@@ -2475,10 +2475,10 @@
   dependencies:
     execa "^5.1.1"
 
-"@netlify/zip-it-and-ship-it@4.29.3":
-  version "4.29.3"
-  resolved "https://registry.yarnpkg.com/@netlify/zip-it-and-ship-it/-/zip-it-and-ship-it-4.29.3.tgz#cafd32eb50529db659ca3d69ef3e205ece37d4f4"
-  integrity sha512-eDa7xS1PLjFailvfOUhmRpcu4mIuXJqd6UVZv/JZWtClWDOyaE3mIg/CYj4h4LQDAg8P2Ljy+a318izHSfqLJg==
+"@netlify/zip-it-and-ship-it@4.30.0":
+  version "4.30.0"
+  resolved "https://registry.yarnpkg.com/@netlify/zip-it-and-ship-it/-/zip-it-and-ship-it-4.30.0.tgz#4dba4115cfeb6e1eef963a2e44cf027d6982275a"
+  integrity sha512-GcUsdgdm7gJDoVhGwd9tGhINHmVzMUdSldKYEIdspetcGa5jRlphpUVg+7vr9kzNDed2wGmqHNs30DMbrTOFqA==
   dependencies:
     "@babel/parser" "^7.15.7"
     "@netlify/esbuild" "^0.13.6"
@@ -10280,10 +10280,10 @@ nested-error-stacks@^2.0.0, nested-error-stacks@^2.1.0:
   resolved "https://registry.yarnpkg.com/nested-error-stacks/-/nested-error-stacks-2.1.0.tgz#0fbdcf3e13fe4994781280524f8b96b0cdff9c61"
   integrity sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==
 
-netlify-cli@6.14.25:
-  version "6.14.25"
-  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-6.14.25.tgz#ac214e227d04f23b16edd626afe94e178ad1d0f1"
-  integrity sha512-0i/B37RDz/Q8BMTdV3m6qzyQo4HsEd1+WQpIe2i48u7LGCBlwtHEhRB69D2CsWln3Z6cVTVzmjEcBHRKHFiVPQ==
+netlify-cli@6.15.0:
+  version "6.15.0"
+  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-6.15.0.tgz#43d1e75046c1782ea2503356500a4235a11110f1"
+  integrity sha512-40r0FZC4vj3qddfTJ536sCO9geCzv15dmGJKEZCQknu12j46RB9AXvy+PUHyXQZQrkZvUnFYsdR6zlgwz7ofyQ==
   dependencies:
     "@netlify/build" "^18.22.0"
     "@netlify/config" "^15.8.2"
@@ -10292,7 +10292,7 @@ netlify-cli@6.14.25:
     "@netlify/plugin-edge-handlers" "^1.11.22"
     "@netlify/plugins-list" "^4.2.0"
     "@netlify/routing-local-proxy" "^0.34.1"
-    "@netlify/zip-it-and-ship-it" "4.29.3"
+    "@netlify/zip-it-and-ship-it" "4.30.0"
     "@oclif/command" "^1.6.1"
     "@oclif/config" "^1.15.1"
     "@oclif/errors" "^1.3.4"
