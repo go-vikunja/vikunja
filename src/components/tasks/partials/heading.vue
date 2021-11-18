@@ -7,7 +7,7 @@
 			:class="{'disabled': !canWrite}"
 			@blur="save($event.target.textContent)"
 			@keydown.enter.prevent.stop="$event.target.blur()"
-			:contenteditable="canWrite ? 'true' : 'false'"
+			:contenteditable="canWrite ? true : undefined"
 			:spellcheck="false"
 		>
 			{{ task.title.trim() }}
