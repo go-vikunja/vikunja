@@ -116,6 +116,7 @@ describe('Task', () => {
 				.should('be.visible')
 				.should('contain', 'Done')
 			cy.get('.task-view .action-buttons p.created')
+				.scrollIntoView()
 				.should('be.visible')
 				.should('contain', 'Done')
 		})
