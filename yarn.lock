@@ -2177,10 +2177,10 @@
     call-me-maybe "^1.0.1"
     glob-to-regexp "^0.3.0"
 
-"@netlify/build@^18.22.0":
-  version "18.22.0"
-  resolved "https://registry.yarnpkg.com/@netlify/build/-/build-18.22.0.tgz#09ed6874acfc4e7bc3ccb15f79a13a3654d9c3ca"
-  integrity sha512-/cOSn08l4JGghV6o7F4z34qYaRPLN153IAIFs16DnrSffLkQO25GB+cxmxgb2Er9kUo9pTK3Otg5WzkfZuUKCg==
+"@netlify/build@^18.24.0":
+  version "18.25.0"
+  resolved "https://registry.yarnpkg.com/@netlify/build/-/build-18.25.0.tgz#40ef90ca835b8bea3f7b3ab4cd211367bbcacc31"
+  integrity sha512-frQHT4Fd1enJMzbQ8zf903gyKq/VLGzVp3pX54VxcVcVpN9iqREEmxe7dw/LvAP/dUWerMsCJORNqiBrV4UpFA==
   dependencies:
     "@bugsnag/js" "^7.0.0"
     "@netlify/cache-utils" "^2.0.0"
@@ -2190,7 +2190,7 @@
     "@netlify/plugin-edge-handlers" "^1.11.22"
     "@netlify/plugins-list" "^4.2.0"
     "@netlify/run-utils" "^2.0.0"
-    "@netlify/zip-it-and-ship-it" "^4.29.4"
+    "@netlify/zip-it-and-ship-it" "^4.30.0"
     "@sindresorhus/slugify" "^1.1.0"
     "@ungap/from-entries" "^0.2.1"
     ansi-escapes "^4.3.2"
@@ -2475,7 +2475,7 @@
   dependencies:
     execa "^5.1.1"
 
-"@netlify/zip-it-and-ship-it@4.30.0":
+"@netlify/zip-it-and-ship-it@4.30.0", "@netlify/zip-it-and-ship-it@^4.30.0":
   version "4.30.0"
   resolved "https://registry.yarnpkg.com/@netlify/zip-it-and-ship-it/-/zip-it-and-ship-it-4.30.0.tgz#4dba4115cfeb6e1eef963a2e44cf027d6982275a"
   integrity sha512-GcUsdgdm7gJDoVhGwd9tGhINHmVzMUdSldKYEIdspetcGa5jRlphpUVg+7vr9kzNDed2wGmqHNs30DMbrTOFqA==
@@ -2519,46 +2519,6 @@
   version "4.29.1"
   resolved "https://registry.yarnpkg.com/@netlify/zip-it-and-ship-it/-/zip-it-and-ship-it-4.29.1.tgz#ff81b1d98b8c4ea886a315b21af1dd4b06cc576f"
   integrity sha512-tTJ+EGONXfi5OntmgJlvrCI2dmVlxhJLKRtZsDbcoDr/PbFg3LurVMbdYJS34XqCOMZQNhWG8zRFfqoW1N9T5w==
-  dependencies:
-    "@babel/parser" "^7.15.7"
-    "@netlify/esbuild" "^0.13.6"
-    "@vercel/nft" "^0.17.0"
-    archiver "^5.3.0"
-    array-flat-polyfill "^1.0.1"
-    common-path-prefix "^3.0.0"
-    cp-file "^9.0.0"
-    del "^6.0.0"
-    elf-cam "^0.1.1"
-    end-of-stream "^1.4.4"
-    es-module-lexer "^0.9.0"
-    execa "^5.0.0"
-    filter-obj "^2.0.1"
-    find-up "^5.0.0"
-    glob "^7.1.6"
-    is-builtin-module "^3.1.0"
-    junk "^3.1.0"
-    locate-path "^6.0.0"
-    make-dir "^3.1.0"
-    merge-options "^3.0.4"
-    minimatch "^3.0.4"
-    p-map "^4.0.0"
-    path-exists "^4.0.0"
-    pkg-dir "^5.0.0"
-    precinct "^8.2.0"
-    read-package-json-fast "^2.0.2"
-    require-package-name "^2.0.1"
-    resolve "^2.0.0-next.1"
-    semver "^7.0.0"
-    tmp-promise "^3.0.2"
-    toml "^3.0.0"
-    typescript "^4.4.3"
-    unixify "^1.0.0"
-    yargs "^16.0.0"
-
-"@netlify/zip-it-and-ship-it@^4.29.4":
-  version "4.29.4"
-  resolved "https://registry.yarnpkg.com/@netlify/zip-it-and-ship-it/-/zip-it-and-ship-it-4.29.4.tgz#25107764afd6e55230b79a59a1336dcebc21a4a0"
-  integrity sha512-CDU9zzGNQF9p3b/oznT1GGKMw8X7PbaoCnsl787KbC6rx45QjAUiJqspCQv13GOh/a4n8WSnIf05VocCMMFLFw==
   dependencies:
     "@babel/parser" "^7.15.7"
     "@netlify/esbuild" "^0.13.6"
@@ -10280,12 +10240,12 @@ nested-error-stacks@^2.0.0, nested-error-stacks@^2.1.0:
   resolved "https://registry.yarnpkg.com/nested-error-stacks/-/nested-error-stacks-2.1.0.tgz#0fbdcf3e13fe4994781280524f8b96b0cdff9c61"
   integrity sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==
 
-netlify-cli@7.0.0:
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-7.0.0.tgz#169cf6e2746eb3e62215894a5055c4f3c8e93895"
-  integrity sha512-9eh3FHnBJFKuV9fn+iktwd2zyhD0IQEe8b3LcR3KqyDvsKrZAX+X+qS4Wek9N/g5SdyZ972g4yhRElhhcZCziQ==
+netlify-cli@7.0.1:
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-7.0.1.tgz#8f183a322fec0ace2d70b1207140e2219251f4bb"
+  integrity sha512-SS2Qr7kMQ4PZhlu1nlaSQrW/W5vXACH3ITMNrmRJ8vtVSrc/ufFo35Pr2SHZABTwA/Ougj4V+Te62ma4j3jAUQ==
   dependencies:
-    "@netlify/build" "^18.22.0"
+    "@netlify/build" "^18.24.0"
     "@netlify/config" "^15.8.2"
     "@netlify/framework-info" "^5.11.0"
     "@netlify/local-functions-proxy" "^1.1.1"
