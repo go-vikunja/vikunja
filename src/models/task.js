@@ -7,6 +7,8 @@ import {REPEAT_MODE_DEFAULT} from './constants/taskRepeatModes'
 import SubscriptionModel from '@/models/subscription'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
+const SUPPORTS_TRIGGERED_NOTIFICATION = 'Notification' in window && 'showTrigger' in Notification.prototype
+
 export default class TaskModel extends AbstractModel {
 
 	defaultColor = '198CFF'
@@ -161,7 +163,7 @@ export default class TaskModel extends AbstractModel {
 	}
 
 	async cancelScheduledNotifications() {
-		if (!(Notification && 'showTrigger' in Notification.prototype)) {
+		if (!SUPPORTS_TRIGGERED_NOTIFICATION) {
 			console.debug('This browser does not support triggered notifications')
 			return
 		}
@@ -196,7 +198,7 @@ export default class TaskModel extends AbstractModel {
 			return
 		}
 
-		if (!(Notification && 'showTrigger' in Notification.prototype)) {
+		if (!SUPPORTS_TRIGGERED_NOTIFICATION) {
 			console.debug('This browser does not support triggered notifications')
 			return
 		}
