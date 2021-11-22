@@ -263,8 +263,7 @@ describe('Task', () => {
 
 			cy.visit(`/tasks/${tasks[0].id}`)
 
-			cy.get('.task-view .action-buttons .button')
-				.contains('Assign this task to a user')
+			cy.get('[data-cy="taskDetail.assign"]')
 				.click()
 			cy.get('.task-view .column.assignees .multiselect input')
 				.type(users[1].username)

@@ -271,7 +271,9 @@
 						<x-button
 							@click="setFieldActive('assignees')"
 							type="secondary"
-							v-shortcut="'a'">
+							v-shortcut="'a'"
+							v-cy="'taskDetail.assign'"
+						>
 							<span class="icon is-small"><icon icon="users"/></span>
 							{{ $t('task.detail.actions.assign') }}
 						</x-button>

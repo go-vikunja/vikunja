@@ -65,7 +65,7 @@
     "@vue/eslint-config-typescript": "9.1.0",
     "axios": "0.24.0",
     "browserslist": "4.18.1",
-    "cypress": "9.0.0",
+    "cypress": "8.7.0",
     "cypress-file-upload": "5.0.8",
     "esbuild": "0.13.15",
     "eslint": "8.3.0",

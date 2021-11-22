@@ -17,7 +17,7 @@ declare global {
 	interface Window {
 		API_URL: string;
 		SENTRY_ENABLED: boolean;
-		SENTRY_DSN: string,
+		SENTRY_DSN: string;
 	}
 }
 
@@ -54,13 +54,15 @@ const app = createApp(App)
 app.use(Notifications)
 
 // directives
-import focus from './directives/focus'
-import tooltip from './directives/tooltip'
+import focus from '@/directives/focus'
+import tooltip from '@/directives/tooltip'
 import shortcut from '@/directives/shortcut'
+import cypress from '@/directives/cypress'
 
 app.directive('focus', focus)
 app.directive('tooltip', tooltip)
 app.directive('shortcut', shortcut)
+app.directive('cy', cypress)
 
 // global components
 import FontAwesomeIcon from './icons'
