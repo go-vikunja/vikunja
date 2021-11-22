@@ -1,7 +1,7 @@
 <template>
 	<div class="no-auth-wrapper">
 		<div class="noauth-container">
-			<Logo width="400" height="117" />
+			<Logo class="logo" width="400" height="117" />
 			<div class="message is-info" v-if="motd !== ''">
 				<div class="message-header">
 					<p>{{ $t('misc.info') }}</p>
@@ -35,5 +35,9 @@ const motd = computed(() => store.state.config.motd)
 	width: 100%;
 	margin: 0 auto;
 	padding: 1rem;
+}
+
+.logo {
+	max-width: 100%;
 }
 </style>
