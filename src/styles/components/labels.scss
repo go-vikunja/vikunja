@@ -6,7 +6,7 @@
 
   .tag {
     margin: .5rem 0 .5rem .5rem;
-    background: $grey-200;
+    background: var(--grey-200);
 
     // FIXME: only used in ListLabels.vue
     &.disabled {

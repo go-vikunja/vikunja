@@ -258,7 +258,7 @@ export default {
 		position: absolute;
 		z-index: 99;
 		width: 320px;
-		background: $white;
+		background: var(--white);
 		border-radius: $radius;
 		box-shadow: $shadow;
 
@@ -272,7 +272,7 @@ export default {
 			padding: 0 .5rem;
 			width: 100%;
 			height: 2.25rem;
-			color: $text;
+			color: var(--text);
 			transition: all $transition;
 
 			&:first-child {
@@ -280,7 +280,7 @@ export default {
 			}
 
 			&:hover {
-				background: $light;
+				background: var(--light);
 			}
 
 			.text {
@@ -291,7 +291,7 @@ export default {
 				padding-right: .25rem;
 
 				.weekday {
-					color: $text-light;
+					color: var(--text-light);
 					text-transform: capitalize;
 				}
 			}

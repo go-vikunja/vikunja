@@ -1,7 +1,7 @@
 $scrollbar-height: 8px;
-$scrollbar-track-color: $grey-200;
-$scrollbar-thumb-color: $grey-300;
-$scrollbar-hover-color: $grey-500;
+$scrollbar-track-color: var(--grey-200);
+$scrollbar-thumb-color: var(--grey-300);
+$scrollbar-hover-color: var(--grey-500);
 
 // Chrome
 ::-webkit-scrollbar {

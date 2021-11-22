@@ -10,7 +10,7 @@ import {POWERED_BY as poweredByUrl} from '@/urls'
 
 <style lang="scss">
 .menu-bottom-link {
-	color: $grey-300;
+	color: var(--grey-300);
 	text-align: center;
 	display: block;
 	padding-top: 1rem;

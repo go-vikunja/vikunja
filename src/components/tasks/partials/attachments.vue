@@ -267,17 +267,17 @@ export default {
       padding: .5rem;
 
       &:hover {
-        background-color: $grey-200;
+        background-color: var(--grey-200);
       }
 
       .filename {
         font-weight: bold;
         margin-bottom: .25rem;
-        color: $text;
+        color: var(--text);
       }
 
       .info {
-        color: $grey-500;
+        color: var(--grey-500);
         font-size: .9rem;
 
         p {
@@ -339,17 +339,17 @@ export default {
         width: 100%;
         font-size: 5rem;
         height: auto;
-        text-shadow: $shadow-md;
+        text-shadow: var(--shadow-md);
         animation: bounce 2s infinite;
       }
 
       .hint {
         margin: .5rem auto 2rem;
         border-radius: 2px;
-        box-shadow: $shadow-md;
-        background: $primary;
+        box-shadow: var(--shadow-md);
+        background: var(--primary);
         padding: 1rem;
-        color: $white;
+        color: var(--white);
         width: 100%;
         max-width: 300px;
       }

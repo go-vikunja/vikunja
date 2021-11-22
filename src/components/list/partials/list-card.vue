@@ -86,11 +86,11 @@ export default {
   cursor: pointer;
   width: calc((100% - #{($lists-per-row - 1) * 1rem}) / #{$lists-per-row});
   height: $list-height;
-  background: $white;
+  background: var(--white);
   margin: 0 $list-spacing $list-spacing 0;
   padding: 1rem;
   border-radius: $radius;
-  box-shadow: $shadow-sm;
+  box-shadow: var(--shadow-sm);
   transition: box-shadow $transition;
 
   display: flex;
@@ -98,13 +98,13 @@ export default {
   flex-wrap: wrap;
 
   &:hover {
-    box-shadow: $shadow-md;
+    box-shadow: var(--shadow-md);
   }
 
   &:active,
   &:focus,
   &:focus:not(:active) {
-    box-shadow: $shadow-xs !important;
+    box-shadow: var(--shadow-xs) !important;
   }
 
   @media screen and (min-width: $widescreen) {
@@ -158,7 +158,7 @@ export default {
     font-family: $vikunja-font;
     font-weight: 400;
     font-size: 1.5rem;
-    color: $text;
+    color: var(--text);
     width: 100%;
     margin-bottom: 0;
     max-height: calc(100% - 2rem); // 1rem padding, 1rem height of the "is archived" badge
@@ -171,7 +171,7 @@ export default {
   }
 
   &.has-light-text .title {
-    color: $light;
+    color: var(--light);
   }
 
   &.has-background {
@@ -180,8 +180,8 @@ export default {
     background-position: center;
 
     .title {
-      text-shadow: 0 0 10px $black, 1px 1px 5px $grey-700, -1px -1px 5px $grey-700;
-      color: $white;
+      text-shadow: 0 0 10px var(--black), 1px 1px 5px var(--grey-700), -1px -1px 5px var(--grey-700);
+      color: var(--white);
     }
   }
 
@@ -190,7 +190,7 @@ export default {
     opacity: 0;
 
     &:hover {
-      color: $orange;
+      color: var(--warning);
     }
 
     &.is-archived {
@@ -200,7 +200,7 @@ export default {
     &.is-favorite {
       display: inline-block;
       opacity: 1;
-      color: $orange;
+      color: var(--warning);
     }
   }
 

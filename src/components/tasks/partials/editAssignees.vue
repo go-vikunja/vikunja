@@ -127,7 +127,7 @@ export default {
 	}
 
 	:deep(.user img) {
-		border: 2px solid $white;
+		border: 2px solid var(--white);
 		margin-right: 0;
 	}
 
@@ -135,8 +135,8 @@ export default {
 		position: absolute;
 		top: 4px;
 		left: 2px;
-		color: $red;
-		background: $white;
+		color: var(--danger);
+		background: var(--white);
 		padding: 0 4px;
 		display: block;
 		border-radius: 100%;

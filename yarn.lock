@@ -3727,6 +3727,21 @@
   resolved "https://registry.yarnpkg.com/@vue/shared/-/shared-3.2.22.tgz#26dcbe5e530f6c1f2de5ca9aeab92ab00f523b41"
   integrity sha512-qWVav014mpjEtbWbEgl0q9pEyrrIySKum8UVYjwhC6njrKzknLZPvfuYdQyVbApsqr94tf/3dP4pCuZmmjdCWQ==
 
+"@vueuse/core@^6.8.0":
+  version "6.9.2"
+  resolved "https://registry.yarnpkg.com/@vueuse/core/-/core-6.9.2.tgz#76b16d01f33cf367dd1a2d7f2e31d106443ceb8a"
+  integrity sha512-FRwl4ccSFuHZBHLGgS9TMv/+Dd6XFaL4o9nph2qtgQIV+z29RBFokw08XjHfykiENRzB01MjYHJ7iRUnsIFQXg==
+  dependencies:
+    "@vueuse/shared" "6.9.2"
+    vue-demi "*"
+
+"@vueuse/shared@6.9.2":
+  version "6.9.2"
+  resolved "https://registry.yarnpkg.com/@vueuse/shared/-/shared-6.9.2.tgz#97e4369fa7262ebc96fe1d6e210268f30b037005"
+  integrity sha512-lAiMh6XROs0kSKVd0Yb/6GKoQMxC1fYrFDi6opvQWISPtcqRNluRrQxLUZ3WTI78ovtoKRLktjhkFAtydcfFDg==
+  dependencies:
+    vue-demi "*"
+
 abab@^2.0.3, abab@^2.0.5:
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/abab/-/abab-2.0.5.tgz#c0b678fb32d60fc1219c784d6a826fe385aeb79a"
@@ -4631,10 +4646,10 @@ builtins@^1.0.3:
   resolved "https://registry.yarnpkg.com/builtins/-/builtins-1.0.3.tgz#cb94faeb61c8696451db36534e1422f94f0aee88"
   integrity sha1-y5T662HIaWRR2zZTThQi+U8K7og=
 
-bulma@0.9.3:
-  version "0.9.3"
-  resolved "https://registry.yarnpkg.com/bulma/-/bulma-0.9.3.tgz#ddccb7436ebe3e21bf47afe01d3c43a296b70243"
-  integrity sha512-0d7GNW1PY4ud8TWxdNcP6Cc8Bu7MxcntD/RRLGWuiw/s0a9P+XlH/6QoOIrmbj6o8WWJzJYhytiu9nFjTszk1g==
+bulma-css-variables@^0.9.33:
+  version "0.9.33"
+  resolved "https://registry.yarnpkg.com/bulma-css-variables/-/bulma-css-variables-0.9.33.tgz#b249c3410e9edcfa7a5ce8ca96049b6939fe92de"
+  integrity sha512-D85dXLyLOBBDCuSSOeASc0kN2IknJqo5hzkZ22hxDHobxko/qay0nD+zNl2CJtF8v/7iwvQXqzVSDRnFVRSg9A==
 
 byline@^5.0.0:
   version "5.0.0"
@@ -13969,6 +13984,11 @@ vue-advanced-cropper@2.7.0:
     classnames "^2.2.6"
     debounce "^1.2.0"
     easy-bem "^1.0.2"
+
+vue-demi@*:
+  version "0.12.1"
+  resolved "https://registry.yarnpkg.com/vue-demi/-/vue-demi-0.12.1.tgz#f7e18efbecffd11ab069d1472d7a06e319b4174c"
+  integrity sha512-QL3ny+wX8c6Xm1/EZylbgzdoDolye+VpCXRhI2hug9dJTP3OUJ3lmiKN3CsVV3mOJKwFi0nsstbgob0vG7aoIw==
 
 vue-drag-resize@2.0.3:
   version "2.0.3"

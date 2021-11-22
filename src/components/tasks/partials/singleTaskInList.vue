@@ -227,7 +227,7 @@ export default {
 	border: 2px solid transparent;
 
 	&:hover {
-		background-color: $grey-100;
+		background-color: var(--grey-100);
 	}
 
 	.tasktext,
@@ -239,13 +239,13 @@ export default {
 		flex: 1 0 50%;
 
 		.overdue {
-			color: $red;
+			color: var(--danger);
 		}
 	}
 
 	.task-list {
 		width: auto;
-		color: $grey-400;
+		color: var(--grey-400);
 		font-size: .9rem;
 		white-space: nowrap;
 	}
@@ -273,11 +273,11 @@ export default {
 	}
 
 	a {
-		color: $text;
+		color: var(--text);
 		transition: color ease $transition-duration;
 
 		&:hover {
-			color: $grey-900;
+			color: var(--grey-900);
 		}
 	}
 
@@ -288,12 +288,12 @@ export default {
 		transition: opacity $transition, color $transition;
 
 		&:hover {
-			color: $orange;
+			color: var(--warning);
 		}
 
 		&.is-favorite {
 			opacity: 1;
-			color: $orange;
+			color: var(--warning);
 		}
 	}
 
@@ -324,16 +324,16 @@ export default {
 
 	.tasktext.done {
 		text-decoration: line-through;
-		color: $grey-500;
+		color: var(--grey-500);
 	}
 
 	span.parent-tasks {
-		color: $grey-500;
+		color: var(--grey-500);
 		width: auto;
 	}
 
 	.remove {
-		color: $red;
+		color: var(--danger);
 	}
 
 	input[type="checkbox"] {
@@ -351,8 +351,8 @@ export default {
 		left: calc(50% - 1rem);
 		width: 2rem;
 		height: 2rem;
-		border-left-color: $grey-300;
-		border-bottom-color: $grey-300;
+		border-left-color: var(--grey-300);
+		border-bottom-color: var(--grey-300);
 	}
 }
 </style>

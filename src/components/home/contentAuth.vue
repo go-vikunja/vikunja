@@ -144,7 +144,7 @@ export default {
 	justify-content: center;
 	align-items: center;
 	font-size: 2rem;
-	color: $grey-400;
+	color: var(--grey-400);
 	line-height: 1;
 	transition: all $transition;
 
@@ -155,7 +155,7 @@ export default {
 	&:hover,
 	&:focus {
 		height: 1rem;
-		color: $grey-600;
+		color: var(--grey-600);
 	}
 }
 
@@ -191,7 +191,7 @@ export default {
 	}
 
     .card {
-      background: $white;
+      background: var(--white);
     }
   }
 }
@@ -220,7 +220,7 @@ export default {
 	right: 1rem;
 	z-index: 4500; // The modal has a z-index of 4000
 
-	color: $grey-500;
+	color: var(--grey-500);
 	transition: color $transition;
 	
 	@media screen and (max-width: $tablet) {

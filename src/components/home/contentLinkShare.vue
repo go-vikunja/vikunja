@@ -57,11 +57,11 @@ export default {
 }
 
 .title {
-    text-shadow: 0 0 1rem $white;
+	text-shadow: 0 0 1rem var(--white);
 }
 
 // FIXME: this should be defined somewhere deep
 .link-share-view .card {
-    background-color: $white;
+    background-color: var(--white);
 }
 </style>

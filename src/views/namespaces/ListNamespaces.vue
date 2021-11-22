@@ -131,12 +131,12 @@ export default {
 
     .is-archived {
       font-size: 0.75rem;
-      border: 1px solid $grey-500;
+      border: 1px solid var(--grey-500);
       color: $grey !important;
       padding: 2px 4px;
       border-radius: 3px;
       font-family: $vikunja-font;
-      background: rgba($white, 0.75);
+      background: var(--white-translucent);
       margin-left: .5rem;
     }
 

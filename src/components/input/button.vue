@@ -82,11 +82,11 @@ export default {
   font-size: 0.85rem;
   font-weight: bold;
   height: $button-height;
-  box-shadow: $shadow-sm;
+  box-shadow: var(--shadow-sm);
 
   &.is-hovered,
   &:hover {
-    box-shadow: $shadow-md;
+    box-shadow: var(--shadow-md);
   }
 
   &.fullheight {
@@ -99,11 +99,11 @@ export default {
   &:active,
   &:focus,
   &:focus:not(:active) {
-    box-shadow: $shadow-xs !important;
+    box-shadow: var(--shadow-xs) !important;
   }
 
   &.is-primary.is-outlined:hover {
-    color: $white;
+    color: var(--white);
   }
 
   &.is-small {

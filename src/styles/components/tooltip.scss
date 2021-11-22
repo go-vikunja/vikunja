@@ -5,7 +5,7 @@
   z-index: 10000;
   font-size: 0.8rem;
   text-align: center;
-  background: $dark;
+  background: var(--dark);
   color: white;
   border-radius: 5px;
   padding: 5px 10px 5px;
@@ -28,7 +28,7 @@
     height: 0;
     border-left: 5px solid transparent;
     border-right: 5px solid transparent;
-    border-top: 5px solid $dark;
+    border-top: 5px solid var(--dark);
 
     &.bottom {
       transform: rotate(180deg);

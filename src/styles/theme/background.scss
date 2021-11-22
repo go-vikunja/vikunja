@@ -8,7 +8,7 @@
 
 	// FIXME: move to pagination component
   .pagination-link:not(.is-current) {
-    background: $light-background;
+    background: var(--grey-100);
   }
 
   .box,

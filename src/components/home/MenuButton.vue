@@ -43,7 +43,7 @@ $size: $lineWidth + 1rem;
 		width: $lineWidth;
 		left: 50%;
 		transform: $transformX;
-		background-color: $grey-400;
+		background-color: var(--grey-400);
 		border-radius: 2px;
 		transition: all $transition;
 	}
@@ -62,7 +62,7 @@ $size: $lineWidth + 1rem;
 	&:focus {
 		&::before,
 		&::after {
-			background-color: $grey-600;
+			background-color: var(--grey-600);
 		}
 
 		&::before {

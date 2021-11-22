@@ -1,0 +1,44 @@
+//
+// IMPORTANT NOTE:
+//
+// The styles in this file and all imported styles should not
+// create CSS output when compiled!
+// Instead they should only define SCSS that gets compiled to nothing.
+//
+// The reason is that this file is prefixed in _every_ component style so that
+// the component has access to the variables, mixins, etc. that
+// are defined here.
+//
+
+// the default values get overwritten by the definitions above
+@import "bulma-css-variables/sass/utilities/_all";
+
+// since $tablet is defined by bulma we can just define it after importing the utilities
+$mobile: math.div($tablet, 2);
+
+$family-sans-serif: 'Open Sans', Helvetica, Arial, sans-serif;
+$vikunja-font: 'Quicksand', sans-serif;
+
+$thickness: 1px;
+$pagination-current-border: var(--primary);
+$navbar-item-active-color: var(--primary);
+
+$dropdown-content-shadow: none;
+$dropdown-item-hover-background-color: var(--grey-100);
+
+$bulmaswatch-import-font: false !default;
+$site-background: var(--grey-100);
+
+$transition-duration: 150ms;
+$transition: $transition-duration ease;
+
+$button-height: 34px;
+$switch-view-height: 2.69rem;
+
+$navbar-height: 4rem;
+$navbar-width: 300px;
+$navbar-icon-width: 40px;
+
+$lists-per-row: 5;
+$list-height: 150px;
+$list-spacing: 1rem;

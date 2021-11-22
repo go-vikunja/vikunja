@@ -167,7 +167,7 @@ export default {
     font-size: .8rem;
 
     a {
-      color: $grey-800;
+      color: var(--grey-800);
     }
   }
 
@@ -224,7 +224,7 @@ export default {
         background: rgba(0, 0, 0, 0.5);
         font-size: .75rem;
         font-weight: bold;
-        color: $white;
+        color: var(--white);
         transition: opacity $transition;
       }
 

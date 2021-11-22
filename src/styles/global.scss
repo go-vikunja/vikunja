@@ -5,13 +5,15 @@
 // This imports are the same as in "bulma/bulma.sass"
 // with the expeption of the bulma utilities.
 // They are imported globally in variables.scss
-@import "bulma/sass/base/_all";
-@import "bulma/sass/elements/_all";
-@import "bulma/sass/form/_all";
-@import "bulma/sass/components/_all";
-@import "bulma/sass/grid/_all";
-@import "bulma/sass/helpers/_all";
-@import "bulma/sass/layout/_all";
+@import "bulma-css-variables/sass/base/_all";
+@import "bulma-css-variables/sass/elements/_all";
+@import "bulma-css-variables/sass/form/_all";
+@import "bulma-css-variables/sass/components/_all";
+@import "bulma-css-variables/sass/grid/_all";
+@import "bulma-css-variables/sass/helpers/_all";
+@import "bulma-css-variables/sass/layout/_all";
 
 @import "theme";
 @import "components";
+
+@import "custom-properties";

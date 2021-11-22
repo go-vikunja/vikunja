@@ -63,22 +63,22 @@ export default {
 
 <style lang="scss" scoped>
 .card {
-  background-color: $white;
+  background-color: var(--white);
   border-radius: $radius;
   margin-bottom: 1rem;
-  border: 1px solid $grey-200;
-  box-shadow: $shadow-sm;
+  border: 1px solid var(--card-border-color);
+  box-shadow: var(--shadow-sm);
 }
 
 .card-header {
   box-shadow: none;
-  border-bottom: 1px solid $grey-200;
+  border-bottom: 1px solid var(--card-border-color);
   border-radius: $radius $radius 0 0;
 }
 
 // FIXME: should maybe be merged somehow with modal
 :deep(.modal-card-foot) {
-  background-color: $grey-50;
+  background-color: var(--grey-50);
   border-top: 0;
 }
 </style>

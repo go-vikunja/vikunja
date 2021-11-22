@@ -280,8 +280,8 @@ export default {
 
 <style lang="scss" scoped>
 $navbar-padding: 2rem;
-$vikunja-nav-background: $light-background;
-$vikunja-nav-color: $grey-700;
+$vikunja-nav-background: var(--site-background);
+$vikunja-nav-color: var(--grey-700);
 $vikunja-nav-selected-width: 0.4rem;
 
 .namespace-container {
@@ -349,12 +349,12 @@ $vikunja-nav-selected-width: 0.4rem;
 				opacity: 0;
 
 				&:hover {
-					color: $orange;
+					color: var(--warning);
 				}
 
 				&.is-favorite {
 					opacity: 1;
-					color: $orange;
+					color: var(--warning);
 				}
 			}
 
@@ -436,7 +436,7 @@ $vikunja-nav-selected-width: 0.4rem;
 				align-items: center;
 
 				&:hover {
-					background: $white;
+					background: var(--white);
 				}
 
 				:deep(.dropdown-trigger) {
@@ -456,7 +456,7 @@ $vikunja-nav-selected-width: 0.4rem;
 			}
 
 			.ghost {
-				background: $grey-200;
+				background: var(--grey-200);
 
 				* {
 					opacity: 0;
@@ -496,16 +496,16 @@ $vikunja-nav-selected-width: 0.4rem;
 				}
 
 				&.router-link-exact-active {
-					color: $primary;
-					border-left: $vikunja-nav-selected-width solid $primary;
+					color: var(--primary);
+					border-left: $vikunja-nav-selected-width solid var(--primary);
 
 					.icon {
-						color: $primary;
+						color: var(--primary);
 					}
 				}
 
 				&:hover {
-					border-left: $vikunja-nav-selected-width solid $primary;
+					border-left: $vikunja-nav-selected-width solid var(--primary);
 				}
 			}
 		}
@@ -526,7 +526,7 @@ $vikunja-nav-selected-width: 0.4rem;
 		}
 
 		.icon {
-			color: $grey-400 !important;
+			color: var(--grey-400) !important;
 		}
 	}
 

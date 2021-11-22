@@ -1,6 +1,6 @@
 $font-files-path: '/fonts/';
 
-/* quicksand-regular - latin */
+// quicksand-regular - latin
 @font-face {
   font-family: 'Quicksand';
   font-style: normal;
@@ -10,7 +10,7 @@ $font-files-path: '/fonts/';
   
 }
 
-/* quicksand-500 - latin */
+// quicksand-500 - latin
 @font-face {
   font-family: 'Quicksand';
   font-style: normal;
@@ -19,7 +19,7 @@ $font-files-path: '/fonts/';
   src: url($font-files-path + 'quicksand-v7-latin-500.woff2') format('woff2');
 }
 
-/* quicksand-700 - latin */
+// quicksand-700 - latin
 @font-face {
   font-family: 'Quicksand';
   font-style: normal;
@@ -28,7 +28,7 @@ $font-files-path: '/fonts/';
   src: url($font-files-path + 'quicksand-v7-latin-700.woff2') format('woff2');
 }
 
-/* open-sans-regular - latin */
+// open-sans-regular - latin
 @font-face {
   font-family: 'Open Sans';
   font-style: normal;
@@ -37,7 +37,7 @@ $font-files-path: '/fonts/';
   src: url($font-files-path + 'open-sans-v15-latin-regular.woff2') format('woff2');
 }
 
-/* open-sans-italic - latin */
+// open-sans-italic - latin
 @font-face {
   font-family: 'Open Sans';
   font-style: italic;
@@ -46,7 +46,7 @@ $font-files-path: '/fonts/';
   src: url($font-files-path + 'open-sans-v15-latin-italic.woff2') format('woff2');
 }
 
-/* open-sans-700 - latin */
+// open-sans-700 - latin
 @font-face {
   font-family: 'Open Sans';
   font-style: normal;
@@ -55,7 +55,7 @@ $font-files-path: '/fonts/';
   src: url($font-files-path + 'open-sans-v15-latin-700.woff2') format('woff2');
 }
 
-/* open-sans-700italic - latin */
+// open-sans-700italic - latin
 @font-face {
   font-family: 'Open Sans';
   font-style: italic;

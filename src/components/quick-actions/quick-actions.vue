@@ -513,11 +513,11 @@ export default {
 	.results {
 		text-align: left;
 		width: 100%;
-		color: $grey-800;
+		color: var(--grey-800);
 
 		.result {
 			&-title {
-				background: $grey-50;
+				background: var(--grey-50);
 				padding: .5rem;
 				display: block;
 				font-size: .75rem;
@@ -528,6 +528,7 @@ export default {
 					font-size: .9rem;
 					width: 100%;
 					background: transparent;
+					color: var(--grey-800);
 					text-align: left;
 					box-shadow: none;
 					border-radius: 0;
@@ -539,12 +540,12 @@ export default {
 					cursor: pointer;
 
 					&:focus, &:hover {
-						background: $grey-50;
+						background: var(--grey-50);
 						box-shadow: none !important;
 					}
 
 					&:active {
-						background: $grey-100;
+						background: var(--grey-100);
 					}
 				}
 			}

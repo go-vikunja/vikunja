@@ -26,7 +26,7 @@ const motd = computed(() => store.state.config.motd)
 
 <style lang="scss" scoped>
 .no-auth-wrapper {
-	background: url('@/assets/llama.svg') no-repeat bottom left fixed $light-background;
+	background: url('@/assets/llama.svg') no-repeat bottom left fixed var(--site-background);
 	min-height: 100vh;
 }
 
@@ -38,6 +38,6 @@ const motd = computed(() => store.state.config.motd)
 }
 
 .logo {
-	max-width: 100%;
+	color: var(--logo-text-color);
 }
 </style>

@@ -141,14 +141,14 @@ $defer-task-max-width: 350px + 100px;
 	width: 100%;
 	max-width: $defer-task-max-width;
 	border-radius: $radius;
-	border: 1px solid $grey-200;
+	border: 1px solid var(--grey-200);
 	padding: 1rem;
 	margin: 1rem;
-	background: $white;
-	color: $text;
+	background: var(--white);
+	color: var(--text);
 	cursor: default;
 	z-index: 10;
-	box-shadow: $shadow-lg;
+	box-shadow: var(--shadow-lg);
 
 	@media screen and (max-width: ($defer-task-max-width)) {
 		left: .5rem;

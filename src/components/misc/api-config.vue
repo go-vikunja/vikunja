@@ -128,6 +128,6 @@ export default {
 }
 
 .url {
-	border-bottom: 1px dashed $primary;
+	border-bottom: 1px dashed var(--primary);
 }
 </style>

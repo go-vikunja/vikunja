@@ -149,6 +149,6 @@ export default {
 }
 
 .vue-advanced-cropper__background {
-	background: $white;
+	background: var(--white);
 }
 </style>

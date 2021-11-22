@@ -106,7 +106,7 @@ svg {
 }
 
 .check:hover svg {
-	stroke: $primary;
+	stroke: var(--primary);
 }
 
 .is-disabled .check:hover svg {
@@ -125,7 +125,7 @@ polyline {
 
 input[type=checkbox]:checked + .check {
 	svg {
-		stroke: $primary;
+		stroke: var(--primary);
 	}
 
 	path {

@@ -310,7 +310,7 @@ export default {
 }
 
 .different-list {
-	color: $grey-500;
+	color: var(--grey-500);
 	width: auto;
 }
 
@@ -332,21 +332,21 @@ export default {
 	border-radius: $radius;
 
 	&:hover {
-		background-color: $grey-200;
+		background-color: var(--grey-200);
 	}
 
 	a {
-		color: $text;
+		color: var(--text);
 		transition: color ease $transition-duration;
 
 		&:hover {
-			color: $grey-900;
+			color: var(--grey-900);
 		}
 	}
 
 	.remove {
 		text-align: center;
-		color: $red;
+		color: var(--danger);
 		opacity: 0;
 		transition: opacity $transition;
 	}

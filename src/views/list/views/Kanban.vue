@@ -581,7 +581,6 @@ export default {
 </script>
 
 <style lang="scss">
-$bucket-background: $grey-100;
 $ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
 $bucket-width: 300px;
 $bucket-header-height: 60px;
@@ -615,7 +614,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 
 	.ghost {
 		background: transparent !important;
-		border: 3px dashed $grey-300 !important;
+		border: 3px dashed var(--grey-300) !important;
 		box-shadow: none !important;
 
 		* {
@@ -624,7 +623,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	}
 
 	.bucket {
-		background-color: $bucket-background;
+		background-color: var(--grey-100);
 		border-radius: $radius;
 		position: relative;
 
@@ -672,7 +671,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			padding-right: 1rem;
 
 			.button {
-				background: $bucket-background;
+				background: var(--grey-100);
 				width: 100%;
 			}
 		}
@@ -706,7 +705,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			font-weight: bold;
 
 			&.is-max {
-				color: $red;
+				color: var(--danger);
 			}
 		}
 
@@ -730,7 +729,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			background-color: transparent;
 
 			&:hover {
-				background-color: $white;
+				background-color: var(--white);
 			}
 		}
 	}

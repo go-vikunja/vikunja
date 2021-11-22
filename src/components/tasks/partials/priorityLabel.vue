@@ -54,7 +54,7 @@ export default {
 }
 
 span.high-priority {
-	color: $red;
+	color: var(--danger);
 	width: auto !important; // To override the width set in tasks
 
 	.icon {
@@ -64,7 +64,7 @@ span.high-priority {
 	}
 
 	&.not-so-high {
-		color: $orange;
+		color: var(--warning);
 	}
 }
 </style>

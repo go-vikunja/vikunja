@@ -706,18 +706,18 @@ $flash-background-duration: 750ms;
   // This is a workaround to hide the llama background from the top on the task detail page
   margin-top: -1.5rem;
   padding: 1rem;
-  background-color: $light-background;
+  background-color: var(--site-background);
 
   @media screen and (max-width: $desktop) {
     padding-bottom: 0;
   }
 
   .subtitle {
-    color: $grey-500;
+    color: var(--grey-500);
 	margin-bottom: 1rem;
 
     a {
-      color: $grey-800;
+      color: var(--grey-800);
     }
   }
 
@@ -726,7 +726,7 @@ $flash-background-duration: 750ms;
   }
 
   .icon.is-grey {
-    color: $grey-400;
+    color: var(--grey-400);
   }
 
   :deep(.heading) {
@@ -754,7 +754,7 @@ $flash-background-duration: 750ms;
     }
 
     .title.task-id {
-      color: $grey-400;
+      color: var(--grey-400);
       white-space: nowrap;
     }
 
@@ -765,7 +765,7 @@ $flash-background-duration: 750ms;
     align-items: center;
 
     a.remove {
-      color: $red;
+      color: var(--danger);
       vertical-align: middle;
       padding-left: .5rem;
       line-height: 1;
@@ -776,7 +776,7 @@ $flash-background-duration: 750ms;
     width: 100%;
 
     a.show {
-      color: $text;
+      color: var(--text);
       padding: .25rem .5rem;
       transition: background-color $transition;
       border-radius: $radius;
@@ -784,7 +784,7 @@ $flash-background-duration: 750ms;
       margin: .1rem 0;
 
       &:hover {
-        background: $white;
+        background: var(--white);
       }
     }
 
@@ -800,7 +800,7 @@ $flash-background-duration: 750ms;
 
     .detail-title {
       display: block;
-      color: $grey-400;
+      color: var(--grey-400);
     }
 
     .none {
@@ -837,21 +837,24 @@ $flash-background-duration: 750ms;
       transition: all $transition-duration;
 
       &::placeholder {
-        color: $text-light;
+        color: var(--text-light);
         opacity: 1;
         font-style: italic;
       }
 
       &:not(:disabled) {
-        &:hover, &:active {
-          background: $input-background-color;
-          border-color: $input-border-color;
+        &:hover,
+        &:active,
+        &:focus {
+          background: var(--scheme-main);
+          border-color: var(--border);
           cursor: text;
         }
 
-        &:focus {
-          background: $input-background-color;
-          border-color: $input-focus-border-color;
+        &:hover,
+        &:active {
+          cursor: text;
+          border-color: var(--link)
         }
       }
     }
@@ -883,18 +886,18 @@ $flash-background-duration: 750ms;
 
   .created {
     font-size: .75rem;
-    color: $grey-500;
+    color: var(--grey-500);
     text-align: right;
   }
 
   .checklist-summary {
     margin-left: .25rem;
-  }	
+  }
 }
 
 .task-view-container {
   padding-bottom: 1rem;
-	
+
   @media screen and (max-width: $desktop) {
 	padding-bottom: 0;
   }
@@ -917,6 +920,11 @@ $flash-background-duration: 750ms;
   }
 }
 
+.task-view-container {
+  // simulate sass lighten($primary, 30) by increasing lightness 30% to 73%
+  --primary-light: hsla(var(--primary-h), var(--primary-s), 73%, var(--primary-a));
+}
+
 .flash-background-enter-from,
 .flash-background-enter-active  {
   animation: flash-background $flash-background-duration ease 1;
@@ -924,7 +932,7 @@ $flash-background-duration: 750ms;
 
 @keyframes flash-background {
   0% {
-    background: lighten($primary, 30);
+    background: var(--primary-light);
   }
   100% {
     background: transparent;

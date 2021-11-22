@@ -70,6 +70,6 @@ export default {
 
 <style lang="scss" scoped>
 .list-namespace-title {
-	color: $grey-500;
+  color: var(--grey-500);
 }
 </style>

@@ -145,9 +145,9 @@ export default {
 		width: .75rem;
 		height: .75rem;
 
-		background: $primary;
+		background: var(--primary);
 		border-radius: 100%;
-		border: 2px solid $white;
+		border: 2px solid var(--white);
 	}
 
 	.notifications-list {
@@ -157,12 +157,12 @@ export default {
 		max-height: 400px;
 		overflow-y: auto;
 
-		background: $white;
+		background: var(--white);
 		width: 350px;
 		max-width: calc(100vw - 2rem);
 		padding: .75rem .25rem;
 		border-radius: $radius;
-		box-shadow: $shadow-sm;
+		box-shadow: var(--shadow-sm);
 		font-size: .85rem;
 
 		@media screen and (max-width: $tablet) {
@@ -183,14 +183,14 @@ export default {
 			transition: background-color $transition;
 
 			&:hover {
-				background: $grey-100;
+				background: var(--grey-100);
 				border-radius: $radius;
 			}
 
 			.read-indicator {
 				width: .35rem;
 				height: .35rem;
-				background: $primary;
+				background: var(--primary);
 				border-radius: 100%;
 				margin-left: .5rem;
 
@@ -219,7 +219,7 @@ export default {
 			}
 
 			.created {
-				color: $grey-400;
+				color: var(--grey-400);
 			}
 
 			&:last-child {
@@ -227,14 +227,14 @@ export default {
 			}
 
 			a {
-				color: $grey-800;
+				color: var(--grey-800);
 			}
 		}
 
 		.nothing {
 			text-align: center;
 			padding: 1rem 0;
-			color: $grey-500;
+			color: var(--grey-500);
 
 			.explainer {
 				font-size: .75rem;

@@ -33,6 +33,7 @@ import ContentNoAuth from './components/home/contentNoAuth'
 import {setLanguage} from './i18n'
 import AccountDeleteService from '@/services/accountDelete'
 import Ready from '@/components/misc/ready'
+import {useColorScheme} from '@/composables/useColorScheme'
 
 export default defineComponent({
 	name: 'app',
@@ -53,6 +54,9 @@ export default defineComponent({
 	},
 	beforeCreate() {
 		setLanguage()
+	},
+	setup() {
+		useColorScheme()
 	},
 	created() {
 		// Make sure to always load the home route when running with electron

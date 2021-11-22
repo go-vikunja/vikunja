@@ -68,7 +68,7 @@ ul.teams {
       transition: background-color $transition;
 
       &:hover {
-        background: $grey-100;
+        background: var(--grey-100);
       }
     }
   }

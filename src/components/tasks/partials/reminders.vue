@@ -112,7 +112,7 @@ export default {
     align-items: center;
 
     &.overdue :deep(.datepicker a.show) {
-      color: $red;
+      color: var(--danger);
     }
 
     &:last-child {
@@ -120,7 +120,7 @@ export default {
     }
 
     a.remove {
-      color: $red;
+      color: var(--danger);
       padding-left: .5rem;
     }
   }

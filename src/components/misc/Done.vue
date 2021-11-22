@@ -40,8 +40,8 @@ export default {
 
 <style lang="scss" scoped>
 .is-done {
-  background: $green;
-  color: $white;
+  background: var(--success);
+  color: var(--white);
   padding: .5rem;
   font-weight: bold;
   line-height: 1;

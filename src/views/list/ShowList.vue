@@ -166,11 +166,11 @@ export default {
 }
 
 .switch-view {
-  background: $white;
+  background: var(--white);
   display: inline-flex;
   border-radius: $radius;
   font-size: .75rem;
-  box-shadow: $shadow-sm;
+  box-shadow: var(--shadow-sm);
   height: $switch-view-height;
   margin-bottom: 1rem;
   padding: .5rem;
@@ -187,18 +187,18 @@ export default {
     }
 
     &.is-active,
-	&:hover {
-      color: $white;
+    &:hover {
+      color: var(--switch-view-color);
     }
 
     &.is-active {
-      background: $primary;
+      background: var(--primary);
       font-weight: bold;
-      box-shadow: $shadow-xs;
+      box-shadow: var(--shadow-xs);
     }
 
     &:hover {
-      background: $primary;
+      background: var(--primary);
     }
   }
 }

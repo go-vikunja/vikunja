@@ -83,13 +83,13 @@ const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
 		a {
 			display: block;
 			padding: .5rem;
-			color: $dark;
+			color: var(--dark);
 			width: 100%;
 			border-left: 3px solid transparent;
 
 			&:hover, &.router-link-active {
-				background: $white;
-				border-color: $primary;
+				background: var(--white);
+				border-color: var(--primary);
 			}
 		}
 	}

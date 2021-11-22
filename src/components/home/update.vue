@@ -57,7 +57,7 @@ export default {
 	padding: 0 0 0 .5rem;
 	border-radius: $radius;
 	font-size: .9rem;
-	color: $grey-900;
+	color: var(--grey-900);
 	justify-content: space-between;
 
 	@media screen and (max-width: $desktop) {

@@ -134,7 +134,7 @@ export default {
 		height: $PICKER_SIZE;
 		overflow: hidden;
 		border-radius: 100%;
-		border: $BORDER_WIDTH solid $grey-300;
+		border: $BORDER_WIDTH solid var(--grey-300);
 		box-shadow: $shadow;
 
 		& > * {

@@ -167,7 +167,7 @@ ul.assingees {
 
 		a {
 			float: right;
-			color: $red;
+			color: var(--danger);
 			transition: all $transition;
 		}
 	}

@@ -98,7 +98,7 @@ export default {
 	left: 0;
 	bottom: 0;
 	right: 0;
-	background: $grey-100;
+	background: var(--grey-100);
 	z-index: 99;
 }
 
@@ -112,8 +112,8 @@ export default {
 	margin-right: 1rem;
 
 	&.is-loading::after {
-		border-left-color: $grey-400;
-		border-bottom-color: $grey-400;
+		border-left-color: var(--grey-400);
+		border-bottom-color: var(--grey-400);
 	}
 }
 

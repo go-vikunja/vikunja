@@ -7,8 +7,8 @@
 .modal-container .task-view {
   border-radius: $radius;
   padding: 1rem;
-  color: $text;
-  background-color: $light-background !important;
+  color: var(--text);
+  background-color: var(--site-background) !important;
 
   @media screen and (max-width: 800px) {
     border-radius: 0;

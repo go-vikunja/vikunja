@@ -380,23 +380,23 @@ export default {
 
 	&.has-search-results .input-wrapper {
 		border-radius: $radius $radius 0 0;
-		border-color: $primary !important;
-		background: $white !important;
+		border-color: var(--primary) !important;
+		background: var(--white) !important;
 
 		&, &:focus-within {
-			border-bottom-color: $grey-200 !important;
+			border-bottom-color: var(--grey-200) !important;
 		}
 	}
 
 	.input-wrapper {
 		padding: 0;
-		background: $white !important;
-		border-color: $grey-200 !important;
+		background: var(--white) !important;
+		border-color: var(--grey-200) !important;
 		flex-wrap: wrap;
 		height: auto;
 
 		&:hover {
-			border-color: $grey-300 !important;
+			border-color: var(--grey-300) !important;
 		}
 
 		.input {
@@ -422,8 +422,8 @@ export default {
 		}
 
 		&:focus-within {
-			border-color: $primary !important;
-			background: $white !important;
+			border-color: var(--primary) !important;
+			background: var(--white) !important;
 		}
 
 		.loader {
@@ -432,9 +432,9 @@ export default {
 	}
 
 	.search-results {
-		background: $white;
+		background: var(--white);
 		border-radius: 0 0 $radius $radius;
-		border: 1px solid $primary;
+		border: 1px solid var(--primary);
 		border-top: none;
 
 		max-height: 50vh;
@@ -481,16 +481,16 @@ export default {
 			}
 
 			&:focus, &:hover {
-				background: $grey-100;
+				background: var(--grey-100);
 				box-shadow: none !important;
 
 				.hint-text {
-					color: $text;
+					color: var(--text);
 				}
 			}
 
 			&:active {
-				background: $grey-200;
+				background: var(--grey-200);
 			}
 		}
 	}

@@ -90,6 +90,21 @@
 				</div>
 			</label>
 		</div>
+		<div class="field">
+			<label class="is-flex is-align-items-center">
+					<span>
+						{{ $t('user.settings.appearance.title') }}
+					</span>
+				<div class="select ml-2">
+					<select v-model="activeColorSchemeSetting">
+						<!-- TODO: use the Vikunja logo in color scheme as option buttons -->
+						<option v-for="(title, schemeId) in colorSchemeSettings" :key="schemeId" :value="schemeId">
+							{{ title }}
+						</option>
+					</select>
+				</div>
+			</label>
+		</div>
 
 		<x-button
 			:loading="userSettingsService.loading"
@@ -102,6 +117,9 @@
 </template>
 
 <script>
+import {computed, watch} from 'vue'
+import {useI18n} from 'vue-i18n'
+
 import {playSoundWhenDoneKey} from '@/helpers/playPop'
 import {availableLanguages, saveLanguage, getCurrentLanguage} from '@/i18n'
 import {getQuickAddMagicMode, setQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
@@ -110,6 +128,29 @@ import {PrefixMode} from '@/modules/parseTaskText'
 import ListSearch from '@/components/tasks/partials/listSearch'
 import {createRandomID} from '@/helpers/randomId'
 import {playPop} from '@/helpers/playPop'
+import {useColorScheme} from '@/composables/useColorScheme'
+import {success} from '@/message'
+
+function useColorSchemeSetting() {
+	const { t } = useI18n()
+	const colorSchemeSettings = computed(() => ({
+		light: t('user.settings.appearance.colorScheme.light'),
+		auto: t('user.settings.appearance.colorScheme.system'),
+		dark: t('user.settings.appearance.colorScheme.dark'),
+	}))
+
+	const {store} = useColorScheme()
+	watch(store, (schemeId) => {
+		success({message: t('user.settings.appearance.setSuccess', {
+			colorScheme: colorSchemeSettings.value[schemeId],
+		})})
+	})
+
+	return {
+		colorSchemeSettings,
+		activeColorSchemeSetting: store,
+	}
+}
 
 function getPlaySoundWhenDoneSetting() {
 	return localStorage.getItem(playSoundWhenDoneKey) === 'true' || localStorage.getItem(playSoundWhenDoneKey) === null
@@ -141,6 +182,13 @@ export default {
 			return this.$store.getters['lists/getListById'](this.settings.defaultListId)
 		},
 	},
+
+	setup() {
+		return {
+			...useColorSchemeSetting(),
+		}
+	},
+
 	mounted() {
 		this.setTitle(`${this.$t('user.settings.general.title')} - ${this.$t('user.settings.title')}`)
 	},

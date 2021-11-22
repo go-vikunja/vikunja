@@ -117,13 +117,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-$task-background: $white;
+$task-background: var(--white);
 
 .task {
 	-webkit-touch-callout: none; // iOS Safari
 	user-select: none;
 	cursor: pointer;
-	box-shadow: $shadow-xs;
+	box-shadow: var(--shadow-xs);
 	display: block;
 	border: 3px solid transparent;
 
@@ -163,7 +163,7 @@ $task-background: $white;
 		}
 
 		&.overdue {
-			color: $red;
+			color: var(--danger);
 		}
 	}
 
@@ -219,7 +219,7 @@ $task-background: $white;
 	.footer .icon,
 	.due-date,
 	.priority-label {
-		background: $grey-100;
+		background: var(--grey-100);
 		border-radius: $radius;
 		padding: 0 .5rem;
 	}
@@ -229,7 +229,7 @@ $task-background: $white;
 	}
 
 	.task-id {
-		color: $grey-500;
+		color: var(--grey-500);
 		font-size: .8rem;
 		margin-bottom: .25rem;
 		display: flex;
@@ -244,21 +244,21 @@ $task-background: $white;
 	}
 
 	&.has-light-text {
-		color: $white;
+		color: var(--white);
 
 		.task-id {
-			color: $grey-200;
+			color: var(--grey-200);
 		}
 
 		.footer .icon,
 		.due-date,
 		.priority-label {
-			background: $grey-800;
+			background: var(--grey-800);
 		}
 
 		.footer {
 			.icon svg {
-				fill: $white;
+				fill: var(--white);
 			}
 		}
 	}

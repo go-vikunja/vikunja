@@ -327,8 +327,8 @@ export default {
 
 		.ghost {
 			border-radius: $radius;
-			background: $grey-100;
-			border: 2px dashed $grey-300;
+			background: var(--grey-100);
+			border: 2px dashed var(--grey-300);
 
 			* {
 				opacity: 0;

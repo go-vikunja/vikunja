@@ -39,7 +39,7 @@ export default {
 
 <style scoped lang="scss">
 .checklist-summary {
-	color: $grey-500;
+	color: var(--grey-500);
 	display: inline-flex;
 	align-items: center;
 
@@ -49,10 +49,10 @@ export default {
 		margin-right: .25rem;
 
 		circle {
-			stroke: $grey-400;
+			stroke: var(--grey-400);
 
 			&:last-child {
-				stroke: $primary;
+				stroke: var(--primary);
 			}
 		}
 	}

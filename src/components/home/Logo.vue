@@ -7,5 +7,11 @@ const Logo = computed(() => new Date().getMonth() === 5 ? LogoFullPride : LogoFu
 </script>
 
 <template>
-	<Logo alt="Vikunja" />
+	<Logo alt="Vikunja" class="logo" />
 </template>
+
+<style lang="scss" scoped>
+.logo {
+	color: var(--logo-text-color);
+}
+</style>

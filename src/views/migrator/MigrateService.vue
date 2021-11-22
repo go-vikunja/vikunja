@@ -200,7 +200,7 @@ export default {
 
 	span {
 		transition: all 500ms ease;
-		background: $grey-500;
+		background: var(--grey-500);
 		height: 10px;
 		width: 10px;
 		display: inline-block;
@@ -245,11 +245,11 @@ export default {
 @keyframes wave {
 	0%, 40%, 100% {
 		transform: translate(0, 0);
-		background-color: $primary;
+		background-color: var(--primary);
 	}
 	10% {
 		transform: translate(0, -15px);
-		background-color: $primary-dark;
+		background-color: var(--primary-dark);
 	}
 }
 </style>

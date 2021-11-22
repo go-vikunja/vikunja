@@ -338,13 +338,14 @@ $editor-border-color: #ddd;
 .CodeMirror {
 	padding: .5rem;
 	border: 1px solid $editor-border-color;
+	background: var(--white);
 
 	&-lines pre {
 		margin: 0 !important;
 	}
 
 	&-placeholder {
-		color: $grey-400 !important;
+		color: var(--grey-400) !important;
 		font-style: italic;
 	}
 }
@@ -383,7 +384,7 @@ $editor-border-color: #ddd;
 
 pre.CodeMirror-line {
 	margin-bottom: 0 !important;
-	color: $grey-700 !important;
+	color: var(--grey-700) !important;
 }
 
 .cm-header {
@@ -409,10 +410,10 @@ ul.actions {
 	}
 
 	&, a {
-		color: $grey-500;
+		color: var(--grey-500);
 
 		&.done-edit {
-			color: $primary;
+			color: var(--primary);
 		}
 	}
 

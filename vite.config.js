@@ -9,8 +9,8 @@ import svgLoader from 'vite-svg-loader'
 const pathSrc = path.resolve(__dirname, './src')
 
 // the @use rules have to be the first in the compiled stylesheets
-const SCSS_IMPORT_PREFIX = `@use "sass:math";
-@import "${pathSrc}/styles/variables";`
+const PREFIXED_SCSS_STYLES = `@use "sass:math";
+@import "${pathSrc}/styles/common-imports";`
 
 const isModernBuild = Boolean(process.env.BUILD_MODERN_ONLY)
 const legacy = isModernBuild
@@ -29,7 +29,10 @@ if (isModernBuild) {
 export default defineConfig({
 	css: {
 		preprocessorOptions: {
-			scss: { additionalData: SCSS_IMPORT_PREFIX },
+			scss: {
+				additionalData: PREFIXED_SCSS_STYLES,
+				charset: false, // fixes  "@charset" must be the first rule in the file" warnings
+			},
 		},
 	},
 	plugins: [

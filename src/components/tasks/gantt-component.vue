@@ -445,12 +445,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-$gantt-border: 1px solid $grey-200;
-$gantt-vertical-border-color: $grey-100;
+$gantt-border: 1px solid var(--grey-200);
+$gantt-vertical-border-color: var(--grey-100);
 
 .gantt-chart {
 	overflow-x: auto;
-	border-top: 1px solid $grey-200;
+	border-top: 1px solid var(--grey-200);
 
 	.dates {
 		display: flex;
@@ -477,8 +477,8 @@ $gantt-vertical-border-color: $grey-100;
 						font-weight: normal;
 
 						&.today {
-							background: $primary;
-							color: $white;
+							background: var(--primary);
+							color: var(--white);
 							border-radius: 5px 5px 0 0;
 							font-weight: bold;
 						}
@@ -507,7 +507,7 @@ $gantt-vertical-border-color: $grey-100;
 
 			.task {
 				display: inline-block;
-				border: 2px solid $primary;
+				border: 2px solid var(--primary);
 				font-size: 0.85rem;
 				margin: 0.5rem;
 				border-radius: 6px;
@@ -520,30 +520,30 @@ $gantt-vertical-border-color: $grey-100;
 				user-select: none; // Non-prefixed version
 
 				&.is-current-edit {
-					border-color: $orange !important;
+					border-color: var(--warning) !important;
 				}
 
 				&.has-light-text {
-					color: $light;
+					color: var(--light);
 
 					&.done span:after {
-						border-top: 1px solid $light;
+						border-top: 1px solid var(--light);
 					}
 
 					.edit-toggle {
-						color: $light;
+						color: var(--light);
 					}
 				}
 
 				&.has-dark-text {
-					color: $text;
+					color: var(--text);
 
 					&.done span:after {
-						border-top: 1px solid $dark;
+						border-top: 1px solid var(--dark);
 					}
 
 					.edit-toggle {
-						color: $text;
+						color: var(--text);
 					}
 				}
 
@@ -596,8 +596,8 @@ $gantt-vertical-border-color: $grey-100;
 				}
 
 				&.nodate {
-					border: 2px dashed $grey-300;
-					background: $grey-100;
+					border: 2px dashed var(--grey-300);
+					background: var(--grey-100);
 				}
 
 				&:active {

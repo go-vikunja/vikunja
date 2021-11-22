@@ -2,6 +2,7 @@
 	<modal
 		@close="close()"
 		variant="scrolling"
+		class="task-detail-view-modal"
 	>
 				<a @click="close()" class="close">
 					<icon icon="times"/>
@@ -53,11 +54,18 @@ export default {
 	position: fixed;
 	top: 5px;
 	right: 26px;
-	color: $white;
+	color: var(--white);
 	font-size: 2rem;
 
 	@media screen and (max-width: $desktop) {
-		color: $dark;
+		color: var(--dark);
 	}
+}
+</style>
+
+<style lang="scss">
+// Close icon SVG uses currentColor, change the color to keep it visible
+.dark .task-detail-view-modal .close {
+	color: var(--grey-900);
 }
 </style>

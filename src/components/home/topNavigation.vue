@@ -5,7 +5,7 @@
 		class="navbar main-theme is-fixed-top"
 		role="navigation"
 	>
-		<router-link :to="{name: 'home'}" class="navbar-item logo">
+		<router-link :to="{name: 'home'}" class="logo-link">
 			<Logo width="164" height="48"/>
 		</router-link>
 		<MenuButton class="menu-button"/>
@@ -137,13 +137,18 @@ export default {
 
 <style lang="scss" scoped>
 $vikunja-nav-logo-full-width: 164px;
+$user-dropdown-width-mobile: 5rem;
+
+$hamburger-menu-icon-spacing: 1rem;
+$hamburger-menu-icon-width: 28px;
 
 .navbar {
 	z-index: 4 !important;
 }
 
-.logo {
+.logo-link {
 	display: none;
+	padding: 0.5rem 0.75rem;
 
 	@media screen and (min-width: $tablet) {
 		align-self: stretch;
@@ -164,7 +169,7 @@ $vikunja-nav-logo-full-width: 164px;
 }
 
 .navbar.main-theme {
-	background: $light-background;
+	background: var(--site-background);
 	z-index: 5 !important;
 	justify-content: space-between;
 	align-items: center;
@@ -219,7 +224,7 @@ $vikunja-nav-logo-full-width: 164px;
 	:deep() {
 		.trigger-button {
 			cursor: pointer;
-			color: $grey-400;
+			color: var(--grey-400);
 			padding: .5rem;
 			font-size: 1.25rem;
 			position: relative;
@@ -278,7 +283,7 @@ $vikunja-nav-logo-full-width: 164px;
 	}
 
 	:deep(.dropdown-trigger) {
-		color: $grey-400;
+		color: var(--grey-400);
 		margin-left: 1rem;
 		height: 1rem;
 		width: 1rem;
