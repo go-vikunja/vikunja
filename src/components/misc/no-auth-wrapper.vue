@@ -39,5 +39,6 @@ const motd = computed(() => store.state.config.motd)
 
 .logo {
 	color: var(--logo-text-color);
+	max-width: 100%;
 }
 </style>
