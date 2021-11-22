@@ -23,8 +23,8 @@ export default {
 			})
 		},
 		removeListById(state, list) {
-			delete state[list.id]
 			remove(list)
+			delete state[list.id]
 		},
 	},
 	getters: {

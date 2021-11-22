@@ -55,8 +55,8 @@ export default {
 		removeNamespaceById(state, namespaceId) {
 			for (const n in state.namespaces) {
 				if (state.namespaces[n].id === namespaceId) {
-					state.namespaces.splice(n, 1)
 					remove(state.namespaces[n])
+					state.namespaces.splice(n, 1)
 					return
 				}
 			}

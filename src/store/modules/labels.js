@@ -37,8 +37,8 @@ export default {
 			update(label)
 		},
 		removeLabelById(state, label) {
-			delete state.labels[label.id]
 			remove(label)
+			delete state.labels[label.id]
 		},
 		setLoaded(state, loaded) {
 			state.loaded = loaded
