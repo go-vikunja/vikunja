@@ -72,7 +72,7 @@
     "express": "4.17.1",
     "faker": "5.5.3",
     "jest": "27.3.1",
-    "netlify-cli": "7.0.2",
+    "netlify-cli": "7.0.4",
     "postcss": "8.3.11",
     "postcss-preset-env": "7.0.1",
     "rollup": "2.60.1",
