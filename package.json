@@ -60,7 +60,7 @@
     "@typescript-eslint/eslint-plugin": "5.4.0",
     "@typescript-eslint/parser": "5.4.0",
     "@vitejs/plugin-legacy": "1.6.2",
-    "@vitejs/plugin-vue": "1.9.4",
+    "@vitejs/plugin-vue": "1.10.0",
     "@vue/eslint-config-typescript": "9.1.0",
     "axios": "0.24.0",
     "browserslist": "4.18.1",
