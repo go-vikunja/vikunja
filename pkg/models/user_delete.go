@@ -87,17 +87,18 @@ func deleteUsers() {
 	}
 }
 
-// DeleteUser completely removes a user and all their associated lists, namespaces and tasks.
-// This action is irrevocable.
-// Public to allow deletion from the CLI.
-func DeleteUser(s *xorm.Session, u *user.User) (err error) {
-	namespacesToDelete := []*Namespace{}
-	// Get all namespaces and lists this u has access to
+func getNamespacesToDelete(s *xorm.Session, u *user.User) (namespacesToDelete []*Namespace, err error) {
+	namespacesToDelete = []*Namespace{}
 	nm := &Namespace{IsArchived: true}
 	res, _, _, err := nm.ReadAll(s, u, "", 1, -1)
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	if res == nil {
+		return nil, nil
+	}
+
 	namespaces := res.([]*NamespaceWithLists)
 	for _, n := range namespaces {
 		if n.ID < 0 {
@@ -106,14 +107,14 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 
 		hadUsers, err := ensureNamespaceAdminUser(s, &n.Namespace)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if hadUsers {
 			continue
 		}
 		hadTeams, err := ensureNamespaceAdminTeam(s, &n.Namespace)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if hadTeams {
 			continue
@@ -122,13 +123,21 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		namespacesToDelete = append(namespacesToDelete, &n.Namespace)
 	}
 
-	// Get all lists to delete
-	listsToDelete := []*List{}
+	return
+}
+
+func getListsToDelete(s *xorm.Session, u *user.User) (listsToDelete []*List, err error) {
+	listsToDelete = []*List{}
 	lm := &List{IsArchived: true}
-	res, _, _, err = lm.ReadAll(s, u, "", 0, -1)
+	res, _, _, err := lm.ReadAll(s, u, "", 0, -1)
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	if res == nil {
+		return nil, nil
+	}
+
 	lists := res.([]*List)
 	for _, l := range lists {
 		if l.ID < 0 {
@@ -137,20 +146,38 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 
 		hadUsers, err := ensureListAdminUser(s, l)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if hadUsers {
 			continue
 		}
 		hadTeams, err := ensureListAdminTeam(s, l)
 		if err != nil {
-			return err
+			return nil, err
 		}
+
 		if hadTeams {
 			continue
 		}
 
 		listsToDelete = append(listsToDelete, l)
+	}
+
+	return
+}
+
+// DeleteUser completely removes a user and all their associated lists, namespaces and tasks.
+// This action is irrevocable.
+// Public to allow deletion from the CLI.
+func DeleteUser(s *xorm.Session, u *user.User) (err error) {
+	namespacesToDelete, err := getNamespacesToDelete(s, u)
+	if err != nil {
+		return err
+	}
+
+	listsToDelete, err := getListsToDelete(s, u)
+	if err != nil {
+		return err
 	}
 
 	// Delete everything not shared with anybody else
