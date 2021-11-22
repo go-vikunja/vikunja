@@ -31,12 +31,12 @@
 				<color-picker v-model="namespace.hexColor" />
 			</div>
 		</div>
-		<p
-			class="is-small has-text-centered"
-			v-tooltip.bottom="$t('namespace.create.explanation')"
-		>
-			{{ $t('namespace.create.tooltip') }}
-		</p>
+
+		<div class="notification is-info mt-4">
+			<h4 class="title">{{ $t('namespace.create.tooltip') }}</h4>
+
+			{{ $t('namespace.create.explanation') }}
+		</div>
 	</create-edit>
 </template>
 
