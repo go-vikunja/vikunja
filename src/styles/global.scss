@@ -2,16 +2,85 @@
 
 @import "transitions";
 
-// This imports are the same as in "bulma/bulma.sass"
-// with the expeption of the bulma utilities.
-// They are imported globally in variables.scss
-@import "bulma-css-variables/sass/base/_all";
-@import "bulma-css-variables/sass/elements/_all";
-@import "bulma-css-variables/sass/form/_all";
-@import "bulma-css-variables/sass/components/_all";
-@import "bulma-css-variables/sass/grid/_all";
-@import "bulma-css-variables/sass/helpers/_all";
-@import "bulma-css-variables/sass/layout/_all";
+// ###################
+// START BULMA IMPORTS
+// ###################
+//
+// The following imports are the same as in "bulma/bulma.sass"
+// with the expeption of the bulma utilities – They are
+// imported globally in common-imports.scss
+
+// imports from "bulma-css-variables/sass/base/_all";
+@import "bulma-css-variables/sass/base/minireset";
+@import "bulma-css-variables/sass/base/generic";
+@import "bulma-css-variables/sass/base/animations";
+
+
+// imports from "bulma-css-variables/sass/elements/_all";
+@import "bulma-css-variables/sass/elements/box";
+@import "bulma-css-variables/sass/elements/button";
+@import "bulma-css-variables/sass/elements/container";
+@import "bulma-css-variables/sass/elements/content";
+@import "bulma-css-variables/sass/elements/icon";
+@import "bulma-css-variables/sass/elements/image";
+@import "bulma-css-variables/sass/elements/notification";
+@import "bulma-css-variables/sass/elements/progress";
+@import "bulma-css-variables/sass/elements/table";
+@import "bulma-css-variables/sass/elements/tag";
+@import "bulma-css-variables/sass/elements/title";
+
+@import "bulma-css-variables/sass/elements/other";
+
+
+// imports from "bulma-css-variables/sass/form/_all";
+@import "bulma-css-variables/sass/form/shared";
+@import "bulma-css-variables/sass/form/input-textarea";
+@import "bulma-css-variables/sass/form/checkbox-radio";
+@import "bulma-css-variables/sass/form/select";
+@import "bulma-css-variables/sass/form/file";
+@import "bulma-css-variables/sass/form/tools";
+
+
+// imports from "bulma-css-variables/sass/components/_all";
+// @import "bulma-css-variables/sass/components/breadcrumb"; // not used
+@import "bulma-css-variables/sass/components/card";
+@import "bulma-css-variables/sass/components/dropdown";
+// @import "bulma-css-variables/sass/components/level"; // not used
+@import "bulma-css-variables/sass/components/media"; 
+@import "bulma-css-variables/sass/components/menu";
+@import "bulma-css-variables/sass/components/message";
+@import "bulma-css-variables/sass/components/modal";
+@import "bulma-css-variables/sass/components/navbar";
+@import "bulma-css-variables/sass/components/pagination";
+// @import "bulma-css-variables/sass/components/panel"; // not used
+// @import "bulma-css-variables/sass/components/tabs"; // not used
+
+
+// imports from "bulma-css-variables/sass/grid/_all";
+@import "bulma-css-variables/sass/grid/columns";
+// @import "bulma-css-variables/sass/grid/tiles"; // not used
+
+
+// imports from "bulma-css-variables/sass/helpers/_all";
+@import "bulma-css-variables/sass/helpers/color";
+@import "bulma-css-variables/sass/helpers/flexbox";
+@import "bulma-css-variables/sass/helpers/float";
+// @import "bulma-css-variables/sass/helpers/other"; // not used
+// @import "bulma-css-variables/sass/helpers/overflow";
+// @import "bulma-css-variables/sass/helpers/position";
+@import "bulma-css-variables/sass/helpers/spacing";
+@import "bulma-css-variables/sass/helpers/typography";
+@import "bulma-css-variables/sass/helpers/visibility";
+
+
+// imports from "bulma-css-variables/sass/layout/_all";
+// @import "bulma-css-variables/sass/layout/hero"; // not used
+// @import "bulma-css-variables/sass/layout/section"; // not used
+@import "bulma-css-variables/sass/layout/footer";
+
+// #################
+// END BULMA IMPORTS
+// #################
 
 @import "theme";
 @import "components";
