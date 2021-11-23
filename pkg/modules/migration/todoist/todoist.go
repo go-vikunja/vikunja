@@ -241,6 +241,15 @@ func (m *Migration) AuthURL() string {
 }
 
 func parseDate(dateString string) (date time.Time, err error) {
+	if len(dateString) == 10 {
+		// We're probably dealing with a date in the form of 2021-11-23 without a time
+		date, err = time.Parse("2006-01-02", dateString)
+		if err == nil {
+			// round the day to eod
+			return date.Add(time.Hour*23 + time.Minute*59), nil
+		}
+	}
+
 	date, err = time.Parse("2006-01-02T15:04:05Z", dateString)
 	if err != nil {
 		date, err = time.Parse("2006-01-02T15:04:05", dateString)

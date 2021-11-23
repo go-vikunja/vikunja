@@ -39,7 +39,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 	time3, err := time.Parse(time.RFC3339Nano, "2014-10-21T08:25:05Z")
 	assert.NoError(t, err)
 	time3 = time3.In(config.GetTimeZone())
-	dueTime, err := time.Parse(time.RFC3339Nano, "2020-05-31T00:00:00Z")
+	dueTime, err := time.Parse(time.RFC3339Nano, "2020-05-31T23:59:00Z")
 	assert.NoError(t, err)
 	dueTime = dueTime.In(config.GetTimeZone())
 	dueTimeWithTime, err := time.Parse(time.RFC3339Nano, "2021-01-31T19:00:00Z")
@@ -401,7 +401,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 								Done:        false,
 								Created:     time1,
 								Reminders: []time.Time{
-									time.Date(2020, time.June, 15, 0, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
+									time.Date(2020, time.June, 15, 23, 59, 0, 0, time.UTC).In(config.GetTimeZone()),
 									time.Date(2020, time.June, 16, 7, 0, 0, 0, time.UTC).In(config.GetTimeZone()),
 								},
 							},
