@@ -556,7 +556,7 @@
         "text2": "Tímto také odstraníte všechny přílohy, připomenutí a vztahy spojené s tímto úkolem a nelze je vrátit zpět!"
       },
       "actions": {
-        "assign": "Přiřadit tuto úlohu uživateli",
+        "assign": "Assign to a user",
         "label": "Přidat štítky",
         "priority": "Nastavit prioritu",
         "dueDate": "Nastavit termín",
@@ -775,7 +775,7 @@
     "task": {
       "title": "Stránka úkolů",
       "done": "Označit úkol jako hotový",
-      "assign": "Přiřadit tento úkol uživateli",
+      "assign": "Assign to a user",
       "labels": "Přidat štítky k tomuto úkolu",
       "dueDate": "Změnit termín tohoto úkolu",
       "attachment": "Přidat přílohu k tomuto úkolu",

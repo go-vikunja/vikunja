@@ -775,7 +775,7 @@
     "task": {
       "title": "Task Page",
       "done": "Mark a task as done",
-      "assign": "Assign this task to a user",
+      "assign": "Assign to a user",
       "labels": "Add labels to this task",
       "dueDate": "Change the due date of this task",
       "attachment": "Add an attachment to this task",

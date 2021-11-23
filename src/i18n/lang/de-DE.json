@@ -556,7 +556,7 @@
         "text2": "Dies wird auch alle Anhänge, Erinnerungen und Verknüpfungen, die zu dieser Aufgabe gehören löschen und kann nicht rückgängig gemacht werden!"
       },
       "actions": {
-        "assign": "Diese Aufgabe jemandem zuweisen",
+        "assign": "Assign to a user",
         "label": "Label hinzufügen",
         "priority": "Priorität setzen",
         "dueDate": "Fälligkeitsdatum setzen",
@@ -775,7 +775,7 @@
     "task": {
       "title": "Aufgabenseite",
       "done": "Eine Aufgabe als erledigt markieren",
-      "assign": "Diese Aufgabe jemandem zuweisen",
+      "assign": "Assign to a user",
       "labels": "Dieser Aufgabe ein Label hinzufügen",
       "dueDate": "Ändere das Fälligkeitsdatum dieser Aufgabe",
       "attachment": "Einen Anhang dieser Aufgabe hinzufügen",

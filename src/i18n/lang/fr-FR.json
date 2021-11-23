@@ -556,7 +556,7 @@
         "text2": "Ceci supprimera également toutes les pièces jointes, les rappels et les relations associés à cette tâche et ne pourra pas être annulé !"
       },
       "actions": {
-        "assign": "Assigner cette tâche à un·e utilisateur·rice",
+        "assign": "Assign to a user",
         "label": "Ajouter des étiquettes",
         "priority": "Définir la priorité",
         "dueDate": "Définir l’échéance",
@@ -775,7 +775,7 @@
     "task": {
       "title": "Page de tâche",
       "done": "Marquer une tâche comme terminée",
-      "assign": "Assigner cette tâche à un·e utilisateur·rice",
+      "assign": "Assign to a user",
       "labels": "Ajouter des étiquettes à cette tâche",
       "dueDate": "Modifier la date d’échéance de cette tâche",
       "attachment": "Ajouter une pièce jointe à cette tâche",
