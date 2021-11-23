@@ -55,20 +55,21 @@ app.use(Notifications)
 
 // directives
 import focus from '@/directives/focus'
-import tooltip from '@/directives/tooltip'
+import { VTooltip } from 'v-tooltip'
+import 'v-tooltip/dist/v-tooltip.css'
 import shortcut from '@/directives/shortcut'
 import cypress from '@/directives/cypress'
 
 app.directive('focus', focus)
-app.directive('tooltip', tooltip)
+app.directive('tooltip', VTooltip)
 app.directive('shortcut', shortcut)
 app.directive('cy', cypress)
 
 // global components
 import FontAwesomeIcon from './icons'
-import Button from './components/input/button.vue'
-import Modal from './components/modal/modal.vue'
-import Card from './components/misc/card.vue'
+import Button from '@/components/input/button.vue'
+import Modal from '@/components/modal/modal.vue'
+import Card from '@/components/misc/card.vue'
 
 app.component('icon', FontAwesomeIcon)
 app.component('x-button', Button)
