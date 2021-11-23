@@ -76,7 +76,9 @@
   --card-border-color: var(--grey-200);
   --logo-text-color: hsl(180, 1%, 15%);
 
-
+  --link: var(--primary);
+  --link-hover: hsla(var(--primary-h), var(--primary-s), var(--primary-l), .75);
+  --border: var(--grey-200);
 
   &.dark {
     // Light mode colours reversed for dark mode

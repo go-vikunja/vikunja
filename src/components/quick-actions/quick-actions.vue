@@ -507,6 +507,8 @@ export default {
 		.active-cmd {
 			font-size: 1.25rem;
 			margin-left: .5rem;
+			background-color: var(--grey-100);
+			color: var(--grey-800);
 		}
 	}
 
