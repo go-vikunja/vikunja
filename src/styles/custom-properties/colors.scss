@@ -79,6 +79,8 @@
   --link: var(--primary);
   --link-hover: hsla(var(--primary-h), var(--primary-s), var(--primary-l), .75);
   --border: var(--grey-200);
+  --input-disabled-background-color: var(--grey-100);
+  --input-disabled-border-color: var(--grey-300);
 
   &.dark {
     // Light mode colours reversed for dark mode
