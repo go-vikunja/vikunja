@@ -4651,7 +4651,7 @@ builtins@^1.0.3:
   resolved "https://registry.yarnpkg.com/builtins/-/builtins-1.0.3.tgz#cb94faeb61c8696451db36534e1422f94f0aee88"
   integrity sha1-y5T662HIaWRR2zZTThQi+U8K7og=
 
-bulma-css-variables@^0.9.33:
+bulma-css-variables@0.9.33:
   version "0.9.33"
   resolved "https://registry.yarnpkg.com/bulma-css-variables/-/bulma-css-variables-0.9.33.tgz#b249c3410e9edcfa7a5ce8ca96049b6939fe92de"
   integrity sha512-D85dXLyLOBBDCuSSOeASc0kN2IknJqo5hzkZ22hxDHobxko/qay0nD+zNl2CJtF8v/7iwvQXqzVSDRnFVRSg9A==
