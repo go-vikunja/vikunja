@@ -276,7 +276,7 @@ export default {
 
 			this.commentEdit.taskId = this.taskId
 			try {
-				const comment = this.taskCommentService.update(this.commentEdit)
+				const comment = await this.taskCommentService.update(this.commentEdit)
 				for (const c in this.comments) {
 					if (this.comments[c].id === this.commentEdit.id) {
 						this.comments[c] = comment
