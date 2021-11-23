@@ -9,6 +9,13 @@ All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
 
+## [0.18.2] - 2021-11-23
+
+### Fixed
+
+* fix(docker): properly replace api url
+* fix: edit saved filter title
+
 ## [0.18.1] - 2021-09-08
 
 ### Added
