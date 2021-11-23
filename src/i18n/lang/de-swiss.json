@@ -112,6 +112,15 @@
         "disabled": "Deaktiviert",
         "todoist": "Todoist",
         "vikunja": "Vikunja"
+      },
+      "appearance": {
+        "title": "Color Scheme",
+        "setSuccess": "Saved change of color scheme to {colorScheme}",
+        "colorScheme": {
+          "light": "Light",
+          "system": "System",
+          "dark": "Dark"
+        }
       }
     },
     "deletion": {
@@ -547,7 +556,7 @@
         "text2": "Das wird au alli Ahhäng, Errinnerige und Beziehige wo mit dere Uufgab verchnüpft sind chüble und cha nid rückgängig gmacht werde!"
       },
       "actions": {
-        "assign": "Die Uufgab emne Benutzer zuewiise",
+        "assign": "Assign to a user",
         "label": "Label hinzuefüege",
         "priority": "Priorität setzä",
         "dueDate": "Fälligkeitsdatum setze",
@@ -766,7 +775,7 @@
     "task": {
       "title": "Uufgabesiite",
       "done": "Uufgab als erledigt markiere",
-      "assign": "Die Uufgab emne Benutzer zuewiise",
+      "assign": "Assign to a user",
       "labels": "Labels ennere Uufgab hinzuefüege",
       "dueDate": "S'Fälligkeitsdatum für die Uufgab ändere",
       "attachment": "En Aahang dere Uufgab hinzuefüege",

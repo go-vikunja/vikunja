@@ -112,6 +112,15 @@
         "disabled": "Disabled",
         "todoist": "Todoist",
         "vikunja": "Vikunja"
+      },
+      "appearance": {
+        "title": "Color Scheme",
+        "setSuccess": "Saved change of color scheme to {colorScheme}",
+        "colorScheme": {
+          "light": "Light",
+          "system": "System",
+          "dark": "Dark"
+        }
       }
     },
     "deletion": {
@@ -547,7 +556,7 @@
         "text2": "Будут удалены все вложения, напоминания и отношения, связанные с этой задачей, и отменить это будет нельзя!"
       },
       "actions": {
-        "assign": "Назначить пользователю",
+        "assign": "Assign to a user",
         "label": "Добавить метки",
         "priority": "Установить приоритет",
         "dueDate": "Установить срок",
@@ -766,7 +775,7 @@
     "task": {
       "title": "Страница задачи",
       "done": "Пометить задачу завершённой",
-      "assign": "Назначить задачу пользователю",
+      "assign": "Assign to a user",
       "labels": "Добавить метки этой задаче",
       "dueDate": "Изменить срок этой задачи",
       "attachment": "Добавить вложение к задаче",

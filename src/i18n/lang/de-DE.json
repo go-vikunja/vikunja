@@ -112,6 +112,15 @@
         "disabled": "Deaktiviert",
         "todoist": "Todoist",
         "vikunja": "Vikunja"
+      },
+      "appearance": {
+        "title": "Color Scheme",
+        "setSuccess": "Saved change of color scheme to {colorScheme}",
+        "colorScheme": {
+          "light": "Light",
+          "system": "System",
+          "dark": "Dark"
+        }
       }
     },
     "deletion": {

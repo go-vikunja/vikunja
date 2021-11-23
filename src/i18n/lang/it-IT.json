@@ -112,6 +112,15 @@
         "disabled": "Disabilitato",
         "todoist": "Todoist",
         "vikunja": "Vikunja"
+      },
+      "appearance": {
+        "title": "Color Scheme",
+        "setSuccess": "Saved change of color scheme to {colorScheme}",
+        "colorScheme": {
+          "light": "Light",
+          "system": "System",
+          "dark": "Dark"
+        }
       }
     },
     "deletion": {
@@ -547,7 +556,7 @@
         "text2": "Questo rimuoverà anche tutti gli allegati, i promemoria e le relazioni associati a questa attività e non può essere ripristinato!"
       },
       "actions": {
-        "assign": "Assign this task to a user",
+        "assign": "Assign to a user",
         "label": "Aggiungi etichette",
         "priority": "Imposta Priorità",
         "dueDate": "Imposta data di scadenza",

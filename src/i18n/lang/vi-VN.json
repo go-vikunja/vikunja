@@ -112,6 +112,15 @@
         "disabled": "Vô hiệu hóa",
         "todoist": "Todoist",
         "vikunja": "Vikunja"
+      },
+      "appearance": {
+        "title": "Color Scheme",
+        "setSuccess": "Saved change of color scheme to {colorScheme}",
+        "colorScheme": {
+          "light": "Light",
+          "system": "System",
+          "dark": "Dark"
+        }
       }
     },
     "deletion": {
@@ -547,7 +556,7 @@
         "text2": "Thao tác này cũng sẽ xóa tất cả tệp đính kèm, lời nhắc và liên kết đến công việc này. Nó không thể hoàn tác!"
       },
       "actions": {
-        "assign": "Chỉ định người đảm nhiệm",
+        "assign": "Assign to a user",
         "label": "Thêm nhãn",
         "priority": "Mức độ ưu tiên",
         "dueDate": "Đặt ngày đến hạn",
@@ -766,7 +775,7 @@
     "task": {
       "title": "Trang công việc",
       "done": "Đánh dấu hoàn thành",
-      "assign": "Chỉnh định việc này cho một người",
+      "assign": "Assign to a user",
       "labels": "Thêm nhãn cho công việc này",
       "dueDate": "Thay đổi ngày hết hạn của công việc này",
       "attachment": "Thêm tệp đính kèm cho công việc này",
