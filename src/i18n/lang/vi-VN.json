@@ -114,12 +114,12 @@
         "vikunja": "Vikunja"
       },
       "appearance": {
-        "title": "Color Scheme",
-        "setSuccess": "Saved change of color scheme to {colorScheme}",
+        "title": "Phối màu",
+        "setSuccess": "Đã lưu phối màu vào {colorScheme}",
         "colorScheme": {
-          "light": "Light",
-          "system": "System",
-          "dark": "Dark"
+          "light": "Sáng",
+          "system": "Hệ thống",
+          "dark": "Tối"
         }
       }
     },
@@ -556,7 +556,7 @@
         "text2": "Thao tác này cũng sẽ xóa tất cả tệp đính kèm, lời nhắc và liên kết đến công việc này. Nó không thể hoàn tác!"
       },
       "actions": {
-        "assign": "Assign to a user",
+        "assign": "Chỉ định một người",
         "label": "Thêm nhãn",
         "priority": "Mức độ ưu tiên",
         "dueDate": "Đặt ngày đến hạn",
@@ -775,7 +775,7 @@
     "task": {
       "title": "Trang công việc",
       "done": "Đánh dấu hoàn thành",
-      "assign": "Assign to a user",
+      "assign": "Chỉ định một người",
       "labels": "Thêm nhãn cho công việc này",
       "dueDate": "Thay đổi ngày hết hạn của công việc này",
       "attachment": "Thêm tệp đính kèm cho công việc này",
