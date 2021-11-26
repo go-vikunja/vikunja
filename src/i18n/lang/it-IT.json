@@ -901,7 +901,7 @@
     "5010": "This team does not have access to that namespace.",
     "5011": "This user has already access to that namespace.",
     "5012": "The namespace is archived and can therefore only be accessed read only.",
-    "6001": "The team name cannot be emtpy.",
+    "6001": "The team name cannot be empty.",
     "6002": "The team does not exist.",
     "6004": "The team already has access to that namespace or list.",
     "6005": "The user is already a member of that team.",

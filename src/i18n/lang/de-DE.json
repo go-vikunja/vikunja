@@ -114,12 +114,12 @@
         "vikunja": "Vikunja"
       },
       "appearance": {
-        "title": "Color Scheme",
-        "setSuccess": "Saved change of color scheme to {colorScheme}",
+        "title": "Farbschema",
+        "setSuccess": "Änderung des Farbschemas auf {colorScheme} gespeichert",
         "colorScheme": {
-          "light": "Light",
+          "light": "Hell",
           "system": "System",
-          "dark": "Dark"
+          "dark": "Dunkel"
         }
       }
     },
@@ -556,7 +556,7 @@
         "text2": "Dies wird auch alle Anhänge, Erinnerungen und Verknüpfungen, die zu dieser Aufgabe gehören löschen und kann nicht rückgängig gemacht werden!"
       },
       "actions": {
-        "assign": "Assign to a user",
+        "assign": "Benutzer:in zuweisen",
         "label": "Label hinzufügen",
         "priority": "Priorität setzen",
         "dueDate": "Fälligkeitsdatum setzen",
@@ -775,7 +775,7 @@
     "task": {
       "title": "Aufgabenseite",
       "done": "Eine Aufgabe als erledigt markieren",
-      "assign": "Assign to a user",
+      "assign": "Benutzer:in zuweisen",
       "labels": "Dieser Aufgabe ein Label hinzufügen",
       "dueDate": "Ändere das Fälligkeitsdatum dieser Aufgabe",
       "attachment": "Einen Anhang dieser Aufgabe hinzufügen",

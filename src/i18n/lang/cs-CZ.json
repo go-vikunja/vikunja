@@ -901,7 +901,7 @@
     "5010": "Tento tým nemá k tomuto prostoru přístup.",
     "5011": "Tento uživatel již má přístup k tomuto prostoru.",
     "5012": "Prostor je archivován, a proto je přístupný pouze pro čtení.",
-    "6001": "Název týmu nemůže být prázdný.",
+    "6001": "The team name cannot be empty.",
     "6002": "Tým neexistuje.",
     "6004": "Tým již má přístup k tomuto prostoru nebo seznamu.",
     "6005": "Uživatel je již členem tohoto týmu.",

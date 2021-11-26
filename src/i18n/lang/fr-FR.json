@@ -901,7 +901,7 @@
     "5010": "Cette équipe n’a pas accès à cet espace de noms.",
     "5011": "Cet·e utilisateur·rice a déjà accès à cet espace de noms.",
     "5012": "L’espace de noms est archivé et ne peut donc être consulté qu’en lecture seule.",
-    "6001": "Le nom de l’équipe ne peut pas être vide.",
+    "6001": "The team name cannot be empty.",
     "6002": "L’équipe n’existe pas.",
     "6004": "L’équipe a déjà accès à cet espace de noms ou à cette liste.",
     "6005": "L’utilisateur·rice est déjà membre de cette équipe.",

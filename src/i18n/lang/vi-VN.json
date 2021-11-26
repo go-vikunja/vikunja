@@ -901,7 +901,7 @@
     "5010": "Team này không có quyền bước vào góc làm việc đó.",
     "5011": "Người này đã có quyền bước vào góc làm việc đó.",
     "5012": "Góc làm việc đã được lưu trữ nên chỉ có thể vào đó để đọc.",
-    "6001": "Team cũng cần có tên gọi mà.",
+    "6001": "The team name cannot be empty.",
     "6002": "Team không tồn tại.",
     "6004": "Team đã có quyền bước vào góc làm việc và xem danh sách.",
     "6005": "Người này đã là thành viên của Team đó rồi.",

@@ -114,12 +114,12 @@
         "vikunja": "Vikunja"
       },
       "appearance": {
-        "title": "Color Scheme",
-        "setSuccess": "Saved change of color scheme to {colorScheme}",
+        "title": "Farbschema",
+        "setSuccess": "Änderung des Farbschemas auf {colorScheme} gespeichert",
         "colorScheme": {
-          "light": "Light",
+          "light": "Hell",
           "system": "System",
-          "dark": "Dark"
+          "dark": "Dunkel"
         }
       }
     },
@@ -556,7 +556,7 @@
         "text2": "Das wird au alli Ahhäng, Errinnerige und Beziehige wo mit dere Uufgab verchnüpft sind chüble und cha nid rückgängig gmacht werde!"
       },
       "actions": {
-        "assign": "Assign to a user",
+        "assign": "Benutzer:in zuweisen",
         "label": "Label hinzuefüege",
         "priority": "Priorität setzä",
         "dueDate": "Fälligkeitsdatum setze",
@@ -775,7 +775,7 @@
     "task": {
       "title": "Uufgabesiite",
       "done": "Uufgab als erledigt markiere",
-      "assign": "Assign to a user",
+      "assign": "Benutzer:in zuweisen",
       "labels": "Labels ennere Uufgab hinzuefüege",
       "dueDate": "S'Fälligkeitsdatum für die Uufgab ändere",
       "attachment": "En Aahang dere Uufgab hinzuefüege",
@@ -901,7 +901,7 @@
     "5010": "Da Team hett kei zuegriff uf de Namensruum.",
     "5011": "De Benutzer hett bereits zuegriff uf de Namensruum.",
     "5012": "De Namensruum isch momentan schriibgschützt weil er archiviert isch.",
-    "6001": "Der TeamName kann nicht leer sein.",
+    "6001": "Der Teamname kann nicht leer sein.",
     "6002": "Da Team giz nid.",
     "6004": "Da Team het scho Zuegang zu dem Namensruum oder Liste.",
     "6005": "De Benutzer isch scho bi dem Team.",
