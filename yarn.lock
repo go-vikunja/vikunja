@@ -3506,10 +3506,10 @@
     regenerator-runtime "^0.13.9"
     systemjs "^6.11.0"
 
-"@vitejs/plugin-vue@1.10.0":
-  version "1.10.0"
-  resolved "https://registry.yarnpkg.com/@vitejs/plugin-vue/-/plugin-vue-1.10.0.tgz#d015c12d905bb7f76274c2bb272c3662151bf3c0"
-  integrity sha512-XkSN7lduhQ3z/WMXv2spqt9TCS0znCjnvIGmbud2bxViWWWR4JWXE+x/cQZ/klR0Ug4Ts9eubL7LXAysON5Uvg==
+"@vitejs/plugin-vue@1.10.1":
+  version "1.10.1"
+  resolved "https://registry.yarnpkg.com/@vitejs/plugin-vue/-/plugin-vue-1.10.1.tgz#d140e93d574c5eac247a79f5b15df665dcb7635b"
+  integrity sha512-oL76QETMSpVE9jIScirGB2bYJEVU/+r+g+K7oG+sXPs9TZljqveoVRsmLyXlMZTjpQkLL8gz527cW80NMGVKJg==
 
 "@volar/code-gen@0.29.6":
   version "0.29.6"
