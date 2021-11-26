@@ -11501,10 +11501,10 @@ postcss-values-parser@^2.0.1:
     indexes-of "^1.0.1"
     uniq "^1.0.1"
 
-postcss@8.4.2:
-  version "8.4.2"
-  resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.4.2.tgz#39920b20748b323bf6f331d1128256392489aa3e"
-  integrity sha512-zGwUzDSwfRLJABcYXjROVVnjPn8mdxl88kR8SAA7LOkSY/Jnm8GzV21tm6wjQxsQISnwVIggwbxDZI3cIq8mJg==
+postcss@8.4.3:
+  version "8.4.3"
+  resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.4.3.tgz#adc55db82e868dea54e9e0e7ecdb0368b5adf65a"
+  integrity sha512-d5gVKo8ekrircqHOQNvSQk8dhGOuAfu1iP6dzfAlnAmcu7EBJ9cFuZG8B1KZK362aaEO3L1H+WM3ny9xQ29tFw==
   dependencies:
     nanoid "^3.1.30"
     picocolors "^1.0.0"
