@@ -99,7 +99,7 @@ steps:
       - dependencies
 
   - name: test-frontend
-    image: cypress/browsers:node14.17.0-chrome91-ff89
+    image: cypress/browsers:node16.5.0-chrome94-ff93
     pull: true
     environment:
       CYPRESS_API_URL: http://api:3456/api/v1
