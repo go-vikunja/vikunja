@@ -486,7 +486,6 @@ export default {
 			taskColor: '',
 
 			showDeleteModal: false,
-			descriptionChanged: false,
 			// Used to avoid flashing of empty elements if the task content is not yet loaded.
 			visible: false,
 
@@ -677,13 +676,6 @@ export default {
 			}
 
 			this.saveTask(true, this.toggleTaskDone)
-		},
-
-		setDescriptionChanged(e) {
-			if (e.key === 'Enter' || e.key === 'Control') {
-				return
-			}
-			this.descriptionChanged = true
 		},
 
 		async changeList(list) {
