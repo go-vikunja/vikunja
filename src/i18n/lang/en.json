@@ -34,7 +34,6 @@
       "email": "E-mail address",
       "emailPlaceholder": "e.g. frederic{'@'}vikunja.io",
       "password": "Password",
-      "passwordRepeat": "Retype your password",
       "passwordPlaceholder": "e.g. •••••••••••",
       "forgotPassword": "Forgot your password?",
       "resetPassword": "Reset your password",
@@ -50,7 +49,10 @@
       "authenticating": "Authenticating…",
       "openIdStateError": "State does not match, refusing to continue!",
       "openIdGeneralError": "An error occured while authenticating against the third party.",
-      "logout": "Logout"
+      "logout": "Logout",
+      "emailInvalid": "Please enter a valid email address.",
+      "usernameRequired": "Please provide a username.",
+      "passwordRequired": "Please provide a password."
     },
     "settings": {
       "title": "Settings",
