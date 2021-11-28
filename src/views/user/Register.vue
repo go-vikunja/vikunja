@@ -77,7 +77,7 @@
 						class="mr-2"
 						:disabled="!everythingValid"
 					>
-						{{ $t('user.auth.register') }}
+						{{ $t('user.auth.createAccount') }}
 					</x-button>
 					<x-button :to="{ name: 'user.login' }" type="secondary">
 						{{ $t('user.auth.login') }}
@@ -91,7 +91,6 @@
 <script setup>
 import {useDebounceFn} from '@vueuse/core'
 import {ref, reactive, toRaw, computed, onBeforeMount} from 'vue'
-import {useI18n} from 'vue-i18n'
 
 import router from '@/router'
 import {store} from '@/store'
@@ -105,8 +104,6 @@ onBeforeMount(() => {
 		router.push({name: 'home'})
 	}
 })
-
-const {t} = useI18n()
 
 const credentials = reactive({
 	username: '',

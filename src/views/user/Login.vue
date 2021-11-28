@@ -83,7 +83,7 @@
 						type="secondary"
 						tabindex="5"
 					>
-						{{ $t('user.auth.register') }}
+						{{ $t('user.auth.createAccount') }}
 					</x-button>
 				</div>
 			</div>
