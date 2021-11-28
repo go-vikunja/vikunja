@@ -53,32 +53,19 @@
 						name="password"
 						:placeholder="$t('user.auth.passwordPlaceholder')"
 						required
-						type="password"
+						:type="passwordFieldType"
 						autocomplete="new-password"
 						v-model="credentials.password"
 						@keyup.enter="submit"
 						@focusout="validatePassword"
 					/>
+					<a @click="togglePasswordFieldType" class="password-field-type-toggle">
+						<icon :icon="passwordFieldType === 'password' ? 'eye' : 'eye-slash'"/>
+					</a>
 				</div>
 				<p class="help is-danger" v-if="!passwordValid">
 					{{ $t('user.auth.passwordRequired') }}
 				</p>
-			</div>
-			<div class="field">
-				<label class="label" for="passwordValidation">{{ $t('user.auth.passwordRepeat') }}</label>
-				<div class="control">
-					<input
-						class="input"
-						id="passwordValidation"
-						name="passwordValidation"
-						:placeholder="$t('user.auth.passwordPlaceholder')"
-						required
-						type="password"
-						autocomplete="new-password"
-						v-model="passwordValidation"
-						@keyup.enter="submit"
-					/>
-				</div>
 			</div>
 
 			<div class="field is-grouped">
@@ -157,6 +144,13 @@ const everythingValid = computed(() => {
 		passwordValid.value
 })
 
+const passwordFieldType = ref('password')
+const togglePasswordFieldType = () => {
+	passwordFieldType.value = passwordFieldType.value === 'password'
+		? 'text'
+		: 'password'
+}
+
 async function submit() {
 	errorMessage.value = ''
 
@@ -171,3 +165,12 @@ async function submit() {
 	}
 }
 </script>
+
+<style scoped>
+.password-field-type-toggle {
+	position: absolute;
+	top: .5rem;
+	right: 1rem;
+	color: var(--grey-400);
+}
+</style>
