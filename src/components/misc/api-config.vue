@@ -30,27 +30,25 @@
 			<a @click="() => (configureApi = true)">{{ $t('apiConfig.change') }}</a>
 		</div>
 
-		<div
-			class="notification is-success mt-2"
-			v-if="successMsg !== '' && errorMsg === ''"
-		>
+		<message variant="success" v-if="successMsg !== '' && errorMsg === ''" class="mt-2">
 			{{ successMsg }}
-		</div>
-		<div
-			class="notification is-danger mt-2"
-			v-if="errorMsg !== '' && successMsg === ''"
-		>
+		</message>
+		<message variant="danger" v-if="errorMsg !== '' && successMsg === ''" class="mt-2">
 			{{ errorMsg }}
-		</div>
+		</message>
 	</div>
 </template>
 
 <script>
+import Message from '@/components/misc/message'
 import {parseURL} from 'ufo'
 import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 
 export default {
 	name: 'apiConfig',
+	components: {
+		Message,
+	},
 	data() {
 		return {
 			configureApi: false,

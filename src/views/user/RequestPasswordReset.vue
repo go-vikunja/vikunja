@@ -31,14 +31,14 @@
 						</x-button>
 					</div>
 				</div>
-				<div class="notification is-danger" v-if="errorMsg">
+				<message variant="danger" v-if="errorMsg">
 					{{ errorMsg }}
-				</div>
+				</message>
 			</form>
 			<div class="has-text-centered" v-if="isSuccess">
-				<div class="notification is-success">
+				<message variant="success">
 					{{ $t('user.auth.resetPasswordSuccess') }}
-				</div>
+				</message>
 				<x-button :to="{ name: 'user.login' }">
 					{{ $t('user.auth.login') }}
 				</x-button>
@@ -57,6 +57,7 @@ import Legal from '@/components/misc/legal'
 import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
 import { useTitle } from '@/composables/useTitle'
+import Message from '@/components/misc/message'
 
 const { t } = useI18n()
 useTitle(() => t('user.auth.resetPassword'))

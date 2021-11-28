@@ -193,10 +193,6 @@ export default {
 			align-items: center;
 
 		}
-
-		.message-body {
-			padding: .5rem .75rem;
-		}
 	}
 }
 

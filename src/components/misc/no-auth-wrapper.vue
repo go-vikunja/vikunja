@@ -2,14 +2,9 @@
 	<div class="no-auth-wrapper">
 		<div class="noauth-container">
 			<Logo class="logo" width="400" height="117" />
-			<div class="message is-info" v-if="motd !== ''">
-				<div class="message-header">
-					<p>{{ $t('misc.info') }}</p>
-				</div>
-				<div class="message-body">
-					{{ motd }}
-				</div>
-			</div>
+			<message v-if="motd !== ''" class="my-2">
+				{{ motd }}
+			</message>
 			<slot/>
 		</div>
 	</div>
@@ -17,6 +12,7 @@
 
 <script setup>
 import Logo from '@/components/home/Logo.vue'
+import message from '@/components/misc/message'
 import {useStore} from 'vuex'
 import {computed} from 'vue'
 

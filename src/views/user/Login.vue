@@ -2,9 +2,9 @@
 	<div>
 		<h2 class="title has-text-centered">Login</h2>
 		<div class="box">
-			<div class="notification is-success has-text-centered" v-if="confirmedEmailSuccess">
+			<message variant="success" class="has-text-centered" v-if="confirmedEmailSuccess">
 				{{ $t('user.auth.confirmEmailSuccess') }}
-			</div>
+			</message>
 			<api-config @foundApi="hasApiUrl = true"/>
 			<form @submit.prevent="submit" id="loginform" v-if="hasApiUrl && localAuthEnabled">
 				<div class="field">
@@ -78,9 +78,9 @@
 						</router-link>
 					</div>
 				</div>
-				<div class="notification is-danger" v-if="errorMessage">
+				<message variant="danger" v-if="errorMessage">
 					{{ errorMessage }}
-				</div>
+				</message>
 			</form>
 
 			<div
@@ -110,11 +110,13 @@ import {LOADING} from '@/store/mutation-types'
 import legal from '../../components/misc/legal'
 import ApiConfig from '@/components/misc/api-config.vue'
 import {getErrorText} from '@/message'
+import Message from '@/components/misc/message'
 import {redirectToProvider} from '../../helpers/redirectToProvider'
 import {getLastVisited, clearLastVisited} from '../../helpers/saveLastVisited'
 
 export default {
 	components: {
+		Message,
 		ApiConfig,
 		legal,
 	},
@@ -149,7 +151,7 @@ export default {
 			const last = getLastVisited()
 			if (last !== null) {
 				this.$router.push({
-					name: last.name, 
+					name: last.name,
 					params: last.params,
 				})
 				clearLastVisited()
@@ -206,7 +208,7 @@ export default {
 			try {
 				await this.$store.dispatch('auth/login', credentials)
 				this.$store.commit('auth/needsTotpPasscode', false)
-			} catch(e) {
+			} catch (e) {
 				if (e.response && e.response.data.code === 1017 && !credentials.totpPasscode) {
 					return
 				}

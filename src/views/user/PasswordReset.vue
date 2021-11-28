@@ -45,37 +45,37 @@
 						</x-button>
 					</div>
 				</div>
-				<div class="notification is-info" v-if="this.passwordResetService.loading">
+				<message v-if="this.passwordResetService.loading">
 					{{ $t('misc.loading') }}
-				</div>
-				<div class="notification is-danger" v-if="errorMsg">
+				</message>
+				<message v-if="errorMsg">
 					{{ errorMsg }}
-				</div>
+				</message>
 			</form>
 			<div class="has-text-centered" v-if="successMessage">
-				<div class="notification is-success">
+				<message variant="success">
 					{{ successMessage }}
-				</div>
+				</message>
 				<x-button :to="{ name: 'user.login' }">
 					{{ $t('user.auth.login') }}
 				</x-button>
 			</div>
-			<Legal />
+			<Legal/>
 		</div>
 	</div>
 </template>
 
 <script setup>
 import {ref, reactive} from 'vue'
-import { useI18n } from 'vue-i18n'
+import {useI18n} from 'vue-i18n'
 
 import Legal from '@/components/misc/legal'
-
 import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
-import { useTitle } from '@/composables/useTitle'
+import {useTitle} from '@/composables/useTitle'
+import Message from '@/components/misc/message'
 
-const { t } = useI18n()
+const {t} = useI18n()
 useTitle(() => t('user.auth.resetPassword'))
 
 const credentials = reactive({
@@ -97,10 +97,10 @@ async function submit() {
 
 	const passwordReset = new PasswordResetModel({newPassword: credentials.password})
 	try {
-		const { message } = passwordResetService.resetPassword(passwordReset)
+		const {message} = passwordResetService.resetPassword(passwordReset)
 		successMessage.value = message
 		localStorage.removeItem('passwordResetToken')
-	} catch(e) {
+	} catch (e) {
 		errorMsg.value = e.response.data.message
 	}
 }

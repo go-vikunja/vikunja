@@ -16,7 +16,7 @@
 				<p v-if="error === errorNoApiUrl">
 					{{ $t('ready.noApiUrlConfigured') }}
 				</p>
-				<div class="notification is-danger" v-else>
+				<message variant="danger" v-else>
 					<p>
 						{{ $t('ready.errorOccured') }}<br/>
 						{{ error }}
@@ -24,7 +24,7 @@
 					<p>
 						{{ $t('ready.checkApiUrl') }}
 					</p>
-				</div>
+				</message>
 				<api-config :configure-open="true" @found-api="load"/>
 			</card>
 		</no-auth-wrapper>
@@ -43,6 +43,7 @@
 <script>
 import Logo from '@/assets/logo.svg?component'
 import ApiConfig from '@/components/misc/api-config'
+import Message from '@/components/misc/message'
 import NoAuthWrapper from '@/components/misc/no-auth-wrapper'
 import {mapState} from 'vuex'
 import {ERROR_NO_API_URL} from '@/helpers/checkAndSetApiUrl'
@@ -50,6 +51,7 @@ import {ERROR_NO_API_URL} from '@/helpers/checkAndSetApiUrl'
 export default {
 	name: 'ready',
 	components: {
+		Message,
 		Logo,
 		NoAuthWrapper,
 		ApiConfig,

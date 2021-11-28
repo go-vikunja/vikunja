@@ -1,11 +1,11 @@
 <template>
 	<div>
-		<div class="notification is-danger" v-if="errorMessage">
+		<message variant="danger" v-if="errorMessage">
 			{{ errorMessage }}
-		</div>
-		<div class="notification is-info" v-if="loading">
+		</message>
+		<message v-if="loading">
 			{{ $t('user.auth.authenticating') }}
-		</div>
+		</message>
 	</div>
 </template>
 
@@ -14,10 +14,12 @@ import {mapState} from 'vuex'
 
 import {LOADING} from '@/store/mutation-types'
 import {getErrorText} from '@/message'
+import Message from '@/components/misc/message'
 import {clearLastVisited, getLastVisited} from '../../helpers/saveLastVisited'
 
 export default {
 	name: 'Auth',
+	components: {Message},
 	data() {
 		return {
 			errorMessage: '',

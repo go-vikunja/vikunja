@@ -4,13 +4,11 @@
 			<template v-for="(s, i) in shortcuts" :key="i">
 				<h3>{{ $t(s.title) }}</h3>
 
-				<div class="message is-primary">
-					<div class="message-body">
-						{{
-							s.available($route) ? $t('keyboardShortcuts.currentPageOnly') : $t('keyboardShortcuts.allPages')
-						}}
-					</div>
-				</div>
+				<message>
+					{{
+						s.available($route) ? $t('keyboardShortcuts.currentPageOnly') : $t('keyboardShortcuts.allPages')
+					}}
+				</message>
 
 				<dl class="shortcut-list">
 					<template v-for="(sc, si) in s.shortcuts" :key="si">
@@ -30,11 +28,15 @@
 <script>
 import {KEYBOARD_SHORTCUTS_ACTIVE} from '@/store/mutation-types'
 import Shortcut from '@/components/misc/shortcut.vue'
+import Message from '@/components/misc/message'
 import {KEYBOARD_SHORTCUTS} from './shortcuts'
 
 export default {
 	name: 'keyboard-shortcuts',
-	components: {Shortcut},
+	components: {
+		Message, 
+		Shortcut,
+	},
 	data() {
 		return {
 			shortcuts: KEYBOARD_SHORTCUTS,

@@ -130,7 +130,10 @@
     "ignorePatterns": [
       "*.test.*",
       "cypress/*"
-    ]
+    ],
+    "globals": {
+      "defineProps": "readonly"
+    }
   },
   "postcss": {
     "plugins": {

@@ -1,8 +1,8 @@
 <template>
 	<div>
-		<div class="notification is-info is-light has-text-centered" v-if="loading">
+		<message v-if="loading">
 			{{ $t('sharing.authenticating') }}
-		</div>
+		</message>
 		<div v-if="authenticateWithPassword" class="box">
 			<p class="pb-2">
 				{{ $t('sharing.passwordRequired') }}
@@ -25,18 +25,20 @@
 				{{ $t('user.auth.login') }}
 			</x-button>
 
-			<div class="notification is-danger mt-4" v-if="errorMessage !== ''">
+			<message variant="danger" class="mt-4" v-if="errorMessage !== ''">
 				{{ errorMessage }}
-			</div>
+			</message>
 		</div>
 	</div>
 </template>
 
 <script>
 import {mapGetters} from 'vuex'
+import Message from '@/components/misc/message'
 
 export default {
 	name: 'LinkSharingAuth',
+	components: {Message},
 	data() {
 		return {
 			loading: true,
@@ -72,7 +74,7 @@ export default {
 					password: this.password,
 				})
 				this.$router.push({name: 'list.list', params: {listId: r.list_id}})
-			} catch(e) {
+			} catch (e) {
 				if (typeof e.response.data.code !== 'undefined' && e.response.data.code === 13001) {
 					this.authenticateWithPassword = true
 					return

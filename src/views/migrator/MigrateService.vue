@@ -39,7 +39,7 @@
 				<div class="migration-in-progress">
 					<img :alt="migrator.name" :src="migrator.icon" class="logo"/>
 					<div class="progress-dots">
-						<span v-for="i in progressDotsCount" :key="i" />
+						<span v-for="i in progressDotsCount" :key="i"/>
 					</div>
 					<Logo class="logo"/>
 				</div>
@@ -57,11 +57,9 @@
 			</div>
 		</div>
 		<div v-else>
-			<div class="message is-primary">
-				<div class="message-body">
-					{{ message }}
-				</div>
-			</div>
+			<message class="mb-4">
+				{{ message }}
+			</message>
 			<x-button :to="{name: 'home'}">{{ $t('misc.refresh') }}</x-button>
 		</div>
 	</div>
@@ -71,6 +69,7 @@
 import AbstractMigrationService from '@/services/migrator/abstractMigration'
 import AbstractMigrationFileService from '@/services/migrator/abstractMigrationFile'
 import Logo from '@/assets/logo.svg?component'
+import Message from '@/components/misc/message'
 
 import {MIGRATORS} from './migrators'
 
@@ -79,7 +78,10 @@ const PROGRESS_DOTS_COUNT = 8
 export default {
 	name: 'MigrateService',
 
-	components: { Logo },
+	components: {
+		Logo,
+		Message,
+	},
 
 	data() {
 		return {
@@ -101,7 +103,7 @@ export default {
 
 	beforeRouteEnter(to) {
 		if (MIGRATORS[to.params.service] === undefined) {
-			return { name: 'not-found' }
+			return {name: 'not-found'}
 		}
 	},
 
@@ -122,7 +124,7 @@ export default {
 			if (this.migrator.isFileMigrator) {
 				return
 			}
-			
+
 			this.authUrl = await this.migrationService.getAuthUrl().then(({url}) => url)
 
 			this.migratorAuthCode = location.hash.startsWith('#token=')
@@ -150,7 +152,7 @@ export default {
 			this.lastMigrationDate = null
 			this.message = ''
 
-			let migrationConfig = { code: this.migratorAuthCode }
+			let migrationConfig = {code: this.migratorAuthCode}
 
 			if (this.migrator.isFileMigrator) {
 				if (this.$refs.uploadInput.files.length === 0) {
@@ -160,7 +162,7 @@ export default {
 			}
 
 			try {
-				const { message } = await this.migrationService.migrate(migrationConfig)
+				const {message} = await this.migrationService.migrate(migrationConfig)
 				this.message = message
 				return this.$store.dispatch('namespaces/loadNamespaces')
 			} finally {
@@ -173,24 +175,24 @@ export default {
 
 <style lang="scss" scoped>
 .migration-in-progress-container {
-  max-width: 400px;
-  margin: 4rem auto 0;
-  text-align: center;
+	max-width: 400px;
+	margin: 4rem auto 0;
+	text-align: center;
 }
 
 .migration-in-progress {
-  text-align: center;
-  display: flex;
-  max-width: 400px;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+	text-align: center;
+	display: flex;
+	max-width: 400px;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 2rem;
 }
 
 .logo {
-  display: block;
-  max-height: 100px;
-  max-width: 100px;
+	display: block;
+	max-height: 100px;
+	max-width: 100px;
 }
 
 .progress-dots {

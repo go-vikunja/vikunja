@@ -3,7 +3,7 @@
 		<h2 v-if="userInfo">
 			{{ $t(`home.welcome${welcome}`, {username: userInfo.name !== '' ? userInfo.name : userInfo.username}) }}!
 		</h2>
-		<div class="notification is-danger" v-if="deletionScheduledAt !== null">
+		<message variant="danger" v-if="deletionScheduledAt !== null">
 			{{
 				$t('user.deletion.scheduled', {
 					date: formatDateShort(deletionScheduledAt),
@@ -13,7 +13,7 @@
 			<router-link :to="{name: 'user.settings', hash: '#deletion'}">
 				{{ $t('user.deletion.scheduledCancel') }}
 			</router-link>
-		</div>
+		</message>
 		<add-task
 			:listId="defaultListId"
 			@taskAdded="updateTaskList"
@@ -57,6 +57,7 @@
 
 <script>
 import {mapState} from 'vuex'
+import Message from '@/components/misc/message'
 import ShowTasks from './tasks/ShowTasks.vue'
 import {getHistory} from '../modules/listHistory'
 import ListCard from '@/components/list/partials/list-card.vue'
@@ -67,6 +68,7 @@ import {parseDateOrNull} from '../helpers/parseDateOrNull'
 export default {
 	name: 'Home',
 	components: {
+		Message,
 		ListCard,
 		ShowTasks,
 		AddTask,
@@ -147,7 +149,7 @@ export default {
 	flex-wrap: wrap;
 	max-height: calc(#{$list-height * 2} + #{$list-spacing * 2} - 4px);
 	overflow: hidden;
-	
+
 	@media screen and (max-width: $mobile) {
 		max-height: calc(#{$list-height * 4} + #{$list-spacing * 4} - 4px);
 	}

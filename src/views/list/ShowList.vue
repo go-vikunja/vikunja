@@ -36,9 +36,9 @@
 			</div>
 		</div>
 		<transition name="fade">
-			<div class="notification is-warning" v-if="currentList.isArchived">
+			<message variant="warning" v-if="currentList.isArchived" class="mb-4">
 				{{ $t('list.archived') }}
-			</div>
+			</message>
 		</transition>
 
 		<router-view/>
@@ -46,6 +46,7 @@
 </template>
 
 <script>
+import Message from '@/components/misc/message'
 import ListModel from '../../models/list'
 import ListService from '../../services/list'
 import {CURRENT_LIST} from '../../store/mutation-types'
@@ -53,6 +54,7 @@ import {getListView} from '../../helpers/saveListView'
 import {saveListToHistory} from '../../modules/listHistory'
 
 export default {
+	components: {Message},
 	data() {
 		return {
 			listService: new ListService(),

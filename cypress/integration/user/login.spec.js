@@ -8,7 +8,7 @@ const testAndAssertFailed = fixture => {
 
 	cy.wait(5000) // It can take waaaayy too long to log the user in
 	cy.url().should('include', '/')
-	cy.get('div.notification.is-danger').contains('Wrong username or password.')
+	cy.get('div.message.danger').contains('Wrong username or password.')
 }
 
 context('Login', () => {

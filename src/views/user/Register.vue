@@ -83,12 +83,12 @@
 						</x-button>
 					</div>
 				</div>
-				<div class="notification is-info" v-if="loading">
+				<message v-if="loading">
 					{{ $t('misc.loading') }}
-				</div>
-				<div class="notification is-danger" v-if="errorMessage !== ''">
+				</message>
+				<message variant="danger" v-if="errorMessage !== ''">
 					{{ errorMessage }}
-				</div>
+				</message>
 			</form>
 			<legal/>
 		</div>
@@ -97,13 +97,13 @@
 
 <script setup>
 import {ref, reactive, toRaw, computed, onBeforeMount} from 'vue'
-import { useI18n } from 'vue-i18n'
+import {useI18n} from 'vue-i18n'
 
 import router from '@/router'
-import { store } from '@/store'
-import { useTitle } from '@/composables/useTitle'
-
+import {store} from '@/store'
+import {useTitle} from '@/composables/useTitle'
 import Legal from '@/components/misc/legal'
+import Message from '@/components/misc/message'
 
 // FIXME: use the `beforeEnter` hook of vue-router
 // Check if the user is already logged in, if so, redirect them to the homepage
@@ -113,7 +113,7 @@ onBeforeMount(() => {
 	}
 })
 
-const { t } = useI18n()
+const {t} = useI18n()
 useTitle(() => t('user.auth.register'))
 
 const credentials = reactive({
@@ -137,7 +137,7 @@ async function submit() {
 
 	try {
 		await store.dispatch('auth/register', toRaw(credentials))
-	} catch(e) {
+	} catch (e) {
 		errorMessage.value = e.message
 	}
 }

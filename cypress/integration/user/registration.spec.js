@@ -32,7 +32,7 @@ context('Registration', () => {
 		cy.get('h2').should('contain', `Hi ${fixture.username}!`)
 	})
 
-	it('Should fail', () => {
+	it.only('Should fail', () => {
 		const fixture = {
 			username: 'test',
 			password: '123456',
@@ -45,6 +45,6 @@ context('Registration', () => {
 		cy.get('#password').type(fixture.password)
 		cy.get('#passwordValidation').type(fixture.password)
 		cy.get('#register-submit').click()
-		cy.get('div.notification.is-danger').contains('A user with this username already exists.')
+		cy.get('div.message.danger').contains('A user with this username already exists.')
 	})
 })

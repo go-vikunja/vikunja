@@ -28,19 +28,20 @@
 		<div class="field">
 			<label class="label">{{ $t('namespace.attributes.color') }}</label>
 			<div class="control">
-				<color-picker v-model="namespace.hexColor" />
+				<color-picker v-model="namespace.hexColor"/>
 			</div>
 		</div>
 
-		<div class="notification is-info mt-4">
+		<message class="mt-4">
 			<h4 class="title">{{ $t('namespace.create.tooltip') }}</h4>
 
 			{{ $t('namespace.create.explanation') }}
-		</div>
+		</message>
 	</create-edit>
 </template>
 
 <script>
+import Message from '@/components/misc/message'
 import NamespaceModel from '../../models/namespace'
 import NamespaceService from '../../services/namespace'
 import CreateEdit from '@/components/misc/create-edit.vue'
@@ -56,6 +57,7 @@ export default {
 		}
 	},
 	components: {
+		Message,
 		ColorPicker,
 		CreateEdit,
 	},
@@ -72,7 +74,7 @@ export default {
 
 			const namespace = await this.namespaceService.create(this.namespace)
 			this.$store.commit('namespaces/addNamespace', namespace)
-			this.$message.success({message: this.$t('namespace.create.success') })
+			this.$message.success({message: this.$t('namespace.create.success')})
 			this.$router.back()
 		},
 	},
