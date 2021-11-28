@@ -26,7 +26,7 @@ If you plan to do a bigger change, it is better to open an issue for discussion 
 
 The code for the api is located at [code.vikunja.io/api](https://code.vikunja.io/api).
 
-We use go modules to manage third-party libraries for Vikunja, so you'll need at least go `1.11` to use these.
+We use go modules to manage third-party libraries for Vikunja, so you'll need at least go `1.17` to use these.
 
 A lot of developing tasks are automated using a Magefile, so make sure to [take a look at it]({{< ref "mage.md">}}).
 
