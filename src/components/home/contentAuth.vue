@@ -82,7 +82,7 @@ export default {
 				this.$route.name === 'labels.index' ||
 				this.$route.name === 'migrate.start' ||
 				this.$route.name === 'migrate.wunderlist' ||
-				this.$route.name === 'user.settings' ||
+				this.$route.name.startsWith('user.settings') ||
 				this.$route.name === 'namespaces.index'
 			) {
 				return this.$store.dispatch(CURRENT_LIST, null)
