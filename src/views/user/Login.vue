@@ -21,14 +21,18 @@
 						v-focus
 						@keyup.enter="submit"
 						tabindex="1"
+						@focusout="validateField('username')"
 					/>
 				</div>
+				<p class="help is-danger" v-if="!usernameValid">
+					{{ $t('user.auth.usernameRequired') }}
+				</p>
 			</div>
 			<div class="field">
 				<div class="label-with-link">
 					<label class="label" for="password">{{ $t('user.auth.password') }}</label>
-					<router-link 
-						:to="{ name: 'user.password-reset.request' }" 
+					<router-link
+						:to="{ name: 'user.password-reset.request' }"
 						class="reset-password-link"
 						tabindex="6"
 					>
@@ -43,12 +47,19 @@
 						:placeholder="$t('user.auth.passwordPlaceholder')"
 						ref="password"
 						required
-						type="password"
+						:type="passwordFieldType"
 						autocomplete="current-password"
 						@keyup.enter="submit"
 						tabindex="2"
+						@focusout="validateField('password')"
 					/>
+					<a @click="togglePasswordFieldType" class="password-field-type-toggle">
+						<icon :icon="passwordFieldType === 'password' ? 'eye' : 'eye-slash'"/>
+					</a>
 				</div>
+				<p class="help is-danger" v-if="!passwordValid">
+					{{ $t('user.auth.passwordRequired') }}
+				</p>
 			</div>
 			<div class="field" v-if="needsTotpPasscode">
 				<label class="label" for="totpPasscode">{{ $t('user.auth.totpTitle') }}</label>
@@ -106,6 +117,7 @@
 </template>
 
 <script>
+import {useDebounceFn} from '@vueuse/core'
 import {mapState} from 'vuex'
 
 import {HTTPFactory} from '@/http-common'
@@ -123,6 +135,9 @@ export default {
 		return {
 			confirmedEmailSuccess: false,
 			errorMessage: '',
+			usernameValid: true,
+			passwordValid: true,
+			passwordFieldType: 'password',
 		}
 	},
 	beforeMount() {
@@ -175,6 +190,13 @@ export default {
 			localAuthEnabled: state => state.config.auth.local.enabled,
 			openidConnect: state => state.config.auth.openidConnect,
 		}),
+
+		validateField() {
+			// using computed so that debounced function definition stays
+			return useDebounceFn((field) => {
+				this[`${field}Valid`] = this.$refs[field].value !== ''
+			}, 100)
+		},
 	},
 	methods: {
 		setLoading() {
@@ -185,6 +207,12 @@ export default {
 				clearTimeout(timeout)
 				this.loading = false
 			}
+		},
+
+		togglePasswordFieldType() {
+			this.passwordFieldType = this.passwordFieldType === 'password'
+				? 'text'
+				: 'password'
 		},
 
 		async submit() {
@@ -205,7 +233,7 @@ export default {
 				await this.$store.dispatch('auth/login', credentials)
 				this.$store.commit('auth/needsTotpPasscode', false)
 			} catch (e) {
-				if (e.response && e.response.data.code === 1017 && !credentials.totpPasscode) {
+				if (e.response?.data.code === 1017 && !this.credentials.totpPasscode) {
 					return
 				}
 
@@ -242,9 +270,16 @@ export default {
 	display: flex;
 	justify-content: space-between;
 	margin-bottom: .5rem;
-	
+
 	.label {
 		margin-bottom: 0;
 	}
+}
+
+.password-field-type-toggle {
+	position: absolute;
+	top: .5rem;
+	right: 1rem;
+	color: var(--grey-400);
 }
 </style>
