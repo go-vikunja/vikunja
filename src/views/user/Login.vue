@@ -20,11 +20,21 @@
 						autocomplete="username"
 						v-focus
 						@keyup.enter="submit"
+						tabindex="1"
 					/>
 				</div>
 			</div>
 			<div class="field">
-				<label class="label" for="password">{{ $t('user.auth.password') }}</label>
+				<div class="label-with-link">
+					<label class="label" for="password">{{ $t('user.auth.password') }}</label>
+					<router-link 
+						:to="{ name: 'user.password-reset.request' }" 
+						class="reset-password-link"
+						tabindex="6"
+					>
+						{{ $t('user.auth.forgotPassword') }}
+					</router-link>
+				</div>
 				<div class="control">
 					<input
 						class="input"
@@ -36,6 +46,7 @@
 						type="password"
 						autocomplete="current-password"
 						@keyup.enter="submit"
+						tabindex="2"
 					/>
 				</div>
 			</div>
@@ -52,6 +63,7 @@
 						type="text"
 						v-focus
 						@keyup.enter="submit"
+						tabindex="3"
 					/>
 				</div>
 			</div>
@@ -61,6 +73,7 @@
 					<x-button
 						@click="submit"
 						:loading="loading"
+						tabindex="4"
 					>
 						{{ $t('user.auth.login') }}
 					</x-button>
@@ -68,14 +81,10 @@
 						:to="{ name: 'user.register' }"
 						v-if="registrationEnabled"
 						type="secondary"
+						tabindex="5"
 					>
 						{{ $t('user.auth.register') }}
 					</x-button>
-				</div>
-				<div class="control">
-					<router-link :to="{ name: 'user.password-reset.request' }" class="reset-password-link">
-						{{ $t('user.auth.forgotPassword') }}
-					</router-link>
 				</div>
 			</div>
 		</form>
@@ -227,6 +236,15 @@ export default {
 
 .reset-password-link {
 	display: inline-block;
-	padding-top: 5px;
+}
+
+.label-with-link {
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: .5rem;
+	
+	.label {
+		margin-bottom: 0;
+	}
 }
 </style>
