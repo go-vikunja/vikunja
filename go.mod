@@ -56,7 +56,7 @@ require (
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.9.0
 	github.com/stretchr/testify v1.7.0
-	github.com/swaggo/swag v1.7.4
+	github.com/swaggo/swag v1.7.6
 	github.com/ulule/limiter/v3 v3.9.0
 	github.com/yuin/goldmark v1.4.4
 	golang.org/x/crypto v0.0.0-20211117183948-ae814b36b871
