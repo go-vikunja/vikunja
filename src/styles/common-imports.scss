@@ -19,14 +19,12 @@ $mobile: math.div($tablet, 2);
 $family-sans-serif: 'Open Sans', Helvetica, Arial, sans-serif;
 $vikunja-font: 'Quicksand', sans-serif;
 
-$thickness: 1px;
 $pagination-current-border: var(--primary);
 $navbar-item-active-color: var(--primary);
 
 $dropdown-content-shadow: none;
 $dropdown-item-hover-background-color: var(--grey-100);
 
-$bulmaswatch-import-font: false !default;
 $site-background: var(--grey-100);
 
 $transition-duration: 150ms;

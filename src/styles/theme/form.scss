@@ -40,6 +40,7 @@
 }
 
 .select select {
+  $thickness: 1px;
   border-width: $thickness;
 
   &:not([multiple]) {
