@@ -96,7 +96,8 @@
     "env": {
       "browser": true,
       "es2021": true,
-      "node": true
+      "node": true,
+      "vue/setup-compiler-macros": true
     },
     "extends": [
       "eslint:recommended",
@@ -120,6 +121,7 @@
         "error",
         "never"
       ],
+      "vue/script-setup-uses-vars": "error",
       "vue/multi-word-component-names": 0
     },
     "parser": "vue-eslint-parser",
