@@ -2,13 +2,6 @@
 	<div class="gantt-chart">
 		<div class="filter-container">
 			<div class="items">
-				<x-button
-					@click.prevent.stop="showTaskFilter = !showTaskFilter"
-					type="secondary"
-					icon="filter"
-				>
-					{{ $t('filters.title') }}
-				</x-button>
 				<filter-popup
 					:visible="showTaskFilter"
 					v-model="params"
@@ -237,7 +230,6 @@ export default {
 			newTaskFieldActive: false,
 			priorities: priorities,
 			taskCollectionService: new TaskCollectionService(),
-			showTaskFilter: false,
 
 			params: {
 				sort_by: ['done', 'id'],
