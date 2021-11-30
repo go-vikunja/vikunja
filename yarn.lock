@@ -10347,10 +10347,10 @@ nested-error-stacks@^2.0.0, nested-error-stacks@^2.1.0:
   resolved "https://registry.yarnpkg.com/nested-error-stacks/-/nested-error-stacks-2.1.0.tgz#0fbdcf3e13fe4994781280524f8b96b0cdff9c61"
   integrity sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==
 
-netlify-cli@8.0.5:
-  version "8.0.5"
-  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.0.5.tgz#23af9760cdf26f3703ffca3765e94e8cf8d8f074"
-  integrity sha512-coyliKQHR8xqSe+oHvN8bgd6LdUPo4Ji32UxBzYRgpWgYv+teIDJpZCAKKoQFNdoBVGrNFs7BHDQmyYBYyDYeA==
+netlify-cli@8.0.6:
+  version "8.0.6"
+  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.0.6.tgz#388fe173fb64279be8581f35594a251ec14fddaf"
+  integrity sha512-68Ja/ZsFU8muf9kdMzufN6kFs6oIm+gPzHEbNE4dszHw5lj4/vnk+c4d+NCjXzKMk8iC2uFSXQgDf1hUea1V+Q==
   dependencies:
     "@netlify/build" "^19.0.7"
     "@netlify/config" "^16.0.4"
@@ -10425,7 +10425,7 @@ netlify-cli@8.0.5:
     minimist "^1.2.5"
     mock-require "^3.0.3"
     multiparty "^4.2.1"
-    netlify "^9.0.0"
+    netlify "^10.0.0"
     netlify-headers-parser "^5.0.0"
     netlify-redirect-parser "^12.0.0"
     netlify-redirector "^0.2.1"
@@ -10511,6 +10511,19 @@ netlify-redirector@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/netlify-redirector/-/netlify-redirector-0.2.1.tgz#efdb761ea2c52edb3ecb5f237db0e10861f2ff0e"
   integrity sha512-17vDR9p1Loanp+vd57y+b6WlKb5X+qb0LZ44oTYsKJbdonz4Md+Ybv1lzH1w1aKm5YWWXHR8LMpWyY9bjlAJKw==
+
+netlify@^10.0.0:
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/netlify/-/netlify-10.0.0.tgz#26cbd186d7f1d776d48b880cc7e84380dab90a09"
+  integrity sha512-8oLcxWZPbzJy9naA2oH86NyaIFmDuRyQONjPAD4hn6JmnZPq+s6Ukh//qjWXNXE/9H8l8J/vDzY4ehHxYfP32w==
+  dependencies:
+    "@netlify/open-api" "^2.6.0"
+    lodash.camelcase "^4.3.0"
+    micro-api-client "^3.3.0"
+    node-fetch "^2.6.1"
+    omit.js "^2.0.2"
+    p-wait-for "^3.2.0"
+    qs "^6.9.6"
 
 netlify@^8.0.4:
   version "8.0.4"
