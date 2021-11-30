@@ -22,7 +22,7 @@ const motd = computed(() => store.state.config.motd)
 
 <style lang="scss" scoped>
 .no-auth-wrapper {
-	background: url('@/assets/llama.svg') no-repeat bottom left fixed var(--site-background);
+	background: url('@/assets/llama.svg?url') no-repeat bottom left fixed var(--site-background);
 	min-height: 100vh;
 }
 
