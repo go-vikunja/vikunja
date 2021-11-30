@@ -55,92 +55,70 @@
 	</div>
 </template>
 
-<script>
-import {mapState} from 'vuex'
-import Message from '@/components/misc/message'
-import ShowTasks from './tasks/ShowTasks.vue'
-import {getHistory} from '../modules/listHistory'
+<script lang="ts" setup>
+import {ref, computed} from 'vue'
+import {useStore} from 'vuex'
+import {useNow} from '@vueuse/core'
+
+import Message from '@/components/misc/message.vue'
+import ShowTasks from '@/views/tasks/ShowTasks.vue'
 import ListCard from '@/components/list/partials/list-card.vue'
-import AddTask from '../components/tasks/add-task.vue'
-import {LOADING, LOADING_MODULE} from '../store/mutation-types'
-import {parseDateOrNull} from '../helpers/parseDateOrNull'
+import AddTask from '@/components/tasks/add-task.vue'
 
-export default {
-	name: 'Home',
-	components: {
-		Message,
-		ListCard,
-		ShowTasks,
-		AddTask,
-	},
-	data() {
-		return {
-			currentDate: new Date(),
-			tasks: [],
-			showTasksKey: 0,
-		}
-	},
-	computed: {
-		welcome() {
-			const now = new Date()
+import {getHistory} from '@/modules/listHistory'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
+import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
 
-			if (now.getHours() < 5) {
-				return 'Night'
-			}
+const now = useNow()
+const welcome = computed(() => {
+	const hours = new Date(now.value).getHours()
 
-			if (now.getHours() < 11) {
-				return 'Morning'
-			}
+	if (hours < 5) {
+		return 'Night'
+	}
 
-			if (now.getHours() < 18) {
-				return 'Day'
-			}
+	if (hours < 11) {
+		return 'Morning'
+	}
 
-			if (now.getHours() < 23) {
-				return 'Evening'
-			}
+	if (hours < 18) {
+		return 'Day'
+	}
 
-			return 'Night'
-		},
-		listHistory() {
-			const history = getHistory()
-			return history.map(l => {
-				return this.$store.getters['lists/getListById'](l.id)
-			}).filter(l => l !== null)
-		},
-		...mapState({
-			migratorsEnabled: state =>
-				state.config.availableMigrators !== null &&
-				state.config.availableMigrators.length > 0,
-			authenticated: state => state.auth.authenticated,
-			userInfo: state => state.auth.info,
-			hasTasks: state => state.hasTasks,
-			defaultListId: state => state.auth.defaultListId,
-			defaultNamespaceId: state => {
-				if (state.namespaces.namespaces.length === 0) {
-					return 0
-				}
+	if (hours < 23) {
+		return 'Evening'
+	}
 
-				return state.namespaces.namespaces[0].id
-			},
-			hasLists: state => {
-				if (state.namespaces.namespaces.length === 0) {
-					return false
-				}
+	return 'Night'
+})
 
-				return state.namespaces.namespaces[0].lists.length > 0
-			},
-			loading: state => state[LOADING] && state[LOADING_MODULE] === 'tasks',
-			deletionScheduledAt: state => parseDateOrNull(state.auth.info?.deletionScheduledAt),
-		}),
-	},
-	methods: {
-		// This is to reload the tasks list after adding a new task through the global task add.
-		// FIXME: Should use vuex (somehow?)
-		updateTaskList() {
-			this.showTasksKey++
-		},
-	},
+const store = useStore()
+const listHistory = computed(() => {
+	const history = getHistory()
+	return history.map(l => {
+		return store.getters['lists/getListById'](l.id)
+	}).filter(l => l !== null)
+})
+
+
+const migratorsEnabled = computed(() => store.state.config.availableMigrators?.length > 0)
+const userInfo = computed(() => store.state.auth.info)
+const hasTasks = computed(() => store.state.hasTasks)
+const defaultListId = computed(() => store.state.auth.defaultListId)
+const defaultNamespaceId = computed(() => store.state.namespaces.namespaces?.[0].id || 0)
+const hasLists = computed (() => {
+	return store.state.namespaces.namespaces.length === 0
+		? false
+		: store.state.namespaces.namespaces[0].lists.length > 0
+})
+const loading = computed(() => store.state.loading && store.state.loadingModule === 'tasks')
+const deletionScheduledAt = computed(() => parseDateOrNull(store.state.auth.info?.deletionScheduledAt))
+
+// This is to reload the tasks list after adding a new task through the global task add.
+// FIXME: Should use vuex (somehow?)
+const showTasksKey = ref(0)
+function updateTaskList() {
+	showTasksKey.value++
 }
 </script>
 
