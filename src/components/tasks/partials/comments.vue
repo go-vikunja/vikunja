@@ -152,7 +152,7 @@
 </template>
 
 <script>
-import AsyncEditor from '@/components/input/AsyncEditor'
+import Editor from '@/components/input/editor.vue'
 
 import TaskCommentService from '../../../services/taskComment'
 import TaskCommentModel from '../../../models/taskComment'
@@ -162,7 +162,7 @@ import {mapState} from 'vuex'
 export default {
 	name: 'comments',
 	components: {
-		editor: AsyncEditor,
+		Editor,
 	},
 	props: {
 		taskId: {

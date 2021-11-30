@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import AsyncEditor from '@/components/input/AsyncEditor'
+import Editor from '@/components/input/editor.vue'
 
 import {LOADING} from '@/store/mutation-types'
 import {mapState} from 'vuex'
@@ -38,7 +38,7 @@ import {mapState} from 'vuex'
 export default {
 	name: 'description',
 	components: {
-		editor: AsyncEditor,
+		Editor,
 	},
 	data() {
 		return {

@@ -453,8 +453,10 @@ import {CURRENT_LIST} from '@/store/mutation-types'
 import {uploadFile} from '@/helpers/attachments'
 import ChecklistSummary from '../../components/tasks/partials/checklist-summary'
 
+
 export default {
 	name: 'TaskDetailView',
+	compatConfig: { ATTR_FALSE_VALUE: false },
 	components: {
 		ChecklistSummary,
 		TaskSubscription,
