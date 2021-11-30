@@ -217,7 +217,7 @@ const router = createRouter({
 			},
 		},
 		{
-			path: '/namespaces/:id/settings/share',
+			path: '/namespaces/:namespaceId/settings/share',
 			name: 'namespace.settings.share',
 			component: NamespaceSettingShare,
 			meta: {

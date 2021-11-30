@@ -16,7 +16,7 @@
 				{{ $t('menu.edit') }}
 			</dropdown-item>
 			<dropdown-item
-				:to="{ name: 'namespace.settings.share', params: { id: namespace.id } }"
+				:to="{ name: 'namespace.settings.share', params: { namespaceId: namespace.id } }"
 				icon="share-alt"
 			>
 				{{ $t('menu.share') }}
