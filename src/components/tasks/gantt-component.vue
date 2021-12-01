@@ -3,7 +3,6 @@
 		<div class="filter-container">
 			<div class="items">
 				<filter-popup
-					:visible="showTaskFilter"
 					v-model="params"
 					@update:modelValue="loadTasks()"
 				/>
