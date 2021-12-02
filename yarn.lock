@@ -2177,7 +2177,7 @@
     call-me-maybe "^1.0.1"
     glob-to-regexp "^0.3.0"
 
-"@netlify/build@^20.0.3":
+"@netlify/build@^20.0.4":
   version "20.0.4"
   resolved "https://registry.yarnpkg.com/@netlify/build/-/build-20.0.4.tgz#a29b7b679e2c435f78ff1dd3e128d67b8045291e"
   integrity sha512-hEv5YwrgK3xkzWulnG1iD7+g/qEB/6NadXfLCkwXquW7NM624C1UAy6XI9FhOmoqYQ10cLVDz1KnUUsa5TETKQ==
@@ -2285,10 +2285,10 @@
     validate-npm-package-name "^3.0.0"
     yargs "^15.3.0"
 
-"@netlify/config@^16.0.5":
-  version "16.0.6"
-  resolved "https://registry.yarnpkg.com/@netlify/config/-/config-16.0.6.tgz#235748174e2d152f053b4064e1412f86170a0fc5"
-  integrity sha512-bYHfhf6FRyhtphcKblxcNxuQVMp12hDgdOIGLdCsqcifbomzPSgCctPzGD4AULPK2Dw3Rx0J9YJxft2McHJIVg==
+"@netlify/config@^16.0.7":
+  version "16.0.7"
+  resolved "https://registry.yarnpkg.com/@netlify/config/-/config-16.0.7.tgz#96ffda4fc556205c55cf776a074eaf4954a4fe63"
+  integrity sha512-/t7/F9WcLqXbOmHynZYZ5iMD8XqDNWyVjAu0XiwNsf4/wLBPN9kfjsOm/fYNi3MncLO03WA70iT7BCUzw2tnYQ==
   dependencies:
     chalk "^4.1.2"
     cron-parser "^4.1.0"
@@ -2305,7 +2305,7 @@
     make-dir "^3.1.0"
     map-obj "^4.0.0"
     netlify "^10.0.0"
-    netlify-headers-parser "^5.0.0"
+    netlify-headers-parser "^6.0.0"
     netlify-redirect-parser "^13.0.0"
     omit.js "^2.0.2"
     p-locate "^5.0.0"
@@ -10371,13 +10371,13 @@ nested-error-stacks@^2.0.0, nested-error-stacks@^2.1.0:
   resolved "https://registry.yarnpkg.com/nested-error-stacks/-/nested-error-stacks-2.1.0.tgz#0fbdcf3e13fe4994781280524f8b96b0cdff9c61"
   integrity sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==
 
-netlify-cli@8.0.13:
-  version "8.0.13"
-  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.0.13.tgz#6b8ad9fcb74ed4b6c70b34e24afaf263f677b566"
-  integrity sha512-XxsOkKWzZonmjQ1Lee1lUFoJD9uk4eZMh7x2E3D+FUwF4Rk8CvN8hVtlUPvOjzyiDdaS+rmEaa/BM7RPtjGVzA==
+netlify-cli@8.0.14:
+  version "8.0.14"
+  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.0.14.tgz#e34eb0b5a04c179be68cebfbe0822cfe2a9e0f7c"
+  integrity sha512-yNw45pABE+fsoD8wizhyQ/iY+f3tryx8InecaLslKooqtW9A2hYOCNKWrM+VWXu9vzfswUfYlMZs6Y9H+QZoUA==
   dependencies:
-    "@netlify/build" "^20.0.3"
-    "@netlify/config" "^16.0.5"
+    "@netlify/build" "^20.0.4"
+    "@netlify/config" "^16.0.7"
     "@netlify/framework-info" "^6.0.0"
     "@netlify/local-functions-proxy" "^1.1.1"
     "@netlify/plugin-edge-handlers" "^2.0.0"
@@ -10450,7 +10450,7 @@ netlify-cli@8.0.13:
     mock-require "^3.0.3"
     multiparty "^4.2.1"
     netlify "^10.0.0"
-    netlify-headers-parser "^5.0.0"
+    netlify-headers-parser "^6.0.0"
     netlify-redirect-parser "^13.0.0"
     netlify-redirector "^0.2.1"
     node-fetch "^2.6.0"
@@ -10500,10 +10500,10 @@ netlify-headers-parser@^4.0.1:
     path-exists "^4.0.0"
     toml "^3.0.0"
 
-netlify-headers-parser@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/netlify-headers-parser/-/netlify-headers-parser-5.0.0.tgz#69dfb165ab3fcbe797dd4991248578b9673684c7"
-  integrity sha512-C953bI/T4jcmO0Ey+z+DWtXfJ38P5Lj0JGhphFMU+WO1i3fdFD+eAzcS1+oTuZ2JoOS9ZNArtzSTtvxDSnL+VQ==
+netlify-headers-parser@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/netlify-headers-parser/-/netlify-headers-parser-6.0.0.tgz#9ba844ef973227c48d01671796dff58435d341f3"
+  integrity sha512-nQkKdMs875uWdjOykbSwIeYCxW8LGb+Gk421o2Jl6jaXvb23ltP/WqsqLngpBuL5G6Jl5SnI6sE2VwjbaLsJSg==
   dependencies:
     escape-string-regexp "^4.0.0"
     is-plain-obj "^3.0.0"
