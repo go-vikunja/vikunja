@@ -297,7 +297,8 @@ const getDayFromText = (text: string) => {
 		}
 	}
 
-	const date = new Date()
+	const now = new Date()
+	const date = new Date(now)
 	const day = parseInt(results[0])
 	date.setDate(day)
 	
@@ -309,7 +310,7 @@ const getDayFromText = (text: string) => {
 		date.setDate(day)
 	}
 
-	if (date < new Date()) {
+	if (date < now) {
 		date.setMonth(date.getMonth() + 1)
 	}
 

@@ -208,7 +208,11 @@ describe('Parse Task Text', () => {
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.date.getDate()).toBe(date.getDate())
-			expect(result.date.getMonth()).toBe(result.date.getDate() === 31 ? date.getMonth() + 2 : date.getMonth() + 1)
+
+			const nextMonthWithDate = result.date.getDate() === 31
+				? (date.getMonth() + 2) % 12
+				: (date.getMonth() + 1) % 12
+			expect(result.date.getMonth()).toBe(nextMonthWithDate)
 		})
 		it('should recognize dates of the month in the future', () => {
 			const nextDay = new Date(+new Date() + 60 * 60 * 24 * 1000)
