@@ -11,18 +11,15 @@
 	</router-link>
 </template>
 
-<script>
-export default {
-	name: 'dropdown-item',
-	props: {
-		to: {
-			required: true,
-		},
-		icon: {
-			type: String,
-			required: false,
-			default: '',
-		},
+<script lang="ts" setup>
+defineProps({
+	to: {
+		required: true,
 	},
-}
+	icon: {
+		type: String,
+		required: false,
+		default: '',
+	},
+})
 </script>

@@ -11,31 +11,28 @@
 	</div>
 </template>
 
-<script>
-export default {
-	name: 'user',
-	props: {
-		user: {
-			required: true,
-			type: Object,
-		},
-		showUsername: {
-			required: false,
-			type: Boolean,
-			default: true,
-		},
-		avatarSize: {
-			required: false,
-			type: Number,
-			default: 50,
-		},
-		isInline: {
-			required: false,
-			type: Boolean,
-			default: false,
-		},
+<script lang="ts" setup>
+defineProps({
+	user: {
+		required: true,
+		type: Object,
 	},
-}
+	showUsername: {
+		required: false,
+		type: Boolean,
+		default: true,
+	},
+	avatarSize: {
+		required: false,
+		type: Number,
+		default: 50,
+	},
+	isInline: {
+		required: false,
+		type: Boolean,
+		default: false,
+	},
+})
 </script>
 
 <style lang="scss" scoped>

@@ -24,41 +24,39 @@
 	</div>
 </template>
 
-<script>
-export default {
-	name: 'card',
-	props: {
-		title: {
-			type: String,
-			default: '',
-		},
-		padding: {
-			type: Boolean,
-			default: true,
-		},
-		hasClose: {
-			type: Boolean,
-			default: false,
-		},
-		closeIcon: {
-			type: String,
-			default: 'times',
-		},
-		shadow: {
-			type: Boolean,
-			default: true,
-		},
-		hasContent: {
-			type: Boolean,
-			default: true,
-		},
-		loading: {
-			type: Boolean,
-			default: false,
-		},
+<script setup lang="ts">
+defineProps({
+	title: {
+		type: String,
+		default: '',
 	},
-	emits: ['close'],
-}
+	padding: {
+		type: Boolean,
+		default: true,
+	},
+	hasClose: {
+		type: Boolean,
+		default: false,
+	},
+	closeIcon: {
+		type: String,
+		default: 'times',
+	},
+	shadow: {
+		type: Boolean,
+		default: true,
+	},
+	hasContent: {
+		type: Boolean,
+		default: true,
+	},
+	loading: {
+		type: Boolean,
+		default: false,
+	},
+})
+
+defineEmits(['close'])
 </script>
 
 <style lang="scss" scoped>

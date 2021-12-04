@@ -1,40 +1,27 @@
 <template>
     <div
-			v-if="isDone"
-			class="is-done"
-			:class="{ 'is-done--small': variant === variants.SMALL }"
-		>
-			{{ $t('task.attributes.done') }}
-		</div>
+		v-if="isDone"
+		class="is-done"
+		:class="{ 'is-done--small': variant === 'small' }"
+	>
+		{{ $t('task.attributes.done') }}
+	</div>
 </template>
 
-<script>
-const VARIANTS = {
-	DEFAULT: 'default',
-	SMALL: 'small',
-}
+<script lang="ts" setup>
+import {PropType} from 'vue'
+type Variants = 'default' | 'small'
 
-export default {
-	name: 'Done',
-
-	data() {
-		return {
-			variants: VARIANTS,
-		}
+defineProps({
+	isDone: {
+		type: Boolean,
+		default: false,
 	},
-
-	props: {
-		isDone: {
-			type: Boolean,
-			default: false,
-		},
-		variant: {
-			type: String,
-			default: VARIANTS.DEFAULT,
-			validator: (variant) => Object.values(VARIANTS).includes(variant),
-		},
+	variant: {
+		type: String as PropType<Variants>,
+		default: 'default',
 	},
-}
+})
 </script>
 
 

@@ -22,91 +22,89 @@
 	</a>
 </template>
 
-<script>
+<script lang="ts" setup>
+import {computed, shallowRef} from 'vue'
+import {useI18n} from 'vue-i18n'
+
 import SubscriptionService from '@/services/subscription'
 import SubscriptionModel from '@/models/subscription'
 
-export default {
-	name: 'task-subscription',
-	data() {
-		return {
-			subscriptionService: new SubscriptionService(),
-		}
-	},
-	props: {
-		entity: {
-			required: true,
-			type: String,
-		},
-		subscription: {
-			required: true,
-		},
-		entityId: {
-			required: true,
-		},
-		isButton: {
-			type: Boolean,
-			default: true,
-		},
-	},
-	emits: ['change'],
-	computed: {
-		tooltipText() {
-			if (this.disabled) {
-				return this.$t('task.subscription.subscribedThroughParent', {
-					entity: this.entity,
-					parent: this.subscription.entity,
-				})
-			}
+import {success} from '@/message'
 
-			return this.subscription !== null ?
-				this.$t('task.subscription.subscribed', {entity: this.entity}) :
-				this.$t('task.subscription.notSubscribed', {entity: this.entity})
-		},
-		buttonText() {
-			return this.subscription !== null ? this.$t('task.subscription.unsubscribe') : this.$t('task.subscription.subscribe')
-		},
-		icon() {
-			return this.subscription !== null ? ['far', 'bell-slash'] : 'bell'
-		},
-		disabled() {
-			if (this.subscription === null) {
-				return false
-			}
-
-			return this.subscription.entity !== this.entity
-		},
+const props = defineProps({
+	entity: {
+		required: true,
+		type: String,
 	},
-	methods: {
-		changeSubscription() {
-			if (this.disabled) {
-				return
-			}
-
-			if (this.subscription === null) {
-				this.subscribe()
-			} else {
-				this.unsubscribe()
-			}
-		},
-		async subscribe() {
-			const subscription = new SubscriptionModel({
-				entity: this.entity,
-				entityId: this.entityId,
-			})
-			await this.subscriptionService.create(subscription)
-			this.$emit('change', subscription)
-			this.$message.success({message: this.$t('task.subscription.subscribeSuccess', {entity: this.entity})})
-		},
-		async unsubscribe() {
-			const subscription = new SubscriptionModel({
-				entity: this.entity,
-				entityId: this.entityId,
-			})
-			await this.subscriptionService.delete(subscription)
-			this.$emit('change', null)
-			this.$message.success({message: this.$t('task.subscription.unsubscribeSuccess', {entity: this.entity})})
-		},
+	subscription: {
+		required: true,
 	},
+	entityId: {
+		required: true,
+	},
+	isButton: {
+		type: Boolean,
+		default: true,
+	},
+})
+
+const emit = defineEmits(['change'])
+
+const subscriptionService = shallowRef(new SubscriptionService())
+
+const {t} = useI18n()
+const tooltipText = computed(() => {
+	if (disabled.value) {
+		return t('task.subscription.subscribedThroughParent', {
+			entity: props.entity,
+			parent: props.subscription.entity,
+		})
+	}
+
+	return props.subscription !== null ?
+		t('task.subscription.subscribed', {entity: props.entity}) :
+		t('task.subscription.notSubscribed', {entity: props.entity})
+})
+
+const buttonText = computed(() => props.subscription !== null ? t('task.subscription.unsubscribe') : t('task.subscription.subscribe'))
+const icon = computed(() => props.subscription !== null ? ['far', 'bell-slash'] : 'bell')
+const disabled = computed(() => {
+	if (props.subscription === null) {
+		return false
+	}
+
+	return props.subscription.entity !== props.entity
+})
+
+function changeSubscription() {
+	if (disabled.value) {
+		return
+	}
+
+	if (props.subscription === null) {
+		subscribe()
+	} else {
+		unsubscribe()
+	}
+}
+
+async function subscribe() {
+	const subscription = new SubscriptionModel({
+		entity: props.entity,
+		entityId: props.entityId,
+	})
+	await subscriptionService.value.create(subscription)
+	emit('change', subscription)
+	success({message: t('task.subscription.subscribeSuccess', {entity: props.entity})})
+}
+
+async function unsubscribe() {
+	const subscription = new SubscriptionModel({
+		entity: props.entity,
+		entityId: props.entityId,
+	})
+	await subscriptionService.value.delete(subscription)
+	emit('change', null)
+	success({message: t('task.subscription.unsubscribeSuccess', {entity: props.entity})})
 }
 </script>

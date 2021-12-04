@@ -20,64 +20,59 @@
 				:class="{'is-favorite': list.isFavorite, 'is-archived': list.isArchived}"
 				@click.stop="toggleFavoriteList(list)"
 				class="favorite">
-				<icon icon="star" v-if="list.isFavorite"/>
-				<icon :icon="['far', 'star']" v-else/>
+				<icon :icon="list.isFavorite ? 'star' : ['far', 'star']" />
 			</span>
 		</div>
 		<div class="title">{{ list.title }}</div>
 	</router-link>
 </template>
 
-<script>
+<script lang="ts" setup>
+import {ref, watch} from 'vue'
+import {useStore} from 'vuex'
+
 import ListService from '@/services/list'
 
-export default {
-	name: 'list-card',
-	data() {
-		return {
-			background: null,
-			backgroundLoading: false,
-		}
-	},
-	props: {
-		list: {
-			required: true,
-		},
-		showArchived: {
-			default: false,
-			type: Boolean,
-		},
-	},
-	watch: {
-		list: {
-			handler: 'loadBackground',
-			immediate: true,
-		},
-	},
-	methods: {
-		async loadBackground() {
-			if (this.list === null || !this.list.backgroundInformation || this.backgroundLoading) {
-				return
-			}
+const background = ref(null)
+const backgroundLoading = ref(false)
 
-			this.backgroundLoading = true
-
-			const listService = new ListService()
-			try {
-				this.background = await listService.background(this.list)
-			} finally {
-				this.backgroundLoading = false
-			}
-		},
-		toggleFavoriteList(list) {
-			// The favorites pseudo list is always favorite
-			// Archived lists cannot be marked favorite
-			if (list.id === -1 || list.isArchived) {
-				return
-			}
-			this.$store.dispatch('lists/toggleListFavorite', list)
-		},
+const props = defineProps({
+	list: {
+		type: Object,
+		required: true,
 	},
+	showArchived: {
+		default: false,
+		type: Boolean,
+	},
+})
+
+watch(props.list, loadBackground, { immediate: true })
+
+async function loadBackground() {
+	if (props.list === null || !props.list.backgroundInformation || backgroundLoading.value) {
+		return
+	}
+
+	backgroundLoading.value = true
+
+	const listService = new ListService()
+	try {
+		background.value = await listService.background(props.list)
+	} finally {
+		backgroundLoading.value = false
+	}
+}
+
+const store = useStore()
+
+function toggleFavoriteList(list) {
+	// The favorites pseudo list is always favorite
+	// Archived lists cannot be marked favorite
+	if (list.id === -1 || list.isArchived) {
+		return
+	}
+	store.dispatch('lists/toggleListFavorite', list)
 }
 </script>
 

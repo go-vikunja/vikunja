@@ -2,17 +2,17 @@
 	<div class="no-auth-wrapper">
 		<div class="noauth-container">
 			<Logo class="logo" width="400" height="117" />
-			<message v-if="motd !== ''" class="my-2">
+			<Message v-if="motd !== ''" class="my-2">
 				{{ motd }}
-			</message>
+			</Message>
 			<slot/>
 		</div>
 	</div>
 </template>
 
-<script setup>
+<script lang="ts" setup>
 import Logo from '@/components/home/Logo.vue'
-import message from '@/components/misc/message'
+import Message from '@/components/misc/message.vue'
 import {useStore} from 'vuex'
 import {computed} from 'vue'
 

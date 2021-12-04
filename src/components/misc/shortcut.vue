@@ -7,24 +7,21 @@
 	</component>
 </template>
 
-<script>
-export default {
-	name: 'shortcut',
-	props: {
-		keys: {
-			type: Array,
-			required: true,
-		},
-		combination: {
-			type: String,
-			default: '+',
-		},
-		is: {
-			type: String,
-			default: 'div',
-		},
+<script lang="ts" setup>
+defineProps({
+	keys: {
+		type: Array,
+		required: true,
 	},
-}
+	combination: {
+		type: String,
+		default: '+',
+	},
+	is: {
+		type: String,
+		default: 'div',
+	},
+})
 </script>
 
 <style lang="scss" scoped>

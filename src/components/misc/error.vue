@@ -7,16 +7,10 @@
 	</message>
 </template>
 
-<script>
-import Message from '@/components/misc/message'
+<script lang="ts" setup>
+import Message from '@/components/misc/message.vue'
 
-export default {
-	name: 'error',
-	components: {Message},
-	methods: {
-		reload() {
-			window.location.reload()
-		},
-	},
+function reload() {
+	window.location.reload()
 }
 </script>

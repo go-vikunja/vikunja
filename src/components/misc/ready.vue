@@ -13,7 +13,7 @@
 	<section v-else-if="error !== ''">
 		<no-auth-wrapper>
 			<card>
-				<p v-if="error === errorNoApiUrl">
+				<p v-if="error === ERROR_NO_API_URL">
 					{{ $t('ready.noApiUrlConfigured') }}
 				</p>
 				<message variant="danger" v-else>
@@ -40,51 +40,34 @@
 	</transition>
 </template>
 
-<script>
+<script lang="ts" setup>
+import {ref, computed} from 'vue'
+import {useStore} from 'vuex'
+
 import Logo from '@/assets/logo.svg?component'
-import ApiConfig from '@/components/misc/api-config'
-import Message from '@/components/misc/message'
-import NoAuthWrapper from '@/components/misc/no-auth-wrapper'
-import {mapState} from 'vuex'
+import ApiConfig from '@/components/misc/api-config.vue'
+import Message from '@/components/misc/message.vue'
+import NoAuthWrapper from '@/components/misc/no-auth-wrapper.vue'
+
 import {ERROR_NO_API_URL} from '@/helpers/checkAndSetApiUrl'
 
-export default {
-	name: 'ready',
-	components: {
-		Message,
-		Logo,
-		NoAuthWrapper,
-		ApiConfig,
-	},
-	data() {
-		return {
-			error: '',
-			errorNoApiUrl: ERROR_NO_API_URL,
-		}
-	},
-	created() {
-		this.load()
-	},
-	computed: {
-		ready() {
-			return this.$store.state.vikunjaReady
-		},
-		showLoading() {
-			return !this.ready && this.error === ''
-		},
-		...mapState([
-			'online',
-		]),
-	},
-	methods: {
-		load() {
-			this.$store.dispatch('loadApp')
-				.catch(e => {
-					this.error = e
-				})
-		},
-	},
+const store = useStore()
+
+const ready = computed(() => store.state.vikunjaReady)
+const online = computed(() => store.state.online)
+
+const error = ref('')
+const showLoading = computed(() => !ready.value && error.value === '')
+
+async function load() {
+	try {
+		await store.dispatch('loadApp')
+	} catch(e: any) {
+		error.value = e
+	}
 }
+
+load()
 </script>
 
 <style lang="scss" scoped>

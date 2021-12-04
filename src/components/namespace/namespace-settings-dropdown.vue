@@ -52,30 +52,22 @@
 	</dropdown>
 </template>
 
-<script>
+<script setup lang="ts">
+import {ref, onMounted} from 'vue'
+
 import Dropdown from '@/components/misc/dropdown.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 import TaskSubscription from '@/components/misc/subscription.vue'
 
-export default {
-	name: 'namespace-settings-dropdown',
-	data() {
-		return {
-			subscription: null,
-		}
+const props = defineProps({
+	namespace: {
+		type: Object, // NamespaceModel
+		required: true,
 	},
-	components: {
-		DropdownItem,
-		Dropdown,
-		TaskSubscription,
-	},
-	props: {
-		namespace: {
-			required: true,
-		},
-	},
-	mounted() {
-		this.subscription = this.namespace.subscription
-	},
-}
+})
+
+const subscription = ref(null)
+onMounted(() => {
+	subscription.value = props.namespace.subscription
+})
 </script>

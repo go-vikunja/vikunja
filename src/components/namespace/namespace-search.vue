@@ -9,32 +9,23 @@
 	/>
 </template>
 
-<script>
+<script lang="ts" setup>
+import {ref, computed} from 'vue'
+import {useStore} from 'vuex'
 import Multiselect from '@/components/input/multiselect.vue'
 
-export default {
-	name: 'namespace-search',
-	emits: ['selected'],
-	data() {
-		return {
-			query: '',
-		}
-	},
-	components: {
-		Multiselect,
-	},
-	computed: {
-		namespaces() {
-			return this.$store.getters['namespaces/searchNamespace'](this.query)
-		},
-	},
-	methods: {
-		findNamespaces(query) {
-			this.query = query
-		},
-		select(namespace) {
-			this.$emit('selected', namespace)
-		},
-	},
+const emit = defineEmits(['selected'])
+
+const query = ref('')
+
+const store = useStore()
+const namespaces = computed(() => store.getters['namespaces/searchNamespace'](query.value))
+
+function findNamespaces(newQuery: string) {
+	query.value = newQuery
+}
+
+function select(namespace) {
+	emit('selected', namespace)
 }
 </script>

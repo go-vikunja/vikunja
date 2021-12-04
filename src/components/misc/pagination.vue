@@ -34,8 +34,10 @@
 	</nav>
 </template>
 
-<script>
-function createPagination(totalPages, currentPage) {
+<script lang="ts" setup>
+import {computed} from 'vue'
+
+function createPagination(totalPages: number, currentPage: number) {
 	const pages = []
 	for (let i = 0; i < totalPages; i++) {
 
@@ -79,30 +81,18 @@ function getRouteForPagination(page = 1, type = 'list') {
 	}
 }
 
-export default {
-	name: 'Pagination',
-
-	props: {
-		totalPages: {
-			type: Number,
-			required: true,
-		},
-		currentPage: {
-			type: Number,
-			default: 0,
-		},
+const props = defineProps({
+	totalPages: {
+		type: Number,
+		required: true,
 	},
-
-	computed: {
-		pages() {
-			return createPagination(this.totalPages, this.currentPage)
-		},
+	currentPage: {
+		type: Number,
+		default: 0,
 	},
+})
 
-	methods: {
-		getRouteForPagination,
-	},
-}
+const pages = computed(() => createPagination(props.totalPages, props.currentPage))
 </script>
 
 <style lang="scss" scoped>

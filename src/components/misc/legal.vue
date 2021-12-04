@@ -6,16 +6,14 @@
 	</div>
 </template>
 
-<script>
-import {mapState} from 'vuex'
+<script lang="ts" setup>
+import {computed} from 'vue'
+import {useStore} from 'vuex'
 
-export default {
-	name: 'legal',
-	computed: mapState({
-		imprintUrl: state => state.config.legal.imprintUrl,
-		privacyPolicyUrl: state => state.config.legal.privacyPolicyUrl,
-	}),
-}
+const store = useStore()
+
+const imprintUrl = computed(() => store.state.config.legal.imprintUrl)
+const privacyPolicyUrl = computed(() => store.state.config.legal.privacyPolicyUrl)
 </script>
 
 <style lang="scss" scoped>
