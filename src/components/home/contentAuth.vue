@@ -20,7 +20,12 @@
 
 				<quick-actions/>
 
-				<router-view :route="routeWithModal"/>
+
+				<router-view :route="routeWithModal" v-slot="{ Component }">
+					<keep-alive :include="['list.list', 'list.gantt', 'list.table', 'list.kanban']">
+						<component :is="Component" />
+					</keep-alive>
+				</router-view>
 
 				<transition name="modal">
 					<component v-if="currentModal" :is="currentModal" />
