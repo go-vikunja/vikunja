@@ -47,7 +47,6 @@
 					v-for="(l, k) in listHistory"
 					:key="`l${k}`"
 					:list="l"
-					:background-resolver="() => null"
 				/>
 			</div>
 		</div>
@@ -105,12 +104,8 @@ const migratorsEnabled = computed(() => store.state.config.availableMigrators?.l
 const userInfo = computed(() => store.state.auth.info)
 const hasTasks = computed(() => store.state.hasTasks)
 const defaultListId = computed(() => store.state.auth.defaultListId)
-const defaultNamespaceId = computed(() => store.state.namespaces.namespaces?.[0].id || 0)
-const hasLists = computed (() => {
-	return store.state.namespaces.namespaces.length === 0
-		? false
-		: store.state.namespaces.namespaces[0].lists.length > 0
-})
+const defaultNamespaceId = computed(() => store.state.namespaces.namespaces?.[0]?.id || 0)
+const hasLists = computed (() => store.state.namespaces.namespaces?.[0]?.lists.length > 0)
 const loading = computed(() => store.state.loading && store.state.loadingModule === 'tasks')
 const deletionScheduledAt = computed(() => parseDateOrNull(store.state.auth.info?.deletionScheduledAt))
 
