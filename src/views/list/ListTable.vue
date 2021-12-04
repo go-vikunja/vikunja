@@ -282,7 +282,7 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 		{
 			name: 'task.detail',
 			params: { id },
-			state: { backgroundView: router.currentRoute.value.fullPath },
+			state: { backdropView: router.currentRoute.value.fullPath },
 		},
 	])),
 ))

@@ -167,7 +167,7 @@ export default {
 			return {
 				name: 'task.detail',
 				params: { id: this.task.id },
-				state: { backgroundView: this.$router.currentRoute.value.fullPath },
+				state: { backdropView: this.$router.currentRoute.value.fullPath },
 			}
 		},
 	},

@@ -21,7 +21,7 @@ export function useTaskList(initTasks) {
 	const loading = computed(() => taskCollectionService.value.loading)
 	const totalPages = computed(() => taskCollectionService.value.totalPages)
 
-    const tasks = ref([])
+	const tasks = ref([])
 	const currentPage = ref(0)
 	const loadedList = ref(null)
 	const searchTerm = ref('')

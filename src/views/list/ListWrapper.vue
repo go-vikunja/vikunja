@@ -124,7 +124,7 @@ async function loadList(listIdToLoad) {
 		const loadedList = await listService.value.get(list)
 		await store.dispatch(CURRENT_LIST, loadedList)
 	} finally {
-		loadedListId.value = listId
+		loadedListId.value = listId.value
 	}
 }
 </script>

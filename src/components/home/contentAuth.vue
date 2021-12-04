@@ -54,8 +54,8 @@ function useRouteWithModal() {
 	const historyState = computed(() => route.fullPath && window.history.state)
 
 	const routeWithModal = computed(() => {
-		if (historyState.value.backgroundView) {
-			return router.resolve(historyState.value.backgroundView)
+		if (historyState.value.backdropView) {
+			return router.resolve(historyState.value.backdropView)
 		} else {
 			return route
 		}
@@ -65,7 +65,7 @@ function useRouteWithModal() {
 
 	const currentModal = shallowRef(null)
 	watchEffect(() => {
-		currentModal.value = historyState.value.backgroundView
+		currentModal.value = historyState.value.backdropView
 			? route.matched[0]?.components.default
 			: null
 	})
