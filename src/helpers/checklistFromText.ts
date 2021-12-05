@@ -40,7 +40,7 @@ export const findCheckboxesInText = (text: string): number[] => {
 	return [
 		...checkboxes.checked,
 		...checkboxes.unchecked,
-	].sort()
+	].sort((a, b) => a < b ? -1 : 1)
 }
 
 export const getChecklistStatistics = (text: string): CheckboxStatistics => {

@@ -21,6 +21,7 @@ Here's some text in between
 		expect(checkboxes[0]).toBe(0)
 		expect(checkboxes[1]).toBe(18)
 		expect(checkboxes[2]).toBe(69)
+		expect(checkboxes[3]).toBe(90)
 	})
 	it('should find one checkbox with *', () => {
 		const text: string = '* [ ] Lorem Ipsum'
