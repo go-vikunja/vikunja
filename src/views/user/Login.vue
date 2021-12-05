@@ -97,6 +97,7 @@
 </template>
 
 <script>
+import {parseURL} from 'ufo'
 import {mapState} from 'vuex'
 
 import {HTTPFactory} from '@/http-common'
@@ -206,7 +207,9 @@ export default {
 		},
 
 		redirectToProvider(provider) {
-			redirectToProvider(provider, this.openidConnect.redirectUrl)
+			const {host, protocol} = parseURL(window.location.href)
+			const redirectUrl = `${protocol}//${host}/auth/openid/`
+			redirectToProvider(provider, redirectUrl)
 		},
 	},
 }
