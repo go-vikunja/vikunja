@@ -231,23 +231,25 @@ export default {
 		},
 
 		setDatesToNextWeek() {
-			this.cStartDate = new Date()
-			this.cEndDate = new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
+			const now = new Date()
+			this.cStartDate = now
+			this.cEndDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
 			this.showOverdue = false
 			this.setDate()
 		},
 
 		setDatesToNextMonth() {
-			this.cStartDate = new Date()
-			this.cEndDate = new Date((new Date()).setMonth((new Date()).getMonth() + 1))
+			const now = new Date()
+			this.cStartDate = now
+			this.cEndDate = new Date((new Date()).setMonth(now.getMonth() + 1))
 			this.showOverdue = false
 			this.setDate()
 		},
 
 		showTodaysTasks() {
-			const d = new Date()
-			this.cStartDate = new Date()
-			this.cEndDate = new Date(d.setDate(d.getDate() + 1))
+			const now = new Date()
+			this.cStartDate = now
+			this.cEndDate = new Date((new Date()).setDate(now.getDate() + 1))
 			this.showOverdue = true
 			this.setDate()
 		},

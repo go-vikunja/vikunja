@@ -68,21 +68,26 @@
 import { ref, computed } from 'vue'
 import flatPickr from 'vue-flatpickr-component'
 
-import { i18n } from '@/i18n'
-import { store } from '@/store'
+import { useI18n } from 'vue-i18n'
+import { useStore } from 'vuex'
 
 import ListWrapper from './ListWrapper'
 import GanttChart from '@/components/tasks/gantt-component'
 import Fancycheckbox from '@/components/input/fancycheckbox'
 
+const DEFAULT_DAY_COUNT = 35 
+
 const showTaskswithoutDates = ref(false)
-const dayWidth = ref(35)
-const dateFrom = ref(new Date((new Date()).setDate((new Date()).getDate() - 15)))
-const dateTo = ref(new Date((new Date()).setDate((new Date()).getDate() + 30)))
+const dayWidth = ref(DEFAULT_DAY_COUNT)
 
+const now = ref(new Date())
+const dateFrom = ref(new Date((new Date()).setDate(now.value.getDate() - 15)))
+const dateTo = ref(new Date((new Date()).setDate(now.value.getDate() + 30)))
 
+const {t} = useI18n()
+const {store} = useStore()
 const flatPickerConfig = computed(() => ({
-	altFormat: i18n.global.t('date.altFormatShort'),
+	altFormat: t('date.altFormatShort'),
 	altInput: true,
 	dateFormat: 'Y-m-d',
 	enableTime: false,
