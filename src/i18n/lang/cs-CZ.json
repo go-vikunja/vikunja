@@ -102,6 +102,7 @@
         "title": "Avatar",
         "initials": "Iniciály",
         "gravatar": "Gravatar",
+        "marble": "Marble",
         "upload": "Nahrát",
         "uploadAvatar": "Nahrát avatara",
         "statusUpdateSuccess": "Stav avatara byl úspěšně aktualizován!",
