@@ -19,8 +19,8 @@
   "dependencies": {
     "@github/hotkey": "1.6.0",
     "@kyvg/vue3-notification": "2.3.4",
-    "@sentry/tracing": "6.15.0",
-    "@sentry/vue": "6.15.0",
+    "@sentry/tracing": "6.16.0",
+    "@sentry/vue": "6.16.0",
     "@vue/compat": "3.2.24",
     "@vueuse/core": "7.1.2",
     "bulma-css-variables": "0.9.33",
