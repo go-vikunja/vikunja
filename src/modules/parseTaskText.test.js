@@ -7,14 +7,14 @@ describe('Parse Task Text', () => {
 	it('should return text with no intents as is', () => {
 		expect(parseTaskText('Lorem Ipsum').text).toBe('Lorem Ipsum')
 	})
-	
+
 	it('should not parse text when disabled', () => {
 		const text = 'Lorem Ipsum today *label +list !2 @user'
 		const result = parseTaskText(text, 'disabled')
-		
+
 		expect(result.text).toBe(text)
 	})
-	
+
 	it('should parse text in todoist mode when configured', () => {
 		const result = parseTaskText('Lorem Ipsum today @label #list !2 +user', 'todoist')
 
@@ -509,5 +509,55 @@ describe('Parse Task Text', () => {
 			expect(result.assignees).toHaveLength(1)
 			expect(result.assignees[0]).toBe('user with long name')
 		})
+	})
+
+	describe('Recurring Dates', () => {
+		const cases = {
+			'every 1 hour': {type: 'hours', amount: 1},
+			'every hour': {type: 'hours', amount: 1},
+			'every 5 hours': {type: 'hours', amount: 5},
+			'every 12 hours': {type: 'hours', amount: 12},
+			'every day': {type: 'days', amount: 1},
+			'every 1 day': {type: 'days', amount: 1},
+			'every 2 days': {type: 'days', amount: 2},
+			'every week': {type: 'weeks', amount: 1},
+			'every 1 week': {type: 'weeks', amount: 1},
+			'every 3 weeks': {type: 'weeks', amount: 3},
+			'every month': {type: 'months', amount: 1},
+			'every 1 month': {type: 'months', amount: 1},
+			'every 2 months': {type: 'months', amount: 2},
+			'every year': {type: 'years', amount: 1},
+			'every 1 year': {type: 'years', amount: 1},
+			'every 4 years': {type: 'years', amount: 4},
+			'anually': {type: 'years', amount: 1},
+			'bianually': {type: 'months', amount: 6},
+			'semiannually': {type: 'months', amount: 6},
+			'biennially': {type: 'years', amount: 2},
+			'daily': {type: 'days', amount: 1},
+			'hourly': {type: 'hours', amount: 1},
+			'monthly': {type: 'months', amount: 1},
+			'weekly': {type: 'weeks', amount: 1},
+			'yearly': {type: 'years', amount: 1},
+			'every one hour': {type: 'hours', amount: 1}, // maybe unnesecary but better to include it for completeness sake
+			'every two hours': {type: 'hours', amount: 2},
+			'every three hours': {type: 'hours', amount: 3},
+			'every four hours': {type: 'hours', amount: 4},
+			'every five hours': {type: 'hours', amount: 5},
+			'every six hours': {type: 'hours', amount: 6},
+			'every seven hours': {type: 'hours', amount: 7},
+			'every eight hours': {type: 'hours', amount: 8},
+			'every nine hours': {type: 'hours', amount: 9},
+			'every ten hours': {type: 'hours', amount: 10},
+		}
+
+		for (const c in cases) {
+			it(`should parse ${c} as recurring date every ${cases[c].amount} ${cases[c].type}`, () => {
+				const result = parseTaskText(`Lorem Ipsum ${c}`)
+
+				expect(result.text).toBe('Lorem Ipsum')
+				expect(result.repeats.type).toBe(cases[c].type)
+				expect(result.repeats.amount).toBe(cases[c].amount)
+			})
+		}
 	})
 })

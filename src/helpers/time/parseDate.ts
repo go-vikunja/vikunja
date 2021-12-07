@@ -135,18 +135,18 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 
 		if (result === null) {
 			// 3. Try parsing the date as "27/01" or "01/27"
-			const monthNumericRegex:RegExp = /([0-9][0-9]?\/[0-9][0-9]?)/ig
+			const monthNumericRegex: RegExp = /([0-9][0-9]?\/[0-9][0-9]?)/ig
 			results = monthNumericRegex.exec(text)
 
 			// Put the year before or after the date, depending on what works
 			result = results === null ? null : `${now.getFullYear()}/${results[0]}`
-			if(result === null) {
+			if (result === null) {
 				return {
 					foundText,
 					date: null,
 				}
 			}
-			
+
 			foundText = results === null ? '' : results[0]
 			if (result === null || isNaN(new Date(result).getTime())) {
 				result = results === null ? null : `${results[0]}/${now.getFullYear()}`
@@ -280,7 +280,7 @@ const getDateFromWeekday = (text: string): dateFoundResult => {
 	if (foundText.endsWith(' ')) {
 		foundText = foundText.substr(0, foundText.length - 1)
 	}
-	
+
 	return {
 		foundText: foundText,
 		date: date,
@@ -301,12 +301,12 @@ const getDayFromText = (text: string) => {
 	const date = new Date(now)
 	const day = parseInt(results[0])
 	date.setDate(day)
-	
+
 	// If the parsed day is the 31st but the next month only has 30 days, setting the day to 31 will "overflow" the
 	// date to the next month, but the first.
 	// This would look like a very weired bug. Now, to prevent that, we check if the day is the same as parsed after 
 	// setting it for the first time and set it again if it isn't - that would mean the month overflowed.
-	if(day === 31 && date.getDate() !== day) {
+	if (day === 31 && date.getDate() !== day) {
 		date.setDate(day)
 	}
 

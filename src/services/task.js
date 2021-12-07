@@ -69,7 +69,7 @@ export default class TaskService extends AbstractService {
 
 		// Make the repeating amount to seconds
 		let repeatAfterSeconds = 0
-		if (model.repeatAfter.amount !== null || model.repeatAfter.amount !== 0) {
+		if (model.repeatAfter !== null && (model.repeatAfter.amount !== null || model.repeatAfter.amount !== 0)) {
 			switch (model.repeatAfter.type) {
 				case 'hours':
 					repeatAfterSeconds = model.repeatAfter.amount * 60 * 60

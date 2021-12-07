@@ -38,6 +38,24 @@ interface Priorites {
 	DO_NOW: number,
 }
 
+enum RepeatType {
+	Hours = 'hours',
+	Days = 'days',
+	Weeks = 'weeks',
+	Months = 'months',
+	Years = 'years',
+}
+
+interface Repeats {
+	type: RepeatType,
+	amount: number,
+}
+
+interface repeatParsedResult {
+	textWithoutMatched: string,
+	repeats: Repeats | null,
+}
+
 interface ParsedTaskText {
 	text: string,
 	date: Date | null,
@@ -45,6 +63,7 @@ interface ParsedTaskText {
 	list: string | null,
 	priority: number | null,
 	assignees: string[],
+	repeats: Repeats | null,
 }
 
 interface Prefixes {
@@ -67,6 +86,7 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 		list: null,
 		priority: null,
 		assignees: [],
+		repeats: null,
 	}
 
 	const prefixes = PREFIXES[prefixesMode]
@@ -83,7 +103,11 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 
 	result.assignees = getItemsFromPrefix(text, prefixes.assignee)
 
-	const {newText, date} = parseDate(text)
+	const {textWithoutMatched, repeats} = getRepeats(text)
+	result.text = textWithoutMatched
+	result.repeats = repeats
+
+	const {newText, date} = parseDate(result.text)
 	result.text = newText
 	result.date = date
 
@@ -130,6 +154,113 @@ const getPriority = (text: string, prefix: string): number | null => {
 	}
 
 	return null
+}
+
+const getRepeats = (text: string): repeatParsedResult => {
+	const regex = /((every|each) (([0-9]+|one|two|three|four|five|six|seven|eight|nine|ten) )?(hours?|days?|weeks?|months?|years?))|anually|bianually|semiannually|biennially|daily|hourly|monthly|weekly|yearly/ig
+	const results = regex.exec(text)
+	if (results === null) {
+		return {
+			textWithoutMatched: text,
+			repeats: null,
+		}
+	}
+
+	let amount = 1
+	switch (results[3] ? results[3].trim() : undefined) {
+		case 'one':
+			amount = 1
+			break
+		case 'two':
+			amount = 2
+			break
+		case 'three':
+			amount = 3
+			break
+		case 'four':
+			amount = 4
+			break
+		case 'five':
+			amount = 5
+			break
+		case 'six':
+			amount = 6
+			break
+		case 'seven':
+			amount = 7
+			break
+		case 'eight':
+			amount = 8
+			break
+		case 'nine':
+			amount = 9
+			break
+		case 'ten':
+			amount = 10
+			break
+		default:
+			amount = results[3] ? parseInt(results[3]) : 1
+	}
+	let type: RepeatType = RepeatType.Hours
+
+	switch (results[0]) {
+		case 'biennially':
+			type = RepeatType.Years
+			amount = 2
+			break
+		case 'bianually':
+		case 'semiannually':
+			type = RepeatType.Months
+			amount = 6
+			break
+		case 'yearly':
+		case 'anually':
+			type = RepeatType.Years
+			break
+		case 'daily':
+			type = RepeatType.Days
+			break
+		case 'hourly':
+			type = RepeatType.Hours
+			break
+		case 'monthly':
+			type = RepeatType.Months
+			break
+		case 'weekly':
+			type = RepeatType.Weeks
+			break
+		default:
+			switch (results[5]) {
+				case 'hour':
+				case 'hours':
+					type = RepeatType.Hours
+					break
+				case 'day':
+				case 'days':
+					type = RepeatType.Days
+					break
+				case 'week':
+				case 'weeks':
+					type = RepeatType.Weeks
+					break
+				case 'month':
+				case 'months':
+					type = RepeatType.Months
+					break
+				case 'year':
+				case 'years':
+					type = RepeatType.Years
+					break
+			}
+	}
+
+	return {
+		textWithoutMatched: text.replace(results[0], ''),
+		repeats: {
+			amount,
+			type,
+		},
+	}
 }
 
 const cleanupItemText = (text: string, items: string[], prefix: string): string => {

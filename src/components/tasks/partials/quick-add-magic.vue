@@ -65,6 +65,21 @@
 					<li>17th ({{ $t('task.quickAddMagic.dateNth', {day: '17'}) }})</li>
 				</ul>
 				<p>{{ $t('task.quickAddMagic.dateTime', {time: 'at 17:00', timePM: '5pm'}) }}</p>
+				
+				<h3>{{ $t('task.quickAddMagic.repeats') }}</h3>
+				<p>{{ $t('task.quickAddMagic.repeatsDescription', {suffix: 'every {amount} {type}'}) }}</p>
+				<p>{{ $t('misc.forExample') }}</p>
+				<ul>
+					<!-- Not localized because these only work in english -->
+					<li>Every day</li>
+					<li>Every 3 days</li>
+					<li>Every week</li>
+					<li>Every 2 weeks</li>
+					<li>Every month</li>
+					<li>Every 6 months</li>
+					<li>Every year</li>
+					<li>Every 2 years</li>
+				</ul>
 			</card>
 		</modal>
 	</div>

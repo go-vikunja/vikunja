@@ -292,6 +292,7 @@ export default {
 				bucketId: bucketId || 0,
 				position,
 			})
+			task.repeatAfter = parsedTask.repeats
 		
 			const taskService = new TaskService()
 			const createdTask = await taskService.create(task)
