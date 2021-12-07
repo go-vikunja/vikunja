@@ -52,7 +52,7 @@ ln -s /opt/vikunja/vikunja /usr/bin/vikunja
 
 ### Systemd service
 
-Take the following `service` file and adapt it to your needs:
+Save the following service file to `/etc/systemd/system/vikunja.service` and adapt it to your needs:
 
 {{< highlight service >}}
 [Unit]
@@ -82,8 +82,6 @@ WantedBy=multi-user.target
 {{< /highlight >}}
 
 If you've installed Vikunja to a directory other than `/opt/vikunja`, you need to adapt `WorkingDirectory` accordingly.
-
-Save the file to `/etc/systemd/system/vikunja.service`
 
 After you made all nessecary modifications, it's time to start the service:
 
