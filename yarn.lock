@@ -3519,10 +3519,10 @@
     resolve-from "^5.0.0"
     rollup-pluginutils "^2.8.2"
 
-"@vitejs/plugin-legacy@1.6.3":
-  version "1.6.3"
-  resolved "https://registry.yarnpkg.com/@vitejs/plugin-legacy/-/plugin-legacy-1.6.3.tgz#314be9df113e5c2747ab10d29e5e9ebe0048c99f"
-  integrity sha512-YivdG6gT91/wjFL6woTwVRgK9KHrju8GwXwgv5FdfAVo0GK0FK4V+YEobmDKRcOMKXQ1U5awY5HqbPIsoJalKQ==
+"@vitejs/plugin-legacy@1.6.4":
+  version "1.6.4"
+  resolved "https://registry.yarnpkg.com/@vitejs/plugin-legacy/-/plugin-legacy-1.6.4.tgz#36cf0cc10bd1f32902719d62c8f23c9d433eb3a8"
+  integrity sha512-geH2F3hTRN++E4n9NZ0JFumxIWUKqW4FA9PAgM7Q6RvUOUUYW4tlURhEmCBYfZSN24H/yX3mEolX+wFVErsAYQ==
   dependencies:
     "@babel/standalone" "^7.16.4"
     core-js "^3.19.1"
