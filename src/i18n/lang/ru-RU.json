@@ -102,6 +102,7 @@
         "title": "Аватар",
         "initials": "Инициалы",
         "gravatar": "Gravatar",
+        "marble": "Marble",
         "upload": "Загрузить файл",
         "uploadAvatar": "Загрузить аватар",
         "statusUpdateSuccess": "Статус аватара обновлён.",
@@ -471,7 +472,8 @@
     "close": "Закрыть",
     "download": "Скачать",
     "showMenu": "Show the menu",
-    "hideMenu": "Hide the menu"
+    "hideMenu": "Hide the menu",
+    "forExample": "For example:"
   },
   "input": {
     "resetColor": "Сбросить цвет",
@@ -720,7 +722,9 @@
       "dateWeekday": "любой день недели, будет использовать следующую дату",
       "dateCurrentYear": "текущий год",
       "dateNth": "будет использовать {day}е текущего месяца",
-      "dateTime": "Комбинируй любой из этих форматов даты с «{time}» (или {timePM}), чтобы установить время."
+      "dateTime": "Комбинируй любой из этих форматов даты с «{time}» (или {timePM}), чтобы установить время.",
+      "repeats": "Repeating tasks",
+      "repeatsDescription": "To set a task as repeating in an interval, simply add '{suffix}' to the task text. The amount needs to be a number and can be omitted to use just the type (see examples)."
     }
   },
   "team": {

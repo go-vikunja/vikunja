@@ -102,6 +102,7 @@
         "title": "Avatar",
         "initials": "Chữ cái viết tắt",
         "gravatar": "Gravatar",
+        "marble": "Marble",
         "upload": "Tải lên",
         "uploadAvatar": "Tải lên Avatar",
         "statusUpdateSuccess": "Avatar đã được cập nhật!",
@@ -471,7 +472,8 @@
     "close": "Đóng",
     "download": "Tải về",
     "showMenu": "Hiển thị menu",
-    "hideMenu": "Ẩn menu"
+    "hideMenu": "Ẩn menu",
+    "forExample": "For example:"
   },
   "input": {
     "resetColor": "Đặt lại màu",
@@ -720,7 +722,9 @@
       "dateWeekday": "bất kỳ ngày nào trong tuần, sẽ sử dụng ngày tiếp theo với ngày đó",
       "dateCurrentYear": "sẽ sử dụng năm hiện tại",
       "dateNth": "sẽ sử dụng ngày {day} của tháng hiện tại",
-      "dateTime": "Kết hợp bất kì đinh dạng ngày với \"{time}\" (hoặc {timePM}) để thiết lập thời gian."
+      "dateTime": "Kết hợp bất kì đinh dạng ngày với \"{time}\" (hoặc {timePM}) để thiết lập thời gian.",
+      "repeats": "Repeating tasks",
+      "repeatsDescription": "To set a task as repeating in an interval, simply add '{suffix}' to the task text. The amount needs to be a number and can be omitted to use just the type (see examples)."
     }
   },
   "team": {

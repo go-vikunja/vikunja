@@ -102,6 +102,7 @@
         "title": "Avatar",
         "initials": "Iniziali",
         "gravatar": "Gravatar",
+        "marble": "Marble",
         "upload": "Carica",
         "uploadAvatar": "Carica Avatar",
         "statusUpdateSuccess": "Avatar status was updated successfully!",
@@ -471,7 +472,8 @@
     "close": "Chiudi",
     "download": "Scarica",
     "showMenu": "Show the menu",
-    "hideMenu": "Hide the menu"
+    "hideMenu": "Hide the menu",
+    "forExample": "For example:"
   },
   "input": {
     "resetColor": "Ripristina Colore",
@@ -720,7 +722,9 @@
       "dateWeekday": "any weekday, will use the next date with that date",
       "dateCurrentYear": "will use the current year",
       "dateNth": "will use the {day}th of the current month",
-      "dateTime": "Combine any of the date formats with \"{time}\" (or {timePM}) to set a time."
+      "dateTime": "Combine any of the date formats with \"{time}\" (or {timePM}) to set a time.",
+      "repeats": "Repeating tasks",
+      "repeatsDescription": "To set a task as repeating in an interval, simply add '{suffix}' to the task text. The amount needs to be a number and can be omitted to use just the type (see examples)."
     }
   },
   "team": {

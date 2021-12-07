@@ -102,6 +102,7 @@
         "title": "Herr Der Elemente",
         "initials": "Initialä",
         "gravatar": "Gravatar",
+        "marble": "Marble",
         "upload": "Ufeladä",
         "uploadAvatar": "Profiilbild ufeladä",
         "statusUpdateSuccess": "Avatar Zuestand erfolgriich aktualisiert!",
@@ -471,7 +472,8 @@
     "close": "Schlüüse",
     "download": "Herunterladen",
     "showMenu": "Menü anzeigen",
-    "hideMenu": "Menü ausblenden"
+    "hideMenu": "Menü ausblenden",
+    "forExample": "For example:"
   },
   "input": {
     "resetColor": "Farb zruggsetze",
@@ -720,7 +722,9 @@
       "dateWeekday": "jede Wuchetaag wird nimmt s'negste Datum mit dem Datum",
       "dateCurrentYear": "nimmt das laufende Jahr",
       "dateNth": "nimmt de {day}ti vom jetzige Monet",
-      "dateTime": "Kombiniere irgendeis vo dene Datumsformat mit \"{time}\" (oder {timePM}) um e Ziit z'setze."
+      "dateTime": "Kombiniere irgendeis vo dene Datumsformat mit \"{time}\" (oder {timePM}) um e Ziit z'setze.",
+      "repeats": "Repeating tasks",
+      "repeatsDescription": "To set a task as repeating in an interval, simply add '{suffix}' to the task text. The amount needs to be a number and can be omitted to use just the type (see examples)."
     }
   },
   "team": {

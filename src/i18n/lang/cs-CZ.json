@@ -471,7 +471,8 @@
     "close": "Zavřít",
     "download": "Stáhnout",
     "showMenu": "Zobrazit nabídku",
-    "hideMenu": "Skrýt nabídku"
+    "hideMenu": "Skrýt nabídku",
+    "forExample": "For example:"
   },
   "input": {
     "resetColor": "Obnovit barvu",
@@ -720,7 +721,9 @@
       "dateWeekday": "každý pracovní den použije další datum s tímto datem",
       "dateCurrentYear": "použije aktuální rok",
       "dateNth": "použije {day}. den aktuálního měsíce",
-      "dateTime": "Pro nastavení času zkombinujte libovolný formát data s \"{time}\" (nebo {timePM})."
+      "dateTime": "Pro nastavení času zkombinujte libovolný formát data s \"{time}\" (nebo {timePM}).",
+      "repeats": "Repeating tasks",
+      "repeatsDescription": "To set a task as repeating in an interval, simply add '{suffix}' to the task text. The amount needs to be a number and can be omitted to use just the type (see examples)."
     }
   },
   "team": {
