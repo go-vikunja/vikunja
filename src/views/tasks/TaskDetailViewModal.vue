@@ -12,11 +12,22 @@
 </template>
 
 <script setup>
-import TaskDetailView from './TaskDetailView'
-import router from '@/router'
+import {computed} from 'vue'
+import {useRouter, useRoute} from 'vue-router'
 
+import TaskDetailView from './TaskDetailView'
+
+const route = useRoute()
+const historyState = computed(() => route.fullPath && window.history.state)
+
+const router = useRouter()
 function close() {
-	router.back()
+	if (historyState.value) {
+		router.back()
+	} else {
+		const backdropRoute = historyState.value?.backdropView && router.resolve(historyState.value.backdropView)
+		router.push(backdropRoute)
+	}
 }
 </script>
 
