@@ -2321,10 +2321,10 @@
   resolved "https://registry.yarnpkg.com/@netlify/esbuild/-/esbuild-0.13.6.tgz#ef0fda98604e708528ef0a57e853c50a6fc987f2"
   integrity sha512-tiKmDcHM2riSVN79c0mJY/67EBDafXQAMitHuLiCDAMdtz3kfv+NqdVG5krgf5lWR8Uf8AeZrUW5Q9RP25REvw==
 
-"@netlify/framework-info@^6.0.0":
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/@netlify/framework-info/-/framework-info-6.0.0.tgz#dc37bb3e2bdeee893dd4a3dfc112e6ad0cf433ab"
-  integrity sha512-4El0mzzKZF1elVq0AT4fo9e8FbYEIDKvORgGkJHWouO0yMGkmo5r8ub5YHgjPp6dV9ShkwOTu34/MbvbddqO8A==
+"@netlify/framework-info@^6.1.0":
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/@netlify/framework-info/-/framework-info-6.1.0.tgz#1b0c5b1b604141ae20fd71d2fdff5d3bce58349f"
+  integrity sha512-yupFxf+RzLNJIZO2KMm6Nkp2xh4w1QbRQ3W6Fa8YciaaZwsjAPGrvpmUKftvLf5q7edb3i2ogitLUm2aYlTZiQ==
   dependencies:
     ajv "^8.0.0"
     filter-obj "^2.0.1"
@@ -10357,14 +10357,14 @@ nested-error-stacks@^2.0.0, nested-error-stacks@^2.1.0:
   resolved "https://registry.yarnpkg.com/nested-error-stacks/-/nested-error-stacks-2.1.0.tgz#0fbdcf3e13fe4994781280524f8b96b0cdff9c61"
   integrity sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==
 
-netlify-cli@8.0.15:
-  version "8.0.15"
-  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.0.15.tgz#7f8c758342ea9eb59400c0e0fbd6cbe991259fad"
-  integrity sha512-7bv+bTWBdRJMkqStbY9qD365p47BV+Djl1nMXGh9j55GNc4ntGwIhgGeMTpS6B/k7PsURkHF2gSTrGr0ymB0ng==
+netlify-cli@8.0.16:
+  version "8.0.16"
+  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.0.16.tgz#6646b15a6e3208af1c508081385a4afaf4781bd0"
+  integrity sha512-HHSZRofFF0Or7i4POYF0CKmJZBhJtm+3Gz7VMxLBxylIvatwfGIcCY+47JXOXm+YxMpERCThSr33NaTT1ezwxQ==
   dependencies:
     "@netlify/build" "^20.0.4"
     "@netlify/config" "^16.0.7"
-    "@netlify/framework-info" "^6.0.0"
+    "@netlify/framework-info" "^6.1.0"
     "@netlify/local-functions-proxy" "^1.1.1"
     "@netlify/plugin-edge-handlers" "^2.0.0"
     "@netlify/plugins-list" "^6.0.1"
