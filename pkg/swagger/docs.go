@@ -8915,7 +8915,7 @@ var doc = `{
             "type": "object",
             "properties": {
                 "avatar_provider": {
-                    "description": "The avatar provider. Valid types are ` + "`" + `gravatar` + "`" + ` (uses the user email), ` + "`" + `upload` + "`" + `, ` + "`" + `initials` + "`" + `, ` + "`" + `default` + "`" + `.",
+                    "description": "The avatar provider. Valid types are ` + "`" + `gravatar` + "`" + ` (uses the user email), ` + "`" + `upload` + "`" + `, ` + "`" + `initials` + "`" + `, ` + "`" + `marble` + "`" + ` (generates a random avatar for each user), ` + "`" + `default` + "`" + `.",
                     "type": "string"
                 }
             }

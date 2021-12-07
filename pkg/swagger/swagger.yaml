@@ -1235,7 +1235,8 @@ definitions:
     properties:
       avatar_provider:
         description: The avatar provider. Valid types are `gravatar` (uses the user
-          email), `upload`, `initials`, `default`.
+          email), `upload`, `initials`, `marble` (generates a random avatar for each
+          user), `default`.
         type: string
     type: object
   v1.UserDeletionRequestConfirm:

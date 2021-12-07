@@ -455,7 +455,8 @@ func UpdateUser(s *xorm.Session, user *User) (updatedUser *User, err error) {
 		if user.AvatarProvider != "default" &&
 			user.AvatarProvider != "gravatar" &&
 			user.AvatarProvider != "initials" &&
-			user.AvatarProvider != "upload" {
+			user.AvatarProvider != "upload" &&
+			user.AvatarProvider != "marble" {
 			return updatedUser, &ErrInvalidAvatarProvider{AvatarProvider: user.AvatarProvider}
 		}
 	}

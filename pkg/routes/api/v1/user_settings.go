@@ -29,7 +29,7 @@ import (
 
 // UserAvatarProvider holds the user avatar provider type
 type UserAvatarProvider struct {
-	// The avatar provider. Valid types are `gravatar` (uses the user email), `upload`, `initials`, `default`.
+	// The avatar provider. Valid types are `gravatar` (uses the user email), `upload`, `initials`, `marble` (generates a random avatar for each user), `default`.
 	AvatarProvider string `json:"avatar_provider"`
 }
 
