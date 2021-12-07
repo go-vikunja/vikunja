@@ -14,6 +14,10 @@
 				{{ $t('user.settings.avatar.gravatar') }}
 			</label>
 			<label class="radio">
+				<input name="avatarProvider" type="radio" v-model="avatarProvider" value="marble"/>
+				{{ $t('user.settings.avatar.marble') }}
+			</label>
+			<label class="radio">
 				<input name="avatarProvider" type="radio" v-model="avatarProvider" value="upload"/>
 				{{ $t('user.settings.avatar.upload') }}
 			</label>

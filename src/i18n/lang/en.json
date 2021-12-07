@@ -102,6 +102,7 @@
         "title": "Avatar",
         "initials": "Initials",
         "gravatar": "Gravatar",
+        "marble": "Marble",
         "upload": "Upload",
         "uploadAvatar": "Upload Avatar",
         "statusUpdateSuccess": "Avatar status was updated successfully!",
