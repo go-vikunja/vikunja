@@ -21,23 +21,16 @@
 	</div>
 </template>
 
-<script>
-import {mapState} from 'vuex'
+<script lang="ts" setup>
+import {computed} from 'vue'
+import {useStore} from 'vuex'
 
 import Logo from '@/components/home/Logo.vue'
 import PoweredByLink from './PoweredByLink.vue'
 
-export default {
-	name: 'contentLinkShare',
-	components: {
-		Logo,
-		PoweredByLink,
-	},
-	computed: mapState([
-		'currentList',
-		'background',
-	]),
-}
+const store = useStore()
+const currentList = computed(() => store.state.currentList)
+const background = computed(() => store.state.background)
 </script>
 
 <style lang="scss" scoped>

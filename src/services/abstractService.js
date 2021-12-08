@@ -28,7 +28,7 @@ export default class AbstractService {
 
 	/**
 	 * The abstract constructor.
-	 * @param paths An object with all paths. Default values are specified above.
+	 * @param [paths] An object with all paths. Default values are specified above.
 	 */
 	constructor(paths) {
 		this.http = axios.create({

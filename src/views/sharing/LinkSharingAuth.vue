@@ -16,83 +16,101 @@
 						:placeholder="$t('user.auth.passwordPlaceholder')"
 						v-model="password"
 						v-focus
-						@keyup.enter.prevent="auth"
+						@keyup.enter.prevent="authenticate()"
 					/>
 				</div>
 			</div>
 
-			<x-button @click="auth" :loading="loading">
+			<x-button @click="authenticate()" :loading="loading">
 				{{ $t('user.auth.login') }}
 			</x-button>
 
-			<message variant="danger" class="mt-4" v-if="errorMessage !== ''">
+			<Message variant="danger" class="mt-4" v-if="errorMessage !== ''">
 				{{ errorMessage }}
-			</message>
+			</Message>
 		</div>
 	</div>
 </template>
 
-<script>
-import {mapGetters} from 'vuex'
-import Message from '@/components/misc/message'
+<script lang="ts" setup>
+import {ref, computed} from 'vue'
+import {useStore} from 'vuex'
+import {useRoute, useRouter} from 'vue-router'
+import {useI18n} from 'vue-i18n'
+import {useTitle} from '@vueuse/core'
 
-export default {
-	name: 'LinkSharingAuth',
-	components: {Message},
-	data() {
-		return {
-			loading: true,
-			authenticateWithPassword: false,
-			errorMessage: '',
+import Message from '@/components/misc/message.vue'
 
-			hash: '',
-			password: '',
+const {t} = useI18n()
+useTitle(t('sharing.authenticating'))
+
+async function useAuth() {
+	const store = useStore()
+	const route = useRoute()
+	const router = useRouter()
+
+	const loading = ref(false)
+	const authenticateWithPassword = ref(false)
+	const errorMessage = ref('')
+	const password = ref('')
+
+	const authLinkShare = computed(() => store.getters['auth/authLinkShare'])
+
+	async function authenticate() {
+		authenticateWithPassword.value = false
+		errorMessage.value = ''
+	
+		if (authLinkShare.value) {
+			// FIXME: push to 'list.list' since authenticated?
+			return
 		}
-	},
-	created() {
-		this.auth()
-	},
-	mounted() {
-		this.setTitle(this.$t('sharing.authenticating'))
-	},
-	computed: mapGetters('auth', [
-		'authLinkShare',
-	]),
-	methods: {
-		async auth() {
-			this.errorMessage = ''
+	
+		// TODO: no password
+	
+		loading.value = true
 
-			if (this.authLinkShare) {
+		try {
+			const {list_id: listId} = await store.dispatch('auth/linkShareAuth', {
+				hash: route.params.share,
+				password: password.value,
+			})
+			router.push({name: 'list.list', params: {listId}})
+		} catch (e) {
+			if (e.response?.data?.code === 13001) {
+				authenticateWithPassword.value = true
 				return
 			}
 
-			this.loading = true
-
-			try {
-				const r = await this.$store.dispatch('auth/linkShareAuth', {
-					hash: this.$route.params.share,
-					password: this.password,
-				})
-				this.$router.push({name: 'list.list', params: {listId: r.list_id}})
-			} catch (e) {
-				if (typeof e.response.data.code !== 'undefined' && e.response.data.code === 13001) {
-					this.authenticateWithPassword = true
-					return
-				}
-
-				// TODO: Put this logic in a global errorMessage handler method which checks all auth codes
-				let errorMessage = this.$t('sharing.error')
-				if (e.response && e.response.data && e.response.data.message) {
-					errorMessage = e.response.data.message
-				}
-				if (typeof e.response.data.code !== 'undefined' && e.response.data.code === 13002) {
-					errorMessage = this.$t('sharing.invalidPassword')
-				}
-				this.errorMessage = errorMessage
-			} finally {
-				this.loading = false
+			// TODO: Put this logic in a global errorMessage handler method which checks all auth codes
+			let errorMessage = t('sharing.error')
+			if (e.response?.data?.message) {
+				errorMessage = e.response.data.message
 			}
-		},
-	},
+			if (e.response?.data?.code === 13002) {
+				errorMessage = t('sharing.invalidPassword')
+			}
+			errorMessage.value = errorMessage
+		} finally {
+			loading.value = false
+		}
+	}
+
+	authenticate()
+
+	return {
+		loading,
+		authenticateWithPassword,
+		errorMessage,
+		password,
+		authenticate,
+	}
 }
+
+const {
+	loading,
+	authenticateWithPassword,
+	errorMessage,
+	password,
+	authenticate,
+} = useAuth()
 </script>

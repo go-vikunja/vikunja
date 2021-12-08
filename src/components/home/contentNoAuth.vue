@@ -4,44 +4,38 @@
 	</no-auth-wrapper>
 </template>
 
-<script>
-import {saveLastVisited} from '@/helpers/saveLastVisited'
+<script lang="ts" setup>
+import {watchEffect} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+
 import NoAuthWrapper from '@/components/misc/no-auth-wrapper'
 
-export default {
-	name: 'contentNoAuth',
-	components: {NoAuthWrapper},
-	computed: {
-		routeName() {
-			return this.$route.name
-		},
-	},
-	watch: {
-		routeName: {
-			handler(routeName) {
-				if (!routeName) return
-				this.redirectToHome()
-			},
-			immediate: true,
-		},
-	},
-	methods: {
-		redirectToHome() {
-			// Check if the user is already logged in and redirect them to the home page if not
-			if (
-				this.$route.name !== 'user.login' &&
-				this.$route.name !== 'user.password-reset.request' &&
-				this.$route.name !== 'user.password-reset.reset' &&
-				this.$route.name !== 'user.register' &&
-				this.$route.name !== 'link-share.auth' &&
-				this.$route.name !== 'openid.auth' &&
-				localStorage.getItem('passwordResetToken') === null &&
-				localStorage.getItem('emailConfirmToken') === null
-			) {
-				saveLastVisited(this.$route.name, this.$route.params)
-				this.$router.push({name: 'user.login'})
-			}
-		},
-	},
+import {saveLastVisited} from '@/helpers/saveLastVisited'
+
+const route = useRoute()
+
+watchEffect(() => {
+	if (!route.name) return
+	redirectToHome()
+})
+
+const router = useRouter()
+function redirectToHome() {
+	// Check if the user is already logged in and redirect them to the home page if not
+	if (
+		![
+			'user.login',
+			'user.password-reset.request',
+			'user.password-reset.reset',
+			'user.register',
+			'link-share.auth',
+			'openid.auth',
+		].includes(route.name) &&
+		localStorage.getItem('passwordResetToken') === null &&
+		localStorage.getItem('emailConfirmToken') === null
+	) {
+		saveLastVisited(route.name, route.params)
+		router.push({name: 'user.login'})
+	}
 }
 </script>
