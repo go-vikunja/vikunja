@@ -102,7 +102,7 @@
         "title": "Avatar",
         "initials": "Iniciály",
         "gravatar": "Gravatar",
-        "marble": "Marble",
+        "marble": "Mramor",
         "upload": "Nahrát",
         "uploadAvatar": "Nahrát avatara",
         "statusUpdateSuccess": "Stav avatara byl úspěšně aktualizován!",
@@ -115,12 +115,12 @@
         "vikunja": "Vikunja"
       },
       "appearance": {
-        "title": "Color Scheme",
-        "setSuccess": "Saved change of color scheme to {colorScheme}",
+        "title": "Barevné schéma",
+        "setSuccess": "Změna barevného schématu na {colorScheme} byla uložena",
         "colorScheme": {
-          "light": "Light",
-          "system": "System",
-          "dark": "Dark"
+          "light": "Světlý",
+          "system": "Systém",
+          "dark": "Tmavý"
         }
       }
     },
@@ -473,7 +473,7 @@
     "download": "Stáhnout",
     "showMenu": "Zobrazit nabídku",
     "hideMenu": "Skrýt nabídku",
-    "forExample": "For example:"
+    "forExample": "Například:"
   },
   "input": {
     "resetColor": "Obnovit barvu",
@@ -558,7 +558,7 @@
         "text2": "Tímto také odstraníte všechny přílohy, připomenutí a vztahy spojené s tímto úkolem a nelze je vrátit zpět!"
       },
       "actions": {
-        "assign": "Assign to a user",
+        "assign": "Přiřadit uživateli",
         "label": "Přidat štítky",
         "priority": "Nastavit prioritu",
         "dueDate": "Nastavit termín",
@@ -723,8 +723,8 @@
       "dateCurrentYear": "použije aktuální rok",
       "dateNth": "použije {day}. den aktuálního měsíce",
       "dateTime": "Pro nastavení času zkombinujte libovolný formát data s \"{time}\" (nebo {timePM}).",
-      "repeats": "Repeating tasks",
-      "repeatsDescription": "To set a task as repeating in an interval, simply add '{suffix}' to the task text. The amount needs to be a number and can be omitted to use just the type (see examples)."
+      "repeats": "Opakující se úkoly",
+      "repeatsDescription": "Chcete-li nastavit úkol jako opakující se v intervalu, stačí přidat '{suffix}' do textu úkolu. Množství musí být číslo a lze ji vynechat, aby byl použit pouze typ (viz příklady)."
     }
   },
   "team": {
@@ -779,7 +779,7 @@
     "task": {
       "title": "Stránka úkolů",
       "done": "Označit úkol jako hotový",
-      "assign": "Assign to a user",
+      "assign": "Přiřadit uživateli",
       "labels": "Přidat štítky k tomuto úkolu",
       "dueDate": "Změnit termín tohoto úkolu",
       "attachment": "Přidat přílohu k tomuto úkolu",
@@ -905,7 +905,7 @@
     "5010": "Tento tým nemá k tomuto prostoru přístup.",
     "5011": "Tento uživatel již má přístup k tomuto prostoru.",
     "5012": "Prostor je archivován, a proto je přístupný pouze pro čtení.",
-    "6001": "The team name cannot be empty.",
+    "6001": "Název týmu nemůže být prázdný.",
     "6002": "Tým neexistuje.",
     "6004": "Tým již má přístup k tomuto prostoru nebo seznamu.",
     "6005": "Uživatel je již členem tohoto týmu.",
