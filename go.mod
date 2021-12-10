@@ -59,7 +59,7 @@ require (
 	github.com/swaggo/swag v1.7.6
 	github.com/ulule/limiter/v3 v3.9.0
 	github.com/yuin/goldmark v1.4.4
-	golang.org/x/crypto v0.0.0-20211202192323-5770296d904e
+	golang.org/x/crypto v0.0.0-20211209193657-4570a0811e8b
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
