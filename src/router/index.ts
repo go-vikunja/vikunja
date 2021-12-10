@@ -244,6 +244,9 @@ const router = createRouter({
 			path: '/tasks/:id',
 			name: 'task.detail',
 			component: TaskDetailViewModal,
+			props: route => ({
+				taskId: parseInt(route.params.id),
+			}),
 		},
 		{
 			path: '/tasks/by/upcoming',
@@ -341,21 +344,33 @@ const router = createRouter({
 			path: '/lists/:listId/list',
 			name: 'list.list',
 			component: ListList,
+			props: route => ({
+				listId: parseInt(route.params.listId),
+			}),
 		},
 		{
 			path: '/lists/:listId/gantt',
 			name: 'list.gantt',
 			component: ListGantt,
+			props: route => ({
+				listId: parseInt(route.params.listId),
+			}),
 		},
 		{
 			path: '/lists/:listId/table',
 			name: 'list.table',
 			component: ListTable,
+			props: route => ({
+				listId: parseInt(route.params.listId),
+			}),
 		},
 		{
 			path: '/lists/:listId/kanban',
 			name: 'list.kanban',
 			component: ListKanban,
+			props: route => ({
+				listId: parseInt(route.params.listId),
+			}),
 		},
 		{
 			path: '/teams',

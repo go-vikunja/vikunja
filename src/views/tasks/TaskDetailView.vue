@@ -475,6 +475,14 @@ export default {
 		description,
 		heading,
 	},
+
+	props: {
+		taskId: {
+			type: Number,
+			required: true,
+		},
+	},
+
 	data() {
 		return {
 			taskService: new TaskService(),
@@ -525,10 +533,6 @@ export default {
 		},
 	},
 	computed: {
-		taskId() {
-			const {id} = this.$route.params
-			return id === undefined ? id : Number(id)
-		},
 		currentList() {
 			return this.$store.state[CURRENT_LIST]
 		},

@@ -1,5 +1,5 @@
 <template>
-	<ListWrapper class="list-table">
+	<ListWrapper class="list-table" :list-id="listId" viewName="table">
 		<template #header>
 			<div class="filter-container">
 			<div class="items">
@@ -15,50 +15,47 @@
 					</template>
 					<template #content="{isOpen}">
 						<card class="columns-filter" :class="{'is-open': isOpen}">
-							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.id">#</fancycheckbox>
-							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.done">
+							<fancycheckbox v-model="activeColumns.id">#</fancycheckbox>
+							<fancycheckbox v-model="activeColumns.done">
 								{{ $t('task.attributes.done') }}
 							</fancycheckbox>
-							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.title">
+							<fancycheckbox v-model="activeColumns.title">
 								{{ $t('task.attributes.title') }}
 							</fancycheckbox>
-							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.priority">
+							<fancycheckbox v-model="activeColumns.priority">
 								{{ $t('task.attributes.priority') }}
 							</fancycheckbox>
-							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.labels">
+							<fancycheckbox v-model="activeColumns.labels">
 								{{ $t('task.attributes.labels') }}
 							</fancycheckbox>
-							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.assignees">
+							<fancycheckbox v-model="activeColumns.assignees">
 								{{ $t('task.attributes.assignees') }}
 							</fancycheckbox>
-							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.dueDate">
+							<fancycheckbox v-model="activeColumns.dueDate">
 								{{ $t('task.attributes.dueDate') }}
 							</fancycheckbox>
-							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.startDate">
+							<fancycheckbox v-model="activeColumns.startDate">
 								{{ $t('task.attributes.startDate') }}
 							</fancycheckbox>
-							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.endDate">
+							<fancycheckbox v-model="activeColumns.endDate">
 								{{ $t('task.attributes.endDate') }}
 							</fancycheckbox>
-							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.percentDone">
+							<fancycheckbox v-model="activeColumns.percentDone">
 								{{ $t('task.attributes.percentDone') }}
 							</fancycheckbox>
-							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.created">
+							<fancycheckbox v-model="activeColumns.created">
 								{{ $t('task.attributes.created') }}
 							</fancycheckbox>
-							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.updated">
+							<fancycheckbox v-model="activeColumns.updated">
 								{{ $t('task.attributes.updated') }}
 							</fancycheckbox>
-							<fancycheckbox @change="saveTaskColumns" v-model="activeColumns.createdBy">
+							<fancycheckbox v-model="activeColumns.createdBy">
 								{{ $t('task.attributes.createdBy') }}
 							</fancycheckbox>
 						</card>
 					</template>
 				</popup>
-				<filter-popup
-					v-model="params"
-					@update:modelValue="loadTasks()"
-				/>
+				<filter-popup v-model="params" />
 			</div>
 			</div>
 		</template>
@@ -182,21 +179,23 @@
 	</ListWrapper>
 </template>
 
-<script setup>
-import { ref, reactive, computed, toRaw } from 'vue'
+<script setup lang="ts">
+import { toRef, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
-import ListWrapper from './ListWrapper'
+import { useStorage } from '@vueuse/core'
+
+import ListWrapper from './ListWrapper.vue'
 import Done from '@/components/misc/Done.vue'
-import User from '@/components/misc/user'
-import PriorityLabel from '@/components/tasks/partials/priorityLabel'
-import Labels from '@/components/tasks/partials/labels'
-import DateTableCell from '@/components/tasks/partials/date-table-cell'
-import Fancycheckbox from '@/components/input/fancycheckbox'
-import Sort from '@/components/tasks/partials/sort'
+import User from '@/components/misc/user.vue'
+import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'
+import Labels from '@/components/tasks/partials/labels.vue'
+import DateTableCell from '@/components/tasks/partials/date-table-cell.vue'
+import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+import Sort from '@/components/tasks/partials/sort.vue'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import Pagination from '@/components/misc/pagination.vue'
-import Popup from '@/components/misc/popup'
+import Popup from '@/components/misc/popup.vue'
 
 import { useTaskList } from '@/composables/taskList'
 
@@ -216,57 +215,27 @@ const ACTIVE_COLUMNS_DEFAULT = {
 	createdBy: false,
 }
 
+const props = defineProps({
+	listId: {
+		type: Number,
+		required: true,
+	},
+})
+
 const SORT_BY_DEFAULT = {
 	id: 'desc',
 }
 
-function useSavedView(activeColumns, sortBy) {
-	const savedShowColumns = localStorage.getItem('tableViewColumns')
-	if (savedShowColumns !== null) {
-		Object.assign(activeColumns, JSON.parse(savedShowColumns))
-	}
-
-	const savedSortBy = localStorage.getItem('tableViewSortBy')
-	if (savedSortBy !== null) {
-		sortBy.value = JSON.parse(savedSortBy)
-	}
-}
-
-const activeColumns = reactive({ ...ACTIVE_COLUMNS_DEFAULT })
-const sortBy = ref({ ...SORT_BY_DEFAULT })
-
-useSavedView(activeColumns, sortBy)
-
-function beforeLoad(params) {
-	// This makes sure an id sort order is always sorted last.
-	// When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
-	// precedence over everything else, making any other sort columns pretty useless.
-	let hasIdFilter = false
-	const sortKeys = Object.keys(sortBy.value)
-	for (const s of sortKeys) {
-		if (s === 'id') {
-			sortKeys.splice(s, 1)
-			hasIdFilter = true
-			break
-		}
-	}
-	if (hasIdFilter) {
-		sortKeys.push('id')
-	}
-	params.value.sort_by = sortKeys
-	params.value.order_by = sortKeys.map(s => sortBy.value[s])
-}
+const activeColumns = useStorage('tableViewColumns', { ...ACTIVE_COLUMNS_DEFAULT })
+const sortBy = useStorage('tableViewSortBy', { ...SORT_BY_DEFAULT })
 
 const {
 	tasks,
 	loading,
 	params,
-	loadTasks,
 	totalPages,
 	currentPage,
-	searchTerm,
-	initTaskList,
-} = useTaskList(beforeLoad)
+} = useTaskList(toRef(props, 'listId'))
 
 Object.assign(params.value, {
 	filter_by: [],
@@ -274,8 +243,19 @@ Object.assign(params.value, {
 	filter_comparator: [],
 })
 
-const router = useRouter()
+// FIXME: by doing this we can have multiple sort orders
+function sort(property) {
+	const order = sortBy.value[property]
+	if (typeof order === 'undefined' || order === 'none') {
+		sortBy.value[property] = 'desc'
+	} else if (order === 'desc') {
+		sortBy.value[property] = 'asc'
+	} else {
+		delete sortBy.value[property]
+	}
+}
 
+const router = useRouter()
 const taskDetailRoutes = computed(() => Object.fromEntries(
 	tasks.value.map(({id}) => ([
 		id,
@@ -286,26 +266,6 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 		},
 	])),
 ))
-
-function sort(property) {
-	const order = sortBy.value[property]
-	if (typeof order === 'undefined' || order === 'none') {
-		sortBy.value[property] = 'desc'
-	} else if (order === 'desc') {
-		sortBy.value[property] = 'asc'
-	} else {
-		delete sortBy.value[property]
-	}
-	beforeLoad(currentPage.value, searchTerm.value)
-	// Save the order to be able to retrieve them later
-	localStorage.setItem('tableViewSortBy', JSON.stringify(sortBy.value))
-}
-
-function saveTaskColumns() {
-	localStorage.setItem('tableViewColumns', JSON.stringify(toRaw(activeColumns)))
-}
-
-initTaskList()
 </script>
 
 <style lang="scss" scoped>

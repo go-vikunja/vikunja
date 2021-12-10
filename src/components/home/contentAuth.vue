@@ -44,7 +44,7 @@
 </template>
 
 <script lang="ts" setup>
-import {watch, computed, shallowRef, watchEffect} from 'vue'
+import {watch, computed, shallowRef, watchEffect, h} from 'vue'
 import {useStore} from 'vuex'
 import {useRoute, useRouter} from 'vue-router'
 import {useEventListener} from '@vueuse/core'
@@ -66,19 +66,36 @@ function useRouteWithModal() {
 		}
 	})
 
-	
-
 	const currentModal = shallowRef(null)
 	watchEffect(() => {
-		currentModal.value = historyState.value.backdropView
-			? route.matched[0]?.components.default
+		const hasBackdropView = historyState.value.backdropView
+
+		if (!hasBackdropView) {
+			currentModal.value = null
+			return
+		}
+
+		// logic from vue-router
+		// https://github.com/vuejs/vue-router-next/blob/798cab0d1e21f9b4d45a2bd12b840d2c7415f38a/src/RouterView.ts#L125
+		const routePropsOption = route.matched[0]?.props.default
+		const routeProps = routePropsOption
+			? routePropsOption === true
+				? route.params
+				: typeof routePropsOption === 'function'
+					? routePropsOption(route)
+					: routePropsOption
 			: null
+
+		currentModal.value = h(
+			route.matched[0]?.components.default,
+			routeProps,
+		)
 	})
 
 	return { routeWithModal, currentModal }
 }
 
-useRouteWithModal()
+const { routeWithModal, currentModal } = useRouteWithModal()
 
 const store = useStore()
 

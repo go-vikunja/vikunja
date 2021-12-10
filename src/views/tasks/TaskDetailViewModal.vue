@@ -7,15 +7,22 @@
 		<a @click="close()" class="close">
 			<icon icon="times"/>
 		</a>
-		<task-detail-view/>
+		<task-detail-view :task-id="props.taskId"/>
 	</modal>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed} from 'vue'
 import {useRouter, useRoute} from 'vue-router'
 
-import TaskDetailView from './TaskDetailView'
+import TaskDetailView from './TaskDetailView.vue'
+
+const props = defineProps({
+	taskId: {
+		type: Number,
+		required: true,
+	},
+})
 
 const route = useRoute()
 const historyState = computed(() => route.fullPath && window.history.state)

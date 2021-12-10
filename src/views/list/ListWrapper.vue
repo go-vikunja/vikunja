@@ -8,28 +8,28 @@
 				<router-link
 					v-shortcut="'g l'"
 					:title="$t('keyboardShortcuts.list.switchToListView')"
-					:class="{'is-active': $route.name === 'list.list'}"
+					:class="{'is-active': viewName === 'list'}"
 					:to="{ name: 'list.list',   params: { listId } }">
 					{{ $t('list.list.title') }}
 				</router-link>
 				<router-link
 					v-shortcut="'g g'"
 					:title="$t('keyboardShortcuts.list.switchToGanttView')"
-					:class="{'is-active': $route.name === 'list.gantt'}"
+					:class="{'is-active': viewName === 'gantt'}"
 					:to="{ name: 'list.gantt',  params: { listId } }">
 					{{ $t('list.gantt.title') }}
 				</router-link>
 				<router-link
 					v-shortcut="'g t'"
 					:title="$t('keyboardShortcuts.list.switchToTableView')"
-					:class="{'is-active': $route.name === 'list.table'}"
+					:class="{'is-active': viewName === 'table'}"
 					:to="{ name: 'list.table',  params: { listId } }">
 					{{ $t('list.table.title') }}
 				</router-link>
 				<router-link
 					v-shortcut="'g k'"
 					:title="$t('keyboardShortcuts.list.switchToKanbanView')"
-					:class="{'is-active': $route.name === 'list.kanban'}"
+					:class="{'is-active': viewName === 'kanban'}"
 					:to="{ name: 'list.kanban', params: { listId } }">
 					{{ $t('list.kanban.title') }}
 				</router-link>
@@ -46,11 +46,11 @@
 	</div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, shallowRef, computed, watchEffect} from 'vue'
 import {useRoute} from 'vue-router'
 
-import Message from '@/components/misc/message'
+import Message from '@/components/misc/message.vue'
 
 import ListModel from '@/models/list'
 import ListService from '@/services/list'
@@ -63,11 +63,22 @@ import {saveListView} from '@/helpers/saveListView'
 import {saveListToHistory} from '@/modules/listHistory'
 import { useTitle } from '@/composables/useTitle'
 
+const props = defineProps({
+	listId: {
+		type: Number,
+		required: true,
+	},
+	viewName: {
+		type: String,
+		required: true,
+	},
+})
+
 const route = useRoute()
 
 // Save the current list view to local storage
 // We use local storage and not vuex here to make it persistent across reloads.
-saveListView(route.params.listId, route.name)
+saveListView(props.listId, props.viewName)
 
 const listService = shallowRef(new ListService())
 const loadedListId = ref(0)
@@ -80,14 +91,12 @@ const currentList = computed(() => {
 	} : store.state.currentList
 })
 
-// Computed property to let "listId" always have a value
-const listId = computed(() => typeof route.params.listId === 'undefined' ? 0 : parseInt(route.params.listId))
 // call again the method if the listId changes
-watchEffect(() => loadList(listId.value))
+watchEffect(() => loadList(props.listId))
 
 useTitle(() => currentList.value.id ? getListTitle(currentList.value) : '')
 
-async function loadList(listIdToLoad) {
+async function loadList(listIdToLoad: number) {
 	const listData = {id: listIdToLoad}
 	saveListToHistory(listData)
 
@@ -97,8 +106,8 @@ async function loadList(listIdToLoad) {
 	// We don't do this for the table view because that does not change tasks.
 	// FIXME: remove this
 	if (
-		route.name === 'list.list' ||
-		route.name === 'list.gantt'
+		props.viewName === 'list.list' ||
+		props.viewName === 'list.gantt'
 	) {
 		store.commit('kanban/setListId', 0)
 	}
@@ -116,7 +125,7 @@ async function loadList(listIdToLoad) {
 		return
 	}
 
-	console.debug(`Loading list, $route.name = ${route.name}, $route.params =`, route.params, `, loadedListId = ${loadedListId.value}, currentList = `, currentList.value)
+	console.debug(`Loading list, props.viewName = ${props.viewName}, $route.params =`, route.params, `, loadedListId = ${loadedListId.value}, currentList = `, currentList.value)
 
 	// We create an extra list object instead of creating it in list.value because that would trigger a ui update which would result in bad ux.
 	const list = new ListModel(listData)
@@ -124,7 +133,7 @@ async function loadList(listIdToLoad) {
 		const loadedList = await listService.value.get(list)
 		await store.dispatch(CURRENT_LIST, loadedList)
 	} finally {
-		loadedListId.value = listId.value
+		loadedListId.value = props.listId
 	}
 }
 </script>

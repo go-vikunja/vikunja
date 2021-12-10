@@ -1,5 +1,5 @@
 <template>
-	<ListWrapper class="list-list">
+	<ListWrapper class="list-list" :list-id="listId" viewName="list">
 		<template #header>
 		<div
 			class="filter-container"
@@ -132,9 +132,9 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, toRef, defineComponent } from 'vue'
 
-import ListWrapper from './ListWrapper'
+import ListWrapper from './ListWrapper.vue'
 import EditTask from '@/components/tasks/edit-task'
 import AddTask from '@/components/tasks/add-task'
 import SingleTaskInList from '@/components/tasks/partials/singleTaskInList'
@@ -167,8 +167,16 @@ function sortTasks(tasks) {
 	})
 }
 
-export default {
+export default defineComponent({
 	name: 'List',
+	
+	props: {
+		listId: {
+			type: Number,
+			required: true,
+		},
+	},
+
 	data() {
 		return {
 			ctaVisible: false,
@@ -192,19 +200,17 @@ export default {
 		Pagination,
 	},
 
-	setup() {
+	setup(props) {
 		const taskEditTask = ref(null)
 		const isTaskEdit = ref(false)
 
 		// This function initializes the tasks page and loads the first page of tasks
-		function beforeLoad() {
-			taskEditTask.value = null
-			isTaskEdit.value = false
-		}
+		// function beforeLoad() {
+		// 	taskEditTask.value = null
+		// 	isTaskEdit.value = false
+		// }
 
-		const taskList = useTaskList(beforeLoad)
-
-		taskList.initTaskList()
+		const taskList = useTaskList(toRef(props, 'listId'))
 
 		return {
 			taskEditTask,
@@ -312,7 +318,7 @@ export default {
 			this.tasks[e.newIndex] = updatedTask
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>
