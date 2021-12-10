@@ -74,7 +74,7 @@
     "eslint-plugin-vue": "8.2.0",
     "express": "4.17.1",
     "faker": "5.5.3",
-    "jest": "27.4.3",
+    "jest": "27.4.4",
     "netlify-cli": "8.0.18",
     "postcss": "8.4.4",
     "postcss-preset-env": "7.0.1",
