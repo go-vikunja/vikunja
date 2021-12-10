@@ -2,7 +2,7 @@ import { createRouter, createWebHistory, RouteLocation } from 'vue-router'
 import {saveLastVisited} from '@/helpers/saveLastVisited'
 import {store} from '@/store'
 
-import {getListView} from '@/helpers/saveListView'
+import {saveListView, getListView} from '@/helpers/saveListView'
 
 import HomeComponent from '../views/Home'
 import NotFoundComponent from '../views/404'
@@ -244,9 +244,7 @@ const router = createRouter({
 			path: '/tasks/:id',
 			name: 'task.detail',
 			component: TaskDetailViewModal,
-			props: route => ({
-				taskId: parseInt(route.params.id),
-			}),
+			props: route => ({ taskId: parseInt(route.params.id) }),
 		},
 		{
 			path: '/tasks/by/upcoming',
@@ -328,14 +326,16 @@ const router = createRouter({
 		{
 			path: '/lists/:listId',
 			name: 'list.index',
-			beforeEnter(to) {
+			redirect(to) {
 				// Redirect the user to list view by default
 
 				const savedListView = getListView(to.params.listId)
 				console.debug('Replaced list view with', savedListView)
 
 				return {
-					name: savedListView,
+					name:  router.hasRoute(savedListView)
+						? savedListView
+						: 'list.list',
 					params: {listId: to.params.listId},
 				}
 			},
@@ -344,33 +344,29 @@ const router = createRouter({
 			path: '/lists/:listId/list',
 			name: 'list.list',
 			component: ListList,
-			props: route => ({
-				listId: parseInt(route.params.listId),
-			}),
+			beforeEnter: (to) => saveListView(to.params.listId, to.name),
+			props: route => ({ listId: parseInt(route.params.listId) }),
 		},
 		{
 			path: '/lists/:listId/gantt',
 			name: 'list.gantt',
 			component: ListGantt,
-			props: route => ({
-				listId: parseInt(route.params.listId),
-			}),
+			beforeEnter: (to) => saveListView(to.params.listId, to.name),
+			props: route => ({ listId: parseInt(route.params.listId) }),
 		},
 		{
 			path: '/lists/:listId/table',
 			name: 'list.table',
 			component: ListTable,
-			props: route => ({
-				listId: parseInt(route.params.listId),
-			}),
+			beforeEnter: (to) => saveListView(to.params.listId, to.name),
+			props: route => ({ listId: parseInt(route.params.listId) }),
 		},
 		{
 			path: '/lists/:listId/kanban',
 			name: 'list.kanban',
 			component: ListKanban,
-			props: route => ({
-				listId: parseInt(route.params.listId),
-			}),
+			beforeEnter: (to) => saveListView(to.params.listId, to.name),
+			props: route => ({ listId: parseInt(route.params.listId) }),
 		},
 		{
 			path: '/teams',

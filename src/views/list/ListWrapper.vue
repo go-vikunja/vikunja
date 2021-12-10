@@ -59,7 +59,6 @@ import {store} from '@/store'
 import {CURRENT_LIST} from '@/store/mutation-types'
 
 import {getListTitle} from '@/helpers/getListTitle'
-import {saveListView} from '@/helpers/saveListView'
 import {saveListToHistory} from '@/modules/listHistory'
 import { useTitle } from '@/composables/useTitle'
 
@@ -75,10 +74,6 @@ const props = defineProps({
 })
 
 const route = useRoute()
-
-// Save the current list view to local storage
-// We use local storage and not vuex here to make it persistent across reloads.
-saveListView(props.listId, props.viewName)
 
 const listService = shallowRef(new ListService())
 const loadedListId = ref(0)
