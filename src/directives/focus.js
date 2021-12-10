@@ -5,7 +5,7 @@ export default {
 		// auto focusing elements on mobile can be annoying since in these cases the
 		// keyboard always pops up and takes half of the available space on the screen.
 		// The threshhold is the same as the breakpoints in css.
-		if (window.innerWidth > 769 || (typeof modifiers.always !== 'undefined' && modifiers.always)) {
+		if (window.innerWidth > 769 || modifiers?.always) {
 			el.focus()
 		}
 	},
