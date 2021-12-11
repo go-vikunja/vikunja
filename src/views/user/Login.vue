@@ -1,9 +1,9 @@
 <template>
 	<div>
-		<message variant="success" class="has-text-centered" v-if="confirmedEmailSuccess">
+		<message variant="success" class="has-text-centered mb-4" v-if="confirmedEmailSuccess">
 			{{ $t('user.auth.confirmEmailSuccess') }}
 		</message>
-		<message variant="danger" v-if="errorMessage">
+		<message variant="danger" v-if="errorMessage" class="mb-4">
 			{{ errorMessage }}
 		</message>
 		<form @submit.prevent="submit" id="loginform" v-if="localAuthEnabled">
@@ -227,6 +227,13 @@ export default {
 			const credentials = {
 				username: this.$refs.username.value,
 				password: this.$refs.password.value,
+			}
+
+			if (credentials.username === '' || credentials.password === '') {
+				// Trigger the validation error messages
+				this.validateField('username')
+				this.validateField('password')
+				return
 			}
 
 			if (this.needsTotpPasscode) {

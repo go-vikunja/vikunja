@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<message variant="danger" v-if="errorMessage !== ''">
+		<message variant="danger" v-if="errorMessage !== ''" class="mb-4">
 			{{ errorMessage }}
 		</message>
 		<form @submit.prevent="submit" id="registerform">
