@@ -21,11 +21,11 @@
 			<li :key="`page-${i}`" v-for="(p, i) in pages">
 				<span class="pagination-ellipsis" v-if="p.isEllipsis">&hellip;</span>
 				<router-link
+					v-else
+					class="pagination-link"
 					:aria-label="'Goto page ' + p.number"
 					:class="{ 'is-current': p.number === currentPage }"
 					:to="getRouteForPagination(p.number)"
-					class="pagination-link"
-					v-else
 				>
 					{{ p.number }}
 				</router-link>
@@ -98,13 +98,13 @@ const pages = computed(() => createPagination(props.totalPages, props.currentPag
 <style lang="scss" scoped>
 .pagination {
 	padding-bottom: 1rem;
+}
 
-	.pagination-previous,
-	.pagination-next {
-		&:not(:disabled):hover {
-			background: $scheme-main;
-			cursor: pointer;
-		}
+.pagination-previous,
+.pagination-next {
+	&:not(:disabled):hover {
+		background: $scheme-main;
+		cursor: pointer;
 	}
 }
 </style>
