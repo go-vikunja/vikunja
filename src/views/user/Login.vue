@@ -275,11 +275,4 @@ export default {
 		margin-bottom: 0;
 	}
 }
-
-.password-field-type-toggle {
-	position: absolute;
-	top: .5rem;
-	right: 1rem;
-	color: var(--grey-400);
-}
 </style>

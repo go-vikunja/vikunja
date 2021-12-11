@@ -162,12 +162,3 @@ async function submit() {
 	}
 }
 </script>
-
-<style scoped>
-.password-field-type-toggle {
-	position: absolute;
-	top: .5rem;
-	right: 1rem;
-	color: var(--grey-400);
-}
-</style>
