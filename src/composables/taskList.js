@@ -13,15 +13,6 @@ export const getDefaultParams = () => ({
 	filter_concat: 'and',
 })
 
-
-const filters = {
-	done: {
-		value: false,
-		comparator: 'equals',
-		concat: 'and',
-	},
-}
-
 const SORT_BY_DEFAULT = {
 	id: 'desc',
 }
@@ -88,9 +79,13 @@ export function useTaskList(listId) {
 
 	const route = useRoute()
 	watch(() => route.query, (query) => {
-		const { page: pageQuery, search: searchQuery } = query
-		search.value = searchQuery
-		page.value = pageQuery
+		const { page: pageQueryValue, search: searchQuery } = query
+		if (searchQuery !== undefined) {
+			search.value = searchQuery
+		}
+		if (pageQueryValue !== undefined) {
+			page.value = parseInt(pageQueryValue)
+		}
 
 	}, { immediate: true })
 
