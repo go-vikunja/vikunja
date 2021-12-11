@@ -89,6 +89,7 @@
 						@click="submit"
 						:loading="loading"
 						tabindex="4"
+						:disabled="!allFieldsValid"
 					>
 						{{ $t('user.auth.login') }}
 					</x-button>
@@ -185,6 +186,9 @@ export default {
 			return this.openidConnect.enabled &&
 				this.openidConnect.providers &&
 				this.openidConnect.providers.length > 0
+		},
+		allFieldsValid() {
+			return this.usernameValid && this.passwordValid
 		},
 		...mapState({
 			registrationEnabled: state => state.config.registrationEnabled,
