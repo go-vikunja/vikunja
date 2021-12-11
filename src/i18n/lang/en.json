@@ -52,7 +52,9 @@
       "logout": "Logout",
       "emailInvalid": "Please enter a valid email address.",
       "usernameRequired": "Please provide a username.",
-      "passwordRequired": "Please provide a password."
+      "passwordRequired": "Please provide a password.",
+      "showPassword": "Show the password",
+      "hidePassword": "Hide the password"
     },
     "settings": {
       "title": "Settings",

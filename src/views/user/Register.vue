@@ -59,7 +59,11 @@
 						@keyup.enter="submit"
 						@focusout="validatePassword"
 					/>
-					<a @click="togglePasswordFieldType" class="password-field-type-toggle">
+					<a
+						@click="togglePasswordFieldType" 
+						class="password-field-type-toggle"
+						aria-label="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')"
+						v-tooltip="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')">
 						<icon :icon="passwordFieldType === 'password' ? 'eye' : 'eye-slash'"/>
 					</a>
 				</div>
