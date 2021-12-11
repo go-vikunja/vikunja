@@ -78,7 +78,7 @@
     "netlify-cli": "8.0.20",
     "postcss": "8.4.4",
     "postcss-preset-env": "7.0.1",
-    "rollup": "2.61.0",
+    "rollup": "2.61.1",
     "rollup-plugin-visualizer": "5.5.2",
     "sass": "1.44.0",
     "slugify": "1.6.3",
