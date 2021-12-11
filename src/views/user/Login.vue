@@ -83,26 +83,24 @@
 				</div>
 			</div>
 
-			<div class="field is-grouped login-buttons">
-				<div class="control is-expanded">
-					<x-button
-						@click="submit"
-						:loading="loading"
-						tabindex="4"
-						:disabled="!allFieldsValid"
-					>
-						{{ $t('user.auth.login') }}
-					</x-button>
-					<x-button
-						:to="{ name: 'user.register' }"
-						v-if="registrationEnabled"
-						type="secondary"
-						tabindex="5"
-					>
-						{{ $t('user.auth.createAccount') }}
-					</x-button>
-				</div>
-			</div>
+			<x-button
+				@click="submit"
+				:loading="loading"
+				tabindex="4"
+				:disabled="!allFieldsValid"
+			>
+				{{ $t('user.auth.login') }}
+			</x-button>
+			<p class="mt-2" v-if="registrationEnabled">
+				{{ $t('user.auth.noAccountYet') }}
+				<router-link
+					:to="{ name: 'user.register' }"
+					type="secondary"
+					tabindex="5"
+				>
+					{{ $t('user.auth.createAccount') }}
+				</router-link>
+			</p>
 		</form>
 
 		<div
@@ -263,16 +261,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.login-buttons {
-	@media screen and (max-width: 450px) {
-		flex-direction: column;
-
-		.control:first-child {
-			margin-bottom: 1rem;
-		}
-	}
-}
-
 .button {
 	margin: 0 0.4rem 0 0;
 }

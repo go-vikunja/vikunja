@@ -54,7 +54,9 @@
       "usernameRequired": "Please provide a username.",
       "passwordRequired": "Please provide a password.",
       "showPassword": "Show the password",
-      "hidePassword": "Hide the password"
+      "hidePassword": "Hide the password",
+      "noAccountYet": "Don't have an account yet?",
+      "alreadyHaveAnAccount": "Already have an account?"
     },
     "settings": {
       "title": "Settings",

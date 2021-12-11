@@ -60,7 +60,7 @@
 						@focusout="validatePassword"
 					/>
 					<a
-						@click="togglePasswordFieldType" 
+						@click="togglePasswordFieldType"
 						class="password-field-type-toggle"
 						aria-label="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')"
 						v-tooltip="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')">
@@ -72,22 +72,21 @@
 				</p>
 			</div>
 
-			<div class="field is-grouped">
-				<div class="control">
-					<x-button
-						:loading="loading"
-						id="register-submit"
-						@click="submit"
-						class="mr-2"
-						:disabled="!everythingValid"
-					>
-						{{ $t('user.auth.createAccount') }}
-					</x-button>
-					<x-button :to="{ name: 'user.login' }" type="secondary">
-						{{ $t('user.auth.login') }}
-					</x-button>
-				</div>
-			</div>
+			<x-button
+				:loading="loading"
+				id="register-submit"
+				@click="submit"
+				class="mr-2"
+				:disabled="!everythingValid"
+			>
+				{{ $t('user.auth.createAccount') }}
+			</x-button>
+			<p class="mt-2">
+				{{ $t('user.auth.alreadyHaveAnAccount') }}
+				<router-link :to="{ name: 'user.login' }">
+					{{ $t('user.auth.login') }}
+				</router-link>
+			</p>
 		</form>
 	</div>
 </template>
