@@ -51,11 +51,27 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithListsAndTas
 
 	labels := make(map[string]*models.Label)
 
+	archivedLists := []int64{}
+	archivedNamespaces := []int64{}
+
 	// Create all namespaces
 	for _, n := range str {
+		n.ID = 0
+
+		// Saving the archived status to archive the namespace again after creating it
+		var wasArchived bool
+		if n.IsArchived {
+			n.IsArchived = false
+			wasArchived = true
+		}
+
 		err = n.Create(s, user)
 		if err != nil {
 			return
+		}
+
+		if wasArchived {
+			archivedNamespaces = append(archivedNamespaces, n.ID)
 		}
 
 		log.Debugf("[creating structure] Created namespace %d", n.ID)
@@ -70,10 +86,22 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithListsAndTas
 			originalBackgroundInformation := l.BackgroundInformation
 			needsDefaultBucket := false
 
+			// Saving the archived status to archive the list again after creating it
+			var wasArchived bool
+			if l.IsArchived {
+				wasArchived = true
+				l.IsArchived = false
+			}
+
 			l.NamespaceID = n.ID
+			l.ID = 0
 			err = l.Create(s, user)
 			if err != nil {
 				return
+			}
+
+			if wasArchived {
+				archivedLists = append(archivedLists, l.ID)
 			}
 
 			log.Debugf("[creating structure] Created list %d", l.ID)
@@ -216,7 +244,7 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithListsAndTas
 						TaskID:  t.ID,
 					}
 					err = lt.Create(s, user)
-					if err != nil {
+					if err != nil && !models.IsErrLabelIsAlreadyOnTask(err) {
 						return err
 					}
 					log.Debugf("[creating structure] Associated task %d with label %d", t.ID, lb.ID)
@@ -248,6 +276,26 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithListsAndTas
 
 			l.Tasks = tasks
 			l.Buckets = originalBuckets
+		}
+	}
+
+	if len(archivedLists) > 0 {
+		_, err = s.
+			Cols("is_archived").
+			In("id", archivedLists).
+			Update(&models.List{IsArchived: true})
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(archivedNamespaces) > 0 {
+		_, err = s.
+			Cols("is_archived").
+			In("id", archivedNamespaces).
+			Update(&models.Namespace{IsArchived: true})
+		if err != nil {
+			return err
 		}
 	}
 
