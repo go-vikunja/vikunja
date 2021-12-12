@@ -1,18 +1,36 @@
 <template>
 	<div class="message-wrapper">
-		<div class="message" :class="variant">
+		<div class="message" :class="[variant, textAlignClass]">
 			<slot/>
 		</div>
 	</div>
 </template>
 
 <script lang="ts" setup>
-defineProps({
+import {computed} from 'vue'
+
+const props = defineProps({
 	variant: {
 		type: String,
 		default: 'info',
 	},
+	textAlign: {
+		type: String,
+		default: 'left',
+	},
 })
+
+const textAlignClass = computed(() => {
+	switch (props.textAlign) {
+		case 'left':
+			return ''
+		case 'right':
+			return 'has-text-right'
+		case 'center':
+			return 'has-text-centered'
+	}
+})
+
 </script>
 
 <style lang="scss" scoped>

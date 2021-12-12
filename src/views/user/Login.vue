@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<message variant="success" class="has-text-centered mb-4" v-if="confirmedEmailSuccess">
+		<message variant="success" text-align="center" class="mb-4" v-if="confirmedEmailSuccess">
 			{{ $t('user.auth.confirmEmailSuccess') }}
 		</message>
 		<message variant="danger" v-if="errorMessage" class="mb-4">
