@@ -32,7 +32,7 @@ func (user20211212151642) TableName() string {
 func init() {
 	migrations = append(migrations, &xormigrate.Migration{
 		ID:          "20211212151642",
-		Description: "Add user langauge field",
+		Description: "Add user language field",
 		Migrate: func(tx *xorm.Engine) error {
 			return tx.Sync2(user20211212151642{})
 		},
