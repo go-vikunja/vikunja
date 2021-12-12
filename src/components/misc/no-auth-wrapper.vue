@@ -23,9 +23,9 @@
 </template>
 
 <script lang="ts" setup>
-import Logo from '@/components/home/Logo'
-import Message from '@/components/misc/message'
-import Legal from '@/components/misc/legal'
+import Logo from '@/components/home/Logo.vue'
+import Message from '@/components/misc/message.vue'
+import Legal from '@/components/misc/legal.vue'
 import ApiConfig from '@/components/misc/api-config.vue'
 import {useStore} from 'vuex'
 import {computed} from 'vue'
