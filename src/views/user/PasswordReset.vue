@@ -1,67 +1,60 @@
 <template>
 	<div>
-		<h2 class="title has-text-centered">{{ $t('user.auth.resetPassword') }}</h2>
-		<div class="box">
-			<form @submit.prevent="submit" id="form" v-if="!successMessage">
-				<div class="field">
-					<label class="label" for="password1">{{ $t('user.auth.password') }}</label>
-					<div class="control">
-						<input
-							class="input"
-							id="password1"
-							name="password1"
-							:placeholder="$t('user.auth.passwordPlaceholder')"
-							required
-							type="password"
-							autocomplete="new-password"
-							v-focus
-							v-model="credentials.password"/>
-					</div>
-				</div>
-				<div class="field">
-					<label class="label" for="password2">{{ $t('user.auth.passwordRepeat') }}</label>
-					<div class="control">
-						<input
-							class="input"
-							id="password2"
-							name="password2"
-							:placeholder="$t('user.auth.passwordPlaceholder')"
-							required
-							type="password"
-							autocomplete="new-password"
-							v-model="credentials.password2"
-							@keyup.enter="submit"
-						/>
-					</div>
-				</div>
-
-				<div class="field is-grouped">
-					<div class="control">
-						<x-button
-							:loading="this.passwordResetService.loading"
-							@click="submit"
-						>
-							{{ $t('user.auth.resetPassword') }}
-						</x-button>
-					</div>
-				</div>
-				<message v-if="this.passwordResetService.loading">
-					{{ $t('misc.loading') }}
-				</message>
-				<message v-if="errorMsg">
-					{{ errorMsg }}
-				</message>
-			</form>
-			<div class="has-text-centered" v-if="successMessage">
-				<message variant="success">
-					{{ successMessage }}
-				</message>
-				<x-button :to="{ name: 'user.login' }">
-					{{ $t('user.auth.login') }}
-				</x-button>
-			</div>
-			<Legal/>
+		<message v-if="errorMsg">
+			{{ errorMsg }}
+		</message>
+		<div class="has-text-centered" v-if="successMessage">
+			<message variant="success">
+				{{ successMessage }}
+			</message>
+			<x-button :to="{ name: 'user.login' }">
+				{{ $t('user.auth.login') }}
+			</x-button>
 		</div>
+		<form @submit.prevent="submit" id="form" v-if="!successMessage">
+			<div class="field">
+				<label class="label" for="password1">{{ $t('user.auth.password') }}</label>
+				<div class="control">
+					<input
+						class="input"
+						id="password1"
+						name="password1"
+						:placeholder="$t('user.auth.passwordPlaceholder')"
+						required
+						type="password"
+						autocomplete="new-password"
+						v-focus
+						v-model="credentials.password"/>
+				</div>
+			</div>
+			<div class="field">
+				<label class="label" for="password2">{{ $t('user.auth.passwordRepeat') }}</label>
+				<div class="control">
+					<input
+						class="input"
+						id="password2"
+						name="password2"
+						:placeholder="$t('user.auth.passwordPlaceholder')"
+						required
+						type="password"
+						autocomplete="new-password"
+						v-model="credentials.password2"
+						@keyup.enter="submit"
+					/>
+				</div>
+			</div>
+
+			<div class="field is-grouped">
+				<div class="control">
+					<x-button
+						:loading="this.passwordResetService.loading"
+						@click="submit"
+					>
+						{{ $t('user.auth.resetPassword') }}
+					</x-button>
+				</div>
+			</div>
+		</form>
 	</div>
 </template>
 
@@ -69,14 +62,11 @@
 import {ref, reactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import Legal from '@/components/misc/legal'
 import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
-import {useTitle} from '@/composables/useTitle'
 import Message from '@/components/misc/message'
 
 const {t} = useI18n()
-useTitle(() => t('user.auth.resetPassword'))
 
 const credentials = reactive({
 	password: '',

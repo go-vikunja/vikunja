@@ -105,21 +105,33 @@ const router = createRouter({
 			path: '/login',
 			name: 'user.login',
 			component: LoginComponent,
+			meta: {
+				title: 'user.auth.login',
+			},
 		},
 		{
 			path: '/get-password-reset',
 			name: 'user.password-reset.request',
 			component: GetPasswordResetComponent,
+			meta: {
+				title: 'user.auth.resetPassword',
+			},
 		},
 		{
 			path: '/password-reset',
 			name: 'user.password-reset.reset',
 			component: PasswordResetComponent,
+			meta: {
+				title: 'user.auth.resetPassword',
+			},
 		},
 		{
 			path: '/register',
 			name: 'user.register',
 			component: RegisterComponent,
+			meta: {
+				title: 'user.auth.register',
+			},
 		},
 		{
 			path: '/user/settings',

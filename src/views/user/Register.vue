@@ -1,97 +1,90 @@
 <template>
 	<div>
-		<h2 class="title has-text-centered">{{ $t('user.auth.register') }}</h2>
-		<div class="box">
-			<form @submit.prevent="submit" id="registerform">
-				<div class="field">
-					<label class="label" for="username">{{ $t('user.auth.username') }}</label>
-					<div class="control">
-						<input
-							class="input"
-							id="username"
-							name="username"
-							:placeholder="$t('user.auth.usernamePlaceholder')"
-							required
-							type="text"
-							autocomplete="username"
-							v-focus
-							v-model="credentials.username"
-							@keyup.enter="submit"
-						/>
-					</div>
+		<message variant="danger" v-if="errorMessage !== ''">
+			{{ errorMessage }}
+		</message>
+		<form @submit.prevent="submit" id="registerform">
+			<div class="field">
+				<label class="label" for="username">{{ $t('user.auth.username') }}</label>
+				<div class="control">
+					<input
+						class="input"
+						id="username"
+						name="username"
+						:placeholder="$t('user.auth.usernamePlaceholder')"
+						required
+						type="text"
+						autocomplete="username"
+						v-focus
+						v-model="credentials.username"
+						@keyup.enter="submit"
+					/>
 				</div>
-				<div class="field">
-					<label class="label" for="email">{{ $t('user.auth.email') }}</label>
-					<div class="control">
-						<input
-							class="input"
-							id="email"
-							name="email"
-							:placeholder="$t('user.auth.emailPlaceholder')"
-							required
-							type="email"
-							v-model="credentials.email"
-							@keyup.enter="submit"
-						/>
-					</div>
+			</div>
+			<div class="field">
+				<label class="label" for="email">{{ $t('user.auth.email') }}</label>
+				<div class="control">
+					<input
+						class="input"
+						id="email"
+						name="email"
+						:placeholder="$t('user.auth.emailPlaceholder')"
+						required
+						type="email"
+						v-model="credentials.email"
+						@keyup.enter="submit"
+					/>
 				</div>
-				<div class="field">
-					<label class="label" for="password">{{ $t('user.auth.password') }}</label>
-					<div class="control">
-						<input
-							class="input"
-							id="password"
-							name="password"
-							:placeholder="$t('user.auth.passwordPlaceholder')"
-							required
-							type="password"
-							autocomplete="new-password"
-							v-model="credentials.password"
-							@keyup.enter="submit"
-						/>
-					</div>
+			</div>
+			<div class="field">
+				<label class="label" for="password">{{ $t('user.auth.password') }}</label>
+				<div class="control">
+					<input
+						class="input"
+						id="password"
+						name="password"
+						:placeholder="$t('user.auth.passwordPlaceholder')"
+						required
+						type="password"
+						autocomplete="new-password"
+						v-model="credentials.password"
+						@keyup.enter="submit"
+					/>
 				</div>
-				<div class="field">
-					<label class="label" for="passwordValidation">{{ $t('user.auth.passwordRepeat') }}</label>
-					<div class="control">
-						<input
-							class="input"
-							id="passwordValidation"
-							name="passwordValidation"
-							:placeholder="$t('user.auth.passwordPlaceholder')"
-							required
-							type="password"
-							autocomplete="new-password"
-							v-model="passwordValidation"
-							@keyup.enter="submit"
-						/>
-					</div>
+			</div>
+			<div class="field">
+				<label class="label" for="passwordValidation">{{ $t('user.auth.passwordRepeat') }}</label>
+				<div class="control">
+					<input
+						class="input"
+						id="passwordValidation"
+						name="passwordValidation"
+						:placeholder="$t('user.auth.passwordPlaceholder')"
+						required
+						type="password"
+						autocomplete="new-password"
+						v-model="passwordValidation"
+						@keyup.enter="submit"
+					/>
 				</div>
+			</div>
 
-				<div class="field is-grouped">
-					<div class="control">
-						<x-button
-							:loading="loading"
-							id="register-submit"
-							@click="submit"
-							class="mr-2"
-						>
-							{{ $t('user.auth.register') }}
-						</x-button>
-						<x-button :to="{ name: 'user.login' }" type="secondary">
-							{{ $t('user.auth.login') }}
-						</x-button>
-					</div>
+			<div class="field is-grouped">
+				<div class="control">
+					<x-button
+						:loading="loading"
+						id="register-submit"
+						@click="submit"
+						class="mr-2"
+					>
+						{{ $t('user.auth.register') }}
+					</x-button>
+					<x-button :to="{ name: 'user.login' }" type="secondary">
+						{{ $t('user.auth.login') }}
+					</x-button>
 				</div>
-				<message v-if="loading">
-					{{ $t('misc.loading') }}
-				</message>
-				<message variant="danger" v-if="errorMessage !== ''">
-					{{ errorMessage }}
-				</message>
-			</form>
-			<legal/>
-		</div>
+			</div>
+		</form>
 	</div>
 </template>
 
@@ -101,8 +94,6 @@ import {useI18n} from 'vue-i18n'
 
 import router from '@/router'
 import {store} from '@/store'
-import {useTitle} from '@/composables/useTitle'
-import Legal from '@/components/misc/legal'
 import Message from '@/components/misc/message'
 
 // FIXME: use the `beforeEnter` hook of vue-router
@@ -114,7 +105,6 @@ onBeforeMount(() => {
 })
 
 const {t} = useI18n()
-useTitle(() => t('user.auth.register'))
 
 const credentials = reactive({
 	username: '',

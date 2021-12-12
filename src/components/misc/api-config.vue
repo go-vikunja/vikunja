@@ -23,7 +23,7 @@
 			</div>
 		</div>
 		<div class="api-url-info" v-else>
-			<i18n-t keypath="apiConfig.signInOn">
+			<i18n-t keypath="apiConfig.use">
 				<span class="url" v-tooltip="apiUrl"> {{ apiDomain }} </span>
 			</i18n-t>
 			<br/>
@@ -101,7 +101,7 @@ export default {
 
 				// Set it + save it to local storage to save us the hoops
 				this.errorMsg = ''
-				this.successMsg = this.$t('apiConfig.success', {domain: this.apiDomain})
+				this.$message.success({message: this.$t('apiConfig.success', {domain: this.apiDomain})})
 				this.configureApi = false
 				this.apiUrl = url
 				this.$emit('foundApi', this.apiUrl)

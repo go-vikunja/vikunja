@@ -1,103 +1,97 @@
 <template>
 	<div>
-		<h2 class="title has-text-centered">Login</h2>
-		<div class="box">
-			<message variant="success" class="has-text-centered" v-if="confirmedEmailSuccess">
-				{{ $t('user.auth.confirmEmailSuccess') }}
-			</message>
-			<api-config @foundApi="hasApiUrl = true"/>
-			<form @submit.prevent="submit" id="loginform" v-if="hasApiUrl && localAuthEnabled">
-				<div class="field">
-					<label class="label" for="username">{{ $t('user.auth.usernameEmail') }}</label>
-					<div class="control">
-						<input
-							class="input" id="username"
-							name="username"
-							:placeholder="$t('user.auth.usernamePlaceholder')"
-							ref="username"
-							required
-							type="text"
-							autocomplete="username"
-							v-focus
-							@keyup.enter="submit"
-						/>
-					</div>
+		<message variant="success" class="has-text-centered" v-if="confirmedEmailSuccess">
+			{{ $t('user.auth.confirmEmailSuccess') }}
+		</message>
+		<message variant="danger" v-if="errorMessage">
+			{{ errorMessage }}
+		</message>
+		<form @submit.prevent="submit" id="loginform" v-if="localAuthEnabled">
+			<div class="field">
+				<label class="label" for="username">{{ $t('user.auth.usernameEmail') }}</label>
+				<div class="control">
+					<input
+						class="input" id="username"
+						name="username"
+						:placeholder="$t('user.auth.usernamePlaceholder')"
+						ref="username"
+						required
+						type="text"
+						autocomplete="username"
+						v-focus
+						@keyup.enter="submit"
+					/>
 				</div>
-				<div class="field">
-					<label class="label" for="password">{{ $t('user.auth.password') }}</label>
-					<div class="control">
-						<input
-							class="input"
-							id="password"
-							name="password"
-							:placeholder="$t('user.auth.passwordPlaceholder')"
-							ref="password"
-							required
-							type="password"
-							autocomplete="current-password"
-							@keyup.enter="submit"
-						/>
-					</div>
+			</div>
+			<div class="field">
+				<label class="label" for="password">{{ $t('user.auth.password') }}</label>
+				<div class="control">
+					<input
+						class="input"
+						id="password"
+						name="password"
+						:placeholder="$t('user.auth.passwordPlaceholder')"
+						ref="password"
+						required
+						type="password"
+						autocomplete="current-password"
+						@keyup.enter="submit"
+					/>
 				</div>
-				<div class="field" v-if="needsTotpPasscode">
-					<label class="label" for="totpPasscode">{{ $t('user.auth.totpTitle') }}</label>
-					<div class="control">
-						<input
-							autocomplete="one-time-code"
-							class="input"
-							id="totpPasscode"
-							:placeholder="$t('user.auth.totpPlaceholder')"
-							ref="totpPasscode"
-							required
-							type="text"
-							v-focus
-							@keyup.enter="submit"
-						/>
-					</div>
+			</div>
+			<div class="field" v-if="needsTotpPasscode">
+				<label class="label" for="totpPasscode">{{ $t('user.auth.totpTitle') }}</label>
+				<div class="control">
+					<input
+						autocomplete="one-time-code"
+						class="input"
+						id="totpPasscode"
+						:placeholder="$t('user.auth.totpPlaceholder')"
+						ref="totpPasscode"
+						required
+						type="text"
+						v-focus
+						@keyup.enter="submit"
+					/>
 				</div>
-
-				<div class="field is-grouped login-buttons">
-					<div class="control is-expanded">
-						<x-button
-							@click="submit"
-							:loading="loading"
-						>
-							{{ $t('user.auth.login') }}
-						</x-button>
-						<x-button
-							:to="{ name: 'user.register' }"
-							v-if="registrationEnabled"
-							type="secondary"
-						>
-							{{ $t('user.auth.register') }}
-						</x-button>
-					</div>
-					<div class="control">
-						<router-link :to="{ name: 'user.password-reset.request' }" class="reset-password-link">
-							{{ $t('user.auth.resetPassword') }}
-						</router-link>
-					</div>
-				</div>
-				<message variant="danger" v-if="errorMessage">
-					{{ errorMessage }}
-				</message>
-			</form>
-
-			<div
-				v-if="hasOpenIdProviders"
-				class="mt-4">
-				<x-button
-					@click="redirectToProvider(p)"
-					v-for="(p, k) in openidConnect.providers"
-					:key="k"
-					type="secondary"
-					class="is-fullwidth mt-2"
-				>
-					{{ $t('user.auth.loginWith', {provider: p.name}) }}
-				</x-button>
 			</div>
 
-			<legal/>
+			<div class="field is-grouped login-buttons">
+				<div class="control is-expanded">
+					<x-button
+						@click="submit"
+						:loading="loading"
+					>
+						{{ $t('user.auth.login') }}
+					</x-button>
+					<x-button
+						:to="{ name: 'user.register' }"
+						v-if="registrationEnabled"
+						type="secondary"
+					>
+						{{ $t('user.auth.register') }}
+					</x-button>
+				</div>
+				<div class="control">
+					<router-link :to="{ name: 'user.password-reset.request' }" class="reset-password-link">
+						{{ $t('user.auth.forgotPassword') }}
+					</router-link>
+				</div>
+			</div>
+		</form>
+
+		<div
+			v-if="hasOpenIdProviders"
+			class="mt-4">
+			<x-button
+				@click="redirectToProvider(p)"
+				v-for="(p, k) in openidConnect.providers"
+				:key="k"
+				type="secondary"
+				class="is-fullwidth mt-2"
+			>
+				{{ $t('user.auth.loginWith', {provider: p.name}) }}
+			</x-button>
 		</div>
 	</div>
 </template>
@@ -107,8 +101,6 @@ import {mapState} from 'vuex'
 
 import {HTTPFactory} from '@/http-common'
 import {LOADING} from '@/store/mutation-types'
-import legal from '../../components/misc/legal'
-import ApiConfig from '@/components/misc/api-config.vue'
 import {getErrorText} from '@/message'
 import Message from '@/components/misc/message'
 import {redirectToProvider} from '../../helpers/redirectToProvider'
@@ -117,13 +109,10 @@ import {getLastVisited, clearLastVisited} from '../../helpers/saveLastVisited'
 export default {
 	components: {
 		Message,
-		ApiConfig,
-		legal,
 	},
 	data() {
 		return {
 			confirmedEmailSuccess: false,
-			hasApiUrl: false,
 			errorMessage: '',
 		}
 	},
@@ -161,13 +150,11 @@ export default {
 		}
 	},
 	created() {
-		this.hasApiUrl = window.API_URL !== ''
 		this.setTitle(this.$t('user.auth.login'))
 	},
 	computed: {
 		hasOpenIdProviders() {
-			return this.hasApiUrl &&
-				this.openidConnect.enabled &&
+			return this.openidConnect.enabled &&
 				this.openidConnect.providers &&
 				this.openidConnect.providers.length > 0
 		},

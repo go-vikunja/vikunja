@@ -1,6 +1,8 @@
 <template>
-	<div class="message" :class="variant">
-		<slot/>
+	<div class="message-wrapper">
+		<div class="message" :class="variant">
+			<slot/>
+		</div>
 	</div>
 </template>
 
@@ -14,6 +16,11 @@ defineProps({
 </script>
 
 <style lang="scss" scoped>
+.message-wrapper {
+	border-radius: $radius;
+	background: var(--white);
+}
+
 .message {
 	padding: .75rem 1rem;
 	border-radius: $radius;
