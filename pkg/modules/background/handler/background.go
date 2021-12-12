@@ -17,13 +17,14 @@
 package handler
 
 import (
-	"github.com/bbrks/go-blurhash"
-	"golang.org/x/image/draw"
 	"image"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/bbrks/go-blurhash"
+	"golang.org/x/image/draw"
 
 	"code.vikunja.io/api/pkg/db"
 	"xorm.io/xorm"

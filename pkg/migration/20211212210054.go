@@ -17,11 +17,12 @@
 package migration
 
 import (
+	"image"
+
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"github.com/bbrks/go-blurhash"
 	"golang.org/x/image/draw"
-	"image"
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )

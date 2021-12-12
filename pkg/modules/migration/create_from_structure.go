@@ -18,8 +18,9 @@ package migration
 
 import (
 	"bytes"
-	"code.vikunja.io/api/pkg/modules/background/handler"
 	"io/ioutil"
+
+	"code.vikunja.io/api/pkg/modules/background/handler"
 
 	"xorm.io/xorm"
 
