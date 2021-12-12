@@ -97,7 +97,6 @@
 </template>
 
 <script>
-import {parseURL} from 'ufo'
 import {mapState} from 'vuex'
 
 import {HTTPFactory} from '@/http-common'
@@ -206,9 +205,7 @@ export default {
 			}
 		},
 
-		redirectToProvider(provider) {
-			redirectToProvider(provider)
-		},
+		redirectToProvider,
 	},
 }
 </script>
