@@ -207,9 +207,7 @@ export default {
 		},
 
 		redirectToProvider(provider) {
-			const {host, protocol} = parseURL(window.location.href)
-			const redirectUrl = `${protocol}//${host}/auth/openid/`
-			redirectToProvider(provider, redirectUrl)
+			redirectToProvider(provider)
 		},
 	},
 }

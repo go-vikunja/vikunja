@@ -83,7 +83,7 @@ export default {
 				ctx.state.auth.openidConnect.providers.length === 1 &&
 				window.location.pathname.startsWith('/login') // Kinda hacky, but prevents an endless loop.
 			) {
-				redirectToProvider(ctx.state.auth.openidConnect.providers[0], ctx.state.auth.openidConnect.redirectUrl)
+				redirectToProvider(ctx.state.auth.openidConnect.providers[0])
 			}
 		},
 	},

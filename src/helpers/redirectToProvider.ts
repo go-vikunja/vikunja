@@ -1,4 +1,5 @@
 import {createRandomID} from '@/helpers/randomId'
+import {parseURL} from 'ufo'
 
 interface Provider {
 	name: string
@@ -7,7 +8,15 @@ interface Provider {
 	clientId: string
 }
 
-export const redirectToProvider = (provider: Provider, redirectUrl: string) => {
+export const redirectToProvider = (provider: Provider, redirectUrl: string = '') => {
+
+	// We're not using the redirect url provided by the server to allow redirects when using the electron app.
+	// The implications are not quite clear yet hence the logic to pass in another redirect url still exists.
+	if (redirectUrl === '') {
+		const {host, protocol} = parseURL(window.location.href)
+		redirectUrl = `${protocol}//${host}/auth/openid/`
+	}
+
 	const state = createRandomID(24)
 	localStorage.setItem('state', state)
 
