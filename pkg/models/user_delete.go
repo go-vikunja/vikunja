@@ -59,7 +59,7 @@ func deleteUsers() {
 	now := time.Now()
 
 	for _, u := range users {
-		if u.DeletionScheduledAt.Before(now) {
+		if !u.DeletionScheduledAt.Before(now) {
 			log.Debugf("User %d is not yet scheduled for deletion. Scheduled at %s, now is %s", u.ID, u.DeletionScheduledAt, now)
 			continue
 		}
