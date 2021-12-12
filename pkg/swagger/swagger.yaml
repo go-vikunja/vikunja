@@ -7,6 +7,8 @@ definitions:
     type: object
   background.Image:
     properties:
+      blur_hash:
+        type: string
       id:
         type: string
       info:
@@ -389,6 +391,11 @@ definitions:
     type: object
   models.List:
     properties:
+      background_blur_hash:
+        description: Contains a very small version of the list background to use as
+          a blurry preview until the actual background is loaded. Check out https://blurha.sh/
+          to learn how it works.
+        type: string
       background_information:
         description: Holds extra information about the background set since some background
           providers require attribution or similar. If not null, the background can

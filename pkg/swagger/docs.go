@@ -7437,6 +7437,9 @@ var doc = `{
         "background.Image": {
             "type": "object",
             "properties": {
+                "blur_hash": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -7901,6 +7904,10 @@ var doc = `{
         "models.List": {
             "type": "object",
             "properties": {
+                "background_blur_hash": {
+                    "description": "Contains a very small version of the list background to use as a blurry preview until the actual background is loaded. Check out https://blurha.sh/ to learn how it works.",
+                    "type": "string"
+                },
                 "background_information": {
                     "description": "Holds extra information about the background set since some background providers require attribution or similar. If not null, the background can be accessed at /lists/{listID}/background"
                 },
