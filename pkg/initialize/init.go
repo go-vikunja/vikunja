@@ -78,14 +78,14 @@ func FullInit() {
 
 	LightInit()
 
+	// Initialize the files handler
+	files.InitFileHandler()
+
 	// Run the migrations
 	migration.Migrate(nil)
 
 	// Set Engine
 	InitEngines()
-
-	// Initialize the files handler
-	files.InitFileHandler()
 
 	// Start the mail daemon
 	mail.StartMailDaemon()

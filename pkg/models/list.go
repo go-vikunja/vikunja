@@ -59,6 +59,8 @@ type List struct {
 	BackgroundFileID int64 `xorm:"null" json:"-"`
 	// Holds extra information about the background set since some background providers require attribution or similar. If not null, the background can be accessed at /lists/{listID}/background
 	BackgroundInformation interface{} `xorm:"-" json:"background_information"`
+	// Contains a very small version of the list background to use as a blurry preview until the actual background is loaded. Check out https://blurha.sh/ to learn how it works.
+	BackgroundBlurHash string `xorm:"varchar(50) null" json:"background_blur_hash"`
 
 	// True if a list is a favorite. Favorite lists show up in a separate namespace. This value depends on the user making the call to the api.
 	IsFavorite bool `xorm:"-" json:"is_favorite"`
