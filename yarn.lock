@@ -3787,7 +3787,7 @@
     "@vueuse/shared" "7.3.0"
     vue-demi "*"
 
-"@vueuse/router@^7.3.0":
+"@vueuse/router@7.3.0":
   version "7.3.0"
   resolved "https://registry.yarnpkg.com/@vueuse/router/-/router-7.3.0.tgz#8157d20636040e573379eda338b57d47f1464163"
   integrity sha512-MRGaZPVV21MZOZ759LMRWTlSaRvcKh+kGw2tGCLhxkihObcrNNLl0h3N5QtBy/+eR84tf7MO7JHCL+0PJspzQg==
