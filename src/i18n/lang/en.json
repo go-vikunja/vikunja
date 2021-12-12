@@ -105,7 +105,12 @@
       "caldav": {
         "title": "Caldav",
         "howTo": "You can connect Vikunja to caldav clients to view and manage all tasks from different clients. Enter this url into your client:",
-        "more": "More information about caldav in Vikunja"
+        "more": "More information about caldav in Vikunja",
+        "tokens": "Caldav Tokens",
+        "tokensHowTo": "You can use a caldav token to use instead of a password to log in the above endpoint.",
+        "createToken": "Create a token",
+        "tokenCreated": "Here is your token: {token}",
+        "wontSeeItAgain": "Write it down, you won't be able to see it again."
       },
       "avatar": {
         "title": "Avatar",
@@ -486,7 +491,10 @@
     "hideMenu": "Hide the menu",
     "forExample": "For example:",
     "welcomeBack": "Welcome Back!",
-    "custom": "Custom"
+    "custom": "Custom",
+    "id": "ID",
+    "created": "Created at",
+    "actions": "Actions"
   },
   "input": {
     "resetColor": "Reset Color",
