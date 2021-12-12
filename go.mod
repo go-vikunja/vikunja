@@ -22,7 +22,7 @@ require (
 	github.com/ThreeDotsLabs/watermill v1.1.1
 	github.com/adlio/trello v1.9.0
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
-	github.com/bbrks/go-blurhash v1.1.1 // indirect
+	github.com/bbrks/go-blurhash v1.1.1
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
 	github.com/coreos/go-oidc/v3 v3.1.0
