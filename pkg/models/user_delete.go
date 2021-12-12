@@ -34,7 +34,7 @@ import (
 
 // RegisterUserDeletionCron registers the cron job that actually removes users who are scheduled to delete.
 func RegisterUserDeletionCron() {
-	err := cron.Schedule("0 * * * *", deleteUsers)
+	err := cron.Schedule("* * * * *", deleteUsers)
 	if err != nil {
 		log.Errorf("Could not register deletion cron: %s", err.Error())
 	}
@@ -195,7 +195,7 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		}
 	}
 
-	_, err = s.Where("id = ?", u.ID).Delete(u)
+	_, err = s.Where("id = ?", u.ID).Delete(&user.User{})
 	if err != nil {
 		return err
 	}
