@@ -179,8 +179,9 @@ func (p *Provider) Search(s *xorm.Session, search string, page int64) (result []
 		result = []*background.Image{}
 		for _, p := range collectionResult {
 			result = append(result, &background.Image{
-				ID:  p.ID,
-				URL: getImageID(p.Urls.Raw),
+				ID:       p.ID,
+				URL:      getImageID(p.Urls.Raw),
+				BlurHash: p.BlurHash,
 				Info: &models.UnsplashPhoto{
 					UnsplashID: p.ID,
 					Author:     p.User.Username,
