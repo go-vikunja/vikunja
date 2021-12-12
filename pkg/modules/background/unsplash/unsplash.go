@@ -61,6 +61,7 @@ type Photo struct {
 	Height      int    `json:"height"`
 	Color       string `json:"color"`
 	Description string `json:"description"`
+	BlurHash    string `json:"blur_hash"`
 	User        struct {
 		Username string `json:"username"`
 		Name     string `json:"name"`
@@ -315,7 +316,7 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, list *models.Li
 	list.BackgroundInformation = unsplashPhoto
 
 	// Set it as the list background
-	return models.SetListBackground(s, list.ID, file)
+	return models.SetListBackground(s, list.ID, file, photo.BlurHash)
 }
 
 // Pingback pings the unsplash api if an unsplash photo has been accessed.
