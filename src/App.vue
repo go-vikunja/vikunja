@@ -48,9 +48,6 @@ export default defineComponent({
 	},
 	beforeMount() {
 		this.setupOnlineStatus()
-		this.setupPasswortResetRedirect()
-		this.setupEmailVerificationRedirect()
-		this.setupAccountDeletionVerification()
 	},
 	beforeCreate() {
 		setLanguage()
@@ -63,6 +60,18 @@ export default defineComponent({
 		if (this.$route.fullPath.endsWith('frontend/index.html')) {
 			this.$router.push({name: 'home'})
 		}
+	},
+	watch: {
+		// Calling these methods in the mounted hook directly does not work.
+		'$route.query.accountDeletionConfirm'() {
+			this.setupAccountDeletionVerification()
+		},
+		'$route.query.userPasswordReset'() {
+			this.setupPasswortResetRedirect()
+		},
+		'$route.query.userEmailConfirm'() {
+			this.setupEmailVerificationRedirect()
+		},
 	},
 	computed: {
 		isTouch() {
