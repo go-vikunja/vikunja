@@ -17,6 +17,9 @@
 package handler
 
 import (
+	"github.com/bbrks/go-blurhash"
+	"golang.org/x/image/draw"
+	"image"
 	"io"
 	"net/http"
 	"strconv"
@@ -134,6 +137,18 @@ func (bp *BackgroundProvider) SetBackground(c echo.Context) error {
 	return c.JSON(http.StatusOK, list)
 }
 
+func CreateBlurHash(srcf io.Reader) (hash string, err error) {
+	src, _, err := image.Decode(srcf)
+	if err != nil {
+		return "", err
+	}
+
+	dst := image.NewRGBA(image.Rect(0, 0, 32, 32))
+	draw.NearestNeighbor.Scale(dst, dst.Rect, src, src.Bounds(), draw.Over, nil)
+
+	return blurhash.Encode(4, 3, dst)
+}
+
 // UploadBackground uploads a background and passes the id of the uploaded file as an Image to the Set function of the BackgroundProvider.
 func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 	s := db.NewSession()
@@ -153,15 +168,15 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 		_ = s.Rollback()
 		return err
 	}
-	src, err := file.Open()
+	srcf, err := file.Open()
 	if err != nil {
 		_ = s.Rollback()
 		return err
 	}
-	defer src.Close()
+	defer srcf.Close()
 
 	// Validate we're dealing with an image
-	mime, err := mimetype.DetectReader(src)
+	mime, err := mimetype.DetectReader(srcf)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
@@ -170,10 +185,10 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 		_ = s.Rollback()
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
 	}
-	_, _ = src.Seek(0, io.SeekStart)
+	_, _ = srcf.Seek(0, io.SeekStart)
 
 	// Save the file
-	f, err := files.CreateWithMime(src, file.Filename, uint64(file.Size), auth, mime.String())
+	f, err := files.CreateWithMime(srcf, file.Filename, uint64(file.Size), auth, mime.String())
 	if err != nil {
 		_ = s.Rollback()
 		if files.IsErrFileIsTooLarge(err) {
@@ -183,9 +198,16 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	image := &background.Image{ID: strconv.FormatInt(f.ID, 10)}
+	// Generate a blurHash
+	_, _ = srcf.Seek(0, io.SeekStart)
+	list.BackgroundBlurHash, err = CreateBlurHash(srcf)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
 
-	err = p.Set(s, image, list, auth)
+	// Save it
+	img := &background.Image{ID: strconv.FormatInt(f.ID, 10)}
+	err = p.Set(s, img, list, auth)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
@@ -300,6 +322,7 @@ func RemoveListBackground(c echo.Context) error {
 
 	list.BackgroundFileID = 0
 	list.BackgroundInformation = nil
+	list.BackgroundBlurHash = ""
 	err = models.UpdateList(s, list, auth, true)
 	if err != nil {
 		return err

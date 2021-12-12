@@ -52,7 +52,7 @@ func (p *Provider) Search(s *xorm.Session, search string, page int64) (result []
 // @Failure 404 {object} models.Message "The list does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{id}/backgrounds/upload [put]
-func (p *Provider) Set(s *xorm.Session, image *background.Image, list *models.List, auth web.Auth) (err error) {
+func (p *Provider) Set(s *xorm.Session, img *background.Image, list *models.List, auth web.Auth) (err error) {
 	// Remove the old background if one exists
 	if list.BackgroundFileID != 0 {
 		file := files.File{ID: list.BackgroundFileID}
@@ -62,12 +62,12 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, list *models.Li
 	}
 
 	file := &files.File{}
-	file.ID, err = strconv.ParseInt(image.ID, 10, 64)
+	file.ID, err = strconv.ParseInt(img.ID, 10, 64)
 	if err != nil {
 		return
 	}
 
 	list.BackgroundInformation = &models.ListBackgroundType{Type: models.ListBackgroundUpload}
 
-	return models.SetListBackground(s, list.ID, file)
+	return models.SetListBackground(s, list.ID, file, list.BackgroundBlurHash)
 }

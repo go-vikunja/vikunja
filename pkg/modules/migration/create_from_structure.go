@@ -18,6 +18,7 @@ package migration
 
 import (
 	"bytes"
+	"code.vikunja.io/api/pkg/modules/background/handler"
 	"io/ioutil"
 
 	"xorm.io/xorm"
@@ -115,7 +116,12 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithListsAndTas
 					return err
 				}
 
-				err = models.SetListBackground(s, l.ID, file)
+				hash, err := handler.CreateBlurHash(backgroundFile)
+				if err != nil {
+					return err
+				}
+
+				err = models.SetListBackground(s, l.ID, file, hash)
 				if err != nil {
 					return err
 				}

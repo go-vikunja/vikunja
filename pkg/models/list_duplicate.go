@@ -144,7 +144,7 @@ func (ld *ListDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 			}
 		}
 
-		if err := SetListBackground(s, ld.List.ID, file); err != nil {
+		if err := SetListBackground(s, ld.List.ID, file, ld.List.BackgroundBlurHash); err != nil {
 			return err
 		}
 

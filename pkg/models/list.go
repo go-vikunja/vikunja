@@ -640,7 +640,7 @@ func UpdateList(s *xorm.Session, list *List, auth web.Auth, updateListBackground
 	}
 
 	if updateListBackground {
-		colsToUpdate = append(colsToUpdate, "background_file_id")
+		colsToUpdate = append(colsToUpdate, "background_file_id", "background_blur_hash")
 	}
 
 	wasFavorite, err := isFavorite(s, list.ID, auth, FavoriteKindList)
@@ -801,14 +801,15 @@ func (l *List) Delete(s *xorm.Session, a web.Auth) (err error) {
 }
 
 // SetListBackground sets a background file as list background in the db
-func SetListBackground(s *xorm.Session, listID int64, background *files.File) (err error) {
+func SetListBackground(s *xorm.Session, listID int64, background *files.File, blurHash string) (err error) {
 	l := &List{
-		ID:               listID,
-		BackgroundFileID: background.ID,
+		ID:                 listID,
+		BackgroundFileID:   background.ID,
+		BackgroundBlurHash: blurHash,
 	}
 	_, err = s.
 		Where("id = ?", l.ID).
-		Cols("background_file_id").
+		Cols("background_file_id", "background_blur_hash").
 		Update(l)
 	return
 }
