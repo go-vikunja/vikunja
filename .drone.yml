@@ -202,7 +202,6 @@ steps:
       YARN_CACHE_FOLDER: .cache/yarn/
     commands:
       - yarn --frozen-lockfile --network-timeout 100000
-      - npx browserslist@latest --update-db
       - yarn run lint
       - "echo '{\"VERSION\": \"'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'\"}' > src/version.json"
       - yarn run build
