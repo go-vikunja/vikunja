@@ -73,6 +73,7 @@ func UserShow(c echo.Context) error {
 			OverdueTasksRemindersEnabled: u.OverdueTasksRemindersEnabled,
 			DefaultListID:                u.DefaultListID,
 			WeekStart:                    u.WeekStart,
+			Language:                     u.Language,
 		},
 		DeletionScheduledAt: u.DeletionScheduledAt,
 		IsLocalUser:         u.Issuer == user.IssuerLocal,

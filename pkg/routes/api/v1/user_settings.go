@@ -50,6 +50,8 @@ type UserSettings struct {
 	DefaultListID int64 `json:"default_list_id"`
 	// The day when the week starts for this user. 0 = sunday, 1 = monday, etc.
 	WeekStart int `json:"week_start"`
+	// The user's language
+	Language string `json:"language"`
 }
 
 // GetUserAvatarProvider returns the currently set user avatar
@@ -177,6 +179,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	user.OverdueTasksRemindersEnabled = us.OverdueTasksRemindersEnabled
 	user.DefaultListID = us.DefaultListID
 	user.WeekStart = us.WeekStart
+	user.Language = us.Language
 
 	_, err = user2.UpdateUser(s, user)
 	if err != nil {

@@ -8966,6 +8966,10 @@ var doc = `{
                     "description": "If enabled, sends email reminders of tasks to the user.",
                     "type": "boolean"
                 },
+                "language": {
+                    "description": "The user's language",
+                    "type": "string"
+                },
                 "name": {
                     "description": "The new name of the current user.",
                     "type": "string"
