@@ -36,6 +36,7 @@
       "password": "Mật khẩu",
       "passwordRepeat": "Nhập lại mật khẩu",
       "passwordPlaceholder": "ví dụ: •••••••••••",
+      "forgotPassword": "Forgot your password?",
       "resetPassword": "Reset mật khẩu của bạn",
       "resetPasswordAction": "Gửi cho tôi liên kết reset mật khẩu",
       "resetPasswordSuccess": "Kiểm tra hộp thư của bạn! Bạn sẽ nhận một e-mail với hướng dẫn reset mật khẩu của mình.",
@@ -473,7 +474,8 @@
     "download": "Tải về",
     "showMenu": "Hiển thị menu",
     "hideMenu": "Ẩn menu",
-    "forExample": "For example:"
+    "forExample": "For example:",
+    "welcomeBack": "Welcome Back!"
   },
   "input": {
     "resetColor": "Đặt lại màu",
@@ -811,7 +813,7 @@
     "url": "URL Vikunja",
     "urlPlaceholder": "ví dụ: https://localhost:3456",
     "change": "thay đổi",
-    "signInOn": "Đăng nhập vào tài khoản Vikunia tại {0}",
+    "use": "Using Vikunja installation at {0}",
     "error": "Không thể tìm thấy hoặc sử dụng cài đặt Vikunja tại \"{domain}\". Vui lòng thử một url khác.",
     "success": "Sử dụng cài đặt Vikunja tại \"{domain}\".",
     "urlRequired": "Cần có một url."

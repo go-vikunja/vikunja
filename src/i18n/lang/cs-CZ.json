@@ -36,6 +36,7 @@
       "password": "Heslo",
       "passwordRepeat": "Zopakovat heslo",
       "passwordPlaceholder": "např. • • • • • • • •",
+      "forgotPassword": "Forgot your password?",
       "resetPassword": "Obnovit heslo",
       "resetPasswordAction": "Poslat odkaz na obnovení hesla",
       "resetPasswordSuccess": "Zkontrolujte doručenou poštu! Měli byste mít e-mail s pokyny, jak obnovit své heslo.",
@@ -473,7 +474,8 @@
     "download": "Stáhnout",
     "showMenu": "Zobrazit nabídku",
     "hideMenu": "Skrýt nabídku",
-    "forExample": "Například:"
+    "forExample": "Například:",
+    "welcomeBack": "Welcome Back!"
   },
   "input": {
     "resetColor": "Obnovit barvu",
@@ -811,7 +813,7 @@
     "url": "Vikunja URL",
     "urlPlaceholder": "např. https://localhost:3456",
     "change": "změnit",
-    "signInOn": "Přihlaste se ke svému účtu Vikunja na {0}",
+    "use": "Using Vikunja installation at {0}",
     "error": "Nelze najít nebo použít instalaci Vikunja na \"{domain}\". Zkuste prosím jinou url.",
     "success": "Pomocí instalace Vikunja na \"{domain}\".",
     "urlRequired": "Je vyžadována adresa URL."

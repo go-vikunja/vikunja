@@ -36,6 +36,7 @@
       "password": "Mot de passe",
       "passwordRepeat": "Retape ton mot de passe",
       "passwordPlaceholder": "p. ex. •••••••••••",
+      "forgotPassword": "Forgot your password?",
       "resetPassword": "Réinitialiser ton mot de passe",
       "resetPasswordAction": "M’envoyer un lien de réinitialisation du mot de passe",
       "resetPasswordSuccess": "Vérifie ta boîte de réception ! Tu devrais avoir un courriel contenant les instructions sur la manière de réinitialiser ton mot de passe.",
@@ -473,7 +474,8 @@
     "download": "Télécharger",
     "showMenu": "Afficher le menu",
     "hideMenu": "Masquer le menu",
-    "forExample": "For example:"
+    "forExample": "For example:",
+    "welcomeBack": "Welcome Back!"
   },
   "input": {
     "resetColor": "Réinitialiser la couleur",
@@ -811,7 +813,7 @@
     "url": "URL Vikunja",
     "urlPlaceholder": "Par exemple : https://localhost:3456",
     "change": "changer",
-    "signInOn": "Se connecter à ton compte Vikunja sur {0}",
+    "use": "Using Vikunja installation at {0}",
     "error": "Impossible de trouver ou d'utiliser l'installation de Vikunja sur « {domain} ». Veuillez essayer une autre URL.",
     "success": "Utilisation de l’installation Vikunja à « {domain} ».",
     "urlRequired": "Une URL est requise."

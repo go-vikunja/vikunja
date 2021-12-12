@@ -36,6 +36,7 @@
       "password": "Passwort",
       "passwordRepeat": "Gib dis Passwort nomal iih",
       "passwordPlaceholder": "z.B. •••••••••••",
+      "forgotPassword": "Forgot your password?",
       "resetPassword": "Setz diis Passwort zrugg",
       "resetPasswordAction": "Schick mir en Passwort zruggsetz Link",
       "resetPasswordSuccess": "Prüfe deinen Posteingang! Du solltest eine E-Mail mit Anweisungen zum Zurücksetzen deines Passworts erhalten haben.",
@@ -473,7 +474,8 @@
     "download": "Herunterladen",
     "showMenu": "Menü anzeigen",
     "hideMenu": "Menü ausblenden",
-    "forExample": "For example:"
+    "forExample": "For example:",
+    "welcomeBack": "Welcome Back!"
   },
   "input": {
     "resetColor": "Farb zruggsetze",
@@ -811,7 +813,7 @@
     "url": "Vikunja URL",
     "urlPlaceholder": "z.B. https://localhost:3456",
     "change": "ändere",
-    "signInOn": "Dich i diin Vikunja-Account Iihloge uf {0}",
+    "use": "Using Vikunja installation at {0}",
     "error": "Konnte keine Vikunja-Installation unter „{domain}“ finden oder verwenden. Bitte probiere eine andere Url.",
     "success": "Benutze d'Vikunja Installation uf \"{domain}\".",
     "urlRequired": "Eine Url ist erforderlich."

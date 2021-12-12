@@ -36,6 +36,7 @@
       "password": "Пароль",
       "passwordRepeat": "Пароль ещё раз",
       "passwordPlaceholder": "напр. •••••••••••",
+      "forgotPassword": "Forgot your password?",
       "resetPassword": "Сбросить пароль",
       "resetPasswordAction": "Отправить ссылку на сброс пароля",
       "resetPasswordSuccess": "Проверь свою почту! Там должно быть письмо с инструкциями, как сбросить пароль.",
@@ -473,7 +474,8 @@
     "download": "Скачать",
     "showMenu": "Show the menu",
     "hideMenu": "Hide the menu",
-    "forExample": "For example:"
+    "forExample": "For example:",
+    "welcomeBack": "Welcome Back!"
   },
   "input": {
     "resetColor": "Сбросить цвет",
@@ -811,7 +813,7 @@
     "url": "Vikunja URL",
     "urlPlaceholder": "напр. https://localhost:3456",
     "change": "изменить",
-    "signInOn": "Войди в свой аккаунт Vikunja на {0}",
+    "use": "Using Vikunja installation at {0}",
     "error": "Could not find or use Vikunja installation at \"{domain}\". Please try a different url.",
     "success": "Используется Vikunja на \"{domain}\".",
     "urlRequired": "A url is required."
