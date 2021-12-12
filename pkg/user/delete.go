@@ -58,10 +58,10 @@ func notifyUsersScheduledForDeletion() {
 
 		var number = 2
 		if user.DeletionLastReminderSent.IsZero() {
-			number = 1
+			number = 3
 		}
 		if user.DeletionScheduledAt.Sub(user.DeletionLastReminderSent) < time.Hour*24 {
-			number = 3
+			number = 1
 		}
 
 		log.Debugf("Notifying user %d of the deletion of their account...", user.ID)
