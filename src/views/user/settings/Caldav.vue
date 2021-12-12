@@ -29,12 +29,12 @@
 			<tr>
 				<th>{{ $t('misc.id') }}</th>
 				<th>{{ $t('misc.created') }}</th>
-				<th>{{ $t('misc.actions') }}</th>
+				<th class="has-text-right">{{ $t('misc.actions') }}</th>
 			</tr>
 			<tr v-for="tk in tokens">
 				<td>{{ tk.id }}</td>
 				<td>{{ formatDateShort(tk.created) }}</td>
-				<td>
+				<td class="has-text-right">
 					<x-button type="secondary" @click="deleteToken(tk)">
 						{{ $t('misc.delete') }}
 					</x-button>
