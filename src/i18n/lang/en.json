@@ -110,7 +110,9 @@
         "tokensHowTo": "You can use a caldav token to use instead of a password to log in the above endpoint.",
         "createToken": "Create a token",
         "tokenCreated": "Here is your token: {token}",
-        "wontSeeItAgain": "Write it down, you won't be able to see it again."
+        "wontSeeItAgain": "Write it down, you won't be able to see it again.",
+        "mustUseToken": "You need to create a caldav token if you want to use caldav with a third party client. Use the token as the password.",
+        "usernameIs": "Your username is: {0}"
       },
       "avatar": {
         "title": "Avatar",

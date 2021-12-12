@@ -22,7 +22,13 @@
 		</p>
 
 		<p>
-			{{ $t('user.settings.caldav.tokensHowTo') }}
+			{{ isLocalUser ? $t('user.settings.caldav.tokensHowTo') : $t('user.settings.caldav.mustUseToken') }}
+			<template v-if="!isLocalUser">
+				<br/>
+				<i18n-t keypath="user.settings.caldav.usernameIs">
+					<strong>{{ username }}</strong>
+				</i18n-t>
+			</template>
 		</p>
 
 		<table class="table" v-if="tokens.length > 0">
@@ -78,6 +84,8 @@ useTitle(() => `${t('user.settings.caldav.title')} - ${t('user.settings.title')}
 
 const caldavUrl = computed(() => `${store.getters['config/apiBase']}/dav/principals/${store.state.auth.info.username}/`)
 const caldavEnabled = computed(() => store.state.config.caldavEnabled)
+const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
+const username = computed(() => store.state.auth.info?.username)
 
 const service = new CaldavTokenService()
 const tokens = ref([])
