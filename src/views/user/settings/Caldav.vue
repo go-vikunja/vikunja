@@ -17,40 +17,27 @@
 			</div>
 		</div>
 		<p>
-			<a href="https://vikunja.io/docs/caldav/" rel="noreferrer noopener nofollow" target="_blank">
+			<a :href="CALDAV_DOCS" rel="noreferrer noopener nofollow" target="_blank">
 				{{ $t('user.settings.caldav.more') }}
 			</a>
 		</p>
 	</card>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script lang="ts" setup>
 import copy from 'copy-to-clipboard'
-import {mapState} from 'vuex'
-import {CALDAV_DOCS} from '@/urls'
+import {computed} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useStore} from 'vuex'
 
-export default defineComponent({
-	name: 'user-settings-caldav',
-	data() {
-		return {
-			caldavDocsUrl: CALDAV_DOCS,
-		}
-	},
-	mounted() {
-		this.setTitle(`${this.$t('user.settings.caldav.title')} - ${this.$t('user.settings.title')}`)
-	},
-	computed: {
-		caldavUrl() {
-			return `${this.$store.getters['config/apiBase']}/dav/principals/${this.userInfo.username}/`
-		},
-		...mapState('config', ['caldavEnabled']),
-		...mapState({
-			userInfo: state => state.auth.info,
-		}),
-	},
-	methods: {
-		copy,
-	},
-})
+import {CALDAV_DOCS} from '@/urls'
+import {useTitle} from '@/composables/useTitle'
+
+const store = useStore()
+const {t} = useI18n()
+
+useTitle(() => `${t('user.settings.caldav.title')} - ${t('user.settings.title')}`)
+
+const caldavUrl = computed(() => `${store.getters['config/apiBase']}/dav/principals/${store.state.auth.info.username}/`)
+const caldavEnabled = computed(() => store.state.config.caldavEnabled)
 </script>
