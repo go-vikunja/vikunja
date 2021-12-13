@@ -78,7 +78,7 @@
     "faker": "5.5.3",
     "jest": "27.4.4",
     "netlify-cli": "8.0.20",
-    "postcss": "8.4.4",
+    "postcss": "8.4.5",
     "postcss-preset-env": "7.0.1",
     "rollup": "2.61.1",
     "rollup-plugin-visualizer": "5.5.2",
