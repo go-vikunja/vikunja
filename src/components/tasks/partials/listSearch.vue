@@ -16,60 +16,54 @@
 	</multiselect>
 </template>
 
-<script>
-import ListModel from '../../../models/list'
+<script lang="ts" setup>
+import {reactive, ref, watchEffect} from 'vue'
+import {useStore} from 'vuex'
+import {useI18n} from 'vue-i18n'
+import ListModel from '@/models/list'
 import Multiselect from '@/components/input/multiselect.vue'
 
-export default {
-	name: 'listSearch',
-	data() {
-		return {
-			list: new ListModel(),
-			foundLists: [],
-		}
-	},
-	props: {
-		modelValue: {
-			required: false,
-		},
-	},
-	emits: ['update:modelValue', 'selected'],
-	components: {
-		Multiselect,
-	},
-	watch: {
-		modelValue: {
-			handler(value) {
-				this.list = value
-			},
-			immeditate: true,
-			deep: true,
-		},
-	},
-	methods: {
-		findLists(query) {
-			this.foundLists = this.$store.getters['lists/searchList'](query)
-		},
+const store = useStore()
+const {t} = useI18n()
 
-		select(list) {
-			this.list = list
-			this.$emit('selected', list)
-			this.$emit('update:modelValue', list)
+const list = reactive(new ListModel())
+const props = defineProps({
+	modelValue: {
+		validator(value) {
+			return value instanceof ListModel
 		},
-
-		namespace(namespaceId) {
-			const namespace = this.$store.getters['namespaces/getNamespaceById'](namespaceId)
-			if (namespace !== null) {
-				return namespace.title
-			}
-			return this.$t('list.shared')
-		},
+		required: false,
 	},
+})
+const emit = defineEmits(['update:modelValue'])
+
+watchEffect(() => {
+	Object.assign(list, props.modelValue)
+})
+
+const foundLists = ref([])
+function findLists(query: string) {
+	if (query === '') {
+		select(null)
+	}
+	foundLists.value = store.getters['lists/searchList'](query)
+}
+
+function select(l: ListModel | null) {
+	Object.assign(list, l)
+	emit('update:modelValue', list)
+}
+
+function namespace(namespaceId: number) {
+	const namespace = store.getters['namespaces/getNamespaceById'](namespaceId)
+	return namespace !== null
+		? namespace.title
+		: t('list.shared')
 }
 </script>
 
 <style lang="scss" scoped>
 .list-namespace-title {
-  color: var(--grey-500);
+	color: var(--grey-500);
 }
 </style>

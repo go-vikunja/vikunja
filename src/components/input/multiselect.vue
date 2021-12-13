@@ -457,7 +457,7 @@ export default {
 			text-transform: none;
 			font-family: $family-sans-serif;
 			font-weight: normal;
-			padding: .5rem 0;
+			padding: .5rem;
 			border: none;
 			cursor: pointer;
 
@@ -477,7 +477,7 @@ export default {
 				font-size: .75rem;
 				color: transparent;
 				transition: color $transition;
-				padding: 0 .5rem;
+				padding-left: .5rem;
 			}
 
 			&:focus, &:hover {

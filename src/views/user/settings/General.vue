@@ -131,8 +131,10 @@ import {playPop} from '@/helpers/playPop'
 import {useColorScheme} from '@/composables/useColorScheme'
 import {success} from '@/message'
 
+const DEFAULT_LIST_ID = 0
+
 function useColorSchemeSetting() {
-	const { t } = useI18n()
+	const {t} = useI18n()
 	const colorSchemeSettings = computed(() => ({
 		light: t('user.settings.appearance.colorScheme.light'),
 		auto: t('user.settings.appearance.colorScheme.system'),
@@ -141,9 +143,11 @@ function useColorSchemeSetting() {
 
 	const {store} = useColorScheme()
 	watch(store, (schemeId) => {
-		success({message: t('user.settings.appearance.setSuccess', {
-			colorScheme: colorSchemeSettings.value[schemeId],
-		})})
+		success({
+			message: t('user.settings.appearance.setSuccess', {
+				colorScheme: colorSchemeSettings.value[schemeId],
+			}),
+		})
 	})
 
 	return {
@@ -178,8 +182,13 @@ export default {
 				.map(l => ({code: l[0], title: l[1]}))
 				.sort((a, b) => a.title.localeCompare(b.title))
 		},
-		defaultList() {
-			return this.$store.getters['lists/getListById'](this.settings.defaultListId)
+		defaultList: {
+			get() {
+				return this.$store.getters['lists/getListById'](this.settings.defaultListId)
+			},
+			set(l) {
+				this.settings.defaultListId = l ? l.id : DEFAULT_LIST_ID
+			},
 		},
 	},
 
@@ -204,12 +213,13 @@ export default {
 			localStorage.setItem(playSoundWhenDoneKey, this.playSoundWhenDone)
 			saveLanguage(this.language)
 			setQuickAddMagicMode(this.quickAddMagicMode)
-			this.settings.defaultListId = this.defaultList ? this.defaultList.id : 0
 
-			await this.userSettingsService.update(this.settings)
-			this.$store.commit('auth/setUserSettings', {
+			const settings = {
 				...this.settings,
-			})
+			}
+
+			await this.userSettingsService.update(settings)
+			this.$store.commit('auth/setUserSettings', settings)
 			this.$message.success({message: this.$t('user.settings.general.savedSuccess')})
 		},
 	},
