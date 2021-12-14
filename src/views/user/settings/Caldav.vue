@@ -9,10 +9,10 @@
 			</div>
 			<div class="control">
 				<x-button
-					@click="copy(caldavUrl)"
-					:shadow="false"
-					v-tooltip="$t('misc.copy')"
-					icon="paste"
+						@click="copy(caldavUrl)"
+						:shadow="false"
+						v-tooltip="$t('misc.copy')"
+						icon="paste"
 				/>
 			</div>
 		</div>
@@ -74,8 +74,9 @@ import {useStore} from 'vuex'
 import {CALDAV_DOCS} from '@/urls'
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
-import Message from '../../../components/misc/message'
-import CaldavTokenService from '../../../services/caldavToken'
+import Message from '@/components/misc/message.vue'
+import CaldavTokenService from '@/services/caldavToken'
+import CaldavTokenModel from '@/models/caldavToken'
 
 const store = useStore()
 const {t} = useI18n()
@@ -88,9 +89,9 @@ const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
 const username = computed(() => store.state.auth.info?.username)
 
 const service = new CaldavTokenService()
-const tokens = ref([])
+const tokens = ref<CaldavTokenModel[]>([])
 service.getAll()
-	.then(r => {
+	.then((r: CaldavTokenModel[]) => {
 		tokens.value = r
 	})
 
@@ -103,12 +104,15 @@ const createToken = () => {
 		})
 }
 
-const deleteToken = token => {
+const deleteToken = (token: CaldavTokenModel) => {
 	service.delete(token)
+		// @ts-ignore
 		.then(r => {
 			success(r)
 			for (const i in tokens.value) {
+				// @ts-ignore
 				if (tokens.value[i].id === token.id) {
+					// @ts-ignore
 					tokens.value.splice(i, 1)
 				}
 			}
