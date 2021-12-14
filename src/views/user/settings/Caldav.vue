@@ -109,13 +109,10 @@ const deleteToken = (token: CaldavTokenModel) => {
 		// @ts-ignore
 		.then(r => {
 			success(r)
-			for (const i in tokens.value) {
-				// @ts-ignore
-				if (tokens.value[i].id === token.id) {
-					// @ts-ignore
-					tokens.value.splice(i, 1)
-				}
-			}
+			// @ts-ignore
+			const i = tokens.value.findIndex(v => v.id === token.id)
+			// @ts-ignore
+			tokens.value.splice(i, 1)
 		})
 }
 </script>
