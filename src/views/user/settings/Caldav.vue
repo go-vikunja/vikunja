@@ -96,23 +96,18 @@ service.getAll()
 	})
 
 const newToken = ref(null)
-const createToken = () => {
-	service.create({})
-		.then(r => {
-			tokens.value.push(r)
-			newToken.value = r
-		})
+const createToken = async () => {
+	const r = await service.create({})
+	tokens.value.push(r)
+	newToken.value = r
 }
 
-const deleteToken = (token: CaldavTokenModel) => {
-	service.delete(token)
-		// @ts-ignore
-		.then(r => {
-			success(r)
-			// @ts-ignore
-			const i = tokens.value.findIndex(v => v.id === token.id)
-			// @ts-ignore
-			tokens.value.splice(i, 1)
-		})
+const deleteToken = async (token: CaldavTokenModel) => {
+	const r = await service.delete(token)
+	success(r)
+	// @ts-ignore
+	const i = tokens.value.findIndex(v => v.id === token.id)
+	// @ts-ignore
+	tokens.value.splice(i, 1)
 }
 </script>
