@@ -37,7 +37,7 @@
 				<th>{{ $t('misc.created') }}</th>
 				<th class="has-text-right">{{ $t('misc.actions') }}</th>
 			</tr>
-			<tr v-for="tk in tokens">
+			<tr v-for="tk in tokens" :key="tk.id">
 				<td>{{ tk.id }}</td>
 				<td>{{ formatDateShort(tk.created) }}</td>
 				<td class="has-text-right">
