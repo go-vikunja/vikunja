@@ -17,7 +17,7 @@
     "browserslist:update": "npx browserslist@latest --update-db"
   },
   "dependencies": {
-    "@github/hotkey": "1.6.0",
+    "@github/hotkey": "1.6.1",
     "@kyvg/vue3-notification": "2.3.4",
     "@sentry/tracing": "6.16.1",
     "@sentry/vue": "6.16.1",
