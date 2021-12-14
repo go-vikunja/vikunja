@@ -78,6 +78,16 @@ import Message from '@/components/misc/message.vue'
 import CaldavTokenService from '@/services/caldavToken'
 import CaldavTokenModel from '@/models/caldavToken'
 
+const service = new CaldavTokenService()
+
+async function useToken() {
+	const tokens = ref<CaldavTokenModel[]>([])
+	tokens.value = await service.getAll()
+	return tokens
+}
+
+const tokens = useToken()
+
 const store = useStore()
 const {t} = useI18n()
 
@@ -87,13 +97,6 @@ const caldavUrl = computed(() => `${store.getters['config/apiBase']}/dav/princip
 const caldavEnabled = computed(() => store.state.config.caldavEnabled)
 const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
 const username = computed(() => store.state.auth.info?.username)
-
-const service = new CaldavTokenService()
-const tokens = ref<CaldavTokenModel[]>([])
-service.getAll()
-	.then((r: CaldavTokenModel[]) => {
-		tokens.value = r
-	})
 
 const newToken = ref(null)
 const createToken = async () => {
