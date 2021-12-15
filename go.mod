@@ -63,7 +63,7 @@ require (
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20211214234402-4825e8c3871d
+	golang.org/x/sys v0.0.0-20211215211219-4abf325e0275
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
