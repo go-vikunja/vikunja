@@ -2275,10 +2275,10 @@
     validate-npm-package-name "^3.0.0"
     yargs "^15.3.0"
 
-"@netlify/config@^16.0.7":
-  version "16.0.7"
-  resolved "https://registry.yarnpkg.com/@netlify/config/-/config-16.0.7.tgz#96ffda4fc556205c55cf776a074eaf4954a4fe63"
-  integrity sha512-/t7/F9WcLqXbOmHynZYZ5iMD8XqDNWyVjAu0XiwNsf4/wLBPN9kfjsOm/fYNi3MncLO03WA70iT7BCUzw2tnYQ==
+"@netlify/config@^17.0.0":
+  version "17.0.0"
+  resolved "https://registry.yarnpkg.com/@netlify/config/-/config-17.0.0.tgz#29fd7a28d3ed77d8d3eea2fb66df8780f5077482"
+  integrity sha512-nm6Xls6Q4CGQlnckBNczdSY6jF/X7lCOZCfULyFE/mRivLqQ46eZOUXDIWYMWMrxNozjMiRfiSrMvlbm8ZV2LA==
   dependencies:
     chalk "^4.1.2"
     cron-parser "^4.1.0"
@@ -2427,30 +2427,6 @@
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/@netlify/open-api/-/open-api-2.6.0.tgz#128c8d66ac8798e9f60824ca9857735c368090b6"
   integrity sha512-VfYLiEXJIVIn25wrwNB/O+QkM3xPgCVcGSKZxM/i+oPCOgBK+4PEieRtfqhF4vXXwwOi68VaRWU7P3aRnb3nIA==
-
-"@netlify/plugin-edge-handlers@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@netlify/plugin-edge-handlers/-/plugin-edge-handlers-2.0.0.tgz#3081c0e1581d6bfa6000dcf5c71e3411d0415a55"
-  integrity sha512-qfEUPZ4JCo3/j6txjwR6dUeteYI6ErYYLJmhGHEm5OEpZz4IUlnqWajmpU0sKgbB/F7AbEFi1aZFYmYnTIB3Bg==
-  dependencies:
-    "@babel/core" "^7.11.4"
-    "@babel/preset-env" "^7.11.5"
-    "@rollup/plugin-babel" "^5.2.0"
-    "@rollup/plugin-commonjs" "^21.0.0"
-    "@rollup/plugin-inject" "^4.0.2"
-    "@rollup/plugin-json" "^4.1.0"
-    "@rollup/plugin-node-resolve" "^11.0.0"
-    "@types/node" "^16.0.0"
-    buffer-es6 "^4.9.3"
-    del "^6.0.0"
-    make-dir "^3.1.0"
-    node-fetch "^2.6.1"
-    path-type "^4.0.0"
-    process-es6 "^0.11.6"
-    rollup "^2.23.1"
-    rollup-plugin-node-polyfills "^0.2.1"
-    rollup-plugin-terser "^7.0.2"
-    typescript "^4.1.5"
 
 "@netlify/plugin-edge-handlers@^3.0.0":
   version "3.0.0"
@@ -10127,16 +10103,16 @@ nested-error-stacks@^2.0.0, nested-error-stacks@^2.1.0:
   resolved "https://registry.yarnpkg.com/nested-error-stacks/-/nested-error-stacks-2.1.0.tgz#0fbdcf3e13fe4994781280524f8b96b0cdff9c61"
   integrity sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==
 
-netlify-cli@8.1.4:
-  version "8.1.4"
-  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.1.4.tgz#6887649b2153a452ca48d34dc2b41be4d77b8db0"
-  integrity sha512-QxAngbfqucNOSDVI4yultI1l92brGYElkZfgiUbsrIuIUe4y/Gql153qD3Uu4ybT62vOPO8AIcq7/wPiU909DA==
+netlify-cli@8.1.8:
+  version "8.1.8"
+  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.1.8.tgz#f20c1fd014802849e971efdba4eb9bafa7bfe5bb"
+  integrity sha512-BRrzaQNymNyohtqAcOCR9NKqw1uCD8q3cc34kmGGIBYvDpryzPnHhEbg+C/aLkwZEDYRIh/9AFEIpRWZF3GZgQ==
   dependencies:
     "@netlify/build" "^20.3.1"
-    "@netlify/config" "^16.0.7"
+    "@netlify/config" "^17.0.0"
     "@netlify/framework-info" "^7.0.0"
     "@netlify/local-functions-proxy" "^1.1.1"
-    "@netlify/plugin-edge-handlers" "^2.0.0"
+    "@netlify/plugin-edge-handlers" "^3.0.0"
     "@netlify/plugins-list" "^6.2.0"
     "@netlify/routing-local-proxy" "^0.34.1"
     "@netlify/zip-it-and-ship-it" "5.2.0"
