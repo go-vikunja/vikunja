@@ -85,8 +85,8 @@ server {
 1. Create a Proxy Host within NPM and point it to whatever URL you plan to use. 
 2. Verify that the page will pull up in your browser. (Do not bother trying to log in. It won't work. Trust me.)
 3. Identify the container name for your NPM installation. e.g. `NGINX-PM`
-4. From the command line, enter sudo docker exec -it NGINX-PM /bin/bash and navigate to the proxy hosts folder where the `.conf` files are stashed. Probably `/data/nginx/proxy_host`. 
-5. Locate the `.conf` file where the server_name matches your Vikunja Proxy Host. Once found, add the following just above the existing location block in that file.
+4. From the command line, enter sudo docker exec -it NGINX-PM /bin/bash and navigate to the proxy hosts folder where the `.conf` files are stashed. Probably `/data/nginx/proxy_host`.
+5. Locate the `.conf` file where the server_name matches your Vikunja Proxy Host. Once found, add the following code, unchanged, just above the existing location block in that file. (They are listed by number, not name.)  
 ```
 location ~* ^/(api|dav|\.well-known)/ {
         proxy_pass http://api:3456;
