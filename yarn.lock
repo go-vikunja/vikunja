@@ -3646,18 +3646,25 @@
     "@vueuse/shared" "7.3.0"
     vue-demi "*"
 
-"@vueuse/router@7.3.0":
-  version "7.3.0"
-  resolved "https://registry.yarnpkg.com/@vueuse/router/-/router-7.3.0.tgz#8157d20636040e573379eda338b57d47f1464163"
-  integrity sha512-MRGaZPVV21MZOZ759LMRWTlSaRvcKh+kGw2tGCLhxkihObcrNNLl0h3N5QtBy/+eR84tf7MO7JHCL+0PJspzQg==
+"@vueuse/router@7.4.0":
+  version "7.4.0"
+  resolved "https://registry.yarnpkg.com/@vueuse/router/-/router-7.4.0.tgz#31c820b668f4fc4bc93524a1038a15f64a6e8133"
+  integrity sha512-UZ+rRxT5wmmqC9CGLG/gaPO2C4vDKom11AWnvIElnDZSCsvesGnxfqH7nGUqrDFkYbwMBy8kvrVqccJ8uakgQA==
   dependencies:
-    "@vueuse/shared" "7.3.0"
+    "@vueuse/shared" "7.4.0"
     vue-demi "*"
 
 "@vueuse/shared@7.3.0":
   version "7.3.0"
   resolved "https://registry.yarnpkg.com/@vueuse/shared/-/shared-7.3.0.tgz#729b2f0a83f38647896d955902e828dcbd8ed7dc"
   integrity sha512-vOAeI84tIXKVkzm8s/Mxbrzhj0QN6NyVc/sC6LrW0AjVNdvpD8sB1dZiDn9yh8T77WJmloCEt4zZVIppeq7I+w==
+  dependencies:
+    vue-demi "*"
+
+"@vueuse/shared@7.4.0":
+  version "7.4.0"
+  resolved "https://registry.yarnpkg.com/@vueuse/shared/-/shared-7.4.0.tgz#8f0767c4f7b89112c1b34accec44a6c8625ce085"
+  integrity sha512-x5Jn6jUB8gS1mGnVCoNWFEpAoDkm2QwtacZTUgKMn0Ow8tlUBKIfGVOt4vn9qZB10froED/ARHEj79WKLXRieA==
   dependencies:
     vue-demi "*"
 
