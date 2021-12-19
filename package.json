@@ -68,7 +68,7 @@
     "autoprefixer": "10.4.0",
     "axios": "0.24.0",
     "browserslist": "4.19.1",
-    "caniuse-lite": "1.0.30001287",
+    "caniuse-lite": "1.0.30001291",
     "cypress": "9.1.1",
     "cypress-file-upload": "5.0.8",
     "esbuild": "0.14.5",
