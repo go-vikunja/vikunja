@@ -9,10 +9,10 @@
 			</div>
 			<div class="control">
 				<x-button
-						@click="copy(caldavUrl)"
-						:shadow="false"
-						v-tooltip="$t('misc.copy')"
-						icon="paste"
+					@click="copy(caldavUrl)"
+					:shadow="false"
+					v-tooltip="$t('misc.copy')"
+					icon="paste"
 				/>
 			</div>
 		</div>
@@ -109,6 +109,9 @@ const deleteToken = async (token: CaldavTokenModel) => {
 	const r = await service.delete(token)
 	success(r)
 	const i = tokens.value.findIndex(v => v.id === token.id)
+	if (i === -1) {
+		return
+	}
 	tokens.value.splice(i, 1)
 }
 </script>
