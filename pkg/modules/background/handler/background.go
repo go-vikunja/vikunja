@@ -18,9 +18,9 @@ package handler
 
 import (
 	"image"
-	_ "image/gif"
-	_ "image/jpeg"
-	_ "image/png"
+	_ "image/gif"  // To make sure the decoder used for generating blurHashes recognizes gifs
+	_ "image/jpeg" // To make sure the decoder used for generating blurHashes recognizes jpgs
+	_ "image/png"  // To make sure the decoder used for generating blurHashes recognizes pngs
 	"io"
 	"net/http"
 	"strconv"
