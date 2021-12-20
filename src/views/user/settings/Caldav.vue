@@ -80,7 +80,7 @@ import CaldavTokenModel from '@/models/caldavToken'
 
 const service = new CaldavTokenService()
 
-async function useToken() {
+async function useToken(): ref<CaldavTokenModel[]> {
 	const tokens = ref<CaldavTokenModel[]>([])
 	tokens.value = await service.getAll()
 	return tokens
@@ -108,9 +108,7 @@ const createToken = async () => {
 const deleteToken = async (token: CaldavTokenModel) => {
 	const r = await service.delete(token)
 	success(r)
-	// @ts-ignore
 	const i = tokens.value.findIndex(v => v.id === token.id)
-	// @ts-ignore
 	tokens.value.splice(i, 1)
 }
 </script>
