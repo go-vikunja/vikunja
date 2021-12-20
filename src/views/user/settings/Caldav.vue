@@ -99,13 +99,14 @@ const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
 const username = computed(() => store.state.auth.info?.username)
 
 const newToken = ref(null)
-const createToken = async () => {
+
+async function createToken() {
 	const r = await service.create({})
 	tokens.value.push(r)
 	newToken.value = r
 }
 
-const deleteToken = async (token: CaldavTokenModel) => {
+async function deleteToken(token: CaldavTokenModel) {
 	const r = await service.delete(token)
 	success(r)
 	const i = tokens.value.findIndex(v => v.id === token.id)
