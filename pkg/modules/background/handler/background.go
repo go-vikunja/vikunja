@@ -18,27 +18,30 @@ package handler
 
 import (
 	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/bbrks/go-blurhash"
-	"golang.org/x/image/draw"
-
 	"code.vikunja.io/api/pkg/db"
-	"xorm.io/xorm"
-
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/background"
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
+	"code.vikunja.io/api/pkg/modules/background/upload"
 	"code.vikunja.io/web"
 	"code.vikunja.io/web/handler"
+
+	"github.com/bbrks/go-blurhash"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/labstack/echo/v4"
+	"golang.org/x/image/draw"
+	"xorm.io/xorm"
 )
 
 // BackgroundProvider represents a thing which holds a background provider
@@ -161,8 +164,6 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	p := bp.Provider()
-
 	// Get + upload the image
 	file, err := c.FormFile("background")
 	if err != nil {
@@ -186,10 +187,8 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 		_ = s.Rollback()
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
 	}
-	_, _ = srcf.Seek(0, io.SeekStart)
 
-	// Save the file
-	f, err := files.CreateWithMime(srcf, file.Filename, uint64(file.Size), auth, mime.String())
+	err = SaveBackgroundFile(s, auth, list, srcf, file.Filename, uint64(file.Size))
 	if err != nil {
 		_ = s.Rollback()
 		if files.IsErrFileIsTooLarge(err) {
@@ -199,27 +198,33 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	// Generate a blurHash
-	_, _ = srcf.Seek(0, io.SeekStart)
-	list.BackgroundBlurHash, err = CreateBlurHash(srcf)
-	if err != nil {
-		return handler.HandleHTTPError(err, c)
-	}
-
-	// Save it
-	img := &background.Image{ID: strconv.FormatInt(f.ID, 10)}
-	err = p.Set(s, img, list, auth)
-	if err != nil {
-		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
-	}
-
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
 
 	return c.JSON(http.StatusOK, list)
+}
+
+func SaveBackgroundFile(s *xorm.Session, auth web.Auth, list *models.List, srcf io.ReadSeeker, filename string, filesize uint64) (err error) {
+	_, _ = srcf.Seek(0, io.SeekStart)
+	f, err := files.Create(srcf, filename, filesize, auth)
+	if err != nil {
+		return err
+	}
+
+	// Generate a blurHash
+	_, _ = srcf.Seek(0, io.SeekStart)
+	list.BackgroundBlurHash, err = CreateBlurHash(srcf)
+	if err != nil {
+		return err
+	}
+
+	// Save it
+	p := upload.Provider{}
+	img := &background.Image{ID: strconv.FormatInt(f.ID, 10)}
+	err = p.Set(s, img, list, auth)
+	return err
 }
 
 func checkListBackgroundRights(s *xorm.Session, c echo.Context) (list *models.List, auth web.Auth, err error) {

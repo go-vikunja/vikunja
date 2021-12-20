@@ -25,7 +25,6 @@ import (
 	"xorm.io/xorm"
 
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
@@ -108,26 +107,19 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithListsAndTas
 
 			log.Debugf("[creating structure] Created list %d", l.ID)
 
-			backgroundFile, is := originalBackgroundInformation.(*bytes.Buffer)
+			bf, is := originalBackgroundInformation.(*bytes.Buffer)
 			if is {
+
+				backgroundFile := bytes.NewReader(bf.Bytes())
+
 				log.Debugf("[creating structure] Creating a background file for list %d", l.ID)
 
-				file, err := files.Create(backgroundFile, "", uint64(backgroundFile.Len()), user)
+				err = handler.SaveBackgroundFile(s, user, &l.List, backgroundFile, "", uint64(backgroundFile.Len()))
 				if err != nil {
 					return err
 				}
 
-				hash, err := handler.CreateBlurHash(backgroundFile)
-				if err != nil {
-					return err
-				}
-
-				err = models.SetListBackground(s, l.ID, file, hash)
-				if err != nil {
-					return err
-				}
-
-				log.Debugf("[creating structure] Created a background file as new file %d for list %d", file.ID, l.ID)
+				log.Debugf("[creating structure] Created a background file for list %d", l.ID)
 			}
 
 			// Create all buckets
