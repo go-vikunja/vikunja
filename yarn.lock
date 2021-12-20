@@ -2494,10 +2494,10 @@
   dependencies:
     execa "^5.1.1"
 
-"@netlify/zip-it-and-ship-it@5.2.0", "@netlify/zip-it-and-ship-it@^5.2.0":
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/@netlify/zip-it-and-ship-it/-/zip-it-and-ship-it-5.2.0.tgz#c225edd06f4d6251066512e79cde7c950137bc87"
-  integrity sha512-YcLj5zcStVYPtPn1SNCjD5dXRpZ1HoAweywCOGNSAcOM6fn489IAaiXpkdmhA8oghBS5ukaP09lOZmJ9LD1m/A==
+"@netlify/zip-it-and-ship-it@5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@netlify/zip-it-and-ship-it/-/zip-it-and-ship-it-5.3.0.tgz#d19b8ffd86247025269aae86a88b5fea1ac5f451"
+  integrity sha512-ZaHjN0wTtsmJr2NIquHr16T6A3wquKB7PFLodcjlinS57DatSr4exb3V02QrxuDbTD36VS2kiYfiZ8ueTXH/3Q==
   dependencies:
     "@babel/parser" "^7.15.7"
     "@netlify/esbuild" "^0.13.6"
@@ -2543,6 +2543,45 @@
     "@vercel/nft" "^0.17.0"
     archiver "^5.3.0"
     array-flat-polyfill "^1.0.1"
+    common-path-prefix "^3.0.0"
+    cp-file "^9.0.0"
+    del "^6.0.0"
+    elf-cam "^0.1.1"
+    end-of-stream "^1.4.4"
+    es-module-lexer "^0.9.0"
+    execa "^5.0.0"
+    filter-obj "^2.0.1"
+    find-up "^5.0.0"
+    glob "^7.1.6"
+    is-builtin-module "^3.1.0"
+    junk "^3.1.0"
+    locate-path "^6.0.0"
+    make-dir "^3.1.0"
+    merge-options "^3.0.4"
+    minimatch "^3.0.4"
+    p-map "^4.0.0"
+    path-exists "^4.0.0"
+    pkg-dir "^5.0.0"
+    precinct "^8.2.0"
+    read-package-json-fast "^2.0.2"
+    require-package-name "^2.0.1"
+    resolve "^2.0.0-next.1"
+    semver "^7.0.0"
+    tmp-promise "^3.0.2"
+    toml "^3.0.0"
+    typescript "^4.4.3"
+    unixify "^1.0.0"
+    yargs "^16.0.0"
+
+"@netlify/zip-it-and-ship-it@^5.2.0":
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/@netlify/zip-it-and-ship-it/-/zip-it-and-ship-it-5.2.0.tgz#c225edd06f4d6251066512e79cde7c950137bc87"
+  integrity sha512-YcLj5zcStVYPtPn1SNCjD5dXRpZ1HoAweywCOGNSAcOM6fn489IAaiXpkdmhA8oghBS5ukaP09lOZmJ9LD1m/A==
+  dependencies:
+    "@babel/parser" "^7.15.7"
+    "@netlify/esbuild" "^0.13.6"
+    "@vercel/nft" "^0.17.0"
+    archiver "^5.3.0"
     common-path-prefix "^3.0.0"
     cp-file "^9.0.0"
     del "^6.0.0"
@@ -10108,10 +10147,10 @@ nested-error-stacks@^2.0.0, nested-error-stacks@^2.1.0:
   resolved "https://registry.yarnpkg.com/nested-error-stacks/-/nested-error-stacks-2.1.0.tgz#0fbdcf3e13fe4994781280524f8b96b0cdff9c61"
   integrity sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==
 
-netlify-cli@8.2.0:
-  version "8.2.0"
-  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.2.0.tgz#d5e42856eed2686b33f2dc69a58f1e67484b18e0"
-  integrity sha512-+yPLQlsgTKfLxdA9fdgVPgGdnSiekfc/DbQLTb7u8MdfkTJCMlhEi9Cx1+3clblDEmShKjas4Sx2Kv0/A2tG1A==
+netlify-cli@8.2.1:
+  version "8.2.1"
+  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.2.1.tgz#ed9d6454284c5171269cd42fec87b4fa393a694c"
+  integrity sha512-Qg9MMbAdPMFZUJQj2vEFTyFedIKDQwYFLn58bTr2TDKDIAfKHKccjtPnlM7fd2AiXuub0GoZKCmPyt7fwifk3A==
   dependencies:
     "@netlify/build" "^20.3.1"
     "@netlify/config" "^17.0.0"
@@ -10120,7 +10159,7 @@ netlify-cli@8.2.0:
     "@netlify/plugin-edge-handlers" "^3.0.0"
     "@netlify/plugins-list" "^6.2.0"
     "@netlify/routing-local-proxy" "^0.34.1"
-    "@netlify/zip-it-and-ship-it" "5.2.0"
+    "@netlify/zip-it-and-ship-it" "5.3.0"
     "@octokit/rest" "^18.0.0"
     "@sindresorhus/slugify" "^1.1.0"
     ansi-styles "^5.0.0"
