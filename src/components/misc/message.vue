@@ -7,7 +7,15 @@
 </template>
 
 <script lang="ts" setup>
-import {computed} from 'vue'
+import {computed, PropType} from 'vue'
+
+const TEXT_ALIGN_MAP = Object.freeze({
+	left: '',
+	center: 'has-text-centered',
+	right: 'has-text-right',
+})
+
+type textAlignVariants = keyof typeof TEXT_ALIGN_MAP
 
 const props = defineProps({
 	variant: {
@@ -15,21 +23,12 @@ const props = defineProps({
 		default: 'info',
 	},
 	textAlign: {
-		type: String,
+		type: String as PropType<textAlignVariants>,
 		default: 'left',
 	},
 })
 
-const textAlignClass = computed(() => {
-	switch (props.textAlign) {
-		case 'left':
-			return ''
-		case 'right':
-			return 'has-text-right'
-		case 'center':
-			return 'has-text-centered'
-	}
-})
+const textAlignClass = computed(() => TEXT_ALIGN_MAP[props.textAlign])
 
 </script>
 
