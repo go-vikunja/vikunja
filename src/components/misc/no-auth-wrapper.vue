@@ -13,7 +13,7 @@
 			<section class="content">
 				<div>
 					<h2 class="title" v-if="title">{{ title }}</h2>
-					<api-config @foundApi="hasApiUrl = true"/>
+					<api-config/>
 					<Message v-if="motd !== ''" class="is-hidden-tablet mb-4">
 						{{ motd }}
 					</Message>
