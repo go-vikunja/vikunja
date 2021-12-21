@@ -44,7 +44,6 @@ export default {
 			params = null,
 			forceLoading = false,
 		) {
-
 			// Because this function is triggered every time on topNavigation, we're putting a condition here to only load it when we actually want to show tasks
 			// FIXME: This is a bit hacky -> Cleanup.
 			if (

@@ -1,23 +1,24 @@
 <template>
 	<card class="filters has-overflow">
-		<fancycheckbox v-model="params.filter_include_nulls">
-			{{ $t('filters.attributes.includeNulls') }}
-		</fancycheckbox>
-		<fancycheckbox
-			v-model="filters.requireAllFilters"
-			@change="setFilterConcat()"
-		>
-			{{ $t('filters.attributes.requireAll') }}
-		</fancycheckbox>
 		<div class="field">
-			<label class="label">
+			<fancycheckbox v-model="params.filter_include_nulls">
+				{{ $t('filters.attributes.includeNulls') }}
+			</fancycheckbox>
+			<fancycheckbox
+				v-model="filters.requireAllFilters"
+				@change="setFilterConcat()"
+			>
+				{{ $t('filters.attributes.requireAll') }}
+			</fancycheckbox>
+			<fancycheckbox @change="setDoneFilter" v-model="filters.done">
 				{{ $t('filters.attributes.showDoneTasks') }}
-			</label>
-			<div class="control">
-				<fancycheckbox @change="setDoneFilter" v-model="filters.done">
-					{{ $t('filters.attributes.showDoneTasks') }}
-				</fancycheckbox>
-			</div>
+			</fancycheckbox>
+			<fancycheckbox
+				v-if="!$route.name.includes('list.kanban') || !$route.name.includes('list.table')"
+				v-model="sortAlphabetically"
+			>
+				{{ $t('filters.attributes.sortAlphabetically') }}
+			</fancycheckbox>
 		</div>
 		<div class="field">
 			<label class="label">{{ $t('misc.search') }}</label>
@@ -190,6 +191,7 @@ import NamespaceService from '@/services/namespace'
 import EditLabels from '@/components/tasks/partials/editLabels.vue'
 
 import {objectToSnakeCase} from '@/helpers/case'
+import {getDefaultParams} from '@/components/tasks/mixins/taskList'
 
 // FIXME: merge with DEFAULT_PARAMS in taskList.js
 const DEFAULT_PARAMS = {
@@ -219,6 +221,8 @@ const DEFAULT_FILTERS = {
 	list_id: '',
 	namespace: '',
 }
+
+export const ALPHABETICAL_SORT	= 'title'
 
 export default {
 	name: 'filters',
@@ -272,6 +276,18 @@ export default {
 		},
 	},
 	computed: {
+		sortAlphabetically: {
+			get() {
+				return this.params?.sort_by?.find(sortBy => sortBy === ALPHABETICAL_SORT) !== undefined
+			},
+			set(sortAlphabetically) {
+				this.params.sort_by	= sortAlphabetically
+					? [ALPHABETICAL_SORT]
+					: getDefaultParams().sort_by
+
+				this.change()
+			},
+		},
 		foundLabels() {
 			return this.$store.getters['labels/filterLabelsByQuery'](this.labels, this.query)
 		},
