@@ -41,8 +41,8 @@ const store = useStore()
 const {t} = useI18n()
 
 const motd = computed(() => store.state.config.motd)
-// @ts-ignore
-const title = computed(() => t(route.meta.title ?? ''))
+
+const title = computed(() => t(route.meta?.title as string || ''))
 useTitle(() => title.value)
 </script>
 
