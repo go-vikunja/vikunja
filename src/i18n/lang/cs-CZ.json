@@ -374,7 +374,7 @@
       "includeNulls": "Zahrnout úkoly, které nemají nastavenou hodnotu",
       "requireAll": "Vyžaduje aby všechny filtry odpovídaly, aby se úkol zobrazil",
       "showDoneTasks": "Zobrazit dokončené úkoly",
-      "sortAlphabetically": "Sort Alphabetically",
+      "sortAlphabetically": "Řadit podle abecedy",
       "enablePriority": "Povolit filtrování podle priority",
       "enablePercentDone": "Povolit filtrování dle dokončenosti",
       "dueDateRange": "Rozsah termínu",
