@@ -374,6 +374,7 @@
       "includeNulls": "Inclure les tâches sans valeurs",
       "requireAll": "Exiger tous les filtres pour qu’une tâche s’affiche",
       "showDoneTasks": "Afficher les tâches terminées",
+      "sortAlphabetically": "Sort Alphabetically",
       "enablePriority": "Activer le filtre par priorité",
       "enablePercentDone": "Par % d’achèvement",
       "dueDateRange": "Plage de dates d’échéance",

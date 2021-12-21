@@ -374,6 +374,7 @@
       "includeNulls": "Includi attività che non hanno un valore impostato",
       "requireAll": "Tutti i filtri devono essere veri affinché l'attività venga mostrata",
       "showDoneTasks": "Mostra Attività Fatte",
+      "sortAlphabetically": "Sort Alphabetically",
       "enablePriority": "Abilita Filtro Per Priorità",
       "enablePercentDone": "Abilitare Filtro Per Percentuale Fatta",
       "dueDateRange": "Intervallo Data Di Scadenza",

@@ -374,6 +374,7 @@
       "includeNulls": "Bao gồm các Công việc không có bộ giá trị",
       "requireAll": "Yêu cầu tất cả các bộ lọc phải đúng để một công việc được hiển thị",
       "showDoneTasks": "Hiển thị các công việc đã hoàn thành",
+      "sortAlphabetically": "Sort Alphabetically",
       "enablePriority": "Bật Bộ lọc theo mức độ ưu tiên",
       "enablePercentDone": "Bật Bộ lọc theo tỉ lệ % hoàn thành",
       "dueDateRange": "Phạm vi ngày đến hạn",
