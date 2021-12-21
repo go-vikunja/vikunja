@@ -1,4 +1,6 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, RouteLocation } from 'vue-router'
+import {saveLastVisited} from '@/helpers/saveLastVisited'
+import {store} from '@/store'
 
 import HomeComponent from '../views/Home'
 import NotFoundComponent from '../views/404'
@@ -573,16 +575,34 @@ const router = createRouter({
 	],
 })
 
-// bad example if using named routes:
-router.resolve({
-	name: 'bad-not-found',
-	params: { pathMatch: 'not/found' },
-}).href // '/not%2Ffound'
+router.beforeEach((to) => {
+	return checkAuth(to)
+})
 
-// good example:
-router.resolve({
-	name: 'not-found',
-	params: { pathMatch: ['not', 'found'] },
-}).href // '/not/found'
+function checkAuth(route: RouteLocation) {
+	const authUser = store.getters['auth/authUser']
+	const authLinkShare = store.getters['auth/authLinkShare']
+
+	if (authUser || authLinkShare) {
+		return
+	}
+
+	// Check if the user is already logged in and redirect them to the home page if not
+	if (
+		![
+			'user.login',
+			'user.password-reset.request',
+			'user.password-reset.reset',
+			'user.register',
+			'link-share.auth',
+			'openid.auth',
+		].includes(route.name as string) &&
+		localStorage.getItem('passwordResetToken') === null &&
+		localStorage.getItem('emailConfirmToken') === null
+	) {
+		saveLastVisited(route.name as string, route.params)
+		return {name: 'user.login'}
+	}
+}
 
 export default router

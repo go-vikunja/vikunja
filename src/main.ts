@@ -133,8 +133,8 @@ if (window.SENTRY_ENABLED) {
 	import('./sentry').then(sentry => sentry.default(app, router))
 }
 
-app.use(router)
 app.use(store)
+app.use(router)
 app.use(i18n)
 
 app.mount('#app')

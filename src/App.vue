@@ -6,8 +6,10 @@
 				<content-auth/>
 			</template>
 			<content-link-share v-else-if="authLinkShare"/>
-			<content-no-auth v-else/>
-			<notification/>
+			<no-auth-wrapper v-else>
+				<router-view/>
+			</no-auth-wrapper>
+			<Notification/>
 		</div>
 
 		<transition name="fade">
@@ -31,7 +33,7 @@ import KeyboardShortcuts from './components/misc/keyboard-shortcuts/index.vue'
 import TopNavigation from './components/home/topNavigation.vue'
 import ContentAuth from './components/home/contentAuth.vue'
 import ContentLinkShare from './components/home/contentLinkShare.vue'
-import ContentNoAuth from './components/home/contentNoAuth.vue'
+import NoAuthWrapper from '@/components/misc/no-auth-wrapper.vue'
 import Ready from '@/components/misc/ready.vue'
 
 import {setLanguage} from './i18n'

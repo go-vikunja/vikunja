@@ -64,21 +64,25 @@ const route = useRoute()
 // hide menu on mobile
 watch(() => route.fullPath, () => window.innerWidth < 769 && store.commit(MENU_ACTIVE, false))
 
+// FIXME: this is really error prone
 // Reset the current list highlight in menu if the current route is not list related.
-watch(() => route.fullPath, () => {
+watch(() => route.name as string, (routeName) => {
 	if (
-		[
-			'home',
-			'namespace.edit',
-			'teams.index',
-			'teams.edit',
-			'tasks.range',
-			'labels.index',
-			'migrate.start',
-			'migrate.wunderlist',
-			'namespaces.index',
-		].includes(route.name) || 
-		route.name.startsWith('user.settings')
+		routeName &&
+		(
+			[
+				'home',
+				'namespace.edit',
+				'teams.index',
+				'teams.edit',
+				'tasks.range',
+				'labels.index',
+				'migrate.start',
+				'migrate.wunderlist',
+				'namespaces.index',
+			].includes(routeName) || 
+			routeName.startsWith('user.settings')
+		)
 	) {
 		store.dispatch(CURRENT_LIST, null)
 	}
