@@ -36,7 +36,7 @@
       "password": "Mật khẩu",
       "passwordRepeat": "Nhập lại mật khẩu",
       "passwordPlaceholder": "ví dụ: •••••••••••",
-      "forgotPassword": "Forgot your password?",
+      "forgotPassword": "Bạn quên mật khẩu?",
       "resetPassword": "Reset mật khẩu của bạn",
       "resetPasswordAction": "Gửi cho tôi liên kết reset mật khẩu",
       "resetPasswordSuccess": "Kiểm tra hộp thư của bạn! Bạn sẽ nhận một e-mail với hướng dẫn reset mật khẩu của mình.",
@@ -103,7 +103,7 @@
         "title": "Avatar",
         "initials": "Chữ cái viết tắt",
         "gravatar": "Gravatar",
-        "marble": "Marble",
+        "marble": "Cẩm thạch",
         "upload": "Tải lên",
         "uploadAvatar": "Tải lên Avatar",
         "statusUpdateSuccess": "Avatar đã được cập nhật!",
@@ -374,7 +374,7 @@
       "includeNulls": "Bao gồm các Công việc không có bộ giá trị",
       "requireAll": "Yêu cầu tất cả các bộ lọc phải đúng để một công việc được hiển thị",
       "showDoneTasks": "Hiển thị các công việc đã hoàn thành",
-      "sortAlphabetically": "Sort Alphabetically",
+      "sortAlphabetically": "Xếp theo bảng chữ cái",
       "enablePriority": "Bật Bộ lọc theo mức độ ưu tiên",
       "enablePercentDone": "Bật Bộ lọc theo tỉ lệ % hoàn thành",
       "dueDateRange": "Phạm vi ngày đến hạn",
@@ -475,8 +475,8 @@
     "download": "Tải về",
     "showMenu": "Hiển thị menu",
     "hideMenu": "Ẩn menu",
-    "forExample": "For example:",
-    "welcomeBack": "Welcome Back!"
+    "forExample": "Ví dụ:",
+    "welcomeBack": "Mừng quá! Bạn trở lại rồi."
   },
   "input": {
     "resetColor": "Đặt lại màu",
@@ -726,8 +726,8 @@
       "dateCurrentYear": "sẽ sử dụng năm hiện tại",
       "dateNth": "sẽ sử dụng ngày {day} của tháng hiện tại",
       "dateTime": "Kết hợp bất kì đinh dạng ngày với \"{time}\" (hoặc {timePM}) để thiết lập thời gian.",
-      "repeats": "Repeating tasks",
-      "repeatsDescription": "To set a task as repeating in an interval, simply add '{suffix}' to the task text. The amount needs to be a number and can be omitted to use just the type (see examples)."
+      "repeats": "Công việc định kỳ",
+      "repeatsDescription": "Để cài một công việc được lặp lại trong các khoảng thời gian, chỉ cần thêm '{suffix}' vào văn bản công việc. Số lượng phải là một số và có thể được bỏ qua để chỉ sử dụng loại (xem ví dụ)."
     }
   },
   "team": {
@@ -814,7 +814,7 @@
     "url": "URL Vikunja",
     "urlPlaceholder": "ví dụ: https://localhost:3456",
     "change": "thay đổi",
-    "use": "Using Vikunja installation at {0}",
+    "use": "Sử dụng cài đặt Vikunja tại {0}",
     "error": "Không thể tìm thấy hoặc sử dụng cài đặt Vikunja tại \"{domain}\". Vui lòng thử một url khác.",
     "success": "Sử dụng cài đặt Vikunja tại \"{domain}\".",
     "urlRequired": "Cần có một url."
@@ -908,7 +908,7 @@
     "5010": "Team này không có quyền bước vào góc làm việc đó.",
     "5011": "Người này đã có quyền bước vào góc làm việc đó.",
     "5012": "Góc làm việc đã được lưu trữ nên chỉ có thể vào đó để đọc.",
-    "6001": "The team name cannot be empty.",
+    "6001": "Tên của Team không được để trống.",
     "6002": "Team không tồn tại.",
     "6004": "Team đã có quyền bước vào góc làm việc và xem danh sách.",
     "6005": "Người này đã là thành viên của Team đó rồi.",
