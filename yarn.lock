@@ -4743,7 +4743,7 @@ camelcase@^6.0.0, camelcase@^6.2.0:
   resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-6.2.0.tgz#924af881c9d525ac9d87f40d964e5cea982a1809"
   integrity sha512-c7wVvbw3f37nuobQNtgsgG9POC9qMbNuMQmTCqZv23b6MIz0fcYpBiOlv9gEN/hdLdnZTDQhg6e9Dq5M1vKvfg==
 
-caniuse-lite@1.0.30001292:
+caniuse-lite@1.0.30001292, caniuse-lite@^1.0.30001291:
   version "1.0.30001292"
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001292.tgz#4a55f61c06abc9595965cfd77897dc7bc1cdc456"
   integrity sha512-jnT4Tq0Q4ma+6nncYQVe7d73kmDmE9C3OGTx3MvW7lBM/eY1S1DZTMBON7dqV481RhNiS5OxD7k9JQvmDOTirw==
@@ -4752,11 +4752,6 @@ caniuse-lite@^1.0.30001219, caniuse-lite@^1.0.30001271, caniuse-lite@^1.0.300012
   version "1.0.30001286"
   resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001286.tgz"
   integrity sha512-zaEMRH6xg8ESMi2eQ3R4eZ5qw/hJiVsO/HlLwniIwErij0JDr9P+8V4dtx1l+kLq6j3yy8l8W4fst1lBnat5wQ==
-
-caniuse-lite@^1.0.30001287:
-  version "1.0.30001287"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001287.tgz#5fab6a46ab9e47146d5dd35abfe47beaf8073c71"
-  integrity sha512-4udbs9bc0hfNrcje++AxBuc6PfLNHwh3PO9kbwnfCQWyqtlzg3py0YgFu8jyRTTo85VAz4U+VLxSlID09vNtWA==
 
 caseless@~0.12.0:
   version "0.12.0"
@@ -11170,14 +11165,14 @@ postcss-place@^7.0.2:
   dependencies:
     postcss-value-parser "^4.2.0"
 
-postcss-preset-env@7.0.2:
-  version "7.0.2"
-  resolved "https://registry.yarnpkg.com/postcss-preset-env/-/postcss-preset-env-7.0.2.tgz#f143d4aa2eb0f13a50f20bbcff8b3bb3413e7bc6"
-  integrity sha512-xgmkS+H2xhjPQWewnH4ViKBCHIZ15FfpldGZuBFaBIi/iipxHTLnBHKtkCp1L531SdNEPwo9md2psjOU1G77lw==
+postcss-preset-env@7.1.0:
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/postcss-preset-env/-/postcss-preset-env-7.1.0.tgz#bb91486e15aa30307292acfcea07e871f30714d5"
+  integrity sha512-YZI44uxVJQQu18TeHEoDtdLsjKLQpCpzt/4FAzadIcnNYwvKSQqvxaHE6uWobEWQrcfU42zIddMPUKgYQxZs8g==
   dependencies:
     autoprefixer "^10.4.0"
     browserslist "^4.19.1"
-    caniuse-lite "^1.0.30001287"
+    caniuse-lite "^1.0.30001291"
     css-blank-pseudo "^3.0.0"
     css-has-pseudo "^3.0.0"
     css-prefers-color-scheme "^6.0.0"
