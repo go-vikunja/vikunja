@@ -201,10 +201,10 @@ export default {
 			default: false,
 		},
 		dateFrom: {
-			default: new Date(new Date().setDate(new Date().getDate() - 15)),
+			default: () => new Date(new Date().setDate(new Date().getDate() - 15)),
 		},
 		dateTo: {
-			default: new Date(new Date().setDate(new Date().getDate() + 30)),
+			default: () => new Date(new Date().setDate(new Date().getDate() + 30)),
 		},
 		// The width of a day in pixels, used to calculate all sorts of things.
 		dayWidth: {
