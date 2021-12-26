@@ -374,6 +374,7 @@
       "includeNulls": "Aufgaben ohne Werte einbeziehen",
       "requireAll": "Alle Filterkriterien müssen erfüllt sein, damit eine Aufgabe angezeigt wird",
       "showDoneTasks": "Erledigte Aufgaben anzeigen",
+      "sortAlphabetically": "Sort Alphabetically",
       "enablePriority": "Filter nach Priorität aktivieren",
       "enablePercentDone": "Filter nach % Erledigt aktivieren",
       "dueDateRange": "Fälligkeitsbereich",

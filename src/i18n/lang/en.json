@@ -380,6 +380,7 @@
       "includeNulls": "Include Tasks which don't have a value set",
       "requireAll": "Require all filters to be true for a task to show up",
       "showDoneTasks": "Show Done Tasks",
+      "sortAlphabetically": "Sort Alphabetically",
       "enablePriority": "Enable Filter By Priority",
       "enablePercentDone": "Enable Filter By Percent Done",
       "dueDateRange": "Due Date Range",

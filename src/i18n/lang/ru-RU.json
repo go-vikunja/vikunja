@@ -374,6 +374,7 @@
       "includeNulls": "Включать задачи, у которых не установлено значение",
       "requireAll": "Для отображения задачи требовать истинность всех фильтров",
       "showDoneTasks": "Показывать завершённые задачи",
+      "sortAlphabetically": "Sort Alphabetically",
       "enablePriority": "Вкл. фильтр по приоритету",
       "enablePercentDone": "По % завершения",
       "dueDateRange": "Диапазон срока",

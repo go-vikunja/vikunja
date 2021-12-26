@@ -81,7 +81,7 @@
 						:disabled="!canWrite"
 						item-key="id"
 						:component-data="{
-							class: { 'dragging-disabled': !canWrite },
+							class: { 'dragging-disabled': !canWrite || isAlphabeticalSorting },
 						}"
 					>
 						<template #item="{element: t}">
@@ -148,6 +148,7 @@ import {HAS_TASKS} from '@/store/mutation-types'
 import Nothing from '@/components/misc/nothing.vue'
 import Pagination from '@/components/misc/pagination.vue'
 import Popup from '@/components/misc/popup'
+import { ALPHABETICAL_SORT } from '@/components/list/partials/filters'
 
 import draggable from 'vuedraggable'
 import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
@@ -206,6 +207,9 @@ export default {
 		saveListView(this.$route.params.listId, this.$route.name)
 	},
 	computed: {
+		isAlphabeticalSorting() {
+			return this.params.sort_by.find( sortBy => sortBy === ALPHABETICAL_SORT ) !== undefined
+		},
 		firstNewPosition() {
 			if (this.tasks.length === 0) {
 				return 0
@@ -254,12 +258,18 @@ export default {
 		focusNewTaskInput() {
 			this.$refs.newTaskInput.$refs.newTaskInput.focus()
 		},
-		updateTaskList(task) {
-			const tasks = [
-				task,
-				...this.tasks,
-			]
-			this.tasks = tasks
+		updateTaskList( task ) {
+			if ( this.isAlphabeticalSorting ) {
+				// reload tasks with current filter and sorting
+				this.loadTasks(1, undefined, undefined, true)
+			}
+			else {
+				this.tasks = [
+					task,
+					...this.tasks,
+				]
+			}
+
 			this.$store.commit(HAS_TASKS, true)
 		},
 		editTask(id) {

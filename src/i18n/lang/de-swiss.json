@@ -374,6 +374,7 @@
       "includeNulls": "Uufgabe ohni Wert iihbezieh",
       "requireAll": "Alli Filter mend wahr sii, demits die Uufgab ahzeigt",
       "showDoneTasks": "Zeig die fertige Uufgabe",
+      "sortAlphabetically": "Sort Alphabetically",
       "enablePriority": "Filter nach Priorität aktiviere",
       "enablePercentDone": "Filter nach Prozent iihschalte",
       "dueDateRange": "Fälligkeitsberiich",
