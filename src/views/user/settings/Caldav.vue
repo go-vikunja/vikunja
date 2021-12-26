@@ -17,9 +17,9 @@
 			</div>
 		</div>
 
-		<p class="my-4 has-text-weight-bold">
+		<h5 class="mt-5 mb-4 has-text-weight-bold">
 			{{ $t('user.settings.caldav.tokens') }}
-		</p>
+		</h5>
 
 		<p>
 			{{ isLocalUser ? $t('user.settings.caldav.tokensHowTo') : $t('user.settings.caldav.mustUseToken') }}
