@@ -108,11 +108,11 @@ async function createToken() {
 
 async function deleteToken(token: CaldavTokenModel) {
 	const r = await service.delete(token)
-	success(r)
 	const i = tokens.value.findIndex(v => v.id === token.id)
 	if (i === -1) {
 		return
 	}
 	tokens.value.splice(i, 1)
+	success(r)
 }
 </script>
