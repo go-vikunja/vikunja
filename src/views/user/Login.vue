@@ -39,31 +39,7 @@
 						{{ $t('user.auth.forgotPassword') }}
 					</router-link>
 				</div>
-				<div class="control">
-					<input
-						class="input"
-						id="password"
-						name="password"
-						:placeholder="$t('user.auth.passwordPlaceholder')"
-						ref="password"
-						required
-						:type="passwordFieldType"
-						autocomplete="current-password"
-						@keyup.enter="submit"
-						tabindex="2"
-						@focusout="validateField('password')"
-					/>
-					<a
-						@click="togglePasswordFieldType"
-						class="password-field-type-toggle"
-						aria-label="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')"
-						v-tooltip="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')">
-						<icon :icon="passwordFieldType === 'password' ? 'eye' : 'eye-slash'"/>
-					</a>
-				</div>
-				<p class="help is-danger" v-if="!passwordValid">
-					{{ $t('user.auth.passwordRequired') }}
-				</p>
+				<password tabindex="2" @submit="submit" v-model="password" :validate-initially="validatePasswordInitially"/>
 			</div>
 			<div class="field" v-if="needsTotpPasscode">
 				<label class="label" for="totpPasscode">{{ $t('user.auth.totpTitle') }}</label>
@@ -87,7 +63,6 @@
 				@click="submit"
 				:loading="loading"
 				tabindex="4"
-				:disabled="!allFieldsValid"
 			>
 				{{ $t('user.auth.login') }}
 			</x-button>
@@ -129,9 +104,11 @@ import {getErrorText} from '@/message'
 import Message from '@/components/misc/message'
 import {redirectToProvider} from '../../helpers/redirectToProvider'
 import {getLastVisited, clearLastVisited} from '../../helpers/saveLastVisited'
+import Password from '@/components/input/password'
 
 export default {
 	components: {
+		Password,
 		Message,
 	},
 	data() {
@@ -139,8 +116,8 @@ export default {
 			confirmedEmailSuccess: false,
 			errorMessage: '',
 			usernameValid: true,
-			passwordValid: true,
-			passwordFieldType: 'password',
+			password: '',
+			validatePasswordInitially: false,
 		}
 	},
 	beforeMount() {
@@ -185,9 +162,6 @@ export default {
 				this.openidConnect.providers &&
 				this.openidConnect.providers.length > 0
 		},
-		allFieldsValid() {
-			return this.usernameValid && this.passwordValid
-		},
 		...mapState({
 			registrationEnabled: state => state.config.registrationEnabled,
 			loading: LOADING,
@@ -215,12 +189,6 @@ export default {
 			}
 		},
 
-		togglePasswordFieldType() {
-			this.passwordFieldType = this.passwordFieldType === 'password'
-				? 'text'
-				: 'password'
-		},
-
 		async submit() {
 			this.errorMessage = ''
 			// Some browsers prevent Vue bindings from working with autofilled values.
@@ -228,13 +196,13 @@ export default {
 			// For more info, see https://kolaente.dev/vikunja/frontend/issues/78
 			const credentials = {
 				username: this.$refs.username.value,
-				password: this.$refs.password.value,
+				password: this.password,
 			}
 
 			if (credentials.username === '' || credentials.password === '') {
 				// Trigger the validation error messages
 				this.validateField('username')
-				this.validateField('password')
+				this.validatePasswordInitially = true
 				return
 			}
 

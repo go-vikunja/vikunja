@@ -46,30 +46,7 @@
 			</div>
 			<div class="field">
 				<label class="label" for="password">{{ $t('user.auth.password') }}</label>
-				<div class="control is-relative">
-					<input
-						class="input"
-						id="password"
-						name="password"
-						:placeholder="$t('user.auth.passwordPlaceholder')"
-						required
-						:type="passwordFieldType"
-						autocomplete="new-password"
-						v-model="credentials.password"
-						@keyup.enter="submit"
-						@focusout="validatePassword"
-					/>
-					<a
-						@click="togglePasswordFieldType"
-						class="password-field-type-toggle"
-						aria-label="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')"
-						v-tooltip="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')">
-						<icon :icon="passwordFieldType === 'password' ? 'eye' : 'eye-slash'"/>
-					</a>
-				</div>
-				<p class="help is-danger" v-if="!passwordValid">
-					{{ $t('user.auth.passwordRequired') }}
-				</p>
+				<password @submit="submit" @update:modelValue="v => credentials.password = v" :validate-initially="validatePasswordInitially"/>
 			</div>
 
 			<x-button
@@ -93,12 +70,13 @@
 
 <script setup>
 import {useDebounceFn} from '@vueuse/core'
-import {ref, reactive, toRaw, computed, onBeforeMount} from 'vue'
+import {ref, reactive, toRaw, computed, onBeforeMount, watch} from 'vue'
 
 import router from '@/router'
 import {store} from '@/store'
 import Message from '@/components/misc/message'
 import {isEmail} from '@/helpers/isEmail'
+import Password from '@/components/input/password'
 
 // FIXME: use the `beforeEnter` hook of vue-router
 // Check if the user is already logged in, if so, redirect them to the homepage
@@ -116,6 +94,7 @@ const credentials = reactive({
 
 const loading = computed(() => store.state.loading)
 const errorMessage = ref('')
+const validatePasswordInitially = ref(false)
 
 const DEBOUNCE_TIME = 100
 
@@ -130,29 +109,17 @@ const validateUsername = useDebounceFn(() => {
 	usernameValid.value = credentials.username !== ''
 }, DEBOUNCE_TIME)
 
-const passwordValid = ref(true)
-const validatePassword = useDebounceFn(() => {
-	passwordValid.value = credentials.password !== ''
-}, DEBOUNCE_TIME)
-
 const everythingValid = computed(() => {
 	return credentials.username !== '' &&
 		credentials.email !== '' &&
 		credentials.password !== '' &&
 		emailValid.value &&
-		usernameValid.value &&
-		passwordValid.value
+		usernameValid.value
 })
-
-const passwordFieldType = ref('password')
-const togglePasswordFieldType = () => {
-	passwordFieldType.value = passwordFieldType.value === 'password'
-		? 'text'
-		: 'password'
-}
 
 async function submit() {
 	errorMessage.value = ''
+	validatePasswordInitially.value = true
 
 	if (!everythingValid.value) {
 		return
