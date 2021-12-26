@@ -101,9 +101,8 @@ const username = computed(() => store.state.auth.info?.username)
 const newToken = ref(null)
 
 async function createToken() {
-	const r = await service.create({})
-	tokens.value.push(r)
-	newToken.value = r
+	newToken.value = await service.create({})
+	tokens.value.push(newToken.value)
 }
 
 async function deleteToken(token: CaldavTokenModel) {
