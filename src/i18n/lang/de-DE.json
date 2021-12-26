@@ -36,7 +36,7 @@
       "password": "Passwort",
       "passwordRepeat": "Gib dein Passwort erneut ein",
       "passwordPlaceholder": "z.B. •••••••••••",
-      "forgotPassword": "Forgot your password?",
+      "forgotPassword": "Passwort vergessen?",
       "resetPassword": "Setze dein Passwort zurück",
       "resetPasswordAction": "Sende mir einen Link zum Zurücksetzen des Passworts",
       "resetPasswordSuccess": "Prüfe deinen Posteingang! Du solltest eine E-Mail mit Anweisungen zum Zurücksetzen deines Passworts erhalten haben.",
@@ -103,7 +103,7 @@
         "title": "Avatar",
         "initials": "Initialen",
         "gravatar": "Gravatar",
-        "marble": "Marble",
+        "marble": "Murmel",
         "upload": "Hochladen",
         "uploadAvatar": "Avatar hochladen",
         "statusUpdateSuccess": "Avatar-Status wurde erfolgreich aktualisiert.",
@@ -374,7 +374,7 @@
       "includeNulls": "Aufgaben ohne Werte einbeziehen",
       "requireAll": "Alle Filterkriterien müssen erfüllt sein, damit eine Aufgabe angezeigt wird",
       "showDoneTasks": "Erledigte Aufgaben anzeigen",
-      "sortAlphabetically": "Sort Alphabetically",
+      "sortAlphabetically": "Alphabetisch sortieren",
       "enablePriority": "Filter nach Priorität aktivieren",
       "enablePercentDone": "Filter nach % Erledigt aktivieren",
       "dueDateRange": "Fälligkeitsbereich",
@@ -475,8 +475,8 @@
     "download": "Herunterladen",
     "showMenu": "Menü anzeigen",
     "hideMenu": "Menü ausblenden",
-    "forExample": "For example:",
-    "welcomeBack": "Welcome Back!"
+    "forExample": "Zum Beispiel:",
+    "welcomeBack": "Willkommen zurück!"
   },
   "input": {
     "resetColor": "Farbe zurücksetzen",
@@ -726,8 +726,8 @@
       "dateCurrentYear": "wird das laufende Jahr nutzen",
       "dateNth": "wird den {day}. des aktuellen Monats verwenden",
       "dateTime": "Kombiniere eines der Datumsformate mit \"{time}\" (oder {timePM}), um eine Zeit festzulegen.",
-      "repeats": "Repeating tasks",
-      "repeatsDescription": "To set a task as repeating in an interval, simply add '{suffix}' to the task text. The amount needs to be a number and can be omitted to use just the type (see examples)."
+      "repeats": "Wiederholende Aufgaben",
+      "repeatsDescription": "Um eine Aufgabe als Wiederholung in einem Intervall festzulegen, füge einfach '{suffix}' dem Aufgabentext hinzu. Der Betrag muss eine Zahl sein und kann weggelassen werden, um nur den Typ zu verwenden (siehe Beispiele)."
     }
   },
   "team": {
@@ -814,7 +814,7 @@
     "url": "Vikunja-URL",
     "urlPlaceholder": "z.B. https://localhost:3456",
     "change": "ändern",
-    "use": "Using Vikunja installation at {0}",
+    "use": "Verwende die Vikunja-Installation unter „{0}“",
     "error": "Konnte keine Vikunja-Installation unter „{domain}“ finden oder verwenden. Bitte probiere eine andere Url.",
     "success": "Verwende die Vikunja-Installation unter „{domain}“.",
     "urlRequired": "Eine Url ist erforderlich."
