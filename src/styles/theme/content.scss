@@ -24,3 +24,7 @@
 	max-width: $widescreen;
 }
 
+.content blockquote {
+  background-color: var(--grey-200);
+  border-left: .25rem solid var(--grey-300);
+}
