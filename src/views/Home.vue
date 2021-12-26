@@ -57,7 +57,6 @@
 <script lang="ts" setup>
 import {ref, computed} from 'vue'
 import {useStore} from 'vuex'
-import {useNow} from '@vueuse/core'
 
 import Message from '@/components/misc/message.vue'
 import ShowTasks from '@/views/tasks/ShowTasks.vue'
@@ -67,29 +66,9 @@ import AddTask from '@/components/tasks/add-task.vue'
 import {getHistory} from '@/modules/listHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
+import {hourToSalutation} from '@/helpers/hourToSalutation'
 
-const now = useNow()
-const welcome = computed(() => {
-	const hours = new Date(now.value).getHours()
-
-	if (hours < 5) {
-		return 'Night'
-	}
-
-	if (hours < 11) {
-		return 'Morning'
-	}
-
-	if (hours < 18) {
-		return 'Day'
-	}
-
-	if (hours < 23) {
-		return 'Evening'
-	}
-
-	return 'Night'
-})
+const welcome = computed(hourToSalutation)
 
 const store = useStore()
 const listHistory = computed(() => {
