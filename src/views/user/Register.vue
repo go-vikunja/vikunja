@@ -70,7 +70,7 @@
 
 <script setup>
 import {useDebounceFn} from '@vueuse/core'
-import {ref, reactive, toRaw, computed, onBeforeMount, watch} from 'vue'
+import {ref, reactive, toRaw, computed, onBeforeMount} from 'vue'
 
 import router from '@/router'
 import {store} from '@/store'

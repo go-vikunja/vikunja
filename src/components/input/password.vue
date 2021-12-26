@@ -27,8 +27,8 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, watch} from "vue";
-import {useDebounceFn} from "@vueuse/core";
+import {ref, watch} from 'vue'
+import {useDebounceFn} from '@vueuse/core'
 
 const props = defineProps({
 	tabindex: String,
@@ -49,7 +49,7 @@ watch(
 		if (doValidate) {
 			validate()
 		}
-	}
+	},
 )
 
 function validate() {
