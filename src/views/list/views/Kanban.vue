@@ -701,7 +701,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		height: $bucket-header-height;
 
 		.limit {
-			padding-left: .5rem;
+			padding: 0 .5rem;
 			font-weight: bold;
 
 			&.is-max {

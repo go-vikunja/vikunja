@@ -1,6 +1,6 @@
 <template>
 	<div class="dropdown is-right is-active" ref="dropdown">
-		<div class="dropdown-trigger" @click="open = !open">
+		<div class="dropdown-trigger is-flex" @click="open = !open">
 			<slot name="trigger" :close="close">
 				<icon :icon="triggerIcon" class="icon"/>
 			</slot>
