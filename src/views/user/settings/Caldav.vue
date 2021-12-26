@@ -80,9 +80,12 @@ import CaldavTokenModel from '@/models/caldavToken'
 
 const service = new CaldavTokenService()
 
-async function useTokens(): ref<CaldavTokenModel[]> {
+function useTokens(): ref<CaldavTokenModel[]> {
 	const tokens = ref<CaldavTokenModel[]>([])
-	tokens.value = await service.getAll()
+	service.getAll()
+		.then((t: CaldavTokenModel[]) => {
+			tokens.value = t
+		})
 	return tokens
 }
 
