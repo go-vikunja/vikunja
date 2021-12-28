@@ -8,37 +8,34 @@
 		>
 			{{ $t('task.show.noDates') }}
 		</fancycheckbox>
-		<h3 v-if="showAll && tasks.length > 0">
-			{{ $t('task.show.current') }}
+		<h3 class="mb-2">
+			{{ pageTitle }}
 		</h3>
-		<h3 v-else-if="!showAll" class="mb-2">
-			{{ $t('task.show.from') }}
+		<!-- FIXME: Styling, maybe in combination with the buttons? -->
+		<p class="is-flex" v-if="!showAll">
+			{{ $t('task.show.select') }}
 			<flat-pickr
 				:class="{ 'disabled': loading}"
 				:config="flatPickerConfig"
 				:disabled="loading"
 				@on-close="setDate"
-				class="input"
-				v-model="cStartDate"
+				v-model="dateRange"
 			/>
-			{{ $t('task.show.until') }}
-			<flat-pickr
-				:class="{ 'disabled': loading}"
-				:config="flatPickerConfig"
-				:disabled="loading"
-				@on-close="setDate"
-				class="input"
-				v-model="cEndDate"
-			/>
-		</h3>
-		<div v-if="!showAll" class="mb-4">
-			<x-button type="secondary" @click="showTodaysTasks()" class="mr-2">{{ $t('task.show.today') }}</x-button>
-			<x-button type="secondary" @click="setDatesToNextWeek()" class="mr-2">{{ $t('task.show.nextWeek') }}</x-button>
-			<x-button type="secondary" @click="setDatesToNextMonth()">{{ $t('task.show.nextMonth') }}</x-button>
+		</p>
+		<div v-if="!showAll" class="mb-4 mt-2">
+			<x-button type="secondary" @click="showTodaysTasks()" class="mr-2">
+				{{ $t('task.show.today') }}
+			</x-button>
+			<x-button type="secondary" @click="setDatesToNextWeek()" class="mr-2">
+				{{ $t('task.show.nextWeek') }}
+			</x-button>
+			<x-button type="secondary" @click="setDatesToNextMonth()">
+				{{ $t('task.show.nextMonth') }}
+			</x-button>
 		</div>
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
 			<h3 class="nothing">{{ $t('task.show.noTasks') }}</h3>
-			<LlamaCool class="llama-cool" />
+			<LlamaCool class="llama-cool"/>
 		</template>
 		<div :class="{ 'is-loading': loading}" class="spinner"></div>
 
@@ -56,15 +53,19 @@
 	</div>
 </template>
 <script>
-import SingleTaskInList from '../../components/tasks/partials/singleTaskInList'
+import SingleTaskInList from '@/components/tasks/partials/singleTaskInList'
 import {mapState} from 'vuex'
 
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
-import Fancycheckbox from '../../components/input/fancycheckbox'
-import {LOADING, LOADING_MODULE} from '../../store/mutation-types'
+import Fancycheckbox from '@/components/input/fancycheckbox'
+import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
 import LlamaCool from '@/assets/llama-cool.svg?component'
+
+function formatDate(date) {
+	return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`
+}
 
 export default {
 	name: 'ShowTasks',
@@ -80,8 +81,7 @@ export default {
 			showNulls: true,
 			showOverdue: false,
 
-			cStartDate: null,
-			cEndDate: null,
+			dateRange: null,
 
 			showNothingToDo: false,
 		}
@@ -92,23 +92,16 @@ export default {
 		showAll: Boolean,
 	},
 	created() {
-		this.cStartDate = this.startDate
-		this.cEndDate = this.endDate
 		this.loadPendingTasks()
 	},
 	mounted() {
+		// FIXME
 		setTimeout(() => this.showNothingToDo = true, 100)
 	},
 	watch: {
 		'$route': {
 			handler: 'loadPendingTasks',
 			deep: true,
-		},
-		startDate(newVal) {
-			this.cStartDate = newVal
-		},
-		endDate(newVal) {
-			this.cEndDate = newVal
 		},
 	},
 	computed: {
@@ -119,10 +112,37 @@ export default {
 				dateFormat: 'Y-m-d H:i',
 				enableTime: true,
 				time_24hr: true,
+				mode: 'range',
 				locale: {
 					firstDayOfWeek: this.$store.state.auth.settings.weekStart,
 				},
 			}
+		},
+		dateFrom() {
+			const d = new Date(Number(this.$route.query.from))
+
+			return !isNaN(d)
+				? d
+				: this.startDate
+		},
+		dateTo() {
+			const d = new Date(Number(this.$route.query.to))
+
+			return !isNaN(d)
+				? d
+				: this.endDate
+		},
+		pageTitle() {
+			const title = this.showAll
+				? this.$t('task.show.titleCurrent')
+				: this.$t('task.show.fromuntil', {
+					from: this.formatDateShort(this.dateFrom),
+					until: this.formatDateShort(this.dateTo)
+				})
+
+			this.setTitle(title)
+
+			return title
 		},
 		...mapState({
 			userAuthenticated: state => state.auth.authenticated,
@@ -131,11 +151,17 @@ export default {
 	},
 	methods: {
 		setDate() {
+			if (this.dateRange === null) {
+				return
+			}
+
+			const [fromDate, toDate] = this.dateRange.split(' to ')
+
 			this.$router.push({
 				name: this.$route.name,
 				query: {
-					from: +new Date(this.cStartDate),
-					to: +new Date(this.cEndDate),
+					from: +new Date(fromDate),
+					to: +new Date(toDate),
 					showOverdue: this.showOverdue,
 					showNulls: this.showNulls,
 				},
@@ -149,25 +175,8 @@ export default {
 				return
 			}
 
-			// Make sure all dates are date objects
-			if (typeof this.$route.query.from !== 'undefined' && typeof this.$route.query.to !== 'undefined') {
-				this.cStartDate = new Date(Number(this.$route.query.from))
-				this.cEndDate = new Date(Number(this.$route.query.to))
-			} else {
-				this.cStartDate = new Date(this.cStartDate)
-				this.cEndDate = new Date(this.cEndDate)
-			}
 			this.showOverdue = this.$route.query.showOverdue
 			this.showNulls = this.$route.query.showNulls
-
-			if (this.showAll) {
-				this.setTitle(this.$t('task.show.titleCurrent'))
-			} else {
-				this.setTitle(this.$t('task.show.titleDates', {
-					from: this.cStartDate.toLocaleDateString(),
-					to: this.cEndDate.toLocaleDateString(),
-				}))
-			}
 
 			const params = {
 				sort_by: ['due_date', 'id'],
@@ -181,21 +190,21 @@ export default {
 			if (!this.showAll) {
 				if (this.showNulls) {
 					params.filter_by.push('start_date')
-					params.filter_value.push(this.cStartDate)
+					params.filter_value.push(this.dateFrom)
 					params.filter_comparator.push('greater')
 
 					params.filter_by.push('end_date')
-					params.filter_value.push(this.cEndDate)
+					params.filter_value.push(this.dateTo)
 					params.filter_comparator.push('less')
 				}
 
 				params.filter_by.push('due_date')
-				params.filter_value.push(this.cEndDate)
+				params.filter_value.push(this.dateFrom)
 				params.filter_comparator.push('less')
 
 				if (!this.showOverdue) {
 					params.filter_by.push('due_date')
-					params.filter_value.push(this.cStartDate)
+					params.filter_value.push(this.dateTo)
 					params.filter_comparator.push('greater')
 				}
 			}
@@ -231,23 +240,26 @@ export default {
 		},
 
 		setDatesToNextWeek() {
-			this.cStartDate = new Date()
-			this.cEndDate = new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
+			const startDate = new Date()
+			const endDate = new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
+			this.dateRange = `${formatDate(startDate)} to ${formatDate(endDate)}`
 			this.showOverdue = false
 			this.setDate()
 		},
 
 		setDatesToNextMonth() {
-			this.cStartDate = new Date()
-			this.cEndDate = new Date((new Date()).setMonth((new Date()).getMonth() + 1))
+			const startDate = new Date()
+			const endDate = new Date((new Date()).setMonth((new Date()).getMonth() + 1))
+			this.dateRange = `${formatDate(startDate)} to ${formatDate(endDate)}`
 			this.showOverdue = false
 			this.setDate()
 		},
 
 		showTodaysTasks() {
 			const d = new Date()
-			this.cStartDate = new Date()
-			this.cEndDate = new Date(d.setDate(d.getDate() + 1))
+			const startDate = new Date()
+			const endDate = new Date(d.setDate(d.getDate() + 1))
+			this.dateRange = `${formatDate(startDate)} to ${formatDate(endDate)}`
 			this.showOverdue = true
 			this.setDate()
 		},
