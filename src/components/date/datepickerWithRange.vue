@@ -1,46 +1,54 @@
 <template>
-	<a @click="showPopup = !showPopup">
-		{{ $t('task.show.select') }}
-	</a>
-
 	<div class="datepicker-with-range-container">
-		<transition name="fade">
-			<div class="datepicker-with-range" v-if="showPopup">
-				<div class="selections">
-					<button @click="setDateRange(datesToday)" :class="{'is-active': dateRange === datesToday}">
-						{{ $t('task.show.today') }}
-					</button>
-					<button @click="setDateRange(datesThisWeek)" :class="{'is-active': dateRange === datesThisWeek}">
-						{{ $t('task.show.thisWeek') }}
-					</button>
-					<button @click="setDateRange(datesNextWeek)" :class="{'is-active': dateRange === datesNextWeek}">
-						{{ $t('task.show.nextWeek') }}
-					</button>
-					<button @click="setDateRange(datesNext7Days)" :class="{'is-active': dateRange === datesNext7Days}">
-						{{ $t('task.show.next7Days') }}
-					</button>
-					<button @click="setDateRange(datesThisMonth)" :class="{'is-active': dateRange === datesThisMonth}">
-						{{ $t('task.show.thisMonth') }}
-					</button>
-					<button @click="setDateRange(datesNextMonth)" :class="{'is-active': dateRange === datesNextMonth}">
-						{{ $t('task.show.nextMonth') }}
-					</button>
-					<button @click="setDateRange(datesNext30Days)"
-							:class="{'is-active': dateRange === datesNext30Days}">
-						{{ $t('task.show.next30Days') }}
-					</button>
-					<button @click="setDateRange('')" :class="{'is-active': customRangeActive}">
-						{{ $t('misc.custom') }}
-					</button>
+		<popup>
+			<template #trigger="{toggle}">
+				<a @click.prevent.stop="toggle()">
+					{{ $t('task.show.select') }}
+				</a>
+			</template>
+			<template #content="{isOpen}">
+				<div class="datepicker-with-range" :class="{'is-open': isOpen}">
+					<div class="selections">
+						<button @click="setDateRange(datesToday)" :class="{'is-active': dateRange === datesToday}">
+							{{ $t('task.show.today') }}
+						</button>
+						<button @click="setDateRange(datesThisWeek)"
+								:class="{'is-active': dateRange === datesThisWeek}">
+							{{ $t('task.show.thisWeek') }}
+						</button>
+						<button @click="setDateRange(datesNextWeek)"
+								:class="{'is-active': dateRange === datesNextWeek}">
+							{{ $t('task.show.nextWeek') }}
+						</button>
+						<button @click="setDateRange(datesNext7Days)"
+								:class="{'is-active': dateRange === datesNext7Days}">
+							{{ $t('task.show.next7Days') }}
+						</button>
+						<button @click="setDateRange(datesThisMonth)"
+								:class="{'is-active': dateRange === datesThisMonth}">
+							{{ $t('task.show.thisMonth') }}
+						</button>
+						<button @click="setDateRange(datesNextMonth)"
+								:class="{'is-active': dateRange === datesNextMonth}">
+							{{ $t('task.show.nextMonth') }}
+						</button>
+						<button @click="setDateRange(datesNext30Days)"
+								:class="{'is-active': dateRange === datesNext30Days}">
+							{{ $t('task.show.next30Days') }}
+						</button>
+						<button @click="setDateRange('')" :class="{'is-active': customRangeActive}">
+							{{ $t('misc.custom') }}
+						</button>
+					</div>
+					<div class="flatpickr-container">
+						<flat-pickr
+							:config="flatPickerConfig"
+							v-model="dateRange"
+						/>
+					</div>
 				</div>
-				<div class="flatpickr-container">
-					<flat-pickr
-						:config="flatPickerConfig"
-						v-model="dateRange"
-					/>
-				</div>
-			</div>
-		</transition>
+			</template>
+		</popup>
 	</div>
 </template>
 
@@ -51,6 +59,7 @@ import {computed, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {store} from '@/store'
 import {format} from 'date-fns'
+import Popup from '@/components/misc/popup'
 
 const {t} = useI18n()
 
@@ -202,15 +211,25 @@ const customRangeActive = computed<Boolean>(() => {
 .datepicker-with-range-container {
 	position: relative;
 	z-index: 10;
+
+	:deep(.popup) {
+		margin-top: 1rem;
+		border-radius: $radius;
+		border: 1px solid var(--grey-200);
+		background-color: var(--white);
+		box-shadow: $shadow;
+
+		&.is-open {
+			width: 500px;
+			height: 320px;
+		}
+	}
 }
 
 .datepicker-with-range {
-	border-radius: $radius;
-	border: 1px solid var(--grey-200);
-	background-color: var(--white);
-	box-shadow: $shadow;
 	display: flex;
-	width: 500px;
+	width: 100%;
+	height: 100%;
 	position: absolute;
 
 	:deep(.flatpickr-calendar) {
