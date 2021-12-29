@@ -47,7 +47,8 @@ const {t} = useI18n()
 
 const emit = defineEmits(['dateChanged'])
 
-const weekStart = computed<number>(() => store.state.auth.settings.weekStart)
+// FIXME: This seems to always contain the default value - that breaks the picker
+const weekStart = computed<number>(() => store.state.auth.settings.weekStart ?? 0)
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,
@@ -55,10 +56,9 @@ const flatPickerConfig = computed(() => ({
 	enableTime: false,
 	inline: true,
 	mode: 'range',
-	/*locale: {
-		// FIXME: This seems to always contain the default value - that breaks the picker
+	locale: {
 		firstDayOf7Days: weekStart,
-	},*/
+	},
 }))
 
 const dateRange = ref<string>('')
@@ -110,7 +110,7 @@ const datesToday = computed<string>(() => {
 
 function thisWeek() {
 	const startDate = startOfDay(new Date())
-	const first = startDate.getDate() - startDate.getDay()
+	const first = startDate.getDate() - startDate.getDay() + weekStart.value
 	startDate.setDate(first)
 	const endDate = endOfDay(new Date((new Date(startDate).setDate(first + 6))))
 
