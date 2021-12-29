@@ -476,7 +476,8 @@
     "showMenu": "Show the menu",
     "hideMenu": "Hide the menu",
     "forExample": "For example:",
-    "welcomeBack": "Welcome Back!"
+    "welcomeBack": "Welcome Back!",
+    "custom": "Custom"
   },
   "input": {
     "resetColor": "Reset Color",

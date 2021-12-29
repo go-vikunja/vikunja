@@ -1,17 +1,24 @@
 <template>
 	<div class="datepicker-with-range">
 		<div class="selections">
-			<a @click="setDatesToToday">Today</a>
-			<a @click="setDatesToNextWeek">Next Week</a>
-			<a @click="setDatesToNextMonth">Next Month</a>
-			<a>Custom</a>
+			<button @click="setDateRange(datesToday)" :class="{'is-active': dateRange === datesToday}">
+				{{ $t('task.show.today') }}
+			</button>
+			<button @click="setDateRange(datesNextWeek)" :class="{'is-active': dateRange === datesNextWeek}">
+				{{ $t('task.show.nextWeek') }}
+			</button>
+			<button @click="setDateRange(datesNextMonth)" :class="{'is-active': dateRange === datesNextMonth}">
+				{{ $t('task.show.nextMonth') }}
+			</button>
+			<button :class="{'is-active': customRangeActive}">
+				{{ $t('misc.custom') }}
+			</button>
 		</div>
 		<div class="flatpickr-container">
 			<flat-pickr
 				:config="flatPickerConfig"
 				v-model="dateRange"
 			/>
-			{{ dateRange }}
 		</div>
 	</div>
 </template>
@@ -48,12 +55,16 @@ const dateRange = ref('')
 watch(
 	() => dateRange.value,
 	newVal => {
+		if (newVal === null) {
+			return
+		}
+
 		const [fromDate, toDate] = newVal.split(' to ')
-		
+
 		if (typeof fromDate === 'undefined' || typeof toDate === 'undefined') {
 			return
 		}
-		
+
 		emit('dateChanged', {
 			dateFrom: new Date(fromDate),
 			dateTo: new Date(toDate),
@@ -65,23 +76,33 @@ function formatDate(date) {
 	return format(date, 'yyyy-MM-dd HH:mm')
 }
 
-function setDatesToToday() {
+const datesToday = computed(() => {
 	const startDate = new Date()
 	const endDate = new Date((new Date()).setDate((new Date()).getDate() + 1))
-	dateRange.value = `${formatDate(startDate)} to ${formatDate(endDate)}`
-}
+	return `${formatDate(startDate)} to ${formatDate(endDate)}`
+})
 
-function setDatesToNextWeek() {
+const datesNextWeek = computed(() => {
 	const startDate = new Date()
 	const endDate = new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
-	dateRange.value = `${formatDate(startDate)} to ${formatDate(endDate)}`
-}
+	return `${formatDate(startDate)} to ${formatDate(endDate)}`
+})
 
-function setDatesToNextMonth() {
+const datesNextMonth = computed(() => {
 	const startDate = new Date()
 	const endDate = new Date((new Date()).setMonth((new Date()).getMonth() + 1))
-	dateRange.value = `${formatDate(startDate)} to ${formatDate(endDate)}`
+	return `${formatDate(startDate)} to ${formatDate(endDate)}`
+})
+
+function setDateRange(range) {
+	dateRange.value = range
 }
+
+const customRangeActive = computed(() => {
+	return dateRange.value !== datesToday.value &&
+		dateRange.value !== datesNextWeek.value &&
+		dateRange.value !== datesNextMonth.value
+})
 </script>
 
 <style lang="scss" scoped>
@@ -113,7 +134,7 @@ function setDatesToNextMonth() {
 	display: flex;
 	flex-direction: column;
 
-	a {
+	button {
 		display: block;
 		width: 100%;
 		text-align: left;
@@ -121,12 +142,15 @@ function setDatesToNextMonth() {
 		transition: $transition;
 		font-size: .9rem;
 		color: var(--text);
+		background: transparent;
+		border: 0;
+		cursor: pointer;
 
-		&.active {
+		&.is-active {
 			color: var(--primary);
 		}
 
-		&:hover, &.active {
+		&:hover, &.is-active {
 			background-color: var(--grey-100);
 		}
 	}
