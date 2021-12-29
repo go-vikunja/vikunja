@@ -210,9 +210,9 @@ const customRangeActive = computed<Boolean>(() => {
 <style lang="scss" scoped>
 .datepicker-with-range-container {
 	position: relative;
-	z-index: 10;
 
 	:deep(.popup) {
+		z-index: 10;
 		margin-top: 1rem;
 		border-radius: $radius;
 		border: 1px solid var(--grey-200);
