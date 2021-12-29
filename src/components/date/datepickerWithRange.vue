@@ -40,8 +40,7 @@ const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,
 	dateFormat: 'Y-m-d H:i',
-	enableTime: true,
-	time_24hr: true,
+	enableTime: false,
 	inline: true,
 	mode: 'range',
 	/*locale: {
