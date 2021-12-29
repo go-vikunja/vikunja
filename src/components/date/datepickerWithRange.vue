@@ -44,10 +44,10 @@ const flatPickerConfig = computed(() => ({
 	time_24hr: true,
 	inline: true,
 	mode: 'range',
-	locale: {
-		// FIXME: This seems to always contain the default value
+	/*locale: {
+		// FIXME: This seems to always contain the default value - that breaks the picker
 		firstDayOfWeek: weekStart,
-	},
+	},*/
 }))
 
 const dateRange = ref<string>('')
