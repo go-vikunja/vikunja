@@ -1,5 +1,13 @@
 <template>
 	<div class="is-max-width-desktop show-tasks">
+		<fancycheckbox
+			@change="setDate"
+			class="is-pulled-right"
+			v-if="!showAll"
+			v-model="showNulls"
+		>
+			{{ $t('task.show.noDates') }}
+		</fancycheckbox>
 		<h3 class="mb-2">
 			{{ pageTitle }}
 		</h3>
@@ -157,12 +165,12 @@ export default {
 				}
 
 				params.filter_by.push('due_date')
-				params.filter_value.push(this.dateFrom)
+				params.filter_value.push(this.dateTo)
 				params.filter_comparator.push('less')
 
 				if (!this.showOverdue) {
 					params.filter_by.push('due_date')
-					params.filter_value.push(this.dateTo)
+					params.filter_value.push(this.dateFrom)
 					params.filter_comparator.push('greater')
 				}
 			}
