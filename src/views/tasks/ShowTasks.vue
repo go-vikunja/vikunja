@@ -12,7 +12,7 @@
 			{{ pageTitle }}
 		</h3>
 		<!-- FIXME: Styling, maybe in combination with the buttons? -->
-		<p class="is-flex" v-if="!showAll">
+		<p v-if="!showAll">
 			{{ $t('task.show.select') }}
 			<flat-pickr
 				:class="{ 'disabled': loading}"
@@ -21,6 +21,7 @@
 				@on-close="setDate"
 				v-model="dateRange"
 			/>
+			<datepicker-with-range @dateChanged="setDate"/>
 		</p>
 		<div v-if="!showAll" class="mb-4 mt-2">
 			<x-button type="secondary" @click="showTodaysTasks()" class="mr-2">
@@ -62,6 +63,7 @@ import Fancycheckbox from '@/components/input/fancycheckbox'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
 import LlamaCool from '@/assets/llama-cool.svg?component'
+import DatepickerWithRange from '@/components/date/datepickerWithRange'
 
 function formatDate(date) {
 	return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`
@@ -70,6 +72,7 @@ function formatDate(date) {
 export default {
 	name: 'ShowTasks',
 	components: {
+		DatepickerWithRange,
 		Fancycheckbox,
 		SingleTaskInList,
 		flatPickr,
@@ -81,6 +84,7 @@ export default {
 			showNulls: true,
 			showOverdue: false,
 
+			// TODO: Set the date range based on the default (to make sure it shows up in the picker)  -> maybe also use a computed which depends on dateFrom and dateTo?
 			dateRange: null,
 
 			showNothingToDo: false,
@@ -150,18 +154,12 @@ export default {
 		}),
 	},
 	methods: {
-		setDate() {
-			if (this.dateRange === null) {
-				return
-			}
-
-			const [fromDate, toDate] = this.dateRange.split(' to ')
-
+		setDate({dateFrom, dateTo}) {
 			this.$router.push({
 				name: this.$route.name,
 				query: {
-					from: +new Date(fromDate),
-					to: +new Date(toDate),
+					from: +new Date(dateFrom),
+					to: +new Date(dateTo),
 					showOverdue: this.showOverdue,
 					showNulls: this.showNulls,
 				},
