@@ -79,7 +79,6 @@ const flatPickerConfig = computed(() => ({
 	},
 }))
 
-const showPopup = ref<Boolean>(false)
 const dateRange = ref<string>('')
 
 watch(
@@ -99,7 +98,7 @@ watch(
 			dateFrom: new Date(fromDate),
 			dateTo: new Date(toDate),
 		})
-	}
+	},
 )
 
 function formatDate(date: Date): string {

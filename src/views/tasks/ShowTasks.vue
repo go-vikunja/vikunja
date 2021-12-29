@@ -104,7 +104,7 @@ export default {
 				? this.$t('task.show.titleCurrent')
 				: this.$t('task.show.fromuntil', {
 					from: this.format(this.dateFrom, 'PPP'),
-					until: this.format(this.dateTo, 'PPP')
+					until: this.format(this.dateTo, 'PPP'),
 				})
 
 			this.setTitle(title)
@@ -116,7 +116,7 @@ export default {
 			// soonest before the later ones.
 			// We can't use the api sorting here because that sorts tasks with a due date after
 			// ones without a due date.
-			return this.tasks.sort((a, b) => {
+			return [...this.tasks].sort((a, b) => {
 				const sortByDueDate = b.dueDate - a.dueDate
 				return sortByDueDate === 0
 					? b.id - a.id
