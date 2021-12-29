@@ -16,9 +16,15 @@
 			<h3 class="has-text-centered mt-6">{{ $t('task.show.noTasks') }}</h3>
 			<LlamaCool class="mt-5"/>
 		</template>
-		<div :class="{ 'is-loading': loading}" class="spinner"></div>
 
-		<card :padding="false" class="has-overflow" :has-content="false" v-if="tasks && tasks.length > 0">
+		<div v-if="!hasTasks" :class="{ 'is-loading': loading}" class="spinner"></div>
+		<card
+			v-if="hasTasks"
+			:padding="false"
+			class="has-overflow"
+			:has-content="false"
+			:loading="loading"
+		>
 			<div class="p-2">
 				<single-task-in-list
 					v-for="t in tasksSorted"
@@ -40,10 +46,6 @@ import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
 import LlamaCool from '@/assets/llama-cool.svg?component'
 import DatepickerWithRange from '@/components/date/datepickerWithRange'
-
-function formatDate(date) {
-	return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`
-}
 
 export default {
 	name: 'ShowTasks',
@@ -68,7 +70,6 @@ export default {
 		this.loadPendingTasks()
 	},
 	mounted() {
-		// FIXME
 		setTimeout(() => this.showNothingToDo = true, 100)
 	},
 	watch: {
@@ -121,6 +122,9 @@ export default {
 					? b.id - a.id
 					: sortByDueDate
 			})
+		},
+		hasTasks() {
+			return this.tasks && this.tasks.length > 0
 		},
 		...mapState({
 			userAuthenticated: state => state.auth.authenticated,
@@ -175,12 +179,13 @@ export default {
 				filter_include_nulls: this.showNulls,
 			}
 
-			// FIXME: Add button to show / hide overdue
-
 			if (!this.showAll) {
 				params.filter_by.push('due_date')
 				params.filter_value.push(this.dateTo)
 				params.filter_comparator.push('less')
+				
+				// NOTE: Ideally we could also show tasks with a start or end date in the specified range, but the api
+				//       is not capable (yet) of combining multiple filters with 'and' and 'or'.
 
 				if (!this.showOverdue) {
 					params.filter_by.push('due_date')
@@ -214,7 +219,7 @@ export default {
 .show-tasks-options {
 	display: flex;
 	flex-direction: column;
-	
+
 	> :deep(a) {
 		margin-right: .5rem;
 	}
