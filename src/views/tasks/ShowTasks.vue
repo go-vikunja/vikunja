@@ -24,9 +24,9 @@
 		<card :padding="false" class="has-overflow" :has-content="false" v-if="tasks && tasks.length > 0">
 			<div class="tasks">
 				<single-task-in-list
+					v-for="t in tasksSorted"
 					:key="t.id"
 					class="task"
-					v-for="t in tasks"
 					:show-list="true"
 					:the-task="t"
 					@taskUpdated="updateTasks"/>
@@ -113,6 +113,18 @@ export default {
 
 			return title
 		},
+		tasksSorted() {
+			// Sort all tasks to put those with a due date before the ones without a due date, the
+			// soonest before the later ones.
+			// We can't use the api sorting here because that sorts tasks with a due date after
+			// ones without a due date.
+			return this.tasks.sort((a, b) => {
+				const sortByDueDate = b.dueDate - a.dueDate
+				return sortByDueDate === 0
+					? b.id - a.id
+					: sortByDueDate
+			})
+		},
 		...mapState({
 			userAuthenticated: state => state.auth.authenticated,
 			loading: state => state[LOADING] && state[LOADING_MODULE] === 'tasks',
@@ -150,9 +162,9 @@ export default {
 				filter_concat: 'and',
 				filter_include_nulls: this.showNulls,
 			}
-			
+
 			// FIXME: Add button to show / hide overdue
-			
+
 			if (!this.showAll) {
 				if (this.showNulls) {
 					params.filter_by.push('start_date')
@@ -175,19 +187,7 @@ export default {
 				}
 			}
 
-			const tasks = await this.$store.dispatch('tasks/loadTasks', params)
-
-			// FIXME: sort tasks in computed
-			// Sort all tasks to put those with a due date before the ones without a due date, the
-			// soonest before the later ones.
-			// We can't use the api sorting here because that sorts tasks with a due date after
-			// ones without a due date.
-			this.tasks = tasks.sort((a, b) => {
-				const sortByDueDate = b.dueDate - a.dueDate
-				return sortByDueDate === 0
-					? b.id - a.id
-					: sortByDueDate
-			})
+			this.tasks = await this.$store.dispatch('tasks/loadTasks', params)
 		},
 
 		// FIXME: this modification should happen in the store
