@@ -533,6 +533,7 @@
       "titleCurrent": "Current Tasks",
       "titleDates": "Tasks from {from} until {to}",
       "noDates": "Show tasks without dates",
+      "overdue": "Show overdue tasks",
       "fromuntil": "Tasks from {from} until {until}",
       "select": "Select a range:",
       "today": "Today",

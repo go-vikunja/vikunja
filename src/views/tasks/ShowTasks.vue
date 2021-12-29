@@ -1,17 +1,24 @@
 <template>
 	<div class="is-max-width-desktop show-tasks">
-		<fancycheckbox
-			@change="setDate"
-			class="is-pulled-right"
-			v-if="!showAll"
-			v-model="showNulls"
-		>
-			{{ $t('task.show.noDates') }}
-		</fancycheckbox>
 		<h3 class="mb-2">
 			{{ pageTitle }}
 		</h3>
 		<p v-if="!showAll">
+			<fancycheckbox
+				@change="setDate"
+				v-model="showNulls"
+			>
+				{{ $t('task.show.noDates') }}
+			</fancycheckbox>
+			<fancycheckbox
+				@change="setDate"
+				v-model="showOverdue"
+			>
+				{{ $t('task.show.overdue') }}
+			</fancycheckbox>
+			
+			{{ showOverdue ? 'true' : 'false'}}
+			
 			{{ $t('task.show.select') }}
 			<datepicker-with-range @dateChanged="setDate"/>
 		</p>
@@ -135,8 +142,8 @@ export default {
 			this.$router.push({
 				name: this.$route.name,
 				query: {
-					from: +new Date(dateFrom),
-					to: +new Date(dateTo),
+					from: +new Date(dateFrom ?? this.dateFrom),
+					to: +new Date(dateTo ?? this.dateTo),
 					showOverdue: this.showOverdue,
 					showNulls: this.showNulls,
 				},
@@ -150,8 +157,8 @@ export default {
 				return
 			}
 
-			this.showOverdue = this.$route.query.showOverdue
-			this.showNulls = this.$route.query.showNulls
+			this.showOverdue = this.$route.query.showOverdue === 'true'
+			this.showNulls = this.$route.query.showNulls === 'true'
 
 			const params = {
 				sort_by: ['due_date', 'id'],
@@ -166,16 +173,6 @@ export default {
 			// FIXME: Add button to show / hide overdue
 
 			if (!this.showAll) {
-				if (this.showNulls) {
-					params.filter_by.push('start_date')
-					params.filter_value.push(this.dateFrom)
-					params.filter_comparator.push('greater')
-
-					params.filter_by.push('end_date')
-					params.filter_value.push(this.dateTo)
-					params.filter_comparator.push('less')
-				}
-
 				params.filter_by.push('due_date')
 				params.filter_value.push(this.dateTo)
 				params.filter_comparator.push('less')
