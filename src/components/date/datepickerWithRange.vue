@@ -4,13 +4,25 @@
 			<button @click="setDateRange(datesToday)" :class="{'is-active': dateRange === datesToday}">
 				{{ $t('task.show.today') }}
 			</button>
+			<button @click="setDateRange(datesThisWeek)" :class="{'is-active': dateRange === datesThisWeek}">
+				{{ $t('task.show.thisWeek') }}
+			</button>
 			<button @click="setDateRange(datesNextWeek)" :class="{'is-active': dateRange === datesNextWeek}">
 				{{ $t('task.show.nextWeek') }}
+			</button>
+			<button @click="setDateRange(datesNext7Days)" :class="{'is-active': dateRange === datesNext7Days}">
+				{{ $t('task.show.next7Days') }}
+			</button>
+			<button @click="setDateRange(datesThisMonth)" :class="{'is-active': dateRange === datesThisMonth}">
+				{{ $t('task.show.thisMonth') }}
 			</button>
 			<button @click="setDateRange(datesNextMonth)" :class="{'is-active': dateRange === datesNextMonth}">
 				{{ $t('task.show.nextMonth') }}
 			</button>
-			<button @click="setDateRange('')"  :class="{'is-active': customRangeActive}">
+			<button @click="setDateRange(datesNext30Days)" :class="{'is-active': dateRange === datesNext30Days}">
+				{{ $t('task.show.next30Days') }}
+			</button>
+			<button @click="setDateRange('')" :class="{'is-active': customRangeActive}">
 				{{ $t('misc.custom') }}
 			</button>
 		</div>
@@ -45,7 +57,7 @@ const flatPickerConfig = computed(() => ({
 	mode: 'range',
 	/*locale: {
 		// FIXME: This seems to always contain the default value - that breaks the picker
-		firstDayOfWeek: weekStart,
+		firstDayOf7Days: weekStart,
 	},*/
 }))
 
@@ -75,21 +87,89 @@ function formatDate(date: Date): string {
 	return format(date, 'yyyy-MM-dd HH:mm')
 }
 
+function startOfDay(date: Date): Date {
+	date.setHours(0)
+	date.setMinutes(0)
+
+	return date
+}
+
+function endOfDay(date: Date): Date {
+	date.setHours(23)
+	date.setMinutes(59)
+
+	return date
+}
+
 const datesToday = computed<string>(() => {
-	const startDate = new Date()
-	const endDate = new Date((new Date()).setDate((new Date()).getDate() + 1))
+	const startDate = startOfDay(new Date())
+	const endDate = endOfDay(new Date())
+
+	return `${formatDate(startDate)} to ${formatDate(endDate)}`
+})
+
+function thisWeek() {
+	const startDate = startOfDay(new Date())
+	const first = startDate.getDate() - startDate.getDay()
+	startDate.setDate(first)
+	const endDate = endOfDay(new Date((new Date(startDate).setDate(first + 6))))
+
+	return {
+		startDate,
+		endDate,
+	}
+}
+
+const datesThisWeek = computed<string>(() => {
+	const {startDate, endDate} = thisWeek()
+
 	return `${formatDate(startDate)} to ${formatDate(endDate)}`
 })
 
 const datesNextWeek = computed<string>(() => {
-	const startDate = new Date()
-	const endDate = new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
+	const {startDate, endDate} = thisWeek()
+	startDate.setDate(startDate.getDate() + 7)
+	endDate.setDate(endDate.getDate() + 7)
+
+	return `${formatDate(startDate)} to ${formatDate(endDate)}`
+})
+
+const datesNext7Days = computed<string>(() => {
+	const startDate = startOfDay(new Date())
+	const endDate = endOfDay(new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000))
+	return `${formatDate(startDate)} to ${formatDate(endDate)}`
+})
+
+function thisMonth() {
+	const startDate = startOfDay(new Date())
+	startDate.setDate(1)
+	const endDate = endOfDay(new Date((new Date()).getFullYear(), (new Date()).getMonth() + 1, 0))
+
+	return {
+		startDate,
+		endDate,
+	}
+}
+
+const datesThisMonth = computed<string>(() => {
+	const {startDate, endDate} = thisMonth()
+
 	return `${formatDate(startDate)} to ${formatDate(endDate)}`
 })
 
 const datesNextMonth = computed<string>(() => {
-	const startDate = new Date()
-	const endDate = new Date((new Date()).setMonth((new Date()).getMonth() + 1))
+	const {startDate, endDate} = thisMonth()
+
+	startDate.setMonth(startDate.getMonth() + 1)
+	endDate.setMonth(endDate.getMonth() + 1)
+
+	return `${formatDate(startDate)} to ${formatDate(endDate)}`
+})
+
+const datesNext30Days = computed<string>(() => {
+	const startDate = startOfDay(new Date())
+	const endDate = endOfDay(new Date((new Date()).setMonth((new Date()).getMonth() + 1)))
+
 	return `${formatDate(startDate)} to ${formatDate(endDate)}`
 })
 
@@ -99,8 +179,12 @@ function setDateRange(range: string) {
 
 const customRangeActive = computed<Boolean>(() => {
 	return dateRange.value !== datesToday.value &&
+		dateRange.value !== datesThisWeek.value &&
 		dateRange.value !== datesNextWeek.value &&
-		dateRange.value !== datesNextMonth.value
+		dateRange.value !== datesNext7Days.value &&
+		dateRange.value !== datesThisMonth.value &&
+		dateRange.value !== datesNextMonth.value &&
+		dateRange.value !== datesNext30Days.value
 })
 </script>
 

@@ -536,8 +536,12 @@
       "fromuntil": "Tasks from {from} until {until}",
       "select": "Select a range:",
       "today": "Today",
+      "thisWeek": "This Week",
       "nextWeek": "Next Week",
+      "next7Days": "Next 7 Days",
+      "thisMonth": "This Month",
       "nextMonth": "Next Month",
+      "next30Days": "Next 30 Days",
       "noTasks": "Nothing to do — Have a nice day!"
     },
     "detail": {
