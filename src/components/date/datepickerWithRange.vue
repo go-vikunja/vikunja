@@ -57,7 +57,7 @@ const flatPickerConfig = computed(() => ({
 	inline: true,
 	mode: 'range',
 	locale: {
-		firstDayOf7Days: weekStart,
+		firstDayOf7Days: weekStart.value,
 	},
 }))
 

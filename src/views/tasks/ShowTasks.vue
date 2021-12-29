@@ -97,8 +97,8 @@ export default {
 			const title = this.showAll
 				? this.$t('task.show.titleCurrent')
 				: this.$t('task.show.fromuntil', {
-					from: this.formatDateShort(this.dateFrom),
-					until: this.formatDateShort(this.dateTo)
+					from: this.format(this.dateFrom, 'PPP'),
+					until: this.format(this.dateTo, 'PPP')
 				})
 
 			this.setTitle(title)
