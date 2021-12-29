@@ -4,21 +4,12 @@
 			{{ pageTitle }}
 		</h3>
 		<p v-if="!showAll">
-			<fancycheckbox
-				@change="setDate"
-				v-model="showNulls"
-			>
+			<fancycheckbox @change="setShowNulls">
 				{{ $t('task.show.noDates') }}
 			</fancycheckbox>
-			<fancycheckbox
-				@change="setDate"
-				v-model="showOverdue"
-			>
+			<fancycheckbox @change="setShowOverdue">
 				{{ $t('task.show.overdue') }}
 			</fancycheckbox>
-			
-			{{ showOverdue ? 'true' : 'false'}}
-			
 			{{ $t('task.show.select') }}
 			<datepicker-with-range @dateChanged="setDate"/>
 		</p>
@@ -66,12 +57,6 @@ export default {
 	data() {
 		return {
 			tasks: [],
-			showNulls: true,
-			showOverdue: false,
-
-			// TODO: Set the date range based on the default (to make sure it shows up in the picker)  -> maybe also use a computed which depends on dateFrom and dateTo?
-			dateRange: null,
-
 			showNothingToDo: false,
 		}
 	},
@@ -107,6 +92,12 @@ export default {
 			return !isNaN(d)
 				? d
 				: this.endDate
+		},
+		showNulls() {
+			return this.$route.query.showNulls === 'true'
+		},
+		showOverdue() {
+			return this.$route.query.showOverdue === 'true'
 		},
 		pageTitle() {
 			const title = this.showAll
@@ -149,6 +140,24 @@ export default {
 				},
 			})
 		},
+		setShowOverdue(show) {
+			this.$router.push({
+				name: this.$route.name,
+				query: {
+					...this.$route.query,
+					showOverdue: show,
+				},
+			})
+		},
+		setShowNulls(show) {
+			this.$router.push({
+				name: this.$route.name,
+				query: {
+					...this.$route.query,
+					showNulls: show,
+				},
+			})
+		},
 		async loadPendingTasks() {
 			// Since this route is authentication only, users would get an error message if they access the page unauthenticated.
 			// Since this component is mounted as the home page before unauthenticated users get redirected
@@ -156,9 +165,6 @@ export default {
 			if (!this.userAuthenticated) {
 				return
 			}
-
-			this.showOverdue = this.$route.query.showOverdue === 'true'
-			this.showNulls = this.$route.query.showNulls === 'true'
 
 			const params = {
 				sort_by: ['due_date', 'id'],
