@@ -10,7 +10,7 @@
 			<button @click="setDateRange(datesNextMonth)" :class="{'is-active': dateRange === datesNextMonth}">
 				{{ $t('task.show.nextMonth') }}
 			</button>
-			<button :class="{'is-active': customRangeActive}">
+			<button @click="setDateRange('')"  :class="{'is-active': customRangeActive}">
 				{{ $t('misc.custom') }}
 			</button>
 		</div>
