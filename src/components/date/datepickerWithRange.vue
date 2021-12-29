@@ -23,7 +23,7 @@
 	</div>
 </template>
 
-<script setup>
+<script lang="ts" setup>
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import {computed, ref, watch} from 'vue'
@@ -35,7 +35,7 @@ const {t} = useI18n()
 
 const emit = defineEmits(['dateChanged'])
 
-const weekStart = computed(() => store.state.auth.settings.weekStart)
+const weekStart = computed<number>(() => store.state.auth.settings.weekStart)
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,
@@ -50,11 +50,11 @@ const flatPickerConfig = computed(() => ({
 	},
 }))
 
-const dateRange = ref('')
+const dateRange = ref<string>('')
 
 watch(
 	() => dateRange.value,
-	newVal => {
+	(newVal: string | null) => {
 		if (newVal === null) {
 			return
 		}
@@ -72,33 +72,33 @@ watch(
 	}
 )
 
-function formatDate(date) {
+function formatDate(date: Date): string {
 	return format(date, 'yyyy-MM-dd HH:mm')
 }
 
-const datesToday = computed(() => {
+const datesToday = computed<string>(() => {
 	const startDate = new Date()
 	const endDate = new Date((new Date()).setDate((new Date()).getDate() + 1))
 	return `${formatDate(startDate)} to ${formatDate(endDate)}`
 })
 
-const datesNextWeek = computed(() => {
+const datesNextWeek = computed<string>(() => {
 	const startDate = new Date()
 	const endDate = new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
 	return `${formatDate(startDate)} to ${formatDate(endDate)}`
 })
 
-const datesNextMonth = computed(() => {
+const datesNextMonth = computed<string>(() => {
 	const startDate = new Date()
 	const endDate = new Date((new Date()).setMonth((new Date()).getMonth() + 1))
 	return `${formatDate(startDate)} to ${formatDate(endDate)}`
 })
 
-function setDateRange(range) {
+function setDateRange(range: string) {
 	dateRange.value = range
 }
 
-const customRangeActive = computed(() => {
+const customRangeActive = computed<Boolean>(() => {
 	return dateRange.value !== datesToday.value &&
 		dateRange.value !== datesNextWeek.value &&
 		dateRange.value !== datesNextMonth.value
