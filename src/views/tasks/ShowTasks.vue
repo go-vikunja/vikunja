@@ -1,26 +1,25 @@
 <template>
-	<div class="is-max-width-desktop show-tasks">
+	<div class="is-max-width-desktop has-text-left ">
 		<h3 class="mb-2">
 			{{ pageTitle }}
 		</h3>
-		<p v-if="!showAll">
-			<fancycheckbox @change="setShowNulls">
+		<p v-if="!showAll" class="show-tasks-options">
+			<datepicker-with-range @dateChanged="setDate"/>
+			<fancycheckbox @change="setShowNulls" class="mr-2">
 				{{ $t('task.show.noDates') }}
 			</fancycheckbox>
 			<fancycheckbox @change="setShowOverdue">
 				{{ $t('task.show.overdue') }}
 			</fancycheckbox>
-			{{ $t('task.show.select') }}
-			<datepicker-with-range @dateChanged="setDate"/>
 		</p>
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
-			<h3 class="nothing">{{ $t('task.show.noTasks') }}</h3>
-			<LlamaCool class="llama-cool"/>
+			<h3 class="has-text-centered mt-6">{{ $t('task.show.noTasks') }}</h3>
+			<LlamaCool class="mt-5"/>
 		</template>
 		<div :class="{ 'is-loading': loading}" class="spinner"></div>
 
 		<card :padding="false" class="has-overflow" :has-content="false" v-if="tasks && tasks.length > 0">
-			<div class="tasks">
+			<div class="p-2">
 				<single-task-in-list
 					v-for="t in tasksSorted"
 					:key="t.id"
@@ -212,26 +211,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-h3 {
-	text-align: left;
-
-	&.nothing {
-		text-align: center;
-		margin-top: 3rem;
+.show-tasks-options {
+	display: flex;
+	flex-direction: column;
+	
+	> :deep(a) {
+		margin-right: .5rem;
 	}
-
-	:deep(.input) {
-		width: 190px;
-		vertical-align: middle;
-		margin: .5rem 0;
-	}
-}
-
-.tasks {
-	padding: .5rem;
-}
-
-.llama-cool {
-	margin-top: 2rem;
 }
 </style>

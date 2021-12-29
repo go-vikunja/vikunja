@@ -1,37 +1,46 @@
 <template>
-	<div class="datepicker-with-range">
-		<div class="selections">
-			<button @click="setDateRange(datesToday)" :class="{'is-active': dateRange === datesToday}">
-				{{ $t('task.show.today') }}
-			</button>
-			<button @click="setDateRange(datesThisWeek)" :class="{'is-active': dateRange === datesThisWeek}">
-				{{ $t('task.show.thisWeek') }}
-			</button>
-			<button @click="setDateRange(datesNextWeek)" :class="{'is-active': dateRange === datesNextWeek}">
-				{{ $t('task.show.nextWeek') }}
-			</button>
-			<button @click="setDateRange(datesNext7Days)" :class="{'is-active': dateRange === datesNext7Days}">
-				{{ $t('task.show.next7Days') }}
-			</button>
-			<button @click="setDateRange(datesThisMonth)" :class="{'is-active': dateRange === datesThisMonth}">
-				{{ $t('task.show.thisMonth') }}
-			</button>
-			<button @click="setDateRange(datesNextMonth)" :class="{'is-active': dateRange === datesNextMonth}">
-				{{ $t('task.show.nextMonth') }}
-			</button>
-			<button @click="setDateRange(datesNext30Days)" :class="{'is-active': dateRange === datesNext30Days}">
-				{{ $t('task.show.next30Days') }}
-			</button>
-			<button @click="setDateRange('')" :class="{'is-active': customRangeActive}">
-				{{ $t('misc.custom') }}
-			</button>
-		</div>
-		<div class="flatpickr-container">
-			<flat-pickr
-				:config="flatPickerConfig"
-				v-model="dateRange"
-			/>
-		</div>
+	<a @click="showPopup = !showPopup">
+		{{ $t('task.show.select') }}
+	</a>
+
+	<div class="datepicker-with-range-container">
+		<transition name="fade">
+			<div class="datepicker-with-range" v-if="showPopup">
+				<div class="selections">
+					<button @click="setDateRange(datesToday)" :class="{'is-active': dateRange === datesToday}">
+						{{ $t('task.show.today') }}
+					</button>
+					<button @click="setDateRange(datesThisWeek)" :class="{'is-active': dateRange === datesThisWeek}">
+						{{ $t('task.show.thisWeek') }}
+					</button>
+					<button @click="setDateRange(datesNextWeek)" :class="{'is-active': dateRange === datesNextWeek}">
+						{{ $t('task.show.nextWeek') }}
+					</button>
+					<button @click="setDateRange(datesNext7Days)" :class="{'is-active': dateRange === datesNext7Days}">
+						{{ $t('task.show.next7Days') }}
+					</button>
+					<button @click="setDateRange(datesThisMonth)" :class="{'is-active': dateRange === datesThisMonth}">
+						{{ $t('task.show.thisMonth') }}
+					</button>
+					<button @click="setDateRange(datesNextMonth)" :class="{'is-active': dateRange === datesNextMonth}">
+						{{ $t('task.show.nextMonth') }}
+					</button>
+					<button @click="setDateRange(datesNext30Days)"
+							:class="{'is-active': dateRange === datesNext30Days}">
+						{{ $t('task.show.next30Days') }}
+					</button>
+					<button @click="setDateRange('')" :class="{'is-active': customRangeActive}">
+						{{ $t('misc.custom') }}
+					</button>
+				</div>
+				<div class="flatpickr-container">
+					<flat-pickr
+						:config="flatPickerConfig"
+						v-model="dateRange"
+					/>
+				</div>
+			</div>
+		</transition>
 	</div>
 </template>
 
@@ -61,6 +70,7 @@ const flatPickerConfig = computed(() => ({
 	},
 }))
 
+const showPopup = ref<Boolean>(false)
 const dateRange = ref<string>('')
 
 watch(
@@ -189,6 +199,11 @@ const customRangeActive = computed<Boolean>(() => {
 </script>
 
 <style lang="scss" scoped>
+.datepicker-with-range-container {
+	position: relative;
+	z-index: 10;
+}
+
 .datepicker-with-range {
 	border-radius: $radius;
 	border: 1px solid var(--grey-200);
@@ -196,6 +211,7 @@ const customRangeActive = computed<Boolean>(() => {
 	box-shadow: $shadow;
 	display: flex;
 	width: 500px;
+	position: absolute;
 
 	:deep(.flatpickr-calendar) {
 		margin: 0 auto 8px;
@@ -216,6 +232,7 @@ const customRangeActive = computed<Boolean>(() => {
 	width: 30%;
 	display: flex;
 	flex-direction: column;
+	padding-top: .5rem;
 
 	button {
 		display: block;

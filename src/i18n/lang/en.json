@@ -535,7 +535,7 @@
       "noDates": "Show tasks without dates",
       "overdue": "Show overdue tasks",
       "fromuntil": "Tasks from {from} until {until}",
-      "select": "Select a range:",
+      "select": "Select a date range",
       "today": "Today",
       "thisWeek": "This Week",
       "nextWeek": "Next Week",
