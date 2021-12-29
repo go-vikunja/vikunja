@@ -185,6 +185,9 @@ export default {
 				filter_concat: 'and',
 				filter_include_nulls: this.showNulls,
 			}
+			
+			// FIXME: Add button to show / hide overdue
+			
 			if (!this.showAll) {
 				if (this.showNulls) {
 					params.filter_by.push('start_date')
