@@ -1,39 +1,12 @@
 <template>
 	<div class="is-max-width-desktop show-tasks">
-		<fancycheckbox
-			@change="setDate"
-			class="is-pulled-right"
-			v-if="!showAll"
-			v-model="showNulls"
-		>
-			{{ $t('task.show.noDates') }}
-		</fancycheckbox>
 		<h3 class="mb-2">
 			{{ pageTitle }}
 		</h3>
-		<!-- FIXME: Styling, maybe in combination with the buttons? -->
 		<p v-if="!showAll">
 			{{ $t('task.show.select') }}
-			<flat-pickr
-				:class="{ 'disabled': loading}"
-				:config="flatPickerConfig"
-				:disabled="loading"
-				@on-close="setDate"
-				v-model="dateRange"
-			/>
 			<datepicker-with-range @dateChanged="setDate"/>
 		</p>
-		<div v-if="!showAll" class="mb-4 mt-2">
-			<x-button type="secondary" @click="showTodaysTasks()" class="mr-2">
-				{{ $t('task.show.today') }}
-			</x-button>
-			<x-button type="secondary" @click="setDatesToNextWeek()" class="mr-2">
-				{{ $t('task.show.nextWeek') }}
-			</x-button>
-			<x-button type="secondary" @click="setDatesToNextMonth()">
-				{{ $t('task.show.nextMonth') }}
-			</x-button>
-		</div>
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
 			<h3 class="nothing">{{ $t('task.show.noTasks') }}</h3>
 			<LlamaCool class="llama-cool"/>
@@ -57,8 +30,6 @@
 import SingleTaskInList from '@/components/tasks/partials/singleTaskInList'
 import {mapState} from 'vuex'
 
-import flatPickr from 'vue-flatpickr-component'
-import 'flatpickr/dist/flatpickr.css'
 import Fancycheckbox from '@/components/input/fancycheckbox'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
@@ -75,7 +46,6 @@ export default {
 		DatepickerWithRange,
 		Fancycheckbox,
 		SingleTaskInList,
-		flatPickr,
 		LlamaCool,
 	},
 	data() {
@@ -109,19 +79,6 @@ export default {
 		},
 	},
 	computed: {
-		flatPickerConfig() {
-			return {
-				altFormat: this.$t('date.altFormatLong'),
-				altInput: true,
-				dateFormat: 'Y-m-d H:i',
-				enableTime: true,
-				time_24hr: true,
-				mode: 'range',
-				locale: {
-					firstDayOfWeek: this.$store.state.auth.settings.weekStart,
-				},
-			}
-		},
 		dateFrom() {
 			const d = new Date(Number(this.$route.query.from))
 
@@ -238,31 +195,6 @@ export default {
 					break
 				}
 			}
-		},
-
-		setDatesToNextWeek() {
-			const startDate = new Date()
-			const endDate = new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
-			this.dateRange = `${formatDate(startDate)} to ${formatDate(endDate)}`
-			this.showOverdue = false
-			this.setDate()
-		},
-
-		setDatesToNextMonth() {
-			const startDate = new Date()
-			const endDate = new Date((new Date()).setMonth((new Date()).getMonth() + 1))
-			this.dateRange = `${formatDate(startDate)} to ${formatDate(endDate)}`
-			this.showOverdue = false
-			this.setDate()
-		},
-
-		showTodaysTasks() {
-			const d = new Date()
-			const startDate = new Date()
-			const endDate = new Date(d.setDate(d.getDate() + 1))
-			this.dateRange = `${formatDate(startDate)} to ${formatDate(endDate)}`
-			this.showOverdue = true
-			this.setDate()
 		},
 	},
 }
