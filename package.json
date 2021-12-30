@@ -59,7 +59,7 @@
     "@fortawesome/free-solid-svg-icons": "5.15.4",
     "@fortawesome/vue-fontawesome": "3.0.0-5",
     "@types/flexsearch": "0.7.2",
-    "@types/jest": "27.0.3",
+    "@types/jest": "27.4.0",
     "@typescript-eslint/eslint-plugin": "5.8.1",
     "@typescript-eslint/parser": "5.8.1",
     "@vitejs/plugin-legacy": "1.6.4",
