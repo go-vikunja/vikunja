@@ -1,7 +1,12 @@
 import {HTTPFactory} from '@/http-common'
+import {getCurrentLanguage, saveLanguage} from '@/i18n'
 import {LOADING} from '../mutation-types'
-import UserModel from '../../models/user'
+import UserModel from '@/models/user'
+import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
+import {setLoading} from '@/store/helper'
+import {i18n} from '@/i18n'
+import {success} from '@/message'
 
 const AUTH_TYPES = {
 	'UNKNOWN': 0,
@@ -98,10 +103,10 @@ export default {
 				const response = await HTTP.post('login', data)
 				// Save the token to local storage for later use
 				saveToken(response.data.token, true)
-				
+
 				// Tell others the user is autheticated
 				ctx.dispatch('checkAuth')
-			} catch(e) {
+			} catch (e) {
 				if (
 					e.response &&
 					e.response.data.code === 1017 &&
@@ -124,7 +129,7 @@ export default {
 			try {
 				await HTTP.post('register', credentials)
 				return ctx.dispatch('login', credentials)
-			} catch(e) {
+			} catch (e) {
 				if (e.response?.data?.message) {
 					throw e.response.data
 				}
@@ -149,7 +154,7 @@ export default {
 				const response = await HTTP.post(`/auth/openid/${provider}/callback`, data)
 				// Save the token to local storage for later use
 				saveToken(response.data.token, true)
-				
+
 				// Tell others the user is autheticated
 				ctx.dispatch('checkAuth')
 			} finally {
@@ -200,7 +205,7 @@ export default {
 			}
 		},
 
-		async refreshUserInfo(ctx) {
+		async refreshUserInfo({state, commit, dispatch}) {
 			const jwt = getToken()
 			if (!jwt) {
 				return
@@ -208,22 +213,53 @@ export default {
 
 			const HTTP = HTTPFactory()
 			try {
-
 				const response = await HTTP.get('user', {
 					headers: {
 						Authorization: `Bearer ${jwt}`,
 					},
 				})
 				const info = new UserModel(response.data)
-				info.type = ctx.state.info.type
-				info.email = ctx.state.info.email
-				info.exp = ctx.state.info.exp
-				
-				ctx.commit('info', info)
-				ctx.commit('lastUserRefresh')
+				info.type = state.info.type
+				info.email = state.info.email
+				info.exp = state.info.exp
+
+				commit('info', info)
+				commit('lastUserRefresh')
+
+				if (typeof info.settings.language !== 'undefined') {
+					// save current language
+					await dispatch('saveUserSettings', {
+						settings: {
+							...state.settings,
+							language: getCurrentLanguage(),
+						},
+						showMessage: false,
+					})
+				}
+
 				return info
-			} catch(e) {
-				throw new Error('Error while refreshing user info:', { cause: e })
+			} catch (e) {
+				throw new Error('Error while refreshing user info:', {cause: e})
+			}
+		},
+
+		async saveUserSettings(ctx, payload) {
+			const {settings} = payload
+			const showMessage = payload.showMessage ?? true
+			const userSettingsService = new UserSettingsService()
+
+			const cancel = setLoading(ctx, 'general-settings')
+			try {
+				saveLanguage(settings.language)
+				await userSettingsService.update(settings)
+				ctx.commit('setUserSettings', {...settings})
+				if (showMessage) {
+					success({message: i18n.global.t('user.settings.general.savedSuccess')})
+				}
+			} catch (e) {
+				throw new Error('Error while saving user settings:', {cause: e})
+			} finally {
+				cancel()
 			}
 		},
 
@@ -240,7 +276,7 @@ export default {
 				try {
 					await refreshToken(!ctx.state.isLinkShareAuth)
 					ctx.dispatch('checkAuth')
-				} catch(e) {
+				} catch (e) {
 					// Don't logout on network errors as the user would then get logged out if they don't have
 					// internet for a short period of time - such as when the laptop is still reconnecting
 					if (e?.request?.status) {

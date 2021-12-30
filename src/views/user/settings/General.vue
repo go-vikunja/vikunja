@@ -1,5 +1,5 @@
 <template>
-	<card :title="$t('user.settings.general.title')" class="general-settings" :loading="userSettingsService.loading">
+	<card :title="$t('user.settings.general.title')" class="general-settings" :loading="loading">
 		<div class="field">
 			<label class="label" :for="`newName${id}`">{{ $t('user.settings.general.name') }}</label>
 			<div class="control">
@@ -67,8 +67,8 @@
 						{{ $t('user.settings.general.language') }}
 					</span>
 				<div class="select ml-2">
-					<select v-model="language">
-						<option :value="lang.code" v-for="lang in availableLanguages" :key="lang.code">{{
+					<select v-model="settings.language">
+						<option :value="lang.code" v-for="lang in availableLanguageOptions" :key="lang.code">{{
 								lang.title
 							}}
 						</option>
@@ -107,7 +107,7 @@
 		</div>
 
 		<x-button
-			:loading="userSettingsService.loading"
+			:loading="loading"
 			@click="updateSettings()"
 			class="is-fullwidth mt-4"
 		>
@@ -120,14 +120,12 @@
 import {computed, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import {playSoundWhenDoneKey} from '@/helpers/playPop'
-import {availableLanguages, saveLanguage, getCurrentLanguage} from '@/i18n'
+import {playSoundWhenDoneKey, playPop} from '@/helpers/playPop'
+import {availableLanguages} from '@/i18n'
 import {getQuickAddMagicMode, setQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
-import UserSettingsService from '@/services/userSettings'
 import {PrefixMode} from '@/modules/parseTaskText'
 import ListSearch from '@/components/tasks/partials/listSearch'
 import {createRandomID} from '@/helpers/randomId'
-import {playPop} from '@/helpers/playPop'
 import {useColorScheme} from '@/composables/useColorScheme'
 import {success} from '@/message'
 
@@ -165,23 +163,19 @@ export default {
 	data() {
 		return {
 			playSoundWhenDone: getPlaySoundWhenDoneSetting(),
-			language: getCurrentLanguage(),
 			quickAddMagicMode: getQuickAddMagicMode(),
 			quickAddMagicPrefixes: PrefixMode,
-			userSettingsService: new UserSettingsService(),
 			settings: {...this.$store.state.auth.settings},
 			id: createRandomID(),
+			availableLanguageOptions: Object.entries(availableLanguages)
+				.map(l => ({code: l[0], title: l[1]}))
+				.sort((a, b) => a.title.localeCompare(b.title)),
 		}
 	},
 	components: {
 		ListSearch,
 	},
 	computed: {
-		availableLanguages() {
-			return Object.entries(availableLanguages)
-				.map(l => ({code: l[0], title: l[1]}))
-				.sort((a, b) => a.title.localeCompare(b.title))
-		},
 		defaultList: {
 			get() {
 				return this.$store.getters['lists/getListById'](this.settings.defaultListId)
@@ -189,6 +183,9 @@ export default {
 			set(l) {
 				this.settings.defaultListId = l ? l.id : DEFAULT_LIST_ID
 			},
+		},
+		loading() {
+			return this.$store.state.loading && this.$store.state.loadingModule === 'general-settings'
 		},
 	},
 
@@ -211,16 +208,11 @@ export default {
 	methods: {
 		async updateSettings() {
 			localStorage.setItem(playSoundWhenDoneKey, this.playSoundWhenDone)
-			saveLanguage(this.language)
 			setQuickAddMagicMode(this.quickAddMagicMode)
 
-			const settings = {
-				...this.settings,
-			}
-
-			await this.userSettingsService.update(settings)
-			this.$store.commit('auth/setUserSettings', settings)
-			this.$message.success({message: this.$t('user.settings.general.savedSuccess')})
+			await this.$store.dispatch('auth/saveUserSettings', {
+				settings: {...this.settings},
+			})
 		},
 	},
 }
