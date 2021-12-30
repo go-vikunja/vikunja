@@ -1,7 +1,7 @@
 <template>
 	<div class="content has-text-centered">
 		<h2 v-if="userInfo">
-			{{ $t(`home.welcome${welcome}`, {username: userInfo.name !== '' ? userInfo.name : userInfo.username}) }}!
+			{{ $t(welcome, {username: userInfo.name !== '' ? userInfo.name : userInfo.username}) }}!
 		</h2>
 		<message variant="danger" v-if="deletionScheduledAt !== null" class="mb-4">
 			{{
