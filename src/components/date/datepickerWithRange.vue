@@ -2,9 +2,9 @@
 	<div class="datepicker-with-range-container">
 		<popup>
 			<template #trigger="{toggle}">
-				<a @click.prevent.stop="toggle()">
+				<x-button @click.prevent.stop="toggle()" type="secondary" :shadow="false" class="mb-2">
 					{{ $t('task.show.select') }}
-				</a>
+				</x-button>
 			</template>
 			<template #content="{isOpen}">
 				<div class="datepicker-with-range" :class="{'is-open': isOpen}">
