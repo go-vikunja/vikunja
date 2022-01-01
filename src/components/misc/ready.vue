@@ -50,11 +50,12 @@ import Message from '@/components/misc/message.vue'
 import NoAuthWrapper from '@/components/misc/no-auth-wrapper.vue'
 
 import {ERROR_NO_API_URL} from '@/helpers/checkAndSetApiUrl'
+import {useOnline} from '@/composables/useOnline'
 
 const store = useStore()
 
 const ready = computed(() => store.state.vikunjaReady)
-const online = computed(() => store.state.online)
+const online = useOnline()
 
 const error = ref('')
 const showLoading = computed(() => !ready.value && error.value === '')
