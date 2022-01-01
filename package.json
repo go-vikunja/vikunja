@@ -12,7 +12,7 @@
     "lint": "eslint --ignore-pattern '*.test.*' ./src --ext .vue,.js,.ts",
     "lint:markup": "vue-tsc --noEmit",
     "cypress:open": "cypress open",
-    "test:unit": "jest",
+    "test:unit": "vitest run",
     "test:frontend": "cypress run",
     "browserslist:update": "npx browserslist@latest --update-db"
   },
@@ -59,7 +59,6 @@
     "@fortawesome/free-solid-svg-icons": "5.15.4",
     "@fortawesome/vue-fontawesome": "3.0.0-5",
     "@types/flexsearch": "0.7.2",
-    "@types/jest": "27.4.0",
     "@typescript-eslint/eslint-plugin": "5.9.0",
     "@typescript-eslint/parser": "5.9.0",
     "@vitejs/plugin-legacy": "1.6.4",
@@ -76,19 +75,19 @@
     "eslint-plugin-vue": "8.2.0",
     "express": "4.17.2",
     "faker": "5.5.3",
-    "jest": "27.4.5",
     "netlify-cli": "8.6.4",
+    "happy-dom": "^2.25.1",
     "postcss": "8.4.5",
     "postcss-preset-env": "7.2.0",
     "rollup": "2.63.0",
     "rollup-plugin-visualizer": "5.5.2",
     "sass": "1.45.2",
     "slugify": "1.6.5",
-    "ts-jest": "27.1.2",
     "typescript": "4.5.4",
     "vite": "2.7.10",
     "vite-plugin-pwa": "0.11.12",
     "vite-svg-loader": "3.1.1",
+    "vitest": "^0.0.125",
     "vue-tsc": "0.30.2",
     "wait-on": "6.0.0",
     "workbox-cli": "6.4.2"
@@ -143,24 +142,6 @@
     "plugins": {
       "autoprefixer": {}
     }
-  },
-  "jest": {
-    "testPathIgnorePatterns": [
-      "cypress"
-    ],
-    "testEnvironment": "jsdom",
-    "preset": "ts-jest",
-    "roots": [
-      "<rootDir>/src"
-    ],
-    "transform": {
-      "^.+\\.(js|tsx?)$": "ts-jest"
-    },
-    "moduleFileExtensions": [
-      "ts",
-      "js",
-      "json"
-    ]
   },
   "license": "AGPL-3.0-or-later",
   "packageManager": "yarn@1.22.17"

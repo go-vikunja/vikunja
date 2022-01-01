@@ -1,3 +1,5 @@
+import {describe, it, expect} from 'vitest'
+
 import {findCheckboxesInText, getChecklistStatistics} from './checklistFromText'
 
 describe('Find checklists in text', () => {

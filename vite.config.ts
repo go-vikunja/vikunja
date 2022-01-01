@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import legacyFn from '@vitejs/plugin-legacy'
@@ -27,6 +28,10 @@ if (isModernBuild) {
 }
 
 export default defineConfig({
+	// https://vitest.dev/config/
+	test: {
+		environment: 'happy-dom',
+	},
 	css: {
 		preprocessorOptions: {
 			scss: {
