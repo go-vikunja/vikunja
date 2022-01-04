@@ -4341,13 +4341,6 @@ builtins@^1.0.3:
   resolved "https://registry.yarnpkg.com/builtins/-/builtins-1.0.3.tgz#cb94faeb61c8696451db36534e1422f94f0aee88"
   integrity sha1-y5T662HIaWRR2zZTThQi+U8K7og=
 
-builtins@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/builtins/-/builtins-4.0.0.tgz#a8345420de82068fdc4d6559d0456403a8fb1905"
-  integrity sha512-qC0E2Dxgou1IHhvJSLwGDSTvokbRovU5zZFuDY6oY8Y2lF3nGt5Ad8YZK7GMtqzY84Wu7pXTPeHQeHcXSXsRhw==
-  dependencies:
-    semver "^7.0.0"
-
 bulma-css-variables@0.9.33:
   version "0.9.33"
   resolved "https://registry.yarnpkg.com/bulma-css-variables/-/bulma-css-variables-0.9.33.tgz#b249c3410e9edcfa7a5ce8ca96049b6939fe92de"
@@ -7733,13 +7726,6 @@ import-lazy@^2.1.0:
   resolved "https://registry.yarnpkg.com/import-lazy/-/import-lazy-2.1.0.tgz#05698e3d45c88e8d7e9d92cb0584e77f096f3e43"
   integrity sha1-BWmOPUXIjo1+nZLLBYTnfwlvPkM=
 
-import-meta-resolve@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/import-meta-resolve/-/import-meta-resolve-1.1.1.tgz#244fd542fd1fae73550d4f8b3cde3bba1d7b2b18"
-  integrity sha512-JiTuIvVyPaUg11eTrNDx5bgQ/yMKMZffc7YSjvQeSMXy58DO2SQ8BtAf3xteZvmzvjYh14wnqNjL8XVeDy2o9A==
-  dependencies:
-    builtins "^4.0.0"
-
 imurmurhash@^0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/imurmurhash/-/imurmurhash-0.1.4.tgz#9218b9b2b928a238b13dc4fb6b6d576f231453ea"
@@ -8700,12 +8686,10 @@ listr@^0.14.3:
     p-map "^2.0.0"
     rxjs "^6.3.3"
 
-local-pkg@^0.4.0:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/local-pkg/-/local-pkg-0.4.0.tgz#e6221171813d5a0812dd84fa80ffb1c8fcc00531"
-  integrity sha512-2XBWjO/v63JeR1HPzLJxdTVRQDB84Av2p2KtBA5ahvpyLUPubcAU6iXlAJrONcY7aSqgJhXxElAnKtnYsRolPQ==
-  dependencies:
-    mlly "^0.2.2"
+local-pkg@^0.4.1:
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/local-pkg/-/local-pkg-0.4.1.tgz#e7b0d7aa0b9c498a1110a5ac5b00ba66ef38cfff"
+  integrity sha512-lL87ytIGP2FU5PWwNDo0w3WhIo2gopIAxPg9RxDYF7m4rr5ahuZxP22xnJHIvaLTe4Z9P6uKKY2UHiwyB4pcrw==
 
 locate-path@^5.0.0:
   version "5.0.0"
@@ -9215,13 +9199,6 @@ mkdirp@^1.0.3:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-1.0.4.tgz#3eb5ed62622756d79a5f0e2a221dfebad75c2f7e"
   integrity sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==
-
-mlly@^0.2.2:
-  version "0.2.10"
-  resolved "https://registry.yarnpkg.com/mlly/-/mlly-0.2.10.tgz#645902c9761dc6b5ded174b8e717147fe52e4893"
-  integrity sha512-xfyW6c2QBGArtctzNnTV5leOKX8nOMz2simeubtXofdsdSJFSNw+Ncvrs8kxcN3pBrQLXuYBHNFV6NgZ5Ryf4A==
-  dependencies:
-    import-meta-resolve "^1.1.1"
 
 mock-require@^3.0.3:
   version "3.0.3"
@@ -12257,15 +12234,15 @@ timed-out@^4.0.1:
   resolved "https://registry.yarnpkg.com/timed-out/-/timed-out-4.0.1.tgz#f32eacac5a175bea25d7fab565ab3ed8741ef56f"
   integrity sha1-8y6srFoXW+ol1/q1Zas+2HQe9W8=
 
-tinypool@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/tinypool/-/tinypool-0.1.0.tgz#a0023181f7a8c094453698fbc9d9bef4b3f1a263"
-  integrity sha512-eQXAsrzFBbd4kwSmxE0g64eo/l0St7iGmkRsJVKJ5awRHUyMeSHxMD9samPaWD6fCL+pufv37TEfVcnQdQXAeA==
+tinypool@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/tinypool/-/tinypool-0.1.1.tgz#99eaf29d030feeca2da6c1d6b33f90fc18093bc7"
+  integrity sha512-sW2fQZ2BRb/GX5v55NkHiTrbMLx0eX0xNpP+VGhOe2f7Oo04+LeClDyM19zCE/WCy7jJ8kzIJ0Ojrxj3UhN9Sg==
 
-tinyspy@^0.2.6:
-  version "0.2.6"
-  resolved "https://registry.yarnpkg.com/tinyspy/-/tinyspy-0.2.6.tgz#4c5430afa361d4a18431f85d9ccbefc21c607cb3"
-  integrity sha512-HXNA1PZ9p95rWK7h3DvWaDK06XmsjN3ldZjacW/1F0viVfPanTGSQ6l2iQyjNElD0Nd5ogfq/hT0sx2Hdyz4wQ==
+tinyspy@^0.2.7:
+  version "0.2.7"
+  resolved "https://registry.yarnpkg.com/tinyspy/-/tinyspy-0.2.7.tgz#265b5deab32c89b2fa1986939869ef74b160c0f5"
+  integrity sha512-AaNITSED8/2j2/nSgPeQZW2nNhdTxNJ7XwcdBezI7MtPS2C+pJ1HjcHc/qfDhohUhQvODITdxzWH9u+Qs+7yFQ==
 
 tmp-promise@^3.0.2:
   version "3.0.3"
@@ -12848,17 +12825,17 @@ vite@2.7.10, vite@>=2.7.10:
   optionalDependencies:
     fsevents "~2.3.2"
 
-vitest@0.0.131:
-  version "0.0.131"
-  resolved "https://registry.yarnpkg.com/vitest/-/vitest-0.0.131.tgz#3171856dfb4990075d7e5443a954ee06209b0eb3"
-  integrity sha512-8az+/FUECnJTVsJxNJ6RHcy0FqWSlLlUq7prlz74OIWV6Lhh8zrjH2P+7J5uv0HLVgz92NMvWTPGQWk+90tXJQ==
+vitest@0.0.132:
+  version "0.0.132"
+  resolved "https://registry.yarnpkg.com/vitest/-/vitest-0.0.132.tgz#11aa2691709748bbf05297a72adee3f9f1f8ffc6"
+  integrity sha512-LxmHT3aAS+7mRJzYQg5tS5IQuDSmEBupaPcHK9PMRiOITZ2dMFo7mcvmvNZ8k0SL7NIIXYJ0BHTLX9ROY3xHmw==
   dependencies:
     "@types/chai" "^4.3.0"
     "@types/chai-subset" "^1.3.3"
     chai "^4.3.4"
-    local-pkg "^0.4.0"
-    tinypool "^0.1.0"
-    tinyspy "^0.2.6"
+    local-pkg "^0.4.1"
+    tinypool "^0.1.1"
+    tinyspy "^0.2.7"
     vite ">=2.7.10"
 
 void-elements@^3.1.0:
