@@ -67,7 +67,7 @@
 
 <script lang="ts" setup>
 import copy from 'copy-to-clipboard'
-import {computed, ref} from 'vue'
+import {computed, ref, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useStore} from 'vuex'
 
@@ -79,43 +79,31 @@ import Message from '@/components/misc/message.vue'
 import CaldavTokenService from '@/services/caldavToken'
 import CaldavTokenModel from '@/models/caldavToken'
 
-const service = new CaldavTokenService()
-
-function useTokens(): ref<CaldavTokenModel[]> {
-	const tokens = ref<CaldavTokenModel[]>([])
-	service.getAll()
-		.then((t: CaldavTokenModel[]) => {
-			tokens.value = t
-		})
-	return tokens
-}
-
-const tokens = useTokens()
-
-const store = useStore()
 const {t} = useI18n()
-
 useTitle(() => `${t('user.settings.caldav.title')} - ${t('user.settings.title')}`)
 
-const caldavUrl = computed(() => `${store.getters['config/apiBase']}/dav/principals/${store.state.auth.info.username}/`)
-const caldavEnabled = computed(() => store.state.config.caldavEnabled)
-const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
-const username = computed(() => store.state.auth.info?.username)
+const service = shallowReactive(new CaldavTokenService())
+const tokens = ref<CaldavTokenModel[]>([])
 
-const newToken = ref(null)
+service.getAll().then((result: CaldavTokenModel[]) => {
+	tokens.value = result
+})
 
+const newToken = ref<CaldavTokenModel>()
 async function createToken() {
-	newToken.value = await service.create({})
+	newToken.value = await service.create() as CaldavTokenModel
 	tokens.value.push(newToken.value)
 }
 
 async function deleteToken(token: CaldavTokenModel) {
 	const r = await service.delete(token)
-	const i = tokens.value.findIndex(v => v.id === token.id)
-	if (i === -1) {
-		return
-	}
-	tokens.value.splice(i, 1)
+	tokens.value = tokens.value.filter(({id}) => id !== token.id)
 	success(r)
 }
+
+const store = useStore()
+const username = computed(() => store.state.auth.info?.username)
+const caldavUrl = computed(() => `${store.getters['config/apiBase']}/dav/principals/${username.value}/`)
+const caldavEnabled = computed(() => store.state.config.caldavEnabled)
+const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
 </script>
