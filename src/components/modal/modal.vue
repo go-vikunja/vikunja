@@ -31,14 +31,15 @@
 						<div class="actions">
 							<x-button
 								@click="$emit('close')"
-								type="tertary"
+								variant="tertiary"
 								class="has-text-danger"
 							>
 								{{ $t('misc.cancel') }}
 							</x-button>
 							<x-button
 								@click="$emit('submit')"
-								type="primary"
+								variant="primary"
+								v-cy="'modalPrimary'"
 								:shadow="false"
 							>
 								{{ $t('misc.doit') }}

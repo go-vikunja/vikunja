@@ -1,5 +1,6 @@
 <template>
-	<ready :class="{'is-touch': isTouch}">
+	<ready>
+		<div :class="{'is-touch': isTouch}">
 		<div :class="{'is-hidden': !online}">
 			<template v-if="authUser">
 				<top-navigation/>
@@ -15,6 +16,7 @@
 		<transition name="fade">
 			<keyboard-shortcuts v-if="keyboardShortcutsActive"/>
 		</transition>
+		</div>
 	</ready>
 </template>
 

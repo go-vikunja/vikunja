@@ -89,7 +89,7 @@ describe('Namepaces', () => {
 			.click()
 		cy.url()
 			.should('contain', '/settings/delete')
-		cy.get('.modal-mask .modal-container .modal-content .actions a.button')
+		cy.get('[data-cy="modalPrimary"]')
 			.contains('Do it')
 			.click()
 

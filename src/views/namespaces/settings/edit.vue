@@ -4,8 +4,8 @@
 		primary-icon=""
 		:primary-label="$t('misc.save')"
 		@primary="save"
-		:tertary="$t('misc.delete')"
-		@tertary="$router.push({ name: 'namespace.settings.delete', params: { id: $route.params.id } })"
+		:tertiary="$t('misc.delete')"
+		@tertiary="$router.push({ name: 'namespace.settings.delete', params: { id: $route.params.id } })"
 	>
 		<form @submit.prevent="save()">
 			<div class="field">

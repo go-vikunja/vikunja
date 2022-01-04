@@ -258,7 +258,7 @@
 							@click="toggleTaskDone()"
 							class="is-outlined has-no-border"
 							icon="check-double"
-							type="secondary"
+							variant="secondary"
 						>
 							{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
 						</x-button>
@@ -270,7 +270,7 @@
 						/>
 						<x-button
 							@click="setFieldActive('assignees')"
-							type="secondary"
+							variant="secondary"
 							v-shortcut="'a'"
 							v-cy="'taskDetail.assign'"
 						>
@@ -279,7 +279,7 @@
 						</x-button>
 						<x-button
 							@click="setFieldActive('labels')"
-							type="secondary"
+							variant="secondary"
 							icon="tags"
 							v-shortcut="'l'"
 						>
@@ -287,14 +287,14 @@
 						</x-button>
 						<x-button
 							@click="setFieldActive('priority')"
-							type="secondary"
+							variant="secondary"
 							icon="exclamation"
 						>
 							{{ $t('task.detail.actions.priority') }}
 						</x-button>
 						<x-button
 							@click="setFieldActive('dueDate')"
-							type="secondary"
+							variant="secondary"
 							icon="calendar"
 							v-shortcut="'d'"
 						>
@@ -302,42 +302,42 @@
 						</x-button>
 						<x-button
 							@click="setFieldActive('startDate')"
-							type="secondary"
+							variant="secondary"
 							icon="play"
 						>
 							{{ $t('task.detail.actions.startDate') }}
 						</x-button>
 						<x-button
 							@click="setFieldActive('endDate')"
-							type="secondary"
+							variant="secondary"
 							icon="stop"
 						>
 							{{ $t('task.detail.actions.endDate') }}
 						</x-button>
 						<x-button
 							@click="setFieldActive('reminders')"
-							type="secondary"
+							variant="secondary"
 							:icon="['far', 'clock']"
 						>
 							{{ $t('task.detail.actions.reminders') }}
 						</x-button>
 						<x-button
 							@click="setFieldActive('repeatAfter')"
-							type="secondary"
+							variant="secondary"
 							icon="history"
 						>
 							{{ $t('task.detail.actions.repeatAfter') }}
 						</x-button>
 						<x-button
 							@click="setFieldActive('percentDone')"
-							type="secondary"
+							variant="secondary"
 							icon="percent"
 						>
 							{{ $t('task.detail.actions.percentDone') }}
 						</x-button>
 						<x-button
 							@click="setFieldActive('attachments')"
-							type="secondary"
+							variant="secondary"
 							icon="paperclip"
 							v-shortcut="'f'"
 						>
@@ -345,7 +345,7 @@
 						</x-button>
 						<x-button
 							@click="setFieldActive('relatedTasks')"
-							type="secondary"
+							variant="secondary"
 							icon="sitemap"
 							v-shortcut="'r'"
 						>
@@ -353,21 +353,21 @@
 						</x-button>
 						<x-button
 							@click="setFieldActive('moveList')"
-							type="secondary"
+							variant="secondary"
 							icon="list"
 						>
 							{{ $t('task.detail.actions.moveList') }}
 						</x-button>
 						<x-button
 							@click="setFieldActive('color')"
-							type="secondary"
+							variant="secondary"
 							icon="fill-drip"
 						>
 							{{ $t('task.detail.actions.color') }}
 						</x-button>
 						<x-button
 							@click="toggleFavorite"
-							type="secondary"
+							variant="secondary"
 							:icon="task.isFavorite ? 'star' : ['far', 'star']"
 						>
 							{{

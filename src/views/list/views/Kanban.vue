@@ -79,6 +79,7 @@
 												:disabled="bucket.limit < 0"
 												:icon="['far', 'save']"
 												:shadow="false"
+												v-cy="'setBucketLimit'"
 											/>
 										</div>
 									</div>
@@ -165,7 +166,7 @@
 								:shadow="false"
 								v-if="!showNewTaskInput[bucket.id]"
 								icon="plus"
-								type="secondary"
+								variant="secondary"
 							>
 								{{
 									bucket.tasks.length === 0 ? $t('list.kanban.addTask') : $t('list.kanban.addAnotherTask')
@@ -195,7 +196,7 @@
 					:shadow="false"
 					class="is-transparent is-fullwidth has-text-centered"
 					v-else
-					type="secondary"
+					variant="secondary"
 					icon="plus"
 				>
 					{{ $t('list.kanban.addBucket') }}

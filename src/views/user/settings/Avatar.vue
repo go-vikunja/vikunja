@@ -48,6 +48,7 @@
 				<x-button
 					:loading="avatarService.loading || loading"
 					@click="uploadAvatar"
+					v-cy="'uploadAvatar'"
 				>
 					{{ $t('user.settings.avatar.uploadAvatar') }}
 				</x-button>

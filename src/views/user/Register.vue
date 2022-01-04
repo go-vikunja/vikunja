@@ -79,7 +79,7 @@
 					>
 						{{ $t('user.auth.register') }}
 					</x-button>
-					<x-button :to="{ name: 'user.login' }" type="secondary">
+					<x-button :to="{ name: 'user.login' }" variant="secondary">
 						{{ $t('user.auth.login') }}
 					</x-button>
 				</div>

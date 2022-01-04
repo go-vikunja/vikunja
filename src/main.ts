@@ -1,11 +1,8 @@
 import {createApp, configureCompat} from 'vue'
 
+// default everything to Vue 3 behavior
 configureCompat({
-	COMPONENT_V_MODEL: false,
-	COMPONENT_ASYNC: false,
-	RENDER_FUNCTION: false,
-	WATCH_ARRAY: false, // TODO: check this again; this might lead to some problemes
-	TRANSITION_GROUP_ROOT: false,
+	MODE: 3,
 })
 
 import App from './App.vue'

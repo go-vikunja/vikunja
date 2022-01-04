@@ -6,7 +6,7 @@
 			class="is-pulled-right add-task-relation-button"
 			:class="{'is-active': showNewRelationForm}"
 			v-tooltip="$t('task.relation.add')"
-			type="secondary"
+			variant="secondary"
 			icon="plus"
 			:shadow="false"
 		/>

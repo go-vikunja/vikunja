@@ -18,7 +18,7 @@ describe('User Settings', () => {
 			.trigger('mousedown', {which: 1})
 			.trigger('mousemove', {clientY: 100})
 			.trigger('mouseup')
-		cy.get('a.button.is-primary')
+		cy.get('[data-cy="uploadAvatar"]')
 			.contains('Upload Avatar')
 			.click()
 
@@ -33,7 +33,7 @@ describe('User Settings', () => {
 		cy.get('.general-settings .control input.input')
 			.first()
 			.type('Lorem Ipsum')
-		cy.get('.card.general-settings .button.is-primary')
+		cy.get('[data-cy="saveGeneralSettings"]')
 			.contains('Save')
 			.click()
 

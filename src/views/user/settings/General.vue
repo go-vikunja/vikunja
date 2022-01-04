@@ -110,6 +110,7 @@
 			:loading="loading"
 			@click="updateSettings()"
 			class="is-fullwidth mt-4"
+			v-cy="'saveGeneralSettings'"
 		>
 			{{ $t('misc.save') }}
 		</x-button>

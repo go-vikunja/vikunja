@@ -37,7 +37,7 @@
 					<x-button
 						@click="showTaskSearch = !showTaskSearch"
 						icon="search"
-						type="secondary"
+						variant="secondary"
 						v-if="!showTaskSearch"
 					/>
 				</div>

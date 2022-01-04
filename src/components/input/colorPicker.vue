@@ -27,7 +27,7 @@
 			@click="reset"
 			class="is-small ml-2"
 			:shadow="false"
-			type="secondary"
+			variant="secondary"
 		>
 			{{ $t('input.resetColor') }}
 		</x-button>

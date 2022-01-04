@@ -22,7 +22,7 @@
 			<x-button
 				:to="{name: 'list.create', params: {id:  n.id}}"
 				class="is-pulled-right"
-				type="secondary"
+				variant="secondary"
 				v-if="n.id > 0 && n.lists.length > 0"
 				icon="plus"
 			>
@@ -31,7 +31,7 @@
 			<x-button
 				:to="{name: 'namespace.settings.archive', params: {id:  n.id}}"
 				class="is-pulled-right mr-4"
-				type="secondary"
+				variant="secondary"
 				v-if="n.isArchived"
 				icon="archive"
 			>
