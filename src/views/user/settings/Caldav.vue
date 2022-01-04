@@ -58,9 +58,9 @@
 		</x-button>
 
 		<p>
-			<a :href="CALDAV_DOCS" rel="noreferrer noopener nofollow" target="_blank">
+			<BaseButton :href="CALDAV_DOCS" rel="noreferrer noopener nofollow" target="_blank">
 				{{ $t('user.settings.caldav.more') }}
-			</a>
+			</BaseButton>
 		</p>
 	</card>
 </template>
@@ -74,6 +74,7 @@ import {useStore} from 'vuex'
 import {CALDAV_DOCS} from '@/urls'
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
+import BaseButton from '@/components/base/BaseButton.vue'
 import Message from '@/components/misc/message.vue'
 import CaldavTokenService from '@/services/caldavToken'
 import CaldavTokenModel from '@/models/caldavToken'
