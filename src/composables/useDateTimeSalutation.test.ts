@@ -1,6 +1,5 @@
 import {describe, it, expect} from 'vitest'
-
-import {hourToSalutation} from './hourToSalutation'
+import {hourToSalutation} from './useDateTimeSalutation'
 
 const dateWithHour = (hours: number): Date => {
 	const date = new Date()
@@ -30,5 +29,3 @@ describe('Salutation', () => {
 		expect(salutation).toBe('home.welcomeNight')
 	})
 })
-
-

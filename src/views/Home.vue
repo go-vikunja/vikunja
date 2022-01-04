@@ -66,16 +66,15 @@ import AddTask from '@/components/tasks/add-task.vue'
 import {getHistory} from '@/modules/listHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
-import {hourToSalutation} from '@/helpers/hourToSalutation'
+import {useDateTimeSalutation} from '@/composables/useDateTimeSalutation'
 
-const welcome = computed(hourToSalutation)
+const welcome = useDateTimeSalutation()
 
 const store = useStore()
 const listHistory = computed(() => {
-	const history = getHistory()
-	return history.map(l => {
-		return store.getters['lists/getListById'](l.id)
-	}).filter(l => l !== null)
+	return getHistory()
+		.map(l => store.getters['lists/getListById'](l.id))
+		.filter(l => l !== null)
 })
 
 

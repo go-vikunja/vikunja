@@ -1,10 +1,10 @@
+import {computed} from 'vue'
 import {useNow} from '@vueuse/core'
-import {Ref} from 'vue'
 
 const TRANSLATION_KEY_PREFIX = 'home.welcome'
 
-export function hourToSalutation(now: Date | Ref<Date> = useNow()): String {
-	const hours = now instanceof Date ? new Date(now).getHours() : new Date(now.value).getHours()
+export function hourToSalutation(now: Date) {
+	const hours = now.getHours()
 
 	if (hours < 5) {
 		return `${TRANSLATION_KEY_PREFIX}Night`
@@ -23,4 +23,9 @@ export function hourToSalutation(now: Date | Ref<Date> = useNow()): String {
 	}
 
 	return `${TRANSLATION_KEY_PREFIX}Night`
+}
+
+export function useDateTimeSalutation() {
+	const now = useNow()
+	return computed(() => hourToSalutation(now.value))
 }
