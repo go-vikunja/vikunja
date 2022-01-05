@@ -12985,10 +12985,10 @@ vscode-vue-languageservice@0.30.2:
     vscode-pug-languageservice "0.30.2"
     vscode-typescript-languageservice "0.30.2"
 
-vue-advanced-cropper@2.7.0:
-  version "2.7.0"
-  resolved "https://registry.yarnpkg.com/vue-advanced-cropper/-/vue-advanced-cropper-2.7.0.tgz#37495e450af17ebd6076819737b8d5e1142a5591"
-  integrity sha512-rXzUCCdSQswZ5b/w2qyDSb9Bce8xD+vw7RtOreVnbz+dV1AVMFHcVDHxrkeNaO6LTBcgG/agnjZgnmB3oN2vJg==
+vue-advanced-cropper@2.7.1:
+  version "2.7.1"
+  resolved "https://registry.yarnpkg.com/vue-advanced-cropper/-/vue-advanced-cropper-2.7.1.tgz#1706a6c72f317807487145b142dade8c7aaa4569"
+  integrity sha512-L8ynZenoWBpseIysaMnxXf9K/JbCcEgm1lraIca2D960h0APdZnfmteQgkEkNx16zyW8Dm/yzdlw/8LQmDCbcA==
   dependencies:
     classnames "^2.2.6"
     debounce "^1.2.0"
