@@ -21,7 +21,7 @@
     "@kyvg/vue3-notification": "2.3.4",
     "@sentry/tracing": "6.16.1",
     "@sentry/vue": "6.16.1",
-    "@types/is-touch-device": "^1.0.0",
+    "@types/is-touch-device": "1.0.0",
     "@vue/compat": "3.2.26",
     "@vueuse/core": "7.5.2",
     "@vueuse/router": "7.5.3",

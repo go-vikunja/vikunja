@@ -2869,7 +2869,7 @@
   dependencies:
     "@types/node" "*"
 
-"@types/is-touch-device@^1.0.0":
+"@types/is-touch-device@1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@types/is-touch-device/-/is-touch-device-1.0.0.tgz#c835c4c220a4e5635f4895b6223630dcd429b49c"
   integrity sha512-/rErV0NuroAR9EZF1xK0TrihQ/7BbVckGfSr/suq/E4tJQLr4TrADR0qAUpDs/hxtl1NiP0V/ho+fSA/5EIO9Q==
