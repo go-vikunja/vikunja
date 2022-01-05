@@ -31,7 +31,7 @@ describe('Lists', () => {
 		cy.url()
 			.should('contain', '/namespaces/1/list')
 		cy.get('.card-header-title')
-			.contains('Create a new list')
+			.contains('New list')
 		cy.get('input.input')
 			.type('New List')
 		cy.get('.button')
