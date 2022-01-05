@@ -76,7 +76,6 @@ app.component('card', Card)
 // Mixins
 import {getNamespaceTitle} from './helpers/getNamespaceTitle'
 import {getListTitle} from './helpers/getListTitle'
-import {colorIsDark} from './helpers/color/colorIsDark'
 import {setTitle} from './helpers/setTitle'
 
 app.mixin({
@@ -87,7 +86,6 @@ app.mixin({
 		formatDateShort: formatDateShort,
 		getNamespaceTitle,
 		getListTitle,
-		colorIsDark,
 		setTitle,
 	},
 })

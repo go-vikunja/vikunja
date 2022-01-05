@@ -183,6 +183,8 @@ import {mapState} from 'vuex'
 import Rights from '../../models/constants/rights.json'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 
+import {colorIsDark} from '@/helpers/color/colorIsDark'
+
 export default {
 	name: 'GanttChart',
 	components: {
@@ -252,6 +254,7 @@ export default {
 		canWrite: (state) => state.currentList.maxRight > Rights.READ,
 	}),
 	methods: {
+		colorIsDark,
 		buildTheGanttChart() {
 			this.setDates()
 			this.prepareGanttDays()
