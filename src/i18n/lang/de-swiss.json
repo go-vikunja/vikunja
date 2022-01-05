@@ -7,7 +7,7 @@
     "lastViewed": "Zletscht ahglueget",
     "list": {
       "newText": "Du chasch e Liste für dini neue Uufgabe erstelle:",
-      "new": "Neui Liste erstelle",
+      "new": "New list",
       "importText": "Oder importier dini Liste und Uufgabe us anderne Dienst nach Vikunja:",
       "import": "Dini Date in Vikunja importiere"
     }
@@ -157,7 +157,7 @@
     "searchSelect": "Druck uf Enter um die Liste uuszwähle",
     "shared": "Teilti Liste",
     "create": {
-      "header": "Neui Liste erstelle",
+      "header": "New list",
       "titlePlaceholder": "Listetitl da ahgeh…",
       "addTitleRequired": "Bitte gib en Titl ah.",
       "createdSuccess": "Liste erfolgriich erstellt.",
@@ -315,7 +315,7 @@
     "namespaces": "Namensrüüm",
     "search": "Schriib, um nachemne Namensruum z'sueche…",
     "create": {
-      "title": "Neue Namensruum erstelle",
+      "title": "New namespace",
       "titleRequired": "Bitte gib en Titl ah.",
       "explanation": "En Namensruum isch e Gruppe vo Liste, wo du chasch zur Organisation benutze. Tatsächlich sind alli Listene emne Namensruum zuegwise.",
       "tooltip": "Was isch en Namensruum?",
@@ -383,7 +383,7 @@
       "reminderRange": "Errinnerigs Datumbereich"
     },
     "create": {
-      "title": "Neue gspeicherete Filter erstelle",
+      "title": "New Saved Filter",
       "description": "En gspeicherete Filter isch e virtuelli Liste, welche vomene Satz a Filter zemmegsetzt wird, sobald me uf sie zuegriift. Wenn sie mal erstellt worde isch, erhaltet si ihren eigene Namensruum.",
       "action": "Neue gspeicherete Filter erstelle"
     },

@@ -7,7 +7,7 @@
     "lastViewed": "Naposledy zobrazeno",
     "list": {
       "newText": "Můžete vytvořit nový seznam pro své nové úkoly:",
-      "new": "Vytvořit nový seznam",
+      "new": "New list",
       "importText": "Nebo importujte své seznamy a úkoly z jiných služeb:",
       "import": "Importujte svá data do Vikunja"
     }
@@ -157,7 +157,7 @@
     "searchSelect": "Klikněte nebo stiskněte Enter pro výběr tohoto seznamu",
     "shared": "Sdílené seznamy",
     "create": {
-      "header": "Vytvořit nový seznam",
+      "header": "New list",
       "titlePlaceholder": "Název seznamu přijde sem…",
       "addTitleRequired": "Uveďte prosím název.",
       "createdSuccess": "Seznam byl úspěšně vytvořen.",
@@ -315,7 +315,7 @@
     "namespaces": "Prostory",
     "search": "Začni psát pro vyhledání prostoru…",
     "create": {
-      "title": "Vytvořit nový prostor",
+      "title": "New namespace",
       "titleRequired": "Uveďte prosím název.",
       "explanation": "Prostor je kolekce seznamů, které můžete sdílet a používat k organizaci seznamů. Každý seznam patří do nějakého prostoru.",
       "tooltip": "Co je prostor?",
@@ -383,7 +383,7 @@
       "reminderRange": "Připomínky - období"
     },
     "create": {
-      "title": "Vytvořit uložený filtr",
+      "title": "New Saved Filter",
       "description": "Uložený filtr je virtuální seznam, který se počítá ze sady filtrů pokaždé, když je přístupný. Jakmile bude vytvořen, objeví se ve speciálním prostoru.",
       "action": "Vytvořit uložený filtr"
     },

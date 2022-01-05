@@ -7,7 +7,7 @@
     "lastViewed": "Zuletzt angesehen",
     "list": {
       "newText": "Du kannst eine neue Liste für deine neuen Aufgaben erstellen:",
-      "new": "Eine neue Liste erstellen",
+      "new": "New list",
       "importText": "Oder importiere deine Listen und Aufgaben aus anderen Diensten in Vikunja:",
       "import": "Deine Daten in Vikunja importieren"
     }
@@ -157,7 +157,7 @@
     "searchSelect": "Klicke auf oder drücke die Eingabetaste, um diese Liste auszuwählen",
     "shared": "Geteilte Listen",
     "create": {
-      "header": "Eine neue Liste erstellen",
+      "header": "New list",
       "titlePlaceholder": "Der Titel der Liste steht hier…",
       "addTitleRequired": "Bitte gebe einen Namen an.",
       "createdSuccess": "Die Liste wurde erfolgreich erstellt.",
@@ -315,7 +315,7 @@
     "namespaces": "Namespaces",
     "search": "Beginne zu schreiben, um einen Namespace zu suchen…",
     "create": {
-      "title": "Einen neuen Namespace erstellen",
+      "title": "New namespace",
       "titleRequired": "Bitte gebe einen Titel an.",
       "explanation": "Ein Namespace ist eine Sammlung von Listen, die du teilen und zur Organisation verwenden kannst. Jede Liste zu einem Namespace.",
       "tooltip": "Was ist ein Namespace?",
@@ -383,7 +383,7 @@
       "reminderRange": "Erinnerungs-Datumsbereich"
     },
     "create": {
-      "title": "Einen gespeicherten Filter erstellen",
+      "title": "New Saved Filter",
       "description": "Ein gespeicherter Filter ist eine virtuelle Liste, die bei jedem Zugriff aus einem Satz von Filtern errechnet wird. Einmal erstellt, erscheint diese in einem speziellen Namespace.",
       "action": "Neuen gespeicherten Filter erstellen"
     },
