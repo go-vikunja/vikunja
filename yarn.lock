@@ -7077,11 +7077,6 @@ get-amd-module-type@^3.0.0:
     ast-module-types "^2.3.2"
     node-source-walk "^4.0.0"
 
-get-caller-file@^1.0.2:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/get-caller-file/-/get-caller-file-1.0.3.tgz#f978fa4c90d1dfe7ff2d6beda2a515e713bdcf4a"
-  integrity sha512-3t6rVToeoZfYSGd8YoLFR2DJkiQrIiUrGcjvFX2mDw3bn6k2OtwHN0TNCLbBO+w8qTvimhDkv+LSscbJY1vE6w==
-
 get-caller-file@^2.0.1, get-caller-file@^2.0.5:
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/get-caller-file/-/get-caller-file-2.0.5.tgz#4f94412a82db32f36e3b0b9741f8a97feb031f7e"
@@ -9205,14 +9200,6 @@ mkdirp@^1.0.3:
   resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-1.0.4.tgz#3eb5ed62622756d79a5f0e2a221dfebad75c2f7e"
   integrity sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==
 
-mock-require@^3.0.3:
-  version "3.0.3"
-  resolved "https://registry.yarnpkg.com/mock-require/-/mock-require-3.0.3.tgz#ccd544d9eae81dd576b3f219f69ec867318a1946"
-  integrity sha512-lLzfLHcyc10MKQnNUCv7dMcoY/2Qxd6wJfbqCcVk3LDb8An4hF6ohk5AztrvgKhJCqj36uyzi/p5se+tvyD+Wg==
-  dependencies:
-    get-caller-file "^1.0.2"
-    normalize-path "^2.1.1"
-
 module-definition@^3.3.1:
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/module-definition/-/module-definition-3.3.1.tgz#fedef71667713e36988b93d0626a4fe7b35aebfc"
@@ -9336,10 +9323,10 @@ nested-error-stacks@^2.0.0, nested-error-stacks@^2.1.0:
   resolved "https://registry.yarnpkg.com/nested-error-stacks/-/nested-error-stacks-2.1.0.tgz#0fbdcf3e13fe4994781280524f8b96b0cdff9c61"
   integrity sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==
 
-netlify-cli@8.6.6:
-  version "8.6.6"
-  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.6.6.tgz#30a95ad97eaaa3a86a60d1d6d7ac83cbed5ecde4"
-  integrity sha512-5Ack9nRLSGdfYX44GdSyHQeD7DSI6ezZWTZTBs+n0lb/T4R45AZjx5kdToHR/pZ+EJL3p2zRDoX8fPhpMeSgig==
+netlify-cli@8.6.8:
+  version "8.6.8"
+  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.6.8.tgz#274736cb759e9e7a26464736493db3ee90ce09a9"
+  integrity sha512-wAx87ERFHQO0yZtPHYVG4HdBY5ee2hgV/kKbzLDEX1Z3r23KAwE7LUEJNxgzJRL529avQycApKEj6VL1Z9Vmlw==
   dependencies:
     "@netlify/build" "^26.1.0"
     "@netlify/config" "^17.0.3"
@@ -9377,7 +9364,6 @@ netlify-cli@8.6.6:
     execa "^5.0.0"
     express "^4.17.1"
     express-logging "^1.1.1"
-    filter-obj "^2.0.1"
     find-up "^5.0.0"
     flush-write-stream "^2.0.0"
     folder-walker "^3.2.0"
@@ -9405,10 +9391,8 @@ netlify-cli@8.6.6:
     lodash "^4.17.20"
     log-symbols "^4.0.0"
     log-update "^5.0.0"
-    make-dir "^3.0.0"
     memoize-one "^6.0.0"
     minimist "^1.2.5"
-    mock-require "^3.0.3"
     multiparty "^4.2.1"
     netlify "^10.1.1"
     netlify-headers-parser "^6.0.0"
@@ -9417,7 +9401,6 @@ netlify-cli@8.6.6:
     node-fetch "^2.6.0"
     node-version-alias "^1.0.1"
     omit.js "^2.0.2"
-    open "^7.0.0"
     ora "^5.0.0"
     p-event "^4.2.0"
     p-filter "^2.1.0"
@@ -9426,14 +9409,11 @@ netlify-cli@8.6.6:
     parallel-transform "^1.2.0"
     parse-github-url "^1.0.2"
     parse-gitignore "^1.0.1"
-    path-exists "^4.0.0"
     path-key "^3.1.1"
-    path-type "^4.0.0"
     prettyjson "^1.2.1"
     pump "^3.0.0"
     raw-body "^2.4.1"
     read-pkg-up "^7.0.1"
-    resolve "^1.12.0"
     semver "^7.3.5"
     source-map-support "^0.5.19"
     static-server "^2.2.1"
@@ -9798,7 +9778,7 @@ onetime@^5.1.0, onetime@^5.1.2:
   dependencies:
     mimic-fn "^2.1.0"
 
-open@^7.0.0, open@^7.0.3, open@^7.4.2:
+open@^7.0.3, open@^7.4.2:
   version "7.4.2"
   resolved "https://registry.yarnpkg.com/open/-/open-7.4.2.tgz#b8147e26dcf3e426316c730089fd71edd29c2321"
   integrity sha512-MVHddDVweXZF3awtlAS+6pgKLlm/JgxZ90+/NBurBoQctVOOB/zDdVjcyPzQ+0laDGbsWgrRkflI65sQeOgT9Q==
@@ -11088,7 +11068,7 @@ resolve-url@^0.2.1:
   resolved "https://registry.yarnpkg.com/resolve-url/-/resolve-url-0.2.1.tgz#2c637fe77c893afd2a663fe21aa9080068e2052a"
   integrity sha1-LGN/53yJOv0qZj/iGqkIAGjiBSo=
 
-resolve@^1.10.0, resolve@^1.12.0, resolve@^1.14.2, resolve@^1.15.1, resolve@^1.17.0, resolve@^1.19.0, resolve@^1.20.0:
+resolve@^1.10.0, resolve@^1.14.2, resolve@^1.15.1, resolve@^1.17.0, resolve@^1.19.0, resolve@^1.20.0:
   version "1.20.0"
   resolved "https://registry.yarnpkg.com/resolve/-/resolve-1.20.0.tgz#629a013fb3f70755d6f0b7935cc1c2c5378b1975"
   integrity sha512-wENBPt4ySzg4ybFQW2TT1zMQucPK95HSh/nq2CFTZVOGut2+pQvSsgtda4d26YrYcr067wjbmzOG8byDPBX63A==
