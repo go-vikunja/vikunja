@@ -38,7 +38,7 @@
     "is-touch-device": "1.0.1",
     "lodash.clonedeep": "4.5.0",
     "lodash.debounce": "4.0.8",
-    "marked": "4.0.8",
+    "marked": "4.0.9",
     "register-service-worker": "1.7.2",
     "snake-case": "3.0.4",
     "ufo": "0.7.9",
