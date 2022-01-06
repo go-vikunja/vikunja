@@ -7170,16 +7170,15 @@ getpass@^0.1.1:
   dependencies:
     assert-plus "^1.0.0"
 
-gh-release-fetch@^2.0.0:
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/gh-release-fetch/-/gh-release-fetch-2.0.4.tgz#e242c5b4c365cbca7100bfbe9b71017f6603e8b0"
-  integrity sha512-PALrCv6MuxEKsj5Oz9G81iU6pxvoxgpSnwbtIqAkQ6m6fioFicNznZUl/aOW92rK2k8cuaM48Rd59G7eV2QsTA==
+gh-release-fetch@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/gh-release-fetch/-/gh-release-fetch-3.0.0.tgz#53cf970b3c063819abab9a329303ae09caebe5cf"
+  integrity sha512-P7Anj35Y4kI3RBoQ+M8Z2U9ittORYyRNLb55+5yGGXmm3Mazgkq4MPqsHH9S7+pNWFpE2BtAWeF6twzz6JY3Bw==
   dependencies:
     "@types/download" "^8.0.0"
     "@types/node-fetch" "^2.1.6"
     "@types/semver" "^7.0.0"
     download "^8.0.0"
-    make-dir "^3.1.0"
     node-fetch "^2.3.0"
     semver "^7.0.0"
 
@@ -9323,10 +9322,10 @@ nested-error-stacks@^2.0.0, nested-error-stacks@^2.1.0:
   resolved "https://registry.yarnpkg.com/nested-error-stacks/-/nested-error-stacks-2.1.0.tgz#0fbdcf3e13fe4994781280524f8b96b0cdff9c61"
   integrity sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==
 
-netlify-cli@8.6.8:
-  version "8.6.8"
-  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.6.8.tgz#274736cb759e9e7a26464736493db3ee90ce09a9"
-  integrity sha512-wAx87ERFHQO0yZtPHYVG4HdBY5ee2hgV/kKbzLDEX1Z3r23KAwE7LUEJNxgzJRL529avQycApKEj6VL1Z9Vmlw==
+netlify-cli@8.6.9:
+  version "8.6.9"
+  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.6.9.tgz#aaf27f97a0fd54f6ab2c6421ee7e78687903cf7f"
+  integrity sha512-fKBHCibWWZew+rHVvWnaHUUMFMd77iFXPo0sUEMGmCzx3xpEk76iupx+YbgWMK0vY67rew0q26kqAkXKvIfCdg==
   dependencies:
     "@netlify/build" "^26.1.0"
     "@netlify/config" "^17.0.3"
@@ -9370,7 +9369,7 @@ netlify-cli@8.6.8:
     from2-array "^0.0.4"
     fuzzy "^0.1.3"
     get-port "^5.1.0"
-    gh-release-fetch "^2.0.0"
+    gh-release-fetch "^3.0.0"
     git-repo-info "^2.1.0"
     gitconfiglocal "^2.1.0"
     hasbin "^1.2.3"
