@@ -2050,10 +2050,10 @@
     validate-npm-package-name "^3.0.0"
     yargs "^15.3.0"
 
-"@netlify/config@^17.0.2":
-  version "17.0.2"
-  resolved "https://registry.yarnpkg.com/@netlify/config/-/config-17.0.2.tgz#b4bf7e823d04857a41f29b9421a3721ccd24be62"
-  integrity sha512-Wy/Z0i4f1MSZG0Db9MwV2Yoz0AYh1Z3A3dYitJQVIWZCARO9njh0pVw6V2F7PogASiaTb1xrBaXHIFE0almQ1g==
+"@netlify/config@^17.0.3":
+  version "17.0.3"
+  resolved "https://registry.yarnpkg.com/@netlify/config/-/config-17.0.3.tgz#49d6c8076aead0a938f906fb8e538b5bfdfacf48"
+  integrity sha512-u1x//PEqKvsExPQtRMG4x786mKcAV6ykwqiN102szLlr5Dojb7X5y+6vb9wi4JJ/KNiVURP7Wna/sMxGvFi/Tw==
   dependencies:
     chalk "^4.1.2"
     cron-parser "^4.1.0"
@@ -2069,7 +2069,7 @@
     js-yaml "^4.0.0"
     make-dir "^3.1.0"
     map-obj "^4.0.0"
-    netlify "^10.1.0"
+    netlify "^10.1.1"
     netlify-headers-parser "^6.0.0"
     netlify-redirect-parser "^13.0.0"
     omit.js "^2.0.2"
@@ -2202,11 +2202,6 @@
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/@netlify/open-api/-/open-api-2.6.0.tgz#128c8d66ac8798e9f60824ca9857735c368090b6"
   integrity sha512-VfYLiEXJIVIn25wrwNB/O+QkM3xPgCVcGSKZxM/i+oPCOgBK+4PEieRtfqhF4vXXwwOi68VaRWU7P3aRnb3nIA==
-
-"@netlify/open-api@^2.7.0":
-  version "2.7.0"
-  resolved "https://registry.yarnpkg.com/@netlify/open-api/-/open-api-2.7.0.tgz#d8147396a0c41b5e9de1f52889004ad2a1d59163"
-  integrity sha512-WzedpLK6XFs67naFDX1K3QWk3GKlUQVCuIlMuXb0dWvJvfB71R/Njk1bq0FqVllIWw2RRCQMkCIywEABbnB2Yg==
 
 "@netlify/open-api@^2.8.0":
   version "2.8.0"
@@ -9341,13 +9336,13 @@ nested-error-stacks@^2.0.0, nested-error-stacks@^2.1.0:
   resolved "https://registry.yarnpkg.com/nested-error-stacks/-/nested-error-stacks-2.1.0.tgz#0fbdcf3e13fe4994781280524f8b96b0cdff9c61"
   integrity sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==
 
-netlify-cli@8.6.5:
-  version "8.6.5"
-  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.6.5.tgz#3c1e4a91a2ae104a0ca55e2d70bcbdfbeff1a5d0"
-  integrity sha512-ok4f10W8jLPNSn0vSXd+YIrhjhUX0/sNa97L8B1umNlhfFueIDmbpRuUQyN6zYyOMv3Xkl/QS6g+Rlamu9rWcA==
+netlify-cli@8.6.6:
+  version "8.6.6"
+  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.6.6.tgz#30a95ad97eaaa3a86a60d1d6d7ac83cbed5ecde4"
+  integrity sha512-5Ack9nRLSGdfYX44GdSyHQeD7DSI6ezZWTZTBs+n0lb/T4R45AZjx5kdToHR/pZ+EJL3p2zRDoX8fPhpMeSgig==
   dependencies:
     "@netlify/build" "^26.1.0"
-    "@netlify/config" "^17.0.2"
+    "@netlify/config" "^17.0.3"
     "@netlify/framework-info" "^7.0.0"
     "@netlify/local-functions-proxy" "^1.1.1"
     "@netlify/plugin-edge-handlers" "^3.0.0"
@@ -9489,19 +9484,6 @@ netlify@^10.0.0:
   integrity sha512-8oLcxWZPbzJy9naA2oH86NyaIFmDuRyQONjPAD4hn6JmnZPq+s6Ukh//qjWXNXE/9H8l8J/vDzY4ehHxYfP32w==
   dependencies:
     "@netlify/open-api" "^2.6.0"
-    lodash.camelcase "^4.3.0"
-    micro-api-client "^3.3.0"
-    node-fetch "^2.6.1"
-    omit.js "^2.0.2"
-    p-wait-for "^3.2.0"
-    qs "^6.9.6"
-
-netlify@^10.1.0:
-  version "10.1.0"
-  resolved "https://registry.yarnpkg.com/netlify/-/netlify-10.1.0.tgz#fb7dc14ab96e382f013f50df993d7e4af0353364"
-  integrity sha512-c6ljxmQKc6CHXVlkAvxQc+YrI7vqnm2rHocucGflycRIm981sWkEM/GzMirF4ykgPAeMGltLBhFdjOO7OTI2Hw==
-  dependencies:
-    "@netlify/open-api" "^2.7.0"
     lodash.camelcase "^4.3.0"
     micro-api-client "^3.3.0"
     node-fetch "^2.6.1"
