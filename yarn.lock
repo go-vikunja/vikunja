@@ -12249,10 +12249,10 @@ tinypool@^0.1.1:
   resolved "https://registry.yarnpkg.com/tinypool/-/tinypool-0.1.1.tgz#99eaf29d030feeca2da6c1d6b33f90fc18093bc7"
   integrity sha512-sW2fQZ2BRb/GX5v55NkHiTrbMLx0eX0xNpP+VGhOe2f7Oo04+LeClDyM19zCE/WCy7jJ8kzIJ0Ojrxj3UhN9Sg==
 
-tinyspy@^0.2.7:
-  version "0.2.7"
-  resolved "https://registry.yarnpkg.com/tinyspy/-/tinyspy-0.2.7.tgz#265b5deab32c89b2fa1986939869ef74b160c0f5"
-  integrity sha512-AaNITSED8/2j2/nSgPeQZW2nNhdTxNJ7XwcdBezI7MtPS2C+pJ1HjcHc/qfDhohUhQvODITdxzWH9u+Qs+7yFQ==
+tinyspy@^0.2.8:
+  version "0.2.8"
+  resolved "https://registry.yarnpkg.com/tinyspy/-/tinyspy-0.2.8.tgz#b821b3d43a7d5ae47bc575a5d8627e84fdf4e809"
+  integrity sha512-4VXqQzzh9gC5uOLk77cLr9R3wqJq07xJlgM9IUdCNJCet139r+046ETKbU1x7mGs7B0k7eopyH5U6yflbBXNyA==
 
 tmp-promise@^3.0.2:
   version "3.0.3"
@@ -12835,17 +12835,17 @@ vite@2.7.10, vite@>=2.7.10:
   optionalDependencies:
     fsevents "~2.3.2"
 
-vitest@0.0.136:
-  version "0.0.136"
-  resolved "https://registry.yarnpkg.com/vitest/-/vitest-0.0.136.tgz#8bd2881fbc60ba51c07d73ff86a47f8af812e1a1"
-  integrity sha512-l/FByRw+GNIckkAKMUib8HF5K+U3vmlrBOIl2ugt2FtMPvxSCKmRrbZWPmo3bbMzK1dekqSLILFp0v8WjNS5Lg==
+vitest@0.0.139:
+  version "0.0.139"
+  resolved "https://registry.yarnpkg.com/vitest/-/vitest-0.0.139.tgz#5a0a29181be27e27fe9582e12d41685c0d4095fe"
+  integrity sha512-5AXMaEOJXgQpobgXkzBPGP8o4NpAhT2yczeRD1V94U0VWGxRObI1zjqtxBPEtgda8Q4rQKw0SVlHCR0P76h9QA==
   dependencies:
     "@types/chai" "^4.3.0"
     "@types/chai-subset" "^1.3.3"
     chai "^4.3.4"
     local-pkg "^0.4.1"
     tinypool "^0.1.1"
-    tinyspy "^0.2.7"
+    tinyspy "^0.2.8"
     vite ">=2.7.10"
 
 void-elements@^3.1.0:
