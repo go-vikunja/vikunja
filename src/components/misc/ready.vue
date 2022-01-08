@@ -52,6 +52,12 @@ import NoAuthWrapper from '@/components/misc/no-auth-wrapper.vue'
 import {ERROR_NO_API_URL} from '@/helpers/checkAndSetApiUrl'
 import {useOnline} from '@/composables/useOnline'
 
+import {useRouter, useRoute} from 'vue-router'
+import {checkAuth} from '@/router'
+
+const router = useRouter()
+const route = useRoute()
+
 const store = useStore()
 
 const ready = computed(() => store.state.vikunjaReady)
@@ -63,7 +69,12 @@ const showLoading = computed(() => !ready.value && error.value === '')
 async function load() {
 	try {
 		await store.dispatch('loadApp')
-	} catch(e: any) {
+		const redirectTo = checkAuth(route)
+		if (typeof redirectTo !== 'undefined') {
+			await router.push(redirectTo)
+		}
+		store.commit('vikunjaReady', true)
+	} catch (e: any) {
 		error.value = e
 	}
 }
