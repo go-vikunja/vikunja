@@ -165,7 +165,7 @@ Check that everything is on the same network:
 ![2](https://user-images.githubusercontent.com/76781738/147372128-7706e87d-a516-4d77-967c-9d77380edfb7.png)
 
 So, in this case 
-`vikunja_api_1` is at 192.168.0.23
+* `vikunja_api_1` is at 192.168.0.23
 `vikunja_frontend_1` is at 192.168.0.22
 `nginx proxy manager` is at  192.168.0.2
 
