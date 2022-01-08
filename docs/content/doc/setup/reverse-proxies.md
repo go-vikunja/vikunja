@@ -174,7 +174,7 @@ Just try to find them following the above command.
 
 Now let's go to npm:
 
-Click to Add a Proxy Host
+Click to Add a Proxy Host:
 
 ![1](https://user-images.githubusercontent.com/76781738/147372191-c4929564-7d68-4445-b267-e32cadb6aa8b.png)
 
