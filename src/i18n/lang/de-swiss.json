@@ -545,7 +545,7 @@
       "chooseStartDate": "Druck dah, um es Startdatum z'setze",
       "chooseEndDate": "Druck da, um es Enddatum z'setze",
       "move": "Schieb die Uufgab in e anderi Liste",
-      "done": "Fertig!",
+      "done": "Mark task done!",
       "undone": "Als unerledigt markierä",
       "created": "Erstellt am {0} vo {1}",
       "updated": "{0} g'updatet",
@@ -781,7 +781,7 @@
     "then": "dann",
     "task": {
       "title": "Uufgabesiite",
-      "done": "Uufgab als erledigt markiere",
+      "done": "Done",
       "assign": "Benutzer:in zuweisen",
       "labels": "Labels ennere Uufgab hinzuefüege",
       "dueDate": "S'Fälligkeitsdatum für die Uufgab ändere",

@@ -545,7 +545,7 @@
       "chooseStartDate": "Klicke hier, um ein Startdatum zu setzen",
       "chooseEndDate": "Klicke hier, um ein Enddatum zu setzen",
       "move": "Aufgabe in eine andere Liste verschieben",
-      "done": "Fertig!",
+      "done": "Mark task done!",
       "undone": "Als nicht erledigt markieren",
       "created": "Erstellt {0} von {1}",
       "updated": "Aktualisiert {0}",
@@ -781,7 +781,7 @@
     "then": "dann",
     "task": {
       "title": "Aufgabenseite",
-      "done": "Eine Aufgabe als erledigt markieren",
+      "done": "Done",
       "assign": "Benutzer:in zuweisen",
       "labels": "Dieser Aufgabe ein Label hinzufügen",
       "dueDate": "Ändere das Fälligkeitsdatum dieser Aufgabe",

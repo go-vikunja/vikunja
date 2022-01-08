@@ -545,7 +545,7 @@
       "chooseStartDate": "Klikněte zde pro nastavení počátečního data",
       "chooseEndDate": "Klikněte zde pro nastavení data ukončení",
       "move": "Přesunout úkol do jiného seznamu",
-      "done": "Hotovo!",
+      "done": "Mark task done!",
       "undone": "Označit jako znovu otevřené",
       "created": "Vytvořeno {0} uživatelem {1}",
       "updated": "Aktualizováno {0}",
@@ -781,7 +781,7 @@
     "then": "potom",
     "task": {
       "title": "Stránka úkolů",
-      "done": "Označit úkol jako hotový",
+      "done": "Done",
       "assign": "Přiřadit uživateli",
       "labels": "Přidat štítky k tomuto úkolu",
       "dueDate": "Změnit termín tohoto úkolu",

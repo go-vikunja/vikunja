@@ -545,7 +545,7 @@
       "chooseStartDate": "Click here to set a start date",
       "chooseEndDate": "Click here to set an end date",
       "move": "Move task to a different list",
-      "done": "Done!",
+      "done": "Mark task done!",
       "undone": "Mark as undone",
       "created": "Created {0} by {1}",
       "updated": "Updated {0}",
@@ -781,7 +781,7 @@
     "then": "then",
     "task": {
       "title": "Task Page",
-      "done": "Mark a task as done",
+      "done": "Done",
       "assign": "Assign to a user",
       "labels": "Add labels to this task",
       "dueDate": "Change the due date of this task",

@@ -545,7 +545,7 @@
       "chooseStartDate": "Bấm vào đây để đặt ngày bắt đầu",
       "chooseEndDate": "Bấm vào đây để đặt ngày kết thúc",
       "move": "Di chuyển công việc sang một danh sách khác",
-      "done": "Xong!",
+      "done": "Mark task done!",
       "undone": "Đánh dấu Chưa xong",
       "created": "Đã tạo được {0} bởi {1}",
       "updated": "Đã cập nhật {0}",
@@ -781,7 +781,7 @@
     "then": "sau đó",
     "task": {
       "title": "Trang công việc",
-      "done": "Đánh dấu hoàn thành",
+      "done": "Done",
       "assign": "Chỉ định một người",
       "labels": "Thêm nhãn cho công việc này",
       "dueDate": "Thay đổi ngày hết hạn của công việc này",

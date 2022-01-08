@@ -545,7 +545,7 @@
       "chooseStartDate": "Clique ici pour fixer une date de début",
       "chooseEndDate": "Clique ici pour fixer une date de fin",
       "move": "Déplacer une tâche vers une autre liste",
-      "done": "Terminé !",
+      "done": "Mark task done!",
       "undone": "Marquer comme inachevé",
       "created": "Créé {0} par {1}",
       "updated": "Mis à jour {0}",
@@ -781,7 +781,7 @@
     "then": "puis",
     "task": {
       "title": "Page de tâche",
-      "done": "Marquer une tâche comme terminée",
+      "done": "Done",
       "assign": "Assign to a user",
       "labels": "Ajouter des étiquettes à cette tâche",
       "dueDate": "Modifier la date d’échéance de cette tâche",
