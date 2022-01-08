@@ -82,7 +82,7 @@ server {
 
 ## NGINX Proxy Manager (NPM)
 
-### 1. Editing the config file
+### Manually editing the config file
 
 1. Create a standard Proxy Host for the Vikunja Frontend within NPM and point it to the URL you plan to use. The next several steps will enable the Proxy Host to successfully navigate to the API (on port 3456).
 2. Verify that the page will pull up in your browser. (Do not bother trying to log in. It won't work. Trust me.)
