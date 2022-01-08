@@ -197,7 +197,7 @@ Fill the form:
 
 ![5](https://user-images.githubusercontent.com/76781738/147372484-1fc740ac-756a-4748-90a6-d5314d2d6325.png)
 
-Click the cog
+Click the cog:
 
 ![6](https://user-images.githubusercontent.com/76781738/147372297-cfde6ffd-c81e-487a-99f2-7a539a9b486a.png)
 
