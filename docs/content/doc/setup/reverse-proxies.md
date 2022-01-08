@@ -162,7 +162,7 @@ Check that everything is on the same network:
 
 `docker ps -q | xargs -n 1 docker inspect --format '{{ .Name }} {{range .NetworkSettings.Networks}} {{.IPAddress}}{{end}}' | sed 's#^/##';`
 
-![2](docs/content/doc/setup/2.png)
+![2](doc/setup/2.png)
 
 So, in this case 
 * `vikunja_api_1` is at 192.168.0.23
