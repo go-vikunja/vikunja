@@ -158,7 +158,7 @@ To assign the containers execute
 
 You don't have to assign the DB container, but be careful not to remove the `vikunja_default` network.
 
-Run a command to check that everything is on the same network 
+Check that everything is on the same network:
 
 `docker ps -q | xargs -n 1 docker inspect --format '{{ .Name }} {{range .NetworkSettings.Networks}} {{.IPAddress}}{{end}}' | sed 's#^/##';`
 
