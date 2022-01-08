@@ -177,7 +177,7 @@ Click to Add a Proxy Host
 
 ![1](https://user-images.githubusercontent.com/76781738/147372191-c4929564-7d68-4445-b267-e32cadb6aa8b.png)
 
-Then fill in the form 
+Then fill in the form:
 
 - Your domain or subdomain of choice
 - The vikunja frontend IP address as found before, alternatively you could assign the hostname of the container `vikunja_frontend_1`
