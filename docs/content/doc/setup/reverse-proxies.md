@@ -166,7 +166,7 @@ Check that everything is on the same network:
 
 So, in this case 
 * `vikunja_api_1` is at 192.168.0.23
-`vikunja_frontend_1` is at 192.168.0.22
+* `vikunja_frontend_1` is at 192.168.0.22
 `nginx proxy manager` is at  192.168.0.2
 
 Just make sure to note that these IP addresses will be different on your system just try to find them following the above command 
