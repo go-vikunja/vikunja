@@ -348,6 +348,10 @@ $editor-border-color: #ddd;
 		color: var(--grey-400) !important;
 		font-style: italic;
 	}
+	
+	&-cursor {
+		border-color: var(--grey-700);
+	}
 }
 
 .editor-preview {
