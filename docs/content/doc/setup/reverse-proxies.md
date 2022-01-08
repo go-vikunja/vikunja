@@ -145,7 +145,7 @@ If you have ports exposed in the yaml you don't have to.
 
 You can find your NPM instance id by running `docker ps`:
 
-![2022-01-06_13-47](https://user-images.githubusercontent.com/76781738/148378509-e56829c9-59d6-4ad5-af13-e94412c2a18e.png)
+![docker ps](docs/content/doc/setup/8.png)
 
 and then run `docker inspect -f "{{json .NetworkSettings.Networks  }}" $INSTANCE_ID` to find the network name.
 
@@ -162,7 +162,7 @@ Check that everything is on the same network:
 
 `docker ps -q | xargs -n 1 docker inspect --format '{{ .Name }} {{range .NetworkSettings.Networks}} {{.IPAddress}}{{end}}' | sed 's#^/##';`
 
-![2](https://user-images.githubusercontent.com/76781738/147372128-7706e87d-a516-4d77-967c-9d77380edfb7.png)
+![2](docs/content/doc/setup/2.png)
 
 So, in this case 
 * `vikunja_api_1` is at 192.168.0.23
@@ -176,7 +176,7 @@ Now let's go to npm:
 
 Click to Add a Proxy Host:
 
-![1](https://user-images.githubusercontent.com/76781738/147372191-c4929564-7d68-4445-b267-e32cadb6aa8b.png)
+![1](docs/content/doc/setup/1.png)
 
 Then fill in the form:
 
@@ -184,11 +184,11 @@ Then fill in the form:
 - The vikunja frontend IP address as found before, alternatively you could assign the hostname of the container `vikunja_frontend_1`
 - At port 80
 
-![3](https://user-images.githubusercontent.com/76781738/147372236-e13bf3eb-14c8-4616-ac0a-bfe72a7cd160.png)
+![3](docs/content/doc/setup/3.png)
 
 Then move to the next tab Custom Locations and add a new location:
 
-![4](https://user-images.githubusercontent.com/76781738/147372259-eee1392a-bd18-4a0b-8ff9-be6ca8feef84.png)
+![4](docs/content/doc/setup/4.png)
 
 Fill the form:
 
@@ -196,18 +196,18 @@ Fill the form:
 - The vikunja api address in the Forward IP, alternatively you could assign the hostname of the container `vikunja_api_1` 
 - At port 3456
 
-![5](https://user-images.githubusercontent.com/76781738/147372484-1fc740ac-756a-4748-90a6-d5314d2d6325.png)
+![5](docs/content/doc/setup/5.png)
 
 Click the cog:
 
-![6](https://user-images.githubusercontent.com/76781738/147372297-cfde6ffd-c81e-487a-99f2-7a539a9b486a.png)
+![6](docs/content/doc/setup/6.png)
 
 and add last line
 `client_max_body_size 20M;`
 
 Finally request a new SSL Certificate and Save your configuration!
 
-![7](https://user-images.githubusercontent.com/76781738/147372490-2411a3d8-73b2-40ce-8c15-5f66adc66257.png)
+![7](docs/content/doc/setup/7.png)
 
 
 ## Apache
