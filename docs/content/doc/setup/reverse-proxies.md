@@ -136,7 +136,8 @@ services:
     #  - 80:80
     restart: unless-stopped
 ```
-Create a docker-compose.yml file and run `docker-compose up -d`
+
+Create a `docker-compose.yml` file with the above content and run `docker-compose up -d`.
 
 After it has spun up the containers it assigns them automatically a network `vikunja_default`.
 For this setup to work you must assign the containers on the same network your NPM is.
