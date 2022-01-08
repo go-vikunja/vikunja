@@ -156,7 +156,7 @@ To assign the containers execute
 
 `docker network connect vikunja_frontend_1 npm_default `
 
-You don't have to assign the DB container, but be careful not to remove the `vikunja_default` network
+You don't have to assign the DB container, but be careful not to remove the `vikunja_default` network.
 
 Run a command to check that everything is on the same network 
 
