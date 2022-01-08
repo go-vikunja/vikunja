@@ -83,7 +83,7 @@
 			@click="$refs.files.click()"
 			class="mb-4"
 			icon="cloud-upload-alt"
-			type="secondary"
+			variant="secondary"
 			:shadow="false"
 		>
 			{{ $t('task.attachment.upload') }}

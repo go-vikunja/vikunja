@@ -1,3 +1,5 @@
+import {test, expect} from 'vitest'
+
 import {colorFromHex} from './colorFromHex'
 
 test('hex', () => {

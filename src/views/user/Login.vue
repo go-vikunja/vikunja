@@ -85,7 +85,7 @@
 				@click="redirectToProvider(p)"
 				v-for="(p, k) in openidConnect.providers"
 				:key="k"
-				type="secondary"
+				variant="secondary"
 				class="is-fullwidth mt-2"
 			>
 				{{ $t('user.auth.loginWith', {provider: p.name}) }}

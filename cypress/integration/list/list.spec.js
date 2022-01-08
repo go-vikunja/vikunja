@@ -31,7 +31,7 @@ describe('Lists', () => {
 		cy.url()
 			.should('contain', '/namespaces/1/list')
 		cy.get('.card-header-title')
-			.contains('Create a new list')
+			.contains('New list')
 		cy.get('input.input')
 			.type('New List')
 		cy.get('.button')
@@ -101,7 +101,7 @@ describe('Lists', () => {
 			.click()
 		cy.url()
 			.should('contain', '/settings/delete')
-		cy.get('.modal-mask .modal-container .modal-content .actions a.button')
+		cy.get('[data-cy="modalPrimary"]')
 			.contains('Do it')
 			.click()
 
@@ -392,7 +392,7 @@ describe('Lists', () => {
 			cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-menu .dropdown-item .field input.input')
 				.first()
 				.type(3)
-			cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-menu .dropdown-item .field a.button.is-primary')
+			cy.get('[data-cy="setBucketLimit"]')
 				.first()
 				.click()
 

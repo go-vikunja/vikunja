@@ -7,7 +7,7 @@ import {
 	LOADING,
 	LOADING_MODULE,
 	MENU_ACTIVE,
-	ONLINE, QUICK_ACTIONS_ACTIVE,
+	QUICK_ACTIONS_ACTIVE,
 } from './mutation-types'
 import config from './modules/config'
 import auth from './modules/auth'
@@ -36,7 +36,6 @@ export const store = createStore({
 	state: {
 		loading: false,
 		loadingModule: null,
-		online: true,
 		// This is used to highlight the current list in menu for all list related views
 		currentList: {id: 0},
 		background: '',
@@ -52,12 +51,6 @@ export const store = createStore({
 		},
 		[LOADING_MODULE](state, module) {
 			state.loadingModule = module
-		},
-		[ONLINE](state, online) {
-			if (import.meta.env.VITE_IS_ONLINE) {
-				console.log('Setting fake online state', import.meta.env.VITE_IS_ONLINE)
-			}
-			state.online = !!import.meta.env.VITE_IS_ONLINE || online
 		},
 		[CURRENT_LIST](state, currentList) {
 			// Server updates don't return the right. Therefore the right is reset after updating the list which is

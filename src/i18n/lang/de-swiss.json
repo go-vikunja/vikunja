@@ -7,7 +7,7 @@
     "lastViewed": "Zletscht ahglueget",
     "list": {
       "newText": "Du chasch e Liste für dini neue Uufgabe erstelle:",
-      "new": "Neui Liste erstelle",
+      "new": "New list",
       "importText": "Oder importier dini Liste und Uufgabe us anderne Dienst nach Vikunja:",
       "import": "Dini Date in Vikunja importiere"
     }
@@ -36,7 +36,7 @@
       "password": "Passwort",
       "passwordRepeat": "Gib dis Passwort nomal iih",
       "passwordPlaceholder": "z.B. •••••••••••",
-      "forgotPassword": "Forgot your password?",
+      "forgotPassword": "Passwort vergessen?",
       "resetPassword": "Setz diis Passwort zrugg",
       "resetPasswordAction": "Schick mir en Passwort zruggsetz Link",
       "resetPasswordSuccess": "Prüfe deinen Posteingang! Du solltest eine E-Mail mit Anweisungen zum Zurücksetzen deines Passworts erhalten haben.",
@@ -103,7 +103,7 @@
         "title": "Herr Der Elemente",
         "initials": "Initialä",
         "gravatar": "Gravatar",
-        "marble": "Marble",
+        "marble": "Murmel",
         "upload": "Ufeladä",
         "uploadAvatar": "Profiilbild ufeladä",
         "statusUpdateSuccess": "Avatar Zuestand erfolgriich aktualisiert!",
@@ -157,7 +157,7 @@
     "searchSelect": "Druck uf Enter um die Liste uuszwähle",
     "shared": "Teilti Liste",
     "create": {
-      "header": "Neui Liste erstelle",
+      "header": "New list",
       "titlePlaceholder": "Listetitl da ahgeh…",
       "addTitleRequired": "Bitte gib en Titl ah.",
       "createdSuccess": "Liste erfolgriich erstellt.",
@@ -315,7 +315,7 @@
     "namespaces": "Namensrüüm",
     "search": "Schriib, um nachemne Namensruum z'sueche…",
     "create": {
-      "title": "Neue Namensruum erstelle",
+      "title": "New namespace",
       "titleRequired": "Bitte gib en Titl ah.",
       "explanation": "En Namensruum isch e Gruppe vo Liste, wo du chasch zur Organisation benutze. Tatsächlich sind alli Listene emne Namensruum zuegwise.",
       "tooltip": "Was isch en Namensruum?",
@@ -374,7 +374,7 @@
       "includeNulls": "Uufgabe ohni Wert iihbezieh",
       "requireAll": "Alli Filter mend wahr sii, demits die Uufgab ahzeigt",
       "showDoneTasks": "Zeig die fertige Uufgabe",
-      "sortAlphabetically": "Sort Alphabetically",
+      "sortAlphabetically": "Alphabetisch sortieren",
       "enablePriority": "Filter nach Priorität aktiviere",
       "enablePercentDone": "Filter nach Prozent iihschalte",
       "dueDateRange": "Fälligkeitsberiich",
@@ -383,7 +383,7 @@
       "reminderRange": "Errinnerigs Datumbereich"
     },
     "create": {
-      "title": "Neue gspeicherete Filter erstelle",
+      "title": "New Saved Filter",
       "description": "En gspeicherete Filter isch e virtuelli Liste, welche vomene Satz a Filter zemmegsetzt wird, sobald me uf sie zuegriift. Wenn sie mal erstellt worde isch, erhaltet si ihren eigene Namensruum.",
       "action": "Neue gspeicherete Filter erstelle"
     },
@@ -475,8 +475,8 @@
     "download": "Herunterladen",
     "showMenu": "Menü anzeigen",
     "hideMenu": "Menü ausblenden",
-    "forExample": "For example:",
-    "welcomeBack": "Welcome Back!"
+    "forExample": "Zum Beispiel:",
+    "welcomeBack": "Willkommen zurück!"
   },
   "input": {
     "resetColor": "Farb zruggsetze",
@@ -726,8 +726,8 @@
       "dateCurrentYear": "nimmt das laufende Jahr",
       "dateNth": "nimmt de {day}ti vom jetzige Monet",
       "dateTime": "Kombiniere irgendeis vo dene Datumsformat mit \"{time}\" (oder {timePM}) um e Ziit z'setze.",
-      "repeats": "Repeating tasks",
-      "repeatsDescription": "To set a task as repeating in an interval, simply add '{suffix}' to the task text. The amount needs to be a number and can be omitted to use just the type (see examples)."
+      "repeats": "Wiederholende Aufgaben",
+      "repeatsDescription": "Um eine Aufgabe als Wiederholung in einem Intervall festzulegen, füge einfach '{suffix}' dem Aufgabentext hinzu. Der Betrag muss eine Zahl sein und kann weggelassen werden, um nur den Typ zu verwenden (siehe Beispiele)."
     }
   },
   "team": {
@@ -814,7 +814,7 @@
     "url": "Vikunja URL",
     "urlPlaceholder": "z.B. https://localhost:3456",
     "change": "ändere",
-    "use": "Using Vikunja installation at {0}",
+    "use": "Verwende die Vikunja-Installation unter „{0}“",
     "error": "Konnte keine Vikunja-Installation unter „{domain}“ finden oder verwenden. Bitte probiere eine andere Url.",
     "success": "Benutze d'Vikunja Installation uf \"{domain}\".",
     "urlRequired": "Eine Url ist erforderlich."

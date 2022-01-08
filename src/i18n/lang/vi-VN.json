@@ -7,7 +7,7 @@
     "lastViewed": "Xem gần đây",
     "list": {
       "newText": "Bạn có thể tạo một danh sách công việc mới cho mình:",
-      "new": "Tạo một danh sách mới",
+      "new": "New list",
       "importText": "Hoặc nhập danh sách và nhiệm vụ của bạn từ các dịch vụ khác vào Vikunja:",
       "import": "Nhập dữ liệu của bạn vào Vikunja"
     }
@@ -157,7 +157,7 @@
     "searchSelect": "Nhấp hoặc nhấn enter để chọn danh sách này",
     "shared": "Đang tham gia",
     "create": {
-      "header": "Tạo một danh sách mới",
+      "header": "New list",
       "titlePlaceholder": "Tên danh sách ở đây…",
       "addTitleRequired": "Hãy xác định một tên.",
       "createdSuccess": "Danh sách đã được tạo thành công.",
@@ -315,7 +315,7 @@
     "namespaces": "Góc làm việc",
     "search": "Gõ để tìm kiếm một góc làm việc…",
     "create": {
-      "title": "Tạo một góc làm việc mới",
+      "title": "New namespace",
       "titleRequired": "Hãy đặt một tiêu đề.",
       "explanation": "Góc làm việc là một tập hợp các danh sách mà bạn có thể chia sẻ và sử dụng để sắp xếp các danh sách của mình. Trên thực tế, mọi danh sách đều thuộc về một góc làm việc.",
       "tooltip": "Góc làm việc là gì?",
@@ -383,7 +383,7 @@
       "reminderRange": "Phạm vi Ngày nhắc nhở"
     },
     "create": {
-      "title": "Tạo một Bộ lọc sẵn",
+      "title": "New Saved Filter",
       "description": "Bộ lọc sẵn là một danh sách ảo được chọn từ một tập hợp các bộ lọc. Sau khi được tạo, nó sẽ xuất hiện trong một không gian làm việc đặc biệt.",
       "action": "Tạo thêm bộ lọc sẵn"
     },

@@ -15,7 +15,7 @@ describe('Namepaces', () => {
 
 	it('Should be all there', () => {
 		cy.visit('/namespaces')
-		cy.get('.namespace h1 span')
+		cy.get('[data-cy="namespace-title"]')
 			.should('contain', namespaces[0].title)
 	})
 
@@ -23,14 +23,14 @@ describe('Namepaces', () => {
 		const newNamespaceTitle = 'New Namespace'
 
 		cy.visit('/namespaces')
-		cy.get('a.button')
-			.contains('Create a new namespace')
+		cy.get('[data-cy="new-namespace"]')
+			.should('contain', 'New namespace')
 			.click()
 
 		cy.url()
 			.should('contain', '/namespaces/new')
 		cy.get('.card-header-title')
-			.should('contain', 'Create a new namespace')
+			.should('contain', 'New namespace')
 		cy.get('input.input')
 			.type(newNamespaceTitle)
 		cy.get('.button')
@@ -72,7 +72,7 @@ describe('Namepaces', () => {
 		cy.get('.namespace-container .menu.namespaces-lists')
 			.should('contain', newNamespaceName)
 			.should('not.contain', newNamespaces[0].title)
-		cy.get('.content.namespaces-list')
+		cy.get('[data-cy="namespaces-list"]')
 			.should('contain', newNamespaceName)
 			.should('not.contain', newNamespaces[0].title)
 	})
@@ -89,7 +89,7 @@ describe('Namepaces', () => {
 			.click()
 		cy.url()
 			.should('contain', '/settings/delete')
-		cy.get('.modal-mask .modal-container .modal-content .actions a.button')
+		cy.get('[data-cy="modalPrimary"]')
 			.contains('Do it')
 			.click()
 
@@ -116,30 +116,30 @@ describe('Namepaces', () => {
 
 		// Initial
 		cy.visit('/namespaces')
-		cy.get('.namespaces-list .namespace')
+		cy.get('.namespace')
 			.should('not.contain', 'Archived')
 
 		// Show archived
-		cy.get('.namespaces-list .fancycheckbox.show-archived-check label.check span')
+		cy.get('[data-cy="show-archived-check"] label.check span')
 			.should('be.visible')
 			.click()
-		cy.get('.namespaces-list .fancycheckbox.show-archived-check input')
+		cy.get('[data-cy="show-archived-check"] input')
 			.should('be.checked')
-		cy.get('.namespaces-list .namespace')
+		cy.get('.namespace')
 			.should('contain', 'Archived')
 
 		// Don't show archived
-		cy.get('.namespaces-list .fancycheckbox.show-archived-check label.check span')
+		cy.get('[data-cy="show-archived-check"] label.check span')
 			.should('be.visible')
 			.click()
-		cy.get('.namespaces-list .fancycheckbox.show-archived-check input')
+		cy.get('[data-cy="show-archived-check"] input')
 			.should('not.be.checked')
 
 		// Second time visiting after unchecking
 		cy.visit('/namespaces')
-		cy.get('.namespaces-list .fancycheckbox.show-archived-check input')
+		cy.get('[data-cy="show-archived-check"] input')
 			.should('not.be.checked')
-		cy.get('.namespaces-list .namespace')
+		cy.get('.namespace')
 			.should('not.contain', 'Archived')
 	})
 })

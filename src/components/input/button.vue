@@ -1,77 +1,62 @@
 <template>
-	<a
+	<BaseButton
 		class="button"
-		:class="{
-			'is-loading': loading,
-			'has-no-shadow': !shadow,
-			'is-primary': type === 'primary',
-			'is-outlined': type === 'secondary',
-			'is-text is-inverted has-no-shadow underline-none':
-				type === 'tertary',
-		}"
-		:disabled="disabled || null"
-		@click="click"
-		:href="href !== '' ? href : null"
+		:class="[
+			variantClass,
+			{
+				'is-loading': loading,
+				'has-no-shadow': !shadow || variant === 'tertiary',
+			}
+		]"
 	>
 		<icon :icon="icon" v-if="showIconOnly"/>
 		<span class="icon is-small" v-else-if="icon !== ''">
 			<icon :icon="icon"/>
 		</span>
-		<slot></slot>
-	</a>
+		<slot />
+	</BaseButton>
 </template>
 
-<script>
+<script lang="ts">
 export default {
 	name: 'x-button',
-	props: {
-		type: {
-			type: String,
-			default: 'primary',
-		},
-		href: {
-			type: String,
-			default: '',
-		},
-		to: {
-			default: false,
-		},
-		icon: {
-			default: '',
-		},
-		loading: {
-			type: Boolean,
-			default: false,
-		},
-		shadow: {
-			type: Boolean,
-			default: true,
-		},
-		disabled: {
-			type: Boolean,
-			default: false,
-		},
-	},
-	emits: ['click'],
-	computed: {
-		showIconOnly() {
-			return this.icon !== '' && typeof this.$slots.default === 'undefined'
-		},
-	},
-	methods: {
-		click(e) {
-			if (this.disabled) {
-				return
-			}
-
-			if (this.to !== false) {
-				this.$router.push(this.to)
-			}
-
-			this.$emit('click', e)
-		},
-	},
 }
+</script>
+
+<script setup lang="ts">
+import {computed, useSlots, PropType} from 'vue'
+import BaseButton from '@/components/base/BaseButton.vue'
+
+const BUTTON_TYPES_MAP =  Object.freeze({
+  primary: 'is-primary',
+  secondary: 'is-outlined',
+  tertiary: 'is-text is-inverted underline-none',
+})
+
+type ButtonTypes = keyof typeof BUTTON_TYPES_MAP
+
+const props = defineProps({
+	variant: {
+		type: String as PropType<ButtonTypes>,
+		default: 'primary',
+	},
+	icon: {
+		default: '',
+	},
+	loading: {
+		type: Boolean,
+		default: false,
+	},
+	shadow: {
+		type: Boolean,
+		default: true,
+	},
+})
+
+const variantClass = computed(() => BUTTON_TYPES_MAP[props.variant])
+
+const slots = useSlots()
+const showIconOnly = computed(() => props.icon !== '' && typeof slots.default === 'undefined')
 </script>
 
 <style lang="scss" scoped>
@@ -83,8 +68,8 @@ export default {
   font-weight: bold;
   height: $button-height;
   box-shadow: var(--shadow-sm);
+  display: inline-flex;
 
-  &.is-hovered,
   &:hover {
     box-shadow: var(--shadow-md);
   }
@@ -106,9 +91,10 @@ export default {
     color: var(--white);
   }
 
-  &.is-small {
-    border-radius: $radius;
-  }
+}
+
+.is-small {
+	border-radius: $radius;
 }
 
 .underline-none {

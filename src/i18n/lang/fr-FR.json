@@ -7,7 +7,7 @@
     "lastViewed": "Dernière consultation",
     "list": {
       "newText": "Tu peux créer une nouvelle liste pour tes nouvelles tâches :",
-      "new": "Créer une nouvelle liste",
+      "new": "New list",
       "importText": "Ou importe tes listes et tâches d’autres services dans Vikunja :",
       "import": "Importer tes données dans Vikunja"
     }
@@ -157,7 +157,7 @@
     "searchSelect": "Clique ou appuie sur la touche Entrée pour sélectionner cette liste",
     "shared": "Listes partagées",
     "create": {
-      "header": "Créer une nouvelle liste",
+      "header": "New list",
       "titlePlaceholder": "Entre le nom de la liste…",
       "addTitleRequired": "Indique un nom.",
       "createdSuccess": "Liste créée.",
@@ -315,7 +315,7 @@
     "namespaces": "Espaces de noms",
     "search": "Écris pour rechercher un espace de noms…",
     "create": {
-      "title": "Créer un nouvel espace de noms",
+      "title": "New namespace",
       "titleRequired": "Indique un nom.",
       "explanation": "Des collections de listes pour partager et organiser vos listes. En fait, chaque liste appartient à un espace de noms.",
       "tooltip": "Qu’est-ce qu’un espace de noms ?",
@@ -383,7 +383,7 @@
       "reminderRange": "Plage de dates de rappel"
     },
     "create": {
-      "title": "Créer un filtre enregistré",
+      "title": "New Saved Filter",
       "description": "Un filtre enregistré est une liste virtuelle qui est calculée à partir d’un ensemble de filtres à chaque fois qu’on y accède. Une fois créé, il apparaît dans un espace de noms spécial.",
       "action": "Créer un nouveau filtre enregistré"
     },

@@ -101,6 +101,7 @@
 					class="is-fullwidth"
 					:shadow="false"
 					@click="close"
+					v-cy="'closeDatepicker'"
 				>
 					{{ $t('misc.confirm') }}
 				</x-button>

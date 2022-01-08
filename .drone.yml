@@ -98,6 +98,15 @@ steps:
     depends_on:
       - dependencies
 
+  - name: typecheck
+    failure: ignore
+    image: node:16
+    pull: true
+    commands:
+      - yarn typecheck
+    depends_on:
+      - dependencies
+
   - name: test-frontend
     image: cypress/browsers:node16.5.0-chrome94-ff93
     pull: true

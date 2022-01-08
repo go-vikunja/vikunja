@@ -1,6 +1,6 @@
 <template>
 	<x-button
-		type="secondary"
+		variant="secondary"
 		:icon="icon"
 		v-tooltip="tooltipText"
 		@click="changeSubscription"

@@ -1,7 +1,7 @@
 <template>
 	<div class="content has-text-centered">
 		<h2 v-if="userInfo">
-			{{ $t(`home.welcome${welcome}`, {username: userInfo.name !== '' ? userInfo.name : userInfo.username}) }}!
+			{{ $t(welcome, {username: userInfo.name !== '' ? userInfo.name : userInfo.username}) }}!
 		</h2>
 		<message variant="danger" v-if="deletionScheduledAt !== null" class="mb-4">
 			{{
@@ -57,7 +57,6 @@
 <script lang="ts" setup>
 import {ref, computed} from 'vue'
 import {useStore} from 'vuex'
-import {useNow} from '@vueuse/core'
 
 import Message from '@/components/misc/message.vue'
 import ShowTasks from '@/views/tasks/ShowTasks.vue'
@@ -67,36 +66,15 @@ import AddTask from '@/components/tasks/add-task.vue'
 import {getHistory} from '@/modules/listHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
+import {useDateTimeSalutation} from '@/composables/useDateTimeSalutation'
 
-const now = useNow()
-const welcome = computed(() => {
-	const hours = new Date(now.value).getHours()
-
-	if (hours < 5) {
-		return 'Night'
-	}
-
-	if (hours < 11) {
-		return 'Morning'
-	}
-
-	if (hours < 18) {
-		return 'Day'
-	}
-
-	if (hours < 23) {
-		return 'Evening'
-	}
-
-	return 'Night'
-})
+const welcome = useDateTimeSalutation()
 
 const store = useStore()
 const listHistory = computed(() => {
-	const history = getHistory()
-	return history.map(l => {
-		return store.getters['lists/getListById'](l.id)
-	}).filter(l => l !== null)
+	return getHistory()
+		.map(l => store.getters['lists/getListById'](l.id))
+		.filter(l => l !== null)
 })
 
 

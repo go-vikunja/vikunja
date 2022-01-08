@@ -4,8 +4,8 @@
 		primary-icon=""
 		:primary-label="$t('misc.save')"
 		@primary="save"
-		:tertary="$t('misc.delete')"
-		@tertary="$router.push({ name: 'list.list.settings.delete', params: { id: $route.params.listId } })"
+		:tertiary="$t('misc.delete')"
+		@tertiary="$router.push({ name: 'list.list.settings.delete', params: { id: $route.params.listId } })"
 	>
 		<div class="field">
 			<label class="label" for="title">{{ $t('list.title') }}</label>

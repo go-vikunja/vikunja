@@ -37,7 +37,7 @@
 				<dropdown class="is-right" ref="usernameDropdown">
 					<template #trigger>
 						<x-button
-							type="secondary"
+							variant="secondary"
 							:shadow="false">
 							<span class="username">{{ userInfo.name !== '' ? userInfo.name : userInfo.username }}</span>
 							<span class="icon is-small">

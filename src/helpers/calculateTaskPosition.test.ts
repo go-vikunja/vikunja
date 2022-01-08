@@ -1,3 +1,5 @@
+import {it, expect} from 'vitest'
+
 import {calculateItemPosition} from './calculateItemPosition'
 
 it('should calculate the task position', () => {

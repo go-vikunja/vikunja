@@ -7,7 +7,7 @@
     "lastViewed": "Last viewed",
     "list": {
       "newText": "You can create a new list for your new tasks:",
-      "new": "Create a new list",
+      "new": "New list",
       "importText": "Or import your lists and tasks from other services into Vikunja:",
       "import": "Import your data into Vikunja"
     }
@@ -163,7 +163,7 @@
     "searchSelect": "Click or press enter to select this list",
     "shared": "Shared Lists",
     "create": {
-      "header": "Create a new list",
+      "header": "New list",
       "titlePlaceholder": "The list's title goes here…",
       "addTitleRequired": "Please specify a title.",
       "createdSuccess": "The list was successfully created.",
@@ -321,7 +321,7 @@
     "namespaces": "Namespaces",
     "search": "Type to search for a namespace…",
     "create": {
-      "title": "Create a new namespace",
+      "title": "New namespace",
       "titleRequired": "Please specify a title.",
       "explanation": "A namespace is a collection of lists you can share and use to organize your lists with. In fact, every list belongs to a namepace.",
       "tooltip": "What's a namespace?",
@@ -389,7 +389,7 @@
       "reminderRange": "Reminder Date Range"
     },
     "create": {
-      "title": "Create A Saved Filter",
+      "title": "New Saved Filter",
       "description": "A saved filter is a virtual list which is computed from a set of filters each time it is accessed. Once created, it will appear in a special namespace.",
       "action": "Create new saved filter"
     },

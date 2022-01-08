@@ -183,6 +183,8 @@ import {mapState} from 'vuex'
 import Rights from '../../models/constants/rights.json'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 
+import {colorIsDark} from '@/helpers/color/colorIsDark'
+
 export default {
 	name: 'GanttChart',
 	components: {
@@ -201,10 +203,10 @@ export default {
 			default: false,
 		},
 		dateFrom: {
-			default: new Date(new Date().setDate(new Date().getDate() - 15)),
+			default: () => new Date(new Date().setDate(new Date().getDate() - 15)),
 		},
 		dateTo: {
-			default: new Date(new Date().setDate(new Date().getDate() + 30)),
+			default: () => new Date(new Date().setDate(new Date().getDate() + 30)),
 		},
 		// The width of a day in pixels, used to calculate all sorts of things.
 		dayWidth: {
@@ -252,6 +254,7 @@ export default {
 		canWrite: (state) => state.currentList.maxRight > Rights.READ,
 	}),
 	methods: {
+		colorIsDark,
 		buildTheGanttChart() {
 			this.setDates()
 			this.prepareGanttDays()

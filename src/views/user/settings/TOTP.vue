@@ -55,7 +55,7 @@
 				<x-button @click="totpDisable" class="is-danger">
 					{{ $t('user.settings.totp.disable') }}
 				</x-button>
-				<x-button @click="totpDisableForm = false" type="tertary" class="ml-2">
+				<x-button @click="totpDisableForm = false" variant="tertiary" class="ml-2">
 					{{ $t('misc.cancel') }}
 				</x-button>
 			</div>

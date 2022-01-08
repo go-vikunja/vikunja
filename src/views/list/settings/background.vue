@@ -6,8 +6,8 @@
 		class="list-background-setting"
 		:wide="true"
 		v-if="uploadBackgroundEnabled || unsplashBackgroundEnabled"
-		:tertary="hasBackground ? $t('list.background.remove') : ''"
-		@tertary="removeBackground()"
+		:tertiary="hasBackground ? $t('list.background.remove') : ''"
+		@tertiary="removeBackground()"
 	>
 		<div class="mb-4" v-if="uploadBackgroundEnabled">
 			<input
@@ -20,7 +20,7 @@
 			<x-button
 				:loading="backgroundUploadService.loading"
 				@click="$refs.backgroundUploadInput.click()"
-				type="primary"
+				variant="primary"
 			>
 				{{ $t('list.background.upload') }}
 			</x-button>
@@ -54,7 +54,7 @@
 				@click="() => searchBackgrounds(currentPage + 1)"
 				class="is-load-more-button mt-4"
 				:shadow="false"
-				type="secondary"
+				variant="secondary"
 				v-if="backgroundSearchResult.length > 0"
 			>
 				{{ backgroundService.loading ? $t('misc.loading') : $t('list.background.loadMore') }}

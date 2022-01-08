@@ -42,7 +42,7 @@ import {useI18n} from 'vue-i18n'
 import {useStore} from 'vuex'
 import { tryOnMounted, debouncedWatch, useWindowSize, MaybeRef } from '@vueuse/core'
 
-import TaskService from '../../services/task'
+import TaskService from '@/services/task'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
 
 function cleanupTitle(title: string) {
@@ -117,9 +117,6 @@ function useAutoHeightTextarea(value: MaybeRef<string>) {
 	return textarea
 }
 
-const emit = defineEmits(['taskAdded'])
-
-
 const props = defineProps({
 	defaultPosition: {
 		type: Number,
@@ -127,14 +124,16 @@ const props = defineProps({
 	},
 })
 
-const taskService = shallowReactive(new TaskService())
-const errorMessage = ref('')
+const emit = defineEmits(['taskAdded'])
 
 const newTaskTitle = ref('')
 const newTaskInput = useAutoHeightTextarea(newTaskTitle)
 
 const { t } = useI18n()
 const store = useStore()
+
+const taskService = shallowReactive(new TaskService())
+const errorMessage = ref('')
 
 async function addTask() {
 	if (newTaskTitle.value === '') {

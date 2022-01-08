@@ -7,7 +7,7 @@
     "lastViewed": "Ultima visualizzazione",
     "list": {
       "newText": "È possibile creare una nuova lista per le nuove attività:",
-      "new": "Crea una nuova lista",
+      "new": "New list",
       "importText": "O importare le liste e le attività da altri servizi in Vikunja:",
       "import": "Importa i tuoi dati in Vikunja"
     }
@@ -157,7 +157,7 @@
     "searchSelect": "Fare clic o premere invio per selezionare questa lista",
     "shared": "Liste Condivise",
     "create": {
-      "header": "Crea una nuova lista",
+      "header": "New list",
       "titlePlaceholder": "Il titolo della lista va qui…",
       "addTitleRequired": "Specifica un titolo.",
       "createdSuccess": "La lista è stata creata correttamente.",
@@ -315,7 +315,7 @@
     "namespaces": "Namespaces",
     "search": "Type to search for a namespace…",
     "create": {
-      "title": "Create a new namespace",
+      "title": "New namespace",
       "titleRequired": "Please specify a title.",
       "explanation": "A namespace is a collection of lists you can share and use to organize your lists with. In fact, every list belongs to a namepace.",
       "tooltip": "What's a namespace?",
@@ -383,7 +383,7 @@
       "reminderRange": "Reminder Date Range"
     },
     "create": {
-      "title": "Crea Un Filtro Salvato",
+      "title": "New Saved Filter",
       "description": "A saved filter is a virtual list which is computed from a set of filters each time it is accessed. Once created, it will appear in a special namespace.",
       "action": "Crea nuovo filtro salvato"
     },

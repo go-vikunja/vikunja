@@ -9,7 +9,7 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue'
-import ShowTasks from './ShowTasks'
+import ShowTasks from './ShowTasks.vue'
 
 function getNextWeekDate() {
 	return new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)

@@ -26,7 +26,7 @@
 						@click="action.callback"
 						:shadow="false"
 						class="is-small"
-						type="secondary"
+						variant="secondary"
 						v-for="(action, i) in item.data.actions"
 					>
 						{{ action.title }}

@@ -32,9 +32,9 @@
 			/>
 		</h3>
 		<div v-if="!showAll" class="mb-4">
-			<x-button type="secondary" @click="showTodaysTasks()" class="mr-2">{{ $t('task.show.today') }}</x-button>
-			<x-button type="secondary" @click="setDatesToNextWeek()" class="mr-2">{{ $t('task.show.nextWeek') }}</x-button>
-			<x-button type="secondary" @click="setDatesToNextMonth()">{{ $t('task.show.nextMonth') }}</x-button>
+			<x-button variant="secondary" @click="showTodaysTasks()" class="mr-2">{{ $t('task.show.today') }}</x-button>
+			<x-button variant="secondary" @click="setDatesToNextWeek()" class="mr-2">{{ $t('task.show.nextWeek') }}</x-button>
+			<x-button variant="secondary" @click="setDatesToNextMonth()">{{ $t('task.show.nextMonth') }}</x-button>
 		</div>
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
 			<h3 class="nothing">{{ $t('task.show.noTasks') }}</h3>
