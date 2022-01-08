@@ -143,7 +143,7 @@ After it has spun up the containers it assigns them automatically a network `vik
 For this setup to work you must assign the containers on the same network your NPM is.
 If you have ports exposed in the yaml you don't have to.
 
-You can find your instance id by running `docker ps`:
+You can find your NPM instance id by running `docker ps`:
 
 ![2022-01-06_13-47](https://user-images.githubusercontent.com/76781738/148378509-e56829c9-59d6-4ad5-af13-e94412c2a18e.png)
 
