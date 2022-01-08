@@ -189,7 +189,7 @@ Then move to the next tab Custom Locations and add a new location:
 
 ![4](https://user-images.githubusercontent.com/76781738/147372259-eee1392a-bd18-4a0b-8ff9-be6ca8feef84.png)
 
-Fill the form
+Fill the form:
 
 - The same location as in the nginx configuration `~* ^/(api|dav|\.well-known)/`
 - The vikunja api address in the Forward IP, alternatively you could assign the hostname of the container `vikunja_api_1` 
