@@ -627,7 +627,6 @@ export default {
 			}
 
 			this.task = await this.$store.dispatch('tasks/update', this.task)
-			this.setActiveFields()
 
 			if (!showNotification) {
 				return
