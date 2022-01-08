@@ -100,7 +100,8 @@ location ~* ^/(api|dav|\.well-known)/ {
 
 ### Using the GUI
 
-This guide puts everything in a custom docker network so no ports are exposed, if your setup requires otherwise you will have to uncomment them
+This guide puts everything in a custom docker network so no ports are exposed.
+If your setup requires otherwise you will have to uncomment them.
 
 ```
 version: '3'
