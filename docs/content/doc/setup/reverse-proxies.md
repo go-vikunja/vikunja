@@ -172,7 +172,7 @@ So, in this case
 Just make sure to note that these IP addresses will be different on your system.
 Just try to find them following the above command.
 
-Now let's go to npm
+Now let's go to npm:
 
 Click to Add a Proxy Host
 
