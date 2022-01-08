@@ -98,7 +98,7 @@ location ~* ^/(api|dav|\.well-known)/ {
 6. After saving the edited file, return to NPM's UI browser window and refresh the page to verify your Proxy Host for Vikunja is still online. 
 7. Now, switch over to your Vikunja browswer window and hit refresh. If you configured your URL correctly in original Vikunja container, you should be all set and the browser will correctly show Vikunja. If not, you'll need to adjust the address in the top of the login subscreen to match your proxy address.
 
-### 2. Using the GUI
+### Using the GUI
 
 This guide puts everything in a custom docker network so no ports are exposed, if your setup requires otherwise you will have to uncomment them
 
