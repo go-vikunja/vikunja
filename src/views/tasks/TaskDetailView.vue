@@ -871,7 +871,7 @@ $flash-background-duration: 750ms;
   }
 
   .action-buttons {
-    a.button {
+    .button {
       width: 100%;
       margin-bottom: .5rem;
       justify-content: left;
