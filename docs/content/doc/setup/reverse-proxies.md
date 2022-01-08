@@ -185,7 +185,7 @@ Then fill in the form:
 
 ![3](https://user-images.githubusercontent.com/76781738/147372236-e13bf3eb-14c8-4616-ac0a-bfe72a7cd160.png)
 
-Then move to the next tab Custom Locations and add a new location
+Then move to the next tab Custom Locations and add a new location:
 
 ![4](https://user-images.githubusercontent.com/76781738/147372259-eee1392a-bd18-4a0b-8ff9-be6ca8feef84.png)
 
