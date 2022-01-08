@@ -147,7 +147,7 @@ You can find your instance id by running `docker ps`:
 
 ![2022-01-06_13-47](https://user-images.githubusercontent.com/76781738/148378509-e56829c9-59d6-4ad5-af13-e94412c2a18e.png)
 
-and then run `docker inspect -f "{{json .NetworkSettings.Networks  }}" $INSTANCE_ID` to find the network name
+and then run `docker inspect -f "{{json .NetworkSettings.Networks  }}" $INSTANCE_ID` to find the network name.
 
 For example, let's say npm is running on `npm_default`
 To assign the containers execute 
