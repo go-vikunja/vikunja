@@ -11,15 +11,15 @@
 			<template #content="{isOpen}">
 				<div class="datepicker-with-range" :class="{'is-open': isOpen}">
 					<div class="selections">
+						<button @click="setDateRange(null)" :class="{'is-active': customRangeActive}">
+							{{ $t('misc.custom') }}
+						</button>
 						<button
 							v-for="(value, text) in dateRanges"
 							:key="text"
 							@click="setDateRange(value)"
 							:class="{'is-active': from === value[0] && to === value[1]}">
-							{{ $t(text) }}
-						</button>
-						<button @click="setDateRange(null)" :class="{'is-active': customRangeActive}">
-							{{ $t('misc.custom') }}
+							{{ $t(`input.datepickerRange.ranges.${text}`) }}
 						</button>
 					</div>
 					<div class="flatpickr-container input-group">
@@ -324,6 +324,7 @@ const customRangeActive = computed<Boolean>(() => {
 	display: flex;
 	flex-direction: column;
 	padding-top: .5rem;
+	overflow-y: scroll;
 
 	button {
 		display: block;

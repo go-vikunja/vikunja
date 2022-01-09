@@ -556,6 +556,24 @@
           "in30Days": "In 30 days",
           "datePlusMonth": "{0} plus one month at 00:00 of that day"
         }
+      },
+      "ranges": {
+        "today": "Today",
+        
+        "thisWeek": "This Week",
+        "restOfThisWeek": "The Rest of This Week",
+        "nextWeek": "Next Week",
+        "next7Days": "Next 7 Days",
+        "lastWeek": "Last Week",
+        
+        "thisMonth": "This Month",
+        "restOfThisMonth": "The Rest of This Month",
+        "nextMonth": "Next Month",
+        "next30Days": "Next 30 Days",
+        "lastMonth": "Last Month",
+        
+        "thisYear": "This Year",
+        "restOfThisYear": "The Rest of This Year"
       }
     }
   },
@@ -577,13 +595,6 @@
       "overdue": "Show overdue tasks",
       "fromuntil": "Tasks from {from} until {until}",
       "select": "Select a date range",
-      "today": "Today",
-      "thisWeek": "This Week",
-      "nextWeek": "Next Week",
-      "next7Days": "Next 7 Days",
-      "thisMonth": "This Month",
-      "nextMonth": "Next Month",
-      "next30Days": "Next 30 Days",
       "noTasks": "Nothing to do — Have a nice day!"
     },
     "detail": {

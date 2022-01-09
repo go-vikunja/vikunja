@@ -111,7 +111,7 @@ export default {
 
 			const predefinedRange = Object.entries(dateRanges).find(([key, value]) => this.dateFrom === value[0] && this.dateTo === value[1])
 			if (typeof predefinedRange !== 'undefined') {
-				title = this.$t(predefinedRange[0])
+				title = this.$t(`input.datepickerRange.ranges.${predefinedRange[0]}`)
 			} else {
 				title = this.showAll
 					? this.$t('task.show.titleCurrent')
