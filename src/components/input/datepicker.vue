@@ -128,10 +128,6 @@ export default {
 			date: null,
 			show: false,
 			changed: false,
-
-			// Since flatpickr dates are strings, we need to convert them to native date objects.
-			// To make that work, we need a separate variable since flatpickr does not have a change event.
-			flatPickrDate: null,
 		}
 	},
 	components: {
@@ -164,10 +160,6 @@ export default {
 			handler: 'setDateValue',
 			immediate: true,
 		},
-		flatPickrDate(newVal) {
-			this.date = createDateFromString(newVal)
-			this.updateData()
-		},
 	},
 	computed: {
 		flatPickerConfig() {
@@ -182,6 +174,17 @@ export default {
 					firstDayOfWeek: this.$store.state.auth.settings.weekStart,
 				},
 			}
+		},
+		// Since flatpickr dates are strings, we need to convert them to native date objects.
+		// To make that work, we need a separate variable since flatpickr does not have a change event.
+		flatPickrDate: {
+			set(newValue) {
+				this.date = createDateFromString(newValue)
+				this.updateData()
+			},
+			get() {
+				return format(this.date, 'yyy-LL-dd H:mm')
+			},
 		},
 	},
 	methods: {
