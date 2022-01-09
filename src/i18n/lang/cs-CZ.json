@@ -7,7 +7,7 @@
     "lastViewed": "Naposledy zobrazeno",
     "list": {
       "newText": "Můžete vytvořit nový seznam pro své nové úkoly:",
-      "new": "New list",
+      "new": "Nový seznam",
       "importText": "Nebo importujte své seznamy a úkoly z jiných služeb:",
       "import": "Importujte svá data do Vikunja"
     }
@@ -157,7 +157,7 @@
     "searchSelect": "Klikněte nebo stiskněte Enter pro výběr tohoto seznamu",
     "shared": "Sdílené seznamy",
     "create": {
-      "header": "New list",
+      "header": "Nový seznam",
       "titlePlaceholder": "Název seznamu přijde sem…",
       "addTitleRequired": "Uveďte prosím název.",
       "createdSuccess": "Seznam byl úspěšně vytvořen.",
@@ -315,7 +315,7 @@
     "namespaces": "Prostory",
     "search": "Začni psát pro vyhledání prostoru…",
     "create": {
-      "title": "New namespace",
+      "title": "Nový prostor",
       "titleRequired": "Uveďte prosím název.",
       "explanation": "Prostor je kolekce seznamů, které můžete sdílet a používat k organizaci seznamů. Každý seznam patří do nějakého prostoru.",
       "tooltip": "Co je prostor?",
@@ -383,7 +383,7 @@
       "reminderRange": "Připomínky - období"
     },
     "create": {
-      "title": "New Saved Filter",
+      "title": "Nový uložený filtr",
       "description": "Uložený filtr je virtuální seznam, který se počítá ze sady filtrů pokaždé, když je přístupný. Jakmile bude vytvořen, objeví se ve speciálním prostoru.",
       "action": "Vytvořit uložený filtr"
     },
@@ -545,7 +545,7 @@
       "chooseStartDate": "Klikněte zde pro nastavení počátečního data",
       "chooseEndDate": "Klikněte zde pro nastavení data ukončení",
       "move": "Přesunout úkol do jiného seznamu",
-      "done": "Mark task done!",
+      "done": "Označit úkol jako hotový!",
       "undone": "Označit jako znovu otevřené",
       "created": "Vytvořeno {0} uživatelem {1}",
       "updated": "Aktualizováno {0}",
@@ -781,7 +781,7 @@
     "then": "potom",
     "task": {
       "title": "Stránka úkolů",
-      "done": "Done",
+      "done": "Hotovo",
       "assign": "Přiřadit uživateli",
       "labels": "Přidat štítky k tomuto úkolu",
       "dueDate": "Změnit termín tohoto úkolu",
