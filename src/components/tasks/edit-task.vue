@@ -78,7 +78,6 @@
 <script>
 import AsyncEditor from '@/components/input/AsyncEditor'
 
-import ListService from '../../services/list'
 import TaskService from '../../services/task'
 import TaskModel from '../../models/task'
 import priorities from '../../models/constants/priorities'
@@ -90,14 +89,10 @@ export default {
 	name: 'edit-task',
 	data() {
 		return {
-			listId: this.$route.params.id,
-			listService: new ListService(),
 			taskService: new TaskService(),
 
 			priorities: priorities,
-			list: {},
 			editorActive: false,
-			newTask: new TaskModel(),
 			isTaskEdit: false,
 			taskEditTask: TaskModel,
 		}

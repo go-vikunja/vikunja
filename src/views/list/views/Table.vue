@@ -7,7 +7,7 @@
 						<x-button
 							@click.prevent.stop="toggle()"
 							icon="th"
-							type="secondary"
+							variant="secondary"
 						>
 							{{ $t('list.table.columns') }}
 						</x-button>

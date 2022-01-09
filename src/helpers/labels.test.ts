@@ -1,3 +1,5 @@
+import {describe, it, expect} from 'vitest'
+
 import {filterLabelsByQuery} from './labels'
 import {createNewIndexer} from '../indexes'
 

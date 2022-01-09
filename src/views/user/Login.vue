@@ -67,7 +67,7 @@
 					<x-button
 						:to="{ name: 'user.register' }"
 						v-if="registrationEnabled"
-						type="secondary"
+						variant="secondary"
 					>
 						{{ $t('user.auth.register') }}
 					</x-button>
@@ -87,7 +87,7 @@
 				@click="redirectToProvider(p)"
 				v-for="(p, k) in openidConnect.providers"
 				:key="k"
-				type="secondary"
+				variant="secondary"
 				class="is-fullwidth mt-2"
 			>
 				{{ $t('user.auth.loginWith', {provider: p.name}) }}

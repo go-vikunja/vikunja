@@ -128,7 +128,7 @@ describe('Task', () => {
 			cy.visit(`/tasks/${tasks[0].id}`)
 
 			cy.get('.task-view .action-buttons .button')
-				.contains('Done!')
+				.contains('Mark task done!')
 				.click()
 
 			cy.get('.task-view .heading .is-done')
@@ -168,7 +168,7 @@ describe('Task', () => {
 				.click()
 			cy.get('.task-view .details.content.description .editor .vue-easymde .EasyMDEContainer .CodeMirror-scroll')
 				.type('{selectall}New Description')
-			cy.get('.task-view .details.content.description .editor a')
+			cy.get('[data-cy="saveEditor"]')
 				.contains('Save')
 				.click()
 
@@ -404,7 +404,7 @@ describe('Task', () => {
 			cy.get('.datepicker .datepicker-popup a')
 				.contains('Tomorrow')
 				.click()
-			cy.get('.datepicker .datepicker-popup a.button')
+			cy.get('[data-cy="closeDatepicker"]')
 				.contains('Confirm')
 				.click()
 

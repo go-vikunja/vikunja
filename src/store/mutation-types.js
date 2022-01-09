@@ -1,6 +1,5 @@
 export const LOADING = 'loading'
 export const LOADING_MODULE = 'loadingModule'
-export const ONLINE = 'online'
 export const CURRENT_LIST = 'currentList'
 export const HAS_TASKS = 'hasTasks'
 export const MENU_ACTIVE = 'menuActive'

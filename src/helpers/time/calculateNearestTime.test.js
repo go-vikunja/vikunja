@@ -1,3 +1,5 @@
+import {test, expect} from 'vitest'
+
 import {calculateNearestHours} from './calculateNearestHours'
 
 test('5:00', () => {

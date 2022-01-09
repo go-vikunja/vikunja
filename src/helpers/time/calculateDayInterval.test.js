@@ -1,3 +1,5 @@
+import {test, expect} from 'vitest'
+
 import {calculateDayInterval} from './calculateDayInterval'
 
 const days = {

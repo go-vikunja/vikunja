@@ -555,4 +555,8 @@ $vikunja-nav-selected-width: 0.4rem;
 	width: 32px;
 	flex-shrink: 0;
 }
+
+.namespaces-list.loader-container.is-loading {
+	min-height: calc(100vh - #{$navbar-height + 1.5rem + 1rem + 1.5rem});
+}
 </style>

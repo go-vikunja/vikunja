@@ -35,7 +35,7 @@
 					<a @click="toggleEdit">{{ $t('input.editor.edit') }}</a>
 				</li>
 			</ul>
-			<x-button v-else-if="isEditActive" @click="toggleEdit" type="secondary" :shadow="false">
+			<x-button v-else-if="isEditActive" @click="toggleEdit" variant="secondary" :shadow="false" v-cy="'saveEditor'">
 				{{ $t('misc.save') }}
 			</x-button>
 		</template>
@@ -312,8 +312,6 @@ export default {
 @import './vue-easymde/vue-easymde.css';
 @import 'highlight.js/scss/base16/equilibrium-gray-light';
 
-$editor-border-color: #ddd;
-
 .editor {
 	.clear {
 		clear: both;
@@ -337,7 +335,7 @@ $editor-border-color: #ddd;
 
 .CodeMirror {
 	padding: .5rem;
-	border: 1px solid $editor-border-color;
+	border: 1px solid var(--grey-200) !important;
 	background: var(--white);
 
 	&-lines pre {
@@ -347,6 +345,10 @@ $editor-border-color: #ddd;
 	&-placeholder {
 		color: var(--grey-400) !important;
 		font-style: italic;
+	}
+	
+	&-cursor {
+		border-color: var(--grey-700);
 	}
 }
 
@@ -359,12 +361,13 @@ $editor-border-color: #ddd;
 }
 
 .editor-toolbar {
-	background: #ffffff;
-	border-top: 1px solid $editor-border-color;
-	border-left: 1px solid $editor-border-color;
-	border-right: 1px solid $editor-border-color;
+	background: var(--grey-50);
+	border: 1px solid var(--grey-200);
+	border-bottom: none;
 
 	button {
+		color: var(--grey-700);
+		
 		svg {
 			vertical-align: middle;
 
@@ -379,6 +382,15 @@ $editor-border-color: #ddd;
 			top: 24px;
 			margin-left: -3px;
 		}
+		
+		&:hover {
+			background: var(--grey-200);
+			border-color: var(--grey-300);
+		}
+	}
+
+	i.separator {
+		border-color: var(--grey-200) !important;
 	}
 }
 

@@ -14,25 +14,25 @@
 			</div>
 			<footer class="modal-card-foot is-flex is-justify-content-flex-end">
 				<x-button
+					v-if="tertiary !== ''"
 					:shadow="false"
-					type="tertary"
-					@click.prevent.stop="$emit('tertary')"
-					v-if="tertary !== ''"
+					variant="tertiary"
+					@click.prevent.stop="$emit('tertiary')"
 				>
-					{{ tertary }}
+					{{ tertiary }}
 				</x-button>
 				<x-button
-					type="secondary"
+					variant="secondary"
 					@click.prevent.stop="$router.back()"
 				>
 					{{ $t('misc.cancel') }}
 				</x-button>
 				<x-button
-					type="primary"
+					v-if="primaryLabel !== ''"
+					variant="primary"
 					@click.prevent.stop="primary"
 					:icon="primaryIcon"
 					:disabled="primaryDisabled"
-					v-if="primaryLabel !== ''"
 				>
 					{{ primaryLabel }}
 				</x-button>
@@ -65,7 +65,7 @@ export default {
 			type: Boolean,
 			default: false,
 		},
-		tertary: {
+		tertiary: {
 			type: String,
 			default: '',
 		},
@@ -78,7 +78,7 @@ export default {
 			default: false,
 		},
 	},
-	emits: ['create', 'primary', 'tertary'],
+	emits: ['create', 'primary', 'tertiary'],
 	methods: {
 		primary() {
 			this.$emit('create')

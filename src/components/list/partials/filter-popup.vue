@@ -1,7 +1,7 @@
 <template>
 	<x-button
 		v-if="hasFilters"
-		type="secondary"
+		variant="secondary"
 		@click="clearFilters"
 	>
 		{{ $t('filters.clear') }}
@@ -10,7 +10,7 @@
 		<template #trigger="{toggle}">
 			<x-button
 				@click.prevent.stop="toggle()"
-				type="secondary"
+				variant="secondary"
 				icon="filter"
 			>
 				{{ $t('filters.title') }}

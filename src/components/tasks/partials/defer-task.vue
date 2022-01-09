@@ -8,21 +8,21 @@
 			<x-button
 				@click.prevent.stop="() => deferDays(1)"
 				:shadow="false"
-				type="secondary"
+				variant="secondary"
 			>
 				{{ $t('task.deferDueDate.1day') }}
 			</x-button>
 			<x-button
 				@click.prevent.stop="() => deferDays(3)"
 				:shadow="false"
-				type="secondary"
+				variant="secondary"
 			>
 				{{ $t('task.deferDueDate.3days') }}
 			</x-button>
 			<x-button
 				@click.prevent.stop="() => deferDays(7)"
 				:shadow="false"
-				type="secondary"
+				variant="secondary"
 			>
 				{{ $t('task.deferDueDate.1week') }}
 			</x-button>

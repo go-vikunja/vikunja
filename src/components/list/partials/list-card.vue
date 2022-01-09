@@ -33,7 +33,9 @@ import {useStore} from 'vuex'
 
 import ListService from '@/services/list'
 
-const background = ref(null)
+import {colorIsDark} from '@/helpers/color/colorIsDark'
+
+const background = ref<string | null>(null)
 const backgroundLoading = ref(false)
 
 const props = defineProps({

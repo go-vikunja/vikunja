@@ -1,3 +1,5 @@
+import {test, expect} from 'vitest'
+
 import {colorIsDark} from './colorIsDark'
 
 test('dark color', () => {

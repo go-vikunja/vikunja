@@ -21,7 +21,7 @@
 			</div>
 			<footer class="modal-card-foot is-flex is-justify-content-flex-end">
 				<x-button
-					type="secondary"
+					variant="secondary"
 					@click.prevent.stop="$router.back()"
 				>
 					{{ $t('misc.close') }}

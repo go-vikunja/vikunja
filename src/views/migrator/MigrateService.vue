@@ -53,7 +53,7 @@
 			</p>
 			<div class="buttons">
 				<x-button @click="migrate">{{ $t('migrate.confirm') }}</x-button>
-				<x-button :to="{name: 'home'}" type="tertary" class="has-text-danger">{{ $t('misc.cancel') }}</x-button>
+				<x-button :to="{name: 'home'}" variant="tertiary" class="has-text-danger">{{ $t('misc.cancel') }}</x-button>
 			</div>
 		</div>
 		<div v-else>
