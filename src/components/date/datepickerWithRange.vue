@@ -3,8 +3,8 @@
 		<popup>
 			<template #trigger="{toggle}">
 				<slot name="trigger" :toggle="toggle">
-					<x-button @click.prevent.stop="toggle()" type="secondary" :shadow="false" class="mb-2">
-						{{ $t('task.show.select') }}
+					<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
+						{{ buttonText }}
 					</x-button>
 				</slot>
 			</template>
@@ -187,6 +187,13 @@ const {t} = useI18n()
 
 const emit = defineEmits(['dateChanged'])
 
+const props = defineProps({
+	showSelectedOnButton: {
+		type: Boolean,
+		default: false,
+	}
+})
+
 // FIXME: This seems to always contain the default value - that breaks the picker
 const weekStart = computed<number>(() => store.state.auth.settings.weekStart ?? 0)
 const flatPickerConfig = computed(() => ({
@@ -258,6 +265,17 @@ function setDateRange(range: string[] | null) {
 
 const customRangeActive = computed<Boolean>(() => {
 	return !Object.values(dateRanges).some(el => from.value === el[0] && to.value === el[1])
+})
+
+const buttonText = computed<string>(() => {
+	if(props.showSelectedOnButton && from.value !== '' && to.value !== '') {
+		return t('input.datepickerRange.fromto', {
+			from: from.value,
+			to: to.value,
+		})
+	}
+	
+	return t('task.show.select')
 })
 </script>
 

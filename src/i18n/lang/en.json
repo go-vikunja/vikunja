@@ -526,6 +526,7 @@
     "datepickerRange": {
       "to": "To",
       "from": "From",
+      "fromto": "{from} to {to}",
       "math": {
         "canuse": "You can use date math to filter for relative dates.",
         "learnhow": "Check out how it works",
