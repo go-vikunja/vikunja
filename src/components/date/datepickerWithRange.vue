@@ -15,10 +15,10 @@
 							v-for="(value, text) in dateRanges"
 							:key="text"
 							@click="setDateRange(value)"
-							:class="{'is-active': dateRange === value}">
+							:class="{'is-active': from === value[0] && to === value[1]}">
 							{{ $t(text) }}
 						</button>
-						<button @click="setDateRange('')" :class="{'is-active': customRangeActive}">
+						<button @click="setDateRange(null)" :class="{'is-active': customRangeActive}">
 							{{ $t('misc.custom') }}
 						</button>
 					</div>
@@ -27,7 +27,7 @@
 							{{ $t('input.datepickerRange.from') }}
 							<div class="field has-addons">
 								<div class="control is-fullwidth">
-									<input class="input" type="text"/>
+									<input class="input" type="text" v-model="from" @change="emitChanged"/>
 								</div>
 								<div class="control">
 									<x-button icon="calendar" variant="secondary" data-toggle/>
@@ -38,7 +38,7 @@
 							{{ $t('input.datepickerRange.to') }}
 							<div class="field has-addons">
 								<div class="control is-fullwidth">
-									<input class="input" type="text"/>
+									<input class="input" type="text" v-model="to" @change="emitChanged"/>
 								</div>
 								<div class="control">
 									<x-button icon="calendar" variant="secondary" data-toggle/>
@@ -47,7 +47,7 @@
 						</label>
 						<flat-pickr
 							:config="flatPickerConfig"
-							v-model="dateRange"
+							v-model="flatpickrRange"
 						/>
 					</div>
 				</div>
@@ -83,10 +83,20 @@ const flatPickerConfig = computed(() => ({
 	},
 }))
 
-const dateRange = ref('')
+const flatpickrRange = ref('')
+
+const from = ref('')
+const to = ref('')
+
+function emitChanged() {
+	emit('dateChanged', {
+		dateFrom: from.value,
+		dateTo: to.value,
+	})
+}
 
 watch(
-	() => dateRange.value,
+	() => flatpickrRange.value,
 	(newVal: string | null) => {
 		if (newVal === null) {
 			return
@@ -98,30 +108,40 @@ watch(
 			return
 		}
 
-		emit('dateChanged', {
-			dateFrom: fromDate,
-			dateTo: toDate,
-		})
+		from.value = fromDate
+		to.value = toDate
+
+		emitChanged()
 	},
 )
 
-function setDateRange(range: string) {
-	dateRange.value = range
+function setDateRange(range: string[] | null) {
+	if (range === null) {
+		from.value = ''
+		to.value = ''
+		emitChanged()
+
+		return
+	}
+
+	from.value = range[0]
+	to.value = range[1]
+
+	emitChanged()
 }
 
 const dateRanges = {
-	// Still using strings for the range instead of an array or object to keep it compatible with the dates from flatpickr
-	'task.show.today': 'now/d to now/d+1d',
-	'task.show.thisWeek': 'now/w to now/w+1w',
-	'task.show.nextWeek': 'now/w+1w to now/w+2w',
-	'task.show.next7Days': 'now to now+7d',
-	'task.show.thisMonth': 'now/M to now/M+1M',
-	'task.show.nextMonth': 'now/M+1M to now/M+2M',
-	'task.show.next30Days': 'now to now+30d',
+	'task.show.today': ['now/d', 'now/d+1d'],
+	'task.show.thisWeek': ['now/w', 'now/w+1w'],
+	'task.show.nextWeek': ['now/w+1w', 'now/w+2w'],
+	'task.show.next7Days': ['now', 'now+7d'],
+	'task.show.thisMonth': ['now/M', 'now/M+1M'],
+	'task.show.nextMonth': ['now/M+1M', 'now/M+2M'],
+	'task.show.next30Days': ['now', 'now+30d'],
 }
 
 const customRangeActive = computed<Boolean>(() => {
-	return !Object.values(dateRanges).includes(dateRange.value)
+	return !Object.values(dateRanges).some(el => from.value === el[0] && to.value === el[1])
 })
 </script>
 
@@ -168,16 +188,16 @@ const customRangeActive = computed<Boolean>(() => {
 		padding: 0;
 		border: 0;
 	}
-	
+
 	.field .control :deep(.button) {
 		border: 1px solid var(--input-border-color);
 		height: 2.25rem;
-		
+
 		&:hover {
 			border: 1px solid var(--input-hover-border-color);
 		}
 	}
-	
+
 	.label, .input, :deep(.button) {
 		font-size: .9rem;
 	}
