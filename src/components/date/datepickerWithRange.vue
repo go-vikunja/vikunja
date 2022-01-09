@@ -27,7 +27,7 @@
 							{{ $t('input.datepickerRange.from') }}
 							<div class="field has-addons">
 								<div class="control is-fullwidth">
-									<input class="input" type="text" v-model="from" @change="emitChanged"/>
+									<input class="input" type="text" v-model="from" @change="inputChanged"/>
 								</div>
 								<div class="control">
 									<x-button icon="calendar" variant="secondary" data-toggle/>
@@ -38,7 +38,7 @@
 							{{ $t('input.datepickerRange.to') }}
 							<div class="field has-addons">
 								<div class="control is-fullwidth">
-									<input class="input" type="text" v-model="to" @change="emitChanged"/>
+									<input class="input" type="text" v-model="to" @change="inputChanged"/>
 								</div>
 								<div class="control">
 									<x-button icon="calendar" variant="secondary" data-toggle/>
@@ -95,6 +95,11 @@ function emitChanged() {
 	})
 }
 
+function inputChanged() {
+	flatpickrRange.value = ''
+	emitChanged()
+}
+
 watch(
 	() => flatpickrRange.value,
 	(newVal: string | null) => {
@@ -119,7 +124,7 @@ function setDateRange(range: string[] | null) {
 	if (range === null) {
 		from.value = ''
 		to.value = ''
-		emitChanged()
+		inputChanged()
 
 		return
 	}
@@ -127,7 +132,7 @@ function setDateRange(range: string[] | null) {
 	from.value = range[0]
 	to.value = range[1]
 
-	emitChanged()
+	inputChanged()
 }
 
 const dateRanges = {
