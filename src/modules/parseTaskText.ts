@@ -117,23 +117,30 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 const getItemsFromPrefix = (text: string, prefix: string): string[] => {
 	const items: string[] = []
 
-	const itemParts = text.split(prefix)
+	const itemParts = text.split(' ' + prefix)
+	if (text.startsWith(prefix)) {
+		const firstItem = text.split(prefix)[1]
+		itemParts.unshift(firstItem)
+	}
+
 	itemParts.forEach((p, index) => {
 		// First part contains the rest
 		if (index < 1) {
 			return
 		}
 
-		let labelText
+		p = p.replace(prefix, '')
+
+		let itemText
 		if (p.charAt(0) === '\'') {
-			labelText = p.split('\'')[1]
+			itemText = p.split('\'')[1]
 		} else if (p.charAt(0) === '"') {
-			labelText = p.split('"')[1]
+			itemText = p.split('"')[1]
 		} else {
 			// Only until the next space
-			labelText = p.split(' ')[0]
+			itemText = p.split(' ')[0]
 		}
-		items.push(labelText)
+		items.push(itemText)
 	})
 
 	return Array.from(new Set(items))
