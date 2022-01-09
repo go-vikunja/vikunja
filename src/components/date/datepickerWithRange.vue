@@ -11,32 +11,12 @@
 			<template #content="{isOpen}">
 				<div class="datepicker-with-range" :class="{'is-open': isOpen}">
 					<div class="selections">
-						<button @click="setDateRange(datesToday)" :class="{'is-active': dateRange === datesToday}">
-							{{ $t('task.show.today') }}
-						</button>
-						<button @click="setDateRange(datesThisWeek)"
-								:class="{'is-active': dateRange === datesThisWeek}">
-							{{ $t('task.show.thisWeek') }}
-						</button>
-						<button @click="setDateRange(datesNextWeek)"
-								:class="{'is-active': dateRange === datesNextWeek}">
-							{{ $t('task.show.nextWeek') }}
-						</button>
-						<button @click="setDateRange(datesNext7Days)"
-								:class="{'is-active': dateRange === datesNext7Days}">
-							{{ $t('task.show.next7Days') }}
-						</button>
-						<button @click="setDateRange(datesThisMonth)"
-								:class="{'is-active': dateRange === datesThisMonth}">
-							{{ $t('task.show.thisMonth') }}
-						</button>
-						<button @click="setDateRange(datesNextMonth)"
-								:class="{'is-active': dateRange === datesNextMonth}">
-							{{ $t('task.show.nextMonth') }}
-						</button>
-						<button @click="setDateRange(datesNext30Days)"
-								:class="{'is-active': dateRange === datesNext30Days}">
-							{{ $t('task.show.next30Days') }}
+						<button
+							v-for="(value, text) in dateRanges"
+							:key="text"
+							@click="setDateRange(value)" 
+							:class="{'is-active': dateRange === value}">
+							{{ $t(text) }}
 						</button>
 						<button @click="setDateRange('')" :class="{'is-active': customRangeActive}">
 							{{ $t('misc.custom') }}
@@ -57,7 +37,7 @@
 <script lang="ts" setup>
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
-import {computed, ref, watch} from 'vue'
+import {computed, Ref, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {store} from '@/store'
 import {format} from 'date-fns'
@@ -193,8 +173,8 @@ const datesNext30Days = computed<string>(() => {
 	return `${formatDate(startDate)} to ${formatDate(endDate)}`
 })
 
-function setDateRange(range: string) {
-	dateRange.value = range
+function setDateRange(range: Ref<string>) {
+	dateRange.value = range.value
 }
 
 const customRangeActive = computed<Boolean>(() => {
@@ -206,6 +186,16 @@ const customRangeActive = computed<Boolean>(() => {
 		dateRange.value !== datesNextMonth.value &&
 		dateRange.value !== datesNext30Days.value
 })
+
+const dateRanges = {
+	'task.show.today': datesToday,
+	'task.show.thisWeek': datesThisWeek,
+	'task.show.nextWeek': datesNextWeek,
+	'task.show.next7Days': datesNext7Days,
+	'task.show.thisMonth': datesThisMonth,
+	'task.show.nextMonth': datesNextMonth,
+	'task.show.next30Days': datesNext30Days,
+}
 </script>
 
 <style lang="scss" scoped>
