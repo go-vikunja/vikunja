@@ -98,6 +98,8 @@ export default {
 		pageTitle() {
 			let title = ''
 
+			// We need to define "key" because it is the first parameter in the array and we need the second
+			// eslint-disable-next-line no-unused-vars
 			const predefinedRange = Object.entries(dateRanges).find(([key, value]) => this.dateFrom === value[0] && this.dateTo === value[1])
 			if (typeof predefinedRange !== 'undefined') {
 				title = this.$t(`input.datepickerRange.ranges.${predefinedRange[0]}`)

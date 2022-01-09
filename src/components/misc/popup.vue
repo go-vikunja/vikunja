@@ -20,7 +20,7 @@ const props = defineProps({
 	hasOverflow: {
 		type: Boolean,
 		default: false,
-	}
+	},
 })
 
 function hidePopup(e) {

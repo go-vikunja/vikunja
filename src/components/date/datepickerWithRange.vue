@@ -191,7 +191,7 @@ const props = defineProps({
 	showSelectedOnButton: {
 		type: Boolean,
 		default: false,
-	}
+	},
 })
 
 // FIXME: This seems to always contain the default value - that breaks the picker
