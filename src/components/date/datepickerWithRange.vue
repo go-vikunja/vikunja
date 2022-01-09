@@ -14,7 +14,7 @@
 						<button
 							v-for="(value, text) in dateRanges"
 							:key="text"
-							@click="setDateRange(value)" 
+							@click="setDateRange(value)"
 							:class="{'is-active': dateRange === value}">
 							{{ $t(text) }}
 						</button>
@@ -77,125 +77,30 @@ watch(
 		}
 
 		emit('dateChanged', {
-			dateFrom: new Date(fromDate),
-			dateTo: new Date(toDate),
+			dateFrom: fromDate,
+			dateTo: toDate,
 		})
 	},
 )
 
-function formatDate(date: Date): string {
-	return format(date, 'yyyy-MM-dd HH:mm')
+function setDateRange(range: string) {
+	dateRange.value = range
 }
 
-function startOfDay(date: Date): Date {
-	date.setHours(0)
-	date.setMinutes(0)
-
-	return date
-}
-
-function endOfDay(date: Date): Date {
-	date.setHours(23)
-	date.setMinutes(59)
-
-	return date
-}
-
-const datesToday = computed<string>(() => {
-	const startDate = startOfDay(new Date())
-	const endDate = endOfDay(new Date())
-
-	return `${formatDate(startDate)} to ${formatDate(endDate)}`
-})
-
-function thisWeek() {
-	const startDate = startOfDay(new Date())
-	const first = startDate.getDate() - startDate.getDay() + weekStart.value
-	startDate.setDate(first)
-	const endDate = endOfDay(new Date((new Date(startDate).setDate(first + 6))))
-
-	return {
-		startDate,
-		endDate,
-	}
-}
-
-const datesThisWeek = computed<string>(() => {
-	const {startDate, endDate} = thisWeek()
-
-	return `${formatDate(startDate)} to ${formatDate(endDate)}`
-})
-
-const datesNextWeek = computed<string>(() => {
-	const {startDate, endDate} = thisWeek()
-	startDate.setDate(startDate.getDate() + 7)
-	endDate.setDate(endDate.getDate() + 7)
-
-	return `${formatDate(startDate)} to ${formatDate(endDate)}`
-})
-
-const datesNext7Days = computed<string>(() => {
-	const startDate = startOfDay(new Date())
-	const endDate = endOfDay(new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000))
-	return `${formatDate(startDate)} to ${formatDate(endDate)}`
-})
-
-function thisMonth() {
-	const startDate = startOfDay(new Date())
-	startDate.setDate(1)
-	const endDate = endOfDay(new Date((new Date()).getFullYear(), (new Date()).getMonth() + 1, 0))
-
-	return {
-		startDate,
-		endDate,
-	}
-}
-
-const datesThisMonth = computed<string>(() => {
-	const {startDate, endDate} = thisMonth()
-
-	return `${formatDate(startDate)} to ${formatDate(endDate)}`
-})
-
-const datesNextMonth = computed<string>(() => {
-	const {startDate, endDate} = thisMonth()
-
-	startDate.setMonth(startDate.getMonth() + 1)
-	endDate.setMonth(endDate.getMonth() + 1)
-
-	return `${formatDate(startDate)} to ${formatDate(endDate)}`
-})
-
-const datesNext30Days = computed<string>(() => {
-	const startDate = startOfDay(new Date())
-	const endDate = endOfDay(new Date((new Date()).setMonth((new Date()).getMonth() + 1)))
-
-	return `${formatDate(startDate)} to ${formatDate(endDate)}`
-})
-
-function setDateRange(range: Ref<string>) {
-	dateRange.value = range.value
+const dateRanges = {
+	// Still using strings for the range instead of an array or object to keep it compatible with the dates from flatpickr
+	'task.show.today': 'now/d to now/d+1d',
+	'task.show.thisWeek': 'now/w to now/w+1w',
+	'task.show.nextWeek': 'now/w+1w to now/w+2w',
+	'task.show.next7Days': 'now to now+7d',
+	'task.show.thisMonth': 'now/M to now/M+1M',
+	'task.show.nextMonth': 'now/M+1M to now/M+2M',
+	'task.show.next30Days': 'now to now+30d',
 }
 
 const customRangeActive = computed<Boolean>(() => {
-	return dateRange.value !== datesToday.value &&
-		dateRange.value !== datesThisWeek.value &&
-		dateRange.value !== datesNextWeek.value &&
-		dateRange.value !== datesNext7Days.value &&
-		dateRange.value !== datesThisMonth.value &&
-		dateRange.value !== datesNextMonth.value &&
-		dateRange.value !== datesNext30Days.value
+	return !Object.values(dateRanges).includes(dateRange.value)
 })
-
-const dateRanges = {
-	'task.show.today': datesToday,
-	'task.show.thisWeek': datesThisWeek,
-	'task.show.nextWeek': datesNextWeek,
-	'task.show.next7Days': datesNext7Days,
-	'task.show.thisMonth': datesThisMonth,
-	'task.show.nextMonth': datesNextMonth,
-	'task.show.next30Days': datesNext30Days,
-}
 </script>
 
 <style lang="scss" scoped>
