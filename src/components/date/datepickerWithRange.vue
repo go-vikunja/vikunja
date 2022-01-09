@@ -90,8 +90,8 @@ const to = ref('')
 
 function emitChanged() {
 	emit('dateChanged', {
-		dateFrom: from.value,
-		dateTo: to.value,
+		dateFrom: from.value === '' ? null : from.value,
+		dateTo: to.value === '' ? null : to.value,
 	})
 }
 
