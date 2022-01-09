@@ -59,11 +59,12 @@
 <script lang="ts" setup>
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
-import {computed, Ref, ref, watch} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {store} from '@/store'
-import {format} from 'date-fns'
-import Popup from '@/components/misc/popup'
+import Popup from '@/components/misc/popup.vue'
+
+import {dateRanges} from '@/components/date/dateRanges'
 
 const {t} = useI18n()
 
@@ -133,16 +134,6 @@ function setDateRange(range: string[] | null) {
 	to.value = range[1]
 
 	inputChanged()
-}
-
-const dateRanges = {
-	'task.show.today': ['now/d', 'now/d+1d'],
-	'task.show.thisWeek': ['now/w', 'now/w+1w'],
-	'task.show.nextWeek': ['now/w+1w', 'now/w+2w'],
-	'task.show.next7Days': ['now', 'now+7d'],
-	'task.show.thisMonth': ['now/M', 'now/M+1M'],
-	'task.show.nextMonth': ['now/M+1M', 'now/M+2M'],
-	'task.show.next30Days': ['now', 'now+30d'],
 }
 
 const customRangeActive = computed<Boolean>(() => {

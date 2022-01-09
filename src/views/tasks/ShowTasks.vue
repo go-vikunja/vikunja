@@ -38,6 +38,7 @@
 	</div>
 </template>
 <script>
+import {dateRanges} from '@/components/date/dateRanges'
 import SingleTaskInList from '@/components/tasks/partials/singleTaskInList'
 import {mapState} from 'vuex'
 
@@ -106,12 +107,19 @@ export default {
 			return this.$route.query.showOverdue === 'true'
 		},
 		pageTitle() {
-			const title = this.showAll
-				? this.$t('task.show.titleCurrent')
-				: this.$t('task.show.fromuntil', {
-					from: this.format(this.dateFrom, 'PPP'),
-					until: this.format(this.dateTo, 'PPP'),
-				})
+			let title = ''
+
+			const predefinedRange = Object.entries(dateRanges).find(([key, value]) => this.dateFrom === value[0] && this.dateTo === value[1])
+			if (typeof predefinedRange !== 'undefined') {
+				title = this.$t(predefinedRange[0])
+			} else {
+				title = this.showAll
+					? this.$t('task.show.titleCurrent')
+					: this.$t('task.show.fromuntil', {
+						from: this.format(this.dateFrom, 'PPP'),
+						until: this.format(this.dateTo, 'PPP'),
+					})
+			}
 
 			this.setTitle(title)
 
