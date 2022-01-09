@@ -22,7 +22,29 @@
 							{{ $t('misc.custom') }}
 						</button>
 					</div>
-					<div class="flatpickr-container">
+					<div class="flatpickr-container input-group">
+						<label class="label">
+							{{ $t('input.datepickerRange.from') }}
+							<div class="field has-addons">
+								<div class="control is-fullwidth">
+									<input class="input" type="text"/>
+								</div>
+								<div class="control">
+									<x-button icon="calendar" variant="secondary" data-toggle/>
+								</div>
+							</div>
+						</label>
+						<label class="label">
+							{{ $t('input.datepickerRange.to') }}
+							<div class="field has-addons">
+								<div class="control is-fullwidth">
+									<input class="input" type="text"/>
+								</div>
+								<div class="control">
+									<x-button icon="calendar" variant="secondary" data-toggle/>
+								</div>
+							</div>
+						</label>
 						<flat-pickr
 							:config="flatPickerConfig"
 							v-model="dateRange"
@@ -54,7 +76,7 @@ const flatPickerConfig = computed(() => ({
 	altInput: true,
 	dateFormat: 'Y-m-d H:i',
 	enableTime: false,
-	inline: true,
+	wrap: true,
 	mode: 'range',
 	locale: {
 		firstDayOf7Days: weekStart.value,
@@ -137,9 +159,27 @@ const customRangeActive = computed<Boolean>(() => {
 .flatpickr-container {
 	width: 70%;
 	border-left: 1px solid var(--grey-200);
+	padding: 1rem;
+	font-size: .9rem;
 
-	:deep(input.input) {
-		display: none;
+	// Flatpickr has no option to use it without an input field so we're hiding it instead
+	:deep(input.form-control.input) {
+		height: 0;
+		padding: 0;
+		border: 0;
+	}
+	
+	.field .control :deep(.button) {
+		border: 1px solid var(--input-border-color);
+		height: 2.25rem;
+		
+		&:hover {
+			border: 1px solid var(--input-hover-border-color);
+		}
+	}
+	
+	.label, .input, :deep(.button) {
+		font-size: .9rem;
 	}
 }
 

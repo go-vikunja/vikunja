@@ -522,6 +522,10 @@
     "multiselect": {
       "createPlaceholder": "Create new",
       "selectPlaceholder": "Click or press enter to select"
+    },
+    "datepickerRange": {
+      "to": "To",
+      "from": "From"
     }
   },
   "task": {
