@@ -47,6 +47,18 @@ import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import LlamaCool from '@/assets/llama-cool.svg?component'
 import DatepickerWithRange from '@/components/date/datepickerWithRange'
 
+function parseDate(query, fallback) {
+	if (typeof query === 'undefined') {
+		return fallback
+	}
+
+	const d = new Date(query)
+
+	return !isNaN(d)
+		? d
+		: query
+}
+
 function getNextWeekDate() {
 	return new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
 }
@@ -82,18 +94,10 @@ export default {
 	},
 	computed: {
 		dateFrom() {
-			const d = new Date(Number(this.$route.query.from))
-
-			return !isNaN(d)
-				? d
-				: new Date()
+			return parseDate(this.$route.query.from, new Date())
 		},
 		dateTo() {
-			const d = new Date(Number(this.$route.query.to))
-
-			return !isNaN(d)
-				? d
-				: getNextWeekDate()
+			return parseDate(this.$route.query.to, getNextWeekDate())
 		},
 		showNulls() {
 			return this.$route.query.showNulls === 'true'
@@ -138,8 +142,8 @@ export default {
 			this.$router.push({
 				name: this.$route.name,
 				query: {
-					from: +new Date(dateFrom ?? this.dateFrom),
-					to: +new Date(dateTo ?? this.dateTo),
+					from: dateFrom ?? this.dateFrom,
+					to: dateTo ?? this.dateTo,
 					showOverdue: this.showOverdue,
 					showNulls: this.showNulls,
 				},
@@ -185,7 +189,7 @@ export default {
 				params.filter_by.push('due_date')
 				params.filter_value.push(this.dateTo)
 				params.filter_comparator.push('less')
-				
+
 				// NOTE: Ideally we could also show tasks with a start or end date in the specified range, but the api
 				//       is not capable (yet) of combining multiple filters with 'and' and 'or'.
 
