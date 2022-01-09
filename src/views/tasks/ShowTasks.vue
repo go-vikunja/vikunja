@@ -40,6 +40,7 @@
 <script>
 import {dateRanges} from '@/components/date/dateRanges'
 import SingleTaskInList from '@/components/tasks/partials/singleTaskInList'
+import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {mapState} from 'vuex'
 
 import Fancycheckbox from '@/components/input/fancycheckbox'
@@ -47,18 +48,6 @@ import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
 import LlamaCool from '@/assets/llama-cool.svg?component'
 import DatepickerWithRange from '@/components/date/datepickerWithRange'
-
-function parseDate(query, fallback) {
-	if (typeof query === 'undefined') {
-		return fallback
-	}
-
-	const d = new Date(query)
-
-	return !isNaN(d)
-		? d
-		: query
-}
 
 function getNextWeekDate() {
 	return new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
@@ -95,10 +84,10 @@ export default {
 	},
 	computed: {
 		dateFrom() {
-			return parseDate(this.$route.query.from, new Date())
+			return parseDateOrString(this.$route.query.from, new Date())
 		},
 		dateTo() {
-			return parseDate(this.$route.query.to, getNextWeekDate())
+			return parseDateOrString(this.$route.query.to, getNextWeekDate())
 		},
 		showNulls() {
 			return this.$route.query.showNulls === 'true'

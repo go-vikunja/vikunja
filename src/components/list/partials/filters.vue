@@ -67,49 +67,25 @@
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.dueDate') }}</label>
 			<div class="control">
-				<flat-pickr
-					:config="flatPickerConfig"
-					@on-close="setDueDateFilter"
-					class="input"
-					:placeholder="$t('filters.attributes.dueDateRange')"
-					v-model="filters.dueDate"
-				/>
+				<datepicker-with-range :show-selected-on-button="true" @dateChanged="setDueDateFilter"/>
 			</div>
 		</div>
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.startDate') }}</label>
 			<div class="control">
-				<flat-pickr
-					:config="flatPickerConfig"
-					@on-close="setStartDateFilter"
-					class="input"
-					:placeholder="$t('filters.attributes.startDateRange')"
-					v-model="filters.startDate"
-				/>
+				<datepicker-with-range :show-selected-on-button="true" @dateChanged="setStartDateFilter"/>
 			</div>
 		</div>
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.endDate') }}</label>
 			<div class="control">
-				<flat-pickr
-					:config="flatPickerConfig"
-					@on-close="setEndDateFilter"
-					class="input"
-					:placeholder="$t('filters.attributes.endDateRange')"
-					v-model="filters.endDate"
-				/>
+				<datepicker-with-range :show-selected-on-button="true" @dateChanged="setEndDateFilter"/>
 			</div>
 		</div>
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.reminders') }}</label>
 			<div class="control">
-				<flat-pickr
-					:config="flatPickerConfig"
-					@on-close="setReminderFilter"
-					class="input"
-					:placeholder="$t('filters.attributes.reminderRange')"
-					v-model="filters.reminders"
-				/>
+				<datepicker-with-range :show-selected-on-button="true" @dateChanged="setReminderFilter"/>
 			</div>
 		</div>
 
@@ -175,15 +151,14 @@
 </template>
 
 <script>
+import DatepickerWithRange from '@/components/date/datepickerWithRange'
 import Fancycheckbox from '../../input/fancycheckbox'
-import flatPickr from 'vue-flatpickr-component'
-import 'flatpickr/dist/flatpickr.css'
 
 import {includesById} from '@/helpers/utils'
-import {formatISO} from 'date-fns'
 import PrioritySelect from '@/components/tasks/partials/prioritySelect.vue'
 import PercentDoneSelect from '@/components/tasks/partials/percentDoneSelect.vue'
 import Multiselect from '@/components/input/multiselect.vue'
+import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 
 import UserService from '@/services/user'
 import ListService from '@/services/list'
@@ -222,15 +197,15 @@ const DEFAULT_FILTERS = {
 	namespace: '',
 }
 
-export const ALPHABETICAL_SORT	= 'title'
+export const ALPHABETICAL_SORT = 'title'
 
 export default {
 	name: 'filters',
 	components: {
+		DatepickerWithRange,
 		EditLabels,
 		PrioritySelect,
 		Fancycheckbox,
-		flatPickr,
 		PercentDoneSelect,
 		Multiselect,
 	},
@@ -281,7 +256,7 @@ export default {
 				return this.params?.sort_by?.find(sortBy => sortBy === ALPHABETICAL_SORT) !== undefined
 			},
 			set(sortAlphabetically) {
-				this.params.sort_by	= sortAlphabetically
+				this.params.sort_by = sortAlphabetically
 					? [ALPHABETICAL_SORT]
 					: getDefaultParams().sort_by
 
@@ -290,19 +265,6 @@ export default {
 		},
 		foundLabels() {
 			return this.$store.getters['labels/filterLabelsByQuery'](this.labels, this.query)
-		},
-		flatPickerConfig() {
-			return {
-				altFormat: this.$t('date.altFormatLong'),
-				altInput: true,
-				dateFormat: 'Y-m-d H:i',
-				enableTime: true,
-				time_24hr: true,
-				mode: 'range',
-				locale: {
-					firstDayOfWeek: this.$store.state.auth.settings.weekStart,
-				},
-			}
 		},
 	},
 	methods: {
@@ -343,19 +305,12 @@ export default {
 				}
 			}
 		},
-		setDateFilter(filterName, variableName = null) {
-			if (variableName === null) {
-				variableName = filterName
-			}
+		setDateFilter(filterName, {dateFrom, dateTo}) {
+			dateFrom = parseDateOrString(dateFrom, null)
+			dateTo = parseDateOrString(dateTo, null)
 			
-			// Only filter if we have a start and end due date
-			if (this.filters[variableName] !== '') {
-
-				const parts = this.filters[variableName].split(' to ')
-
-				if (parts.length < 2) {
-					return
-				}
+			// Only filter if we have a date
+			if (dateFrom !== null && dateTo !== null) {
 
 				// Check if we already have values in params and only update them if we do
 				let foundStart = false
@@ -363,23 +318,23 @@ export default {
 				this.params.filter_by.forEach((f, i) => {
 					if (f === filterName && this.params.filter_comparator[i] === 'greater_equals') {
 						foundStart = true
-						this.params.filter_value[i] = formatISO(new Date(parts[0]))
+						this.params.filter_value[i] = dateFrom
 					}
 					if (f === filterName && this.params.filter_comparator[i] === 'less_equals') {
 						foundEnd = true
-						this.params.filter_value[i] = formatISO(new Date(parts[1]))
+						this.params.filter_value[i] = dateTo
 					}
 				})
 
 				if (!foundStart) {
 					this.params.filter_by.push(filterName)
 					this.params.filter_comparator.push('greater_equals')
-					this.params.filter_value.push(formatISO(new Date(parts[0])))
+					this.params.filter_value.push(dateFrom)
 				}
 				if (!foundEnd) {
 					this.params.filter_by.push(filterName)
 					this.params.filter_comparator.push('less_equals')
-					this.params.filter_value.push(formatISO(new Date(parts[1])))
+					this.params.filter_value.push(dateTo)
 				}
 				this.change()
 				return
@@ -513,23 +468,23 @@ export default {
 				this.params.filter_concat = 'or'
 			}
 		},
-		setDueDateFilter() {
-			this.setDateFilter('due_date', 'dueDate')
-		},
 		setPriority() {
 			this.setSingleValueFilter('priority', 'priority', 'usePriority')
-		},
-		setStartDateFilter() {
-			this.setDateFilter('start_date', 'startDate')
-		},
-		setEndDateFilter() {
-			this.setDateFilter('end_date', 'endDate')
 		},
 		setPercentDoneFilter() {
 			this.setSingleValueFilter('percent_done', 'percentDone', 'usePercentDone')
 		},
-		setReminderFilter() {
-			this.setDateFilter('reminders')
+		setDueDateFilter(values) {
+			this.setDateFilter('due_date', values)
+		},
+		setStartDateFilter(values) {
+			this.setDateFilter('start_date', values)
+		},
+		setEndDateFilter(values) {
+			this.setDateFilter('end_date', values)
+		},
+		setReminderFilter(values) {
+			this.setDateFilter('reminders', values)
 		},
 		clear(kind) {
 			this[`found${kind}`] = []
@@ -617,5 +572,9 @@ export default {
 	.fancycheckbox {
 		margin-left: .5rem;
 	}
+}
+
+.datepicker-with-range-container .popup {
+	right: 0;
 }
 </style>

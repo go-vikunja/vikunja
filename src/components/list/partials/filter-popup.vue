@@ -6,7 +6,7 @@
 	>
 		{{ $t('filters.clear') }}
 	</x-button>
-	<popup>
+	<popup :has-overflow="true">
 		<template #trigger="{toggle}">
 			<x-button
 				@click.prevent.stop="toggle()"
