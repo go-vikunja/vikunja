@@ -14,7 +14,7 @@
 		</p>
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
 			<h3 class="has-text-centered mt-6">{{ $t('task.show.noTasks') }}</h3>
-			<LlamaCool class="mt-5"/>
+			<LlamaCool class="llama-cool"/>
 		</template>
 
 		<card
@@ -233,5 +233,10 @@ export default {
 .show-tasks-options {
 	display: flex;
 	flex-direction: column;
+}
+
+.llama-cool {
+	margin: 3rem auto 0;
+	display: block;
 }
 </style>
