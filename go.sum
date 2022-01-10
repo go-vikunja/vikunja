@@ -522,6 +522,8 @@ github.com/labstack/echo/v4 v4.6.1 h1:OMVsrnNFzYlGSdaiYGHbgWQnr+JM7NG+B9suCPie14
 github.com/labstack/echo/v4 v4.6.1/go.mod h1:RnjgMWNDB9g/HucVWhQYNQP9PvbYf6adqftqryo7s9k=
 github.com/labstack/echo/v4 v4.6.2 h1:lGl58LRvItiofInOQGHHLuH2TyGU3BAEgmEv55N65nM=
 github.com/labstack/echo/v4 v4.6.2/go.mod h1:Hk5OiHj0kDqmFq7aHe7eDqI7CUhuCrfpupQtLGGLm7A=
+github.com/labstack/echo/v4 v4.6.3 h1:VhPuIZYxsbPmo4m9KAkMU/el2442eB7EBFFhNTTT9ac=
+github.com/labstack/echo/v4 v4.6.3/go.mod h1:Hk5OiHj0kDqmFq7aHe7eDqI7CUhuCrfpupQtLGGLm7A=
 github.com/labstack/gommon v0.3.0/go.mod h1:MULnywXg0yavhxWKc+lOruYdAhDwPK9wf0OL7NoOu+k=
 github.com/labstack/gommon v0.3.1 h1:OomWaJXm7xR6L1HmEtGyQf26TEn7V6X88mktX9kee9o=
 github.com/labstack/gommon v0.3.1/go.mod h1:uW6kP17uPlLJsD3ijUYn3/M5bAxtlZhMI6m3MFxTMTM=
