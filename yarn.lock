@@ -4836,11 +4836,6 @@ colors@^1.1.2, colors@^1.2.1:
   resolved "https://registry.yarnpkg.com/colors/-/colors-1.4.0.tgz#c50491479d4c1bdaed2c9ced32cf7c7dc2360f78"
   integrity sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA==
 
-colors@^1.4.0:
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/colors/-/colors-1.4.2.tgz#cd4fe227412ca2c75bb6f5683ec2e5e68de4f317"
-  integrity sha512-5QhJWPFZqkKIieXJPpCprdOytvH7v0AGWpu9K2jZ4LWkGg3dVBNoYPgGGRpEsc0jb8Boy0ElYrdjH9uXfhRSqw==
-
 colorspace@1.1.x:
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/colorspace/-/colorspace-1.1.4.tgz#8d442d1186152f60453bf8070cd66eb364e59243"
@@ -9310,10 +9305,10 @@ nested-error-stacks@^2.0.0, nested-error-stacks@^2.1.0:
   resolved "https://registry.yarnpkg.com/nested-error-stacks/-/nested-error-stacks-2.1.0.tgz#0fbdcf3e13fe4994781280524f8b96b0cdff9c61"
   integrity sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==
 
-netlify-cli@8.6.16:
-  version "8.6.16"
-  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.6.16.tgz#39c860fad937cbfb5ddea3b0eda4ec5518005b4e"
-  integrity sha512-P/sRYKLsulnO4Jrj8087x+RfX2grvfCls03AkzxqHivMdCmPruKWw/rAWmBOK2c3ohgfQxmZ0bnHbYSem4VeiA==
+netlify-cli@8.6.17:
+  version "8.6.17"
+  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.6.17.tgz#d3b0ef73744aca89eb8517927d59555bf927fbec"
+  integrity sha512-EbE8ZQ+fHP7y4HR7pTlhazSqKgF3uG7DBanKqXHa3RVlyA4UBghxD7ZKlS/36R4uSI7eePURGXf5FL5/c7FugA==
   dependencies:
     "@netlify/build" "^26.1.0"
     "@netlify/config" "^17.0.3"
@@ -9335,7 +9330,6 @@ netlify-cli@8.6.16:
     chokidar "^3.0.2"
     ci-info "^3.0.0"
     clean-deep "^3.0.2"
-    colors "^1.4.0"
     commander "^8.3.0"
     concordance "^5.0.0"
     configstore "^5.0.0"
