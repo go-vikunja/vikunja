@@ -899,7 +899,7 @@
     "4015": "Le commentaire de la tâche n’existe pas.",
     "4016": "Champ de tâche invalide.",
     "4017": "Comparateur de filtre de tâche invalide.",
-    "4018": "Concaténateur de filtre de tâche invalide.",
+    "4018": "Invalid task filter concatenator.",
     "4019": "Valeur de filtre de tâche invalide.",
     "5001": "L’espace de noms n’existe pas.",
     "5003": "Tu n’as pas accès à l’espace de noms indiqué.",

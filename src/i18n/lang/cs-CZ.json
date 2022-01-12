@@ -899,7 +899,7 @@
     "4015": "Komentář k úkolu neexistuje.",
     "4016": "Neplatné pole úkolu.",
     "4017": "Neplatný komparátor filtru úkolů.",
-    "4018": "Neplatný koncatinátor filtru úkolů.",
+    "4018": "Invalid task filter concatenator.",
     "4019": "Neplatná hodnota filtru úkolů.",
     "5001": "Prostor neexistuje.",
     "5003": "Nemáte přístup ke zvolenému prostoru.",

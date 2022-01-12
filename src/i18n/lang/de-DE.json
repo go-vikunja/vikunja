@@ -899,7 +899,7 @@
     "4015": "Dieser Aufgabenkommentar existiert nicht.",
     "4016": "Ungültiges Aufgabenfeld.",
     "4017": "Ungültiger Aufgabenfilter (Vergleichskriterium).",
-    "4018": "Ungültiger Aufgabenfilter (Kombination).",
+    "4018": "Invalid task filter concatenator.",
     "4019": "Ungültiger Aufgabenfilter (Wert).",
     "5001": "Dieser Namespace existiert nicht.",
     "5003": "Du hast keinen Zugriff auf den Namespace.",

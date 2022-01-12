@@ -899,7 +899,7 @@
     "4015": "The task comment does not exist.",
     "4016": "Invalid task field.",
     "4017": "Invalid task filter comparator.",
-    "4018": "Invalid task filter concatinator.",
+    "4018": "Invalid task filter concatenator.",
     "4019": "Invalid task filter value.",
     "5001": "The namespace does not exist.",
     "5003": "You do not have access to the specified namespace.",
