@@ -80,7 +80,7 @@
     "netlify-cli": "8.6.22",
     "happy-dom": "2.25.1",
     "postcss": "8.4.5",
-    "postcss-preset-env": "7.2.2",
+    "postcss-preset-env": "7.2.3",
     "rollup": "2.63.0",
     "rollup-plugin-visualizer": "5.5.2",
     "sass": "1.47.0",

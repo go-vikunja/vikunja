@@ -10316,10 +10316,10 @@ postcss-place@^7.0.3:
   dependencies:
     postcss-value-parser "^4.2.0"
 
-postcss-preset-env@7.2.2:
-  version "7.2.2"
-  resolved "https://registry.yarnpkg.com/postcss-preset-env/-/postcss-preset-env-7.2.2.tgz#bebd1abf487e9cd3fe17ceb9ebc10e88f7de7888"
-  integrity sha512-qLlBuuxX05zX8nLNysqrU0U8y42ygGmcUyi43iGR34p9FSgNtTZXCpS+d0A2vt3a+XNiwcIbnomQqth8ejK1OQ==
+postcss-preset-env@7.2.3:
+  version "7.2.3"
+  resolved "https://registry.yarnpkg.com/postcss-preset-env/-/postcss-preset-env-7.2.3.tgz#01b9b6eea0ff16c27a3d514f10105d56363428a6"
+  integrity sha512-Ok0DhLfwrcNGrBn8sNdy1uZqWRk/9FId0GiQ39W4ILop5GHtjJs8bu1MY9isPwHInpVEPWjb4CEcEaSbBLpfwA==
   dependencies:
     autoprefixer "^10.4.2"
     browserslist "^4.19.1"
