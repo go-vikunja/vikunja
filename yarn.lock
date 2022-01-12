@@ -4471,7 +4471,7 @@ camelcase@^6.0.0, camelcase@^6.2.0:
   resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-6.2.0.tgz#924af881c9d525ac9d87f40d964e5cea982a1809"
   integrity sha512-c7wVvbw3f37nuobQNtgsgG9POC9qMbNuMQmTCqZv23b6MIz0fcYpBiOlv9gEN/hdLdnZTDQhg6e9Dq5M1vKvfg==
 
-caniuse-lite@1.0.30001299:
+caniuse-lite@1.0.30001299, caniuse-lite@^1.0.30001299:
   version "1.0.30001299"
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001299.tgz#d753bf6444ed401eb503cbbe17aa3e1451b5a68c"
   integrity sha512-iujN4+x7QzqA2NCSrS5VUy+4gLmRd4xv6vbBBsmfVqTx8bLAD8097euLqQgKxSVLvxjSDcvF1T/i9ocgnUFexw==
@@ -4485,11 +4485,6 @@ caniuse-lite@^1.0.30001297:
   version "1.0.30001297"
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001297.tgz#ea7776ccc4992956582cae5b8fea127fbebde430"
   integrity sha512-6bbIbowYG8vFs/Lk4hU9jFt7NknGDleVAciK916tp6ft1j+D//ZwwL6LbF1wXMQ32DMSjeuUV8suhh6dlmFjcA==
-
-caniuse-lite@^1.0.30001299:
-  version "1.0.30001299"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001299.tgz#d753bf6444ed401eb503cbbe17aa3e1451b5a68c"
-  integrity sha512-iujN4+x7QzqA2NCSrS5VUy+4gLmRd4xv6vbBBsmfVqTx8bLAD8097euLqQgKxSVLvxjSDcvF1T/i9ocgnUFexw==
 
 caseless@^0.12.0, caseless@~0.12.0:
   version "0.12.0"
@@ -9309,10 +9304,10 @@ nested-error-stacks@^2.0.0, nested-error-stacks@^2.1.0:
   resolved "https://registry.yarnpkg.com/nested-error-stacks/-/nested-error-stacks-2.1.0.tgz#0fbdcf3e13fe4994781280524f8b96b0cdff9c61"
   integrity sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==
 
-netlify-cli@8.6.21:
-  version "8.6.21"
-  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.6.21.tgz#3e34967b7493cafa039b3831267b7c781b61aae7"
-  integrity sha512-LIrQn2nsnLt16HWZUP379j3p3QUoC0RjP5atnr78YQLjtUJ558asceD0TTVrGJgEHuceHq9YU1ztXwoohiv1nA==
+netlify-cli@8.6.22:
+  version "8.6.22"
+  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.6.22.tgz#ddd964865e966fa9185e0f0cb1b9a03dd7af1c3b"
+  integrity sha512-X1XcQiSURXCcEj7KGS+OjbwZp6v7BeOFPmmsSa20iB5WveTSjHhEO0treecQVhHXeQhawuuF78eQms62T7q6lw==
   dependencies:
     "@netlify/build" "^26.1.0"
     "@netlify/config" "^17.0.3"
