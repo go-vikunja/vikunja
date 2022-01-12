@@ -1945,18 +1945,18 @@
     call-me-maybe "^1.0.1"
     glob-to-regexp "^0.3.0"
 
-"@netlify/build@^26.1.0":
-  version "26.1.0"
-  resolved "https://registry.yarnpkg.com/@netlify/build/-/build-26.1.0.tgz#72860e5c90e95a8733731f54e1805a9333bd708b"
-  integrity sha512-BZEC/8jUizGkZboc7RGGTC23KcFUH9MawpfH5ecFVM30gzL3LEdAOFZS/xvgffC3s5s2vsnZenslICowUpJueA==
+"@netlify/build@^26.1.1":
+  version "26.1.1"
+  resolved "https://registry.yarnpkg.com/@netlify/build/-/build-26.1.1.tgz#b4e3d2738d834a736bd1b8c4fa4e58dbd6b8f229"
+  integrity sha512-bFVNUXElPPkKOMn3/d4mxmsaxpe4QJC376yuXqZIhKMn37JCDPAfE2sBkFgMK9TjsWNqYKfsIhUtUnjFB6y2gA==
   dependencies:
     "@bugsnag/js" "^7.0.0"
     "@netlify/cache-utils" "^4.0.0"
     "@netlify/config" "^17.0.0"
     "@netlify/functions-utils" "^4.0.0"
     "@netlify/git-utils" "^4.0.0"
-    "@netlify/plugin-edge-handlers" "^3.0.0"
-    "@netlify/plugins-list" "^6.2.0"
+    "@netlify/plugin-edge-handlers" "^3.0.2"
+    "@netlify/plugins-list" "^6.2.1"
     "@netlify/run-utils" "^4.0.0"
     "@netlify/zip-it-and-ship-it" "^5.4.0"
     "@sindresorhus/slugify" "^1.1.0"
@@ -1973,7 +1973,6 @@
     keep-func-props "^3.0.0"
     locate-path "^6.0.0"
     log-process-errors "^6.0.0"
-    make-dir "^3.0.2"
     map-obj "^4.0.0"
     memoize-one "^6.0.0"
     os-name "^4.0.1"
@@ -2208,30 +2207,6 @@
   resolved "https://registry.yarnpkg.com/@netlify/open-api/-/open-api-2.8.0.tgz#e59537ae9aa8342c2aa64952d42e5e089c8422f4"
   integrity sha512-lfNB/QYDgaP07pwm/nWEaWPvRAAGyhxvJqNzvxMijc7A4uwquMjlbYve8yYyd0LJXPwgBpGobwiQj5RA76xzUQ==
 
-"@netlify/plugin-edge-handlers@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@netlify/plugin-edge-handlers/-/plugin-edge-handlers-3.0.0.tgz#c81b3449b509ebaed075c535013441f85e9db372"
-  integrity sha512-lolaK+xaY0Hud4tE89baA9FrwxebTvSTVTeQAEK3a9yj1o0jZrEzaBW9kGZ89lwANb4Mghz3PLaksOlEH179MA==
-  dependencies:
-    "@babel/core" "^7.11.4"
-    "@babel/preset-env" "^7.11.5"
-    "@rollup/plugin-babel" "^5.2.0"
-    "@rollup/plugin-commonjs" "^21.0.0"
-    "@rollup/plugin-inject" "^4.0.2"
-    "@rollup/plugin-json" "^4.1.0"
-    "@rollup/plugin-node-resolve" "^11.0.0"
-    "@types/node" "^16.0.0"
-    buffer-es6 "^4.9.3"
-    del "^6.0.0"
-    make-dir "^3.1.0"
-    node-fetch "^2.6.1"
-    path-type "^4.0.0"
-    process-es6 "^0.11.6"
-    rollup "^2.23.1"
-    rollup-plugin-node-polyfills "^0.2.1"
-    rollup-plugin-terser "^7.0.2"
-    typescript "^4.1.5"
-
 "@netlify/plugin-edge-handlers@^3.0.2":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@netlify/plugin-edge-handlers/-/plugin-edge-handlers-3.0.2.tgz#92beec901721f50b6cd90e1aa5bd13a09a95210c"
@@ -2253,11 +2228,6 @@
     rollup "^2.23.1"
     rollup-plugin-node-polyfills "^0.2.1"
     rollup-plugin-terser "^7.0.2"
-
-"@netlify/plugins-list@^6.2.0":
-  version "6.2.0"
-  resolved "https://registry.yarnpkg.com/@netlify/plugins-list/-/plugins-list-6.2.0.tgz#dec7eef1a5bac9fc0f44b45a22c9839591428279"
-  integrity sha512-ZkrNrq1A/pVt32XsSLye9We0v+f0yqnOMD32Yu17KoMsL6AVF0KOyiAqjuJFNOZlusTkLgmZuMAbtmriybP0AQ==
 
 "@netlify/plugins-list@^6.2.1":
   version "6.2.1"
@@ -8891,7 +8861,7 @@ make-dir@^2.1.0:
     pify "^4.0.1"
     semver "^5.6.0"
 
-make-dir@^3.0.0, make-dir@^3.0.2, make-dir@^3.1.0:
+make-dir@^3.0.0, make-dir@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/make-dir/-/make-dir-3.1.0.tgz#415e967046b3a7f1d185277d84aa58203726a13f"
   integrity sha512-g3FeP20LNwhALb/6Cz6Dd4F2ngze0jz7tbzrD2wAV+o9FeNHe4rL+yK2md0J/fiSf1sa1ADhXqi5+oVwOM/eGw==
@@ -9304,12 +9274,12 @@ nested-error-stacks@^2.0.0, nested-error-stacks@^2.1.0:
   resolved "https://registry.yarnpkg.com/nested-error-stacks/-/nested-error-stacks-2.1.0.tgz#0fbdcf3e13fe4994781280524f8b96b0cdff9c61"
   integrity sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==
 
-netlify-cli@8.6.22:
-  version "8.6.22"
-  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.6.22.tgz#ddd964865e966fa9185e0f0cb1b9a03dd7af1c3b"
-  integrity sha512-X1XcQiSURXCcEj7KGS+OjbwZp6v7BeOFPmmsSa20iB5WveTSjHhEO0treecQVhHXeQhawuuF78eQms62T7q6lw==
+netlify-cli@8.6.23:
+  version "8.6.23"
+  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-8.6.23.tgz#cb00ea07ec2bae495a3ae3c8924db01c6673c291"
+  integrity sha512-xiYpatBU2UKwITk7hv8ifZXvF4pi1u2urkWX+6Bl08kYuvvoM0CqkzIKbA0XYdE7L2ES+d0a45KX0pajRq1myA==
   dependencies:
-    "@netlify/build" "^26.1.0"
+    "@netlify/build" "^26.1.1"
     "@netlify/config" "^17.0.3"
     "@netlify/framework-info" "^8.0.0"
     "@netlify/local-functions-proxy" "^1.1.1"
@@ -12500,7 +12470,7 @@ typescript@^3.9.7:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.9.10.tgz#70f3910ac7a51ed6bef79da7800690b19bf778b8"
   integrity sha512-w6fIxVE/H1PkLKcCPsFqKE7Kv7QUwhU8qQY2MueZXWx5cPZdwFupLgKK3vntcK98BtNHZtAF4LA/yl2a7k8R6Q==
 
-typescript@^4.1.5, typescript@^4.4.3:
+typescript@^4.4.3:
   version "4.4.4"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.4.4.tgz#2cd01a1a1f160704d3101fd5a58ff0f9fcb8030c"
   integrity sha512-DqGhF5IKoBl8WNf8C1gu8q0xZSInh9j1kJJMqT3a94w1JzVaBU4EXOSMrz9yDqMT0xt3selp83fuFMQ0uzv6qA==
