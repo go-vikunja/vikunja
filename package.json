@@ -83,7 +83,7 @@
     "postcss-preset-env": "7.2.3",
     "rollup": "2.63.0",
     "rollup-plugin-visualizer": "5.5.2",
-    "sass": "1.47.0",
+    "sass": "1.48.0",
     "slugify": "1.6.5",
     "typescript": "4.5.4",
     "vite": "2.7.10",
