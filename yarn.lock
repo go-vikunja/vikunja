@@ -12770,10 +12770,10 @@ vite@2.7.10, vite@>=2.7.10:
   optionalDependencies:
     fsevents "~2.3.2"
 
-vitest@0.0.142:
-  version "0.0.142"
-  resolved "https://registry.yarnpkg.com/vitest/-/vitest-0.0.142.tgz#6d7a3c6cbdb7ddcbab8ddb5ff74e469d827c8c06"
-  integrity sha512-d1Ya3Jd/RKYfH9qJHlrCw7AU3Xne7sjdjLfR0Kh+UsYmpRvdYsWAA8AkrIkv2U/N77wmA59LlqooMBI5GoK/ZQ==
+vitest@0.1.12:
+  version "0.1.12"
+  resolved "https://registry.yarnpkg.com/vitest/-/vitest-0.1.12.tgz#05ee77bc24e112228f3289d781ae9db131c0dfcf"
+  integrity sha512-uiGDO1aKX2rUWtkR7iNedbtN3ij/qr4l1DwAbX5cIADUD7VBuFimaUrL8KyFw3eSxdA56xJyl8JpvSAsvvpN7w==
   dependencies:
     "@types/chai" "^4.3.0"
     "@types/chai-subset" "^1.3.3"
