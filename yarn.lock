@@ -12758,7 +12758,19 @@ vite-svg-loader@3.1.2:
     "@vue/compiler-sfc" "^3.2.20"
     svgo "^2.7.0"
 
-vite@2.7.10, vite@>=2.7.10:
+vite@2.7.11:
+  version "2.7.11"
+  resolved "https://registry.yarnpkg.com/vite/-/vite-2.7.11.tgz#b3caca377c202db887afda16b85b0ab111146bd9"
+  integrity sha512-W1OVwJmtuxnzt9HwZ1AebVLgvsgNpe4TK/sxvF+1x2y8MRnTEHvaPqxy9A67IYb5BR0Q+nENmLYa3QfESmp5GQ==
+  dependencies:
+    esbuild "^0.13.12"
+    postcss "^8.4.5"
+    resolve "^1.20.0"
+    rollup "^2.59.0"
+  optionalDependencies:
+    fsevents "~2.3.2"
+
+vite@>=2.7.10:
   version "2.7.10"
   resolved "https://registry.yarnpkg.com/vite/-/vite-2.7.10.tgz#d12c4c10e56a0ecf7890cb529c15996c6111218f"
   integrity sha512-KEY96ntXUid1/xJihJbgmLZx7QSC2D4Tui0FdS0Old5OokYzFclcofhtxtjDdGOk/fFpPbHv9yw88+rB93Tb8w==
