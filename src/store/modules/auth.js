@@ -1,4 +1,4 @@
-import {HTTPFactory} from '@/http-common'
+import {HTTPFactory, AuthenticatedHTTPFactory} from '@/http-common'
 import {i18n, getCurrentLanguage, saveLanguage} from '@/i18n'
 import {objectToSnakeCase} from '@/helpers/case'
 import {LOADING} from '../mutation-types'
@@ -215,13 +215,9 @@ export default {
 				return
 			}
 
-			const HTTP = HTTPFactory()
+			const HTTP = AuthenticatedHTTPFactory(jwt)
 			try {
-				const response = await HTTP.get('user', {
-					headers: {
-						Authorization: `Bearer ${jwt}`,
-					},
-				})
+				const response = await HTTP.get('user')
 				const info = new UserModel(response.data)
 				info.type = state.info.type
 				info.email = state.info.email
