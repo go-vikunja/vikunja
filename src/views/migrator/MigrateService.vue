@@ -254,4 +254,13 @@ export default {
 		background-color: var(--primary-dark);
 	}
 }
+
+@media (prefers-reduced-motion: reduce) {
+	@keyframes wave {
+		10% {
+			transform: translate(0, 0);
+			background-color: var(--primary);
+		}
+	}
+}
 </style>

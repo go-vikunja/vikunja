@@ -326,6 +326,10 @@ export default {
         height: auto;
         text-shadow: var(--shadow-md);
         animation: bounce 2s infinite;
+		
+		@media (prefers-reduced-motion: reduce) {
+          animation: none;
+		}
       }
 
       .hint {

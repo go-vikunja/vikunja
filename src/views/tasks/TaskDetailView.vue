@@ -937,4 +937,12 @@ $flash-background-duration: 750ms;
     background: transparent;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+	@keyframes flash-background {
+		0% {
+			background: transparent;
+		}
+	}
+}
 </style>
