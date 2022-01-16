@@ -7260,6 +7260,43 @@ var doc = `{
                 }
             }
         },
+        "/user/timezones": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Because available time zones depend on the system Vikunja is running on, this endpoint returns a list of all valid time zones this particular Vikunja instance can handle. The list of time zones is not sorted, you should sort it on the client.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get all available time zones on this vikunja instance",
+                "responses": {
+                    "200": {
+                        "description": "All available time zones.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/user/token": {
             "post": {
                 "description": "Returns a new valid jwt user token with an extended length.",
@@ -8977,6 +9014,10 @@ var doc = `{
                 "overdue_tasks_reminders_enabled": {
                     "description": "If enabled, the user will get an email for their overdue tasks each morning.",
                     "type": "boolean"
+                },
+                "timezone": {
+                    "description": "The user's time zone. Used to send task reminders in the time zone of the user.",
+                    "type": "string"
                 },
                 "week_start": {
                     "description": "The day when the week starts for this user. 0 = sunday, 1 = monday, etc.",

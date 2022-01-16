@@ -57,6 +57,7 @@ require (
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.0
 	github.com/swaggo/swag v1.7.8
+	github.com/tkuchiki/go-timezone v0.2.2 // indirect
 	github.com/ulule/limiter/v3 v3.9.0
 	github.com/yuin/goldmark v1.4.4
 	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce

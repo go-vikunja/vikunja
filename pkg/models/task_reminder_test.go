@@ -32,10 +32,10 @@ func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T01:13:00Z")
 		assert.NoError(t, err)
-		taskIDs, err := getTasksWithRemindersInTheNextMinute(s, now)
+		notifications, err := getTasksWithRemindersDueAndTheirUsers(s, now)
 		assert.NoError(t, err)
-		assert.Len(t, taskIDs, 1)
-		assert.Equal(t, int64(27), taskIDs[0])
+		assert.Len(t, notifications, 1)
+		assert.Equal(t, int64(27), notifications[0].Task.ID)
 	})
 	t.Run("Found No Tasks", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -44,7 +44,7 @@ func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-12-02T01:13:00Z")
 		assert.NoError(t, err)
-		taskIDs, err := getTasksWithRemindersInTheNextMinute(s, now)
+		taskIDs, err := getTasksWithRemindersDueAndTheirUsers(s, now)
 		assert.NoError(t, err)
 		assert.Len(t, taskIDs, 0)
 	})

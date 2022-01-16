@@ -74,6 +74,7 @@ func UserShow(c echo.Context) error {
 			DefaultListID:                u.DefaultListID,
 			WeekStart:                    u.WeekStart,
 			Language:                     u.Language,
+			Timezone:                     u.Timezone,
 		},
 		DeletionScheduledAt: u.DeletionScheduledAt,
 		IsLocalUser:         u.Issuer == user.IssuerLocal,

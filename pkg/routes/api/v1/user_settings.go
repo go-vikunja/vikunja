@@ -19,12 +19,13 @@ package v1
 import (
 	"net/http"
 
-	"code.vikunja.io/api/pkg/db"
+	"github.com/labstack/echo/v4"
+	"github.com/tkuchiki/go-timezone"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
-	"github.com/labstack/echo/v4"
 )
 
 // UserAvatarProvider holds the user avatar provider type
@@ -52,6 +53,8 @@ type UserSettings struct {
 	WeekStart int `json:"week_start"`
 	// The user's language
 	Language string `json:"language"`
+	// The user's time zone. Used to send task reminders in the time zone of the user.
+	Timezone string `json:"timezone"`
 }
 
 // GetUserAvatarProvider returns the currently set user avatar
@@ -180,6 +183,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	user.DefaultListID = us.DefaultListID
 	user.WeekStart = us.WeekStart
 	user.Language = us.Language
+	user.Timezone = us.Timezone
 
 	_, err = user2.UpdateUser(s, user)
 	if err != nil {
@@ -193,4 +197,32 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, &models.Message{Message: "The settings were updated successfully."})
+}
+
+// GetAvailableTimezones
+// @Summary Get all available time zones on this vikunja instance
+// @Description Because available time zones depend on the system Vikunja is running on, this endpoint returns a list of all valid time zones this particular Vikunja instance can handle. The list of time zones is not sorted, you should sort it on the client.
+// @tags user
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Success 200 {array} string "All available time zones."
+// @Failure 500 {object} models.Message "Internal server error."
+// @Router /user/timezones [get]
+func GetAvailableTimezones(c echo.Context) error {
+
+	allTimezones := timezone.New().Timezones()
+	timezoneMap := make(map[string]bool) // to filter all duplicates
+	for _, s := range allTimezones {
+		for _, t := range s {
+			timezoneMap[t] = true
+		}
+	}
+
+	ts := []string{}
+	for s := range timezoneMap {
+		ts = append(ts, s)
+	}
+
+	return c.JSON(http.StatusOK, ts)
 }

@@ -61,11 +61,11 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 	// Get all creators of tasks
 	creators := make(map[int64]*user.User, len(taskIDs))
 	err = s.
-		Select("users.id, users.username, users.email, users.name").
+		Select("users.id, users.username, users.email, users.name, users.timezone").
 		Join("LEFT", "tasks", "tasks.created_by_id = users.id").
 		In("tasks.id", taskIDs).
 		Where(cond).
-		GroupBy("tasks.id, users.id, users.username, users.email, users.name").
+		GroupBy("tasks.id, users.id, users.username, users.email, users.name, users.timezone").
 		Find(&creators)
 	if err != nil {
 		return
@@ -77,14 +77,14 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 		return
 	}
 
-	for _, taskID := range taskIDs {
-		u, exists := creators[taskMap[taskID].CreatedByID]
+	for _, task := range taskMap {
+		u, exists := creators[task.CreatedByID]
 		if !exists {
 			continue
 		}
 
 		taskUsers = append(taskUsers, &taskUser{
-			Task: taskMap[taskID],
+			Task: taskMap[task.ID],
 			User: u,
 		})
 	}
@@ -110,8 +110,9 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 	return
 }
 
-func getTasksWithRemindersInTheNextMinute(s *xorm.Session, now time.Time) (taskIDs []int64, err error) {
+func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) (reminderNotifications []*ReminderDueNotification, err error) {
 	now = utils.GetTimeWithoutNanoSeconds(now)
+	reminderNotifications = []*ReminderDueNotification{}
 
 	nextMinute := now.Add(1 * time.Minute)
 
@@ -120,7 +121,8 @@ func getTasksWithRemindersInTheNextMinute(s *xorm.Session, now time.Time) (taskI
 	reminders := []*TaskReminder{}
 	err = s.
 		Join("INNER", "tasks", "tasks.id = task_reminders.task_id").
-		Where("reminder >= ? and reminder < ?", now.Format(dbTimeFormat), nextMinute.Format(dbTimeFormat)).
+		// All reminders from -12h to +14h to include all time zones
+		Where("reminder >= ? and reminder < ?", now.Add(time.Hour*-12).Format(dbTimeFormat), nextMinute.Add(time.Hour*14).Format(dbTimeFormat)).
 		And("tasks.done = false").
 		Find(&reminders)
 	if err != nil {
@@ -133,9 +135,54 @@ func getTasksWithRemindersInTheNextMinute(s *xorm.Session, now time.Time) (taskI
 		return
 	}
 
-	// We're sending a reminder to everyone who is assigned to the task or has created it.
+	var taskIDs []int64
 	for _, r := range reminders {
 		taskIDs = append(taskIDs, r.TaskID)
+	}
+
+	if len(taskIDs) == 0 {
+		return
+	}
+
+	usersWithReminders, err := getTaskUsersForTasks(s, taskIDs, builder.Eq{"users.email_reminders_enabled": true})
+	if err != nil {
+		return
+	}
+
+	usersPerTask := make(map[int64][]*taskUser, len(usersWithReminders))
+	for _, ur := range usersWithReminders {
+		usersPerTask[ur.Task.ID] = append(usersPerTask[ur.Task.ID], ur)
+	}
+
+	// Time zone cache per time zone string to avoid parsing the same time zone over and over again
+	tzs := make(map[string]*time.Location)
+	// Figure out which reminders are actually due in the time zone of the users
+	for _, r := range reminders {
+
+		for _, u := range usersPerTask[r.TaskID] {
+
+			if u.User.Timezone == "" {
+				u.User.Timezone = config.GetTimeZone().String()
+			}
+
+			// I think this will break once there's more reminders than what we can handle in one minute
+			tz, exists := tzs[u.User.Timezone]
+			if !exists {
+				tz, err = time.LoadLocation(u.User.Timezone)
+				if err != nil {
+					return
+				}
+				tzs[u.User.Timezone] = tz
+			}
+
+			actualReminder := r.Reminder.In(tz)
+			if (actualReminder.After(now) && actualReminder.Before(now.Add(time.Minute))) || actualReminder.Equal(now) {
+				reminderNotifications = append(reminderNotifications, &ReminderDueNotification{
+					User: u.User,
+					Task: u.Task,
+				})
+			}
+		}
 	}
 
 	return
@@ -162,37 +209,26 @@ func RegisterReminderCron() {
 		defer s.Close()
 
 		now := time.Now()
-		taskIDs, err := getTasksWithRemindersInTheNextMinute(s, now)
+		reminders, err := getTasksWithRemindersDueAndTheirUsers(s, now)
 		if err != nil {
 			log.Errorf("[Task Reminder Cron] Could not get tasks with reminders in the next minute: %s", err)
 			return
 		}
 
-		if len(taskIDs) == 0 {
+		if len(reminders) == 0 {
 			return
 		}
 
-		users, err := getTaskUsersForTasks(s, taskIDs, builder.Eq{"users.email_reminders_enabled": true})
-		if err != nil {
-			log.Errorf("[Task Reminder Cron] Could not get task users to send them reminders: %s", err)
-			return
-		}
+		log.Debugf("[Task Reminder Cron] Sending %d reminders", len(reminders))
 
-		log.Debugf("[Task Reminder Cron] Sending reminders to %d users", len(users))
-
-		for _, u := range users {
-			n := &ReminderDueNotification{
-				User: u.User,
-				Task: u.Task,
-			}
-
-			err = notifications.Notify(u.User, n)
+		for _, n := range reminders {
+			err = notifications.Notify(n.User, n)
 			if err != nil {
-				log.Errorf("[Task Reminder Cron] Could not notify user %d: %s", u.User.ID, err)
+				log.Errorf("[Task Reminder Cron] Could not notify user %d: %s", n.User.ID, err)
 				return
 			}
 
-			log.Debugf("[Task Reminder Cron] Sent reminder email for task %d to user %d", u.Task.ID, u.User.ID)
+			log.Debugf("[Task Reminder Cron] Sent reminder email for task %d to user %d", n.Task.ID, n.User.ID)
 		}
 	})
 	if err != nil {

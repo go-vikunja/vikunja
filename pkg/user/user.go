@@ -95,6 +95,7 @@ type User struct {
 	DefaultListID                int64  `xorm:"bigint null index" json:"-"`
 	WeekStart                    int    `xorm:"null" json:"-"`
 	Language                     string `xorm:"varchar(50) null" json:"-"`
+	Timezone                     string `xorm:"varchar(255) null" json:"-"`
 
 	DeletionScheduledAt      time.Time `xorm:"datetime null" json:"-"`
 	DeletionLastReminderSent time.Time `xorm:"datetime null" json:"-"`
@@ -462,6 +463,16 @@ func UpdateUser(s *xorm.Session, user *User) (updatedUser *User, err error) {
 		}
 	}
 
+	// Check if we have a valid time zone
+	if user.Timezone == "" {
+		user.Timezone = config.GetTimeZone().String()
+	}
+
+	_, err = time.LoadLocation(user.Timezone)
+	if err != nil {
+		return
+	}
+
 	// Update it
 	_, err = s.
 		ID(user.ID).
@@ -479,6 +490,7 @@ func UpdateUser(s *xorm.Session, user *User) (updatedUser *User, err error) {
 			"default_list_id",
 			"week_start",
 			"language",
+			"timezone",
 		).
 		Update(user)
 	if err != nil {
