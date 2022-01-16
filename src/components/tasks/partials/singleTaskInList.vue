@@ -46,6 +46,7 @@
 				@click.prevent.stop="showDefer = !showDefer"
 				v-if="+new Date(task.dueDate) > 0"
 				v-tooltip="formatDate(task.dueDate)"
+				:aria-expanded="showDefer ? 'true' : 'false'"
 			>
 				- {{ $t('task.detail.due', {at: formatDateSince(task.dueDate)}) }}
 			</time>
