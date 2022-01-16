@@ -23,7 +23,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, shallowRef} from 'vue'
+import {computed, PropType, shallowRef} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import SubscriptionService from '@/services/subscription'
@@ -38,15 +38,19 @@ const props = defineProps({
 	},
 	subscription: {
 		required: true,
+		type: Object as PropType<SubscriptionModel>,
 	},
 	entityId: {
 		required: true,
+		type: Number,
 	},
 	isButton: {
 		type: Boolean,
 		default: true,
 	},
 })
+
+const subscriptionEntity = computed<string>(() => props.subscription.entity)
 
 const emit = defineEmits(['change'])
 
@@ -57,7 +61,7 @@ const tooltipText = computed(() => {
 	if (disabled.value) {
 		return t('task.subscription.subscribedThroughParent', {
 			entity: props.entity,
-			parent: props.subscription.entity,
+			parent: subscriptionEntity.value,
 		})
 	}
 
@@ -73,7 +77,7 @@ const disabled = computed(() => {
 		return false
 	}
 
-	return props.subscription.entity !== props.entity
+	return subscriptionEntity.value !== props.entity
 })
 
 function changeSubscription() {

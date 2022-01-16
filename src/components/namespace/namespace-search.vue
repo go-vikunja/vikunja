@@ -13,6 +13,7 @@
 import {ref, computed} from 'vue'
 import {useStore} from 'vuex'
 import Multiselect from '@/components/input/multiselect.vue'
+import NamespaceModel from '@/models/namespace'
 
 const emit = defineEmits(['selected'])
 
@@ -25,7 +26,7 @@ function findNamespaces(newQuery: string) {
 	query.value = newQuery
 }
 
-function select(namespace) {
+function select(namespace: NamespaceModel) {
 	emit('selected', namespace)
 }
 </script>
