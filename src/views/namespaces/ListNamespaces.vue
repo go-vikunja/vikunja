@@ -22,7 +22,7 @@
 			</router-link>
 		</p>
 
-		<div :key="`n${n.id}`" class="namespace" v-for="n in namespaces">
+		<section :key="`n${n.id}`" class="namespace" v-for="n in namespaces">
 			<x-button
 				:to="{name: 'list.create', params: {id:  n.id}}"
 				class="is-pulled-right"
@@ -64,7 +64,7 @@
 					:show-archived="showArchived"
 				/>
 			</div>
-		</div>
+		</section>
 	</div>
 </template>
 

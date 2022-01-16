@@ -1,6 +1,6 @@
 <template>
-	<div :class="{'is-active': menuActive}" class="namespace-container">
-		<div class="menu top-menu">
+	<aside :class="{'is-active': menuActive}" class="namespace-container">
+		<nav class="menu top-menu">
 			<router-link :to="{name: 'home'}" class="logo">
 				<Logo width="164" height="48" />
 			</router-link>
@@ -46,9 +46,9 @@
 					</router-link>
 				</li>
 			</ul>
-		</div>
+		</nav>
 
-		<aside class="menu namespaces-lists loader-container is-loading-small" :class="{'is-loading': loading}">
+		<nav class="menu namespaces-lists loader-container is-loading-small" :class="{'is-loading': loading}">
 			<template v-for="(n, nk) in namespaces" :key="n.id" >
 				<div class="namespace-title" :class="{'has-menu': n.id > 0}">
 					<span
@@ -145,9 +145,9 @@
 					</draggable>
 				</div>
 			</template>
-		</aside>
+		</nav>
 		<PoweredByLink />
-	</div>
+	</aside>
 </template>
 
 <script>
