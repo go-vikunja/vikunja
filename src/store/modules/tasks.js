@@ -179,9 +179,18 @@ export default {
 				console.debug('Could not add label to task in kanban, task not found', t)
 				return r
 			}
-			// FIXME: direct store manipulation (task)
-			t.task.labels.push(label)
-			ctx.commit('kanban/setTaskInBucketByIndex', t, { root: true })
+			
+			const labels = [...t.task.labels]
+			labels.push(label)
+
+			ctx.commit('kanban/setTaskInBucketByIndex', {
+				task: {
+					labels,
+				...t.task,
+				},
+				...t,
+			}, { root: true })
+
 			return r
 		},
 
@@ -200,15 +209,21 @@ export default {
 			}
 
 			// Remove the label from the list
-			for (const l in t.task.labels) {
-				if (t.task.labels[l].id === label.id) {
-					// FIXME: direct store manipulation (task)
-					t.task.labels.splice(l, 1)
+			const labels = [...t.task.labels]
+			for (const l in labels) {
+				if (labels[l].id === label.id) {
+					labels.splice(l, 1)
 					break
 				}
 			}
 
-			ctx.commit('kanban/setTaskInBucketByIndex', t, {root: true})
+			ctx.commit('kanban/setTaskInBucketByIndex', {
+				task: {
+					labels,
+					...t.task,
+				},
+				...t,
+			}, {root: true})
 
 			return response
 		},
