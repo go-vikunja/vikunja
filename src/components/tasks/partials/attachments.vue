@@ -34,7 +34,7 @@
 			>
 				<div class="filename">{{ a.file.name }}</div>
 				<div class="info">
-					<p class="collapses">
+					<p class="attachment-info-meta">
 						<i18n-t keypath="task.attachment.createdBy">
 							<span v-tooltip="formatDate(a.created)">
 								{{ formatDateSince(a.created) }}
@@ -289,21 +289,6 @@ export default {
             content: '·';
             padding: 0 .25rem;
           }
-
-          @media screen and (max-width: $mobile) {
-            &.collapses {
-              flex-direction: column;
-
-              > span:not(:last-child):after,
-              > a:not(:last-child):after {
-                display: none;
-              }
-
-              .user .username {
-                display: none;
-              }
-            }
-          }
         }
       }
     }
@@ -355,6 +340,35 @@ export default {
       }
     }
   }
+}
+
+.attachment-info-meta {
+	display: flex;
+	align-items: center;
+	
+	:deep(.user) {
+		display: flex !important;
+		align-items: center;
+		margin: 0 .5rem;
+	}
+
+	@media screen and (max-width: $mobile) {
+		flex-direction: column;
+		align-items: flex-start;
+		
+		:deep(.user) {
+			margin: .5rem 0;
+		}
+
+		> span:not(:last-child):after,
+		> a:not(:last-child):after {
+			display: none;
+		}
+
+		.user .username {
+			display: none;
+		}
+	}
 }
 
 @keyframes bounce {
