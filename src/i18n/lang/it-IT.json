@@ -7,7 +7,7 @@
     "lastViewed": "Ultima visualizzazione",
     "list": {
       "newText": "È possibile creare una nuova lista per le nuove attività:",
-      "new": "New list",
+      "new": "Nuova lista",
       "importText": "O importare le liste e le attività da altri servizi in Vikunja:",
       "import": "Importa i tuoi dati in Vikunja"
     }
@@ -17,13 +17,13 @@
     "text": "La pagina richiesta non esiste."
   },
   "ready": {
-    "loading": "Vikunja is loading…",
-    "errorOccured": "An error occured:",
-    "checkApiUrl": "Please check if the api url is correct.",
-    "noApiUrlConfigured": "No API url was configured. Please set one below:"
+    "loading": "Vikunja sta caricando…",
+    "errorOccured": "Si è verificato un errore:",
+    "checkApiUrl": "Controlla se l'URL API è corretto.",
+    "noApiUrlConfigured": "Nessun URL API configurato. Impostane uno qui sotto:"
   },
   "offline": {
-    "title": "You are offline.",
+    "title": "Sei offline.",
     "text": "Please check your network connection and try again."
   },
   "user": {
