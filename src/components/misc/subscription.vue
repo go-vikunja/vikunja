@@ -38,7 +38,9 @@ const props = defineProps({
 	},
 	subscription: {
 		required: true,
-		type: Object as PropType<SubscriptionModel>,
+		validator(value) {
+			return value instanceof SubscriptionModel || value === null
+		}
 	},
 	entityId: {
 		required: true,

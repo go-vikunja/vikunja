@@ -601,6 +601,9 @@ export default {
 			}
 		},
 		scrollToHeading() {
+			if(!this.$refs?.heading?.$el) {
+				return
+			}
 			this.$refs.heading.$el.scrollIntoView({block: 'center'})
 		},
 		setActiveFields() {
