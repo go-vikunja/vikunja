@@ -18,8 +18,7 @@ declare global {
 	}
 }
 
-import {formatDate, formatDateShort, formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
-import {formatISO} from 'date-fns'
+import {formatDate, formatDateShort, formatDateLong, formatDateSince, formatISO} from '@/helpers/time/formatDate'
 // @ts-ignore
 import {VERSION} from './version.json'
 
