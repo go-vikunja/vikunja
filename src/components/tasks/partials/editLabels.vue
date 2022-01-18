@@ -25,13 +25,13 @@
 		<template #searchResult="props">
 			<span
 				v-if="typeof props.option === 'string'"
-				class="tag">
+				class="tag search-result">
 				<span>{{ props.option }}</span>
 			</span>
 			<span
 				v-else
 				:style="{'background': props.option.hexColor, 'color': props.option.textColor}"
-				class="tag">
+				class="tag search-result">
 				<span>{{ props.option.title }}</span>
 			</span>
 		</template>
@@ -152,6 +152,18 @@ export default {
 
 <style lang="scss" scoped>
 .tag {
-	margin: .5rem 0 0 .5rem;
+	margin: .25rem !important;
+}
+
+.tag.search-result {
+	margin: 0 !important;
+}
+
+:deep(.input-wrapper) {
+	padding: .25rem !important;
+}
+
+:deep(input.input) {
+	padding: 0 .5rem;
 }
 </style>
