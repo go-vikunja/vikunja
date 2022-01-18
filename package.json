@@ -78,7 +78,7 @@
     "express": "4.17.2",
     "faker": "5.5.3",
     "netlify-cli": "8.8.2",
-    "happy-dom": "2.25.2",
+    "happy-dom": "2.27.0",
     "postcss": "8.4.5",
     "postcss-preset-env": "7.2.3",
     "rollup": "2.64.0",

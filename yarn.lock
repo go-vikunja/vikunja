@@ -7369,10 +7369,10 @@ graceful-fs@^4.1.2, graceful-fs@^4.1.6, graceful-fs@^4.2.0, graceful-fs@^4.2.4:
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.6.tgz#ff040b2b0853b23c3d31027523706f1885d76bee"
   integrity sha512-nTnJ528pbqxYanhpDYsi4Rd8MAeaBA67+RZ10CM1m3bTAVFEDcd5AuA4a6W5YkGZ1iNXHzZz8T6TBKLeBuNriQ==
 
-happy-dom@2.25.2:
-  version "2.25.2"
-  resolved "https://registry.yarnpkg.com/happy-dom/-/happy-dom-2.25.2.tgz#a8362ac5141c346a2db0c3ef22baa2bf6d9e342f"
-  integrity sha512-PEKxqE7v04J3t6hESxmWwbeimJSNpw+10OyG2dqA8uUsm35xqM2fL0KoppQHC2BRuPKy43rmH+ZHEXMuGz3XEQ==
+happy-dom@2.27.0:
+  version "2.27.0"
+  resolved "https://registry.yarnpkg.com/happy-dom/-/happy-dom-2.27.0.tgz#e5f7714dc00ddc47d93f928673c2c5f0d22d89c7"
+  integrity sha512-VucqmIeKeeVtxrTVGfrLR6dskVIk0F3/ZlHE3vL1C7Owaqodfxz+qNzpsGY0EBtTjsb4xhcS8wjp5X8/prI+2g==
   dependencies:
     he "^1.1.1"
     node-fetch "^2.6.1"
