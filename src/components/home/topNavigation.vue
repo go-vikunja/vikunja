@@ -1,9 +1,8 @@
 <template>
-	<nav
+	<header
 		:class="{'has-background': background}"
 		aria-label="main navigation"
 		class="navbar main-theme is-fixed-top"
-		role="navigation"
 	>
 		<router-link :to="{name: 'home'}" class="logo-link">
 			<Logo width="164" height="48"/>
@@ -77,7 +76,7 @@
 				</dropdown>
 			</div>
 		</div>
-	</nav>
+	</header>
 </template>
 
 <script>

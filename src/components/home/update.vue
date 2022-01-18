@@ -85,4 +85,8 @@ export default {
 		margin-left: .5rem;
 	}
 }
+
+.dark .update-notification {
+	color: var(--grey-200);
+}
 </style>

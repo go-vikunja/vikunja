@@ -60,9 +60,9 @@
   --danger: hsla(var(--danger-h), var(--danger-s), var(--danger-l), var(--danger-a));
 
 	// var(--primary) / $blue is #1973ff
-  --primary-h: 216.5deg;
-  --primary-s: 100%;
-  --primary-l: 54.9%;
+  --primary-h: 217deg;
+  --primary-s: 98%;
+  --primary-l: 53%;
   --primary-a: 1;
   --primary-hsl: var(--primary-h), var(--primary-s), var(--primary-l);
   --primary: hsla(var(--primary-h), var(--primary-s), var(--primary-l), var(--primary-a));
@@ -122,5 +122,10 @@
     // Custom color variables we need to override
     --card-border-color: hsla(var(--grey-100-hsl), 0.3);
     --logo-text-color: var(--grey-700);
+    
+    // Slightly different primary color to make sure it has a sufficent contrast ratio
+    --primary-h: 217deg;
+    --primary-s: 98%;
+    --primary-l: 58%;
   }
 }

@@ -4,7 +4,7 @@
 			<template v-for="(s, i) in shortcuts" :key="i">
 				<h3>{{ $t(s.title) }}</h3>
 
-				<message>
+				<message class="mb-4">
 					{{
 						s?.available($route)
 							? $t('keyboardShortcuts.currentPageOnly')

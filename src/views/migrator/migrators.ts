@@ -24,17 +24,17 @@ export const MIGRATORS: IMigratorRecord = {
 	todoist: {
 		id: 'todoist',
 		name: 'Todoist',
-		icon: todoistIcon,
+		icon: todoistIcon as string,
 	},
 	trello: {
 		id: 'trello',
 		name: 'Trello',
-		icon: trelloIcon,
+		icon: trelloIcon as string,
 	},
 	'microsoft-todo': {
 		id: 'microsoft-todo',
 		name: 'Microsoft Todo',
-		icon: microsoftTodoIcon,
+		icon: microsoftTodoIcon as string,
 	},
 	'vikunja-file': {
 		id: 'vikunja-file',

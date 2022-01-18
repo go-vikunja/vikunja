@@ -238,7 +238,7 @@ export default {
 				commit('info', info)
 				commit('lastUserRefresh')
 
-				if (typeof info.settings.language !== 'undefined') {
+				if (typeof info.settings.language === 'undefined' || info.settings.language === '') {
 					// save current language
 					await dispatch('saveUserSettings', {
 						settings: {

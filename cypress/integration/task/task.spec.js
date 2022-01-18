@@ -129,7 +129,7 @@ describe('Task', () => {
 			cy.visit(`/tasks/${tasks[0].id}`)
 
 			cy.get('.task-view .action-buttons .button')
-				.contains('Done!')
+				.contains('Mark task done!')
 				.click()
 
 			cy.get('.task-view .heading .is-done')

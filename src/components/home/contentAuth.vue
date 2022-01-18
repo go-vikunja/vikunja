@@ -9,7 +9,7 @@
 			class="app-container"
 		>
 			<navigation/>
-			<div
+			<main
 				:class="[
 					{ 'is-menu-enabled': menuActive },
 					$route.name,
@@ -38,7 +38,7 @@
 				>
 					<icon icon="keyboard"/>
 				</a>
-			</div>
+			</main>
 		</div>
 	</div>
 </template>

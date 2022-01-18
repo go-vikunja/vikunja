@@ -28,17 +28,20 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, watch} from 'vue'
+import {PropType, ref, watch} from 'vue'
 import {useStore} from 'vuex'
 
 import ListService from '@/services/list'
 
-const background = ref(null)
+import {colorIsDark} from '@/helpers/color/colorIsDark'
+import ListModel from '@/models/list'
+
+const background = ref<string | null>(null)
 const backgroundLoading = ref(false)
 
 const props = defineProps({
 	list: {
-		type: Object,
+		type: Object as PropType<ListModel>,
 		required: true,
 	},
 	showArchived: {
@@ -66,7 +69,7 @@ async function loadBackground() {
 
 const store = useStore()
 
-function toggleFavoriteList(list) {
+function toggleFavoriteList(list: ListModel) {
 	// The favorites pseudo list is always favorite
 	// Archived lists cannot be marked favorite
 	if (list.id === -1 || list.isArchived) {

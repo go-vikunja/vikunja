@@ -28,9 +28,9 @@
 			<span class="icon">
 				<icon :icon="['far', 'calendar-alt']"/>
 			</span>
-			<span>
+			<time :datetime="formatISO(task.dueDate)">
 				{{ formatDateSince(task.dueDate) }}
-			</span>
+			</time>
 		</span>
 		<h3>{{ task.title }}</h3>
 		<progress
@@ -73,6 +73,8 @@ import Done from '@/components/misc/Done.vue'
 import Labels from '../../../components/tasks/partials/labels'
 import ChecklistSummary from './checklist-summary'
 
+import {colorIsDark} from '@/helpers/color/colorIsDark'
+
 export default {
 	name: 'kanban-card',
 	components: {
@@ -98,6 +100,7 @@ export default {
 		},
 	},
 	methods: {
+		colorIsDark,
 		async toggleTaskDone(task) {
 			this.loadingInternal = true
 			try {

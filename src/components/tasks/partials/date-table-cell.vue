@@ -1,6 +1,8 @@
 <template>
 	<td v-tooltip="+date === 0 ? '' : formatDate(date)">
-		{{ +date === 0 ? '-' : formatDateSince(date) }}
+		<time :datetime="date ? formatISO(date) : null">
+			{{ +date === 0 ? '-' : formatDateSince(date) }}
+		</time>
 	</td>
 </template>
 
