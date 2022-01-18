@@ -7,7 +7,7 @@
     "lastViewed": "Zuletzt angesehen",
     "list": {
       "newText": "Du kannst eine neue Liste für deine neuen Aufgaben erstellen:",
-      "new": "New list",
+      "new": "Neue Liste",
       "importText": "Oder importiere deine Listen und Aufgaben aus anderen Diensten in Vikunja:",
       "import": "Deine Daten in Vikunja importieren"
     }
@@ -157,7 +157,7 @@
     "searchSelect": "Klicke auf oder drücke die Eingabetaste, um diese Liste auszuwählen",
     "shared": "Geteilte Listen",
     "create": {
-      "header": "New list",
+      "header": "Neue Liste",
       "titlePlaceholder": "Der Titel der Liste steht hier…",
       "addTitleRequired": "Bitte gebe einen Namen an.",
       "createdSuccess": "Die Liste wurde erfolgreich erstellt.",
@@ -315,7 +315,7 @@
     "namespaces": "Namespaces",
     "search": "Beginne zu schreiben, um einen Namespace zu suchen…",
     "create": {
-      "title": "New namespace",
+      "title": "Neuer Namespace",
       "titleRequired": "Bitte gebe einen Titel an.",
       "explanation": "Ein Namespace ist eine Sammlung von Listen, die du teilen und zur Organisation verwenden kannst. Jede Liste zu einem Namespace.",
       "tooltip": "Was ist ein Namespace?",
@@ -383,7 +383,7 @@
       "reminderRange": "Erinnerungs-Datumsbereich"
     },
     "create": {
-      "title": "New Saved Filter",
+      "title": "Neuer gespeicherter Filter",
       "description": "Ein gespeicherter Filter ist eine virtuelle Liste, die bei jedem Zugriff aus einem Satz von Filtern errechnet wird. Einmal erstellt, erscheint diese in einem speziellen Namespace.",
       "action": "Neuen gespeicherten Filter erstellen"
     },
@@ -545,7 +545,7 @@
       "chooseStartDate": "Klicke hier, um ein Startdatum zu setzen",
       "chooseEndDate": "Klicke hier, um ein Enddatum zu setzen",
       "move": "Aufgabe in eine andere Liste verschieben",
-      "done": "Mark task done!",
+      "done": "Als erledigt markieren!",
       "undone": "Als nicht erledigt markieren",
       "created": "Erstellt {0} von {1}",
       "updated": "Aktualisiert {0}",
@@ -781,7 +781,7 @@
     "then": "dann",
     "task": {
       "title": "Aufgabenseite",
-      "done": "Done",
+      "done": "Fertig",
       "assign": "Benutzer:in zuweisen",
       "labels": "Dieser Aufgabe ein Label hinzufügen",
       "dueDate": "Ändere das Fälligkeitsdatum dieser Aufgabe",
@@ -899,7 +899,7 @@
     "4015": "Dieser Aufgabenkommentar existiert nicht.",
     "4016": "Ungültiges Aufgabenfeld.",
     "4017": "Ungültiger Aufgabenfilter (Vergleichskriterium).",
-    "4018": "Invalid task filter concatenator.",
+    "4018": "Ungültige Verkettung von Aufgabenfiltern.",
     "4019": "Ungültiger Aufgabenfilter (Wert).",
     "5001": "Dieser Namespace existiert nicht.",
     "5003": "Du hast keinen Zugriff auf den Namespace.",
