@@ -23,7 +23,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, PropType, shallowRef} from 'vue'
+import {computed, shallowRef} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import SubscriptionService from '@/services/subscription'
@@ -38,9 +38,10 @@ const props = defineProps({
 	},
 	subscription: {
 		required: true,
+		type: Object,
 		validator(value) {
 			return value instanceof SubscriptionModel || value === null
-		}
+		},
 	},
 	entityId: {
 		required: true,
