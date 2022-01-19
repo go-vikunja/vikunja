@@ -37,8 +37,6 @@ import Message from '@/components/misc/message.vue'
 import {KEYBOARD_SHORTCUTS_ACTIVE} from '@/store/mutation-types'
 import {KEYBOARD_SHORTCUTS as shortcuts} from './shortcuts'
 
-console.log('s', shortcuts)
-
 function close() {
 	store.commit(KEYBOARD_SHORTCUTS_ACTIVE, false)
 }
