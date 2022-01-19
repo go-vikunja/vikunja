@@ -170,7 +170,8 @@ export default {
 			return {
 				name: 'task.detail',
 				params: { id: this.task.id },
-				state: { backdropView: this.$router.currentRoute.value.fullPath },
+				// TODO: re-enable opening task detail in modal
+				// state: { backdropView: this.$router.currentRoute.value.fullPath },
 			}
 		},
 	},

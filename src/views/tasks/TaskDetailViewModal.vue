@@ -4,10 +4,10 @@
 		variant="scrolling"
 		class="task-detail-view-modal"
 	>
-		<a @click="close()" class="close">
+		<BaseButton @click="close()" class="close">
 			<icon icon="times"/>
-		</a>
-		<task-detail-view :task-id="props.taskId"/>
+		</BaseButton>
+		<slot />
 	</modal>
 </template>
 
@@ -15,14 +15,7 @@
 import {computed} from 'vue'
 import {useRouter, useRoute} from 'vue-router'
 
-import TaskDetailView from './TaskDetailView.vue'
-
-const props = defineProps({
-	taskId: {
-		type: Number,
-		required: true,
-	},
-})
+import BaseButton from '@/components/base/BaseButton.vue'
 
 const route = useRoute()
 const historyState = computed(() => route.fullPath && window.history.state)

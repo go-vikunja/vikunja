@@ -181,7 +181,6 @@
 
 <script setup lang="ts">
 import { toRef, computed, Ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 import { useStorage } from '@vueuse/core'
 
@@ -273,14 +272,15 @@ function sort(property : keyof SortBy) {
 	}
 }
 
-const router = useRouter()
+// TODO: re-enable opening task detail in modal
+// const router = useRouter()
 const taskDetailRoutes = computed(() => Object.fromEntries(
 	tasks.value.map(({id}) => ([
 		id,
 		{
 			name: 'task.detail',
 			params: { id },
-			state: { backdropView: router.currentRoute.value.fullPath },
+			// state: { backdropView: router.currentRoute.value.fullPath },
 		},
 	])),
 ))

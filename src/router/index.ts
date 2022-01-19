@@ -16,7 +16,7 @@ import DataExportDownload from '../views/user/DataExportDownload.vue'
 import ShowTasksInRangeComponent from '../views/tasks/ShowTasksInRange.vue'
 import LinkShareAuthComponent from '../views/sharing/LinkSharingAuth.vue'
 import ListNamespaces from '../views/namespaces/ListNamespaces.vue'
-import TaskDetailViewModal from '../views/tasks/TaskDetailViewModal.vue'
+import TaskDetailView from '../views/tasks/TaskDetailView.vue'
 // Team Handling
 import ListTeamsComponent from '../views/teams/ListTeams.vue'
 // Label Handling
@@ -242,7 +242,7 @@ const router = createRouter({
 		{
 			path: '/tasks/:id',
 			name: 'task.detail',
-			component: TaskDetailViewModal,
+			component: TaskDetailView,
 			props: route => ({ taskId: parseInt(route.params.id as string) }),
 		},
 		{

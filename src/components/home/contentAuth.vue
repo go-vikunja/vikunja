@@ -1,8 +1,12 @@
 <template>
 	<div>
-		<a @click="$store.commit('menuActive', false)" class="menu-hide-button" v-if="menuActive">
+		<BaseButton
+			v-if="menuActive"
+			@click="$store.commit('menuActive', false)"
+			class="menu-hide-button" 
+		>
 			<icon icon="times" />
-		</a>
+		</BaseButton>
 		<div
 			:class="{'has-background': background}"
 			:style="{'background-image': background && `url(${background})`}"
@@ -16,7 +20,11 @@
 				]"
 				class="app-content"
 			>
-				<a @click="$store.commit('menuActive', false)" class="mobile-overlay" v-if="menuActive"></a>
+				<BaseButton
+					v-if="menuActive"
+					@click="$store.commit('menuActive', false)"
+					class="mobile-overlay"
+				/>
 
 				<quick-actions/>
 
@@ -28,7 +36,9 @@
 				</router-view>
 
 				<transition name="modal">
-					<component v-if="currentModal" :is="currentModal" />
+					<TaskDetailViewModal v-if="currentModal" >
+						<component :is="currentModal" />
+					</TaskDetailViewModal>
 				</transition>
 
 				<a
@@ -52,25 +62,23 @@ import {useEventListener} from '@vueuse/core'
 import {CURRENT_LIST, KEYBOARD_SHORTCUTS_ACTIVE, MENU_ACTIVE} from '@/store/mutation-types'
 import Navigation from '@/components/home/navigation.vue'
 import QuickActions from '@/components/quick-actions/quick-actions.vue'
+import TaskDetailViewModal from '@/views/tasks/TaskDetailViewModal.vue'
+import BaseButton from '@/components/base/BaseButton.vue'
 
 function useRouteWithModal() {
 	const router = useRouter()
 	const route = useRoute()
-	const historyState = computed(() => route.fullPath && window.history.state)
+	const backdropView = computed(() => route.fullPath && window.history.state.backdropView)
 
 	const routeWithModal = computed(() => {
-		if (historyState.value.backdropView) {
-			return router.resolve(historyState.value.backdropView)
-		} else {
-			return route
-		}
+		return backdropView.value
+			? router.resolve(backdropView.value)
+			: route
 	})
 
 	const currentModal = shallowRef<VNode>()
 	watchEffect(() => {
-		const hasBackdropView = historyState.value.backdropView
-
-		if (!hasBackdropView) {
+		if (!backdropView.value) {
 			currentModal.value = undefined
 			return
 		}
