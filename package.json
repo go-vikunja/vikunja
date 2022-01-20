@@ -28,7 +28,7 @@
     "@vueuse/router": "7.5.3",
     "bulma-css-variables": "0.9.33",
     "camel-case": "4.1.2",
-    "codemirror": "5.65.0",
+    "codemirror": "5.65.1",
     "copy-to-clipboard": "3.3.1",
     "date-fns": "2.28.0",
     "dompurify": "2.3.4",
