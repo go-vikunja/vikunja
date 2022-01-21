@@ -81,7 +81,7 @@
     "happy-dom": "2.28.0",
     "postcss": "8.4.5",
     "postcss-preset-env": "7.2.3",
-    "rollup": "2.64.0",
+    "rollup": "2.65.0",
     "rollup-plugin-visualizer": "5.5.4",
     "sass": "1.49.0",
     "slugify": "1.6.5",
