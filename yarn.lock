@@ -3270,10 +3270,10 @@
     vscode-nls "^5.0.0"
     vscode-uri "^2.1.2"
 
-"@vue/compat@3.2.27":
-  version "3.2.27"
-  resolved "https://registry.yarnpkg.com/@vue/compat/-/compat-3.2.27.tgz#faeac50138024737a2d9bb664627c1ac19ef0c3e"
-  integrity sha512-BqwwsTtawcbZdPgN5tJJKiQXbM5y9XQVGx+0p9NHJOHZCwsHMZmm6nOQN3a/9YjmgLAvo2ZkcLfnzwdMwWcvuA==
+"@vue/compat@3.2.28":
+  version "3.2.28"
+  resolved "https://registry.yarnpkg.com/@vue/compat/-/compat-3.2.28.tgz#5195534bd3346b4a08a0d2c0447641bd652e6d2b"
+  integrity sha512-BxCWBH5i83muVjzSY7NJ69YOE9EMWKugchhqoZdu7B3T9FcFBWwQr4LlUf8/Q4sYqJSx4O7tspLvqlM9UKc6QQ==
 
 "@vue/compiler-core@3.2.21":
   version "3.2.21"
