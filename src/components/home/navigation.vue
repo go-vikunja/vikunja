@@ -1,8 +1,8 @@
 <template>
-	<div :class="{'is-active': menuActive}" class="namespace-container">
-		<div class="menu top-menu">
+	<aside :class="{'is-active': menuActive}" class="namespace-container">
+		<nav class="menu top-menu">
 			<router-link :to="{name: 'home'}" class="logo">
-				<Logo width="164" height="48" />
+				<Logo width="164" height="48"/>
 			</router-link>
 			<ul class="menu-list">
 				<li>
@@ -46,31 +46,35 @@
 					</router-link>
 				</li>
 			</ul>
-		</div>
+		</nav>
 
-		<aside class="menu namespaces-lists loader-container is-loading-small" :class="{'is-loading': loading}">
-			<template v-for="(n, nk) in namespaces" :key="n.id" >
+		<nav class="menu namespaces-lists loader-container is-loading-small" :class="{'is-loading': loading}">
+			<template v-for="(n, nk) in namespaces" :key="n.id">
 				<div class="namespace-title" :class="{'has-menu': n.id > 0}">
 					<span
 						@click="toggleLists(n.id)"
 						class="menu-label"
-						v-tooltip="namespaceTitles[nk]">
+						v-tooltip="namespaceTitles[nk]"
+					>
+						<span
+							v-if="n.hexColor !== ''"
+							:style="{ backgroundColor: n.hexColor }"
+							class="color-bubble"
+						/>
 						<span class="name">
-							<span
-								:style="{ backgroundColor: n.hexColor }"
-								class="color-bubble"
-								v-if="n.hexColor !== ''">
-							</span>
 							{{ namespaceTitles[nk] }}
 						</span>
+						<a
+							class="icon is-small toggle-lists-icon pl-2"
+							:class="{'active': typeof listsVisible[n.id] !== 'undefined' ? listsVisible[n.id] : true}"
+							@click="toggleLists(n.id)"
+						>
+							<icon icon="chevron-down"/>
+						</a>
+						<span class="count" :class="{'ml-2 mr-0': n.id > 0}">
+							({{ namespaceListsCount[nk] }})
+						</span>
 					</span>
-					<a
-						class="icon is-small toggle-lists-icon"
-						:class="{'active': typeof listsVisible[n.id] !== 'undefined' ? listsVisible[n.id] : true}"
-						@click="toggleLists(n.id)"
-					>
-						<icon icon="chevron-down"/>
-					</a>
 					<namespace-settings-dropdown :namespace="n" v-if="n.id > 0"/>
 				</div>
 				<div
@@ -81,7 +85,7 @@
 					<!--
 						NOTE: a v-model / computed setter is not possible, since the updateActiveLists function
 						triggered by the change needs to have access to the current namespace
-					--> 
+					-->
 					<draggable
 						v-bind="dragOptions"
 						:modelValue="activeLists[nk]"
@@ -134,7 +138,7 @@
 											:class="{'is-favorite': l.isFavorite}"
 											@click.prevent.stop="toggleFavoriteList(l)"
 											class="favorite">
-											<icon :icon="l.isFavorite ? 'star' : ['far', 'star']" />
+											<icon :icon="l.isFavorite ? 'star' : ['far', 'star']"/>
 										</span>
 									</a>
 								</router-link>
@@ -145,9 +149,9 @@
 					</draggable>
 				</div>
 			</template>
-		</aside>
-		<PoweredByLink />
-	</div>
+		</nav>
+		<PoweredByLink/>
+	</aside>
 </template>
 
 <script>
@@ -197,10 +201,10 @@ export default {
 			return this.namespaces.map(({lists}) => lists?.filter(item => !item.isArchived))
 		},
 		namespaceTitles() {
-			return this.namespaces.map((namespace, index) => {
-				const title = this.getNamespaceTitle(namespace)
-				return `${title} (${this.activeLists[index]?.length ?? 0})`
-			})
+			return this.namespaces.map((namespace) => this.getNamespaceTitle(namespace))
+		},
+		namespaceListsCount() {
+			return this.namespaces.map((_, index) => this.activeLists[index]?.length ?? 0)
 		},
 	},
 	beforeCreate() {
@@ -365,8 +369,9 @@ $vikunja-nav-selected-width: 0.4rem;
 
 		.menu-label {
 			.color-bubble {
-				width: 14px !important;
-				height: 14px !important;
+				width: 14px;
+				height: 14px;
+				flex-basis: auto;
 			}
 
 			.is-archived {
@@ -387,6 +392,12 @@ $vikunja-nav-selected-width: 0.4rem;
 					overflow: hidden;
 					text-overflow: ellipsis;
 					white-space: nowrap;
+					margin-right: auto;
+				}
+
+				.count {
+					color: var(--grey-500);
+					margin-right: .5rem;
 				}
 			}
 
@@ -482,7 +493,7 @@ $vikunja-nav-selected-width: 0.4rem;
 					height: 1rem;
 					vertical-align: middle;
 					padding-right: 0.5rem;
-					
+
 					&.handle {
 						opacity: 0;
 						transition: opacity $transition;
@@ -490,7 +501,7 @@ $vikunja-nav-selected-width: 0.4rem;
 						cursor: grab;
 					}
 				}
-				
+
 				&:hover .icon.handle {
 					opacity: 1;
 				}
@@ -542,7 +553,7 @@ $vikunja-nav-selected-width: 0.4rem;
 			span.list-menu-link, li > a {
 				padding-left: 2rem;
 				display: inline-block;
-				
+
 				.icon {
 					padding-bottom: .25rem;
 				}

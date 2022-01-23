@@ -28,9 +28,9 @@
 			<span class="icon">
 				<icon :icon="['far', 'calendar-alt']"/>
 			</span>
-			<span>
+			<time :datetime="formatISO(task.dueDate)">
 				{{ formatDateSince(task.dueDate) }}
-			</span>
+			</time>
 		</span>
 		<h3>{{ task.title }}</h3>
 		<progress

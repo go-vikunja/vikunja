@@ -42,7 +42,7 @@ import {useBodyClass} from '@/composables/useBodyClass'
 const store = useStore()
 const router = useRouter()
 
-useBodyClass('is-touch', isTouchDevice)
+useBodyClass('is-touch', isTouchDevice())
 const keyboardShortcutsActive = computed(() => store.state.keyboardShortcutsActive)
 
 const authUser = computed(() => store.getters['auth/authUser'])

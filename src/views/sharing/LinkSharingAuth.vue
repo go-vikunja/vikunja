@@ -44,7 +44,7 @@ import Message from '@/components/misc/message.vue'
 const {t} = useI18n()
 useTitle(t('sharing.authenticating'))
 
-async function useAuth() {
+function useAuth() {
 	const store = useStore()
 	const route = useRoute()
 	const router = useRouter()
@@ -75,21 +75,21 @@ async function useAuth() {
 				password: password.value,
 			})
 			router.push({name: 'list.list', params: {listId}})
-		} catch (e) {
+		} catch (e: any) {
 			if (e.response?.data?.code === 13001) {
 				authenticateWithPassword.value = true
 				return
 			}
 
 			// TODO: Put this logic in a global errorMessage handler method which checks all auth codes
-			let errorMessage = t('sharing.error')
+			let err = t('sharing.error')
 			if (e.response?.data?.message) {
-				errorMessage = e.response.data.message
+				err = e.response.data.message
 			}
 			if (e.response?.data?.code === 13002) {
-				errorMessage = t('sharing.invalidPassword')
+				err = t('sharing.invalidPassword')
 			}
-			errorMessage.value = errorMessage
+			errorMessage.value = err
 		} finally {
 			loading.value = false
 		}

@@ -38,15 +38,21 @@ const props = defineProps({
 	},
 	subscription: {
 		required: true,
+		validator(value) {
+			return value instanceof SubscriptionModel || value === null
+		},
 	},
 	entityId: {
 		required: true,
+		type: Number,
 	},
 	isButton: {
 		type: Boolean,
 		default: true,
 	},
 })
+
+const subscriptionEntity = computed<string>(() => props.subscription.entity)
 
 const emit = defineEmits(['change'])
 
@@ -57,7 +63,7 @@ const tooltipText = computed(() => {
 	if (disabled.value) {
 		return t('task.subscription.subscribedThroughParent', {
 			entity: props.entity,
-			parent: props.subscription.entity,
+			parent: subscriptionEntity.value,
 		})
 	}
 
@@ -73,7 +79,7 @@ const disabled = computed(() => {
 		return false
 	}
 
-	return props.subscription.entity !== props.entity
+	return subscriptionEntity.value !== props.entity
 })
 
 function changeSubscription() {

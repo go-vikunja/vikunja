@@ -7,7 +7,7 @@
     "lastViewed": "Zletscht ahglueget",
     "list": {
       "newText": "Du chasch e Liste für dini neue Uufgabe erstelle:",
-      "new": "New list",
+      "new": "Neue Liste",
       "importText": "Oder importier dini Liste und Uufgabe us anderne Dienst nach Vikunja:",
       "import": "Dini Date in Vikunja importiere"
     }
@@ -157,7 +157,7 @@
     "searchSelect": "Druck uf Enter um die Liste uuszwähle",
     "shared": "Teilti Liste",
     "create": {
-      "header": "New list",
+      "header": "Neue Liste",
       "titlePlaceholder": "Listetitl da ahgeh…",
       "addTitleRequired": "Bitte gib en Titl ah.",
       "createdSuccess": "Liste erfolgriich erstellt.",
@@ -315,7 +315,7 @@
     "namespaces": "Namensrüüm",
     "search": "Schriib, um nachemne Namensruum z'sueche…",
     "create": {
-      "title": "New namespace",
+      "title": "Neuer Namespace",
       "titleRequired": "Bitte gib en Titl ah.",
       "explanation": "En Namensruum isch e Gruppe vo Liste, wo du chasch zur Organisation benutze. Tatsächlich sind alli Listene emne Namensruum zuegwise.",
       "tooltip": "Was isch en Namensruum?",
@@ -383,7 +383,7 @@
       "reminderRange": "Errinnerigs Datumbereich"
     },
     "create": {
-      "title": "New Saved Filter",
+      "title": "Neuer gespeicherter Filter",
       "description": "En gspeicherete Filter isch e virtuelli Liste, welche vomene Satz a Filter zemmegsetzt wird, sobald me uf sie zuegriift. Wenn sie mal erstellt worde isch, erhaltet si ihren eigene Namensruum.",
       "action": "Neue gspeicherete Filter erstelle"
     },
@@ -545,7 +545,7 @@
       "chooseStartDate": "Druck dah, um es Startdatum z'setze",
       "chooseEndDate": "Druck da, um es Enddatum z'setze",
       "move": "Schieb die Uufgab in e anderi Liste",
-      "done": "Fertig!",
+      "done": "Als erledigt markieren!",
       "undone": "Als unerledigt markierä",
       "created": "Erstellt am {0} vo {1}",
       "updated": "{0} g'updatet",
@@ -781,7 +781,7 @@
     "then": "dann",
     "task": {
       "title": "Uufgabesiite",
-      "done": "Uufgab als erledigt markiere",
+      "done": "Fertig",
       "assign": "Benutzer:in zuweisen",
       "labels": "Labels ennere Uufgab hinzuefüege",
       "dueDate": "S'Fälligkeitsdatum für die Uufgab ändere",
@@ -899,7 +899,7 @@
     "4015": "De Uufgabe Kommentar giz nid.",
     "4016": "Ungültigs Uufgabefeld.",
     "4017": "Ungültige Uufgabefilter vergliich.",
-    "4018": "Ungültige Uufgabefilter Zemmezug.",
+    "4018": "Ungültige Verkettung von Aufgabenfiltern.",
     "4019": "Ungültigi Uufgabe Filter Wert.",
     "5001": "De Namensruum existiert nid.",
     "5003": "Du hesch kei Zuegriff zu dem Namensruum.",

@@ -32,6 +32,13 @@ describe('Parse Task Text', () => {
 		expect(result.assignees).toHaveLength(1)
 		expect(result.assignees[0]).toBe('user')
 	})
+	
+	it('should ignore email addresses', () => {
+		const text = 'Lorem Ipsum email@example.com'
+		const result = parseTaskText(text)
+
+		expect(result.text).toBe(text)
+	})
 
 	describe('Date Parsing', () => {
 		it('should not return any date if none was provided', () => {

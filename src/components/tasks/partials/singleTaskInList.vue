@@ -39,14 +39,17 @@
 				:user="a"
 				v-for="(a, i) in task.assignees"
 			/>
-			<i
+			<time
+				:datetime="formatISO(task.dueDate)"
 				:class="{'overdue': task.dueDate <= new Date() && !task.done}"
+				class="is-italic"
 				@click.prevent.stop="showDefer = !showDefer"
 				v-if="+new Date(task.dueDate) > 0"
 				v-tooltip="formatDate(task.dueDate)"
+				:aria-expanded="showDefer ? 'true' : 'false'"
 			>
 				- {{ $t('task.detail.due', {at: formatDateSince(task.dueDate)}) }}
-			</i>
+			</time>
 			<transition name="fade">
 				<defer-task v-if="+new Date(task.dueDate) > 0 && showDefer" v-model="task" ref="deferDueDate"/>
 			</transition>
