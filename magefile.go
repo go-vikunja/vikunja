@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+//go:build mage
 // +build mage
 
 package main
@@ -349,7 +350,7 @@ func (Test) Unit() {
 	mg.Deps(initVars)
 	setApiPackages()
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := append([]string{"test", Goflags[0], "-p", "1", "-timeout", "20m"}, ApiPackages...)
+	args := append([]string{"test", Goflags[0], "-p", "1", "-coverprofile", "cover.out", "-timeout", "20m"}, ApiPackages...)
 	runAndStreamOutput("go", args...)
 }
 

@@ -116,6 +116,25 @@ func (l *List) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err error
 		return false, nil
 	}
 
+	// Get the list
+	ol, err := GetListSimpleByID(s, l.ID)
+	if err != nil {
+		return false, err
+	}
+
+	// Check if we're moving the list into a different namespace.
+	// If that is the case, we need to verify permissions to do so.
+	if l.NamespaceID != 0 && l.NamespaceID != ol.NamespaceID {
+		newNamespace := &Namespace{ID: l.NamespaceID}
+		can, err := newNamespace.CanWrite(s, a)
+		if err != nil {
+			return false, err
+		}
+		if !can {
+			return false, ErrGenericForbidden{}
+		}
+	}
+
 	fid := getSavedFilterIDFromListID(l.ID)
 	if fid > 0 {
 		sf, err := getSavedFilterSimpleByID(s, fid)

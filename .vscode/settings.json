@@ -1,0 +1,5 @@
+{
+    "go.testEnvVars": {
+        "VIKUNJA_SERVICE_ROOTPATH": "${workspaceRoot}"
+    }
+}

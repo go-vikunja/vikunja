@@ -11,9 +11,9 @@ menu:
 # Mage
 
 Vikunja uses [Mage](https://magefile.org/) to script common development tasks and even releasing.
-Mage is a pure go solution which allows for greater flexibility and things like better paralelization.
+Mage is a pure go solution which allows for greater flexibility and things like better parallelization.
 
-This document explains what taks are available and what they do.
+This document explains what tasks are available and what they do.
 
 {{< table_of_contents >}}
 

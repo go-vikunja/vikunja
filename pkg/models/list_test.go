@@ -163,6 +163,65 @@ func TestList_CreateOrUpdate(t *testing.T) {
 			assert.True(t, IsErrListIdentifierIsNotUnique(err))
 			_ = s.Close()
 		})
+		t.Run("change namespace", func(t *testing.T) {
+			t.Run("own", func(t *testing.T) {
+				usr := &user.User{
+					ID:       6,
+					Username: "user6",
+					Email:    "user6@example.com",
+				}
+
+				db.LoadAndAssertFixtures(t)
+				s := db.NewSession()
+				list := List{
+					ID:          6,
+					Title:       "Test6",
+					Description: "Lorem Ipsum",
+					NamespaceID: 7, // from 6
+				}
+				can, err := list.CanUpdate(s, usr)
+				assert.NoError(t, err)
+				assert.True(t, can)
+				err = list.Update(s, usr)
+				assert.NoError(t, err)
+				err = s.Commit()
+				assert.NoError(t, err)
+				db.AssertExists(t, "lists", map[string]interface{}{
+					"id":           list.ID,
+					"title":        list.Title,
+					"description":  list.Description,
+					"namespace_id": list.NamespaceID,
+				}, false)
+			})
+			// FIXME: The check for whether the namespace is archived is missing in namespace.CanWrite
+			// t.Run("archived own", func(t *testing.T) {
+			// 	db.LoadAndAssertFixtures(t)
+			// 	s := db.NewSession()
+			// 	list := List{
+			// 		ID:          1,
+			// 		Title:       "Test1",
+			// 		Description: "Lorem Ipsum",
+			// 		NamespaceID: 16, // from 1
+			// 	}
+			// 	can, err := list.CanUpdate(s, usr)
+			// 	assert.NoError(t, err)
+			// 	assert.False(t, can) // namespace is archived and thus not writeable
+			// 	_ = s.Close()
+			// })
+			t.Run("others", func(t *testing.T) {
+				db.LoadAndAssertFixtures(t)
+				s := db.NewSession()
+				list := List{
+					ID:          1,
+					Title:       "Test1",
+					Description: "Lorem Ipsum",
+					NamespaceID: 2, // from 1
+				}
+				can, _ := list.CanUpdate(s, usr)
+				assert.False(t, can) // namespace is not writeable by us
+				_ = s.Close()
+			})
+		})
 	})
 }
 

@@ -630,6 +630,7 @@ func UpdateList(s *xorm.Session, list *List, auth web.Auth, updateListBackground
 		"is_archived",
 		"identifier",
 		"hex_color",
+		"namespace_id",
 		"position",
 	}
 	if list.Description != "" {
