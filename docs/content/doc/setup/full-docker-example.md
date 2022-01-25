@@ -370,3 +370,81 @@ services:
     volumes:
         - ./Caddyfile:/etc/caddy/Caddyfile:ro
 {{< /highlight >}}
+
+## Setup on a Synology NAS
+
+There is a proxy preinstalled in DSM, so if you want to access vikunja from outside,
+you can prepare 2 proxy rules:
+
+* a redirection rule for vikunja's api (see example screenshot using port 3456)
+* a similar redirection rule for vikunja's frontend (using port 4321)
+
+![Synology Proxy Settings](/synology-proxy-1.png)
+
+You should also add 2 empty folders for mariadb and vikunja inside Synology's
+docker main folders:
+
+* Docker
+  * vikunja
+  * mariadb
+
+Synology has it's own GUI for managing Docker containers... But it's easier via docker compose.
+
+To do that, you can
+
+* either activate SSH and paste the adapted compose file in a terminal (using Putty or similar)
+* without activating SSH as a "custom script" (go to Control Panel / Task Scheduler / Create / Scheduled Task / User-defined script)
+* without activating SSH, by using Portainer (you have to install first, check out [this tutorial](https://www.portainer.io/blog/how-to-install-portainer-on-a-synology-nas) for exmple):
+  1. Go to **Dashboard / Stacks** click the button **"Add Stack"**
+  2. Give it the name Vikunja and paste the adapted docker compose file 
+  3. Deploy the Stack with the "Delpoy Stack" button: 
+
+![Portainer Stack deploy](/synology-proxy-2.png)
+
+The docker-compose file we're going to use is very similar to the [example without any proxy](#example-without-any-proxy) above:
+
+{{< highlight yaml >}}
+version: '3'
+
+services:
+  db:
+    image: mariadb:10
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: supersecret
+      MYSQL_USER: vikunja
+      MYSQL_PASSWORD: secret
+      MYSQL_DATABASE: vikunja
+    volumes:
+      - ./db:/var/lib/mysql
+    restart: unless-stopped
+  api:
+    image: vikunja/api
+    environment:
+      VIKUNJA_DATABASE_HOST: db
+      VIKUNJA_DATABASE_PASSWORD: secret
+      VIKUNJA_DATABASE_TYPE: mysql
+      VIKUNJA_DATABASE_USER: vikunja
+      VIKUNJA_DATABASE_DATABASE: vikunja
+    ports:
+      - 3456:3456
+    volumes:
+      - ./files:/app/vikunja/files
+    depends_on:
+      - db
+    restart: unless-stopped
+  frontend:
+    image: vikunja/frontend
+    ports:
+      - 4321:80
+    environment:
+      VIKUNJA_API_URL: http://vikunja-api-domain.tld/api/v1
+    restart: unless-stopped
+{{< /highlight >}}
+
+You may want to change the volumes to match the rest of your setup.
+
+Once deployed, you might want to change the [`PUID` and `GUID` settings]({{< ref "install-backend.md">}}#setting-user-and-group-id-of-the-user-running-vikunja) or [set the time zone]({{< ref "config.md">}}#timezone).
+
+After registering all your users, you might also want to [disable the user registration]({{<ref "config.md">}}#enableregistration).
+
