@@ -37,12 +37,13 @@ export default {
 	methods: {
 		async archiveNamespace() {
 			try {
+				const isArchived = !this.namespace.isArchived
 				const namespace = await this.namespaceService.update({
 					...this.namespace,
-					isArchived: !this.namespace.isArchived,
+					isArchived,
 				})
 				this.$store.commit('namespaces/setNamespaceById', namespace)
-				this.$message.success({message: this.$t('namespace.archive.success')})
+				this.$message.success({message: this.$t(isArchived ? 'namespace.archive.success' : 'namespace.archive.unarchiveSuccess')})
 			} finally {
 				this.$router.back()
 			}
