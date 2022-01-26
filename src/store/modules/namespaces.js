@@ -23,8 +23,6 @@ export default {
 				return
 			}
 
-			// FIXME: direct manipulation of the prop
-			// might not be a problem since this is happening in the mutation 
 			if (!namespace.lists || namespace.lists.length === 0) {
 				namespace.lists = state.namespaces[namespaceIndex].lists
 			}
