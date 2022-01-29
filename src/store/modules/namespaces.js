@@ -134,8 +134,8 @@ export default {
 		},
 
 		loadNamespacesIfFavoritesDontExist(ctx) {
-			// The first namespace should be the one holding all favorites
-			if (ctx.state.namespaces[0].id !== -2) {
+			// The first or second namespace should be the one holding all favorites
+			if (ctx.state.namespaces[0].id !== -2 && ctx.state.namespaces[1]?.id !== -2) {
 				return ctx.dispatch('loadNamespaces')
 			}
 		},

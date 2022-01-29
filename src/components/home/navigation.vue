@@ -90,13 +90,15 @@
 						v-bind="dragOptions"
 						:modelValue="activeLists[nk]"
 						@update:modelValue="(lists) => updateActiveLists(n, lists)"
-						:group="`namespace-${n.id}-lists`"
+						group="namespace-lists"
 						@start="() => drag = true"
-						@end="e => saveListPosition(e, nk)"
+						@end="saveListPosition"
 						handle=".handle"
 						:disabled="n.id < 0 || null"
 						tag="transition-group"
 						item-key="id"
+						:data-namespace-id="n.id"
+						:data-namespace-index="nk"
 						:component-data="{
 							type: 'transition',
 							tag: 'ul',
@@ -198,7 +200,7 @@ export default {
 			loading: state => state[LOADING] && state[LOADING_MODULE] === 'namespaces',
 		}),
 		activeLists() {
-			return this.namespaces.map(({lists}) => lists?.filter(item => !item.isArchived))
+			return this.namespaces.map(({lists}) => lists?.filter(item => typeof item !== 'undefined' && !item.isArchived))
 		},
 		namespaceTitles() {
 			return this.namespaces.map((namespace) => this.getNamespaceTitle(namespace))
@@ -241,15 +243,15 @@ export default {
 			this.listsVisible[namespaceId] = !this.listsVisible[namespaceId]
 		},
 		updateActiveLists(namespace, activeLists) {
-			// this is a bit hacky: since we do have to filter out the archived items from the list
+			// This is a bit hacky: since we do have to filter out the archived items from the list
 			// for vue draggable updating it is not as simple as replacing it.
-			// instead we iterate over the non archived items in the old list and replace them with the ones in their new order
-			const lists = namespace.lists.map((item) => {
-				if (item.isArchived) {
-					return item
-				}
-				return activeLists.shift()
-			})
+			// To work around this, we merge the active lists with the archived ones. Doing so breaks the order
+			// because now all archived lists are sorted after the active ones. This is fine because they are sorted 
+			// later when showing them anyway, and it makes the merging happening here a lot easier.
+			const lists = [
+				...activeLists,
+				...namespace.lists.filter(l => l.isArchived),
+			]
 
 			const newNamespace = {
 				...namespace,
@@ -259,8 +261,11 @@ export default {
 			this.$store.commit('namespaces/setNamespaceById', newNamespace)
 		},
 
-		async saveListPosition(e, namespaceIndex) {
-			const listsActive = this.activeLists[namespaceIndex]
+		async saveListPosition(e) {
+			const namespaceId = parseInt(e.to.dataset.namespaceId)
+			const newNamespaceIndex = parseInt(e.to.dataset.namespaceIndex)
+				
+			const listsActive = this.activeLists[newNamespaceIndex]
 			const list = listsActive[e.newIndex]
 			const listBefore = listsActive[e.newIndex - 1] ?? null
 			const listAfter = listsActive[e.newIndex + 1] ?? null
@@ -273,6 +278,7 @@ export default {
 				await this.$store.dispatch('lists/updateList', {
 					...list,
 					position,
+					namespaceId,
 				})
 			} finally {
 				this.listUpdating[list.id] = false
