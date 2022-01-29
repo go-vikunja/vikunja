@@ -621,7 +621,7 @@ steps:
       - tar -xzf vikunja-theme.tar.gz
 
   - name: build
-    image: monachus/hugo:v0.75.1
+    image: klakegg/hugo:0.91.2
     pull: true
     commands:
       - cd docs
