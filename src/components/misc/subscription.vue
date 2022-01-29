@@ -1,7 +1,7 @@
 <template>
 	<x-button
 		variant="secondary"
-		:icon="icon"
+		:icon="iconName"
 		v-tooltip="tooltipText"
 		@click="changeSubscription"
 		:disabled="disabled || null"
@@ -16,7 +16,7 @@
 		v-else
 	>
 		<span class="icon">
-			<icon :icon="icon"/>
+			<icon :icon="iconName"/>
 		</span>
 		{{ buttonText }}
 	</a>
@@ -73,7 +73,7 @@ const tooltipText = computed(() => {
 })
 
 const buttonText = computed(() => props.subscription !== null ? t('task.subscription.unsubscribe') : t('task.subscription.subscribe'))
-const icon = computed(() => props.subscription !== null ? ['far', 'bell-slash'] : 'bell')
+const iconName = computed(() => props.subscription !== null ? ['far', 'bell-slash'] : 'bell')
 const disabled = computed(() => {
 	if (props.subscription === null) {
 		return false
