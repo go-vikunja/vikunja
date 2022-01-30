@@ -10,9 +10,8 @@ describe('List History', () => {
 
 		cy.visit('/')
 		cy.wait('@loadNamespaces')
-		cy.get('h3')
-			.contains('Last viewed')
-			.should('not.exist')
+		cy.get('body')
+			.should('not.contain', 'Last viewed')
 
 		cy.visit(`/lists/${lists[0].id}`)
 		cy.wait('@loadNamespaces')
