@@ -429,11 +429,7 @@ const router = createRouter({
 	],
 })
 
-router.beforeEach((to) => {
-	return checkAuth(to)
-})
-
-function checkAuth(route: RouteLocation) {
+export function checkAuth(route: RouteLocation) {
 	const authUser = store.getters['auth/authUser']
 	const authLinkShare = store.getters['auth/authLinkShare']
 

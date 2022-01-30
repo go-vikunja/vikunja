@@ -141,10 +141,9 @@ export const store = createStore({
 
 			commit(CURRENT_LIST, currentList)
 		},
-		async loadApp({commit, dispatch}) {
+		async loadApp({dispatch}) {
 			await checkAndSetApiUrl(window.API_URL)
 			await dispatch('auth/checkAuth')
-			commit('vikunjaReady', true)
 		},
 	},
 })
