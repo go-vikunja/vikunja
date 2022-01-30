@@ -1,4 +1,4 @@
-import {describe, it, expect} from 'vitest'
+import {beforeEach, afterEach, describe, it, expect, vi} from 'vitest'
 
 import {parseTaskText} from './parseTaskText'
 import {getDateFromText, getDateFromTextIn} from '../helpers/time/parseDate'
@@ -6,6 +6,14 @@ import {calculateDayInterval} from '../helpers/time/calculateDayInterval'
 import priorities from '../models/constants/priorities.json'
 
 describe('Parse Task Text', () => {
+	beforeEach(() => {
+		vi.useFakeTimers()
+	})
+
+	afterEach(() => {
+		vi.useRealTimers()
+	})
+
 	it('should return text with no intents as is', () => {
 		expect(parseTaskText('Lorem Ipsum').text).toBe('Lorem Ipsum')
 	})
@@ -211,17 +219,36 @@ describe('Parse Task Text', () => {
 			expect(`${result.date.getHours()}:${result.date.getMinutes()}`).toBe('14:0')
 		})
 		it('should recognize dates of the month in the past but next month', () => {
-			const date = new Date()
-			date.setDate(date.getDate() - 1)
-			const result = parseTaskText(`Lorem Ipsum ${date.getDate()}nd`)
+			const time = new Date(2022, 0, 15)
+			vi.setSystemTime(time)
+
+			const result = parseTaskText(`Lorem Ipsum ${time.getDate() - 1}th`)
 
 			expect(result.text).toBe('Lorem Ipsum')
-			expect(result.date.getDate()).toBe(date.getDate())
+			expect(result.date.getDate()).toBe(time.getDate() - 1)
+			expect(result.date.getMonth()).toBe(time.getMonth() + 1)
+		})
+		it('should recognize dates of the month in the past but next month when february is the next month', () => {
+			const jan = new Date(2022, 0, 30)
+			vi.setSystemTime(jan)
 
-			const nextMonthWithDate = result.date.getDate() === 31
-				? (date.getMonth() + 2) % 12
-				: (date.getMonth() + 1) % 12
-			expect(result.date.getMonth()).toBe(nextMonthWithDate)
+			const result = parseTaskText(`Lorem Ipsum ${jan.getDate() - 1}th`)
+
+			const expectedDate = new Date(2022, 2, jan.getDate() - 1)
+			expect(result.text).toBe('Lorem Ipsum')
+			expect(result.date.getDate()).toBe(expectedDate.getDate())
+			expect(result.date.getMonth()).toBe(expectedDate.getMonth())
+		})
+		it('should recognize dates of the month in the past but next month when the next month has less days than this one', () => {
+			const mar = new Date(2022, 2, 32)
+			vi.setSystemTime(mar)
+
+			const result = parseTaskText(`Lorem Ipsum 31st`)
+
+			const expectedDate = new Date(2022, 4, 31)
+			expect(result.text).toBe('Lorem Ipsum')
+			expect(result.date.getDate()).toBe(expectedDate.getDate())
+			expect(result.date.getMonth()).toBe(expectedDate.getMonth())
 		})
 		it('should recognize dates of the month in the future', () => {
 			const nextDay = new Date(+new Date() + 60 * 60 * 24 * 1000)

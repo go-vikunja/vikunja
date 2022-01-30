@@ -302,16 +302,16 @@ const getDayFromText = (text: string) => {
 	const day = parseInt(results[0])
 	date.setDate(day)
 
-	// If the parsed day is the 31st but the next month only has 30 days, setting the day to 31 will "overflow" the
-	// date to the next month, but the first.
+	// If the parsed day is the 31st (or 29+ and the next month is february) but the next month only has 30 days, 
+	// setting the day to 31 will "overflow" the date to the next month, but the first.
 	// This would look like a very weired bug. Now, to prevent that, we check if the day is the same as parsed after 
 	// setting it for the first time and set it again if it isn't - that would mean the month overflowed.
-	if (day === 31 && date.getDate() !== day) {
-		date.setDate(day)
-	}
-
-	if (date < now) {
+	while (date < now) {
 		date.setMonth(date.getMonth() + 1)
+	}
+	
+	if (date.getDate() !== day) {
+		date.setDate(day)
 	}
 
 	return {
