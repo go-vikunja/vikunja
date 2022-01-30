@@ -1,20 +1,21 @@
 <template>
-	<a @click="$emit('click')">
+	<BaseButton>
 		<icon icon="sort-up" v-if="order === 'asc'"/>
-		<icon icon="sort-up" rotation="180" v-else-if="order === 'desc'"/>
+		<icon icon="sort-up" v-else-if="order === 'desc'" rotation="180"/>
 		<icon icon="sort" v-else/>
-	</a>
+	</BaseButton>
 </template>
 
-<script>
-export default {
-	name: 'sort',
-	props: {
-		order: {
-			type: String,
-			default: 'none',
-		},
+<script setup lang="ts">
+import {PropType} from 'vue'
+import BaseButton from '@/components/base/BaseButton.vue'
+
+type Order = 'asc' | 'desc' | 'none'
+
+defineProps({
+	order: {
+		type: String as PropType<Order>,
+		default: 'none',
 	},
-	emits: ['click'],
-}
+})
 </script>
