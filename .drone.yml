@@ -116,10 +116,12 @@ steps:
       YARN_CACHE_FOLDER: .cache/yarn/
       CYPRESS_CACHE_FOLDER: .cache/cypress/
       CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000
+      CYPRESS_RECORD_KEY:
+        from_secret: cypress_project_key
     commands:
       - sed -i 's/localhost/api/g' dist/index.html
       - yarn serve:dist & npx wait-on http://localhost:5000
-      - yarn test:frontend --browser chrome
+      - yarn test:frontend --browser chrome --record
     depends_on:
       - dependencies
       - build-prod
@@ -665,6 +667,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: 188ee90100c5fc5922a445e531e7a47453121edddb2a64a182eb23ed2bf602de
+hmac: e8748058b09d57b4d9f53dc40fb163f1719a4177d392439a62b1c198ba1502a0
 
 ...
