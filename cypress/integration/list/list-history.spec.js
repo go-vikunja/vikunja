@@ -5,6 +5,7 @@ import '../../support/authenticateUser'
 describe('List History', () => {
 	it('should show a list history on the home page', () => {
 		cy.intercept(Cypress.env('API_URL') + '/namespaces*').as('loadNamespaces')
+		cy.intercept(Cypress.env('API_URL') + '/lists/*').as('loadList')
 		
 		const lists = ListFactory.create(6)
 
@@ -15,16 +16,22 @@ describe('List History', () => {
 
 		cy.visit(`/lists/${lists[0].id}`)
 		cy.wait('@loadNamespaces')
+		cy.wait('@loadList')
 		cy.visit(`/lists/${lists[1].id}`)
 		cy.wait('@loadNamespaces')
+		cy.wait('@loadList')
 		cy.visit(`/lists/${lists[2].id}`)
 		cy.wait('@loadNamespaces')
+		cy.wait('@loadList')
 		cy.visit(`/lists/${lists[3].id}`)
 		cy.wait('@loadNamespaces')
+		cy.wait('@loadList')
 		cy.visit(`/lists/${lists[4].id}`)
 		cy.wait('@loadNamespaces')
+		cy.wait('@loadList')
 		cy.visit(`/lists/${lists[5].id}`)
 		cy.wait('@loadNamespaces')
+		cy.wait('@loadList')
 
 		cy.visit('/')
 		cy.wait('@loadNamespaces')
