@@ -37,7 +37,7 @@ interface Props {
   entity: string
   entityId: number
   subscription: SubscriptionModel
-  isButton: boolean
+  isButton?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
