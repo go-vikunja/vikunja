@@ -5215,11 +5215,6 @@ cyclist@^1.0.1:
   resolved "https://registry.yarnpkg.com/cyclist/-/cyclist-1.0.1.tgz#596e9698fd0c80e12038c2b82d6eb1b35b6224d9"
   integrity sha1-WW6WmP0MgOEgOMK4LW6xs1tiJNk=
 
-cypress-file-upload@5.0.8:
-  version "5.0.8"
-  resolved "https://registry.yarnpkg.com/cypress-file-upload/-/cypress-file-upload-5.0.8.tgz#d8824cbeaab798e44be8009769f9a6c9daa1b4a1"
-  integrity sha512-+8VzNabRk3zG6x8f8BWArF/xA/W0VK4IZNx3MV0jFWrJS/qKn8eHfa5nU73P9fOQAgwHFJx7zjg4lwOnljMO8g==
-
 cypress@9.3.1:
   version "9.3.1"
   resolved "https://registry.yarnpkg.com/cypress/-/cypress-9.3.1.tgz#8116f52d49d6daf90a91e88f3eafd940234d2958"
@@ -7385,10 +7380,10 @@ graphql@^16.1.0:
   resolved "https://registry.yarnpkg.com/graphql/-/graphql-16.2.0.tgz#de3150e80f1fc009590b92a9d16ab1b46e12b656"
   integrity sha512-MuQd7XXrdOcmfwuLwC2jNvx0n3rxIuNYOxUtiee5XOmfrWo613ar2U8pE7aHAKh8VwfpifubpD9IP+EdEAEOsA==
 
-happy-dom@2.30.1:
-  version "2.30.1"
-  resolved "https://registry.yarnpkg.com/happy-dom/-/happy-dom-2.30.1.tgz#afc77ed8969ad5d49de266ec1b3e2055a1eabe76"
-  integrity sha512-Qz3Z/zn/VeUCtVEGoSCDD+zzPcyOEdIYz4p1BvsXvrTSx6vXyGadMDAsxOKf8ZFCRfuyLpLKfqdRHFFPF77qPA==
+happy-dom@2.31.0:
+  version "2.31.0"
+  resolved "https://registry.yarnpkg.com/happy-dom/-/happy-dom-2.31.0.tgz#1b858aabd9c33ba431f16f616a642a1461fd4295"
+  integrity sha512-xWMINbteuSF6hkmetrreuXK+r0vBBdRknqwaqDxrjIV6aQBlUcMBvTX/2dZ+KwP5vjrDrqCeop5dPOgQpebHgw==
   dependencies:
     he "^1.1.1"
     node-fetch "^2.6.1"
