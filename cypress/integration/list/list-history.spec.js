@@ -36,9 +36,8 @@ describe('List History', () => {
 		cy.visit('/')
 		cy.wait('@loadNamespaces')
 		
-		cy.get('h3')
-			.contains('Last viewed')
-			.should('exist')
+		cy.get('body')
+			.should('contain', 'Last viewed')
 		cy.get('.list-cards-wrapper-2-rows')
 			.should('not.contain', lists[0].title)
 			.should('contain', lists[1].title)
