@@ -34,6 +34,7 @@
 				{{ $t('menu.archive') }}
 			</dropdown-item>
 			<task-subscription
+				v-if="subscription"
 				class="dropdown-item has-no-shadow"
 				:is-button="false"
 				entity="namespace"

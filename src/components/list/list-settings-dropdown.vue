@@ -56,6 +56,7 @@
 				{{ $t('menu.archive') }}
 			</dropdown-item>
 			<task-subscription
+				v-if="subscription"
 				class="dropdown-item has-no-shadow"
 				:is-button="false"
 				entity="list"
@@ -74,39 +75,32 @@
 	</dropdown>
 </template>
 
-<script>
+<script setup lang="ts">
+import {ref, computed, watchEffect} from 'vue'
+import {useStore} from 'vuex'
+
 import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
 import Dropdown from '@/components/misc/dropdown.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 import TaskSubscription from '@/components/misc/subscription.vue'
+import ListModel from '@/models/list'
+import SubscriptionModel from '@/models/subscription'
 
-export default {
-	name: 'list-settings-dropdown',
-	data() {
-		return {
-			subscription: null,
-		}
+const props = defineProps({
+	list: {
+		type: ListModel,
+		required: true,
 	},
-	components: {
-		TaskSubscription,
-		DropdownItem,
-		Dropdown,
-	},
-	props: {
-		list: {
-			required: true,
-		},
-	},
-	mounted() {
-		this.subscription = this.list.subscription
-	},
-	computed: {
-		backgroundsEnabled() {
-			return this.$store.state.config.enabledBackgroundProviders?.length > 0
-		},
-		isSavedFilter() {
-			return getSavedFilterIdFromListId(this.list.id) > 0
-		},
-	},
-}
+})
+
+const subscription = ref<SubscriptionModel>()
+watchEffect(() => {
+	if (props.list.subscription) {
+		subscription.value = props.list.subscription
+	}
+})
+
+const store = useStore()
+const backgroundsEnabled = computed(() => store.state.config.enabledBackgroundProviders?.length > 0)
+const isSavedFilter = computed(() => getSavedFilterIdFromListId(props.list.id) > 0)
 </script>

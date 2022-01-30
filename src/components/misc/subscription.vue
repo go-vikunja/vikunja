@@ -1,19 +1,19 @@
 <template>
 	<x-button
+		v-if="isButton"
 		variant="secondary"
 		:icon="iconName"
 		v-tooltip="tooltipText"
 		@click="changeSubscription"
 		:disabled="disabled || null"
-		v-if="isButton"
 	>
 		{{ buttonText }}
 	</x-button>
 	<a
+		v-else
 		v-tooltip="tooltipText"
 		@click="changeSubscription"
 		:class="{'is-disabled': disabled}"
-		v-else
 	>
 		<span class="icon">
 			<icon :icon="iconName"/>
@@ -31,26 +31,15 @@ import SubscriptionModel from '@/models/subscription'
 
 import {success} from '@/message'
 
-const props = defineProps({
-	entity: {
-		required: true,
-		type: String,
-	},
-	subscription: {
-		required: true,
-		type: Object,
-		validator(value) {
-			return value instanceof SubscriptionModel || value === null
-		},
-	},
-	entityId: {
-		required: true,
-		type: Number,
-	},
-	isButton: {
-		type: Boolean,
-		default: true,
-	},
+interface Props {
+  entity: string
+  entityId: number
+  subscription: SubscriptionModel
+  isButton: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+	isButton: true,
 })
 
 const subscriptionEntity = computed<string>(() => props.subscription.entity)
