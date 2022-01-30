@@ -33,8 +33,12 @@ describe('List History', () => {
 		cy.wait('@loadNamespaces')
 		cy.wait('@loadList')
 
-		cy.visit('/')
-		cy.wait('@loadNamespaces')
+		// cy.visit('/')
+		// cy.wait('@loadNamespaces')
+		// Not using cy.visit here to work around the redirect issue fixed in #1337
+		cy.get('nav.menu.top-menu a')
+			.contains('Overview')
+			.click()
 		
 		cy.get('body')
 			.should('contain', 'Last viewed')
