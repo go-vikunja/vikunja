@@ -121,12 +121,22 @@ export default {
 			// soonest before the later ones.
 			// We can't use the api sorting here because that sorts tasks with a due date after
 			// ones without a due date.
-			return [...this.tasks].sort((a, b) => {
-				const sortByDueDate = b.dueDate - a.dueDate
-				return sortByDueDate === 0
-					? b.id - a.id
-					: sortByDueDate
-			})
+
+			const tasksWithDueDate = [...this.tasks]
+				.filter(t => t.dueDate !== null)
+				.sort((a, b) => {
+					const sortByDueDate = a.dueDate - b.dueDate
+					return sortByDueDate === 0
+						? b.id - a.id
+						: sortByDueDate
+				})
+			const tasksWithoutDueDate = [...this.tasks]
+				.filter(t => t.dueDate === null)
+
+			return [
+				...tasksWithDueDate,
+				...tasksWithoutDueDate,
+			]
 		},
 		hasTasks() {
 			return this.tasks && this.tasks.length > 0
