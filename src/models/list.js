@@ -5,6 +5,22 @@ import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
 import SubscriptionModel from '@/models/subscription'
 
 export default class ListModel extends AbstractModel {
+	id = 0
+	title = ''
+	description = ''
+	owner = UserModel
+	tasks = []
+	namespaceId = 0
+	isArchived = false
+	hexColor = ''
+	identifier = ''
+	backgroundInformation = null
+	isFavorite = false
+	subscription = null
+	position = 0
+
+	created = null
+	updated = null
 
 	constructor(data) {
 		super(data)
