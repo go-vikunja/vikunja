@@ -37,7 +37,10 @@ export const store = createStore({
 		loading: false,
 		loadingModule: null,
 		// This is used to highlight the current list in menu for all list related views
-		currentList: {id: 0},
+		currentList: {
+			id: 0,
+			isArchived: false,
+		},
 		background: '',
 		hasTasks: false,
 		menuActive: true,
