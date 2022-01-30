@@ -1,9 +1,12 @@
 import {formatISO, format} from 'date-fns'
 import {TaskFactory} from '../../factories/task'
+import {prepareLists} from './prepareLists'
 
 import '../../support/authenticateUser'
 
 describe('List View Gantt', () => {
+	prepareLists()
+	
 	it('Hides tasks with no dates', () => {
 		const tasks = TaskFactory.create(1)
 		cy.visit('/lists/1/gantt')
