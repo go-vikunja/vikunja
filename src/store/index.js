@@ -18,6 +18,8 @@ import lists from './modules/lists'
 import attachments from './modules/attachments'
 import labels from './modules/labels'
 
+import ListModel from '@/models/list'
+
 import ListService from '../services/list'
 import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 
@@ -37,10 +39,10 @@ export const store = createStore({
 		loading: false,
 		loadingModule: null,
 		// This is used to highlight the current list in menu for all list related views
-		currentList: {
+		currentList: new ListModel({
 			id: 0,
 			isArchived: false,
-		},
+		}),
 		background: '',
 		hasTasks: false,
 		menuActive: true,

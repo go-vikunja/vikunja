@@ -44,7 +44,7 @@
 </template>
 
 <script lang="ts" setup>
-import {watch, computed, shallowRef, watchEffect, h} from 'vue'
+import {watch, computed, shallowRef, watchEffect, VNode, h} from 'vue'
 import {useStore} from 'vuex'
 import {useRoute, useRouter} from 'vue-router'
 import {useEventListener} from '@vueuse/core'
@@ -66,12 +66,12 @@ function useRouteWithModal() {
 		}
 	})
 
-	const currentModal = shallowRef(null)
+	const currentModal = shallowRef<VNode>()
 	watchEffect(() => {
 		const hasBackdropView = historyState.value.backdropView
 
 		if (!hasBackdropView) {
-			currentModal.value = null
+			currentModal.value = undefined
 			return
 		}
 

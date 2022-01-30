@@ -3,6 +3,12 @@ import UserModel from './user'
 import FileModel from './file'
 
 export default class AttachmentModel extends AbstractModel {
+	id = 0
+	taskId = 0
+	file = FileModel
+	createdBy = UserModel
+	created = null
+
 	constructor(data) {
 		super(data)
 		this.createdBy = new UserModel(this.createdBy)

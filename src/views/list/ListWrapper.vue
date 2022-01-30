@@ -83,6 +83,7 @@ const currentList = computed(() => {
 		id: 0,
 		title: '',
 		isArchived: false,
+		maxRight: null,
 	} : store.state.currentList
 })
 

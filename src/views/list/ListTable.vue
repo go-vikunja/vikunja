@@ -180,7 +180,7 @@
 </template>
 
 <script setup lang="ts">
-import { toRef, computed } from 'vue'
+import { toRef, computed, Ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useStorage } from '@vueuse/core'
@@ -198,6 +198,7 @@ import Pagination from '@/components/misc/pagination.vue'
 import Popup from '@/components/misc/popup.vue'
 
 import { useTaskList } from '@/composables/taskList'
+import TaskModel from '@/models/task'
 
 const ACTIVE_COLUMNS_DEFAULT = {
 	id: true,
@@ -222,20 +223,37 @@ const props = defineProps({
 	},
 })
 
-const SORT_BY_DEFAULT = {
+type Order = 'asc' | 'desc' | 'none'
+
+interface SortBy {
+	id : Order
+	done? : Order 
+	title? : Order 
+	priority? : Order 
+	due_date? : Order 
+	start_date? : Order 
+	end_date? : Order 
+	percent_done? : Order 
+	created? : Order 
+	updated? : Order 
+}
+
+const SORT_BY_DEFAULT : SortBy = {
 	id: 'desc',
 }
 
 const activeColumns = useStorage('tableViewColumns', { ...ACTIVE_COLUMNS_DEFAULT })
-const sortBy = useStorage('tableViewSortBy', { ...SORT_BY_DEFAULT })
+const sortBy = useStorage<SortBy>('tableViewSortBy', { ...SORT_BY_DEFAULT })
+
+const taskList = useTaskList(toRef(props, 'listId'))
 
 const {
-	tasks,
 	loading,
 	params,
 	totalPages,
 	currentPage,
-} = useTaskList(toRef(props, 'listId'))
+} = taskList
+const tasks : Ref<TaskModel[]> = taskList.tasks
 
 Object.assign(params.value, {
 	filter_by: [],
@@ -244,7 +262,7 @@ Object.assign(params.value, {
 })
 
 // FIXME: by doing this we can have multiple sort orders
-function sort(property) {
+function sort(property : keyof SortBy) {
 	const order = sortBy.value[property]
 	if (typeof order === 'undefined' || order === 'none') {
 		sortBy.value[property] = 'desc'

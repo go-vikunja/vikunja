@@ -10,7 +10,11 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 const SUPPORTS_TRIGGERED_NOTIFICATION = 'Notification' in window && 'showTrigger' in Notification.prototype
 
 export default class TaskModel extends AbstractModel {
-
+	index = 0
+	done = false
+	priority = 0
+	percentDone = 0
+	
 	defaultColor = '198CFF'
 
 	constructor(data) {
