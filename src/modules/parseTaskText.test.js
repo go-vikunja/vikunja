@@ -32,7 +32,7 @@ describe('Parse Task Text', () => {
 		expect(result.assignees).toHaveLength(1)
 		expect(result.assignees[0]).toBe('user')
 	})
-	
+
 	it('should ignore email addresses', () => {
 		const text = 'Lorem Ipsum email@example.com'
 		const result = parseTaskText(text)
@@ -240,6 +240,12 @@ describe('Parse Task Text', () => {
 			const result = parseTaskText('Lorem Ipsum github')
 
 			expect(result.text).toBe('Lorem Ipsum github')
+			expect(result.date).toBeNull()
+		})
+		it('should not recognize date number with no spacing around them', () => {
+			const result = parseTaskText('Lorem Ispum v1.1.1')
+
+			expect(result.text).toBe('Lorem Ispum v1.1.1')
 			expect(result.date).toBeNull()
 		})
 

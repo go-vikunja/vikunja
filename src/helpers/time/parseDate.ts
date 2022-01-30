@@ -288,7 +288,7 @@ const getDateFromWeekday = (text: string): dateFoundResult => {
 }
 
 const getDayFromText = (text: string) => {
-	const matcher = /(([1-2][0-9])|(3[01])|(0?[1-9]))(st|nd|rd|th|\.)/ig
+	const matcher = /($| )(([1-2][0-9])|(3[01])|(0?[1-9]))(st|nd|rd|th|\.)($| )/ig
 	const results = matcher.exec(text)
 	if (results === null) {
 		return {
