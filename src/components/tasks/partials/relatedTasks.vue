@@ -274,10 +274,11 @@ export default {
 			return tasks
 				.map(task => {
 					// by doing this here once we can save a lot of duplicate calls in the template
+					const listAndNamespace = this.$store.getters['namespaces/getListAndNamespaceById'](task.listId, true)
 					const {
 						list,
 						namespace,
-					} = this.$store.getters['namespaces/getListAndNamespaceById'](task.listId, true)
+					} = listAndNamespace === null ? {list: null, namespace: null} : listAndNamespace
 
 					return {
 						...task,
