@@ -19,7 +19,7 @@
 							class="shortcut-keys"
 							is="dd"
 							:keys="sc.keys"
-							:combination="typeof sc.combination !== 'undefined' ? $t(`keyboardShortcuts.${sc.combination}`) : null"
+							:combination="sc.combination && $t(`keyboardShortcuts.${sc.combination}`)"
 						/>
 					</template>
 				</dl>
@@ -29,7 +29,7 @@
 </template>
 
 <script lang="ts" setup>
-import {store} from '@/store'
+import {useStore} from 'vuex'
 
 import Shortcut from '@/components/misc/shortcut.vue'
 import Message from '@/components/misc/message.vue'
@@ -37,6 +37,7 @@ import Message from '@/components/misc/message.vue'
 import {KEYBOARD_SHORTCUTS_ACTIVE} from '@/store/mutation-types'
 import {KEYBOARD_SHORTCUTS as shortcuts} from './shortcuts'
 
+const store = useStore()
 function close() {
 	store.commit(KEYBOARD_SHORTCUTS_ACTIVE, false)
 }
