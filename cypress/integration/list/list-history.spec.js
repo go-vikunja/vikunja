@@ -9,6 +9,7 @@ describe('List History', () => {
 		const lists = ListFactory.create(6)
 
 		cy.visit('/')
+		cy.wait('@loadNamespaces')
 		cy.get('h3')
 			.contains('Last viewed')
 			.should('not.exist')
