@@ -81,7 +81,7 @@ const router = createRouter({
 
 		// Scroll to anchor should still work
 		if (to.hash) {
-			return {el: document.getElementById(to.hash.slice(1))}
+			return {el: to.hash}
 		}
 
 		// Otherwise just scroll to the top
