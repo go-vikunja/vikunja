@@ -9,7 +9,7 @@
 	>
 		{{ buttonText }}
 	</x-button>
-	<a
+	<BaseButton
 		v-else
 		v-tooltip="tooltipText"
 		@click="changeSubscription"
@@ -19,12 +19,14 @@
 			<icon :icon="iconName"/>
 		</span>
 		{{ buttonText }}
-	</a>
+	</BaseButton>
 </template>
 
 <script lang="ts" setup>
 import {computed, shallowRef} from 'vue'
 import {useI18n} from 'vue-i18n'
+
+import BaseButton from '@/components/base/BaseButton.vue'
 
 import SubscriptionService from '@/services/subscription'
 import SubscriptionModel from '@/models/subscription'
