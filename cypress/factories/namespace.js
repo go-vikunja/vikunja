@@ -1,4 +1,4 @@
-import faker from 'faker'
+import faker from '@faker-js/faker'
 import {Factory} from '../support/factory'
 import {formatISO} from 'date-fns'
 

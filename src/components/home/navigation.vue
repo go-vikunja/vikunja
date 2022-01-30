@@ -2,7 +2,7 @@
 	<aside :class="{'is-active': menuActive}" class="namespace-container">
 		<nav class="menu top-menu">
 			<router-link :to="{name: 'home'}" class="logo">
-				<Logo width="164" height="48" />
+				<Logo width="164" height="48"/>
 			</router-link>
 			<ul class="menu-list">
 				<li>
@@ -49,28 +49,32 @@
 		</nav>
 
 		<nav class="menu namespaces-lists loader-container is-loading-small" :class="{'is-loading': loading}">
-			<template v-for="(n, nk) in namespaces" :key="n.id" >
+			<template v-for="(n, nk) in namespaces" :key="n.id">
 				<div class="namespace-title" :class="{'has-menu': n.id > 0}">
 					<span
 						@click="toggleLists(n.id)"
 						class="menu-label"
-						v-tooltip="namespaceTitles[nk]">
+						v-tooltip="namespaceTitles[nk]"
+					>
+						<span
+							v-if="n.hexColor !== ''"
+							:style="{ backgroundColor: n.hexColor }"
+							class="color-bubble"
+						/>
 						<span class="name">
-							<span
-								:style="{ backgroundColor: n.hexColor }"
-								class="color-bubble"
-								v-if="n.hexColor !== ''">
-							</span>
 							{{ namespaceTitles[nk] }}
 						</span>
+						<a
+							class="icon is-small toggle-lists-icon pl-2"
+							:class="{'active': typeof listsVisible[n.id] !== 'undefined' ? listsVisible[n.id] : true}"
+							@click="toggleLists(n.id)"
+						>
+							<icon icon="chevron-down"/>
+						</a>
+						<span class="count" :class="{'ml-2 mr-0': n.id > 0}">
+							({{ namespaceListsCount[nk] }})
+						</span>
 					</span>
-					<a
-						class="icon is-small toggle-lists-icon"
-						:class="{'active': typeof listsVisible[n.id] !== 'undefined' ? listsVisible[n.id] : true}"
-						@click="toggleLists(n.id)"
-					>
-						<icon icon="chevron-down"/>
-					</a>
 					<namespace-settings-dropdown :namespace="n" v-if="n.id > 0"/>
 				</div>
 				<div
@@ -81,18 +85,20 @@
 					<!--
 						NOTE: a v-model / computed setter is not possible, since the updateActiveLists function
 						triggered by the change needs to have access to the current namespace
-					--> 
+					-->
 					<draggable
 						v-bind="dragOptions"
 						:modelValue="activeLists[nk]"
 						@update:modelValue="(lists) => updateActiveLists(n, lists)"
-						:group="`namespace-${n.id}-lists`"
+						group="namespace-lists"
 						@start="() => drag = true"
-						@end="e => saveListPosition(e, nk)"
+						@end="saveListPosition"
 						handle=".handle"
 						:disabled="n.id < 0 || null"
 						tag="transition-group"
 						item-key="id"
+						:data-namespace-id="n.id"
+						:data-namespace-index="nk"
 						:component-data="{
 							type: 'transition',
 							tag: 'ul',
@@ -134,7 +140,7 @@
 											:class="{'is-favorite': l.isFavorite}"
 											@click.prevent.stop="toggleFavoriteList(l)"
 											class="favorite">
-											<icon :icon="l.isFavorite ? 'star' : ['far', 'star']" />
+											<icon :icon="l.isFavorite ? 'star' : ['far', 'star']"/>
 										</span>
 									</a>
 								</router-link>
@@ -146,7 +152,7 @@
 				</div>
 			</template>
 		</nav>
-		<PoweredByLink />
+		<PoweredByLink/>
 	</aside>
 </template>
 
@@ -194,13 +200,13 @@ export default {
 			loading: state => state[LOADING] && state[LOADING_MODULE] === 'namespaces',
 		}),
 		activeLists() {
-			return this.namespaces.map(({lists}) => lists?.filter(item => !item.isArchived))
+			return this.namespaces.map(({lists}) => lists?.filter(item => typeof item !== 'undefined' && !item.isArchived))
 		},
 		namespaceTitles() {
-			return this.namespaces.map((namespace, index) => {
-				const title = this.getNamespaceTitle(namespace)
-				return `${title} (${this.activeLists[index]?.length ?? 0})`
-			})
+			return this.namespaces.map((namespace) => this.getNamespaceTitle(namespace))
+		},
+		namespaceListsCount() {
+			return this.namespaces.map((_, index) => this.activeLists[index]?.length ?? 0)
 		},
 	},
 	beforeCreate() {
@@ -237,15 +243,15 @@ export default {
 			this.listsVisible[namespaceId] = !this.listsVisible[namespaceId]
 		},
 		updateActiveLists(namespace, activeLists) {
-			// this is a bit hacky: since we do have to filter out the archived items from the list
+			// This is a bit hacky: since we do have to filter out the archived items from the list
 			// for vue draggable updating it is not as simple as replacing it.
-			// instead we iterate over the non archived items in the old list and replace them with the ones in their new order
-			const lists = namespace.lists.map((item) => {
-				if (item.isArchived) {
-					return item
-				}
-				return activeLists.shift()
-			})
+			// To work around this, we merge the active lists with the archived ones. Doing so breaks the order
+			// because now all archived lists are sorted after the active ones. This is fine because they are sorted 
+			// later when showing them anyway, and it makes the merging happening here a lot easier.
+			const lists = [
+				...activeLists,
+				...namespace.lists.filter(l => l.isArchived),
+			]
 
 			const newNamespace = {
 				...namespace,
@@ -255,8 +261,11 @@ export default {
 			this.$store.commit('namespaces/setNamespaceById', newNamespace)
 		},
 
-		async saveListPosition(e, namespaceIndex) {
-			const listsActive = this.activeLists[namespaceIndex]
+		async saveListPosition(e) {
+			const namespaceId = parseInt(e.to.dataset.namespaceId)
+			const newNamespaceIndex = parseInt(e.to.dataset.namespaceIndex)
+				
+			const listsActive = this.activeLists[newNamespaceIndex]
 			const list = listsActive[e.newIndex]
 			const listBefore = listsActive[e.newIndex - 1] ?? null
 			const listAfter = listsActive[e.newIndex + 1] ?? null
@@ -269,6 +278,7 @@ export default {
 				await this.$store.dispatch('lists/updateList', {
 					...list,
 					position,
+					namespaceId,
 				})
 			} finally {
 				this.listUpdating[list.id] = false
@@ -365,8 +375,9 @@ $vikunja-nav-selected-width: 0.4rem;
 
 		.menu-label {
 			.color-bubble {
-				width: 14px !important;
-				height: 14px !important;
+				width: 14px;
+				height: 14px;
+				flex-basis: auto;
 			}
 
 			.is-archived {
@@ -387,6 +398,12 @@ $vikunja-nav-selected-width: 0.4rem;
 					overflow: hidden;
 					text-overflow: ellipsis;
 					white-space: nowrap;
+					margin-right: auto;
+				}
+
+				.count {
+					color: var(--grey-500);
+					margin-right: .5rem;
 				}
 			}
 
@@ -482,7 +499,7 @@ $vikunja-nav-selected-width: 0.4rem;
 					height: 1rem;
 					vertical-align: middle;
 					padding-right: 0.5rem;
-					
+
 					&.handle {
 						opacity: 0;
 						transition: opacity $transition;
@@ -490,7 +507,7 @@ $vikunja-nav-selected-width: 0.4rem;
 						cursor: grab;
 					}
 				}
-				
+
 				&:hover .icon.handle {
 					opacity: 1;
 				}
@@ -542,7 +559,7 @@ $vikunja-nav-selected-width: 0.4rem;
 			span.list-menu-link, li > a {
 				padding-left: 2rem;
 				display: inline-block;
-				
+
 				.icon {
 					padding-bottom: .25rem;
 				}
