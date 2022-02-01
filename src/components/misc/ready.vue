@@ -60,7 +60,7 @@ const route = useRoute()
 
 const store = useStore()
 
-const ready = computed(() => store.state.vikunjaReady)
+const ready = ref(false)
 const online = useOnline()
 
 const error = ref('')
@@ -73,7 +73,7 @@ async function load() {
 		if (typeof redirectTo !== 'undefined') {
 			await router.push(redirectTo)
 		}
-		store.commit('vikunjaReady', true)
+		ready.value = true
 	} catch (e: any) {
 		error.value = e
 	}
