@@ -53,7 +53,7 @@ import {ERROR_NO_API_URL} from '@/helpers/checkAndSetApiUrl'
 import {useOnline} from '@/composables/useOnline'
 
 import {useRouter, useRoute} from 'vue-router'
-import {checkAuth} from '@/router'
+import {getAuthForRoute} from '@/router'
 
 const router = useRouter()
 const route = useRoute()
@@ -69,7 +69,7 @@ const showLoading = computed(() => !ready.value && error.value === '')
 async function load() {
 	try {
 		await store.dispatch('loadApp')
-		const redirectTo = checkAuth(route)
+		const redirectTo = getAuthForRoute(route)
 		if (typeof redirectTo !== 'undefined') {
 			await router.push(redirectTo)
 		}
