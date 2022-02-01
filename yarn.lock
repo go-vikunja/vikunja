@@ -11381,10 +11381,10 @@ safe-stable-stringify@^1.1.0:
   resolved "https://registry.yarnpkg.com/safer-buffer/-/safer-buffer-2.1.2.tgz#44fa161b0187b9549dd84bb91802f9bd8385cd6a"
   integrity sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==
 
-sass@1.49.5:
-  version "1.49.5"
-  resolved "https://registry.yarnpkg.com/sass/-/sass-1.49.5.tgz#3df799df2a94126aef62ef29dbde389c34e88196"
-  integrity sha512-W3wvezIHsi5unpYQ88I3rtLY8ybYkagiVrYfzoZ2cPtr3gzPfOEJKBU9HNp74k9qrQ3mLDaJsreI7qPuUlw6/A==
+sass@1.49.6:
+  version "1.49.6"
+  resolved "https://registry.yarnpkg.com/sass/-/sass-1.49.6.tgz#bc9f30bd450e8007e8601e2e0db8676da08bbea8"
+  integrity sha512-b6/xpPgSfnM2FObLVsSU8HmNPp9VyVesprFMBDZ+kdLXpRyqhObdn1jjAxW/iDg5cN7Z7pKnkFlKHJKwXJ2Q9w==
   dependencies:
     chokidar ">=3.0.0 <4.0.0"
     immutable "^4.0.0"
