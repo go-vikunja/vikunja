@@ -116,6 +116,7 @@ describe('Task', () => {
 				.should('be.visible')
 				.should('contain', 'Done')
 			cy.get('.task-view .action-buttons p.created')
+				.scrollIntoView()
 				.should('be.visible')
 				.should('contain', 'Done')
 		})
@@ -372,13 +373,13 @@ describe('Task', () => {
 
 			cy.visit(`/tasks/${tasks[0].id}`)
 
-			cy.get('.task-view .details.labels-list .multiselect .input-wrapper')
+			cy.getSettled('.task-view .details.labels-list .multiselect .input-wrapper')
 				.should('be.visible')
 				.should('contain', labels[0].title)
-			cy.get('.task-view .details.labels-list .multiselect .input-wrapper')
+			cy.getSettled('.task-view .details.labels-list .multiselect .input-wrapper')
 				.children()
 				.first()
-				.get('a.delete')
+				.get('[data-cy="taskDetail.removeLabel"]')
 				.click()
 
 			cy.get('.global-notification')

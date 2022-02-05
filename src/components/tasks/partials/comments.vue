@@ -162,7 +162,7 @@ import {mapState} from 'vuex'
 export default {
 	name: 'comments',
 	components: {
-		editor: AsyncEditor,
+		Editor: AsyncEditor,
 	},
 	props: {
 		taskId: {
@@ -339,4 +339,6 @@ export default {
 .media-content {
 	width: calc(100% - 48px - 2rem);
 }
+
+@include modal-transition();
 </style>

@@ -8,7 +8,7 @@
 		>
 		</span>
 		<router-link
-			:to="{ name: taskDetailRoute, params: { id: task.id } }"
+			:to="taskDetailRoute"
 			:class="{ 'done': task.done}"
 			class="tasktext">
 			<span>
@@ -129,10 +129,6 @@ export default {
 			type: Boolean,
 			default: false,
 		},
-		taskDetailRoute: {
-			type: String,
-			default: 'task.list.detail',
-		},
 		showList: {
 			type: Boolean,
 			default: false,
@@ -169,6 +165,14 @@ export default {
 				id: 0,
 				title: '',
 			} : this.$store.state.currentList
+		},
+		taskDetailRoute() {
+			return {
+				name: 'task.detail',
+				params: { id: this.task.id },
+				// TODO: re-enable opening task detail in modal
+				// state: { backdropView: this.$router.currentRoute.value.fullPath },
+			}
 		},
 	},
 	methods: {

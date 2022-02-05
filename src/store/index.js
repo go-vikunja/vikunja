@@ -18,6 +18,8 @@ import lists from './modules/lists'
 import attachments from './modules/attachments'
 import labels from './modules/labels'
 
+import ListModel from '@/models/list'
+
 import ListService from '../services/list'
 import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 
@@ -37,13 +39,15 @@ export const store = createStore({
 		loading: false,
 		loadingModule: null,
 		// This is used to highlight the current list in menu for all list related views
-		currentList: {id: 0},
+		currentList: new ListModel({
+			id: 0,
+			isArchived: false,
+		}),
 		background: '',
 		hasTasks: false,
 		menuActive: true,
 		keyboardShortcutsActive: false,
 		quickActionsActive: false,
-		vikunjaReady: false,
 	},
 	mutations: {
 		[LOADING](state, loading) {
@@ -78,9 +82,6 @@ export const store = createStore({
 		},
 		[BACKGROUND](state, background) {
 			state.background = background
-		},
-		vikunjaReady(state, ready) {
-			state.vikunjaReady = ready
 		},
 	},
 	actions: {
@@ -136,10 +137,9 @@ export const store = createStore({
 
 			commit(CURRENT_LIST, currentList)
 		},
-		async loadApp({commit, dispatch}) {
+		async loadApp({dispatch}) {
 			await checkAndSetApiUrl(window.API_URL)
 			await dispatch('auth/checkAuth')
-			commit('vikunjaReady', true)
 		},
 	},
 })

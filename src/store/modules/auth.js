@@ -1,12 +1,12 @@
 import {HTTPFactory} from '@/http-common'
-import {getCurrentLanguage, saveLanguage} from '@/i18n'
+import {i18n, getCurrentLanguage, saveLanguage} from '@/i18n'
 import {LOADING} from '../mutation-types'
 import UserModel from '@/models/user'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 import {setLoading} from '@/store/helper'
-import {i18n} from '@/i18n'
 import {success} from '@/message'
+import {redirectToProvider} from '@/helpers/redirectToProvider'
 
 const AUTH_TYPES = {
 	'UNKNOWN': 0,
@@ -201,7 +201,19 @@ export default {
 			ctx.commit('authenticated', authenticated)
 			if (!authenticated) {
 				ctx.commit('info', null)
-				ctx.dispatch('config/redirectToProviderIfNothingElseIsEnabled', null, {root: true})
+				ctx.dispatch('redirectToProviderIfNothingElseIsEnabled')
+			}
+		},
+
+		redirectToProviderIfNothingElseIsEnabled({rootState}) {
+			const {auth} = rootState.config
+			if (
+				auth.local.enabled === false &&
+				auth.openidConnect.enabled &&
+				auth.openidConnect.providers?.length === 1 &&
+				window.location.pathname.startsWith('/login') // Kinda hacky, but prevents an endless loop.
+			) {
+				redirectToProvider(auth.openidConnect.providers[0], auth.openidConnect.redirectUrl)
 			}
 		},
 

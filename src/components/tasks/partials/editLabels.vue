@@ -19,7 +19,7 @@
 				:style="{'background': props.item.hexColor, 'color': props.item.textColor}"
 				class="tag">
 				<span>{{ props.item.title }}</span>
-				<a @click="removeLabel(props.item)" class="delete is-small"></a>
+				<button type="button" v-cy="'taskDetail.removeLabel'" @click="removeLabel(props.item)" class="delete is-small" />
 			</span>
 		</template>
 		<template #searchResult="props">
@@ -114,23 +114,17 @@ export default {
 		},
 
 		async removeLabel(label) {
-			const removeFromState = () => {
-				for (const l in this.labels) {
-					if (this.labels[l].id === label.id) {
-						this.labels.splice(l, 1)
-					}
+			if (!this.taskId === 0) {
+				await this.$store.dispatch('tasks/removeLabel', {label: label, taskId: this.taskId})
+			}
+
+			for (const l in this.labels) {
+				if (this.labels[l].id === label.id) {
+					this.labels.splice(l, 1)
 				}
-				this.$emit('update:modelValue', this.labels)
-				this.$emit('change', this.labels)
 			}
-
-			if (this.taskId === 0) {
-				removeFromState()
-				return
-			}
-
-			await this.$store.dispatch('tasks/removeLabel', {label: label, taskId: this.taskId})
-			removeFromState()
+			this.$emit('update:modelValue', this.labels)
+			this.$emit('change', this.labels)
 			this.$message.success({message: this.$t('task.label.removeSuccess')})
 		},
 

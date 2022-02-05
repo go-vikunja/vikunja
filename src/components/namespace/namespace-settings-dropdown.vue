@@ -16,13 +16,13 @@
 				{{ $t('menu.edit') }}
 			</dropdown-item>
 			<dropdown-item
-				:to="{ name: 'namespace.settings.share', params: { id: namespace.id } }"
+				:to="{ name: 'namespace.settings.share', params: { namespaceId: namespace.id } }"
 				icon="share-alt"
 			>
 				{{ $t('menu.share') }}
 			</dropdown-item>
 			<dropdown-item
-				:to="{ name: 'list.create', params: { id: namespace.id } }"
+				:to="{ name: 'list.create', params: { namespaceId: namespace.id } }"
 				icon="plus"
 			>
 				{{ $t('menu.newList') }}
@@ -34,6 +34,7 @@
 				{{ $t('menu.archive') }}
 			</dropdown-item>
 			<task-subscription
+				v-if="subscription"
 				class="dropdown-item has-no-shadow"
 				:is-button="false"
 				entity="namespace"

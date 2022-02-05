@@ -29,8 +29,9 @@
 
 <script>
 import Filters from '@/components/list/partials/filters'
-import {getDefaultParams} from '@/components/tasks/mixins/taskList'
 import Popup from '@/components/misc/popup'
+
+import {getDefaultParams} from '@/composables/taskList'
 
 export default {
 	name: 'filter-popup',

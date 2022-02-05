@@ -1,8 +1,6 @@
 <template>
-	<div
-		:class="{ 'is-loading': taskCollectionService.loading }"
-		class="loader-container is-max-width-desktop list-view"
-	>
+	<ListWrapper class="list-list" :list-id="listId" viewName="list">
+		<template #header>
 		<div
 			class="filter-container"
 			v-if="list.isSavedFilter && !list.isSavedFilter()"
@@ -26,7 +24,7 @@
 						</div>
 						<div class="control">
 							<x-button
-								:loading="taskCollectionService.loading"
+								:loading="loading"
 								@click="searchTasks"
 								:shadow="false"
 							>
@@ -47,7 +45,13 @@
 				/>
 			</div>
 		</div>
+		</template>
 
+		<template #default>
+		<div
+			:class="{ 'is-loading': loading }"
+			class="loader-container is-max-width-desktop list-view"
+		>
 		<card :padding="false" :has-content="false" class="has-overflow">
 			<template
 				v-if="!list.isArchived && canWrite && list.id > 0"
@@ -59,7 +63,7 @@
 				/>
 			</template>
 
-			<nothing v-if="ctaVisible && tasks.length === 0 && !taskCollectionService.loading">
+			<nothing v-if="ctaVisible && tasks.length === 0 && !loading">
 				{{ $t('list.list.empty') }}
 				<a @click="focusNewTaskInput()">
 					{{ $t('list.list.newTaskCta') }}
@@ -90,7 +94,6 @@
 								:disabled="!canWrite"
 								:the-task="t"
 								@taskUpdated="updateTasks"
-								task-detail-route="task.detail"
 							>
 								<template v-if="canWrite">
 									<span class="icon handle">
@@ -118,40 +121,33 @@
 				/>
 			</div>
 
-			<Pagination
-				:total-pages="taskCollectionService.totalPages"
+			<Pagination 
+				:total-pages="totalPages"
 				:current-page="currentPage"
 			/>
 		</card>
-
-		<!-- This router view is used to show the task popup while keeping the kanban board itself -->
-		<router-view v-slot="{ Component }">
-			<transition name="modal">
-				<component :is="Component"/>
-			</transition>
-		</router-view>
-	</div>
+		</div>
+		</template>
+	</ListWrapper>
 </template>
 
 <script>
-import TaskService from '../../../services/task'
-import TaskModel from '../../../models/task'
+import { ref, toRef, defineComponent } from 'vue'
 
-import EditTask from '../../../components/tasks/edit-task'
-import AddTask from '../../../components/tasks/add-task'
-import SingleTaskInList from '../../../components/tasks/partials/singleTaskInList'
-import taskList from '../../../components/tasks/mixins/taskList'
-import {saveListView} from '@/helpers/saveListView'
-import Rights from '../../../models/constants/rights.json'
+import ListWrapper from './ListWrapper.vue'
+import EditTask from '@/components/tasks/edit-task'
+import AddTask from '@/components/tasks/add-task'
+import SingleTaskInList from '@/components/tasks/partials/singleTaskInList'
+import { useTaskList } from '@/composables/taskList'
+import Rights from '../../models/constants/rights.json'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import {HAS_TASKS} from '@/store/mutation-types'
 import Nothing from '@/components/misc/nothing.vue'
 import Pagination from '@/components/misc/pagination.vue'
-import Popup from '@/components/misc/popup'
-import { ALPHABETICAL_SORT } from '@/components/list/partials/filters'
+import {ALPHABETICAL_SORT} from '@/components/list/partials/filters.vue'
 
 import draggable from 'vuedraggable'
-import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
+import {calculateItemPosition} from '../../helpers/calculateItemPosition'
 
 function sortTasks(tasks) {
 	if (tasks === null || tasks === []) {
@@ -171,13 +167,18 @@ function sortTasks(tasks) {
 	})
 }
 
-export default {
+export default defineComponent({
 	name: 'List',
+	
+	props: {
+		listId: {
+			type: Number,
+			required: true,
+		},
+	},
+
 	data() {
 		return {
-			taskService: new TaskService(),
-			isTaskEdit: false,
-			taskEditTask: TaskModel,
 			ctaVisible: false,
 			showTaskSearch: false,
 
@@ -188,11 +189,8 @@ export default {
 			},
 		}
 	},
-	mixins: [
-		taskList,
-	],
 	components: {
-		Popup,
+		ListWrapper,
 		Nothing,
 		FilterPopup,
 		SingleTaskInList,
@@ -201,10 +199,24 @@ export default {
 		draggable,
 		Pagination,
 	},
-	created() {
-		// Save the current list view to local storage
-		// We use local storage and not vuex here to make it persistent across reloads.
-		saveListView(this.$route.params.listId, this.$route.name)
+
+	setup(props) {
+		const taskEditTask = ref(null)
+		const isTaskEdit = ref(false)
+
+		// This function initializes the tasks page and loads the first page of tasks
+		// function beforeLoad() {
+		// 	taskEditTask.value = null
+		// 	isTaskEdit.value = false
+		// }
+
+		const taskList = useTaskList(toRef(props, 'listId'))
+
+		return {
+			taskEditTask,
+			isTaskEdit,
+			...taskList,
+		}
 	},
 	computed: {
 		isAlphabeticalSorting() {
@@ -244,16 +256,10 @@ export default {
 			// When clicking on the search button, @blur from the input is fired. If we
 			// would then directly hide the whole search bar directly, no click event
 			// from the button gets fired. To prevent this, we wait 200ms until we hide
-			// everything so the button has a chance of firering the search event.
+			// everything so the button has a chance of firing the search event.
 			setTimeout(() => {
 				this.showTaskSearch = false
 			}, 200)
-		},
-		// This function initializes the tasks page and loads the first page of tasks
-		initTasks(page, search = '') {
-			this.taskEditTask = null
-			this.isTaskEdit = false
-			this.loadTasks(page, search)
 		},
 		focusNewTaskInput() {
 			this.$refs.newTaskInput.$refs.newTaskInput.focus()
@@ -312,7 +318,7 @@ export default {
 			this.tasks[e.newIndex] = updatedTask
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

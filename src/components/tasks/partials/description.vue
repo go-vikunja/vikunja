@@ -38,7 +38,7 @@ import {mapState} from 'vuex'
 export default {
 	name: 'description',
 	components: {
-		editor: AsyncEditor,
+		Editor: AsyncEditor,
 	},
 	data() {
 		return {

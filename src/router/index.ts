@@ -2,6 +2,8 @@ import { createRouter, createWebHistory, RouteLocation } from 'vue-router'
 import {saveLastVisited} from '@/helpers/saveLastVisited'
 import {store} from '@/store'
 
+import {saveListView, getListView} from '@/helpers/saveListView'
+
 import HomeComponent from '../views/Home.vue'
 import NotFoundComponent from '../views/404.vue'
 import About from '../views/About.vue'
@@ -13,9 +15,8 @@ import DataExportDownload from '../views/user/DataExportDownload.vue'
 // Tasks
 import ShowTasksInRangeComponent from '../views/tasks/ShowTasksInRange.vue'
 import LinkShareAuthComponent from '../views/sharing/LinkSharingAuth.vue'
-import TaskDetailViewModal from '../views/tasks/TaskDetailViewModal.vue'
-import TaskDetailView from '../views/tasks/TaskDetailView.vue'
 import ListNamespaces from '../views/namespaces/ListNamespaces.vue'
+import TaskDetailView from '../views/tasks/TaskDetailView.vue'
 // Team Handling
 import ListTeamsComponent from '../views/teams/ListTeams.vue'
 // Label Handling
@@ -25,11 +26,11 @@ import NewLabelComponent from '../views/labels/NewLabel.vue'
 import MigrationComponent from '../views/migrator/Migrate.vue'
 import MigrateServiceComponent from '../views/migrator/MigrateService.vue'
 // List Views
-import ShowListComponent from '../views/list/ShowList.vue'
-import Kanban from '../views/list/views/Kanban.vue'
-import List from '../views/list/views/List.vue'
-import Gantt from '../views/list/views/Gantt.vue'
-import Table from '../views/list/views/Table.vue'
+import ListList from '../views/list/ListList.vue'
+import ListGantt from '../views/list/ListGantt.vue'
+import ListTable from '../views/list/ListTable.vue'
+import ListKanban from '../views/list/ListKanban.vue'
+
 // List Settings
 import ListSettingEdit from '../views/list/settings/edit.vue'
 import ListSettingBackground from '../views/list/settings/background.vue'
@@ -80,7 +81,7 @@ const router = createRouter({
 
 		// Scroll to anchor should still work
 		if (to.hash) {
-			return {el: document.getElementById(to.hash.slice(1))}
+			return {el: to.hash}
 		}
 
 		// Otherwise just scroll to the top
@@ -201,49 +202,48 @@ const router = createRouter({
 		{
 			path: '/namespaces/new',
 			name: 'namespace.create',
-			components: {
-				popup: NewNamespaceComponent,
-			},
-		},
-		{
-			path: '/namespaces/:id/list',
-			name: 'list.create',
-			components: {
-				popup: NewListComponent,
+			component: NewNamespaceComponent,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/namespaces/:id/settings/edit',
 			name: 'namespace.settings.edit',
-			components: {
-				popup: NamespaceSettingEdit,
+			component: NamespaceSettingEdit,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
-			path: '/namespaces/:id/settings/share',
+			path: '/namespaces/:namespaceId/settings/share',
 			name: 'namespace.settings.share',
-			components: {
-				popup: NamespaceSettingShare,
+			component: NamespaceSettingShare,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/namespaces/:id/settings/archive',
 			name: 'namespace.settings.archive',
-			components: {
-				popup: NamespaceSettingArchive,
+			component: NamespaceSettingArchive,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/namespaces/:id/settings/delete',
 			name: 'namespace.settings.delete',
-			components: {
-				popup: NamespaceSettingDelete,
+			component: NamespaceSettingDelete,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/tasks/:id',
 			name: 'task.detail',
 			component: TaskDetailView,
+			props: route => ({ taskId: parseInt(route.params.id as string) }),
 		},
 		{
 			path: '/tasks/by/upcoming',
@@ -251,270 +251,121 @@ const router = createRouter({
 			component: ShowTasksInRangeComponent,
 		},
 		{
+			path: '/lists/new/:namespaceId/',
+			name: 'list.create',
+			component: NewListComponent,
+			meta: {
+				showAsModal: true,
+			},
+		},
+		{
 			path: '/lists/:listId/settings/edit',
 			name: 'list.settings.edit',
-			components: {
-				popup: ListSettingEdit,
+			component: ListSettingEdit,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/lists/:listId/settings/background',
 			name: 'list.settings.background',
-			components: {
-				popup: ListSettingBackground,
+			component: ListSettingBackground,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/lists/:listId/settings/duplicate',
 			name: 'list.settings.duplicate',
-			components: {
-				popup: ListSettingDuplicate,
+			component: ListSettingDuplicate,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/lists/:listId/settings/share',
 			name: 'list.settings.share',
-			components: {
-				popup: ListSettingShare,
+			component: ListSettingShare,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/lists/:listId/settings/delete',
 			name: 'list.settings.delete',
-			components: {
-				popup: ListSettingDelete,
+			component: ListSettingDelete,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/lists/:listId/settings/archive',
 			name: 'list.settings.archive',
-			components: {
-				popup: ListSettingArchive,
+			component: ListSettingArchive,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/lists/:listId/settings/edit',
 			name: 'filter.settings.edit',
-			components: {
-				popup: FilterEdit,
+			component: FilterEdit,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/lists/:listId/settings/delete',
 			name: 'filter.settings.delete',
-			components: {
-				popup: FilterDelete,
+			component: FilterDelete,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
 			path: '/lists/:listId',
 			name: 'list.index',
-			component: ShowListComponent,
-			children: [
-				{
-					path: '/lists/:listId/list',
-					name: 'list.list',
-					component: List,
-					children: [
-						{
-							path: '/tasks/:id',
-							name: 'task.list.detail',
-							component: TaskDetailViewModal,
-						},
-						{
-							path: '/lists/:listId/settings/edit',
-							name: 'list.list.settings.edit',
-							component: ListSettingEdit,
-						},
-						{
-							path: '/lists/:listId/settings/background',
-							name: 'list.list.settings.background',
-							component: ListSettingBackground,
-						},
-						{
-							path: '/lists/:listId/settings/duplicate',
-							name: 'list.list.settings.duplicate',
-							component: ListSettingDuplicate,
-						},
-						{
-							path: '/lists/:listId/settings/share',
-							name: 'list.list.settings.share',
-							component: ListSettingShare,
-						},
-						{
-							path: '/lists/:listId/settings/delete',
-							name: 'list.list.settings.delete',
-							component: ListSettingDelete,
-						},
-						{
-							path: '/lists/:listId/settings/archive',
-							name: 'list.list.settings.archive',
-							component: ListSettingArchive,
-						},
-						{
-							path: '/lists/:listId/settings/edit',
-							name: 'filter.list.settings.edit',
-							component: FilterEdit,
-						},
-						{
-							path: '/lists/:listId/settings/delete',
-							name: 'filter.list.settings.delete',
-							component: FilterDelete,
-						},
-					],
-				},
-				{
-					path: '/lists/:listId/gantt',
-					name: 'list.gantt',
-					component: Gantt,
-					children: [
-						{
-							path: '/tasks/:id',
-							name: 'task.gantt.detail',
-							component: TaskDetailViewModal,
-						},
-						{
-							path: '/lists/:listId/settings/edit',
-							name: 'list.gantt.settings.edit',
-							component: ListSettingEdit,
-						},
-						{
-							path: '/lists/:listId/settings/background',
-							name: 'list.gantt.settings.background',
-							component: ListSettingBackground,
-						},
-						{
-							path: '/lists/:listId/settings/duplicate',
-							name: 'list.gantt.settings.duplicate',
-							component: ListSettingDuplicate,
-						},
-						{
-							path: '/lists/:listId/settings/share',
-							name: 'list.gantt.settings.share',
-							component: ListSettingShare,
-						},
-						{
-							path: '/lists/:listId/settings/delete',
-							name: 'list.gantt.settings.delete',
-							component: ListSettingDelete,
-						},
-						{
-							path: '/lists/:listId/settings/archive',
-							name: 'list.gantt.settings.archive',
-							component: ListSettingArchive,
-						},
-						{
-							path: '/lists/:listId/settings/edit',
-							name: 'filter.gantt.settings.edit',
-							component: FilterEdit,
-						},
-						{
-							path: '/lists/:listId/settings/delete',
-							name: 'filter.gantt.settings.delete',
-							component: FilterDelete,
-						},
-					],
-				},
-				{
-					path: '/lists/:listId/table',
-					name: 'list.table',
-					component: Table,
-					children: [
-						{
-							path: '/lists/:listId/settings/edit',
-							name: 'list.table.settings.edit',
-							component: ListSettingEdit,
-						},
-						{
-							path: '/lists/:listId/settings/background',
-							name: 'list.table.settings.background',
-							component: ListSettingBackground,
-						},
-						{
-							path: '/lists/:listId/settings/duplicate',
-							name: 'list.table.settings.duplicate',
-							component: ListSettingDuplicate,
-						},
-						{
-							path: '/lists/:listId/settings/share',
-							name: 'list.table.settings.share',
-							component: ListSettingShare,
-						},
-						{
-							path: '/lists/:listId/settings/delete',
-							name: 'list.table.settings.delete',
-							component: ListSettingDelete,
-						},
-						{
-							path: '/lists/:listId/settings/archive',
-							name: 'list.table.settings.archive',
-							component: ListSettingArchive,
-						},
-						{
-							path: '/lists/:listId/settings/edit',
-							name: 'filter.table.settings.edit',
-							component: FilterEdit,
-						},
-						{
-							path: '/lists/:listId/settings/delete',
-							name: 'filter.table.settings.delete',
-							component: FilterDelete,
-						},
-					],
-				},
-				{
-					path: '/lists/:listId/kanban',
-					name: 'list.kanban',
-					component: Kanban,
-					children: [
-						{
-							path: '/tasks/:id',
-							name: 'task.kanban.detail',
-							component: TaskDetailViewModal,
-						},
-						{
-							path: '/lists/:listId/settings/edit',
-							name: 'list.kanban.settings.edit',
-							component: ListSettingEdit,
-						},
-						{
-							path: '/lists/:listId/settings/background',
-							name: 'list.kanban.settings.background',
-							component: ListSettingBackground,
-						},
-						{
-							path: '/lists/:listId/settings/duplicate',
-							name: 'list.kanban.settings.duplicate',
-							component: ListSettingDuplicate,
-						},
-						{
-							path: '/lists/:listId/settings/share',
-							name: 'list.kanban.settings.share',
-							component: ListSettingShare,
-						},
-						{
-							path: '/lists/:listId/settings/delete',
-							name: 'list.kanban.settings.delete',
-							component: ListSettingDelete,
-						},
-						{
-							path: '/lists/:listId/settings/archive',
-							name: 'list.kanban.settings.archive',
-							component: ListSettingArchive,
-						},
-						{
-							path: '/lists/:listId/settings/edit',
-							name: 'filter.kanban.settings.edit',
-							component: FilterEdit,
-						},
-						{
-							path: '/lists/:listId/settings/delete',
-							name: 'filter.kanban.settings.delete',
-							component: FilterDelete,
-						},
-					],
-				},
-			],
+			redirect(to) {
+				// Redirect the user to list view by default
+
+				const savedListView = getListView(to.params.listId)
+				console.debug('Replaced list view with', savedListView)
+
+				return {
+					name:  router.hasRoute(savedListView)
+						? savedListView
+						: 'list.list',
+					params: {listId: to.params.listId},
+				}
+			},
+		},
+		{
+			path: '/lists/:listId/list',
+			name: 'list.list',
+			component: ListList,
+			beforeEnter: (to) => saveListView(to.params.listId, to.name),
+			props: route => ({ listId: parseInt(route.params.listId as string) }),
+		},
+		{
+			path: '/lists/:listId/gantt',
+			name: 'list.gantt',
+			component: ListGantt,
+			beforeEnter: (to) => saveListView(to.params.listId, to.name),
+			props: route => ({ listId: parseInt(route.params.listId as string) }),
+		},
+		{
+			path: '/lists/:listId/table',
+			name: 'list.table',
+			component: ListTable,
+			beforeEnter: (to) => saveListView(to.params.listId, to.name),
+			props: route => ({ listId: parseInt(route.params.listId as string) }),
+		},
+		{
+			path: '/lists/:listId/kanban',
+			name: 'list.kanban',
+			component: ListKanban,
+			beforeEnter: (to) => saveListView(to.params.listId, to.name),
+			props: route => ({ listId: parseInt(route.params.listId as string) }),
 		},
 		{
 			path: '/teams',
@@ -524,8 +375,9 @@ const router = createRouter({
 		{
 			path: '/teams/new',
 			name: 'teams.create',
-			components: {
-				popup: NewTeamComponent,
+			component: NewTeamComponent,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
@@ -541,8 +393,9 @@ const router = createRouter({
 		{
 			path: '/labels/new',
 			name: 'labels.create',
-			components: {
-				popup: NewLabelComponent,
+			component: NewLabelComponent,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
@@ -558,8 +411,9 @@ const router = createRouter({
 		{
 			path: '/filters/new',
 			name: 'filters.create',
-			components: {
-				popup: FilterNew,
+			component: FilterNew,
+			meta: {
+				showAsModal: true,
 			},
 		},
 		{
@@ -575,11 +429,7 @@ const router = createRouter({
 	],
 })
 
-router.beforeEach((to) => {
-	return checkAuth(to)
-})
-
-function checkAuth(route: RouteLocation) {
+export function getAuthForRoute(route: RouteLocation) {
 	const authUser = store.getters['auth/authUser']
 	const authLinkShare = store.getters['auth/authLinkShare']
 
