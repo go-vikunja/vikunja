@@ -18,7 +18,7 @@ declare global {
 	}
 }
 
-import {formatDate, formatDateShort, formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
+import {formatDate, formatDateShort, formatDateLong, formatDateSince, formatISO} from '@/helpers/time/formatDate'
 // @ts-ignore
 import {VERSION} from './version.json'
 
@@ -52,6 +52,7 @@ app.use(Notifications)
 
 // directives
 import focus from '@/directives/focus'
+// @ts-ignore The export does exist, ts just doesn't find it.
 import { VTooltip } from 'v-tooltip'
 import 'v-tooltip/dist/v-tooltip.css'
 import shortcut from '@/directives/shortcut'
@@ -84,6 +85,7 @@ app.mixin({
 		format: formatDate,
 		formatDate: formatDateLong,
 		formatDateShort: formatDateShort,
+		formatISO,
 		getNamespaceTitle,
 		getListTitle,
 		setTitle,

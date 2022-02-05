@@ -8,12 +8,14 @@ describe('User Settings', () => {
 	})
 
 	it('Changes the user avatar', () => {
+		cy.intercept(`${Cypress.env('API_URL')}/user/settings/avatar/upload`).as('uploadAvatar')
+		
 		cy.visit('/user/settings/avatar')
 
 		cy.get('input[name=avatarProvider][value=upload]')
 			.click()
-		cy.get('input[type=file]', { timeout: 1000 })
-			.attachFile('image.jpg')
+		cy.get('input[type=file]', {timeout: 1000})
+			.selectFile('cypress/fixtures/image.jpg', {force: true}) // The input is not visible, but on purpose
 		cy.get('.vue-handler-wrapper.vue-handler-wrapper--south .vue-simple-handler.vue-simple-handler--south')
 			.trigger('mousedown', {which: 1})
 			.trigger('mousemove', {clientY: 100})
@@ -22,7 +24,7 @@ describe('User Settings', () => {
 			.contains('Upload Avatar')
 			.click()
 
-		cy.wait(3000) // Wait for the request to finish
+		cy.wait('@uploadAvatar')
 		cy.get('.global-notification')
 			.should('contain', 'Success')
 	})

@@ -1,6 +1,6 @@
 <template>
-	<div class="gantt-chart-container">
-		<card :padding="false" class="has-overflow">
+	<ListWrapper class="list-gantt" :list-id="props.listId" viewName="gantt">
+		<template #header>
 		<div class="gantt-options p-4">
 			<fancycheckbox class="is-block" v-model="showTaskswithoutDates">
 				{{ $t('list.gantt.showTasksWithoutDates') }}
@@ -44,65 +44,64 @@
 				</div>
 			</div>
 		</div>
+		</template>
+		
+		<template #default>
+		<div class="gantt-chart-container">
+		<card :padding="false" class="has-overflow">
+
 		<gantt-chart
 			:date-from="dateFrom"
 			:date-to="dateTo"
 			:day-width="dayWidth"
-			:list-id="Number($route.params.listId)"
+			:list-id="props.listId"
 			:show-taskswithout-dates="showTaskswithoutDates"
 		/>
 
-		<!-- This router view is used to show the task popup while keeping the gantt chart itself -->
-		<router-view v-slot="{ Component }">
-			<transition name="modal">
-				<component :is="Component" />
-			</transition>
-		</router-view>
-
 		</card>
-	</div>
+		</div>
+		</template>
+	</ListWrapper>
 </template>
 
-<script>
-import GanttChart from '../../../components/tasks/gantt-component'
+<script setup lang="ts">
+import { ref, computed } from 'vue'
 import flatPickr from 'vue-flatpickr-component'
-import Fancycheckbox from '../../../components/input/fancycheckbox'
-import {saveListView} from '@/helpers/saveListView'
 
-export default {
-	name: 'Gantt',
-	components: {
-		Fancycheckbox,
-		flatPickr,
-		GanttChart,
+import { useI18n } from 'vue-i18n'
+import { useStore } from 'vuex'
+
+import ListWrapper from './ListWrapper.vue'
+import GanttChart from '@/components/tasks/gantt-component.vue'
+import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+
+const props = defineProps({
+	listId: {
+		type: Number,
+		required: true,
 	},
-	created() {
-		// Save the current list view to local storage
-		// We use local storage and not vuex here to make it persistent across reloads.
-		saveListView(this.$route.params.listId, this.$route.name)
+})
+
+const DEFAULT_DAY_COUNT = 35 
+
+const showTaskswithoutDates = ref(false)
+const dayWidth = ref(DEFAULT_DAY_COUNT)
+
+const now = ref(new Date())
+const dateFrom = ref(new Date((new Date()).setDate(now.value.getDate() - 15)))
+const dateTo = ref(new Date((new Date()).setDate(now.value.getDate() + 30)))
+
+const {t} = useI18n()
+const store = useStore()
+const flatPickerConfig = computed(() => ({
+	altFormat: t('date.altFormatShort'),
+	altInput: true,
+	dateFormat: 'Y-m-d',
+	enableTime: false,
+	locale: {
+		firstDayOfWeek: store.state.auth.settings.weekStart,
 	},
-	data() {
-		return {
-			showTaskswithoutDates: false,
-			dayWidth: 35,
-			dateFrom: new Date((new Date()).setDate((new Date()).getDate() - 15)),
-			dateTo: new Date((new Date()).setDate((new Date()).getDate() + 30)),
-		}
-	},
-	computed: {
-		flatPickerConfig() {
-			return {
-				altFormat: this.$t('date.altFormatShort'),
-				altInput: true,
-				dateFormat: 'Y-m-d',
-				enableTime: false,
-				locale: {
-					firstDayOfWeek: this.$store.state.auth.settings.weekStart,
-				},
-			}
-		},
-	},
-}
+}))
 </script>
 
 <style lang="scss">

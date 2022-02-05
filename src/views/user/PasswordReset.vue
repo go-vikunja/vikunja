@@ -1,9 +1,9 @@
 <template>
 	<div>
-		<message v-if="errorMsg">
+		<message v-if="errorMsg" class="mb-4">
 			{{ errorMsg }}
 		</message>
-		<div class="has-text-centered" v-if="successMessage">
+		<div class="has-text-centered mb-4" v-if="successMessage">
 			<message variant="success">
 				{{ successMessage }}
 			</message>

@@ -1,9 +1,9 @@
 <template>
 	<div>
-		<message variant="success" class="has-text-centered" v-if="confirmedEmailSuccess">
+		<message variant="success" text-align="center" class="mb-4" v-if="confirmedEmailSuccess">
 			{{ $t('user.auth.confirmEmailSuccess') }}
 		</message>
-		<message variant="danger" v-if="errorMessage">
+		<message variant="danger" v-if="errorMessage" class="mb-4">
 			{{ errorMessage }}
 		</message>
 		<form @submit.prevent="submit" id="loginform" v-if="localAuthEnabled">
@@ -20,24 +20,26 @@
 						autocomplete="username"
 						v-focus
 						@keyup.enter="submit"
+						tabindex="1"
+						@focusout="validateField('username')"
 					/>
 				</div>
+				<p class="help is-danger" v-if="!usernameValid">
+					{{ $t('user.auth.usernameRequired') }}
+				</p>
 			</div>
 			<div class="field">
-				<label class="label" for="password">{{ $t('user.auth.password') }}</label>
-				<div class="control">
-					<input
-						class="input"
-						id="password"
-						name="password"
-						:placeholder="$t('user.auth.passwordPlaceholder')"
-						ref="password"
-						required
-						type="password"
-						autocomplete="current-password"
-						@keyup.enter="submit"
-					/>
+				<div class="label-with-link">
+					<label class="label" for="password">{{ $t('user.auth.password') }}</label>
+					<router-link
+						:to="{ name: 'user.password-reset.request' }"
+						class="reset-password-link"
+						tabindex="6"
+					>
+						{{ $t('user.auth.forgotPassword') }}
+					</router-link>
 				</div>
+				<password tabindex="2" @submit="submit" v-model="password" :validate-initially="validatePasswordInitially"/>
 			</div>
 			<div class="field" v-if="needsTotpPasscode">
 				<label class="label" for="totpPasscode">{{ $t('user.auth.totpTitle') }}</label>
@@ -52,32 +54,28 @@
 						type="text"
 						v-focus
 						@keyup.enter="submit"
+						tabindex="3"
 					/>
 				</div>
 			</div>
 
-			<div class="field is-grouped login-buttons">
-				<div class="control is-expanded">
-					<x-button
-						@click="submit"
-						:loading="loading"
-					>
-						{{ $t('user.auth.login') }}
-					</x-button>
-					<x-button
-						:to="{ name: 'user.register' }"
-						v-if="registrationEnabled"
-						variant="secondary"
-					>
-						{{ $t('user.auth.register') }}
-					</x-button>
-				</div>
-				<div class="control">
-					<router-link :to="{ name: 'user.password-reset.request' }" class="reset-password-link">
-						{{ $t('user.auth.forgotPassword') }}
-					</router-link>
-				</div>
-			</div>
+			<x-button
+				@click="submit"
+				:loading="loading"
+				tabindex="4"
+			>
+				{{ $t('user.auth.login') }}
+			</x-button>
+			<p class="mt-2" v-if="registrationEnabled">
+				{{ $t('user.auth.noAccountYet') }}
+				<router-link
+					:to="{ name: 'user.register' }"
+					type="secondary"
+					tabindex="5"
+				>
+					{{ $t('user.auth.createAccount') }}
+				</router-link>
+			</p>
 		</form>
 
 		<div
@@ -97,6 +95,7 @@
 </template>
 
 <script>
+import {useDebounceFn} from '@vueuse/core'
 import {mapState} from 'vuex'
 
 import {HTTPFactory} from '@/http-common'
@@ -105,15 +104,20 @@ import {getErrorText} from '@/message'
 import Message from '@/components/misc/message'
 import {redirectToProvider} from '../../helpers/redirectToProvider'
 import {getLastVisited, clearLastVisited} from '../../helpers/saveLastVisited'
+import Password from '@/components/input/password'
 
 export default {
 	components: {
+		Password,
 		Message,
 	},
 	data() {
 		return {
 			confirmedEmailSuccess: false,
 			errorMessage: '',
+			usernameValid: true,
+			password: '',
+			validatePasswordInitially: false,
 		}
 	},
 	beforeMount() {
@@ -166,6 +170,13 @@ export default {
 			localAuthEnabled: state => state.config.auth.local.enabled,
 			openidConnect: state => state.config.auth.openidConnect,
 		}),
+
+		validateField() {
+			// using computed so that debounced function definition stays
+			return useDebounceFn((field) => {
+				this[`${field}Valid`] = this.$refs[field].value !== ''
+			}, 100)
+		},
 	},
 	methods: {
 		setLoading() {
@@ -185,7 +196,14 @@ export default {
 			// For more info, see https://kolaente.dev/vikunja/frontend/issues/78
 			const credentials = {
 				username: this.$refs.username.value,
-				password: this.$refs.password.value,
+				password: this.password,
+			}
+
+			if (credentials.username === '' || credentials.password === '') {
+				// Trigger the validation error messages
+				this.validateField('username')
+				this.validatePasswordInitially = true
+				return
 			}
 
 			if (this.needsTotpPasscode) {
@@ -196,7 +214,7 @@ export default {
 				await this.$store.dispatch('auth/login', credentials)
 				this.$store.commit('auth/needsTotpPasscode', false)
 			} catch (e) {
-				if (e.response && e.response.data.code === 1017 && !credentials.totpPasscode) {
+				if (e.response?.data.code === 1017 && !this.credentials.totpPasscode) {
 					return
 				}
 
@@ -211,22 +229,21 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.login-buttons {
-	@media screen and (max-width: 450px) {
-		flex-direction: column;
-
-		.control:first-child {
-			margin-bottom: 1rem;
-		}
-	}
-}
-
 .button {
 	margin: 0 0.4rem 0 0;
 }
 
 .reset-password-link {
 	display: inline-block;
-	padding-top: 5px;
+}
+
+.label-with-link {
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: .5rem;
+
+	.label {
+		margin-bottom: 0;
+	}
 }
 </style>

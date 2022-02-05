@@ -7,7 +7,7 @@
     "lastViewed": "Ultima visualizzazione",
     "list": {
       "newText": "È possibile creare una nuova lista per le nuove attività:",
-      "new": "New list",
+      "new": "Nuova lista",
       "importText": "O importare le liste e le attività da altri servizi in Vikunja:",
       "import": "Importa i tuoi dati in Vikunja"
     }
@@ -17,14 +17,14 @@
     "text": "La pagina richiesta non esiste."
   },
   "ready": {
-    "loading": "Vikunja is loading…",
-    "errorOccured": "An error occured:",
-    "checkApiUrl": "Please check if the api url is correct.",
-    "noApiUrlConfigured": "No API url was configured. Please set one below:"
+    "loading": "Vikunja sta caricando…",
+    "errorOccured": "Si è verificato un errore:",
+    "checkApiUrl": "Controlla se l'URL API è corretto.",
+    "noApiUrlConfigured": "Nessun URL API configurato. Impostane uno qui sotto:"
   },
   "offline": {
-    "title": "You are offline.",
-    "text": "Please check your network connection and try again."
+    "title": "Sei offline.",
+    "text": "Controlla la connessione di rete e riprova."
   },
   "user": {
     "auth": {
@@ -36,7 +36,7 @@
       "password": "Password",
       "passwordRepeat": "Digita di nuovo la tua password",
       "passwordPlaceholder": "es. ••••••••••••",
-      "forgotPassword": "Forgot your password?",
+      "forgotPassword": "Password dimenticata?",
       "resetPassword": "Reimposta la tua password",
       "resetPasswordAction": "Inviami il link per reimpostare la password",
       "resetPasswordSuccess": "Controlla la tua casella di posta! Dovresti avere un'e-mail con le istruzioni su come reimpostare la password.",
@@ -48,7 +48,7 @@
       "register": "Registrati",
       "loginWith": "Accedi con {provider}",
       "authenticating": "Autenticazione…",
-      "openIdStateError": "State does not match, refusing to continue!",
+      "openIdStateError": "Stato non corrispondente, impossibile continuare!",
       "openIdGeneralError": "Si è verificato un errore durante l'autenticazione con terze parti.",
       "logout": "Esci"
     },
@@ -103,31 +103,31 @@
         "title": "Avatar",
         "initials": "Iniziali",
         "gravatar": "Gravatar",
-        "marble": "Marble",
+        "marble": "Marmo",
         "upload": "Carica",
         "uploadAvatar": "Carica Avatar",
-        "statusUpdateSuccess": "Avatar status was updated successfully!",
+        "statusUpdateSuccess": "Avatar aggiornato!",
         "setSuccess": "L'avatar è stato impostato con successo!"
       },
       "quickAddMagic": {
-        "title": "Quick Add Magic Mode",
+        "title": "Modalità Aggiunta Rapida Magica",
         "disabled": "Disabilitato",
         "todoist": "Todoist",
         "vikunja": "Vikunja"
       },
       "appearance": {
-        "title": "Color Scheme",
-        "setSuccess": "Saved change of color scheme to {colorScheme}",
+        "title": "Tema",
+        "setSuccess": "Tema cambiato in {colorScheme}",
         "colorScheme": {
-          "light": "Light",
-          "system": "System",
-          "dark": "Dark"
+          "light": "Chiaro",
+          "system": "Sistema",
+          "dark": "Scuro"
         }
       }
     },
     "deletion": {
-      "title": "Delete your Vikunja Account",
-      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your namespaces, lists, tasks and everything associated with it.",
+      "title": "Elimina il tuo Account Vikunja",
+      "text1": "La cancellazione del tuo account è permanente e non può essere annullata. Elimineremo tutti i tuoi namespace, liste, attività e tutto ciò che è ad esso associato.",
       "text2": "Per continuare, inserisci la tua password. Riceverai un'e-mail con ulteriori istruzioni.",
       "confirm": "Elimina il mio profilo",
       "requestSuccess": "Richiesta riuscita. Riceverai un'e-mail con ulteriori istruzioni.",
@@ -141,7 +141,7 @@
     },
     "export": {
       "title": "Esporta i tuoi dati Vikunja",
-      "description": "You can request a copy of all your Vikunja data. This include Namespaces, Lists, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
+      "description": "Puoi richiedere una copia di tutti i tuoi dati all'interno di Vikunja. Questo include i Namespace, le Liste, le Attività e tutto ciò che è loro associato. È possibile importare questi dati in qualsiasi istanza Vikunja attraverso la funzione di migrazione.",
       "descriptionPasswordRequired": "Inserisci la tua password per procedere:",
       "request": "Richiedi una copia dei miei dati Vikunja",
       "success": "Hai richiesto con successo i tuoi dati Vikunja! Ti invieremo un'e-mail una volta che saranno pronti da scaricare.",
@@ -157,7 +157,7 @@
     "searchSelect": "Fare clic o premere invio per selezionare questa lista",
     "shared": "Liste Condivise",
     "create": {
-      "header": "New list",
+      "header": "Nuova lista",
       "titlePlaceholder": "Il titolo della lista va qui…",
       "addTitleRequired": "Specifica un titolo.",
       "createdSuccess": "La lista è stata creata correttamente.",
@@ -191,7 +191,7 @@
     "duplicate": {
       "title": "Duplica questa lista",
       "label": "Duplica",
-      "text": "Select a namespace which should hold the duplicated list:",
+      "text": "Seleziona un namespace che dovrebbe contenere l'elenco duplicato:",
       "success": "Lista duplicata."
     },
     "edit": {
@@ -279,23 +279,23 @@
       "title": "Kanban",
       "limit": "Limite: {limit}",
       "noLimit": "Non Impostato",
-      "doneBucket": "Done bucket",
-      "doneBucketHint": "All tasks moved into this bucket will automatically marked as done.",
-      "doneBucketHintExtended": "All tasks moved into the done bucket will be marked as done automatically. All tasks marked as done from elsewhere will be moved as well.",
-      "doneBucketSavedSuccess": "The done bucket has been saved successfully.",
-      "deleteLast": "You cannot remove the last bucket.",
-      "addTaskPlaceholder": "Enter the new task title…",
+      "doneBucket": "Colonna attività completate",
+      "doneBucketHint": "Tutte le attività spostate in questa colonna verranno automaticamente contrassegnate come completate.",
+      "doneBucketHintExtended": "Tutte le attività spostate nella colonna attività completate saranno contrassegnate automaticamente come completate. Tutte le attività contrassegnate come completate altrove verranno anche spostate.",
+      "doneBucketSavedSuccess": "Colonna attività completate salvata.",
+      "deleteLast": "Impossibile eliminare l'ultima colonna.",
+      "addTaskPlaceholder": "Inserisci il nuovo titolo dell'attività…",
       "addTask": "Aggiungi un'attività",
       "addAnotherTask": "Aggiungi un'altra attività",
-      "addBucket": "Create a new bucket",
-      "addBucketPlaceholder": "Enter the new bucket title…",
-      "deleteHeaderBucket": "Delete the bucket",
-      "deleteBucketText1": "Are you sure you want to delete this bucket?",
-      "deleteBucketText2": "This will not delete any tasks but move them into the default bucket.",
-      "deleteBucketSuccess": "The bucket has been deleted successfully.",
-      "bucketTitleSavedSuccess": "The bucket title has been saved successfully.",
-      "bucketLimitSavedSuccess": "The bucket limit been saved successfully.",
-      "collapse": "Collapse this bucket"
+      "addBucket": "Crea una nuova colonna",
+      "addBucketPlaceholder": "Inserisci il titolo della nuova colonna…",
+      "deleteHeaderBucket": "Elimina la colonna",
+      "deleteBucketText1": "Confermi di voler eliminare questa colonna?",
+      "deleteBucketText2": "Questo non eliminerà nessuna attività, ma la sposterà nel bucket predefinito.",
+      "deleteBucketSuccess": "Colonna eliminata.",
+      "bucketTitleSavedSuccess": "Titolo della colonna salvato.",
+      "bucketLimitSavedSuccess": "Limite della colonna salvato.",
+      "collapse": "Comprimi questa colonna"
     },
     "pseudo": {
       "favorites": {
@@ -304,52 +304,52 @@
     }
   },
   "namespace": {
-    "title": "Namespaces & Lists",
+    "title": "Namespace e Liste",
     "namespace": "Namespace",
-    "showArchived": "Show Archived",
-    "noneAvailable": "You don't have any namespaces right now.",
-    "unarchive": "Un-Archive",
-    "archived": "Archived",
-    "noLists": "This namespace does not contain any lists.",
-    "createList": "Create a new list in this namespace.",
-    "namespaces": "Namespaces",
-    "search": "Type to search for a namespace…",
+    "showArchived": "Mostra Archiviati",
+    "noneAvailable": "Non hai alcun namespace in questo momento.",
+    "unarchive": "De-Archivia",
+    "archived": "Archiviato",
+    "noLists": "Questo namespace non contiene alcuna lista.",
+    "createList": "Crea una nuova lista in questo namespace.",
+    "namespaces": "Namespace",
+    "search": "Digita per cercare un namespace…",
     "create": {
-      "title": "New namespace",
-      "titleRequired": "Please specify a title.",
-      "explanation": "A namespace is a collection of lists you can share and use to organize your lists with. In fact, every list belongs to a namepace.",
-      "tooltip": "What's a namespace?",
-      "success": "The namespace was successfully created."
+      "title": "Nuovo namespace",
+      "titleRequired": "Specifica un titolo.",
+      "explanation": "Un namespace è una raccolta di liste che puoi condividere e che puoi usare per organizzare le tue liste. Infatti, ogni lista appartiene a un namespace.",
+      "tooltip": "Che cos'è un namespace?",
+      "success": "Namespace creato."
     },
     "archive": {
       "titleArchive": "Archivia \"{namespace}\"",
-      "titleUnarchive": "Un-Archive \"{namespace}\"",
-      "archiveText": "You won't be able to edit this namespace or create new lists until you un-archive it. This will also archive all lists in this namespace.",
-      "unarchiveText": "You will be able to create new lists or edit it.",
-      "success": "The namespace was successfully archived.",
-      "description": "If a namespace is archived, you cannot create new lists or edit it."
+      "titleUnarchive": "Disarchivia \"{namespace}\"",
+      "archiveText": "Non sarà possibile modificare questo namespace o creare nuove liste fino a quando non verrà disarchiviato. Questo archivierà anche tutte le liste in questo namespace.",
+      "unarchiveText": "Potrai creare nuove liste o modificarle.",
+      "success": "Namespace creato.",
+      "description": "Se un namespace è archiviato, non è possibile creare nuove liste o modificarlo."
     },
     "delete": {
-      "title": "Delete \"{namespace}\"",
-      "text1": "Are you sure you want to delete this namespace and all of its contents?",
+      "title": "Elimina \"{namespace}\"",
+      "text1": "Sei sicuro di voler rimuovere questo namespace e tutto il relativo contenuto?",
       "text2": "Questo include tutte le liste e le attività e NON PUÒ ESSERE RIPRISTINATO!",
-      "success": "The namespace was successfully deleted."
+      "success": "Namespace eliminato."
     },
     "edit": {
       "title": "Modifica \"{namespace}\"",
-      "success": "The namespace was successfully updated."
+      "success": "Namespace aggiornato."
     },
     "share": {
       "title": "Condividi \"{namespace}\""
     },
     "attributes": {
-      "title": "Namespace Title",
-      "titlePlaceholder": "The namespace title goes here…",
+      "title": "Titolo del Namespace",
+      "titlePlaceholder": "Il titolo del namespace va qui…",
       "description": "Descrizione",
-      "descriptionPlaceholder": "The namespaces description goes here…",
+      "descriptionPlaceholder": "La descrizione del namespace va qui…",
       "color": "Colore",
-      "archived": "Is Archived",
-      "isArchived": "This namespace is archived"
+      "archived": "Archiviato",
+      "isArchived": "Questo namespace è archiviato"
     },
     "pseudo": {
       "sharedLists": {
@@ -365,7 +365,7 @@
   },
   "filters": {
     "title": "Filtri",
-    "clear": "Clear Filters",
+    "clear": "Pulisci Filtri",
     "attributes": {
       "title": "Titolo",
       "titlePlaceholder": "Il titolo del filtro salvato va qui…",
@@ -374,17 +374,17 @@
       "includeNulls": "Includi attività che non hanno un valore impostato",
       "requireAll": "Tutti i filtri devono essere veri affinché l'attività venga mostrata",
       "showDoneTasks": "Mostra Attività Fatte",
-      "sortAlphabetically": "Sort Alphabetically",
+      "sortAlphabetically": "Ordine alfabetico",
       "enablePriority": "Abilita Filtro Per Priorità",
       "enablePercentDone": "Abilitare Filtro Per Percentuale Fatta",
       "dueDateRange": "Intervallo Data Di Scadenza",
       "startDateRange": "Intervallo Data Iniziale",
       "endDateRange": "Intervallo Data Finale",
-      "reminderRange": "Reminder Date Range"
+      "reminderRange": "Intervallo date dei promemoria"
     },
     "create": {
-      "title": "New Saved Filter",
-      "description": "A saved filter is a virtual list which is computed from a set of filters each time it is accessed. Once created, it will appear in a special namespace.",
+      "title": "Nuovo Filtro Salvato",
+      "description": "Un filtro salvato è una lista virtuale che viene calcolata da un insieme di filtri di volta in volta. Una volta creato, apparirà in un namespace speciale.",
       "action": "Crea nuovo filtro salvato"
     },
     "delete": {
@@ -446,9 +446,9 @@
   },
   "navigation": {
     "overview": "Panoramica",
-    "upcoming": "Upcoming",
+    "upcoming": "Prossimamente",
     "settings": "Impostazioni",
-    "imprint": "Imprint",
+    "imprint": "Informazioni legali",
     "privacy": "Politica sulla Privacy"
   },
   "misc": {
@@ -464,19 +464,19 @@
     "searchPlaceholder": "Digita per cercare…",
     "previous": "Precedente",
     "next": "Successivo",
-    "poweredBy": "Powered by Vikunja",
+    "poweredBy": "Creato con Vikunja",
     "info": "Info",
-    "create": "Create",
+    "create": "Crea",
     "doit": "Fallo!",
     "saving": "Salvataggio…",
     "saved": "Salvato!",
     "default": "Predefinito",
     "close": "Chiudi",
     "download": "Scarica",
-    "showMenu": "Show the menu",
-    "hideMenu": "Hide the menu",
-    "forExample": "For example:",
-    "welcomeBack": "Welcome Back!"
+    "showMenu": "Mostra il menu",
+    "hideMenu": "Nascondi il menù",
+    "forExample": "Ad esempio:",
+    "welcomeBack": "Bentornato!"
   },
   "input": {
     "resetColor": "Ripristina Colore",
@@ -485,9 +485,9 @@
       "tomorrow": "Domani",
       "nextMonday": "Lunedì Prossimo",
       "thisWeekend": "Questo fine settimana",
-      "laterThisWeek": "Later This Week",
+      "laterThisWeek": "Alla fine di questa settimana",
       "nextWeek": "Prossima Settimana",
-      "chooseDate": "Choose a date"
+      "chooseDate": "Seleziona una data"
     },
     "editor": {
       "edit": "Modifica",
@@ -504,16 +504,16 @@
       "quote": "Citazione",
       "unorderedList": "Elenco puntato",
       "orderedList": "Elenco numerato",
-      "cleanBlock": "Clean Block",
+      "cleanBlock": "Pulisci Blocco",
       "link": "Link",
       "image": "Immagine",
       "table": "Tabella",
-      "horizontalRule": "Horizontal Rule",
-      "sideBySide": "Side By Side",
-      "guide": "Guide"
+      "horizontalRule": "Divisore Orizzontale",
+      "sideBySide": "Affianca",
+      "guide": "Guida"
     },
     "multiselect": {
-      "createPlaceholder": "Create new",
+      "createPlaceholder": "Crea nuovo",
       "selectPlaceholder": "Clicca o premere invio per selezionare"
     }
   },
@@ -533,19 +533,19 @@
       "titleDates": "Attività dal {from} al {to}",
       "noDates": "Mostra attività senza date",
       "current": "Attività attuali",
-      "from": "Tasks from",
-      "until": "until",
+      "from": "Attività dal",
+      "until": "fino al",
       "today": "Oggi",
       "nextWeek": "Settimana Prossima",
       "nextMonth": "Prossimo Mese",
-      "noTasks": "Nothing to do — Have a nice day!"
+      "noTasks": "Nessuna attività — Buona giornata!"
     },
     "detail": {
       "chooseDueDate": "Clicca qui per impostare una data di scadenza",
       "chooseStartDate": "Clicca qui per impostare una data di inizio",
       "chooseEndDate": "Clicca qui per impostare una data di fine",
       "move": "Sposta attività in un'altra lista",
-      "done": "Mark task done!",
+      "done": "Segna attività fatta!",
       "undone": "Segna come non completato",
       "created": "Creato {0} da {1}",
       "updated": "Aggiornato {0}",
@@ -554,21 +554,21 @@
       "deleteSuccess": "L'attività è stata eliminata con successo.",
       "belongsToList": "Questa attività appartiene alla lista '{list}'",
       "due": "Scadenza {at}",
-      "closePopup": "Close popup",
+      "closePopup": "Chiudi popup",
       "delete": {
         "header": "Elimina questa attività",
         "text1": "Sei sicuro di voler eliminare questa attività?",
         "text2": "Questo rimuoverà anche tutti gli allegati, i promemoria e le relazioni associati a questa attività e non può essere ripristinato!"
       },
       "actions": {
-        "assign": "Assign to a user",
+        "assign": "Assegna ad un utente",
         "label": "Aggiungi etichette",
         "priority": "Imposta Priorità",
         "dueDate": "Imposta data di scadenza",
         "startDate": "Imposta una data di inizio",
         "endDate": "Imposta una data di fine",
         "reminders": "Imposta promemoria",
-        "repeatAfter": "Set a repeating interval",
+        "repeatAfter": "Imposta ricorrenza",
         "percentDone": "Imposta Percentuale Completata",
         "attachments": "Aggiungi allegati",
         "relatedTasks": "Aggiungi attività collegate",
@@ -599,13 +599,13 @@
       "updated": "Aggiornato"
     },
     "subscription": {
-      "subscribedThroughParent": "You can't unsubscribe here because you are subscribed to this {entity} through its {parent}.",
-      "subscribed": "You are currently subscribed to this {entity} and will receive notifications for changes.",
-      "notSubscribed": "You are not subscribed to this {entity} and won't receive notifications for changes.",
-      "subscribe": "Subscribe",
-      "unsubscribe": "Unsubscribe",
-      "subscribeSuccess": "You are now subscribed to this {entity}",
-      "unsubscribeSuccess": "You are now unsubscribed to this {entity}"
+      "subscribedThroughParent": "Non puoi annullare l'iscrizione qui perché sei iscritto a questo {entity} attraverso il suo {parent}.",
+      "subscribed": "Sei attualmente iscritto a questo {entity} e riceverai notifiche per le modifiche.",
+      "notSubscribed": "Non sei iscritto a questo {entity} e non riceverai notifiche per le modifiche.",
+      "subscribe": "Iscriviti",
+      "unsubscribe": "Disiscriviti",
+      "subscribeSuccess": "Ti sei iscritto a questo {entity}",
+      "unsubscribeSuccess": "Ti sei disiscritto a questo {entity}"
     },
     "attachment": {
       "title": "Allegati",
@@ -623,41 +623,41 @@
     "comment": {
       "title": "Commenti",
       "loading": "Caricamento commenti…",
-      "edited": "edited {date}",
+      "edited": "modificato il {date}",
       "creating": "Creazione del commento…",
       "placeholder": "Aggiungi un commento…",
-      "comment": "Comment",
+      "comment": "Commenta",
       "delete": "Elimina questo commento",
       "deleteText1": "Sei sicuro di voler eliminare questo commento?",
       "deleteText2": "Questa azione non può essere annullata!",
       "addedSuccess": "Il commento è stato aggiunto correttamente."
     },
     "deferDueDate": {
-      "title": "Defer due date",
+      "title": "Rinvia data di scadenza",
       "1day": "1 giorno",
       "3days": "3 giorni",
       "1week": "1 settimana"
     },
     "description": {
-      "placeholder": "Click here to enter a description…",
-      "empty": "No description available yet."
+      "placeholder": "Clicca qui per inserire una descrizione…",
+      "empty": "Nessuna descrizione."
     },
     "assignee": {
-      "placeholder": "Type to assign a user…",
+      "placeholder": "Digita per assegnare un utente…",
       "selectPlaceholder": "Assegna questo utente",
-      "assignSuccess": "The user has been assigned successfully.",
-      "unassignSuccess": "The user has been unassigned successfully."
+      "assignSuccess": "Utente assegnato.",
+      "unassignSuccess": "Utente disassegnato."
     },
     "label": {
-      "placeholder": "Type to add a new label…",
-      "createPlaceholder": "Add this as new label",
+      "placeholder": "Digita per aggiungere una nuova etichetta…",
+      "createPlaceholder": "Aggiungila come nuova etichetta",
       "addSuccess": "Etichetta aggiunta.",
       "createSuccess": "Etichetta creata.",
       "removeSuccess": "Etichetta eliminata.",
       "addCreateSuccess": "Etichetta creata e aggiunta."
     },
     "priority": {
-      "unset": "Unset",
+      "unset": "Azzera",
       "low": "Bassa",
       "medium": "Media",
       "high": "Alta",
@@ -665,38 +665,38 @@
       "doNow": "FARE ORA"
     },
     "relation": {
-      "add": "Add a New Task Relation",
-      "new": "New Task Relation",
-      "searchPlaceholder": "Type search for a new task to add as related…",
-      "createPlaceholder": "Add this as new related task",
-      "differentList": "This task belongs to a different list.",
-      "differentNamespace": "This task belongs to a different namespace.",
-      "noneYet": "No task relations yet.",
-      "delete": "Delete Task Relation",
-      "deleteText1": "Are you sure you want to delete this task relation?",
+      "add": "Aggiungi Attività Collegata",
+      "new": "Nuova Attività Collegata",
+      "searchPlaceholder": "Digita per cercare un'attività da aggiungere come collegata…",
+      "createPlaceholder": "Aggiungi come attività collegata",
+      "differentList": "Questa attività è di una lista diversa.",
+      "differentNamespace": "Questa attività appartiene ad un namespace diverso.",
+      "noneYet": "Nessuna attività collegata.",
+      "delete": "Elimina Collegamento Attività",
+      "deleteText1": "Confermi di voler eliminare questo collegamento attività?",
       "deleteText2": "Questa azione non può essere annullata!",
-      "select": "Select a relation kind",
+      "select": "Seleziona un tipo di collegamento",
       "kinds": {
-        "subtask": "Subtask | Subtasks",
-        "parenttask": "Parent Task | Parent Tasks",
-        "related": "Related Task | Related Tasks",
+        "subtask": "Sotto-attività | Sotto-attività",
+        "parenttask": "Attività Principale | Attività Principale",
+        "related": "Attività Correlata | Attività Correlata",
         "duplicateof": "Duplicato Di | Duplicati Di",
-        "duplicates": "Duplicates | Duplicates",
-        "blocking": "Blocking | Blocking",
-        "blocked": "Blocked By | Blocked By",
-        "precedes": "Precedes | Precedes",
-        "follows": "Follows | Follows",
-        "copiedfrom": "Copied From | Copied From",
-        "copiedto": "Copied To | Copied To"
+        "duplicates": "Duplicato | Duplicati",
+        "blocking": "Bloccante | Bloccanti",
+        "blocked": "Bloccato Da | Bloccati Da",
+        "precedes": "Precede | Precede",
+        "follows": "Segue | Segue",
+        "copiedfrom": "Copiata Da | Copiate Da",
+        "copiedto": "Copiata In | Copiate In"
       }
     },
     "repeat": {
       "everyDay": "Ogni Giorno",
       "everyWeek": "Ogni Settimana",
       "everyMonth": "Ogni Mese",
-      "mode": "Repeat mode",
+      "mode": "Modalità Ripetizione",
       "monthly": "Mensilmente",
-      "fromCurrentDate": "From Current Date",
+      "fromCurrentDate": "Dalla Data Attuale",
       "each": "Ogni",
       "specifyAmount": "Specifica una quantità…",
       "hours": "Ore",
@@ -706,32 +706,32 @@
       "years": "Anni"
     },
     "quickAddMagic": {
-      "hint": "You can use Quick Add Magic",
+      "hint": "Puoi usare l'Aggiunta Rapida Magica",
       "what": "Cosa?",
-      "title": "Quick Add Magic",
-      "intro": "When creating a task, you can use special keywords to directly add attributes to the newly created task. This allows to add commonly used attributes to tasks much faster.",
+      "title": "Aggiunta Rapida Magica",
+      "intro": "Quando si crea un'attività, è possibile utilizzare parole chiave speciali per aggiungere direttamente attributi all'attività appena creata. Questo permette di aggiungere gli attributi comuni molto più velocemente.",
       "multiple": "Puoi usarlo più volte.",
-      "label1": "To add a label, simply prefix the name of the label with {prefix}.",
-      "label2": "Vikunja will first check if the label already exist and create it if not.",
-      "label3": "To use spaces, simply add a \" around the label name.",
-      "label4": "For example: {prefix}\"Label with spaces\".",
-      "priority1": "To set a task's priority, add a number 1-5, prefixed with a {prefix}.",
-      "priority2": "The higher the number, the higher the priority.",
-      "assignees": "To directly assign the task to a user, add their username prefixed with {prefix} to the task.",
-      "list1": "To set a list for the task to appear in, enter its name prefixed with {prefix}.",
-      "list2": "This will return an error if the list does not exist.",
+      "label1": "Per aggiungere un'etichetta, basta aggiungere il nome dell'etichetta preceduto da {prefix}.",
+      "label2": "Vikunja controllerà prima se l'etichetta esiste già e nel caso la creerà.",
+      "label3": "Per usare gli spazi, basta \" prima e dopo del nome dell'etichetta.",
+      "label4": "Per esempio: {prefix}\"Etichetta con spazi\".",
+      "priority1": "Per impostare la priorità di un'attività, aggiungi un numero 1-5, preceduto da {prefix}.",
+      "priority2": "Più alto è il numero, più alta è la priorità.",
+      "assignees": "Per assegnare direttamente l'attività a un utente, aggiungere il suo nome utente preceduto da {prefix} all'attività.",
+      "list1": "Per impostare una lista di appartenenza all'attività, inserisci il suo nome prefisso con {prefix}.",
+      "list2": "Ciò restituirà un errore se la lista non esiste.",
       "dateAndTime": "Data e ora",
-      "date": "Any date will be used as the due date of the new task. You can use dates in any of these formats:",
-      "dateWeekday": "any weekday, will use the next date with that date",
-      "dateCurrentYear": "will use the current year",
-      "dateNth": "will use the {day}th of the current month",
-      "dateTime": "Combine any of the date formats with \"{time}\" (or {timePM}) to set a time.",
-      "repeats": "Repeating tasks",
-      "repeatsDescription": "To set a task as repeating in an interval, simply add '{suffix}' to the task text. The amount needs to be a number and can be omitted to use just the type (see examples)."
+      "date": "Qualsiasi data verrà utilizzata come data di scadenza della nuova attività. È possibile utilizzare le date in uno qualsiasi di questi formati:",
+      "dateWeekday": "qualsiasi giorno della settimana, userà la data più vicina",
+      "dateCurrentYear": "userà l’anno corrente",
+      "dateNth": "userà il {day} del mese corrente",
+      "dateTime": "Combina uno qualsiasi dei formati di data con \"{time}\" (o {timePM}) per impostare un orario.",
+      "repeats": "Attività ricorrenti",
+      "repeatsDescription": "Per impostare un'attività come ricorrente in un intervallo, basta aggiungere '{suffix}' al testo dell'attività. La quantità deve essere un numero e può essere omesso per usare solo il tipo (vedi esempi)."
     }
   },
   "team": {
-    "title": "Teams",
+    "title": "Gruppi",
     "noTeams": "Non fai parte di nessun gruppo.",
     "create": {
       "title": "Crea un nuovo gruppo",
@@ -746,23 +746,23 @@
       "makeAdmin": "Rendi Amministratore",
       "success": "Gruppo aggiornato.",
       "userAddedSuccess": "Membro del gruppo aggiunto.",
-      "madeMember": "The team member was successfully made member.",
-      "madeAdmin": "The team member was successfully made admin.",
+      "madeMember": "Membro del gruppo reso membro.",
+      "madeAdmin": "Membro del gruppo reso amministratore.",
       "delete": {
         "header": "Elimina il gruppo",
         "text1": "Sei sicuro di voler eliminare questo gruppo e tutti i suoi membri?",
-        "text2": "All team members will lose access to lists and namespaces shared with this team. This CANNOT BE UNDONE!",
+        "text2": "Tutti i membri del gruppo perderanno l'accesso alle liste e ai namespace condivisi con questo gruppo. NON PUÒ ESSERE RIPRISTINATO!",
         "success": "Gruppo eliminato."
       },
       "deleteUser": {
         "header": "Rimuovi un utente dal gruppo",
         "text1": "Confermi di voler rimuovere questo utente dal gruppo?",
-        "text2": "They will lose access to all lists and namespaces this team has access to. This CANNOT BE UNDONE!",
+        "text2": "Perderanno l'accesso a tutte le liste e i namespace a cui questo gruppo ha accesso. NON PUÒ ESSERE RIPRISTINATO!",
         "success": "Utente rimosso dal gruppo."
       }
     },
     "attributes": {
-      "name": "Team Name",
+      "name": "Nome Gruppo",
       "namePlaceholder": "Il nome del gruppo va qui…",
       "nameRequired": "Specifica un nome.",
       "description": "Descrizione",
@@ -772,32 +772,32 @@
     }
   },
   "keyboardShortcuts": {
-    "title": "Keyboard Shortcuts",
-    "general": "General",
+    "title": "Tasti Rapidi",
+    "general": "Generali",
     "allPages": "Queste scorciatoie funzionano in tutte le pagine.",
     "currentPageOnly": "Queste scorciatoie funzionano solo nella pagina attuale.",
     "toggleMenu": "Attiva/Disattiva Menu",
     "quickSearch": "Apri la barra di ricerca/azione rapida",
-    "then": "then",
+    "then": "e dopo",
     "task": {
-      "title": "Task Page",
-      "done": "Done",
-      "assign": "Assign to a user",
-      "labels": "Add labels to this task",
-      "dueDate": "Change the due date of this task",
-      "attachment": "Add an attachment to this task",
-      "related": "Modify related tasks of this task"
+      "title": "Pagina Attività",
+      "done": "Fatto",
+      "assign": "Assegna a un utente",
+      "labels": "Aggiungi etichette a questa attività",
+      "dueDate": "Modifica la data di scadenza di questa attività",
+      "attachment": "Aggiungi un allegato a questa attività",
+      "related": "Modifica le attività collegate a questa"
     },
     "list": {
-      "title": "List Views",
-      "switchToListView": "Switch to list view",
-      "switchToGanttView": "Switch to gantt view",
-      "switchToKanbanView": "Switch to kanban view",
-      "switchToTableView": "Switch to table view"
+      "title": "Viste Liste",
+      "switchToListView": "Passa alla vista Lista",
+      "switchToGanttView": "Passa alla vista Gantt",
+      "switchToKanbanView": "Passa alla vista Kanban",
+      "switchToTableView": "Passa alla vista Tabella"
     }
   },
   "update": {
-    "available": "There is an update for Vikunja available!",
+    "available": "È disponibile un aggiornamento per Vikunja!",
     "do": "Aggiorna Adesso"
   },
   "menu": {
@@ -805,136 +805,136 @@
     "archive": "Archivia",
     "duplicate": "Duplica",
     "delete": "Elimina",
-    "unarchive": "Un-Archive",
-    "setBackground": "Set background",
+    "unarchive": "Disarchivia",
+    "setBackground": "Imposta sfondo",
     "share": "Condividi",
     "newList": "Nuova lista"
   },
   "apiConfig": {
     "url": "URL Vikunja",
     "urlPlaceholder": "es. http://localhost:8080",
-    "change": "change",
-    "use": "Using Vikunja installation at {0}",
-    "error": "Could not find or use Vikunja installation at \"{domain}\". Please try a different url.",
-    "success": "Using Vikunja installation at \"{domain}\".",
-    "urlRequired": "A url is required."
+    "change": "modifica",
+    "use": "Usa l'installazione di Vikunja a {0}",
+    "error": "Impossibile trovare o usare l'installazione di Vikunja su \"{domain}\". Prova per favore con un altro Url.",
+    "success": "Utilizzando l'installazione di Vikunja su \"{domain}\".",
+    "urlRequired": "L'URL è obbligatorio."
   },
   "loadingError": {
-    "failed": "Loading failed, please {0}. If the error persists, please {1}.",
-    "tryAgain": "try again",
-    "contact": "contact us"
+    "failed": "Caricamento non riuscito, si prega di {0}. Se l'errore persiste, per favore {1}.",
+    "tryAgain": "riprova",
+    "contact": "Contattaci"
   },
   "notification": {
-    "title": "Notifications",
-    "none": "You don't have any notifications. Have a nice day!",
-    "explainer": "Notifications will appear here when actions on namespaces, lists or tasks you subscribed to happen."
+    "title": "Notifiche",
+    "none": "Nessuna notifica. Buona giornata!",
+    "explainer": "Le notifiche appariranno qui quando le azioni su Namespace, liste o attività a cui hai sottoscritto la sottoscrizione avvengono."
   },
   "quickActions": {
-    "commands": "Commands",
-    "placeholder": "Type a command or search…",
-    "hint": "You can use {list} to limit the search to a list. Combine {list} or {label} (labels) with a search query to search for a task with these labels or on that list. Use {assignee} to only search for teams.",
-    "tasks": "Tasks",
+    "commands": "Comandi",
+    "placeholder": "Digita un comando o cerca…",
+    "hint": "Puoi usare {list} per limitare la ricerca a una lista. Unisci {list} o {label} (etichette) alla ricerca per trovare un'attività con quelle etichette o in quella lista. Usa {assignee} per cercare solo i gruppi.",
+    "tasks": "Attivitá",
     "lists": "Liste",
-    "teams": "Teams",
-    "newList": "Enter the title of the new list…",
-    "newTask": "Enter the title of the new task…",
-    "newNamespace": "Enter the title of the new namespace…",
-    "newTeam": "Enter the name of the new team…",
-    "createTask": "Create a task in the current list ({title})",
-    "createList": "Create a list in the current namespace ({title})",
+    "teams": "Gruppi",
+    "newList": "Inserisci il titolo della nuova lista…",
+    "newTask": "Inserisci il titolo della nuova attività…",
+    "newNamespace": "Inserisci il titolo del nuovo namespace…",
+    "newTeam": "Inserisci il nome del nuovo gruppo…",
+    "createTask": "Crea un'attività nella lista attuale ({title})",
+    "createList": "Crea una lista nel namespace attuale ({title})",
     "cmds": {
-      "newTask": "New task",
-      "newList": "New list",
-      "newNamespace": "New namespace",
-      "newTeam": "New team"
+      "newTask": "Nuova attività",
+      "newList": "Nuova lista",
+      "newNamespace": "Nuovo Namespace",
+      "newTeam": "Nuovo gruppo"
     }
   },
   "date": {
-    "locale": "en",
+    "locale": "it",
     "altFormatLong": "j M Y H:i",
     "altFormatShort": "j M Y"
   },
   "error": {
     "error": "Errore",
-    "success": "Success",
+    "success": "Fatto",
     "0001": "Non ti è permesso farlo.",
-    "1001": "A user with this username already exists.",
+    "1001": "Esiste già un utente con questo nome utente.",
     "1002": "Un utente con questo indirizzo e-mail esiste già.",
-    "1004": "No username and password specified.",
+    "1004": "Nessun nome utente e password specificati.",
     "1005": "L'utente non esiste.",
     "1006": "Impossibile ottenere l'id utente.",
-    "1008": "No password reset token provided.",
-    "1009": "Invalid password reset token.",
+    "1008": "Nessun codice di reimpostazione password fornito.",
+    "1009": "Codice di reimpostazione password non valido.",
     "1010": "Token di conferma dell'e-mail non valido.",
-    "1011": "Wrong username or password.",
+    "1011": "Nome utente o password errati.",
     "1012": "Indirizzo e-mail dell'utente non confermato.",
     "1013": "La nuova password è vuota.",
     "1014": "La vecchia password è vuota.",
     "1015": "Autenticazione TOTP già abilitata per questo utente.",
     "1016": "Autenticazione TOTP non abilitata per questo utente.",
     "1017": "Codice TOTP non valido.",
-    "1018": "The user avatar type setting is invalid.",
+    "1018": "L'impostazione del tipo di avatar utente non è valida.",
     "2001": "L'ID non può essere vuoto o 0.",
     "2002": "Alcuni dati della richiesta non erano validi.",
     "3001": "La lista non esiste.",
-    "3004": "You need to have read permissions on that list to perform that action.",
+    "3004": "Devi avere i permessi di lettura su quella lista per eseguire quell'azione.",
     "3005": "Il titolo della lista non può essere vuoto.",
-    "3006": "The list share does not exist.",
+    "3006": "La condivisione della lista non esiste.",
     "3007": "Esiste già una lista con questo identificatore.",
-    "3008": "The list is archived and can therefore only be accessed read only. This is also true for all tasks associated with this list.",
-    "4001": "The list task text cannot be empty.",
-    "4002": "The list task does not exist.",
+    "3008": "La lista è archiviata e può quindi essere consultata solo in sola lettura. Questo vale anche per tutte le attività associate a questa lista.",
+    "4001": "Il testo delle attività della lista non può essere vuoto.",
+    "4002": "Lista di attività non esistente.",
     "4003": "Tutte le attività di modifica in blocco devono appartenere alla stessa lista.",
     "4004": "Hai bisogno di almeno un'attività quando si modificano in blocco le attività.",
     "4005": "Non hai il permesso di vedere l'attività.",
-    "4006": "You can't set a parent task as the task itself.",
-    "4007": "You can't create a task relation with an invalid kind of relation.",
-    "4008": "You can't create a task relation which already exists.",
-    "4009": "The task relation does not exist.",
-    "4010": "Cannot relate a task with itself.",
-    "4011": "The task attachment does not exist.",
-    "4012": "The task attachment is too large.",
-    "4013": "The task sort param is invalid.",
-    "4014": "The task sort order is invalid.",
-    "4015": "The task comment does not exist.",
-    "4016": "Invalid task field.",
-    "4017": "Invalid task filter comparator.",
-    "4018": "Invalid task filter concatinator.",
-    "4019": "Invalid task filter value.",
-    "5001": "The namespace does not exist.",
-    "5003": "You do not have access to the specified namespace.",
-    "5006": "The namespace name cannot be empty.",
-    "5009": "You need to have namespace read access to perform that action.",
-    "5010": "This team does not have access to that namespace.",
-    "5011": "This user has already access to that namespace.",
-    "5012": "The namespace is archived and can therefore only be accessed read only.",
-    "6001": "The team name cannot be empty.",
-    "6002": "The team does not exist.",
-    "6004": "The team already has access to that namespace or list.",
-    "6005": "The user is already a member of that team.",
-    "6006": "Cannot delete the last team member.",
-    "6007": "The team does not have access to the list to perform that action.",
-    "7002": "The user already has access to that list.",
+    "4006": "Non è possibile impostare un'attività principale come l'attività stessa.",
+    "4007": "Non è possibile creare una relazione di attività con un tipo di relazione non valido.",
+    "4008": "Non è possibile creare una relazione di attività già esistente.",
+    "4009": "La relazione di attività non esiste.",
+    "4010": "Non è possibile relazionare un'attività con se stessa.",
+    "4011": "L'allegato dell'attività non esiste.",
+    "4012": "L'allegato dell'attività è troppo grande.",
+    "4013": "Il parametro di ordinamento dei task non è valido.",
+    "4014": "L' ordinamento dei task non è valido.",
+    "4015": "Il commento all'attività non esiste.",
+    "4016": "Campo attività non valido.",
+    "4017": "Comparatore di filtri attività non valido.",
+    "4018": "Concatenatore filtro attività non valido.",
+    "4019": "Filtro attività non valido.",
+    "5001": "Il namespace non esiste.",
+    "5003": "Non hai accesso a questo namespace.",
+    "5006": "Il nome del namespace non può essere vuoto.",
+    "5009": "Devi avere accesso in lettura al namespace per effettuare questa operazione.",
+    "5010": "Il tuo gruppo non ha accesso a questo namespace.",
+    "5011": "Questo utente ha già accesso a quel namespace.",
+    "5012": "Il namespace è archiviato e può quindi essere accessibile solo in sola lettura.",
+    "6001": "Il nome del gruppo non può essere vuoto.",
+    "6002": "Gruppo non esistente.",
+    "6004": "Il team ha già accesso a questo namespace o lista.",
+    "6005": "L'utente è già membro di quel gruppo.",
+    "6006": "Non è possibile eliminare l'ultimo membro del gruppo.",
+    "6007": "Il gruppo non ha accesso alla lista per eseguire quell'azione.",
+    "7002": "L'utente ha già accesso a quella lista.",
     "7003": "Non hai accesso a quella lista.",
     "8001": "Questa etichetta esiste già in quell'attività.",
     "8002": "L'etichetta non esiste.",
     "8003": "Non hai accesso a questa etichetta.",
-    "9001": "The right is invalid.",
-    "10001": "The bucket does not exist.",
-    "10002": "The bucket does not belong to that list.",
-    "10003": "You cannot remove the last bucket on a list.",
-    "10004": "You cannot add the task to this bucket as it already exceeded the limit of tasks it can hold.",
-    "10005": "There can be only one done bucket per list.",
-    "11001": "The saved filter does not exist.",
-    "11002": "Saved filters are not available for link shares.",
-    "12001": "The subscription entity type is invalid.",
-    "12002": "You are already subscribed to the entity itself or a parent entity.",
-    "13001": "This link share requires a password for authentication, but none was provided.",
-    "13002": "The provided link share password was invalid."
+    "9001": "Permesso non valido.",
+    "10001": "Colonna non esistente.",
+    "10002": "La colonna non appartiene a quella lista.",
+    "10003": "Non puoi rimuovere l'ultima colonna di una lista.",
+    "10004": "Non puoi aggiungere l'attività a questa colonna perché ha già superato il limite di attività che può contenere.",
+    "10005": "Ci può essere solo una colonna completati per lista.",
+    "11001": "Filtro salvato non esistente.",
+    "11002": "I filtri salvati non sono disponibili per i link di condivisione.",
+    "12001": "Il tipo di entità sottoscritto non è valido.",
+    "12002": "Sei già iscritto all'entità stessa o a un'entità principale.",
+    "13001": "Questa condivisione di link richiede una password per l'autenticazione, ma non è stato inserita.",
+    "13002": "La password inserita per il link di condivisione è valida."
   },
   "about": {
-    "title": "About",
-    "frontendVersion": "Frontend Version: {version}",
-    "apiVersion": "API Version: {version}"
+    "title": "Informazioni",
+    "frontendVersion": "Versione Frontend: {version}",
+    "apiVersion": "Versione API: {version}"
   }
 }

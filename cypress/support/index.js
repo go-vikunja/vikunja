@@ -1,6 +1,5 @@
 
 import './commands'
-import 'cypress-file-upload'
 import '@4tw/cypress-drag-drop'
 
 // see https://github.com/cypress-io/cypress/issues/702#issuecomment-587127275

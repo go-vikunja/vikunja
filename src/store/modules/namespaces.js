@@ -23,8 +23,6 @@ export default {
 				return
 			}
 
-			// FIXME: direct manipulation of the prop
-			// might not be a problem since this is happening in the mutation 
 			if (!namespace.lists || namespace.lists.length === 0) {
 				namespace.lists = state.namespaces[namespaceIndex].lists
 			}
@@ -136,8 +134,8 @@ export default {
 		},
 
 		loadNamespacesIfFavoritesDontExist(ctx) {
-			// The first namespace should be the one holding all favorites
-			if (ctx.state.namespaces[0].id !== -2) {
+			// The first or second namespace should be the one holding all favorites
+			if (ctx.state.namespaces[0].id !== -2 && ctx.state.namespaces[1]?.id !== -2) {
 				return ctx.dispatch('loadNamespaces')
 			}
 		},

@@ -22,9 +22,9 @@
 			</router-link>
 		</p>
 
-		<div :key="`n${n.id}`" class="namespace" v-for="n in namespaces">
+		<section :key="`n${n.id}`" class="namespace" v-for="n in namespaces">
 			<x-button
-				:to="{name: 'list.create', params: {id:  n.id}}"
+				:to="{name: 'list.create', params: {namespaceId:  n.id}}"
 				class="is-pulled-right"
 				variant="secondary"
 				v-if="n.id > 0 && n.lists.length > 0"
@@ -51,7 +51,7 @@
 
 			<p class="has-text-centered has-text-grey mt-4 is-italic" v-if="n.lists.length === 0">
 				{{ $t('namespace.noLists') }}
-				<router-link :to="{name: 'list.create', params: {id:  n.id}}">
+				<router-link :to="{name: 'list.create', params: {namespaceId:  n.id}}">
 					{{ $t('namespace.createList') }}
 				</router-link>
 			</p>
@@ -64,7 +64,7 @@
 					:show-archived="showArchived"
 				/>
 			</div>
-		</div>
+		</section>
 	</div>
 </template>
 

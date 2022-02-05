@@ -1,11 +1,24 @@
+import {RouteLocation} from 'vue-router'
+
 import {isAppleDevice} from '@/helpers/isAppleDevice'
 
 const ctrl = isAppleDevice() ? '⌘' : 'ctrl'
 
-export const KEYBOARD_SHORTCUTS = [
+interface Shortcut {
+	title: string
+	keys: string[]
+	combination?: 'then'
+}
+
+interface ShortcutGroup {
+	title: string
+	available?: (route: RouteLocation) => boolean
+	shortcuts: Shortcut[]
+}
+
+export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
 	{
 		title: 'keyboardShortcuts.general',
-		available: () => null,
 		shortcuts: [
 			{
 				title: 'keyboardShortcuts.toggleMenu',
@@ -29,7 +42,7 @@ export const KEYBOARD_SHORTCUTS = [
 	},
 	{
 		title: 'keyboardShortcuts.list.title',
-		available: (route) => route.name.startsWith('list.'),
+		available: (route) => (route.name as string)?.startsWith('list.'),
 		shortcuts: [
 			{
 				title: 'keyboardShortcuts.list.switchToListView',
@@ -55,13 +68,7 @@ export const KEYBOARD_SHORTCUTS = [
 	},
 	{
 		title: 'keyboardShortcuts.task.title',
-		available: (route) => [
-			'task.detail',
-			'task.list.detail',
-			'task.gantt.detail',
-			'task.kanban.detail',
-			'task.detail',
-		].includes(route.name),
+		available: (route) => route.name === 'task.detail',
 		shortcuts: [
 			{
 				title: 'keyboardShortcuts.task.assign',

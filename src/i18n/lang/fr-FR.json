@@ -116,12 +116,12 @@
         "vikunja": "Vikunja"
       },
       "appearance": {
-        "title": "Color Scheme",
-        "setSuccess": "Saved change of color scheme to {colorScheme}",
+        "title": "Jeu de couleurs",
+        "setSuccess": "Changement du jeu de couleurs enregistré vers {colorScheme}",
         "colorScheme": {
-          "light": "Light",
-          "system": "System",
-          "dark": "Dark"
+          "light": "Clair",
+          "system": "Système",
+          "dark": "Sombre"
         }
       }
     },
@@ -475,7 +475,7 @@
     "download": "Télécharger",
     "showMenu": "Afficher le menu",
     "hideMenu": "Masquer le menu",
-    "forExample": "For example:",
+    "forExample": "Par exemple :",
     "welcomeBack": "Welcome Back!"
   },
   "input": {
@@ -561,7 +561,7 @@
         "text2": "Ceci supprimera également toutes les pièces jointes, les rappels et les relations associés à cette tâche et ne pourra pas être annulé !"
       },
       "actions": {
-        "assign": "Assign to a user",
+        "assign": "Attribuer à un utilisateur",
         "label": "Ajouter des étiquettes",
         "priority": "Définir la priorité",
         "dueDate": "Définir l’échéance",
@@ -726,8 +726,8 @@
       "dateCurrentYear": "utilisera l’année en cours",
       "dateNth": "utilisera le {day}e du mois en cours",
       "dateTime": "Combinez n’importe lequel des formats de date avec « {time} » (ou {timePM}) pour définir une heure.",
-      "repeats": "Repeating tasks",
-      "repeatsDescription": "To set a task as repeating in an interval, simply add '{suffix}' to the task text. The amount needs to be a number and can be omitted to use just the type (see examples)."
+      "repeats": "Tâches répétitives",
+      "repeatsDescription": "Pour définir une tâche comme répétitive dans un intervalle, il suffit d'ajouter « {suffix} » au texte de la tâche. Le montant doit être un nombre et peut être omis pour utiliser uniquement le type (voir exemples)."
     }
   },
   "team": {
@@ -782,7 +782,7 @@
     "task": {
       "title": "Page de tâche",
       "done": "Done",
-      "assign": "Assign to a user",
+      "assign": "Attribuer à un utilisateur",
       "labels": "Ajouter des étiquettes à cette tâche",
       "dueDate": "Modifier la date d’échéance de cette tâche",
       "attachment": "Ajouter une pièce jointe à cette tâche",
@@ -899,7 +899,7 @@
     "4015": "Le commentaire de la tâche n’existe pas.",
     "4016": "Champ de tâche invalide.",
     "4017": "Comparateur de filtre de tâche invalide.",
-    "4018": "Concaténateur de filtre de tâche invalide.",
+    "4018": "Invalid task filter concatenator.",
     "4019": "Valeur de filtre de tâche invalide.",
     "5001": "L’espace de noms n’existe pas.",
     "5003": "Tu n’as pas accès à l’espace de noms indiqué.",
@@ -908,7 +908,7 @@
     "5010": "Cette équipe n’a pas accès à cet espace de noms.",
     "5011": "Cet·e utilisateur·rice a déjà accès à cet espace de noms.",
     "5012": "L’espace de noms est archivé et ne peut donc être consulté qu’en lecture seule.",
-    "6001": "The team name cannot be empty.",
+    "6001": "Le nom de l'équipe ne peut pas être vide.",
     "6002": "L’équipe n’existe pas.",
     "6004": "L’équipe a déjà accès à cet espace de noms ou à cette liste.",
     "6005": "L’utilisateur·rice est déjà membre de cette équipe.",

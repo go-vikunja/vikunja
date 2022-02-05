@@ -116,35 +116,15 @@ steps:
       YARN_CACHE_FOLDER: .cache/yarn/
       CYPRESS_CACHE_FOLDER: .cache/cypress/
       CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000
+      CYPRESS_RECORD_KEY:
+        from_secret: cypress_project_key
     commands:
       - sed -i 's/localhost/api/g' dist/index.html
       - yarn serve:dist & npx wait-on http://localhost:5000
-      - yarn test:frontend --browser chrome
+      - yarn test:frontend --browser chrome --record
     depends_on:
       - dependencies
       - build-prod
-
-  - name: upload-test-results
-    image: plugins/s3
-    pull: true
-    settings:
-      bucket: drone-test-results
-      access_key:
-        from_secret: test_results_aws_access_key_id
-      secret_key:
-        from_secret: test_results_aws_secret_access_key
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
-      path_style: true
-      source: cypress/screenshots/**/**/*
-      strip_prefix: cypress/screenshots/
-      target: /${DRONE_REPO}/${DRONE_PULL_REQUEST}_${DRONE_BRANCH}/${DRONE_BUILD_NUMBER}/
-    depends_on:
-      - test-frontend
-    when:
-      status:
-        - failure
-        - success
 
   - name: deploy-preview
     image: node:16
@@ -665,6 +645,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: 188ee90100c5fc5922a445e531e7a47453121edddb2a64a182eb23ed2bf602de
+hmac: 997e1badebe484ac29557c4af356e63db4d3d57f3d32e92d482f117f8cec64da
 
 ...

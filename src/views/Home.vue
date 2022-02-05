@@ -23,7 +23,7 @@
 			<template v-if="defaultNamespaceId > 0">
 				<p class="mt-4">{{ $t('home.list.newText') }}</p>
 				<x-button
-					:to="{ name: 'list.create', params: { id: defaultNamespaceId } }"
+					:to="{ name: 'list.create', params: { namespaceId: defaultNamespaceId } }"
 					:shadow="false"
 					class="ml-2"
 				>

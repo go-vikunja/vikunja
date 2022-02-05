@@ -19,19 +19,19 @@
 				:style="{'background': props.item.hexColor, 'color': props.item.textColor}"
 				class="tag">
 				<span>{{ props.item.title }}</span>
-				<a @click="removeLabel(props.item)" class="delete is-small"></a>
+				<button type="button" v-cy="'taskDetail.removeLabel'" @click="removeLabel(props.item)" class="delete is-small" />
 			</span>
 		</template>
 		<template #searchResult="props">
 			<span
 				v-if="typeof props.option === 'string'"
-				class="tag">
+				class="tag search-result">
 				<span>{{ props.option }}</span>
 			</span>
 			<span
 				v-else
 				:style="{'background': props.option.hexColor, 'color': props.option.textColor}"
-				class="tag">
+				class="tag search-result">
 				<span>{{ props.option.title }}</span>
 			</span>
 		</template>
@@ -114,23 +114,17 @@ export default {
 		},
 
 		async removeLabel(label) {
-			const removeFromState = () => {
-				for (const l in this.labels) {
-					if (this.labels[l].id === label.id) {
-						this.labels.splice(l, 1)
-					}
+			if (!this.taskId === 0) {
+				await this.$store.dispatch('tasks/removeLabel', {label: label, taskId: this.taskId})
+			}
+
+			for (const l in this.labels) {
+				if (this.labels[l].id === label.id) {
+					this.labels.splice(l, 1)
 				}
-				this.$emit('update:modelValue', this.labels)
-				this.$emit('change', this.labels)
 			}
-
-			if (this.taskId === 0) {
-				removeFromState()
-				return
-			}
-
-			await this.$store.dispatch('tasks/removeLabel', {label: label, taskId: this.taskId})
-			removeFromState()
+			this.$emit('update:modelValue', this.labels)
+			this.$emit('change', this.labels)
 			this.$message.success({message: this.$t('task.label.removeSuccess')})
 		},
 
@@ -152,6 +146,18 @@ export default {
 
 <style lang="scss" scoped>
 .tag {
-	margin: .5rem 0 0 .5rem;
+	margin: .25rem !important;
+}
+
+.tag.search-result {
+	margin: 0 !important;
+}
+
+:deep(.input-wrapper) {
+	padding: .25rem !important;
+}
+
+:deep(input.input) {
+	padding: 0 .5rem;
 }
 </style>

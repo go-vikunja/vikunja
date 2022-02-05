@@ -7,8 +7,8 @@
 			'has-light-text': !colorIsDark(task.hexColor) && task.hexColor !== `#${task.defaultColor}` && task.hexColor !== task.defaultColor,
 		}"
 		:style="{'background-color': task.hexColor !== '#' && task.hexColor !== `#${task.defaultColor}` ? task.hexColor : false}"
+		@click.exact="openTaskDetail()"
 		@click.ctrl="() => toggleTaskDone(task)"
-		@click.exact="() => $router.push({ name: 'task.kanban.detail', params: { id: task.id } })"
 		@click.meta="() => toggleTaskDone(task)"
 	>
 		<span class="task-id">
@@ -28,9 +28,9 @@
 			<span class="icon">
 				<icon :icon="['far', 'calendar-alt']"/>
 			</span>
-			<span>
+			<time :datetime="formatISO(task.dueDate)">
 				{{ formatDateSince(task.dueDate) }}
-			</span>
+			</time>
 		</span>
 		<h3>{{ task.title }}</h3>
 		<progress
@@ -114,6 +114,13 @@ export default {
 			} finally {
 				this.loadingInternal = false
 			}
+		},
+		openTaskDetail() {
+			this.$router.push({
+				name: 'task.detail',
+				params: { id: this.task.id },
+				state: { backdropView: this.$router.currentRoute.value.fullPath },
+			})
 		},
 	},
 }

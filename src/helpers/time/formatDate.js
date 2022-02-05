@@ -1,5 +1,5 @@
 import {createDateFromString} from '@/helpers/time/createDateFromString'
-import {format, formatDistanceToNow} from 'date-fns'
+import {format, formatDistanceToNow, formatISO as formatISOfns} from 'date-fns'
 import {enGB, de, fr, ru} from 'date-fns/locale'
 
 import {i18n} from '@/i18n'
@@ -43,4 +43,8 @@ export const formatDateSince = (date) => {
 		locale: locales[i18n.global.t('date.locale')],
 		addSuffix: true,
 	})
+}
+
+export function formatISO(date) {
+	return date ? formatISOfns(date) : ''
 }

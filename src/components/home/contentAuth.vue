@@ -1,32 +1,50 @@
 <template>
 	<div>
-		<a @click="$store.commit('menuActive', false)" class="menu-hide-button" v-if="menuActive">
+		<BaseButton
+			v-if="menuActive"
+			@click="$store.commit('menuActive', false)"
+			class="menu-hide-button" 
+		>
 			<icon icon="times" />
-		</a>
+		</BaseButton>
 		<div
 			:class="{'has-background': background}"
 			:style="{'background-image': background && `url(${background})`}"
 			class="app-container"
 		>
 			<navigation/>
-			<div
+			<main
 				:class="[
 					{ 'is-menu-enabled': menuActive },
 					$route.name,
 				]"
 				class="app-content"
 			>
-				<a @click="$store.commit('menuActive', false)" class="mobile-overlay" v-if="menuActive"></a>
+				<BaseButton
+					v-if="menuActive"
+					@click="$store.commit('menuActive', false)"
+					class="mobile-overlay"
+				/>
 
 				<quick-actions/>
 
-				<router-view/>
 
-				<router-view name="popup" v-slot="{ Component }">
-					<transition name="modal">
+				<router-view :route="routeWithModal" v-slot="{ Component }">
+					<keep-alive :include="['list.list', 'list.gantt', 'list.table', 'list.kanban']">
 						<component :is="Component" />
-					</transition>
+					</keep-alive>
 				</router-view>
+
+				<transition name="modal">
+					<modal
+						v-if="currentModal" 
+						@close="closeModal()"
+						variant="scrolling"
+						class="task-detail-view-modal"
+					>
+						<component :is="currentModal" />
+					</modal>
+				</transition>
 
 				<a
 					class="keyboard-shortcuts-button"
@@ -35,13 +53,13 @@
 				>
 					<icon icon="keyboard"/>
 				</a>
-			</div>
+			</main>
 		</div>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import {watch, computed} from 'vue'
+import {watch, computed, shallowRef, watchEffect, VNode, h} from 'vue'
 import {useStore} from 'vuex'
 import {useRoute, useRouter} from 'vue-router'
 import {useEventListener} from '@vueuse/core'
@@ -49,6 +67,59 @@ import {useEventListener} from '@vueuse/core'
 import {CURRENT_LIST, KEYBOARD_SHORTCUTS_ACTIVE, MENU_ACTIVE} from '@/store/mutation-types'
 import Navigation from '@/components/home/navigation.vue'
 import QuickActions from '@/components/quick-actions/quick-actions.vue'
+import BaseButton from '@/components/base/BaseButton.vue'
+
+function useRouteWithModal() {
+	const router = useRouter()
+	const route = useRoute()
+	const backdropView = computed(() => route.fullPath && window.history.state.backdropView)
+
+	const routeWithModal = computed(() => {
+		return backdropView.value
+			? router.resolve(backdropView.value)
+			: route
+	})
+
+	const currentModal = shallowRef<VNode>()
+	watchEffect(() => {
+		if (!backdropView.value) {
+			currentModal.value = undefined
+			return
+		}
+
+		// logic from vue-router
+		// https://github.com/vuejs/vue-router-next/blob/798cab0d1e21f9b4d45a2bd12b840d2c7415f38a/src/RouterView.ts#L125
+		const routePropsOption = route.matched[0]?.props.default
+		const routeProps = routePropsOption
+			? routePropsOption === true
+				? route.params
+				: typeof routePropsOption === 'function'
+					? routePropsOption(route)
+					: routePropsOption
+			: null
+
+		currentModal.value = h(
+			route.matched[0]?.components.default,
+			routeProps,
+		)
+	})
+
+	function closeModal() {
+		const historyState = computed(() => route.fullPath && window.history.state)
+
+		if (historyState.value) {
+			router.back()
+		} else {
+			const backdropRoute = historyState.value?.backdropView && router.resolve(historyState.value.backdropView)
+			router.push(backdropRoute)
+		}
+	}
+
+	return { routeWithModal, currentModal, closeModal }
+}
+
+const { routeWithModal, currentModal, closeModal } = useRouteWithModal()
+
 
 const store = useStore()
 
@@ -223,4 +294,6 @@ store.dispatch('labels/loadAllLabels')
 		display: none;
 	}
 }
+
+@include modal-transition();
 </style>

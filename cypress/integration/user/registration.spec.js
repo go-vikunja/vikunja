@@ -25,7 +25,6 @@ context('Registration', () => {
 		cy.get('#username').type(fixture.username)
 		cy.get('#email').type(fixture.email)
 		cy.get('#password').type(fixture.password)
-		cy.get('#passwordValidation').type(fixture.password)
 		cy.get('#register-submit').click()
 		cy.url().should('include', '/')
 		cy.clock(1625656161057) // 13:00
@@ -43,7 +42,6 @@ context('Registration', () => {
 		cy.get('#username').type(fixture.username)
 		cy.get('#email').type(fixture.email)
 		cy.get('#password').type(fixture.password)
-		cy.get('#passwordValidation').type(fixture.password)
 		cy.get('#register-submit').click()
 		cy.get('div.message.danger').contains('A user with this username already exists.')
 	})

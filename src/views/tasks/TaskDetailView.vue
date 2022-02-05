@@ -263,6 +263,7 @@
 							{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
 						</x-button>
 						<task-subscription
+							v-if="task.subscription"
 							entity="task"
 							:entity-id="task.id"
 							:subscription="task.subscription"
@@ -386,22 +387,28 @@
 
 					<!-- Created / Updated [by] -->
 					<p class="created">
-						<i18n-t keypath="task.detail.created">
-							<span v-tooltip="formatDate(task.created)">{{ formatDateSince(task.created) }}</span>
-							{{ task.createdBy.getDisplayName() }}
-						</i18n-t>
+						<time :datetime="formatISO(task.created)" v-tooltip="formatDate(task.created)">
+							<i18n-t keypath="task.detail.created">
+								<span>{{ formatDateSince(task.created) }}</span>
+								{{ task.createdBy.getDisplayName() }}
+							</i18n-t>
+						</time>
 						<template v-if="+new Date(task.created) !== +new Date(task.updated)">
 							<br/>
 							<!-- Computed properties to show the actual date every time it gets updated -->
-							<i18n-t keypath="task.detail.updated">
-								<span v-tooltip="updatedFormatted">{{ updatedSince }}</span>
-							</i18n-t>
+							<time :datetime="formatISO(task.updated)" v-tooltip="updatedFormatted">
+								<i18n-t keypath="task.detail.updated">
+									<span>{{ updatedSince }}</span>
+								</i18n-t>
+							</time>
 						</template>
 						<template v-if="task.done">
 							<br/>
-							<i18n-t keypath="task.detail.doneAt">
-								<span v-tooltip="doneFormatted">{{ doneSince }}</span>
-							</i18n-t>
+							<time :datetime="formatISO(task.doneAt)" v-tooltip="doneFormatted">
+								<i18n-t keypath="task.detail.doneAt">
+									<span>{{ doneSince }}</span>
+								</i18n-t>
+							</time>
 						</template>
 					</p>
 				</div>
@@ -453,8 +460,10 @@ import {CURRENT_LIST} from '@/store/mutation-types'
 import {uploadFile} from '@/helpers/attachments'
 import ChecklistSummary from '../../components/tasks/partials/checklist-summary'
 
+
 export default {
 	name: 'TaskDetailView',
+	compatConfig: { ATTR_FALSE_VALUE: false },
 	components: {
 		ChecklistSummary,
 		TaskSubscription,
@@ -473,6 +482,14 @@ export default {
 		description,
 		heading,
 	},
+
+	props: {
+		taskId: {
+			type: Number,
+			required: true,
+		},
+	},
+
 	data() {
 		return {
 			taskService: new TaskService(),
@@ -523,10 +540,6 @@ export default {
 		},
 	},
 	computed: {
-		taskId() {
-			const {id} = this.$route.params
-			return id === undefined ? id : Number(id)
-		},
 		currentList() {
 			return this.$store.state[CURRENT_LIST]
 		},
@@ -589,6 +602,9 @@ export default {
 			}
 		},
 		scrollToHeading() {
+			if(!this.$refs?.heading?.$el) {
+				return
+			}
 			this.$refs.heading.$el.scrollIntoView({block: 'center'})
 		},
 		setActiveFields() {
@@ -931,4 +947,14 @@ $flash-background-duration: 750ms;
     background: transparent;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+	@keyframes flash-background {
+		0% {
+			background: transparent;
+		}
+	}
+}
+
+@include modal-transition();
 </style>

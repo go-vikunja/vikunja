@@ -8,7 +8,7 @@
 		>
 		</span>
 		<router-link
-			:to="{ name: taskDetailRoute, params: { id: task.id } }"
+			:to="taskDetailRoute"
 			:class="{ 'done': task.done}"
 			class="tasktext">
 			<span>
@@ -39,14 +39,17 @@
 				:user="a"
 				v-for="(a, i) in task.assignees"
 			/>
-			<i
+			<time
+				:datetime="formatISO(task.dueDate)"
 				:class="{'overdue': task.dueDate <= new Date() && !task.done}"
+				class="is-italic"
 				@click.prevent.stop="showDefer = !showDefer"
 				v-if="+new Date(task.dueDate) > 0"
 				v-tooltip="formatDate(task.dueDate)"
+				:aria-expanded="showDefer ? 'true' : 'false'"
 			>
 				- {{ $t('task.detail.due', {at: formatDateSince(task.dueDate)}) }}
-			</i>
+			</time>
 			<transition name="fade">
 				<defer-task v-if="+new Date(task.dueDate) > 0 && showDefer" v-model="task" ref="deferDueDate"/>
 			</transition>
@@ -126,10 +129,6 @@ export default {
 			type: Boolean,
 			default: false,
 		},
-		taskDetailRoute: {
-			type: String,
-			default: 'task.list.detail',
-		},
 		showList: {
 			type: Boolean,
 			default: false,
@@ -166,6 +165,14 @@ export default {
 				id: 0,
 				title: '',
 			} : this.$store.state.currentList
+		},
+		taskDetailRoute() {
+			return {
+				name: 'task.detail',
+				params: { id: this.task.id },
+				// TODO: re-enable opening task detail in modal
+				// state: { backdropView: this.$router.currentRoute.value.fullPath },
+			}
 		},
 	},
 	methods: {
