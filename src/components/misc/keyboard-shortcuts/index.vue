@@ -4,9 +4,11 @@
 			<template v-for="(s, i) in shortcuts" :key="i">
 				<h3>{{ $t(s.title) }}</h3>
 
-				<message class="mb-4">
+				<message class="mb-4" v-if="s.available">
 					{{
-						s.available($route) ? $t('keyboardShortcuts.currentPageOnly') : $t('keyboardShortcuts.allPages')
+						s.available($route)
+							? $t('keyboardShortcuts.currentPageOnly')
+							: $t('keyboardShortcuts.allPages')
 					}}
 				</message>
 
@@ -17,7 +19,8 @@
 							class="shortcut-keys"
 							is="dd"
 							:keys="sc.keys"
-							:combination="typeof sc.combination !== 'undefined' ? $t(`keyboardShortcuts.${sc.combination}`) : null"/>
+							:combination="sc.combination && $t(`keyboardShortcuts.${sc.combination}`)"
+						/>
 					</template>
 				</dl>
 			</template>
@@ -25,28 +28,18 @@
 	</modal>
 </template>
 
-<script>
-import {KEYBOARD_SHORTCUTS_ACTIVE} from '@/store/mutation-types'
-import Shortcut from '@/components/misc/shortcut.vue'
-import Message from '@/components/misc/message'
-import {KEYBOARD_SHORTCUTS} from './shortcuts'
+<script lang="ts" setup>
+import {useStore} from 'vuex'
 
-export default {
-	name: 'keyboard-shortcuts',
-	components: {
-		Message, 
-		Shortcut,
-	},
-	data() {
-		return {
-			shortcuts: KEYBOARD_SHORTCUTS,
-		}
-	},
-	methods: {
-		close() {
-			this.$store.commit(KEYBOARD_SHORTCUTS_ACTIVE, false)
-		},
-	},
+import Shortcut from '@/components/misc/shortcut.vue'
+import Message from '@/components/misc/message.vue'
+
+import {KEYBOARD_SHORTCUTS_ACTIVE} from '@/store/mutation-types'
+import {KEYBOARD_SHORTCUTS as shortcuts} from './shortcuts'
+
+const store = useStore()
+function close() {
+	store.commit(KEYBOARD_SHORTCUTS_ACTIVE, false)
 }
 </script>
 

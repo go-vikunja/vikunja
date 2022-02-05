@@ -4,9 +4,11 @@
 		@submit="archiveNamespace()"
 	>
 		<template #header><span>{{ title }}</span></template>
-		
+
 		<template #text>
-			<p>{{ list.isArchived ? $t('namespace.archive.unarchiveText') : $t('namespace.archive.archiveText') }}</p>
+			<p>
+				{{ namespace.isArchived ? $t('namespace.archive.unarchiveText') : $t('namespace.archive.archiveText')}}
+			</p>
 		</template>
 	</modal>
 </template>
@@ -27,17 +29,18 @@ export default {
 	created() {
 		this.namespace = this.$store.getters['namespaces/getNamespaceById'](this.$route.params.id)
 		this.title = this.namespace.isArchived ?
-			this.$t('namespace.archive.titleUnarchive', { namespace: this.namespace.title }) :
-			this.$t('namespace.archive.titleArchive', { namespace: this.namespace.title })
+			this.$t('namespace.archive.titleUnarchive', {namespace: this.namespace.title}) :
+			this.$t('namespace.archive.titleArchive', {namespace: this.namespace.title})
 		this.setTitle(this.title)
 	},
 
 	methods: {
 		async archiveNamespace() {
-			this.namespace.isArchived = !this.namespace.isArchived
-
 			try {
-				const namespace = await this.namespaceService.update(this.namespace)
+				const namespace = await this.namespaceService.update({
+					...this.namespace,
+					isArchived: !this.namespace.isArchived,
+				})
 				this.$store.commit('namespaces/setNamespaceById', namespace)
 				this.$message.success({message: this.$t('namespace.archive.success')})
 			} finally {

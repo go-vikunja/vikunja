@@ -308,4 +308,6 @@ export default {
     padding: 0;
   }
 }
+
+@include modal-transition();
 </style>

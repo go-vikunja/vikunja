@@ -1,7 +1,6 @@
 import {CONFIG} from '../mutation-types'
 import {HTTPFactory} from '@/http-common'
 import {objectToCamelCase} from '@/helpers/case'
-import {redirectToProvider} from '../../helpers/redirectToProvider'
 import {parseURL} from 'ufo'
 
 export default {
@@ -74,17 +73,6 @@ export default {
 			const {data: info} = await HTTP.get('info')
 			ctx.commit(CONFIG, info)
 			return info
-		},
-
-		redirectToProviderIfNothingElseIsEnabled(ctx) {
-			if (ctx.state.auth.local.enabled === false &&
-				ctx.state.auth.openidConnect.enabled &&
-				ctx.state.auth.openidConnect.providers &&
-				ctx.state.auth.openidConnect.providers.length === 1 &&
-				window.location.pathname.startsWith('/login') // Kinda hacky, but prevents an endless loop.
-			) {
-				redirectToProvider(ctx.state.auth.openidConnect.providers[0])
-			}
 		},
 	},
 }

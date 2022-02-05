@@ -1,17 +1,22 @@
 <template>
-	<div class="kanban-view">
-		<div class="filter-container" v-if="isSavedFilter">
+	<ListWrapper class="list-kanban" :list-id="listId" viewName="kanban">
+		<template #header>
+			<div class="filter-container" v-if="isSavedFilter">
 			<div class="items">
 				<filter-popup
 					v-model="params"
 					@update:modelValue="loadBuckets"
 				/>
 			</div>
-		</div>
-		<div
-			:class="{ 'is-loading': loading && !oneTaskUpdating}"
-			class="kanban kanban-bucket-container loader-container"
-		>
+			</div>
+		</template>
+
+		<template #default>
+			<div class="kanban-view">
+			<div
+				:class="{ 'is-loading': loading && !oneTaskUpdating}"
+				class="kanban kanban-bucket-container loader-container"
+			>
 			<draggable
 				v-bind="dragOptions"
 				:modelValue="buckets"
@@ -204,18 +209,11 @@
 			</div>
 		</div>
 
-		<!-- This router view is used to show the task popup while keeping the kanban board itself -->
-		<router-view v-slot="{ Component }">
-			<transition name="modal">
-				<component :is="Component"/>
-			</transition>
-		</router-view>
-
 		<transition name="modal">
 			<modal
+				v-if="showBucketDeleteModal"
 				@close="showBucketDeleteModal = false"
 				@submit="deleteBucket()"
-				v-if="showBucketDeleteModal"
 			>
 				<template #header><span>{{ $t('list.kanban.deleteHeaderBucket') }}</span></template>
 
@@ -225,22 +223,24 @@
 				</template>
 			</modal>
 		</transition>
-	</div>
+		</div>
+		</template>
+	</ListWrapper>
 </template>
 
 <script>
 import draggable from 'vuedraggable'
 import cloneDeep from 'lodash.clonedeep'
 
-import BucketModel from '../../../models/bucket'
+import BucketModel from '../../models/bucket'
 import {mapState} from 'vuex'
-import {saveListView} from '@/helpers/saveListView'
-import Rights from '../../../models/constants/rights.json'
+import Rights from '../../models/constants/rights.json'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
+import ListWrapper from './ListWrapper'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import Dropdown from '@/components/misc/dropdown.vue'
 import {getCollapsedBucketState, saveCollapsedBucketState} from '@/helpers/saveCollapsedBucketState'
-import {calculateItemPosition} from '../../../helpers/calculateItemPosition'
+import {calculateItemPosition} from '../../helpers/calculateItemPosition'
 import KanbanCard from '@/components/tasks/partials/kanban-card'
 
 const DRAG_OPTIONS = {
@@ -257,11 +257,20 @@ const MIN_SCROLL_HEIGHT_PERCENT = 0.25
 export default {
 	name: 'Kanban',
 	components: {
+		ListWrapper,
 		KanbanCard,
 		Dropdown,
 		FilterPopup,
 		draggable,
 	},
+
+	props: {
+		listId: {
+			type: Number,
+			required: true,
+		},
+	},
+
 	data() {
 		return {
 			taskContainerRefs: {},
@@ -296,11 +305,7 @@ export default {
 			},
 		}
 	},
-	created() {
-		// Save the current list view to local storage
-		// We use local storage and not vuex here to make it persistent across reloads.
-		saveListView(this.$route.params.listId, this.$route.name)
-	},
+
 	watch: {
 		loadBucketParameter: {
 			handler: 'loadBuckets',
@@ -313,7 +318,7 @@ export default {
 		},
 		loadBucketParameter() {
 			return {
-				listId: this.$route.params.listId,
+				listId: this.listId,
 				params: this.params,
 			}
 		},
@@ -353,16 +358,11 @@ export default {
 
 	methods: {
 		loadBuckets() {
-			// Prevent trying to load buckets if the task popup view is active
-			if (this.$route.name !== 'list.kanban') {
-				return
-			}
-
 			const {listId, params} = this.loadBucketParameter
 
 			this.collapsedBuckets = getCollapsedBucketState(listId)
 
-			console.debug(`Loading buckets, loadedListId = ${this.loadedListId}, $route.params =`, this.$route.params)
+			console.debug(`Loading buckets, loadedListId = ${this.loadedListId}, $attrs = ${this.$attrs} $route.params =`, this.$route.params)
 
 			this.$store.dispatch('kanban/loadBucketsForList', {listId, params})
 		},
@@ -437,7 +437,7 @@ export default {
 			const task = await this.$store.dispatch('tasks/createNewTask', {
 				title: this.newTaskText,
 				bucketId,
-				listId: this.$route.params.listId,
+				listId: this.listId,
 			})
 			this.newTaskText = ''
 			this.$store.commit('kanban/addTaskToBucket', task)
@@ -459,7 +459,7 @@ export default {
 
 			const newBucket = new BucketModel({
 				title: this.newBucketTitle,
-				listId: parseInt(this.$route.params.listId),
+				listId: this.listId,
 			})
 
 			await this.$store.dispatch('kanban/createBucket', newBucket)
@@ -479,7 +479,7 @@ export default {
 		async deleteBucket() {
 			const bucket = new BucketModel({
 				id: this.bucketToDelete,
-				listId: parseInt(this.$route.params.listId),
+				listId: this.listId,
 			})
 
 			try {
@@ -567,7 +567,7 @@ export default {
 
 		collapseBucket(bucket) {
 			this.collapsedBuckets[bucket.id] = true
-			saveCollapsedBucketState(this.$route.params.listId, this.collapsedBuckets)
+			saveCollapsedBucketState(this.listId, this.collapsedBuckets)
 		},
 		unCollapseBucket(bucket) {
 			if (!this.collapsedBuckets[bucket.id]) {
@@ -575,7 +575,7 @@ export default {
 			}
 
 			this.collapsedBuckets[bucket.id] = false
-			saveCollapsedBucketState(this.$route.params.listId, this.collapsedBuckets)
+			saveCollapsedBucketState(this.listId, this.collapsedBuckets)
 		},
 	},
 }
@@ -746,4 +746,6 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 .move-card-leave-active {
 	display: none;
 }
+
+@include modal-transition();
 </style>

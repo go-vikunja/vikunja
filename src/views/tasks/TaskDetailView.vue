@@ -263,6 +263,7 @@
 							{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
 						</x-button>
 						<task-subscription
+							v-if="task.subscription"
 							entity="task"
 							:entity-id="task.id"
 							:subscription="task.subscription"
@@ -459,8 +460,10 @@ import {CURRENT_LIST} from '@/store/mutation-types'
 import {uploadFile} from '@/helpers/attachments'
 import ChecklistSummary from '../../components/tasks/partials/checklist-summary'
 
+
 export default {
 	name: 'TaskDetailView',
+	compatConfig: { ATTR_FALSE_VALUE: false },
 	components: {
 		ChecklistSummary,
 		TaskSubscription,
@@ -479,6 +482,14 @@ export default {
 		description,
 		heading,
 	},
+
+	props: {
+		taskId: {
+			type: Number,
+			required: true,
+		},
+	},
+
 	data() {
 		return {
 			taskService: new TaskService(),
@@ -529,10 +540,6 @@ export default {
 		},
 	},
 	computed: {
-		taskId() {
-			const {id} = this.$route.params
-			return id === undefined ? id : Number(id)
-		},
 		currentList() {
 			return this.$store.state[CURRENT_LIST]
 		},
@@ -948,4 +955,6 @@ $flash-background-duration: 750ms;
 		}
 	}
 }
+
+@include modal-transition();
 </style>
