@@ -1,6 +1,6 @@
 <template>
 	<div class="is-max-width-desktop has-text-left ">
-		<h3 class="mb-2">
+		<h3 class="mb-2 title">
 			{{ pageTitle }}
 		</h3>
 		<p v-if="!showAll" class="show-tasks-options">

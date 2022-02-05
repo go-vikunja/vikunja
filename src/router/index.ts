@@ -13,7 +13,7 @@ import RegisterComponent from '../views/user/Register.vue'
 import OpenIdAuth from '../views/user/OpenIdAuth.vue'
 import DataExportDownload from '../views/user/DataExportDownload.vue'
 // Tasks
-import ShowTasksInRangeComponent from '../views/tasks/ShowTasksInRange.vue'
+import UpcomingTasksComponent from '../views/tasks/ShowTasks.vue'
 import LinkShareAuthComponent from '../views/sharing/LinkSharingAuth.vue'
 import ListNamespaces from '../views/namespaces/ListNamespaces.vue'
 import TaskDetailView from '../views/tasks/TaskDetailView.vue'
@@ -248,7 +248,7 @@ const router = createRouter({
 		{
 			path: '/tasks/by/upcoming',
 			name: 'tasks.range',
-			component: ShowTasksInRangeComponent,
+			component: UpcomingTasksComponent,
 		},
 		{
 			path: '/lists/new/:namespaceId/',
