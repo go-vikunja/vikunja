@@ -219,9 +219,5 @@ export default {
 .show-tasks-options {
 	display: flex;
 	flex-direction: column;
-
-	> :deep(a) {
-		margin-right: .5rem;
-	}
 }
 </style>
