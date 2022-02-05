@@ -79,7 +79,7 @@ const flatPickerConfig = computed(() => ({
 	},
 }))
 
-const dateRange = ref<string>('')
+const dateRange = ref('')
 
 watch(
 	() => dateRange.value,
