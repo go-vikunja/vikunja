@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<message variant="danger" v-if="errorMessage !== ''">
+		<message variant="danger" v-if="errorMessage !== ''" class="mb-4">
 			{{ errorMessage }}
 		</message>
 		<form @submit.prevent="submit" id="registerform">
@@ -18,8 +18,12 @@
 						v-focus
 						v-model="credentials.username"
 						@keyup.enter="submit"
+						@focusout="validateUsername"
 					/>
 				</div>
+				<p class="help is-danger" v-if="!usernameValid">
+					{{ $t('user.auth.usernameRequired') }}
+				</p>
 			</div>
 			<div class="field">
 				<label class="label" for="email">{{ $t('user.auth.email') }}</label>
@@ -33,68 +37,46 @@
 						type="email"
 						v-model="credentials.email"
 						@keyup.enter="submit"
+						@focusout="validateEmail"
 					/>
 				</div>
+				<p class="help is-danger" v-if="!emailValid">
+					{{ $t('user.auth.emailInvalid') }}
+				</p>
 			</div>
 			<div class="field">
 				<label class="label" for="password">{{ $t('user.auth.password') }}</label>
-				<div class="control">
-					<input
-						class="input"
-						id="password"
-						name="password"
-						:placeholder="$t('user.auth.passwordPlaceholder')"
-						required
-						type="password"
-						autocomplete="new-password"
-						v-model="credentials.password"
-						@keyup.enter="submit"
-					/>
-				</div>
-			</div>
-			<div class="field">
-				<label class="label" for="passwordValidation">{{ $t('user.auth.passwordRepeat') }}</label>
-				<div class="control">
-					<input
-						class="input"
-						id="passwordValidation"
-						name="passwordValidation"
-						:placeholder="$t('user.auth.passwordPlaceholder')"
-						required
-						type="password"
-						autocomplete="new-password"
-						v-model="passwordValidation"
-						@keyup.enter="submit"
-					/>
-				</div>
+				<password @submit="submit" @update:modelValue="v => credentials.password = v" :validate-initially="validatePasswordInitially"/>
 			</div>
 
-			<div class="field is-grouped">
-				<div class="control">
-					<x-button
-						:loading="loading"
-						id="register-submit"
-						@click="submit"
-						class="mr-2"
-					>
-						{{ $t('user.auth.register') }}
-					</x-button>
-					<x-button :to="{ name: 'user.login' }" variant="secondary">
-						{{ $t('user.auth.login') }}
-					</x-button>
-				</div>
-			</div>
+			<x-button
+				:loading="loading"
+				id="register-submit"
+				@click="submit"
+				class="mr-2"
+				:disabled="!everythingValid"
+			>
+				{{ $t('user.auth.createAccount') }}
+			</x-button>
+			<p class="mt-2">
+				{{ $t('user.auth.alreadyHaveAnAccount') }}
+				<router-link :to="{ name: 'user.login' }">
+					{{ $t('user.auth.login') }}
+				</router-link>
+			</p>
 		</form>
 	</div>
 </template>
 
 <script setup>
+import {useDebounceFn} from '@vueuse/core'
 import {ref, reactive, toRaw, computed, onBeforeMount} from 'vue'
-import {useI18n} from 'vue-i18n'
 
 import router from '@/router'
 import {store} from '@/store'
 import Message from '@/components/misc/message'
+import {isEmail} from '@/helpers/isEmail'
+import Password from '@/components/input/password'
 
 // FIXME: use the `beforeEnter` hook of vue-router
 // Check if the user is already logged in, if so, redirect them to the homepage
@@ -104,26 +86,44 @@ onBeforeMount(() => {
 	}
 })
 
-const {t} = useI18n()
-
 const credentials = reactive({
 	username: '',
 	email: '',
 	password: '',
 })
-const passwordValidation = ref('')
 
 const loading = computed(() => store.state.loading)
 const errorMessage = ref('')
+const validatePasswordInitially = ref(false)
+
+const DEBOUNCE_TIME = 100
+
+// debouncing to prevent error messages when clicking on the log in button
+const emailValid = ref(true)
+const validateEmail = useDebounceFn(() => {
+	emailValid.value = isEmail(credentials.email)
+}, DEBOUNCE_TIME)
+
+const usernameValid = ref(true)
+const validateUsername = useDebounceFn(() => {
+	usernameValid.value = credentials.username !== ''
+}, DEBOUNCE_TIME)
+
+const everythingValid = computed(() => {
+	return credentials.username !== '' &&
+		credentials.email !== '' &&
+		credentials.password !== '' &&
+		emailValid.value &&
+		usernameValid.value
+})
 
 async function submit() {
 	errorMessage.value = ''
+	validatePasswordInitially.value = true
 
-	if (credentials.password !== passwordValidation.value) {
-		errorMessage.value = t('user.auth.passwordsDontMatch')
+	if (!everythingValid.value) {
 		return
 	}
-
 
 	try {
 		await store.dispatch('auth/register', toRaw(credentials))

@@ -14,6 +14,9 @@
 				<div>
 					<h2 class="title" v-if="title">{{ title }}</h2>
 					<api-config/>
+					<Message v-if="motd !== ''" class="is-hidden-tablet mb-4">
+						{{ motd }}
+					</Message>
 					<slot/>
 				</div>
 				<legal/>
@@ -38,8 +41,8 @@ const store = useStore()
 const {t} = useI18n()
 
 const motd = computed(() => store.state.config.motd)
-// @ts-ignore
-const title = computed(() => t(route.meta.title ?? ''))
+
+const title = computed(() => t(route.meta?.title as string || ''))
 useTitle(() => title.value)
 </script>
 

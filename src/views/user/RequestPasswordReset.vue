@@ -1,9 +1,9 @@
 <template>
 	<div>
-		<message variant="danger" v-if="errorMsg">
+		<message variant="danger" v-if="errorMsg" class="mb-4">
 			{{ errorMsg }}
 		</message>
-		<div class="has-text-centered" v-if="isSuccess">
+		<div class="has-text-centered mb-4" v-if="isSuccess">
 			<message variant="success">
 				{{ $t('user.auth.resetPasswordSuccess') }}
 			</message>

@@ -1,18 +1,35 @@
 <template>
 	<div class="message-wrapper">
-		<div class="message" :class="variant">
+		<div class="message" :class="[variant, textAlignClass]">
 			<slot/>
 		</div>
 	</div>
 </template>
 
 <script lang="ts" setup>
-defineProps({
+import {computed, PropType} from 'vue'
+
+const TEXT_ALIGN_MAP = Object.freeze({
+	left: '',
+	center: 'has-text-centered',
+	right: 'has-text-right',
+})
+
+type textAlignVariants = keyof typeof TEXT_ALIGN_MAP
+
+const props = defineProps({
 	variant: {
 		type: String,
 		default: 'info',
 	},
+	textAlign: {
+		type: String as PropType<textAlignVariants>,
+		default: 'left',
+	},
 })
+
+const textAlignClass = computed(() => TEXT_ALIGN_MAP[props.textAlign])
+
 </script>
 
 <style lang="scss" scoped>

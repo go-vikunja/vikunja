@@ -133,7 +133,7 @@ const router = createRouter({
 			name: 'user.register',
 			component: RegisterComponent,
 			meta: {
-				title: 'user.auth.register',
+				title: 'user.auth.createAccount',
 			},
 		},
 		{
