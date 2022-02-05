@@ -17,7 +17,6 @@
 			<LlamaCool class="mt-5"/>
 		</template>
 
-		<div v-if="!hasTasks" :class="{ 'is-loading': loading}" class="spinner"></div>
 		<card
 			v-if="hasTasks"
 			:padding="false"
@@ -35,6 +34,7 @@
 					@taskUpdated="updateTasks"/>
 			</div>
 		</card>
+		<div v-else :class="{ 'is-loading': loading}" class="spinner"></div>
 	</div>
 </template>
 <script>
