@@ -36,9 +36,14 @@
 				</router-view>
 
 				<transition name="modal">
-					<TaskDetailViewModal v-if="currentModal" >
+					<modal
+						v-if="currentModal" 
+						@close="closeModal()"
+						variant="scrolling"
+						class="task-detail-view-modal"
+					>
 						<component :is="currentModal" />
-					</TaskDetailViewModal>
+					</modal>
 				</transition>
 
 				<a
@@ -62,7 +67,6 @@ import {useEventListener} from '@vueuse/core'
 import {CURRENT_LIST, KEYBOARD_SHORTCUTS_ACTIVE, MENU_ACTIVE} from '@/store/mutation-types'
 import Navigation from '@/components/home/navigation.vue'
 import QuickActions from '@/components/quick-actions/quick-actions.vue'
-import TaskDetailViewModal from '@/views/tasks/TaskDetailViewModal.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 function useRouteWithModal() {
@@ -100,10 +104,22 @@ function useRouteWithModal() {
 		)
 	})
 
-	return { routeWithModal, currentModal }
+	function closeModal() {
+		const historyState = computed(() => route.fullPath && window.history.state)
+
+		if (historyState.value) {
+			router.back()
+		} else {
+			const backdropRoute = historyState.value?.backdropView && router.resolve(historyState.value.backdropView)
+			router.push(backdropRoute)
+		}
+	}
+
+	return { routeWithModal, currentModal, closeModal }
 }
 
-const { routeWithModal, currentModal } = useRouteWithModal()
+const { routeWithModal, currentModal, closeModal } = useRouteWithModal()
+
 
 const store = useStore()
 

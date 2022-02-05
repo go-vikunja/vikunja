@@ -22,6 +22,13 @@
 						'is-wide': wide
 					}"
 				>
+					<BaseButton
+						@click="emit('close')"
+						class="close"
+					>
+						<icon icon="times"/>
+					</BaseButton>
+
 					<slot>
 						<div class="header">
 							<slot name="header"></slot>
@@ -54,6 +61,8 @@
 </template>
 
 <script>
+import BaseButton from '@/components/base/BaseButton.vue'
+
 export const TRANSITION_NAMES = {
 	MODAL: 'modal',
 	FADE: 'fade',
@@ -71,6 +80,11 @@ function validValue(values) {
 
 export default {
 	name: 'modal',
+
+	components: {
+		BaseButton,
+	},
+
 	mounted() {
 		document.addEventListener('keydown', (e) => {
 			// Close the model when escape is pressed
@@ -196,5 +210,24 @@ export default {
 
 		}
 	}
+}
+
+.close {
+	position: fixed;
+	top: 5px;
+	right: 26px;
+	color: var(--white);
+	font-size: 2rem;
+
+	@media screen and (max-width: $desktop) {
+		color: var(--dark);
+	}
+}
+</style>
+
+<style lang="scss">
+// Close icon SVG uses currentColor, change the color to keep it visible
+.dark .task-detail-view-modal .close {
+	color: var(--grey-900);
 }
 </style>
