@@ -47,6 +47,10 @@ import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import LlamaCool from '@/assets/llama-cool.svg?component'
 import DatepickerWithRange from '@/components/date/datepickerWithRange'
 
+function getNextWeekDate() {
+	return new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
+}
+
 export default {
 	name: 'ShowTasks',
 	components: {
@@ -62,8 +66,6 @@ export default {
 		}
 	},
 	props: {
-		startDate: Date,
-		endDate: Date,
 		showAll: Boolean,
 	},
 	created() {
@@ -84,14 +86,14 @@ export default {
 
 			return !isNaN(d)
 				? d
-				: this.startDate
+				: new Date()
 		},
 		dateTo() {
 			const d = new Date(Number(this.$route.query.to))
 
 			return !isNaN(d)
 				? d
-				: this.endDate
+				: getNextWeekDate()
 		},
 		showNulls() {
 			return this.$route.query.showNulls === 'true'
