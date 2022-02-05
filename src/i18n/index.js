@@ -30,6 +30,10 @@ const setI18nLanguage = lang => {
 }
 
 export const loadLanguageAsync = lang => {
+	if(!lang) {
+		return 
+	}
+	
 	if (
 		// If the same language
 		i18n.global.locale === lang ||
