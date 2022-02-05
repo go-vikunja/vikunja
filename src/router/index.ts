@@ -429,7 +429,7 @@ const router = createRouter({
 	],
 })
 
-export function checkAuth(route: RouteLocation) {
+export function getAuthForRoute(route: RouteLocation) {
 	const authUser = store.getters['auth/authUser']
 	const authLinkShare = store.getters['auth/authLinkShare']
 

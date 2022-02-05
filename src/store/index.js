@@ -48,7 +48,6 @@ export const store = createStore({
 		menuActive: true,
 		keyboardShortcutsActive: false,
 		quickActionsActive: false,
-		vikunjaReady: false,
 	},
 	mutations: {
 		[LOADING](state, loading) {
@@ -83,9 +82,6 @@ export const store = createStore({
 		},
 		[BACKGROUND](state, background) {
 			state.background = background
-		},
-		vikunjaReady(state, ready) {
-			state.vikunjaReady = ready
 		},
 	},
 	actions: {
