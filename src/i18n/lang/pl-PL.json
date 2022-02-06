@@ -34,6 +34,7 @@
       "email": "Email address",
       "emailPlaceholder": "e.g. frederic{'@'}vikunja.io",
       "password": "Password",
+      "passwordRepeat": "Retype your password",
       "passwordPlaceholder": "e.g. •••••••••••",
       "forgotPassword": "Forgot your password?",
       "resetPassword": "Reset your password",
@@ -44,19 +45,12 @@
       "totpTitle": "Two Factor Authentication Code",
       "totpPlaceholder": "e.g. 123456",
       "login": "Login",
-      "createAccount": "Create account",
+      "register": "Register",
       "loginWith": "Log in with {provider}",
       "authenticating": "Authenticating…",
       "openIdStateError": "State does not match, refusing to continue!",
       "openIdGeneralError": "An error occured while authenticating against the third party.",
-      "logout": "Logout",
-      "emailInvalid": "Please enter a valid email address.",
-      "usernameRequired": "Please provide a username.",
-      "passwordRequired": "Please provide a password.",
-      "showPassword": "Show the password",
-      "hidePassword": "Hide the password",
-      "noAccountYet": "Don't have an account yet?",
-      "alreadyHaveAnAccount": "Already have an account?"
+      "logout": "Logout"
     },
     "settings": {
       "title": "Settings",
@@ -67,7 +61,7 @@
       "currentPasswordPlaceholder": "Your current password",
       "passwordsDontMatch": "The new password and its confirmation don't match.",
       "passwordUpdateSuccess": "The password was successfully updated.",
-      "updateEmailTitle": "Update Your Email Address",
+      "updateEmailTitle": "Update Your E-Mail Address",
       "updateEmailNew": "New Email Address",
       "updateEmailSuccess": "Your email address was successfully updated. We've sent you a link to confirm it.",
       "general": {

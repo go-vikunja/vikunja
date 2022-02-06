@@ -31,7 +31,7 @@
       "username": "Nom d’utilisateur·rice",
       "usernameEmail": "Nom d’utilisateur·rice ou adresse courriel",
       "usernamePlaceholder": "p. ex. frederick",
-      "email": "Adresse courriel",
+      "email": "Email address",
       "emailPlaceholder": "p. ex. frederic{'@'}vikunja.io",
       "password": "Mot de passe",
       "passwordRepeat": "Retape ton mot de passe",
