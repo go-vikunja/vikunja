@@ -114,3 +114,9 @@ import {format} from 'date-fns'
 
 const exampleDate = format(new Date(), 'yyyy-MM-dd')
 </script>
+
+<style scoped>
+.how-it-works-modal {
+	font-size: 1rem;
+}
+</style>
