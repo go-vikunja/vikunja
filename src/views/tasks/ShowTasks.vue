@@ -5,7 +5,7 @@
 		</h3>
 		<p v-if="!showAll" class="show-tasks-options">
 			<datepicker-with-range @dateChanged="setDate">
-				<template #trigger="{toggle, buttonText}">
+				<template #trigger="{toggle}">
 					<x-button @click.prevent.stop="toggle()" variant="primary" :shadow="false" class="mb-2">
 						{{ $t('task.show.select') }}
 					</x-button>
@@ -46,8 +46,7 @@
 
 <script setup lang="ts">
 import SingleTaskInList from '@/components/tasks/partials/singleTaskInList.vue'
-import {parseDateOrString} from '@/helpers/time/parseDateOrString'
-import {mapState, useStore} from 'vuex'
+import {useStore} from 'vuex'
 import {computed, ref, watchEffect} from 'vue'
 
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
@@ -73,6 +72,8 @@ const showNothingToDo = ref<boolean>(false)
 setTimeout(() => showNothingToDo.value = true, 100)
 
 // NOTE: You MUST provide either dateFrom and dateTo OR showAll for the component to actually show tasks.
+// Linting disabled because we explicitely enabled destructuring in vite's config, this will work.
+// eslint-disable-next-line vue/no-setup-props-destructure
 const {
 	dateFrom,
 	dateTo,
@@ -128,7 +129,7 @@ const tasksSorted = computed(() => {
 		...tasksWithoutDueDate,
 	]
 })
-const hasTasks = computed(() => tasks && tasks.value.length > 0)
+const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
 const userAuthenticated = computed(() => store.state.auth.authenticated)
 const loading = computed(() => store.state[LOADING] && store.state[LOADING_MODULE] === 'tasks')
 
@@ -173,7 +174,7 @@ async function loadPendingTasks(from: string, to: string) {
 	// Since this route is authentication only, users would get an error message if they access the page unauthenticated.
 	// Since this component is mounted as the home page before unauthenticated users get redirected
 	// to the login page, they will almost always see the error message.
-	if (!userAuthenticated) {
+	if (!userAuthenticated.value) {
 		return
 	}
 

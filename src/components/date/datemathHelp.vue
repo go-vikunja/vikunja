@@ -1,6 +1,7 @@
 <template>
-	<card class="has-no-shadow how-it-works-modal"
-		  :title="$t('input.datepickerRange.math.title')">
+	<card
+		class="has-no-shadow how-it-works-modal"
+		:title="$t('input.datepickerRange.math.title')">
 		<p>
 			{{ $t('input.datepickerRange.math.intro') }}
 		</p>
@@ -12,12 +13,14 @@
 		</p>
 		<p>
 			<i18n-t keypath="input.datepickerRange.math.similar">
-				<a href="https://grafana.com/docs/grafana/latest/dashboards/time-range-controls/"
-				   rel="noreferrer noopener nofollow" target="_blank">
+				<a
+					href="https://grafana.com/docs/grafana/latest/dashboards/time-range-controls/"
+					rel="noreferrer noopener nofollow" target="_blank">
 					Grafana
 				</a>
-				<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#date-math"
-				   rel="noreferrer noopener nofollow" target="_blank">
+				<a
+					href="https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#date-math"
+					rel="noreferrer noopener nofollow" target="_blank">
 					Elasticsearch
 				</a>
 			</i18n-t>

@@ -256,7 +256,7 @@ const router = createRouter({
 				dateTo: parseDateOrString(route.query.to, getNextWeekDate()),
 				showNulls: route.query.showNulls === 'true',
 				showOverdue: route.query.showOverdue === 'true',
-			})
+			}),
 		},
 		{
 			path: '/lists/new/:namespaceId/',
