@@ -7,16 +7,16 @@
 			<template #content="{isOpen}">
 				<div class="datepicker-with-range" :class="{'is-open': isOpen}">
 					<div class="selections">
-						<button @click="setDateRange(null)" :class="{'is-active': customRangeActive}">
+						<BaseButton @click="setDateRange(null)" :class="{'is-active': customRangeActive}">
 							{{ $t('misc.custom') }}
-						</button>
-						<button
+						</BaseButton>
+						<BaseButton
 							v-for="(value, text) in dateRanges"
 							:key="text"
 							@click="setDateRange(value)"
 							:class="{'is-active': from === value[0] && to === value[1]}">
 							{{ $t(`input.datepickerRange.ranges.${text}`) }}
-						</button>
+						</BaseButton>
 					</div>
 					<div class="flatpickr-container input-group">
 						<label class="label">
@@ -48,7 +48,7 @@
 
 						<p>
 							{{ $t('input.datepickerRange.math.canuse') }}
-							<a @click="showHowItWorks = true">{{ $t('input.datepickerRange.math.learnhow') }}</a>.
+							<BaseButton class="has-text-primary" @click="showHowItWorks = true">{{ $t('input.datepickerRange.math.learnhow') }}</BaseButton>
 						</p>
 
 						<modal
@@ -181,6 +181,7 @@ import {format} from 'date-fns'
 import Popup from '@/components/misc/popup.vue'
 
 import {dateRanges} from '@/components/date/dateRanges'
+import BaseButton from '@/components/base/BaseButton.vue'
 
 const {t} = useI18n()
 
