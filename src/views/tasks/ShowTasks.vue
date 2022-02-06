@@ -212,8 +212,7 @@ function updateTasks(updatedTask) {
 }
 
 watchEffect(() => loadPendingTasks(dateFrom.value as string, dateTo.value as string))
-// loadPendingTasks()
-watchEffect(() => setTitle(pageTitle))
+watchEffect(() => setTitle(pageTitle.value))
 </script>
 
 <style lang="scss" scoped>
