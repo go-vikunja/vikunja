@@ -120,4 +120,12 @@ const exampleDate = format(new Date(), 'yyyy-MM-dd')
 .how-it-works-modal {
 	font-size: 1rem;
 }
+
+p {
+	display: inline-block !important;
+}
+
+.base-button {
+	display: inline;
+}
 </style>
