@@ -115,11 +115,6 @@ function emitChanged() {
 	})
 }
 
-function inputChanged() {
-	flatpickrRange.value = ''
-	emitChanged()
-}
-
 watch(
 	() => flatpickrRange.value,
 	(newVal: string | null) => {
@@ -139,8 +134,8 @@ watch(
 		emitChanged()
 	},
 )
-watch(() => from.value, inputChanged)
-watch(() => to.value, inputChanged)
+watch(() => from.value, emitChanged)
+watch(() => to.value, emitChanged)
 
 function setDateRange(range: string[] | null) {
 	if (range === null) {
