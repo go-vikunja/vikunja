@@ -195,11 +195,11 @@ const buttonText = computed<string>(() => {
 	width: 100%;
 	height: 100%;
 	position: absolute;
+}
 
-	:deep(.flatpickr-calendar) {
-		margin: 0 auto 8px;
-		box-shadow: none;
-	}
+:deep(.flatpickr-calendar) {
+	margin: 0 auto 8px;
+	box-shadow: none;
 }
 
 .flatpickr-container {
