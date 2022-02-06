@@ -8847,6 +8847,10 @@ var doc = `{
         "user.Login": {
             "type": "object",
             "properties": {
+                "long_token": {
+                    "description": "If true, the token returned will be valid a lot longer than default. Useful for \"remember me\" style logins.",
+                    "type": "boolean"
+                },
                 "password": {
                     "description": "The password for the user.",
                     "type": "string"

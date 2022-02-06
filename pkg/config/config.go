@@ -38,6 +38,7 @@ const (
 	// #nosec
 	ServiceJWTSecret       Key = `service.JWTSecret`
 	ServiceJWTTTL          Key = `service.jwtttl`
+	ServiceJWTTTLLong      Key = `service.jwtttllong`
 	ServiceInterface       Key = `service.interface`
 	ServiceUnixSocket      Key = `service.unixsocket`
 	ServiceUnixSocketMode  Key = `service.unixsocketmode`
@@ -227,7 +228,8 @@ func InitDefaultConfig() {
 
 	// Service
 	ServiceJWTSecret.setDefault(random)
-	ServiceJWTTTL.setDefault(259200)
+	ServiceJWTTTL.setDefault(259200)      // 72 hours
+	ServiceJWTTTLLong.setDefault(2592000) // 30 days
 	ServiceInterface.setDefault(":3456")
 	ServiceUnixSocket.setDefault("")
 	ServiceFrontendurl.setDefault("")

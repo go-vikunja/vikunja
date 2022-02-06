@@ -91,6 +91,19 @@ Full path: `service.jwtttl`
 Environment path: `VIKUNJA_SERVICE_JWTTTL`
 
 
+### jwtttllong
+
+The duration of the "remember me" time in seconds. When the login request is made with 
+the long param set, the token returned will be valid for this period.
+The default is 2592000 seconds (30 Days).
+
+Default: `2592000`
+
+Full path: `service.jwtttllong`
+
+Environment path: `VIKUNJA_SERVICE_JWTTTLLONG`
+
+
 ### interface
 
 The interface on which to run the webserver

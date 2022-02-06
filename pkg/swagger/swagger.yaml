@@ -1157,6 +1157,10 @@ definitions:
     type: object
   user.Login:
     properties:
+      long_token:
+        description: If true, the token returned will be valid a lot longer than default.
+          Useful for "remember me" style logins.
+        type: boolean
       password:
         description: The password for the user.
         type: string

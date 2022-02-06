@@ -42,8 +42,8 @@ type Token struct {
 }
 
 // NewUserAuthTokenResponse creates a new user auth token response from a user object.
-func NewUserAuthTokenResponse(u *user.User, c echo.Context) error {
-	t, err := NewUserJWTAuthtoken(u)
+func NewUserAuthTokenResponse(u *user.User, c echo.Context, long bool) error {
+	t, err := NewUserJWTAuthtoken(u, long)
 	if err != nil {
 		return err
 	}
@@ -52,10 +52,13 @@ func NewUserAuthTokenResponse(u *user.User, c echo.Context) error {
 }
 
 // NewUserJWTAuthtoken generates and signes a new jwt token for a user. This is a global function to be able to call it from integration tests.
-func NewUserJWTAuthtoken(u *user.User) (token string, err error) {
+func NewUserJWTAuthtoken(u *user.User, long bool) (token string, err error) {
 	t := jwt.New(jwt.SigningMethodHS256)
 
 	var ttl = time.Duration(config.ServiceJWTTTL.GetInt64())
+	if long {
+		ttl = time.Duration(config.ServiceJWTTTLLong.GetInt64())
+	}
 	var exp = time.Now().Add(time.Second * ttl).Unix()
 
 	// Set claims
@@ -68,6 +71,7 @@ func NewUserJWTAuthtoken(u *user.User) (token string, err error) {
 	claims["name"] = u.Name
 	claims["emailRemindersEnabled"] = u.EmailRemindersEnabled
 	claims["isLocalUser"] = u.Issuer == user.IssuerLocal
+	claims["long"] = long
 
 	// Generate encoded token and send it as response.
 	return t.SignedString([]byte(config.ServiceJWTSecret.GetString()))

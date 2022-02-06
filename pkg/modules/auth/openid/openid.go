@@ -198,7 +198,7 @@ func HandleCallback(c echo.Context) error {
 	}
 
 	// Create token
-	return auth.NewUserAuthTokenResponse(u, c)
+	return auth.NewUserAuthTokenResponse(u, c, false)
 }
 
 func getOrCreateUser(s *xorm.Session, cl *claims, issuer, subject string) (u *user.User, err error) {

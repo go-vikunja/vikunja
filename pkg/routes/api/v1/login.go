@@ -102,7 +102,7 @@ func Login(c echo.Context) error {
 	}
 
 	// Create token
-	return auth.NewUserAuthTokenResponse(user, c)
+	return auth.NewUserAuthTokenResponse(user, c, u.LongToken)
 }
 
 // RenewToken gives a new token to every user with a valid token
@@ -156,6 +156,12 @@ func RenewToken(c echo.Context) (err error) {
 		return handler.HandleHTTPError(err, c)
 	}
 
+	var long bool
+	lng, has := claims["long"]
+	if has {
+		long = lng.(bool)
+	}
+
 	// Create token
-	return auth.NewUserAuthTokenResponse(user, c)
+	return auth.NewUserAuthTokenResponse(user, c, long)
 }

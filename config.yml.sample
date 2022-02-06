@@ -6,6 +6,10 @@ service:
   # The duration of the issed JWT tokens in seconds.
   # The default is 259200 seconds (3 Days).
   jwtttl: 259200
+  # The duration of the "remember me" time in seconds. When the login request is made with 
+  # the long param set, the token returned will be valid for this period.
+  # The default is 2592000 seconds (30 Days).
+  jwtttllong: 2592000
   # The interface on which to run the webserver
   interface: ":3456"
   # Path to Unix socket. If set, it will be created and used instead of tcp

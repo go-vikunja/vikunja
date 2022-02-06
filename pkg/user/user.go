@@ -44,6 +44,8 @@ type Login struct {
 	Password string `json:"password"`
 	// The totp passcode of a user. Only needs to be provided when enabled.
 	TOTPPasscode string `json:"totp_passcode"`
+	// If true, the token returned will be valid a lot longer than default. Useful for "remember me" style logins.
+	LongToken bool `json:"long_token"`
 }
 
 type Status int
