@@ -3,6 +3,8 @@ import {saveLastVisited} from '@/helpers/saveLastVisited'
 import {store} from '@/store'
 
 import {saveListView, getListView} from '@/helpers/saveListView'
+import {parseDateOrString} from '@/helpers/time/parseDateOrString'
+import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 
 import HomeComponent from '../views/Home.vue'
 import NotFoundComponent from '../views/404.vue'
@@ -249,6 +251,12 @@ const router = createRouter({
 			path: '/tasks/by/upcoming',
 			name: 'tasks.range',
 			component: UpcomingTasksComponent,
+			props: route => ({
+				dateFrom: parseDateOrString(route.query.from, new Date()),
+				dateTo: parseDateOrString(route.query.to, getNextWeekDate()),
+				showNulls: route.query.showNulls === 'true',
+				showOverdue: route.query.showOverdue === 'true',
+			})
 		},
 		{
 			path: '/lists/new/:namespaceId/',

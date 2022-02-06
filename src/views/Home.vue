@@ -50,7 +50,12 @@
 				/>
 			</div>
 		</div>
-		<ShowTasks class="mt-4" :show-all="true" v-if="hasLists" :key="showTasksKey"/>
+		<ShowTasks
+			v-if="hasLists"
+			class="mt-4"
+			:show-all="true"
+			:key="showTasksKey"
+		/>
 	</div>
 </template>
 
@@ -83,13 +88,14 @@ const userInfo = computed(() => store.state.auth.info)
 const hasTasks = computed(() => store.state.hasTasks)
 const defaultListId = computed(() => store.state.auth.defaultListId)
 const defaultNamespaceId = computed(() => store.state.namespaces.namespaces?.[0]?.id || 0)
-const hasLists = computed (() => store.state.namespaces.namespaces?.[0]?.lists.length > 0)
+const hasLists = computed(() => store.state.namespaces.namespaces?.[0]?.lists.length > 0)
 const loading = computed(() => store.state.loading && store.state.loadingModule === 'tasks')
 const deletionScheduledAt = computed(() => parseDateOrNull(store.state.auth.info?.deletionScheduledAt))
 
 // This is to reload the tasks list after adding a new task through the global task add.
 // FIXME: Should use vuex (somehow?)
 const showTasksKey = ref(0)
+
 function updateTaskList() {
 	showTasksKey.value++
 }

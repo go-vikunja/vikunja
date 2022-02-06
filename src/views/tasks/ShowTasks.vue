@@ -62,10 +62,6 @@ import {useI18n} from 'vue-i18n'
 import {setTitle} from '@/helpers/setTitle'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 
-function getNextWeekDate() {
-	return new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
-}
-
 const store = useStore()
 const route = useRoute()
 const router = useRouter()
@@ -76,28 +72,35 @@ const showNothingToDo = ref<boolean>(false)
 
 setTimeout(() => showNothingToDo.value = true, 100)
 
-const props = defineProps({
-	showAll: Boolean,
-})
+// NOTE: You MUST provide either dateFrom and dateTo OR showAll for the component to actually show tasks.
+const {
+	dateFrom,
+	dateTo,
+	showAll = false,
+	showNulls = false,
+	showOverdue = false,
+} = defineProps<{
+	dateFrom?: Date | string,
+	dateTo?: Date | string,
+	showAll?: Boolean,
+	showNulls?: Boolean,
+	showOverdue?: Boolean,
+}>()
 
-const dateFrom = computed<Date | string>(() => parseDateOrString(route.query.from as string, new Date()))
-const dateTo = computed<Date | string>(() => parseDateOrString(route.query.to as string, getNextWeekDate()))
-const showNulls = computed(() => route.query.showNulls === 'true')
-const showOverdue = computed(() => route.query.showOverdue === 'true')
 const pageTitle = computed(() => {
 	let title = ''
 
 	// We need to define "key" because it is the first parameter in the array and we need the second
 	// eslint-disable-next-line no-unused-vars
-	const predefinedRange = Object.entries(DATE_RANGES).find(([key, value]) => dateFrom.value === value[0] && dateTo.value === value[1])
+	const predefinedRange = Object.entries(DATE_RANGES).find(([key, value]) => dateFrom === value[0] && dateTo === value[1])
 	if (typeof predefinedRange !== 'undefined') {
 		title = t(`input.datepickerRange.ranges.${predefinedRange[0]}`)
 	} else {
-		title = props.showAll
+		title = showAll
 			? t('task.show.titleCurrent')
 			: t('task.show.fromuntil', {
-				from: formatDate(dateFrom.value, 'PPP'),
-				until: formatDate(dateTo.value, 'PPP'),
+				from: formatDate(dateFrom, 'PPP'),
+				until: formatDate(dateTo, 'PPP'),
 			})
 	}
 
@@ -140,8 +143,8 @@ function setDate(dates: dateStrings) {
 		query: {
 			from: dates.dateFrom ?? dateFrom,
 			to: dates.dateTo ?? dateTo,
-			showOverdue: showOverdue.value ? 'true' : 'false',
-			showNulls: showNulls.value ? 'true' : 'false',
+			showOverdue: showOverdue ? 'true' : 'false',
+			showNulls: showNulls ? 'true' : 'false',
 		},
 	})
 }
@@ -181,10 +184,10 @@ async function loadPendingTasks(from: string, to: string) {
 		filter_value: ['false'],
 		filter_comparator: ['equals'],
 		filter_concat: 'and',
-		filter_include_nulls: showNulls.value,
+		filter_include_nulls: showNulls,
 	}
 
-	if (!props.showAll) {
+	if (!showAll) {
 		params.filter_by.push('due_date')
 		params.filter_value.push(to)
 		params.filter_comparator.push('less')
@@ -192,7 +195,7 @@ async function loadPendingTasks(from: string, to: string) {
 		// NOTE: Ideally we could also show tasks with a start or end date in the specified range, but the api
 		//       is not capable (yet) of combining multiple filters with 'and' and 'or'.
 
-		if (!showOverdue.value) {
+		if (!showOverdue) {
 			params.filter_by.push('due_date')
 			params.filter_value.push(from)
 			params.filter_comparator.push('greater')
@@ -203,7 +206,7 @@ async function loadPendingTasks(from: string, to: string) {
 }
 
 // FIXME: this modification should happen in the store
-function updateTasks(updatedTask) {
+function updateTasks(updatedTask: TaskModel) {
 	for (const t in tasks.value) {
 		if (tasks.value[t].id === updatedTask.id) {
 			tasks.value[t] = updatedTask
@@ -217,7 +220,7 @@ function updateTasks(updatedTask) {
 	}
 }
 
-watchEffect(() => loadPendingTasks(dateFrom.value as string, dateTo.value as string))
+watchEffect(() => loadPendingTasks(dateFrom as string, dateTo as string))
 watchEffect(() => setTitle(pageTitle.value))
 </script>
 

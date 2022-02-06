@@ -139,8 +139,8 @@ watch(
 		emitChanged()
 	},
 )
-watch(() => from, inputChanged)
-watch(() => to, inputChanged)
+watch(() => from.value, inputChanged)
+watch(() => to.value, inputChanged)
 
 function setDateRange(range: string[] | null) {
 	if (range === null) {
@@ -152,7 +152,6 @@ function setDateRange(range: string[] | null) {
 
 	from.value = range[0]
 	to.value = range[1]
-
 }
 
 const customRangeActive = computed<boolean>(() => {
