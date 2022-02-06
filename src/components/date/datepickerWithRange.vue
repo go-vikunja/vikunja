@@ -174,19 +174,19 @@ const buttonText = computed<string>(() => {
 <style lang="scss" scoped>
 .datepicker-with-range-container {
 	position: relative;
+}
 
-	:deep(.popup) {
-		z-index: 10;
-		margin-top: 1rem;
-		border-radius: $radius;
-		border: 1px solid var(--grey-200);
-		background-color: var(--white);
-		box-shadow: $shadow;
+:deep(.popup) {
+	z-index: 10;
+	margin-top: 1rem;
+	border-radius: $radius;
+	border: 1px solid var(--grey-200);
+	background-color: var(--white);
+	box-shadow: $shadow;
 
-		&.is-open {
-			width: 500px;
-			height: 320px;
-		}
+	&.is-open {
+		width: 500px;
+		height: 320px;
 	}
 }
 

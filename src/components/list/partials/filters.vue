@@ -588,7 +588,7 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .single-value-control {
 	display: flex;
 	align-items: center;
@@ -598,7 +598,7 @@ export default {
 	}
 }
 
-.datepicker-with-range-container .popup {
+:deep(.datepicker-with-range-container .popup) {
 	right: 0;
 }
 </style>
