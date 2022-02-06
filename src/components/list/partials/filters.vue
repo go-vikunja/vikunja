@@ -67,25 +67,49 @@
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.dueDate') }}</label>
 			<div class="control">
-				<datepicker-with-range :show-selected-on-button="true" @dateChanged="setDueDateFilter"/>
+				<datepicker-with-range @dateChanged="setDueDateFilter">
+					<template #trigger="{toggle, buttonText}">
+						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
+							{{ buttonText }}
+						</x-button>
+					</template>
+				</datepicker-with-range>
 			</div>
 		</div>
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.startDate') }}</label>
 			<div class="control">
-				<datepicker-with-range :show-selected-on-button="true" @dateChanged="setStartDateFilter"/>
+				<datepicker-with-range @dateChanged="setStartDateFilter">
+					<template #trigger="{toggle, buttonText}">
+						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
+							{{ buttonText }}
+						</x-button>
+					</template>
+				</datepicker-with-range>
 			</div>
 		</div>
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.endDate') }}</label>
 			<div class="control">
-				<datepicker-with-range :show-selected-on-button="true" @dateChanged="setEndDateFilter"/>
+				<datepicker-with-range @dateChanged="setEndDateFilter">
+					<template #trigger="{toggle, buttonText}">
+						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
+							{{ buttonText }}
+						</x-button>
+					</template>
+				</datepicker-with-range>
 			</div>
 		</div>
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.reminders') }}</label>
 			<div class="control">
-				<datepicker-with-range :show-selected-on-button="true" @dateChanged="setReminderFilter"/>
+				<datepicker-with-range @dateChanged="setReminderFilter">
+					<template #trigger="{toggle, buttonText}">
+						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
+							{{ buttonText }}
+						</x-button>
+					</template>
+				</datepicker-with-range>
 			</div>
 		</div>
 
@@ -308,7 +332,7 @@ export default {
 		setDateFilter(filterName, {dateFrom, dateTo}) {
 			dateFrom = parseDateOrString(dateFrom, null)
 			dateTo = parseDateOrString(dateTo, null)
-			
+
 			// Only filter if we have a date
 			if (dateFrom !== null && dateTo !== null) {
 

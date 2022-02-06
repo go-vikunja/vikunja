@@ -2,11 +2,7 @@
 	<div class="datepicker-with-range-container">
 		<popup>
 			<template #trigger="{toggle}">
-				<slot name="trigger" :toggle="toggle">
-					<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
-						{{ buttonText }}
-					</x-button>
-				</slot>
+				<slot name="trigger" :toggle="toggle" :buttonText="buttonText"></slot>
 			</template>
 			<template #content="{isOpen}">
 				<div class="datepicker-with-range" :class="{'is-open': isOpen}">
@@ -62,7 +58,8 @@
 							:overflow="true"
 							variant="hint-modal"
 						>
-							<card class="has-no-shadow how-it-works-modal" :title="$t('input.datepickerRange.math.title')">
+							<card class="has-no-shadow how-it-works-modal"
+								  :title="$t('input.datepickerRange.math.title')">
 								<p>
 									{{ $t('input.datepickerRange.math.intro') }}
 								</p>
@@ -74,10 +71,12 @@
 								</p>
 								<p>
 									<i18n-t keypath="input.datepickerRange.math.similar">
-										<a href="https://grafana.com/docs/grafana/latest/dashboards/time-range-controls/" rel="noreferrer noopener nofollow" target="_blank">
+										<a href="https://grafana.com/docs/grafana/latest/dashboards/time-range-controls/"
+										   rel="noreferrer noopener nofollow" target="_blank">
 											Grafana
 										</a>
-										<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#date-math" rel="noreferrer noopener nofollow" target="_blank">
+										<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#date-math"
+										   rel="noreferrer noopener nofollow" target="_blank">
 											Elasticsearch
 										</a>
 									</i18n-t>
@@ -125,7 +124,7 @@
 									</tr>
 									</tbody>
 								</table>
-								
+
 								<p>{{ $t('input.datepickerRange.math.someExamples') }}</p>
 								<table class="table">
 									<tbody>
@@ -187,13 +186,6 @@ const {t} = useI18n()
 
 const emit = defineEmits(['dateChanged'])
 
-const props = defineProps({
-	showSelectedOnButton: {
-		type: Boolean,
-		default: false,
-	},
-})
-
 // FIXME: This seems to always contain the default value - that breaks the picker
 const weekStart = computed<number>(() => store.state.auth.settings.weekStart ?? 0)
 const flatPickerConfig = computed(() => ({
@@ -209,7 +201,7 @@ const flatPickerConfig = computed(() => ({
 }))
 
 const showHowItWorks = ref(false)
-const exampleDate = format(new Date(), 'yyyy-MM-dd') 
+const exampleDate = format(new Date(), 'yyyy-MM-dd')
 
 const flatpickrRange = ref('')
 
@@ -268,7 +260,7 @@ const customRangeActive = computed<Boolean>(() => {
 })
 
 const buttonText = computed<string>(() => {
-	if(props.showSelectedOnButton && from.value !== '' && to.value !== '') {
+	if(from.value !== '' && to.value !== '') {
 		return t('input.datepickerRange.fromto', {
 			from: from.value,
 			to: to.value,
@@ -366,9 +358,9 @@ const buttonText = computed<string>(() => {
 	}
 }
 
-.how-it-works-modal{
+.how-it-works-modal {
 	font-size: 1rem;
-	
+
 	p {
 		display: inline-block !important;
 	}
