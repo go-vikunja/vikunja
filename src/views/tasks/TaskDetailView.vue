@@ -246,11 +246,11 @@
 					<!-- Comments -->
 					<comments :can-write="canWrite" :task-id="taskId"/>
 				</div>
-				<div class="column is-one-third action-buttons">
-					<a @click="$router.back()" class="is-fullwidth is-block has-text-centered mb-4" v-if="shouldShowClosePopup">
+				<div class="column is-one-third action-buttons" v-if="canWrite || shouldShowClosePopup">
+					<BaseButton @click="$router.back()" class="is-fullwidth is-block has-text-centered mb-4 has-text-primary" v-if="shouldShowClosePopup">
 						<icon icon="arrow-left"/>
 						{{ $t('task.detail.closePopup') }}
-					</a>
+					</BaseButton>
 					<template v-if="canWrite">
 						<x-button
 							:class="{'is-success': !task.done}"
@@ -386,33 +386,11 @@
 					</template>
 
 					<!-- Created / Updated [by] -->
-					<p class="created">
-						<time :datetime="formatISO(task.created)" v-tooltip="formatDate(task.created)">
-							<i18n-t keypath="task.detail.created">
-								<span>{{ formatDateSince(task.created) }}</span>
-								{{ task.createdBy.getDisplayName() }}
-							</i18n-t>
-						</time>
-						<template v-if="+new Date(task.created) !== +new Date(task.updated)">
-							<br/>
-							<!-- Computed properties to show the actual date every time it gets updated -->
-							<time :datetime="formatISO(task.updated)" v-tooltip="updatedFormatted">
-								<i18n-t keypath="task.detail.updated">
-									<span>{{ updatedSince }}</span>
-								</i18n-t>
-							</time>
-						</template>
-						<template v-if="task.done">
-							<br/>
-							<time :datetime="formatISO(task.doneAt)" v-tooltip="doneFormatted">
-								<i18n-t keypath="task.detail.doneAt">
-									<span>{{ doneSince }}</span>
-								</i18n-t>
-							</time>
-						</template>
-					</p>
+					<created-updated :task="task"/>
 				</div>
 			</div>
+			<!-- Created / Updated [by] -->
+			<created-updated :task="task" v-if="!canWrite && !shouldShowClosePopup"/>
 		</div>
 
 		<transition name="modal">
@@ -453,18 +431,22 @@ import description from '@/components/tasks/partials/description.vue'
 import ColorPicker from '../../components/input/colorPicker'
 import heading from '@/components/tasks/partials/heading.vue'
 import Datepicker from '@/components/input/datepicker.vue'
+import BaseButton from '@/components/base/BaseButton'
 import {playPop} from '@/helpers/playPop'
 import TaskSubscription from '@/components/misc/subscription.vue'
 import {CURRENT_LIST} from '@/store/mutation-types'
 
 import {uploadFile} from '@/helpers/attachments'
 import ChecklistSummary from '../../components/tasks/partials/checklist-summary'
+import CreatedUpdated from '@/components/tasks/partials/createdUpdated'
 
 
 export default {
 	name: 'TaskDetailView',
 	compatConfig: { ATTR_FALSE_VALUE: false },
 	components: {
+		BaseButton,
+		CreatedUpdated,
 		ChecklistSummary,
 		TaskSubscription,
 		Datepicker,
@@ -559,18 +541,6 @@ export default {
 		},
 		canWrite() {
 			return typeof this.task !== 'undefined' && typeof this.task.maxRight !== 'undefined' && this.task.maxRight > rights.READ
-		},
-		updatedSince() {
-			return this.formatDateSince(this.task.updated)
-		},
-		updatedFormatted() {
-			return this.formatDate(this.task.updated)
-		},
-		doneSince() {
-			return this.formatDateSince(this.task.doneAt)
-		},
-		doneFormatted() {
-			return this.formatDate(this.task.doneAt)
 		},
 		hasAttachments() {
 			return this.$store.state.attachments.attachments.length > 0
@@ -723,7 +693,7 @@ $flash-background-duration: 750ms;
 
   .subtitle {
     color: var(--grey-500);
-	margin-bottom: 1rem;
+    margin-bottom: 1rem;
 
     a {
       color: var(--grey-800);
@@ -751,15 +721,15 @@ $flash-background-duration: 750ms;
 
     .title {
       margin-bottom: 0;
-	}
+    }
 
-   .title.input {
-		// 1.8rem is the font-size, 1.125 is the line-height, .3rem padding everywhere, 1px border around the whole thing.
-		min-height: calc(1.8rem * 1.125 + .6rem + 2px);
+    .title.input {
+      // 1.8rem is the font-size, 1.125 is the line-height, .3rem padding everywhere, 1px border around the whole thing.
+      min-height: calc(1.8rem * 1.125 + .6rem + 2px);
 
-		@media screen and (max-width: $tablet) {
-			margin: 0 -.3rem .5rem -.3rem; // the title has 0.3rem padding - this make the text inside of it align with the rest
-		}
+      @media screen and (max-width: $tablet) {
+        margin: 0 -.3rem .5rem -.3rem; // the title has 0.3rem padding - this make the text inside of it align with the rest
+      }
     }
 
     .title.task-id {
@@ -823,7 +793,7 @@ $flash-background-duration: 750ms;
     }
 
     &.labels-list,
-	.assignees {
+    .assignees {
       :deep(.multiselect) {
         .input-wrapper {
           &:not(:focus-within):not(:hover) {
@@ -908,7 +878,7 @@ $flash-background-duration: 750ms;
   padding-bottom: 1rem;
 
   @media screen and (max-width: $desktop) {
-	padding-bottom: 0;
+    padding-bottom: 0;
   }
 
   .task-view * {
@@ -935,7 +905,7 @@ $flash-background-duration: 750ms;
 }
 
 .flash-background-enter-from,
-.flash-background-enter-active  {
+.flash-background-enter-active {
   animation: flash-background $flash-background-duration ease 1;
 }
 

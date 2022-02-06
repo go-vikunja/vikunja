@@ -1,7 +1,7 @@
 <template>
 	<div class="task-relations">
 		<x-button
-			v-if="Object.keys(relatedTasks).length > 0"
+			v-if="editEnabled && Object.keys(relatedTasks).length > 0"
 			@click="showNewRelationForm = !showNewRelationForm"
 			class="is-pulled-right add-task-relation-button"
 			:class="{'is-active': showNewRelationForm}"
