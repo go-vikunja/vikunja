@@ -124,16 +124,16 @@ const userAuthenticated = computed(() => store.state.auth.authenticated)
 const loading = computed(() => store.state[LOADING] && store.state[LOADING_MODULE] === 'tasks')
 
 interface dateStrings {
-	from: string,
-	to: string,
+	dateFrom: string,
+	dateTo: string,
 }
 
-function setDate({from, to}: dateStrings) {
+function setDate(dates: dateStrings) {
 	router.push({
 		name: route.name as string,
 		query: {
-			from: from ?? dateFrom,
-			to: to ?? dateTo,
+			from: dates.dateFrom ?? dateFrom,
+			to: dates.dateTo ?? dateTo,
 			showOverdue: showOverdue.value ? 'true' : 'false',
 			showNulls: showNulls.value ? 'true' : 'false',
 		},
@@ -160,7 +160,7 @@ function setShowNulls(show: boolean) {
 	})
 }
 
-async function loadPendingTasks(from:string, to:string) {
+async function loadPendingTasks(from: string, to: string) {
 	// Since this route is authentication only, users would get an error message if they access the page unauthenticated.
 	// Since this component is mounted as the home page before unauthenticated users get redirected
 	// to the login page, they will almost always see the error message.
