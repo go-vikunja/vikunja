@@ -70,17 +70,19 @@
 </template>
 
 <script lang="ts" setup>
+import {computed, ref, watch} from 'vue'
+import {useStore} from 'vuex'
+import {useI18n} from 'vue-i18n'
+
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
-import {computed, ref, watch} from 'vue'
-import {useI18n} from 'vue-i18n'
-import {store} from '@/store'
-import Popup from '@/components/misc/popup.vue'
 
+import Popup from '@/components/misc/popup.vue'
 import {dateRanges} from '@/components/date/dateRanges'
 import BaseButton from '@/components/base/BaseButton.vue'
 import DatemathHelp from '@/components/date/datemathHelp.vue'
 
+const store = useStore()
 const {t} = useI18n()
 
 const emit = defineEmits(['dateChanged'])
