@@ -54,7 +54,7 @@ import TaskModel from '@/models/task'
 import {useRoute, useRouter} from 'vue-router'
 import {formatDate} from '@/helpers/time/formatDate'
 import {useI18n} from 'vue-i18n'
-import {setTitle} from './helpers/setTitle'
+import {setTitle} from '@/helpers/setTitle'
 
 function getNextWeekDate() {
 	return new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
