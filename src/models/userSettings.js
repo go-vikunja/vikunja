@@ -11,6 +11,7 @@ export default class UserSettingsModel extends AbstractModel {
 			overdueTasksRemindersEnabled: true,
 			defaultListId: undefined,
 			weekStart: 0,
+			timezone: '',
 		}
 	}
 }

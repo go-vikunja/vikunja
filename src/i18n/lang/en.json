@@ -85,7 +85,8 @@
         "weekStartSunday": "Sunday",
         "weekStartMonday": "Monday",
         "language": "Language",
-        "defaultList": "Default List"
+        "defaultList": "Default List",
+        "timezone": "Time Zone"
       },
       "totp": {
         "title": "Two Factor Authentication",
