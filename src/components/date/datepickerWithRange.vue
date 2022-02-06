@@ -155,7 +155,7 @@ function setDateRange(range: string[] | null) {
 }
 
 const customRangeActive = computed<boolean>(() => {
-	return !Object.values(DATE_RANGES).some(el => from.value === el[0] && to.value === el[1])
+	return !Object.values(DATE_RANGES).some(range => from.value === range[0] && to.value === range[1])
 })
 
 const buttonText = computed<string>(() => {
