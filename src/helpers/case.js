@@ -45,6 +45,10 @@ export function objectToCamelCase(object) {
  */
 export function objectToSnakeCase(object) {
 
+	if (object instanceof Date) {
+		return object.toISOString()
+	}
+
 	// When calling recursively, this can be called without being and object or array in which case we just return the value
 	if (typeof object !== 'object') {
 		return object

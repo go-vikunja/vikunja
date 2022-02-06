@@ -45,21 +45,22 @@
 </template>
 
 <script setup lang="ts">
-import SingleTaskInList from '@/components/tasks/partials/singleTaskInList.vue'
-import {useStore} from 'vuex'
 import {computed, ref, watchEffect} from 'vue'
+import {useStore} from 'vuex'
+import {useRoute, useRouter} from 'vue-router'
+import {useI18n} from 'vue-i18n'
+
+import TaskModel from '@/models/task'
+import {formatDate} from '@/helpers/time/formatDate'
+import {setTitle} from '@/helpers/setTitle'
+import {objectToSnakeCase} from '@/helpers/case'
 
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
-import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
-
-import LlamaCool from '@/assets/llama-cool.svg?component'
+import SingleTaskInList from '@/components/tasks/partials/singleTaskInList.vue'
 import DatepickerWithRange from '@/components/date/datepickerWithRange.vue'
-import TaskModel from '@/models/task'
-import {useRoute, useRouter} from 'vue-router'
-import {formatDate} from '@/helpers/time/formatDate'
-import {useI18n} from 'vue-i18n'
-import {setTitle} from '@/helpers/setTitle'
 import {DATE_RANGES} from '@/components/date/dateRanges'
+import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
+import LlamaCool from '@/assets/llama-cool.svg?component'
 
 const store = useStore()
 const route = useRoute()
@@ -179,31 +180,31 @@ async function loadPendingTasks(from: string, to: string) {
 	}
 
 	const params = {
-		sort_by: ['due_date', 'id'],
-		order_by: ['desc', 'desc'],
-		filter_by: ['done'],
-		filter_value: ['false'],
-		filter_comparator: ['equals'],
-		filter_concat: 'and',
-		filter_include_nulls: showNulls,
+		sortBy: ['due_date', 'id'],
+		orderBy: ['desc', 'desc'],
+		filterBy: ['done'],
+		filterValue: ['false'],
+		filterComparator: ['equals'],
+		filterConcat: 'and',
+		filterIncludeNulls: showNulls,
 	}
 
 	if (!showAll) {
-		params.filter_by.push('due_date')
-		params.filter_value.push(to)
-		params.filter_comparator.push('less')
+		params.filterBy.push('due_date')
+		params.filterValue.push(to)
+		params.filterComparator.push('less')
 
 		// NOTE: Ideally we could also show tasks with a start or end date in the specified range, but the api
 		//       is not capable (yet) of combining multiple filters with 'and' and 'or'.
 
 		if (!showOverdue) {
-			params.filter_by.push('due_date')
-			params.filter_value.push(from)
-			params.filter_comparator.push('greater')
+			params.filterBy.push('due_date')
+			params.filterValue.push(from)
+			params.filterComparator.push('greater')
 		}
 	}
 
-	tasks.value = await store.dispatch('tasks/loadTasks', params)
+	tasks.value = await store.dispatch('tasks/loadTasks', objectToSnakeCase(params))
 }
 
 // FIXME: this modification should happen in the store
