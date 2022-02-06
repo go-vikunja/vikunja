@@ -260,9 +260,5 @@ const buttonText = computed<string>(() => {
 
 .how-it-works-modal {
 	font-size: 1rem;
-
-	p {
-		display: inline-block !important;
-	}
 }
 </style>
