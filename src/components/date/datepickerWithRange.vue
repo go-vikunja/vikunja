@@ -23,7 +23,7 @@
 							{{ $t('input.datepickerRange.from') }}
 							<div class="field has-addons">
 								<div class="control is-fullwidth">
-									<input class="input" type="text" v-model="from" @change="inputChanged"/>
+									<input class="input" type="text" v-model="from"/>
 								</div>
 								<div class="control">
 									<x-button icon="calendar" variant="secondary" data-toggle/>
@@ -34,7 +34,7 @@
 							{{ $t('input.datepickerRange.to') }}
 							<div class="field has-addons">
 								<div class="control is-fullwidth">
-									<input class="input" type="text" v-model="to" @change="inputChanged"/>
+									<input class="input" type="text" v-model="to"/>
 								</div>
 								<div class="control">
 									<x-button icon="calendar" variant="secondary" data-toggle/>
@@ -48,7 +48,9 @@
 
 						<p>
 							{{ $t('input.datepickerRange.math.canuse') }}
-							<BaseButton class="has-text-primary" @click="showHowItWorks = true">{{ $t('input.datepickerRange.math.learnhow') }}</BaseButton>
+							<BaseButton class="has-text-primary" @click="showHowItWorks = true">
+								{{ $t('input.datepickerRange.math.learnhow') }}
+							</BaseButton>
 						</p>
 
 						<modal
@@ -240,12 +242,13 @@ watch(
 		emitChanged()
 	},
 )
+watch(() => from, inputChanged)
+watch(() => to, inputChanged)
 
 function setDateRange(range: string[] | null) {
 	if (range === null) {
 		from.value = ''
 		to.value = ''
-		inputChanged()
 
 		return
 	}
@@ -253,7 +256,6 @@ function setDateRange(range: string[] | null) {
 	from.value = range[0]
 	to.value = range[1]
 
-	inputChanged()
 }
 
 const customRangeActive = computed<Boolean>(() => {
@@ -261,13 +263,13 @@ const customRangeActive = computed<Boolean>(() => {
 })
 
 const buttonText = computed<string>(() => {
-	if(from.value !== '' && to.value !== '') {
+	if (from.value !== '' && to.value !== '') {
 		return t('input.datepickerRange.fromto', {
 			from: from.value,
 			to: to.value,
 		})
 	}
-	
+
 	return t('task.show.select')
 })
 </script>
