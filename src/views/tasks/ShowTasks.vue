@@ -6,7 +6,7 @@
 		<p v-if="!showAll" class="show-tasks-options">
 			<datepicker-with-range @dateChanged="setDate">
 				<template #trigger="{toggle, buttonText}">
-					<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
+					<x-button @click.prevent.stop="toggle()" variant="primary" :shadow="false" class="mb-2">
 						{{ $t('task.show.select') }}
 					</x-button>
 				</template>
