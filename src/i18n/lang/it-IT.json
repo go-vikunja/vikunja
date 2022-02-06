@@ -31,7 +31,7 @@
       "username": "Nome utente",
       "usernameEmail": "Nome utente o indirizzo e-mail",
       "usernamePlaceholder": "es. frederick",
-      "email": "Indirizzo e-mail",
+      "email": "Email address",
       "emailPlaceholder": "per es. frederic{'@'}vikunja.io",
       "password": "Password",
       "passwordRepeat": "Digita di nuovo la tua password",
