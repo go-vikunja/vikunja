@@ -13,16 +13,16 @@
 		</p>
 		<p>
 			<i18n-t keypath="input.datepickerRange.math.similar">
-				<a
+				<BaseButton
 					href="https://grafana.com/docs/grafana/latest/dashboards/time-range-controls/"
 					rel="noreferrer noopener nofollow" target="_blank">
 					Grafana
-				</a>
-				<a
+				</BaseButton>
+				<BaseButton
 					href="https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#date-math"
 					rel="noreferrer noopener nofollow" target="_blank">
 					Elasticsearch
-				</a>
+				</BaseButton>
 			</i18n-t>
 		</p>
 		<p>{{ $t('misc.forExample') }}</p>
@@ -111,6 +111,7 @@
 
 <script lang="ts" setup>
 import {format} from 'date-fns'
+import BaseButton from '@/components/base/BaseButton.vue'
 
 const exampleDate = format(new Date(), 'yyyy-MM-dd')
 </script>
