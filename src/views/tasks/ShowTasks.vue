@@ -45,7 +45,6 @@
 </template>
 
 <script setup lang="ts">
-import {dateRanges} from '@/components/date/dateRanges'
 import SingleTaskInList from '@/components/tasks/partials/singleTaskInList.vue'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {mapState, useStore} from 'vuex'
@@ -61,6 +60,7 @@ import {useRoute, useRouter} from 'vue-router'
 import {formatDate} from '@/helpers/time/formatDate'
 import {useI18n} from 'vue-i18n'
 import {setTitle} from '@/helpers/setTitle'
+import {DATE_RANGES} from '@/components/date/dateRanges'
 
 function getNextWeekDate() {
 	return new Date((new Date()).getTime() + 7 * 24 * 60 * 60 * 1000)
@@ -89,7 +89,7 @@ const pageTitle = computed(() => {
 
 	// We need to define "key" because it is the first parameter in the array and we need the second
 	// eslint-disable-next-line no-unused-vars
-	const predefinedRange = Object.entries(dateRanges).find(([key, value]) => dateFrom.value === value[0] && dateTo.value === value[1])
+	const predefinedRange = Object.entries(DATE_RANGES).find(([key, value]) => dateFrom.value === value[0] && dateTo.value === value[1])
 	if (typeof predefinedRange !== 'undefined') {
 		title = t(`input.datepickerRange.ranges.${predefinedRange[0]}`)
 	} else {

@@ -1,4 +1,4 @@
-export const dateRanges = {
+export const DATE_RANGES = {
 	// Format: 
 	// Key is the title, as a translation string, the first entry of the value array 
 	// is the "from" date, the second one is the "to" date.
