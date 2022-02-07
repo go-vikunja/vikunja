@@ -31,7 +31,7 @@
       "username": "Benutzernamä",
       "usernameEmail": "Benutzernamä oder E-Mail Adrässe",
       "usernamePlaceholder": "z.B. Hansruedi",
-      "email": "Email address",
+      "email": "E-Mail-Adresse",
       "emailPlaceholder": "z.B. frederic{'@'}vikunja.io",
       "password": "Passwort",
       "passwordPlaceholder": "z.B. •••••••••••",
@@ -44,19 +44,20 @@
       "totpTitle": "Zweifaktor Authentifizierigs Ziffere",
       "totpPlaceholder": "z.B. 123456",
       "login": "Iihlogge",
-      "createAccount": "Create account",
+      "createAccount": "Account erstellen",
       "loginWith": "Iihlogge mit {provider}",
       "authenticating": "Authentifiziere…",
       "openIdStateError": "Status stimmt nid überiih, ich verweigerä wiiter zmache!",
       "openIdGeneralError": "Es ist ein Fehler bei der externen Authentisierung aufgetreten.",
       "logout": "Uuslogge",
-      "emailInvalid": "Please enter a valid email address.",
-      "usernameRequired": "Please provide a username.",
-      "passwordRequired": "Please provide a password.",
-      "showPassword": "Show the password",
-      "hidePassword": "Hide the password",
-      "noAccountYet": "Don't have an account yet?",
-      "alreadyHaveAnAccount": "Already have an account?"
+      "emailInvalid": "Bitte gib eine gültige E-Mail-Adresse ein.",
+      "usernameRequired": "Bitte gib einen Anmeldenamen ein.",
+      "passwordRequired": "Bitte gib ein Passwort ein.",
+      "showPassword": "Passwort anzeigen",
+      "hidePassword": "Passwort verbergen",
+      "noAccountYet": "Noch kein Account?",
+      "alreadyHaveAnAccount": "Hast du bereits einen Account?",
+      "remember": "Stay logged in"
     },
     "settings": {
       "title": "Iihstellige",
@@ -67,7 +68,7 @@
       "currentPasswordPlaceholder": "Diis jetzige Passwort",
       "passwordsDontMatch": "Dis neue Passwort und siini Bestätigung stimmed nid überiih.",
       "passwordUpdateSuccess": "Dis Passwort isch erfolgriich aktualisiert wordä.",
-      "updateEmailTitle": "Update Your Email Address",
+      "updateEmailTitle": "Aktualisiere deine E-Mail-Adresse",
       "updateEmailNew": "Neui E-Mail Adrässä",
       "updateEmailSuccess": "Dini E-Mail Adrässä isch erfolgriich gänderet worde. Mir hend dir en Link gschickt, um si zu bestätigä.",
       "general": {
@@ -84,7 +85,8 @@
         "weekStartSunday": "Sunntig",
         "weekStartMonday": "Määntig",
         "language": "Sproch",
-        "defaultList": "Standard Liste"
+        "defaultList": "Standard Liste",
+        "timezone": "Time Zone"
       },
       "totp": {
         "title": "Zweifaktor Authentifizierig",

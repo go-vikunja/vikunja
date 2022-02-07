@@ -34,7 +34,6 @@
       "email": "Email address",
       "emailPlaceholder": "p. ex. frederic{'@'}vikunja.io",
       "password": "Mot de passe",
-      "passwordRepeat": "Retape ton mot de passe",
       "passwordPlaceholder": "p. ex. •••••••••••",
       "forgotPassword": "Forgot your password?",
       "resetPassword": "Réinitialiser ton mot de passe",
@@ -45,12 +44,19 @@
       "totpTitle": "Code d’authentification à deux facteurs",
       "totpPlaceholder": "p. ex. 123456",
       "login": "Se connecter",
-      "register": "S’inscrire",
+      "createAccount": "Create account",
       "loginWith": "Se connecter avec {provider}",
       "authenticating": "Authentification…",
       "openIdStateError": "L’état ne correspond pas, impossible de continuer !",
       "openIdGeneralError": "Une erreur s'est produite lors de l'authentification contre un tiers.",
-      "logout": "Se déconnecter"
+      "logout": "Se déconnecter",
+      "emailInvalid": "Please enter a valid email address.",
+      "usernameRequired": "Please provide a username.",
+      "passwordRequired": "Please provide a password.",
+      "showPassword": "Show the password",
+      "hidePassword": "Hide the password",
+      "noAccountYet": "Don't have an account yet?",
+      "alreadyHaveAnAccount": "Already have an account?"
     },
     "settings": {
       "title": "Paramètres",
@@ -61,7 +67,7 @@
       "currentPasswordPlaceholder": "Ton mot de passe actuel",
       "passwordsDontMatch": "Le nouveau mot de passe et sa confirmation ne correspondent pas.",
       "passwordUpdateSuccess": "Mot de passe mis à jour.",
-      "updateEmailTitle": "Mets à jour ton adresse électronique",
+      "updateEmailTitle": "Update Your Email Address",
       "updateEmailNew": "Nouvelle adresse courriel",
       "updateEmailSuccess": "Mise à jour de l’adresse électronique. Clique sur le lien dans le courriel qui t’a été envoyé pour le confirmer.",
       "general": {
