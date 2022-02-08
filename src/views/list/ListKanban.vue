@@ -2,12 +2,12 @@
 	<ListWrapper class="list-kanban" :list-id="listId" viewName="kanban">
 		<template #header>
 			<div class="filter-container" v-if="isSavedFilter">
-			<div class="items">
-				<filter-popup
-					v-model="params"
-					@update:modelValue="loadBuckets"
-				/>
-			</div>
+				<div class="items">
+					<filter-popup
+						v-model="params"
+						@update:modelValue="loadBuckets"
+					/>
+				</div>
 			</div>
 		</template>
 
@@ -541,7 +541,10 @@ export default {
 
 			const updatedData = {
 				id: bucket.id,
-				position: calculateItemPosition(bucketBefore !== null ? bucketBefore.position : null, bucketAfter !== null ? bucketAfter.position : null),
+				position: calculateItemPosition(
+					bucketBefore !== null ? bucketBefore.position : null,
+					bucketAfter !== null ? bucketAfter.position : null,
+				),
 			}
 
 			this.$store.dispatch('kanban/updateBucket', updatedData)
@@ -562,9 +565,14 @@ export default {
 		},
 
 		shouldAcceptDrop(bucket) {
-			return bucket.id === this.sourceBucket || // When dragging from a bucket who has its limit reached, dragging should still be possible
-				bucket.limit === 0 || // If there is no limit set, dragging & dropping should always work
-				bucket.tasks.length < bucket.limit // Disallow dropping to buckets which have their limit reached
+			return (
+				// When dragging from a bucket who has its limit reached, dragging should still be possible
+				bucket.id === this.sourceBucket ||
+				// If there is no limit set, dragging & dropping should always work
+				bucket.limit === 0 ||
+				// Disallow dropping to buckets which have their limit reached
+				bucket.tasks.length < bucket.limit
+			)
 		},
 
 		dragstart(bucket) {
@@ -613,7 +621,6 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 }
 
 .kanban {
-
 	overflow-x: auto;
 	overflow-y: hidden;
 	height: calc(#{$crazy-height-calculation});
@@ -629,12 +636,21 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	}
 
 	.ghost {
-		background: transparent !important;
-		border: 3px dashed var(--grey-300) !important;
-		box-shadow: none !important;
+		position: relative;
 
 		* {
 			opacity: 0;
+		}
+		&::after {
+			content: '';
+			position: absolute;
+			display: block;
+			top: 0.25rem;
+			right: 0.5rem;
+			bottom: 0.25rem;
+			left: 0.5rem;
+			border: 3px dashed var(--grey-300);
+			border-radius: $radius;
 		}
 	}
 
@@ -656,12 +672,14 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 
 		.task-item {
 			background-color: var(--grey-100);
-			padding: .5rem .5rem 0;
-		}
+			padding: .25rem .5rem;
 
-
-		.move-card-move {
-			transition: transform $transition-duration;
+			&:first-of-type {
+				padding-top: .5rem;
+			}
+			&:last-of-type {
+				padding-bottom: .5rem;
+			}	
 		}
 
 		.no-move {
@@ -758,8 +776,13 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 }
 
 .task-dragging {
+	transform: rotateZ(3deg);
 	transition: transform 0.18s ease;
-	transform: rotateZ(3deg)
+}
+
+.move-card-move {
+	transform: rotateZ(3deg);
+	transition: transform $transition-duration;
 }
 
 .move-card-leave-from,
