@@ -407,10 +407,25 @@ export default {
 			// of the drop target works all the time.
 			const bucketIndex = parseInt(e.to.dataset.bucketIndex)
 
+
 			const newBucket = this.buckets[bucketIndex]
-			const task = newBucket.tasks[e.newIndex]
-			const taskBefore = newBucket.tasks[e.newIndex - 1] ?? null
-			const taskAfter = newBucket.tasks[e.newIndex + 1] ?? null
+
+			// HACK:
+			// this is a hacky workaround for a known problem of vue.draggable.next when using the footer slot
+			// the problem: https://github.com/SortableJS/vue.draggable.next/issues/108
+			// This hack doesn't remove the problem that the ghost item is still displayed below the footer
+			// It just makes releasing the item possible.
+
+			// The newIndex of the event doesn't count in the elements of the footer slot.
+			// This is why in case the length of the tasks is identical with the newIndex
+			// we have to remove 1 to get the correct index.
+			const newTaskIndex = newBucket.tasks.length === e.newIndex
+				? e.newIndex - 1
+				: e.newIndex
+
+			const task = newBucket.tasks[newTaskIndex]
+			const taskBefore = newBucket.tasks[newTaskIndex - 1] ?? null
+			const taskAfter = newBucket.tasks[newTaskIndex + 1] ?? null
 
 			const newTask = cloneDeep(task) // cloning the task to avoid vuex store mutations
 			newTask.bucketId = newBucket.id,
