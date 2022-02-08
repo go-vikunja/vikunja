@@ -92,52 +92,6 @@
     "wait-on": "6.0.1",
     "workbox-cli": "6.5.3"
   },
-  "eslintConfig": {
-    "root": true,
-    "env": {
-      "browser": true,
-      "es2021": true,
-      "node": true,
-      "vue/setup-compiler-macros": true
-    },
-    "extends": [
-      "eslint:recommended",
-      "plugin:vue/vue3-essential",
-      "@vue/typescript"
-    ],
-    "rules": {
-      "vue/html-quotes": [
-        "error",
-        "double"
-      ],
-      "quotes": [
-        "error",
-        "single"
-      ],
-      "comma-dangle": [
-        "error",
-        "always-multiline"
-      ],
-      "semi": [
-        "error",
-        "never"
-      ],
-      "vue/script-setup-uses-vars": "error",
-      "vue/multi-word-component-names": 0
-    },
-    "parser": "vue-eslint-parser",
-    "parserOptions": {
-      "parser": "@typescript-eslint/parser",
-      "ecmaVersion": 2022
-    },
-    "ignorePatterns": [
-      "*.test.*",
-      "cypress/*"
-    ],
-    "globals": {
-      "defineProps": "readonly"
-    }
-  },
   "postcss": {
     "plugins": {
       "autoprefixer": {}
