@@ -123,61 +123,59 @@
 								</a>
 							</dropdown>
 						</div>
-						<div
-							:ref="(el) => setTaskContainerRef(bucket.id, el)"
-							@scroll="($event) => handleTaskContainerScroll(bucket.id, bucket.listId, $event.target)"
-							class="tasks"
+
+						<draggable
+							v-bind="dragOptions"
+							:modelValue="bucket.tasks"
+							@update:modelValue="(tasks) => updateTasks(bucket.id, tasks)"
+							@start="() => dragstart(bucket)"
+							@end="updateTaskPosition"
+							:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
+							:disabled="!canWrite"
+							:data-bucket-index="bucketIndex"
+							tag="transition-group"
+							:item-key="(task) => `bucket${bucket.id}-task${task.id}`"
+							:component-data="getTaskDraggableTaskComponentData(bucket)"
 						>
-							<draggable
-								v-bind="dragOptions"
-								:modelValue="bucket.tasks"
-								@update:modelValue="(tasks) => updateTasks(bucket.id, tasks)"
-								@start="() => dragstart(bucket)"
-								@end="updateTaskPosition"
-								:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
-								:disabled="!canWrite"
-								:data-bucket-index="bucketIndex"
-								tag="transition-group"
-								:item-key="(task) => `bucket${bucket.id}-task${task.id}`"
-								:component-data="taskDraggableTaskComponentData"
-							>
-								<template #item="{element: task}">
-									<kanban-card :task="task"/>
-								</template>
-							</draggable>
-						</div>
-						<div class="bucket-footer" v-if="canWrite">
-							<div class="field" v-if="showNewTaskInput[bucket.id]">
-								<div class="control" :class="{'is-loading': loading}">
-									<input
-										class="input"
-										:disabled="loading || null"
-										@focusout="toggleShowNewTaskInput(bucket.id)"
-										@keyup.enter="addTaskToBucket(bucket.id)"
-										@keyup.esc="toggleShowNewTaskInput(bucket.id)"
-										:placeholder="$t('list.kanban.addTaskPlaceholder')"
-										type="text"
-										v-focus.always
-										v-model="newTaskText"
-									/>
+							<template #footer>
+								<div class="bucket-footer" v-if="canWrite">
+									<div class="field" v-if="showNewTaskInput[bucket.id]">
+										<div class="control" :class="{'is-loading': loading}">
+											<input
+												class="input"
+												:disabled="loading || undefined"
+												@focusout="toggleShowNewTaskInput(bucket.id)"
+												@keyup.enter="addTaskToBucket(bucket.id)"
+												@keyup.esc="toggleShowNewTaskInput(bucket.id)"
+												:placeholder="$t('list.kanban.addTaskPlaceholder')"
+												type="text"
+												v-focus.always
+												v-model="newTaskText"
+											/>
+										</div>
+										<p class="help is-danger" v-if="newTaskError[bucket.id] && newTaskText === ''">
+											{{ $t('list.create.addTitleRequired') }}
+										</p>
+									</div>
+									<x-button
+										@click="toggleShowNewTaskInput(bucket.id)"
+										class="is-fullwidth has-text-centered"
+										:shadow="false"
+										v-else
+										icon="plus"
+										variant="secondary"
+									>
+										{{ bucket.tasks.length === 0 ? $t('list.kanban.addTask') : $t('list.kanban.addAnotherTask') }}
+									</x-button>
 								</div>
-								<p class="help is-danger" v-if="newTaskError[bucket.id] && newTaskText === ''">
-									{{ $t('list.create.addTitleRequired') }}
-								</p>
-							</div>
-							<x-button
-								@click="toggleShowNewTaskInput(bucket.id)"
-								class="is-transparent is-fullwidth has-text-centered"
-								:shadow="false"
-								v-if="!showNewTaskInput[bucket.id]"
-								icon="plus"
-								variant="secondary"
-							>
-								{{
-									bucket.tasks.length === 0 ? $t('list.kanban.addTask') : $t('list.kanban.addAnotherTask')
-								}}
-							</x-button>
-						</div>
+							</template>
+
+							<template #item="{element: task}">
+								<div class="task-item">
+									<kanban-card class="kanban-card" :task="task"/>
+								</div>
+							</template>
+						</draggable>
 					</div>
 				</template>
 			</draggable>
@@ -197,10 +195,10 @@
 					v-model="newBucketTitle"
 				/>
 				<x-button
+					v-else
 					@click="() => showNewBucketInput = true"
 					:shadow="false"
 					class="is-transparent is-fullwidth has-text-centered"
-					v-else
 					variant="secondary"
 					icon="plus"
 				>
@@ -313,6 +311,20 @@ export default {
 		},
 	},
 	computed: {
+		getTaskDraggableTaskComponentData() {
+			return (bucket) => ({
+				ref: (el) => this.setTaskContainerRef(bucket.id, el),
+				onScroll: (event) => this.handleTaskContainerScroll(bucket.id, bucket.listId, event.target),
+				type: 'transition',
+				tag: 'div',
+				name: !this.drag ? 'move-card' : null,
+				class: [
+					'tasks',
+					{'dragging-disabled': !this.canWrite},
+				],
+			})
+		},
+
 		isSavedFilter() {
 			return this.list.isSavedFilter && !this.list.isSavedFilter()
 		},
@@ -329,17 +341,6 @@ export default {
 				name: !this.dragBucket ? 'move-bucket' : null,
 				class: [
 					'kanban-bucket-container',
-					{'dragging-disabled': !this.canWrite},
-				],
-			}
-		},
-		taskDraggableTaskComponentData() {
-			return {
-				type: 'transition',
-				tag: 'div',
-				name: !this.drag ? 'move-card' : null,
-				class: [
-					'dropper',
 					{'dragging-disabled': !this.canWrite},
 				],
 			}
@@ -610,7 +611,6 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 
 	&-bucket-container {
 		display: flex;
-		align-items: flex-start;
 	}
 
 	.ghost {
@@ -624,7 +624,6 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	}
 
 	.bucket {
-		background-color: var(--grey-100);
 		border-radius: $radius;
 		position: relative;
 
@@ -632,21 +631,19 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		max-height: 100%;
 		min-height: 20px;
 		width: $bucket-width;
+		display: flex;
+		flex-direction: column;
 
 		.tasks {
-			max-height: calc(#{$crazy-height-calculation-tasks});
-			overflow: auto;
-
-			@media screen and (max-width: $tablet) {
-				max-height: calc(#{$crazy-height-calculation-tasks} - #{$filter-container-height});
-			}
-
-			.dropper {
-				&, > div {
-					min-height: 40px;
-				}
-			}
+			overflow: hidden auto;
+			height: 100%;
 		}
+
+		.task-item {
+			background-color: var(--grey-100);
+			padding: .5rem .5rem 0;
+		}
+
 
 		.move-card-move {
 			transition: transform $transition-duration;
@@ -682,10 +679,11 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 
 		&.is-collapsed {
-			transform: rotate(90deg) translateX(math.div($bucket-width, 2) - math.div($bucket-header-height, 2));
+			align-self: flex-start;
+			transform: rotate(90deg) translateY(-100%);
+			transform-origin: top left;
 			// Using negative margins instead of translateY here to make all other buckets fill the empty space
-			margin-left: (math.div($bucket-width, 2) - math.div($bucket-header-height, 2)) * -1;
-			margin-right: calc(#{(math.div($bucket-width, 2) - math.div($bucket-header-height, 2)) * -1} + #{$bucket-right-margin});
+			margin-right: calc((#{$bucket-width} - #{$bucket-header-height} - #{$bucket-right-margin}) * -1);
 			cursor: pointer;
 
 			.tasks, .bucket-footer {
@@ -695,6 +693,8 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	}
 
 	.bucket-header {
+		background-color: var(--grey-100);
+		height: min-content;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -724,7 +724,13 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	}
 
 	.bucket-footer {
+		position: sticky;
+		bottom: 0;
+		height: min-content;
 		padding: .5rem;
+		background-color: var(--grey-100);
+		border-bottom-left-radius: $radius;
+		border-bottom-right-radius: $radius;
 
 		.button {
 			background-color: transparent;
