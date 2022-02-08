@@ -56,7 +56,8 @@
       "showPassword": "Mostra la password",
       "hidePassword": "Nascondi la password",
       "noAccountYet": "Non hai un account?",
-      "alreadyHaveAnAccount": "Hai già un account?"
+      "alreadyHaveAnAccount": "Hai già un account?",
+      "remember": "Resta connesso"
     },
     "settings": {
       "title": "Impostazioni",
@@ -84,7 +85,8 @@
         "weekStartSunday": "Domenica",
         "weekStartMonday": "Lunedì",
         "language": "Lingua",
-        "defaultList": "Lista predefinita"
+        "defaultList": "Lista predefinita",
+        "timezone": "Fuso Orario"
       },
       "totp": {
         "title": "Autenticazione a due fattori",

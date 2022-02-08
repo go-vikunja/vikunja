@@ -56,7 +56,8 @@
       "showPassword": "Show the password",
       "hidePassword": "Hide the password",
       "noAccountYet": "Don't have an account yet?",
-      "alreadyHaveAnAccount": "Already have an account?"
+      "alreadyHaveAnAccount": "Already have an account?",
+      "remember": "Stay logged in"
     },
     "settings": {
       "title": "Nastavení",
@@ -84,7 +85,8 @@
         "weekStartSunday": "Neděle",
         "weekStartMonday": "Pondělí",
         "language": "Jazyk",
-        "defaultList": "Výchozí seznam"
+        "defaultList": "Výchozí seznam",
+        "timezone": "Time Zone"
       },
       "totp": {
         "title": "Dvoufaktorové ověření",
