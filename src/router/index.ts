@@ -252,8 +252,8 @@ const router = createRouter({
 			name: 'tasks.range',
 			component: UpcomingTasksComponent,
 			props: route => ({
-				dateFrom: parseDateOrString(route.query.from, new Date()),
-				dateTo: parseDateOrString(route.query.to, getNextWeekDate()),
+				dateFrom: parseDateOrString(route.query.from as string, new Date()),
+				dateTo: parseDateOrString(route.query.to as string, getNextWeekDate()),
 				showNulls: route.query.showNulls === 'true',
 				showOverdue: route.query.showOverdue === 'true',
 			}),
