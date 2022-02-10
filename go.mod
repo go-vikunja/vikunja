@@ -60,7 +60,7 @@ require (
 	github.com/tkuchiki/go-timezone v0.2.2
 	github.com/ulule/limiter/v3 v3.9.0
 	github.com/yuin/goldmark v1.4.5
-	golang.org/x/crypto v0.0.0-20220209155544-dad33157f4bf
+	golang.org/x/crypto v0.0.0-20220209195652-db638375bc3a
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
