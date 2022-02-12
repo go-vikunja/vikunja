@@ -1,4 +1,4 @@
-import { createI18n } from 'vue-i18n'
+import {createI18n} from 'vue-i18n'
 import langEN from './lang/en.json'
 
 export const i18n = createI18n({
@@ -19,6 +19,9 @@ export const availableLanguages = {
 	'vi-VN': 'Tiếng Việt',
 	'it-IT': 'Italiano',
 	'cs-CZ': 'Čeština',
+	'pl-PL': 'Polski',
+	'nl-NL': 'Nederlands',
+	'pt-PT': 'Português',
 }
 
 const loadedLanguages = ['en'] // our default language that is preloaded
@@ -30,10 +33,10 @@ const setI18nLanguage = lang => {
 }
 
 export const loadLanguageAsync = lang => {
-	if(!lang) {
-		return 
+	if (!lang) {
+		return
 	}
-	
+
 	if (
 		// If the same language
 		i18n.global.locale === lang ||
