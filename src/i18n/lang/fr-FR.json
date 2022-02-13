@@ -335,6 +335,7 @@
       "archiveText": "Tu ne pourras pas modifier cet espace de noms ou créer de nouvelles listes tant que tu ne l’auras pas désarchivé. Ceci archivera également toutes les listes de cet espace de noms.",
       "unarchiveText": "Tu pourras créer de nouvelles listes ou les modifier.",
       "success": "Espace de noms archivé.",
+      "unarchiveSuccess": "The namespace was successfully un-archived.",
       "description": "L’archivage d’un espace de noms signifie qu’on ne peut pas créer de nouvelles listes dans cet espace, ni le modifier."
     },
     "delete": {

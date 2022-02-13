@@ -335,6 +335,7 @@
       "archiveText": "Bạn sẽ không thể chỉnh sửa góc làm việc này hoặc tạo danh sách mới cho đến khi bạn bỏ lưu trữ nó. Điều này cũng sẽ lưu trữ tất cả các danh sách trong góc làm việc này.",
       "unarchiveText": "Bạn có thể tạo danh sách mới hoặc chỉnh sửa nó.",
       "success": "Góc làm việc đã lưu trữ thành công.",
+      "unarchiveSuccess": "The namespace was successfully un-archived.",
       "description": "Nếu một góc làm việc được lưu trữ, bạn không thể tạo thêm danh sách hoặc chỉnh sửa nó."
     },
     "delete": {

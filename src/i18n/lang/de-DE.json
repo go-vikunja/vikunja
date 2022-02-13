@@ -335,6 +335,7 @@
       "archiveText": "Du kannst diesen Namespace nicht mehr bearbeiten oder neue Listen erstellen, bis du die Archivierung rückgängig machst. Das gilt auch für alle Listen in diesem Namespace.",
       "unarchiveText": "Du kannst neue Aufgaben erstellen oder diese bearbeiten.",
       "success": "Der Namespace wurde erfolgreich archiviert.",
+      "unarchiveSuccess": "The namespace was successfully un-archived.",
       "description": "In einem archivierten Namespace können Listen weder angelegt noch editiert werden."
     },
     "delete": {

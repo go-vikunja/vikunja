@@ -335,6 +335,7 @@
       "archiveText": "Non sarà possibile modificare questo namespace o creare nuove liste fino a quando non verrà disarchiviato. Questo archivierà anche tutte le liste in questo namespace.",
       "unarchiveText": "Potrai creare nuove liste o modificarle.",
       "success": "Namespace creato.",
+      "unarchiveSuccess": "The namespace was successfully un-archived.",
       "description": "Se un namespace è archiviato, non è possibile creare nuove liste o modificarlo."
     },
     "delete": {

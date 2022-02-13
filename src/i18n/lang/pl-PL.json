@@ -335,6 +335,7 @@
       "archiveText": "Nie będziesz mógł tworzyć nowych list ani edytować tej sekcji, dopóki nie cofniesz archiwizacji. Ta operacja zarchiwizuje również wszystkie listy należące do tej sekcji.",
       "unarchiveText": "Będziesz mógł tworzyć nowe listy i je edytować.",
       "success": "Sekcja została pomyślnie zarchiwizowana.",
+      "unarchiveSuccess": "The namespace was successfully un-archived.",
       "description": "Jeśli sekcja jest zarchiwizowana, nie można edytować ani tworzyć nowych list."
     },
     "delete": {

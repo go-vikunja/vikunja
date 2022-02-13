@@ -335,6 +335,7 @@
       "archiveText": "Du hesch kei möglichkeit meh de Namensruum z'bearbeite oder neui Listene drin z'erstelle, bis du si wider ent-archiviert hesch. Das archiviert au grad alli Liste im Namensruum.",
       "unarchiveText": "Du chasch neui Liste erstelle oder bearbeite.",
       "success": "De Namensruum isch erfolgriich archiviert worde.",
+      "unarchiveSuccess": "The namespace was successfully un-archived.",
       "description": "Wenn en Namensruum archiviert isch, chasch du kei neui Liste erstelle oder die bearbeite."
     },
     "delete": {
