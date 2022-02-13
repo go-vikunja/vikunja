@@ -24,6 +24,15 @@ export default class ListModel extends AbstractModel {
 			this.subscription = new SubscriptionModel(this.subscription)
 		}
 
+		/** @type {number} */
+		this.id
+
+		/** @type {boolean} */
+		this.isArchived
+
+		/** @type {number} */
+		this.position
+
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
 	}

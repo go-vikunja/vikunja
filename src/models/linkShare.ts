@@ -1,7 +1,7 @@
 import AbstractModel from './abstractModel'
 import UserModel from './user'
 
-export default class ListModel extends AbstractModel {
+export default class LinkShareModel extends AbstractModel {
 
 	constructor(data) {
 		// The constructor of AbstractModel handles all the default parsing.

@@ -11,6 +11,7 @@ export default class NamespaceModel extends AbstractModel {
 			this.hexColor = '#' + this.hexColor
 		}
 
+		/** @type {ListModel[]} */
 		this.lists = this.lists.map(l => {
 			return new ListModel(l)
 		})
@@ -20,6 +21,15 @@ export default class NamespaceModel extends AbstractModel {
 		if(typeof this.subscription !== 'undefined' && this.subscription !== null) {
 			this.subscription = new SubscriptionModel(this.subscription)
 		}
+
+		/** @type {number} */
+		this.id
+
+		/** @type {string} */
+		this.title
+
+		/** @type {boolean} */
+		this.isArchived
 
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)

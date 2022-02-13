@@ -8,6 +8,9 @@ export default class AttachmentModel extends AbstractModel {
 		this.createdBy = new UserModel(this.createdBy)
 		this.file = new FileModel(this.file)
 		this.created = new Date(this.created)
+
+		/** @type {number} */
+		this.id
 	}
 
 	defaults() {

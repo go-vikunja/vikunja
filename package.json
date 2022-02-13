@@ -23,6 +23,7 @@
     "@sentry/tracing": "6.19.3",
     "@sentry/vue": "6.19.3",
     "@types/is-touch-device": "1.0.0",
+    "@types/sortablejs": "^1.10.7",
     "@vue/compat": "3.2.31",
     "@vueuse/core": "8.2.3",
     "@vueuse/router": "8.2.3",

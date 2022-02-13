@@ -156,138 +156,135 @@
 	</aside>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
-
-import {mapState} from 'vuex'
+<script setup lang="ts">
+import {ref, computed, onMounted, onBeforeMount} from 'vue'
+import {useStore} from 'vuex'
 import draggable from 'vuedraggable'
+import { SortableEvent } from 'sortablejs'
 
 import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
 import NamespaceSettingsDropdown from '@/components/namespace/namespace-settings-dropdown.vue'
 import PoweredByLink from '@/components/home/PoweredByLink.vue'
 import Logo from '@/components/home/Logo.vue'
 
-import {CURRENT_LIST, MENU_ACTIVE, LOADING, LOADING_MODULE} from '@/store/mutation-types'
+import {MENU_ACTIVE} from '@/store/mutation-types'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
+import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
+import { useEventListener } from '@vueuse/core'
+import NamespaceModel from '@/models/namespace'
+import ListModel from '@/models/list'
+
+const drag = ref(false)
+const dragOptions = {
+	animation: 100,
+	ghostClass: 'ghost',
+}
+
+const store = useStore()
+const currentList = computed(() => store.state.currentList)
+const menuActive = computed(() => store.state.menuActive)
+const loading = computed(() => store.state.loading && store.state.loadingModule === 'namespaces')
 
 
-export default defineComponent({
-	name: 'navigation',
-
-	components: {
-		ListSettingsDropdown,
-		NamespaceSettingsDropdown,
-		draggable,
-		Logo,
-		PoweredByLink,
-	},
-
-	data() {
-		return {
-			listsVisible: {},
-			drag: false,
-			dragOptions: {
-				animation: 100,
-				ghostClass: 'ghost',
-			},
-			listUpdating: {},
-		}
-	},
-	computed: {
-		...mapState({
-			namespaces: state => state.namespaces.namespaces.filter(n => !n.isArchived),
-			currentList: CURRENT_LIST,
-			background: 'background',
-			menuActive: MENU_ACTIVE,
-			loading: state => state[LOADING] && state[LOADING_MODULE] === 'namespaces',
-		}),
-		activeLists() {
-			return this.namespaces.map(({lists}) => lists?.filter(item => typeof item !== 'undefined' && !item.isArchived))
-		},
-		namespaceTitles() {
-			return this.namespaces.map((namespace) => this.getNamespaceTitle(namespace))
-		},
-		namespaceListsCount() {
-			return this.namespaces.map((_, index) => this.activeLists[index]?.length ?? 0)
-		},
-	},
-	beforeCreate() {
-		// FIXME: async action in beforeCreate, might be unfinished when component mounts
-		this.$store.dispatch('namespaces/loadNamespaces')
-			.then(namespaces => {
-				namespaces.forEach(n => {
-					if (typeof this.listsVisible[n.id] === 'undefined') {
-						this.listsVisible[n.id] = true
-					}
-				})
-			})
-	},
-	created() {
-		window.addEventListener('resize', this.resize)
-	},
-	mounted() {
-		this.resize()
-	},
-	methods: {
-		toggleFavoriteList(list) {
-			// The favorites pseudo list is always favorite
-			// Archived lists cannot be marked favorite
-			if (list.id === -1 || list.isArchived) {
-				return
-			}
-			this.$store.dispatch('lists/toggleListFavorite', list)
-		},
-		resize() {
-			// Hide the menu by default on mobile
-			this.$store.commit(MENU_ACTIVE, window.innerWidth >= 770)
-		},
-		toggleLists(namespaceId) {
-			this.listsVisible[namespaceId] = !this.listsVisible[namespaceId]
-		},
-		updateActiveLists(namespace, activeLists) {
-			// This is a bit hacky: since we do have to filter out the archived items from the list
-			// for vue draggable updating it is not as simple as replacing it.
-			// To work around this, we merge the active lists with the archived ones. Doing so breaks the order
-			// because now all archived lists are sorted after the active ones. This is fine because they are sorted 
-			// later when showing them anyway, and it makes the merging happening here a lot easier.
-			const lists = [
-				...activeLists,
-				...namespace.lists.filter(l => l.isArchived),
-			]
-
-			const newNamespace = {
-				...namespace,
-				lists,
-			}
-
-			this.$store.commit('namespaces/setNamespaceById', newNamespace)
-		},
-
-		async saveListPosition(e) {
-			const namespaceId = parseInt(e.to.dataset.namespaceId)
-			const newNamespaceIndex = parseInt(e.to.dataset.namespaceIndex)
-				
-			const listsActive = this.activeLists[newNamespaceIndex]
-			const list = listsActive[e.newIndex]
-			const listBefore = listsActive[e.newIndex - 1] ?? null
-			const listAfter = listsActive[e.newIndex + 1] ?? null
-			this.listUpdating[list.id] = true
-
-			const position = calculateItemPosition(listBefore !== null ? listBefore.position : null, listAfter !== null ? listAfter.position : null)
-
-			try {
-				// create a copy of the list in order to not violate vuex mutations
-				await this.$store.dispatch('lists/updateList', {
-					...list,
-					position,
-					namespaceId,
-				})
-			} finally {
-				this.listUpdating[list.id] = false
-			}
-		},
-	},
+const namespaces = computed(() => {
+	return (store.state.namespaces.namespaces as NamespaceModel[]).filter(n => !n.isArchived)
 })
+const activeLists = computed(() => {
+	return namespaces.value.map(({lists}) => {
+		return lists?.filter(item => {
+			return typeof item !== 'undefined' && !item.isArchived
+		})
+	})
+})
+	
+const namespaceTitles = computed(() => {
+	return namespaces.value.map((namespace) => getNamespaceTitle(namespace))
+})
+
+const namespaceListsCount = computed(() => {
+	return namespaces.value.map((_, index) => activeLists.value[index]?.length ?? 0)
+})
+
+
+useEventListener('resize', resize)
+onMounted(() => resize())
+
+
+function toggleFavoriteList(list: ListModel) {
+	// The favorites pseudo list is always favorite
+	// Archived lists cannot be marked favorite
+	if (list.id === -1 || list.isArchived) {
+		return
+	}
+	store.dispatch('lists/toggleListFavorite', list)
+}
+
+function resize() {
+	// Hide the menu by default on mobile
+	store.commit(MENU_ACTIVE, window.innerWidth >= 770)
+}
+
+function toggleLists(namespaceId: number) {
+	listsVisible.value[namespaceId] = !listsVisible.value[namespaceId]
+}
+
+const listsVisible = ref<{ [id: NamespaceModel['id']]: boolean}>({})
+// FIXME: async action will be unfinished when component mounts
+onBeforeMount(async () => {
+	const namespaces = await store.dispatch('namespaces/loadNamespaces') as NamespaceModel[]
+	namespaces.forEach(n => {
+		if (typeof listsVisible.value[n.id] === 'undefined') {
+			listsVisible.value[n.id] = true
+		}
+	})
+})
+
+function updateActiveLists(namespace: NamespaceModel, activeLists: ListModel[]) {
+	// This is a bit hacky: since we do have to filter out the archived items from the list
+	// for vue draggable updating it is not as simple as replacing it.
+	// To work around this, we merge the active lists with the archived ones. Doing so breaks the order
+	// because now all archived lists are sorted after the active ones. This is fine because they are sorted 
+	// later when showing them anyway, and it makes the merging happening here a lot easier.
+	const lists = [
+		...activeLists,
+		...namespace.lists.filter(l => l.isArchived),
+	]
+
+	store.commit('namespaces/setNamespaceById', {
+		...namespace,
+		lists,
+	})
+}
+
+const listUpdating = ref<{ [id: NamespaceModel['id']]: boolean}>({})
+async function saveListPosition(e: SortableEvent) {
+	if (!e.newIndex) return
+
+	const namespaceId = parseInt(e.to.dataset.namespaceId as string)
+	const newNamespaceIndex = parseInt(e.to.dataset.namespaceIndex as string)
+		
+	const listsActive = activeLists.value[newNamespaceIndex]
+	const list = listsActive[e.newIndex]
+	const listBefore = listsActive[e.newIndex - 1] ?? null
+	const listAfter = listsActive[e.newIndex + 1] ?? null
+	listUpdating.value[list.id] = true
+
+	const position = calculateItemPosition(
+		listBefore !== null ? listBefore.position : null,
+		listAfter !== null ? listAfter.position : null,
+	)
+
+	try {
+		// create a copy of the list in order to not violate vuex mutations
+		await store.dispatch('lists/updateList', {
+			...list,
+			position,
+			namespaceId,
+		})
+	} finally {
+		listUpdating.value[list.id] = false
+	}
+}
 </script>
 
 <style lang="scss" scoped>
