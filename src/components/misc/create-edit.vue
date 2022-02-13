@@ -30,7 +30,7 @@
 				<x-button
 					v-if="primaryLabel !== ''"
 					variant="primary"
-					@click.prevent.stop="primary"
+					@click.prevent.stop="primary()"
 					:icon="primaryIcon"
 					:disabled="primaryDisabled"
 				>
@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { i18n } from '@/i18n'
+import { useI18n } from 'vue-i18n'
 
 defineProps({
 	title: {
@@ -52,7 +52,8 @@ defineProps({
 	primaryLabel: {
 		type: String,
 		default() {
-			return i18n.global.t('misc.create')
+			const {t} = useI18n()
+			return t('misc.create')
 		},
 	},
 	primaryIcon: {
@@ -76,6 +77,7 @@ defineProps({
 		default: false,
 	},
 })
+
 const emit = defineEmits(['create', 'primary', 'tertiary'])
 
 function primary() {
