@@ -58,7 +58,7 @@
 		</x-button>
 
 		<p>
-			<BaseButton :href="CALDAV_DOCS" rel="noreferrer noopener nofollow" target="_blank">
+			<BaseButton :href="CALDAV_DOCS" target="_blank">
 				{{ $t('user.settings.caldav.more') }}
 			</BaseButton>
 		</p>
