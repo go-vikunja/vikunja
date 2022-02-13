@@ -1,7 +1,18 @@
-import {objectToSnakeCase} from '@/helpers/case'
 import {AuthenticatedHTTPFactory} from '@/http-common'
+import type {Method} from 'axios'
 
-function convertObject(o) {
+import {objectToSnakeCase} from '@/helpers/case'
+import AbstractModel from '@/models/abstractModel'
+
+interface Paths {
+	create : string
+	get : string
+	getAll : string
+	update : string
+	delete : string
+}
+
+function convertObject(o: Record<string, unknown>) {
 	if (o instanceof Date) {
 		return o.toISOString()
 	}
@@ -9,7 +20,7 @@ function convertObject(o) {
 	return o
 }
 
-function prepareParams(params) {
+function prepareParams(params: Record<string, unknown | any[]>) {
 	if (typeof params !== 'object') {
 		return params
 	}
@@ -26,16 +37,16 @@ function prepareParams(params) {
 	return objectToSnakeCase(params)
 }
 
-export default class AbstractService {
+export default class AbstractService<Model extends AbstractModel> {
 
 	/////////////////////////////
 	// Initial variable definitions
 	///////////////////////////
 
-	http = null
+	http
 	loading = false
 	uploadProgress = 0
-	paths = {
+	paths: Paths = {
 		create: '',
 		get: '',
 		getAll: '',
@@ -52,9 +63,9 @@ export default class AbstractService {
 
 	/**
 	 * The abstract constructor.
-	 * @param [paths] An object with all paths. Default values are specified above.
+	 * @param [paths] An object with all paths.
 	 */
-	constructor(paths) {
+	constructor(paths : Partial<Paths> = {}) {
 		this.http = AuthenticatedHTTPFactory()
 
 		// Set the interceptors to process every request
@@ -82,38 +93,27 @@ export default class AbstractService {
 			return config
 		})
 
-		if (paths) {
-			this.paths = {
-				create: paths.create !== undefined ? paths.create : '',
-				get: paths.get !== undefined ? paths.get : '',
-				getAll: paths.getAll !== undefined ? paths.getAll : '',
-				update: paths.update !== undefined ? paths.update : '',
-				delete: paths.delete !== undefined ? paths.delete : '',
-			}
-		}
+		Object.assign(this.paths, paths)
 	}
 
 	/**
 	 * Whether or not to use the create interceptor which processes a request payload into json
-	 * @returns {boolean}
 	 */
-	useCreateInterceptor() {
+	useCreateInterceptor(): boolean {
 		return true
 	}
 
 	/**
 	 * Whether or not to use the update interceptor which processes a request payload into json
-	 * @returns {boolean}
 	 */
-	useUpdateInterceptor() {
+	useUpdateInterceptor(): boolean {
 		return true
 	}
 
 	/**
 	 * Whether or not to use the delete interceptor which processes a request payload into json
-	 * @returns {boolean}
 	 */
-	useDeleteInterceptor() {
+	useDeleteInterceptor(): boolean {
 		return true
 	}
 
@@ -123,11 +123,9 @@ export default class AbstractService {
 
 	/**
 	 * Returns an object with all route parameters and their values.
-	 * @param route
-	 * @returns object
 	 */
-	getRouteReplacements(route, parameters = {}) {
-		const replace$$1 = {}
+	getRouteReplacements(route : string, parameters = {}) {
+		const replace$$1: {} = {}
 		let pattern = this.getRouteParameterPattern()
 		pattern = new RegExp(pattern instanceof RegExp ? pattern.source : pattern, 'g')
 
@@ -140,22 +138,18 @@ export default class AbstractService {
 
 	/**
 	 * Holds the replacement pattern for url paths, can be overwritten by implementations.
-	 * @return {RegExp}
 	 */
-	getRouteParameterPattern() {
+	getRouteParameterPattern(): RegExp {
 		return /{([^}]+)}/
 	}
 
 	/**
 	 * Returns a fully-ready-ready-to-make-a-request-to route with replaced parameters.
-	 * @param path
-	 * @param pathparams
-	 * @return string
 	 */
-	getReplacedRoute(path, pathparams) {
+	getReplacedRoute(path : string, pathparams : {}) : string {
 		const replacements = this.getRouteReplacements(path, pathparams)
 		return Object.entries(replacements).reduce(
-			(result, [parameter, value]) => result.replace(parameter, value),
+			(result, [parameter, value]) => result.replace(parameter, value as string),
 			path,
 		)
 	}
@@ -166,9 +160,8 @@ export default class AbstractService {
 	 * case the api returns a response in < 100ms.
 	 * But because the timeout is created using setTimeout, it will still trigger even if the request is
 	 * already finished, so we return a method to call in that case.
-	 * @returns {Function}
 	 */
-	setLoading() {
+	setLoading(): Function {
 		const timeout = setTimeout(() => {
 			this.loading = true
 		}, 100)
@@ -188,46 +181,36 @@ export default class AbstractService {
 	/**
 	 * The modelFactory returns an model from an object.
 	 * This one here is the default one, usually the service definitions for a model will override this.
-	 * @param data
-	 * @returns {*}
 	 */
-	modelFactory(data) {
-		return data
+	modelFactory(data : Partial<Model>) {
+		return new AbstractModel(data)
 	}
 
 	/**
 	 * This is the model factory for get requests.
-	 * @param data
-	 * @return {*}
 	 */
-	modelGetFactory(data) {
+	modelGetFactory(data : Partial<Model>) {
 		return this.modelFactory(data)
 	}
 
 	/**
 	 * This is the model factory for get all requests.
-	 * @param data
-	 * @return {*}
 	 */
-	modelGetAllFactory(data) {
+	modelGetAllFactory(data : Partial<Model>) {
 		return this.modelFactory(data)
 	}
 
 	/**
 	 * This is the model factory for create requests.
-	 * @param data
-	 * @return {*}
 	 */
-	modelCreateFactory(data) {
+	modelCreateFactory(data : Partial<Model>) {
 		return this.modelFactory(data)
 	}
 
 	/**
 	 * This is the model factory for update requests.
-	 * @param data
-	 * @return {*}
 	 */
-	modelUpdateFactory(data) {
+	modelUpdateFactory(data : Partial<Model>) {
 		return this.modelFactory(data)
 	}
 
@@ -237,37 +220,29 @@ export default class AbstractService {
 
 	/**
 	 * Default preprocessor for get requests
-	 * @param model
-	 * @return {*}
 	 */
-	beforeGet(model) {
+	beforeGet(model : Model) {
 		return model
 	}
 
 	/**
 	 * Default preprocessor for create requests
-	 * @param model
-	 * @return {*}
 	 */
-	beforeCreate(model) {
+	beforeCreate(model : Model) {
 		return model
 	}
 
 	/**
 	 * Default preprocessor for update requests
-	 * @param model
-	 * @return {*}
 	 */
-	beforeUpdate(model) {
+	beforeUpdate(model : Model) {
 		return model
 	}
 
 	/**
 	 * Default preprocessor for delete requests
-	 * @param model
-	 * @return {*}
 	 */
-	beforeDelete(model) {
+	beforeDelete(model : Model) {
 		return model
 	}
 
@@ -279,9 +254,8 @@ export default class AbstractService {
 	 * Performs a get request to the url specified before.
 	 * @param model The model to use. The request path is built using the values from the model.
 	 * @param params Optional query parameters
-	 * @returns {Q.Promise<any>}
 	 */
-	get(model, params = {}) {
+	get(model : Model, params = {}) {
 		if (this.paths.get === '') {
 			throw new Error('This model is not able to get data.')
 		}
@@ -292,12 +266,8 @@ export default class AbstractService {
 	/**
 	 * This is a more abstract implementation which only does a get request.
 	 * Services which need more flexibility can use this.
-	 * @param url
-	 * @param model
-	 * @param params
-	 * @returns {Q.Promise<unknown>}
 	 */
-	async getM(url, model = {}, params = {}) {
+	async getM(url : string, model = new AbstractModel({}), params = {}) {
 		const cancel = this.setLoading()
 
 		model = this.beforeGet(model)
@@ -313,12 +283,12 @@ export default class AbstractService {
 		}
 	}
 
-	async getBlobUrl(url, method = 'GET', data = {}) {
+	async getBlobUrl(url : string, method = 'GET' as Method, data = {}) {
 		const response = await this.http({
-			url: url,
-			method: method,
+			url,
+			method,
 			responseType: 'blob',
-			data: data,
+			data,
 		})
 		return window.URL.createObjectURL(new Blob([response.data]))
 	}
@@ -329,9 +299,8 @@ export default class AbstractService {
 	 * @param model The model to use. The request path is built using the values from the model.
 	 * @param params Optional query parameters
 	 * @param page The page to get
-	 * @returns {Q.Promise<any>}
 	 */
-	async getAll(model = {}, params = {}, page = 1) {
+	async getAll(model : Model = new AbstractModel({}), params = {}, page = 1) {
 		if (this.paths.getAll === '') {
 			throw new Error('This model is not able to get data.')
 		}
@@ -362,10 +331,9 @@ export default class AbstractService {
 
 	/**
 	 * Performs a put request to the url specified before
-	 * @param model
 	 * @returns {Promise<any | never>}
 	 */
-	async create(model) {
+	async create(model : Model) {
 		if (this.paths.create === '') {
 			throw new Error('This model is not able to create data.')
 		}
@@ -388,11 +356,8 @@ export default class AbstractService {
 	/**
 	 * An abstract implementation to send post requests.
 	 * Services can use this to implement functions to do post requests other than using the update method.
-	 * @param url
-	 * @param model
-	 * @returns {Q.Promise<unknown>}
 	 */
-	async post(url, model) {
+	async post(url : string, model : Model) {
 		const cancel = this.setLoading()
 
 		try {
@@ -409,10 +374,8 @@ export default class AbstractService {
 
 	/**
 	 * Performs a post request to the update url
-	 * @param model
-	 * @returns {Q.Promise<any>}
 	 */
-	update(model) {
+	update(model : Model) {
 		if (this.paths.update === '') {
 			throw new Error('This model is not able to update data.')
 		}
@@ -423,10 +386,8 @@ export default class AbstractService {
 
 	/**
 	 * Performs a delete request to the update url
-	 * @param model
-	 * @returns {Q.Promise<any>}
 	 */
-	async delete(model) {
+	async delete(model : Model) {
 		if (this.paths.delete === '') {
 			throw new Error('This model is not able to delete data.')
 		}
@@ -447,21 +408,15 @@ export default class AbstractService {
 	 * @param url
 	 * @param file
 	 * @param fieldName The name of the field the file is uploaded to.
-	 * @returns {Q.Promise<unknown>}
 	 */
-	uploadFile(url, file, fieldName) {
+	uploadFile(url : string, file, fieldName : string) {
 		return this.uploadBlob(url, new Blob([file]), fieldName, file.name)
 	}
 
 	/**
 	 * Uploads a blob to a url.
-	 * @param url
-	 * @param blob
-	 * @param fieldName
-	 * @param filename
-	 * @returns {Q.Promise<unknown>}
 	 */
-	uploadBlob(url, blob, fieldName, filename) {
+	uploadBlob(url : string, blob: Blob, fieldName: string, filename : string) {
 		const data = new FormData()
 		data.append(fieldName, blob, filename)
 		return this.uploadFormData(url, data)
@@ -469,11 +424,8 @@ export default class AbstractService {
 
 	/**
 	 * Uploads a form data object.
-	 * @param url
-	 * @param formData
-	 * @returns {Q.Promise<unknown>}
 	 */
-	async uploadFormData(url, formData) {
+	async uploadFormData(url : string, formData: Record<string, unknown>) {
 		const cancel = this.setLoading()
 		try {
 			const response = await this.http.put(
