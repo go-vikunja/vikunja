@@ -5,12 +5,30 @@ export default class UserModel extends AbstractModel {
 	constructor(data) {
 		super(data)
 
+		/** @type {number} */
+		this.id
+
+		/** @type {string} */
+		this.email
+
+		/** @type {string} */
+		this.username
+
+		/** @type {string} */
+		this.name
+
+		/** @type {Date} */
+		this.created = new Date(this.created)
+
+		/** @type {Date} */
+		this.updated = new Date(this.updated)
+
+		/** @type {UserSettingsModel} */
+		this.settings
+
 		if (this.settings !== null) {
 			this.settings = new UserSettingsModel(this.settings)
 		}
-
-		this.created = new Date(this.created)
-		this.updated = new Date(this.updated)
 	}
 
 	defaults() {

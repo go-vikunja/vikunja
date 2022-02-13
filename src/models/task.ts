@@ -13,40 +13,80 @@ export default class TaskModel extends AbstractModel {
 	constructor(data) {
 		super(data)
 
+		/** @type {number} */
 		this.id = Number(this.id)
-		this.title = this.title?.trim()
-		this.listId = Number(this.listId)
 
-		// Make date objects from timestamps
-		this.dueDate = parseDateOrNull(this.dueDate)
-		this.startDate = parseDateOrNull(this.startDate)
-		this.endDate = parseDateOrNull(this.endDate)
+		/** @type {string} */
+		this.title = this.title?.trim()
+
+		/** @type {string} */
+		this.description
+
+		/** @type {boolean} */
+		this.done
+
+		/** @type */
 		this.doneAt = parseDateOrNull(this.doneAt)
 
+		/** @type {number} */
+		this.priority
+
+		/** @type {LabelModel[]} */
+		this.labels = this.labels
+			.map(l => new LabelModel(l))
+			.sort((f, s) => f.title > s.title ? 1 : -1)
+
+		/** @type {UserModel[]} */
+		// Parse the assignees into user models
+		this.assignees = this.assignees.map(a => {
+			return new UserModel(a)
+		})
+
+		/** @type {Date} */
+		this.dueDate = parseDateOrNull(this.dueDate)
+
+		/** @type {Date} */
+		this.startDate = parseDateOrNull(this.startDate)
+
+		/** @type {Date} */
+		this.endDate = parseDateOrNull(this.endDate)
+
+		/** @type */
+		this.repeatAfter
+
+		// Parse the repeat after into something usable
+		this.parseRepeatAfter()
+
+		/** @type {boolean} */
+		this.repeatFromCurrentDate
+
+		/** @type {TaskRepeatMode: 0 | 1 | 2} */
+		this.repeatMode
+
+		/** @type {Date[]} */
 		this.reminderDates = this.reminderDates.map(d => new Date(d))
+
 		// Cancel all scheduled notifications for this task to be sure to only have available notifications
 		this.cancelScheduledNotifications().then(() => {
 			// Every time we see a reminder, we schedule a notification for it
 			this.reminderDates.forEach(d => this.scheduleNotification(d))
 		})
 
-		// Parse the repeat after into something usable
-		this.parseRepeatAfter()
+		/** @type {number} */
+		this.parentTaskId
 
-		// Parse the assignees into user models
-		this.assignees = this.assignees.map(a => {
-			return new UserModel(a)
-		})
-		this.createdBy = new UserModel(this.createdBy)
-
-		this.labels = this.labels.map(l => {
-			return new LabelModel(l)
-		})
-			.sort((f, s) => f.title > s.title ? 1 : -1)
+		/** @type {string} */
+		this.hexColor
 
 		if (this.hexColor !== '' && this.hexColor.substring(0, 1) !== '#') {
 			this.hexColor = '#' + this.hexColor
 		}
+
+		/** @type {number} */
+		this.percentDone
+
+		/** @type {{ [relationKind: string]: TaskModel }} */
+		this.relatedTasks
 
 		// Make all subtasks to task models
 		Object.keys(this.relatedTasks).forEach(relationKind => {
@@ -56,21 +96,47 @@ export default class TaskModel extends AbstractModel {
 		})
 
 		// Make all attachments to attachment models
-		this.attachments = this.attachments.map(a => {
-			return new AttachmentModel(a)
-		})
+		/** @type {AttachmentModel[]} */
+		this.attachments = this.attachments.map(a => new AttachmentModel(a))
+
+		/** @type {string} */
+		this.identifier
 
 		// Set the task identifier to empty if the list does not have one
 		if (this.identifier === `-${this.index}`) {
 			this.identifier = ''
 		}
 
+		/** @type {number} */
+		this.index
+
+		/** @type {boolean} */
+		this.isFavorite
+
+		/** @type {SubscriptionModel} */
+		this.subscription
+
 		if (typeof this.subscription !== 'undefined' && this.subscription !== null) {
 			this.subscription = new SubscriptionModel(this.subscription)
 		}
 
+		/** @type {number} */
+		this.position
+
+		/** @type {number} */
+		this.kanbanPosition
+
+		/** @type {UserModel} */
+		this.createdBy = new UserModel(this.createdBy)
+
+		/** @type {Date} */
 		this.created = new Date(this.created)
+
+		/** @type {Date} */
 		this.updated = new Date(this.updated)
+
+		/** @type {number} */
+		this.listId = Number(this.listId)
 	}
 
 	defaults() {

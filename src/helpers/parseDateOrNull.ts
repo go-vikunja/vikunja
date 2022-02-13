@@ -1,4 +1,7 @@
-export const parseDateOrNull = date => {
+/**
+ * Make date objects from timestamps
+*/
+export function parseDateOrNull(date) {
 	if (date instanceof Date) {
 		return date
 	}

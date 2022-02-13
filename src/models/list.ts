@@ -9,31 +9,64 @@ export default class ListModel extends AbstractModel {
 	constructor(data) {
 		super(data)
 
-		if (this.hexColor !== '' && this.hexColor.substring(0, 1) !== '#') {
-			this.hexColor = '#' + this.hexColor
-		}
+		this.owner = new UserModel(this.owner)
+
+		/** @type {number} */
+		this.id
+
+		/** @type {string} */
+		this.title
+
+		/** @type {string} */
+		this.description
+		
+		/** @type {UserModel} */
+		this.owner
+
+		/** @type {TaskModel[]} */
+		this.tasks
 
 		// Make all tasks to task models
 		this.tasks = this.tasks.map(t => {
 			return new TaskModel(t)
 		})
+		
+		/** @type {number} */
+		this.namespaceId
 
-		this.owner = new UserModel(this.owner)
+		/** @type {boolean} */
+		this.isArchived
+
+		/** @type {string} */
+		this.hexColor
+
+		if (this.hexColor !== '' && this.hexColor.substring(0, 1) !== '#') {
+			this.hexColor = '#' + this.hexColor
+		}
+
+		/** @type {string} */
+		this.identifier
+
+		/** @type */
+		this.backgroundInformation
+
+		/** @type {boolean} */
+		this.isFavorite
+
+		/** @type */
+		this.subscription
 
 		if (typeof this.subscription !== 'undefined' && this.subscription !== null) {
 			this.subscription = new SubscriptionModel(this.subscription)
 		}
 
 		/** @type {number} */
-		this.id
-
-		/** @type {boolean} */
-		this.isArchived
-
-		/** @type {number} */
 		this.position
 
+		/** @type {Date} */
 		this.created = new Date(this.created)
+
+		/** @type {Date} */
 		this.updated = new Date(this.updated)
 	}
 
