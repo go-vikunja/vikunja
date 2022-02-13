@@ -2,12 +2,12 @@
 	<ListWrapper class="list-kanban" :list-id="listId" viewName="kanban">
 		<template #header>
 			<div class="filter-container" v-if="isSavedFilter">
-			<div class="items">
-				<filter-popup
-					v-model="params"
-					@update:modelValue="loadBuckets"
-				/>
-			</div>
+				<div class="items">
+					<filter-popup
+						v-model="params"
+						@update:modelValue="loadBuckets"
+					/>
+				</div>
 			</div>
 		</template>
 
@@ -123,61 +123,59 @@
 								</a>
 							</dropdown>
 						</div>
-						<div
-							:ref="(el) => setTaskContainerRef(bucket.id, el)"
-							@scroll="($event) => handleTaskContainerScroll(bucket.id, bucket.listId, $event.target)"
-							class="tasks"
+
+						<draggable
+							v-bind="dragOptions"
+							:modelValue="bucket.tasks"
+							@update:modelValue="(tasks) => updateTasks(bucket.id, tasks)"
+							@start="() => dragstart(bucket)"
+							@end="updateTaskPosition"
+							:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
+							:disabled="!canWrite"
+							:data-bucket-index="bucketIndex"
+							tag="transition-group"
+							:item-key="(task) => `bucket${bucket.id}-task${task.id}`"
+							:component-data="getTaskDraggableTaskComponentData(bucket)"
 						>
-							<draggable
-								v-bind="dragOptions"
-								:modelValue="bucket.tasks"
-								@update:modelValue="(tasks) => updateTasks(bucket.id, tasks)"
-								@start="() => dragstart(bucket)"
-								@end="updateTaskPosition"
-								:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
-								:disabled="!canWrite"
-								:data-bucket-index="bucketIndex"
-								tag="transition-group"
-								:item-key="(task) => `bucket${bucket.id}-task${task.id}`"
-								:component-data="taskDraggableTaskComponentData"
-							>
-								<template #item="{element: task}">
-									<kanban-card :task="task"/>
-								</template>
-							</draggable>
-						</div>
-						<div class="bucket-footer" v-if="canWrite">
-							<div class="field" v-if="showNewTaskInput[bucket.id]">
-								<div class="control" :class="{'is-loading': loading}">
-									<input
-										class="input"
-										:disabled="loading || null"
-										@focusout="toggleShowNewTaskInput(bucket.id)"
-										@keyup.enter="addTaskToBucket(bucket.id)"
-										@keyup.esc="toggleShowNewTaskInput(bucket.id)"
-										:placeholder="$t('list.kanban.addTaskPlaceholder')"
-										type="text"
-										v-focus.always
-										v-model="newTaskText"
-									/>
+							<template #footer>
+								<div class="bucket-footer" v-if="canWrite">
+									<div class="field" v-if="showNewTaskInput[bucket.id]">
+										<div class="control" :class="{'is-loading': loading}">
+											<input
+												class="input"
+												:disabled="loading || undefined"
+												@focusout="toggleShowNewTaskInput(bucket.id)"
+												@keyup.enter="addTaskToBucket(bucket.id)"
+												@keyup.esc="toggleShowNewTaskInput(bucket.id)"
+												:placeholder="$t('list.kanban.addTaskPlaceholder')"
+												type="text"
+												v-focus.always
+												v-model="newTaskText"
+											/>
+										</div>
+										<p class="help is-danger" v-if="newTaskError[bucket.id] && newTaskText === ''">
+											{{ $t('list.create.addTitleRequired') }}
+										</p>
+									</div>
+									<x-button
+										@click="toggleShowNewTaskInput(bucket.id)"
+										class="is-fullwidth has-text-centered"
+										:shadow="false"
+										v-else
+										icon="plus"
+										variant="secondary"
+									>
+										{{ bucket.tasks.length === 0 ? $t('list.kanban.addTask') : $t('list.kanban.addAnotherTask') }}
+									</x-button>
 								</div>
-								<p class="help is-danger" v-if="newTaskError[bucket.id] && newTaskText === ''">
-									{{ $t('list.create.addTitleRequired') }}
-								</p>
-							</div>
-							<x-button
-								@click="toggleShowNewTaskInput(bucket.id)"
-								class="is-transparent is-fullwidth has-text-centered"
-								:shadow="false"
-								v-if="!showNewTaskInput[bucket.id]"
-								icon="plus"
-								variant="secondary"
-							>
-								{{
-									bucket.tasks.length === 0 ? $t('list.kanban.addTask') : $t('list.kanban.addAnotherTask')
-								}}
-							</x-button>
-						</div>
+							</template>
+
+							<template #item="{element: task}">
+								<div class="task-item">
+									<kanban-card class="kanban-card" :task="task"/>
+								</div>
+							</template>
+						</draggable>
 					</div>
 				</template>
 			</draggable>
@@ -197,10 +195,10 @@
 					v-model="newBucketTitle"
 				/>
 				<x-button
+					v-else
 					@click="() => showNewBucketInput = true"
 					:shadow="false"
 					class="is-transparent is-fullwidth has-text-centered"
-					v-else
 					variant="secondary"
 					icon="plus"
 				>
@@ -313,6 +311,20 @@ export default {
 		},
 	},
 	computed: {
+		getTaskDraggableTaskComponentData() {
+			return (bucket) => ({
+				ref: (el) => this.setTaskContainerRef(bucket.id, el),
+				onScroll: (event) => this.handleTaskContainerScroll(bucket.id, bucket.listId, event.target),
+				type: 'transition',
+				tag: 'div',
+				name: !this.drag ? 'move-card' : null,
+				class: [
+					'tasks',
+					{'dragging-disabled': !this.canWrite},
+				],
+			})
+		},
+
 		isSavedFilter() {
 			return this.list.isSavedFilter && !this.list.isSavedFilter()
 		},
@@ -329,17 +341,6 @@ export default {
 				name: !this.dragBucket ? 'move-bucket' : null,
 				class: [
 					'kanban-bucket-container',
-					{'dragging-disabled': !this.canWrite},
-				],
-			}
-		},
-		taskDraggableTaskComponentData() {
-			return {
-				type: 'transition',
-				tag: 'div',
-				name: !this.drag ? 'move-card' : null,
-				class: [
-					'dropper',
 					{'dragging-disabled': !this.canWrite},
 				],
 			}
@@ -406,10 +407,25 @@ export default {
 			// of the drop target works all the time.
 			const bucketIndex = parseInt(e.to.dataset.bucketIndex)
 
+
 			const newBucket = this.buckets[bucketIndex]
-			const task = newBucket.tasks[e.newIndex]
-			const taskBefore = newBucket.tasks[e.newIndex - 1] ?? null
-			const taskAfter = newBucket.tasks[e.newIndex + 1] ?? null
+
+			// HACK:
+			// this is a hacky workaround for a known problem of vue.draggable.next when using the footer slot
+			// the problem: https://github.com/SortableJS/vue.draggable.next/issues/108
+			// This hack doesn't remove the problem that the ghost item is still displayed below the footer
+			// It just makes releasing the item possible.
+
+			// The newIndex of the event doesn't count in the elements of the footer slot.
+			// This is why in case the length of the tasks is identical with the newIndex
+			// we have to remove 1 to get the correct index.
+			const newTaskIndex = newBucket.tasks.length === e.newIndex
+				? e.newIndex - 1
+				: e.newIndex
+
+			const task = newBucket.tasks[newTaskIndex]
+			const taskBefore = newBucket.tasks[newTaskIndex - 1] ?? null
+			const taskAfter = newBucket.tasks[newTaskIndex + 1] ?? null
 
 			const newTask = cloneDeep(task) // cloning the task to avoid vuex store mutations
 			newTask.bucketId = newBucket.id,
@@ -525,7 +541,10 @@ export default {
 
 			const updatedData = {
 				id: bucket.id,
-				position: calculateItemPosition(bucketBefore !== null ? bucketBefore.position : null, bucketAfter !== null ? bucketAfter.position : null),
+				position: calculateItemPosition(
+					bucketBefore !== null ? bucketBefore.position : null,
+					bucketAfter !== null ? bucketAfter.position : null,
+				),
 			}
 
 			this.$store.dispatch('kanban/updateBucket', updatedData)
@@ -546,9 +565,14 @@ export default {
 		},
 
 		shouldAcceptDrop(bucket) {
-			return bucket.id === this.sourceBucket || // When dragging from a bucket who has its limit reached, dragging should still be possible
-				bucket.limit === 0 || // If there is no limit set, dragging & dropping should always work
-				bucket.tasks.length < bucket.limit // Disallow dropping to buckets which have their limit reached
+			return (
+				// When dragging from a bucket who has its limit reached, dragging should still be possible
+				bucket.id === this.sourceBucket ||
+				// If there is no limit set, dragging & dropping should always work
+				bucket.limit === 0 ||
+				// Disallow dropping to buckets which have their limit reached
+				bucket.tasks.length < bucket.limit
+			)
 		},
 
 		dragstart(bucket) {
@@ -597,7 +621,6 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 }
 
 .kanban {
-
 	overflow-x: auto;
 	overflow-y: hidden;
 	height: calc(#{$crazy-height-calculation});
@@ -610,21 +633,28 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 
 	&-bucket-container {
 		display: flex;
-		align-items: flex-start;
 	}
 
 	.ghost {
-		background: transparent !important;
-		border: 3px dashed var(--grey-300) !important;
-		box-shadow: none !important;
+		position: relative;
 
 		* {
 			opacity: 0;
 		}
+		&::after {
+			content: '';
+			position: absolute;
+			display: block;
+			top: 0.25rem;
+			right: 0.5rem;
+			bottom: 0.25rem;
+			left: 0.5rem;
+			border: 3px dashed var(--grey-300);
+			border-radius: $radius;
+		}
 	}
 
 	.bucket {
-		background-color: var(--grey-100);
 		border-radius: $radius;
 		position: relative;
 
@@ -632,24 +662,24 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		max-height: 100%;
 		min-height: 20px;
 		width: $bucket-width;
+		display: flex;
+		flex-direction: column;
 
 		.tasks {
-			max-height: calc(#{$crazy-height-calculation-tasks});
-			overflow: auto;
-
-			@media screen and (max-width: $tablet) {
-				max-height: calc(#{$crazy-height-calculation-tasks} - #{$filter-container-height});
-			}
-
-			.dropper {
-				&, > div {
-					min-height: 40px;
-				}
-			}
+			overflow: hidden auto;
+			height: 100%;
 		}
 
-		.move-card-move {
-			transition: transform $transition-duration;
+		.task-item {
+			background-color: var(--grey-100);
+			padding: .25rem .5rem;
+
+			&:first-of-type {
+				padding-top: .5rem;
+			}
+			&:last-of-type {
+				padding-bottom: .5rem;
+			}	
 		}
 
 		.no-move {
@@ -682,10 +712,11 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 
 		&.is-collapsed {
-			transform: rotate(90deg) translateX(math.div($bucket-width, 2) - math.div($bucket-header-height, 2));
+			align-self: flex-start;
+			transform: rotate(90deg) translateY(-100%);
+			transform-origin: top left;
 			// Using negative margins instead of translateY here to make all other buckets fill the empty space
-			margin-left: (math.div($bucket-width, 2) - math.div($bucket-header-height, 2)) * -1;
-			margin-right: calc(#{(math.div($bucket-width, 2) - math.div($bucket-header-height, 2)) * -1} + #{$bucket-right-margin});
+			margin-right: calc((#{$bucket-width} - #{$bucket-header-height} - #{$bucket-right-margin}) * -1);
 			cursor: pointer;
 
 			.tasks, .bucket-footer {
@@ -695,6 +726,8 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	}
 
 	.bucket-header {
+		background-color: var(--grey-100);
+		height: min-content;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -724,7 +757,13 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	}
 
 	.bucket-footer {
+		position: sticky;
+		bottom: 0;
+		height: min-content;
 		padding: .5rem;
+		background-color: var(--grey-100);
+		border-bottom-left-radius: $radius;
+		border-bottom-right-radius: $radius;
 
 		.button {
 			background-color: transparent;
@@ -737,8 +776,13 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 }
 
 .task-dragging {
+	transform: rotateZ(3deg);
 	transition: transform 0.18s ease;
-	transform: rotateZ(3deg)
+}
+
+.move-card-move {
+	transform: rotateZ(3deg);
+	transition: transform $transition-duration;
 }
 
 .move-card-leave-from,
