@@ -335,6 +335,7 @@
       "archiveText": "You won't be able to edit this namespace or create new lists until you un-archive it. This will also archive all lists in this namespace.",
       "unarchiveText": "Je kan nieuwe lijsten maken of deze bewerken.",
       "success": "The namespace was successfully archived.",
+      "unarchiveSuccess": "The namespace was successfully un-archived.",
       "description": "If a namespace is archived, you cannot create new lists or edit it."
     },
     "delete": {

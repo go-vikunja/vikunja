@@ -335,6 +335,7 @@
       "archiveText": "Nebudete moci upravovat tento jmenný prostor ani vytvářet nové seznamy, dokud jej neodarchivujete. Všechny seznamy v tomto prostoru budou také archivovány.",
       "unarchiveText": "Budete moci vytvářet nové úkoly nebo je upravovat.",
       "success": "Prostor byl úspěšně archivován.",
+      "unarchiveSuccess": "The namespace was successfully un-archived.",
       "description": "Pokud je prostor archivován, nelze vytvořit nové seznamy nebo je upravit."
     },
     "delete": {

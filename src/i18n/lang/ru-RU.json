@@ -105,7 +105,7 @@
       "caldav": {
         "title": "CalDAV",
         "howTo": "Ты можешь подключить Vikunja к клиентам CalDAV, чтобы просматривать и управлять всеми задачами из разных клиентов. Введи этот URL в свой клиент:",
-        "more": "Подробнее о caldav в Vikunja"
+        "more": "Подробнее о CalDAV в Vikunja"
       },
       "avatar": {
         "title": "Аватар",

@@ -103,9 +103,9 @@
         "disableSuccess": "Zweifaktor Authentifizierig isch erfolgriich uusgschalte wore."
       },
       "caldav": {
-        "title": "Caldav",
-        "howTo": "Du chasch Vikunja zu Caldav Applikatione verbinde, um dini Uufgabe vo verschidene Gräät zgseh. Gib die Url i dim Client iih:",
-        "more": "Meh Informatione über Caldav in Vikunja"
+        "title": "CalDAV",
+        "howTo": "Du chasch Vikunja zu CalDAV Applikatione verbinde, um dini Uufgabe vo verschidene Gräät zgseh. Gib die Url i dim Client iih:",
+        "more": "Meh Informatione über CalDAV in Vikunja"
       },
       "avatar": {
         "title": "Herr Der Elemente",

@@ -105,7 +105,7 @@
       "caldav": {
         "title": "Caldav",
         "howTo": "Możesz połączyć Vikunja z klientami caldav, aby przeglądać i zarządzać wszystkimi zadaniami z różnych klientów. Wprowadź ten adres URL do swojego klienta:",
-        "more": "Więcej informacji o caldav w Vikunji"
+        "more": "Więcej informacji o CalDAV w Vikunji"
       },
       "avatar": {
         "title": "Awatar",
@@ -335,7 +335,7 @@
       "archiveText": "Nie będziesz mógł tworzyć nowych list ani edytować tej sekcji, dopóki nie cofniesz archiwizacji. Ta operacja zarchiwizuje również wszystkie listy należące do tej sekcji.",
       "unarchiveText": "Będziesz mógł tworzyć nowe listy i je edytować.",
       "success": "Sekcja została pomyślnie zarchiwizowana.",
-      "unarchiveSuccess": "The namespace was successfully un-archived.",
+      "unarchiveSuccess": "Archiwizacja sekcji została pomyślnie cofnięta.",
       "description": "Jeśli sekcja jest zarchiwizowana, nie można edytować ani tworzyć nowych list."
     },
     "delete": {
@@ -357,7 +357,7 @@
       "description": "Opis",
       "descriptionPlaceholder": "Tu wpisz opis sekcji…",
       "color": "Kolor",
-      "archived": "Zarchiwizowany",
+      "archived": "Archiwizacja",
       "isArchived": "Ta sekcja jest zarchiwizowana"
     },
     "pseudo": {

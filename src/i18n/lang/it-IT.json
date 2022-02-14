@@ -103,9 +103,9 @@
         "disableSuccess": "L'autenticazione a due fattori è stata disattivata."
       },
       "caldav": {
-        "title": "CalDav",
+        "title": "CalDAV",
         "howTo": "Puoi connettere Vikunja ai client caldav per visualizzare e gestire tutte le attività da diversi client. Inserisci questo URL nel tuo client:",
-        "more": "Ulteriori informazioni su caldav in Vikunja"
+        "more": "Ulteriori informazioni su CalDAV in Vikunja"
       },
       "avatar": {
         "title": "Avatar",

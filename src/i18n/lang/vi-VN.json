@@ -103,7 +103,7 @@
         "disableSuccess": "Xác thực hai lớp đã bị vô hiệu hóa thành công."
       },
       "caldav": {
-        "title": "Giao thức Caldav",
+        "title": "Giao thức CalDAV",
         "howTo": "Bạn có thể kết nối Vikunja tới các máy khách CalDAV để xem và quản lý tất cả các công việc từ nhiều máy khách khác nhau. Nhập URL này vào ứng dụng khách của bạn:",
         "more": "Tìm hiểu thêm về CalDAV"
       },
