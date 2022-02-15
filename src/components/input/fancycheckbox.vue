@@ -19,7 +19,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import {createRandomID} from '@/helpers/randomId'
 
 export default {

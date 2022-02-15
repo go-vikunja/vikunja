@@ -29,7 +29,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import AsyncEditor from '@/components/input/AsyncEditor'
 
 import {LOADING} from '@/store/mutation-types'

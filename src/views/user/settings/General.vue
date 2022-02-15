@@ -131,7 +131,7 @@
 	</card>
 </template>
 
-<script>
+<script lang="ts">
 import {computed, watch, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 

@@ -64,7 +64,7 @@ export default class AbstractService {
 		})
 
 		// Set the interceptors to process every request
-		let self = this
+		const self = this
 		this.http.interceptors.request.use((config) => {
 			switch (config.method) {
 				case 'post':
@@ -140,7 +140,7 @@ export default class AbstractService {
 	 * @returns object
 	 */
 	getRouteReplacements(route, parameters = {}) {
-		let replace$$1 = {}
+		const replace$$1 = {}
 		let pattern = this.getRouteParameterPattern()
 		pattern = new RegExp(pattern instanceof RegExp ? pattern.source : pattern, 'g')
 
@@ -166,7 +166,7 @@ export default class AbstractService {
 	 * @return string
 	 */
 	getReplacedRoute(path, pathparams) {
-		let replacements = this.getRouteReplacements(path, pathparams)
+		const replacements = this.getRouteReplacements(path, pathparams)
 		return Object.entries(replacements).reduce(
 			(result, [parameter, value]) => result.replace(parameter, value),
 			path,

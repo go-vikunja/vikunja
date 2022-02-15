@@ -34,7 +34,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import {createRandomID} from '@/helpers/randomId'
 
 const DEFAULT_COLORS = [

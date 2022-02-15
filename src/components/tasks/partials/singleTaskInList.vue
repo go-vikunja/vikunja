@@ -91,7 +91,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import TaskModel from '../../../models/task'
 import PriorityLabel from './priorityLabel'
 import TaskService from '../../../services/task'

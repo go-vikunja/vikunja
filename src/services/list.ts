@@ -26,7 +26,7 @@ export default class ListService extends AbstractService {
 	}
 
 	beforeUpdate(model) {
-		let taskService = new TaskService()
+		const taskService = new TaskService()
 		model.tasks = model.tasks.map(task => {
 			return taskService.beforeUpdate(task)
 		})

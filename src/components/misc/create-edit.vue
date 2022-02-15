@@ -41,7 +41,7 @@
 	</modal>
 </template>
 
-<script>
+<script lang="ts">
 import { i18n } from '@/i18n'
 
 export default {

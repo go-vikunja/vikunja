@@ -160,7 +160,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import AsyncEditor from '@/components/input/AsyncEditor'
 import {mapState} from 'vuex'
 import { i18n } from '@/i18n'

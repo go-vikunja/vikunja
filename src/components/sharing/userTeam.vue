@@ -130,7 +130,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import UserNamespaceService from '../../services/userNamespace'
 import UserNamespaceModel from '../../models/userNamespace'
 import UserListModel from '../../models/userList'

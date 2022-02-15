@@ -11,7 +11,7 @@
 	</modal>
 </template>
 
-<script>
+<script lang="ts">
 import ListService from '@/services/list'
 
 export default {

@@ -9,7 +9,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import {mapState} from 'vuex'
 
 import {LOADING} from '@/store/mutation-types'

@@ -175,7 +175,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import rights from '../../models/constants/rights'
 
 import LinkShareService from '../../services/linkShare'

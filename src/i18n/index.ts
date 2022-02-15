@@ -62,9 +62,9 @@ export const getCurrentLanguage = () => {
 		return savedLanguage
 	}
 
-	let browserLanguage = navigator.language || navigator.userLanguage
+	const browserLanguage = navigator.language || navigator.userLanguage
 
-	for (let k in availableLanguages) {
+	for (const k in availableLanguages) {
 		if (browserLanguage[k] === browserLanguage || k.startsWith(browserLanguage + '-')) {
 			return k
 		}

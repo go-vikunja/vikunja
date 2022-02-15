@@ -38,7 +38,7 @@
 	</multiselect>
 </template>
 
-<script>
+<script lang="ts">
 import LabelModel from '../../../models/label'
 import LabelTaskService from '../../../services/labelTask'
 

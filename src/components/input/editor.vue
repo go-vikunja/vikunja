@@ -42,7 +42,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import VueEasymde from './vue-easymde/vue-easymde.vue'
 import {marked} from 'marked'
 import DOMPurify from 'dompurify'

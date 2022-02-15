@@ -137,12 +137,12 @@ export default class TaskModel extends AbstractModel {
 	 * This function should only be called from the constructor.
 	 */
 	parseRepeatAfter() {
-		let repeatAfterHours = (this.repeatAfter / 60) / 60
+		const repeatAfterHours = (this.repeatAfter / 60) / 60
 		this.repeatAfter = {type: 'hours', amount: repeatAfterHours}
 
 		// if its dividable by 24, its something with days, otherwise hours
 		if (repeatAfterHours % 24 === 0) {
-			let repeatAfterDays = repeatAfterHours / 24
+			const repeatAfterDays = repeatAfterHours / 24
 			if (repeatAfterDays % 7 === 0) {
 				this.repeatAfter.type = 'weeks'
 				this.repeatAfter.amount = repeatAfterDays / 7

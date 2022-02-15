@@ -72,7 +72,7 @@
 	</create-edit>
 </template>
 
-<script>
+<script lang="ts">
 import {mapState} from 'vuex'
 import {getBlobFromBlurHash} from '../../../helpers/getBlobFromBlurHash'
 

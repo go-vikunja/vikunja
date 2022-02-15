@@ -63,7 +63,7 @@
 	</card>
 </template>
 
-<script>
+<script lang="ts">
 import TotpService from '@/services/totp'
 import TotpModel from '@/models/totp'
 import {mapState} from 'vuex'

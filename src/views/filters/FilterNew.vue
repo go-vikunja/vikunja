@@ -59,7 +59,7 @@
 	</modal>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, shallowRef, computed } from 'vue'
 
 import { store } from '@/store'

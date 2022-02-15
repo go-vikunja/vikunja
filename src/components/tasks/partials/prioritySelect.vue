@@ -11,7 +11,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import priorites from '../../../models/constants/priorities'
 
 export default {

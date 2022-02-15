@@ -131,7 +131,7 @@
 	</ListWrapper>
 </template>
 
-<script>
+<script lang="ts">
 import { ref, toRef, defineComponent } from 'vue'
 
 import ListWrapper from './ListWrapper.vue'

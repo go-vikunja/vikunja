@@ -68,7 +68,7 @@
 	</div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {useDebounceFn} from '@vueuse/core'
 import {ref, reactive, toRaw, computed, onBeforeMount} from 'vue'
 

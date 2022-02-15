@@ -25,7 +25,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import {mapState} from 'vuex'
 
 import Done from '@/components/misc/Done.vue'

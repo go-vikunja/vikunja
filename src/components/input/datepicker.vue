@@ -110,7 +110,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import { i18n } from '@/i18n'

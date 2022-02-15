@@ -13,7 +13,7 @@ export function objectToCamelCase(object) {
 		return object
 	}
 
-	let parsedObject = {}
+	const parsedObject = {}
 	for (const m in object) {
 		parsedObject[camelCase(m)] = object[m]
 
@@ -50,7 +50,7 @@ export function objectToSnakeCase(object) {
 		return object
 	}
 
-	let parsedObject = {}
+	const parsedObject = {}
 	for (const m in object) {
 		parsedObject[snakeCase(m)] = object[m]
 

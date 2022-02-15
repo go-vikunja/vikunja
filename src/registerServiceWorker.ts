@@ -3,7 +3,7 @@
 import {register} from 'register-service-worker'
 
 if (import.meta.env.PROD) {
-	register('/sw.js', {
+	register('/sw.ts', {
 		ready() {
 			console.log('App is being served from cache by a service worker.')
 		},

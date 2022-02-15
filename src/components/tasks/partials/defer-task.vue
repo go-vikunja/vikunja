@@ -37,7 +37,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import TaskService from '../../../services/task'
 import flatPickr from 'vue-flatpickr-component'
 

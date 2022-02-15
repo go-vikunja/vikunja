@@ -65,7 +65,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import {playPop} from '../../../helpers/playPop'
 import PriorityLabel from '../../../components/tasks/partials/priorityLabel'
 import User from '../../../components/misc/user'

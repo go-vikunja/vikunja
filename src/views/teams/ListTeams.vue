@@ -25,7 +25,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import TeamService from '../../services/team'
 
 export default {

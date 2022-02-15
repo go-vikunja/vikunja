@@ -413,7 +413,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import TaskService from '../../services/task'
 import TaskModel from '../../models/task'
 

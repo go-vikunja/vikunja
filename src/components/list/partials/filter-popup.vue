@@ -27,7 +27,7 @@
 	</popup>
 </template>
 
-<script>
+<script lang="ts">
 import Filters from '@/components/list/partials/filters'
 import Popup from '@/components/misc/popup'
 

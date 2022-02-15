@@ -135,7 +135,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import AttachmentService from '../../../services/attachment'
 import AttachmentModel from '../../../models/attachment'
 import User from '../../misc/user'

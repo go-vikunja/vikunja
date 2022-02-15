@@ -226,7 +226,7 @@
 	</ListWrapper>
 </template>
 
-<script>
+<script lang="ts">
 import draggable from 'vuedraggable'
 import cloneDeep from 'lodash.clonedeep'
 

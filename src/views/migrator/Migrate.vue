@@ -20,7 +20,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import {MIGRATORS} from './migrators'
 
 export default {

@@ -50,7 +50,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import repeatModes from '@/models/constants/taskRepeatModes'
 
 export default {

@@ -25,7 +25,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import datepicker from '@/components/input/datepicker.vue'
 
 export default {

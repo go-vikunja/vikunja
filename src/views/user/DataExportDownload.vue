@@ -35,7 +35,7 @@
 	</div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, computed, reactive} from 'vue'
 import DataExportService from '@/services/dataExport'
 import {store} from '@/store'

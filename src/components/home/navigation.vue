@@ -156,7 +156,7 @@
 	</aside>
 </template>
 
-<script>
+<script lang="ts">
 import {mapState} from 'vuex'
 import draggable from 'vuedraggable'
 

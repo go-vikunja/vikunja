@@ -51,7 +51,7 @@
 	</create-edit>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, shallowRef, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { store } from '@/store'

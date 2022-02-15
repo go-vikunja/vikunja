@@ -96,7 +96,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import {mapState} from 'vuex'
 
 import LabelModel from '../../models/label'

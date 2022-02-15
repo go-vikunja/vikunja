@@ -36,7 +36,7 @@
 	</card>
 </template>
 
-<script>
+<script lang="ts">
 import EmailUpdateService from '@/services/emailUpdate'
 import EmailUpdateModel from '@/models/emailUpdate'
 

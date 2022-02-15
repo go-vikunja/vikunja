@@ -51,7 +51,7 @@
 	</card>
 </template>
 
-<script>
+<script lang="ts">
 import PasswordUpdateService from '@/services/passwordUpdateService'
 import PasswordUpdateModel from '@/models/passwordUpdate'
 

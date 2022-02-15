@@ -13,7 +13,7 @@
 	</create-edit>
 </template>
 
-<script>
+<script lang="ts">
 import ListDuplicateService from '@/services/listDuplicateService'
 import NamespaceSearch from '@/components/namespace/namespace-search.vue'
 import ListDuplicateModel from '@/models/listDuplicateModel'

@@ -28,7 +28,7 @@
 	</create-edit>
 </template>
 
-<script>
+<script lang="ts">
 import TeamModel from '../../models/team'
 import TeamService from '../../services/team'
 import CreateEdit from '@/components/misc/create-edit.vue'

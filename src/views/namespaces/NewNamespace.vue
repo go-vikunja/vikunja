@@ -40,7 +40,7 @@
 	</create-edit>
 </template>
 
-<script>
+<script lang="ts">
 import Message from '@/components/misc/message'
 import NamespaceModel from '../../models/namespace'
 import NamespaceService from '../../services/namespace'

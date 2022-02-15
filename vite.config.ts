@@ -60,7 +60,7 @@ export default defineConfig({
 		}),
 		VitePWA({
 			srcDir: 'src',
-			filename: 'sw.js',
+			filename: 'sw.ts',
 			base: '/',
 			strategies: 'injectManifest',
 			injectRegister: false,

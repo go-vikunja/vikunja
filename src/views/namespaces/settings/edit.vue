@@ -55,7 +55,7 @@
 	</create-edit>
 </template>
 
-<script>
+<script lang="ts">
 import AsyncEditor from '@/components/input/AsyncEditor'
 
 import NamespaceService from '@/services/namespace'

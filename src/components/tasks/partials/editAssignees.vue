@@ -27,7 +27,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import {includesById} from '@/helpers/utils'
 import UserModel from '../../../models/user'
 import ListUserService from '../../../services/listUsers'

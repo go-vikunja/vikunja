@@ -75,7 +75,7 @@
 	</card>
 </template>
 
-<script>
+<script lang="ts">
 import AsyncEditor from '@/components/input/AsyncEditor'
 
 import TaskService from '../../services/task'

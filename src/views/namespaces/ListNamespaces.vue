@@ -68,7 +68,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import {mapState} from 'vuex'
 import Fancycheckbox from '../../components/input/fancycheckbox.vue'
 import {LOADING} from '@/store/mutation-types'

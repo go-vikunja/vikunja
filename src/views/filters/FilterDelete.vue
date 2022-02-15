@@ -11,7 +11,7 @@
 	</modal>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { store } from '@/store'
 import { useI18n } from 'vue-i18n'
 import { useRouter, useRoute } from 'vue-router'

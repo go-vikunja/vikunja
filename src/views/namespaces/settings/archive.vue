@@ -13,7 +13,7 @@
 	</modal>
 </template>
 
-<script>
+<script lang="ts">
 import NamespaceService from '@/services/namespace'
 
 export default {

@@ -15,7 +15,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 
 export default {

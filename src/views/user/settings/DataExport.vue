@@ -38,7 +38,7 @@
 	</card>
 </template>
 
-<script>
+<script lang="ts">
 import DataExportService from '@/services/dataExport'
 
 export default {

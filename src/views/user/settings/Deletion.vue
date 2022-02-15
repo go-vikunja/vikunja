@@ -82,7 +82,7 @@
 	</card>
 </template>
 
-<script>
+<script lang="ts">
 import AccountDeleteService from '@/services/accountDelete'
 import {mapState} from 'vuex'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'

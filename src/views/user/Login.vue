@@ -100,7 +100,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import {useDebounceFn} from '@vueuse/core'
 import {mapState} from 'vuex'
 

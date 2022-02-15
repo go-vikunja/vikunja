@@ -11,7 +11,7 @@
 	</span>
 </template>
 
-<script>
+<script lang="ts">
 import {getChecklistStatistics} from '../../../helpers/checklistFromText'
 
 export default {

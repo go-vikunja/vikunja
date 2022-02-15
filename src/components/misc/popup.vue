@@ -5,7 +5,7 @@
 	</div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {onBeforeUnmount, onMounted, ref} from 'vue'
 

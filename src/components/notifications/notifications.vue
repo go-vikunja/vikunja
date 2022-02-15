@@ -47,7 +47,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import NotificationService from '@/services/notification'
 import User from '@/components/misc/user.vue'
 import names from '@/models/constants/notificationNames.json'

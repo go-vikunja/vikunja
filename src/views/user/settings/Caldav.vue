@@ -24,7 +24,7 @@
 	</card>
 </template>
 
-<script>
+<script lang="ts">
 import copy from 'copy-to-clipboard'
 import {mapState} from 'vuex'
 import {CALDAV_DOCS} from '@/urls'

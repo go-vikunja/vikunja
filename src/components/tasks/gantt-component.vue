@@ -170,7 +170,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import VueDragResize from 'vue-drag-resize'
 import EditTask from './edit-task'
 

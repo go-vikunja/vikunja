@@ -174,7 +174,7 @@
 	</card>
 </template>
 
-<script>
+<script lang="ts">
 import DatepickerWithRange from '@/components/date/datepickerWithRange'
 import Fancycheckbox from '../../input/fancycheckbox'
 

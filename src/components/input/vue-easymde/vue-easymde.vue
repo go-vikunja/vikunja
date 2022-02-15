@@ -9,7 +9,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import EasyMDE from 'easymde'
 import {marked} from 'marked'
 

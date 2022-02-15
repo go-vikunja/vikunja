@@ -52,7 +52,7 @@
 	</modal>
 </template>
 
-<script>
+<script lang="ts">
 import TaskService from '@/services/task'
 import TeamService from '@/services/team'
 

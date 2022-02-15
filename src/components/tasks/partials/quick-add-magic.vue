@@ -85,7 +85,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {PREFIXES} from '@/modules/parseTaskText'
 

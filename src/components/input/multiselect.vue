@@ -82,7 +82,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import {i18n} from '@/i18n'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 

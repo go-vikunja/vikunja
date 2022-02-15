@@ -34,7 +34,7 @@
 	</create-edit>
 </template>
 
-<script>
+<script lang="ts">
 import LabelModel from '../../models/label'
 import CreateEdit from '@/components/misc/create-edit.vue'
 import ColorPicker from '../../components/input/colorPicker'
