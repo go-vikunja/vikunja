@@ -30,12 +30,14 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import AsyncEditor from '@/components/input/AsyncEditor'
 
 import {LOADING} from '@/store/mutation-types'
 import {mapState} from 'vuex'
 
-export default {
+export default defineComponent({
 	name: 'description',
 	components: {
 		Editor: AsyncEditor,
@@ -86,6 +88,6 @@ export default {
 			}
 		},
 	},
-}
+})
 </script>
 

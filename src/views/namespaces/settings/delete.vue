@@ -13,7 +13,9 @@
 </template>
 
 <script lang="ts">
-export default {
+import {defineComponent} from 'vue'
+
+export default defineComponent({
 	name: 'namespace-setting-delete',
 	computed: {
 		namespace() {
@@ -41,5 +43,5 @@ export default {
 			this.$router.push({name: 'home'})
 		},
 	},
-}
+})
 </script>

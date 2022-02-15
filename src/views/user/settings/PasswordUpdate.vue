@@ -52,10 +52,11 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import PasswordUpdateService from '@/services/passwordUpdateService'
 import PasswordUpdateModel from '@/models/passwordUpdate'
 
-export default {
+export default defineComponent({
 	name: 'user-settings-password-update',
 	data() {
 		return {
@@ -83,5 +84,5 @@ export default {
 			this.$message.success({message: this.$t('user.settings.passwordUpdateSuccess')})
 		},
 	},
-}
+})
 </script>

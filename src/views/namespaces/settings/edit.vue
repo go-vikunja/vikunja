@@ -56,6 +56,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import AsyncEditor from '@/components/input/AsyncEditor'
 
 import NamespaceService from '@/services/namespace'
@@ -64,7 +66,7 @@ import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import ColorPicker from '@/components/input/colorPicker.vue'
 import CreateEdit from '@/components/misc/create-edit.vue'
 
-export default {
+export default defineComponent({
 	name: 'namespace-setting-edit',
 	data() {
 		return {
@@ -118,5 +120,5 @@ export default {
 			this.$router.back()
 		},
 	},
-}
+})
 </script>

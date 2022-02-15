@@ -3,9 +3,3 @@
 		<slot></slot>
 	</p>
 </template>
-
-<script lang="ts">
-export default {
-	name: 'nothing',
-}
-</script>

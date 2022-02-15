@@ -20,9 +20,11 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import {createRandomID} from '@/helpers/randomId'
 
-export default {
+export default defineComponent({
 	name: 'fancycheckbox',
 	data() {
 		return {
@@ -57,7 +59,7 @@ export default {
 			this.$emit('change', checked)
 		},
 	},
-}
+})
 </script>
 
 

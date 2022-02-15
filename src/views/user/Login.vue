@@ -101,6 +101,7 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import {useDebounceFn} from '@vueuse/core'
 import {mapState} from 'vuex'
 
@@ -112,7 +113,7 @@ import {redirectToProvider} from '../../helpers/redirectToProvider'
 import {getLastVisited, clearLastVisited} from '../../helpers/saveLastVisited'
 import Password from '@/components/input/password'
 
-export default {
+export default defineComponent({
 	components: {
 		Password,
 		Message,
@@ -233,7 +234,7 @@ export default {
 
 		redirectToProvider,
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

@@ -8,7 +8,9 @@
 </template>
 
 <script lang="ts">
-export default {
+import {defineComponent} from 'vue'
+
+export default defineComponent({
 	name: 'update',
 	data() {
 		return {
@@ -45,7 +47,7 @@ export default {
 			this.registration.waiting.postMessage('skipWaiting')
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

@@ -29,11 +29,12 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import TeamModel from '../../models/team'
 import TeamService from '../../services/team'
 import CreateEdit from '@/components/misc/create-edit.vue'
 
-export default {
+export default defineComponent({
 	name: 'NewTeam',
 	data() {
 		return {
@@ -64,5 +65,5 @@ export default {
 			this.$message.success({message: this.$t('team.create.success') })
 		},
 	},
-}
+})
 </script>

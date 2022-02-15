@@ -14,9 +14,11 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import NamespaceService from '@/services/namespace'
 
-export default {
+export default defineComponent({
 	name: 'namespace-setting-archive',
 	data() {
 		return {
@@ -49,5 +51,5 @@ export default {
 			}
 		},
 	},
-}
+})
 </script>

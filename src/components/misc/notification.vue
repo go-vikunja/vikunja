@@ -37,12 +37,6 @@
 	</notifications>
 </template>
 
-<script lang="ts">
-export default {
-	name: 'notification',
-}
-</script>
-
 <style scoped>
 .vue-notification {
 	z-index: 9999;

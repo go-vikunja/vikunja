@@ -66,6 +66,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import AbstractMigrationService from '@/services/migrator/abstractMigration'
 import AbstractMigrationFileService from '@/services/migrator/abstractMigrationFile'
 import Logo from '@/assets/logo.svg?component'
@@ -75,7 +77,7 @@ import {MIGRATORS} from './migrators'
 
 const PROGRESS_DOTS_COUNT = 8
 
-export default {
+export default defineComponent({
 	name: 'MigrateService',
 
 	components: {
@@ -170,7 +172,7 @@ export default {
 			}
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

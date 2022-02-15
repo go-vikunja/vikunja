@@ -41,13 +41,15 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import Message from '@/components/misc/message'
 import NamespaceModel from '../../models/namespace'
 import NamespaceService from '../../services/namespace'
 import CreateEdit from '@/components/misc/create-edit.vue'
 import ColorPicker from '../../components/input/colorPicker'
 
-export default {
+export default defineComponent({
 	name: 'NewNamespace',
 	data() {
 		return {
@@ -78,5 +80,5 @@ export default {
 			this.$router.back()
 		},
 	},
-}
+})
 </script>

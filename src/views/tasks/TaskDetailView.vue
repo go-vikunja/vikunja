@@ -414,6 +414,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import TaskService from '../../services/task'
 import TaskModel from '../../models/task'
 
@@ -444,7 +446,7 @@ import ChecklistSummary from '../../components/tasks/partials/checklist-summary'
 import CreatedUpdated from '@/components/tasks/partials/createdUpdated'
 
 
-export default {
+export default defineComponent({
 	name: 'TaskDetailView',
 	compatConfig: { ATTR_FALSE_VALUE: false },
 	components: {
@@ -685,7 +687,7 @@ export default {
 			this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

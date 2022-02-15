@@ -97,6 +97,7 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import {mapState} from 'vuex'
 
 import LabelModel from '../../models/label'
@@ -105,7 +106,7 @@ import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import AsyncEditor from '@/components/input/AsyncEditor'
 import ColorPicker from '@/components/input/colorPicker'
 
-export default {
+export default defineComponent({
 	name: 'ListLabels',
 	components: {
 		ColorPicker,
@@ -160,5 +161,5 @@ export default {
 			this.$nextTick(() => this.editorActive = true)
 		},
 	},
-}
+})
 </script>

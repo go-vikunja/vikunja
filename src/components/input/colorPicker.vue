@@ -35,6 +35,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import {createRandomID} from '@/helpers/randomId'
 
 const DEFAULT_COLORS = [
@@ -46,7 +48,7 @@ const DEFAULT_COLORS = [
 	'#00db60',
 ]
 
-export default {
+export default defineComponent({
 	name: 'colorPicker',
 	data() {
 		return {
@@ -105,7 +107,7 @@ export default {
 			this.update(true)
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

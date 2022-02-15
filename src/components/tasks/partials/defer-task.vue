@@ -38,10 +38,12 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import TaskService from '../../../services/task'
 import flatPickr from 'vue-flatpickr-component'
 
-export default {
+export default defineComponent({
 	name: 'defer-task',
 	data() {
 		return {
@@ -129,7 +131,7 @@ export default {
 			this.$emit('update:modelValue', task)
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

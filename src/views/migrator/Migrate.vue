@@ -21,9 +21,11 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import {MIGRATORS} from './migrators'
 
-export default {
+export default defineComponent({
 	name: 'Migrate',
 	mounted() {
 		this.setTitle(this.$t('migrate.title'))
@@ -35,7 +37,7 @@ export default {
 				.filter((item) => Boolean(item))
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

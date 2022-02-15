@@ -83,11 +83,12 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import AccountDeleteService from '@/services/accountDelete'
 import {mapState} from 'vuex'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
-export default {
+export default defineComponent({
 	name: 'user-settings-deletion',
 	data() {
 		return {
@@ -129,5 +130,5 @@ export default {
 			this.password = ''
 		},
 	},
-}
+})
 </script>

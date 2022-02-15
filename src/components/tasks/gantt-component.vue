@@ -171,6 +171,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import VueDragResize from 'vue-drag-resize'
 import EditTask from './edit-task'
 
@@ -185,7 +187,7 @@ import FilterPopup from '@/components/list/partials/filter-popup.vue'
 
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 
-export default {
+export default defineComponent({
 	name: 'GanttChart',
 	components: {
 		FilterPopup,
@@ -435,7 +437,7 @@ export default {
 			return this.format(date, 'MMMM, yyyy')
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

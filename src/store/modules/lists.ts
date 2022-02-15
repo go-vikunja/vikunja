@@ -1,6 +1,6 @@
 import ListService from '@/services/list'
 import {setLoading} from '@/store/helper'
-import {removeListFromHistory} from '@/modules/listHistory.ts'
+import {removeListFromHistory} from '@/modules/listHistory'
 import {createNewIndexer} from '@/indexes'
 
 const {add, remove, search, update} = createNewIndexer('lists', ['title', 'description'])

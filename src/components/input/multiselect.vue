@@ -83,10 +83,11 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import {i18n} from '@/i18n'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 
-export default {
+export default defineComponent({
 	name: 'multiselect',
 	data() {
 		return {
@@ -366,7 +367,7 @@ export default {
 			this.$refs.searchInput.focus()
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

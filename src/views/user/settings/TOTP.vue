@@ -64,11 +64,12 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import TotpService from '@/services/totp'
 import TotpModel from '@/models/totp'
 import {mapState} from 'vuex'
 
-export default {
+export default defineComponent({
 	name: 'user-settings-totp',
 	data() {
 		return {
@@ -129,5 +130,5 @@ export default {
 			this.$message.success({message: this.$t('user.settings.totp.disableSuccess')})
 		},
 	},
-}
+})
 </script>

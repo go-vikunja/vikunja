@@ -53,6 +53,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import TaskService from '@/services/task'
 import TeamService from '@/services/team'
 
@@ -82,7 +84,7 @@ const SEARCH_MODE_TASKS = 'tasks'
 const SEARCH_MODE_LISTS = 'lists'
 const SEARCH_MODE_TEAMS = 'teams'
 
-export default {
+export default defineComponent({
 	name: 'quick-actions',
 	components: {QuickAddMagic},
 	data() {
@@ -480,7 +482,7 @@ export default {
 			this.selectedCmd = null
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

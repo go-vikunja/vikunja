@@ -48,6 +48,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import NotificationService from '@/services/notification'
 import User from '@/components/misc/user.vue'
 import names from '@/models/constants/notificationNames.json'
@@ -56,7 +58,7 @@ import {mapState} from 'vuex'
 
 const LOAD_NOTIFICATIONS_INTERVAL = 10000
 
-export default {
+export default defineComponent({
 	name: 'notifications',
 	components: {User},
 	data() {
@@ -131,7 +133,7 @@ export default {
 			}
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

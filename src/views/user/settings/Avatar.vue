@@ -68,13 +68,14 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import {Cropper} from 'vue-advanced-cropper'
 import 'vue-advanced-cropper/dist/style.css'
 
 import AvatarService from '@/services/avatar'
 import AvatarModel from '@/models/avatar'
 
-export default {
+export default defineComponent({
 	name: 'user-settings-avatar',
 	data() {
 		return {
@@ -144,7 +145,7 @@ export default {
 			reader.readAsDataURL(avatar[0])
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss">

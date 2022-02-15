@@ -25,11 +25,12 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import copy from 'copy-to-clipboard'
 import {mapState} from 'vuex'
 import {CALDAV_DOCS} from '@/urls'
 
-export default {
+export default defineComponent({
 	name: 'user-settings-caldav',
 	data() {
 		return {
@@ -51,5 +52,5 @@ export default {
 	methods: {
 		copy,
 	},
-}
+})
 </script>

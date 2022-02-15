@@ -12,9 +12,10 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import priorites from '../../../models/constants/priorities'
 
-export default {
+export default defineComponent({
 	name: 'prioritySelect',
 	data() {
 		return {
@@ -47,5 +48,5 @@ export default {
 			this.$emit('change')
 		},
 	},
-}
+})
 </script>

@@ -76,6 +76,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import AsyncEditor from '@/components/input/AsyncEditor'
 
 import TaskService from '../../services/task'
@@ -85,7 +87,7 @@ import EditLabels from './partials/editLabels'
 import Reminders from './partials/reminders'
 import ColorPicker from '../input/colorPicker'
 
-export default {
+export default defineComponent({
 	name: 'edit-task',
 	data() {
 		return {
@@ -151,7 +153,7 @@ export default {
 			this.$message.success({message: this.$t('task.detail.updateSuccess')})
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

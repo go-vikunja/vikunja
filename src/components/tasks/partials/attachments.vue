@@ -136,6 +136,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import AttachmentService from '../../../services/attachment'
 import AttachmentModel from '../../../models/attachment'
 import User from '../../misc/user'
@@ -144,7 +146,7 @@ import copy from 'copy-to-clipboard'
 
 import { uploadFiles, generateAttachmentUrl } from '@/helpers/attachments'
 
-export default {
+export default defineComponent({
 	name: 'attachments',
 	components: {
 		User,
@@ -247,7 +249,7 @@ export default {
 			copy(generateAttachmentUrl(this.taskId, attachment.id))
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

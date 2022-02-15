@@ -35,13 +35,14 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import LabelModel from '../../models/label'
 import CreateEdit from '@/components/misc/create-edit.vue'
 import ColorPicker from '../../components/input/colorPicker'
 import {mapState} from 'vuex'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
-export default {
+export default defineComponent({
 	name: 'NewLabel',
 	data() {
 		return {
@@ -75,5 +76,5 @@ export default {
 			this.$message.success({message: this.$t('label.create.success')})
 		},
 	},
-}
+})
 </script>

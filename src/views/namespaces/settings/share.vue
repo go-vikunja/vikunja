@@ -21,9 +21,11 @@
 </template>
 
 <script lang="ts">
-export default {
+import {defineComponent} from 'vue'
+
+export default defineComponent({
 	name: 'namespace-setting-share',
-}
+})
 </script>
 
 <script lang="ts" setup>

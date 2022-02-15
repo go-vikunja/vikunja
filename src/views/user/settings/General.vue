@@ -132,7 +132,7 @@
 </template>
 
 <script lang="ts">
-import {computed, watch, ref} from 'vue'
+import {defineComponent, computed, watch, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import {playSoundWhenDoneKey, playPopSound} from '@/helpers/playPop'
@@ -186,7 +186,7 @@ function getPlaySoundWhenDoneSetting() {
 	return localStorage.getItem(playSoundWhenDoneKey) === 'true' || localStorage.getItem(playSoundWhenDoneKey) === null
 }
 
-export default {
+export default defineComponent({
 	name: 'user-settings-general',
 	data() {
 		return {
@@ -244,5 +244,5 @@ export default {
 			})
 		},
 	},
-}
+})
 </script>

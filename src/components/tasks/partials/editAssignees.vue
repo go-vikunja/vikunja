@@ -28,6 +28,7 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import {includesById} from '@/helpers/utils'
 import UserModel from '../../../models/user'
 import ListUserService from '../../../services/listUsers'
@@ -35,7 +36,7 @@ import TaskAssigneeService from '../../../services/taskAssignee'
 import User from '../../misc/user'
 import Multiselect from '@/components/input/multiselect.vue'
 
-export default {
+export default defineComponent({
 	name: 'editAssignees',
 	components: {
 		User,
@@ -115,7 +116,7 @@ export default {
 			this.$refs.multiselect.focus()
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

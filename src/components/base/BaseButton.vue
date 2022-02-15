@@ -11,10 +11,12 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 // see https://v3.vuejs.org/api/sfc-script-setup.html#usage-alongside-normal-script
-export default {
+export default defineComponent({
   inheritAttrs: false,
-}
+})
 </script>
 
 <script lang="ts" setup>

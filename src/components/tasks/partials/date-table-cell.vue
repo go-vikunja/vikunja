@@ -6,14 +6,11 @@
 	</td>
 </template>
 
-<script lang="ts">
-export default {
-	name: 'date-table-cell',
-	props: {
-		date: {
-			type: Date,
-			default: 0,
-		},
+<script setup lang="ts">
+defineProps({
+	date: {
+		type: Date,
+		default: 0,
 	},
-}
+})
 </script>

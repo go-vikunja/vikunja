@@ -41,49 +41,45 @@
 	</modal>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { i18n } from '@/i18n'
 
-export default {
-	name: 'create-edit',
-	props: {
-		title: {
-			type: String,
-			default: '',
-		},
-		primaryLabel: {
-			type: String,
-			default() {
-				return i18n.global.t('misc.create')
-			},
-		},
-		primaryIcon: {
-			type: String,
-			default: 'plus',
-		},
-		primaryDisabled: {
-			type: Boolean,
-			default: false,
-		},
-		tertiary: {
-			type: String,
-			default: '',
-		},
-		wide: {
-			type: Boolean,
-			default: false,
-		},
-		loading: {
-			type: Boolean,
-			default: false,
+defineProps({
+	title: {
+		type: String,
+		default: '',
+	},
+	primaryLabel: {
+		type: String,
+		default() {
+			return i18n.global.t('misc.create')
 		},
 	},
-	emits: ['create', 'primary', 'tertiary'],
-	methods: {
-		primary() {
-			this.$emit('create')
-			this.$emit('primary')
-		},
+	primaryIcon: {
+		type: String,
+		default: 'plus',
 	},
+	primaryDisabled: {
+		type: Boolean,
+		default: false,
+	},
+	tertiary: {
+		type: String,
+		default: '',
+	},
+	wide: {
+		type: Boolean,
+		default: false,
+	},
+	loading: {
+		type: Boolean,
+		default: false,
+	},
+})
+const emit = defineEmits(['create', 'primary', 'tertiary'])
+
+function primary() {
+	emit('create')
+	emit('primary')
 }
 </script>

@@ -12,9 +12,11 @@
 </template>
 
 <script lang="ts">
-import {getChecklistStatistics} from '../../../helpers/checklistFromText'
+import {defineComponent} from 'vue'
 
-export default {
+import {getChecklistStatistics} from '@/helpers/checklistFromText'
+
+export default defineComponent({
 	name: 'checklist-summary',
 	props: {
 		task: {
@@ -34,7 +36,7 @@ export default {
 			return ((100 - progress) / 100) * c
 		},
 	},
-}
+})
 </script>
 
 <style scoped lang="scss">

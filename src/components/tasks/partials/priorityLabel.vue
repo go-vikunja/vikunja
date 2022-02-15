@@ -20,31 +20,23 @@
 	</span>
 </template>
 
-<script lang="ts">
-import priorites from '../../../models/constants/priorities'
-
-export default {
-	name: 'priorityLabel',
-	data() {
-		return {
-			priorities: priorites,
-		}
+<script setup lang="ts">
+import priorities from '@/models/constants/priorities'
+	
+defineProps({
+	priority: {
+		default: 0,
+		type: Number,
 	},
-	props: {
-		priority: {
-			default: 0,
-			type: Number,
-		},
-		showAll: {
-			type: Boolean,
-			default: false,
-		},
-		done: {
-			type: Boolean,
-			default: false,
-		},
+	showAll: {
+		type: Boolean,
+		default: false,
 	},
-}
+	done: {
+		type: Boolean,
+		default: false,
+	},
+})
 </script>
 
 <style lang="scss" scoped>

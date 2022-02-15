@@ -66,6 +66,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import {playPop} from '../../../helpers/playPop'
 import PriorityLabel from '../../../components/tasks/partials/priorityLabel'
 import User from '../../../components/misc/user'
@@ -75,7 +77,7 @@ import ChecklistSummary from './checklist-summary'
 
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 
-export default {
+export default defineComponent({
 	name: 'kanban-card',
 	components: {
 		ChecklistSummary,
@@ -124,7 +126,7 @@ export default {
 			})
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

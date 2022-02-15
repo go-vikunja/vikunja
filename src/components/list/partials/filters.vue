@@ -175,6 +175,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import DatepickerWithRange from '@/components/date/datepickerWithRange'
 import Fancycheckbox from '../../input/fancycheckbox'
 
@@ -223,7 +225,7 @@ const DEFAULT_FILTERS = {
 
 export const ALPHABETICAL_SORT = 'title'
 
-export default {
+export default defineComponent({
 	name: 'filters',
 	components: {
 		DatepickerWithRange,
@@ -573,7 +575,7 @@ export default {
 			this.setSingleValueFilter('labels', 'labels', '', 'in')
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

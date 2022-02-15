@@ -37,10 +37,11 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import EmailUpdateService from '@/services/emailUpdate'
 import EmailUpdateModel from '@/models/emailUpdate'
 
-export default {
+export default defineComponent({
 	name: 'user-settings-update-email',
 	data() {
 		return {
@@ -62,5 +63,5 @@ export default {
 			this.$message.success({message: this.$t('user.settings.updateEmailSuccess')})
 		},
 	},
-}
+})
 </script>

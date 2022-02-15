@@ -176,6 +176,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import rights from '../../models/constants/rights'
 
 import LinkShareService from '../../services/linkShare'
@@ -184,7 +186,7 @@ import LinkShareModel from '../../models/linkShare'
 import copy from 'copy-to-clipboard'
 import {mapState} from 'vuex'
 
-export default {
+export default defineComponent({
 	name: 'linkSharing',
 	props: {
 		listId: {
@@ -256,7 +258,7 @@ export default {
 			return this.frontendUrl + 'share/' + hash + '/auth'
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

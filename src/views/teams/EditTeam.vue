@@ -161,6 +161,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import AsyncEditor from '@/components/input/AsyncEditor'
 import {mapState} from 'vuex'
 import { i18n } from '@/i18n'
@@ -175,7 +177,7 @@ import Rights from '../../models/constants/rights.json'
 
 import Multiselect from '@/components/input/multiselect.vue'
 
-export default {
+export default defineComponent({
 	name: 'EditTeam',
 	data() {
 		return {
@@ -297,7 +299,7 @@ export default {
 			this.foundUsers = []
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

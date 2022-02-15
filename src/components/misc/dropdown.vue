@@ -16,9 +16,10 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 
-export default {
+export default defineComponent({
 	name: 'dropdown',
 	data() {
 		return {
@@ -55,5 +56,5 @@ export default {
 			})
 		},
 	},
-}
+})
 </script>

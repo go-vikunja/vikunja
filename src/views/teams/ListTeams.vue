@@ -26,9 +26,10 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import TeamService from '../../services/team'
 
-export default {
+export default defineComponent({
 	name: 'ListTeams',
 	data() {
 		return {
@@ -47,7 +48,7 @@ export default {
 			this.teams = await this.teamService.getAll()
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

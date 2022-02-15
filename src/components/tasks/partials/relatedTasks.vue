@@ -135,6 +135,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import TaskService from '../../../services/task'
 import TaskModel from '../../../models/task'
 import TaskRelationService from '../../../services/taskRelation'
@@ -143,7 +145,7 @@ import TaskRelationModel from '../../../models/taskRelation'
 
 import Multiselect from '@/components/input/multiselect.vue'
 
-export default {
+export default defineComponent({
 	name: 'relatedTasks',
 	data() {
 		return {
@@ -307,7 +309,7 @@ export default {
 				})
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

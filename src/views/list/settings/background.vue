@@ -73,6 +73,7 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import {mapState} from 'vuex'
 import {getBlobFromBlurHash} from '../../../helpers/getBlobFromBlurHash'
 
@@ -85,7 +86,7 @@ import debounce from 'lodash.debounce'
 
 const SEARCH_DEBOUNCE = 300
 
-export default {
+export default defineComponent({
 	name: 'list-setting-background',
 	components: {CreateEdit},
 	data() {
@@ -179,7 +180,7 @@ export default {
 			this.$router.back()
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

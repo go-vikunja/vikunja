@@ -131,6 +131,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import UserNamespaceService from '../../services/userNamespace'
 import UserNamespaceModel from '../../models/userNamespace'
 import UserListModel from '../../models/userList'
@@ -149,7 +151,7 @@ import rights from '../../models/constants/rights.json'
 import Multiselect from '@/components/input/multiselect.vue'
 import Nothing from '@/components/misc/nothing.vue'
 
-export default {
+export default defineComponent({
 	name: 'userTeamShare',
 	props: {
 		type: {
@@ -363,7 +365,7 @@ export default {
 			this.found = []
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

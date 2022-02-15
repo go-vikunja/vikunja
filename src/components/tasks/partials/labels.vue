@@ -10,15 +10,12 @@
 	</div>
 </template>
 
-<script lang="ts">
-export default {
-	name: 'labels',
-	props: {
-		labels: {
-			required: true,
-		},
+<script setup lang="ts">
+defineProps({
+	labels: {
+		required: true,
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

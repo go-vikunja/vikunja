@@ -66,6 +66,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import AsyncEditor from '@/components/input/AsyncEditor'
 
 import ListModel from '@/models/list'
@@ -74,7 +76,7 @@ import ColorPicker from '@/components/input/colorPicker.vue'
 import {CURRENT_LIST} from '@/store/mutation-types'
 import CreateEdit from '@/components/misc/create-edit.vue'
 
-export default {
+export default defineComponent({
 	name: 'list-setting-edit',
 	data() {
 		return {
@@ -109,5 +111,5 @@ export default {
 			this.$router.back()
 		},
 	},
-}
+})
 </script>

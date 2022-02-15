@@ -26,9 +26,11 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import datepicker from '@/components/input/datepicker.vue'
 
-export default {
+export default defineComponent({
 	name: 'reminders',
 	data() {
 		return {
@@ -102,7 +104,7 @@ export default {
 			this.updateData()
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

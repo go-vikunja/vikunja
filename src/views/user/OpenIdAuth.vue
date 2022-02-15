@@ -10,6 +10,7 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import {mapState} from 'vuex'
 
 import {LOADING} from '@/store/mutation-types'
@@ -17,7 +18,7 @@ import {getErrorText} from '@/message'
 import Message from '@/components/misc/message'
 import {clearLastVisited, getLastVisited} from '../../helpers/saveLastVisited'
 
-export default {
+export default defineComponent({
 	name: 'Auth',
 	components: {Message},
 	data() {
@@ -86,5 +87,5 @@ export default {
 			}
 		},
 	},
-}
+})
 </script>

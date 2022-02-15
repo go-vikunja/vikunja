@@ -69,12 +69,14 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import {mapState} from 'vuex'
 import Fancycheckbox from '../../components/input/fancycheckbox.vue'
 import {LOADING} from '@/store/mutation-types'
 import ListCard from '@/components/list/partials/list-card.vue'
 
-export default {
+export default defineComponent({
 	name: 'ListNamespaces',
 	components: {
 		ListCard,
@@ -103,7 +105,7 @@ export default {
 			localStorage.setItem('showArchived', JSON.stringify(this.showArchived))
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

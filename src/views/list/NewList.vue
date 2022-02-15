@@ -32,12 +32,13 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import ListService from '../../services/list'
 import ListModel from '../../models/list'
 import CreateEdit from '@/components/misc/create-edit.vue'
 import ColorPicker from '../../components/input/colorPicker'
 
-export default {
+export default defineComponent({
 	name: 'NewList',
 	data() {
 		return {
@@ -70,5 +71,5 @@ export default {
 			})
 		},
 	},
-}
+})
 </script>

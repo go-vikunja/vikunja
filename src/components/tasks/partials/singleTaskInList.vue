@@ -92,6 +92,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import TaskModel from '../../../models/task'
 import PriorityLabel from './priorityLabel'
 import TaskService from '../../../services/task'
@@ -103,7 +105,7 @@ import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {playPop} from '@/helpers/playPop'
 import ChecklistSummary from './checklist-summary'
 
-export default {
+export default defineComponent({
 	name: 'singleTaskInList',
 	data() {
 		return {
@@ -221,7 +223,7 @@ export default {
 			})
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

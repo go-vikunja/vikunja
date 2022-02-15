@@ -28,12 +28,14 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import Filters from '@/components/list/partials/filters'
 import Popup from '@/components/misc/popup'
 
 import {getDefaultParams} from '@/composables/taskList'
 
-export default {
+export default defineComponent({
 	name: 'filter-popup',
 	components: {
 		Popup,
@@ -85,7 +87,7 @@ export default {
 			this.value = {...getDefaultParams()}
 		},
 	},
-}
+})
 </script>
 
 <style scoped lang="scss">

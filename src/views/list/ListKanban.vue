@@ -227,6 +227,7 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import draggable from 'vuedraggable'
 import cloneDeep from 'lodash.clonedeep'
 
@@ -252,7 +253,7 @@ const DRAG_OPTIONS = {
 
 const MIN_SCROLL_HEIGHT_PERCENT = 0.25
 
-export default {
+export default defineComponent({
 	name: 'Kanban',
 	components: {
 		ListWrapper,
@@ -602,7 +603,7 @@ export default {
 			saveCollapsedBucketState(this.listId, this.collapsedBuckets)
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss">

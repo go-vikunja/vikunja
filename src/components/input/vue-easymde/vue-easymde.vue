@@ -10,10 +10,12 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import EasyMDE from 'easymde'
 import {marked} from 'marked'
 
-export default {
+export default defineComponent({
   name: 'vue-easymde',
   props: {
     modelValue: String,
@@ -143,7 +145,7 @@ export default {
       }
     },
   },
-}
+})
 </script>
 
 <style lang="scss" scoped>

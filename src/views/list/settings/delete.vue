@@ -13,7 +13,9 @@
 </template>
 
 <script lang="ts">
-export default {
+import {defineComponent} from 'vue'
+
+export default defineComponent({
 	name: 'list-setting-delete',
 	created() {
 		this.setTitle(this.$t('list.delete.title', {list: this.list.title}))
@@ -30,5 +32,5 @@ export default {
 			this.$router.push({name: 'home'})
 		},
 	},
-}
+})
 </script>

@@ -152,6 +152,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import AsyncEditor from '@/components/input/AsyncEditor'
 
 import TaskCommentService from '../../../services/taskComment'
@@ -159,7 +161,7 @@ import TaskCommentModel from '../../../models/taskComment'
 import {uploadFile} from '@/helpers/attachments'
 import {mapState} from 'vuex'
 
-export default {
+export default defineComponent({
 	name: 'comments',
 	components: {
 		Editor: AsyncEditor,
@@ -302,7 +304,7 @@ export default {
 			}
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

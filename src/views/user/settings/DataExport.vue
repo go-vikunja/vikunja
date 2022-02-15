@@ -39,9 +39,10 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import DataExportService from '@/services/dataExport'
 
-export default {
+export default defineComponent({
 	name: 'user-settings-data-export',
 	data() {
 		return {
@@ -71,5 +72,5 @@ export default {
 			this.password = ''
 		},
 	},
-}
+})
 </script>

@@ -88,8 +88,9 @@
 <script lang="ts">
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {PREFIXES} from '@/modules/parseTaskText'
+import { defineComponent } from 'vue'
 
-export default {
+export default defineComponent({
 	name: 'quick-add-magic',
 	data() {
 		return {
@@ -105,5 +106,5 @@ export default {
 			return PREFIXES[this.mode]
 		},
 	},
-}
+})
 </script>

@@ -157,6 +157,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import {mapState} from 'vuex'
 import draggable from 'vuedraggable'
 
@@ -169,7 +171,7 @@ import {CURRENT_LIST, MENU_ACTIVE, LOADING, LOADING_MODULE} from '@/store/mutati
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 
 
-export default {
+export default defineComponent({
 	name: 'navigation',
 
 	components: {
@@ -285,7 +287,7 @@ export default {
 			}
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

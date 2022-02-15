@@ -39,13 +39,14 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import LabelModel from '../../../models/label'
 import LabelTaskService from '../../../services/labelTask'
 
 import Multiselect from '@/components/input/multiselect.vue'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
-export default {
+export default defineComponent({
 	name: 'edit-labels',
 	props: {
 		modelValue: {
@@ -141,7 +142,7 @@ export default {
 		},
 
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

@@ -14,12 +14,14 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import ListDuplicateService from '@/services/listDuplicateService'
 import NamespaceSearch from '@/components/namespace/namespace-search.vue'
 import ListDuplicateModel from '@/models/listDuplicateModel'
 import CreateEdit from '@/components/misc/create-edit.vue'
 
-export default {
+export default defineComponent({
 	name: 'list-setting-duplicate',
 	data() {
 		return {
@@ -51,5 +53,5 @@ export default {
 			this.$router.push({name: 'list.index', params: {listId: duplicate.list.id}})
 		},
 	},
-}
+})
 </script>

@@ -26,11 +26,12 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import {mapState} from 'vuex'
 
 import Done from '@/components/misc/Done.vue'
 
-export default {
+export default defineComponent({
 	name: 'heading',
 	components: {
 		Done,
@@ -92,7 +93,7 @@ export default {
 			}
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

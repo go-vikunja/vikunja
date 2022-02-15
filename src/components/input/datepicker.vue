@@ -111,6 +111,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import { i18n } from '@/i18n'
@@ -121,7 +123,7 @@ import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
 
-export default {
+export default defineComponent({
 	name: 'datepicker',
 	data() {
 		return {
@@ -249,7 +251,7 @@ export default {
 			return format(newDate, 'E')
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss" scoped>

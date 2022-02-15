@@ -12,9 +12,10 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
 import ListService from '@/services/list'
 
-export default {
+export default defineComponent({
 	name: 'list-setting-archive',
 	data() {
 		return {
@@ -46,5 +47,5 @@ export default {
 			}
 		},
 	},
-}
+})
 </script>

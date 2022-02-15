@@ -5,11 +5,8 @@
 	</div>
 </template>
 
-<script lang="ts">
-export default {
-	name: '404',
-	mounted() {
-		this.setTitle('404')
-	},
-}
+<script setup lang="ts">
+import {useTitle} from '@/composables/useTitle'
+
+useTitle(() => '404')
 </script>

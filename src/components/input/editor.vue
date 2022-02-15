@@ -43,6 +43,8 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import VueEasymde from './vue-easymde/vue-easymde.vue'
 import {marked} from 'marked'
 import DOMPurify from 'dompurify'
@@ -55,7 +57,7 @@ import AttachmentService from '../../services/attachment'
 import {findCheckboxesInText} from '../../helpers/checklistFromText'
 import {createRandomID} from '@/helpers/randomId'
 
-export default {
+export default defineComponent({
 	name: 'editor',
 	components: {
 		VueEasymde,
@@ -304,7 +306,7 @@ export default {
 			}
 		},
 	},
-}
+})
 </script>
 
 <style lang="scss">
