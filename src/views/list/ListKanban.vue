@@ -627,6 +627,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	height: calc(#{$crazy-height-calculation});
 	margin: 0 -1.5rem;
 	padding: 0 1.5rem;
+	scroll-snap-type: x mandatory;
 
 	@media screen and (max-width: $tablet) {
 		height: calc(#{$crazy-height-calculation} - #{$filter-container-height});
@@ -666,6 +667,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		display: flex;
 		flex-direction: column;
 		overflow: hidden; // Make sure the edges are always rounded		
+		scroll-snap-align: center;
 
 		.tasks {
 			overflow: hidden auto;
