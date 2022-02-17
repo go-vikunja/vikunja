@@ -72,7 +72,7 @@
     "browserslist": "4.19.1",
     "caniuse-lite": "1.0.30001311",
     "cypress": "9.4.1",
-    "esbuild": "0.14.21",
+    "esbuild": "0.14.22",
     "eslint": "8.9.0",
     "eslint-plugin-vue": "8.4.1",
     "express": "4.17.3",
