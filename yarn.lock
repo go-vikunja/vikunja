@@ -5276,6 +5276,11 @@ css-what@^5.0.0:
   resolved "https://registry.yarnpkg.com/css-what/-/css-what-5.1.0.tgz#3f7b707aadf633baf62c2ceb8579b545bb40f7fe"
   integrity sha512-arSMRWIIFY0hV8pIxZMEfmMI47Wj3R/aWpZDDxWYCPEiOMv6tfOrnpDtgxBYPEQD4V0Y/958+1TdC3iWTFcUPw==
 
+css.escape@^1.5.1:
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/css.escape/-/css.escape-1.5.1.tgz#42e27d4fa04ae32f931a4b4d4191fa9cddee97cb"
+  integrity sha1-QuJ9T6BK4y+TGktNQZH6nN3ul8s=
+
 cssdb@^6.3.1:
   version "6.3.1"
   resolved "https://registry.yarnpkg.com/cssdb/-/cssdb-6.3.1.tgz#d8e521c70b32df082ea5373cdd51ac4dc6b6c151"
@@ -7467,11 +7472,12 @@ graphql@^16.1.0:
   resolved "https://registry.yarnpkg.com/graphql/-/graphql-16.2.0.tgz#de3150e80f1fc009590b92a9d16ab1b46e12b656"
   integrity sha512-MuQd7XXrdOcmfwuLwC2jNvx0n3rxIuNYOxUtiee5XOmfrWo613ar2U8pE7aHAKh8VwfpifubpD9IP+EdEAEOsA==
 
-happy-dom@2.36.0:
-  version "2.36.0"
-  resolved "https://registry.yarnpkg.com/happy-dom/-/happy-dom-2.36.0.tgz#a02ecb24182f9efe4c3806682253ade2c4fb9bb2"
-  integrity sha512-YbGZXg+/GLX6T+jhdiirwQasaXo8ReOkjmlbOdBzULAFpqTYTFo5o+5sNvZ6QQVY+ONOZgI2i06uKQnTu/PRVA==
+happy-dom@2.39.1:
+  version "2.39.1"
+  resolved "https://registry.yarnpkg.com/happy-dom/-/happy-dom-2.39.1.tgz#ee1b191fa3c6388bf1d68e4268f01b71b3b2168c"
+  integrity sha512-xABIR1/klgdPw5yVhQvbrbpU9025dXpr4pPVP4UG0uITzoPGsYruoDYiDNYT69ZhkGrs4K3pg01uD91mijhJcg==
   dependencies:
+    css.escape "^1.5.1"
     he "^1.1.1"
     node-fetch "^2.6.1"
     sync-request "^6.1.0"
