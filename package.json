@@ -68,7 +68,7 @@
     "@vitejs/plugin-vue": "2.2.0",
     "@vue/eslint-config-typescript": "10.0.0",
     "autoprefixer": "10.4.2",
-    "axios": "0.25.0",
+    "axios": "0.26.0",
     "browserslist": "4.19.1",
     "caniuse-lite": "1.0.30001312",
     "cypress": "9.4.1",
