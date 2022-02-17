@@ -7467,10 +7467,10 @@ graphql@^16.1.0:
   resolved "https://registry.yarnpkg.com/graphql/-/graphql-16.2.0.tgz#de3150e80f1fc009590b92a9d16ab1b46e12b656"
   integrity sha512-MuQd7XXrdOcmfwuLwC2jNvx0n3rxIuNYOxUtiee5XOmfrWo613ar2U8pE7aHAKh8VwfpifubpD9IP+EdEAEOsA==
 
-happy-dom@2.34.0:
-  version "2.34.0"
-  resolved "https://registry.yarnpkg.com/happy-dom/-/happy-dom-2.34.0.tgz#213bfd6a3fa0d84930debc7eaa67be26ec55d5e8"
-  integrity sha512-qUuuP7fa5BZaEmdcIccU51Hy/TzYHwR/I+hne2oe1ZCQrzdgmLAk9clDKwJsw44c9ceex/LX6S2W5nQb0nzNCg==
+happy-dom@2.36.0:
+  version "2.36.0"
+  resolved "https://registry.yarnpkg.com/happy-dom/-/happy-dom-2.36.0.tgz#a02ecb24182f9efe4c3806682253ade2c4fb9bb2"
+  integrity sha512-YbGZXg+/GLX6T+jhdiirwQasaXo8ReOkjmlbOdBzULAFpqTYTFo5o+5sNvZ6QQVY+ONOZgI2i06uKQnTu/PRVA==
   dependencies:
     he "^1.1.1"
     node-fetch "^2.6.1"
