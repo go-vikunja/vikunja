@@ -72,7 +72,7 @@
 						</transition>
 						<transition name="flash-background" appear>
 							<div class="column" v-if="activeFields.percentDone">
-								<!-- Percent Done -->
+								<!-- Progress -->
 								<div class="detail-title">
 									<icon icon="percent"/>
 									{{ $t('task.attributes.percentDone') }}
