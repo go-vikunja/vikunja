@@ -5,7 +5,7 @@
   "scripts": {
     "serve": "vite",
     "serve:dist-dev": "node scripts/serve-dist.js",
-    "serve:dist": "vite preview",
+    "serve:dist": "vite preview --port 4173",
     "build": "vite build && workbox copyLibraries dist/",
     "build:modern-only": "BUILD_MODERN_ONLY=true vite build && workbox copyLibraries dist/",
     "build:dev": "vite build -m development --outDir dist-dev/",

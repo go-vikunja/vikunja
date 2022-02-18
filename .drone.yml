@@ -120,7 +120,7 @@ steps:
         from_secret: cypress_project_key
     commands:
       - sed -i 's/localhost/api/g' dist/index.html
-      - yarn serve:dist & npx wait-on http://localhost:5000
+      - yarn serve:dist & npx wait-on http://localhost:4173
       - yarn test:frontend --browser chrome --record
     depends_on:
       - dependencies
