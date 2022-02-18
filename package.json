@@ -80,7 +80,7 @@
     "netlify-cli": "8.16.1",
     "postcss": "8.4.6",
     "postcss-preset-env": "7.4.1",
-    "rollup": "2.67.2",
+    "rollup": "2.67.3",
     "rollup-plugin-visualizer": "5.5.4",
     "sass": "1.49.8",
     "typescript": "4.5.5",
