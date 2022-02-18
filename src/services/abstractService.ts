@@ -64,24 +64,23 @@ export default class AbstractService {
 		})
 
 		// Set the interceptors to process every request
-		const self = this
 		this.http.interceptors.request.use((config) => {
 			switch (config.method) {
 				case 'post':
 					if (this.useUpdateInterceptor()) {
-						config.data = self.beforeUpdate(config.data)
+						config.data = this.beforeUpdate(config.data)
 						config.data = objectToSnakeCase(config.data)
 					}
 					break
 				case 'put':
 					if (this.useCreateInterceptor()) {
-						config.data = self.beforeCreate(config.data)
+						config.data = this.beforeCreate(config.data)
 						config.data = objectToSnakeCase(config.data)
 					}
 					break
 				case 'delete':
 					if (this.useDeleteInterceptor()) {
-						config.data = self.beforeDelete(config.data)
+						config.data = this.beforeDelete(config.data)
 						config.data = objectToSnakeCase(config.data)
 					}
 					break
