@@ -389,10 +389,10 @@ func InitConfig() {
 		MetricsEnabled.Set(true)
 	}
 
+	err = viper.ReadInConfig()
 	if viper.ConfigFileUsed() != "" {
 		log.Printf("Using config file: %s", viper.ConfigFileUsed())
 
-		err = viper.ReadInConfig()
 		if err != nil {
 			log.Println(err.Error())
 			log.Println("Using default config.")

@@ -63,23 +63,26 @@ func InitLogger() {
 		}
 	}
 
-	// We define our two backends
-	if config.LogStandard.GetString() != "off" {
+	// The backend is the part which actually handles logging the log entries somewhere.
+	cf := config.LogStandard.GetString()
+	var backend logging.Backend
+	backend = &NoopBackend{}
+	if cf != "off" && cf != "false" {
 		stdWriter := GetLogWriter("standard")
 
-		level, err := logging.LogLevel(strings.ToUpper(config.LogLevel.GetString()))
-		if err != nil {
-			Fatalf("Error setting database log level: %s", err.Error())
-		}
-
 		logBackend := logging.NewLogBackend(stdWriter, "", 0)
-		backend := logging.NewBackendFormatter(logBackend, logging.MustStringFormatter(Fmt+"\n"))
-
-		backendLeveled := logging.AddModuleLevel(backend)
-		backendLeveled.SetLevel(level, logModule)
-
-		logInstance.SetBackend(backendLeveled)
+		backend = logging.NewBackendFormatter(logBackend, logging.MustStringFormatter(Fmt+"\n"))
 	}
+
+	level, err := logging.LogLevel(strings.ToUpper(config.LogLevel.GetString()))
+	if err != nil {
+		Fatalf("Error setting database log level: %s", err.Error())
+	}
+
+	backendLeveled := logging.AddModuleLevel(backend)
+	backendLeveled.SetLevel(level, logModule)
+
+	logInstance.SetBackend(backendLeveled)
 }
 
 // GetLogWriter returns the writer to where the normal log goes, depending on the config
