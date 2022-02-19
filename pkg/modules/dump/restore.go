@@ -60,6 +60,7 @@ func Restore(filename string) error {
 
 	// Find the configFile, database and files files
 	var configFile *zip.File
+	var dotEnvFile *zip.File
 	dbfiles := make(map[string]*zip.File)
 	filesFiles := make(map[string]*zip.File)
 	for _, file := range r.File {
@@ -72,43 +73,20 @@ func Restore(filename string) error {
 			dbfiles[fname[:len(fname)-5]] = file
 			continue
 		}
+		if file.Name == ".env" {
+			dotEnvFile = file
+			continue
+		}
 		if strings.HasPrefix(file.Name, "files/") {
 			filesFiles[strings.ReplaceAll(file.Name, "files/", "")] = file
 		}
 	}
-	if configFile == nil {
-		return fmt.Errorf("dump does not contain a config file")
-	}
 
 	///////
 	// Restore the config file
-	if configFile.UncompressedSize64 > maxConfigSize {
-		return fmt.Errorf("config file too large, is %d, max size is %d", configFile.UncompressedSize64, maxConfigSize)
-	}
-
-	outFile, err := os.OpenFile(configFile.Name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, configFile.Mode())
-	if err != nil {
-		return fmt.Errorf("could not open config file for writing: %s", err)
-	}
-
-	cfgr, err := configFile.Open()
+	err = restoreConfig(configFile, dotEnvFile)
 	if err != nil {
 		return err
-	}
-
-	// #nosec - We eliminated the potential decompression bomb by erroring out above if the file is larger than a threshold.
-	_, err = io.Copy(outFile, cfgr)
-	if err != nil {
-		return fmt.Errorf("could not create config file: %s", err)
-	}
-
-	_ = cfgr.Close()
-	_ = outFile.Close()
-
-	log.Infof("The config file has been restored to '%s'.", configFile.Name)
-	log.Infof("You can now make changes to it, hit enter when you're done.")
-	if _, err := bufio.NewReader(os.Stdin).ReadString('\n'); err != nil {
-		return fmt.Errorf("could not read from stdin: %s", err)
 	}
 	log.Info("Restoring...")
 
@@ -217,4 +195,63 @@ func unmarshalFileToJSON(file *zip.File) (contents []map[string]interface{}, err
 		return nil, err
 	}
 	return
+}
+
+func restoreConfig(configFile, dotEnvFile *zip.File) error {
+	if configFile != nil {
+		if configFile.UncompressedSize64 > maxConfigSize {
+			return fmt.Errorf("config file too large, is %d, max size is %d", configFile.UncompressedSize64, maxConfigSize)
+		}
+
+		outFile, err := os.OpenFile(configFile.Name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, configFile.Mode())
+		if err != nil {
+			return fmt.Errorf("could not open config file for writing: %s", err)
+		}
+
+		cfgr, err := configFile.Open()
+		if err != nil {
+			return err
+		}
+
+		// #nosec - We eliminated the potential decompression bomb by erroring out above if the file is larger than a threshold.
+		_, err = io.Copy(outFile, cfgr)
+		if err != nil {
+			return fmt.Errorf("could not create config file: %s", err)
+		}
+
+		_ = cfgr.Close()
+		_ = outFile.Close()
+
+		log.Infof("The config file has been restored to '%s'.", configFile.Name)
+		log.Infof("You can now make changes to it, hit enter when you're done.")
+		if _, err := bufio.NewReader(os.Stdin).ReadString('\n'); err != nil {
+			return fmt.Errorf("could not read from stdin: %s", err)
+		}
+
+		return nil
+	}
+
+	log.Warning("No config file found, not restoring one.")
+	log.Warning("You'll likely have had Vikunja configured through environment variables.")
+
+	if dotEnvFile != nil {
+		dotenv, err := dotEnvFile.Open()
+		if err != nil {
+			return err
+		}
+		buf := bytes.Buffer{}
+		_, err = buf.ReadFrom(dotenv)
+		if err != nil {
+			return err
+		}
+
+		log.Warningf("Please make sure the following settings are properly configured in your instance:\n%s", buf.String())
+		log.Warning("Make sure your current config matches the following env variables, confirm by pressing enter when done.")
+		log.Warning("If your config does not match, you'll have to make the changes and restart the restoring process afterwards.")
+		if _, err := bufio.NewReader(os.Stdin).ReadString('\n'); err != nil {
+			return fmt.Errorf("could not read from stdin: %s", err)
+		}
+	}
+
+	return nil
 }
