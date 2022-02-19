@@ -385,7 +385,7 @@
       "showDoneTasks": "Mostra Attività Fatte",
       "sortAlphabetically": "Ordine alfabetico",
       "enablePriority": "Abilita Filtro Per Priorità",
-      "enablePercentDone": "Abilitare Filtro Per Percentuale Fatta",
+      "enablePercentDone": "Enable Filter By Progress",
       "dueDateRange": "Intervallo Data Di Scadenza",
       "startDateRange": "Intervallo Data Iniziale",
       "endDateRange": "Intervallo Data Finale",
