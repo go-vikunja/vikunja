@@ -13089,10 +13089,10 @@ vite@^2.8.2:
   optionalDependencies:
     fsevents "~2.3.2"
 
-vitest@0.4.1:
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/vitest/-/vitest-0.4.1.tgz#e52401d9a45a107088901f5c6d1120dce544a807"
-  integrity sha512-zDqUYOUoyBiC0DgWw9RyQqhUktaFA+hJmrZskYrnVslSuZiuzI7SYj2GmXGwHvSx1FfdWI5lRFN9IWB7Ug5cYg==
+vitest@0.4.2:
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/vitest/-/vitest-0.4.2.tgz#0c1c2f43215f118815deace87a9ec37f13d48adf"
+  integrity sha512-f5kclFhkCuIKQ96lsAveESeyfTf9ihT79ZQcLDNCoJbMDNTHQdSMnU7aq9KAeOmZVh4la3NANKWECWM7HfP1ng==
   dependencies:
     "@types/chai" "^4.3.0"
     "@types/chai-subset" "^1.3.3"
