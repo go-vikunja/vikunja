@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
@@ -43,11 +44,30 @@ func Dump(filename string) error {
 
 	// Config
 	log.Info("Start dumping config file...")
-	err = writeFileToZip(viper.ConfigFileUsed(), dumpWriter)
-	if err != nil {
-		return fmt.Errorf("error saving config file: %s", err)
+	if viper.ConfigFileUsed() != "" {
+		err = writeFileToZip(viper.ConfigFileUsed(), dumpWriter)
+		if err != nil {
+			return fmt.Errorf("error saving config file: %s", err)
+		}
+	} else {
+		log.Warning("No config file found, not including one in the dump. This usually happens when environment variables are used for configuration.")
 	}
 	log.Info("Dumped config file")
+
+	env := os.Environ()
+	dotEnv := ""
+	for _, e := range env {
+		if strings.Contains(e, "VIKUNJA_") {
+			dotEnv += e + "\n"
+		}
+	}
+	if dotEnv != "" {
+		err = utils.WriteBytesToZip(".env", []byte(dotEnv), dumpWriter)
+		if err != nil {
+			return fmt.Errorf("error saving env file: %s", err)
+		}
+		log.Info("Dumped .env file")
+	}
 
 	// Version
 	log.Info("Start dumping version file...")
