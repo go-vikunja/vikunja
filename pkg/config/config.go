@@ -355,12 +355,6 @@ func InitConfig() {
 
 	viper.AddConfigPath(".")
 	viper.SetConfigName("config")
-	err = viper.ReadInConfig()
-	if err != nil {
-		log.Println(err.Error())
-		log.Println("Using default config.")
-		return
-	}
 
 	if CacheType.GetString() == "keyvalue" {
 		CacheType.Set(KeyvalueType.GetString())
@@ -395,7 +389,18 @@ func InitConfig() {
 		MetricsEnabled.Set(true)
 	}
 
-	log.Printf("Using config file: %s", viper.ConfigFileUsed())
+	if viper.ConfigFileUsed() != "" {
+		log.Printf("Using config file: %s", viper.ConfigFileUsed())
+
+		err = viper.ReadInConfig()
+		if err != nil {
+			log.Println(err.Error())
+			log.Println("Using default config.")
+			return
+		}
+	} else {
+		log.Println("No config file found, using default or config from environment variables.")
+	}
 }
 
 func random(length int) (string, error) {
