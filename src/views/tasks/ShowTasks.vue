@@ -89,18 +89,16 @@ const {
 const showAll = computed(() => typeof dateFrom === 'undefined' || typeof dateTo === 'undefined')
 
 const pageTitle = computed(() => {
-	let title = ''
-
 	// We need to define "key" because it is the first parameter in the array and we need the second
-	// eslint-disable-next-line no-unused-vars
 	const predefinedRange = Object.entries(DATE_RANGES)
+		// eslint-disable-next-line no-unused-vars
 		.find(([key, value]) => dateFrom === value[0] && dateTo === value[1])
 		?.[0]
 	if (typeof predefinedRange !== 'undefined') {
 		return t(`input.datepickerRange.ranges.${predefinedRange}`)
 	}
 
-	return showAll
+	return showAll.value
 		? t('task.show.titleCurrent')
 		: t('task.show.fromuntil', {
 			from: formatDate(dateFrom, 'PPP'),
