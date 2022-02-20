@@ -172,6 +172,7 @@ function setShowNulls(show: boolean) {
 }
 
 async function loadPendingTasks(from: string, to: string) {
+	// FIXME: HACK! This should never happen.
 	// Since this route is authentication only, users would get an error message if they access the page unauthenticated.
 	// Since this component is mounted as the home page before unauthenticated users get redirected
 	// to the login page, they will almost always see the error message.
