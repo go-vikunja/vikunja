@@ -176,7 +176,7 @@ describe('List View Kanban', () => {
 			.click()
 
 		cy.get('.task-view .action-buttons .button', { timeout: 3000 })
-			.contains('Move task')
+			.contains('Move')
 			.click()
 		cy.get('.task-view .content.details .field .multiselect.control .input-wrapper input')
 			.type(`${lists[1].title}{enter}`)

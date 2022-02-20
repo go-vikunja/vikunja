@@ -570,22 +570,22 @@
         "text2": "This will also remove all attachments, reminders and relations associated with this task and cannot be undone!"
       },
       "actions": {
-        "assign": "Assign to a user",
-        "label": "Add labels",
+        "assign": "Assign to User",
+        "label": "Add Labels",
         "priority": "Set Priority",
         "dueDate": "Set Due Date",
-        "startDate": "Set a Start Date",
-        "endDate": "Set an End Date",
+        "startDate": "Set Start Date",
+        "endDate": "Set End Date",
         "reminders": "Set Reminders",
-        "repeatAfter": "Set a repeating interval",
+        "repeatAfter": "Set Repeating Interval",
         "percentDone": "Set Progress",
-        "attachments": "Add attachments",
-        "relatedTasks": "Add task relations",
-        "moveList": "Move task",
-        "color": "Set task color",
-        "delete": "Delete task",
-        "favorite": "Save as favorite",
-        "unfavorite": "Remove from favorites"
+        "attachments": "Add Attachments",
+        "relatedTasks": "Add Relation",
+        "moveList": "Move",
+        "color": "Set Color",
+        "delete": "Delete",
+        "favorite": "Add to Favorites",
+        "unfavorite": "Remove from Favorites"
       }
     },
     "attributes": {
