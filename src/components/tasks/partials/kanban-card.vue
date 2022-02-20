@@ -138,7 +138,6 @@ $task-background: var(--white);
 	border: 3px solid transparent;
 
 	font-size: .9rem;
-	margin: .5rem;
 	padding: .4rem;
 	border-radius: $radius;
 	background: $task-background;

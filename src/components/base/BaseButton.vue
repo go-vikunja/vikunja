@@ -69,10 +69,10 @@ watchEffect(() => {
 	}
 
 	// if there is a href we assume the user wants an external link via a link element
-	// we also set the attribute rel to "noopener" but make it possible to overwrite this by the user.
+	// we also set a predefined value for the attribute rel, but make it possible to overwrite this by the user.
 	if ('href' in attrs) {
 		nodeName = 'a'
-		bindings = {rel: 'noopener'}
+		bindings = {rel: 'noreferrer noopener nofollow'}
 	}
 
 	componentNodeName.value = nodeName

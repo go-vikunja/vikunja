@@ -31,10 +31,9 @@
       "username": "Nome utente",
       "usernameEmail": "Nome utente o indirizzo e-mail",
       "usernamePlaceholder": "es. frederick",
-      "email": "Email address",
+      "email": "Indirizzo e-mail",
       "emailPlaceholder": "per es. frederic{'@'}vikunja.io",
       "password": "Password",
-      "passwordRepeat": "Digita di nuovo la tua password",
       "passwordPlaceholder": "es. ••••••••••••",
       "forgotPassword": "Password dimenticata?",
       "resetPassword": "Reimposta la tua password",
@@ -45,12 +44,20 @@
       "totpTitle": "Codice di autenticazione a due fattori",
       "totpPlaceholder": "es. 123456",
       "login": "Accedi",
-      "register": "Registrati",
+      "createAccount": "Crea account",
       "loginWith": "Accedi con {provider}",
       "authenticating": "Autenticazione…",
       "openIdStateError": "Stato non corrispondente, impossibile continuare!",
       "openIdGeneralError": "Si è verificato un errore durante l'autenticazione con terze parti.",
-      "logout": "Esci"
+      "logout": "Esci",
+      "emailInvalid": "Inserisci un indirizzo e-mail valido.",
+      "usernameRequired": "Inserisci un nome utente.",
+      "passwordRequired": "Inserisci una password.",
+      "showPassword": "Mostra la password",
+      "hidePassword": "Nascondi la password",
+      "noAccountYet": "Non hai un account?",
+      "alreadyHaveAnAccount": "Hai già un account?",
+      "remember": "Resta connesso"
     },
     "settings": {
       "title": "Impostazioni",
@@ -61,7 +68,7 @@
       "currentPasswordPlaceholder": "La tua password attuale",
       "passwordsDontMatch": "La nuova password e la conferma non coincidono.",
       "passwordUpdateSuccess": "Password aggiornata con successo.",
-      "updateEmailTitle": "Inserisci il tuo indirizzo e-mail",
+      "updateEmailTitle": "Aggiorna l'indirizzo e-mail",
       "updateEmailNew": "Nuovo indirizzo e-mail",
       "updateEmailSuccess": "Il tuo indirizzo e-mail è stato aggiornato correttamente. Ti abbiamo inviato un collegamento per confermarlo.",
       "general": {
@@ -78,7 +85,8 @@
         "weekStartSunday": "Domenica",
         "weekStartMonday": "Lunedì",
         "language": "Lingua",
-        "defaultList": "Lista predefinita"
+        "defaultList": "Lista predefinita",
+        "timezone": "Fuso Orario"
       },
       "totp": {
         "title": "Autenticazione a due fattori",
@@ -95,9 +103,9 @@
         "disableSuccess": "L'autenticazione a due fattori è stata disattivata."
       },
       "caldav": {
-        "title": "CalDav",
-        "howTo": "Puoi connettere Vikunja ai client caldav per visualizzare e gestire tutte le attività da diversi client. Inserisci questo URL nel tuo client:",
-        "more": "Ulteriori informazioni su caldav in Vikunja"
+        "title": "CalDAV",
+        "howTo": "Puoi connettere Vikunja ai client CalDAV per visualizzare e gestire tutte le attività da diversi client. Inserisci questo URL nel tuo client:",
+        "more": "Ulteriori informazioni su CalDAV in Vikunja"
       },
       "avatar": {
         "title": "Avatar",
@@ -327,6 +335,7 @@
       "archiveText": "Non sarà possibile modificare questo namespace o creare nuove liste fino a quando non verrà disarchiviato. Questo archivierà anche tutte le liste in questo namespace.",
       "unarchiveText": "Potrai creare nuove liste o modificarle.",
       "success": "Namespace creato.",
+      "unarchiveSuccess": "Namespace estratto dall'archivio.",
       "description": "Se un namespace è archiviato, non è possibile creare nuove liste o modificarlo."
     },
     "delete": {
@@ -376,7 +385,7 @@
       "showDoneTasks": "Mostra Attività Fatte",
       "sortAlphabetically": "Ordine alfabetico",
       "enablePriority": "Abilita Filtro Per Priorità",
-      "enablePercentDone": "Abilitare Filtro Per Percentuale Fatta",
+      "enablePercentDone": "Abilita Filtro Per Progresso",
       "dueDateRange": "Intervallo Data Di Scadenza",
       "startDateRange": "Intervallo Data Iniziale",
       "endDateRange": "Intervallo Data Finale",
@@ -569,7 +578,7 @@
         "endDate": "Imposta una data di fine",
         "reminders": "Imposta promemoria",
         "repeatAfter": "Imposta ricorrenza",
-        "percentDone": "Imposta Percentuale Completata",
+        "percentDone": "Imposta Progresso",
         "attachments": "Aggiungi allegati",
         "relatedTasks": "Aggiungi attività collegate",
         "moveList": "Sposta attività",
@@ -589,7 +598,7 @@
       "dueDate": "Data di scadenza",
       "endDate": "Data di fine",
       "labels": "Etichette",
-      "percentDone": "% Completata",
+      "percentDone": "Progresso",
       "priority": "Priorità",
       "relatedTasks": "Attività Collegate",
       "reminders": "Promemoria",

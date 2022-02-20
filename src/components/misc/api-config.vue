@@ -39,79 +39,66 @@
 	</div>
 </template>
 
-<script>
-import Message from '@/components/misc/message'
+<script setup lang="ts">
+import {ref, computed, watch} from 'vue'
+import { useI18n } from 'vue-i18n'
 import {parseURL} from 'ufo'
+
 import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
+import {success} from '@/message'
 
-export default {
-	name: 'apiConfig',
-	components: {
-		Message,
+import Message from '@/components/misc/message.vue'
+
+const props = defineProps({
+	configureOpen: {
+		type: Boolean,
+		required: false,
+		default: false,
 	},
-	data() {
-		return {
-			configureApi: false,
-			apiUrl: window.API_URL,
-			errorMsg: '',
-			successMsg: '',
+})
+const emit = defineEmits(['foundApi'])
+
+const apiUrl = ref(window.API_URL)
+const configureApi = ref(apiUrl.value === '')
+
+const apiDomain = computed(() => parseURL(apiUrl.value).host || parseURL(window.location.href).host)
+
+
+watch(() => props.configureOpen, (value) => {
+	configureApi.value = value
+}, { immediate: true })
+
+
+const {t} = useI18n()
+
+const errorMsg = ref('')
+const successMsg = ref('')
+async function setApiUrl() {
+	if (apiUrl.value === '') {
+		// Don't try to check and set an empty url
+		errorMsg.value = t('apiConfig.urlRequired')
+		return
+	}
+
+	try {
+		const url = await checkAndSetApiUrl(apiUrl.value)
+
+		if (url === '') {
+			// If the config setter function could not figure out a url					
+			throw new Error('URL cannot be empty.')
 		}
-	},
-	emits: ['foundApi'],
-	created() {
-		if (this.apiUrl === '') {
-			this.configureApi = true
-		}
-	},
-	computed: {
-		apiDomain() {
-			return parseURL(this.apiUrl).host || parseURL(window.location.href).host
-		},
-	},
-	props: {
-		configureOpen: {
-			type: Boolean,
-			required: false,
-			default: false,
-		},
-	},
-	watch: {
-		configureOpen: {
-			handler(value) {
-				this.configureApi = value
-			},
-			immediate: true,
-		},
-	},
-	methods: {
-		async setApiUrl() {
-			if (this.apiUrl === '') {
-				// Don't try to check and set an empty url
-				this.errorMsg = this.$t('apiConfig.urlRequired')
-				return
-			}
 
-			try {
-				const url = await checkAndSetApiUrl(this.apiUrl)
-
-				if (url === '') {
-					// If the config setter function could not figure out a url					
-					throw new Error('URL cannot be empty.')
-				}
-
-				// Set it + save it to local storage to save us the hoops
-				this.errorMsg = ''
-				this.$message.success({message: this.$t('apiConfig.success', {domain: this.apiDomain})})
-				this.configureApi = false
-				this.apiUrl = url
-				this.$emit('foundApi', this.apiUrl)
-			} catch (e) {
-				// Still not found, url is still invalid
-				this.successMsg = ''
-				this.errorMsg = this.$t('apiConfig.error', {domain: this.apiDomain})
-			}
-		},
-	},
+		// Set it + save it to local storage to save us the hoops
+		errorMsg.value = ''
+		apiUrl.value = url
+		success({message: t('apiConfig.success', {domain: apiDomain.value})})
+		configureApi.value = false
+		emit('foundApi', apiUrl.value)
+	} catch (e) {
+		// Still not found, url is still invalid
+		successMsg.value = ''
+		errorMsg.value = t('apiConfig.error', {domain: apiDomain.value})
+	}
 }
 </script>
 

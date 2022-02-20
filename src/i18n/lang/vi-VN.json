@@ -56,7 +56,8 @@
       "showPassword": "Show the password",
       "hidePassword": "Hide the password",
       "noAccountYet": "Don't have an account yet?",
-      "alreadyHaveAnAccount": "Already have an account?"
+      "alreadyHaveAnAccount": "Already have an account?",
+      "remember": "Stay logged in"
     },
     "settings": {
       "title": "Cài đặt",
@@ -84,7 +85,8 @@
         "weekStartSunday": "Chủ nhật",
         "weekStartMonday": "Thứ hai",
         "language": "Ngôn ngữ",
-        "defaultList": "Danh sách mặc định"
+        "defaultList": "Danh sách mặc định",
+        "timezone": "Time Zone"
       },
       "totp": {
         "title": "Xác thực hai lớp",
@@ -101,7 +103,7 @@
         "disableSuccess": "Xác thực hai lớp đã bị vô hiệu hóa thành công."
       },
       "caldav": {
-        "title": "Giao thức Caldav",
+        "title": "Giao thức CalDAV",
         "howTo": "Bạn có thể kết nối Vikunja tới các máy khách CalDAV để xem và quản lý tất cả các công việc từ nhiều máy khách khác nhau. Nhập URL này vào ứng dụng khách của bạn:",
         "more": "Tìm hiểu thêm về CalDAV"
       },
@@ -333,6 +335,7 @@
       "archiveText": "Bạn sẽ không thể chỉnh sửa góc làm việc này hoặc tạo danh sách mới cho đến khi bạn bỏ lưu trữ nó. Điều này cũng sẽ lưu trữ tất cả các danh sách trong góc làm việc này.",
       "unarchiveText": "Bạn có thể tạo danh sách mới hoặc chỉnh sửa nó.",
       "success": "Góc làm việc đã lưu trữ thành công.",
+      "unarchiveSuccess": "The namespace was successfully un-archived.",
       "description": "Nếu một góc làm việc được lưu trữ, bạn không thể tạo thêm danh sách hoặc chỉnh sửa nó."
     },
     "delete": {
@@ -382,7 +385,7 @@
       "showDoneTasks": "Hiển thị các công việc đã hoàn thành",
       "sortAlphabetically": "Xếp theo bảng chữ cái",
       "enablePriority": "Bật Bộ lọc theo mức độ ưu tiên",
-      "enablePercentDone": "Bật Bộ lọc theo tỉ lệ % hoàn thành",
+      "enablePercentDone": "Enable Filter By Progress",
       "dueDateRange": "Phạm vi ngày đến hạn",
       "startDateRange": "Phạm vi Ngày bắt đầu",
       "endDateRange": "Phạm vi Ngày Kết thúc",
@@ -575,7 +578,7 @@
         "endDate": "Chọn ngày kết thúc",
         "reminders": "Thiết lập nhắc nhở",
         "repeatAfter": "Đặt khoảng lặp lại",
-        "percentDone": "Chọn tỉ lệ hoàn thành",
+        "percentDone": "Set Progress",
         "attachments": "Đính kèm tệp",
         "relatedTasks": "Thêm liên kết công việc",
         "moveList": "Di chuyển công việc",
@@ -595,7 +598,7 @@
       "dueDate": "Ngày hết hạn",
       "endDate": "Ngày kết thúc",
       "labels": "Nhãn",
-      "percentDone": "Tiến độ hoàn thành",
+      "percentDone": "Progress",
       "priority": "Mức độ ưu tiên",
       "relatedTasks": "Công việc liên quan",
       "reminders": "Nhắc nhở",

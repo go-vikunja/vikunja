@@ -58,6 +58,12 @@
 					/>
 				</div>
 			</div>
+			<div class="field">
+				<label class="label">
+					<input type="checkbox" v-model="rememberMe" class="mr-1"/>
+					{{ $t('user.auth.remember') }}
+				</label>
+			</div>
 
 			<x-button
 				@click="submit"
@@ -118,6 +124,7 @@ export default {
 			usernameValid: true,
 			password: '',
 			validatePasswordInitially: false,
+			rememberMe: false,
 		}
 	},
 	beforeMount() {
@@ -197,6 +204,7 @@ export default {
 			const credentials = {
 				username: this.$refs.username.value,
 				password: this.password,
+				longToken: this.rememberMe,
 			}
 
 			if (credentials.username === '' || credentials.password === '') {

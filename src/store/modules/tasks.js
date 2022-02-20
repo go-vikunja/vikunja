@@ -133,9 +133,19 @@ export default {
 				console.debug('Could not add assignee to task in kanban, task not found', t)
 				return r
 			}
-			// FIXME: direct store manipulation (task)
-			t.task.assignees.push(user)
-			ctx.commit('kanban/setTaskInBucketByIndex', t, { root: true })
+
+			const assignees = [
+				...t.task.assignees,
+				user,
+			]
+
+			ctx.commit('kanban/setTaskInBucketByIndex', {
+				...t,
+				task: {
+					...t.task,
+					assignees,
+				},
+			}, {root: true})
 			return r
 		},
 
@@ -153,15 +163,15 @@ export default {
 				return response
 			}
 
-			for (const a in t.task.assignees) {
-				if (t.task.assignees[a].id === user.id) {
-					// FIXME: direct store manipulation (task)
-					t.task.assignees.splice(a, 1)
-					break
-				}
-			}
+			const assignees = t.task.assignees.filter(({ id }) => id !== user.id)
 
-			ctx.commit('kanban/setTaskInBucketByIndex', t, {root: true})
+			ctx.commit('kanban/setTaskInBucketByIndex', {
+				...t,
+				task: {
+					...t.task,
+					assignees,
+				},
+			}, {root: true})
 			return response
 
 		},
@@ -179,17 +189,19 @@ export default {
 				console.debug('Could not add label to task in kanban, task not found', t)
 				return r
 			}
-			
-			const labels = [...t.task.labels]
-			labels.push(label)
+
+			const labels = [
+				...t.task.labels,
+				label,
+			]
 
 			ctx.commit('kanban/setTaskInBucketByIndex', {
-				task: {
-					labels,
-				...t.task,
-				},
 				...t,
-			}, { root: true })
+				task: {
+					...t.task,
+					labels,
+				},
+			}, {root: true})
 
 			return r
 		},
@@ -209,20 +221,14 @@ export default {
 			}
 
 			// Remove the label from the list
-			const labels = [...t.task.labels]
-			for (const l in labels) {
-				if (labels[l].id === label.id) {
-					labels.splice(l, 1)
-					break
-				}
-			}
+			const labels = t.task.labels.filter(({ id }) => id !== label.id)
 
 			ctx.commit('kanban/setTaskInBucketByIndex', {
-				task: {
-					labels,
-					...t.task,
-				},
 				...t,
+				task: {
+					...t.task,
+					labels,
+				},
 			}, {root: true})
 
 			return response

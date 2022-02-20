@@ -132,7 +132,7 @@ describe('List View Kanban', () => {
 		cy.getSettled('.kanban .bucket .tasks .task')
 			.contains(tasks[0].title)
 			.first()
-			.drag('.kanban .bucket:nth-child(2) .tasks .dropper')
+			.drag('.kanban .bucket:nth-child(2) .tasks')
 		
 		cy.get('.kanban .bucket:nth-child(2) .tasks')
 			.should('contain', tasks[0].title)
@@ -176,7 +176,7 @@ describe('List View Kanban', () => {
 			.click()
 
 		cy.get('.task-view .action-buttons .button', { timeout: 3000 })
-			.contains('Move task')
+			.contains('Move')
 			.click()
 		cy.get('.task-view .content.details .field .multiselect.control .input-wrapper input')
 			.type(`${lists[1].title}{enter}`)

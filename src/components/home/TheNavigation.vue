@@ -32,12 +32,13 @@
 			</a>
 			<notifications/>
 			<div class="user">
-				<img :src="userAvatar" alt="" class="avatar" width="40" height="40"/>
 				<dropdown class="is-right" ref="usernameDropdown">
 					<template #trigger>
 						<x-button
 							variant="secondary"
-							:shadow="false">
+							:shadow="false"
+						>
+							<img :src="userAvatar" alt="" class="avatar" width="40" height="40"/>
 							<span class="username">{{ userInfo.name !== '' ? userInfo.name : userInfo.username }}</span>
 							<span class="icon is-small">
 								<icon icon="chevron-down"/>
@@ -45,92 +46,96 @@
 						</x-button>
 					</template>
 
-					<router-link :to="{name: 'user.settings'}" class="dropdown-item">
+					<BaseButton
+						:to="{name: 'user.settings'}"
+						class="dropdown-item"
+					>
 						{{ $t('user.settings.title') }}
-					</router-link>
-					<a
+					</BaseButton>
+					<BaseButton
+						v-if="imprintUrl"
 						:href="imprintUrl"
 						class="dropdown-item"
-						target="_blank"
-						rel="noreferrer noopener nofollow"
-						v-if="imprintUrl">
+					>
 						{{ $t('navigation.imprint') }}
-					</a>
-					<a
+					</BaseButton>
+					<BaseButton
+						v-if="privacyPolicyUrl"
 						:href="privacyPolicyUrl"
 						class="dropdown-item"
-						target="_blank"
-						rel="noreferrer noopener nofollow"
-						v-if="privacyPolicyUrl">
+					>
 						{{ $t('navigation.privacy') }}
-					</a>
-					<a @click="$store.commit('keyboardShortcutsActive', true)" class="dropdown-item">
+					</BaseButton>
+					<BaseButton
+						@click="$store.commit('keyboardShortcutsActive', true)"
+						class="dropdown-item"
+					>
 						{{ $t('keyboardShortcuts.title') }}
-					</a>
-					<router-link :to="{name: 'about'}" class="dropdown-item">
+					</BaseButton>
+					<BaseButton
+						:to="{name: 'about'}"
+						class="dropdown-item"
+					>
 						{{ $t('about.title') }}
-					</router-link>
-					<a @click="logout()" class="dropdown-item">
+					</BaseButton>
+					<BaseButton
+						@click="logout()"
+						class="dropdown-item"
+					>
 						{{ $t('user.auth.logout') }}
-					</a>
+					</BaseButton>
 				</dropdown>
 			</div>
 		</div>
 	</header>
 </template>
 
-<script>
-import {mapState} from 'vuex'
-import {CURRENT_LIST, QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'
+<script setup langs="ts">
+import {ref, computed, onMounted, nextTick} from 'vue'
+import {useStore} from 'vuex'
+import {useRouter} from 'vue-router'
+
+import {QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'
 import Rights from '@/models/constants/rights.json'
+
 import Update from '@/components/home/update.vue'
 import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
 import Dropdown from '@/components/misc/dropdown.vue'
 import Notifications from '@/components/notifications/notifications.vue'
 import Logo from '@/components/home/Logo.vue'
+import BaseButton from '@/components/base/BaseButton.vue'
 import MenuButton from '@/components/home/MenuButton.vue'
 
-export default {
-	name: 'topNavigation',
-	components: {
-		Notifications,
-		Dropdown,
-		ListSettingsDropdown,
-		Update,
-		Logo,
-		MenuButton,
-	},
-	computed: {
-		...mapState({
-			userInfo: state => state.auth.info,
-			userAvatar: state => state.auth.avatarUrl,
-			userAuthenticated: state => state.auth.authenticated,
-			currentList: CURRENT_LIST,
-			background: 'background',
-			imprintUrl: state => state.config.legal.imprintUrl,
-			privacyPolicyUrl: state => state.config.legal.privacyPolicyUrl,
-			canWriteCurrentList: state => state.currentList.maxRight > Rights.READ,
-		}),
-	},
-	mounted() {
-		this.$nextTick(() => {
-			if (typeof this.$refs.usernameDropdown === 'undefined' || typeof this.$refs.listTitle === 'undefined') {
-				return
-			}
+const store = useStore()
 
-			const usernameWidth = this.$refs.usernameDropdown.$el.clientWidth
-			this.$refs.listTitle.style.setProperty('--nav-username-width', `${usernameWidth}px`)
-		})
-	},
-	methods: {
-		logout() {
-			this.$store.dispatch('auth/logout')
-			this.$router.push({name: 'user.login'})
-		},
-		openQuickActions() {
-			this.$store.commit(QUICK_ACTIONS_ACTIVE, true)
-		},
-	},
+const userInfo = computed(() => store.state.auth.info)
+const userAvatar = computed(() => store.state.auth.avatarUrl)
+const currentList = computed(() => store.state.currentList)
+const background = computed(() => store.state.background)
+const imprintUrl = computed(() => store.state.config.legal.imprintUrl)
+const privacyPolicyUrl = computed(() => store.state.config.legal.privacyPolicyUrl)
+const canWriteCurrentList = computed(() => store.state.currentList.maxRight > Rights.READ)
+
+const usernameDropdown = ref()
+const listTitle = ref()
+onMounted(async () => {
+	await nextTick()
+	if (typeof usernameDropdown.value === 'undefined' || typeof listTitle.value === 'undefined') {
+		return
+	}
+
+	const usernameWidth = usernameDropdown.value.$el.clientWidth
+	listTitle.value.style.setProperty('--nav-username-width', `${usernameWidth}px`)
+})
+
+const router = useRouter()
+function logout() {
+	store.dispatch('auth/logout')
+	router.push({name: 'user.login'})
+}
+
+function openQuickActions() {
+	store.commit(QUICK_ACTIONS_ACTIVE, true)
 }
 </script>
 
@@ -246,6 +251,7 @@ $hamburger-menu-icon-width: 28px;
 			border-radius: 100%;
 			vertical-align: middle;
 			height: 40px;
+			margin-right: var(--button-padding-horizontal);
 		}
 
 		:deep(.dropdown-trigger .button) {

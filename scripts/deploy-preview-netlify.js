@@ -1,20 +1,24 @@
-const slugify = require('slugify')
 const {exec} = require('child_process')
 const axios = require('axios')
 
 const BOT_USER_ID = 513
 const giteaToken = process.env.GITEA_TOKEN
 const siteId = process.env.NETLIFY_SITE_ID
-const branchSlug = slugify(process.env.DRONE_SOURCE_BRANCH)
+const branchSlug = String(process.env.DRONE_SOURCE_BRANCH)
+						.trim()
+						.normalize('NFKD')
+						.toLowerCase()
+						.replace(/[.\s/]/g, '-')
+						.replace(/[^A-Za-z\d-]/g, '')
 const prNumber = process.env.DRONE_PULL_REQUEST
 
 const prIssueCommentsUrl = `https://kolaente.dev/api/v1/repos/vikunja/frontend/issues/${prNumber}/comments`
-const alias = `${prNumber}-${branchSlug}`
+const alias = `${prNumber}-${branchSlug}`.substring(0,37)
 const fullPreviewUrl = `https://${alias}--vikunja-frontend-preview.netlify.app`
 
 const promiseExec = cmd => {
 	return new Promise((resolve, reject) => {
-		exec(cmd, (error, stdout, stderr) => {
+		exec(cmd, (error, stdout) => {
 			if (error) {
 				reject(error)
 				return

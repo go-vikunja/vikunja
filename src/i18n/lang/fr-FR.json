@@ -34,7 +34,6 @@
       "email": "Email address",
       "emailPlaceholder": "p. ex. frederic{'@'}vikunja.io",
       "password": "Mot de passe",
-      "passwordRepeat": "Retape ton mot de passe",
       "passwordPlaceholder": "p. ex. •••••••••••",
       "forgotPassword": "Forgot your password?",
       "resetPassword": "Réinitialiser ton mot de passe",
@@ -45,12 +44,20 @@
       "totpTitle": "Code d’authentification à deux facteurs",
       "totpPlaceholder": "p. ex. 123456",
       "login": "Se connecter",
-      "register": "S’inscrire",
+      "createAccount": "Create account",
       "loginWith": "Se connecter avec {provider}",
       "authenticating": "Authentification…",
       "openIdStateError": "L’état ne correspond pas, impossible de continuer !",
       "openIdGeneralError": "Une erreur s'est produite lors de l'authentification contre un tiers.",
-      "logout": "Se déconnecter"
+      "logout": "Se déconnecter",
+      "emailInvalid": "Please enter a valid email address.",
+      "usernameRequired": "Please provide a username.",
+      "passwordRequired": "Please provide a password.",
+      "showPassword": "Show the password",
+      "hidePassword": "Hide the password",
+      "noAccountYet": "Don't have an account yet?",
+      "alreadyHaveAnAccount": "Already have an account?",
+      "remember": "Stay logged in"
     },
     "settings": {
       "title": "Paramètres",
@@ -61,7 +68,7 @@
       "currentPasswordPlaceholder": "Ton mot de passe actuel",
       "passwordsDontMatch": "Le nouveau mot de passe et sa confirmation ne correspondent pas.",
       "passwordUpdateSuccess": "Mot de passe mis à jour.",
-      "updateEmailTitle": "Mets à jour ton adresse électronique",
+      "updateEmailTitle": "Update Your Email Address",
       "updateEmailNew": "Nouvelle adresse courriel",
       "updateEmailSuccess": "Mise à jour de l’adresse électronique. Clique sur le lien dans le courriel qui t’a été envoyé pour le confirmer.",
       "general": {
@@ -78,7 +85,8 @@
         "weekStartSunday": "dimanche",
         "weekStartMonday": "lundi",
         "language": "Langue",
-        "defaultList": "Liste par défaut"
+        "defaultList": "Liste par défaut",
+        "timezone": "Time Zone"
       },
       "totp": {
         "title": "Authentification à deux facteurs",
@@ -327,6 +335,7 @@
       "archiveText": "Tu ne pourras pas modifier cet espace de noms ou créer de nouvelles listes tant que tu ne l’auras pas désarchivé. Ceci archivera également toutes les listes de cet espace de noms.",
       "unarchiveText": "Tu pourras créer de nouvelles listes ou les modifier.",
       "success": "Espace de noms archivé.",
+      "unarchiveSuccess": "The namespace was successfully un-archived.",
       "description": "L’archivage d’un espace de noms signifie qu’on ne peut pas créer de nouvelles listes dans cet espace, ni le modifier."
     },
     "delete": {
@@ -376,7 +385,7 @@
       "showDoneTasks": "Afficher les tâches terminées",
       "sortAlphabetically": "Sort Alphabetically",
       "enablePriority": "Activer le filtre par priorité",
-      "enablePercentDone": "Par % d’achèvement",
+      "enablePercentDone": "Enable Filter By Progress",
       "dueDateRange": "Plage de dates d’échéance",
       "startDateRange": "Plage de dates de début",
       "endDateRange": "Plage de dates de fin",
@@ -569,7 +578,7 @@
         "endDate": "Fixer une date de fin",
         "reminders": "Définir des rappels",
         "repeatAfter": "Définir un intervalle de répétition",
-        "percentDone": "Définir le pourcentage d’achèvement",
+        "percentDone": "Set Progress",
         "attachments": "Ajouter des pièces jointes",
         "relatedTasks": "Ajouter des relations de tâches",
         "moveList": "Déplacer la tâche",
@@ -589,7 +598,7 @@
       "dueDate": "Date d’échéance",
       "endDate": "Date de fin",
       "labels": "Étiquettes",
-      "percentDone": "% terminé",
+      "percentDone": "Progress",
       "priority": "Priorité",
       "relatedTasks": "Tâches connexes",
       "reminders": "Rappels",

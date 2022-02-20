@@ -23,7 +23,7 @@
 					}"
 				>
 					<BaseButton
-						@click="emit('close')"
+						@click="$emit('close')"
 						class="close"
 					>
 						<icon icon="times"/>

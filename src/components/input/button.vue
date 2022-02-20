@@ -66,7 +66,7 @@ const showIconOnly = computed(() => props.icon !== '' && typeof slots.default ==
   text-transform: uppercase;
   font-size: 0.85rem;
   font-weight: bold;
-  height: $button-height;
+  min-height: $button-height;
   box-shadow: var(--shadow-sm);
   display: inline-flex;
 

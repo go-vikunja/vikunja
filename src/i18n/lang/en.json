@@ -56,7 +56,8 @@
       "showPassword": "Show the password",
       "hidePassword": "Hide the password",
       "noAccountYet": "Don't have an account yet?",
-      "alreadyHaveAnAccount": "Already have an account?"
+      "alreadyHaveAnAccount": "Already have an account?",
+      "remember": "Stay logged in"
     },
     "settings": {
       "title": "Settings",
@@ -84,7 +85,8 @@
         "weekStartSunday": "Sunday",
         "weekStartMonday": "Monday",
         "language": "Language",
-        "defaultList": "Default List"
+        "defaultList": "Default List",
+        "timezone": "Time Zone"
       },
       "totp": {
         "title": "Two Factor Authentication",
@@ -333,6 +335,7 @@
       "archiveText": "You won't be able to edit this namespace or create new lists until you un-archive it. This will also archive all lists in this namespace.",
       "unarchiveText": "You will be able to create new lists or edit it.",
       "success": "The namespace was successfully archived.",
+      "unarchiveSuccess": "The namespace was successfully un-archived.",
       "description": "If a namespace is archived, you cannot create new lists or edit it."
     },
     "delete": {
@@ -382,7 +385,7 @@
       "showDoneTasks": "Show Done Tasks",
       "sortAlphabetically": "Sort Alphabetically",
       "enablePriority": "Enable Filter By Priority",
-      "enablePercentDone": "Enable Filter By Percent Done",
+      "enablePercentDone": "Enable Filter By Progress",
       "dueDateRange": "Due Date Range",
       "startDateRange": "Start Date Range",
       "endDateRange": "End Date Range",
@@ -619,22 +622,22 @@
         "text2": "This will also remove all attachments, reminders and relations associated with this task and cannot be undone!"
       },
       "actions": {
-        "assign": "Assign to a user",
-        "label": "Add labels",
+        "assign": "Assign to User",
+        "label": "Add Labels",
         "priority": "Set Priority",
         "dueDate": "Set Due Date",
-        "startDate": "Set a Start Date",
-        "endDate": "Set an End Date",
+        "startDate": "Set Start Date",
+        "endDate": "Set End Date",
         "reminders": "Set Reminders",
-        "repeatAfter": "Set a repeating interval",
-        "percentDone": "Set Percent Done",
-        "attachments": "Add attachments",
-        "relatedTasks": "Add task relations",
-        "moveList": "Move task",
-        "color": "Set task color",
-        "delete": "Delete task",
-        "favorite": "Save as favorite",
-        "unfavorite": "Remove from favorites"
+        "repeatAfter": "Set Repeating Interval",
+        "percentDone": "Set Progress",
+        "attachments": "Add Attachments",
+        "relatedTasks": "Add Relation",
+        "moveList": "Move",
+        "color": "Set Color",
+        "delete": "Delete",
+        "favorite": "Add to Favorites",
+        "unfavorite": "Remove from Favorites"
       }
     },
     "attributes": {
@@ -647,7 +650,7 @@
       "dueDate": "Due Date",
       "endDate": "End Date",
       "labels": "Labels",
-      "percentDone": "% Done",
+      "percentDone": "Progress",
       "priority": "Priority",
       "relatedTasks": "Related Tasks",
       "reminders": "Reminders",

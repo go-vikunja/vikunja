@@ -1,5 +1,6 @@
-import {HTTPFactory} from '@/http-common'
+import {HTTPFactory, AuthenticatedHTTPFactory} from '@/http-common'
 import {i18n, getCurrentLanguage, saveLanguage} from '@/i18n'
+import {objectToSnakeCase} from '@/helpers/case'
 import {LOADING} from '../mutation-types'
 import UserModel from '@/models/user'
 import UserSettingsService from '@/services/userSettings'
@@ -90,17 +91,8 @@ export default {
 			// Delete an eventually preexisting old token
 			removeToken()
 
-			const data = {
-				username: credentials.username,
-				password: credentials.password,
-			}
-
-			if (credentials.totpPasscode) {
-				data.totp_passcode = credentials.totpPasscode
-			}
-
 			try {
-				const response = await HTTP.post('login', data)
+				const response = await HTTP.post('login', objectToSnakeCase(credentials))
 				// Save the token to local storage for later use
 				saveToken(response.data.token, true)
 
@@ -223,13 +215,9 @@ export default {
 				return
 			}
 
-			const HTTP = HTTPFactory()
+			const HTTP = AuthenticatedHTTPFactory(jwt)
 			try {
-				const response = await HTTP.get('user', {
-					headers: {
-						Authorization: `Bearer ${jwt}`,
-					},
-				})
+				const response = await HTTP.get('user')
 				const info = new UserModel(response.data)
 				info.type = state.info.type
 				info.email = state.info.email

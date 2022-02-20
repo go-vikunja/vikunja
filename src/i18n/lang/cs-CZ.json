@@ -31,10 +31,9 @@
       "username": "Uživatelské jméno",
       "usernameEmail": "Uživatelské jméno nebo e-mail",
       "usernamePlaceholder": "např. Jarmil",
-      "email": "E-mailová adresa",
+      "email": "Email address",
       "emailPlaceholder": "např. jarmil{'@'}vikunja.io",
       "password": "Heslo",
-      "passwordRepeat": "Zopakovat heslo",
       "passwordPlaceholder": "např. • • • • • • • •",
       "forgotPassword": "Zapomenuté heslo?",
       "resetPassword": "Obnovit heslo",
@@ -45,12 +44,20 @@
       "totpTitle": "Kód dvoufaktorového ověření",
       "totpPlaceholder": "např. 123456",
       "login": "Přihlásit se",
-      "register": "Registrovat",
+      "createAccount": "Create account",
       "loginWith": "Přihlásit se pomocí {provider}",
       "authenticating": "Ověřování…",
       "openIdStateError": "Stav neodpovídá, odmítám pokračovat!",
       "openIdGeneralError": "Došlo k chybě při ověřování proti třetí straně.",
-      "logout": "Odhlásit se"
+      "logout": "Odhlásit se",
+      "emailInvalid": "Please enter a valid email address.",
+      "usernameRequired": "Please provide a username.",
+      "passwordRequired": "Please provide a password.",
+      "showPassword": "Show the password",
+      "hidePassword": "Hide the password",
+      "noAccountYet": "Don't have an account yet?",
+      "alreadyHaveAnAccount": "Already have an account?",
+      "remember": "Stay logged in"
     },
     "settings": {
       "title": "Nastavení",
@@ -61,7 +68,7 @@
       "currentPasswordPlaceholder": "Vaše současné heslo",
       "passwordsDontMatch": "Nové heslo se neshoduje s potvrzením hesla.",
       "passwordUpdateSuccess": "Heslo bylo úspěšně změněno.",
-      "updateEmailTitle": "Aktualizovat Vaši e-mailovou adresu",
+      "updateEmailTitle": "Update Your Email Address",
       "updateEmailNew": "Nová e-mailová adresa",
       "updateEmailSuccess": "Vaše e-mailová adresa byla úspěšně aktualizována. Poslali jsme vám odkaz pro její potvrzení.",
       "general": {
@@ -78,7 +85,8 @@
         "weekStartSunday": "Neděle",
         "weekStartMonday": "Pondělí",
         "language": "Jazyk",
-        "defaultList": "Výchozí seznam"
+        "defaultList": "Výchozí seznam",
+        "timezone": "Time Zone"
       },
       "totp": {
         "title": "Dvoufaktorové ověření",
@@ -327,6 +335,7 @@
       "archiveText": "Nebudete moci upravovat tento jmenný prostor ani vytvářet nové seznamy, dokud jej neodarchivujete. Všechny seznamy v tomto prostoru budou také archivovány.",
       "unarchiveText": "Budete moci vytvářet nové úkoly nebo je upravovat.",
       "success": "Prostor byl úspěšně archivován.",
+      "unarchiveSuccess": "The namespace was successfully un-archived.",
       "description": "Pokud je prostor archivován, nelze vytvořit nové seznamy nebo je upravit."
     },
     "delete": {
@@ -376,7 +385,7 @@
       "showDoneTasks": "Zobrazit dokončené úkoly",
       "sortAlphabetically": "Řadit podle abecedy",
       "enablePriority": "Povolit filtrování podle priority",
-      "enablePercentDone": "Povolit filtrování dle dokončenosti",
+      "enablePercentDone": "Enable Filter By Progress",
       "dueDateRange": "Rozsah termínu",
       "startDateRange": "Začátek období",
       "endDateRange": "Konec období",
@@ -569,7 +578,7 @@
         "endDate": "Nastavit koncové datum",
         "reminders": "Nastavit připomenutí",
         "repeatAfter": "Nastavit interval opakování",
-        "percentDone": "Nastavit procenta dokončeno",
+        "percentDone": "Set Progress",
         "attachments": "Přidat přílohy",
         "relatedTasks": "Přidat vztahy úkolu",
         "moveList": "Přesunout úkol",
@@ -589,7 +598,7 @@
       "dueDate": "Termín",
       "endDate": "Datum ukončení",
       "labels": "Štítky",
-      "percentDone": "% Hotovo",
+      "percentDone": "Progress",
       "priority": "Priorita",
       "relatedTasks": "Související úkoly",
       "reminders": "Připomínky",

@@ -6,7 +6,7 @@ describe('Log out', () => {
 
 		cy.get('.navbar .user .username')
 			.click()
-		cy.get('.navbar .user .dropdown-menu a.dropdown-item')
+		cy.get('.navbar .user .dropdown-menu .dropdown-item')
 			.contains('Logout')
 			.click()
 

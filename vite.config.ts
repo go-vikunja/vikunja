@@ -132,7 +132,7 @@ export default defineConfig({
 		extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue'],
 	},
 	server: {
-		port: 5000,
+		port: 4173,
 		strictPort: true,
 	},
 	build: {

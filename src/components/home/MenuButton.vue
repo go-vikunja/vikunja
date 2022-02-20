@@ -1,8 +1,7 @@
 <template>
-	<button
-		type="button"
-		@click="$store.commit('toggleMenu')"
+	<BaseButton
 		class="menu-show-button"
+		@click="$store.commit('toggleMenu')"
 		@shortkey="() => $store.commit('toggleMenu')"
 		v-shortcut="'Control+e'"
 		:title="$t('keyboardShortcuts.toggleMenu')"
@@ -10,11 +9,14 @@
 	/>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {computed} from 'vue'
-import {store} from '@/store'
+import {useStore} from 'vuex'
 
-const menuActive = computed(() => store.menuActive)
+import BaseButton from '@/components/base/BaseButton.vue'
+
+const store = useStore()
+const menuActive = computed(() => store.state.menuActive)
 </script>
 
 <style lang="scss" scoped>
@@ -22,11 +24,6 @@ $lineWidth: 2rem;
 $size: $lineWidth + 1rem;
 
 .menu-show-button {
-	// FIXME: create general button component
-	appearance: none;
-	background-color: transparent;
-	border: 0;
-
 	min-height: $size;
 	width: $size;
 

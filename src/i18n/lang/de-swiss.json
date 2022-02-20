@@ -31,7 +31,7 @@
       "username": "Benutzernamä",
       "usernameEmail": "Benutzernamä oder E-Mail Adrässe",
       "usernamePlaceholder": "z.B. Hansruedi",
-      "email": "Email address",
+      "email": "E-Mail-Adresse",
       "emailPlaceholder": "z.B. frederic{'@'}vikunja.io",
       "password": "Passwort",
       "passwordPlaceholder": "z.B. •••••••••••",
@@ -44,19 +44,20 @@
       "totpTitle": "Zweifaktor Authentifizierigs Ziffere",
       "totpPlaceholder": "z.B. 123456",
       "login": "Iihlogge",
-      "createAccount": "Create account",
+      "createAccount": "Account erstellen",
       "loginWith": "Iihlogge mit {provider}",
       "authenticating": "Authentifiziere…",
       "openIdStateError": "Status stimmt nid überiih, ich verweigerä wiiter zmache!",
       "openIdGeneralError": "Es ist ein Fehler bei der externen Authentisierung aufgetreten.",
       "logout": "Uuslogge",
-      "emailInvalid": "Please enter a valid email address.",
-      "usernameRequired": "Please provide a username.",
-      "passwordRequired": "Please provide a password.",
-      "showPassword": "Show the password",
-      "hidePassword": "Hide the password",
-      "noAccountYet": "Don't have an account yet?",
-      "alreadyHaveAnAccount": "Already have an account?"
+      "emailInvalid": "Bitte gib eine gültige E-Mail-Adresse ein.",
+      "usernameRequired": "Bitte gib einen Anmeldenamen ein.",
+      "passwordRequired": "Bitte gib ein Passwort ein.",
+      "showPassword": "Passwort anzeigen",
+      "hidePassword": "Passwort verbergen",
+      "noAccountYet": "Noch kein Account?",
+      "alreadyHaveAnAccount": "Hast du bereits einen Account?",
+      "remember": "Angemeldet bleiben"
     },
     "settings": {
       "title": "Iihstellige",
@@ -67,7 +68,7 @@
       "currentPasswordPlaceholder": "Diis jetzige Passwort",
       "passwordsDontMatch": "Dis neue Passwort und siini Bestätigung stimmed nid überiih.",
       "passwordUpdateSuccess": "Dis Passwort isch erfolgriich aktualisiert wordä.",
-      "updateEmailTitle": "Update Your Email Address",
+      "updateEmailTitle": "Aktualisiere deine E-Mail-Adresse",
       "updateEmailNew": "Neui E-Mail Adrässä",
       "updateEmailSuccess": "Dini E-Mail Adrässä isch erfolgriich gänderet worde. Mir hend dir en Link gschickt, um si zu bestätigä.",
       "general": {
@@ -84,7 +85,8 @@
         "weekStartSunday": "Sunntig",
         "weekStartMonday": "Määntig",
         "language": "Sproch",
-        "defaultList": "Standard Liste"
+        "defaultList": "Standard Liste",
+        "timezone": "Zeitzone"
       },
       "totp": {
         "title": "Zweifaktor Authentifizierig",
@@ -101,9 +103,9 @@
         "disableSuccess": "Zweifaktor Authentifizierig isch erfolgriich uusgschalte wore."
       },
       "caldav": {
-        "title": "Caldav",
-        "howTo": "Du chasch Vikunja zu Caldav Applikatione verbinde, um dini Uufgabe vo verschidene Gräät zgseh. Gib die Url i dim Client iih:",
-        "more": "Meh Informatione über Caldav in Vikunja"
+        "title": "CalDAV",
+        "howTo": "Du chasch Vikunja zu CalDAV Applikatione verbinde, um dini Uufgabe vo verschidene Gräät zgseh. Gib die Url i dim Client iih:",
+        "more": "Meh Informatione über CalDAV in Vikunja"
       },
       "avatar": {
         "title": "Herr Der Elemente",
@@ -333,6 +335,7 @@
       "archiveText": "Du hesch kei möglichkeit meh de Namensruum z'bearbeite oder neui Listene drin z'erstelle, bis du si wider ent-archiviert hesch. Das archiviert au grad alli Liste im Namensruum.",
       "unarchiveText": "Du chasch neui Liste erstelle oder bearbeite.",
       "success": "De Namensruum isch erfolgriich archiviert worde.",
+      "unarchiveSuccess": "Der Namespace wurde erfolgreich wiederhergestellt.",
       "description": "Wenn en Namensruum archiviert isch, chasch du kei neui Liste erstelle oder die bearbeite."
     },
     "delete": {
@@ -382,7 +385,7 @@
       "showDoneTasks": "Zeig die fertige Uufgabe",
       "sortAlphabetically": "Alphabetisch sortieren",
       "enablePriority": "Filter nach Priorität aktiviere",
-      "enablePercentDone": "Filter nach Prozent iihschalte",
+      "enablePercentDone": "Filter nach Fortschritt aktivieren",
       "dueDateRange": "Fälligkeitsberiich",
       "startDateRange": "Startdatumsbreiich",
       "endDateRange": "Enddatumsberiich",
@@ -575,7 +578,7 @@
         "endDate": "Enddatum setze",
         "reminders": "Errinnerig iihstelle",
         "repeatAfter": "En wiederholende Intervall setze",
-        "percentDone": "Prozentuelli Erledigung setze",
+        "percentDone": "Fortschritt einstellen",
         "attachments": "Aahang hinzuefüege",
         "relatedTasks": "Uufgabsbeziehig hinzufüege",
         "moveList": "Uufgab verschiebe",
@@ -595,7 +598,7 @@
       "dueDate": "Fälligkeitsdatum",
       "endDate": "Enddatum",
       "labels": "Labels",
-      "percentDone": "% fertig",
+      "percentDone": "Fortschritt",
       "priority": "Priorität",
       "relatedTasks": "Verwandti Uufgabe",
       "reminders": "Errinnerige",

@@ -4,7 +4,7 @@ export default class EmailUpdateModel extends AbstractModel {
 	defaults() {
 		return {
 			newEmail: '',
-			passwort: '',
+			password: '',
 		}
 	}
 }

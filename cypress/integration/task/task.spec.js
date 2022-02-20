@@ -210,7 +210,7 @@ describe('Task', () => {
 			cy.visit(`/tasks/${tasks[0].id}`)
 
 			cy.get('.task-view .action-buttons .button')
-				.contains('Move task')
+				.contains('Move')
 				.click()
 			cy.get('.task-view .content.details .field .multiselect.control .input-wrapper input')
 				.type(`${lists[1].title}{enter}`)
@@ -237,7 +237,7 @@ describe('Task', () => {
 
 			cy.get('.task-view .action-buttons .button')
 				.should('be.visible')
-				.contains('Delete task')
+				.contains('Delete')
 				.click()
 			cy.get('.modal-mask .modal-container .modal-content .header')
 				.should('contain', 'Delete this task')
@@ -317,7 +317,7 @@ describe('Task', () => {
 			cy.visit(`/tasks/${tasks[0].id}`)
 
 			cy.get('.task-view .action-buttons .button')
-				.contains('Add labels')
+				.contains('Add Labels')
 				.should('be.visible')
 				.click()
 			cy.get('.task-view .details.labels-list .multiselect input')
@@ -344,7 +344,7 @@ describe('Task', () => {
 			cy.visit(`/tasks/${tasks[0].id}`)
 
 			cy.get('.task-view .action-buttons .button')
-				.contains('Add labels')
+				.contains('Add Labels')
 				.click()
 			cy.get('.task-view .details.labels-list .multiselect input')
 				.type(labels[0].title)

@@ -13,6 +13,7 @@
     "resolveJsonModule": true,
     "sourceMap": true,
     "baseUrl": ".",
+    "strictNullChecks": true,
     "isolatedModules": true,
     "types": [
       "vite/client"

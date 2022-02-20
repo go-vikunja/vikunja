@@ -56,7 +56,8 @@
       "showPassword": "Show the password",
       "hidePassword": "Hide the password",
       "noAccountYet": "Don't have an account yet?",
-      "alreadyHaveAnAccount": "Already have an account?"
+      "alreadyHaveAnAccount": "Already have an account?",
+      "remember": "Stay logged in"
     },
     "settings": {
       "title": "Настройки",
@@ -84,7 +85,8 @@
         "weekStartSunday": "Воскресенье",
         "weekStartMonday": "Понедельник",
         "language": "Язык",
-        "defaultList": "Список по умолчанию"
+        "defaultList": "Список по умолчанию",
+        "timezone": "Time Zone"
       },
       "totp": {
         "title": "Двухфакторная аутентификация",
@@ -103,7 +105,7 @@
       "caldav": {
         "title": "CalDAV",
         "howTo": "Ты можешь подключить Vikunja к клиентам CalDAV, чтобы просматривать и управлять всеми задачами из разных клиентов. Введи этот URL в свой клиент:",
-        "more": "Подробнее о caldav в Vikunja"
+        "more": "Подробнее о CalDAV в Vikunja"
       },
       "avatar": {
         "title": "Аватар",
@@ -333,6 +335,7 @@
       "archiveText": "Ты не сможешь изменять это пространство имён, пока не вернёшь его из архива. Это также касается всех списков в этом пространстве имён.",
       "unarchiveText": "Ты сможешь создавать новые списки или изменять их.",
       "success": "Пространство имён архивировано.",
+      "unarchiveSuccess": "The namespace was successfully un-archived.",
       "description": "Архивирование пространства имён означает, что ты не сможешь создавать в нём новые списки или изменять их."
     },
     "delete": {
@@ -382,7 +385,7 @@
       "showDoneTasks": "Показывать завершённые задачи",
       "sortAlphabetically": "Sort Alphabetically",
       "enablePriority": "Вкл. фильтр по приоритету",
-      "enablePercentDone": "По % завершения",
+      "enablePercentDone": "Enable Filter By Progress",
       "dueDateRange": "Диапазон срока",
       "startDateRange": "Диапазон даты начала",
       "endDateRange": "Диапазон даты завершения",
@@ -575,7 +578,7 @@
         "endDate": "Установить дату завершения",
         "reminders": "Установить напоминания",
         "repeatAfter": "Установить интервал повтора",
-        "percentDone": "Установить процент завершения",
+        "percentDone": "Set Progress",
         "attachments": "Добавить вложения",
         "relatedTasks": "Добавить связанные задачи",
         "moveList": "Переместить задачу",
@@ -595,7 +598,7 @@
       "dueDate": "Срок",
       "endDate": "Дата завершения",
       "labels": "Метки",
-      "percentDone": "% Завершено",
+      "percentDone": "Progress",
       "priority": "Приоритет",
       "relatedTasks": "Связанные задачи",
       "reminders": "Напоминания",

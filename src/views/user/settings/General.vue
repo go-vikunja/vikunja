@@ -92,14 +92,28 @@
 		</div>
 		<div class="field">
 			<label class="is-flex is-align-items-center">
-					<span>
-						{{ $t('user.settings.appearance.title') }}
-					</span>
+				<span>
+					{{ $t('user.settings.appearance.title') }}
+				</span>
 				<div class="select ml-2">
 					<select v-model="activeColorSchemeSetting">
 						<!-- TODO: use the Vikunja logo in color scheme as option buttons -->
 						<option v-for="(title, schemeId) in colorSchemeSettings" :key="schemeId" :value="schemeId">
 							{{ title }}
+						</option>
+					</select>
+				</div>
+			</label>
+		</div>
+		<div class="field">
+			<label class="is-flex is-align-items-center">
+				<span>
+					{{ $t('user.settings.general.timezone') }}
+				</span>
+				<div class="select ml-2">
+					<select v-model="settings.timezone">
+						<option v-for="tz in availableTimezones" :key="tz">
+							{{ tz }}
 						</option>
 					</select>
 				</div>
@@ -118,7 +132,7 @@
 </template>
 
 <script>
-import {computed, watch} from 'vue'
+import {computed, watch, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import {playSoundWhenDoneKey, playPop} from '@/helpers/playPop'
@@ -129,6 +143,7 @@ import ListSearch from '@/components/tasks/partials/listSearch'
 import {createRandomID} from '@/helpers/randomId'
 import {useColorScheme} from '@/composables/useColorScheme'
 import {success} from '@/message'
+import {AuthenticatedHTTPFactory} from '@/http-common'
 
 const DEFAULT_LIST_ID = 0
 
@@ -153,6 +168,18 @@ function useColorSchemeSetting() {
 		colorSchemeSettings,
 		activeColorSchemeSetting: store,
 	}
+}
+
+function useAvailableTimezones() {
+	const availableTimezones = ref([])
+
+	const HTTP = AuthenticatedHTTPFactory()
+	HTTP.get('user/timezones')
+		.then(r => {
+			availableTimezones.value = r.data.sort()
+		})
+
+	return availableTimezones
 }
 
 function getPlaySoundWhenDoneSetting() {
@@ -193,6 +220,7 @@ export default {
 	setup() {
 		return {
 			...useColorSchemeSetting(),
+			availableTimezones: useAvailableTimezones(),
 		}
 	},
 
