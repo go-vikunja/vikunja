@@ -47,9 +47,9 @@
 						/>
 
 						<p>
-							{{ $t('input.datepickerRange.math.canuse') }}
+							{{ $t('input.datemathHelp.canuse') }}
 							<BaseButton class="has-text-primary" @click="showHowItWorks = true">
-								{{ $t('input.datepickerRange.math.learnhow') }}
+								{{ $t('input.datemathHelp.learnhow') }}
 							</BaseButton>
 						</p>
 
