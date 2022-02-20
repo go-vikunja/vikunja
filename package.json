@@ -56,7 +56,7 @@
   },
   "devDependencies": {
     "@4tw/cypress-drag-drop": "2.1.0",
-    "@faker-js/faker": "6.0.0-alpha.6",
+    "@faker-js/faker": "6.0.0-alpha.7",
     "@fortawesome/fontawesome-svg-core": "1.3.0",
     "@fortawesome/free-regular-svg-icons": "5.15.4",
     "@fortawesome/free-solid-svg-icons": "5.15.4",
