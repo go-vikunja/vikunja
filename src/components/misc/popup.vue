@@ -1,6 +1,6 @@
 <template>
 	<slot name="trigger" :isOpen="open" :toggle="toggle"></slot>
-	<div class="popup" :class="{'is-open': open, 'has-overflow': props.hasOverflow}" ref="popup">
+	<div class="popup" :class="{'is-open': open, 'has-overflow': props.hasOverflow && open}" ref="popup">
 		<slot name="content" :isOpen="open"/>
 	</div>
 </template>
