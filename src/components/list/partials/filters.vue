@@ -67,7 +67,7 @@
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.dueDate') }}</label>
 			<div class="control">
-				<datepicker-with-range @dateChanged="setDueDateFilter">
+				<datepicker-with-range @dateChanged="values => setDateFilter('due_date', values)">
 					<template #trigger="{toggle, buttonText}">
 						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
 							{{ buttonText }}
@@ -79,7 +79,7 @@
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.startDate') }}</label>
 			<div class="control">
-				<datepicker-with-range @dateChanged="setStartDateFilter">
+				<datepicker-with-range @dateChanged="values => setDateFilter('start_date', values)">
 					<template #trigger="{toggle, buttonText}">
 						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
 							{{ buttonText }}
@@ -91,7 +91,7 @@
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.endDate') }}</label>
 			<div class="control">
-				<datepicker-with-range @dateChanged="setEndDateFilter">
+				<datepicker-with-range @dateChanged="values => setDateFilter('end_date', values)">
 					<template #trigger="{toggle, buttonText}">
 						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
 							{{ buttonText }}
@@ -103,7 +103,7 @@
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.reminders') }}</label>
 			<div class="control">
-				<datepicker-with-range @dateChanged="setReminderFilter">
+				<datepicker-with-range @dateChanged="values => setDateFilter('reminders', values)">
 					<template #trigger="{toggle, buttonText}">
 						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
 							{{ buttonText }}
@@ -497,18 +497,6 @@ export default {
 		},
 		setPercentDoneFilter() {
 			this.setSingleValueFilter('percent_done', 'percentDone', 'usePercentDone')
-		},
-		setDueDateFilter(values) {
-			this.setDateFilter('due_date', values)
-		},
-		setStartDateFilter(values) {
-			this.setDateFilter('start_date', values)
-		},
-		setEndDateFilter(values) {
-			this.setDateFilter('end_date', values)
-		},
-		setReminderFilter(values) {
-			this.setDateFilter('reminders', values)
 		},
 		clear(kind) {
 			this[`found${kind}`] = []
