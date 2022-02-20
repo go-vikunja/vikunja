@@ -98,17 +98,15 @@ const pageTitle = computed(() => {
 		.find(([key, value]) => dateFrom === value[0] && dateTo === value[1])
 		?.[0]
 	if (typeof predefinedRange !== 'undefined') {
-		title = t(`input.datepickerRange.ranges.${predefinedRange}`)
-	} else {
-		title = showAll
-			? t('task.show.titleCurrent')
-			: t('task.show.fromuntil', {
-				from: formatDate(dateFrom, 'PPP'),
-				until: formatDate(dateTo, 'PPP'),
-			})
+		return t(`input.datepickerRange.ranges.${predefinedRange}`)
 	}
 
-	return title
+	return showAll
+		? t('task.show.titleCurrent')
+		: t('task.show.fromuntil', {
+			from: formatDate(dateFrom, 'PPP'),
+			until: formatDate(dateTo, 'PPP'),
+		})
 })
 const tasksSorted = computed(() => {
 	// Sort all tasks to put those with a due date before the ones without a due date, the
