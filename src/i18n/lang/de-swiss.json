@@ -57,7 +57,7 @@
       "hidePassword": "Passwort verbergen",
       "noAccountYet": "Noch kein Account?",
       "alreadyHaveAnAccount": "Hast du bereits einen Account?",
-      "remember": "Stay logged in"
+      "remember": "Angemeldet bleiben"
     },
     "settings": {
       "title": "Iihstellige",
@@ -86,7 +86,7 @@
         "weekStartMonday": "Määntig",
         "language": "Sproch",
         "defaultList": "Standard Liste",
-        "timezone": "Time Zone"
+        "timezone": "Zeitzone"
       },
       "totp": {
         "title": "Zweifaktor Authentifizierig",
@@ -335,7 +335,7 @@
       "archiveText": "Du hesch kei möglichkeit meh de Namensruum z'bearbeite oder neui Listene drin z'erstelle, bis du si wider ent-archiviert hesch. Das archiviert au grad alli Liste im Namensruum.",
       "unarchiveText": "Du chasch neui Liste erstelle oder bearbeite.",
       "success": "De Namensruum isch erfolgriich archiviert worde.",
-      "unarchiveSuccess": "The namespace was successfully un-archived.",
+      "unarchiveSuccess": "Der Namespace wurde erfolgreich wiederhergestellt.",
       "description": "Wenn en Namensruum archiviert isch, chasch du kei neui Liste erstelle oder die bearbeite."
     },
     "delete": {
@@ -385,7 +385,7 @@
       "showDoneTasks": "Zeig die fertige Uufgabe",
       "sortAlphabetically": "Alphabetisch sortieren",
       "enablePriority": "Filter nach Priorität aktiviere",
-      "enablePercentDone": "Enable Filter By Progress",
+      "enablePercentDone": "Filter nach Fortschritt aktivieren",
       "dueDateRange": "Fälligkeitsberiich",
       "startDateRange": "Startdatumsbreiich",
       "endDateRange": "Enddatumsberiich",
@@ -578,7 +578,7 @@
         "endDate": "Enddatum setze",
         "reminders": "Errinnerig iihstelle",
         "repeatAfter": "En wiederholende Intervall setze",
-        "percentDone": "Set Progress",
+        "percentDone": "Fortschritt einstellen",
         "attachments": "Aahang hinzuefüege",
         "relatedTasks": "Uufgabsbeziehig hinzufüege",
         "moveList": "Uufgab verschiebe",
@@ -598,7 +598,7 @@
       "dueDate": "Fälligkeitsdatum",
       "endDate": "Enddatum",
       "labels": "Labels",
-      "percentDone": "Progress",
+      "percentDone": "Fortschritt",
       "priority": "Priorität",
       "relatedTasks": "Verwandti Uufgabe",
       "reminders": "Errinnerige",

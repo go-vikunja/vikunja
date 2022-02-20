@@ -57,7 +57,7 @@
       "hidePassword": "Passwort verbergen",
       "noAccountYet": "Noch kein Account?",
       "alreadyHaveAnAccount": "Hast du bereits einen Account?",
-      "remember": "Stay logged in"
+      "remember": "Angemeldet bleiben"
     },
     "settings": {
       "title": "Einstellungen",
@@ -86,7 +86,7 @@
         "weekStartMonday": "Montag",
         "language": "Sprache",
         "defaultList": "Standard-Liste",
-        "timezone": "Time Zone"
+        "timezone": "Zeitzone"
       },
       "totp": {
         "title": "Zwei-Faktor-Authentifizierung",
@@ -335,7 +335,7 @@
       "archiveText": "Du kannst diesen Namespace nicht mehr bearbeiten oder neue Listen erstellen, bis du die Archivierung rückgängig machst. Das gilt auch für alle Listen in diesem Namespace.",
       "unarchiveText": "Du kannst neue Aufgaben erstellen oder diese bearbeiten.",
       "success": "Der Namespace wurde erfolgreich archiviert.",
-      "unarchiveSuccess": "The namespace was successfully un-archived.",
+      "unarchiveSuccess": "Der Namespace wurde erfolgreich wiederhergestellt.",
       "description": "In einem archivierten Namespace können Listen weder angelegt noch editiert werden."
     },
     "delete": {
@@ -385,7 +385,7 @@
       "showDoneTasks": "Erledigte Aufgaben anzeigen",
       "sortAlphabetically": "Alphabetisch sortieren",
       "enablePriority": "Filter nach Priorität aktivieren",
-      "enablePercentDone": "Filter nach % Erledigt aktivieren",
+      "enablePercentDone": "Filter nach Fortschritt aktivieren",
       "dueDateRange": "Fälligkeitsbereich",
       "startDateRange": "Startdatumsbereich",
       "endDateRange": "Enddatumsbereich",
@@ -578,7 +578,7 @@
         "endDate": "Enddatum setzen",
         "reminders": "Erinnerungen setzen",
         "repeatAfter": "Wiederholung setzen",
-        "percentDone": "Prozent erledigt setzen",
+        "percentDone": "Fortschritt einstellen",
         "attachments": "Anhänge hinzufügen",
         "relatedTasks": "Aufgabenbeziehungen hinzufügen",
         "moveList": "Aufgabe verschieben",
@@ -598,7 +598,7 @@
       "dueDate": "Fälligkeitsdatum",
       "endDate": "Enddatum",
       "labels": "Labels",
-      "percentDone": "% erledigt",
+      "percentDone": "Fortschritt",
       "priority": "Priorität",
       "relatedTasks": "Verwandte Aufgaben",
       "reminders": "Erinnerungen",

@@ -104,7 +104,7 @@
       },
       "caldav": {
         "title": "CalDAV",
-        "howTo": "Puoi connettere Vikunja ai client caldav per visualizzare e gestire tutte le attività da diversi client. Inserisci questo URL nel tuo client:",
+        "howTo": "Puoi connettere Vikunja ai client CalDAV per visualizzare e gestire tutte le attività da diversi client. Inserisci questo URL nel tuo client:",
         "more": "Ulteriori informazioni su CalDAV in Vikunja"
       },
       "avatar": {
@@ -335,7 +335,7 @@
       "archiveText": "Non sarà possibile modificare questo namespace o creare nuove liste fino a quando non verrà disarchiviato. Questo archivierà anche tutte le liste in questo namespace.",
       "unarchiveText": "Potrai creare nuove liste o modificarle.",
       "success": "Namespace creato.",
-      "unarchiveSuccess": "The namespace was successfully un-archived.",
+      "unarchiveSuccess": "Namespace estratto dall'archivio.",
       "description": "Se un namespace è archiviato, non è possibile creare nuove liste o modificarlo."
     },
     "delete": {
@@ -385,7 +385,7 @@
       "showDoneTasks": "Mostra Attività Fatte",
       "sortAlphabetically": "Ordine alfabetico",
       "enablePriority": "Abilita Filtro Per Priorità",
-      "enablePercentDone": "Enable Filter By Progress",
+      "enablePercentDone": "Abilita Filtro Per Progresso",
       "dueDateRange": "Intervallo Data Di Scadenza",
       "startDateRange": "Intervallo Data Iniziale",
       "endDateRange": "Intervallo Data Finale",
@@ -578,7 +578,7 @@
         "endDate": "Imposta una data di fine",
         "reminders": "Imposta promemoria",
         "repeatAfter": "Imposta ricorrenza",
-        "percentDone": "Imposta Percentuale Completata",
+        "percentDone": "Imposta Progresso",
         "attachments": "Aggiungi allegati",
         "relatedTasks": "Aggiungi attività collegate",
         "moveList": "Sposta attività",
@@ -598,7 +598,7 @@
       "dueDate": "Data di scadenza",
       "endDate": "Data di fine",
       "labels": "Etichette",
-      "percentDone": "% Completata",
+      "percentDone": "Progresso",
       "priority": "Priorità",
       "relatedTasks": "Attività Collegate",
       "reminders": "Promemoria",
