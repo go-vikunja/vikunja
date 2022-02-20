@@ -15,12 +15,12 @@
 			<i18n-t keypath="input.datepickerRange.math.similar">
 				<BaseButton
 					href="https://grafana.com/docs/grafana/latest/dashboards/time-range-controls/"
-					rel="noreferrer noopener nofollow" target="_blank">
+					target="_blank">
 					Grafana
 				</BaseButton>
 				<BaseButton
 					href="https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#date-math"
-					rel="noreferrer noopener nofollow" target="_blank">
+					target="_blank">
 					Elasticsearch
 				</BaseButton>
 			</i18n-t>
