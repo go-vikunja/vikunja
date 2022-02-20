@@ -53,7 +53,6 @@
 		<ShowTasks
 			v-if="hasLists"
 			class="mt-4"
-			:show-all="true"
 			:key="showTasksKey"
 		/>
 	</div>

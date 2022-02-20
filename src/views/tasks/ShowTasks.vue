@@ -72,22 +72,21 @@ const showNothingToDo = ref<boolean>(false)
 
 setTimeout(() => showNothingToDo.value = true, 100)
 
-// NOTE: You MUST provide either dateFrom and dateTo OR showAll for the component to actually show tasks.
 // Linting disabled because we explicitely enabled destructuring in vite's config, this will work.
 // eslint-disable-next-line vue/no-setup-props-destructure
 const {
 	dateFrom,
 	dateTo,
-	showAll = false,
 	showNulls = false,
 	showOverdue = false,
 } = defineProps<{
 	dateFrom?: Date | string,
 	dateTo?: Date | string,
-	showAll?: Boolean,
 	showNulls?: Boolean,
 	showOverdue?: Boolean,
 }>()
+
+const showAll = computed(() => typeof dateFrom === 'undefined' || typeof dateTo === 'undefined')
 
 const pageTitle = computed(() => {
 	let title = ''
@@ -190,7 +189,7 @@ async function loadPendingTasks(from: string, to: string) {
 		filterIncludeNulls: showNulls,
 	}
 
-	if (!showAll) {
+	if (!showAll.value) {
 		params.filterBy.push('due_date')
 		params.filterValue.push(to)
 		params.filterComparator.push('less')
