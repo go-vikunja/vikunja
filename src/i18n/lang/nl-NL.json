@@ -570,22 +570,22 @@
         "text2": "This will also remove all attachments, reminders and relations associated with this task and cannot be undone!"
       },
       "actions": {
-        "assign": "Toewijzen aan een gebruiker",
-        "label": "Labels toevoegen",
+        "assign": "Assign to User",
+        "label": "Add Labels",
         "priority": "Prioriteit instellen",
         "dueDate": "Vervaldatum instellen",
-        "startDate": "Startdatum instellen",
-        "endDate": "Einddatum instellen",
+        "startDate": "Set Start Date",
+        "endDate": "Set End Date",
         "reminders": "Herinneringen instellen",
-        "repeatAfter": "Herhalingsinterval instellen",
+        "repeatAfter": "Set Repeating Interval",
         "percentDone": "Set Progress",
-        "attachments": "Bijlage toevoegen",
-        "relatedTasks": "Taakrelaties toevoegen",
-        "moveList": "Taak verplaatsen",
-        "color": "Taakkleur instellen",
-        "delete": "Taak verwijderen",
-        "favorite": "Opslaan als favoriet",
-        "unfavorite": "Verwijderen uit favorieten"
+        "attachments": "Add Attachments",
+        "relatedTasks": "Add Relation",
+        "moveList": "Move",
+        "color": "Set Color",
+        "delete": "Delete",
+        "favorite": "Add to Favorites",
+        "unfavorite": "Remove from Favorites"
       }
     },
     "attributes": {

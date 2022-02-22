@@ -570,22 +570,22 @@
         "text2": "Будут удалены все вложения, напоминания и отношения, связанные с этой задачей, и отменить это будет нельзя!"
       },
       "actions": {
-        "assign": "Assign to a user",
-        "label": "Добавить метки",
+        "assign": "Assign to User",
+        "label": "Add Labels",
         "priority": "Установить приоритет",
         "dueDate": "Установить срок",
-        "startDate": "Установить дату начала",
-        "endDate": "Установить дату завершения",
+        "startDate": "Set Start Date",
+        "endDate": "Set End Date",
         "reminders": "Установить напоминания",
-        "repeatAfter": "Установить интервал повтора",
+        "repeatAfter": "Set Repeating Interval",
         "percentDone": "Set Progress",
-        "attachments": "Добавить вложения",
-        "relatedTasks": "Добавить связанные задачи",
-        "moveList": "Переместить задачу",
-        "color": "Установить цвет задачи",
-        "delete": "Удалить задачу",
-        "favorite": "Сохранить как ибзранное",
-        "unfavorite": "Убрать из избранного"
+        "attachments": "Add Attachments",
+        "relatedTasks": "Add Relation",
+        "moveList": "Move",
+        "color": "Set Color",
+        "delete": "Delete",
+        "favorite": "Add to Favorites",
+        "unfavorite": "Remove from Favorites"
       }
     },
     "attributes": {

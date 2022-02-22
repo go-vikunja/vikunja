@@ -570,22 +570,22 @@
         "text2": "Thao tác này cũng sẽ xóa tất cả tệp đính kèm, lời nhắc và liên kết đến công việc này. Nó không thể hoàn tác!"
       },
       "actions": {
-        "assign": "Chỉ định một người",
-        "label": "Thêm nhãn",
+        "assign": "Assign to User",
+        "label": "Add Labels",
         "priority": "Mức độ ưu tiên",
         "dueDate": "Đặt ngày đến hạn",
-        "startDate": "Chọn ngày bắt đầu",
-        "endDate": "Chọn ngày kết thúc",
+        "startDate": "Set Start Date",
+        "endDate": "Set End Date",
         "reminders": "Thiết lập nhắc nhở",
-        "repeatAfter": "Đặt khoảng lặp lại",
+        "repeatAfter": "Set Repeating Interval",
         "percentDone": "Set Progress",
-        "attachments": "Đính kèm tệp",
-        "relatedTasks": "Thêm liên kết công việc",
-        "moveList": "Di chuyển công việc",
-        "color": "Chọn màu",
-        "delete": "Loại bỏ công việc",
-        "favorite": "Lưu thành ưa thích",
-        "unfavorite": "Gỡ khỏi ưa thích"
+        "attachments": "Add Attachments",
+        "relatedTasks": "Add Relation",
+        "moveList": "Move",
+        "color": "Set Color",
+        "delete": "Delete",
+        "favorite": "Add to Favorites",
+        "unfavorite": "Remove from Favorites"
       }
     },
     "attributes": {

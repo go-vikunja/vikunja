@@ -570,22 +570,22 @@
         "text2": "Questo rimuoverà anche tutti gli allegati, i promemoria e le relazioni associati a questa attività e non può essere ripristinato!"
       },
       "actions": {
-        "assign": "Assegna ad un utente",
-        "label": "Aggiungi etichette",
+        "assign": "Assign to User",
+        "label": "Add Labels",
         "priority": "Imposta Priorità",
         "dueDate": "Imposta data di scadenza",
-        "startDate": "Imposta una data di inizio",
-        "endDate": "Imposta una data di fine",
+        "startDate": "Set Start Date",
+        "endDate": "Set End Date",
         "reminders": "Imposta promemoria",
-        "repeatAfter": "Imposta ricorrenza",
+        "repeatAfter": "Set Repeating Interval",
         "percentDone": "Imposta Progresso",
-        "attachments": "Aggiungi allegati",
-        "relatedTasks": "Aggiungi attività collegate",
-        "moveList": "Sposta attività",
-        "color": "Imposta colore attività",
-        "delete": "Elimina attività",
-        "favorite": "Salva come preferito",
-        "unfavorite": "Rimuovi dai preferiti"
+        "attachments": "Add Attachments",
+        "relatedTasks": "Add Relation",
+        "moveList": "Move",
+        "color": "Set Color",
+        "delete": "Delete",
+        "favorite": "Add to Favorites",
+        "unfavorite": "Remove from Favorites"
       }
     },
     "attributes": {

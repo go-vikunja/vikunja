@@ -570,22 +570,22 @@
         "text2": "Tímto také odstraníte všechny přílohy, připomenutí a vztahy spojené s tímto úkolem a nelze je vrátit zpět!"
       },
       "actions": {
-        "assign": "Přiřadit uživateli",
-        "label": "Přidat štítky",
+        "assign": "Assign to User",
+        "label": "Add Labels",
         "priority": "Nastavit prioritu",
         "dueDate": "Nastavit termín",
-        "startDate": "Nastavit počáteční datum",
-        "endDate": "Nastavit koncové datum",
+        "startDate": "Set Start Date",
+        "endDate": "Set End Date",
         "reminders": "Nastavit připomenutí",
-        "repeatAfter": "Nastavit interval opakování",
+        "repeatAfter": "Set Repeating Interval",
         "percentDone": "Set Progress",
-        "attachments": "Přidat přílohy",
-        "relatedTasks": "Přidat vztahy úkolu",
-        "moveList": "Přesunout úkol",
-        "color": "Nastavit barvu úkolu",
-        "delete": "Smazat úkol",
-        "favorite": "Uložit jako oblíbené",
-        "unfavorite": "Odebrat z oblíbených"
+        "attachments": "Add Attachments",
+        "relatedTasks": "Add Relation",
+        "moveList": "Move",
+        "color": "Set Color",
+        "delete": "Delete",
+        "favorite": "Add to Favorites",
+        "unfavorite": "Remove from Favorites"
       }
     },
     "attributes": {
