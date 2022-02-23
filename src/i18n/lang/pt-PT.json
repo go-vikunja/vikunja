@@ -570,22 +570,22 @@
         "text2": "Isto vai também eliminar todos os anexos, lembretes e relações associadas a esta tarefa, e não pode ser revertido!"
       },
       "actions": {
-        "assign": "Assign to User",
-        "label": "Add Labels",
+        "assign": "Atribuir a Utilizador",
+        "label": "Adicionar Etiquetas",
         "priority": "Definir Prioridade",
         "dueDate": "Definir Data de Vencimento",
-        "startDate": "Set Start Date",
-        "endDate": "Set End Date",
+        "startDate": "Definir Data de Início",
+        "endDate": "Definir Data de Fim",
         "reminders": "Definir Lembretes",
-        "repeatAfter": "Set Repeating Interval",
+        "repeatAfter": "Definir Intervalo Recorrente",
         "percentDone": "Definir Progresso",
-        "attachments": "Add Attachments",
-        "relatedTasks": "Add Relation",
-        "moveList": "Move",
-        "color": "Set Color",
-        "delete": "Delete",
-        "favorite": "Add to Favorites",
-        "unfavorite": "Remove from Favorites"
+        "attachments": "Adicionar Anexos",
+        "relatedTasks": "Adicionar Relação",
+        "moveList": "Mover",
+        "color": "Definir Cor",
+        "delete": "Eliminar",
+        "favorite": "Adicionar aos Favoritos",
+        "unfavorite": "Remover dos Favoritos"
       }
     },
     "attributes": {
