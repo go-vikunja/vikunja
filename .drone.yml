@@ -123,7 +123,6 @@ steps:
       - yarn serve:dist & npx wait-on http://localhost:4173
       - yarn test:frontend --browser chrome --record
     depends_on:
-      - dependencies
       - build-prod
 
   - name: deploy-preview
@@ -137,6 +136,9 @@ steps:
       GITEA_TOKEN:
         from_secret: gitea_token
     commands:
+      - cp -r dist dist-preview
+      # Override the default api url used for preview
+      - sed -i 's|localhost:3456|try.vikunja.io|g' dist-preview/index.html
       - shasum -a 384 -c ./scripts/deploy-preview-netlify.js.sha384
       - node ./scripts/deploy-preview-netlify.js
     depends_on:
