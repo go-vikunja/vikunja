@@ -2,7 +2,7 @@ baseurl: https://vikunja.io/docs/
 title: Vikunja
 theme: vikunja
 enableRobotsTXT: true
-canonifyURLs: true
+canonifyURLs: false
 
 pygmentsUseClasses: true
 
