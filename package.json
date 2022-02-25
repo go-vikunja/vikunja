@@ -78,7 +78,7 @@
     "express": "4.17.3",
     "happy-dom": "2.41.0",
     "netlify-cli": "9.6.5",
-    "postcss": "8.4.6",
+    "postcss": "8.4.7",
     "postcss-preset-env": "7.4.1",
     "rollup": "2.68.0",
     "rollup-plugin-visualizer": "5.5.4",
