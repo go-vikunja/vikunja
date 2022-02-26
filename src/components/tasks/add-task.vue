@@ -10,7 +10,7 @@
 					v-focus
 					v-model="newTaskTitle"
 					ref="newTaskInput"
-					@keyup="errorMessage = ''"
+					@keyup="resetEmptyTitleError"
 					@keydown.enter="handleEnter"
 				/>
 				<span class="icon is-small is-left">
@@ -134,6 +134,12 @@ const store = useStore()
 
 const taskService = shallowReactive(new TaskService())
 const errorMessage = ref('')
+
+function resetEmptyTitleError() {
+	if(newTaskTitle.value !== '') {
+		errorMessage.value = ''
+	}
+}
 
 async function addTask() {
 	if (newTaskTitle.value === '') {
