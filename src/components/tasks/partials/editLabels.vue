@@ -114,7 +114,7 @@ export default {
 		},
 
 		async removeLabel(label) {
-			if (!this.taskId === 0) {
+			if (this.taskId !== 0) {
 				await this.$store.dispatch('tasks/removeLabel', {label: label, taskId: this.taskId})
 			}
 

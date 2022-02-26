@@ -580,11 +580,11 @@
         "repeatAfter": "Ustaw interwał powtarzania",
         "percentDone": "Ustaw postęp",
         "attachments": "Dodaj załączniki",
-        "relatedTasks": "Dodaj powiązane zadania",
-        "moveList": "Przenieś zadanie",
-        "color": "Ustaw kolor zadania",
-        "delete": "Usuń zadanie",
-        "favorite": "Zapisz jako ulubione",
+        "relatedTasks": "Dodaj powiązanie",
+        "moveList": "Przenieś",
+        "color": "Ustaw kolor",
+        "delete": "Usuń",
+        "favorite": "Dodaj do ulubionych",
         "unfavorite": "Usuń z ulubionych"
       }
     },

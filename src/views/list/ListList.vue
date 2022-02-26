@@ -299,6 +299,7 @@ export default defineComponent({
 					break
 				}
 			}
+			// FIXME: Use computed
 			sortTasks(this.tasks)
 		},
 

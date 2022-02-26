@@ -7,7 +7,7 @@
     "lastViewed": "Dernière consultation",
     "list": {
       "newText": "Tu peux créer une nouvelle liste pour tes nouvelles tâches :",
-      "new": "New list",
+      "new": "Nouvelle liste",
       "importText": "Ou importe tes listes et tâches d’autres services dans Vikunja :",
       "import": "Importer tes données dans Vikunja"
     }
@@ -31,11 +31,11 @@
       "username": "Nom d’utilisateur·rice",
       "usernameEmail": "Nom d’utilisateur·rice ou adresse courriel",
       "usernamePlaceholder": "p. ex. frederick",
-      "email": "Email address",
+      "email": "Adresse courriel",
       "emailPlaceholder": "p. ex. frederic{'@'}vikunja.io",
       "password": "Mot de passe",
       "passwordPlaceholder": "p. ex. •••••••••••",
-      "forgotPassword": "Forgot your password?",
+      "forgotPassword": "Mot de passe oublié ?",
       "resetPassword": "Réinitialiser ton mot de passe",
       "resetPasswordAction": "M’envoyer un lien de réinitialisation du mot de passe",
       "resetPasswordSuccess": "Vérifie ta boîte de réception ! Tu devrais avoir un courriel contenant les instructions sur la manière de réinitialiser ton mot de passe.",
@@ -44,20 +44,20 @@
       "totpTitle": "Code d’authentification à deux facteurs",
       "totpPlaceholder": "p. ex. 123456",
       "login": "Se connecter",
-      "createAccount": "Create account",
+      "createAccount": "Créer un compte",
       "loginWith": "Se connecter avec {provider}",
       "authenticating": "Authentification…",
       "openIdStateError": "L’état ne correspond pas, impossible de continuer !",
       "openIdGeneralError": "Une erreur s'est produite lors de l'authentification contre un tiers.",
       "logout": "Se déconnecter",
-      "emailInvalid": "Please enter a valid email address.",
-      "usernameRequired": "Please provide a username.",
-      "passwordRequired": "Please provide a password.",
-      "showPassword": "Show the password",
-      "hidePassword": "Hide the password",
-      "noAccountYet": "Don't have an account yet?",
-      "alreadyHaveAnAccount": "Already have an account?",
-      "remember": "Stay logged in"
+      "emailInvalid": "Veuillez saisir une adresse courriel valide.",
+      "usernameRequired": "Veuillez saisir un nom d'utilisateur.",
+      "passwordRequired": "Veuillez fournir un mot de passe.",
+      "showPassword": "Afficher le mot de passe",
+      "hidePassword": "Masquer le mot de passe",
+      "noAccountYet": "Vous n'avez pas encore de compte ?",
+      "alreadyHaveAnAccount": "Vous avez déjà un compte ?",
+      "remember": "Rester connecté(e)"
     },
     "settings": {
       "title": "Paramètres",
@@ -68,7 +68,7 @@
       "currentPasswordPlaceholder": "Ton mot de passe actuel",
       "passwordsDontMatch": "Le nouveau mot de passe et sa confirmation ne correspondent pas.",
       "passwordUpdateSuccess": "Mot de passe mis à jour.",
-      "updateEmailTitle": "Update Your Email Address",
+      "updateEmailTitle": "Mettre à jour votre adresse courriel",
       "updateEmailNew": "Nouvelle adresse courriel",
       "updateEmailSuccess": "Mise à jour de l’adresse électronique. Clique sur le lien dans le courriel qui t’a été envoyé pour le confirmer.",
       "general": {
@@ -86,7 +86,7 @@
         "weekStartMonday": "lundi",
         "language": "Langue",
         "defaultList": "Liste par défaut",
-        "timezone": "Time Zone"
+        "timezone": "Fuseau horaire"
       },
       "totp": {
         "title": "Authentification à deux facteurs",
@@ -165,7 +165,7 @@
     "searchSelect": "Clique ou appuie sur la touche Entrée pour sélectionner cette liste",
     "shared": "Listes partagées",
     "create": {
-      "header": "New list",
+      "header": "Nouvelle liste",
       "titlePlaceholder": "Entre le nom de la liste…",
       "addTitleRequired": "Indique un nom.",
       "createdSuccess": "Liste créée.",
@@ -323,7 +323,7 @@
     "namespaces": "Espaces de noms",
     "search": "Écris pour rechercher un espace de noms…",
     "create": {
-      "title": "New namespace",
+      "title": "Nouvel espace de noms",
       "titleRequired": "Indique un nom.",
       "explanation": "Des collections de listes pour partager et organiser vos listes. En fait, chaque liste appartient à un espace de noms.",
       "tooltip": "Qu’est-ce qu’un espace de noms ?",
@@ -335,7 +335,7 @@
       "archiveText": "Tu ne pourras pas modifier cet espace de noms ou créer de nouvelles listes tant que tu ne l’auras pas désarchivé. Ceci archivera également toutes les listes de cet espace de noms.",
       "unarchiveText": "Tu pourras créer de nouvelles listes ou les modifier.",
       "success": "Espace de noms archivé.",
-      "unarchiveSuccess": "The namespace was successfully un-archived.",
+      "unarchiveSuccess": "Espace de noms archivé.",
       "description": "L’archivage d’un espace de noms signifie qu’on ne peut pas créer de nouvelles listes dans cet espace, ni le modifier."
     },
     "delete": {
@@ -383,7 +383,7 @@
       "includeNulls": "Inclure les tâches sans valeurs",
       "requireAll": "Exiger tous les filtres pour qu’une tâche s’affiche",
       "showDoneTasks": "Afficher les tâches terminées",
-      "sortAlphabetically": "Sort Alphabetically",
+      "sortAlphabetically": "Trier par ordre alphabétique",
       "enablePriority": "Activer le filtre par priorité",
       "enablePercentDone": "Enable Filter By Progress",
       "dueDateRange": "Plage de dates d’échéance",
@@ -392,7 +392,7 @@
       "reminderRange": "Plage de dates de rappel"
     },
     "create": {
-      "title": "New Saved Filter",
+      "title": "Nouveau filtre enregistré",
       "description": "Un filtre enregistré est une liste virtuelle qui est calculée à partir d’un ensemble de filtres à chaque fois qu’on y accède. Une fois créé, il apparaît dans un espace de noms spécial.",
       "action": "Créer un nouveau filtre enregistré"
     },
@@ -485,7 +485,7 @@
     "showMenu": "Afficher le menu",
     "hideMenu": "Masquer le menu",
     "forExample": "Par exemple :",
-    "welcomeBack": "Welcome Back!"
+    "welcomeBack": "Heureux de vous revoir !"
   },
   "input": {
     "resetColor": "Réinitialiser la couleur",
@@ -554,7 +554,7 @@
       "chooseStartDate": "Clique ici pour fixer une date de début",
       "chooseEndDate": "Clique ici pour fixer une date de fin",
       "move": "Déplacer une tâche vers une autre liste",
-      "done": "Mark task done!",
+      "done": "Marquer la tâche comme terminée !",
       "undone": "Marquer comme inachevé",
       "created": "Créé {0} par {1}",
       "updated": "Mis à jour {0}",
@@ -570,22 +570,22 @@
         "text2": "Ceci supprimera également toutes les pièces jointes, les rappels et les relations associés à cette tâche et ne pourra pas être annulé !"
       },
       "actions": {
-        "assign": "Attribuer à un utilisateur",
-        "label": "Ajouter des étiquettes",
+        "assign": "Assign to User",
+        "label": "Add Labels",
         "priority": "Définir la priorité",
         "dueDate": "Définir l’échéance",
-        "startDate": "Définir une date de début",
-        "endDate": "Fixer une date de fin",
+        "startDate": "Set Start Date",
+        "endDate": "Set End Date",
         "reminders": "Définir des rappels",
-        "repeatAfter": "Définir un intervalle de répétition",
+        "repeatAfter": "Set Repeating Interval",
         "percentDone": "Set Progress",
-        "attachments": "Ajouter des pièces jointes",
-        "relatedTasks": "Ajouter des relations de tâches",
-        "moveList": "Déplacer la tâche",
-        "color": "Définir la couleur de la tâche",
-        "delete": "Supprimer la tâche",
-        "favorite": "Enregistrer comme favori",
-        "unfavorite": "Retirer des favoris"
+        "attachments": "Add Attachments",
+        "relatedTasks": "Add Relation",
+        "moveList": "Move",
+        "color": "Set Color",
+        "delete": "Delete",
+        "favorite": "Add to Favorites",
+        "unfavorite": "Remove from Favorites"
       }
     },
     "attributes": {
@@ -790,7 +790,7 @@
     "then": "puis",
     "task": {
       "title": "Page de tâche",
-      "done": "Done",
+      "done": "Terminé",
       "assign": "Attribuer à un utilisateur",
       "labels": "Ajouter des étiquettes à cette tâche",
       "dueDate": "Modifier la date d’échéance de cette tâche",
@@ -823,7 +823,7 @@
     "url": "URL Vikunja",
     "urlPlaceholder": "Par exemple : https://localhost:3456",
     "change": "changer",
-    "use": "Using Vikunja installation at {0}",
+    "use": "Utiliser l’installation de Vikunja à {0}",
     "error": "Impossible de trouver ou d'utiliser l'installation de Vikunja sur « {domain} ». Veuillez essayer une autre URL.",
     "success": "Utilisation de l’installation Vikunja à « {domain} ».",
     "urlRequired": "Une URL est requise."
@@ -908,7 +908,7 @@
     "4015": "Le commentaire de la tâche n’existe pas.",
     "4016": "Champ de tâche invalide.",
     "4017": "Comparateur de filtre de tâche invalide.",
-    "4018": "Invalid task filter concatenator.",
+    "4018": "Concaténateur de filtre de tâche invalide.",
     "4019": "Valeur de filtre de tâche invalide.",
     "5001": "L’espace de noms n’existe pas.",
     "5003": "Tu n’as pas accès à l’espace de noms indiqué.",

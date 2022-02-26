@@ -41,7 +41,7 @@
 
 <script setup lang="ts">
 import {ref, computed, watch} from 'vue'
-import { useI18n } from 'vue-i18n'
+import {useI18n} from 'vue-i18n'
 import {parseURL} from 'ufo'
 
 import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
@@ -61,18 +61,20 @@ const emit = defineEmits(['foundApi'])
 const apiUrl = ref(window.API_URL)
 const configureApi = ref(apiUrl.value === '')
 
-const apiDomain = computed(() => parseURL(apiUrl.value).host || parseURL(window.location.href).host)
-
+// Because we're only using this to parse the hostname, it should be fine to just prefix with http:// 
+// regardless of whether the url is actually reachable under http.
+const apiDomain = computed(() => parseURL(apiUrl.value, 'http://').host || parseURL(window.location.href).host)
 
 watch(() => props.configureOpen, (value) => {
 	configureApi.value = value
-}, { immediate: true })
+}, {immediate: true})
 
 
 const {t} = useI18n()
 
 const errorMsg = ref('')
 const successMsg = ref('')
+
 async function setApiUrl() {
 	if (apiUrl.value === '') {
 		// Don't try to check and set an empty url

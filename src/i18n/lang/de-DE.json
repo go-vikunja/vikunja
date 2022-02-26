@@ -580,11 +580,11 @@
         "repeatAfter": "Wiederholung setzen",
         "percentDone": "Fortschritt einstellen",
         "attachments": "Anhänge hinzufügen",
-        "relatedTasks": "Aufgabenbeziehungen hinzufügen",
-        "moveList": "Aufgabe verschieben",
-        "color": "Taskfarbe setzen",
-        "delete": "Aufgabe löschen",
-        "favorite": "In Favoriten speichern",
+        "relatedTasks": "Beziehung hinzufügen",
+        "moveList": "Verschieben",
+        "color": "Farbe setzen",
+        "delete": "Löschen",
+        "favorite": "Zu Favoriten hinzufügen",
         "unfavorite": "Aus Favoriten entfernen"
       }
     },

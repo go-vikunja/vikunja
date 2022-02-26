@@ -181,7 +181,7 @@ export default {
 		validateField() {
 			// using computed so that debounced function definition stays
 			return useDebounceFn((field) => {
-				this[`${field}Valid`] = this.$refs[field].value !== ''
+				this[`${field}Valid`] = this.$refs[field]?.value !== ''
 			}, 100)
 		},
 	},

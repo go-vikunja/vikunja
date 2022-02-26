@@ -520,6 +520,13 @@ export default {
 			},
 			immediate: true,
 		},
+		// Using a watcher here because the header component handles saving the task with the api but we want to decouple
+		// it from the page title.
+		'task.title': {
+			handler(title) {
+				this.setTitle(title)
+			},
+		},
 	},
 	computed: {
 		currentList() {
