@@ -190,10 +190,7 @@ export default {
 						this.$t('task.undoneSuccess'),
 				}, [{
 					title: 'Undo',
-					callback() {
-						this.task.done = !this.task.done
-						this.markAsDone(!checked)
-					},
+					callback: () => this.undoDone(checked),
 				}])
 			}
 
@@ -202,6 +199,11 @@ export default {
 			} else {
 				await updateFunc() // Don't delay it when un-marking it as it doesn't have an animation the other way around
 			}
+		},
+		
+		undoDone(checked) {
+			this.task.done = !this.task.done
+			this.markAsDone(!checked)
 		},
 
 		async toggleFavorite() {
