@@ -768,6 +768,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		background-color: var(--grey-100);
 		border-bottom-left-radius: $radius;
 		border-bottom-right-radius: $radius;
+		transform: none;
 
 		.button {
 			background-color: transparent;
@@ -779,6 +780,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	}
 }
 
+// FIXME: This does not seem to work
 .task-dragging {
 	transform: rotateZ(3deg);
 	transition: transform 0.18s ease;
