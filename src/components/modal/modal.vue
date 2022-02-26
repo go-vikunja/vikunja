@@ -85,14 +85,6 @@ export default {
 		BaseButton,
 	},
 
-	mounted() {
-		document.addEventListener('keydown', (e) => {
-			// Close the model when escape is pressed
-			if (e.keyCode === 27) {
-				this.$emit('close')
-			}
-		})
-	},
 	props: {
 		enabled: {
 			type: Boolean,
