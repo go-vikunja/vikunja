@@ -81,7 +81,7 @@ export default {
 			return this.notifications.filter(n => n.readAt === null).length
 		},
 		notifications() {
-			return this.allNotifications.filter(n => n.name !== '')
+			return this.allNotifications ? this.allNotifications.filter(n => n.name !== '') : []
 		},
 		...mapState({
 			userInfo: state => state.auth.info,
