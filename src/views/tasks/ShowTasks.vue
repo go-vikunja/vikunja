@@ -201,6 +201,10 @@ export default {
 			}
 
 			const tasks = await this.$store.dispatch('tasks/loadTasks', params)
+			if (!tasks) {
+				// When no tasks where returned, we won't be able to sort them.
+				return
+			}
 
 			// FIXME: sort tasks in computed
 			// Sort all tasks to put those with a due date before the ones without a due date, the
