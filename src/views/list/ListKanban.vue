@@ -653,6 +653,10 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			border-radius: $radius;
 		}
 	}
+	
+	.sortable-chosen .task {
+		transform: rotate(3deg);
+	}
 
 	.bucket {
 		border-radius: $radius;
