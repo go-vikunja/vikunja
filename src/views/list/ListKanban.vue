@@ -616,7 +616,7 @@ $crazy-height-calculation-tasks: '#{$crazy-height-calculation} - 1rem - 2.5rem -
 $filter-container-height: '1rem - #{$switch-view-height}';
 
 // FIXME:
-.app-content.list\.kanban {
+.app-content.list\.kanban, .app-content.task\.detail {
 	padding-bottom: 0 !important;
 }
 
