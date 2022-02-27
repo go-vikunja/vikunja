@@ -134,6 +134,7 @@ export default {
 			const list = await this.backgroundService.update({id: backgroundId, listId: this.$route.params.listId})
 			await this.$store.dispatch(CURRENT_LIST, list)
 			this.$store.commit('namespaces/setListInNamespaceById', list)
+			this.$store.commit('lists/setList', list)
 			this.$message.success({message: this.$t('list.background.success')})
 		},
 
@@ -145,6 +146,7 @@ export default {
 			const list = await this.backgroundUploadService.create(this.$route.params.listId, this.$refs.backgroundUploadInput.files[0])
 			await this.$store.dispatch(CURRENT_LIST, list)
 			this.$store.commit('namespaces/setListInNamespaceById', list)
+			this.$store.commit('lists/setList', list)
 			this.$message.success({message: this.$t('list.background.success')})
 		},
 
@@ -152,6 +154,7 @@ export default {
 			const list = await this.listService.removeBackground(this.currentList)
 			await this.$store.dispatch(CURRENT_LIST, list)
 			this.$store.commit('namespaces/setListInNamespaceById', list)
+			this.$store.commit('lists/setList', list)
 			this.$message.success({message: this.$t('list.background.removeSuccess')})
 			this.$router.back()
 		},
