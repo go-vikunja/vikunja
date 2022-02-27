@@ -60,57 +60,50 @@
 	</transition>
 </template>
 
-<script>
+<script lang="ts" setup>
 import BaseButton from '@/components/base/BaseButton.vue'
+import {onUnmounted, watch} from 'vue'
 
-export const TRANSITION_NAMES = {
-	MODAL: 'modal',
-	FADE: 'fade',
+const props = withDefaults(defineProps<{
+	enabled?: boolean,
+	overflow?: boolean,
+	wide?: boolean,
+	transitionName?: 'modal' | 'fade',
+	variant?: 'default' | 'hint-modal' | 'scrolling',
+}>(), {
+	enabled: true,
+	transitionName: 'modal',
+	variant: 'default',
+})
+
+ defineEmits(['close', 'submit'])
+
+// Based on https://css-tricks.com/prevent-page-scrolling-when-a-modal-is-open/
+function resetScrolling() {
+	const body = document.body
+	const scrollY = body.style.top
+	body.style.position = ''
+	body.style.top = ''
+	window.scrollTo(0, parseInt(scrollY || '0') * -1)
 }
 
-export const VARIANTS = {
-	DEFAULT: 'default',
-	HINT_MODAL: 'hint-modal',
-	SCROLLING: 'scrolling',
-}
-
-function validValue(values) {
-	return (value) => Object.values(values).includes(value)
-}
-
-export default {
-	name: 'modal',
-
-	components: {
-		BaseButton,
+watch(
+	() => props.enabled,
+	enabled => {
+		if (enabled) {
+			const scrollY = window.scrollY
+			document.body.style.position = 'fixed'
+			document.body.style.top = `-${scrollY}px`
+		} else {
+			resetScrolling()
+		}
 	},
-
-	props: {
-		enabled: {
-			type: Boolean,
-			default: true,
-		},
-		overflow: {
-			type: Boolean,
-			default: false,
-		},
-		wide: {
-			type: Boolean,
-			default: false,
-		},
-		transitionName: {
-			type: String,
-			default: TRANSITION_NAMES.MODAL,
-			validator: validValue(TRANSITION_NAMES),
-		},
-		variant: {
-			type: String,
-			default: VARIANTS.DEFAULT,
-			validator: validValue(VARIANTS),
-		},
+	{
+		immediate: true,
 	},
-	emits: ['close', 'submit'],
-}
+)
+
+onUnmounted(resetScrolling)
 </script>
 
 <style lang="scss" scoped>
