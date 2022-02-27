@@ -139,6 +139,7 @@ async function loadList(listIdToLoad: number) {
   @media screen and (max-width: $tablet) {
     display: flex;
     justify-content: center;
+    flex-direction: column;
   }
 }
 
@@ -149,7 +150,7 @@ async function loadList(listIdToLoad: number) {
   font-size: .75rem;
   box-shadow: var(--shadow-sm);
   height: $switch-view-height;
-  margin-bottom: 1rem;
+  margin: 0 auto 1rem;
   padding: .5rem;
 
   a {

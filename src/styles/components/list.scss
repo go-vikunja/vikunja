@@ -23,7 +23,7 @@ $filter-container-top-link-share-list: -47px;
     display: flex;
     justify-content: flex-end;
 
-    .button:not(:last-child) {
+    .button:not(:last-of-type) {
       margin-right: .5rem;
     }
   }
