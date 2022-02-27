@@ -95,12 +95,12 @@ const currentList = computed(() => {
 // of it, most likely due to the rights not being properly populated.
 watch(
 	() => props.listId,
-	(listId, prevListId) => {
+	(listId) => {
 		loadList(listId)
 	},
 	{
 		immediate: true,
-	}
+	},
 )
 
 // call the method again if the listId changes
