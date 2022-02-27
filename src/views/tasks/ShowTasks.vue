@@ -53,7 +53,6 @@ import {useI18n} from 'vue-i18n'
 import TaskModel from '@/models/task'
 import {formatDate} from '@/helpers/time/formatDate'
 import {setTitle} from '@/helpers/setTitle'
-import {objectToSnakeCase} from '@/helpers/case'
 
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import SingleTaskInList from '@/components/tasks/partials/singleTaskInList.vue'
@@ -202,7 +201,7 @@ async function loadPendingTasks(from: string, to: string) {
 		}
 	}
 
-	tasks.value = await store.dispatch('tasks/loadTasks', objectToSnakeCase(params))
+	tasks.value = await store.dispatch('tasks/loadTasks', params)
 }
 
 // FIXME: this modification should happen in the store

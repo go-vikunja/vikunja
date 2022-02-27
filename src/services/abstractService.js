@@ -2,6 +2,31 @@ import axios from 'axios'
 import {objectToSnakeCase} from '@/helpers/case'
 import {getToken} from '@/helpers/auth'
 
+function convertObject(o) {
+	if (o instanceof Date) {
+		return o.toISOString()
+	}
+
+	return o
+}
+
+function prepareParams(params) {
+	if (typeof params !== 'object') {
+		return params
+	}
+
+	for (const p in params) {
+		if (Array.isArray(params[p])) {
+			params[p] = params[p].map(convertObject)
+			continue
+		}
+
+		params[p] = convertObject(params[p])
+	}
+
+	return objectToSnakeCase(params)
+}
+
 export default class AbstractService {
 
 	/////////////////////////////
@@ -292,7 +317,7 @@ export default class AbstractService {
 		const finalUrl = this.getReplacedRoute(url, model)
 
 		try {
-			const response = await this.http.get(finalUrl, {params})
+			const response = await this.http.get(finalUrl, {params: prepareParams(params)})
 			const result = this.modelGetFactory(response.data)
 			result.maxRight = Number(response.headers['x-max-right'])
 			return result
@@ -331,7 +356,7 @@ export default class AbstractService {
 		const finalUrl = this.getReplacedRoute(this.paths.getAll, model)
 
 		try {
-			const response = await this.http.get(finalUrl, {params: params})
+			const response = await this.http.get(finalUrl, {params: prepareParams(params)})
 			this.resultCount = Number(response.headers['x-pagination-result-count'])
 			this.totalPages = Number(response.headers['x-pagination-total-pages'])
 
