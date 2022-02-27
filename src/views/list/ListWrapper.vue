@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watchEffect} from 'vue'
+import {ref, computed, watch} from 'vue'
 import {useRoute} from 'vue-router'
 
 import Message from '@/components/misc/message.vue'
@@ -87,6 +87,21 @@ const currentList = computed(() => {
 		maxRight: null,
 	} : store.state.currentList
 })
+
+// watchEffect would be called every time the prop would get a value assigned, even if that value was the same as before.
+// This resulted in loading and setting the list multiple times, even when navigating away from it.
+// This caused wired bugs where the list background would be set on the home page but only right after setting a new 
+// list background and then navigating to home. It also highlighted the list in the menu and didn't allow changing any
+// of it, most likely due to the rights not being properly populated.
+watch(
+	() => props.listId,
+	(listId, prevListId) => {
+		loadList(listId)
+	},
+	{
+		immediate: true,
+	}
+)
 
 // call the method again if the listId changes
 watchEffect(() => loadList(props.listId))
