@@ -235,7 +235,6 @@ store.dispatch('labels/loadAllLabels')
 
   .app-content {
     padding: $navbar-height + 1.5rem 1.5rem 1rem 1.5rem;
-    z-index: 2;
 
     @media screen and (max-width: $tablet) {
       margin-left: 0;
@@ -251,11 +250,6 @@ store.dispatch('labels/loadAllLabels')
         margin-left: 0;
       }
     }
-
-	&.task\.detail {
-		padding-left: 0;
-		padding-right: 0;
-	}
 
     .card {
       background: var(--white);

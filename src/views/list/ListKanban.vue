@@ -616,7 +616,7 @@ $crazy-height-calculation-tasks: '#{$crazy-height-calculation} - 1rem - 2.5rem -
 $filter-container-height: '1rem - #{$switch-view-height}';
 
 // FIXME:
-.app-content.list\.kanban {
+.app-content.list\.kanban, .app-content.task\.detail {
 	padding-bottom: 0 !important;
 }
 
@@ -653,17 +653,22 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			border-radius: $radius;
 		}
 	}
+	
+	.sortable-chosen .task {
+		transform: rotate(3deg);
+	}
 
 	.bucket {
 		border-radius: $radius;
 		position: relative;
 
 		margin: 0 $bucket-right-margin 0 0;
-		max-height: 100%;
+		max-height: calc(100% - 1rem); // 1rem spacing to the bottom
 		min-height: 20px;
 		width: $bucket-width;
 		display: flex;
 		flex-direction: column;
+		overflow: hidden; // Make sure the edges are always rounded		
 
 		.tasks {
 			overflow: hidden auto;
@@ -764,6 +769,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		background-color: var(--grey-100);
 		border-bottom-left-radius: $radius;
 		border-bottom-right-radius: $radius;
+		transform: none;
 
 		.button {
 			background-color: transparent;
@@ -775,6 +781,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	}
 }
 
+// FIXME: This does not seem to work
 .task-dragging {
 	transform: rotateZ(3deg);
 	transition: transform 0.18s ease;

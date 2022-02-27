@@ -183,6 +183,10 @@ export default {
 				this.updateData()
 			},
 			get() {
+				if(!this.date) {
+					return ''
+				}
+
 				return format(this.date, 'yyy-LL-dd H:mm')
 			},
 		},

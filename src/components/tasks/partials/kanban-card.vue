@@ -104,11 +104,12 @@ export default {
 		async toggleTaskDone(task) {
 			this.loadingInternal = true
 			try {
+				const done = !task.done
 				await this.$store.dispatch('tasks/update', {
 					...task,
-					done: !task.done,
+					done,
 				})
-				if (task.done) {
+				if (done) {
 					playPop()
 				}
 			} finally {

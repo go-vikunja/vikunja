@@ -18,6 +18,11 @@
   box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
 }
 
+:root {
+  // Bulma sets this to "scroll" which gives us a scrollbar even if there's no content to scroll
+  --body-overflow-y: auto;
+}
+
 body {
   background: var(--site-background);
   min-height: 100vh;

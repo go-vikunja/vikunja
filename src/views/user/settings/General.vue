@@ -135,7 +135,7 @@
 import {computed, watch, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import {playSoundWhenDoneKey, playPop} from '@/helpers/playPop'
+import {playSoundWhenDoneKey, playPopSound} from '@/helpers/playPop'
 import {availableLanguages} from '@/i18n'
 import {getQuickAddMagicMode, setQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {PrefixMode} from '@/modules/parseTaskText'
@@ -230,13 +230,13 @@ export default {
 	watch: {
 		playSoundWhenDone(play) {
 			if (play) {
-				playPop()
+				playPopSound()
 			}
 		},
 	},
 	methods: {
 		async updateSettings() {
-			localStorage.setItem(playSoundWhenDoneKey, this.playSoundWhenDone)
+			localStorage.setItem(playSoundWhenDoneKey, this.playSoundWhenDone ? 'true' : 'false')
 			setQuickAddMagicMode(this.quickAddMagicMode)
 
 			await this.$store.dispatch('auth/saveUserSettings', {
