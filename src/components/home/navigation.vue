@@ -6,7 +6,7 @@
 			</router-link>
 			<ul class="menu-list">
 				<li>
-					<router-link :to="{ name: 'home'}">
+					<router-link :to="{ name: 'home'}" v-shortcut="'g o'">
 						<span class="icon">
 							<icon icon="calendar"/>
 						</span>
@@ -14,7 +14,7 @@
 					</router-link>
 				</li>
 				<li>
-					<router-link :to="{ name: 'tasks.range'}">
+					<router-link :to="{ name: 'tasks.range'}" v-shortcut="'g u'">
 						<span class="icon">
 							<icon :icon="['far', 'calendar-alt']"/>
 						</span>
@@ -22,7 +22,7 @@
 					</router-link>
 				</li>
 				<li>
-					<router-link :to="{ name: 'namespaces.index'}">
+					<router-link :to="{ name: 'namespaces.index'}" v-shortcut="'g n'">
 						<span class="icon">
 							<icon icon="layer-group"/>
 						</span>
@@ -30,7 +30,7 @@
 					</router-link>
 				</li>
 				<li>
-					<router-link :to="{ name: 'labels.index'}">
+					<router-link :to="{ name: 'labels.index'}" v-shortcut="'g a'">
 						<span class="icon">
 							<icon icon="tags"/>
 						</span>
@@ -38,7 +38,7 @@
 					</router-link>
 				</li>
 				<li>
-					<router-link :to="{ name: 'teams.index'}">
+					<router-link :to="{ name: 'teams.index'}" v-shortcut="'g m'">
 						<span class="icon">
 							<icon icon="users"/>
 						</span>
