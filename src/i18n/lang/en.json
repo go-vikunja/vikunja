@@ -785,6 +785,7 @@
     "general": "General",
     "allPages": "These shortcuts work on all pages.",
     "currentPageOnly": "These shortcuts work only on the current page.",
+    "somePagesOnly": "These shortcuts work only on some pages.",
     "toggleMenu": "Toggle The Menu",
     "quickSearch": "Open the search/quick action bar",
     "then": "then",
