@@ -785,17 +785,20 @@
     "general": "Allgemein",
     "allPages": "Die Chürzl funktioniered uf allne Siitene.",
     "currentPageOnly": "Die Chürzl funktioniered nur uf de momentane Siite.",
+    "somePagesOnly": "Funktioniert nur auf manchen Seiten.",
     "toggleMenu": "Menü umschalte",
     "quickSearch": "Suechi und Schnellaktionsliste öffne",
     "then": "dann",
     "task": {
       "title": "Uufgabesiite",
-      "done": "Fertig",
-      "assign": "Benutzer:in zuweisen",
+      "done": "Aufgabe als erledigt / unerledigt markieren",
+      "assign": "Diese Aufgabe jemandem zuweisen",
       "labels": "Labels ennere Uufgab hinzuefüege",
       "dueDate": "S'Fälligkeitsdatum für die Uufgab ändere",
       "attachment": "En Aahang dere Uufgab hinzuefüege",
-      "related": "Beziehige vo dere Uufgab bearbeite"
+      "related": "Beziehige vo dere Uufgab bearbeite",
+      "color": "Die Farbe dieser Aufgabe ändern",
+      "move": "Diese Aufgabe in eine andere Liste verschieben"
     },
     "list": {
       "title": "Listenansicht",
@@ -803,6 +806,14 @@
       "switchToGanttView": "Zur Ganttansicht wechseln",
       "switchToKanbanView": "Zur Kanbanansicht wechseln",
       "switchToTableView": "Zur Tabellenansicht wechseln"
+    },
+    "navigation": {
+      "title": "Navigation",
+      "overview": "Die Startseite aufrufen",
+      "upcoming": "Anstehende Aufgaben aufrufen",
+      "namespaces": "Namespaces & Listen aufrufen",
+      "labels": "Labels aufrufen",
+      "teams": "Teams aufrufen"
     }
   },
   "update": {

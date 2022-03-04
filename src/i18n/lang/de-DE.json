@@ -785,17 +785,20 @@
     "general": "Allgemein",
     "allPages": "Diese Tastenkürzel funktionieren auf allen Seiten.",
     "currentPageOnly": "Diese Tastenkürzel funktionieren nur auf der aktuellen Seite.",
+    "somePagesOnly": "Funktioniert nur auf manchen Seiten.",
     "toggleMenu": "Das Menü umschalten",
     "quickSearch": "Such-/Schnellaktionsleiste öffnen",
     "then": "dann",
     "task": {
       "title": "Aufgabenseite",
-      "done": "Fertig",
-      "assign": "Benutzer:in zuweisen",
+      "done": "Aufgabe als erledigt / unerledigt markieren",
+      "assign": "Diese Aufgabe jemandem zuweisen",
       "labels": "Dieser Aufgabe ein Label hinzufügen",
       "dueDate": "Ändere das Fälligkeitsdatum dieser Aufgabe",
       "attachment": "Einen Anhang dieser Aufgabe hinzufügen",
-      "related": "Ändere die Abhängigen Aufgaben dieser Aufgabe"
+      "related": "Ändere die Abhängigen Aufgaben dieser Aufgabe",
+      "color": "Die Farbe dieser Aufgabe ändern",
+      "move": "Diese Aufgabe in eine andere Liste verschieben"
     },
     "list": {
       "title": "Listenansicht",
@@ -803,6 +806,14 @@
       "switchToGanttView": "Zur Ganttansicht wechseln",
       "switchToKanbanView": "Zur Kanbanansicht wechseln",
       "switchToTableView": "Zur Tabellenansicht wechseln"
+    },
+    "navigation": {
+      "title": "Navigation",
+      "overview": "Die Startseite aufrufen",
+      "upcoming": "Anstehende Aufgaben aufrufen",
+      "namespaces": "Namespaces & Listen aufrufen",
+      "labels": "Labels aufrufen",
+      "teams": "Teams aufrufen"
     }
   },
   "update": {

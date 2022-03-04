@@ -785,17 +785,20 @@
     "general": "Obecné",
     "allPages": "Tyto zkratky fungují na všech stránkách.",
     "currentPageOnly": "Tyto zkratky fungují pouze na aktuální stránce.",
+    "somePagesOnly": "These shortcuts work only on some pages.",
     "toggleMenu": "Přepnout nabídku",
     "quickSearch": "Otevřít vyhledávání / panel rychlých akcí",
     "then": "potom",
     "task": {
       "title": "Stránka úkolů",
-      "done": "Hotovo",
-      "assign": "Přiřadit uživateli",
+      "done": "Mark task done / undone",
+      "assign": "Assign this task to a user",
       "labels": "Přidat štítky k tomuto úkolu",
       "dueDate": "Změnit termín tohoto úkolu",
       "attachment": "Přidat přílohu k tomuto úkolu",
-      "related": "Upravit související úkoly tohoto úkolu"
+      "related": "Upravit související úkoly tohoto úkolu",
+      "color": "Change the color of this task",
+      "move": "Move this task to another list"
     },
     "list": {
       "title": "Zobrazení seznamů",
@@ -803,6 +806,14 @@
       "switchToGanttView": "Přepnout na zobrazení gantt",
       "switchToKanbanView": "Přepnout na zobrazení kanbanu",
       "switchToTableView": "Přepnout na zobrazení tabulky"
+    },
+    "navigation": {
+      "title": "Navigation",
+      "overview": "Navigato to overview",
+      "upcoming": "Navigato to upcoming taks",
+      "namespaces": "Navigate to namepaces & lists",
+      "labels": "Navigate to labels",
+      "teams": "Navigate to teams"
     }
   },
   "update": {

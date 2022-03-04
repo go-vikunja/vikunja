@@ -785,17 +785,20 @@
     "general": "Général",
     "allPages": "Fonctionne sur toutes les pages.",
     "currentPageOnly": "Fonctionnent uniquement sur la page en cours.",
+    "somePagesOnly": "These shortcuts work only on some pages.",
     "toggleMenu": "Basculer le menu",
     "quickSearch": "Ouvrir la barre de recherche/action rapide",
     "then": "puis",
     "task": {
       "title": "Page de tâche",
-      "done": "Terminé",
-      "assign": "Attribuer à un utilisateur",
+      "done": "Mark task done / undone",
+      "assign": "Assign this task to a user",
       "labels": "Ajouter des étiquettes à cette tâche",
       "dueDate": "Modifier la date d’échéance de cette tâche",
       "attachment": "Ajouter une pièce jointe à cette tâche",
-      "related": "Modifier les tâches connexes de cette tâche"
+      "related": "Modifier les tâches connexes de cette tâche",
+      "color": "Change the color of this task",
+      "move": "Move this task to another list"
     },
     "list": {
       "title": "Vues en liste",
@@ -803,6 +806,14 @@
       "switchToGanttView": "Passer en vue Gantt",
       "switchToKanbanView": "Passer en vue kanban",
       "switchToTableView": "Passer en vue tableau"
+    },
+    "navigation": {
+      "title": "Navigation",
+      "overview": "Navigato to overview",
+      "upcoming": "Navigato to upcoming taks",
+      "namespaces": "Navigate to namepaces & lists",
+      "labels": "Navigate to labels",
+      "teams": "Navigate to teams"
     }
   },
   "update": {

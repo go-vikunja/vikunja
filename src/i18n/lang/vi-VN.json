@@ -785,17 +785,20 @@
     "general": "Tổng quan",
     "allPages": "Các phím tắt này hoạt động ở mọi nơi.",
     "currentPageOnly": "Các phím tắt này chỉ hoạt động ở trang hiện tại.",
+    "somePagesOnly": "These shortcuts work only on some pages.",
     "toggleMenu": "Bật/tắt Menu",
     "quickSearch": "Mở thanh tìm kiếm/thao tác nhanh",
     "then": "sau đó",
     "task": {
       "title": "Trang công việc",
-      "done": "Done",
-      "assign": "Chỉ định một người",
+      "done": "Mark task done / undone",
+      "assign": "Assign this task to a user",
       "labels": "Thêm nhãn cho công việc này",
       "dueDate": "Thay đổi ngày hết hạn của công việc này",
       "attachment": "Thêm tệp đính kèm cho công việc này",
-      "related": "Sửa đổi các công việc liên kết"
+      "related": "Sửa đổi các công việc liên kết",
+      "color": "Change the color of this task",
+      "move": "Move this task to another list"
     },
     "list": {
       "title": "Xem danh sách",
@@ -803,6 +806,14 @@
       "switchToGanttView": "Chuyển sang biểu đồ Gantt",
       "switchToKanbanView": "Chuyển sang Kanban",
       "switchToTableView": "Chuyển qua xem Bảng"
+    },
+    "navigation": {
+      "title": "Navigation",
+      "overview": "Navigato to overview",
+      "upcoming": "Navigato to upcoming taks",
+      "namespaces": "Navigate to namepaces & lists",
+      "labels": "Navigate to labels",
+      "teams": "Navigate to teams"
     }
   },
   "update": {
