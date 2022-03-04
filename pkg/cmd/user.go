@@ -24,6 +24,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/asaskevich/govalidator"
+
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
@@ -175,6 +177,11 @@ var userCreateCmd = &cobra.Command{
 			Email:    userFlagEmail,
 			Password: getPasswordFromFlagOrInput(),
 		}
+
+		if !govalidator.IsEmail(userFlagEmail) {
+			log.Fatalf("Provided email is invalid.")
+		}
+
 		newUser, err := user.CreateUser(s, u)
 		if err != nil {
 			_ = s.Rollback()
