@@ -785,20 +785,20 @@
     "general": "Geral",
     "allPages": "Estes atalhos funcionam em todas as páginas.",
     "currentPageOnly": "Estes atalhos funcionamente apenas na página atual.",
-    "somePagesOnly": "These shortcuts work only on some pages.",
+    "somePagesOnly": "Estes atalhos funcionam apenas em algumas páginas.",
     "toggleMenu": "Alternar o Menu",
     "quickSearch": "Abrir a pesquisa/barra de ação rápida",
     "then": "então",
     "task": {
       "title": "Página de Tarefa",
-      "done": "Mark task done / undone",
-      "assign": "Assign this task to a user",
+      "done": "Marcar tarefa como concluída / não concluída",
+      "assign": "Atribuir esta tarefa a um utilizador",
       "labels": "Adicionar etiquetas a esta tarefa",
       "dueDate": "Alterar a data de vencimento desta tarefa",
       "attachment": "Adicionar um anexo a esta tarefa",
       "related": "Modificar as tarefas relacionadas desta tarefa",
-      "color": "Change the color of this task",
-      "move": "Move this task to another list"
+      "color": "Alterar a cor desta tarefa",
+      "move": "Mover esta tarefa para outra lista"
     },
     "list": {
       "title": "Visualização em Lista",
@@ -808,12 +808,12 @@
       "switchToTableView": "Alternar para visualização em tabela"
     },
     "navigation": {
-      "title": "Navigation",
-      "overview": "Navigato to overview",
-      "upcoming": "Navigato to upcoming taks",
-      "namespaces": "Navigate to namepaces & lists",
-      "labels": "Navigate to labels",
-      "teams": "Navigate to teams"
+      "title": "Navegação",
+      "overview": "Navegar para a vista geral",
+      "upcoming": "Navegar para próximas tarefas",
+      "namespaces": "Navegar para espaços e listas",
+      "labels": "Navegar para etiquetas",
+      "teams": "Navegar para equipas"
     }
   },
   "update": {
