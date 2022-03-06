@@ -16,7 +16,7 @@
 		<a
 			@click="togglePasswordFieldType"
 			class="password-field-type-toggle"
-			aria-label="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')"
+			:aria-label="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')"
 			v-tooltip="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')">
 			<icon :icon="passwordFieldType === 'password' ? 'eye' : 'eye-slash'"/>
 		</a>
