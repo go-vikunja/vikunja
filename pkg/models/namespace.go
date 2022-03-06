@@ -603,20 +603,17 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces [put]
 func (n *Namespace) Create(s *xorm.Session, a web.Auth) (err error) {
-	// Check if we have at least a name
+	// Check if we have at least a title
 	if n.Title == "" {
 		return ErrNamespaceNameCannotBeEmpty{NamespaceID: 0, UserID: a.GetID()}
 	}
-	n.ID = 0 // This would otherwise prevent the creation of new lists after one was created
 
-	// Check if the User exists
 	n.Owner, err = user.GetUserByID(s, a.GetID())
 	if err != nil {
 		return
 	}
 	n.OwnerID = n.Owner.ID
 
-	// Insert
 	if _, err = s.Insert(n); err != nil {
 		return err
 	}
