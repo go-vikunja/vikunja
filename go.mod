@@ -62,7 +62,7 @@ require (
 	github.com/yuin/goldmark v1.4.8
 	golang.org/x/crypto v0.0.0-20220307211146-efcb8507fb70
 	golang.org/x/image v0.0.0-20220302094943-723b81ca9867
-	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b
+	golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20220307203707-22a9840ba4d7
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
