@@ -111,7 +111,7 @@
         "title": "Avatar",
         "initials": "Initiales",
         "gravatar": "Gravatar",
-        "marble": "Marble",
+        "marble": "Bille",
         "upload": "Téléverser",
         "uploadAvatar": "Téléverser l’avatar",
         "statusUpdateSuccess": "Statut de l’avatar mis à jour.",
@@ -385,7 +385,7 @@
       "showDoneTasks": "Afficher les tâches terminées",
       "sortAlphabetically": "Trier par ordre alphabétique",
       "enablePriority": "Activer le filtre par priorité",
-      "enablePercentDone": "Enable Filter By Progress",
+      "enablePercentDone": "Activer le filtre par progression",
       "dueDateRange": "Plage de dates d’échéance",
       "startDateRange": "Plage de dates de début",
       "endDateRange": "Plage de dates de fin",
@@ -570,22 +570,22 @@
         "text2": "Ceci supprimera également toutes les pièces jointes, les rappels et les relations associés à cette tâche et ne pourra pas être annulé !"
       },
       "actions": {
-        "assign": "Assign to User",
-        "label": "Add Labels",
+        "assign": "Assigner à l'utilisateur",
+        "label": "Ajouter des étiquettes",
         "priority": "Définir la priorité",
         "dueDate": "Définir l’échéance",
-        "startDate": "Set Start Date",
-        "endDate": "Set End Date",
+        "startDate": "Définir la date de début",
+        "endDate": "Définir la date de fin",
         "reminders": "Définir des rappels",
-        "repeatAfter": "Set Repeating Interval",
-        "percentDone": "Set Progress",
-        "attachments": "Add Attachments",
-        "relatedTasks": "Add Relation",
-        "moveList": "Move",
-        "color": "Set Color",
-        "delete": "Delete",
-        "favorite": "Add to Favorites",
-        "unfavorite": "Remove from Favorites"
+        "repeatAfter": "Définir un intervalle de répétition",
+        "percentDone": "Définir la progression",
+        "attachments": "Ajouter des pièces jointes",
+        "relatedTasks": "Ajouter une relation",
+        "moveList": "Déplacer",
+        "color": "Définir la couleur",
+        "delete": "Supprimer",
+        "favorite": "Ajouter aux favoris",
+        "unfavorite": "Retirer des favoris"
       }
     },
     "attributes": {
@@ -598,7 +598,7 @@
       "dueDate": "Date d’échéance",
       "endDate": "Date de fin",
       "labels": "Étiquettes",
-      "percentDone": "Progress",
+      "percentDone": "Progression",
       "priority": "Priorité",
       "relatedTasks": "Tâches connexes",
       "reminders": "Rappels",
@@ -785,20 +785,20 @@
     "general": "Général",
     "allPages": "Fonctionne sur toutes les pages.",
     "currentPageOnly": "Fonctionnent uniquement sur la page en cours.",
-    "somePagesOnly": "These shortcuts work only on some pages.",
+    "somePagesOnly": "Ces raccourcis fonctionnent seulement sur certaines pages.",
     "toggleMenu": "Basculer le menu",
     "quickSearch": "Ouvrir la barre de recherche/action rapide",
     "then": "puis",
     "task": {
       "title": "Page de tâche",
       "done": "Mark task done / undone",
-      "assign": "Assign this task to a user",
+      "assign": "Assigner cette tâche à un utilisateur",
       "labels": "Ajouter des étiquettes à cette tâche",
       "dueDate": "Modifier la date d’échéance de cette tâche",
       "attachment": "Ajouter une pièce jointe à cette tâche",
       "related": "Modifier les tâches connexes de cette tâche",
-      "color": "Change the color of this task",
-      "move": "Move this task to another list"
+      "color": "Changer la couleur de cette tâche",
+      "move": "Déplacer cette tâche dans une autre liste"
     },
     "list": {
       "title": "Vues en liste",
@@ -809,11 +809,11 @@
     },
     "navigation": {
       "title": "Navigation",
-      "overview": "Navigato to overview",
-      "upcoming": "Navigato to upcoming taks",
-      "namespaces": "Navigate to namepaces & lists",
-      "labels": "Navigate to labels",
-      "teams": "Navigate to teams"
+      "overview": "Accéder à la vue d'ensemble",
+      "upcoming": "Accéder aux prochaines tâches",
+      "namespaces": "Accéder aux espaces de noms et listes",
+      "labels": "Accéder aux étiquettes",
+      "teams": "Accéder aux équipes"
     }
   },
   "update": {
