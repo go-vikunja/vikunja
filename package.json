@@ -69,7 +69,7 @@
     "@vue/eslint-config-typescript": "10.0.0",
     "autoprefixer": "10.4.3",
     "axios": "0.26.1",
-    "browserslist": "4.20.0",
+    "browserslist": "4.20.2",
     "caniuse-lite": "1.0.30001317",
     "cypress": "9.5.2",
     "esbuild": "0.14.27",
