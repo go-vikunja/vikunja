@@ -13033,10 +13033,10 @@ typo-js@*:
   resolved "https://registry.yarnpkg.com/typo-js/-/typo-js-1.2.0.tgz#dbe58de3a6dcbbe260b78bf290ee761b008a28e8"
   integrity sha512-dELuLBVa2jvWdU/CHTKi2L/POYaRupv942k+vRsFXsM17acXesQGAiGCio82RW7fvcr7bkuD/Zj8XpUh6aPC2A==
 
-ufo@0.8.0:
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/ufo/-/ufo-0.8.0.tgz#349cf2ccdd5aa4d2e19f64cef038788ef42c94fd"
-  integrity sha512-w2U54d0LBlhz+xUleORZAQI0jRMnJpLlMY9NGNEZHVl/XCR/lf0wk8DylbBfjsBb+EkNDghux74nU4H8c9JAoQ==
+ufo@0.8.1:
+  version "0.8.1"
+  resolved "https://registry.yarnpkg.com/ufo/-/ufo-0.8.1.tgz#e45182ac01fc37eda5cf89879a70166fecde9642"
+  integrity sha512-1hqVxwcvBvzwwMRjR8pQEJ0CYOCGo49VF11caCe1hxKGiMGpL5ge/JiRX8ttf+YoIMomoEAim2SbD4jQ4tKbXw==
 
 uid-safe@2.1.5:
   version "2.1.5"
