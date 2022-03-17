@@ -2847,10 +2847,10 @@
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-0.0.39.tgz#e177e699ee1b8c22d23174caaa7422644389509f"
   integrity sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==
 
-"@types/flexsearch@0.7.2":
-  version "0.7.2"
-  resolved "https://registry.yarnpkg.com/@types/flexsearch/-/flexsearch-0.7.2.tgz#05d982d292e70fcb9fc59347a4a4f98c4ecd9e56"
-  integrity sha512-Nq0CSpOCyUhaF7tAXSvMtoyBMPGlhNyF+uElhIrrgSiXDmX/bnn9jUX7Us3l81Hzowb9rcgNISke0Nj+3xhd3g==
+"@types/flexsearch@0.7.3":
+  version "0.7.3"
+  resolved "https://registry.yarnpkg.com/@types/flexsearch/-/flexsearch-0.7.3.tgz#ee79b1618035c82284278e05652e91116765b634"
+  integrity sha512-HXwADeHEP4exXkCIwy2n1+i0f1ilP1ETQOH5KDOugjkTFZPntWo0Gr8stZOaebkxsdx+k0X/K6obU/+it07ocg==
 
 "@types/form-data@0.0.33":
   version "0.0.33"
