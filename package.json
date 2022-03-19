@@ -24,7 +24,7 @@
     "@sentry/vue": "6.18.2",
     "@types/is-touch-device": "1.0.0",
     "@vue/compat": "3.2.31",
-    "@vueuse/core": "8.1.1",
+    "@vueuse/core": "8.1.2",
     "@vueuse/router": "8.1.2",
     "bulma-css-variables": "0.9.33",
     "camel-case": "4.1.2",
