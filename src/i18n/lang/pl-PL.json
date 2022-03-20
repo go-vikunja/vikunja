@@ -785,20 +785,20 @@
     "general": "Ogólne",
     "allPages": "Te skróty działają na wszystkich stronach.",
     "currentPageOnly": "Te skróty działają tylko na bieżącej stronie.",
-    "somePagesOnly": "These shortcuts work only on some pages.",
+    "somePagesOnly": "Te skróty działają tylko na niektórych stronach.",
     "toggleMenu": "Przełącz menu",
     "quickSearch": "Otwórz pasek wyszukiwania/szybkiej akcji",
     "then": "następnie",
     "task": {
       "title": "Widok zadań",
-      "done": "Mark task done / undone",
-      "assign": "Assign this task to a user",
+      "done": "Oznacz zadanie jako wykonane / niewykonane",
+      "assign": "Przypisz to zadanie do użytkownika",
       "labels": "Dodaj etykiety do tego zadania",
       "dueDate": "Zmień termin wykonania tego zadania",
       "attachment": "Dodaj załącznik do tego zadania",
       "related": "Zmodyfikuj zadania powiązane z tym zadaniem",
-      "color": "Change the color of this task",
-      "move": "Move this task to another list"
+      "color": "Zmień kolor tego zadania",
+      "move": "Przenieś to zadanie do innej listy"
     },
     "list": {
       "title": "Widoki listy",
@@ -808,12 +808,12 @@
       "switchToTableView": "Przełącz na widok tabeli"
     },
     "navigation": {
-      "title": "Navigation",
-      "overview": "Navigato to overview",
-      "upcoming": "Navigato to upcoming taks",
-      "namespaces": "Navigate to namepaces & lists",
-      "labels": "Navigate to labels",
-      "teams": "Navigate to teams"
+      "title": "Nawigacja",
+      "overview": "Przejdź do przeglądu",
+      "upcoming": "Przejdź do nadchodzących zadań",
+      "namespaces": "Przejdź do sekcji i list",
+      "labels": "Przejdź do etykiet",
+      "teams": "Przejdź do zespołów"
     }
   },
   "update": {
