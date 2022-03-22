@@ -57,9 +57,9 @@
   "devDependencies": {
     "@4tw/cypress-drag-drop": "2.1.0",
     "@faker-js/faker": "6.0.0",
-    "@fortawesome/fontawesome-svg-core": "6.1.0",
-    "@fortawesome/free-regular-svg-icons": "6.1.0",
-    "@fortawesome/free-solid-svg-icons": "6.1.0",
+    "@fortawesome/fontawesome-svg-core": "6.1.1",
+    "@fortawesome/free-regular-svg-icons": "6.1.1",
+    "@fortawesome/free-solid-svg-icons": "6.1.1",
     "@fortawesome/vue-fontawesome": "3.0.0-5",
     "@types/flexsearch": "0.7.3",
     "@typescript-eslint/eslint-plugin": "5.16.0",
