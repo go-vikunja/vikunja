@@ -212,14 +212,14 @@ export default {
 	font-size: 2rem;
 
 	@media screen and (max-width: $desktop) {
-		color: var(--dark);
+		color: var(--grey-900);
 	}
 }
 </style>
 
 <style lang="scss">
 // Close icon SVG uses currentColor, change the color to keep it visible
-.dark .task-detail-view-modal .close {
+.dark .close {
 	color: var(--grey-900);
 }
 </style>
