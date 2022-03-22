@@ -83,7 +83,7 @@
 			<span class="title">{{ rts.title }}</span>
 			<div class="tasks">
 				<div :key="t.id" class="task" v-for="t in rts.tasks">
-					<router-link :to="{ name: $route.name, params: { id: t.id } }" :class="{ 'done': t.done}">
+					<router-link :to="{ name: $route.name, params: { id: t.id } }" :class="{ 'is-strikethrough': t.done}">
 						<span
 							class="different-list"
 							v-if="t.listId !== listId"
