@@ -8,6 +8,7 @@
 				{ 'has-overflow': overflow },
 				variant,
 			]"
+			ref="modal"
 		>
 			<div
 				class="modal-container"
@@ -62,7 +63,8 @@
 
 <script lang="ts" setup>
 import BaseButton from '@/components/base/BaseButton.vue'
-import {onUnmounted, watch} from 'vue'
+import {ref, watch} from 'vue'
+import {useScrollLock} from '@vueuse/core'
 
 const props = withDefaults(defineProps<{
 	enabled?: boolean,
@@ -76,34 +78,20 @@ const props = withDefaults(defineProps<{
 	variant: 'default',
 })
 
- defineEmits(['close', 'submit'])
+defineEmits(['close', 'submit'])
 
-// Based on https://css-tricks.com/prevent-page-scrolling-when-a-modal-is-open/
-function resetScrolling() {
-	const body = document.body
-	const scrollY = body.style.top
-	body.style.position = ''
-	body.style.top = ''
-	window.scrollTo(0, parseInt(scrollY || '0') * -1)
-}
+const modal = ref<HTMLElement | null>(null)
+const scrollLock = useScrollLock(modal)
 
 watch(
 	() => props.enabled,
 	enabled => {
-		if (enabled) {
-			const scrollY = window.scrollY
-			document.body.style.position = 'fixed'
-			document.body.style.top = `-${scrollY}px`
-		} else {
-			resetScrolling()
-		}
+		scrollLock.value = enabled
 	},
 	{
 		immediate: true,
 	},
 )
-
-onUnmounted(resetScrolling)
 </script>
 
 <style lang="scss" scoped>
