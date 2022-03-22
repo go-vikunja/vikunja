@@ -264,7 +264,9 @@ store.dispatch('labels/loadAllLabels')
 	bottom: 0;
 	left: 0;
 	right: 0;
-	background: rgba(250, 250, 250, 0.8);
+	height: 100vh;
+	width: 100vw;
+	background: hsla(var(--grey-100-hsl), 0.8);
 	z-index: 5;
 	opacity: 0;
 	transition: all $transition;

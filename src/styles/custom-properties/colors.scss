@@ -3,7 +3,8 @@
 :root {
   // Vikunja specific variables
   --grey-50: hsl(210, 20%, 98%);
-  --grey-100: hsl(220, 14.3%, 95.9%);
+  --grey-100-hsl: 220, 14.3%, 95.9%;
+  --grey-100: hsl(var(--grey-100-hsl));
   --grey-200: hsl(220, 13%, 91%);
   --grey-300: hsl(216, 12.2%, 83.9%);
   --grey-400: hsl(217.9, 10.6%, 64.9%);
