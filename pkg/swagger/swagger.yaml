@@ -2898,7 +2898,10 @@ paths:
         in: query
         name: filter_by
         type: string
-      - description: The value to filter for.
+      - description: The value to filter for. You can use [grafana](https://grafana.com/docs/grafana/latest/dashboards/time-range-controls)-
+          or [elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#date-math)-style
+          relative dates for all date fields like `due_date`, `start_date`, `end_date`,
+          etc.
         in: query
         name: filter_value
         type: string

@@ -59,6 +59,7 @@ require (
 	github.com/swaggo/swag v1.8.0
 	github.com/tkuchiki/go-timezone v0.2.2
 	github.com/ulule/limiter/v3 v3.10.0
+	github.com/vectordotdev/go-datemath v0.1.1-0.20211214182920-0a4ac8742b93
 	github.com/yuin/goldmark v1.4.8
 	golang.org/x/crypto v0.0.0-20220307211146-efcb8507fb70
 	golang.org/x/image v0.0.0-20220302094943-723b81ca9867

@@ -25,6 +25,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"github.com/iancoleman/strcase"
+	"github.com/vectordotdev/go-datemath"
 	"xorm.io/xorm/schemas"
 )
 
@@ -159,8 +160,14 @@ func getValueForField(field reflect.StructField, rawValue string) (value interfa
 		value, err = strconv.ParseBool(rawValue)
 	case reflect.Struct:
 		if field.Type == schemas.TimeType {
-			value, err = time.Parse(time.RFC3339, rawValue)
-			value = value.(time.Time).In(config.GetTimeZone())
+			var t datemath.Expression
+			t, err = datemath.Parse(rawValue)
+			if err == nil {
+				value = t.Time(datemath.WithLocation(config.GetTimeZone()))
+			} else {
+				value, err = time.Parse(time.RFC3339, rawValue)
+				value = value.(time.Time).In(config.GetTimeZone())
+			}
 		}
 	case reflect.Slice:
 		// If this is a slice of pointers we're dealing with some property which is a relation
