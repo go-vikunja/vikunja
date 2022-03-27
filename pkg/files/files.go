@@ -137,7 +137,8 @@ func (f *File) Delete() (err error) {
 
 	err = afs.Remove(f.getFileName())
 	if err != nil {
-		if errors.Is(err, &os.PathError{}) {
+		var perr *os.PathError
+		if errors.As(err, &perr) {
 			// Don't fail when removing the file failed
 			log.Errorf("Error deleting file %d: %w", err)
 			return s.Commit()

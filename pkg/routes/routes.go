@@ -156,7 +156,8 @@ func NewEcho() *echo.Echo {
 
 		e.HTTPErrorHandler = func(err error, c echo.Context) {
 			// Only capture errors not already handled by echo
-			if errors.Is(err, &echo.HTTPError{}) {
+			var herr *echo.HTTPError
+			if errors.As(err, &herr) {
 				hub := sentryecho.GetHubFromContext(c)
 				if hub != nil {
 					hub.WithScope(func(scope *sentry.Scope) {
