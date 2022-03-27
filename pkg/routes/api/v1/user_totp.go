@@ -18,6 +18,7 @@ package v1
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"image/jpeg"
 	"net/http"
@@ -91,7 +92,8 @@ func UserTOTPEnable(c echo.Context) error {
 	}
 	if err := c.Bind(passcode); err != nil {
 		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
-		if he, is := err.(*echo.HTTPError); is {
+		var he *echo.HTTPError
+		if errors.As(err, &he) {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message))
 		}
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.")
@@ -131,7 +133,8 @@ func UserTOTPDisable(c echo.Context) error {
 	login := &user.Login{}
 	if err := c.Bind(login); err != nil {
 		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
-		if he, is := err.(*echo.HTTPError); is {
+		var he *echo.HTTPError
+		if errors.As(err, &he) {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message))
 		}
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.")

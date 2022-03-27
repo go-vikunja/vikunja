@@ -17,6 +17,7 @@
 package integrations
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -174,8 +175,8 @@ func assertHandlerErrorCode(t *testing.T, err error, expectedErrorCode int) {
 		t.Error("Error is nil")
 		t.FailNow()
 	}
-	httperr, ok := err.(*echo.HTTPError)
-	if !ok {
+	var httperr *echo.HTTPError
+	if !errors.As(err, &httperr) {
 		t.Error("Error is not *echo.HTTPError")
 		t.FailNow()
 	}

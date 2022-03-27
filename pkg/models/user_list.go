@@ -91,7 +91,7 @@ func ListUsersFromList(s *xorm.Session, l *List, search string) (users []*user.U
 		uidmap[u.TeamNamespaceUserID] = true
 	}
 
-	uids := make([]int64, len(uidmap))
+	uids := make([]int64, 0, len(uidmap))
 	for id := range uidmap {
 		uids = append(uids, id)
 	}

@@ -13,10 +13,11 @@ linters:
     - goheader
     - gofmt
     - goimports
-    - golint
+    - revive
     - misspell
   disable:
     - scopelint # Obsolete, using exportloopref instead
+    - durationcheck
   presets:
     - bugs
     - unused
@@ -35,6 +36,7 @@ issues:
       linters:
         - gocyclo
         - deadcode
+        - errorlint
     - path: pkg/integrations/*
       linters:
         - gocyclo
@@ -80,3 +82,9 @@ issues:
     - text: "Missed string"
       linters:
         - goheader
+    - path: pkg/.*/error.go
+      linters:
+        - errorlint
+    - path: pkg/models/favorites\.go
+      linters:
+        - nilerr

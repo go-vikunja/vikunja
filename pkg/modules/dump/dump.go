@@ -35,7 +35,7 @@ import (
 func Dump(filename string) error {
 	dumpFile, err := os.Create(filename)
 	if err != nil {
-		return fmt.Errorf("error opening dump file: %s", err)
+		return fmt.Errorf("error opening dump file: %w", err)
 	}
 	defer dumpFile.Close()
 
@@ -47,7 +47,7 @@ func Dump(filename string) error {
 	if viper.ConfigFileUsed() != "" {
 		err = writeFileToZip(viper.ConfigFileUsed(), dumpWriter)
 		if err != nil {
-			return fmt.Errorf("error saving config file: %s", err)
+			return fmt.Errorf("error saving config file: %w", err)
 		}
 	} else {
 		log.Warning("No config file found, not including one in the dump. This usually happens when environment variables are used for configuration.")
@@ -64,7 +64,7 @@ func Dump(filename string) error {
 	if dotEnv != "" {
 		err = utils.WriteBytesToZip(".env", []byte(dotEnv), dumpWriter)
 		if err != nil {
-			return fmt.Errorf("error saving env file: %s", err)
+			return fmt.Errorf("error saving env file: %w", err)
 		}
 		log.Info("Dumped .env file")
 	}
@@ -73,7 +73,7 @@ func Dump(filename string) error {
 	log.Info("Start dumping version file...")
 	err = utils.WriteBytesToZip("VERSION", []byte(version.Version), dumpWriter)
 	if err != nil {
-		return fmt.Errorf("error saving version: %s", err)
+		return fmt.Errorf("error saving version: %w", err)
 	}
 	log.Info("Dumped version")
 
@@ -81,12 +81,12 @@ func Dump(filename string) error {
 	log.Info("Start dumping database...")
 	data, err := db.Dump()
 	if err != nil {
-		return fmt.Errorf("error saving database data: %s", err)
+		return fmt.Errorf("error saving database data: %w", err)
 	}
 	for t, d := range data {
 		err = utils.WriteBytesToZip("database/"+t+".json", d, dumpWriter)
 		if err != nil {
-			return fmt.Errorf("error writing database table %s: %s", t, err)
+			return fmt.Errorf("error writing database table %s: %w", t, err)
 		}
 	}
 	log.Info("Dumped database")
@@ -95,7 +95,7 @@ func Dump(filename string) error {
 	log.Info("Start dumping files...")
 	allFiles, err := files.Dump()
 	if err != nil {
-		return fmt.Errorf("error saving file: %s", err)
+		return fmt.Errorf("error saving file: %w", err)
 	}
 
 	err = utils.WriteFilesToZip(allFiles, dumpWriter)

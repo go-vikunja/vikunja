@@ -683,17 +683,17 @@ create unique index UQE_users_namespace_id
 
 				sess := tx.NewSession()
 				if err := sess.Begin(); err != nil {
-					return fmt.Errorf("unable to open session: %s", err)
+					return fmt.Errorf("unable to open session: %w", err)
 				}
 				for _, s := range sql {
 					_, err := sess.Exec(s)
 					if err != nil {
 						_ = sess.Rollback()
-						return fmt.Errorf("error executing update data for table %s, column %s: %s", table, column, err)
+						return fmt.Errorf("error executing update data for table %s, column %s: %w", table, column, err)
 					}
 				}
 				if err := sess.Commit(); err != nil {
-					return fmt.Errorf("error committing data change: %s", err)
+					return fmt.Errorf("error committing data change: %w", err)
 				}
 				return nil
 			}

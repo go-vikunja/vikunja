@@ -138,7 +138,7 @@ steps:
       GOPROXY: 'https://goproxy.kolaente.de'
     depends_on: [ build ]
     commands:
-      - wget -O - -q https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.31.0
+      - wget -O - -q https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.45.2
       - ./mage-static check:all
     when:
       event: [ push, tag, pull_request ]
@@ -874,6 +874,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: de40fb1378ab65f47d8c518f503eefede9284dd5634e033dd50abf0a6ec33645
+hmac: 1c4c211e66e4b6eddd2a1c1bad31e5c960d4f67d6033f4d5c4de7896dfae6c30
 
 ...

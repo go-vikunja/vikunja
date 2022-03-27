@@ -402,7 +402,7 @@ func getRawTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskO
 			return nil, 0, 0, err
 		}
 
-		userListIDs := make([]int64, len(userLists))
+		userListIDs := make([]int64, 0, len(userLists))
 		for _, l := range userLists {
 			userListIDs = append(userListIDs, l.ID)
 		}

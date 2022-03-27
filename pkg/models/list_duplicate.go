@@ -216,7 +216,7 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ListDuplicate, bucketMap
 	// It is used to map old task items to new ones.
 	taskMap := make(map[int64]int64)
 	// Create + update all tasks (includes reminders)
-	oldTaskIDs := make([]int64, len(tasks))
+	oldTaskIDs := make([]int64, 0, len(tasks))
 	for _, t := range tasks {
 		oldID := t.ID
 		t.ID = 0

@@ -19,6 +19,7 @@ package openid
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"math/rand"
 	"net/http"
 	"time"
@@ -104,12 +105,13 @@ func HandleCallback(c echo.Context) error {
 	// Parse the access & ID token
 	oauth2Token, err := provider.Oauth2Config.Exchange(context.Background(), cb.Code)
 	if err != nil {
-		if rerr, is := err.(*oauth2.RetrieveError); is {
+		var rerr *oauth2.RetrieveError
+		if errors.As(err, &rerr) {
 			log.Error(err)
 
 			details := make(map[string]interface{})
 			if err := json.Unmarshal(rerr.Body, &details); err != nil {
-				log.Errorf("Error unmarshaling token for provider %s: %v", provider.Name, err)
+				log.Errorf("Error unmarshalling token for provider %s: %v", provider.Name, err)
 				return handler.HandleHTTPError(err, c)
 			}
 

@@ -17,6 +17,7 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -47,7 +48,8 @@ func UpdateUserEmail(c echo.Context) (err error) {
 	var emailUpdate = &user.EmailUpdate{}
 	if err := c.Bind(emailUpdate); err != nil {
 		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
-		if he, is := err.(*echo.HTTPError); is {
+		var he *echo.HTTPError
+		if errors.As(err, &he) {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message))
 		}
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.")

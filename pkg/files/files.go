@@ -17,6 +17,7 @@
 package files
 
 import (
+	"errors"
 	"io"
 	"os"
 	"strconv"
@@ -136,9 +137,9 @@ func (f *File) Delete() (err error) {
 
 	err = afs.Remove(f.getFileName())
 	if err != nil {
-		if e, is := err.(*os.PathError); is {
+		if errors.Is(err, &os.PathError{}) {
 			// Don't fail when removing the file failed
-			log.Errorf("Error deleting file %d: %s", e.Error())
+			log.Errorf("Error deleting file %d: %w", err)
 			return s.Commit()
 		}
 

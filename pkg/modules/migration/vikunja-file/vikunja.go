@@ -64,7 +64,7 @@ func (v *FileMigrator) Name() string {
 func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) error {
 	r, err := zip.NewReader(file, size)
 	if err != nil {
-		return fmt.Errorf("could not open import file: %s", err)
+		return fmt.Errorf("could not open import file: %w", err)
 	}
 
 	log.Debugf(logPrefix+"Importing a zip file containing %d files", len(r.File))
@@ -77,7 +77,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 			fname := strings.ReplaceAll(f.Name, "files/", "")
 			id, err := strconv.ParseInt(fname, 10, 64)
 			if err != nil {
-				return fmt.Errorf("could not convert file id: %s", err)
+				return fmt.Errorf("could not convert file id: %w", err)
 			}
 			storedFiles[id] = f
 			log.Debugf(logPrefix + "Found a blob file")
@@ -104,18 +104,18 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	// Import the bulk of Vikunja data
 	df, err := dataFile.Open()
 	if err != nil {
-		return fmt.Errorf("could not open data file: %s", err)
+		return fmt.Errorf("could not open data file: %w", err)
 	}
 	defer df.Close()
 
 	var bufData bytes.Buffer
 	if _, err := bufData.ReadFrom(df); err != nil {
-		return fmt.Errorf("could not read data file: %s", err)
+		return fmt.Errorf("could not read data file: %w", err)
 	}
 
 	namespaces := []*models.NamespaceWithListsAndTasks{}
 	if err := json.Unmarshal(bufData.Bytes(), &namespaces); err != nil {
-		return fmt.Errorf("could not read data: %s", err)
+		return fmt.Errorf("could not read data: %w", err)
 	}
 
 	for _, n := range namespaces {
@@ -123,11 +123,11 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 			if b, exists := storedFiles[l.BackgroundFileID]; exists {
 				bf, err := b.Open()
 				if err != nil {
-					return fmt.Errorf("could not open list background file %d for reading: %s", l.BackgroundFileID, err)
+					return fmt.Errorf("could not open list background file %d for reading: %w", l.BackgroundFileID, err)
 				}
 				var buf bytes.Buffer
 				if _, err := buf.ReadFrom(bf); err != nil {
-					return fmt.Errorf("could not read list background file %d: %s", l.BackgroundFileID, err)
+					return fmt.Errorf("could not read list background file %d: %w", l.BackgroundFileID, err)
 				}
 
 				l.BackgroundInformation = &buf
@@ -143,11 +143,11 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 				for _, attachment := range t.Attachments {
 					af, err := storedFiles[attachment.File.ID].Open()
 					if err != nil {
-						return fmt.Errorf("could not open attachment %d for reading: %s", attachment.ID, err)
+						return fmt.Errorf("could not open attachment %d for reading: %w", attachment.ID, err)
 					}
 					var buf bytes.Buffer
 					if _, err := buf.ReadFrom(af); err != nil {
-						return fmt.Errorf("could not read attachment %d: %s", attachment.ID, err)
+						return fmt.Errorf("could not read attachment %d: %w", attachment.ID, err)
 					}
 
 					attachment.ID = 0
@@ -160,7 +160,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 
 	err = migration.InsertFromStructure(namespaces, user)
 	if err != nil {
-		return fmt.Errorf("could not insert data: %s", err)
+		return fmt.Errorf("could not insert data: %w", err)
 	}
 
 	if filterFile == nil {
@@ -172,18 +172,18 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	// Import filters
 	ff, err := filterFile.Open()
 	if err != nil {
-		return fmt.Errorf("could not open filters file: %s", err)
+		return fmt.Errorf("could not open filters file: %w", err)
 	}
 	defer ff.Close()
 
 	var bufFilter bytes.Buffer
 	if _, err := bufFilter.ReadFrom(ff); err != nil {
-		return fmt.Errorf("could not read filters file: %s", err)
+		return fmt.Errorf("could not read filters file: %w", err)
 	}
 
 	filters := []*models.SavedFilter{}
 	if err := json.Unmarshal(bufFilter.Bytes(), &filters); err != nil {
-		return fmt.Errorf("could not read filter data: %s", err)
+		return fmt.Errorf("could not read filter data: %w", err)
 	}
 
 	log.Debugf(logPrefix+"Importing %d saved filters", len(filters))

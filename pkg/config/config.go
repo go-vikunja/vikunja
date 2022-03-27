@@ -46,7 +46,7 @@ const (
 	ServiceEnableCaldav    Key = `service.enablecaldav`
 	ServiceRootpath        Key = `service.rootpath`
 	ServiceMaxItemsPerPage Key = `service.maxitemsperpage`
-	// Deprecated. Use metrics.enabled
+	// Deprecated: Use metrics.enabled
 	ServiceEnableMetrics         Key = `service.enablemetrics`
 	ServiceMotd                  Key = `service.motd`
 	ServiceEnableLinkSharing     Key = `service.enablelinksharing`

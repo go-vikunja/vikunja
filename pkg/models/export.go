@@ -49,7 +49,7 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 	// Open zip
 	dumpFile, err := os.Create(tmpFilename)
 	if err != nil {
-		return fmt.Errorf("error opening dump file: %s", err)
+		return fmt.Errorf("error opening dump file: %w", err)
 	}
 	defer dumpFile.Close()
 

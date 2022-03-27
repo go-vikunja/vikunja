@@ -54,7 +54,7 @@ func WriteFilesToZip(files map[int64]io.ReadCloser, wr *zip.Writer) (err error) 
 		}
 		_, err = io.Copy(w, file)
 		if err != nil {
-			return fmt.Errorf("error writing file %d: %s", fid, err)
+			return fmt.Errorf("error writing file %d: %w", fid, err)
 		}
 		_ = file.Close()
 	}

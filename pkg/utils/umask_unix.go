@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+//go:build !windows
 // +build !windows
 
 package utils
