@@ -5,6 +5,7 @@
 				<textarea
 					:disabled="taskService.loading || undefined"
 					class="add-task-textarea input"
+					:class="{'textarea-empty': newTaskTitle === ''}"
 					:placeholder="$t('list.list.addPlaceholder')"
 					rows="1"
 					v-focus
@@ -24,15 +25,18 @@
 					@click="addTask()"
 					icon="plus"
 					:loading="taskService.loading"
+					:aria-label="$t('list.list.add')"
 				>
-					{{ $t('list.list.add') }}
+					<span class="button-text">
+						{{ $t('list.list.add') }}
+					</span>
 				</x-button>
 			</p>
 		</div>
 		<p class="help is-danger" v-if="errorMessage !== ''">
 			{{ errorMessage }}
 		</p>
-		<quick-add-magic v-else />
+		<quick-add-magic v-else/>
 	</div>
 </template>
 
@@ -40,7 +44,7 @@
 import {ref, watch, unref, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useStore} from 'vuex'
-import { tryOnMounted, debouncedWatch, useWindowSize, MaybeRef } from '@vueuse/core'
+import {tryOnMounted, debouncedWatch, useWindowSize, MaybeRef} from '@vueuse/core'
 
 import TaskService from '@/services/task'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
@@ -54,12 +58,12 @@ function useAutoHeightTextarea(value: MaybeRef<string>) {
 	const minHeight = ref(0)
 
 	// adapted from https://github.com/LeaVerou/stretchy/blob/47f5f065c733029acccb755cae793009645809e2/src/stretchy.js#L34
-	function resize(textareaEl: HTMLInputElement|undefined) {
+	function resize(textareaEl: HTMLInputElement | undefined) {
 		if (!textareaEl) return
 
 		let empty
 
-		// the value here is the the attribute value
+		// the value here is the attribute value
 		if (!textareaEl.value && textareaEl.placeholder) {
 			empty = true
 			textareaEl.value = textareaEl.placeholder
@@ -95,12 +99,12 @@ function useAutoHeightTextarea(value: MaybeRef<string>) {
 		}
 	})
 
-	const { width: windowWidth } = useWindowSize()
+	const {width: windowWidth} = useWindowSize()
 
 	debouncedWatch(
 		windowWidth,
 		() => resize(textarea.value),
-		{ debounce: 200 },
+		{debounce: 200},
 	)
 
 	// It is not possible to get notified of a change of the value attribute of a textarea without workarounds (setTimeout) 
@@ -129,14 +133,14 @@ const emit = defineEmits(['taskAdded'])
 const newTaskTitle = ref('')
 const newTaskInput = useAutoHeightTextarea(newTaskTitle)
 
-const { t } = useI18n()
+const {t} = useI18n()
 const store = useStore()
 
 const taskService = shallowReactive(new TaskService())
 const errorMessage = ref('')
 
 function resetEmptyTitleError() {
-	if(newTaskTitle.value !== '') {
+	if (newTaskTitle.value !== '') {
 		errorMessage.value = ''
 	}
 }
@@ -200,9 +204,26 @@ function handleEnter(e: KeyboardEvent) {
 
 .add-task-button {
 	height: 2.5rem;
+
+	@media screen and (max-width: $mobile) {
+		.button-text {
+			display: none;
+		}
+		
+		:deep(.icon) {
+			margin: 0 !important;
+		}
+	}
 }
+
 .add-task-textarea {
 	transition: border-color $transition;
 	resize: none;
+}
+
+// Adding this class when the textarea has no text prevents the textarea from wrapping the placeholder.
+.textarea-empty {
+	white-space: nowrap;
+	text-overflow: ellipsis;
 }
 </style>
