@@ -42,12 +42,12 @@
 			</Message>
 		</transition>
 
-		<slot />
+		<slot v-if="loadedListId"/>
 	</div>
 </template>
 
 <script setup lang="ts">
-import {ref, shallowRef, computed, watchEffect} from 'vue'
+import {ref, computed, watchEffect} from 'vue'
 import {useRoute} from 'vue-router'
 
 import Message from '@/components/misc/message.vue'
@@ -55,12 +55,12 @@ import Message from '@/components/misc/message.vue'
 import ListModel from '@/models/list'
 import ListService from '@/services/list'
 
-import {store} from '@/store'
-import {CURRENT_LIST} from '@/store/mutation-types'
+import {BACKGROUND, CURRENT_LIST} from '@/store/mutation-types'
 
 import {getListTitle} from '@/helpers/getListTitle'
 import {saveListToHistory} from '@/modules/listHistory'
-import { useTitle } from '@/composables/useTitle'
+import {useTitle} from '@/composables/useTitle'
+import {useStore} from 'vuex'
 
 const props = defineProps({
 	listId: {
@@ -74,8 +74,9 @@ const props = defineProps({
 })
 
 const route = useRoute()
+const store = useStore()
 
-const listService = shallowRef(new ListService())
+const listService = ref(new ListService())
 const loadedListId = ref(0)
 
 const currentList = computed(() => {
@@ -87,7 +88,7 @@ const currentList = computed(() => {
 	} : store.state.currentList
 })
 
-// call again the method if the listId changes
+// call the method again if the listId changes
 watchEffect(() => loadList(props.listId))
 
 useTitle(() => currentList.value.id ? getListTitle(currentList.value) : '')
@@ -122,6 +123,14 @@ async function loadList(listIdToLoad: number) {
 	}
 
 	console.debug(`Loading list, props.viewName = ${props.viewName}, $route.params =`, route.params, `, loadedListId = ${loadedListId.value}, currentList = `, currentList.value)
+
+	// Put set the current list to the one we're about to load so that the title is already shown at the top
+	loadedListId.value = 0
+	const listFromStore = store.getters['lists/getListById'](listData.id)
+	if (listFromStore !== null) {
+		store.commit(BACKGROUND, null)
+		store.commit(CURRENT_LIST, listFromStore)
+	}
 
 	// We create an extra list object instead of creating it in list.value because that would trigger a ui update which would result in bad ux.
 	const list = new ListModel(listData)
