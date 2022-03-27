@@ -450,7 +450,6 @@ export default {
 
 		button {
 			background: transparent;
-			display: block;
 			text-align: left;
 			box-shadow: none;
 			border-radius: 0;
@@ -460,6 +459,7 @@ export default {
 			padding: .5rem;
 			border: none;
 			cursor: pointer;
+			color: var(--grey-800);
 
 			display: flex;
 			justify-content: space-between;

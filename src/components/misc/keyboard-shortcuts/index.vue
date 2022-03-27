@@ -6,9 +6,13 @@
 
 				<message class="mb-4" v-if="s.available">
 					{{
-						s.available($route)
-							? $t('keyboardShortcuts.currentPageOnly')
-							: $t('keyboardShortcuts.allPages')
+						typeof s.available === 'undefined' ?
+							$t('keyboardShortcuts.allPages') :
+							(
+								s.available($route)
+									? $t('keyboardShortcuts.currentPageOnly')
+									: $t('keyboardShortcuts.somePagesOnly')
+							)
 					}}
 				</message>
 
@@ -38,6 +42,7 @@ import {KEYBOARD_SHORTCUTS_ACTIVE} from '@/store/mutation-types'
 import {KEYBOARD_SHORTCUTS as shortcuts} from './shortcuts'
 
 const store = useStore()
+
 function close() {
 	store.commit(KEYBOARD_SHORTCUTS_ACTIVE, false)
 }

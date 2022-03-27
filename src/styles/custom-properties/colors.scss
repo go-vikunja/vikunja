@@ -1,9 +1,182 @@
 // Vikunja colors as CSS custom properties
 
 :root {
+  // Core Bulma color variables
+  // Added (from bulma-css-variables/css/bulma.css) to fix issues with undefined variables
+  // This section should be removed once bulma/sass scoping issues are fixed
+  // see https://kolaente.dev/vikunja/frontend/issues/1064
+  // Variables overriden in Vikunja specific rules below are commented out
+  //--scheme-main: white;
+  --scheme-main-bis: #fafafa;
+  --scheme-main-ter: whitesmoke;
+  --scheme-invert: #0a0a0a;
+  --scheme-invert-rgb: 10.2, 10.2, 10.2;
+  --scheme-invert-bis: #121212;
+  --scheme-invert-ter: #242424;
+  --background: whitesmoke;
+  //--border: #dbdbdb;
+  --border-rgb: 219.3, 219.3, 219.3;
+  --border-hover: #b5b5b5;
+  --border-light: #ededed;
+  --border-light-hover: #b5b5b5;
+  --text: #4a4a4a;
+  --text-invert: #fff;
+  --text-light: #7a7a7a;
+  --text-strong: #363636;
+  --code: #da1039;
+  --code-background: var(--background, whitesmoke);
+  --pre: var(--text, #4a4a4a);
+  --pre-background: var(--background, whitesmoke);
+  --link-visited: #b86bff;
+  //--link-hover: #363636;
+  --link-hover-border: #b5b5b5;
+  --link-focus: #363636;
+  --link-focus-border: var(--link, #485fc7);
+  --link-active: #363636;
+  --link-active-border: #4a4a4a;
+  //--white-h: 0deg;
+  //--white-s: 0%;
+  //--white-l: 100%;
+  //--white-a: 1;
+  //--white: hsla(var(--white-h), var(--white-s), var(--white-l), var(--white-a));
+  --white-invert-l: 4%;
+  --white-invert: #0a0a0a;
+  --white-light-l: 100%;
+  --white-light: hsla(var(--white-h), var(--white-s), var(--white-light-l), var(--white-a));
+  --white-dark-l: 29%;
+  --white-dark: hsla(var(--white-h), var(--white-s), var(--white-dark-l), var(--white-a));
+  //--black-h: 0deg;
+  //--black-s: 0%;
+  //--black-l: 4%;
+  //--black-a: 1;
+  //--black: hsla(var(--black-h), var(--black-s), var(--black-l), var(--black-a));
+  --black-invert-l: 100%;
+  --black-invert: white;
+  --black-light-l: 96%;
+  --black-light: hsla(var(--black-h), var(--black-s), var(--black-light-l), var(--black-a));
+  --black-dark-l: 57%;
+  --black-dark: hsla(var(--black-h), var(--black-s), var(--black-dark-l), var(--black-a));
+  --light-h: 0deg;
+  --light-s: 0%;
+  --light-l: 96%;
+  --light-a: 1;
+  --light: hsla(var(--light-h), var(--light-s), var(--light-l), var(--light-a));
+  --light-invert-l: 0%;
+  --light-invert: rgba(0, 0, 0, 0.7);
+  --light-light-l: 96%;
+  --light-light: hsla(var(--light-h), var(--light-s), var(--light-light-l), var(--light-a));
+  --light-dark-l: 29%;
+  --light-dark: hsla(var(--light-h), var(--light-s), var(--light-dark-l), var(--light-a));
+  --dark-h: 0deg;
+  --dark-s: 0%;
+  --dark-l: 21%;
+  --dark-a: 1;
+  --dark: hsla(var(--dark-h), var(--dark-s), var(--dark-l), var(--dark-a));
+  --dark-invert-l: 100%;
+  --dark-invert: #fff;
+  --dark-light-l: 96%;
+  --dark-light: hsla(var(--dark-h), var(--dark-s), var(--dark-light-l), var(--dark-a));
+  --dark-dark-l: 54%;
+  --dark-dark: hsla(var(--dark-h), var(--dark-s), var(--dark-dark-l), var(--dark-a));
+  //--primary-h: 171deg;
+  //--primary-s: 100%;
+  //--primary-l: 41%;
+  //--primary-a: 1;
+  //--primary: hsla(var(--primary-h), var(--primary-s), var(--primary-l), var(--primary-a));
+  --primary-invert-l: 100%;
+  --primary-invert: #fff;
+  --primary-light-l: 96%;
+  --primary-light: hsla(var(--primary-h), var(--primary-s), var(--primary-light-l), var(--primary-a));
+  --primary-dark-l: 29%;
+  --primary-dark: hsla(var(--primary-h), var(--primary-s), var(--primary-dark-l), var(--primary-a));
+  --link-h: 229deg;
+  --link-s: 53%;
+  --link-l: 53%;
+  --link-a: 1;
+  //--link: hsla(var(--link-h), var(--link-s), var(--link-l), var(--link-a));
+  --link-invert-l: 100%;
+  --link-invert: #fff;
+  --link-light-l: 96%;
+  --link-light: hsla(var(--link-h), var(--link-s), var(--link-light-l), var(--link-a));
+  --link-dark-l: 47%;
+  --link-dark: hsla(var(--link-h), var(--link-s), var(--link-dark-l), var(--link-a));
+  --info-h: 207deg;
+  --info-s: 61%;
+  --info-l: 53%;
+  --info-a: 1;
+  --info: hsla(var(--info-h), var(--info-s), var(--info-l), var(--info-a));
+  --info-invert-l: 100%;
+  --info-invert: #fff;
+  --info-light-l: 96%;
+  --info-light: hsla(var(--info-h), var(--info-s), var(--info-light-l), var(--info-a));
+  --info-dark-l: 41%;
+  --info-dark: hsla(var(--info-h), var(--info-s), var(--info-dark-l), var(--info-a));
+  //--success-h: 153deg;
+  //--success-s: 53%;
+  //--success-l: 53%;
+  //--success-a: 1;
+  //--success: hsla(var(--success-h), var(--success-s), var(--success-l), var(--success-a));
+  --success-invert-l: 100%;
+  --success-invert: #fff;
+  --success-light-l: 96%;
+  --success-light: hsla(var(--success-h), var(--success-s), var(--success-light-l), var(--success-a));
+  --success-dark-l: 31%;
+  --success-dark: hsla(var(--success-h), var(--success-s), var(--success-dark-l), var(--success-a));
+  //--warning-h: 44deg;
+  //--warning-s: 100%;
+  //--warning-l: 77%;
+  //--warning-a: 1;
+  //--warning: hsla(var(--warning-h), var(--warning-s), var(--warning-l), var(--warning-a));
+  --warning-invert-l: 0%;
+  --warning-invert: rgba(0, 0, 0, 0.7);
+  --warning-light-l: 96%;
+  --warning-light: hsla(var(--warning-h), var(--warning-s), var(--warning-light-l), var(--warning-a));
+  --warning-dark-l: 29%;
+  --warning-dark: hsla(var(--warning-h), var(--warning-s), var(--warning-dark-l), var(--warning-a));
+  //--danger-h: 348deg;
+  //--danger-s: 86%;
+  //--danger-l: 61%;
+  //--danger-a: 1;
+  //--danger: hsla(var(--danger-h), var(--danger-s), var(--danger-l), var(--danger-a));
+  --danger-invert-l: 100%;
+  --danger-invert: #fff;
+  --danger-light-l: 96%;
+  --danger-light: hsla(var(--danger-h), var(--danger-s), var(--danger-light-l), var(--danger-a));
+  --danger-dark-l: 43%;
+  --danger-dark: hsla(var(--danger-h), var(--danger-s), var(--danger-dark-l), var(--danger-a));
+  --input-color: var(--text-strong, #363636);
+  --input-background-color: var(--scheme-main, white);
+  //--input-border-color: var(--border, #dbdbdb);
+  --input-shadow: inset 0 0.0625em 0.125em rgba(var(--scheme-invert-rgb, 10.2, 10.2, 10.2), 0.05);
+  --input-placeholder-color: rgba(54, 54, 54, 0.3);
+  --input-hover-color: var(--text-strong, #363636);
+  --input-hover-border-color: var(--border-hover, #b5b5b5);
+  --input-focus-color: var(--text-strong, #363636);
+  --input-focus-border-color: var(--link, #485fc7);
+  --input-focus-box-shadow-color: var(--input-focus-box-shadow-color-hsla, rgba(72, 95, 199, 0.25));
+  --input-disabled-color: var(--text-light, #7a7a7a);
+  //--input-disabled-background-color: var(--background, whitesmoke);
+  //--input-disabled-border-color: var(--background, whitesmoke);
+  --input-disabled-placeholder-color: rgba(122, 122, 122, 0.3);
+  --input-arrow: var(--link, #485fc7);
+  --input-icon-color: var(--border, #dbdbdb);
+  --input-icon-active-color: var(--text, #4a4a4a);
+  --black-bis: #121212;
+  --black-ter: #242424;
+  //--grey-darker: #363636;
+  //--grey-dark: #4a4a4a;
+  //--grey: #7a7a7a;
+  //--grey-light: #b5b5b5;
+  //--grey-lighter: #dbdbdb;
+  --white-ter: whitesmoke;
+  --white-bis: #fafafa;
+// END core Bulma color variables
+
+
   // Vikunja specific variables
   --grey-50: hsl(210, 20%, 98%);
-  --grey-100: hsl(220, 14.3%, 95.9%);
+  --grey-100-hsl: 220, 14.3%, 95.9%;
+  --grey-100: hsl(var(--grey-100-hsl));
   --grey-200: hsl(220, 13%, 91%);
   --grey-300: hsl(216, 12.2%, 83.9%);
   --grey-400: hsl(217.9, 10.6%, 64.9%);
@@ -14,9 +187,9 @@
   --grey-800: hsl(215, 27.9%, 16.9%);
   --grey-900: hsl(220.9, 39.3%, 11%);
   --site-background: var(--grey-100);
-  --scheme-main: var(--white);
 
   // Overrides of Bulma defaults
+  --scheme-main: var(--white);
   --grey-darker: var(--grey-700);
   --grey-dark:  var(--grey-800);
   --grey:  var(--grey-500);
@@ -66,6 +239,12 @@
   --primary-a: 1;
   --primary-hsl: var(--primary-h), var(--primary-s), var(--primary-l);
   --primary: hsla(var(--primary-h), var(--primary-s), var(--primary-l), var(--primary-a));
+
+  --link: var(--primary);
+  --link-hover: hsla(var(--primary-h), var(--primary-s), var(--primary-l), .75);
+  --border: var(--grey-200);
+  --input-disabled-background-color: var(--grey-100);
+  --input-disabled-border-color: var(--grey-300);
   // END Overrides of Bulma defaults
 
 
@@ -75,12 +254,6 @@
   // Define custom color variable to alow change in dark mode
   --card-border-color: var(--grey-200);
   --logo-text-color: hsl(180, 1%, 15%);
-
-  --link: var(--primary);
-  --link-hover: hsla(var(--primary-h), var(--primary-s), var(--primary-l), .75);
-  --border: var(--grey-200);
-  --input-disabled-background-color: var(--grey-100);
-  --input-disabled-border-color: var(--grey-300);
 
   &.dark {
     // Light mode colours reversed for dark mode

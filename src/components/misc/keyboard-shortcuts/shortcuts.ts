@@ -31,6 +31,36 @@ export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
 		],
 	},
 	{
+		title: 'keyboardShortcuts.navigation.title',
+		shortcuts: [
+			{
+				title: 'keyboardShortcuts.navigation.overview',
+				keys: ['g', 'o'],
+				combination: 'then',
+			},
+			{
+				title: 'keyboardShortcuts.navigation.upcoming',
+				keys: ['g', 'u'],
+				combination: 'then',
+			},
+			{
+				title: 'keyboardShortcuts.navigation.namespaces',
+				keys: ['g', 'n'],
+				combination: 'then',
+			},
+			{
+				title: 'keyboardShortcuts.navigation.labels',
+				keys: ['g', 'a'],
+				combination: 'then',
+			},
+			{
+				title: 'keyboardShortcuts.navigation.teams',
+				keys: ['g', 'm'],
+				combination: 'then',
+			},
+		],
+	},
+	{
 		title: 'list.kanban.title',
 		available: (route) => route.name === 'list.kanban',
 		shortcuts: [
@@ -71,6 +101,10 @@ export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
 		available: (route) => route.name === 'task.detail',
 		shortcuts: [
 			{
+				title: 'keyboardShortcuts.task.done',
+				keys: ['t'],
+			},
+			{
 				title: 'keyboardShortcuts.task.assign',
 				keys: ['a'],
 			},
@@ -89,6 +123,14 @@ export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
 			{
 				title: 'keyboardShortcuts.task.related',
 				keys: ['r'],
+			},
+			{
+				title: 'keyboardShortcuts.task.move',
+				keys: ['m'],
+			},
+			{
+				title: 'keyboardShortcuts.task.color',
+				keys: ['c'],
 			},
 		],
 	},

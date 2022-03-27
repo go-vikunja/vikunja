@@ -785,17 +785,20 @@
     "general": "Generali",
     "allPages": "Queste scorciatoie funzionano in tutte le pagine.",
     "currentPageOnly": "Queste scorciatoie funzionano solo nella pagina attuale.",
+    "somePagesOnly": "These shortcuts work only on some pages.",
     "toggleMenu": "Attiva/Disattiva Menu",
     "quickSearch": "Apri la barra di ricerca/azione rapida",
     "then": "e dopo",
     "task": {
       "title": "Pagina Attività",
-      "done": "Fatto",
-      "assign": "Assegna a un utente",
+      "done": "Mark task done / undone",
+      "assign": "Assign this task to a user",
       "labels": "Aggiungi etichette a questa attività",
       "dueDate": "Modifica la data di scadenza di questa attività",
       "attachment": "Aggiungi un allegato a questa attività",
-      "related": "Modifica le attività collegate a questa"
+      "related": "Modifica le attività collegate a questa",
+      "color": "Change the color of this task",
+      "move": "Move this task to another list"
     },
     "list": {
       "title": "Viste Liste",
@@ -803,6 +806,14 @@
       "switchToGanttView": "Passa alla vista Gantt",
       "switchToKanbanView": "Passa alla vista Kanban",
       "switchToTableView": "Passa alla vista Tabella"
+    },
+    "navigation": {
+      "title": "Navigation",
+      "overview": "Navigato to overview",
+      "upcoming": "Navigato to upcoming taks",
+      "namespaces": "Navigate to namepaces & lists",
+      "labels": "Navigate to labels",
+      "teams": "Navigate to teams"
     }
   },
   "update": {

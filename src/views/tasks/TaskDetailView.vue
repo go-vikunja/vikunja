@@ -259,6 +259,7 @@
 							class="is-outlined has-no-border"
 							icon="check-double"
 							variant="secondary"
+							v-shortcut="'t'"
 						>
 							{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
 						</x-button>
@@ -356,6 +357,7 @@
 							@click="setFieldActive('moveList')"
 							variant="secondary"
 							icon="list"
+							v-shortcut="'m'"
 						>
 							{{ $t('task.detail.actions.moveList') }}
 						</x-button>
@@ -363,6 +365,7 @@
 							@click="setFieldActive('color')"
 							variant="secondary"
 							icon="fill-drip"
+							v-shortcut="'c'"
 						>
 							{{ $t('task.detail.actions.color') }}
 						</x-button>

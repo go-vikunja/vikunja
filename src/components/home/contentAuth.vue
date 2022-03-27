@@ -236,6 +236,11 @@ store.dispatch('labels/loadAllLabels')
   .app-content {
     padding: $navbar-height + 1.5rem 1.5rem 1rem 1.5rem;
 
+	// Used to make sure the spinner is always in the middle while loading
+	> .loader-container {
+      min-height: calc(100vh -  #{$navbar-height + 1.5rem + 1rem});
+	}
+
     @media screen and (max-width: $tablet) {
       margin-left: 0;
       padding-top: 1.5rem;
@@ -264,7 +269,9 @@ store.dispatch('labels/loadAllLabels')
 	bottom: 0;
 	left: 0;
 	right: 0;
-	background: rgba(250, 250, 250, 0.8);
+	height: 100vh;
+	width: 100vw;
+	background: hsla(var(--grey-100-hsl), 0.8);
 	z-index: 5;
 	opacity: 0;
 	transition: all $transition;
