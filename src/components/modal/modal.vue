@@ -12,7 +12,6 @@
 		>
 			<div
 				class="modal-container"
-				:class="{'has-overflow': overflow}"
 				@click.self.prevent.stop="$emit('close')"
 				v-shortcut="'Escape'"
 			>
@@ -180,7 +179,6 @@ watch(
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
-
 		}
 	}
 }

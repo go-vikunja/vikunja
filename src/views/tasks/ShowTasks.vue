@@ -1,287 +1,236 @@
 <template>
-	<div class="is-max-width-desktop show-tasks">
-		<fancycheckbox
-			@change="setDate"
-			class="is-pulled-right"
-			v-if="!showAll"
-			v-model="showNulls"
-		>
-			{{ $t('task.show.noDates') }}
-		</fancycheckbox>
-		<h3 v-if="showAll && tasks.length > 0">
-			{{ $t('task.show.current') }}
+	<div class="is-max-width-desktop has-text-left ">
+		<h3 class="mb-2 title">
+			{{ pageTitle }}
 		</h3>
-		<h3 v-else-if="!showAll" class="mb-2">
-			{{ $t('task.show.from') }}
-			<flat-pickr
-				:class="{ 'disabled': loading}"
-				:config="flatPickerConfig"
-				:disabled="loading"
-				@on-close="setDate"
-				class="input"
-				v-model="cStartDate"
-			/>
-			{{ $t('task.show.until') }}
-			<flat-pickr
-				:class="{ 'disabled': loading}"
-				:config="flatPickerConfig"
-				:disabled="loading"
-				@on-close="setDate"
-				class="input"
-				v-model="cEndDate"
-			/>
-		</h3>
-		<div v-if="!showAll" class="mb-4">
-			<x-button variant="secondary" @click="showTodaysTasks()" class="mr-2">{{ $t('task.show.today') }}</x-button>
-			<x-button variant="secondary" @click="setDatesToNextWeek()" class="mr-2">{{ $t('task.show.nextWeek') }}</x-button>
-			<x-button variant="secondary" @click="setDatesToNextMonth()">{{ $t('task.show.nextMonth') }}</x-button>
-		</div>
+		<p v-if="!showAll" class="show-tasks-options">
+			<datepicker-with-range @dateChanged="setDate">
+				<template #trigger="{toggle}">
+					<x-button @click.prevent.stop="toggle()" variant="primary" :shadow="false" class="mb-2">
+						{{ $t('task.show.select') }}
+					</x-button>
+				</template>
+			</datepicker-with-range>
+			<fancycheckbox @change="setShowNulls" class="mr-2">
+				{{ $t('task.show.noDates') }}
+			</fancycheckbox>
+			<fancycheckbox @change="setShowOverdue">
+				{{ $t('task.show.overdue') }}
+			</fancycheckbox>
+		</p>
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
-			<h3 class="nothing">{{ $t('task.show.noTasks') }}</h3>
-			<LlamaCool class="llama-cool" />
+			<h3 class="has-text-centered mt-6">{{ $t('task.show.noTasks') }}</h3>
+			<LlamaCool class="llama-cool"/>
 		</template>
-		<div :class="{ 'is-loading': loading}" class="spinner"></div>
 
-		<card :padding="false" class="has-overflow" :has-content="false" v-if="tasks && tasks.length > 0">
-			<div class="tasks">
+		<card
+			v-if="hasTasks"
+			:padding="false"
+			class="has-overflow"
+			:has-content="false"
+			:loading="loading"
+		>
+			<div class="p-2">
 				<single-task-in-list
+					v-for="t in tasksSorted"
 					:key="t.id"
 					class="task"
-					v-for="t in tasks"
 					:show-list="true"
 					:the-task="t"
 					@taskUpdated="updateTasks"/>
 			</div>
 		</card>
+		<div v-else :class="{ 'is-loading': loading}" class="spinner"></div>
 	</div>
 </template>
-<script>
-import SingleTaskInList from '../../components/tasks/partials/singleTaskInList'
-import {mapState} from 'vuex'
 
-import flatPickr from 'vue-flatpickr-component'
-import 'flatpickr/dist/flatpickr.css'
-import Fancycheckbox from '../../components/input/fancycheckbox'
-import {LOADING, LOADING_MODULE} from '../../store/mutation-types'
+<script setup lang="ts">
+import {computed, ref, watchEffect} from 'vue'
+import {useStore} from 'vuex'
+import {useRoute, useRouter} from 'vue-router'
+import {useI18n} from 'vue-i18n'
 
+import TaskModel from '@/models/task'
+import {formatDate} from '@/helpers/time/formatDate'
+import {setTitle} from '@/helpers/setTitle'
+
+import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+import SingleTaskInList from '@/components/tasks/partials/singleTaskInList.vue'
+import DatepickerWithRange from '@/components/date/datepickerWithRange.vue'
+import {DATE_RANGES} from '@/components/date/dateRanges'
+import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import LlamaCool from '@/assets/llama-cool.svg?component'
 
-export default {
-	name: 'ShowTasks',
-	components: {
-		Fancycheckbox,
-		SingleTaskInList,
-		flatPickr,
-		LlamaCool,
-	},
-	data() {
-		return {
-			tasks: [],
-			showNulls: true,
-			showOverdue: false,
+const store = useStore()
+const route = useRoute()
+const router = useRouter()
+const {t} = useI18n()
 
-			cStartDate: null,
-			cEndDate: null,
+const tasks = ref<TaskModel[]>([])
+const showNothingToDo = ref<boolean>(false)
 
-			showNothingToDo: false,
-		}
-	},
-	props: {
-		startDate: Date,
-		endDate: Date,
-		showAll: Boolean,
-	},
-	created() {
-		this.cStartDate = this.startDate
-		this.cEndDate = this.endDate
-		this.loadPendingTasks()
-	},
-	mounted() {
-		setTimeout(() => this.showNothingToDo = true, 100)
-	},
-	watch: {
-		'$route': {
-			handler: 'loadPendingTasks',
-			deep: true,
-		},
-		startDate(newVal) {
-			this.cStartDate = newVal
-		},
-		endDate(newVal) {
-			this.cEndDate = newVal
-		},
-	},
-	computed: {
-		flatPickerConfig() {
-			return {
-				altFormat: this.$t('date.altFormatLong'),
-				altInput: true,
-				dateFormat: 'Y-m-d H:i',
-				enableTime: true,
-				time_24hr: true,
-				locale: {
-					firstDayOfWeek: this.$store.state.auth.settings.weekStart,
-				},
-			}
-		},
-		...mapState({
-			userAuthenticated: state => state.auth.authenticated,
-			loading: state => state[LOADING] && state[LOADING_MODULE] === 'tasks',
-		}),
-	},
-	methods: {
-		setDate() {
-			this.$router.push({
-				name: this.$route.name,
-				query: {
-					from: +new Date(this.cStartDate),
-					to: +new Date(this.cEndDate),
-					showOverdue: this.showOverdue,
-					showNulls: this.showNulls,
-				},
-			})
-		},
-		async loadPendingTasks() {
-			// Since this route is authentication only, users would get an error message if they access the page unauthenticated.
-			// Since this component is mounted as the home page before unauthenticated users get redirected
-			// to the login page, they will almost always see the error message.
-			if (!this.userAuthenticated) {
-				return
-			}
+setTimeout(() => showNothingToDo.value = true, 100)
 
-			// Make sure all dates are date objects
-			if (typeof this.$route.query.from !== 'undefined' && typeof this.$route.query.to !== 'undefined') {
-				this.cStartDate = new Date(Number(this.$route.query.from))
-				this.cEndDate = new Date(Number(this.$route.query.to))
-			} else {
-				this.cStartDate = new Date(this.cStartDate)
-				this.cEndDate = new Date(this.cEndDate)
-			}
-			this.showOverdue = this.$route.query.showOverdue
-			this.showNulls = this.$route.query.showNulls
+// Linting disabled because we explicitely enabled destructuring in vite's config, this will work.
+// eslint-disable-next-line vue/no-setup-props-destructure
+const {
+	dateFrom,
+	dateTo,
+	showNulls = false,
+	showOverdue = false,
+} = defineProps<{
+	dateFrom?: Date | string,
+	dateTo?: Date | string,
+	showNulls?: Boolean,
+	showOverdue?: Boolean,
+}>()
 
-			if (this.showAll) {
-				this.setTitle(this.$t('task.show.titleCurrent'))
-			} else {
-				this.setTitle(this.$t('task.show.titleDates', {
-					from: this.cStartDate.toLocaleDateString(),
-					to: this.cEndDate.toLocaleDateString(),
-				}))
-			}
+const showAll = computed(() => typeof dateFrom === 'undefined' || typeof dateTo === 'undefined')
 
-			const params = {
-				sort_by: ['due_date', 'id'],
-				order_by: ['desc', 'desc'],
-				filter_by: ['done'],
-				filter_value: [false],
-				filter_comparator: ['equals'],
-				filter_concat: 'and',
-				filter_include_nulls: this.showNulls,
-			}
-			if (!this.showAll) {
-				if (this.showNulls) {
-					params.filter_by.push('start_date')
-					params.filter_value.push(this.cStartDate)
-					params.filter_comparator.push('greater')
+const pageTitle = computed(() => {
+	// We need to define "key" because it is the first parameter in the array and we need the second
+	const predefinedRange = Object.entries(DATE_RANGES)
+		// eslint-disable-next-line no-unused-vars
+		.find(([key, value]) => dateFrom === value[0] && dateTo === value[1])
+		?.[0]
+	if (typeof predefinedRange !== 'undefined') {
+		return t(`input.datepickerRange.ranges.${predefinedRange}`)
+	}
 
-					params.filter_by.push('end_date')
-					params.filter_value.push(this.cEndDate)
-					params.filter_comparator.push('less')
-				}
+	return showAll.value
+		? t('task.show.titleCurrent')
+		: t('task.show.fromuntil', {
+			from: formatDate(dateFrom, 'PPP'),
+			until: formatDate(dateTo, 'PPP'),
+		})
+})
+const tasksSorted = computed(() => {
+	// Sort all tasks to put those with a due date before the ones without a due date, the
+	// soonest before the later ones.
+	// We can't use the api sorting here because that sorts tasks with a due date after
+	// ones without a due date.
 
-				params.filter_by.push('due_date')
-				params.filter_value.push(this.cEndDate)
-				params.filter_comparator.push('less')
+	const tasksWithDueDate = [...tasks.value]
+		.filter(t => t.dueDate !== null)
+		.sort((a, b) => {
+			const sortByDueDate = a.dueDate - b.dueDate
+			return sortByDueDate === 0
+				? b.id - a.id
+				: sortByDueDate
+		})
+	const tasksWithoutDueDate = [...tasks.value]
+		.filter(t => t.dueDate === null)
 
-				if (!this.showOverdue) {
-					params.filter_by.push('due_date')
-					params.filter_value.push(this.cStartDate)
-					params.filter_comparator.push('greater')
-				}
-			}
+	return [
+		...tasksWithDueDate,
+		...tasksWithoutDueDate,
+	]
+})
+const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
+const userAuthenticated = computed(() => store.state.auth.authenticated)
+const loading = computed(() => store.state[LOADING] && store.state[LOADING_MODULE] === 'tasks')
 
-			const tasks = await this.$store.dispatch('tasks/loadTasks', params)
-			if (!tasks) {
-				// When no tasks where returned, we won't be able to sort them.
-				return
-			}
-
-			// FIXME: sort tasks in computed
-			// Sort all tasks to put those with a due date before the ones without a due date, the
-			// soonest before the later ones.
-			// We can't use the api sorting here because that sorts tasks with a due date after
-			// ones without a due date.
-			this.tasks = tasks.sort((a, b) => {
-				const sortByDueDate = b.dueDate - a.dueDate
-				return sortByDueDate === 0
-					? b.id - a.id
-					: sortByDueDate
-			})
-		},
-
-		// FIXME: this modification should happen in the store
-		updateTasks(updatedTask) {
-			for (const t in this.tasks) {
-				if (this.tasks[t].id === updatedTask.id) {
-					this.tasks[t] = updatedTask
-					// Move the task to the end of the done tasks if it is now done
-					if (updatedTask.done) {
-						this.tasks.splice(t, 1)
-						this.tasks.push(updatedTask)
-					}
-					break
-				}
-			}
-		},
-
-		setDatesToNextWeek() {
-			const now = new Date()
-			this.cStartDate = now
-			this.cEndDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-			this.showOverdue = false
-			this.setDate()
-		},
-
-		setDatesToNextMonth() {
-			const now = new Date()
-			this.cStartDate = now
-			this.cEndDate = new Date((new Date()).setMonth(now.getMonth() + 1))
-			this.showOverdue = false
-			this.setDate()
-		},
-
-		showTodaysTasks() {
-			const now = new Date()
-			this.cStartDate = now
-			this.cEndDate = new Date((new Date()).setDate(now.getDate() + 1))
-			this.showOverdue = true
-			this.setDate()
-		},
-	},
+interface dateStrings {
+	dateFrom: string,
+	dateTo: string,
 }
+
+function setDate(dates: dateStrings) {
+	router.push({
+		name: route.name as string,
+		query: {
+			from: dates.dateFrom ?? dateFrom,
+			to: dates.dateTo ?? dateTo,
+			showOverdue: showOverdue ? 'true' : 'false',
+			showNulls: showNulls ? 'true' : 'false',
+		},
+	})
+}
+
+function setShowOverdue(show: boolean) {
+	router.push({
+		name: route.name as string,
+		query: {
+			...route.query,
+			showOverdue: show ? 'true' : 'false',
+		},
+	})
+}
+
+function setShowNulls(show: boolean) {
+	router.push({
+		name: route.name as string,
+		query: {
+			...route.query,
+			showNulls: show ? 'true' : 'false',
+		},
+	})
+}
+
+async function loadPendingTasks(from: string, to: string) {
+	// FIXME: HACK! This should never happen.
+	// Since this route is authentication only, users would get an error message if they access the page unauthenticated.
+	// Since this component is mounted as the home page before unauthenticated users get redirected
+	// to the login page, they will almost always see the error message.
+	if (!userAuthenticated.value) {
+		return
+	}
+
+	const params = {
+		sortBy: ['due_date', 'id'],
+		orderBy: ['desc', 'desc'],
+		filterBy: ['done'],
+		filterValue: ['false'],
+		filterComparator: ['equals'],
+		filterConcat: 'and',
+		filterIncludeNulls: showNulls,
+	}
+
+	if (!showAll.value) {
+		params.filterBy.push('due_date')
+		params.filterValue.push(to)
+		params.filterComparator.push('less')
+
+		// NOTE: Ideally we could also show tasks with a start or end date in the specified range, but the api
+		//       is not capable (yet) of combining multiple filters with 'and' and 'or'.
+
+		if (!showOverdue) {
+			params.filterBy.push('due_date')
+			params.filterValue.push(from)
+			params.filterComparator.push('greater')
+		}
+	}
+
+	tasks.value = await store.dispatch('tasks/loadTasks', params)
+}
+
+// FIXME: this modification should happen in the store
+function updateTasks(updatedTask: TaskModel) {
+	for (const t in tasks.value) {
+		if (tasks.value[t].id === updatedTask.id) {
+			tasks.value[t] = updatedTask
+			// Move the task to the end of the done tasks if it is now done
+			if (updatedTask.done) {
+				tasks.value.splice(t, 1)
+				tasks.value.push(updatedTask)
+			}
+			break
+		}
+	}
+}
+
+watchEffect(() => loadPendingTasks(dateFrom as string, dateTo as string))
+watchEffect(() => setTitle(pageTitle.value))
 </script>
 
 <style lang="scss" scoped>
-h3 {
-	text-align: left;
-
-	&.nothing {
-		text-align: center;
-		margin-top: 3rem;
-	}
-
-	:deep(.input) {
-		width: 190px;
-		vertical-align: middle;
-		margin: .5rem 0;
-	}
-}
-
-.tasks {
-	padding: .5rem;
+.show-tasks-options {
+	display: flex;
+	flex-direction: column;
 }
 
 .llama-cool {
-	margin-top: 2rem;
+	margin: 3rem auto 0;
+	display: block;
 }
 </style>

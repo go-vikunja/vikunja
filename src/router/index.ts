@@ -3,6 +3,8 @@ import {saveLastVisited} from '@/helpers/saveLastVisited'
 import {store} from '@/store'
 
 import {saveListView, getListView} from '@/helpers/saveListView'
+import {parseDateOrString} from '@/helpers/time/parseDateOrString'
+import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 
 import HomeComponent from '../views/Home.vue'
 import NotFoundComponent from '../views/404.vue'
@@ -13,7 +15,7 @@ import RegisterComponent from '../views/user/Register.vue'
 import OpenIdAuth from '../views/user/OpenIdAuth.vue'
 import DataExportDownload from '../views/user/DataExportDownload.vue'
 // Tasks
-import ShowTasksInRangeComponent from '../views/tasks/ShowTasksInRange.vue'
+import UpcomingTasksComponent from '../views/tasks/ShowTasks.vue'
 import LinkShareAuthComponent from '../views/sharing/LinkSharingAuth.vue'
 import ListNamespaces from '../views/namespaces/ListNamespaces.vue'
 import TaskDetailView from '../views/tasks/TaskDetailView.vue'
@@ -248,7 +250,13 @@ const router = createRouter({
 		{
 			path: '/tasks/by/upcoming',
 			name: 'tasks.range',
-			component: ShowTasksInRangeComponent,
+			component: UpcomingTasksComponent,
+			props: route => ({
+				dateFrom: parseDateOrString(route.query.from as string, new Date()),
+				dateTo: parseDateOrString(route.query.to as string, getNextWeekDate()),
+				showNulls: route.query.showNulls === 'true',
+				showOverdue: route.query.showOverdue === 'true',
+			}),
 		},
 		{
 			path: '/lists/new/:namespaceId/',

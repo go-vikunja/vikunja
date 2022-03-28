@@ -1,6 +1,6 @@
 <template>
 	<slot name="trigger" :isOpen="open" :toggle="toggle"></slot>
-	<div class="popup" :class="{'is-open': open}" ref="popup">
+	<div class="popup" :class="{'is-open': open, 'has-overflow': props.hasOverflow && open}" ref="popup">
 		<slot name="content" :isOpen="open"/>
 	</div>
 </template>
@@ -15,6 +15,13 @@ const popup = ref(null)
 const toggle = () => {
 	open.value = !open.value
 }
+
+const props = defineProps({
+	hasOverflow: {
+		type: Boolean,
+		default: false,
+	},
+})
 
 function hidePopup(e) {
 	if (!open.value) {

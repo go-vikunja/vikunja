@@ -1,7 +1,8 @@
 /// <reference types="vitest" />
-import { defineConfig } from 'vite'
+import {defineConfig} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import legacyFn from '@vitejs/plugin-legacy'
+
 const {VitePWA} = require('vite-plugin-pwa')
 const path = require('path')
 const {visualizer} = require('rollup-plugin-visualizer')
@@ -49,6 +50,7 @@ export default defineConfig({
 					},
 				},
 			},
+			reactivityTransform: true,
 		}),
 		legacy,
 		svgLoader({

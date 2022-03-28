@@ -72,7 +72,7 @@ describe('Lists', () => {
 			.should('contain', newListName)
 			.should('not.contain', lists[0].title)
 		cy.visit('/')
-		cy.get('.card-content .tasks')
+		cy.get('.card-content')
 			.should('contain', newListName)
 			.should('not.contain', lists[0].title)
 	})
