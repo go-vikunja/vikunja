@@ -1210,6 +1210,15 @@ definitions:
       passcode:
         type: string
     type: object
+  user.Token:
+    properties:
+      created:
+        type: string
+      id:
+        type: integer
+      token:
+        type: string
+    type: object
   user.User:
     properties:
       created:
@@ -6077,6 +6086,101 @@ paths:
       security:
       - JWTKeyAuth: []
       summary: Change general user settings of the current user.
+      tags:
+      - user
+  /user/settings/token/caldav:
+    get:
+      consumes:
+      - application/json
+      description: Return the IDs and created dates of all caldav tokens for the current
+        user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/user.Token'
+            type: array
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: User does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Returns the caldav tokens for the current user
+      tags:
+      - user
+    put:
+      consumes:
+      - application/json
+      description: Generates a caldav token which can be used for the caldav api.
+        It is not possible to see the token again after it was generated.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.Token'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: User does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Generate a caldav token
+      tags:
+      - user
+  /user/settings/token/caldav/{id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Token ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: User does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Delete a caldav token by id
       tags:
       - user
   /user/settings/totp:

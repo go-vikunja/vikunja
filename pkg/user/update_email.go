@@ -63,7 +63,7 @@ func UpdateEmail(s *xorm.Session, update *EmailUpdate) (err error) {
 	}
 
 	update.User.Status = StatusEmailConfirmationRequired
-	token, err := generateNewToken(s, update.User, TokenEmailConfirm)
+	token, err := generateToken(s, update.User, TokenEmailConfirm)
 	if err != nil {
 		return
 	}

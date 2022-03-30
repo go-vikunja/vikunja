@@ -112,7 +112,7 @@ func RequestUserPasswordResetTokenByEmail(s *xorm.Session, tr *PasswordTokenRequ
 
 // RequestUserPasswordResetToken sends a user a password reset email.
 func RequestUserPasswordResetToken(s *xorm.Session, user *User) (err error) {
-	token, err := generateNewToken(s, user, TokenPasswordReset)
+	token, err := generateToken(s, user, TokenPasswordReset)
 	if err != nil {
 		return
 	}

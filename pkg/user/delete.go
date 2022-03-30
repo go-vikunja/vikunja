@@ -87,7 +87,7 @@ func notifyUsersScheduledForDeletion() {
 
 // RequestDeletion creates a user deletion confirm token and sends a notification to the user
 func RequestDeletion(s *xorm.Session, user *User) (err error) {
-	token, err := generateNewToken(s, user, TokenAccountDeletion)
+	token, err := generateToken(s, user, TokenAccountDeletion)
 	if err != nil {
 		return err
 	}

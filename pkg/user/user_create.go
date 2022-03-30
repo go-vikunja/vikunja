@@ -81,7 +81,7 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 	}
 
 	user.Status = StatusEmailConfirmationRequired
-	token, err := generateNewToken(s, user, TokenEmailConfirm)
+	token, err := generateToken(s, user, TokenEmailConfirm)
 	if err != nil {
 		return nil, err
 	}

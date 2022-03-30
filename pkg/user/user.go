@@ -324,7 +324,7 @@ func CheckUserCredentials(s *xorm.Session, u *Login) (*User, error) {
 		if IsErrWrongUsernameOrPassword(err) {
 			handleFailedPassword(user)
 		}
-		return nil, err
+		return user, err
 	}
 
 	return user, nil
