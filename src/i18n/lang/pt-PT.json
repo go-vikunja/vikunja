@@ -485,7 +485,8 @@
     "showMenu": "Mostra o menu",
     "hideMenu": "Ocultar o menu",
     "forExample": "Por exemplo:",
-    "welcomeBack": "Bem-Vindo de Volta!"
+    "welcomeBack": "Bem-Vindo de Volta!",
+    "custom": "Personalizado"
   },
   "input": {
     "resetColor": "Repor cor",
@@ -524,6 +525,57 @@
     "multiselect": {
       "createPlaceholder": "Criar novo",
       "selectPlaceholder": "Clica ou pressiona Enter para selecionar"
+    },
+    "datepickerRange": {
+      "to": "Até",
+      "from": "De",
+      "fromto": "{from} até {to}",
+      "ranges": {
+        "today": "Hoje",
+        "thisWeek": "Esta semana",
+        "restOfThisWeek": "O Resto Desta Semana",
+        "nextWeek": "Próxima Semana",
+        "next7Days": "Próximos 7 Dias",
+        "lastWeek": "Semana Passada",
+        "thisMonth": "Este Mês",
+        "restOfThisMonth": "O Resto Deste Mês",
+        "nextMonth": "Próximo Mês",
+        "next30Days": "Próximos 30 Dias",
+        "lastMonth": "Mês Passado",
+        "thisYear": "Este Ano",
+        "restOfThisYear": "O Resto Deste Ano"
+      }
+    },
+    "datemathHelp": {
+      "canuse": "Podes utilizar cálculo de data para filtrar por datas relativas.",
+      "learnhow": "Vê como funciona",
+      "title": "Cálculo de Data",
+      "intro": "O cálculo de data permite especificar datas relativas resolvidas em tempo real pelo Vikunja na aplicação do filtro.",
+      "expression": "Cada expressão de Cálculo de Data inicia com uma data âncora, que tanto pode ser {0}, como uma expressão de data terminada com {1}. Esta data âncora pode ser opcionalmente seguida de uma ou mais expressões matemáticas.",
+      "similar": "Essas expressões são semelhantes às fornecidas por {0} e {1}.",
+      "add1Day": "Adicionar um dia",
+      "minus1Day": "Subtrair um dia",
+      "roundDay": "Arredondar para baixo para o dia mais próximo",
+      "supportedUnits": "As unidades de tempo suportadas são:",
+      "someExamples": "Alguns exemplos de expressões de tempo:",
+      "units": {
+        "seconds": "Segundos",
+        "minutes": "Minutos",
+        "hours": "Horas",
+        "days": "Dias",
+        "weeks": "Semanas",
+        "months": "Meses",
+        "years": "Anos"
+      },
+      "examples": {
+        "now": "Agora",
+        "in24h": "Em 24h",
+        "today": "Hoje às 00:00",
+        "beginningOfThisWeek": "O início desta semana às 00h00",
+        "endOfThisWeek": "O fim desta semana",
+        "in30Days": "Em 30 dias",
+        "datePlusMonth": "{0} mais um mês às 00:00 desse dia"
+      }
     }
   },
   "task": {
@@ -541,12 +593,9 @@
       "titleCurrent": "Tarefas Atuais",
       "titleDates": "Tarefas de {from} até {to}",
       "noDates": "Mostrar tarefas sem datas",
-      "current": "Tarefas atuais",
-      "from": "Tarefas de",
-      "until": "até",
-      "today": "Hoje",
-      "nextWeek": "Próxima Semana",
-      "nextMonth": "Próximo Mês",
+      "overdue": "Mostrar tarefas em atraso",
+      "fromuntil": "Tarefas de {from} a {until}",
+      "select": "Escolha um intervalo de datas",
       "noTasks": "Nada para fazer — Tem um bom dia!"
     },
     "detail": {

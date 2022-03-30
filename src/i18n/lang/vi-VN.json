@@ -485,7 +485,8 @@
     "showMenu": "Hiển thị menu",
     "hideMenu": "Ẩn menu",
     "forExample": "Ví dụ:",
-    "welcomeBack": "Mừng quá! Bạn trở lại rồi."
+    "welcomeBack": "Mừng quá! Bạn trở lại rồi.",
+    "custom": "Custom"
   },
   "input": {
     "resetColor": "Đặt lại màu",
@@ -524,6 +525,57 @@
     "multiselect": {
       "createPlaceholder": "Tạo mới",
       "selectPlaceholder": "Nhấp hoặc nhấn enter để chọn"
+    },
+    "datepickerRange": {
+      "to": "To",
+      "from": "From",
+      "fromto": "{from} to {to}",
+      "ranges": {
+        "today": "Today",
+        "thisWeek": "This Week",
+        "restOfThisWeek": "The Rest of This Week",
+        "nextWeek": "Next Week",
+        "next7Days": "Next 7 Days",
+        "lastWeek": "Last Week",
+        "thisMonth": "This Month",
+        "restOfThisMonth": "The Rest of This Month",
+        "nextMonth": "Next Month",
+        "next30Days": "Next 30 Days",
+        "lastMonth": "Last Month",
+        "thisYear": "This Year",
+        "restOfThisYear": "The Rest of This Year"
+      }
+    },
+    "datemathHelp": {
+      "canuse": "You can use date math to filter for relative dates.",
+      "learnhow": "Check out how it works",
+      "title": "Date Math",
+      "intro": "Date Math allows you to specifiy relative dates which are resolved on the fly by Vikunja when applying the filter.",
+      "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
+      "similar": "These expressions are similar to the ones provided by {0} and {1}.",
+      "add1Day": "Add one day",
+      "minus1Day": "Subtract one day",
+      "roundDay": "Round down to the nearest day",
+      "supportedUnits": "Supported time units are:",
+      "someExamples": "Some examples of time expressions:",
+      "units": {
+        "seconds": "Seconds",
+        "minutes": "Minutes",
+        "hours": "Hours",
+        "days": "Days",
+        "weeks": "Weeks",
+        "months": "Months",
+        "years": "Years"
+      },
+      "examples": {
+        "now": "Right now",
+        "in24h": "In 24h",
+        "today": "Today at 00:00",
+        "beginningOfThisWeek": "The beginning of this week at 00:00",
+        "endOfThisWeek": "The end of this week",
+        "in30Days": "In 30 days",
+        "datePlusMonth": "{0} plus one month at 00:00 of that day"
+      }
     }
   },
   "task": {
@@ -541,12 +593,9 @@
       "titleCurrent": "Công việc hiện tại",
       "titleDates": "Công việc từ {from} cho đến {to}",
       "noDates": "Hiển thị công việc không có ngày tháng",
-      "current": "Công việc hiện tại",
-      "from": "Công việc từ",
-      "until": "cho đến",
-      "today": "Hôm nay",
-      "nextWeek": "Tuần tới",
-      "nextMonth": "Tháng tới",
+      "overdue": "Show overdue tasks",
+      "fromuntil": "Tasks from {from} until {until}",
+      "select": "Select a date range",
       "noTasks": "Hôm nay thảnh thơi — Hãy tận hưởng ngày tuyệt vời!"
     },
     "detail": {
