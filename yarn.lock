@@ -7564,10 +7564,10 @@ graphql@^16.1.0:
   resolved "https://registry.yarnpkg.com/graphql/-/graphql-16.2.0.tgz#de3150e80f1fc009590b92a9d16ab1b46e12b656"
   integrity sha512-MuQd7XXrdOcmfwuLwC2jNvx0n3rxIuNYOxUtiee5XOmfrWo613ar2U8pE7aHAKh8VwfpifubpD9IP+EdEAEOsA==
 
-happy-dom@2.53.0:
-  version "2.53.0"
-  resolved "https://registry.yarnpkg.com/happy-dom/-/happy-dom-2.53.0.tgz#463b7d902fe12d66df1ba2e3df54a9e7799a3e9d"
-  integrity sha512-+tXrnK3R44aPn/tng8q6hipiiescc+qNNmqW3ZsMSabcHtH54rTGroW+LOO6NLWEu8/uxIsPR/1VaL17yeOmDQ==
+happy-dom@2.54.0:
+  version "2.54.0"
+  resolved "https://registry.yarnpkg.com/happy-dom/-/happy-dom-2.54.0.tgz#350fb12755cefe861f088fbdc0bec0e8c5428f94"
+  integrity sha512-zsHfHuk0xIljH1a57jcHsCoR/AY1snxgRXRL2vaMN7F/BiHJHW0x+weoJ2ppcRULBkMMQkrY5Jbujyk1U7ub3w==
   dependencies:
     css.escape "^1.5.1"
     he "^1.2.0"
