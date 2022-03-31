@@ -486,7 +486,7 @@
     "hideMenu": "Menü ausblenden",
     "forExample": "Zum Beispiel:",
     "welcomeBack": "Willkommen zurück!",
-    "custom": "Custom"
+    "custom": "Benutzerdefiniert"
   },
   "input": {
     "resetColor": "Farb zruggsetze",
@@ -527,54 +527,54 @@
       "selectPlaceholder": "Druck uf Enter zum uuswähle"
     },
     "datepickerRange": {
-      "to": "To",
-      "from": "From",
-      "fromto": "{from} to {to}",
+      "to": "Bis",
+      "from": "Von",
+      "fromto": "{from} bis {to}",
       "ranges": {
-        "today": "Today",
-        "thisWeek": "This Week",
-        "restOfThisWeek": "The Rest of This Week",
-        "nextWeek": "Next Week",
-        "next7Days": "Next 7 Days",
-        "lastWeek": "Last Week",
-        "thisMonth": "This Month",
-        "restOfThisMonth": "The Rest of This Month",
-        "nextMonth": "Next Month",
-        "next30Days": "Next 30 Days",
-        "lastMonth": "Last Month",
-        "thisYear": "This Year",
-        "restOfThisYear": "The Rest of This Year"
+        "today": "Heute",
+        "thisWeek": "Diese Woche",
+        "restOfThisWeek": "Der Rest dieser Woche",
+        "nextWeek": "Nächste Woche",
+        "next7Days": "Nächsten 7 Tage",
+        "lastWeek": "Letzte Woche",
+        "thisMonth": "Dieser Monat",
+        "restOfThisMonth": "Der Rest dieses Monats",
+        "nextMonth": "Nächster Monat",
+        "next30Days": "Nächsten 30 Tage",
+        "lastMonth": "Letzter Monat",
+        "thisYear": "Dieses Jahr",
+        "restOfThisYear": "Der Rest des Jahres"
       }
     },
     "datemathHelp": {
-      "canuse": "You can use date math to filter for relative dates.",
-      "learnhow": "Check out how it works",
-      "title": "Date Math",
-      "intro": "Date Math allows you to specifiy relative dates which are resolved on the fly by Vikunja when applying the filter.",
-      "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
-      "similar": "These expressions are similar to the ones provided by {0} and {1}.",
-      "add1Day": "Add one day",
-      "minus1Day": "Subtract one day",
-      "roundDay": "Round down to the nearest day",
-      "supportedUnits": "Supported time units are:",
-      "someExamples": "Some examples of time expressions:",
+      "canuse": "Du kannst Datumsberechnung verwenden, um nach relativen Daten zu filtern.",
+      "learnhow": "Sieh dir an, wie es funktioniert",
+      "title": "Datumsberechnung",
+      "intro": "Die Datumsberechnung erlaubt es, relative Daten anzugeben, die bei der Anwendung des Filters von Vikunja aufgelöst werden.",
+      "expression": "Jeder Ausdruck der Datumsberechnung beginnt mit einem Datumswert, welcher entweder {0} sein kann oder mit {1} endet. Auf diesen Datumswert kann optional ein oder mehrere mathematische Ausdrücke folgen.",
+      "similar": "Diese Ausdrücke ähneln denen von {0} und {1}.",
+      "add1Day": "Einen Tag hinzufügen",
+      "minus1Day": "Einen Tag abziehen",
+      "roundDay": "Auf den nächsten Tag abrunden",
+      "supportedUnits": "Unterstützte Zeiteinheiten sind:",
+      "someExamples": "Einige Beispiele für Zeitausdrücke:",
       "units": {
-        "seconds": "Seconds",
-        "minutes": "Minutes",
-        "hours": "Hours",
-        "days": "Days",
-        "weeks": "Weeks",
-        "months": "Months",
-        "years": "Years"
+        "seconds": "Sekunden",
+        "minutes": "Minuten",
+        "hours": "Stunden",
+        "days": "Tage",
+        "weeks": "Wochen",
+        "months": "Monate",
+        "years": "Jahre"
       },
       "examples": {
-        "now": "Right now",
-        "in24h": "In 24h",
-        "today": "Today at 00:00",
-        "beginningOfThisWeek": "The beginning of this week at 00:00",
-        "endOfThisWeek": "The end of this week",
-        "in30Days": "In 30 days",
-        "datePlusMonth": "{0} plus one month at 00:00 of that day"
+        "now": "Jetzt",
+        "in24h": "In 24 Stunden",
+        "today": "Heute um 00:00 Uhr",
+        "beginningOfThisWeek": "Der Anfang dieser Woche um 00:00 Uhr",
+        "endOfThisWeek": "Das Ende dieser Woche",
+        "in30Days": "In 30 Tagen",
+        "datePlusMonth": "{0} plus einen Monat um 00:00 des Tages"
       }
     }
   },
@@ -593,9 +593,9 @@
       "titleCurrent": "Momentani Uufgabe",
       "titleDates": "Uufgabe vo {from} bis {to}",
       "noDates": "Zeig Uufgabe ohni Datum",
-      "overdue": "Show overdue tasks",
-      "fromuntil": "Tasks from {from} until {until}",
-      "select": "Select a date range",
+      "overdue": "Überfällige Aufgaben anzeigen",
+      "fromuntil": "Aufgaben von {from} bis {until}",
+      "select": "Datumsbereich wählen",
       "noTasks": "Nichts zu tun – Einen schönen Tag noch!"
     },
     "detail": {

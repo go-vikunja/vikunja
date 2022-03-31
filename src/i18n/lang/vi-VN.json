@@ -7,7 +7,7 @@
     "lastViewed": "Xem gần đây",
     "list": {
       "newText": "Bạn có thể tạo một danh sách công việc mới cho mình:",
-      "new": "New list",
+      "new": "Danh sách mới",
       "importText": "Hoặc nhập danh sách và nhiệm vụ của bạn từ các dịch vụ khác vào Vikunja:",
       "import": "Nhập dữ liệu của bạn vào Vikunja"
     }
@@ -31,7 +31,7 @@
       "username": "Tên người dùng",
       "usernameEmail": "Tên người dùng hoặc Email",
       "usernamePlaceholder": "ví dụ: frederick",
-      "email": "Email address",
+      "email": "Địa chỉ Email",
       "emailPlaceholder": "ví dụ: frederic{'@'}vikunja.io",
       "password": "Mật khẩu",
       "passwordPlaceholder": "ví dụ: •••••••••••",
@@ -44,20 +44,20 @@
       "totpTitle": "Mã xác thực hai lớp",
       "totpPlaceholder": "ví dụ: 123456",
       "login": "Đăng nhập",
-      "createAccount": "Create account",
+      "createAccount": "Tạo tài khoản",
       "loginWith": "Đăng nhập với {provider}",
       "authenticating": "Đang xác thực…",
       "openIdStateError": "Trạng thái không khớp, từ chối tiếp tục!",
       "openIdGeneralError": "Đã xảy ra lỗi khi xác thực với bên thứ ba.",
       "logout": "Đăng xuất",
-      "emailInvalid": "Please enter a valid email address.",
-      "usernameRequired": "Please provide a username.",
-      "passwordRequired": "Please provide a password.",
-      "showPassword": "Show the password",
-      "hidePassword": "Hide the password",
-      "noAccountYet": "Don't have an account yet?",
-      "alreadyHaveAnAccount": "Already have an account?",
-      "remember": "Stay logged in"
+      "emailInvalid": "Vui lòng nhập một địa chỉ email hợp lệ.",
+      "usernameRequired": "Vui lòng cung cấp tên người dùng.",
+      "passwordRequired": "Vui lòng cung cấp một mật khẩu.",
+      "showPassword": "Hiển thị mật khẩu",
+      "hidePassword": "Ẩn mật khẩu",
+      "noAccountYet": "Bạn chưa có tài khoản?",
+      "alreadyHaveAnAccount": "Đã có tài khoản?",
+      "remember": "Duy trì đăng nhập"
     },
     "settings": {
       "title": "Cài đặt",
@@ -68,7 +68,7 @@
       "currentPasswordPlaceholder": "Nhập mật khẩu hiện tại của bạn",
       "passwordsDontMatch": "Mật khẩu mới và xác nhận của nó không khớp.",
       "passwordUpdateSuccess": "Mật khẩu đã được cập nhật thành công.",
-      "updateEmailTitle": "Update Your Email Address",
+      "updateEmailTitle": "Cập nhật địa chỉ e-mail của bạn",
       "updateEmailNew": "Địa chỉ email mới",
       "updateEmailSuccess": "Địa chỉ email của bạn đã được cập nhật thành công. Chúng tôi đã gửi cho bạn một liên kết để xác nhận nó.",
       "general": {
@@ -86,7 +86,7 @@
         "weekStartMonday": "Thứ hai",
         "language": "Ngôn ngữ",
         "defaultList": "Danh sách mặc định",
-        "timezone": "Time Zone"
+        "timezone": "Múi giờ"
       },
       "totp": {
         "title": "Xác thực hai lớp",
@@ -165,7 +165,7 @@
     "searchSelect": "Nhấp hoặc nhấn enter để chọn danh sách này",
     "shared": "Đang tham gia",
     "create": {
-      "header": "New list",
+      "header": "Danh sách mới",
       "titlePlaceholder": "Tên danh sách ở đây…",
       "addTitleRequired": "Hãy xác định một tên.",
       "createdSuccess": "Danh sách đã được tạo thành công.",
@@ -323,7 +323,7 @@
     "namespaces": "Góc làm việc",
     "search": "Gõ để tìm kiếm một góc làm việc…",
     "create": {
-      "title": "New namespace",
+      "title": "Góc làm việc mới",
       "titleRequired": "Hãy đặt một tiêu đề.",
       "explanation": "Góc làm việc là một tập hợp các danh sách mà bạn có thể chia sẻ và sử dụng để sắp xếp các danh sách của mình. Trên thực tế, mọi danh sách đều thuộc về một góc làm việc.",
       "tooltip": "Góc làm việc là gì?",
@@ -335,7 +335,7 @@
       "archiveText": "Bạn sẽ không thể chỉnh sửa góc làm việc này hoặc tạo danh sách mới cho đến khi bạn bỏ lưu trữ nó. Điều này cũng sẽ lưu trữ tất cả các danh sách trong góc làm việc này.",
       "unarchiveText": "Bạn có thể tạo danh sách mới hoặc chỉnh sửa nó.",
       "success": "Góc làm việc đã lưu trữ thành công.",
-      "unarchiveSuccess": "The namespace was successfully un-archived.",
+      "unarchiveSuccess": "Góc làm việc đã được bỏ lưu trữ thành công.",
       "description": "Nếu một góc làm việc được lưu trữ, bạn không thể tạo thêm danh sách hoặc chỉnh sửa nó."
     },
     "delete": {
@@ -385,14 +385,14 @@
       "showDoneTasks": "Hiển thị các công việc đã hoàn thành",
       "sortAlphabetically": "Xếp theo bảng chữ cái",
       "enablePriority": "Bật Bộ lọc theo mức độ ưu tiên",
-      "enablePercentDone": "Enable Filter By Progress",
+      "enablePercentDone": "Bật Bộ lọc theo Tiến độ",
       "dueDateRange": "Phạm vi ngày đến hạn",
       "startDateRange": "Phạm vi Ngày bắt đầu",
       "endDateRange": "Phạm vi Ngày Kết thúc",
       "reminderRange": "Phạm vi Ngày nhắc nhở"
     },
     "create": {
-      "title": "New Saved Filter",
+      "title": "Bộ lọc đã lưu mới",
       "description": "Bộ lọc sẵn là một danh sách ảo được chọn từ một tập hợp các bộ lọc. Sau khi được tạo, nó sẽ xuất hiện trong một không gian làm việc đặc biệt.",
       "action": "Tạo thêm bộ lọc sẵn"
     },
@@ -486,7 +486,7 @@
     "hideMenu": "Ẩn menu",
     "forExample": "Ví dụ:",
     "welcomeBack": "Mừng quá! Bạn trở lại rồi.",
-    "custom": "Custom"
+    "custom": "Tuỳ chỉnh"
   },
   "input": {
     "resetColor": "Đặt lại màu",
@@ -527,54 +527,54 @@
       "selectPlaceholder": "Nhấp hoặc nhấn enter để chọn"
     },
     "datepickerRange": {
-      "to": "To",
-      "from": "From",
-      "fromto": "{from} to {to}",
+      "to": "Đến",
+      "from": "Từ",
+      "fromto": "{from} đến {to}",
       "ranges": {
-        "today": "Today",
-        "thisWeek": "This Week",
-        "restOfThisWeek": "The Rest of This Week",
-        "nextWeek": "Next Week",
-        "next7Days": "Next 7 Days",
-        "lastWeek": "Last Week",
-        "thisMonth": "This Month",
-        "restOfThisMonth": "The Rest of This Month",
-        "nextMonth": "Next Month",
-        "next30Days": "Next 30 Days",
-        "lastMonth": "Last Month",
-        "thisYear": "This Year",
-        "restOfThisYear": "The Rest of This Year"
+        "today": "Hôm nay",
+        "thisWeek": "Tuần này",
+        "restOfThisWeek": "Toàn bộ ngày còn lại trong tuần này",
+        "nextWeek": "Tuần tới",
+        "next7Days": "7 ngày tới",
+        "lastWeek": "Tuần trước",
+        "thisMonth": "Tháng này",
+        "restOfThisMonth": "Toàn bộ ngày còn lại trong tháng này",
+        "nextMonth": "Tháng tới",
+        "next30Days": "30 ngày tới",
+        "lastMonth": "Tháng trước",
+        "thisYear": "Năm nay",
+        "restOfThisYear": "Toàn bộ ngày còn lại trong năm"
       }
     },
     "datemathHelp": {
-      "canuse": "You can use date math to filter for relative dates.",
-      "learnhow": "Check out how it works",
-      "title": "Date Math",
-      "intro": "Date Math allows you to specifiy relative dates which are resolved on the fly by Vikunja when applying the filter.",
-      "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
-      "similar": "These expressions are similar to the ones provided by {0} and {1}.",
-      "add1Day": "Add one day",
-      "minus1Day": "Subtract one day",
-      "roundDay": "Round down to the nearest day",
-      "supportedUnits": "Supported time units are:",
-      "someExamples": "Some examples of time expressions:",
+      "canuse": "Bạn có thể sử dụng biểu thức tính ngày để lọc những ngày liên quan.",
+      "learnhow": "Xem cách hoạt động",
+      "title": "Tính Ngày",
+      "intro": "Tính Ngày cho phép bạn xác định những ngày liên quan được xử lý bởi Vikunja khi áp dụng bộ lọc.",
+      "expression": "Mỗi Biểu thức tính ngày bắt đầu bằng một ngày cố định, có thể là {0}, hoặc kết thúc bằng {1}. Ngày cố định này có thể được theo sau bởi một hoặc nhiều biểu thức toán học.",
+      "similar": "Những biểu thức này tương tự như những biểu thức được cung cấp bởi {0} và {1}.",
+      "add1Day": "Thêm một ngày",
+      "minus1Day": "Bớt đi một ngày",
+      "roundDay": "Làm tròn đến ngày gần nhất",
+      "supportedUnits": "Các đơn vị thời gian hỗ trợ là:",
+      "someExamples": "Một vài ví dụ về cách hiển thị thời gian:",
       "units": {
-        "seconds": "Seconds",
-        "minutes": "Minutes",
-        "hours": "Hours",
-        "days": "Days",
-        "weeks": "Weeks",
-        "months": "Months",
-        "years": "Years"
+        "seconds": "Giây",
+        "minutes": "Phút",
+        "hours": "Giờ",
+        "days": "Ngày",
+        "weeks": "Tuần",
+        "months": "Tháng",
+        "years": "Năm"
       },
       "examples": {
-        "now": "Right now",
-        "in24h": "In 24h",
-        "today": "Today at 00:00",
-        "beginningOfThisWeek": "The beginning of this week at 00:00",
-        "endOfThisWeek": "The end of this week",
-        "in30Days": "In 30 days",
-        "datePlusMonth": "{0} plus one month at 00:00 of that day"
+        "now": "Ngay bây giờ",
+        "in24h": "Trong vòng 24h",
+        "today": "Hôm nay lúc 00:00",
+        "beginningOfThisWeek": "Bắt đầu tuần này lúc 00:00",
+        "endOfThisWeek": "Cuối tuần này",
+        "in30Days": "Trong 30 ngày",
+        "datePlusMonth": "{0} thêm một tháng kể từ lúc 00:00 ngày hôm đó"
       }
     }
   },
@@ -593,9 +593,9 @@
       "titleCurrent": "Công việc hiện tại",
       "titleDates": "Công việc từ {from} cho đến {to}",
       "noDates": "Hiển thị công việc không có ngày tháng",
-      "overdue": "Show overdue tasks",
-      "fromuntil": "Tasks from {from} until {until}",
-      "select": "Select a date range",
+      "overdue": "Hiển thị công việc quá hạn",
+      "fromuntil": "Công việc từ {from} cho đến {until}",
+      "select": "Chọn khoảng ngày",
       "noTasks": "Hôm nay thảnh thơi — Hãy tận hưởng ngày tuyệt vời!"
     },
     "detail": {
@@ -603,7 +603,7 @@
       "chooseStartDate": "Bấm vào đây để đặt ngày bắt đầu",
       "chooseEndDate": "Bấm vào đây để đặt ngày kết thúc",
       "move": "Di chuyển công việc sang một danh sách khác",
-      "done": "Mark task done!",
+      "done": "Đánh dấu đã xong!",
       "undone": "Đánh dấu Chưa xong",
       "created": "Đã tạo được {0} bởi {1}",
       "updated": "Đã cập nhật {0}",
@@ -619,22 +619,22 @@
         "text2": "Thao tác này cũng sẽ xóa tất cả tệp đính kèm, lời nhắc và liên kết đến công việc này. Nó không thể hoàn tác!"
       },
       "actions": {
-        "assign": "Assign to User",
-        "label": "Add Labels",
+        "assign": "Chỉ định người",
+        "label": "Thêm nhãn",
         "priority": "Mức độ ưu tiên",
         "dueDate": "Đặt ngày đến hạn",
-        "startDate": "Set Start Date",
-        "endDate": "Set End Date",
+        "startDate": "Chọn ngày bắt đầu",
+        "endDate": "Chọn ngày kết thúc",
         "reminders": "Thiết lập nhắc nhở",
-        "repeatAfter": "Set Repeating Interval",
-        "percentDone": "Set Progress",
-        "attachments": "Add Attachments",
-        "relatedTasks": "Add Relation",
-        "moveList": "Move",
-        "color": "Set Color",
-        "delete": "Delete",
-        "favorite": "Add to Favorites",
-        "unfavorite": "Remove from Favorites"
+        "repeatAfter": "Chọn chu kì lặp",
+        "percentDone": "Đặt tiến trình",
+        "attachments": "Thêm Tệp đính kèm",
+        "relatedTasks": "Thêm Quan hệ",
+        "moveList": "Di chuyển",
+        "color": "Đặt màu",
+        "delete": "Xóa",
+        "favorite": "Thêm vào mục yêu thích",
+        "unfavorite": "Xóa khỏi mục yêu thích"
       }
     },
     "attributes": {
@@ -647,7 +647,7 @@
       "dueDate": "Ngày hết hạn",
       "endDate": "Ngày kết thúc",
       "labels": "Nhãn",
-      "percentDone": "Progress",
+      "percentDone": "Tiến độ",
       "priority": "Mức độ ưu tiên",
       "relatedTasks": "Công việc liên quan",
       "reminders": "Nhắc nhở",
@@ -834,20 +834,20 @@
     "general": "Tổng quan",
     "allPages": "Các phím tắt này hoạt động ở mọi nơi.",
     "currentPageOnly": "Các phím tắt này chỉ hoạt động ở trang hiện tại.",
-    "somePagesOnly": "These shortcuts work only on some pages.",
+    "somePagesOnly": "Các phím tắt này chỉ hoạt động trên một số trang.",
     "toggleMenu": "Bật/tắt Menu",
     "quickSearch": "Mở thanh tìm kiếm/thao tác nhanh",
     "then": "sau đó",
     "task": {
       "title": "Trang công việc",
-      "done": "Mark task done / undone",
-      "assign": "Assign this task to a user",
+      "done": "Đánh dấu công việc hoàn thành / chưa xong",
+      "assign": "Chỉ định công việc cho một người",
       "labels": "Thêm nhãn cho công việc này",
       "dueDate": "Thay đổi ngày hết hạn của công việc này",
       "attachment": "Thêm tệp đính kèm cho công việc này",
       "related": "Sửa đổi các công việc liên kết",
-      "color": "Change the color of this task",
-      "move": "Move this task to another list"
+      "color": "Thay đổi màu công việc này",
+      "move": "Dời công việc này sang danh sách khác"
     },
     "list": {
       "title": "Xem danh sách",
@@ -857,12 +857,12 @@
       "switchToTableView": "Chuyển qua xem Bảng"
     },
     "navigation": {
-      "title": "Navigation",
-      "overview": "Navigato to overview",
-      "upcoming": "Navigato to upcoming taks",
-      "namespaces": "Navigate to namepaces & lists",
-      "labels": "Navigate to labels",
-      "teams": "Navigate to teams"
+      "title": "Điều hướng",
+      "overview": "Điều hướng đến trang tổng quan",
+      "upcoming": "Điều hướng đến công việc sắp tới",
+      "namespaces": "Điều hướng đến Không gian làm việc & danh sách",
+      "labels": "Điều hướng đến nhãn",
+      "teams": "Điều hướng đến Team"
     }
   },
   "update": {
@@ -968,7 +968,7 @@
     "4015": "Bình luận không tồn tại.",
     "4016": "Trường công việc không hợp lệ.",
     "4017": "Bộ so sánh bộ lọc công việc không hợp lệ.",
-    "4018": "Invalid task filter concatenator.",
+    "4018": "Bộ lọc kết hợp không hợp lệ.",
     "4019": "Giá trị bộ lọc công việc không hợp lệ.",
     "5001": "Góc làm việc không có nữa.",
     "5003": "Bạn chưa được phép bước vào vào góc làm việc được chỉ định.",
