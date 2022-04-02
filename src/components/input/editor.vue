@@ -326,7 +326,7 @@ export default {
 			}
 
 			&.has-checkbox {
-				margin-left: -2em;
+				margin-left: -1.25rem;
 				list-style: none;
 			}
 		}
