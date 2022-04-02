@@ -64,6 +64,9 @@
 import BaseButton from '@/components/base/BaseButton.vue'
 import {ref, watch} from 'vue'
 import {useScrollLock} from '@vueuse/core'
+import {useStore} from 'vuex'
+
+const store = useStore()
 
 const props = withDefaults(defineProps<{
 	enabled?: boolean,
@@ -86,6 +89,7 @@ watch(
 	() => props.enabled,
 	enabled => {
 		scrollLock.value = enabled
+		store.commit('modalActive', enabled)
 	},
 	{
 		immediate: true,

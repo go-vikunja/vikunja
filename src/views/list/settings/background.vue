@@ -35,16 +35,25 @@
 				v-model="backgroundSearchTerm"
 			/>
 			<p class="unsplash-link">
-				<a href="https://unsplash.com" rel="noreferrer noopener nofollow" target="_blank">{{ $t('list.background.poweredByUnsplash') }}</a>
+				<a href="https://unsplash.com" rel="noreferrer noopener nofollow" target="_blank">
+					{{ $t('list.background.poweredByUnsplash') }}
+				</a>
 			</p>
 			<div class="image-search-result">
 				<a
 					:key="im.id"
-					:style="{'background-image': `url(${backgroundThumbs[im.id]})`}"
+					:style="{'background-image': `url(${backgroundBlurHashes[im.id]})`}"
 					@click="() => setBackground(im.id)"
 					class="image"
 					v-for="im in backgroundSearchResult">
-					<a :href="`https://unsplash.com/@${im.info.author}`" rel="noreferrer noopener nofollow" target="_blank" class="info">
+					<transition name="fade">
+						<img :src="backgroundThumbs[im.id]" alt="" v-if="backgroundThumbs[im.id]"/>
+					</transition>
+					<a
+						:href="`https://unsplash.com/@${im.info.author}`"
+						rel="noreferrer noopener nofollow"
+						target="_blank"
+						class="info">
 						{{ im.info.authorName }}
 					</a>
 				</a>
@@ -65,6 +74,8 @@
 
 <script>
 import {mapState} from 'vuex'
+import {getBlobFromBlurHash} from '../../../helpers/getBlobFromBlurHash'
+
 import BackgroundUnsplashService from '../../../services/backgroundUnsplash'
 import BackgroundUploadService from '../../../services/backgroundUpload'
 import ListService from '@/services/list'
@@ -83,6 +94,7 @@ export default {
 			backgroundSearchTerm: '',
 			backgroundSearchResult: [],
 			backgroundThumbs: {},
+			backgroundBlurHashes: {},
 			currentPage: 1,
 
 			// We're using debounce to not search on every keypress but with a delay.
@@ -120,8 +132,16 @@ export default {
 			this.currentPage = page
 			const result = await this.backgroundService.getAll({}, {s: this.backgroundSearchTerm, p: page})
 			this.backgroundSearchResult = this.backgroundSearchResult.concat(result)
-			result.forEach(async background => {
-				this.backgroundThumbs[background.id] = await this.backgroundService.thumb(background)
+			result.forEach(background => {
+				getBlobFromBlurHash(background.blurHash)
+					.then(b => {
+						this.backgroundBlurHashes[background.id] = window.URL.createObjectURL(b)
+					})
+
+				this.backgroundService.thumb(background)
+					.then(b => {
+						this.backgroundThumbs[background.id] = b
+					})
 			})
 		},
 
@@ -165,82 +185,88 @@ export default {
 <style lang="scss" scoped>
 .list-background-setting {
 
-  .unsplash-link {
-    text-align: right;
-    font-size: .8rem;
+	.unsplash-link {
+		text-align: right;
+		font-size: .8rem;
 
-    a {
-      color: var(--grey-800);
-    }
-  }
+		a {
+			color: var(--grey-800);
+		}
+	}
 
-  .image-search-result {
-    margin-top: 1rem;
-    display: flex;
-    flex-flow: row wrap;
+	.image-search-result {
+		margin-top: 1rem;
+		display: flex;
+		flex-flow: row wrap;
 
-    .image {
-      width: calc(100% / 5 - 1rem);
-      height: 120px;
-      margin: .5rem;
-      background-size: cover;
-      background-position: center;
-      display: flex;
+		.image {
+			width: calc(100% / 5 - 1rem);
+			height: 120px;
+			margin: .5rem;
+			background-size: cover;
+			background-position: center;
+			display: flex;
+			position: relative;
 
-      @media screen and (min-width: $desktop) {
-        &:nth-child(5n) {
-          break-after: always;
-        }
-      }
+			@media screen and (min-width: $desktop) {
+				&:nth-child(5n) {
+					break-after: always;
+				}
+			}
 
-      @media screen and (max-width: $desktop) {
-        width: calc(100% / 4 - 1rem);
+			@media screen and (max-width: $desktop) {
+				width: calc(100% / 4 - 1rem);
 
-        &:nth-child(4n) {
-          break-after: always;
-        }
-      }
+				&:nth-child(4n) {
+					break-after: always;
+				}
+			}
 
-      @media screen and (max-width: $tablet) {
-        width: calc(100% / 2 - 1rem);
+			@media screen and (max-width: $tablet) {
+				width: calc(100% / 2 - 1rem);
 
-        &:nth-child(2n) {
-          break-after: always;
-        }
-      }
+				&:nth-child(2n) {
+					break-after: always;
+				}
+			}
 
-      @media screen and (max-width: ($mobile)) {
-        width: calc(100% - 1rem);
+			@media screen and (max-width: ($mobile)) {
+				width: calc(100% - 1rem);
 
-        &:nth-child(1n) {
-          break-after: always;
-        }
-      }
+				&:nth-child(1n) {
+					break-after: always;
+				}
+			}
 
-      .info {
-        align-self: flex-end;
-        display: block;
-        opacity: 0;
-        width: 100%;
-        padding: .25rem 0;
-        text-align: center;
-        background: rgba(0, 0, 0, 0.5);
-        font-size: .75rem;
-        font-weight: bold;
-        color: var(--white);
-        transition: opacity $transition;
-      }
+			.info {
+				align-self: flex-end;
+				display: block;
+				opacity: 0;
+				width: 100%;
+				padding: .25rem 0;
+				text-align: center;
+				background: rgba(0, 0, 0, 0.5);
+				font-size: .75rem;
+				font-weight: bold;
+				color: var(--white);
+				transition: opacity $transition;
+				position: absolute;
+			}
 
-      &:hover .info {
-        opacity: 1;
-      }
-    }
-  }
+			img {
+				object-fit: cover;
+			}
 
-  .is-load-more-button {
-    margin: 1rem auto 0 !important;
-    display: block;
-    width: 200px;
-  }
+			&:hover .info {
+				opacity: 1;
+			}
+		}
+	}
+
+	.is-load-more-button {
+		margin: 1rem auto 0 !important;
+		display: block;
+		width: 200px;
+	}
 }
 </style>

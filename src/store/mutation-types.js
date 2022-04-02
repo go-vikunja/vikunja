@@ -6,6 +6,6 @@ export const MENU_ACTIVE = 'menuActive'
 export const KEYBOARD_SHORTCUTS_ACTIVE = 'keyboardShortcutsActive'
 export const QUICK_ACTIONS_ACTIVE = 'quickActionsActive'
 export const BACKGROUND = 'background'
+export const BLUR_HASH = 'blurHash'
 
 export const CONFIG = 'config'
-export const AUTH = 'auth'

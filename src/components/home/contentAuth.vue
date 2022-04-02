@@ -1,17 +1,21 @@
 <template>
-	<div>
+	<div class="content-auth" :class="{'modal-active': modalActive}">
 		<BaseButton
 			v-if="menuActive"
 			@click="$store.commit('menuActive', false)"
-			class="menu-hide-button" 
+			class="menu-hide-button"
 		>
-			<icon icon="times" />
+			<icon icon="times"/>
 		</BaseButton>
 		<div
-			:class="{'has-background': background}"
-			:style="{'background-image': background && `url(${background})`}"
+			:class="{'has-background': background || blurHash}"
+			:style="{'background-image': blurHash && `url(${blurHash})`}"
 			class="app-container"
 		>
+			<div
+				:class="{'is-visible': background}"
+				class="app-container-background background-fade-in"
+				:style="{'background-image': background && `url(${background})`}"></div>
 			<navigation/>
 			<main
 				:class="[
@@ -31,18 +35,18 @@
 
 				<router-view :route="routeWithModal" v-slot="{ Component }">
 					<keep-alive :include="['list.list', 'list.gantt', 'list.table', 'list.kanban']">
-						<component :is="Component" />
+						<component :is="Component"/>
 					</keep-alive>
 				</router-view>
 
 				<transition name="modal">
 					<modal
-						v-if="currentModal" 
+						v-if="currentModal"
 						@close="closeModal()"
 						variant="scrolling"
 						class="task-detail-view-modal"
 					>
-						<component :is="currentModal" />
+						<component :is="currentModal"/>
 					</modal>
 				</transition>
 
@@ -115,16 +119,17 @@ function useRouteWithModal() {
 		}
 	}
 
-	return { routeWithModal, currentModal, closeModal }
+	return {routeWithModal, currentModal, closeModal}
 }
 
-const { routeWithModal, currentModal, closeModal } = useRouteWithModal()
-
+const {routeWithModal, currentModal, closeModal} = useRouteWithModal()
 
 const store = useStore()
 
 const background = computed(() => store.state.background)
+const blurHash = computed(() => store.state.blurHash)
 const menuActive = computed(() => store.state.menuActive)
+const modalActive = computed(() => store.state.modalActive)
 
 function showKeyboardShortcuts() {
 	store.commit(KEYBOARD_SHORTCUTS_ACTIVE, true)
@@ -151,7 +156,7 @@ watch(() => route.name as string, (routeName) => {
 				'migrate.start',
 				'migrate.wunderlist',
 				'namespaces.index',
-			].includes(routeName) || 
+			].includes(routeName) ||
 			routeName.startsWith('user.settings')
 		)
 	) {
@@ -163,7 +168,7 @@ watch(() => route.name as string, (routeName) => {
 
 function useRenewTokenOnFocus() {
 	const router = useRouter()
-	
+
 	const userInfo = computed(() => store.state.auth.info)
 	const authenticated = computed(() => store.state.auth.authenticated)
 
@@ -227,39 +232,41 @@ store.dispatch('labels/loadAllLabels')
 }
 
 .app-container {
-  min-height: calc(100vh - 65px);
+	min-height: calc(100vh - 65px);
 
-  @media screen and (max-width: $tablet) {
-    padding-top: $navbar-height;
-  }
-
-  .app-content {
-    padding: $navbar-height + 1.5rem 1.5rem 1rem 1.5rem;
-
-	// Used to make sure the spinner is always in the middle while loading
-	> .loader-container {
-      min-height: calc(100vh -  #{$navbar-height + 1.5rem + 1rem});
+	@media screen and (max-width: $tablet) {
+		padding-top: $navbar-height;
 	}
 
-    @media screen and (max-width: $tablet) {
-      margin-left: 0;
-      padding-top: 1.5rem;
-      min-height: calc(100vh - 4rem);
-    }
+	.app-content {
+		padding: $navbar-height + 1.5rem 1.5rem 1rem 1.5rem;
+		z-index: 10;
+		position: relative;
 
-    &.is-menu-enabled {
-      margin-left: $navbar-width;
+		// Used to make sure the spinner is always in the middle while loading
+		> .loader-container {
+			min-height: calc(100vh - #{$navbar-height + 1.5rem + 1rem});
+		}
 
-      @media screen and (max-width: $tablet) {
-        min-width: 100%;
-        margin-left: 0;
-      }
-    }
+		@media screen and (max-width: $tablet) {
+			margin-left: 0;
+			padding-top: 1.5rem;
+			min-height: calc(100vh - 4rem);
+		}
 
-    .card {
-      background: var(--white);
-    }
-  }
+		&.is-menu-enabled {
+			margin-left: $navbar-width;
+
+			@media screen and (max-width: $tablet) {
+				min-width: 100%;
+				margin-left: 0;
+			}
+		}
+
+		.card {
+			background: var(--white);
+		}
+	}
 }
 
 .mobile-overlay {
@@ -290,9 +297,18 @@ store.dispatch('labels/loadAllLabels')
 
 	color: var(--grey-500);
 	transition: color $transition;
-	
+
 	@media screen and (max-width: $tablet) {
 		display: none;
+	}
+}
+
+.content-auth {
+	position: relative;
+	z-index: 1;
+
+	&.modal-active {
+		z-index: unset;
 	}
 }
 

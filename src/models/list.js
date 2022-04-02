@@ -20,7 +20,7 @@ export default class ListModel extends AbstractModel {
 
 		this.owner = new UserModel(this.owner)
 
-		if(typeof this.subscription !== 'undefined' && this.subscription !== null) {
+		if (typeof this.subscription !== 'undefined' && this.subscription !== null) {
 			this.subscription = new SubscriptionModel(this.subscription)
 		}
 
@@ -44,6 +44,7 @@ export default class ListModel extends AbstractModel {
 			isFavorite: false,
 			subscription: null,
 			position: 0,
+			backgroundBlurHash: '',
 
 			created: null,
 			updated: null,

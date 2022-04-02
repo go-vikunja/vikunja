@@ -2,28 +2,34 @@
 	<router-link
 		:class="{
 			'has-light-text': !colorIsDark(list.hexColor),
-			'has-background': background !== null
+			'has-background': blurHashUrl !== ''
 		}"
 		:style="{
 			'background-color': list.hexColor,
-			'background-image': background !== null ? `url(${background})` : false,
+			'background-image': blurHashUrl !== null ? `url(${blurHashUrl})` : false,
 		}"
 		:to="{ name: 'list.index', params: { listId: list.id} }"
 		class="list-card"
 		v-if="list !== null && (showArchived ? true : !list.isArchived)"
 	>
-		<div class="is-archived-container">
+		<div
+			class="list-background background-fade-in"
+			:class="{'is-visible': background}"
+			:style="{'background-image': background !== null ? `url(${background})` : false}"></div>
+		<div class="list-content">
+			<div class="is-archived-container">
 			<span class="is-archived" v-if="list.isArchived">
 				{{ $t('namespace.archived') }}
 			</span>
-			<span
-				:class="{'is-favorite': list.isFavorite, 'is-archived': list.isArchived}"
-				@click.stop="toggleFavoriteList(list)"
-				class="favorite">
-				<icon :icon="list.isFavorite ? 'star' : ['far', 'star']" />
+				<span
+					:class="{'is-favorite': list.isFavorite, 'is-archived': list.isArchived}"
+					@click.stop="toggleFavoriteList(list)"
+					class="favorite">
+				<icon :icon="list.isFavorite ? 'star' : ['far', 'star']"/>
 			</span>
+			</div>
+			<div class="title">{{ list.title }}</div>
 		</div>
-		<div class="title">{{ list.title }}</div>
 	</router-link>
 </template>
 
@@ -32,12 +38,14 @@ import {PropType, ref, watch} from 'vue'
 import {useStore} from 'vuex'
 
 import ListService from '@/services/list'
+import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import ListModel from '@/models/list'
 
 const background = ref<string | null>(null)
 const backgroundLoading = ref(false)
+const blurHashUrl = ref('')
 
 const props = defineProps({
 	list: {
@@ -50,11 +58,16 @@ const props = defineProps({
 	},
 })
 
-watch(props.list, loadBackground, { immediate: true })
+watch(props.list, loadBackground, {immediate: true})
 
 async function loadBackground() {
 	if (props.list === null || !props.list.backgroundInformation || backgroundLoading.value) {
 		return
+	}
+
+	const blurHash = await getBlobFromBlurHash(props.list.backgroundBlurHash)
+	if (blurHash) {
+		blurHashUrl.value = window.URL.createObjectURL(blurHash)
 	}
 
 	backgroundLoading.value = true
@@ -81,129 +94,145 @@ function toggleFavoriteList(list: ListModel) {
 
 <style lang="scss" scoped>
 .list-card {
-  cursor: pointer;
-  width: calc((100% - #{($lists-per-row - 1) * 1rem}) / #{$lists-per-row});
-  height: $list-height;
-  background: var(--white);
-  margin: 0 $list-spacing $list-spacing 0;
-  padding: 1rem;
-  border-radius: $radius;
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow $transition;
+	cursor: pointer;
+	width: calc((100% - #{($lists-per-row - 1) * 1rem}) / #{$lists-per-row});
+	height: $list-height;
+	background: var(--white);
+	margin: 0 $list-spacing $list-spacing 0;
+	border-radius: $radius;
+	box-shadow: var(--shadow-sm);
+	transition: box-shadow $transition;
+	position: relative;
+	overflow: hidden;
 
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
+	&.has-light-text .title {
+		color: var(--light);
+	}
 
-  &:hover {
-    box-shadow: var(--shadow-md);
-  }
+	&.has-background, .list-background {
+		background-size: cover;
+		background-repeat: no-repeat;
+		background-position: center;
+	}
 
-  &:active,
-  &:focus,
-  &:focus:not(:active) {
-    box-shadow: var(--shadow-xs) !important;
-  }
+	&.has-background .list-content .title {
+		text-shadow: 0 0 10px var(--black), 1px 1px 5px var(--grey-700), -1px -1px 5px var(--grey-700);
+		color: var(--white);
+	}
 
-  @media screen and (min-width: $widescreen) {
-    &:nth-child(#{$lists-per-row}n) {
-      margin-right: 0;
-    }
-  }
+	.list-background {
+		position: absolute;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+	}
 
-  @media screen and (max-width: $widescreen) and (min-width: $tablet) {
-    $lists-per-row: 3;
-    & {
-      width: calc((100% - #{($lists-per-row - 1) * 1rem}) / #{$lists-per-row});
-    }
+	&:hover {
+		box-shadow: var(--shadow-md);
+	}
 
-    &:nth-child(#{$lists-per-row}n) {
-      margin-right: 0;
-    }
-  }
+	&:active,
+	&:focus,
+	&:focus:not(:active) {
+		box-shadow: var(--shadow-xs) !important;
+	}
 
-  @media screen and (max-width: $tablet) {
-    $lists-per-row: 2;
-    & {
-      width: calc((100% - #{($lists-per-row - 1) * 1rem}) / #{$lists-per-row});
-    }
+	@media screen and (min-width: $widescreen) {
+		&:nth-child(#{$lists-per-row}n) {
+			margin-right: 0;
+		}
+	}
 
-    &:nth-child(#{$lists-per-row}n) {
-      margin-right: 0;
-    }
-  }
+	@media screen and (max-width: $widescreen) and (min-width: $tablet) {
+		$lists-per-row: 3;
+		& {
+			width: calc((100% - #{($lists-per-row - 1) * 1rem}) / #{$lists-per-row});
+		}
 
-  @media screen and (max-width: $mobile) {
-    $lists-per-row: 1;
-    & {
-      width: 100%;
-      margin-right: 0;
-    }
-  }
+		&:nth-child(#{$lists-per-row}n) {
+			margin-right: 0;
+		}
+	}
 
-  .is-archived-container {
-    width: 100%;
-    text-align: right;
+	@media screen and (max-width: $tablet) {
+		$lists-per-row: 2;
+		& {
+			width: calc((100% - #{($lists-per-row - 1) * 1rem}) / #{$lists-per-row});
+		}
 
-    .is-archived {
-      font-size: .75rem;
-      float: left;
-    }
-  }
+		&:nth-child(#{$lists-per-row}n) {
+			margin-right: 0;
+		}
+	}
 
-  .title {
-    align-self: flex-end;
-    font-family: $vikunja-font;
-    font-weight: 400;
-    font-size: 1.5rem;
-    color: var(--text);
-    width: 100%;
-    margin-bottom: 0;
-    max-height: calc(100% - 2rem); // 1rem padding, 1rem height of the "is archived" badge
-    overflow: hidden;
-    text-overflow: ellipsis;
+	@media screen and (max-width: $mobile) {
+		$lists-per-row: 1;
+		& {
+			width: 100%;
+			margin-right: 0;
+		}
+	}
 
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-  }
+	.list-content {
+		display: flex;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		padding: 1rem;
+		position: absolute;
+		height: 100%;
+		width: 100%;
 
-  &.has-light-text .title {
-    color: var(--light);
-  }
+		.is-archived-container {
+			width: 100%;
+			text-align: right;
 
-  &.has-background {
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center;
+			.is-archived {
+				font-size: .75rem;
+				float: left;
+			}
+		}
 
-    .title {
-      text-shadow: 0 0 10px var(--black), 1px 1px 5px var(--grey-700), -1px -1px 5px var(--grey-700);
-      color: var(--white);
-    }
-  }
+		.title {
+			align-self: flex-end;
+			font-family: $vikunja-font;
+			font-weight: 400;
+			font-size: 1.5rem;
+			color: var(--text);
+			width: 100%;
+			margin-bottom: 0;
+			max-height: calc(100% - 2rem); // 1rem padding, 1rem height of the "is archived" badge
+			overflow: hidden;
+			text-overflow: ellipsis;
 
-  .favorite {
-    transition: opacity $transition, color $transition;
-    opacity: 0;
+			display: -webkit-box;
+			-webkit-line-clamp: 3;
+			-webkit-box-orient: vertical;
+		}
 
-    &:hover {
-      color: var(--warning);
-    }
+		.favorite {
+			transition: opacity $transition, color $transition;
+			opacity: 0;
 
-    &.is-archived {
-      display: none;
-    }
+			&:hover {
+				color: var(--warning);
+			}
 
-    &.is-favorite {
-      display: inline-block;
-      opacity: 1;
-      color: var(--warning);
-    }
-  }
+			&.is-archived {
+				display: none;
+			}
 
-  &:hover .favorite {
-    opacity: 1;
-  }
+			&.is-favorite {
+				display: inline-block;
+				opacity: 1;
+				color: var(--warning);
+			}
+		}
+
+		&:hover .favorite {
+			opacity: 1;
+		}
+
+	}
 }
 </style>

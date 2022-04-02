@@ -7,6 +7,7 @@ export default class BackgroundImageModel extends AbstractModel {
 			url: '',
 			thumb: '',
 			info: {},
+			blurHash: '',
 		}
 	}
 }

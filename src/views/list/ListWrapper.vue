@@ -55,7 +55,7 @@ import Message from '@/components/misc/message.vue'
 import ListModel from '@/models/list'
 import ListService from '@/services/list'
 
-import {BACKGROUND, CURRENT_LIST} from '@/store/mutation-types'
+import {BACKGROUND, BLUR_HASH, CURRENT_LIST} from '@/store/mutation-types'
 
 import {getListTitle} from '@/helpers/getListTitle'
 import {saveListToHistory} from '@/modules/listHistory'
@@ -145,6 +145,7 @@ async function loadList(listIdToLoad: number) {
 	const listFromStore = store.getters['lists/getListById'](listData.id)
 	if (listFromStore !== null) {
 		store.commit(BACKGROUND, null)
+		store.commit(BLUR_HASH, null)
 		store.commit(CURRENT_LIST, listFromStore)
 	}
 

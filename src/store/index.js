@@ -1,6 +1,8 @@
 import {createStore} from 'vuex'
+import {getBlobFromBlurHash} from '../helpers/getBlobFromBlurHash'
 import {
 	BACKGROUND,
+	BLUR_HASH,
 	CURRENT_LIST,
 	HAS_TASKS,
 	KEYBOARD_SHORTCUTS_ACTIVE,
@@ -44,10 +46,12 @@ export const store = createStore({
 			isArchived: false,
 		}),
 		background: '',
+		blurHash: '',
 		hasTasks: false,
 		menuActive: true,
 		keyboardShortcutsActive: false,
 		quickActionsActive: false,
+		modalActive: false,
 	},
 	mutations: {
 		[LOADING](state, loading) {
@@ -83,6 +87,12 @@ export const store = createStore({
 		[BACKGROUND](state, background) {
 			state.background = background
 		},
+		[BLUR_HASH](state, blurHash) {
+			state.blurHash = blurHash
+		},
+		modalActive(state, active) {
+			state.modalActive = active
+		},
 	},
 	actions: {
 		async [CURRENT_LIST]({state, commit}, currentList) {
@@ -90,6 +100,7 @@ export const store = createStore({
 			if (currentList === null) {
 				commit(CURRENT_LIST, {})
 				commit(BACKGROUND, null)
+				commit(BLUR_HASH, null)
 				return
 			}
 
@@ -122,10 +133,15 @@ export const store = createStore({
 			) {
 				if (currentList.backgroundInformation) {
 					try {
+						const blurHash = await getBlobFromBlurHash(currentList.backgroundBlurHash)
+						if (blurHash) {
+							commit(BLUR_HASH, window.URL.createObjectURL(blurHash))
+						}
+
 						const listService = new ListService()
 						const background = await listService.background(currentList)
 						commit(BACKGROUND, background)
-					} catch(e) {
+					} catch (e) {
 						console.error('Error getting background image for list', currentList.id, e)
 					}
 				}
@@ -133,6 +149,7 @@ export const store = createStore({
 
 			if (typeof currentList.backgroundInformation === 'undefined' || currentList.backgroundInformation === null) {
 				commit(BACKGROUND, null)
+				commit(BLUR_HASH, null)
 			}
 
 			commit(CURRENT_LIST, currentList)
