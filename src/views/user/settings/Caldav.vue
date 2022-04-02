@@ -91,7 +91,7 @@ service.getAll().then((result: CaldavTokenModel[]) => {
 
 const newToken = ref<CaldavTokenModel>()
 async function createToken() {
-	newToken.value = await service.create() as CaldavTokenModel
+	newToken.value = await service.create({}) as CaldavTokenModel
 	tokens.value.push(newToken.value)
 }
 
