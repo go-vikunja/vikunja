@@ -103,9 +103,16 @@
         "disableSuccess": "Two factor authentication was sucessfully disabled."
       },
       "caldav": {
-        "title": "Caldav",
-        "howTo": "You can connect Vikunja to caldav clients to view and manage all tasks from different clients. Enter this url into your client:",
-        "more": "More information about caldav in Vikunja"
+        "title": "CalDAV",
+        "howTo": "You can connect Vikunja to CalDAV clients to view and manage all tasks from different clients. Enter this url into your client:",
+        "more": "More information about CalDAV in Vikunja",
+        "tokens": "CalDAV Tokens",
+        "tokensHowTo": "You can use a CalDAV token to use instead of a password to log in the above endpoint.",
+        "createToken": "Create a token",
+        "tokenCreated": "Here is your token: {token}",
+        "wontSeeItAgain": "Write it down, you won't be able to see it again.",
+        "mustUseToken": "You need to create a CalDAV token if you want to use CalDAV with a third party client. Use the token as the password.",
+        "usernameIs": "Your username is: {0}"
       },
       "avatar": {
         "title": "Avatar",
@@ -486,7 +493,10 @@
     "hideMenu": "Hide the menu",
     "forExample": "For example:",
     "welcomeBack": "Welcome Back!",
-    "custom": "Custom"
+    "custom": "Custom",
+    "id": "ID",
+    "created": "Created at",
+    "actions": "Actions"
   },
   "input": {
     "resetColor": "Reset Color",
