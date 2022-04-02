@@ -134,12 +134,13 @@ async function loadList(listIdToLoad: number) {
 		)
 		&& typeof currentList.value !== 'undefined' && currentList.value.maxRight !== null
 	) {
+		loadedListId.value = props.listId
 		return
 	}
 
 	console.debug(`Loading list, props.viewName = ${props.viewName}, $route.params =`, route.params, `, loadedListId = ${loadedListId.value}, currentList = `, currentList.value)
 
-	// Put set the current list to the one we're about to load so that the title is already shown at the top
+	// Set the current list to the one we're about to load so that the title is already shown at the top
 	loadedListId.value = 0
 	const listFromStore = store.getters['lists/getListById'](listData.id)
 	if (listFromStore !== null) {
