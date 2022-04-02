@@ -737,6 +737,7 @@
       "deleteText1": "Are you sure you want to delete this task relation?",
       "deleteText2": "This cannot be undone!",
       "select": "Select a relation kind",
+      "taskRequired": "Please select a task or enter a new task title.",
       "kinds": {
         "subtask": "Subtask | Subtasks",
         "parenttask": "Parent Task | Parent Tasks",

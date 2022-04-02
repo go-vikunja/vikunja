@@ -35,7 +35,6 @@ export function error(e, actions = []) {
 		text: getErrorText(e),
 		actions: actions,
 	})
-	console.error(e, actions)
 }
 
 export function success(e, actions = []) {

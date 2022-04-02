@@ -83,7 +83,8 @@
 			<span class="title">{{ rts.title }}</span>
 			<div class="tasks">
 				<div :key="t.id" class="task" v-for="t in rts.tasks">
-					<router-link :to="{ name: $route.name, params: { id: t.id } }" :class="{ 'is-strikethrough': t.done}">
+					<router-link :to="{ name: $route.name, params: { id: t.id } }"
+								 :class="{ 'is-strikethrough': t.done}">
 						<span
 							class="different-list"
 							v-if="t.listId !== listId"
@@ -156,6 +157,7 @@ export default {
 			relationToDelete: {},
 			saved: false,
 			showNewRelationForm: false,
+			query: '',
 		}
 	},
 	components: {
@@ -211,10 +213,20 @@ export default {
 	},
 	methods: {
 		async findTasks(query) {
+			this.query = query
 			this.foundTasks = await this.taskService.getAll({}, {s: query})
 		},
 
 		async addTaskRelation() {
+			if (this.newTaskRelationTask.id === 0 && this.query !== '') {
+				return this.createAndRelateTask(this.query)
+			}
+
+			if (this.newTaskRelationTask.id === 0) {
+				this.$message.error({message: this.$t('task.relation.taskRequired')})
+				return
+			}
+
 			const rel = new TaskRelationModel({
 				taskId: this.taskId,
 				otherTaskId: this.newTaskRelationTask.id,
