@@ -160,7 +160,7 @@
 import {ref, computed, onMounted, onBeforeMount} from 'vue'
 import {useStore} from 'vuex'
 import draggable from 'vuedraggable'
-import { SortableEvent } from 'sortablejs'
+import {SortableEvent} from 'sortablejs'
 
 import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
 import NamespaceSettingsDropdown from '@/components/namespace/namespace-settings-dropdown.vue'
@@ -170,7 +170,7 @@ import Logo from '@/components/home/Logo.vue'
 import {MENU_ACTIVE} from '@/store/mutation-types'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
-import { useEventListener } from '@vueuse/core'
+import {useEventListener} from '@vueuse/core'
 import NamespaceModel from '@/models/namespace'
 import ListModel from '@/models/list'
 
@@ -196,7 +196,7 @@ const activeLists = computed(() => {
 		})
 	})
 })
-	
+
 const namespaceTitles = computed(() => {
 	return namespaces.value.map((namespace) => getNamespaceTitle(namespace))
 })
@@ -228,7 +228,7 @@ function toggleLists(namespaceId: number) {
 	listsVisible.value[namespaceId] = !listsVisible.value[namespaceId]
 }
 
-const listsVisible = ref<{ [id: NamespaceModel['id']]: boolean}>({})
+const listsVisible = ref<{ [id: NamespaceModel['id']]: boolean }>({})
 // FIXME: async action will be unfinished when component mounts
 onBeforeMount(async () => {
 	const namespaces = await store.dispatch('namespaces/loadNamespaces') as NamespaceModel[]
@@ -256,13 +256,14 @@ function updateActiveLists(namespace: NamespaceModel, activeLists: ListModel[]) 
 	})
 }
 
-const listUpdating = ref<{ [id: NamespaceModel['id']]: boolean}>({})
+const listUpdating = ref<{ [id: NamespaceModel['id']]: boolean }>({})
+
 async function saveListPosition(e: SortableEvent) {
 	if (!e.newIndex) return
 
 	const namespaceId = parseInt(e.to.dataset.namespaceId as string)
 	const newNamespaceIndex = parseInt(e.to.dataset.namespaceIndex as string)
-		
+
 	const listsActive = activeLists.value[newNamespaceIndex]
 	const list = listsActive[e.newIndex]
 	const listBefore = listsActive[e.newIndex - 1] ?? null
@@ -294,7 +295,6 @@ $vikunja-nav-color: var(--grey-700);
 $vikunja-nav-selected-width: 0.4rem;
 
 .namespace-container {
-	z-index: 6;
 	background: $vikunja-nav-background;
 	color: $vikunja-nav-color;
 	padding: 0 0 1rem;
@@ -307,10 +307,10 @@ $vikunja-nav-selected-width: 0.4rem;
 	overflow-x: auto;
 	width: $navbar-width;
 
-
 	@media screen and (max-width: $tablet) {
 		top: 0;
 		width: 70vw;
+		z-index: 20;
 	}
 
 	&.is-active {

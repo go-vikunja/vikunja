@@ -1,5 +1,5 @@
 <template>
-	<div class="content-auth" :class="{'modal-active': modalActive}">
+	<div class="content-auth" :class="{'z-unset': modalActive}">
 		<BaseButton
 			v-if="menuActive"
 			@click="$store.commit('menuActive', false)"
@@ -306,10 +306,11 @@ store.dispatch('labels/loadAllLabels')
 .content-auth {
 	position: relative;
 	z-index: 1;
+}
 
-	&.modal-active {
-		z-index: unset;
-	}
+.is-touch .content-auth,
+.content-auth.z-unset {
+	z-index: unset;
 }
 
 @include modal-transition();
