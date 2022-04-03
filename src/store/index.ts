@@ -95,64 +95,40 @@ export const store = createStore({
 		},
 	},
 	actions: {
-		async [CURRENT_LIST]({state, commit}, currentList) {
+		async [CURRENT_LIST]({state, commit}, {list, forceUpdate = false}) {
 
-			if (currentList === null) {
+			if (list === null) {
 				commit(CURRENT_LIST, {})
 				commit(BACKGROUND, null)
 				commit(BLUR_HASH, null)
 				return
 			}
 
-			// Not sure if this is the right way to do it but hey, it works
-			if (
-				// List changed
-				currentList.id !== state.currentList.id ||
-				// The current list got a new background and didn't have one previously
-				(
-					currentList.backgroundInformation &&
-					!state.currentList.backgroundInformation
-				) ||
-				// The current list got a new background and had one previously
-				(
-					currentList.backgroundInformation &&
-					currentList.backgroundInformation.unsplashId &&
-					state.currentList &&
-					state.currentList.backgroundInformation &&
-					state.currentList.backgroundInformation.unsplashId &&
-					currentList.backgroundInformation.unsplashId !== state.currentList.backgroundInformation.unsplashId
-				) ||
-				// The new list has a background which is not an unsplash one and did not have one previously
-				(
-					currentList.backgroundInformation &&
-					currentList.backgroundInformation.type &&
-					state.currentList &&
-					state.currentList.backgroundInformation &&
-					state.currentList.backgroundInformation.type
-				)
-			) {
-				if (currentList.backgroundInformation) {
+			// The forceUpdate parameter is used only when updating a list background directly because in that case 
+			// the current list stays the same, but we want to show the new background right away.
+			if (list.id !== state.currentList.id || forceUpdate) {
+				if (list.backgroundInformation) {
 					try {
-						const blurHash = await getBlobFromBlurHash(currentList.backgroundBlurHash)
+						const blurHash = await getBlobFromBlurHash(list.backgroundBlurHash)
 						if (blurHash) {
 							commit(BLUR_HASH, window.URL.createObjectURL(blurHash))
 						}
 
 						const listService = new ListService()
-						const background = await listService.background(currentList)
+						const background = await listService.background(list)
 						commit(BACKGROUND, background)
 					} catch (e) {
-						console.error('Error getting background image for list', currentList.id, e)
+						console.error('Error getting background image for list', list.id, e)
 					}
 				}
 			}
 
-			if (typeof currentList.backgroundInformation === 'undefined' || currentList.backgroundInformation === null) {
+			if (typeof list.backgroundInformation === 'undefined' || list.backgroundInformation === null) {
 				commit(BACKGROUND, null)
 				commit(BLUR_HASH, null)
 			}
 
-			commit(CURRENT_LIST, currentList)
+			commit(CURRENT_LIST, list)
 		},
 		async loadApp({dispatch}) {
 			await checkAndSetApiUrl(window.API_URL)

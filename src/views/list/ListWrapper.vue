@@ -146,14 +146,14 @@ async function loadList(listIdToLoad: number) {
 	if (listFromStore !== null) {
 		store.commit(BACKGROUND, null)
 		store.commit(BLUR_HASH, null)
-		store.commit(CURRENT_LIST, listFromStore)
+		store.dispatch(CURRENT_LIST, {list: listFromStore})
 	}
 
 	// We create an extra list object instead of creating it in list.value because that would trigger a ui update which would result in bad ux.
 	const list = new ListModel(listData)
 	try {
 		const loadedList = await listService.value.get(list)
-		await store.dispatch(CURRENT_LIST, loadedList)
+		await store.dispatch(CURRENT_LIST, {list: loadedList})
 	} finally {
 		loadedListId.value = props.listId
 	}

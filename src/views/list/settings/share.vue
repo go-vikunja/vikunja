@@ -61,7 +61,7 @@ const userIsAdmin = computed(() => 'owner' in list.value && list.value.owner.id 
 async function loadList(listId: number) {
 	const listService = new ListService()
 	const newList = await listService.get(new ListModel({id: listId}))
-	await store.dispatch(CURRENT_LIST, newList)
+	await store.dispatch(CURRENT_LIST, {list: newList})
 	list.value = newList
 }
 

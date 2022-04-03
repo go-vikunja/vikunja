@@ -520,7 +520,7 @@ export default defineComponent({
 			handler(parent) {
 				const parentList = parent !== null ? parent.list : null
 				if (parentList !== null) {
-					this.$store.commit(CURRENT_LIST, parentList)
+					this.$store.dispatch(CURRENT_LIST, {list: parentList})
 				}
 			},
 			immediate: true,
