@@ -73,6 +73,7 @@ export function useTaskList(listId) {
 
 	const tasks = ref([])
 	async function loadTasks() {
+		tasks.value = []
 		tasks.value = await taskCollectionService.getAll(...getAllTasksParams.value)
 		return tasks.value
 	}
