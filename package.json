@@ -26,7 +26,7 @@
     "@types/sortablejs": "1.10.7",
     "@vue/compat": "3.2.31",
     "@vueuse/core": "8.2.4",
-    "@vueuse/router": "8.2.3",
+    "@vueuse/router": "8.2.4",
     "blurhash": "1.1.5",
     "bulma-css-variables": "0.9.33",
     "camel-case": "4.1.2",
