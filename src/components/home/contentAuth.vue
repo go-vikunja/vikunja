@@ -160,7 +160,7 @@ watch(() => route.name as string, (routeName) => {
 			routeName.startsWith('user.settings')
 		)
 	) {
-		store.dispatch(CURRENT_LIST, null)
+		store.dispatch(CURRENT_LIST, {list: null})
 	}
 })
 
