@@ -2286,6 +2286,11 @@
   resolved "https://registry.yarnpkg.com/@netlify/plugins-list/-/plugins-list-6.17.0.tgz#fd6ff86a81de0f2b4bc14ec2f0f5f9431ec54bd6"
   integrity sha512-XQMijnVOxbZwkOeSzUZ8Hwon8WIv9uka5R6+mjJs25lcFiTscA8HqHWjhSHf2xPSrcKopJm4BNJZja5YHV3NQg==
 
+"@netlify/plugins-list@^6.18.1":
+  version "6.18.1"
+  resolved "https://registry.yarnpkg.com/@netlify/plugins-list/-/plugins-list-6.18.1.tgz#f96396c818b98c6c59c6b081b0484daff76fb4e2"
+  integrity sha512-4aAF+lpoBYOIVMuTxge2YNjNKdMxnsV1equq0VtknBW6EGJ9yFiTPyL0NU0MXDWTWk7dNu8tS5+Uw7LN7+sgcg==
+
 "@netlify/routing-local-proxy-darwin-arm64@^0.34.1":
   version "0.34.1"
   resolved "https://registry.yarnpkg.com/@netlify/routing-local-proxy-darwin-arm64/-/routing-local-proxy-darwin-arm64-0.34.1.tgz#5c8160f7b8dc75dabfd15ac3b02b205659b5b820"
@@ -9773,17 +9778,17 @@ nested-error-stacks@^2.0.0, nested-error-stacks@^2.1.0:
   resolved "https://registry.yarnpkg.com/nested-error-stacks/-/nested-error-stacks-2.1.0.tgz#0fbdcf3e13fe4994781280524f8b96b0cdff9c61"
   integrity sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==
 
-netlify-cli@9.13.5:
-  version "9.13.5"
-  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-9.13.5.tgz#b371b8471295ddeddb232a8770df0a0f78a1e891"
-  integrity sha512-w774DeWrpcHtK4ObgZhD/8YaMQ75lSfe/Up+PIAtXCC4IcKiaYenUETrdfCsIpy5vkZhPMcQnccA7T0/J2cgqA==
+netlify-cli@9.16.1:
+  version "9.16.1"
+  resolved "https://registry.yarnpkg.com/netlify-cli/-/netlify-cli-9.16.1.tgz#4fb26042df27e134f118d032a261000b500fba53"
+  integrity sha512-f7WZ4iaFppmQBRjL9dZPg+4Ao1DLqzdSdk4oj+LYa+GbUltj5EoUrNyfwL4WU6pekoIITOaBf5XoMqsAP32t1Q==
   dependencies:
     "@netlify/build" "^26.5.1"
     "@netlify/config" "^17.0.19"
     "@netlify/framework-info" "^9.0.2"
     "@netlify/local-functions-proxy" "^1.1.1"
     "@netlify/plugin-edge-handlers" "^3.0.7"
-    "@netlify/plugins-list" "^6.17.0"
+    "@netlify/plugins-list" "^6.18.1"
     "@netlify/routing-local-proxy" "^0.34.1"
     "@netlify/zip-it-and-ship-it" "^5.9.0"
     "@octokit/rest" "^18.0.0"
