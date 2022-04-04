@@ -104,8 +104,15 @@
       },
       "caldav": {
         "title": "CalDAV",
-        "howTo": "Ты можешь подключить Vikunja к клиентам CalDAV, чтобы просматривать и управлять всеми задачами из разных клиентов. Введи этот URL в свой клиент:",
-        "more": "Подробнее о CalDAV в Vikunja"
+        "howTo": "You can connect Vikunja to CalDAV clients to view and manage all tasks from different clients. Enter this url into your client:",
+        "more": "More information about CalDAV in Vikunja",
+        "tokens": "CalDAV Tokens",
+        "tokensHowTo": "You can use a CalDAV token to use instead of a password to log in the above endpoint.",
+        "createToken": "Create a token",
+        "tokenCreated": "Here is your token: {token}",
+        "wontSeeItAgain": "Write it down, you won't be able to see it again.",
+        "mustUseToken": "You need to create a CalDAV token if you want to use CalDAV with a third party client. Use the token as the password.",
+        "usernameIs": "Your username is: {0}"
       },
       "avatar": {
         "title": "Аватар",
@@ -486,7 +493,10 @@
     "hideMenu": "Hide the menu",
     "forExample": "For example:",
     "welcomeBack": "Welcome Back!",
-    "custom": "Custom"
+    "custom": "Custom",
+    "id": "ID",
+    "created": "Created at",
+    "actions": "Actions"
   },
   "input": {
     "resetColor": "Сбросить цвет",
@@ -734,6 +744,7 @@
       "deleteText1": "Удалить эту связь с задачей?",
       "deleteText2": "Это действие отменить нельзя!",
       "select": "Select a relation kind",
+      "taskRequired": "Please select a task or enter a new task title.",
       "kinds": {
         "subtask": "Subtask | Subtasks",
         "parenttask": "Parent Task | Parent Tasks",

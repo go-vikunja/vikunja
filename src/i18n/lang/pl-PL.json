@@ -103,9 +103,16 @@
         "disableSuccess": "Uwierzytelnianie dwuskładnikowe zostało pomyślnie wyłączone."
       },
       "caldav": {
-        "title": "Caldav",
-        "howTo": "Możesz połączyć Vikunja z klientami caldav, aby przeglądać i zarządzać wszystkimi zadaniami z różnych klientów. Wprowadź ten adres URL do swojego klienta:",
-        "more": "Więcej informacji o CalDAV w Vikunji"
+        "title": "CalDAV",
+        "howTo": "You can connect Vikunja to CalDAV clients to view and manage all tasks from different clients. Enter this url into your client:",
+        "more": "More information about CalDAV in Vikunja",
+        "tokens": "CalDAV Tokens",
+        "tokensHowTo": "You can use a CalDAV token to use instead of a password to log in the above endpoint.",
+        "createToken": "Create a token",
+        "tokenCreated": "Here is your token: {token}",
+        "wontSeeItAgain": "Write it down, you won't be able to see it again.",
+        "mustUseToken": "You need to create a CalDAV token if you want to use CalDAV with a third party client. Use the token as the password.",
+        "usernameIs": "Your username is: {0}"
       },
       "avatar": {
         "title": "Awatar",
@@ -486,7 +493,10 @@
     "hideMenu": "Ukryj menu",
     "forExample": "Na przykład:",
     "welcomeBack": "Witaj ponownie!",
-    "custom": "Custom"
+    "custom": "Custom",
+    "id": "ID",
+    "created": "Created at",
+    "actions": "Actions"
   },
   "input": {
     "resetColor": "Resetuj kolor",
@@ -734,6 +744,7 @@
       "deleteText1": "Czy na pewno chcesz usunąć to powiązane zadanie?",
       "deleteText2": "Tego nie da się cofnąć!",
       "select": "Wybierz rodzaj powiązanego zadania",
+      "taskRequired": "Please select a task or enter a new task title.",
       "kinds": {
         "subtask": "Podzadanie | Podzadania",
         "parenttask": "Zadanie nadrzędne | Zadania nadrzędne",

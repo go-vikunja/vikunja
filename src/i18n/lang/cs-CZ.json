@@ -104,8 +104,15 @@
       },
       "caldav": {
         "title": "CalDAV",
-        "howTo": "Můžete propojit Vikunja s klienty CalDAV a prohlížet a spravovat všechny úkoly v nich. Zadejte tuto url do klienta:",
-        "more": "Více informací o CalDAV ve Vikunja"
+        "howTo": "You can connect Vikunja to CalDAV clients to view and manage all tasks from different clients. Enter this url into your client:",
+        "more": "More information about CalDAV in Vikunja",
+        "tokens": "CalDAV Tokens",
+        "tokensHowTo": "You can use a CalDAV token to use instead of a password to log in the above endpoint.",
+        "createToken": "Create a token",
+        "tokenCreated": "Here is your token: {token}",
+        "wontSeeItAgain": "Write it down, you won't be able to see it again.",
+        "mustUseToken": "You need to create a CalDAV token if you want to use CalDAV with a third party client. Use the token as the password.",
+        "usernameIs": "Your username is: {0}"
       },
       "avatar": {
         "title": "Avatar",
@@ -486,7 +493,10 @@
     "hideMenu": "Skrýt nabídku",
     "forExample": "Například:",
     "welcomeBack": "Vítejte zpět!",
-    "custom": "Custom"
+    "custom": "Custom",
+    "id": "ID",
+    "created": "Created at",
+    "actions": "Actions"
   },
   "input": {
     "resetColor": "Obnovit barvu",
@@ -734,6 +744,7 @@
       "deleteText1": "Jste si jisti, že chcete odstranit tento vztah úkolu?",
       "deleteText2": "Toto nelze vrátit!",
       "select": "Vyberte typ vztahu",
+      "taskRequired": "Please select a task or enter a new task title.",
       "kinds": {
         "subtask": "Podúkol | Podúkoly",
         "parenttask": "Nadřazený úkol | Nadřazené úkoly",

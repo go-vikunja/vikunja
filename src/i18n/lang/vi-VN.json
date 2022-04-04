@@ -103,9 +103,16 @@
         "disableSuccess": "Xác thực hai lớp đã bị vô hiệu hóa thành công."
       },
       "caldav": {
-        "title": "Giao thức CalDAV",
-        "howTo": "Bạn có thể kết nối Vikunja tới các máy khách CalDAV để xem và quản lý tất cả các công việc từ nhiều máy khách khác nhau. Nhập URL này vào ứng dụng khách của bạn:",
-        "more": "Tìm hiểu thêm về CalDAV"
+        "title": "CalDAV",
+        "howTo": "You can connect Vikunja to CalDAV clients to view and manage all tasks from different clients. Enter this url into your client:",
+        "more": "More information about CalDAV in Vikunja",
+        "tokens": "CalDAV Tokens",
+        "tokensHowTo": "You can use a CalDAV token to use instead of a password to log in the above endpoint.",
+        "createToken": "Create a token",
+        "tokenCreated": "Here is your token: {token}",
+        "wontSeeItAgain": "Write it down, you won't be able to see it again.",
+        "mustUseToken": "You need to create a CalDAV token if you want to use CalDAV with a third party client. Use the token as the password.",
+        "usernameIs": "Your username is: {0}"
       },
       "avatar": {
         "title": "Avatar",
@@ -486,7 +493,10 @@
     "hideMenu": "Ẩn menu",
     "forExample": "Ví dụ:",
     "welcomeBack": "Mừng quá! Bạn trở lại rồi.",
-    "custom": "Tuỳ chỉnh"
+    "custom": "Tuỳ chỉnh",
+    "id": "ID",
+    "created": "Created at",
+    "actions": "Actions"
   },
   "input": {
     "resetColor": "Đặt lại màu",
@@ -734,6 +744,7 @@
       "deleteText1": "Bạn có chắc muốn xóa công việc liên quan này không?",
       "deleteText2": "Việc này không thể hoàn tác!",
       "select": "Chọn kiểu liên kết",
+      "taskRequired": "Please select a task or enter a new task title.",
       "kinds": {
         "subtask": "Công việc con | Công việc con",
         "parenttask": "Công việc gốc | Công việc gốc",

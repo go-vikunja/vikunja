@@ -103,9 +103,16 @@
         "disableSuccess": "Authenticatie in twee stappen is succesvol uitgeschakeld."
       },
       "caldav": {
-        "title": "Caldav",
-        "howTo": "Je kan Vikunja verbinden met CalDAVclients om alle taken van verschillende clients te bekijken en beheren. Voer deze url in bij je client:",
-        "more": "Meer informatie over CalDAV in Vikunja"
+        "title": "CalDAV",
+        "howTo": "You can connect Vikunja to CalDAV clients to view and manage all tasks from different clients. Enter this url into your client:",
+        "more": "More information about CalDAV in Vikunja",
+        "tokens": "CalDAV Tokens",
+        "tokensHowTo": "You can use a CalDAV token to use instead of a password to log in the above endpoint.",
+        "createToken": "Create a token",
+        "tokenCreated": "Here is your token: {token}",
+        "wontSeeItAgain": "Write it down, you won't be able to see it again.",
+        "mustUseToken": "You need to create a CalDAV token if you want to use CalDAV with a third party client. Use the token as the password.",
+        "usernameIs": "Your username is: {0}"
       },
       "avatar": {
         "title": "Avatar",
@@ -486,7 +493,10 @@
     "hideMenu": "Menu verbergen",
     "forExample": "Bijvoorbeeld:",
     "welcomeBack": "Welkom terug!",
-    "custom": "Custom"
+    "custom": "Custom",
+    "id": "ID",
+    "created": "Created at",
+    "actions": "Actions"
   },
   "input": {
     "resetColor": "Kleur resetten",
@@ -734,6 +744,7 @@
       "deleteText1": "Weet je zeker dat je deze taakrelatie wilt verwijderen?",
       "deleteText2": "Dit kan niet ongedaan worden gemaakt!",
       "select": "Selecteer een relatietype",
+      "taskRequired": "Please select a task or enter a new task title.",
       "kinds": {
         "subtask": "Subtask | Subtasks",
         "parenttask": "Parent Task | Parent Tasks",

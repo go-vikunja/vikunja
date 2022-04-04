@@ -104,8 +104,15 @@
       },
       "caldav": {
         "title": "CalDAV",
-        "howTo": "Du chasch Vikunja zu CalDAV Applikatione verbinde, um dini Uufgabe vo verschidene Gräät zgseh. Gib die Url i dim Client iih:",
-        "more": "Meh Informatione über CalDAV in Vikunja"
+        "howTo": "Du kannst Vikunja mit CalDAV-Clients verbinden, um alle Aufgaben mit verschiedenen Clients anzuzeigen und zu verwalten. Gebe dazu diese Url in deine Client ein:",
+        "more": "Weitere Informationen über CalDAV in Vikunja",
+        "tokens": "CalDAV-Token",
+        "tokensHowTo": "Du kannst für den obigen Endpunkt einen CalDAV Token anstelle deines Passwortes verwenden.",
+        "createToken": "Token erstellen",
+        "tokenCreated": "Hier ist dein Token: {token}",
+        "wontSeeItAgain": "Notiere dir den Token, er kann nicht wieder angezeigt werden.",
+        "mustUseToken": "Du musst einen CalDAV Token erstellen um CalDAV mit einem Drittanbieter-Client zu nutzen. Verwende diesen Token anstelle deines Passworts.",
+        "usernameIs": "Dein Benutzername lautet: {0}"
       },
       "avatar": {
         "title": "Herr Der Elemente",
@@ -486,7 +493,10 @@
     "hideMenu": "Menü ausblenden",
     "forExample": "Zum Beispiel:",
     "welcomeBack": "Willkommen zurück!",
-    "custom": "Benutzerdefiniert"
+    "custom": "Benutzerdefiniert",
+    "id": "ID",
+    "created": "Erstellt am",
+    "actions": "Aktionen"
   },
   "input": {
     "resetColor": "Farb zruggsetze",
@@ -734,6 +744,7 @@
       "deleteText1": "Bisch du dir sicher, dass du die Zueghörigkeit chüblä wetsch?",
       "deleteText2": "Das chan nid rückgängig gmacht werde!",
       "select": "Beziehungsart auswählen",
+      "taskRequired": "Bitte wähle eine Aufgabe aus oder gib einen neuen Aufgabentitel ein.",
       "kinds": {
         "subtask": "Unteraufgabe | Unteraufgaben",
         "parenttask": "Übergeordnete Aufgabe | Übergeordnete Aufgaben",
