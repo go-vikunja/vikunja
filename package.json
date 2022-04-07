@@ -20,8 +20,8 @@
   "dependencies": {
     "@github/hotkey": "2.0.0",
     "@kyvg/vue3-notification": "2.3.4",
-    "@sentry/tracing": "6.19.5",
-    "@sentry/vue": "6.19.5",
+    "@sentry/tracing": "6.19.6",
+    "@sentry/vue": "6.19.6",
     "@types/is-touch-device": "1.0.0",
     "@types/sortablejs": "1.10.7",
     "@vue/compat": "3.2.31",
