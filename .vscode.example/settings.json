@@ -1,5 +1,5 @@
 {
-  "eslint.packageManager": "yarn",
+  "eslint.packageManager": "pnpm",
   "editor.formatOnSave": false,
   "editor.codeActionsOnSave": {
     "source.fixAll": true
