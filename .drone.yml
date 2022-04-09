@@ -20,63 +20,44 @@ services:
 
 steps:
 # Disabled until we figure out why it is so slow
-#  - name: restore-cache
-#    image: meltwater/drone-cache:dev
-#    pull: true
-#    environment:
-#      AWS_ACCESS_KEY_ID:
-#        from_secret: cache_aws_access_key_id
-#      AWS_SECRET_ACCESS_KEY:
-#        from_secret: cache_aws_secret_access_key
-#    settings:
-#      restore: true
-#      bucket: kolaente.dev-drone-dependency-cache
-#      endpoint: https://s3.fr-par.scw.cloud
-#      region: fr-par
-#      path_style: true
-#      cache_key: '{{ .Repo.Name }}_{{ checksum "pnpm-lock.yaml" }}_{{ arch }}_{{ os }}'
-#      mount:
-#        - '.cache'
+  - name: restore-cache
+    image: meltwater/drone-cache:dev
+    pull: true
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: cache_aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: cache_aws_secret_access_key
+    settings:
+      debug: true
+      restore: true
+      bucket: kolaente.dev-drone-dependency-cache
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      cache_key: '{{ .Repo.Name }}_{{ checksum "pnpm-lock.yaml" }}_{{ arch }}_{{ os }}'
+      mount:
+        - .cache
 
   - name: dependencies
     image: node:18-alpine
     pull: true
     environment:
-      PNPM_CACHE_FOLDER: .cache/pnpm/
-      CYPRESS_CACHE_FOLDER: .cache/cypress/
+      PNPM_CACHE_FOLDER: .cache/pnpm
+      CYPRESS_CACHE_FOLDER: .cache/cypress
     commands:
-      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/.pnpm
+      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000
-#    depends_on:
-#      - restore-cache
-
-#  - name: rebuild-cache
-#    image: meltwater/drone-cache:dev
-#    pull: true
-#    environment:
-#      AWS_ACCESS_KEY_ID:
-#        from_secret: cache_aws_access_key_id
-#      AWS_SECRET_ACCESS_KEY:
-#        from_secret: cache_aws_secret_access_key
-#    settings:
-#      rebuild: true
-#      bucket: kolaente.dev-drone-dependency-cache
-#      endpoint: https://s3.fr-par.scw.cloud
-#      region: fr-par
-#      path_style: true
-#      cache_key: '{{ .Repo.Name }}_{{ checksum "pnpm-lock.yaml" }}_{{ arch }}_{{ os }}'
-#      mount:
-#        - '.cache'
-#    depends_on:
-#      - dependencies
+    depends_on:
+      - restore-cache
 
   - name: lint
     image: node:18-alpine
     pull: true
     environment:
-      PNPM_CACHE_FOLDER: .cache/pnpm/
+      PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
-      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/.pnpm
+      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/pnpm
       - pnpm run lint
     depends_on:
       - dependencies
@@ -85,9 +66,9 @@ steps:
     image: node:18-alpine
     pull: true
     environment:
-      PNPM_CACHE_FOLDER: .cache/pnpm/
+      PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
-      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/.pnpm
+      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/pnpm
       - pnpm run build
     depends_on:
       - dependencies
@@ -96,7 +77,7 @@ steps:
     image: node:18-alpine
     pull: true
     commands:
-      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/.pnpm
+      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/pnpm
       - pnpm run test:unit
     depends_on:
       - dependencies
@@ -106,9 +87,9 @@ steps:
     image: node:18-alpine
     pull: true
     environment:
-      PNPM_CACHE_FOLDER: .cache/pnpm/
+      PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
-      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/.pnpm
+      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/pnpm
       - pnpm run typecheck
     depends_on:
       - dependencies
@@ -119,18 +100,38 @@ steps:
     environment:
       CYPRESS_API_URL: http://api:3456/api/v1
       CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB
-      PNPM_CACHE_FOLDER: .cache/pnpm/
-      CYPRESS_CACHE_FOLDER: .cache/cypress/
+      PNPM_CACHE_FOLDER: .cache/pnpm
+      CYPRESS_CACHE_FOLDER: .cache/cypress
       CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000
       CYPRESS_RECORD_KEY:
         from_secret: cypress_project_key
     commands:
       - sed -i 's/localhost/api/g' dist/index.html
-      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/.pnpm
+      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/pnpm
       - pnpm run serve:dist & npx wait-on http://localhost:4173
       - pnpm run test:frontend --browser chrome --record
     depends_on:
       - build-prod
+
+  - name: rebuild-cache
+    image: meltwater/drone-cache:dev
+    pull: true
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: cache_aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: cache_aws_secret_access_key
+    settings:
+      rebuild: true
+      bucket: kolaente.dev-drone-dependency-cache
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      cache_key: '{{ .Repo.Name }}_{{ checksum "pnpm-lock.yaml" }}_{{ arch }}_{{ os }}'
+      mount:
+        - .cache
+    depends_on:
+      - dependencies
 
   - name: deploy-preview
     image: node:18-alpine
@@ -175,30 +176,30 @@ steps:
     commands:
       - git fetch --tags
 
-#  - name: restore-cache
-#    image: meltwater/drone-cache:dev
-#    pull: true
-#    environment:
-#      AWS_ACCESS_KEY_ID:
-#        from_secret: cache_aws_access_key_id
-#      AWS_SECRET_ACCESS_KEY:
-#        from_secret: cache_aws_secret_access_key
-#    settings:
-#      restore: true
-#      bucket: kolaente.dev-drone-dependency-cache
-#      endpoint: https://s3.fr-par.scw.cloud
-#      region: fr-par
-#      path_style: true
-#      cache_key: '{{ .Repo.Name }}_{{ checksum "pnpm-lock.yaml" }}_{{ arch }}_{{ os }}'
-#      mount:
-#        - '.cache'
+  - name: restore-cache
+    image: meltwater/drone-cache:dev
+    pull: true
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: cache_aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: cache_aws_secret_access_key
+    settings:
+      restore: true
+      bucket: kolaente.dev-drone-dependency-cache
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      cache_key: '{{ .Repo.Name }}_{{ checksum "pnpm-lock.yaml" }}_{{ arch }}_{{ os }}'
+      mount:
+        - .cache
 
   - name: build
     image: node:18-alpine
     pull: true
     group: build-static
     environment:
-      PNPM_CACHE_FOLDER: .cache/pnpm/
+      PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
       - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/.pnp
       - pnpm install --fetch-timeout 100000
@@ -206,8 +207,8 @@ steps:
       - "echo '{\"VERSION\": \"'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'\"}' > src/version.json"
       - pnpm run build
       - sed -i 's/http\:\\/\\/localhost\\:3456\\/api\\/v1/\\/api\\/v1/g' dist/index.html # Override the default api url used for developing
-#    depends_on:
-#      - restore-cache
+    depends_on:
+      - restore-cache
 
   - name: static
     image: kolaente/zip
@@ -251,39 +252,39 @@ steps:
     commands:
       - git fetch --tags
 
-#  - name: restore-cache
-#    image: meltwater/drone-cache:dev
-#    pull: true
-#    environment:
-#      AWS_ACCESS_KEY_ID:
-#        from_secret: cache_aws_access_key_id
-#      AWS_SECRET_ACCESS_KEY:
-#        from_secret: cache_aws_secret_access_key
-#    settings:
-#      restore: true
-#      bucket: kolaente.dev-drone-dependency-cache
-#      endpoint: https://s3.fr-par.scw.cloud
-#      region: fr-par
-#      path_style: true
-#      cache_key: '{{ .Repo.Name }}_{{ checksum "pnpm-lock.yaml" }}_{{ arch }}_{{ os }}'
-#      mount:
-#        - '.cache'
+  - name: restore-cache
+    image: meltwater/drone-cache:dev
+    pull: true
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: cache_aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: cache_aws_secret_access_key
+    settings:
+      restore: true
+      bucket: kolaente.dev-drone-dependency-cache
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      cache_key: '{{ .Repo.Name }}_{{ checksum "pnpm-lock.yaml" }}_{{ arch }}_{{ os }}'
+      mount:
+        - .cache
 
   - name: build
     image: node:18-alpine
     pull: true
     group: build-static
     environment:
-      PNPM_CACHE_FOLDER: .cache/pnpm/
+      PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
-      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/.pnpm
+      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000
       - pnpm run lint
       - "echo '{\"VERSION\": \"'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'\"}' > src/version.json"
       - pnpm run build
       - sed -i 's/http\:\\/\\/localhost\\:3456\\/api\\/v1/\\/api\\/v1/g' dist/index.html # Override the default api url used for developing
-#    depends_on:
-#      - restore-cache
+    depends_on:
+      - restore-cache
 
   - name: static
     image: kolaente/zip
