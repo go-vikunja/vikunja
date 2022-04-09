@@ -52,7 +52,7 @@
   },
   "devDependencies": {
     "electron": "18.0.3",
-    "electron-builder": "22.14.13"
+    "electron-builder": "23.0.3"
   },
   "dependencies": {
     "connect-history-api-fallback": "^1.6.0",
