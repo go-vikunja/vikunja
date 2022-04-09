@@ -15,7 +15,7 @@ export function isNil(value: any) {
 	return value == null
 }
 
-export function omitBy(obj: {}, check: (value: any) => Boolean): {} {
+export function omitBy(obj: {}, check: (value: any) => boolean): {} {
 	if (isNil(obj)) {
 		return {}
 	}
