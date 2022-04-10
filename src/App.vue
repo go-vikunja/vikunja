@@ -63,7 +63,7 @@ watch(accountDeletionConfirm, async (accountDeletionConfirm) => {
 	store.dispatch('auth/refreshUserInfo')
 }, { immediate: true })
 
-// setup passwort reset redirect
+// setup password reset redirect
 const userPasswordReset = useRouteQuery('userPasswordReset') as Ref<null | string>
 watch(userPasswordReset, (userPasswordReset) => {
 	if (userPasswordReset === null) {
