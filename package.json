@@ -9,12 +9,12 @@
     "build": "vite build && workbox copyLibraries dist/",
     "build:modern-only": "BUILD_MODERN_ONLY=true vite build && workbox copyLibraries dist/",
     "build:dev": "vite build -m development --outDir dist-dev/",
-    "typecheck": "vue-tsc --noEmit",
     "lint": "eslint --ignore-pattern '*.test.*' ./src --ext .vue,.js,.ts",
     "cypress:open": "cypress open",
-    "test:unit": "vitest run",
+    "test:unit": "vitest",
     "test:unit-watch": "vitest watch",
     "test:frontend": "cypress run",
+    "typecheck": "vue-tsc --noEmit && vue-tsc --noEmit -p tsconfig.vitest.json --composite false",
     "browserslist:update": "npx browserslist@latest --update-db"
   },
   "dependencies": {
@@ -67,6 +67,8 @@
     "@vitejs/plugin-legacy": "1.8.2",
     "@vitejs/plugin-vue": "2.3.3",
     "@vue/eslint-config-typescript": "11.0.0",
+    "@vue/test-utils": "2.0.0-rc.18",
+    "@vue/tsconfig": "0.1.3",
     "autoprefixer": "10.4.7",
     "axios": "0.27.2",
     "browserslist": "4.21.1",

@@ -3,12 +3,12 @@ import {defineConfig} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import legacyFn from '@vitejs/plugin-legacy'
 
-const {VitePWA} = require('vite-plugin-pwa')
-const path = require('path')
-const {visualizer} = require('rollup-plugin-visualizer')
+import {VitePWA}  from 'vite-plugin-pwa'
+import {visualizer}  from 'rollup-plugin-visualizer'
 import svgLoader from 'vite-svg-loader'
+import { fileURLToPath, URL } from 'url'
 
-const pathSrc = path.resolve(__dirname, './src')
+const pathSrc = fileURLToPath(new URL('./src', import.meta.url))
 
 // the @use rules have to be the first in the compiled stylesheets
 const PREFIXED_SCSS_STYLES = `@use "sass:math";
@@ -22,12 +22,12 @@ const legacy = isModernBuild
 		targets: ['defaults', 'not IE 11'],
 	})
 
-if (isModernBuild) {
-	console.log('Building "modern-only" build')
-} else {
-	console.log('Building "legacy" build with "@vitejs/plugin-legacy"')
-}
+console.log(isModernBuild
+	? 'Building "modern-only" build'
+	: 'Building "legacy" build with "@vitejs/plugin-legacy"'
+)
 
+// https://vitejs.dev/config/
 export default defineConfig({
 	// https://vitest.dev/config/
 	test: {
@@ -115,7 +115,7 @@ export default defineConfig({
 		alias: [
 			{
 				find: '@',
-				replacement: path.resolve(__dirname, 'src'),
+				replacement: pathSrc,
 			},
 		],
 		extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue'],

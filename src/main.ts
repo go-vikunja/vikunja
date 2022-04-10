@@ -5,14 +5,6 @@ import router from './router'
 
 import {error, success} from './message'
 
-declare global {
-	interface Window {
-		API_URL: string;
-		SENTRY_ENABLED: boolean;
-		SENTRY_DSN: string;
-	}
-}
-
 import {formatDate, formatDateShort, formatDateLong, formatDateSince, formatISO} from '@/helpers/time/formatDate'
 // @ts-ignore
 import {VERSION} from './version.json'
