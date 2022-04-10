@@ -88,9 +88,9 @@
 			v-if="hasOpenIdProviders"
 			class="mt-4">
 			<x-button
-				@click="redirectToProvider(p)"
 				v-for="(p, k) in openidConnect.providers"
 				:key="k"
+				@click="redirectToProvider(p)"
 				variant="secondary"
 				class="is-fullwidth mt-2"
 			>
@@ -134,17 +134,16 @@ export default defineComponent({
 		// FIXME: Why is this here? Can we find a better place for this?
 		let emailVerifyToken = localStorage.getItem('emailConfirmToken')
 		if (emailVerifyToken) {
-			const cancel = this.setLoading()
+			const stopLoading = this.setLoading()
 			HTTP.post('user/confirm', {token: emailVerifyToken})
 				.then(() => {
 					localStorage.removeItem('emailConfirmToken')
 					this.confirmedEmailSuccess = true
-					cancel()
 				})
 				.catch(e => {
-					cancel()
 					this.errorMessage = e.response.data.message
 				})
+				.finally(stopLoading)
 		}
 
 		// Check if the user is already logged in, if so, redirect them to the homepage
@@ -166,9 +165,7 @@ export default defineComponent({
 	},
 	computed: {
 		hasOpenIdProviders() {
-			return this.openidConnect.enabled &&
-				this.openidConnect.providers &&
-				this.openidConnect.providers.length > 0
+			return this.openidConnect.enabled && this.openidConnect.providers?.length > 0
 		},
 		...mapState({
 			registrationEnabled: state => state.config.registrationEnabled,
