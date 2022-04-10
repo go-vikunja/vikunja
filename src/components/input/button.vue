@@ -43,6 +43,7 @@ const props = defineProps({
 		default: 'primary',
 	},
 	icon: {
+		type: String,
 		default: '',
 	},
 	loading: {

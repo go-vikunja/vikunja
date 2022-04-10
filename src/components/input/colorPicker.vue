@@ -1,7 +1,7 @@
 <template>
 	<div class="color-picker-container">
 		<datalist :id="colorListID">
-			<option v-for="color in defaultColors" :key="color" :value="color" />
+			<option v-for="defaultColor in defaultColors" :key="defaultColor" :value="defaultColor" />
 		</datalist>
 		
 		<div class="picker">
@@ -60,6 +60,7 @@ export default defineComponent({
 	},
 	props: {
 		modelValue: {
+			type: String,
 			required: true,
 		},
 		menuPosition: {
