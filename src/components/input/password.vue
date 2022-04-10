@@ -13,13 +13,13 @@
 			@focusout="validate"
 			@input="handleInput"
 		/>
-		<a
+		<BaseButton
 			@click="togglePasswordFieldType"
 			class="password-field-type-toggle"
 			:aria-label="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')"
 			v-tooltip="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')">
 			<icon :icon="passwordFieldType === 'password' ? 'eye' : 'eye-slash'"/>
-		</a>
+		</BaseButton>
 	</div>
 	<p class="help is-danger" v-if="!isValid">
 		{{ $t('user.auth.passwordRequired') }}
@@ -29,6 +29,7 @@
 <script lang="ts" setup>
 import {ref, watch} from 'vue'
 import {useDebounceFn} from '@vueuse/core'
+import BaseButton from '@/components/base/BaseButton.vue'
 
 const props = defineProps({
 	tabindex: String,
@@ -39,24 +40,19 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'update:modelValue'])
 
-const passwordFieldType = ref<String>('password')
-const password = ref<String>('')
-const isValid = ref<Boolean>(!props.validateInitially)
+const passwordFieldType = ref('password')
+const password = ref('')
+const isValid = ref(!props.validateInitially)
 
 watch(
-	() => props.validateInitially,
-	(doValidate: Boolean) => {
-		if (doValidate) {
-			validate()
-		}
-	},
+	props.validateInitially,
+	() => props.validateInitially && validate(),
+	{immediate: true},
 )
 
-function validate() {
-	useDebounceFn(() => {
-		isValid.value = password.value !== ''
-	}, 100)()
-}
+const validate = useDebounceFn(() => {
+	isValid.value = password.value !== ''
+}, 100)
 
 function togglePasswordFieldType() {
 	passwordFieldType.value = passwordFieldType.value === 'password'
@@ -64,9 +60,9 @@ function togglePasswordFieldType() {
 		: 'password'
 }
 
-function handleInput(e) {
-	password.value = e.target.value
-	emit('update:modelValue', e.target.value)
+function handleInput(e: Event) {
+	password.value = (e.target as HTMLInputElement)?.value
+	emit('update:modelValue', password.value)
 }
 </script>
 
