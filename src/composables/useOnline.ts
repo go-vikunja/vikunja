@@ -1,6 +1,6 @@
 import {ref} from 'vue'
-import {useOnline as useNetworkOnline, ConfigurableWindow} from '@vueuse/core'
-
+import {useOnline as useNetworkOnline} from '@vueuse/core'
+import type {ConfigurableWindow} from '@vueuse/core'
 
 export function useOnline(options?: ConfigurableWindow) {
 	const fakeOnlineState = !!import.meta.env.VITE_IS_ONLINE

@@ -1,4 +1,4 @@
-import {RouteLocation} from 'vue-router'
+import type {RouteLocation} from 'vue-router'
 
 import {isAppleDevice} from '@/helpers/isAppleDevice'
 

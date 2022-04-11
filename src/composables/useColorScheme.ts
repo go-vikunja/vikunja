@@ -1,5 +1,6 @@
 import {computed, watch, readonly} from 'vue'
-import {useStorage, createSharedComposable, BasicColorSchema, usePreferredColorScheme, tryOnMounted} from '@vueuse/core'
+import {useStorage, createSharedComposable, usePreferredColorScheme, tryOnMounted} from '@vueuse/core'
+import type {BasicColorSchema} from '@vueuse/core'
 
 const STORAGE_KEY = 'color-scheme'
 

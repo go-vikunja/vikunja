@@ -1,7 +1,7 @@
 import { computed, watchEffect } from 'vue'
-import { setTitle } from '@/helpers/setTitle'
+import type { ComputedGetter } from 'vue'
 
-import { ComputedGetter } from 'vue'
+import { setTitle } from '@/helpers/setTitle'
 
 export function useTitle(titleGetter: ComputedGetter<string>) {
 	const titleRef = computed(titleGetter)

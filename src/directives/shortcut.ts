@@ -1,4 +1,4 @@
-import {Directive} from 'vue'
+import type {Directive} from 'vue'
 import {install, uninstall} from '@github/hotkey'
 import {isAppleDevice} from '@/helpers/isAppleDevice'
 

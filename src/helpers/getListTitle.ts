@@ -1,6 +1,6 @@
 import {i18n} from '@/i18n'
 
-import ListModal from '@/modals/list'
+import type ListModal from '@/models/list'
 
 export function getListTitle(l: ListModal) {
 	if (l.id === -1) {

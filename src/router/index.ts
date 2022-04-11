@@ -1,4 +1,5 @@
-import { createRouter, createWebHistory, RouteLocation } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
+import type { RouteLocation } from 'vue-router'
 import {saveLastVisited} from '@/helpers/saveLastVisited'
 import {store} from '@/store'
 
