@@ -1,4 +1,4 @@
-import {Document, SimpleDocumentSearchResultSetUnit} from 'flexsearch'
+import {Document} from 'flexsearch'
 
 export interface withId {
 	id: number,

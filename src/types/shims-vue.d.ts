@@ -1,5 +1,4 @@
 // https://next.vuex.vuejs.org/guide/migrating-to-4-0-from-3-x.html#typescript-support
-import { ComponentCustomProperties } from 'vue'
 import { Store } from 'vuex'
 
 declare module '@vue/runtime-core' {

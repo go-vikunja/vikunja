@@ -90,7 +90,7 @@ const pageTitle = computed(() => {
 	// We need to define "key" because it is the first parameter in the array and we need the second
 	const predefinedRange = Object.entries(DATE_RANGES)
 		// eslint-disable-next-line no-unused-vars
-		.find(([key, value]) => dateFrom === value[0] && dateTo === value[1])
+		.find(([, value]) => dateFrom === value[0] && dateTo === value[1])
 		?.[0]
 	if (typeof predefinedRange !== 'undefined') {
 		return t(`input.datepickerRange.ranges.${predefinedRange}`)

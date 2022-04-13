@@ -6,7 +6,7 @@ import router from './router'
 import {error, success} from './message'
 
 import {formatDate, formatDateShort, formatDateLong, formatDateSince, formatISO} from '@/helpers/time/formatDate'
-// @ts-ignore
+
 import {VERSION} from './version.json'
 
 // Notifications
@@ -19,6 +19,14 @@ import './registerServiceWorker'
 import {store} from './store'
 // i18n
 import {i18n} from './i18n'
+
+declare global {
+	interface Window {
+		API_URL: string;
+		SENTRY_ENABLED: boolean;
+		SENTRY_DSN: string;
+	}
+}
 
 console.info(`Vikunja frontend version ${VERSION}`)
 
@@ -87,7 +95,7 @@ app.config.errorHandler = (err, vm, info) => {
 }
 
 if (import.meta.env.DEV) {
-	app.config.warnHandler = (msg, vm, info) => {
+	app.config.warnHandler = (msg) => {
 		error(msg)
 		throw(msg)
 	}
