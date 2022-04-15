@@ -108,7 +108,7 @@
         "more": "More information about CalDAV in Vikunja",
         "tokens": "CalDAV Tokens",
         "tokensHowTo": "You can use a CalDAV token to use instead of a password to log in the above endpoint.",
-        "createToken": "Create a token",
+        "createToken": "Crea un token",
         "tokenCreated": "Here is your token: {token}",
         "wontSeeItAgain": "Write it down, you won't be able to see it again.",
         "mustUseToken": "You need to create a CalDAV token if you want to use CalDAV with a third party client. Use the token as the password.",
@@ -569,13 +569,13 @@
       "supportedUnits": "Supported time units are:",
       "someExamples": "Some examples of time expressions:",
       "units": {
-        "seconds": "Seconds",
-        "minutes": "Minutes",
-        "hours": "Hours",
-        "days": "Days",
-        "weeks": "Weeks",
-        "months": "Months",
-        "years": "Years"
+        "seconds": "Secondi",
+        "minutes": "Minuti",
+        "hours": "Ore",
+        "days": "Giorni",
+        "weeks": "Settimane",
+        "months": "Mesi",
+        "years": "Anni"
       },
       "examples": {
         "now": "Right now",
