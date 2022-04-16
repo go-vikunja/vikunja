@@ -106,7 +106,7 @@
         "title": "CalDAV",
         "howTo": "You can connect Vikunja to CalDAV clients to view and manage all tasks from different clients. Enter this url into your client:",
         "more": "More information about CalDAV in Vikunja",
-        "tokens": "CalDAV Tokens",
+        "tokens": "Token CalDAV",
         "tokensHowTo": "You can use a CalDAV token to use instead of a password to log in the above endpoint.",
         "createToken": "Crea un token",
         "tokenCreated": "Here is your token: {token}",
@@ -852,7 +852,7 @@
     "task": {
       "title": "Pagina Attività",
       "done": "Mark task done / undone",
-      "assign": "Assign this task to a user",
+      "assign": "Assegna questa attività a un utente",
       "labels": "Aggiungi etichette a questa attività",
       "dueDate": "Modifica la data di scadenza di questa attività",
       "attachment": "Aggiungi un allegato a questa attività",
