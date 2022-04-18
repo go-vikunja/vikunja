@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 /* eslint-disable no-undef */
 
-const workboxVersion = 'v6.5.2'
+const workboxVersion = 'v6.5.3'
 importScripts( `/workbox-${workboxVersion}/workbox-sw.js`)
 workbox.setConfig({
 	modulePathPrefix: `/workbox-${workboxVersion}`,
