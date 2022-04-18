@@ -66,7 +66,7 @@ app.directive('cy', cypress)
 // global components
 import FontAwesomeIcon from './icons'
 import Button from '@/components/input/button.vue'
-import Modal from '@/components/modal/modal.vue'
+import Modal from '@/components/misc/modal.vue'
 import Card from '@/components/misc/card.vue'
 
 app.component('icon', FontAwesomeIcon)
