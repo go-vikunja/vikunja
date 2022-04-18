@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watch, watchEffect} from 'vue'
+import {ref, computed, watch} from 'vue'
 import {useRoute} from 'vue-router'
 
 import Message from '@/components/misc/message.vue'
@@ -95,16 +95,9 @@ const currentList = computed(() => {
 // of it, most likely due to the rights not being properly populated.
 watch(
 	() => props.listId,
-	(listId) => {
-		loadList(listId)
-	},
-	{
-		immediate: true,
-	},
+	listId => loadList(listId),
+	{immediate: true},
 )
-
-// call the method again if the listId changes
-watchEffect(() => loadList(props.listId))
 
 useTitle(() => currentList.value.id ? getListTitle(currentList.value) : '')
 
