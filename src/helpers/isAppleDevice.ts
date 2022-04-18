@@ -1,4 +1,4 @@
-export const isAppleDevice = (): Boolean => {
+export const isAppleDevice = (): boolean => {
 	return navigator.userAgent.includes('Mac') || [
 		'iPad Simulator',
 		'iPhone Simulator',

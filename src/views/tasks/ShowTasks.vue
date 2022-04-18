@@ -81,8 +81,8 @@ const {
 } = defineProps<{
 	dateFrom?: Date | string,
 	dateTo?: Date | string,
-	showNulls?: Boolean,
-	showOverdue?: Boolean,
+	showNulls?: boolean,
+	showOverdue?: boolean,
 }>()
 
 const showAll = computed(() => typeof dateFrom === 'undefined' || typeof dateTo === 'undefined')
