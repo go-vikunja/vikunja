@@ -1,10 +1,11 @@
 <template>
 	<div class="dropdown is-right is-active" ref="dropdown">
-		<div class="dropdown-trigger is-flex" @click="open = !open">
-			<slot name="trigger" :close="close">
+		<slot name="trigger" :close="close" :toggleOpen="toggleOpen">
+			<BaseButton class="dropdown-trigger is-flex" @click="toggleOpen">
 				<icon :icon="triggerIcon" class="icon"/>
-			</slot>
-		</div>
+			</BaseButton>
+		</slot>
+
 		<transition name="fade">
 			<div class="dropdown-menu" v-if="open">
 				<div class="dropdown-content">
@@ -15,46 +16,42 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
-import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
+<script setup lang="ts">
+import {ref} from 'vue'
+import {onClickOutside} from '@vueuse/core'
 
-export default defineComponent({
-	name: 'dropdown',
-	data() {
-		return {
-			open: false,
-		}
-	},
-	mounted() {
-		document.addEventListener('click', this.handleClickOutside)
-	},
-	beforeUnmount() {
-		document.removeEventListener('click', this.handleClickOutside)
-	},
-	props: {
-		triggerIcon: {
-			type: String,
-			default: 'ellipsis-h',
-		},
-	},
-	emits: ['close'],
-	methods: {
-		close() {
-			this.open = false
-		},
-		toggleOpen() {
-			this.open = !this.open
-		},
-		handleClickOutside(e) {
-			if (!this.open) {
-				return
-			}
-			closeWhenClickedOutside(e, this.$refs.dropdown, () => {
-				this.open = false
-				this.$emit('close', e)
-			})
-		},
+import BaseButton from '@/components/base/BaseButton.vue'
+
+defineProps({
+	triggerIcon: {
+		type: String,
+		default: 'ellipsis-h',
 	},
 })
+const emit = defineEmits(['close'])
+
+const open = ref(false)
+
+function close() {
+	open.value = false
+}
+
+function toggleOpen() {
+	open.value = !open.value
+}
+
+const dropdown = ref()
+onClickOutside(dropdown, (e: Event) => {
+	if (!open.value) {
+		return
+	}
+	close()
+	emit('close', e)
+})
 </script>
+
+<style lang="scss" scoped>
+.dropdown-menu  .dropdown-content {
+	box-shadow: var(--shadow-md);
+}
+</style>

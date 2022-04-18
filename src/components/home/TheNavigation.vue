@@ -33,8 +33,10 @@
 			<notifications/>
 			<div class="user">
 				<dropdown class="is-right" ref="usernameDropdown">
-					<template #trigger>
+					<template #trigger="{toggleOpen}">
 						<x-button
+							class="username-dropdown-trigger"
+							@click="toggleOpen()"
 							variant="secondary"
 							:shadow="false"
 						>
@@ -203,16 +205,13 @@ $hamburger-menu-icon-width: 28px;
 			display: flex;
 			align-items: center;
 
-			:deep(.dropdown-trigger) {
+			.username-dropdown-trigger {
 				line-height: 1;
+				padding: 0 0.25rem;
+				height: 1rem;
 
-				.button {
-					padding: 0 0.25rem;
-					height: 1rem;
-
-					.icon {
-						width: .5rem;
-					}
+				.icon {
+					width: .5rem;
 				}
 			}
 
@@ -254,7 +253,7 @@ $hamburger-menu-icon-width: 28px;
 			margin-right: var(--button-padding-horizontal);
 		}
 
-		:deep(.dropdown-trigger .button) {
+		.username-dropdown-trigger {
 			background: none;
 
 			&:focus:not(:active), &:active {
