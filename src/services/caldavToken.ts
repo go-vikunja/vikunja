@@ -11,7 +11,7 @@ export default class CaldavTokenService extends AbstractService {
 		})
 	}
 
-	processModel(model) {
+	processModel(model: Partial<CaldavTokenModel>) {
 		return {
 			...model,
 			created: formatISO(new Date(model.created)),
