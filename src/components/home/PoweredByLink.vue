@@ -1,10 +1,11 @@
 <template>
-    <a class="menu-bottom-link" :href="poweredByUrl" target="_blank" rel="noreferrer noopener nofollow">
+    <BaseButton class="menu-bottom-link" :href="poweredByUrl" target="_blank">
         {{ $t('misc.poweredBy') }}
-    </a>
+    </BaseButton>
 </template>
 
 <script setup lang="ts">
+import BaseButton from '@/components/base/BaseButton.vue'
 import {POWERED_BY as poweredByUrl} from '@/urls'
 </script>
 
