@@ -18,7 +18,7 @@
   },
   "ready": {
     "loading": "Vikunja is loading…",
-    "errorOccured": "An error occured:",
+    "errorOccured": "An error occurred:",
     "checkApiUrl": "Please check if the api url is correct.",
     "noApiUrlConfigured": "No API url was configured. Please set one below:"
   },
@@ -96,11 +96,11 @@
         "scanQR": "Или ты можешь отсканировать этот QR-код:",
         "passcode": "Код",
         "passcodePlaceholder": "Код, который сгенерировал твой приложение TOTP",
-        "setupSuccess": "У тебя подключена двухфакторная аутентификация.",
+        "setupSuccess": "You've successfully set up two factor authentication!",
         "enterPassword": "Введи свой пароль",
         "disable": "Отключить двухфакторную аутентификацию",
         "confirmSuccess": "TOTP настроен и готов к использованию.",
-        "disableSuccess": "Двухфакторная аутентификация отключена."
+        "disableSuccess": "Two factor authentication was successfully disabled."
       },
       "caldav": {
         "title": "CalDAV",
@@ -332,7 +332,7 @@
     "create": {
       "title": "New namespace",
       "titleRequired": "Укажи название.",
-      "explanation": "Коллекции списков для совместного использования и организации ваших списков. Фактически, каждый список принадлежит какому-нибудь пространству имён.",
+      "explanation": "A namespace is a collection of lists you can share and use to organize your lists with. In fact, every list belongs to a namespace.",
       "tooltip": "Что такое пространство имён?",
       "success": "Пространство имён создано."
     },
@@ -560,7 +560,7 @@
       "canuse": "You can use date math to filter for relative dates.",
       "learnhow": "Check out how it works",
       "title": "Date Math",
-      "intro": "Date Math allows you to specifiy relative dates which are resolved on the fly by Vikunja when applying the filter.",
+      "intro": "Date Math allows you to specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
       "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
       "similar": "These expressions are similar to the ones provided by {0} and {1}.",
       "add1Day": "Add one day",
@@ -869,9 +869,9 @@
     },
     "navigation": {
       "title": "Navigation",
-      "overview": "Navigato to overview",
-      "upcoming": "Navigato to upcoming taks",
-      "namespaces": "Navigate to namepaces & lists",
+      "overview": "Navigate to overview",
+      "upcoming": "Navigate to upcoming tasks",
+      "namespaces": "Navigate to namespaces & lists",
       "labels": "Navigate to labels",
       "teams": "Navigate to teams"
     }

@@ -18,7 +18,7 @@
   },
   "ready": {
     "loading": "Vikunja đang tải…",
-    "errorOccured": "Đã xảy ra lỗi:",
+    "errorOccured": "An error occurred:",
     "checkApiUrl": "Vui lòng kiểm tra lại url api.",
     "noApiUrlConfigured": "Không có url API nào được cấu hình. Hãy đặt một cái:"
   },
@@ -96,11 +96,11 @@
         "scanQR": "Ngoài ra, bạn có thể quét mã QR này:",
         "passcode": "Mã xác thực",
         "passcodePlaceholder": "Một đoạn mã được tạo bởi ứng dụng TOTP của bạn",
-        "setupSuccess": "Bạn đã thiết lập xác thực hai lớp thành công!",
+        "setupSuccess": "You've successfully set up two factor authentication!",
         "enterPassword": "Vui lòng nhập mật khẩu",
         "disable": "Tắt xác thực 2 lớp",
         "confirmSuccess": "Bạn đã xác nhận thành công thiết lập TOTP của mình và có thể sử dụng nó từ bây giờ!",
-        "disableSuccess": "Xác thực hai lớp đã bị vô hiệu hóa thành công."
+        "disableSuccess": "Two factor authentication was successfully disabled."
       },
       "caldav": {
         "title": "CalDAV",
@@ -332,7 +332,7 @@
     "create": {
       "title": "Góc làm việc mới",
       "titleRequired": "Hãy đặt một tiêu đề.",
-      "explanation": "Góc làm việc là một tập hợp các danh sách mà bạn có thể chia sẻ và sử dụng để sắp xếp các danh sách của mình. Trên thực tế, mọi danh sách đều thuộc về một góc làm việc.",
+      "explanation": "A namespace is a collection of lists you can share and use to organize your lists with. In fact, every list belongs to a namespace.",
       "tooltip": "Góc làm việc là gì?",
       "success": "Góc làm việc đã được tạo."
     },
@@ -560,7 +560,7 @@
       "canuse": "Bạn có thể sử dụng biểu thức tính ngày để lọc những ngày liên quan.",
       "learnhow": "Xem cách hoạt động",
       "title": "Tính Ngày",
-      "intro": "Tính Ngày cho phép bạn xác định những ngày liên quan được xử lý bởi Vikunja khi áp dụng bộ lọc.",
+      "intro": "Date Math allows you to specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
       "expression": "Mỗi Biểu thức tính ngày bắt đầu bằng một ngày cố định, có thể là {0}, hoặc kết thúc bằng {1}. Ngày cố định này có thể được theo sau bởi một hoặc nhiều biểu thức toán học.",
       "similar": "Những biểu thức này tương tự như những biểu thức được cung cấp bởi {0} và {1}.",
       "add1Day": "Thêm một ngày",
@@ -869,9 +869,9 @@
     },
     "navigation": {
       "title": "Điều hướng",
-      "overview": "Điều hướng đến trang tổng quan",
-      "upcoming": "Điều hướng đến công việc sắp tới",
-      "namespaces": "Điều hướng đến Không gian làm việc & danh sách",
+      "overview": "Navigate to overview",
+      "upcoming": "Navigate to upcoming tasks",
+      "namespaces": "Navigate to namespaces & lists",
       "labels": "Điều hướng đến nhãn",
       "teams": "Điều hướng đến Team"
     }

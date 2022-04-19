@@ -18,7 +18,7 @@
   },
   "ready": {
     "loading": "Vikunja sta caricando…",
-    "errorOccured": "Si è verificato un errore:",
+    "errorOccured": "An error occurred:",
     "checkApiUrl": "Controlla se l'URL API è corretto.",
     "noApiUrlConfigured": "Nessun URL API configurato. Impostane uno qui sotto:"
   },
@@ -96,11 +96,11 @@
         "scanQR": "In alternativa puoi scansionare questo codice QR:",
         "passcode": "Codice di accesso",
         "passcodePlaceholder": "Un codice generato dalla tua applicazione TOTP",
-        "setupSuccess": "Hai impostato con successo l'autenticazione a due fattori!",
+        "setupSuccess": "You've successfully set up two factor authentication!",
         "enterPassword": "Inserisci La Tua Password",
         "disable": "Disabilita l'autenticazione a due fattori",
         "confirmSuccess": "Hai confermato con successo la tua configurazione totp e puoi usarla da ora in poi!",
-        "disableSuccess": "L'autenticazione a due fattori è stata disattivata."
+        "disableSuccess": "Two factor authentication was successfully disabled."
       },
       "caldav": {
         "title": "CalDAV",
@@ -332,7 +332,7 @@
     "create": {
       "title": "Nuovo namespace",
       "titleRequired": "Specifica un titolo.",
-      "explanation": "Un namespace è una raccolta di liste che puoi condividere e che puoi usare per organizzare le tue liste. Infatti, ogni lista appartiene a un namespace.",
+      "explanation": "A namespace is a collection of lists you can share and use to organize your lists with. In fact, every list belongs to a namespace.",
       "tooltip": "Che cos'è un namespace?",
       "success": "Namespace creato."
     },
