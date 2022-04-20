@@ -7161,10 +7161,10 @@ flat-cache@^3.0.4:
     flatted "^3.1.0"
     rimraf "^3.0.2"
 
-flatpickr@4.6.11:
-  version "4.6.11"
-  resolved "https://registry.yarnpkg.com/flatpickr/-/flatpickr-4.6.11.tgz#c92f5108269c551c6b5069ecd754be610574574c"
-  integrity sha512-/rnbE/hu5I5zndLEyYfYvqE4vPDvI5At0lFcQA5eOPfjquZLcQ0HMKTL7rv5/+DvbPM3/vJcXpXjB/DjBh+1jw==
+flatpickr@4.6.13:
+  version "4.6.13"
+  resolved "https://registry.yarnpkg.com/flatpickr/-/flatpickr-4.6.13.tgz#8a029548187fd6e0d670908471e43abe9ad18d94"
+  integrity sha512-97PMG/aywoYpB4IvbvUJi0RQi8vearvU0oov1WW3k0WZPBMrTQVqekSX5CjSG/M4Q3i6A/0FKXC7RyAoAUUSPw==
 
 flatpickr@^4.6.9:
   version "4.6.9"
