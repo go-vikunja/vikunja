@@ -869,9 +869,9 @@
     },
     "navigation": {
       "title": "Navegação",
-      "overview": "Navegar para a vista geral",
-      "upcoming": "Navegar para próximas tarefas",
-      "namespaces": "Navegar para espaços e listas",
+      "overview": "Navigate to overview",
+      "upcoming": "Navigate to upcoming tasks",
+      "namespaces": "Navigate to namespaces & lists",
       "labels": "Navegar para etiquetas",
       "teams": "Navegar para equipas"
     }

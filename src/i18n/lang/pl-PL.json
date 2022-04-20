@@ -560,7 +560,7 @@
       "canuse": "Możesz użyć kalkulacji dat do względnego filtrowania dat.",
       "learnhow": "Sprawdź jak to działa",
       "title": "Kalkulacja daty",
-      "intro": "Kalkulacja daty pozwala względnie określić daty, które są przetwarzane przez Vikunję w locie, w czasie stosowania filtra.",
+      "intro": "Date Math allows you to specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
       "expression": "Każde wyrażenie kalkulacji daty rozpoczyna się datą zakotwiczenia, którą może być {0} lub wyrażeniem daty zakończonym {1}. Po tej dacie zakotwiczenia opcjonalnie może następować jedno lub więcej wyrażeń matematycznych.",
       "similar": "Te wyrażenia są podobne do tych dostarczonych przez {0} i {1}.",
       "add1Day": "Dodaj jeden dzień",
@@ -869,9 +869,9 @@
     },
     "navigation": {
       "title": "Nawigacja",
-      "overview": "Przejdź do przeglądu",
-      "upcoming": "Przejdź do nadchodzących zadań",
-      "namespaces": "Przejdź do sekcji i list",
+      "overview": "Navigate to overview",
+      "upcoming": "Navigate to upcoming tasks",
+      "namespaces": "Navigate to namespaces & lists",
       "labels": "Przejdź do etykiet",
       "teams": "Przejdź do zespołów"
     }

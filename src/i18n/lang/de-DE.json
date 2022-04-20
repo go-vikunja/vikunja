@@ -332,7 +332,7 @@
     "create": {
       "title": "Neuer Namespace",
       "titleRequired": "Bitte gebe einen Titel an.",
-      "explanation": "Ein Namespace ist eine Sammlung von Listen, die du teilen und zur Organisation verwenden kannst. Jede Liste zu einem Namespace.",
+      "explanation": "A namespace is a collection of lists you can share and use to organize your lists with. In fact, every list belongs to a namespace.",
       "tooltip": "Was ist ein Namespace?",
       "success": "Der Namespace wurde erfolgreich erstellt."
     },
@@ -560,7 +560,7 @@
       "canuse": "Du kannst Datumsberechnung verwenden, um nach relativen Daten zu filtern.",
       "learnhow": "Sieh dir an, wie es funktioniert",
       "title": "Datumsberechnung",
-      "intro": "Die Datumsberechnung erlaubt es, relative Daten anzugeben, die bei der Anwendung des Filters von Vikunja aufgelöst werden.",
+      "intro": "Date Math allows you to specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
       "expression": "Jeder Ausdruck der Datumsberechnung beginnt mit einem Datumswert, welcher entweder {0} sein kann oder mit {1} endet. Auf diesen Datumswert kann optional ein oder mehrere mathematische Ausdrücke folgen.",
       "similar": "Diese Ausdrücke ähneln denen von {0} und {1}.",
       "add1Day": "Einen Tag hinzufügen",
@@ -869,9 +869,9 @@
     },
     "navigation": {
       "title": "Navigation",
-      "overview": "Die Startseite aufrufen",
-      "upcoming": "Anstehende Aufgaben aufrufen",
-      "namespaces": "Namespaces & Listen aufrufen",
+      "overview": "Navigate to overview",
+      "upcoming": "Navigate to upcoming tasks",
+      "namespaces": "Navigate to namespaces & lists",
       "labels": "Labels aufrufen",
       "teams": "Teams aufrufen"
     }

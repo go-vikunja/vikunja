@@ -18,7 +18,7 @@
   },
   "ready": {
     "loading": "Vikunja se načítá…",
-    "errorOccured": "Došlo k chybě:",
+    "errorOccured": "An error occurred:",
     "checkApiUrl": "Zkontrolujte, zda je adresa URL API správná.",
     "noApiUrlConfigured": "Nebyla nakonfigurována žádná adresa API. Prosím nastavte jednu níže:"
   },
@@ -96,11 +96,11 @@
         "scanQR": "Případně můžete naskenovat tento QR kód:",
         "passcode": "Přístupový kód",
         "passcodePlaceholder": "Kód vygenerovaný vaší aplikací",
-        "setupSuccess": "Úspěšně jste nastavili dvoufaktorové ověření!",
+        "setupSuccess": "You've successfully set up two factor authentication!",
         "enterPassword": "Zadejte prosím heslo",
         "disable": "Zakázat dvoufaktorové ověření",
         "confirmSuccess": "Úspěšně jste potvrdili nastavení a od nynějška jej můžete používat!",
-        "disableSuccess": "Dvoufaktorové ověřování bylo úspěšně zakázáno."
+        "disableSuccess": "Two factor authentication was successfully disabled."
       },
       "caldav": {
         "title": "CalDAV",
@@ -332,7 +332,7 @@
     "create": {
       "title": "Nový prostor",
       "titleRequired": "Uveďte prosím název.",
-      "explanation": "Prostor je kolekce seznamů, které můžete sdílet a používat k organizaci seznamů. Každý seznam patří do nějakého prostoru.",
+      "explanation": "A namespace is a collection of lists you can share and use to organize your lists with. In fact, every list belongs to a namespace.",
       "tooltip": "Co je prostor?",
       "success": "Prostor byl úspěšně vytvořen."
     },
@@ -560,7 +560,7 @@
       "canuse": "You can use date math to filter for relative dates.",
       "learnhow": "Check out how it works",
       "title": "Date Math",
-      "intro": "Date Math allows you to specifiy relative dates which are resolved on the fly by Vikunja when applying the filter.",
+      "intro": "Date Math allows you to specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
       "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
       "similar": "These expressions are similar to the ones provided by {0} and {1}.",
       "add1Day": "Add one day",
@@ -869,9 +869,9 @@
     },
     "navigation": {
       "title": "Navigation",
-      "overview": "Navigato to overview",
-      "upcoming": "Navigato to upcoming taks",
-      "namespaces": "Navigate to namepaces & lists",
+      "overview": "Navigate to overview",
+      "upcoming": "Navigate to upcoming tasks",
+      "namespaces": "Navigate to namespaces & lists",
       "labels": "Navigate to labels",
       "teams": "Navigate to teams"
     }
