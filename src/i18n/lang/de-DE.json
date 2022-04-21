@@ -18,7 +18,7 @@
   },
   "ready": {
     "loading": "Vikunja wird geladen…",
-    "errorOccured": "An error occurred:",
+    "errorOccured": "Es ist ein Fehler aufgetreten:",
     "checkApiUrl": "Bitte überprüfe, ob die API-Url stimmt.",
     "noApiUrlConfigured": "Es wurde keine API-Url konfiguriert. Bitte stelle unten eine ein:"
   },
@@ -96,11 +96,11 @@
         "scanQR": "Alternativ kannst du auch diesen QR-Code scannen:",
         "passcode": "Code",
         "passcodePlaceholder": "Ein von deiner TOTP-App generierter code",
-        "setupSuccess": "You've successfully set up two factor authentication!",
+        "setupSuccess": "Du hast die Zwei-Faktor-Authentifizierung erfolgreich eingerichtet!",
         "enterPassword": "Bitte gib dein Passwort ein",
         "disable": "Zwei-Faktor-Authentifizierung deaktivieren",
         "confirmSuccess": "TOTP wurde verifiziert und ist nun verwendbar.",
-        "disableSuccess": "Two factor authentication was successfully disabled."
+        "disableSuccess": "Die Zwei-Faktor-Authentifizierung wurde erfolgreich deaktiviert."
       },
       "caldav": {
         "title": "CalDAV",
@@ -332,7 +332,7 @@
     "create": {
       "title": "Neuer Namespace",
       "titleRequired": "Bitte gebe einen Titel an.",
-      "explanation": "A namespace is a collection of lists you can share and use to organize your lists with. In fact, every list belongs to a namespace.",
+      "explanation": "Ein Namespace ist eine Sammlung von Listen, die du teilen und zur Organisation verwenden kannst. Jede Liste zu einem Namespace.",
       "tooltip": "Was ist ein Namespace?",
       "success": "Der Namespace wurde erfolgreich erstellt."
     },
@@ -560,7 +560,7 @@
       "canuse": "Du kannst Datumsberechnung verwenden, um nach relativen Daten zu filtern.",
       "learnhow": "Sieh dir an, wie es funktioniert",
       "title": "Datumsberechnung",
-      "intro": "Date Math allows you to specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
+      "intro": "Die Datumsberechnung erlaubt es, relative Daten anzugeben, die bei der Anwendung des Filters von Vikunja aufgelöst werden.",
       "expression": "Jeder Ausdruck der Datumsberechnung beginnt mit einem Datumswert, welcher entweder {0} sein kann oder mit {1} endet. Auf diesen Datumswert kann optional ein oder mehrere mathematische Ausdrücke folgen.",
       "similar": "Diese Ausdrücke ähneln denen von {0} und {1}.",
       "add1Day": "Einen Tag hinzufügen",
@@ -869,9 +869,9 @@
     },
     "navigation": {
       "title": "Navigation",
-      "overview": "Navigate to overview",
-      "upcoming": "Navigate to upcoming tasks",
-      "namespaces": "Navigate to namespaces & lists",
+      "overview": "Die Startseite aufrufen",
+      "upcoming": "Anstehende Aufgaben aufrufen",
+      "namespaces": "Namespaces & Listen aufrufen",
       "labels": "Labels aufrufen",
       "teams": "Teams aufrufen"
     }

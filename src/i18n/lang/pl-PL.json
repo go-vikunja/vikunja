@@ -18,7 +18,7 @@
   },
   "ready": {
     "loading": "Vikunja się ładuje…",
-    "errorOccured": "An error occurred:",
+    "errorOccured": "Wystąpił błąd:",
     "checkApiUrl": "Sprawdź, czy adres URL interfejsu API jest poprawny.",
     "noApiUrlConfigured": "Nie skonfigurowano adresu URL interfejsu API. Ustaw go poniżej:"
   },
@@ -96,11 +96,11 @@
         "scanQR": "Możesz również zeskanować ten kod QR:",
         "passcode": "Kod autoryzacyjny",
         "passcodePlaceholder": "Kod wygenerowany przez twoją aplikację TOTP",
-        "setupSuccess": "You've successfully set up two factor authentication!",
+        "setupSuccess": "Pomyślnie skonfigurowałeś uwierzytelnianie dwuskładnikowe!",
         "enterPassword": "Wprowadź hasło",
         "disable": "Wyłącz uwierzytelnianie dwuskładnikowe",
         "confirmSuccess": "Pomyślnie skonfigurowałeś uwierzytelnianie dwuskładnikowe i od teraz możesz z niego korzystać!",
-        "disableSuccess": "Two factor authentication was successfully disabled."
+        "disableSuccess": "Uwierzytelnianie dwuskładnikowe zostało pomyślnie wyłączone."
       },
       "caldav": {
         "title": "CalDAV",
@@ -332,7 +332,7 @@
     "create": {
       "title": "Nowa sekcja",
       "titleRequired": "Proszę, podaj tytuł.",
-      "explanation": "A namespace is a collection of lists you can share and use to organize your lists with. In fact, every list belongs to a namespace.",
+      "explanation": "Sekcja to zbiór list, które możesz udostępniać i używać do organizowania list. Każda lista należy do jakiejś sekcji.",
       "tooltip": "Co to jest sekcja?",
       "success": "Sekcja została pomyślnie utworzona."
     },
@@ -560,7 +560,7 @@
       "canuse": "Możesz użyć kalkulacji dat do względnego filtrowania dat.",
       "learnhow": "Sprawdź jak to działa",
       "title": "Kalkulacja daty",
-      "intro": "Date Math allows you to specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
+      "intro": "Kalkulacja daty pozwala względnie określić daty, które są przetwarzane przez Vikunję w locie, w czasie stosowania filtra.",
       "expression": "Każde wyrażenie kalkulacji daty rozpoczyna się datą zakotwiczenia, którą może być {0} lub wyrażeniem daty zakończonym {1}. Po tej dacie zakotwiczenia opcjonalnie może następować jedno lub więcej wyrażeń matematycznych.",
       "similar": "Te wyrażenia są podobne do tych dostarczonych przez {0} i {1}.",
       "add1Day": "Dodaj jeden dzień",
@@ -869,9 +869,9 @@
     },
     "navigation": {
       "title": "Nawigacja",
-      "overview": "Navigate to overview",
-      "upcoming": "Navigate to upcoming tasks",
-      "namespaces": "Navigate to namespaces & lists",
+      "overview": "Przejdź do przeglądu",
+      "upcoming": "Przejdź do nadchodzących zadań",
+      "namespaces": "Przejdź do sekcji i list",
       "labels": "Przejdź do etykiet",
       "teams": "Przejdź do zespołów"
     }
