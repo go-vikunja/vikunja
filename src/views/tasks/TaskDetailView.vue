@@ -882,7 +882,7 @@ $flash-background-duration: 750ms;
   }
 
   .checklist-summary {
-    margin-left: .25rem;
+    padding-left: .25rem;
   }
 }
 

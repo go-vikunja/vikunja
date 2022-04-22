@@ -44,6 +44,8 @@ export default defineComponent({
 	color: var(--grey-500);
 	display: inline-flex;
 	align-items: center;
+	padding-left: .5rem;
+	font-size: .9rem;
 
 	svg {
 		transform: rotate(-90deg);
