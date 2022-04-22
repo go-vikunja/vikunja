@@ -3561,19 +3561,19 @@
   resolved "https://registry.yarnpkg.com/@vue/shared/-/shared-3.2.33.tgz#69a8c99ceb37c1b031d5cc4aec2ff1dc77e1161e"
   integrity sha512-UBc1Pg1T3yZ97vsA2ueER0F6GbJebLHYlEi4ou1H5YL4KWvMOOWwpYo9/QpWq93wxKG6Wo13IY74Hcn/f7c7Bg==
 
-"@vueuse/core@8.3.0":
-  version "8.3.0"
-  resolved "https://registry.yarnpkg.com/@vueuse/core/-/core-8.3.0.tgz#299afb7f3d316d112353f6b468a9d4a7686bd8ab"
-  integrity sha512-GDHM0vr/E3mw1fbh3yj4DJCJ/KvTXtOtT0OR2kCKuEUOo0Btk45MDGI6MdIqsHMjI0OXBJl8jH8WFv64KU2mOQ==
+"@vueuse/core@8.3.1":
+  version "8.3.1"
+  resolved "https://registry.yarnpkg.com/@vueuse/core/-/core-8.3.1.tgz#7f2c5977cc0690a803f44c3f5c291536ad7880d1"
+  integrity sha512-WiXUgVyPG9elGx3G8UV8g+zqbEJ2hYacrPICogAxDdW6hnxxcUFdF7FtvDroJ/DxWmo2pg8XNNz07ybfnZyJbw==
   dependencies:
-    "@vueuse/metadata" "8.3.0"
-    "@vueuse/shared" "8.3.0"
+    "@vueuse/metadata" "8.3.1"
+    "@vueuse/shared" "8.3.1"
     vue-demi "*"
 
-"@vueuse/metadata@8.3.0":
-  version "8.3.0"
-  resolved "https://registry.yarnpkg.com/@vueuse/metadata/-/metadata-8.3.0.tgz#80c3eeead16489cfe851828e70700731c23a79e1"
-  integrity sha512-7R/LNPQWp1r/owa2e71l3dFlJ21p89YE3ks14ZclP2VOTvhC6AzDRcpk+ChISNetv8spsFbWZj/Z7sFjbFZfuw==
+"@vueuse/metadata@8.3.1":
+  version "8.3.1"
+  resolved "https://registry.yarnpkg.com/@vueuse/metadata/-/metadata-8.3.1.tgz#acc0ff9ad686c68dfc7b4869639c43e71ae2682b"
+  integrity sha512-1aZaFL44HzXXkfN6Q7KMDOXBFKTHDClHlOJBxtN8rTBXIIScoGOrJCpxWiQ4kuVg95MzG/pHrd3P4wd8poL9XQ==
 
 "@vueuse/router@8.3.1":
   version "8.3.1"
@@ -3581,13 +3581,6 @@
   integrity sha512-c43wzOxsS8Wsrouh61jUVw2KtvVxS208ip/2H0Kl4c4YPmxi7Vp6inhlMWaey79NJHZ8BXkKuBCkIvGSopzeYA==
   dependencies:
     "@vueuse/shared" "8.3.1"
-    vue-demi "*"
-
-"@vueuse/shared@8.3.0":
-  version "8.3.0"
-  resolved "https://registry.yarnpkg.com/@vueuse/shared/-/shared-8.3.0.tgz#5a65c9e584168c38ded720134e00bbd2ecd61ddc"
-  integrity sha512-xehtLfevPw9nsVIGFe/tWMtFvbvZjeAfXh7DT9Fptt/6/C5rLwpJtxsVguIBtPybjwobO4KCpQYS78aa9fg5Sw==
-  dependencies:
     vue-demi "*"
 
 "@vueuse/shared@8.3.1":
