@@ -18,7 +18,7 @@
   },
   "ready": {
     "loading": "Vikunja sta caricando…",
-    "errorOccured": "An error occurred:",
+    "errorOccured": "Si è verificato un errore:",
     "checkApiUrl": "Controlla se l'URL API è corretto.",
     "noApiUrlConfigured": "Nessun URL API configurato. Impostane uno qui sotto:"
   },
@@ -496,7 +496,7 @@
     "custom": "Custom",
     "id": "ID",
     "created": "Created at",
-    "actions": "Actions"
+    "actions": "Azioni"
   },
   "input": {
     "resetColor": "Ripristina Colore",
