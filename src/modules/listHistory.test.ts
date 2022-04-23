@@ -1,15 +1,15 @@
-import {test, expect, fn} from 'vitest'
+import {test, expect, vi} from 'vitest'
 import {getHistory, removeListFromHistory, saveListToHistory} from './listHistory'
 
 test('return an empty history when none was saved', () => {
-	Storage.prototype.getItem = fn(() => null)
+	Storage.prototype.getItem = vi.fn(() => null)
 	const h = getHistory()
 	expect(h).toStrictEqual([])
 })
 
 test('return a saved history', () => {
 	const saved = [{id: 1}, {id: 2}]
-	Storage.prototype.getItem = fn(() => JSON.stringify(saved))
+	Storage.prototype.getItem = vi.fn(() => JSON.stringify(saved))
 
 	const h = getHistory()
 	expect(h).toStrictEqual(saved)
@@ -17,8 +17,8 @@ test('return a saved history', () => {
 
 test('store list in history', () => {
 	let saved = {}
-	Storage.prototype.getItem = fn(() => null)
-	Storage.prototype.setItem = fn((key, lists) => {
+	Storage.prototype.getItem = vi.fn(() => null)
+	Storage.prototype.setItem = vi.fn((key, lists) => {
 		saved = lists
 	})
 
@@ -28,8 +28,8 @@ test('store list in history', () => {
 
 test('store only the last 5 lists in history', () => {
 	let saved: string | null = null
-	Storage.prototype.getItem = fn(() => saved)
-	Storage.prototype.setItem = fn((key: string, lists: string) => {
+	Storage.prototype.getItem = vi.fn(() => saved)
+	Storage.prototype.setItem = vi.fn((key: string, lists: string) => {
 		saved = lists
 	})
 
@@ -44,8 +44,8 @@ test('store only the last 5 lists in history', () => {
 
 test('don\'t store the same list twice', () => {
 	let saved: string | null = null
-	Storage.prototype.getItem = fn(() => saved)
-	Storage.prototype.setItem = fn((key: string, lists: string) => {
+	Storage.prototype.getItem = vi.fn(() => saved)
+	Storage.prototype.setItem = vi.fn((key: string, lists: string) => {
 		saved = lists
 	})
 
@@ -56,8 +56,8 @@ test('don\'t store the same list twice', () => {
 
 test('move a list to the beginning when storing it multiple times', () => {
 	let saved: string | null = null
-	Storage.prototype.getItem = fn(() => saved)
-	Storage.prototype.setItem = fn((key: string, lists: string) => {
+	Storage.prototype.getItem = vi.fn(() => saved)
+	Storage.prototype.setItem = vi.fn((key: string, lists: string) => {
 		saved = lists
 	})
 
@@ -69,11 +69,11 @@ test('move a list to the beginning when storing it multiple times', () => {
 
 test('remove list from history', () => {
 	let saved: string | null = '[{"id": 1}]'
-	Storage.prototype.getItem = fn(() => null)
-	Storage.prototype.setItem = fn((key: string, lists: string) => {
+	Storage.prototype.getItem = vi.fn(() => null)
+	Storage.prototype.setItem = vi.fn((key: string, lists: string) => {
 		saved = lists
 	})
-	Storage.prototype.removeItem = fn((key: string) => {
+	Storage.prototype.removeItem = vi.fn((key: string) => {
 		saved = null
 	})
 
