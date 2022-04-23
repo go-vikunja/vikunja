@@ -6486,10 +6486,10 @@ escodegen@^2.0.0:
   optionalDependencies:
     source-map "~0.6.1"
 
-eslint-plugin-vue@8.7.0:
-  version "8.7.0"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-vue/-/eslint-plugin-vue-8.7.0.tgz#d7adb556ba763e6df5447a3775491d0ae40f4dd7"
-  integrity sha512-0Heo1gHDTjU8+5WvfBPEyNqQpzuynbLLebwxh2/xPK0FkEOJlRCwuf1MjGmkidacF2735u5ApRhse18CWTt9Wg==
+eslint-plugin-vue@8.7.1:
+  version "8.7.1"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-vue/-/eslint-plugin-vue-8.7.1.tgz#f13c53547a0c9d64588a675cc5ecc6ccaf63703f"
+  integrity sha512-28sbtm4l4cOzoO1LtzQPxfxhQABararUb1JtqusQqObJpWX2e/gmVyeYVfepizPFne0Q5cILkYGiBoV36L12Wg==
   dependencies:
     eslint-utils "^3.0.0"
     natural-compare "^1.4.0"
