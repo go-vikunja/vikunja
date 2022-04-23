@@ -340,7 +340,7 @@ Environment path: `VIKUNJA_DATABASE_USER`
 
 ### password
 
-Databse password
+Database password
 
 Default: `<empty>`
 
@@ -351,7 +351,7 @@ Environment path: `VIKUNJA_DATABASE_PASSWORD`
 
 ### host
 
-Databse host
+Database host
 
 Default: `localhost`
 
@@ -362,7 +362,7 @@ Environment path: `VIKUNJA_DATABASE_HOST`
 
 ### database
 
-Databse to use
+Database to use
 
 Default: `vikunja`
 
@@ -426,6 +426,35 @@ Full path: `database.sslmode`
 
 Environment path: `VIKUNJA_DATABASE_SSLMODE`
 
+### sslcert
+
+The path to the client cert. Only used with postgres.
+  
+Default: `<empty>`
+
+Full path: `database.sslcert`
+
+Environment path: `VIKUNJA_DATABASE_SSLCERT`
+
+### sslkey
+
+The path to the client key. Only used with postgres.
+
+Default: `<empty>`
+
+Full path: `database.sslkey`
+
+Environment path: `VIKUNJA_DATABASE_SSLKEY`
+
+### sslrootcert
+
+The path to the ca cert. Only used with postgres.
+
+Default: `<empty>`
+
+Full path: `database.sslrootcert`
+
+Environment path: `VIKUNJA_DATABASE_SSLROOTCERT`
 
 ### tls
 

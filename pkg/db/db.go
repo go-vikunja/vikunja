@@ -150,13 +150,16 @@ func parsePostgreSQLHostPort(info string) (string, string) {
 
 func initPostgresEngine() (engine *xorm.Engine, err error) {
 	host, port := parsePostgreSQLHostPort(config.DatabaseHost.GetString())
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s sslcert=%s sslkey=%s sslrootcert=%s",
 		host,
 		port,
 		url.PathEscape(config.DatabaseUser.GetString()),
 		url.PathEscape(config.DatabasePassword.GetString()),
 		config.DatabaseDatabase.GetString(),
 		config.DatabaseSslMode.GetString(),
+		config.DatabaseSslCert.GetString(),
+		config.DatabaseSslKey.GetString(),
+		config.DatabaseSslRootCert.GetString(),
 	)
 
 	engine, err = xorm.NewEngine("postgres", connStr)

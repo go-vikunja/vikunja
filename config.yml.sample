@@ -60,11 +60,11 @@ database:
   type: "sqlite"
   # Database user which is used to connect to the database.
   user: "vikunja"
-  # Databse password
+  # Database password
   password: ""
-  # Databse host
+  # Database host
   host: "localhost"
-  # Databse to use
+  # Database to use
   database: "vikunja"
   # When using sqlite, this is the path where to store the data
   path: "./vikunja.db"
@@ -77,6 +77,12 @@ database:
   # Secure connection mode. Only used with postgres.
   # (see https://pkg.go.dev/github.com/lib/pq?tab=doc#hdr-Connection_String_Parameters)
   sslmode: disable
+  # The path to the client cert. Only used with postgres.
+  sslcert: ""
+  # The path to the client key. Only used with postgres.
+  sslkey: ""
+  # The path to the ca cert. Only used with postgres.
+  sslrootcert: ""
   # Enable SSL/TLS for mysql connections. Options: false, true, skip-verify, preferred
   tls: false
 
