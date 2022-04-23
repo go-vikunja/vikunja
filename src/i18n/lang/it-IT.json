@@ -537,12 +537,12 @@
       "selectPlaceholder": "Clicca o premere invio per selezionare"
     },
     "datepickerRange": {
-      "to": "To",
-      "from": "From",
+      "to": "A",
+      "from": "Da",
       "fromto": "{from} to {to}",
       "ranges": {
-        "today": "Today",
-        "thisWeek": "This Week",
+        "today": "Oggi",
+        "thisWeek": "Questa Settimana",
         "restOfThisWeek": "The Rest of This Week",
         "nextWeek": "Next Week",
         "next7Days": "Next 7 Days",
@@ -563,8 +563,8 @@
       "intro": "Date Math allows you to specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
       "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
       "similar": "These expressions are similar to the ones provided by {0} and {1}.",
-      "add1Day": "Add one day",
-      "minus1Day": "Subtract one day",
+      "add1Day": "Aggiungi un giorno",
+      "minus1Day": "Sottrai un giorno",
       "roundDay": "Round down to the nearest day",
       "supportedUnits": "Supported time units are:",
       "someExamples": "Some examples of time expressions:",
@@ -580,10 +580,10 @@
       "examples": {
         "now": "Right now",
         "in24h": "In 24h",
-        "today": "Today at 00:00",
+        "today": "Oggi alle ore 00:00",
         "beginningOfThisWeek": "The beginning of this week at 00:00",
         "endOfThisWeek": "The end of this week",
-        "in30Days": "In 30 days",
+        "in30Days": "Fra 30 giorni",
         "datePlusMonth": "{0} plus one month at 00:00 of that day"
       }
     }
@@ -857,8 +857,8 @@
       "dueDate": "Modifica la data di scadenza di questa attività",
       "attachment": "Aggiungi un allegato a questa attività",
       "related": "Modifica le attività collegate a questa",
-      "color": "Change the color of this task",
-      "move": "Move this task to another list"
+      "color": "Cambia il colore di questa attività",
+      "move": "Sposta questa attività in un altro elenco"
     },
     "list": {
       "title": "Viste Liste",
@@ -868,7 +868,7 @@
       "switchToTableView": "Passa alla vista Tabella"
     },
     "navigation": {
-      "title": "Navigation",
+      "title": "Navigazione",
       "overview": "Navigate to overview",
       "upcoming": "Navigate to upcoming tasks",
       "namespaces": "Navigate to namespaces & lists",
