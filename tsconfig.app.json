@@ -6,12 +6,12 @@
     "composite": true,
     "baseUrl": ".",
 
-    // "importHelpers": true,
+    "importHelpers": true,
+    "sourceMap": true,
+    "strictNullChecks": true,
     // "allowJs": true,
     // "allowSyntheticDefaultImports": true,
-    // "sourceMap": true,
-    // "strictNullChecks": true,
-
+    
     "paths": {
       "@/*": ["./src/*"]
     }
