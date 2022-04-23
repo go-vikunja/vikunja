@@ -183,8 +183,8 @@ import rights from '../../models/constants/rights'
 import LinkShareService from '../../services/linkShare'
 import LinkShareModel from '../../models/linkShare'
 
-import copy from 'copy-to-clipboard'
 import {mapState} from 'vuex'
+import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
 
 export default defineComponent({
 	name: 'linkSharing',
@@ -205,6 +205,11 @@ export default defineComponent({
 			showDeleteModal: false,
 			linkIdToDelete: 0,
 			showNewForm: false,
+		}
+	},
+	setup() {
+		return {
+			copy: useCopyToClipboard(),
 		}
 	},
 	watch: {
@@ -253,7 +258,6 @@ export default defineComponent({
 				this.showDeleteModal = false
 			}
 		},
-		copy,
 		getShareLink(hash) {
 			return this.frontendUrl + 'share/' + hash + '/auth'
 		},

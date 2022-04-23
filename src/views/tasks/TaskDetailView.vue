@@ -1,7 +1,7 @@
 <template>
 	<div :class="{ 'is-loading': taskService.loading, 'visible': visible}" class="loader-container task-view-container">
 		<div class="task-view">
-			<heading v-model="task" :can-write="canWrite" ref="heading"/>
+			<heading v-model:task="task" :can-write="canWrite" ref="heading"/>
 			<h6 class="subtitle" v-if="parent && parent.namespace && parent.list">
 				{{ getNamespaceTitle(parent.namespace) }} >
 				<router-link :to="{ name: 'list.index', params: { listId: parent.list.id } }">

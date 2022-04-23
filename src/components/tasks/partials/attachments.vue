@@ -142,8 +142,8 @@ import AttachmentService from '../../../services/attachment'
 import AttachmentModel from '../../../models/attachment'
 import User from '../../misc/user'
 import {mapState} from 'vuex'
-import copy from 'copy-to-clipboard'
 
+import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
 import { uploadFiles, generateAttachmentUrl } from '@/helpers/attachments'
 
 export default defineComponent({
@@ -175,6 +175,17 @@ export default defineComponent({
 			default: true,
 		},
 	},
+
+	setup(props) {
+		const copy = useCopyToClipboard()
+
+		function copyUrl(attachment: AttachmentModel) {
+			copy(generateAttachmentUrl(props.taskId, attachment.id))
+		}
+
+		return { copyUrl }
+	},
+
 	computed: mapState({
 		attachments: (state) => state.attachments.attachments,
 	}),
@@ -244,9 +255,6 @@ export default defineComponent({
 			} else {
 				this.downloadAttachment(attachment)
 			}
-		},
-		copyUrl(attachment) {
-			copy(generateAttachmentUrl(this.taskId, attachment.id))
 		},
 	},
 })

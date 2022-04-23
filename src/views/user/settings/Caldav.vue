@@ -66,18 +66,20 @@
 </template>
 
 <script lang="ts" setup>
-import copy from 'copy-to-clipboard'
 import {computed, ref, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useStore} from 'vuex'
 
 import {CALDAV_DOCS} from '@/urls'
 import {useTitle} from '@/composables/useTitle'
+import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {success} from '@/message'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Message from '@/components/misc/message.vue'
 import CaldavTokenService from '@/services/caldavToken'
 import CaldavTokenModel from '@/models/caldavToken'
+
+const copy = useCopyToClipboard()
 
 const {t} = useI18n()
 useTitle(() => `${t('user.settings.caldav.title')} - ${t('user.settings.title')}`)

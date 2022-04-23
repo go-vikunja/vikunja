@@ -476,6 +476,7 @@
     "refresh": "Refresh",
     "disable": "Disable",
     "copy": "Copy to clipboard",
+    "copyError": "Copy to clipboard failed",
     "search": "Search",
     "searchPlaceholder": "Type to search…",
     "previous": "Previous",
