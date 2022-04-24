@@ -143,7 +143,7 @@
 				<template #text>
 					<p>
 						{{ $t('task.comment.deleteText1') }}<br/>
-						<strong>{{ $t('task.comment.deleteText2') }}</strong>
+						<strong class="has-text-white">{{ $t('misc.cannotBeUndone') }}</strong>
 					</p>
 				</template>
 			</modal>

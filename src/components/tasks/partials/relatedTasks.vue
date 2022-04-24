@@ -126,8 +126,10 @@
 				<template #header><span>{{ $t('task.relation.delete') }}</span></template>
 
 				<template #text>
-					<p>{{ $t('task.relation.deleteText1') }}<br/>
-						<strong>{{ $t('task.relation.deleteText2') }}</strong></p>
+					<p>
+						{{ $t('task.relation.deleteText1') }}<br/>
+						<strong class="has-text-white">{{ $t('misc.cannotBeUndone') }}</strong>
+					</p>
 				</template>
 			</modal>
 		</transition>

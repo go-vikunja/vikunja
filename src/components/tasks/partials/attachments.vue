@@ -113,8 +113,10 @@
 				<template #header><span>{{ $t('task.attachment.delete') }}</span></template>
 				
 				<template #text>
-					<p>{{ $t('task.attachment.deleteText1', {filename: attachmentToDelete.file.name}) }}<br/>
-					<strong>{{ $t('task.attachment.deleteText2') }}</strong></p>
+					<p>
+						{{ $t('task.attachment.deleteText1', {filename: attachmentToDelete.file.name}) }}<br/>
+						<strong class="has-text-white">{{ $t('misc.cannotBeUndone') }}</strong>
+					</p>
 				</template>
 			</modal>
 		</transition>
