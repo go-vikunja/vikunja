@@ -4,33 +4,59 @@
 		@submit="deleteList()"
 	>
 		<template #header><span>{{ $t('list.delete.header') }}</span></template>
-		
+
 		<template #text>
-			<p>{{ $t('list.delete.text1') }}<br/>
-			{{ $t('list.delete.text2') }}</p>
+			<p>
+				{{ $t('list.delete.text1') }}
+			</p>
+
+			<p>
+				<strong v-if="totalTasks !== null" class="has-text-white">
+					{{ totalTasks > 0 ? $t('list.delete.tasksToDelete', {count: totalTasks}) : $t('list.delete.noTasksToDelete') }}
+				</strong>
+				<Loading v-else class="is-loading-small"/>
+			</p>
+
+			<p>
+				{{ $t('misc.cannotBeUndone') }}
+			</p>
 		</template>
 	</modal>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script setup lang="ts">
+import {computed, ref, watchEffect} from 'vue'
+import {useTitle} from '@/composables/useTitle'
+import {useI18n} from 'vue-i18n'
+import {useStore} from 'vuex'
+import {useRoute, useRouter} from 'vue-router'
+import {success} from '@/message'
+import TaskCollectionService from '@/services/taskCollection'
+import Loading from '@/components/misc/loading.vue'
 
-export default defineComponent({
-	name: 'list-setting-delete',
-	created() {
-		this.setTitle(this.$t('list.delete.title', {list: this.list.title}))
+const {t} = useI18n()
+const store = useStore()
+const route = useRoute()
+const router = useRouter()
+
+const totalTasks = ref<number | null>(null)
+
+const list = computed(() => store.getters['lists/getListById'](route.params.listId))
+
+watchEffect(
+	() => {
+		const taskCollectionService = new TaskCollectionService()
+		taskCollectionService.getAll({listId: route.params.listId}).then(() => {
+			totalTasks.value = taskCollectionService.totalPages * taskCollectionService.resultCount
+		})
 	},
-	computed: {
-		list() {
-			return this.$store.getters['lists/getListById'](this.$route.params.listId)
-		},
-	},
-	methods: {
-		async deleteList() {
-			await this.$store.dispatch('lists/deleteList', this.list)
-			this.$message.success({message: this.$t('list.delete.success')})
-			this.$router.push({name: 'home'})
-		},
-	},
-})
+)
+
+useTitle(() => t('list.delete.title', {list: list.value.title}))
+
+async function deleteList() {
+	await store.dispatch('lists/deleteList', list)
+	success({message: t('list.delete.success')})
+	router.push({name: 'home'})
+}
 </script>
