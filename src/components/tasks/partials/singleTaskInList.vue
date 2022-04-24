@@ -171,7 +171,7 @@ export default defineComponent({
 		taskDetailRoute() {
 			return {
 				name: 'task.detail',
-				params: { id: this.task.id },
+				params: {id: this.task.id},
 				// TODO: re-enable opening task detail in modal
 				// state: { backdropView: this.$router.currentRoute.value.fullPath },
 			}
@@ -202,7 +202,7 @@ export default defineComponent({
 				await updateFunc() // Don't delay it when un-marking it as it doesn't have an animation the other way around
 			}
 		},
-		
+
 		undoDone(checked) {
 			this.task.done = !this.task.done
 			this.markAsDone(!checked)
@@ -364,6 +364,10 @@ export default defineComponent({
 		height: 2rem;
 		border-left-color: var(--grey-300);
 		border-bottom-color: var(--grey-300);
+	}
+
+	.progress {
+		margin-bottom: 0;
 	}
 }
 </style>
