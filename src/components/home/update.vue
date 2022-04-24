@@ -56,7 +56,7 @@ export default defineComponent({
 	display: flex;
 	align-items: center;
 	background: $warning;
-	padding: 0 0 0 .5rem;
+	padding: .25rem .5rem;
 	border-radius: $radius;
 	font-size: .9rem;
 	color: var(--grey-900);
