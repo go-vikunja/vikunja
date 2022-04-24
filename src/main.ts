@@ -93,12 +93,10 @@ app.mixin({
 })
 
 app.config.errorHandler = (err, vm, info) => {
-	// if (import.meta.env.PROD) {
-	// error(err)
-	// } else {
-	// console.error(err, vm, info)
+	if (import.meta.env.DEV) {
+		console.error(err, vm, info)
+	}
 	error(err)
-	// }
 }
 
 if (import.meta.env.DEV) {
