@@ -56,12 +56,11 @@
 				{{ $t('menu.archive') }}
 			</dropdown-item>
 			<task-subscription
-				v-if="subscription"
 				class="dropdown-item has-no-shadow"
 				:is-button="false"
 				entity="list"
 				:entity-id="list.id"
-				:subscription="subscription"
+				:subscription="list.subscription"
 				@change="sub => subscription = sub"
 			/>
 			<dropdown-item
@@ -93,11 +92,9 @@ const props = defineProps({
 	},
 })
 
-const subscription = ref<SubscriptionModel>()
+const subscription = ref<SubscriptionModel | null>(null)
 watchEffect(() => {
-	if (props.list.subscription) {
-		subscription.value = props.list.subscription
-	}
+	subscription.value = props.list.subscription ?? null
 })
 
 const store = useStore()

@@ -264,7 +264,6 @@
 							{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
 						</x-button>
 						<task-subscription
-							v-if="task.subscription"
 							entity="task"
 							:entity-id="task.id"
 							:subscription="task.subscription"

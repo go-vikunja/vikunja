@@ -36,15 +36,16 @@ import {success} from '@/message'
 interface Props {
   entity: string
   entityId: number
-  subscription: SubscriptionModel
+  subscription: SubscriptionModel | null
   isButton?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
 	isButton: true,
+	subscription: null,
 })
 
-const subscriptionEntity = computed<string>(() => props.subscription.entity)
+const subscriptionEntity = computed<string | null>(() => props.subscription?.entity ?? null)
 
 const emit = defineEmits(['change'])
 
