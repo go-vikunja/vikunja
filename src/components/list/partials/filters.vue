@@ -295,8 +295,10 @@ export default defineComponent({
 	},
 	methods: {
 		change() {
-			this.$emit('update:modelValue', this.params)
-			this.$emit('change', this.params)
+			const params = {...this.params}
+			params.filter_value = params.filter_value.map(v => v instanceof Date ? v.toISOString() : v)
+			this.$emit('update:modelValue', params)
+			this.$emit('change', params)
 		},
 		prepareFilters() {
 			this.prepareDone()
