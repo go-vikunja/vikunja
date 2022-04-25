@@ -79,7 +79,7 @@
     "eslint-plugin-vue": "8.7.1",
     "express": "4.17.3",
     "happy-dom": "2.55.0",
-    "netlify-cli": "9.16.5",
+    "netlify-cli": "10.0.0",
     "postcss": "8.4.12",
     "postcss-preset-env": "7.4.3",
     "rollup": "2.70.2",
