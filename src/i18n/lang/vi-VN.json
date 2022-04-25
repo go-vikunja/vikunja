@@ -201,7 +201,9 @@
       "header": "Xóa danh sách này",
       "text1": "Bạn có chắc chắn muốn xóa danh sách này và tất cả nội dung của nó không?",
       "text2": "Điều này bao gồm tất cả các công việc và KHÔNG THỂ KHÔI PHỤC!",
-      "success": "Danh sách đã được xóa."
+      "success": "Danh sách đã được xóa.",
+      "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
+      "noTasksToDelete": "This list does not contain any tasks, it should be safe to delete."
     },
     "duplicate": {
       "title": "Nhân bản danh sách này",
@@ -476,6 +478,7 @@
     "refresh": "Làm mới",
     "disable": "Vô hiệu hóa",
     "copy": "Sao chép vào khay nhớ tạm",
+    "copyError": "Copy to clipboard failed",
     "search": "Tìm Kiếm",
     "searchPlaceholder": "Gõ để tìm kiếm…",
     "previous": "Trước đó",
@@ -496,7 +499,8 @@
     "custom": "Tuỳ chỉnh",
     "id": "ID",
     "created": "Created at",
-    "actions": "Actions"
+    "actions": "Actions",
+    "cannotBeUndone": "This cannot be undone!"
   },
   "input": {
     "resetColor": "Đặt lại màu",
@@ -684,7 +688,6 @@
       "delete": "Xóa tệp đính kèm",
       "deleteTooltip": "Xóa tệp đính kèm này",
       "deleteText1": "Bạn có chắc chắn muốn xóa tệp đính kèm {filename} không?",
-      "deleteText2": "Việc này không thể hoàn tác!",
       "copyUrl": "Sao chép URL",
       "copyUrlTooltip": "Sao chép url của tệp đính kèm này để sử dụng trong văn bản"
     },
@@ -697,7 +700,6 @@
       "comment": "Bình luận",
       "delete": "Xóa bình luận này",
       "deleteText1": "Bạn có chắc muốn xóa bình luận này không?",
-      "deleteText2": "Việc này không thể hoàn tác!",
       "addedSuccess": "Bình luận đã được thêm vào."
     },
     "deferDueDate": {
@@ -742,7 +744,6 @@
       "noneYet": "Không có công việc liên quan nào.",
       "delete": "Xóa công việc liên quan",
       "deleteText1": "Bạn có chắc muốn xóa công việc liên quan này không?",
-      "deleteText2": "Việc này không thể hoàn tác!",
       "select": "Chọn kiểu liên kết",
       "taskRequired": "Please select a task or enter a new task title.",
       "kinds": {

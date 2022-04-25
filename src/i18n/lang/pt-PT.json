@@ -201,7 +201,9 @@
       "header": "Eliminar esta lista",
       "text1": "Tens a certeza que prentedes apagar esta lista e todo o seu conteúdo?",
       "text2": "Isto inclui todas as tarefas e NÃO PODE SER REVERTIDO!",
-      "success": "A lista foi eliminada com sucesso."
+      "success": "A lista foi eliminada com sucesso.",
+      "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
+      "noTasksToDelete": "This list does not contain any tasks, it should be safe to delete."
     },
     "duplicate": {
       "title": "Duplicar esta lista",
@@ -476,6 +478,7 @@
     "refresh": "Atualizar",
     "disable": "Desativar",
     "copy": "Copiar para a área de trabalho",
+    "copyError": "Copy to clipboard failed",
     "search": "Pesquisar",
     "searchPlaceholder": "Escreva para pesquisar…",
     "previous": "Anterior",
@@ -496,7 +499,8 @@
     "custom": "Personalizado",
     "id": "ID",
     "created": "Criado em",
-    "actions": "Ações"
+    "actions": "Ações",
+    "cannotBeUndone": "This cannot be undone!"
   },
   "input": {
     "resetColor": "Repor cor",
@@ -684,7 +688,6 @@
       "delete": "Eliminar anexo",
       "deleteTooltip": "Eliminar este anexo",
       "deleteText1": "Tens a certeza que pretendes eliminar o anexo {filename}?",
-      "deleteText2": "Isto não pode ser revertido!",
       "copyUrl": "Copiar URL",
       "copyUrlTooltip": "Copia o url deste anexo para o utilizar no texto"
     },
@@ -697,7 +700,6 @@
       "comment": "Comentário",
       "delete": "Eliminar este comentário",
       "deleteText1": "Tens a certeza que pretendes eliminar este comentário?",
-      "deleteText2": "Isto não pode ser revertido!",
       "addedSuccess": "O comentário foi adicionada com sucesso."
     },
     "deferDueDate": {
@@ -742,7 +744,6 @@
       "noneYet": "Ainda sem tarefas relacionadas.",
       "delete": "Eliminar Relação Entre Tarefas",
       "deleteText1": "Tens a certeza que pretendes eliminar esta relação entre tarefas?",
-      "deleteText2": "Isto não pode ser revertido!",
       "select": "Seleciona um tipo de relação",
       "taskRequired": "Por favor, seleciona uma tarefa ou introduz um título para uma nova tarefa.",
       "kinds": {

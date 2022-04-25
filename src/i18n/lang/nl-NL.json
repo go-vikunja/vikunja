@@ -476,6 +476,7 @@
     "refresh": "Vernieuwen",
     "disable": "Uitschakelen",
     "copy": "Kopiëren naar klembord",
+    "copyError": "Copy to clipboard failed",
     "search": "Zoeken",
     "searchPlaceholder": "Typ om te zoeken…",
     "previous": "Vorige",

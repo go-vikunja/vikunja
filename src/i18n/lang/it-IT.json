@@ -96,23 +96,23 @@
         "scanQR": "In alternativa puoi scansionare questo codice QR:",
         "passcode": "Codice di accesso",
         "passcodePlaceholder": "Un codice generato dalla tua applicazione TOTP",
-        "setupSuccess": "You've successfully set up two factor authentication!",
+        "setupSuccess": "Autenticazione a due fattori abilitata!",
         "enterPassword": "Inserisci La Tua Password",
         "disable": "Disabilita l'autenticazione a due fattori",
         "confirmSuccess": "Hai confermato con successo la tua configurazione totp e puoi usarla da ora in poi!",
-        "disableSuccess": "Two factor authentication was successfully disabled."
+        "disableSuccess": "Autenticazione a due fattori disabilitata."
       },
       "caldav": {
         "title": "CalDAV",
-        "howTo": "You can connect Vikunja to CalDAV clients to view and manage all tasks from different clients. Enter this url into your client:",
-        "more": "More information about CalDAV in Vikunja",
+        "howTo": "Puoi connettere Vikunja ai client CalDAV per visualizzare e gestire tutte le attività da diversi client. Inserisci questo URL nel client:",
+        "more": "Ulteriori informazioni riguardo CalDAV in Vikunja",
         "tokens": "Token CalDAV",
-        "tokensHowTo": "You can use a CalDAV token to use instead of a password to log in the above endpoint.",
+        "tokensHowTo": "È possibile utilizzare un token CalDAV per utilizzare invece della password per accedere all'indirizzo precedente.",
         "createToken": "Crea un token",
-        "tokenCreated": "Here is your token: {token}",
-        "wontSeeItAgain": "Write it down, you won't be able to see it again.",
+        "tokenCreated": "Ecco il token: {token}",
+        "wontSeeItAgain": "Scrivetelo, non potrai più vederlo in futuro.",
         "mustUseToken": "You need to create a CalDAV token if you want to use CalDAV with a third party client. Use the token as the password.",
-        "usernameIs": "Your username is: {0}"
+        "usernameIs": "Il tuo nome utente è: {0}"
       },
       "avatar": {
         "title": "Avatar",
@@ -201,7 +201,9 @@
       "header": "Elimina questa lista",
       "text1": "Sei sicuro di voler eliminare questa lista e tutti i suoi contenuti?",
       "text2": "Questo include tutte le attività e NON PUÒ ESSERE RIPRISTINATO!",
-      "success": "La lista è stata eliminata con successo."
+      "success": "La lista è stata eliminata con successo.",
+      "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
+      "noTasksToDelete": "This list does not contain any tasks, it should be safe to delete."
     },
     "duplicate": {
       "title": "Duplica questa lista",
@@ -476,6 +478,7 @@
     "refresh": "Aggiorna",
     "disable": "Disabilita",
     "copy": "Copia negli appunti",
+    "copyError": "Copy to clipboard failed",
     "search": "Cerca",
     "searchPlaceholder": "Digita per cercare…",
     "previous": "Precedente",
@@ -496,7 +499,8 @@
     "custom": "Custom",
     "id": "ID",
     "created": "Created at",
-    "actions": "Azioni"
+    "actions": "Azioni",
+    "cannotBeUndone": "This cannot be undone!"
   },
   "input": {
     "resetColor": "Ripristina Colore",
@@ -684,7 +688,6 @@
       "delete": "Elimina allegato",
       "deleteTooltip": "Elimina questo allegato",
       "deleteText1": "Sei sicuro di voler eliminare l'allegato {filename}?",
-      "deleteText2": "Questa azione non può essere annullata!",
       "copyUrl": "Copia URL",
       "copyUrlTooltip": "Copia l'URL di questo allegato per usarlo nel testo"
     },
@@ -697,7 +700,6 @@
       "comment": "Commenta",
       "delete": "Elimina questo commento",
       "deleteText1": "Sei sicuro di voler eliminare questo commento?",
-      "deleteText2": "Questa azione non può essere annullata!",
       "addedSuccess": "Il commento è stato aggiunto correttamente."
     },
     "deferDueDate": {
@@ -742,7 +744,6 @@
       "noneYet": "Nessuna attività collegata.",
       "delete": "Elimina Collegamento Attività",
       "deleteText1": "Confermi di voler eliminare questo collegamento attività?",
-      "deleteText2": "Questa azione non può essere annullata!",
       "select": "Seleziona un tipo di collegamento",
       "taskRequired": "Please select a task or enter a new task title.",
       "kinds": {
@@ -869,11 +870,11 @@
     },
     "navigation": {
       "title": "Navigazione",
-      "overview": "Navigate to overview",
-      "upcoming": "Navigate to upcoming tasks",
-      "namespaces": "Navigate to namespaces & lists",
-      "labels": "Navigate to labels",
-      "teams": "Navigate to teams"
+      "overview": "Passa a \"Panoramica\"",
+      "upcoming": "Passa a \"Prossimamente\"",
+      "namespaces": "Passa a \"Namespace e Liste\"",
+      "labels": "Passa a \"Etichette\"",
+      "teams": "Passa a \"Gruppi\""
     }
   },
   "update": {

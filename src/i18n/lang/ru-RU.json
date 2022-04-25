@@ -201,7 +201,9 @@
       "header": "Удалить этот список",
       "text1": "Удалить этот список вместе со всем содержимым?",
       "text2": "Это включает в себя все задачи, и отменить это будет нельзя!",
-      "success": "Список удалён."
+      "success": "Список удалён.",
+      "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
+      "noTasksToDelete": "This list does not contain any tasks, it should be safe to delete."
     },
     "duplicate": {
       "title": "Создать копию списка",
@@ -476,6 +478,7 @@
     "refresh": "Обновить",
     "disable": "Отключить",
     "copy": "Скопировать в буфер обмена",
+    "copyError": "Copy to clipboard failed",
     "search": "Поиск",
     "searchPlaceholder": "Введи запрос для поиска…",
     "previous": "Назад",
@@ -496,7 +499,8 @@
     "custom": "Custom",
     "id": "ID",
     "created": "Created at",
-    "actions": "Actions"
+    "actions": "Actions",
+    "cannotBeUndone": "This cannot be undone!"
   },
   "input": {
     "resetColor": "Сбросить цвет",
@@ -684,7 +688,6 @@
       "delete": "Удалить вложение",
       "deleteTooltip": "Удалить это вложение",
       "deleteText1": "Удалить вложение {filename}?",
-      "deleteText2": "Это действие отменить нельзя!",
       "copyUrl": "Скопировать URL",
       "copyUrlTooltip": "Скопировать ссылку на это вложение для использования в тексте"
     },
@@ -697,7 +700,6 @@
       "comment": "Комментировать",
       "delete": "Удалить комментарий",
       "deleteText1": "Удалить этот комментарий?",
-      "deleteText2": "Это действие отменить нельзя!",
       "addedSuccess": "Комментарий добавлен."
     },
     "deferDueDate": {
@@ -742,7 +744,6 @@
       "noneYet": "Ещё нет связанных задач.",
       "delete": "Удалить связь",
       "deleteText1": "Удалить эту связь с задачей?",
-      "deleteText2": "Это действие отменить нельзя!",
       "select": "Select a relation kind",
       "taskRequired": "Please select a task or enter a new task title.",
       "kinds": {

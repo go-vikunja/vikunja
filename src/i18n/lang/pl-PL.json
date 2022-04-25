@@ -201,7 +201,9 @@
       "header": "Usuń tę listę",
       "text1": "Czy na pewno chcesz usunąć tę listę i całą jej zawartość?",
       "text2": "Obejmuje to wszystkie zadania i tego NIE DA SIĘ COFNĄĆ!",
-      "success": "Lista została pomyślnie usunięta."
+      "success": "Lista została pomyślnie usunięta.",
+      "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
+      "noTasksToDelete": "This list does not contain any tasks, it should be safe to delete."
     },
     "duplicate": {
       "title": "Duplikuj tę listę",
@@ -476,6 +478,7 @@
     "refresh": "Odśwież",
     "disable": "Wyłącz",
     "copy": "Skopiuj do schowka",
+    "copyError": "Kopiowanie do schowka nie powiodło się",
     "search": "Szukaj",
     "searchPlaceholder": "Wpisz, aby wyszukać…",
     "previous": "Poprzedni",
@@ -496,7 +499,8 @@
     "custom": "Własne",
     "id": "ID",
     "created": "Utworzono",
-    "actions": "Akcje"
+    "actions": "Akcje",
+    "cannotBeUndone": "This cannot be undone!"
   },
   "input": {
     "resetColor": "Resetuj kolor",
@@ -684,7 +688,6 @@
       "delete": "Usuń załącznik",
       "deleteTooltip": "Usuń ten załącznik",
       "deleteText1": "Czy na pewno chcesz usunąć załącznik {filename}?",
-      "deleteText2": "Tego nie da się cofnąć!",
       "copyUrl": "Kopiuj URL",
       "copyUrlTooltip": "Skopiuj adres URL tego załącznika do użycia w tekście"
     },
@@ -697,7 +700,6 @@
       "comment": "Skomentuj",
       "delete": "Usuń ten komentarz",
       "deleteText1": "Czy na pewno chcesz usunąć ten komentarz?",
-      "deleteText2": "Tego nie da się cofnąć!",
       "addedSuccess": "Komentarz został pomyślnie dodany."
     },
     "deferDueDate": {
@@ -742,7 +744,6 @@
       "noneYet": "Nie ma jeszcze powiązanych zadań.",
       "delete": "Usuń powiązane zadanie",
       "deleteText1": "Czy na pewno chcesz usunąć to powiązane zadanie?",
-      "deleteText2": "Tego nie da się cofnąć!",
       "select": "Wybierz rodzaj powiązanego zadania",
       "taskRequired": "Wybierz zadanie lub wpisz tytuł nowego zadania.",
       "kinds": {

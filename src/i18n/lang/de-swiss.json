@@ -201,7 +201,9 @@
       "header": "Die Liste chüble",
       "text1": "Bisch du dir sicher, dass du die Liste und all ihren Inhalt chüble wetsch?",
       "text2": "Das beinhalltet alli Uufgabe und CHAN NID RÜCKGÄNGIG GMACHT WERDE!",
-      "success": "Die Liste isch erfolgriich g'chüblet wore."
+      "success": "Die Liste isch erfolgriich g'chüblet wore.",
+      "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
+      "noTasksToDelete": "This list does not contain any tasks, it should be safe to delete."
     },
     "duplicate": {
       "title": "Die Liste dubliziere",
@@ -476,6 +478,7 @@
     "refresh": "Neu lade",
     "disable": "Deaktiviere",
     "copy": "I'd Zwüscheablaag kopiere",
+    "copyError": "Kopieren in Zwischenablage fehlgeschlagen",
     "search": "Sueche",
     "searchPlaceholder": "Schriib zum sueche…",
     "previous": "Vorherige",
@@ -496,7 +499,8 @@
     "custom": "Benutzerdefiniert",
     "id": "ID",
     "created": "Erstellt am",
-    "actions": "Aktionen"
+    "actions": "Aktionen",
+    "cannotBeUndone": "This cannot be undone!"
   },
   "input": {
     "resetColor": "Farb zruggsetze",
@@ -684,7 +688,6 @@
       "delete": "Aahhang lösche",
       "deleteTooltip": "De Aahhang lösche",
       "deleteText1": "Bisch du dir sicher, dass du de Aahang {filename} lösche wetsch?",
-      "deleteText2": "Das chan nid rückgängig gmacht werde!",
       "copyUrl": "URL Kopierä",
       "copyUrlTooltip": "D'Url vo dem Aahang kopiere, um sie im Text zbruuche"
     },
@@ -697,7 +700,6 @@
       "comment": "Kommentar",
       "delete": "De Kommentar chüble",
       "deleteText1": "Bisch du dir sicher, dass du de Kommentar chüble wetsch?",
-      "deleteText2": "Das chan nid rückgängig gmacht werde!",
       "addedSuccess": "Din Kommentar isch erfolgriich hinzuegfüegt worde."
     },
     "deferDueDate": {
@@ -742,7 +744,6 @@
       "noneYet": "S'git kei Uufgabe Beziehige.",
       "delete": "Uufgabe Beziehig chüble",
       "deleteText1": "Bisch du dir sicher, dass du die Zueghörigkeit chüblä wetsch?",
-      "deleteText2": "Das chan nid rückgängig gmacht werde!",
       "select": "Beziehungsart auswählen",
       "taskRequired": "Bitte wähle eine Aufgabe aus oder gib einen neuen Aufgabentitel ein.",
       "kinds": {

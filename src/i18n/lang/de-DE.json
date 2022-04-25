@@ -476,6 +476,7 @@
     "refresh": "Neu laden",
     "disable": "Deaktivieren",
     "copy": "In Zwischenablage kopieren",
+    "copyError": "Kopieren in Zwischenablage fehlgeschlagen",
     "search": "Suchen",
     "searchPlaceholder": "Beginne zu schreiben, um zu suchen…",
     "previous": "Vorherige",

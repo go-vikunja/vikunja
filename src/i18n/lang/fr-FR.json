@@ -476,6 +476,7 @@
     "refresh": "Actualiser",
     "disable": "Désactiver",
     "copy": "Copier dans le presse-papier",
+    "copyError": "Copy to clipboard failed",
     "search": "Rechercher",
     "searchPlaceholder": "Écris pour rechercher…",
     "previous": "Précédent",

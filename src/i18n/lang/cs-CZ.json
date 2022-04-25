@@ -18,7 +18,7 @@
   },
   "ready": {
     "loading": "Vikunja se načítá…",
-    "errorOccured": "An error occurred:",
+    "errorOccured": "Došlo k chybě:",
     "checkApiUrl": "Zkontrolujte, zda je adresa URL API správná.",
     "noApiUrlConfigured": "Nebyla nakonfigurována žádná adresa API. Prosím nastavte jednu níže:"
   },
@@ -31,7 +31,7 @@
       "username": "Uživatelské jméno",
       "usernameEmail": "Uživatelské jméno nebo e-mail",
       "usernamePlaceholder": "např. Jarmil",
-      "email": "Email address",
+      "email": "E-mailová adresa",
       "emailPlaceholder": "např. jarmil{'@'}vikunja.io",
       "password": "Heslo",
       "passwordPlaceholder": "např. • • • • • • • •",
@@ -44,20 +44,20 @@
       "totpTitle": "Kód dvoufaktorového ověření",
       "totpPlaceholder": "např. 123456",
       "login": "Přihlásit se",
-      "createAccount": "Create account",
+      "createAccount": "Vytvořit účet",
       "loginWith": "Přihlásit se pomocí {provider}",
       "authenticating": "Ověřování…",
       "openIdStateError": "Stav neodpovídá, odmítám pokračovat!",
       "openIdGeneralError": "Došlo k chybě při ověřování proti třetí straně.",
       "logout": "Odhlásit se",
-      "emailInvalid": "Please enter a valid email address.",
-      "usernameRequired": "Please provide a username.",
-      "passwordRequired": "Please provide a password.",
-      "showPassword": "Show the password",
-      "hidePassword": "Hide the password",
-      "noAccountYet": "Don't have an account yet?",
-      "alreadyHaveAnAccount": "Already have an account?",
-      "remember": "Stay logged in"
+      "emailInvalid": "Prosím zadejte platnou emailovou adresu.",
+      "usernameRequired": "Zadejte prosím uživatelské jméno.",
+      "passwordRequired": "Zadejte prosím heslo.",
+      "showPassword": "Ukázat heslo",
+      "hidePassword": "Skrýt heslo",
+      "noAccountYet": "Ještě nemáte účet?",
+      "alreadyHaveAnAccount": "Už máte svůj účet?",
+      "remember": "Zůstat trvale přihlášen"
     },
     "settings": {
       "title": "Nastavení",
@@ -68,7 +68,7 @@
       "currentPasswordPlaceholder": "Vaše současné heslo",
       "passwordsDontMatch": "Nové heslo se neshoduje s potvrzením hesla.",
       "passwordUpdateSuccess": "Heslo bylo úspěšně změněno.",
-      "updateEmailTitle": "Update Your Email Address",
+      "updateEmailTitle": "Aktualizujte svou e-mailovou adresu",
       "updateEmailNew": "Nová e-mailová adresa",
       "updateEmailSuccess": "Vaše e-mailová adresa byla úspěšně aktualizována. Poslali jsme vám odkaz pro její potvrzení.",
       "general": {
@@ -86,7 +86,7 @@
         "weekStartMonday": "Pondělí",
         "language": "Jazyk",
         "defaultList": "Výchozí seznam",
-        "timezone": "Time Zone"
+        "timezone": "Časové pásmo"
       },
       "totp": {
         "title": "Dvoufaktorové ověření",
@@ -96,23 +96,23 @@
         "scanQR": "Případně můžete naskenovat tento QR kód:",
         "passcode": "Přístupový kód",
         "passcodePlaceholder": "Kód vygenerovaný vaší aplikací",
-        "setupSuccess": "You've successfully set up two factor authentication!",
+        "setupSuccess": "Úspěšně jste nastavili dvoufaktorové ověření!",
         "enterPassword": "Zadejte prosím heslo",
         "disable": "Zakázat dvoufaktorové ověření",
         "confirmSuccess": "Úspěšně jste potvrdili nastavení a od nynějška jej můžete používat!",
-        "disableSuccess": "Two factor authentication was successfully disabled."
+        "disableSuccess": "Dvoufázové ověření bylo úspěšně vypnuto."
       },
       "caldav": {
         "title": "CalDAV",
-        "howTo": "You can connect Vikunja to CalDAV clients to view and manage all tasks from different clients. Enter this url into your client:",
-        "more": "More information about CalDAV in Vikunja",
-        "tokens": "CalDAV Tokens",
-        "tokensHowTo": "You can use a CalDAV token to use instead of a password to log in the above endpoint.",
-        "createToken": "Create a token",
-        "tokenCreated": "Here is your token: {token}",
-        "wontSeeItAgain": "Write it down, you won't be able to see it again.",
-        "mustUseToken": "You need to create a CalDAV token if you want to use CalDAV with a third party client. Use the token as the password.",
-        "usernameIs": "Your username is: {0}"
+        "howTo": "Můžete propojit Vikunja s klienty CalDAV a prohlížet a spravovat všechny úkoly v nich. Zadejte tuto url do klienta:",
+        "more": "Více informací o CalDAV ve Vikunja",
+        "tokens": "CalDAV tokeny",
+        "tokensHowTo": "Pro přihlášení do výše uvedeného koncového bodu můžete použít CalDAV token místo hesla.",
+        "createToken": "Vytvořit token",
+        "tokenCreated": "Tady je váš token: {token}",
+        "wontSeeItAgain": "Poznamenejte si ho, znovu ho už neuvidíte.",
+        "mustUseToken": "Musíte vytvořit CalDAV token, pokud chcete používat CalDAV s klientem třetí strany. Jako heslo použijte token.",
+        "usernameIs": "Vaše uživatelské jméno je: {0}"
       },
       "avatar": {
         "title": "Avatar",
@@ -332,7 +332,7 @@
     "create": {
       "title": "Nový prostor",
       "titleRequired": "Uveďte prosím název.",
-      "explanation": "A namespace is a collection of lists you can share and use to organize your lists with. In fact, every list belongs to a namespace.",
+      "explanation": "Prostor je kolekce seznamů, které můžete sdílet a používat k organizaci seznamů. Každý seznam patří do nějakého prostoru.",
       "tooltip": "Co je prostor?",
       "success": "Prostor byl úspěšně vytvořen."
     },
@@ -342,7 +342,7 @@
       "archiveText": "Nebudete moci upravovat tento jmenný prostor ani vytvářet nové seznamy, dokud jej neodarchivujete. Všechny seznamy v tomto prostoru budou také archivovány.",
       "unarchiveText": "Budete moci vytvářet nové úkoly nebo je upravovat.",
       "success": "Prostor byl úspěšně archivován.",
-      "unarchiveSuccess": "The namespace was successfully un-archived.",
+      "unarchiveSuccess": "Jmenný prostor byl úspěšně obnoven.",
       "description": "Pokud je prostor archivován, nelze vytvořit nové seznamy nebo je upravit."
     },
     "delete": {
@@ -392,7 +392,7 @@
       "showDoneTasks": "Zobrazit dokončené úkoly",
       "sortAlphabetically": "Řadit podle abecedy",
       "enablePriority": "Povolit filtrování podle priority",
-      "enablePercentDone": "Enable Filter By Progress",
+      "enablePercentDone": "Povolit filtrování podle průběhu",
       "dueDateRange": "Rozsah termínu",
       "startDateRange": "Začátek období",
       "endDateRange": "Konec období",
@@ -476,6 +476,7 @@
     "refresh": "Obnovit",
     "disable": "Vypnout",
     "copy": "Kopírovat do schránky",
+    "copyError": "Kopírování do schránky se nezdařilo",
     "search": "Hledat",
     "searchPlaceholder": "Zadejte hledaný text…",
     "previous": "Předchozí",
@@ -493,10 +494,10 @@
     "hideMenu": "Skrýt nabídku",
     "forExample": "Například:",
     "welcomeBack": "Vítejte zpět!",
-    "custom": "Custom",
+    "custom": "Vlastní",
     "id": "ID",
-    "created": "Created at",
-    "actions": "Actions"
+    "created": "Vytvořeno",
+    "actions": "Akce"
   },
   "input": {
     "resetColor": "Obnovit barvu",
@@ -537,54 +538,54 @@
       "selectPlaceholder": "Kliknutím nebo stisknutím klávesy Enter vyberte"
     },
     "datepickerRange": {
-      "to": "To",
-      "from": "From",
-      "fromto": "{from} to {to}",
+      "to": "Do",
+      "from": "Od",
+      "fromto": "{from} – {to}",
       "ranges": {
-        "today": "Today",
-        "thisWeek": "This Week",
-        "restOfThisWeek": "The Rest of This Week",
-        "nextWeek": "Next Week",
-        "next7Days": "Next 7 Days",
-        "lastWeek": "Last Week",
-        "thisMonth": "This Month",
-        "restOfThisMonth": "The Rest of This Month",
-        "nextMonth": "Next Month",
-        "next30Days": "Next 30 Days",
-        "lastMonth": "Last Month",
-        "thisYear": "This Year",
-        "restOfThisYear": "The Rest of This Year"
+        "today": "Dnes",
+        "thisWeek": "Tento týden",
+        "restOfThisWeek": "Zbytek tohoto týdne",
+        "nextWeek": "Příští týden",
+        "next7Days": "Příštích 7 dní",
+        "lastWeek": "Minulý týden",
+        "thisMonth": "Tento měsíc",
+        "restOfThisMonth": "Zbytek tohoto měsíce",
+        "nextMonth": "Příští měsíc",
+        "next30Days": "Příštích 30 dní",
+        "lastMonth": "Minulý měsíc",
+        "thisYear": "Tento rok",
+        "restOfThisYear": "Zbytek tohoto roku"
       }
     },
     "datemathHelp": {
-      "canuse": "You can use date math to filter for relative dates.",
-      "learnhow": "Check out how it works",
-      "title": "Date Math",
-      "intro": "Date Math allows you to specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
-      "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
-      "similar": "These expressions are similar to the ones provided by {0} and {1}.",
-      "add1Day": "Add one day",
-      "minus1Day": "Subtract one day",
-      "roundDay": "Round down to the nearest day",
-      "supportedUnits": "Supported time units are:",
-      "someExamples": "Some examples of time expressions:",
+      "canuse": "Můžete použít vzorec pro filtrování podle relativních datumů.",
+      "learnhow": "Podívejte se, jak to funguje",
+      "title": "Datumový vzorec",
+      "intro": "Datumový vzorec umožňuje určit relativní data, která jsou při použití filtru vyřešena za běhu Vikunjou.",
+      "expression": "Každý datumový matematický výraz začíná datem ukotvení, které může být buď {0}, nebo datový řetězec končící {1}. Po tomto ukotvení může volitelně následovat jeden nebo více matematických výrazů.",
+      "similar": "Tyto výrazy jsou podobné výrazům poskytnutým {0} a {1}.",
+      "add1Day": "Přidat jeden den",
+      "minus1Day": "Odečíst jeden den",
+      "roundDay": "Zaokrouhlit dolů na nejbližší den",
+      "supportedUnits": "Podporované časové jednotky jsou:",
+      "someExamples": "Některé příklady časových výrazů:",
       "units": {
-        "seconds": "Seconds",
-        "minutes": "Minutes",
-        "hours": "Hours",
-        "days": "Days",
-        "weeks": "Weeks",
-        "months": "Months",
-        "years": "Years"
+        "seconds": "Sekundy",
+        "minutes": "Minuty",
+        "hours": "Hodiny",
+        "days": "Dny",
+        "weeks": "Týdny",
+        "months": "Měsíce",
+        "years": "Roky"
       },
       "examples": {
-        "now": "Right now",
-        "in24h": "In 24h",
-        "today": "Today at 00:00",
-        "beginningOfThisWeek": "The beginning of this week at 00:00",
-        "endOfThisWeek": "The end of this week",
-        "in30Days": "In 30 days",
-        "datePlusMonth": "{0} plus one month at 00:00 of that day"
+        "now": "Právě teď",
+        "in24h": "Za 24 hodin",
+        "today": "Dnes v 00:00",
+        "beginningOfThisWeek": "Začátek tohoto týdne v 00:00",
+        "endOfThisWeek": "Konec tohoto týdne",
+        "in30Days": "Za 30 dní",
+        "datePlusMonth": "{0} plus jeden měsíc v 00:00 daného dne"
       }
     }
   },
@@ -603,9 +604,9 @@
       "titleCurrent": "Aktuální úkoly",
       "titleDates": "Úkoly od {from} do {to}",
       "noDates": "Zobrazit úkoly bez datumu",
-      "overdue": "Show overdue tasks",
-      "fromuntil": "Tasks from {from} until {until}",
-      "select": "Select a date range",
+      "overdue": "Zobrazit zpožděné úkoly",
+      "fromuntil": "Úkoly od {from} do {until}",
+      "select": "Vyberte rozsah dat",
       "noTasks": "Nic na práci - užij si pěkný den!"
     },
     "detail": {
@@ -629,22 +630,22 @@
         "text2": "Tímto také odstraníte všechny přílohy, připomenutí a vztahy spojené s tímto úkolem a nelze je vrátit zpět!"
       },
       "actions": {
-        "assign": "Assign to User",
-        "label": "Add Labels",
+        "assign": "Přiřadit uživateli",
+        "label": "Přidat štítky",
         "priority": "Nastavit prioritu",
         "dueDate": "Nastavit termín",
-        "startDate": "Set Start Date",
-        "endDate": "Set End Date",
+        "startDate": "Nastavit počáteční datum",
+        "endDate": "Nastavit koncové datum",
         "reminders": "Nastavit připomenutí",
-        "repeatAfter": "Set Repeating Interval",
-        "percentDone": "Set Progress",
-        "attachments": "Add Attachments",
-        "relatedTasks": "Add Relation",
-        "moveList": "Move",
-        "color": "Set Color",
-        "delete": "Delete",
-        "favorite": "Add to Favorites",
-        "unfavorite": "Remove from Favorites"
+        "repeatAfter": "Nastavit interval opakování",
+        "percentDone": "Nastavit průběh",
+        "attachments": "Přidat přílohy",
+        "relatedTasks": "Přidat vztah",
+        "moveList": "Přesunout",
+        "color": "Nastavit barvu",
+        "delete": "Smazat",
+        "favorite": "Přidat do oblíbených",
+        "unfavorite": "Odebrat z oblíbených"
       }
     },
     "attributes": {
@@ -657,7 +658,7 @@
       "dueDate": "Termín",
       "endDate": "Datum ukončení",
       "labels": "Štítky",
-      "percentDone": "Progress",
+      "percentDone": "Průběh",
       "priority": "Priorita",
       "relatedTasks": "Související úkoly",
       "reminders": "Připomínky",
@@ -744,7 +745,7 @@
       "deleteText1": "Jste si jisti, že chcete odstranit tento vztah úkolu?",
       "deleteText2": "Toto nelze vrátit!",
       "select": "Vyberte typ vztahu",
-      "taskRequired": "Please select a task or enter a new task title.",
+      "taskRequired": "Vyberte úkol nebo zadejte název nového úkolu.",
       "kinds": {
         "subtask": "Podúkol | Podúkoly",
         "parenttask": "Nadřazený úkol | Nadřazené úkoly",
@@ -845,20 +846,20 @@
     "general": "Obecné",
     "allPages": "Tyto zkratky fungují na všech stránkách.",
     "currentPageOnly": "Tyto zkratky fungují pouze na aktuální stránce.",
-    "somePagesOnly": "These shortcuts work only on some pages.",
+    "somePagesOnly": "Tyto zkratky fungují pouze na některých stránkách.",
     "toggleMenu": "Přepnout nabídku",
     "quickSearch": "Otevřít vyhledávání / panel rychlých akcí",
     "then": "potom",
     "task": {
       "title": "Stránka úkolů",
-      "done": "Mark task done / undone",
-      "assign": "Assign this task to a user",
+      "done": "Označit úkol za hotový / rozpracovaný",
+      "assign": "Přiřadit tento úkol uživateli",
       "labels": "Přidat štítky k tomuto úkolu",
       "dueDate": "Změnit termín tohoto úkolu",
       "attachment": "Přidat přílohu k tomuto úkolu",
       "related": "Upravit související úkoly tohoto úkolu",
-      "color": "Change the color of this task",
-      "move": "Move this task to another list"
+      "color": "Změnit barvu tohoto úkolu",
+      "move": "Přesunout tento úkol do jiného seznamu"
     },
     "list": {
       "title": "Zobrazení seznamů",
@@ -868,12 +869,12 @@
       "switchToTableView": "Přepnout na zobrazení tabulky"
     },
     "navigation": {
-      "title": "Navigation",
-      "overview": "Navigate to overview",
-      "upcoming": "Navigate to upcoming tasks",
-      "namespaces": "Navigate to namespaces & lists",
-      "labels": "Navigate to labels",
-      "teams": "Navigate to teams"
+      "title": "Navigace",
+      "overview": "Přejít na přehled",
+      "upcoming": "Přejít na nadcházející úkoly",
+      "namespaces": "Přejít na prostory a seznamy",
+      "labels": "Přejít na štítky",
+      "teams": "Přejít na týmy"
     }
   },
   "update": {
@@ -979,7 +980,7 @@
     "4015": "Komentář k úkolu neexistuje.",
     "4016": "Neplatné pole úkolu.",
     "4017": "Neplatný komparátor filtru úkolů.",
-    "4018": "Invalid task filter concatenator.",
+    "4018": "Neplatné zřetězení filtru úkolů.",
     "4019": "Neplatná hodnota filtru úkolů.",
     "5001": "Prostor neexistuje.",
     "5003": "Nemáte přístup ke zvolenému prostoru.",
