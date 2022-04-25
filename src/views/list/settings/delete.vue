@@ -12,7 +12,9 @@
 
 			<p>
 				<strong v-if="totalTasks !== null" class="has-text-white">
-					{{ totalTasks > 0 ? $t('list.delete.tasksToDelete', {count: totalTasks}) : $t('list.delete.noTasksToDelete') }}
+					{{
+						totalTasks > 0 ? $t('list.delete.tasksToDelete', {count: totalTasks}) : $t('list.delete.noTasksToDelete')
+					}}
 				</strong>
 				<Loading v-else class="is-loading-small"/>
 			</p>
@@ -45,6 +47,10 @@ const list = computed(() => store.getters['lists/getListById'](route.params.list
 
 watchEffect(
 	() => {
+		if (!route.params.lisId) {
+			return
+		}
+
 		const taskCollectionService = new TaskCollectionService()
 		taskCollectionService.getAll({listId: route.params.listId}).then(() => {
 			totalTasks.value = taskCollectionService.totalPages * taskCollectionService.resultCount
@@ -52,10 +58,10 @@ watchEffect(
 	},
 )
 
-useTitle(() => t('list.delete.title', {list: list.value.title}))
+useTitle(() => t('list.delete.title', {list: list?.value?.title}))
 
 async function deleteList() {
-	await store.dispatch('lists/deleteList', list)
+	await store.dispatch('lists/deleteList', list.value)
 	success({message: t('list.delete.success')})
 	router.push({name: 'home'})
 }
