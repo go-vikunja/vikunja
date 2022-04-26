@@ -201,7 +201,9 @@
       "header": "Supprimer cette liste",
       "text1": "Supprimer cette liste et tout son contenu ?",
       "text2": "Ceci inclut toutes les tâches et ne peut pas être annulé !",
-      "success": "Liste supprimée."
+      "success": "Liste supprimée.",
+      "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
+      "noTasksToDelete": "This list does not contain any tasks, it should be safe to delete."
     },
     "duplicate": {
       "title": "Dupliquer cette liste",
@@ -497,7 +499,8 @@
     "custom": "Custom",
     "id": "ID",
     "created": "Created at",
-    "actions": "Actions"
+    "actions": "Actions",
+    "cannotBeUndone": "This cannot be undone!"
   },
   "input": {
     "resetColor": "Réinitialiser la couleur",
@@ -685,7 +688,6 @@
       "delete": "Supprimer la pièce jointe",
       "deleteTooltip": "Supprimer cette pièce jointe",
       "deleteText1": "Supprimer la pièce jointe {filename} ?",
-      "deleteText2": "Ceci ne peut être annulé !",
       "copyUrl": "Copier l’URL",
       "copyUrlTooltip": "Copier l’URL de cette pièce jointe pour l’utiliser dans le texte"
     },
@@ -698,7 +700,6 @@
       "comment": "Commentaire",
       "delete": "Supprimer ce commentaire",
       "deleteText1": "Supprimer ce commentaire ?",
-      "deleteText2": "Ceci ne peut être annulé !",
       "addedSuccess": "Commentaire ajouté."
     },
     "deferDueDate": {
@@ -743,7 +744,6 @@
       "noneYet": "Pas encore de relations de tâches.",
       "delete": "Supprimer la relation de tâche",
       "deleteText1": "Supprimer cette relation de tâche ?",
-      "deleteText2": "Ceci ne peut pas être annulé !",
       "select": "Sélectionnez un genre de relation",
       "taskRequired": "Please select a task or enter a new task title.",
       "kinds": {

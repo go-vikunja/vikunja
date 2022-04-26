@@ -202,8 +202,8 @@
       "text1": "Bisch du dir sicher, dass du die Liste und all ihren Inhalt chüble wetsch?",
       "text2": "Das beinhalltet alli Uufgabe und CHAN NID RÜCKGÄNGIG GMACHT WERDE!",
       "success": "Die Liste isch erfolgriich g'chüblet wore.",
-      "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
-      "noTasksToDelete": "This list does not contain any tasks, it should be safe to delete."
+      "tasksToDelete": "Dies löscht unwiderruflich ca. {count} Aufgaben.",
+      "noTasksToDelete": "Diese Liste enthält keine Aufgaben, sie kann sicher gelöscht werden."
     },
     "duplicate": {
       "title": "Die Liste dubliziere",
@@ -500,7 +500,7 @@
     "id": "ID",
     "created": "Erstellt am",
     "actions": "Aktionen",
-    "cannotBeUndone": "This cannot be undone!"
+    "cannotBeUndone": "Dies kann nicht rückgängig gemacht werden!"
   },
   "input": {
     "resetColor": "Farb zruggsetze",

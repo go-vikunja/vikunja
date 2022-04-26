@@ -201,7 +201,9 @@
       "header": "Smazat tento seznam",
       "text1": "Opravdu chcete odstranit tento seznam a jeho obsah?",
       "text2": "To zahrnuje všechny úkoly a NEMŮŽE BÝT VRÁCENO ZPĚT!",
-      "success": "Seznam byl úspěšně smazán."
+      "success": "Seznam byl úspěšně smazán.",
+      "tasksToDelete": "Navždy smazat asi {count} úkolů.",
+      "noTasksToDelete": "Tento seznam neobsahuje žádné úkoly, mělo by být bezpečné ho smazat."
     },
     "duplicate": {
       "title": "Duplikovat tento seznam",
@@ -497,7 +499,8 @@
     "custom": "Vlastní",
     "id": "ID",
     "created": "Vytvořeno",
-    "actions": "Akce"
+    "actions": "Akce",
+    "cannotBeUndone": "Toto nelze vrátit!"
   },
   "input": {
     "resetColor": "Obnovit barvu",
@@ -685,7 +688,6 @@
       "delete": "Smazat přílohu",
       "deleteTooltip": "Smazat tuto přílohu",
       "deleteText1": "Opravdu chcete odstranit přílohu {filename}?",
-      "deleteText2": "Toto nelze vrátit!",
       "copyUrl": "Kopírovat URL",
       "copyUrlTooltip": "Kopírovat URL této přílohy pro použití v textu"
     },
@@ -698,7 +700,6 @@
       "comment": "Komentář",
       "delete": "Smazat tento komentář",
       "deleteText1": "Opravdu chcete smazat tento komentář?",
-      "deleteText2": "Toto nelze vrátit!",
       "addedSuccess": "Komentář byl úspěšně přidán."
     },
     "deferDueDate": {
@@ -743,7 +744,6 @@
       "noneYet": "Zatím žádné vztahy mezi úkoly.",
       "delete": "Odstranit vztah k úloze",
       "deleteText1": "Jste si jisti, že chcete odstranit tento vztah úkolu?",
-      "deleteText2": "Toto nelze vrátit!",
       "select": "Vyberte typ vztahu",
       "taskRequired": "Vyberte úkol nebo zadejte název nového úkolu.",
       "kinds": {

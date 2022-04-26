@@ -201,7 +201,9 @@
       "header": "Diese Liste löschen",
       "text1": "Bist du sicher, dass du diese Liste und alle ihre Inhalte löschen willst?",
       "text2": "Dies umfasst alle Aufgaben und kann NICHT rückgängig gemacht werden!",
-      "success": "Die Liste wurde erfolgreich gelöscht."
+      "success": "Die Liste wurde erfolgreich gelöscht.",
+      "tasksToDelete": "Dies löscht unwiderruflich ca. {count} Aufgaben.",
+      "noTasksToDelete": "Diese Liste enthält keine Aufgaben, sie kann sicher gelöscht werden."
     },
     "duplicate": {
       "title": "Diese Liste duplizieren",
@@ -497,7 +499,8 @@
     "custom": "Benutzerdefiniert",
     "id": "ID",
     "created": "Erstellt am",
-    "actions": "Aktionen"
+    "actions": "Aktionen",
+    "cannotBeUndone": "Dies kann nicht rückgängig gemacht werden!"
   },
   "input": {
     "resetColor": "Farbe zurücksetzen",
@@ -685,7 +688,6 @@
       "delete": "Anhang löschen",
       "deleteTooltip": "Diesen Anhang löschen",
       "deleteText1": "Soll der Anhang {filename} gelöscht werden?",
-      "deleteText2": "Dies kann nicht rückgängig gemacht werden!",
       "copyUrl": "URL kopieren",
       "copyUrlTooltip": "Die URL dieses Anhangs zur Verwendung im Text kopieren"
     },
@@ -698,7 +700,6 @@
       "comment": "Kommentieren",
       "delete": "Diesen Kommentar löschen",
       "deleteText1": "Bist du sicher, dass du diesen Kommentar löschen willst?",
-      "deleteText2": "Dies kann nicht rückgängig gemacht werden!",
       "addedSuccess": "Der Kommentar wurde erfolgreich hinzugefügt."
     },
     "deferDueDate": {
@@ -743,7 +744,6 @@
       "noneYet": "Keine Aufgabenbeziehung vorhanden.",
       "delete": "Aufgabenbeziehung entfernen",
       "deleteText1": "Willst du diese Aufgabenbeziehung wirklich entfernen?",
-      "deleteText2": "Dies kann nicht rückgängig gemacht werden!",
       "select": "Beziehungsart auswählen",
       "taskRequired": "Bitte wähle eine Aufgabe aus oder gib einen neuen Aufgabentitel ein.",
       "kinds": {

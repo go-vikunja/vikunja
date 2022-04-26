@@ -201,7 +201,9 @@
       "header": "Verwijder deze lijst",
       "text1": "Are you sure you want to delete this list and all of its contents?",
       "text2": "Dit omvat alle taken en KAN NIET ONGEDAAN GEMAAKT WORDEN!",
-      "success": "De lijst is succesvol verwijderd."
+      "success": "De lijst is succesvol verwijderd.",
+      "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
+      "noTasksToDelete": "This list does not contain any tasks, it should be safe to delete."
     },
     "duplicate": {
       "title": "Deze lijst dupliceren",
@@ -497,7 +499,8 @@
     "custom": "Custom",
     "id": "ID",
     "created": "Created at",
-    "actions": "Actions"
+    "actions": "Actions",
+    "cannotBeUndone": "This cannot be undone!"
   },
   "input": {
     "resetColor": "Kleur resetten",
@@ -685,7 +688,6 @@
       "delete": "Bijlage verwijderen",
       "deleteTooltip": "Verwijder deze bijlage",
       "deleteText1": "Weet je zeker dat je de bijlage {filename} wilt verwijderen?",
-      "deleteText2": "Dit kan niet ongedaan worden gemaakt!",
       "copyUrl": "URL kopiëren",
       "copyUrlTooltip": "Copy the url of this attachment for usage in text"
     },
@@ -698,7 +700,6 @@
       "comment": "Reactie",
       "delete": "Verwijder deze reactie",
       "deleteText1": "Weet je zeker dat je deze reactie wilt verwijderen?",
-      "deleteText2": "Dit kan niet ongedaan worden gemaakt!",
       "addedSuccess": "De reactie is succesvol toegevoegd."
     },
     "deferDueDate": {
@@ -743,7 +744,6 @@
       "noneYet": "Nog geen taakrelaties.",
       "delete": "Taak relatie verwijderen",
       "deleteText1": "Weet je zeker dat je deze taakrelatie wilt verwijderen?",
-      "deleteText2": "Dit kan niet ongedaan worden gemaakt!",
       "select": "Selecteer een relatietype",
       "taskRequired": "Please select a task or enter a new task title.",
       "kinds": {

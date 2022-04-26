@@ -202,8 +202,8 @@
       "text1": "Czy na pewno chcesz usunąć tę listę i całą jej zawartość?",
       "text2": "Obejmuje to wszystkie zadania i tego NIE DA SIĘ COFNĄĆ!",
       "success": "Lista została pomyślnie usunięta.",
-      "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
-      "noTasksToDelete": "This list does not contain any tasks, it should be safe to delete."
+      "tasksToDelete": "To nieodwołalnie usunie około {count} zadań.",
+      "noTasksToDelete": "Ta lista nie zawiera żadnych zadań, usunięcie powinno być bezpieczne."
     },
     "duplicate": {
       "title": "Duplikuj tę listę",
@@ -500,7 +500,7 @@
     "id": "ID",
     "created": "Utworzono",
     "actions": "Akcje",
-    "cannotBeUndone": "This cannot be undone!"
+    "cannotBeUndone": "Tego nie da się cofnąć!"
   },
   "input": {
     "resetColor": "Resetuj kolor",
