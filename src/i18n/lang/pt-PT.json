@@ -18,7 +18,7 @@
   },
   "ready": {
     "loading": "Vikunja está a carregar…",
-    "errorOccured": "An error occurred:",
+    "errorOccured": "Ocorreu um erro:",
     "checkApiUrl": "Por favor, verifica se o url da api está correto.",
     "noApiUrlConfigured": "Nenhum URL de API foi configurado. Por favor, define um abaixo:"
   },
@@ -96,11 +96,11 @@
         "scanQR": "Como alternativa, podes digitalizar este código QR:",
         "passcode": "Código",
         "passcodePlaceholder": "Um código gerado pelo teu aplicativo totp",
-        "setupSuccess": "You've successfully set up two factor authentication!",
+        "setupSuccess": "Configuraste com sucesso a autenticação de dois fatores!",
         "enterPassword": "Por favor, insere a tua palavra-passe",
         "disable": "Desativar a autenticação de dois fatores",
         "confirmSuccess": "Confirmaste com sucesso a tua configuração totp e podes utilizá-la de agora em diante!",
-        "disableSuccess": "Two factor authentication was successfully disabled."
+        "disableSuccess": "A autenticação de dois fatores foi desativada com sucesso."
       },
       "caldav": {
         "title": "CalDAV",
@@ -202,8 +202,8 @@
       "text1": "Tens a certeza que prentedes apagar esta lista e todo o seu conteúdo?",
       "text2": "Isto inclui todas as tarefas e NÃO PODE SER REVERTIDO!",
       "success": "A lista foi eliminada com sucesso.",
-      "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
-      "noTasksToDelete": "This list does not contain any tasks, it should be safe to delete."
+      "tasksToDelete": "Isto irá remover irrevogavelmente aprox. {count} tarefas.",
+      "noTasksToDelete": "Esta lista não contém tarefas, deve ser seguro eliminá-la."
     },
     "duplicate": {
       "title": "Duplicar esta lista",
@@ -334,7 +334,7 @@
     "create": {
       "title": "Novo espaço",
       "titleRequired": "Por favor, especifica um título.",
-      "explanation": "A namespace is a collection of lists you can share and use to organize your lists with. In fact, every list belongs to a namespace.",
+      "explanation": "Um espaço é uma coleção de listas que podes partilhar e utilizar para organizar as tuas listas. De facto, cada lista pertence a um espaço.",
       "tooltip": "O que é um espaço?",
       "success": "O espaço foi criado com sucesso."
     },
@@ -478,7 +478,7 @@
     "refresh": "Atualizar",
     "disable": "Desativar",
     "copy": "Copiar para a área de trabalho",
-    "copyError": "Copy to clipboard failed",
+    "copyError": "Falha ao copiar para a área de trabalho",
     "search": "Pesquisar",
     "searchPlaceholder": "Escreva para pesquisar…",
     "previous": "Anterior",
@@ -500,7 +500,7 @@
     "id": "ID",
     "created": "Criado em",
     "actions": "Ações",
-    "cannotBeUndone": "This cannot be undone!"
+    "cannotBeUndone": "Isto não pode ser revertido!"
   },
   "input": {
     "resetColor": "Repor cor",
@@ -564,7 +564,7 @@
       "canuse": "Podes utilizar cálculo de data para filtrar por datas relativas.",
       "learnhow": "Vê como funciona",
       "title": "Cálculo de Data",
-      "intro": "Date Math allows you to specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
+      "intro": "O cálculo de data permite especificar datas relativas resolvidas em tempo real pelo Vikunja na aplicação do filtro.",
       "expression": "Cada expressão de Cálculo de Data inicia com uma data âncora, que tanto pode ser {0}, como uma expressão de data terminada com {1}. Esta data âncora pode ser opcionalmente seguida de uma ou mais expressões matemáticas.",
       "similar": "Essas expressões são semelhantes às fornecidas por {0} e {1}.",
       "add1Day": "Adicionar um dia",
@@ -870,9 +870,9 @@
     },
     "navigation": {
       "title": "Navegação",
-      "overview": "Navigate to overview",
-      "upcoming": "Navigate to upcoming tasks",
-      "namespaces": "Navigate to namespaces & lists",
+      "overview": "Ir para a vista geral",
+      "upcoming": "Ir para próximas tarefas",
+      "namespaces": "Ir para espaços e listas",
       "labels": "Navegar para etiquetas",
       "teams": "Navegar para equipas"
     }
