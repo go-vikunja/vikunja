@@ -250,7 +250,10 @@ export default defineComponent({
 
 		async deleteUser() {
 			try {
-				await this.teamMemberService.delete(this.member)
+				await this.teamMemberService.delete({
+					teamId: this.team.id,
+					username: this.member.username,
+				})
 				this.$message.success({message: this.$t('team.edit.deleteUser.success')})
 				this.loadTeam()
 			} finally {
