@@ -83,7 +83,7 @@ const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
 		a {
 			display: block;
 			padding: .5rem;
-			color: var(--dark);
+			color: var(--text);
 			width: 100%;
 			border-left: 3px solid transparent;
 

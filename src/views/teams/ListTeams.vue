@@ -63,7 +63,7 @@ ul.teams {
     border-bottom: 1px solid $border;
 
     a {
-      color: #363636;
+      color: var(--text);
       display: block;
       padding: 0.5rem 1rem;
       transition: background-color $transition;
