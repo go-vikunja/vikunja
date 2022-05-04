@@ -2734,19 +2734,12 @@
   resolved "https://registry.yarnpkg.com/@vueuse/metadata/-/metadata-8.4.1.tgz#933d971599fbb772769afd281fd2aefa09bb955e"
   integrity sha512-OMwadiewrAHgJAgCh5zrbJMXySECB09cnEnIWRicvTWBiqBm14N1t464oeV1fhskRPEBsLSzxQmDoVBAqQh4rQ==
 
-"@vueuse/router@8.4.0":
-  version "8.4.0"
-  resolved "https://registry.yarnpkg.com/@vueuse/router/-/router-8.4.0.tgz#6e53eb0162d521ded9f7eeb56a576f3a65b700b2"
-  integrity sha512-J6IUBXBKdoPkNAlrthJYVp3UgzqT6OkxjZUjAY+W2UCwaderJqRrsufSJd3SAF21l63re9b26ZVBNSc2TmTEQQ==
+"@vueuse/router@8.4.1":
+  version "8.4.1"
+  resolved "https://registry.yarnpkg.com/@vueuse/router/-/router-8.4.1.tgz#801f8e1d100400c774987b5ee82f69fa0ec2aa69"
+  integrity sha512-06HEmPwnrQzuMgxWpjsqtotxVSebo0XM4Gio7TG3Q8O3nnNymoPCrxSbqzBjSlxCaPEoaJYzEDBKJUavS2jzag==
   dependencies:
-    "@vueuse/shared" "8.4.0"
-    vue-demi "*"
-
-"@vueuse/shared@8.4.0":
-  version "8.4.0"
-  resolved "https://registry.yarnpkg.com/@vueuse/shared/-/shared-8.4.0.tgz#a8a99ad843321bf83620e0234b5f6145a2131583"
-  integrity sha512-8ECJyrr6e/PTkJOTP4ym2KDVfabWfcx+8K2sz00XofzjKBlUeYEiBTaXor/SzoInlQLkJtMpa6Z81NYNpxzIOw==
-  dependencies:
+    "@vueuse/shared" "8.4.1"
     vue-demi "*"
 
 "@vueuse/shared@8.4.1":
