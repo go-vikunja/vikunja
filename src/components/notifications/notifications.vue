@@ -21,20 +21,19 @@
 						:show-username="false"
 						:avatar-size="16"
 						v-if="n.notification.doer"/>
-					<span class="detail">
-						<p>
-
-						<span class="has-text-weight-bold" v-if="n.notification.doer">
-							{{ n.notification.doer.getDisplayName() }}
+					<div class="detail">
+						<div>
+							<span class="has-text-weight-bold mr-1" v-if="n.notification.doer">
+								{{ n.notification.doer.getDisplayName() }}
+							</span>
+							<a @click="() => to(n, index)()">
+								{{ n.toText(userInfo) }}
+							</a>
+						</div>
+						<span class="created" v-tooltip="formatDate(n.created)">
+							{{ formatDateSince(n.created) }}
 						</span>
-						<a @click="() => to(n, index)()">
-							{{ n.toText(userInfo) }}
-						</a>
-						</p>
-					<div class="created" v-tooltip="formatDate(n.created)">
-						{{ formatDateSince(n.created) }}
 					</div>
-					</span>
 				</div>
 				<p class="nothing" v-if="notifications.length === 0">
 					{{ $t('notification.none') }}<br/>
