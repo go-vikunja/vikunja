@@ -370,6 +370,10 @@ $vikunja-nav-selected-width: 0.4rem;
 			&:hover .favorite {
 				opacity: 1;
 			}
+
+			&:hover {
+				background: transparent;
+			}
 		}
 
 		.menu-label {
@@ -573,6 +577,6 @@ $vikunja-nav-selected-width: 0.4rem;
 }
 
 a.dropdown-item:hover {
-  background: var(--dropdown-item-hover-background-color) !important;
+	background: var(--dropdown-item-hover-background-color) !important;
 }
 </style>
