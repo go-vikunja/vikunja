@@ -479,10 +479,6 @@ $vikunja-nav-selected-width: 0.4rem;
 				}
 			}
 
-			a:hover {
-				background: transparent;
-			}
-
 			span.list-menu-link, li > a {
 				padding: 0.75rem .5rem 0.75rem ($navbar-padding * 1.5 - 1.75rem);
 				transition: all 0.2s ease;
@@ -574,5 +570,9 @@ $vikunja-nav-selected-width: 0.4rem;
 
 .namespaces-list.loader-container.is-loading {
 	min-height: calc(100vh - #{$navbar-height + 1.5rem + 1rem + 1.5rem});
+}
+
+a.dropdown-item:hover {
+  background: var(--dropdown-item-hover-background-color) !important;
 }
 </style>
