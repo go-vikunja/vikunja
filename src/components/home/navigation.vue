@@ -564,7 +564,7 @@ $vikunja-nav-selected-width: 0.4rem;
 }
 
 .list-setting-spacer {
-	width: 32px;
+	width: 2.5rem;
 	flex-shrink: 0;
 }
 
