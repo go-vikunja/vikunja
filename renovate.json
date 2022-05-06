@@ -6,8 +6,14 @@
   ],
   "packageRules": [
     {
-      "matchPackageNames": ["netlify-cli"],
+      "matchPackageNames": ["netlify-cli", "caniuse-lite"],
       "extends": ["schedule:weekly"]
+    },
+    {
+      "groupName": "vueuse",
+      "matchPackagePrefixes": [
+        "@vueuse/"
+      ]
     }
   ]
 }
