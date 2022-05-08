@@ -91,9 +91,6 @@ watch(
 		scrollLock.value = enabled
 		store.commit('modalActive', enabled)
 	},
-	{
-		immediate: true,
-	},
 )
 </script>
 

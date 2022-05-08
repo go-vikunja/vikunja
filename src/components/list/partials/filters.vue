@@ -1,5 +1,5 @@
 <template>
-	<card class="filters has-overflow">
+	<card class="filters has-overflow" :title="hasTitle ? $t('filters.title') : ''">
 		<div class="field">
 			<fancycheckbox v-model="params.filter_include_nulls">
 				{{ $t('filters.attributes.includeNulls') }}
@@ -262,6 +262,10 @@ export default defineComponent({
 	props: {
 		modelValue: {
 			required: true,
+		},
+		hasTitle: {
+			type: Boolean,
+			default: false,
 		},
 	},
 	emits: ['update:modelValue', 'change'],

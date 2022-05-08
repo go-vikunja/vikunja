@@ -6,39 +6,34 @@
 	>
 		{{ $t('filters.clear') }}
 	</x-button>
-	<popup :has-overflow="true">
-		<template #trigger="{toggle}">
-			<x-button
-				@click.prevent.stop="toggle()"
-				variant="secondary"
-				icon="filter"
-			>
-				{{ $t('filters.title') }}
-			</x-button>
-		</template>
-		<template #content="{isOpen}">
-			<filters
-				v-model="value"
-				ref="filters"
-				class="filter-popup"
-				:class="{'is-open': isOpen}"
-			/>
-		</template>
-	</popup>
+	<x-button
+		@click="() => modalOpen = true"
+		variant="secondary"
+		icon="filter"
+	>
+		{{ $t('filters.title') }}
+	</x-button>
+	<modal @close="() => modalOpen = false" :enabled="modalOpen">
+		<filters
+			:has-title="true"
+			v-model="value"
+			ref="filters"
+			class="filter-popup"
+			:class="{'is-open': isOpen}"
+		/>
+	</modal>
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
+import {defineComponent, ref} from 'vue'
 
-import Filters from '@/components/list/partials/filters'
-import Popup from '@/components/misc/popup'
+import Filters from '@/components/list/partials/filters.vue'
 
 import {getDefaultParams} from '@/composables/taskList'
 
 export default defineComponent({
 	name: 'filter-popup',
 	components: {
-		Popup,
 		Filters,
 	},
 	props: {
@@ -81,6 +76,13 @@ export default defineComponent({
 			},
 			immediate: true,
 		},
+	},
+	setup() {
+		const modalOpen = ref(false)
+
+		return {
+			modalOpen,
+		}
 	},
 	methods: {
 		clearFilters() {
