@@ -21,8 +21,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 	_ "time/tzdata" // Imports time zone data instead of relying on the os
@@ -220,6 +222,39 @@ func (k Key) setDefault(i interface{}) {
 	viper.SetDefault(string(k), i)
 }
 
+// Tries different methods to figure out the binary folder.
+// Copied and adopted from https://github.com/speedata/publisher/commit/3b668668d57edef04ea854d5bbd58f83eb1b799f
+func getBinaryDirLocation() string {
+	// First, check if the standard library gives us the path. This will work 99% of the time.
+	ex, err := os.Executable()
+	if err == nil {
+		return filepath.Dir(ex)
+	}
+
+	// Then check if the binary was run with a full path and use that if that's the case.
+	if strings.Contains(os.Args[0], "/") {
+		binDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err != nil {
+			log.Fatal(err)
+		}
+		return binDir
+	}
+
+	exeSuffix := ""
+	if runtime.GOOS == "windows" {
+		exeSuffix = ".exe"
+	}
+
+	// All else failing, search for a vikunja binary in the current $PATH.
+	// This can give wrong results.
+	exeLocation, err := exec.LookPath("vikunja" + exeSuffix)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return filepath.Dir(exeLocation)
+}
+
 // InitDefaultConfig sets default config values
 // This is an extra function so we can call it when initializing tests without initializing the full config
 func InitDefaultConfig() {
@@ -238,12 +273,7 @@ func InitDefaultConfig() {
 	ServiceFrontendurl.setDefault("")
 	ServiceEnableCaldav.setDefault(true)
 
-	ex, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
-	exPath := filepath.Dir(ex)
-	ServiceRootpath.setDefault(exPath)
+	ServiceRootpath.setDefault(getBinaryDirLocation())
 	ServiceMaxItemsPerPage.setDefault(50)
 	ServiceEnableMetrics.setDefault(false)
 	ServiceMotd.setDefault("")
