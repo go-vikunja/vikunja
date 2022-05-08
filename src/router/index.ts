@@ -51,6 +51,7 @@ import NamespaceSettingDelete from '../views/namespaces/settings/delete.vue'
 import FilterNew from '@/views/filters/FilterNew.vue'
 import FilterEdit from '@/views/filters/FilterEdit.vue'
 import FilterDelete from '@/views/filters/FilterDelete.vue'
+import {setTitle} from '@/helpers/setTitle'
 
 const PasswordResetComponent = () => import('../views/user/PasswordReset.vue')
 const GetPasswordResetComponent = () => import('../views/user/RequestPasswordReset.vue')
@@ -372,7 +373,14 @@ const router = createRouter({
 			path: '/lists/:listId/kanban',
 			name: 'list.kanban',
 			component: ListKanban,
-			beforeEnter: (to) => saveListView(to.params.listId, to.name),
+			beforeEnter: (to) => {
+				saveListView(to.params.listId, to.name)
+				// Properly set the page title when a task popup is closed
+				const listFromStore = store.getters['lists/getListById'](parseInt(to.params.listId))
+				if(listFromStore) {
+					setTitle(listFromStore.title)
+				}
+			},
 			props: route => ({ listId: parseInt(route.params.listId as string) }),
 		},
 		{

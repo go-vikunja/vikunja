@@ -443,7 +443,7 @@ import {CURRENT_LIST} from '@/store/mutation-types'
 import {uploadFile} from '@/helpers/attachments'
 import ChecklistSummary from '../../components/tasks/partials/checklist-summary'
 import CreatedUpdated from '@/components/tasks/partials/createdUpdated'
-
+import { setTitle } from '@/helpers/setTitle'
 
 export default defineComponent({
 	name: 'TaskDetailView',
@@ -575,7 +575,8 @@ export default defineComponent({
 				this.$store.commit('attachments/set', this.task.attachments)
 				this.taskColor = this.task.hexColor
 				this.setActiveFields()
-				this.setTitle(this.task.title)
+				await this.$nextTick()
+				setTitle(this.task.title)
 			} finally {
 				this.scrollToHeading()
 				await this.$nextTick()

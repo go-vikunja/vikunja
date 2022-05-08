@@ -235,12 +235,12 @@ import BucketModel from '../../models/bucket'
 import {mapState} from 'vuex'
 import Rights from '../../models/constants/rights.json'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
-import ListWrapper from './ListWrapper'
+import ListWrapper from './ListWrapper.vue'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import Dropdown from '@/components/misc/dropdown.vue'
 import {getCollapsedBucketState, saveCollapsedBucketState} from '@/helpers/saveCollapsedBucketState'
 import {calculateItemPosition} from '../../helpers/calculateItemPosition'
-import KanbanCard from '@/components/tasks/partials/kanban-card'
+import KanbanCard from '@/components/tasks/partials/kanban-card.vue'
 
 const DRAG_OPTIONS = {
 	// sortable options
