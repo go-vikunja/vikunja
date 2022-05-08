@@ -46,95 +46,93 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script lang="ts" setup>
+import {computed, onMounted, onUnmounted, ref} from 'vue'
 
 import NotificationService from '@/services/notification'
 import User from '@/components/misc/user.vue'
 import names from '@/models/constants/notificationNames.json'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
-import {mapState} from 'vuex'
+import {useStore} from 'vuex'
+import {useRouter} from 'vue-router'
 
 const LOAD_NOTIFICATIONS_INTERVAL = 10000
 
-export default defineComponent({
-	name: 'notifications',
-	components: {User},
-	data() {
-		return {
-			notificationService: new NotificationService(),
-			allNotifications: [],
-			showNotifications: false,
-			interval: null,
-		}
-	},
-	mounted() {
-		this.loadNotifications()
-		document.addEventListener('click', this.hidePopup)
-		this.interval = setInterval(this.loadNotifications, LOAD_NOTIFICATIONS_INTERVAL)
-	},
-	beforeUnmount() {
-		document.removeEventListener('click', this.hidePopup)
-		clearInterval(this.interval)
-	},
-	computed: {
-		unreadNotifications() {
-			return this.notifications.filter(n => n.readAt === null).length
-		},
-		notifications() {
-			return this.allNotifications ? this.allNotifications.filter(n => n.name !== '') : []
-		},
-		...mapState({
-			userInfo: state => state.auth.info,
-		}),
-	},
-	methods: {
-		hidePopup(e) {
-			if (this.showNotifications) {
-				closeWhenClickedOutside(e, this.$refs.popup, () => this.showNotifications = false)
-			}
-		},
-		async loadNotifications() {
-			// We're recreating the notification service here to make sure it uses the latest api user token
-			const notificationService = new NotificationService()
-			this.allNotifications = await notificationService.getAll()
-		},
-		to(n, index) {
-			const to = {
-				name: '',
-				params: {},
-			}
+const store = useStore()
+const router = useRouter()
 
-			switch (n.name) {
-				case names.TASK_COMMENT:
-				case names.TASK_ASSIGNED:
-					to.name = 'task.detail'
-					to.params.id = n.notification.task.id
-					break
-				case names.TASK_DELETED:
-					// Nothing
-					break
-				case names.LIST_CREATED:
-					to.name = 'task.index'
-					to.params.listId = n.notification.list.id
-					break
-				case names.TEAM_MEMBER_ADDED:
-					to.name = 'teams.edit'
-					to.params.id = n.notification.team.id
-					break
-			}
+const allNotifications = ref([])
+const showNotifications = ref(false)
+const popup = ref(null)
 
-			return async () => {
-				if (to.name !== '') {
-					this.$router.push(to)
-				}
-
-				n.read = true
-				this.allNotifications[index] = await this.notificationService.update(n)
-			}
-		},
-	},
+const unreadNotifications = computed(() => {
+	return notifications.value.filter(n => n.readAt === null).length
 })
+const notifications = computed(() => {
+	return allNotifications.value ? allNotifications.value.filter(n => n.name !== '') : []
+})
+const userInfo = computed(() => store.state.auth.info)
+
+let interval: number
+
+onMounted(() => {
+	loadNotifications()
+	document.addEventListener('click', hidePopup)
+	interval = setInterval(loadNotifications, LOAD_NOTIFICATIONS_INTERVAL)
+})
+
+onUnmounted(() => {
+	document.removeEventListener('click', hidePopup)
+	clearInterval(interval)
+})
+
+async function loadNotifications() {
+	// We're recreating the notification service here to make sure it uses the latest api user token
+	const notificationService = new NotificationService()
+	allNotifications.value = await notificationService.getAll()
+}
+
+function hidePopup(e) {
+	if (showNotifications.value) {
+		closeWhenClickedOutside(e, popup.value, () => showNotifications.value = false)
+	}
+}
+
+function to(n, index) {
+	const to = {
+		name: '',
+		params: {},
+	}
+
+	switch (n.name) {
+		case names.TASK_COMMENT:
+		case names.TASK_ASSIGNED:
+			to.name = 'task.detail'
+			to.params.id = n.notification.task.id
+			break
+		case names.TASK_DELETED:
+			// Nothing
+			break
+		case names.LIST_CREATED:
+			to.name = 'task.index'
+			to.params.listId = n.notification.list.id
+			break
+		case names.TEAM_MEMBER_ADDED:
+			to.name = 'teams.edit'
+			to.params.id = n.notification.team.id
+			break
+	}
+
+	return async () => {
+		if (to.name !== '') {
+			router.push(to)
+		}
+
+		n.read = true
+		const notificationService = new NotificationService()
+		allNotifications.value[index] = await notificationService.update(n)
+	}
+}
 </script>
 
 <style lang="scss" scoped>
