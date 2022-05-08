@@ -69,7 +69,7 @@ $filter-container-top-link-share-list: -47px;
 
   @media screen and (max-width: $tablet) {
     position: static;
-    margin: 0 0 1rem 0;
+    margin: 0 0 1rem 0 !important;
     max-width: 100%;
     min-width: auto;
 
