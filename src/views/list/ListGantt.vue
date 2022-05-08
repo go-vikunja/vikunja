@@ -1,75 +1,75 @@
 <template>
 	<ListWrapper class="list-gantt" :list-id="props.listId" viewName="gantt">
 		<template #header>
-		<div class="gantt-options p-4">
-			<fancycheckbox class="is-block" v-model="showTaskswithoutDates">
-				{{ $t('list.gantt.showTasksWithoutDates') }}
-			</fancycheckbox>
-			<div class="range-picker">
-				<div class="field">
-					<label class="label" for="dayWidth">{{ $t('list.gantt.size') }}</label>
-					<div class="control">
-						<div class="select">
-							<select id="dayWidth" v-model.number="dayWidth">
-								<option value="35">{{ $t('list.gantt.default') }}</option>
-								<option value="10">{{ $t('list.gantt.month') }}</option>
-								<option value="80">{{ $t('list.gantt.day') }}</option>
-							</select>
+			<card class="gantt-options">
+				<fancycheckbox class="is-block" v-model="showTaskswithoutDates">
+					{{ $t('list.gantt.showTasksWithoutDates') }}
+				</fancycheckbox>
+				<div class="range-picker">
+					<div class="field">
+						<label class="label" for="dayWidth">{{ $t('list.gantt.size') }}</label>
+						<div class="control">
+							<div class="select">
+								<select id="dayWidth" v-model.number="dayWidth">
+									<option value="35">{{ $t('list.gantt.default') }}</option>
+									<option value="10">{{ $t('list.gantt.month') }}</option>
+									<option value="80">{{ $t('list.gantt.day') }}</option>
+								</select>
+							</div>
+						</div>
+					</div>
+					<div class="field">
+						<label class="label" for="fromDate">{{ $t('list.gantt.from') }}</label>
+						<div class="control">
+							<flat-pickr
+								:config="flatPickerConfig"
+								class="input"
+								id="fromDate"
+								:placeholder="$t('list.gantt.from')"
+								v-model="dateFrom"
+							/>
+						</div>
+					</div>
+					<div class="field">
+						<label class="label" for="toDate">{{ $t('list.gantt.to') }}</label>
+						<div class="control">
+							<flat-pickr
+								:config="flatPickerConfig"
+								class="input"
+								id="toDate"
+								:placeholder="$t('list.gantt.to')"
+								v-model="dateTo"
+							/>
 						</div>
 					</div>
 				</div>
-				<div class="field">
-					<label class="label" for="fromDate">{{ $t('list.gantt.from') }}</label>
-					<div class="control">
-						<flat-pickr
-							:config="flatPickerConfig"
-							class="input"
-							id="fromDate"
-							:placeholder="$t('list.gantt.from')"
-							v-model="dateFrom"
-						/>
-					</div>
-				</div>
-				<div class="field">
-					<label class="label" for="toDate">{{ $t('list.gantt.to') }}</label>
-					<div class="control">
-						<flat-pickr
-							:config="flatPickerConfig"
-							class="input"
-							id="toDate"
-							:placeholder="$t('list.gantt.to')"
-							v-model="dateTo"
-						/>
-					</div>
-				</div>
-			</div>
-		</div>
+			</card>
 		</template>
-		
+
 		<template #default>
-		<div class="gantt-chart-container">
-		<card :padding="false" class="has-overflow">
+			<div class="gantt-chart-container">
+				<card :padding="false" class="has-overflow">
 
-		<gantt-chart
-			:date-from="dateFrom"
-			:date-to="dateTo"
-			:day-width="dayWidth"
-			:list-id="props.listId"
-			:show-taskswithout-dates="showTaskswithoutDates"
-		/>
+					<gantt-chart
+						:date-from="dateFrom"
+						:date-to="dateTo"
+						:day-width="dayWidth"
+						:list-id="props.listId"
+						:show-taskswithout-dates="showTaskswithoutDates"
+					/>
 
-		</card>
-		</div>
+				</card>
+			</div>
 		</template>
 	</ListWrapper>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import {ref, computed} from 'vue'
 import flatPickr from 'vue-flatpickr-component'
 
-import { useI18n } from 'vue-i18n'
-import { useStore } from 'vuex'
+import {useI18n} from 'vue-i18n'
+import {useStore} from 'vuex'
 
 import ListWrapper from './ListWrapper.vue'
 import GanttChart from '@/components/tasks/gantt-component.vue'
@@ -82,7 +82,7 @@ const props = defineProps({
 	},
 })
 
-const DEFAULT_DAY_COUNT = 35 
+const DEFAULT_DAY_COUNT = 35
 
 const showTaskswithoutDates = ref(false)
 const dayWidth = ref(DEFAULT_DAY_COUNT)
@@ -113,6 +113,7 @@ const flatPickerConfig = computed(() => ({
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
+	margin-bottom: 1rem;
 
 	@media screen and (max-width: $tablet) {
 		flex-direction: column;
@@ -165,5 +166,14 @@ const flatPickerConfig = computed(() => ({
 // vue-draggable overwrites
 .vdr.active::before {
 	display: none;
+}
+
+.link-share-view:not(.has-background) .card.gantt-options {
+	border: none;
+	box-shadow: none;
+
+	.card-content {
+		padding: .5rem;
+	}
 }
 </style>

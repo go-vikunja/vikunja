@@ -6,7 +6,7 @@
 // - Table.vue
 
 $filter-container-top-default: -59px;
-$filter-container-top-link-share-gantt: -138px;
+$filter-container-top-link-share-gantt: -133px;
 $filter-container-top-link-share-list: -47px;
 
 .filter-container {
@@ -91,14 +91,21 @@ $filter-container-top-link-share-list: -47px;
 .link-share-container .gantt-chart-container .filter-container,
 .gantt-chart-container .filter-container {
   right: 0;
-  margin-top: calc(#{$filter-container-top-link-share-gantt} - 2rem);
+  margin-top: calc(#{$filter-container-top-link-share-gantt - 2} - 7rem);
+}
+
+.link-share-container .gantt-chart-container .filter-container {
+  margin-top: calc(#{$filter-container-top-link-share-gantt} - 5rem);
 }
 
 .link-share-container .list-view .filter-container {
   margin-top: $filter-container-top-link-share-list - 10px;
 }
 
-.link-share-container .filter-container {
-  right: 9rem;
-  margin-top: $filter-container-top-default;
+.link-share-container.list\.table-view,
+.link-share-container.list\.list-view {
+  .filter-container {
+    right: 9rem;
+    margin-top: $filter-container-top-default;
+  }
 }

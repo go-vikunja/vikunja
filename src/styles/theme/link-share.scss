@@ -17,8 +17,8 @@
 }
 
 .link-share-container {
-  &.has-background,
-	&.list\.kanban-view {
+	&.list\.gantt-view,
+  &.list\.kanban-view {
     .container {
       max-width: 100vw;
 

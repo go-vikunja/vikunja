@@ -308,4 +308,9 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 		margin: 2rem 0 1rem;
 	}
 }
+
+.link-share-view .card {
+  border: none;
+  box-shadow: none;
+}
 </style>

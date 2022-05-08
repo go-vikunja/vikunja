@@ -373,4 +373,9 @@ export default defineComponent({
 .list-view .task-add {
 	padding: 1rem 1rem 0;
 }
+
+.link-share-view .card {
+  border: none;
+  box-shadow: none;
+}
 </style>
