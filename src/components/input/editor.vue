@@ -1,7 +1,7 @@
 <template>
 	<div class="editor">
 		<div class="clear"></div>
-		
+
 		<vue-easymde
 			:configs="config"
 			@change="bubble"
@@ -35,7 +35,8 @@
 					<a @click="toggleEdit">{{ $t('input.editor.edit') }}</a>
 				</li>
 			</ul>
-			<x-button v-else-if="isEditActive" @click="toggleEdit" variant="secondary" :shadow="false" v-cy="'saveEditor'">
+			<x-button v-else-if="isEditActive" @click="toggleEdit" variant="secondary" :shadow="false"
+					  v-cy="'saveEditor'">
 				{{ $t('misc.save') }}
 			</x-button>
 		</template>
@@ -176,7 +177,7 @@ export default defineComponent({
 			}
 
 			this.changeTimeout = setTimeout(() => {
-				this.$emit('update:modelValue',this.text)
+				this.$emit('update:modelValue', this.text)
 				this.$emit('change', this.text)
 			}, timeout)
 		},
@@ -348,7 +349,7 @@ export default defineComponent({
 		color: var(--grey-400) !important;
 		font-style: italic;
 	}
-	
+
 	&-cursor {
 		border-color: var(--grey-700);
 	}
@@ -369,7 +370,11 @@ export default defineComponent({
 
 	button {
 		color: var(--grey-700);
-		
+
+		&.active {
+			background: var(--grey-200);
+		}
+
 		svg {
 			vertical-align: middle;
 
@@ -384,7 +389,7 @@ export default defineComponent({
 			top: 24px;
 			margin-left: -3px;
 		}
-		
+
 		&:hover {
 			background: var(--grey-200);
 			border-color: var(--grey-300);
