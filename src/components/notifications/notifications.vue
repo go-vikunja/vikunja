@@ -95,7 +95,9 @@ export default defineComponent({
 			}
 		},
 		async loadNotifications() {
-			this.allNotifications = await this.notificationService.getAll()
+			// We're recreating the notification service here to make sure it uses the latest api user token
+			const notificationService = new NotificationService()
+			this.allNotifications = await notificationService.getAll()
 		},
 		to(n, index) {
 			const to = {
