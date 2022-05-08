@@ -7,47 +7,38 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script lang="ts" setup>
+import {ref} from 'vue'
 
-export default defineComponent({
-	name: 'update',
-	data() {
-		return {
-			updateAvailable: false,
-			registration: null,
-			refreshing: false,
-		}
-	},
-	created() {
-		document.addEventListener('swUpdated', this.showRefreshUI, {once: true})
+const updateAvailable = ref(false)
+const registration = ref(null)
+const refreshing = ref(false)
 
-		if (navigator && navigator.serviceWorker) {
-			navigator.serviceWorker.addEventListener(
-				'controllerchange', () => {
-					if (this.refreshing) return
-					this.refreshing = true
-					window.location.reload()
-				},
-			)
-		}
-	},
-	methods: {
-		showRefreshUI(e) {
-			console.log('recieved refresh event', e)
-			this.registration = e.detail
-			this.updateAvailable = true
+document.addEventListener('swUpdated', showRefreshUI, {once: true})
+
+if (navigator && navigator.serviceWorker) {
+	navigator.serviceWorker.addEventListener(
+		'controllerchange', () => {
+			if (refreshing.value) return
+			refreshing.value = true
+			window.location.reload()
 		},
-		refreshApp() {
-			this.updateExists = false
-			if (!this.registration || !this.registration.waiting) {
-				return
-			}
-			// Notify the service worker to actually do the update
-			this.registration.waiting.postMessage('skipWaiting')
-		},
-	},
-})
+	)
+}
+
+function showRefreshUI(e) {
+	console.log('recieved refresh event', e)
+	registration.value = e.detail
+	updateAvailable.value = true
+}
+
+function refreshApp() {
+	if (!registration.value || !registration.value.waiting) {
+		return
+	}
+	// Notify the service worker to actually do the update
+	registration.value.waiting.postMessage('skipWaiting')
+}
 </script>
 
 <style lang="scss" scoped>

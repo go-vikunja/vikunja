@@ -92,7 +92,7 @@
 	</header>
 </template>
 
-<script setup langs="ts">
+<script setup lang="ts">
 import {ref, computed, onMounted, nextTick} from 'vue'
 import {useStore} from 'vuex'
 import {useRouter} from 'vue-router'
