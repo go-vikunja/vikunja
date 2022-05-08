@@ -13,7 +13,13 @@
 	>
 		{{ $t('filters.title') }}
 	</x-button>
-	<modal @close="() => modalOpen = false" :enabled="modalOpen">
+	<modal
+		@close="() => modalOpen = false"
+		:enabled="modalOpen"
+		transition-name="fade"
+		:overflow="true"
+		variant="hint-modal"
+	>
 		<filters
 			:has-title="true"
 			v-model="value"

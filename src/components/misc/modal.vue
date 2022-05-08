@@ -1,72 +1,71 @@
 <template>
-	<!-- FIXME: transition should not be included in the modal -->
-	<transition name="modal">
-		<section
-			v-if="enabled"
-			class="modal-mask"
-			:class="[
+	<Teleport to="body">
+		<!-- FIXME: transition should not be included in the modal -->
+		<transition name="modal">
+			<section
+				v-if="enabled"
+				class="modal-mask"
+				:class="[
 				{ 'has-overflow': overflow },
 				variant,
 			]"
-			ref="modal"
-		>
-			<div
-				class="modal-container"
-				@click.self.prevent.stop="$emit('close')"
-				v-shortcut="'Escape'"
+				ref="modal"
 			>
 				<div
-					class="modal-content"
-					:class="{
+					class="modal-container"
+					@click.self.prevent.stop="$emit('close')"
+					v-shortcut="'Escape'"
+				>
+					<div
+						class="modal-content"
+						:class="{
 						'has-overflow': overflow,
 						'is-wide': wide
 					}"
-				>
-					<BaseButton
-						@click="$emit('close')"
-						class="close"
 					>
-						<icon icon="times"/>
-					</BaseButton>
+						<BaseButton
+							@click="$emit('close')"
+							class="close"
+						>
+							<icon icon="times"/>
+						</BaseButton>
 
-					<slot>
-						<div class="header">
-							<slot name="header"></slot>
-						</div>
-						<div class="content">
-							<slot name="text"></slot>
-						</div>
-						<div class="actions">
-							<x-button
-								@click="$emit('close')"
-								variant="tertiary"
-								class="has-text-danger"
-							>
-								{{ $t('misc.cancel') }}
-							</x-button>
-							<x-button
-								@click="$emit('submit')"
-								variant="primary"
-								v-cy="'modalPrimary'"
-								:shadow="false"
-							>
-								{{ $t('misc.doit') }}
-							</x-button>
-						</div>
-					</slot>
+						<slot>
+							<div class="header">
+								<slot name="header"></slot>
+							</div>
+							<div class="content">
+								<slot name="text"></slot>
+							</div>
+							<div class="actions">
+								<x-button
+									@click="$emit('close')"
+									variant="tertiary"
+									class="has-text-danger"
+								>
+									{{ $t('misc.cancel') }}
+								</x-button>
+								<x-button
+									@click="$emit('submit')"
+									variant="primary"
+									v-cy="'modalPrimary'"
+									:shadow="false"
+								>
+									{{ $t('misc.doit') }}
+								</x-button>
+							</div>
+						</slot>
+					</div>
 				</div>
-			</div>
-		</section>
-	</transition>
+			</section>
+		</transition>
+	</Teleport>
 </template>
 
 <script lang="ts" setup>
 import BaseButton from '@/components/base/BaseButton.vue'
-import {ref, watch} from 'vue'
+import {onUnmounted, ref, watch} from 'vue'
 import {useScrollLock} from '@vueuse/core'
-import {useStore} from 'vuex'
-
-const store = useStore()
 
 const props = withDefaults(defineProps<{
 	enabled?: boolean,
@@ -89,9 +88,10 @@ watch(
 	() => props.enabled,
 	enabled => {
 		scrollLock.value = enabled
-		store.commit('modalActive', enabled)
 	},
 )
+
+onUnmounted(() => scrollLock.value = false)
 </script>
 
 <style lang="scss" scoped>

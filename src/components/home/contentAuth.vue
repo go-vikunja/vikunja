@@ -1,5 +1,5 @@
 <template>
-	<div class="content-auth" :class="{'z-unset': modalActive}">
+	<div class="content-auth">
 		<BaseButton
 			v-if="menuActive"
 			@click="$store.commit('menuActive', false)"
@@ -129,7 +129,6 @@ const store = useStore()
 const background = computed(() => store.state.background)
 const blurHash = computed(() => store.state.blurHash)
 const menuActive = computed(() => store.state.menuActive)
-const modalActive = computed(() => store.state.modalActive)
 
 function showKeyboardShortcuts() {
 	store.commit(KEYBOARD_SHORTCUTS_ACTIVE, true)

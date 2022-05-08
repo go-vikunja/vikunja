@@ -51,7 +51,6 @@ export const store = createStore({
 		menuActive: true,
 		keyboardShortcutsActive: false,
 		quickActionsActive: false,
-		modalActive: false,
 	},
 	mutations: {
 		[LOADING](state, loading) {
@@ -89,9 +88,6 @@ export const store = createStore({
 		},
 		[BLUR_HASH](state, blurHash) {
 			state.blurHash = blurHash
-		},
-		modalActive(state, active) {
-			state.modalActive = active
 		},
 	},
 	actions: {
