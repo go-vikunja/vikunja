@@ -35,8 +35,12 @@
 					<a @click="toggleEdit">{{ $t('input.editor.edit') }}</a>
 				</li>
 			</ul>
-			<x-button v-else-if="isEditActive" @click="toggleEdit" variant="secondary" :shadow="false"
-					  v-cy="'saveEditor'">
+			<x-button
+				v-else-if="isEditActive"
+				@click="toggleEdit"
+				variant="secondary"
+				:shadow="false"
+				v-cy="'saveEditor'">
 				{{ $t('misc.save') }}
 			</x-button>
 		</template>
