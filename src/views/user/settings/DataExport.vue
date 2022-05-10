@@ -40,37 +40,41 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
-import DataExportService from '@/services/dataExport'
 
 export default defineComponent({
 	name: 'user-settings-data-export',
-	data() {
-		return {
-			dataExportService: new DataExportService(),
-			password: '',
-			errPasswordRequired: false,
-		}
-	},
-	computed: {
-		isLocalUser() {
-			return this.$store.state.auth.info?.isLocalUser
-		},
-	},
-	mounted() {
-		this.setTitle(`${this.$t('user.export.title')} - ${this.$t('user.settings.title')}`)
-	},
-	methods: {
-		async requestDataExport() {
-			if (this.password === '' && this.isLocalUser) {
-				this.errPasswordRequired = true
-				this.$refs.passwordInput.focus()
-				return
-			}
-
-			await this.dataExportService.request(this.password)
-			this.$message.success({message: this.$t('user.export.success')})
-			this.password = ''
-		},
-	},
 })
+</script>
+
+<script setup lang="ts">
+import {ref, computed, shallowReactive} from 'vue'
+import {useStore} from 'vuex'
+import {useI18n} from 'vue-i18n'
+
+import DataExportService from '@/services/dataExport'
+import { useTitle } from '@/composables/useTitle'
+import {success} from '@/message'
+
+const {t} = useI18n()
+const store = useStore()
+
+useTitle(() => `${t('user.export.title')} - ${t('user.settings.title')}`)
+
+const dataExportService = shallowReactive(new DataExportService())
+const password = ref('')
+const errPasswordRequired = ref(false)
+const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
+const passwordInput = ref()
+
+async function requestDataExport() {
+	if (password.value === '' && isLocalUser.value) {
+		errPasswordRequired.value = true
+		passwordInput.value.focus()
+		return
+	}
+
+	await dataExportService.request(password.value)
+	success({message: t('user.export.success')})
+	password.value = ''
+}
 </script>
