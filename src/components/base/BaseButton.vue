@@ -103,7 +103,7 @@ const isButton = computed(() => componentNodeName.value === 'button')
 
 :where(.base-button) {
 	cursor: pointer;
-	display: block;
+	display: inline-block;
 	color: inherit;
 	font: inherit;
 	user-select: none;
