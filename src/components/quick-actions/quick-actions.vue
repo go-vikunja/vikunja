@@ -32,7 +32,7 @@
 						{{ r.title }}
 					</span>
 					<div class="result-items">
-						<button
+						<BaseButton
 							v-for="(i, key) in r.items"
 							:key="key"
 							:ref="`result-${k}_${key}`"
@@ -44,7 +44,7 @@
 							:class="{'is-strikethrough': i.done}"
 						>
 							{{ i.title }}
-						</button>
+						</BaseButton>
 					</div>
 				</div>
 			</div>
@@ -63,6 +63,8 @@ import TeamModel from '@/models/team'
 
 import {CURRENT_LIST, LOADING, LOADING_MODULE, QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'
 import ListModel from '@/models/list'
+
+import BaseButton from '@/components/base/BaseButton.vue'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
 import {getHistory} from '@/modules/listHistory'
 import {parseTaskText, PrefixMode} from '@/modules/parseTaskText'
@@ -86,7 +88,10 @@ const SEARCH_MODE_TEAMS = 'teams'
 
 export default defineComponent({
 	name: 'quick-actions',
-	components: {QuickAddMagic},
+	components: {
+		BaseButton,
+		QuickAddMagic,
+	},
 	data() {
 		return {
 			query: '',

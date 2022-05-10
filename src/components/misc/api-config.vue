@@ -27,7 +27,7 @@
 				<span class="url" v-tooltip="apiUrl"> {{ apiDomain }} </span>
 			</i18n-t>
 			<br/>
-			<a @click="() => (configureApi = true)">{{ $t('apiConfig.change') }}</a>
+			<BaseButton @click="() => (configureApi = true)">{{ $t('apiConfig.change') }}</BaseButton>
 		</div>
 
 		<message variant="success" v-if="successMsg !== '' && errorMsg === ''" class="mt-2">
@@ -48,6 +48,7 @@ import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 import {success} from '@/message'
 
 import Message from '@/components/misc/message.vue'
+import BaseButton from '@/components/base/BaseButton.vue'
 
 const props = defineProps({
 	configureOpen: {

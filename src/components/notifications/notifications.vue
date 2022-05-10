@@ -1,10 +1,10 @@
 <template>
 	<div class="notifications">
 		<div class="is-flex is-justify-content-center">
-			<a @click.stop="showNotifications = !showNotifications" class="trigger-button">
+			<BaseButton @click.stop="showNotifications = !showNotifications" class="trigger-button">
 				<span class="unread-indicator" v-if="unreadNotifications > 0"></span>
 				<icon icon="bell"/>
-			</a>
+			</BaseButton>
 		</div>
 
 		<transition name="fade">
@@ -26,9 +26,9 @@
 							<span class="has-text-weight-bold mr-1" v-if="n.notification.doer">
 								{{ n.notification.doer.getDisplayName() }}
 							</span>
-							<a @click="() => to(n, index)()">
+							<BaseButton @click="() => to(n, index)()">
 								{{ n.toText(userInfo) }}
-							</a>
+							</BaseButton>
 						</div>
 						<span class="created" v-tooltip="formatDate(n.created)">
 							{{ formatDateSince(n.created) }}
@@ -50,6 +50,7 @@
 import {computed, onMounted, onUnmounted, ref} from 'vue'
 
 import NotificationService from '@/services/notification'
+import BaseButton from '@/components/base/BaseButton.vue'
 import User from '@/components/misc/user.vue'
 import names from '@/models/constants/notificationNames.json'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'

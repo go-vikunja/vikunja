@@ -39,17 +39,20 @@
 				:user="a"
 				v-for="(a, i) in task.assignees"
 			/>
-			<time
-				:datetime="formatISO(task.dueDate)"
-				:class="{'overdue': task.dueDate <= new Date() && !task.done}"
-				class="is-italic"
-				@click.prevent.stop="showDefer = !showDefer"
+			<BaseButton
 				v-if="+new Date(task.dueDate) > 0"
+				@click.prevent.stop="showDefer = !showDefer"
 				v-tooltip="formatDate(task.dueDate)"
-				:aria-expanded="showDefer ? 'true' : 'false'"
 			>
-				- {{ $t('task.detail.due', {at: formatDateSince(task.dueDate)}) }}
-			</time>
+				<time
+					:datetime="formatISO(task.dueDate)"
+					:class="{'overdue': task.dueDate <= new Date() && !task.done}"
+					class="is-italic"
+					:aria-expanded="showDefer ? 'true' : 'false'"
+				>
+					- {{ $t('task.detail.due', {at: formatDateSince(task.dueDate)}) }}
+				</time>
+			</BaseButton>
 			<transition name="fade">
 				<defer-task v-if="+new Date(task.dueDate) > 0 && showDefer" v-model="task" ref="deferDueDate"/>
 			</transition>
@@ -80,13 +83,13 @@
 			v-tooltip="$t('task.detail.belongsToList', {list: $store.getters['lists/getListById'](task.listId).title})">
 			{{ $store.getters['lists/getListById'](task.listId).title }}
 		</router-link>
-		<a
+		<BaseButton
 			:class="{'is-favorite': task.isFavorite}"
 			@click="toggleFavorite"
 			class="favorite">
 			<icon icon="star" v-if="task.isFavorite"/>
 			<icon :icon="['far', 'star']" v-else/>
-		</a>
+		</BaseButton>
 		<slot></slot>
 	</div>
 </template>
@@ -99,6 +102,7 @@ import PriorityLabel from './priorityLabel'
 import TaskService from '../../../services/task'
 import Labels from './labels'
 import User from '../../misc/user'
+import BaseButton from '@/components/base/BaseButton.vue'
 import Fancycheckbox from '../../input/fancycheckbox'
 import DeferTask from './defer-task'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
@@ -115,6 +119,7 @@ export default defineComponent({
 		}
 	},
 	components: {
+		BaseButton,
 		ChecklistSummary,
 		DeferTask,
 		Fancycheckbox,

@@ -59,14 +59,14 @@
 										:disabled="taskService.loading || !canWrite"
 										ref="dueDate"
 									/>
-									<a
+									<BaseButton
 										@click="() => {task.dueDate = null;saveTask()}"
 										v-if="task.dueDate && canWrite"
 										class="remove">
 										<span class="icon is-small">
 											<icon icon="times"></icon>
 										</span>
-									</a>
+									</BaseButton>
 								</div>
 							</div>
 						</transition>
@@ -99,7 +99,7 @@
 										:disabled="taskService.loading || !canWrite"
 										ref="startDate"
 									/>
-									<a
+									<BaseButton
 										@click="() => {task.startDate = null;saveTask()}"
 										v-if="task.startDate && canWrite"
 										class="remove"
@@ -107,7 +107,7 @@
 										<span class="icon is-small">
 											<icon icon="times"></icon>
 										</span>
-									</a>
+									</BaseButton>
 								</div>
 							</div>
 						</transition>
@@ -126,14 +126,14 @@
 										:disabled="taskService.loading || !canWrite"
 										ref="endDate"
 									/>
-									<a
+									<BaseButton
 										@click="() => {task.endDate = null;saveTask()}"
 										v-if="task.endDate && canWrite"
 										class="remove">
 										<span class="icon is-small">
 											<icon icon="times"></icon>
 										</span>
-									</a>
+									</BaseButton>
 								</div>
 							</div>
 						</transition>

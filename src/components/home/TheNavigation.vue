@@ -22,14 +22,14 @@
 
 		<div class="navbar-end">
 			<update/>
-			<a
+			<BaseButton
 				@click="openQuickActions"
 				class="trigger-button pr-0"
 				v-shortcut="'Control+k'"
 				:title="$t('keyboardShortcuts.quickSearch')"
 			>
 				<icon icon="search"/>
-			</a>
+			</BaseButton>
 			<notifications/>
 			<div class="user">
 				<dropdown class="is-right" ref="usernameDropdown">

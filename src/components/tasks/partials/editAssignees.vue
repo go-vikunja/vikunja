@@ -18,9 +18,9 @@
 			<template #tag="{item: user}">
 				<span class="assignee">
 					<user :avatar-size="32" :show-username="false" :user="user"/>
-					<a @click="removeAssignee(user)" class="remove-assignee" v-if="!disabled">
+					<BaseButton @click="removeAssignee(user)" class="remove-assignee" v-if="!disabled">
 						<icon icon="times"/>
-					</a>
+					</BaseButton>
 				</span>
 			</template>
 		</Multiselect>
@@ -34,6 +34,7 @@ import {useI18n} from 'vue-i18n'
 
 import User from '@/components/misc/user.vue'
 import Multiselect from '@/components/input/multiselect.vue'
+import BaseButton from '@/components/base/BaseButton.vue'
 
 import {includesById} from '@/helpers/utils'
 import UserModel from '@/models/user'
@@ -95,7 +96,7 @@ async function removeAssignee(user: UserModel) {
 	success({message: t('task.assignee.unassignSuccess')})
 }
 
-async function findUser(query) {
+async function findUser(query: string) {
 	if (query === '') {
 		clearAllFoundUsers()
 		return

@@ -16,23 +16,23 @@
 		<p class="has-text-centered has-text-grey is-italic my-5" v-if="showPreviewText">
 			{{ emptyText }}
 			<template v-if="isEditEnabled">
-				<a @click="toggleEdit" class="d-print-none">{{ $t('input.editor.edit') }}</a>.
+				<BaseButton @click="toggleEdit" class="d-print-none">{{ $t('input.editor.edit') }}</BaseButton>.
 			</template>
 		</p>
 
 		<ul class="actions d-print-none" v-if="bottomActions.length > 0">
 			<li v-if="isEditEnabled && !showPreviewText && showSave">
-				<a v-if="showEditButton" @click="toggleEdit">{{ $t('input.editor.edit') }}</a>
-				<a v-else-if="isEditActive" @click="toggleEdit" class="done-edit">{{ $t('misc.save') }}</a>
+				<BaseButton v-if="showEditButton" @click="toggleEdit">{{ $t('input.editor.edit') }}</BaseButton>
+				<BaseButton v-else-if="isEditActive" @click="toggleEdit" class="done-edit">{{ $t('misc.save') }}</BaseButton>
 			</li>
 			<li v-for="(action, k) in bottomActions" :key="k">
-				<a @click="action.action">{{ action.title }}</a>
+				<BaseButton @click="action.action">{{ action.title }}</BaseButton>
 			</li>
 		</ul>
 		<template v-else-if="isEditEnabled && showSave">
 			<ul v-if="showEditButton" class="actions d-print-none">
 				<li>
-					<a @click="toggleEdit">{{ $t('input.editor.edit') }}</a>
+					<BaseButton @click="toggleEdit">{{ $t('input.editor.edit') }}</BaseButton>
 				</li>
 			</ul>
 			<x-button
@@ -62,10 +62,13 @@ import AttachmentService from '../../services/attachment'
 import {findCheckboxesInText} from '../../helpers/checklistFromText'
 import {createRandomID} from '@/helpers/randomId'
 
+import BaseButton from '@/components/base/BaseButton.vue'
+
 export default defineComponent({
 	name: 'editor',
 	components: {
 		VueEasymde,
+		BaseButton,
 	},
 	props: {
 		modelValue: {

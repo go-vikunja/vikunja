@@ -32,13 +32,13 @@
 						v-tooltip.bottom="$t('label.edit.forbidden')">
 						{{ l.title }}
 					</span>
-					<a
+					<BaseButton
 						:style="{'color': l.textColor}"
 						@click="editLabel(l)"
 						v-else>
 						{{ l.title }}
-					</a>
-					<a @click="showDeleteDialoge(l)" class="delete is-small" v-if="userInfo.id === l.createdBy.id"></a>
+					</BaseButton>
+					<BaseButton @click="showDeleteDialoge(l)" class="delete is-small" v-if="userInfo.id === l.createdBy.id" />
 				</span>
 			</div>
 			<div class="column is-4" v-if="isLabelEdit">
@@ -116,12 +116,14 @@ import {mapState} from 'vuex'
 import LabelModel from '../../models/label'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
+import BaseButton from '@/components/base/BaseButton.vue'
 import AsyncEditor from '@/components/input/AsyncEditor'
 import ColorPicker from '@/components/input/colorPicker'
 
 export default defineComponent({
 	name: 'ListLabels',
 	components: {
+		BaseButton,
 		ColorPicker,
 		editor: AsyncEditor,
 	},

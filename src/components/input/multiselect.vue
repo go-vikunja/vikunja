@@ -15,7 +15,7 @@
 						<slot name="tag" :item="item">
 						<span :key="`item${key}`" class="tag ml-2 mt-2">
 							{{ label !== '' ? item[label] : item }}
-							<a @click="() => remove(item)" class="delete is-small"></a>
+							<BaseButton @click="() => remove(item)" class="delete is-small"></BaseButton>
 						</span>
 						</slot>
 					</template>
@@ -37,7 +37,7 @@
 
 		<transition name="fade">
 			<div class="search-results" :class="{'search-results-inline': inline}" v-if="searchResultsVisible">
-				<button
+				<BaseButton
 					class="is-fullwidth"
 					v-for="(data, key) in filteredSearchResults"
 					:key="key"
@@ -54,9 +54,9 @@
 					<span class="hint-text">
 						{{ selectPlaceholder }}
 					</span>
-				</button>
+				</BaseButton>
 
-				<button
+				<BaseButton
 					v-if="creatableAvailable"
 					class="is-fullwidth"
 					:ref="`result-${filteredSearchResults.length}`"
@@ -75,7 +75,7 @@
 					<span class="hint-text">
 						{{ createPlaceholder }}
 					</span>
-				</button>
+				</BaseButton>
 			</div>
 		</transition>
 
@@ -87,8 +87,13 @@ import {defineComponent} from 'vue'
 import {i18n} from '@/i18n'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 
+import BaseButton from '@/components/base/BaseButton.vue'
+
 export default defineComponent({
 	name: 'multiselect',
+	components: {
+		BaseButton,
+	},
 	data() {
 		return {
 			query: '',

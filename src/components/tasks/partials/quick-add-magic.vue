@@ -2,7 +2,7 @@
 	<div v-if="available">
 		<p class="help has-text-grey">
 			{{ $t('task.quickAddMagic.hint') }}.
-			<a @click="() => visible = true">{{ $t('task.quickAddMagic.what') }}</a>
+			<BaseButton @click="() => visible = true">{{ $t('task.quickAddMagic.what') }}</BaseButton>
 		</p>
 		<modal
 			@close="() => visible = false"
@@ -86,13 +86,16 @@
 </template>
 
 <script setup lang="ts">
+import {ref, computed} from 'vue'
+
+import BaseButton from '@/components/base/BaseButton.vue'
+
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {PREFIXES} from '@/modules/parseTaskText'
-import {ref, computed} from 'vue'
 
 const visible = ref(false)
 const mode = ref(getQuickAddMagicMode())
 
 const available = computed(() => mode.value !== 'disabled')
-const prefixes = computed(() =>PREFIXES[mode.value])
+const prefixes = computed(() => PREFIXES[mode.value])
 </script>

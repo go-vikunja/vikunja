@@ -51,6 +51,9 @@
 		<nav class="menu namespaces-lists loader-container is-loading-small" :class="{'is-loading': loading}">
 			<template v-for="(n, nk) in namespaces" :key="n.id">
 				<div class="namespace-title" :class="{'has-menu': n.id > 0}">
+					<!-- FIXME we shouldn't wrap with the clickable area and have another one inside aswell
+						@click should only be used on interactive elements
+					-->
 					<span
 						@click="toggleLists(n.id)"
 						class="menu-label"
@@ -64,13 +67,13 @@
 						<span class="name">
 							{{ namespaceTitles[nk] }}
 						</span>
-						<a
+						<BaseButton
 							class="icon is-small toggle-lists-icon pl-2"
 							:class="{'active': typeof listsVisible[n.id] !== 'undefined' ? listsVisible[n.id] : true}"
 							@click="toggleLists(n.id)"
 						>
 							<icon icon="chevron-down"/>
-						</a>
+						</BaseButton>
 						<span class="count" :class="{'ml-2 mr-0': n.id > 0}">
 							({{ namespaceListsCount[nk] }})
 						</span>
@@ -136,12 +139,13 @@
 										<span class="list-menu-title">
 											{{ getListTitle(l) }}
 										</span>
-										<span
+										<!-- FIXME: we shouldn't use a button inside a link This can be unwrapped by using CSS -->
+										<BaseButton
 											:class="{'is-favorite': l.isFavorite}"
 											@click.prevent.stop="toggleFavoriteList(l)"
 											class="favorite">
 											<icon :icon="l.isFavorite ? 'star' : ['far', 'star']"/>
-										</span>
+										</BaseButton>
 									</a>
 								</router-link>
 								<list-settings-dropdown :list="l" v-if="l.id > 0"/>
@@ -162,6 +166,7 @@ import {useStore} from 'vuex'
 import draggable from 'zhyswan-vuedraggable'
 import {SortableEvent} from 'sortablejs'
 
+import BaseButton from '@/components/base/BaseButton.vue'
 import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
 import NamespaceSettingsDropdown from '@/components/namespace/namespace-settings-dropdown.vue'
 import PoweredByLink from '@/components/home/PoweredByLink.vue'

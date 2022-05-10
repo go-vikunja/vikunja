@@ -1,18 +1,16 @@
 <template>
 	<div class="datepicker" :class="{'disabled': disabled}">
-		<a @click.stop="toggleDatePopup" class="show">
-			<template v-if="date === null">
-				{{ chooseDateLabel }}
-			</template>
-			<template v-else>
-				{{ formatDateShort(date) }}
-			</template>
-		</a>
+		<BaseButton @click.stop="toggleDatePopup" class="show">
+			{{ date === null ? chooseDateLabel : formatDateShort(date) }}
+		</BaseButton>
 
 		<transition name="fade">
 			<div v-if="show" class="datepicker-popup" ref="datepickerPopup">
 
-				<a @click.stop="() => setDate('today')" v-if="(new Date()).getHours() < 21">
+				<BaseButton
+					v-if="(new Date()).getHours() < 21"
+					@click.stop="setDate('today')"
+				>
 					<span class="icon">
 						<icon :icon="['far', 'calendar-alt']"/>
 					</span>
@@ -24,8 +22,8 @@
 							{{ getWeekdayFromStringInterval('today') }}
 						</span>
 					</span>
-				</a>
-				<a @click.stop="() => setDate('tomorrow')">
+				</BaseButton>
+				<BaseButton @click.stop="() => setDate('tomorrow')">
 					<span class="icon">
 						<icon :icon="['far', 'sun']"/>
 					</span>
@@ -37,8 +35,8 @@
 							{{ getWeekdayFromStringInterval('tomorrow') }}
 						</span>
 					</span>
-				</a>
-				<a @click.stop="() => setDate('nextMonday')">
+				</BaseButton>
+				<BaseButton @click.stop="() => setDate('nextMonday')">
 					<span class="icon">
 						<icon icon="coffee"/>
 					</span>
@@ -50,8 +48,8 @@
 							{{ getWeekdayFromStringInterval('nextMonday') }}
 						</span>
 					</span>
-				</a>
-				<a @click.stop="() => setDate('thisWeekend')">
+				</BaseButton>
+				<BaseButton @click.stop="() => setDate('thisWeekend')">
 					<span class="icon">
 						<icon icon="cocktail"/>
 					</span>
@@ -63,8 +61,8 @@
 							{{ getWeekdayFromStringInterval('thisWeekend') }}
 						</span>
 					</span>
-				</a>
-				<a @click.stop="() => setDate('laterThisWeek')">
+				</BaseButton>
+				<BaseButton @click.stop="() => setDate('laterThisWeek')">
 					<span class="icon">
 						<icon icon="chess-knight"/>
 					</span>
@@ -76,8 +74,8 @@
 							{{ getWeekdayFromStringInterval('laterThisWeek') }}
 						</span>
 					</span>
-				</a>
-				<a @click.stop="() => setDate('nextWeek')">
+				</BaseButton>
+				<BaseButton @click.stop="() => setDate('nextWeek')">
 					<span class="icon">
 						<icon icon="forward"/>
 					</span>
@@ -89,7 +87,7 @@
 							{{ getWeekdayFromStringInterval('nextWeek') }}
 						</span>
 					</span>
-				</a>
+				</BaseButton>
 
 				<flat-pickr
 					:config="flatPickerConfig"
@@ -117,6 +115,8 @@ import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import {i18n} from '@/i18n'
 
+import BaseButton from '@/components/base/BaseButton.vue'
+
 import {format} from 'date-fns'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
@@ -134,6 +134,7 @@ export default defineComponent({
 	},
 	components: {
 		flatPickr,
+		BaseButton,
 	},
 	props: {
 		modelValue: {

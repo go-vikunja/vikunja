@@ -165,7 +165,7 @@ describe('Task', () => {
 			})
 			cy.visit(`/tasks/${tasks[0].id}`)
 
-			cy.get('.task-view .details.content.description .editor a')
+			cy.get('.task-view .details.content.description .editor button')
 				.click()
 			cy.get('.task-view .details.content.description .editor .vue-easymde .EasyMDEContainer .CodeMirror-scroll')
 				.type('{selectall}New Description')
@@ -297,7 +297,7 @@ describe('Task', () => {
 			cy.visit(`/tasks/${tasks[0].id}`)
 
 			cy.get('.task-view .column.assignees .multiselect .input-wrapper span.assignee')
-				.get('a.remove-assignee')
+				.get('.remove-assignee')
 				.click()
 
 			cy.get('.global-notification')
@@ -402,7 +402,7 @@ describe('Task', () => {
 				.contains('Due Date')
 				.get('.date-input .datepicker .show')
 				.click()
-			cy.get('.datepicker .datepicker-popup a')
+			cy.get('.datepicker .datepicker-popup button')
 				.contains('Tomorrow')
 				.click()
 			cy.get('[data-cy="closeDatepicker"]')

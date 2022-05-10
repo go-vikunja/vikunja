@@ -65,9 +65,9 @@
 
 			<nothing v-if="ctaVisible && tasks.length === 0 && !loading">
 				{{ $t('list.list.empty') }}
-				<a @click="focusNewTaskInput()">
+				<BaseButton @click="focusNewTaskInput()">
 					{{ $t('list.list.newTaskCta') }}
-				</a>
+				</BaseButton>
 			</nothing>
 
 			<div class="tasks-container" :class="{ 'has-task-edit-open': isTaskEdit }">
@@ -99,13 +99,13 @@
 									<span class="icon handle">
 										<icon icon="grip-lines"/>
 									</span>
-									<div
+									<BaseButton
 										@click="editTask(t.id)"
 										class="icon settings"
 										v-if="!list.isArchived"
 									>
 										<icon icon="pencil-alt"/>
-									</div>
+									</BaseButton>
 								</template>
 							</single-task-in-list>
 						</template>
@@ -134,6 +134,7 @@
 <script lang="ts">
 import { ref, toRef, defineComponent } from 'vue'
 
+import BaseButton from '@/components/base/BaseButton.vue'
 import ListWrapper from './ListWrapper.vue'
 import EditTask from '@/components/tasks/edit-task'
 import AddTask from '@/components/tasks/add-task'
@@ -190,6 +191,7 @@ export default defineComponent({
 		}
 	},
 	components: {
+		BaseButton,
 		ListWrapper,
 		Nothing,
 		FilterPopup,

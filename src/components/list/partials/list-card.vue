@@ -18,15 +18,16 @@
 			:style="{'background-image': background !== null ? `url(${background})` : false}"></div>
 		<div class="list-content">
 			<div class="is-archived-container">
-			<span class="is-archived" v-if="list.isArchived">
-				{{ $t('namespace.archived') }}
-			</span>
-				<span
+				<span class="is-archived" v-if="list.isArchived">
+					{{ $t('namespace.archived') }}
+				</span>
+				<BaseButton
 					:class="{'is-favorite': list.isFavorite, 'is-archived': list.isArchived}"
 					@click.stop="toggleFavoriteList(list)"
-					class="favorite">
-				<icon :icon="list.isFavorite ? 'star' : ['far', 'star']"/>
-			</span>
+					class="favorite"
+				>
+					<icon :icon="list.isFavorite ? 'star' : ['far', 'star']"/>
+				</BaseButton>
 			</div>
 			<div class="title">{{ list.title }}</div>
 		</div>
@@ -42,6 +43,8 @@ import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import ListModel from '@/models/list'
+
+import BaseButton from '@/components/base/BaseButton.vue'
 
 const background = ref<string | null>(null)
 const backgroundLoading = ref(false)

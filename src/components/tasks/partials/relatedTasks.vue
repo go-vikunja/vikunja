@@ -103,12 +103,13 @@
 						</span>
 						{{ t.title }}
 					</router-link>
-					<a
+					<BaseButton
+						v-if="editEnabled"
 						@click="() => {showDeleteModal = true; relationToDelete = {relationKind: rts.kind, otherTaskId: t.id}}"
 						class="remove"
-						v-if="editEnabled">
+					>
 						<icon icon="trash-alt"/>
-					</a>
+					</BaseButton>
 				</div>
 			</div>
 		</div>
@@ -145,6 +146,7 @@ import TaskRelationService from '../../../services/taskRelation'
 import relationKinds from '../../../models/constants/relationKinds'
 import TaskRelationModel from '../../../models/taskRelation'
 
+import BaseButton from '@/components/base/BaseButton.vue'
 import Multiselect from '@/components/input/multiselect.vue'
 
 export default defineComponent({
@@ -166,6 +168,7 @@ export default defineComponent({
 		}
 	},
 	components: {
+		BaseButton,
 		Multiselect,
 	},
 	props: {

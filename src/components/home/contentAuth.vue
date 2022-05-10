@@ -49,13 +49,13 @@
 					</modal>
 				</transition>
 
-				<a
+				<BaseButton
 					class="keyboard-shortcuts-button d-print-none"
 					@click="showKeyboardShortcuts()"
 					v-shortcut="'?'"
 				>
 					<icon icon="keyboard"/>
-				</a>
+				</BaseButton>
 			</main>
 		</div>
 	</div>

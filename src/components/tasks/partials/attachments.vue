@@ -26,6 +26,9 @@
 		</progress>
 
 		<div class="files" v-if="attachments.length > 0">
+			<!-- FIXME: don't use a for element that wraps other links / buttons
+				Instead: overlay element with button that is inside.
+			-->
 			<a
 				class="attachment"
 				v-for="a in attachments"
@@ -53,25 +56,25 @@
 						</span>
 					</p>
 					<p>
-						<a
+						<BaseButton
 							@click.prevent.stop="downloadAttachment(a)"
 							v-tooltip="$t('task.attachment.downloadTooltip')"
 						>
 							{{ $t('misc.download') }}
-						</a>
-						<a
+						</BaseButton>
+						<BaseButton
 							@click.stop="copyUrl(a)"
 							v-tooltip="$t('task.attachment.copyUrlTooltip')"
 						>
 							{{ $t('task.attachment.copyUrl') }}
-						</a>
-						<a
+						</BaseButton>
+						<BaseButton
 							@click.prevent.stop="() => {attachmentToDelete = a; showDeleteModal = true}"
 							v-if="editEnabled"
 							v-tooltip="$t('task.attachment.deleteTooltip')"
 						>
 							{{ $t('misc.delete') }}
-						</a>
+						</BaseButton>
 					</p>
 				</div>
 			</a>
@@ -148,9 +151,12 @@ import {mapState} from 'vuex'
 import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
 import { uploadFiles, generateAttachmentUrl } from '@/helpers/attachments'
 
+import BaseButton from '@/components/base/BaseButton'
+
 export default defineComponent({
 	name: 'attachments',
 	components: {
+		BaseButton,
 		User,
 	},
 	data() {

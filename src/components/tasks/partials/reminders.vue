@@ -11,9 +11,9 @@
 				:disabled="disabled"
 				@close-on-change="() => addReminderDate(index)"
 			/>
-			<a @click="removeReminderByIndex(index)" v-if="!disabled" class="remove">
+			<BaseButton @click="removeReminderByIndex(index)" v-if="!disabled" class="remove">
 				<icon icon="times"></icon>
-			</a>
+			</BaseButton>
 		</div>
 		<div class="reminder-input" v-if="!disabled">
 			<Datepicker
@@ -28,9 +28,12 @@
 <script setup lang="ts">
 import {PropType, ref, onMounted, watch} from 'vue'
 
+import BaseButton from '@/components/base/BaseButton.vue'
 import Datepicker from '@/components/input/datepicker.vue'
 
 type Reminder = Date | string
+
+
 
 const props = defineProps({
 	modelValue: {

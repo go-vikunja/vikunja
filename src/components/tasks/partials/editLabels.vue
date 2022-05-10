@@ -19,7 +19,7 @@
 				:style="{'background': label.hexColor, 'color': label.textColor}"
 				class="tag">
 				<span>{{ label.title }}</span>
-				<button type="button" v-cy="'taskDetail.removeLabel'" @click="removeLabel(label)" class="delete is-small" />
+				<BaseButton v-cy="'taskDetail.removeLabel'" @click="removeLabel(label)" class="delete is-small" />
 			</span>
 		</template>
 		<template #searchResult="{option}">
@@ -47,6 +47,7 @@ import LabelModel from '@/models/label'
 import LabelTaskService from '@/services/labelTask'
 import {success} from '@/message'
 
+import BaseButton from '@/components/base/BaseButton.vue'
 import Multiselect from '@/components/input/multiselect.vue'
 
 const props = defineProps({

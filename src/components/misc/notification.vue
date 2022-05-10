@@ -1,6 +1,7 @@
 <template>
 	<notifications position="bottom left" :max="2" class="global-notification">
 		<template #body="{ item, close }">
+			<!-- FIXME: overlay whole notification with button and add event listener on that button instead -->
 			<div
 				:class="[
 					'vue-notification-template',

@@ -4,7 +4,7 @@
 			<p class="card-header-title">
 				{{ title }}
 			</p>
-			<a
+			<BaseButton
 				v-if="hasClose"
 				class="card-header-icon"
 				:aria-label="$t('misc.close')"
@@ -14,7 +14,7 @@
 				<span class="icon">
 					<icon :icon="closeIcon"/>
 				</span>
-			</a>
+			</BaseButton>
 		</header>
 		<div class="card-content loader-container" :class="{'p-0': !padding, 'is-loading': loading}">
 			<div :class="{'content': hasContent}">
@@ -25,6 +25,8 @@
 </template>
 
 <script setup lang="ts">
+import BaseButton from '@/components/base/BaseButton.vue'
+
 defineProps({
 	title: {
 		type: String,
