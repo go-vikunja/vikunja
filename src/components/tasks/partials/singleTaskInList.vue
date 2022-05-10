@@ -41,6 +41,7 @@
 			/>
 			<BaseButton
 				v-if="+new Date(task.dueDate) > 0"
+				class="dueDate"
 				@click.prevent.stop="showDefer = !showDefer"
 				v-tooltip="formatDate(task.dueDate)"
 			>
@@ -253,6 +254,11 @@ export default defineComponent({
 		overflow: hidden;
 		display: inline-block;
 		flex: 1 0 50%;
+
+		.dueDate {
+			display: inline-block;
+			margin-left: 5px;
+		}
 
 		.overdue {
 			color: var(--danger);

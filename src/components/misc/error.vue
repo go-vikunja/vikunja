@@ -2,7 +2,7 @@
 	<message variant="danger">
 		<i18n-t keypath="loadingError.failed">
 			<BaseButton @click="reload">{{ $t('loadingError.tryAgain') }}</BaseButton>
-			<a href="https://vikunja.io/contact/" rel="noreferrer noopener nofollow" target="_blank">{{ $t('loadingError.contact') }}</a>
+			<BaseButton href="https://vikunja.io/contact/">{{ $t('loadingError.contact') }}</BaseButton>
 		</i18n-t>
 	</message>
 </template>

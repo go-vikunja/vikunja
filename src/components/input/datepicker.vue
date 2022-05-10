@@ -1,6 +1,6 @@
 <template>
-	<div class="datepicker" :class="{'disabled': disabled}">
-		<BaseButton @click.stop="toggleDatePopup" class="show">
+	<div class="datepicker">
+		<BaseButton @click.stop="toggleDatePopup" class="show" :disabled="disabled || undefined">
 			{{ date === null ? chooseDateLabel : formatDateShort(date) }}
 		</BaseButton>
 
@@ -9,83 +9,63 @@
 
 				<BaseButton
 					v-if="(new Date()).getHours() < 21"
+					class="datepicker__quick-select-date"
 					@click.stop="setDate('today')"
 				>
-					<span class="icon">
-						<icon :icon="['far', 'calendar-alt']"/>
-					</span>
+					<span class="icon"><icon :icon="['far', 'calendar-alt']"/></span>
 					<span class="text">
-						<span>
-							{{ $t('input.datepicker.today') }}
-						</span>
-						<span class="weekday">
-							{{ getWeekdayFromStringInterval('today') }}
-						</span>
+						<span>{{ $t('input.datepicker.today') }}</span>
+						<span class="weekday">{{ getWeekdayFromStringInterval('today') }}</span>
 					</span>
 				</BaseButton>
-				<BaseButton @click.stop="() => setDate('tomorrow')">
-					<span class="icon">
-						<icon :icon="['far', 'sun']"/>
-					</span>
+				<BaseButton
+					class="datepicker__quick-select-date"
+					@click.stop="setDate('tomorrow')"
+				>
+					<span class="icon"><icon :icon="['far', 'sun']"/></span>
 					<span class="text">
-						<span>
-							{{ $t('input.datepicker.tomorrow') }}
-						</span>
-						<span class="weekday">
-							{{ getWeekdayFromStringInterval('tomorrow') }}
-						</span>
+						<span>{{ $t('input.datepicker.tomorrow') }}</span>
+						<span class="weekday">{{ getWeekdayFromStringInterval('tomorrow') }}</span>
 					</span>
 				</BaseButton>
-				<BaseButton @click.stop="() => setDate('nextMonday')">
-					<span class="icon">
-						<icon icon="coffee"/>
-					</span>
+				<BaseButton
+					class="datepicker__quick-select-date"
+					@click.stop="setDate('nextMonday')"
+				>
+					<span class="icon"><icon icon="coffee"/></span>
 					<span class="text">
-						<span>
-							{{ $t('input.datepicker.nextMonday') }}
-						</span>
-						<span class="weekday">
-							{{ getWeekdayFromStringInterval('nextMonday') }}
-						</span>
+						<span>{{ $t('input.datepicker.nextMonday') }}</span>
+						<span class="weekday">{{ getWeekdayFromStringInterval('nextMonday') }}</span>
 					</span>
 				</BaseButton>
-				<BaseButton @click.stop="() => setDate('thisWeekend')">
-					<span class="icon">
-						<icon icon="cocktail"/>
-					</span>
+				<BaseButton
+					class="datepicker__quick-select-date"
+					@click.stop="setDate('thisWeekend')"
+				>
+					<span class="icon"><icon icon="cocktail"/></span>
 					<span class="text">
-						<span>
-							{{ $t('input.datepicker.thisWeekend') }}
-						</span>
-						<span class="weekday">
-							{{ getWeekdayFromStringInterval('thisWeekend') }}
-						</span>
+						<span>{{ $t('input.datepicker.thisWeekend') }}</span>
+						<span class="weekday">{{ getWeekdayFromStringInterval('thisWeekend') }}</span>
 					</span>
 				</BaseButton>
-				<BaseButton @click.stop="() => setDate('laterThisWeek')">
-					<span class="icon">
-						<icon icon="chess-knight"/>
-					</span>
+				<BaseButton
+					class="datepicker__quick-select-date"
+					@click.stop="setDate('laterThisWeek')"
+				>
+					<span class="icon"><icon icon="chess-knight"/></span>
 					<span class="text">
-						<span>
-							{{ $t('input.datepicker.laterThisWeek') }}
-						</span>
-						<span class="weekday">
-							{{ getWeekdayFromStringInterval('laterThisWeek') }}
-						</span>
+						<span>{{ $t('input.datepicker.laterThisWeek') }}</span>
+						<span class="weekday">{{ getWeekdayFromStringInterval('laterThisWeek') }}</span>
 					</span>
 				</BaseButton>
-				<BaseButton @click.stop="() => setDate('nextWeek')">
-					<span class="icon">
-						<icon icon="forward"/>
-					</span>
+				<BaseButton
+					class="datepicker__quick-select-date"
+					@click.stop="setDate('nextWeek')"
+				>
+					<span class="icon"><icon icon="forward"/></span>
 					<span class="text">
-						<span>
-							{{ $t('input.datepicker.nextWeek') }}
-						</span>
-						<span class="weekday">
-							{{ getWeekdayFromStringInterval('nextWeek') }}
-						</span>
+						<span>{{ $t('input.datepicker.nextWeek') }}</span>
+						<span class="weekday">{{ getWeekdayFromStringInterval('nextWeek') }}</span>
 					</span>
 				</BaseButton>
 
@@ -96,7 +76,7 @@
 				/>
 
 				<x-button
-					class="is-fullwidth"
+					class="datepicker__close-button is-fullwidth"
 					:shadow="false"
 					@click="close"
 					v-cy="'closeDatepicker'"
@@ -264,68 +244,64 @@ export default defineComponent({
 	input.input {
 		display: none;
 	}
+}
 
-	&.disabled a {
-		cursor: default;
+.datepicker-popup {
+	position: absolute;
+	z-index: 99;
+	width: 320px;
+	background: var(--white);
+	border-radius: $radius;
+	box-shadow: $shadow;
+
+	@media screen and (max-width: ($tablet)) {
+		width: calc(100vw - 5rem);
+	}
+}
+
+.datepicker__quick-select-date {
+	display: flex;
+	align-items: center;
+	padding: 0 .5rem;
+	width: 100%;
+	height: 2.25rem;
+	color: var(--text);
+	transition: all $transition;
+
+	&:first-child {
+		border-radius: $radius $radius 0 0;
 	}
 
-	.datepicker-popup {
-		position: absolute;
-		z-index: 99;
-		width: 320px;
-		background: var(--white);
-		border-radius: $radius;
-		box-shadow: $shadow;
+	&:hover {
+		background: var(--grey-100);
+	}
 
-		@media screen and (max-width: ($tablet)) {
-			width: calc(100vw - 5rem);
-		}
+	.text {
+		width: 100%;
+		font-size: .85rem;
+		display: flex;
+		justify-content: space-between;
+		padding-right: .25rem;
 
-		a:not(.button) {
-			display: flex;
-			align-items: center;
-			padding: 0 .5rem;
-			width: 100%;
-			height: 2.25rem;
-			color: var(--text);
-			transition: all $transition;
-
-			&:first-child {
-				border-radius: $radius $radius 0 0;
-			}
-
-			&:hover {
-				background: var(--grey-100);
-			}
-
-			.text {
-				width: 100%;
-				font-size: .85rem;
-				display: flex;
-				justify-content: space-between;
-				padding-right: .25rem;
-
-				.weekday {
-					color: var(--text-light);
-					text-transform: capitalize;
-				}
-			}
-
-			.icon {
-				width: 2rem;
-				text-align: center;
-			}
-		}
-
-		a.button {
-			margin: 1rem;
-			width: calc(100% - 2rem);
-		}
-
-		:deep(.flatpickr-calendar) {
-			margin: 0 auto 8px;
-			box-shadow: none;
+		.weekday {
+			color: var(--text-light);
+			text-transform: capitalize;
 		}
 	}
+
+	.icon {
+		width: 2rem;
+		text-align: center;
+	}
+}
+	
+.datepicker__close-button {
+	margin: 1rem;
+	width: calc(100% - 2rem);
+}
+
+:deep(.flatpickr-calendar) {
+	margin: 0 auto 8px;
+	box-shadow: none;
 }
 </style>

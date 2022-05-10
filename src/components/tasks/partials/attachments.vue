@@ -57,20 +57,23 @@
 					</p>
 					<p>
 						<BaseButton
+							class="attachment-info-meta-button"
 							@click.prevent.stop="downloadAttachment(a)"
 							v-tooltip="$t('task.attachment.downloadTooltip')"
 						>
 							{{ $t('misc.download') }}
 						</BaseButton>
 						<BaseButton
+							class="attachment-info-meta-button"
 							@click.stop="copyUrl(a)"
 							v-tooltip="$t('task.attachment.copyUrlTooltip')"
 						>
 							{{ $t('task.attachment.copyUrl') }}
 						</BaseButton>
 						<BaseButton
-							@click.prevent.stop="() => {attachmentToDelete = a; showDeleteModal = true}"
 							v-if="editEnabled"
+							class="attachment-info-meta-button"
+							@click.prevent.stop="() => {attachmentToDelete = a; showDeleteModal = true}"
 							v-tooltip="$t('task.attachment.deleteTooltip')"
 						>
 							{{ $t('misc.delete') }}
@@ -303,7 +306,7 @@ export default defineComponent({
           display: flex;
 
           > span:not(:last-child):after,
-          > a:not(:last-child):after {
+          > button:not(:last-child):after {
             content: '·';
             padding: 0 .25rem;
           }
@@ -383,7 +386,7 @@ export default defineComponent({
 		}
 
 		> span:not(:last-child):after,
-		> a:not(:last-child):after {
+		> button:not(:last-child):after {
 			display: none;
 		}
 
@@ -391,6 +394,10 @@ export default defineComponent({
 			display: none;
 		}
 	}
+}
+
+.attachment-info-meta-button {
+	color: var(--link);
 }
 
 @keyframes bounce {

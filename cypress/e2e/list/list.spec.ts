@@ -52,9 +52,9 @@ describe('Lists', () => {
 		cy.get('.list-title h1')
 			.should('contain', 'First List')
 
-		cy.get('.namespace-container .menu.namespaces-lists .more-container .menu-list li:first-child .dropdown .dropdown-trigger')
+		cy.get('.namespace-container .menu.namespaces-lists .menu-list li:first-child .dropdown .dropdown-trigger')
 			.click()
-		cy.get('.namespace-container .menu.namespaces-lists .more-container .menu-list li:first-child .dropdown .dropdown-content')
+		cy.get('.namespace-container .menu.namespaces-lists .menu-list li:first-child .dropdown .dropdown-content')
 			.contains('Edit')
 			.click()
 		cy.get('#title')
@@ -68,7 +68,7 @@ describe('Lists', () => {
 		cy.get('.list-title h1')
 			.should('contain', newListName)
 			.should('not.contain', lists[0].title)
-		cy.get('.namespace-container .menu.namespaces-lists .more-container .menu-list li:first-child')
+		cy.get('.namespace-container .menu.namespaces-lists .menu-list li:first-child')
 			.should('contain', newListName)
 			.should('not.contain', lists[0].title)
 		cy.visit('/')
@@ -80,9 +80,9 @@ describe('Lists', () => {
 	it('Should remove a list', () => {
 		cy.visit(`/lists/${lists[0].id}`)
 
-		cy.get('.namespace-container .menu.namespaces-lists .more-container .menu-list li:first-child .dropdown .dropdown-trigger')
+		cy.get('.namespace-container .menu.namespaces-lists .menu-list li:first-child .dropdown .dropdown-trigger')
 			.click()
-		cy.get('.namespace-container .menu.namespaces-lists .more-container .menu-list li:first-child .dropdown .dropdown-content')
+		cy.get('.namespace-container .menu.namespaces-lists .menu-list li:first-child .dropdown .dropdown-content')
 			.contains('Delete')
 			.click()
 		cy.url()
@@ -93,7 +93,7 @@ describe('Lists', () => {
 
 		cy.get('.global-notification')
 			.should('contain', 'Success')
-		cy.get('.namespace-container .menu.namespaces-lists .more-container .menu-list')
+		cy.get('.namespace-container .menu.namespaces-lists .menu-list')
 			.should('not.contain', lists[0].title)
 		cy.location('pathname')
 			.should('equal', '/')
@@ -112,7 +112,7 @@ describe('Lists', () => {
 		cy.get('.modal-content [data-cy=modalPrimary]')
 			.click()
 		
-		cy.get('.namespace-container .menu.namespaces-lists .more-container .menu-list')
+		cy.get('.namespace-container .menu.namespaces-lists .menu-list')
 			.should('not.contain', lists[0].title)
 		cy.get('main.app-content')
 			.should('contain.text', 'This list is archived. It is not possible to create new or edit tasks for it.')

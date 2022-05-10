@@ -51,10 +51,7 @@
 		<nav class="menu namespaces-lists loader-container is-loading-small" :class="{'is-loading': loading}">
 			<template v-for="(n, nk) in namespaces" :key="n.id">
 				<div class="namespace-title" :class="{'has-menu': n.id > 0}">
-					<!-- FIXME we shouldn't wrap with the clickable area and have another one inside aswell
-						@click should only be used on interactive elements
-					-->
-					<span
+					<BaseButton
 						@click="toggleLists(n.id)"
 						class="menu-label"
 						v-tooltip="namespaceTitles[nk]"
@@ -64,32 +61,25 @@
 							:style="{ backgroundColor: n.hexColor }"
 							class="color-bubble"
 						/>
-						<span class="name">
-							{{ namespaceTitles[nk] }}
-						</span>
-						<BaseButton
+						<span class="name">{{ namespaceTitles[nk] }}</span>
+						<div
 							class="icon is-small toggle-lists-icon pl-2"
 							:class="{'active': typeof listsVisible[n.id] !== 'undefined' ? listsVisible[n.id] : true}"
-							@click="toggleLists(n.id)"
 						>
 							<icon icon="chevron-down"/>
-						</BaseButton>
+						</div>
 						<span class="count" :class="{'ml-2 mr-0': n.id > 0}">
 							({{ namespaceListsCount[nk] }})
 						</span>
-					</span>
+					</BaseButton>
 					<namespace-settings-dropdown :namespace="n" v-if="n.id > 0"/>
 				</div>
-				<div
-					v-if="listsVisible[n.id] ?? true"
-					:key="n.id + 'child'"
-					class="more-container"
-				>
 					<!--
 						NOTE: a v-model / computed setter is not possible, since the updateActiveLists function
 						triggered by the change needs to have access to the current namespace
 					-->
 					<draggable
+						v-if="listsVisible[n.id] ?? true"
 						v-bind="dragOptions"
 						:modelValue="activeLists[nk]"
 						@update:modelValue="(lists) => updateActiveLists(n, lists)"
@@ -114,46 +104,36 @@
 					>
 						<template #item="{element: l}">
 							<li
-								class="loader-container is-loading-small"
+								class="list-menu loader-container is-loading-small"
 								:class="{'is-loading': listUpdating[l.id]}"
 							>
-								<router-link
+								<BaseButton
 									:to="{ name: 'list.index', params: { listId: l.id} }"
-									v-slot="{ href, navigate, isActive }"
-									custom
+									class="list-menu-link"
+									:class="{'router-link-exact-active': currentList.id === l.id}"
 								>
-									<a
-										@click="navigate"
-										:href="href"
-										class="list-menu-link"
-										:class="{'router-link-exact-active': isActive || currentList?.id === l.id}"
-									>
-										<span class="icon handle">
-											<icon icon="grip-lines"/>
-										</span>
-										<span
-											:style="{ backgroundColor: l.hexColor }"
-											class="color-bubble"
-											v-if="l.hexColor !== ''">
-										</span>
-										<span class="list-menu-title">
-											{{ getListTitle(l) }}
-										</span>
-										<!-- FIXME: we shouldn't use a button inside a link This can be unwrapped by using CSS -->
-										<BaseButton
-											:class="{'is-favorite': l.isFavorite}"
-											@click.prevent.stop="toggleFavoriteList(l)"
-											class="favorite">
-											<icon :icon="l.isFavorite ? 'star' : ['far', 'star']"/>
-										</BaseButton>
-									</a>
-								</router-link>
+									<span class="icon handle">
+										<icon icon="grip-lines"/>
+									</span>
+									<span
+										:style="{ backgroundColor: l.hexColor }"
+										class="color-bubble"
+										v-if="l.hexColor !== ''">
+									</span>
+									<span class="list-menu-title">{{ getListTitle(l) }}</span>
+								</BaseButton>
+								<BaseButton
+									class="favorite"
+									:class="{'is-favorite': l.isFavorite}"
+									@click="toggleFavoriteList(l)"
+								>
+									<icon :icon="l.isFavorite ? 'star' : ['far', 'star']"/>
+								</BaseButton>
 								<list-settings-dropdown :list="l" v-if="l.id > 0"/>
 								<span class="list-setting-spacer" v-else></span>
 							</li>
 						</template>
 					</draggable>
-				</div>
 			</template>
 		</nav>
 		<PoweredByLink/>
@@ -339,7 +319,7 @@ $vikunja-nav-selected-width: 0.4rem;
 		}
 
 		.menu-label,
-		.menu-list span.list-menu-link,
+		.menu-list .list-menu-link,
 		.menu-list a {
 			display: flex;
 			align-items: center;
@@ -357,28 +337,21 @@ $vikunja-nav-selected-width: 0.4rem;
 				flex: 0 0 12px;
 			}
 
-			.favorite {
-				margin-left: .25rem;
-				transition: opacity $transition, color $transition;
-				opacity: 0;
+		}
+		.favorite {
+			margin-left: .25rem;
+			transition: opacity $transition, color $transition;
+			opacity: 0;
 
-				&:hover {
-					color: var(--warning);
-				}
-
-				&.is-favorite {
-					opacity: 1;
-					color: var(--warning);
-				}
+			&:hover,
+			&.is-favorite {
+				color: var(--warning);
 			}
+		}
 
-			&:hover .favorite {
-				opacity: 1;
-			}
-
-			&:hover {
-				background: transparent;
-			}
+		.favorite.is-favorite,
+		.list-menu:hover .favorite {
+			opacity: 1;
 		}
 
 		.menu-label {
@@ -397,6 +370,8 @@ $vikunja-nav-selected-width: 0.4rem;
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
+			color: $vikunja-nav-color;
+			padding: 0 .25rem;
 
 			.menu-label {
 				margin-bottom: 0;
@@ -413,11 +388,6 @@ $vikunja-nav-selected-width: 0.4rem;
 					color: var(--grey-500);
 					margin-right: .5rem;
 				}
-			}
-
-			a:not(.dropdown-item) {
-				color: $vikunja-nav-color;
-				padding: 0 .25rem;
 			}
 
 			:deep(.dropdown-trigger) {
@@ -449,7 +419,7 @@ $vikunja-nav-selected-width: 0.4rem;
 
 		.menu-label,
 		.nsettings,
-		.menu-list span.list-menu-link,
+		.menu-list .list-menu-link,
 		.menu-list a {
 			color: $vikunja-nav-color;
 		}
@@ -488,7 +458,11 @@ $vikunja-nav-selected-width: 0.4rem;
 				}
 			}
 
-			span.list-menu-link, li > a {
+			a:hover {
+				background: transparent;
+			}
+
+			.list-menu-link, li > a {
 				padding: 0.75rem .5rem 0.75rem ($navbar-padding * 1.5 - 1.75rem);
 				transition: all 0.2s ease;
 
@@ -561,7 +535,7 @@ $vikunja-nav-selected-width: 0.4rem;
 				font-family: $vikunja-font;
 			}
 
-			span.list-menu-link, li > a {
+			.list-menu-link, li > a {
 				padding-left: 2rem;
 				display: inline-block;
 

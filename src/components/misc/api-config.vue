@@ -27,7 +27,7 @@
 				<span class="url" v-tooltip="apiUrl"> {{ apiDomain }} </span>
 			</i18n-t>
 			<br/>
-			<BaseButton @click="() => (configureApi = true)">{{ $t('apiConfig.change') }}</BaseButton>
+			<BaseButton class="api-config__change-button" @click="() => (configureApi = true)">{{ $t('apiConfig.change') }}</BaseButton>
 		</div>
 
 		<message variant="success" v-if="successMsg !== '' && errorMsg === ''" class="mt-2">
@@ -117,5 +117,10 @@ async function setApiUrl() {
 
 .url {
 	border-bottom: 1px dashed var(--primary);
+}
+
+.api-config__change-button {
+	display: inline-block;
+    color: var(--link);
 }
 </style>

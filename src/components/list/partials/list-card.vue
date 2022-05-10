@@ -15,20 +15,21 @@
 		<div
 			class="list-background background-fade-in"
 			:class="{'is-visible': background}"
-			:style="{'background-image': background !== null ? `url(${background})` : false}"></div>
+			:style="{'background-image': background !== null ? `url(${background})` : undefined}"
+		/>
 		<div class="list-content">
-			<div class="is-archived-container">
-				<span class="is-archived" v-if="list.isArchived">
-					{{ $t('namespace.archived') }}
-				</span>
-				<BaseButton
-					:class="{'is-favorite': list.isFavorite, 'is-archived': list.isArchived}"
-					@click.stop="toggleFavoriteList(list)"
-					class="favorite"
-				>
-					<icon :icon="list.isFavorite ? 'star' : ['far', 'star']"/>
-				</BaseButton>
-			</div>
+			<span class="is-archived" v-if="list.isArchived">
+				{{ $t('namespace.archived') }}
+			</span>
+			<BaseButton
+				v-else
+				:class="{'is-favorite': list.isFavorite}"
+				@click.stop="toggleFavoriteList(list)"
+				class="favorite"
+			>
+				<icon :icon="list.isFavorite ? 'star' : ['far', 'star']"/>
+			</BaseButton>
+
 			<div class="title">{{ list.title }}</div>
 		</div>
 	</router-link>
@@ -112,13 +113,14 @@ function toggleFavoriteList(list: ListModel) {
 		color: var(--grey-100);
 	}
 
-	&.has-background, .list-background {
+	&.has-background,
+	.list-background {
 		background-size: cover;
 		background-repeat: no-repeat;
 		background-position: center;
 	}
 
-	&.has-background .list-content .title {
+	&.has-background .title {
 		text-shadow: 0 0 10px var(--black), 1px 1px 5px var(--grey-700), -1px -1px 5px var(--grey-700);
 		color: var(--white);
 	}
@@ -179,21 +181,33 @@ function toggleFavoriteList(list: ListModel) {
 
 	.list-content {
 		display: flex;
-		justify-content: space-between;
+		align-content: space-between;
 		flex-wrap: wrap;
 		padding: 1rem;
 		position: absolute;
 		height: 100%;
 		width: 100%;
 
-		.is-archived-container {
-			width: 100%;
-			text-align: right;
 
-			.is-archived {
-				font-size: .75rem;
-				float: left;
+		.is-archived {
+			font-size: .75rem;
+		}
+
+		.favorite {
+			margin-left: auto;
+			transition: opacity $transition, color $transition;
+			opacity: 0;
+			display: block;
+
+			&:hover,
+			&.is-favorite {
+				color: var(--warning);
 			}
+		}
+
+		.favorite.is-favorite,
+		&:hover .favorite {
+			opacity: 1;
 		}
 
 		.title {
@@ -212,30 +226,6 @@ function toggleFavoriteList(list: ListModel) {
 			-webkit-line-clamp: 3;
 			-webkit-box-orient: vertical;
 		}
-
-		.favorite {
-			transition: opacity $transition, color $transition;
-			opacity: 0;
-
-			&:hover {
-				color: var(--warning);
-			}
-
-			&.is-archived {
-				display: none;
-			}
-
-			&.is-favorite {
-				display: inline-block;
-				opacity: 1;
-				color: var(--warning);
-			}
-		}
-
-		&:hover .favorite {
-			opacity: 1;
-		}
-
 	}
 }
 </style>

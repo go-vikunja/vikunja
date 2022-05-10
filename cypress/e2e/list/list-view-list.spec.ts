@@ -61,7 +61,7 @@ describe('List View List', () => {
 		})
 		cy.visit(`/lists/${lists[1].id}/`)
 
-		cy.get('.list-title a.icon')
+		cy.get('.list-title .icon')
 			.should('not.exist')
 		cy.get('input.input[placeholder="Add a new task..."')
 			.should('not.exist')
