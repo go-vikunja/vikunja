@@ -51,7 +51,7 @@
     }
   },
   "devDependencies": {
-    "electron": "18.2.0",
+    "electron": "18.2.2",
     "electron-builder": "23.0.3"
   },
   "dependencies": {
