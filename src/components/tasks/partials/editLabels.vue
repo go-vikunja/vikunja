@@ -1,5 +1,5 @@
 <template>
-	<multiselect
+	<Multiselect
 		:loading="loading"
 		:placeholder="$t('task.label.placeholder')"
 		:multiple="true"
@@ -14,135 +14,126 @@
 		:search-delay="10"
 		:close-after-select="false"
 	>
-		<template #tag="props">
+		<template #tag="{item: label}">
 			<span
-				:style="{'background': props.item.hexColor, 'color': props.item.textColor}"
+				:style="{'background': label.hexColor, 'color': label.textColor}"
 				class="tag">
-				<span>{{ props.item.title }}</span>
-				<button type="button" v-cy="'taskDetail.removeLabel'" @click="removeLabel(props.item)" class="delete is-small" />
+				<span>{{ label.title }}</span>
+				<button type="button" v-cy="'taskDetail.removeLabel'" @click="removeLabel(label)" class="delete is-small" />
 			</span>
 		</template>
-		<template #searchResult="props">
+		<template #searchResult="{option}">
 			<span
-				v-if="typeof props.option === 'string'"
+				v-if="typeof option === 'string'"
 				class="tag search-result">
-				<span>{{ props.option }}</span>
+				<span>{{ option }}</span>
 			</span>
 			<span
 				v-else
-				:style="{'background': props.option.hexColor, 'color': props.option.textColor}"
+				:style="{'background': option.hexColor, 'color': option.textColor}"
 				class="tag search-result">
-				<span>{{ props.option.title }}</span>
+				<span>{{ option.title }}</span>
 			</span>
 		</template>
-	</multiselect>
+	</Multiselect>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
-import LabelModel from '../../../models/label'
-import LabelTaskService from '../../../services/labelTask'
+<script setup lang="ts">
+import {PropType, ref, computed, shallowReactive, watch} from 'vue'
+import {useStore} from 'vuex'
+import {useI18n} from 'vue-i18n'
+
+import LabelModel from '@/models/label'
+import LabelTaskService from '@/services/labelTask'
+import {success} from '@/message'
 
 import Multiselect from '@/components/input/multiselect.vue'
-import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
-export default defineComponent({
-	name: 'edit-labels',
-	props: {
-		modelValue: {
-			default: () => [],
-			type: Array,
-		},
-		taskId: {
-			type: Number,
-			required: false,
-			default: () => 0,
-		},
-		disabled: {
-			default: false,
-		},
+const props = defineProps({
+	modelValue: {
+		type: Array as PropType<LabelModel[]>,
+		default: () => [],
 	},
-	emits: ['update:modelValue', 'change'],
-	data() {
-		return {
-			labelTaskService: new LabelTaskService(),
-			labelTimeout: null,
-			labels: [],
-			query: '',
-		}
+	taskId: {
+		type: Number,
+		required: false,
+		default: 0,
 	},
-	components: {
-		Multiselect,
-	},
-	watch: {
-		modelValue: {
-			handler(value) {
-				this.labels = value
-			},
-			immediate: true,
-			deep: true,
-		},
-	},
-	computed: {
-		foundLabels() {
-			return this.$store.getters['labels/filterLabelsByQuery'](this.labels, this.query)
-		},
-		loading() {
-			return this.labelTaskService.loading || (this.$store.state[LOADING] && this.$store.state[LOADING_MODULE] === 'labels')
-		},
-	},
-	methods: {
-		findLabel(query) {
-			this.query = query
-		},
-
-		async addLabel(label, showNotification = true) {
-			const bubble = () => {
-				this.$emit('update:modelValue', this.labels)
-				this.$emit('change', this.labels)
-			}
-			
-			if (this.taskId === 0) {
-				bubble()
-				return
-			}
-
-			await this.$store.dispatch('tasks/addLabel', {label: label, taskId: this.taskId})
-			bubble()
-			if (showNotification) {
-				this.$message.success({message: this.$t('task.label.addSuccess')})
-			}
-		},
-
-		async removeLabel(label) {
-			if (this.taskId !== 0) {
-				await this.$store.dispatch('tasks/removeLabel', {label: label, taskId: this.taskId})
-			}
-
-			for (const l in this.labels) {
-				if (this.labels[l].id === label.id) {
-					this.labels.splice(l, 1)
-				}
-			}
-			this.$emit('update:modelValue', this.labels)
-			this.$emit('change', this.labels)
-			this.$message.success({message: this.$t('task.label.removeSuccess')})
-		},
-
-		async createAndAddLabel(title) {
-			if (this.taskId === 0) {
-				return
-			}
-
-			const newLabel = new LabelModel({title: title})
-			const label = await this.$store.dispatch('labels/createLabel', newLabel)
-			this.addLabel(label, false)
-			this.labels.push(label)
-			this.$message.success({message: this.$t('task.label.addCreateSuccess')})
-		},
-
+	disabled: {
+		default: false,
 	},
 })
+
+const emit = defineEmits(['update:modelValue', 'change'])
+
+const store = useStore()
+const {t} = useI18n()
+
+const labelTaskService = shallowReactive(new LabelTaskService())
+const labels = ref<LabelModel[]>([])
+const query = ref('')
+
+watch(
+	() => props.modelValue,
+	(value) => {
+		labels.value = value
+	},
+	{
+		immediate: true,
+		deep: true,
+	},
+)
+
+const foundLabels = computed(() => store.getters['labels/filterLabelsByQuery'](labels.value, query.value))
+const loading = computed(() => labelTaskService.loading || (store.state.loading && store.state.loadingModule === 'labels'))
+
+function findLabel(newQuery: string) {
+	query.value = newQuery
+}
+
+async function addLabel(label: LabelModel, showNotification = true) {
+	const bubble = () => {
+		emit('update:modelValue', labels.value)
+		emit('change', labels.value)
+	}
+	
+	if (props.taskId === 0) {
+		bubble()
+		return
+	}
+
+	await store.dispatch('tasks/addLabel', {label, taskId: props.taskId})
+	bubble()
+	if (showNotification) {
+		success({message: t('task.label.addSuccess')})
+	}
+}
+
+async function removeLabel(label: LabelModel) {
+	if (props.taskId !== 0) {
+		await store.dispatch('tasks/removeLabel', {label, taskId: props.taskId})
+	}
+
+	for (const l in labels.value) {
+		if (labels.value[l].id === label.id) {
+			labels.value.splice(l, 1)
+		}
+	}
+	emit('update:modelValue', labels.value)
+	emit('change', labels.value)
+	success({message: t('task.label.removeSuccess')})
+}
+
+async function createAndAddLabel(title: string) {
+	if (props.taskId === 0) {
+		return
+	}
+
+	const newLabel = await store.dispatch('labels/createLabel', new LabelModel({title}))
+	addLabel(newLabel, false)
+	labels.value.push(newLabel)
+	success({message: t('task.label.addCreateSuccess')})
+}
 </script>
 
 <style lang="scss" scoped>
