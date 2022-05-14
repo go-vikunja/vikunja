@@ -64,7 +64,7 @@ import {useI18n} from 'vue-i18n'
 
 import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
-import Message from '@/components/misc/message'
+import Message from '@/components/misc/message.vue'
 
 const {t} = useI18n()
 
