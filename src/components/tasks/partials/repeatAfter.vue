@@ -26,7 +26,7 @@
 			<div class="field has-addons is-fullwidth">
 				<div class="control">
 					<input
-						:disabled="disabled || null"
+						:disabled="disabled || undefined"
 						@change="updateData"
 						class="input"
 						:placeholder="$t('task.repeat.specifyAmount')"
@@ -36,7 +36,11 @@
 				</div>
 				<div class="control">
 					<div class="select">
-						<select :disabled="disabled || null" @change="updateData" v-model="repeatAfter.type">
+						<select
+							v-model="repeatAfter.type"
+							@change="updateData"
+							:disabled="disabled || undefined"
+						>
 							<option value="hours">{{ $t('task.repeat.hours') }}</option>
 							<option value="days">{{ $t('task.repeat.days') }}</option>
 							<option value="weeks">{{ $t('task.repeat.weeks') }}</option>
@@ -50,61 +54,55 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script setup lang="ts">
+import {ref, reactive, watch} from 'vue'
 import repeatModes from '@/models/constants/taskRepeatModes'
+import TaskModel from '@/models/task'
 
-export default defineComponent({
-	name: 'repeatAfter',
-	data() {
-		return {
-			task: {},
-			repeatAfter: {
-				amount: 0,
-				type: '',
-			},
-			repeatModes,
-		}
+const props = defineProps({
+	modelValue: {
+		default: () => {},
+		required: true,
 	},
-	props: {
-		modelValue: {
-			default: () => {},
-			required: true,
-		},
-		disabled: {
-			type: Boolean,
-			default: false,
-		},
-	},
-	emits: ['update:modelValue', 'change'],
-	watch: {
-		modelValue: {
-			handler(value) {
-				this.task = value
-				if (typeof value.repeatAfter !== 'undefined') {
-					this.repeatAfter = value.repeatAfter
-				}
-			},
-			immediate: true,
-		},
-	},
-	methods: {
-		updateData() {
-			if (this.task.repeatMode !== repeatModes.REPEAT_MODE_DEFAULT && this.repeatAfter.amount === 0) {
-				return
-			}
-			
-			this.task.repeatAfter = this.repeatAfter
-			this.$emit('update:modelValue', this.task)
-			this.$emit('change')
-		},
-		setRepeatAfter(amount, type) {
-			this.repeatAfter.amount = amount
-			this.repeatAfter.type = type
-			this.updateData()
-		},
+	disabled: {
+		type: Boolean,
+		default: false,
 	},
 })
+
+const emit = defineEmits(['update:modelValue', 'change'])
+
+const task = ref<TaskModel>({})
+const repeatAfter = reactive({
+	amount: 0,
+	type: '',
+})
+
+watch(
+	() => props.modelValue,
+	(value) => {
+		task.value = value
+		if (typeof value.repeatAfter !== 'undefined') {
+			Object.assign(repeatAfter, value.repeatAfter)
+		}
+	},
+	{immediate: true},
+)
+
+function updateData() {
+	if (task.value.repeatMode !== repeatModes.REPEAT_MODE_DEFAULT && repeatAfter.amount === 0) {
+		return
+	}
+	
+	Object.assign(task.value.repeatAfter, repeatAfter)
+	emit('update:modelValue', task.value)
+	emit('change')
+}
+
+function setRepeatAfter(amount: number, type) {
+	Object.assign(repeatAfter, { amount, type})
+	updateData()
+}
 </script>
 
 <style lang="scss" scoped>
