@@ -38,30 +38,31 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
-import EmailUpdateService from '@/services/emailUpdate'
-import EmailUpdateModel from '@/models/emailUpdate'
-
 export default defineComponent({
 	name: 'user-settings-update-email',
-	data() {
-		return {
-			emailUpdateService: new EmailUpdateService(),
-			emailUpdate: new EmailUpdateModel(),
-		}
-	},
-	mounted() {
-		this.setTitle(`${this.$t('user.settings.updateEmailTitle')} - ${this.$t('user.settings.title')}`)
-	},
-	computed: {
-		isLocalUser() {
-			return this.$store.state.auth.info?.isLocalUser
-		},
-	},
-	methods: {
-		async updateEmail() {
-			await this.emailUpdateService.update(this.emailUpdate)
-			this.$message.success({message: this.$t('user.settings.updateEmailSuccess')})
-		},
-	},
 })
+</script>
+
+<script setup lang="ts">
+import {reactive, computed, shallowReactive} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useStore} from 'vuex'
+
+import EmailUpdateService from '@/services/emailUpdate'
+import EmailUpdateModel from '@/models/emailUpdate'
+import {success} from '@/message'
+import {useTitle} from '@/composables/useTitle'
+
+const {t} = useI18n()
+useTitle(() => `${t('user.settings.updateEmailTitle')} - ${t('user.settings.title')}`)
+
+const store = useStore()
+const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
+
+const emailUpdate = reactive(new EmailUpdateModel())
+const emailUpdateService = shallowReactive(new EmailUpdateService())
+async function updateEmail() {
+	await emailUpdateService.update(emailUpdate)
+	success({message: t('user.settings.updateEmailSuccess')})
+}
 </script>
