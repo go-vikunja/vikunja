@@ -1,25 +1,13 @@
 <template>
 	<card :title="$t('user.settings.avatar.title')">
 		<div class="control mb-4">
-			<label class="radio">
-				<input name="avatarProvider" type="radio" v-model="avatarProvider" value="default"/>
-				{{ $t('misc.default') }}
-			</label>
-			<label class="radio">
-				<input name="avatarProvider" type="radio" v-model="avatarProvider" value="initials"/>
-				{{ $t('user.settings.avatar.initials') }}
-			</label>
-			<label class="radio">
-				<input name="avatarProvider" type="radio" v-model="avatarProvider" value="gravatar"/>
-				{{ $t('user.settings.avatar.gravatar') }}
-			</label>
-			<label class="radio">
-				<input name="avatarProvider" type="radio" v-model="avatarProvider" value="marble"/>
-				{{ $t('user.settings.avatar.marble') }}
-			</label>
-			<label class="radio">
-				<input name="avatarProvider" type="radio" v-model="avatarProvider" value="upload"/>
-				{{ $t('user.settings.avatar.upload') }}
+			<label
+				v-for="(label, providerId) in AVATAR_PROVIDERS"
+				:key="providerId"
+				class="radio"
+			>
+				<input name="avatarProvider" type="radio" v-model="avatarProvider" :value="providerId"/>
+				{{ label }}
 			</label>
 		</div>
 
@@ -31,14 +19,16 @@
 				ref="avatarUploadInput"
 				type="file"
 			/>
+
 			<x-button
+				v-if="!isCropAvatar"
 				:loading="avatarService.loading || loading"
 				@click="$refs.avatarUploadInput.click()"
-				v-if="!isCropAvatar">
+			>
 				{{ $t('user.settings.avatar.uploadAvatar') }}
 			</x-button>
 			<template v-else>
-				<cropper
+				<Cropper
 					:src="avatarToCrop"
 					:stencil-props="{aspectRatio: 1}"
 					@ready="() => loading = false"
@@ -55,7 +45,7 @@
 			</template>
 		</template>
 
-		<div class="mt-2" v-if="avatarProvider !== 'upload'">
+		<div class="mt-2" v-else>
 			<x-button
 				:loading="avatarService.loading || loading"
 				@click="updateAvatarStatus()"
@@ -69,83 +59,97 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
+
+export default defineComponent({
+	name: 'user-settings-avatar',
+})
+</script>
+
+<script setup lang="ts">
+import {ref, shallowReactive} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useStore} from 'vuex'
 import {Cropper} from 'vue-advanced-cropper'
 import 'vue-advanced-cropper/dist/style.css'
 
 import AvatarService from '@/services/avatar'
 import AvatarModel from '@/models/avatar'
+import { useTitle } from '@/composables/useTitle'
+import { success } from '@/message'
 
-export default defineComponent({
-	name: 'user-settings-avatar',
-	data() {
-		return {
-			avatarProvider: '',
-			avatarService: new AvatarService(),
-			isCropAvatar: false,
-			avatarToCrop: null,
-			loading: false, // Seperate variable because some things we're doing in browser take a bit
-		}
-	},
-	created() {
-		this.avatarStatus()
-	},
-	components: {
-		Cropper,
-	},
-	mounted() {
-		this.setTitle(`${this.$t('user.settings.avatar.title')} - ${this.$t('user.settings.title')}`)
-	},
-	methods: {
-		async avatarStatus() {
-			const { avatarProvider } = await this.avatarService.get({})
-			this.avatarProvider = avatarProvider
-		},
+const {t} = useI18n()
+const store = useStore()
 
-		async updateAvatarStatus() {
-			const avatarStatus = new AvatarModel({avatarProvider: this.avatarProvider})
-			await this.avatarService.update(avatarStatus)
-			this.$message.success({message: this.$t('user.settings.avatar.statusUpdateSuccess')})
-			this.$store.commit('auth/reloadAvatar')
-		},
+const AVATAR_PROVIDERS = {
+	default: t('misc.default'),
+	initials: t('user.settings.avatar.initials'),
+	gravatar: t('user.settings.avatar.gravatar'),
+	marble: t('user.settings.avatar.marble'),
+	upload: t('user.settings.avatar.upload'),
+}
 
-		async uploadAvatar() {
-			this.loading = true
-			const {canvas} = this.$refs.cropper.getResult()
+useTitle(() => `${t('user.settings.avatar.title')} - ${t('user.settings.title')}`)
 
-			if (!canvas) {
-				this.loading = false
-				return
-			}
+const avatarService = shallowReactive(new AvatarService())
+// Seperate variable because some things we're doing in browser take a bit
+const loading = ref(false)
 
-			try {
-				const blob = await new Promise(resolve => canvas.toBlob(blob => resolve(blob)))
-				await this.avatarService.create(blob)
-				this.$message.success({message: this.$t('user.settings.avatar.setSuccess')})
-				this.$store.commit('auth/reloadAvatar')
-			} finally {
-				this.loading = false
-				this.isCropAvatar = false
-			}
-		},
 
-		cropAvatar() {
-			const avatar = this.$refs.avatarUploadInput.files
+const avatarProvider = ref('')
+async function avatarStatus() {
+	const { avatarProvider: currentProvider } = await avatarService.get({})
+	avatarProvider.value = currentProvider
+}
+avatarStatus()
 
-			if (avatar.length === 0) {
-				return
-			}
 
-			this.loading = true
-			const reader = new FileReader()
-			reader.onload = e => {
-				this.avatarToCrop = e.target.result
-				this.isCropAvatar = true
-			}
-			reader.onloadend = () => this.loading = false
-			reader.readAsDataURL(avatar[0])
-		},
-	},
-})
+async function updateAvatarStatus() {
+	await avatarService.update(new AvatarModel({avatarProvider: avatarProvider.value}))
+	success({message: t('user.settings.avatar.statusUpdateSuccess')})
+	store.commit('auth/reloadAvatar')
+}
+
+const cropper = ref()
+const isCropAvatar = ref(false)
+
+async function uploadAvatar() {
+	loading.value = true
+	const {canvas} = cropper.value.getResult()
+
+	if (!canvas) {
+		loading.value = false
+		return
+	}
+
+	try {
+		const blob = await new Promise(resolve => canvas.toBlob(blob => resolve(blob)))
+		await avatarService.create(blob)
+		success({message: t('user.settings.avatar.setSuccess')})
+		store.commit('auth/reloadAvatar')
+	} finally {
+		loading.value = false
+		isCropAvatar.value = false
+	}
+}
+
+const avatarToCrop = ref()
+const avatarUploadInput = ref()
+function cropAvatar() {
+	const avatar = avatarUploadInput.value.files
+
+	if (avatar.length === 0) {
+		return
+	}
+
+	loading.value = true
+	const reader = new FileReader()
+	reader.onload = e => {
+		avatarToCrop.value = e.target.result
+		isCropAvatar.value = true
+	}
+	reader.onloadend = () => loading.value = false
+	reader.readAsDataURL(avatar[0])
+}
 </script>
 
 <style lang="scss">
