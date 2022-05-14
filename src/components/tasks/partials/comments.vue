@@ -151,160 +151,151 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script setup lang="ts">
+import {ref, reactive, computed, shallowReactive, watch, nextTick} from 'vue'
+import {useStore} from 'vuex'
+import {useI18n} from 'vue-i18n'
 
-import AsyncEditor from '@/components/input/AsyncEditor'
+import Editor from '@/components/input/AsyncEditor'
 
-import TaskCommentService from '../../../services/taskComment'
-import TaskCommentModel from '../../../models/taskComment'
+import TaskCommentService from '@/services/taskComment'
+import TaskCommentModel from '@/models/taskComment'
 import {uploadFile} from '@/helpers/attachments'
-import {mapState} from 'vuex'
+import {success} from '@/message'
 
-export default defineComponent({
-	name: 'comments',
-	components: {
-		Editor: AsyncEditor,
+const props = defineProps({
+	taskId: {
+		type: Number,
+		required: true,
 	},
-	props: {
-		taskId: {
-			type: Number,
-			required: true,
-		},
-		canWrite: {
-			default: true,
-		},
-	},
-	data() {
-		return {
-			comments: [],
-
-			showDeleteModal: false,
-			commentToDelete: new TaskCommentModel(),
-
-			isCommentEdit: false,
-			commentEdit: new TaskCommentModel(),
-
-			taskCommentService: new TaskCommentService(),
-			newComment: new TaskCommentModel(),
-			editorActive: true,
-
-			saved: null,
-			saving: null,
-			creating: false,
-		}
-	},
-	watch: {
-		taskId: {
-			handler: 'loadComments',
-			immediate: true,
-		},
-	},
-	computed: {
-		...mapState({
-			userAvatar: state => state.auth.info.getAvatarUrl(48),
-			enabled: state => state.config.taskCommentsEnabled,
-		}),
-		actions() {
-			if (!this.canWrite) {
-				return {}
-			}
-			return Object.fromEntries(this.comments.map((c) => ([
-				c.id,
-				[{
-					action: () => this.toggleDelete(c.id),
-					title: this.$t('misc.delete'),
-				}],
-			])))
-		},
-	},
-
-	methods: {
-		attachmentUpload(...args) {
-			return uploadFile(this.taskId, ...args)
-		},
-
-		async loadComments(taskId) {
-			if (!this.enabled) {
-				return
-			}
-
-			this.newComment.taskId = taskId
-			this.commentEdit.taskId = taskId
-			this.commentToDelete.taskId = taskId
-			this.comments = await this.taskCommentService.getAll({taskId})
-		},
-
-		async addComment() {
-			if (this.newComment.comment === '') {
-				return
-			}
-
-			// This makes the editor trigger its mounted function again which makes it forget every input
-			// it currently has in its textarea. This is a counter-hack to a hack inside of vue-easymde
-			// which made it impossible to detect change from the outside. Therefore the component would
-			// not update if new content from the outside was made available.
-			// See https://github.com/NikulinIlya/vue-easymde/issues/3
-			this.editorActive = false
-			this.$nextTick(() => (this.editorActive = true))
-			this.creating = true
-
-			try {
-				const comment = await this.taskCommentService.create(this.newComment)
-				this.comments.push(comment)
-				this.newComment.comment = ''
-				this.$message.success({message: this.$t('task.comment.addedSuccess')})
-			} finally {
-				this.creating = false
-			}
-		},
-
-		toggleEdit(comment) {
-			this.isCommentEdit = !this.isCommentEdit
-			this.commentEdit = comment
-		},
-
-		toggleDelete(commentId) {
-			this.showDeleteModal = !this.showDeleteModal
-			this.commentToDelete.id = commentId
-		},
-
-		async editComment() {
-			if (this.commentEdit.comment === '') {
-				return
-			}
-
-			this.saving = this.commentEdit.id
-
-			this.commentEdit.taskId = this.taskId
-			try {
-				const comment = await this.taskCommentService.update(this.commentEdit)
-				for (const c in this.comments) {
-					if (this.comments[c].id === this.commentEdit.id) {
-						this.comments[c] = comment
-					}
-				}
-				this.saved = this.commentEdit.id
-				setTimeout(() => {
-					this.saved = null
-				}, 2000)
-			} finally {
-				this.isCommentEdit = false
-				this.saving = null
-			}
-		},
-
-		async deleteComment(commentToDelete) {
-			try {
-				await this.taskCommentService.delete(commentToDelete)
-				const index = this.comments.findIndex(({id}) => id === commentToDelete.id)
-				this.comments.splice(index, 1)
-			} finally {
-				this.showDeleteModal = false
-			}
-		},
+	canWrite: {
+		default: true,
 	},
 })
+
+const {t} = useI18n()
+const store = useStore()
+
+const comments = ref<TaskCommentModel[]>([])
+
+const showDeleteModal = ref(false)
+const commentToDelete = reactive(new TaskCommentModel())
+
+const isCommentEdit = ref(false)
+const commentEdit = reactive(new TaskCommentModel())
+
+const newComment = reactive(new TaskCommentModel())
+
+const saved = ref(null)
+const saving = ref(null)
+
+const userAvatar = computed(() => store.state.auth.info.getAvatarUrl(48))
+const enabled = computed(() => store.state.config.taskCommentsEnabled)
+const actions = computed(() => {
+	if (!props.canWrite) {
+		return {}
+	}
+	return Object.fromEntries(comments.value.map((comment) => ([
+		comment.id,
+		[{
+			action: () => toggleDelete(comment.id),
+			title: t('misc.delete'),
+		}],
+	])))
+})
+
+function attachmentUpload(...args) {
+	return uploadFile(props.taskId, ...args)
+}
+
+const taskCommentService = shallowReactive(new TaskCommentService())
+async function loadComments(taskId) {
+	if (!enabled.value) {
+		return
+	}
+
+	newComment.taskId = taskId
+	commentEdit.taskId = taskId
+	commentToDelete.taskId = taskId
+	comments.value = await taskCommentService.getAll({taskId})
+}
+
+watch(
+	() => props.taskId,
+	loadComments,
+	{immediate: true},
+)
+
+const editorActive = ref(true)
+const creating = ref(false)
+async function addComment() {
+	if (newComment.comment === '') {
+		return
+	}
+
+	// This makes the editor trigger its mounted function again which makes it forget every input
+	// it currently has in its textarea. This is a counter-hack to a hack inside of vue-easymde
+	// which made it impossible to detect change from the outside. Therefore the component would
+	// not update if new content from the outside was made available.
+	// See https://github.com/NikulinIlya/vue-easymde/issues/3
+	editorActive.value = false
+	nextTick(() => (editorActive.value = true))
+	creating.value = true
+
+	try {
+		const comment = await taskCommentService.create(newComment)
+		comments.value.push(comment)
+		newComment.comment = ''
+		success({message: t('task.comment.addedSuccess')})
+	} finally {
+		creating.value = false
+	}
+}
+
+function toggleEdit(comment: TaskCommentModel) {
+	isCommentEdit.value = !isCommentEdit.value
+	Object.assign(commentEdit, comment)
+}
+
+function toggleDelete(commentId) {
+	showDeleteModal.value = !showDeleteModal.value
+	commentToDelete.id = commentId
+}
+
+async function editComment() {
+	if (commentEdit.comment === '') {
+		return
+	}
+
+	saving.value = commentEdit.id
+
+	commentEdit.taskId = props.taskId
+	try {
+		const comment = await taskCommentService.update(commentEdit)
+		for (const c in comments.value) {
+			if (comments.value[c].id === commentEdit.id) {
+				comments.value[c] = comment
+			}
+		}
+		saved.value = commentEdit.id
+		setTimeout(() => {
+			saved.value = null
+		}, 2000)
+	} finally {
+		isCommentEdit.value = false
+		saving.value = null
+	}
+}
+
+async function deleteComment(commentToDelete: TaskCommentModel) {
+	try {
+		await taskCommentService.delete(commentToDelete)
+		const index = comments.value.findIndex(({id}) => id === commentToDelete.id)
+		comments.value.splice(index, 1)
+	} finally {
+		showDeleteModal.value = false
+	}
+}
 </script>
 
 <style lang="scss" scoped>
