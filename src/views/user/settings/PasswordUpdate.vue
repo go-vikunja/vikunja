@@ -53,36 +53,40 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
-import PasswordUpdateService from '@/services/passwordUpdateService'
-import PasswordUpdateModel from '@/models/passwordUpdate'
 
 export default defineComponent({
 	name: 'user-settings-password-update',
-	data() {
-		return {
-			passwordUpdateService: new PasswordUpdateService(),
-			passwordUpdate: new PasswordUpdateModel(),
-			passwordConfirm: '',
-		}
-	},
-	mounted() {
-		this.setTitle(`${this.$t('user.settings.newPasswordTitle')} - ${this.$t('user.settings.title')}`)
-	},
-	computed: {
-		isLocalUser() {
-			return this.$store.state.auth.info?.isLocalUser
-		},
-	},
-	methods: {
-		async updatePassword() {
-			if (this.passwordConfirm !== this.passwordUpdate.newPassword) {
-				this.$message.error({message: this.$t('user.settings.passwordsDontMatch')})
-				return
-			}
-
-			await this.passwordUpdateService.update(this.passwordUpdate)
-			this.$message.success({message: this.$t('user.settings.passwordUpdateSuccess')})
-		},
-	},
 })
+</script>
+
+<script setup lang="ts">
+import {ref, reactive, shallowReactive, computed} from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useStore } from 'vuex'
+
+import PasswordUpdateService from '@/services/passwordUpdateService'
+import PasswordUpdateModel from '@/models/passwordUpdate'
+
+import {useTitle} from '@/composables/useTitle'
+import {success, error} from '@/message'
+
+const passwordUpdateService = shallowReactive(new PasswordUpdateService())
+const passwordUpdate = reactive(new PasswordUpdateModel())
+const passwordConfirm = ref('')
+
+const {t} = useI18n()
+const store = useStore()
+useTitle(() => `${t('user.settings.newPasswordTitle')} - ${t('user.settings.title')}`)
+
+const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
+
+async function updatePassword() {
+	if (passwordConfirm.value !== passwordUpdate.newPassword) {
+		error({message: t('user.settings.passwordsDontMatch')})
+		return
+	}
+
+	await passwordUpdateService.update(passwordUpdate)
+	success({message: t('user.settings.passwordUpdateSuccess')})
+}
 </script>
