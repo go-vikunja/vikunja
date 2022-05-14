@@ -84,51 +84,56 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
-import AccountDeleteService from '@/services/accountDelete'
-import {mapState} from 'vuex'
-import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
 export default defineComponent({
 	name: 'user-settings-deletion',
-	data() {
-		return {
-			accountDeleteService: new AccountDeleteService(),
-			password: '',
-			errPasswordRequired: false,
-		}
-	},
-	computed: mapState({
-		userDeletionEnabled: state => state.config.userDeletionEnabled,
-		deletionScheduledAt: state => parseDateOrNull(state.auth.info?.deletionScheduledAt),
-	}),
-	mounted() {
-		this.setTitle(`${this.$t('user.deletion.title')} - ${this.$t('user.settings.title')}`)
-	},
-	methods: {
-		async deleteAccount() {
-			if (this.password === '') {
-				this.errPasswordRequired = true
-				this.$refs.passwordInput.focus()
-				return
-			}
-
-			await this.accountDeleteService.request(this.password)
-			this.$message.success({message: this.$t('user.deletion.requestSuccess')})
-			this.password = ''
-		},
-
-		async cancelDeletion() {
-			if (this.password === '') {
-				this.errPasswordRequired = true
-				this.$refs.passwordInput.focus()
-				return
-			}
-
-			await this.accountDeleteService.cancel(this.password)
-			this.$message.success({message: this.$t('user.deletion.scheduledCancelSuccess')})
-			this.$store.dispatch('auth/refreshUserInfo')
-			this.password = ''
-		},
-	},
 })
+</script>
+
+<script setup lang="ts">
+import {ref, shallowReactive, computed} from 'vue'
+import {useStore} from 'vuex'
+import {useI18n} from 'vue-i18n'
+
+import AccountDeleteService from '@/services/accountDelete'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
+import {useTitle} from '@/composables/useTitle'
+import {success} from '@/message'
+
+const {t} = useI18n()
+useTitle(() => `${t('user.deletion.title')} - ${t('user.settings.title')}`)
+
+const accountDeleteService = shallowReactive(new AccountDeleteService())
+const password = ref('')
+const errPasswordRequired = ref(false)
+
+const store = useStore()
+const userDeletionEnabled = computed(() => store.state.config.userDeletionEnabled)
+const deletionScheduledAt = computed(() => parseDateOrNull(store.state.auth.info?.deletionScheduledAt))
+
+const passwordInput = ref()
+async function deleteAccount() {
+	if (password.value === '') {
+		errPasswordRequired.value = true
+		passwordInput.value.focus()
+		return
+	}
+
+	await accountDeleteService.request(password.value)
+	success({message: t('user.deletion.requestSuccess')})
+	password.value = ''
+}
+
+async function cancelDeletion() {
+	if (password.value === '') {
+		errPasswordRequired.value = true
+		passwordInput.value.focus()
+		return
+	}
+
+	await accountDeleteService.cancel(password.value)
+	success({message: t('user.deletion.scheduledCancelSuccess')})
+	store.dispatch('auth/refreshUserInfo')
+	password.value = ''
+}
 </script>
