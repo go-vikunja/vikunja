@@ -50,7 +50,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pquerna/otp v1.3.0
-	github.com/prometheus/client_golang v1.12.1
+	github.com/prometheus/client_golang v1.12.2
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/samedi/caldav-go v3.0.0+incompatible
 	github.com/spf13/afero v1.8.2
