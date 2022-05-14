@@ -1,6 +1,9 @@
 <template>
 	<div class="select">
-		<select :disabled="disabled || null" v-model.number="percentDone">
+		<select
+			v-model.number="percentDone"
+			:disabled="disabled || undefined"
+		>
 			<option value="0">0%</option>
 			<option value="0.1">10%</option>
 			<option value="0.2">20%</option>
@@ -16,30 +19,26 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
-export default defineComponent({
-	name: 'percentDoneSelect',
-	props: {
-		modelValue: {
-			default: 0,
-			type: Number,
-		},
-		disabled: {
-			default: false,
-		},
+<script setup lang="ts">
+import {computed} from 'vue'
+
+const props = defineProps({
+	modelValue: {
+		default: 0,
+		type: Number,
 	},
-	emits: ['update:modelValue', 'change'],
-	computed: {
-		percentDone: {
-			get() {
-				return this.modelValue
-			},
-			set(percentDone) {
-				this.$emit('update:modelValue', percentDone)
-				this.$emit('change')
-			},
-		},
+	disabled: {
+		default: false,
+	},
+})
+
+const emit = defineEmits(['update:modelValue', 'change'])
+
+const percentDone = computed({
+	get: () => props.modelValue,
+	set(percentDone) {
+		emit('update:modelValue', percentDone)
+		emit('change')
 	},
 })
 </script>
