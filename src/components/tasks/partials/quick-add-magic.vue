@@ -85,26 +85,14 @@
 	</div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {PREFIXES} from '@/modules/parseTaskText'
-import { defineComponent } from 'vue'
+import {ref, computed} from 'vue'
 
-export default defineComponent({
-	name: 'quick-add-magic',
-	data() {
-		return {
-			visible: false,
-			mode: getQuickAddMagicMode(),
-		}
-	},
-	computed: {
-		available() {
-			return this.mode !== 'disabled'
-		},
-		prefixes() {
-			return PREFIXES[this.mode]
-		},
-	},
-})
+const visible = ref(false)
+const mode = ref(getQuickAddMagicMode())
+
+const available = computed(() => mode.value !== 'disabled')
+const prefixes = computed(() =>PREFIXES[mode.value])
 </script>
