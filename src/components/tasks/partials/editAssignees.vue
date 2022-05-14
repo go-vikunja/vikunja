@@ -3,7 +3,7 @@
 		tabindex="-1"
 		@focus="focus"
 	>
-		<multiselect
+		<Multiselect
 			:loading="listUserService.loading"
 			:placeholder="$t('task.assignee.placeholder')"
 			:multiple="true"
@@ -15,34 +15,32 @@
 			v-model="assignees"
 			ref="multiselect"
 		>
-			<template #tag="props">
+			<template #tag="{item: user}">
 				<span class="assignee">
-					<user :avatar-size="32" :show-username="false" :user="props.item"/>
-					<a @click="removeAssignee(props.item)" class="remove-assignee" v-if="!disabled">
+					<user :avatar-size="32" :show-username="false" :user="user"/>
+					<a @click="removeAssignee(user)" class="remove-assignee" v-if="!disabled">
 						<icon icon="times"/>
 					</a>
 				</span>
 			</template>
-		</multiselect>
+		</Multiselect>
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
-import {includesById} from '@/helpers/utils'
-import UserModel from '../../../models/user'
-import ListUserService from '../../../services/listUsers'
-import TaskAssigneeService from '../../../services/taskAssignee'
-import User from '../../misc/user'
+<script setup lang="ts">
+import {ref, shallowReactive, watch, PropType} from 'vue'
+import {useStore} from 'vuex'
+import {useI18n} from 'vue-i18n'
+
+import User from '@/components/misc/user.vue'
 import Multiselect from '@/components/input/multiselect.vue'
 
-export default defineComponent({
-	name: 'editAssignees',
-	components: {
-		User,
-		Multiselect,
-	},
-	props: {
+import {includesById} from '@/helpers/utils'
+import UserModel from '@/models/user'
+import ListUserService from '@/services/listUsers'
+import {success} from '@/message'
+
+const props = defineProps({
 		taskId: {
 			type: Number,
 			required: true,
@@ -55,68 +53,68 @@ export default defineComponent({
 			default: false,
 		},
 		modelValue: {
-			type: Array,
+			type: Array as PropType<UserModel[]>,
+			default: () => [],
 		},
+	})
+const emit = defineEmits(['update:modelValue'])
+
+const store = useStore()
+const {t} = useI18n()
+
+const listUserService = shallowReactive(new ListUserService())
+const foundUsers = ref([])
+const assignees = ref<UserModel[]>([])
+
+watch(
+	() => props.modelValue,
+	(value) => {
+		assignees.value = value
 	},
-	emits: ['update:modelValue'],
-	data() {
-		return {
-			newAssignee: new UserModel(),
-			listUserService: new ListUserService(),
-			foundUsers: [],
-			assignees: [],
-			taskAssigneeService: new TaskAssigneeService(),
+	{
+		immediate: true,
+		deep: true,
+	},
+)
+
+async function addAssignee(user: UserModel) {
+	await store.dispatch('tasks/addAssignee', {user: user, taskId: props.taskId})
+	emit('update:modelValue', assignees.value)
+	success({message: t('task.assignee.assignSuccess')})
+}
+
+async function removeAssignee(user: UserModel) {
+	await store.dispatch('tasks/removeAssignee', {user: user, taskId: props.taskId})
+
+	// Remove the assignee from the list
+	for (const a in assignees.value) {
+		if (assignees.value[a].id === user.id) {
+			assignees.value.splice(a, 1)
 		}
-	},
-	watch: {
-		modelValue: {
-			handler(value) {
-				this.assignees = value
-			},
-			immediate: true,
-			deep: true,
-		},
-	},
-	methods: {
-		async addAssignee(user) {
-			await this.$store.dispatch('tasks/addAssignee', {user: user, taskId: this.taskId})
-			this.$emit('update:modelValue', this.assignees)
-			this.$message.success({message: this.$t('task.assignee.assignSuccess')})
-		},
+	}
+	success({message: t('task.assignee.unassignSuccess')})
+}
 
-		async removeAssignee(user) {
-			await this.$store.dispatch('tasks/removeAssignee', {user: user, taskId: this.taskId})
+async function findUser(query) {
+	if (query === '') {
+		clearAllFoundUsers()
+		return
+	}
 
-			// Remove the assignee from the list
-			for (const a in this.assignees) {
-				if (this.assignees[a].id === user.id) {
-					this.assignees.splice(a, 1)
-				}
-			}
-			this.$message.success({message: this.$t('task.assignee.unassignSuccess')})
-		},
+	const response = await listUserService.getAll({listId: props.listId}, {s: query})
 
-		async findUser(query) {
-			if (query === '') {
-				this.clearAllFoundUsers()
-				return
-			}
+	// Filter the results to not include users who are already assigned
+	foundUsers.value = response.filter(({id}) => !includesById(assignees.value, id))
+}
 
-			const response = await this.listUserService.getAll({listId: this.listId}, {s: query})
+function clearAllFoundUsers() {
+	foundUsers.value = []
+}
 
-			// Filter the results to not include users who are already assigned
-			this.foundUsers = response.filter(({id}) => !includesById(this.assignees, id))
-		},
-
-		clearAllFoundUsers() {
-			this.foundUsers = []
-		},
-
-		focus() {
-			this.$refs.multiselect.focus()
-		},
-	},
-})
+const multiselect = ref()
+function focus() {
+	multiselect.value.focus()
+}
 </script>
 
 <style lang="scss" scoped>
