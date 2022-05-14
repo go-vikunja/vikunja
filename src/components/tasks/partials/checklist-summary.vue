@@ -5,37 +5,40 @@
 			<circle stroke-width="2" stroke-dasharray="31" :stroke-dashoffset="checklistCircleDone"
 					stroke-linecap="round" fill="transparent" cx="50%" cy="50%" r="5"></circle>
 		</svg>
-		<span>
-			{{ $t(checklist.total === checklist.checked ? 'task.checklistAllDone' : 'task.checklistTotal', checklist) }}
-		</span>
+		<span>{{ label }}</span>
 	</span>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script setup lang="ts">
+import {computed} from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import {getChecklistStatistics} from '@/helpers/checklistFromText'
+import TaskModel from '@/models/task'
 
-export default defineComponent({
-	name: 'checklist-summary',
-	props: {
-		task: {
-			required: true,
-		},
+const props = defineProps({
+	task: {
+		type: TaskModel,
+		required: true,
 	},
-	computed: {
-		checklist() {
-			return getChecklistStatistics(this.task.description)
-		},
-		checklistCircleDone() {
-			const r = 5
-			const c = Math.PI * (r * 2)
+})
 
-			const progress = this.checklist.checked / this.checklist.total * 100
+const checklist = computed(() => getChecklistStatistics(props.task.description))
 
-			return ((100 - progress) / 100) * c
-		},
-	},
+const checklistCircleDone = computed(() => {
+	const r = 5
+	const c = Math.PI * (r * 2)
+
+	const progress = checklist.value.checked / checklist.value.total * 100
+
+	return ((100 - progress) / 100) * c
+})
+
+const {t} = useI18n()
+const label = computed(() => {
+	return checklist.value.total === checklist.value.checked 
+		? t('task.checklistAllDone', checklist.value)
+		: t('task.checklistTotal', checklist.value)
 })
 </script>
 
@@ -47,18 +50,20 @@ export default defineComponent({
 	padding-left: .5rem;
 	font-size: .9rem;
 
-	svg {
-		transform: rotate(-90deg);
-		transition: stroke-dashoffset 0.35s;
-		margin-right: .25rem;
+}
 
-		circle {
-			stroke: var(--grey-400);
+svg {
+	transform: rotate(-90deg);
+	transition: stroke-dashoffset 0.35s;
+	margin-right: .25rem;
 
-			&:last-child {
-				stroke: var(--primary);
-			}
-		}
+}
+
+circle {
+	stroke: var(--grey-400);
+
+	&:last-child {
+		stroke: var(--primary);
 	}
 }
 </style>
