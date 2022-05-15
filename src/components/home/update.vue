@@ -43,11 +43,11 @@ function refreshApp() {
 
 <style lang="scss" scoped>
 .update-notification {
-	margin: 1rem;
+	margin: .5rem;
 	display: flex;
 	align-items: center;
 	background: $warning;
-	padding: .25rem .5rem;
+	padding: 0 .25rem;
 	border-radius: $radius;
 	font-size: .9rem;
 	color: var(--grey-900);
@@ -59,6 +59,7 @@ function refreshApp() {
 		margin: 0;
 		width: 450px;
 		left: calc(50vw - 225px);
+		padding: .5rem;
 	}
 
 	@media screen and (max-width: $tablet) {
