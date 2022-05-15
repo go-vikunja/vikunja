@@ -326,6 +326,8 @@ export default defineComponent({
 
 	.preview.content {
 		margin-bottom: .5rem;
+		overflow-wrap: anywhere; // Safari does not understand "break-word" so we put that first to make sure it at least is able to show it somewhat properly there.
+		overflow-wrap: break-word;
 
 		ul li {
 			input[type="checkbox"] {
