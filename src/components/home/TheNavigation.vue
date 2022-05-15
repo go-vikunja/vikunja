@@ -197,8 +197,6 @@ $hamburger-menu-icon-width: 28px;
 	@media screen and (max-width: $tablet) {
 		.user {
 			width: $user-dropdown-width-mobile;
-			display: flex;
-			align-items: center;
 
 			.username-dropdown-trigger {
 				line-height: 1;
@@ -245,7 +243,7 @@ $hamburger-menu-icon-width: 28px;
 			border-radius: 100%;
 			vertical-align: middle;
 			height: 40px;
-			margin-right: var(--button-padding-horizontal);
+			margin-right: .5rem;
 		}
 
 		.username-dropdown-trigger {
