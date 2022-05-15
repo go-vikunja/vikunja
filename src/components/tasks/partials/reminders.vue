@@ -66,7 +66,7 @@ const emit = defineEmits(['update:modelValue', 'change'])
 const reminders = ref<Reminder[]>([])
 
 onMounted(() => {
-	reminders.value = props.modelValue
+	reminders.value = [...props.modelValue]
 })
 
 watch(
