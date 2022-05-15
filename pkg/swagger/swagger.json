@@ -8820,7 +8820,9 @@
                     "minLength": 1
                 },
                 "right": {
-                    "type": "integer"
+                    "description": "The right this team has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                    "type": "integer",
+                    "default": 0
                 },
                 "updated": {
                     "description": "A timestamp when this relation was last updated. You cannot change this value.",
@@ -8851,7 +8853,9 @@
                     "type": "string"
                 },
                 "right": {
-                    "type": "integer"
+                    "description": "The right this user has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                    "type": "integer",
+                    "default": 0
                 },
                 "updated": {
                     "description": "A timestamp when this task was last updated. You cannot change this value.",
