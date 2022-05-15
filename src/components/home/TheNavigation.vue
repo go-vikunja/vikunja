@@ -148,10 +148,6 @@ $user-dropdown-width-mobile: 5rem;
 $hamburger-menu-icon-spacing: 1rem;
 $hamburger-menu-icon-width: 28px;
 
-.navbar {
-	z-index: 4 !important;
-}
-
 .logo-link {
 	display: none;
 	padding: 0.5rem 0.75rem;
@@ -176,7 +172,6 @@ $hamburger-menu-icon-width: 28px;
 
 .navbar.main-theme {
 	background: var(--site-background);
-	z-index: 5 !important;
 	justify-content: space-between;
 	align-items: center;
 
