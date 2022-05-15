@@ -292,6 +292,7 @@ async function deleteComment(commentToDelete: TaskCommentModel) {
 		await taskCommentService.delete(commentToDelete)
 		const index = comments.value.findIndex(({id}) => id === commentToDelete.id)
 		comments.value.splice(index, 1)
+		success({message: t('task.comment.deleteSuccess')})
 	} finally {
 		showDeleteModal.value = false
 	}
