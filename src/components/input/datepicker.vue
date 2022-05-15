@@ -115,7 +115,7 @@ import {defineComponent} from 'vue'
 
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
-import { i18n } from '@/i18n'
+import {i18n} from '@/i18n'
 
 import {format} from 'date-fns'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
@@ -185,7 +185,7 @@ export default defineComponent({
 				this.updateData()
 			},
 			get() {
-				if(!this.date) {
+				if (!this.date) {
 					return ''
 				}
 
@@ -195,7 +195,7 @@ export default defineComponent({
 	},
 	methods: {
 		setDateValue(newVal) {
-			if(newVal === null) {
+			if (newVal === null) {
 				this.date = null
 				return
 			}
@@ -207,7 +207,7 @@ export default defineComponent({
 			this.$emit('change', this.date)
 		},
 		toggleDatePopup() {
-			if(this.disabled) {
+			if (this.disabled) {
 				return
 			}
 
@@ -219,12 +219,16 @@ export default defineComponent({
 			}
 		},
 		close() {
-			this.show = false
-			this.$emit('close', this.changed)
-			if(this.changed) {
-				this.changed = false
-				this.$emit('close-on-change', this.changed)
-			}
+			// Kind of dirty, but the timeout allows us to enter a time and click on "confirm" without
+			// having to click on another input field before it is actually used.
+			setTimeout(() => {
+				this.show = false
+				this.$emit('close', this.changed)
+				if (this.changed) {
+					this.changed = false
+					this.$emit('close-on-change', this.changed)
+				}
+			}, 200)
 		},
 		setDate(date) {
 			if (this.date === null) {
@@ -311,7 +315,7 @@ export default defineComponent({
 				text-align: center;
 			}
 		}
-			
+
 		a.button {
 			margin: 1rem;
 			width: calc(100% - 2rem);
