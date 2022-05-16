@@ -700,6 +700,7 @@
       "comment": "Bình luận",
       "delete": "Xóa bình luận này",
       "deleteText1": "Bạn có chắc muốn xóa bình luận này không?",
+      "deleteSuccess": "The comment was deleted successfully.",
       "addedSuccess": "Bình luận đã được thêm vào."
     },
     "deferDueDate": {

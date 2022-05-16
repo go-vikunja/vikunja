@@ -700,6 +700,7 @@
       "comment": "Комментировать",
       "delete": "Удалить комментарий",
       "deleteText1": "Удалить этот комментарий?",
+      "deleteSuccess": "The comment was deleted successfully.",
       "addedSuccess": "Комментарий добавлен."
     },
     "deferDueDate": {
