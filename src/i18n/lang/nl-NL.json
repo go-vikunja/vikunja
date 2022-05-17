@@ -700,6 +700,7 @@
       "comment": "Reactie",
       "delete": "Verwijder deze reactie",
       "deleteText1": "Weet je zeker dat je deze reactie wilt verwijderen?",
+      "deleteSuccess": "The comment was deleted successfully.",
       "addedSuccess": "De reactie is succesvol toegevoegd."
     },
     "deferDueDate": {

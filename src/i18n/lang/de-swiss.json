@@ -700,7 +700,7 @@
       "comment": "Kommentar",
       "delete": "De Kommentar chüble",
       "deleteText1": "Bisch du dir sicher, dass du de Kommentar chüble wetsch?",
-      "deleteSuccess": "The comment was deleted successfully.",
+      "deleteSuccess": "Der Kommentar wurde erfolgreich gelöscht.",
       "addedSuccess": "Din Kommentar isch erfolgriich hinzuegfüegt worde."
     },
     "deferDueDate": {

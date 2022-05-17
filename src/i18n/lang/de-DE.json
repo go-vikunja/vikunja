@@ -700,6 +700,7 @@
       "comment": "Kommentieren",
       "delete": "Diesen Kommentar löschen",
       "deleteText1": "Bist du sicher, dass du diesen Kommentar löschen willst?",
+      "deleteSuccess": "Der Kommentar wurde erfolgreich gelöscht.",
       "addedSuccess": "Der Kommentar wurde erfolgreich hinzugefügt."
     },
     "deferDueDate": {

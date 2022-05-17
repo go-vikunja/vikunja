@@ -700,6 +700,7 @@
       "comment": "Komentář",
       "delete": "Smazat tento komentář",
       "deleteText1": "Opravdu chcete smazat tento komentář?",
+      "deleteSuccess": "The comment was deleted successfully.",
       "addedSuccess": "Komentář byl úspěšně přidán."
     },
     "deferDueDate": {
