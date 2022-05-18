@@ -76,7 +76,7 @@
     "cypress": "9.6.1",
     "esbuild": "0.14.39",
     "eslint": "8.15.0",
-    "eslint-plugin-vue": "8.7.1",
+    "eslint-plugin-vue": "9.0.1",
     "express": "4.18.1",
     "happy-dom": "3.2.2",
     "netlify-cli": "10.3.1",
