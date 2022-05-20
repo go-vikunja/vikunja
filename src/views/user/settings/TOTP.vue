@@ -65,70 +65,77 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
+export default defineComponent({ name: 'user-settings-totp' })
+</script>
+
+<script lang="ts" setup>
+import {computed, ref, shallowReactive} from 'vue'
+import {useStore} from 'vuex'
+import {useI18n} from 'vue-i18n'
+
 import TotpService from '@/services/totp'
 import TotpModel from '@/models/totp'
-import {mapState} from 'vuex'
 
-export default defineComponent({
-	name: 'user-settings-totp',
-	data() {
-		return {
-			totpService: new TotpService(),
-			totp: new TotpModel(),
-			totpQR: '',
-			totpEnrolled: false,
-			totpConfirmPasscode: '',
-			totpDisableForm: false,
-			totpDisablePassword: '',
+import {success} from '@/message'
+
+import { useTitle } from '@/composables/useTitle'
+
+const {t} = useI18n()
+useTitle(() => `${t('user.settings.totp.title')} - ${t('user.settings.title')}`)
+
+
+const totpService = shallowReactive(new TotpService())
+const totp = ref(new TotpModel())
+const totpQR = ref('')
+const totpEnrolled = ref(false)
+const totpConfirmPasscode = ref('')
+const totpDisableForm = ref(false)
+const totpDisablePassword = ref('')
+
+const store = useStore()
+const totpEnabled = computed(() => store.state.config.totpEnabled)
+
+totpStatus()
+
+async function totpStatus() {
+	if (!totpEnabled.value) {
+		return
+	}
+	try {
+		totp.value = await totpService.get()
+		totpSetQrCode()
+	} catch(e) {
+		// Error code 1016 means totp is not enabled, we don't need an error in that case.
+		if (e.response?.data?.code === 1016) {
+			totpEnrolled.value = false
+			return
 		}
-	},
-	created() {
-		this.totpStatus()
-	},
-	computed: mapState({
-		totpEnabled: state => state.config.totpEnabled,
-	}),
-	mounted() {
-		this.setTitle(`${this.$t('user.settings.totp.title')} - ${this.$t('user.settings.title')}`)
-	},
-	methods: {
-		async totpStatus() {
-			if (!this.totpEnabled) {
-				return
-			}
-			try {
-				this.totp = await this.totpService.get()
-				this.totpSetQrCode()
-			} catch(e) {
-				// Error code 1016 means totp is not enabled, we don't need an error in that case.
-				if (e.response && e.response.data && e.response.data.code && e.response.data.code === 1016) {
-					this.totpEnrolled = false
-					return
-				}
 
-				throw e
-			}
-		},
-		async totpSetQrCode() {
-			const qr = await this.totpService.qrcode()
-			this.totpQR = window.URL.createObjectURL(qr)
-		},
-		async totpEnroll() {
-			this.totp = await this.totpService.enroll()
-			this.totpEnrolled = true
-			this.totpSetQrCode()
-		},
-		async totpConfirm() {
-			await this.totpService.enable({passcode: this.totpConfirmPasscode})
-			this.totp.enabled = true
-			this.$message.success({message: this.$t('user.settings.totp.confirmSuccess')})
-		},
-		async totpDisable() {
-			await this.totpService.disable({password: this.totpDisablePassword})
-			this.totpEnrolled = false
-			this.totp = new TotpModel()
-			this.$message.success({message: this.$t('user.settings.totp.disableSuccess')})
-		},
-	},
-})
+		throw e
+	}
+}
+
+async function totpSetQrCode() {
+	const qr = await totpService.qrcode()
+	totpQR.value = window.URL.createObjectURL(qr)
+}
+
+async function totpEnroll() {
+	totp.value = await totpService.enroll()
+	totpEnrolled.value = true
+	totpSetQrCode()
+}
+
+async function totpConfirm() {
+	await totpService.enable({passcode: totpConfirmPasscode.value})
+	totp.value.enabled = true
+	success({message: t('user.settings.totp.confirmSuccess')})
+}
+
+async function totpDisable() {
+	await totpService.disable({password: totpDisablePassword.value})
+	totpEnrolled.value = false
+	totp.value = new TotpModel()
+	success({message: t('user.settings.totp.disableSuccess')})
+}
 </script>
