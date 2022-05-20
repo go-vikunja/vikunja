@@ -68,10 +68,11 @@
 					</span>
 				<div class="select ml-2">
 					<select v-model="settings.language">
-						<option :value="lang.code" v-for="lang in availableLanguageOptions" :key="lang.code">{{
-								lang.title
-							}}
-						</option>
+						<option
+							v-for="lang in availableLanguageOptions"
+							:key="lang.code"
+							:value="lang.code"
+						>{{ lang.title }}</option>
 					</select>
 				</div>
 			</label>
@@ -83,7 +84,7 @@
 					</span>
 				<div class="select ml-2">
 					<select v-model="quickAddMagicMode">
-						<option v-for="set in quickAddMagicPrefixes" :key="set" :value="set">
+						<option v-for="set in PrefixMode" :key="set" :value="set">
 							{{ $t(`user.settings.quickAddMagic.${set}`) }}
 						</option>
 					</select>
@@ -132,18 +133,34 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, computed, watch, ref} from 'vue'
-import {useI18n} from 'vue-i18n'
+import {defineComponent} from 'vue'
 
-import {playSoundWhenDoneKey, playPopSound} from '@/helpers/playPop'
-import {availableLanguages} from '@/i18n'
-import {getQuickAddMagicMode, setQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
+export default defineComponent({
+	name: 'user-settings-general',
+})
+</script>
+
+<script setup lang="ts">
+import {computed, watch, ref, reactive} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useStore} from 'vuex'
+
 import {PrefixMode} from '@/modules/parseTaskText'
-import ListSearch from '@/components/tasks/partials/listSearch'
+
+import ListSearch from '@/components/tasks/partials/listSearch.vue'
+
+import {availableLanguages} from '@/i18n'
+import {playSoundWhenDoneKey, playPopSound} from '@/helpers/playPop'
+import {getQuickAddMagicMode, setQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {createRandomID} from '@/helpers/randomId'
-import {useColorScheme} from '@/composables/useColorScheme'
 import {success} from '@/message'
 import {AuthenticatedHTTPFactory} from '@/http-common'
+
+import {useColorScheme} from '@/composables/useColorScheme'
+import { useTitle } from '@/composables/useTitle'
+
+const {t} = useI18n()
+useTitle(() => `${t('user.settings.general.title')} - ${t('user.settings.title')}`)
 
 const DEFAULT_LIST_ID = 0
 
@@ -170,6 +187,8 @@ function useColorSchemeSetting() {
 	}
 }
 
+const {colorSchemeSettings, activeColorSchemeSetting} = useColorSchemeSetting()
+
 function useAvailableTimezones() {
 	const availableTimezones = ref([])
 
@@ -181,68 +200,46 @@ function useAvailableTimezones() {
 
 	return availableTimezones
 }
+const availableTimezones = useAvailableTimezones()
 
 function getPlaySoundWhenDoneSetting() {
 	return localStorage.getItem(playSoundWhenDoneKey) === 'true' || localStorage.getItem(playSoundWhenDoneKey) === null
 }
 
-export default defineComponent({
-	name: 'user-settings-general',
-	data() {
-		return {
-			playSoundWhenDone: getPlaySoundWhenDoneSetting(),
-			quickAddMagicMode: getQuickAddMagicMode(),
-			quickAddMagicPrefixes: PrefixMode,
-			settings: {...this.$store.state.auth.settings},
-			id: createRandomID(),
-			availableLanguageOptions: Object.entries(availableLanguages)
-				.map(l => ({code: l[0], title: l[1]}))
-				.sort((a, b) => a.title.localeCompare(b.title)),
-		}
-	},
-	components: {
-		ListSearch,
-	},
-	computed: {
-		defaultList: {
-			get() {
-				return this.$store.getters['lists/getListById'](this.settings.defaultListId)
-			},
-			set(l) {
-				this.settings.defaultListId = l ? l.id : DEFAULT_LIST_ID
-			},
-		},
-		loading() {
-			return this.$store.state.loading && this.$store.state.loadingModule === 'general-settings'
-		},
-	},
 
-	setup() {
-		return {
-			...useColorSchemeSetting(),
-			availableTimezones: useAvailableTimezones(),
-		}
-	},
+const playSoundWhenDone = ref(getPlaySoundWhenDoneSetting())
+const quickAddMagicMode = ref(getQuickAddMagicMode())
 
-	mounted() {
-		this.setTitle(`${this.$t('user.settings.general.title')} - ${this.$t('user.settings.title')}`)
-	},
-	watch: {
-		playSoundWhenDone(play) {
-			if (play) {
-				playPopSound()
-			}
-		},
-	},
-	methods: {
-		async updateSettings() {
-			localStorage.setItem(playSoundWhenDoneKey, this.playSoundWhenDone ? 'true' : 'false')
-			setQuickAddMagicMode(this.quickAddMagicMode)
+const store = useStore()
+const settings = reactive({...store.state.auth.settings})
+const id = ref(createRandomID())
+const availableLanguageOptions = ref(
+	Object.entries(availableLanguages)
+		.map(l => ({code: l[0], title: l[1]}))
+		.sort((a, b) => a.title.localeCompare(b.title)),
+)
 
-			await this.$store.dispatch('auth/saveUserSettings', {
-				settings: {...this.settings},
-			})
-		},
+
+const defaultList = computed({
+	get: () => store.getters['lists/getListById'](settings.defaultListId),
+	set(l) {
+		settings.defaultListId = l ? l.id : DEFAULT_LIST_ID
 	},
 })
+const loading = computed(() => store.state.loading && store.state.loadingModule === 'general-settings')
+
+watch(
+	playSoundWhenDone,
+	(play) => play && playPopSound(),
+)
+
+
+async function updateSettings() {
+	localStorage.setItem(playSoundWhenDoneKey, playSoundWhenDone.value ? 'true' : 'false')
+	setQuickAddMagicMode(quickAddMagicMode.value)
+
+	await store.dispatch('auth/saveUserSettings', {
+		settings: {...settings},
+	})
+}
 </script>
