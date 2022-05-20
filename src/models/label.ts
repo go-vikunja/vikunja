@@ -15,7 +15,7 @@ export default class LabelModel extends AbstractModel {
 		if (this.hexColor.substring(0, 1) !== '#') {
 			this.hexColor = '#' + this.hexColor
 		}
-		this.textColor = colorIsDark(this.hexColor) ? '#4a4a4a' : '#e5e5e5'
+		this.textColor = colorIsDark(this.hexColor) ? '#4a4a4a' : '#fff'
 		this.createdBy = new UserModel(this.createdBy)
 
 		this.created = new Date(this.created)

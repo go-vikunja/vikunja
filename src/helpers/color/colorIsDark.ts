@@ -1,4 +1,4 @@
-export const colorIsDark = color => {
+export function colorIsDark(color) {
 	if (typeof color === 'undefined') {
 		return true // Defaults to dark
 	}
@@ -16,7 +16,11 @@ export const colorIsDark = color => {
 	const g = (rgb >> 8) & 0xff  // extract green
 	const b = (rgb >> 0) & 0xff  // extract blue
 
-	// luma will be a value 0..255 where 0 indicates the darkest, and 255 the brightest
-	const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b // per ITU-R BT.709
-	return luma > 128
+	// this is a quick and dirty implementation of the WCAG 3.0 APCA color contrast formula
+	// see: https://gist.github.com/Myndex/e1025706436736166561d339fd667493#andys-shortcut-to-luminance--lightness
+	const Ys = Math.pow(r/255.0,2.2) * 0.2126 +
+		Math.pow(g/255.0,2.2) * 0.7152 +
+		Math.pow(b/255.0,2.2) * 0.0722
+
+	return Math.pow(Ys,0.678) >= 0.5
 }
