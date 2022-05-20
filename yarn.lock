@@ -2671,11 +2671,6 @@
     "@vue/compiler-sfc" "^3.2.31"
     "@vue/reactivity" "^3.2.31"
 
-"@vue/compat@3.2.31":
-  version "3.2.31"
-  resolved "https://registry.yarnpkg.com/@vue/compat/-/compat-3.2.31.tgz#9c8bdf265eeba1777e5edb56cda73581e351a648"
-  integrity sha512-hhwJk/SRwpT2OADctj+t7QZCRIgh04AcelGpe6gdj0OxA75xpHnPrG+fmG37U3Z6WDrNHZpGvu2eXBzWXM4OVA==
-
 "@vue/compiler-core@3.2.21":
   version "3.2.21"
   resolved "https://registry.yarnpkg.com/@vue/compiler-core/-/compiler-core-3.2.21.tgz#26566c32b2ad838199d471ef5df620a83846f24e"

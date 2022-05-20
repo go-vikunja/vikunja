@@ -1,9 +1,4 @@
-import {createApp, configureCompat} from 'vue'
-
-// default everything to Vue 3 behavior
-configureCompat({
-	MODE: 3,
-})
+import {createApp} from 'vue'
 
 import App from './App.vue'
 import router from './router'

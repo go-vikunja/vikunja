@@ -467,7 +467,6 @@ function scrollIntoView(el) {
 
 export default defineComponent({
 	name: 'TaskDetailView',
-	compatConfig: { ATTR_FALSE_VALUE: false },
 	components: {
 		BaseButton,
 		CreatedUpdated,

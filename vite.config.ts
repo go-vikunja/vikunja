@@ -43,13 +43,6 @@ export default defineConfig({
 	},
 	plugins: [
 		vue({
-			template: {
-				compilerOptions: {
-					compatConfig: {
-						MODE: 3,
-					},
-				},
-			},
 			reactivityTransform: true,
 		}),
 		legacy,
@@ -120,10 +113,6 @@ export default defineConfig({
 	],
 	resolve: {
 		alias: [
-			{
-				find: 'vue',
-				replacement: '@vue/compat',
-			},
 			{
 				find: '@',
 				replacement: path.resolve(__dirname, 'src'),
