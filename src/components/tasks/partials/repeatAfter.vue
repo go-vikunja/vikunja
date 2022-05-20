@@ -61,7 +61,7 @@ import TaskModel from '@/models/task'
 
 const props = defineProps({
 	modelValue: {
-		default: () => {},
+		default: () => ({}),
 		required: true,
 	},
 	disabled: {
@@ -72,7 +72,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'change'])
 
-const task = ref<TaskModel>({})
+const task = ref<TaskModel>()
 const repeatAfter = reactive({
 	amount: 0,
 	type: '',
