@@ -13,39 +13,41 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
+export default defineComponent({name: 'list-setting-archive'})
+</script>
+
+<script setup lang="ts">
+import {computed, shallowReactive} from 'vue'
+import {useStore} from 'vuex'
+import {useRouter, useRoute} from 'vue-router'
+import {useI18n} from 'vue-i18n'
+
 import ListService from '@/services/list'
 
-export default defineComponent({
-	name: 'list-setting-archive',
-	data() {
-		return {
-			listService: new ListService(),
-		}
-	},
-	created() {
-		this.setTitle(this.$t('list.archive.title', {list: this.list.title}))
-	},
-	computed: {
-		list() {
-			return this.$store.getters['lists/getListById'](this.$route.params.listId)
-		},
-	},
-	methods: {
-		async archiveList() {
-			const newList = {
-				...this.list,
-				isArchived: !this.list.isArchived,
-			}
+import { success } from '@/message'
+import { useTitle } from '@/composables/useTitle'
 
-			try {
-				const list = await this.listService.update(newList)
-				this.$store.commit('currentList', list)
-				this.$store.commit('namespaces/setListInNamespaceById', list)
-				this.$message.success({message: this.$t('list.archive.success')})
-			} finally {
-				this.$router.back()
-			}
-		},
-	},
-})
+const {t} = useI18n()
+const store = useStore()
+const router = useRouter()
+const route = useRoute()
+
+const list = computed(() => store.getters['lists/getListById'](route.params.listId))
+useTitle(() => t('list.archive.title', {list: list.value.title}))
+
+const listService = shallowReactive(new ListService())
+
+async function archiveList() {
+	try {
+		const newList = await listService.update({
+			...list,
+			isArchived: !list.value.isArchived,
+		})
+		store.commit('currentList', newList)
+		store.commit('namespaces/setListInNamespaceById', newList)
+		success({message: t('list.archive.success')})
+	} finally {
+		router.back()
+	}
+}
 </script>
