@@ -20,24 +20,23 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script setup lang="ts">
+import {computed} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useStore} from 'vuex'
 
 import {MIGRATORS} from './migrators'
+import {useTitle} from '@/composables/useTitle'
 
-export default defineComponent({
-	name: 'Migrate',
-	mounted() {
-		this.setTitle(this.$t('migrate.title'))
-	},
-	computed: {
-		availableMigrators() {
-			return this.$store.state.config.availableMigrators
-				.map((id) => MIGRATORS[id])
-				.filter((item) => Boolean(item))
-		},
-	},
-})
+const {t} = useI18n()
+const store = useStore()
+
+useTitle(() => t('migrate.title'))
+
+const availableMigrators = computed(() => store.state.config.availableMigrators
+	.map((id) => MIGRATORS[id])
+	.filter((item) => Boolean(item)),
+)
 </script>
 
 <style lang="scss" scoped>
@@ -50,7 +49,6 @@ export default defineComponent({
     width: 100px;
     text-transform: capitalize;
     margin-right: 1rem;
-
 }
 
 .migration-service-image {
