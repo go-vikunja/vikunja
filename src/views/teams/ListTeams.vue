@@ -25,29 +25,20 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
-import TeamService from '../../services/team'
+<script setup lang="ts">
+import {ref, shallowReactive} from 'vue'
+import { useI18n } from 'vue-i18n'
 
-export default defineComponent({
-	name: 'ListTeams',
-	data() {
-		return {
-			teamService: new TeamService(),
-			teams: [],
-		}
-	},
-	created() {
-		this.loadTeams()
-	},
-	mounted() {
-		this.setTitle(this.$t('team.title'))
-	},
-	methods: {
-		async loadTeams() {
-			this.teams = await this.teamService.getAll()
-		},
-	},
+import TeamService from '@/services/team'
+import { useTitle } from '@/composables/useTitle'
+
+const { t } = useI18n()
+useTitle(() => t('team.title'))
+
+const teams = ref([])
+const teamService = shallowReactive(new TeamService())
+teamService.getAll().then((result) => {
+	teams.value = result
 })
 </script>
 
