@@ -75,85 +75,82 @@
 	</card>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script setup lang="ts">
+import {ref, reactive, computed, shallowReactive, watch, nextTick} from 'vue'
+import {useRouter} from 'vue-router'
+import {useI18n} from 'vue-i18n'
 
-import AsyncEditor from '@/components/input/AsyncEditor'
+import Editor from '@/components/input/AsyncEditor'
 
-import TaskService from '../../services/task'
-import TaskModel from '../../models/task'
-import priorities from '../../models/constants/priorities'
-import EditLabels from './partials/editLabels'
-import Reminders from './partials/reminders'
-import ColorPicker from '../input/colorPicker'
+import TaskService from '@/services/task'
+import TaskModel from '@/models/task'
+import EditLabels from './partials/editLabels.vue'
+import Reminders from './partials/reminders.vue'
+import ColorPicker from '../input/colorPicker.vue'
 
-export default defineComponent({
-	name: 'edit-task',
-	data() {
-		return {
-			taskService: new TaskService(),
+import {success} from '@/message'
 
-			priorities: priorities,
-			editorActive: false,
-			isTaskEdit: false,
-			taskEditTask: TaskModel,
-		}
-	},
-	computed: {
-		taskDetailRoute() {
-			return {
-				name: 'task.detail',
-				params: { id: this.taskEditTask.id },
-				state: { backdropView: this.$router.currentRoute.value.fullPath },
-			}
-		},
-	},
-	components: {
-		ColorPicker,
-		Reminders,
-		EditLabels,
-		editor: AsyncEditor,
-	},
-	props: {
-		task: {
-			type: TaskModel,
-			required: true,
-		},
-	},
-	watch: {
-		task: {
-			handler() {
-				this.taskEditTask = this.task
-				this.initTaskFields()
-			},
-			immediate: true,
-		},
-	},
-	methods: {
-		initTaskFields() {
-			this.taskEditTask.dueDate =
-				+new Date(this.task.dueDate) === 0 ? null : this.task.dueDate
-			this.taskEditTask.startDate =
-				+new Date(this.task.startDate) === 0
-					? null
-					: this.task.startDate
-			this.taskEditTask.endDate =
-				+new Date(this.task.endDate) === 0 ? null : this.task.endDate
-			// This makes the editor trigger its mounted function again which makes it forget every input
-			// it currently has in its textarea. This is a counter-hack to a hack inside of vue-easymde
-			// which made it impossible to detect change from the outside. Therefore the component would
-			// not update if new content from the outside was made available.
-			// See https://github.com/NikulinIlya/vue-easymde/issues/3
-			this.editorActive = false
-			this.$nextTick(() => (this.editorActive = true))
-		},
-		async editTaskSubmit() {
-			this.taskEditTask = await this.taskService.update(this.taskEditTask)
-			this.initTaskFields()
-			this.$message.success({message: this.$t('task.detail.updateSuccess')})
-		},
+const {t} = useI18n()
+const router = useRouter()
+
+const props = defineProps({
+	task: {
+		type: TaskModel,
+		required: true,
 	},
 })
+
+const taskService = shallowReactive(new TaskService())
+
+const editorActive = ref(false)
+let taskEditTask: TaskModel | undefined
+
+
+// FIXME: this initialization should not be necessary here 
+function initTaskFields() {
+	taskEditTask.dueDate =
+		+new Date(props.task.dueDate) === 0 ? null : props.task.dueDate
+	taskEditTask.startDate =
+		+new Date(props.task.startDate) === 0
+			? null
+			: props.task.startDate
+	taskEditTask.endDate =
+		+new Date(props.task.endDate) === 0 ? null : props.task.endDate
+	// This makes the editor trigger its mounted function again which makes it forget every input
+	// it currently has in its textarea. This is a counter-hack to a hack inside of vue-easymde
+	// which made it impossible to detect change from the outside. Therefore the component would
+	// not update if new content from the outside was made available.
+	// See https://github.com/NikulinIlya/vue-easymde/issues/3
+	editorActive.value = false
+	nextTick(() => (editorActive.value = true))
+}
+
+watch(
+	() => props.task,
+	() => {
+		if (!taskEditTask) {
+			taskEditTask = reactive(props.task)
+		} else {
+			Object.assign(taskEditTask, new TaskModel(props.task))
+		}
+		initTaskFields()
+	},
+	{immediate: true },
+)
+const taskDetailRoute = computed(() => {
+	return {
+		name: 'task.detail',
+		params: { id: taskEditTask.id },
+		state: { backdropView: router.currentRoute.value.fullPath },
+	}
+})
+
+async function editTaskSubmit() {
+	const newTask = await taskService.update(taskEditTask)
+	Object.assign(taskEditTask, newTask)
+	initTaskFields()
+	success({message: t('task.detail.updateSuccess')})
+}
 </script>
 
 <style lang="scss" scoped>
