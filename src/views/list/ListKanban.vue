@@ -228,7 +228,7 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
-import draggable from 'vuedraggable'
+import draggable from 'zhyswan-vuedraggable'
 import cloneDeep from 'lodash.clonedeep'
 
 import BucketModel from '../../models/bucket'

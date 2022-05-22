@@ -146,7 +146,7 @@ import Nothing from '@/components/misc/nothing.vue'
 import Pagination from '@/components/misc/pagination.vue'
 import {ALPHABETICAL_SORT} from '@/components/list/partials/filters.vue'
 
-import draggable from 'vuedraggable'
+import draggable from 'zhyswan-vuedraggable'
 import {calculateItemPosition} from '../../helpers/calculateItemPosition'
 
 function sortTasks(tasks) {

@@ -159,7 +159,7 @@
 <script setup lang="ts">
 import {ref, computed, onMounted, onBeforeMount} from 'vue'
 import {useStore} from 'vuex'
-import draggable from 'vuedraggable'
+import draggable from 'zhyswan-vuedraggable'
 import {SortableEvent} from 'sortablejs'
 
 import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
