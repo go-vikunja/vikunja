@@ -16,7 +16,7 @@
 					/>
 				</div>
 				<div class="control">
-					<x-button @click="setApiUrl" :disabled="apiUrl === '' || null">
+					<x-button @click="setApiUrl" :disabled="apiUrl === '' || undefined">
 						{{ $t('apiConfig.change') }}
 					</x-button>
 				</div>

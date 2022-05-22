@@ -30,7 +30,7 @@
 		<flat-pickr
 			:class="{ disabled: taskService.loading }"
 			:config="flatPickerConfig"
-			:disabled="taskService.loading || null"
+			:disabled="taskService.loading || undefined"
 			class="input"
 			v-model="dueDate"
 		/>

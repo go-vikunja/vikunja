@@ -36,7 +36,7 @@
 			<label class="label">{{ $t('task.attributes.priority') }}</label>
 			<div class="control single-value-control">
 				<priority-select
-					:disabled="!filters.usePriority || null"
+					:disabled="!filters.usePriority || undefined"
 					v-model.number="filters.priority"
 					@change="setPriority"
 				/>
@@ -54,7 +54,7 @@
 				<percent-done-select
 					v-model.number="filters.percentDone"
 					@change="setPercentDoneFilter"
-					:disabled="!filters.usePercentDone || null"
+					:disabled="!filters.usePercentDone || undefined"
 				/>
 				<fancycheckbox
 					v-model="filters.usePercentDone"

@@ -5,7 +5,7 @@
 		:icon="iconName"
 		v-tooltip="tooltipText"
 		@click="changeSubscription"
-		:disabled="disabled || null"
+		:disabled="disabled || undefined"
 	>
 		{{ buttonText }}
 	</x-button>

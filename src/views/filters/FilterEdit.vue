@@ -13,7 +13,7 @@
 				<div class="control">
 					<input
 						:class="{ 'disabled': filterService.loading}"
-						:disabled="filterService.loading || null"
+						:disabled="filterService.loading || undefined"
 						@keyup.enter="saveSavedFilter"
 						class="input"
 						id="title"

@@ -6,13 +6,13 @@
 		v-if="totalPages > 1"
 	>
 		<router-link
-			:disabled="currentPage === 1 || null"
+			:disabled="currentPage === 1 || undefined"
 			:to="getRouteForPagination(currentPage - 1)"
 			class="pagination-previous">
 			{{ $t('misc.previous') }}
 		</router-link>
 		<router-link
-			:disabled="currentPage === totalPages || null"
+			:disabled="currentPage === totalPages || undefined"
 			:to="getRouteForPagination(currentPage + 1)"
 			class="pagination-next">
 			{{ $t('misc.next') }}

@@ -94,7 +94,7 @@
 						@start="() => drag = true"
 						@end="saveListPosition"
 						handle=".handle"
-						:disabled="n.id < 0 || null"
+						:disabled="n.id < 0 || undefined"
 						tag="transition-group"
 						item-key="id"
 						:data-namespace-id="n.id"

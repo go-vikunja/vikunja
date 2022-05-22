@@ -8,7 +8,7 @@
 		</h3>
 
 		<input
-			:disabled="attachmentService.loading || null"
+			:disabled="attachmentService.loading || undefined"
 			@change="uploadNewAttachment()"
 			id="files"
 			multiple

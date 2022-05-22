@@ -183,7 +183,7 @@
 			<div class="bucket new-bucket" v-if="canWrite && !loading && buckets.length > 0">
 				<input
 					:class="{'is-loading': loading}"
-					:disabled="loading || null"
+					:disabled="loading || undefined"
 					@blur="() => showNewBucketInput = false"
 					@keyup.enter="createNewBucket"
 					@keyup.esc="$event.target.blur()"
