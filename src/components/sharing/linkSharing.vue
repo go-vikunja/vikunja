@@ -26,13 +26,13 @@
 					<div class="control">
 						<div class="select">
 							<select v-model="selectedRight" id="linkShareRight">
-								<option :value="rights.READ">
+								<option :value="RIGHTS.READ">
 									{{ $t('list.share.right.read') }}
 								</option>
-								<option :value="rights.READ_WRITE">
+								<option :value="RIGHTS.READ_WRITE">
 									{{ $t('list.share.right.readWrite') }}
 								</option>
-								<option :value="rights.ADMIN">
+								<option :value="RIGHTS.ADMIN">
 									{{ $t('list.share.right.admin') }}
 								</option>
 							</select>
@@ -121,13 +121,13 @@
 						{{ s.sharedBy.getDisplayName() }}
 					</td>
 					<td class="type">
-						<template v-if="s.right === rights.ADMIN">
+						<template v-if="s.right === RIGHTS.ADMIN">
 							<span class="icon is-small">
 								<icon icon="lock"/>
 							</span>&nbsp;
 							{{ $t('list.share.right.admin') }}
 						</template>
-						<template v-else-if="s.right === rights.READ_WRITE">
+						<template v-else-if="s.right === RIGHTS.READ_WRITE">
 							<span class="icon is-small">
 								<icon icon="pen"/>
 							</span>&nbsp;
@@ -175,94 +175,88 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script setup lang="ts">
+import {ref, watch, computed, shallowReactive} from 'vue'
+import {useStore} from 'vuex'
+import {useI18n} from 'vue-i18n'
 
-import rights from '../../models/constants/rights'
+import RIGHTS from '@/models/constants/rights.json'
+import LinkShareModel from '@/models/linkShare'
 
-import LinkShareService from '../../services/linkShare'
-import LinkShareModel from '../../models/linkShare'
+import LinkShareService from '@/services/linkShare'
 
-import {mapState} from 'vuex'
-import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
+import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
+import {success} from '@/message'
 
-export default defineComponent({
-	name: 'linkSharing',
-	props: {
-		listId: {
-			default: 0,
-			required: true,
-		},
-	},
-	data() {
-		return {
-			linkShares: [],
-			linkShareService: new LinkShareService(),
-			rights: rights,
-			selectedRight: rights.READ,
-			name: '',
-			password: '',
-			showDeleteModal: false,
-			linkIdToDelete: 0,
-			showNewForm: false,
-		}
-	},
-	setup() {
-		return {
-			copy: useCopyToClipboard(),
-		}
-	},
-	watch: {
-		listId: {
-			handler: 'load',
-			immediate: true,
-		},
-	},
-	computed: mapState({
-		frontendUrl: (state) => state.config.frontendUrl,
-	}),
-	methods: {
-		async load(listId) {
-			// If listId == 0 the list on the calling component wasn't already loaded, so we just bail out here
-			if (listId === 0) {
-				return
-			}
-
-			this.linkShares = await this.linkShareService.getAll({listId})
-		},
-		async add(listId) {
-			const newLinkShare = new LinkShareModel({
-				right: this.selectedRight,
-				listId,
-				name: this.name,
-				password: this.password,
-			})
-			await this.linkShareService.create(newLinkShare)
-			this.selectedRight = rights.READ
-			this.name = ''
-			this.password = ''
-			this.showNewForm = false
-			this.$message.success({message: this.$t('list.share.links.createSuccess')})
-			await this.load(listId)
-		},
-		async remove(listId) {
-			const linkshare = new LinkShareModel({
-				id: this.linkIdToDelete,
-				listId,
-			})
-			try {
-				await this.linkShareService.delete(linkshare)
-				this.$message.success({message: this.$t('list.share.links.deleteSuccess')})
-				await this.load(listId)
-			} finally {
-				this.showDeleteModal = false
-			}
-		},
-		getShareLink(hash) {
-			return this.frontendUrl + 'share/' + hash + '/auth'
-		},
+const props = defineProps({
+	listId: {
+		default: 0,
+		required: true,
 	},
 })
+
+const {t} = useI18n()
+
+const linkShares = ref([])
+const linkShareService = shallowReactive(new LinkShareService())
+const selectedRight = ref(RIGHTS.READ)
+const name = ref('')
+const password = ref('')
+const showDeleteModal = ref(false)
+const linkIdToDelete = ref(0)
+const showNewForm = ref(false)
+
+const copy = useCopyToClipboard()
+watch(
+	() => props.listId,
+	load,
+	{immediate: true},
+)
+
+const store = useStore()
+const frontendUrl = computed(() => store.state.config.frontendUrl)
+
+async function load(listId) {
+	// If listId == 0 the list on the calling component wasn't already loaded, so we just bail out here
+	if (listId === 0) {
+		return
+	}
+
+	linkShares.value = await linkShareService.getAll({listId})
+}
+
+async function add(listId) {
+	const newLinkShare = new LinkShareModel({
+		right: selectedRight.value,
+		listId,
+		name: name.value,
+		password: password.value,
+	})
+	await linkShareService.create(newLinkShare)
+	selectedRight.value = RIGHTS.READ
+	name.value = ''
+	password.value = ''
+	showNewForm.value = false
+	success({message: t('list.share.links.createSuccess')})
+	await load(listId)
+}
+
+async function remove(listId) {
+	try {
+		await linkShareService.delete(new LinkShareModel({
+			id: linkIdToDelete.value,
+			listId,
+		}))
+		success({message: t('list.share.links.deleteSuccess')})
+		await load(listId)
+	} finally {
+		showDeleteModal.value = false
+	}
+}
+
+function getShareLink(hash: string) {
+	return frontendUrl.value + 'share/' + hash + '/auth'
+}
 </script>
 
 <style lang="scss" scoped>
