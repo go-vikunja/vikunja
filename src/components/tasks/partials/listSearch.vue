@@ -17,18 +17,16 @@
 </template>
 
 <script lang="ts" setup>
-import {reactive, ref, watchEffect} from 'vue'
+import {reactive, ref, watch} from 'vue'
+import type {PropType} from 'vue'
 import {useStore} from 'vuex'
 import {useI18n} from 'vue-i18n'
 import ListModel from '@/models/list'
 import Multiselect from '@/components/input/multiselect.vue'
 
-const store = useStore()
-const {t} = useI18n()
-
-const list = reactive(new ListModel())
 const props = defineProps({
 	modelValue: {
+		type: Object as PropType<ListModel>,
 		validator(value) {
 			return value instanceof ListModel
 		},
@@ -37,9 +35,19 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue'])
 
-watchEffect(() => {
-	Object.assign(list, props.modelValue)
-})
+const store = useStore()
+const {t} = useI18n()
+
+const list = reactive<ListModel>(new ListModel())
+
+watch(
+	() => props.modelValue,
+	(newList) => Object.assign(list, newList),
+	{
+		immediate: true,
+		deep: true,
+	},
+)
 
 const foundLists = ref([])
 function findLists(query: string) {
