@@ -9,7 +9,7 @@
 					class="control is-expanded"
 					:class="{ 'is-loading': searchService.loading }"
 				>
-					<multiselect
+					<Multiselect
 						:loading="searchService.loading"
 						:placeholder="$t('misc.searchPlaceholder')"
 						@search="find"
@@ -131,241 +131,234 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
+import {defineComponent, ShallowReactive, shallowReactive} from 'vue'
+export default defineComponent({ name: 'userTeamShare' })
+</script>
 
-import UserNamespaceService from '../../services/userNamespace'
-import UserNamespaceModel from '../../models/userNamespace'
-import UserListModel from '../../models/userList'
-import UserListService from '../../services/userList'
-import UserService from '../../services/user'
-import UserModel from '../../models/user'
+<script setup lang="ts">
+import {ref, reactive, computed} from 'vue'
+import type {PropType} from 'vue'
+import {useStore} from 'vuex'
+import {useI18n} from 'vue-i18n'
 
-import TeamNamespaceService from '../../services/teamNamespace'
-import TeamNamespaceModel from '../../models/teamNamespace'
-import TeamListModel from '../../models/teamList'
-import TeamListService from '../../services/teamList'
-import TeamService from '../../services/team'
-import TeamModel from '../../models/team'
+import UserNamespaceService from '@/services/userNamespace'
+import UserNamespaceModel from '@/models/userNamespace'
+import UserListModel from '@/models/userList'
+import UserListService from '@/services/userList'
+import UserService from '@/services/user'
+import UserModel from '@/models/user'
 
-import rights from '../../models/constants/rights.json'
+import TeamNamespaceService from '@/services/teamNamespace'
+import TeamNamespaceModel from '@/models/teamNamespace'
+import TeamListModel from '@/models/teamList'
+import TeamListService from '@/services/teamList'
+import TeamService from '@/services/team'
+import TeamModel from '@/models/team'
+
+import RIGHTS from '@/models/constants/rights.json'
 import Multiselect from '@/components/input/multiselect.vue'
 import Nothing from '@/components/misc/nothing.vue'
+import { success } from '@/message'
 
-export default defineComponent({
-	name: 'userTeamShare',
-	props: {
-		type: {
-			type: String,
-			default: '',
-		},
-		shareType: {
-			type: String,
-			default: '',
-		},
-		id: {
-			type: Number,
-			default: 0,
-		},
-		userIsAdmin: {
-			type: Boolean,
-			default: false,
-		},
+const props = defineProps({
+	type: {
+		type: String as PropType<'list' | 'namespace'>,
+		default: '',
 	},
-	data() {
-		return {
-			stuffService: Object, // This user service is either a userNamespaceService or a userListService, depending on the type we are using
-			stuffModel: Object,
-			searchService: Object,
-			sharable: Object,
-
-			found: [],
-			searchLabel: '',
-			rights: rights,
-			selectedRight: {},
-
-			typeString: '',
-			sharables: [], // This holds either teams or users who this namepace or list is shared with
-			showDeleteModal: false,
-		}
+	shareType: {
+		type: String as PropType<'user' | 'team' | 'namespace'>,
+		default: '',
 	},
-	components: {
-		Nothing,
-		Multiselect,
+	id: {
+		type: Number,
+		default: 0,
 	},
-	computed: {
-		userInfo() {
-			return this.$store.state.auth.info
-		},
-		shareTypeNames() {
-			if (this.shareType === 'user') {
-				return this.$tc('list.share.userTeam.typeUser', 2)
-			}
-
-			if (this.shareType === 'team') {
-				return this.$tc('list.share.userTeam.typeTeam', 2)
-			}
-
-			return ''
-		},
-		shareTypeName() {
-			if (this.shareType === 'user') {
-				return this.$tc('list.share.userTeam.typeUser', 1)
-			}
-
-			if (this.shareType === 'team') {
-				return this.$tc('list.share.userTeam.typeTeam', 1)
-			}
-
-			return ''
-		},
-		sharableName() {
-			if (this.type === 'list') {
-				return this.$t('list.list.title')
-			}
-
-			if (this.shareType === 'namespace') {
-				return this.$t('namespace.namespace')
-			}
-
-			return ''
-		},
-	},
-	created() {
-		if (this.shareType === 'user') {
-			this.searchService = new UserService()
-			this.sharable = new UserModel()
-			this.searchLabel = 'username'
-
-			if (this.type === 'list') {
-				this.typeString = 'list'
-				this.stuffService = new UserListService()
-				this.stuffModel = new UserListModel({listId: this.id})
-			} else if (this.type === 'namespace') {
-				this.typeString = 'namespace'
-				this.stuffService = new UserNamespaceService()
-				this.stuffModel = new UserNamespaceModel({
-					namespaceId: this.id,
-				})
-			} else {
-				throw new Error('Unknown type: ' + this.type)
-			}
-		} else if (this.shareType === 'team') {
-			this.searchService = new TeamService()
-			this.sharable = new TeamModel()
-			this.searchLabel = 'name'
-
-			if (this.type === 'list') {
-				this.typeString = 'list'
-				this.stuffService = new TeamListService()
-				this.stuffModel = new TeamListModel({listId: this.id})
-			} else if (this.type === 'namespace') {
-				this.typeString = 'namespace'
-				this.stuffService = new TeamNamespaceService()
-				this.stuffModel = new TeamNamespaceModel({
-					namespaceId: this.id,
-				})
-			} else {
-				throw new Error('Unknown type: ' + this.type)
-			}
-		} else {
-			throw new Error('Unkown share type')
-		}
-
-		this.load()
-	},
-	methods: {
-		async load() {
-			this.sharables = await this.stuffService.getAll(this.stuffModel)
-			this.sharables.forEach((s) =>
-				this.selectedRight[s.id] = s.right,
-			)
-		},
-
-		async deleteSharable() {
-			if (this.shareType === 'user') {
-				this.stuffModel.userId = this.sharable.username
-			} else if (this.shareType === 'team') {
-				this.stuffModel.teamId = this.sharable.id
-			}
-
-			await this.stuffService.delete(this.stuffModel)
-			this.showDeleteModal = false
-			for (const i in this.sharables) {
-				if (
-					(this.sharables[i].username === this.stuffModel.userId && this.shareType === 'user') ||
-					(this.sharables[i].id === this.stuffModel.teamId && this.shareType === 'team')
-				) {
-					this.sharables.splice(i, 1)
-				}
-			}
-			this.$message.success({message: this.$t('list.share.userTeam.removeSuccess', {type: this.shareTypeName, sharable: this.sharableName})})
-		},
-
-		async add(admin) {
-			if (admin === null) {
-				admin = false
-			}
-			this.stuffModel.right = rights.READ
-			if (admin) {
-				this.stuffModel.right = rights.ADMIN
-			}
-
-			if (this.shareType === 'user') {
-				this.stuffModel.userId = this.sharable.username
-			} else if (this.shareType === 'team') {
-				this.stuffModel.teamId = this.sharable.id
-			}
-
-			await this.stuffService.create(this.stuffModel)
-			this.$message.success({message: this.$t('list.share.userTeam.addedSuccess', {type: this.shareTypeName})})
-			await this.load()
-		},
-
-		async toggleType(sharable) {
-			if (
-				this.selectedRight[sharable.id] !== rights.ADMIN &&
-				this.selectedRight[sharable.id] !== rights.READ &&
-				this.selectedRight[sharable.id] !== rights.READ_WRITE
-			) {
-				this.selectedRight[sharable.id] = rights.READ
-			}
-			this.stuffModel.right = this.selectedRight[sharable.id]
-
-			if (this.shareType === 'user') {
-				this.stuffModel.userId = sharable.username
-			} else if (this.shareType === 'team') {
-				this.stuffModel.teamId = sharable.id
-			}
-
-			const r = await this.stuffService.update(this.stuffModel)
-			for (const i in this.sharables) {
-				if (
-					(this.sharables[i].username ===
-						this.stuffModel.userId &&
-						this.shareType === 'user') ||
-					(this.sharables[i].id === this.stuffModel.teamId &&
-						this.shareType === 'team')
-				) {
-					this.sharables[i].right = r.right
-				}
-			}
-			this.$message.success({message: this.$t('list.share.userTeam.updatedSuccess', {type: this.shareTypeName})})
-		},
-
-		async find(query) {
-			if (query === '') {
-				this.clearAll()
-				return
-			}
-
-			this.found = await this.searchService.getAll({}, {s: query})
-		},
-
-		clearAll() {
-			this.found = []
-		},
+	userIsAdmin: {
+		type: Boolean,
+		default: false,
 	},
 })
+
+const {t} = useI18n()
+
+// This user service is either a userNamespaceService or a userListService, depending on the type we are using
+let stuffService: ShallowReactive<UserNamespaceService | UserListService | TeamListService | TeamNamespaceService>
+let stuffModel: UserNamespaceModel | UserListModel | TeamListModel | TeamNamespaceModel
+let searchService: ShallowReactive<UserService | TeamService>
+let sharable: UserModel | TeamModel
+ 
+const searchLabel = ref('')
+const selectedRight = ref({})
+
+
+// This holds either teams or users who this namepace or list is shared with
+const sharables = ref([])
+const showDeleteModal = ref(false)
+
+
+const store = useStore()
+const userInfo = computed(() => store.state.auth.info)
+
+function createShareTypeNameComputed(count: number) {
+	return computed(() => {
+		if (props.shareType === 'user') {
+			return t('list.share.userTeam.typeUser', count)
+		}
+
+		if (props.shareType === 'team') {
+			return t('list.share.userTeam.typeTeam', count)
+		}
+
+		return ''
+	})
+}
+
+const shareTypeNames = createShareTypeNameComputed(2)
+const shareTypeName = createShareTypeNameComputed(1)
+
+const sharableName = computed(() => {
+	if (props.type === 'list') {
+		return t('list.list.title')
+	}
+
+	if (props.shareType === 'namespace') {
+		return t('namespace.namespace')
+	}
+
+	return ''
+})
+
+if (props.shareType === 'user') {
+	searchService = shallowReactive(new UserService())
+	sharable = reactive(new UserModel())
+	searchLabel.value = 'username'
+
+	if (props.type === 'list') {
+		stuffService = shallowReactive(new UserListService())
+		stuffModel = reactive(new UserListModel({listId: props.id}))
+	} else if (props.type === 'namespace') {
+		stuffService = shallowReactive(new UserNamespaceService())
+		stuffModel = reactive(new UserNamespaceModel({
+			namespaceId: props.id,
+		}))
+	} else {
+		throw new Error('Unknown type: ' + props.type)
+	}
+} else if (props.shareType === 'team') {
+	searchService = new TeamService()
+	sharable = reactive(new TeamModel())
+	searchLabel.value = 'name'
+
+	if (props.type === 'list') {
+		stuffService = shallowReactive(new TeamListService())
+		stuffModel = reactive(new TeamListModel({listId: props.id}))
+	} else if (props.type === 'namespace') {
+		stuffService = shallowReactive(new TeamNamespaceService())
+		stuffModel = reactive(new TeamNamespaceModel({
+			namespaceId: props.id,
+		}))
+	} else {
+		throw new Error('Unknown type: ' + props.type)
+	}
+} else {
+	throw new Error('Unkown share type')
+}
+
+load()
+
+async function load() {
+	sharables.value = await stuffService.getAll(stuffModel)
+	sharables.value.forEach(({id, right}) =>
+		selectedRight.value[id] = right,
+	)
+}
+
+async function deleteSharable() {
+	if (props.shareType === 'user') {
+		stuffModel.userId = sharable.username
+	} else if (props.shareType === 'team') {
+		stuffModel.teamId = sharable.id
+	}
+
+	await stuffService.delete(stuffModel)
+	showDeleteModal.value = false
+	for (const i in sharables.value) {
+		if (
+			(sharables.value[i].username === stuffModel.userId && props.shareType === 'user') ||
+			(sharables.value[i].id === stuffModel.teamId && props.shareType === 'team')
+		) {
+			sharables.value.splice(i, 1)
+		}
+	}
+	success({message: t('list.share.userTeam.removeSuccess', {
+		type: shareTypeName.value,
+		sharable: sharableName.value,
+	})})
+}
+
+async function add(admin) {
+	if (admin === null) {
+		admin = false
+	}
+	stuffModel.right = RIGHTS.READ
+	if (admin) {
+		stuffModel.right = RIGHTS.ADMIN
+	}
+
+	if (props.shareType === 'user') {
+		stuffModel.userId = sharable.username
+	} else if (props.shareType === 'team') {
+		stuffModel.teamId = sharable.id
+	}
+
+	await stuffService.create(stuffModel)
+	success({message: t('list.share.userTeam.addedSuccess', {type: shareTypeName.value})})
+	await load()
+}
+
+async function toggleType(sharable) {
+	if (
+		selectedRight.value[sharable.id] !== RIGHTS.ADMIN &&
+		selectedRight.value[sharable.id] !== RIGHTS.READ &&
+		selectedRight.value[sharable.id] !== RIGHTS.READ_WRITE
+	) {
+		selectedRight.value[sharable.id] = RIGHTS.READ
+	}
+	stuffModel.right = selectedRight.value[sharable.id]
+
+	if (props.shareType === 'user') {
+		stuffModel.userId = sharable.username
+	} else if (props.shareType === 'team') {
+		stuffModel.teamId = sharable.id
+	}
+
+	const r = await stuffService.update(stuffModel)
+	for (const i in sharables.value) {
+		if (
+			(sharables.value[i].username ===
+				stuffModel.userId &&
+				props.shareType === 'user') ||
+			(sharables.value[i].id === stuffModel.teamId &&
+				props.shareType === 'team')
+		) {
+			sharables.value[i].right = r.right
+		}
+	}
+	success({message: t('list.share.userTeam.updatedSuccess', {type: shareTypeName.value})})
+}
+
+const found = ref([])
+async function find(query) {
+	if (query === '') {
+		clearAll()
+		return
+	}
+	found.value = await searchService.getAll({}, {s: query})
+}
+
+function clearAll() {
+	found.value = []
+}
 </script>
 
 <style lang="scss" scoped>
