@@ -102,6 +102,7 @@ app.config.errorHandler = (err, vm, info) => {
 if (import.meta.env.DEV) {
 	app.config.warnHandler = (msg, vm, info) => {
 		error(msg)
+		throw(msg)
 	}
 
 	// https://stackoverflow.com/a/52076738/15522256
