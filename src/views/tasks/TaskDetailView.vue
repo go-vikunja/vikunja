@@ -445,6 +445,26 @@ import ChecklistSummary from '../../components/tasks/partials/checklist-summary'
 import CreatedUpdated from '@/components/tasks/partials/createdUpdated'
 import { setTitle } from '@/helpers/setTitle'
 
+function scrollIntoView(el) {
+	if (!el) {
+		return
+	}
+
+	const boundingRect = el.getBoundingClientRect()
+	const scrollY = window.scrollY
+
+	if (
+		boundingRect.top > (scrollY + window.innerHeight) ||
+		boundingRect.top < scrollY
+	) {
+		el.scrollIntoView({
+			behavior: 'smooth',
+			block: 'center',
+			inline: 'nearest',
+		})
+	}
+}
+
 export default defineComponent({
 	name: 'TaskDetailView',
 	compatConfig: { ATTR_FALSE_VALUE: false },
@@ -643,19 +663,15 @@ export default defineComponent({
 		setFieldActive(fieldName) {
 			this.activeFields[fieldName] = true
 			this.$nextTick(() => {
-				if (this.$refs[fieldName]) {
-					this.$refs[fieldName].$el.focus()
-
-					// scroll the field to the center of the screen if not in viewport already
-					const boundingRect = this.$refs[fieldName].$el.getBoundingClientRect()
-
-					if (boundingRect.top > (window.scrollY + window.innerHeight) || boundingRect.top < window.scrollY)
-						this.$refs[fieldName].$el.scrollIntoView({
-							behavior: 'smooth',
-							block: 'center',
-							inline: 'nearest',
-						})
+				const el = this.$refs[fieldName]?.$el
+				if (!el) {
+					return
 				}
+				
+				el.focus()
+
+				// scroll the field to the center of the screen if not in viewport already
+				scrollIntoView(el)
 			})
 		},
 
