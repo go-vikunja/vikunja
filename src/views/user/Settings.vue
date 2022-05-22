@@ -3,49 +3,9 @@
 		<div class="user-settings">
 			<nav class="navigation">
 				<ul>
-					<li>
-						<router-link :to="{name: 'user.settings.general'}">
-							{{ $t('user.settings.general.title') }}
-						</router-link>
-					</li>
-					<li v-if="isLocalUser">
-						<router-link :to="{name: 'user.settings.password-update'}">
-							{{ $t('user.settings.newPasswordTitle') }}
-						</router-link>
-					</li>
-					<li v-if="isLocalUser">
-						<router-link :to="{name: 'user.settings.email-update'}">
-							{{ $t('user.settings.updateEmailTitle') }}
-						</router-link>
-					</li>
-					<li>
-						<router-link :to="{name: 'user.settings.avatar'}">
-							{{ $t('user.settings.avatar.title') }}
-						</router-link>
-					</li>
-					<li v-if="totpEnabled">
-						<router-link :to="{name: 'user.settings.totp'}">
-							{{ $t('user.settings.totp.title') }}
-						</router-link>
-					</li>
-					<li>
-						<router-link :to="{name: 'user.settings.data-export'}">
-							{{ $t('user.export.title') }}
-						</router-link>
-					</li>
-					<li v-if="migratorsEnabled">
-						<router-link :to="{name: 'migrate.start'}">
-							{{ $t('migrate.title') }}
-						</router-link>
-					</li>
-					<li v-if="caldavEnabled">
-						<router-link :to="{name: 'user.settings.caldav'}">
-							{{ $t('user.settings.caldav.title') }}
-						</router-link>
-					</li>
-					<li>
-						<router-link :to="{name: 'user.settings.deletion'}">
-							{{ $t('user.deletion.title') }}
+					<li v-for="({routeName, title }, index) in navigationItems" :key="index">
+						<router-link :to="{name: routeName}">
+							{{ title }}
 						</router-link>
 					</li>
 				</ul>
@@ -70,6 +30,54 @@ const totpEnabled = computed(() => store.state.config.totpEnabled)
 const caldavEnabled = computed(() => store.state.config.caldavEnabled)
 const migratorsEnabled = computed(() => store.getters['config/migratorsEnabled'])
 const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
+
+const navigationItems = computed(() => {
+	const items = [
+		{
+			title: t('user.settings.general.title'),
+			routeName: 'user.settings.general',
+		},
+		{
+			title: t('user.settings.newPasswordTitle'),
+			routeName: 'user.settings.password-update',
+			condition: isLocalUser.value,
+		},
+		{
+			title: t('user.settings.updateEmailTitle'),
+			routeName: 'user.settings.email-update',
+			condition: isLocalUser.value,
+		},
+		{
+			title: t('user.settings.avatar.title'),
+			routeName: 'user.settings.avatar',
+		},
+		{
+			title: t('user.settings.totp.title'),
+			routeName: 'user.settings.totp',
+			condition: totpEnabled.value,
+		},
+		{
+			title: t('user.export.title'),
+			routeName: 'user.settings.data-export',
+		},
+		{
+			title: t('migrate.title'),
+			routeName: 'migrate.start',
+			condition: migratorsEnabled.value,
+		},
+		{
+			title: t('user.settings.caldav.title'),
+			routeName: 'user.settings.caldav',
+			condition: caldavEnabled.value,
+		},
+		{
+			title: t('user.deletion.title'),
+			routeName: 'user.settings.deletion',
+		},
+	]
+	
+	return items.filter(({condition}) => condition !== false)
+})
 </script>
 
 <style lang="scss" scoped>
