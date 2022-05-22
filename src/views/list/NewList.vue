@@ -1,5 +1,5 @@
 <template>
-	<create-edit :title="$t('list.create.header')" @create="newList()" :primary-disabled="list.title === ''">
+	<create-edit :title="$t('list.create.header')" @create="createNewList()" :primary-disabled="list.title === ''">
 		<div class="field">
 			<label class="label" for="listTitle">{{ $t('list.title') }}</label>
 			<div
@@ -8,7 +8,7 @@
 			>
 				<input
 					:class="{ disabled: listService.loading }"
-					@keyup.enter="newList()"
+					@keyup.enter="createNewList()"
 					@keyup.esc="$router.back()"
 					class="input"
 					:placeholder="$t('list.create.titlePlaceholder')"
@@ -31,45 +31,44 @@
 	</create-edit>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
-import ListService from '../../services/list'
-import ListModel from '../../models/list'
+<script setup lang="ts">
+import {ref, reactive, shallowReactive} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useRouter, useRoute} from 'vue-router'
+import {useStore} from 'vuex'
+
+import ListService from '@/services/list'
+import ListModel from '@/models/list'
 import CreateEdit from '@/components/misc/create-edit.vue'
-import ColorPicker from '../../components/input/colorPicker'
+import ColorPicker from '@/components/input/colorPicker.vue'
 
-export default defineComponent({
-	name: 'NewList',
-	data() {
-		return {
-			showError: false,
-			list: new ListModel(),
-			listService: new ListService(),
-		}
-	},
-	components: {
-		CreateEdit,
-		ColorPicker,
-	},
-	mounted() {
-		this.setTitle(this.$t('list.create.header'))
-	},
-	methods: {
-		async newList() {
-			if (this.list.title === '') {
-				this.showError = true
-				return
-			}
-			this.showError = false
+import { success } from '@/message'
+import { useTitle } from '@/composables/useTitle'
 
-			this.list.namespaceId = parseInt(this.$route.params.namespaceId)
-			const list = await this.$store.dispatch('lists/createList', this.list)
-			this.$message.success({message: this.$t('list.create.createdSuccess') })
-			this.$router.push({
-				name: 'list.index',
-				params: { listId: list.id },
-			})
-		},
-	},
-})
+const {t} = useI18n()
+const store = useStore()
+const router = useRouter()
+const route = useRoute()
+
+useTitle(() => t('list.create.header'))
+
+const showError = ref(false)
+const list = reactive(new ListModel())
+const listService = shallowReactive(new ListService())
+
+async function createNewList() {
+	if (list.title === '') {
+		showError.value = true
+		return
+	}
+	showError.value = false
+
+	list.namespaceId = parseInt(route.params.namespaceId)
+	const newList = await store.dispatch('lists/createList', list)
+	await router.push({
+		name: 'list.index',
+		params: { listId: newList.id },
+	})
+	success({message: t('list.create.createdSuccess') })
+}
 </script>
