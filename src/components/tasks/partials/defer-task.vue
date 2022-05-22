@@ -37,101 +37,99 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
-
-import TaskService from '../../../services/task'
+<script setup lang="ts">
+import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount} from 'vue'
+import {useStore} from 'vuex'
+import {useI18n} from 'vue-i18n'
 import flatPickr from 'vue-flatpickr-component'
 
-export default defineComponent({
-	name: 'defer-task',
-	data() {
-		return {
-			taskService: new TaskService(),
-			task: null,
-			// We're saving the due date seperately to prevent null errors in very short periods where the task is null.
-			dueDate: null,
-			lastValue: null,
-			changeInterval: null,
-		}
-	},
-	components: {
-		flatPickr,
-	},
-	props: {
-		modelValue: {
-			required: true,
-		},
-	},
-	emits: ['update:modelValue'],
+import TaskService from '@/services/task'
+import TaskModel from '@/models/task'
 
-	watch: {
-		modelValue: {
-			handler(value) {
-				this.task = value
-				this.dueDate = value.dueDate
-				this.lastValue = value.dueDate
-			},
-			immediate: true,
-		},
-	},
-	mounted() {
-		// Because we don't really have other ways of handling change since if we let flatpickr
-		// change events trigger updates, it would trigger a flatpickr change event which would trigger
-		// an update which would trigger a change event and so on...
-		// This is either a bug in flatpickr or in the vue component of it.
-		// To work around that, we're only updating if something changed and check each second and when closing the popup.
-		if (this.changeInterval) {
-			clearInterval(this.changeInterval)
-		}
-
-		this.changeInterval = setInterval(this.updateDueDate, 1000)
-	},
-	beforeUnmount() {
-		if (this.changeInterval) {
-			clearInterval(this.changeInterval)
-		}
-		this.updateDueDate()
-	},
-	computed: {
-		flatPickerConfig() {
-			return {
-				altFormat: this.$t('date.altFormatLong'),
-				altInput: true,
-				dateFormat: 'Y-m-d H:i',
-				enableTime: true,
-				time_24hr: true,
-				inline: true,
-				locale: {
-					firstDayOfWeek: this.$store.state.auth.settings.weekStart,
-				},
-			}
-		},
-	},
-	methods: {
-		deferDays(days) {
-			this.dueDate = new Date(this.dueDate)
-			this.dueDate = this.dueDate.setDate(this.dueDate.getDate() + days)
-			this.updateDueDate()
-		},
-
-		async updateDueDate() {
-			if (!this.dueDate) {
-				return
-			}
-
-			if (+new Date(this.dueDate) === +this.lastValue) {
-				return
-			}
-
-			this.task.dueDate = new Date(this.dueDate)
-			const task = await this.taskService.update(this.task)
-			this.lastValue = task.dueDate
-			this.task = task
-			this.$emit('update:modelValue', task)
-		},
+const props = defineProps({
+	modelValue: {
+		type: TaskModel,
+		required: true,
 	},
 })
+const emit = defineEmits(['update:modelValue'])
+
+const {t} = useI18n()
+const store = useStore()
+
+const taskService = shallowReactive(new TaskService())
+const task = ref<TaskModel>()
+
+// We're saving the due date seperately to prevent null errors in very short periods where the task is null.
+const dueDate = ref<Date>()
+const lastValue = ref<Date>()
+const changeInterval = ref<number>()
+
+watch(
+	() => props.modelValue,
+	(value) => {
+		task.value = value
+		dueDate.value = value.dueDate
+		lastValue.value = value.dueDate
+	},
+	{immediate: true},
+)
+
+onMounted(() => {
+	// Because we don't really have other ways of handling change since if we let flatpickr
+	// change events trigger updates, it would trigger a flatpickr change event which would trigger
+	// an update which would trigger a change event and so on...
+	// This is either a bug in flatpickr or in the vue component of it.
+	// To work around that, we're only updating if something changed and check each second and when closing the popup.
+	if (changeInterval.value) {
+		clearInterval(changeInterval.value)
+	}
+
+	changeInterval.value = setInterval(updateDueDate, 1000)
+})
+
+onBeforeUnmount(() => {
+	if (changeInterval.value) {
+		clearInterval(changeInterval.value)
+	}
+	updateDueDate()
+})
+
+const flatPickerConfig = computed(() => ({
+	altFormat: t('date.altFormatLong'),
+	altInput: true,
+	dateFormat: 'Y-m-d H:i',
+	enableTime: true,
+	time_24hr: true,
+	inline: true,
+	locale: {
+		firstDayOfWeek: store.state.auth.settings.weekStart,
+	},
+}))
+
+function deferDays(days: number) {
+	dueDate.value = new Date(dueDate.value)
+	const currentDate = new Date(dueDate.value).getDate()
+	dueDate.value = new Date(dueDate.value).setDate(currentDate + days)
+	updateDueDate()
+}
+
+async function updateDueDate() {
+	if (!dueDate.value) {
+		return
+	}
+
+	if (+new Date(dueDate.value) === +lastValue.value) {
+		return
+	}
+
+	// FIXME: direct prop manipulation
+	task.value.dueDate = new Date(dueDate.value)
+	const newTask = await taskService.update(task.value)
+	lastValue.value = newTask.dueDate
+	task.value = newTask
+	emit('update:modelValue', newTask)
+}
 </script>
 
 <style lang="scss" scoped>
