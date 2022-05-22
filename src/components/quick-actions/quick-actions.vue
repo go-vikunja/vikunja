@@ -1,6 +1,6 @@
 <template>
-	<modal v-if="active" class="quick-actions" @close="closeQuickActions" :overflow="isNewTaskCommand">
-		<div class="card">
+	<modal v-if="active" @close="closeQuickActions" :overflow="isNewTaskCommand">
+		<div class="card quick-actions">
 			<div class="action-input" :class="{'has-active-cmd': selectedCmd !== null}">
 				<div class="active-cmd tag" v-if="selectedCmd !== null">
 					{{ selectedCmd.title }}
