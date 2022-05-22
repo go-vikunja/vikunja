@@ -29,65 +29,62 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script setup lang="ts">
+import {ref,computed, watch} from 'vue'
+import {useStore} from 'vuex'
 
-import AsyncEditor from '@/components/input/AsyncEditor'
+import Editor from '@/components/input/AsyncEditor'
 
-import {LOADING} from '@/store/mutation-types'
-import {mapState} from 'vuex'
+import TaskModel from '@/models/task'
 
-export default defineComponent({
-	name: 'description',
-	components: {
-		Editor: AsyncEditor,
-	},
-	data() {
-		return {
-			task: {description: ''},
-			saved: false,
-			saving: false, // Since loading is global state, this variable ensures we're only showing the saving icon when saving the description.
-		}
-	},
-	computed: mapState({
-		loading: LOADING,
-	}),
-	props: {
-		modelValue: {
-			required: true,
-		},
-		attachmentUpload: {
-			required: true,
-		},
-		canWrite: {
-			required: true,
-		},
-	},
-	emits: ['update:modelValue'],
-	watch: {
-		modelValue: {
-			handler(value) {
-				this.task = value
-			},
-			immediate: true,
-		},
-	},
-	methods: {
-		async save() {
-			this.saving = true
 
-			try {
-				this.task = await this.$store.dispatch('tasks/update', this.task)
-				this.$emit('update:modelValue', this.task)
-				this.saved = true
-				setTimeout(() => {
-					this.saved = false
-				}, 2000)
-			} finally {
-				this.saving = false
-			}
-		},
+const props = defineProps({
+	modelValue: {
+		type: TaskModel,
+		required: true,
+	},
+	attachmentUpload: {
+		required: true,
+	},
+	canWrite: {
+		required: true,
 	},
 })
+
+const emit = defineEmits(['update:modelValue'])
+
+const task = ref<TaskModel>({description: ''})
+const saved = ref(false)
+
+// Since loading is global state, this variable ensures we're only showing the saving icon when saving the description.
+const saving = ref(false)
+
+const store = useStore()
+const loading = computed(() => store.state.loading)
+
+watch(
+	() => props.modelValue,
+	(value) => {
+		task.value = value
+	},
+	{immediate: true},
+)
+
+async function save() {
+	saving.value = true
+
+	try {
+		// FIXME: don't update state from internal.
+		task.value = await store.dispatch('tasks/update', task.value)
+		emit('update:modelValue', task.value)
+
+		saved.value = true
+		setTimeout(() => {
+			saved.value = false
+		}, 2000)
+	} finally {
+		saving.value = false
+	}
+}
 </script>
 
