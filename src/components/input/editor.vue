@@ -50,7 +50,7 @@
 <script lang="ts">
 import {defineComponent} from 'vue'
 
-import VueEasymde from './vue-easymde/vue-easymde.vue'
+import VueEasymde from './vue-easymde.vue'
 import {marked} from 'marked'
 import DOMPurify from 'dompurify'
 import hljs from 'highlight.js/lib/common'
@@ -316,7 +316,6 @@ export default defineComponent({
 
 <style lang="scss">
 @import 'codemirror/lib/codemirror.css';
-@import './vue-easymde/vue-easymde.css';
 @import 'highlight.js/scss/base16/equilibrium-gray-light';
 
 .editor {

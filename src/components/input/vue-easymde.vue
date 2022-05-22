@@ -1,3 +1,150 @@
+<template>
+  <div class="vue-easymde" ref="easymdeRef">
+    <textarea
+      class="vue-simplemde-textarea"
+      :name="name"
+      :value="modelValue"
+      @input="handleInput($event.target.value)"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import {ref, watch, onMounted, onDeactivated, onBeforeUnmount, nextTick, shallowReactive} from 'vue'
+import type { ShallowReactive } from 'vue'
+
+import EasyMDE from 'easymde'
+import {marked} from 'marked'
+
+const props = defineProps({
+	modelValue: String,
+	name: String,
+	previewClass: String,
+	autoinit: {
+		type: Boolean,
+		default: true,
+	},
+	highlight: {
+		type: Boolean,
+		default: false,
+	},
+	sanitize: {
+		type: Boolean,
+		default: false,
+	},
+	configs: {
+		type: Object,
+		default: () => ({}),
+	},
+	previewRender: {
+		type: Function,
+	},
+})
+
+const emit = defineEmits(['update:modelValue', 'blur', 'initialized'])
+
+const isValueUpdateFromInner = ref(false)
+let easymde: ShallowReactive<EasyMDE> | undefined
+
+onMounted(() => {
+	if (props.autoinit) initialize()
+})
+
+onDeactivated(() => {
+	if (!easymde) return
+	const isFullScreen = easymde.codemirror.getOption('fullScreen')
+	if (isFullScreen) easymde.toggleFullScreen()
+})
+
+onBeforeUnmount(() => {
+	if (easymde) {
+		easymde.toTextArea()
+		easymde.cleanup()
+		easymde = undefined
+	}
+})
+
+const easymdeRef = ref<HTMLElement | null>(null)
+
+function initialize() {
+	const configs = Object.assign({
+		element: easymdeRef.value?.firstElementChild,
+		initialValue: props.modelValue,
+		previewRender: props.previewRender,
+		renderingConfig: {},
+	}, props.configs)
+
+	// Synchronize the values of value and initialValue
+	if (configs.initialValue) {
+		emit('update:modelValue', configs.initialValue)
+	}
+
+	// Determine whether to enable code highlighting
+	if (props.highlight) {
+		configs.renderingConfig.codeSyntaxHighlighting = true
+	}
+
+	// Set whether to render the input html
+	marked.setOptions({ sanitize: props.sanitize })
+
+	// Instantiated editor
+	easymde = shallowReactive(new EasyMDE(configs))
+
+	// Add a custom previewClass
+	const className = props.previewClass || ''
+	addPreviewClass(className)
+
+	// Binding event
+	bindingEvents()
+
+	nextTick(() => emit('initialized', easymde))
+}
+
+function addPreviewClass(className: string) {
+	const wrapper = easymde.codemirror.getWrapperElement()
+	const preview = document.createElement('div')
+	wrapper.nextSibling.className += ` ${className}`
+	preview.className = `editor-preview ${className}`
+	wrapper.appendChild(preview)
+}
+
+function bindingEvents() {
+	easymde.codemirror.on('change', handleCodemirrorInput)
+	easymde.codemirror.on('blur', handleCodemirrorBlur)
+}
+
+function handleCodemirrorInput(instance, changeObj)  {
+	if (changeObj.origin === 'setValue') {
+		return
+	}
+	const val = easymde.value()
+	handleInput(val)
+}
+
+function handleCodemirrorBlur() {
+	const val = easymde.value()
+	isValueUpdateFromInner.value = true
+	emit('blur', val)
+}
+
+function handleInput(val) {
+	isValueUpdateFromInner.value = true
+	emit('update:modelValue', val)
+}
+
+watch(
+	() => props.modelValue,
+	(val) => {
+		if (isValueUpdateFromInner.value) {
+			isValueUpdateFromInner.value = false
+		} else {
+			easymde.value(val)
+		}
+	},
+)
+</script>
+
+<style lang="scss">
 .EasyMDEContainer {
     display: block;
 }
@@ -58,10 +205,6 @@
 
 .editor-toolbar {
     position: relative;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    -o-user-select: none;
     user-select: none;
     padding: 9px 10px;
     border-top: 1px solid #bbb;
@@ -89,11 +232,6 @@
 .editor-toolbar.fullscreen::before {
     width: 20px;
     height: 50px;
-    background: -moz-linear-gradient(left, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 100%);
-    background: -webkit-gradient(linear, left top, right top, color-stop(0%, rgba(255, 255, 255, 1)), color-stop(100%, rgba(255, 255, 255, 0)));
-    background: -webkit-linear-gradient(left, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 100%);
-    background: -o-linear-gradient(left, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 100%);
-    background: -ms-linear-gradient(left, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 100%);
     background: linear-gradient(to right, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 100%);
     position: fixed;
     top: 0;
@@ -105,11 +243,6 @@
 .editor-toolbar.fullscreen::after {
     width: 20px;
     height: 50px;
-    background: -moz-linear-gradient(left, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%);
-    background: -webkit-gradient(linear, left top, right top, color-stop(0%, rgba(255, 255, 255, 0)), color-stop(100%, rgba(255, 255, 255, 1)));
-    background: -webkit-linear-gradient(left, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%);
-    background: -o-linear-gradient(left, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%);
-    background: -ms-linear-gradient(left, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%);
     background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%);
     position: fixed;
     top: 0;
@@ -372,3 +505,15 @@ span[data-img-src]::after{
     width: var(--width);
     background-repeat: no-repeat;
 }
+</style>
+
+<style lang="scss" scoped>
+.vue-easymde .markdown-body {
+	padding: 0.5em
+}
+
+.vue-easymde .editor-preview-active,
+.vue-easymde .editor-preview-active-side {
+	display: block;
+}
+</style>
