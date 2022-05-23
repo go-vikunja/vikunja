@@ -203,6 +203,11 @@ func RegisterRoutes(e *echo.Echo) {
 	// healthcheck
 	e.GET("/health", HealthcheckHandler)
 
+	// static files
+	if static := config.ServiceStaticpath.GetString(); static != "" {
+		e.Use(middleware.Static(static))
+	}
+
 	// CORS_SHIT
 	if config.CorsEnable.GetBool() {
 		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{

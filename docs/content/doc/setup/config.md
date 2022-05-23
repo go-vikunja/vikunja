@@ -161,6 +161,17 @@ Full path: `service.rootpath`
 Environment path: `VIKUNJA_SERVICE_ROOTPATH`
 
 
+### staticpath
+
+Path on the file system to serve static files from. Set to the path of the frontend files to host frontend alongside the api.
+
+Default: `<empty>`
+
+Full path: `service.staticpath`
+
+Environment path: `VIKUNJA_SERVICE_STATICPATH`
+
+
 ### maxitemsperpage
 
 The max number of items which can be returned per page
@@ -426,15 +437,17 @@ Full path: `database.sslmode`
 
 Environment path: `VIKUNJA_DATABASE_SSLMODE`
 
+
 ### sslcert
 
 The path to the client cert. Only used with postgres.
-  
+
 Default: `<empty>`
 
 Full path: `database.sslcert`
 
 Environment path: `VIKUNJA_DATABASE_SSLCERT`
+
 
 ### sslkey
 
@@ -446,6 +459,7 @@ Full path: `database.sslkey`
 
 Environment path: `VIKUNJA_DATABASE_SSLKEY`
 
+
 ### sslrootcert
 
 The path to the ca cert. Only used with postgres.
@@ -455,6 +469,7 @@ Default: `<empty>`
 Full path: `database.sslrootcert`
 
 Environment path: `VIKUNJA_DATABASE_SSLROOTCERT`
+
 
 ### tls
 
