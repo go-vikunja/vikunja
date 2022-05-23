@@ -84,7 +84,7 @@ server {
 
 1. Create a standard Proxy Host for the Vikunja Frontend within NPM and point it to the URL you plan to use. The next several steps will enable the Proxy Host to successfully navigate to the API (on port 3456).
 2. Verify that the page will pull up in your browser. (Do not bother trying to log in. It won't work. Trust me.)
-4. Go back and edit the proxy host for Vikunja, and this time go to the Custom Locations tab, and add the following.location bar to enter  
+3. Go back and edit the proxy host for Vikunja, and this time go to the Custom Locations tab, and add the following.location bar to enter  
 ```
  ~* ^/(api|dav|\.well-known)/ {
 ```
@@ -95,8 +95,10 @@ client_max_body_size 20M;
 It should end up looking like this.
 Replace "api" with the IP address of your API container if needed.
 ![image](https://user-images.githubusercontent.com/724777/169915063-40bb6b0a-4e92-40b7-b089-beb98d4ebc0a.png)
+
 Finally, click save.
-5. Now, switch over to your Vikunja browswer window and hit refresh. If you configured your URL correctly in original Vikunja container, you should be all set and the browser will correctly show Vikunja. If not, you'll need to adjust the address in the top of the login subscreen to match your proxy address.
+
+4. Now, switch over to your Vikunja browswer window and hit refresh. If you configured your URL correctly in original Vikunja container, you should be all set and the browser will correctly show Vikunja. If not, you'll need to adjust the address in the top of the login subscreen to match your proxy address.
 
 ## Apache
 
