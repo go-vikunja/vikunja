@@ -392,6 +392,18 @@ func InitConfig() {
 	viper.AddConfigPath(".")
 	viper.SetConfigName("config")
 
+	err = viper.ReadInConfig()
+	if viper.ConfigFileUsed() != "" {
+		log.Printf("Using config file: %s", viper.ConfigFileUsed())
+
+		if err != nil {
+			log.Println(err.Error())
+			log.Println("Using default config.")
+		}
+	} else {
+		log.Println("No config file found, using default or config from environment variables.")
+	}
+
 	if CacheType.GetString() == "keyvalue" {
 		CacheType.Set(KeyvalueType.GetString())
 	}
@@ -423,19 +435,6 @@ func InitConfig() {
 	if ServiceEnableMetrics.GetBool() {
 		log.Println("WARNING: service.enablemetrics is deprecated and will be removed in a future release. Please use metrics.enable.")
 		MetricsEnabled.Set(true)
-	}
-
-	err = viper.ReadInConfig()
-	if viper.ConfigFileUsed() != "" {
-		log.Printf("Using config file: %s", viper.ConfigFileUsed())
-
-		if err != nil {
-			log.Println(err.Error())
-			log.Println("Using default config.")
-			return
-		}
-	} else {
-		log.Println("No config file found, using default or config from environment variables.")
 	}
 }
 
