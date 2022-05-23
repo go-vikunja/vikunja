@@ -58,7 +58,7 @@
 			>
 				<add-task
 					@taskAdded="updateTaskList"
-					ref="newTaskInput"
+					ref="addTask"
 					:default-position="firstNewPosition"
 				/>
 			</template>
@@ -262,7 +262,7 @@ export default defineComponent({
 			}, 200)
 		},
 		focusNewTaskInput() {
-			this.$refs.newTaskInput.focus()
+			this.$refs.addTask.$refs.newTaskInput.focus()
 		},
 		updateTaskList( task ) {
 			if ( this.isAlphabeticalSorting ) {
