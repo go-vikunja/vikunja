@@ -81,7 +81,7 @@ import CaldavTokenModel from '@/models/caldavToken'
 
 const copy = useCopyToClipboard()
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.caldav.title')} - ${t('user.settings.title')}`)
 
 const service = shallowReactive(new CaldavTokenService())

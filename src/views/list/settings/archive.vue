@@ -27,7 +27,7 @@ import ListService from '@/services/list'
 import { success } from '@/message'
 import { useTitle } from '@/composables/useTitle'
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 const store = useStore()
 const router = useRouter()
 const route = useRoute()

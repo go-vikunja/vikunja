@@ -68,7 +68,7 @@ import SavedFilterService from '@/services/savedFilter'
 import {objectToSnakeCase} from '@/helpers/case'
 import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
 
-const { t } = useI18n()
+const { t } = useI18n({useScope: 'global'})
 
 function useSavedFilter(listId) {
 	const filterService = shallowRef(new SavedFilterService())

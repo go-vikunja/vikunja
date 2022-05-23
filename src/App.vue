@@ -48,7 +48,7 @@ const keyboardShortcutsActive = computed(() => store.state.keyboardShortcutsActi
 const authUser = computed(() => store.getters['auth/authUser'])
 const authLinkShare = computed(() => store.getters['auth/authLinkShare'])
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 
 // setup account deletion verification
 const accountDeletionConfirm = useRouteQuery('accountDeletionConfirm') as Ref<null | string>

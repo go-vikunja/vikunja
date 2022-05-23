@@ -179,7 +179,7 @@ const props = defineProps({
 	},
 })
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 
 // This user service is either a userNamespaceService or a userListService, depending on the type we are using
 let stuffService: ShallowReactive<UserNamespaceService | UserListService | TeamListService | TeamNamespaceService>

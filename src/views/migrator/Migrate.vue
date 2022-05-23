@@ -28,7 +28,7 @@ import {useStore} from 'vuex'
 import {MIGRATORS} from './migrators'
 import {useTitle} from '@/composables/useTitle'
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 const store = useStore()
 
 useTitle(() => t('migrate.title'))

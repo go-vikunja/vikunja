@@ -53,7 +53,7 @@ import EmailUpdateModel from '@/models/emailUpdate'
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.updateEmailTitle')} - ${t('user.settings.title')}`)
 
 const store = useStore()

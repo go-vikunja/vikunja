@@ -45,7 +45,7 @@ import CreateEdit from '@/components/misc/create-edit.vue'
 import LinkSharing from '@/components/sharing/linkSharing.vue'
 import userTeam from '@/components/sharing/userTeam.vue'
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 
 const list = ref()
 const title = computed(() => list.value?.title

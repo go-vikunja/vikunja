@@ -159,13 +159,13 @@ import {AuthenticatedHTTPFactory} from '@/http-common'
 import {useColorScheme} from '@/composables/useColorScheme'
 import { useTitle } from '@/composables/useTitle'
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.general.title')} - ${t('user.settings.title')}`)
 
 const DEFAULT_LIST_ID = 0
 
 function useColorSchemeSetting() {
-	const {t} = useI18n()
+	const {t} = useI18n({useScope: 'global'})
 	const colorSchemeSettings = computed(() => ({
 		light: t('user.settings.appearance.colorScheme.light'),
 		auto: t('user.settings.appearance.colorScheme.system'),

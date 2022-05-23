@@ -133,7 +133,7 @@ const emit = defineEmits(['taskAdded'])
 const newTaskTitle = ref('')
 const newTaskInput = useAutoHeightTextarea(newTaskTitle)
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 const store = useStore()
 
 const taskService = shallowReactive(new TaskService())

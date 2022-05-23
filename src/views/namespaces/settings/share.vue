@@ -41,7 +41,7 @@ import NamespaceModel from '@/models/namespace'
 import CreateEdit from '@/components/misc/create-edit.vue'
 import manageSharing from '@/components/sharing/userTeam.vue'
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 
 const namespace = ref()
 

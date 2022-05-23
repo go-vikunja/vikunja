@@ -41,7 +41,7 @@ import {useTitle} from '@vueuse/core'
 
 import Message from '@/components/misc/message.vue'
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 useTitle(t('sharing.authenticating'))
 
 function useAuth() {

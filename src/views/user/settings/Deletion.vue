@@ -100,7 +100,7 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.deletion.title')} - ${t('user.settings.title')}`)
 
 const accountDeleteService = shallowReactive(new AccountDeleteService())

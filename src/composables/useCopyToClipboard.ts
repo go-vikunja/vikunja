@@ -2,7 +2,7 @@ import {error} from '@/message'
 import {useI18n} from 'vue-i18n'
 
 export function useCopyToClipboard() {
-	const {t} = useI18n()
+	const {t} = useI18n({useScope: 'global'})
 
 	return async (text: string) => {
 		try {

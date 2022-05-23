@@ -77,7 +77,7 @@ import AvatarModel from '@/models/avatar'
 import { useTitle } from '@/composables/useTitle'
 import { success } from '@/message'
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 const store = useStore()
 
 const AVATAR_PROVIDERS = {

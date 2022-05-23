@@ -173,7 +173,7 @@ const props = defineProps({
 	},
 })
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 const store = useStore()
 
 const comments = ref<TaskCommentModel[]>([])

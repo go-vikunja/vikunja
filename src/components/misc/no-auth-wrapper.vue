@@ -38,7 +38,7 @@ import {useTitle} from '@/composables/useTitle'
 
 const route = useRoute()
 const store = useStore()
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 
 const motd = computed(() => store.state.config.motd)
 

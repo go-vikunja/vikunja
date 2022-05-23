@@ -67,7 +67,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'change'])
 
 const store = useStore()
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 
 const labelTaskService = shallowReactive(new LabelTaskService())
 const labels = ref<LabelModel[]>([])

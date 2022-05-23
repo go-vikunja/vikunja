@@ -83,7 +83,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import DatemathHelp from '@/components/date/datemathHelp.vue'
 
 const store = useStore()
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 
 const emit = defineEmits(['dateChanged'])
 

@@ -74,7 +74,7 @@ const passwordUpdateService = shallowReactive(new PasswordUpdateService())
 const passwordUpdate = reactive(new PasswordUpdateModel())
 const passwordConfirm = ref('')
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 const store = useStore()
 useTitle(() => `${t('user.settings.newPasswordTitle')} - ${t('user.settings.title')}`)
 

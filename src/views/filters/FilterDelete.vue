@@ -21,7 +21,7 @@ import SavedFilterModel from '@/models/savedFilter'
 import SavedFilterService from '@/services/savedFilter'
 import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
 
-const { t } = useI18n()
+const { t } = useI18n({useScope: 'global'})
 const router = useRouter()
 const route = useRoute()
 

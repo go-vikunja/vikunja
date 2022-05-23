@@ -36,7 +36,7 @@ import {success} from '@/message'
 import TaskCollectionService from '@/services/taskCollection'
 import Loading from '@/components/misc/loading.vue'
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 const store = useStore()
 const route = useRoute()
 const router = useRouter()

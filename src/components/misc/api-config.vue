@@ -70,7 +70,7 @@ watch(() => props.configureOpen, (value) => {
 }, {immediate: true})
 
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 
 const errorMsg = ref('')
 const successMsg = ref('')

@@ -55,7 +55,7 @@ import DataExportService from '@/services/dataExport'
 import { useTitle } from '@/composables/useTitle'
 import {success} from '@/message'
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 const store = useStore()
 
 useTitle(() => `${t('user.export.title')} - ${t('user.settings.title')}`)

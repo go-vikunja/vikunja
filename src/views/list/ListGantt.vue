@@ -91,7 +91,7 @@ const now = ref(new Date())
 const dateFrom = ref(new Date((new Date()).setDate(now.value.getDate() - 15)))
 const dateTo = ref(new Date((new Date()).setDate(now.value.getDate() + 30)))
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 const store = useStore()
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatShort'),

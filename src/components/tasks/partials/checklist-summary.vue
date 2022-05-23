@@ -34,7 +34,7 @@ const checklistCircleDone = computed(() => {
 	return ((100 - progress) / 100) * c
 })
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 const label = computed(() => {
 	return checklist.value.total === checklist.value.checked 
 		? t('task.checklistAllDone', checklist.value)

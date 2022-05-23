@@ -64,7 +64,7 @@ import LlamaCool from '@/assets/llama-cool.svg?component'
 const store = useStore()
 const route = useRoute()
 const router = useRouter()
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 
 const tasks = ref<TaskModel[]>([])
 const showNothingToDo = ref<boolean>(false)

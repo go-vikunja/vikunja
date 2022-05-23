@@ -28,22 +28,21 @@
 					{{ $t('misc.cancel') }}
 				</x-button>
 				<x-button
-					v-if="primaryLabel !== ''"
 					variant="primary"
 					@click.prevent.stop="primary()"
 					:icon="primaryIcon"
 					:disabled="primaryDisabled"
 				>
-					{{ primaryLabel }}
+					{{ primaryLabel || $t('misc.create') }}
 				</x-button>
 			</footer>
 		</card>
 	</modal>
 </template>
 
+<script lang="ts">
+</script>
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
-
 defineProps({
 	title: {
 		type: String,
@@ -51,10 +50,6 @@ defineProps({
 	},
 	primaryLabel: {
 		type: String,
-		default() {
-			const {t} = useI18n()
-			return t('misc.create')
-		},
 	},
 	primaryIcon: {
 		type: String,

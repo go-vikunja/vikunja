@@ -90,7 +90,7 @@ import ColorPicker from '../input/colorPicker.vue'
 
 import {success} from '@/message'
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
 
 const props = defineProps({

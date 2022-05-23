@@ -23,7 +23,7 @@ import { store } from '@/store'
 import { useI18n } from 'vue-i18n'
 import { useTitle } from '@/composables/useTitle'
 
-const { t } = useI18n()
+const { t } = useI18n({useScope: 'global'})
 useTitle(() => t('user.settings.title'))
 
 const totpEnabled = computed(() => store.state.config.totpEnabled)

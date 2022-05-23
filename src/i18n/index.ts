@@ -4,7 +4,9 @@ import langEN from './lang/en.json'
 export const i18n = createI18n({
 	locale: 'en', // set locale
 	fallbackLocale: 'en',
+	legacy: true,
 	globalInjection: true,
+	allowComposition: true,
 	messages: {
 		en: langEN,
 	},
@@ -26,9 +28,9 @@ export const availableLanguages = {
 
 const loadedLanguages = ['en'] // our default language that is preloaded
 
-const setI18nLanguage = lang => {
+const setI18nLanguage = (lang: string) => {
 	i18n.global.locale = lang
-	document.querySelector('html').setAttribute('lang', lang)
+	document.documentElement.lang =lang
 	return lang
 }
 
@@ -73,7 +75,7 @@ export const getCurrentLanguage = () => {
 	return 'en'
 }
 
-export const saveLanguage = lang => {
+export const saveLanguage = (lang: string) => {
 	localStorage.setItem('language', lang)
 	setLanguage()
 }

@@ -60,7 +60,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const store = useStore()
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 
 const listUserService = shallowReactive(new ListUserService())
 const foundUsers = ref([])

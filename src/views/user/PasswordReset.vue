@@ -66,7 +66,7 @@ import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
 import Message from '@/components/misc/message.vue'
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 
 const credentials = reactive({
 	password: '',

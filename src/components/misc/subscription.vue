@@ -51,7 +51,7 @@ const emit = defineEmits(['change'])
 
 const subscriptionService = shallowRef(new SubscriptionService())
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 const tooltipText = computed(() => {
 	if (disabled.value) {
 		return t('task.subscription.subscribedThroughParent', {

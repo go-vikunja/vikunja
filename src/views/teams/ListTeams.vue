@@ -32,7 +32,7 @@ import { useI18n } from 'vue-i18n'
 import TeamService from '@/services/team'
 import { useTitle } from '@/composables/useTitle'
 
-const { t } = useI18n()
+const { t } = useI18n({useScope: 'global'})
 useTitle(() => t('team.title'))
 
 const teams = ref([])

@@ -37,7 +37,7 @@ import { useTitle } from '@/composables/useTitle'
 import { useNameSpaceSearch } from '@/composables/useNamespaceSearch'
 
 
-const { t } = useI18n()
+const { t } = useI18n({useScope: 'global'})
 useTitle(() => t('list.duplicate.title'))
 
 
