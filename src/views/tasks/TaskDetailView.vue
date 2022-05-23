@@ -319,6 +319,7 @@
 							@click="setFieldActive('reminders')"
 							variant="secondary"
 							:icon="['far', 'clock']"
+							v-shortcut="'Alt+r'"
 						>
 							{{ $t('task.detail.actions.reminders') }}
 						</x-button>
