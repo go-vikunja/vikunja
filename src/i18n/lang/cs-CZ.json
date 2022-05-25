@@ -860,7 +860,8 @@
       "attachment": "Přidat přílohu k tomuto úkolu",
       "related": "Upravit související úkoly tohoto úkolu",
       "color": "Změnit barvu tohoto úkolu",
-      "move": "Přesunout tento úkol do jiného seznamu"
+      "move": "Přesunout tento úkol do jiného seznamu",
+      "reminder": "Manage reminders of this task"
     },
     "list": {
       "title": "Zobrazení seznamů",

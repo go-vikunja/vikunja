@@ -860,7 +860,8 @@
       "attachment": "Adicionar um anexo a esta tarefa",
       "related": "Modificar as tarefas relacionadas desta tarefa",
       "color": "Alterar a cor desta tarefa",
-      "move": "Mover esta tarefa para outra lista"
+      "move": "Mover esta tarefa para outra lista",
+      "reminder": "Gerir lembretes desta tarefa"
     },
     "list": {
       "title": "Visualização em Lista",

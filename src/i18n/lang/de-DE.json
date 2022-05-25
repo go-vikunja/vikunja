@@ -860,7 +860,8 @@
       "attachment": "Einen Anhang dieser Aufgabe hinzufügen",
       "related": "Ändere die Abhängigen Aufgaben dieser Aufgabe",
       "color": "Die Farbe dieser Aufgabe ändern",
-      "move": "Diese Aufgabe in eine andere Liste verschieben"
+      "move": "Diese Aufgabe in eine andere Liste verschieben",
+      "reminder": "Erinnerungen für diese Aufgabe verwalten"
     },
     "list": {
       "title": "Listenansicht",

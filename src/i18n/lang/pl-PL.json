@@ -860,7 +860,8 @@
       "attachment": "Dodaj załącznik do tego zadania",
       "related": "Zmodyfikuj zadania powiązane z tym zadaniem",
       "color": "Zmień kolor tego zadania",
-      "move": "Przenieś to zadanie do innej listy"
+      "move": "Przenieś to zadanie do innej listy",
+      "reminder": "Zarządzaj przypomnieniami o tym zadaniu"
     },
     "list": {
       "title": "Widoki listy",

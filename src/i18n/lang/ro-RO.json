@@ -860,7 +860,8 @@
       "attachment": "Add an attachment to this task",
       "related": "Modify related tasks of this task",
       "color": "Change the color of this task",
-      "move": "Move this task to another list"
+      "move": "Move this task to another list",
+      "reminder": "Manage reminders of this task"
     },
     "list": {
       "title": "List Views",

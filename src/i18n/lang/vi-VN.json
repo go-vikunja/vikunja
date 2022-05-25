@@ -860,7 +860,8 @@
       "attachment": "Thêm tệp đính kèm cho công việc này",
       "related": "Sửa đổi các công việc liên kết",
       "color": "Thay đổi màu công việc này",
-      "move": "Dời công việc này sang danh sách khác"
+      "move": "Dời công việc này sang danh sách khác",
+      "reminder": "Manage reminders of this task"
     },
     "list": {
       "title": "Xem danh sách",

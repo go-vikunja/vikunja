@@ -860,7 +860,8 @@
       "attachment": "Ajouter une pièce jointe à cette tâche",
       "related": "Modifier les tâches connexes de cette tâche",
       "color": "Changer la couleur de cette tâche",
-      "move": "Déplacer cette tâche dans une autre liste"
+      "move": "Déplacer cette tâche dans une autre liste",
+      "reminder": "Manage reminders of this task"
     },
     "list": {
       "title": "Vues en liste",

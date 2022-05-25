@@ -111,7 +111,7 @@
         "createToken": "Crea un token",
         "tokenCreated": "Ecco il token: {token}",
         "wontSeeItAgain": "Scrivetelo, non potrai più vederlo in futuro.",
-        "mustUseToken": "You need to create a CalDAV token if you want to use CalDAV with a third party client. Use the token as the password.",
+        "mustUseToken": "È necessario creare un token CalDAV se desideri utilizzare CalDAV con un client di terze parti. Usa il token come password.",
         "usernameIs": "Il tuo nome utente è: {0}"
       },
       "avatar": {
@@ -202,8 +202,8 @@
       "text1": "Sei sicuro di voler eliminare questa lista e tutti i suoi contenuti?",
       "text2": "Questo include tutte le attività e NON PUÒ ESSERE RIPRISTINATO!",
       "success": "La lista è stata eliminata con successo.",
-      "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
-      "noTasksToDelete": "This list does not contain any tasks, it should be safe to delete."
+      "tasksToDelete": "Questo eliminerà definitivamente circa {count} attività.",
+      "noTasksToDelete": "Questo elenco non contiene alcuna attività, puoi eliminarlo in sicurezza."
     },
     "duplicate": {
       "title": "Duplica questa lista",
@@ -334,7 +334,7 @@
     "create": {
       "title": "Nuovo namespace",
       "titleRequired": "Specifica un titolo.",
-      "explanation": "A namespace is a collection of lists you can share and use to organize your lists with. In fact, every list belongs to a namespace.",
+      "explanation": "Una collezione è una raccolta di liste che puoi condividere e che puoi usare per organizzare le tue liste. Infatti, ogni lista appartiene a una collezione.",
       "tooltip": "Che cos'è un namespace?",
       "success": "Namespace creato."
     },
@@ -478,7 +478,7 @@
     "refresh": "Aggiorna",
     "disable": "Disabilita",
     "copy": "Copia negli appunti",
-    "copyError": "Copy to clipboard failed",
+    "copyError": "Copia negli appunti fallita",
     "search": "Cerca",
     "searchPlaceholder": "Digita per cercare…",
     "previous": "Precedente",
@@ -496,11 +496,11 @@
     "hideMenu": "Nascondi il menù",
     "forExample": "Ad esempio:",
     "welcomeBack": "Bentornato!",
-    "custom": "Custom",
+    "custom": "Personalizzato",
     "id": "ID",
-    "created": "Created at",
+    "created": "Creato il",
     "actions": "Azioni",
-    "cannotBeUndone": "This cannot be undone!"
+    "cannotBeUndone": "Questa azione non può essere annullata!"
   },
   "input": {
     "resetColor": "Ripristina Colore",
@@ -543,35 +543,35 @@
     "datepickerRange": {
       "to": "A",
       "from": "Da",
-      "fromto": "{from} to {to}",
+      "fromto": "da {from} a {to}",
       "ranges": {
         "today": "Oggi",
         "thisWeek": "Questa Settimana",
-        "restOfThisWeek": "The Rest of This Week",
-        "nextWeek": "Next Week",
-        "next7Days": "Next 7 Days",
-        "lastWeek": "Last Week",
-        "thisMonth": "This Month",
-        "restOfThisMonth": "The Rest of This Month",
-        "nextMonth": "Next Month",
-        "next30Days": "Next 30 Days",
-        "lastMonth": "Last Month",
-        "thisYear": "This Year",
-        "restOfThisYear": "The Rest of This Year"
+        "restOfThisWeek": "Il resto di questa settimana",
+        "nextWeek": "Settimana Prossima",
+        "next7Days": "I prossimi 7 giorni",
+        "lastWeek": "Settimana Scorsa",
+        "thisMonth": "Questo mese",
+        "restOfThisMonth": "Il resto di questo mese",
+        "nextMonth": "Mese successivo",
+        "next30Days": "I prossimi 30 giorni",
+        "lastMonth": "Mese scorso",
+        "thisYear": "Quest'anno",
+        "restOfThisYear": "Il resto di quest'anno"
       }
     },
     "datemathHelp": {
       "canuse": "You can use date math to filter for relative dates.",
-      "learnhow": "Check out how it works",
+      "learnhow": "Scopri come funziona",
       "title": "Date Math",
       "intro": "Date Math allows you to specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
       "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
       "similar": "These expressions are similar to the ones provided by {0} and {1}.",
       "add1Day": "Aggiungi un giorno",
       "minus1Day": "Sottrai un giorno",
-      "roundDay": "Round down to the nearest day",
-      "supportedUnits": "Supported time units are:",
-      "someExamples": "Some examples of time expressions:",
+      "roundDay": "Arrotonda per difetto al giorno più vicino",
+      "supportedUnits": "Le unità di tempo supportate sono:",
+      "someExamples": "Alcuni esempi di espressione temporale:",
       "units": {
         "seconds": "Secondi",
         "minutes": "Minuti",
@@ -582,13 +582,13 @@
         "years": "Anni"
       },
       "examples": {
-        "now": "Right now",
-        "in24h": "In 24h",
+        "now": "Adesso",
+        "in24h": "Tra 24 ore",
         "today": "Oggi alle ore 00:00",
-        "beginningOfThisWeek": "The beginning of this week at 00:00",
-        "endOfThisWeek": "The end of this week",
+        "beginningOfThisWeek": "L’inizio di questa settimana alle 00:00",
+        "endOfThisWeek": "La fine di questa settimana",
         "in30Days": "Fra 30 giorni",
-        "datePlusMonth": "{0} plus one month at 00:00 of that day"
+        "datePlusMonth": "{0} più un mese alle 00:00 di quel giorno"
       }
     }
   },
@@ -607,9 +607,9 @@
       "titleCurrent": "Attività Attuali",
       "titleDates": "Attività dal {from} al {to}",
       "noDates": "Mostra attività senza date",
-      "overdue": "Show overdue tasks",
-      "fromuntil": "Tasks from {from} until {until}",
-      "select": "Select a date range",
+      "overdue": "Mostra attività scadute",
+      "fromuntil": "Attività dal {from} al {until}",
+      "select": "Seleziona un intervallo di date",
       "noTasks": "Nessuna attività — Buona giornata!"
     },
     "detail": {
@@ -700,7 +700,7 @@
       "comment": "Commenta",
       "delete": "Elimina questo commento",
       "deleteText1": "Sei sicuro di voler eliminare questo commento?",
-      "deleteSuccess": "The comment was deleted successfully.",
+      "deleteSuccess": "Commento cancellato con successo.",
       "addedSuccess": "Il commento è stato aggiunto correttamente."
     },
     "deferDueDate": {
@@ -746,7 +746,7 @@
       "delete": "Elimina Collegamento Attività",
       "deleteText1": "Confermi di voler eliminare questo collegamento attività?",
       "select": "Seleziona un tipo di collegamento",
-      "taskRequired": "Please select a task or enter a new task title.",
+      "taskRequired": "Seleziona un'attività o inserisci il nuovo titolo.",
       "kinds": {
         "subtask": "Sotto-attività | Sotto-attività",
         "parenttask": "Attività Principale | Attività Principale",
@@ -847,20 +847,21 @@
     "general": "Generali",
     "allPages": "Queste scorciatoie funzionano in tutte le pagine.",
     "currentPageOnly": "Queste scorciatoie funzionano solo nella pagina attuale.",
-    "somePagesOnly": "These shortcuts work only on some pages.",
+    "somePagesOnly": "Queste scorciatoie funzionano solo su alcune pagine.",
     "toggleMenu": "Attiva/Disattiva Menu",
     "quickSearch": "Apri la barra di ricerca/azione rapida",
     "then": "e dopo",
     "task": {
       "title": "Pagina Attività",
-      "done": "Mark task done / undone",
+      "done": "Contrassegna l'attività come fatta / da fare",
       "assign": "Assegna questa attività a un utente",
       "labels": "Aggiungi etichette a questa attività",
       "dueDate": "Modifica la data di scadenza di questa attività",
       "attachment": "Aggiungi un allegato a questa attività",
       "related": "Modifica le attività collegate a questa",
       "color": "Cambia il colore di questa attività",
-      "move": "Sposta questa attività in un altro elenco"
+      "move": "Sposta questa attività in un altro elenco",
+      "reminder": "Manage reminders of this task"
     },
     "list": {
       "title": "Viste Liste",
