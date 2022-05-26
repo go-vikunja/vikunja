@@ -93,7 +93,7 @@ server {
 client_max_body_size 20M;
 ```
 It should end up looking like this.
-Replace "api" with the IP address of your API container if needed.
+Replace "api" with the IP address of your API container if needed. Usually, `api` will work just fine if your api container is named `api` in the docker-compose file.
 ![image](https://user-images.githubusercontent.com/724777/169915063-40bb6b0a-4e92-40b7-b089-beb98d4ebc0a.png)
 
 Finally, click save.
