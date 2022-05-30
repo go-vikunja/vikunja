@@ -296,17 +296,20 @@ func getRawTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskO
 		if err := param.validate(); err != nil {
 			return nil, 0, 0, err
 		}
+
+		// Mysql sorts columns with null values before ones without null value.
+		// Because it does not have support for NULLS FIRST or NULLS LAST we work around this by
+		// first sorting for null (or not null) values and then the order we actually want to.
+		if db.Type() == schemas.MYSQL {
+			orderby += param.sortBy + " IS NULL, "
+		}
+
 		orderby += param.sortBy + " " + param.orderBy.String()
 
-		// Postgres sorts by default entries with null values after ones with values.
+		// Postgres and sqlite allow us to control how columns with null values are sorted.
 		// To make that consistent with the sort order we have and other dbms, we're adding a separate clause here.
-		if db.Type() == schemas.POSTGRES {
-			if param.orderBy == orderAscending {
-				orderby += " NULLS FIRST"
-			}
-			if param.orderBy == orderDescending {
-				orderby += " NULLS LAST"
-			}
+		if db.Type() == schemas.POSTGRES || db.Type() == schemas.SQLITE {
+			orderby += " NULLS LAST"
 		}
 
 		if (i + 1) < len(opts.sortby) {

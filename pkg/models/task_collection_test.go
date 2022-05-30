@@ -1046,6 +1046,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				a: &user.User{ID: 1},
 			},
 			want: []*Task{
+				// The only tasks with a position set
+				task1,
+				task2,
 				// the other ones don't have a position set
 				task3,
 				task4,
@@ -1076,9 +1079,51 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task31,
 				task32,
 				task33,
-				// The only tasks with a position set
-				task1,
+			},
+		},
+		{
+			name: "order by due date",
+			fields: fields{
+				SortBy:  []string{"due_date", "id"},
+				OrderBy: []string{"asc", "desc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				// The only tasks with a due date
+				task6,
+				task5,
+				// The other ones don't have a due date
+				task33,
+				task32,
+				task31,
+				task30,
+				task29,
+				task28,
+				task27,
+				task26,
+				task25,
+				task24,
+				task23,
+				task22,
+				task21,
+				task20,
+				task19,
+				task18,
+				task17,
+				task16,
+				task15,
+				task12,
+				task11,
+				task10,
+				task9,
+				task8,
+				task7,
+				task4,
+				task3,
 				task2,
+				task1,
 			},
 		},
 		{
