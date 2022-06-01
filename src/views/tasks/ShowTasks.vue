@@ -1,5 +1,5 @@
 <template>
-	<div class="is-max-width-desktop has-text-left ">
+	<div class="is-max-width-desktop has-text-left" v-cy="'showTasks'">
 		<h3 class="mb-2 title">
 			{{ pageTitle }}
 		</h3>
@@ -32,9 +32,8 @@
 		>
 			<div class="p-2">
 				<single-task-in-list
-					v-for="t in tasksSorted"
+					v-for="t in tasks"
 					:key="t.id"
-					class="task"
 					:show-list="true"
 					:the-task="t"
 					@taskUpdated="updateTasks"/>
@@ -104,28 +103,6 @@ const pageTitle = computed(() => {
 			until: formatDate(dateTo, 'PPP'),
 		})
 })
-const tasksSorted = computed(() => {
-	// Sort all tasks to put those with a due date before the ones without a due date, the
-	// soonest before the later ones.
-	// We can't use the api sorting here because that sorts tasks with a due date after
-	// ones without a due date.
-
-	const tasksWithDueDate = [...tasks.value]
-		.filter(t => t.dueDate !== null)
-		.sort((a, b) => {
-			const sortByDueDate = a.dueDate - b.dueDate
-			return sortByDueDate === 0
-				? b.id - a.id
-				: sortByDueDate
-		})
-	const tasksWithoutDueDate = [...tasks.value]
-		.filter(t => t.dueDate === null)
-
-	return [
-		...tasksWithDueDate,
-		...tasksWithoutDueDate,
-	]
-})
 const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
 const userAuthenticated = computed(() => store.state.auth.authenticated)
 const loading = computed(() => store.state[LOADING] && store.state[LOADING_MODULE] === 'tasks')
@@ -178,7 +155,7 @@ async function loadPendingTasks(from: string, to: string) {
 
 	const params = {
 		sortBy: ['due_date', 'id'],
-		orderBy: ['desc', 'desc'],
+		orderBy: ['asc', 'desc'],
 		filterBy: ['done'],
 		filterValue: ['false'],
 		filterComparator: ['equals'],

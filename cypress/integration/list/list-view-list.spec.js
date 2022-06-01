@@ -21,6 +21,16 @@ describe('List View List', () => {
 			.contains('This list is currently empty.')
 			.should('exist')
 	})
+	
+	it('Should create a new task', () => {
+		const newTaskTitle = 'New task'
+		
+		cy.visit('/lists/1')
+		cy.get('.task-add textarea')
+			.type(newTaskTitle+'{enter}')
+		cy.get('.tasks')
+			.should('contain.text', newTaskTitle)
+	})
 
 	it('Should navigate to the task when the title is clicked', () => {
 		const tasks = TaskFactory.create(5, {

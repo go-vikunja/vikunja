@@ -6,12 +6,12 @@ import {TaskCommentFactory} from '../../factories/task_comment'
 import {UserFactory} from '../../factories/user'
 import {NamespaceFactory} from '../../factories/namespace'
 import {UserListFactory} from '../../factories/users_list'
-
-import '../../support/authenticateUser'
 import {TaskAssigneeFactory} from '../../factories/task_assignee'
 import {LabelFactory} from '../../factories/labels'
 import {LabelTaskFactory} from '../../factories/label_task'
 import {BucketFactory} from '../../factories/bucket'
+
+import '../../support/authenticateUser'
 
 describe('Task', () => {
 	let namespaces
