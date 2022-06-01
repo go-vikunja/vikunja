@@ -71,7 +71,7 @@ require (
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	gopkg.in/yaml.v3 v3.0.1
 	src.techknowlogick.com/xgo v1.4.1-0.20210311222705-d25c33fcd864
 	src.techknowlogick.com/xormigrate v1.4.0
 	xorm.io/builder v0.3.9
