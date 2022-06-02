@@ -14,7 +14,7 @@
 			<!-- Content and buttons -->
 			<div class="columns mt-2">
 				<!-- Content -->
-				<div :class="{'is-two-thirds': canWrite}" class="column">
+				<div :class="{'is-two-thirds': canWrite}" class="column detail-content">
 					<div class="columns details">
 						<div class="column assignees" v-if="activeFields.assignees">
 							<!-- Assignees -->
@@ -246,7 +246,7 @@
 					<!-- Comments -->
 					<comments :can-write="canWrite" :task-id="taskId"/>
 				</div>
-				<div class="column is-one-third action-buttons" v-if="canWrite || shouldShowClosePopup">
+				<div class="column is-one-third action-buttons d-print-none" v-if="canWrite || shouldShowClosePopup">
 					<BaseButton @click="$router.back()" class="is-fullwidth is-block has-text-centered mb-4 has-text-primary" v-if="shouldShowClosePopup">
 						<icon icon="arrow-left"/>
 						{{ $t('task.detail.closePopup') }}
@@ -955,4 +955,10 @@ $flash-background-duration: 750ms;
 }
 
 @include modal-transition();
+
+.detail-content {
+  @media print {
+	width: 100% !important;
+  }
+}
 </style>

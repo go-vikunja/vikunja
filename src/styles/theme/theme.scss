@@ -26,6 +26,10 @@
 body {
   background: var(--site-background);
   min-height: 100vh;
+ 
+  @media print {
+    background: #fff;
+  }
 }
 
 h1,

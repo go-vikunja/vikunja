@@ -3,7 +3,7 @@
 		<BaseButton
 			v-if="menuActive"
 			@click="$store.commit('menuActive', false)"
-			class="menu-hide-button"
+			class="menu-hide-button d-print-none"
 		>
 			<icon icon="times"/>
 		</BaseButton>
@@ -14,9 +14,9 @@
 		>
 			<div
 				:class="{'is-visible': background}"
-				class="app-container-background background-fade-in"
+				class="app-container-background background-fade-in d-print-none"
 				:style="{'background-image': background && `url(${background})`}"></div>
-			<navigation/>
+			<navigation class="d-print-none"/>
 			<main
 				:class="[
 					{ 'is-menu-enabled': menuActive },
@@ -27,11 +27,10 @@
 				<BaseButton
 					v-if="menuActive"
 					@click="$store.commit('menuActive', false)"
-					class="mobile-overlay"
+					class="mobile-overlay d-print-none"
 				/>
 
 				<quick-actions/>
-
 
 				<router-view :route="routeWithModal" v-slot="{ Component }">
 					<keep-alive :include="['list.list', 'list.gantt', 'list.table', 'list.kanban']">
@@ -51,7 +50,7 @@
 				</transition>
 
 				<a
-					class="keyboard-shortcuts-button"
+					class="keyboard-shortcuts-button d-print-none"
 					@click="showKeyboardShortcuts()"
 					v-shortcut="'?'"
 				>
@@ -238,9 +237,13 @@ store.dispatch('labels/loadAllLabels')
 	}
 
 	.app-content {
-		padding: $navbar-height + 1.5rem 1.5rem 1rem 1.5rem;
 		z-index: 10;
 		position: relative;
+		padding-top: 1rem;
+
+		@media screen {
+			padding: $navbar-height + 1.5rem 1.5rem 1rem 1.5rem;
+		}
 
 		// Used to make sure the spinner is always in the middle while loading
 		> .loader-container {
@@ -253,12 +256,14 @@ store.dispatch('labels/loadAllLabels')
 			min-height: calc(100vh - 4rem);
 		}
 
-		&.is-menu-enabled {
-			margin-left: $navbar-width;
+		@media screen {
+			&.is-menu-enabled {
+				margin-left: $navbar-width;
 
-			@media screen and (max-width: $tablet) {
-				min-width: 100%;
-				margin-left: 0;
+				@media screen and (max-width: $tablet) {
+					min-width: 100%;
+					margin-left: 0;
+				}
 			}
 		}
 

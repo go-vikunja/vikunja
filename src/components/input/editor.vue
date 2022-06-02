@@ -16,11 +16,11 @@
 		<p class="has-text-centered has-text-grey is-italic my-5" v-if="showPreviewText">
 			{{ emptyText }}
 			<template v-if="isEditEnabled">
-				<a @click="toggleEdit">{{ $t('input.editor.edit') }}</a>.
+				<a @click="toggleEdit" class="d-print-none">{{ $t('input.editor.edit') }}</a>.
 			</template>
 		</p>
 
-		<ul class="actions" v-if="bottomActions.length > 0">
+		<ul class="actions d-print-none" v-if="bottomActions.length > 0">
 			<li v-if="isEditEnabled && !showPreviewText && showSave">
 				<a v-if="showEditButton" @click="toggleEdit">{{ $t('input.editor.edit') }}</a>
 				<a v-else-if="isEditActive" @click="toggleEdit" class="done-edit">{{ $t('misc.save') }}</a>
@@ -30,7 +30,7 @@
 			</li>
 		</ul>
 		<template v-else-if="isEditEnabled && showSave">
-			<ul v-if="showEditButton" class="actions">
+			<ul v-if="showEditButton" class="actions d-print-none">
 				<li>
 					<a @click="toggleEdit">{{ $t('input.editor.edit') }}</a>
 				</li>

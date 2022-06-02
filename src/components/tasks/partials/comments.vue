@@ -1,6 +1,6 @@
 <template>
 	<div class="content details" v-if="enabled">
-		<h3 v-if="canWrite || comments.length > 0">
+		<h3 v-if="canWrite || comments.length > 0" :class="{'d-print-none': comments.length === 0}">
 			<span class="icon is-grey">
 				<icon :icon="['far', 'comments']"/>
 			</span>
@@ -29,7 +29,7 @@
 						<img
 							:src="c.author.getAvatarUrl(20)"
 							alt=""
-							class="image is-avatar"
+							class="image is-avatar d-print-none"
 							height="20"
 							width="20"
 						/>
@@ -82,7 +82,7 @@
 					/>
 				</div>
 			</div>
-			<div class="media comment" v-if="canWrite">
+			<div class="media comment d-print-none" v-if="canWrite">
 				<figure class="media-left is-hidden-mobile">
 					<img
 						:src="userAvatar"

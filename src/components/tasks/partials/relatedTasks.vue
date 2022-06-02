@@ -3,7 +3,7 @@
 		<x-button
 			v-if="editEnabled && Object.keys(relatedTasks).length > 0"
 			@click="showNewRelationForm = !showNewRelationForm"
-			class="is-pulled-right add-task-relation-button"
+			class="is-pulled-right add-task-relation-button d-print-none"
 			:class="{'is-active': showNewRelationForm}"
 			v-tooltip="$t('task.relation.add')"
 			variant="secondary"
