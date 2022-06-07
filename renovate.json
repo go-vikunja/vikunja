@@ -6,7 +6,12 @@
   ],
   "packageRules": [
     {
-      "matchPackageNames": ["netlify-cli", "caniuse-lite"],
+      "matchPackageNames": ["netlify-cli"],
+      "extends": ["schedule:weekly"]
+    },
+    {
+      "groupName": "caniuse-and-related",
+      "matchPackageNames": ["caniuse-lite", "browserslist"],
       "extends": ["schedule:weekly"]
     },
     {
