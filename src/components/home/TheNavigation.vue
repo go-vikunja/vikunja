@@ -1,6 +1,6 @@
 <template>
 	<header
-		:class="{'has-background': background}"
+		:class="{'has-background': background, 'menu-active': menuActive}"
 		aria-label="main navigation"
 		class="navbar main-theme is-fixed-top d-print-none"
 	>
@@ -117,6 +117,7 @@ const background = computed(() => store.state.background)
 const imprintUrl = computed(() => store.state.config.legal.imprintUrl)
 const privacyPolicyUrl = computed(() => store.state.config.legal.privacyPolicyUrl)
 const canWriteCurrentList = computed(() => store.state.currentList.maxRight > Rights.READ)
+const menuActive = computed(() => store.state.menuActive)
 
 const usernameDropdown = ref()
 const listTitle = ref()
@@ -131,6 +132,7 @@ onMounted(async () => {
 })
 
 const router = useRouter()
+
 function logout() {
 	store.dispatch('auth/logout')
 	router.push({name: 'user.login'})
@@ -195,6 +197,10 @@ $hamburger-menu-icon-width: 28px;
 	}
 
 	@media screen and (max-width: $tablet) {
+		&.menu-active {
+			z-index: 0;
+		}
+
 		.user {
 			width: $user-dropdown-width-mobile;
 
