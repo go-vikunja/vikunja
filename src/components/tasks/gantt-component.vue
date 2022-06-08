@@ -520,14 +520,14 @@ $gantt-vertical-border-color: var(--grey-100);
 				}
 
 				&.has-light-text {
-					color: var(--light);
+					color: var(--grey-100);
 
 					&.done span:after {
-						border-top: 1px solid var(--light);
+						border-top: 1px solid var(--grey-100);
 					}
 
 					.edit-toggle {
-						color: var(--light);
+						color: var(--grey-100);
 					}
 				}
 

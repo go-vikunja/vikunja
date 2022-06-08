@@ -294,7 +294,7 @@ export default defineComponent({
 			}
 
 			&:hover {
-				background: var(--light);
+				background: var(--grey-100);
 			}
 
 			.text {

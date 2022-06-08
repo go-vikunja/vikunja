@@ -106,7 +106,7 @@ function toggleFavoriteList(list: ListModel) {
 	overflow: hidden;
 
 	&.has-light-text .title {
-		color: var(--light);
+		color: var(--grey-100);
 	}
 
 	&.has-background, .list-background {
