@@ -529,8 +529,9 @@ $vikunja-nav-selected-width: 0.4rem;
 		.logo {
 			display: block;
 
-			padding-left: 2rem;
+			padding-left: 1rem;
 			margin-right: 1rem;
+			margin-bottom: 1rem;
 
 			@media screen and (min-width: $tablet) {
 				display: none;
