@@ -145,5 +145,5 @@
     }
   },
   "license": "AGPL-3.0-or-later",
-  "packageManager": "yarn@1.22.18"
+  "packageManager": "yarn@1.22.19"
 }
