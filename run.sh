@@ -16,7 +16,7 @@ VIKUNJA_API_URL=$(echo $VIKUNJA_API_URL |sed 's/\//\\\//g')
 sed -i "s/http\:\/\/localhost\:3456//g" /usr/share/nginx/html/index.html # replacing in two steps to make sure api urls from releases are properly replaced as well
 sed -i "s/'\/api\/v1/'$VIKUNJA_API_URL/g" /usr/share/nginx/html/index.html
 sed -i "s/\.SENTRY_ENABLED = false/\.SENTRY_ENABLED = $VIKUNJA_SENTRY_ENABLED/g" /usr/share/nginx/html/index.html
-sed -i "s/\.SENTRY_DSN = '.*'/\.SENTRY_DSN = '$VIKUNJA_SENTRY_DSN'/g" /usr/share/nginx/html/index.html
+sed -i "s|\.SENTRY_DSN = '.*'|\.SENTRY_DSN = '$VIKUNJA_SENTRY_DSN'|g" /usr/share/nginx/html/index.html
 
 sed -i "s/listen 80/listen $VIKUNJA_HTTP_PORT/g" /etc/nginx/nginx.conf
 sed -i "s/listen 443/listen $VIKUNJA_HTTPS_PORT/g" /etc/nginx/nginx.conf
