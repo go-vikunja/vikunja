@@ -72,7 +72,7 @@
     "axios": "0.27.2",
     "browserslist": "4.20.4",
     "caniuse-lite": "1.0.30001341",
-    "cypress": "9.6.1",
+    "cypress": "10.0.3",
     "esbuild": "0.14.43",
     "eslint": "8.17.0",
     "eslint-plugin-vue": "9.1.0",
