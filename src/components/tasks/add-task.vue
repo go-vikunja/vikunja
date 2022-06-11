@@ -139,8 +139,11 @@ const store = useStore()
 const taskService = shallowReactive(new TaskService())
 const errorMessage = ref('')
 
-function resetEmptyTitleError() {
-	if (newTaskTitle.value !== '') {
+function resetEmptyTitleError(e) {
+	if (
+		(e.which <= 90 && e.which >= 48 || e.which >= 96 && e.which <= 105)
+		&& newTaskTitle.value !== ''
+	) {
 		errorMessage.value = ''
 	}
 }
@@ -209,7 +212,7 @@ function handleEnter(e: KeyboardEvent) {
 		.button-text {
 			display: none;
 		}
-		
+
 		:deep(.icon) {
 			margin: 0 !important;
 		}

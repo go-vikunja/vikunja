@@ -298,6 +298,10 @@ export default {
 				list: parsedTask.list,
 				listId: listId || 0,
 			})
+			
+			if(foundListId === null || foundListId === 0) {
+				throw new Error('NO_LIST')
+			}
 		
 			const assignees = await findAssignees(parsedTask.assignees)
 			
