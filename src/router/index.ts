@@ -217,6 +217,7 @@ const router = createRouter({
 			meta: {
 				showAsModal: true,
 			},
+			props: route => ({ namespaceId: parseInt(route.params.id as string) }),
 		},
 		{
 			path: '/namespaces/:namespaceId/settings/share',

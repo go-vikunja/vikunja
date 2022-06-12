@@ -82,14 +82,16 @@ export default defineComponent({
 		Fancycheckbox,
 		editor: AsyncEditor,
 	},
-	beforeMount() {
-		this.namespace.id = this.$route.params.id
+	props: {
+		namespaceId: {
+			type: Number,
+			required: true,
+		},
 	},
 	watch: {
 		// call again the method if the route changes
-		'$route': {
+		namespaceId: {
 			handler: 'loadNamespace',
-			deep: true,
 			immediate: true,
 		},
 	},
@@ -103,8 +105,7 @@ export default defineComponent({
 			this.editorActive = false
 			this.$nextTick(() => this.editorActive = true)
 
-			const namespace = new NamespaceModel({id: this.$route.params.id})
-			this.namespace = await this.namespaceService.get(namespace)
+			this.namespace = await this.namespaceService.get({id: this.namespaceId})
 			// This will trigger the dynamic loading of components once we actually have all the data to pass to them
 			this.manageTeamsComponent = 'manageSharing'
 			this.manageUsersComponent = 'manageSharing'
