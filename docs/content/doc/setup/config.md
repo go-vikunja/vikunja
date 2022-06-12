@@ -76,7 +76,7 @@ Default: `<jwt-secret>`
 
 Full path: `service.JWTSecret`
 
-Environment path: `VIKUNJA_SERVICE_JWT_SECRET`
+Environment path: `VIKUNJA_SERVICE_JWTSECRET`
 
 
 ### jwtttl

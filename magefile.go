@@ -1051,7 +1051,7 @@ func printConfig(config []*configOption, level int, parent string) (rendered str
 				fullPath := parent + "." + option.key
 
 				rendered += "Full path: `" + fullPath + "`\n\n"
-				rendered += "Environment path: `VIKUNJA_" + strcase.ToScreamingSnake(fullPath) + "`\n\n"
+				rendered += "Environment path: `VIKUNJA_" + strcase.ToScreamingSnake(strings.ToUpper(fullPath)) + "`\n\n"
 			}
 		}
 
