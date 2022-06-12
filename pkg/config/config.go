@@ -62,6 +62,7 @@ const (
 	ServiceTestingtoken          Key = `service.testingtoken`
 	ServiceEnableEmailReminders  Key = `service.enableemailreminders`
 	ServiceEnableUserDeletion    Key = `service.enableuserdeletion`
+	ServiceMaxAvatarSize         Key = `service.maxavatarsize`
 
 	AuthLocalEnabled      Key = `auth.local.enabled`
 	AuthOpenIDEnabled     Key = `auth.openid.enabled`
@@ -287,6 +288,7 @@ func InitDefaultConfig() {
 	ServiceEnableTotp.setDefault(true)
 	ServiceEnableEmailReminders.setDefault(true)
 	ServiceEnableUserDeletion.setDefault(true)
+	ServiceMaxAvatarSize.setDefault(1024)
 
 	// Auth
 	AuthLocalEnabled.setDefault(true)

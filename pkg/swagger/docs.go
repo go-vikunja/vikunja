@@ -7537,7 +7537,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "The size of the avatar you want to get",
+                        "description": "The size of the avatar you want to get. If bigger than the max configured size this will be adjusted to the maximum size.",
                         "name": "size",
                         "in": "query"
                     }

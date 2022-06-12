@@ -17,6 +17,7 @@
 package v1
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
@@ -49,7 +50,7 @@ import (
 // @tags user
 // @Produce octet-stream
 // @Param username path string true "The username of the user who's avatar you want to get"
-// @Param size query int false "The size of the avatar you want to get"
+// @Param size query int false "The size of the avatar you want to get. If bigger than the max configured size this will be adjusted to the maximum size."
 // @Success 200 {} blob "The avatar"
 // @Failure 404 {object} models.Message "The user does not exist."
 // @Failure 500 {object} models.Message "Internal error"
@@ -96,6 +97,9 @@ func GetAvatar(c echo.Context) error {
 			log.Errorf("Error parsing size: %v", err)
 			return handler.HandleHTTPError(err, c)
 		}
+	}
+	if sizeInt > config.ServiceMaxAvatarSize.GetInt64() {
+		sizeInt = config.ServiceMaxAvatarSize.GetInt64()
 	}
 
 	// Get the avatar

@@ -321,6 +321,18 @@ Full path: `service.enableuserdeletion`
 Environment path: `VIKUNJA_SERVICE_ENABLEUSERDELETION`
 
 
+### maxavatarsize
+
+The maximum size clients will be able to request for user avatars.
+If clients request a size bigger than this, it will be changed on the fly.
+
+Default: `1024`
+
+Full path: `service.maxavatarsize`
+
+Environment path: `VIKUNJA_SERVICE_MAXAVATARSIZE`
+
+
 ---
 
 ## database

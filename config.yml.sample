@@ -56,6 +56,9 @@ service:
   # it may be required to coordinate with them in order to delete the account. This setting will not affect the cli commands
   # for user deletion.
   enableuserdeletion: true
+  # The maximum size clients will be able to request for user avatars.
+  # If clients request a size bigger than this, it will be changed on the fly.
+  maxavatarsize: 1024
 
 database:
   # Database type to use. Supported types are mysql, postgres and sqlite.
