@@ -19,35 +19,83 @@ package models
 import (
 	"time"
 
-	"code.vikunja.io/api/pkg/user"
-
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/notifications"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
+
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
-func getUndoneOverdueTasks(s *xorm.Session, now time.Time) (taskIDs []int64, err error) {
+func getUndoneOverdueTasks(s *xorm.Session, now time.Time) (usersWithTasks map[int64]*userWithTasks, err error) {
 	now = utils.GetTimeWithoutNanoSeconds(now)
+	nextMinute := now.Add(1 * time.Minute)
 
 	var tasks []*Task
 	err = s.
-		Where("due_date is not null and due_date < ?", now.Format(dbTimeFormat)).
+		Where("due_date is not null and due_date < ?", nextMinute.Add(time.Hour*14).Format(dbTimeFormat)).
 		And("done = false").
 		Find(&tasks)
 	if err != nil {
 		return
 	}
 
+	if len(tasks) == 0 {
+		return
+	}
+
+	var taskIDs []int64
 	for _, task := range tasks {
 		taskIDs = append(taskIDs, task.ID)
 	}
 
-	return
+	users, err := getTaskUsersForTasks(s, taskIDs, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
+	if err != nil {
+		return
+	}
+
+	if len(users) == 0 {
+		return
+	}
+
+	uts := make(map[int64]*userWithTasks)
+	tzs := make(map[string]*time.Location)
+	for _, t := range users {
+		if t.User.Timezone == "" {
+			t.User.Timezone = config.GetTimeZone().String()
+		}
+
+		tz, exists := tzs[t.User.Timezone]
+		if !exists {
+			tz, err = time.LoadLocation(t.User.Timezone)
+			if err != nil {
+				return
+			}
+			tzs[t.User.Timezone] = tz
+		}
+
+		// If it is 9:00 for that current user, add the task to their list of overdue tasks
+		overdueMailTime := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, tz)
+		isTimeForReminder := overdueMailTime.After(now) || overdueMailTime.Equal(now.In(tz))
+		wasTimeForReminder := overdueMailTime.Before(now.Add(time.Minute))
+		taskIsOverdueInUserTimezone := overdueMailTime.After(t.Task.DueDate.In(tz))
+		if isTimeForReminder && wasTimeForReminder && taskIsOverdueInUserTimezone {
+			_, exists := uts[t.User.ID]
+			if !exists {
+				uts[t.User.ID] = &userWithTasks{
+					user:  t.User,
+					tasks: []*Task{},
+				}
+			}
+			uts[t.User.ID].tasks = append(uts[t.User.ID].tasks, t.Task)
+		}
+	}
+
+	return uts, nil
 }
 
 type userWithTasks struct {
@@ -66,36 +114,18 @@ func RegisterOverdueReminderCron() {
 		return
 	}
 
-	err := cron.Schedule("0 8 * * *", func() {
+	err := cron.Schedule("* * * * *", func() {
 		s := db.NewSession()
 		defer s.Close()
 
 		now := time.Now()
-		taskIDs, err := getUndoneOverdueTasks(s, now)
+		uts, err := getUndoneOverdueTasks(s, now)
 		if err != nil {
-			log.Errorf("[Undone Overdue Tasks Reminder] Could not get tasks with reminders in the next minute: %s", err)
+			log.Errorf("[Undone Overdue Tasks Reminder] Could not get undone overdue tasks in the next minute: %s", err)
 			return
 		}
 
-		users, err := getTaskUsersForTasks(s, taskIDs, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
-		if err != nil {
-			log.Errorf("[Undone Overdue Tasks Reminder] Could not get task users to send them reminders: %s", err)
-			return
-		}
-
-		uts := make(map[int64]*userWithTasks)
-		for _, t := range users {
-			_, exists := uts[t.User.ID]
-			if !exists {
-				uts[t.User.ID] = &userWithTasks{
-					user:  t.User,
-					tasks: []*Task{},
-				}
-			}
-			uts[t.User.ID].tasks = append(uts[t.User.ID].tasks, t.Task)
-		}
-
-		log.Debugf("[Undone Overdue Tasks Reminder] Sending reminders to %d users", len(users))
+		log.Debugf("[Undone Overdue Tasks Reminder] Sending reminders to %d users", len(uts))
 
 		for _, ut := range uts {
 			var n notifications.Notification = &UndoneTasksOverdueNotification{
@@ -117,7 +147,6 @@ func RegisterOverdueReminderCron() {
 			}
 
 			log.Debugf("[Undone Overdue Tasks Reminder] Sent reminder email for %d tasks to user %d", len(ut.tasks), ut.user.ID)
-			continue
 		}
 	})
 	if err != nil {

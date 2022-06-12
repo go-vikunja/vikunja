@@ -32,21 +32,34 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-01-01T01:13:00Z")
 		assert.NoError(t, err)
-		taskIDs, err := getUndoneOverdueTasks(s, now)
+		tasks, err := getUndoneOverdueTasks(s, now)
 		assert.NoError(t, err)
-		assert.Len(t, taskIDs, 0)
+		assert.Len(t, tasks, 0)
 	})
 	t.Run("undone overdue", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
-		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T01:13:00Z")
+		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T09:00:00Z")
 		assert.NoError(t, err)
-		taskIDs, err := getUndoneOverdueTasks(s, now)
+		uts, err := getUndoneOverdueTasks(s, now)
 		assert.NoError(t, err)
-		assert.Len(t, taskIDs, 1)
-		assert.Equal(t, int64(6), taskIDs[0])
+		assert.Len(t, uts, 1)
+		assert.Len(t, uts[1].tasks, 2)
+		// The tasks don't always have the same order, so we only check their presence, not their position.
+		var task5Present bool
+		var task6Present bool
+		for _, t := range uts[1].tasks {
+			if t.ID == 5 {
+				task5Present = true
+			}
+			if t.ID == 6 {
+				task6Present = true
+			}
+		}
+		assert.Truef(t, task5Present, "expected task 5 to be present but was not")
+		assert.Truef(t, task6Present, "expected task 6 to be present but was not")
 	})
 	t.Run("done overdue", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -55,8 +68,8 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-11-01T01:13:00Z")
 		assert.NoError(t, err)
-		taskIDs, err := getUndoneOverdueTasks(s, now)
+		tasks, err := getUndoneOverdueTasks(s, now)
 		assert.NoError(t, err)
-		assert.Len(t, taskIDs, 0)
+		assert.Len(t, tasks, 0)
 	})
 }
