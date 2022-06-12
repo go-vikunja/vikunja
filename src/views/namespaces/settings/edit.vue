@@ -25,7 +25,7 @@
 			<div class="field">
 				<label class="label" for="namespacedescription">{{ $t('namespace.attributes.description') }}</label>
 				<div class="control">
-					<editor
+					<AsyncEditor
 						:class="{ 'disabled': namespaceService.loading}"
 						:preview-is-default="false"
 						id="namespacedescription"
@@ -55,71 +55,64 @@
 	</create-edit>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script lang="ts" setup>
+import {nextTick, ref, watch} from 'vue'
+import {useStore} from 'vuex'
+import {success} from '@/message'
+import router from '@/router'
 
 import AsyncEditor from '@/components/input/AsyncEditor'
-
-import NamespaceService from '@/services/namespace'
-import NamespaceModel from '@/models/namespace'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import ColorPicker from '@/components/input/colorPicker.vue'
 import CreateEdit from '@/components/misc/create-edit.vue'
 
-export default defineComponent({
-	name: 'namespace-setting-edit',
-	data() {
-		return {
-			namespaceService: new NamespaceService(),
-			namespace: new NamespaceModel(),
-			editorActive: false,
-			title: '',
-		}
-	},
-	components: {
-		CreateEdit,
-		ColorPicker,
-		Fancycheckbox,
-		editor: AsyncEditor,
-	},
-	props: {
-		namespaceId: {
-			type: Number,
-			required: true,
-		},
-	},
-	watch: {
-		// call again the method if the route changes
-		namespaceId: {
-			handler: 'loadNamespace',
-			immediate: true,
-		},
-	},
-	methods: {
-		async loadNamespace() {
-			// HACK: This makes the editor trigger its mounted function again which makes it forget every input
-			// it currently has in its textarea. This is a counter-hack to a hack inside of vue-easymde
-			// which made it impossible to detect change from the outside. Therefore the component would
-			// not update if new content from the outside was made available.
-			// See https://github.com/NikulinIlya/vue-easymde/issues/3
-			this.editorActive = false
-			this.$nextTick(() => this.editorActive = true)
+import NamespaceService from '@/services/namespace'
+import NamespaceModel from '@/models/namespace'
+import {useI18n} from 'vue-i18n'
+import {useTitle} from '@/composables/useTitle'
 
-			this.namespace = await this.namespaceService.get({id: this.namespaceId})
-			// This will trigger the dynamic loading of components once we actually have all the data to pass to them
-			this.manageTeamsComponent = 'manageSharing'
-			this.manageUsersComponent = 'manageSharing'
-			this.title = this.$t('namespace.edit.title', {namespace: this.namespace.title})
-			this.setTitle(this.title)
-		},
+const {t} = useI18n()
+const store = useStore()
 
-		async save() {
-			const namespace = await this.namespaceService.update(this.namespace)
-			// Update the namespace in the parent
-			this.$store.commit('namespaces/setNamespaceById', namespace)
-			this.$message.success({message: this.$t('namespace.edit.success')})
-			this.$router.back()
-		},
+const namespaceService = ref(new NamespaceService())
+const namespace = ref(new NamespaceModel())
+const editorActive = ref(false)
+const title = ref('')
+useTitle(() => title.value)
+
+const props = defineProps({
+	namespaceId: {
+		type: Number,
+		required: true,
 	},
 })
+
+watch(
+	() => props.namespaceId,
+	loadNamespace,
+	{
+		immediate: true,
+	},
+)
+
+async function loadNamespace() {
+	// HACK: This makes the editor trigger its mounted function again which makes it forget every input
+	// it currently has in its textarea. This is a counter-hack to a hack inside of vue-easymde
+	// which made it impossible to detect change from the outside. Therefore the component would
+	// not update if new content from the outside was made available.
+	// See https://github.com/NikulinIlya/vue-easymde/issues/3
+	editorActive.value = false
+	nextTick(() => editorActive.value = true)
+
+	namespace.value = await namespaceService.value.get({id: props.namespaceId})
+	title.value = t('namespace.edit.title', {namespace: namespace.value.title})
+}
+
+async function save() {
+	const updatedNamespace = await namespaceService.value.update(namespace.value)
+	// Update the namespace in the parent
+	store.commit('namespaces/setNamespaceById', updatedNamespace)
+	success({message: t('namespace.edit.success')})
+	router.back()
+}
 </script>
