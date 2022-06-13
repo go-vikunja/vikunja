@@ -70,7 +70,7 @@
     "autoprefixer": "10.4.7",
     "axios": "0.27.2",
     "browserslist": "4.20.4",
-    "caniuse-lite": "1.0.30001341",
+    "caniuse-lite": "1.0.30001352",
     "cypress": "10.1.0",
     "esbuild": "0.14.43",
     "eslint": "8.17.0",
