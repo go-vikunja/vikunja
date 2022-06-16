@@ -67,7 +67,7 @@
 					</div>
 					<editor
 						:hasPreview="true"
-						:is-edit-enabled="canWrite"
+						:is-edit-enabled="canWrite && c.author.id === currentUserId"
 						:upload-callback="attachmentUpload"
 						:upload-enabled="true"
 						@change="
@@ -190,6 +190,7 @@ const saved = ref(null)
 const saving = ref(null)
 
 const userAvatar = computed(() => store.state.auth.info.getAvatarUrl(48))
+const currentUserId = computed(() => store.state.auth.info.id)
 const enabled = computed(() => store.state.config.taskCommentsEnabled)
 const actions = computed(() => {
 	if (!props.canWrite) {
@@ -197,10 +198,12 @@ const actions = computed(() => {
 	}
 	return Object.fromEntries(comments.value.map((comment) => ([
 		comment.id,
-		[{
-			action: () => toggleDelete(comment.id),
-			title: t('misc.delete'),
-		}],
+		comment.author.id === currentUserId.value
+			? [{
+				action: () => toggleDelete(comment.id),
+				title: t('misc.delete'),
+			}]
+			: [],
 	])))
 })
 
@@ -209,6 +212,7 @@ function attachmentUpload(...args) {
 }
 
 const taskCommentService = shallowReactive(new TaskCommentService())
+
 async function loadComments(taskId) {
 	if (!enabled.value) {
 		return
@@ -228,6 +232,7 @@ watch(
 
 const editorActive = ref(true)
 const creating = ref(false)
+
 async function addComment() {
 	if (newComment.comment === '') {
 		return
@@ -301,7 +306,7 @@ async function deleteComment(commentToDelete: TaskCommentModel) {
 
 <style lang="scss" scoped>
 .media-left {
-	margin: 0 1rem;
+	margin: 0 1rem !important;
 }
 
 .comment-info {
