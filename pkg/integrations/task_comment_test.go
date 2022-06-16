@@ -63,6 +63,7 @@ func TestTaskComments(t *testing.T) {
 			assertHandlerErrorCode(t, err, models.ErrCodeTaskDoesNotExist)
 		})
 		t.Run("Rights check", func(t *testing.T) {
+			// Only the own comments can be updated
 			t.Run("Forbidden", func(t *testing.T) {
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "14", "commentid": "2"}, `{"comment":"Lorem Ipsum"}`)
 				assert.Error(t, err)
@@ -74,14 +75,14 @@ func TestTaskComments(t *testing.T) {
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "16", "commentid": "4"}, `{"comment":"Lorem Ipsum"}`)
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"comment":"Lorem Ipsum"`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "16", "commentid": "4"}, `{"comment":"Lorem Ipsum"}`)
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via Team admin", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "17", "commentid": "5"}, `{"comment":"Lorem Ipsum"}`)
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"comment":"Lorem Ipsum"`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "17", "commentid": "5"}, `{"comment":"Lorem Ipsum"}`)
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 
 			t.Run("Shared Via User readonly", func(t *testing.T) {
@@ -90,14 +91,14 @@ func TestTaskComments(t *testing.T) {
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via User write", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "19", "commentid": "7"}, `{"comment":"Lorem Ipsum"}`)
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"comment":"Lorem Ipsum"`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "19", "commentid": "7"}, `{"comment":"Lorem Ipsum"}`)
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via User admin", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "20", "commentid": "8"}, `{"comment":"Lorem Ipsum"}`)
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"comment":"Lorem Ipsum"`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "20", "commentid": "8"}, `{"comment":"Lorem Ipsum"}`)
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 
 			t.Run("Shared Via NamespaceTeam readonly", func(t *testing.T) {
@@ -106,14 +107,14 @@ func TestTaskComments(t *testing.T) {
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceTeam write", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "22", "commentid": "10"}, `{"comment":"Lorem Ipsum"}`)
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"comment":"Lorem Ipsum"`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "22", "commentid": "10"}, `{"comment":"Lorem Ipsum"}`)
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceTeam admin", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "23", "commentid": "11"}, `{"comment":"Lorem Ipsum"}`)
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"comment":"Lorem Ipsum"`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "23", "commentid": "11"}, `{"comment":"Lorem Ipsum"}`)
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 
 			t.Run("Shared Via NamespaceUser readonly", func(t *testing.T) {
@@ -122,14 +123,14 @@ func TestTaskComments(t *testing.T) {
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceUser write", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "25", "commentid": "13"}, `{"comment":"Lorem Ipsum"}`)
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"comment":"Lorem Ipsum"`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "25", "commentid": "13"}, `{"comment":"Lorem Ipsum"}`)
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceUser admin", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "26", "commentid": "14"}, `{"comment":"Lorem Ipsum"}`)
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"comment":"Lorem Ipsum"`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "26", "commentid": "14"}, `{"comment":"Lorem Ipsum"}`)
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 		})
 	})
@@ -145,6 +146,7 @@ func TestTaskComments(t *testing.T) {
 			assertHandlerErrorCode(t, err, models.ErrCodeTaskDoesNotExist)
 		})
 		t.Run("Rights check", func(t *testing.T) {
+			// Only the own comments can be deleted
 			t.Run("Forbidden", func(t *testing.T) {
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "14", "commentid": "2"})
 				assert.Error(t, err)
@@ -156,14 +158,14 @@ func TestTaskComments(t *testing.T) {
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "16", "commentid": "4"})
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "16", "commentid": "4"})
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via Team admin", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "17", "commentid": "5"})
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "17", "commentid": "5"})
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 
 			t.Run("Shared Via User readonly", func(t *testing.T) {
@@ -172,14 +174,14 @@ func TestTaskComments(t *testing.T) {
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via User write", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "19", "commentid": "7"})
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "19", "commentid": "7"})
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via User admin", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "20", "commentid": "8"})
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "20", "commentid": "8"})
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 
 			t.Run("Shared Via NamespaceTeam readonly", func(t *testing.T) {
@@ -188,14 +190,14 @@ func TestTaskComments(t *testing.T) {
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceTeam write", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "22", "commentid": "10"})
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "22", "commentid": "10"})
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceTeam admin", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "23", "commentid": "11"})
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "23", "commentid": "11"})
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 
 			t.Run("Shared Via NamespaceUser readonly", func(t *testing.T) {
@@ -204,14 +206,14 @@ func TestTaskComments(t *testing.T) {
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceUser write", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "25", "commentid": "13"})
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "25", "commentid": "13"})
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceUser admin", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "26", "commentid": "14"})
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "26", "commentid": "14"})
+				assert.Error(t, err)
+				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 		})
 	})

@@ -151,6 +151,24 @@ func (tc *TaskComment) Update(s *xorm.Session, a web.Auth) error {
 	})
 }
 
+func getTaskCommentSimple(s *xorm.Session, tc *TaskComment) error {
+	exists, err := s.
+		Where("id = ? and task_id = ?", tc.ID, tc.TaskID).
+		NoAutoCondition().
+		Get(tc)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return ErrTaskCommentDoesNotExist{
+			ID:     tc.ID,
+			TaskID: tc.TaskID,
+		}
+	}
+
+	return nil
+}
+
 // ReadOne handles getting a single comment
 // @Summary Remove a task comment
 // @Description Remove a task comment. The user doing this need to have at least read access to the task this comment belongs to.
@@ -166,15 +184,9 @@ func (tc *TaskComment) Update(s *xorm.Session, a web.Auth) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [get]
 func (tc *TaskComment) ReadOne(s *xorm.Session, a web.Auth) (err error) {
-	exists, err := s.Get(tc)
+	err = getTaskCommentSimple(s, tc)
 	if err != nil {
-		return
-	}
-	if !exists {
-		return ErrTaskCommentDoesNotExist{
-			ID:     tc.ID,
-			TaskID: tc.TaskID,
-		}
+		return err
 	}
 
 	// Get the author

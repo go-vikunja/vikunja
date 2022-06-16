@@ -121,6 +121,16 @@ func TestTaskComment_Delete(t *testing.T) {
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskCommentDoesNotExist(err))
 	})
+	t.Run("not the own comment", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		tc := &TaskComment{ID: 1, TaskID: 1}
+		can, err := tc.CanDelete(s, &user.User{ID: 2})
+		assert.NoError(t, err)
+		assert.False(t, can)
+	})
 }
 
 func TestTaskComment_Update(t *testing.T) {
@@ -157,6 +167,16 @@ func TestTaskComment_Update(t *testing.T) {
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskCommentDoesNotExist(err))
 	})
+	t.Run("not the own comment", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		tc := &TaskComment{ID: 1, TaskID: 1}
+		can, err := tc.CanUpdate(s, &user.User{ID: 2})
+		assert.NoError(t, err)
+		assert.False(t, can)
+	})
 }
 
 func TestTaskComment_ReadOne(t *testing.T) {
@@ -167,7 +187,7 @@ func TestTaskComment_ReadOne(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		tc := &TaskComment{ID: 1}
+		tc := &TaskComment{ID: 1, TaskID: 1}
 		err := tc.ReadOne(s, u)
 		assert.NoError(t, err)
 		assert.Equal(t, "Lorem Ipsum Dolor Sit Amet", tc.Comment)
