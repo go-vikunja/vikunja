@@ -4,9 +4,9 @@
 		:class="{
 			'is-loading': loadingInternal || loading,
 			'draggable': !(loadingInternal || loading),
-			'has-light-text': !colorIsDark(task.hexColor) && task.hexColor !== `#${task.defaultColor}` && task.hexColor !== task.defaultColor,
+			'has-light-text': task.getHexColor() !== TASK_DEFAULT_COLOR && !colorIsDark(task.getHexColor()),
 		}"
-		:style="{'background-color': task.hexColor !== '#' && task.hexColor !== `#${task.defaultColor}` ? task.hexColor : false}"
+		:style="{'background-color': task.hexColor !== '#' && task.hexColor !== '' ? task.hexColor : false}"
 		@click.exact="openTaskDetail()"
 		@click.ctrl="() => toggleTaskDone(task)"
 		@click.meta="() => toggleTaskDone(task)"
@@ -74,6 +74,7 @@ import User from '../../../components/misc/user'
 import Done from '@/components/misc/Done.vue'
 import Labels from '../../../components/tasks/partials/labels'
 import ChecklistSummary from './checklist-summary'
+import {TASK_DEFAULT_COLOR} from '@/models/task'
 
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 
@@ -89,6 +90,7 @@ export default defineComponent({
 	data() {
 		return {
 			loadingInternal: false,
+			TASK_DEFAULT_COLOR,
 		}
 	},
 	props: {

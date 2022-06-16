@@ -8,6 +8,7 @@ import SubscriptionModel from '@/models/subscription'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
 const SUPPORTS_TRIGGERED_NOTIFICATION = 'Notification' in window && 'showTrigger' in Notification.prototype
+export const TASK_DEFAULT_COLOR = '#1973ff'
 
 export default class TaskModel extends AbstractModel {
 	constructor(data) {
@@ -187,8 +188,8 @@ export default class TaskModel extends AbstractModel {
 	}
 
 	getHexColor() {
-		if (this.hexColor === '') {
-			return `#${this.defaultColor}`
+		if (this.hexColor === '' || this.hexColor === '#') {
+			return TASK_DEFAULT_COLOR
 		}
 
 		return this.hexColor
