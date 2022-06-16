@@ -38,7 +38,7 @@
 						v-else>
 						{{ l.title }}
 					</a>
-					<a @click="deleteLabel(l)" class="delete is-small" v-if="userInfo.id === l.createdBy.id"></a>
+					<a @click="showDeleteDialoge(l)" class="delete is-small" v-if="userInfo.id === l.createdBy.id"></a>
 				</span>
 			</div>
 			<div class="column is-4" v-if="isLabelEdit">
@@ -83,7 +83,7 @@
 							</div>
 							<div class="control">
 								<x-button
-									@click="() => {deleteLabel(labelEditLabel);isLabelEdit = false}"
+									@click="showDeleteDialoge(labelEditLabel)"
 									icon="trash-alt"
 									class="is-danger"
 								/>
@@ -92,6 +92,19 @@
 					</form>
 				</card>
 			</div>
+
+			<modal
+				@close="showDeleteModal = false"
+				@submit="deleteLabel(labelToDelete)"
+				v-if="showDeleteModal"
+			>
+				<template #header><span>{{ $t('task.label.delete.header') }}</span></template>
+
+				<template #text>
+					<p>{{ $t('task.label.delete.text1') }}<br/>
+						{{ $t('task.label.delete.text2') }}</p>
+				</template>
+			</modal>
 		</div>
 	</div>
 </template>
@@ -117,6 +130,8 @@ export default defineComponent({
 			labelEditLabel: new LabelModel(),
 			isLabelEdit: false,
 			editorActive: false,
+			showDeleteModal: false,
+			labelToDelete: null,
 		}
 	},
 	created() {
@@ -133,6 +148,8 @@ export default defineComponent({
 	}),
 	methods: {
 		deleteLabel(label) {
+			this.showDeleteModal = false
+			this.isLabelEdit = false
 			return this.$store.dispatch('labels/deleteLabel', label)
 		},
 		editLabelSubmit() {
@@ -159,6 +176,10 @@ export default defineComponent({
 			// See https://github.com/NikulinIlya/vue-easymde/issues/3
 			this.editorActive = false
 			this.$nextTick(() => this.editorActive = true)
+		},
+		showDeleteDialoge(label) {
+			this.labelToDelete = label
+			this.showDeleteModal = true
 		},
 	},
 })

@@ -729,7 +729,12 @@
       "addSuccess": "The label has been added successfully.",
       "createSuccess": "The label has been created successfully.",
       "removeSuccess": "The label has been removed successfully.",
-      "addCreateSuccess": "The label has been created and added successfully."
+      "addCreateSuccess": "The label has been created and added successfully.",
+      "delete": {
+        "header": "Delete this label",
+        "text1": "Are you sure you want to delete this label?",
+        "text2": "This will remove it from all tasks and cannot be restored."
+      }
     },
     "priority": {
       "unset": "Unset",
