@@ -79,7 +79,6 @@ import (
 	"code.vikunja.io/web"
 	"code.vikunja.io/web/handler"
 
-	"github.com/asaskevich/govalidator"
 	"github.com/getsentry/sentry-go"
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	"github.com/golang-jwt/jwt/v4"
@@ -87,31 +86,6 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	elog "github.com/labstack/gommon/log"
 )
-
-// CustomValidator is a dummy struct to use govalidator with echo
-type CustomValidator struct{}
-
-// Validate validates stuff
-func (cv *CustomValidator) Validate(i interface{}) error {
-	if _, err := govalidator.ValidateStruct(i); err != nil {
-
-		var errs []string
-		for field, e := range govalidator.ErrorsByField(err) {
-			errs = append(errs, field+": "+e)
-		}
-
-		httperr := models.ValidationHTTPError{
-			HTTPError: web.HTTPError{
-				Code:    models.ErrCodeInvalidData,
-				Message: "Invalid Data",
-			},
-			InvalidFields: errs,
-		}
-
-		return httperr
-	}
-	return nil
-}
 
 // NewEcho registers a new Echo instance
 func NewEcho() *echo.Echo {

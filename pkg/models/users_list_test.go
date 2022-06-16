@@ -32,6 +32,7 @@ func TestListUsersFromList(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
+		OverdueTasksRemindersTime:    "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -42,6 +43,7 @@ func TestListUsersFromList(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
+		OverdueTasksRemindersTime:    "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -52,6 +54,7 @@ func TestListUsersFromList(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
+		OverdueTasksRemindersTime:    "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -63,6 +66,7 @@ func TestListUsersFromList(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
+		OverdueTasksRemindersTime:    "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -74,6 +78,7 @@ func TestListUsersFromList(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
+		OverdueTasksRemindersTime:    "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -84,6 +89,7 @@ func TestListUsersFromList(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
+		OverdueTasksRemindersTime:    "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -95,6 +101,7 @@ func TestListUsersFromList(t *testing.T) {
 		EmailRemindersEnabled:        true,
 		DiscoverableByEmail:          true,
 		OverdueTasksRemindersEnabled: true,
+		OverdueTasksRemindersTime:    "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -105,6 +112,7 @@ func TestListUsersFromList(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
+		OverdueTasksRemindersTime:    "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -115,6 +123,7 @@ func TestListUsersFromList(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
+		OverdueTasksRemindersTime:    "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -125,6 +134,7 @@ func TestListUsersFromList(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
+		OverdueTasksRemindersTime:    "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -136,6 +146,7 @@ func TestListUsersFromList(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
+		OverdueTasksRemindersTime:    "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -148,6 +159,7 @@ func TestListUsersFromList(t *testing.T) {
 		EmailRemindersEnabled:        true,
 		DiscoverableByName:           true,
 		OverdueTasksRemindersEnabled: true,
+		OverdueTasksRemindersTime:    "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -158,6 +170,7 @@ func TestListUsersFromList(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
+		OverdueTasksRemindersTime:    "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}

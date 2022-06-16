@@ -9184,6 +9184,10 @@ const docTemplate = `{
                     "description": "If enabled, the user will get an email for their overdue tasks each morning.",
                     "type": "boolean"
                 },
+                "overdue_tasks_reminders_time": {
+                    "description": "The time when the daily summary of overdue tasks will be sent via email.",
+                    "type": "string"
+                },
                 "timezone": {
                     "description": "The user's time zone. Used to send task reminders in the time zone of the user.",
                     "type": "string"

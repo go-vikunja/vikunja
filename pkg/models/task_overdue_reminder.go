@@ -32,7 +32,7 @@ import (
 )
 
 func getUndoneOverdueTasks(s *xorm.Session, now time.Time) (usersWithTasks map[int64]*userWithTasks, err error) {
-	now = utils.GetTimeWithoutNanoSeconds(now)
+	now = utils.GetTimeWithoutSeconds(now)
 	nextMinute := now.Add(1 * time.Minute)
 
 	var tasks []*Task
@@ -78,10 +78,14 @@ func getUndoneOverdueTasks(s *xorm.Session, now time.Time) (usersWithTasks map[i
 			tzs[t.User.Timezone] = tz
 		}
 
-		// If it is 9:00 for that current user, add the task to their list of overdue tasks
-		overdueMailTime := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, tz)
+		// If it is time for that current user, add the task to their list of overdue tasks
+		tm, err := time.Parse("15:04", t.User.OverdueTasksRemindersTime)
+		if err != nil {
+			return nil, err
+		}
+		overdueMailTime := time.Date(now.Year(), now.Month(), now.Day(), tm.Hour(), tm.Minute(), 0, 0, tz)
 		isTimeForReminder := overdueMailTime.After(now) || overdueMailTime.Equal(now.In(tz))
-		wasTimeForReminder := overdueMailTime.Before(now.Add(time.Minute))
+		wasTimeForReminder := overdueMailTime.Before(nextMinute)
 		taskIsOverdueInUserTimezone := overdueMailTime.After(t.Task.DueDate.In(tz))
 		if isTimeForReminder && wasTimeForReminder && taskIsOverdueInUserTimezone {
 			_, exists := uts[t.User.ID]

@@ -17,6 +17,8 @@
 package v1
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -46,11 +48,13 @@ type UserSettings struct {
 	DiscoverableByEmail bool `json:"discoverable_by_email"`
 	// If enabled, the user will get an email for their overdue tasks each morning.
 	OverdueTasksRemindersEnabled bool `json:"overdue_tasks_reminders_enabled"`
+	// The time when the daily summary of overdue tasks will be sent via email.
+	OverdueTasksRemindersTime string `json:"overdue_tasks_reminders_time" valid:"time,required"`
 	// If a task is created without a specified list this value should be used. Applies
 	// to tasks made directly in API and from clients.
 	DefaultListID int64 `json:"default_list_id"`
 	// The day when the week starts for this user. 0 = sunday, 1 = monday, etc.
-	WeekStart int `json:"week_start"`
+	WeekStart int `json:"week_start" valid:"range(0|7)"`
 	// The user's language
 	Language string `json:"language"`
 	// The user's time zone. Used to send task reminders in the time zone of the user.
@@ -158,7 +162,16 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	us := &UserSettings{}
 	err := c.Bind(us)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Bad user name provided.")
+		var he *echo.HTTPError
+		if errors.As(err, &he) {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message))
+		}
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.")
+	}
+
+	err = c.Validate(us)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
 	u, err := user2.GetCurrentUser(c)
@@ -184,6 +197,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	user.WeekStart = us.WeekStart
 	user.Language = us.Language
 	user.Timezone = us.Timezone
+	user.OverdueTasksRemindersTime = us.OverdueTasksRemindersTime
 
 	_, err = user2.UpdateUser(s, user)
 	if err != nil {

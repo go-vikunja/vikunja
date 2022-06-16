@@ -30,3 +30,12 @@ func GetTimeWithoutNanoSeconds(t time.Time) time.Time {
 	// so we make sure the time we use to get the reminders don't contain nanoseconds.
 	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), 0, t.Location()).In(tz)
 }
+
+// GetTimeWithoutSeconds returns a time.Time with the seconds set to 0.
+func GetTimeWithoutSeconds(t time.Time) time.Time {
+	tz := config.GetTimeZone()
+
+	// By default, time.Now() includes nanoseconds which we don't save. That results in getting the wrong dates,
+	// so we make sure the time we use to get the reminders don't contain nanoseconds.
+	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), 0, 0, t.Location()).In(tz)
+}

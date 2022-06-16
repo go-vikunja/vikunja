@@ -43,6 +43,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 			Issuer:                       "local",
 			EmailRemindersEnabled:        true,
 			OverdueTasksRemindersEnabled: true,
+			OverdueTasksRemindersTime:    "09:00",
 			Created:                      testCreatedTime,
 			Updated:                      testUpdatedTime,
 		},

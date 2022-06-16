@@ -61,7 +61,7 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 	// Get all creators of tasks
 	creators := make(map[int64]*user.User, len(taskIDs))
 	err = s.
-		Select("users.id, users.username, users.email, users.name, users.timezone").
+		Select("users.*").
 		Join("LEFT", "tasks", "tasks.created_by_id = users.id").
 		In("tasks.id", taskIDs).
 		Where(cond).

@@ -94,6 +94,7 @@ type User struct {
 	DiscoverableByName           bool   `xorm:"bool default false index" json:"-"`
 	DiscoverableByEmail          bool   `xorm:"bool default false index" json:"-"`
 	OverdueTasksRemindersEnabled bool   `xorm:"bool default true index" json:"-"`
+	OverdueTasksRemindersTime    string `xorm:"varchar(5) not null default '09:00'" json:"-"`
 	DefaultListID                int64  `xorm:"bigint null index" json:"-"`
 	WeekStart                    int    `xorm:"null" json:"-"`
 	Language                     string `xorm:"varchar(50) null" json:"-"`
@@ -493,6 +494,7 @@ func UpdateUser(s *xorm.Session, user *User) (updatedUser *User, err error) {
 			"week_start",
 			"language",
 			"timezone",
+			"overdue_tasks_reminders_time",
 		).
 		Update(user)
 	if err != nil {
