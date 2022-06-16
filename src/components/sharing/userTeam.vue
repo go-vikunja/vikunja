@@ -131,12 +131,12 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, ShallowReactive, shallowReactive} from 'vue'
+import {defineComponent} from 'vue'
 export default defineComponent({ name: 'userTeamShare' })
 </script>
 
 <script setup lang="ts">
-import {ref, reactive, computed} from 'vue'
+import {ref, reactive, computed, shallowReactive, ShallowReactive, Ref} from 'vue'
 import type {PropType} from 'vue'
 import {useStore} from 'vuex'
 import {useI18n} from 'vue-i18n'
@@ -185,7 +185,7 @@ const {t} = useI18n({useScope: 'global'})
 let stuffService: ShallowReactive<UserNamespaceService | UserListService | TeamListService | TeamNamespaceService>
 let stuffModel: UserNamespaceModel | UserListModel | TeamListModel | TeamNamespaceModel
 let searchService: ShallowReactive<UserService | TeamService>
-let sharable: UserModel | TeamModel
+let sharable: Ref<UserModel | TeamModel>
  
 const searchLabel = ref('')
 const selectedRight = ref({})
@@ -230,7 +230,7 @@ const sharableName = computed(() => {
 
 if (props.shareType === 'user') {
 	searchService = shallowReactive(new UserService())
-	sharable = reactive(new UserModel())
+	sharable = ref(new UserModel())
 	searchLabel.value = 'username'
 
 	if (props.type === 'list') {
@@ -246,7 +246,7 @@ if (props.shareType === 'user') {
 	}
 } else if (props.shareType === 'team') {
 	searchService = new TeamService()
-	sharable = reactive(new TeamModel())
+	sharable = ref(new TeamModel())
 	searchLabel.value = 'name'
 
 	if (props.type === 'list') {
@@ -275,9 +275,9 @@ async function load() {
 
 async function deleteSharable() {
 	if (props.shareType === 'user') {
-		stuffModel.userId = sharable.username
+		stuffModel.userId = sharable.value.username
 	} else if (props.shareType === 'team') {
-		stuffModel.teamId = sharable.id
+		stuffModel.teamId = sharable.value.id
 	}
 
 	await stuffService.delete(stuffModel)
@@ -306,11 +306,11 @@ async function add(admin) {
 	}
 
 	if (props.shareType === 'user') {
-		stuffModel.userId = sharable.username
+		stuffModel.userId = sharable.value.username
 	} else if (props.shareType === 'team') {
-		stuffModel.teamId = sharable.id
+		stuffModel.teamId = sharable.value.id
 	}
-
+	
 	await stuffService.create(stuffModel)
 	success({message: t('list.share.userTeam.addedSuccess', {type: shareTypeName.value})})
 	await load()
