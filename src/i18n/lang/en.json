@@ -77,7 +77,7 @@
         "newName": "The new Name",
         "savedSuccess": "The settings were successfully updated.",
         "emailReminders": "Send me reminders for tasks via Email",
-        "overdueReminders": "Send me reminders for overdue undone tasks via email each morning",
+        "overdueReminders": "Send me reminders for overdue undone tasks via email",
         "discoverableByName": "Let other users find me when they search for my name",
         "discoverableByEmail": "Let other users find me when they search for my full email",
         "playSoundWhenDone": "Play a sound when marking tasks as done",
@@ -86,7 +86,8 @@
         "weekStartMonday": "Monday",
         "language": "Language",
         "defaultList": "Default List",
-        "timezone": "Time Zone"
+        "timezone": "Time Zone",
+        "overdueTasksRemindersTime": "Overdue tasks reminder email time"
       },
       "totp": {
         "title": "Two Factor Authentication",

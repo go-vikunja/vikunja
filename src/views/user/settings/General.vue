@@ -20,14 +20,27 @@
 		</div>
 		<div class="field">
 			<label class="checkbox">
-				<input type="checkbox" v-model="settings.emailRemindersEnabled"/>
-				{{ $t('user.settings.general.emailReminders') }}
+				<input type="checkbox" v-model="settings.overdueTasksRemindersEnabled"/>
+				{{ $t('user.settings.general.overdueReminders') }}
 			</label>
+		</div>
+		<div class="field" v-if="settings.overdueTasksRemindersEnabled">
+			<label class="label" for="overdueTasksReminderTime">
+				{{ $t('user.settings.general.overdueTasksRemindersTime') }}
+			</label>
+			<div class="control">
+				<input
+					@keyup.enter="updateSettings"
+					class="input"
+					id="overdueTasksReminderTime"
+					type="time"
+					v-model="settings.overdueTasksRemindersTime"/>
+			</div>
 		</div>
 		<div class="field">
 			<label class="checkbox">
-				<input type="checkbox" v-model="settings.overdueTasksRemindersEnabled"/>
-				{{ $t('user.settings.general.overdueReminders') }}
+				<input type="checkbox" v-model="settings.emailRemindersEnabled"/>
+				{{ $t('user.settings.general.emailReminders') }}
 			</label>
 		</div>
 		<div class="field">
@@ -206,7 +219,6 @@ function getPlaySoundWhenDoneSetting() {
 	return localStorage.getItem(playSoundWhenDoneKey) === 'true' || localStorage.getItem(playSoundWhenDoneKey) === null
 }
 
-
 const playSoundWhenDone = ref(getPlaySoundWhenDoneSetting())
 const quickAddMagicMode = ref(getQuickAddMagicMode())
 
@@ -218,7 +230,6 @@ const availableLanguageOptions = ref(
 		.map(l => ({code: l[0], title: l[1]}))
 		.sort((a, b) => a.title.localeCompare(b.title)),
 )
-
 
 const defaultList = computed({
 	get: () => store.getters['lists/getListById'](settings.defaultListId),
