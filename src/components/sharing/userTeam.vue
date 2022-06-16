@@ -48,13 +48,13 @@
 					</td>
 				</template>
 				<td class="type">
-					<template v-if="s.right === rights.ADMIN">
+					<template v-if="s.right === RIGHTS.ADMIN">
 							<span class="icon is-small">
 								<icon icon="lock"/>
 							</span>
 						{{ $t('list.share.right.admin') }}
 					</template>
-					<template v-else-if="s.right === rights.READ_WRITE">
+					<template v-else-if="s.right === RIGHTS.READ_WRITE">
 							<span class="icon is-small">
 								<icon icon="pen"/>
 							</span>
@@ -75,20 +75,20 @@
 							v-model="selectedRight[s.id]"
 						>
 							<option
-								:selected="s.right === rights.READ"
-								:value="rights.READ"
+								:selected="s.right === RIGHTS.READ"
+								:value="RIGHTS.READ"
 							>
 								{{ $t('list.share.right.read') }}
 							</option>
 							<option
-								:selected="s.right === rights.READ_WRITE"
-								:value="rights.READ_WRITE"
+								:selected="s.right === RIGHTS.READ_WRITE"
+								:value="RIGHTS.READ_WRITE"
 							>
 								{{ $t('list.share.right.readWrite') }}
 							</option>
 							<option
-								:selected="s.right === rights.ADMIN"
-								:value="rights.ADMIN"
+								:selected="s.right === RIGHTS.ADMIN"
+								:value="RIGHTS.ADMIN"
 							>
 								{{ $t('list.share.right.admin') }}
 							</option>
