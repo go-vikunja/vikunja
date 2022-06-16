@@ -120,7 +120,9 @@
 				v-if="showDeleteModal"
 			>
 				<template #header>
-					<span>{{ $t('list.share.userTeam.removeHeader', {type: shareTypeName, sharable: sharableName}) }}</span>
+					<span>{{
+							$t('list.share.userTeam.removeHeader', {type: shareTypeName, sharable: sharableName})
+						}}</span>
 				</template>
 				<template #text>
 					<p>{{ $t('list.share.userTeam.removeText', {type: shareTypeName, sharable: sharableName}) }}</p>
@@ -132,7 +134,8 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
-export default defineComponent({ name: 'userTeamShare' })
+
+export default defineComponent({name: 'userTeamShare'})
 </script>
 
 <script setup lang="ts">
@@ -158,7 +161,7 @@ import TeamModel from '@/models/team'
 import RIGHTS from '@/models/constants/rights.json'
 import Multiselect from '@/components/input/multiselect.vue'
 import Nothing from '@/components/misc/nothing.vue'
-import { success } from '@/message'
+import {success} from '@/message'
 
 const props = defineProps({
 	type: {
@@ -186,7 +189,7 @@ let stuffService: ShallowReactive<UserNamespaceService | UserListService | TeamL
 let stuffModel: UserNamespaceModel | UserListModel | TeamListModel | TeamNamespaceModel
 let searchService: ShallowReactive<UserService | TeamService>
 let sharable: Ref<UserModel | TeamModel>
- 
+
 const searchLabel = ref('')
 const selectedRight = ref({})
 
@@ -290,10 +293,12 @@ async function deleteSharable() {
 			sharables.value.splice(i, 1)
 		}
 	}
-	success({message: t('list.share.userTeam.removeSuccess', {
-		type: shareTypeName.value,
-		sharable: sharableName.value,
-	})})
+	success({
+		message: t('list.share.userTeam.removeSuccess', {
+			type: shareTypeName.value,
+			sharable: sharableName.value,
+		}),
+	})
 }
 
 async function add(admin) {
@@ -310,7 +315,7 @@ async function add(admin) {
 	} else if (props.shareType === 'team') {
 		stuffModel.teamId = sharable.value.id
 	}
-	
+
 	await stuffService.create(stuffModel)
 	success({message: t('list.share.userTeam.addedSuccess', {type: shareTypeName.value})})
 	await load()
@@ -348,16 +353,22 @@ async function toggleType(sharable) {
 }
 
 const found = ref([])
+
+const currentUserId = computed(() => store.state.auth.info.id)
 async function find(query) {
 	if (query === '') {
-		clearAll()
+		found.value = []
 		return
 	}
-	found.value = await searchService.getAll({}, {s: query})
-}
-
-function clearAll() {
-	found.value = []
+	const results = await searchService.getAll({}, {s: query})
+	found.value = results
+		.filter(m => {
+			if(props.shareType === 'user' && m.id === currentUserId.value) {
+				return false
+			}
+			
+			return typeof sharables.value.find(s => s.id === m.id) === 'undefined'
+		})
 }
 </script>
 
