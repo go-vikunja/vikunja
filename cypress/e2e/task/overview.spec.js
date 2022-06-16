@@ -115,6 +115,7 @@ describe('Home Page Task Overview', () => {
 		const {list} = seedTasks(40)
 		updateUserSettings({
 			default_list_id: list.id,
+			overdue_tasks_reminders_time: '9:00',
 		})
 		
 		const newTaskTitle = 'New Task'
