@@ -198,6 +198,14 @@ function handleEnter(e: KeyboardEvent) {
 	e.preventDefault()
 	addTask()
 }
+
+function focusTaskInput() {
+	newTaskInput.value.focus()
+}
+
+defineExpose({
+	focusTaskInput,
+})
 </script>
 
 <style lang="scss" scoped>

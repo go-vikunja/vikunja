@@ -262,7 +262,7 @@ export default defineComponent({
 			}, 200)
 		},
 		focusNewTaskInput() {
-			this.$refs.addTask.$refs.newTaskInput.focus()
+			this.$refs.addTask.focusTaskInput()
 		},
 		updateTaskList( task ) {
 			if ( this.isAlphabeticalSorting ) {
