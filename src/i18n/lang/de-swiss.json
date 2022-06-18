@@ -77,7 +77,7 @@
         "newName": "De neu Namä",
         "savedSuccess": "Die Iihstellige sind erfolgriich aktualisiert wordä.",
         "emailReminders": "Schick mir e Errinnerig für Uufgabe per E-Mail",
-        "overdueReminders": "Schick mir jede Morge Errinnerige für überfälligi Uufgabe per E-Mail",
+        "overdueReminders": "Sende mir jeden Tag eine Zusammenfassung meiner überfälligen Aufgaben",
         "discoverableByName": "Anderi Lüüt chend mi findä, wenn si nach miim Name sueched",
         "discoverableByEmail": "Anderi Benutzer chend mich finde, wenns mini voll E-Mail Adressä sueched",
         "playSoundWhenDone": "Spil es Tönli ab, wenn en Task als fertig markiert wird",
@@ -86,7 +86,8 @@
         "weekStartMonday": "Määntig",
         "language": "Sproch",
         "defaultList": "Standard Liste",
-        "timezone": "Zeitzone"
+        "timezone": "Zeitzone",
+        "overdueTasksRemindersTime": "Zeit der E-Mail-Zusammenfassung der überfälligen Aufgaben"
       },
       "totp": {
         "title": "Zweifaktor Authentifizierig",
@@ -725,7 +726,12 @@
       "addSuccess": "Das Label isch erfolgriich hinzuegfüegt worde.",
       "createSuccess": "Das Label isch erfolgriich erstellt worde.",
       "removeSuccess": "Das Label isch erfolgriich glöscht.",
-      "addCreateSuccess": "Das Label wurde erfolgreich erstellt und hinzugefügt."
+      "addCreateSuccess": "Das Label wurde erfolgreich erstellt und hinzugefügt.",
+      "delete": {
+        "header": "Dieses Label löschen",
+        "text1": "Bist du sicher, dass du dieses Label löschen möchtest?",
+        "text2": "Es wird von allen Aufgaben entfernt und kann nicht wiederhergestellt werden."
+      }
     },
     "priority": {
       "unset": "Nid iihgstellt",

@@ -77,7 +77,7 @@
         "newName": "Neuer Name",
         "savedSuccess": "Die Einstellungen wurden erfolgreich aktualisiert.",
         "emailReminders": "Erinnerungen an Aufgaben per E-Mail senden",
-        "overdueReminders": "Erinnerungen für überfällige, unerledigte Aufgaben jeden Morgen per E-Mail senden",
+        "overdueReminders": "Sende mir jeden Tag eine Zusammenfassung meiner überfälligen Aufgaben",
         "discoverableByName": "Andere können mich finden, wenn sie nach meinem Namen suchen",
         "discoverableByEmail": "Andere können mich finden, wenn sie nach meiner kompletten E-Mail-Adresse suchen",
         "playSoundWhenDone": "Einen Ton abspielen, wenn Aufgaben als erledigt markiert werden",
@@ -86,7 +86,8 @@
         "weekStartMonday": "Montag",
         "language": "Sprache",
         "defaultList": "Standard-Liste",
-        "timezone": "Zeitzone"
+        "timezone": "Zeitzone",
+        "overdueTasksRemindersTime": "Zeit der E-Mail-Zusammenfassung der überfälligen Aufgaben"
       },
       "totp": {
         "title": "Zwei-Faktor-Authentifizierung",
@@ -725,7 +726,12 @@
       "addSuccess": "Das Label wurde erfolgreich hinzugefügt.",
       "createSuccess": "Das Label wurde erfolgreich erstellt.",
       "removeSuccess": "Das Label wurde erfolgreich entfernt.",
-      "addCreateSuccess": "Das Label wurde erfolgreich erstellt und hinzugefügt."
+      "addCreateSuccess": "Das Label wurde erfolgreich erstellt und hinzugefügt.",
+      "delete": {
+        "header": "Dieses Label löschen",
+        "text1": "Bist du sicher, dass du dieses Label löschen möchtest?",
+        "text2": "Es wird von allen Aufgaben entfernt und kann nicht wiederhergestellt werden."
+      }
     },
     "priority": {
       "unset": "Nicht eingestellt",

@@ -77,7 +77,7 @@
         "newName": "O novo Nome",
         "savedSuccess": "As definições foram atualizadas com sucesso.",
         "emailReminders": "Enviar-me notificações por e-mail",
-        "overdueReminders": "Enviar-me lembretes para tarefas pendentes em atraso, por e-mail, todas as manhãs",
+        "overdueReminders": "Envie-me diariamente um resumo das minhas tarefas pendentes",
         "discoverableByName": "Permitir que outros utilizadores me encontrem quando pesquisam o meu nome",
         "discoverableByEmail": "Permitir que outros utilizadores me encontrem quando pesquisam o meu e-mail completo",
         "playSoundWhenDone": "Tocar um som quando marcar tarefas como concluídas",
@@ -86,7 +86,8 @@
         "weekStartMonday": "Segunda-Feira",
         "language": "Idioma",
         "defaultList": "Lista padrão",
-        "timezone": "Fuso Horário"
+        "timezone": "Fuso Horário",
+        "overdueTasksRemindersTime": "Horário do e-mail de lembrete de tarefas pendentes"
       },
       "totp": {
         "title": "Autenticação de Dois Fatores",
@@ -725,7 +726,12 @@
       "addSuccess": "A etiqueta foi adicionada com sucesso.",
       "createSuccess": "A etiqueta foi criada com sucesso.",
       "removeSuccess": "A etiqueta foi eliminada com sucesso.",
-      "addCreateSuccess": "A etiqueta foi criada e adicionada com sucesso."
+      "addCreateSuccess": "A etiqueta foi criada e adicionada com sucesso.",
+      "delete": {
+        "header": "Eliminar esta etiqueta",
+        "text1": "Tens a certeza que pretendes eliminar esta etiqueta?",
+        "text2": "Isto irá removê-la de todas as tarefas e não poderá ser restaurado."
+      }
     },
     "priority": {
       "unset": "Remover",
