@@ -181,7 +181,7 @@ func convertListForFolder(listID int, list *list, content *wunderlistContents) (
 				}
 			}
 
-			// Attachments
+			// Embeds
 			for _, f := range content.files {
 				if f.TaskID == t.ID {
 					// Download the attachment and put it in the file

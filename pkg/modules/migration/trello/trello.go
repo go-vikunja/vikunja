@@ -242,12 +242,12 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullV
 					log.Debugf("[Trello Migration] Converted label %s from card %s", label.ID, card.ID)
 				}
 
-				// Attachments
+				// Embeds
 				if len(card.Attachments) > 0 {
 					log.Debugf("[Trello Migration] Downloading %d card attachments from card %s", len(card.Attachments), card.ID)
 				}
 				for _, attachment := range card.Attachments {
-					if attachment.MimeType == "" { // Attachments can also be not downloadable - the mime type is empty in that case.
+					if attachment.MimeType == "" { // Embeds can also be not downloadable - the mime type is empty in that case.
 						log.Debugf("[Trello Migration] Attachment %s does not have a mime type, not downloading", attachment.ID)
 						continue
 					}

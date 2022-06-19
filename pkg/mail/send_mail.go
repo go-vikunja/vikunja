@@ -20,6 +20,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/version"
+	"io"
 
 	"github.com/wneessen/go-mail"
 )
@@ -34,6 +35,7 @@ type Opts struct {
 	ContentType ContentType
 	Boundary    string
 	Headers     []*header
+	Embeds      map[string]io.Reader
 }
 
 // ContentType represents mail content types
@@ -78,8 +80,13 @@ func getMessage(opts *Opts) *mail.Msg {
 	_ = m.From(opts.From)
 	_ = m.To(opts.To)
 	m.Subject(opts.Subject)
+
 	for _, h := range opts.Headers {
 		m.SetHeader(h.Field, h.Content)
+	}
+
+	for name, content := range opts.Embeds {
+		m.EmbedReader(name, content)
 	}
 
 	switch opts.ContentType {

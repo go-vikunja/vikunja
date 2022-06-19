@@ -18,7 +18,9 @@ package notifications
 
 import (
 	"bytes"
+	_ "embed"
 	templatehtml "html/template"
+	"io"
 	templatetext "text/template"
 
 	"code.vikunja.io/api/pkg/config"
@@ -49,7 +51,7 @@ const mailTemplateHTML = `
 <div style="width: 100%; font-family: 'Open Sans', sans-serif; text-rendering: optimizeLegibility">
     <div style="width: 600px; margin: 0 auto; text-align: justify;">
         <h1 style="font-size: 30px; text-align: center;">
-            <img src="{{.FrontendURL}}images/logo-full.svg" style="height: 75px;" alt="Vikunja"/>
+            <img src="cid:logo.png" style="height: 75px;" alt="Vikunja"/>
         </h1>
         <div style="border: 1px solid #dbdbdb; -webkit-box-shadow: 0.3em 0.3em 0.8em #e6e6e6; box-shadow: 0.3em 0.3em 0.8em #e6e6e6; color: #4a4a4a; padding: 5px 25px; border-radius: 3px; background: #fff;">
 <p>
@@ -83,6 +85,9 @@ const mailTemplateHTML = `
 </body>
 </html>
 `
+
+//go:embed logo.png
+var logo []byte
 
 // RenderMail takes a precomposed mail message and renders it into a ready to send mail.Opts object
 func RenderMail(m *Mail) (mailOpts *mail.Opts, err error) {
@@ -155,6 +160,9 @@ func RenderMail(m *Mail) (mailOpts *mail.Opts, err error) {
 		Message:     plainContent.String(),
 		HTMLMessage: htmlContent.String(),
 		Boundary:    boundary,
+		Embeds: map[string]io.Reader{
+			"logo.png": bytes.NewBuffer(logo),
+		},
 	}
 
 	return mailOpts, nil

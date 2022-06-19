@@ -4791,7 +4791,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Attachments were uploaded successfully.",
+                        "description": "Embeds were uploaded successfully.",
                         "schema": {
                             "$ref": "#/definitions/models.Message"
                         }
