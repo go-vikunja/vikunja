@@ -61,6 +61,7 @@ require (
 	github.com/tkuchiki/go-timezone v0.2.2
 	github.com/ulule/limiter/v3 v3.10.0
 	github.com/vectordotdev/go-datemath v0.1.1-0.20211214182920-0a4ac8742b93
+	github.com/wneessen/go-mail v0.2.4
 	github.com/yuin/goldmark v1.4.12
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	golang.org/x/image v0.0.0-20220302094943-723b81ca9867
@@ -68,9 +69,7 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
-	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
-	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/yaml.v3 v3.0.1
 	src.techknowlogick.com/xgo v1.4.1-0.20210311222705-d25c33fcd864
 	src.techknowlogick.com/xormigrate v1.4.0

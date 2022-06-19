@@ -19,7 +19,9 @@ package mail
 import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
-	"gopkg.in/gomail.v2"
+	"code.vikunja.io/api/pkg/version"
+
+	"github.com/wneessen/go-mail"
 )
 
 // Opts holds infos for a mail
@@ -45,11 +47,11 @@ const (
 )
 
 type header struct {
-	Field   string
+	Field   mail.Header
 	Content string
 }
 
-// SendTestMail sends a test mail to a receipient.
+// SendTestMail sends a test mail to a recipient.
 // It works without a queue.
 func SendTestMail(opts *Opts) error {
 	if config.MailerHost.GetString() == "" {
@@ -57,39 +59,39 @@ func SendTestMail(opts *Opts) error {
 		return nil
 	}
 
-	d := getDialer()
-	s, err := d.Dial()
+	c, err := getClient()
 	if err != nil {
 		return err
 	}
-	defer s.Close()
 
-	m := sendMail(opts)
+	m := getMessage(opts)
 
-	return gomail.Send(s, m)
+	return c.DialAndSend(m)
 }
 
-func sendMail(opts *Opts) *gomail.Message {
-	m := gomail.NewMessage()
+func getMessage(opts *Opts) *mail.Msg {
+	m := mail.NewMsg()
+	m.SetUserAgent("Vikunja " + version.Version)
 	if opts.From == "" {
 		opts.From = "Vikunja <" + config.MailerFromEmail.GetString() + ">"
 	}
-	m.SetHeader("From", opts.From)
-	m.SetHeader("To", opts.To)
-	m.SetHeader("Subject", opts.Subject)
+	_ = m.From(opts.From)
+	_ = m.To(opts.To)
+	m.Subject(opts.Subject)
 	for _, h := range opts.Headers {
 		m.SetHeader(h.Field, h.Content)
 	}
 
 	switch opts.ContentType {
 	case ContentTypePlain:
-		m.SetBody("text/plain", opts.Message)
+		m.SetBodyString("text/plain", opts.Message)
 	case ContentTypeHTML:
-		m.SetBody("text/html", opts.Message)
+		m.SetBodyString("text/html", opts.Message)
 	case ContentTypeMultipart:
-		m.SetBody("text/plain", opts.Message)
-		m.AddAlternative("text/html", opts.HTMLMessage)
+		m.SetBodyString("text/plain", opts.Message)
+		m.AddAlternativeString("text/html", opts.HTMLMessage)
 	}
+
 	return m
 }
 
@@ -100,6 +102,6 @@ func SendMail(opts *Opts) {
 		return
 	}
 
-	m := sendMail(opts)
+	m := getMessage(opts)
 	Queue <- m
 }

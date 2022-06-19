@@ -17,31 +17,47 @@
 package mail
 
 import (
-	"crypto/tls"
+	"context"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
-	"gopkg.in/gomail.v2"
+
+	"github.com/wneessen/go-mail"
 )
 
 // Queue is the mail queue
-var Queue chan *gomail.Message
+var Queue chan *mail.Msg
 
-func getDialer() *gomail.Dialer {
-	d := gomail.NewDialer(config.MailerHost.GetString(), config.MailerPort.GetInt(), config.MailerUsername.GetString(), config.MailerPassword.GetString())
-	// #nosec
-	d.TLSConfig = &tls.Config{
-		InsecureSkipVerify: config.MailerSkipTLSVerify.GetBool(),
-		ServerName:         config.MailerHost.GetString(),
+func getClient() (*mail.Client, error) {
+
+	var authType mail.SMTPAuthType
+	switch config.MailerAuthType.GetString() {
+	case "plain":
+		authType = mail.SMTPAuthPlain
+	case "login":
+		authType = mail.SMTPAuthLogin
+	case "cram-md5":
+		authType = mail.SMTPAuthCramMD5
 	}
-	d.SSL = config.MailerForceSSL.GetBool()
-	return d
+
+	tlsPolicy := mail.TLSOpportunistic
+	if config.MailerForceSSL.GetBool() {
+		tlsPolicy = mail.TLSMandatory
+	}
+
+	return mail.NewClient(
+		config.MailerHost.GetString(),
+		mail.WithSMTPAuth(authType),
+		mail.WithUsername(config.MailerUsername.GetString()),
+		mail.WithPassword(config.MailerPassword.GetString()),
+		mail.WithPort(config.MailerPort.GetInt()),
+		mail.WithTLSPolicy(tlsPolicy))
 }
 
 // StartMailDaemon starts the mail daemon
 func StartMailDaemon() {
-	Queue = make(chan *gomail.Message, config.MailerQueuelength.GetInt())
+	Queue = make(chan *mail.Msg, config.MailerQueuelength.GetInt())
 
 	if !config.MailerEnabled.GetBool() {
 		return
@@ -52,10 +68,12 @@ func StartMailDaemon() {
 		return
 	}
 
+	c, err := getClient()
+	if err != nil {
+		log.Errorf("Could not create mail client: %v", err)
+		return
+	}
 	go func() {
-		d := getDialer()
-
-		var s gomail.SendCloser
 		var err error
 		open := false
 		for {
@@ -65,13 +83,15 @@ func StartMailDaemon() {
 					return
 				}
 				if !open {
-					if s, err = d.Dial(); err != nil {
+					err = c.DialWithContext(context.Background())
+					if err != nil {
 						log.Error("Error during connect to smtp server: %s", err)
 						break
 					}
 					open = true
 				}
-				if err := gomail.Send(s, m); err != nil {
+				err = c.Send(m)
+				if err != nil {
 					log.Error("Error when sending mail: %s", err)
 					break
 				}
@@ -80,18 +100,14 @@ func StartMailDaemon() {
 			case <-time.After(config.MailerQueueTimeout.GetDuration() * time.Second):
 				if open {
 					open = false
-					if err := s.Close(); err != nil {
+					err = c.Close()
+					if err != nil {
 						log.Error("Error closing the mail server connection: %s\n", err)
 						break
 					}
-					log.Infof("Closed connection to mailserver")
+					log.Infof("Closed connection to mail server")
 				}
 			}
 		}
 	}()
-}
-
-// StopMailDaemon closes the mail queue channel, aka stops the daemon
-func StopMailDaemon() {
-	close(Queue)
 }

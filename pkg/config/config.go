@@ -96,6 +96,7 @@ const (
 	MailerPort          Key = `mailer.port`
 	MailerUsername      Key = `mailer.username`
 	MailerPassword      Key = `mailer.password`
+	MailerAuthType      Key = `mailer.authtype`
 	MailerSkipTLSVerify Key = `mailer.skiptlsverify`
 	MailerFromEmail     Key = `mailer.fromemail`
 	MailerQueuelength   Key = `mailer.queuelength`
@@ -325,6 +326,7 @@ func InitDefaultConfig() {
 	MailerQueuelength.setDefault(100)
 	MailerQueueTimeout.setDefault(30)
 	MailerForceSSL.setDefault(false)
+	MailerAuthType.setDefault("plain")
 	// Redis
 	RedisEnabled.setDefault(false)
 	RedisHost.setDefault("localhost:6379")
