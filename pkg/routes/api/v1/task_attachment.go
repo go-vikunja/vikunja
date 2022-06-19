@@ -36,7 +36,7 @@ import (
 // @Param id path int true "Task ID"
 // @Param files formData string true "The file, as multipart form file. You can pass multiple."
 // @Security JWTKeyAuth
-// @Success 200 {object} models.Message "Embeds were uploaded successfully."
+// @Success 200 {object} models.Message "Attachments were uploaded successfully."
 // @Failure 403 {object} models.Message "No access to the task."
 // @Failure 404 {object} models.Message "The task does not exist."
 // @Failure 500 {object} models.Message "Internal error"
