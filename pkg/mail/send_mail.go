@@ -17,10 +17,11 @@
 package mail
 
 import (
+	"io"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/version"
-	"io"
 
 	"github.com/wneessen/go-mail"
 )

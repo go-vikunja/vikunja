@@ -129,6 +129,8 @@ mailer:
   host: ""
   # SMTP Host port
   port: 587
+  # SMTP Auth Type. Can be either `plain`, `login` or `cram-md5`.
+  authtype: "plain"
   # SMTP username
   username: "user"
   # SMTP password

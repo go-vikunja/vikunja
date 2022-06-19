@@ -665,6 +665,17 @@ Full path: `mailer.port`
 Environment path: `VIKUNJA_MAILER_PORT`
 
 
+### authtype
+
+SMTP Auth Type. Can be either `plain`, `login` or `cram-md5`.
+
+Default: `plain`
+
+Full path: `mailer.authtype`
+
+Environment path: `VIKUNJA_MAILER_AUTHTYPE`
+
+
 ### username
 
 SMTP username
