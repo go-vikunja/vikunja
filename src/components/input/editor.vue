@@ -16,7 +16,7 @@
 		<p class="has-text-centered has-text-grey is-italic my-5" v-if="showPreviewText">
 			{{ emptyText }}
 			<template v-if="isEditEnabled">
-				<BaseButton @click="toggleEdit" class="d-print-none">{{ $t('input.editor.edit') }}</BaseButton>.
+				<ButtonLink @click="toggleEdit" class="d-print-none">{{ $t('input.editor.edit') }}</ButtonLink>.
 			</template>
 		</p>
 
@@ -63,12 +63,14 @@ import {findCheckboxesInText} from '../../helpers/checklistFromText'
 import {createRandomID} from '@/helpers/randomId'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import ButtonLink from '@/components/misc/ButtonLink.vue'
 
 export default defineComponent({
 	name: 'editor',
 	components: {
 		VueEasymde,
 		BaseButton,
+		ButtonLink,
 	},
 	props: {
 		modelValue: {
