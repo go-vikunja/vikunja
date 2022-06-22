@@ -1,14 +1,16 @@
 <template>
 	<div class="legal-links">
-		<a :href="imprintUrl" rel="noreferrer noopener nofollow" target="_blank" v-if="imprintUrl">{{ $t('navigation.imprint') }}</a>
+		<BaseButton :href="imprintUrl" v-if="imprintUrl">{{ $t('navigation.imprint') }}</BaseButton>
 		<span v-if="imprintUrl && privacyPolicyUrl"> | </span>
-		<a :href="privacyPolicyUrl" rel="noreferrer noopener nofollow" target="_blank" v-if="privacyPolicyUrl">{{ $t('navigation.privacy') }}</a>
+		<BaseButton :href="privacyPolicyUrl" v-if="privacyPolicyUrl">{{ $t('navigation.privacy') }}</BaseButton>
 	</div>
 </template>
 
 <script lang="ts" setup>
 import {computed} from 'vue'
 import {useStore} from 'vuex'
+
+import BaseButton from '@/components/base/BaseButton.vue'
 
 const store = useStore()
 

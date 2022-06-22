@@ -35,9 +35,7 @@
 				v-model="backgroundSearchTerm"
 			/>
 			<p class="unsplash-link">
-				<a href="https://unsplash.com" rel="noreferrer noopener nofollow" target="_blank">
-					{{ $t('list.background.poweredByUnsplash') }}
-				</a>
+				<BaseButton href="https://unsplash.com">{{ $t('list.background.poweredByUnsplash') }}</BaseButton>
 			</p>
 			<div class="image-search-result">
 				<a
@@ -83,12 +81,13 @@ import ListService from '@/services/list'
 import {CURRENT_LIST} from '@/store/mutation-types'
 import CreateEdit from '@/components/misc/create-edit.vue'
 import debounce from 'lodash.debounce'
+import BaseButton from '@/components/base/BaseButton.vue'
 
 const SEARCH_DEBOUNCE = 300
 
 export default defineComponent({
 	name: 'list-setting-background',
-	components: {CreateEdit},
+	components: {CreateEdit, BaseButton},
 	data() {
 		return {
 			backgroundService: new BackgroundUnsplashService(),

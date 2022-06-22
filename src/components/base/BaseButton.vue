@@ -53,7 +53,8 @@ const props = defineProps({
 const componentNodeName = ref<Node['nodeName']>('button')
 interface ElementBindings {
 	type?: string;
-	rel?: string,
+	rel?: string;
+	target?: string;
 }
 
 const elementBindings = ref({})
@@ -74,7 +75,10 @@ watchEffect(() => {
 	// we also set a predefined value for the attribute rel, but make it possible to overwrite this by the user.
 	if ('href' in attrs) {
 		nodeName = 'a'
-		bindings = {rel: 'noreferrer noopener nofollow'}
+		bindings = {
+			rel: 'noreferrer noopener nofollow',
+			target: '_blank',
+		}
 	}
 
 	componentNodeName.value = nodeName
