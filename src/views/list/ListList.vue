@@ -65,9 +65,9 @@
 
 			<nothing v-if="ctaVisible && tasks.length === 0 && !loading">
 				{{ $t('list.list.empty') }}
-				<BaseButton @click="focusNewTaskInput()">
+				<ButtonLink @click="focusNewTaskInput()">
 					{{ $t('list.list.newTaskCta') }}
-				</BaseButton>
+				</ButtonLink>
 			</nothing>
 
 			<div class="tasks-container" :class="{ 'has-task-edit-open': isTaskEdit }">
@@ -135,6 +135,7 @@
 import { ref, toRef, defineComponent } from 'vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import ButtonLink from '@/components/misc/ButtonLink.vue'
 import ListWrapper from './ListWrapper.vue'
 import EditTask from '@/components/tasks/edit-task'
 import AddTask from '@/components/tasks/add-task'
@@ -200,6 +201,7 @@ export default defineComponent({
 		AddTask,
 		draggable,
 		Pagination,
+		ButtonLink,
 	},
 
 	setup(props) {
