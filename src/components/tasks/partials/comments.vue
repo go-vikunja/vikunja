@@ -188,8 +188,8 @@ const commentEdit = reactive(new TaskCommentModel())
 
 const newComment = reactive(new TaskCommentModel())
 
-const saved = ref(null)
-const saving = ref(null)
+const saved = ref<TaskModel['id'] | null>(null)
+const saving = ref<TaskModel['id'] | null>(null)
 
 const userAvatar = computed(() => store.state.auth.info.getAvatarUrl(48))
 const currentUserId = computed(() => store.state.auth.info.id)

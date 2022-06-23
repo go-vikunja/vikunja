@@ -62,14 +62,15 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, watch} from 'vue'
+import {ref, reactive, watch, type PropType} from 'vue'
 import {error} from '@/message'
 import {useI18n} from 'vue-i18n'
-import type TaskModel from '@/models/task'
 import {TASK_REPEAT_MODES, type RepeatAfter} from '@/models/task'
+import type TaskModel from '@/models/task'
 
 const props = defineProps({
 	modelValue: {
+		type: Object as PropType<TaskModel>,
 		default: () => ({}),
 		required: true,
 	},

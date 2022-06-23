@@ -63,7 +63,7 @@ async function createNewList() {
 	}
 	showError.value = false
 
-	list.namespaceId = parseInt(route.params.namespaceId)
+	list.namespaceId = Number(route.params.namespaceId as string)
 	const newList = await store.dispatch('lists/createList', list)
 	await router.push({
 		name: 'list.index',

@@ -47,6 +47,7 @@ const props = defineProps({
 		required: true,
 	},
 	canWrite: {
+		type: Boolean,
 		required: true,
 	},
 })

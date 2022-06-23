@@ -38,7 +38,7 @@ const emit = defineEmits(['update:modelValue'])
 const store = useStore()
 const {t} = useI18n({useScope: 'global'})
 
-const list = reactive<ListModel>(new ListModel())
+const list: ListModel= reactive(new ListModel())
 
 watch(
 	() => props.modelValue,

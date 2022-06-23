@@ -63,7 +63,7 @@ const LOAD_NOTIFICATIONS_INTERVAL = 10000
 const store = useStore()
 const router = useRouter()
 
-const allNotifications = ref([])
+const allNotifications = ref<NotificationModel[]>([])
 const showNotifications = ref(false)
 const popup = ref(null)
 

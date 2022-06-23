@@ -198,7 +198,7 @@ const props = defineProps({
 
 const {t} = useI18n({useScope: 'global'})
 
-const linkShares = ref([])
+const linkShares = ref<LinkShareModel[]>([])
 const linkShareService = shallowReactive(new LinkShareService())
 const selectedRight = ref(RIGHTS.READ)
 const name = ref('')
