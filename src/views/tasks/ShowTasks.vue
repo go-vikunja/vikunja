@@ -49,7 +49,7 @@ import {useStore} from 'vuex'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
-import TaskModel from '@/models/task'
+import type TaskModel from '@/models/task'
 import {formatDate} from '@/helpers/time/formatDate'
 import {setTitle} from '@/helpers/setTitle'
 

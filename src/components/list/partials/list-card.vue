@@ -36,14 +36,14 @@
 </template>
 
 <script lang="ts" setup>
-import {PropType, ref, watch} from 'vue'
+import {type PropType, ref, watch} from 'vue'
 import {useStore} from 'vuex'
 
 import ListService from '@/services/list'
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 
 import {colorIsDark} from '@/helpers/color/colorIsDark'
-import ListModel from '@/models/list'
+import type ListModel from '@/models/list'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 

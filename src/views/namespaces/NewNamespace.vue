@@ -43,11 +43,11 @@
 <script lang="ts">
 import {defineComponent} from 'vue'
 
-import Message from '@/components/misc/message'
+import Message from '@/components/misc/message.vue'
 import NamespaceModel from '../../models/namespace'
 import NamespaceService from '../../services/namespace'
 import CreateEdit from '@/components/misc/create-edit.vue'
-import ColorPicker from '../../components/input/colorPicker'
+import ColorPicker from '../../components/input/colorPicker.vue'
 
 export default defineComponent({
 	name: 'NewNamespace',

@@ -74,9 +74,9 @@ import {ref, reactive, toRaw, computed, onBeforeMount} from 'vue'
 
 import router from '@/router'
 import {store} from '@/store'
-import Message from '@/components/misc/message'
+import Message from '@/components/misc/message.vue'
 import {isEmail} from '@/helpers/isEmail'
-import Password from '@/components/input/password'
+import Password from '@/components/input/password.vue'
 
 // FIXME: use the `beforeEnter` hook of vue-router
 // Check if the user is already logged in, if so, redirect them to the homepage

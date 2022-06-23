@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, watch, PropType} from 'vue'
+import {ref, shallowReactive, watch, type PropType} from 'vue'
 import {useStore} from 'vuex'
 import {useI18n} from 'vue-i18n'
 
@@ -37,7 +37,7 @@ import Multiselect from '@/components/input/multiselect.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import {includesById} from '@/helpers/utils'
-import UserModel from '@/models/user'
+import type UserModel from '@/models/user'
 import ListUserService from '@/services/listUsers'
 import {success} from '@/message'
 

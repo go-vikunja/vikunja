@@ -71,7 +71,7 @@ import {defineComponent} from 'vue'
 import AbstractMigrationService from '@/services/migrator/abstractMigration'
 import AbstractMigrationFileService from '@/services/migrator/abstractMigrationFile'
 import Logo from '@/assets/logo.svg?component'
-import Message from '@/components/misc/message'
+import Message from '@/components/misc/message.vue'
 
 import {MIGRATORS} from './migrators'
 

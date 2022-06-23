@@ -99,16 +99,14 @@
 import {defineComponent} from 'vue'
 
 import TaskModel from '../../../models/task'
-import PriorityLabel from './priorityLabel'
+import PriorityLabel from './priorityLabel.vue'
 import TaskService from '../../../services/task'
-import Labels from './labels'
-import User from '../../misc/user'
 import BaseButton from '@/components/base/BaseButton.vue'
-import Fancycheckbox from '../../input/fancycheckbox'
-import DeferTask from './defer-task'
+import Fancycheckbox from '../../input/fancycheckbox.vue'
+import DeferTask from './defer-task.vue'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {playPop} from '@/helpers/playPop'
-import ChecklistSummary from './checklist-summary'
+import ChecklistSummary from './checklist-summary.vue'
 
 export default defineComponent({
 	name: 'singleTaskInList',

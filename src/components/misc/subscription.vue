@@ -32,7 +32,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, shallowRef} from 'vue'
+import {computed, shallowRef, type PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -43,16 +43,21 @@ import SubscriptionModel from '@/models/subscription'
 
 import {success} from '@/message'
 
-interface Props {
-	entity: string
-	entityId: number
-	subscription: SubscriptionModel | null
-	type?: 'button' | 'dropdown' | null
-}
-
-const props = withDefaults(defineProps<Props>(), {
-	subscription: null,
-	type: 'button',
+const props = defineProps({
+	entity: String,
+	entityId: Number,
+	isButton: {
+		type: Boolean,
+		default: true,
+	},
+	subscription: {
+		type: Object as PropType<SubscriptionModel>,
+		default: null,
+	},
+	type: {
+		type: String as PropType<'button' | 'dropdown' | 'null'>,
+		default: 'button',
+	},
 })
 
 const subscriptionEntity = computed<string | null>(() => props.subscription?.entity ?? null)

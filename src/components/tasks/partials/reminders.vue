@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import {PropType, ref, onMounted, watch} from 'vue'
+import {type PropType, ref, onMounted, watch} from 'vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Datepicker from '@/components/input/datepicker.vue'

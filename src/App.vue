@@ -15,7 +15,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, watch, Ref} from 'vue'
+import {computed, watch, type Ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 import {useStore} from 'vuex'

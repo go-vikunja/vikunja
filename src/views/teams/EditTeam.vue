@@ -167,10 +167,10 @@ import Editor from '@/components/input/AsyncEditor'
 import {useStore} from 'vuex'
 
 import TeamService from '../../services/team'
-import TeamModel from '../../models/team'
+import type TeamModel from '../../models/team'
 import TeamMemberService from '../../services/teamMember'
-import TeamMemberModel from '../../models/teamMember'
-import UserModel from '../../models/user'
+import type TeamMemberModel from '../../models/teamMember'
+import type UserModel from '../../models/user'
 import UserService from '../../services/user'
 import Rights from '../../models/constants/rights.json'
 

@@ -9,7 +9,7 @@
 </template>
 
 <script lang="ts" setup>
-import {PropType} from 'vue'
+import type {PropType} from 'vue'
 type Variants = 'default' | 'small'
 
 defineProps({

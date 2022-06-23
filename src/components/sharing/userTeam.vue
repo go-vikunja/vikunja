@@ -139,7 +139,7 @@ export default defineComponent({name: 'userTeamShare'})
 </script>
 
 <script setup lang="ts">
-import {ref, reactive, computed, shallowReactive, ShallowReactive, Ref} from 'vue'
+import {ref, reactive, computed, shallowReactive, type ShallowReactive, type Ref} from 'vue'
 import type {PropType} from 'vue'
 import {useStore} from 'vuex'
 import {useI18n} from 'vue-i18n'

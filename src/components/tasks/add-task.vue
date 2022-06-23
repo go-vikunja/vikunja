@@ -44,7 +44,7 @@
 import {ref, watch, unref, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useStore} from 'vuex'
-import {tryOnMounted, debouncedWatch, useWindowSize, MaybeRef} from '@vueuse/core'
+import {tryOnMounted, debouncedWatch, useWindowSize, type MaybeRef} from '@vueuse/core'
 
 import TaskService from '@/services/task'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'

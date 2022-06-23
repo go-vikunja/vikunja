@@ -84,7 +84,7 @@ import Dropdown from '@/components/misc/dropdown.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 import TaskSubscription from '@/components/misc/subscription.vue'
 import ListModel from '@/models/list'
-import SubscriptionModel from '@/models/subscription'
+import type SubscriptionModel from '@/models/subscription'
 
 const props = defineProps({
 	list: {

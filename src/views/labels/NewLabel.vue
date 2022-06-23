@@ -38,7 +38,7 @@
 import {defineComponent} from 'vue'
 import LabelModel from '../../models/label'
 import CreateEdit from '@/components/misc/create-edit.vue'
-import ColorPicker from '../../components/input/colorPicker'
+import ColorPicker from '../../components/input/colorPicker.vue'
 import {mapState} from 'vuex'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 

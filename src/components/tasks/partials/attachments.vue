@@ -148,7 +148,7 @@ import {defineComponent} from 'vue'
 
 import AttachmentService from '../../../services/attachment'
 import AttachmentModel from '../../../models/attachment'
-import User from '../../misc/user'
+import User from '@/components/misc/user.vue'
 import {mapState} from 'vuex'
 
 import { useCopyToClipboard } from '@/composables/useCopyToClipboard'

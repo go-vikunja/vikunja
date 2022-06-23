@@ -180,7 +180,7 @@
 </template>
 
 <script setup lang="ts">
-import {toRef, computed, Ref} from 'vue'
+import {toRef, computed, type Ref} from 'vue'
 
 import {useStorage} from '@vueuse/core'
 
@@ -197,7 +197,7 @@ import Pagination from '@/components/misc/pagination.vue'
 import Popup from '@/components/misc/popup.vue'
 
 import {useTaskList} from '@/composables/taskList'
-import TaskModel from '@/models/task'
+import type TaskModel from '@/models/task'
 
 const ACTIVE_COLUMNS_DEFAULT = {
 	id: true,

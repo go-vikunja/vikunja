@@ -143,7 +143,7 @@
 import {ref, computed, onMounted, onBeforeMount} from 'vue'
 import {useStore} from 'vuex'
 import draggable from 'zhyswan-vuedraggable'
-import {SortableEvent} from 'sortablejs'
+import type {SortableEvent} from 'sortablejs'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
@@ -154,9 +154,10 @@ import Logo from '@/components/home/Logo.vue'
 import {MENU_ACTIVE} from '@/store/mutation-types'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
+import {getListTitle} from '@/helpers/getListTitle'
 import {useEventListener} from '@vueuse/core'
-import NamespaceModel from '@/models/namespace'
-import ListModel from '@/models/list'
+import type NamespaceModel from '@/models/namespace'
+import type ListModel from '@/models/list'
 
 const drag = ref(false)
 const dragOptions = {

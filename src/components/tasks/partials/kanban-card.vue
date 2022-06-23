@@ -66,15 +66,15 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
+import {defineComponent, type PropType} from 'vue'
 
 import {playPop} from '../../../helpers/playPop'
-import PriorityLabel from '../../../components/tasks/partials/priorityLabel'
-import User from '../../../components/misc/user'
+import PriorityLabel from '../../../components/tasks/partials/priorityLabel.vue'
+import User from '../../../components/misc/user.vue'
 import Done from '@/components/misc/Done.vue'
-import Labels from '../../../components/tasks/partials/labels'
-import ChecklistSummary from './checklist-summary'
-import {TASK_DEFAULT_COLOR} from '@/models/task'
+import Labels from '../../../components/tasks/partials/labels.vue'
+import ChecklistSummary from './checklist-summary.vue'
+import TaskModel, {TASK_DEFAULT_COLOR} from '@/models/task'
 
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 
@@ -95,6 +95,7 @@ export default defineComponent({
 	},
 	props: {
 		task: {
+			type: Object as PropType<TaskModel>,
 			required: true,
 		},
 		loading: {
@@ -112,7 +113,7 @@ export default defineComponent({
 	},
 	methods: {
 		colorIsDark,
-		async toggleTaskDone(task) {
+		async toggleTaskDone(task: TaskModel) {
 			this.loadingInternal = true
 			try {
 				const done = !task.done

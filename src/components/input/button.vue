@@ -26,7 +26,7 @@ export default defineComponent({
 </script>
 
 <script setup lang="ts">
-import {computed, useSlots, PropType} from 'vue'
+import {computed, useSlots, type PropType} from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 const BUTTON_TYPES_MAP =  Object.freeze({

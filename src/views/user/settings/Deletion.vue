@@ -83,11 +83,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-
-export default defineComponent({
-	name: 'user-settings-deletion',
-})
+export default { name: 'user-settings-deletion' }
 </script>
 
 <script setup lang="ts">

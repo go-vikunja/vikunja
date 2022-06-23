@@ -175,12 +175,12 @@
 import {defineComponent} from 'vue'
 
 import VueDragResize from 'vue-drag-resize'
-import EditTask from './edit-task'
+import EditTask from './edit-task.vue'
 
 import TaskService from '../../services/task'
 import TaskModel from '../../models/task'
 import priorities from '../../models/constants/priorities'
-import PriorityLabel from './partials/priorityLabel'
+import PriorityLabel from './partials/priorityLabel.vue'
 import TaskCollectionService from '../../services/taskCollection'
 import {mapState} from 'vuex'
 import Rights from '../../models/constants/rights.json'

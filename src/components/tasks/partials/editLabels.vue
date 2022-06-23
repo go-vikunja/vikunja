@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import {PropType, ref, computed, shallowReactive, watch} from 'vue'
+import {type PropType, ref, computed, shallowReactive, watch} from 'vue'
 import {useStore} from 'vuex'
 import {useI18n} from 'vue-i18n'
 

@@ -118,7 +118,7 @@ import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import AsyncEditor from '@/components/input/AsyncEditor'
-import ColorPicker from '@/components/input/colorPicker'
+import ColorPicker from '@/components/input/colorPicker.vue'
 
 export default defineComponent({
 	name: 'ListLabels',

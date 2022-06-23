@@ -1,7 +1,7 @@
 import {createRandomID} from '@/helpers/randomId'
 import {parseURL} from 'ufo'
 
-interface Provider {
+export interface Provider {
 	name: string
 	key: string
 	authUrl: string
