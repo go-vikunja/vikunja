@@ -257,7 +257,7 @@ async function addUser() {
 	success({message: t('team.edit.userAddedSuccess')})
 }
 
-async function toggleUserType(member) {
+async function toggleUserType(member: TeamMemberModel) {
 	// FIXME: direct manipulation
 	member.admin = !member.admin
 	member.teamId = teamId.value

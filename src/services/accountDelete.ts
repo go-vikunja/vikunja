@@ -1,15 +1,15 @@
 import AbstractService from './abstractService'
 
 export default class AccountDeleteService extends AbstractService {
-	request(password) {
-		return this.post('/user/deletion/request', {password: password})
+	request(password: string) {
+		return this.post('/user/deletion/request', {password})
 	}
 	
-	confirm(token) {
-		return this.post('/user/deletion/confirm', {token: token})
+	confirm(token: string) {
+		return this.post('/user/deletion/confirm', {token})
 	}
 	
-	cancel(password) {
-		return this.post('/user/deletion/cancel', {password: password})
+	cancel(password: string) {
+		return this.post('/user/deletion/cancel', {password})
 	}
 }

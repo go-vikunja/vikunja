@@ -163,6 +163,7 @@ import TaskCommentModel from '@/models/taskComment'
 import {uploadFile} from '@/helpers/attachments'
 import {success} from '@/message'
 
+import type TaskModel from '@/models/task'
 const props = defineProps({
 	taskId: {
 		type: Number,
@@ -213,7 +214,7 @@ function attachmentUpload(...args) {
 
 const taskCommentService = shallowReactive(new TaskCommentService())
 
-async function loadComments(taskId) {
+async function loadComments(taskId: TaskModel['id']) {
 	if (!enabled.value) {
 		return
 	}
@@ -262,7 +263,7 @@ function toggleEdit(comment: TaskCommentModel) {
 	Object.assign(commentEdit, comment)
 }
 
-function toggleDelete(commentId) {
+function toggleDelete(commentId: TaskCommentModel['id']) {
 	showDeleteModal.value = !showDeleteModal.value
 	commentToDelete.id = commentId
 }

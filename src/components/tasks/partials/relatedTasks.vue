@@ -220,7 +220,7 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		async findTasks(query) {
+		async findTasks(query: string) {
 			this.query = query
 			this.foundTasks = await this.taskService.getAll({}, {s: query})
 		},

@@ -148,6 +148,7 @@ import {defineComponent} from 'vue'
 
 import AttachmentService from '../../../services/attachment'
 import AttachmentModel from '../../../models/attachment'
+import type FileModel from '@/models/file'
 import User from '@/components/misc/user.vue'
 import {mapState} from 'vuex'
 
@@ -229,7 +230,7 @@ export default defineComponent({
 		})
 	},
 	methods: {
-		downloadAttachment(attachment) {
+		downloadAttachment(attachment: AttachmentModel) {
 			this.attachmentService.download(attachment)
 		},
 		uploadNewAttachment() {
@@ -239,7 +240,7 @@ export default defineComponent({
 
 			this.uploadFiles(this.$refs.files.files)
 		},
-		uploadFiles(files) {
+		uploadFiles(files: FileModel[]) {
 			uploadFiles(this.attachmentService, this.taskId, files)
 		},
 		async deleteAttachment() {

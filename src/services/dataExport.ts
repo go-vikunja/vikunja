@@ -2,11 +2,11 @@ import AbstractService from './abstractService'
 import {downloadBlob} from '../helpers/downloadBlob'
 
 export default class DataExportService extends AbstractService {
-	request(password) {
-		return this.post('/user/export/request', {password: password})
+	request(password: string) {
+		return this.post('/user/export/request', {password})
 	}
 	
-	async download(password) {
+	async download(password: string) {
 		const clear = this.setLoading()
 		try {
 			const url = await this.getBlobUrl('/user/export/download', 'POST', {password})

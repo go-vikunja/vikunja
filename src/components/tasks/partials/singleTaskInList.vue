@@ -186,7 +186,7 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		async markAsDone(checked) {
+		async markAsDone(checked: boolean) {
 			const updateFunc = async () => {
 				const task = await this.taskService.update(this.task)
 				if (this.task.done) {
@@ -211,7 +211,7 @@ export default defineComponent({
 			}
 		},
 
-		undoDone(checked) {
+		undoDone(checked: boolean) {
 			this.task.done = !this.task.done
 			this.markAsDone(!checked)
 		},

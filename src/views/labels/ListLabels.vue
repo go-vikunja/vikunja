@@ -149,7 +149,7 @@ export default defineComponent({
 		loading: state => state[LOADING] && state[LOADING_MODULE] === 'labels',
 	}),
 	methods: {
-		deleteLabel(label) {
+		deleteLabel(label: LabelModel) {
 			this.showDeleteModal = false
 			this.isLabelEdit = false
 			return this.$store.dispatch('labels/deleteLabel', label)
@@ -157,7 +157,7 @@ export default defineComponent({
 		editLabelSubmit() {
 			return this.$store.dispatch('labels/updateLabel', this.labelEditLabel)
 		},
-		editLabel(label) {
+		editLabel(label: LabelModel) {
 			if (label.createdBy.id !== this.userInfo.id) {
 				return
 			}
@@ -179,7 +179,7 @@ export default defineComponent({
 			this.editorActive = false
 			this.$nextTick(() => this.editorActive = true)
 		},
-		showDeleteDialoge(label) {
+		showDeleteDialoge(label: LabelModel) {
 			this.labelToDelete = label
 			this.showDeleteModal = true
 		},

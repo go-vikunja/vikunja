@@ -453,6 +453,7 @@ import {uploadFile} from '@/helpers/attachments'
 import ChecklistSummary from '../../components/tasks/partials/checklist-summary.vue'
 import CreatedUpdated from '@/components/tasks/partials/createdUpdated.vue'
 import { setTitle } from '@/helpers/setTitle'
+import type ListModel from '@/models/list'
 
 function scrollIntoView(el) {
 	if (!el) {
@@ -592,7 +593,7 @@ export default defineComponent({
 			return uploadFile(this.taskId, ...args)
 		},
 
-		async loadTask(taskId) {
+		async loadTask(taskId: TaskModel['id']) {
 			if (taskId === undefined) {
 				return
 			}
@@ -698,7 +699,7 @@ export default defineComponent({
 			this.saveTask(true, this.toggleTaskDone)
 		},
 
-		async changeList(list) {
+		async changeList(list: ListModel) {
 			this.$store.commit('kanban/removeTaskInBucket', this.task)
 			this.task.listId = list.id
 			await this.saveTask()

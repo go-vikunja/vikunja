@@ -355,7 +355,7 @@ async function toggleType(sharable) {
 const found = ref([])
 
 const currentUserId = computed(() => store.state.auth.info.id)
-async function find(query) {
+async function find(query: string) {
 	if (query === '') {
 		found.value = []
 		return

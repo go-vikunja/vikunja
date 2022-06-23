@@ -209,7 +209,7 @@ function resize() {
 	store.commit(MENU_ACTIVE, window.innerWidth >= 770)
 }
 
-function toggleLists(namespaceId: number) {
+function toggleLists(namespaceId: NamespaceModel['id']) {
 	listsVisible.value[namespaceId] = !listsVisible.value[namespaceId]
 }
 

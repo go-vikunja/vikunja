@@ -22,9 +22,9 @@ export default class BackgroundUploadService extends AbstractService {
 	 * @param file
 	 * @returns {Promise<any|never>}
 	 */
-	create(listId, file) {
+	create(listId: ListModel['id'], file) {
 		return this.uploadFile(
-			this.getReplacedRoute(this.paths.create, {listId: listId}),
+			this.getReplacedRoute(this.paths.create, {listId}),
 			file,
 			'background',
 		)

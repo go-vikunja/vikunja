@@ -53,7 +53,7 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		updateData(checked) {
+		updateData(checked: boolean) {
 			this.checked = checked
 			this.$emit('update:modelValue', checked)
 			this.$emit('change', checked)

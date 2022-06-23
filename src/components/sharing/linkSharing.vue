@@ -182,6 +182,7 @@ import {useI18n} from 'vue-i18n'
 
 import {RIGHTS} from '@/models/constants/rights'
 import LinkShareModel from '@/models/linkShare'
+import type ListModel from '@/models/list'
 
 import LinkShareService from '@/services/linkShare'
 
@@ -216,7 +217,7 @@ watch(
 const store = useStore()
 const frontendUrl = computed(() => store.state.config.frontendUrl)
 
-async function load(listId) {
+async function load(listId: ListModel['id']) {
 	// If listId == 0 the list on the calling component wasn't already loaded, so we just bail out here
 	if (listId === 0) {
 		return
@@ -225,7 +226,7 @@ async function load(listId) {
 	linkShares.value = await linkShareService.getAll({listId})
 }
 
-async function add(listId) {
+async function add(listId: ListModel['id']) {
 	const newLinkShare = new LinkShareModel({
 		right: selectedRight.value,
 		listId,
@@ -241,7 +242,7 @@ async function add(listId) {
 	await load(listId)
 }
 
-async function remove(listId) {
+async function remove(listId: ListModel['id']) {
 	try {
 		await linkShareService.delete(new LinkShareModel({
 			id: linkIdToDelete.value,

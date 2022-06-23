@@ -153,8 +153,9 @@ import {ALPHABETICAL_SORT} from '@/components/list/partials/filters.vue'
 
 import draggable from 'zhyswan-vuedraggable'
 import {calculateItemPosition} from '../../helpers/calculateItemPosition'
+import type TaskModel from '@/models/task'
 
-function sortTasks(tasks) {
+function sortTasks(tasks: TaskModel[]) {
 	if (tasks === null || tasks === []) {
 		return
 	}
@@ -273,7 +274,7 @@ export default defineComponent({
 		focusNewTaskInput() {
 			this.$refs.addTask.focusTaskInput()
 		},
-		updateTaskList( task ) {
+		updateTaskList(task: TaskModel) {
 			if ( this.isAlphabeticalSorting ) {
 				// reload tasks with current filter and sorting
 				this.loadTasks(1, undefined, undefined, true)
@@ -287,11 +288,11 @@ export default defineComponent({
 
 			this.$store.commit(HAS_TASKS, true)
 		},
-		editTask(id) {
+		editTask(id: TaskModel['id']) {
 			this.taskEditTask = {...this.tasks.find(t => t.id === parseInt(id))}
 			this.isTaskEdit = true
 		},
-		updateTasks(updatedTask) {
+		updateTasks(updatedTask: TaskModel) {
 			for (const t in this.tasks) {
 				if (this.tasks[t].id === updatedTask.id) {
 					this.tasks[t] = updatedTask
