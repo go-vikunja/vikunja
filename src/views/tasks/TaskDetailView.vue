@@ -427,8 +427,8 @@ import {defineComponent} from 'vue'
 import TaskService from '../../services/task'
 import TaskModel from '../../models/task'
 
-import priorites from '../../models/constants/priorities.json'
-import rights from '../../models/constants/rights.json'
+import { PRIORITIES as priorites } from '@/models/constants/priorities'
+import {RIGHTS as rights} from '@/models/constants/rights'
 
 import PrioritySelect from '../../components/tasks/partials/prioritySelect.vue'
 import PercentDoneSelect from '../../components/tasks/partials/percentDoneSelect.vue'
@@ -520,7 +520,6 @@ export default defineComponent({
 			// Used to avoid flashing of empty elements if the task content is not yet loaded.
 			visible: false,
 
-			priorities: priorites,
 			activeFields: {
 				assignees: false,
 				priority: false,

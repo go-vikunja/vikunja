@@ -1,6 +1,6 @@
 import AbstractModel from './abstractModel'
 import type UserModel from './user'
-import type {Right} from '@/models/constants/rights'
+import {RIGHTS, type Right} from '@/models/constants/rights'
 
 export default class UserShareBaseModel extends AbstractModel {
 	userId: UserModel['id']
@@ -18,7 +18,7 @@ export default class UserShareBaseModel extends AbstractModel {
 	defaults() {
 		return {
 			userId: '',
-			right: 0,
+			right: RIGHTS.READ,
 
 			created: null,
 			updated: null,

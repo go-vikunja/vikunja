@@ -1,6 +1,7 @@
 import AbstractModel from './abstractModel'
 import UserModel from './user'
 import TeamMemberModel from './teamMember'
+import {RIGHTS, type Right} from '@/models/constants/rights'
 
 export default class TeamModel extends AbstractModel {
 	id: 0
@@ -32,7 +33,7 @@ export default class TeamModel extends AbstractModel {
 			name: '',
 			description: '',
 			members: [],
-			right: 0,
+			right: RIGHTS.READ,
 
 			createdBy: {},
 			created: null,

@@ -180,7 +180,7 @@ import {ref, watch, computed, shallowReactive} from 'vue'
 import {useStore} from 'vuex'
 import {useI18n} from 'vue-i18n'
 
-import RIGHTS from '@/models/constants/rights.json'
+import {RIGHTS} from '@/models/constants/rights'
 import LinkShareModel from '@/models/linkShare'
 
 import LinkShareService from '@/services/linkShare'

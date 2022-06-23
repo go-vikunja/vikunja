@@ -3,7 +3,7 @@ import {beforeEach, afterEach, describe, it, expect, vi} from 'vitest'
 import {parseTaskText} from './parseTaskText'
 import {getDateFromText, getDateFromTextIn} from '../helpers/time/parseDate'
 import {calculateDayInterval} from '../helpers/time/calculateDayInterval'
-import priorities from '../models/constants/priorities.json'
+import {PRIORITIES} from '@/models/constants/priorities.ts'
 
 describe('Parse Task Text', () => {
 	beforeEach(() => {
@@ -571,12 +571,12 @@ describe('Parse Task Text', () => {
 	})
 
 	describe('Priority', () => {
-		for (const p in priorities) {
+		for (const p in PRIORITIES) {
 			it(`should parse priority ${p}`, () => {
-				const result = parseTaskText(`Lorem Ipsum !${priorities[p]}`)
+				const result = parseTaskText(`Lorem Ipsum !${PRIORITIES[p]}`)
 
 				expect(result.text).toBe('Lorem Ipsum')
-				expect(result.priority).toBe(priorities[p])
+				expect(result.priority).toBe(PRIORITIES[p])
 			})
 		}
 		it(`should not parse an invalid priority`, () => {

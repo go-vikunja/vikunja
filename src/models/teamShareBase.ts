@@ -1,6 +1,6 @@
 import AbstractModel from './abstractModel'
 import type TeamModel from './team'
-import type {Right} from '@/models/constants/rights'
+import {RIGHTS, type Right} from '@/models/constants/rights'
 
 /**
  * This class is a base class for common team sharing model.
@@ -22,7 +22,7 @@ export default class TeamShareBaseModel extends AbstractModel {
 	defaults() {
 		return {
 			teamId: 0,
-			right: 0,
+			right: RIGHTS.READ,
 
 			created: null,
 			updated: null,

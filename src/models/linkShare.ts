@@ -1,5 +1,6 @@
 import AbstractModel from './abstractModel'
 import UserModel from './user'
+import {RIGHTS, type Right} from '@/models/constants/rights'
 
 export default class LinkShareModel extends AbstractModel {
 	id: number
@@ -28,7 +29,7 @@ export default class LinkShareModel extends AbstractModel {
 		return {
 			id: 0,
 			hash: '',
-			right: 0,
+			right: RIGHTS.READ,
 			sharedBy: UserModel,
 			sharingType: 0,
 			listId: 0,

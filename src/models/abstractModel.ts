@@ -1,12 +1,13 @@
 import {objectToCamelCase} from '@/helpers/case'
 import {omitBy, isNil} from '@/helpers/utils'
+import type {Right} from '@/models/constants/rights'
 
 export default class AbstractModel {
 
 	/**
 	 * The max right the user has on this object, as returned by the x-max-right header from the api.
 	 */
-	maxRight: number | null = null
+	maxRight: Right | null = null
 
 	/**
 	 * The abstract constructor takes an object and merges its data with the default data of this model.

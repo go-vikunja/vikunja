@@ -1,5 +1,5 @@
 import {parseDate} from '../helpers/time/parseDate'
-import _priorities from '../models/constants/priorities.json'
+import {PRIORITIES} from '@/models/constants/priorities'
 
 const VIKUNJA_PREFIXES: Prefixes = {
 	label: '*',
@@ -27,16 +27,7 @@ export const PREFIXES = {
 	[PrefixMode.Todoist]: TODOIST_PREFIXES,
 }
 
-const priorities: Priorites = _priorities
-
-interface Priorites {
-	UNSET: number,
-	LOW: number,
-	MEDIUM: number,
-	HIGH: number,
-	URGENT: number,
-	DO_NOW: number,
-}
+const priorities = PRIORITIES
 
 enum RepeatType {
 	Hours = 'hours',

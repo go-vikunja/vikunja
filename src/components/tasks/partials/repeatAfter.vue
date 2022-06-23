@@ -18,17 +18,14 @@
 			<div class="control">
 				<div class="select">
 					<select @change="updateData" v-model="task.repeatMode" id="repeatMode">
-						<option :value="repeatModes.REPEAT_MODE_DEFAULT">{{ $t('misc.default') }}</option>
-						<option :value="repeatModes.REPEAT_MODE_MONTH">{{ $t('task.repeat.monthly') }}</option>
-						<option :value="repeatModes.REPEAT_MODE_FROM_CURRENT_DATE">{{
-								$t('task.repeat.fromCurrentDate')
-							}}
-						</option>
+						<option :value="TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT">{{ $t('misc.default') }}</option>
+						<option :value="TASK_REPEAT_MODES.REPEAT_MODE_MONTH">{{ $t('task.repeat.monthly') }}</option>
+						<option :value="TASK_REPEAT_MODES.REPEAT_MODE_FROM_CURRENT_DATE">{{ $t('task.repeat.fromCurrentDate') }}</option>
 					</select>
 				</div>
 			</div>
 		</div>
-		<div class="is-flex" v-if="task.repeatMode !== repeatModes.REPEAT_MODE_MONTH">
+		<div class="is-flex" v-if="task.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_MONTH">
 			<p class="pr-4">
 				{{ $t('task.repeat.each') }}
 			</p>
@@ -66,10 +63,10 @@
 
 <script setup lang="ts">
 import {ref, reactive, watch} from 'vue'
-import repeatModes from '@/models/constants/taskRepeatModes.json'
-import TaskModel from '@/models/task'
 import {error} from '@/message'
 import {useI18n} from 'vue-i18n'
+import type TaskModel from '@/models/task'
+import {TASK_REPEAT_MODES, type RepeatAfter} from '@/models/task'
 
 const props = defineProps({
 	modelValue: {
@@ -104,7 +101,7 @@ watch(
 )
 
 function updateData() {
-	if (task.value.repeatMode !== repeatModes.REPEAT_MODE_DEFAULT && repeatAfter.amount === 0) {
+	if (!task.value || task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT && repeatAfter.amount === 0) {
 		return
 	}
 
@@ -118,8 +115,8 @@ function updateData() {
 	emit('change')
 }
 
-function setRepeatAfter(amount: number, type) {
-	Object.assign(repeatAfter, {amount, type})
+function setRepeatAfter(amount: number, type: RepeatAfter['type']) {
+	Object.assign(repeatAfter, { amount, type})
 	updateData()
 }
 </script>

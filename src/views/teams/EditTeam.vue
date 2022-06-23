@@ -172,7 +172,7 @@ import TeamMemberService from '../../services/teamMember'
 import type TeamMemberModel from '../../models/teamMember'
 import type UserModel from '../../models/user'
 import UserService from '../../services/user'
-import Rights from '../../models/constants/rights.json'
+import {RIGHTS as Rights} from '@/models/constants/rights'
 
 import Multiselect from '@/components/input/multiselect.vue'
 import {useRoute, useRouter} from 'vue-router'
