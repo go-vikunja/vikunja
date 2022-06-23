@@ -48,6 +48,7 @@ import NamespaceModel from '../../models/namespace'
 import NamespaceService from '../../services/namespace'
 import CreateEdit from '@/components/misc/create-edit.vue'
 import ColorPicker from '../../components/input/colorPicker.vue'
+import { setTitle } from '@/helpers/setTitle'
 
 export default defineComponent({
 	name: 'NewNamespace',
@@ -64,7 +65,7 @@ export default defineComponent({
 		CreateEdit,
 	},
 	mounted() {
-		this.setTitle(this.$t('namespace.create.title'))
+		setTitle(this.$t('namespace.create.title'))
 	},
 	methods: {
 		async newNamespace() {

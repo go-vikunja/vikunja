@@ -109,7 +109,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import BackgroundUnsplashService from '@/services/backgroundUnsplash'
 import BackgroundUploadService from '@/services/backgroundUpload'
 import ListService from '@/services/list'
-import BackgroundImageModel from '@/models/backgroundImage'
+import type BackgroundImageModel from '@/models/backgroundImage'
 
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 import {useTitle} from '@/composables/useTitle'

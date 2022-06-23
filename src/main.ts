@@ -67,19 +67,6 @@ app.component('x-button', Button)
 app.component('modal', Modal)
 app.component('card', Card)
 
-// Mixins
-import {getNamespaceTitle} from './helpers/getNamespaceTitle'
-import {getListTitle} from './helpers/getListTitle'
-import {setTitle} from './helpers/setTitle'
-
-app.mixin({
-	methods: {
-		getNamespaceTitle,
-		getListTitle,
-		setTitle,
-	},
-})
-
 app.config.errorHandler = (err, vm, info) => {
 	if (import.meta.env.DEV) {
 		console.error(err, vm, info)

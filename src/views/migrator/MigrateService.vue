@@ -72,6 +72,7 @@ import AbstractMigrationService from '@/services/migrator/abstractMigration'
 import AbstractMigrationFileService from '@/services/migrator/abstractMigrationFile'
 import Logo from '@/assets/logo.svg?component'
 import Message from '@/components/misc/message.vue'
+import { setTitle } from '@/helpers/setTitle'
 
 import {formatDateLong} from '@/helpers/time/formatDate'
 
@@ -116,7 +117,7 @@ export default defineComponent({
 	},
 
 	mounted() {
-		this.setTitle(this.$t('migrate.titleService', {name: this.migrator.name}))
+		setTitle(this.$t('migrate.titleService', {name: this.migrator.name}))
 	},
 
 	methods: {

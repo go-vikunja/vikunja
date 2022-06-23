@@ -103,6 +103,8 @@ import Logo from '@/components/home/Logo.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import MenuButton from '@/components/home/MenuButton.vue'
 
+import {getListTitle} from '@/helpers/getListTitle'
+
 const store = useStore()
 
 const userInfo = computed(() => store.state.auth.info)

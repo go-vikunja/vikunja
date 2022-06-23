@@ -17,6 +17,7 @@
 import {defineComponent} from 'vue'
 
 import NamespaceService from '@/services/namespace'
+import { setTitle } from '@/helpers/setTitle'
 
 export default defineComponent({
 	name: 'namespace-setting-archive',
@@ -33,7 +34,7 @@ export default defineComponent({
 		this.title = this.namespace.isArchived ?
 			this.$t('namespace.archive.titleUnarchive', {namespace: this.namespace.title}) :
 			this.$t('namespace.archive.titleArchive', {namespace: this.namespace.title})
-		this.setTitle(this.title)
+		setTitle(this.title)
 	},
 
 	methods: {

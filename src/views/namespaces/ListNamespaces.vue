@@ -75,6 +75,8 @@ import {mapState} from 'vuex'
 import Fancycheckbox from '../../components/input/fancycheckbox.vue'
 import {LOADING} from '@/store/mutation-types'
 import ListCard from '@/components/list/partials/list-card.vue'
+import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
+import { setTitle } from '@/helpers/setTitle'
 
 export default defineComponent({
 	name: 'ListNamespaces',
@@ -88,7 +90,7 @@ export default defineComponent({
 		}
 	},
 	mounted() {
-		this.setTitle(this.$t('namespace.title'))
+		setTitle(this.$t('namespace.title'))
 	},
 	computed: mapState({
 		namespaces(state) {
@@ -101,6 +103,7 @@ export default defineComponent({
 		loading: LOADING,
 	}),
 	methods: {
+		getNamespaceTitle,
 		saveShowArchivedState() {
 			localStorage.setItem('showArchived', JSON.stringify(this.showArchived))
 		},

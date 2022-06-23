@@ -119,6 +119,7 @@ import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import BaseButton from '@/components/base/BaseButton.vue'
 import AsyncEditor from '@/components/input/AsyncEditor'
 import ColorPicker from '@/components/input/colorPicker.vue'
+import { setTitle } from '@/helpers/setTitle'
 
 export default defineComponent({
 	name: 'ListLabels',
@@ -140,7 +141,7 @@ export default defineComponent({
 		this.$store.dispatch('labels/loadAllLabels')
 	},
 	mounted() {
-		this.setTitle(this.$t('label.title'))
+		setTitle(this.$t('label.title'))
 	},
 	computed: mapState({
 		userInfo: state => state.auth.info,

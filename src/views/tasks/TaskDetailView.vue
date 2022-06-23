@@ -452,8 +452,10 @@ import {CURRENT_LIST} from '@/store/mutation-types'
 import {uploadFile} from '@/helpers/attachments'
 import ChecklistSummary from '../../components/tasks/partials/checklist-summary.vue'
 import CreatedUpdated from '@/components/tasks/partials/createdUpdated.vue'
-import { setTitle } from '@/helpers/setTitle'
 import type ListModel from '@/models/list'
+import { setTitle } from '@/helpers/setTitle'
+import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
+import {getListTitle} from '@/helpers/getListTitle'
 
 function scrollIntoView(el) {
 	if (!el) {
@@ -556,7 +558,7 @@ export default defineComponent({
 		// it from the page title.
 		'task.title': {
 			handler(title) {
-				this.setTitle(title)
+				setTitle(title)
 			},
 		},
 	},
@@ -589,6 +591,8 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		getNamespaceTitle,
+		getListTitle,
 		attachmentUpload(...args) {
 			return uploadFile(this.taskId, ...args)
 		},

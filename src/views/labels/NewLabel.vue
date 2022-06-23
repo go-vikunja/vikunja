@@ -41,6 +41,7 @@ import CreateEdit from '@/components/misc/create-edit.vue'
 import ColorPicker from '../../components/input/colorPicker.vue'
 import {mapState} from 'vuex'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
+import { setTitle } from '@/helpers/setTitle'
 
 export default defineComponent({
 	name: 'NewLabel',
@@ -55,7 +56,7 @@ export default defineComponent({
 		ColorPicker,
 	},
 	mounted() {
-		this.setTitle(this.$t('label.create.title'))
+		setTitle(this.$t('label.create.title'))
 	},
 	computed: mapState({
 		loading: state => state[LOADING] && state[LOADING_MODULE] === 'labels',

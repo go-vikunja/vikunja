@@ -14,6 +14,7 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
+import { setTitle } from '@/helpers/setTitle'
 
 export default defineComponent({
 	name: 'namespace-setting-delete',
@@ -31,7 +32,7 @@ export default defineComponent({
 	watch: {
 		title: {
 			handler(title) {
-				this.setTitle(title)
+				setTitle(title)
 			},
 			immediate: true,
 		},
