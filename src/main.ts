@@ -5,8 +5,6 @@ import router from './router'
 
 import {error, success} from './message'
 
-import {formatDate, formatDateShort, formatDateLong, formatDateSince, formatISO} from '@/helpers/time/formatDate'
-
 import {VERSION} from './version.json'
 
 // Notifications
@@ -76,11 +74,6 @@ import {setTitle} from './helpers/setTitle'
 
 app.mixin({
 	methods: {
-		formatDateSince,
-		format: formatDate,
-		formatDate: formatDateLong,
-		formatDateShort: formatDateShort,
-		formatISO,
 		getNamespaceTitle,
 		getListTitle,
 		setTitle,

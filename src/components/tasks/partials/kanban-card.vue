@@ -24,7 +24,7 @@
 			:class="{'overdue': task.dueDate <= new Date() && !task.done}"
 			class="due-date"
 			v-if="task.dueDate > 0"
-			v-tooltip="formatDate(task.dueDate)">
+			v-tooltip="formatDateLong(task.dueDate)">
 			<span class="icon">
 				<icon :icon="['far', 'calendar-alt']"/>
 			</span>
@@ -76,6 +76,7 @@ import Labels from '../../../components/tasks/partials/labels.vue'
 import ChecklistSummary from './checklist-summary.vue'
 import TaskModel, {TASK_DEFAULT_COLOR} from '@/models/task'
 
+import {formatDateLong, formatISO, formatDateSince} from '@/helpers/time/formatDate'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 
 export default defineComponent({
@@ -112,6 +113,9 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		formatDateLong,
+		formatISO,
+		formatDateSince,
 		colorIsDark,
 		async toggleTaskDone(task: TaskModel) {
 			this.loadingInternal = true

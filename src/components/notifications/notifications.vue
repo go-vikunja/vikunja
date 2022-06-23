@@ -30,7 +30,7 @@
 								{{ n.toText(userInfo) }}
 							</BaseButton>
 						</div>
-						<span class="created" v-tooltip="formatDate(n.created)">
+						<span class="created" v-tooltip="formatDateLong(n.created)">
 							{{ formatDateSince(n.created) }}
 						</span>
 					</div>
@@ -56,6 +56,7 @@ import NotificationModel, { NOTIFICATION_NAMES as names} from '@/models/notifica
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {useStore} from 'vuex'
 import {useRouter} from 'vue-router'
+import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 
 const LOAD_NOTIFICATIONS_INTERVAL = 10000
 

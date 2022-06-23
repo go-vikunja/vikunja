@@ -43,7 +43,7 @@
 				v-if="+new Date(task.dueDate) > 0"
 				class="dueDate"
 				@click.prevent.stop="showDefer = !showDefer"
-				v-tooltip="formatDate(task.dueDate)"
+				v-tooltip="formatDateLong(task.dueDate)"
 			>
 				<time
 					:datetime="formatISO(task.dueDate)"
@@ -107,6 +107,7 @@ import DeferTask from './defer-task.vue'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {playPop} from '@/helpers/playPop'
 import ChecklistSummary from './checklist-summary.vue'
+import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 
 export default defineComponent({
 	name: 'singleTaskInList',
@@ -186,6 +187,10 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		formatDateSince,
+		formatISO,
+		formatDateLong,
+
 		async markAsDone(checked: boolean) {
 			const updateFunc = async () => {
 				const task = await this.taskService.update(this.task)

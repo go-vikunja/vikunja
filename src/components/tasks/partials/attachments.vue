@@ -39,7 +39,7 @@
 				<div class="info">
 					<p class="attachment-info-meta">
 						<i18n-t keypath="task.attachment.createdBy">
-							<span v-tooltip="formatDate(a.created)">
+							<span v-tooltip="formatDateLong(a.created)">
 								{{ formatDateSince(a.created) }}
 							</span>
 							<user
@@ -154,6 +154,7 @@ import {mapState} from 'vuex'
 
 import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
 import { uploadFiles, generateAttachmentUrl } from '@/helpers/attachments'
+import {formatDate, formatDateSince, formatDateLong} from '@/helpers/time/formatDate'
 
 import BaseButton from '@/components/base/BaseButton'
 
@@ -230,6 +231,10 @@ export default defineComponent({
 		})
 	},
 	methods: {
+		formatDate,
+		formatDateSince,
+		formatDateLong,
+
 		downloadAttachment(attachment: AttachmentModel) {
 			this.attachmentService.download(attachment)
 		},

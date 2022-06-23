@@ -78,6 +78,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import Message from '@/components/misc/message.vue'
 import CaldavTokenService from '@/services/caldavToken'
 import type CaldavTokenModel from '@/models/caldavToken'
+import { formatDateShort } from '@/helpers/time/formatDate'
 
 const copy = useCopyToClipboard()
 

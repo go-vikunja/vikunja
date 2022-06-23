@@ -34,12 +34,12 @@
 							width="20"
 						/>
 						<strong>{{ c.author.getDisplayName() }}</strong>&nbsp;
-						<span v-tooltip="formatDate(c.created)" class="has-text-grey">
+						<span v-tooltip="formatDateLong(c.created)" class="has-text-grey">
 							{{ formatDateSince(c.created) }}
 						</span>
 						<span
 							v-if="+new Date(c.created) !== +new Date(c.updated)"
-							v-tooltip="formatDate(c.updated)"
+							v-tooltip="formatDateLong(c.updated)"
 						>
 							· {{ $t('task.comment.edited', {date: formatDateSince(c.updated)}) }}
 						</span>
@@ -162,6 +162,7 @@ import TaskCommentService from '@/services/taskComment'
 import TaskCommentModel from '@/models/taskComment'
 import {uploadFile} from '@/helpers/attachments'
 import {success} from '@/message'
+import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 
 import type TaskModel from '@/models/task'
 const props = defineProps({
