@@ -1,7 +1,16 @@
 import AbstractModel from './abstractModel'
 import UserModel from './user'
+import type TaskModel from './task'
 
 export default class TaskCommentModel extends AbstractModel {
+	id: number
+	taskId: TaskModel['id']
+	comment: string
+	author: UserModel
+
+	created: Date
+	updated: Date
+
 	constructor(data) {
 		super(data)
 		this.author = new UserModel(this.author)
@@ -16,7 +25,7 @@ export default class TaskCommentModel extends AbstractModel {
 			comment: '',
 			author: UserModel,
 			created: null,
-			update: null,
+			updated: null,
 		}
 	}
 }

@@ -4,6 +4,17 @@ import {colorIsDark} from '@/helpers/color/colorIsDark'
 
 const DEFAULT_LABEL_BACKGROUND_COLOR = 'e8e8e8'
 export default class LabelModel extends AbstractModel {
+	id: number
+	title: string
+	hexColor: string
+	description: string
+	createdBy: UserModel
+	listId: number
+	textColor: string
+
+	created: Date
+	updated: Date
+
 	constructor(data) {
 		super(data)
 		// FIXME: this should be empty and be definied in the client.

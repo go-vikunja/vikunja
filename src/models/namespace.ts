@@ -4,6 +4,18 @@ import UserModel from './user'
 import SubscriptionModel from '@/models/subscription'
 
 export default class NamespaceModel extends AbstractModel {
+	id: number
+	title: string
+	description: string
+	owner: UserModel
+	lists: ListModel[]
+	isArchived: boolean
+	hexColor: string
+	subscription: SubscriptionModel
+
+	created: Date
+	updated: Date
+
 	constructor(data) {
 		super(data)
 
@@ -11,7 +23,6 @@ export default class NamespaceModel extends AbstractModel {
 			this.hexColor = '#' + this.hexColor
 		}
 
-		/** @type {ListModel[]} */
 		this.lists = this.lists.map(l => {
 			return new ListModel(l)
 		})
@@ -21,15 +32,6 @@ export default class NamespaceModel extends AbstractModel {
 		if(typeof this.subscription !== 'undefined' && this.subscription !== null) {
 			this.subscription = new SubscriptionModel(this.subscription)
 		}
-
-		/** @type {number} */
-		this.id
-
-		/** @type {string} */
-		this.title
-
-		/** @type {boolean} */
-		this.isArchived
 
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)

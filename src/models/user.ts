@@ -2,29 +2,20 @@ import AbstractModel from './abstractModel'
 import UserSettingsModel from '@/models/userSettings'
 
 export default class UserModel extends AbstractModel {
+	id: number
+	email: string
+	username: string
+	name: string
+
+	created: Date
+	updated: Date
+	settings: UserSettingsModel
+
 	constructor(data) {
 		super(data)
 
-		/** @type {number} */
-		this.id
-
-		/** @type {string} */
-		this.email
-
-		/** @type {string} */
-		this.username
-
-		/** @type {string} */
-		this.name
-
-		/** @type {Date} */
 		this.created = new Date(this.created)
-
-		/** @type {Date} */
 		this.updated = new Date(this.updated)
-
-		/** @type {UserSettingsModel} */
-		this.settings
 
 		if (this.settings !== null) {
 			this.settings = new UserSettingsModel(this.settings)

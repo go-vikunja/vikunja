@@ -1,7 +1,12 @@
 import AbstractModel from './abstractModel'
 import ListModel from './list'
+import NamespaceModel from './namespace'
 
 export default class ListDuplicateModel extends AbstractModel {
+	listId: number
+	namespaceId: NamespaceModel['id']
+	list: ListModel
+
 	constructor(data) {
 		super(data)
 		this.list = new ListModel(this.list)

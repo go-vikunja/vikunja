@@ -2,6 +2,23 @@ import AbstractModel from '@/models/abstractModel'
 import UserModel from '@/models/user'
 
 export default class SavedFilterModel extends AbstractModel {
+	id: 0
+	title: string
+	description: string
+	filters: {
+		sortBy: ('done' | 'id')[]
+		orderBy: ('asc' | 'desc')[]
+		filterBy: 'done'[]
+		filterValue: 'false'[]
+		filterComparator: 'equals'[]
+		filterConcat: 'and'
+		filterIncludeNulls: boolean
+	}
+
+	owner: any
+	created: Date
+	updated: Date
+
 	constructor(data) {
 		super(data)
 

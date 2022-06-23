@@ -3,6 +3,18 @@ import UserModel from './user'
 import TaskModel from './task'
 
 export default class BucketModel extends AbstractModel {
+	id: number
+	title: string
+	listId: number
+	limit: number
+	tasks: TaskModel[]
+	isDoneBucket: boolean
+	position: number
+	
+	createdBy: UserModel
+	created: Date
+	updated: Date
+
 	constructor(bucket) {
 		super(bucket)
 

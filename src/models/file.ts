@@ -1,6 +1,12 @@
 import AbstractModel from './abstractModel'
 
 export default class FileModel extends AbstractModel {
+	id: number
+	mime: string
+	name: string
+	size: number
+	created: Date
+
 	constructor(data) {
 		super(data)
 		this.created = new Date(this.created)

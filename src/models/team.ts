@@ -3,6 +3,16 @@ import UserModel from './user'
 import TeamMemberModel from './teamMember'
 
 export default class TeamModel extends AbstractModel {
+	id: 0
+	name: string
+	description: string
+	members: TeamMemberModel[]
+	right: Right
+
+	createdBy: UserModel
+	created: Date
+	updated: Date
+
 	constructor(data) {
 		super(data)
 

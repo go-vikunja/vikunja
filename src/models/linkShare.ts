@@ -2,6 +2,16 @@ import AbstractModel from './abstractModel'
 import UserModel from './user'
 
 export default class LinkShareModel extends AbstractModel {
+	id: number
+	hash: string
+	right: Right
+	sharedBy: UserModel
+	sharingType: number // FIXME: use correct numbers
+	listId: number
+	name: string
+	password: string
+	created: Date
+	updated: Date
 
 	constructor(data) {
 		// The constructor of AbstractModel handles all the default parsing.

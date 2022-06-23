@@ -1,10 +1,18 @@
 import AbstractModel from './abstractModel'
+import type TeamModel from './team'
+import type {Right} from '@/models/constants/rights'
 
 /**
  * This class is a base class for common team sharing model.
  * It is extended in a way so it can be used for namespaces as well for lists.
  */
 export default class TeamShareBaseModel extends AbstractModel {
+	teamId: TeamModel['id']
+	right: Right
+
+	created: Date
+	updated: Date
+
 	constructor(data) {
 		super(data)
 		this.created = new Date(this.created)
