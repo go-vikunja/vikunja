@@ -26,22 +26,23 @@ export default class ListService extends AbstractService {
 	}
 
 	beforeUpdate(model) {
-		const taskService = new TaskService()
-		model.tasks = model.tasks.map(task => {
-			return taskService.beforeUpdate(task)
-		})
-		model.hexColor = colorFromHex(model.hexColor)
+		if(typeof model.tasks !== 'undefined') {
+			const taskService = new TaskService()
+			model.tasks = model.tasks.map(task => {
+				return taskService.beforeUpdate(task)
+			})
+		}
+		
+		if(typeof model.hexColor !== 'undefined') {
+			model.hexColor = colorFromHex(model.hexColor)
+		}
+		
 		return model
 	}
 
 	beforeCreate(list) {
 		list.hexColor = colorFromHex(list.hexColor)
 		return list
-	}
-
-	update(model) {
-		const newModel = { ... model }
-		return super.update(newModel)
 	}
 
 	async background(list) {

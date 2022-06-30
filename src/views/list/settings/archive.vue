@@ -17,12 +17,10 @@ export default defineComponent({name: 'list-setting-archive'})
 </script>
 
 <script setup lang="ts">
-import {computed, shallowReactive} from 'vue'
+import {computed} from 'vue'
 import {useStore} from 'vuex'
 import {useRouter, useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
-
-import ListService from '@/services/list'
 
 import { success } from '@/message'
 import { useTitle } from '@/composables/useTitle'
@@ -35,16 +33,13 @@ const route = useRoute()
 const list = computed(() => store.getters['lists/getListById'](route.params.listId))
 useTitle(() => t('list.archive.title', {list: list.value.title}))
 
-const listService = shallowReactive(new ListService())
-
 async function archiveList() {
 	try {
-		const newList = await listService.update({
-			...list,
+		const newList = await store.dispatch('lists/updateList', {
+			...list.value,
 			isArchived: !list.value.isArchived,
 		})
 		store.commit('currentList', newList)
-		store.commit('namespaces/setListInNamespaceById', newList)
 		success({message: t('list.archive.success')})
 	} finally {
 		router.back()

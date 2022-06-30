@@ -98,4 +98,23 @@ describe('Lists', () => {
 		cy.location('pathname')
 			.should('equal', '/')
 	})
+	
+	it('Should archive a list', () => {
+		cy.visit(`/lists/${lists[0].id}`)
+		
+		cy.get('.list-title .dropdown')
+			.click()
+		cy.get('.list-title .dropdown .dropdown-menu .dropdown-item')
+			.contains('Archive')
+			.click()
+		cy.get('.modal-content')
+			.should('contain.text', 'Archive this list')
+		cy.get('.modal-content [data-cy=modalPrimary]')
+			.click()
+		
+		cy.get('.namespace-container .menu.namespaces-lists .more-container .menu-list')
+			.should('not.contain', lists[0].title)
+		cy.get('main.app-content')
+			.should('contain.text', 'This list is archived. It is not possible to create new or edit tasks for it.')
+	})
 })
