@@ -55,7 +55,7 @@
     "zhyswan-vuedraggable": "4.1.3"
   },
   "devDependencies": {
-    "@4tw/cypress-drag-drop": "2.2.0",
+    "@4tw/cypress-drag-drop": "2.2.1",
     "@faker-js/faker": "7.3.0",
     "@fortawesome/fontawesome-svg-core": "6.1.1",
     "@fortawesome/free-regular-svg-icons": "6.1.1",
