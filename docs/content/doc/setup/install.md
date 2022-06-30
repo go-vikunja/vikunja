@@ -11,16 +11,20 @@ menu:
 
 # Installing
 
-Vikunja consists of two parts: [Backend](https://code.vikunja.io/api) and [frontend](https://code.vikunja.io/frontend).
-While the backend is required, the frontend is not.
-You don't neccesarily need to have a web-frontend, using Vikunja via the [mobile app](https://code.vikunja.io/app) is totally fine.
+Vikunja consists of two parts: [API](https://code.vikunja.io/api) and [frontend](https://code.vikunja.io/frontend).
 
-However, using the web frontend is highly reccommended.
+You will always need to install at least the API.
+To actually use Vikunja you'll also need to somehow install a frontend to use it.
+You can either:
 
-Vikunja can be installed in various forms. 
+* [Install the web frontend]({{< ref "install-frontend.md">}})
+* Use the desktop app, which is essentially a web frontend packaged for easy installation on desktop devices
+* Use the mobile app only, but as of right now it only supports the very basic features of Vikunja
+
+Vikunja can be installed in various ways. 
 This document provides an overview and instructions for the different methods.
 
-* [Backend]({{< ref "install-backend.md">}})
+* [API]({{< ref "install-backend.md">}})
   * [Installing from binary]({{< ref "install-backend.md#install-from-binary">}})
     * [Verify the GPG signature]({{< ref "install-backend.md#verify-the-gpg-signature">}})
     * [Set it up]({{< ref "install-backend.md#set-it-up">}})
