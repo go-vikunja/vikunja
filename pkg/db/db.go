@@ -27,9 +27,9 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	xrc "gitea.com/xorm/xorm-redis-cache"
-	"xorm.io/core"
 	"xorm.io/xorm"
 	"xorm.io/xorm/caches"
+	"xorm.io/xorm/names"
 	"xorm.io/xorm/schemas"
 
 	_ "github.com/go-sql-driver/mysql" // Because.
@@ -80,7 +80,7 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 		log.Fatalf("Error parsing time zone: %s", err)
 	}
 	engine.SetTZDatabase(loc)
-	engine.SetMapper(core.GonicMapper{})
+	engine.SetMapper(names.GonicMapper{})
 	logger := log.NewXormLogger("")
 	engine.SetLogger(logger)
 
