@@ -10,6 +10,7 @@ export const getQuickAddMagicMode = (): PrefixMode => {
 	const mode = localStorage.getItem(key)
 
 	switch (mode) {
+		case null:
 		case PrefixMode.Default:
 			return PrefixMode.Default
 		case PrefixMode.Todoist:
