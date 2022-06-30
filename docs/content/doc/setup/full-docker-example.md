@@ -379,7 +379,7 @@ you can prepare 2 proxy rules:
 * a redirection rule for vikunja's api (see example screenshot using port 3456)
 * a similar redirection rule for vikunja's frontend (using port 4321)
 
-![Synology Proxy Settings](/synology-proxy-1.png)
+![Synology Proxy Settings](/docs/synology-proxy-1.png)
 
 You should also add 2 empty folders for mariadb and vikunja inside Synology's
 docker main folders:
@@ -399,7 +399,7 @@ To do that, you can
   2. Give it the name Vikunja and paste the adapted docker compose file 
   3. Deploy the Stack with the "Delpoy Stack" button: 
 
-![Portainer Stack deploy](/synology-proxy-2.png)
+![Portainer Stack deploy](/docs/synology-proxy-2.png)
 
 The docker-compose file we're going to use is very similar to the [example without any proxy](#example-without-any-proxy) above:
 
