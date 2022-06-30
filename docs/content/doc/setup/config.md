@@ -10,8 +10,9 @@ menu:
 
 # Configuration options
 
-You can either use a `config.yml` file in the root directory of vikunja or set all config option with 
+You can either use a `config.yml` file in the root directory of vikunja or set almost all config option with 
 environment variables. If you have both, the value set in the config file is used.
+Right now it is not possible to configure openid authentication via environment variables.
 
 Variables are nested in the `config.yml`, these nested variables become `VIKUNJA_FIRST_CHILD` when configuring via
 environment variables. So setting
