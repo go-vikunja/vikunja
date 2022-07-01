@@ -850,10 +850,10 @@ electron-publish@23.0.9:
     lazy-val "^1.0.5"
     mime "^2.5.2"
 
-electron@19.0.6:
-  version "19.0.6"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-19.0.6.tgz#7aacfa4e968f134eecc36a1b03e3f9954ed8f6a5"
-  integrity sha512-S9Yud32nKhB0iWC0lGl2JXz4FQnCiLCnP5Vehm1/CqyeICcQGmgQaZl2HYpCJ2pesKIsYL9nsgmku/10cxm/gg==
+electron@19.0.7:
+  version "19.0.7"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-19.0.7.tgz#c7a7841646adc6457de70b93661cc400bfdf9d38"
+  integrity sha512-Wyg+oGkY8cWYmm8tVka6CZmhJxnyUx+Us2ALyWiY4w73+dO9XUNB/c7vQNIm1Uk/DLMn9vFzgvcS9YtOOMqpbg==
   dependencies:
     "@electron/get" "^1.14.1"
     "@types/node" "^16.11.26"
