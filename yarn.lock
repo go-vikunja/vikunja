@@ -12498,10 +12498,10 @@ verror@1.10.0:
     core-util-is "1.0.2"
     extsprintf "^1.2.0"
 
-vite-plugin-pwa@0.12.1:
-  version "0.12.1"
-  resolved "https://registry.yarnpkg.com/vite-plugin-pwa/-/vite-plugin-pwa-0.12.1.tgz#155656bf8ad509a7ffc7b614c0e98e8ffe86b82f"
-  integrity sha512-Jeb/RHdA1gZ5WiP8rStdPHSqllb53ekvk8VHPAgp0XmLMCGkwBshv0XlPo1nUIZxou6fEirNwbZ4nHLPalXfkg==
+vite-plugin-pwa@0.12.2:
+  version "0.12.2"
+  resolved "https://registry.yarnpkg.com/vite-plugin-pwa/-/vite-plugin-pwa-0.12.2.tgz#d0ec1cd3088260bdc5bf2b10ba753def0b8f3280"
+  integrity sha512-XK2oi1YZkoc1J8fyerNYxyh/yfb+INdrdOW/mOOD5DBLq7jVPxHQuncIhqiREbGOMlY/xMe9CSE7QZ9xIAEf7A==
   dependencies:
     debug "^4.3.4"
     fast-glob "^3.2.11"
