@@ -26,6 +26,7 @@
 						id="totpConfirmPasscode"
 						:placeholder="$t('user.settings.totp.passcodePlaceholder')"
 						type="text"
+						inputmode="numeric"
 						v-model="totpConfirmPasscode"/>
 				</div>
 			</div>

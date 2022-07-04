@@ -55,6 +55,7 @@
 						v-focus
 						@keyup.enter="submit"
 						tabindex="3"
+						inputmode="numeric"
 					/>
 				</div>
 			</div>
