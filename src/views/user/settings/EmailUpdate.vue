@@ -37,10 +37,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-export default defineComponent({
-	name: 'user-settings-update-email',
-})
+export default { name: 'user-settings-update-email' }
 </script>
 
 <script setup lang="ts">

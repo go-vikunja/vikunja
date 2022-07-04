@@ -18,11 +18,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-
-export default defineComponent({
-	name: 'x-button',
-})
+export default { name: 'x-button' }
 </script>
 
 <script setup lang="ts">

@@ -52,11 +52,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-
-export default defineComponent({
-	name: 'user-settings-password-update',
-})
+export default {name: 'user-settings-password-update'}
 </script>
 
 <script setup lang="ts">

@@ -65,8 +65,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-export default defineComponent({ name: 'user-settings-totp' })
+export default { name: 'user-settings-totp' }
 </script>
 
 <script lang="ts" setup>

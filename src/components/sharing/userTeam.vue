@@ -133,9 +133,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-
-export default defineComponent({name: 'userTeamShare'})
+export default {name: 'userTeamShare'}
 </script>
 
 <script setup lang="ts">

@@ -39,11 +39,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-
-export default defineComponent({
-	name: 'user-settings-data-export',
-})
+export default {name: 'user-settings-data-export'}
 </script>
 
 <script setup lang="ts">

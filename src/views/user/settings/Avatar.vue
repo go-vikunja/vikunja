@@ -58,11 +58,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-
-export default defineComponent({
-	name: 'user-settings-avatar',
-})
+export default { name: 'user-settings-avatar' }
 </script>
 
 <script setup lang="ts">
