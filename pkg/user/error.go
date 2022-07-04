@@ -452,3 +452,30 @@ func (err *ErrAccountDisabled) HTTPError() web.HTTPError {
 		Message:  "This account is disabled. Check your emails or ask your administrator.",
 	}
 }
+
+// ErrAccountIsNotLocal represents a "AccountIsNotLocal" kind of error.
+type ErrAccountIsNotLocal struct {
+	UserID int64
+}
+
+// IsErrAccountIsNotLocal checks if an error is a ErrAccountIsNotLocal.
+func IsErrAccountIsNotLocal(err error) bool {
+	_, ok := err.(*ErrAccountIsNotLocal)
+	return ok
+}
+
+func (err *ErrAccountIsNotLocal) Error() string {
+	return "Account is not local"
+}
+
+// ErrCodeAccountIsNotLocal holds the unique world-error code of this error
+const ErrCodeAccountIsNotLocal = 1021
+
+// HTTPError holds the http error description
+func (err *ErrAccountIsNotLocal) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeAccountIsNotLocal,
+		Message:  "This account is managed by a third-party authentication provider.",
+	}
+}

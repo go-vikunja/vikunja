@@ -28,14 +28,15 @@ import (
 )
 
 func BasicAuth(username, password string, c echo.Context) (bool, error) {
-	creds := &user.Login{
+	s := db.NewSession()
+	defer s.Close()
+
+	credentials := &user.Login{
 		Username: username,
 		Password: password,
 	}
-	s := db.NewSession()
-	defer s.Close()
-	u, err := user.CheckUserCredentials(s, creds)
-	if err != nil && !user.IsErrWrongUsernameOrPassword(err) {
+	u, err := user.CheckUserCredentials(s, credentials)
+	if err != nil && !user.IsErrWrongUsernameOrPassword(err) && !user.IsErrAccountIsNotLocal(err) {
 		log.Errorf("Error during basic auth for caldav: %v", err)
 		return false, nil
 	}

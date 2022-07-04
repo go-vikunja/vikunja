@@ -314,6 +314,10 @@ func CheckUserCredentials(s *xorm.Session, u *Login) (*User, error) {
 		return nil, ErrWrongUsernameOrPassword{}
 	}
 
+	if user.Issuer != IssuerLocal {
+		return user, &ErrAccountIsNotLocal{UserID: user.ID}
+	}
+
 	// The user is invalid if they need to verify their email address
 	if user.Status == StatusEmailConfirmationRequired {
 		return &User{}, ErrEmailNotConfirmed{UserID: user.ID}
