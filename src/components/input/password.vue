@@ -45,7 +45,7 @@ const password = ref('')
 const isValid = ref(!props.validateInitially)
 
 watch(
-	props.validateInitially,
+	() => props.validateInitially,
 	() => props.validateInitially && validate(),
 	{immediate: true},
 )
