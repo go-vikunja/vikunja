@@ -17,6 +17,7 @@
 package models
 
 import (
+	"github.com/jinzhu/copier"
 	"math"
 	"regexp"
 	"sort"
@@ -676,7 +677,13 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 			continue
 		}
 		fullRelatedTasks[rt.OtherTaskID].IsFavorite = taskFavorites[rt.OtherTaskID]
-		taskMap[rt.TaskID].RelatedTasks[rt.RelationKind] = append(taskMap[rt.TaskID].RelatedTasks[rt.RelationKind], fullRelatedTasks[rt.OtherTaskID])
+
+		// We're duplicating the other task to avoid cycles as these can't be represented properly in json
+		// and would thus fail with an error.
+		otherTask := &Task{}
+		copier.Copy(otherTask, fullRelatedTasks[rt.OtherTaskID])
+		otherTask.RelatedTasks = nil
+		taskMap[rt.TaskID].RelatedTasks[rt.RelationKind] = append(taskMap[rt.TaskID].RelatedTasks[rt.RelationKind], otherTask)
 	}
 
 	return
