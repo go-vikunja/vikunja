@@ -19,7 +19,6 @@ package db
 import (
 	"encoding/gob"
 	"fmt"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -153,8 +152,8 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s sslcert=%s sslkey=%s sslrootcert=%s",
 		host,
 		port,
-		url.PathEscape(config.DatabaseUser.GetString()),
-		url.PathEscape(config.DatabasePassword.GetString()),
+		config.DatabaseUser.GetString(),
+		config.DatabasePassword.GetString(),
 		config.DatabaseDatabase.GetString(),
 		config.DatabaseSslMode.GetString(),
 		config.DatabaseSslCert.GetString(),
