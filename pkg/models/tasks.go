@@ -17,13 +17,14 @@
 package models
 
 import (
-	"github.com/jinzhu/copier"
 	"math"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/jinzhu/copier"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
@@ -681,7 +682,11 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 		// We're duplicating the other task to avoid cycles as these can't be represented properly in json
 		// and would thus fail with an error.
 		otherTask := &Task{}
-		copier.Copy(otherTask, fullRelatedTasks[rt.OtherTaskID])
+		err = copier.Copy(otherTask, fullRelatedTasks[rt.OtherTaskID])
+		if err != nil {
+			log.Errorf("Could not duplicate task object: %v", err)
+			continue
+		}
 		otherTask.RelatedTasks = nil
 		taskMap[rt.TaskID].RelatedTasks[rt.RelationKind] = append(taskMap[rt.TaskID].RelatedTasks[rt.RelationKind], otherTask)
 	}
