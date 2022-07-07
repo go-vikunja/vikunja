@@ -63,6 +63,7 @@ func GetAllProviders() (providers []*Provider, err error) {
 			if err != nil {
 				if provider != nil {
 					log.Errorf("Error while getting openid provider %s: %s", provider.Name, err)
+					continue
 				}
 				log.Errorf("Error while getting openid provider: %s", err)
 				continue
