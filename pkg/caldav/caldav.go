@@ -17,7 +17,6 @@
 package caldav
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -150,6 +149,15 @@ END:VCALENDAR` // Need a line break
 	return
 }
 
+func formatDuration(duration time.Duration) string {
+	seconds := duration.Seconds() - duration.Minutes()*60
+	minutes := duration.Minutes() - duration.Hours()*60
+
+	return strconv.FormatFloat(duration.Hours(), 'f', 0, 64) + `H` +
+		strconv.FormatFloat(minutes, 'f', 0, 64) + `M` +
+		strconv.FormatFloat(seconds, 'f', 0, 64) + `S`
+}
+
 // ParseTodos returns a caldav vcalendar string with todos
 func ParseTodos(config *Config, todos []*Todo) (caldavtodos string) {
 	caldavtodos = `BEGIN:VCALENDAR
@@ -172,11 +180,11 @@ SUMMARY:` + t.Summary + getCaldavColor(t.Color)
 
 		if t.Start.Unix() > 0 {
 			caldavtodos += `
-DTSTART: ` + makeCalDavTimeFromTimeStamp(t.Start)
+DTSTART:` + makeCalDavTimeFromTimeStamp(t.Start)
 		}
 		if t.End.Unix() > 0 {
 			caldavtodos += `
-DTEND: ` + makeCalDavTimeFromTimeStamp(t.End)
+DTEND:` + makeCalDavTimeFromTimeStamp(t.End)
 		}
 		if t.Description != "" {
 			re := regexp.MustCompile(`\r?\n`)
@@ -211,7 +219,7 @@ CREATED:` + makeCalDavTimeFromTimeStamp(t.Created)
 
 		if t.Duration != 0 {
 			caldavtodos += `
-DURATION:PT` + fmt.Sprintf("%.6f", t.Duration.Hours()) + `H` + fmt.Sprintf("%.6f", t.Duration.Minutes()) + `M` + fmt.Sprintf("%.6f", t.Duration.Seconds()) + `S`
+DURATION:PT` + formatDuration(t.Duration)
 		}
 
 		if t.Priority != 0 {
