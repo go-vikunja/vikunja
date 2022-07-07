@@ -18,9 +18,9 @@ package notifications
 
 import (
 	"bytes"
+	"embed"
 	_ "embed"
 	templatehtml "html/template"
-	"io"
 	templatetext "text/template"
 
 	"code.vikunja.io/api/pkg/config"
@@ -87,7 +87,7 @@ const mailTemplateHTML = `
 `
 
 //go:embed logo.png
-var logo []byte
+var logo embed.FS
 
 // RenderMail takes a precomposed mail message and renders it into a ready to send mail.Opts object
 func RenderMail(m *Mail) (mailOpts *mail.Opts, err error) {
@@ -160,8 +160,8 @@ func RenderMail(m *Mail) (mailOpts *mail.Opts, err error) {
 		Message:     plainContent.String(),
 		HTMLMessage: htmlContent.String(),
 		Boundary:    boundary,
-		Embeds: map[string]io.Reader{
-			"logo.png": bytes.NewBuffer(logo),
+		EmbedFS: map[string]*embed.FS{
+			"logo.png": &logo,
 		},
 	}
 

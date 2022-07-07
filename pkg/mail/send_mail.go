@@ -17,6 +17,7 @@
 package mail
 
 import (
+	"embed"
 	"io"
 
 	"code.vikunja.io/api/pkg/config"
@@ -37,6 +38,7 @@ type Opts struct {
 	Boundary    string
 	Headers     []*header
 	Embeds      map[string]io.Reader
+	EmbedFS     map[string]*embed.FS
 }
 
 // ContentType represents mail content types
@@ -88,6 +90,13 @@ func getMessage(opts *Opts) *mail.Msg {
 
 	for name, content := range opts.Embeds {
 		m.EmbedReader(name, content)
+	}
+
+	for name, fs := range opts.EmbedFS {
+		err := m.EmbedFromEmbedFS(name, fs)
+		if err != nil {
+			log.Errorf("Error embedding %s via embed.FS into mail: %v", err)
+		}
 	}
 
 	switch opts.ContentType {
