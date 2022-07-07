@@ -20,7 +20,7 @@ require (
 	code.vikunja.io/web v0.0.0-20210706160506-d85def955bd3
 	gitea.com/xorm/xorm-redis-cache v0.2.0
 	github.com/ThreeDotsLabs/watermill v1.1.1
-	github.com/adlio/trello v1.9.0
+	github.com/adlio/trello v1.10.0
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/bbrks/go-blurhash v1.1.1
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
@@ -136,7 +136,7 @@ require (
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
 	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
+	golang.org/x/time v0.0.0-20220609170525-579cf78fd858 // indirect
 	golang.org/x/tools v0.1.10 // indirect
 	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
 	google.golang.org/appengine v1.6.7 // indirect
@@ -147,7 +147,6 @@ require (
 )
 
 replace (
-	github.com/adlio/trello => github.com/kolaente/trello v1.7.1-0.20201216234312-5c4ef79b531e
 	github.com/coreos/bbolt => go.etcd.io/bbolt v1.3.4
 	github.com/coreos/go-systemd => github.com/coreos/go-systemd/v22 v22.0.0
 	github.com/hpcloud/tail => github.com/jeffbean/tail v1.0.1 // See https://github.com/hpcloud/tail/pull/159
