@@ -16,7 +16,7 @@
 						class="month"
 						v-for="(m, mk) in days[yk]"
 					>
-						{{ formatYear(new Date(`${yk}-${parseInt(mk) + 1}-01`)) }}
+						{{ formatMonthAndYear(yk, parseInt(mk) + 1) }}
 						<div class="days">
 							<div
 								:class="{ today: d.toDateString() === now.toDateString() }"
@@ -436,7 +436,9 @@ export default defineComponent({
 			this.newTaskTitle = ''
 			this.hideCrateNewTask()
 		},
-		formatYear(date) {
+		formatMonthAndYear(year, month) {
+			month = month < 10 ? '0' + month : month
+			const date = new Date(`${year}-${month}-01`)
 			return this.format(date, 'MMMM, yyyy')
 		},
 	},
