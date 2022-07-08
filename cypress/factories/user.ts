@@ -14,6 +14,7 @@ export class UserFactory extends Factory {
             username: faker.lorem.word(10) + faker.datatype.uuid(),
             password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.', // 1234
 			status: 0,
+			issuer: 'local',
 			created: formatISO(now),
 			updated: formatISO(now)
 		}
