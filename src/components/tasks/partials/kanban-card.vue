@@ -4,9 +4,9 @@
 		:class="{
 			'is-loading': loadingInternal || loading,
 			'draggable': !(loadingInternal || loading),
-			'has-light-text': task.getHexColor() !== TASK_DEFAULT_COLOR && !colorIsDark(task.getHexColor()),
+			'has-light-text': color !== TASK_DEFAULT_COLOR && !colorIsDark(color),
 		}"
-		:style="{'background-color': task.hexColor !== '#' && task.hexColor !== '' ? task.hexColor : false}"
+		:style="{'background-color': color !== TASK_DEFAULT_COLOR ? color : false}"
 		@click.exact="openTaskDetail()"
 		@click.ctrl="() => toggleTaskDone(task)"
 		@click.meta="() => toggleTaskDone(task)"
@@ -101,6 +101,13 @@ export default defineComponent({
 			type: Boolean,
 			required: false,
 			default: false,
+		},
+	},
+	computed: {
+		color() {
+			return this.task.getHexColor
+				? this.task.getHexColor() 
+				: TASK_DEFAULT_COLOR
 		},
 	},
 	methods: {
