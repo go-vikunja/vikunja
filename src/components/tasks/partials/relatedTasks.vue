@@ -35,6 +35,7 @@
 						:creatable="true"
 						:create-placeholder="$t('task.relation.createPlaceholder')"
 						@create="createAndRelateTask"
+						@select="addTaskRelation"
 					>
 						<template #searchResult="props">
 							<span v-if="typeof props.option !== 'string'" class="search-result">
