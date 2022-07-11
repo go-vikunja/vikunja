@@ -18,6 +18,7 @@ package mail
 
 import (
 	"context"
+	"crypto/tls"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -52,7 +53,12 @@ func getClient() (*mail.Client, error) {
 		mail.WithUsername(config.MailerUsername.GetString()),
 		mail.WithPassword(config.MailerPassword.GetString()),
 		mail.WithPort(config.MailerPort.GetInt()),
-		mail.WithTLSPolicy(tlsPolicy))
+		mail.WithTLSPolicy(tlsPolicy),
+		//#nosec G402
+		mail.WithTLSConfig(&tls.Config{
+			InsecureSkipVerify: config.MailerSkipTLSVerify.GetBool(),
+		}),
+	)
 }
 
 // StartMailDaemon starts the mail daemon

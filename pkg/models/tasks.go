@@ -17,7 +17,6 @@
 package models
 
 import (
-	"github.com/google/uuid"
 	"math"
 	"regexp"
 	"sort"
@@ -25,15 +24,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jinzhu/copier"
-
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+
+	"github.com/google/uuid"
 	"github.com/imdario/mergo"
+	"github.com/jinzhu/copier"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"
