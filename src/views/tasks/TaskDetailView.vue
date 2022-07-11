@@ -771,7 +771,7 @@ $flash-background-duration: 750ms;
     display: flex;
     align-items: center;
 
-    a.remove {
+    .remove {
       color: var(--danger);
       vertical-align: middle;
       padding-left: .5rem;
@@ -782,20 +782,22 @@ $flash-background-duration: 750ms;
   :deep(.datepicker) {
     width: 100%;
 
-    a.show {
+    .show {
       color: var(--text);
       padding: .25rem .5rem;
       transition: background-color $transition;
       border-radius: $radius;
       display: block;
       margin: .1rem 0;
+      width: 100%;
+      text-align: left;
 
       &:hover {
         background: var(--white);
       }
     }
 
-    &.disabled a.show:hover {
+    &.disabled .show:hover {
       background: transparent;
     }
   }

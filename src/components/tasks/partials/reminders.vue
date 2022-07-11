@@ -118,7 +118,7 @@ function removeReminderByIndex(index: number) {
     display: flex;
     align-items: center;
 
-    &.overdue :deep(.datepicker a.show) {
+    &.overdue :deep(.datepicker .show) {
       color: var(--danger);
     }
 
@@ -126,7 +126,7 @@ function removeReminderByIndex(index: number) {
       margin-bottom: 0.75rem;
     }
 
-    a.remove {
+    .remove {
       color: var(--danger);
       padding-left: .5rem;
     }
