@@ -6,10 +6,11 @@
 				v-if="enabled"
 				class="modal-mask"
 				:class="[
-				{ 'has-overflow': overflow },
-				variant,
-			]"
+					{ 'has-overflow': overflow },
+					variant,
+				]"
 				ref="modal"
+				v-bind="attrs"
 			>
 				<div
 					class="modal-container"
@@ -62,10 +63,17 @@
 	</Teleport>
 </template>
 
+<script lang="ts">
+export default {
+	inheritAttrs: false,
+}
+</script>
+
 <script lang="ts" setup>
 import BaseButton from '@/components/base/BaseButton.vue'
-import {onUnmounted, ref, watch} from 'vue'
+import {onUnmounted, ref, useAttrs, watch} from 'vue'
 import {useScrollLock} from '@vueuse/core'
+
 
 const props = withDefaults(defineProps<{
 	enabled?: boolean,
@@ -80,6 +88,8 @@ const props = withDefaults(defineProps<{
 })
 
 defineEmits(['close', 'submit'])
+
+const attrs = useAttrs()
 
 const modal = ref<HTMLElement | null>(null)
 const scrollLock = useScrollLock(modal)
