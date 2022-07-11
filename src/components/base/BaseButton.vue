@@ -5,6 +5,7 @@
 		:class="{ 'base-button--type-button': isButton }"
 		v-bind="elementBindings"
 		:disabled="disabled || undefined"
+		ref="button"
 	>
 		<slot />
 	</component>
@@ -89,6 +90,15 @@ watchEffect(() => {
 })
 
 const isButton = computed(() => componentNodeName.value === 'button')
+
+const button = ref()
+function focus() {
+	button.value.focus()
+}
+
+defineExpose({
+	focus,
+})
 </script>
 
 <style lang="scss">
