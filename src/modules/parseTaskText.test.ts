@@ -122,6 +122,18 @@ describe('Parse Task Text', () => {
 			expect(result.date.getMonth()).toBe(nextMonday.getMonth())
 			expect(result.date.getDate()).toBe(nextMonday.getDate())
 		})
+		it('should recognize next monday and ignore casing', () => {
+			const result = parseTaskText('Lorem Ipsum nExt Monday')
+
+			const untilNextMonday = calculateDayInterval('nextMonday')
+
+			expect(result.text).toBe('Lorem Ipsum')
+			const nextMonday = new Date()
+			nextMonday.setDate(nextMonday.getDate() + untilNextMonday)
+			expect(result.date.getFullYear()).toBe(nextMonday.getFullYear())
+			expect(result.date.getMonth()).toBe(nextMonday.getMonth())
+			expect(result.date.getDate()).toBe(nextMonday.getDate())
+		})
 		it('should recognize this weekend', () => {
 			const result = parseTaskText('Lorem Ipsum this weekend')
 
@@ -201,14 +213,47 @@ describe('Parse Task Text', () => {
 			expect(result.date.getMonth()).toBe(date.getMonth())
 			expect(result.date.getDate()).toBe(date.getDate())
 		})
-		it('should recognize weekdays', () => {
-			const result = parseTaskText('Lorem Ipsum thu')
 
-			expect(result.text).toBe('Lorem Ipsum')
-			const nextThursday = new Date()
-			nextThursday.setDate(nextThursday.getDate() + ((4 + 7 - nextThursday.getDay()) % 7))
-			expect(`${result.date.getFullYear()}-${result.date.getMonth()}-${result.date.getDate()}`).toBe(`${nextThursday.getFullYear()}-${nextThursday.getMonth()}-${nextThursday.getDate()}`)
-		})
+		const cases = {
+			'monday': 1,
+			'Monday': 1,
+			'mon': 1,
+			'Mon': 1,
+			'tuesday': 2,
+			'Tuesday': 2,
+			'tue': 2,
+			'Tue': 2,
+			'wednesday': 3,
+			'Wednesday': 3,
+			'wed': 3,
+			'Wed': 3,
+			'thursday': 4,
+			'Thursday': 4,
+			'thu': 4,
+			'Thu': 4,
+			'friday': 5,
+			'Friday': 5,
+			'fri': 5,
+			'Fri': 5,
+			'saturday': 6,
+			'Saturday': 6,
+			'sat': 6,
+			'Sat': 6,
+			'sunday': 7,
+			'Sunday': 7,
+			'sun': 7,
+			'Sun': 7,
+		}
+		for (const c in cases) {
+			it(`should recognize ${c} as weekday`, () => {
+				const result = parseTaskText(`Lorem Ipsum ${c}`)
+
+				expect(result.text).toBe('Lorem Ipsum')
+				const nextDate = new Date()
+				nextDate.setDate(nextDate.getDate() + ((cases[c] + 7 - nextDate.getDay()) % 7))
+				expect(`${result.date.getFullYear()}-${result.date.getMonth()}-${result.date.getDate()}`).toBe(`${nextDate.getFullYear()}-${nextDate.getMonth()}-${nextDate.getDate()}`)
+			})
+		}
 		it('should recognize weekdays with time', () => {
 			const result = parseTaskText('Lorem Ipsum thu at 14:00')
 
