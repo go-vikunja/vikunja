@@ -89,6 +89,15 @@ import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
+function elementInResults(elem: string | any, label: string, query: string): boolean {
+	// Don't make create available if we have an exact match in our search results.
+	if (label !== '') {
+		return elem[label] === query
+	}
+
+	return elem === query
+}
+
 export default defineComponent({
 	name: 'multiselect',
 	components: {
@@ -222,14 +231,12 @@ export default defineComponent({
 			)
 		},
 		creatableAvailable() {
-			return this.creatable && this.query !== '' && !this.filteredSearchResults.some(elem => {
-				// Don't make create available if we have an exact match in our search results.
-				if (this.label !== '') {
-					return elem[this.label] === this.query
-				}
+			const hasResult = this.filteredSearchResults.some(elem => elementInResults(elem, this.label, this.query))
+			const hasQueryAlreadyAdded = Array.isArray(this.internalValue) && this.internalValue.some(elem => elementInResults(elem, this.label, this.query))
 
-				return elem === this.query
-			})
+			return this.creatable 
+				&& this.query !== '' 
+				&& !(hasResult || hasQueryAlreadyAdded)
 		},
 		filteredSearchResults() {
 			if (this.multiple && this.internalValue !== null && Array.isArray(this.internalValue)) {
@@ -352,6 +359,12 @@ export default defineComponent({
 			}
 
 			if (!this.creatableAvailable) {
+				// Check if there's an exact match for our search term
+				const exactMatch = this.filteredSearchResults.find(elem => elementInResults(elem, this.label, this.query))
+				if(exactMatch) {
+					this.select(exactMatch)
+				}
+
 				return
 			}
 
