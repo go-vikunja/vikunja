@@ -17,6 +17,7 @@
 package models
 
 import (
+	"github.com/google/uuid"
 	"math"
 	"regexp"
 	"sort"
@@ -31,7 +32,6 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
 	"github.com/imdario/mergo"
 	"xorm.io/builder"
@@ -898,7 +898,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 
 	// Generate a uuid if we don't already have one
 	if t.UID == "" {
-		t.UID = utils.MakeRandomString(40)
+		t.UID = uuid.NewString()
 	}
 
 	// Get the default bucket and move the task there
