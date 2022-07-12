@@ -47,17 +47,27 @@ func getClient() (*mail.Client, error) {
 		tlsPolicy = mail.TLSMandatory
 	}
 
-	return mail.NewClient(
-		config.MailerHost.GetString(),
+	opts := []mail.Option{
 		mail.WithSMTPAuth(authType),
-		mail.WithUsername(config.MailerUsername.GetString()),
-		mail.WithPassword(config.MailerPassword.GetString()),
 		mail.WithPort(config.MailerPort.GetInt()),
 		mail.WithTLSPolicy(tlsPolicy),
 		//#nosec G402
 		mail.WithTLSConfig(&tls.Config{
 			InsecureSkipVerify: config.MailerSkipTLSVerify.GetBool(),
 		}),
+	}
+
+	if config.MailerUsername.GetString() != "" {
+		opts = append(opts, mail.WithUsername(config.MailerUsername.GetString()))
+	}
+
+	if config.MailerPassword.GetString() != "" {
+		opts = append(opts, mail.WithPassword(config.MailerPassword.GetString()))
+	}
+
+	return mail.NewClient(
+		config.MailerHost.GetString(),
+		opts...,
 	)
 }
 
