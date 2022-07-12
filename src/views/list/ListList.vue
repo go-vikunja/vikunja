@@ -54,7 +54,7 @@
 		>
 		<card :padding="false" :has-content="false" class="has-overflow">
 			<template
-				v-if="!list.isArchived && canWrite && list.id > 0"
+				v-if="!list.isArchived && canWrite"
 			>
 				<add-task
 					@taskAdded="updateTaskList"
@@ -137,9 +137,9 @@ import { ref, toRef, defineComponent } from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import ButtonLink from '@/components/misc/ButtonLink.vue'
 import ListWrapper from './ListWrapper.vue'
-import EditTask from '@/components/tasks/edit-task'
-import AddTask from '@/components/tasks/add-task'
-import SingleTaskInList from '@/components/tasks/partials/singleTaskInList'
+import EditTask from '@/components/tasks/edit-task.vue'
+import AddTask from '@/components/tasks/add-task.vue'
+import SingleTaskInList from '@/components/tasks/partials/singleTaskInList.vue'
 import { useTaskList } from '@/composables/taskList'
 import Rights from '../../models/constants/rights.json'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'

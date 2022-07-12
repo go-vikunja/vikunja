@@ -1,6 +1,6 @@
 <template>
 	<div :class="{'is-loading': taskService.loading}" class="task loader-container">
-		<fancycheckbox :disabled="isArchived || disabled" @change="markAsDone" v-model="task.done"/>
+		<fancycheckbox :disabled="(isArchived || disabled) && !canMarkAsDone" @change="markAsDone" v-model="task.done"/>
 		<span
 			v-if="showListColor && listColor !== ''"
 			:style="{backgroundColor: listColor }"
@@ -146,6 +146,10 @@ export default defineComponent({
 			default: false,
 		},
 		showListColor: {
+			type: Boolean,
+			default: true,
+		},
+		canMarkAsDone: {
 			type: Boolean,
 			default: true,
 		},
