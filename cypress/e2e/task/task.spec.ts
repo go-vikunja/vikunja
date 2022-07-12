@@ -340,6 +340,7 @@ describe('Task', () => {
 				list_id: 1,
 			})
 			const labels = LabelFactory.create(1)
+			LabelTaskFactory.truncate()
 
 			cy.visit(`/tasks/${tasks[0].id}`)
 
