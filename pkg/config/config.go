@@ -319,7 +319,7 @@ func InitDefaultConfig() {
 	MailerEnabled.setDefault(false)
 	MailerHost.setDefault("")
 	MailerPort.setDefault("587")
-	MailerUsername.setDefault("user")
+	MailerUsername.setDefault("")
 	MailerPassword.setDefault("")
 	MailerSkipTLSVerify.setDefault(false)
 	MailerFromEmail.setDefault("mail@vikunja")
