@@ -20,6 +20,7 @@ import (
 	"archive/zip"
 	"bufio"
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -122,13 +123,16 @@ func Restore(filename string) error {
 		return fmt.Errorf("could not read migrations: %w", err)
 	}
 	sort.Slice(ms, func(i, j int) bool {
-		return ms[i].ID > ms[j].ID
+		return ms[i].ID < ms[j].ID
 	})
 
-	lastMigration := ms[len(ms)-1]
+	lastMigration := ms[len(ms)-2]
+	log.Debugf("Last migration: %s", lastMigration.ID)
 	if err := migration.MigrateTo(lastMigration.ID, nil); err != nil {
 		return fmt.Errorf("could not create db structure: %w", err)
 	}
+
+	delete(dbfiles, "migration")
 
 	// Restore all db data
 	for table, d := range dbfiles {
