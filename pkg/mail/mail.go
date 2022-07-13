@@ -54,6 +54,7 @@ func getClient() (*mail.Client, error) {
 		//#nosec G402
 		mail.WithTLSConfig(&tls.Config{
 			InsecureSkipVerify: config.MailerSkipTLSVerify.GetBool(),
+			ServerName:         config.MailerHost.GetString(),
 		}),
 	}
 
