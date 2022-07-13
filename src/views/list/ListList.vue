@@ -214,7 +214,9 @@ export default defineComponent({
 		// 	isTaskEdit.value = false
 		// }
 
-		const taskList = useTaskList(toRef(props, 'listId'))
+		const taskList = useTaskList(toRef(props, 'listId'), {
+			position: 'asc',
+		})
 
 		return {
 			taskEditTask,

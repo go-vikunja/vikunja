@@ -1,4 +1,4 @@
-import { ref, shallowReactive, watch, computed } from 'vue'
+import {ref, shallowReactive, watch, computed} from 'vue'
 import {useRoute} from 'vue-router'
 
 import TaskCollectionService from '@/services/taskCollection'
@@ -20,14 +20,13 @@ const SORT_BY_DEFAULT = {
 /**
  * This mixin provides a base set of methods and properties to get tasks on a list.
  */
-export function useTaskList(listId) {
+export function useTaskList(listId, sortByDefault = SORT_BY_DEFAULT) {
 	const params = ref({...getDefaultParams()})
 	
 	const search = ref('')
 	const page = ref(1)
 
-	const sortBy = ref({ ...SORT_BY_DEFAULT })
-
+	const sortBy = ref({ ...sortByDefault })
 
 	// This makes sure an id sort order is always sorted last.
 	// When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
