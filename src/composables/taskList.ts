@@ -108,5 +108,6 @@ export function useTaskList(listId) {
 		loadTasks,
 		searchTerm: search,
 		params,
+		sortByParam: sortBy,
 	}
 }
