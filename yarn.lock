@@ -1103,10 +1103,10 @@
     debug "^4.3.2"
     get-port "^5.1.1"
 
-"@cypress/vue@3.1.1":
-  version "3.1.1"
-  resolved "https://registry.yarnpkg.com/@cypress/vue/-/vue-3.1.1.tgz#0e6b4a1cb972d2f271ba05209c55e9101a96d0a4"
-  integrity sha512-wD1vunuPFPLC8FZtgwdq+mcSEOs27qquuJJdGcY8aAN0y38rqYuuaj+N4UxKoAjhkSwthaOeZehjBtvDvv9C6w==
+"@cypress/vue@3.1.2":
+  version "3.1.2"
+  resolved "https://registry.yarnpkg.com/@cypress/vue/-/vue-3.1.2.tgz#0950d20249daf5e4140a880d5230305a23cb2fea"
+  integrity sha512-CqIBupPW6EhXJ7lXE64MBKh3VfdShHnuC3HBV/euHBt9tsgSo7RZHBTZUsKc8aM745VzVnuNiax+JV4CplrtLQ==
   dependencies:
     "@cypress/mount-utils" "1.0.2"
     "@vue/test-utils" "^2.0.0-rc.10"
