@@ -408,7 +408,6 @@ export default defineComponent({
 			// of the drop target works all the time.
 			const bucketIndex = parseInt(e.to.dataset.bucketIndex)
 
-
 			const newBucket = this.buckets[bucketIndex]
 
 			// HACK:
@@ -429,11 +428,28 @@ export default defineComponent({
 			const taskAfter = newBucket.tasks[newTaskIndex + 1] ?? null
 
 			const newTask = cloneDeep(task) // cloning the task to avoid vuex store mutations
-			newTask.bucketId = newBucket.id,
-				newTask.kanbanPosition = calculateItemPosition(taskBefore !== null ? taskBefore.kanbanPosition : null, taskAfter !== null ? taskAfter.kanbanPosition : null)
+			newTask.bucketId = newBucket.id
+			newTask.kanbanPosition = calculateItemPosition(
+				taskBefore !== null ? taskBefore.kanbanPosition : null,
+				taskAfter !== null ? taskAfter.kanbanPosition : null,
+			)
 
 			try {
 				await this.$store.dispatch('tasks/update', newTask)
+				
+				// Make sure the first and second task don't both get position 0 assigned
+				if(newTaskIndex === 0 && taskAfter.kanbanPosition === 0) {
+					console.log('first', taskAfter.id, taskAfter.kanbanPosition)
+					const taskAfterAfter = newBucket.tasks[newTaskIndex + 2] ?? null
+					const newTaskAfter = cloneDeep(taskAfter) // cloning the task to avoid vuex store mutations
+					newTaskAfter.bucketId = newBucket.id
+					newTaskAfter.kanbanPosition = calculateItemPosition(
+						0,
+						taskAfterAfter !== null ? taskAfterAfter.kanbanPosition : null,
+					)
+
+					await this.$store.dispatch('tasks/update', newTaskAfter)
+				}
 			} finally {
 				this.taskUpdating[task.id] = false
 				this.oneTaskUpdating = false
