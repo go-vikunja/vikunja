@@ -91,7 +91,9 @@ describe('List View List', () => {
 		cy.visit('/lists/1/list')
 
 		cy.get('.tasks-container .tasks')
-			.should('contain', tasks[99].title)
+			.should('contain', tasks[1].title)
+		cy.get('.tasks-container .tasks')
+			.should('not.contain', tasks[99].title)
 
 		cy.get('.card-content .pagination .pagination-link')
 			.contains('2')
@@ -100,8 +102,8 @@ describe('List View List', () => {
 		cy.url()
 			.should('contain', '?page=2')
 		cy.get('.tasks-container .tasks')
-			.should('contain', tasks[1].title)
+			.should('contain', tasks[99].title)
 		cy.get('.tasks-container .tasks')
-			.should('not.contain', tasks[99].title)
+			.should('not.contain', tasks[1].title)
 	})
 })

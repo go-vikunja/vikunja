@@ -15,6 +15,7 @@ export class TaskFactory extends Factory {
 			list_id: 1,
 			created_by_id: 1,
 			index: '{increment}',
+			position: '{increment}',
 			created: formatISO(now),
 			updated: formatISO(now)
 		}
