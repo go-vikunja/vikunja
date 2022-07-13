@@ -52,11 +52,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, shallowRef, computed, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { store } from '@/store'
-import { success }  from '@/message'
-import { useI18n } from 'vue-i18n'
+import {ref, shallowRef, computed, watch} from 'vue'
+import {useRouter, useRoute} from 'vue-router'
+import {store} from '@/store'
+import {success} from '@/message'
+import {useI18n} from 'vue-i18n'
 
 import {default as Editor} from '@/components/input/AsyncEditor'
 import CreateEdit from '@/components/misc/create-edit.vue'
@@ -68,7 +68,7 @@ import SavedFilterService from '@/services/savedFilter'
 import {objectToSnakeCase} from '@/helpers/case'
 import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
 
-const { t } = useI18n({useScope: 'global'})
+const {t} = useI18n({useScope: 'global'})
 
 function useSavedFilter(listId) {
 	const filterService = shallowRef(new SavedFilterService())
@@ -80,24 +80,24 @@ function useSavedFilter(listId) {
 			filter.value.filters = value
 		},
 	})
-	
+
 	// loadSavedFilter
 	watch(listId, async () => {
 		// We assume the listId in the route is the pseudolist
 		const savedFilterId = getSavedFilterIdFromListId(route.params.listId)
 
-		filter.value = new SavedFilterModel({id: savedFilterId })
+		filter.value = new SavedFilterModel({id: savedFilterId})
 		const response = await filterService.value.get(filter.value)
-		response.filters = objectToSnakeCase(filter.value.filters)
+		response.filters = objectToSnakeCase(response.filters)
 		filter.value = response
-	}, { immediate: true })
+	}, {immediate: true})
 
 	async function save() {
 		filter.value.filters = filters.value
 		const response = await filterService.value.update(filter.value)
 		await store.dispatch('namespaces/loadNamespaces')
 		success({message: t('filters.edit.success')})
-		response.filters = objectToSnakeCase(filter.value.filters)
+		response.filters = objectToSnakeCase(response.filters)
 		filter.value = response
 	}
 
@@ -110,7 +110,7 @@ function useSavedFilter(listId) {
 }
 
 const route = useRoute()
-const listId =	computed(() => route.params.listId)
+const listId = computed(() => route.params.listId)
 
 const {
 	save,
@@ -120,6 +120,7 @@ const {
 } = useSavedFilter(listId)
 
 const router = useRouter()
+
 async function saveSavedFilter() {
 	await save()
 	router.back()

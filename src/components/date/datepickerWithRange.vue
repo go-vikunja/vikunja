@@ -85,7 +85,12 @@ import DatemathHelp from '@/components/date/datemathHelp.vue'
 const store = useStore()
 const {t} = useI18n({useScope: 'global'})
 
-const emit = defineEmits(['dateChanged'])
+const emit = defineEmits(['dateChanged', 'update:modelValue'])
+const props = defineProps({
+	modelValue: {
+		required: false,
+	},
+})
 
 // FIXME: This seems to always contain the default value - that breaks the picker
 const weekStart = computed<number>(() => store.state.auth.settings.weekStart ?? 0)
@@ -108,11 +113,22 @@ const flatpickrRange = ref('')
 const from = ref('')
 const to = ref('')
 
+watch(
+	() => props.modelValue,
+	newValue => {
+		from.value = newValue.dateFrom
+		to.value = newValue.dateTo
+		flatpickrRange.value = `${from.value} to ${to.value}`
+	},
+)
+
 function emitChanged() {
-	emit('dateChanged', {
+	const args = {
 		dateFrom: from.value === '' ? null : from.value,
 		dateTo: to.value === '' ? null : to.value,
-	})
+	}
+	emit('dateChanged', args)
+	emit('update:modelValue', args)
 }
 
 watch(

@@ -67,7 +67,9 @@
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.dueDate') }}</label>
 			<div class="control">
-				<datepicker-with-range @dateChanged="values => setDateFilter('due_date', values)">
+				<datepicker-with-range
+					@dateChanged="values => setDateFilter('due_date', values)"
+					v-model="filters.dueDate">
 					<template #trigger="{toggle, buttonText}">
 						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
 							{{ buttonText }}
@@ -79,7 +81,9 @@
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.startDate') }}</label>
 			<div class="control">
-				<datepicker-with-range @dateChanged="values => setDateFilter('start_date', values)">
+				<datepicker-with-range
+					@dateChanged="values => setDateFilter('start_date', values)"
+					v-model="filters.startDate">
 					<template #trigger="{toggle, buttonText}">
 						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
 							{{ buttonText }}
@@ -91,7 +95,9 @@
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.endDate') }}</label>
 			<div class="control">
-				<datepicker-with-range @dateChanged="values => setDateFilter('end_date', values)">
+				<datepicker-with-range
+					@dateChanged="values => setDateFilter('end_date', values)"
+					v-model="filters.endDate">
 					<template #trigger="{toggle, buttonText}">
 						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
 							{{ buttonText }}
@@ -103,7 +109,9 @@
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.reminders') }}</label>
 			<div class="control">
-				<datepicker-with-range @dateChanged="values => setDateFilter('reminders', values)">
+				<datepicker-with-range
+					@dateChanged="values => setDateFilter('reminders', values)"
+					v-model="filters.reminders">
 					<template #trigger="{toggle, buttonText}">
 						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
 							{{ buttonText }}
@@ -137,7 +145,8 @@
 			</div>
 		</div>
 
-		<template v-if="$route.name === 'filters.create' || $route.name === 'list.edit'">
+		<template
+			v-if="$route.name === 'filters.create' || $route.name === 'list.edit' || $route.name === 'filter.settings.edit'">
 			<div class="field">
 				<label class="label">{{ $t('list.lists') }}</label>
 				<div class="control">
@@ -193,6 +202,7 @@ import EditLabels from '@/components/tasks/partials/editLabels.vue'
 
 import {objectToSnakeCase} from '@/helpers/case'
 import {getDefaultParams} from '@/composables/taskList'
+import {camelCase} from 'camel-case'
 
 // FIXME: merge with DEFAULT_PARAMS in taskList.js
 const DEFAULT_PARAMS = {
@@ -368,6 +378,8 @@ export default defineComponent({
 					this.params.filter_comparator.push('less_equals')
 					this.params.filter_value.push(dateTo)
 				}
+
+				this.filters[camelCase(filterName)] = {dateFrom, dateTo}
 				this.change()
 				return
 			}
@@ -397,9 +409,16 @@ export default defineComponent({
 			}
 
 			if (foundDateStart !== false && foundDateEnd !== false) {
-				const start = new Date(this.params.filter_value[foundDateStart])
-				const end = new Date(this.params.filter_value[foundDateEnd])
-				this.filters[variableName] = `${start.getFullYear()}-${start.getMonth() + 1}-${start.getDate()} to ${end.getFullYear()}-${end.getMonth() + 1}-${end.getDate()}`
+				const startDate = new Date(this.params.filter_value[foundDateStart])
+				const endDate = new Date(this.params.filter_value[foundDateEnd])
+				this.filters[variableName] = {
+					dateFrom: !isNaN(startDate)
+						? `${startDate.getFullYear()}-${startDate.getMonth() + 1}-${startDate.getDate()}`
+						: this.params.filter_value[foundDateStart],
+					dateTo: !isNaN(endDate)
+						? `${endDate.getFullYear()}-${endDate.getMonth() + 1}-${endDate.getDate()}`
+						: this.params.filter_value[foundDateEnd],
+				}
 			}
 		},
 		setSingleValueFilter(filterName, variableName, useVariableName = '', comparator = 'equals') {
