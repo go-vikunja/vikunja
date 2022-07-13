@@ -42,6 +42,10 @@
 					{{ $t('task.quickAddMagic.list1', {prefix: prefixes.list}) }}
 					{{ $t('task.quickAddMagic.list2') }}
 				</p>
+				<p>
+					{{ $t('task.quickAddMagic.list3') }}
+					{{ $t('task.quickAddMagic.list4', {prefix: prefixes.list}) }}
+				</p>
 
 				<h3>{{ $t('task.quickAddMagic.dateAndTime') }}</h3>
 				<p>
