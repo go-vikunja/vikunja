@@ -136,6 +136,19 @@ func Restore(filename string) error {
 		if err != nil {
 			return fmt.Errorf("could not read table %s: %w", table, err)
 		}
+
+		// FIXME: There has to be a general way to do this but this works for now.
+		if table == "notifications" {
+			for i := range content {
+				decoded, err := base64.StdEncoding.DecodeString(content[i]["notification"].(string))
+				if err != nil {
+					return fmt.Errorf("could not decode notification %s: %w", content[i]["notification"], err)
+				}
+
+				content[i]["notification"] = string(decoded)
+			}
+		}
+
 		if err := db.Restore(table, content); err != nil {
 			return fmt.Errorf("could not restore table data for table %s: %w", table, err)
 		}
