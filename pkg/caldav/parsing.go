@@ -23,7 +23,8 @@ import (
 
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
-	"github.com/laurent22/ical-go"
+
+	ics "github.com/arran4/golang-ical"
 )
 
 func GetCaldavTodosForTasks(list *models.ListWithTasksAndBuckets, listTasks []*models.TaskWithComments) string {
@@ -60,21 +61,15 @@ func GetCaldavTodosForTasks(list *models.ListWithTasksAndBuckets, listTasks []*m
 }
 
 func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
-	parsed, err := ical.ParseCalendar(content)
+	parsed, err := ics.ParseCalendar(strings.NewReader(content))
 	if err != nil {
 		return nil, err
 	}
 
 	// We put the task details in a map to be able to handle them more easily
 	task := make(map[string]string)
-	for _, c := range parsed.Children {
-		if c.Name == "VTODO" {
-			for _, entry := range c.Children {
-				task[entry.Name] = entry.Value
-			}
-			// Breaking, to only process the first task
-			break
-		}
+	for _, c := range parsed.Components[0].UnknownPropertiesIANAProperties() {
+		task[c.IANAToken] = c.Value
 	}
 
 	// Parse the priority
@@ -91,10 +86,13 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 	// Parse the enddate
 	duration, _ := time.ParseDuration(task["DURATION"])
 
+	description := strings.ReplaceAll(task["DESCRIPTION"], "\\,", ",")
+	description = strings.ReplaceAll(description, "\\n", "\n")
+
 	vTask = &models.Task{
 		UID:         task["UID"],
 		Title:       task["SUMMARY"],
-		Description: task["DESCRIPTION"],
+		Description: description,
 		Priority:    priority,
 		DueDate:     caldavTimeToTimestamp(task["DUE"]),
 		Updated:     caldavTimeToTimestamp(task["DTSTAMP"]),
@@ -123,6 +121,10 @@ func caldavTimeToTimestamp(tstring string) time.Time {
 
 	if strings.HasSuffix(tstring, "Z") {
 		format = `20060102T150405Z`
+	}
+
+	if len(tstring) == 8 {
+		format = `20060102`
 	}
 
 	t, err := time.Parse(format, tstring)
