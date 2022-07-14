@@ -61,7 +61,7 @@ require (
 	github.com/ulule/limiter/v3 v3.10.0
 	github.com/vectordotdev/go-datemath v0.1.1-0.20211214182920-0a4ac8742b93
 	github.com/wneessen/go-mail v0.2.5
-	github.com/yuin/goldmark v1.4.12
+	github.com/yuin/goldmark v1.4.13
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	golang.org/x/image v0.0.0-20220617043117-41969df76e82
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
