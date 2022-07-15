@@ -24,7 +24,7 @@ require (
 	github.com/arran4/golang-ical v0.0.0-20220517104411-fd89fefb0182
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/bbrks/go-blurhash v1.1.1
-	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
+	github.com/c2h5oh/datasize v0.0.0-20220606134207-859f65c6625b
 	github.com/coreos/go-oidc/v3 v3.2.0
 	github.com/cweill/gotests v1.6.0
 	github.com/d4l3k/messagediff v1.2.1
