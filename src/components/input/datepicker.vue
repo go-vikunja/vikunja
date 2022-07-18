@@ -76,7 +76,7 @@
 				/>
 
 				<x-button
-					class="datepicker__close-button is-fullwidth"
+					class="datepicker__close-button"
 					:shadow="false"
 					@click="close"
 					v-cy="'closeDatepicker'"
