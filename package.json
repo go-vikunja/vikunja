@@ -67,7 +67,7 @@
     "@typescript-eslint/eslint-plugin": "5.30.6",
     "@typescript-eslint/parser": "5.30.6",
     "@vitejs/plugin-legacy": "2.0.0",
-    "@vitejs/plugin-vue": "3.0.0",
+    "@vitejs/plugin-vue": "3.0.1",
     "@vue/eslint-config-typescript": "11.0.0",
     "@vue/test-utils": "2.0.2",
     "@vue/tsconfig": "0.1.3",
