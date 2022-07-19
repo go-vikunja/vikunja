@@ -526,7 +526,7 @@ export default defineComponent({
 
 		.result {
 			&-title {
-				background: var(--grey-50);
+				background: var(--grey-100);
 				padding: .5rem;
 				display: block;
 				font-size: .75rem;
@@ -549,7 +549,7 @@ export default defineComponent({
 					cursor: pointer;
 
 					&:focus, &:hover {
-						background: var(--grey-50);
+						background: var(--grey-100);
 						box-shadow: none !important;
 					}
 
