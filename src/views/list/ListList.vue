@@ -84,8 +84,10 @@
 						handle=".handle"
 						:disabled="!canWrite"
 						item-key="id"
+						tag="ul"
 						:component-data="{
 							class: { 'dragging-disabled': !canWrite || isAlphabeticalSorting },
+							type: 'transition-group'
 						}"
 					>
 						<template #item="{element: t}">

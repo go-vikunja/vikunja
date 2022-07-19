@@ -25,7 +25,7 @@
 				@start="() => dragBucket = true"
 				group="buckets"
 				:disabled="!canWrite"
-				tag="transition-group"
+				tag="ul"
 				:item-key="({id}) => `bucket${id}`"
 				:component-data="bucketDraggableComponentData"
 			>
@@ -133,7 +133,7 @@
 							:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
 							:disabled="!canWrite"
 							:data-bucket-index="bucketIndex"
-							tag="transition-group"
+							tag="ul"
 							:item-key="(task) => `bucket${bucket.id}-task${task.id}`"
 							:component-data="getTaskDraggableTaskComponentData(bucket)"
 						>
@@ -316,8 +316,7 @@ export default defineComponent({
 			return (bucket) => ({
 				ref: (el) => this.setTaskContainerRef(bucket.id, el),
 				onScroll: (event) => this.handleTaskContainerScroll(bucket.id, bucket.listId, event.target),
-				type: 'transition',
-				tag: 'div',
+				type: 'transition-group',
 				name: !this.drag ? 'move-card' : null,
 				class: [
 					'tasks',
@@ -337,8 +336,7 @@ export default defineComponent({
 		},
 		bucketDraggableComponentData() {
 			return {
-				type: 'transition',
-				tag: 'div',
+				type: 'transition-group',
 				name: !this.dragBucket ? 'move-bucket' : null,
 				class: [
 					'kanban-bucket-container',

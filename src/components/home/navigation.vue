@@ -88,13 +88,12 @@
 						@end="saveListPosition"
 						handle=".handle"
 						:disabled="n.id < 0 || undefined"
-						tag="transition-group"
+						tag="ul"
 						item-key="id"
 						:data-namespace-id="n.id"
 						:data-namespace-index="nk"
 						:component-data="{
-							type: 'transition',
-							tag: 'ul',
+							type: 'transition-group',
 							name: !drag ? 'flip-list' : null,
 							class: [
 								'menu-list can-be-hidden',
