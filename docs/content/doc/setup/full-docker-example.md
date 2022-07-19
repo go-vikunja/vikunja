@@ -103,6 +103,8 @@ services:
       VIKUNJA_DATABASE_TYPE: mysql
       VIKUNJA_DATABASE_USER: vikunja
       VIKUNJA_DATABASE_DATABASE: vikunja
+      VIKUNJA_SERVICE_JWTSECRET: <a super secure random secret>
+      VIKUNJA_SERVICE_FRONTENDURL: http://<your public frontend url with slash>/
     ports:
       - 3456:3456
     volumes:
@@ -141,6 +143,8 @@ services:
       VIKUNJA_DATABASE_TYPE: mysql
       VIKUNJA_DATABASE_USER: vikunja
       VIKUNJA_DATABASE_DATABASE: vikunja
+      VIKUNJA_SERVICE_JWTSECRET: <a super secure random secret>
+      VIKUNJA_SERVICE_FRONTENDURL: https://<your public frontend url with slash>/
     volumes: 
       - ./files:/app/vikunja/files
     networks:
@@ -199,6 +203,8 @@ services:
       VIKUNJA_DATABASE_TYPE: mysql
       VIKUNJA_DATABASE_USER: vikunja
       VIKUNJA_DATABASE_DATABASE: vikunja
+      VIKUNJA_SERVICE_JWTSECRET: <a super secure random secret>
+      VIKUNJA_SERVICE_FRONTENDURL: https://<your public frontend url with slash>/
     volumes: 
       - ./files:/app/vikunja/files
     networks:
@@ -292,6 +298,8 @@ services:
       VIKUNJA_DATABASE_TYPE: mysql
       VIKUNJA_DATABASE_USER: vikunja
       VIKUNJA_DATABASE_DATABASE: vikunja
+      VIKUNJA_SERVICE_JWTSECRET: <a super secure random secret>
+      VIKUNJA_SERVICE_FRONTENDURL: https://<your public frontend url with slash>/
     volumes: 
       - ./files:/app/vikunja/files
     depends_on:
@@ -350,6 +358,8 @@ services:
       VIKUNJA_DATABASE_TYPE: mysql
       VIKUNJA_DATABASE_USER: vikunja
       VIKUNJA_DATABASE_DATABASE: vikunja
+      VIKUNJA_SERVICE_JWTSECRET: <a super secure random secret>
+      VIKUNJA_SERVICE_FRONTENDURL: https://<your public frontend url with slash>/
     volumes: 
       - ./files:/app/vikunja/files
     depends_on:
@@ -426,6 +436,8 @@ services:
       VIKUNJA_DATABASE_TYPE: mysql
       VIKUNJA_DATABASE_USER: vikunja
       VIKUNJA_DATABASE_DATABASE: vikunja
+      VIKUNJA_SERVICE_JWTSECRET: <a super secure random secret>
+      VIKUNJA_SERVICE_FRONTENDURL: https://<your public frontend url with slash>/
     ports:
       - 3456:3456
     volumes:
