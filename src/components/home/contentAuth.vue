@@ -38,16 +38,14 @@
 					</keep-alive>
 				</router-view>
 
-				<transition name="modal">
-					<modal
-						v-if="currentModal"
-						@close="closeModal()"
-						variant="scrolling"
-						class="task-detail-view-modal"
-					>
-						<component :is="currentModal"/>
-					</modal>
-				</transition>
+				<modal
+					v-if="currentModal"
+					@close="closeModal()"
+					variant="scrolling"
+					class="task-detail-view-modal"
+				>
+					<component :is="currentModal"/>
+				</modal>
 
 				<BaseButton
 					class="keyboard-shortcuts-button d-print-none"

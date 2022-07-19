@@ -1,7 +1,7 @@
 <template>
 	<Teleport to="body">
 		<!-- FIXME: transition should not be included in the modal -->
-		<transition name="modal">
+		<transition :name="transitionName">
 			<section
 				v-if="enabled"
 				class="modal-mask"

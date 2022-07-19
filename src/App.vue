@@ -10,9 +10,7 @@
 		</no-auth-wrapper>
 		<Notification/>
 
-		<transition name="fade">
-			<keyboard-shortcuts v-if="keyboardShortcutsActive"/>
-		</transition>
+		<keyboard-shortcuts v-if="keyboardShortcutsActive"/>
 	</ready>
 </template>
 
