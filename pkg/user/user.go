@@ -200,7 +200,7 @@ func (apiUser *APIUserPassword) APIFormat() *User {
 
 // GetUserByID gets informations about a user by its ID
 func GetUserByID(s *xorm.Session, id int64) (user *User, err error) {
-	// Apparently xorm does otherwise look for all users but return only one, which leads to returing one even if the ID is 0
+	// Apparently xorm does otherwise look for all users but return only one, which leads to returning one even if the ID is 0
 	if id < 1 {
 		return &User{}, ErrUserDoesNotExist{}
 	}
@@ -278,6 +278,10 @@ func getUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err er
 
 	if !withEmail {
 		userOut.Email = ""
+	}
+
+	if userOut.OverdueTasksRemindersTime == "" {
+		userOut.OverdueTasksRemindersTime = "9:00"
 	}
 
 	return userOut, err
