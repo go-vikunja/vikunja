@@ -49,7 +49,7 @@
 		<template #default>
 			<div class="gantt-chart-container">
 				<card :padding="false" class="has-overflow">
-
+					
 					<gantt-chart
 						:date-from="dateFrom"
 						:date-to="dateTo"
@@ -72,7 +72,7 @@ import {useI18n} from 'vue-i18n'
 import {useAuthStore} from '@/stores/auth'
 
 import ListWrapper from './ListWrapper.vue'
-import GanttChart from '@/components/tasks/gantt-component.vue'
+import GanttChart from '@/components/tasks/gantt-chart.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 
 const props = defineProps({

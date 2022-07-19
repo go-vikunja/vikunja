@@ -1,0 +1,118 @@
+<template>
+	<g-gantt-chart
+		:chart-start="dateFromFormatted"
+		:chart-end="dateToFormatted"
+		precision="day"
+		bar-start="startDate"
+		bar-end="endDate"
+		:grid="true"
+		@dragend-bar="updateTask"
+	>
+		<g-gantt-row
+			v-for="bar in ganttBars"
+			label=""
+			:bars="bar"
+		/>
+	</g-gantt-chart>
+</template>
+
+<script setup lang="ts">
+import {computed, ref} from 'vue'
+import TaskCollectionService from '@/services/taskCollection'
+import {format} from 'date-fns'
+import {colorIsDark} from '@/helpers/color/colorIsDark'
+import TaskService from '@/services/task'
+
+const dateFormat = 'yyyy-LL-dd kk:mm'
+
+const props = defineProps({
+	listId: {
+		type: Number,
+		required: true,
+	},
+	dateFrom: {
+		default: () => new Date(new Date().setDate(new Date().getDate() - 15)),
+	},
+	dateTo: {
+		default: () => new Date(new Date().setDate(new Date().getDate() + 30)),
+	},
+})
+
+const dateFromFormatted = computed(() => format(props.dateFrom, dateFormat))
+const dateToFormatted = computed(() => format(props.dateTo, dateFormat))
+
+const tasks = ref([])
+
+const ganttBars = ref([])
+
+// We need a "real" ref object for the gantt bars to instantly update the tasks when they are dragged on the chart.
+// A computed won't work directly.
+function mapGanttBars() {
+	const defaultStartDate = '2022-07-19 12:00'
+	const defaultEndDate = '2022-07-25 12:00'
+
+	tasks.value.forEach(t => ganttBars.value.push([{
+		startDate: t.startDate ? format(t.startDate, dateFormat) : defaultStartDate,
+		endDate: t.endDate ? format(t.endDate, dateFormat) : defaultEndDate,
+		ganttBarConfig: {
+			id: t.id,
+			label: t.title,
+			hasHandles: true,
+			style: {
+				color: colorIsDark(t.getHexColor()) ? 'black' : 'white',
+				backgroundColor: t.getHexColor(),
+			},
+		},
+	}]))
+}
+
+async function loadTasks() {
+	tasks.value = new Map()
+
+	const params = {
+		sort_by: ['start_date', 'done', 'id'],
+		order_by: ['asc', 'asc', 'desc'],
+		filter_by: ['done'], // TODO: only load tasks in the current date range
+		filter_comparator: ['equals'],
+		filter_value: ['false'],
+		filter_concat: 'and',
+	}
+
+	const taskCollectionService = new TaskCollectionService()
+
+	const getAllTasks = async (page = 1) => {
+		const tasks = await taskCollectionService.getAll({listId: props.listId}, params, page)
+		if (page < taskCollectionService.totalPages) {
+			const nextTasks = await getAllTasks(page + 1)
+			return tasks.concat(nextTasks)
+		}
+		return tasks
+	}
+
+	const loadedTasks = await getAllTasks()
+
+	loadedTasks
+		.forEach(t => {
+			tasks.value.set(t.id, t)
+		})
+
+	mapGanttBars()
+}
+
+loadTasks()
+
+async function updateTask(e) {
+	const task = tasks.value.get(e.bar.ganttBarConfig.id)
+	task.startDate = e.bar.startDate
+	task.endDate = e.bar.endDate
+	const taskService = new TaskService()
+	await taskService.update(task)
+	// TODO: Loading animation
+}
+</script>
+
+<style>
+.g-gantt-row-label {
+	display: none !important;
+}
+</style>
