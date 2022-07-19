@@ -94,6 +94,7 @@
 							<single-task-in-list
 								:show-list-color="false"
 								:disabled="!canWrite"
+								:can-mark-as-done="canWrite || (list.isSavedFilter && list.isSavedFilter())"
 								:the-task="t"
 								@taskUpdated="updateTasks"
 							>
