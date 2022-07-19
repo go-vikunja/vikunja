@@ -5,7 +5,7 @@ import TaskAssigneeService from '@/services/taskAssignee'
 import TaskAssigneeModel from '../../models/taskAssignee'
 import LabelTaskModel from '../../models/labelTask'
 import LabelTaskService from '@/services/labelTask'
-import {HAS_TASKS, LOADING_MODULE} from '../mutation-types'
+import {HAS_TASKS} from '../mutation-types'
 import {setLoading} from '../helper'
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 
@@ -15,7 +15,6 @@ import {formatISO} from 'date-fns'
 import LabelTask from '@/models/labelTask'
 import LabelModel from '@/models/label'
 import UserService from '@/services/user'
-
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
 function findPropertyByValue(object, key, value) {
