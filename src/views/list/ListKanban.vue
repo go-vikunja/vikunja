@@ -436,8 +436,7 @@ export default defineComponent({
 				await this.$store.dispatch('tasks/update', newTask)
 				
 				// Make sure the first and second task don't both get position 0 assigned
-				if(newTaskIndex === 0 && taskAfter.kanbanPosition === 0) {
-					console.log('first', taskAfter.id, taskAfter.kanbanPosition)
+				if(newTaskIndex === 0 && taskAfter !== null && taskAfter.kanbanPosition === 0) {
 					const taskAfterAfter = newBucket.tasks[newTaskIndex + 2] ?? null
 					const newTaskAfter = cloneDeep(taskAfter) // cloning the task to avoid vuex store mutations
 					newTaskAfter.bucketId = newBucket.id
