@@ -69,9 +69,9 @@ function createPagination(totalPages: number, currentPage: number) {
 	return pages
 }
 
-function getRouteForPagination(page = 1, type = 'list') {
+function getRouteForPagination(page = 1, type = null) {
 	return {
-		name: 'list.' + type,
+		name: type,
 		params: {
 			type: type,
 		},
