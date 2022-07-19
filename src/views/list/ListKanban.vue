@@ -140,10 +140,10 @@
 							<template #footer>
 								<div class="bucket-footer" v-if="canWrite">
 									<div class="field" v-if="showNewTaskInput[bucket.id]">
-										<div class="control" :class="{'is-loading': loading}">
+										<div class="control" :class="{'is-loading': loading || taskLoading}">
 											<input
 												class="input"
-												:disabled="loading || undefined"
+												:disabled="loading || taskLoading || undefined"
 												@focusout="toggleShowNewTaskInput(bucket.id)"
 												@keyup.enter="addTaskToBucket(bucket.id)"
 												@keyup.esc="toggleShowNewTaskInput(bucket.id)"
@@ -172,7 +172,7 @@
 
 							<template #item="{element: task}">
 								<div class="task-item">
-									<kanban-card class="kanban-card" :task="task"/>
+									<kanban-card class="kanban-card" :task="task" :loading="taskUpdating[task.id] ?? false"/>
 								</div>
 							</template>
 						</draggable>
@@ -424,6 +424,7 @@ export default defineComponent({
 			const task = newBucket.tasks[newTaskIndex]
 			const taskBefore = newBucket.tasks[newTaskIndex - 1] ?? null
 			const taskAfter = newBucket.tasks[newTaskIndex + 1] ?? null
+			this.taskUpdating[task.id] = true
 
 			const newTask = cloneDeep(task) // cloning the task to avoid vuex store mutations
 			newTask.bucketId = newBucket.id
@@ -463,7 +464,7 @@ export default defineComponent({
 				return
 			}
 			this.newTaskError[bucketId] = false
-
+			
 			const task = await this.$store.dispatch('tasks/createNewTask', {
 				title: this.newTaskText,
 				bucketId,

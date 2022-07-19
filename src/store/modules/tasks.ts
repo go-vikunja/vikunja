@@ -5,7 +5,7 @@ import TaskAssigneeService from '@/services/taskAssignee'
 import TaskAssigneeModel from '../../models/taskAssignee'
 import LabelTaskModel from '../../models/labelTask'
 import LabelTaskService from '@/services/labelTask'
-import {HAS_TASKS} from '../mutation-types'
+import {HAS_TASKS, LOADING_MODULE} from '../mutation-types'
 import {setLoading} from '../helper'
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 
@@ -286,12 +286,13 @@ export default {
 			return foundListId
 		},
 
-		async createNewTask({dispatch}, { 
+		async createNewTask({dispatch, commit}, { 
 			title,
 			bucketId,
 			listId,
 			position,
 		}) {
+			setLoading({commit}, 'tasks')
 			const parsedTask = parseTaskText(title, getQuickAddMagicMode())
 		
 			const foundListId = await dispatch('findListId', {
