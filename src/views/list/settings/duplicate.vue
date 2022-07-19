@@ -21,9 +21,9 @@
 
 <script setup lang="ts">
 import {ref, shallowReactive} from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useStore } from 'vuex'
-import { useI18n } from 'vue-i18n'
+import {useRoute, useRouter} from 'vue-router'
+import {useStore} from 'vuex'
+import {useI18n} from 'vue-i18n'
 
 import ListDuplicateService from '@/services/listDuplicateService'
 import CreateEdit from '@/components/misc/create-edit.vue'
@@ -32,14 +32,12 @@ import Multiselect from '@/components/input/multiselect.vue'
 import ListDuplicateModel from '@/models/listDuplicateModel'
 import NamespaceModel from '@/models/namespace'
 
-import { success } from '@/message'
-import { useTitle } from '@/composables/useTitle'
-import { useNameSpaceSearch } from '@/composables/useNamespaceSearch'
+import {success} from '@/message'
+import {useTitle} from '@/composables/useTitle'
+import {useNameSpaceSearch} from '@/composables/useNamespaceSearch'
 
-
-const { t } = useI18n({useScope: 'global'})
+const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('list.duplicate.title'))
-
 
 const {
 	namespaces,
@@ -47,14 +45,17 @@ const {
 } = useNameSpaceSearch()
 
 const selectedNamespace = ref<NamespaceModel>()
+
 function selectNamespace(namespace: NamespaceModel) {
 	selectedNamespace.value = namespace
 }
 
 const route = useRoute()
-const router= useRouter()
+const router = useRouter()
+const store = useStore()
 
 const listDuplicateService = shallowReactive(new ListDuplicateService())
+
 async function duplicateList() {
 	const listDuplicate = new ListDuplicateModel({
 		// FIXME: should be parameter
@@ -64,7 +65,6 @@ async function duplicateList() {
 
 	const duplicate = await listDuplicateService.create(listDuplicate)
 
-	const store = useStore()
 	store.commit('namespaces/addListToNamespace', duplicate.list)
 	store.commit('lists/setList', duplicate.list)
 	success({message: t('list.duplicate.success')})
