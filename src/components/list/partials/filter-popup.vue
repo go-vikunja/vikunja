@@ -25,7 +25,6 @@
 			v-model="value"
 			ref="filters"
 			class="filter-popup"
-			:class="{'is-open': isOpen}"
 		/>
 	</modal>
 </template>
