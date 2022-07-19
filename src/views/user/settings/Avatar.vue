@@ -66,7 +66,7 @@ export default defineComponent({
 </script>
 
 <script setup lang="ts">
-import {ref, shallowReactive} from 'vue'
+import {computed, ref, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useStore} from 'vuex'
 import {Cropper} from 'vue-advanced-cropper'
@@ -80,13 +80,13 @@ import { success } from '@/message'
 const {t} = useI18n({useScope: 'global'})
 const store = useStore()
 
-const AVATAR_PROVIDERS = {
+const AVATAR_PROVIDERS = computed(() => ({
 	default: t('misc.default'),
 	initials: t('user.settings.avatar.initials'),
 	gravatar: t('user.settings.avatar.gravatar'),
 	marble: t('user.settings.avatar.marble'),
 	upload: t('user.settings.avatar.upload'),
-}
+}))
 
 useTitle(() => `${t('user.settings.avatar.title')} - ${t('user.settings.title')}`)
 
