@@ -113,7 +113,7 @@ export default class TaskService extends AbstractService {
 			model.labels = model.labels.map(l => labelService.processModel(l))
 		}
 
-		return model
+		return model as TaskModel
 	}
 }
 

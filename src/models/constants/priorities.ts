@@ -6,3 +6,5 @@ export const PRIORITIES = {
 	'URGENT': 4,
 	'DO_NOW': 5,
 } as const
+
+export type Priority = typeof PRIORITIES[keyof typeof PRIORITIES]

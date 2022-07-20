@@ -6,6 +6,7 @@ import AttachmentModel from './attachment'
 import SubscriptionModel from '@/models/subscription'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import type ListModel from './list'
+import type { Priority } from './constants/priorities'
 
 const SUPPORTS_TRIGGERED_NOTIFICATION = 'Notification' in window && 'showTrigger' in Notification.prototype
 export const TASK_DEFAULT_COLOR = '#1973ff'
@@ -29,7 +30,7 @@ export default class TaskModel extends AbstractModel {
 	description: string
 	done: boolean
 	doneAt: Date | null
-	priority: 0
+	priority: Priority
 	labels: LabelModel[]
 	assignees: UserModel[]
 

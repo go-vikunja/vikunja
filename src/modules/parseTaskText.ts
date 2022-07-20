@@ -47,7 +47,7 @@ interface repeatParsedResult {
 	repeats: Repeats | null,
 }
 
-interface ParsedTaskText {
+export interface ParsedTaskText {
 	text: string,
 	date: Date | null,
 	labels: string[],

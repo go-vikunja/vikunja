@@ -45,8 +45,8 @@ const props = defineProps({
 				return false
 			}
 
-			const isDate = (e: any) => e instanceof Date
-			const isString = (e: any) => typeof e === 'string'
+			const isDate = (e: unknown) => e instanceof Date
+			const isString = (e: unknown) => typeof e === 'string'
 
 			for (const e of prop) {
 				if (!isDate(e) && !isString(e)) {

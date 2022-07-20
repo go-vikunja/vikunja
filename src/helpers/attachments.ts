@@ -29,6 +29,6 @@ export async function uploadFiles(attachmentService: AttachmentService, taskId: 
 	}
 }
 
-export function generateAttachmentUrl(taskId: number, attachmentId: number) : any {
+export function generateAttachmentUrl(taskId: number, attachmentId: number) {
 	return `${window.API_URL}/tasks/${taskId}/attachments/${attachmentId}`
 }

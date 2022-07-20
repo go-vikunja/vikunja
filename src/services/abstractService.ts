@@ -3,6 +3,8 @@ import type {Method} from 'axios'
 
 import {objectToSnakeCase} from '@/helpers/case'
 import AbstractModel from '@/models/abstractModel'
+import type { Right } from '@/models/constants/rights'
+import type FileModel from '@/models/file'
 
 interface Paths {
 	create : string
@@ -20,7 +22,7 @@ function convertObject(o: Record<string, unknown>) {
 	return o
 }
 
-function prepareParams(params: Record<string, unknown | any[]>) {
+function prepareParams(params: Record<string, unknown | unknown[]>) {
 	if (typeof params !== 'object') {
 		return params
 	}
@@ -37,7 +39,7 @@ function prepareParams(params: Record<string, unknown | any[]>) {
 	return objectToSnakeCase(params)
 }
 
-export default class AbstractService<Model extends AbstractModel> {
+export default class AbstractService<Model extends AbstractModel = AbstractModel> {
 
 	/////////////////////////////
 	// Initial variable definitions
@@ -124,8 +126,8 @@ export default class AbstractService<Model extends AbstractModel> {
 	/**
 	 * Returns an object with all route parameters and their values.
 	 */
-	getRouteReplacements(route : string, parameters = {}) {
-		const replace$$1: {} = {}
+	getRouteReplacements(route : string, parameters : Record<string, unknown> = {}) {
+		const replace$$1: Record<string, unknown> = {}
 		let pattern = this.getRouteParameterPattern()
 		pattern = new RegExp(pattern instanceof RegExp ? pattern.source : pattern, 'g')
 
@@ -161,7 +163,7 @@ export default class AbstractService<Model extends AbstractModel> {
 	 * But because the timeout is created using setTimeout, it will still trigger even if the request is
 	 * already finished, so we return a method to call in that case.
 	 */
-	setLoading(): Function {
+	setLoading() {
 		const timeout = setTimeout(() => {
 			this.loading = true
 		}, 100)
@@ -267,7 +269,7 @@ export default class AbstractService<Model extends AbstractModel> {
 	 * This is a more abstract implementation which only does a get request.
 	 * Services which need more flexibility can use this.
 	 */
-	async getM(url : string, model = new AbstractModel({}), params = {}) {
+	async getM(url : string, model = new AbstractModel({}) as Model, params: Record<string, unknown> = {}) {
 		const cancel = this.setLoading()
 
 		model = this.beforeGet(model)
@@ -276,7 +278,7 @@ export default class AbstractService<Model extends AbstractModel> {
 		try {
 			const response = await this.http.get(finalUrl, {params: prepareParams(params)})
 			const result = this.modelGetFactory(response.data)
-			result.maxRight = Number(response.headers['x-max-right'])
+			result.maxRight = Number(response.headers['x-max-right']) as Right
 			return result
 		} finally {
 			cancel()
@@ -300,7 +302,7 @@ export default class AbstractService<Model extends AbstractModel> {
 	 * @param params Optional query parameters
 	 * @param page The page to get
 	 */
-	async getAll(model : Model = new AbstractModel({}), params = {}, page = 1) {
+	async getAll(model : Model = new AbstractModel({}) as Model, params = {}, page = 1) {
 		if (this.paths.getAll === '') {
 			throw new Error('This model is not able to get data.')
 		}
@@ -406,10 +408,10 @@ export default class AbstractService<Model extends AbstractModel> {
 	/**
 	 * Uploads a file to a url.
 	 * @param url
-	 * @param file
+	 * @param file {FileModel}
 	 * @param fieldName The name of the field the file is uploaded to.
 	 */
-	uploadFile(url : string, file, fieldName : string) {
+	uploadFile(url : string, file: FileModel, fieldName : string) {
 		return this.uploadBlob(url, new Blob([file]), fieldName, file.name)
 	}
 
@@ -425,7 +427,7 @@ export default class AbstractService<Model extends AbstractModel> {
 	/**
 	 * Uploads a form data object.
 	 */
-	async uploadFormData(url : string, formData: Record<string, unknown>) {
+	async uploadFormData(url : string, formData: FormData) {
 		const cancel = this.setLoading()
 		try {
 			const response = await this.http.put(

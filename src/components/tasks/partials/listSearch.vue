@@ -1,5 +1,5 @@
 <template>
-	<multiselect
+	<Multiselect
 		class="control is-expanded"
 		:placeholder="$t('list.search')"
 		@search="findLists"
@@ -13,7 +13,7 @@
 			<span class="list-namespace-title search-result">{{ namespace(props.option.namespaceId) }} ></span>
 			{{ props.option.title }}
 		</template>
-	</multiselect>
+	</Multiselect>
 </template>
 
 <script lang="ts" setup>

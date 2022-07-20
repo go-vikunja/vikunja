@@ -11,11 +11,11 @@ export function includesById(array: [], id: string | number) {
 }
 
 // https://github.com/you-dont-need/You-Dont-Need-Lodash-Underscore#_isnil
-export function isNil(value: any) {
+export function isNil(value: unknown) {
 	return value == null
 }
 
-export function omitBy(obj: {}, check: (value: any) => boolean): {} {
+export function omitBy(obj: {}, check: (value: unknown) => boolean) {
 	if (isNil(obj)) {
 		return {}
 	}

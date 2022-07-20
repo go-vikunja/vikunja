@@ -200,7 +200,7 @@ function handleEnter(e: KeyboardEvent) {
 }
 
 function focusTaskInput() {
-	newTaskInput.value.focus()
+	newTaskInput.value?.focus()
 }
 
 defineExpose({
