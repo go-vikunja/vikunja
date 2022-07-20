@@ -75,10 +75,11 @@ async function loadTasks() {
 	const params = {
 		sort_by: ['start_date', 'done', 'id'],
 		order_by: ['asc', 'asc', 'desc'],
-		filter_by: ['done'], // TODO: only load tasks in the current date range
-		filter_comparator: ['equals'],
-		filter_value: ['false'],
+		filter_by: ['done', 'start_date', 'start_date'],
+		filter_comparator: ['equals', 'greater_equals', 'less_equals'],
+		filter_value: ['false', props.dateFrom, props.dateTo],
 		filter_concat: 'and',
+		filter_include_nulls: true,
 	}
 
 	const taskCollectionService = new TaskCollectionService()
