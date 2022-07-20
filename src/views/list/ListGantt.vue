@@ -1,47 +1,48 @@
 <template>
 	<ListWrapper class="list-gantt" :list-id="props.listId" viewName="gantt">
 		<template #header>
-			<card class="gantt-options">
-				<fancycheckbox class="is-block" v-model="showTaskswithoutDates">
-					{{ $t('list.gantt.showTasksWithoutDates') }}
-				</fancycheckbox>
-				<div class="range-picker">
-					<div class="field">
-						<label class="label" for="dayWidth">{{ $t('list.gantt.size') }}</label>
-						<div class="control">
-							<div class="select">
-								<select id="dayWidth" v-model.number="dayWidth">
-									<option value="35">{{ $t('list.gantt.default') }}</option>
-									<option value="10">{{ $t('list.gantt.month') }}</option>
-									<option value="80">{{ $t('list.gantt.day') }}</option>
-								</select>
+			<card>
+				<div class="gantt-options">
+					<div class="range-picker">
+						<div class="field">
+							<label class="label" for="precision">{{ $t('list.gantt.size') }}</label>
+							<div class="control">
+								<div class="select">
+									<select id="precision" v-model="precision">
+										<option value="day">{{ $t('list.gantt.day') }}</option>
+										<option value="month">{{ $t('list.gantt.month') }}</option>
+									</select>
+								</div>
+							</div>
+						</div>
+						<div class="field">
+							<label class="label" for="fromDate">{{ $t('list.gantt.from') }}</label>
+							<div class="control">
+								<flat-pickr
+									:config="flatPickerConfig"
+									class="input"
+									id="fromDate"
+									:placeholder="$t('list.gantt.from')"
+									v-model="dateFrom"
+								/>
+							</div>
+						</div>
+						<div class="field">
+							<label class="label" for="toDate">{{ $t('list.gantt.to') }}</label>
+							<div class="control">
+								<flat-pickr
+									:config="flatPickerConfig"
+									class="input"
+									id="toDate"
+									:placeholder="$t('list.gantt.to')"
+									v-model="dateTo"
+								/>
 							</div>
 						</div>
 					</div>
-					<div class="field">
-						<label class="label" for="fromDate">{{ $t('list.gantt.from') }}</label>
-						<div class="control">
-							<flat-pickr
-								:config="flatPickerConfig"
-								class="input"
-								id="fromDate"
-								:placeholder="$t('list.gantt.from')"
-								v-model="dateFrom"
-							/>
-						</div>
-					</div>
-					<div class="field">
-						<label class="label" for="toDate">{{ $t('list.gantt.to') }}</label>
-						<div class="control">
-							<flat-pickr
-								:config="flatPickerConfig"
-								class="input"
-								id="toDate"
-								:placeholder="$t('list.gantt.to')"
-								v-model="dateTo"
-							/>
-						</div>
-					</div>
+					<fancycheckbox class="is-block" v-model="showTaskswithoutDates">
+						{{ $t('list.gantt.showTasksWithoutDates') }}
+					</fancycheckbox>
 				</div>
 			</card>
 		</template>
@@ -49,11 +50,11 @@
 		<template #default>
 			<div class="gantt-chart-container">
 				<card :padding="false" class="has-overflow">
-					
+
 					<gantt-chart
 						:date-from="dateFrom"
 						:date-to="dateTo"
-						:day-width="dayWidth"
+						:precision="precision"
 						:list-id="props.listId"
 						:show-taskswithout-dates="showTaskswithoutDates"
 					/>
@@ -74,6 +75,7 @@ import {useAuthStore} from '@/stores/auth'
 import ListWrapper from './ListWrapper.vue'
 import GanttChart from '@/components/tasks/gantt-chart.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+import {format} from 'date-fns'
 
 const props = defineProps({
 	listId: {
@@ -82,14 +84,12 @@ const props = defineProps({
 	},
 })
 
-const DEFAULT_DAY_COUNT = 35
-
 const showTaskswithoutDates = ref(false)
-const dayWidth = ref(DEFAULT_DAY_COUNT)
+const precision = ref('day')
 
 const now = ref(new Date())
-const dateFrom = ref(new Date((new Date()).setDate(now.value.getDate() - 15)))
-const dateTo = ref(new Date((new Date()).setDate(now.value.getDate() + 30)))
+const dateFrom = ref(format(new Date((new Date()).setDate(now.value.getDate() - 15)), 'yyyy-LL-dd'))
+const dateTo = ref(format(new Date((new Date()).setDate(now.value.getDate() + 30)), 'yyyy-LL-dd'))
 
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()

@@ -1,15 +1,16 @@
 <template>
 	<g-gantt-chart
-		:chart-start="dateFromFormatted"
-		:chart-end="dateToFormatted"
-		precision="day"
+		:chart-start="`${dateFrom} 00:00`"
+		:chart-end="`${dateTo} 23:59`"
+		:precision="precision"
 		bar-start="startDate"
 		bar-end="endDate"
 		:grid="true"
 		@dragend-bar="updateTask"
 	>
 		<g-gantt-row
-			v-for="bar in ganttBars"
+			v-for="(bar, k) in ganttBars"
+			:key="k"
 			label=""
 			:bars="bar"
 		/>
@@ -17,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from 'vue'
+import {ref} from 'vue'
 import TaskCollectionService from '@/services/taskCollection'
 import {format} from 'date-fns'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
@@ -30,19 +31,21 @@ const props = defineProps({
 		type: Number,
 		required: true,
 	},
+	precision: {
+		type: String,
+		default: 'day',
+	},
 	dateFrom: {
-		default: () => new Date(new Date().setDate(new Date().getDate() - 15)),
+		type: String,
+		required: true,
 	},
 	dateTo: {
-		default: () => new Date(new Date().setDate(new Date().getDate() + 30)),
+		type: String,
+		required: true,
 	},
 })
 
-const dateFromFormatted = computed(() => format(props.dateFrom, dateFormat))
-const dateToFormatted = computed(() => format(props.dateTo, dateFormat))
-
 const tasks = ref([])
-
 const ganttBars = ref([])
 
 // We need a "real" ref object for the gantt bars to instantly update the tasks when they are dragged on the chart.

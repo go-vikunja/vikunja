@@ -286,6 +286,7 @@
       "default": "Default",
       "month": "Month",
       "day": "Day",
+      "hour": "Hour",
       "from": "From",
       "to": "To",
       "noDates": "This task has no dates set."
