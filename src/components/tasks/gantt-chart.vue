@@ -48,12 +48,12 @@ const props = defineProps({
 const tasks = ref([])
 const ganttBars = ref([])
 
+const defaultStartDate = format(new Date(), dateFormat)
+const defaultEndDate = format(new Date((new Date()).setDate((new Date()).getDate() + 7)), dateFormat)
+
 // We need a "real" ref object for the gantt bars to instantly update the tasks when they are dragged on the chart.
 // A computed won't work directly.
 function mapGanttBars() {
-	const defaultStartDate = format(new Date(), dateFormat)
-	const defaultEndDate = format(new Date((new Date()).setDate((new Date()).getDate() + 7)), dateFormat)
-
 	tasks.value.forEach(t => ganttBars.value.push([{
 		startDate: t.startDate ? format(t.startDate, dateFormat) : defaultStartDate,
 		endDate: t.endDate ? format(t.endDate, dateFormat) : defaultEndDate,
