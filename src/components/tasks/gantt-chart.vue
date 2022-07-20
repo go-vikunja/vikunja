@@ -12,6 +12,16 @@
 			font="'Open Sans', sans-serif"
 			:width="ganttChartWidth + 'px'"
 		>
+			<template #timeunit="{label, value}">
+				<div
+					class="timeunit-wrapper"
+					:class="{'today': dayIsToday(label)}">
+					<span>{{ value }}</span>
+					<span class="weekday">
+						{{ weekdayFromTimeLabel(label) }}
+					</span>
+				</div>
+			</template>
 			<g-gantt-row
 				v-for="(bar, k) in ganttBars"
 				:key="k"
@@ -77,11 +87,12 @@ const props = defineProps({
 	},
 })
 
+const dateFromDate = computed(() => parse(props.dateFrom, 'yyyy-LL-dd', new Date()))
+const dateToDate = computed(() => parse(props.dateTo, 'yyyy-LL-dd', new Date()))
+
 const DAY_WIDTH_PIXELS = 30
 const ganttChartWidth = computed(() => {
-	const from = parse(props.dateFrom, 'yyyy-LL-dd', new Date())
-	const to = parse(props.dateTo, 'yyyy-LL-dd', new Date())
-	const dateDiff = Math.floor((to - from) / (1000 * 60 * 60 * 24))
+	const dateDiff = Math.floor((dateToDate.value - dateFromDate.value) / (1000 * 60 * 60 * 24))
 
 	return dateDiff * DAY_WIDTH_PIXELS
 })
@@ -98,6 +109,8 @@ const defaultEndDate = format(new Date((new Date()).setDate((new Date()).getDate
 // A computed won't work directly.
 function mapGanttBars() {
 	ganttBars.value = []
+	const black = 'var(--grey-800)'
+
 	tasks.value.forEach(t => ganttBars.value.push([{
 		startDate: t.startDate ? format(t.startDate, dateFormat) : defaultStartDate,
 		endDate: t.endDate ? format(t.endDate, dateFormat) : defaultEndDate,
@@ -106,8 +119,9 @@ function mapGanttBars() {
 			label: t.title,
 			hasHandles: true,
 			style: {
-				color: colorIsDark(t.getHexColor()) ? 'black' : 'white',
-				backgroundColor: t.getHexColor(),
+				color: t.startDate ? (colorIsDark(t.getHexColor()) ? black : 'white') : black,
+				backgroundColor: t.startDate ? t.getHexColor() : 'var(--grey-100)',
+				border: t.startDate ? '': '2px dashed var(--grey-300)',
 			},
 		},
 	}]))
@@ -198,18 +212,101 @@ async function createTask() {
 }
 
 function openTask(e) {
-	console.log('open', e.bar.ganttBarConfig.id)
 	router.push({
 		name: 'task.detail',
 		params: {id: e.bar.ganttBarConfig.id},
 		state: {backdropView: router.currentRoute.value.fullPath},
 	})
 }
+
+function weekdayFromTimeLabel(label: string): string {
+	const parsed = parse(label, 'dd.MMM', dateFromDate.value)
+	return format(parsed, 'E')
+}
+
+function dayIsToday(label: string): boolean {
+	const parsed = parse(label, 'dd.MMM', dateFromDate.value)
+	const today = new Date()
+	return parsed.getDate() === today.getDate() &&
+		parsed.getMonth() === today.getMonth() &&
+		parsed.getFullYear() === today.getFullYear()
+}
 </script>
 
-<style>
+<style lang="scss">
+// Not scoped because we need to style the elements inside the gantt chart component
 .g-gantt-row-label {
 	display: none !important;
+}
+
+.g-upper-timeunit, .g-timeunit {
+	background: var(--white) !important;
+	font-family: $vikunja-font;
+}
+
+.g-upper-timeunit {
+	font-weight: bold;
+	border-right: 1px solid var(--grey-200);
+	padding: .5rem 0;
+}
+
+.g-timeunit .timeunit-wrapper {
+	padding: 0.5rem 0;
+	font-size: 1rem !important;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+
+	&.today {
+		background: var(--primary);
+		color: var(--white);
+		border-radius: 5px 5px 0 0;
+		font-weight: bold;
+	}
+
+	.weekday {
+		font-size: 0.8rem;
+	}
+}
+
+.g-timeaxis {
+	height: auto !important;
+	box-shadow: none !important;
+}
+
+.g-gantt-row > .g-gantt-row-bars-container {
+	border-bottom: none !important;
+	border-top: none !important;
+}
+
+.g-gantt-row:nth-child(odd) {
+	background: hsla(var(--grey-100-hsl), .5);
+}
+
+.g-gantt-bar {
+	border-radius: $radius * 1.5;
+	overflow: visible;
+	font-size: .85rem;
+
+	&-handle-left,
+	&-handle-right {
+		width: 8px !important;
+		height: 8px !important;
+		top: 50% !important;
+		transform: translateY(-50%);
+		background: var(--white);
+		border: 1px solid var(--grey-900);
+		opacity: 1 !important;
+	}
+
+	&-handle-left {
+		margin-left: -4px;
+	}
+
+	&-handle-right {
+		margin-right: -4px;
+	}
 }
 </style>
 
