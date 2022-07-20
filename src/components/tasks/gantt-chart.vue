@@ -63,7 +63,7 @@ import Rights from '../../models/constants/rights.json'
 import TaskModel from '@/models/task'
 import {useRouter} from 'vue-router'
 
-const dateFormat = 'yyyy-LL-dd kk:mm'
+const dateFormat = 'yyyy-LL-dd HH:mm'
 
 const store = useStore()
 const router = useRouter()
