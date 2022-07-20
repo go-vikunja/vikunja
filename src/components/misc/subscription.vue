@@ -39,7 +39,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 
 import SubscriptionService from '@/services/subscription'
-import SubscriptionModel from '@/models/subscription'
+import SubscriptionModel, { type ISubscription } from '@/models/subscription'
 
 import {success} from '@/message'
 
@@ -51,7 +51,7 @@ const props = defineProps({
 		default: true,
 	},
 	subscription: {
-		type: Object as PropType<SubscriptionModel>,
+		type: Object as PropType<ISubscription>,
 		default: null,
 	},
 	type: {

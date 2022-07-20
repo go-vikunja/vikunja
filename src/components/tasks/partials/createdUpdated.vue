@@ -27,13 +27,13 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, toRefs} from 'vue'
-import TaskModel from '@/models/task'
+import {computed, toRefs, type PropType} from 'vue'
+import type { ITask } from '@/models/task'
 import {formatISO, formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 
 const props = defineProps({
 	task: {
-		type: TaskModel,
+		type: Object as PropType<ITask>,
 		required: true,
 	},
 })

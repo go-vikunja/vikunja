@@ -2,9 +2,9 @@ import {AuthenticatedHTTPFactory} from '@/http-common'
 import type {Method} from 'axios'
 
 import {objectToSnakeCase} from '@/helpers/case'
-import AbstractModel from '@/models/abstractModel'
+import AbstractModel, { type IAbstract } from '@/models/abstractModel'
 import type { Right } from '@/models/constants/rights'
-import type FileModel from '@/models/file'
+import type { IFile } from '@/models/file'
 
 interface Paths {
 	create : string
@@ -12,6 +12,7 @@ interface Paths {
 	getAll : string
 	update : string
 	delete : string
+	reset?: string
 }
 
 function convertObject(o: Record<string, unknown>) {
@@ -39,7 +40,7 @@ function prepareParams(params: Record<string, unknown | unknown[]>) {
 	return objectToSnakeCase(params)
 }
 
-export default class AbstractService<Model extends AbstractModel = AbstractModel> {
+export default class AbstractService<Model extends IAbstract = IAbstract> {
 
 	/////////////////////////////
 	// Initial variable definitions
@@ -269,7 +270,7 @@ export default class AbstractService<Model extends AbstractModel = AbstractModel
 	 * This is a more abstract implementation which only does a get request.
 	 * Services which need more flexibility can use this.
 	 */
-	async getM(url : string, model = new AbstractModel({}) as Model, params: Record<string, unknown> = {}) {
+	async getM(url : string, model : Model = new AbstractModel({}), params: Record<string, unknown> = {}) {
 		const cancel = this.setLoading()
 
 		model = this.beforeGet(model)
@@ -285,7 +286,7 @@ export default class AbstractService<Model extends AbstractModel = AbstractModel
 		}
 	}
 
-	async getBlobUrl(url : string, method = 'GET' as Method, data = {}) {
+	async getBlobUrl(url : string, method : Method = 'GET', data = {}) {
 		const response = await this.http({
 			url,
 			method,
@@ -302,7 +303,7 @@ export default class AbstractService<Model extends AbstractModel = AbstractModel
 	 * @param params Optional query parameters
 	 * @param page The page to get
 	 */
-	async getAll(model : Model = new AbstractModel({}) as Model, params = {}, page = 1) {
+	async getAll(model : Model = new AbstractModel({}), params = {}, page = 1) {
 		if (this.paths.getAll === '') {
 			throw new Error('This model is not able to get data.')
 		}
@@ -408,10 +409,10 @@ export default class AbstractService<Model extends AbstractModel = AbstractModel
 	/**
 	 * Uploads a file to a url.
 	 * @param url
-	 * @param file {FileModel}
+	 * @param file {IFile}
 	 * @param fieldName The name of the field the file is uploaded to.
 	 */
-	uploadFile(url : string, file: FileModel, fieldName : string) {
+	uploadFile(url : string, file: IFile, fieldName : string) {
 		return this.uploadBlob(url, new Blob([file]), fieldName, file.name)
 	}
 

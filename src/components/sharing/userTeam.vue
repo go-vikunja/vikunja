@@ -143,18 +143,22 @@ import {useStore} from 'vuex'
 import {useI18n} from 'vue-i18n'
 
 import UserNamespaceService from '@/services/userNamespace'
-import UserNamespaceModel from '@/models/userNamespace'
-import UserListModel from '@/models/userList'
+import UserNamespaceModel, { type IUserNamespace } from '@/models/userNamespace'
+
 import UserListService from '@/services/userList'
+import UserListModel, { type IUserList } from '@/models/userList'
+
 import UserService from '@/services/user'
-import UserModel from '@/models/user'
+import UserModel, { type IUser } from '@/models/user'
 
 import TeamNamespaceService from '@/services/teamNamespace'
-import TeamNamespaceModel from '@/models/teamNamespace'
-import TeamListModel from '@/models/teamList'
+import TeamNamespaceModel, { type ITeamNamespace } from '@/models/teamNamespace'
+
 import TeamListService from '@/services/teamList'
+import TeamListModel, { type ITeamList } from '@/models/teamList'
+
 import TeamService from '@/services/team'
-import TeamModel from '@/models/team'
+import TeamModel, { type ITeam } from '@/models/team'
 
 import {RIGHTS} from '@/models/constants/rights'
 import Multiselect from '@/components/input/multiselect.vue'
@@ -183,10 +187,10 @@ const props = defineProps({
 const {t} = useI18n({useScope: 'global'})
 
 // This user service is either a userNamespaceService or a userListService, depending on the type we are using
-let stuffService: ShallowReactive<UserNamespaceService | UserListService | TeamListService | TeamNamespaceService>
-let stuffModel: UserNamespaceModel | UserListModel | TeamListModel | TeamNamespaceModel
-let searchService: ShallowReactive<UserService | TeamService>
-let sharable: Ref<UserModel | TeamModel>
+let stuffService: UserNamespaceService | UserListService | TeamListService | TeamNamespaceService
+let stuffModel: IUserNamespace | IUserList | ITeamList | ITeamNamespace
+let searchService: UserService | TeamService
+let sharable: Ref<IUser | ITeam>
 
 const searchLabel = ref('')
 const selectedRight = ref({})

@@ -32,18 +32,18 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed} from 'vue'
+import {ref, computed, type PropType} from 'vue'
 import {useStore} from 'vuex'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Done from '@/components/misc/Done.vue'
-import TaskModel from '@/models/task'
+import type {ITask} from '@/models/task'
 import { useRouter } from 'vue-router'
 import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
 
 const props = defineProps({
 	task: {
-		type: TaskModel,
+		type: Object as PropType<ITask>,
 		required: true,
 	},
 	canWrite: {

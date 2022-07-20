@@ -1,8 +1,13 @@
-import AbstractModel from './abstractModel'
+import AbstractModel, { type IAbstract } from './abstractModel'
 
-export default class CaldavTokenModel extends AbstractModel {
-	id: number
-	created: Date
+export interface ICaldavToken extends IAbstract {
+	id: number;
+	created: Date;
+}
+
+export default class CaldavTokenModel extends AbstractModel implements ICaldavToken {
+	declare id: number
+	declare created: Date
 
 	constructor(data? : Object) {
 		super(data)

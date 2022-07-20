@@ -1,7 +1,7 @@
 import AbstractModel from '@/models/abstractModel'
-import UserModel from '@/models/user'
+import UserModel, { type IUser } from '@/models/user'
 
-export default class SavedFilterModel extends AbstractModel {
+export interface ISavedFilter {
 	id: 0
 	title: string
 	description: string
@@ -15,7 +15,26 @@ export default class SavedFilterModel extends AbstractModel {
 		filterIncludeNulls: boolean
 	}
 
-	owner: any
+	owner: IUser
+	created: Date
+	updated: Date
+}
+
+export default class SavedFilterModel extends AbstractModel implements ISavedFilter {
+	declare id: 0
+	declare title: string
+	declare description: string
+	declare filters: {
+		sortBy: ('done' | 'id')[]
+		orderBy: ('asc' | 'desc')[]
+		filterBy: 'done'[]
+		filterValue: 'false'[]
+		filterComparator: 'equals'[]
+		filterConcat: 'and'
+		filterIncludeNulls: boolean
+	}
+
+	owner: IUser
 	created: Date
 	updated: Date
 

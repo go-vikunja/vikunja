@@ -3,7 +3,7 @@ import {beforeEach, afterEach, describe, it, expect, vi} from 'vitest'
 import {parseTaskText} from './parseTaskText'
 import {getDateFromText, getDateFromTextIn} from '../helpers/time/parseDate'
 import {calculateDayInterval} from '../helpers/time/calculateDayInterval'
-import {PRIORITIES} from '@/models/constants/priorities.ts'
+import {PRIORITIES} from '@/models/constants/priorities'
 
 describe('Parse Task Text', () => {
 	beforeEach(() => {

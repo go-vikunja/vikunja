@@ -162,23 +162,23 @@
 
 <script lang="ts" setup>
 import {computed, ref} from 'vue'
+import {useI18n} from 'vue-i18n'
 
 import Editor from '@/components/input/AsyncEditor'
 import {useStore} from 'vuex'
 
-import TeamService from '../../services/team'
-import type TeamModel from '../../models/team'
-import TeamMemberService from '../../services/teamMember'
-import type TeamMemberModel from '../../models/teamMember'
-import type UserModel from '../../models/user'
-import UserService from '../../services/user'
+import TeamService from '@/services/team'
+import TeamMemberService from '@/services/teamMember'
+import UserService from '@/services/user'
 import {RIGHTS as Rights} from '@/models/constants/rights'
 
 import Multiselect from '@/components/input/multiselect.vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useTitle} from '@/composables/useTitle'
-import {useI18n} from 'vue-i18n'
 import {success} from '@/message'
+import type { ITeam } from '@/models/team'
+import type { IUser } from '@/models/user'
+import type { ITeamMember } from '@/models/teamMember'
 
 const store = useStore()
 const route = useRoute()
@@ -198,11 +198,11 @@ const teamService = ref<TeamService>(new TeamService())
 const teamMemberService = ref<TeamMemberService>(new TeamMemberService())
 const userService = ref<UserService>(new UserService())
 
-const team = ref<TeamModel>()
+const team = ref<ITeam>()
 const teamId = computed(() => route.params.id)
-const memberToDelete = ref<TeamMemberModel>()
-const newMember = ref<UserModel>()
-const foundUsers = ref<UserModel[]>()
+const memberToDelete = ref<ITeamMember>()
+const newMember = ref<IUser>()
+const foundUsers = ref<IUser[]>()
 
 const showDeleteModal = ref(false)
 const showUserDeleteModal = ref(false)
@@ -257,7 +257,7 @@ async function addUser() {
 	success({message: t('team.edit.userAddedSuccess')})
 }
 
-async function toggleUserType(member: TeamMemberModel) {
+async function toggleUserType(member: ITeamMember) {
 	// FIXME: direct manipulation
 	member.admin = !member.admin
 	member.teamId = teamId.value
@@ -282,7 +282,7 @@ async function findUser(query: string) {
 	}
 
 	const users = await userService.value.getAll({}, {s: query})
-	foundUsers.value = users.filter((u: UserModel) => u.id !== userInfo.value.id)
+	foundUsers.value = users.filter((u: IUser) => u.id !== userInfo.value.id)
 }
 </script>
 

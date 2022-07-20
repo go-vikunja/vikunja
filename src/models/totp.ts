@@ -1,9 +1,15 @@
 import AbstractModel from './abstractModel'
 
-export default class TotpModel extends AbstractModel {
+export interface ITotp {
 	secret: string
 	enabled: boolean
 	url: string
+}
+
+export default class TotpModel extends AbstractModel implements ITotp{
+	declare secret: string
+	declare enabled: boolean
+	declare url: string
 
 	defaults() {
 		return {

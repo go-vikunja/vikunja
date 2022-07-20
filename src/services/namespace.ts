@@ -1,9 +1,9 @@
 import AbstractService from './abstractService'
-import NamespaceModel from '../models/namespace'
+import NamespaceModel, { type INamespace } from '../models/namespace'
 import {formatISO} from 'date-fns'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 
-export default class NamespaceService extends AbstractService {
+export default class NamespaceService extends AbstractService<INamespace> {
 	constructor() {
 		super({
 			create: '/namespaces',

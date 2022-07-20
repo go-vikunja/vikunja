@@ -52,7 +52,7 @@ import {computed, onMounted, onUnmounted, ref} from 'vue'
 import NotificationService from '@/services/notification'
 import BaseButton from '@/components/base/BaseButton.vue'
 import User from '@/components/misc/user.vue'
-import NotificationModel, { NOTIFICATION_NAMES as names} from '@/models/notification'
+import { NOTIFICATION_NAMES as names, type INotification} from '@/models/notification'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {useStore} from 'vuex'
 import {useRouter} from 'vue-router'
@@ -63,7 +63,7 @@ const LOAD_NOTIFICATIONS_INTERVAL = 10000
 const store = useStore()
 const router = useRouter()
 
-const allNotifications = ref<NotificationModel[]>([])
+const allNotifications = ref<INotification[]>([])
 const showNotifications = ref(false)
 const popup = ref(null)
 

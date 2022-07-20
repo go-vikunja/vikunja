@@ -1,6 +1,6 @@
-import AbstractModel from './abstractModel'
+import AbstractModel, { type IAbstract } from './abstractModel'
 
-export default class BackgroundImageModel extends AbstractModel {
+export interface IBackgroundImage extends IAbstract {
 	id: number
 	url: string
 	thumb: string
@@ -9,6 +9,17 @@ export default class BackgroundImageModel extends AbstractModel {
 		authorName: string
 	}
 	blurHash: string  
+}
+
+export default class BackgroundImageModel extends AbstractModel implements IBackgroundImage {
+	declare id: number
+	declare url: string
+	declare thumb: string
+	declare info: {
+		author: string
+		authorName: string
+	}
+	declare blurHash: string  
 
 	defaults() {
 		return {

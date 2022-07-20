@@ -49,7 +49,6 @@ import {useStore} from 'vuex'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
-import type TaskModel from '@/models/task'
 import {formatDate} from '@/helpers/time/formatDate'
 import {setTitle} from '@/helpers/setTitle'
 
@@ -59,13 +58,14 @@ import DatepickerWithRange from '@/components/date/datepickerWithRange.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import LlamaCool from '@/assets/llama-cool.svg?component'
+import type { ITask } from '@/models/task'
 
 const store = useStore()
 const route = useRoute()
 const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
 
-const tasks = ref<TaskModel[]>([])
+const tasks = ref<ITask[]>([])
 const showNothingToDo = ref<boolean>(false)
 
 setTimeout(() => showNothingToDo.value = true, 100)
@@ -182,7 +182,7 @@ async function loadPendingTasks(from: string, to: string) {
 }
 
 // FIXME: this modification should happen in the store
-function updateTasks(updatedTask: TaskModel) {
+function updateTasks(updatedTask: ITask) {
 	for (const t in tasks.value) {
 		if (tasks.value[t].id === updatedTask.id) {
 			tasks.value[t] = updatedTask

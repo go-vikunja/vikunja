@@ -1,6 +1,6 @@
 import AbstractModel from './abstractModel'
-import UserModel from './user'
-import type TaskModel from './task'
+import UserModel, { type IUser } from './user'
+import type { ITask } from './task'
 
 export const RELATION_KIND = {
 	'SUBTASK': 'subtask',
@@ -19,13 +19,23 @@ export const RELATION_KINDS = [...Object.values(RELATION_KIND)] as const
 
 export type RelationKind = typeof RELATION_KINDS[number]
 
-export default class TaskRelationModel extends AbstractModel {
+export interface ITaskRelationModel {
 	id: number
-	otherTaskId: TaskModel['id']
-	taskId: TaskModel['id']
+	otherTaskId: ITask['id']
+	taskId: ITask['id']
 	relationKind: RelationKind
 
-	createdBy: UserModel
+	createdBy: IUser
+	created: Date
+}
+
+export default class TaskRelationModel extends AbstractModel implements ITaskRelationModel {
+	declare id: number
+	declare otherTaskId: ITask['id']
+	declare taskId: ITask['id']
+	declare relationKind: RelationKind
+
+	createdBy: IUser
 	created: Date
 
 	constructor(data) {

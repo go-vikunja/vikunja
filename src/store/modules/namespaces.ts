@@ -1,22 +1,27 @@
+import type {ActionContext} from 'vuex'
+
 import NamespaceService from '../../services/namespace'
 import {setLoading} from '@/store/helper'
 import {createNewIndexer} from '@/indexes'
+import type {NamespaceState, RootStoreState} from '@/store/types'
+import type {INamespace} from '@/models/namespace'
+import type {IList} from '@/models/list'
 
 const {add, remove, search, update} = createNewIndexer('namespaces', ['title', 'description'])
 
 export default {
 	namespaced: true,
-	state: () => ({
+	state: (): NamespaceState => ({
 		namespaces: [],
 	}),
 	mutations: {
-		namespaces(state, namespaces) {
+		namespaces(state: NamespaceState, namespaces: INamespace[]) {
 			state.namespaces = namespaces
 			namespaces.forEach(n => {
 				add(n)
 			})
 		},
-		setNamespaceById(state, namespace) {
+		setNamespaceById(state: NamespaceState, namespace: INamespace) {
 			const namespaceIndex = state.namespaces.findIndex(n => n.id === namespace.id)
 
 			if (namespaceIndex === -1) {
@@ -30,7 +35,7 @@ export default {
 			state.namespaces[namespaceIndex] = namespace
 			update(namespace)
 		},
-		setListInNamespaceById(state, list) {
+		setListInNamespaceById(state: NamespaceState, list: IList) {
 			for (const n in state.namespaces) {
 				// We don't have the namespace id on the list which means we need to loop over all lists until we find it.
 				// FIXME: Not ideal at all - we should fix that at the api level.
@@ -46,11 +51,11 @@ export default {
 				}
 			}
 		},
-		addNamespace(state, namespace) {
+		addNamespace(state: NamespaceState, namespace: INamespace) {
 			state.namespaces.push(namespace)
 			add(namespace)
 		},
-		removeNamespaceById(state, namespaceId) {
+		removeNamespaceById(state: NamespaceState, namespaceId: INamespace['id']) {
 			for (const n in state.namespaces) {
 				if (state.namespaces[n].id === namespaceId) {
 					remove(state.namespaces[n])
@@ -59,7 +64,7 @@ export default {
 				}
 			}
 		},
-		addListToNamespace(state, list) {
+		addListToNamespace(state: NamespaceState, list: IList) {
 			for (const n in state.namespaces) {
 				if (state.namespaces[n].id === list.namespaceId) {
 					state.namespaces[n].lists.push(list)
@@ -67,7 +72,7 @@ export default {
 				}
 			}
 		},
-		removeListFromNamespaceById(state, list) {
+		removeListFromNamespaceById(state: NamespaceState, list: IList) {
 			for (const n in state.namespaces) {
 				// We don't have the namespace id on the list which means we need to loop over all lists until we find it.
 				// FIXME: Not ideal at all - we should fix that at the api level.
@@ -83,7 +88,7 @@ export default {
 		},
 	},
 	getters: {
-		getListAndNamespaceById: state => (listId, ignorePseudoNamespaces = false) => {
+		getListAndNamespaceById: (state: NamespaceState) => (listId: IList['id'], ignorePseudoNamespaces = false) => {
 			for (const n in state.namespaces) {
 
 				if (ignorePseudoNamespaces && state.namespaces[n].id < 0) {
@@ -101,10 +106,10 @@ export default {
 			}
 			return null
 		},
-		getNamespaceById: state => namespaceId => {
+		getNamespaceById: (state: NamespaceState) => (namespaceId: INamespace['id']) => {
 			return state.namespaces.find(({id}) => id == namespaceId) || null
 		},
-		searchNamespace: (state, getters) => query => {
+		searchNamespace: (state: NamespaceState, getters) => (query: string) => {
 			return search(query)
 					?.filter(value => value > 0)
 					.map(getters.getNamespaceById)
@@ -113,7 +118,7 @@ export default {
 		},
 	},
 	actions: {
-		async loadNamespaces(ctx) {
+		async loadNamespaces(ctx: ActionContext<NamespaceState, RootStoreState>) {
 			const cancel = setLoading(ctx, 'namespaces')
 
 			const namespaceService = new NamespaceService()
@@ -133,20 +138,20 @@ export default {
 			}
 		},
 
-		loadNamespacesIfFavoritesDontExist(ctx) {
+		loadNamespacesIfFavoritesDontExist(ctx: ActionContext<NamespaceState, RootStoreState>) {
 			// The first or second namespace should be the one holding all favorites
 			if (ctx.state.namespaces[0].id !== -2 && ctx.state.namespaces[1]?.id !== -2) {
 				return ctx.dispatch('loadNamespaces')
 			}
 		},
 
-		removeFavoritesNamespaceIfEmpty(ctx) {
+		removeFavoritesNamespaceIfEmpty(ctx: ActionContext<NamespaceState, RootStoreState>) {
 			if (ctx.state.namespaces[0].id === -2 && ctx.state.namespaces[0].lists.length === 0) {
 				ctx.state.namespaces.splice(0, 1)
 			}
 		},
 
-		async deleteNamespace(ctx, namespace) {
+		async deleteNamespace(ctx: ActionContext<NamespaceState, RootStoreState>, namespace: INamespace) {
 			const cancel = setLoading(ctx, 'namespaces')
 			const namespaceService = new NamespaceService()
 
@@ -159,7 +164,7 @@ export default {
 			}
 		},
 
-		async createNamespace(ctx, namespace) {
+		async createNamespace(ctx: ActionContext<NamespaceState, RootStoreState>, namespace: INamespace) {
 			const cancel = setLoading(ctx, 'namespaces')
 			const namespaceService = new NamespaceService()
 

@@ -1,8 +1,12 @@
 import TeamShareBaseModel from './teamShareBase'
-import type NamespaceModel from './namespace'
+import type { INamespace } from './namespace'
 
-export default class TeamNamespaceModel extends TeamShareBaseModel {
-	namespaceId: NamespaceModel['id']
+export interface ITeamNamespace {
+	namespaceId: INamespace['id']
+}
+
+export default class TeamNamespaceModel extends TeamShareBaseModel implements ITeamNamespace {
+	declare namespaceId: INamespace['id']
 
 	defaults() {
 		return {

@@ -1,7 +1,7 @@
 import AbstractModel from './abstractModel'
-import UserSettingsModel from '@/models/userSettings'
+import UserSettingsModel, { type IUserSettings } from '@/models/userSettings'
 
-export default class UserModel extends AbstractModel {
+export interface IUser {
 	id: number
 	email: string
 	username: string
@@ -9,7 +9,18 @@ export default class UserModel extends AbstractModel {
 
 	created: Date
 	updated: Date
-	settings: UserSettingsModel
+	settings: IUserSettings
+}
+
+export default class UserModel extends AbstractModel implements IUser {
+	declare id: number
+	declare email: string
+	declare username: string
+	declare name: string
+
+	created: Date
+	updated: Date
+	settings: IUserSettings
 
 	constructor(data) {
 		super(data)
@@ -28,6 +39,7 @@ export default class UserModel extends AbstractModel {
 			email: '',
 			username: '',
 			name: '',
+
 			created: null,
 			updated: null,
 			settings: null,

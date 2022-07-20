@@ -147,8 +147,7 @@
 import {defineComponent} from 'vue'
 
 import AttachmentService from '../../../services/attachment'
-import AttachmentModel from '../../../models/attachment'
-import type FileModel from '@/models/file'
+import AttachmentModel, { type IAttachment } from '@/models/attachment'
 import User from '@/components/misc/user.vue'
 import {mapState} from 'vuex'
 
@@ -157,6 +156,7 @@ import { uploadFiles, generateAttachmentUrl } from '@/helpers/attachments'
 import {formatDate, formatDateSince, formatDateLong} from '@/helpers/time/formatDate'
 
 import BaseButton from '@/components/base/BaseButton'
+import type { IFile } from '@/models/file'
 
 export default defineComponent({
 	name: 'attachments',
@@ -192,7 +192,7 @@ export default defineComponent({
 	setup(props) {
 		const copy = useCopyToClipboard()
 
-		function copyUrl(attachment: AttachmentModel) {
+		function copyUrl(attachment: IAttachment) {
 			copy(generateAttachmentUrl(props.taskId, attachment.id))
 		}
 
@@ -235,7 +235,7 @@ export default defineComponent({
 		formatDateSince,
 		formatDateLong,
 
-		downloadAttachment(attachment: AttachmentModel) {
+		downloadAttachment(attachment: IAttachment) {
 			this.attachmentService.download(attachment)
 		},
 		uploadNewAttachment() {
@@ -245,7 +245,7 @@ export default defineComponent({
 
 			this.uploadFiles(this.$refs.files.files)
 		},
-		uploadFiles(files: FileModel[]) {
+		uploadFiles(files: IFile[]) {
 			uploadFiles(this.attachmentService, this.taskId, files)
 		},
 		async deleteAttachment() {

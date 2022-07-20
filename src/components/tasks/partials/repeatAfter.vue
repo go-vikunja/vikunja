@@ -63,14 +63,14 @@
 
 <script setup lang="ts">
 import {ref, reactive, watch, type PropType} from 'vue'
-import {error} from '@/message'
 import {useI18n} from 'vue-i18n'
-import {TASK_REPEAT_MODES, type RepeatAfter} from '@/models/task'
-import type TaskModel from '@/models/task'
+
+import {error} from '@/message'
+import {TASK_REPEAT_MODES, type ITask, type RepeatAfter} from '@/models/task'
 
 const props = defineProps({
 	modelValue: {
-		type: Object as PropType<TaskModel>,
+		type: Object as PropType<ITask>,
 		default: () => ({}),
 		required: true,
 	},
@@ -84,7 +84,7 @@ const {t} = useI18n({useScope: 'global'})
 
 const emit = defineEmits(['update:modelValue', 'change'])
 
-const task = ref<TaskModel>()
+const task = ref<ITask>()
 const repeatAfter = reactive({
 	amount: 0,
 	type: '',

@@ -1,10 +1,18 @@
 import AbstractModel from './abstractModel'
-import type UserModel from './user'
 import {RIGHTS, type Right} from '@/models/constants/rights'
+import type { IUser } from './user'
 
-export default class UserShareBaseModel extends AbstractModel {
-	userId: UserModel['id']
+export interface IUserShareBase {
+	userId: IUser['id']
 	right: Right
+
+	created: Date
+	updated: Date
+}
+
+export default class UserShareBaseModel extends AbstractModel implements IUserShareBase {
+	declare userId: IUser['id']
+	declare right: Right
 
 	created: Date
 	updated: Date

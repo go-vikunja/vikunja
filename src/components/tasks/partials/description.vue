@@ -30,17 +30,17 @@
 </template>
 
 <script setup lang="ts">
-import {ref,computed, watch} from 'vue'
+import {ref,computed, watch, type PropType} from 'vue'
 import {useStore} from 'vuex'
 
 import Editor from '@/components/input/AsyncEditor'
 
-import TaskModel from '@/models/task'
+import type { ITask } from '@/models/task'
 
 
 const props = defineProps({
 	modelValue: {
-		type: TaskModel,
+		type: Object as PropType<ITask>,
 		required: true,
 	},
 	attachmentUpload: {
@@ -54,7 +54,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const task = ref<TaskModel>({description: ''})
+const task = ref<ITask>({description: ''})
 const saved = ref(false)
 
 // Since loading is global state, this variable ensures we're only showing the saving icon when saving the description.

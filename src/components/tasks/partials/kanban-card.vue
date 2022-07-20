@@ -74,7 +74,7 @@ import User from '../../../components/misc/user.vue'
 import Done from '@/components/misc/Done.vue'
 import Labels from '../../../components/tasks/partials/labels.vue'
 import ChecklistSummary from './checklist-summary.vue'
-import TaskModel, {TASK_DEFAULT_COLOR} from '@/models/task'
+import {TASK_DEFAULT_COLOR, type ITask} from '@/models/task'
 
 import {formatDateLong, formatISO, formatDateSince} from '@/helpers/time/formatDate'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
@@ -96,7 +96,7 @@ export default defineComponent({
 	},
 	props: {
 		task: {
-			type: Object as PropType<TaskModel>,
+			type: Object as PropType<ITask>,
 			required: true,
 		},
 		loading: {
@@ -117,7 +117,7 @@ export default defineComponent({
 		formatISO,
 		formatDateSince,
 		colorIsDark,
-		async toggleTaskDone(task: TaskModel) {
+		async toggleTaskDone(task: ITask) {
 			this.loadingInternal = true
 			try {
 				const done = !task.done

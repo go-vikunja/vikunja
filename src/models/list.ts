@@ -1,25 +1,46 @@
-import AbstractModel from './abstractModel'
-import TaskModel from './task'
-import UserModel from './user'
-import type NamespaceModel from './namespace'
-import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
-import SubscriptionModel from '@/models/subscription'
+import AbstractModel, { type IAbstract } from '@/models/abstractModel'
+import TaskModel, { type ITask } from '@/models/task'
+import UserModel, { type IUser } from '@/models/user'
+import SubscriptionModel, { type ISubscription } from '@/models/subscription'
+import type { INamespace } from '@/models/namespace'
 
-export default class ListModel extends AbstractModel {
+import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
+
+export interface IList extends IAbstract {
 	id: number
 	title: string
 	description: string
-	owner: UserModel
-	tasks: TaskModel[]
-	namespaceId: NamespaceModel['id']
+	owner: IUser
+	tasks: ITask[]
+	namespaceId: INamespace['id']
 	isArchived: boolean
 	hexColor: string
 	identifier: string
 	backgroundInformation: any
 	isFavorite: boolean
-	subscription: SubscriptionModel
+	subscription: ISubscription
 	position: number
 	backgroundBlurHash: string
+	
+	created: Date
+	updated: Date
+}
+
+export default class ListModel extends AbstractModel implements IList {
+	declare id: number
+	declare title: string
+	declare description: string
+	owner: IUser
+	tasks: ITask[]
+	declare namespaceId: INamespace['id']
+	declare isArchived: boolean
+	declare hexColor: string
+	declare identifier: string
+	declare backgroundInformation: any
+	declare isFavorite: boolean
+	declare subscription: ISubscription
+	declare position: number
+	declare backgroundBlurHash: string
 	
 	created: Date
 	updated: Date

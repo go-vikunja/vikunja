@@ -1,11 +1,20 @@
 import AbstractModel from '@/models/abstractModel'
-import UserModel from '@/models/user'
+import UserModel, { type IUser } from '@/models/user'
 
-export default class SubscriptionModel extends AbstractModel {
+export interface ISubscription {
 	id: number
 	entity: string // FIXME: correct type?
 	entityId: number // FIXME: correct type?
-	user: UserModel
+	user: IUser
+
+	created: Date
+}
+
+export default class SubscriptionModel extends AbstractModel implements ISubscription {
+	declare id: number
+	declare entity: string // FIXME: correct type?
+	declare entityId: number // FIXME: correct type?
+	user: IUser
 
 	created: Date
 

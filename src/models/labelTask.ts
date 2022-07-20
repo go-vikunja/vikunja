@@ -1,9 +1,15 @@
 import AbstractModel from './abstractModel'
 
-export default class LabelTask extends AbstractModel {
+interface ILabel {
 	id: number
 	taskId: number
 	labelId: number
+}
+
+export default class LabelTask extends AbstractModel implements ILabel {
+	declare id: number
+	declare taskId: number
+	declare labelId: number
 
 	defaults() {
 		return {

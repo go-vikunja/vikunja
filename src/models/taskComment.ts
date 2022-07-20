@@ -1,12 +1,22 @@
 import AbstractModel from './abstractModel'
-import UserModel from './user'
-import type TaskModel from './task'
+import UserModel, { type IUser } from './user'
+import type { ITask } from './task'
 
-export default class TaskCommentModel extends AbstractModel {
+export interface ITaskComment {
 	id: number
-	taskId: TaskModel['id']
+	taskId: ITask['id']
 	comment: string
-	author: UserModel
+	author: IUser
+
+	created: Date
+	updated: Date
+}
+
+export default class TaskCommentModel extends AbstractModel implements ITaskComment {
+	declare id: number
+	declare taskId: ITask['id']
+	declare comment: string
+	author: IUser
 
 	created: Date
 	updated: Date

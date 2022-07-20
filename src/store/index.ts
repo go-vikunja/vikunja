@@ -25,7 +25,9 @@ import ListModel from '@/models/list'
 import ListService from '../services/list'
 import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 
-export const store = createStore({
+import type { RootStoreState } from './types'
+
+export const store = createStore<RootStoreState>({
 	strict: import.meta.env.DEV,
 	modules: {
 		config,
@@ -37,7 +39,7 @@ export const store = createStore({
 		attachments,
 		labels,
 	},
-	state: {
+	state: () => ({
 		loading: false,
 		loadingModule: null,
 		// This is used to highlight the current list in menu for all list related views
@@ -51,7 +53,7 @@ export const store = createStore({
 		menuActive: true,
 		keyboardShortcutsActive: false,
 		quickActionsActive: false,
-	},
+	}),
 	mutations: {
 		[LOADING](state, loading) {
 			state.loading = loading

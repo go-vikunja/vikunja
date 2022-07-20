@@ -1,12 +1,14 @@
-import AbstractModel from './abstractModel'
-import UserModel from './user'
-import LabelModel from './label'
-import AttachmentModel from './attachment'
+import type { Priority } from '@/models/constants/priorities'
 
-import SubscriptionModel from '@/models/subscription'
+import AbstractModel from '@/models/abstractModel'
+import UserModel, { type IUser } from '@/models/user'
+import LabelModel, { type ILabel } from '@/models/label'
+import AttachmentModel, {type IAttachment} from '@/models/attachment'
+import SubscriptionModel, { type ISubscription } from '@/models/subscription'
+import type { IList } from '@/models/list'
+
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
-import type ListModel from './list'
-import type { Priority } from './constants/priorities'
+import type { IBucket } from './bucket'
 
 const SUPPORTS_TRIGGERED_NOTIFICATION = 'Notification' in window && 'showTrigger' in Notification.prototype
 export const TASK_DEFAULT_COLOR = '#1973ff'
@@ -24,15 +26,15 @@ export interface RepeatAfter {
 	amount: number
 }
 
-export default class TaskModel extends AbstractModel {
+export interface ITask {
 	id: number
 	title: string
 	description: string
 	done: boolean
 	doneAt: Date | null
 	priority: Priority
-	labels: LabelModel[]
-	assignees: UserModel[]
+	labels: ILabel[]
+	assignees: IUser[]
 
 	dueDate: Date | null
 	startDate: Date | null
@@ -41,26 +43,64 @@ export default class TaskModel extends AbstractModel {
 	repeatFromCurrentDate: boolean
 	repeatMode: TaskRepeatMode
 	reminderDates: Date[]
-	parentTaskId: TaskModel['id']
+	parentTaskId: ITask['id']
 	hexColor: string
 	percentDone: number
-	relatedTasks: { [relationKind: string]: TaskModel } // FIXME: use relationKinds
-	attachments: AttachmentModel[]
+	relatedTasks: { [relationKind: string]: ITask } // FIXME: use relationKinds
+	attachments: IAttachment[]
 	identifier: string
 	index: number
 	isFavorite: boolean
-	subscription: SubscriptionModel
+	subscription: ISubscription
 
 	position: number
 	kanbanPosition: number
 
-	createdBy: UserModel
+	createdBy: IUser
 	created: Date
 	updated: Date
 
-	listId: ListModel['id'] // Meta, only used when creating a new task
+	listId: IList['id'] // Meta, only used when creating a new task
+	bucketId: IBucket['id']
+}
 
-	constructor(data: Partial<TaskModel>) {
+export default class TaskModel extends AbstractModel implements ITask {
+	id: number
+	title: string
+	declare description: string
+	declare done: boolean
+	doneAt: Date | null
+	declare priority: Priority
+	labels: ILabel[]
+	assignees: IUser[]
+
+	dueDate: Date | null
+	startDate: Date | null
+	endDate: Date | null
+	declare repeatAfter: number | RepeatAfter
+	declare repeatFromCurrentDate: boolean
+	declare repeatMode: TaskRepeatMode
+	reminderDates: Date[]
+	declare parentTaskId: ITask['id']
+	declare hexColor: string
+	declare percentDone: number
+	declare relatedTasks: { [relationKind: string]: ITask } // FIXME: use relationKinds
+	attachments: IAttachment[]
+	declare identifier: string
+	declare index: number
+	declare isFavorite: boolean
+	declare subscription: ISubscription
+
+	declare position: number
+	declare kanbanPosition: number
+
+	createdBy: IUser
+	created: Date
+	updated: Date
+
+	listId: IList['id'] // Meta, only used when creating a new task
+
+	constructor(data: Partial<ITask>) {
 		super(data)
 
 		this.id = Number(this.id)
@@ -120,6 +160,7 @@ export default class TaskModel extends AbstractModel {
 
 		this.listId = Number(this.listId)
 	}
+bucketId: number
 
 	defaults() {
 		return {

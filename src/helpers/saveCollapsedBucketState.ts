@@ -1,4 +1,4 @@
-import ListModel from '@/models/list'
+import type {IList} from '@/models/list'
 
 const key = 'collapsedBuckets'
 
@@ -11,7 +11,10 @@ const getAllState = () => {
 	return JSON.parse(saved)
 }
 
-export const saveCollapsedBucketState = (listId: ListModel['id'], collapsedBuckets) => {
+export const saveCollapsedBucketState = (
+	listId: IList['id'],
+	collapsedBuckets,
+) => {
 	const state = getAllState()
 	state[listId] = collapsedBuckets
 	for (const bucketId in state[listId]) {
@@ -22,7 +25,7 @@ export const saveCollapsedBucketState = (listId: ListModel['id'], collapsedBucke
 	localStorage.setItem(key, JSON.stringify(state))
 }
 
-export const getCollapsedBucketState = (listId : ListModel['id']) => {
+export const getCollapsedBucketState = (listId : IList['id']) => {
 	const state = getAllState()
 	if (typeof state[listId] !== 'undefined') {
 		return state[listId]

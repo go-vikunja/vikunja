@@ -1,10 +1,18 @@
 import AbstractModel from './abstractModel'
 
-export default class FileModel extends AbstractModel {
+export interface IFile {
 	id: number
 	mime: string
 	name: string
 	size: number
+	created: Date
+} 
+
+export default class FileModel extends AbstractModel implements IFile {
+	declare id: number
+	declare mime: string
+	declare name: string
+	declare size: number
 	created: Date
 
 	constructor(data) {

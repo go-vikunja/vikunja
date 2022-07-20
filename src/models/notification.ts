@@ -1,10 +1,10 @@
 import AbstractModel from '@/models/abstractModel'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
-import UserModel from '@/models/user'
-import TaskModel from '@/models/task'
-import TaskCommentModel from '@/models/taskComment'
+import UserModel, { type IUser } from '@/models/user'
+import TaskModel, { type ITask } from '@/models/task'
+import TaskCommentModel, { type ITaskComment } from '@/models/taskComment'
 import ListModel from '@/models/list'
-import TeamModel from '@/models/team'
+import TeamModel, { type ITeam } from '@/models/team'
 
 export const NOTIFICATION_NAMES = {
 	'TASK_COMMENT': 'task.comment',
@@ -15,36 +15,46 @@ export const NOTIFICATION_NAMES = {
 } as const
 
 interface Notification {
-	doer: UserModel
+	doer: IUser
 }
 interface NotificationTask extends Notification {
-	task: TaskModel
-	comment: TaskCommentModel
+	task: ITask
+	comment: ITaskComment
 }
 
 interface NotificationAssigned extends Notification {
-	task: TaskModel
-	assignee: UserModel
+	task: ITask
+	assignee: IUser
 }
 
 interface NotificationDeleted extends Notification {
-	task: TaskModel
+	task: ITask
 }
 
 interface NotificationCreated extends Notification {
-	task: TaskModel
+	task: ITask
 }
 
 interface NotificationMemberAdded extends Notification {
-	member: UserModel
-	team: TeamModel
+	member: IUser
+	team: ITeam
 }
 
-export default class NotificationModel extends AbstractModel {
+export interface INotification {
 	id: number
 	name: string
 	notification: NotificationTask | NotificationAssigned | NotificationDeleted | NotificationCreated | NotificationMemberAdded
 	read: boolean
+	readAt: Date | null
+
+	created: Date
+}
+
+export default class NotificationModel extends AbstractModel implements INotification {
+	declare id: number
+	declare name: string
+	declare notification: NotificationTask | NotificationAssigned | NotificationDeleted | NotificationCreated | NotificationMemberAdded
+	declare read: boolean
 	readAt: Date | null
 
 	created: Date

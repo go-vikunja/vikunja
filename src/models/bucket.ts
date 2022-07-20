@@ -1,17 +1,31 @@
-import AbstractModel from './abstractModel'
-import UserModel from './user'
-import TaskModel from './task'
+import AbstractModel, { type IAbstract } from './abstractModel'
+import UserModel, { type IUser } from './user'
+import TaskModel, { type ITask } from './task'
 
-export default class BucketModel extends AbstractModel {
+export interface IBucket extends IAbstract {
 	id: number
 	title: string
 	listId: number
 	limit: number
-	tasks: TaskModel[]
+	tasks: ITask[]
 	isDoneBucket: boolean
 	position: number
 	
-	createdBy: UserModel
+	createdBy: IUser
+	created: Date
+	updated: Date
+}
+
+export default class BucketModel extends AbstractModel implements IBucket {
+	declare id: number
+	declare title: string
+	declare listId: number
+	declare limit: number
+	declare tasks: ITask[]
+	declare isDoneBucket: boolean
+	declare position: number
+	
+	createdBy: IUser
 	created: Date
 	updated: Date
 

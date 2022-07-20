@@ -1,11 +1,17 @@
 import AbstractModel from './abstractModel'
-import ListModel from './list'
-import NamespaceModel from './namespace'
+import ListModel, { type IList } from './list'
+import type { INamespace } from './namespace'
 
-export default class ListDuplicateModel extends AbstractModel {
+export interface ListDuplicate {
 	listId: number
-	namespaceId: NamespaceModel['id']
-	list: ListModel
+	namespaceId: INamespace['id']
+	list: IList
+}
+
+export default class ListDuplicateModel extends AbstractModel implements ListDuplicate {
+	declare listId: number
+	declare namespaceId: INamespace['id']
+	list: IList
 
 	constructor(data) {
 		super(data)

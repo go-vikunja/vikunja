@@ -68,11 +68,11 @@ import SavedFilterService from '@/services/savedFilter'
 
 import {objectToSnakeCase} from '@/helpers/case'
 import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
-import type ListModel from '@/models/list'
+import type { IList } from '@/models/list'
 
 const {t} = useI18n({useScope: 'global'})
 
-function useSavedFilter(listId: MaybeRef<ListModel['id']>) {
+function useSavedFilter(listId: MaybeRef<IList['id']>) {
 	const filterService = shallowRef(new SavedFilterService())
 
 	const filter = ref(new SavedFilterModel())

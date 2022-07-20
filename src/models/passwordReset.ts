@@ -1,9 +1,15 @@
 import AbstractModel from './abstractModel'
 
-export default class PasswordResetModel extends AbstractModel {
+export interface IPasswordReset {
 	token: string
 	newPassword: string
 	email: string
+}
+
+export default class PasswordResetModel extends AbstractModel implements IPasswordReset {
+	token: string
+	declare newPassword: string
+	declare email: string
 
 	constructor(data) {
 		super(data)

@@ -425,7 +425,7 @@
 import {defineComponent} from 'vue'
 
 import TaskService from '../../services/task'
-import TaskModel from '../../models/task'
+import TaskModel, { type ITask } from '@/models/task'
 
 import { PRIORITIES as priorites } from '@/models/constants/priorities'
 import {RIGHTS as rights} from '@/models/constants/rights'
@@ -452,10 +452,10 @@ import {CURRENT_LIST} from '@/store/mutation-types'
 import {uploadFile} from '@/helpers/attachments'
 import ChecklistSummary from '../../components/tasks/partials/checklist-summary.vue'
 import CreatedUpdated from '@/components/tasks/partials/createdUpdated.vue'
-import type ListModel from '@/models/list'
 import { setTitle } from '@/helpers/setTitle'
 import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
 import {getListTitle} from '@/helpers/getListTitle'
+import type { IList } from '@/models/list'
 
 function scrollIntoView(el) {
 	if (!el) {
@@ -597,7 +597,7 @@ export default defineComponent({
 			return uploadFile(this.taskId, ...args)
 		},
 
-		async loadTask(taskId: TaskModel['id']) {
+		async loadTask(taskId: ITask['id']) {
 			if (taskId === undefined) {
 				return
 			}
@@ -703,7 +703,7 @@ export default defineComponent({
 			this.saveTask(true, this.toggleTaskDone)
 		},
 
-		async changeList(list: ListModel) {
+		async changeList(list: IList) {
 			this.$store.commit('kanban/removeTaskInBucket', this.task)
 			this.task.listId = list.id
 			await this.saveTask()

@@ -7,10 +7,15 @@ import {success} from '@/message'
 import BucketService from '../../services/bucket'
 import {setLoading} from '../helper'
 import TaskCollectionService from '@/services/taskCollection'
+import type { ActionContext } from 'vuex'
+import type { RootStoreState, KanbanState } from '@/store/types'
+import type { ITask } from '@/models/task'
+import type { IList } from '@/models/list'
+import type { IBucket } from '@/models/bucket'
 
 const TASKS_PER_BUCKET = 25
 
-function getTaskIndicesById(state, taskId) {
+function getTaskIndicesById(state: KanbanState, taskId: ITask['id']) {
 	let taskIndex
 	const bucketIndex = state.buckets.findIndex(({ tasks }) => {
 		taskIndex = findIndexById(tasks, taskId)
@@ -23,7 +28,7 @@ function getTaskIndicesById(state, taskId) {
 	}	
 }
 
-const addTaskToBucketAndSort = (state, task) => {
+const addTaskToBucketAndSort = (state: KanbanState, task: ITask) => {
 	const bucketIndex = findIndexById(state.buckets, task.bucketId)
 	state.buckets[bucketIndex].tasks.push(task)
 	state.buckets[bucketIndex].tasks.sort((a, b) => a.kanbanPosition > b.kanbanPosition ? 1 : -1)
@@ -36,7 +41,7 @@ const addTaskToBucketAndSort = (state, task) => {
 export default {
 	namespaced: true,
 
-	state: () => ({
+	state: (): KanbanState => ({
 		buckets: [],
 		listId: 0,
 		bucketLoading: {},
@@ -45,11 +50,11 @@ export default {
 	}),
 
 	mutations: {
-		setListId(state, listId) {
+		setListId(state: KanbanState, listId: IList['id']) {
 			state.listId = parseInt(listId)
 		},
 
-		setBuckets(state, buckets) {
+		setBuckets(state: KanbanState, buckets: IBucket[]) {
 			state.buckets = buckets
 			buckets.forEach(b => {
 				state.taskPagesPerBucket[b.id] = 1
@@ -57,31 +62,51 @@ export default {
 			})
 		},
 
-		addBucket(state, bucket) {
+		addBucket(state: KanbanState, bucket: IBucket) {
 			state.buckets.push(bucket)
 		},
 
-		removeBucket(state, bucket) {
+		removeBucket(state: KanbanState, bucket: IBucket) {
 			const bucketIndex = findIndexById(state.buckets, bucket.id)
 			state.buckets.splice(bucketIndex, 1)
 		},
 
-		setBucketById(state, bucket) {
+		setBucketById(state: KanbanState, bucket: IBucket) {
 			const bucketIndex = findIndexById(state.buckets, bucket.id)
 			state.buckets[bucketIndex] = bucket
 		},
 
-		setBucketByIndex(state, {bucketIndex, bucket}) {
+		setBucketByIndex(state: KanbanState, {
+			bucketIndex,
+			bucket,
+		} : {
+			bucketIndex: number,
+			bucket: IBucket
+		}) {
 			state.buckets[bucketIndex] = bucket
 		},
 
-		setTaskInBucketByIndex(state, {bucketIndex, taskIndex, task}) {
+		setTaskInBucketByIndex(state: KanbanState, {
+			bucketIndex,
+			taskIndex,
+			task,
+		} : {
+			bucketIndex: number,
+			taskIndex: number,
+			task: ITask
+		}) {
 			const bucket = state.buckets[bucketIndex]
 			bucket.tasks[taskIndex] = task
 			state.buckets[bucketIndex] = bucket
 		},
 
-		setTasksInBucketByBucketId(state, {bucketId, tasks}) {
+		setTasksInBucketByBucketId(state: KanbanState, {
+			bucketId,
+			tasks,
+		} : {
+			bucketId: IBucket['id'],
+			tasks: ITask[],
+		}) {
 			const bucketIndex = findIndexById(state.buckets, bucketId)
 			state.buckets[bucketIndex] = {
 				...state.buckets[bucketIndex],
@@ -89,7 +114,7 @@ export default {
 			}
 		},
 		
-		setTaskInBucket(state, task) {
+		setTaskInBucket(state: KanbanState, task: ITask) {
 			// If this gets invoked without any tasks actually loaded, we can save the hassle of finding the task
 			if (state.buckets.length === 0) {
 				return
@@ -133,7 +158,7 @@ export default {
 			}
 		},
 
-		addTaskToBucket(state, task) {
+		addTaskToBucket(state: KanbanState, task: ITask) {
 			const bucketIndex = findIndexById(state.buckets, task.bucketId)
 			const oldBucket = state.buckets[bucketIndex]
 			const newBucket = {
@@ -146,7 +171,10 @@ export default {
 			state.buckets[bucketIndex] = newBucket
 		},
 
-		addTasksToBucket(state, {tasks, bucketId}) {
+		addTasksToBucket(state: KanbanState, {tasks, bucketId}: {
+			tasks: ITask[];
+			bucketId: IBucket['id'];
+		}) {
 			const bucketIndex = findIndexById(state.buckets, bucketId)
 			const oldBucket = state.buckets[bucketIndex]
 			const newBucket = {
@@ -159,7 +187,7 @@ export default {
 			state.buckets[bucketIndex] = newBucket
 		},
 
-		removeTaskInBucket(state, task) {
+		removeTaskInBucket(state: KanbanState, task: ITask) {
 			// If this gets invoked without any tasks actually loaded, we can save the hassle of finding the task
 			if (state.buckets.length === 0) {
 				return
@@ -168,8 +196,10 @@ export default {
 			const { bucketIndex, taskIndex } = getTaskIndicesById(state, task.id)
 
 			if (
+				!bucketIndex || 
 				state.buckets[bucketIndex]?.id !== task.bucketId ||
-				state.buckets[bucketIndex]?.tasks[taskIndex]?.id !== task.id
+				!taskIndex ||
+				(state.buckets[bucketIndex]?.tasks[taskIndex]?.id !== task.id)
 			) {
 				return
 			}
@@ -177,39 +207,40 @@ export default {
 			state.buckets[bucketIndex].tasks.splice(taskIndex, 1)
 		},
 
-		setBucketLoading(state, {bucketId, loading}) {
+		setBucketLoading(state: KanbanState, {bucketId, loading}) {
 			state.bucketLoading[bucketId] = loading
 		},
 
-		setTasksLoadedForBucketPage(state, {bucketId, page}) {
+		setTasksLoadedForBucketPage(state: KanbanState, {bucketId, page}) {
 			state.taskPagesPerBucket[bucketId] = page
 		},
 
-		setAllTasksLoadedForBucket(state, bucketId) {
+		setAllTasksLoadedForBucket(state: KanbanState, bucketId) {
 			state.allTasksLoadedForBucket[bucketId] = true
 		},
 	},
 
 	getters: {
-		getBucketById(state) {
+		getBucketById(state: KanbanState) {
 			return (bucketId) => findById(state.buckets, bucketId)
 		},
 
-		getTaskById(state) {
+		getTaskById(state: KanbanState) {
 			return (id) => {
 				const { bucketIndex, taskIndex } = getTaskIndicesById(state, id)
 
+				
 				return {
 					bucketIndex,
 					taskIndex,
-					task: state.buckets[bucketIndex]?.tasks?.[taskIndex] || null,
+					task: bucketIndex && taskIndex && state.buckets[bucketIndex]?.tasks?.[taskIndex] || null,
 				}
 			}
 		},
 	},
 
 	actions: {
-		async loadBucketsForList(ctx, {listId, params}) {
+		async loadBucketsForList(ctx: ActionContext<KanbanState, RootStoreState>, {listId, params}) {
 			const cancel = setLoading(ctx, 'kanban')
 
 			// Clear everything to prevent having old buckets in the list if loading the buckets from this list takes a few moments
@@ -219,7 +250,7 @@ export default {
 
 			const bucketService = new BucketService()
 			try {
-				const response = await  bucketService.getAll({listId: listId}, params)
+				const response = await  bucketService.getAll({listId}, params)
 				ctx.commit('setBuckets', response)
 				ctx.commit('setListId', listId)
 				return response
@@ -228,7 +259,7 @@ export default {
 			}
 		},
 
-		async loadNextTasksForBucket(ctx, {listId, ps = {}, bucketId}) {
+		async loadNextTasksForBucket(ctx: ActionContext<KanbanState, RootStoreState>, {listId, ps = {}, bucketId}) {
 			const isLoading = ctx.state.bucketLoading[bucketId] ?? false
 			if (isLoading) {
 				return
@@ -270,7 +301,7 @@ export default {
 
 			const taskService = new TaskCollectionService()
 			try {
-				const tasks = await taskService.getAll({listId: listId}, params, page)
+				const tasks = await taskService.getAll({listId}, params, page)
 				ctx.commit('addTasksToBucket', {tasks, bucketId: bucketId})
 				ctx.commit('setTasksLoadedForBucketPage', {bucketId, page})
 				if (taskService.totalPages <= page) {
@@ -283,7 +314,7 @@ export default {
 			}
 		},
 
-		async createBucket(ctx, bucket) {
+		async createBucket(ctx: ActionContext<KanbanState, RootStoreState>, bucket: IBucket) {
 			const cancel = setLoading(ctx, 'kanban')
 
 			const bucketService = new BucketService()
@@ -296,7 +327,7 @@ export default {
 			}
 		},
 
-		async deleteBucket(ctx, {bucket, params}) {
+		async deleteBucket(ctx: ActionContext<KanbanState, RootStoreState>, {bucket, params}) {
 			const cancel = setLoading(ctx, 'kanban')
 
 			const bucketService = new BucketService()
@@ -304,14 +335,14 @@ export default {
 				const response = await bucketService.delete(bucket)
 				ctx.commit('removeBucket', bucket)
 				// We reload all buckets because tasks are being moved from the deleted bucket
-				ctx.dispatch('loadBucketsForList', {listId: bucket.listId, params: params})
+				ctx.dispatch('loadBucketsForList', {listId: bucket.listId, params})
 				return response
 			} finally {
 				cancel()
 			}
 		},
 
-		async updateBucket(ctx, updatedBucketData) {
+		async updateBucket(ctx: ActionContext<KanbanState, RootStoreState>, updatedBucketData) {
 			const cancel = setLoading(ctx, 'kanban')
 
 			const bucketIndex = findIndexById(ctx.state.buckets, updatedBucketData.id)
@@ -339,10 +370,10 @@ export default {
 			}
 		},
 
-		async updateBucketTitle(ctx, { id, title }) {
+		async updateBucketTitle(ctx: ActionContext<KanbanState, RootStoreState>, { id, title }) {
 			const bucket = findById(ctx.state.buckets, id)
 
-			if (bucket.title === title) {
+			if (bucket?.title === title) {
 				// bucket title has not changed
 				return
 			}

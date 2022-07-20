@@ -1,16 +1,28 @@
 import AbstractModel from './abstractModel'
-import UserModel from './user'
-import TeamMemberModel from './teamMember'
+import UserModel, { type IUser } from './user'
+import TeamMemberModel, { type ITeamMember } from './teamMember'
 import {RIGHTS, type Right} from '@/models/constants/rights'
 
-export default class TeamModel extends AbstractModel {
-	id: 0
+export interface ITeam {
+	id: number
 	name: string
 	description: string
-	members: TeamMemberModel[]
+	members: ITeamMember[]
 	right: Right
 
-	createdBy: UserModel
+	createdBy: IUser
+	created: Date
+	updated: Date
+}
+
+export default class TeamModel extends AbstractModel implements ITeam {
+	declare id: number
+	declare name: string
+	declare description: string
+	members: ITeamMember[]
+	declare right: Right
+
+	createdBy: IUser
 	created: Date
 	updated: Date
 

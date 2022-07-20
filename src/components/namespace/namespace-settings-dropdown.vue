@@ -54,15 +54,16 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted} from 'vue'
+import {ref, onMounted, type PropType} from 'vue'
 
 import Dropdown from '@/components/misc/dropdown.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 import TaskSubscription from '@/components/misc/subscription.vue'
+import type { INamespace } from '@/models/namespace'
 
 const props = defineProps({
 	namespace: {
-		type: Object, // NamespaceModel
+		type: Object as PropType<INamespace>,
 		required: true,
 	},
 })

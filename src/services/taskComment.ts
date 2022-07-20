@@ -1,8 +1,8 @@
 import AbstractService from './abstractService'
-import TaskCommentModel from '../models/taskComment'
+import TaskCommentModel, { type ITaskComment } from '../models/taskComment'
 import {formatISO} from 'date-fns'
 
-export default class TaskCommentService extends AbstractService {
+export default class TaskCommentService extends AbstractService<ITaskComment> {
 	constructor() {
 		super({
 			create: '/tasks/{taskId}/comments',

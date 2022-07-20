@@ -1,9 +1,14 @@
 import UserModel from './user'
-import type ListModel from './list'
+import type { IList } from './list'
 
-export default class TeamMemberModel extends UserModel {
+export interface ITeamMember {
 	admin: boolean
-	teamId: ListModel['id']
+	teamId: IList['id']
+}
+
+export default class TeamMemberModel extends UserModel implements ITeamMember {
+	declare admin: boolean
+	declare teamId: IList['id']
 
 	defaults() {
 		return {

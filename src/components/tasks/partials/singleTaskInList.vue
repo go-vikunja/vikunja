@@ -98,7 +98,7 @@
 <script lang="ts">
 import {defineComponent} from 'vue'
 
-import TaskModel from '../../../models/task'
+import TaskModel, { type ITask } from '../../../models/task'
 import PriorityLabel from './priorityLabel.vue'
 import TaskService from '../../../services/task'
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -129,7 +129,7 @@ export default defineComponent({
 	},
 	props: {
 		theTask: {
-			type: TaskModel,
+			type: Object as PropType<ITask>,
 			required: true,
 		},
 		isArchived: {

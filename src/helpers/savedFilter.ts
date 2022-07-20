@@ -1,6 +1,6 @@
-import ListModel from '@/models/list'
+import type {IList} from '@/models/list'
 
-export function getSavedFilterIdFromListId(listId: ListModel['id']) {
+export function getSavedFilterIdFromListId(listId: IList['id']) {
 	let filterId = listId * -1 - 1
 	// FilterIds from listIds are always positive
 	if (filterId < 0) {

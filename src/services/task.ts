@@ -1,5 +1,5 @@
 import AbstractService from './abstractService'
-import TaskModel from '../models/task'
+import TaskModel, { type ITask } from '../models/task'
 import AttachmentService from './attachment'
 import LabelService from './label'
 
@@ -113,7 +113,7 @@ export default class TaskService extends AbstractService {
 			model.labels = model.labels.map(l => labelService.processModel(l))
 		}
 
-		return model as TaskModel
+		return model as ITask
 	}
 }
 

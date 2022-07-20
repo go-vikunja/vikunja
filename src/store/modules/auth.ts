@@ -1,3 +1,5 @@
+import type { ActionContext } from 'vuex'
+
 import {HTTPFactory, AuthenticatedHTTPFactory} from '@/http-common'
 import {i18n, getCurrentLanguage, saveLanguage} from '@/i18n'
 import {objectToSnakeCase} from '@/helpers/case'
@@ -8,12 +10,10 @@ import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 import {setLoading} from '@/store/helper'
 import {success} from '@/message'
 import {redirectToProvider} from '@/helpers/redirectToProvider'
+import type { RootStoreState, AuthState, Info} from '@/store/types'
+import {AUTH_TYPES} from '@/store/types'
+import type { IUserSettings } from '@/models/userSettings'
 
-const AUTH_TYPES = {
-	'UNKNOWN': 0,
-	'USER': 1,
-	'LINK_SHARE': 2,
-}
 
 const defaultSettings = settings => {
 	if (typeof settings.weekStart === 'undefined' || settings.weekStart === '') {
@@ -24,7 +24,7 @@ const defaultSettings = settings => {
 
 export default {
 	namespaced: true,
-	state: () => ({
+	state: (): AuthState => ({
 		authenticated: false,
 		isLinkShareAuth: false,
 		info: null,
@@ -34,13 +34,13 @@ export default {
 		settings: {},
 	}),
 	getters: {
-		authUser(state) {
+		authUser(state: AuthState) {
 			return state.authenticated && (
 				state.info &&
 				state.info.type === AUTH_TYPES.USER
 			)
 		},
-		authLinkShare(state) {
+		authLinkShare(state: AuthState) {
 			return state.authenticated && (
 				state.info &&
 				state.info.type === AUTH_TYPES.LINK_SHARE
@@ -48,7 +48,7 @@ export default {
 		},
 	},
 	mutations: {
-		info(state, info) {
+		info(state: AuthState, info: Info) {
 			state.info = info
 			if (info !== null) {
 				state.avatarUrl = info.getAvatarUrl()
@@ -60,31 +60,32 @@ export default {
 				state.isLinkShareAuth = info.id < 0
 			}
 		},
-		setUserSettings(state, settings) {
+		setUserSettings(state: AuthState, settings: IUserSettings) {
 			state.settings = defaultSettings(settings)
-			const info = state.info !== null ? state.info : {}
+			const info = state.info !== null ? state.info : {} as Info
 			info.name = settings.name
 			state.info = info
 		},
-		authenticated(state, authenticated) {
+		authenticated(state: AuthState, authenticated: boolean) {
 			state.authenticated = authenticated
 		},
-		isLinkShareAuth(state, is) {
-			state.isLinkShareAuth = is
+		isLinkShareAuth(state: AuthState, isLinkShareAuth: boolean) {
+			state.isLinkShareAuth = isLinkShareAuth
 		},
-		needsTotpPasscode(state, needs) {
-			state.needsTotpPasscode = needs
+		needsTotpPasscode(state: AuthState, needsTotpPasscode: boolean) {
+			state.needsTotpPasscode = needsTotpPasscode
 		},
-		reloadAvatar(state) {
+		reloadAvatar(state: AuthState) {
+			if (!state.info) return
 			state.avatarUrl = `${state.info.getAvatarUrl()}&=${+new Date()}`
 		},
-		lastUserRefresh(state) {
+		lastUserRefresh(state: AuthState) {
 			state.lastUserInfoRefresh = new Date()
 		},
 	},
 	actions: {
 		// Logs a user in with a set of credentials.
-		async login(ctx, credentials) {
+		async login(ctx: ActionContext<AuthState, RootStoreState>, credentials) {
 			const HTTP = HTTPFactory()
 			ctx.commit(LOADING, true, {root: true})
 
@@ -115,7 +116,7 @@ export default {
 
 		// Registers a new user and logs them in.
 		// Not sure if this is the right place to put the logic in, maybe a seperate js component would be better suited.
-		async register(ctx, credentials) {
+		async register(ctx: ActionContext<AuthState, RootStoreState>, credentials) {
 			const HTTP = HTTPFactory()
 			ctx.commit(LOADING, true, {root: true})
 			try {
@@ -132,7 +133,7 @@ export default {
 			}
 		},
 
-		async openIdAuth(ctx, {provider, code}) {
+		async openIdAuth(ctx: ActionContext<AuthState, RootStoreState>, {provider, code}) {
 			const HTTP = HTTPFactory()
 			ctx.commit(LOADING, true, {root: true})
 
@@ -154,7 +155,7 @@ export default {
 			}
 		},
 
-		async linkShareAuth(ctx, {hash, password}) {
+		async linkShareAuth(ctx: ActionContext<AuthState, RootStoreState>, {hash, password}) {
 			const HTTP = HTTPFactory()
 			const response = await HTTP.post('/shares/' + hash + '/auth', {
 				password: password,
@@ -165,7 +166,7 @@ export default {
 		},
 
 		// Populates user information from jwt token saved in local storage in store
-		checkAuth(ctx) {
+		checkAuth(ctx: ActionContext<AuthState, RootStoreState>) {
 
 			// This function can be called from multiple places at the same time and shortly after one another.
 			// To prevent hitting the api too frequently or race conditions, we check at most once per minute.
@@ -197,7 +198,7 @@ export default {
 			}
 		},
 
-		redirectToProviderIfNothingElseIsEnabled({rootState}) {
+		redirectToProviderIfNothingElseIsEnabled({rootState}: ActionContext<AuthState, RootStoreState>) {
 			const {auth} = rootState.config
 			if (
 				auth.local.enabled === false &&
@@ -209,7 +210,7 @@ export default {
 			}
 		},
 
-		async refreshUserInfo({state, commit, dispatch}) {
+		async refreshUserInfo({state, commit, dispatch}: ActionContext<AuthState, RootStoreState>) {
 			const jwt = getToken()
 			if (!jwt) {
 				return
@@ -243,7 +244,7 @@ export default {
 			}
 		},
 
-		async saveUserSettings(ctx, payload) {
+		async saveUserSettings(ctx: ActionContext<AuthState, RootStoreState>, payload) {
 			const {settings} = payload
 			const showMessage = payload.showMessage ?? true
 			const userSettingsService = new UserSettingsService()
@@ -264,7 +265,7 @@ export default {
 		},
 
 		// Renews the api token and saves it to local storage
-		renewToken(ctx) {
+		renewToken(ctx: ActionContext<AuthState, RootStoreState>) {
 			// FIXME: Timeout to avoid race conditions when authenticated as a user (=auth token in localStorage) and as a
 			// link share in another tab. Without the timeout both the token renew and link share auth are executed at
 			// the same time and one might win over the other.
@@ -285,7 +286,7 @@ export default {
 				}
 			}, 5000)
 		},
-		logout(ctx) {
+		logout(ctx: ActionContext<AuthState, RootStoreState>) {
 			removeToken()
 			window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
 			ctx.dispatch('checkAuth')

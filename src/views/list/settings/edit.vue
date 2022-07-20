@@ -80,14 +80,14 @@ import ColorPicker from '@/components/input/colorPicker.vue'
 import CreateEdit from '@/components/misc/create-edit.vue'
 
 import {CURRENT_LIST} from '@/store/mutation-types'
-import type ListModel from '@/models/list'
+import type { IList } from '@/models/list'
 
 import { useList } from '@/composables/useList'
 import { useTitle } from '@/composables/useTitle'
 
 const props = defineProps({
 	listId: {
-		type: Number as PropType<ListModel['id']>,
+		type: Number as PropType<IList['id']>,
 		required: true,
 	},
 })

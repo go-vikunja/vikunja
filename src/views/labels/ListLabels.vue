@@ -113,7 +113,7 @@
 import {defineComponent} from 'vue'
 import {mapState} from 'vuex'
 
-import LabelModel from '../../models/label'
+import LabelModel, { type ILabel } from '../../models/label'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -150,7 +150,7 @@ export default defineComponent({
 		loading: state => state[LOADING] && state[LOADING_MODULE] === 'labels',
 	}),
 	methods: {
-		deleteLabel(label: LabelModel) {
+		deleteLabel(label: ILabel) {
 			this.showDeleteModal = false
 			this.isLabelEdit = false
 			return this.$store.dispatch('labels/deleteLabel', label)
@@ -158,7 +158,7 @@ export default defineComponent({
 		editLabelSubmit() {
 			return this.$store.dispatch('labels/updateLabel', this.labelEditLabel)
 		},
-		editLabel(label: LabelModel) {
+		editLabel(label: ILabel) {
 			if (label.createdBy.id !== this.userInfo.id) {
 				return
 			}
@@ -180,7 +180,7 @@ export default defineComponent({
 			this.editorActive = false
 			this.$nextTick(() => this.editorActive = true)
 		},
-		showDeleteDialoge(label: LabelModel) {
+		showDeleteDialoge(label: ILabel) {
 			this.labelToDelete = label
 			this.showDeleteModal = true
 		},

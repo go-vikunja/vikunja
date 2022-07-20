@@ -43,7 +43,7 @@ import {type PropType, ref, computed, shallowReactive, watch} from 'vue'
 import {useStore} from 'vuex'
 import {useI18n} from 'vue-i18n'
 
-import LabelModel from '@/models/label'
+import LabelModel, { type ILabel } from '@/models/label'
 import LabelTaskService from '@/services/labelTask'
 import {success} from '@/message'
 
@@ -52,7 +52,7 @@ import Multiselect from '@/components/input/multiselect.vue'
 
 const props = defineProps({
 	modelValue: {
-		type: Array as PropType<LabelModel[]>,
+		type: Array as PropType<ILabel[]>,
 		default: () => [],
 	},
 	taskId: {
@@ -71,7 +71,7 @@ const store = useStore()
 const {t} = useI18n({useScope: 'global'})
 
 const labelTaskService = shallowReactive(new LabelTaskService())
-const labels = ref<LabelModel[]>([])
+const labels = ref<ILabel[]>([])
 const query = ref('')
 
 watch(
@@ -92,7 +92,7 @@ function findLabel(newQuery: string) {
 	query.value = newQuery
 }
 
-async function addLabel(label: LabelModel, showNotification = true) {
+async function addLabel(label: ILabel, showNotification = true) {
 	const bubble = () => {
 		emit('update:modelValue', labels.value)
 		emit('change', labels.value)
@@ -110,7 +110,7 @@ async function addLabel(label: LabelModel, showNotification = true) {
 	}
 }
 
-async function removeLabel(label: LabelModel) {
+async function removeLabel(label: ILabel) {
 	if (props.taskId !== 0) {
 		await store.dispatch('tasks/removeLabel', {label, taskId: props.taskId})
 	}

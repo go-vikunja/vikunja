@@ -21,15 +21,12 @@ import {reactive, ref, watch} from 'vue'
 import type {PropType} from 'vue'
 import {useStore} from 'vuex'
 import {useI18n} from 'vue-i18n'
-import ListModel from '@/models/list'
+import ListModel, { type IList } from '@/models/list'
 import Multiselect from '@/components/input/multiselect.vue'
 
 const props = defineProps({
 	modelValue: {
-		type: Object as PropType<ListModel>,
-		validator(value) {
-			return value instanceof ListModel
-		},
+		type: Object as PropType<IList>,
 		required: false,
 	},
 })
@@ -38,7 +35,7 @@ const emit = defineEmits(['update:modelValue'])
 const store = useStore()
 const {t} = useI18n({useScope: 'global'})
 
-const list: ListModel= reactive(new ListModel())
+const list: IList = reactive(new ListModel())
 
 watch(
 	() => props.modelValue,
@@ -57,7 +54,7 @@ function findLists(query: string) {
 	foundLists.value = store.getters['lists/searchList'](query)
 }
 
-function select(l: ListModel | null) {
+function select(l: IList | null) {
 	Object.assign(list, l)
 	emit('update:modelValue', list)
 }

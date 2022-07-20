@@ -1,15 +1,19 @@
+import type { ActionContext } from 'vuex'
+
+import {i18n} from '@/i18n'
+import {success} from '@/message'
 import LabelService from '@/services/label'
 import {setLoading} from '@/store/helper'
-import {success} from '@/message'
-import {i18n} from '@/i18n'
+import type { LabelState, RootStoreState } from '@/store/types'
 import {getLabelsByIds, filterLabelsByQuery} from '@/helpers/labels'
 import {createNewIndexer} from '@/indexes'
+import type { ILabel } from '@/models/label'
 
 const {add, remove, update} = createNewIndexer('labels', ['title', 'description'])
 
-async function getAllLabels(page = 1) {
+async function getAllLabels(page = 1): Promise<ILabel[]> {
 	const labelService = new LabelService()
-	const labels = await labelService.getAll({}, {}, page)
+	const labels  = await labelService.getAll({}, {}, page) as ILabel[]
 	if (page < labelService.totalPages) {
 		const nextLabels = await getAllLabels(page + 1)
 		return labels.concat(nextLabels)
@@ -20,45 +24,44 @@ async function getAllLabels(page = 1) {
 
 export default {
 	namespaced: true,
-	state: () => ({
-		// The labels are stored as an object which has the label ids as keys.
+	state: (): LabelState => ({
 		labels: {},
 		loaded: false,
 	}),
 	mutations: {
-		setLabels(state, labels) {
+		setLabels(state: LabelState, labels: ILabel[]) {
 			labels.forEach(l => {
 				state.labels[l.id] = l
 				add(l)
 			})
 		},
-		setLabel(state, label) {
+		setLabel(state: LabelState, label: ILabel) {
 			state.labels[label.id] = label
 			update(label)
 		},
-		removeLabelById(state, label) {
+		removeLabelById(state: LabelState, label: ILabel) {
 			remove(label)
 			delete state.labels[label.id]
 		},
-		setLoaded(state, loaded) {
+		setLoaded(state: LabelState, loaded: boolean) {
 			state.loaded = loaded
 		},
 	},
 	getters: {
-		getLabelsByIds(state) {
-			return (ids) => getLabelsByIds(state, ids)
+		getLabelsByIds(state: LabelState) {
+			return (ids: ILabel['id'][]) => getLabelsByIds(state, ids)
 		},
-		filterLabelsByQuery(state) {
-			return (labelsToHide, query) => filterLabelsByQuery(state, labelsToHide, query)
+		filterLabelsByQuery(state: LabelState) {
+			return (labelsToHide: ILabel[], query: string) => filterLabelsByQuery(state, labelsToHide, query)
 		},
-		getLabelsByExactTitles(state) {
+		getLabelsByExactTitles(state: LabelState) {
 			return labelTitles => Object
 				.values(state.labels)
 				.filter(({title}) => labelTitles.some(l => l.toLowerCase() === title.toLowerCase()))
 		},
 	},
 	actions: {
-		async loadAllLabels(ctx, {forceLoad} = {}) {
+		async loadAllLabels(ctx: ActionContext<LabelState, RootStoreState>, {forceLoad} = {}) {
 			if (ctx.state.loaded && !forceLoad) {
 				return
 			}
@@ -74,7 +77,7 @@ export default {
 				cancel()
 			}
 		},
-		async deleteLabel(ctx, label) {
+		async deleteLabel(ctx: ActionContext<LabelState, RootStoreState>, label: ILabel) {
 			const cancel = setLoading(ctx, 'labels')
 			const labelService = new LabelService()
 
@@ -87,7 +90,7 @@ export default {
 				cancel()
 			}
 		},
-		async updateLabel(ctx, label) {
+		async updateLabel(ctx: ActionContext<LabelState, RootStoreState>, label: ILabel) {
 			const cancel = setLoading(ctx, 'labels')
 			const labelService = new LabelService()
 
@@ -100,7 +103,7 @@ export default {
 				cancel()
 			}
 		},
-		async createLabel(ctx, label) {
+		async createLabel(ctx: ActionContext<LabelState, RootStoreState>, label: ILabel) {
 			const cancel = setLoading(ctx, 'labels')
 			const labelService = new LabelService()
 

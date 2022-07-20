@@ -77,8 +77,8 @@ import {success} from '@/message'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Message from '@/components/misc/message.vue'
 import CaldavTokenService from '@/services/caldavToken'
-import type CaldavTokenModel from '@/models/caldavToken'
 import { formatDateShort } from '@/helpers/time/formatDate'
+import type { ICaldavToken } from '@/models/caldavToken'
 
 const copy = useCopyToClipboard()
 
@@ -86,19 +86,19 @@ const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.caldav.title')} - ${t('user.settings.title')}`)
 
 const service = shallowReactive(new CaldavTokenService())
-const tokens = ref<CaldavTokenModel[]>([])
+const tokens = ref<ICaldavToken[]>([])
 
-service.getAll().then((result: CaldavTokenModel[]) => {
+service.getAll().then((result: ICaldavToken[]) => {
 	tokens.value = result
 })
 
-const newToken = ref<CaldavTokenModel>()
+const newToken = ref<ICaldavToken>()
 async function createToken() {
-	newToken.value = await service.create({}) as CaldavTokenModel
+	newToken.value = await service.create({}) as ICaldavToken
 	tokens.value.push(newToken.value)
 }
 
-async function deleteToken(token: CaldavTokenModel) {
+async function deleteToken(token: ICaldavToken) {
 	const r = await service.delete(token)
 	tokens.value = tokens.value.filter(({id}) => id !== token.id)
 	success(r)

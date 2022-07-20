@@ -11,12 +11,12 @@
 </template>
 
 <script setup lang="ts">
-import type LabelModel from '@/models/label'
 import type { PropType } from 'vue'
+import type { ILabel } from '@/models/label'
 
 defineProps({
 	labels: {
-		type: Array as PropType<LabelModel[]>,
+		type: Array as PropType<ILabel[]>,
 		required: true,
 	},
 })

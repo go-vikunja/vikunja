@@ -1,9 +1,13 @@
-import AbstractModel from './abstractModel'
+import AbstractModel, { type IAbstract } from './abstractModel'
 
-export type AVATAR_PROVIDERS = 'default' | 'initials' | 'gravatar' | 'marble' | 'upload'
+export type AvatarProvider = 'default' | 'initials' | 'gravatar' | 'marble' | 'upload'
 
-export default class AvatarModel extends AbstractModel {
-	avatarProvider: AVATAR_PROVIDERS
+export interface IAvatar extends IAbstract {
+	avatarProvider: AvatarProvider
+}
+
+export default class AvatarModel extends AbstractModel implements IAvatar {
+	declare avatarProvider: AvatarProvider
 
 	defaults() {
 		return {
