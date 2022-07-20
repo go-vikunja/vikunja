@@ -28,7 +28,7 @@
 							</div>
 						</div>
 					</div>
-					<fancycheckbox class="is-block" v-model="showTaskswithoutDates">
+					<fancycheckbox class="is-block" v-model="showTasksWithoutDates">
 						{{ $t('list.gantt.showTasksWithoutDates') }}
 					</fancycheckbox>
 				</div>
@@ -44,6 +44,7 @@
 						:date-to="dateTo"
 						:precision="precision"
 						:list-id="props.listId"
+						:show-tasks-without-dates="showTasksWithoutDates"
 					/>
 
 				</card>
@@ -71,7 +72,7 @@ const props = defineProps({
 	},
 })
 
-const showTaskswithoutDates = ref(false)
+const showTasksWithoutDates = ref(false)
 const precision = ref('day')
 
 const now = ref(new Date())

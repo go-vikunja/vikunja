@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, ref} from 'vue'
+import {computed, nextTick, ref, watch} from 'vue'
 import TaskCollectionService from '@/services/taskCollection'
 import {format, parse} from 'date-fns'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
@@ -84,6 +84,11 @@ const props = defineProps({
 	dateTo: {
 		type: String,
 		required: true,
+	},
+	showTasksWithoutDates: {
+		type: Boolean,
+		required: false,
+		default: false,
 	},
 })
 
@@ -142,7 +147,7 @@ async function loadTasks() {
 		filter_comparator: ['greater_equals', 'less_equals'],
 		filter_value: [props.dateFrom, props.dateTo],
 		filter_concat: 'and',
-		filter_include_nulls: true,
+		filter_include_nulls: props.showTasksWithoutDates,
 	}
 
 	const taskCollectionService = new TaskCollectionService()
@@ -167,6 +172,10 @@ async function loadTasks() {
 }
 
 loadTasks()
+
+watch(() => props.dateTo, loadTasks)
+watch(() => props.dateFrom, loadTasks)
+watch(() => props.showTasksWithoutDates, loadTasks)
 
 async function updateTask(e) {
 	const task = tasks.value.get(e.bar.ganttBarConfig.id)
