@@ -105,13 +105,9 @@ const ganttBars = ref([])
 const defaultStartDate = format(new Date(), dateFormat)
 const defaultEndDate = format(new Date((new Date()).setDate((new Date()).getDate() + 7)), dateFormat)
 
-// We need a "real" ref object for the gantt bars to instantly update the tasks when they are dragged on the chart.
-// A computed won't work directly.
-function mapGanttBars() {
-	ganttBars.value = []
+function transformTaskToGanttBar(t: TaskModel) {
 	const black = 'var(--grey-800)'
-
-	tasks.value.forEach(t => ganttBars.value.push([{
+	return [{
 		startDate: t.startDate ? format(t.startDate, dateFormat) : defaultStartDate,
 		endDate: t.endDate ? format(t.endDate, dateFormat) : defaultEndDate,
 		ganttBarConfig: {
@@ -124,7 +120,15 @@ function mapGanttBars() {
 				border: t.startDate ? '' : '2px dashed var(--grey-300)',
 			},
 		},
-	}]))
+	}]
+}
+
+// We need a "real" ref object for the gantt bars to instantly update the tasks when they are dragged on the chart.
+// A computed won't work directly.
+function mapGanttBars() {
+	ganttBars.value = []
+
+	tasks.value.forEach(t => ganttBars.value.push(transformTaskToGanttBar(t)))
 }
 
 async function loadTasks() {
@@ -168,10 +172,14 @@ async function updateTask(e) {
 	task.startDate = e.bar.startDate
 	task.endDate = e.bar.endDate
 	const taskService = new TaskService()
-	await taskService.update(task)
+	const r = await taskService.update(task)
 	// TODO: Loading animation
+	for (const i in ganttBars.value) {
+		if(ganttBars.value[i][0].ganttBarConfig.id === task.id) {
+			ganttBars.value[i] = transformTaskToGanttBar(r)
+		}
+	}
 }
-
 
 const newTaskFieldActive = ref(false)
 const newTaskTitleField = ref()
