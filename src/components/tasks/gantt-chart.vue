@@ -121,7 +121,7 @@ function mapGanttBars() {
 			style: {
 				color: t.startDate ? (colorIsDark(t.getHexColor()) ? black : 'white') : black,
 				backgroundColor: t.startDate ? t.getHexColor() : 'var(--grey-100)',
-				border: t.startDate ? '': '2px dashed var(--grey-300)',
+				border: t.startDate ? '' : '2px dashed var(--grey-300)',
 			},
 		},
 	}]))
@@ -291,21 +291,11 @@ function dayIsToday(label: string): boolean {
 
 	&-handle-left,
 	&-handle-right {
-		width: 8px !important;
-		height: 8px !important;
-		top: 50% !important;
-		transform: translateY(-50%);
-		background: var(--white);
-		border: 1px solid var(--grey-900);
-		opacity: 1 !important;
-	}
-
-	&-handle-left {
-		margin-left: -4px;
-	}
-
-	&-handle-right {
-		margin-right: -4px;
+		width: 6px !important;
+		height: 75% !important;
+		opacity: .75 !important;
+		border-radius: $radius !important;
+		margin-top: 4px;
 	}
 }
 </style>
@@ -313,10 +303,6 @@ function dayIsToday(label: string): boolean {
 <style scoped lang="scss">
 .gantt-container {
 	overflow-x: auto;
-
-	#g-gantt-chart {
-		width: 2000px;
-	}
 }
 
 .add-new-task {
