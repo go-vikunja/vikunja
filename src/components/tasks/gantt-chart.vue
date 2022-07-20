@@ -1,24 +1,24 @@
 <template>
 	<div class="gantt-container">
-		<div :style="{'width': ganttChartWidth + 'px'}">
-			<g-gantt-chart
-				:chart-start="`${dateFrom} 00:00`"
-				:chart-end="`${dateTo} 23:59`"
-				:precision="precision"
-				bar-start="startDate"
-				bar-end="endDate"
-				:grid="true"
-				@dragend-bar="updateTask"
-				@dblclick-bar="openTask"
-			>
-				<g-gantt-row
-					v-for="(bar, k) in ganttBars"
-					:key="k"
-					label=""
-					:bars="bar"
-				/>
-			</g-gantt-chart>
-		</div>
+		<g-gantt-chart
+			:chart-start="`${dateFrom} 00:00`"
+			:chart-end="`${dateTo} 23:59`"
+			:precision="precision"
+			bar-start="startDate"
+			bar-end="endDate"
+			:grid="true"
+			@dragend-bar="updateTask"
+			@dblclick-bar="openTask"
+			font="'Open Sans', sans-serif"
+			:width="ganttChartWidth + 'px'"
+		>
+			<g-gantt-row
+				v-for="(bar, k) in ganttBars"
+				:key="k"
+				label=""
+				:bars="bar"
+			/>
+		</g-gantt-chart>
 	</div>
 	<form
 		@submit.prevent="createTask()"
@@ -82,7 +82,7 @@ const ganttChartWidth = computed(() => {
 	const from = parse(props.dateFrom, 'yyyy-LL-dd', new Date())
 	const to = parse(props.dateTo, 'yyyy-LL-dd', new Date())
 	const dateDiff = Math.floor((to - from) / (1000 * 60 * 60 * 24))
-	
+
 	return dateDiff * DAY_WIDTH_PIXELS
 })
 
