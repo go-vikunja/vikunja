@@ -6,7 +6,7 @@
 	>
 		<div class="container has-text-centered link-share-view">
 			<div class="column is-10 is-offset-1">
-				<Logo class="logo" />
+				<Logo class="logo"/>
 				<h1
 					:style="{ 'opacity': currentList.title === '' ? '0': '1' }"
 					class="title">
@@ -14,7 +14,7 @@
 				</h1>
 				<div class="box has-text-left view">
 					<router-view/>
-					<PoweredByLink />
+					<PoweredByLink/>
 				</div>
 			</div>
 		</div>
@@ -35,14 +35,15 @@ const background = computed(() => store.state.background)
 
 <style lang="scss" scoped>
 .link-share-container.has-background .view {
-  background-color: transparent;
-  border: none;
+	background-color: transparent;
+	border: none;
 }
 
 .logo {
 	max-width: 300px;
 	width: 90%;
 	margin: 2rem 0 1.5rem;
+	height: 100px;
 }
 
 .column {
@@ -55,6 +56,6 @@ const background = computed(() => store.state.background)
 
 // FIXME: this should be defined somewhere deep
 .link-share-view .card {
-    background-color: var(--white);
+	background-color: var(--white);
 }
 </style>
