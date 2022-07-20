@@ -15,16 +15,41 @@
 			:bars="bar"
 		/>
 	</g-gantt-chart>
+	<form
+		@submit.prevent="createTask()"
+		class="add-new-task"
+		v-if="canWrite"
+	>
+		<transition name="width">
+			<input
+				@blur="hideCreateNewTask"
+				@keyup.esc="newTaskFieldActive = false"
+				class="input"
+				ref="newTaskTitleField"
+				type="text"
+				v-if="newTaskFieldActive"
+				v-model="newTaskTitle"
+			/>
+		</transition>
+		<x-button @click="showCreateNewTask" :shadow="false" icon="plus">
+			{{ $t('list.list.newTaskCta') }}
+		</x-button>
+	</form>
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue'
+import {computed, nextTick, ref} from 'vue'
 import TaskCollectionService from '@/services/taskCollection'
 import {format} from 'date-fns'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import TaskService from '@/services/task'
+import {useStore} from 'vuex'
+import Rights from '../../models/constants/rights.json'
+import TaskModel from '@/models/task'
 
 const dateFormat = 'yyyy-LL-dd kk:mm'
+
+const store = useStore()
 
 const props = defineProps({
 	listId: {
@@ -45,6 +70,8 @@ const props = defineProps({
 	},
 })
 
+const canWrite = computed(() => store.state.currentList.maxRight > Rights.READ)
+
 const tasks = ref([])
 const ganttBars = ref([])
 
@@ -54,6 +81,7 @@ const defaultEndDate = format(new Date((new Date()).setDate((new Date()).getDate
 // We need a "real" ref object for the gantt bars to instantly update the tasks when they are dragged on the chart.
 // A computed won't work directly.
 function mapGanttBars() {
+	ganttBars.value = []
 	tasks.value.forEach(t => ganttBars.value.push([{
 		startDate: t.startDate ? format(t.startDate, dateFormat) : defaultStartDate,
 		endDate: t.endDate ? format(t.endDate, dateFormat) : defaultEndDate,
@@ -112,6 +140,45 @@ async function updateTask(e) {
 	const taskService = new TaskService()
 	await taskService.update(task)
 	// TODO: Loading animation
+}
+
+
+const newTaskFieldActive = ref(false)
+const newTaskTitleField = ref()
+const newTaskTitle = ref('')
+
+function showCreateNewTask() {
+	if (!newTaskFieldActive.value) {
+		// Timeout to not send the form if the field isn't even shown
+		setTimeout(() => {
+			newTaskFieldActive.value = true
+			nextTick(() => newTaskTitleField.value.focus())
+		}, 100)
+	}
+}
+
+function hideCreateNewTask() {
+	if (newTaskTitle.value === '') {
+		nextTick(() => (newTaskFieldActive.value = false))
+	}
+}
+
+async function createTask() {
+	if (!newTaskFieldActive.value) {
+		return
+	}
+	let task = new TaskModel({
+		title: newTaskTitle.value,
+		listId: props.listId,
+		startDate: defaultStartDate,
+		endDate: defaultEndDate,
+	})
+	const taskService = new TaskService()
+	const r = await taskService.create(task)
+	tasks.value.set(r.id, r)
+	mapGanttBars()
+	newTaskTitle.value = ''
+	hideCreateNewTask()
 }
 </script>
 

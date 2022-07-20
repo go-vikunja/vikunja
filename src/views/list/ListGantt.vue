@@ -56,7 +56,6 @@
 						:date-to="dateTo"
 						:precision="precision"
 						:list-id="props.listId"
-						:show-taskswithout-dates="showTaskswithoutDates"
 					/>
 
 				</card>
