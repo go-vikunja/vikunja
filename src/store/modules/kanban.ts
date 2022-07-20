@@ -318,7 +318,7 @@ export default {
 			const oldBucket = cloneDeep(ctx.state.buckets[bucketIndex])
 
 			const updatedBucket = {
-				...ctx.state.buckets[bucketIndex],
+				...oldBucket,
 				...updatedBucketData,
 			}
 
