@@ -32,7 +32,7 @@
 			/>
 		</transition>
 		<x-button @click="showCreateNewTask" :shadow="false" icon="plus">
-			{{ $t('list.list.newTaskCta') }}
+			{{ $t('task.new') }}
 		</x-button>
 	</form>
 </template>
@@ -185,5 +185,22 @@ async function createTask() {
 <style>
 .g-gantt-row-label {
 	display: none !important;
+}
+</style>
+
+<style scoped lang="scss">
+.add-new-task {
+	padding: 1rem .7rem .4rem .7rem;
+	display: flex;
+	max-width: 450px;
+
+	.input {
+		margin-right: .7rem;
+		font-size: .8rem;
+	}
+
+	.button {
+		font-size: .68rem;
+	}
 }
 </style>
