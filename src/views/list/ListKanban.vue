@@ -62,9 +62,8 @@
 								trigger-icon="ellipsis-v"
 								@close="() => showSetLimitInput = false"
 							>
-								<a
+								<dropdown-item
 									@click.stop="showSetLimitInput = true"
-									class="dropdown-item"
 								>
 									<div class="field has-addons" v-if="showSetLimitInput">
 										<div class="control">
@@ -93,34 +92,32 @@
 											$t('list.kanban.limit', {limit: bucket.limit > 0 ? bucket.limit : $t('list.kanban.noLimit')})
 										}}
 									</template>
-								</a>
-								<a
+								</dropdown-item>
+								<dropdown-item
 									@click.stop="toggleDoneBucket(bucket)"
-									class="dropdown-item"
 									v-tooltip="$t('list.kanban.doneBucketHintExtended')"
 								>
 									<span class="icon is-small" :class="{'has-text-success': bucket.isDoneBucket}">
 										<icon icon="check-double"/>
 									</span>
 									{{ $t('list.kanban.doneBucket') }}
-								</a>
-								<a
-									class="dropdown-item"
+								</dropdown-item>
+								<dropdown-item
 									@click.stop="() => collapseBucket(bucket)"
 								>
 									{{ $t('list.kanban.collapse') }}
-								</a>
-								<a
+								</dropdown-item>
+								<dropdown-item
 									:class="{'is-disabled': buckets.length <= 1}"
 									@click.stop="() => deleteBucketModal(bucket.id)"
-									class="dropdown-item has-text-danger"
+									class="has-text-danger"
 									v-tooltip="buckets.length <= 1 ? $t('list.kanban.deleteLast') : ''"
 								>
 									<span class="icon is-small">
 										<icon icon="trash-alt"/>
 									</span>
 									{{ $t('misc.delete') }}
-								</a>
+								</dropdown-item>
 							</dropdown>
 						</div>
 
@@ -241,6 +238,7 @@ import Dropdown from '@/components/misc/dropdown.vue'
 import {getCollapsedBucketState, saveCollapsedBucketState} from '@/helpers/saveCollapsedBucketState'
 import {calculateItemPosition} from '../../helpers/calculateItemPosition'
 import KanbanCard from '@/components/tasks/partials/kanban-card.vue'
+import DropdownItem from '@/components/misc/dropdown-item.vue'
 
 const DRAG_OPTIONS = {
 	// sortable options
@@ -256,6 +254,7 @@ const MIN_SCROLL_HEIGHT_PERCENT = 0.25
 export default defineComponent({
 	name: 'Kanban',
 	components: {
+		DropdownItem,
 		ListWrapper,
 		KanbanCard,
 		Dropdown,
@@ -726,10 +725,6 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 				background: var(--grey-100);
 				width: 100%;
 			}
-		}
-
-		a.dropdown-item {
-			padding-right: 1rem;
 		}
 
 		&.is-collapsed {

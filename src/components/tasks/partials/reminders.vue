@@ -50,7 +50,6 @@ const props = defineProps({
 
 			for (const e of prop) {
 				if (!isDate(e) && !isString(e)) {
-					console.log('validation failed', e, e instanceof Date)
 					return false
 				}
 			}

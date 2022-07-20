@@ -34,12 +34,13 @@
 				{{ $t('menu.archive') }}
 			</dropdown-item>
 			<task-subscription
-				class="dropdown-item has-no-shadow"
+				class="has-no-shadow"
 				:is-button="false"
 				entity="namespace"
 				:entity-id="namespace.id"
 				:subscription="subscription"
 				@change="sub => subscription = sub"
+				type="dropdown"
 			/>
 			<dropdown-item
 				:to="{ name: 'namespace.settings.delete', params: { id: namespace.id } }"

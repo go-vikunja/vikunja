@@ -1,6 +1,6 @@
 <template>
 	<x-button
-		v-if="isButton"
+		v-if="type === 'button'"
 		variant="secondary"
 		:icon="iconName"
 		v-tooltip="tooltipText"
@@ -9,6 +9,15 @@
 	>
 		{{ buttonText }}
 	</x-button>
+	<DropdownItem
+		v-else-if="type === 'dropdown'"
+		v-tooltip="tooltipText"
+		@click="changeSubscription"
+		:class="{'is-disabled': disabled}"
+		:icon="iconName"
+	>
+		{{ buttonText }}
+	</DropdownItem>
 	<BaseButton
 		v-else
 		v-tooltip="tooltipText"
@@ -27,6 +36,7 @@ import {computed, shallowRef} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import DropdownItem from '@/components/misc/dropdown-item.vue'
 
 import SubscriptionService from '@/services/subscription'
 import SubscriptionModel from '@/models/subscription'
@@ -34,15 +44,15 @@ import SubscriptionModel from '@/models/subscription'
 import {success} from '@/message'
 
 interface Props {
-  entity: string
-  entityId: number
-  subscription: SubscriptionModel | null
-  isButton?: boolean
+	entity: string
+	entityId: number
+	subscription: SubscriptionModel | null
+	type?: 'button' | 'dropdown' | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
-	isButton: true,
 	subscription: null,
+	type: 'button',
 })
 
 const subscriptionEntity = computed<string | null>(() => props.subscription?.entity ?? null)

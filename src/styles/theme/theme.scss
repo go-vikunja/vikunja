@@ -91,34 +91,6 @@ button.table {
   margin-bottom: 0 !important;
 }
 
-// FIXME: merge with dropdown-item.vue
-// for this to happen the component has to be used everywhere
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  justify-content: left !important;
-
-  .icon {
-    padding-right: .5rem;
-  }
-
-  .icon:not(.has-text-success) {
-    color: var(--grey-300) !important;
-  }
-
-  &.has-text-danger .icon {
-    color: var(--danger) !important;
-  }
-
-  &.is-disabled {
-    cursor: not-allowed;
-
-    &:hover {
-      background-color: transparent;
-    }
-  }
-}
-
 .is-max-width-desktop {
   width: 100%;
   max-width: $desktop;
