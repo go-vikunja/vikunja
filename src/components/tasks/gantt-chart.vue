@@ -1,5 +1,5 @@
 <template>
-	<div class="gantt-container">
+	<div class="gantt-container loading-container" :class="{'is-loading': taskService.loading || taskCollectionService.loading}">
 		<g-gantt-chart
 			:chart-start="`${dateFrom} 00:00`"
 			:chart-end="`${dateTo} 23:59`"
@@ -55,9 +55,9 @@
 <script setup lang="ts">
 import {computed, nextTick, ref, watch} from 'vue'
 import TaskCollectionService from '@/services/taskCollection'
+import TaskService from '@/services/task'
 import {format, parse} from 'date-fns'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
-import TaskService from '@/services/task'
 import {useStore} from 'vuex'
 import Rights from '../../models/constants/rights.json'
 import TaskModel from '@/models/task'
@@ -91,6 +91,9 @@ const props = defineProps({
 		default: false,
 	},
 })
+
+const taskCollectionService = ref(new TaskCollectionService())
+const taskService = ref(new TaskService())
 
 const dateFromDate = computed(() => parse(props.dateFrom, 'yyyy-LL-dd', new Date()))
 const dateToDate = computed(() => parse(props.dateTo, 'yyyy-LL-dd', new Date()))
@@ -150,11 +153,10 @@ async function loadTasks() {
 		filter_include_nulls: props.showTasksWithoutDates,
 	}
 
-	const taskCollectionService = new TaskCollectionService()
 
 	const getAllTasks = async (page = 1) => {
-		const tasks = await taskCollectionService.getAll({listId: props.listId}, params, page)
-		if (page < taskCollectionService.totalPages) {
+		const tasks = await taskCollectionService.value.getAll({listId: props.listId}, params, page)
+		if (page < taskCollectionService.value.totalPages) {
 			const nextTasks = await getAllTasks(page + 1)
 			return tasks.concat(nextTasks)
 		}
@@ -181,9 +183,7 @@ async function updateTask(e) {
 	const task = tasks.value.get(e.bar.ganttBarConfig.id)
 	task.startDate = e.bar.startDate
 	task.endDate = e.bar.endDate
-	const taskService = new TaskService()
-	const r = await taskService.update(task)
-	// TODO: Loading animation
+	const r = await taskService.value.update(task)
 	for (const i in ganttBars.value) {
 		if (ganttBars.value[i][0].ganttBarConfig.id === task.id) {
 			ganttBars.value[i] = transformTaskToGanttBar(r)
@@ -221,8 +221,7 @@ async function createTask() {
 		startDate: defaultStartDate,
 		endDate: defaultEndDate,
 	})
-	const taskService = new TaskService()
-	const r = await taskService.create(task)
+	const r = await taskService.value.create(task)
 	tasks.value.set(r.id, r)
 	mapGanttBars()
 	newTaskTitle.value = ''
