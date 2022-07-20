@@ -7,6 +7,7 @@
 		bar-end="endDate"
 		:grid="true"
 		@dragend-bar="updateTask"
+		@dblclick-bar="openTask"
 	>
 		<g-gantt-row
 			v-for="(bar, k) in ganttBars"
@@ -46,10 +47,12 @@ import TaskService from '@/services/task'
 import {useStore} from 'vuex'
 import Rights from '../../models/constants/rights.json'
 import TaskModel from '@/models/task'
+import {useRouter} from 'vue-router'
 
 const dateFormat = 'yyyy-LL-dd kk:mm'
 
 const store = useStore()
+const router = useRouter()
 
 const props = defineProps({
 	listId: {
@@ -179,6 +182,15 @@ async function createTask() {
 	mapGanttBars()
 	newTaskTitle.value = ''
 	hideCreateNewTask()
+}
+
+function openTask(e) {
+	console.log('open', e.bar.ganttBarConfig.id)
+	router.push({
+		name: 'task.detail',
+		params: { id: e.bar.ganttBarConfig.id },
+		state: { backdropView: router.currentRoute.value.fullPath },
+	})
 }
 </script>
 
