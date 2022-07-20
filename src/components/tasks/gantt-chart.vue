@@ -118,6 +118,7 @@ function transformTaskToGanttBar(t: TaskModel) {
 				color: t.startDate ? (colorIsDark(t.getHexColor()) ? black : 'white') : black,
 				backgroundColor: t.startDate ? t.getHexColor() : 'var(--grey-100)',
 				border: t.startDate ? '' : '2px dashed var(--grey-300)',
+				'text-decoration': t.done ? 'line-through' : null,
 			},
 		},
 	}]
@@ -137,9 +138,9 @@ async function loadTasks() {
 	const params = {
 		sort_by: ['start_date', 'done', 'id'],
 		order_by: ['asc', 'asc', 'desc'],
-		filter_by: ['done', 'start_date', 'start_date'],
-		filter_comparator: ['equals', 'greater_equals', 'less_equals'],
-		filter_value: ['false', props.dateFrom, props.dateTo],
+		filter_by: ['start_date', 'start_date'],
+		filter_comparator: ['greater_equals', 'less_equals'],
+		filter_value: [props.dateFrom, props.dateTo],
 		filter_concat: 'and',
 		filter_include_nulls: true,
 	}
@@ -175,7 +176,7 @@ async function updateTask(e) {
 	const r = await taskService.update(task)
 	// TODO: Loading animation
 	for (const i in ganttBars.value) {
-		if(ganttBars.value[i][0].ganttBarConfig.id === task.id) {
+		if (ganttBars.value[i][0].ganttBarConfig.id === task.id) {
 			ganttBars.value[i] = transformTaskToGanttBar(r)
 		}
 	}
