@@ -16,26 +16,14 @@
 							</div>
 						</div>
 						<div class="field">
-							<label class="label" for="fromDate">{{ $t('list.gantt.from') }}</label>
+							<label class="label" for="range">{{ $t('list.gantt.range') }}</label>
 							<div class="control">
 								<flat-pickr
 									:config="flatPickerConfig"
 									class="input"
-									id="fromDate"
-									:placeholder="$t('list.gantt.from')"
-									v-model="dateFrom"
-								/>
-							</div>
-						</div>
-						<div class="field">
-							<label class="label" for="toDate">{{ $t('list.gantt.to') }}</label>
-							<div class="control">
-								<flat-pickr
-									:config="flatPickerConfig"
-									class="input"
-									id="toDate"
-									:placeholder="$t('list.gantt.to')"
-									v-model="dateTo"
+									id="range"
+									:placeholder="$t('list.gantt.range')"
+									v-model="range"
 								/>
 							</div>
 						</div>
@@ -87,8 +75,13 @@ const showTaskswithoutDates = ref(false)
 const precision = ref('day')
 
 const now = ref(new Date())
-const dateFrom = ref(format(new Date((new Date()).setDate(now.value.getDate() - 15)), 'yyyy-LL-dd'))
-const dateTo = ref(format(new Date((new Date()).setDate(now.value.getDate() + 30)), 'yyyy-LL-dd'))
+const defaultFrom = format(new Date((new Date()).setDate(now.value.getDate() - 15)), 'yyyy-LL-dd')
+const defaultTo = format(new Date((new Date()).setDate(now.value.getDate() + 30)), 'yyyy-LL-dd')
+const range = ref(`${defaultFrom} to ${defaultTo}`)
+
+// TODO: only update once both dates are available (maybe use a watcher + refs instead?)
+const dateFrom = computed(() => range.value?.split(' to ')[0] ?? defaultFrom)
+const dateTo = computed(() => range.value?.split(' to ')[1] ?? defaultTo)
 
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
@@ -97,6 +90,7 @@ const flatPickerConfig = computed(() => ({
 	altInput: true,
 	dateFormat: 'Y-m-d',
 	enableTime: false,
+	mode: 'range',
 	locale: {
 		firstDayOfWeek: authStore.settings.weekStart,
 	},

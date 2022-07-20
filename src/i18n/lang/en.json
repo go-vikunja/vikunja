@@ -287,8 +287,7 @@
       "month": "Month",
       "day": "Day",
       "hour": "Hour",
-      "from": "From",
-      "to": "To",
+      "range": "Range",
       "noDates": "This task has no dates set."
     },
     "table": {
