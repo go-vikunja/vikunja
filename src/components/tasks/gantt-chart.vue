@@ -1,21 +1,25 @@
 <template>
-	<g-gantt-chart
-		:chart-start="`${dateFrom} 00:00`"
-		:chart-end="`${dateTo} 23:59`"
-		:precision="precision"
-		bar-start="startDate"
-		bar-end="endDate"
-		:grid="true"
-		@dragend-bar="updateTask"
-		@dblclick-bar="openTask"
-	>
-		<g-gantt-row
-			v-for="(bar, k) in ganttBars"
-			:key="k"
-			label=""
-			:bars="bar"
-		/>
-	</g-gantt-chart>
+	<div class="gantt-container">
+		<div :style="{'width': ganttChartWidth + 'px'}">
+			<g-gantt-chart
+				:chart-start="`${dateFrom} 00:00`"
+				:chart-end="`${dateTo} 23:59`"
+				:precision="precision"
+				bar-start="startDate"
+				bar-end="endDate"
+				:grid="true"
+				@dragend-bar="updateTask"
+				@dblclick-bar="openTask"
+			>
+				<g-gantt-row
+					v-for="(bar, k) in ganttBars"
+					:key="k"
+					label=""
+					:bars="bar"
+				/>
+			</g-gantt-chart>
+		</div>
+	</div>
 	<form
 		@submit.prevent="createTask()"
 		class="add-new-task"
@@ -41,7 +45,7 @@
 <script setup lang="ts">
 import {computed, nextTick, ref} from 'vue'
 import TaskCollectionService from '@/services/taskCollection'
-import {format} from 'date-fns'
+import {format, parse} from 'date-fns'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import TaskService from '@/services/task'
 import {useStore} from 'vuex'
@@ -71,6 +75,15 @@ const props = defineProps({
 		type: String,
 		required: true,
 	},
+})
+
+const DAY_WIDTH_PIXELS = 30
+const ganttChartWidth = computed(() => {
+	const from = parse(props.dateFrom, 'yyyy-LL-dd', new Date())
+	const to = parse(props.dateTo, 'yyyy-LL-dd', new Date())
+	const dateDiff = Math.floor((to - from) / (1000 * 60 * 60 * 24))
+	
+	return dateDiff * DAY_WIDTH_PIXELS
 })
 
 const canWrite = computed(() => store.state.currentList.maxRight > Rights.READ)
@@ -188,8 +201,8 @@ function openTask(e) {
 	console.log('open', e.bar.ganttBarConfig.id)
 	router.push({
 		name: 'task.detail',
-		params: { id: e.bar.ganttBarConfig.id },
-		state: { backdropView: router.currentRoute.value.fullPath },
+		params: {id: e.bar.ganttBarConfig.id},
+		state: {backdropView: router.currentRoute.value.fullPath},
 	})
 }
 </script>
@@ -201,6 +214,14 @@ function openTask(e) {
 </style>
 
 <style scoped lang="scss">
+.gantt-container {
+	overflow-x: auto;
+
+	#g-gantt-chart {
+		width: 2000px;
+	}
+}
+
 .add-new-task {
 	padding: 1rem .7rem .4rem .7rem;
 	display: flex;
