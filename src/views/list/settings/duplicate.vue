@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import {ref, shallowReactive} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import ListDuplicateService from '@/services/listDuplicateService'

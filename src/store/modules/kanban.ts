@@ -1,3 +1,4 @@
+import type { Module } from 'vuex'
 import cloneDeep from 'lodash.clonedeep'
 
 import {findById, findIndexById} from '@/helpers/utils'
@@ -7,7 +8,6 @@ import {success} from '@/message'
 import BucketService from '../../services/bucket'
 import {setLoading} from '../helper'
 import TaskCollectionService from '@/services/taskCollection'
-import type { ActionContext } from 'vuex'
 import type { RootStoreState, KanbanState } from '@/store/types'
 import type { ITask } from '@/models/task'
 import type { IList } from '@/models/list'
@@ -38,10 +38,10 @@ const addTaskToBucketAndSort = (state: KanbanState, task: ITask) => {
  * This store is intended to hold the currently active kanban view.
  * It should hold only the current buckets.
  */
-export default {
+const kanbanStore : Module<KanbanState, RootStoreState> = {
 	namespaced: true,
 
-	state: (): KanbanState => ({
+	state: () => ({
 		buckets: [],
 		listId: 0,
 		bucketLoading: {},
@@ -50,11 +50,11 @@ export default {
 	}),
 
 	mutations: {
-		setListId(state: KanbanState, listId: IList['id']) {
+		setListId(state, listId: IList['id']) {
 			state.listId = parseInt(listId)
 		},
 
-		setBuckets(state: KanbanState, buckets: IBucket[]) {
+		setBuckets(state, buckets: IBucket[]) {
 			state.buckets = buckets
 			buckets.forEach(b => {
 				state.taskPagesPerBucket[b.id] = 1
@@ -62,21 +62,21 @@ export default {
 			})
 		},
 
-		addBucket(state: KanbanState, bucket: IBucket) {
+		addBucket(state, bucket: IBucket) {
 			state.buckets.push(bucket)
 		},
 
-		removeBucket(state: KanbanState, bucket: IBucket) {
+		removeBucket(state, bucket: IBucket) {
 			const bucketIndex = findIndexById(state.buckets, bucket.id)
 			state.buckets.splice(bucketIndex, 1)
 		},
 
-		setBucketById(state: KanbanState, bucket: IBucket) {
+		setBucketById(state, bucket: IBucket) {
 			const bucketIndex = findIndexById(state.buckets, bucket.id)
 			state.buckets[bucketIndex] = bucket
 		},
 
-		setBucketByIndex(state: KanbanState, {
+		setBucketByIndex(state, {
 			bucketIndex,
 			bucket,
 		} : {
@@ -86,7 +86,7 @@ export default {
 			state.buckets[bucketIndex] = bucket
 		},
 
-		setTaskInBucketByIndex(state: KanbanState, {
+		setTaskInBucketByIndex(state, {
 			bucketIndex,
 			taskIndex,
 			task,
@@ -100,7 +100,7 @@ export default {
 			state.buckets[bucketIndex] = bucket
 		},
 
-		setTasksInBucketByBucketId(state: KanbanState, {
+		setTasksInBucketByBucketId(state, {
 			bucketId,
 			tasks,
 		} : {
@@ -114,7 +114,7 @@ export default {
 			}
 		},
 		
-		setTaskInBucket(state: KanbanState, task: ITask) {
+		setTaskInBucket(state, task: ITask) {
 			// If this gets invoked without any tasks actually loaded, we can save the hassle of finding the task
 			if (state.buckets.length === 0) {
 				return
@@ -158,7 +158,7 @@ export default {
 			}
 		},
 
-		addTaskToBucket(state: KanbanState, task: ITask) {
+		addTaskToBucket(state, task: ITask) {
 			const bucketIndex = findIndexById(state.buckets, task.bucketId)
 			const oldBucket = state.buckets[bucketIndex]
 			const newBucket = {
@@ -171,7 +171,7 @@ export default {
 			state.buckets[bucketIndex] = newBucket
 		},
 
-		addTasksToBucket(state: KanbanState, {tasks, bucketId}: {
+		addTasksToBucket(state, {tasks, bucketId}: {
 			tasks: ITask[];
 			bucketId: IBucket['id'];
 		}) {
@@ -187,7 +187,7 @@ export default {
 			state.buckets[bucketIndex] = newBucket
 		},
 
-		removeTaskInBucket(state: KanbanState, task: ITask) {
+		removeTaskInBucket(state, task: ITask) {
 			// If this gets invoked without any tasks actually loaded, we can save the hassle of finding the task
 			if (state.buckets.length === 0) {
 				return
@@ -207,7 +207,7 @@ export default {
 			state.buckets[bucketIndex].tasks.splice(taskIndex, 1)
 		},
 
-		setBucketLoading(state: KanbanState, {bucketId, loading}) {
+		setBucketLoading(state, {bucketId, loading}) {
 			state.bucketLoading[bucketId] = loading
 		},
 
@@ -221,11 +221,11 @@ export default {
 	},
 
 	getters: {
-		getBucketById(state: KanbanState) {
+		getBucketById(state) {
 			return (bucketId) => findById(state.buckets, bucketId)
 		},
 
-		getTaskById(state: KanbanState) {
+		getTaskById(state) {
 			return (id) => {
 				const { bucketIndex, taskIndex } = getTaskIndicesById(state, id)
 
@@ -240,7 +240,7 @@ export default {
 	},
 
 	actions: {
-		async loadBucketsForList(ctx: ActionContext<KanbanState, RootStoreState>, {listId, params}) {
+		async loadBucketsForList(ctx, {listId, params}) {
 			const cancel = setLoading(ctx, 'kanban')
 
 			// Clear everything to prevent having old buckets in the list if loading the buckets from this list takes a few moments
@@ -259,7 +259,7 @@ export default {
 			}
 		},
 
-		async loadNextTasksForBucket(ctx: ActionContext<KanbanState, RootStoreState>, {listId, ps = {}, bucketId}) {
+		async loadNextTasksForBucket(ctx, {listId, ps = {}, bucketId}) {
 			const isLoading = ctx.state.bucketLoading[bucketId] ?? false
 			if (isLoading) {
 				return
@@ -314,7 +314,7 @@ export default {
 			}
 		},
 
-		async createBucket(ctx: ActionContext<KanbanState, RootStoreState>, bucket: IBucket) {
+		async createBucket(ctx, bucket: IBucket) {
 			const cancel = setLoading(ctx, 'kanban')
 
 			const bucketService = new BucketService()
@@ -327,7 +327,7 @@ export default {
 			}
 		},
 
-		async deleteBucket(ctx: ActionContext<KanbanState, RootStoreState>, {bucket, params}) {
+		async deleteBucket(ctx, {bucket, params}) {
 			const cancel = setLoading(ctx, 'kanban')
 
 			const bucketService = new BucketService()
@@ -342,7 +342,7 @@ export default {
 			}
 		},
 
-		async updateBucket(ctx: ActionContext<KanbanState, RootStoreState>, updatedBucketData) {
+		async updateBucket(ctx, updatedBucketData) {
 			const cancel = setLoading(ctx, 'kanban')
 
 			const bucketIndex = findIndexById(ctx.state.buckets, updatedBucketData.id)
@@ -370,7 +370,7 @@ export default {
 			}
 		},
 
-		async updateBucketTitle(ctx: ActionContext<KanbanState, RootStoreState>, { id, title }) {
+		async updateBucketTitle(ctx, { id, title }) {
 			const bucket = findById(ctx.state.buckets, id)
 
 			if (bucket?.title === title) {
@@ -388,3 +388,5 @@ export default {
 		},
 	},
 }
+
+export default kanbanStore

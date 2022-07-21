@@ -165,7 +165,7 @@ import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import Editor from '@/components/input/AsyncEditor'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 
 import TeamService from '@/services/team'
 import TeamMemberService from '@/services/teamMember'

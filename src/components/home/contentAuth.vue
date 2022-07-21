@@ -61,7 +61,7 @@
 
 <script lang="ts" setup>
 import {watch, computed, shallowRef, watchEffect, type VNode, h} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useRoute, useRouter} from 'vue-router'
 import {useEventListener} from '@vueuse/core'
 

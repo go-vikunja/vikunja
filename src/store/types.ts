@@ -15,16 +15,6 @@ export interface RootStoreState {
 	menuActive: boolean,
 	keyboardShortcutsActive: boolean,
 	quickActionsActive: boolean,
-
-	// modules
-	attachments: AttachmentState,
-	auth: AuthState,
-	config: ConfigState,
-	kanban: KanbanState,
-	labels: LabelState,
-	lists: ListState,
-	namespaces: NamespaceState,
-	tasks: TaskState, 
 }
 
 export interface AttachmentState {
@@ -114,3 +104,15 @@ export interface NamespaceState {
 }
 
 export interface TaskState {}
+
+
+export type StoreState = RootStoreState & {
+	config: ConfigState,
+	auth: AuthState,
+	namespaces: NamespaceState,
+	kanban: KanbanState,
+	tasks: TaskState,
+	lists: ListState,
+	attachments: AttachmentState,
+	labels: LabelState,
+}

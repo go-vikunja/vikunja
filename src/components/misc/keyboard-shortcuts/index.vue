@@ -33,7 +33,7 @@
 </template>
 
 <script lang="ts" setup>
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 
 import Shortcut from '@/components/misc/shortcut.vue'
 import Message from '@/components/misc/message.vue'

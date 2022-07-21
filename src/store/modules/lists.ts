@@ -1,49 +1,50 @@
+import type { Module } from 'vuex'
+
 import ListService from '@/services/list'
 import {setLoading} from '@/store/helper'
 import {removeListFromHistory} from '@/modules/listHistory'
 import {createNewIndexer} from '@/indexes'
 import type {ListState, RootStoreState} from '@/store/types'
-import type {ActionContext} from 'vuex'
 import type {IList} from '@/models/list'
 
 const {add, remove, search, update} = createNewIndexer('lists', ['title', 'description'])
 
 const FavoriteListsNamespace = -2
 
-export default {
+const listsStore : Module<ListState, RootStoreState>= {
 	namespaced: true,
 	// The state is an object which has the list ids as keys.
-	state: (): ListState => ({}),
+	state: () => ({}),
 	mutations: {
-		setList(state: ListState, list: IList) {
+		setList(state, list: IList) {
 			state[list.id] = list
 			update(list)
 		},
-		setLists(state: ListState, lists: IList[]) {
+		setLists(state, lists: IList[]) {
 			lists.forEach(l => {
 				state[l.id] = l
 				add(l)
 			})
 		},
-		removeListById(state: ListState, list: IList) {
+		removeListById(state, list: IList) {
 			remove(list)
 			delete state[list.id]
 		},
 	},
 	getters: {
-		getListById: (state: ListState) => (id: IList['id']) => {
+		getListById: (state) => (id: IList['id']) => {
 			if (typeof state[id] !== 'undefined') {
 				return state[id]
 			}
 			return null
 		},
-		findListByExactname: (state: ListState) => (name: string) => {
+		findListByExactname: (state) => (name: string) => {
 			const list = Object.values(state).find(l => {
 				return l.title.toLowerCase() === name.toLowerCase()
 			})
 			return typeof list === 'undefined' ? null : list
 		},
-		searchList: (state: ListState) => (query: string, includeArchived = false) => {
+		searchList: (state) => (query: string, includeArchived = false) => {
 			return search(query)
 					?.filter(value => value > 0)
 					.map(id => state[id])
@@ -52,14 +53,14 @@ export default {
 		},
 	},
 	actions: {
-		toggleListFavorite(ctx: ActionContext<ListState, RootStoreState>, list: IList) {
+		toggleListFavorite(ctx, list: IList) {
 			return ctx.dispatch('updateList', {
 				...list,
 				isFavorite: !list.isFavorite,
 			})
 		},
 
-		async createList(ctx: ActionContext<ListState, RootStoreState>, list: IList) {
+		async createList(ctx, list: IList) {
 			const cancel = setLoading(ctx, 'lists')
 			const listService = new ListService()
 
@@ -74,7 +75,7 @@ export default {
 			}
 		},
 
-		async updateList(ctx: ActionContext<ListState, RootStoreState>, list: IList) {
+		async updateList(ctx, list: IList) {
 			const cancel = setLoading(ctx, 'lists')
 			const listService = new ListService()
 
@@ -109,7 +110,7 @@ export default {
 			}
 		},
 
-		async deleteList(ctx: ActionContext<ListState, RootStoreState>, list: IList) {
+		async deleteList(ctx, list: IList) {
 			const cancel = setLoading(ctx, 'lists')
 			const listService = new ListService()
 
@@ -125,3 +126,5 @@ export default {
 		},
 	},
 }
+
+export default listsStore

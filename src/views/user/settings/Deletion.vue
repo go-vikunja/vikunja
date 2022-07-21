@@ -88,7 +88,7 @@ export default { name: 'user-settings-deletion' }
 
 <script setup lang="ts">
 import {ref, shallowReactive, computed} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import AccountDeleteService from '@/services/accountDelete'

@@ -60,7 +60,7 @@ import {BACKGROUND, BLUR_HASH, CURRENT_LIST} from '@/store/mutation-types'
 import {getListTitle} from '@/helpers/getListTitle'
 import {saveListToHistory} from '@/modules/listHistory'
 import {useTitle} from '@/composables/useTitle'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 
 const props = defineProps({
 	listId: {

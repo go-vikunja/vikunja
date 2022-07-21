@@ -17,7 +17,7 @@ export default {name: 'list-setting-archive'}
 
 <script setup lang="ts">
 import {computed} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useRouter, useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 

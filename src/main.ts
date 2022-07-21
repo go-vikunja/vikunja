@@ -14,7 +14,7 @@ import Notifications from '@kyvg/vue3-notification'
 import './registerServiceWorker'
 
 // Vuex
-import {store} from './store'
+import { store, key } from './store'
 // i18n
 import {i18n} from './i18n'
 
@@ -104,7 +104,7 @@ if (window.SENTRY_ENABLED) {
 	import('./sentry').then(sentry => sentry.default(app, router))
 }
 
-app.use(store)
+app.use(store, key) // pass the injection key
 app.use(router)
 app.use(i18n)
 

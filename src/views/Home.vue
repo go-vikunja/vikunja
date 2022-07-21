@@ -60,7 +60,7 @@
 
 <script lang="ts" setup>
 import {ref, computed} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 
 import Message from '@/components/misc/message.vue'
 import ShowTasks from '@/views/tasks/ShowTasks.vue'

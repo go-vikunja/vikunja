@@ -1,4 +1,4 @@
-import type { ActionContext } from 'vuex'
+import type { Module } from 'vuex'
 import {parseURL} from 'ufo'
 
 import {CONFIG} from '../mutation-types'
@@ -6,9 +6,9 @@ import {HTTPFactory} from '@/http-common'
 import {objectToCamelCase} from '@/helpers/case'
 import type { RootStoreState, ConfigState } from '@/store/types'
 
-export default {
+const configStore : Module<ConfigState, RootStoreState> = {
 	namespaced: true,
-	state: (): ConfigState => ({
+	state: () => ({
 		// These are the api defaults.
 		version: '',
 		frontendUrl: '',
@@ -39,19 +39,19 @@ export default {
 		},
 	}),
 	getters: {
-		migratorsEnabled: (state: ConfigState) => state.availableMigrators?.length > 0,
+		migratorsEnabled: (state) => state.availableMigrators?.length > 0,
 		apiBase() {
 			const {host, protocol} = parseURL(window.API_URL)
 			return protocol + '//' + host
 		},
 	},
 	mutations: {
-		[CONFIG](state: ConfigState, config: ConfigState) {
+		[CONFIG](state, config: ConfigState) {
 			Object.assign(state, config)
 		},
 	},
 	actions: {
-		async update(ctx: ActionContext<ConfigState, RootStoreState>) {
+		async update(ctx) {
 			const HTTP = HTTPFactory()
 			const {data: config} = await HTTP.get('info')
 			ctx.commit(CONFIG, objectToCamelCase(config))
@@ -59,3 +59,5 @@ export default {
 		},
 	},
 }
+
+export default configStore

@@ -19,7 +19,7 @@
 <script lang="ts" setup>
 import {reactive, ref, watch} from 'vue'
 import type {PropType} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 import ListModel, { type IList } from '@/models/list'
 import Multiselect from '@/components/input/multiselect.vue'

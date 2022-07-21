@@ -1,4 +1,4 @@
-import type { ActionContext } from 'vuex'
+import type { Module } from 'vuex'
 
 import {i18n} from '@/i18n'
 import {success} from '@/message'
@@ -22,46 +22,46 @@ async function getAllLabels(page = 1): Promise<ILabel[]> {
 	}
 }
 
-export default {
+const LabelStore : Module<LabelState, RootStoreState> = {
 	namespaced: true,
-	state: (): LabelState => ({
+	state: () => ({
 		labels: {},
 		loaded: false,
 	}),
 	mutations: {
-		setLabels(state: LabelState, labels: ILabel[]) {
+		setLabels(state, labels: ILabel[]) {
 			labels.forEach(l => {
 				state.labels[l.id] = l
 				add(l)
 			})
 		},
-		setLabel(state: LabelState, label: ILabel) {
+		setLabel(state, label: ILabel) {
 			state.labels[label.id] = label
 			update(label)
 		},
-		removeLabelById(state: LabelState, label: ILabel) {
+		removeLabelById(state, label: ILabel) {
 			remove(label)
 			delete state.labels[label.id]
 		},
-		setLoaded(state: LabelState, loaded: boolean) {
+		setLoaded(state, loaded: boolean) {
 			state.loaded = loaded
 		},
 	},
 	getters: {
-		getLabelsByIds(state: LabelState) {
+		getLabelsByIds(state) {
 			return (ids: ILabel['id'][]) => getLabelsByIds(state, ids)
 		},
-		filterLabelsByQuery(state: LabelState) {
+		filterLabelsByQuery(state) {
 			return (labelsToHide: ILabel[], query: string) => filterLabelsByQuery(state, labelsToHide, query)
 		},
-		getLabelsByExactTitles(state: LabelState) {
+		getLabelsByExactTitles(state) {
 			return labelTitles => Object
 				.values(state.labels)
 				.filter(({title}) => labelTitles.some(l => l.toLowerCase() === title.toLowerCase()))
 		},
 	},
 	actions: {
-		async loadAllLabels(ctx: ActionContext<LabelState, RootStoreState>, {forceLoad} = {}) {
+		async loadAllLabels(ctx, {forceLoad} = {}) {
 			if (ctx.state.loaded && !forceLoad) {
 				return
 			}
@@ -77,7 +77,7 @@ export default {
 				cancel()
 			}
 		},
-		async deleteLabel(ctx: ActionContext<LabelState, RootStoreState>, label: ILabel) {
+		async deleteLabel(ctx, label: ILabel) {
 			const cancel = setLoading(ctx, 'labels')
 			const labelService = new LabelService()
 
@@ -90,7 +90,7 @@ export default {
 				cancel()
 			}
 		},
-		async updateLabel(ctx: ActionContext<LabelState, RootStoreState>, label: ILabel) {
+		async updateLabel(ctx, label: ILabel) {
 			const cancel = setLoading(ctx, 'labels')
 			const labelService = new LabelService()
 
@@ -103,7 +103,7 @@ export default {
 				cancel()
 			}
 		},
-		async createLabel(ctx: ActionContext<LabelState, RootStoreState>, label: ILabel) {
+		async createLabel(ctx, label: ILabel) {
 			const cancel = setLoading(ctx, 'labels')
 			const labelService = new LabelService()
 
@@ -117,3 +117,5 @@ export default {
 		},
 	},
 }
+
+export default LabelStore

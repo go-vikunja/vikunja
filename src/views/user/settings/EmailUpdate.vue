@@ -43,7 +43,7 @@ export default { name: 'user-settings-update-email' }
 <script setup lang="ts">
 import {reactive, computed, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 
 import EmailUpdateService from '@/services/emailUpdate'
 import EmailUpdateModel from '@/models/emailUpdate'

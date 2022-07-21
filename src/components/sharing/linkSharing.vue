@@ -177,7 +177,7 @@
 
 <script setup lang="ts">
 import {ref, watch, computed, shallowReactive} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import {RIGHTS} from '@/models/constants/rights'

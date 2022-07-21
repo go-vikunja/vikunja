@@ -40,7 +40,7 @@
 
 <script setup lang="ts">
 import {type PropType, ref, computed, shallowReactive, watch} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import LabelModel, { type ILabel } from '@/models/label'

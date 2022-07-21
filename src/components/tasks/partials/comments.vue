@@ -153,7 +153,7 @@
 
 <script setup lang="ts">
 import {ref, reactive, computed, shallowReactive, watch, nextTick} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import Editor from '@/components/input/AsyncEditor'

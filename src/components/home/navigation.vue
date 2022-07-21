@@ -141,7 +141,7 @@
 
 <script setup lang="ts">
 import {ref, computed, onMounted, onBeforeMount} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import draggable from 'zhyswan-vuedraggable'
 import type {SortableEvent} from 'sortablejs'
 

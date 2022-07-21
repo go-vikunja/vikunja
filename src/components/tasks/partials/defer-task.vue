@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, type PropType} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 import flatPickr from 'vue-flatpickr-component'
 

@@ -44,7 +44,7 @@ export default {name: 'user-settings-data-export'}
 
 <script setup lang="ts">
 import {ref, computed, shallowReactive} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import DataExportService from '@/services/dataExport'

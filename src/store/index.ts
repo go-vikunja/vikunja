@@ -1,4 +1,7 @@
-import {createStore} from 'vuex'
+import type {InjectionKey} from 'vue'
+import {createStore, useStore as baseUseStore, Store} from 'vuex'
+
+
 import {getBlobFromBlurHash} from '../helpers/getBlobFromBlurHash'
 import {
 	BACKGROUND,
@@ -25,7 +28,14 @@ import ListModel from '@/models/list'
 import ListService from '../services/list'
 import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 
-import type { RootStoreState } from './types'
+import type { RootStoreState, StoreState } from './types'
+
+export const key: InjectionKey<Store<StoreState>> = Symbol()
+
+// define your own `useStore` composition function
+export function useStore () {
+  return baseUseStore(key)
+}
 
 export const store = createStore<RootStoreState>({
 	strict: import.meta.env.DEV,

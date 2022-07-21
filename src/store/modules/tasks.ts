@@ -1,5 +1,5 @@
+import type { Module } from 'vuex'
 import router from '@/router'
-import type { ActionContext } from 'vuex'
 import {formatISO} from 'date-fns'
 
 import TaskService from '@/services/task'
@@ -65,11 +65,11 @@ async function findAssignees(parsedTaskAssignees) {
 }
 
 
-export default {
+const tasksStore : Module<TaskState, RootStoreState>= {
 	namespaced: true,
-	state: (): TaskState => ({}),
+	state: () => ({}),
 	actions: {
-		async loadTasks(ctx: ActionContext<TaskState, RootStoreState>, params) {
+		async loadTasks(ctx, params) {
 			const taskService = new TaskService()
 
 			const cancel = setLoading(ctx, 'tasks')
@@ -82,7 +82,7 @@ export default {
 			}
 		},
 
-		async update(ctx: ActionContext<TaskState, RootStoreState>, task: ITask) {
+		async update(ctx, task: ITask) {
 			const cancel = setLoading(ctx, 'tasks')
 
 			const taskService = new TaskService()
@@ -95,7 +95,7 @@ export default {
 			}
 		},
 
-		async delete(ctx: ActionContext<TaskState, RootStoreState>, task: ITask) {
+		async delete(ctx, task: ITask) {
 			const taskService = new TaskService()
 			const response = await taskService.delete(task)
 			ctx.commit('kanban/removeTaskInBucket', task, {root: true})
@@ -104,7 +104,7 @@ export default {
 
 		// Adds a task attachment in store.
 		// This is an action to be able to commit other mutations
-		addTaskAttachment(ctx: ActionContext<TaskState, RootStoreState>, {
+		addTaskAttachment(ctx, {
 			taskId,
 			attachment,
 		}: {
@@ -130,7 +130,7 @@ export default {
 			ctx.commit('attachments/add', attachment, {root: true})
 		},
 
-		async addAssignee(ctx: ActionContext<TaskState, RootStoreState>, {
+		async addAssignee(ctx, {
 			user,
 			taskId,
 		}: {
@@ -165,7 +165,7 @@ export default {
 			return r
 		},
 
-		async removeAssignee(ctx: ActionContext<TaskState, RootStoreState>, {
+		async removeAssignee(ctx, {
 			user,
 			taskId,
 		}: {
@@ -198,7 +198,7 @@ export default {
 
 		},
 
-		async addLabel(ctx: ActionContext<TaskState, RootStoreState>, {
+		async addLabel(ctx, {
 			label,
 			taskId,
 		} : {
@@ -234,7 +234,7 @@ export default {
 			return r
 		},
 
-		async removeLabel(ctx: ActionContext<TaskState, RootStoreState>, {label, taskId}) {
+		async removeLabel(ctx, {label, taskId}) {
 			const labelTask = new LabelTaskModel({taskId, labelId: label.id})
 
 			const labelTaskService = new LabelTaskService()
@@ -263,7 +263,7 @@ export default {
 		},
 
 		// Do everything that is involved in finding, creating and adding the label to the task
-		async addLabelsToTask({rootState, dispatch}: ActionContext<TaskState, RootStoreState>, {
+		async addLabelsToTask({rootState, dispatch}, {
 			task,
 			parsedLabels,
 		}) {
@@ -289,7 +289,7 @@ export default {
 			return task
 		},
 
-		findListId({ rootGetters }: ActionContext<TaskState, RootStoreState>, { list: listName, listId }: {
+		findListId({ rootGetters }, { list: listName, listId }: {
 			list: string,
 			listId: IList['id']
 		}) {
@@ -320,7 +320,7 @@ export default {
 			return foundListId
 		},
 
-		async createNewTask({dispatch, commit}: ActionContext<TaskState, RootStoreState>, { 
+		async createNewTask({dispatch, commit}, { 
 			title,
 			bucketId,
 			listId,
@@ -367,3 +367,5 @@ export default {
 		},
 	},
 }
+
+export default tasksStore

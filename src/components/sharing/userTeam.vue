@@ -139,7 +139,7 @@ export default {name: 'userTeamShare'}
 <script setup lang="ts">
 import {ref, reactive, computed, shallowReactive, type ShallowReactive, type Ref} from 'vue'
 import type {PropType} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import UserNamespaceService from '@/services/userNamespace'

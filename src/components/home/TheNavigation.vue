@@ -88,7 +88,7 @@
 
 <script setup lang="ts">
 import {ref, computed, onMounted, nextTick} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useRouter} from 'vue-router'
 
 import {QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'

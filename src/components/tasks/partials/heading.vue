@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
 import {ref, computed, type PropType} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Done from '@/components/misc/Done.vue'

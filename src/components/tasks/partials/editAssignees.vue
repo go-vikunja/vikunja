@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 import {ref, shallowReactive, watch, type PropType} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import User from '@/components/misc/user.vue'

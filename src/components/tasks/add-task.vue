@@ -43,7 +43,7 @@
 <script setup lang="ts">
 import {ref, watch, unref, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {tryOnMounted, debouncedWatch, useWindowSize, type MaybeRef} from '@vueuse/core'
 
 import TaskService from '@/services/task'

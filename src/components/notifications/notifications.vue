@@ -54,7 +54,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import User from '@/components/misc/user.vue'
 import { NOTIFICATION_NAMES as names, type INotification} from '@/models/notification'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useRouter} from 'vue-router'
 import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 

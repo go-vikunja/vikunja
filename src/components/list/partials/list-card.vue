@@ -37,7 +37,7 @@
 
 <script lang="ts" setup>
 import {type PropType, ref, watch} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 
 import ListService from '@/services/list'
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'

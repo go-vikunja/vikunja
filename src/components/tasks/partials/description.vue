@@ -31,7 +31,7 @@
 
 <script setup lang="ts">
 import {ref,computed, watch, type PropType} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 
 import Editor from '@/components/input/AsyncEditor'
 

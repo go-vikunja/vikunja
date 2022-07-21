@@ -1,4 +1,4 @@
-import type { ActionContext } from 'vuex'
+import type { Module } from 'vuex'
 
 import {HTTPFactory, AuthenticatedHTTPFactory} from '@/http-common'
 import {i18n, getCurrentLanguage, saveLanguage} from '@/i18n'
@@ -22,25 +22,25 @@ const defaultSettings = settings => {
 	return settings
 }
 
-export default {
+const authStore : Module<AuthState, RootStoreState> =  {
 	namespaced: true,
-	state: (): AuthState => ({
+	state: () => ({
 		authenticated: false,
 		isLinkShareAuth: false,
 		info: null,
 		needsTotpPasscode: false,
 		avatarUrl: '',
 		lastUserInfoRefresh: null,
-		settings: {},
+		settings: {}, // should be IUserSettings
 	}),
 	getters: {
-		authUser(state: AuthState) {
+		authUser(state) {
 			return state.authenticated && (
 				state.info &&
 				state.info.type === AUTH_TYPES.USER
 			)
 		},
-		authLinkShare(state: AuthState) {
+		authLinkShare(state) {
 			return state.authenticated && (
 				state.info &&
 				state.info.type === AUTH_TYPES.LINK_SHARE
@@ -48,7 +48,7 @@ export default {
 		},
 	},
 	mutations: {
-		info(state: AuthState, info: Info) {
+		info(state, info: Info) {
 			state.info = info
 			if (info !== null) {
 				state.avatarUrl = info.getAvatarUrl()
@@ -60,32 +60,32 @@ export default {
 				state.isLinkShareAuth = info.id < 0
 			}
 		},
-		setUserSettings(state: AuthState, settings: IUserSettings) {
+		setUserSettings(state, settings: IUserSettings) {
 			state.settings = defaultSettings(settings)
 			const info = state.info !== null ? state.info : {} as Info
 			info.name = settings.name
 			state.info = info
 		},
-		authenticated(state: AuthState, authenticated: boolean) {
+		authenticated(state, authenticated: boolean) {
 			state.authenticated = authenticated
 		},
-		isLinkShareAuth(state: AuthState, isLinkShareAuth: boolean) {
+		isLinkShareAuth(state, isLinkShareAuth: boolean) {
 			state.isLinkShareAuth = isLinkShareAuth
 		},
-		needsTotpPasscode(state: AuthState, needsTotpPasscode: boolean) {
+		needsTotpPasscode(state, needsTotpPasscode: boolean) {
 			state.needsTotpPasscode = needsTotpPasscode
 		},
-		reloadAvatar(state: AuthState) {
+		reloadAvatar(state) {
 			if (!state.info) return
 			state.avatarUrl = `${state.info.getAvatarUrl()}&=${+new Date()}`
 		},
-		lastUserRefresh(state: AuthState) {
+		lastUserRefresh(state) {
 			state.lastUserInfoRefresh = new Date()
 		},
 	},
 	actions: {
 		// Logs a user in with a set of credentials.
-		async login(ctx: ActionContext<AuthState, RootStoreState>, credentials) {
+		async login(ctx, credentials) {
 			const HTTP = HTTPFactory()
 			ctx.commit(LOADING, true, {root: true})
 
@@ -116,7 +116,7 @@ export default {
 
 		// Registers a new user and logs them in.
 		// Not sure if this is the right place to put the logic in, maybe a seperate js component would be better suited.
-		async register(ctx: ActionContext<AuthState, RootStoreState>, credentials) {
+		async register(ctx, credentials) {
 			const HTTP = HTTPFactory()
 			ctx.commit(LOADING, true, {root: true})
 			try {
@@ -133,7 +133,7 @@ export default {
 			}
 		},
 
-		async openIdAuth(ctx: ActionContext<AuthState, RootStoreState>, {provider, code}) {
+		async openIdAuth(ctx, {provider, code}) {
 			const HTTP = HTTPFactory()
 			ctx.commit(LOADING, true, {root: true})
 
@@ -155,7 +155,7 @@ export default {
 			}
 		},
 
-		async linkShareAuth(ctx: ActionContext<AuthState, RootStoreState>, {hash, password}) {
+		async linkShareAuth(ctx, {hash, password}) {
 			const HTTP = HTTPFactory()
 			const response = await HTTP.post('/shares/' + hash + '/auth', {
 				password: password,
@@ -166,7 +166,7 @@ export default {
 		},
 
 		// Populates user information from jwt token saved in local storage in store
-		checkAuth(ctx: ActionContext<AuthState, RootStoreState>) {
+		checkAuth(ctx) {
 
 			// This function can be called from multiple places at the same time and shortly after one another.
 			// To prevent hitting the api too frequently or race conditions, we check at most once per minute.
@@ -198,7 +198,7 @@ export default {
 			}
 		},
 
-		redirectToProviderIfNothingElseIsEnabled({rootState}: ActionContext<AuthState, RootStoreState>) {
+		redirectToProviderIfNothingElseIsEnabled({rootState}) {
 			const {auth} = rootState.config
 			if (
 				auth.local.enabled === false &&
@@ -210,7 +210,7 @@ export default {
 			}
 		},
 
-		async refreshUserInfo({state, commit, dispatch}: ActionContext<AuthState, RootStoreState>) {
+		async refreshUserInfo({state, commit, dispatch}) {
 			const jwt = getToken()
 			if (!jwt) {
 				return
@@ -244,7 +244,7 @@ export default {
 			}
 		},
 
-		async saveUserSettings(ctx: ActionContext<AuthState, RootStoreState>, payload) {
+		async saveUserSettings(ctx, payload) {
 			const {settings} = payload
 			const showMessage = payload.showMessage ?? true
 			const userSettingsService = new UserSettingsService()
@@ -265,7 +265,7 @@ export default {
 		},
 
 		// Renews the api token and saves it to local storage
-		renewToken(ctx: ActionContext<AuthState, RootStoreState>) {
+		renewToken(ctx) {
 			// FIXME: Timeout to avoid race conditions when authenticated as a user (=auth token in localStorage) and as a
 			// link share in another tab. Without the timeout both the token renew and link share auth are executed at
 			// the same time and one might win over the other.
@@ -286,10 +286,12 @@ export default {
 				}
 			}, 5000)
 		},
-		logout(ctx: ActionContext<AuthState, RootStoreState>) {
+		logout(ctx) {
 			removeToken()
 			window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
 			ctx.dispatch('checkAuth')
 		},
 	},
 }
+
+export default authStore

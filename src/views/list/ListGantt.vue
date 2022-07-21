@@ -69,7 +69,7 @@ import {ref, computed} from 'vue'
 import flatPickr from 'vue-flatpickr-component'
 
 import {useI18n} from 'vue-i18n'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 
 import ListWrapper from './ListWrapper.vue'
 import GanttChart from '@/components/tasks/gantt-component.vue'

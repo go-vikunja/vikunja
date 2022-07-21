@@ -35,7 +35,7 @@
 import {ref, reactive, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRouter, useRoute} from 'vue-router'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 
 import ListService from '@/services/list'
 import ListModel from '@/models/list'

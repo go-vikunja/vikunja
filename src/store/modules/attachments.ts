@@ -1,26 +1,29 @@
+import type { Module } from 'vuex'
 import {findIndexById} from '@/helpers/utils'
 
-import type { AttachmentState } from '@/store/types'
+import type { AttachmentState, RootStoreState } from '@/store/types'
 import type { IAttachment } from '@/models/attachment'
 
-export default {
+const store : Module<AttachmentState, RootStoreState> = {
 	namespaced: true,
-	state: (): AttachmentState => ({
+	state: () => ({
 		attachments: [],
 	}),
 	mutations: {
-		set(state: AttachmentState, attachments: IAttachment[]) {
+		set(state, attachments: IAttachment[]) {
 			console.debug('Set attachments', attachments)
 			state.attachments = attachments
 		},
-		add(state: AttachmentState, attachment: IAttachment) {
+		add(state, attachment: IAttachment) {
 			console.debug('Add attachement', attachment)
 			state.attachments.push(attachment)
 		},
-		removeById(state: AttachmentState, id: IAttachment['id']) {
+		removeById(state, id: IAttachment['id']) {
 			const attachmentIndex = findIndexById<IAttachment>(state.attachments, id)
 			state.attachments.splice(attachmentIndex, 1)
 			console.debug('Remove attachement', id)
 		},
 	},
 }
+
+export default store

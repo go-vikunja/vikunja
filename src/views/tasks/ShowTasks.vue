@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 import {computed, ref, watchEffect} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 

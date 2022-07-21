@@ -77,7 +77,7 @@
 
 <script setup lang="ts">
 import {ref, computed, watchEffect, type PropType} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 
 import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
 import Dropdown from '@/components/misc/dropdown.vue'
