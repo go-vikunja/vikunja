@@ -85,7 +85,8 @@
 							v-for="lang in availableLanguageOptions"
 							:key="lang.code"
 							:value="lang.code"
-						>{{ lang.title }}</option>
+						>{{ lang.title }}
+						</option>
 					</select>
 				</div>
 			</label>
@@ -154,7 +155,7 @@ export default defineComponent({
 </script>
 
 <script setup lang="ts">
-import {computed, watch, ref, reactive} from 'vue'
+import {computed, watch, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useStore} from 'vuex'
 
@@ -170,7 +171,8 @@ import {success} from '@/message'
 import {AuthenticatedHTTPFactory} from '@/http-common'
 
 import {useColorScheme} from '@/composables/useColorScheme'
-import { useTitle } from '@/composables/useTitle'
+import {useTitle} from '@/composables/useTitle'
+import {objectIsEmpty} from '@/helpers/objectIsEmpty'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.general.title')} - ${t('user.settings.title')}`)
@@ -213,6 +215,7 @@ function useAvailableTimezones() {
 
 	return availableTimezones
 }
+
 const availableTimezones = useAvailableTimezones()
 
 function getPlaySoundWhenDoneSetting() {
@@ -223,7 +226,7 @@ const playSoundWhenDone = ref(getPlaySoundWhenDoneSetting())
 const quickAddMagicMode = ref(getQuickAddMagicMode())
 
 const store = useStore()
-const settings = reactive({...store.state.auth.settings})
+const settings = ref({...store.state.auth.settings})
 const id = ref(createRandomID())
 const availableLanguageOptions = ref(
 	Object.entries(availableLanguages)
@@ -231,10 +234,22 @@ const availableLanguageOptions = ref(
 		.sort((a, b) => a.title.localeCompare(b.title)),
 )
 
+watch(
+	() => store.state.auth.settings,
+	() => {
+		// Only setting if we don't have values set yet to avoid overriding edited values
+		if (!objectIsEmpty(settings.value)) {
+			return
+		}
+		settings.value = {...store.state.auth.settings}
+	},
+	{immediate: true},
+)
+
 const defaultList = computed({
-	get: () => store.getters['lists/getListById'](settings.defaultListId),
+	get: () => store.getters['lists/getListById'](settings.value.defaultListId),
 	set(l) {
-		settings.defaultListId = l ? l.id : DEFAULT_LIST_ID
+		settings.value.defaultListId = l ? l.id : DEFAULT_LIST_ID
 	},
 })
 const loading = computed(() => store.state.loading && store.state.loadingModule === 'general-settings')
@@ -244,13 +259,12 @@ watch(
 	(play) => play && playPopSound(),
 )
 
-
 async function updateSettings() {
 	localStorage.setItem(playSoundWhenDoneKey, playSoundWhenDone.value ? 'true' : 'false')
 	setQuickAddMagicMode(quickAddMagicMode.value)
 
 	await store.dispatch('auth/saveUserSettings', {
-		settings: {...settings},
+		settings: {...settings.value},
 	})
 }
 </script>
