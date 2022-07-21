@@ -40,7 +40,7 @@ interface NotificationMemberAdded extends Notification {
 	team: ITeam
 }
 
-export interface INotification {
+export interface INotification extends AbstractModel {
 	id: number
 	name: string
 	notification: NotificationTask | NotificationAssigned | NotificationDeleted | NotificationCreated | NotificationMemberAdded

@@ -1,7 +1,7 @@
 import UserModel from './user'
 import type { IList } from './list'
 
-export interface ITeamMember {
+export interface ITeamMember extends UserModel {
 	admin: boolean
 	teamId: IList['id']
 }

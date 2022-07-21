@@ -1,6 +1,6 @@
-import AbstractModel, { type IAbstract } from './abstractModel'
+import AbstractModel from './abstractModel'
 
-export interface IBackgroundImage extends IAbstract {
+export interface IBackgroundImage extends AbstractModel {
 	id: number
 	url: string
 	thumb: string

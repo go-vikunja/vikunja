@@ -1,6 +1,6 @@
 import AbstractModel from './abstractModel'
 
-export interface ITotp {
+export interface ITotp extends AbstractModel {
 	secret: string
 	enabled: boolean
 	url: string

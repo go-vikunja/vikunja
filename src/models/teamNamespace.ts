@@ -1,7 +1,7 @@
 import TeamShareBaseModel from './teamShareBase'
 import type { INamespace } from './namespace'
 
-export interface ITeamNamespace {
+export interface ITeamNamespace extends TeamShareBaseModel {
 	namespaceId: INamespace['id']
 }
 

@@ -1,9 +1,8 @@
 import AbstractModel from './abstractModel'
 import UserModel, {type IUser} from './user'
 import FileModel, {type IFile} from './file'
-import type {IAbstract} from './abstractModel'
 
-export interface IAttachment extends IAbstract {
+export interface IAttachment extends AbstractModel {
 	id: number
 	taskId: number
 	createdBy: IUser

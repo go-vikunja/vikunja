@@ -1,4 +1,4 @@
-import AbstractModel, { type IAbstract } from '@/models/abstractModel'
+import AbstractModel from '@/models/abstractModel'
 import TaskModel, { type ITask } from '@/models/task'
 import UserModel, { type IUser } from '@/models/user'
 import SubscriptionModel, { type ISubscription } from '@/models/subscription'
@@ -6,7 +6,7 @@ import type { INamespace } from '@/models/namespace'
 
 import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
 
-export interface IList extends IAbstract {
+export interface IList extends AbstractModel {
 	id: number
 	title: string
 	description: string

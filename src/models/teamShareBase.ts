@@ -2,7 +2,7 @@ import AbstractModel from './abstractModel'
 import {RIGHTS, type Right} from '@/models/constants/rights'
 import type { ITeam } from './team'
 
-export interface ITeamShareBase {
+export interface ITeamShareBase extends AbstractModel {
 	teamId: ITeam['id']
 	right: Right
 

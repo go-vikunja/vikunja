@@ -26,7 +26,7 @@ export interface RepeatAfter {
 	amount: number
 }
 
-export interface ITask {
+export interface ITask extends AbstractModel {
 	id: number
 	title: string
 	description: string

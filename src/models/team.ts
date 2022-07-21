@@ -3,7 +3,7 @@ import UserModel, { type IUser } from './user'
 import TeamMemberModel, { type ITeamMember } from './teamMember'
 import {RIGHTS, type Right} from '@/models/constants/rights'
 
-export interface ITeam {
+export interface ITeam extends AbstractModel {
 	id: number
 	name: string
 	description: string

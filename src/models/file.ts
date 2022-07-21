@@ -1,6 +1,6 @@
 import AbstractModel from './abstractModel'
 
-export interface IFile {
+export interface IFile extends AbstractModel {
 	id: number
 	mime: string
 	name: string

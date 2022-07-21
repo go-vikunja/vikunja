@@ -1,9 +1,9 @@
-import AbstractModel, { type IAbstract } from './abstractModel'
+import AbstractModel from './abstractModel'
 import ListModel, { type IList } from './list'
 import UserModel, { type IUser } from './user'
 import SubscriptionModel, { type ISubscription } from '@/models/subscription'
 
-export interface INamespace extends IAbstract {
+export interface INamespace extends AbstractModel {
 	id: number
 	title: string
 	description: string

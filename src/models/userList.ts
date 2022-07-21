@@ -1,7 +1,7 @@
 import UserShareBaseModel from './userShareBase'
 import type { IList } from './list'
 
-export interface IUserList {
+export interface IUserList extends UserShareBaseModel {
 	listId: IList['id']
 }
 

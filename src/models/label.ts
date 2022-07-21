@@ -4,7 +4,7 @@ import {colorIsDark} from '@/helpers/color/colorIsDark'
 
 const DEFAULT_LABEL_BACKGROUND_COLOR = 'e8e8e8'
 
-export interface ILabel {
+export interface ILabel extends AbstractModel {
 	id: number
 	title: string
 	hexColor: string

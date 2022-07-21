@@ -1,7 +1,7 @@
 import AbstractModel from '@/models/abstractModel'
 import UserModel, { type IUser } from '@/models/user'
 
-export interface ISubscription {
+export interface ISubscription extends AbstractModel {
 	id: number
 	entity: string // FIXME: correct type?
 	entityId: number // FIXME: correct type?

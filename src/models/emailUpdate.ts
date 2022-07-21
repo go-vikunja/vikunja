@@ -1,6 +1,6 @@
 import AbstractModel from './abstractModel'
 
-interface IEmailUpdate {
+interface IEmailUpdate extends AbstractModel {
 	newEmail: string
 	password: string
 }

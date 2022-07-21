@@ -1,7 +1,7 @@
 import TeamShareBaseModel from './teamShareBase'
 import type { IList } from './list'
 
-export interface ITeamList {
+export interface ITeamList extends TeamShareBaseModel {
 	listId: IList['id']
 }
 

@@ -1,6 +1,6 @@
 import AbstractModel from './abstractModel'
 
-interface ILabel {
+interface ILabel extends AbstractModel {
 	id: number
 	taskId: number
 	labelId: number

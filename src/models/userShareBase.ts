@@ -2,7 +2,7 @@ import AbstractModel from './abstractModel'
 import {RIGHTS, type Right} from '@/models/constants/rights'
 import type { IUser } from './user'
 
-export interface IUserShareBase {
+export interface IUserShareBase extends AbstractModel {
 	userId: IUser['id']
 	right: Right
 

@@ -2,7 +2,7 @@ import AbstractModel from './abstractModel'
 import UserModel, { type IUser } from './user'
 import type { ITask } from './task'
 
-export interface ITaskComment {
+export interface ITaskComment extends AbstractModel {
 	id: number
 	taskId: ITask['id']
 	comment: string

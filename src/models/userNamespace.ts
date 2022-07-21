@@ -1,7 +1,7 @@
 import UserShareBaseModel from './userShareBase'
 import type { INamespace } from './namespace'
 
-export interface IUserNamespace {
+export interface IUserNamespace extends UserShareBaseModel {
 	namespaceId: INamespace['id']
 }
 

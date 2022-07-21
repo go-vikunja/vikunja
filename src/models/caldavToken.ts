@@ -1,6 +1,6 @@
-import AbstractModel, { type IAbstract } from './abstractModel'
+import AbstractModel from './abstractModel'
 
-export interface ICaldavToken extends IAbstract {
+export interface ICaldavToken extends AbstractModel {
 	id: number;
 	created: Date;
 }
