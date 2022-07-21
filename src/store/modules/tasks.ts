@@ -291,7 +291,7 @@ export default {
 			listId,
 			position,
 		}) {
-			setLoading({commit}, 'tasks')
+			const cancel = setLoading({commit}, 'tasks')
 			const parsedTask = parseTaskText(title, getQuickAddMagicMode())
 		
 			const foundListId = await dispatch('findListId', {
@@ -321,10 +321,12 @@ export default {
 		
 			const taskService = new TaskService()
 			const createdTask = await taskService.create(task)
-			return dispatch('addLabelsToTask', {
+			const result = await dispatch('addLabelsToTask', {
 				task: createdTask,
 				parsedLabels: parsedTask.labels,
 			})
+			cancel()
+			return result
 		},
 	},
 }
