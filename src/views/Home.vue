@@ -76,11 +76,15 @@ const welcome = useDateTimeSalutation()
 
 const store = useStore()
 const listHistory = computed(() => {
+	// If we don't check this, it tries to load the list background right after logging out	
+	if(!store.state.auth.authenticated) {
+		return []
+	}
+	
 	return getHistory()
 		.map(l => store.getters['lists/getListById'](l.id))
 		.filter(l => l !== null)
 })
-
 
 const migratorsEnabled = computed(() => store.state.config.availableMigrators?.length > 0)
 const userInfo = computed(() => store.state.auth.info)
