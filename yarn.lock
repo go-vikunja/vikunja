@@ -1175,10 +1175,10 @@
   resolved "https://registry.yarnpkg.com/@fortawesome/vue-fontawesome/-/vue-fontawesome-3.0.1.tgz#ced35cefc52b364f7db973f2fe9f50c3dd160715"
   integrity sha512-CdXZJoCS+aEPec26ZP7hWWU3SaJlQPZSCGdgpQ2qGl2HUmtUUNrI3zC4XWdn1JUmh3t5OuDeRG1qB4eGRNSD4A==
 
-"@github/hotkey@2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@github/hotkey/-/hotkey-2.0.0.tgz#5bc8c53afe2dd6757261b0f94f4ff68339db5a46"
-  integrity sha512-KRw695msYYRIeFWvADV2PJa58+88NvYmHl+RJZLAlCtvbzjlkYwDf6yLC0xSLGcoYB5bKHQzudqYgPgpYnVbLw==
+"@github/hotkey@2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@github/hotkey/-/hotkey-2.0.1.tgz#24ad6b49313cee5b98368174eab16a4b53a08ec7"
+  integrity sha512-qKXjAJjtheJbf4ie3hi8IwrHWJZHB5qdojR6JGo6jvQNPpsdUbk/NIdU8sxu4PW41CjW80vfciDMu3MAP3j2Fg==
 
 "@hapi/hoek@^9.0.0":
   version "9.2.0"
