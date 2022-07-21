@@ -154,9 +154,19 @@
 						<transition name="flash-background" appear>
 							<div class="column" v-if="activeFields.repeatAfter">
 								<!-- Repeat after -->
-								<div class="detail-title">
-									<icon icon="history"/>
-									{{ $t('task.attributes.repeat') }}
+								<div class="is-flex is-justify-content-space-between">
+									<div class="detail-title">
+										<icon icon="history"/>
+										{{ $t('task.attributes.repeat') }}
+									</div>
+									<BaseButton
+										@click="() => {task.repeatAfter.amount = 0;saveTask()}"
+										v-if="canWrite"
+										class="remove">
+										<span class="icon is-small">
+											<icon icon="times"></icon>
+										</span>
+									</BaseButton>
 								</div>
 								<repeat-after
 									:disabled="!canWrite"
@@ -770,13 +780,13 @@ $flash-background-duration: 750ms;
   .date-input {
     display: flex;
     align-items: center;
+  }
 
-    .remove {
-      color: var(--danger);
-      vertical-align: middle;
-      padding-left: .5rem;
-      line-height: 1;
-    }
+  .remove {
+	color: var(--danger);
+	vertical-align: middle;
+	padding-left: .5rem;
+	line-height: 1;
   }
 
   :deep(.datepicker) {
