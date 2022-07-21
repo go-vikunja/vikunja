@@ -66,7 +66,7 @@ type Task struct {
 	// The list this task belongs to.
 	ListID int64 `xorm:"bigint INDEX not null" json:"list_id" param:"list"`
 	// An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as "undone" and then increase all remindes and the due date by its amount.
-	RepeatAfter int64 `xorm:"bigint INDEX null" json:"repeat_after"`
+	RepeatAfter int64 `xorm:"bigint INDEX null" json:"repeat_after" valid:"range(0|9223372036854775807)"`
 	// Can have three possible values which will trigger when the task is marked as done: 0 = repeats after the amount specified in repeat_after, 1 = repeats all dates each months (ignoring repeat_after), 3 = repeats from the current date rather than the last set date.
 	RepeatMode TaskRepeatMode `xorm:"not null default 0" json:"repeat_mode"`
 	// The task priority. Can be anything you want, it is possible to sort by this later.
