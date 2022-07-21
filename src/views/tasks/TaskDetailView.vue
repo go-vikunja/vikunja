@@ -406,20 +406,18 @@
 			<created-updated :task="task" v-if="!canWrite && !shouldShowClosePopup"/>
 		</div>
 
-		<transition name="modal">
-			<modal
-				@close="showDeleteModal = false"
-				@submit="deleteTask()"
-				v-if="showDeleteModal"
-			>
-				<template #header><span>{{ $t('task.detail.delete.header') }}</span></template>
+		<modal
+			@close="showDeleteModal = false"
+			@submit="deleteTask()"
+			v-if="showDeleteModal"
+		>
+			<template #header><span>{{ $t('task.detail.delete.header') }}</span></template>
 
-				<template #text>
-					<p>{{ $t('task.detail.delete.text1') }}<br/>
-						{{ $t('task.detail.delete.text2') }}</p>
-				</template>
-			</modal>
-		</transition>
+			<template #text>
+				<p>{{ $t('task.detail.delete.text1') }}<br/>
+					{{ $t('task.detail.delete.text2') }}</p>
+			</template>
+		</modal>
 	</div>
 </template>
 
