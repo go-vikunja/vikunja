@@ -6,6 +6,7 @@ import LabelModel, { type ILabel } from '@/models/label'
 import AttachmentModel, {type IAttachment} from '@/models/attachment'
 import SubscriptionModel, { type ISubscription } from '@/models/subscription'
 import type { IList } from '@/models/list'
+import  type {IRepeats} from '@/types/IRepeats'
 
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import type { IBucket } from './bucket'
@@ -21,11 +22,6 @@ export const TASK_REPEAT_MODES = {
 
 export type TaskRepeatMode = typeof TASK_REPEAT_MODES[keyof typeof TASK_REPEAT_MODES] 
 
-export interface RepeatAfter {
-	type: 'hours' | 'weeks' | 'months' | 'years' | 'days'
-	amount: number
-}
-
 export interface ITask extends AbstractModel {
 	id: number
 	title: string
@@ -39,7 +35,7 @@ export interface ITask extends AbstractModel {
 	dueDate: Date | null
 	startDate: Date | null
 	endDate: Date | null
-	repeatAfter: number | RepeatAfter
+	repeatAfter: number | IRepeats
 	repeatFromCurrentDate: boolean
 	repeatMode: TaskRepeatMode
 	reminderDates: Date[]
@@ -77,7 +73,7 @@ export default class TaskModel extends AbstractModel implements ITask {
 	dueDate: Date | null
 	startDate: Date | null
 	endDate: Date | null
-	declare repeatAfter: number | RepeatAfter
+	declare repeatAfter: number | IRepeats
 	declare repeatFromCurrentDate: boolean
 	declare repeatMode: TaskRepeatMode
 	reminderDates: Date[]
@@ -99,6 +95,7 @@ export default class TaskModel extends AbstractModel implements ITask {
 	updated: Date
 
 	listId: IList['id'] // Meta, only used when creating a new task
+	declare bucketId: IBucket['id']
 
 	constructor(data: Partial<ITask>) {
 		super(data)
@@ -160,7 +157,6 @@ export default class TaskModel extends AbstractModel implements ITask {
 
 		this.listId = Number(this.listId)
 	}
-bucketId: number
 
 	defaults() {
 		return {
@@ -198,6 +194,7 @@ bucketId: number
 			updated: null,
 
 			listId: 0, // Meta, only used when creating a new task
+			bucketId: 0,
 		}
 	}
 
