@@ -1,9 +1,15 @@
 <template>
 	<div class="control repeat-after-input">
 		<div class="buttons has-addons is-centered mt-2">
-			<x-button variant="secondary" class="is-small" @click="() => setRepeatAfter(1, 'days')">{{ $t('task.repeat.everyDay') }}</x-button>
-			<x-button variant="secondary" class="is-small" @click="() => setRepeatAfter(1, 'weeks')">{{ $t('task.repeat.everyWeek') }}</x-button>
-			<x-button variant="secondary" class="is-small" @click="() => setRepeatAfter(1, 'months')">{{ $t('task.repeat.everyMonth') }}</x-button>
+			<x-button variant="secondary" class="is-small" @click="() => setRepeatAfter(1, 'days')">
+				{{ $t('task.repeat.everyDay') }}
+			</x-button>
+			<x-button variant="secondary" class="is-small" @click="() => setRepeatAfter(1, 'weeks')">
+				{{ $t('task.repeat.everyWeek') }}
+			</x-button>
+			<x-button variant="secondary" class="is-small" @click="() => setRepeatAfter(1, 'months')">
+				{{ $t('task.repeat.everyMonth') }}
+			</x-button>
 		</div>
 		<div class="is-flex is-align-items-center mb-2">
 			<label for="repeatMode" class="is-fullwidth">
@@ -14,7 +20,10 @@
 					<select @change="updateData" v-model="task.repeatMode" id="repeatMode">
 						<option :value="repeatModes.REPEAT_MODE_DEFAULT">{{ $t('misc.default') }}</option>
 						<option :value="repeatModes.REPEAT_MODE_MONTH">{{ $t('task.repeat.monthly') }}</option>
-						<option :value="repeatModes.REPEAT_MODE_FROM_CURRENT_DATE">{{ $t('task.repeat.fromCurrentDate') }}</option>
+						<option :value="repeatModes.REPEAT_MODE_FROM_CURRENT_DATE">{{
+								$t('task.repeat.fromCurrentDate')
+							}}
+						</option>
 					</select>
 				</div>
 			</div>
@@ -32,6 +41,7 @@
 						:placeholder="$t('task.repeat.specifyAmount')"
 						v-model="repeatAfter.amount"
 						type="number"
+						min="0"
 					/>
 				</div>
 				<div class="control">
@@ -56,8 +66,10 @@
 
 <script setup lang="ts">
 import {ref, reactive, watch} from 'vue'
-import repeatModes from '@/models/constants/taskRepeatModes'
+import repeatModes from '@/models/constants/taskRepeatModes.json'
 import TaskModel from '@/models/task'
+import {error} from '@/message'
+import {useI18n} from 'vue-i18n'
 
 const props = defineProps({
 	modelValue: {
@@ -69,6 +81,8 @@ const props = defineProps({
 		default: false,
 	},
 })
+
+const {t} = useI18n()
 
 const emit = defineEmits(['update:modelValue', 'change'])
 
@@ -93,14 +107,19 @@ function updateData() {
 	if (task.value.repeatMode !== repeatModes.REPEAT_MODE_DEFAULT && repeatAfter.amount === 0) {
 		return
 	}
-	
+
+	if (repeatAfter.amount < 0) {
+		error({message: t('task.repeat.invalidAmount')})
+		return
+	}
+
 	Object.assign(task.value.repeatAfter, repeatAfter)
 	emit('update:modelValue', task.value)
 	emit('change')
 }
 
 function setRepeatAfter(amount: number, type) {
-	Object.assign(repeatAfter, { amount, type})
+	Object.assign(repeatAfter, {amount, type})
 	updateData()
 }
 </script>
