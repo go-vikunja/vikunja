@@ -46,7 +46,7 @@
 				v-model="newTaskTitle"
 			/>
 		</transition>
-		<x-button @click="showCreateNewTask" :shadow="false" icon="plus">
+		<x-button @click="showCreateTaskOrCreate" :shadow="false" icon="plus">
 			{{ $t('task.new') }}
 		</x-button>
 	</form>
@@ -195,13 +195,15 @@ const newTaskFieldActive = ref(false)
 const newTaskTitleField = ref()
 const newTaskTitle = ref('')
 
-function showCreateNewTask() {
+function showCreateTaskOrCreate() {
 	if (!newTaskFieldActive.value) {
 		// Timeout to not send the form if the field isn't even shown
 		setTimeout(() => {
 			newTaskFieldActive.value = true
 			nextTick(() => newTaskTitleField.value.focus())
 		}, 100)
+	} else {
+		createTask()
 	}
 }
 
