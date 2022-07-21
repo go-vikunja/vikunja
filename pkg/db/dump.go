@@ -17,10 +17,8 @@
 package db
 
 import (
-	"encoding/json"
-	"strconv"
-
 	"code.vikunja.io/api/pkg/log"
+	"encoding/json"
 
 	"xorm.io/xorm/schemas"
 )
@@ -62,7 +60,7 @@ func Restore(table string, contents []map[string]interface{}) (err error) {
 
 	if Type() == schemas.POSTGRES {
 		idSequence := table + "_id_seq"
-		_, err = x.Query("SELECT setval('" + idSequence + "', " + strconv.Itoa(len(contents)) + ", true);")
+		_, err = x.Query("SELECT setval('" + idSequence + "', COALESCE(MAX(id), 1) )")
 		if err != nil {
 			log.Warningf("Could not reset id sequence for %s: %s", idSequence, err)
 			err = nil
