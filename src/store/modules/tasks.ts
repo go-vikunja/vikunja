@@ -320,7 +320,7 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 			return foundListId
 		},
 
-		async createNewTask({dispatch, commit}, { 
+		async createNewTask(ctx, { 
 			title,
 			bucketId,
 			listId,
@@ -328,10 +328,10 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 		} : 
 			Partial<ITask>,
 		) {
-			const cancel = setLoading({commit}, 'tasks')
+			const cancel = setLoading(ctx, 'tasks')
 			const parsedTask = parseTaskText(title, getQuickAddMagicMode())
 		
-			const foundListId = await dispatch('findListId', {
+			const foundListId = await ctx.dispatch('findListId', {
 				list: parsedTask.list,
 				listId: listId || 0,
 			})
@@ -358,7 +358,7 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 		
 			const taskService = new TaskService()
 			const createdTask = await taskService.create(task)
-			const result = await dispatch('addLabelsToTask', {
+			const result = await ctx.dispatch('addLabelsToTask', {
 				task: createdTask,
 				parsedLabels: parsedTask.labels,
 			})
