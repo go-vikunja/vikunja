@@ -48,44 +48,38 @@
 						</x-button>
 					</template>
 
-					<BaseButton
+					<dropdown-item
 						:to="{name: 'user.settings'}"
-						class="dropdown-item"
 					>
 						{{ $t('user.settings.title') }}
-					</BaseButton>
-					<BaseButton
+					</dropdown-item>
+					<dropdown-item
 						v-if="imprintUrl"
 						:href="imprintUrl"
-						class="dropdown-item"
 					>
 						{{ $t('navigation.imprint') }}
-					</BaseButton>
-					<BaseButton
+					</dropdown-item>
+					<dropdown-item
 						v-if="privacyPolicyUrl"
 						:href="privacyPolicyUrl"
-						class="dropdown-item"
 					>
 						{{ $t('navigation.privacy') }}
-					</BaseButton>
-					<BaseButton
+					</dropdown-item>
+					<dropdown-item
 						@click="$store.commit('keyboardShortcutsActive', true)"
-						class="dropdown-item"
 					>
 						{{ $t('keyboardShortcuts.title') }}
-					</BaseButton>
-					<BaseButton
+					</dropdown-item>
+					<dropdown-item
 						:to="{name: 'about'}"
-						class="dropdown-item"
 					>
 						{{ $t('about.title') }}
-					</BaseButton>
-					<BaseButton
+					</dropdown-item>
+					<dropdown-item
 						@click="logout()"
-						class="dropdown-item"
 					>
 						{{ $t('user.auth.logout') }}
-					</BaseButton>
+					</dropdown-item>
 				</dropdown>
 			</div>
 		</div>
@@ -103,6 +97,7 @@ import Rights from '@/models/constants/rights.json'
 import Update from '@/components/home/update.vue'
 import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
 import Dropdown from '@/components/misc/dropdown.vue'
+import DropdownItem from '@/components/misc/dropdown-item.vue'
 import Notifications from '@/components/notifications/notifications.vue'
 import Logo from '@/components/home/Logo.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
