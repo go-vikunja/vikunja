@@ -14,7 +14,7 @@ const parseDate = date => {
 	return null
 }
 
-export default class TaskService extends AbstractService {
+export default class TaskService extends AbstractService<ITask> {
 	constructor() {
 		super({
 			create: '/lists/{listId}',

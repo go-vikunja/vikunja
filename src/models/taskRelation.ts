@@ -19,7 +19,7 @@ export const RELATION_KINDS = [...Object.values(RELATION_KIND)] as const
 
 export type RelationKind = typeof RELATION_KINDS[number]
 
-export interface ITaskRelationModel extends AbstractModel {
+export interface ITaskRelation extends AbstractModel {
 	id: number
 	otherTaskId: ITask['id']
 	taskId: ITask['id']
@@ -29,7 +29,7 @@ export interface ITaskRelationModel extends AbstractModel {
 	created: Date
 }
 
-export default class TaskRelationModel extends AbstractModel implements ITaskRelationModel {
+export default class TaskRelationModel extends AbstractModel implements ITaskRelation {
 	declare id: number
 	declare otherTaskId: ITask['id']
 	declare taskId: ITask['id']

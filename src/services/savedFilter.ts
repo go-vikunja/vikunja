@@ -1,8 +1,8 @@
 import AbstractService from '@/services/abstractService'
-import SavedFilterModel from '@/models/savedFilter'
+import SavedFilterModel, { type ISavedFilter } from '@/models/savedFilter'
 import {objectToCamelCase} from '@/helpers/case'
 
-export default class SavedFilterService extends AbstractService {
+export default class SavedFilterService extends AbstractService<ISavedFilter> {
 	constructor() {
 		super({
 			get: '/filters/{id}',

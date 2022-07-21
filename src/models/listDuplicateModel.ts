@@ -2,13 +2,13 @@ import AbstractModel from './abstractModel'
 import ListModel, { type IList } from './list'
 import type { INamespace } from './namespace'
 
-export interface ListDuplicate extends AbstractModel {
+export interface IListDuplicate extends AbstractModel {
 	listId: number
 	namespaceId: INamespace['id']
 	list: IList
 }
 
-export default class ListDuplicateModel extends AbstractModel implements ListDuplicate {
+export default class ListDuplicateModel extends AbstractModel implements IListDuplicate {
 	declare listId: number
 	declare namespaceId: INamespace['id']
 	list: IList

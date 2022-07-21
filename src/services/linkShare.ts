@@ -1,8 +1,8 @@
 import AbstractService from './abstractService'
-import LinkShareModel from '../models/linkShare'
+import LinkShareModel, { type ILinkShare } from '@/models/linkShare'
 import {formatISO} from 'date-fns'
 
-export default class ListService extends AbstractService {
+export default class LinkShareService extends AbstractService<ILinkShare> {
 	constructor() {
 		super({
 			getAll: '/lists/{listId}/shares',
