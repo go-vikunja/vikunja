@@ -780,7 +780,8 @@
       "days": "Дней",
       "weeks": "Недель",
       "months": "Месяцев",
-      "years": "Лет"
+      "years": "Лет",
+      "invalidAmount": "Please enter more than 0."
     },
     "quickAddMagic": {
       "hint": "Вы можете использовать Волшебное Быстрое Добавление",

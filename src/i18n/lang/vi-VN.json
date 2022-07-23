@@ -780,7 +780,8 @@
       "days": "Ngày",
       "weeks": "Tuần",
       "months": "Tháng",
-      "years": "Năm"
+      "years": "Năm",
+      "invalidAmount": "Please enter more than 0."
     },
     "quickAddMagic": {
       "hint": "Bạn có thể sử dụng Quick Add Magic",

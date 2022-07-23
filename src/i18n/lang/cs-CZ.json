@@ -780,7 +780,8 @@
       "days": "Dnů",
       "weeks": "Týdny",
       "months": "Měsíce",
-      "years": "Roky"
+      "years": "Roky",
+      "invalidAmount": "Please enter more than 0."
     },
     "quickAddMagic": {
       "hint": "Můžeš použít Kouzelné rychlé přidání",

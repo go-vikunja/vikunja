@@ -780,7 +780,8 @@
       "days": "Dias",
       "weeks": "Semanas",
       "months": "Meses",
-      "years": "Anos"
+      "years": "Anos",
+      "invalidAmount": "Please enter more than 0."
     },
     "quickAddMagic": {
       "hint": "Podes utilizar a Introdução Mágica Rápida",

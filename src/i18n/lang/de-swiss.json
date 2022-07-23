@@ -780,7 +780,8 @@
       "days": "Tääg",
       "weeks": "Wuchä",
       "months": "Monet",
-      "years": "Jahr"
+      "years": "Jahr",
+      "invalidAmount": "Bitte mehr als 0 eingeben."
     },
     "quickAddMagic": {
       "hint": "Du chasch Quick Add Magic verwendä",
