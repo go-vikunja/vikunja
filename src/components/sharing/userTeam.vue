@@ -137,7 +137,7 @@ export default {name: 'userTeamShare'}
 </script>
 
 <script setup lang="ts">
-import {ref, reactive, computed, shallowReactive, type ShallowReactive, type Ref} from 'vue'
+import {ref, reactive, computed, shallowReactive, type Ref} from 'vue'
 import type {PropType} from 'vue'
 import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'

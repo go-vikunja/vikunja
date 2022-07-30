@@ -25,7 +25,7 @@ export default { inheritAttrs: false }
 
 // NOTE: Do NOT use buttons with @click to push routes. => Use router-links instead!
 
-import {ref, watchEffect, computed, useAttrs, PropType} from 'vue'
+import { ref, watchEffect, computed, useAttrs, type PropType } from 'vue'
 
 const BASE_BUTTON_TYPES_MAP = Object.freeze({
 	button: 'button',

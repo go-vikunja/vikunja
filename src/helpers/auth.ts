@@ -1,5 +1,5 @@
 import {AuthenticatedHTTPFactory} from '@/http-common'
-import {AxiosResponse} from 'axios'
+import type {AxiosResponse} from 'axios'
 
 let savedToken: string | null = null
 

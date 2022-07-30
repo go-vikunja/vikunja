@@ -30,7 +30,7 @@
 				{{ task.title }}
 			</span>
 
-			<labels class="labels ml-2 mr-1" :labels="task.labels" v-if="task.labels.length > 0"/>
+			<labels class="labels ml-2 mr-1" :labels="task.labels" v-if="task.labels.length > 0" />
 			<user
 				:avatar-size="27"
 				:is-inline="true"
@@ -96,11 +96,13 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
+import {defineComponent, type PropType} from 'vue'
 
 import TaskModel, { type ITask } from '../../../models/task'
 import PriorityLabel from './priorityLabel.vue'
 import TaskService from '../../../services/task'
+import Labels from '@/components/tasks/partials/labels.vue'
+import User from '@/components/misc/user.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Fancycheckbox from '../../input/fancycheckbox.vue'
 import DeferTask from './defer-task.vue'
