@@ -17,8 +17,9 @@
 package db
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"encoding/json"
+
+	"code.vikunja.io/api/pkg/log"
 
 	"xorm.io/xorm/schemas"
 )
