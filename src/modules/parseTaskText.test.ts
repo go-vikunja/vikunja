@@ -314,6 +314,42 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ipsum github')
 			expect(result.date).toBeNull()
 		})
+		describe('Should not recognize weekdays in words', () => {
+			const cases = [
+				'renewed',
+				'github',
+				'fix monitor stand',
+				'order wedding cake',
+				'investigate thumping noise',
+				'iron frilly napkins',
+				'take photo of saturn',
+				'fix sunglasses',
+				'monitor blood pressure',
+				'Monitor blood pressure',
+				'buy almonds',
+			]
+
+			cases.forEach(c => {
+				it(`should not recognize text with ${c} at the beginning as weekday`, () => {
+					const result = parseTaskText(`${c} dolor sit amet`)
+
+					expect(result.text).toBe(`${c} dolor sit amet`)
+					expect(result.date).toBeNull()
+				})
+				it(`should not recognize text with ${c} at the end as weekday`, () => {
+					const result = parseTaskText(`Lorem Ipsum ${c}`)
+
+					expect(result.text).toBe(`Lorem Ipsum ${c}`)
+					expect(result.date).toBeNull()
+				})
+				it(`should not recognize text with ${c} as weekday`, () => {
+					const result = parseTaskText(`Lorem Ipsum ${c} dolor`)
+
+					expect(result.text).toBe(`Lorem Ipsum ${c} dolor`)
+					expect(result.date).toBeNull()
+				})
+			})
+		})
 		it('should not recognize date number with no spacing around them', () => {
 			const result = parseTaskText('Lorem Ispum v1.1.1')
 
