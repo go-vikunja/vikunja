@@ -1283,10 +1283,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@kyvg/vue3-notification@2.3.5":
-  version "2.3.5"
-  resolved "https://registry.yarnpkg.com/@kyvg/vue3-notification/-/vue3-notification-2.3.5.tgz#b4aa302a839b52d62e25c644827fa16fd7bbc308"
-  integrity sha512-OsRDjCGLXOfUZu9dEyxWJuXkCrpQT7o0ZgdFeKYkcqG9MWY544DTZ7hpPIDFoSI9DlK/GS2NSwAb+/R7DABhzQ==
+"@kyvg/vue3-notification@2.3.6":
+  version "2.3.6"
+  resolved "https://registry.yarnpkg.com/@kyvg/vue3-notification/-/vue3-notification-2.3.6.tgz#130f9b69bbe30ebe582ab4d57510f7dee784742b"
+  integrity sha512-uQcVOrJIyEYoXLctgJqlj2YPhCaZ80mXgF1xgQZwshqeneNgG08WE8Iw9U3IH8OgUITkRGII0YopdXwLeOXb3w==
 
 "@mapbox/node-pre-gyp@^1.0.5":
   version "1.0.6"
