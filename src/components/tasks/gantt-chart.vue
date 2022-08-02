@@ -1,5 +1,6 @@
 <template>
-	<div class="gantt-container loading-container" :class="{'is-loading': taskService.loading || taskCollectionService.loading}">
+	<Loading class="gantt-container" v-if="taskService.loading || taskCollectionService.loading"/>
+	<div class="gantt-container" v-else>
 		<g-gantt-chart
 			:chart-start="`${dateFrom} 00:00`"
 			:chart-end="`${dateTo} 23:59`"
@@ -62,6 +63,7 @@ import {useStore} from 'vuex'
 import Rights from '../../models/constants/rights.json'
 import TaskModel from '@/models/task'
 import {useRouter} from 'vue-router'
+import Loading from '@/components/misc/loading.vue'
 
 const dateFormat = 'yyyy-LL-dd HH:mm'
 
