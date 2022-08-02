@@ -75,9 +75,9 @@ const props = defineProps({
 const showTasksWithoutDates = ref(false)
 const precision = ref('day')
 
-const now = ref(new Date())
-const defaultFrom = format(new Date((new Date()).setDate(now.value.getDate() - 15)), 'yyyy-LL-dd')
-const defaultTo = format(new Date((new Date()).setDate(now.value.getDate() + 55)), 'yyyy-LL-dd')
+const now = new Date()
+const defaultFrom = format(new Date((new Date()).setDate(now.getDate() - 15)), 'yyyy-LL-dd')
+const defaultTo = format(new Date((new Date()).setDate(now.getDate() + 55)), 'yyyy-LL-dd')
 const range = ref(`${defaultFrom} to ${defaultTo}`)
 
 // TODO: only update once both dates are available (maybe use a watcher + refs instead?)
