@@ -49,6 +49,7 @@ package routes
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -208,6 +209,25 @@ func registerAPIRoutes(a *echo.Group) {
 	// It is its own group to be able to rate limit this based on different heuristics
 	n := a.Group("")
 	setupRateLimit(n, "ip")
+
+	// Echo does not unescape url path params by default. To make sure values bound as :param in urls are passed
+	// properly to handlers, we use this middleware to unescape them.
+	// See https://kolaente.dev/vikunja/api/issues/1224
+	// See https://github.com/labstack/echo/issues/766
+	a.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			params := make([]string, 0, len(c.ParamValues()))
+			for _, param := range c.ParamValues() {
+				p, err := url.PathUnescape(param)
+				if err != nil {
+					return err
+				}
+				params = append(params, p)
+			}
+			c.SetParamValues(params...)
+			return next(c)
+		}
+	})
 
 	// Docs
 	n.GET("/docs.json", apiv1.DocsJSON)
