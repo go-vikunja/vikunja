@@ -288,18 +288,8 @@ export default defineComponent({
 			this.$store.commit(HAS_TASKS, true)
 		},
 		editTask(id) {
-			// Find the selected task and set it to the current object
-			let theTask = this.getTaskById(id) // Somehow this does not work if we directly assign this to this.taskEditTask
-			this.taskEditTask = theTask
+			this.taskEditTask = {...this.tasks.find(t => t.id === parseInt(id))}
 			this.isTaskEdit = true
-		},
-		getTaskById(id) {
-			for (const t in this.tasks) {
-				if (this.tasks[t].id === parseInt(id)) {
-					return this.tasks[t]
-				}
-			}
-			return {} // FIXME: This should probably throw something to make it clear to the user noting was found
 		},
 		updateTasks(updatedTask) {
 			for (const t in this.tasks) {

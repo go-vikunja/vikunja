@@ -93,12 +93,9 @@ import {success} from '@/message'
 const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
 
-const props = defineProps({
-	task: {
-		type: TaskModel,
-		required: true,
-	},
-})
+const props = defineProps<{
+	task?: TaskModel | null,
+}>()
 
 const taskService = shallowReactive(new TaskService())
 
