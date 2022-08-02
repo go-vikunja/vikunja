@@ -185,11 +185,11 @@ async function updateTask(e) {
 	task.startDate = e.bar.startDate
 	task.endDate = e.bar.endDate
 	const r = await taskService.value.update(task)
-	for (const i in ganttBars.value) {
+	ganttBars.value.forEach((el, i) => {
 		if (ganttBars.value[i][0].ganttBarConfig.id === task.id) {
 			ganttBars.value[i] = transformTaskToGanttBar(r)
 		}
-	}
+	})
 }
 
 const newTaskFieldActive = ref(false)
