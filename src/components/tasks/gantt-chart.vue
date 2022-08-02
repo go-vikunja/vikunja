@@ -65,7 +65,7 @@ import TaskModel from '@/models/task'
 import {useRouter} from 'vue-router'
 import Loading from '@/components/misc/loading.vue'
 
-const dateFormat = 'yyyy-LL-dd HH:mm'
+const DATE_FORMAT = 'yyyy-LL-dd HH:mm'
 
 const store = useStore()
 const router = useRouter()
@@ -112,14 +112,14 @@ const canWrite = computed(() => store.state.currentList.maxRight > Rights.READ)
 const tasks = ref([])
 const ganttBars = ref([])
 
-const defaultStartDate = format(new Date(), dateFormat)
-const defaultEndDate = format(new Date((new Date()).setDate((new Date()).getDate() + 7)), dateFormat)
+const defaultStartDate = format(new Date(), DATE_FORMAT)
+const defaultEndDate = format(new Date((new Date()).setDate((new Date()).getDate() + 7)), DATE_FORMAT)
 
 function transformTaskToGanttBar(t: TaskModel) {
 	const black = 'var(--grey-800)'
 	return [{
-		startDate: t.startDate ? format(t.startDate, dateFormat) : defaultStartDate,
-		endDate: t.endDate ? format(t.endDate, dateFormat) : defaultEndDate,
+		startDate: t.startDate ? format(t.startDate, DATE_FORMAT) : defaultStartDate,
+		endDate: t.endDate ? format(t.endDate, DATE_FORMAT) : defaultEndDate,
 		ganttBarConfig: {
 			id: t.id,
 			label: t.title,
