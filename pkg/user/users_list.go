@@ -23,8 +23,8 @@ import (
 	"xorm.io/xorm"
 )
 
-// ListUsers returns a list with all users, filtered by an optional searchstring
-func ListUsers(s *xorm.Session, search string) (users []*User, err error) {
+// ListUsers returns a list with all users, filtered by an optional search string
+func ListUsers(s *xorm.Session, search string, additionalCond builder.Cond) (users []*User, err error) {
 
 	// Prevent searching for placeholders
 	search = strings.ReplaceAll(search, "%", "")
@@ -33,18 +33,27 @@ func ListUsers(s *xorm.Session, search string) (users []*User, err error) {
 		return
 	}
 
+	cond := builder.Or(
+		builder.Like{"username", "%" + search + "%"},
+		builder.And(
+			builder.Eq{"email": search},
+			builder.Eq{"discoverable_by_email": true},
+		),
+		builder.And(
+			builder.Like{"name", "%" + search + "%"},
+			builder.Eq{"discoverable_by_name": true},
+		),
+	)
+
+	if additionalCond != nil {
+		cond = builder.And(
+			cond,
+			additionalCond,
+		)
+	}
+
 	err = s.
-		Where(builder.Or(
-			builder.Like{"username", "%" + search + "%"},
-			builder.And(
-				builder.Eq{"email": search},
-				builder.Eq{"discoverable_by_email": true},
-			),
-			builder.And(
-				builder.Like{"name", "%" + search + "%"},
-				builder.Eq{"discoverable_by_name": true},
-			),
-		)).
+		Where(cond).
 		Find(&users)
 	return
 }
