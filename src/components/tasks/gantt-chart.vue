@@ -10,7 +10,7 @@
 			:grid="true"
 			@dragend-bar="updateTask"
 			@dblclick-bar="openTask"
-			font="'Open Sans', sans-serif"
+			font="inherit"
 			:width="ganttChartWidth + 'px'"
 		>
 			<template #timeunit="{label, value}">
