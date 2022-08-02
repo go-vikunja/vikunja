@@ -23,13 +23,21 @@ import (
 	"xorm.io/xorm"
 )
 
+type ListUserOpts struct {
+	AdditionalCond              builder.Cond
+	ReturnAllIfNoSearchProvided bool
+}
+
 // ListUsers returns a list with all users, filtered by an optional search string
-func ListUsers(s *xorm.Session, search string, additionalCond builder.Cond) (users []*User, err error) {
+func ListUsers(s *xorm.Session, search string, opts *ListUserOpts) (users []*User, err error) {
+	if opts == nil {
+		opts = &ListUserOpts{}
+	}
 
 	// Prevent searching for placeholders
 	search = strings.ReplaceAll(search, "%", "")
 
-	if search == "" || strings.ReplaceAll(search, " ", "") == "" {
+	if (search == "" || strings.ReplaceAll(search, " ", "") == "") && !opts.ReturnAllIfNoSearchProvided {
 		return
 	}
 
@@ -45,10 +53,10 @@ func ListUsers(s *xorm.Session, search string, additionalCond builder.Cond) (use
 		),
 	)
 
-	if additionalCond != nil {
+	if opts.AdditionalCond != nil {
 		cond = builder.And(
 			cond,
-			additionalCond,
+			opts.AdditionalCond,
 		)
 	}
 

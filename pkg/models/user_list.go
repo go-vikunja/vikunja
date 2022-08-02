@@ -102,6 +102,9 @@ func ListUsersFromList(s *xorm.Session, l *List, search string) (users []*user.U
 		cond = builder.In("id", uids)
 	}
 
-	users, err = user.ListUsers(s, search, cond)
+	users, err = user.ListUsers(s, search, &user.ListUserOpts{
+		AdditionalCond:              cond,
+		ReturnAllIfNoSearchProvided: true,
+	})
 	return
 }

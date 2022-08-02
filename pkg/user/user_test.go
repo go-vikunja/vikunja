@@ -445,7 +445,7 @@ func TestListUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ListUsers(s, "user7@example.com", builder.In("id", 7))
+		all, err := ListUsers(s, "user7@example.com", &ListUserOpts{AdditionalCond: builder.In("id", 7)})
 		assert.NoError(t, err)
 		assert.Len(t, all, 1)
 		assert.Equal(t, int64(7), all[0].ID)
