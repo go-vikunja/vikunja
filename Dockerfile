@@ -1,14 +1,10 @@
 
 ##############
 # Build stage
-FROM golang:1-buster AS build-env
+FROM vikunja/golang-build AS build-env
 
 ARG VIKUNJA_VERSION
 ENV TAGS "sqlite"
-ENV GO111MODULE=on
-
-# Build deps
-RUN apt-get update && apt-get install git
 
 # Setup repo
 COPY . ${GOPATH}/src/code.vikunja.io/api
