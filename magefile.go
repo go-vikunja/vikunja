@@ -350,7 +350,7 @@ func (Test) Unit() {
 	mg.Deps(initVars)
 	setApiPackages()
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := append([]string{"test", Goflags[0], "-p", "1", "-coverprofile", "cover.out", "-timeout", "20m"}, ApiPackages...)
+	args := append([]string{"test", Goflags[0], "-p", "1", "-coverprofile", "cover.out", "-timeout", "45m"}, ApiPackages...)
 	runAndStreamOutput("go", args...)
 }
 
@@ -365,7 +365,7 @@ func (Test) Coverage() {
 func (Test) Integration() {
 	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	runAndStreamOutput("go", "test", Goflags[0], "-p", "1", "-timeout", "20m", PACKAGE+"/pkg/integrations")
+	runAndStreamOutput("go", "test", Goflags[0], "-p", "1", "-timeout", "45m", PACKAGE+"/pkg/integrations")
 }
 
 type Check mg.Namespace
