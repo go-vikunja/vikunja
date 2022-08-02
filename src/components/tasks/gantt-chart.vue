@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, ref, watch} from 'vue'
+import {computed, nextTick, ref, watch, watchEffect} from 'vue'
 import TaskCollectionService from '@/services/taskCollection'
 import TaskService from '@/services/task'
 import {format, parse} from 'date-fns'
@@ -174,11 +174,11 @@ async function loadTasks() {
 	mapGanttBars()
 }
 
-loadTasks()
-
-watch(() => props.dateTo, loadTasks)
-watch(() => props.dateFrom, loadTasks)
-watch(() => props.showTasksWithoutDates, loadTasks)
+watchEffect(() => loadTasks({
+	dateTo: props.dateTo,
+	dateFrom: props.dateFrom,
+	showTasksWithoutDates: props.showTasksWithoutDates,
+}))
 
 async function updateTask(e) {
 	const task = tasks.value.get(e.bar.ganttBarConfig.id)
