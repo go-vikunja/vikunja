@@ -89,7 +89,6 @@ const props = defineProps({
 	},
 	showTasksWithoutDates: {
 		type: Boolean,
-		required: false,
 		default: false,
 	},
 })
