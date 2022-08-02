@@ -193,7 +193,7 @@ async function updateTask(e) {
 }
 
 const newTaskFieldActive = ref(false)
-const newTaskTitleField = ref()
+const newTaskTitleField = ref<HTMLInputElement | null>(null)
 const newTaskTitle = ref('')
 
 function showCreateTaskOrCreate() {
