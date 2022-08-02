@@ -4,7 +4,7 @@
 		<g-gantt-chart
 			:chart-start="`${dateFrom} 00:00`"
 			:chart-end="`${dateTo} 23:59`"
-			:precision="precision"
+			precision="day"
 			bar-start="startDate"
 			bar-end="endDate"
 			:grid="true"
@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, ref, watch, watchEffect} from 'vue'
+import {computed, nextTick, ref, watchEffect} from 'vue'
 import TaskCollectionService from '@/services/taskCollection'
 import TaskService from '@/services/task'
 import {format, parse} from 'date-fns'
@@ -74,10 +74,6 @@ const props = defineProps({
 	listId: {
 		type: Number,
 		required: true,
-	},
-	precision: {
-		type: String,
-		default: 'day',
 	},
 	dateFrom: {
 		type: String,
