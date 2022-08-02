@@ -52,11 +52,6 @@ h6 {
 	margin: 0 0.5rem 0 0;
 	flex: 3 1 auto;
 
-	&::-moz-progress-bar,
-	&::-webkit-progress-value {
-	  background: var(--grey-500);
-	}
-
 	@media screen and (max-width: $tablet) {
 		margin: 0.5rem 0 0 0;
 		order: 1;
