@@ -18,10 +18,11 @@ package user
 
 import (
 	"testing"
-	"xorm.io/builder"
 
 	"code.vikunja.io/api/pkg/db"
+
 	"github.com/stretchr/testify/assert"
+	"xorm.io/builder"
 )
 
 func TestCreateUser(t *testing.T) {
