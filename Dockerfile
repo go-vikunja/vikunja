@@ -1,14 +1,10 @@
 
 ##############
 # Build stage
-FROM golang:1-alpine3.12 AS build-env
+FROM vikunja/golang-build:latest AS build-env
 
 ARG VIKUNJA_VERSION
 ENV TAGS "sqlite"
-ENV GO111MODULE=on
-
-# Build deps
-RUN apk --no-cache add build-base git
 
 # Setup repo
 COPY . ${GOPATH}/src/code.vikunja.io/api
