@@ -108,7 +108,7 @@ const ganttChartWidth = computed(() => {
 
 const canWrite = computed(() => store.state.currentList.maxRight > Rights.READ)
 
-const tasks = ref([])
+const tasks = ref<Map<number, TaskModel>>([])
 const ganttBars = ref([])
 
 const defaultStartDate = format(new Date(), DATE_FORMAT)
@@ -142,7 +142,7 @@ function mapGanttBars() {
 }
 
 async function loadTasks() {
-	tasks.value = new Map()
+	tasks.value = new Map<number, TaskModel>()
 
 	const params = {
 		sort_by: ['start_date', 'done', 'id'],
