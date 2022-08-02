@@ -63,6 +63,10 @@ func ListUsers(s *xorm.Session, search string, opts *ListUserOpts) (users []*Use
 	err = s.
 		Where(cond).
 		Find(&users)
+
+	for _, u := range users {
+		u.Email = ""
+	}
 	return
 }
 
