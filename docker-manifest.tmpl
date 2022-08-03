@@ -16,8 +16,3 @@ manifests:
     platform:
       architecture: arm64
       os: linux
-  -
-    image: vikunja/api:{{#if build.tag}}{{trimPrefix "v" build.tag}}-{{/if}}linux-arm
-    platform:
-      architecture: arm
-      os: linux

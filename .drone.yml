@@ -662,36 +662,6 @@ steps:
     image: docker:git
     commands:
       - git fetch --tags
-  - name: docker-arm-unstable
-    image: plugins/docker:linux-arm
-    pull: true
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/api
-      tags: unstable-linux-arm
-    depends_on: [ fetch-tags ]
-    when:
-      ref:
-        - refs/heads/main
-
-  - name: docker-arm
-    image: plugins/docker:linux-arm
-    pull: true
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/api
-      auto_tag: true
-      auto_tag_suffix: linux-arm
-    depends_on: [ fetch-tags ]
-    when:
-      ref:
-        - "refs/tags/**"
 
   - name: docker-arm64-unstable
     image: plugins/docker:linux-arm64
@@ -874,6 +844,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 9078662aed29b2f5cf1b7a988d5bffb82234710fa790436c38314552930833d2
+hmac: 24ae934ccafb57159927ab62ba4d00f85490d1330feef264833a6605494b75b2
 
 ...

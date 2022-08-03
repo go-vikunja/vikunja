@@ -17,8 +17,7 @@ RUN if [ -n "${VIKUNJA_VERSION}" ]; then git checkout "${VIKUNJA_VERSION}"; fi \
 # The actual image
 # Note: I wanted to use the scratch image here, but unfortunatly the go-sqlite bindings require cgo and
 # because of this, the container would not start when I compiled the image without cgo.
-# We're using debian as a base image here because the latest alpine image does not work with arm.
-FROM debian:buster-slim
+FROM alpine:3.16
 LABEL maintainer="maintainers@vikunja.io"
 
 WORKDIR /app/vikunja/
@@ -28,13 +27,14 @@ ENV VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/
 # Dynamic permission changing stuff
 ENV PUID 1000
 ENV PGID 1000
-RUN addgroup --gid ${PGID} vikunja && \
-  chown ${PUID} -R /app/vikunja && \
-  useradd --shell /bin/sh --gid vikunja --uid ${PUID} --home-dir /app/vikunja vikunja
+RUN apk --no-cache add shadow && \
+  addgroup -g ${PGID} vikunja && \
+  adduser -s /bin/sh -D -G vikunja -u ${PUID} vikunja -h /app/vikunja -H && \
+  chown vikunja -R /app/vikunja
 COPY run.sh /run.sh
 
-# Fix time zone settings not working
-RUN apt-get update && apt-get install -y tzdata && apt-get clean
+# Add time zone data
+RUN apk --no-cache add tzdata
 
 # Files permissions
 RUN mkdir /app/vikunja/files && \

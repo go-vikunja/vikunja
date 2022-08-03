@@ -1,0 +1,6 @@
+files/
+Dockerfile
+docker-manifest.tmpl
+docker-manifest-unstable.tmpl
+*.db
+*.zip
