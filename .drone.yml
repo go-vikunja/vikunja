@@ -874,6 +874,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 1c4c211e66e4b6eddd2a1c1bad31e5c960d4f67d6033f4d5c4de7896dfae6c30
+hmac: 9078662aed29b2f5cf1b7a988d5bffb82234710fa790436c38314552930833d2
 
 ...
