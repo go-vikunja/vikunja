@@ -79,8 +79,10 @@ func runCmdWithOutput(name string, arg ...string) (output []byte, err error) {
 	cmd := exec.Command(name, arg...)
 	output, err = cmd.Output()
 	if err != nil {
-		ee := err.(*exec.ExitError)
-		return nil, fmt.Errorf("error running command: %s, %s", string(ee.Stderr), err)
+		if ee, is := err.(*exec.ExitError); is {
+			return nil, fmt.Errorf("error running command: %s, %s", string(ee.Stderr), err)
+		}
+		return nil, fmt.Errorf("error running command: %s", err)
 	}
 
 	return output, nil
