@@ -138,7 +138,7 @@ steps:
       GOPROXY: 'https://goproxy.kolaente.de'
     depends_on: [ build ]
     commands:
-      - apk --no-cache add build-base
+      - apk --no-cache add build-base git
       - wget -O - -q https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.47.3
       - ./mage-static check:all
     when:
@@ -845,6 +845,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 3855121602138f1ccf62ace44800b66a0728786ef2ef6d25d3a69e10b805fd52
+hmac: 59e619a19be0bda1935ff2b49ac7b56a0511ac8ecfd2a05a6460bf5840876ba5
 
 ...
