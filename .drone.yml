@@ -152,7 +152,7 @@ steps:
       - unzip vikunja-latest.zip vikunja-unstable-linux-amd64
 
   - name: test-migration-sqlite
-    image: kolaente/toolbox:latest
+    image: vikunja/golang-build:latest
     pull: true
     depends_on: [ test-migration-prepare, build ]
     environment:
@@ -171,7 +171,7 @@ steps:
       event: [ push, tag, pull_request ]
 
   - name: test-migration-mysql
-    image: kolaente/toolbox:latest
+    image: vikunja/golang-build:latest
     pull: true
     depends_on: [ test-migration-prepare, build ]
     environment:
@@ -190,7 +190,7 @@ steps:
       event: [ push, tag, pull_request ]
 
   - name: test-migration-psql
-    image: kolaente/toolbox:latest
+    image: vikunja/golang-build:latest
     pull: true
     depends_on: [ test-migration-prepare, build ]
     environment:
