@@ -9,6 +9,69 @@ All releases can be found on https://code.vikunja.io/desktop/releases.
 
 The releases aim at the api and frontend versions which is why there are missing versions.
 
+## [0.19.0 - 2022-08-03]
+
+### Dependencies
+
+* *(deps)* Update dependency electron-builder to v22.13.1 (#61)
+* *(deps)* Update dependency electron to v15.2.0 (#60)
+* *(deps)* Update dependency electron to v15.3.0 (#63)
+* *(deps)* Update dependency electron to v15.3.1 (#64)
+* *(deps)* Update dependency electron to v15.3.2 (#66)
+* *(deps)* Update dependency electron to v16 (#65)
+* *(deps)* Update dependency electron to v16.0.1 (#67)
+* *(deps)* Update dependency electron-builder to v22.14.5 (#68)
+* *(deps)* Update dependency electron to v16.0.2 (#69)
+* *(deps)* Update dependency electron to v16.0.3 (#71)
+* *(deps)* Update dependency electron to v16.0.4 (#72)
+* *(deps)* Update dependency electron to v16.0.5 (#73)
+* *(deps)* Update dependency electron to v16.0.6 (#74)
+* *(deps)* Update dependency electron to v16.0.7 (#75)
+* *(deps)* Update dependency electron to v16.0.8 (#76)
+* *(deps)* Update dependency electron to v17 (#77)
+* *(deps)* Update dependency electron-builder to v22.14.13 (#78)
+* *(deps)* Update dependency electron to v17.0.1 (#79)
+* *(deps)* Update dependency electron to v17.1.0 (#80)
+* *(deps)* Update dependency electron to v17.1.1 (#81)
+* *(deps)* Update dependency electron to v17.1.2 (#82)
+* *(deps)* Update dependency electron to v17.2.0 (#83)
+* *(deps)* Update dependency electron to v17.3.0 (#84)
+* *(deps)* Update dependency electron to v18 (#85)
+* *(deps)* Update dependency electron to v18.0.1 (#86)
+* *(deps)* Update dependency electron to v18.0.2 (#87)
+* *(deps)* Update dependency electron to v18.0.3 (#88)
+* *(deps)* Update dependency electron-builder to v23 (#89)
+* *(deps)* Update dependency electron to v18.0.4 (#90)
+* *(deps)* Update dependency electron to v18.1.0 (#91)
+* *(deps)* Update dependency electron to v18.2.0 (#92)
+* *(deps)* Update dependency electron to v18.2.2 (#93)
+* *(deps)* Update dependency electron to v18.2.3 (#94)
+* *(deps)* Update dependency electron to v18.2.4 (#95)
+* *(deps)* Update dependency electron to v18.3.1 (#96)
+* *(deps)* Update dependency electron to v19 (#97)
+* *(deps)* Update dependency electron to v19.0.2 (#98)
+* *(deps)* Update dependency electron to v19.0.3 (#99)
+* *(deps)* Update dependency electron to v19.0.4 (#100)
+* *(deps)* Update dependency electron to v19.0.6 (#101)
+* *(deps)* Update dependency electron-builder to v23.1.0 (#102)
+* *(deps)* Update dependency electron to v19.0.7 (#104)
+* *(deps)* Update dependency electron to v19.0.8 (#105)
+* *(deps)* Update dependency electron to v19.0.9 (#106)
+* *(deps)* Update dependency electron to v19.0.10 (#107)
+* *(deps)* Update dependency electron-builder to v23.3.3 (#108)
+* *(deps)* Update dependency electron to v20 (#109)
+* *(deps)* Update dependency electron to v20.0.1 (#110)
+
+### Miscellaneous Tasks
+
+* *(ci)* Use latest s3 plugin
+* *(ci)* Sign drone config
+
+### Other
+
+* *(other)* Update dependency electron to v14.0.1 (#58)
+* *(other)* Update dependency electron to v15 (#59)
+
 ## [0.18.0 - 2021-09-05]
 
 ### Added 
