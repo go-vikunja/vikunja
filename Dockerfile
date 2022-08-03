@@ -4,22 +4,21 @@
 FROM vikunja/golang-build AS build-env
 
 ARG VIKUNJA_VERSION
-ENV TAGS "sqlite"
 
 # Setup repo
-COPY . ${GOPATH}/src/code.vikunja.io/api
-WORKDIR ${GOPATH}/src/code.vikunja.io/api
+COPY . /go/src/code.vikunja.io/api
+WORKDIR /go/src/code.vikunja.io/api
 
 # Checkout version if set
 RUN if [ -n "${VIKUNJA_VERSION}" ]; then git checkout "${VIKUNJA_VERSION}"; fi \
- && go install github.com/magefile/mage \
  && mage build:clean build
 
 ###################
 # The actual image
 # Note: I wanted to use the scratch image here, but unfortunatly the go-sqlite bindings require cgo and
 # because of this, the container would not start when I compiled the image without cgo.
-FROM alpine:3.12
+# We're using debian as a base image here because the latest alpine image does not work with arm.
+FROM debian:buster-slim
 LABEL maintainer="maintainers@vikunja.io"
 
 WORKDIR /app/vikunja/
@@ -29,14 +28,13 @@ ENV VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/
 # Dynamic permission changing stuff
 ENV PUID 1000
 ENV PGID 1000
-RUN apk --no-cache add shadow && \
-  addgroup -g ${PGID} vikunja && \
-  adduser -s /bin/sh -D -G vikunja -u ${PUID} vikunja -h /app/vikunja -H && \
-  chown vikunja -R /app/vikunja
+RUN addgroup --gid ${PGID} vikunja && \
+  chown ${PUID} -R /app/vikunja && \
+  useradd --shell /bin/sh --gid vikunja --uid ${PUID} --home-dir /app/vikunja vikunja
 COPY run.sh /run.sh
 
 # Fix time zone settings not working
-RUN apk --no-cache add tzdata
+RUN apt-get update && apt-get install -y tzdata && apt-get clean
 
 # Files permissions
 RUN mkdir /app/vikunja/files && \
