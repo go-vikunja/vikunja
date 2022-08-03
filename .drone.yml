@@ -132,12 +132,13 @@ steps:
       event: [ push, tag, pull_request ]
 
   - name: lint
-    image: vikunja/golang-build:latest
+    image: golang:1.17-alpine
     pull: true
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
     depends_on: [ build ]
     commands:
+      - apk --no-cache add build-base
       - wget -O - -q https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.47.3
       - ./mage-static check:all
     when:
@@ -844,6 +845,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 3745c69e4723e5349527f5ca8941a530f3ed05f333622cce56630f3c39b1fdbd
+hmac: 3855121602138f1ccf62ace44800b66a0728786ef2ef6d25d3a69e10b805fd52
 
 ...
