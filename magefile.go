@@ -404,7 +404,7 @@ func checkGolangCiLintInstalled() {
 	mg.Deps(initVars)
 	if err := exec.Command("golangci-lint").Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
 		fmt.Println("Please manually install golangci-lint by running")
-		fmt.Println("curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.31.0")
+		fmt.Println("curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.47.3")
 		os.Exit(1)
 	}
 }
