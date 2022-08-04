@@ -25,7 +25,7 @@ import {getErrorText} from '@/message'
 import Message from '@/components/misc/message.vue'
 import {clearLastVisited, getLastVisited} from '@/helpers/saveLastVisited'
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 
 const router = useRouter()
 const route = useRoute()
