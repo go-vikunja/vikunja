@@ -9,9 +9,9 @@ import BucketService from '../../services/bucket'
 import {setLoading} from '../helper'
 import TaskCollectionService from '@/services/taskCollection'
 import type { RootStoreState, KanbanState } from '@/store/types'
-import type { ITask } from '@/models/task'
-import type { IList } from '@/models/list'
-import type { IBucket } from '@/models/bucket'
+import type { ITask } from '@/modelTypes/ITask'
+import type { IList } from '@/modelTypes/IList'
+import type { IBucket } from '@/modelTypes/IBucket'
 
 const TASKS_PER_BUCKET = 25
 

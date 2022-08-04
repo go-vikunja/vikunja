@@ -1,6 +1,6 @@
 import {parseDate} from '../helpers/time/parseDate'
 import {PRIORITIES} from '@/constants/priorities'
-import {REPEAT_TYPES, type IRepeats, type RepeatType} from '@/types/IRepeats'
+import {REPEAT_TYPES, type IRepeatAfter, type IRepeatType} from '@/types/IRepeatAfter'
 
 const VIKUNJA_PREFIXES: Prefixes = {
 	label: '*',
@@ -30,7 +30,7 @@ export const PREFIXES = {
 
 interface repeatParsedResult {
 	textWithoutMatched: string,
-	repeats: IRepeats | null,
+	repeats: IRepeatAfter | null,
 }
 
 export interface ParsedTaskText {
@@ -40,7 +40,7 @@ export interface ParsedTaskText {
 	list: string | null,
 	priority: number | null,
 	assignees: string[],
-	repeats: IRepeats | null,
+	repeats: IRepeatAfter | null,
 }
 
 interface Prefixes {
@@ -185,7 +185,7 @@ const getRepeats = (text: string): repeatParsedResult => {
 		default:
 			amount = results[3] ? parseInt(results[3]) : 1
 	}
-	let type: RepeatType = REPEAT_TYPES.Hours
+	let type: IRepeatType = REPEAT_TYPES.Hours
 
 	switch (results[0]) {
 		case 'biennially':

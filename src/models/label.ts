@@ -1,21 +1,12 @@
-import AbstractModel, { type IAbstract } from './abstractModel'
-import UserModel, { type IUser } from './user'
+import AbstractModel from './abstractModel'
+import UserModel from './user'
+
+import type {ILabel} from '@/modelTypes/ILabel'
+import type {IUser} from '@/modelTypes/IUser'
+
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 
 const DEFAULT_LABEL_BACKGROUND_COLOR = 'e8e8e8'
-
-export interface ILabel extends IAbstract {
-	id: number
-	title: string
-	hexColor: string
-	description: string
-	createdBy: IUser
-	listId: number
-	textColor: string
-
-	created: Date
-	updated: Date
-}
 
 export default class LabelModel extends AbstractModel implements ILabel {
 	id = 0

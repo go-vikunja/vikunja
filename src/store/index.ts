@@ -1,7 +1,6 @@
 import type {InjectionKey} from 'vue'
 import {createStore, useStore as baseUseStore, Store} from 'vuex'
 
-
 import {getBlobFromBlurHash} from '../helpers/getBlobFromBlurHash'
 import {
 	BACKGROUND,

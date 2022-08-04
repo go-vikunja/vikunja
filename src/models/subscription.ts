@@ -1,14 +1,8 @@
-import AbstractModel, { type IAbstract } from '@/models/abstractModel'
-import UserModel, { type IUser } from '@/models/user'
+import AbstractModel from './abstractModel'
+import UserModel from '@/models/user'
 
-export interface ISubscription extends IAbstract {
-	id: number
-	entity: string // FIXME: correct type?
-	entityId: number // FIXME: correct type?
-	user: IUser
-
-	created: Date
-}
+import type {ISubscription} from '@/modelTypes/ISubscription'
+import type {IUser} from '@/modelTypes/IUser'
 
 export default class SubscriptionModel extends AbstractModel implements ISubscription {
 	id = 0

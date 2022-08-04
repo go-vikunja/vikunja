@@ -1,10 +1,6 @@
-import AbstractModel, { type IAbstract } from './abstractModel'
+import AbstractModel from './abstractModel'
 
-export interface ILabelTask extends IAbstract {
-	id: number
-	taskId: number
-	labelId: number
-}
+import type { ILabelTask } from '@/modelTypes/ILabelTask'
 
 export default class LabelTask extends AbstractModel implements ILabelTask {
 	id = 0

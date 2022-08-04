@@ -4,8 +4,8 @@ import NamespaceService from '../../services/namespace'
 import {setLoading} from '@/store/helper'
 import {createNewIndexer} from '@/indexes'
 import type {NamespaceState, RootStoreState} from '@/store/types'
-import type {INamespace} from '@/models/namespace'
-import type {IList} from '@/models/list'
+import type {INamespace} from '@/modelTypes/INamespace'
+import type {IList} from '@/modelTypes/IList'
 
 const {add, remove, search, update} = createNewIndexer('namespaces', ['title', 'description'])
 

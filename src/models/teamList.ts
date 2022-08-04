@@ -1,9 +1,7 @@
 import TeamShareBaseModel from './teamShareBase'
-import type { IList } from './list'
 
-export interface ITeamList extends TeamShareBaseModel {
-	listId: IList['id']
-}
+import type {ITeamList} from '@/modelTypes/ITeamList'
+import type {IList} from '@/modelTypes/IList'
 
 export default class TeamListModel extends TeamShareBaseModel implements ITeamList {
 	listId: IList['id'] = 0

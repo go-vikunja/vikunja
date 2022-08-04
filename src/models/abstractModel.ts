@@ -1,12 +1,10 @@
 import {objectToCamelCase} from '@/helpers/case'
 import {omitBy, isNil} from '@/helpers/utils'
 import type {Right} from '@/constants/rights'
-
-export interface IAbstract {
-	maxRight: Right | null // FIXME: should this be readonly?
-}
+import type {IAbstract} from '@/modelTypes/IAbstract'
 
 export default abstract class AbstractModel<Model extends IAbstract = IAbstract> implements IAbstract {
+
 
 	/**
 	 * The max right the user has on this object, as returned by the x-max-right header from the api.

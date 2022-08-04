@@ -1,39 +1,16 @@
-import AbstractModel, { type IAbstract } from './abstractModel'
-import UserModel, { type IUser } from './user'
-import type { ITask } from './task'
+import AbstractModel from './abstractModel'
+import UserModel from './user'
 
-export const RELATION_KIND = {
-	'SUBTASK': 'subtask',
-	'PARENTTASK': 'parenttask',
-	'RELATED': 'related',
-	'DUPLICATES': 'duplicates',
-	'BLOCKING': 'blocking',
-	'BLOCKED': 'blocked',
-	'PROCEDES': 'precedes',
-	'FOLLOWS': 'follows',
-	'COPIEDFROM': 'copiedfrom',
-	'COPIEDTO': 'copiedto',
- } as const
+import type {ITaskRelation} from '@/modelTypes/ITaskRelation'
+import type {ITask} from '@/modelTypes/ITask'
+import type {IUser} from '@/modelTypes/IUser'
 
-export const RELATION_KINDS = [...Object.values(RELATION_KIND)] as const
-
-export type RelationKind = typeof RELATION_KINDS[number]
-
-export interface ITaskRelation extends IAbstract {
-	id: number
-	otherTaskId: ITask['id']
-	taskId: ITask['id']
-	relationKind: RelationKind
-
-	createdBy: IUser
-	created: Date
-}
-
+import type {IRelationKind} from '@/types/IRelationKind'
 export default class TaskRelationModel extends AbstractModel implements ITaskRelation {
 	id = 0
 	otherTaskId: ITask['id'] = 0
 	taskId: ITask['id'] = 0
-	relationKind: RelationKind = ''
+	relationKind: IRelationKind = ''
 
 	createdBy: IUser = UserModel
 	created: Date = null

@@ -1,60 +1,17 @@
-import AbstractModel, { type IAbstract } from '@/models/abstractModel'
+import AbstractModel from './abstractModel'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
-import UserModel, { type IUser } from '@/models/user'
-import TaskModel, { type ITask } from '@/models/task'
-import TaskCommentModel, { type ITaskComment } from '@/models/taskComment'
-import ListModel, { type IList } from '@/models/list'
-import TeamModel, { type ITeam } from '@/models/team'
+import UserModel from '@/models/user'
+import TaskModel from '@/models/task'
+import TaskCommentModel from '@/models/taskComment'
+import ListModel from '@/models/list'
+import TeamModel from '@/models/team'
 
-export const NOTIFICATION_NAMES = {
-	'TASK_COMMENT': 'task.comment',
-	'TASK_ASSIGNED': 'task.assigned',
-	'TASK_DELETED': 'task.deleted',
-	'LIST_CREATED': 'list.created',
-	'TEAM_MEMBER_ADDED': 'team.member.added',
-} as const
-
-interface Notification {
-	doer: IUser
-}
-interface NotificationTask extends Notification {
-	task: ITask
-	comment: ITaskComment
-}
-
-interface NotificationAssigned extends Notification {
-	task: ITask
-	assignee: IUser
-}
-
-interface NotificationDeleted extends Notification {
-	task: ITask
-}
-
-interface NotificationCreated extends Notification {
-	task: ITask
-	list: IList
-}
-
-interface NotificationMemberAdded extends Notification {
-	member: IUser
-	team: ITeam
-}
-
-export interface INotification extends IAbstract {
-	id: number
-	name: string
-	notification: NotificationTask | NotificationAssigned | NotificationDeleted | NotificationCreated | NotificationMemberAdded
-	read: boolean
-	readAt: Date | null
-
-	created: Date
-}
+import {NOTIFICATION_NAMES, type INotification} from '@/modelTypes/INotification'
 
 export default class NotificationModel extends AbstractModel implements INotification {
 	id = 0
 	name = ''
-	notification: NotificationTask | NotificationAssigned | NotificationDeleted | NotificationCreated | NotificationMemberAdded = null
+	notification: INotification['notification'] = null
 	read = false
 	readAt: Date | null = null
 

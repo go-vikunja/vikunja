@@ -1,63 +1,35 @@
+
 import { PRIORITIES, type Priority } from '@/constants/priorities'
 
-import AbstractModel, { type IAbstract } from '@/models/abstractModel'
-import UserModel, { type IUser } from '@/models/user'
-import LabelModel, { type ILabel } from '@/models/label'
-import AttachmentModel, {type IAttachment} from '@/models/attachment'
-import SubscriptionModel, { type ISubscription } from '@/models/subscription'
-import type { IList } from '@/models/list'
-import  type {IRepeats} from '@/types/IRepeats'
+import type {ITask} from '@/modelTypes/ITask'
+import type {ILabel} from '@/modelTypes/ILabel'
+import type {IUser} from '@/modelTypes/IUser'
+import type {IAttachment} from '@/modelTypes/IAttachment'
+import type {IList} from '@/modelTypes/IList'
+import type {ISubscription} from '@/modelTypes/ISubscription'
+import type {IBucket} from '@/modelTypes/IBucket'
+
+import type {IRepeatAfter} from '@/types/IRepeatAfter'
+import {TASK_REPEAT_MODES, type IRepeatMode} from '@/types/IRepeatMode'
 
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
-import type { IBucket } from './bucket'
+import type { IRelationKind } from '@/types/IRelationKind'
+
+import AbstractModel from './abstractModel'
+import LabelModel from './label'
+import UserModel from './user'
+import AttachmentModel from './attachment'
+import SubscriptionModel from './subscription'
 
 const SUPPORTS_TRIGGERED_NOTIFICATION = 'Notification' in window && 'showTrigger' in Notification.prototype
 export const TASK_DEFAULT_COLOR = '#1973ff'
 
-export const TASK_REPEAT_MODES = {
-	'REPEAT_MODE_DEFAULT': 0,
-	'REPEAT_MODE_MONTH': 1,
-	'REPEAT_MODE_FROM_CURRENT_DATE': 2,
-} as const
+export function	getHexColor(hexColor: string) {
+	if (hexColor === '' || hexColor === '#') {
+		return TASK_DEFAULT_COLOR
+	}
 
-export type TaskRepeatMode = typeof TASK_REPEAT_MODES[keyof typeof TASK_REPEAT_MODES] 
-
-export interface ITask extends IAbstract {
-	id: number
-	title: string
-	description: string
-	done: boolean
-	doneAt: Date | null
-	priority: Priority
-	labels: ILabel[]
-	assignees: IUser[]
-
-	dueDate: Date | null
-	startDate: Date | null
-	endDate: Date | null
-	repeatAfter: number | IRepeats
-	repeatFromCurrentDate: boolean
-	repeatMode: TaskRepeatMode
-	reminderDates: Date[]
-	parentTaskId: ITask['id']
-	hexColor: string
-	percentDone: number
-	relatedTasks: { [relationKind: string]: ITask } // FIXME: use relationKinds
-	attachments: IAttachment[]
-	identifier: string
-	index: number
-	isFavorite: boolean
-	subscription: ISubscription
-
-	position: number
-	kanbanPosition: number
-
-	createdBy: IUser
-	created: Date
-	updated: Date
-
-	listId: IList['id'] // Meta, only used when creating a new task
-	bucketId: IBucket['id']
+	return hexColor
 }
 
 export default class TaskModel extends AbstractModel implements ITask {
@@ -73,14 +45,14 @@ export default class TaskModel extends AbstractModel implements ITask {
 	dueDate: Date | null = 0
 	startDate: Date | null = 0
 	endDate: Date | null = 0
-	repeatAfter: number | IRepeats = 0
+	repeatAfter: number | IRepeatAfter = 0
 	repeatFromCurrentDate = false
-	repeatMode: TaskRepeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	repeatMode: IRepeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
 	reminderDates: Date[] = []
 	parentTaskId: ITask['id'] = 0
 	hexColor = ''
 	percentDone = 0
-	relatedTasks: { [relationKind: string]: ITask } = {}
+	relatedTasks:  Partial<Record<IRelationKind, ITask>> = {}
 	attachments: IAttachment[] = []
 	identifier = ''
 	index = 0
@@ -168,11 +140,7 @@ export default class TaskModel extends AbstractModel implements ITask {
 	}
 
 	getHexColor() {
-		if (this.hexColor === '' || this.hexColor === '#') {
-			return TASK_DEFAULT_COLOR
-		}
-
-		return this.hexColor
+		return getHexColor(this.hexColor)
 	}
 
 	/////////////////

@@ -170,6 +170,7 @@ import {useStore} from '@/store'
 import TeamService from '@/services/team'
 import TeamMemberService from '@/services/teamMember'
 import UserService from '@/services/user'
+
 import {RIGHTS as Rights} from '@/constants/rights'
 
 import Multiselect from '@/components/input/multiselect.vue'

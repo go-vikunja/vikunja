@@ -1,38 +1,14 @@
-import AbstractModel, { type IAbstract } from '@/models/abstractModel'
-import UserModel, { type IUser } from '@/models/user'
+import AbstractModel from './abstractModel'
+import UserModel from '@/models/user'
 
-export interface ISavedFilter extends IAbstract {
-	id: number
-	title: string
-	description: string
-	filters: {
-		sortBy: ('done' | 'id')[]
-		orderBy: ('asc' | 'desc')[]
-		filterBy: 'done'[]
-		filterValue: 'false'[]
-		filterComparator: 'equals'[]
-		filterConcat: 'and'
-		filterIncludeNulls: boolean
-	}
-
-	owner: IUser
-	created: Date
-	updated: Date
-}
+import type {ISavedFilter} from '@/modelTypes/ISavedFilter'
+import type {IUser} from '@/modelTypes/IUser'
 
 export default class SavedFilterModel extends AbstractModel implements ISavedFilter {
 	id = 0
 	title = ''
 	description = ''
-	filters: {
-		sortBy: ('done' | 'id')[]
-		orderBy: ('asc' | 'desc')[]
-		filterBy: 'done'[]
-		filterValue: 'false'[]
-		filterComparator: 'equals'[]
-		filterConcat: 'and'
-		filterIncludeNulls: boolean
-	} = {
+	filters: ISavedFilter['filters'] = {
 		sortBy: ['done', 'id'],
 		orderBy: ['asc', 'desc'],
 		filterBy: ['done'],

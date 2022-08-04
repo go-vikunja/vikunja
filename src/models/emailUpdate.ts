@@ -1,9 +1,6 @@
-import AbstractModel, { type IAbstract } from './abstractModel'
+import AbstractModel from './abstractModel'
 
-interface IEmailUpdate extends IAbstract {
-	newEmail: string
-	password: string
-}
+import type {IEmailUpdate} from '@/modelTypes/IEmailUpdate'
 
 export default class EmailUpdateModel extends AbstractModel implements IEmailUpdate {
 	newEmail = ''

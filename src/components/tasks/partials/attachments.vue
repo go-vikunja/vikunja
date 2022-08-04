@@ -49,7 +49,7 @@
 							/>
 						</i18n-t>
 						<span>
-							{{ a.file.getHumanSize() }}
+							{{ getHumanSize(a.file.size) }}
 						</span>
 						<span v-if="a.file.mime">
 							{{ a.file.mime }}
@@ -157,6 +157,7 @@ import {formatDate, formatDateSince, formatDateLong} from '@/helpers/time/format
 
 import BaseButton from '@/components/base/BaseButton'
 import type { IFile } from '@/models/file'
+import { getHumanSize } from '@/helpers/getHumanSize'
 
 export default defineComponent({
 	name: 'attachments',
@@ -231,6 +232,7 @@ export default defineComponent({
 		})
 	},
 	methods: {
+		getHumanSize,
 		formatDate,
 		formatDateSince,
 		formatDateLong,

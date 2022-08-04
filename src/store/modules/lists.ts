@@ -5,7 +5,7 @@ import {setLoading} from '@/store/helper'
 import {removeListFromHistory} from '@/modules/listHistory'
 import {createNewIndexer} from '@/indexes'
 import type {ListState, RootStoreState} from '@/store/types'
-import type {IList} from '@/models/list'
+import type {IList} from '@/modelTypes/IList'
 
 const {add, remove, search, update} = createNewIndexer('lists', ['title', 'description'])
 

@@ -1,9 +1,9 @@
-import type { IBucket } from '@/models/bucket'
-import type { IUserSettings } from '@/models/userSettings'
-import type { IList } from '@/models/list'
-import type { IAttachment } from '@/models/attachment'
-import type { ILabel } from '@/models/label'
-import type { INamespace } from '@/models/namespace'
+import type { IBucket } from '@/modelTypes/IBucket'
+import type { IUserSettings } from '@/modelTypes/IUserSettings'
+import type { IList } from '@/modelTypes/IList'
+import type { IAttachment } from '@/modelTypes/IAttachment'
+import type { ILabel } from '@/modelTypes/ILabel'
+import type { INamespace } from '@/modelTypes/INamespace'
 
 export interface RootStoreState {
 	loading: boolean,

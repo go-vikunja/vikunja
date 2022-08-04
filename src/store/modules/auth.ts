@@ -12,7 +12,7 @@ import {success} from '@/message'
 import {redirectToProvider} from '@/helpers/redirectToProvider'
 import type { RootStoreState, AuthState, Info} from '@/store/types'
 import {AUTH_TYPES} from '@/store/types'
-import type { IUserSettings } from '@/models/userSettings'
+import type { IUserSettings } from '@/modelTypes/IUserSettings'
 
 
 const defaultSettings = settings => {

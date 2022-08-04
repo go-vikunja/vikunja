@@ -1,17 +1,8 @@
 
-import AbstractModel, { type IAbstract } from './abstractModel'
-import type { IList } from './list'
+import AbstractModel from './abstractModel'
 
-export interface IUserSettings extends IAbstract {
-	name: string
-	emailRemindersEnabled: boolean
-	discoverableByName: boolean
-	discoverableByEmail: boolean
-	overdueTasksRemindersEnabled: boolean
-	defaultListId: undefined | IList['id']
-	weekStart: 0 | 1 | 2 | 3 | 4 | 5 | 6
-	timezone: string
-}
+import type {IUserSettings} from '@/modelTypes/IUserSettings'
+import type {IList} from '@/modelTypes/IList'
 
 export default class UserSettingsModel extends AbstractModel implements IUserSettings {
 	name = ''
@@ -20,7 +11,7 @@ export default class UserSettingsModel extends AbstractModel implements IUserSet
 	discoverableByEmail = false
 	overdueTasksRemindersEnabled = true
 	defaultListId: undefined | IList['id'] = undefined
-	weekStart: 0 | 1 | 2 | 3 | 4 | 5 | 6 = 0
+	weekStart: IUserSettings['weekStart'] = 0
 	timezone = ''
 
 	constructor(data: Partial<IUserSettings>) {

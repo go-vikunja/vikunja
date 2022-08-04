@@ -1,19 +1,9 @@
-import AbstractModel, { type IAbstract } from './abstractModel'
-import UserModel, { type IUser } from './user'
-import {RIGHTS, type Right} from '@/constants/rights'
+import AbstractModel from './abstractModel'
+import UserModel from './user'
 
-export interface ILinkShare extends IAbstract {
-	id: number
-	hash: string
-	right: Right
-	sharedBy: IUser
-	sharingType: number // FIXME: use correct numbers
-	listId: number
-	name: string
-	password: string
-	created: Date
-	updated: Date
-}
+import {RIGHTS, type Right} from '@/constants/rights'
+import type {ILinkShare} from '@/modelTypes/ILinkShare'
+import type {IUser} from '@/modelTypes/IUser'
 
 export default class LinkShareModel extends AbstractModel implements ILinkShare {
 	id = 0

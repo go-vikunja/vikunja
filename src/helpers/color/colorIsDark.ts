@@ -1,4 +1,4 @@
-export function colorIsDark(color) {
+export function colorIsDark(color: string | undefined) {
 	if (typeof color === 'undefined') {
 		return true // Defaults to dark
 	}

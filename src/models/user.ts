@@ -1,16 +1,8 @@
-import AbstractModel, { type IAbstract } from './abstractModel'
-import UserSettingsModel, { type IUserSettings } from '@/models/userSettings'
+import AbstractModel from './abstractModel'
+import UserSettingsModel from '@/models/userSettings'
 
-export interface IUser extends IAbstract {
-	id: number
-	email: string
-	username: string
-	name: string
-
-	created: Date
-	updated: Date
-	settings: IUserSettings
-}
+import type { IUser } from '@/modelTypes/IUser'
+import type { IUserSettings } from '@/modelTypes/IUserSettings'
 
 export default class UserModel extends AbstractModel implements IUser {
 	id = 0

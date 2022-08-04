@@ -156,7 +156,7 @@ import {calculateItemPosition} from '../../helpers/calculateItemPosition'
 import type { ITask } from '@/models/task'
 
 function sortTasks(tasks: ITask[]) {
-	if (tasks === null || tasks === []) {
+	if (tasks === null || Array.isArray(tasks) && tasks.length === 0) {
 		return
 	}
 	return tasks.sort((a, b) => {

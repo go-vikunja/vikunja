@@ -1,19 +1,11 @@
-import AbstractModel, { type IAbstract } from './abstractModel'
-import UserModel, { type IUser } from './user'
-import TeamMemberModel, { type ITeamMember } from './teamMember'
+import AbstractModel from './abstractModel'
+import UserModel from './user'
+import TeamMemberModel from './teamMember'
+
 import {RIGHTS, type Right} from '@/constants/rights'
-
-export interface ITeam extends IAbstract {
-	id: number
-	name: string
-	description: string
-	members: ITeamMember[]
-	right: Right
-
-	createdBy: IUser
-	created: Date
-	updated: Date
-}
+import type {ITeam} from '@/modelTypes/ITeam'
+import type {ITeamMember} from '@/modelTypes/ITeamMember'
+import type {IUser} from '@/modelTypes/IUser'
 
 export default class TeamModel extends AbstractModel implements ITeam {
 	id = 0

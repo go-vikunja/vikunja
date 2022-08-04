@@ -1,9 +1,7 @@
 import UserShareBaseModel from './userShareBase'
-import type { INamespace } from './namespace'
 
-export interface IUserNamespace extends UserShareBaseModel {
-	namespaceId: INamespace['id']
-}
+import type {INamespace} from '@/modelTypes/INamespace'
+import type {IUserNamespace} from '@/modelTypes/IUserNamespace'
 
 // This class extends the user share model with a 'rights' parameter which is used in sharing
 export default class UserNamespaceModel extends UserShareBaseModel implements IUserNamespace {

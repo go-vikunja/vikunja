@@ -1,10 +1,6 @@
-import AbstractModel, { type IAbstract } from './abstractModel'
+import AbstractModel from './abstractModel'
 
-export interface ITotp extends IAbstract {
-	secret: string
-	enabled: boolean
-	url: string
-}
+import type {ITotp} from '@/modelTypes/ITotp'
 
 export default class TotpModel extends AbstractModel implements ITotp {
 	secret = ''

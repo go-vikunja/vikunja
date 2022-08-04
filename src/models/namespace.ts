@@ -1,21 +1,12 @@
-import AbstractModel, { type IAbstract } from './abstractModel'
-import ListModel, { type IList } from './list'
-import UserModel, { type IUser } from './user'
-import SubscriptionModel, { type ISubscription } from '@/models/subscription'
+import AbstractModel from './abstractModel'
+import ListModel from './list'
+import UserModel from './user'
+import SubscriptionModel from '@/models/subscription'
 
-export interface INamespace extends IAbstract {
-	id: number
-	title: string
-	description: string
-	owner: IUser
-	lists: IList[]
-	isArchived: boolean
-	hexColor: string
-	subscription: ISubscription
-
-	created: Date
-	updated: Date
-}
+import type {INamespace} from '@/modelTypes/INamespace'
+import type {IUser} from '@/modelTypes/IUser'
+import type {IList} from '@/modelTypes/IList'
+import type {ISubscription} from '@/modelTypes/ISubscription'
 
 export default class NamespaceModel extends AbstractModel implements INamespace {
 	id = 0

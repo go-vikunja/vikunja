@@ -66,7 +66,10 @@ import {ref, reactive, watch, type PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import {error} from '@/message'
-import {TASK_REPEAT_MODES, type ITask, type RepeatAfter} from '@/models/task'
+
+import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import type {IRepeatAfter} from '@/types/IRepeatAfter'
+import type {ITask} from '@/modelTypes/ITask'
 
 const props = defineProps({
 	modelValue: {
@@ -116,7 +119,7 @@ function updateData() {
 	emit('change')
 }
 
-function setRepeatAfter(amount: number, type: RepeatAfter['type']) {
+function setRepeatAfter(amount: number, type: IRepeatAfter['type']) {
 	Object.assign(repeatAfter, { amount, type})
 	updateData()
 }

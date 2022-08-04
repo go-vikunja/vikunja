@@ -7,7 +7,7 @@ import {setLoading} from '@/store/helper'
 import type { LabelState, RootStoreState } from '@/store/types'
 import {getLabelsByIds, filterLabelsByQuery} from '@/helpers/labels'
 import {createNewIndexer} from '@/indexes'
-import type { ILabel } from '@/models/label'
+import type { ILabel } from '@/modelTypes/ILabel'
 
 const {add, remove, update} = createNewIndexer('labels', ['title', 'description'])
 

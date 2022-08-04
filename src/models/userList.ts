@@ -1,9 +1,7 @@
 import UserShareBaseModel from './userShareBase'
-import type { IList } from './list'
 
-export interface IUserList extends UserShareBaseModel {
-	listId: IList['id']
-}
+import type {IUserList} from '@/modelTypes/IUserList'
+import type {IList} from '@/modelTypes/IList'
 
 // This class extends the user share model with a 'rights' parameter which is used in sharing
 export default class UserListModel extends UserShareBaseModel implements IUserList {

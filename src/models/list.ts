@@ -1,30 +1,15 @@
-import AbstractModel, { type IAbstract } from '@/models/abstractModel'
-import TaskModel, { type ITask } from '@/models/task'
-import UserModel, { type IUser } from '@/models/user'
-import SubscriptionModel, { type ISubscription } from '@/models/subscription'
-import type { INamespace } from '@/models/namespace'
+import AbstractModel from './abstractModel'
+import TaskModel from '@/models/task'
+import UserModel from '@/models/user'
+import SubscriptionModel from '@/models/subscription'
+
+import type {IList} from '@/modelTypes/IList'
+import type {IUser} from '@/modelTypes/IUser'
+import type {ITask} from '@/modelTypes/ITask'
+import type {INamespace} from '@/modelTypes/INamespace'
+import type {ISubscription} from '@/modelTypes/ISubscription'
 
 import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
-
-export interface IList extends IAbstract {
-	id: number
-	title: string
-	description: string
-	owner: IUser
-	tasks: ITask[]
-	namespaceId: INamespace['id']
-	isArchived: boolean
-	hexColor: string
-	identifier: string
-	backgroundInformation: any // FIXME: improve type
-	isFavorite: boolean
-	subscription: ISubscription
-	position: number
-	backgroundBlurHash: string
-	
-	created: Date
-	updated: Date
-}
 
 export default class ListModel extends AbstractModel implements IList {
 	id = 0

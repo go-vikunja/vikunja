@@ -4,22 +4,27 @@ import {formatISO} from 'date-fns'
 
 import TaskService from '@/services/task'
 import TaskAssigneeService from '@/services/taskAssignee'
-import TaskAssigneeModel from '@/models/taskAssignee'
-import LabelTaskModel from '@/models/labelTask'
 import LabelTaskService from '@/services/labelTask'
+import UserService from '@/services/user'
+
 import {HAS_TASKS} from '../mutation-types'
 import {setLoading} from '../helper'
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
-
 import {parseTaskText} from '@/modules/parseTaskText'
-import TaskModel, { type ITask } from '@/models/task'
+
+import TaskAssigneeModel from '@/models/taskAssignee'
+import LabelTaskModel from '@/models/labelTask'
+import TaskModel from '@/models/task'
 import LabelTask from '@/models/labelTask'
-import LabelModel, { type ILabel } from '@/models/label'
-import UserService from '@/services/user'
+import LabelModel from '@/models/label'
+
+import type {ILabel} from '@/modelTypes/ILabel'
+import type {ITask} from '@/modelTypes/ITask'
+import type { IUser } from '@/modelTypes/IUser'
+import type { IAttachment } from '@/modelTypes/IAttachment'
+import type { IList } from '@/modelTypes/IList'
+
 import type { RootStoreState, TaskState } from '@/store/types'
-import type { IUser } from '@/models/user'
-import type { IAttachment } from '@/models/attachment'
-import type { IList } from '@/models/list'
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
 function findPropertyByValue(object, key, value) {

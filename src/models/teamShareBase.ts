@@ -1,14 +1,8 @@
-import AbstractModel, { type IAbstract } from './abstractModel'
+import AbstractModel from './abstractModel'
+
 import {RIGHTS, type Right} from '@/constants/rights'
-import type { ITeam } from './team'
-
-export interface ITeamShareBase extends IAbstract {
-	teamId: ITeam['id']
-	right: Right
-
-	created: Date
-	updated: Date
-}
+import type {ITeamShareBase} from '@/modelTypes/ITeamShareBase'
+import type {ITeam} from '@/modelTypes/ITeam'
 
 /**
  * This class is a base class for common team sharing model.

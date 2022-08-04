@@ -2,7 +2,7 @@ import type { Module } from 'vuex'
 import {findIndexById} from '@/helpers/utils'
 
 import type { AttachmentState, RootStoreState } from '@/store/types'
-import type { IAttachment } from '@/models/attachment'
+import type { IAttachment } from '@/modelTypes/IAttachment'
 
 const store : Module<AttachmentState, RootStoreState> = {
 	namespaced: true,

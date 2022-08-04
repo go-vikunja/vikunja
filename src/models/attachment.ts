@@ -1,14 +1,9 @@
-import AbstractModel, { type IAbstract } from './abstractModel'
-import UserModel, {type IUser} from './user'
-import FileModel, {type IFile} from './file'
-
-export interface IAttachment extends IAbstract {
-	id: number
-	taskId: number
-	createdBy: IUser
-	file: IFile
-	created: Date
-}
+import AbstractModel from './abstractModel'
+import UserModel from './user'
+import FileModel from './file'
+import type { IUser } from '@/modelTypes/IUser'
+import type { IFile } from '@/modelTypes/IFile'
+import type { IAttachment } from '@/modelTypes/IAttachment'
 
 export default class AttachmentModel extends AbstractModel implements IAttachment {
 	id = 0

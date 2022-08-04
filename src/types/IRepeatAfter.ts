@@ -6,9 +6,9 @@ export const REPEAT_TYPES = {
 	Years: 'years',
 } as const
 
-export type RepeatType = typeof REPEAT_TYPES[keyof typeof REPEAT_TYPES]
+export type IRepeatType = typeof REPEAT_TYPES[keyof typeof REPEAT_TYPES]
 
-export interface IRepeats {
-	type: RepeatType,
+export interface IRepeatAfter {
+	type: IRepeatType,
 	amount: number,
 }
