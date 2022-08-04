@@ -65,7 +65,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
 	golang.org/x/image v0.0.0-20220617043117-41969df76e82
 	golang.org/x/oauth2 v0.0.0-20220718184931-c8730f7fcb92
-	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
+	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
 	golang.org/x/sys v0.0.0-20220804182731-e052cef7d300
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
