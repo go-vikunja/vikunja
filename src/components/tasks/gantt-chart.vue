@@ -4,7 +4,7 @@
 		<g-gantt-chart
 			:chart-start="`${dateFrom} 00:00`"
 			:chart-end="`${dateTo} 23:59`"
-			precision="day"
+			:precision="PRECISION"
 			bar-start="startDate"
 			bar-end="endDate"
 			:grid="true"
@@ -31,30 +31,11 @@
 			/>
 		</g-gantt-chart>
 	</div>
-	<form
-		@submit.prevent="createTask()"
-		class="add-new-task"
-		v-if="canWrite"
-	>
-		<transition name="width">
-			<input
-				@blur="hideCreateNewTask"
-				@keyup.esc="newTaskFieldActive = false"
-				class="input"
-				ref="newTaskTitleField"
-				type="text"
-				v-if="newTaskFieldActive"
-				v-model="newTaskTitle"
-			/>
-		</transition>
-		<x-button @click="showCreateTaskOrCreate" :shadow="false" icon="plus">
-			{{ $t('task.new') }}
-		</x-button>
-	</form>
+	<TaskForm v-if="canWrite" @create-task="createTask" />
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, ref, watchEffect} from 'vue'
+import {computed, ref, watchEffect, shallowReactive, type Ref, type PropType} from 'vue'
 import TaskCollectionService from '@/services/taskCollection'
 import TaskService from '@/services/task'
 import {format, parse} from 'date-fns'
@@ -64,6 +45,48 @@ import Rights from '@/models/constants/rights.json'
 import TaskModel from '@/models/task'
 import {useRouter} from 'vue-router'
 import Loading from '@/components/misc/loading.vue'
+import type ListModel from '@/models/list'
+
+// FIXME: these types should be exported from vue-ganttastic
+// see: https://github.com/InfectoOne/vue-ganttastic/blob/master/src/models/models.ts
+
+export interface GanttBarConfig {
+	id: string,
+	label?: string
+	hasHandles?: boolean
+	immobile?: boolean
+	bundle?: string
+	pushOnOverlap?: boolean
+	dragLimitLeft?: number
+	dragLimitRight?: number
+	style?: CSSStyleSheet
+}
+
+export type GanttBarObject = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any,
+  ganttBarConfig: GanttBarConfig
+}
+
+export type GGanttChartPropsRefs = {
+  chartStart: Ref<string>
+  chartEnd: Ref<string>
+  precision: Ref<'hour' | 'day' | 'month'>
+  barStart: Ref<string>
+  barEnd: Ref<string>
+  rowHeight: Ref<number>
+  dateFormat: Ref<string>
+  width: Ref<string>
+  hideTimeaxis: Ref<boolean>
+  colorScheme: Ref<string>
+  grid: Ref<boolean>
+  pushOnOverlap: Ref<boolean>
+  noOverlap: Ref<boolean>
+  gGanttChart: Ref<HTMLElement | null>
+  font: Ref<string>
+}
+
+const PRECISION = 'day'
 
 const DATE_FORMAT = 'yyyy-LL-dd HH:mm'
 
@@ -72,25 +95,25 @@ const router = useRouter()
 
 const props = defineProps({
 	listId: {
-		type: Number,
+		type: Number as PropType<ListModel['id']>,
 		required: true,
 	},
 	dateFrom: {
-		type: String,
+		type: String as PropType<any>,
 		required: true,
 	},
 	dateTo: {
-		type: String,
+		type: String as PropType<any>,
 		required: true,
 	},
 	showTasksWithoutDates: {
-		type: Boolean,
+		type: Boolean as PropType<boolean>,
 		default: false,
 	},
 })
 
-const taskCollectionService = ref(new TaskCollectionService())
-const taskService = ref(new TaskService())
+const taskCollectionService = shallowReactive(new TaskCollectionService())
+const taskService = shallowReactive(new TaskService())
 
 const dateFromDate = computed(() => parse(props.dateFrom, 'yyyy-LL-dd', new Date()))
 const dateToDate = computed(() => parse(props.dateTo, 'yyyy-LL-dd', new Date()))
@@ -104,8 +127,8 @@ const ganttChartWidth = computed(() => {
 
 const canWrite = computed(() => store.state.currentList.maxRight > Rights.READ)
 
-const tasks = ref<Map<number, TaskModel>>([])
-const ganttBars = ref([])
+const tasks = ref<Map<TaskModel['id'], TaskModel>>(new Map())
+const ganttBars = ref<GanttBarObject[][]>([])
 
 const defaultStartDate = format(new Date(), DATE_FORMAT)
 const defaultEndDate = format(new Date((new Date()).setDate((new Date()).getDate() + 7)), DATE_FORMAT)
@@ -120,13 +143,13 @@ function transformTaskToGanttBar(t: TaskModel) {
 			label: t.title,
 			hasHandles: true,
 			style: {
-				color: t.startDate ? (colorIsDark(t.getHexColor()) ? black : 'white') : black,
-				backgroundColor: t.startDate ? t.getHexColor() : 'var(--grey-100)',
+				color: t.startDate ? (colorIsDark(t.getHexColor(t.hexColor)) ? black : 'white') : black,
+				backgroundColor: t.startDate ? t.getHexColor(t.hexColor) : 'var(--grey-100)',
 				border: t.startDate ? '' : '2px dashed var(--grey-300)',
 				'text-decoration': t.done ? 'line-through' : null,
 			},
 		},
-	}]
+	} as GanttBarObject]
 }
 
 // We need a "real" ref object for the gantt bars to instantly update the tasks when they are dragged on the chart.
@@ -137,35 +160,50 @@ function mapGanttBars() {
 	tasks.value.forEach(t => ganttBars.value.push(transformTaskToGanttBar(t)))
 }
 
-async function loadTasks() {
-	tasks.value = new Map<number, TaskModel>()
+// FIXME: unite with other filter params types
+interface GetAllTasksParams {
+		sort_by: ('start_date' | 'done' | 'id')[],
+		order_by: ('asc' | 'asc' | 'desc')[],
+		filter_by: 'start_date'[],
+		filter_comparator: ('greater_equals' | 'less_equals')[],
+		filter_value: [string, string] // [dateFrom, dateTo],
+		filter_concat: 'and',
+		filter_include_nulls: boolean,
+}
+
+async function getAllTasks(params: GetAllTasksParams, page = 1): Promise<TaskModel[]> {
+	const tasks = await taskCollectionService.getAll({listId: props.listId}, params, page) as TaskModel[]
+	if (page < taskCollectionService.totalPages) {
+		const nextTasks = await getAllTasks(params, page + 1)
+		return tasks.concat(nextTasks)
+	}
+	return tasks
+}
+
+async function loadTasks({
+	dateTo,
+	dateFrom,
+	showTasksWithoutDates,
+}: {
+	dateTo: string;
+	dateFrom: string;
+	showTasksWithoutDates: boolean;
+}) {
+	tasks.value = new Map()
 
 	const params = {
 		sort_by: ['start_date', 'done', 'id'],
 		order_by: ['asc', 'asc', 'desc'],
 		filter_by: ['start_date', 'start_date'],
 		filter_comparator: ['greater_equals', 'less_equals'],
-		filter_value: [props.dateFrom, props.dateTo],
+		filter_value: [dateFrom, dateTo],
 		filter_concat: 'and',
-		filter_include_nulls: props.showTasksWithoutDates,
+		filter_include_nulls: showTasksWithoutDates,
 	}
 
+	const loadedTasks = await getAllTasks(params)
 
-	const getAllTasks = async (page = 1) => {
-		const tasks = await taskCollectionService.value.getAll({listId: props.listId}, params, page)
-		if (page < taskCollectionService.value.totalPages) {
-			const nextTasks = await getAllTasks(page + 1)
-			return tasks.concat(nextTasks)
-		}
-		return tasks
-	}
-
-	const loadedTasks = await getAllTasks()
-
-	loadedTasks
-		.forEach(t => {
-			tasks.value.set(t.id, t)
-		})
+	loadedTasks.forEach(t => tasks.value.set(t.id, t))
 
 	mapGanttBars()
 }
@@ -176,55 +214,32 @@ watchEffect(() => loadTasks({
 	showTasksWithoutDates: props.showTasksWithoutDates,
 }))
 
-async function updateTask(e) {
-	const task = tasks.value.get(e.bar.ganttBarConfig.id)
-	task.startDate = e.bar.startDate
-	task.endDate = e.bar.endDate
-	const r = await taskService.value.update(task)
-	ganttBars.value.forEach((el, i) => {
-		if (ganttBars.value[i][0].ganttBarConfig.id === task.id) {
-			ganttBars.value[i] = transformTaskToGanttBar(r)
-		}
-	})
-}
-
-const newTaskFieldActive = ref(false)
-const newTaskTitleField = ref<HTMLInputElement | null>(null)
-const newTaskTitle = ref('')
-
-function showCreateTaskOrCreate() {
-	if (!newTaskFieldActive.value) {
-		// Timeout to not send the form if the field isn't even shown
-		setTimeout(() => {
-			newTaskFieldActive.value = true
-			nextTick(() => newTaskTitleField.value.focus())
-		}, 100)
-	} else {
-		createTask()
-	}
-}
-
-function hideCreateNewTask() {
-	if (newTaskTitle.value === '') {
-		nextTick(() => (newTaskFieldActive.value = false))
-	}
-}
-
-async function createTask() {
-	if (!newTaskFieldActive.value) {
-		return
-	}
-	let task = new TaskModel({
-		title: newTaskTitle.value,
+async function createTask(title: TaskModel['title']) {
+	const newTask = await taskService.create(new TaskModel({
+		title,
 		listId: props.listId,
 		startDate: defaultStartDate,
 		endDate: defaultEndDate,
-	})
-	const r = await taskService.value.create(task)
-	tasks.value.set(r.id, r)
+	}))
+	tasks.value.set(newTask.id, newTask)
 	mapGanttBars()
-	newTaskTitle.value = ''
-	hideCreateNewTask()
+
+	return newTask
+}
+
+async function updateTask(e) {
+	const task = tasks.value.get(e.bar.ganttBarConfig.id)
+
+	if (!task) return
+
+	task.startDate = e.bar.startDate
+	task.endDate = e.bar.endDate
+	const updatedTask = await taskService.update(task)
+	ganttBars.value.map(gantBar => {
+		return gantBar[0].ganttBarConfig.id === task.id
+			? transformTaskToGanttBar(updatedTask)
+			: gantBar
+	})
 }
 
 function openTask(e) {
@@ -321,18 +336,7 @@ function dayIsToday(label: string): boolean {
 	overflow-x: auto;
 }
 
-.add-new-task {
-	padding: 1rem .7rem .4rem .7rem;
-	display: flex;
-	max-width: 450px;
-
-	.input {
-		margin-right: .7rem;
-		font-size: .8rem;
-	}
-
-	.button {
-		font-size: .68rem;
-	}
+#g-gantt-chart {
+	width: 2000px;
 }
 </style>
