@@ -1,3 +1,6 @@
 import {createAsyncComponent} from '@/helpers/createAsyncComponent'
 
-export default createAsyncComponent(() => import('@/components/input/editor.vue'))
+// const Editor = createAsyncComponent(() => import('@/components/input/editor.vue'))
+const TipTap = createAsyncComponent(() => import('@/components/base/TipTap.vue'))
+
+export default TipTap

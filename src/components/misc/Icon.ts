@@ -6,6 +6,10 @@ import {
 	faArchive,
 	faArrowLeft,
 	faArrowUpFromBracket,
+	faBold,
+	faItalic,
+	faStrikethrough,
+	faCode,
 	faBars,
 	faBell,
 	faBolt,
@@ -29,6 +33,7 @@ import {
 	faFilter,
 	faForward,
 	faGripLines,
+	faHeader,
 	faHistory,
 	faImage,
 	faKeyboard,
@@ -59,14 +64,26 @@ import {
 	faTimes,
 	faTrashAlt,
 	faUser,
-	faUsers, faX,
+	faUsers,
+	faQuoteRight,
+	faListUl,
+	faLink,
+	faUndo,
+	faRedo,
+	faUnlink,
+	faParagraph,
+	faTable,
+	faX,
 } from '@fortawesome/free-solid-svg-icons'
 import {
 	faBellSlash,
 	faCalendarAlt,
+	faCheckSquare,
 	faClock,
 	faComments,
+	faFileImage,
 	faSave,
+	faSquareCheck,
 	faStar,
 	faSun,
 	faTimesCircle,
@@ -76,6 +93,21 @@ import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 
 import type {FontAwesomeIcon as FontAwesomeIconFixedTypes} from '@/types/vue-fontawesome'
 
+library.add(faBold)
+library.add(faUndo)
+library.add(faRedo)
+library.add(faItalic)
+library.add(faLink)
+library.add(faUnlink)
+library.add(faParagraph)
+library.add(faSquareCheck)
+library.add(faTable)
+library.add(faFileImage)
+library.add(faCheckSquare)
+library.add(faStrikethrough)
+library.add(faCode)
+library.add(faQuoteRight)
+library.add(faListUl)
 library.add(faAlignLeft)
 library.add(faAngleRight)
 library.add(faArchive)
@@ -107,6 +139,7 @@ library.add(faFillDrip)
 library.add(faFilter)
 library.add(faForward)
 library.add(faGripLines)
+library.add(faHeader)
 library.add(faHistory)
 library.add(faImage)
 library.add(faKeyboard)
