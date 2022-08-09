@@ -88,7 +88,7 @@
     "rollup-plugin-visualizer": "5.7.1",
     "sass": "1.54.3",
     "typescript": "4.7.4",
-    "vite": "3.0.4",
+    "vite": "3.0.5",
     "vite-plugin-pwa": "0.12.3",
     "vite-svg-loader": "3.4.0",
     "vitest": "0.21.0",
