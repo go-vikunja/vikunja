@@ -287,6 +287,7 @@ export default {
 		},
 		logout(ctx) {
 			removeToken()
+			window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
 			ctx.dispatch('checkAuth')
 		},
 	},
