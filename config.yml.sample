@@ -301,6 +301,8 @@ auth:
     enabled: false
     # The url to redirect clients to. Defaults to the configured frontend url. If you're using Vikunja with the official
     # frontend, you don't need to change this value.
+    # **Note:** The redirect url must exactly match the configured redirect url with the third party provider.
+    # This includes all slashes at the end or protocols.
     redirecturl: <frontend url>
     # A list of enabled providers
     providers:
