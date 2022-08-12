@@ -1100,12 +1100,10 @@
     local-pkg "0.4.1"
     pathe "0.2.0"
 
-"@cypress/vue@4.0.0":
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/@cypress/vue/-/vue-4.0.0.tgz#e0689d34c16ffd0874911de92d674fa30d3a559e"
-  integrity sha512-IFskspGdC8O/Ukeog+TrnhfN+rL8kg4ue0dbLNXdGBWMHVMvZin1Y47KbZf++0kjogDmPmSqKIbrNUK3bs+RuQ==
-  dependencies:
-    "@vue/test-utils" "2.0.0-rc.19"
+"@cypress/vue@4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@cypress/vue/-/vue-4.1.0.tgz#03e4dd4b0edbef704527feb6c1534beef4cbc0dd"
+  integrity sha512-HWAsj8N8dWqEy0aBI9GUaPhT16q5ZY2bYiObBUYEXdwTksek/qnyCjEh1L3gAHTFHZC1Yu2pXCuN4CVNMvbTwQ==
 
 "@cypress/xvfb@^1.2.4":
   version "1.2.4"
@@ -2858,11 +2856,6 @@
   version "3.2.37"
   resolved "https://registry.yarnpkg.com/@vue/shared/-/shared-3.2.37.tgz#8e6adc3f2759af52f0e85863dfb0b711ecc5c702"
   integrity sha512-4rSJemR2NQIo9Klm1vabqWjD8rs/ZaJSzMxkMNeJS6lHiUjjUeYFbooN19NgFjztubEKh3WlZUeOLVdbbUWHsw==
-
-"@vue/test-utils@2.0.0-rc.19":
-  version "2.0.0-rc.19"
-  resolved "https://registry.yarnpkg.com/@vue/test-utils/-/test-utils-2.0.0-rc.19.tgz#cd10480b695027481981085c3f705081495a7ca0"
-  integrity sha512-vQ/34z9NH/pqJzl9YTWtTq/vrx5JzLbMojcBB0qydeb7FtGqxp11nLYCgVso+pa8ZOSn2j+OQfjc5aBnb32uzw==
 
 "@vue/test-utils@2.0.2":
   version "2.0.2"
