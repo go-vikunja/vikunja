@@ -7,9 +7,9 @@ export interface ITotp extends AbstractModel {
 }
 
 export default class TotpModel extends AbstractModel implements ITotp{
-	declare secret: string
-	declare enabled: boolean
-	declare url: string
+	secret!: string
+	enabled!: boolean
+	url!: string
 
 	defaults() {
 		return {

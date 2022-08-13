@@ -63,39 +63,39 @@ export interface ITask extends AbstractModel {
 export default class TaskModel extends AbstractModel implements ITask {
 	id: number
 	title: string
-	declare description: string
-	declare done: boolean
+	description!: string
+	done!: boolean
 	doneAt: Date | null
-	declare priority: Priority
+	priority!: Priority
 	labels: ILabel[]
 	assignees: IUser[]
 
 	dueDate: Date | null
 	startDate: Date | null
 	endDate: Date | null
-	declare repeatAfter: number | IRepeats
-	declare repeatFromCurrentDate: boolean
-	declare repeatMode: TaskRepeatMode
+	repeatAfter!: number | IRepeats
+	repeatFromCurrentDate!: boolean
+	repeatMode!: TaskRepeatMode
 	reminderDates: Date[]
-	declare parentTaskId: ITask['id']
-	declare hexColor: string
-	declare percentDone: number
-	declare relatedTasks: { [relationKind: string]: ITask } // FIXME: use relationKinds
+	parentTaskId!: ITask['id']
+	hexColor!: string
+	percentDone!: number
+	relatedTasks!: { [relationKind: string]: ITask } // FIXME: use relationKinds
 	attachments: IAttachment[]
-	declare identifier: string
-	declare index: number
-	declare isFavorite: boolean
-	declare subscription: ISubscription
+	identifier!: string
+	index!: number
+	isFavorite!: boolean
+	subscription!: ISubscription
 
-	declare position: number
-	declare kanbanPosition: number
+	position!: number
+	kanbanPosition!: number
 
 	createdBy: IUser
 	created: Date
 	updated: Date
 
 	listId: IList['id'] // Meta, only used when creating a new task
-	declare bucketId: IBucket['id']
+	bucketId!: IBucket['id']
 
 	constructor(data: Partial<ITask>) {
 		super(data)

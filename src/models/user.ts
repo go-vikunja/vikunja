@@ -13,10 +13,10 @@ export interface IUser extends AbstractModel {
 }
 
 export default class UserModel extends AbstractModel implements IUser {
-	declare id: number
-	declare email: string
-	declare username: string
-	declare name: string
+	id!: number
+	email!: string
+	username!: string
+	name!: string
 
 	created: Date
 	updated: Date

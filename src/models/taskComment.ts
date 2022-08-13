@@ -13,9 +13,9 @@ export interface ITaskComment extends AbstractModel {
 }
 
 export default class TaskCommentModel extends AbstractModel implements ITaskComment {
-	declare id: number
-	declare taskId: ITask['id']
-	declare comment: string
+	id!: number
+	taskId!: ITask['id']
+	comment!: string
 	author: IUser
 
 	created: Date

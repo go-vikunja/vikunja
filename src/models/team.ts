@@ -16,11 +16,11 @@ export interface ITeam extends AbstractModel {
 }
 
 export default class TeamModel extends AbstractModel implements ITeam {
-	declare id: number
-	declare name: string
-	declare description: string
+	id!: number
+	name!: string
+	description!: string
 	members: ITeamMember[]
-	declare right: Right
+	right!: Right
 
 	createdBy: IUser
 	created: Date

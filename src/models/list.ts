@@ -27,20 +27,20 @@ export interface IList extends AbstractModel {
 }
 
 export default class ListModel extends AbstractModel implements IList {
-	declare id: number
-	declare title: string
-	declare description: string
+	id!: number
+	title!: string
+	description!: string
 	owner: IUser
 	tasks: ITask[]
-	declare namespaceId: INamespace['id']
-	declare isArchived: boolean
-	declare hexColor: string
-	declare identifier: string
-	declare backgroundInformation: any
-	declare isFavorite: boolean
-	declare subscription: ISubscription
-	declare position: number
-	declare backgroundBlurHash: string
+	namespaceId!: INamespace['id']
+	isArchived!: boolean
+	hexColor!: string
+	identifier!: string
+	backgroundInformation!: any
+	isFavorite!: boolean
+	subscription!: ISubscription
+	position!: number
+	backgroundBlurHash!: string
 	
 	created: Date
 	updated: Date

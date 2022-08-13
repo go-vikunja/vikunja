@@ -21,10 +21,10 @@ export interface ISavedFilter extends AbstractModel {
 }
 
 export default class SavedFilterModel extends AbstractModel implements ISavedFilter {
-	declare id: 0
-	declare title: string
-	declare description: string
-	declare filters: {
+	id!: 0
+	title!: string
+	description!: string
+	filters!: {
 		sortBy: ('done' | 'id')[]
 		orderBy: ('asc' | 'desc')[]
 		filterBy: 'done'[]

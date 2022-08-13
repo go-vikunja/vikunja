@@ -6,8 +6,8 @@ export interface IPasswordUpdate extends AbstractModel {
 }
 
 export default class PasswordUpdateModel extends AbstractModel implements IPasswordUpdate {
-	declare newPassword: string
-	declare oldPassword: string
+	newPassword!: string
+	oldPassword!: string
 
 	defaults() {
 		return {

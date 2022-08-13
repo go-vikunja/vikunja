@@ -10,8 +10,8 @@ export interface ITaskAssignee extends AbstractModel {
 
 export default class TaskAssigneeModel extends AbstractModel implements ITaskAssignee {
 	created: Date
-	declare userId: IUser['id']
-	declare taskId: ITask['id']
+	userId!: IUser['id']
+	taskId!: ITask['id']
 
 	constructor(data) {
 		super(data)

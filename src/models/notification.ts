@@ -51,10 +51,10 @@ export interface INotification extends AbstractModel {
 }
 
 export default class NotificationModel extends AbstractModel implements INotification {
-	declare id: number
-	declare name: string
-	declare notification: NotificationTask | NotificationAssigned | NotificationDeleted | NotificationCreated | NotificationMemberAdded
-	declare read: boolean
+	id!: number
+	name!: string
+	notification!: NotificationTask | NotificationAssigned | NotificationDeleted | NotificationCreated | NotificationMemberAdded
+	read!: boolean
 	readAt: Date | null
 
 	created: Date

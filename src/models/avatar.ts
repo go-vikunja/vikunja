@@ -7,7 +7,7 @@ export interface IAvatar extends AbstractModel {
 }
 
 export default class AvatarModel extends AbstractModel implements IAvatar {
-	declare avatarProvider: AvatarProvider
+	avatarProvider!: AvatarProvider
 
 	defaults() {
 		return {

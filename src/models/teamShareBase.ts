@@ -15,8 +15,8 @@ export interface ITeamShareBase extends AbstractModel {
  * It is extended in a way so it can be used for namespaces as well for lists.
  */
 export default class TeamShareBaseModel extends AbstractModel implements ITeamShareBase {
-	declare teamId: ITeam['id']
-	declare right: Right
+	teamId!: ITeam['id']
+	right!: Right
 
 	created: Date
 	updated: Date

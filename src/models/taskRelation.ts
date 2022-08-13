@@ -30,10 +30,10 @@ export interface ITaskRelation extends AbstractModel {
 }
 
 export default class TaskRelationModel extends AbstractModel implements ITaskRelation {
-	declare id: number
-	declare otherTaskId: ITask['id']
-	declare taskId: ITask['id']
-	declare relationKind: RelationKind
+	id!: number
+	otherTaskId!: ITask['id']
+	taskId!: ITask['id']
+	relationKind!: RelationKind
 
 	createdBy: IUser
 	created: Date

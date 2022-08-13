@@ -9,10 +9,10 @@ export interface IFile extends AbstractModel {
 } 
 
 export default class FileModel extends AbstractModel implements IFile {
-	declare id: number
-	declare mime: string
-	declare name: string
-	declare size: number
+	id!: number
+	mime!: string
+	name!: string
+	size!: number
 	created: Date
 
 	constructor(data) {

@@ -6,7 +6,7 @@ export interface ITeamNamespace extends TeamShareBaseModel {
 }
 
 export default class TeamNamespaceModel extends TeamShareBaseModel implements ITeamNamespace {
-	declare namespaceId: INamespace['id']
+	namespaceId!: INamespace['id']
 
 	defaults() {
 		return {

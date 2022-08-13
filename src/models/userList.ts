@@ -7,7 +7,7 @@ export interface IUserList extends UserShareBaseModel {
 
 // This class extends the user share model with a 'rights' parameter which is used in sharing
 export default class UserListModel extends UserShareBaseModel implements IUserList {
-	declare listId: IList['id']
+	listId!: IList['id']
 
 	defaults() {
 		return {

@@ -18,13 +18,13 @@ export interface ILabel extends AbstractModel {
 }
 
 export default class LabelModel extends AbstractModel implements ILabel {
-	declare id: number
-	declare title: string
-	declare hexColor: string
-	declare description: string
-	declare createdBy: IUser
-	declare listId: number
-	declare textColor: string
+	id!: number
+	title!: string
+	hexColor!: string
+	description!: string
+	createdBy!: IUser
+	listId!: number
+	textColor!: string
 
 	created: Date
 	updated: Date

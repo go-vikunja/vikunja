@@ -11,8 +11,8 @@ export interface IUserShareBase extends AbstractModel {
 }
 
 export default class UserShareBaseModel extends AbstractModel implements IUserShareBase {
-	declare userId: IUser['id']
-	declare right: Right
+	userId!: IUser['id']
+	right!: Right
 
 	created: Date
 	updated: Date

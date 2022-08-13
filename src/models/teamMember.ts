@@ -7,8 +7,8 @@ export interface ITeamMember extends UserModel {
 }
 
 export default class TeamMemberModel extends UserModel implements ITeamMember {
-	declare admin: boolean
-	declare teamId: IList['id']
+	admin!: boolean
+	teamId!: IList['id']
 
 	defaults() {
 		return {

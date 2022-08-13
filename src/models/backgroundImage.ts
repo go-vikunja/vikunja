@@ -12,14 +12,14 @@ export interface IBackgroundImage extends AbstractModel {
 }
 
 export default class BackgroundImageModel extends AbstractModel implements IBackgroundImage {
-	declare id: number
-	declare url: string
-	declare thumb: string
-	declare info: {
+	id!: number
+	url!: string
+	thumb!: string
+	info!: {
 		author: string
 		authorName: string
 	}
-	declare blurHash: string  
+	blurHash!: string  
 
 	defaults() {
 		return {

@@ -6,7 +6,7 @@ export interface ITeamList extends TeamShareBaseModel {
 }
 
 export default class TeamListModel extends TeamShareBaseModel implements ITeamList {
-	declare listId: IList['id']
+	listId!: IList['id']
 
 	defaults() {
 		return {

@@ -11,9 +11,9 @@ export interface ISubscription extends AbstractModel {
 }
 
 export default class SubscriptionModel extends AbstractModel implements ISubscription {
-	declare id: number
-	declare entity: string // FIXME: correct type?
-	declare entityId: number // FIXME: correct type?
+	id!: number
+	entity!: string // FIXME: correct type?
+	entityId!: number // FIXME: correct type?
 	user: IUser
 
 	created: Date

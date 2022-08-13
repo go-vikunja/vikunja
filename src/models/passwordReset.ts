@@ -8,8 +8,8 @@ export interface IPasswordReset extends AbstractModel {
 
 export default class PasswordResetModel extends AbstractModel implements IPasswordReset {
 	token: string
-	declare newPassword: string
-	declare email: string
+	newPassword!: string
+	email!: string
 
 	constructor(data) {
 		super(data)

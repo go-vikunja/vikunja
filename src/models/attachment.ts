@@ -11,8 +11,8 @@ export interface IAttachment extends AbstractModel {
 }
 
 export default class AttachmentModel extends AbstractModel implements IAttachment {
-	declare id: number
-	declare taskId: number
+	id!: number
+	taskId!: number
 	createdBy: IUser
 	file: IFile
 	created: Date

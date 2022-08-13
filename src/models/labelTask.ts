@@ -7,9 +7,9 @@ export interface ILabelTask extends AbstractModel {
 }
 
 export default class LabelTask extends AbstractModel implements ILabelTask {
-	declare id: number
-	declare taskId: number
-	declare labelId: number
+	id!: number
+	taskId!: number
+	labelId!: number
 
 	defaults() {
 		return {

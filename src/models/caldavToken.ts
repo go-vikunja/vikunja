@@ -6,8 +6,8 @@ export interface ICaldavToken extends AbstractModel {
 }
 
 export default class CaldavTokenModel extends AbstractModel implements ICaldavToken {
-	declare id: number
-	declare created: Date
+	id!: number
+	created!: Date
 
 	constructor(data? : Object) {
 		super(data)

@@ -6,8 +6,8 @@ interface IEmailUpdate extends AbstractModel {
 }
 
 export default class EmailUpdateModel extends AbstractModel implements IEmailUpdate {
-	declare newEmail: string
-	declare password: string
+	newEmail!: string
+	password!: string
 
 	defaults() {
 		return {

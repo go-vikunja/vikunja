@@ -16,14 +16,14 @@ export interface ILinkShare extends AbstractModel {
 }
 
 export default class LinkShareModel extends AbstractModel implements ILinkShare {
-	declare id: number
-	declare hash: string
-	declare right: Right
+	id!: number
+	hash!: string
+	right!: Right
 	sharedBy: IUser
-	declare sharingType: number // FIXME: use correct numbers
-	declare listId: number
-	declare name: string
-	declare password: string
+	sharingType!: number // FIXME: use correct numbers
+	listId!: number
+	name!: string
+	password!: string
 	created: Date
 	updated: Date
 

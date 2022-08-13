@@ -17,13 +17,13 @@ export interface IBucket extends AbstractModel {
 }
 
 export default class BucketModel extends AbstractModel implements IBucket {
-	declare id: number
-	declare title: string
-	declare listId: number
-	declare limit: number
-	declare tasks: ITask[]
-	declare isDoneBucket: boolean
-	declare position: number
+	id!: number
+	title!: string
+	listId!: number
+	limit!: number
+	tasks!: ITask[]
+	isDoneBucket!: boolean
+	position!: number
 	
 	createdBy: IUser
 	created: Date

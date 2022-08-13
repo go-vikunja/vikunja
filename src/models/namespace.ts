@@ -18,14 +18,14 @@ export interface INamespace extends AbstractModel {
 }
 
 export default class NamespaceModel extends AbstractModel implements INamespace {
-	declare id: number
-	declare title: string
-	declare description: string
+	id!: number
+	title!: string
+	description!: string
 	owner: IUser
 	lists: IList[]
-	declare isArchived: boolean
-	declare hexColor: string
-	declare subscription: ISubscription
+	isArchived!: boolean
+	hexColor!: string
+	subscription!: ISubscription
 
 	created: Date
 	updated: Date
