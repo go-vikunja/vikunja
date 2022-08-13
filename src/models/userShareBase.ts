@@ -1,5 +1,5 @@
 import AbstractModel from './abstractModel'
-import {RIGHTS, type Right} from '@/models/constants/rights'
+import {RIGHTS, type Right} from '@/constants/rights'
 import type { IUser } from './user'
 
 export interface IUserShareBase extends AbstractModel {

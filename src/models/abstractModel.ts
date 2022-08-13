@@ -1,6 +1,6 @@
 import {objectToCamelCase} from '@/helpers/case'
 import {omitBy, isNil} from '@/helpers/utils'
-import type {Right} from '@/models/constants/rights'
+import type {Right} from '@/constants/rights'
 
 export interface IAbstract {
 	maxRight: Right | null

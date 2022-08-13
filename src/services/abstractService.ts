@@ -3,7 +3,7 @@ import type {Method} from 'axios'
 
 import {objectToSnakeCase} from '@/helpers/case'
 import AbstractModel, { type IAbstract } from '@/models/abstractModel'
-import type { Right } from '@/models/constants/rights'
+import type { Right } from '@/constants/rights'
 import type { IFile } from '@/models/file'
 
 interface Paths {

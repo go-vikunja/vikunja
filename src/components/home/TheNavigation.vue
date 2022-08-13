@@ -92,7 +92,7 @@ import {useStore} from '@/store'
 import {useRouter} from 'vue-router'
 
 import {QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'
-import {RIGHTS as Rights} from '@/models/constants/rights'
+import {RIGHTS as Rights} from '@/constants/rights'
 
 import Update from '@/components/home/update.vue'
 import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'

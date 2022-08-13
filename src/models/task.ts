@@ -1,4 +1,4 @@
-import type { Priority } from '@/models/constants/priorities'
+import type { Priority } from '@/constants/priorities'
 
 import AbstractModel from '@/models/abstractModel'
 import UserModel, { type IUser } from '@/models/user'

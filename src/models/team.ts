@@ -1,7 +1,7 @@
 import AbstractModel from './abstractModel'
 import UserModel, { type IUser } from './user'
 import TeamMemberModel, { type ITeamMember } from './teamMember'
-import {RIGHTS, type Right} from '@/models/constants/rights'
+import {RIGHTS, type Right} from '@/constants/rights'
 
 export interface ITeam extends AbstractModel {
 	id: number

@@ -427,8 +427,8 @@ import {defineComponent} from 'vue'
 import TaskService from '../../services/task'
 import TaskModel, { type ITask } from '@/models/task'
 
-import { PRIORITIES as priorites } from '@/models/constants/priorities'
-import {RIGHTS as rights} from '@/models/constants/rights'
+import { PRIORITIES as priorites } from '@/constants/priorities'
+import {RIGHTS as rights} from '@/constants/rights'
 
 import PrioritySelect from '../../components/tasks/partials/prioritySelect.vue'
 import PercentDoneSelect from '../../components/tasks/partials/percentDoneSelect.vue'

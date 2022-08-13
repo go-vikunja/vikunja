@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import {PRIORITIES as priorities} from '@/models/constants/priorities'
+import {PRIORITIES as priorities} from '@/constants/priorities'
 	
 defineProps({
 	priority: {

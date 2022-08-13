@@ -179,11 +179,11 @@ import EditTask from './edit-task.vue'
 
 import TaskService from '../../services/task'
 import TaskModel from '../../models/task'
-import {PRIORITIES as priorities} from '@/models/constants/priorities'
+import {PRIORITIES as priorities} from '@/constants/priorities'
 import PriorityLabel from './partials/priorityLabel.vue'
 import TaskCollectionService from '../../services/taskCollection'
 import {mapState} from 'vuex'
-import {RIGHTS as Rights} from '@/models/constants/rights'
+import {RIGHTS as Rights} from '@/constants/rights'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 

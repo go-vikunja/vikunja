@@ -1,5 +1,5 @@
 import {parseDate} from '../helpers/time/parseDate'
-import {PRIORITIES} from '@/models/constants/priorities'
+import {PRIORITIES} from '@/constants/priorities'
 import {REPEAT_TYPES, type IRepeats, type RepeatType} from '@/types/IRepeats'
 
 const VIKUNJA_PREFIXES: Prefixes = {

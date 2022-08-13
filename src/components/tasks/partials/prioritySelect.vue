@@ -17,7 +17,7 @@
 
 <script setup lang="ts">
 import {ref, watch} from 'vue'
-import {PRIORITIES} from '@/models/constants/priorities'
+import {PRIORITIES} from '@/constants/priorities'
 
 const priority = ref(0)
 

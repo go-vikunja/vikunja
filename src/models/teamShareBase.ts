@@ -1,5 +1,5 @@
 import AbstractModel from './abstractModel'
-import {RIGHTS, type Right} from '@/models/constants/rights'
+import {RIGHTS, type Right} from '@/constants/rights'
 import type { ITeam } from './team'
 
 export interface ITeamShareBase extends AbstractModel {

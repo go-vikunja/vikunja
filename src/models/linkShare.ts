@@ -1,6 +1,6 @@
 import AbstractModel from './abstractModel'
 import UserModel, { type IUser } from './user'
-import {RIGHTS, type Right} from '@/models/constants/rights'
+import {RIGHTS, type Right} from '@/constants/rights'
 
 export interface ILinkShare extends AbstractModel {
 	id: number

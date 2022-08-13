@@ -160,7 +160,7 @@ import TeamListModel, { type ITeamList } from '@/models/teamList'
 import TeamService from '@/services/team'
 import TeamModel, { type ITeam } from '@/models/team'
 
-import {RIGHTS} from '@/models/constants/rights'
+import {RIGHTS} from '@/constants/rights'
 import Multiselect from '@/components/input/multiselect.vue'
 import Nothing from '@/components/misc/nothing.vue'
 import {success} from '@/message'
