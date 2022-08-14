@@ -1,6 +1,6 @@
-import AbstractModel from '@/models/abstractModel'
+import AbstractModel, { type IAbstract } from '@/models/abstractModel'
 
-export interface IPasswordUpdate extends AbstractModel {
+export interface IPasswordUpdate extends IAbstract {
 	newPassword: string
 	oldPassword: string
 }

@@ -1,9 +1,9 @@
-import AbstractModel from './abstractModel'
+import AbstractModel, { type IAbstract } from './abstractModel'
 import UserModel, { type IUser } from './user'
 import TeamMemberModel, { type ITeamMember } from './teamMember'
 import {RIGHTS, type Right} from '@/constants/rights'
 
-export interface ITeam extends AbstractModel {
+export interface ITeam extends IAbstract {
 	id: number
 	name: string
 	description: string

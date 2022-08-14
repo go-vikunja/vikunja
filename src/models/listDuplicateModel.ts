@@ -1,8 +1,8 @@
-import AbstractModel from './abstractModel'
+import AbstractModel, { type IAbstract } from './abstractModel'
 import ListModel, { type IList } from './list'
 import type { INamespace } from './namespace'
 
-export interface IListDuplicate extends AbstractModel {
+export interface IListDuplicate extends IAbstract {
 	listId: number
 	namespaceId: INamespace['id']
 	list: IList

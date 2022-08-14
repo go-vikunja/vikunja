@@ -1,8 +1,8 @@
-import AbstractModel from './abstractModel'
+import AbstractModel, { type IAbstract } from './abstractModel'
 import {RIGHTS, type Right} from '@/constants/rights'
 import type { IUser } from './user'
 
-export interface IUserShareBase extends AbstractModel {
+export interface IUserShareBase extends IAbstract {
 	userId: IUser['id']
 	right: Right
 

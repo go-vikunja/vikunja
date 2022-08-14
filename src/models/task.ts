@@ -1,6 +1,6 @@
 import type { Priority } from '@/constants/priorities'
 
-import AbstractModel from '@/models/abstractModel'
+import AbstractModel, { type IAbstract } from '@/models/abstractModel'
 import UserModel, { type IUser } from '@/models/user'
 import LabelModel, { type ILabel } from '@/models/label'
 import AttachmentModel, {type IAttachment} from '@/models/attachment'
@@ -22,7 +22,7 @@ export const TASK_REPEAT_MODES = {
 
 export type TaskRepeatMode = typeof TASK_REPEAT_MODES[keyof typeof TASK_REPEAT_MODES] 
 
-export interface ITask extends AbstractModel {
+export interface ITask extends IAbstract {
 	id: number
 	title: string
 	description: string

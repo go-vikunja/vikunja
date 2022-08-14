@@ -1,8 +1,8 @@
-import AbstractModel from './abstractModel'
+import AbstractModel, { type IAbstract } from './abstractModel'
 import {RIGHTS, type Right} from '@/constants/rights'
 import type { ITeam } from './team'
 
-export interface ITeamShareBase extends AbstractModel {
+export interface ITeamShareBase extends IAbstract {
 	teamId: ITeam['id']
 	right: Right
 

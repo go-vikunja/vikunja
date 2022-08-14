@@ -1,8 +1,8 @@
 
-import AbstractModel from './abstractModel'
+import AbstractModel, { type IAbstract } from './abstractModel'
 import type { IList } from './list'
 
-export interface IUserSettings extends AbstractModel {
+export interface IUserSettings extends IAbstract {
 	name: string
 	emailRemindersEnabled: boolean
 	discoverableByName: boolean

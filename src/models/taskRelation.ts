@@ -1,4 +1,4 @@
-import AbstractModel from './abstractModel'
+import AbstractModel, { type IAbstract } from './abstractModel'
 import UserModel, { type IUser } from './user'
 import type { ITask } from './task'
 
@@ -19,7 +19,7 @@ export const RELATION_KINDS = [...Object.values(RELATION_KIND)] as const
 
 export type RelationKind = typeof RELATION_KINDS[number]
 
-export interface ITaskRelation extends AbstractModel {
+export interface ITaskRelation extends IAbstract {
 	id: number
 	otherTaskId: ITask['id']
 	taskId: ITask['id']

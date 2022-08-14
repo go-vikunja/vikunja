@@ -1,8 +1,8 @@
-import AbstractModel from './abstractModel'
+import AbstractModel, { type IAbstract } from './abstractModel'
 import type { ITask } from './task'
 import type { IUser } from './user'
 
-export interface ITaskAssignee extends AbstractModel {
+export interface ITaskAssignee extends IAbstract {
 	created: Date
 	userId: IUser['id']
 	taskId: ITask['id']

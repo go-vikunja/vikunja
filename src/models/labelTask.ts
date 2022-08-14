@@ -1,6 +1,6 @@
-import AbstractModel from './abstractModel'
+import AbstractModel, { type IAbstract } from './abstractModel'
 
-export interface ILabelTask extends AbstractModel {
+export interface ILabelTask extends IAbstract {
 	id: number
 	taskId: number
 	labelId: number

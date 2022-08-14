@@ -1,7 +1,7 @@
-import AbstractModel from '@/models/abstractModel'
+import AbstractModel, { type IAbstract } from '@/models/abstractModel'
 import UserModel, { type IUser } from '@/models/user'
 
-export interface ISavedFilter extends AbstractModel {
+export interface ISavedFilter extends IAbstract {
 	id: 0
 	title: string
 	description: string

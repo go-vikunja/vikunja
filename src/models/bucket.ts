@@ -1,8 +1,8 @@
-import AbstractModel from './abstractModel'
+import AbstractModel, { type IAbstract } from './abstractModel'
 import UserModel, { type IUser } from './user'
 import TaskModel, { type ITask } from './task'
 
-export interface IBucket extends AbstractModel {
+export interface IBucket extends IAbstract {
 	id: number
 	title: string
 	listId: number

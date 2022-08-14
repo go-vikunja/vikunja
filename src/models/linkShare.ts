@@ -1,8 +1,8 @@
-import AbstractModel from './abstractModel'
+import AbstractModel, { type IAbstract } from './abstractModel'
 import UserModel, { type IUser } from './user'
 import {RIGHTS, type Right} from '@/constants/rights'
 
-export interface ILinkShare extends AbstractModel {
+export interface ILinkShare extends IAbstract {
 	id: number
 	hash: string
 	right: Right

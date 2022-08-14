@@ -1,4 +1,4 @@
-import AbstractModel from '@/models/abstractModel'
+import AbstractModel, { type IAbstract } from '@/models/abstractModel'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import UserModel, { type IUser } from '@/models/user'
 import TaskModel, { type ITask } from '@/models/task'
@@ -40,7 +40,7 @@ interface NotificationMemberAdded extends Notification {
 	team: ITeam
 }
 
-export interface INotification extends AbstractModel {
+export interface INotification extends IAbstract {
 	id: number
 	name: string
 	notification: NotificationTask | NotificationAssigned | NotificationDeleted | NotificationCreated | NotificationMemberAdded

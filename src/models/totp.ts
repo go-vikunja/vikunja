@@ -1,6 +1,6 @@
-import AbstractModel from './abstractModel'
+import AbstractModel, { type IAbstract } from './abstractModel'
 
-export interface ITotp extends AbstractModel {
+export interface ITotp extends IAbstract {
 	secret: string
 	enabled: boolean
 	url: string

@@ -1,6 +1,6 @@
-import AbstractModel from './abstractModel'
+import AbstractModel, { type IAbstract } from './abstractModel'
 
-export interface IPasswordReset extends AbstractModel {
+export interface IPasswordReset extends IAbstract {
 	token: string
 	newPassword: string
 	email: string

@@ -1,7 +1,7 @@
-import AbstractModel from './abstractModel'
+import AbstractModel, { type IAbstract } from './abstractModel'
 import UserSettingsModel, { type IUserSettings } from '@/models/userSettings'
 
-export interface IUser extends AbstractModel {
+export interface IUser extends IAbstract {
 	id: number
 	email: string
 	username: string
