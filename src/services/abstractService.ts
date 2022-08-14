@@ -40,7 +40,7 @@ function prepareParams(params: Record<string, unknown | unknown[]>) {
 	return objectToSnakeCase(params)
 }
 
-export default class AbstractService<Model extends IAbstract = IAbstract> {
+export default abstract class AbstractService<Model extends IAbstract = IAbstract> {
 
 	/////////////////////////////
 	// Initial variable definitions

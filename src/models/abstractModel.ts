@@ -3,10 +3,10 @@ import {omitBy, isNil} from '@/helpers/utils'
 import type {Right} from '@/constants/rights'
 
 export interface IAbstract {
-	maxRight: Right | null
+	maxRight: Right | null // FIXME: should this be readonly?
 }
 
-export default class AbstractModel implements IAbstract {
+export default abstract class AbstractModel<Model extends IAbstract = IAbstract> implements IAbstract {
 
 	/**
 	 * The max right the user has on this object, as returned by the x-max-right header from the api.
