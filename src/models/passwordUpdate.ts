@@ -6,13 +6,11 @@ export interface IPasswordUpdate extends IAbstract {
 }
 
 export default class PasswordUpdateModel extends AbstractModel implements IPasswordUpdate {
-	newPassword!: string
-	oldPassword!: string
+	newPassword = ''
+	oldPassword = ''
 
-	defaults() {
-		return {
-			newPassword: '',
-			oldPassword: '',
-		}
+	constructor(data: Partial<IPasswordUpdate>) {
+		super()
+		this.assignData(data)
 	}
 }

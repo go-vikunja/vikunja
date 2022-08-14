@@ -9,20 +9,13 @@ export interface ITaskAssignee extends IAbstract {
 }
 
 export default class TaskAssigneeModel extends AbstractModel implements ITaskAssignee {
-	created: Date
-	userId!: IUser['id']
-	taskId!: ITask['id']
+	created: Date = null
+	userId: IUser['id'] = 0
+	taskId: ITask['id'] = 0
 
-	constructor(data) {
-		super(data)
+	constructor(data: Partial<ITaskAssignee>) {
+		super()
+		this.assignData(data)
 		this.created = new Date(this.created)
-	}
-
-	defaults() {
-		return {
-			created: null,
-			userId: 0,
-			taskId: 0,
-		}
 	}
 }

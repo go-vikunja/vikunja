@@ -30,29 +30,19 @@ export interface ITaskRelation extends IAbstract {
 }
 
 export default class TaskRelationModel extends AbstractModel implements ITaskRelation {
-	id!: number
-	otherTaskId!: ITask['id']
-	taskId!: ITask['id']
-	relationKind!: RelationKind
+	id = 0
+	otherTaskId: ITask['id'] = 0
+	taskId: ITask['id'] = 0
+	relationKind: RelationKind = ''
 
-	createdBy: IUser
-	created: Date
+	createdBy: IUser = UserModel
+	created: Date = null
 
-	constructor(data) {
-		super(data)
+	constructor(data: Partial<ITaskRelation>) {
+		super()
+		this.assignData(data)
+
 		this.createdBy = new UserModel(this.createdBy)
 		this.created = new Date(this.created)
-	}
-
-	defaults() {
-		return {
-			id: 0,
-			otherTaskId: 0,
-			taskId: 0,
-			relationKind: '',
-
-			createdBy: UserModel,
-			created: null,
-		}
 	}
 }

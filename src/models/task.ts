@@ -1,4 +1,4 @@
-import type { Priority } from '@/constants/priorities'
+import { PRIORITIES, type Priority } from '@/constants/priorities'
 
 import AbstractModel, { type IAbstract } from '@/models/abstractModel'
 import UserModel, { type IUser } from '@/models/user'
@@ -61,44 +61,45 @@ export interface ITask extends IAbstract {
 }
 
 export default class TaskModel extends AbstractModel implements ITask {
-	id: number
-	title: string
-	description!: string
-	done!: boolean
-	doneAt: Date | null
-	priority!: Priority
-	labels: ILabel[]
-	assignees: IUser[]
+	id = 0
+	title = ''
+	description = ''
+	done = false
+	doneAt: Date | null = null
+	priority: Priority = PRIORITIES.UNSET
+	labels: ILabel[] = []
+	assignees: IUser[] = []
 
-	dueDate: Date | null
-	startDate: Date | null
-	endDate: Date | null
-	repeatAfter!: number | IRepeats
-	repeatFromCurrentDate!: boolean
-	repeatMode!: TaskRepeatMode
-	reminderDates: Date[]
-	parentTaskId!: ITask['id']
-	hexColor!: string
-	percentDone!: number
-	relatedTasks!: { [relationKind: string]: ITask } // FIXME: use relationKinds
-	attachments: IAttachment[]
-	identifier!: string
-	index!: number
-	isFavorite!: boolean
-	subscription!: ISubscription
+	dueDate: Date | null = 0
+	startDate: Date | null = 0
+	endDate: Date | null = 0
+	repeatAfter: number | IRepeats = 0
+	repeatFromCurrentDate = false
+	repeatMode: TaskRepeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	reminderDates: Date[] = []
+	parentTaskId: ITask['id'] = 0
+	hexColor = ''
+	percentDone = 0
+	relatedTasks: { [relationKind: string]: ITask } = {}
+	attachments: IAttachment[] = []
+	identifier = ''
+	index = 0
+	isFavorite = false
+	subscription: ISubscription = null
 
-	position!: number
-	kanbanPosition!: number
+	position = 0
+	kanbanPosition = 0
 
-	createdBy: IUser
-	created: Date
-	updated: Date
+	createdBy: IUser = UserModel
+	created: Date = null
+	updated: Date = null
 
-	listId: IList['id'] // Meta, only used when creating a new task
-	bucketId!: IBucket['id']
+	listId: IList['id'] = 0
+	bucketId: IBucket['id'] = 0
 
 	constructor(data: Partial<ITask>) {
-		super(data)
+		super()
+		this.assignData(data)
 
 		this.id = Number(this.id)
 		this.title = this.title?.trim()
@@ -156,46 +157,6 @@ export default class TaskModel extends AbstractModel implements ITask {
 		this.updated = new Date(this.updated)
 
 		this.listId = Number(this.listId)
-	}
-
-	defaults() {
-		return {
-			id: 0,
-			title: '',
-			description: '',
-			done: false,
-			doneAt: null,
-			priority: 0,
-			labels: [],
-			assignees: [],
-
-			dueDate: 0,
-			startDate: 0,
-			endDate: 0,
-			repeatAfter: 0,
-			repeatFromCurrentDate: false,
-			repeatMode: TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT,
-			reminderDates: [],
-			parentTaskId: 0,
-			hexColor: '',
-			percentDone: 0,
-			relatedTasks: {},
-			attachments: [],
-			identifier: '',
-			index: 0,
-			isFavorite: false,
-			subscription: null,
-
-			position: 0,
-			kanbanPosition: 0,
-
-			createdBy: UserModel,
-			created: null,
-			updated: null,
-
-			listId: 0, // Meta, only used when creating a new task
-			bucketId: 0,
-		}
 	}
 
 	getTextIdentifier() {

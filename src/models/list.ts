@@ -16,7 +16,7 @@ export interface IList extends IAbstract {
 	isArchived: boolean
 	hexColor: string
 	identifier: string
-	backgroundInformation: any
+	backgroundInformation: any // FIXME: improve type
 	isFavorite: boolean
 	subscription: ISubscription
 	position: number
@@ -27,26 +27,27 @@ export interface IList extends IAbstract {
 }
 
 export default class ListModel extends AbstractModel implements IList {
-	id!: number
-	title!: string
-	description!: string
-	owner: IUser
-	tasks: ITask[]
-	namespaceId!: INamespace['id']
-	isArchived!: boolean
-	hexColor!: string
-	identifier!: string
-	backgroundInformation!: any
-	isFavorite!: boolean
-	subscription!: ISubscription
-	position!: number
-	backgroundBlurHash!: string
+	id = 0
+	title = ''
+	description = ''
+	owner: IUser = UserModel
+	tasks: ITask[] = []
+	namespaceId: INamespace['id'] = 0
+	isArchived = false
+	hexColor = ''
+	identifier = ''
+	backgroundInformation: any = null
+	isFavorite = false
+	subscription: ISubscription = null
+	position = 0
+	backgroundBlurHash = ''
 	
-	created: Date
-	updated: Date
+	created: Date = null
+	updated: Date = null
 
-	constructor(data) {
-		super(data)
+	constructor(data: Partial<IList>) {
+		super()
+		this.assignData(data)
 
 		this.owner = new UserModel(this.owner)
 
@@ -65,29 +66,6 @@ export default class ListModel extends AbstractModel implements IList {
 
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
-	}
-
-	// Default attributes that define the "empty" state.
-	defaults() {
-		return {
-			id: 0,
-			title: '',
-			description: '',
-			owner: UserModel,
-			tasks: [],
-			namespaceId: 0,
-			isArchived: false,
-			hexColor: '',
-			identifier: '',
-			backgroundInformation: null,
-			isFavorite: false,
-			subscription: null,
-			position: 0,
-			backgroundBlurHash: '',
-
-			created: null,
-			updated: null,
-		}
 	}
 
 	isSavedFilter() {

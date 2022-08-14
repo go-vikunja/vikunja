@@ -7,14 +7,11 @@ export interface ITeamMember extends UserModel {
 }
 
 export default class TeamMemberModel extends UserModel implements ITeamMember {
-	admin!: boolean
-	teamId!: IList['id']
+	admin = false
+	teamId: IList['id'] = 0
 
-	defaults() {
-		return {
-			...super.defaults(),
-			admin: false,
-			teamId: 0,
-		}
+	constructor(data: Partial<ITeamMember>) {
+		super(data)
+		this.assignData(data)
 	}
 }

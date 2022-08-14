@@ -12,22 +12,17 @@ export interface IBackgroundImage extends IAbstract {
 }
 
 export default class BackgroundImageModel extends AbstractModel implements IBackgroundImage {
-	id!: number
-	url!: string
-	thumb!: string
-	info!: {
+	id = 0
+	url = ''
+	thumb = ''
+	info: {
 		author: string
 		authorName: string
-	}
-	blurHash!: string  
+	} = {}
+	blurHash = ''
 
-	defaults() {
-		return {
-			id: 0,
-			url: '',
-			thumb: '',
-			info: {},
-			blurHash: '',
-		}
+	constructor(data: Partial<IBackgroundImage>) {
+		super()
+		this.assignData(data)
 	}
 }

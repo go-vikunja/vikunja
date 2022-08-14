@@ -13,36 +13,24 @@ export interface IUser extends IAbstract {
 }
 
 export default class UserModel extends AbstractModel implements IUser {
-	id!: number
-	email!: string
-	username!: string
-	name!: string
+	id = 0
+	email = ''
+	username = ''
+	name = ''
 
-	created: Date
-	updated: Date
-	settings: IUserSettings
+	created: Date = null
+	updated: Date = null
+	settings: IUserSettings = null
 
-	constructor(data) {
-		super(data)
+	constructor(data: Partial<IUser>) {
+		super()
+		this.assignData(data)
 
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
 
 		if (this.settings !== null) {
 			this.settings = new UserSettingsModel(this.settings)
-		}
-	}
-
-	defaults() {
-		return {
-			id: 0,
-			email: '',
-			username: '',
-			name: '',
-
-			created: null,
-			updated: null,
-			settings: null,
 		}
 	}
 

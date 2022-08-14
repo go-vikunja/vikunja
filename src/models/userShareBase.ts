@@ -11,25 +11,17 @@ export interface IUserShareBase extends IAbstract {
 }
 
 export default class UserShareBaseModel extends AbstractModel implements IUserShareBase {
-	userId!: IUser['id']
-	right!: Right
+	userId: IUser['id'] = ''
+	right: Right = RIGHTS.READ
 
-	created: Date
-	updated: Date
+	created: Date = null
+	updated: Date = null
 
-	constructor(data) {
-		super(data)
+	constructor(data: Partial<IUserShareBase>) {
+		super()
+		this.assignData(data)
+	
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
-	}
-
-	defaults() {
-		return {
-			userId: '',
-			right: RIGHTS.READ,
-
-			created: null,
-			updated: null,
-		}
 	}
 }

@@ -16,41 +16,24 @@ export interface ILinkShare extends IAbstract {
 }
 
 export default class LinkShareModel extends AbstractModel implements ILinkShare {
-	id!: number
-	hash!: string
-	right!: Right
-	sharedBy: IUser
-	sharingType!: number // FIXME: use correct numbers
-	listId!: number
-	name!: string
-	password!: string
-	created: Date
-	updated: Date
+	id = 0
+	hash = ''
+	right: Right = RIGHTS.READ
+	sharedBy: IUser = UserModel
+	sharingType = 0 // FIXME: use correct numbers
+	listId = 0
+	name: ''
+	password: ''
+	created: Date = null
+	updated: Date = null
 
-	constructor(data) {
-		// The constructor of AbstractModel handles all the default parsing.
-		super(data)
+	constructor(data: Partial<ILinkShare>) {
+		super()
+		this.assignData(data)
 
 		this.sharedBy = new UserModel(this.sharedBy)
 
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
-	}
-
-	// Default attributes that define the "empty" state.
-	defaults() {
-		return {
-			id: 0,
-			hash: '',
-			right: RIGHTS.READ,
-			sharedBy: UserModel,
-			sharingType: 0,
-			listId: 0,
-			name: '',
-			password: '',
-
-			created: null,
-			updated: null,
-		}
 	}
 }

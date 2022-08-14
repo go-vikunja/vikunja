@@ -16,18 +16,19 @@ export interface ITeam extends IAbstract {
 }
 
 export default class TeamModel extends AbstractModel implements ITeam {
-	id!: number
-	name!: string
-	description!: string
-	members: ITeamMember[]
-	right!: Right
+	id = 0
+	name = ''
+	description = ''
+	members: ITeamMember[] = []
+	right: Right = RIGHTS.READ
 
-	createdBy: IUser
-	created: Date
-	updated: Date
+	createdBy: IUser = {} // FIXME: seems wrong
+	created: Date = null
+	updated: Date = null
 
-	constructor(data) {
-		super(data)
+	constructor(data: Partial<ITeam>) {
+		super()
+		this.assignData(data)
 
 		// Make the members to usermodels
 		this.members = this.members.map(m => {
@@ -37,19 +38,5 @@ export default class TeamModel extends AbstractModel implements ITeam {
 
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
-	}
-
-	defaults() {
-		return {
-			id: 0,
-			name: '',
-			description: '',
-			members: [],
-			right: RIGHTS.READ,
-
-			createdBy: {},
-			created: null,
-			updated: null,
-		}
 	}
 }

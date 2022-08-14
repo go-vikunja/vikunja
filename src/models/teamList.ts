@@ -6,12 +6,10 @@ export interface ITeamList extends TeamShareBaseModel {
 }
 
 export default class TeamListModel extends TeamShareBaseModel implements ITeamList {
-	listId!: IList['id']
+	listId: IList['id'] = 0
 
-	defaults() {
-		return {
-			...super.defaults(),
-			listId: 0,
-		}
+	constructor(data: Partial<ITeamList>) {
+		super(data)
+		this.assignData(data)
 	}
 }

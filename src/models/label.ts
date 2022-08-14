@@ -18,25 +18,23 @@ export interface ILabel extends IAbstract {
 }
 
 export default class LabelModel extends AbstractModel implements ILabel {
-	id!: number
-	title!: string
-	hexColor!: string
-	description!: string
-	createdBy!: IUser
-	listId!: number
-	textColor!: string
+	id = 0
+	title = ''
+	// FIXME: this should be empty and be definied in the client.
+	// that way it get's never send to the server db and is easier to change in future versions.
+	hexColor = DEFAULT_LABEL_BACKGROUND_COLOR
+	description = ''
+	createdBy: IUser
+	listId = 0
+	textColor = ''
 
-	created: Date
-	updated: Date
+	created: Date = null
+	updated: Date = null
 
-	constructor(data) {
-		super(data)
-		// FIXME: this should be empty and be definied in the client.
-		// that way it get's never send to the server db and is easier to change in future versions.
-		// Set the default color
-		if (this.hexColor === '') {
-			this.hexColor = DEFAULT_LABEL_BACKGROUND_COLOR
-		}
+	constructor(data: Partial<ILabel>) {
+		super()
+		this.assignData(data)
+
 		if (this.hexColor.substring(0, 1) !== '#') {
 			this.hexColor = '#' + this.hexColor
 		}
@@ -45,20 +43,5 @@ export default class LabelModel extends AbstractModel implements ILabel {
 
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
-	}
-
-	defaults() {
-		return {
-			id: 0,
-			title: '',
-			hexColor: '',
-			description: '',
-			createdBy: UserModel,
-			listId: 0,
-			textColor: '',
-
-			created: null,
-			updated: null,
-		}
 	}
 }

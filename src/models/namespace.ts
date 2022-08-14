@@ -18,20 +18,21 @@ export interface INamespace extends IAbstract {
 }
 
 export default class NamespaceModel extends AbstractModel implements INamespace {
-	id!: number
-	title!: string
-	description!: string
-	owner: IUser
-	lists: IList[]
-	isArchived!: boolean
-	hexColor!: string
-	subscription!: ISubscription
+	id = 0
+	title = ''
+	description = ''
+	owner: IUser = UserModel
+	lists: IList[] = []
+	isArchived = false
+	hexColor = ''
+	subscription: ISubscription = null
 
-	created: Date
-	updated: Date
+	created: Date = null
+	updated: Date = null
 
-	constructor(data) {
-		super(data)
+	constructor(data: Partial<INamespace>) {
+		super()
+		this.assignData(data)
 
 		if (this.hexColor !== '' && this.hexColor.substring(0, 1) !== '#') {
 			this.hexColor = '#' + this.hexColor
@@ -49,22 +50,5 @@ export default class NamespaceModel extends AbstractModel implements INamespace 
 
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
-	}
-
-	// Default attributes that define the 'empty' state.
-	defaults() {
-		return {
-			id: 0,
-			title: '',
-			description: '',
-			owner: UserModel,
-			lists: [],
-			isArchived: false,
-			hexColor: '',
-			subscription: null,
-
-			created: null,
-			updated: null,
-		}
 	}
 }

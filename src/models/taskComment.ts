@@ -13,29 +13,20 @@ export interface ITaskComment extends IAbstract {
 }
 
 export default class TaskCommentModel extends AbstractModel implements ITaskComment {
-	id!: number
-	taskId!: ITask['id']
-	comment!: string
-	author: IUser
+	id = 0
+	taskId: ITask['id'] = 0
+	comment = ''
+	author: IUser = UserModel
 
-	created: Date
-	updated: Date
+	created: Date = null
+	updated: Date = null
 
-	constructor(data) {
-		super(data)
+	constructor(data: Partial<ITaskComment>) {
+		super()
+		this.assignData(data)
+
 		this.author = new UserModel(this.author)
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
-	}
-
-	defaults() {
-		return {
-			id: 0,
-			taskId: 0,
-			comment: '',
-			author: UserModel,
-			created: null,
-			updated: null,
-		}
 	}
 }

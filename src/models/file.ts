@@ -9,25 +9,17 @@ export interface IFile extends IAbstract {
 } 
 
 export default class FileModel extends AbstractModel implements IFile {
-	id!: number
-	mime!: string
-	name!: string
-	size!: number
-	created: Date
+	id = 0
+	mime = ''
+	name = ''
+	size = 0
+	created: Date = null
 
-	constructor(data) {
-		super(data)
+	constructor(data: Partial<IFile>) {
+		super()
+		this.assignData(data)
+
 		this.created = new Date(this.created)
-	}
-
-	defaults() {
-		return {
-			id: 0,
-			mime: '',
-			name: '',
-			size: 0,
-			created: null,
-		}
 	}
 
 	getHumanSize() {

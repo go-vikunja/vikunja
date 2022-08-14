@@ -9,20 +9,14 @@ export interface IListDuplicate extends IAbstract {
 }
 
 export default class ListDuplicateModel extends AbstractModel implements IListDuplicate {
-	listId!: number
-	namespaceId!: INamespace['id']
-	list: IList
+	listId = 0
+	namespaceId: INamespace['id'] = 0
+	list: IList = ListModel
 
-	constructor(data) {
-		super(data)
+	constructor(data : Partial<IListDuplicate>) {
+		super()
+		this.assignData(data)
+
 		this.list = new ListModel(this.list)
-	}
-
-	defaults() {
-		return {
-			listId: 0,
-			namespaceId: 0,
-			list: ListModel,
-		}
 	}
 }

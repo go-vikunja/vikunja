@@ -7,21 +7,14 @@ export interface IPasswordReset extends IAbstract {
 }
 
 export default class PasswordResetModel extends AbstractModel implements IPasswordReset {
-	token: string
-	newPassword!: string
-	email!: string
+	token = ''
+	newPassword = ''
+	email = ''
 
-	constructor(data) {
-		super(data)
+	constructor(data: Partial<IPasswordReset>) {
+		super()
+		this.assignData(data)
 
 		this.token = localStorage.getItem('passwordResetToken')
-	}
-
-	defaults() {
-		return {
-			token: '',
-			newPassword: '',
-			email: '',
-		}
 	}
 }

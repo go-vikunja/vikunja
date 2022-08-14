@@ -6,13 +6,11 @@ interface IEmailUpdate extends IAbstract {
 }
 
 export default class EmailUpdateModel extends AbstractModel implements IEmailUpdate {
-	newEmail!: string
-	password!: string
+	newEmail = ''
+	password = ''
 
-	defaults() {
-		return {
-			newEmail: '',
-			password: '',
-		}
+	constructor(data : Partial<IEmailUpdate>) {
+		super()
+		this.assignData(data)
 	}
 }

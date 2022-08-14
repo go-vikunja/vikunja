@@ -7,11 +7,10 @@ export interface IAvatar extends IAbstract {
 }
 
 export default class AvatarModel extends AbstractModel implements IAvatar {
-	avatarProvider!: AvatarProvider
+	avatarProvider: AvatarProvider = 'default'
 
-	defaults() {
-		return {
-			avatarProvider: '',
-		}
+	constructor(data: Partial<IAvatar>) {
+		super()
+		this.assignData(data)
 	}
 }

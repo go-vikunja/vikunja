@@ -6,14 +6,13 @@ export interface ICaldavToken extends IAbstract {
 }
 
 export default class CaldavTokenModel extends AbstractModel implements ICaldavToken {
-	id!: number
-	created!: Date
+	id: number
+	created: Date
 
-	constructor(data? : Object) {
-		super(data)
+	constructor(data? : Partial<CaldavTokenModel>) {
+		super()
+		this.assignData(data)
 		
-		this.id
-
 		if (this.created) {
 			this.created = new Date(this.created)
 		}

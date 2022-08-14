@@ -3,7 +3,7 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import UserModel, { type IUser } from '@/models/user'
 import TaskModel, { type ITask } from '@/models/task'
 import TaskCommentModel, { type ITaskComment } from '@/models/taskComment'
-import ListModel from '@/models/list'
+import ListModel, { type IList } from '@/models/list'
 import TeamModel, { type ITeam } from '@/models/team'
 
 export const NOTIFICATION_NAMES = {
@@ -33,6 +33,7 @@ interface NotificationDeleted extends Notification {
 
 interface NotificationCreated extends Notification {
 	task: ITask
+	list: IList
 }
 
 interface NotificationMemberAdded extends Notification {
@@ -51,16 +52,17 @@ export interface INotification extends IAbstract {
 }
 
 export default class NotificationModel extends AbstractModel implements INotification {
-	id!: number
-	name!: string
-	notification!: NotificationTask | NotificationAssigned | NotificationDeleted | NotificationCreated | NotificationMemberAdded
-	read!: boolean
-	readAt: Date | null
+	id = 0
+	name = ''
+	notification: NotificationTask | NotificationAssigned | NotificationDeleted | NotificationCreated | NotificationMemberAdded = null
+	read = false
+	readAt: Date | null = null
 
 	created: Date
 
-	constructor(data) {
-		super(data)
+	constructor(data: Partial<INotification>) {
+		super()
+		this.assignData(data)
 
 		switch (this.name) {
 			case NOTIFICATION_NAMES.TASK_COMMENT:
@@ -100,16 +102,6 @@ export default class NotificationModel extends AbstractModel implements INotific
 
 		this.created = new Date(this.created)
 		this.readAt = parseDateOrNull(this.readAt)
-	}
-
-	defaults() {
-		return {
-			id: 0,
-			name: '',
-			notification: null,
-			read: false,
-			readAt: null,
-		}
 	}
 
 	toText(user = null) {

@@ -15,25 +15,17 @@ export interface ITeamShareBase extends IAbstract {
  * It is extended in a way so it can be used for namespaces as well for lists.
  */
 export default class TeamShareBaseModel extends AbstractModel implements ITeamShareBase {
-	teamId!: ITeam['id']
-	right!: Right
+	teamId: ITeam['id'] = 0
+	right: Right = RIGHTS.READ
 
-	created: Date
-	updated: Date
+	created: Date = null
+	updated: Date = null
 
-	constructor(data) {
-		super(data)
+	constructor(data: Partial<ITeamShareBase>) {
+		super()
+		this.assignData(data)
+
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
-	}
-
-	defaults() {
-		return {
-			teamId: 0,
-			right: RIGHTS.READ,
-
-			created: null,
-			updated: null,
-		}
 	}
 }
