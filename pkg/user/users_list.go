@@ -41,17 +41,25 @@ func ListUsers(s *xorm.Session, search string, opts *ListUserOpts) (users []*Use
 		return
 	}
 
-	cond := builder.Or(
-		builder.Like{"username", "%" + search + "%"},
-		builder.And(
-			builder.Eq{"email": search},
-			builder.Eq{"discoverable_by_email": true},
-		),
-		builder.And(
-			builder.Like{"name", "%" + search + "%"},
-			builder.Eq{"discoverable_by_name": true},
-		),
-	)
+	conds := []builder.Cond{}
+
+	if search != "" {
+		for _, queryPart := range strings.Split(search, ",") {
+			conds = append(conds,
+				builder.Eq{"username": queryPart},
+				builder.And(
+					builder.Eq{"email": queryPart},
+					builder.Eq{"discoverable_by_email": true},
+				),
+				builder.And(
+					builder.Like{"name", "%" + queryPart + "%"},
+					builder.Eq{"discoverable_by_name": true},
+				),
+			)
+		}
+	}
+
+	cond := builder.Or(conds...)
 
 	if opts.AdditionalCond != nil {
 		cond = builder.And(

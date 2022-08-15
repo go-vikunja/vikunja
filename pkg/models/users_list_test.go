@@ -214,6 +214,13 @@ func TestListUsersFromList(t *testing.T) {
 				testuser13, // Shared Via NamespaceUser admin
 			},
 		},
+		{
+			name: "search for user1",
+			args: args{l: &List{ID: 19, OwnerID: 7}, search: "user1"},
+			wantUsers: []*user.User{
+				testuser1, // Shared Via Team readonly
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

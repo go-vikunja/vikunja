@@ -455,6 +455,31 @@ func TestListUsers(t *testing.T) {
 			"discoverable_by_email": true,
 		}, false)
 	})
+	t.Run("discoverable by exact username", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		all, err := ListUsers(s, "user7", nil)
+		assert.NoError(t, err)
+		assert.Len(t, all, 1)
+		assert.Equal(t, int64(7), all[0].ID)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"username": "user7",
+		}, false)
+	})
+	t.Run("not discoverable by partial username", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		all, err := ListUsers(s, "user", nil)
+		assert.NoError(t, err)
+		assert.Len(t, all, 0)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"username": "user7",
+		}, false)
+	})
 }
 
 func TestUserPasswordReset(t *testing.T) {
