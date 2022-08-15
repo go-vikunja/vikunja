@@ -18,9 +18,10 @@ package migration
 
 import (
 	"encoding/json"
-	"src.techknowlogick.com/xormigrate"
 	"strconv"
 	"strings"
+
+	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
 
