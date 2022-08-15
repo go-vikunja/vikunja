@@ -17,10 +17,15 @@
 package handler
 
 import (
-	"image"
 	_ "image/gif"  // To make sure the decoder used for generating blurHashes recognizes gifs
 	_ "image/jpeg" // To make sure the decoder used for generating blurHashes recognizes jpgs
 	_ "image/png"  // To make sure the decoder used for generating blurHashes recognizes pngs
+
+	_ "golang.org/x/image/bmp"  // To make sure the decoder used for generating blurHashes recognizes bmps
+	_ "golang.org/x/image/tiff" // To make sure the decoder used for generating blurHashes recognizes tiffs
+	_ "golang.org/x/image/webp" // To make sure the decoder used for generating blurHashes recognizes tiffs
+
+	"image"
 	"io"
 	"net/http"
 	"strconv"

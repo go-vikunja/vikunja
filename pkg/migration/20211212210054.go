@@ -17,6 +17,7 @@
 package migration
 
 import (
+	"errors"
 	"image"
 
 	"code.vikunja.io/api/pkg/files"
@@ -64,8 +65,11 @@ func init() {
 				}
 
 				src, _, err := image.Decode(bgFile.File)
-				if err != nil {
+				if err != nil && !errors.Is(err, image.ErrFormat) {
 					return err
+				}
+				if err != nil && errors.Is(err, image.ErrFormat) {
+					log.Warningf("Could not generate a blur hash of list %d's background image: %s", l.ID, err)
 				}
 
 				dst := image.NewRGBA(image.Rect(0, 0, 32, 32))
