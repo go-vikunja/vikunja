@@ -237,7 +237,7 @@ type ErrListIsArchived struct {
 	ListID int64
 }
 
-// IsErrListIsArchived checks if an error is a .
+// IsErrListIsArchived checks if an error is a list is archived error.
 func IsErrListIsArchived(err error) bool {
 	_, ok := err.(ErrListIsArchived)
 	return ok
@@ -253,6 +253,34 @@ const ErrCodeListIsArchived = 3008
 // HTTPError holds the http error description
 func (err ErrListIsArchived) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeListIsArchived, Message: "This list is archived. Editing or creating new tasks is not possible."}
+}
+
+// ErrListCannotBelongToAPseudoNamespace represents an error where a list cannot belong to a pseudo namespace
+type ErrListCannotBelongToAPseudoNamespace struct {
+	ListID      int64
+	NamespaceID int64
+}
+
+// IsErrListCannotBelongToAPseudoNamespace checks if an error is a list is archived error.
+func IsErrListCannotBelongToAPseudoNamespace(err error) bool {
+	_, ok := err.(*ErrListCannotBelongToAPseudoNamespace)
+	return ok
+}
+
+func (err *ErrListCannotBelongToAPseudoNamespace) Error() string {
+	return fmt.Sprintf("List cannot belong to a pseudo namespace [ListID: %d, NamespaceID: %d]", err.ListID, err.NamespaceID)
+}
+
+// ErrCodeListCannotBelongToAPseudoNamespace holds the unique world-error code of this error
+const ErrCodeListCannotBelongToAPseudoNamespace = 3009
+
+// HTTPError holds the http error description
+func (err *ErrListCannotBelongToAPseudoNamespace) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeListCannotBelongToAPseudoNamespace,
+		Message:  "This list cannot belong a dynamically generated namespace.",
+	}
 }
 
 // ================

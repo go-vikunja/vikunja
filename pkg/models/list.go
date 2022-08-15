@@ -543,6 +543,10 @@ func (l *List) CheckIsArchived(s *xorm.Session) (err error) {
 }
 
 func checkListBeforeUpdateOrDelete(s *xorm.Session, list *List) error {
+	if list.NamespaceID < 0 {
+		return &ErrListCannotBelongToAPseudoNamespace{ListID: list.ID, NamespaceID: list.NamespaceID}
+	}
+
 	// Check if the namespace exists
 	if list.NamespaceID > 0 {
 		_, err := GetNamespaceByID(s, list.NamespaceID)

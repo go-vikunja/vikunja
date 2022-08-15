@@ -221,6 +221,25 @@ func TestList_CreateOrUpdate(t *testing.T) {
 				assert.False(t, can) // namespace is not writeable by us
 				_ = s.Close()
 			})
+			t.Run("pseudo namespace", func(t *testing.T) {
+				usr := &user.User{
+					ID:       6,
+					Username: "user6",
+					Email:    "user6@example.com",
+				}
+
+				db.LoadAndAssertFixtures(t)
+				s := db.NewSession()
+				list := List{
+					ID:          6,
+					Title:       "Test6",
+					Description: "Lorem Ipsum",
+					NamespaceID: -1,
+				}
+				err := list.Update(s, usr)
+				assert.Error(t, err)
+				assert.True(t, IsErrListCannotBelongToAPseudoNamespace(err))
+			})
 		})
 	})
 }
