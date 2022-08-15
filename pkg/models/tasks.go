@@ -338,8 +338,11 @@ func getRawTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskO
 			continue
 		}
 
-		if f.field == "assignees" || f.field == "user_id" {
-			f.field = "user_id"
+		if f.field == "assignees" {
+			if f.comparator == taskFilterComparatorLike {
+				return nil, 0, 0, ErrInvalidTaskFilterValue{Field: f.field, Value: f.value}
+			}
+			f.field = "username"
 			filter, err := getFilterCond(f, opts.filterIncludeNulls)
 			if err != nil {
 				return nil, 0, 0, err
@@ -430,7 +433,13 @@ func getRawTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskO
 	}
 
 	if len(assigneeFilters) > 0 {
-		filters = append(filters, getFilterCondForSeparateTable("task_assignees", opts.filterConcat, assigneeFilters))
+		assigneeFilter := []builder.Cond{
+			builder.In("user_id",
+				builder.Select("id").
+					From("users").
+					Where(builder.Or(assigneeFilters...)),
+			)}
+		filters = append(filters, getFilterCondForSeparateTable("task_assignees", opts.filterConcat, assigneeFilter))
 	}
 
 	if len(labelFilters) > 0 {

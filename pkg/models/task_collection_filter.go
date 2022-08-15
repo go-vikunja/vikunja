@@ -214,6 +214,15 @@ func getNativeValueForTaskField(fieldName string, comparator taskFilterComparato
 		return
 	}
 
+	if realFieldName == "Assignees" {
+		vals := strings.Split(value, ",")
+		valueSlice := []string{}
+		for _, val := range vals {
+			valueSlice = append(valueSlice, val)
+		}
+		return valueSlice, nil
+	}
+
 	field, ok := reflect.TypeOf(&Task{}).Elem().FieldByName(realFieldName)
 	if !ok {
 		return nil, ErrInvalidTaskField{TaskField: fieldName}

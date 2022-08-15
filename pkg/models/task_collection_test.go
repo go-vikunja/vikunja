@@ -934,10 +934,10 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "filter assignees",
+			name: "filter assignees by username",
 			fields: fields{
 				FilterBy:         []string{"assignees"},
-				FilterValue:      []string{"1"},
+				FilterValue:      []string{"user1"},
 				FilterComparator: []string{"equals"},
 			},
 			args: defaultArgs,
@@ -947,10 +947,78 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "filter assignees in",
+			name: "filter assignees by username with users field name",
+			fields: fields{
+				FilterBy:         []string{"users"},
+				FilterValue:      []string{"user1"},
+				FilterComparator: []string{"equals"},
+			},
+			args:    defaultArgs,
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "filter assignees by username with user_id field name",
+			fields: fields{
+				FilterBy:         []string{"user_id"},
+				FilterValue:      []string{"user1"},
+				FilterComparator: []string{"equals"},
+			},
+			args:    defaultArgs,
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "filter assignees by multiple username",
+			fields: fields{
+				FilterBy:         []string{"assignees", "assignees"},
+				FilterValue:      []string{"user1", "user2"},
+				FilterComparator: []string{"equals", "equals"},
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task30,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filter assignees by numbers",
+			fields: fields{
+				FilterBy:         []string{"assignees"},
+				FilterValue:      []string{"1"},
+				FilterComparator: []string{"equals"},
+			},
+			args:    defaultArgs,
+			want:    []*Task{},
+			wantErr: false,
+		},
+		{
+			name: "filter assignees by name with like",
+			fields: fields{
+				FilterBy:         []string{"assignees"},
+				FilterValue:      []string{"user"},
+				FilterComparator: []string{"like"},
+			},
+			args:    defaultArgs,
+			want:    []*Task{},
+			wantErr: true,
+		},
+		{
+			name: "filter assignees in by id",
 			fields: fields{
 				FilterBy:         []string{"assignees"},
 				FilterValue:      []string{"1,2"},
+				FilterComparator: []string{"in"},
+			},
+			args:    defaultArgs,
+			want:    []*Task{},
+			wantErr: false,
+		},
+		{
+			name: "filter assignees in by username",
+			fields: fields{
+				FilterBy:         []string{"assignees"},
+				FilterValue:      []string{"user1,user2"},
 				FilterComparator: []string{"in"},
 			},
 			args: defaultArgs,
