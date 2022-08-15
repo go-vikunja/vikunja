@@ -7,7 +7,7 @@
 		:disabled="disabled || undefined"
 		ref="button"
 	>
-		<slot />
+		<slot/>
 	</component>
 </template>
 
@@ -16,7 +16,7 @@ import {defineComponent} from 'vue'
 
 // see https://v3.vuejs.org/api/sfc-script-setup.html#usage-alongside-normal-script
 export default defineComponent({
-  inheritAttrs: false,
+	inheritAttrs: false,
 })
 </script>
 
@@ -30,11 +30,11 @@ export default defineComponent({
 
 // NOTE: Do NOT use buttons with @click to push routes. => Use router-links instead!
 
-import { ref, watchEffect, computed, useAttrs, PropType } from 'vue'
+import {ref, watchEffect, computed, useAttrs, PropType} from 'vue'
 
-const BASE_BUTTON_TYPES_MAP =  Object.freeze({
-  button: 'button',
-  submit: 'submit',
+const BASE_BUTTON_TYPES_MAP = Object.freeze({
+	button: 'button',
+	submit: 'submit',
 })
 
 type BaseButtonTypes = keyof typeof BASE_BUTTON_TYPES_MAP
@@ -52,6 +52,7 @@ const props = defineProps({
 
 
 const componentNodeName = ref<Node['nodeName']>('button')
+
 interface ElementBindings {
 	type?: string;
 	rel?: string;
@@ -92,6 +93,7 @@ watchEffect(() => {
 const isButton = computed(() => componentNodeName.value === 'button')
 
 const button = ref()
+
 function focus() {
 	button.value.focus()
 }
@@ -123,7 +125,7 @@ defineExpose({
 	user-select: none;
 	pointer-events: auto; // disable possible resets
 
-	&:focus {
+	&:focus, &.is-focused {
 		outline: transparent;
 	}
 
