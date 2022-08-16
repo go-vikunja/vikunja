@@ -45,7 +45,7 @@ require (
 	github.com/labstack/gommon v0.3.1
 	github.com/lib/pq v1.10.6
 	github.com/magefile/mage v1.13.0
-	github.com/mattn/go-sqlite3 v1.14.14
+	github.com/mattn/go-sqlite3 v1.14.15
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pquerna/otp v1.3.0
