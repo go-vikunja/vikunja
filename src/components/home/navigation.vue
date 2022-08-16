@@ -243,7 +243,7 @@ function updateActiveLists(namespace: NamespaceModel, activeLists: ListModel[]) 
 const listUpdating = ref<{ [id: NamespaceModel['id']]: boolean }>({})
 
 async function saveListPosition(e: SortableEvent) {
-	if (!e.newIndex) return
+	if (!e.newIndex && e.newIndex !== 0) return
 
 	const namespaceId = parseInt(e.to.dataset.namespaceId as string)
 	const newNamespaceIndex = parseInt(e.to.dataset.namespaceIndex as string)
