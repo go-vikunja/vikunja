@@ -499,6 +499,14 @@ export default defineComponent({
 			if (typeof this.filters[filterName] === 'undefined' || this.filters[filterName] === '') {
 				return
 			}
+			
+			// Don't load things if we already have something loaded.
+			// This is not the most ideal solution because it prevents a re-population when filters are changed 
+			// from the outside. It is still fine because we're not changing them from the outside, other than 
+			// loading them initially.
+			if(this[kind].length > 0) {
+				return
+			}
 
 			this[kind] = await this[`${servicePrefix}Service`].getAll({}, {s: this.filters[filterName]})
 		},
@@ -532,6 +540,7 @@ export default defineComponent({
 
 			if (query === '') {
 				this.clear(kind)
+				return
 			}
 
 			const response = await this[`${kind}Service`].getAll({}, {s: query})
@@ -558,7 +567,7 @@ export default defineComponent({
 
 			let ids = []
 			this[kind].forEach(u => {
-				ids.push(u.id)
+				ids.push(kind === 'users' ? u.username : u.id)
 			})
 
 			this.filters[filterName] = ids.join(',')
