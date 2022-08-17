@@ -89,7 +89,9 @@ func init() {
 
 				f["filters"] = string(filtersJSON)
 
-				_, err = tx.Where("id", f["id"]).
+				_, err = tx.Where("id = ?", f["id"]).
+					Cols("filters").
+					NoAutoCondition().
 					Table("saved_filters").
 					Update(f)
 				if err != nil {
