@@ -7,6 +7,39 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.19.1] - 2022-08-17
+
+### Bug Fixes
+
+* Prevent moving a list into a pseudo namespace ([3ccc636](3ccc6365a6892f37ee54b0750a34a61e52f6dba1))
+* Make sure generating blur hashes for bmp, tiff and webp images works ([8bf0f8b](8bf0f8bb571ddff69a7142be1acaa2e4e0c38e3b))
+* Add debian-based docker image for arm 32 builds ([c9e044b](c9e044b3ad60d25e9641d22d84571a7db83a26ac))
+* Only list all users when allowed ([9ddd7f4](9ddd7f48895f508539d591aeebde450a86987024))
+* Lint ([0c8bed4](0c8bed4054649de8510e5a636d1a14b65d52c402))
+
+### Dependencies
+
+* *(deps)* Update golang.org/x/sys digest to 6e608f9 (#1229)
+* *(deps)* Update golang.org/x/sync digest to 886fb93 (#1221)
+* *(deps)* Update golang.org/x/sys digest to 8e32c04 (#1230)
+* *(deps)* Update golang.org/x/term digest to a9ba230 (#1222)
+* *(deps)* Update module github.com/prometheus/client_golang to v1.13.0
+* *(deps)* Update module github.com/prometheus/client_golang to v1.13.0 (#1231)
+* *(deps)* Update golang.org/x/sys digest to 1c4a2a7
+* *(deps)* Update golang.org/x/oauth2 digest to 128564f (#1220)
+* *(deps)* Update golang.org/x/image digest to 062f8c9 (#1219)
+* *(deps)* Update golang.org/x/crypto digest to 630584e (#1218)
+* *(deps)* Update module github.com/labstack/echo/v4 to v4.8.0 (#1233)
+* *(deps)* Update golang.org/x/sys digest to fbc7d0a (#1234)
+* *(deps)* Update module github.com/wneessen/go-mail to v0.2.6 (#1235)
+* *(deps)* Update module github.com/mattn/go-sqlite3 to v1.14.15 (#1238)
+
+### Features
+
+* *(docs)* Add k8s docs* Add openid examples ([dbb0f54](dbb0f5473269fb29c4a484cd233a5b76484c4ca7))
+* Search by assignee username instead of id ([7f28865](7f28865903740d6dde15ee005323fbdee3072166))
+* Add migration to change user ids to usernames in saved filters ([3047ccf](3047ccfd4af8fee55d9ebff49138911ab80cb3d2))
+
 ## [0.19.0] - 2022-08-03
 
 ### Bug Fixes
