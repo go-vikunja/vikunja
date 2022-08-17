@@ -9,6 +9,64 @@ All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
 
+## [0.19.1] - 2022-08-17
+
+### Bug Fixes
+
+* *(dark mode)* Code background color
+* *(dark mode)* Make a focused text only button actually readable
+* *(lists)* Moving a list into another namespace on the first position* I18n scope ([5b8d142](5b8d142abba9559f6b259940d5f35ccb1c098496))
+* Clear all localstorage when logging out ([51ffe93](51ffe930483bdd02118b512bb00a1ca50a5ce2e5))
+* Search for assignees by username (#2264) ([c6e7390](c6e7390f137991a6d992ad62ddca46a07fd4bf4e))
+
+### Dependencies
+
+* *(deps)* Update dependency sass to v1.54.2 (#2219)
+* *(deps)* Update vueuse to v9.1.0 (#2220)
+* *(deps)* Update dependency sass to v1.54.3 (#2223)
+* *(deps)* Update sentry-javascript monorepo to v7.9.0 (#2224)
+* *(deps)* Update dependency vue-i18n to v9.2.1
+* *(deps)* Update dependency vitest to v0.21.0
+* *(deps)* Update dependency vue-i18n to v9.2.2 (#2228)
+* *(deps)* Update dependency postcss to v8.4.16 (#2230)
+* *(deps)* Update dependency vue-tsc to v0.39.5
+* *(deps)* Update dependency caniuse-lite to v1.0.30001374 (#2231)
+* *(deps)* Update dependency netlify-cli to v10.15.0 (#2232)
+* *(deps)* Update dependency esbuild to v0.14.54 (#2233)
+* *(deps)* Update typescript-eslint monorepo to v5.33.0 (#2235)
+* *(deps)* Update dependency @faker-js/faker to v7.4.0 (#2234)
+* *(deps)* Update dependency vite to v3.0.5 (#2237)
+* *(deps)* Update dependency sass to v1.54.4 (#2238)
+* *(deps)* Update dependency esbuild to v0.15.0 (#2239)
+* *(deps)* Update dependency vue-tsc to v0.40.0 (#2241)
+* *(deps)* Update dependency vitest to v0.21.1 (#2236)
+* *(deps)* Update sentry-javascript monorepo to v7.10.0 (#2242)
+* *(deps)* Update dependency rollup to v2.77.3 (#2245)
+* *(deps)* Update dependency esbuild to v0.15.1 (#2244)
+* *(deps)* Update dependency vue-tsc to v0.40.1 (#2243)
+* *(deps)* Update dependency vite to v3.0.6 (#2252)
+* *(deps)* Update dependency @vitejs/plugin-legacy to v2.0.1 (#2250)
+* *(deps)* Update dependency @cypress/vue to v4.1.0 (#2249)
+* *(deps)* Update dependency @vitejs/plugin-vue to v3.0.2 (#2251)
+* *(deps)* Update dependency @cypress/vite-dev-server to v3.1.0 (#2248)
+* *(deps)* Update dependency esbuild to v0.15.2 (#2255)
+* *(deps)* Update dependency vite to v3.0.7 (#2254)
+* *(deps)* Update dependency @vitejs/plugin-vue to v3.0.3 (#2253)
+* *(deps)* Update dependency eslint to v8.22.0 (#2256)
+* *(deps)* Update dependency rollup to v2.78.0 (#2257)
+* *(deps)* Update dependency esbuild to v0.15.3
+* *(deps)* Update dependency netlify-cli to v10.17.4 (#2262)
+* *(deps)* Update dependency caniuse-lite to v1.0.30001376 (#2261)
+* *(deps)* Update typescript-eslint monorepo to v5.33.1 (#2263)
+* *(deps)* Update dependency vitest to v0.22.0 (#2265)
+* *(deps)* Update dependency cypress to v10.5.0 (#2266)
+* *(deps)* Update dependency @cypress/vite-dev-server to v3.1.1 (#2267)
+* *(deps)* Update dependency postcss-preset-env to v7.8.0 (#2268)
+* *(deps)* Update dependency vite to v3.0.8 (#2269)
+* *(deps)* Update dependency esbuild to v0.15.4 (#2270)
+* *(deps)* Update dependency cypress to v10.6.0 (#2271)
+* *(deps)* Update dependency esbuild to v0.15.5 (#2272)
+
 ## [0.19.0] - 2022-08-03
 
 ### Bug Fixes
