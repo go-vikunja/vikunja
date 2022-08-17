@@ -40,7 +40,11 @@ func init() {
 
 			for _, f := range filters {
 				filter := map[string]interface{}{}
-				err = json.Unmarshal([]byte(f["filters"].(string)), &filter)
+				filterJSON, is := f["filters"].(string)
+				if !is {
+					continue
+				}
+				err = json.Unmarshal([]byte(filterJSON), &filter)
 				if err != nil {
 					return err
 				}
