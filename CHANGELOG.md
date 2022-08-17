@@ -7,6 +7,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.19.2] - 2022-08-17
+
+### Bug Fixes
+
+* Don't fail a migration if there is no filter saved ([10ded56](10ded56f6697ef47910ec68d37f26ed47cbe9180))
+* Don't override saved filters ([beb4d07](beb4d07cf95fc25f7cc5f7471b46bdab49f95fe0))
+
 ## [0.19.1] - 2022-08-17
 
 ### Bug Fixes
