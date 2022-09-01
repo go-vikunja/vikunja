@@ -105,14 +105,14 @@ func StartMailDaemon() {
 				if !open {
 					err = c.DialWithContext(context.Background())
 					if err != nil {
-						log.Error("Error during connect to smtp server: %s", err)
+						log.Errorf("Error during connect to smtp server: %s", err)
 						break
 					}
 					open = true
 				}
 				err = c.Send(m)
 				if err != nil {
-					log.Error("Error when sending mail: %s", err)
+					log.Errorf("Error when sending mail: %s", err)
 					break
 				}
 				// Close the connection to the SMTP server if no email was sent in
@@ -122,10 +122,10 @@ func StartMailDaemon() {
 					open = false
 					err = c.Close()
 					if err != nil {
-						log.Error("Error closing the mail server connection: %s\n", err)
+						log.Errorf("Error closing the mail server connection: %s\n", err)
 						break
 					}
-					log.Infof("Closed connection to mail server")
+					log.Info("Closed connection to mail server")
 				}
 			}
 		}
