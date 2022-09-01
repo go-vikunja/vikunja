@@ -5107,16 +5107,16 @@ easy-bem@^1.0.2:
   resolved "https://registry.yarnpkg.com/easy-bem/-/easy-bem-1.1.1.tgz#1bfcc10425498090bcfddc0f9c000aba91399e03"
   integrity sha512-GJRqdiy2h+EXy6a8E6R+ubmqUM08BK0FWNq41k24fup6045biQ8NXxoXimiwegMQvFFV3t1emADdGNL1TlS61A==
 
-easymde@2.16.1:
-  version "2.16.1"
-  resolved "https://registry.yarnpkg.com/easymde/-/easymde-2.16.1.tgz#f4c2380312615cb33826f1a1fecfaa4022ff551a"
-  integrity sha512-FihYgjRsKfhGNk89SHSqxKLC4aJ1kfybPWW6iAmtb5GnXu+tnFPSzSaGBmk1RRlCuhFSjhF0SnIMGVPjEzkr6g==
+easymde@2.17.0:
+  version "2.17.0"
+  resolved "https://registry.yarnpkg.com/easymde/-/easymde-2.17.0.tgz#07954ec374b2e4f873c505c2b7d82b08e8d7053c"
+  integrity sha512-xerjhBh6G+FDfU2EBfKNEVqawYGqnK2zACKtyQlZKnxPoaesncRbHiSX5Yrf3Ur8KjEX1BvG7Ysccrd8hKTkig==
   dependencies:
     "@types/codemirror" "^5.60.4"
     "@types/marked" "^4.0.1"
     codemirror "^5.63.1"
     codemirror-spell-checker "1.1.2"
-    marked "^4.0.10"
+    marked "^4.0.18"
 
 ecc-jsbn@~0.1.1:
   version "0.1.2"
@@ -8619,15 +8619,10 @@ map-visit@^1.0.0:
   dependencies:
     object-visit "^1.0.0"
 
-marked@4.1.0:
+marked@4.1.0, marked@^4.0.18:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/marked/-/marked-4.1.0.tgz#3fc6e7485f21c1ca5d6ec4a39de820e146954796"
   integrity sha512-+Z6KDjSPa6/723PQYyc1axYZpYYpDnECDaU6hkaf5gqBieBkMKYReL5hteF2QizhlMbgbo8umXl/clZ67+GlsA==
-
-marked@^4.0.10:
-  version "4.0.10"
-  resolved "https://registry.yarnpkg.com/marked/-/marked-4.0.10.tgz#423e295385cc0c3a70fa495e0df68b007b879423"
-  integrity sha512-+QvuFj0nGgO970fySghXGmuw+Fd0gD2x3+MqCWLIPf5oxdv1Ka6b2q+z9RP01P/IaKPMEramy+7cNy/Lw8c3hw==
 
 maxstache-stream@^1.0.0:
   version "1.0.4"
