@@ -57,7 +57,7 @@
   "devDependencies": {
     "@4tw/cypress-drag-drop": "2.2.1",
     "@cypress/vite-dev-server": "3.1.1",
-    "@cypress/vue": "4.1.0",
+    "@cypress/vue": "4.2.0",
     "@faker-js/faker": "7.4.0",
     "@fortawesome/fontawesome-svg-core": "6.1.2",
     "@fortawesome/free-regular-svg-icons": "6.1.2",
