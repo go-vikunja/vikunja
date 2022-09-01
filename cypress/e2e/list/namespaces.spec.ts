@@ -63,7 +63,7 @@ describe('Namepaces', () => {
 			.should('equal', newNamespaces[0].title) // wait until the namespace data is loaded
 		cy.get('#namespacetext')
 			.type(`{selectall}${newNamespaceName}`)
-		cy.get('footer.modal-card-foot .button')
+		cy.get('footer.card-footer .button')
 			.contains('Save')
 			.click()
 

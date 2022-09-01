@@ -4,38 +4,41 @@
 			:title="title"
 			:shadow="false"
 			:padding="false"
-			class="has-text-left has-overflow"
+			class="has-text-left"
 			:has-close="true"
 			@close="$router.back()"
 			:loading="loading"
 		>
 			<div class="p-4">
-				<slot></slot>
+				<slot />
 			</div>
-			<footer class="modal-card-foot is-flex is-justify-content-flex-end">
-				<x-button
-					v-if="tertiary !== ''"
-					:shadow="false"
-					variant="tertiary"
-					@click.prevent.stop="$emit('tertiary')"
-				>
-					{{ tertiary }}
-				</x-button>
-				<x-button
-					variant="secondary"
-					@click.prevent.stop="$router.back()"
-				>
-					{{ $t('misc.cancel') }}
-				</x-button>
-				<x-button
-					variant="primary"
-					@click.prevent.stop="primary()"
-					:icon="primaryIcon"
-					:disabled="primaryDisabled"
-				>
-					{{ primaryLabel || $t('misc.create') }}
-				</x-button>
-			</footer>
+
+			<template #footer>
+				<slot name="footer">
+					<x-button
+						v-if="tertiary !== ''"
+						:shadow="false"
+						variant="tertiary"
+						@click.prevent.stop="$emit('tertiary')"
+					>
+						{{ tertiary }}
+					</x-button>
+					<x-button
+						variant="secondary"
+						@click.prevent.stop="$router.back()"
+					>
+						{{ $t('misc.cancel') }}
+					</x-button>
+					<x-button
+						variant="primary"
+						@click.prevent.stop="primary()"
+						:icon="primaryIcon"
+						:disabled="primaryDisabled || loading"
+					>
+						{{ primaryLabel || $t('misc.create') }}
+					</x-button>
+				</slot>
+			</template>
 		</card>
 	</modal>
 </template>

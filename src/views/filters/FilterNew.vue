@@ -47,14 +47,17 @@
 							/>
 						</div>
 					</div>
-					<x-button
-						:loading="savedFilterService.loading"
-						:disabled="savedFilterService.loading"
-						@click="create()"
-						class="is-fullwidth"
-					>
-						{{ $t('filters.create.action') }}
-					</x-button>
+
+					<template #footer>
+						<x-button
+							:loading="savedFilterService.loading"
+							:disabled="savedFilterService.loading"
+							@click="create()"
+							class="is-fullwidth"
+						>
+							{{ $t('filters.create.action') }}
+						</x-button>
+					</template>
 				</card>
 	</modal>
 </template>

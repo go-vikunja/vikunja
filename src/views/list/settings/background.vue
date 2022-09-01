@@ -1,13 +1,10 @@
 <template>
 	<create-edit
+		v-if="uploadBackgroundEnabled || unsplashBackgroundEnabled"
 		:title="$t('list.background.title')"
-		primary-label=""
 		:loading="backgroundService.loading"
 		class="list-background-setting"
 		:wide="true"
-		v-if="uploadBackgroundEnabled || unsplashBackgroundEnabled"
-		:tertiary="hasBackground ? $t('list.background.remove') : ''"
-		@tertiary="removeBackground()"
 	>
 		<div class="mb-4" v-if="uploadBackgroundEnabled">
 			<input
@@ -19,7 +16,7 @@
 			/>
 			<x-button
 				:loading="backgroundUploadService.loading"
-				@click="$refs.backgroundUploadInput.click()"
+				@click="backgroundUploadInput?.click()"
 				variant="primary"
 			>
 				{{ $t('list.background.upload') }}
@@ -28,43 +25,69 @@
 		<template v-if="unsplashBackgroundEnabled">
 			<input
 				:class="{'is-loading': backgroundService.loading}"
-				@keyup="() => debounceNewBackgroundSearch()"
+				@keyup="debounceNewBackgroundSearch()"
 				class="input is-expanded"
 				:placeholder="$t('list.background.searchPlaceholder')"
 				type="text"
 				v-model="backgroundSearchTerm"
 			/>
-			<p class="unsplash-link">
-				<BaseButton href="https://unsplash.com">{{ $t('list.background.poweredByUnsplash') }}</BaseButton>
+
+			<p class="unsplash-credit">
+				<BaseButton class="unsplash-credit__link" href="https://unsplash.com">{{ $t('list.background.poweredByUnsplash') }}</BaseButton>
 			</p>
-			<div class="image-search-result">
-				<a
+
+			<ul class="image-search__result-list">
+				<li
+					v-for="im in backgroundSearchResult"
+					class="image-search__result-item"
 					:key="im.id"
 					:style="{'background-image': `url(${backgroundBlurHashes[im.id]})`}"
-					@click="() => setBackground(im.id)"
-					class="image"
-					v-for="im in backgroundSearchResult">
+				>
 					<transition name="fade">
-						<img :src="backgroundThumbs[im.id]" alt="" v-if="backgroundThumbs[im.id]"/>
+						<BaseButton
+							v-if="backgroundThumbs[im.id]"
+							class="image-search__image-button"
+							@click="setBackground(im.id)"
+						>
+							<img class="image-search__image" :src="backgroundThumbs[im.id]" alt="" />
+						</BaseButton>
 					</transition>
-					<a
+
+					<BaseButton
 						:href="`https://unsplash.com/@${im.info.author}`"
-						rel="noreferrer noopener nofollow"
-						target="_blank"
-						class="info">
+						class="image-search__info"
+					>
 						{{ im.info.authorName }}
-					</a>
-				</a>
-			</div>
+					</BaseButton>
+				</li>
+			</ul>
 			<x-button
+				v-if="backgroundSearchResult.length > 0"
 				:disabled="backgroundService.loading"
-				@click="() => searchBackgrounds(currentPage + 1)"
+				@click="searchBackgrounds(currentPage + 1)"
 				class="is-load-more-button mt-4"
 				:shadow="false"
 				variant="secondary"
-				v-if="backgroundSearchResult.length > 0"
 			>
 				{{ backgroundService.loading ? $t('misc.loading') : $t('list.background.loadMore') }}
+			</x-button>
+		</template>
+
+		<template #footer>
+			<x-button
+				v-if="hasBackground"
+				:shadow="false"
+				variant="tertiary"
+				class="is-danger"
+				@click.prevent.stop="removeBackground"
+			>
+				{{ $t('list.background.remove') }}
+			</x-button>
+			<x-button
+				variant="secondary"
+				@click.prevent.stop="$router.back()"
+			>
+				{{ $t('misc.close') }}
 			</x-button>
 		</template>
 	</create-edit>
@@ -72,201 +95,190 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
-import {mapState} from 'vuex'
-import {getBlobFromBlurHash} from '../../../helpers/getBlobFromBlurHash'
+export default defineComponent({ name: 'list-setting-background' })
+</script>
 
-import BackgroundUnsplashService from '../../../services/backgroundUnsplash'
-import BackgroundUploadService from '../../../services/backgroundUpload'
-import ListService from '@/services/list'
-import {CURRENT_LIST} from '@/store/mutation-types'
-import CreateEdit from '@/components/misc/create-edit.vue'
+<script setup lang="ts">
+import {ref, computed, shallowReactive} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useStore} from 'vuex'
+import {useRoute, useRouter} from 'vue-router'
 import debounce from 'lodash.debounce'
 import BaseButton from '@/components/base/BaseButton.vue'
 
+import BackgroundUnsplashService from '@/services/backgroundUnsplash'
+import BackgroundUploadService from '@/services/backgroundUpload'
+import ListService from '@/services/list'
+import BackgroundImageModel from '@/models/backgroundImage'
+
+import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
+import {useTitle} from '@/composables/useTitle'
+import {CURRENT_LIST} from '@/store/mutation-types'
+
+import CreateEdit from '@/components/misc/create-edit.vue'
+import { success } from '@/message'
+
 const SEARCH_DEBOUNCE = 300
 
-export default defineComponent({
-	name: 'list-setting-background',
-	components: {CreateEdit, BaseButton},
-	data() {
-		return {
-			backgroundService: new BackgroundUnsplashService(),
-			backgroundSearchTerm: '',
-			backgroundSearchResult: [],
-			backgroundThumbs: {},
-			backgroundBlurHashes: {},
-			currentPage: 1,
+const {t} = useI18n()
+const store = useStore()
+const route = useRoute()
+const router = useRouter()
 
-			// We're using debounce to not search on every keypress but with a delay.
-			debounceNewBackgroundSearch: debounce(this.newBackgroundSearch, SEARCH_DEBOUNCE, {
-				trailing: true,
-			}),
+useTitle(() => t('list.background.title'))
 
-			backgroundUploadService: new BackgroundUploadService(),
-			listService: new ListService(),
-		}
-	},
-	computed: mapState({
-		unsplashBackgroundEnabled: state => state.config.enabledBackgroundProviders.includes('unsplash'),
-		uploadBackgroundEnabled: state => state.config.enabledBackgroundProviders.includes('upload'),
-		currentList: state => state.currentList,
-		hasBackground: state => state.background !== null,
-	}),
-	created() {
-		this.setTitle(this.$t('list.background.title'))
-		// Show the default collection of backgrounds
-		this.newBackgroundSearch()
-	},
-	methods: {
-		newBackgroundSearch() {
-			if (!this.unsplashBackgroundEnabled) {
-				return
-			}
-			// This is an extra method to reset a few things when searching to not break loading more photos.
-			this.backgroundSearchResult = []
-			this.backgroundThumbs = {}
-			this.searchBackgrounds()
-		},
+const backgroundService = shallowReactive(new BackgroundUnsplashService())
+const backgroundSearchTerm = ref('')
+const backgroundSearchResult = ref([])
+const backgroundThumbs = ref<Record<string, string>>({})
+const backgroundBlurHashes = ref<Record<string, string>>({})
+const currentPage = ref(1)
 
-		async searchBackgrounds(page = 1) {
-			this.currentPage = page
-			const result = await this.backgroundService.getAll({}, {s: this.backgroundSearchTerm, p: page})
-			this.backgroundSearchResult = this.backgroundSearchResult.concat(result)
-			result.forEach(background => {
-				getBlobFromBlurHash(background.blurHash)
-					.then(b => {
-						this.backgroundBlurHashes[background.id] = window.URL.createObjectURL(b)
-					})
-
-				this.backgroundService.thumb(background)
-					.then(b => {
-						this.backgroundThumbs[background.id] = b
-					})
-			})
-		},
-
-		async setBackground(backgroundId) {
-			// Don't set a background if we're in the process of setting one
-			if (this.backgroundService.loading) {
-				return
-			}
-
-			const list = await this.backgroundService.update({id: backgroundId, listId: this.$route.params.listId})
-			await this.$store.dispatch(CURRENT_LIST, {list, forceUpdate: true})
-			this.$store.commit('namespaces/setListInNamespaceById', list)
-			this.$store.commit('lists/setList', list)
-			this.$message.success({message: this.$t('list.background.success')})
-		},
-
-		async uploadBackground() {
-			if (this.$refs.backgroundUploadInput.files.length === 0) {
-				return
-			}
-
-			const list = await this.backgroundUploadService.create(this.$route.params.listId, this.$refs.backgroundUploadInput.files[0])
-			await this.$store.dispatch(CURRENT_LIST, {list, forceUpdate: true})
-			this.$store.commit('namespaces/setListInNamespaceById', list)
-			this.$store.commit('lists/setList', list)
-			this.$message.success({message: this.$t('list.background.success')})
-		},
-
-		async removeBackground() {
-			const list = await this.listService.removeBackground(this.currentList)
-			await this.$store.dispatch(CURRENT_LIST, {list, forceUpdate: true})
-			this.$store.commit('namespaces/setListInNamespaceById', list)
-			this.$store.commit('lists/setList', list)
-			this.$message.success({message: this.$t('list.background.removeSuccess')})
-			this.$router.back()
-		},
-	},
+// We're using debounce to not search on every keypress but with a delay.
+const debounceNewBackgroundSearch = debounce(newBackgroundSearch, SEARCH_DEBOUNCE, {
+	trailing: true,
 })
+
+const backgroundUploadService = ref(new BackgroundUploadService())
+const listService = ref(new ListService())
+
+const unsplashBackgroundEnabled = computed(() => store.state.config.enabledBackgroundProviders.includes('unsplash'))
+const uploadBackgroundEnabled = computed(() => store.state.config.enabledBackgroundProviders.includes('upload'))
+const currentList = computed(() => store.state.currentList)
+const hasBackground = computed(() => store.state.background !== null)
+
+// Show the default collection of backgrounds
+newBackgroundSearch()
+
+function newBackgroundSearch() {
+	if (!unsplashBackgroundEnabled.value) {
+		return
+	}
+	// This is an extra method to reset a few things when searching to not break loading more photos.
+	backgroundSearchResult.value = []
+	backgroundThumbs.value = {}
+	searchBackgrounds()
+}
+
+async function searchBackgrounds(page = 1) {
+	currentPage.value = page
+	const result = await backgroundService.getAll({}, {s: backgroundSearchTerm.value, p: page})
+	backgroundSearchResult.value = backgroundSearchResult.value.concat(result)
+	result.forEach((background: BackgroundImageModel) => {
+		getBlobFromBlurHash(background.blurHash)
+			.then((b) => {
+				backgroundBlurHashes.value[background.id] = window.URL.createObjectURL(b)
+			})
+
+		backgroundService.thumb(background).then(b => {
+			backgroundThumbs.value[background.id] = b
+		})
+	})
+}
+
+async function setBackground(backgroundId: string) {
+	// Don't set a background if we're in the process of setting one
+	if (backgroundService.loading) {
+		return
+	}
+
+	const list = await backgroundService.update({id: backgroundId, listId: route.params.listId})
+	await store.dispatch(CURRENT_LIST, {list, forceUpdate: true})
+	store.commit('namespaces/setListInNamespaceById', list)
+	store.commit('lists/setList', list)
+	success({message: t('list.background.success')})
+}
+
+const backgroundUploadInput = ref<HTMLInputElement | null>(null)
+async function uploadBackground() {
+	if (backgroundUploadInput.value?.files?.length === 0) {
+		return
+	}
+
+	const list = await backgroundUploadService.value.create(route.params.listId, backgroundUploadInput.value?.files[0])
+	await store.dispatch(CURRENT_LIST, {list, forceUpdate: true})
+	store.commit('namespaces/setListInNamespaceById', list)
+	store.commit('lists/setList', list)
+	success({message: t('list.background.success')})
+}
+
+async function removeBackground() {
+	const list = await listService.value.removeBackground(currentList.value)
+	await store.dispatch(CURRENT_LIST, {list, forceUpdate: true})
+	store.commit('namespaces/setListInNamespaceById', list)
+	store.commit('lists/setList', list)
+	success({message: t('list.background.removeSuccess')})
+	router.back()
+}
 </script>
 
 <style lang="scss" scoped>
-.list-background-setting {
+.unsplash-credit {
+	text-align: right;
+	font-size: .8rem;
+}
 
-	.unsplash-link {
-		text-align: right;
-		font-size: .8rem;
+.unsplash-credit__link {
+	color: var(--grey-800);
+}
 
-		a {
-			color: var(--grey-800);
-		}
+.image-search__result-list {
+	--items-per-row: 1;
+	margin: 1rem 0 0;
+	display: grid;
+	gap: 1rem;
+	grid-template-columns: repeat(var(--items-per-row), 1fr);
+
+	@media screen and (min-width: $mobile) {
+		--items-per-row: 2;
 	}
-
-	.image-search-result {
-		margin-top: 1rem;
-		display: flex;
-		flex-flow: row wrap;
-
-		.image {
-			width: calc(100% / 5 - 1rem);
-			height: 120px;
-			margin: .5rem;
-			background-size: cover;
-			background-position: center;
-			display: flex;
-			position: relative;
-
-			@media screen and (min-width: $desktop) {
-				&:nth-child(5n) {
-					break-after: always;
-				}
-			}
-
-			@media screen and (max-width: $desktop) {
-				width: calc(100% / 4 - 1rem);
-
-				&:nth-child(4n) {
-					break-after: always;
-				}
-			}
-
-			@media screen and (max-width: $tablet) {
-				width: calc(100% / 2 - 1rem);
-
-				&:nth-child(2n) {
-					break-after: always;
-				}
-			}
-
-			@media screen and (max-width: ($mobile)) {
-				width: calc(100% - 1rem);
-
-				&:nth-child(1n) {
-					break-after: always;
-				}
-			}
-
-			.info {
-				align-self: flex-end;
-				display: block;
-				opacity: 0;
-				width: 100%;
-				padding: .25rem 0;
-				text-align: center;
-				background: rgba(0, 0, 0, 0.5);
-				font-size: .75rem;
-				font-weight: bold;
-				color: var(--white);
-				transition: opacity $transition;
-				position: absolute;
-			}
-
-			img {
-				object-fit: cover;
-			}
-
-			&:hover .info {
-				opacity: 1;
-			}
-		}
+	@media screen and (min-width: $tablet) {
+		--items-per-row: 4;
 	}
-
-	.is-load-more-button {
-		margin: 1rem auto 0 !important;
-		display: block;
-		width: 200px;
+	@media screen and (min-width: $tablet) {
+		--items-per-row: 5;
 	}
+}
+
+.image-search__result-item {
+	margin-top: 0; // FIXME: removes padding from .content
+	aspect-ratio: 16 / 10;
+	background-size: cover;
+	background-position: center;
+	display: flex;
+	position: relative;
+}
+
+.image-search__image-button {
+	width: 100%;
+}
+
+.image-search__image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.image-search__info {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	padding: .25rem 0;
+	opacity: 0;
+	text-align: center;
+	background: rgba(0, 0, 0, 0.5);
+	font-size: .75rem;
+	font-weight: bold;
+	color: var(--white);
+	transition: opacity $transition;
+}
+.image-search__result-item:hover .image-search__info {
+		opacity: 1;
+}
+
+.is-load-more-button {
+	margin: 1rem auto 0 !important;
+	display: block;
+	width: 200px;
 }
 </style>

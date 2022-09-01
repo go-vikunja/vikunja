@@ -59,7 +59,7 @@ describe('Lists', () => {
 			.click()
 		cy.get('#title')
 			.type(`{selectall}${newListName}`)
-		cy.get('footer.modal-card-foot .button')
+		cy.get('footer.card-footer .button')
 			.contains('Save')
 			.click()
 

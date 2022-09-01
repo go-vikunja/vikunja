@@ -19,17 +19,16 @@
 					{{ $t('about.apiVersion', {version: apiVersion}) }}
 				</p>
 			</div>
-			<footer class="modal-card-foot is-flex is-justify-content-flex-end">
+			<template #footer>
 				<x-button
 					variant="secondary"
 					@click.prevent.stop="$router.back()"
 				>
 					{{ $t('misc.close') }}
 				</x-button>
-			</footer>
+			</template>
 		</card>
 	</modal>
-
 </template>
 
 <script setup lang="ts">

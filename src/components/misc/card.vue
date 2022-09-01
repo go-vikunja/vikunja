@@ -16,11 +16,21 @@
 				</span>
 			</BaseButton>
 		</header>
-		<div class="card-content loader-container" :class="{'p-0': !padding, 'is-loading': loading}">
+		<div
+			class="card-content loader-container"
+			:class="{
+				'p-0': !padding,
+				'is-loading': loading
+			}"
+		>
 			<div :class="{'content': hasContent}">
-				<slot></slot>
+				<slot />
 			</div>
 		</div>
+
+		<footer v-if="$slots.footer" class="card-footer">
+			<slot name="footer" />
+		</footer>
 	</div>
 </template>
 
@@ -76,9 +86,11 @@ defineEmits(['close'])
   border-radius: $radius $radius 0 0;
 }
 
-// FIXME: should maybe be merged somehow with modal
-:deep(.modal-card-foot) {
+.card-footer {
   background-color: var(--grey-50);
   border-top: 0;
+	padding: var(--modal-card-head-padding);
+	display: flex;
+	justify-content: flex-end;
 }
 </style>
