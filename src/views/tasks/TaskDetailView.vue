@@ -463,6 +463,7 @@ import {getListTitle} from '@/helpers/getListTitle'
 import type {IList} from '@/modelTypes/IList'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import {useNamespaceStore} from '@/stores/namespaces'
+import {useAttachmentStore} from '@/stores/attachments'
 
 function scrollIntoView(el) {
 	if (!el) {
@@ -595,7 +596,8 @@ export default defineComponent({
 			return typeof this.task !== 'undefined' && typeof this.task.maxRight !== 'undefined' && this.task.maxRight > rights.READ
 		},
 		hasAttachments() {
-			return this.$store.state.attachments.attachments.length > 0
+			const attachmentsStore = useAttachmentStore()
+			return attachmentsStore.attachments.length > 0
 		},
 		shouldShowClosePopup() {
 			return this.$route.name.includes('kanban')
@@ -624,7 +626,8 @@ export default defineComponent({
 
 			try {
 				this.task = await this.taskService.get({id: taskId})
-				this.$store.commit('attachments/set', this.task.attachments)
+				const attachmentStore = useAttachmentStore()
+				attachmentStore.set(this.task.attachments)
 				this.taskColor = this.task.hexColor
 				this.setActiveFields()
 				await this.$nextTick()

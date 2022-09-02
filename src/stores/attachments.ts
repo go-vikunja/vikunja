@@ -1,29 +1,34 @@
-import type { Module } from 'vuex'
+import {defineStore, acceptHMRUpdate} from 'pinia'
 import {findIndexById} from '@/helpers/utils'
 
-import type { AttachmentState, RootStoreState } from '@/store/types'
-import type { IAttachment } from '@/modelTypes/IAttachment'
+import type {AttachmentState} from '@/store/types'
+import type {IAttachment} from '@/modelTypes/IAttachment'
 
-const store : Module<AttachmentState, RootStoreState> = {
-	namespaced: true,
-	state: () => ({
+export const useAttachmentStore = defineStore('attachment', {
+	state: (): AttachmentState => ({
 		attachments: [],
 	}),
-	mutations: {
-		set(state, attachments: IAttachment[]) {
+
+	actions: {
+		set(attachments: IAttachment[]) {
 			console.debug('Set attachments', attachments)
-			state.attachments = attachments
+			this.attachments = attachments
 		},
-		add(state, attachment: IAttachment) {
+
+		add(attachment: IAttachment) {
 			console.debug('Add attachement', attachment)
-			state.attachments.push(attachment)
+			this.attachments.push(attachment)
 		},
-		removeById(state, id: IAttachment['id']) {
-			const attachmentIndex = findIndexById<IAttachment>(state.attachments, id)
-			state.attachments.splice(attachmentIndex, 1)
+
+		removeById(id: IAttachment['id']) {
+			const attachmentIndex = findIndexById(this.attachments, id)
+			this.attachments.splice(attachmentIndex, 1)
 			console.debug('Remove attachement', id)
 		},
 	},
-}
+})
 
-export default store
+// support hot reloading
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useAttachmentStore, import.meta.hot))
+}

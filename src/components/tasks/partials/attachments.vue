@@ -138,9 +138,8 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed} from 'vue'
+import {ref, shallowReactive, computed, type PropType} from 'vue'
 import {useDropZone} from '@vueuse/core'
-import {useStore} from '@/store'
 
 import User from '@/components/misc/user.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -148,7 +147,9 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import AttachmentService from '@/services/attachment'
 import type AttachmentModel from '@/models/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
+import type {ITask} from '@/modelTypes/ITask'
 
+import {useAttachmentStore} from '@/stores/attachments'
 import {formatDateSince, formatDateLong} from '@/helpers/time/formatDate'
 import {uploadFiles, generateAttachmentUrl} from '@/helpers/attachments'
 import {getHumanSize} from '@/helpers/getHumanSize'
@@ -157,7 +158,7 @@ import {error, success} from '@/message'
 
 const props = defineProps({
 	taskId: {
-		type: Number,
+		type: Number as PropType<ITask['id']>,
 		required: true,
 	},
 	initialAttachments: {
@@ -170,8 +171,8 @@ const props = defineProps({
 
 const attachmentService = shallowReactive(new AttachmentService())
 
-const store = useStore()
-const attachments = computed(() => store.state.attachments.attachments)
+const attachmentStore = useAttachmentStore()
+const attachments = computed(() => attachmentStore.attachments)
 
 function onDrop(files: File[] | null) {
 	if (files && files.length !== 0) {
@@ -213,10 +214,7 @@ async function deleteAttachment() {
 
 	try {
 		const r = await attachmentService.delete(attachmentToDelete.value)
-		store.commit(
-			'attachments/removeById',
-			attachmentToDelete.value.id,
-		)
+		attachmentStore.removeById(this.attachmentToDelete.id)
 		success(r)
 		setAttachmentToDelete(null)
 	} catch(e) {
@@ -236,7 +234,7 @@ async function viewOrDownload(attachment: AttachmentModel) {
 }
 
 const copy = useCopyToClipboard()
-function copyUrl(attachment: AttachmentModel) {
+function copyUrl(attachment: IAttachment) {
 	copy(generateAttachmentUrl(props.taskId, attachment.id))
 }
 </script>

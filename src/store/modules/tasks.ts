@@ -27,6 +27,7 @@ import type { IList } from '@/modelTypes/IList'
 import type { RootStoreState, TaskState } from '@/store/types'
 import {useLabelStore} from '@/stores/labels'
 import {useListStore} from '@/stores/lists'
+import {useAttachmentStore} from '@/stores/attachments'
 import {playPop} from '@/helpers/playPop'
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
@@ -138,7 +139,8 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 				}
 				ctx.commit('kanban/setTaskInBucketByIndex', newTask, {root: true})
 			}
-			ctx.commit('attachments/add', attachment, {root: true})
+			const attachmentStore = useAttachmentStore()
+			attachmentStore.add(attachment)
 		},
 
 		async addAssignee(ctx, {
@@ -282,7 +284,7 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 			const labelStore = useLabelStore()
 
 			const labelAddsToWaitFor = parsedLabels.map(async labelTitle => {
-				let label = validateLabel(labelStore.labels, labelTitle)
+				let label = validateLabel(Object.values(labelStore.labels), labelTitle)
 				if (typeof label === 'undefined') {
 					// label not found, create it
 					const labelModel = new LabelModel({title: labelTitle})
