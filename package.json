@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@github/hotkey": "2.0.1",
-    "@kyvg/vue3-notification": "2.3.6",
+    "@kyvg/vue3-notification": "2.4.1",
     "@sentry/tracing": "7.12.0",
     "@sentry/vue": "7.12.0",
     "@types/is-touch-device": "1.0.0",
