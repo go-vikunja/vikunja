@@ -17,7 +17,6 @@ import config from './modules/config'
 import auth from './modules/auth'
 import kanban from './modules/kanban'
 import tasks from './modules/tasks'
-import attachments from './modules/attachments'
 
 import ListModel from '@/models/list'
 
@@ -40,7 +39,6 @@ export const store = createStore<RootStoreState>({
 		auth,
 		kanban,
 		tasks,
-		attachments,
 	},
 	state: () => ({
 		loading: false,
