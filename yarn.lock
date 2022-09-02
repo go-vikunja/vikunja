@@ -12600,10 +12600,10 @@ vite-plugin-pwa@0.12.4:
     workbox-build "^6.5.3"
     workbox-window "^6.5.3"
 
-vite-svg-loader@3.4.0:
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/vite-svg-loader/-/vite-svg-loader-3.4.0.tgz#4638827fe86b85ecfcea1ad61dd972c351d5befd"
-  integrity sha512-xD3yb1FX+f4l9/TmsYIqyki8ncpcVsZ2gEJFh/wLuNNqt55C8OJ+JlcMWOA/Z9gRA+ylV/TA1wmJLxzZkCRqlA==
+vite-svg-loader@3.5.1:
+  version "3.5.1"
+  resolved "https://registry.yarnpkg.com/vite-svg-loader/-/vite-svg-loader-3.5.1.tgz#badf2bdc613198df91351e64932383221a7c360c"
+  integrity sha512-zGAq7qQEh21bWDIuJUwl2t9Vmr4iH7PLqKM1yqS30BjjkLilSYuOokn6wa+Rg/M8m8k1XnQowuj3zRrZq9rYMg==
   dependencies:
     "@vue/compiler-sfc" "^3.2.20"
     svgo "^2.7.0"
