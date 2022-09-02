@@ -3,6 +3,8 @@ import type { RouteLocation } from 'vue-router'
 import {saveLastVisited} from '@/helpers/saveLastVisited'
 import {store} from '@/store'
 
+import type ListModel from '@/models/list'
+
 import {saveListView, getListView} from '@/helpers/saveListView'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
@@ -273,6 +275,7 @@ const router = createRouter({
 			path: '/lists/:listId/settings/edit',
 			name: 'list.settings.edit',
 			component: ListSettingEdit,
+			props: route => ({ listId: parseInt(route.params.listId as ListModel['id']) }),
 			meta: {
 				showAsModal: true,
 			},

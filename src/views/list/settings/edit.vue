@@ -5,14 +5,14 @@
 		:primary-label="$t('misc.save')"
 		@primary="save"
 		:tertiary="$t('misc.delete')"
-		@tertiary="$router.push({ name: 'list.list.settings.delete', params: { id: $route.params.listId } })"
+		@tertiary="$router.push({ name: 'list.settings.delete', params: { id: listId } })"
 	>
 		<div class="field">
 			<label class="label" for="title">{{ $t('list.title') }}</label>
 			<div class="control">
 				<input
-					:class="{ 'disabled': listService.loading}"
-					:disabled="listService.loading || undefined"
+					:class="{ 'disabled': isLoading}"
+					:disabled="isLoading || undefined"
 					@keyup.enter="save"
 					class="input"
 					id="title"
@@ -31,8 +31,8 @@
 			</label>
 			<div class="control">
 				<input
-					:class="{ 'disabled': listService.loading}"
-					:disabled="listService.loading ? true : null"
+					:class="{ 'disabled': isLoading}"
+					:disabled="isLoading || undefined"
 					@keyup.enter="save"
 					class="input"
 					id="identifier"
@@ -46,8 +46,8 @@
 			<label class="label" for="listdescription">{{ $t('list.edit.description') }}</label>
 			<div class="control">
 				<editor
-					:class="{ 'disabled': listService.loading}"
-					:disabled="listService.loading"
+					:class="{ 'disabled': isLoading}"
+					:disabled="isLoading"
 					:previewIsDefault="false"
 					id="listdescription"
 					:placeholder="$t('list.edit.descriptionPlaceholder')"
@@ -66,50 +66,44 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
+export default { name: 'list-setting-edit' }
+</script>
 
-import AsyncEditor from '@/components/input/AsyncEditor'
+<script setup lang="ts">
+import type {PropType} from 'vue'
+import {useRouter} from 'vue-router'
+import {useStore} from 'vuex'
+import {useI18n} from 'vue-i18n'
 
-import ListModel from '@/models/list'
-import ListService from '@/services/list'
+import Editor from '@/components/input/AsyncEditor'
 import ColorPicker from '@/components/input/colorPicker.vue'
-import {CURRENT_LIST} from '@/store/mutation-types'
 import CreateEdit from '@/components/misc/create-edit.vue'
 
-export default defineComponent({
-	name: 'list-setting-edit',
-	data() {
-		return {
-			list: ListModel,
-			listService: new ListService(),
-		}
-	},
-	components: {
-		CreateEdit,
-		ColorPicker,
-		editor: AsyncEditor,
-	},
-	watch: {
-		'$route.params.listId': {
-			handler: 'loadList',
-			immediate: true,
-		},
-	},
-	methods: {
-		async loadList() {
-			const list = new ListModel({id: this.$route.params.listId})
+import {CURRENT_LIST} from '@/store/mutation-types'
+import type ListModel from '@/models/list'
 
-			const loadedList = await this.listService.get(list)
-			this.list = { ...loadedList }
-		},
+import { useList } from '@/composables/useList'
+import { useTitle } from '@/composables/useTitle'
 
-		async save() {
-			await this.$store.dispatch('lists/updateList', this.list)
-			await this.$store.dispatch(CURRENT_LIST, {list: this.list})
-			this.setTitle(this.$t('list.edit.title', {list: this.list.title}))
-			this.$message.success({message: this.$t('list.edit.success')})
-			this.$router.back()
-		},
+const props = defineProps({
+	listId: {
+		type: Number as PropType<ListModel['id']>,
+		required: true,
 	},
 })
+
+const router = useRouter()
+const store = useStore()
+
+const {t} = useI18n()
+
+const {list, save: saveList, isLoading} = useList(props.listId)
+
+useTitle(() => list?.title ? t('list.edit.title', {list: list.title}) : '')
+
+async function save() {
+	await saveList()
+	await store.dispatch(CURRENT_LIST, {list})
+	router.back()
+}
 </script>
