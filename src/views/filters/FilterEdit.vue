@@ -54,8 +54,7 @@
 <script setup lang="ts">
 import {ref, shallowRef, computed, watch, unref } from 'vue'
 import {useRouter, useRoute} from 'vue-router'
-import {store} from '@/store'
-import {success}  from '@/message'
+import {success} from '@/message'
 import {useI18n} from 'vue-i18n'
 import type {MaybeRef} from '@vueuse/core'
 
@@ -69,8 +68,10 @@ import SavedFilterService from '@/services/savedFilter'
 import {objectToSnakeCase} from '@/helpers/case'
 import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
 import type {IList} from '@/modelTypes/IList'
+import {useNamespaceStore} from '@/stores/namespaces'
 
 const {t} = useI18n({useScope: 'global'})
+const namespaceStore = useNamespaceStore()
 
 function useSavedFilter(listId: MaybeRef<IList['id']>) {
 	const filterService = shallowRef(new SavedFilterService())
@@ -97,7 +98,7 @@ function useSavedFilter(listId: MaybeRef<IList['id']>) {
 	async function save() {
 		filter.value.filters = filters.value
 		const response = await filterService.value.update(filter.value)
-		await store.dispatch('namespaces/loadNamespaces')
+		await namespaceStore.loadNamespaces()
 		success({message: t('filters.edit.success')})
 		response.filters = objectToSnakeCase(response.filters)
 		filter.value = response

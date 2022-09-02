@@ -65,7 +65,6 @@
 <script setup lang="ts">
 import { ref, shallowRef, computed } from 'vue'
 
-import { store } from '@/store'
 import { useRouter } from 'vue-router'
 
 import {default as Editor} from '@/components/input/AsyncEditor'
@@ -73,6 +72,9 @@ import Filters from '@/components/list/partials/filters.vue'
 
 import SavedFilterService from '@/services/savedFilter'
 import SavedFilterModel from '@/models/savedFilter'
+import {useNamespaceStore} from '@/stores/namespaces'
+
+const namespaceStore = useNamespaceStore()
 
 const savedFilterService = shallowRef(new SavedFilterService())
 
@@ -85,7 +87,7 @@ const filters = computed({
 const router = useRouter()
 async function create() {
 	savedFilter.value = await savedFilterService.value.create(savedFilter.value)
-	await store.dispatch('namespaces/loadNamespaces')
+	await namespaceStore.loadNamespaces()
 	router.push({name: 'list.index', params: {listId: savedFilter.value.getListId()}})
 }
 </script>

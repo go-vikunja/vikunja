@@ -57,7 +57,6 @@
 
 <script lang="ts" setup>
 import {nextTick, ref, watch} from 'vue'
-import {useStore} from '@/store'
 import {success} from '@/message'
 import router from '@/router'
 
@@ -70,9 +69,10 @@ import NamespaceService from '@/services/namespace'
 import NamespaceModel from '@/models/namespace'
 import {useI18n} from 'vue-i18n'
 import {useTitle} from '@/composables/useTitle'
+import {useNamespaceStore} from '@/stores/namespaces'
 
 const {t} = useI18n({useScope: 'global'})
-const store = useStore()
+const namespaceStore = useNamespaceStore()
 
 const namespaceService = ref(new NamespaceService())
 const namespace = ref(new NamespaceModel())
@@ -111,7 +111,7 @@ async function loadNamespace() {
 async function save() {
 	const updatedNamespace = await namespaceService.value.update(namespace.value)
 	// Update the namespace in the parent
-	store.commit('namespaces/setNamespaceById', updatedNamespace)
+	namespaceStore.setNamespaceById(updatedNamespace)
 	success({message: t('namespace.edit.success')})
 	router.back()
 }

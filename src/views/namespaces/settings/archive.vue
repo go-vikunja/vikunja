@@ -22,35 +22,36 @@ export default { name: 'namespace-setting-archive' }
 </script>
 
 <script setup lang="ts">
-import {watch, ref, computed, shallowReactive} from 'vue'
+import {watch, ref, computed, shallowReactive, type PropType} from 'vue'
 import {useRouter} from 'vue-router'
-import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
 
+import {useNamespaceStore} from '@/stores/namespaces'
 import NamespaceService from '@/services/namespace'
 import NamespaceModel from '@/models/namespace'
+import type {INamespace} from '@/modelTypes/INamespace'
 
 const props = defineProps({
 	namespaceId: {
-		type: Number,
+		type: Number as PropType<INamespace['id']>,
 		required: true,
 	},
 })
 
-const store = useStore()
 const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
 
+const namespaceStore = useNamespaceStore()
 const namespaceService = shallowReactive(new NamespaceService())
-const namespace = ref(new NamespaceModel())
+const namespace = ref<INamespace>(new NamespaceModel())
 
 watch(
 	() => props.namespaceId,
 	async () => {
-		namespace.value = store.getters['namespaces/getNamespaceById'](props.namespaceId)
+		namespace.value = namespaceStore.getNamespaceById(props.namespaceId) || new NamespaceModel()
 
 		// FIXME: ressouce should be loaded in store
 		namespace.value = await namespaceService.get({id: props.namespaceId})
@@ -75,7 +76,7 @@ async function archiveNamespace() {
 			...namespace.value,
 			isArchived,
 		})
-		store.commit('namespaces/setNamespaceById', archivedNamespace)
+		namespaceStore.setNamespaceById(archivedNamespace)
 		success({
 			message: isArchived
 				? t('namespace.archive.success')

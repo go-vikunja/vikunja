@@ -1,11 +1,11 @@
 import {ref, computed} from 'vue'
-import {useStore} from '@/store'
+import {useNamespaceStore} from '@/stores/namespaces'
 
-export function useNameSpaceSearch() {
+export function useNamespaceSearch() {
 	const query = ref('')
 	
-	const store = useStore()
-	const namespaces = computed(() => store.getters['namespaces/searchNamespace'](query.value))
+	const namespaceStore = useNamespaceStore()
+	const namespaces = computed(() => namespaceStore.searchNamespace(query.value))
 	
 	function findNamespaces(newQuery: string) {
 		query.value = newQuery

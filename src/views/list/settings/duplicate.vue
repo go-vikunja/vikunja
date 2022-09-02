@@ -22,7 +22,6 @@
 <script setup lang="ts">
 import {ref, shallowReactive} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
-import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import ListDuplicateService from '@/services/listDuplicateService'
@@ -34,8 +33,9 @@ import type {INamespace} from '@/modelTypes/INamespace'
 
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
-import {useNameSpaceSearch} from '@/composables/useNamespaceSearch'
+import {useNamespaceSearch} from '@/composables/useNamespaceSearch'
 import {useListStore} from '@/stores/lists'
+import {useNamespaceStore} from '@/stores/namespaces'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('list.duplicate.title'))
@@ -43,7 +43,7 @@ useTitle(() => t('list.duplicate.title'))
 const {
 	namespaces,
 	findNamespaces,
-} = useNameSpaceSearch()
+} = useNamespaceSearch()
 
 const selectedNamespace = ref<INamespace>()
 
@@ -53,8 +53,8 @@ function selectNamespace(namespace: INamespace) {
 
 const route = useRoute()
 const router = useRouter()
-const store = useStore()
 const listStore = useListStore()
+const namespaceStore = useNamespaceStore()
 
 const listDuplicateService = shallowReactive(new ListDuplicateService())
 
@@ -67,7 +67,7 @@ async function duplicateList() {
 
 	const duplicate = await listDuplicateService.create(listDuplicate)
 
-	store.commit('namespaces/addListToNamespace', duplicate.list)
+	namespaceStore.addListToNamespace(duplicate.list)
 	listStore.setList(duplicate.list)
 	success({message: t('list.duplicate.success')})
 	router.push({name: 'list.index', params: {listId: duplicate.list.id}})

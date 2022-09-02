@@ -19,12 +19,12 @@
 <script lang="ts" setup>
 import {reactive, ref, watch} from 'vue'
 import type {PropType} from 'vue'
-import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 import ListModel from '@/models/list'
 import type {IList} from '@/modelTypes/IList'
 import Multiselect from '@/components/input/multiselect.vue'
 import {useListStore} from '@/stores/lists'
+import {useNamespaceStore} from '@/stores/namespaces'
 
 const props = defineProps({
 	modelValue: {
@@ -34,8 +34,6 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue'])
 
-const store = useStore()
-const listStore = useListStore()
 const {t} = useI18n({useScope: 'global'})
 
 const list: IList = reactive(new ListModel())
@@ -49,6 +47,8 @@ watch(
 	},
 )
 
+const listStore = useListStore()
+const namespaceStore = useNamespaceStore()
 const foundLists = ref<IList[]>([])
 function findLists(query: string) {
 	if (query === '') {
@@ -66,7 +66,7 @@ function select(l: IList | null) {
 }
 
 function namespace(namespaceId: number) {
-	const namespace = store.getters['namespaces/getNamespaceById'](namespaceId)
+	const namespace = namespaceStore.getNamespaceById(namespaceId)
 	return namespace !== null
 		? namespace.title
 		: t('list.shared')

@@ -79,17 +79,19 @@ import ListCard from '@/components/list/partials/list-card.vue'
 import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
 import {useTitle} from '@/composables/useTitle'
 import {useStorage} from '@vueuse/core'
+import {useNamespaceStore} from '@/stores/namespaces'
 
 const {t} = useI18n()
 const store = useStore()
+const namespaceStore = useNamespaceStore()
 
 useTitle(() => t('namespace.title'))
 const showArchived = useStorage('showArchived', false)
 
 const loading = computed(() => store.state.loading)
 const namespaces = computed(() => {
-	return store.state.namespaces.namespaces.filter(n => showArchived.value ? true : !n.isArchived)
-	// return store.state.namespaces.namespaces.filter(n => showArchived.value ? true : !n.isArchived).map(n => {
+	return namespaceStore.namespaces.filter(n => showArchived.value ? true : !n.isArchived)
+	// return namespaceStore.namespaces.filter(n => showArchived.value ? true : !n.isArchived).map(n => {
 	// 	n.lists = n.lists.filter(l => !l.isArchived)
 	// 	return n
 	// })

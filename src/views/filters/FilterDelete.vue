@@ -12,7 +12,6 @@
 </template>
 
 <script setup lang="ts">
-import { store } from '@/store'
 import { useI18n } from 'vue-i18n'
 import { useRouter, useRoute } from 'vue-router'
 import {success} from '@/message'
@@ -20,10 +19,12 @@ import {success} from '@/message'
 import SavedFilterModel from '@/models/savedFilter'
 import SavedFilterService from '@/services/savedFilter'
 import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
+import {useNamespaceStore} from '@/stores/namespaces'
 
 const { t } = useI18n({useScope: 'global'})
 const router = useRouter()
 const route = useRoute()
+const namespaceStore = useNamespaceStore()
 
 async function deleteSavedFilter() {
 	// We assume the listId in the route is the pseudolist
@@ -33,7 +34,7 @@ async function deleteSavedFilter() {
 	const filter = new SavedFilterModel({id: savedFilterId})
 
 	await filterService.delete(filter)
-	await store.dispatch('namespaces/loadNamespaces')
+	await namespaceStore.loadNamespaces()
 	success({message: t('filters.delete.success')})
 	router.push({name: 'namespaces.index'})
 }

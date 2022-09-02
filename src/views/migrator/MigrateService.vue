@@ -77,6 +77,7 @@ import { setTitle } from '@/helpers/setTitle'
 import {formatDateLong} from '@/helpers/time/formatDate'
 
 import {MIGRATORS} from './migrators'
+import { useNamespaceStore } from '@/stores/namespaces'
 
 const PROGRESS_DOTS_COUNT = 8
 
@@ -171,7 +172,8 @@ export default defineComponent({
 			try {
 				const {message} = await this.migrationService.migrate(migrationConfig)
 				this.message = message
-				return this.$store.dispatch('namespaces/loadNamespaces')
+				const namespaceStore = useNamespaceStore()
+				return namespaceStore.loadNamespaces()
 			} finally {
 				this.isMigrating = false
 			}

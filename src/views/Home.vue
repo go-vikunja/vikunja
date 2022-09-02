@@ -72,10 +72,12 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
 import {useDateTimeSalutation} from '@/composables/useDateTimeSalutation'
 import {useListStore} from '@/stores/lists'
+import {useNamespaceStore} from '@/stores/namespaces'
 
 const welcome = useDateTimeSalutation()
 
 const store = useStore()
+const namespaceStore = useNamespaceStore()
 const listStore = useListStore()
 const listHistory = computed(() => {
 	// If we don't check this, it tries to load the list background right after logging out	
@@ -92,8 +94,8 @@ const migratorsEnabled = computed(() => store.state.config.availableMigrators?.l
 const userInfo = computed(() => store.state.auth.info)
 const hasTasks = computed(() => store.state.hasTasks)
 const defaultListId = computed(() => store.state.auth.settings.defaultListId)
-const defaultNamespaceId = computed(() => store.state.namespaces.namespaces?.[0]?.id || 0)
-const hasLists = computed(() => store.state.namespaces.namespaces?.[0]?.lists.length > 0)
+const defaultNamespaceId = computed(() => namespaceStore.namespaces?.[0]?.id || 0)
+const hasLists = computed(() => namespaceStore.namespaces?.[0]?.lists.length > 0)
 const loading = computed(() => store.state.loading && store.state.loadingModule === 'tasks')
 const deletionScheduledAt = computed(() => parseDateOrNull(store.state.auth.info?.deletionScheduledAt))
 
