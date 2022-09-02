@@ -1,6 +1,6 @@
 import type { Module } from 'vuex'
 
-import NamespaceService from '../../services/namespace'
+import NamespaceService from '../services/namespace'
 import {setLoading} from '@/store/helper'
 import {createNewIndexer} from '@/indexes'
 import type {NamespaceState, RootStoreState} from '@/store/types'
