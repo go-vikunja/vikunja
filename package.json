@@ -92,7 +92,7 @@
     "vite-plugin-pwa": "0.12.6",
     "vite-svg-loader": "3.5.1",
     "vitest": "0.22.1",
-    "vue-tsc": "0.40.5",
+    "vue-tsc": "0.40.6",
     "wait-on": "6.0.1",
     "workbox-cli": "6.5.4"
   },
