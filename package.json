@@ -89,7 +89,7 @@
     "sass": "1.54.8",
     "typescript": "4.8.2",
     "vite": "3.0.9",
-    "vite-plugin-pwa": "0.12.4",
+    "vite-plugin-pwa": "0.12.6",
     "vite-svg-loader": "3.5.1",
     "vitest": "0.22.1",
     "vue-tsc": "0.40.5",
