@@ -215,7 +215,7 @@ export default {
 				return
 			}
 
-			const HTTP = AuthenticatedHTTPFactory(jwt)
+			const HTTP = AuthenticatedHTTPFactory()
 			try {
 				const response = await HTTP.get('user')
 				const info = new UserModel(response.data)

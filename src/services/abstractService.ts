@@ -1,6 +1,5 @@
-import axios from 'axios'
 import {objectToSnakeCase} from '@/helpers/case'
-import {getToken} from '@/helpers/auth'
+import {AuthenticatedHTTPFactory} from '@/http-common'
 
 function convertObject(o) {
 	if (o instanceof Date) {
@@ -56,12 +55,7 @@ export default class AbstractService {
 	 * @param [paths] An object with all paths. Default values are specified above.
 	 */
 	constructor(paths) {
-		this.http = axios.create({
-			baseURL: window.API_URL,
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		})
+		this.http = AuthenticatedHTTPFactory()
 
 		// Set the interceptors to process every request
 		this.http.interceptors.request.use((config) => {
@@ -87,12 +81,6 @@ export default class AbstractService {
 			}
 			return config
 		})
-
-		// Set the default auth header if we have a token
-		const token = getToken()
-		if (token !== null) {
-			this.http.defaults.headers.common['Authorization'] = `Bearer ${token}`
-		}
 
 		if (paths) {
 			this.paths = {
