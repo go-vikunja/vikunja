@@ -870,10 +870,10 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
-"@babel/standalone@^7.18.12":
-  version "7.18.12"
-  resolved "https://registry.yarnpkg.com/@babel/standalone/-/standalone-7.18.12.tgz#4c0abdf1b5213394e73a0ba5500dcc287194a20d"
-  integrity sha512-wDh3K5IUJiSMAY0MLYBFoCaj2RCZwvDz5BHn2uHat9KOsGWEVDFgFQFIOO+81Js2phFKNppLC45iOCsZVfJniw==
+"@babel/standalone@^7.18.13":
+  version "7.18.13"
+  resolved "https://registry.yarnpkg.com/@babel/standalone/-/standalone-7.18.13.tgz#380fd841d95bfd55435282f323136c1ad2469b86"
+  integrity sha512-5hjvvFkaXyfQri+s4CAZtx6FTKclfTNd2QN2RwgzCVJhnYYgKh4YFBCnNJSxurzvpSKD2NmpCkoWAkMc+j9y+g==
 
 "@babel/template@^7.14.5":
   version "7.14.5"
@@ -2604,16 +2604,16 @@
     resolve-from "^5.0.0"
     rollup-pluginutils "^2.8.2"
 
-"@vitejs/plugin-legacy@2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@vitejs/plugin-legacy/-/plugin-legacy-2.0.1.tgz#2f0f2821e65bea4a21045ec083b65b2b26928db7"
-  integrity sha512-kKC56rfsXwebApzyuZqdQlGmqTyH1ugy0l0rY58gx5OXzq4/t5/DCqGUoz53Db51OqfjRqsHfqmvq9or6w9k/Q==
+"@vitejs/plugin-legacy@2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@vitejs/plugin-legacy/-/plugin-legacy-2.1.0.tgz#0170c582f4cccc1a6b0391c258e6cee209542fd9"
+  integrity sha512-en3h0L7okBonSYKJx81bU8AVFPjSCiUSz8xUDAW8J0CxskfxSt/VJKbZO6G9yCVgZLywGoO8PNAfOQWVLUWZ2A==
   dependencies:
-    "@babel/standalone" "^7.18.12"
-    core-js "^3.24.1"
+    "@babel/standalone" "^7.18.13"
+    core-js "^3.25.0"
     magic-string "^0.26.2"
     regenerator-runtime "^0.13.9"
-    systemjs "^6.12.1"
+    systemjs "^6.12.4"
 
 "@vitejs/plugin-vue@3.0.3":
   version "3.0.3"
@@ -4422,10 +4422,10 @@ core-js-compat@^3.14.0, core-js-compat@^3.15.0:
     browserslist "^4.16.6"
     semver "7.0.0"
 
-core-js@^3.24.1:
-  version "3.24.1"
-  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.24.1.tgz#cf7724d41724154010a6576b7b57d94c5d66e64f"
-  integrity sha512-0QTBSYSUZ6Gq21utGzkfITDylE8jWC9Ne1D2MrhvlsZBI1x39OdDIVbzSqtgMndIy6BlHxBXpMGqzZmnztg2rg==
+core-js@^3.25.0:
+  version "3.25.0"
+  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.25.0.tgz#be71d9e0dd648ffd70c44a7ec2319d039357eceb"
+  integrity sha512-CVU1xvJEfJGhyCpBrzzzU1kjCfgsGUxhEvwUV2e/cOedYWHdmluamx+knDnmhqALddMG16fZvIqvs9aijsHHaA==
 
 core-util-is@1.0.2:
   version "1.0.2"
@@ -11883,10 +11883,10 @@ sync-rpc@^1.2.1:
   dependencies:
     get-port "^3.1.0"
 
-systemjs@^6.12.1:
-  version "6.12.1"
-  resolved "https://registry.yarnpkg.com/systemjs/-/systemjs-6.12.1.tgz#47cdd23a6ec9f1b01cf5b5f70562c8550da229d3"
-  integrity sha512-hqTN6kW+pN6/qro6G9OZ7ceDQOcYno020zBQKpZQLsJhYTDMCMNfXi/Y8duF5iW+4WWZr42ry0MMkcRGpbwG2A==
+systemjs@^6.12.4:
+  version "6.12.6"
+  resolved "https://registry.yarnpkg.com/systemjs/-/systemjs-6.12.6.tgz#147a2a9137b8f3fddaafac1d5060adf3d11212a6"
+  integrity sha512-SawLiWya8/uNR4p12OggSYZ35tP4U4QTpfV57DdZEOPr6+J6zlLSeeEpMmzYTEoBAsMhctdEE+SWJUDYX4EaKw==
 
 tabtab@^3.0.2:
   version "3.0.2"

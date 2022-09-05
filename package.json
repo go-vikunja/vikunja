@@ -66,7 +66,7 @@
     "@types/flexsearch": "0.7.3",
     "@typescript-eslint/eslint-plugin": "5.36.1",
     "@typescript-eslint/parser": "5.36.1",
-    "@vitejs/plugin-legacy": "2.0.1",
+    "@vitejs/plugin-legacy": "2.1.0",
     "@vitejs/plugin-vue": "3.0.3",
     "@vue/eslint-config-typescript": "11.0.0",
     "@vue/test-utils": "2.0.2",
