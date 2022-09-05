@@ -72,7 +72,7 @@ export default { name: 'list-setting-edit' }
 <script setup lang="ts">
 import type {PropType} from 'vue'
 import {useRouter} from 'vue-router'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import Editor from '@/components/input/AsyncEditor'
@@ -80,7 +80,7 @@ import ColorPicker from '@/components/input/colorPicker.vue'
 import CreateEdit from '@/components/misc/create-edit.vue'
 
 import {CURRENT_LIST} from '@/store/mutation-types'
-import type { IList } from '@/models/list'
+import type {IList} from '@/modelTypes/IList'
 
 import { useList } from '@/composables/useList'
 import { useTitle } from '@/composables/useTitle'
