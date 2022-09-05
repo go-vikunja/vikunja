@@ -55,6 +55,9 @@ function findLists(query: string) {
 }
 
 function select(l: IList | null) {
+	if (l === null) {
+		return
+	}
 	Object.assign(list, l)
 	emit('update:modelValue', list)
 }
