@@ -39,7 +39,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import {includesById} from '@/helpers/utils'
 import ListUserService from '@/services/listUsers'
 import {success} from '@/message'
-import type { IUser } from '@/models/user'
+import type { IUser } from '@/modelTypes/IUser'
 
 const props = defineProps({
 		taskId: {

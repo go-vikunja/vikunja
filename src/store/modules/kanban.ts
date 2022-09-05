@@ -222,11 +222,11 @@ const kanbanStore : Module<KanbanState, RootStoreState> = {
 
 	getters: {
 		getBucketById(state) {
-			return (bucketId) => findById(state.buckets, bucketId)
+			return (bucketId: IBucket['id']) => findById(state.buckets, bucketId)
 		},
 
 		getTaskById(state) {
-			return (id) => {
+			return (id: ITask['id']) => {
 				const { bucketIndex, taskIndex } = getTaskIndicesById(state, id)
 
 				

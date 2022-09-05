@@ -15,7 +15,7 @@ import {AUTH_TYPES} from '@/store/types'
 import type { IUserSettings } from '@/modelTypes/IUserSettings'
 
 
-const defaultSettings = settings => {
+function defaultSettings(settings: Partial<IUserSettings>) {
 	if (typeof settings.weekStart === 'undefined' || settings.weekStart === '') {
 		settings.weekStart = 0
 	}

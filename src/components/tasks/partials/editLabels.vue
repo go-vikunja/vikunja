@@ -43,12 +43,13 @@ import {type PropType, ref, computed, shallowReactive, watch} from 'vue'
 import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
-import LabelModel, { type ILabel } from '@/models/label'
+import LabelModel from '@/models/label'
 import LabelTaskService from '@/services/labelTask'
 import {success} from '@/message'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Multiselect from '@/components/input/multiselect.vue'
+import type { ILabel } from '@/modelTypes/ILabel'
 
 const props = defineProps({
 	modelValue: {

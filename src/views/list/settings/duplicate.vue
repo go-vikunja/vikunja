@@ -30,7 +30,7 @@ import CreateEdit from '@/components/misc/create-edit.vue'
 import Multiselect from '@/components/input/multiselect.vue'
 
 import ListDuplicateModel from '@/models/listDuplicateModel'
-import type {INamespace} from '@/models/namespace'
+import type {INamespace} from '@/modelTypes/INamespace'
 
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
