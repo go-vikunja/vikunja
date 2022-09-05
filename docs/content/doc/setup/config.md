@@ -657,7 +657,8 @@ Environment path: `VIKUNJA_MAILER_HOST`
 
 ### port
 
-SMTP Host port
+SMTP Host port.
+**NOTE:** If you're unable to send mail and the only error you see in the logs is an `EOF`, try setting the port to `25`.
 
 Default: `587`
 
