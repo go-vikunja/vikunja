@@ -30,6 +30,9 @@ function getTaskIndicesById(state: KanbanState, taskId: ITask['id']) {
 
 const addTaskToBucketAndSort = (state: KanbanState, task: ITask) => {
 	const bucketIndex = findIndexById(state.buckets, task.bucketId)
+	if(typeof state.buckets[bucketIndex] === 'undefined') {
+		return
+	}
 	state.buckets[bucketIndex].tasks.push(task)
 	state.buckets[bucketIndex].tasks.sort((a, b) => a.kanbanPosition > b.kanbanPosition ? 1 : -1)
 }
