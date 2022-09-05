@@ -423,6 +423,7 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
+import cloneDeep from 'lodash.clonedeep'
 
 import TaskService from '../../services/task'
 import TaskModel, { type ITask } from '@/models/task'
@@ -639,7 +640,23 @@ export default defineComponent({
 			this.activeFields.attachments = this.task.attachments.length > 0
 			this.activeFields.relatedTasks = Object.keys(this.task.relatedTasks).length > 0
 		},
-		async saveTask(showNotification = true, undoCallback = null) {
+		async saveTask(args?: {
+			task: ITask,
+			showNotification?: boolean,
+			undoCallback?: () => void,
+		}) {
+			const {
+				task,
+				showNotification,
+				undoCallback,
+			} = {
+				...{
+					task: cloneDeep(this.task),
+					showNotification: true,
+				},
+				...args,
+			}
+
 			if (!this.canWrite) {
 				return
 			}
@@ -648,22 +665,23 @@ export default defineComponent({
 			// setting the due date on mobile which leads to no due date change being saved.
 			await this.$nextTick()
 
-			this.task.hexColor = this.taskColor
+
+			task.hexColor = this.taskColor
 
 			// If no end date is being set, but a start date and due date,
 			// use the due date as the end date
-			if (this.task.endDate === null && this.task.startDate !== null && this.task.dueDate !== null) {
-				this.task.endDate = this.task.dueDate
+			if (task.endDate === null && task.startDate !== null && task.dueDate !== null) {
+				task.endDate = task.dueDate
 			}
 
-			this.task = await this.$store.dispatch('tasks/update', this.task)
+			this.task = await this.$store.dispatch('tasks/update', task)
 
 			if (!showNotification) {
 				return
 			}
 
 			let actions = []
-			if (undoCallback !== null) {
+			if (undoCallback !== undefined) {
 				actions = [{
 					title: 'Undo',
 					callback: undoCallback,
@@ -694,19 +712,28 @@ export default defineComponent({
 		},
 
 		toggleTaskDone() {
-			this.task.done = !this.task.done
-
-			if (this.task.done) {
+			const newTask = {
+				...this.task,
+				done: !this.task.done,
+			}
+			if (newTask.done) {
 				playPop()
 			}
 
-			this.saveTask(true, this.toggleTaskDone)
+			this.saveTask({
+				task: newTask,
+				undoCallback: this.toggleTaskDone,
+			})
 		},
 
 		async changeList(list: IList) {
 			this.$store.commit('kanban/removeTaskInBucket', this.task)
-			this.task.listId = list.id
-			await this.saveTask()
+			await this.saveTask({
+				task: {
+					...this.task,
+					listId: list.id,
+				},
+			})
 		},
 
 		async toggleFavorite() {
