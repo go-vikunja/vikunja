@@ -1,22 +1,27 @@
+import type { Module } from 'vuex'
+
 import NamespaceService from '../../services/namespace'
 import {setLoading} from '@/store/helper'
 import {createNewIndexer} from '@/indexes'
+import type {NamespaceState, RootStoreState} from '@/store/types'
+import type {INamespace} from '@/modelTypes/INamespace'
+import type {IList} from '@/modelTypes/IList'
 
 const {add, remove, search, update} = createNewIndexer('namespaces', ['title', 'description'])
 
-export default {
+const namespacesStore : Module<NamespaceState, RootStoreState> = {
 	namespaced: true,
 	state: () => ({
 		namespaces: [],
 	}),
 	mutations: {
-		namespaces(state, namespaces) {
+		namespaces(state, namespaces: INamespace[]) {
 			state.namespaces = namespaces
 			namespaces.forEach(n => {
 				add(n)
 			})
 		},
-		setNamespaceById(state, namespace) {
+		setNamespaceById(state, namespace: INamespace) {
 			const namespaceIndex = state.namespaces.findIndex(n => n.id === namespace.id)
 
 			if (namespaceIndex === -1) {
@@ -30,7 +35,7 @@ export default {
 			state.namespaces[namespaceIndex] = namespace
 			update(namespace)
 		},
-		setListInNamespaceById(state, list) {
+		setListInNamespaceById(state, list: IList) {
 			for (const n in state.namespaces) {
 				// We don't have the namespace id on the list which means we need to loop over all lists until we find it.
 				// FIXME: Not ideal at all - we should fix that at the api level.
@@ -46,11 +51,11 @@ export default {
 				}
 			}
 		},
-		addNamespace(state, namespace) {
+		addNamespace(state, namespace: INamespace) {
 			state.namespaces.push(namespace)
 			add(namespace)
 		},
-		removeNamespaceById(state, namespaceId) {
+		removeNamespaceById(state, namespaceId: INamespace['id']) {
 			for (const n in state.namespaces) {
 				if (state.namespaces[n].id === namespaceId) {
 					remove(state.namespaces[n])
@@ -59,7 +64,7 @@ export default {
 				}
 			}
 		},
-		addListToNamespace(state, list) {
+		addListToNamespace(state, list: IList) {
 			for (const n in state.namespaces) {
 				if (state.namespaces[n].id === list.namespaceId) {
 					state.namespaces[n].lists.push(list)
@@ -67,7 +72,7 @@ export default {
 				}
 			}
 		},
-		removeListFromNamespaceById(state, list) {
+		removeListFromNamespaceById(state, list: IList) {
 			for (const n in state.namespaces) {
 				// We don't have the namespace id on the list which means we need to loop over all lists until we find it.
 				// FIXME: Not ideal at all - we should fix that at the api level.
@@ -83,7 +88,7 @@ export default {
 		},
 	},
 	getters: {
-		getListAndNamespaceById: state => (listId, ignorePseudoNamespaces = false) => {
+		getListAndNamespaceById: (state) => (listId: IList['id'], ignorePseudoNamespaces = false) => {
 			for (const n in state.namespaces) {
 
 				if (ignorePseudoNamespaces && state.namespaces[n].id < 0) {
@@ -101,10 +106,10 @@ export default {
 			}
 			return null
 		},
-		getNamespaceById: state => namespaceId => {
+		getNamespaceById: (state) => (namespaceId: INamespace['id']) => {
 			return state.namespaces.find(({id}) => id == namespaceId) || null
 		},
-		searchNamespace: (state, getters) => query => {
+		searchNamespace: (state, getters) => (query: string) => {
 			return search(query)
 					?.filter(value => value > 0)
 					.map(getters.getNamespaceById)
@@ -146,7 +151,7 @@ export default {
 			}
 		},
 
-		async deleteNamespace(ctx, namespace) {
+		async deleteNamespace(ctx, namespace: INamespace) {
 			const cancel = setLoading(ctx, 'namespaces')
 			const namespaceService = new NamespaceService()
 
@@ -159,7 +164,7 @@ export default {
 			}
 		},
 
-		async createNamespace(ctx, namespace) {
+		async createNamespace(ctx, namespace: INamespace) {
 			const cancel = setLoading(ctx, 'namespaces')
 			const namespaceService = new NamespaceService()
 
@@ -173,3 +178,5 @@ export default {
 		},
 	},
 }
+
+export default namespacesStore

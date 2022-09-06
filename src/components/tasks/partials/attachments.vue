@@ -39,7 +39,7 @@
 				<div class="info">
 					<p class="attachment-info-meta">
 						<i18n-t keypath="task.attachment.createdBy">
-							<span v-tooltip="formatDate(a.created)">
+							<span v-tooltip="formatDateLong(a.created)">
 								{{ formatDateSince(a.created) }}
 							</span>
 							<user
@@ -49,7 +49,7 @@
 							/>
 						</i18n-t>
 						<span>
-							{{ a.file.getHumanSize() }}
+							{{ getHumanSize(a.file.size) }}
 						</span>
 						<span v-if="a.file.mime">
 							{{ a.file.mime }}
@@ -147,14 +147,17 @@
 import {defineComponent} from 'vue'
 
 import AttachmentService from '../../../services/attachment'
-import AttachmentModel from '../../../models/attachment'
-import User from '../../misc/user'
+import AttachmentModel, { type IAttachment } from '@/models/attachment'
+import User from '@/components/misc/user.vue'
 import {mapState} from 'vuex'
 
 import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
 import { uploadFiles, generateAttachmentUrl } from '@/helpers/attachments'
+import {formatDate, formatDateSince, formatDateLong} from '@/helpers/time/formatDate'
 
 import BaseButton from '@/components/base/BaseButton'
+import type { IFile } from '@/models/file'
+import { getHumanSize } from '@/helpers/getHumanSize'
 
 export default defineComponent({
 	name: 'attachments',
@@ -190,7 +193,7 @@ export default defineComponent({
 	setup(props) {
 		const copy = useCopyToClipboard()
 
-		function copyUrl(attachment: AttachmentModel) {
+		function copyUrl(attachment: IAttachment) {
 			copy(generateAttachmentUrl(props.taskId, attachment.id))
 		}
 
@@ -229,7 +232,12 @@ export default defineComponent({
 		})
 	},
 	methods: {
-		downloadAttachment(attachment) {
+		getHumanSize,
+		formatDate,
+		formatDateSince,
+		formatDateLong,
+
+		downloadAttachment(attachment: IAttachment) {
 			this.attachmentService.download(attachment)
 		},
 		uploadNewAttachment() {
@@ -239,7 +247,7 @@ export default defineComponent({
 
 			this.uploadFiles(this.$refs.files.files)
 		},
-		uploadFiles(files) {
+		uploadFiles(files: IFile[]) {
 			uploadFiles(this.attachmentService, this.taskId, files)
 		},
 		async deleteAttachment() {

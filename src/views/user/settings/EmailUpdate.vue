@@ -37,16 +37,13 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-export default defineComponent({
-	name: 'user-settings-update-email',
-})
+export default { name: 'user-settings-update-email' }
 </script>
 
 <script setup lang="ts">
 import {reactive, computed, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 
 import EmailUpdateService from '@/services/emailUpdate'
 import EmailUpdateModel from '@/models/emailUpdate'

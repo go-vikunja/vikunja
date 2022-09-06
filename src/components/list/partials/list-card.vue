@@ -36,16 +36,16 @@
 </template>
 
 <script lang="ts" setup>
-import {PropType, ref, watch} from 'vue'
-import {useStore} from 'vuex'
+import {type PropType, ref, watch} from 'vue'
+import {useStore} from '@/store'
 
 import ListService from '@/services/list'
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 
 import {colorIsDark} from '@/helpers/color/colorIsDark'
-import ListModel from '@/models/list'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import type { IList } from '@/models/list'
 
 const background = ref<string | null>(null)
 const backgroundLoading = ref(false)
@@ -53,7 +53,7 @@ const blurHashUrl = ref('')
 
 const props = defineProps({
 	list: {
-		type: Object as PropType<ListModel>,
+		type: Object as PropType<IList>,
 		required: true,
 	},
 	showArchived: {
@@ -86,7 +86,7 @@ async function loadBackground() {
 
 const store = useStore()
 
-function toggleFavoriteList(list: ListModel) {
+function toggleFavoriteList(list: IList) {
 	// The favorites pseudo list is always favorite
 	// Archived lists cannot be marked favorite
 	if (list.id === -1 || list.isArchived) {

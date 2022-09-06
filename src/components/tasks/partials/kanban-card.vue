@@ -24,7 +24,7 @@
 			:class="{'overdue': task.dueDate <= new Date() && !task.done}"
 			class="due-date"
 			v-if="task.dueDate > 0"
-			v-tooltip="formatDate(task.dueDate)">
+			v-tooltip="formatDateLong(task.dueDate)">
 			<span class="icon">
 				<icon :icon="['far', 'calendar-alt']"/>
 			</span>
@@ -66,16 +66,17 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
+import {defineComponent, type PropType} from 'vue'
 
 import {playPop} from '../../../helpers/playPop'
-import PriorityLabel from '../../../components/tasks/partials/priorityLabel'
-import User from '../../../components/misc/user'
+import PriorityLabel from '../../../components/tasks/partials/priorityLabel.vue'
+import User from '../../../components/misc/user.vue'
 import Done from '@/components/misc/Done.vue'
-import Labels from '../../../components/tasks/partials/labels'
-import ChecklistSummary from './checklist-summary'
-import {TASK_DEFAULT_COLOR} from '@/models/task'
+import Labels from '../../../components/tasks/partials/labels.vue'
+import ChecklistSummary from './checklist-summary.vue'
+import {TASK_DEFAULT_COLOR, type ITask} from '@/models/task'
 
+import {formatDateLong, formatISO, formatDateSince} from '@/helpers/time/formatDate'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 
 export default defineComponent({
@@ -95,6 +96,7 @@ export default defineComponent({
 	},
 	props: {
 		task: {
+			type: Object as PropType<ITask>,
 			required: true,
 		},
 		loading: {
@@ -111,8 +113,11 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		formatDateLong,
+		formatISO,
+		formatDateSince,
 		colorIsDark,
-		async toggleTaskDone(task) {
+		async toggleTaskDone(task: ITask) {
 			this.loadingInternal = true
 			try {
 				const done = !task.done

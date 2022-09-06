@@ -30,7 +30,7 @@
 				{{ task.title }}
 			</span>
 
-			<labels class="labels ml-2 mr-1" :labels="task.labels" v-if="task.labels.length > 0"/>
+			<labels class="labels ml-2 mr-1" :labels="task.labels" v-if="task.labels.length > 0" />
 			<user
 				:avatar-size="27"
 				:is-inline="true"
@@ -43,7 +43,7 @@
 				v-if="+new Date(task.dueDate) > 0"
 				class="dueDate"
 				@click.prevent.stop="showDefer = !showDefer"
-				v-tooltip="formatDate(task.dueDate)"
+				v-tooltip="formatDateLong(task.dueDate)"
 			>
 				<time
 					:datetime="formatISO(task.dueDate)"
@@ -96,19 +96,20 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
+import {defineComponent, type PropType} from 'vue'
 
-import TaskModel from '../../../models/task'
-import PriorityLabel from './priorityLabel'
+import TaskModel, { type ITask } from '../../../models/task'
+import PriorityLabel from './priorityLabel.vue'
 import TaskService from '../../../services/task'
-import Labels from './labels'
-import User from '../../misc/user'
+import Labels from '@/components/tasks/partials/labels.vue'
+import User from '@/components/misc/user.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
-import Fancycheckbox from '../../input/fancycheckbox'
-import DeferTask from './defer-task'
+import Fancycheckbox from '../../input/fancycheckbox.vue'
+import DeferTask from './defer-task.vue'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {playPop} from '@/helpers/playPop'
-import ChecklistSummary from './checklist-summary'
+import ChecklistSummary from './checklist-summary.vue'
+import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 
 export default defineComponent({
 	name: 'singleTaskInList',
@@ -130,7 +131,7 @@ export default defineComponent({
 	},
 	props: {
 		theTask: {
-			type: TaskModel,
+			type: Object as PropType<ITask>,
 			required: true,
 		},
 		isArchived: {
@@ -188,7 +189,11 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		async markAsDone(checked) {
+		formatDateSince,
+		formatISO,
+		formatDateLong,
+
+		async markAsDone(checked: boolean) {
 			const updateFunc = async () => {
 				const task = await this.taskService.update(this.task)
 				if (this.task.done) {
@@ -213,7 +218,7 @@ export default defineComponent({
 			}
 		},
 
-		undoDone(checked) {
+		undoDone(checked: boolean) {
 			this.task.done = !this.task.done
 			this.markAsDone(!checked)
 		},

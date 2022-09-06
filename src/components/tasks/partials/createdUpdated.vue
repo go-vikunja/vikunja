@@ -1,6 +1,6 @@
 <template>
 	<p class="created">
-		<time :datetime="formatISO(task.created)" v-tooltip="formatDate(task.created)">
+		<time :datetime="formatISO(task.created)" v-tooltip="formatDateLong(task.created)">
 			<i18n-t keypath="task.detail.created">
 				<span>{{ formatDateSince(task.created) }}</span>
 				{{ task.createdBy.getDisplayName() }}
@@ -27,13 +27,13 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, toRefs} from 'vue'
-import TaskModel from '@/models/task'
-import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
+import {computed, toRefs, type PropType} from 'vue'
+import type { ITask } from '@/models/task'
+import {formatISO, formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 
 const props = defineProps({
 	task: {
-		type: TaskModel,
+		type: Object as PropType<ITask>,
 		required: true,
 	},
 })

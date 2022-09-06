@@ -5,6 +5,7 @@
   "compilerOptions": {
     "composite": true,
     "baseUrl": ".",
+    "lib": ["ESNext"],
 
     "importHelpers": true,
     "sourceMap": true,

@@ -1,0 +1,17 @@
+import type {IAbstract} from './IAbstract'
+import type {IUser} from './IUser'
+import type {ITask} from './ITask'
+
+export interface IBucket extends IAbstract {
+	id: number
+	title: string
+	listId: number
+	limit: number
+	tasks: ITask[]
+	isDoneBucket: boolean
+	position: number
+	
+	createdBy: IUser
+	created: Date
+	updated: Date
+}

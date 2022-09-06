@@ -1,11 +1,14 @@
 import AbstractModel from './abstractModel'
 
-export default class TotpModel extends AbstractModel {
-	defaults() {
-		return {
-			secret: '',
-			enabled: false,
-			url: '',
-		}
+import type {ITotp} from '@/modelTypes/ITotp'
+
+export default class TotpModel extends AbstractModel implements ITotp {
+	secret = ''
+	enabled = false
+	url = ''
+
+	constructor(data: Partial<ITotp>) {
+		super()
+		this.assignData(data)
 	}
 }

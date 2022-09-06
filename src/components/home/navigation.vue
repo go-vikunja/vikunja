@@ -141,9 +141,9 @@
 
 <script setup lang="ts">
 import {ref, computed, onMounted, onBeforeMount} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import draggable from 'zhyswan-vuedraggable'
-import {SortableEvent} from 'sortablejs'
+import type {SortableEvent} from 'sortablejs'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
@@ -154,9 +154,10 @@ import Logo from '@/components/home/Logo.vue'
 import {MENU_ACTIVE} from '@/store/mutation-types'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
+import {getListTitle} from '@/helpers/getListTitle'
 import {useEventListener} from '@vueuse/core'
-import NamespaceModel from '@/models/namespace'
-import ListModel from '@/models/list'
+import type { IList } from '@/models/list'
+import type { INamespace } from '@/models/namespace'
 
 const drag = ref(false)
 const dragOptions = {
@@ -171,7 +172,7 @@ const loading = computed(() => store.state.loading && store.state.loadingModule 
 
 
 const namespaces = computed(() => {
-	return (store.state.namespaces.namespaces as NamespaceModel[]).filter(n => !n.isArchived)
+	return (store.state.namespaces.namespaces as INamespace[]).filter(n => !n.isArchived)
 })
 const activeLists = computed(() => {
 	return namespaces.value.map(({lists}) => {
@@ -194,7 +195,7 @@ useEventListener('resize', resize)
 onMounted(() => resize())
 
 
-function toggleFavoriteList(list: ListModel) {
+function toggleFavoriteList(list: IList) {
 	// The favorites pseudo list is always favorite
 	// Archived lists cannot be marked favorite
 	if (list.id === -1 || list.isArchived) {
@@ -208,14 +209,14 @@ function resize() {
 	store.commit(MENU_ACTIVE, window.innerWidth >= 770)
 }
 
-function toggleLists(namespaceId: number) {
+function toggleLists(namespaceId: INamespace['id']) {
 	listsVisible.value[namespaceId] = !listsVisible.value[namespaceId]
 }
 
-const listsVisible = ref<{ [id: NamespaceModel['id']]: boolean }>({})
+const listsVisible = ref<{ [id: INamespace['id']]: boolean }>({})
 // FIXME: async action will be unfinished when component mounts
 onBeforeMount(async () => {
-	const namespaces = await store.dispatch('namespaces/loadNamespaces') as NamespaceModel[]
+	const namespaces = await store.dispatch('namespaces/loadNamespaces') as INamespace[]
 	namespaces.forEach(n => {
 		if (typeof listsVisible.value[n.id] === 'undefined') {
 			listsVisible.value[n.id] = true
@@ -223,7 +224,7 @@ onBeforeMount(async () => {
 	})
 })
 
-function updateActiveLists(namespace: NamespaceModel, activeLists: ListModel[]) {
+function updateActiveLists(namespace: INamespace, activeLists: IList[]) {
 	// This is a bit hacky: since we do have to filter out the archived items from the list
 	// for vue draggable updating it is not as simple as replacing it.
 	// To work around this, we merge the active lists with the archived ones. Doing so breaks the order
@@ -240,7 +241,7 @@ function updateActiveLists(namespace: NamespaceModel, activeLists: ListModel[]) 
 	})
 }
 
-const listUpdating = ref<{ [id: NamespaceModel['id']]: boolean }>({})
+const listUpdating = ref<{ [id: INamespace['id']]: boolean }>({})
 
 async function saveListPosition(e: SortableEvent) {
 	if (!e.newIndex && e.newIndex !== 0) return

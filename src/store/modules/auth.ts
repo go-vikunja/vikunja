@@ -1,3 +1,5 @@
+import type { Module } from 'vuex'
+
 import {HTTPFactory, AuthenticatedHTTPFactory} from '@/http-common'
 import {i18n, getCurrentLanguage, saveLanguage} from '@/i18n'
 import {objectToSnakeCase} from '@/helpers/case'
@@ -8,21 +10,19 @@ import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 import {setLoading} from '@/store/helper'
 import {success} from '@/message'
 import {redirectToProvider} from '@/helpers/redirectToProvider'
+import type { RootStoreState, AuthState, Info} from '@/store/types'
+import {AUTH_TYPES} from '@/store/types'
+import type { IUserSettings } from '@/modelTypes/IUserSettings'
 
-const AUTH_TYPES = {
-	'UNKNOWN': 0,
-	'USER': 1,
-	'LINK_SHARE': 2,
-}
 
-const defaultSettings = settings => {
+function defaultSettings(settings: Partial<IUserSettings>) {
 	if (typeof settings.weekStart === 'undefined' || settings.weekStart === '') {
 		settings.weekStart = 0
 	}
 	return settings
 }
 
-export default {
+const authStore : Module<AuthState, RootStoreState> =  {
 	namespaced: true,
 	state: () => ({
 		authenticated: false,
@@ -31,7 +31,7 @@ export default {
 		needsTotpPasscode: false,
 		avatarUrl: '',
 		lastUserInfoRefresh: null,
-		settings: {},
+		settings: {}, // should be IUserSettings
 	}),
 	getters: {
 		authUser(state) {
@@ -48,7 +48,7 @@ export default {
 		},
 	},
 	mutations: {
-		info(state, info) {
+		info(state, info: Info) {
 			state.info = info
 			if (info !== null) {
 				state.avatarUrl = info.getAvatarUrl()
@@ -60,22 +60,23 @@ export default {
 				state.isLinkShareAuth = info.id < 0
 			}
 		},
-		setUserSettings(state, settings) {
+		setUserSettings(state, settings: IUserSettings) {
 			state.settings = defaultSettings(settings)
-			const info = state.info !== null ? state.info : {}
+			const info = state.info !== null ? state.info : {} as Info
 			info.name = settings.name
 			state.info = info
 		},
-		authenticated(state, authenticated) {
+		authenticated(state, authenticated: boolean) {
 			state.authenticated = authenticated
 		},
-		isLinkShareAuth(state, is) {
-			state.isLinkShareAuth = is
+		isLinkShareAuth(state, isLinkShareAuth: boolean) {
+			state.isLinkShareAuth = isLinkShareAuth
 		},
-		needsTotpPasscode(state, needs) {
-			state.needsTotpPasscode = needs
+		needsTotpPasscode(state, needsTotpPasscode: boolean) {
+			state.needsTotpPasscode = needsTotpPasscode
 		},
 		reloadAvatar(state) {
+			if (!state.info) return
 			state.avatarUrl = `${state.info.getAvatarUrl()}&=${+new Date()}`
 		},
 		lastUserRefresh(state) {
@@ -292,3 +293,5 @@ export default {
 		},
 	},
 }
+
+export default authStore

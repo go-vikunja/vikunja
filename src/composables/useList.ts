@@ -1,6 +1,6 @@
 import {watch, reactive, shallowReactive, unref, toRefs, readonly} from 'vue'
 import type {MaybeRef} from '@vueuse/core'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 
 import ListService from '@/services/list'
 import ListModel from '@/models/list'

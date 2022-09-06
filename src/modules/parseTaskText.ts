@@ -1,5 +1,6 @@
 import {parseDate} from '../helpers/time/parseDate'
-import _priorities from '../models/constants/priorities.json'
+import {PRIORITIES} from '@/constants/priorities'
+import {REPEAT_TYPES, type IRepeatAfter, type IRepeatType} from '@/types/IRepeatAfter'
 
 const VIKUNJA_PREFIXES: Prefixes = {
 	label: '*',
@@ -27,43 +28,19 @@ export const PREFIXES = {
 	[PrefixMode.Todoist]: TODOIST_PREFIXES,
 }
 
-const priorities: Priorites = _priorities
-
-interface Priorites {
-	UNSET: number,
-	LOW: number,
-	MEDIUM: number,
-	HIGH: number,
-	URGENT: number,
-	DO_NOW: number,
-}
-
-enum RepeatType {
-	Hours = 'hours',
-	Days = 'days',
-	Weeks = 'weeks',
-	Months = 'months',
-	Years = 'years',
-}
-
-interface Repeats {
-	type: RepeatType,
-	amount: number,
-}
-
 interface repeatParsedResult {
 	textWithoutMatched: string,
-	repeats: Repeats | null,
+	repeats: IRepeatAfter | null,
 }
 
-interface ParsedTaskText {
+export interface ParsedTaskText {
 	text: string,
 	date: Date | null,
 	labels: string[],
 	list: string | null,
 	priority: number | null,
 	assignees: string[],
-	repeats: Repeats | null,
+	repeats: IRepeatAfter | null,
 }
 
 interface Prefixes {
@@ -153,7 +130,7 @@ const getPriority = (text: string, prefix: string): number | null => {
 	}
 
 	for (const p of ps) {
-		for (const pi of Object.values(priorities)) {
+		for (const pi of Object.values(PRIORITIES)) {
 			if (pi === parseInt(p)) {
 				return parseInt(p)
 			}
@@ -208,55 +185,55 @@ const getRepeats = (text: string): repeatParsedResult => {
 		default:
 			amount = results[3] ? parseInt(results[3]) : 1
 	}
-	let type: RepeatType = RepeatType.Hours
+	let type: IRepeatType = REPEAT_TYPES.Hours
 
 	switch (results[0]) {
 		case 'biennially':
-			type = RepeatType.Years
+			type = REPEAT_TYPES.Years
 			amount = 2
 			break
 		case 'bianually':
 		case 'semiannually':
-			type = RepeatType.Months
+			type = REPEAT_TYPES.Months
 			amount = 6
 			break
 		case 'yearly':
 		case 'anually':
-			type = RepeatType.Years
+			type = REPEAT_TYPES.Years
 			break
 		case 'daily':
-			type = RepeatType.Days
+			type = REPEAT_TYPES.Days
 			break
 		case 'hourly':
-			type = RepeatType.Hours
+			type = REPEAT_TYPES.Hours
 			break
 		case 'monthly':
-			type = RepeatType.Months
+			type = REPEAT_TYPES.Months
 			break
 		case 'weekly':
-			type = RepeatType.Weeks
+			type = REPEAT_TYPES.Weeks
 			break
 		default:
 			switch (results[5]) {
 				case 'hour':
 				case 'hours':
-					type = RepeatType.Hours
+					type = REPEAT_TYPES.Hours
 					break
 				case 'day':
 				case 'days':
-					type = RepeatType.Days
+					type = REPEAT_TYPES.Days
 					break
 				case 'week':
 				case 'weeks':
-					type = RepeatType.Weeks
+					type = REPEAT_TYPES.Weeks
 					break
 				case 'month':
 				case 'months':
-					type = RepeatType.Months
+					type = REPEAT_TYPES.Months
 					break
 				case 'year':
 				case 'years':
-					type = RepeatType.Years
+					type = REPEAT_TYPES.Years
 					break
 			}
 	}

@@ -27,7 +27,7 @@ const route = useRoute()
 
 async function deleteSavedFilter() {
 	// We assume the listId in the route is the pseudolist
-	const savedFilterId = getSavedFilterIdFromListId(route.params.listId)
+	const savedFilterId = getSavedFilterIdFromListId(Number((route.params.listId as string)))
 
 	const filterService = new SavedFilterService()
 	const filter = new SavedFilterModel({id: savedFilterId})

@@ -101,7 +101,7 @@ export default defineComponent({ name: 'list-setting-background' })
 <script setup lang="ts">
 import {ref, computed, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useRoute, useRouter} from 'vue-router'
 import debounce from 'lodash.debounce'
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -109,7 +109,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import BackgroundUnsplashService from '@/services/backgroundUnsplash'
 import BackgroundUploadService from '@/services/backgroundUpload'
 import ListService from '@/services/list'
-import BackgroundImageModel from '@/models/backgroundImage'
+import type BackgroundImageModel from '@/models/backgroundImage'
 
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 import {useTitle} from '@/composables/useTitle'

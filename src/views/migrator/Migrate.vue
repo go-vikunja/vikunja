@@ -23,7 +23,7 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 
 import {MIGRATORS} from './migrators'
 import {useTitle} from '@/composables/useTitle'

@@ -1,10 +1,13 @@
 import AbstractModel from './abstractModel'
 
-export default class PasswordUpdateModel extends AbstractModel {
-	defaults() {
-		return {
-			newPassword: '',
-			oldPassword: '',
-		}
+import type {IPasswordUpdate} from '@/modelTypes/IPasswordUpdate'
+
+export default class PasswordUpdateModel extends AbstractModel implements IPasswordUpdate {
+	newPassword = ''
+	oldPassword = ''
+
+	constructor(data: Partial<IPasswordUpdate>) {
+		super()
+		this.assignData(data)
 	}
 }

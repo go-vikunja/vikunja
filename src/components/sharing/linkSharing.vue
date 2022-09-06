@@ -177,16 +177,17 @@
 
 <script setup lang="ts">
 import {ref, watch, computed, shallowReactive} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
-import RIGHTS from '@/models/constants/rights.json'
-import LinkShareModel from '@/models/linkShare'
+import {RIGHTS} from '@/constants/rights'
+import LinkShareModel, { type ILinkShare } from '@/models/linkShare'
 
 import LinkShareService from '@/services/linkShare'
 
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {success} from '@/message'
+import type { IList } from '@/models/list'
 
 const props = defineProps({
 	listId: {
@@ -197,7 +198,7 @@ const props = defineProps({
 
 const {t} = useI18n({useScope: 'global'})
 
-const linkShares = ref([])
+const linkShares = ref<ILinkShare[]>([])
 const linkShareService = shallowReactive(new LinkShareService())
 const selectedRight = ref(RIGHTS.READ)
 const name = ref('')
@@ -216,7 +217,7 @@ watch(
 const store = useStore()
 const frontendUrl = computed(() => store.state.config.frontendUrl)
 
-async function load(listId) {
+async function load(listId: IList['id']) {
 	// If listId == 0 the list on the calling component wasn't already loaded, so we just bail out here
 	if (listId === 0) {
 		return
@@ -225,7 +226,7 @@ async function load(listId) {
 	linkShares.value = await linkShareService.getAll({listId})
 }
 
-async function add(listId) {
+async function add(listId: IList['id']) {
 	const newLinkShare = new LinkShareModel({
 		right: selectedRight.value,
 		listId,
@@ -241,7 +242,7 @@ async function add(listId) {
 	await load(listId)
 }
 
-async function remove(listId) {
+async function remove(listId: IList['id']) {
 	try {
 		await linkShareService.delete(new LinkShareModel({
 			id: linkIdToDelete.value,

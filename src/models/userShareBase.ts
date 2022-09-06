@@ -1,19 +1,21 @@
 import AbstractModel from './abstractModel'
 
-export default class UserShareBaseModel extends AbstractModel {
-	constructor(data) {
-		super(data)
+import {RIGHTS, type Right} from '@/constants/rights'
+import type {IUserShareBase} from '@/modelTypes/IUserShareBase'
+import type {IUser} from '@/modelTypes/IUser'
+
+export default class UserShareBaseModel extends AbstractModel implements IUserShareBase {
+	userId: IUser['id'] = ''
+	right: Right = RIGHTS.READ
+
+	created: Date = null
+	updated: Date = null
+
+	constructor(data: Partial<IUserShareBase>) {
+		super()
+		this.assignData(data)
+	
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
-	}
-
-	defaults() {
-		return {
-			userId: '',
-			right: 0,
-
-			created: null,
-			updated: null,
-		}
 	}
 }

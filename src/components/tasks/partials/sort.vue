@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import {PropType} from 'vue'
+import type {PropType} from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 type Order = 'asc' | 'desc' | 'none'

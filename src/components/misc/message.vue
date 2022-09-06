@@ -7,7 +7,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, PropType} from 'vue'
+import {computed, type PropType} from 'vue'
 
 const TEXT_ALIGN_MAP = Object.freeze({
 	left: '',

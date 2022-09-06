@@ -1,10 +1,13 @@
 import AbstractModel from './abstractModel'
 
-export default class EmailUpdateModel extends AbstractModel {
-	defaults() {
-		return {
-			newEmail: '',
-			password: '',
-		}
+import type {IEmailUpdate} from '@/modelTypes/IEmailUpdate'
+
+export default class EmailUpdateModel extends AbstractModel implements IEmailUpdate {
+	newEmail = ''
+	password = ''
+
+	constructor(data : Partial<IEmailUpdate>) {
+		super()
+		this.assignData(data)
 	}
 }

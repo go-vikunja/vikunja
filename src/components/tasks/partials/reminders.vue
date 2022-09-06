@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import {PropType, ref, onMounted, watch} from 'vue'
+import {type PropType, ref, onMounted, watch} from 'vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Datepicker from '@/components/input/datepicker.vue'
@@ -45,8 +45,8 @@ const props = defineProps({
 				return false
 			}
 
-			const isDate = (e: any) => e instanceof Date
-			const isString = (e: any) => typeof e === 'string'
+			const isDate = (e: unknown) => e instanceof Date
+			const isString = (e: unknown) => typeof e === 'string'
 
 			for (const e of prop) {
 				if (!isDate(e) && !isString(e)) {

@@ -10,15 +10,15 @@
 </template>
 
 <script setup lang="ts">
-import {computed} from 'vue'
+import {computed, type PropType} from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import {getChecklistStatistics} from '@/helpers/checklistFromText'
-import TaskModel from '@/models/task'
+import type {ITask} from '@/models/task'
 
 const props = defineProps({
 	task: {
-		type: TaskModel,
+		type: Object as PropType<ITask>,
 		required: true,
 	},
 })

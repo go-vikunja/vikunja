@@ -1,20 +1,30 @@
+import type { Module } from 'vuex'
 import router from '@/router'
+import {formatISO} from 'date-fns'
 
 import TaskService from '@/services/task'
 import TaskAssigneeService from '@/services/taskAssignee'
-import TaskAssigneeModel from '../../models/taskAssignee'
-import LabelTaskModel from '../../models/labelTask'
 import LabelTaskService from '@/services/labelTask'
+import UserService from '@/services/user'
+
 import {HAS_TASKS} from '../mutation-types'
 import {setLoading} from '../helper'
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
-
 import {parseTaskText} from '@/modules/parseTaskText'
+
+import TaskAssigneeModel from '@/models/taskAssignee'
+import LabelTaskModel from '@/models/labelTask'
 import TaskModel from '@/models/task'
-import {formatISO} from 'date-fns'
 import LabelTask from '@/models/labelTask'
 import LabelModel from '@/models/label'
-import UserService from '@/services/user'
+
+import type {ILabel} from '@/modelTypes/ILabel'
+import type {ITask} from '@/modelTypes/ITask'
+import type { IUser } from '@/modelTypes/IUser'
+import type { IAttachment } from '@/modelTypes/IAttachment'
+import type { IList } from '@/modelTypes/IList'
+
+import type { RootStoreState, TaskState } from '@/store/types'
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
 function findPropertyByValue(object, key, value) {
@@ -24,16 +34,16 @@ function findPropertyByValue(object, key, value) {
 }
 
 // Check if the user exists
-function validateUsername(users, username) {
+function validateUsername(users: IUser[], username: IUser['username']) {
 	return findPropertyByValue(users, 'username', username)
 }
 
 // Check if the label exists
-function validateLabel(labels, label) {
+function validateLabel(labels: ILabel[], label: ILabel) {
 	return findPropertyByValue(labels, 'title', label)
 }
 
-async function addLabelToTask(task, label) {
+async function addLabelToTask(task: ITask, label: ILabel) {
 	const labelTask = new LabelTask({
 		taskId: task.id,
 		labelId: label.id,
@@ -60,7 +70,7 @@ async function findAssignees(parsedTaskAssignees) {
 }
 
 
-export default {
+const tasksStore : Module<TaskState, RootStoreState>= {
 	namespaced: true,
 	state: () => ({}),
 	actions: {
@@ -77,7 +87,7 @@ export default {
 			}
 		},
 
-		async update(ctx, task) {
+		async update(ctx, task: ITask) {
 			const cancel = setLoading(ctx, 'tasks')
 
 			const taskService = new TaskService()
@@ -90,7 +100,7 @@ export default {
 			}
 		},
 
-		async delete(ctx, task) {
+		async delete(ctx, task: ITask) {
 			const taskService = new TaskService()
 			const response = await taskService.delete(task)
 			ctx.commit('kanban/removeTaskInBucket', task, {root: true})
@@ -99,7 +109,13 @@ export default {
 
 		// Adds a task attachment in store.
 		// This is an action to be able to commit other mutations
-		addTaskAttachment(ctx, {taskId, attachment}) {
+		addTaskAttachment(ctx, {
+			taskId,
+			attachment,
+		}: {
+			taskId: ITask['id']
+			attachment: IAttachment
+		}) {
 			const t = ctx.rootGetters['kanban/getTaskById'](taskId)
 			if (t.task !== null) {
 				const attachments = [
@@ -119,7 +135,13 @@ export default {
 			ctx.commit('attachments/add', attachment, {root: true})
 		},
 
-		async addAssignee(ctx, {user, taskId}) {
+		async addAssignee(ctx, {
+			user,
+			taskId,
+		}: {
+			user: IUser,
+			taskId: ITask['id']
+		}) {
 			const taskAssignee = new TaskAssigneeModel({userId: user.id, taskId: taskId})
 
 			const taskAssigneeService = new TaskAssigneeService()
@@ -148,7 +170,13 @@ export default {
 			return r
 		},
 
-		async removeAssignee(ctx, {user, taskId}) {
+		async removeAssignee(ctx, {
+			user,
+			taskId,
+		}: {
+			user: IUser,
+			taskId: ITask['id']
+		}) {
 			const taskAssignee = new TaskAssigneeModel({userId: user.id, taskId: taskId})
 
 			const taskAssigneeService = new TaskAssigneeService()
@@ -175,8 +203,14 @@ export default {
 
 		},
 
-		async addLabel(ctx, {label, taskId}) {
-			const labelTask = new LabelTaskModel({taskId: taskId, labelId: label.id})
+		async addLabel(ctx, {
+			label,
+			taskId,
+		} : {
+			label: ILabel,
+			taskId: ITask['id']
+		}) {
+			const labelTask = new LabelTaskModel({taskId, labelId: label.id})
 
 			const labelTaskService = new LabelTaskService()
 			const r = await labelTaskService.create(labelTask)
@@ -206,7 +240,7 @@ export default {
 		},
 
 		async removeLabel(ctx, {label, taskId}) {
-			const labelTask = new LabelTaskModel({taskId: taskId, labelId: label.id})
+			const labelTask = new LabelTaskModel({taskId, labelId: label.id})
 
 			const labelTaskService = new LabelTaskService()
 			const response = await labelTaskService.delete(labelTask)
@@ -234,7 +268,10 @@ export default {
 		},
 
 		// Do everything that is involved in finding, creating and adding the label to the task
-		async addLabelsToTask({rootState, dispatch}, { task, parsedLabels }) {
+		async addLabelsToTask({rootState, dispatch}, {
+			task,
+			parsedLabels,
+		}) {
 			if (parsedLabels.length <= 0) {
 				return task
 			}
@@ -257,7 +294,10 @@ export default {
 			return task
 		},
 
-		findListId({ rootGetters }, { list: listName, listId }) {
+		findListId({ rootGetters }, { list: listName, listId }: {
+			list: string,
+			listId: IList['id']
+		}) {
 			let foundListId = null
 			
 			// Uses the following ways to get the list id of the new task:
@@ -285,16 +325,18 @@ export default {
 			return foundListId
 		},
 
-		async createNewTask({dispatch, commit}, { 
+		async createNewTask(ctx, { 
 			title,
 			bucketId,
 			listId,
 			position,
-		}) {
-			const cancel = setLoading({commit}, 'tasks')
+		} : 
+			Partial<ITask>,
+		) {
+			const cancel = setLoading(ctx, 'tasks')
 			const parsedTask = parseTaskText(title, getQuickAddMagicMode())
 		
-			const foundListId = await dispatch('findListId', {
+			const foundListId = await ctx.dispatch('findListId', {
 				list: parsedTask.list,
 				listId: listId || 0,
 			})
@@ -321,7 +363,7 @@ export default {
 		
 			const taskService = new TaskService()
 			const createdTask = await taskService.create(task)
-			const result = await dispatch('addLabelsToTask', {
+			const result = await ctx.dispatch('addLabelsToTask', {
 				task: createdTask,
 				parsedLabels: parsedTask.labels,
 			})
@@ -330,3 +372,5 @@ export default {
 		},
 	},
 }
+
+export default tasksStore

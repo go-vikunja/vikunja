@@ -12,13 +12,12 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-export default defineComponent({name: 'list-setting-archive'})
+export default {name: 'list-setting-archive'}
 </script>
 
 <script setup lang="ts">
 import {computed} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useRouter, useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 

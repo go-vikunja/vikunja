@@ -1,33 +1,22 @@
-import AbstractModel from '@/models/abstractModel'
+import AbstractModel from './abstractModel'
 import UserModel from '@/models/user'
 
-export default class SubscriptionModel extends AbstractModel {
-	constructor(data) {
-		super(data)
+import type {ISubscription} from '@/modelTypes/ISubscription'
+import type {IUser} from '@/modelTypes/IUser'
 
-		/** @type {number} */
-		this.id
+export default class SubscriptionModel extends AbstractModel implements ISubscription {
+	id = 0
+	entity = ''
+	entityId = 0
+	user: IUser = {}
 
-		/** @type {string} */
-		this.entity
+	created: Date = null
 
-		/** @type {number} */
-		this.entityId
+	constructor(data : Partial<ISubscription>) {
+		super()
+		this.assignData(data)
 
-		/** @type {Date} */
 		this.created = new Date(this.created)
-
-		/** @type {UserModel} */
 		this.user = new UserModel(this.user)
-	}
-
-	defaults() {
-		return {
-			id: 0,
-			entity: '',
-			entityId: 0,
-			created: null,
-			user: {},
-		}
 	}
 }

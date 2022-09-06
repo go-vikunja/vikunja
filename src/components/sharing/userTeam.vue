@@ -133,32 +133,34 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-
-export default defineComponent({name: 'userTeamShare'})
+export default {name: 'userTeamShare'}
 </script>
 
 <script setup lang="ts">
-import {ref, reactive, computed, shallowReactive, ShallowReactive, Ref} from 'vue'
+import {ref, reactive, computed, shallowReactive, type Ref} from 'vue'
 import type {PropType} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import UserNamespaceService from '@/services/userNamespace'
-import UserNamespaceModel from '@/models/userNamespace'
-import UserListModel from '@/models/userList'
+import UserNamespaceModel, { type IUserNamespace } from '@/models/userNamespace'
+
 import UserListService from '@/services/userList'
+import UserListModel, { type IUserList } from '@/models/userList'
+
 import UserService from '@/services/user'
-import UserModel from '@/models/user'
+import UserModel, { type IUser } from '@/models/user'
 
 import TeamNamespaceService from '@/services/teamNamespace'
-import TeamNamespaceModel from '@/models/teamNamespace'
-import TeamListModel from '@/models/teamList'
-import TeamListService from '@/services/teamList'
-import TeamService from '@/services/team'
-import TeamModel from '@/models/team'
+import TeamNamespaceModel, { type ITeamNamespace } from '@/models/teamNamespace'
 
-import RIGHTS from '@/models/constants/rights.json'
+import TeamListService from '@/services/teamList'
+import TeamListModel, { type ITeamList } from '@/models/teamList'
+
+import TeamService from '@/services/team'
+import TeamModel, { type ITeam } from '@/models/team'
+
+import {RIGHTS} from '@/constants/rights'
 import Multiselect from '@/components/input/multiselect.vue'
 import Nothing from '@/components/misc/nothing.vue'
 import {success} from '@/message'
@@ -185,10 +187,10 @@ const props = defineProps({
 const {t} = useI18n({useScope: 'global'})
 
 // This user service is either a userNamespaceService or a userListService, depending on the type we are using
-let stuffService: ShallowReactive<UserNamespaceService | UserListService | TeamListService | TeamNamespaceService>
-let stuffModel: UserNamespaceModel | UserListModel | TeamListModel | TeamNamespaceModel
-let searchService: ShallowReactive<UserService | TeamService>
-let sharable: Ref<UserModel | TeamModel>
+let stuffService: UserNamespaceService | UserListService | TeamListService | TeamNamespaceService
+let stuffModel: IUserNamespace | IUserList | ITeamList | ITeamNamespace
+let searchService: UserService | TeamService
+let sharable: Ref<IUser | ITeam>
 
 const searchLabel = ref('')
 const selectedRight = ref({})
@@ -355,7 +357,7 @@ async function toggleType(sharable) {
 const found = ref([])
 
 const currentUserId = computed(() => store.state.auth.info.id)
-async function find(query) {
+async function find(query: string) {
 	if (query === '') {
 		found.value = []
 		return

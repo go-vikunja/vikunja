@@ -109,10 +109,11 @@ import {mapState} from 'vuex'
 import {HTTPFactory} from '@/http-common'
 import {LOADING} from '@/store/mutation-types'
 import {getErrorText} from '@/message'
-import Message from '@/components/misc/message'
+import Message from '@/components/misc/message.vue'
 import {redirectToProvider} from '../../helpers/redirectToProvider'
 import {getLastVisited, clearLastVisited} from '../../helpers/saveLastVisited'
-import Password from '@/components/input/password'
+import Password from '@/components/input/password.vue'
+import { setTitle } from '@/helpers/setTitle'
 
 export default defineComponent({
 	components: {
@@ -162,7 +163,7 @@ export default defineComponent({
 		}
 	},
 	created() {
-		this.setTitle(this.$t('user.auth.login'))
+		setTitle(this.$t('user.auth.login'))
 	},
 	computed: {
 		hasOpenIdProviders() {

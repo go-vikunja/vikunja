@@ -60,7 +60,7 @@
 
 <script lang="ts" setup>
 import {ref, computed} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 
 import Message from '@/components/misc/message.vue'
 import ShowTasks from '@/views/tasks/ShowTasks.vue'
@@ -89,7 +89,7 @@ const listHistory = computed(() => {
 const migratorsEnabled = computed(() => store.state.config.availableMigrators?.length > 0)
 const userInfo = computed(() => store.state.auth.info)
 const hasTasks = computed(() => store.state.hasTasks)
-const defaultListId = computed(() => store.state.auth.defaultListId)
+const defaultListId = computed(() => store.state.auth.settings.defaultListId)
 const defaultNamespaceId = computed(() => store.state.namespaces.namespaces?.[0]?.id || 0)
 const hasLists = computed(() => store.state.namespaces.namespaces?.[0]?.lists.length > 0)
 const loading = computed(() => store.state.loading && store.state.loadingModule === 'tasks')

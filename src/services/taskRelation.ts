@@ -1,8 +1,9 @@
-import AbstractService from './abstractService'
-import TaskRelationModel from '../models/taskRelation'
 import {formatISO} from 'date-fns'
 
-export default class TaskRelationService extends AbstractService {
+import AbstractService from './abstractService'
+import TaskRelationModel, {type ITaskRelation} from '@/models/taskRelation'
+
+export default class TaskRelationService extends AbstractService<ITaskRelation> {
 	constructor() {
 		super({
 			create: '/tasks/{taskId}/relations',

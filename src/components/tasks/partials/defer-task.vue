@@ -38,17 +38,17 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount} from 'vue'
-import {useStore} from 'vuex'
+import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, type PropType} from 'vue'
+import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 import flatPickr from 'vue-flatpickr-component'
 
 import TaskService from '@/services/task'
-import TaskModel from '@/models/task'
+import { type ITask } from '@/models/task'
 
 const props = defineProps({
 	modelValue: {
-		type: TaskModel,
+		type: Object as PropType<ITask>,
 		required: true,
 	},
 })
@@ -58,7 +58,7 @@ const {t} = useI18n({useScope: 'global'})
 const store = useStore()
 
 const taskService = shallowReactive(new TaskService())
-const task = ref<TaskModel>()
+const task = ref<ITask>()
 
 // We're saving the due date seperately to prevent null errors in very short periods where the task is null.
 const dueDate = ref<Date>()

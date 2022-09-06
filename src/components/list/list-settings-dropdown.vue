@@ -76,24 +76,24 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watchEffect} from 'vue'
-import {useStore} from 'vuex'
+import {ref, computed, watchEffect, type PropType} from 'vue'
+import {useStore} from '@/store'
 
 import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
 import Dropdown from '@/components/misc/dropdown.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 import TaskSubscription from '@/components/misc/subscription.vue'
-import ListModel from '@/models/list'
-import SubscriptionModel from '@/models/subscription'
+import type {IList} from '@/models/list'
+import type { ISubscription } from '@/models/subscription'
 
 const props = defineProps({
 	list: {
-		type: ListModel,
+		type: Object as PropType<IList>,
 		required: true,
 	},
 })
 
-const subscription = ref<SubscriptionModel | null>(null)
+const subscription = ref<ISubscription | null>(null)
 watchEffect(() => {
 	subscription.value = props.list.subscription ?? null
 })

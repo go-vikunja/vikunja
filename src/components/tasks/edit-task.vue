@@ -76,14 +76,14 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, computed, shallowReactive, watch, nextTick} from 'vue'
+import {ref, reactive, computed, shallowReactive, watch, nextTick, type PropType} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import Editor from '@/components/input/AsyncEditor'
 
 import TaskService from '@/services/task'
-import TaskModel from '@/models/task'
+import TaskModel, { type ITask } from '@/models/task'
 import EditLabels from './partials/editLabels.vue'
 import Reminders from './partials/reminders.vue'
 import ColorPicker from '../input/colorPicker.vue'
@@ -93,14 +93,16 @@ import {success} from '@/message'
 const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
 
-const props = defineProps<{
-	task?: TaskModel | null,
-}>()
+const props = defineProps({
+	task: {
+		type: Object as PropType<ITask | null>,
+	},
+})
 
 const taskService = shallowReactive(new TaskService())
 
 const editorActive = ref(false)
-let taskEditTask: TaskModel | undefined
+let taskEditTask: ITask | undefined
 
 
 // FIXME: this initialization should not be necessary here 

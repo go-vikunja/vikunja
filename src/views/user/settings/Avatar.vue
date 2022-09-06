@@ -58,17 +58,13 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-
-export default defineComponent({
-	name: 'user-settings-avatar',
-})
+export default { name: 'user-settings-avatar' }
 </script>
 
 <script setup lang="ts">
 import {computed, ref, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {Cropper} from 'vue-advanced-cropper'
 import 'vue-advanced-cropper/dist/style.css'
 

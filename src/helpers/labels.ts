@@ -1,17 +1,9 @@
 import {createNewIndexer} from '../indexes'
 
+import type {LabelState} from '@/store/types'
+import type {ILabel} from '@/models/label'
+
 const {search} = createNewIndexer('labels', ['title', 'description'])
-
-export interface label {
-	id: number,
-	title: string,
-}
-
-interface labelState {
-	labels: {
-		[k: number]: label,
-	},
-}
 
 /**
  * Checks if a list of labels is available in the store and filters them then query
@@ -20,7 +12,7 @@ interface labelState {
  * @param {String} query
  * @returns {Array}
  */
-export function filterLabelsByQuery(state: labelState, labelsToHide: label[], query: string) {
+export function filterLabelsByQuery(state: LabelState, labelsToHide: ILabel[], query: string) {
 	const labelIdsToHide: number[] = labelsToHide.map(({id}) => id)
 
 	return search(query)
@@ -36,6 +28,6 @@ export function filterLabelsByQuery(state: labelState, labelsToHide: label[], qu
  * @param {Array} ids
  * @returns {Array}
  */
-export function getLabelsByIds(state: labelState, ids: number[]) {
+export function getLabelsByIds(state: LabelState, ids: ILabel['id'][]) {
 	return Object.values(state.labels).filter(({id}) => ids.includes(id))
 }

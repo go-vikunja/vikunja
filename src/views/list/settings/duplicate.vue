@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import {ref, shallowReactive} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import ListDuplicateService from '@/services/listDuplicateService'
@@ -30,7 +30,7 @@ import CreateEdit from '@/components/misc/create-edit.vue'
 import Multiselect from '@/components/input/multiselect.vue'
 
 import ListDuplicateModel from '@/models/listDuplicateModel'
-import NamespaceModel from '@/models/namespace'
+import type {INamespace} from '@/modelTypes/INamespace'
 
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
@@ -44,9 +44,9 @@ const {
 	findNamespaces,
 } = useNameSpaceSearch()
 
-const selectedNamespace = ref<NamespaceModel>()
+const selectedNamespace = ref<INamespace>()
 
-function selectNamespace(namespace: NamespaceModel) {
+function selectNamespace(namespace: INamespace) {
 	selectedNamespace.value = namespace
 }
 

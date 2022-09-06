@@ -1,7 +1,7 @@
 import AbstractService from './abstractService'
-import AvatarModel from '../models/avatar'
+import AvatarModel, { type IAvatar } from '../models/avatar'
 
-export default class AvatarService extends AbstractService {
+export default class AvatarService extends AbstractService<IAvatar> {
 	constructor() {
 		super({
 			get: '/user/settings/avatar',

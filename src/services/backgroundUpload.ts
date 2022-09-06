@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
-import ListModel from '../models/list'
+import ListModel, { type IList } from '../models/list'
+import type { IFile } from '@/models/file'
 
 export default class BackgroundUploadService extends AbstractService {
 	constructor() {
@@ -18,13 +19,12 @@ export default class BackgroundUploadService extends AbstractService {
 
 	/**
 	 * Uploads a file to the server
-	 * @param listId
 	 * @param file
 	 * @returns {Promise<any|never>}
 	 */
-	create(listId, file) {
+	create(listId: IList['id'], file: IFile) {
 		return this.uploadFile(
-			this.getReplacedRoute(this.paths.create, {listId: listId}),
+			this.getReplacedRoute(this.paths.create, {listId}),
 			file,
 			'background',
 		)

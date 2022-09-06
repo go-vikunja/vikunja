@@ -42,7 +42,7 @@
 
 <script lang="ts" setup>
 import {ref, computed} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 
 import Logo from '@/assets/logo.svg?component'
 import ApiConfig from '@/components/misc/api-config.vue'

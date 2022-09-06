@@ -97,7 +97,7 @@ import {i18n} from '@/i18n'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
-import {format} from 'date-fns'
+import {formatDate, formatDateShort} from '@/helpers/time/formatDate'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
@@ -170,11 +170,12 @@ export default defineComponent({
 					return ''
 				}
 
-				return format(this.date, 'yyy-LL-dd H:mm')
+				return formatDate(this.date, 'yyy-LL-dd H:mm')
 			},
 		},
 	},
 	methods: {
+		formatDateShort,
 		setDateValue(newVal) {
 			if (newVal === null) {
 				this.date = null
@@ -233,7 +234,7 @@ export default defineComponent({
 			const interval = calculateDayInterval(date)
 			const newDate = new Date()
 			newDate.setDate(newDate.getDate() + interval)
-			return format(newDate, 'E')
+			return formatDate(newDate, 'E')
 		},
 	},
 })

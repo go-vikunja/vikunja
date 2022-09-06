@@ -1,7 +1,7 @@
 import {i18n} from '@/i18n'
-import NamespaceModel from '@/models/namespace'
+import type {INamespace} from '@/models/namespace'
 
-export const getNamespaceTitle = (n: NamespaceModel) => {
+export const getNamespaceTitle = (n: INamespace) => {
 	if (n.id === -1) {
 		return i18n.global.t('namespace.pseudo.sharedLists.title')
 	}

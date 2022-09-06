@@ -1,9 +1,12 @@
+import type { Module } from 'vuex'
+import {parseURL} from 'ufo'
+
 import {CONFIG} from '../mutation-types'
 import {HTTPFactory} from '@/http-common'
 import {objectToCamelCase} from '@/helpers/case'
-import {parseURL} from 'ufo'
+import type { RootStoreState, ConfigState } from '@/store/types'
 
-export default {
+const configStore : Module<ConfigState, RootStoreState> = {
 	namespaced: true,
 	state: () => ({
 		// These are the api defaults.
@@ -36,14 +39,14 @@ export default {
 		},
 	}),
 	getters: {
-		migratorsEnabled: state => state.availableMigrators?.length > 0,
+		migratorsEnabled: (state) => state.availableMigrators?.length > 0,
 		apiBase() {
 			const {host, protocol} = parseURL(window.API_URL)
 			return protocol + '//' + host
 		},
 	},
 	mutations: {
-		[CONFIG](state, config) {
+		[CONFIG](state, config: ConfigState) {
 			Object.assign(state, config)
 		},
 	},
@@ -56,3 +59,5 @@ export default {
 		},
 	},
 }
+
+export default configStore

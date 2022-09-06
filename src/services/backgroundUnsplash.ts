@@ -1,8 +1,8 @@
 import AbstractService from './abstractService'
-import BackgroundImageModel from '../models/backgroundImage'
-import ListModel from '../models/list'
+import BackgroundImageModel, { type IBackgroundImage } from '../models/backgroundImage'
+import ListModel from '@/models/list'
 
-export default class BackgroundUnsplashService extends AbstractService {
+export default class BackgroundUnsplashService extends AbstractService<IBackgroundImage> {
 	constructor() {
 		super({
 			getAll: '/backgrounds/unsplash/search',

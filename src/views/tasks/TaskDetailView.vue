@@ -423,36 +423,40 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
+import cloneDeep from 'lodash.clonedeep'
 
 import TaskService from '../../services/task'
-import TaskModel from '../../models/task'
+import TaskModel, { type ITask } from '@/models/task'
 
-import priorites from '../../models/constants/priorities.json'
-import rights from '../../models/constants/rights.json'
+import { PRIORITIES as priorites } from '@/constants/priorities'
+import {RIGHTS as rights} from '@/constants/rights'
 
-import PrioritySelect from '../../components/tasks/partials/prioritySelect'
-import PercentDoneSelect from '../../components/tasks/partials/percentDoneSelect'
-import EditLabels from '../../components/tasks/partials/editLabels'
-import EditAssignees from '../../components/tasks/partials/editAssignees'
-import Attachments from '../../components/tasks/partials/attachments'
-import RelatedTasks from '../../components/tasks/partials/relatedTasks'
-import RepeatAfter from '../../components/tasks/partials/repeatAfter'
-import Reminders from '../../components/tasks/partials/reminders'
-import Comments from '../../components/tasks/partials/comments'
-import ListSearch from '../../components/tasks/partials/listSearch'
+import PrioritySelect from '../../components/tasks/partials/prioritySelect.vue'
+import PercentDoneSelect from '../../components/tasks/partials/percentDoneSelect.vue'
+import EditLabels from '../../components/tasks/partials/editLabels.vue'
+import EditAssignees from '../../components/tasks/partials/editAssignees.vue'
+import Attachments from '../../components/tasks/partials/attachments.vue'
+import RelatedTasks from '../../components/tasks/partials/relatedTasks.vue'
+import RepeatAfter from '../../components/tasks/partials/repeatAfter.vue'
+import Reminders from '../../components/tasks/partials/reminders.vue'
+import Comments from '../../components/tasks/partials/comments.vue'
+import ListSearch from '../../components/tasks/partials/listSearch.vue'
 import description from '@/components/tasks/partials/description.vue'
-import ColorPicker from '../../components/input/colorPicker'
+import ColorPicker from '../../components/input/colorPicker.vue'
 import heading from '@/components/tasks/partials/heading.vue'
 import Datepicker from '@/components/input/datepicker.vue'
-import BaseButton from '@/components/base/BaseButton'
+import BaseButton from '@/components/base/BaseButton.vue'
 import {playPop} from '@/helpers/playPop'
 import TaskSubscription from '@/components/misc/subscription.vue'
 import {CURRENT_LIST} from '@/store/mutation-types'
 
 import {uploadFile} from '@/helpers/attachments'
-import ChecklistSummary from '../../components/tasks/partials/checklist-summary'
-import CreatedUpdated from '@/components/tasks/partials/createdUpdated'
+import ChecklistSummary from '../../components/tasks/partials/checklist-summary.vue'
+import CreatedUpdated from '@/components/tasks/partials/createdUpdated.vue'
 import { setTitle } from '@/helpers/setTitle'
+import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
+import {getListTitle} from '@/helpers/getListTitle'
+import type { IList } from '@/models/list'
 
 function scrollIntoView(el) {
 	if (!el) {
@@ -520,7 +524,6 @@ export default defineComponent({
 			// Used to avoid flashing of empty elements if the task content is not yet loaded.
 			visible: false,
 
-			priorities: priorites,
 			activeFields: {
 				assignees: false,
 				priority: false,
@@ -556,7 +559,7 @@ export default defineComponent({
 		// it from the page title.
 		'task.title': {
 			handler(title) {
-				this.setTitle(title)
+				setTitle(title)
 			},
 		},
 	},
@@ -589,11 +592,13 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		getNamespaceTitle,
+		getListTitle,
 		attachmentUpload(...args) {
 			return uploadFile(this.taskId, ...args)
 		},
 
-		async loadTask(taskId) {
+		async loadTask(taskId: ITask['id']) {
 			if (taskId === undefined) {
 				return
 			}
@@ -635,7 +640,23 @@ export default defineComponent({
 			this.activeFields.attachments = this.task.attachments.length > 0
 			this.activeFields.relatedTasks = Object.keys(this.task.relatedTasks).length > 0
 		},
-		async saveTask(showNotification = true, undoCallback = null) {
+		async saveTask(args?: {
+			task: ITask,
+			showNotification?: boolean,
+			undoCallback?: () => void,
+		}) {
+			const {
+				task,
+				showNotification,
+				undoCallback,
+			} = {
+				...{
+					task: cloneDeep(this.task),
+					showNotification: true,
+				},
+				...args,
+			}
+
 			if (!this.canWrite) {
 				return
 			}
@@ -644,22 +665,23 @@ export default defineComponent({
 			// setting the due date on mobile which leads to no due date change being saved.
 			await this.$nextTick()
 
-			this.task.hexColor = this.taskColor
+
+			task.hexColor = this.taskColor
 
 			// If no end date is being set, but a start date and due date,
 			// use the due date as the end date
-			if (this.task.endDate === null && this.task.startDate !== null && this.task.dueDate !== null) {
-				this.task.endDate = this.task.dueDate
+			if (task.endDate === null && task.startDate !== null && task.dueDate !== null) {
+				task.endDate = task.dueDate
 			}
 
-			this.task = await this.$store.dispatch('tasks/update', this.task)
+			this.task = await this.$store.dispatch('tasks/update', task)
 
 			if (!showNotification) {
 				return
 			}
 
 			let actions = []
-			if (undoCallback !== null) {
+			if (undoCallback !== undefined) {
 				actions = [{
 					title: 'Undo',
 					callback: undoCallback,
@@ -690,19 +712,28 @@ export default defineComponent({
 		},
 
 		toggleTaskDone() {
-			this.task.done = !this.task.done
-
-			if (this.task.done) {
+			const newTask = {
+				...this.task,
+				done: !this.task.done,
+			}
+			if (newTask.done) {
 				playPop()
 			}
 
-			this.saveTask(true, this.toggleTaskDone)
+			this.saveTask({
+				task: newTask,
+				undoCallback: this.toggleTaskDone,
+			})
 		},
 
-		async changeList(list) {
+		async changeList(list: IList) {
 			this.$store.commit('kanban/removeTaskInBucket', this.task)
-			this.task.listId = list.id
-			await this.saveTask()
+			await this.saveTask({
+				task: {
+					...this.task,
+					listId: list.id,
+				},
+			})
 		},
 
 		async toggleFavorite() {

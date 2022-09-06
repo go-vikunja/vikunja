@@ -144,8 +144,8 @@ import {defineComponent} from 'vue'
 import TaskService from '../../../services/task'
 import TaskModel from '../../../models/task'
 import TaskRelationService from '../../../services/taskRelation'
-import relationKinds from '../../../models/constants/relationKinds'
-import TaskRelationModel from '../../../models/taskRelation'
+import TaskRelationModel from '@/models/taskRelation'
+import { RELATION_KIND, RELATION_KINDS } from '@/types/IRelationKind'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Multiselect from '@/components/input/multiselect.vue'
@@ -157,9 +157,9 @@ export default defineComponent({
 			relatedTasks: {},
 			taskService: new TaskService(),
 			foundTasks: [],
-			relationKinds: relationKinds,
+			relationKinds: RELATION_KINDS,
 			newTaskRelationTask: new TaskModel(),
-			newTaskRelationKind: 'related',
+			newTaskRelationKind: RELATION_KIND.RELATED,
 			taskRelationService: new TaskRelationService(),
 			showDeleteModal: false,
 			relationToDelete: {},
@@ -221,7 +221,7 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		async findTasks(query) {
+		async findTasks(query: string) {
 			this.query = query
 			this.foundTasks = await this.taskService.getAll({}, {s: query})
 		},

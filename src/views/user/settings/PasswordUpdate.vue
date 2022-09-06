@@ -52,17 +52,13 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-
-export default defineComponent({
-	name: 'user-settings-password-update',
-})
+export default {name: 'user-settings-password-update'}
 </script>
 
 <script setup lang="ts">
 import {ref, reactive, shallowReactive, computed} from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useStore } from 'vuex'
+import {useStore} from '@/store'
 
 import PasswordUpdateService from '@/services/passwordUpdateService'
 import PasswordUpdateModel from '@/models/passwordUpdate'

@@ -1,9 +1,9 @@
 import AbstractService from './abstractService'
-import LabelModel from '../models/label'
+import LabelModel, { type ILabel } from '@/models/label'
 import {formatISO} from 'date-fns'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 
-export default class LabelService extends AbstractService {
+export default class LabelService extends AbstractService<ILabel> {
 	constructor() {
 		super({
 			create: '/labels',

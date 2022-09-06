@@ -1,46 +1,50 @@
+import type { Module } from 'vuex'
+
 import ListService from '@/services/list'
 import {setLoading} from '@/store/helper'
 import {removeListFromHistory} from '@/modules/listHistory'
 import {createNewIndexer} from '@/indexes'
+import type {ListState, RootStoreState} from '@/store/types'
+import type {IList} from '@/modelTypes/IList'
 
 const {add, remove, search, update} = createNewIndexer('lists', ['title', 'description'])
 
 const FavoriteListsNamespace = -2
 
-export default {
+const listsStore : Module<ListState, RootStoreState>= {
 	namespaced: true,
 	// The state is an object which has the list ids as keys.
 	state: () => ({}),
 	mutations: {
-		setList(state, list) {
+		setList(state, list: IList) {
 			state[list.id] = list
 			update(list)
 		},
-		setLists(state, lists) {
+		setLists(state, lists: IList[]) {
 			lists.forEach(l => {
 				state[l.id] = l
 				add(l)
 			})
 		},
-		removeListById(state, list) {
+		removeListById(state, list: IList) {
 			remove(list)
 			delete state[list.id]
 		},
 	},
 	getters: {
-		getListById: state => id => {
+		getListById: (state) => (id: IList['id']) => {
 			if (typeof state[id] !== 'undefined') {
 				return state[id]
 			}
 			return null
 		},
-		findListByExactname: state => name => {
+		findListByExactname: (state) => (name: string) => {
 			const list = Object.values(state).find(l => {
 				return l.title.toLowerCase() === name.toLowerCase()
 			})
 			return typeof list === 'undefined' ? null : list
 		},
-		searchList: state => (query, includeArchived = false) => {
+		searchList: (state) => (query: string, includeArchived = false) => {
 			return search(query)
 					?.filter(value => value > 0)
 					.map(id => state[id])
@@ -49,14 +53,14 @@ export default {
 		},
 	},
 	actions: {
-		toggleListFavorite(ctx, list) {
+		toggleListFavorite(ctx, list: IList) {
 			return ctx.dispatch('updateList', {
 				...list,
 				isFavorite: !list.isFavorite,
 			})
 		},
 
-		async createList(ctx, list) {
+		async createList(ctx, list: IList) {
 			const cancel = setLoading(ctx, 'lists')
 			const listService = new ListService()
 
@@ -71,7 +75,7 @@ export default {
 			}
 		},
 
-		async updateList(ctx, list) {
+		async updateList(ctx, list: IList) {
 			const cancel = setLoading(ctx, 'lists')
 			const listService = new ListService()
 
@@ -106,7 +110,7 @@ export default {
 			}
 		},
 
-		async deleteList(ctx, list) {
+		async deleteList(ctx, list: IList) {
 			const cancel = setLoading(ctx, 'lists')
 			const listService = new ListService()
 
@@ -122,3 +126,5 @@ export default {
 		},
 	},
 }
+
+export default listsStore

@@ -1,4 +1,6 @@
-import {createStore} from 'vuex'
+import type {InjectionKey} from 'vue'
+import {createStore, useStore as baseUseStore, Store} from 'vuex'
+
 import {getBlobFromBlurHash} from '../helpers/getBlobFromBlurHash'
 import {
 	BACKGROUND,
@@ -25,7 +27,16 @@ import ListModel from '@/models/list'
 import ListService from '../services/list'
 import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 
-export const store = createStore({
+import type { RootStoreState, StoreState } from './types'
+
+export const key: InjectionKey<Store<StoreState>> = Symbol()
+
+// define your own `useStore` composition function
+export function useStore () {
+  return baseUseStore(key)
+}
+
+export const store = createStore<RootStoreState>({
 	strict: import.meta.env.DEV,
 	modules: {
 		config,
@@ -37,7 +48,7 @@ export const store = createStore({
 		attachments,
 		labels,
 	},
-	state: {
+	state: () => ({
 		loading: false,
 		loadingModule: null,
 		// This is used to highlight the current list in menu for all list related views
@@ -51,7 +62,7 @@ export const store = createStore({
 		menuActive: true,
 		keyboardShortcutsActive: false,
 		quickActionsActive: false,
-	},
+	}),
 	mutations: {
 		[LOADING](state, loading) {
 			state.loading = loading

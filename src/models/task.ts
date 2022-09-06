@@ -1,70 +1,98 @@
-import AbstractModel from './abstractModel'
-import UserModel from './user'
-import LabelModel from './label'
-import AttachmentModel from './attachment'
-import {REPEAT_MODE_DEFAULT} from './constants/taskRepeatModes'
 
-import SubscriptionModel from '@/models/subscription'
+import { PRIORITIES, type Priority } from '@/constants/priorities'
+
+import type {ITask} from '@/modelTypes/ITask'
+import type {ILabel} from '@/modelTypes/ILabel'
+import type {IUser} from '@/modelTypes/IUser'
+import type {IAttachment} from '@/modelTypes/IAttachment'
+import type {IList} from '@/modelTypes/IList'
+import type {ISubscription} from '@/modelTypes/ISubscription'
+import type {IBucket} from '@/modelTypes/IBucket'
+
+import type {IRepeatAfter} from '@/types/IRepeatAfter'
+import {TASK_REPEAT_MODES, type IRepeatMode} from '@/types/IRepeatMode'
+
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
+import type { IRelationKind } from '@/types/IRelationKind'
+
+import AbstractModel from './abstractModel'
+import LabelModel from './label'
+import UserModel from './user'
+import AttachmentModel from './attachment'
+import SubscriptionModel from './subscription'
 
 const SUPPORTS_TRIGGERED_NOTIFICATION = 'Notification' in window && 'showTrigger' in Notification.prototype
 export const TASK_DEFAULT_COLOR = '#1973ff'
 
-export default class TaskModel extends AbstractModel {
-	constructor(data) {
-		super(data)
+export function	getHexColor(hexColor: string) {
+	if (hexColor === '' || hexColor === '#') {
+		return TASK_DEFAULT_COLOR
+	}
 
-		/** @type {number} */
+	return hexColor
+}
+
+export default class TaskModel extends AbstractModel implements ITask {
+	id = 0
+	title = ''
+	description = ''
+	done = false
+	doneAt: Date | null = null
+	priority: Priority = PRIORITIES.UNSET
+	labels: ILabel[] = []
+	assignees: IUser[] = []
+
+	dueDate: Date | null = 0
+	startDate: Date | null = 0
+	endDate: Date | null = 0
+	repeatAfter: number | IRepeatAfter = 0
+	repeatFromCurrentDate = false
+	repeatMode: IRepeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	reminderDates: Date[] = []
+	parentTaskId: ITask['id'] = 0
+	hexColor = ''
+	percentDone = 0
+	relatedTasks:  Partial<Record<IRelationKind, ITask>> = {}
+	attachments: IAttachment[] = []
+	identifier = ''
+	index = 0
+	isFavorite = false
+	subscription: ISubscription = null
+
+	position = 0
+	kanbanPosition = 0
+
+	createdBy: IUser = UserModel
+	created: Date = null
+	updated: Date = null
+
+	listId: IList['id'] = 0
+	bucketId: IBucket['id'] = 0
+
+	constructor(data: Partial<ITask>) {
+		super()
+		this.assignData(data)
+
 		this.id = Number(this.id)
-
-		/** @type {string} */
 		this.title = this.title?.trim()
-
-		/** @type {string} */
-		this.description
-
-		/** @type {boolean} */
-		this.done
-
-		/** @type */
 		this.doneAt = parseDateOrNull(this.doneAt)
 
-		/** @type {number} */
-		this.priority
-
-		/** @type {LabelModel[]} */
 		this.labels = this.labels
 			.map(l => new LabelModel(l))
 			.sort((f, s) => f.title > s.title ? 1 : -1)
 
-		/** @type {UserModel[]} */
 		// Parse the assignees into user models
 		this.assignees = this.assignees.map(a => {
 			return new UserModel(a)
 		})
 
-		/** @type {Date} */
 		this.dueDate = parseDateOrNull(this.dueDate)
-
-		/** @type {Date} */
 		this.startDate = parseDateOrNull(this.startDate)
-
-		/** @type {Date} */
 		this.endDate = parseDateOrNull(this.endDate)
-
-		/** @type */
-		this.repeatAfter
 
 		// Parse the repeat after into something usable
 		this.parseRepeatAfter()
 
-		/** @type {boolean} */
-		this.repeatFromCurrentDate
-
-		/** @type {TaskRepeatMode: 0 | 1 | 2} */
-		this.repeatMode
-
-		/** @type {Date[]} */
 		this.reminderDates = this.reminderDates.map(d => new Date(d))
 
 		// Cancel all scheduled notifications for this task to be sure to only have available notifications
@@ -73,21 +101,9 @@ export default class TaskModel extends AbstractModel {
 			this.reminderDates.forEach(d => this.scheduleNotification(d))
 		})
 
-		/** @type {number} */
-		this.parentTaskId
-
-		/** @type {string} */
-		this.hexColor
-
 		if (this.hexColor !== '' && this.hexColor.substring(0, 1) !== '#') {
 			this.hexColor = '#' + this.hexColor
 		}
-
-		/** @type {number} */
-		this.percentDone
-
-		/** @type {{ [relationKind: string]: TaskModel }} */
-		this.relatedTasks
 
 		// Make all subtasks to task models
 		Object.keys(this.relatedTasks).forEach(relationKind => {
@@ -97,86 +113,22 @@ export default class TaskModel extends AbstractModel {
 		})
 
 		// Make all attachments to attachment models
-		/** @type {AttachmentModel[]} */
 		this.attachments = this.attachments.map(a => new AttachmentModel(a))
-
-		/** @type {string} */
-		this.identifier
 
 		// Set the task identifier to empty if the list does not have one
 		if (this.identifier === `-${this.index}`) {
 			this.identifier = ''
 		}
 
-		/** @type {number} */
-		this.index
-
-		/** @type {boolean} */
-		this.isFavorite
-
-		/** @type {SubscriptionModel} */
-		this.subscription
-
 		if (typeof this.subscription !== 'undefined' && this.subscription !== null) {
 			this.subscription = new SubscriptionModel(this.subscription)
 		}
 
-		/** @type {number} */
-		this.position
-
-		/** @type {number} */
-		this.kanbanPosition
-
-		/** @type {UserModel} */
 		this.createdBy = new UserModel(this.createdBy)
-
-		/** @type {Date} */
 		this.created = new Date(this.created)
-
-		/** @type {Date} */
 		this.updated = new Date(this.updated)
 
-		/** @type {number} */
 		this.listId = Number(this.listId)
-	}
-
-	defaults() {
-		return {
-			id: 0,
-			title: '',
-			description: '',
-			done: false,
-			doneAt: null,
-			priority: 0,
-			labels: [],
-			assignees: [],
-
-			dueDate: 0,
-			startDate: 0,
-			endDate: 0,
-			repeatAfter: 0,
-			repeatFromCurrentDate: false,
-			repeatMode: REPEAT_MODE_DEFAULT,
-			reminderDates: [],
-			parentTaskId: 0,
-			hexColor: '',
-			percentDone: 0,
-			relatedTasks: {},
-			attachments: [],
-			identifier: '',
-			index: 0,
-			isFavorite: false,
-			subscription: null,
-
-			position: 0,
-			kanbanPosition: 0,
-
-			createdBy: UserModel,
-			created: null,
-			updated: null,
-
-			listId: 0, // Meta, only used when creating a new task
-		}
 	}
 
 	getTextIdentifier() {
@@ -188,11 +140,7 @@ export default class TaskModel extends AbstractModel {
 	}
 
 	getHexColor() {
-		if (this.hexColor === '' || this.hexColor === '#') {
-			return TASK_DEFAULT_COLOR
-		}
-
-		return this.hexColor
+		return getHexColor(this.hexColor)
 	}
 
 	/////////////////
@@ -204,7 +152,7 @@ export default class TaskModel extends AbstractModel {
 	 * This function should only be called from the constructor.
 	 */
 	parseRepeatAfter() {
-		const repeatAfterHours = (this.repeatAfter / 60) / 60
+		const repeatAfterHours = (this.repeatAfter as number / 60) / 60
 		this.repeatAfter = {type: 'hours', amount: repeatAfterHours}
 
 		// if its dividable by 24, its something with days, otherwise hours

@@ -1,31 +1,23 @@
 import {objectToCamelCase} from '@/helpers/case'
 import {omitBy, isNil} from '@/helpers/utils'
+import type {Right} from '@/constants/rights'
+import type {IAbstract} from '@/modelTypes/IAbstract'
 
-export default class AbstractModel {
+export default abstract class AbstractModel<Model extends IAbstract = IAbstract> implements IAbstract {
+
 
 	/**
 	 * The max right the user has on this object, as returned by the x-max-right header from the api.
 	 */
-	maxRight: number | null = null
-
+	maxRight: Right | null = null
+	
 	/**
-	 * The abstract constructor takes an object and merges its data with the default data of this model.
-	 */
-	constructor(data : Object = {}) {
+	* Takes an object and merges its data with the default data of this model.
+	*/
+	assignData(data: Partial<Model>) {
 		data = objectToCamelCase(data)
 
 		// Put all data in our model while overriding those with a value of null or undefined with their defaults
-		Object.assign(
-			this,
-			this.defaults(),
-			omitBy(data, isNil),
-		)
-	}
-
-	/**
-	 * Default attributes that define the "empty" state.
-	 */
-	defaults(): Object {
-		return {}
+		Object.assign(this, omitBy(data, isNil))
 	}
 }

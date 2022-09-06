@@ -34,12 +34,12 @@
 							width="20"
 						/>
 						<strong>{{ c.author.getDisplayName() }}</strong>&nbsp;
-						<span v-tooltip="formatDate(c.created)" class="has-text-grey">
+						<span v-tooltip="formatDateLong(c.created)" class="has-text-grey">
 							{{ formatDateSince(c.created) }}
 						</span>
 						<span
 							v-if="+new Date(c.created) !== +new Date(c.updated)"
-							v-tooltip="formatDate(c.updated)"
+							v-tooltip="formatDateLong(c.updated)"
 						>
 							· {{ $t('task.comment.edited', {date: formatDateSince(c.updated)}) }}
 						</span>
@@ -153,16 +153,18 @@
 
 <script setup lang="ts">
 import {ref, reactive, computed, shallowReactive, watch, nextTick} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import Editor from '@/components/input/AsyncEditor'
 
 import TaskCommentService from '@/services/taskComment'
-import TaskCommentModel from '@/models/taskComment'
+import TaskCommentModel, { type ITaskComment } from '@/models/taskComment'
 import {uploadFile} from '@/helpers/attachments'
 import {success} from '@/message'
+import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 
+import type { ITask } from '@/models/task'
 const props = defineProps({
 	taskId: {
 		type: Number,
@@ -176,7 +178,7 @@ const props = defineProps({
 const {t} = useI18n({useScope: 'global'})
 const store = useStore()
 
-const comments = ref<TaskCommentModel[]>([])
+const comments = ref<ITaskComment[]>([])
 
 const showDeleteModal = ref(false)
 const commentToDelete = reactive(new TaskCommentModel())
@@ -186,8 +188,8 @@ const commentEdit = reactive(new TaskCommentModel())
 
 const newComment = reactive(new TaskCommentModel())
 
-const saved = ref(null)
-const saving = ref(null)
+const saved = ref<ITask['id'] | null>(null)
+const saving = ref<ITask['id'] | null>(null)
 
 const userAvatar = computed(() => store.state.auth.info.getAvatarUrl(48))
 const currentUserId = computed(() => store.state.auth.info.id)
@@ -213,7 +215,7 @@ function attachmentUpload(...args) {
 
 const taskCommentService = shallowReactive(new TaskCommentService())
 
-async function loadComments(taskId) {
+async function loadComments(taskId: ITask['id']) {
 	if (!enabled.value) {
 		return
 	}
@@ -257,12 +259,12 @@ async function addComment() {
 	}
 }
 
-function toggleEdit(comment: TaskCommentModel) {
+function toggleEdit(comment: ITaskComment) {
 	isCommentEdit.value = !isCommentEdit.value
 	Object.assign(commentEdit, comment)
 }
 
-function toggleDelete(commentId) {
+function toggleDelete(commentId: ITaskComment['id']) {
 	showDeleteModal.value = !showDeleteModal.value
 	commentToDelete.id = commentId
 }
@@ -292,7 +294,7 @@ async function editComment() {
 	}
 }
 
-async function deleteComment(commentToDelete: TaskCommentModel) {
+async function deleteComment(commentToDelete: ITaskComment) {
 	try {
 		await taskCommentService.delete(commentToDelete)
 		const index = comments.value.findIndex(({id}) => id === commentToDelete.id)

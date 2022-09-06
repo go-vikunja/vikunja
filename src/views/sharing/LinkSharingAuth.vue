@@ -34,7 +34,7 @@
 
 <script lang="ts" setup>
 import {ref, computed} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {useTitle} from '@vueuse/core'

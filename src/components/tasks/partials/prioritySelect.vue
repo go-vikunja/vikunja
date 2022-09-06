@@ -5,19 +5,19 @@
 			@change="updateData"
 			:disabled="disabled || undefined"
 		>
-			<option :value="priorities.UNSET">{{ $t('task.priority.unset') }}</option>
-			<option :value="priorities.LOW">{{ $t('task.priority.low') }}</option>
-			<option :value="priorities.MEDIUM">{{ $t('task.priority.medium') }}</option>
-			<option :value="priorities.HIGH">{{ $t('task.priority.high') }}</option>
-			<option :value="priorities.URGENT">{{ $t('task.priority.urgent') }}</option>
-			<option :value="priorities.DO_NOW">{{ $t('task.priority.doNow') }}</option>
+			<option :value="PRIORITIES.UNSET">{{ $t('task.priority.unset') }}</option>
+			<option :value="PRIORITIES.LOW">{{ $t('task.priority.low') }}</option>
+			<option :value="PRIORITIES.MEDIUM">{{ $t('task.priority.medium') }}</option>
+			<option :value="PRIORITIES.HIGH">{{ $t('task.priority.high') }}</option>
+			<option :value="PRIORITIES.URGENT">{{ $t('task.priority.urgent') }}</option>
+			<option :value="PRIORITIES.DO_NOW">{{ $t('task.priority.doNow') }}</option>
 		</select>
 	</div>
 </template>
 
 <script setup lang="ts">
 import {ref, watch} from 'vue'
-import priorities from '@/models/constants/priorities.json'
+import {PRIORITIES} from '@/constants/priorities'
 
 const priority = ref(0)
 

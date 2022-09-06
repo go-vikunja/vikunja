@@ -1,8 +1,8 @@
 import AbstractService from './abstractService'
-import UserModel from '../models/user'
+import UserModel, { type IUser } from '../models/user'
 import {formatISO} from 'date-fns'
 
-export default class UserService extends AbstractService {
+export default class UserService extends AbstractService<IUser> {
 	constructor() {
 		super({
 			getAll: '/users',

@@ -12,12 +12,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-
-// see https://v3.vuejs.org/api/sfc-script-setup.html#usage-alongside-normal-script
-export default defineComponent({
-	inheritAttrs: false,
-})
+export default { inheritAttrs: false }
 </script>
 
 <script lang="ts" setup>
@@ -30,7 +25,7 @@ export default defineComponent({
 
 // NOTE: Do NOT use buttons with @click to push routes. => Use router-links instead!
 
-import {ref, watchEffect, computed, useAttrs, PropType} from 'vue'
+import { ref, watchEffect, computed, useAttrs, type PropType } from 'vue'
 
 const BASE_BUTTON_TYPES_MAP = Object.freeze({
 	button: 'button',

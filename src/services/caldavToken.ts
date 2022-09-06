@@ -1,8 +1,8 @@
 import {formatISO} from 'date-fns'
-import CaldavTokenModel from '../models/caldavToken'
+import CaldavTokenModel, {type ICaldavToken} from '../models/caldavToken'
 import AbstractService from './abstractService'
 
-export default class CaldavTokenService extends AbstractService {
+export default class CaldavTokenService extends AbstractService<ICaldavToken> {
 	constructor() {
 		super({
 			getAll: '/user/settings/token/caldav',
@@ -11,7 +11,7 @@ export default class CaldavTokenService extends AbstractService {
 		})
 	}
 
-	processModel(model: Partial<CaldavTokenModel>) {
+	processModel(model: Partial<ICaldavToken>) {
 		return {
 			...model,
 			created: formatISO(new Date(model.created)),

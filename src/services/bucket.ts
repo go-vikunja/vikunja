@@ -1,8 +1,8 @@
 import AbstractService from './abstractService'
-import BucketModel from '../models/bucket'
+import BucketModel, { type IBucket } from '../models/bucket'
 import TaskService from '@/services/task'
 
-export default class BucketService extends AbstractService {
+export default class BucketService extends AbstractService<IBucket> {
 	constructor() {
 		super({
 			getAll: '/lists/{listId}/buckets',

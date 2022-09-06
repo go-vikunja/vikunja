@@ -57,7 +57,7 @@
 
 <script lang="ts" setup>
 import {nextTick, ref, watch} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {success} from '@/message'
 import router from '@/router'
 

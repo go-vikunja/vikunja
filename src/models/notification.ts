@@ -1,39 +1,59 @@
-import AbstractModel from '@/models/abstractModel'
+import AbstractModel from './abstractModel'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import UserModel from '@/models/user'
 import TaskModel from '@/models/task'
 import TaskCommentModel from '@/models/taskComment'
 import ListModel from '@/models/list'
 import TeamModel from '@/models/team'
-import names from './constants/notificationNames.json'
 
-export default class NotificationModel extends AbstractModel {
-	constructor(data) {
-		super(data)
+import {NOTIFICATION_NAMES, type INotification} from '@/modelTypes/INotification'
+
+export default class NotificationModel extends AbstractModel implements INotification {
+	id = 0
+	name = ''
+	notification: INotification['notification'] = null
+	read = false
+	readAt: Date | null = null
+
+	created: Date
+
+	constructor(data: Partial<INotification>) {
+		super()
+		this.assignData(data)
 
 		switch (this.name) {
-			case names.TASK_COMMENT:
-				this.notification.doer = new UserModel(this.notification.doer)
-				this.notification.task = new TaskModel(this.notification.task)
-				this.notification.comment = new TaskCommentModel(this.notification.comment)
+			case NOTIFICATION_NAMES.TASK_COMMENT:
+				this.notification = {
+					doer: new UserModel(this.notification.doer),
+					task: new TaskModel(this.notification.task),
+					comment: new TaskCommentModel(this.notification.comment),
+				}
 				break
-			case names.TASK_ASSIGNED:
-				this.notification.doer = new UserModel(this.notification.doer)
-				this.notification.task = new TaskModel(this.notification.task)
-				this.notification.assignee = new UserModel(this.notification.assignee)
+			case NOTIFICATION_NAMES.TASK_ASSIGNED:
+				this.notification = {
+					doer: new UserModel(this.notification.doer),
+					task: new TaskModel(this.notification.task),
+					assignee: new UserModel(this.notification.assignee),
+				}
 				break
-			case names.TASK_DELETED:
-				this.notification.doer = new UserModel(this.notification.doer)
-				this.notification.task = new TaskModel(this.notification.task)
+			case NOTIFICATION_NAMES.TASK_DELETED:
+				this.notification = {
+					doer: new UserModel(this.notification.doer),
+					task: new TaskModel(this.notification.task),
+				}
 				break
-			case names.LIST_CREATED:
-				this.notification.doer = new UserModel(this.notification.doer)
-				this.notification.list = new ListModel(this.notification.list)
+			case NOTIFICATION_NAMES.LIST_CREATED:
+				this.notification = {
+					doer: new UserModel(this.notification.doer),
+					list: new ListModel(this.notification.list),
+				}
 				break
-			case names.TEAM_MEMBER_ADDED:
-				this.notification.doer = new UserModel(this.notification.doer)
-				this.notification.member = new UserModel(this.notification.member)
-				this.notification.team = new TeamModel(this.notification.team)
+			case NOTIFICATION_NAMES.TEAM_MEMBER_ADDED:
+				this.notification = {
+					doer: new UserModel(this.notification.doer),
+					member: new UserModel(this.notification.member),
+					team: new TeamModel(this.notification.team),
+				}
 				break
 		}
 
@@ -41,23 +61,13 @@ export default class NotificationModel extends AbstractModel {
 		this.readAt = parseDateOrNull(this.readAt)
 	}
 
-	defaults() {
-		return {
-			id: 0,
-			name: '',
-			notification: null,
-			read: false,
-			readAt: null,
-		}
-	}
-
 	toText(user = null) {
 		let who = ''
 
 		switch (this.name) {
-			case names.TASK_COMMENT:
+			case NOTIFICATION_NAMES.TASK_COMMENT:
 				return `commented on ${this.notification.task.getTextIdentifier()}`
-			case names.TASK_ASSIGNED:
+			case NOTIFICATION_NAMES.TASK_ASSIGNED:
 				who = `${this.notification.assignee.getDisplayName()}`
 
 				if (user !== null && user.id === this.notification.assignee.id) {
@@ -65,11 +75,11 @@ export default class NotificationModel extends AbstractModel {
 				}
 
 				return `assigned ${who} to ${this.notification.task.getTextIdentifier()}`
-			case names.TASK_DELETED:
+			case NOTIFICATION_NAMES.TASK_DELETED:
 				return `deleted ${this.notification.task.getTextIdentifier()}`
-			case names.LIST_CREATED:
+			case NOTIFICATION_NAMES.LIST_CREATED:
 				return `created ${this.notification.list.title}`
-			case names.TEAM_MEMBER_ADDED:
+			case NOTIFICATION_NAMES.TEAM_MEMBER_ADDED:
 				who = `${this.notification.member.getDisplayName()}`
 
 				if (user !== null && user.id === this.notification.member.id) {

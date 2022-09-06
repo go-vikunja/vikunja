@@ -30,7 +30,7 @@
 import {computed, ref, watchEffect} from 'vue'
 import {useTitle} from '@/composables/useTitle'
 import {useI18n} from 'vue-i18n'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useRoute, useRouter} from 'vue-router'
 import {success} from '@/message'
 import TaskCollectionService from '@/services/taskCollection'

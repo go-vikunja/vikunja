@@ -35,7 +35,7 @@
 import {ref, reactive, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRouter, useRoute} from 'vue-router'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 
 import ListService from '@/services/list'
 import ListModel from '@/models/list'
@@ -63,7 +63,7 @@ async function createNewList() {
 	}
 	showError.value = false
 
-	list.namespaceId = parseInt(route.params.namespaceId)
+	list.namespaceId = Number(route.params.namespaceId as string)
 	const newList = await store.dispatch('lists/createList', list)
 	await router.push({
 		name: 'list.index',

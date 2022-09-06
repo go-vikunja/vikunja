@@ -9,7 +9,7 @@ services:
     ports:
       - 3456:3456
   cypress:
-    image: cypress/browsers:node12.18.3-chrome87-ff82
+    image: cypress/browsers:node16.14.0-chrome99-ff97
     volumes:
     - ..:/project
     - $HOME/.cache:/home/node/.cache/

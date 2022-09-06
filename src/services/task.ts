@@ -1,5 +1,5 @@
 import AbstractService from './abstractService'
-import TaskModel from '../models/task'
+import TaskModel, { type ITask } from '../models/task'
 import AttachmentService from './attachment'
 import LabelService from './label'
 
@@ -14,7 +14,7 @@ const parseDate = date => {
 	return null
 }
 
-export default class TaskService extends AbstractService {
+export default class TaskService extends AbstractService<ITask> {
 	constructor() {
 		super({
 			create: '/lists/{listId}',
@@ -113,7 +113,7 @@ export default class TaskService extends AbstractService {
 			model.labels = model.labels.map(l => labelService.processModel(l))
 		}
 
-		return model
+		return model as ITask
 	}
 }
 

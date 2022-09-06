@@ -34,6 +34,8 @@ import TeamModel from '../../models/team'
 import TeamService from '../../services/team'
 import CreateEdit from '@/components/misc/create-edit.vue'
 
+import { setTitle } from '@/helpers/setTitle'
+
 export default defineComponent({
 	name: 'NewTeam',
 	data() {
@@ -47,7 +49,7 @@ export default defineComponent({
 		CreateEdit,
 	},
 	mounted() {
-		this.setTitle(this.$t('team.create.title'))
+		setTitle(this.$t('team.create.title'))
 	},
 	methods: {
 		async newTeam() {

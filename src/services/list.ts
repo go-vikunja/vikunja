@@ -1,10 +1,10 @@
 import AbstractService from './abstractService'
-import ListModel from '../models/list'
+import ListModel, { type IList } from '@/models/list'
 import TaskService from './task'
 import {formatISO} from 'date-fns'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 
-export default class ListService extends AbstractService {
+export default class ListService extends AbstractService<IList> {
 	constructor() {
 		super({
 			create: '/namespaces/{namespaceId}/lists',

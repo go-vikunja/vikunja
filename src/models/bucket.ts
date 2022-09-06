@@ -2,30 +2,31 @@ import AbstractModel from './abstractModel'
 import UserModel from './user'
 import TaskModel from './task'
 
-export default class BucketModel extends AbstractModel {
-	constructor(bucket) {
-		super(bucket)
+import type {IBucket} from '@/modelTypes/IBucket'
+import type {ITask} from '@/modelTypes/ITask'
+import type {IUser} from '@/modelTypes/IUser'
+
+export default class BucketModel extends AbstractModel implements IBucket {
+	id = 0
+	title = ''
+	listId = ''
+	limit = 0
+	tasks: ITask[] = []
+	isDoneBucket: false
+	position: 0
+	
+	createdBy: IUser = null
+	created: Date = null
+	updated: Date = null
+
+	constructor(data: Partial<IBucket>) {
+		super()
+		this.assignData(data)
 
 		this.tasks = this.tasks.map(t => new TaskModel(t))
 
 		this.createdBy = new UserModel(this.createdBy)
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
-	}
-
-	defaults() {
-		return {
-			id: 0,
-			title: '',
-			listId: 0,
-			limit: 0,
-			tasks: [],
-			isDoneBucket: false,
-			position: 0,
-
-			createdBy: null,
-			created: null,
-			updated: null,
-		}
 	}
 }

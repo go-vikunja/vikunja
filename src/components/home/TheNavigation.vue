@@ -88,11 +88,11 @@
 
 <script setup lang="ts">
 import {ref, computed, onMounted, nextTick} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useRouter} from 'vue-router'
 
 import {QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'
-import Rights from '@/models/constants/rights.json'
+import {RIGHTS as Rights} from '@/constants/rights'
 
 import Update from '@/components/home/update.vue'
 import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
@@ -102,6 +102,8 @@ import Notifications from '@/components/notifications/notifications.vue'
 import Logo from '@/components/home/Logo.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import MenuButton from '@/components/home/MenuButton.vue'
+
+import {getListTitle} from '@/helpers/getListTitle'
 
 const store = useStore()
 

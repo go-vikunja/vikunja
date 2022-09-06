@@ -3,15 +3,32 @@ import ListModel from './list'
 import UserModel from './user'
 import SubscriptionModel from '@/models/subscription'
 
-export default class NamespaceModel extends AbstractModel {
-	constructor(data) {
-		super(data)
+import type {INamespace} from '@/modelTypes/INamespace'
+import type {IUser} from '@/modelTypes/IUser'
+import type {IList} from '@/modelTypes/IList'
+import type {ISubscription} from '@/modelTypes/ISubscription'
+
+export default class NamespaceModel extends AbstractModel implements INamespace {
+	id = 0
+	title = ''
+	description = ''
+	owner: IUser = UserModel
+	lists: IList[] = []
+	isArchived = false
+	hexColor = ''
+	subscription: ISubscription = null
+
+	created: Date = null
+	updated: Date = null
+
+	constructor(data: Partial<INamespace>) {
+		super()
+		this.assignData(data)
 
 		if (this.hexColor !== '' && this.hexColor.substring(0, 1) !== '#') {
 			this.hexColor = '#' + this.hexColor
 		}
 
-		/** @type {ListModel[]} */
 		this.lists = this.lists.map(l => {
 			return new ListModel(l)
 		})
@@ -22,33 +39,7 @@ export default class NamespaceModel extends AbstractModel {
 			this.subscription = new SubscriptionModel(this.subscription)
 		}
 
-		/** @type {number} */
-		this.id
-
-		/** @type {string} */
-		this.title
-
-		/** @type {boolean} */
-		this.isArchived
-
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
-	}
-
-	// Default attributes that define the 'empty' state.
-	defaults() {
-		return {
-			id: 0,
-			title: '',
-			description: '',
-			owner: UserModel,
-			lists: [],
-			isArchived: false,
-			hexColor: '',
-			subscription: null,
-
-			created: null,
-			updated: null,
-		}
 	}
 }

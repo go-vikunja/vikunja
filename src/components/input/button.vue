@@ -18,15 +18,11 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-
-export default defineComponent({
-	name: 'x-button',
-})
+export default { name: 'x-button' }
 </script>
 
 <script setup lang="ts">
-import {computed, useSlots, PropType} from 'vue'
+import {computed, useSlots, type PropType} from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 const BUTTON_TYPES_MAP =  Object.freeze({

@@ -1,8 +1,8 @@
 import AbstractService from './abstractService'
-import TeamMemberModel from '../models/teamMember'
+import TeamMemberModel, { type ITeamMember } from '../models/teamMember'
 import {formatISO} from 'date-fns'
 
-export default class TeamMemberService extends AbstractService {
+export default class TeamMemberService extends AbstractService<ITeamMember> {
 	constructor() {
 		super({
 			create: '/teams/{teamId}/members',

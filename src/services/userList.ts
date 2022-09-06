@@ -1,9 +1,9 @@
 import AbstractService from './abstractService'
-import UserListModel from '../models/userList'
+import UserListModel, { type IUserList } from '../models/userList'
 import UserModel from '../models/user'
 import {formatISO} from 'date-fns'
 
-export default class UserListService extends AbstractService {
+export default class UserListService extends AbstractService<IUserList> {
 	constructor() {
 		super({
 			create: '/lists/{listId}/users',

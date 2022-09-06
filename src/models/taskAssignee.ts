@@ -1,16 +1,17 @@
 import AbstractModel from './abstractModel'
 
-export default class TaskAssigneeModel extends AbstractModel {
-	constructor(data) {
-		super(data)
-		this.created = new Date(this.created)
-	}
+import type {ITaskAssignee} from '@/modelTypes/ITaskAssignee'
+import type {IUser} from '@/modelTypes/IUser'
+import type {ITask} from '@/modelTypes/ITask'
 
-	defaults() {
-		return {
-			created: null,
-			userId: 0,
-			taskId: 0,
-		}
+export default class TaskAssigneeModel extends AbstractModel implements ITaskAssignee {
+	created: Date = null
+	userId: IUser['id'] = 0
+	taskId: ITask['id'] = 0
+
+	constructor(data: Partial<ITaskAssignee>) {
+		super()
+		this.assignData(data)
+		this.created = new Date(this.created)
 	}
 }

@@ -230,7 +230,7 @@ import cloneDeep from 'lodash.clonedeep'
 
 import BucketModel from '../../models/bucket'
 import {mapState} from 'vuex'
-import Rights from '../../models/constants/rights.json'
+import {RIGHTS as Rights} from '@/constants/rights'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import ListWrapper from './ListWrapper.vue'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'

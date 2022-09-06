@@ -1,5 +1,5 @@
 import {ref, computed} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 
 export function useNameSpaceSearch() {
 	const query = ref('')

@@ -30,7 +30,7 @@
 								{{ n.toText(userInfo) }}
 							</BaseButton>
 						</div>
-						<span class="created" v-tooltip="formatDate(n.created)">
+						<span class="created" v-tooltip="formatDateLong(n.created)">
 							{{ formatDateSince(n.created) }}
 						</span>
 					</div>
@@ -52,17 +52,18 @@ import {computed, onMounted, onUnmounted, ref} from 'vue'
 import NotificationService from '@/services/notification'
 import BaseButton from '@/components/base/BaseButton.vue'
 import User from '@/components/misc/user.vue'
-import names from '@/models/constants/notificationNames.json'
+import { NOTIFICATION_NAMES as names, type INotification} from '@/modelTypes/INotification'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useRouter} from 'vue-router'
+import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 
 const LOAD_NOTIFICATIONS_INTERVAL = 10000
 
 const store = useStore()
 const router = useRouter()
 
-const allNotifications = ref([])
+const allNotifications = ref<INotification[]>([])
 const showNotifications = ref(false)
 const popup = ref(null)
 

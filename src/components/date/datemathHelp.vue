@@ -110,10 +110,10 @@
 </template>
 
 <script lang="ts" setup>
-import {format} from 'date-fns'
+import { formatDate } from '@/helpers/time/formatDate'
 import BaseButton from '@/components/base/BaseButton.vue'
 
-const exampleDate = format(new Date(), 'yyyy-MM-dd')
+const exampleDate = formatDate(new Date(), 'yyyy-MM-dd')
 </script>
 
 <style scoped>

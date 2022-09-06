@@ -5,8 +5,6 @@ import router from './router'
 
 import {error, success} from './message'
 
-import {formatDate, formatDateShort, formatDateLong, formatDateSince, formatISO} from '@/helpers/time/formatDate'
-
 import {VERSION} from './version.json'
 
 // Notifications
@@ -16,7 +14,7 @@ import Notifications from '@kyvg/vue3-notification'
 import './registerServiceWorker'
 
 // Vuex
-import {store} from './store'
+import { store, key } from './store'
 // i18n
 import {i18n} from './i18n'
 
@@ -69,24 +67,6 @@ app.component('x-button', Button)
 app.component('modal', Modal)
 app.component('card', Card)
 
-// Mixins
-import {getNamespaceTitle} from './helpers/getNamespaceTitle'
-import {getListTitle} from './helpers/getListTitle'
-import {setTitle} from './helpers/setTitle'
-
-app.mixin({
-	methods: {
-		formatDateSince,
-		format: formatDate,
-		formatDate: formatDateLong,
-		formatDateShort: formatDateShort,
-		formatISO,
-		getNamespaceTitle,
-		getListTitle,
-		setTitle,
-	},
-})
-
 app.config.errorHandler = (err, vm, info) => {
 	if (import.meta.env.DEV) {
 		console.error(err, vm, info)
@@ -124,7 +104,7 @@ if (window.SENTRY_ENABLED) {
 	import('./sentry').then(sentry => sentry.default(app, router))
 }
 
-app.use(store)
+app.use(store, key) // pass the injection key
 app.use(router)
 app.use(i18n)
 

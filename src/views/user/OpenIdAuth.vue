@@ -10,14 +10,12 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-export default defineComponent({ name: 'Auth' })
-
+export default { name: 'Auth' }
 </script>
 
 <script setup lang="ts">
 import {ref, computed, onMounted} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 

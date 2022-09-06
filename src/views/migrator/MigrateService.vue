@@ -48,7 +48,7 @@
 		</template>
 		<div v-else-if="lastMigrationDate">
 			<p>
-				{{ $t('migrate.alreadyMigrated1', {name: migrator.name, date: formatDate(lastMigrationDate)}) }}<br/>
+				{{ $t('migrate.alreadyMigrated1', {name: migrator.name, date: formatDateLong(lastMigrationDate)}) }}<br/>
 				{{ $t('migrate.alreadyMigrated2') }}
 			</p>
 			<div class="buttons">
@@ -71,7 +71,10 @@ import {defineComponent} from 'vue'
 import AbstractMigrationService from '@/services/migrator/abstractMigration'
 import AbstractMigrationFileService from '@/services/migrator/abstractMigrationFile'
 import Logo from '@/assets/logo.svg?component'
-import Message from '@/components/misc/message'
+import Message from '@/components/misc/message.vue'
+import { setTitle } from '@/helpers/setTitle'
+
+import {formatDateLong} from '@/helpers/time/formatDate'
 
 import {MIGRATORS} from './migrators'
 
@@ -114,10 +117,12 @@ export default defineComponent({
 	},
 
 	mounted() {
-		this.setTitle(this.$t('migrate.titleService', {name: this.migrator.name}))
+		setTitle(this.$t('migrate.titleService', {name: this.migrator.name}))
 	},
 
 	methods: {
+		formatDateLong,
+
 		async initMigration() {
 			this.migrationService = this.migrator.isFileMigrator
 				? new AbstractMigrationFileService(this.migrator.id)

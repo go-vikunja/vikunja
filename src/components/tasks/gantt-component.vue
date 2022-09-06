@@ -175,19 +175,20 @@
 import {defineComponent} from 'vue'
 
 import VueDragResize from 'vue-drag-resize'
-import EditTask from './edit-task'
+import EditTask from './edit-task.vue'
 
 import TaskService from '../../services/task'
 import TaskModel from '../../models/task'
-import priorities from '../../models/constants/priorities'
-import PriorityLabel from './partials/priorityLabel'
+import {PRIORITIES as priorities} from '@/constants/priorities'
+import PriorityLabel from './partials/priorityLabel.vue'
 import TaskCollectionService from '../../services/taskCollection'
 import {mapState} from 'vuex'
-import Rights from '../../models/constants/rights.json'
+import {RIGHTS as Rights} from '@/constants/rights'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import {colorIsDark} from '@/helpers/color/colorIsDark'
+import {formatDate} from '@/helpers/time/formatDate'
 
 export default defineComponent({
 	name: 'GanttChart',
@@ -439,7 +440,7 @@ export default defineComponent({
 		formatMonthAndYear(year, month) {
 			month = month < 10 ? '0' + month : month
 			const date = new Date(`${year}-${month}-01`)
-			return this.format(date, 'MMMM, yyyy')
+			return formatDate(date, 'MMMM, yyyy')
 		},
 	},
 })

@@ -1,9 +1,10 @@
 import AbstractService from './abstractService'
-import AttachmentModel from '../models/attachment'
+import AttachmentModel, { type IAttachment } from '../models/attachment'
 import {formatISO} from 'date-fns'
 import {downloadBlob} from '@/helpers/downloadBlob'
+import type { IFile } from '@/models/file'
 
-export default class AttachmentService extends AbstractService {
+export default class AttachmentService extends AbstractService<AttachmentModel> {
 	constructor() {
 		super({
 			create: '/tasks/{taskId}/attachments',
@@ -12,7 +13,7 @@ export default class AttachmentService extends AbstractService {
 		})
 	}
 
-	processModel(model) {
+	processModel(model: IAttachment) {
 		model.created = formatISO(new Date(model.created))
 		return model
 	}
@@ -33,26 +34,25 @@ export default class AttachmentService extends AbstractService {
 		return data
 	}
 
-	getBlobUrl(model) {
+	getBlobUrl(model: IAttachment) {
 		return AbstractService.prototype.getBlobUrl.call(this, '/tasks/' + model.taskId + '/attachments/' + model.id)
 	}
 
-	async download(model) {
+	async download(model: IAttachment) {
 		const url = await this.getBlobUrl(model)
 		return downloadBlob(url, model.file.name)
 	}
 
 	/**
 	 * Uploads a file to the server
-	 * @param model
 	 * @param files
 	 * @returns {Promise<any|never>}
 	 */
-	create(model, files) {
+	create(model: IAttachment, files: IFile[]) {
 		const data = new FormData()
 		for (let i = 0; i < files.length; i++) {
 			// TODO: Validation of file size
-			data.append('files', new Blob([files[i]]), files[i].name)
+			data.append('files', new Blob([JSON.stringify(files[i], null, 2)]), files[i].name)
 		}
 
 		return this.uploadFormData(

@@ -186,8 +186,8 @@
 <script lang="ts">
 import {defineComponent} from 'vue'
 
-import DatepickerWithRange from '@/components/date/datepickerWithRange'
-import Fancycheckbox from '../../input/fancycheckbox'
+import DatepickerWithRange from '@/components/date/datepickerWithRange.vue'
+import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 
 import {includesById} from '@/helpers/utils'
 import PrioritySelect from '@/components/tasks/partials/prioritySelect.vue'

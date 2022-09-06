@@ -1,8 +1,8 @@
 import AbstractService from './abstractService'
-import TaskAssigneeModel from '../models/taskAssignee'
+import TaskAssigneeModel, { type ITaskAssignee } from '../models/taskAssignee'
 import {formatISO} from 'date-fns'
 
-export default class TaskAssigneeService extends AbstractService {
+export default class TaskAssigneeService extends AbstractService<ITaskAssignee> {
 	constructor() {
 		super({
 			create: '/tasks/{taskId}/assignees',

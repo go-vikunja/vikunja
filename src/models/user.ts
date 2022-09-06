@@ -1,45 +1,28 @@
 import AbstractModel from './abstractModel'
 import UserSettingsModel from '@/models/userSettings'
 
-export default class UserModel extends AbstractModel {
-	constructor(data) {
-		super(data)
+import type { IUser } from '@/modelTypes/IUser'
+import type { IUserSettings } from '@/modelTypes/IUserSettings'
 
-		/** @type {number} */
-		this.id
+export default class UserModel extends AbstractModel implements IUser {
+	id = 0
+	email = ''
+	username = ''
+	name = ''
 
-		/** @type {string} */
-		this.email
+	created: Date = null
+	updated: Date = null
+	settings: IUserSettings = null
 
-		/** @type {string} */
-		this.username
+	constructor(data: Partial<IUser>) {
+		super()
+		this.assignData(data)
 
-		/** @type {string} */
-		this.name
-
-		/** @type {Date} */
 		this.created = new Date(this.created)
-
-		/** @type {Date} */
 		this.updated = new Date(this.updated)
-
-		/** @type {UserSettingsModel} */
-		this.settings
 
 		if (this.settings !== null) {
 			this.settings = new UserSettingsModel(this.settings)
-		}
-	}
-
-	defaults() {
-		return {
-			id: 0,
-			email: '',
-			username: '',
-			name: '',
-			created: null,
-			updated: null,
-			settings: null,
 		}
 	}
 

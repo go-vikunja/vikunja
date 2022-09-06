@@ -65,13 +65,12 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-export default defineComponent({ name: 'user-settings-totp' })
+export default { name: 'user-settings-totp' }
 </script>
 
 <script lang="ts" setup>
 import {computed, ref, shallowReactive} from 'vue'
-import {useStore} from 'vuex'
+import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import TotpService from '@/services/totp'
