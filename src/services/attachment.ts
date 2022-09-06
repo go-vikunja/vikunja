@@ -52,7 +52,7 @@ export default class AttachmentService extends AbstractService<AttachmentModel> 
 		const data = new FormData()
 		for (let i = 0; i < files.length; i++) {
 			// TODO: Validation of file size
-			data.append('files', new Blob([JSON.stringify(files[i], null, 2)]), files[i].name)
+			data.append('files', new Blob([files[i]]), files[i].name)
 		}
 
 		return this.uploadFormData(
