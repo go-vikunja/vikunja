@@ -25,3 +25,7 @@ sed -i 's/\/api\/v1//g' frontend/index.html # Make sure to trigger the "enter th
 3. `yarn install`
 4. `yarn dist --linux --windows`
 
+## Sponsors
+
+[![Relm](https://vikunja.io/images/sponsors/relm.png)](https://relm.us)
+
