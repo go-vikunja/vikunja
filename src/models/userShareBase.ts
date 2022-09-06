@@ -4,7 +4,7 @@ import {RIGHTS, type Right} from '@/constants/rights'
 import type {IUserShareBase} from '@/modelTypes/IUserShareBase'
 import type {IUser} from '@/modelTypes/IUser'
 
-export default class UserShareBaseModel extends AbstractModel implements IUserShareBase {
+export default class UserShareBaseModel extends AbstractModel<IUserShareBase> implements IUserShareBase {
 	userId: IUser['id'] = ''
 	right: Right = RIGHTS.READ
 

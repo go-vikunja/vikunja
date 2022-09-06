@@ -98,7 +98,8 @@
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
 
-import TaskModel, { type ITask } from '../../../models/task'
+import TaskModel from '@/models/task'
+import type {ITask} from '@/modelTypes/ITask'
 import PriorityLabel from './priorityLabel.vue'
 import TaskService from '../../../services/task'
 import Labels from '@/components/tasks/partials/labels.vue'

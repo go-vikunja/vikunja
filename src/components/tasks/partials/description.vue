@@ -36,7 +36,7 @@ import {useStore} from '@/store'
 
 import Editor from '@/components/input/AsyncEditor'
 
-import type { ITask } from '@/models/task'
+import type {ITask} from '@/modelTypes/ITask'
 
 
 const props = defineProps({

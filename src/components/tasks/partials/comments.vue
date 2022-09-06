@@ -159,12 +159,15 @@ import {useI18n} from 'vue-i18n'
 import Editor from '@/components/input/AsyncEditor'
 
 import TaskCommentService from '@/services/taskComment'
-import TaskCommentModel, { type ITaskComment } from '@/models/taskComment'
+import TaskCommentModel from '@/models/taskComment'
+
+import type {ITaskComment} from '@/modelTypes/ITaskComment'
+import type {ITask} from '@/modelTypes/ITask'
+
 import {uploadFile} from '@/helpers/attachments'
 import {success} from '@/message'
 import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 
-import type { ITask } from '@/models/task'
 const props = defineProps({
 	taskId: {
 		type: Number,

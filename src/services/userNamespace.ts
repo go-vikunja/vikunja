@@ -1,7 +1,9 @@
-import AbstractService from './abstractService'
-import UserNamespaceModel, { type IUserNamespace } from '../models/userNamespace'
-import UserModel from '../models/user'
 import {formatISO} from 'date-fns'
+
+import AbstractService from './abstractService'
+import UserNamespaceModel from '@/models/userNamespace'
+import type {IUserNamespace} from '@/modelTypes/IUserNamespace'
+import UserModel from '@/models/user'
 
 export default class UserNamespaceService extends AbstractService<IUserNamespace> {
 	constructor() {

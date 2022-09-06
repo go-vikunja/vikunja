@@ -2,7 +2,7 @@ import AbstractModel from './abstractModel'
 
 import type {ITotp} from '@/modelTypes/ITotp'
 
-export default class TotpModel extends AbstractModel implements ITotp {
+export default class TotpModel extends AbstractModel<ITotp> implements ITotp {
 	secret = ''
 	enabled = false
 	url = ''

@@ -58,7 +58,7 @@ import DatepickerWithRange from '@/components/date/datepickerWithRange.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import LlamaCool from '@/assets/llama-cool.svg?component'
-import type { ITask } from '@/models/task'
+import type {ITask} from '@/modelTypes/ITask'
 
 const store = useStore()
 const route = useRoute()

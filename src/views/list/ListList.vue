@@ -153,7 +153,7 @@ import {ALPHABETICAL_SORT} from '@/components/list/partials/filters.vue'
 
 import draggable from 'zhyswan-vuedraggable'
 import {calculateItemPosition} from '../../helpers/calculateItemPosition'
-import type { ITask } from '@/models/task'
+import type {ITask} from '@/modelTypes/ITask'
 
 function sortTasks(tasks: ITask[]) {
 	if (tasks === null || Array.isArray(tasks) && tasks.length === 0) {

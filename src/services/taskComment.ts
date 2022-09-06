@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
-import TaskCommentModel, { type ITaskComment } from '../models/taskComment'
+import TaskCommentModel from '@/models/taskComment'
+import type {ITaskComment} from '@/modelTypes/ITaskComment'
 import {formatISO} from 'date-fns'
 
 export default class TaskCommentService extends AbstractService<ITaskComment> {

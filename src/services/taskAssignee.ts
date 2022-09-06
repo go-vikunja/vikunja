@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
-import TaskAssigneeModel, { type ITaskAssignee } from '../models/taskAssignee'
+import TaskAssigneeModel from '@/models/taskAssignee'
+import type {ITaskAssignee} from '@/modelTypes/ITaskAssignee'
 import {formatISO} from 'date-fns'
 
 export default class TaskAssigneeService extends AbstractService<ITaskAssignee> {

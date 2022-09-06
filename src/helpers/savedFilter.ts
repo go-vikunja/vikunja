@@ -1,4 +1,4 @@
-import type {IList} from '@/models/list'
+import type {IList} from '@/modelTypes/IList'
 
 export function getSavedFilterIdFromListId(listId: IList['id']) {
 	let filterId = listId * -1 - 1

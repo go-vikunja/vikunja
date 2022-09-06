@@ -1,5 +1,6 @@
 import {formatISO} from 'date-fns'
-import CaldavTokenModel, {type ICaldavToken} from '../models/caldavToken'
+import CaldavTokenModel from '@/models/caldavToken'
+import type {ICaldavToken} from '@/modelTypes/ICaldavToken'
 import AbstractService from './abstractService'
 
 export default class CaldavTokenService extends AbstractService<ICaldavToken> {

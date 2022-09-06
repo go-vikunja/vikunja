@@ -8,7 +8,7 @@ import type {IUser} from '@/modelTypes/IUser'
 import type {IList} from '@/modelTypes/IList'
 import type {ISubscription} from '@/modelTypes/ISubscription'
 
-export default class NamespaceModel extends AbstractModel implements INamespace {
+export default class NamespaceModel extends AbstractModel<INamespace> implements INamespace {
 	id = 0
 	title = ''
 	description = ''
@@ -21,7 +21,7 @@ export default class NamespaceModel extends AbstractModel implements INamespace 
 	created: Date = null
 	updated: Date = null
 
-	constructor(data: Partial<INamespace>) {
+	constructor(data: Partial<INamespace> = {}) {
 		super()
 		this.assignData(data)
 

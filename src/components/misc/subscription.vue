@@ -39,7 +39,8 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 
 import SubscriptionService from '@/services/subscription'
-import SubscriptionModel, { type ISubscription } from '@/models/subscription'
+import SubscriptionModel from '@/models/subscription'
+import type {ISubscription} from '@/modelTypes/ISubscription'
 
 import {success} from '@/message'
 

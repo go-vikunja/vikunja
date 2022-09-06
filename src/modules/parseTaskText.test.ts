@@ -1,6 +1,6 @@
 import {beforeEach, afterEach, describe, it, expect, vi} from 'vitest'
 
-import {parseTaskText} from './parseTaskText'
+import {parseTaskText, PrefixMode} from './parseTaskText'
 import {getDateFromText, getDateFromTextIn} from '../helpers/time/parseDate'
 import {calculateDayInterval} from '../helpers/time/calculateDayInterval'
 import {PRIORITIES} from '@/constants/priorities'
@@ -20,13 +20,13 @@ describe('Parse Task Text', () => {
 
 	it('should not parse text when disabled', () => {
 		const text = 'Lorem Ipsum today *label +list !2 @user'
-		const result = parseTaskText(text, 'disabled')
+		const result = parseTaskText(text, PrefixMode.Disabled)
 
 		expect(result.text).toBe(text)
 	})
 
 	it('should parse text in todoist mode when configured', () => {
-		const result = parseTaskText('Lorem Ipsum today @label #list !2 +user', 'todoist')
+		const result = parseTaskText('Lorem Ipsum today @label #list !2 +user', PrefixMode.Todoist)
 
 		expect(result.text).toBe('Lorem Ipsum')
 		const now = new Date()
@@ -84,7 +84,7 @@ describe('Parse Task Text', () => {
 				'at 3am': '3:0',
 				'at 3:12 am': '3:12',
 				'at 3:12 pm': '15:12',
-			}
+			} as const
 
 			for (const c in cases) {
 				it(`should recognize today with a time ${c}`, () => {
@@ -95,7 +95,7 @@ describe('Parse Task Text', () => {
 					expect(result.date.getFullYear()).toBe(now.getFullYear())
 					expect(result.date.getMonth()).toBe(now.getMonth())
 					expect(result.date.getDate()).toBe(now.getDate())
-					expect(`${result.date.getHours()}:${result.date.getMinutes()}`).toBe(cases[c])
+					expect(`${result.date.getHours()}:${result.date.getMinutes()}`).toBe(cases[c as keyof typeof cases])
 					expect(result.date.getSeconds()).toBe(0)
 				})
 			}

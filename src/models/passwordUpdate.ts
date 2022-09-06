@@ -2,7 +2,7 @@ import AbstractModel from './abstractModel'
 
 import type {IPasswordUpdate} from '@/modelTypes/IPasswordUpdate'
 
-export default class PasswordUpdateModel extends AbstractModel implements IPasswordUpdate {
+export default class PasswordUpdateModel extends AbstractModel<IPasswordUpdate> implements IPasswordUpdate {
 	newPassword = ''
 	oldPassword = ''
 

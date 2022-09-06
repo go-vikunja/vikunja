@@ -68,7 +68,7 @@ import SavedFilterService from '@/services/savedFilter'
 
 import {objectToSnakeCase} from '@/helpers/case'
 import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
-import type { IList } from '@/models/list'
+import type {IList} from '@/modelTypes/IList'
 
 const {t} = useI18n({useScope: 'global'})
 

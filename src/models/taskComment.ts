@@ -5,7 +5,7 @@ import type {ITaskComment} from '@/modelTypes/ITaskComment'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IUser} from '@/modelTypes/IUser'
 
-export default class TaskCommentModel extends AbstractModel implements ITaskComment {
+export default class TaskCommentModel extends AbstractModel<ITaskComment> implements ITaskComment {
 	id = 0
 	taskId: ITask['id'] = 0
 	comment = ''

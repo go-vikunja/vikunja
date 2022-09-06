@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
-import ListModel, { type IList } from '@/models/list'
+import ListModel from '@/models/list'
+import type {IList} from '@/modelTypes/IList'
 import TaskService from './task'
 import {formatISO} from 'date-fns'
 import {colorFromHex} from '@/helpers/color/colorFromHex'

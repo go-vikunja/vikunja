@@ -83,8 +83,8 @@ import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
 import Dropdown from '@/components/misc/dropdown.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 import TaskSubscription from '@/components/misc/subscription.vue'
-import type {IList} from '@/models/list'
-import type { ISubscription } from '@/models/subscription'
+import type {IList} from '@/modelTypes/IList'
+import type {ISubscription} from '@/modelTypes/ISubscription'
 
 const props = defineProps({
 	list: {

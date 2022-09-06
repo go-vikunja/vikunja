@@ -6,7 +6,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {IUser} from '@/modelTypes/IUser'
 
 import type {IRelationKind} from '@/types/IRelationKind'
-export default class TaskRelationModel extends AbstractModel implements ITaskRelation {
+export default class TaskRelationModel extends AbstractModel<ITaskRelation> implements ITaskRelation {
 	id = 0
 	otherTaskId: ITask['id'] = 0
 	taskId: ITask['id'] = 0

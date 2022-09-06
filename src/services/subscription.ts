@@ -1,5 +1,6 @@
 import AbstractService from '@/services/abstractService'
-import SubscriptionModel, { type ISubscription } from '@/models/subscription'
+import SubscriptionModel from '@/models/subscription'
+import type {ISubscription} from '@/modelTypes/ISubscription'
 
 export default class SubscriptionService extends AbstractService<ISubscription> {
 	constructor() {

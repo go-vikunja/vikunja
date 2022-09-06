@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
-import TotpModel, { type ITotp } from '@/models/totp'
+import TotpModel from '@/models/totp'
+import type {ITotp} from '@/modelTypes/ITotp'
 
 export default class TotpService extends AbstractService<ITotp> {
 	urlPrefix = '/user/settings/totp'

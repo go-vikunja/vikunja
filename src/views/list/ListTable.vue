@@ -197,7 +197,7 @@ import Pagination from '@/components/misc/pagination.vue'
 import Popup from '@/components/misc/popup.vue'
 
 import {useTaskList} from '@/composables/taskList'
-import type { ITask } from '@/models/task'
+import type {ITask} from '@/modelTypes/ITask'
 
 const ACTIVE_COLUMNS_DEFAULT = {
 	id: true,

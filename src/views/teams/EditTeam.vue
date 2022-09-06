@@ -177,9 +177,9 @@ import Multiselect from '@/components/input/multiselect.vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
-import type { ITeam } from '@/models/team'
-import type { IUser } from '@/models/user'
-import type { ITeamMember } from '@/models/teamMember'
+import type {ITeam} from '@/modelTypes/ITeam'
+import type {IUser} from '@/modelTypes/IUser'
+import type {ITeamMember} from '@/modelTypes/ITeamMember'
 
 const store = useStore()
 const route = useRoute()

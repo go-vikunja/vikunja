@@ -21,7 +21,8 @@ import {reactive, ref, watch} from 'vue'
 import type {PropType} from 'vue'
 import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
-import ListModel, { type IList } from '@/models/list'
+import ListModel from '@/models/list'
+import type {IList} from '@/modelTypes/IList'
 import Multiselect from '@/components/input/multiselect.vue'
 
 const props = defineProps({

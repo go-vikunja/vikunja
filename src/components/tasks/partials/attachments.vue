@@ -147,7 +147,8 @@
 import {defineComponent} from 'vue'
 
 import AttachmentService from '../../../services/attachment'
-import AttachmentModel, { type IAttachment } from '@/models/attachment'
+import AttachmentModel from '@/models/attachment'
+import type {IAttachment} from '@/modelTypes/IAttachment'
 import User from '@/components/misc/user.vue'
 import {mapState} from 'vuex'
 
@@ -155,8 +156,8 @@ import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
 import { uploadFiles, generateAttachmentUrl } from '@/helpers/attachments'
 import {formatDate, formatDateSince, formatDateLong} from '@/helpers/time/formatDate'
 
-import BaseButton from '@/components/base/BaseButton'
-import type { IFile } from '@/models/file'
+import BaseButton from '@/components/base/BaseButton.vue'
+import type { IFile } from '@/modelTypes/IFile'
 import { getHumanSize } from '@/helpers/getHumanSize'
 
 export default defineComponent({

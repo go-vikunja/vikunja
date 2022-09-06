@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
-import LabelModel, { type ILabel } from '@/models/label'
+import LabelModel from '@/models/label'
+import type {ILabel} from '@/modelTypes/ILabel'
 import {formatISO} from 'date-fns'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 

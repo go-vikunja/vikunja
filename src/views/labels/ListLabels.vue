@@ -113,7 +113,8 @@
 import {defineComponent} from 'vue'
 import {mapState} from 'vuex'
 
-import LabelModel, { type ILabel } from '../../models/label'
+import LabelModel from '@/models/label'
+import type {ILabel} from '@/modelTypes/ILabel'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
 import BaseButton from '@/components/base/BaseButton.vue'

@@ -4,7 +4,7 @@ import UserSettingsModel from '@/models/userSettings'
 import type { IUser } from '@/modelTypes/IUser'
 import type { IUserSettings } from '@/modelTypes/IUserSettings'
 
-export default class UserModel extends AbstractModel implements IUser {
+export default class UserModel extends AbstractModel<IUser> implements IUser {
 	id = 0
 	email = ''
 	username = ''

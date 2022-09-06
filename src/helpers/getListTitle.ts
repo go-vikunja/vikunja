@@ -1,5 +1,5 @@
 import {i18n} from '@/i18n'
-import type { IList } from '@/models/list'
+import type {IList} from '@/modelTypes/IList'
 
 export function getListTitle(l: IList) {
 	if (l.id === -1) {

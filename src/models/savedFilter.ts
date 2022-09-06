@@ -4,7 +4,7 @@ import UserModel from '@/models/user'
 import type {ISavedFilter} from '@/modelTypes/ISavedFilter'
 import type {IUser} from '@/modelTypes/IUser'
 
-export default class SavedFilterModel extends AbstractModel implements ISavedFilter {
+export default class SavedFilterModel extends AbstractModel<ISavedFilter> implements ISavedFilter {
 	id = 0
 	title = ''
 	description = ''

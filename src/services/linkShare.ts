@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
-import LinkShareModel, { type ILinkShare } from '@/models/linkShare'
+import LinkShareModel from '@/models/linkShare'
+import type {ILinkShare} from '@/modelTypes/ILinkShare'
 import {formatISO} from 'date-fns'
 
 export default class LinkShareService extends AbstractService<ILinkShare> {

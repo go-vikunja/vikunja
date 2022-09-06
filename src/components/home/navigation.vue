@@ -156,8 +156,8 @@ import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
 import {getListTitle} from '@/helpers/getListTitle'
 import {useEventListener} from '@vueuse/core'
-import type { IList } from '@/models/list'
-import type { INamespace } from '@/models/namespace'
+import type {IList} from '@/modelTypes/IList'
+import type {INamespace} from '@/modelTypes/INamespace'
 
 const drag = ref(false)
 const dragOptions = {

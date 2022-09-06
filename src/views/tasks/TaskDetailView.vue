@@ -426,7 +426,8 @@ import {defineComponent} from 'vue'
 import cloneDeep from 'lodash.clonedeep'
 
 import TaskService from '../../services/task'
-import TaskModel, { type ITask } from '@/models/task'
+import TaskModel from '@/models/task'
+import type {ITask} from '@/modelTypes/ITask'
 
 import { PRIORITIES as priorites } from '@/constants/priorities'
 import {RIGHTS as rights} from '@/constants/rights'
@@ -456,7 +457,7 @@ import CreatedUpdated from '@/components/tasks/partials/createdUpdated.vue'
 import { setTitle } from '@/helpers/setTitle'
 import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
 import {getListTitle} from '@/helpers/getListTitle'
-import type { IList } from '@/models/list'
+import type { IList } from '@/modelTypes/IList'
 
 function scrollIntoView(el) {
 	if (!el) {

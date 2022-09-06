@@ -44,7 +44,7 @@ import {useI18n} from 'vue-i18n'
 import flatPickr from 'vue-flatpickr-component'
 
 import TaskService from '@/services/task'
-import { type ITask } from '@/models/task'
+import type {ITask} from '@/modelTypes/ITask'
 
 const props = defineProps({
 	modelValue: {

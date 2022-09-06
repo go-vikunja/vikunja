@@ -2,7 +2,7 @@ import AbstractModel from './abstractModel'
 
 import type {IPasswordReset} from '@/modelTypes/IPasswordReset'
 
-export default class PasswordResetModel extends AbstractModel implements IPasswordReset {
+export default class PasswordResetModel extends AbstractModel<IPasswordReset> implements IPasswordReset {
 	token = ''
 	newPassword = ''
 	email = ''

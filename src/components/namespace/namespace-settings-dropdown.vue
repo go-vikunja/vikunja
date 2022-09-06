@@ -59,7 +59,8 @@ import {ref, onMounted, type PropType} from 'vue'
 import Dropdown from '@/components/misc/dropdown.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 import TaskSubscription from '@/components/misc/subscription.vue'
-import type { INamespace } from '@/models/namespace'
+import type {INamespace} from '@/modelTypes/INamespace'
+import type {ISubscription} from '@/modelTypes/ISubscription'
 
 const props = defineProps({
 	namespace: {
@@ -68,7 +69,7 @@ const props = defineProps({
 	},
 })
 
-const subscription = ref(null)
+const subscription = ref<ISubscription | null>(null)
 onMounted(() => {
 	subscription.value = props.namespace.subscription
 })

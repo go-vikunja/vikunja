@@ -1,5 +1,6 @@
 import AbstractService from '@/services/abstractService'
-import SavedFilterModel, { type ISavedFilter } from '@/models/savedFilter'
+import SavedFilterModel from '@/models/savedFilter'
+import type {ISavedFilter} from '@/modelTypes/ISavedFilter'
 import {objectToCamelCase} from '@/helpers/case'
 
 export default class SavedFilterService extends AbstractService<ISavedFilter> {

@@ -1,6 +1,8 @@
 import AbstractService from './abstractService'
-import ListModel, { type IList } from '../models/list'
-import type { IFile } from '@/models/file'
+import ListModel from '@/models/list'
+
+import type { IList } from '@/modelTypes/IList'
+import type { IFile } from '@/modelTypes/IFile'
 
 export default class BackgroundUploadService extends AbstractService {
 	constructor() {
@@ -13,14 +15,12 @@ export default class BackgroundUploadService extends AbstractService {
 		return false
 	}
 
-	modelCreateFactory(data) {
+	modelCreateFactory(data: Partial<IList>) {
 		return new ListModel(data)
 	}
 
 	/**
 	 * Uploads a file to the server
-	 * @param file
-	 * @returns {Promise<any|never>}
 	 */
 	create(listId: IList['id'], file: IFile) {
 		return this.uploadFile(

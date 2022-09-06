@@ -1,4 +1,4 @@
-import type {IList} from '@/models/list'
+import type {IList} from '@/modelTypes/IList'
 
 const key = 'collapsedBuckets'
 
