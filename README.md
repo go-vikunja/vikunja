@@ -42,3 +42,7 @@ yarn run build
 ```shell
 yarn run lint
 ```
+
+## Sponsors
+
+[![Relm](https://vikunja.io/images/sponsors/relm.png)](https://relm.us)
