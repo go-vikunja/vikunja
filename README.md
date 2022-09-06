@@ -56,6 +56,10 @@ See [the roadmap](https://my.vikunja.cloud/share/QFyzYEmEYfSyQfTOmIRSwLUpkFjboaB
 
 Fork -> Push -> Pull-Request. Also see the [dev docs](https://vikunja.io/docs/development/) for more info.
 
+## Sponsors
+
+[![Relm](https://vikunja.io/images/sponsors/relm.png)](https://relm.us)
+
 ## License
 
 This project is licensed under the AGPLv3 License. See the [LICENSE](LICENSE) file for the full license text.
