@@ -80,9 +80,7 @@
 				<thead>
 				<tr>
 					<th>{{ $t('list.share.attributes.link') }}</th>
-					<th>{{ $t('list.share.attributes.name') }}</th>
-					<th>{{ $t('list.share.attributes.sharedBy') }}</th>
-					<th>{{ $t('list.share.attributes.right') }}</th>
+					<th>&nbsp;</th>
 					<th>{{ $t('list.share.links.view') }}</th>
 					<th>{{ $t('list.share.attributes.delete') }}</th>
 				</tr>
@@ -112,34 +110,37 @@
 							</div>
 						</div>
 					</td>
-					<td>
-						<template v-if="s.name !== ''">
-							{{ s.name }}
-						</template>
-						<i v-else>{{ $t('list.share.links.noName') }}</i>
-					</td>
-					<td>
-						{{ s.sharedBy.getDisplayName() }}
-					</td>
 					<td class="type">
-						<template v-if="s.right === RIGHTS.ADMIN">
-							<span class="icon is-small">
-								<icon icon="lock"/>
-							</span>&nbsp;
-							{{ $t('list.share.right.admin') }}
-						</template>
-						<template v-else-if="s.right === RIGHTS.READ_WRITE">
-							<span class="icon is-small">
-								<icon icon="pen"/>
-							</span>&nbsp;
-							{{ $t('list.share.right.readWrite') }}
-						</template>
-						<template v-else>
-							<span class="icon is-small">
-								<icon icon="users"/>
-							</span>&nbsp;
-							{{ $t('list.share.right.read') }}
-						</template>
+						<p class="mb-2" v-if="s.name !== ''">
+							{{ s.name }}
+						</p>
+
+						<p class="mb-2">
+							<i18n-t keypath="list.share.links.sharedBy">
+								<strong>{{ s.sharedBy.getDisplayName() }}</strong>
+							</i18n-t>
+						</p>
+
+						<p class="rights-item">
+							<template v-if="s.right === RIGHTS.ADMIN">
+								<span class="icon is-small">
+									<icon icon="lock"/>
+								</span>&nbsp;
+								{{ $t('list.share.right.admin') }}
+							</template>
+							<template v-else-if="s.right === RIGHTS.READ_WRITE">
+								<span class="icon is-small">
+									<icon icon="pen"/>
+								</span>&nbsp;
+								{{ $t('list.share.right.readWrite') }}
+							</template>
+							<template v-else>
+								<span class="icon is-small">
+									<icon icon="users"/>
+								</span>&nbsp;
+								{{ $t('list.share.right.read') }}
+							</template>
+						</p>
 					</td>
 					<td>
 						<div class="select">
@@ -229,6 +230,7 @@ const showNewForm = ref(false)
 interface SelectedViewMapper {
 	[listId: number]: string,
 }
+
 const selectedView = ref<SelectedViewMapper>({})
 
 const copy = useCopyToClipboard()
@@ -292,6 +294,10 @@ function getShareLink(hash: string, view: string = 'list') {
 // FIXME: I think this is not needed
 .sharables-list:not(.card-content) {
 	overflow-y: auto
+}
+
+.rights-item {
+	white-space: nowrap;
 }
 
 @include modal-transition();
