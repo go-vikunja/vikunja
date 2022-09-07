@@ -559,7 +559,9 @@ func (Release) Compress(ctx context.Context) error {
 			return nil
 		}
 		// No mips or s390x for you today
-		if strings.Contains(info.Name(), "mips") || strings.Contains(info.Name(), "s390x") {
+		if strings.Contains(info.Name(), "mips") ||
+			strings.Contains(info.Name(), "s390x") ||
+			strings.Contains(info.Name(), "riscv64") { // not supported by upx
 			return nil
 		}
 
