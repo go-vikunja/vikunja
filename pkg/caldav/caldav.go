@@ -181,6 +181,10 @@ SUMMARY:` + t.Summary + getCaldavColor(t.Color)
 		if t.Start.Unix() > 0 {
 			caldavtodos += `
 DTSTART:` + makeCalDavTimeFromTimeStamp(t.Start)
+			if t.Duration != 0 && t.DueDate.Unix() == 0 {
+				caldavtodos += `
+DURATION:PT` + formatDuration(t.Duration)
+			}
 		}
 		if t.End.Unix() > 0 {
 			caldavtodos += `
@@ -215,11 +219,6 @@ DUE:` + makeCalDavTimeFromTimeStamp(t.DueDate)
 		if t.Created.Unix() > 0 {
 			caldavtodos += `
 CREATED:` + makeCalDavTimeFromTimeStamp(t.Created)
-		}
-
-		if t.Duration != 0 {
-			caldavtodos += `
-DURATION:PT` + formatDuration(t.Duration)
 		}
 
 		if t.Priority != 0 {
