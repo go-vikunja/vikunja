@@ -15,6 +15,7 @@ export interface RootStoreState {
 	menuActive: boolean,
 	keyboardShortcutsActive: boolean,
 	quickActionsActive: boolean,
+	logoVisible: boolean,
 }
 
 export interface AttachmentState {

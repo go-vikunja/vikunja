@@ -7,5 +7,6 @@ export const KEYBOARD_SHORTCUTS_ACTIVE = 'keyboardShortcutsActive'
 export const QUICK_ACTIONS_ACTIVE = 'quickActionsActive'
 export const BACKGROUND = 'background'
 export const BLUR_HASH = 'blurHash'
+export const LOGO_VISIBLE = 'logoVisible'
 
 export const CONFIG = 'config'

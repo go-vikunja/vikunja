@@ -9,7 +9,7 @@ import {
 	HAS_TASKS,
 	KEYBOARD_SHORTCUTS_ACTIVE,
 	LOADING,
-	LOADING_MODULE,
+	LOADING_MODULE, LOGO_VISIBLE,
 	MENU_ACTIVE,
 	QUICK_ACTIONS_ACTIVE,
 } from './mutation-types'
@@ -62,6 +62,7 @@ export const store = createStore<RootStoreState>({
 		menuActive: true,
 		keyboardShortcutsActive: false,
 		quickActionsActive: false,
+		logoVisible: true,
 	}),
 	mutations: {
 		[LOADING](state, loading) {
@@ -99,6 +100,9 @@ export const store = createStore<RootStoreState>({
 		},
 		[BLUR_HASH](state, blurHash) {
 			state.blurHash = blurHash
+		},
+		[LOGO_VISIBLE](state, visible: boolean) {
+			state.logoVisible = visible
 		},
 	},
 	actions: {

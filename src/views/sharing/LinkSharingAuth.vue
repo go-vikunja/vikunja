@@ -40,6 +40,7 @@ import {useI18n} from 'vue-i18n'
 import {useTitle} from '@vueuse/core'
 
 import Message from '@/components/misc/message.vue'
+import {LOGO_VISIBLE} from '@/store/mutation-types'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(t('sharing.authenticating'))
@@ -59,14 +60,14 @@ function useAuth() {
 	async function authenticate() {
 		authenticateWithPassword.value = false
 		errorMessage.value = ''
-	
+
 		if (authLinkShare.value) {
 			// FIXME: push to 'list.list' since authenticated?
 			return
 		}
-	
+
 		// TODO: no password
-	
+
 		loading.value = true
 
 		try {
@@ -74,6 +75,10 @@ function useAuth() {
 				hash: route.params.share,
 				password: password.value,
 			})
+			const logoVisible = route.query.logoVisible
+				? route.query.logoVisible === 'true'
+				: true
+			store.commit(LOGO_VISIBLE, logoVisible)
 			router.push({name: 'list.list', params: {listId}})
 		} catch (e: any) {
 			if (e.response?.data?.code === 13001) {

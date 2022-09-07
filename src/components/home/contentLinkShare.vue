@@ -6,8 +6,9 @@
 	>
 		<div class="container has-text-centered link-share-view">
 			<div class="column is-10 is-offset-1">
-				<Logo class="logo"/>
+				<Logo class="logo" v-if="logoVisible"/>
 				<h1
+					:class="{'m-0': !logoVisible}"
 					:style="{ 'opacity': currentList.title === '' ? '0': '1' }"
 					class="title">
 					{{ currentList.title === '' ? $t('misc.loading') : currentList.title }}
@@ -31,6 +32,7 @@ import PoweredByLink from './PoweredByLink.vue'
 const store = useStore()
 const currentList = computed(() => store.state.currentList)
 const background = computed(() => store.state.background)
+const logoVisible = computed(() => store.state.logoVisible)
 </script>
 
 <style lang="scss" scoped>
