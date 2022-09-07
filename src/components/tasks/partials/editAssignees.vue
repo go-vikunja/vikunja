@@ -10,7 +10,7 @@
 			@search="findUser"
 			:search-results="foundUsers"
 			@select="addAssignee"
-			label="username"
+			label="name"
 			:select-placeholder="$t('task.assignee.selectPlaceholder')"
 			v-model="assignees"
 			ref="multiselect"
@@ -106,6 +106,11 @@ async function findUser(query: string) {
 
 	// Filter the results to not include users who are already assigned
 	foundUsers.value = response.filter(({id}) => !includesById(assignees.value, id))
+		.map(u => {
+			// Users may not have a display name set, so we fall back on the username in that case
+			u.name = u.name === '' ? u.username : u.name
+			return u
+		})
 }
 
 function clearAllFoundUsers() {
