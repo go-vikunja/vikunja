@@ -136,6 +136,10 @@ export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
 				title: 'keyboardShortcuts.task.reminder',
 				keys: ['alt', 'r'],
 			},
+			{
+				title: 'keyboardShortcuts.task.description',
+				keys: ['e'],
+			},
 		],
 	},
 ]

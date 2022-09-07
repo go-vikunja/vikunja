@@ -16,14 +16,29 @@
 		<p class="has-text-centered has-text-grey is-italic my-5" v-if="showPreviewText">
 			{{ emptyText }}
 			<template v-if="isEditEnabled">
-				<ButtonLink @click="toggleEdit" class="d-print-none">{{ $t('input.editor.edit') }}</ButtonLink>.
+				<ButtonLink
+					@click="toggleEdit"
+					v-shortcut="editShortcut"
+					class="d-print-none">
+					{{ $t('input.editor.edit') }}
+				</ButtonLink>.
 			</template>
 		</p>
 
 		<ul class="actions d-print-none" v-if="bottomActions.length > 0">
 			<li v-if="isEditEnabled && !showPreviewText && showSave">
-				<BaseButton v-if="showEditButton" @click="toggleEdit">{{ $t('input.editor.edit') }}</BaseButton>
-				<BaseButton v-else-if="isEditActive" @click="toggleEdit" class="done-edit">{{ $t('misc.save') }}</BaseButton>
+				<BaseButton
+					v-if="showEditButton"
+					@click="toggleEdit"
+					v-shortcut="editShortcut">
+					{{ $t('input.editor.edit') }}
+				</BaseButton>
+				<BaseButton
+					v-else-if="isEditActive"
+					@click="toggleEdit"
+					class="done-edit">
+					{{ $t('misc.save') }}
+				</BaseButton>
 			</li>
 			<li v-for="(action, k) in bottomActions" :key="k">
 				<BaseButton @click="action.action">{{ action.title }}</BaseButton>
@@ -32,7 +47,11 @@
 		<template v-else-if="isEditEnabled && showSave">
 			<ul v-if="showEditButton" class="actions d-print-none">
 				<li>
-					<BaseButton @click="toggleEdit">{{ $t('input.editor.edit') }}</BaseButton>
+					<BaseButton
+						@click="toggleEdit"
+						v-shortcut="editShortcut">
+						{{ $t('input.editor.edit') }}
+					</BaseButton>
 				</li>
 			</ul>
 			<x-button
@@ -109,6 +128,12 @@ export default defineComponent({
 		showSave: {
 			type: Boolean,
 			default: false,
+		},
+		// If a key is passed the editor will go in "edit" mode when the key is pressed.
+		// Disabled if an empty string is passed.
+		editShortcut: {
+			type: String,
+			default: '',
 		},
 	},
 	emits: ['update:modelValue', 'change'],
