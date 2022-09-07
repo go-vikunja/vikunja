@@ -242,7 +242,8 @@
         "remove": "Remove a link share",
         "removeText": "Are you sure you want to remove this link share? It will no longer be possible to access this list with this link share. This cannot be undone!",
         "createSuccess": "The link share was successfully created.",
-        "deleteSuccess": "The link share was successfully deleted"
+        "deleteSuccess": "The link share was successfully deleted",
+        "view": "View"
       },
       "userTeam": {
         "typeUser": "user | users",

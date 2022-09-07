@@ -79,7 +79,15 @@ function useAuth() {
 				? route.query.logoVisible === 'true'
 				: true
 			store.commit(LOGO_VISIBLE, logoVisible)
-			router.push({name: 'list.list', params: {listId}})
+
+			let view = 'list'
+			if (route.query.view &&
+				(route.query.view === 'gantt' ||
+					route.query.view === 'kanban' ||
+					route.query.view === 'table')) {
+				view = route.query.view
+			}
+			router.push({name: `list.${view}`, params: {listId}})
 		} catch (e: any) {
 			if (e.response?.data?.code === 13001) {
 				authenticateWithPassword.value = true

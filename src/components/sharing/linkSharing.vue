@@ -83,6 +83,7 @@
 					<th>{{ $t('list.share.attributes.name') }}</th>
 					<th>{{ $t('list.share.attributes.sharedBy') }}</th>
 					<th>{{ $t('list.share.attributes.right') }}</th>
+					<th>{{ $t('list.share.links.view') }}</th>
 					<th>{{ $t('list.share.attributes.delete') }}</th>
 				</tr>
 				</thead>
@@ -92,7 +93,7 @@
 						<div class="field has-addons no-input-mobile">
 							<div class="control">
 								<input
-									:value="getShareLink(s.hash)"
+									:value="getShareLink(s.hash, selectedView[s.id])"
 									class="input"
 									readonly
 									type="text"
@@ -100,7 +101,7 @@
 							</div>
 							<div class="control">
 								<x-button
-									@click="copy(getShareLink(s.hash))"
+									@click="copy(getShareLink(s.hash, selectedView[s.id]))"
 									:shadow="false"
 									v-tooltip="$t('misc.copy')"
 								>
@@ -140,6 +141,24 @@
 							{{ $t('list.share.right.read') }}
 						</template>
 					</td>
+					<td>
+						<div class="select">
+							<select v-model="selectedView[s.id]" id="linkShareView">
+								<option value="list">
+									{{ $t('list.list.title') }}
+								</option>
+								<option value="gantt">
+									{{ $t('list.gantt.title') }}
+								</option>
+								<option value="table">
+									{{ $t('list.table.title') }}
+								</option>
+								<option value="kanban">
+									{{ $t('list.kanban.title') }}
+								</option>
+							</select>
+						</div>
+					</td>
 					<td class="actions">
 						<x-button
 							@click="
@@ -166,7 +185,7 @@
 				<template #header>
 					<span>{{ $t('list.share.links.remove') }}</span>
 				</template>
-				
+
 				<template #text>
 					<p>{{ $t('list.share.links.removeText') }}</p>
 				</template>
@@ -181,13 +200,13 @@ import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import {RIGHTS} from '@/constants/rights'
-import LinkShareModel, { type ILinkShare } from '@/models/linkShare'
+import LinkShareModel, {type ILinkShare} from '@/models/linkShare'
 
 import LinkShareService from '@/services/linkShare'
 
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {success} from '@/message'
-import type { IList } from '@/models/list'
+import type {IList} from '@/models/list'
 
 const props = defineProps({
 	listId: {
@@ -207,6 +226,11 @@ const showDeleteModal = ref(false)
 const linkIdToDelete = ref(0)
 const showNewForm = ref(false)
 
+interface SelectedViewMapper {
+	[listId: number]: string,
+}
+const selectedView = ref<SelectedViewMapper>({})
+
 const copy = useCopyToClipboard()
 watch(
 	() => props.listId,
@@ -223,7 +247,11 @@ async function load(listId: IList['id']) {
 		return
 	}
 
-	linkShares.value = await linkShareService.getAll({listId})
+	const links = await linkShareService.getAll({listId})
+	links.forEach((l: ILinkShare) => {
+		selectedView.value[l.id] = 'list'
+	})
+	linkShares.value = links
 }
 
 async function add(listId: IList['id']) {
@@ -255,15 +283,15 @@ async function remove(listId: IList['id']) {
 	}
 }
 
-function getShareLink(hash: string) {
-	return frontendUrl.value + 'share/' + hash + '/auth'
+function getShareLink(hash: string, view: string = 'list') {
+	return frontendUrl.value + 'share/' + hash + '/auth?view=' + view
 }
 </script>
 
 <style lang="scss" scoped>
 // FIXME: I think this is not needed
 .sharables-list:not(.card-content) {
-  overflow-y: auto
+	overflow-y: auto
 }
 
 @include modal-transition();
