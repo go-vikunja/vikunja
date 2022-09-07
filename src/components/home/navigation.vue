@@ -250,9 +250,14 @@ async function saveListPosition(e: SortableEvent) {
 	const newNamespaceIndex = parseInt(e.to.dataset.namespaceIndex as string)
 
 	const listsActive = activeLists.value[newNamespaceIndex]
-	const list = listsActive[e.newIndex]
-	const listBefore = listsActive[e.newIndex - 1] ?? null
-	const listAfter = listsActive[e.newIndex + 1] ?? null
+	// If the list was dragged to the last position, Safari will report e.newIndex as the size of the listsActive
+	// array instead of using the position. Because the index is wrong in that case, dragging the list will fail.
+	// To work around that we're explicitly checking that case here and decrease the index.
+	const newIndex = e.newIndex === listsActive.length ? e.newIndex - 1 : e.newIndex 
+	
+	const list = listsActive[newIndex]
+	const listBefore = listsActive[newIndex - 1] ?? null
+	const listAfter = listsActive[newIndex + 1] ?? null
 	listUpdating.value[list.id] = true
 
 	const position = calculateItemPosition(
