@@ -83,26 +83,34 @@
 			<span class="title">{{ rts.title }}</span>
 			<div class="tasks">
 				<div :key="t.id" class="task" v-for="t in rts.tasks">
-					<router-link
-						:to="{ name: route.name as string, params: { id: t.id } }"
-						:class="{ 'is-strikethrough': t.done}">
-						<span
-							class="different-list"
-							v-if="t.listId !== listId"
+					<div class="is-flex is-align-items-center">
+						<Fancycheckbox
+							class="task-done-checkbox"
+							v-model="t.done"
+							@update:model-value="toggleTaskDone(t)"
+						/>
+						<router-link
+							:to="{ name: route.name as string, params: { id: t.id } }"
+							:class="{ 'is-strikethrough': t.done}"
 						>
 							<span
-								v-if="t.differentNamespace !== null"
-								v-tooltip="$t('task.relation.differentNamespace')">
-								{{ t.differentNamespace }} >
+								class="different-list"
+								v-if="t.listId !== listId"
+							>
+								<span
+									v-if="t.differentNamespace !== null"
+									v-tooltip="$t('task.relation.differentNamespace')">
+									{{ t.differentNamespace }} >
+								</span>
+								<span
+									v-if="t.differentList !== null"
+									v-tooltip="$t('task.relation.differentList')">
+									{{ t.differentList }} >
+								</span>
 							</span>
-							<span
-								v-if="t.differentList !== null"
-								v-tooltip="$t('task.relation.differentList')">
-								{{ t.differentList }} >
-							</span>
-						</span>
-						{{ t.title }}
-					</router-link>
+							{{ t.title }}
+						</router-link>
+					</div>
 					<BaseButton
 						v-if="editEnabled"
 						@click="setRelationToDelete({
@@ -154,7 +162,9 @@ import TaskRelationModel from '@/models/taskRelation'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Multiselect from '@/components/input/multiselect.vue'
-import { error } from '@/message'
+import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+
+import {error, success} from '@/message'
 
 const props = defineProps({
 	taskId: {
@@ -330,6 +340,23 @@ async function createAndRelateTask(title: string) {
 	newTaskRelation.task = newTask
 	await addTaskRelation()
 }
+
+async function toggleTaskDone(task: ITask) {
+	await store.dispatch('tasks/update', task)
+	
+	// Find the task in the list and update it so that it is correctly strike through
+	Object.entries(relatedTasks.value).some(([kind, tasks]) => {
+		return tasks.some((t, key) => {
+			const found = t.id === task.id
+			if (found) {
+				relatedTasks.value[kind as IRelationKind]![key] = task
+			}
+			return found
+		})
+	})
+
+	success({message: t('task.detail.updateSuccess')})
+}
 </script>
 
 <style lang="scss" scoped>
@@ -400,6 +427,14 @@ async function createAndRelateTask(title: string) {
 
 :deep(.multiselect .search-results button) {
 	padding: 0.5rem;
+}
+
+// FIXME: The height of the actual checkbox in the <Fancycheckbox/> component is too much resulting in a 
+//  weired positioning of the checkbox. Setting the height here is a workaround until we fix the styling 
+//  of the component.
+.task-done-checkbox {
+	padding: 0;
+	height: 18px; // The exact height of the checkbox in the container
 }
 
 @include modal-transition();

@@ -114,7 +114,6 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import Fancycheckbox from '../../input/fancycheckbox.vue'
 import DeferTask from './defer-task.vue'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
-import {playPop} from '@/helpers/playPop'
 import ChecklistSummary from './checklist-summary.vue'
 import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 import ColorBubble from '@/components/misc/colorBubble.vue'
@@ -208,10 +207,7 @@ export default defineComponent({
 
 		async markAsDone(checked: boolean) {
 			const updateFunc = async () => {
-				const task = await this.taskService.update(this.task)
-				if (this.task.done) {
-					playPop()
-				}
+				const task = await this.$store.dispatch('tasks/update', this.task)
 				this.task = task
 				this.$emit('task-updated', task)
 				this.$message.success({
