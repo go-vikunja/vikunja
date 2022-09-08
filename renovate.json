@@ -19,6 +19,12 @@
       "matchPackagePrefixes": [
         "@vueuse/"
       ]
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true,
+      "automergeStrategy": "squash",
+      "automergeType": "pr"
     }
   ]
 }
