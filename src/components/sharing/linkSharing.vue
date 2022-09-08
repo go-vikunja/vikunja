@@ -145,17 +145,11 @@
 					<td>
 						<div class="select">
 							<select v-model="selectedView[s.id]">
-								<option value="list">
-									{{ $t('list.list.title') }}
-								</option>
-								<option value="gantt">
-									{{ $t('list.gantt.title') }}
-								</option>
-								<option value="table">
-									{{ $t('list.table.title') }}
-								</option>
-								<option value="kanban">
-									{{ $t('list.kanban.title') }}
+								<option
+									v-for="v in availableViews"
+									:value="v"
+									:key="v">
+									{{ $t('list.' + v + '.title') }}
 								</option>
 							</select>
 						</div>
@@ -233,6 +227,8 @@ const showNewForm = ref(false)
 type SelectedViewMapper = Record<IList['id'], ListView>
 
 const selectedView = ref<SelectedViewMapper>({})
+
+const availableViews = computed(() => Object.values(LIST_VIEWS))
 
 const copy = useCopyToClipboard()
 watch(
