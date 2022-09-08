@@ -80,7 +80,7 @@
 				<thead>
 				<tr>
 					<th>{{ $t('list.share.attributes.link') }}</th>
-					<th>&nbsp;</th>
+					<th></th>
 					<th>{{ $t('list.share.links.view') }}</th>
 					<th>{{ $t('list.share.attributes.delete') }}</th>
 				</tr>
