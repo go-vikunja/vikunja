@@ -41,6 +41,7 @@ import {useTitle} from '@vueuse/core'
 
 import Message from '@/components/misc/message.vue'
 import {LOGO_VISIBLE} from '@/store/mutation-types'
+import {LIST_VIEWS, type ListView} from '@/types/ListView'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(t('sharing.authenticating'))
@@ -80,13 +81,10 @@ function useAuth() {
 				: true
 			store.commit(LOGO_VISIBLE, logoVisible)
 
-			let view = 'list'
-			if (route.query.view &&
-				(route.query.view === 'gantt' ||
-					route.query.view === 'kanban' ||
-					route.query.view === 'table')) {
-				view = route.query.view
-			}
+			const view = route.query.view && Object.values(LIST_VIEWS).includes(route.query.view as ListView)
+				? route.query.view
+				: 'list'
+
 			router.push({name: `list.${view}`, params: {listId}})
 		} catch (e: any) {
 			if (e.response?.data?.code === 13001) {

@@ -201,13 +201,16 @@ import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import {RIGHTS} from '@/constants/rights'
-import LinkShareModel, {type ILinkShare} from '@/models/linkShare'
+import LinkShareModel from '@/models/linkShare'
+import type {ILinkShare} from '@/modelTypes/ILinkShare'
 
 import LinkShareService from '@/services/linkShare'
 
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {success} from '@/message'
-import type {IList} from '@/models/list'
+import type {IList} from '@/modelTypes/IList'
+import type {ListView} from '@/types/ListView'
+import {LIST_VIEWS} from '@/types/ListView'
 
 const props = defineProps({
 	listId: {
@@ -227,9 +230,7 @@ const showDeleteModal = ref(false)
 const linkIdToDelete = ref(0)
 const showNewForm = ref(false)
 
-interface SelectedViewMapper {
-	[listId: number]: string,
-}
+type SelectedViewMapper = Record<IList['id'], ListView>
 
 const selectedView = ref<SelectedViewMapper>({})
 
@@ -285,7 +286,7 @@ async function remove(listId: IList['id']) {
 	}
 }
 
-function getShareLink(hash: string, view: string = 'list') {
+function getShareLink(hash: string, view: ListView = LIST_VIEWS.LIST) {
 	return frontendUrl.value + 'share/' + hash + '/auth?view=' + view
 }
 </script>
