@@ -144,7 +144,7 @@
 					</td>
 					<td>
 						<div class="select">
-							<select v-model="selectedView[s.id]" id="linkShareView">
+							<select v-model="selectedView[s.id]">
 								<option value="list">
 									{{ $t('list.list.title') }}
 								</option>
