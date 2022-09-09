@@ -870,7 +870,8 @@
       "related": "Beziehige vo dere Uufgab bearbeite",
       "color": "Die Farbe dieser Aufgabe ändern",
       "move": "Diese Aufgabe in eine andere Liste verschieben",
-      "reminder": "Erinnerungen für diese Aufgabe verwalten"
+      "reminder": "Erinnerungen für diese Aufgabe verwalten",
+      "description": "Aufgabenbeschreibung bearbeiten"
     },
     "list": {
       "title": "Listenansicht",

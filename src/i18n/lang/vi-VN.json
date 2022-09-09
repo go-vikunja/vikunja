@@ -870,7 +870,8 @@
       "related": "Sửa đổi các công việc liên kết",
       "color": "Thay đổi màu công việc này",
       "move": "Dời công việc này sang danh sách khác",
-      "reminder": "Manage reminders of this task"
+      "reminder": "Manage reminders of this task",
+      "description": "Toggle editing of the task description"
     },
     "list": {
       "title": "Xem danh sách",

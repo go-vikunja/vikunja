@@ -870,7 +870,8 @@
       "related": "Zmodyfikuj zadania powiązane z tym zadaniem",
       "color": "Zmień kolor tego zadania",
       "move": "Przenieś to zadanie do innej listy",
-      "reminder": "Zarządzaj przypomnieniami o tym zadaniu"
+      "reminder": "Zarządzaj przypomnieniami o tym zadaniu",
+      "description": "Toggle editing of the task description"
     },
     "list": {
       "title": "Widoki listy",

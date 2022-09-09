@@ -870,7 +870,8 @@
       "related": "Modifica le attività collegate a questa",
       "color": "Cambia il colore di questa attività",
       "move": "Sposta questa attività in un altro elenco",
-      "reminder": "Gestisci i promemoria di questa attività"
+      "reminder": "Gestisci i promemoria di questa attività",
+      "description": "Toggle editing of the task description"
     },
     "list": {
       "title": "Viste Liste",
