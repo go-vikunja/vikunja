@@ -87,7 +87,7 @@
         "language": "Lingua",
         "defaultList": "Lista predefinita",
         "timezone": "Fuso Orario",
-        "overdueTasksRemindersTime": "Orario email del promemoria attività in ritardo"
+        "overdueTasksRemindersTime": "Orario email attività in scadute"
       },
       "totp": {
         "title": "Autenticazione a due fattori",
@@ -562,12 +562,12 @@
       }
     },
     "datemathHelp": {
-      "canuse": "You can use date math to filter for relative dates.",
+      "canuse": "Puoi usare le date calcolate per filtrare per date relative.",
       "learnhow": "Scopri come funziona",
-      "title": "Date Math",
-      "intro": "Date Math allows you to specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
-      "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
-      "similar": "These expressions are similar to the ones provided by {0} and {1}.",
+      "title": "Date Calcolate",
+      "intro": "Le Date Calcolate ti permettono di specificare date relative che vengono calcolate al volo da Vikunja quando viene applicato il filtro.",
+      "expression": "Ogni Data Calcolata inizia con una data base, che può essere {0}, o una data con {1} alla fine. Questa data base può essere seguita da una o più espressioni matematiche.",
+      "similar": "Queste espressioni sono simili a quelle fornite da {0} e {1}.",
       "add1Day": "Aggiungi un giorno",
       "minus1Day": "Sottrai un giorno",
       "roundDay": "Arrotonda per difetto al giorno più vicino",
@@ -781,7 +781,7 @@
       "weeks": "Settimane",
       "months": "Mesi",
       "years": "Anni",
-      "invalidAmount": "Please enter more than 0."
+      "invalidAmount": "Inserisci più di 0."
     },
     "quickAddMagic": {
       "hint": "Puoi usare l'Aggiunta Rapida Magica",
@@ -791,15 +791,15 @@
       "multiple": "Puoi usarlo più volte.",
       "label1": "Per aggiungere un'etichetta, basta aggiungere il nome dell'etichetta preceduto da {prefix}.",
       "label2": "Vikunja controllerà prima se l'etichetta esiste già e nel caso la creerà.",
-      "label3": "To use spaces, simply add a \" or ' around the label name.",
+      "label3": "Per usare gli spazi, basta aggiungere un \" o ' prima e dopo il nome dell'etichetta.",
       "label4": "Per esempio: {prefix}\"Etichetta con spazi\".",
       "priority1": "Per impostare la priorità di un'attività, aggiungi un numero 1-5, preceduto da {prefix}.",
       "priority2": "Più alto è il numero, più alta è la priorità.",
       "assignees": "Per assegnare direttamente l'attività a un utente, aggiungere il suo nome utente preceduto da {prefix} all'attività.",
       "list1": "Per impostare una lista di appartenenza all'attività, inserisci il suo nome prefisso con {prefix}.",
       "list2": "Ciò restituirà un errore se la lista non esiste.",
-      "list3": "To use spaces, simply add a \" or ' around the list name.",
-      "list4": "For example: {prefix}\"List with spaces\".",
+      "list3": "Per usare gli spazi, basta aggiungere un \" o ' prima e dopo il nome della lista.",
+      "list4": "Per esempio: {prefix}\"Etichetta con spazi\".",
       "dateAndTime": "Data e ora",
       "date": "Qualsiasi data verrà utilizzata come data di scadenza della nuova attività. È possibile utilizzare le date in uno qualsiasi di questi formati:",
       "dateWeekday": "qualsiasi giorno della settimana, userà la data più vicina",
@@ -871,7 +871,7 @@
       "color": "Cambia il colore di questa attività",
       "move": "Sposta questa attività in un altro elenco",
       "reminder": "Gestisci i promemoria di questa attività",
-      "description": "Toggle editing of the task description"
+      "description": "Attiva/Disattiva modifica della descrizione dell'attività"
     },
     "list": {
       "title": "Viste Liste",
