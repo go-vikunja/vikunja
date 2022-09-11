@@ -871,7 +871,7 @@
       "color": "Alterar a cor desta tarefa",
       "move": "Mover esta tarefa para outra lista",
       "reminder": "Gerir lembretes desta tarefa",
-      "description": "Toggle editing of the task description"
+      "description": "Alternar edição da descrição da tarefa"
     },
     "list": {
       "title": "Visualização em Lista",
