@@ -1,12 +1,21 @@
-import { computed, watchEffect } from 'vue'
-import type { ComputedGetter } from 'vue'
+import { computed } from 'vue'
+import type { Ref } from 'vue'
 
-import { setTitle } from '@/helpers/setTitle'
+import {useTitle as useTitleVueUse, resolveRef} from '@vueuse/core'
 
-export function useTitle(titleGetter: ComputedGetter<string>) {
-	const titleRef = computed(titleGetter)
+type UseTitleParameters = Parameters<typeof useTitleVueUse>
 
-	watchEffect(() => setTitle(titleRef.value))
+export function useTitle(...args: UseTitleParameters) {
 
-	return titleRef
+	const [newTitle, ...restArgs] = args
+
+  const pageTitle = resolveRef(newTitle) as Ref<string>
+
+	const completeTitle = computed(() => 
+		(typeof pageTitle.value === 'undefined' || pageTitle.value === '')
+		? 'Vikunja'
+		: `${pageTitle.value} | Vikunja`,
+	)
+
+	return useTitleVueUse(completeTitle, ...restArgs)
 }
