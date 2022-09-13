@@ -4,7 +4,7 @@
 			{{ pageTitle }}
 		</h3>
 		<p v-if="!showAll" class="show-tasks-options">
-			<datepicker-with-range @dateChanged="setDate">
+			<datepicker-with-range @update:model-value="setDate">
 				<template #trigger="{toggle}">
 					<x-button @click.prevent.stop="toggle()" variant="primary" :shadow="false" class="mb-2">
 						{{ $t('task.show.select') }}

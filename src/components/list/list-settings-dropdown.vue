@@ -60,8 +60,8 @@
 				:is-button="false"
 				entity="list"
 				:entity-id="list.id"
-				:subscription="list.subscription"
-				@change="sub => subscription = sub"
+				:model-value="list.subscription"
+				@update:model-value="sub => subscription = sub"
 				type="dropdown"
 			/>
 			<dropdown-item

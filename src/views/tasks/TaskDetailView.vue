@@ -39,7 +39,7 @@
 								</div>
 								<priority-select
 									:disabled="!canWrite"
-									@change="saveTask"
+									@update:model-value="saveTask"
 									ref="priority"
 									v-model="task.priority"/>
 							</div>
@@ -79,7 +79,7 @@
 								</div>
 								<percent-done-select
 									:disabled="!canWrite"
-									@change="saveTask"
+									@update:model-value="saveTask"
 									ref="percentDone"
 									v-model="task.percentDone"/>
 							</div>
@@ -146,9 +146,10 @@
 								</div>
 								<reminders
 									:disabled="!canWrite"
-									@change="saveTask"
 									ref="reminders"
-									v-model="task.reminderDates"/>
+									v-model="task.reminderDates"
+									@update:model-value="saveTask"
+								/>
 							</div>
 						</transition>
 						<transition name="flash-background" appear>
@@ -170,9 +171,10 @@
 								</div>
 								<repeat-after
 									:disabled="!canWrite"
-									@change="saveTask"
 									ref="repeatAfter"
-									v-model="task"/>
+									v-model="task"
+									@update:model-value="saveTask"
+								/>
 							</div>
 						</transition>
 						<transition name="flash-background" appear>
@@ -183,10 +185,11 @@
 									{{ $t('task.attributes.color') }}
 								</div>
 								<color-picker
-									@change="saveTask"
 									menu-position="bottom"
 									ref="color"
-									v-model="taskColor"/>
+									v-model="taskColor"
+									@update:model-value="saveTask"
+								/>
 							</div>
 						</transition>
 					</div>
@@ -276,8 +279,8 @@
 						<task-subscription
 							entity="task"
 							:entity-id="task.id"
-							:subscription="task.subscription"
-							@change="sub => task.subscription = sub"
+							:model-value="task.subscription"
+							@update:model-value="sub => task.subscription = sub"
 						/>
 						<x-button
 							@click="setFieldActive('assignees')"

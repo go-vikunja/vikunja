@@ -34,12 +34,13 @@
 				{{ $t('menu.archive') }}
 			</dropdown-item>
 			<task-subscription
+				v-if="subscription"
 				class="has-no-shadow"
 				:is-button="false"
 				entity="namespace"
 				:entity-id="namespace.id"
-				:subscription="subscription"
-				@change="sub => subscription = sub"
+				:model-value="subscription"
+				@update:model-value="sub => subscription = sub"
 				type="dropdown"
 			/>
 			<dropdown-item

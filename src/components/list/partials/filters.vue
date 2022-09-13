@@ -38,7 +38,7 @@
 				<priority-select
 					:disabled="!filters.usePriority || undefined"
 					v-model.number="filters.priority"
-					@change="setPriority"
+					@update:model-value="setPriority"
 				/>
 				<fancycheckbox
 					v-model="filters.usePriority"
@@ -53,7 +53,7 @@
 			<div class="control single-value-control">
 				<percent-done-select
 					v-model.number="filters.percentDone"
-					@change="setPercentDoneFilter"
+					@update:model-value="setPercentDoneFilter"
 					:disabled="!filters.usePercentDone || undefined"
 				/>
 				<fancycheckbox
@@ -68,8 +68,9 @@
 			<label class="label">{{ $t('task.attributes.dueDate') }}</label>
 			<div class="control">
 				<datepicker-with-range
-					@dateChanged="values => setDateFilter('due_date', values)"
-					v-model="filters.dueDate">
+					v-model="filters.dueDate"
+					@update:model-value="values => setDateFilter('due_date', values)"
+				>
 					<template #trigger="{toggle, buttonText}">
 						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
 							{{ buttonText }}
@@ -82,8 +83,9 @@
 			<label class="label">{{ $t('task.attributes.startDate') }}</label>
 			<div class="control">
 				<datepicker-with-range
-					@dateChanged="values => setDateFilter('start_date', values)"
-					v-model="filters.startDate">
+					v-model="filters.startDate"
+					@update:model-value="values => setDateFilter('start_date', values)"
+				>
 					<template #trigger="{toggle, buttonText}">
 						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
 							{{ buttonText }}
@@ -96,8 +98,9 @@
 			<label class="label">{{ $t('task.attributes.endDate') }}</label>
 			<div class="control">
 				<datepicker-with-range
-					@dateChanged="values => setDateFilter('end_date', values)"
-					v-model="filters.endDate">
+					v-model="filters.endDate"
+					@update:model-value="values => setDateFilter('end_date', values)"
+				>
 					<template #trigger="{toggle, buttonText}">
 						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
 							{{ buttonText }}
@@ -110,8 +113,9 @@
 			<label class="label">{{ $t('task.attributes.reminders') }}</label>
 			<div class="control">
 				<datepicker-with-range
-					@dateChanged="values => setDateFilter('reminders', values)"
-					v-model="filters.reminders">
+					v-model="filters.reminders"
+					@update:model-value="values => setDateFilter('reminders', values)"
+				>
 					<template #trigger="{toggle, buttonText}">
 						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
 							{{ buttonText }}
@@ -141,7 +145,7 @@
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.labels') }}</label>
 			<div class="control labels-list">
-				<edit-labels v-model="labels" @change="changeLabelFilter"/>
+				<edit-labels v-model="labels" @update:model-value="changeLabelFilter"/>
 			</div>
 		</div>
 
@@ -278,7 +282,7 @@ export default defineComponent({
 			default: false,
 		},
 	},
-	emits: ['update:modelValue', 'change'],
+	emits: ['update:modelValue'],
 	watch: {
 		modelValue: {
 			handler(value) {
@@ -312,7 +316,6 @@ export default defineComponent({
 			const params = {...this.params}
 			params.filter_value = params.filter_value.map(v => v instanceof Date ? v.toISOString() : v)
 			this.$emit('update:modelValue', params)
-			this.$emit('change', params)
 		},
 		prepareFilters() {
 			this.prepareDone()

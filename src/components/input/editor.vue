@@ -136,7 +136,7 @@ export default defineComponent({
 			default: '',
 		},
 	},
-	emits: ['update:modelValue', 'change'],
+	emits: ['update:modelValue'],
 	computed: {
 		showPreviewText() {
 			return this.isPreviewActive && this.text === '' && this.emptyText !== ''
@@ -212,7 +212,6 @@ export default defineComponent({
 
 			this.changeTimeout = setTimeout(() => {
 				this.$emit('update:modelValue', this.text)
-				this.$emit('change', this.text)
 			}, timeout)
 		},
 		replaceAt(str, index, replacement) {

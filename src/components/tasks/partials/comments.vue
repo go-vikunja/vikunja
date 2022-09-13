@@ -70,13 +70,13 @@
 						:is-edit-enabled="canWrite && c.author.id === currentUserId"
 						:upload-callback="attachmentUpload"
 						:upload-enabled="true"
-						@change="
+						v-model="c.comment"
+						@update:model-value="
 							() => {
 								toggleEdit(c)
 								editComment()
 							}
 						"
-						v-model="c.comment"
 						:bottom-actions="actions[c.id]"
 						:show-save="true"
 					/>

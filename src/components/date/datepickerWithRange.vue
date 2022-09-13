@@ -85,7 +85,7 @@ import DatemathHelp from '@/components/date/datemathHelp.vue'
 const store = useStore()
 const {t} = useI18n({useScope: 'global'})
 
-const emit = defineEmits(['dateChanged', 'update:modelValue'])
+const emit = defineEmits(['update:modelValue'])
 const props = defineProps({
 	modelValue: {
 		required: false,
@@ -127,7 +127,6 @@ function emitChanged() {
 		dateFrom: from.value === '' ? null : from.value,
 		dateTo: to.value === '' ? null : to.value,
 	}
-	emit('dateChanged', args)
 	emit('update:modelValue', args)
 }
 

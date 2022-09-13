@@ -63,7 +63,7 @@ const props = defineProps({
 	},
 })
 
-const emit = defineEmits(['update:modelValue', 'change'])
+const emit = defineEmits(['update:modelValue'])
 
 const reminders = ref<Reminder[]>([])
 
@@ -86,7 +86,6 @@ watch(
 
 function updateData() {
 	emit('update:modelValue', reminders.value)
-	emit('change')
 }
 
 const newReminder = ref(null)

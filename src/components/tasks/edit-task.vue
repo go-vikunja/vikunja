@@ -36,8 +36,8 @@
 
 		<strong>{{ $t('task.attributes.reminders') }}</strong>
 		<reminders
-			@change="editTaskSubmit()"
 			v-model="taskEditTask.reminderDates"
+			@update:model-value="editTaskSubmit()"
 		/>
 
 		<div class="field">
