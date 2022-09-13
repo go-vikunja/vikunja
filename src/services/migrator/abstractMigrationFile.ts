@@ -1,3 +1,4 @@
+import type {IFile} from '@/modelTypes/IFile'
 import AbstractService from '../abstractService'
 
 // This service builds on top of the abstract service and basically just hides away method names.
@@ -5,7 +6,7 @@ import AbstractService from '../abstractService'
 export default class AbstractMigrationFileService extends AbstractService {
 	serviceUrlKey = ''
 
-	constructor(serviceUrlKey) {
+	constructor(serviceUrlKey: '') {
 		super({
 			create: '/migration/' + serviceUrlKey + '/migrate',
 		})
@@ -20,7 +21,7 @@ export default class AbstractMigrationFileService extends AbstractService {
 		return false
 	}
 
-	migrate(file) {
+	migrate(file: IFile) {
 		console.log(file)
 		return this.uploadFile(
 			this.paths.create,

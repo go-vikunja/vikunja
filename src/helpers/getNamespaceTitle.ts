@@ -1,5 +1,5 @@
 import {i18n} from '@/i18n'
-import type {INamespace} from '@/models/namespace'
+import type {INamespace} from '@/modelTypes/INamespace'
 
 export const getNamespaceTitle = (n: INamespace) => {
 	if (n.id === -1) {

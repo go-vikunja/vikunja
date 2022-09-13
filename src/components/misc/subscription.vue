@@ -5,7 +5,7 @@
 		:icon="iconName"
 		v-tooltip="tooltipText"
 		@click="changeSubscription"
-		:disabled="disabled || undefined"
+		:disabled="disabled"
 	>
 		{{ buttonText }}
 	</x-button>
@@ -23,6 +23,7 @@
 		v-tooltip="tooltipText"
 		@click="changeSubscription"
 		:class="{'is-disabled': disabled}"
+		:disabled="disabled"
 	>
 		<span class="icon">
 			<icon :icon="iconName"/>
@@ -39,7 +40,8 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 
 import SubscriptionService from '@/services/subscription'
-import SubscriptionModel, { type ISubscription } from '@/models/subscription'
+import SubscriptionModel from '@/models/subscription'
+import type {ISubscription} from '@/modelTypes/ISubscription'
 
 import {success} from '@/message'
 
@@ -50,7 +52,7 @@ const props = defineProps({
 		type: Boolean,
 		default: true,
 	},
-	subscription: {
+	modelValue: {
 		type: Object as PropType<ISubscription>,
 		default: null,
 	},
@@ -60,9 +62,9 @@ const props = defineProps({
 	},
 })
 
-const subscriptionEntity = computed<string | null>(() => props.subscription?.entity ?? null)
+const subscriptionEntity = computed<string | null>(() => props.modelValue?.entity ?? null)
 
-const emit = defineEmits(['change'])
+const emit = defineEmits(['update:modelValue'])
 
 const subscriptionService = shallowRef(new SubscriptionService())
 
@@ -75,27 +77,21 @@ const tooltipText = computed(() => {
 		})
 	}
 
-	return props.subscription !== null ?
+	return props.modelValue !== null ?
 		t('task.subscription.subscribed', {entity: props.entity}) :
 		t('task.subscription.notSubscribed', {entity: props.entity})
 })
 
-const buttonText = computed(() => props.subscription !== null ? t('task.subscription.unsubscribe') : t('task.subscription.subscribe'))
-const iconName = computed(() => props.subscription !== null ? ['far', 'bell-slash'] : 'bell')
-const disabled = computed(() => {
-	if (props.subscription === null) {
-		return false
-	}
-
-	return subscriptionEntity.value !== props.entity
-})
+const buttonText = computed(() => props.modelValue ? t('task.subscription.unsubscribe') : t('task.subscription.subscribe'))
+const iconName = computed(() => props.modelValue ? ['far', 'bell-slash'] : 'bell')
+const disabled = computed(() => props.modelValue && subscriptionEntity.value !== props.entity)
 
 function changeSubscription() {
 	if (disabled.value) {
 		return
 	}
 
-	if (props.subscription === null) {
+	if (props.modelValue === null) {
 		subscribe()
 	} else {
 		unsubscribe()
@@ -108,7 +104,7 @@ async function subscribe() {
 		entityId: props.entityId,
 	})
 	await subscriptionService.value.create(subscription)
-	emit('change', subscription)
+	emit('update:modelValue', subscription)
 	success({message: t('task.subscription.subscribeSuccess', {entity: props.entity})})
 }
 
@@ -118,7 +114,7 @@ async function unsubscribe() {
 		entityId: props.entityId,
 	})
 	await subscriptionService.value.delete(subscription)
-	emit('change', null)
+	emit('update:modelValue', null)
 	success({message: t('task.subscription.unsubscribeSuccess', {entity: props.entity})})
 }
 </script>

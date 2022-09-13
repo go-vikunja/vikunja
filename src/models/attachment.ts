@@ -5,7 +5,7 @@ import type { IUser } from '@/modelTypes/IUser'
 import type { IFile } from '@/modelTypes/IFile'
 import type { IAttachment } from '@/modelTypes/IAttachment'
 
-export default class AttachmentModel extends AbstractModel implements IAttachment {
+export default class AttachmentModel extends AbstractModel<IAttachment> implements IAttachment {
 	id = 0
 	taskId = 0
 	createdBy: IUser = UserModel

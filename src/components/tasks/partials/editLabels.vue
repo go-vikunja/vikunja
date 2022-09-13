@@ -66,7 +66,7 @@ const props = defineProps({
 	},
 })
 
-const emit = defineEmits(['update:modelValue', 'change'])
+const emit = defineEmits(['update:modelValue'])
 
 const store = useStore()
 const {t} = useI18n({useScope: 'global'})
@@ -96,7 +96,6 @@ function findLabel(newQuery: string) {
 async function addLabel(label: ILabel, showNotification = true) {
 	const bubble = () => {
 		emit('update:modelValue', labels.value)
-		emit('change', labels.value)
 	}
 	
 	if (props.taskId === 0) {
@@ -122,7 +121,6 @@ async function removeLabel(label: ILabel) {
 		}
 	}
 	emit('update:modelValue', labels.value)
-	emit('change', labels.value)
 	success({message: t('task.label.removeSuccess')})
 }
 

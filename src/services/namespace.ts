@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
-import NamespaceModel, { type INamespace } from '../models/namespace'
+import NamespaceModel from '../models/namespace'
+import type {INamespace} from '@/modelTypes/INamespace'
 import {formatISO} from 'date-fns'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 

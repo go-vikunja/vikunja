@@ -68,7 +68,7 @@ export default defineComponent({
 			default: 'top',
 		},
 	},
-	emits: ['update:modelValue', 'change'],
+	emits: ['update:modelValue'],
 	watch: {
 		modelValue: {
 			handler(modelValue) {
@@ -98,7 +98,6 @@ export default defineComponent({
 
 			this.lastChangeTimeout = setTimeout(() => {
 				this.$emit('update:modelValue', this.color)
-				this.$emit('change')
 			}, 500)
 		},
 		reset() {

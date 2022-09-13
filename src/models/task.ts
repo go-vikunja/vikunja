@@ -32,7 +32,7 @@ export function	getHexColor(hexColor: string) {
 	return hexColor
 }
 
-export default class TaskModel extends AbstractModel implements ITask {
+export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	id = 0
 	title = ''
 	description = ''

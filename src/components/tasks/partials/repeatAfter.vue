@@ -85,7 +85,7 @@ const props = defineProps({
 
 const {t} = useI18n({useScope: 'global'})
 
-const emit = defineEmits(['update:modelValue', 'change'])
+const emit = defineEmits(['update:modelValue'])
 
 const task = ref<ITask>()
 const repeatAfter = reactive({
@@ -116,7 +116,6 @@ function updateData() {
 
 	Object.assign(task.value.repeatAfter, repeatAfter)
 	emit('update:modelValue', task.value)
-	emit('change')
 }
 
 function setRepeatAfter(amount: number, type: IRepeatAfter['type']) {

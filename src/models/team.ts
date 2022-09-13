@@ -7,7 +7,7 @@ import type {ITeam} from '@/modelTypes/ITeam'
 import type {ITeamMember} from '@/modelTypes/ITeamMember'
 import type {IUser} from '@/modelTypes/IUser'
 
-export default class TeamModel extends AbstractModel implements ITeam {
+export default class TeamModel extends AbstractModel<ITeam> implements ITeam {
 	id = 0
 	name = ''
 	description = ''

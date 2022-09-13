@@ -1,7 +1,7 @@
 import {createNewIndexer} from '../indexes'
 
 import type {LabelState} from '@/store/types'
-import type {ILabel} from '@/models/label'
+import type {ILabel} from '@/modelTypes/ILabel'
 
 const {search} = createNewIndexer('labels', ['title', 'description'])
 

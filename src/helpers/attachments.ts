@@ -1,5 +1,6 @@
-import AttachmentModel, { type IAttachment } from '@/models/attachment'
-import type {IFile} from '@/models/file'
+import AttachmentModel from '@/models/attachment'
+import type {IAttachment} from '@/modelTypes/IAttachment'
+import type {IFile} from '@/modelTypes/IFile'
 
 import AttachmentService from '@/services/attachment'
 import { store } from '@/store'

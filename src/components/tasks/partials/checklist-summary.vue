@@ -14,7 +14,7 @@ import {computed, type PropType} from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import {getChecklistStatistics} from '@/helpers/checklistFromText'
-import type {ITask} from '@/models/task'
+import type {ITask} from '@/modelTypes/ITask'
 
 const props = defineProps({
 	task: {

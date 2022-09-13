@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
-import TaskModel, { type ITask } from '../models/task'
+import TaskModel from '@/models/task'
+import type {ITask} from '@/modelTypes/ITask'
 import AttachmentService from './attachment'
 import LabelService from './label'
 

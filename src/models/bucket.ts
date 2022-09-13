@@ -6,14 +6,14 @@ import type {IBucket} from '@/modelTypes/IBucket'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IUser} from '@/modelTypes/IUser'
 
-export default class BucketModel extends AbstractModel implements IBucket {
+export default class BucketModel extends AbstractModel<IBucket> implements IBucket {
 	id = 0
 	title = ''
 	listId = ''
 	limit = 0
 	tasks: ITask[] = []
-	isDoneBucket: false
-	position: 0
+	isDoneBucket = false
+	position = 0
 	
 	createdBy: IUser = null
 	created: Date = null

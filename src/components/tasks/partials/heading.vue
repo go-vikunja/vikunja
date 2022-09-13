@@ -34,12 +34,14 @@
 <script setup lang="ts">
 import {ref, computed, type PropType} from 'vue'
 import {useStore} from '@/store'
+import {useRouter} from 'vue-router'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Done from '@/components/misc/Done.vue'
-import type {ITask} from '@/models/task'
-import { useRouter } from 'vue-router'
-import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
+
+import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
+
+import type {ITask} from '@/modelTypes/ITask'
 
 const props = defineProps({
 	task: {

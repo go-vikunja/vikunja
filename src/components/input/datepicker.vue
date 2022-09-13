@@ -131,7 +131,7 @@ export default defineComponent({
 			default: false,
 		},
 	},
-	emits: ['update:modelValue', 'change', 'close', 'close-on-change'],
+	emits: ['update:modelValue', 'close', 'close-on-change'],
 	mounted() {
 		document.addEventListener('click', this.hideDatePopup)
 	},
@@ -186,7 +186,6 @@ export default defineComponent({
 		updateData() {
 			this.changed = true
 			this.$emit('update:modelValue', this.date)
-			this.$emit('change', this.date)
 		},
 		toggleDatePopup() {
 			if (this.disabled) {

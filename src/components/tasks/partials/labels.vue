@@ -11,8 +11,8 @@
 </template>
 
 <script setup lang="ts">
-import type { PropType } from 'vue'
-import type { ILabel } from '@/models/label'
+import type {PropType} from 'vue'
+import type {ILabel} from '@/modelTypes/ILabel'
 
 defineProps({
 	labels: {

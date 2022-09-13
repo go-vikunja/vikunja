@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
-import PasswordResetModel, { type IPasswordReset } from '../models/passwordReset'
+import PasswordResetModel from '@/models/passwordReset'
+import type {IPasswordReset} from '@/modelTypes/IPasswordReset'
 
 export default class PasswordResetService extends AbstractService<IPasswordReset> {
 

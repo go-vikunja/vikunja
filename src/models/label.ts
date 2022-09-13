@@ -8,7 +8,7 @@ import {colorIsDark} from '@/helpers/color/colorIsDark'
 
 const DEFAULT_LABEL_BACKGROUND_COLOR = 'e8e8e8'
 
-export default class LabelModel extends AbstractModel implements ILabel {
+export default class LabelModel extends AbstractModel<ILabel> implements ILabel {
 	id = 0
 	title = ''
 	// FIXME: this should be empty and be definied in the client.

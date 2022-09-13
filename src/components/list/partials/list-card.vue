@@ -45,7 +45,7 @@ import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 
 import BaseButton from '@/components/base/BaseButton.vue'
-import type { IList } from '@/models/list'
+import type {IList} from '@/modelTypes/IList'
 
 const background = ref<string | null>(null)
 const backgroundLoading = ref(false)

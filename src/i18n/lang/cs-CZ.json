@@ -870,7 +870,8 @@
       "related": "Upravit související úkoly tohoto úkolu",
       "color": "Změnit barvu tohoto úkolu",
       "move": "Přesunout tento úkol do jiného seznamu",
-      "reminder": "Manage reminders of this task"
+      "reminder": "Manage reminders of this task",
+      "description": "Toggle editing of the task description"
     },
     "list": {
       "title": "Zobrazení seznamů",

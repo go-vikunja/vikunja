@@ -1,5 +1,5 @@
-import type { IPasswordUpdate } from '@/models/passwordUpdate'
 import AbstractService from './abstractService'
+import type {IPasswordUpdate} from '@/modelTypes/IPasswordUpdate'
 
 export default class PasswordUpdateService extends AbstractService<IPasswordUpdate> {
 	constructor() {

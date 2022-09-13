@@ -1,5 +1,4 @@
-
-import type { IUserSettings } from '@/models/userSettings'
+import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import AbstractService from './abstractService'
 
 export default class UserSettingsService extends AbstractService<IUserSettings> {

@@ -196,13 +196,14 @@ import {useI18n} from 'vue-i18n'
 
 import {RIGHTS} from '@/constants/rights'
 import LinkShareModel from '@/models/linkShare'
+
 import type {ILinkShare} from '@/modelTypes/ILinkShare'
+import type {IList} from '@/modelTypes/IList'
 
 import LinkShareService from '@/services/linkShare'
 
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {success} from '@/message'
-import type {IList} from '@/modelTypes/IList'
 import type {ListView} from '@/types/ListView'
 import {LIST_VIEWS} from '@/types/ListView'
 

@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
-import UserModel, { type IUser } from '../models/user'
+import UserModel from '@/models/user'
+import type {IUser} from '@/modelTypes/IUser'
 import {formatISO} from 'date-fns'
 
 export default class UserService extends AbstractService<IUser> {

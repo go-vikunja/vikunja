@@ -1,6 +1,7 @@
 import AbstractService from './abstractService'
-import BucketModel, { type IBucket } from '../models/bucket'
+import BucketModel from '../models/bucket'
 import TaskService from '@/services/task'
+import type { IBucket } from '@/modelTypes/IBucket'
 
 export default class BucketService extends AbstractService<IBucket> {
 	constructor() {
@@ -12,7 +13,7 @@ export default class BucketService extends AbstractService<IBucket> {
 		})
 	}
 
-	modelFactory(data) {
+	modelFactory(data: Partial<IBucket>) {
 		return new BucketModel(data)
 	}
 

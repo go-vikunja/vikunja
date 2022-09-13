@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
-import LabelTask, {type ILabelTask} from '@/models/labelTask'
+import LabelTask from '@/models/labelTask'
+import type {ILabelTask} from '@/modelTypes/ILabelTask'
 
 export default class LabelTaskService extends AbstractService<ILabelTask> {
 	constructor() {

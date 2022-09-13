@@ -20,12 +20,12 @@
 			:is-edit-enabled="canWrite"
 			:upload-callback="attachmentUpload"
 			:upload-enabled="true"
-			@change="save"
 			:placeholder="$t('task.description.placeholder')"
 			:empty-text="$t('task.description.empty')"
 			:show-save="true"
 			edit-shortcut="e"
 			v-model="task.description"
+			@update:model-value="save"
 		/>
 	</div>
 </template>
@@ -36,7 +36,7 @@ import {useStore} from '@/store'
 
 import Editor from '@/components/input/AsyncEditor'
 
-import type { ITask } from '@/models/task'
+import type {ITask} from '@/modelTypes/ITask'
 
 
 const props = defineProps({

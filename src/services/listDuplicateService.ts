@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
-import listDuplicateModel, {type IListDuplicate} from '../models/listDuplicateModel'
+import listDuplicateModel from '@/models/listDuplicateModel'
+import type {IListDuplicate} from '@/modelTypes/IListDuplicate'
 
 export default class ListDuplicateService extends AbstractService<IListDuplicate> {
 	constructor() {

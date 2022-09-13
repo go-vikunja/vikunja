@@ -36,8 +36,8 @@
 
 		<strong>{{ $t('task.attributes.reminders') }}</strong>
 		<reminders
-			@change="editTaskSubmit()"
 			v-model="taskEditTask.reminderDates"
+			@update:model-value="editTaskSubmit()"
 		/>
 
 		<div class="field">
@@ -83,7 +83,8 @@ import {useI18n} from 'vue-i18n'
 import Editor from '@/components/input/AsyncEditor'
 
 import TaskService from '@/services/task'
-import TaskModel, { type ITask } from '@/models/task'
+import TaskModel from '@/models/task'
+import type {ITask} from '@/modelTypes/ITask'
 import EditLabels from './partials/editLabels.vue'
 import Reminders from './partials/reminders.vue'
 import ColorPicker from '../input/colorPicker.vue'

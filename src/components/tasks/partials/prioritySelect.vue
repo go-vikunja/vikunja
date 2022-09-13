@@ -19,19 +19,19 @@
 import {ref, watch} from 'vue'
 import {PRIORITIES} from '@/constants/priorities'
 
-const priority = ref(0)
-
 const props = defineProps({
 	modelValue: {
-		default: 0,
 		type: Number,
+		default: 0,
 	},
 	disabled: {
 		default: false,
 	},
 })
 
-const emit = defineEmits(['update:modelValue', 'change'])
+const emit = defineEmits(['update:modelValue'])
+
+const priority = ref(0)
 
 // FIXME: store value outside
 // Set the priority to the :value every time it changes from the outside
@@ -45,6 +45,5 @@ watch(
 
 function updateData() {
 	emit('update:modelValue', priority.value)
-	emit('change')
 }
 </script>

@@ -11,7 +11,7 @@ import type {ISubscription} from '@/modelTypes/ISubscription'
 
 import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
 
-export default class ListModel extends AbstractModel implements IList {
+export default class ListModel extends AbstractModel<IList> implements IList {
 	id = 0
 	title = ''
 	description = ''
@@ -30,7 +30,7 @@ export default class ListModel extends AbstractModel implements IList {
 	created: Date = null
 	updated: Date = null
 
-	constructor(data: Partial<IList>) {
+	constructor(data: Partial<IList> = {}) {
 		super()
 		this.assignData(data)
 

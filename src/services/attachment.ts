@@ -1,8 +1,12 @@
-import AbstractService from './abstractService'
-import AttachmentModel, { type IAttachment } from '../models/attachment'
 import {formatISO} from 'date-fns'
+
+import AbstractService from './abstractService'
+import AttachmentModel from '../models/attachment'
+
+import type { IAttachment } from '@/modelTypes/IAttachment'
+import type { IFile } from '@/modelTypes/IFile'
+
 import {downloadBlob} from '@/helpers/downloadBlob'
-import type { IFile } from '@/models/file'
 
 export default class AttachmentService extends AbstractService<AttachmentModel> {
 	constructor() {
@@ -22,7 +26,7 @@ export default class AttachmentService extends AbstractService<AttachmentModel> 
 		return false
 	}
 
-	modelFactory(data) {
+	modelFactory(data: Partial<IAttachment>) {
 		return new AttachmentModel(data)
 	}
 

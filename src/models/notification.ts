@@ -8,7 +8,7 @@ import TeamModel from '@/models/team'
 
 import {NOTIFICATION_NAMES, type INotification} from '@/modelTypes/INotification'
 
-export default class NotificationModel extends AbstractModel implements INotification {
+export default class NotificationModel extends AbstractModel<INotification> implements INotification {
 	id = 0
 	name = ''
 	notification: INotification['notification'] = null

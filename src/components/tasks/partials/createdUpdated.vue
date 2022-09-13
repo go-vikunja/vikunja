@@ -28,7 +28,7 @@
 
 <script lang="ts" setup>
 import {computed, toRefs, type PropType} from 'vue'
-import type { ITask } from '@/models/task'
+import type {ITask} from '@/modelTypes/ITask'
 import {formatISO, formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 
 const props = defineProps({

@@ -1,6 +1,7 @@
 import AbstractService from '@/services/abstractService'
 import {formatISO} from 'date-fns'
-import NotificationModel, { type INotification } from '@/models/notification'
+import NotificationModel from '@/models/notification'
+import type {INotification} from '@/modelTypes/INotification'
 
 export default class NotificationService extends AbstractService<INotification> {
 	constructor() {

@@ -2,7 +2,7 @@ import AbstractModel from './abstractModel'
 
 import type {IEmailUpdate} from '@/modelTypes/IEmailUpdate'
 
-export default class EmailUpdateModel extends AbstractModel implements IEmailUpdate {
+export default class EmailUpdateModel extends AbstractModel<IEmailUpdate> implements IEmailUpdate {
 	newEmail = ''
 	password = ''
 

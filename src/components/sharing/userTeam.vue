@@ -143,22 +143,29 @@ import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import UserNamespaceService from '@/services/userNamespace'
-import UserNamespaceModel, { type IUserNamespace } from '@/models/userNamespace'
+import UserNamespaceModel from '@/models/userNamespace'
+import type {IUserNamespace} from '@/modelTypes/IUserNamespace'
 
 import UserListService from '@/services/userList'
-import UserListModel, { type IUserList } from '@/models/userList'
+import UserListModel from '@/models/userList'
+import type {IUserList} from '@/modelTypes/IUserList'
 
 import UserService from '@/services/user'
-import UserModel, { type IUser } from '@/models/user'
+import UserModel from '@/models/user'
+import type {IUser} from '@/modelTypes/IUser'
 
 import TeamNamespaceService from '@/services/teamNamespace'
-import TeamNamespaceModel, { type ITeamNamespace } from '@/models/teamNamespace'
+import TeamNamespaceModel from '@/models/teamNamespace'
+import type { ITeamNamespace } from '@/modelTypes/ITeamNamespace'
 
 import TeamListService from '@/services/teamList'
-import TeamListModel, { type ITeamList } from '@/models/teamList'
+import TeamListModel from '@/models/teamList'
+import type { ITeamList } from '@/modelTypes/ITeamList'
 
 import TeamService from '@/services/team'
-import TeamModel, { type ITeam } from '@/models/team'
+import TeamModel from '@/models/team'
+import type {ITeam} from '@/modelTypes/ITeam'
+
 
 import {RIGHTS} from '@/constants/rights'
 import Multiselect from '@/components/input/multiselect.vue'

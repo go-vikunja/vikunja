@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
-import TeamModel, { type ITeam } from '../models/team'
+import TeamModel from '@/models/team'
+import type { ITeam } from '@/modelTypes/ITeam'
 import {formatISO} from 'date-fns'
 
 export default class TeamService extends AbstractService<ITeam> {

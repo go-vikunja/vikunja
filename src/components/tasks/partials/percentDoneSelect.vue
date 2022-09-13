@@ -32,13 +32,12 @@ const props = defineProps({
 	},
 })
 
-const emit = defineEmits(['update:modelValue', 'change'])
+const emit = defineEmits(['update:modelValue'])
 
 const percentDone = computed({
 	get: () => props.modelValue,
 	set(percentDone) {
 		emit('update:modelValue', percentDone)
-		emit('change')
 	},
 })
 </script>

@@ -4,7 +4,7 @@ import AbstractModel from './abstractModel'
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import type {IList} from '@/modelTypes/IList'
 
-export default class UserSettingsModel extends AbstractModel implements IUserSettings {
+export default class UserSettingsModel extends AbstractModel<IUserSettings> implements IUserSettings {
 	name = ''
 	emailRemindersEnabled = true
 	discoverableByName = false

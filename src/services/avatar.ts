@@ -1,5 +1,6 @@
 import AbstractService from './abstractService'
-import AvatarModel, { type IAvatar } from '../models/avatar'
+import AvatarModel from '@/models/avatar'
+import type { IAvatar } from '@/modelTypes/IAvatar'
 
 export default class AvatarService extends AbstractService<IAvatar> {
 	constructor() {
@@ -10,7 +11,7 @@ export default class AvatarService extends AbstractService<IAvatar> {
 		})
 	}
 
-	modelFactory(data) {
+	modelFactory(data: Partial<IAvatar>) {
 		return new AvatarModel(data)
 	}
 

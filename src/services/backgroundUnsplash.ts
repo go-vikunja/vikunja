@@ -1,6 +1,7 @@
 import AbstractService from './abstractService'
-import BackgroundImageModel, { type IBackgroundImage } from '../models/backgroundImage'
+import BackgroundImageModel from '../models/backgroundImage'
 import ListModel from '@/models/list'
+import type { IBackgroundImage } from '@/modelTypes/IBackgroundImage'
 
 export default class BackgroundUnsplashService extends AbstractService<IBackgroundImage> {
 	constructor() {
@@ -10,7 +11,7 @@ export default class BackgroundUnsplashService extends AbstractService<IBackgrou
 		})
 	}
 
-	modelFactory(data) {
+	modelFactory(data: Partial<IBackgroundImage>) {
 		return new BackgroundImageModel(data)
 	}
 

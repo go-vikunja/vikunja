@@ -870,7 +870,8 @@
       "related": "Modifier les tâches connexes de cette tâche",
       "color": "Changer la couleur de cette tâche",
       "move": "Déplacer cette tâche dans une autre liste",
-      "reminder": "Manage reminders of this task"
+      "reminder": "Manage reminders of this task",
+      "description": "Toggle editing of the task description"
     },
     "list": {
       "title": "Vues en liste",
