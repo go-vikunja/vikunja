@@ -146,10 +146,10 @@
 						<div class="select">
 							<select v-model="selectedView[s.id]">
 								<option
-									v-for="v in availableViews"
-									:value="v"
-									:key="v">
-									{{ $t('list.' + v + '.title') }}
+									v-for="(v, k) in availableViews"
+									:value="k"
+									:key="k">
+									{{ v }}
 								</option>
 							</select>
 						</div>
@@ -228,7 +228,12 @@ type SelectedViewMapper = Record<IList['id'], ListView>
 
 const selectedView = ref<SelectedViewMapper>({})
 
-const availableViews = computed(() => Object.values(LIST_VIEWS))
+const availableViews = computed<Record<ListView, string>>(() => ({
+	list: t('list.list.title'),
+	gantt: t('list.gantt.title'),
+	table: t('list.table.title'),
+	kanban: t('list.kanban.title'),
+}))
 
 const copy = useCopyToClipboard()
 watch(
