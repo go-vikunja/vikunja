@@ -378,9 +378,8 @@
 							@click="setFieldActive('color')"
 							variant="secondary"
 							icon="fill-drip"
+							:icon-color="color"
 							v-shortcut="'c'"
-							:class="{'has-light-text': color !== TASK_DEFAULT_COLOR && !colorIsDark(color)}"
-							:style="{'background-color': color !== TASK_DEFAULT_COLOR ? color : false}"
 						>
 							{{ $t('task.detail.actions.color') }}
 						</x-button>
@@ -600,9 +599,13 @@ export default defineComponent({
 			return this.$route.name.includes('kanban')
 		},
 		color() {
-			return this.task.getHexColor
+			const color = this.task.getHexColor
 				? this.task.getHexColor()
-				: TASK_DEFAULT_COLOR
+				: false
+			
+			return color === TASK_DEFAULT_COLOR
+				? ''
+				: color
 		},
 	},
 	methods: {
