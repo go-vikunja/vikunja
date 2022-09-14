@@ -146,10 +146,10 @@
 						<div class="select">
 							<select v-model="selectedView[s.id]">
 								<option
-									v-for="(v, k) in availableViews"
-									:value="k"
-									:key="k">
-									{{ v }}
+									v-for="(title, key) in availableViews"
+									:value="key"
+									:key="key">
+									{{ title }}
 								</option>
 							</select>
 						</div>
