@@ -111,7 +111,7 @@
 						</div>
 					</td>
 					<td class="type">
-						<p class="mb-2" v-if="s.name !== ''">
+						<p class="mb-2 is-italic" v-if="s.name !== ''">
 							{{ s.name }}
 						</p>
 
