@@ -21,8 +21,12 @@ import UserModel from './user'
 import AttachmentModel from './attachment'
 import SubscriptionModel from './subscription'
 
-const SUPPORTS_TRIGGERED_NOTIFICATION = 'Notification' in window && 'showTrigger' in Notification.prototype
 export const TASK_DEFAULT_COLOR = '#1973ff'
+
+const SUPPORTS_TRIGGERED_NOTIFICATION = 'Notification' in window && 'showTrigger' in Notification.prototype
+if (!SUPPORTS_TRIGGERED_NOTIFICATION) {
+	console.debug('This browser does not support triggered notifications')
+}
 
 export function	getHexColor(hexColor: string) {
 	if (hexColor === '' || hexColor === '#') {
@@ -176,7 +180,6 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 
 	async cancelScheduledNotifications() {
 		if (!SUPPORTS_TRIGGERED_NOTIFICATION) {
-			console.debug('This browser does not support triggered notifications')
 			return
 		}
 
@@ -211,7 +214,6 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		}
 
 		if (!SUPPORTS_TRIGGERED_NOTIFICATION) {
-			console.debug('This browser does not support triggered notifications')
 			return
 		}
 
