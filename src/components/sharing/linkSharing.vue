@@ -79,7 +79,6 @@
 			>
 				<thead>
 				<tr>
-					<th>{{ $t('list.share.attributes.link') }}</th>
 					<th></th>
 					<th>{{ $t('list.share.links.view') }}</th>
 					<th>{{ $t('list.share.attributes.delete') }}</th>
@@ -88,29 +87,6 @@
 				<tbody>
 				<tr :key="s.id" v-for="s in linkShares">
 					<td>
-						<div class="field has-addons no-input-mobile">
-							<div class="control">
-								<input
-									:value="getShareLink(s.hash, selectedView[s.id])"
-									class="input"
-									readonly
-									type="text"
-								/>
-							</div>
-							<div class="control">
-								<x-button
-									@click="copy(getShareLink(s.hash, selectedView[s.id]))"
-									:shadow="false"
-									v-tooltip="$t('misc.copy')"
-								>
-									<span class="icon">
-										<icon icon="paste"/>
-									</span>
-								</x-button>
-							</div>
-						</div>
-					</td>
-					<td class="type">
 						<p class="mb-2 is-italic" v-if="s.name !== ''">
 							{{ s.name }}
 						</p>
@@ -121,7 +97,7 @@
 							</i18n-t>
 						</p>
 
-						<p class="rights-item">
+						<p class="mb-2">
 							<template v-if="s.right === RIGHTS.ADMIN">
 								<span class="icon is-small">
 									<icon icon="lock"/>
@@ -141,6 +117,28 @@
 								{{ $t('list.share.right.read') }}
 							</template>
 						</p>
+						
+						<div class="field has-addons no-input-mobile">
+							<div class="control">
+								<input
+										:value="getShareLink(s.hash, selectedView[s.id])"
+										class="input"
+										readonly
+										type="text"
+								/>
+							</div>
+							<div class="control">
+								<x-button
+										@click="copy(getShareLink(s.hash, selectedView[s.id]))"
+										:shadow="false"
+										v-tooltip="$t('misc.copy')"
+								>
+									<span class="icon">
+										<icon icon="paste"/>
+									</span>
+								</x-button>
+							</div>
+						</div>
 					</td>
 					<td>
 						<div class="select">
@@ -297,10 +295,6 @@ function getShareLink(hash: string, view: ListView = LIST_VIEWS.LIST) {
 // FIXME: I think this is not needed
 .sharables-list:not(.card-content) {
 	overflow-y: auto
-}
-
-.rights-item {
-	white-space: nowrap;
 }
 
 @include modal-transition();
