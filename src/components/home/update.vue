@@ -1,7 +1,7 @@
 <template>
 	<div class="update-notification" v-if="updateAvailable">
 		<p>{{ $t('update.available') }}</p>
-		<x-button @click="refreshApp()" :shadow="false">
+		<x-button @click="refreshApp()" :shadow="false" class="has-no-text-wrap">
 			{{ $t('update.do') }}
 		</x-button>
 	</div>
@@ -43,24 +43,19 @@ function refreshApp() {
 
 <style lang="scss" scoped>
 .update-notification {
-	margin: .5rem;
 	display: flex;
 	align-items: center;
 	background: $warning;
-	padding: 0 .25rem;
+	padding: .5rem;
 	border-radius: $radius;
 	font-size: .9rem;
 	color: var(--grey-900);
 	justify-content: space-between;
 
-	@media screen and (max-width: $desktop) {
-		position: fixed;
-		bottom: 1rem;
-		margin: 0;
-		width: 450px;
-		left: calc(50vw - 225px);
-		padding: .5rem;
-	}
+	position: fixed;
+	bottom: 1rem;
+	width: 450px;
+	left: calc(50vw - 225px);
 
 	@media screen and (max-width: $tablet) {
 		position: fixed;
