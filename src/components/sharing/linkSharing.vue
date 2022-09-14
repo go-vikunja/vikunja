@@ -79,30 +79,59 @@
 			>
 				<thead>
 				<tr>
-					<th>{{ $t('list.share.attributes.link') }}</th>
-					<th>{{ $t('list.share.attributes.name') }}</th>
-					<th>{{ $t('list.share.attributes.sharedBy') }}</th>
-					<th>{{ $t('list.share.attributes.right') }}</th>
+					<th></th>
+					<th>{{ $t('list.share.links.view') }}</th>
 					<th>{{ $t('list.share.attributes.delete') }}</th>
 				</tr>
 				</thead>
 				<tbody>
 				<tr :key="s.id" v-for="s in linkShares">
 					<td>
+						<p class="mb-2 is-italic" v-if="s.name !== ''">
+							{{ s.name }}
+						</p>
+
+						<p class="mb-2">
+							<i18n-t keypath="list.share.links.sharedBy">
+								<strong>{{ s.sharedBy.getDisplayName() }}</strong>
+							</i18n-t>
+						</p>
+
+						<p class="mb-2">
+							<template v-if="s.right === RIGHTS.ADMIN">
+								<span class="icon is-small">
+									<icon icon="lock"/>
+								</span>&nbsp;
+								{{ $t('list.share.right.admin') }}
+							</template>
+							<template v-else-if="s.right === RIGHTS.READ_WRITE">
+								<span class="icon is-small">
+									<icon icon="pen"/>
+								</span>&nbsp;
+								{{ $t('list.share.right.readWrite') }}
+							</template>
+							<template v-else>
+								<span class="icon is-small">
+									<icon icon="users"/>
+								</span>&nbsp;
+								{{ $t('list.share.right.read') }}
+							</template>
+						</p>
+						
 						<div class="field has-addons no-input-mobile">
 							<div class="control">
 								<input
-									:value="getShareLink(s.hash)"
-									class="input"
-									readonly
-									type="text"
+										:value="getShareLink(s.hash, selectedView[s.id])"
+										class="input"
+										readonly
+										type="text"
 								/>
 							</div>
 							<div class="control">
 								<x-button
-									@click="copy(getShareLink(s.hash))"
-									:shadow="false"
-									v-tooltip="$t('misc.copy')"
+										@click="copy(getShareLink(s.hash, selectedView[s.id]))"
+										:shadow="false"
+										v-tooltip="$t('misc.copy')"
 								>
 									<span class="icon">
 										<icon icon="paste"/>
@@ -112,33 +141,16 @@
 						</div>
 					</td>
 					<td>
-						<template v-if="s.name !== ''">
-							{{ s.name }}
-						</template>
-						<i v-else>{{ $t('list.share.links.noName') }}</i>
-					</td>
-					<td>
-						{{ s.sharedBy.getDisplayName() }}
-					</td>
-					<td class="type">
-						<template v-if="s.right === RIGHTS.ADMIN">
-							<span class="icon is-small">
-								<icon icon="lock"/>
-							</span>&nbsp;
-							{{ $t('list.share.right.admin') }}
-						</template>
-						<template v-else-if="s.right === RIGHTS.READ_WRITE">
-							<span class="icon is-small">
-								<icon icon="pen"/>
-							</span>&nbsp;
-							{{ $t('list.share.right.readWrite') }}
-						</template>
-						<template v-else>
-							<span class="icon is-small">
-								<icon icon="users"/>
-							</span>&nbsp;
-							{{ $t('list.share.right.read') }}
-						</template>
+						<div class="select">
+							<select v-model="selectedView[s.id]">
+								<option
+									v-for="(title, key) in availableViews"
+									:value="key"
+									:key="key">
+									{{ title }}
+								</option>
+							</select>
+						</div>
 					</td>
 					<td class="actions">
 						<x-button
@@ -166,7 +178,7 @@
 				<template #header>
 					<span>{{ $t('list.share.links.remove') }}</span>
 				</template>
-				
+
 				<template #text>
 					<p>{{ $t('list.share.links.removeText') }}</p>
 				</template>
@@ -190,6 +202,8 @@ import LinkShareService from '@/services/linkShare'
 
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {success} from '@/message'
+import type {ListView} from '@/types/ListView'
+import {LIST_VIEWS} from '@/types/ListView'
 
 const props = defineProps({
 	listId: {
@@ -209,6 +223,17 @@ const showDeleteModal = ref(false)
 const linkIdToDelete = ref(0)
 const showNewForm = ref(false)
 
+type SelectedViewMapper = Record<IList['id'], ListView>
+
+const selectedView = ref<SelectedViewMapper>({})
+
+const availableViews = computed<Record<ListView, string>>(() => ({
+	list: t('list.list.title'),
+	gantt: t('list.gantt.title'),
+	table: t('list.table.title'),
+	kanban: t('list.kanban.title'),
+}))
+
 const copy = useCopyToClipboard()
 watch(
 	() => props.listId,
@@ -225,7 +250,11 @@ async function load(listId: IList['id']) {
 		return
 	}
 
-	linkShares.value = await linkShareService.getAll({listId})
+	const links = await linkShareService.getAll({listId})
+	links.forEach((l: ILinkShare) => {
+		selectedView.value[l.id] = 'list'
+	})
+	linkShares.value = links
 }
 
 async function add(listId: IList['id']) {
@@ -257,15 +286,15 @@ async function remove(listId: IList['id']) {
 	}
 }
 
-function getShareLink(hash: string) {
-	return frontendUrl.value + 'share/' + hash + '/auth'
+function getShareLink(hash: string, view: ListView = LIST_VIEWS.LIST) {
+	return frontendUrl.value + 'share/' + hash + '/auth?view=' + view
 }
 </script>
 
 <style lang="scss" scoped>
 // FIXME: I think this is not needed
 .sharables-list:not(.card-content) {
-  overflow-y: auto
+	overflow-y: auto
 }
 
 @include modal-transition();
