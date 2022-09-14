@@ -73,7 +73,7 @@
     "@vue/eslint-config-typescript": "11.0.1",
     "@vue/test-utils": "2.0.2",
     "@vue/tsconfig": "0.1.3",
-    "autoprefixer": "10.4.10",
+    "autoprefixer": "10.4.11",
     "browserslist": "4.21.3",
     "caniuse-lite": "1.0.30001397",
     "cypress": "10.8.0",
