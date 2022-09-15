@@ -95,7 +95,7 @@ const props = defineProps({
 const router = useRouter()
 const store = useStore()
 
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 
 const {list, save: saveList, isLoading} = useList(props.listId)
 

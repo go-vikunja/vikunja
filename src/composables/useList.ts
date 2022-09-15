@@ -11,7 +11,7 @@ export function useList(listId: MaybeRef<ListModel['id']>) {
 	const listService = shallowReactive(new ListService())
 	const {loading: isLoading} = toRefs(listService)
 	const list : ListModel = reactive(new ListModel({}))
-	const {t} = useI18n()
+	const {t} = useI18n({useScope: 'global'})
 
 	watch(
 		() => unref(listId),
