@@ -227,7 +227,7 @@ const authStore : Module<AuthState, RootStoreState> =  {
 				commit('info', info)
 				commit('lastUserRefresh')
 
-				if (typeof info.settings.language === 'undefined' || info.settings.language === '') {
+				if (info.type === AUTH_TYPES.USER && (typeof info.settings.language === 'undefined' || info.settings.language === '')) {
 					// save current language
 					await dispatch('saveUserSettings', {
 						settings: {
