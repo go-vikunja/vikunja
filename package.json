@@ -11,7 +11,7 @@
     "build:dev": "vite build -m development --outDir dist-dev/",
     "lint": "eslint --ignore-pattern '*.test.*' ./src --ext .vue,.js,.ts",
     "cypress:open": "cypress open",
-    "test:unit": "vitest",
+    "test:unit": "vitest --run",
     "test:unit-watch": "vitest watch",
     "test:frontend": "cypress run",
     "typecheck": "vue-tsc --noEmit && vue-tsc --noEmit -p tsconfig.vitest.json --composite false",

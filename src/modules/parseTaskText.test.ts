@@ -1,7 +1,7 @@
 import {beforeEach, afterEach, describe, it, expect, vi} from 'vitest'
 
 import {parseTaskText, PrefixMode} from './parseTaskText'
-import {getDateFromText, getDateFromTextIn} from '../helpers/time/parseDate'
+import {getDateFromText, getDateFromTextIn, parseDate} from '../helpers/time/parseDate'
 import {calculateDayInterval} from '../helpers/time/calculateDayInterval'
 import {PRIORITIES} from '@/constants/priorities'
 
@@ -359,7 +359,7 @@ describe('Parse Task Text', () => {
 		it('should not recognize dates in urls', () => {
 			const text = 'https://some-url.org/blog/2019/1/233526-some-more-text'
 			const result = parseTaskText(text)
-			
+
 			expect(result.text).toBe(text)
 			expect(result.date).toBeNull()
 		})
@@ -483,6 +483,15 @@ describe('Parse Task Text', () => {
 			now.setMinutes(0)
 			now.setSeconds(0)
 
+			beforeEach(() => {
+				vi.useFakeTimers()
+				vi.setSystemTime(now)
+			})
+
+			afterEach(() => {
+				vi.useRealTimers()
+			})
+
 			const cases = {
 				'Lorem Ipsum in 1 hour': '2021-6-24 13:0',
 				'in 2 hours': '2021-6-24 14:0',
@@ -493,11 +502,18 @@ describe('Parse Task Text', () => {
 				'in 4 weeks': '2021-7-22 12:0',
 				'in 1 month': '2021-7-24 12:0',
 				'in 3 months': '2021-9-24 12:0',
+				'Something in 5 days at 10:00': '2021-6-29 10:0',
+				'Something 17th at 10:00': '2021-7-17 10:0',
+				'Something sep 17 at 10:00': '2021-9-17 10:0',
+				'Something sep 17th at 10:00': '2021-9-17 10:0',
+				'Something at 10:00 in 5 days': '2021-6-29 10:0',
+				'Something at 10:00 17th': '2021-7-17 10:0',
+				'Something at 10:00 sep 17th': '2021-9-17 10:0',
 			}
 
 			for (const c in cases) {
 				it(`should parse '${c}' as '${cases[c]}'`, () => {
-					const {date} = getDateFromTextIn(c, now)
+					const {date} = parseDate(c, now)
 					if (date === null && cases[c] === null) {
 						expect(date).toBeNull()
 						return

@@ -12,7 +12,9 @@ interface dateFoundResult {
 	date: Date | null,
 }
 
-export const parseDate = (text: string): dateParseResult => {
+const monthsRegexGroup = '(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)'
+
+export const parseDate = (text: string, now: Date = new Date()): dateParseResult => {
 	const lowerText: string = text.toLowerCase()
 
 	if (lowerText.includes('today')) {
@@ -63,38 +65,43 @@ export const parseDate = (text: string): dateParseResult => {
 
 	parsed = getDayFromText(text)
 	if (parsed.date !== null) {
+		const month = getMonthFromText(text, parsed.date)
+		return addTimeToDate(text, month.date, parsed.foundText)
+	}
+
+	parsed = getDateFromTextIn(text, now)
+	if (parsed.date !== null) {
 		return addTimeToDate(text, parsed.date, parsed.foundText)
 	}
 
-	parsed = getDateFromTextIn(text)
-	if (parsed.date !== null) {
+	parsed = getDateFromText(text)
+
+	if (parsed.date === null) {
 		return {
 			newText: replaceAll(text, parsed.foundText, ''),
 			date: parsed.date,
 		}
 	}
 
-	parsed = getDateFromText(text)
-
-	return {
-		newText: replaceAll(text, parsed.foundText, ''),
-		date: parsed.date,
-	}
+	return addTimeToDate(text, parsed.date, parsed.foundText)
 }
 
-const addTimeToDate = (text: string, date: Date, match: string | null): dateParseResult => {
-	if (match === null) {
+const addTimeToDate = (text: string, date: Date, previousMatch: string | null): dateParseResult => {
+	previousMatch = previousMatch?.trim() || ''
+	text = replaceAll(text, previousMatch, '')
+	if (previousMatch === null) {
 		return {
 			newText: text,
 			date: null,
 		}
 	}
 
-	const matcher = new RegExp(`(${match} (at|@) )([0-9][0-9]?(:[0-9][0-9]?)?( ?(a|p)m)?)`, 'ig')
+	const timeRegex = ' (at|@) ([0-9][0-9]?(:[0-9][0-9]?)?( ?(a|p)m)?)'
+	const matcher = new RegExp(timeRegex, 'ig')
 	const results = matcher.exec(text)
 
 	if (results !== null) {
-		const time = results[3]
+		const time = results[2]
 		const parts = time.split(':')
 		let hours = parseInt(parts[0])
 		let minutes = 0
@@ -110,7 +117,7 @@ const addTimeToDate = (text: string, date: Date, match: string | null): datePars
 		date.setSeconds(0)
 	}
 
-	const replace = results !== null ? results[0] : match
+	const replace = results !== null ? results[0] : previousMatch
 	return {
 		newText: replaceAll(text, replace, ''),
 		date: date,
@@ -127,10 +134,10 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 	let containsYear: boolean = true
 	if (result === null) {
 		// 2. Try parsing the date as something like "jan 21" or "21 jan"
-		const monthRegex: RegExp = / ((jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec) [0-9][0-9]?|[0-9][0-9]? (jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec))/ig
+		const monthRegex: RegExp = new RegExp(` (${monthsRegexGroup} [0-9][0-9]?|[0-9][0-9]? ${monthsRegexGroup})`, 'ig')
 		results = monthRegex.exec(text)
-		result = results === null ? null : `${results[0]} ${now.getFullYear()}`
-		foundText = results === null ? '' : results[0]
+		result = results === null ? null : `${results[0]} ${now.getFullYear()}`.trim()
+		foundText = results === null ? '' : results[0].trim()
 		containsYear = false
 
 		if (result === null) {
@@ -309,7 +316,7 @@ const getDayFromText = (text: string) => {
 	while (date < now) {
 		date.setMonth(date.getMonth() + 1)
 	}
-	
+
 	if (date.getDate() !== day) {
 		date.setDate(day)
 	}
@@ -317,6 +324,25 @@ const getDayFromText = (text: string) => {
 	return {
 		foundText: results[0],
 		date: date,
+	}
+}
+
+const getMonthFromText = (text: string, date: Date) => {
+	const matcher = new RegExp(monthsRegexGroup, 'ig')
+	const results = matcher.exec(text)
+
+	if (results === null) {
+		return {
+			newText: text,
+			date,
+		}
+	}
+
+	const fullDate = new Date(`${results[0]} 1 ${(new Date()).getFullYear()}`)
+	date.setMonth(fullDate.getMonth())
+	return {
+		newText: replaceAll(text, results[0], ''),
+		date,
 	}
 }
 
