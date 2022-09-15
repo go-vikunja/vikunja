@@ -17,7 +17,6 @@ defineProps< {
 .color-bubble {
 	display: inline-block;
 	border-radius: 100%;
-	margin-right: 4px;
 	height: 10px;
 	width: 10px;
 	flex-shrink: 0;
