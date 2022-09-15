@@ -537,7 +537,6 @@ export default defineComponent({
 
 			await this.$store.dispatch('kanban/updateBucketTitle', updatedBucketData)
 			this.bucketTitleEditable = false
-			this.$message.success({message: this.$t('list.kanban.bucketTitleSavedSuccess')})
 		},
 
 		updateBuckets(value) {
