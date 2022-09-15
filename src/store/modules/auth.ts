@@ -13,7 +13,7 @@ import {redirectToProvider} from '@/helpers/redirectToProvider'
 import type { RootStoreState, AuthState, Info} from '@/store/types'
 import {AUTH_TYPES} from '@/store/types'
 import type { IUserSettings } from '@/modelTypes/IUserSettings'
-
+import router from '@/router'
 
 function defaultSettings(settings: Partial<IUserSettings>) {
 	if (typeof settings.weekStart === 'undefined' || settings.weekStart === '') {
@@ -240,6 +240,10 @@ const authStore : Module<AuthState, RootStoreState> =  {
 
 				return info
 			} catch (e) {
+				if(e?.response?.data?.message === 'invalid or expired jwt') {
+					dispatch('logout')
+					return
+				}
 				throw new Error('Error while refreshing user info:', {cause: e})
 			}
 		},
@@ -289,6 +293,7 @@ const authStore : Module<AuthState, RootStoreState> =  {
 		logout(ctx) {
 			removeToken()
 			window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
+			router.push({name: 'user.login'})
 			ctx.dispatch('checkAuth')
 		},
 	},
