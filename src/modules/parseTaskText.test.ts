@@ -356,6 +356,13 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ispum v1.1.1')
 			expect(result.date).toBeNull()
 		})
+		it('should not recognize dates in urls', () => {
+			const text = 'https://some-url.org/blog/2019/1/233526-some-more-text'
+			const result = parseTaskText(text)
+			
+			expect(result.text).toBe(text)
+			expect(result.date).toBeNull()
+		})
 
 		describe('Parse weekdays', () => {
 
@@ -432,28 +439,28 @@ describe('Parse Task Text', () => {
 			const cases = {
 				'Lorem Ipsum 06/08/2021 ad': '2021-6-8',
 				'Lorem Ipsum 6/7/21 ad': '2021-6-7',
-				'27/07/2021,': null,
-				'2021/07/06,': '2021-7-6',
-				'2021-07-06': '2021-7-6',
-				'27 jan': '2022-1-27',
-				'27/1': '2022-1-27',
-				'27/01': '2022-1-27',
-				'16/12': '2021-12-16',
-				'01/27': '2022-1-27',
-				'1/27': '2022-1-27',
-				'Jan 27': '2022-1-27',
-				'jan 27': '2022-1-27',
-				'feb 21': '2022-2-21',
-				'mar 21': '2022-3-21',
-				'apr 21': '2022-4-21',
-				'may 21': '2022-5-21',
-				'jun 21': '2022-6-21',
-				'jul 21': '2021-7-21',
-				'aug 21': '2021-8-21',
-				'sep 21': '2021-9-21',
-				'oct 21': '2021-10-21',
-				'nov 21': '2021-11-21',
-				'dec 21': '2021-12-21',
+				'dolor sit amet 27/07/2021,': null,
+				'dolor sit amet 2021/07/06,': '2021-7-6',
+				'dolor sit amet 2021-07-06': '2021-7-6',
+				'dolor sit amet 27 jan': '2022-1-27',
+				'dolor sit amet 27/1': '2022-1-27',
+				'dolor sit amet 27/01': '2022-1-27',
+				'dolor sit amet 16/12': '2021-12-16',
+				'dolor sit amet 01/27': '2022-1-27',
+				'dolor sit amet 1/27': '2022-1-27',
+				'dolor sit amet Jan 27': '2022-1-27',
+				'dolor sit amet jan 27': '2022-1-27',
+				'dolor sit amet feb 21': '2022-2-21',
+				'dolor sit amet mar 21': '2022-3-21',
+				'dolor sit amet apr 21': '2022-4-21',
+				'dolor sit amet may 21': '2022-5-21',
+				'dolor sit amet jun 21': '2022-6-21',
+				'dolor sit amet jul 21': '2021-7-21',
+				'dolor sit amet aug 21': '2021-8-21',
+				'dolor sit amet sep 21': '2021-9-21',
+				'dolor sit amet oct 21': '2021-10-21',
+				'dolor sit amet nov 21': '2021-11-21',
+				'dolor sit amet dec 21': '2021-12-21',
 			}
 
 			for (const c in cases) {

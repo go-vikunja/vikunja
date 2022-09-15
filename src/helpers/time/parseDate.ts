@@ -118,7 +118,7 @@ const addTimeToDate = (text: string, date: Date, match: string | null): datePars
 }
 
 export const getDateFromText = (text: string, now: Date = new Date()) => {
-	const fullDateRegex: RegExp = /([0-9][0-9]?\/[0-9][0-9]?\/[0-9][0-9]([0-9][0-9])?|[0-9][0-9][0-9][0-9]\/[0-9][0-9]?\/[0-9][0-9]?|[0-9][0-9][0-9][0-9]-[0-9][0-9]?-[0-9][0-9]?)/ig
+	const fullDateRegex: RegExp = / ([0-9][0-9]?\/[0-9][0-9]?\/[0-9][0-9]([0-9][0-9])?|[0-9][0-9][0-9][0-9]\/[0-9][0-9]?\/[0-9][0-9]?|[0-9][0-9][0-9][0-9]-[0-9][0-9]?-[0-9][0-9]?)/ig
 
 	// 1. Try parsing the text as a "usual" date, like 2021-06-24 or 06/24/2021
 	let results: string[] | null = fullDateRegex.exec(text)
@@ -127,7 +127,7 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 	let containsYear: boolean = true
 	if (result === null) {
 		// 2. Try parsing the date as something like "jan 21" or "21 jan"
-		const monthRegex: RegExp = /((jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec) [0-9][0-9]?|[0-9][0-9]? (jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec))/ig
+		const monthRegex: RegExp = / ((jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec) [0-9][0-9]?|[0-9][0-9]? (jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec))/ig
 		results = monthRegex.exec(text)
 		result = results === null ? null : `${results[0]} ${now.getFullYear()}`
 		foundText = results === null ? '' : results[0]
@@ -135,7 +135,7 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 
 		if (result === null) {
 			// 3. Try parsing the date as "27/01" or "01/27"
-			const monthNumericRegex: RegExp = /([0-9][0-9]?\/[0-9][0-9]?)/ig
+			const monthNumericRegex: RegExp = / ([0-9][0-9]?\/[0-9][0-9]?)/ig
 			results = monthNumericRegex.exec(text)
 
 			// Put the year before or after the date, depending on what works
