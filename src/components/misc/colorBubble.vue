@@ -6,12 +6,11 @@
 </template>
 
 <script lang="ts" setup>
-defineProps({
-	color: {
-		type: String,
-		required: true,
-	},
-})
+import type { Color } from 'csstype'
+
+defineProps< {
+	color: Color,
+}>()
 </script>
 
 <style scoped>
