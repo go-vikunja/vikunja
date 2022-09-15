@@ -16,6 +16,10 @@
 					{{ currentList.title === '' ? $t('misc.loading') : getListTitle(currentList) }}
 				</h1>
 
+				<BaseButton :to="{name: 'list.info', params: {listId: currentList.id}}" class="info-button">
+					<icon icon="circle-info"/>
+				</BaseButton>
+
 				<list-settings-dropdown v-if="canWriteCurrentList && currentList.id !== -1" :list="currentList"/>
 			</template>
 		</div>
@@ -284,10 +288,21 @@ $hamburger-menu-icon-width: 28px;
 
 	:deep(.dropdown-trigger) {
 		color: var(--grey-400);
-		margin-left: 1rem;
+		margin-left: .5rem;
 		height: 1rem;
 		width: 1rem;
 		cursor: pointer;
 	}
+}
+
+.info-button {
+	text-align: center;
+	height: 1.25rem;
+	line-height: 1.25rem;
+	width: 2rem;
+	margin-top: .25rem;
+	padding: 0 .5rem;
+	color: var(--grey-400);
+	margin-left: .5rem;
 }
 </style>

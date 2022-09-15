@@ -11,16 +11,17 @@ import {
 	faCheckDouble,
 	faChessKnight,
 	faChevronDown,
+	faCircleInfo,
 	faCloudDownloadAlt,
 	faCloudUploadAlt,
 	faCocktail,
 	faCoffee,
 	faCog,
-	faEye,
-	faEyeSlash,
 	faEllipsisH,
 	faEllipsisV,
 	faExclamation,
+	faEye,
+	faEyeSlash,
 	faFillDrip,
 	faFilter,
 	faForward,
@@ -82,6 +83,7 @@ library.add(faCheck)
 library.add(faCheckDouble)
 library.add(faChessKnight)
 library.add(faChevronDown)
+library.add(faCircleInfo)
 library.add(faClock)
 library.add(faCloudDownloadAlt)
 library.add(faCloudUploadAlt)
@@ -89,11 +91,11 @@ library.add(faCocktail)
 library.add(faCoffee)
 library.add(faCog)
 library.add(faComments)
-library.add(faEye)
-library.add(faEyeSlash)
 library.add(faEllipsisH)
 library.add(faEllipsisV)
 library.add(faExclamation)
+library.add(faEye)
+library.add(faEyeSlash)
 library.add(faFillDrip)
 library.add(faFilter)
 library.add(faForward)

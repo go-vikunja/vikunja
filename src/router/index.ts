@@ -35,6 +35,7 @@ import ListList from '../views/list/ListList.vue'
 import ListGantt from '../views/list/ListGantt.vue'
 import ListTable from '../views/list/ListTable.vue'
 import ListKanban from '../views/list/ListKanban.vue'
+const ListInfo = () => import('../views/list/ListInfo.vue')
 
 // List Settings
 import ListSettingEdit from '../views/list/settings/edit.vue'
@@ -335,6 +336,15 @@ const router = createRouter({
 			meta: {
 				showAsModal: true,
 			},
+		},
+		{
+			path: '/lists/:listId/info',
+			name: 'list.info',
+			component: ListInfo,
+			meta: {
+				showAsModal: true,
+			},
+			props: route => ({ listId: Number(route.params.listId as string) }),
 		},
 		{
 			path: '/lists/:listId',
