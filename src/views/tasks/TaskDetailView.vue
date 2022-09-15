@@ -378,6 +378,7 @@
 							@click="setFieldActive('color')"
 							variant="secondary"
 							icon="fill-drip"
+							:icon-color="color"
 							v-shortcut="'c'"
 						>
 							{{ $t('task.detail.actions.color') }}
@@ -429,7 +430,7 @@ import {defineComponent} from 'vue'
 import cloneDeep from 'lodash.clonedeep'
 
 import TaskService from '../../services/task'
-import TaskModel from '@/models/task'
+import TaskModel, {TASK_DEFAULT_COLOR} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 
 import { PRIORITIES as priorites } from '@/constants/priorities'
@@ -461,6 +462,7 @@ import { setTitle } from '@/helpers/setTitle'
 import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
 import {getListTitle} from '@/helpers/getListTitle'
 import type { IList } from '@/modelTypes/IList'
+import {colorIsDark} from '@/helpers/color/colorIsDark'
 
 function scrollIntoView(el) {
 	if (!el) {
@@ -527,6 +529,8 @@ export default defineComponent({
 			showDeleteModal: false,
 			// Used to avoid flashing of empty elements if the task content is not yet loaded.
 			visible: false,
+			
+			TASK_DEFAULT_COLOR,
 
 			activeFields: {
 				assignees: false,
@@ -593,6 +597,15 @@ export default defineComponent({
 		},
 		shouldShowClosePopup() {
 			return this.$route.name.includes('kanban')
+		},
+		color() {
+			const color = this.task.getHexColor
+				? this.task.getHexColor()
+				: false
+			
+			return color === TASK_DEFAULT_COLOR
+				? ''
+				: color
 		},
 	},
 	methods: {
@@ -745,6 +758,8 @@ export default defineComponent({
 			this.task = await this.taskService.update(this.task)
 			this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
 		},
+		
+		colorIsDark,
 	},
 })
 </script>
@@ -932,7 +947,11 @@ $flash-background-duration: 750ms;
     .button {
       width: 100%;
       margin-bottom: .5rem;
-      justify-content: left;
+      justify-content: left; 
+
+      &.has-light-text {
+		color: var(--white);
+      }
     }
   }
 

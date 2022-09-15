@@ -1,12 +1,11 @@
 <template>
 	<div :class="{'is-loading': taskService.loading}" class="task loader-container">
 		<fancycheckbox :disabled="(isArchived || disabled) && !canMarkAsDone" @change="markAsDone" v-model="task.done"/>
-		<span
+		<ColorBubble
 			v-if="showListColor && listColor !== ''"
-			:style="{backgroundColor: listColor }"
-			class="color-bubble"
-		>
-		</span>
+			:color="listColor"
+			class="mr-1"
+		/>
 		<router-link
 			:to="taskDetailRoute"
 			:class="{ 'done': task.done}"
@@ -15,11 +14,17 @@
 				<router-link
 					:to="{ name: 'list.list', params: { listId: task.listId } }"
 					class="task-list"
+					:class="{'mr-2': task.hexColor !== ''}"
 					v-if="showList && $store.getters['lists/getListById'](task.listId) !== null"
 					v-tooltip="$t('task.detail.belongsToList', {list: $store.getters['lists/getListById'](task.listId).title})">
 					{{ $store.getters['lists/getListById'](task.listId).title }}
 				</router-link>
 
+				<ColorBubble
+					v-if="task.hexColor !== ''"
+					:color="task.getHexColor()"
+					class="mr-1"
+				/>
 				<!-- Show any parent tasks to make it clear this task is a sub task of something -->
 				<span class="parent-tasks" v-if="typeof task.relatedTasks.parenttask !== 'undefined'">
 					<template v-for="(pt, i) in task.relatedTasks.parenttask">
@@ -30,7 +35,7 @@
 				{{ task.title }}
 			</span>
 
-			<labels class="labels ml-2 mr-1" :labels="task.labels" v-if="task.labels.length > 0" />
+			<labels class="labels ml-2 mr-1" :labels="task.labels" v-if="task.labels.length > 0"/>
 			<user
 				:avatar-size="27"
 				:is-inline="true"
@@ -111,6 +116,7 @@ import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {playPop} from '@/helpers/playPop'
 import ChecklistSummary from './checklist-summary.vue'
 import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatDate'
+import ColorBubble from '@/components/misc/colorBubble.vue'
 
 export default defineComponent({
 	name: 'singleTaskInList',
@@ -122,6 +128,7 @@ export default defineComponent({
 		}
 	},
 	components: {
+		ColorBubble,
 		BaseButton,
 		ChecklistSummary,
 		DeferTask,
@@ -280,11 +287,6 @@ export default defineComponent({
 		color: var(--grey-400);
 		font-size: .9rem;
 		white-space: nowrap;
-	}
-
-	.color-bubble {
-		height: 10px;
-		flex: 0 0 10px;
 	}
 
 	.avatar {

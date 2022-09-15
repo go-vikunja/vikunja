@@ -56,10 +56,10 @@
 						class="menu-label"
 						v-tooltip="namespaceTitles[nk]"
 					>
-						<span
+						<ColorBubble
 							v-if="n.hexColor !== ''"
-							:style="{ backgroundColor: n.hexColor }"
-							class="color-bubble"
+							:color="n.hexColor"
+							class="mr-1"
 						/>
 						<span class="name">{{ namespaceTitles[nk] }}</span>
 						<div
@@ -114,11 +114,11 @@
 									<span class="icon handle">
 										<icon icon="grip-lines"/>
 									</span>
-									<span
-										:style="{ backgroundColor: l.hexColor }"
-										class="color-bubble"
-										v-if="l.hexColor !== ''">
-									</span>
+									<ColorBubble
+											v-if="l.hexColor !== ''"
+										:color="l.hexColor"
+										class="mr-1"
+									/>
 									<span class="list-menu-title">{{ getListTitle(l) }}</span>
 								</BaseButton>
 								<BaseButton
@@ -158,6 +158,7 @@ import {getListTitle} from '@/helpers/getListTitle'
 import {useEventListener} from '@vueuse/core'
 import type {IList} from '@/modelTypes/IList'
 import type {INamespace} from '@/modelTypes/INamespace'
+import ColorBubble from '@/components/misc/colorBubble.vue'
 
 const drag = ref(false)
 const dragOptions = {

@@ -1,7 +1,12 @@
 <template>
 	<div class="heading">
 		<BaseButton @click="copyUrl"><h1 class="title task-id">{{ textIdentifier }}</h1></BaseButton>
-		<Done class="heading__done" :is-done="task.done" />
+		<Done class="heading__done" :is-done="task.done"/>
+		<ColorBubble
+			v-if="task.hexColor !== ''"
+			:color="task.getHexColor()"
+			class="mt-1 ml-2"
+		/>
 		<h1
 			class="title input"
 			:class="{'disabled': !canWrite}"
@@ -42,6 +47,7 @@ import Done from '@/components/misc/Done.vue'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 
 import type {ITask} from '@/modelTypes/ITask'
+import ColorBubble from '@/components/misc/colorBubble.vue'
 
 const props = defineProps({
 	task: {
@@ -58,10 +64,11 @@ const emit = defineEmits(['update:task'])
 
 const router = useRouter()
 const copy = useCopyToClipboard()
+
 async function copyUrl() {
-	const route = router.resolve({ name: 'task.detail', query: { taskId: props.task.id}})
+	const route = router.resolve({name: 'task.detail', query: {taskId: props.task.id}})
 	const absoluteURL = new URL(route.href, window.location.href).href
-	
+
 	await copy(absoluteURL)
 }
 
@@ -95,8 +102,7 @@ async function save(title: string) {
 		setTimeout(() => {
 			showSavedMessage.value = false
 		}, 2000)
-	}
-	finally {
+	} finally {
 		saving.value = false
 	}
 }
@@ -105,5 +111,10 @@ async function save(title: string) {
 <style lang="scss" scoped>
 .heading__done {
 	margin-left: .5rem;
+}
+
+.color-bubble {
+	height: .75rem;
+	width: .75rem;
 }
 </style>

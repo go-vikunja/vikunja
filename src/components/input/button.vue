@@ -9,9 +9,16 @@
 			}
 		]"
 	>
-		<icon :icon="icon" v-if="showIconOnly"/>
+		<icon 
+			v-if="showIconOnly"
+			:icon="icon"
+			:style="{'color': iconColor !== '' ? iconColor : false}"
+		/>
 		<span class="icon is-small" v-else-if="icon !== ''">
-			<icon :icon="icon"/>
+			<icon 
+				:icon="icon"
+				:style="{'color': iconColor !== '' ? iconColor : false}"
+			/>
 		</span>
 		<slot />
 	</BaseButton>
@@ -40,6 +47,10 @@ const props = defineProps({
 	},
 	icon: {
 		type: [String, Array],
+		default: '',
+	},
+	iconColor: {
+		type: String,
 		default: '',
 	},
 	loading: {
