@@ -1289,18 +1289,39 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 		}
 	}
 
-	// If a task has a start and end date, the end date should keep the difference to the start date when setting them as new
-	if !oldTask.StartDate.IsZero() && !oldTask.EndDate.IsZero() {
-		diff := oldTask.EndDate.Sub(oldTask.StartDate)
-		newTask.StartDate = now.Add(repeatDuration)
-		newTask.EndDate = now.Add(repeatDuration + diff)
-	} else {
-		if !oldTask.StartDate.IsZero() {
+	// We want to preserve intervals among the due, start and end dates.
+	// The due date is used as a reference point for all new dates, so the
+	// behaviour depends on whether the due date is set at all.
+	if oldTask.DueDate.IsZero() {
+		// If a task has no due date, but does have a start and end date, the
+		// end date should keep the difference to the start date when setting
+		// them as new
+		if !oldTask.StartDate.IsZero() && !oldTask.EndDate.IsZero() {
+			diff := oldTask.EndDate.Sub(oldTask.StartDate)
 			newTask.StartDate = now.Add(repeatDuration)
+			newTask.EndDate = now.Add(repeatDuration + diff)
+		} else {
+			if !oldTask.StartDate.IsZero() {
+				newTask.StartDate = now.Add(repeatDuration)
+			}
+
+			if !oldTask.EndDate.IsZero() {
+				newTask.EndDate = now.Add(repeatDuration)
+			}
+		}
+	} else {
+		// If the old task has a start and due date, we set the new start date
+		// to preserve the interval between them.
+		if !oldTask.StartDate.IsZero() {
+			diff := oldTask.DueDate.Sub(oldTask.StartDate)
+			newTask.StartDate = newTask.DueDate.Add(-diff)
 		}
 
+		// If the old task has an end and due date, we set the new end date
+		// to preserve the interval between them.
 		if !oldTask.EndDate.IsZero() {
-			newTask.EndDate = now.Add(repeatDuration)
+			diff := oldTask.DueDate.Sub(oldTask.EndDate)
+			newTask.EndDate = newTask.DueDate.Add(-diff)
 		}
 	}
 
