@@ -172,6 +172,7 @@
     "search": "Schriib, um nachere Liste z'sueche…",
     "searchSelect": "Druck uf Enter um die Liste uuszwähle",
     "shared": "Teilti Liste",
+    "noDescriptionAvailable": "No list description is available.",
     "create": {
       "header": "Neue Liste",
       "titlePlaceholder": "Listetitl da ahgeh…",
@@ -242,7 +243,9 @@
         "remove": "Linkfreigab lösche",
         "removeText": "Bisch du sicher, dass du die Freigab lösche wetsch? Es wird nüme möglich sii, die Liste mit dem Link z'erreiche. Das chann nid rückgängig gmacht werde!",
         "createSuccess": "De Freigabelink isch erfolgriich erstellt wore.",
-        "deleteSuccess": "De g'teilti Link isch erfolgriich g'chüblet wore"
+        "deleteSuccess": "De g'teilti Link isch erfolgriich g'chüblet wore",
+        "view": "Ansicht",
+        "sharedBy": "Von {0} geteilt"
       },
       "userTeam": {
         "typeUser": "Benutzer | Benutzer",
@@ -264,9 +267,6 @@
       },
       "attributes": {
         "link": "Link",
-        "name": "Namä",
-        "sharedBy": "Teilt vo",
-        "right": "Rechts",
         "delete": "Chüble"
       }
     },

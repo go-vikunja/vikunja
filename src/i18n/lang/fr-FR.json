@@ -242,7 +242,9 @@
         "remove": "Retirer un lien de partage",
         "removeText": "Retirer ce partage de lien ? Il ne sera plus possible d’accéder à cette liste avec ce partage de lien. Cette opération ne peut être annulée !",
         "createSuccess": "Partage créé.",
-        "deleteSuccess": "Lien supprimé"
+        "deleteSuccess": "Lien supprimé",
+        "view": "View",
+        "sharedBy": "Shared by {0}"
       },
       "userTeam": {
         "typeUser": "utilisateur·rice | utilisateur·rice·s",
@@ -264,9 +266,6 @@
       },
       "attributes": {
         "link": "Lien",
-        "name": "Nom",
-        "sharedBy": "Partagé par",
-        "right": "Droit",
         "delete": "Supprimer"
       }
     },

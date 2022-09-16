@@ -172,6 +172,7 @@
     "search": "Введи запрос для поиска списка…",
     "searchSelect": "Кликни или нажми Enter для выбора этого списка",
     "shared": "Общие списки",
+    "noDescriptionAvailable": "No list description is available.",
     "create": {
       "header": "New list",
       "titlePlaceholder": "Введи имя списка…",
@@ -242,7 +243,9 @@
         "remove": "Удалить ссылку для обмена",
         "removeText": "Удалить эту ссылку для обмена? Больше не удастся получить доступ к списку через эту ссылку. Это действие отменить нельзя!",
         "createSuccess": "Ссылка создана.",
-        "deleteSuccess": "Ссылка удалена"
+        "deleteSuccess": "Ссылка удалена",
+        "view": "View",
+        "sharedBy": "Shared by {0}"
       },
       "userTeam": {
         "typeUser": "пользователь | пользователи",
@@ -264,9 +267,6 @@
       },
       "attributes": {
         "link": "Ссылка",
-        "name": "Имя",
-        "sharedBy": "Создатель",
-        "right": "Права",
         "delete": "Удалить"
       }
     },

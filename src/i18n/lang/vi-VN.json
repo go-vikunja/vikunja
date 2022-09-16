@@ -172,6 +172,7 @@
     "search": "Gõ để tìm kiếm danh sách…",
     "searchSelect": "Nhấp hoặc nhấn enter để chọn danh sách này",
     "shared": "Đang tham gia",
+    "noDescriptionAvailable": "No list description is available.",
     "create": {
       "header": "Danh sách mới",
       "titlePlaceholder": "Tên danh sách ở đây…",
@@ -242,7 +243,9 @@
         "remove": "Gỡ liên kết chia sẻ",
         "removeText": "Bạn có chắc chắn muốn xóa liên kết chia sẻ này không? Không ai có thể truy cập liên kết này được nữa. Điều này không thể hoàn tác!",
         "createSuccess": "Liên kết chia sẻ đã được tạo thành công.",
-        "deleteSuccess": "Liên kết chia sẽ đã được xóa rồi"
+        "deleteSuccess": "Liên kết chia sẽ đã được xóa rồi",
+        "view": "View",
+        "sharedBy": "Shared by {0}"
       },
       "userTeam": {
         "typeUser": "người dùng | người dùng",
@@ -264,9 +267,6 @@
       },
       "attributes": {
         "link": "Liên kết",
-        "name": "Tên",
-        "sharedBy": "Chia sẻ bởi",
-        "right": "Quyền hạn",
         "delete": "Xóa"
       }
     },

@@ -172,6 +172,7 @@
     "search": "Začni psát pro vyhledání seznamu…",
     "searchSelect": "Klikněte nebo stiskněte Enter pro výběr tohoto seznamu",
     "shared": "Sdílené seznamy",
+    "noDescriptionAvailable": "No list description is available.",
     "create": {
       "header": "Nový seznam",
       "titlePlaceholder": "Název seznamu přijde sem…",
@@ -242,7 +243,9 @@
         "remove": "Odstranit sdílený odkaz",
         "removeText": "Jste si jisti, že chcete odstranit tento sdílený odkaz? K tomuto seznamu již nebude možné přistupovat s tímto sdíleným odkazem. Tuto akci nelze vrátit zpět!",
         "createSuccess": "Sdílený odkaz byl úspěšně vytvořen.",
-        "deleteSuccess": "Sdílený odkaz byl úspěšně smazán"
+        "deleteSuccess": "Sdílený odkaz byl úspěšně smazán",
+        "view": "View",
+        "sharedBy": "Shared by {0}"
       },
       "userTeam": {
         "typeUser": "uživatel | uživatelé",
@@ -264,9 +267,6 @@
       },
       "attributes": {
         "link": "Odkaz",
-        "name": "Název",
-        "sharedBy": "Sdíleno od",
-        "right": "Právo",
         "delete": "Smazat"
       }
     },

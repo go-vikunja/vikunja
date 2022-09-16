@@ -172,6 +172,7 @@
     "search": "Typ om naar een lijst te zoeken…",
     "searchSelect": "Klik of druk op enter om deze lijst te selecteren",
     "shared": "Gedeelde lijsten",
+    "noDescriptionAvailable": "No list description is available.",
     "create": {
       "header": "Nieuwe lijst",
       "titlePlaceholder": "De titel van de lijst komt hier…",
@@ -242,7 +243,9 @@
         "remove": "Remove a link share",
         "removeText": "Are you sure you want to remove this link share? It will no longer be possible to access this list with this link share. This cannot be undone!",
         "createSuccess": "The link share was successfully created.",
-        "deleteSuccess": "The link share was successfully deleted"
+        "deleteSuccess": "The link share was successfully deleted",
+        "view": "View",
+        "sharedBy": "Shared by {0}"
       },
       "userTeam": {
         "typeUser": "gebruiker | gebruikers",
@@ -264,9 +267,6 @@
       },
       "attributes": {
         "link": "Link",
-        "name": "Naam",
-        "sharedBy": "Gedeeld door",
-        "right": "Rechten",
         "delete": "Verwijderen"
       }
     },

@@ -172,6 +172,7 @@
     "search": "Type to search for a list…",
     "searchSelect": "Click or press enter to select this list",
     "shared": "Shared Lists",
+    "noDescriptionAvailable": "No list description is available.",
     "create": {
       "header": "New list",
       "titlePlaceholder": "The list's title goes here…",
@@ -242,7 +243,9 @@
         "remove": "Remove a link share",
         "removeText": "Are you sure you want to remove this link share? It will no longer be possible to access this list with this link share. This cannot be undone!",
         "createSuccess": "The link share was successfully created.",
-        "deleteSuccess": "The link share was successfully deleted"
+        "deleteSuccess": "The link share was successfully deleted",
+        "view": "View",
+        "sharedBy": "Shared by {0}"
       },
       "userTeam": {
         "typeUser": "user | users",
@@ -264,9 +267,6 @@
       },
       "attributes": {
         "link": "Link",
-        "name": "Name",
-        "sharedBy": "Shared by",
-        "right": "Right",
         "delete": "Delete"
       }
     },

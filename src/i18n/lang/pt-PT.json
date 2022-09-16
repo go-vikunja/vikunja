@@ -172,6 +172,7 @@
     "search": "Escreve para pesquisar por uma lista…",
     "searchSelect": "Clica ou pressiona Enter para selecionar esta lista",
     "shared": "Listas Partilhadas",
+    "noDescriptionAvailable": "No list description is available.",
     "create": {
       "header": "Nova lista",
       "titlePlaceholder": "O título da lista será aqui…",
@@ -242,7 +243,9 @@
         "remove": "Remover um link partilhado",
         "removeText": "Tens a certeza que queres remover este link partilhado? Não será mais possível aceder a esta lista utilizando este link partilhado. Isto não pode ser revertido!",
         "createSuccess": "O link partilhado foi criado com sucesso.",
-        "deleteSuccess": "O link partilhado foi eliminado com sucesso"
+        "deleteSuccess": "O link partilhado foi eliminado com sucesso",
+        "view": "View",
+        "sharedBy": "Shared by {0}"
       },
       "userTeam": {
         "typeUser": "utilizador | utilizadores",
@@ -264,9 +267,6 @@
       },
       "attributes": {
         "link": "Link",
-        "name": "Nome",
-        "sharedBy": "Partilhado por",
-        "right": "Permissões",
         "delete": "Eliminar"
       }
     },

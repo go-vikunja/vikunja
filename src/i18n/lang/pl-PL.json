@@ -172,6 +172,7 @@
     "search": "Wpisz, aby wyszukać listę…",
     "searchSelect": "Kliknij lub naciśnij Enter, aby wybrać tę listę",
     "shared": "Współdzielone listy",
+    "noDescriptionAvailable": "No list description is available.",
     "create": {
       "header": "Nowa lista",
       "titlePlaceholder": "Tu wpisz tytuł listy…",
@@ -242,7 +243,9 @@
         "remove": "Usuń link",
         "removeText": "Czy na pewno chcesz usunąć ten link? Dostęp do tej listy z tym linkiem nie będzie już możliwy. Tego nie da się cofnąć!",
         "createSuccess": "Pomyślnie utworzono udostępniony link.",
-        "deleteSuccess": "Udostępniony link został pomyślnie usunięty"
+        "deleteSuccess": "Udostępniony link został pomyślnie usunięty",
+        "view": "View",
+        "sharedBy": "Shared by {0}"
       },
       "userTeam": {
         "typeUser": "użytkownik(a) | użytkownikom",
@@ -264,9 +267,6 @@
       },
       "attributes": {
         "link": "Link",
-        "name": "Nazwa",
-        "sharedBy": "Udostępniony przez",
-        "right": "Uprawnienia",
         "delete": "Usuń"
       }
     },

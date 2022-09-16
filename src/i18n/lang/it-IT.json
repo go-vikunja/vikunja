@@ -172,6 +172,7 @@
     "search": "Digita per cercare una lista…",
     "searchSelect": "Fare clic o premere invio per selezionare questa lista",
     "shared": "Liste Condivise",
+    "noDescriptionAvailable": "No list description is available.",
     "create": {
       "header": "Nuova lista",
       "titlePlaceholder": "Il titolo della lista va qui…",
@@ -242,7 +243,9 @@
         "remove": "Rimuovi un link di condivisione",
         "removeText": "Sei sicuro di voler rimuovere questo link di condivisione? Non sarà più possibile accedere a questa lista con questo link. Non può essere ripristinato!",
         "createSuccess": "Link di condivisione creato.",
-        "deleteSuccess": "Link di condivisione elimitato"
+        "deleteSuccess": "Link di condivisione elimitato",
+        "view": "Mostra",
+        "sharedBy": "Condiviso da {0}"
       },
       "userTeam": {
         "typeUser": "utente | utenti",
@@ -264,9 +267,6 @@
       },
       "attributes": {
         "link": "Link",
-        "name": "Nome",
-        "sharedBy": "Condiviso da",
-        "right": "Permessi",
         "delete": "Elimina"
       }
     },
