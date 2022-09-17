@@ -172,6 +172,7 @@
     "search": "Type to search for a list…",
     "searchSelect": "Click or press enter to select this list",
     "shared": "Shared Lists",
+    "noDescriptionAvailable": "No list description is available.",
     "create": {
       "header": "New list",
       "titlePlaceholder": "The list's title goes here…",

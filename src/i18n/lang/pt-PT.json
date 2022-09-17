@@ -172,7 +172,7 @@
     "search": "Escreve para pesquisar por uma lista…",
     "searchSelect": "Clica ou pressiona Enter para selecionar esta lista",
     "shared": "Listas Partilhadas",
-    "noDescriptionAvailable": "No list description is available.",
+    "noDescriptionAvailable": "Não está disponível nenhuma descrição da lista.",
     "create": {
       "header": "Nova lista",
       "titlePlaceholder": "O título da lista será aqui…",
@@ -244,8 +244,8 @@
         "removeText": "Tens a certeza que queres remover este link partilhado? Não será mais possível aceder a esta lista utilizando este link partilhado. Isto não pode ser revertido!",
         "createSuccess": "O link partilhado foi criado com sucesso.",
         "deleteSuccess": "O link partilhado foi eliminado com sucesso",
-        "view": "View",
-        "sharedBy": "Shared by {0}"
+        "view": "Visualizar",
+        "sharedBy": "Partilhado por {0}"
       },
       "userTeam": {
         "typeUser": "utilizador | utilizadores",
@@ -781,7 +781,7 @@
       "weeks": "Semanas",
       "months": "Meses",
       "years": "Anos",
-      "invalidAmount": "Please enter more than 0."
+      "invalidAmount": "Por favor, insere mais do que 0."
     },
     "quickAddMagic": {
       "hint": "Podes utilizar a Introdução Mágica Rápida",
