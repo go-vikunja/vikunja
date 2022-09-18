@@ -28,7 +28,7 @@
     "@sentry/vue": "7.13.0",
     "@types/is-touch-device": "1.0.0",
     "@types/lodash.clonedeep": "4.5.7",
-    "@types/sortablejs": "1.13.0",
+    "@types/sortablejs": "1.15.0",
     "@vueuse/core": "9.2.0",
     "@vueuse/router": "9.2.0",
     "axios": "0.27.2",
