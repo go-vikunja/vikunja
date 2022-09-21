@@ -35,6 +35,7 @@ import type {INamespace} from '@/modelTypes/INamespace'
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
 import {useNameSpaceSearch} from '@/composables/useNamespaceSearch'
+import {useListStore} from '@/stores/lists'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('list.duplicate.title'))
@@ -53,6 +54,7 @@ function selectNamespace(namespace: INamespace) {
 const route = useRoute()
 const router = useRouter()
 const store = useStore()
+const listStore = useListStore()
 
 const listDuplicateService = shallowReactive(new ListDuplicateService())
 
@@ -66,7 +68,7 @@ async function duplicateList() {
 	const duplicate = await listDuplicateService.create(listDuplicate)
 
 	store.commit('namespaces/addListToNamespace', duplicate.list)
-	store.commit('lists/setList', duplicate.list)
+	listStore.setList(duplicate.list)
 	success({message: t('list.duplicate.success')})
 	router.push({name: 'list.index', params: {listId: duplicate.list.id}})
 }

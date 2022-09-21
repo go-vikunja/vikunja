@@ -15,9 +15,9 @@
 					:to="{ name: 'list.list', params: { listId: task.listId } }"
 					class="task-list"
 					:class="{'mr-2': task.hexColor !== ''}"
-					v-if="showList && $store.getters['lists/getListById'](task.listId) !== null"
-					v-tooltip="$t('task.detail.belongsToList', {list: $store.getters['lists/getListById'](task.listId).title})">
-					{{ $store.getters['lists/getListById'](task.listId).title }}
+					v-if="showList && getListById(task.listId) !== null"
+					v-tooltip="$t('task.detail.belongsToList', {list: getListById(task.listId).title})">
+					{{ getListById(task.listId).title }}
 				</router-link>
 
 				<ColorBubble
@@ -85,9 +85,9 @@
 		<router-link
 			:to="{ name: 'list.list', params: { listId: task.listId } }"
 			class="task-list"
-			v-if="!showList && currentList.id !== task.listId && $store.getters['lists/getListById'](task.listId) !== null"
-			v-tooltip="$t('task.detail.belongsToList', {list: $store.getters['lists/getListById'](task.listId).title})">
-			{{ $store.getters['lists/getListById'](task.listId).title }}
+			v-if="!showList && currentList.id !== task.listId && getListById(task.listId) !== null"
+			v-tooltip="$t('task.detail.belongsToList', {list: getListById(task.listId).title})">
+			{{ getListById(task.listId).title }}
 		</router-link>
 		<BaseButton
 			:class="{'is-favorite': task.isFavorite}"
@@ -102,6 +102,7 @@
 
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
+import {mapState} from 'pinia'
 
 import TaskModel from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
@@ -117,6 +118,7 @@ import {playPop} from '@/helpers/playPop'
 import ChecklistSummary from './checklist-summary.vue'
 import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 import ColorBubble from '@/components/misc/colorBubble.vue'
+import {useListStore} from '@/stores/lists'
 
 export default defineComponent({
 	name: 'singleTaskInList',
@@ -177,8 +179,11 @@ export default defineComponent({
 		document.removeEventListener('click', this.hideDeferDueDatePopup)
 	},
 	computed: {
+		...mapState(useListStore, {
+			getListById: 'getListById',
+		}),
 		listColor() {
-			const list = this.$store.getters['lists/getListById'](this.task.listId)
+			const list = this.getListById(this.task.listId)
 			return list !== null ? list.hexColor : ''
 		},
 		currentList() {

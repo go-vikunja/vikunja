@@ -26,6 +26,7 @@ import type { IList } from '@/modelTypes/IList'
 
 import type { RootStoreState, TaskState } from '@/store/types'
 import { useLabelStore } from '@/stores/labels'
+import { useListStore } from '@/stores/lists'
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
 function findPropertyByValue(object, key, value) {
@@ -292,7 +293,7 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 			return task
 		},
 
-		findListId({ rootGetters }, { list: listName, listId }: {
+		findListId(_, { list: listName, listId }: {
 			list: string,
 			listId: IList['id']
 		}) {
@@ -301,7 +302,8 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 			// Uses the following ways to get the list id of the new task:
 			//  1. If specified in quick add magic, look in store if it exists and use it if it does
 			if (listName !== null) {
-				const list = rootGetters['lists/findListByExactname'](listName)
+				const listStore = useListStore()
+				const list = listStore.findListByExactname(listName)
 				foundListId = list === null ? null : list.id
 			}
 			

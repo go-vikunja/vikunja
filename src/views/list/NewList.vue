@@ -35,18 +35,17 @@
 import {ref, reactive, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRouter, useRoute} from 'vue-router'
-import {useStore} from '@/store'
 
 import ListService from '@/services/list'
 import ListModel from '@/models/list'
 import CreateEdit from '@/components/misc/create-edit.vue'
 import ColorPicker from '@/components/input/colorPicker.vue'
 
-import { success } from '@/message'
-import { useTitle } from '@/composables/useTitle'
+import {success} from '@/message'
+import {useTitle} from '@/composables/useTitle'
+import {useListStore} from '@/stores/lists'
 
 const {t} = useI18n({useScope: 'global'})
-const store = useStore()
 const router = useRouter()
 const route = useRoute()
 
@@ -55,6 +54,7 @@ useTitle(() => t('list.create.header'))
 const showError = ref(false)
 const list = reactive(new ListModel())
 const listService = shallowReactive(new ListService())
+const listStore = useListStore()
 
 async function createNewList() {
 	if (list.title === '') {
@@ -64,7 +64,7 @@ async function createNewList() {
 	showError.value = false
 
 	list.namespaceId = Number(route.params.namespaceId as string)
-	const newList = await store.dispatch('lists/createList', list)
+	const newList = await listStore.createList(list)
 	await router.push({
 		name: 'list.index',
 		params: { listId: newList.id },

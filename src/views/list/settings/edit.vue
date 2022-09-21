@@ -45,7 +45,7 @@
 		<div class="field">
 			<label class="label" for="listdescription">{{ $t('list.edit.description') }}</label>
 			<div class="control">
-				<editor
+				<Editor
 					:class="{ 'disabled': isLoading}"
 					:disabled="isLoading"
 					:previewIsDefault="false"
@@ -82,8 +82,8 @@ import CreateEdit from '@/components/misc/create-edit.vue'
 import {CURRENT_LIST} from '@/store/mutation-types'
 import type {IList} from '@/modelTypes/IList'
 
-import { useList } from '@/composables/useList'
-import { useTitle } from '@/composables/useTitle'
+import {useList} from '@/stores/lists'
+import {useTitle} from '@/composables/useTitle'
 
 const props = defineProps({
 	listId: {

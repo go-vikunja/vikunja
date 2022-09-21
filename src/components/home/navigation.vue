@@ -124,7 +124,7 @@
 								<BaseButton
 									class="favorite"
 									:class="{'is-favorite': l.isFavorite}"
-									@click="toggleFavoriteList(l)"
+									@click="listStore.toggleListFavorite(l)"
 								>
 									<icon :icon="l.isFavorite ? 'star' : ['far', 'star']"/>
 								</BaseButton>
@@ -159,6 +159,7 @@ import {useEventListener} from '@vueuse/core'
 import type {IList} from '@/modelTypes/IList'
 import type {INamespace} from '@/modelTypes/INamespace'
 import ColorBubble from '@/components/misc/colorBubble.vue'
+import {useListStore} from '@/stores/lists'
 
 const drag = ref(false)
 const dragOptions = {
@@ -195,15 +196,7 @@ const namespaceListsCount = computed(() => {
 useEventListener('resize', resize)
 onMounted(() => resize())
 
-
-function toggleFavoriteList(list: IList) {
-	// The favorites pseudo list is always favorite
-	// Archived lists cannot be marked favorite
-	if (list.id === -1 || list.isArchived) {
-		return
-	}
-	store.dispatch('lists/toggleListFavorite', list)
-}
+const listStore = useListStore()
 
 function resize() {
 	// Hide the menu by default on mobile
@@ -268,7 +261,7 @@ async function saveListPosition(e: SortableEvent) {
 
 	try {
 		// create a copy of the list in order to not violate vuex mutations
-		await store.dispatch('lists/updateList', {
+		await listStore.updateList({
 			...list,
 			position,
 			namespaceId,

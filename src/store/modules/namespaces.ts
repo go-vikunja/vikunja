@@ -6,6 +6,7 @@ import {createNewIndexer} from '@/indexes'
 import type {NamespaceState, RootStoreState} from '@/store/types'
 import type {INamespace} from '@/modelTypes/INamespace'
 import type {IList} from '@/modelTypes/IList'
+import {useListStore} from '@/stores/lists'
 
 const {add, remove, search, update} = createNewIndexer('namespaces', ['title', 'description'])
 
@@ -130,7 +131,8 @@ const namespacesStore : Module<NamespaceState, RootStoreState> = {
 				// Put all lists in the list state
 				const lists = namespaces.flatMap(({lists}) => lists)
 
-				ctx.commit('lists/setLists', lists, {root: true})
+				const listStore = useListStore()
+				listStore.setLists(lists)
 
 				return namespaces
 			} finally {

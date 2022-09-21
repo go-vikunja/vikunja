@@ -24,7 +24,7 @@
 			<BaseButton
 				v-else
 				:class="{'is-favorite': list.isFavorite}"
-				@click.stop="toggleFavoriteList(list)"
+				@click.stop="listStore.toggleListFavorite(list)"
 				class="favorite"
 			>
 				<icon :icon="list.isFavorite ? 'star' : ['far', 'star']"/>
@@ -37,7 +37,6 @@
 
 <script lang="ts" setup>
 import {type PropType, ref, watch} from 'vue'
-import {useStore} from '@/store'
 
 import ListService from '@/services/list'
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
@@ -46,6 +45,7 @@ import {colorIsDark} from '@/helpers/color/colorIsDark'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import type {IList} from '@/modelTypes/IList'
+import {useListStore} from '@/stores/lists'
 
 const background = ref<string | null>(null)
 const backgroundLoading = ref(false)
@@ -84,16 +84,7 @@ async function loadBackground() {
 	}
 }
 
-const store = useStore()
-
-function toggleFavoriteList(list: IList) {
-	// The favorites pseudo list is always favorite
-	// Archived lists cannot be marked favorite
-	if (list.id === -1 || list.isArchived) {
-		return
-	}
-	store.dispatch('lists/toggleListFavorite', list)
-}
+const listStore = useListStore()
 </script>
 
 <style lang="scss" scoped>

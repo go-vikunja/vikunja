@@ -148,6 +148,7 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
+import { useListStore } from '@/stores/lists'
 
 export default defineComponent({
 	name: 'user-settings-general',
@@ -246,8 +247,9 @@ watch(
 	{immediate: true},
 )
 
+const listStore = useListStore()
 const defaultList = computed({
-	get: () => store.getters['lists/getListById'](settings.value.defaultListId),
+	get: () => listStore.getListById(settings.value.defaultListId),
 	set(l) {
 		settings.value.defaultListId = l ? l.id : DEFAULT_LIST_ID
 	},

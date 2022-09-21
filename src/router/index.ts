@@ -8,6 +8,9 @@ import type ListModel from '@/models/list'
 import {saveListView, getListView} from '@/helpers/saveListView'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
+import {setTitle} from '@/helpers/setTitle'
+
+import {useListStore} from '@/stores/lists'
 
 import HomeComponent from '../views/Home.vue'
 import NotFoundComponent from '../views/404.vue'
@@ -55,7 +58,6 @@ import NamespaceSettingDelete from '../views/namespaces/settings/delete.vue'
 import FilterNew from '@/views/filters/FilterNew.vue'
 import FilterEdit from '@/views/filters/FilterEdit.vue'
 import FilterDelete from '@/views/filters/FilterDelete.vue'
-import {setTitle} from '@/helpers/setTitle'
 
 const PasswordResetComponent = () => import('../views/user/PasswordReset.vue')
 const GetPasswordResetComponent = () => import('../views/user/RequestPasswordReset.vue')
@@ -392,7 +394,8 @@ const router = createRouter({
 			beforeEnter: (to) => {
 				saveListView(to.params.listId, to.name)
 				// Properly set the page title when a task popup is closed
-				const listFromStore = store.getters['lists/getListById'](parseInt(to.params.listId))
+				const listStore = useListStore()
+				const listFromStore = listStore.getListById(Number(to.params.listId))
 				if(listFromStore) {
 					setTitle(listFromStore.title)
 				}

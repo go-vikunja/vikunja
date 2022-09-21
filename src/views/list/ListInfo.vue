@@ -15,11 +15,11 @@
 
 <script lang="ts" setup>
 import {computed} from 'vue'
-import {useStore} from '@/store'
 import {setupMarkdownRenderer} from '@/helpers/markdownRenderer'
 import {marked} from 'marked'
 import DOMPurify from 'dompurify'
 import {createRandomID} from '@/helpers/randomId'
+import {useListStore} from '@/stores/lists'
 
 const props = defineProps({
 	listId: {
@@ -28,8 +28,8 @@ const props = defineProps({
 	},
 })
 
-const store = useStore()
-const list = computed(() => store.getters['lists/getListById'](props.listId))
+const listStore = useListStore()
+const list = computed(() => listStore.getListById(props.listId))
 const htmlDescription = computed(() => {
 	const description = list.value?.description || ''
 	if (description === '') {

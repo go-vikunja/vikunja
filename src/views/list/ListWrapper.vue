@@ -61,6 +61,7 @@ import {getListTitle} from '@/helpers/getListTitle'
 import {saveListToHistory} from '@/modules/listHistory'
 import {useTitle} from '@/composables/useTitle'
 import {useStore} from '@/store'
+import {useListStore} from '@/stores/lists'
 
 const props = defineProps({
 	listId: {
@@ -76,6 +77,7 @@ const props = defineProps({
 const route = useRoute()
 const store = useStore()
 
+const listStore = useListStore()
 const listService = ref(new ListService())
 const loadedListId = ref(0)
 
@@ -135,7 +137,7 @@ async function loadList(listIdToLoad: number) {
 
 	// Set the current list to the one we're about to load so that the title is already shown at the top
 	loadedListId.value = 0
-	const listFromStore = store.getters['lists/getListById'](listData.id)
+	const listFromStore = listStore.getListById(listData.id)
 	if (listFromStore !== null) {
 		store.commit(BACKGROUND, null)
 		store.commit(BLUR_HASH, null)

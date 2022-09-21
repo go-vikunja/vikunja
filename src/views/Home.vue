@@ -71,10 +71,12 @@ import {getHistory} from '@/modules/listHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
 import {useDateTimeSalutation} from '@/composables/useDateTimeSalutation'
+import {useListStore} from '@/stores/lists'
 
 const welcome = useDateTimeSalutation()
 
 const store = useStore()
+const listStore = useListStore()
 const listHistory = computed(() => {
 	// If we don't check this, it tries to load the list background right after logging out	
 	if(!store.state.auth.authenticated) {
@@ -82,7 +84,7 @@ const listHistory = computed(() => {
 	}
 	
 	return getHistory()
-		.map(l => store.getters['lists/getListById'](l.id))
+		.map(l => listStore.getListById(l.id))
 		.filter(l => l !== null)
 })
 

@@ -23,18 +23,20 @@ import {useI18n} from 'vue-i18n'
 
 import { success } from '@/message'
 import { useTitle } from '@/composables/useTitle'
+import { useListStore } from '@/stores/lists'
 
 const {t} = useI18n({useScope: 'global'})
 const store = useStore()
+const listStore = useListStore()
 const router = useRouter()
 const route = useRoute()
 
-const list = computed(() => store.getters['lists/getListById'](route.params.listId))
+const list = computed(() => listStore.getListById(route.params.listId))
 useTitle(() => t('list.archive.title', {list: list.value.title}))
 
 async function archiveList() {
 	try {
-		const newList = await store.dispatch('lists/updateList', {
+		const newList = await listStore.updateList({
 			...list.value,
 			isArchived: !list.value.isArchived,
 		})

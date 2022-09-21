@@ -97,7 +97,8 @@ export interface LabelState {
 }
 
 export interface ListState {
-	[id: IList['id']]: IList
+	lists: { [id: IList['id']]: IList },
+	isLoading: boolean,
 }
 
 export interface NamespaceState {

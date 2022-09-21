@@ -70,6 +70,7 @@ import {getHistory} from '@/modules/listHistory'
 import {parseTaskText, PrefixMode} from '@/modules/parseTaskText'
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {PREFIXES} from '@/modules/parseTaskText'
+import {useListStore} from '@/stores/lists'
 
 const TYPE_LIST = 'list'
 const TYPE_TASK = 'task'
@@ -116,6 +117,8 @@ export default defineComponent({
 		},
 		results() {
 			let lists = []
+			const listStore = useListStore()
+
 			if (this.searchMode === SEARCH_MODE_ALL || this.searchMode === SEARCH_MODE_LISTS) {
 				const {list} = this.parsedQuery
 
@@ -126,10 +129,8 @@ export default defineComponent({
 					const history = getHistory()
 					// Puts recently visited lists at the top
 					const allLists = [...new Set([
-						...history.map(l => {
-							return this.$store.getters['lists/getListById'](l.id)
-						}),
-						...this.$store.getters['lists/searchList'](list),
+						...history.map(l => listStore.getListById(l.id)),
+						...listStore.searchList(list),
 					])]
 
 					lists = allLists.filter(l => {
@@ -296,8 +297,10 @@ export default defineComponent({
 				filter_comparator: [],
 			}
 
+			const listStore = useListStore()
+
 			if (list !== null) {
-				const l = this.$store.getters['lists/findListByExactname'](list)
+				const l = listStore.findListByExactname(list)
 				if (l !== null) {
 					params.filter_by.push('list_id')
 					params.filter_value.push(l.id)
@@ -318,7 +321,7 @@ export default defineComponent({
 				const r = await this.taskService.getAll({}, params)
 				this.foundTasks = r.map(t => {
 					t.type = TYPE_TASK
-					const list = this.$store.getters['lists/getListById'](t.listId)
+					const list = listStore.getListById(t.listId)
 					if (list !== null) {
 						t.title = `${t.title} (${list.title})`
 					}
@@ -424,7 +427,8 @@ export default defineComponent({
 				title: this.query,
 				namespaceId: this.currentList.namespaceId,
 			})
-			const list = await this.$store.dispatch('lists/createList', newList)
+			const listStore = useListStore()
+			const list = await listStore.createList(newList)
 			this.$message.success({message: this.$t('list.create.createdSuccess')})
 			this.$router.push({name: 'list.index', params: {listId: list.id}})
 			this.closeQuickActions()

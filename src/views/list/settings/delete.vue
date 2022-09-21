@@ -30,24 +30,24 @@
 import {computed, ref, watchEffect} from 'vue'
 import {useTitle} from '@/composables/useTitle'
 import {useI18n} from 'vue-i18n'
-import {useStore} from '@/store'
 import {useRoute, useRouter} from 'vue-router'
 import {success} from '@/message'
 import TaskCollectionService from '@/services/taskCollection'
 import Loading from '@/components/misc/loading.vue'
+import {useListStore} from '@/stores/lists'
 
 const {t} = useI18n({useScope: 'global'})
-const store = useStore()
+const listStore = useListStore()
 const route = useRoute()
 const router = useRouter()
 
 const totalTasks = ref<number | null>(null)
 
-const list = computed(() => store.getters['lists/getListById'](route.params.listId))
+const list = computed(() => listStore.getListById(route.params.listId))
 
 watchEffect(
 	() => {
-		if (!route.params.lisId) {
+		if (!route.params.listId) {
 			return
 		}
 
@@ -61,7 +61,11 @@ watchEffect(
 useTitle(() => t('list.delete.title', {list: list?.value?.title}))
 
 async function deleteList() {
-	await store.dispatch('lists/deleteList', list.value)
+	if (!list.value) {
+		return
+	}
+
+	await listStore.deleteList(list.value)
 	success({message: t('list.delete.success')})
 	router.push({name: 'home'})
 }

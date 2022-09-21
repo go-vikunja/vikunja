@@ -18,7 +18,6 @@ import auth from './modules/auth'
 import namespaces from './modules/namespaces'
 import kanban from './modules/kanban'
 import tasks from './modules/tasks'
-import lists from './modules/lists'
 import attachments from './modules/attachments'
 
 import ListModel from '@/models/list'
@@ -43,7 +42,6 @@ export const store = createStore<RootStoreState>({
 		namespaces,
 		kanban,
 		tasks,
-		lists,
 		attachments,
 	},
 	state: () => ({
