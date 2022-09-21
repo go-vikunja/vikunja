@@ -1,7 +1,7 @@
 <template>
 	<div class="content loader-container" :class="{'is-loading': loading}" v-cy="'namespaces-list'">
 		<header class="namespace-header">
-			<fancycheckbox v-model="showArchived" @change="saveShowArchivedState" v-cy="'show-archived-check'">
+			<fancycheckbox v-model="showArchived" v-cy="'show-archived-check'">
 				{{ $t('namespace.showArchived') }}
 			</fancycheckbox>
 
@@ -68,46 +68,31 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script setup lang="ts">
+import {computed} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useStore} from '@/store'
 
-import {mapState} from 'vuex'
-import Fancycheckbox from '../../components/input/fancycheckbox.vue'
-import {LOADING} from '@/store/mutation-types'
+import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import ListCard from '@/components/list/partials/list-card.vue'
-import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
-import { setTitle } from '@/helpers/setTitle'
 
-export default defineComponent({
-	name: 'ListNamespaces',
-	components: {
-		ListCard,
-		Fancycheckbox,
-	},
-	data() {
-		return {
-			showArchived: JSON.parse(localStorage.getItem('showArchived')) ?? false,
-		}
-	},
-	mounted() {
-		setTitle(this.$t('namespace.title'))
-	},
-	computed: mapState({
-		namespaces(state) {
-			return state.namespaces.namespaces.filter(n => this.showArchived ? true : !n.isArchived)
-			// return state.namespaces.namespaces.filter(n => this.showArchived ? true : !n.isArchived).map(n => {
-			// 	n.lists = n.lists.filter(l => !l.isArchived)
-			// 	return n
-			// })
-		},
-		loading: LOADING,
-	}),
-	methods: {
-		getNamespaceTitle,
-		saveShowArchivedState() {
-			localStorage.setItem('showArchived', JSON.stringify(this.showArchived))
-		},
-	},
+import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
+import {useTitle} from '@/composables/useTitle'
+import {useStorage} from '@vueuse/core'
+
+const {t} = useI18n()
+const store = useStore()
+
+useTitle(() => t('namespace.title'))
+const showArchived = useStorage('showArchived', false)
+
+const loading = computed(() => store.state.loading)
+const namespaces = computed(() => {
+	return store.state.namespaces.namespaces.filter(n => showArchived.value ? true : !n.isArchived)
+	// return store.state.namespaces.namespaces.filter(n => showArchived.value ? true : !n.isArchived).map(n => {
+	// 	n.lists = n.lists.filter(l => !l.isArchived)
+	// 	return n
+	// })
 })
 </script>
 
