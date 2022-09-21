@@ -1,5 +1,5 @@
 [build]
-  command = "yarn build"
+  command = "pnpm run build"
   publish = "dist-preview"
 
 [[redirects]]

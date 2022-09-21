@@ -29,25 +29,90 @@ steps:
 #      AWS_SECRET_ACCESS_KEY:
 #        from_secret: cache_aws_secret_access_key
 #    settings:
+#      debug: true
 #      restore: true
 #      bucket: kolaente.dev-drone-dependency-cache
 #      endpoint: https://s3.fr-par.scw.cloud
 #      region: fr-par
 #      path_style: true
-#      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
+#      cache_key: '{{ .Repo.Name }}_{{ checksum "pnpm-lock.yaml" }}_{{ arch }}_{{ os }}'
 #      mount:
-#        - '.cache'
+#        - .cache
 
   - name: dependencies
-    image: node:18
+    image: node:18-alpine
     pull: true
     environment:
-      YARN_CACHE_FOLDER: .cache/yarn/
-      CYPRESS_CACHE_FOLDER: .cache/cypress/
+      PNPM_CACHE_FOLDER: .cache/pnpm
+      CYPRESS_CACHE_FOLDER: .cache/cypress
     commands:
-      - yarn --frozen-lockfile --network-timeout 100000
+      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/pnpm
+      - pnpm install --fetch-timeout 100000
 #    depends_on:
 #      - restore-cache
+
+  - name: lint
+    image: node:18-alpine
+    pull: true
+    environment:
+      PNPM_CACHE_FOLDER: .cache/pnpm
+    commands:
+      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/pnpm
+      - pnpm run lint
+    depends_on:
+      - dependencies
+
+  - name: build-prod
+    image: node:18-alpine
+    pull: true
+    environment:
+      PNPM_CACHE_FOLDER: .cache/pnpm
+    commands:
+      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/pnpm
+      - pnpm run build
+    depends_on:
+      - dependencies
+
+  - name: test-unit
+    image: node:18-alpine
+    pull: true
+    commands:
+      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/pnpm
+      - pnpm run test:unit
+    depends_on:
+      - dependencies
+
+  - name: typecheck
+    failure: ignore
+    image: node:18-alpine
+    pull: true
+    environment:
+      PNPM_CACHE_FOLDER: .cache/pnpm
+    commands:
+      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/pnpm
+      - pnpm run typecheck
+    depends_on:
+      - dependencies
+
+  - name: test-frontend
+    image: cypress/browsers:node16.14.0-chrome99-ff97
+    pull: true
+    environment:
+      CYPRESS_API_URL: http://api:3456/api/v1
+      CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB
+      PNPM_CACHE_FOLDER: .cache/pnpm
+      CYPRESS_CACHE_FOLDER: .cache/cypress
+      CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000
+      CYPRESS_RECORD_KEY:
+        from_secret: cypress_project_key
+    commands:
+      - sed -i 's/localhost/api/g' dist/index.html
+      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/pnpm
+      - pnpm cypress install
+      - pnpm run serve:dist & npx wait-on http://localhost:4173
+      - pnpm run test:frontend --browser chrome --record
+    depends_on:
+      - build-prod
 
 #  - name: rebuild-cache
 #    image: meltwater/drone-cache:dev
@@ -63,70 +128,14 @@ steps:
 #      endpoint: https://s3.fr-par.scw.cloud
 #      region: fr-par
 #      path_style: true
-#      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
+#      cache_key: '{{ .Repo.Name }}_{{ checksum "pnpm-lock.yaml" }}_{{ arch }}_{{ os }}'
 #      mount:
-#        - '.cache'
+#        - .cache
 #    depends_on:
 #      - dependencies
 
-  - name: lint
-    image: node:18
-    pull: true
-    environment:
-      YARN_CACHE_FOLDER: .cache/yarn/
-      CYPRESS_CACHE_FOLDER: .cache/cypress/
-    commands:
-      - yarn run lint
-    depends_on:
-      - dependencies
-
-  - name: build-prod
-    image: node:18
-    pull: true
-    environment:
-      YARN_CACHE_FOLDER: .cache/yarn/
-    commands:
-      - yarn build
-    depends_on:
-      - dependencies
-
-  - name: test-unit
-    image: node:18
-    pull: true
-    commands:
-      - yarn test:unit
-    depends_on:
-      - dependencies
-
-  - name: typecheck
-    failure: ignore
-    image: node:18
-    pull: true
-    commands:
-      - yarn typecheck
-    depends_on:
-      - dependencies
-
-  - name: test-frontend
-    image: cypress/browsers:node16.14.0-chrome99-ff97
-    pull: true
-    environment:
-      CYPRESS_API_URL: http://api:3456/api/v1
-      CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB
-      YARN_CACHE_FOLDER: .cache/yarn/
-      CYPRESS_CACHE_FOLDER: .cache/cypress/
-      CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000
-      CYPRESS_RECORD_KEY:
-        from_secret: cypress_project_key
-    commands:
-      - sed -i 's/localhost/api/g' dist/index.html
-      - yarn serve:dist & npx wait-on http://localhost:4173
-      - yarn test:frontend --browser chrome --record
-    depends_on:
-      - build-prod
-
   - name: deploy-preview
-    image: node:18
+    image: node:18-alpine
     pull: true
     environment:
       NETLIFY_AUTH_TOKEN:
@@ -139,6 +148,7 @@ steps:
       - cp -r dist dist-preview
       # Override the default api url used for preview
       - sed -i 's|localhost:3456|try.vikunja.io|g' dist-preview/index.html
+      - apk add --no-cache perl-utils
       - shasum -a 384 -c ./scripts/deploy-preview-netlify.js.sha384
       - node ./scripts/deploy-preview-netlify.js
     depends_on:
@@ -181,21 +191,22 @@ steps:
 #      endpoint: https://s3.fr-par.scw.cloud
 #      region: fr-par
 #      path_style: true
-#      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
+#      cache_key: '{{ .Repo.Name }}_{{ checksum "pnpm-lock.yaml" }}_{{ arch }}_{{ os }}'
 #      mount:
-#        - '.cache'
+#        - .cache
 
   - name: build
-    image: node:18
+    image: node:18-alpine
     pull: true
     group: build-static
     environment:
-      YARN_CACHE_FOLDER: .cache/yarn/
+      PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
-      - yarn --frozen-lockfile --network-timeout 100000
-      - yarn run lint
+      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/.pnp
+      - pnpm install --fetch-timeout 100000
+      - pnpm run lint
       - "echo '{\"VERSION\": \"'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'\"}' > src/version.json"
-      - yarn run build
+      - pnpm run build
       - sed -i 's/http\:\\/\\/localhost\\:3456\\/api\\/v1/\\/api\\/v1/g' dist/index.html # Override the default api url used for developing
 #    depends_on:
 #      - restore-cache
@@ -256,21 +267,22 @@ steps:
 #      endpoint: https://s3.fr-par.scw.cloud
 #      region: fr-par
 #      path_style: true
-#      cache_key: '{{ .Repo.Name }}_{{ checksum "yarn.lock" }}_{{ arch }}_{{ os }}'
+#      cache_key: '{{ .Repo.Name }}_{{ checksum "pnpm-lock.yaml" }}_{{ arch }}_{{ os }}'
 #      mount:
-#        - '.cache'
+#        - .cache
 
   - name: build
-    image: node:18
+    image: node:18-alpine
     pull: true
     group: build-static
     environment:
-      YARN_CACHE_FOLDER: .cache/yarn/
+      PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
-      - yarn --frozen-lockfile --network-timeout 100000
-      - yarn run lint
+      - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/pnpm
+      - pnpm install --fetch-timeout 100000
+      - pnpm run lint
       - "echo '{\"VERSION\": \"'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'\"}' > src/version.json"
-      - yarn run build
+      - pnpm run build
       - sed -i 's/http\:\\/\\/localhost\\:3456\\/api\\/v1/\\/api\\/v1/g' dist/index.html # Override the default api url used for developing
 #    depends_on:
 #      - restore-cache
@@ -647,6 +659,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: 997e1badebe484ac29557c4af356e63db4d3d57f3d32e92d482f117f8cec64da
+hmac: 9e9585222c466c67b426df40c76670f1a539c363a52075ff34e7f4518e67da2d
 
 ...

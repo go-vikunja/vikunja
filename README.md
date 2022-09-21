@@ -22,25 +22,25 @@ There is a [docker image available](https://hub.docker.com/r/vikunja/api) with s
 ## Project setup
 
 ```shell
-yarn install
+pnpm install
 ```
 
 ### Compiles and hot-reloads for development
 
 ```shell
-yarn run serve
+pnpm run serve
 ```
 
 ### Compiles and minifies for production
 
 ```shell
-yarn run build
+pnpm run build
 ```
 
 ### Lints and fixes files
 
 ```shell
-yarn run lint
+pnpm run lint
 ```
 
 ## Sponsors

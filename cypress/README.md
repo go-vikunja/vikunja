@@ -36,7 +36,7 @@ to get a shell inside the cypress container.
 In that shell you can then execute the tests with
 
 ```shell
-yarn test:frontend
+pnpm run test:frontend
 ```
 
 ### Using The Cypress Dashboard
@@ -44,5 +44,5 @@ yarn test:frontend
 To open the Cypress Dashboard and run tests from there, run
 
 ```shell
-yarn cypress:open
+pnpm run cypress:open
 ```
