@@ -18,7 +18,7 @@ export default class TeamModel extends AbstractModel<ITeam> implements ITeam {
 	created: Date = null
 	updated: Date = null
 
-	constructor(data: Partial<ITeam>) {
+	constructor(data: Partial<ITeam> = {}) {
 		super()
 		this.assignData(data)
 

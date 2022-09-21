@@ -1,6 +1,6 @@
 <template>
 	<create-edit
-		:title="$t('team.create.title')"
+		:title="title"
 		@create="newTeam()"
 		:primary-disabled="team.name === ''"
 	>
@@ -29,43 +29,43 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-import TeamModel from '../../models/team'
-import TeamService from '../../services/team'
+export default { name: 'NewTeam' }
+</script>
+
+<script setup lang="ts">
+import {reactive, ref, shallowReactive, computed} from 'vue'
+import {useI18n} from 'vue-i18n'
+
+import TeamModel from '@/models/team'
+import TeamService from '@/services/team'
+
 import CreateEdit from '@/components/misc/create-edit.vue'
 
-import { setTitle } from '@/helpers/setTitle'
+import {useTitle} from '@/composables/useTitle'
+import {useRouter} from 'vue-router'
+import {success} from '@/message'
 
-export default defineComponent({
-	name: 'NewTeam',
-	data() {
-		return {
-			teamService: new TeamService(),
-			team: new TeamModel(),
-			showError: false,
-		}
-	},
-	components: {
-		CreateEdit,
-	},
-	mounted() {
-		setTitle(this.$t('team.create.title'))
-	},
-	methods: {
-		async newTeam() {
-			if (this.team.name === '') {
-				this.showError = true
-				return
-			}
-			this.showError = false
+const {t} = useI18n()
+const title = computed(() => t('team.create.title'))
+useTitle(title)
+const router = useRouter()
 
-			const response = await this.teamService.create(this.team)
-			this.$router.push({
-				name: 'teams.edit',
-				params: { id: response.id },
-			})
-			this.$message.success({message: this.$t('team.create.success') })
-		},
-	},
-})
+const teamService = shallowReactive(new TeamService())
+const team = reactive(new TeamModel())
+const showError = ref(false)
+
+async function newTeam() {
+	if (team.name === '') {
+		showError.value = true
+		return
+	}
+	showError.value = false
+
+	const response = await teamService.create(team)
+	router.push({
+		name: 'teams.edit',
+		params: { id: response.id },
+	})
+	success({message: t('team.create.success') })
+}
 </script>
