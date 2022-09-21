@@ -108,6 +108,7 @@ steps:
     commands:
       - sed -i 's/localhost/api/g' dist/index.html
       - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/pnpm
+      - pnpm cypress install
       - pnpm run serve:dist & npx wait-on http://localhost:4173
       - pnpm run test:frontend --browser chrome --record
     depends_on:
