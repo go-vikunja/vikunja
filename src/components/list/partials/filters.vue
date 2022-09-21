@@ -190,6 +190,8 @@
 <script lang="ts">
 import {defineComponent} from 'vue'
 
+import {useLabelStore} from '@/stores/labels'
+
 import DatepickerWithRange from '@/components/date/datepickerWithRange.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 
@@ -307,8 +309,10 @@ export default defineComponent({
 				this.change()
 			},
 		},
+
 		foundLabels() {
-			return this.$store.getters['labels/filterLabelsByQuery'](this.labels, this.query)
+			const labelStore = useLabelStore()
+			return labelStore.filterLabelsByQuery(this.labels, this.labelQuery)
 		},
 	},
 	methods: {
@@ -336,7 +340,8 @@ export default defineComponent({
 				: ''
 			const labelIds = labels.split(',').map(i => parseInt(i))
 
-			this.labels = this.$store.getters['labels/getLabelsByIds'](labelIds)
+			const labelStore = useLabelStore()
+			this.labels = labelStore.getLabelsByIds(labelIds)
 		},
 		removePropertyFromFilter(propertyName) {
 			// Because of the way arrays work, we can only ever remove one element at once.

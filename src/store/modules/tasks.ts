@@ -25,6 +25,7 @@ import type { IAttachment } from '@/modelTypes/IAttachment'
 import type { IList } from '@/modelTypes/IList'
 
 import type { RootStoreState, TaskState } from '@/store/types'
+import { useLabelStore } from '@/stores/labels'
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
 function findPropertyByValue(object, key, value) {
@@ -268,22 +269,19 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 		},
 
 		// Do everything that is involved in finding, creating and adding the label to the task
-		async addLabelsToTask({rootState, dispatch}, {
-			task,
-			parsedLabels,
-		}) {
+		async addLabelsToTask(_, { task, parsedLabels }) {
 			if (parsedLabels.length <= 0) {
 				return task
 			}
 
-			const {labels} = rootState.labels
+			const labelStore = useLabelStore()
 
 			const labelAddsToWaitFor = parsedLabels.map(async labelTitle => {
-				let label = validateLabel(labels, labelTitle)
+				let label = validateLabel(labelStore.labels, labelTitle)
 				if (typeof label === 'undefined') {
 					// label not found, create it
 					const labelModel = new LabelModel({title: labelTitle})
-					label = await dispatch('labels/createLabel', labelModel, {root: true})
+					label = await labelStore.createLabel(labelModel)
 				}
 
 				return addLabelToTask(task, label)

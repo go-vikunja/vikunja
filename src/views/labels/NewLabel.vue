@@ -36,12 +36,13 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
+import {mapState} from 'pinia'
+
 import LabelModel from '../../models/label'
 import CreateEdit from '@/components/misc/create-edit.vue'
 import ColorPicker from '../../components/input/colorPicker.vue'
-import {mapState} from 'vuex'
-import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import { setTitle } from '@/helpers/setTitle'
+import { useLabelStore } from '@/stores/labels'
 
 export default defineComponent({
 	name: 'NewLabel',
@@ -58,9 +59,11 @@ export default defineComponent({
 	mounted() {
 		setTitle(this.$t('label.create.title'))
 	},
-	computed: mapState({
-		loading: state => state[LOADING] && state[LOADING_MODULE] === 'labels',
-	}),
+	computed: {
+		...mapState(useLabelStore, {
+			loading: state => state.isLoading,
+		}),
+	},
 	methods: {
 		async newLabel() {
 			if (this.label.title === '') {
@@ -69,7 +72,8 @@ export default defineComponent({
 			}
 			this.showError = false
 
-			const label = this.$store.dispatch('labels/createLabel', this.label)
+			const labelStore = useLabelStore()
+			const label = labelStore.createLabel(this.label)
 			this.$router.push({
 				name: 'labels.index',
 				params: {id: label.id},

@@ -20,7 +20,6 @@ import kanban from './modules/kanban'
 import tasks from './modules/tasks'
 import lists from './modules/lists'
 import attachments from './modules/attachments'
-import labels from './modules/labels'
 
 import ListModel from '@/models/list'
 
@@ -46,7 +45,6 @@ export const store = createStore<RootStoreState>({
 		tasks,
 		lists,
 		attachments,
-		labels,
 	},
 	state: () => ({
 		loading: false,

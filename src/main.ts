@@ -2,6 +2,7 @@ import {createApp} from 'vue'
 
 import App from './App.vue'
 import router from './router'
+import { createPinia } from 'pinia'
 
 import {error, success} from './message'
 
@@ -103,6 +104,9 @@ app.config.globalProperties.$message = {
 if (window.SENTRY_ENABLED) {
 	import('./sentry').then(sentry => sentry.default(app, router))
 }
+
+const pinia = createPinia()
+app.use(pinia)
 
 app.use(store, key) // pass the injection key
 app.use(router)

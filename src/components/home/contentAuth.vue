@@ -66,6 +66,7 @@ import {useRoute, useRouter} from 'vue-router'
 import {useEventListener} from '@vueuse/core'
 
 import {CURRENT_LIST, KEYBOARD_SHORTCUTS_ACTIVE, MENU_ACTIVE} from '@/store/mutation-types'
+import {useLabelStore} from '@/stores/labels'
 import Navigation from '@/components/home/navigation.vue'
 import QuickActions from '@/components/quick-actions/quick-actions.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -197,7 +198,8 @@ function useRenewTokenOnFocus() {
 }
 
 useRenewTokenOnFocus()
-store.dispatch('labels/loadAllLabels')
+const labelStore = useLabelStore()
+labelStore.loadAllLabels()
 </script>
 
 <style lang="scss" scoped>

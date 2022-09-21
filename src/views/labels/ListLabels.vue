@@ -111,11 +111,12 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
-import {mapState} from 'vuex'
+import {mapState as mapVuexState} from 'vuex'
+import {mapState} from 'pinia'
 
-import LabelModel from '@/models/label'
+import LabelModel from '../../models/label'
 import type {ILabel} from '@/modelTypes/ILabel'
-import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
+import {useLabelStore} from '@/stores/labels'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import AsyncEditor from '@/components/input/AsyncEditor'
@@ -139,25 +140,32 @@ export default defineComponent({
 		}
 	},
 	created() {
-		this.$store.dispatch('labels/loadAllLabels')
+		const labelStore = useLabelStore()
+		labelStore.loadAllLabels()
 	},
 	mounted() {
 		setTitle(this.$t('label.title'))
 	},
-	computed: mapState({
-		userInfo: state => state.auth.info,
-		// Alphabetically sort the labels
-		labels: state => Object.values(state.labels.labels).sort((f, s) => f.title > s.title ? 1 : -1),
-		loading: state => state[LOADING] && state[LOADING_MODULE] === 'labels',
-	}),
+	computed: {
+		...mapVuexState({
+			userInfo: state => state.auth.info,
+		}),
+		...mapState(useLabelStore, {
+			// Alphabetically sort the labels
+			labels: state => Object.values(state.labels).sort((f, s) => f.title > s.title ? 1 : -1),
+			loading: state => state.isLoading,
+		}),
+	},
 	methods: {
 		deleteLabel(label: ILabel) {
 			this.showDeleteModal = false
 			this.isLabelEdit = false
-			return this.$store.dispatch('labels/deleteLabel', label)
+			const labelStore = useLabelStore()
+			return labelStore.deleteLabel(label)
 		},
 		editLabelSubmit() {
-			return this.$store.dispatch('labels/updateLabel', this.labelEditLabel)
+			const labelStore = useLabelStore()
+			return labelStore.updateLabel(this.labelEditLabel)
 		},
 		editLabel(label: ILabel) {
 			if (label.createdBy.id !== this.userInfo.id) {

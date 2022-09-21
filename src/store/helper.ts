@@ -1,4 +1,5 @@
 import type { ActionContext } from 'vuex'
+import type { StoreDefinition } from 'pinia'
 import {LOADING, LOADING_MODULE} from './mutation-types'
 import type { RootStoreState } from './types'
 
@@ -27,6 +28,24 @@ export function setLoading<State>(
 		if (loadFunc === null) {
 			context.commit(LOADING, false, {root: true})
 			context.commit(LOADING_MODULE, null, {root: true})
+		} else {
+			loadFunc(false)
+		}
+	}
+}
+
+export const setLoadingPinia = (store: StoreDefinition, loadFunc : ((isLoading: boolean) => void) | null = null) => {
+	const timeout = setTimeout(() => {
+		if (loadFunc === null) {
+			store.isLoading = true
+		} else {
+			loadFunc(true)
+		}
+	}, 100)
+	return () => {
+		clearTimeout(timeout)
+		if (loadFunc === null) {
+			store.isLoading = false
 		} else {
 			loadFunc(false)
 		}

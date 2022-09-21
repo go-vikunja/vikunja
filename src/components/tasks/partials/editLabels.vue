@@ -50,6 +50,7 @@ import {success} from '@/message'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Multiselect from '@/components/input/multiselect.vue'
 import type { ILabel } from '@/modelTypes/ILabel'
+import { useLabelStore } from '@/stores/labels'
 
 const props = defineProps({
 	modelValue: {
@@ -86,8 +87,10 @@ watch(
 	},
 )
 
-const foundLabels = computed(() => store.getters['labels/filterLabelsByQuery'](labels.value, query.value))
-const loading = computed(() => labelTaskService.loading || (store.state.loading && store.state.loadingModule === 'labels'))
+const labelStore = useLabelStore()
+
+const foundLabels = computed(() => labelStore.filterLabelsByQuery(labels.value, query.value))
+const loading = computed(() => labelTaskService.loading || labelStore.isLoading)
 
 function findLabel(newQuery: string) {
 	query.value = newQuery
@@ -129,7 +132,8 @@ async function createAndAddLabel(title: string) {
 		return
 	}
 
-	const newLabel = await store.dispatch('labels/createLabel', new LabelModel({title}))
+	const labelStore = useLabelStore()
+	const newLabel = await labelStore.createLabel(new LabelModel({title}))
 	addLabel(newLabel, false)
 	labels.value.push(newLabel)
 	success({message: t('task.label.addCreateSuccess')})

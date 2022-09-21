@@ -93,7 +93,7 @@ export interface LabelState {
 	labels: {
 		[id: ILabel['id']]: ILabel
 	},
-	loaded: boolean,
+	isLoading: boolean,
 }
 
 export interface ListState {
