@@ -1,5 +1,5 @@
 import {watch, reactive, shallowReactive, unref, toRefs, readonly} from 'vue'
-import {defineStore} from 'pinia'
+import {acceptHMRUpdate, defineStore} from 'pinia'
 import {useI18n} from 'vue-i18n'
 
 import ListService from '@/services/list'
@@ -179,4 +179,9 @@ export function useList(listId: MaybeRef<IList['id']>) {
 		list,
 		save,
 	}
+}
+
+// support hot reloading
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useListStore, import.meta.hot))
 }
