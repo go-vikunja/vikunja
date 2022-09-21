@@ -40,7 +40,7 @@ steps:
 #        - .cache
 
   - name: dependencies
-    image: node:18-alpine
+    image: node:18
     pull: true
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -52,7 +52,7 @@ steps:
 #      - restore-cache
 
   - name: lint
-    image: node:18-alpine
+    image: node:18
     pull: true
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -63,7 +63,7 @@ steps:
       - dependencies
 
   - name: build-prod
-    image: node:18-alpine
+    image: node:18
     pull: true
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -74,7 +74,7 @@ steps:
       - dependencies
 
   - name: test-unit
-    image: node:18-alpine
+    image: node:18
     pull: true
     commands:
       - corepack enable && corepack prepare pnpm@7.9.3 --activate && pnpm config set store-dir .cache/pnpm
@@ -84,7 +84,7 @@ steps:
 
   - name: typecheck
     failure: ignore
-    image: node:18-alpine
+    image: node:18
     pull: true
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -134,7 +134,7 @@ steps:
 #      - dependencies
 
   - name: deploy-preview
-    image: node:18-alpine
+    image: node:18
     pull: true
     environment:
       NETLIFY_AUTH_TOKEN:
@@ -195,7 +195,7 @@ steps:
 #        - .cache
 
   - name: build
-    image: node:18-alpine
+    image: node:18
     pull: true
     group: build-static
     environment:
@@ -271,7 +271,7 @@ steps:
 #        - .cache
 
   - name: build
-    image: node:18-alpine
+    image: node:18
     pull: true
     group: build-static
     environment:
