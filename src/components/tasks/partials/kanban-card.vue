@@ -68,7 +68,6 @@
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
 
-import {playPop} from '../../../helpers/playPop'
 import PriorityLabel from '../../../components/tasks/partials/priorityLabel.vue'
 import User from '../../../components/misc/user.vue'
 import Done from '@/components/misc/Done.vue'
@@ -126,9 +125,6 @@ export default defineComponent({
 					...task,
 					done,
 				})
-				if (done) {
-					playPop()
-				}
 			} finally {
 				this.loadingInternal = false
 			}

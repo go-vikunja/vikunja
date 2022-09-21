@@ -5,15 +5,15 @@ import type {ITaskRelation} from '@/modelTypes/ITaskRelation'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IUser} from '@/modelTypes/IUser'
 
-import type {IRelationKind} from '@/types/IRelationKind'
+import {RELATION_KIND, type IRelationKind} from '@/types/IRelationKind'
 export default class TaskRelationModel extends AbstractModel<ITaskRelation> implements ITaskRelation {
 	id = 0
 	otherTaskId: ITask['id'] = 0
 	taskId: ITask['id'] = 0
-	relationKind: IRelationKind = ''
+	relationKind: IRelationKind = RELATION_KIND.RELATED
 
-	createdBy: IUser = UserModel
-	created: Date = null
+	createdBy: IUser = new UserModel()
+	created: Date = new Date
 
 	constructor(data: Partial<ITaskRelation>) {
 		super()

@@ -14,7 +14,7 @@ export default class UserModel extends AbstractModel<IUser> implements IUser {
 	updated: Date = null
 	settings: IUserSettings = null
 
-	constructor(data: Partial<IUser>) {
+	constructor(data: Partial<IUser> = {}) {
 		super()
 		this.assignData(data)
 

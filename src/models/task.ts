@@ -56,7 +56,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	parentTaskId: ITask['id'] = 0
 	hexColor = ''
 	percentDone = 0
-	relatedTasks:  Partial<Record<IRelationKind, ITask>> = {}
+	relatedTasks:  Partial<Record<IRelationKind, ITask[]>> = {}
 	attachments: IAttachment[] = []
 	identifier = ''
 	index = 0
@@ -73,7 +73,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	listId: IList['id'] = 0
 	bucketId: IBucket['id'] = 0
 
-	constructor(data: Partial<ITask>) {
+	constructor(data: Partial<ITask> = {}) {
 		super()
 		this.assignData(data)
 
@@ -109,7 +109,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 			this.hexColor = '#' + this.hexColor
 		}
 
-		// Make all subtasks to task models
+		// Convert all subtasks to task models
 		Object.keys(this.relatedTasks).forEach(relationKind => {
 			this.relatedTasks[relationKind] = this.relatedTasks[relationKind].map(t => {
 				return new TaskModel(t)

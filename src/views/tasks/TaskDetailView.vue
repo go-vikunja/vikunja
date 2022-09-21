@@ -451,7 +451,6 @@ import ColorPicker from '../../components/input/colorPicker.vue'
 import heading from '@/components/tasks/partials/heading.vue'
 import Datepicker from '@/components/input/datepicker.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
-import {playPop} from '@/helpers/playPop'
 import TaskSubscription from '@/components/misc/subscription.vue'
 import {CURRENT_LIST} from '@/store/mutation-types'
 
@@ -732,9 +731,6 @@ export default defineComponent({
 			const newTask = {
 				...this.task,
 				done: !this.task.done,
-			}
-			if (newTask.done) {
-				playPop()
 			}
 
 			this.saveTask({

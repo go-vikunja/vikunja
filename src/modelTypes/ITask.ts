@@ -31,7 +31,7 @@ export interface ITask extends IAbstract {
 	parentTaskId: ITask['id']
 	hexColor: string
 	percentDone: number
-	relatedTasks: Partial<Record<IRelationKind, ITask>>,
+	relatedTasks: Partial<Record<IRelationKind, ITask[]>>,
 	attachments: IAttachment[]
 	identifier: string
 	index: number

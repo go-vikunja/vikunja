@@ -25,8 +25,9 @@ import type { IAttachment } from '@/modelTypes/IAttachment'
 import type { IList } from '@/modelTypes/IList'
 
 import type { RootStoreState, TaskState } from '@/store/types'
-import { useLabelStore } from '@/stores/labels'
-import { useListStore } from '@/stores/lists'
+import {useLabelStore} from '@/stores/labels'
+import {useListStore} from '@/stores/lists'
+import {playPop} from '@/helpers/playPop'
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
 function findPropertyByValue(object, key, value) {
@@ -96,6 +97,9 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 			try {
 				const updatedTask = await taskService.update(task)
 				ctx.commit('kanban/setTaskInBucket', updatedTask, {root: true})
+				if (task.done) {
+					playPop()
+				}
 				return updatedTask
 			} finally {
 				cancel()

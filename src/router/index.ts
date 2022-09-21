@@ -3,8 +3,6 @@ import type { RouteLocation } from 'vue-router'
 import {saveLastVisited} from '@/helpers/saveLastVisited'
 import {store} from '@/store'
 
-import type ListModel from '@/models/list'
-
 import {saveListView, getListView} from '@/helpers/saveListView'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
@@ -223,7 +221,7 @@ const router = createRouter({
 			meta: {
 				showAsModal: true,
 			},
-			props: route => ({ namespaceId: parseInt(route.params.id as string) }),
+			props: route => ({ namespaceId: Number(route.params.id as string) }),
 		},
 		{
 			path: '/namespaces/:namespaceId/settings/share',
@@ -255,7 +253,7 @@ const router = createRouter({
 			path: '/tasks/:id',
 			name: 'task.detail',
 			component: TaskDetailView,
-			props: route => ({ taskId: parseInt(route.params.id as string) }),
+			props: route => ({ taskId: Number(route.params.id as string) }),
 		},
 		{
 			path: '/tasks/by/upcoming',
@@ -280,7 +278,7 @@ const router = createRouter({
 			path: '/lists/:listId/settings/edit',
 			name: 'list.settings.edit',
 			component: ListSettingEdit,
-			props: route => ({ listId: parseInt(route.params.listId as ListModel['id']) }),
+			props: route => ({ listId: Number(route.params.listId as string) }),
 			meta: {
 				showAsModal: true,
 			},
@@ -372,21 +370,21 @@ const router = createRouter({
 			name: 'list.list',
 			component: ListList,
 			beforeEnter: (to) => saveListView(to.params.listId, to.name),
-			props: route => ({ listId: parseInt(route.params.listId as string) }),
+			props: route => ({ listId: Number(route.params.listId as string) }),
 		},
 		{
 			path: '/lists/:listId/gantt',
 			name: 'list.gantt',
 			component: ListGantt,
 			beforeEnter: (to) => saveListView(to.params.listId, to.name),
-			props: route => ({ listId: parseInt(route.params.listId as string) }),
+			props: route => ({ listId: Number(route.params.listId as string) }),
 		},
 		{
 			path: '/lists/:listId/table',
 			name: 'list.table',
 			component: ListTable,
 			beforeEnter: (to) => saveListView(to.params.listId, to.name),
-			props: route => ({ listId: parseInt(route.params.listId as string) }),
+			props: route => ({ listId: Number(route.params.listId as string) }),
 		},
 		{
 			path: '/lists/:listId/kanban',
@@ -401,7 +399,7 @@ const router = createRouter({
 					setTitle(listFromStore.title)
 				}
 			},
-			props: route => ({ listId: parseInt(route.params.listId as string) }),
+			props: route => ({ listId: Number(route.params.listId as string) }),
 		},
 		{
 			path: '/teams',

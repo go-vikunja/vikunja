@@ -25,49 +25,48 @@
 					</transition>
 				</label>
 				<div class="field" key="field-search">
-					<multiselect
+					<Multiselect
 						:placeholder="$t('task.relation.searchPlaceholder')"
 						@search="findTasks"
 						:loading="taskService.loading"
 						:search-results="mappedFoundTasks"
 						label="title"
-						v-model="newTaskRelationTask"
+						v-model="newTaskRelation.task"
 						:creatable="true"
 						:create-placeholder="$t('task.relation.createPlaceholder')"
 						@create="createAndRelateTask"
-						@select="addTaskRelation"
 					>
-						<template #searchResult="props">
-							<span v-if="typeof props.option !== 'string'" class="search-result">
+						<template #searchResult="{option: task}">
+							<span v-if="typeof task !== 'string'" class="search-result">
 								<span
 									class="different-list"
-									v-if="props.option.listId !== listId"
+									v-if="task.listId !== listId"
 								>
 									<span
-										v-if="props.option.differentNamespace !== null"
+										v-if="task.differentNamespace !== null"
 										v-tooltip="$t('task.relation.differentNamespace')">
-										{{ props.option.differentNamespace }} >
+										{{ task.differentNamespace }} >
 									</span>
 									<span
-										v-if="props.option.differentList !== null"
+										v-if="task.differentList !== null"
 										v-tooltip="$t('task.relation.differentList')">
-										{{ props.option.differentList }} >
+										{{ task.differentList }} >
 									</span>
 								</span>
-								{{ props.option.title }}
+								{{ task.title }}
 							</span>
 							<span class="search-result" v-else>
-								{{ props.option }}
+								{{ task }}
 							</span>
 						</template>
-					</multiselect>
+					</Multiselect>
 				</div>
 				<div class="field has-addons mb-4" key="field-kind">
 					<div class="control is-expanded">
 						<div class="select is-fullwidth has-defaults">
-							<select v-model="newTaskRelationKind">
+							<select v-model="newTaskRelation.kind">
 								<option value="unset">{{ $t('task.relation.select') }}</option>
-								<option :key="rk" :value="rk" v-for="rk in relationKinds">
+								<option :key="`option_${rk}`" :value="rk" v-for="rk in RELATION_KINDS">
 									{{ $tc(`task.relation.kinds.${rk}`, 1) }}
 								</option>
 							</select>
@@ -84,29 +83,40 @@
 			<span class="title">{{ rts.title }}</span>
 			<div class="tasks">
 				<div :key="t.id" class="task" v-for="t in rts.tasks">
-					<router-link
-						:to="{ name: $route.name, params: { id: t.id } }"
-						:class="{ 'is-strikethrough': t.done}">
-						<span
-							class="different-list"
-							v-if="t.listId !== listId"
+					<div class="is-flex is-align-items-center">
+						<Fancycheckbox
+							class="task-done-checkbox"
+							v-model="t.done"
+							@update:model-value="toggleTaskDone(t)"
+						/>
+						<router-link
+							:to="{ name: route.name as string, params: { id: t.id } }"
+							:class="{ 'is-strikethrough': t.done}"
 						>
 							<span
-								v-if="t.differentNamespace !== null"
-								v-tooltip="$t('task.relation.differentNamespace')">
-								{{ t.differentNamespace }} >
+								class="different-list"
+								v-if="t.listId !== listId"
+							>
+								<span
+									v-if="t.differentNamespace !== null"
+									v-tooltip="$t('task.relation.differentNamespace')">
+									{{ t.differentNamespace }} >
+								</span>
+								<span
+									v-if="t.differentList !== null"
+									v-tooltip="$t('task.relation.differentList')">
+									{{ t.differentList }} >
+								</span>
 							</span>
-							<span
-								v-if="t.differentList !== null"
-								v-tooltip="$t('task.relation.differentList')">
-								{{ t.differentList }} >
-							</span>
-						</span>
-						{{ t.title }}
-					</router-link>
+							{{ t.title }}
+						</router-link>
+					</div>
 					<BaseButton
 						v-if="editEnabled"
-						@click="() => {showDeleteModal = true; relationToDelete = {relationKind: rts.kind, otherTaskId: t.id}}"
+						@click="setRelationToDelete({
+							relationKind: rts.kind,
+							otherTaskId: t.id
+						})"
 						class="remove"
 					>
 						<icon icon="trash-alt"/>
@@ -118,204 +128,234 @@
 			{{ $t('task.relation.noneYet') }}
 		</p>
 
-		<!-- Delete modal -->
-		<transition name="modal">
-			<modal
-				@close="showDeleteModal = false"
-				@submit="removeTaskRelation()"
-				v-if="showDeleteModal"
-			>
-				<template #header><span>{{ $t('task.relation.delete') }}</span></template>
+		<modal
+			v-if="relationToDelete !== undefined"
+			@close="relationToDelete = undefined"
+			@submit="removeTaskRelation()"
+		>
+			<template #header><span>{{ $t('task.relation.delete') }}</span></template>
 
-				<template #text>
-					<p>
-						{{ $t('task.relation.deleteText1') }}<br/>
-						<strong class="has-text-white">{{ $t('misc.cannotBeUndone') }}</strong>
-					</p>
-				</template>
-			</modal>
-		</transition>
+			<template #text>
+				<p>
+					{{ $t('task.relation.deleteText1') }}<br/>
+					<strong class="has-text-white">{{ $t('misc.cannotBeUndone') }}</strong>
+				</p>
+			</template>
+		</modal>
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script setup lang="ts">
+import {ref, reactive, shallowReactive, watch, computed, type PropType} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useRoute} from 'vue-router'
+import {useStore} from '@/store'
 
-import TaskService from '../../../services/task'
-import TaskModel from '../../../models/task'
-import TaskRelationService from '../../../services/taskRelation'
+import TaskService from '@/services/task'
+import TaskModel from '@/models/task'
+import type {ITask} from '@/modelTypes/ITask'
+import type {ITaskRelation} from '@/modelTypes/ITaskRelation'
+import {RELATION_KINDS, RELATION_KIND, type IRelationKind} from '@/types/IRelationKind'
+
+import TaskRelationService from '@/services/taskRelation'
 import TaskRelationModel from '@/models/taskRelation'
-import { RELATION_KIND, RELATION_KINDS } from '@/types/IRelationKind'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Multiselect from '@/components/input/multiselect.vue'
+import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 
-export default defineComponent({
-	name: 'relatedTasks',
-	data() {
-		return {
-			relatedTasks: {},
-			taskService: new TaskService(),
-			foundTasks: [],
-			relationKinds: RELATION_KINDS,
-			newTaskRelationTask: new TaskModel(),
-			newTaskRelationKind: RELATION_KIND.RELATED,
-			taskRelationService: new TaskRelationService(),
-			showDeleteModal: false,
-			relationToDelete: {},
-			saved: false,
-			showNewRelationForm: false,
-			query: '',
-		}
+import {error, success} from '@/message'
+
+const props = defineProps({
+	taskId: {
+		type: Number,
+		required: true,
 	},
-	components: {
-		BaseButton,
-		Multiselect,
+	initialRelatedTasks: {
+		type: Object as PropType<ITask['relatedTasks']>,
+		default: () => ({}),
 	},
-	props: {
-		taskId: {
-			type: Number,
-			required: true,
-		},
-		initialRelatedTasks: {
-			type: Object,
-			default: () => {
-			},
-		},
-		showNoRelationsNotice: {
-			type: Boolean,
-			default: false,
-		},
-		listId: {
-			type: Number,
-			default: 0,
-		},
-		editEnabled: {
-			default: true,
-		},
+	showNoRelationsNotice: {
+		type: Boolean,
+		default: false,
 	},
-	watch: {
-		initialRelatedTasks: {
-			handler(value) {
-				this.relatedTasks = value
-			},
-			immediate: true,
-		},
+	listId: {
+		type: Number,
+		default: 0,
 	},
-	computed: {
-		showCreate() {
-			return Object.keys(this.relatedTasks).length === 0 || this.showNewRelationForm
-		},
-		namespace() {
-			return this.$store.getters['namespaces/getListAndNamespaceById'](this.listId, true)?.namespace
-		},
-		mappedRelatedTasks() {
-			return Object.entries(this.relatedTasks).map(([kind, tasks]) => ({
-				title: this.$tc(`task.relation.kinds.${kind}`, tasks.length),
-				tasks: this.mapRelatedTasks(tasks),
-				kind,
-			}))
-		},
-		mappedFoundTasks() {
-			return this.mapRelatedTasks(this.foundTasks.filter(t => t.id !== this.taskId))
-		},
-	},
-	methods: {
-		async findTasks(query: string) {
-			this.query = query
-			this.foundTasks = await this.taskService.getAll({}, {s: query})
-		},
-
-		async addTaskRelation() {
-			if (this.newTaskRelationTask.id === 0 && this.query !== '') {
-				return this.createAndRelateTask(this.query)
-			}
-
-			if (this.newTaskRelationTask.id === 0) {
-				this.$message.error({message: this.$t('task.relation.taskRequired')})
-				return
-			}
-
-			const rel = new TaskRelationModel({
-				taskId: this.taskId,
-				otherTaskId: this.newTaskRelationTask.id,
-				relationKind: this.newTaskRelationKind,
-			})
-			await this.taskRelationService.create(rel)
-			if (!this.relatedTasks[this.newTaskRelationKind]) {
-				this.relatedTasks[this.newTaskRelationKind] = []
-			}
-			this.relatedTasks[this.newTaskRelationKind].push(this.newTaskRelationTask)
-			this.newTaskRelationTask = null
-			this.saved = true
-			this.showNewRelationForm = false
-			setTimeout(() => {
-				this.saved = false
-			}, 2000)
-		},
-
-		async removeTaskRelation() {
-			const rel = new TaskRelationModel({
-				relationKind: this.relationToDelete.relationKind,
-				taskId: this.taskId,
-				otherTaskId: this.relationToDelete.otherTaskId,
-			})
-			try {
-				await this.taskRelationService.delete(rel)
-
-				const kind = this.relationToDelete.relationKind
-				for (const t in this.relatedTasks[kind]) {
-					if (this.relatedTasks[kind][t].id === this.relationToDelete.otherTaskId) {
-						this.relatedTasks[kind].splice(t, 1)
-
-						break
-					}
-				}
-
-				this.saved = true
-				setTimeout(() => {
-					this.saved = false
-				}, 2000)
-			} finally {
-				this.showDeleteModal = false
-			}
-		},
-
-		async createAndRelateTask(title) {
-			const newTask = new TaskModel({title: title, listId: this.listId})
-			this.newTaskRelationTask = await this.taskService.create(newTask)
-			await this.addTaskRelation()
-		},
-
-		relationKindTitle(kind, length) {
-			return this.$tc(`task.relation.kinds.${kind}`, length)
-		},
-
-		mapRelatedTasks(tasks) {
-			return tasks
-				.map(task => {
-					// by doing this here once we can save a lot of duplicate calls in the template
-					const listAndNamespace = this.$store.getters['namespaces/getListAndNamespaceById'](task.listId, true)
-					const {
-						list,
-						namespace,
-					} = listAndNamespace === null ? {list: null, namespace: null} : listAndNamespace
-
-					return {
-						...task,
-						differentNamespace:
-							(namespace !== null &&
-								namespace.id !== this.namespace.id &&
-								namespace?.title) || null,
-						differentList:
-							(list !== null &&
-								task.listId !== this.listId &&
-								list?.title) || null,
-					}
-				})
-		},
+	editEnabled: {
+		default: true,
 	},
 })
+
+const store = useStore()
+const route = useRoute()
+const {t} = useI18n({useScope: 'global'})
+
+type TaskRelation = {kind: IRelationKind, task: ITask}
+
+const taskService = shallowReactive(new TaskService())
+
+const relatedTasks = ref<ITask['relatedTasks']>({})
+
+const newTaskRelation: TaskRelation = reactive({
+	kind: RELATION_KIND.RELATED,
+	task: new TaskModel(),
+})
+
+watch(
+	() => props.initialRelatedTasks,
+	(value) => {
+		relatedTasks.value = value
+	},
+		{immediate: true},
+)
+
+const showNewRelationForm = ref(false)
+const showCreate = computed(() => Object.keys(relatedTasks.value).length === 0 || showNewRelationForm.value)
+
+const query = ref('')
+const foundTasks = ref<ITask[]>([])
+
+async function findTasks(newQuery: string) {
+	query.value = newQuery
+	foundTasks.value = await taskService.getAll({}, {s: newQuery})
+}
+
+const getListAndNamespaceById = (listId: number) => store.getters['namespaces/getListAndNamespaceById'](listId, true)
+
+const namespace = computed(() => getListAndNamespaceById(props.listId)?.namespace)
+
+function mapRelatedTasks(tasks: ITask[]) {
+	return tasks.map(task => {
+		// by doing this here once we can save a lot of duplicate calls in the template
+		const {
+			list,
+			namespace: taskNamespace,
+		} = getListAndNamespaceById(task.listId) || {list: null, namespace: null}
+
+		return {
+			...task,
+			differentNamespace:
+				(taskNamespace !== null &&
+					taskNamespace.id !== namespace.value.id &&
+					taskNamespace?.title) || null,
+			differentList:
+				(list !== null &&
+					task.listId !== props.listId &&
+					list?.title) || null,
+		}
+	})
+}
+
+const mapRelationKindsTitleGetter = computed(() => ({
+	'subtask': (count: number) => t('task.relation.kinds.subtask', count),
+	'parenttask': (count: number) => t('task.relation.kinds.parenttask', count),
+	'related': (count: number) => t('task.relation.kinds.related', count),
+	'duplicateof': (count: number) => t('task.relation.kinds.duplicateof', count),
+	'duplicates': (count: number) => t('task.relation.kinds.duplicates', count),
+	'blocking': (count: number) => t('task.relation.kinds.blocking', count),
+	'blocked': (count: number) => t('task.relation.kinds.blocked', count),
+	'precedes': (count: number) => t('task.relation.kinds.precedes', count),
+	'follows': (count: number) => t('task.relation.kinds.follows', count),
+	'copiedfrom': (count: number) => t('task.relation.kinds.copiedfrom', count),
+	'copiedto': (count: number) => t('task.relation.kinds.copiedto', count),
+}))
+
+const mappedRelatedTasks = computed(() => Object.entries(relatedTasks.value).map(
+	([kind, tasks]) => ({
+		title: mapRelationKindsTitleGetter.value[kind as IRelationKind](tasks.length),
+		tasks: mapRelatedTasks(tasks),
+		kind: kind as IRelationKind,
+	}),
+))
+const mappedFoundTasks = computed(() => mapRelatedTasks(foundTasks.value.filter(t => t.id !== props.taskId)))
+
+const taskRelationService = shallowReactive(new TaskRelationService())
+const saved = ref(false)
+
+async function addTaskRelation() {
+	if (newTaskRelation.task.id === 0 && query.value !== '') {
+		return createAndRelateTask(query.value)
+	}
+
+	if (newTaskRelation.task.id === 0) {
+		error({message: t('task.relation.taskRequired')})
+		return
+	}
+
+	await taskRelationService.create(new TaskRelationModel({
+		taskId: props.taskId,
+		otherTaskId: newTaskRelation.task.id,
+		relationKind: newTaskRelation.kind,
+	}))
+	relatedTasks.value[newTaskRelation.kind] = [
+		...(relatedTasks.value[newTaskRelation.kind] || []),
+		newTaskRelation.task,
+	]
+	newTaskRelation.task = new TaskModel()
+	saved.value = true
+	showNewRelationForm.value = false
+	setTimeout(() => {
+		saved.value = false
+	}, 2000)
+}
+
+const relationToDelete = ref<Partial<ITaskRelation>>()
+
+function setRelationToDelete(relation: Partial<ITaskRelation>) {
+	relationToDelete.value = relation
+}
+
+async function removeTaskRelation() {
+	const relation = relationToDelete.value
+	if (!relation || !relation.relationKind || !relation.otherTaskId) {
+		relationToDelete.value = undefined
+		return
+	}
+	try {
+		const relationKind = relation.relationKind
+		await taskRelationService.delete(new TaskRelationModel({
+			relationKind,
+			taskId: props.taskId,
+			otherTaskId: relation.otherTaskId,
+		}))
+
+		relatedTasks.value[relationKind] = relatedTasks.value[relationKind]?.filter(
+			({id}) => id !== relation.otherTaskId,
+		)
+
+		saved.value = true
+		setTimeout(() => {
+			saved.value = false
+		}, 2000)
+	} finally {
+		relationToDelete.value = undefined
+	}
+}
+
+async function createAndRelateTask(title: string) {
+	const newTask = await taskService.create(new TaskModel({title, listId: props.listId}))
+	newTaskRelation.task = newTask
+	await addTaskRelation()
+}
+
+async function toggleTaskDone(task: ITask) {
+	await store.dispatch('tasks/update', task)
+	
+	// Find the task in the list and update it so that it is correctly strike through
+	Object.entries(relatedTasks.value).some(([kind, tasks]) => {
+		return tasks.some((t, key) => {
+			const found = t.id === task.id
+			if (found) {
+				relatedTasks.value[kind as IRelationKind]![key] = task
+			}
+			return found
+		})
+	})
+
+	success({message: t('task.detail.updateSuccess')})
+}
 </script>
 
 <style lang="scss" scoped>
@@ -366,15 +406,16 @@ export default defineComponent({
 		}
 	}
 
-	.remove {
-		text-align: center;
-		color: var(--danger);
-		opacity: 0;
-		transition: opacity $transition;
-	}
 }
 
-.related-tasks:hover .tasks .task .remove {
+.remove {
+	text-align: center;
+	color: var(--danger);
+	opacity: 0;
+	transition: opacity $transition;
+}
+
+.task:hover .remove {
 	opacity: 1;
 }
 
@@ -385,6 +426,14 @@ export default defineComponent({
 
 :deep(.multiselect .search-results button) {
 	padding: 0.5rem;
+}
+
+// FIXME: The height of the actual checkbox in the <Fancycheckbox/> component is too much resulting in a 
+//  weired positioning of the checkbox. Setting the height here is a workaround until we fix the styling 
+//  of the component.
+.task-done-checkbox {
+	padding: 0;
+	height: 18px; // The exact height of the checkbox in the container
 }
 
 @include modal-transition();
