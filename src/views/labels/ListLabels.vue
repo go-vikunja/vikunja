@@ -119,10 +119,10 @@ import ColorPicker from '@/components/input/colorPicker.vue'
 
 import LabelModel from '@/models/label'
 import type {ILabel} from '@/modelTypes/ILabel'
+import {useAuthStore} from '@/stores/auth'
 import {useLabelStore} from '@/stores/labels'
 
 import { useTitle } from '@/composables/useTitle'
-import { useStore } from '@/store'
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -134,25 +134,23 @@ const labelToDelete = ref<ILabel>(null)
 
 useTitle(() => t('label.title'))
 
-const store = useStore()
-const userInfo = computed(() => store.state.auth.info)
+const authStore = useAuthStore()
+const userInfo = computed(() => authStore.info)
 
 const labelStore = useLabelStore()
 labelStore.loadAllLabels()
 
 // Alphabetically sort the labels
 const labels = computed(() => Object.values(labelStore.labels).sort((f, s) => f.title > s.title ? 1 : -1))
-const loading = computed(() =>labelStore.isLoading)
+const loading = computed(() => labelStore.isLoading)
 
 function deleteLabel(label: ILabel) {
 	showDeleteModal.value = false
 	isLabelEdit.value = false
-	const labelStore = useLabelStore()
 	return labelStore.deleteLabel(label)
 }
 
 function editLabelSubmit() {
-		const labelStore = useLabelStore()
 		return labelStore.updateLabel(labelEditLabel.value)
 	}
 

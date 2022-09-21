@@ -139,7 +139,6 @@ export default {name: 'userTeamShare'}
 <script setup lang="ts">
 import {ref, reactive, computed, shallowReactive, type Ref} from 'vue'
 import type {PropType} from 'vue'
-import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import UserNamespaceService from '@/services/userNamespace'
@@ -171,6 +170,7 @@ import {RIGHTS} from '@/constants/rights'
 import Multiselect from '@/components/input/multiselect.vue'
 import Nothing from '@/components/misc/nothing.vue'
 import {success} from '@/message'
+import {useAuthStore} from '@/stores/auth'
 
 const props = defineProps({
 	type: {
@@ -208,8 +208,8 @@ const sharables = ref([])
 const showDeleteModal = ref(false)
 
 
-const store = useStore()
-const userInfo = computed(() => store.state.auth.info)
+const authStore = useAuthStore()
+const userInfo = computed(() => authStore.info)
 
 function createShareTypeNameComputed(count: number) {
 	return computed(() => {
@@ -365,7 +365,7 @@ async function toggleType(sharable) {
 
 const found = ref([])
 
-const currentUserId = computed(() => store.state.auth.info.id)
+const currentUserId = computed(() => authStore.info.id)
 async function find(query: string) {
 	if (query === '') {
 		found.value = []

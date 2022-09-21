@@ -39,12 +39,12 @@
 
 <script setup lang="ts">
 import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, type PropType} from 'vue'
-import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 import flatPickr from 'vue-flatpickr-component'
 
 import TaskService from '@/services/task'
 import type {ITask} from '@/modelTypes/ITask'
+import {useAuthStore} from '@/stores/auth'
 
 const props = defineProps({
 	modelValue: {
@@ -55,7 +55,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const {t} = useI18n({useScope: 'global'})
-const store = useStore()
+const authStore = useAuthStore()
 
 const taskService = shallowReactive(new TaskService())
 const task = ref<ITask>()
@@ -103,7 +103,7 @@ const flatPickerConfig = computed(() => ({
 	time_24hr: true,
 	inline: true,
 	locale: {
-		firstDayOfWeek: store.state.auth.settings.weekStart,
+		firstDayOfWeek: authStore.settings.weekStart,
 	},
 }))
 
@@ -124,8 +124,10 @@ async function updateDueDate() {
 	}
 
 	// FIXME: direct prop manipulation
-	task.value.dueDate = new Date(dueDate.value)
-	const newTask = await taskService.update(task.value)
+	const newTask = await taskService.update({
+		...task.value,
+		dueDate: new Date(dueDate.value),
+	})
 	lastValue.value = newTask.dueDate
 	task.value = newTask
 	emit('update:modelValue', newTask)

@@ -116,6 +116,7 @@ import {getLastVisited, clearLastVisited} from '../../helpers/saveLastVisited'
 import Password from '@/components/input/password.vue'
 import { setTitle } from '@/helpers/setTitle'
 import {useConfigStore} from '@/stores/config'
+import {useAuthStore} from '@/stores/auth'
 
 export default defineComponent({
 	components: {
@@ -173,8 +174,11 @@ export default defineComponent({
 		},
 		...mapStateVuex({
 			loading: LOADING,
-			needsTotpPasscode: state => state.auth.needsTotpPasscode,
-			authenticated: state => state.auth.authenticated,
+		}),
+
+		...mapState(useAuthStore, {
+			needsTotpPasscode: state => state.needsTotpPasscode,
+			authenticated: state => state.authenticated,
 		}),
 
 		...mapState(useConfigStore, {
@@ -224,8 +228,9 @@ export default defineComponent({
 			}
 
 			try {
-				await this.$store.dispatch('auth/login', credentials)
-				this.$store.commit('auth/needsTotpPasscode', false)
+				const authStore = useAuthStore()
+				await authStore.login(credentials)
+				authStore.setNeedsTotpPasscode(false)
 			} catch (e) {
 				if (e.response?.data.code === 1017 && !this.credentials.totpPasscode) {
 					return

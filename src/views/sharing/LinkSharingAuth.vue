@@ -42,12 +42,14 @@ import {useTitle} from '@vueuse/core'
 import Message from '@/components/misc/message.vue'
 import {LOGO_VISIBLE} from '@/store/mutation-types'
 import {LIST_VIEWS, type ListView} from '@/types/ListView'
+import {useAuthStore} from '@/stores/auth'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(t('sharing.authenticating'))
 
 function useAuth() {
 	const store = useStore()
+	const authStore = useAuthStore()
 	const route = useRoute()
 	const router = useRouter()
 
@@ -56,7 +58,7 @@ function useAuth() {
 	const errorMessage = ref('')
 	const password = ref('')
 
-	const authLinkShare = computed(() => store.getters['auth/authLinkShare'])
+	const authLinkShare = computed(() => authStore.authLinkShare)
 
 	async function authenticate() {
 		authenticateWithPassword.value = false
@@ -72,7 +74,7 @@ function useAuth() {
 		loading.value = true
 
 		try {
-			const {list_id: listId} = await store.dispatch('auth/linkShareAuth', {
+			const {list_id: listId} = await authStore.linkShareAuth({
 				hash: route.params.share,
 				password: password.value,
 			})

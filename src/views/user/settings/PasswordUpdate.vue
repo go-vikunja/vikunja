@@ -57,24 +57,24 @@ export default {name: 'user-settings-password-update'}
 
 <script setup lang="ts">
 import {ref, reactive, shallowReactive, computed} from 'vue'
-import { useI18n } from 'vue-i18n'
-import {useStore} from '@/store'
+import {useI18n} from 'vue-i18n'
 
 import PasswordUpdateService from '@/services/passwordUpdateService'
 import PasswordUpdateModel from '@/models/passwordUpdate'
 
 import {useTitle} from '@/composables/useTitle'
 import {success, error} from '@/message'
+import {useAuthStore} from '@/stores/auth'
 
 const passwordUpdateService = shallowReactive(new PasswordUpdateService())
 const passwordUpdate = reactive(new PasswordUpdateModel())
 const passwordConfirm = ref('')
 
 const {t} = useI18n({useScope: 'global'})
-const store = useStore()
 useTitle(() => `${t('user.settings.newPasswordTitle')} - ${t('user.settings.title')}`)
 
-const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
+const authStore = useAuthStore()
+const isLocalUser = computed(() => authStore.info?.isLocalUser)
 
 async function updatePassword() {
 	if (passwordConfirm.value !== passwordUpdate.newPassword) {

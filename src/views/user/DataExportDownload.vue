@@ -38,14 +38,15 @@
 <script setup lang="ts">
 import {ref, computed, reactive} from 'vue'
 import DataExportService from '@/services/dataExport'
-import {store} from '@/store'
+import {useAuthStore} from '@/stores/auth'
 
 const dataExportService = reactive(new DataExportService())
 const password = ref('')
 const errPasswordRequired = ref(false)
 const passwordInput = ref(null)
 
-const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
+const authStore = useAuthStore()
+const isLocalUser = computed(() => authStore.info?.isLocalUser)
 
 function download() {
 	if (password.value === '' && isLocalUser.value) {

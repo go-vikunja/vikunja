@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteLocation } from 'vue-router'
 import {saveLastVisited} from '@/helpers/saveLastVisited'
-import {store} from '@/store'
 
 import {saveListView, getListView} from '@/helpers/saveListView'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
@@ -9,6 +8,7 @@ import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 import {setTitle} from '@/helpers/setTitle'
 
 import {useListStore} from '@/stores/lists'
+import {useAuthStore} from '@/stores/auth'
 
 import HomeComponent from '../views/Home.vue'
 import NotFoundComponent from '../views/404.vue'
@@ -464,10 +464,8 @@ const router = createRouter({
 })
 
 export function getAuthForRoute(route: RouteLocation) {
-	const authUser = store.getters['auth/authUser']
-	const authLinkShare = store.getters['auth/authLinkShare']
-
-	if (authUser || authLinkShare) {
+	const authStore = useAuthStore()
+	if (authStore.authUser || authStore.authLinkShare) {
 		return
 	}
 

@@ -88,7 +88,6 @@ export default { name: 'user-settings-deletion' }
 
 <script setup lang="ts">
 import {ref, shallowReactive, computed} from 'vue'
-import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import AccountDeleteService from '@/services/accountDelete'
@@ -96,6 +95,7 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
+import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 
 const {t} = useI18n({useScope: 'global'})
@@ -105,11 +105,11 @@ const accountDeleteService = shallowReactive(new AccountDeleteService())
 const password = ref('')
 const errPasswordRequired = ref(false)
 
-const store = useStore()
+const authStore = useAuthStore()
 const configStore = useConfigStore()
 
 const userDeletionEnabled = computed(() => configStore.userDeletionEnabled)
-const deletionScheduledAt = computed(() => parseDateOrNull(store.state.auth.info?.deletionScheduledAt))
+const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt))
 
 const passwordInput = ref()
 async function deleteAccount() {
@@ -133,7 +133,7 @@ async function cancelDeletion() {
 
 	await accountDeleteService.cancel(password.value)
 	success({message: t('user.deletion.scheduledCancelSuccess')})
-	store.dispatch('auth/refreshUserInfo')
+	authStore.refreshUserInfo()
 	password.value = ''
 }
 </script>

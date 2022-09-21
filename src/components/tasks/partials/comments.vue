@@ -153,7 +153,6 @@
 
 <script setup lang="ts">
 import {ref, reactive, computed, shallowReactive, watch, nextTick} from 'vue'
-import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import Editor from '@/components/input/AsyncEditor'
@@ -168,6 +167,7 @@ import {uploadFile} from '@/helpers/attachments'
 import {success} from '@/message'
 import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 import {useConfigStore} from '@/stores/config'
+import {useAuthStore} from '@/stores/auth'
 
 const props = defineProps({
 	taskId: {
@@ -180,8 +180,8 @@ const props = defineProps({
 })
 
 const {t} = useI18n({useScope: 'global'})
-const store = useStore()
 const configStore = useConfigStore()
+const authStore = useAuthStore()
 
 const comments = ref<ITaskComment[]>([])
 
@@ -196,8 +196,8 @@ const newComment = reactive(new TaskCommentModel())
 const saved = ref<ITask['id'] | null>(null)
 const saving = ref<ITask['id'] | null>(null)
 
-const userAvatar = computed(() => store.state.auth.info.getAvatarUrl(48))
-const currentUserId = computed(() => store.state.auth.info.id)
+const userAvatar = computed(() => authStore.info.getAvatarUrl(48))
+const currentUserId = computed(() => authStore.info.id)
 const enabled = computed(() => configStore.taskCommentsEnabled)
 const actions = computed(() => {
 	if (!props.canWrite) {

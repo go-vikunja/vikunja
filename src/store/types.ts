@@ -45,6 +45,7 @@ export interface AuthState {
 	avatarUrl: string,
 	lastUserInfoRefresh: Date | null,
 	settings: IUserSettings,
+	isLoading: boolean,
 }
 
 export interface ConfigState {

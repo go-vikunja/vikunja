@@ -22,6 +22,7 @@ import {useI18n} from 'vue-i18n'
 import {getErrorText} from '@/message'
 import Message from '@/components/misc/message.vue'
 import {clearLastVisited, getLastVisited} from '@/helpers/saveLastVisited'
+import {useAuthStore} from '@/stores/auth'
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -29,6 +30,7 @@ const router = useRouter()
 const route = useRoute()
 
 const store = useStore()
+const authStore = useAuthStore()
 
 const loading = computed(() => store.state.loading)
 const errorMessage = ref('')
@@ -65,7 +67,7 @@ async function authenticateWithCode() {
 	}
 
 	try {
-		await store.dispatch('auth/openIdAuth', {
+		await authStore.openIdAuth({
 			provider: route.params.provider,
 			code: route.query.code,
 		})

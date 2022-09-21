@@ -70,6 +70,7 @@ import {useLabelStore} from '@/stores/labels'
 import Navigation from '@/components/home/navigation.vue'
 import QuickActions from '@/components/quick-actions/quick-actions.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
+import {useAuthStore} from '@/stores/auth'
 
 function useRouteWithModal() {
 	const router = useRouter()
@@ -165,13 +166,15 @@ watch(() => route.name as string, (routeName) => {
 
 function useRenewTokenOnFocus() {
 	const router = useRouter()
+	const authStore = useAuthStore()
 
-	const userInfo = computed(() => store.state.auth.info)
-	const authenticated = computed(() => store.state.auth.authenticated)
+
+	const userInfo = computed(() => authStore.info)
+	const authenticated = computed(() => authStore.authenticated)
 
 	// Try renewing the token every time vikunja is loaded initially
 	// (When opening the browser the focus event is not fired)
-	store.dispatch('auth/renewToken')
+	authStore.renewToken()
 
 	// Check if the token is still valid if the window gets focus again to maybe renew it
 	useEventListener('focus', () => {
@@ -184,14 +187,14 @@ function useRenewTokenOnFocus() {
 		// If the token expiry is negative, it is already expired and we have no choice but to redirect
 		// the user to the login page
 		if (expiresIn < 0) {
-			store.dispatch('auth/checkAuth')
+			authStore.checkAuth()
 			router.push({name: 'user.login'})
 			return
 		}
 
 		// Check if the token is valid for less than 60 hours and renew if thats the case
 		if (expiresIn < 60 * 3600) {
-			store.dispatch('auth/renewToken')
+			authStore.renewToken()
 			console.debug('renewed token')
 		}
 	})

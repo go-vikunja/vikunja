@@ -74,16 +74,18 @@ import {useDateTimeSalutation} from '@/composables/useDateTimeSalutation'
 import {useListStore} from '@/stores/lists'
 import {useConfigStore} from '@/stores/config'
 import {useNamespaceStore} from '@/stores/namespaces'
+import {useAuthStore} from '@/stores/auth'
 
 const welcome = useDateTimeSalutation()
 
 const store = useStore()
+const authStore = useAuthStore()
 const configStore = useConfigStore()
 const namespaceStore = useNamespaceStore()
 const listStore = useListStore()
 const listHistory = computed(() => {
 	// If we don't check this, it tries to load the list background right after logging out	
-	if(!store.state.auth.authenticated) {
+	if(!authStore.authenticated) {
 		return []
 	}
 	
@@ -93,13 +95,13 @@ const listHistory = computed(() => {
 })
 
 const migratorsEnabled = computed(() => configStore.availableMigrators?.length > 0)
-const userInfo = computed(() => store.state.auth.info)
+const userInfo = computed(() => authStore.info)
 const hasTasks = computed(() => store.state.hasTasks)
-const defaultListId = computed(() => store.state.auth.settings.defaultListId)
+const defaultListId = computed(() => authStore.settings.defaultListId)
 const defaultNamespaceId = computed(() => namespaceStore.namespaces?.[0]?.id || 0)
 const hasLists = computed(() => namespaceStore.namespaces?.[0]?.lists.length > 0)
 const loading = computed(() => store.state.loading && store.state.loadingModule === 'tasks')
-const deletionScheduledAt = computed(() => parseDateOrNull(store.state.auth.info?.deletionScheduledAt))
+const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt))
 
 // This is to reload the tasks list after adding a new task through the global task add.
 // FIXME: Should use vuex (somehow?)

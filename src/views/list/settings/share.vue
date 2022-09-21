@@ -41,6 +41,7 @@ import CreateEdit from '@/components/misc/create-edit.vue'
 import LinkSharing from '@/components/sharing/linkSharing.vue'
 import userTeam from '@/components/sharing/userTeam.vue'
 import {useConfigStore} from '@/stores/config'
+import {useAuthStore} from '@/stores/auth'
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -52,10 +53,11 @@ const title = computed(() => list.value?.title
 useTitle(title)
 
 const store = useStore()
+const authStore = useAuthStore()
 const configStore = useConfigStore()
 
 const linkSharingEnabled = computed(() => configStore.linkSharingEnabled)
-const userIsAdmin = computed(() => 'owner' in list.value && list.value.owner.id === store.state.auth.info.id)
+const userIsAdmin = computed(() => 'owner' in list.value && list.value.owner.id === authStore.info.id)
 
 async function loadList(listId: number) {
 	const listService = new ListService()

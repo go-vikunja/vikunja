@@ -13,7 +13,6 @@ import {
 	MENU_ACTIVE,
 	QUICK_ACTIONS_ACTIVE,
 } from './mutation-types'
-import auth from './modules/auth'
 import kanban from './modules/kanban'
 import tasks from './modules/tasks'
 
@@ -23,6 +22,7 @@ import ListService from '../services/list'
 import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 
 import type { RootStoreState, StoreState } from './types'
+import {useAuthStore} from '@/stores/auth'
 
 export const key: InjectionKey<Store<StoreState>> = Symbol()
 
@@ -34,7 +34,6 @@ export function useStore () {
 export const store = createStore<RootStoreState>({
 	strict: import.meta.env.DEV,
 	modules: {
-		auth,
 		kanban,
 		tasks,
 	},
@@ -131,9 +130,10 @@ export const store = createStore<RootStoreState>({
 
 			commit(CURRENT_LIST, list)
 		},
-		async loadApp({dispatch}) {
+		async loadApp() {
 			await checkAndSetApiUrl(window.API_URL)
-			await dispatch('auth/checkAuth')
+			const authStore = useAuthStore()
+			await authStore.checkAuth()
 		},
 	},
 })
