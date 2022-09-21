@@ -167,6 +167,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import {uploadFile} from '@/helpers/attachments'
 import {success} from '@/message'
 import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
+import {useConfigStore} from '@/stores/config'
 
 const props = defineProps({
 	taskId: {
@@ -180,6 +181,7 @@ const props = defineProps({
 
 const {t} = useI18n({useScope: 'global'})
 const store = useStore()
+const configStore = useConfigStore()
 
 const comments = ref<ITaskComment[]>([])
 
@@ -196,7 +198,7 @@ const saving = ref<ITask['id'] | null>(null)
 
 const userAvatar = computed(() => store.state.auth.info.getAvatarUrl(48))
 const currentUserId = computed(() => store.state.auth.info.id)
-const enabled = computed(() => store.state.config.taskCommentsEnabled)
+const enabled = computed(() => configStore.taskCommentsEnabled)
 const actions = computed(() => {
 	if (!props.canWrite) {
 		return {}

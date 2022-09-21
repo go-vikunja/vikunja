@@ -13,7 +13,6 @@ import {
 	MENU_ACTIVE,
 	QUICK_ACTIONS_ACTIVE,
 } from './mutation-types'
-import config from './modules/config'
 import auth from './modules/auth'
 import kanban from './modules/kanban'
 import tasks from './modules/tasks'
@@ -35,7 +34,6 @@ export function useStore () {
 export const store = createStore<RootStoreState>({
 	strict: import.meta.env.DEV,
 	modules: {
-		config,
 		auth,
 		kanban,
 		tasks,

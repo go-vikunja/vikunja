@@ -96,6 +96,7 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
+import {useConfigStore} from '@/stores/config'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.deletion.title')} - ${t('user.settings.title')}`)
@@ -105,7 +106,9 @@ const password = ref('')
 const errPasswordRequired = ref(false)
 
 const store = useStore()
-const userDeletionEnabled = computed(() => store.state.config.userDeletionEnabled)
+const configStore = useConfigStore()
+
+const userDeletionEnabled = computed(() => configStore.userDeletionEnabled)
 const deletionScheduledAt = computed(() => parseDateOrNull(store.state.auth.info?.deletionScheduledAt))
 
 const passwordInput = ref()

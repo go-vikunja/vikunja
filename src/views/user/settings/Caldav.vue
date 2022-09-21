@@ -79,6 +79,7 @@ import Message from '@/components/misc/message.vue'
 import CaldavTokenService from '@/services/caldavToken'
 import { formatDateShort } from '@/helpers/time/formatDate'
 import type {ICaldavToken} from '@/modelTypes/ICaldavToken'
+import {useConfigStore} from '@/stores/config'
 
 const copy = useCopyToClipboard()
 
@@ -105,8 +106,9 @@ async function deleteToken(token: ICaldavToken) {
 }
 
 const store = useStore()
+const configStore = useConfigStore()
 const username = computed(() => store.state.auth.info?.username)
-const caldavUrl = computed(() => `${store.getters['config/apiBase']}/dav/principals/${username.value}/`)
-const caldavEnabled = computed(() => store.state.config.caldavEnabled)
+const caldavUrl = computed(() => `${configStore.apiBase}/dav/principals/${username.value}/`)
+const caldavEnabled = computed(() => configStore.caldavEnabled)
 const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
 </script>

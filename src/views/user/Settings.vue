@@ -22,13 +22,15 @@ import {computed} from 'vue'
 import { store } from '@/store'
 import { useI18n } from 'vue-i18n'
 import { useTitle } from '@/composables/useTitle'
+import { useConfigStore } from '@/stores/config'
 
 const { t } = useI18n({useScope: 'global'})
 useTitle(() => t('user.settings.title'))
 
-const totpEnabled = computed(() => store.state.config.totpEnabled)
-const caldavEnabled = computed(() => store.state.config.caldavEnabled)
-const migratorsEnabled = computed(() => store.getters['config/migratorsEnabled'])
+const configStore = useConfigStore()
+const totpEnabled = computed(() => configStore.totpEnabled)
+const caldavEnabled = computed(() => configStore.caldavEnabled)
+const migratorsEnabled = computed(() => configStore.migratorsEnabled)
 const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
 
 const navigationItems = computed(() => {

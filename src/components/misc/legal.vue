@@ -8,14 +8,13 @@
 
 <script lang="ts" setup>
 import {computed} from 'vue'
-import {useStore} from '@/store'
-
 import BaseButton from '@/components/base/BaseButton.vue'
+import {useConfigStore} from '@/stores/config'
 
-const store = useStore()
+const configStore = useConfigStore()
 
-const imprintUrl = computed(() => store.state.config.legal.imprintUrl)
-const privacyPolicyUrl = computed(() => store.state.config.legal.privacyPolicyUrl)
+const imprintUrl = computed(() => configStore.legal.imprintUrl)
+const privacyPolicyUrl = computed(() => configStore.legal.privacyPolicyUrl)
 </script>
 
 <style lang="scss" scoped>

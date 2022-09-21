@@ -23,17 +23,17 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useStore} from '@/store'
 
 import {MIGRATORS} from './migrators'
 import {useTitle} from '@/composables/useTitle'
+import {useConfigStore} from '@/stores/config'
 
 const {t} = useI18n({useScope: 'global'})
-const store = useStore()
 
 useTitle(() => t('migrate.title'))
 
-const availableMigrators = computed(() => store.state.config.availableMigrators
+const configStore = useConfigStore()
+const availableMigrators = computed(() => configStore.availableMigrators
 	.map((id) => MIGRATORS[id])
 	.filter((item) => Boolean(item)),
 )

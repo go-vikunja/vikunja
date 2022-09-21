@@ -104,7 +104,8 @@
 <script lang="ts">
 import {defineComponent} from 'vue'
 import {useDebounceFn} from '@vueuse/core'
-import {mapState} from 'vuex'
+import {mapState as mapStateVuex} from 'vuex'
+import {mapState} from 'pinia'
 
 import {HTTPFactory} from '@/http-common'
 import {LOADING} from '@/store/mutation-types'
@@ -114,6 +115,7 @@ import {redirectToProvider} from '../../helpers/redirectToProvider'
 import {getLastVisited, clearLastVisited} from '../../helpers/saveLastVisited'
 import Password from '@/components/input/password.vue'
 import { setTitle } from '@/helpers/setTitle'
+import {useConfigStore} from '@/stores/config'
 
 export default defineComponent({
 	components: {
@@ -169,13 +171,16 @@ export default defineComponent({
 		hasOpenIdProviders() {
 			return this.openidConnect.enabled && this.openidConnect.providers?.length > 0
 		},
-		...mapState({
-			registrationEnabled: state => state.config.registrationEnabled,
+		...mapStateVuex({
 			loading: LOADING,
 			needsTotpPasscode: state => state.auth.needsTotpPasscode,
 			authenticated: state => state.auth.authenticated,
-			localAuthEnabled: state => state.config.auth.local.enabled,
-			openidConnect: state => state.config.auth.openidConnect,
+		}),
+
+		...mapState(useConfigStore, {
+			registrationEnabled: state => state.registrationEnabled,
+			localAuthEnabled: state => state.auth.local.enabled,
+			openidConnect: state => state.auth.openidConnect,
 		}),
 
 		validateField() {

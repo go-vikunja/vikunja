@@ -26,22 +26,23 @@
 </template>
 
 <script lang="ts" setup>
+import {computed} from 'vue'
+import {useRoute} from 'vue-router'
+import {useI18n} from 'vue-i18n'
+
 import Logo from '@/components/home/Logo.vue'
 import Message from '@/components/misc/message.vue'
 import Legal from '@/components/misc/legal.vue'
 import ApiConfig from '@/components/misc/api-config.vue'
-import {useStore} from '@/store'
-import {computed} from 'vue'
-import {useRoute} from 'vue-router'
-import {useI18n} from 'vue-i18n'
+
 import {useTitle} from '@/composables/useTitle'
+import {useConfigStore} from '@/stores/config'
+
+const configStore = useConfigStore()
+const motd = computed(() => configStore.motd)
 
 const route = useRoute()
-const store = useStore()
 const {t} = useI18n({useScope: 'global'})
-
-const motd = computed(() => store.state.config.motd)
-
 const title = computed(() => t(route.meta?.title as string || ''))
 useTitle(() => title.value)
 </script>

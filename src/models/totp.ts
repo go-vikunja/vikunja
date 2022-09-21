@@ -7,7 +7,7 @@ export default class TotpModel extends AbstractModel<ITotp> implements ITotp {
 	enabled = false
 	url = ''
 
-	constructor(data: Partial<ITotp>) {
+	constructor(data: Partial<ITotp> = {}) {
 		super()
 		this.assignData(data)
 	}

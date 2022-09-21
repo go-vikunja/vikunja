@@ -77,7 +77,6 @@
 
 <script setup lang="ts">
 import {ref, computed, watchEffect, type PropType} from 'vue'
-import {useStore} from '@/store'
 
 import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
 import Dropdown from '@/components/misc/dropdown.vue'
@@ -85,6 +84,7 @@ import DropdownItem from '@/components/misc/dropdown-item.vue'
 import TaskSubscription from '@/components/misc/subscription.vue'
 import type {IList} from '@/modelTypes/IList'
 import type {ISubscription} from '@/modelTypes/ISubscription'
+import {useConfigStore} from '@/stores/config'
 
 const props = defineProps({
 	list: {
@@ -98,7 +98,7 @@ watchEffect(() => {
 	subscription.value = props.list.subscription ?? null
 })
 
-const store = useStore()
-const backgroundsEnabled = computed(() => store.state.config.enabledBackgroundProviders?.length > 0)
+const configStore = useConfigStore()
+const backgroundsEnabled = computed(() => configStore.enabledBackgroundProviders?.length > 0)
 const isSavedFilter = computed(() => getSavedFilterIdFromListId(props.list.id) > 0)
 </script>

@@ -40,6 +40,7 @@ import {CURRENT_LIST} from '@/store/mutation-types'
 import CreateEdit from '@/components/misc/create-edit.vue'
 import LinkSharing from '@/components/sharing/linkSharing.vue'
 import userTeam from '@/components/sharing/userTeam.vue'
+import {useConfigStore} from '@/stores/config'
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -51,7 +52,9 @@ const title = computed(() => list.value?.title
 useTitle(title)
 
 const store = useStore()
-const linkSharingEnabled = computed(() => store.state.config.linkSharingEnabled)
+const configStore = useConfigStore()
+
+const linkSharingEnabled = computed(() => configStore.linkSharingEnabled)
 const userIsAdmin = computed(() => 'owner' in list.value && list.value.owner.id === store.state.auth.info.id)
 
 async function loadList(listId: number) {

@@ -108,15 +108,17 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import MenuButton from '@/components/home/MenuButton.vue'
 
 import {getListTitle} from '@/helpers/getListTitle'
+import {useConfigStore} from '@/stores/config'
 
 const store = useStore()
+const configStore = useConfigStore()
 
 const userInfo = computed(() => store.state.auth.info)
 const userAvatar = computed(() => store.state.auth.avatarUrl)
 const currentList = computed(() => store.state.currentList)
 const background = computed(() => store.state.background)
-const imprintUrl = computed(() => store.state.config.legal.imprintUrl)
-const privacyPolicyUrl = computed(() => store.state.config.legal.privacyPolicyUrl)
+const imprintUrl = computed(() => configStore.legal.imprintUrl)
+const privacyPolicyUrl = computed(() => configStore.legal.privacyPolicyUrl)
 const canWriteCurrentList = computed(() => store.state.currentList.maxRight > Rights.READ)
 const menuActive = computed(() => store.state.menuActive)
 

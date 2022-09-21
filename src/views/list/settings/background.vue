@@ -106,6 +106,7 @@ import debounce from 'lodash.debounce'
 import BaseButton from '@/components/base/BaseButton.vue'
 import {useListStore} from '@/stores/lists'
 import {useNamespaceStore} from '@/stores/namespaces'
+import {useConfigStore} from '@/stores/config'
 
 import BackgroundUnsplashService from '@/services/backgroundUnsplash'
 import BackgroundUploadService from '@/services/backgroundUpload'
@@ -144,9 +145,10 @@ const backgroundUploadService = ref(new BackgroundUploadService())
 const listService = ref(new ListService())
 const listStore = useListStore()
 const namespaceStore = useNamespaceStore()
+const configStore = useConfigStore()
 
-const unsplashBackgroundEnabled = computed(() => store.state.config.enabledBackgroundProviders.includes('unsplash'))
-const uploadBackgroundEnabled = computed(() => store.state.config.enabledBackgroundProviders.includes('upload'))
+const unsplashBackgroundEnabled = computed(() => configStore.enabledBackgroundProviders.includes('unsplash'))
+const uploadBackgroundEnabled = computed(() => configStore.enabledBackgroundProviders.includes('upload'))
 const currentList = computed(() => store.state.currentList)
 const hasBackground = computed(() => store.state.background !== null)
 

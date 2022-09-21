@@ -1,10 +1,9 @@
-import {store} from '@/store'
+import {useConfigStore} from '@/stores/config'
 
 const API_DEFAULT_PORT = '3456'
 
 export const ERROR_NO_API_URL = 'noApiUrlProvided'
 
-const updateConfig = () => store.dispatch('config/update') 
 
 export const checkAndSetApiUrl = (url: string): Promise<string> => {
 	if(url.startsWith('/')) {
@@ -24,6 +23,9 @@ export const checkAndSetApiUrl = (url: string): Promise<string> => {
 
 	const oldUrl = window.API_URL
 	window.API_URL = urlToCheck.toString()
+
+	const configStore = useConfigStore()
+	const updateConfig = () => configStore.update()
 
 	// Check if the api is reachable at the provided url
 	return updateConfig()

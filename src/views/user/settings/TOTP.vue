@@ -70,7 +70,6 @@ export default { name: 'user-settings-totp' }
 
 <script lang="ts" setup>
 import {computed, ref, shallowReactive} from 'vue'
-import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import TotpService from '@/services/totp'
@@ -78,7 +77,8 @@ import TotpModel from '@/models/totp'
 
 import {success} from '@/message'
 
-import { useTitle } from '@/composables/useTitle'
+import {useTitle} from '@/composables/useTitle'
+import {useConfigStore} from '@/stores/config'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.totp.title')} - ${t('user.settings.title')}`)
@@ -92,8 +92,8 @@ const totpConfirmPasscode = ref('')
 const totpDisableForm = ref(false)
 const totpDisablePassword = ref('')
 
-const store = useStore()
-const totpEnabled = computed(() => store.state.config.totpEnabled)
+const configStore = useConfigStore()
+const totpEnabled = computed(() => configStore.totpEnabled)
 
 totpStatus()
 

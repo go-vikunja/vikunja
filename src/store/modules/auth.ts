@@ -14,6 +14,7 @@ import type { RootStoreState, AuthState, Info} from '@/store/types'
 import {AUTH_TYPES} from '@/store/types'
 import type { IUserSettings } from '@/modelTypes/IUserSettings'
 import router from '@/router'
+import {useConfigStore} from '@/stores/config'
 
 function defaultSettings(settings: Partial<IUserSettings>) {
 	if (typeof settings.weekStart === 'undefined' || settings.weekStart === '') {
@@ -198,8 +199,8 @@ const authStore : Module<AuthState, RootStoreState> =  {
 			}
 		},
 
-		redirectToProviderIfNothingElseIsEnabled({rootState}) {
-			const {auth} = rootState.config
+		redirectToProviderIfNothingElseIsEnabled() {
+			const {auth} = useConfigStore()
 			if (
 				auth.local.enabled === false &&
 				auth.openidConnect.enabled &&

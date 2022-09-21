@@ -72,11 +72,13 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
 import {useDateTimeSalutation} from '@/composables/useDateTimeSalutation'
 import {useListStore} from '@/stores/lists'
+import {useConfigStore} from '@/stores/config'
 import {useNamespaceStore} from '@/stores/namespaces'
 
 const welcome = useDateTimeSalutation()
 
 const store = useStore()
+const configStore = useConfigStore()
 const namespaceStore = useNamespaceStore()
 const listStore = useListStore()
 const listHistory = computed(() => {
@@ -90,7 +92,7 @@ const listHistory = computed(() => {
 		.filter(l => l !== null)
 })
 
-const migratorsEnabled = computed(() => store.state.config.availableMigrators?.length > 0)
+const migratorsEnabled = computed(() => configStore.availableMigrators?.length > 0)
 const userInfo = computed(() => store.state.auth.info)
 const hasTasks = computed(() => store.state.hasTasks)
 const defaultListId = computed(() => store.state.auth.settings.defaultListId)

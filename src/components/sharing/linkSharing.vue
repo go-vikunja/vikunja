@@ -189,7 +189,6 @@
 
 <script setup lang="ts">
 import {ref, watch, computed, shallowReactive} from 'vue'
-import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import {RIGHTS} from '@/constants/rights'
@@ -204,6 +203,7 @@ import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {success} from '@/message'
 import type {ListView} from '@/types/ListView'
 import {LIST_VIEWS} from '@/types/ListView'
+import {useConfigStore} from '@/stores/config'
 
 const props = defineProps({
 	listId: {
@@ -241,8 +241,8 @@ watch(
 	{immediate: true},
 )
 
-const store = useStore()
-const frontendUrl = computed(() => store.state.config.frontendUrl)
+const configStore = useConfigStore()
+const frontendUrl = computed(() => configStore.frontendUrl)
 
 async function load(listId: IList['id']) {
 	// If listId == 0 the list on the calling component wasn't already loaded, so we just bail out here

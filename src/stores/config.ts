@@ -1,14 +1,13 @@
-import type { Module } from 'vuex'
+import {defineStore, acceptHMRUpdate} from 'pinia'
 import {parseURL} from 'ufo'
 
-import {CONFIG} from '../mutation-types'
+import {CONFIG} from '../store/mutation-types'
 import {HTTPFactory} from '@/http-common'
 import {objectToCamelCase} from '@/helpers/case'
-import type { RootStoreState, ConfigState } from '@/store/types'
+import type {ConfigState} from '@/store/types'
 
-const configStore : Module<ConfigState, RootStoreState> = {
-	namespaced: true,
-	state: () => ({
+export const useConfigStore = defineStore('config', {
+	state: (): ConfigState => ({
 		// These are the api defaults.
 		version: '',
 		frontendUrl: '',
@@ -45,19 +44,20 @@ const configStore : Module<ConfigState, RootStoreState> = {
 			return protocol + '//' + host
 		},
 	},
-	mutations: {
-		[CONFIG](state, config: ConfigState) {
-			Object.assign(state, config)
-		},
-	},
 	actions: {
-		async update(ctx) {
+		[CONFIG](config: ConfigState) {
+			Object.assign(this, config)
+		},
+		async update() {
 			const HTTP = HTTPFactory()
 			const {data: config} = await HTTP.get('info')
-			ctx.commit(CONFIG, objectToCamelCase(config))
+			this[CONFIG](objectToCamelCase(config))
 			return config
 		},
 	},
-}
+})
 
-export default configStore
+// support hot reloading
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useConfigStore, import.meta.hot))
+}
