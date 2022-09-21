@@ -249,6 +249,7 @@ const router = createRouter({
 			meta: {
 				showAsModal: true,
 			},
+			props: route => ({ namespaceId: Number(route.params.id as string) }),
 		},
 		{
 			path: '/tasks/:id',
