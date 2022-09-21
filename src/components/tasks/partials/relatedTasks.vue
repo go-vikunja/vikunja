@@ -336,7 +336,6 @@ async function removeTaskRelation() {
 
 async function createAndRelateTask(title: string) {
 	const newTask = await taskService.create(new TaskModel({title, listId: props.listId}))
-	console.log('new task created', JSON.parse(JSON.stringify(newTask)))
 	newTaskRelation.task = newTask
 	await addTaskRelation()
 }
