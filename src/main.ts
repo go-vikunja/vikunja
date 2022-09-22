@@ -58,7 +58,7 @@ app.directive('shortcut', shortcut)
 app.directive('cy', cypress)
 
 // global components
-import FontAwesomeIcon from './icons'
+import FontAwesomeIcon from '@/components/misc/Icon'
 import Button from '@/components/input/button.vue'
 import Modal from '@/components/misc/modal.vue'
 import Card from '@/components/misc/card.vue'

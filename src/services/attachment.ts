@@ -4,7 +4,6 @@ import AbstractService from './abstractService'
 import AttachmentModel from '../models/attachment'
 
 import type { IAttachment } from '@/modelTypes/IAttachment'
-import type { IFile } from '@/modelTypes/IFile'
 
 import {downloadBlob} from '@/helpers/downloadBlob'
 
@@ -18,8 +17,10 @@ export default class AttachmentService extends AbstractService<AttachmentModel> 
 	}
 
 	processModel(model: IAttachment) {
-		model.created = formatISO(new Date(model.created))
-		return model
+		return {
+			...model,
+			created: formatISO(new Date(model.created)),
+		}
 	}
 
 	useCreateInterceptor() {
@@ -52,7 +53,7 @@ export default class AttachmentService extends AbstractService<AttachmentModel> 
 	 * @param files
 	 * @returns {Promise<any|never>}
 	 */
-	create(model: IAttachment, files: IFile[]) {
+	create(model: IAttachment, files: File[] | FileList) {
 		const data = new FormData()
 		for (let i = 0; i < files.length; i++) {
 			// TODO: Validation of file size

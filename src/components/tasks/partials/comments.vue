@@ -212,8 +212,13 @@ const actions = computed(() => {
 	])))
 })
 
-function attachmentUpload(...args) {
-	return uploadFile(props.taskId, ...args)
+function attachmentUpload(
+	file: File,
+	onSuccess: (url: string) => void,
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	onError: (error: string) => void,
+) {
+	return uploadFile(props.taskId, file, onSuccess)
 }
 
 const taskCommentService = shallowReactive(new TaskCommentService())

@@ -1,11 +1,10 @@
 import AttachmentModel from '@/models/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
-import type {IFile} from '@/modelTypes/IFile'
 
 import AttachmentService from '@/services/attachment'
 import { store } from '@/store'
 
-export function uploadFile(taskId: number, file: IFile, onSuccess: () => Function) {
+export function uploadFile(taskId: number, file: File, onSuccess: (url: string) => void) {
 	const attachmentService = new AttachmentService()
 	const files = [file]
 
@@ -15,7 +14,7 @@ export function uploadFile(taskId: number, file: IFile, onSuccess: () => Functio
 export async function uploadFiles(
 	attachmentService: AttachmentService,
 	taskId: number,
-	files: IFile[],
+	files: File[] | FileList,
 	onSuccess: Function = () => {},
 ) {
 	const attachmentModel = new AttachmentModel({taskId})

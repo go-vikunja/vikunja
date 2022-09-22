@@ -8,19 +8,19 @@
 		</h3>
 
 		<input
+			v-if="editEnabled"
 			:disabled="attachmentService.loading || undefined"
 			@change="uploadNewAttachment()"
 			id="files"
 			multiple
-			ref="files"
+			ref="filesRef"
 			type="file"
-			v-if="editEnabled"
 		/>
 		<progress
+			v-if="attachmentService.uploadProgress > 0"
 			:value="attachmentService.uploadProgress"
 			class="progress is-primary"
 			max="100"
-			v-if="attachmentService.uploadProgress > 0"
 		>
 			{{ attachmentService.uploadProgress }}%
 		</progress>
@@ -42,7 +42,7 @@
 							<span v-tooltip="formatDateLong(a.created)">
 								{{ formatDateSince(a.created) }}
 							</span>
-							<user
+							<User
 								:avatar-size="24"
 								:user="a.createdBy"
 								:is-inline="true"
@@ -73,7 +73,7 @@
 						<BaseButton
 							v-if="editEnabled"
 							class="attachment-info-meta-button"
-							@click.prevent.stop="() => {attachmentToDelete = a; showDeleteModal = true}"
+							@click.prevent.stop="setAttachmentToDelete(a)"
 							v-tooltip="$t('task.attachment.deleteTooltip')"
 						>
 							{{ $t('misc.delete') }}
@@ -86,7 +86,7 @@
 		<x-button
 			v-if="editEnabled"
 			:disabled="attachmentService.loading"
-			@click="$refs.files.click()"
+			@click="filesRef?.click()"
 			class="mb-4"
 			icon="cloud-upload-alt"
 			variant="secondary"
@@ -97,7 +97,7 @@
 
 		<!-- Dropzone -->
 		<div
-			:class="{ hidden: !showDropzone }"
+			:class="{ hidden: !isOverDropZone }"
 			class="dropzone"
 			v-if="editEnabled"
 		>
@@ -110,270 +110,231 @@
 		</div>
 
 		<!-- Delete modal -->
-		<transition name="modal">
-			<modal
-				@close="showDeleteModal = false"
-				v-if="showDeleteModal"
-				@submit="deleteAttachment()"
-			>
-				<template #header><span>{{ $t('task.attachment.delete') }}</span></template>
-				
-				<template #text>
-					<p>
-						{{ $t('task.attachment.deleteText1', {filename: attachmentToDelete.file.name}) }}<br/>
-						<strong class="has-text-white">{{ $t('misc.cannotBeUndone') }}</strong>
-					</p>
-				</template>
-			</modal>
-		</transition>
+		<modal
+			v-if="attachmentToDelete !== null"
+			@close="setAttachmentToDelete(null)"
+			@submit="deleteAttachment()"
+		>
+			<template #header>
+				<span>{{ $t('task.attachment.delete') }}</span>
+			</template>
+			
+			<template #text>
+				<p>
+					{{ $t('task.attachment.deleteText1', {filename: attachmentToDelete.file.name}) }}<br/>
+					<strong class="has-text-white">{{ $t('misc.cannotBeUndone') }}</strong>
+				</p>
+			</template>
+		</modal>
 
-		<transition name="modal">
-			<modal
-				@close="
-					() => {
-						showImageModal = false
-						attachmentImageBlobUrl = null
-					}
-				"
-				v-if="showImageModal"
-			>
-				<img :src="attachmentImageBlobUrl" alt=""/>
-			</modal>
-		</transition>
+		<!-- Attachment image modal -->
+		<modal
+			v-if="attachmentImageBlobUrl !== null"
+			@close="attachmentImageBlobUrl = null"
+		>
+			<img :src="attachmentImageBlobUrl" alt=""/>
+		</modal>
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script setup lang="ts">
+import {ref, shallowReactive, computed} from 'vue'
+import {useDropZone} from '@vueuse/core'
+import {useStore} from '@/store'
 
-import AttachmentService from '../../../services/attachment'
-import AttachmentModel from '@/models/attachment'
-import type {IAttachment} from '@/modelTypes/IAttachment'
 import User from '@/components/misc/user.vue'
-import {mapState} from 'vuex'
-
-import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
-import { uploadFiles, generateAttachmentUrl } from '@/helpers/attachments'
-import {formatDate, formatDateSince, formatDateLong} from '@/helpers/time/formatDate'
-
 import BaseButton from '@/components/base/BaseButton.vue'
-import type { IFile } from '@/modelTypes/IFile'
-import { getHumanSize } from '@/helpers/getHumanSize'
 
-export default defineComponent({
-	name: 'attachments',
-	components: {
-		BaseButton,
-		User,
+import AttachmentService from '@/services/attachment'
+import type AttachmentModel from '@/models/attachment'
+import type {IAttachment} from '@/modelTypes/IAttachment'
+
+import {formatDateSince, formatDateLong} from '@/helpers/time/formatDate'
+import {uploadFiles, generateAttachmentUrl} from '@/helpers/attachments'
+import {getHumanSize} from '@/helpers/getHumanSize'
+import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
+import {error, success} from '@/message'
+
+const props = defineProps({
+	taskId: {
+		type: Number,
+		required: true,
 	},
-	data() {
-		return {
-			attachmentService: new AttachmentService(),
-			showDropzone: false,
-
-			showDeleteModal: false,
-			attachmentToDelete: AttachmentModel,
-
-			showImageModal: false,
-			attachmentImageBlobUrl: null,
-		}
+	initialAttachments: {
+		type: Array,
 	},
-	props: {
-		taskId: {
-			required: true,
-			type: Number,
-		},
-		initialAttachments: {
-			type: Array,
-		},
-		editEnabled: {
-			default: true,
-		},
-	},
-
-	setup(props) {
-		const copy = useCopyToClipboard()
-
-		function copyUrl(attachment: IAttachment) {
-			copy(generateAttachmentUrl(props.taskId, attachment.id))
-		}
-
-		return { copyUrl }
-	},
-
-	computed: mapState({
-		attachments: (state) => state.attachments.attachments,
-	}),
-	mounted() {
-		document.addEventListener('dragenter', (e) => {
-			e.stopPropagation()
-			e.preventDefault()
-			this.showDropzone = true
-		})
-
-		window.addEventListener('dragleave', (e) => {
-			e.stopPropagation()
-			e.preventDefault()
-			this.showDropzone = false
-		})
-
-		document.addEventListener('dragover', (e) => {
-			e.stopPropagation()
-			e.preventDefault()
-			this.showDropzone = true
-		})
-
-		document.addEventListener('drop', (e) => {
-			e.stopPropagation()
-			e.preventDefault()
-
-			let files = e.dataTransfer.files
-			this.uploadFiles(files)
-			this.showDropzone = false
-		})
-	},
-	methods: {
-		getHumanSize,
-		formatDate,
-		formatDateSince,
-		formatDateLong,
-
-		downloadAttachment(attachment: IAttachment) {
-			this.attachmentService.download(attachment)
-		},
-		uploadNewAttachment() {
-			if (this.$refs.files.files.length === 0) {
-				return
-			}
-
-			this.uploadFiles(this.$refs.files.files)
-		},
-		uploadFiles(files: IFile[]) {
-			uploadFiles(this.attachmentService, this.taskId, files)
-		},
-		async deleteAttachment() {
-			try {
-				const r = await this.attachmentService.delete(this.attachmentToDelete)
-				this.$store.commit(
-					'attachments/removeById',
-					this.attachmentToDelete.id,
-				)
-				this.$message.success(r)
-			} finally{
-				this.showDeleteModal = false
-			}
-		},
-		async viewOrDownload(attachment) {
-			if (
-				attachment.file.name.endsWith('.jpg') ||
-				attachment.file.name.endsWith('.png') ||
-				attachment.file.name.endsWith('.bmp') ||
-				attachment.file.name.endsWith('.gif')
-			) {
-				this.showImageModal = true
-				this.attachmentImageBlobUrl = await this.attachmentService.getBlobUrl(attachment)
-			} else {
-				this.downloadAttachment(attachment)
-			}
-		},
+	editEnabled: {
+		default: true,
 	},
 })
+
+const attachmentService = shallowReactive(new AttachmentService())
+
+const store = useStore()
+const attachments = computed(() => store.state.attachments.attachments)
+
+function onDrop(files: File[] | null) {
+	if (files && files.length !== 0) {
+		uploadFilesToTask(files)
+	}
+}
+
+const { isOverDropZone } = useDropZone(document, onDrop)
+
+function downloadAttachment(attachment: IAttachment) {
+	attachmentService.download(attachment)
+}
+
+const filesRef = ref<HTMLInputElement | null>(null)
+function uploadNewAttachment() {
+	const files = filesRef.value?.files
+
+	if (!files || files.length === 0) {
+		return
+	}
+
+	uploadFilesToTask(files)
+}
+
+function uploadFilesToTask(files: File[] | FileList) {
+	uploadFiles(attachmentService, props.taskId, files)
+}
+
+const attachmentToDelete = ref<AttachmentModel | null>(null)
+
+function setAttachmentToDelete(attachment: AttachmentModel | null) {
+	attachmentToDelete.value = attachment
+}
+
+async function deleteAttachment() {
+	if (attachmentToDelete.value === null) {
+		return
+	}
+
+	try {
+		const r = await attachmentService.delete(attachmentToDelete.value)
+		store.commit(
+			'attachments/removeById',
+			attachmentToDelete.value.id,
+		)
+		success(r)
+		setAttachmentToDelete(null)
+	} catch(e) {
+		error(e)
+	}
+}
+
+const attachmentImageBlobUrl = ref<string | null>(null)
+const SUPPORTED_SUFFIX = ['.jpg', '.png', '.bmp', '.gif']
+
+async function viewOrDownload(attachment: AttachmentModel) {
+	if (SUPPORTED_SUFFIX.some((suffix) => attachment.file.name.endsWith(suffix))	) {
+		attachmentImageBlobUrl.value = await attachmentService.getBlobUrl(attachment)
+	} else {
+		downloadAttachment(attachment)
+	}
+}
+
+const copy = useCopyToClipboard()
+function copyUrl(attachment: AttachmentModel) {
+	copy(generateAttachmentUrl(props.taskId, attachment.id))
+}
 </script>
 
 <style lang="scss" scoped>
 .attachments {
-  input[type=file] {
-    display: none;
-  }
+	input[type=file] {
+		display: none;
+	}
 
-  .files {
-    margin-bottom: 1rem;
-
-    .attachment {
-      margin-bottom: .5rem;
-      display: block;
-      transition: background-color $transition;
-      border-radius: $radius;
-      padding: .5rem;
-
-      &:hover {
-        background-color: var(--grey-200);
-      }
-
-      .filename {
-        font-weight: bold;
-        margin-bottom: .25rem;
-        color: var(--text);
-      }
-
-      .info {
-        color: var(--grey-500);
-        font-size: .9rem;
-
-        p {
-          margin-bottom: 0;
-          display: flex;
-
-          > span:not(:last-child):after,
-          > button:not(:last-child):after {
-            content: '·';
-            padding: 0 .25rem;
-          }
-        }
-      }
-    }
-  }
-
-  @media screen and (max-width: $tablet) {
-    .button {
-      width: 100%;
-    }
-  }
-
-  .dropzone {
-    position: fixed;
-    background: rgba(250, 250, 250, 0.8);
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    z-index: 100;
-    text-align: center;
-
-    &.hidden {
-      display: none;
-    }
-
-    .drop-hint {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-
-      .icon {
-        width: 100%;
-        font-size: 5rem;
-        height: auto;
-        text-shadow: var(--shadow-md);
-        animation: bounce 2s infinite;
-		
-		@media (prefers-reduced-motion: reduce) {
-          animation: none;
+	@media screen and (max-width: $tablet) {
+		.button {
+			width: 100%;
 		}
-      }
+	}
+}
 
-      .hint {
-        margin: .5rem auto 2rem;
-        border-radius: 2px;
-        box-shadow: var(--shadow-md);
-        background: var(--primary);
-        padding: 1rem;
-        color: var(--white);
-        width: 100%;
-        max-width: 300px;
-      }
-    }
-  }
+.files {
+	margin-bottom: 1rem;
+}
+
+.attachment {
+	margin-bottom: .5rem;
+	display: block;
+	transition: background-color $transition;
+	border-radius: $radius;
+	padding: .5rem;
+
+	&:hover {
+		background-color: var(--grey-200);
+	}
+}
+
+.filename {
+	font-weight: bold;
+	margin-bottom: .25rem;
+	color: var(--text);
+}
+
+.info {
+	color: var(--grey-500);
+	font-size: .9rem;
+
+	p {
+		margin-bottom: 0;
+		display: flex;
+
+		> span:not(:last-child):after,
+		> button:not(:last-child):after {
+			content: '·';
+			padding: 0 .25rem;
+		}
+	}
+}
+
+.dropzone {
+	position: fixed;
+	background: rgba(250, 250, 250, 0.8);
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	z-index: 100;
+	text-align: center;
+
+	&.hidden {
+		display: none;
+	}
+
+	.drop-hint {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+
+		.icon {
+			width: 100%;
+			font-size: 5rem;
+			height: auto;
+			text-shadow: var(--shadow-md);
+			animation: bounce 2s infinite;
+	
+			@media (prefers-reduced-motion: reduce) {
+				animation: none;
+			}
+		}
+
+		.hint {
+			margin: .5rem auto 2rem;
+			border-radius: 2px;
+			box-shadow: var(--shadow-md);
+			background: var(--primary);
+			padding: 1rem;
+			color: var(--white);
+			width: 100%;
+			max-width: 300px;
+		}
+	}
 }
 
 .attachment-info-meta {
@@ -410,29 +371,29 @@ export default defineComponent({
 }
 
 @keyframes bounce {
-  from,
-  20%,
-  53%,
-  80%,
-  to {
-    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
-    transform: translate3d(0, 0, 0);
-  }
+	from,
+	20%,
+	53%,
+	80%,
+	to {
+		animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+		transform: translate3d(0, 0, 0);
+	}
 
-  40%,
-  43% {
-    animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
-    transform: translate3d(0, -30px, 0);
-  }
+	40%,
+	43% {
+		animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
+		transform: translate3d(0, -30px, 0);
+	}
 
-  70% {
-    animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
-    transform: translate3d(0, -15px, 0);
-  }
+	70% {
+		animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
+		transform: translate3d(0, -15px, 0);
+	}
 
-  90% {
-    transform: translate3d(0, -4px, 0);
-  }
+	90% {
+		transform: translate3d(0, -4px, 0);
+	}
 }
 
 @include modal-transition();

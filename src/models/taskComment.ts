@@ -14,7 +14,7 @@ export default class TaskCommentModel extends AbstractModel<ITaskComment> implem
 	created: Date = null
 	updated: Date = null
 
-	constructor(data: Partial<ITaskComment>) {
+	constructor(data: Partial<ITaskComment> = {}) {
 		super()
 		this.assignData(data)
 
