@@ -80,12 +80,11 @@ export const useLabelStore = defineStore('label', {
 				return
 			}
 
-			const cancel = setLoadingPinia(useLabelStore)
+			const cancel = setLoadingPinia(useLabelStore, this.setIsLoading)
 
 			try {
 				const labels = await getAllLabels()
 				this.setLabels(labels)
-				this.setIsLoading(true)
 				return labels
 			} finally {
 				cancel()
