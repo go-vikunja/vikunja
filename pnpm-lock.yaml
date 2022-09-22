@@ -59,7 +59,7 @@ specifiers:
   register-service-worker: 1.7.2
   rollup: 2.79.1
   rollup-plugin-visualizer: 5.8.1
-  sass: 1.54.9
+  sass: 1.55.0
   snake-case: 3.0.4
   sortablejs: 1.15.0
   typescript: 4.8.3
@@ -156,12 +156,12 @@ devDependencies:
   postcss-preset-env: 7.8.2_postcss@8.4.16
   rollup: 2.79.1
   rollup-plugin-visualizer: 5.8.1_rollup@2.79.1
-  sass: 1.54.9
+  sass: 1.55.0
   typescript: 4.8.3
-  vite: 3.1.3_sass@1.54.9+terser@5.10.0
+  vite: 3.1.3_sass@1.55.0+terser@5.10.0
   vite-plugin-pwa: 0.13.1_vite@3.1.3
   vite-svg-loader: 3.6.0
-  vitest: 0.23.4_a41ccc6df2d590c4abbc4200fe4ac982
+  vitest: 0.23.4_ddc85b0b7a78b2cfae025c8e16b7f605
   vue-tsc: 0.40.13_typescript@4.8.3
   wait-on: 6.0.1
   workbox-cli: 6.5.4
@@ -3306,7 +3306,7 @@ packages:
       regenerator-runtime: 0.13.9
       systemjs: 6.12.6
       terser: 5.10.0
-      vite: 3.1.3_sass@1.54.9+terser@5.10.0
+      vite: 3.1.3_sass@1.55.0+terser@5.10.0
     dev: true
 
   /@vitejs/plugin-vue/3.1.0_vite@3.1.3+vue@3.2.39:
@@ -3316,7 +3316,7 @@ packages:
       vite: ^3.0.0
       vue: ^3.2.25
     dependencies:
-      vite: 3.1.3_sass@1.54.9+terser@5.10.0
+      vite: 3.1.3_sass@1.55.0+terser@5.10.0
       vue: 3.2.39
     dev: true
 
@@ -11175,8 +11175,8 @@ packages:
     resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
     dev: true
 
-  /sass/1.54.9:
-    resolution: {integrity: sha512-xb1hjASzEH+0L0WI9oFjqhRi51t/gagWnxLiwUNMltA0Ab6jIDkAacgKiGYKM9Jhy109osM7woEEai6SXeJo5Q==}
+  /sass/1.55.0:
+    resolution: {integrity: sha512-Pk+PMy7OGLs9WaxZGJMn7S96dvlyVBwwtToX895WmCpAOr5YiJYEUJfiJidMuKb613z2xNWcXCHEuOvjZbqC6A==}
     engines: {node: '>=12.0.0'}
     hasBin: true
     dependencies:
@@ -12577,7 +12577,7 @@ packages:
       fast-glob: 3.2.11
       pretty-bytes: 6.0.0
       rollup: 2.79.1
-      vite: 3.1.3_sass@1.54.9+terser@5.10.0
+      vite: 3.1.3_sass@1.55.0+terser@5.10.0
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
@@ -12592,7 +12592,7 @@ packages:
       svgo: 2.8.0
     dev: true
 
-  /vite/3.1.3_sass@1.54.9+terser@5.10.0:
+  /vite/3.1.3_sass@1.55.0+terser@5.10.0:
     resolution: {integrity: sha512-/3XWiktaopByM5bd8dqvHxRt5EEgRikevnnrpND0gRfNkrMrPaGGexhtLCzv15RcCMtV2CLw+BPas8YFeSG0KA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
@@ -12615,13 +12615,13 @@ packages:
       postcss: 8.4.16
       resolve: 1.22.1
       rollup: 2.78.0
-      sass: 1.54.9
+      sass: 1.55.0
       terser: 5.10.0
     optionalDependencies:
       fsevents: 2.3.2
     dev: true
 
-  /vitest/0.23.4_a41ccc6df2d590c4abbc4200fe4ac982:
+  /vitest/0.23.4_ddc85b0b7a78b2cfae025c8e16b7f605:
     resolution: {integrity: sha512-iukBNWqQAv8EKDBUNntspLp9SfpaVFbmzmM0sNcnTxASQZMzRw3PsM6DMlsHiI+I6GeO5/sYDg3ecpC+SNFLrQ==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
@@ -12654,7 +12654,7 @@ packages:
       tinybench: 2.1.5
       tinypool: 0.3.0
       tinyspy: 1.0.2
-      vite: 3.1.3_sass@1.54.9+terser@5.10.0
+      vite: 3.1.3_sass@1.55.0+terser@5.10.0
     transitivePeerDependencies:
       - less
       - sass
