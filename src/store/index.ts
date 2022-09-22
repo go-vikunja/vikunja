@@ -15,7 +15,6 @@ import {
 } from './mutation-types'
 import config from './modules/config'
 import auth from './modules/auth'
-import namespaces from './modules/namespaces'
 import kanban from './modules/kanban'
 import tasks from './modules/tasks'
 import attachments from './modules/attachments'
@@ -39,7 +38,6 @@ export const store = createStore<RootStoreState>({
 	modules: {
 		config,
 		auth,
-		namespaces,
 		kanban,
 		tasks,
 		attachments,

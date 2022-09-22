@@ -160,6 +160,7 @@ import type {IList} from '@/modelTypes/IList'
 import type {INamespace} from '@/modelTypes/INamespace'
 import ColorBubble from '@/components/misc/colorBubble.vue'
 import {useListStore} from '@/stores/lists'
+import {useNamespaceStore} from '@/stores/namespaces'
 
 const drag = ref(false)
 const dragOptions = {
@@ -168,13 +169,14 @@ const dragOptions = {
 }
 
 const store = useStore()
+const namespaceStore = useNamespaceStore()
 const currentList = computed(() => store.state.currentList)
 const menuActive = computed(() => store.state.menuActive)
-const loading = computed(() => store.state.loading && store.state.loadingModule === 'namespaces')
+const loading = computed(() => namespaceStore.isLoading)
 
 
 const namespaces = computed(() => {
-	return (store.state.namespaces.namespaces as INamespace[]).filter(n => !n.isArchived)
+	return namespaceStore.namespaces.filter(n => !n.isArchived)
 })
 const activeLists = computed(() => {
 	return namespaces.value.map(({lists}) => {
@@ -210,7 +212,7 @@ function toggleLists(namespaceId: INamespace['id']) {
 const listsVisible = ref<{ [id: INamespace['id']]: boolean }>({})
 // FIXME: async action will be unfinished when component mounts
 onBeforeMount(async () => {
-	const namespaces = await store.dispatch('namespaces/loadNamespaces') as INamespace[]
+	const namespaces = await namespaceStore.loadNamespaces()
 	namespaces.forEach(n => {
 		if (typeof listsVisible.value[n.id] === 'undefined') {
 			listsVisible.value[n.id] = true
@@ -229,7 +231,7 @@ function updateActiveLists(namespace: INamespace, activeLists: IList[]) {
 		...namespace.lists.filter(l => l.isArchived),
 	]
 
-	store.commit('namespaces/setNamespaceById', {
+	namespaceStore.setNamespaceById({
 		...namespace,
 		lists,
 	})

@@ -460,8 +460,9 @@ import CreatedUpdated from '@/components/tasks/partials/createdUpdated.vue'
 import { setTitle } from '@/helpers/setTitle'
 import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
 import {getListTitle} from '@/helpers/getListTitle'
-import type { IList } from '@/modelTypes/IList'
+import type {IList} from '@/modelTypes/IList'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
+import {useNamespaceStore} from '@/stores/namespaces'
 
 function scrollIntoView(el) {
 	if (!el) {
@@ -582,11 +583,13 @@ export default defineComponent({
 				}
 			}
 
-			if (!this.$store.getters['namespaces/getListAndNamespaceById']) {
+			const namespaceStore = useNamespaceStore()
+
+			if (!namespaceStore.getListAndNamespaceById) {
 				return null
 			}
 
-			return this.$store.getters['namespaces/getListAndNamespaceById'](this.task.listId)
+			return namespaceStore.getListAndNamespaceById(this.task.listId)
 		},
 		canWrite() {
 			return typeof this.task !== 'undefined' && typeof this.task.maxRight !== 'undefined' && this.task.maxRight > rights.READ
@@ -752,7 +755,8 @@ export default defineComponent({
 		async toggleFavorite() {
 			this.task.isFavorite = !this.task.isFavorite
 			this.task = await this.taskService.update(this.task)
-			this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
+			const namespaceStore = useNamespaceStore()
+			await namespaceStore.loadNamespacesIfFavoritesDontExist()
 		},
 		
 		colorIsDark,

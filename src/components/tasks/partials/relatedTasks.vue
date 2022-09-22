@@ -164,6 +164,8 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import Multiselect from '@/components/input/multiselect.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 
+import {useNamespaceStore} from '@/stores/namespaces'
+
 import {error, success} from '@/message'
 
 const props = defineProps({
@@ -189,6 +191,7 @@ const props = defineProps({
 })
 
 const store = useStore()
+const namespaceStore = useNamespaceStore()
 const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
 
@@ -222,7 +225,7 @@ async function findTasks(newQuery: string) {
 	foundTasks.value = await taskService.getAll({}, {s: newQuery})
 }
 
-const getListAndNamespaceById = (listId: number) => store.getters['namespaces/getListAndNamespaceById'](listId, true)
+const getListAndNamespaceById = (listId: number) => namespaceStore.getListAndNamespaceById(listId, true)
 
 const namespace = computed(() => getListAndNamespaceById(props.listId)?.namespace)
 

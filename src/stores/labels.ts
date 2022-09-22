@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { acceptHMRUpdate, defineStore } from 'pinia'
 
 import LabelService from '@/services/label'
 import {success} from '@/message'
@@ -134,3 +134,8 @@ export const useLabelStore = defineStore('label', {
 		},
 	},
 })
+
+// support hot reloading
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useLabelStore, import.meta.hot))
+}

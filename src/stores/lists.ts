@@ -1,12 +1,12 @@
 import {watch, reactive, shallowReactive, unref, toRefs, readonly} from 'vue'
-import {defineStore} from 'pinia'
+import {acceptHMRUpdate, defineStore} from 'pinia'
 import {useI18n} from 'vue-i18n'
 
 import ListService from '@/services/list'
 import {setLoadingPinia} from '@/store/helper'
 import {removeListFromHistory} from '@/modules/listHistory'
 import {createNewIndexer} from '@/indexes'
-import {store as vuexStore} from '@/store' // for gradual conversion, see fullUserDetails
+import {useNamespaceStore} from './namespaces'
 
 import type {ListState} from '@/store/types'
 import type {IList} from '@/modelTypes/IList'
@@ -93,7 +93,8 @@ export const useListStore = defineStore('list', {
 			try {
 				const createdList = await listService.create(list)
 				createdList.namespaceId = list.namespaceId
-				vuexStore.commit('namespaces/addListToNamespace', createdList, {root: true})
+				const namespaceStore = useNamespaceStore()
+				namespaceStore.addListToNamespace(createdList)
 				this.setList(createdList)
 				return createdList
 			} finally {
@@ -108,7 +109,8 @@ export const useListStore = defineStore('list', {
 			try {
 				await listService.update(list)
 				this.setList(list)
-				vuexStore.commit('namespaces/setListInNamespaceById', list, {root: true})
+				const namespaceStore = useNamespaceStore()
+				namespaceStore.setListInNamespaceById(list)
 
 				// the returned list from listService.update is the same!
 				// in order to not validate vuex mutations we have to create a new copy
@@ -117,12 +119,12 @@ export const useListStore = defineStore('list', {
 					namespaceId: FavoriteListsNamespace,
 				}
 				if (list.isFavorite) {
-					vuexStore.commit('namespaces/addListToNamespace', newList, {root: true})
+					namespaceStore.addListToNamespace(newList)
 				} else {
-					vuexStore.commit('namespaces/removeListFromNamespaceById', newList, {root: true})
+					namespaceStore.removeListFromNamespaceById(newList)
 				}
-				vuexStore.dispatch('namespaces/loadNamespacesIfFavoritesDontExist', null, {root: true})
-				vuexStore.dispatch('namespaces/removeFavoritesNamespaceIfEmpty', null, {root: true})
+				namespaceStore.loadNamespacesIfFavoritesDontExist(null)
+				namespaceStore.removeFavoritesNamespaceIfEmpty(null)
 				return newList
 			} catch (e) {
 				// Reset the list state to the initial one to avoid confusion for the user
@@ -143,7 +145,8 @@ export const useListStore = defineStore('list', {
 			try {
 				const response = await listService.delete(list)
 				this.removeListById(list)
-				vuexStore.commit('namespaces/removeListFromNamespaceById', list, {root: true})
+				const namespaceStore = useNamespaceStore()
+				namespaceStore.removeListFromNamespaceById(list)
 				removeListFromHistory({id: list.id})
 				return response
 			} finally {
@@ -179,4 +182,9 @@ export function useList(listId: MaybeRef<IList['id']>) {
 		list,
 		save,
 	}
+}
+
+// support hot reloading
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useListStore, import.meta.hot))
 }

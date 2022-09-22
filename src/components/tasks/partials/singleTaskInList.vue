@@ -118,6 +118,7 @@ import ChecklistSummary from './checklist-summary.vue'
 import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 import ColorBubble from '@/components/misc/colorBubble.vue'
 import {useListStore} from '@/stores/lists'
+import {useNamespaceStore} from '@/stores/namespaces'
 
 export default defineComponent({
 	name: 'singleTaskInList',
@@ -236,7 +237,8 @@ export default defineComponent({
 			this.task.isFavorite = !this.task.isFavorite
 			this.task = await this.taskService.update(this.task)
 			this.$emit('task-updated', this.task)
-			this.$store.dispatch('namespaces/loadNamespacesIfFavoritesDontExist')
+			const namespaceStore = useNamespaceStore()
+			namespaceStore.loadNamespacesIfFavoritesDontExist()
 		},
 		hideDeferDueDatePopup(e) {
 			if (!this.showDefer) {

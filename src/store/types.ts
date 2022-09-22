@@ -103,6 +103,7 @@ export interface ListState {
 
 export interface NamespaceState {
 	namespaces: INamespace[]
+	isLoading: boolean,
 }
 
 export interface TaskState {}

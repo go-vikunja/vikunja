@@ -22,7 +22,7 @@ export default class SavedFilterModel extends AbstractModel<ISavedFilter> implem
 	created: Date = null
 	updated: Date = null
 
-	constructor(data: Partial<ISavedFilter>) {
+	constructor(data: Partial<ISavedFilter> = {}) {
 		super()
 		this.assignData(data)
 

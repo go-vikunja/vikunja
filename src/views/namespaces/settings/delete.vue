@@ -12,7 +12,7 @@
 	</modal>
 </template>
 
-<script lang="ts">	
+<script lang="ts">
 export default { name: 'namespace-setting-delete' }
 </script>
 
@@ -21,11 +21,12 @@ import {ref, computed, watch, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
 
-import {useStore} from '@/store'
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
+import {useNamespaceStore} from '@/stores/namespaces'
 import NamespaceModel from '@/models/namespace'
 import NamespaceService from '@/services/namespace'
+import type { INamespace } from '@/modelTypes/INamespace'
 
 const props = defineProps({
 	namespaceId: {
@@ -34,17 +35,17 @@ const props = defineProps({
 	},
 })
 
-const store = useStore()
-const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
+const router = useRouter()
+const namespaceStore = useNamespaceStore()
 
 const namespaceService = shallowReactive(new NamespaceService())
-const namespace = ref(new NamespaceModel())
+const namespace = ref<INamespace>(new NamespaceModel())
 
 watch(
 	() => props.namespaceId,
 	async () => {
-		namespace.value = store.getters['namespaces/getNamespaceById'](props.namespaceId)
+		namespace.value = namespaceStore.getNamespaceById(props.namespaceId) || new NamespaceModel()
 
 		// FIXME: ressouce should be loaded in store
 		namespace.value = await namespaceService.get({id: props.namespaceId})
@@ -61,7 +62,7 @@ const title = computed(() => {
 useTitle(title)
 
 async function deleteNamespace() {
-	await store.dispatch('namespaces/deleteNamespace', namespace.value)
+	await namespaceStore.deleteNamespace(namespace.value)
 	success({message: t('namespace.delete.success')})
 	router.push({name: 'home'})
 }

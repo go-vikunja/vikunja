@@ -49,6 +49,7 @@ import NamespaceService from '../../services/namespace'
 import CreateEdit from '@/components/misc/create-edit.vue'
 import ColorPicker from '../../components/input/colorPicker.vue'
 import { setTitle } from '@/helpers/setTitle'
+import {useNamespaceStore} from '@/stores/namespaces'
 
 export default defineComponent({
 	name: 'NewNamespace',
@@ -76,7 +77,8 @@ export default defineComponent({
 			this.showError = false
 
 			const namespace = await this.namespaceService.create(this.namespace)
-			this.$store.commit('namespaces/addNamespace', namespace)
+			const namespaceStore = useNamespaceStore()
+			namespaceStore.addNamespace(namespace)
 			this.$message.success({message: this.$t('namespace.create.success')})
 			this.$router.back()
 		},
