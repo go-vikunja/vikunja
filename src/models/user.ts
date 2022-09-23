@@ -4,6 +4,18 @@ import UserSettingsModel from '@/models/userSettings'
 import { AUTH_TYPES, type IUser } from '@/modelTypes/IUser'
 import type { IUserSettings } from '@/modelTypes/IUserSettings'
 
+export function getAvatarUrl(user: IUser, size = 50) {
+	return `${window.API_URL}/avatar/${user.username}?size=${size}`
+}
+
+export function getDisplayName(user: IUser) {
+	if (user.name !== '') {
+		return user.name
+	}
+
+	return user.username
+}
+
 export default class UserModel extends AbstractModel<IUser> implements IUser {
 	id = 0
 	email = ''
@@ -24,17 +36,5 @@ export default class UserModel extends AbstractModel<IUser> implements IUser {
 		this.updated = new Date(this.updated)
 
 		this.settings = new UserSettingsModel(this.settings || {})
-	}
-
-	getAvatarUrl(size = 50) {
-		return `${window.API_URL}/avatar/${this.username}?size=${size}`
-	}
-
-	getDisplayName() {
-		if (this.name !== '') {
-			return this.name
-		}
-
-		return this.username
 	}
 }

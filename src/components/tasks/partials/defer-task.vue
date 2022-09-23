@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, type PropType} from 'vue'
+import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, toRef, type PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
 import flatPickr from 'vue-flatpickr-component'
 
@@ -63,12 +63,12 @@ const task = ref<ITask>()
 // We're saving the due date seperately to prevent null errors in very short periods where the task is null.
 const dueDate = ref<Date>()
 const lastValue = ref<Date>()
-const changeInterval = ref<number>()
+const changeInterval = ref<ReturnType<typeof setInterval>>()
 
 watch(
-	() => props.modelValue,
+	toRef(props, 'modelValue'),
 	(value) => {
-		task.value = value
+		task.value = { ...value }
 		dueDate.value = value.dueDate
 		lastValue.value = value.dueDate
 	},
@@ -123,7 +123,6 @@ async function updateDueDate() {
 		return
 	}
 
-	// FIXME: direct prop manipulation
 	const newTask = await taskService.update({
 		...task.value,
 		dueDate: new Date(dueDate.value),

@@ -3,7 +3,7 @@ import {defineStore, acceptHMRUpdate} from 'pinia'
 import {HTTPFactory, AuthenticatedHTTPFactory} from '@/http-common'
 import {i18n, getCurrentLanguage, saveLanguage} from '@/i18n'
 import {objectToSnakeCase} from '@/helpers/case'
-import UserModel from '@/models/user'
+import UserModel, { getAvatarUrl } from '@/models/user'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 import {setLoadingPinia} from '@/store/helper'
@@ -15,6 +15,7 @@ import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import router from '@/router'
 import {useConfigStore} from '@/stores/config'
 import UserSettingsModel from '@/models/userSettings'
+import {store} from '@/store'
 
 export const useAuthStore = defineStore('auth', {
 	state: () : AuthState => ({
@@ -28,6 +29,7 @@ export const useAuthStore = defineStore('auth', {
 		
 		lastUserInfoRefresh: null,
 		isLoading: false,
+		isLoadingGeneralSettings: false,
 	}),
 	getters: {
 		authUser(state) {
@@ -46,6 +48,10 @@ export const useAuthStore = defineStore('auth', {
 	actions: {
 		setIsLoading(isLoading: boolean) {
 			this.isLoading = isLoading 
+		},
+
+		setIsLoadingGeneralSettings(isLoading: boolean) {
+			this.isLoadingGeneralSettings = isLoading 
 		},
 
 		setUser(info: IUser | null) {
@@ -78,7 +84,7 @@ export const useAuthStore = defineStore('auth', {
 		},
 		reloadAvatar() {
 			if (!this.info) return
-			this.avatarUrl = `${this.info.getAvatarUrl()}&=${+new Date()}`
+			this.avatarUrl = `${getAvatarUrl(this.info)}&=${+new Date()}`
 		},
 		updateLastUserRefresh() {
 			this.lastUserInfoRefresh = new Date()
@@ -87,6 +93,7 @@ export const useAuthStore = defineStore('auth', {
 		// Logs a user in with a set of credentials.
 		async login(credentials) {
 			const HTTP = HTTPFactory()
+			store.commit('loading', true)
 			this.setIsLoading(true)
 
 			// Delete an eventually preexisting old token
@@ -110,6 +117,7 @@ export const useAuthStore = defineStore('auth', {
 
 				throw e
 			} finally {
+				store.commit('loading', false)
 				this.setIsLoading(false)
 			}
 		},
@@ -118,6 +126,7 @@ export const useAuthStore = defineStore('auth', {
 		// Not sure if this is the right place to put the logic in, maybe a seperate js component would be better suited.
 		async register(credentials) {
 			const HTTP = HTTPFactory()
+			store.commit('loading', true)
 			this.setIsLoading(true)
 			try {
 				await HTTP.post('register', credentials)
@@ -129,12 +138,14 @@ export const useAuthStore = defineStore('auth', {
 
 				throw e
 			} finally {
+			store.commit('loading', false)
 				this.setIsLoading(false)
 			}
 		},
 
 		async openIdAuth({provider, code}) {
 			const HTTP = HTTPFactory()
+			store.commit('loading', true)
 			this.setIsLoading(true)
 
 			const data = {
@@ -151,6 +162,7 @@ export const useAuthStore = defineStore('auth', {
 				// Tell others the user is autheticated
 				this.checkAuth()
 			} finally {
+				store.commit('loading', false)
 				this.setIsLoading(false)
 			}
 		},
@@ -266,11 +278,10 @@ export const useAuthStore = defineStore('auth', {
 			settings: IUserSettings
 			showMessage : boolean
 		}) {
-			// const showMessage = payload.showMessage ?? true
 			const userSettingsService = new UserSettingsService()
 
 			// FIXME
-			const cancel = setLoadingPinia(useAuthStore, 'general-settings')
+			const cancel = setLoadingPinia(this, this.setIsLoadingGeneralSettings)
 			try {
 				saveLanguage(settings.language)
 				await userSettingsService.update(settings)

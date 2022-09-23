@@ -36,7 +36,7 @@ import CreateEdit from '@/components/misc/create-edit.vue'
 import manageSharing from '@/components/sharing/userTeam.vue'
 import {useTitle} from '@/composables/useTitle'
 import {useAuthStore} from '@/stores/auth'
-import type { INamespace } from '@/modelTypes/INamespace'
+import type {INamespace} from '@/modelTypes/INamespace'
 
 const {t} = useI18n({useScope: 'global'})
 

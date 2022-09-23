@@ -2,34 +2,39 @@
 	<div :class="{'is-inline': isInline}" class="user">
 		<img
 			:height="avatarSize"
-			:src="user.getAvatarUrl(avatarSize)"
+			:src="getAvatarUrl(user, avatarSize)"
 			:width="avatarSize"
 			alt=""
 			class="avatar"
-			v-tooltip="user.getDisplayName()"/>
-		<span class="username" v-if="showUsername">{{ user.getDisplayName() }}</span>
+			v-tooltip="getDisplayName(user)"/>
+		<span class="username" v-if="showUsername">{{ getDisplayName(user) }}</span>
 	</div>
 </template>
 
 <script lang="ts" setup>
+import type {PropType} from 'vue'
+
+import {getAvatarUrl, getDisplayName} from '@/models/user'
+import type {IUser} from '@/modelTypes/IUser'
+
 defineProps({
 	user: {
+		type: Object as PropType<IUser>,
 		required: true,
-		type: Object,
 	},
 	showUsername: {
-		required: false,
 		type: Boolean,
+		required: false,
 		default: true,
 	},
 	avatarSize: {
-		required: false,
 		type: Number,
+		required: false,
 		default: 50,
 	},
 	isInline: {
-		required: false,
 		type: Boolean,
+		required: false,
 		default: false,
 	},
 })

@@ -28,7 +28,7 @@
 			<tbody>
 			<tr :key="s.id" v-for="s in sharables">
 				<template v-if="shareType === 'user'">
-					<td>{{ s.getDisplayName() }}</td>
+					<td>{{ getDisplayName(s) }}</td>
 					<td>
 						<template v-if="s.id === userInfo.id">
 							<b class="is-success">{{ $t('list.share.userTeam.you') }}</b>
@@ -150,7 +150,7 @@ import UserListModel from '@/models/userList'
 import type {IUserList} from '@/modelTypes/IUserList'
 
 import UserService from '@/services/user'
-import UserModel from '@/models/user'
+import UserModel, { getDisplayName } from '@/models/user'
 import type {IUser} from '@/modelTypes/IUser'
 
 import TeamNamespaceService from '@/services/teamNamespace'

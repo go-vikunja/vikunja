@@ -93,7 +93,7 @@
 
 						<p class="mb-2">
 							<i18n-t keypath="list.share.links.sharedBy" scope="global">
-								<strong>{{ s.sharedBy.getDisplayName() }}</strong>
+								<strong>{{ getDisplayName(s.sharedBy) }}</strong>
 							</i18n-t>
 						</p>
 
@@ -201,6 +201,7 @@ import LinkShareService from '@/services/linkShare'
 
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {success} from '@/message'
+import {getDisplayName} from '@/models/user'
 import type {ListView} from '@/types/ListView'
 import {LIST_VIEWS} from '@/types/ListView'
 import {useConfigStore} from '@/stores/config'

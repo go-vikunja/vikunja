@@ -24,7 +24,7 @@
 					<div class="detail">
 						<div>
 							<span class="has-text-weight-bold mr-1" v-if="n.notification.doer">
-								{{ n.notification.doer.getDisplayName() }}
+								{{ getDisplayName(n.notification.doer) }}
 							</span>
 							<BaseButton @click="() => to(n, index)()">
 								{{ n.toText(userInfo) }}
@@ -56,6 +56,7 @@ import User from '@/components/misc/user.vue'
 import { NOTIFICATION_NAMES as names, type INotification} from '@/modelTypes/INotification'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
+import {getDisplayName} from '@/models/user'
 import {useAuthStore} from '@/stores/auth'
 
 const LOAD_NOTIFICATIONS_INTERVAL = 10000

@@ -85,7 +85,7 @@
 			<table class="table has-actions is-striped is-hoverable is-fullwidth">
 				<tbody>
 				<tr :key="m.id" v-for="m in team?.members">
-					<td>{{ m.getDisplayName() }}</td>
+					<td>{{ getDisplayName(m) }}</td>
 					<td>
 						<template v-if="m.id === userInfo.id">
 							<b class="is-success">You</b>
@@ -176,6 +176,7 @@ import {RIGHTS as Rights} from '@/constants/rights'
 
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
+import {getDisplayName} from '@/models/user'
 import {useAuthStore} from '@/stores/auth'
 
 import type {ITeam} from '@/modelTypes/ITeam'

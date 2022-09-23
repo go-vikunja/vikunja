@@ -17,7 +17,7 @@
 			<div :key="c.id" class="media comment" v-for="c in comments">
 				<figure class="media-left is-hidden-mobile">
 					<img
-						:src="c.author.getAvatarUrl(48)"
+						:src="getAvatarUrl(c.author, 48)"
 						alt=""
 						class="image is-avatar"
 						height="48"
@@ -27,13 +27,13 @@
 				<div class="media-content">
 					<div class="comment-info">
 						<img
-							:src="c.author.getAvatarUrl(20)"
+							:src="getAvatarUrl(c.author, 20)"
 							alt=""
 							class="image is-avatar d-print-none"
 							height="20"
 							width="20"
 						/>
-						<strong>{{ c.author.getDisplayName() }}</strong>&nbsp;
+						<strong>{{ getDisplayName(c.author) }}</strong>&nbsp;
 						<span v-tooltip="formatDateLong(c.created)" class="has-text-grey">
 							{{ formatDateSince(c.created) }}
 						</span>
@@ -166,6 +166,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import {uploadFile} from '@/helpers/attachments'
 import {success} from '@/message'
 import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
+import {getAvatarUrl, getDisplayName} from '@/models/user'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 
@@ -196,7 +197,7 @@ const newComment = reactive(new TaskCommentModel())
 const saved = ref<ITask['id'] | null>(null)
 const saving = ref<ITask['id'] | null>(null)
 
-const userAvatar = computed(() => authStore.info.getAvatarUrl(48))
+const userAvatar = computed(() => getAvatarUrl(authStore.info, 48))
 const currentUserId = computed(() => authStore.info.id)
 const enabled = computed(() => configStore.taskCommentsEnabled)
 const actions = computed(() => {

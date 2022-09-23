@@ -32,6 +32,7 @@ export interface AuthState {
 	lastUserInfoRefresh: Date | null,
 	settings: IUserSettings,
 	isLoading: boolean,
+	isLoadingGeneralSettings: boolean
 }
 
 export interface ConfigState {
