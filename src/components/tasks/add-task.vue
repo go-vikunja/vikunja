@@ -214,7 +214,7 @@ defineExpose({
 }
 
 .add-task-button {
-	height: 2.5rem;
+	height: 100% !important;
 
 	@media screen and (max-width: $mobile) {
 		.button-text {
