@@ -36,8 +36,9 @@ Make sure to check the other doc articles for specific development tasks like [t
 ## Frontend requirements
 
 The code for the frontend is located at [code.vikunja.io/frontend](https://code.vikunja.io/frontend).
+More instructions can be found in the repo's README.
 
-You need to have yarn v1 and nodejs in version 16 installed.
+You need to have [pnpm](https://pnpm.io/) and nodejs in version 16 or 18 installed.
 
 ## Git flow
 

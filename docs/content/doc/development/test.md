@@ -98,12 +98,12 @@ Check out the docs [in the frontend repo](https://kolaente.dev/vikunja/frontend/
 To run the frontend unit tests, run
 
 {{< highlight bash >}}
-yarn test:unit
+pnpm test:unit
 {{< /highlight >}}
 
 The frontend also has a watcher available that re-runs all unit tests every time you change something.
 To use it, simply run
 
 {{< highlight bash >}}
-yarn test:unit-watch
+pnpm test:unit-watch
 {{< /highlight >}}

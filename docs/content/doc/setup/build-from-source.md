@@ -38,9 +38,7 @@ More options are available, please refer to the [magefile docs]({{< ref "../deve
 
 The code for the frontend is located at [code.vikunja.io/frontend](https://code.vikunja.io/frontend).
 
-You need to have yarn v1 and nodejs in version 16 installed.
-
-1. Make sure [yarn v1](https://yarnpkg.com/getting-started/install) is properly installed on your system.
-3. Clone the repo with `git clone https://code.vikunja.io/frontend` and switch into the directory.
-3. Install all dependencies with `yarn install`
-4. Build the frontend with `yarn build`. This will result in a js bundle in the `dist/` folder which you can deploy.
+1. Make sure you have [pnpm](https://pnpm.io/) properly installed on your system.
+2. Clone the repo with `git clone https://code.vikunja.io/frontend` and switch into the directory.
+3. Install all dependencies with `pnpm install`
+4. Build the frontend with `pnpm build`. This will result in a static js bundle in the `dist/` folder which you can deploy.
