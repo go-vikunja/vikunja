@@ -2,7 +2,7 @@ import AttachmentModel from '@/models/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 
 import AttachmentService from '@/services/attachment'
-import { store } from '@/store'
+import {useTaskStore} from '@/stores/tasks'
 
 export function uploadFile(taskId: number, file: File, onSuccess: (url: string) => void) {
 	const attachmentService = new AttachmentService()
@@ -22,7 +22,7 @@ export async function uploadFiles(
 	console.debug(`Uploaded attachments for task ${taskId}, response was`, response)
 
 	response.success?.map((attachment: IAttachment) => {
-		store.dispatch('tasks/addTaskAttachment', {
+		useTaskStore().addTaskAttachment({
 			taskId,
 			attachment,
 		})

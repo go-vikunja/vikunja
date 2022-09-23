@@ -78,6 +78,7 @@ import type {ITask} from '@/modelTypes/ITask'
 
 import {formatDateLong, formatISO, formatDateSince} from '@/helpers/time/formatDate'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
+import {useTaskStore} from '@/stores/tasks'
 
 export default defineComponent({
 	name: 'kanban-card',
@@ -121,7 +122,7 @@ export default defineComponent({
 			this.loadingInternal = true
 			try {
 				const done = !task.done
-				await this.$store.dispatch('tasks/update', {
+				await useTaskStore().update({
 					...task,
 					done,
 				})

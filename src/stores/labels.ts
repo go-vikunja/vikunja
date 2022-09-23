@@ -124,7 +124,7 @@ export const useLabelStore = defineStore('label', {
 			const labelService = new LabelService()
 
 			try {
-				const newLabel = await labelService.create(label)
+				const newLabel = await labelService.create(label) as ILabel
 				this.setLabel(newLabel)
 				return newLabel
 			} finally {

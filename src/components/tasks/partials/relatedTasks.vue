@@ -149,7 +149,6 @@
 import {ref, reactive, shallowReactive, watch, computed, type PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRoute} from 'vue-router'
-import {useStore} from '@/store'
 
 import TaskService from '@/services/task'
 import TaskModel from '@/models/task'
@@ -167,6 +166,7 @@ import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import {useNamespaceStore} from '@/stores/namespaces'
 
 import {error, success} from '@/message'
+import {useTaskStore} from '@/stores/tasks'
 
 const props = defineProps({
 	taskId: {
@@ -190,7 +190,7 @@ const props = defineProps({
 	},
 })
 
-const store = useStore()
+const taskStore = useTaskStore()
 const namespaceStore = useNamespaceStore()
 const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
@@ -344,7 +344,7 @@ async function createAndRelateTask(title: string) {
 }
 
 async function toggleTaskDone(task: ITask) {
-	await store.dispatch('tasks/update', task)
+	await taskStore.update(task)
 	
 	// Find the task in the list and update it so that it is correctly strike through
 	Object.entries(relatedTasks.value).some(([kind, tasks]) => {

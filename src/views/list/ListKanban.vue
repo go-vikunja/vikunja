@@ -240,6 +240,7 @@ import {calculateItemPosition} from '../../helpers/calculateItemPosition'
 import KanbanCard from '@/components/tasks/partials/kanban-card.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 import {isSavedFilter} from '@/helpers/savedFilter'
+import {useTaskStore} from '@/stores/tasks'
 
 const DRAG_OPTIONS = {
 	// sortable options
@@ -433,7 +434,8 @@ export default defineComponent({
 			)
 
 			try {
-				await this.$store.dispatch('tasks/update', newTask)
+				const taskStore = useTaskStore()
+				await taskStore.update(newTask)
 				
 				// Make sure the first and second task don't both get position 0 assigned
 				if(newTaskIndex === 0 && taskAfter !== null && taskAfter.kanbanPosition === 0) {
@@ -445,7 +447,7 @@ export default defineComponent({
 						taskAfterAfter !== null ? taskAfterAfter.kanbanPosition : null,
 					)
 
-					await this.$store.dispatch('tasks/update', newTaskAfter)
+					await taskStore.update(newTaskAfter)
 				}
 			} finally {
 				this.taskUpdating[task.id] = false
@@ -464,7 +466,7 @@ export default defineComponent({
 			}
 			this.newTaskError[bucketId] = false
 			
-			const task = await this.$store.dispatch('tasks/createNewTask', {
+			const task = await useTaskStore().createNewTask({
 				title: this.newTaskText,
 				bucketId,
 				listId: this.listId,

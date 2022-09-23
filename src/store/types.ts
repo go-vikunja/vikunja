@@ -94,7 +94,9 @@ export interface NamespaceState {
 	isLoading: boolean,
 }
 
-export interface TaskState {}
+export interface TaskState {
+	isLoading: boolean,
+}
 
 
 export type StoreState = RootStoreState & {

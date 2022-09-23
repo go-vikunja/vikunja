@@ -73,6 +73,7 @@ import {PREFIXES} from '@/modules/parseTaskText'
 import {useListStore} from '@/stores/lists'
 import {useNamespaceStore} from '@/stores/namespaces'
 import {useLabelStore} from '@/stores/labels'
+import {useTaskStore} from '@/stores/tasks'
 
 const TYPE_LIST = 'list'
 const TYPE_TASK = 'task'
@@ -412,7 +413,8 @@ export default defineComponent({
 				return
 			}
 
-			const task = await this.$store.dispatch('tasks/createNewTask', {
+			const taskStore = useTaskStore()
+			const task = await taskStore.createNewTask({
 				title: this.query,
 				listId: this.currentList.id,
 			})

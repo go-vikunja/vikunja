@@ -38,7 +38,6 @@
 
 <script setup lang="ts">
 import {ref, computed, type PropType} from 'vue'
-import {useStore} from '@/store'
 import {useRouter} from 'vue-router'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -48,6 +47,7 @@ import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 
 import type {ITask} from '@/modelTypes/ITask'
 import ColorBubble from '@/components/misc/colorBubble.vue'
+import {useTaskStore} from '@/stores/tasks'
 
 const props = defineProps({
 	task: {
@@ -72,8 +72,8 @@ async function copyUrl() {
 	await copy(absoluteURL)
 }
 
-const store = useStore()
-const loading = computed(() => store.state.loading)
+const taskStore = useTaskStore()
+const loading = computed(() => taskStore.isLoading)
 
 const textIdentifier = computed(() => props.task?.getTextIdentifier() || '')
 
@@ -93,7 +93,7 @@ async function save(title: string) {
 
 	try {
 		saving.value = true
-		const newTask = await store.dispatch('tasks/update', {
+		const newTask = await taskStore.update({
 			...props.task,
 			title,
 		})

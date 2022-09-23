@@ -29,7 +29,6 @@
 
 <script setup lang="ts">
 import {ref, shallowReactive, watch, type PropType} from 'vue'
-import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import User from '@/components/misc/user.vue'
@@ -39,7 +38,9 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import {includesById} from '@/helpers/utils'
 import ListUserService from '@/services/listUsers'
 import {success} from '@/message'
-import type { IUser } from '@/modelTypes/IUser'
+import {useTaskStore} from '@/stores/tasks'
+
+import type {IUser} from '@/modelTypes/IUser'
 
 const props = defineProps({
 		taskId: {
@@ -60,7 +61,7 @@ const props = defineProps({
 	})
 const emit = defineEmits(['update:modelValue'])
 
-const store = useStore()
+const taskStore = useTaskStore()
 const {t} = useI18n({useScope: 'global'})
 
 const listUserService = shallowReactive(new ListUserService())
@@ -79,13 +80,13 @@ watch(
 )
 
 async function addAssignee(user: IUser) {
-	await store.dispatch('tasks/addAssignee', {user: user, taskId: props.taskId})
+	await taskStore.addAssignee({user: user, taskId: props.taskId})
 	emit('update:modelValue', assignees.value)
 	success({message: t('task.assignee.assignSuccess')})
 }
 
 async function removeAssignee(user: IUser) {
-	await store.dispatch('tasks/removeAssignee', {user: user, taskId: props.taskId})
+	await taskStore.removeAssignee({user: user, taskId: props.taskId})
 
 	// Remove the assignee from the list
 	for (const a in assignees.value) {

@@ -119,6 +119,7 @@ import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatD
 import ColorBubble from '@/components/misc/colorBubble.vue'
 import {useListStore} from '@/stores/lists'
 import {useNamespaceStore} from '@/stores/namespaces'
+import {useTaskStore} from '@/stores/tasks'
 
 export default defineComponent({
 	name: 'singleTaskInList',
@@ -208,7 +209,7 @@ export default defineComponent({
 
 		async markAsDone(checked: boolean) {
 			const updateFunc = async () => {
-				const task = await this.$store.dispatch('tasks/update', this.task)
+				const task = await useTaskStore().update(this.task)
 				this.task = task
 				this.$emit('task-updated', task)
 				this.$message.success({
