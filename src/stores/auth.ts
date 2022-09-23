@@ -9,28 +9,24 @@ import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 import {setLoadingPinia} from '@/store/helper'
 import {success} from '@/message'
 import {redirectToProvider} from '@/helpers/redirectToProvider'
-import type {AuthState, Info} from '@/store/types'
-import {AUTH_TYPES} from '@/store/types'
-import type { IUserSettings } from '@/modelTypes/IUserSettings'
+import {AUTH_TYPES, type IUser} from '@/modelTypes/IUser'
+import type {AuthState} from '@/store/types'
+import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import router from '@/router'
 import {useConfigStore} from '@/stores/config'
-
-function defaultSettings(settings: Partial<IUserSettings>) {
-	if (typeof settings.weekStart === 'undefined' || settings.weekStart === '') {
-		settings.weekStart = 0
-	}
-	return settings
-}
+import UserSettingsModel from '@/models/userSettings'
 
 export const useAuthStore = defineStore('auth', {
 	state: () : AuthState => ({
 		authenticated: false,
 		isLinkShareAuth: false,
-		info: null,
 		needsTotpPasscode: false,
+		
+		info: null,
 		avatarUrl: '',
+		settings: new UserSettingsModel(),
+		
 		lastUserInfoRefresh: null,
-		settings: {}, // should be IUserSettings
 		isLoading: false,
 	}),
 	getters: {
@@ -52,23 +48,24 @@ export const useAuthStore = defineStore('auth', {
 			this.isLoading = isLoading 
 		},
 
-		setInfo(info: Info) {
+		setUser(info: IUser | null) {
 			this.info = info
 			if (info !== null) {
-				this.avatarUrl = info.getAvatarUrl()
+				this.reloadAvatar()
 
 				if (info.settings) {
-					this.settings = defaultSettings(info.settings)
+					this.settings = new UserSettingsModel(info.settings)
 				}
 
 				this.isLinkShareAuth = info.id < 0
 			}
 		},
 		setUserSettings(settings: IUserSettings) {
-			this.settings = defaultSettings(settings)
-			const info = this.info !== null ? this.info : {} as Info
-			info.name = settings.name
-			this.info = info
+			this.settings = new UserSettingsModel(settings)
+			this.info = new UserModel({
+				...this.info !== null ? this.info : {},
+				name: settings.name,
+			})
 		},
 		setAuthenticated(authenticated: boolean) {
 			this.authenticated = authenticated
@@ -190,7 +187,7 @@ export const useAuthStore = defineStore('auth', {
 				const info = new UserModel(JSON.parse(atob(base64)))
 				const ts = Math.round((new Date()).getTime() / 1000)
 				authenticated = info.exp >= ts
-				this.setInfo(info)
+				this.setUser(info)
 
 				if (authenticated) {
 					this.refreshUserInfo()
@@ -199,7 +196,7 @@ export const useAuthStore = defineStore('auth', {
 
 			this.setAuthenticated(authenticated)
 			if (!authenticated) {
-				this.setInfo(null)
+				this.setUser(null)
 				this.redirectToProviderIfNothingElseIsEnabled()
 			}
 		},
@@ -227,12 +224,12 @@ export const useAuthStore = defineStore('auth', {
 				const response = await HTTP.get('user')
 				const info = new UserModel({
 					...response.data,
-					type: this.info.type,
-					email: this.info.email,
-					exp: this.info.exp,
+					...(this.info?.type && {type: this.info?.type}),
+					...(this.info?.email && {email: this.info?.email}),
+					...(this.info?.exp && {exp: this.info?.exp}),
 				})
 
-				this.setInfo(info)
+				this.setUser(info)
 				this.updateLastUserRefresh()
 
 				if (
@@ -262,9 +259,14 @@ export const useAuthStore = defineStore('auth', {
 			}
 		},
 
-		async saveUserSettings(payload) {
-			const {settings} = payload
-			const showMessage = payload.showMessage ?? true
+		async saveUserSettings({
+			settings,
+			showMessage = true,
+		}: {
+			settings: IUserSettings
+			showMessage : boolean
+		}) {
+			// const showMessage = payload.showMessage ?? true
 			const userSettingsService = new UserSettingsService()
 
 			// FIXME
