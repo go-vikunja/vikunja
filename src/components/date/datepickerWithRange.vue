@@ -118,7 +118,13 @@ watch(
 	newValue => {
 		from.value = newValue.dateFrom
 		to.value = newValue.dateTo
-		flatpickrRange.value = `${from.value} to ${to.value}`
+		// Only set the date back to flatpickr when it's an actual date.
+		// Otherwise flatpickr runs in an endless loop and slows down the browser.
+		const dateFrom = new Date(from.value)
+		const dateTo = new Date(to.value)
+		if (dateTo.getTime() === dateTo.getTime() && dateFrom.getTime() === dateFrom.getTime()) {
+			flatpickrRange.value = `${from.value} to ${to.value}`
+		}
 	},
 )
 
