@@ -14,7 +14,6 @@ import {
 	QUICK_ACTIONS_ACTIVE,
 } from './mutation-types'
 import kanban from './modules/kanban'
-import tasks from './modules/tasks'
 
 import ListModel from '@/models/list'
 
@@ -35,7 +34,6 @@ export const store = createStore<RootStoreState>({
 	strict: import.meta.env.DEV,
 	modules: {
 		kanban,
-		tasks,
 	},
 	state: () => ({
 		loading: false,

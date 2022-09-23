@@ -7,8 +7,8 @@ import TaskAssigneeService from '@/services/taskAssignee'
 import LabelTaskService from '@/services/labelTask'
 import UserService from '@/services/user'
 
-import {HAS_TASKS} from '../mutation-types'
-import {setLoading} from '../helper'
+import {HAS_TASKS} from '../store/mutation-types'
+import {setLoading} from '../store/helper'
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {parseTaskText} from '@/modules/parseTaskText'
 
