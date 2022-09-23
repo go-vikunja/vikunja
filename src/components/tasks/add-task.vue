@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, unref, shallowReactive, computed} from 'vue'
+import {ref, watch, unref, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useStore} from '@/store'
 import {tryOnMounted, debouncedWatch, useWindowSize, type MaybeRef} from '@vueuse/core'
