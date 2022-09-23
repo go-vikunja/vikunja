@@ -71,6 +71,8 @@ import {parseTaskText, PrefixMode} from '@/modules/parseTaskText'
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {PREFIXES} from '@/modules/parseTaskText'
 import {useListStore} from '@/stores/lists'
+import {useNamespaceStore} from '@/stores/namespaces'
+import {useLabelStore} from '@/stores/labels'
 
 const TYPE_LIST = 'list'
 const TYPE_TASK = 'task'
@@ -139,7 +141,7 @@ export default defineComponent({
 						}
 
 						if (typeof ncache[l.namespaceId] === 'undefined') {
-							ncache[l.namespaceId] = this.$store.getters['namespaces/getNamespaceById'](l.namespaceId)
+							ncache[l.namespaceId] = useNamespaceStore().getNamespaceById(l.namespaceId)
 						}
 
 						return !ncache[l.namespaceId].isArchived
@@ -206,7 +208,7 @@ export default defineComponent({
 					case CMD_NEW_TASK:
 						return this.$t('quickActions.createTask', {title: this.currentList.title})
 					case CMD_NEW_LIST:
-						namespace = this.$store.getters['namespaces/getNamespaceById'](this.currentList.namespaceId)
+						namespace = useNamespaceStore().getNamespaceById(this.currentList.namespaceId)
 						return this.$t('quickActions.createList', {title: namespace.title})
 				}
 			}
@@ -309,7 +311,7 @@ export default defineComponent({
 			}
 
 			if (labels.length > 0) {
-				const labelIds = this.$store.getters['labels/getLabelsByExactTitles'](labels).map(l => l.id)
+				const labelIds = useLabelStore().getLabelsByExactTitles(labels).map(l => l.id)
 				if (labelIds.length > 0) {
 					params.filter_by.push('labels')
 					params.filter_value.push(labelIds.join())
@@ -436,7 +438,7 @@ export default defineComponent({
 		async newNamespace() {
 			const newNamespace = new NamespaceModel({title: this.query})
 
-			await this.$store.dispatch('namespaces/createNamespace', newNamespace)
+			await useNamespaceStore().createNamespace(newNamespace)
 			this.$message.success({message: this.$t('namespace.create.success')})
 			this.closeQuickActions()
 		},

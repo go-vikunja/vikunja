@@ -94,8 +94,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-export default defineComponent({ name: 'list-setting-background' })
+export default { name: 'list-setting-background' }
 </script>
 
 <script setup lang="ts">
@@ -106,6 +105,7 @@ import {useRoute, useRouter} from 'vue-router'
 import debounce from 'lodash.debounce'
 import BaseButton from '@/components/base/BaseButton.vue'
 import {useListStore} from '@/stores/lists'
+import {useNamespaceStore} from '@/stores/namespaces'
 
 import BackgroundUnsplashService from '@/services/backgroundUnsplash'
 import BackgroundUploadService from '@/services/backgroundUpload'
@@ -117,7 +117,7 @@ import {useTitle} from '@/composables/useTitle'
 import {CURRENT_LIST} from '@/store/mutation-types'
 
 import CreateEdit from '@/components/misc/create-edit.vue'
-import { success } from '@/message'
+import {success} from '@/message'
 
 const SEARCH_DEBOUNCE = 300
 
@@ -143,6 +143,7 @@ const debounceNewBackgroundSearch = debounce(newBackgroundSearch, SEARCH_DEBOUNC
 const backgroundUploadService = ref(new BackgroundUploadService())
 const listService = ref(new ListService())
 const listStore = useListStore()
+const namespaceStore = useNamespaceStore()
 
 const unsplashBackgroundEnabled = computed(() => store.state.config.enabledBackgroundProviders.includes('unsplash'))
 const uploadBackgroundEnabled = computed(() => store.state.config.enabledBackgroundProviders.includes('upload'))
@@ -187,7 +188,7 @@ async function setBackground(backgroundId: string) {
 
 	const list = await backgroundService.update({id: backgroundId, listId: route.params.listId})
 	await store.dispatch(CURRENT_LIST, {list, forceUpdate: true})
-	store.commit('namespaces/setListInNamespaceById', list)
+	namespaceStore.setListInNamespaceById(list)
 	listStore.setList(list)
 	success({message: t('list.background.success')})
 }
@@ -200,7 +201,7 @@ async function uploadBackground() {
 
 	const list = await backgroundUploadService.value.create(route.params.listId, backgroundUploadInput.value?.files[0])
 	await store.dispatch(CURRENT_LIST, {list, forceUpdate: true})
-	store.commit('namespaces/setListInNamespaceById', list)
+	namespaceStore.setListInNamespaceById(list)
 	listStore.setList(list)
 	success({message: t('list.background.success')})
 }
@@ -208,7 +209,7 @@ async function uploadBackground() {
 async function removeBackground() {
 	const list = await listService.value.removeBackground(currentList.value)
 	await store.dispatch(CURRENT_LIST, {list, forceUpdate: true})
-	store.commit('namespaces/setListInNamespaceById', list)
+	namespaceStore.setListInNamespaceById(list)
 	listStore.setList(list)
 	success({message: t('list.background.removeSuccess')})
 	router.back()
