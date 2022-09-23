@@ -1,8 +1,8 @@
 <template>
 	<router-link
 		:class="{
-			'has-light-text': !colorIsDark(list.hexColor),
-			'has-background': blurHashUrl !== ''
+			'has-light-text': !colorIsDark(list.hexColor) || background !== null,
+			'has-background': blurHashUrl !== '' || background !== null,
 		}"
 		:style="{
 			'background-color': list.hexColor,
@@ -101,7 +101,7 @@ const listStore = useListStore()
 	overflow: hidden;
 
 	&.has-light-text .title {
-		color: var(--grey-100);
+		color: var(--grey-100) !important;
 	}
 
 	&.has-background,
