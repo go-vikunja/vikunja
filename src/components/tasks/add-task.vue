@@ -3,7 +3,7 @@
 		<div class="field is-grouped">
 			<p class="control has-icons-left is-expanded">
 				<textarea
-					:disabled="taskService.loading || undefined"
+					:disabled="loading || undefined"
 					class="add-task-textarea input"
 					:class="{'textarea-empty': newTaskTitle === ''}"
 					:placeholder="$t('list.list.addPlaceholder')"
@@ -21,10 +21,10 @@
 			<p class="control">
 				<x-button
 					class="add-task-button"
-					:disabled="newTaskTitle === '' || taskService.loading || undefined"
+					:disabled="newTaskTitle === '' || loading || undefined"
 					@click="addTask()"
 					icon="plus"
-					:loading="taskService.loading"
+					:loading="loading"
 					:aria-label="$t('list.list.add')"
 				>
 					<span class="button-text">
@@ -41,13 +41,13 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, unref, shallowReactive} from 'vue'
+import {ref, watch, unref, shallowReactive, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useStore} from '@/store'
 import {tryOnMounted, debouncedWatch, useWindowSize, type MaybeRef} from '@vueuse/core'
 
-import TaskService from '@/services/task'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
+import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 
 function cleanupTitle(title: string) {
 	return title.replace(/^((\* |\+ |- )(\[ \] )?)/g, '')
@@ -136,7 +136,6 @@ const newTaskInput = useAutoHeightTextarea(newTaskTitle)
 const {t} = useI18n({useScope: 'global'})
 const store = useStore()
 
-const taskService = shallowReactive(new TaskService())
 const errorMessage = ref('')
 
 function resetEmptyTitleError(e) {
@@ -148,6 +147,7 @@ function resetEmptyTitleError(e) {
 	}
 }
 
+const loading = computed(() => store.state[LOADING] && store.state[LOADING_MODULE] === 'tasks')
 async function addTask() {
 	if (newTaskTitle.value === '') {
 		errorMessage.value = t('list.create.addTitleRequired')
@@ -155,7 +155,7 @@ async function addTask() {
 	}
 	errorMessage.value = ''
 
-	if (taskService.loading) {
+	if (loading.value) {
 		return
 	}
 
