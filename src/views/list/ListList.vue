@@ -154,13 +154,13 @@ import Nothing from '@/components/misc/nothing.vue'
 import Pagination from '@/components/misc/pagination.vue'
 import {ALPHABETICAL_SORT} from '@/components/list/partials/filters.vue'
 
-import {useStore} from '@/store'
-import {HAS_TASKS} from '@/store/mutation-types'
 import {useTaskList} from '@/composables/taskList'
 import {RIGHTS as Rights} from '@/constants/rights'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import type {ITask} from '@/modelTypes/ITask'
 import {isSavedFilter} from '@/helpers/savedFilter'
+
+import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
 
 import type {IList} from '@/modelTypes/IList'
@@ -238,8 +238,8 @@ const firstNewPosition = computed(() => {
 })
 
 const taskStore = useTaskStore()
-const store = useStore()
-const list = computed(() => store.state.currentList)
+const baseStore = useBaseStore()
+const list = computed(() => baseStore.currentList)
 
 const canWrite = computed(() => {
 	return list.value.maxRight > Rights.READ && list.value.id > 0
@@ -293,7 +293,7 @@ function updateTaskList(task: ITask) {
 		]
 	}
 
-	store.commit(HAS_TASKS, true)
+	baseStore.setHasTasks(true)
 }
 
 function editTask(id: ITask['id']) {

@@ -159,7 +159,6 @@ export default defineComponent({
 <script setup lang="ts">
 import {computed, watch, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useStore} from '@/store'
 
 import {PrefixMode} from '@/modules/parseTaskText'
 
@@ -171,6 +170,8 @@ import {getQuickAddMagicMode, setQuickAddMagicMode} from '@/helpers/quickAddMagi
 import {createRandomID} from '@/helpers/randomId'
 import {success} from '@/message'
 import {AuthenticatedHTTPFactory} from '@/http-common'
+
+import {useBaseStore} from '@/stores/base'
 
 import {useColorScheme} from '@/composables/useColorScheme'
 import {useTitle} from '@/composables/useTitle'
@@ -227,7 +228,7 @@ function getPlaySoundWhenDoneSetting() {
 const playSoundWhenDone = ref(getPlaySoundWhenDoneSetting())
 const quickAddMagicMode = ref(getQuickAddMagicMode())
 
-const store = useStore()
+const baseStore = useBaseStore()
 const authStore = useAuthStore()
 const settings = ref({...authStore.settings})
 const id = ref(createRandomID())
@@ -256,7 +257,7 @@ const defaultList = computed({
 		settings.value.defaultListId = l ? l.id : DEFAULT_LIST_ID
 	},
 })
-const loading = computed(() => store.state.loading && store.state.loadingModule === 'general-settings')
+const loading = computed(() => baseStore.loading && baseStore.loadingModule === 'general-settings')
 
 watch(
 	playSoundWhenDone,

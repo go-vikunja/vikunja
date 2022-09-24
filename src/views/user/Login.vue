@@ -68,7 +68,7 @@
 
 			<x-button
 				@click="submit"
-				:loading="loading"
+				:loading="isLoading"
 				tabindex="4"
 			>
 				{{ $t('user.auth.login') }}
@@ -104,17 +104,17 @@
 <script lang="ts">
 import {defineComponent} from 'vue'
 import {useDebounceFn} from '@vueuse/core'
-import {mapState as mapStateVuex} from 'vuex'
 import {mapState} from 'pinia'
 
 import {HTTPFactory} from '@/http-common'
-import {LOADING} from '@/store/mutation-types'
 import {getErrorText} from '@/message'
 import Message from '@/components/misc/message.vue'
 import {redirectToProvider} from '../../helpers/redirectToProvider'
 import {getLastVisited, clearLastVisited} from '../../helpers/saveLastVisited'
 import Password from '@/components/input/password.vue'
-import { setTitle } from '@/helpers/setTitle'
+import {setTitle} from '@/helpers/setTitle'
+
+import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 
@@ -172,8 +172,8 @@ export default defineComponent({
 		hasOpenIdProviders() {
 			return this.openidConnect.enabled && this.openidConnect.providers?.length > 0
 		},
-		...mapStateVuex({
-			loading: LOADING,
+		...mapState(useBaseStore, {
+			isLoading: state => state.loading,
 		}),
 
 		...mapState(useAuthStore, {
@@ -197,11 +197,11 @@ export default defineComponent({
 	methods: {
 		setLoading() {
 			const timeout = setTimeout(() => {
-				this.loading = true
+				this.isLoading = true
 			}, 100)
 			return () => {
 				clearTimeout(timeout)
-				this.loading = false
+				this.isLoading = false
 			}
 		},
 

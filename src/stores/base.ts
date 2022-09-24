@@ -1,40 +1,34 @@
-import type {InjectionKey} from 'vue'
-import {createStore, useStore as baseUseStore, Store} from 'vuex'
+import {defineStore, acceptHMRUpdate} from 'pinia'
 
-import {getBlobFromBlurHash} from '../helpers/getBlobFromBlurHash'
-import {
-	BACKGROUND,
-	BLUR_HASH,
-	CURRENT_LIST,
-	HAS_TASKS,
-	KEYBOARD_SHORTCUTS_ACTIVE,
-	LOADING,
-	LOADING_MODULE, LOGO_VISIBLE,
-	MENU_ACTIVE,
-	QUICK_ACTIONS_ACTIVE,
-} from '../store/mutation-types'
+import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 
 import ListModel from '@/models/list'
-
 import ListService from '../services/list'
 import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 
-import type { RootStoreState, StoreState } from '../store/types'
-import pinia from '@/pinia'
 import {useAuthStore} from '@/stores/auth'
+import type {IList} from '@/modelTypes/IList'
 
-export const key: InjectionKey<Store<StoreState>> = Symbol()
+export interface RootStoreState {
+	loading: boolean,
+	loadingModule: null,
 
-// define your own `useStore` composition function
-export function useStore () {
-  return baseUseStore(key)
+	currentList: IList,
+	background: string,
+	blurHash: string,
+
+	hasTasks: boolean,
+	menuActive: boolean,
+	keyboardShortcutsActive: boolean,
+	quickActionsActive: boolean,
+	logoVisible: boolean,
 }
 
-export const store = createStore<RootStoreState>({
-	strict: import.meta.env.DEV,
-	state: () => ({
+export const useBaseStore = defineStore('base', {
+	state: () : RootStoreState => ({
 		loading: false,
 		loadingModule: null,
+
 		// This is used to highlight the current list in menu for all list related views
 		currentList: new ListModel({
 			id: 0,
@@ -42,76 +36,94 @@ export const store = createStore<RootStoreState>({
 		}),
 		background: '',
 		blurHash: '',
+
 		hasTasks: false,
 		menuActive: true,
 		keyboardShortcutsActive: false,
 		quickActionsActive: false,
 		logoVisible: true,
 	}),
-	mutations: {
-		[LOADING](state, loading) {
-			state.loading = loading
+
+	actions: {
+		setLoading(loading: boolean) {
+			this.loading = loading
 		},
-		[LOADING_MODULE](state, module) {
-			state.loadingModule = module
+
+		setLoadingModule(module) {
+			this.loadingModule = module
 		},
-		[CURRENT_LIST](state, currentList) {
+
+		// FIXME: same action as mutation name
+		setCurrentList(currentList: IList) {
 			// Server updates don't return the right. Therefore, the right is reset after updating the list which is
 			// confusing because all the buttons will disappear in that case. To prevent this, we're keeping the right
 			// when updating the list in global state.
-			if (typeof state.currentList.maxRight !== 'undefined' && (typeof currentList.maxRight === 'undefined' || currentList.maxRight === null)) {
-				currentList.maxRight = state.currentList.maxRight
+			if (
+				typeof this.currentList.maxRight !== 'undefined' &&
+				(
+					typeof currentList.maxRight === 'undefined' ||
+					currentList.maxRight === null
+				)
+			) {
+				currentList.maxRight = this.currentList.maxRight
 			}
-			state.currentList = currentList
+			this.currentList = currentList
 		},
-		[HAS_TASKS](state, hasTasks) {
-			state.hasTasks = hasTasks
-		},
-		[MENU_ACTIVE](state, menuActive) {
-			state.menuActive = menuActive
-		},
-		toggleMenu(state) {
-			state.menuActive = !state.menuActive
-		},
-		[KEYBOARD_SHORTCUTS_ACTIVE](state, active) {
-			state.keyboardShortcutsActive = active
-		},
-		[QUICK_ACTIONS_ACTIVE](state, active) {
-			state.quickActionsActive = active
-		},
-		[BACKGROUND](state, background) {
-			state.background = background
-		},
-		[BLUR_HASH](state, blurHash) {
-			state.blurHash = blurHash
-		},
-		[LOGO_VISIBLE](state, visible: boolean) {
-			state.logoVisible = visible
-		},
-	},
-	actions: {
-		async [CURRENT_LIST]({state, commit}, {list, forceUpdate = false}) {
 
+		setHasTasks(hasTasks: boolean) {
+			this.hasTasks = hasTasks
+		},
+
+		setMenuActive(menuActive: boolean) {
+			this.menuActive = menuActive
+		},
+
+		toggleMenu() {
+			this.menuActive = !this.menuActive
+		},
+
+		setKeyboardShortcutsActive(active: boolean) {
+			this.keyboardShortcutsActive = active
+		},
+
+		setQuickActionsActive(active: boolean) {
+			this.quickActionsActive = active
+		},
+
+		setBackground(background: string) {
+			this.background = background
+		},
+
+		setBlurHash(blurHash: string) {
+			this.blurHash = blurHash
+		},
+
+		setLogoVisible(visible: boolean) {
+			this.logoVisible = visible
+		},
+
+		// FIXME: update all actions handleSetCurrentList
+		async handleSetCurrentList({list, forceUpdate = false}) {
 			if (list === null) {
-				commit(CURRENT_LIST, {})
-				commit(BACKGROUND, null)
-				commit(BLUR_HASH, null)
+				this.setCurrentList({})
+				this.setBackground('')
+				this.setBlurHash('')
 				return
 			}
 
 			// The forceUpdate parameter is used only when updating a list background directly because in that case 
 			// the current list stays the same, but we want to show the new background right away.
-			if (list.id !== state.currentList.id || forceUpdate) {
+			if (list.id !== this.currentList.id || forceUpdate) {
 				if (list.backgroundInformation) {
 					try {
 						const blurHash = await getBlobFromBlurHash(list.backgroundBlurHash)
 						if (blurHash) {
-							commit(BLUR_HASH, window.URL.createObjectURL(blurHash))
+							this.setBlurHash(window.URL.createObjectURL(blurHash))
 						}
 
 						const listService = new ListService()
 						const background = await listService.background(list)
-						commit(BACKGROUND, background)
+						this.setBackground(background)
 					} catch (e) {
 						console.error('Error getting background image for list', list.id, e)
 					}
@@ -119,16 +131,21 @@ export const store = createStore<RootStoreState>({
 			}
 
 			if (typeof list.backgroundInformation === 'undefined' || list.backgroundInformation === null) {
-				commit(BACKGROUND, null)
-				commit(BLUR_HASH, null)
+				this.setBackground('')
+				this.setBlurHash('')
 			}
 
-			commit(CURRENT_LIST, list)
+			this.setCurrentList(list)
 		},
+
 		async loadApp() {
 			await checkAndSetApiUrl(window.API_URL)
-			const authStore = useAuthStore(pinia)
-			await authStore.checkAuth()
+			await useAuthStore().checkAuth()
 		},
 	},
 })
+
+// support hot reloading
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useBaseStore, import.meta.hot))
+}

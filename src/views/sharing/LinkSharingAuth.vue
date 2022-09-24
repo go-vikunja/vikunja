@@ -34,21 +34,21 @@
 
 <script lang="ts" setup>
 import {ref, computed} from 'vue'
-import {useStore} from '@/store'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {useTitle} from '@vueuse/core'
 
 import Message from '@/components/misc/message.vue'
-import {LOGO_VISIBLE} from '@/store/mutation-types'
 import {LIST_VIEWS, type ListView} from '@/types/ListView'
+
+import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(t('sharing.authenticating'))
 
 function useAuth() {
-	const store = useStore()
+	const baseStore = useBaseStore()
 	const authStore = useAuthStore()
 	const route = useRoute()
 	const router = useRouter()
@@ -81,7 +81,7 @@ function useAuth() {
 			const logoVisible = route.query.logoVisible
 				? route.query.logoVisible === 'true'
 				: true
-			store.commit(LOGO_VISIBLE, logoVisible)
+			baseStore.setLogoVisible(logoVisible)
 
 			const view = route.query.view && Object.values(LIST_VIEWS).includes(route.query.view as ListView)
 				? route.query.view

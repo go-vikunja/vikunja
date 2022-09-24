@@ -227,10 +227,9 @@
 import {defineComponent} from 'vue'
 import draggable from 'zhyswan-vuedraggable'
 import cloneDeep from 'lodash.clonedeep'
+import {mapState} from 'pinia'
 
 import BucketModel from '../../models/bucket'
-import {mapState as mapStateVuex} from 'vuex'
-import {mapState} from 'pinia'
 import {RIGHTS as Rights} from '@/constants/rights'
 import ListWrapper from './ListWrapper.vue'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
@@ -240,6 +239,8 @@ import {calculateItemPosition} from '../../helpers/calculateItemPosition'
 import KanbanCard from '@/components/tasks/partials/kanban-card.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 import {isSavedFilter} from '@/helpers/savedFilter'
+
+import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
 
@@ -343,7 +344,7 @@ export default defineComponent({
 				],
 			}
 		},
-		...mapStateVuex({
+		...mapState(useBaseStore, {
 			canWrite: state => state.currentList.maxRight > Rights.READ,
 			list: state => state.currentList,
 		}),
@@ -430,7 +431,7 @@ export default defineComponent({
 			const taskAfter = newBucket.tasks[newTaskIndex + 1] ?? null
 			this.taskUpdating[task.id] = true
 
-			const newTask = cloneDeep(task) // cloning the task to avoid vuex store mutations
+			const newTask = cloneDeep(task) // cloning the task to avoid pinia store manipulation
 			newTask.bucketId = newBucket.id
 			newTask.kanbanPosition = calculateItemPosition(
 				taskBefore !== null ? taskBefore.kanbanPosition : null,
@@ -444,7 +445,7 @@ export default defineComponent({
 				// Make sure the first and second task don't both get position 0 assigned
 				if(newTaskIndex === 0 && taskAfter !== null && taskAfter.kanbanPosition === 0) {
 					const taskAfterAfter = newBucket.tasks[newTaskIndex + 2] ?? null
-					const newTaskAfter = cloneDeep(taskAfter) // cloning the task to avoid vuex store mutations
+					const newTaskAfter = cloneDeep(taskAfter) // cloning the task to avoid pinia store manipulation
 					newTaskAfter.bucketId = newBucket.id
 					newTaskAfter.kanbanPosition = calculateItemPosition(
 						0,

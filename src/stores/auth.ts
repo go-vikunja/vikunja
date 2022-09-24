@@ -6,16 +6,27 @@ import {objectToSnakeCase} from '@/helpers/case'
 import UserModel, { getAvatarUrl } from '@/models/user'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
-import {setLoadingPinia} from '@/store/helper'
+import {setLoadingPinia} from '@/stores/helper'
 import {success} from '@/message'
 import {redirectToProvider} from '@/helpers/redirectToProvider'
 import {AUTH_TYPES, type IUser} from '@/modelTypes/IUser'
-import type {AuthState} from '@/store/types'
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import router from '@/router'
 import {useConfigStore} from '@/stores/config'
+import {useBaseStore} from '@/stores/base'
 import UserSettingsModel from '@/models/userSettings'
-import {store} from '@/store'
+
+export interface AuthState {
+	authenticated: boolean,
+	isLinkShareAuth: boolean,
+	info: IUser | null,
+	needsTotpPasscode: boolean,
+	avatarUrl: string,
+	lastUserInfoRefresh: Date | null,
+	settings: IUserSettings,
+	isLoading: boolean,
+	isLoadingGeneralSettings: boolean
+}
 
 export const useAuthStore = defineStore('auth', {
 	state: () : AuthState => ({
@@ -93,7 +104,8 @@ export const useAuthStore = defineStore('auth', {
 		// Logs a user in with a set of credentials.
 		async login(credentials) {
 			const HTTP = HTTPFactory()
-			store.commit('loading', true)
+			const baseStore = useBaseStore()
+			baseStore.setLoading(true)
 			this.setIsLoading(true)
 
 			// Delete an eventually preexisting old token
@@ -117,7 +129,7 @@ export const useAuthStore = defineStore('auth', {
 
 				throw e
 			} finally {
-				store.commit('loading', false)
+				baseStore.setLoading(false)
 				this.setIsLoading(false)
 			}
 		},
@@ -126,7 +138,8 @@ export const useAuthStore = defineStore('auth', {
 		// Not sure if this is the right place to put the logic in, maybe a seperate js component would be better suited.
 		async register(credentials) {
 			const HTTP = HTTPFactory()
-			store.commit('loading', true)
+			const baseStore = useBaseStore()
+			baseStore.setLoading(true)
 			this.setIsLoading(true)
 			try {
 				await HTTP.post('register', credentials)
@@ -138,14 +151,15 @@ export const useAuthStore = defineStore('auth', {
 
 				throw e
 			} finally {
-			store.commit('loading', false)
+				baseStore.setLoading(false)
 				this.setIsLoading(false)
 			}
 		},
 
 		async openIdAuth({provider, code}) {
 			const HTTP = HTTPFactory()
-			store.commit('loading', true)
+			const baseStore = useBaseStore()
+			baseStore.setLoading(true)
 			this.setIsLoading(true)
 
 			const data = {
@@ -162,7 +176,7 @@ export const useAuthStore = defineStore('auth', {
 				// Tell others the user is autheticated
 				this.checkAuth()
 			} finally {
-				store.commit('loading', false)
+				baseStore.setLoading(false)
 				this.setIsLoading(false)
 			}
 		},

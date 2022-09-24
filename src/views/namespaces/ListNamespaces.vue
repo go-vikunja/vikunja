@@ -71,7 +71,6 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useStore} from '@/store'
 
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import ListCard from '@/components/list/partials/list-card.vue'
@@ -79,16 +78,18 @@ import ListCard from '@/components/list/partials/list-card.vue'
 import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
 import {useTitle} from '@/composables/useTitle'
 import {useStorage} from '@vueuse/core'
+
+import {useBaseStore} from '@/stores/base'
 import {useNamespaceStore} from '@/stores/namespaces'
 
 const {t} = useI18n()
-const store = useStore()
+const baseStore = useBaseStore()
 const namespaceStore = useNamespaceStore()
 
 useTitle(() => t('namespace.title'))
 const showArchived = useStorage('showArchived', false)
 
-const loading = computed(() => store.state.loading)
+const loading = computed(() => baseStore.loading) // FIXME: shouldn't this reference the namespace store?
 const namespaces = computed(() => {
 	return namespaceStore.namespaces.filter(n => showArchived.value ? true : !n.isArchived)
 	// return namespaceStore.namespaces.filter(n => showArchived.value ? true : !n.isArchived).map(n => {

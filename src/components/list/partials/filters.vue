@@ -1,22 +1,25 @@
 <template>
 	<card class="filters has-overflow" :title="hasTitle ? $t('filters.title') : ''">
 		<div class="field is-flex is-flex-direction-column">
-			<fancycheckbox v-model="params.filter_include_nulls" @change="change()">
+			<fancycheckbox
+				v-model="params.filter_include_nulls"
+				@update:model-value="change()"
+			>
 				{{ $t('filters.attributes.includeNulls') }}
 			</fancycheckbox>
 			<fancycheckbox
 				v-model="filters.requireAllFilters"
-				@change="setFilterConcat()"
+				@update:model-value="setFilterConcat()"
 			>
 				{{ $t('filters.attributes.requireAll') }}
 			</fancycheckbox>
-			<fancycheckbox @change="setDoneFilter" v-model="filters.done">
+			<fancycheckbox v-model="filters.done" @update:model-value="setDoneFilter">
 				{{ $t('filters.attributes.showDoneTasks') }}
 			</fancycheckbox>
 			<fancycheckbox
 				v-if="!$route.name.includes('list.kanban') || !$route.name.includes('list.table')"
 				v-model="sortAlphabetically"
-				@change="change()"
+				@update:model-value="change()"
 			>
 				{{ $t('filters.attributes.sortAlphabetically') }}
 			</fancycheckbox>
@@ -43,7 +46,7 @@
 				/>
 				<fancycheckbox
 					v-model="filters.usePriority"
-					@change="setPriority"
+					@update:model-value="setPriority"
 				>
 					{{ $t('filters.attributes.enablePriority') }}
 				</fancycheckbox>
@@ -59,7 +62,7 @@
 				/>
 				<fancycheckbox
 					v-model="filters.usePercentDone"
-					@change="setPercentDoneFilter"
+					@update:model-value="setPercentDoneFilter"
 				>
 					{{ $t('filters.attributes.enablePercentDone') }}
 				</fancycheckbox>

@@ -2,7 +2,7 @@
 	<div class="content-auth">
 		<BaseButton
 			v-if="menuActive"
-			@click="$store.commit('menuActive', false)"
+			@click="baseStore.setMenuActive(false)"
 			class="menu-hide-button d-print-none"
 		>
 			<icon icon="times"/>
@@ -26,7 +26,7 @@
 			>
 				<BaseButton
 					v-if="menuActive"
-					@click="$store.commit('menuActive', false)"
+					@click="baseStore.setMenuActive(false)"
 					class="mobile-overlay d-print-none"
 				/>
 
@@ -61,11 +61,10 @@
 
 <script lang="ts" setup>
 import {watch, computed, shallowRef, watchEffect, type VNode, h} from 'vue'
-import {useStore} from '@/store'
+import {useBaseStore} from '@/stores/base'
 import {useRoute, useRouter} from 'vue-router'
 import {useEventListener} from '@vueuse/core'
 
-import {CURRENT_LIST, KEYBOARD_SHORTCUTS_ACTIVE, MENU_ACTIVE} from '@/store/mutation-types'
 import {useLabelStore} from '@/stores/labels'
 import Navigation from '@/components/home/navigation.vue'
 import QuickActions from '@/components/quick-actions/quick-actions.vue'
@@ -123,20 +122,19 @@ function useRouteWithModal() {
 
 const {routeWithModal, currentModal, closeModal} = useRouteWithModal()
 
-const store = useStore()
-
-const background = computed(() => store.state.background)
-const blurHash = computed(() => store.state.blurHash)
-const menuActive = computed(() => store.state.menuActive)
+const baseStore = useBaseStore()
+const background = computed(() => baseStore.background)
+const blurHash = computed(() => baseStore.blurHash)
+const menuActive = computed(() => baseStore.menuActive)
 
 function showKeyboardShortcuts() {
-	store.commit(KEYBOARD_SHORTCUTS_ACTIVE, true)
+	baseStore.setKeyboardShortcutsActive(true)
 }
 
 const route = useRoute()
 
 // hide menu on mobile
-watch(() => route.fullPath, () => window.innerWidth < 769 && store.commit(MENU_ACTIVE, false))
+watch(() => route.fullPath, () => window.innerWidth < 769 && baseStore.setMenuActive(false))
 
 // FIXME: this is really error prone
 // Reset the current list highlight in menu if the current route is not list related.
@@ -158,7 +156,7 @@ watch(() => route.name as string, (routeName) => {
 			routeName.startsWith('user.settings')
 		)
 	) {
-		store.dispatch(CURRENT_LIST, {list: null})
+		baseStore.handleSetCurrentList({list: null})
 	}
 })
 

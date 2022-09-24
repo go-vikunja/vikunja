@@ -5,10 +5,11 @@ import {findById, findIndexById} from '@/helpers/utils'
 import {i18n} from '@/i18n'
 import {success} from '@/message'
 
-import BucketService from '../services/bucket'
-import {setLoadingPinia} from '@/store/helper'
+import BucketService from '@/services/bucket'
 import TaskCollectionService from '@/services/taskCollection'
-import type { KanbanState } from '@/store/types'
+
+import {setLoadingPinia} from '@/stores/helper'
+
 import type { ITask } from '@/modelTypes/ITask'
 import type { IList } from '@/modelTypes/IList'
 import type { IBucket } from '@/modelTypes/IBucket'
@@ -35,6 +36,21 @@ const addTaskToBucketAndSort = (state: KanbanState, task: ITask) => {
 	}
 	state.buckets[bucketIndex].tasks.push(task)
 	state.buckets[bucketIndex].tasks.sort((a, b) => a.kanbanPosition > b.kanbanPosition ? 1 : -1)
+}
+
+export interface KanbanState {
+	buckets: IBucket[],
+	listId: IList['id'],
+	bucketLoading: {
+		[id: IBucket['id']]: boolean
+	},
+	taskPagesPerBucket: {
+		[id: IBucket['id']]: number
+	},
+	allTasksLoadedForBucket: {
+		[id: IBucket['id']]: boolean
+	},
+	isLoading: boolean,
 }
 
 /**

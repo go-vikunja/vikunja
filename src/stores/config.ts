@@ -1,10 +1,38 @@
 import {defineStore, acceptHMRUpdate} from 'pinia'
 import {parseURL} from 'ufo'
 
-import {CONFIG} from '../store/mutation-types'
 import {HTTPFactory} from '@/http-common'
 import {objectToCamelCase} from '@/helpers/case'
-import type {ConfigState} from '@/store/types'
+
+export interface ConfigState {
+	version: string,
+	frontendUrl: string,
+	motd: string,
+	linkSharingEnabled: boolean,
+	maxFileSize: '20MB',
+	registrationEnabled: boolean,
+	availableMigrators: [],
+	taskAttachmentsEnabled: boolean,
+	totpEnabled: boolean,
+	enabledBackgroundProviders: [],
+	legal: {
+		imprintUrl: string,
+		privacyPolicyUrl: string,
+	},
+	caldavEnabled: boolean,
+	userDeletionEnabled: boolean,
+	taskCommentsEnabled: boolean,
+	auth: {
+		local: {
+			enabled: boolean,
+		},
+		openidConnect: {
+			enabled: boolean,
+			redirectUrl: string,
+			providers: [],
+		},
+	},
+}
 
 export const useConfigStore = defineStore('config', {
 	state: (): ConfigState => ({
@@ -45,13 +73,13 @@ export const useConfigStore = defineStore('config', {
 		},
 	},
 	actions: {
-		[CONFIG](config: ConfigState) {
+		setConfig(config: ConfigState) {
 			Object.assign(this, config)
 		},
 		async update() {
 			const HTTP = HTTPFactory()
 			const {data: config} = await HTTP.get('info')
-			this[CONFIG](objectToCamelCase(config))
+			this.setConfig(objectToCamelCase(config))
 			return config
 		},
 	},

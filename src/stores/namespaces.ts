@@ -1,14 +1,18 @@
 import {defineStore, acceptHMRUpdate} from 'pinia'
 
 import NamespaceService from '../services/namespace'
-import {setLoadingPinia} from '@/store/helper'
+import {setLoadingPinia} from '@/stores/helper'
 import {createNewIndexer} from '@/indexes'
-import type {NamespaceState} from '@/store/types'
 import type {INamespace} from '@/modelTypes/INamespace'
 import type {IList} from '@/modelTypes/IList'
 import {useListStore} from '@/stores/lists'
 
 const {add, remove, search, update} = createNewIndexer('namespaces', ['title', 'description'])
+
+export interface NamespaceState {
+	namespaces: INamespace[]
+	isLoading: boolean,
+}
 
 export const useNamespaceStore = defineStore('namespace', {
 	state: (): NamespaceState => ({

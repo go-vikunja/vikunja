@@ -1,5 +1,5 @@
 // Save the current list view to local storage
-// We use local storage and not vuex here to make it persistent across reloads.
+// We use local storage and not a store here to make it persistent across reloads.
 export const saveListView = (listId, routeName) => {
 	if (routeName.includes('settings.')) {
 		return

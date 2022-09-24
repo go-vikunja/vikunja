@@ -15,13 +15,14 @@ export default { name: 'Auth' }
 
 <script setup lang="ts">
 import {ref, computed, onMounted} from 'vue'
-import {useStore} from '@/store'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import {getErrorText} from '@/message'
 import Message from '@/components/misc/message.vue'
 import {clearLastVisited, getLastVisited} from '@/helpers/saveLastVisited'
+
+import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
 
 const {t} = useI18n({useScope: 'global'})
@@ -29,10 +30,10 @@ const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
 const route = useRoute()
 
-const store = useStore()
+const baseStore = useBaseStore()
 const authStore = useAuthStore()
 
-const loading = computed(() => store.state.loading)
+const loading = computed(() => baseStore.loading)
 const errorMessage = ref('')
 
 async function authenticateWithCode() {

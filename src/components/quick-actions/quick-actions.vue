@@ -61,7 +61,6 @@ import TeamService from '@/services/team'
 import NamespaceModel from '@/models/namespace'
 import TeamModel from '@/models/team'
 
-import {CURRENT_LIST, LOADING, LOADING_MODULE, QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'
 import ListModel from '@/models/list'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -70,6 +69,8 @@ import {getHistory} from '@/modules/listHistory'
 import {parseTaskText, PrefixMode} from '@/modules/parseTaskText'
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {PREFIXES} from '@/modules/parseTaskText'
+
+import {useBaseStore} from '@/stores/base'
 import {useListStore} from '@/stores/lists'
 import {useNamespaceStore} from '@/stores/namespaces'
 import {useLabelStore} from '@/stores/labels'
@@ -112,8 +113,10 @@ export default defineComponent({
 	},
 	computed: {
 		active() {
-			const active = this.$store.state[QUICK_ACTIONS_ACTIVE]
+			const active = useBaseStore().quickActionsActive
 			if (!active) {
+				// FIXME: computeds shouldn't have side effects.
+				// create a watcher instead
 				this.reset()
 			}
 			return active
@@ -181,8 +184,7 @@ export default defineComponent({
 		},
 		loading() {
 			return this.taskService.loading ||
-				(this.$store.state[LOADING] && this.$store.state[LOADING_MODULE] === 'namespaces') ||
-				(this.$store.state[LOADING] && this.$store.state[LOADING_MODULE] === 'lists') ||
+				useNamespaceStore().isLoading || useListStore().isLoading ||
 				this.teamService.loading
 		},
 		placeholder() {
@@ -219,7 +221,8 @@ export default defineComponent({
 			return this.$t('quickActions.hint', prefixes)
 		},
 		currentList() {
-			return Object.keys(this.$store.state[CURRENT_LIST]).length === 0 ? null : this.$store.state[CURRENT_LIST]
+			const currentList = useBaseStore().currentList
+			return Object.keys(currentList).length === 0 ? null : currentList
 		},
 		availableCmds() {
 			const cmds = []
@@ -360,7 +363,7 @@ export default defineComponent({
 			}, 150)
 		},
 		closeQuickActions() {
-			this.$store.commit(QUICK_ACTIONS_ACTIVE, false)
+			useBaseStore().setQuickActionsActive(false)
 		},
 		doAction(type, item) {
 			switch (type) {

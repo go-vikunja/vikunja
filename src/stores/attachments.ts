@@ -1,8 +1,11 @@
 import {defineStore, acceptHMRUpdate} from 'pinia'
 import {findIndexById} from '@/helpers/utils'
 
-import type {AttachmentState} from '@/store/types'
 import type {IAttachment} from '@/modelTypes/IAttachment'
+
+export interface AttachmentState {
+	attachments: IAttachment[],
+}
 
 export const useAttachmentStore = defineStore('attachment', {
 	state: (): AttachmentState => ({

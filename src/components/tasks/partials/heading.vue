@@ -41,13 +41,13 @@ import {ref, computed, type PropType} from 'vue'
 import {useRouter} from 'vue-router'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import ColorBubble from '@/components/misc/colorBubble.vue'
 import Done from '@/components/misc/Done.vue'
 
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
+import {useTaskStore} from '@/stores/tasks'
 
 import type {ITask} from '@/modelTypes/ITask'
-import ColorBubble from '@/components/misc/colorBubble.vue'
-import {useTaskStore} from '@/stores/tasks'
 
 const props = defineProps({
 	task: {

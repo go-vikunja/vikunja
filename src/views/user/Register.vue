@@ -50,7 +50,7 @@
 			</div>
 
 			<x-button
-				:loading="loading"
+				:loading="isLoading"
 				id="register-submit"
 				@click="submit"
 				class="mr-2"
@@ -73,12 +73,14 @@ import {useDebounceFn} from '@vueuse/core'
 import {ref, reactive, toRaw, computed, onBeforeMount} from 'vue'
 
 import router from '@/router'
-import {store} from '@/store'
 import Message from '@/components/misc/message.vue'
 import {isEmail} from '@/helpers/isEmail'
 import Password from '@/components/input/password.vue'
+
+import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
 
+const baseStore = useBaseStore()
 const authStore = useAuthStore()
 
 // FIXME: use the `beforeEnter` hook of vue-router
@@ -95,7 +97,7 @@ const credentials = reactive({
 	password: '',
 })
 
-const loading = computed(() => store.state.loading)
+const isLoading = computed(() => baseStore.loading)
 const errorMessage = ref('')
 const validatePasswordInitially = ref(false)
 

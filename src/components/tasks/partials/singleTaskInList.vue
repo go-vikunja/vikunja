@@ -35,7 +35,7 @@
 				{{ task.title }}
 			</span>
 
-			<labels class="labels ml-2 mr-1" :labels="task.labels" v-if="task.labels.length > 0"/>
+			<labels class="labels ml-2 mr-1" :labels="task.labels" v-if="task.labels.length > 0" />
 			<user
 				:avatar-size="27"
 				:is-inline="true"
@@ -119,6 +119,7 @@ import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatD
 import ColorBubble from '@/components/misc/colorBubble.vue'
 import {useListStore} from '@/stores/lists'
 import {useNamespaceStore} from '@/stores/namespaces'
+import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
 
 export default defineComponent({
@@ -188,10 +189,11 @@ export default defineComponent({
 			return list !== null ? list.hexColor : ''
 		},
 		currentList() {
-			return typeof this.$store.state.currentList === 'undefined' ? {
+			const baseStore = useBaseStore()
+			return typeof baseStore.currentList === 'undefined' ? {
 				id: 0,
 				title: '',
-			} : this.$store.state.currentList
+			} : baseStore.currentList
 		},
 		taskDetailRoute() {
 			return {
@@ -238,8 +240,7 @@ export default defineComponent({
 			this.task.isFavorite = !this.task.isFavorite
 			this.task = await this.taskService.update(this.task)
 			this.$emit('task-updated', this.task)
-			const namespaceStore = useNamespaceStore()
-			namespaceStore.loadNamespacesIfFavoritesDontExist()
+			useNamespaceStore().loadNamespacesIfFavoritesDontExist()
 		},
 		hideDeferDueDatePopup(e) {
 			if (!this.showDefer) {

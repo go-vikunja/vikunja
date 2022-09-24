@@ -3,12 +3,11 @@ import {acceptHMRUpdate, defineStore} from 'pinia'
 import {useI18n} from 'vue-i18n'
 
 import ListService from '@/services/list'
-import {setLoadingPinia} from '@/store/helper'
+import {setLoadingPinia} from '@/stores/helper'
 import {removeListFromHistory} from '@/modules/listHistory'
 import {createNewIndexer} from '@/indexes'
 import {useNamespaceStore} from './namespaces'
 
-import type {ListState} from '@/store/types'
 import type {IList} from '@/modelTypes/IList'
 
 import type {MaybeRef} from '@vueuse/core'
@@ -19,6 +18,11 @@ import {success} from '@/message'
 const {add, remove, search, update} = createNewIndexer('lists', ['title', 'description'])
 
 const FavoriteListsNamespace = -2
+
+export interface ListState {
+	lists: { [id: IList['id']]: IList },
+	isLoading: boolean,
+}
 
 export const useListStore = defineStore('list', {
 	state: () : ListState => ({
@@ -113,7 +117,7 @@ export const useListStore = defineStore('list', {
 				namespaceStore.setListInNamespaceById(list)
 
 				// the returned list from listService.update is the same!
-				// in order to not validate vuex mutations we have to create a new copy
+				// in order to not create a manipulation in pinia store we have to create a new copy
 				const newList = {
 					...list,
 					namespaceId: FavoriteListsNamespace,

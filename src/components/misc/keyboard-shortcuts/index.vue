@@ -33,18 +33,15 @@
 </template>
 
 <script lang="ts" setup>
-import {useStore} from '@/store'
+import {useBaseStore} from '@/stores/base'
 
 import Shortcut from '@/components/misc/shortcut.vue'
 import Message from '@/components/misc/message.vue'
 
-import {KEYBOARD_SHORTCUTS_ACTIVE} from '@/store/mutation-types'
 import {KEYBOARD_SHORTCUTS as shortcuts} from './shortcuts'
 
-const store = useStore()
-
 function close() {
-	store.commit(KEYBOARD_SHORTCUTS_ACTIVE, false)
+	useBaseStore().setKeyboardShortcutsActive(false)
 }
 </script>
 

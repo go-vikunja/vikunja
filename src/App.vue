@@ -18,7 +18,6 @@
 import {computed, watch, type Ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
-import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 import isTouchDevice from 'is-touch-device'
 import {success} from '@/message'
@@ -34,16 +33,17 @@ import Ready from '@/components/misc/ready.vue'
 import {setLanguage} from './i18n'
 import AccountDeleteService from '@/services/accountDelete'
 
+import {useBaseStore} from '@/stores/base'
 import {useColorScheme} from '@/composables/useColorScheme'
 import {useBodyClass} from '@/composables/useBodyClass'
 import {useAuthStore} from './stores/auth'
 
-const store = useStore()
+const baseStore = useBaseStore()
 const authStore = useAuthStore()
 const router = useRouter()
 
 useBodyClass('is-touch', isTouchDevice())
-const keyboardShortcutsActive = computed(() => store.state.keyboardShortcutsActive)
+const keyboardShortcutsActive = computed(() => baseStore.keyboardShortcutsActive)
 
 const authUser = computed(() => authStore.authUser)
 const authLinkShare = computed(() => authStore.authLinkShare)

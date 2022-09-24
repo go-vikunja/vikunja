@@ -452,7 +452,6 @@ import heading from '@/components/tasks/partials/heading.vue'
 import Datepicker from '@/components/input/datepicker.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import TaskSubscription from '@/components/misc/subscription.vue'
-import {CURRENT_LIST} from '@/store/mutation-types'
 
 import {uploadFile} from '@/helpers/attachments'
 import ChecklistSummary from '../../components/tasks/partials/checklist-summary.vue'
@@ -462,6 +461,7 @@ import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
 import {getListTitle} from '@/helpers/getListTitle'
 import type {IList} from '@/modelTypes/IList'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
+import {useBaseStore} from '@/stores/base'
 import {useNamespaceStore} from '@/stores/namespaces'
 import {useAttachmentStore} from '@/stores/attachments'
 import {useTaskStore} from '@/stores/tasks'
@@ -561,7 +561,7 @@ export default defineComponent({
 			handler(parent) {
 				const parentList = parent !== null ? parent.list : null
 				if (parentList !== null) {
-					this.$store.dispatch(CURRENT_LIST, {list: parentList})
+					useBaseStore().handleSetCurrentList({list: parentList})
 				}
 			},
 			immediate: true,
@@ -576,7 +576,7 @@ export default defineComponent({
 	},
 	computed: {
 		currentList() {
-			return this.$store.state[CURRENT_LIST]
+			return useBaseStore().currentList
 		},
 		parent() {
 			if (!this.task.listId) {

@@ -55,12 +55,11 @@ import Message from '@/components/misc/message.vue'
 import ListModel from '@/models/list'
 import ListService from '@/services/list'
 
-import {BACKGROUND, BLUR_HASH, CURRENT_LIST} from '@/store/mutation-types'
-
 import {getListTitle} from '@/helpers/getListTitle'
 import {saveListToHistory} from '@/modules/listHistory'
 import {useTitle} from '@/composables/useTitle'
-import {useStore} from '@/store'
+
+import {useBaseStore} from '@/stores/base'
 import {useListStore} from '@/stores/lists'
 import {useKanbanStore} from '@/stores/kanban'
 
@@ -76,20 +75,20 @@ const props = defineProps({
 })
 
 const route = useRoute()
-const store = useStore()
 
+const baseStore = useBaseStore()
 const kanbanStore = useKanbanStore()
 const listStore = useListStore()
 const listService = ref(new ListService())
 const loadedListId = ref(0)
 
 const currentList = computed(() => {
-	return typeof store.state.currentList === 'undefined' ? {
+	return typeof baseStore.currentList === 'undefined' ? {
 		id: 0,
 		title: '',
 		isArchived: false,
 		maxRight: null,
-	} : store.state.currentList
+	} : baseStore.currentList
 })
 
 // watchEffect would be called every time the prop would get a value assigned, even if that value was the same as before.
@@ -141,16 +140,16 @@ async function loadList(listIdToLoad: number) {
 	loadedListId.value = 0
 	const listFromStore = listStore.getListById(listData.id)
 	if (listFromStore !== null) {
-		store.commit(BACKGROUND, null)
-		store.commit(BLUR_HASH, null)
-		store.dispatch(CURRENT_LIST, {list: listFromStore})
+		baseStore.setBackground(null)
+		baseStore.setBlurHash(null)
+		baseStore.handleSetCurrentList({list: listFromStore})
 	}
 
 	// We create an extra list object instead of creating it in list.value because that would trigger a ui update which would result in bad ux.
 	const list = new ListModel(listData)
 	try {
 		const loadedList = await listService.value.get(list)
-		await store.dispatch(CURRENT_LIST, {list: loadedList})
+		await baseStore.handleSetCurrentList({list: loadedList})
 	} finally {
 		loadedListId.value = props.listId
 	}

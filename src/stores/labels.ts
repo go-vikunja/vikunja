@@ -4,7 +4,7 @@ import LabelService from '@/services/label'
 import {success} from '@/message'
 import {i18n} from '@/i18n'
 import {createNewIndexer} from '@/indexes'
-import {setLoadingPinia} from '@/store/helper'
+import {setLoadingPinia} from '@/stores/helper'
 import type {ILabel} from '@/modelTypes/ILabel'
 
 const {add, remove, update, search} = createNewIndexer('labels', ['title', 'description'])
@@ -20,7 +20,12 @@ async function getAllLabels(page = 1): Promise<ILabel[]> {
 	}
 }
 
-import type {LabelState} from '@/store/types'
+export interface LabelState {
+	labels: {
+		[id: ILabel['id']]: ILabel
+	},
+	isLoading: boolean,
+}
 
 export const useLabelStore = defineStore('label', {
 	state: () : LabelState => ({

@@ -45,7 +45,6 @@
 
 <script setup lang="ts">
 import {computed, ref, watchEffect} from 'vue'
-import {useStore} from '@/store'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
@@ -56,13 +55,11 @@ import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import SingleTaskInList from '@/components/tasks/partials/singleTaskInList.vue'
 import DatepickerWithRange from '@/components/date/datepickerWithRange.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
-import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import LlamaCool from '@/assets/llama-cool.svg?component'
 import type {ITask} from '@/modelTypes/ITask'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 
-const store = useStore()
 const authStore = useAuthStore()
 const taskStore = useTaskStore()
 const route = useRoute()
@@ -109,7 +106,7 @@ const pageTitle = computed(() => {
 })
 const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
 const userAuthenticated = computed(() => authStore.authenticated)
-const loading = computed(() => store.state[LOADING] && store.state[LOADING_MODULE] === 'tasks')
+const loading = computed(() => taskStore.isLoading)
 
 interface dateStrings {
 	dateFrom: string,

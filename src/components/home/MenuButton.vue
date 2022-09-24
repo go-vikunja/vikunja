@@ -1,8 +1,8 @@
 <template>
 	<BaseButton
 		class="menu-show-button"
-		@click="$store.commit('toggleMenu')"
-		@shortkey="() => $store.commit('toggleMenu')"
+		@click="baseStore.toggleMenu()"
+		@shortkey="() => baseStore.toggleMenu()"
 		v-shortcut="'Control+e'"
 		:title="$t('keyboardShortcuts.toggleMenu')"
 		:aria-label="menuActive ? $t('misc.hideMenu') : $t('misc.showMenu')"
@@ -11,12 +11,12 @@
 
 <script setup lang="ts">
 import {computed} from 'vue'
-import {useStore} from '@/store'
+import {useBaseStore} from '@/stores/base'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
-const store = useStore()
-const menuActive = computed(() => store.state.menuActive)
+const baseStore = useBaseStore()
+const menuActive = computed(() => baseStore.menuActive)
 </script>
 
 <style lang="scss" scoped>

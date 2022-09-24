@@ -72,17 +72,17 @@ export default { name: 'list-setting-edit' }
 <script setup lang="ts">
 import type {PropType} from 'vue'
 import {useRouter} from 'vue-router'
-import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import Editor from '@/components/input/AsyncEditor'
 import ColorPicker from '@/components/input/colorPicker.vue'
 import CreateEdit from '@/components/misc/create-edit.vue'
 
-import {CURRENT_LIST} from '@/store/mutation-types'
 import type {IList} from '@/modelTypes/IList'
 
+import {useBaseStore} from '@/stores/base'
 import {useList} from '@/stores/lists'
+
 import {useTitle} from '@/composables/useTitle'
 
 const props = defineProps({
@@ -93,7 +93,6 @@ const props = defineProps({
 })
 
 const router = useRouter()
-const store = useStore()
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -103,7 +102,7 @@ useTitle(() => list?.title ? t('list.edit.title', {list: list.title}) : '')
 
 async function save() {
 	await saveList()
-	await store.dispatch(CURRENT_LIST, {list})
+	await useBaseStore().handleSetCurrentList({list})
 	router.back()
 }
 </script>

@@ -100,10 +100,11 @@ export default { name: 'list-setting-background' }
 <script setup lang="ts">
 import {ref, computed, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useStore} from '@/store'
 import {useRoute, useRouter} from 'vue-router'
 import debounce from 'lodash.debounce'
 import BaseButton from '@/components/base/BaseButton.vue'
+
+import {useBaseStore} from '@/stores/base'
 import {useListStore} from '@/stores/lists'
 import {useNamespaceStore} from '@/stores/namespaces'
 import {useConfigStore} from '@/stores/config'
@@ -115,7 +116,6 @@ import type BackgroundImageModel from '@/models/backgroundImage'
 
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 import {useTitle} from '@/composables/useTitle'
-import {CURRENT_LIST} from '@/store/mutation-types'
 
 import CreateEdit from '@/components/misc/create-edit.vue'
 import {success} from '@/message'
@@ -123,7 +123,7 @@ import {success} from '@/message'
 const SEARCH_DEBOUNCE = 300
 
 const {t} = useI18n({useScope: 'global'})
-const store = useStore()
+const baseStore = useBaseStore()
 const route = useRoute()
 const router = useRouter()
 
@@ -149,8 +149,8 @@ const configStore = useConfigStore()
 
 const unsplashBackgroundEnabled = computed(() => configStore.enabledBackgroundProviders.includes('unsplash'))
 const uploadBackgroundEnabled = computed(() => configStore.enabledBackgroundProviders.includes('upload'))
-const currentList = computed(() => store.state.currentList)
-const hasBackground = computed(() => store.state.background !== null)
+const currentList = computed(() => baseStore.currentList)
+const hasBackground = computed(() => baseStore.background !== null)
 
 // Show the default collection of backgrounds
 newBackgroundSearch()
@@ -188,8 +188,11 @@ async function setBackground(backgroundId: string) {
 		return
 	}
 
-	const list = await backgroundService.update({id: backgroundId, listId: route.params.listId})
-	await store.dispatch(CURRENT_LIST, {list, forceUpdate: true})
+	const list = await backgroundService.update({
+		id: backgroundId,
+		listId: route.params.listId,
+	})
+	await baseStore.handleSetCurrentList({list, forceUpdate: true})
 	namespaceStore.setListInNamespaceById(list)
 	listStore.setList(list)
 	success({message: t('list.background.success')})
@@ -201,8 +204,11 @@ async function uploadBackground() {
 		return
 	}
 
-	const list = await backgroundUploadService.value.create(route.params.listId, backgroundUploadInput.value?.files[0])
-	await store.dispatch(CURRENT_LIST, {list, forceUpdate: true})
+	const list = await backgroundUploadService.value.create(
+		route.params.listId,
+		backgroundUploadInput.value?.files[0],
+	)
+	await baseStore.handleSetCurrentList({list, forceUpdate: true})
 	namespaceStore.setListInNamespaceById(list)
 	listStore.setList(list)
 	success({message: t('list.background.success')})
@@ -210,7 +216,7 @@ async function uploadBackground() {
 
 async function removeBackground() {
 	const list = await listService.value.removeBackground(currentList.value)
-	await store.dispatch(CURRENT_LIST, {list, forceUpdate: true})
+	await baseStore.handleSetCurrentList({list, forceUpdate: true})
 	namespaceStore.setListInNamespaceById(list)
 	listStore.setList(list)
 	success({message: t('list.background.removeSuccess')})

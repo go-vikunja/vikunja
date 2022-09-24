@@ -42,7 +42,7 @@
 
 <script lang="ts" setup>
 import {ref, computed} from 'vue'
-import {useStore} from '@/store'
+import {useRouter, useRoute} from 'vue-router'
 
 import Logo from '@/assets/logo.svg?component'
 import ApiConfig from '@/components/misc/api-config.vue'
@@ -52,13 +52,14 @@ import NoAuthWrapper from '@/components/misc/no-auth-wrapper.vue'
 import {ERROR_NO_API_URL} from '@/helpers/checkAndSetApiUrl'
 import {useOnline} from '@/composables/useOnline'
 
-import {useRouter, useRoute} from 'vue-router'
 import {getAuthForRoute} from '@/router'
+
+import {useBaseStore} from '@/stores/base'
 
 const router = useRouter()
 const route = useRoute()
 
-const store = useStore()
+const baseStore = useBaseStore()
 
 const ready = ref(false)
 const online = useOnline()
@@ -68,7 +69,7 @@ const showLoading = computed(() => !ready.value && error.value === '')
 
 async function load() {
 	try {
-		await store.dispatch('loadApp')
+		await baseStore.loadApp()
 		const redirectTo = getAuthForRoute(route)
 		if (typeof redirectTo !== 'undefined') {
 			await router.push(redirectTo)

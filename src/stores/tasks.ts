@@ -7,8 +7,7 @@ import TaskAssigneeService from '@/services/taskAssignee'
 import LabelTaskService from '@/services/labelTask'
 import UserService from '@/services/user'
 
-import {HAS_TASKS} from '../store/mutation-types'
-import {setLoadingPinia} from '../store/helper'
+import {playPop} from '@/helpers/playPop'
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {parseTaskText} from '@/modules/parseTaskText'
 
@@ -24,13 +23,12 @@ import type {IUser} from '@/modelTypes/IUser'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {IList} from '@/modelTypes/IList'
 
-import type {TaskState} from '@/store/types'
+import {setLoadingPinia} from '@/stores/helper'
+import {useBaseStore} from '@/stores/base'
 import {useLabelStore} from '@/stores/labels'
 import {useListStore} from '@/stores/lists'
 import {useAttachmentStore} from '@/stores/attachments'
 import {useKanbanStore} from '@/stores/kanban'
-import {playPop} from '@/helpers/playPop'
-import {store} from '@/store'
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
 function findPropertyByValue(object, key, value) {
@@ -40,10 +38,13 @@ function findPropertyByValue(object, key, value) {
 }
 
 // Check if the user exists in the search results
-function validateUser(users: IUser[], username: IUser['username']) {
-	return findPropertyByValue(users, 'username', username) ||
-		findPropertyByValue(users, 'name', username) ||
-		findPropertyByValue(users, 'email', username)
+function validateUser(
+	users: IUser[],
+	query: IUser['username'] | IUser['name'] | IUser['email'],
+) {
+	return findPropertyByValue(users, 'username', query) ||
+		findPropertyByValue(users, 'name', query) ||
+		findPropertyByValue(users, 'email', query)
 }
 
 // Check if the label exists
@@ -77,6 +78,9 @@ async function findAssignees(parsedTaskAssignees: string[]) {
 	return validatedUsers.filter((item) => Boolean(item))
 }
 
+export interface TaskState {
+	isLoading: boolean,
+}
 
 export const useTaskStore = defineStore('task', {
 	state: () : TaskState => ({
@@ -89,7 +93,7 @@ export const useTaskStore = defineStore('task', {
 			const cancel = setLoadingPinia(this)
 			try {
 				const tasks = await taskService.getAll({}, params)
-				store.commit(HAS_TASKS, tasks.length > 0)
+				useBaseStore().setHasTasks(tasks.length > 0)
 				return tasks
 			} finally {
 				cancel()

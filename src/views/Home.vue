@@ -60,7 +60,6 @@
 
 <script lang="ts" setup>
 import {ref, computed} from 'vue'
-import {useStore} from '@/store'
 
 import Message from '@/components/misc/message.vue'
 import ShowTasks from '@/views/tasks/ShowTasks.vue'
@@ -71,18 +70,23 @@ import {getHistory} from '@/modules/listHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
 import {useDateTimeSalutation} from '@/composables/useDateTimeSalutation'
+
+import {useBaseStore} from '@/stores/base'
 import {useListStore} from '@/stores/lists'
 import {useConfigStore} from '@/stores/config'
 import {useNamespaceStore} from '@/stores/namespaces'
 import {useAuthStore} from '@/stores/auth'
+import {useTaskStore} from '@/stores/tasks'
 
 const welcome = useDateTimeSalutation()
 
-const store = useStore()
+const baseStore = useBaseStore()
 const authStore = useAuthStore()
 const configStore = useConfigStore()
 const namespaceStore = useNamespaceStore()
 const listStore = useListStore()
+const taskStore = useTaskStore()
+
 const listHistory = computed(() => {
 	// If we don't check this, it tries to load the list background right after logging out	
 	if(!authStore.authenticated) {
@@ -96,15 +100,15 @@ const listHistory = computed(() => {
 
 const migratorsEnabled = computed(() => configStore.availableMigrators?.length > 0)
 const userInfo = computed(() => authStore.info)
-const hasTasks = computed(() => store.state.hasTasks)
+const hasTasks = computed(() => baseStore.hasTasks)
 const defaultListId = computed(() => authStore.settings.defaultListId)
 const defaultNamespaceId = computed(() => namespaceStore.namespaces?.[0]?.id || 0)
 const hasLists = computed(() => namespaceStore.namespaces?.[0]?.lists.length > 0)
-const loading = computed(() => store.state.loading && store.state.loadingModule === 'tasks')
+const loading = computed(() => taskStore.isLoading)
 const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt))
 
 // This is to reload the tasks list after adding a new task through the global task add.
-// FIXME: Should use vuex (somehow?)
+// FIXME: Should use pinia (somehow?)
 const showTasksKey = ref(0)
 
 function updateTaskList() {

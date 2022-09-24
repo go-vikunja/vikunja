@@ -28,18 +28,18 @@ export default {name: 'list-setting-share'}
 
 <script lang="ts" setup>
 import {ref, computed, watchEffect} from 'vue'
-import {useStore} from '@/store'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {useTitle} from '@vueuse/core'
 
 import ListService from '@/services/list'
 import ListModel from '@/models/list'
-import {CURRENT_LIST} from '@/store/mutation-types'
 
 import CreateEdit from '@/components/misc/create-edit.vue'
 import LinkSharing from '@/components/sharing/linkSharing.vue'
 import userTeam from '@/components/sharing/userTeam.vue'
+
+import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 
@@ -52,7 +52,6 @@ const title = computed(() => list.value?.title
 )
 useTitle(title)
 
-const store = useStore()
 const authStore = useAuthStore()
 const configStore = useConfigStore()
 
@@ -62,7 +61,7 @@ const userIsAdmin = computed(() => 'owner' in list.value && list.value.owner.id 
 async function loadList(listId: number) {
 	const listService = new ListService()
 	const newList = await listService.get(new ListModel({id: listId}))
-	await store.dispatch(CURRENT_LIST, {list: newList})
+	await useBaseStore().handleSetCurrentList({list: newList})
 	list.value = newList
 }
 

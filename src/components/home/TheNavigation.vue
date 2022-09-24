@@ -70,7 +70,7 @@
 						{{ $t('navigation.privacy') }}
 					</dropdown-item>
 					<dropdown-item
-						@click="$store.commit('keyboardShortcutsActive', true)"
+						@click="baseStore.setKeyboardShortcutsActive(true)"
 					>
 						{{ $t('keyboardShortcuts.title') }}
 					</dropdown-item>
@@ -92,9 +92,7 @@
 
 <script setup lang="ts">
 import {ref, computed, onMounted, nextTick} from 'vue'
-import {useStore} from '@/store'
 
-import {QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'
 import {RIGHTS as Rights} from '@/constants/rights'
 
 import Update from '@/components/home/update.vue'
@@ -107,21 +105,24 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import MenuButton from '@/components/home/MenuButton.vue'
 
 import {getListTitle} from '@/helpers/getListTitle'
+
+import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 
-const store = useStore()
-const authStore = useAuthStore()
-const configStore = useConfigStore()
+const baseStore = useBaseStore()
+const currentList = computed(() => baseStore.currentList)
+const background = computed(() => baseStore.background)
+const canWriteCurrentList = computed(() => baseStore.currentList.maxRight > Rights.READ)
+const menuActive = computed(() => baseStore.menuActive)
 
+const authStore = useAuthStore()
 const userInfo = computed(() => authStore.info)
 const userAvatar = computed(() => authStore.avatarUrl)
-const currentList = computed(() => store.state.currentList)
-const background = computed(() => store.state.background)
+
+const configStore = useConfigStore()
 const imprintUrl = computed(() => configStore.legal.imprintUrl)
 const privacyPolicyUrl = computed(() => configStore.legal.privacyPolicyUrl)
-const canWriteCurrentList = computed(() => store.state.currentList.maxRight > Rights.READ)
-const menuActive = computed(() => store.state.menuActive)
 
 const usernameDropdown = ref()
 const listTitle = ref()
@@ -140,7 +141,7 @@ function logout() {
 }
 
 function openQuickActions() {
-	store.commit(QUICK_ACTIONS_ACTIVE, true)
+	baseStore.setQuickActionsActive(true)
 }
 </script>
 

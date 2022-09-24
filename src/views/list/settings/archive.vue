@@ -17,16 +17,16 @@ export default {name: 'list-setting-archive'}
 
 <script setup lang="ts">
 import {computed} from 'vue'
-import {useStore} from '@/store'
 import {useRouter, useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
-import { success } from '@/message'
-import { useTitle } from '@/composables/useTitle'
-import { useListStore } from '@/stores/lists'
+import {success} from '@/message'
+import {useTitle} from '@/composables/useTitle'
+
+import {useBaseStore} from '@/stores/base'
+import {useListStore} from '@/stores/lists'
 
 const {t} = useI18n({useScope: 'global'})
-const store = useStore()
 const listStore = useListStore()
 const router = useRouter()
 const route = useRoute()
@@ -40,7 +40,7 @@ async function archiveList() {
 			...list.value,
 			isArchived: !list.value.isArchived,
 		})
-		store.commit('currentList', newList)
+		useBaseStore().setCurrentList(newList)
 		success({message: t('list.archive.success')})
 	} finally {
 		router.back()

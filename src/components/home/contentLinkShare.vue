@@ -24,15 +24,16 @@
 
 <script lang="ts" setup>
 import {computed} from 'vue'
-import {useStore} from '@/store'
+
+import {useBaseStore} from '@/stores/base'
 
 import Logo from '@/components/home/Logo.vue'
 import PoweredByLink from './PoweredByLink.vue'
 
-const store = useStore()
-const currentList = computed(() => store.state.currentList)
-const background = computed(() => store.state.background)
-const logoVisible = computed(() => store.state.logoVisible)
+const baseStore = useBaseStore()
+const currentList = computed(() => baseStore.currentList)
+const background = computed(() => baseStore.background)
+const logoVisible = computed(() => baseStore.logoVisible)
 </script>
 
 <style lang="scss" scoped>

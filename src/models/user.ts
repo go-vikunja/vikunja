@@ -1,7 +1,7 @@
 import AbstractModel from './abstractModel'
 import UserSettingsModel from '@/models/userSettings'
 
-import { AUTH_TYPES, type IUser } from '@/modelTypes/IUser'
+import { AUTH_TYPES, type IUser, type AuthType } from '@/modelTypes/IUser'
 import type { IUserSettings } from '@/modelTypes/IUserSettings'
 
 export function getAvatarUrl(user: IUser, size = 50) {
@@ -22,7 +22,7 @@ export default class UserModel extends AbstractModel<IUser> implements IUser {
 	username = ''
 	name = ''
 	exp = 0
-	type = AUTH_TYPES.UNKNOWN
+	type: AuthType = AUTH_TYPES.UNKNOWN
 
 	created: Date
 	updated: Date

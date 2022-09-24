@@ -173,6 +173,7 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
+import {mapState} from 'pinia'
 
 import VueDragResize from 'vue-drag-resize'
 import EditTask from './edit-task.vue'
@@ -182,13 +183,14 @@ import TaskModel from '../../models/task'
 import {PRIORITIES as priorities} from '@/constants/priorities'
 import PriorityLabel from './partials/priorityLabel.vue'
 import TaskCollectionService from '../../services/taskCollection'
-import {mapState} from 'vuex'
 import {RIGHTS as Rights} from '@/constants/rights'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import {formatDate} from '@/helpers/time/formatDate'
+
+import {useBaseStore} from '@/stores/base'
 
 export default defineComponent({
 	name: 'GanttChart',
@@ -256,7 +258,7 @@ export default defineComponent({
 	mounted() {
 		this.buildTheGanttChart()
 	},
-	computed: mapState({
+	computed: mapState(useBaseStore, {
 		canWrite: (state) => state.currentList.maxRight > Rights.READ,
 	}),
 	methods: {
