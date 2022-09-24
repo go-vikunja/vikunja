@@ -12,14 +12,14 @@ import {
 	LOADING_MODULE, LOGO_VISIBLE,
 	MENU_ACTIVE,
 	QUICK_ACTIONS_ACTIVE,
-} from './mutation-types'
+} from '../store/mutation-types'
 
 import ListModel from '@/models/list'
 
 import ListService from '../services/list'
 import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 
-import type { RootStoreState, StoreState } from './types'
+import type { RootStoreState, StoreState } from '../store/types'
 import pinia from '@/pinia'
 import {useAuthStore} from '@/stores/auth'
 
