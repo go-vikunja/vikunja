@@ -21,16 +21,16 @@ COPY pnpm-lock.yaml ./
 RUN \
   # https://pnpm.io/installation#using-corepack
   corepack enable && \
-  corepack prepare pnpm@7.9.3 --activate && \
+  corepack prepare pnpm@7.12.2 --activate && \
   # Build the frontend
-	pnpm fetch
+	pnpm fetch --prod
 
 ADD .  ./
 
 RUN apk add --no-cache git
 
 RUN \
-	pnpm install --offline && \
+	pnpm install -r --offline --prod && \
 	echo '{"VERSION": "'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'"}' > src/version.json && \
 	pnpm run build
 
