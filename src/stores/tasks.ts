@@ -28,6 +28,7 @@ import type {TaskState} from '@/store/types'
 import {useLabelStore} from '@/stores/labels'
 import {useListStore} from '@/stores/lists'
 import {useAttachmentStore} from '@/stores/attachments'
+import {useKanbanStore} from '@/stores/kanban'
 import {playPop} from '@/helpers/playPop'
 import {store} from '@/store'
 
@@ -99,7 +100,7 @@ export const useTaskStore = defineStore('task', {
 			const taskService = new TaskService()
 			try {
 				const updatedTask = await taskService.update(task)
-				store.commit('kanban/setTaskInBucket', updatedTask)
+				useKanbanStore().setTaskInBucket(updatedTask)
 				if (task.done) {
 					playPop()
 				}
@@ -112,7 +113,7 @@ export const useTaskStore = defineStore('task', {
 		async delete(task: ITask) {
 			const taskService = new TaskService()
 			const response = await taskService.delete(task)
-			store.commit('kanban/removeTaskInBucket', task)
+			useKanbanStore().removeTaskInBucket(task)
 			return response
 		},
 
@@ -125,7 +126,8 @@ export const useTaskStore = defineStore('task', {
 			taskId: ITask['id']
 			attachment: IAttachment
 		}) {
-			const t = store.getters['kanban/getTaskById'](taskId)
+			const kanbanStore = useKanbanStore()
+			const t = kanbanStore.getTaskById(taskId)
 			if (t.task !== null) {
 				const attachments = [
 					...t.task.attachments,
@@ -139,7 +141,7 @@ export const useTaskStore = defineStore('task', {
 						attachments,
 					},
 				}
-				store.commit('kanban/setTaskInBucketByIndex', newTask)
+				kanbanStore.setTaskInBucketByIndex(newTask)
 			}
 			const attachmentStore = useAttachmentStore()
 			attachmentStore.add(attachment)
@@ -152,12 +154,13 @@ export const useTaskStore = defineStore('task', {
 			user: IUser,
 			taskId: ITask['id']
 		}) {
+			const kanbanStore = useKanbanStore()
 			const taskAssigneeService = new TaskAssigneeService()
 			const r = await taskAssigneeService.create(new TaskAssigneeModel({
 				userId: user.id,
 				taskId: taskId,
 			}))
-			const t = store.getters['kanban/getTaskById'](taskId)
+			const t = kanbanStore.getTaskById(taskId)
 			if (t.task === null) {
 				// Don't try further adding a label if the task is not in kanban
 				// Usually this means the kanban board hasn't been accessed until now.
@@ -166,7 +169,7 @@ export const useTaskStore = defineStore('task', {
 				return r
 			}
 
-			store.commit('kanban/setTaskInBucketByIndex', {
+			kanbanStore.setTaskInBucketByIndex({
 				...t,
 				task: {
 					...t.task,
@@ -186,12 +189,13 @@ export const useTaskStore = defineStore('task', {
 			user: IUser,
 			taskId: ITask['id']
 		}) {
+			const kanbanStore = useKanbanStore()
 			const taskAssigneeService = new TaskAssigneeService()
 			const response = await taskAssigneeService.delete(new TaskAssigneeModel({
 				userId: user.id,
 				taskId: taskId,
 			}))
-			const t = store.getters['kanban/getTaskById'](taskId)
+			const t = kanbanStore.getTaskById(taskId)
 			if (t.task === null) {
 				// Don't try further adding a label if the task is not in kanban
 				// Usually this means the kanban board hasn't been accessed until now.
@@ -202,7 +206,7 @@ export const useTaskStore = defineStore('task', {
 
 			const assignees = t.task.assignees.filter(({ id }) => id !== user.id)
 
-			store.commit('kanban/setTaskInBucketByIndex', {
+			kanbanStore.setTaskInBucketByIndex({
 				...t,
 				task: {
 					...t.task,
@@ -220,12 +224,13 @@ export const useTaskStore = defineStore('task', {
 			label: ILabel,
 			taskId: ITask['id']
 		}) {
+			const kanbanStore = useKanbanStore()
 			const labelTaskService = new LabelTaskService()
 			const r = await labelTaskService.create(new LabelTaskModel({
 				taskId,
 				labelId: label.id,
 			}))
-			const t = store.getters['kanban/getTaskById'](taskId)
+			const t = kanbanStore.getTaskById(taskId)
 			if (t.task === null) {
 				// Don't try further adding a label if the task is not in kanban
 				// Usually this means the kanban board hasn't been accessed until now.
@@ -234,7 +239,7 @@ export const useTaskStore = defineStore('task', {
 				return r
 			}
 
-			store.commit('kanban/setTaskInBucketByIndex', {
+			kanbanStore.setTaskInBucketByIndex({
 				...t,
 				task: {
 					...t.task,
@@ -252,12 +257,13 @@ export const useTaskStore = defineStore('task', {
 			{label, taskId}:
 			{label: ILabel, taskId: ITask['id']},
 		) {
+			const kanbanStore = useKanbanStore()
 			const labelTaskService = new LabelTaskService()
 			const response = await labelTaskService.delete(new LabelTaskModel({
 				taskId, labelId:
 				label.id,
 			}))
-			const t = store.getters['kanban/getTaskById'](taskId)
+			const t = kanbanStore.getTaskById(taskId)
 			if (t.task === null) {
 				// Don't try further adding a label if the task is not in kanban
 				// Usually this means the kanban board hasn't been accessed until now.
@@ -269,7 +275,7 @@ export const useTaskStore = defineStore('task', {
 			// Remove the label from the list
 			const labels = t.task.labels.filter(({ id }) => id !== label.id)
 
-			store.commit('kanban/setTaskInBucketByIndex', {
+			kanbanStore.setTaskInBucketByIndex({
 				...t,
 				task: {
 					...t.task,

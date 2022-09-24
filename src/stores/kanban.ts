@@ -1,14 +1,14 @@
-import type { Module } from 'vuex'
+import {defineStore, acceptHMRUpdate} from 'pinia'
 import cloneDeep from 'lodash.clonedeep'
 
 import {findById, findIndexById} from '@/helpers/utils'
 import {i18n} from '@/i18n'
 import {success} from '@/message'
 
-import BucketService from '../../services/bucket'
-import {setLoading} from '../helper'
+import BucketService from '../services/bucket'
+import {setLoadingPinia} from '@/store/helper'
 import TaskCollectionService from '@/services/taskCollection'
-import type { RootStoreState, KanbanState } from '@/store/types'
+import type { KanbanState } from '@/store/types'
 import type { ITask } from '@/modelTypes/ITask'
 import type { IList } from '@/modelTypes/IList'
 import type { IBucket } from '@/modelTypes/IBucket'
@@ -41,187 +41,15 @@ const addTaskToBucketAndSort = (state: KanbanState, task: ITask) => {
  * This store is intended to hold the currently active kanban view.
  * It should hold only the current buckets.
  */
-const kanbanStore : Module<KanbanState, RootStoreState> = {
-	namespaced: true,
-
-	state: () => ({
+export const useKanbanStore = defineStore('kanban', {
+	state: () : KanbanState => ({
 		buckets: [],
 		listId: 0,
 		bucketLoading: {},
 		taskPagesPerBucket: {},
 		allTasksLoadedForBucket: {},
+		isLoading: false,
 	}),
-
-	mutations: {
-		setListId(state, listId: IList['id']) {
-			state.listId = parseInt(listId)
-		},
-
-		setBuckets(state, buckets: IBucket[]) {
-			state.buckets = buckets
-			buckets.forEach(b => {
-				state.taskPagesPerBucket[b.id] = 1
-				state.allTasksLoadedForBucket[b.id] = false
-			})
-		},
-
-		addBucket(state, bucket: IBucket) {
-			state.buckets.push(bucket)
-		},
-
-		removeBucket(state, bucket: IBucket) {
-			const bucketIndex = findIndexById(state.buckets, bucket.id)
-			state.buckets.splice(bucketIndex, 1)
-		},
-
-		setBucketById(state, bucket: IBucket) {
-			const bucketIndex = findIndexById(state.buckets, bucket.id)
-			state.buckets[bucketIndex] = bucket
-		},
-
-		setBucketByIndex(state, {
-			bucketIndex,
-			bucket,
-		} : {
-			bucketIndex: number,
-			bucket: IBucket
-		}) {
-			state.buckets[bucketIndex] = bucket
-		},
-
-		setTaskInBucketByIndex(state, {
-			bucketIndex,
-			taskIndex,
-			task,
-		} : {
-			bucketIndex: number,
-			taskIndex: number,
-			task: ITask
-		}) {
-			const bucket = state.buckets[bucketIndex]
-			bucket.tasks[taskIndex] = task
-			state.buckets[bucketIndex] = bucket
-		},
-
-		setTasksInBucketByBucketId(state, {
-			bucketId,
-			tasks,
-		} : {
-			bucketId: IBucket['id'],
-			tasks: ITask[],
-		}) {
-			const bucketIndex = findIndexById(state.buckets, bucketId)
-			state.buckets[bucketIndex] = {
-				...state.buckets[bucketIndex],
-				tasks,
-			}
-		},
-		
-		setTaskInBucket(state, task: ITask) {
-			// If this gets invoked without any tasks actually loaded, we can save the hassle of finding the task
-			if (state.buckets.length === 0) {
-				return
-			}
-
-			let found = false
-
-			const findAndUpdate = b => {
-				for (const t in state.buckets[b].tasks) {
-					if (state.buckets[b].tasks[t].id === task.id) {
-						const bucket = state.buckets[b]
-						bucket.tasks[t] = task
-
-						if (bucket.id !== task.bucketId) {
-							bucket.tasks.splice(t, 1)
-							addTaskToBucketAndSort(state, task)
-						}
-
-						state.buckets[b] = bucket
-
-						found = true
-						return
-					}
-				}
-			}
-
-			for (const b in state.buckets) {
-				if (state.buckets[b].id === task.bucketId) {
-					findAndUpdate(b)
-					if (found) {
-						return
-					}
-				}
-			}
-
-			for (const b in state.buckets) {
-				findAndUpdate(b)
-				if (found) {
-					return
-				}
-			}
-		},
-
-		addTaskToBucket(state, task: ITask) {
-			const bucketIndex = findIndexById(state.buckets, task.bucketId)
-			const oldBucket = state.buckets[bucketIndex]
-			const newBucket = {
-				...oldBucket,
-				tasks: [
-					...oldBucket.tasks,
-					task,
-				],
-			}
-			state.buckets[bucketIndex] = newBucket
-		},
-
-		addTasksToBucket(state, {tasks, bucketId}: {
-			tasks: ITask[];
-			bucketId: IBucket['id'];
-		}) {
-			const bucketIndex = findIndexById(state.buckets, bucketId)
-			const oldBucket = state.buckets[bucketIndex]
-			const newBucket = {
-				...oldBucket,
-				tasks: [
-					...oldBucket.tasks,
-					...tasks,
-				],
-			}
-			state.buckets[bucketIndex] = newBucket
-		},
-
-		removeTaskInBucket(state, task: ITask) {
-			// If this gets invoked without any tasks actually loaded, we can save the hassle of finding the task
-			if (state.buckets.length === 0) {
-				return
-			}
-
-			const { bucketIndex, taskIndex } = getTaskIndicesById(state, task.id)
-
-			if (
-				!bucketIndex || 
-				state.buckets[bucketIndex]?.id !== task.bucketId ||
-				!taskIndex ||
-				(state.buckets[bucketIndex]?.tasks[taskIndex]?.id !== task.id)
-			) {
-				return
-			}
-			
-			state.buckets[bucketIndex].tasks.splice(taskIndex, 1)
-		},
-
-		setBucketLoading(state, {bucketId, loading}) {
-			state.bucketLoading[bucketId] = loading
-		},
-
-		setTasksLoadedForBucketPage(state: KanbanState, {bucketId, page}) {
-			state.taskPagesPerBucket[bucketId] = page
-		},
-
-		setAllTasksLoadedForBucket(state: KanbanState, bucketId) {
-			state.allTasksLoadedForBucket[bucketId] = true
-		},
-	},
 
 	getters: {
 		getBucketById(state) {
@@ -243,40 +71,216 @@ const kanbanStore : Module<KanbanState, RootStoreState> = {
 	},
 
 	actions: {
-		async loadBucketsForList(ctx, {listId, params}) {
-			const cancel = setLoading(ctx, 'kanban')
+		setIsLoading(isLoading: boolean) {
+			this.isLoading = isLoading
+		},
+
+		setListId(listId: IList['id']) {
+			this.listId = Number(listId)
+		},
+
+		setBuckets(buckets: IBucket[]) {
+			this.buckets = buckets
+			buckets.forEach(b => {
+				this.taskPagesPerBucket[b.id] = 1
+				this.allTasksLoadedForBucket[b.id] = false
+			})
+		},
+
+		addBucket(bucket: IBucket) {
+			this.buckets.push(bucket)
+		},
+
+		removeBucket(bucket: IBucket) {
+			const bucketIndex = findIndexById(this.buckets, bucket.id)
+			this.buckets.splice(bucketIndex, 1)
+		},
+
+		setBucketById(bucket: IBucket) {
+			const bucketIndex = findIndexById(this.buckets, bucket.id)
+			this.buckets[bucketIndex] = bucket
+		},
+
+		setBucketByIndex({
+			bucketIndex,
+			bucket,
+		} : {
+			bucketIndex: number,
+			bucket: IBucket
+		}) {
+			this.buckets[bucketIndex] = bucket
+		},
+
+		setTaskInBucketByIndex({
+			bucketIndex,
+			taskIndex,
+			task,
+		} : {
+			bucketIndex: number,
+			taskIndex: number,
+			task: ITask
+		}) {
+			const bucket = this.buckets[bucketIndex]
+			bucket.tasks[taskIndex] = task
+			this.buckets[bucketIndex] = bucket
+		},
+
+		setTasksInBucketByBucketId({
+			bucketId,
+			tasks,
+		} : {
+			bucketId: IBucket['id'],
+			tasks: ITask[],
+		}) {
+			const bucketIndex = findIndexById(this.buckets, bucketId)
+			this.buckets[bucketIndex] = {
+				...this.buckets[bucketIndex],
+				tasks,
+			}
+		},
+		
+		setTaskInBucket(task: ITask) {
+			// If this gets invoked without any tasks actually loaded, we can save the hassle of finding the task
+			if (this.buckets.length === 0) {
+				return
+			}
+
+			let found = false
+
+			const findAndUpdate = b => {
+				for (const t in this.buckets[b].tasks) {
+					if (this.buckets[b].tasks[t].id === task.id) {
+						const bucket = this.buckets[b]
+						bucket.tasks[t] = task
+
+						if (bucket.id !== task.bucketId) {
+							bucket.tasks.splice(t, 1)
+							addTaskToBucketAndSort(this, task)
+						}
+
+						this.buckets[b] = bucket
+
+						found = true
+						return
+					}
+				}
+			}
+
+			for (const b in this.buckets) {
+				if (this.buckets[b].id === task.bucketId) {
+					findAndUpdate(b)
+					if (found) {
+						return
+					}
+				}
+			}
+
+			for (const b in this.buckets) {
+				findAndUpdate(b)
+				if (found) {
+					return
+				}
+			}
+		},
+
+		addTaskToBucket(task: ITask) {
+			const bucketIndex = findIndexById(this.buckets, task.bucketId)
+			const oldBucket = this.buckets[bucketIndex]
+			const newBucket = {
+				...oldBucket,
+				tasks: [
+					...oldBucket.tasks,
+					task,
+				],
+			}
+			this.buckets[bucketIndex] = newBucket
+		},
+
+		addTasksToBucket({tasks, bucketId}: {
+			tasks: ITask[];
+			bucketId: IBucket['id'];
+		}) {
+			const bucketIndex = findIndexById(this.buckets, bucketId)
+			const oldBucket = this.buckets[bucketIndex]
+			const newBucket = {
+				...oldBucket,
+				tasks: [
+					...oldBucket.tasks,
+					...tasks,
+				],
+			}
+			this.buckets[bucketIndex] = newBucket
+		},
+
+		removeTaskInBucket(task: ITask) {
+			// If this gets invoked without any tasks actually loaded, we can save the hassle of finding the task
+			if (this.buckets.length === 0) {
+				return
+			}
+
+			const { bucketIndex, taskIndex } = getTaskIndicesById(this, task.id)
+
+			if (
+				!bucketIndex || 
+				this.buckets[bucketIndex]?.id !== task.bucketId ||
+				!taskIndex ||
+				(this.buckets[bucketIndex]?.tasks[taskIndex]?.id !== task.id)
+			) {
+				return
+			}
+			
+			this.buckets[bucketIndex].tasks.splice(taskIndex, 1)
+		},
+
+		setBucketLoading({bucketId, loading}: {bucketId: IBucket['id'], loading: boolean}) {
+			this.bucketLoading[bucketId] = loading
+		},
+
+		setTasksLoadedForBucketPage({bucketId, page}: {bucketId: IBucket['id'], page: number}) {
+			this.taskPagesPerBucket[bucketId] = page
+		},
+
+		setAllTasksLoadedForBucket(bucketId: IBucket['id']) {
+			this.allTasksLoadedForBucket[bucketId] = true
+		},
+
+		async loadBucketsForList({listId, params}: {listId: IList['id'], params}) {
+			const cancel = setLoadingPinia(this)
 
 			// Clear everything to prevent having old buckets in the list if loading the buckets from this list takes a few moments
-			ctx.commit('setBuckets', [])
+			this.setBuckets([])
 
 			params.per_page = TASKS_PER_BUCKET
 
 			const bucketService = new BucketService()
 			try {
-				const response = await  bucketService.getAll({listId}, params)
-				ctx.commit('setBuckets', response)
-				ctx.commit('setListId', listId)
-				return response
+				const buckets = await bucketService.getAll({listId}, params)
+				this.setBuckets(buckets)
+				this.setListId(listId)
+				return buckets
 			} finally {
 				cancel()
 			}
 		},
 
-		async loadNextTasksForBucket(ctx, {listId, ps = {}, bucketId}) {
-			const isLoading = ctx.state.bucketLoading[bucketId] ?? false
+		async loadNextTasksForBucket(
+			{listId, ps = {}, bucketId} :
+			{listId: IList['id'], ps, bucketId: IBucket['id']},
+		) {
+			const isLoading = this.bucketLoading[bucketId] ?? false
 			if (isLoading) {
 				return
 			}
 
-			const page = (ctx.state.taskPagesPerBucket[bucketId] ?? 1) + 1
+			const page = (this.taskPagesPerBucket[bucketId] ?? 1) + 1
 
-			const alreadyLoaded = ctx.state.allTasksLoadedForBucket[bucketId] ?? false
+			const alreadyLoaded = this.allTasksLoadedForBucket[bucketId] ?? false
 			if (alreadyLoaded) {
 				return
 			}
 
-			const cancel = setLoading(ctx, 'kanban')
-			ctx.commit('setBucketLoading', {bucketId: bucketId, loading: true})
+			const cancel = setLoadingPinia(this)
+			this.setBucketLoading({bucketId: bucketId, loading: true})
 
 			const params = JSON.parse(JSON.stringify(ps))
 
@@ -305,67 +309,67 @@ const kanbanStore : Module<KanbanState, RootStoreState> = {
 			const taskService = new TaskCollectionService()
 			try {
 				const tasks = await taskService.getAll({listId}, params, page)
-				ctx.commit('addTasksToBucket', {tasks, bucketId: bucketId})
-				ctx.commit('setTasksLoadedForBucketPage', {bucketId, page})
+				this.addTasksToBucket({tasks, bucketId: bucketId})
+				this.setTasksLoadedForBucketPage({bucketId, page})
 				if (taskService.totalPages <= page) {
-					ctx.commit('setAllTasksLoadedForBucket', bucketId)
+					this.setAllTasksLoadedForBucket(bucketId)
 				}
 				return tasks
 			} finally {
 				cancel()
-				ctx.commit('setBucketLoading', {bucketId, loading: false})
+				this.setBucketLoading({bucketId, loading: false})
 			}
 		},
 
-		async createBucket(ctx, bucket: IBucket) {
-			const cancel = setLoading(ctx, 'kanban')
+		async createBucket(bucket: IBucket) {
+			const cancel = setLoadingPinia(this)
 
 			const bucketService = new BucketService()
 			try {
 				const createdBucket = await bucketService.create(bucket)
-				ctx.commit('addBucket', createdBucket)
+				this.addBucket(createdBucket)
 				return createdBucket
 			} finally {
 				cancel()
 			}
 		},
 
-		async deleteBucket(ctx, {bucket, params}) {
-			const cancel = setLoading(ctx, 'kanban')
+		async deleteBucket({bucket, params}: {bucket: IBucket, params}) {
+			const cancel = setLoadingPinia(this)
 
 			const bucketService = new BucketService()
 			try {
 				const response = await bucketService.delete(bucket)
-				ctx.commit('removeBucket', bucket)
+				this.removeBucket(bucket)
 				// We reload all buckets because tasks are being moved from the deleted bucket
-				ctx.dispatch('loadBucketsForList', {listId: bucket.listId, params})
+				this.loadBucketsForList({listId: bucket.listId, params})
 				return response
 			} finally {
 				cancel()
 			}
 		},
 
-		async updateBucket(ctx, updatedBucketData) {
-			const cancel = setLoading(ctx, 'kanban')
+		async updateBucket(updatedBucketData: IBucket) {
+			const cancel = setLoadingPinia(this)
 
-			const bucketIndex = findIndexById(ctx.state.buckets, updatedBucketData.id)
-			const oldBucket = cloneDeep(ctx.state.buckets[bucketIndex])
+			const bucketIndex = findIndexById(this.buckets, updatedBucketData.id)
+			const oldBucket = cloneDeep(this.buckets[bucketIndex])
 
 			const updatedBucket = {
 				...oldBucket,
 				...updatedBucketData,
 			}
 
-			ctx.commit('setBucketByIndex', {bucketIndex, bucket: updatedBucket})
+			this.setBucketByIndex({bucketIndex, bucket: updatedBucket})
 			
 			const bucketService = new BucketService()
 			try {
 				const returnedBucket = await bucketService.update(updatedBucket)
-				ctx.commit('setBucketByIndex', {bucketIndex, bucket: returnedBucket})
+				this.setBucketByIndex({bucketIndex, bucket: returnedBucket})
 				return returnedBucket
 			} catch(e) {
 				// restore original state
-				ctx.commit('setBucketByIndex', {bucketIndex, bucket: oldBucket})
+				this.setBucketByIndex({bucketIndex, bucket: oldBucket})
 
 				throw e
 			} finally {
@@ -373,23 +377,21 @@ const kanbanStore : Module<KanbanState, RootStoreState> = {
 			}
 		},
 
-		async updateBucketTitle(ctx, { id, title }) {
-			const bucket = findById(ctx.state.buckets, id)
+		async updateBucketTitle({ id, title }: { id: IBucket['id'], title: IBucket['title'] }) {
+			const bucket = findById(this.buckets, id)
 
 			if (bucket?.title === title) {
 				// bucket title has not changed
 				return
 			}
 
-			const updatedBucketData = {
-				id,
-				title,
-			}
-
-			await ctx.dispatch('updateBucket', updatedBucketData)
+			await this.updateBucket({ id, title })
 			success({message: i18n.global.t('list.kanban.bucketTitleSavedSuccess')})
 		},
 	},
-}
+})
 
-export default kanbanStore
+// support hot reloading
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useKanbanStore, import.meta.hot))
+}

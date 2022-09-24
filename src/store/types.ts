@@ -68,13 +68,16 @@ export interface ConfigState {
 export interface KanbanState {
 	buckets: IBucket[],
 	listId: IList['id'],
-	bucketLoading: {},
+	bucketLoading: {
+		[id: IBucket['id']]: boolean
+	},
 	taskPagesPerBucket: {
 		[id: IBucket['id']]: number
 	},
 	allTasksLoadedForBucket: {
 		[id: IBucket['id']]: boolean
 	},
+	isLoading: boolean,
 }
 
 export interface LabelState {
