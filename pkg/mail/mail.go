@@ -55,6 +55,7 @@ func getClient() (*mail.Client, error) {
 			InsecureSkipVerify: config.MailerSkipTLSVerify.GetBool(),
 			ServerName:         config.MailerHost.GetString(),
 		}),
+		mail.WithTimeout((config.MailerQueueTimeout.GetDuration() + 3) * time.Second), // 3s more for us to close before mail server timeout
 	}
 
 	if config.MailerUsername.GetString() != "" && config.MailerPassword.GetString() != "" {
