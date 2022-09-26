@@ -52,7 +52,7 @@ specifiers:
   lodash.debounce: 4.0.8
   marked: 4.1.0
   minimist: 1.2.6
-  netlify-cli: 11.8.0
+  netlify-cli: 11.8.3
   pinia: 2.0.22
   postcss: 8.4.16
   postcss-preset-env: 7.8.2
@@ -151,7 +151,7 @@ devDependencies:
   eslint-plugin-vue: 9.5.1_eslint@8.23.1
   express: 4.18.1
   happy-dom: 6.0.4
-  netlify-cli: 11.8.0
+  netlify-cli: 11.8.3
   postcss: 8.4.16
   postcss-preset-env: 7.8.2_postcss@8.4.16
   rollup: 2.79.1
@@ -1862,8 +1862,8 @@ packages:
     resolution: {integrity: sha512-4wMPu9iN3/HL97QblBsBay3E1etIciR84izI3U+4iALY+JHCrI+a2jO0qbAZ/nxKoegypYEaiiqWXylm+/zfrw==}
     dev: true
 
-  /@netlify/build/27.18.4:
-    resolution: {integrity: sha512-3DXTuv5X9FWI+6G7uI29GlxkatMqgNyPX9Ey2BiYIi2CSUjILuCealVW+Qo3SV0+afty3teptaUfMQSKa1OLHg==}
+  /@netlify/build/27.18.5:
+    resolution: {integrity: sha512-SmLOcgp/VJiCe9ft/8oUmCdPBOvQ/k7G4Y0fUb1BXusRePdultUDzC0pHFybNa/YyIsA4HDTAtGsTAk8GJpu7g==}
     engines: {node: ^12.20.0 || ^14.14.0 || >=16.0.0}
     hasBin: true
     dependencies:
@@ -1873,7 +1873,7 @@ packages:
       '@netlify/edge-bundler': 2.2.0
       '@netlify/functions-utils': 4.2.9_supports-color@9.2.1
       '@netlify/git-utils': 4.1.1
-      '@netlify/plugins-list': 6.45.0
+      '@netlify/plugins-list': 6.46.0
       '@netlify/run-utils': 4.0.1
       '@netlify/zip-it-and-ship-it': 7.1.2_supports-color@9.2.1
       '@sindresorhus/slugify': 2.1.0
@@ -2372,8 +2372,8 @@ packages:
     resolution: {integrity: sha512-1n9VvO/9qM7cRB5f7NgSNqeUrovM7j9WVAY7ZQ4LtQuXSquFmO9Fku7WrV3zAUC6v2Y62fxGyJ0fRllYz5uXLw==}
     dev: true
 
-  /@netlify/plugins-list/6.45.0:
-    resolution: {integrity: sha512-eFvBjP1o+ckujlV81GFDfnMOM9Vz4jeI/ZsRELLH7j1+GnGRrYcdG20THDJCS++l1bWEvX59PC2Je9eyD7fZFA==}
+  /@netlify/plugins-list/6.46.0:
+    resolution: {integrity: sha512-kUX90Eacqko9ni3cepVZKXFTLmhdwES/HDRlMYxyUh+SmvXWRC+h43b11nA0/6M5PEPolUChQOZN9wZql6oJJw==}
     engines: {node: ^12.20.0 || ^14.14.0 || >=16.0.0}
     dev: true
 
@@ -3923,7 +3923,7 @@ packages:
     dev: true
 
   /ascii-table/0.0.9:
-    resolution: {integrity: sha1-BqZgTWpV1L9BqaR9mHLXp42jHnM=}
+    resolution: {integrity: sha512-xpkr6sCDIYTPqzvjG8M3ncw1YOTaloWZOyrUmicoEifBEKzQzt+ooUpRpQ/AbOoJfO/p2ZKiyp79qHThzJDulQ==}
     dev: true
 
   /asn1/0.2.6:
@@ -4291,7 +4291,7 @@ packages:
     dev: true
 
   /buffer-equal-constant-time/1.0.1:
-    resolution: {integrity: sha1-+OcRMvf/5uAaXJaXpMbz5I1cyBk=}
+    resolution: {integrity: sha512-zRpUiDwd/xk6ADqPMATG8vc9VPrkck7T07OIx0gnjmJAnHnTVXNQG3vfvWNuiZIkwu9KrKdA1iJKfsfTVxE6NA==}
     dev: true
 
   /buffer-fill/1.0.0:
@@ -6634,7 +6634,7 @@ packages:
     dev: true
 
   /file-size/0.0.5:
-    resolution: {integrity: sha1-BX1Dw6Ptc12j+Q1gUqs4Dx5tXjs=}
+    resolution: {integrity: sha512-ZW056dw8Ta1RWHVOQue3LMZe+mSOnHkcM7AN9is8JoHSIHRiLD5szwPAHM3fM7P5SGJ1bkAmCv3PvUTGoluDqA==}
     dev: true
 
   /file-type/11.1.0:
@@ -9137,7 +9137,7 @@ packages:
     dev: true
 
   /mute-stream/0.0.7:
-    resolution: {integrity: sha1-MHXOk7whuPq0PhvE2n6BFe0ee6s=}
+    resolution: {integrity: sha512-r65nCZhrbXXb6dXOACihYApHw2Q6pV0M3V0PSxd74N0+D8nzAdEAITq2oAjA1jVnKI+tGvEBUpqiMh0+rW6zDQ==}
     dev: true
 
   /mute-stream/0.0.8:
@@ -9200,18 +9200,18 @@ packages:
     resolution: {integrity: sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==}
     dev: true
 
-  /netlify-cli/11.8.0:
-    resolution: {integrity: sha512-ZCOoUonc/cXBWe7dxkXooILqS3BoyPpQlXZG5rJudCntzfO1EmPc7CFYx33vHFZgn9yjgQAEnLIvB3A//v7Trg==}
+  /netlify-cli/11.8.3:
+    resolution: {integrity: sha512-g8CG+kOrT/euh8dKoS7KB5ItuT0wYs0uxb8HctlWMm5g4DP1wTXX2O9Vnhhoqy4nQ2bhiTp9NUef7EcDim/uzw==}
     engines: {node: ^12.20.0 || ^14.14.0 || >=16.0.0}
     hasBin: true
     requiresBuild: true
     dependencies:
-      '@netlify/build': 27.18.4
+      '@netlify/build': 27.18.5
       '@netlify/config': 18.2.3
       '@netlify/edge-bundler': 2.2.0
       '@netlify/framework-info': 9.2.0
       '@netlify/local-functions-proxy': 1.1.1
-      '@netlify/plugins-list': 6.45.0
+      '@netlify/plugins-list': 6.46.0
       '@netlify/zip-it-and-ship-it': 7.1.2
       '@octokit/rest': 18.12.0
       '@sindresorhus/slugify': 1.1.2
@@ -9277,7 +9277,7 @@ packages:
       multiparty: 4.2.3
       netlify: 12.0.1
       netlify-headers-parser: 6.0.2
-      netlify-onegraph-internal: 0.10.0
+      netlify-onegraph-internal: 0.10.1
       netlify-redirect-parser: 13.0.5
       netlify-redirector: 0.3.1
       node-fetch: 2.6.7
@@ -9335,8 +9335,8 @@ packages:
       toml: 3.0.0
     dev: true
 
-  /netlify-onegraph-internal/0.10.0:
-    resolution: {integrity: sha512-Gf6cE1W+q35niIz54xpSLneShpRxlleYL3ZD3D1tjGazuv19q8XBVAAynaAQFzbOk/RPTnu3+Vi/5L7DGACOIg==}
+  /netlify-onegraph-internal/0.10.1:
+    resolution: {integrity: sha512-lGHBUfILWoMO2iJN3zmqd/S+pbgYyQI4WgWDiMrEPkDQPF6wO1JUmhcMOGiZfsmaX/leD9S+CKDKX7iDc440Hw==}
     dependencies:
       graphql: 16.5.0
       node-fetch: 2.6.7
