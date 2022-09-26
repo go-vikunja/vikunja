@@ -22,7 +22,7 @@ export default class LabelModel extends AbstractModel<ILabel> implements ILabel 
 	created: Date = null
 	updated: Date = null
 
-	constructor(data: Partial<ILabel>) {
+	constructor(data: Partial<ILabel> = {}) {
 		super()
 		this.assignData(data)
 

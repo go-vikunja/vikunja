@@ -109,90 +109,78 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
-import {mapState as mapVuexState} from 'vuex'
-import {mapState} from 'pinia'
+<script setup lang="ts">
+import {computed, nextTick, ref} from 'vue'
+import {useI18n} from 'vue-i18n'
 
-import LabelModel from '../../models/label'
+import BaseButton from '@/components/base/BaseButton.vue'
+import Editor from '@/components/input/AsyncEditor'
+import ColorPicker from '@/components/input/colorPicker.vue'
+
+import LabelModel from '@/models/label'
 import type {ILabel} from '@/modelTypes/ILabel'
 import {useLabelStore} from '@/stores/labels'
 
-import BaseButton from '@/components/base/BaseButton.vue'
-import AsyncEditor from '@/components/input/AsyncEditor'
-import ColorPicker from '@/components/input/colorPicker.vue'
-import { setTitle } from '@/helpers/setTitle'
+import { useTitle } from '@/composables/useTitle'
+import { useStore } from '@/store'
 
-export default defineComponent({
-	name: 'ListLabels',
-	components: {
-		BaseButton,
-		ColorPicker,
-		editor: AsyncEditor,
-	},
-	data() {
-		return {
-			labelEditLabel: new LabelModel(),
-			isLabelEdit: false,
-			editorActive: false,
-			showDeleteModal: false,
-			labelToDelete: null,
-		}
-	},
-	created() {
+const {t} = useI18n({useScope: 'global'})
+
+const labelEditLabel = ref<ILabel>(new LabelModel())
+const isLabelEdit = ref(false)
+const editorActive = ref(false)
+const showDeleteModal = ref(false)
+const labelToDelete = ref<ILabel>(null)
+
+useTitle(() => t('label.title'))
+
+const store = useStore()
+const userInfo = computed(() => store.state.auth.info)
+
+const labelStore = useLabelStore()
+labelStore.loadAllLabels()
+
+// Alphabetically sort the labels
+const labels = computed(() => Object.values(labelStore.labels).sort((f, s) => f.title > s.title ? 1 : -1))
+const loading = computed(() =>labelStore.isLoading)
+
+function deleteLabel(label: ILabel) {
+	showDeleteModal.value = false
+	isLabelEdit.value = false
+	const labelStore = useLabelStore()
+	return labelStore.deleteLabel(label)
+}
+
+function editLabelSubmit() {
 		const labelStore = useLabelStore()
-		labelStore.loadAllLabels()
-	},
-	mounted() {
-		setTitle(this.$t('label.title'))
-	},
-	computed: {
-		...mapVuexState({
-			userInfo: state => state.auth.info,
-		}),
-		...mapState(useLabelStore, {
-			// Alphabetically sort the labels
-			labels: state => Object.values(state.labels).sort((f, s) => f.title > s.title ? 1 : -1),
-			loading: state => state.isLoading,
-		}),
-	},
-	methods: {
-		deleteLabel(label: ILabel) {
-			this.showDeleteModal = false
-			this.isLabelEdit = false
-			const labelStore = useLabelStore()
-			return labelStore.deleteLabel(label)
-		},
-		editLabelSubmit() {
-			const labelStore = useLabelStore()
-			return labelStore.updateLabel(this.labelEditLabel)
-		},
-		editLabel(label: ILabel) {
-			if (label.createdBy.id !== this.userInfo.id) {
-				return
-			}
-			// Duplicating the label to make sure it does not look like changes take effect immediatly as the label 
-			// object passed to this function here still has a reference to the store.
-			this.labelEditLabel = new LabelModel({
-				...label,
-				// The model does not support passing dates into it directly so we need to convert them first				
-				created: +label.created,
-				updated: +label.updated,
-			})
-			this.isLabelEdit = true
+		return labelStore.updateLabel(labelEditLabel.value)
+	}
 
-			// This makes the editor trigger its mounted function again which makes it forget every input
-			// it currently has in its textarea. This is a counter-hack to a hack inside of vue-easymde
-			// which made it impossible to detect change from the outside. Therefore the component would
-			// not update if new content from the outside was made available.
-			// See https://github.com/NikulinIlya/vue-easymde/issues/3
-			this.editorActive = false
-			this.$nextTick(() => this.editorActive = true)
-		},
-		showDeleteDialoge(label: ILabel) {
-			this.labelToDelete = label
-			this.showDeleteModal = true
-		},
-	},
-})
+function editLabel(label: ILabel) {
+	if (label.createdBy.id !== userInfo.value.id) {
+		return
+	}
+	// Duplicating the label to make sure it does not look like changes take effect immediatly as the label 
+	// object passed to this function here still has a reference to the store.
+	labelEditLabel.value = new LabelModel({
+		...label,
+		// The model does not support passing dates into it directly so we need to convert them first				
+		created: +label.created,
+		updated: +label.updated,
+	})
+	isLabelEdit.value = true
+
+	// This makes the editor trigger its mounted function again which makes it forget every input
+	// it currently has in its textarea. This is a counter-hack to a hack inside of vue-easymde
+	// which made it impossible to detect change from the outside. Therefore the component would
+	// not update if new content from the outside was made available.
+	// See https://github.com/NikulinIlya/vue-easymde/issues/3
+	editorActive.value = false
+	nextTick(() => editorActive.value = true)
+}
+
+function showDeleteDialoge(label: ILabel) {
+	labelToDelete.value = label
+	showDeleteModal.value = true
+}
 </script>
