@@ -21,7 +21,8 @@ COPY pnpm-lock.yaml ./
 RUN \
   # https://pnpm.io/installation#using-corepack
   corepack enable && \
-  corepack prepare pnpm@7.12.2 --activate && \
+	# we don't use corepack prepare here by intend since
+	# we have renovate to keep our dependencies up to date
   # Build the frontend
 	pnpm fetch --prod
 

@@ -46,7 +46,7 @@ steps:
       PNPM_CACHE_FOLDER: .cache/pnpm
       CYPRESS_CACHE_FOLDER: .cache/cypress
     commands:
-      - corepack enable && corepack prepare pnpm@7.12.2 --activate && pnpm config set store-dir .cache/pnpm
+      - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000
 #    depends_on:
 #      - restore-cache
@@ -57,7 +57,7 @@ steps:
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
-      - corepack enable && corepack prepare pnpm@7.12.2 --activate && pnpm config set store-dir .cache/pnpm
+      - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run lint
     depends_on:
       - dependencies
@@ -68,7 +68,7 @@ steps:
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
-      - corepack enable && corepack prepare pnpm@7.12.2 --activate && pnpm config set store-dir .cache/pnpm
+      - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run build
     depends_on:
       - dependencies
@@ -77,7 +77,7 @@ steps:
     image: node:18-alpine
     pull: true
     commands:
-      - corepack enable && corepack prepare pnpm@7.12.2 --activate && pnpm config set store-dir .cache/pnpm
+      - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run test:unit
     depends_on:
       - dependencies
@@ -89,7 +89,7 @@ steps:
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
-      - corepack enable && corepack prepare pnpm@7.12.2 --activate && pnpm config set store-dir .cache/pnpm
+      - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run typecheck
     depends_on:
       - dependencies
@@ -107,7 +107,7 @@ steps:
         from_secret: cypress_project_key
     commands:
       - sed -i 's/localhost/api/g' dist/index.html
-      - corepack enable && corepack prepare pnpm@7.12.2 --activate && pnpm config set store-dir .cache/pnpm
+      - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm cypress install
       - pnpm run serve:dist & npx wait-on http://localhost:4173
       - pnpm run test:frontend --browser chrome --record
@@ -202,7 +202,7 @@ steps:
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
-      - corepack enable && corepack prepare pnpm@7.12.2 --activate && pnpm config set store-dir .cache/.pnp
+      - corepack enable && pnpm config set store-dir .cache/.pnp
       - pnpm install --fetch-timeout 100000
       - pnpm run lint
       - "echo '{\"VERSION\": \"'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'\"}' > src/version.json"
@@ -278,7 +278,7 @@ steps:
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
-      - corepack enable && corepack prepare pnpm@7.12.2 --activate && pnpm config set store-dir .cache/pnpm
+      - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000
       - pnpm run lint
       - "echo '{\"VERSION\": \"'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'\"}' > src/version.json"
