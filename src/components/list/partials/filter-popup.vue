@@ -29,72 +29,60 @@
 	</modal>
 </template>
 
-<script lang="ts">
-import {defineComponent, ref} from 'vue'
+<script setup lang="ts">
+import {computed, ref, watch} from 'vue'
 
 import Filters from '@/components/list/partials/filters.vue'
 
 import {getDefaultParams} from '@/composables/taskList'
 
-export default defineComponent({
-	name: 'filter-popup',
-	components: {
-		Filters,
-	},
-	props: {
-		modelValue: {
-			required: true,
-		},
-	},
-	emits: ['update:modelValue'],
-	computed: {
-		value: {
-			get() {
-				return this.modelValue
-			},
-			set(value) {
-				this.$emit('update:modelValue', value)
-			},
-		},
-		hasFilters() {
-			// this.value also contains the page parameter which we don't want to include in filters
-			// eslint-disable-next-line no-unused-vars
-			const {filter_by, filter_value, filter_comparator, filter_concat, s} = this.value
-			const def = {...getDefaultParams()}
-
-			const params = {filter_by, filter_value, filter_comparator, filter_concat, s}
-			const defaultParams = {
-				filter_by: def.filter_by,
-				filter_value: def.filter_value,
-				filter_comparator: def.filter_comparator,
-				filter_concat: def.filter_concat,
-				s: s ? def.s : undefined,
-			}
-
-			return JSON.stringify(params) !== JSON.stringify(defaultParams)
-		},
-	},
-	watch: {
-		modelValue: {
-			handler(value) {
-				this.value = value
-			},
-			immediate: true,
-		},
-	},
-	setup() {
-		const modalOpen = ref(false)
-
-		return {
-			modalOpen,
-		}
-	},
-	methods: {
-		clearFilters() {
-			this.value = {...getDefaultParams()}
-		},
+const	props = defineProps({
+	modelValue: {
+		required: true,
 	},
 })
+const emit = defineEmits(['update:modelValue'])
+
+const value = computed({
+	get() {
+		return props.modelValue
+	},
+	set(value) {
+		emit('update:modelValue', value)
+	},
+})
+
+watch(
+	() => props.modelValue,
+	(modelValue) => {
+		value.value = modelValue
+	},
+	{immediate: true},
+)
+		
+const hasFilters = computed(() => {
+	// this.value also contains the page parameter which we don't want to include in filters
+	// eslint-disable-next-line no-unused-vars
+	const {filter_by, filter_value, filter_comparator, filter_concat, s} = value.value
+	const def = {...getDefaultParams()}
+
+	const params = {filter_by, filter_value, filter_comparator, filter_concat, s}
+	const defaultParams = {
+		filter_by: def.filter_by,
+		filter_value: def.filter_value,
+		filter_comparator: def.filter_comparator,
+		filter_concat: def.filter_concat,
+		s: s ? def.s : undefined,
+	}
+
+	return JSON.stringify(params) !== JSON.stringify(defaultParams)
+})
+
+const modalOpen = ref(false)
+
+function clearFilters() {
+	value.value = {...getDefaultParams()}
+}
 </script>
 
 <style scoped lang="scss">
