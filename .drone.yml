@@ -147,7 +147,7 @@ steps:
     commands:
       - cp -r dist dist-preview
       # Override the default api url used for preview
-      - sed -i 's|localhost:3456|try.vikunja.io|g' dist-preview/index.html
+      - sed -i 's|http://localhost:3456|https://try.vikunja.io|g' dist-preview/index.html
       - apk add --no-cache perl-utils
       - shasum -a 384 -c ./scripts/deploy-preview-netlify.js.sha384
       - node ./scripts/deploy-preview-netlify.js
@@ -659,6 +659,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: 9e9585222c466c67b426df40c76670f1a539c363a52075ff34e7f4518e67da2d
+hmac: 9eccb4a9999236be0f772c4cbe7ccce2875faa57f32de179bd75cf0df4124d00
 
 ...
