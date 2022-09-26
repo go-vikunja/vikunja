@@ -82,7 +82,7 @@
     "caniuse-lite": "1.0.30001412",
     "cypress": "10.8.0",
     "esbuild": "0.15.9",
-    "eslint": "8.23.1",
+    "eslint": "8.24.0",
     "eslint-plugin-vue": "9.5.1",
     "express": "4.18.1",
     "happy-dom": "6.0.4",
