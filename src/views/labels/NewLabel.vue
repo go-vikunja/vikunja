@@ -34,52 +34,43 @@
 	</create-edit>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
-import {mapState} from 'pinia'
+<script setup lang="ts">
+import {computed, ref} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useRouter} from 'vue-router'
 
-import LabelModel from '../../models/label'
 import CreateEdit from '@/components/misc/create-edit.vue'
-import ColorPicker from '../../components/input/colorPicker.vue'
-import { setTitle } from '@/helpers/setTitle'
-import { useLabelStore } from '@/stores/labels'
+import ColorPicker from '@/components/input/colorPicker.vue'
 
-export default defineComponent({
-	name: 'NewLabel',
-	data() {
-		return {
-			label: new LabelModel(),
-			showError: false,
-		}
-	},
-	components: {
-		CreateEdit,
-		ColorPicker,
-	},
-	mounted() {
-		setTitle(this.$t('label.create.title'))
-	},
-	computed: {
-		...mapState(useLabelStore, {
-			loading: state => state.isLoading,
-		}),
-	},
-	methods: {
-		async newLabel() {
-			if (this.label.title === '') {
-				this.showError = true
-				return
-			}
-			this.showError = false
+import LabelModel from '@/models/label'
+import {useLabelStore} from '@/stores/labels'
+import {useTitle} from '@/composables/useTitle'
+import {success} from '@/message'
 
-			const labelStore = useLabelStore()
-			const label = labelStore.createLabel(this.label)
-			this.$router.push({
-				name: 'labels.index',
-				params: {id: label.id},
-			})
-			this.$message.success({message: this.$t('label.create.success')})
-		},
-	},
-})
+const router = useRouter()
+
+const {t} = useI18n({useScope: 'global'})
+useTitle(() => t('label.create.title'))
+
+const labelStore = useLabelStore()
+const label = ref(new LabelModel())
+
+const showError = ref(false)
+const loading = computed(() => labelStore.isLoading)
+
+async function newLabel() {
+	if (label.value.title === '') {
+		showError.value = true
+		return
+	}
+	showError.value = false
+
+	const labelStore = useLabelStore()
+	const newLabel = labelStore.createLabel(label.value)
+	router.push({
+		name: 'labels.index',
+		params: {id: newLabel.id},
+	})
+	success({message: t('label.create.success')})
+}
 </script>
