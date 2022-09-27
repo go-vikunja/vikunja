@@ -35,7 +35,7 @@ export function setupMarkdownRenderer(checkboxId: string) {
 				return isLocal ? html : html.replace(/^<a /, '<a target="_blank" rel="noreferrer noopener nofollow" ')
 			},
 		},
-		highlight(code, language) {
+		highlight(code: string, language: string) {
 			const validLanguage = hljs.getLanguage(language) ? language : 'plaintext'
 			return hljs.highlight(code, {language: validLanguage}).value
 		},

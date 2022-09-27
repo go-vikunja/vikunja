@@ -1,21 +1,22 @@
-// Save the current list view to local storage
-
 import type { IList } from '@/modelTypes/IList'
 
 type ListView = Record<IList['id'], string>
 
 const DEFAULT_LIST_VIEW = 'list.list' as const
 
-// We use local storage and not a store here to make it persistent across reloads.
-export const saveListView = (listId: IList['id'], routeName: string) => {
+/**
+ * Save the current list view to local storage
+ */
+export function saveListView(listId: IList['id'], routeName: string) {
 	if (routeName.includes('settings.')) {
 		return
 	}
-
+	
 	if (!listId) {
 		return
 	}
-
+	
+	// We use local storage and not the store here to make it persistent across reloads.
 	const savedListView = localStorage.getItem('listView')
 	let savedListViewJson: ListView | false = false
 	if (savedListView !== null) {

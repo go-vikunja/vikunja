@@ -6,7 +6,7 @@ import AbstractService from '../abstractService'
 export default class AbstractMigrationFileService extends AbstractService {
 	serviceUrlKey = ''
 
-	constructor(serviceUrlKey: '') {
+	constructor(serviceUrlKey: string) {
 		super({
 			create: '/migration/' + serviceUrlKey + '/migrate',
 		})
