@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
+	"xorm.io/xorm"
 
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
@@ -35,37 +36,47 @@ func BasicAuth(username, password string, c echo.Context) (bool, error) {
 		Username: username,
 		Password: password,
 	}
-	u, err := user.CheckUserCredentials(s, credentials)
-	if err != nil && !user.IsErrWrongUsernameOrPassword(err) && !user.IsErrAccountIsNotLocal(err) {
-		log.Errorf("Error during basic auth for caldav: %v", err)
+	var err error
+	u, err := checkUserCaldavTokens(s, credentials)
+	if user.IsErrUserDoesNotExist(err) {
 		return false, nil
 	}
-
-	if err == nil {
+	if u == nil {
+		u, err = user.CheckUserCredentials(s, credentials)
+		if err != nil {
+			log.Errorf("Error during basic auth for caldav: %v", err)
+			return false, nil
+		}
+	}
+	if u != nil && err == nil {
 		c.Set("userBasicAuth", u)
 		return true, nil
 	}
+	return false, nil
+}
 
-	tokens, err := user.GetCaldavTokens(u)
+func checkUserCaldavTokens(s *xorm.Session, login *user.Login) (*user.User, error) {
+	usr, err := user.GetUserByUsername(s, login.Username)
+	if err != nil || usr == nil {
+		log.Warningf("Error while retrieving users from database: %v", err)
+		return nil, err
+	}
+	tokens, err := user.GetCaldavTokens(usr)
 	if err != nil {
 		log.Errorf("Error while getting tokens for caldav auth: %v", err)
-		return false, nil
+		return nil, err
 	}
-
 	// Looping over all tokens until we find one that matches
 	for _, token := range tokens {
-		err = bcrypt.CompareHashAndPassword([]byte(token.Token), []byte(password))
+		err = bcrypt.CompareHashAndPassword([]byte(token.Token), []byte(login.Password))
 		if err != nil {
 			if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
 				continue
 			}
 			log.Errorf("Error while verifying tokens for caldav auth: %v", err)
-			return false, nil
+			return nil, nil
 		}
-
-		c.Set("userBasicAuth", u)
-		return true, nil
+		return usr, nil
 	}
-
-	return false, nil
+	return nil, nil
 }
