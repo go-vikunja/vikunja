@@ -23,7 +23,7 @@
 			<x-button
 				v-if="!isCropAvatar"
 				:loading="avatarService.loading || loading"
-				@click="$refs.avatarUploadInput.click()"
+				@click="avatarUploadInput.click()"
 			>
 				{{ $t('user.settings.avatar.uploadAvatar') }}
 			</x-button>
