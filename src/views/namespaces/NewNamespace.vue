@@ -10,9 +10,12 @@
 				class="control is-expanded"
 				:class="{ 'is-loading': namespaceService.loading }"
 			>
+				<!-- The user should be able to close the modal by pressing escape - that already works with the default modal.
+					But with the input modal here since it autofocuses the input that input field catches the focus instead.
+					Hence we place the listener on the input field directly. -->
 				<input
 					@keyup.enter="newNamespace()"
-					@keyup.esc="back()"
+					@keyup.esc="$router.back()"
 					class="input"
 					:placeholder="$t('namespace.attributes.titlePlaceholder')"
 					type="text"
@@ -40,48 +43,42 @@
 	</create-edit>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script setup lang="ts">
+import {ref, shallowReactive} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useRouter} from 'vue-router'
 
 import Message from '@/components/misc/message.vue'
-import NamespaceModel from '../../models/namespace'
-import NamespaceService from '../../services/namespace'
 import CreateEdit from '@/components/misc/create-edit.vue'
-import ColorPicker from '../../components/input/colorPicker.vue'
-import { setTitle } from '@/helpers/setTitle'
+import ColorPicker from '@/components/input/colorPicker.vue'
+
+import NamespaceModel from '@/models/namespace'
+import NamespaceService from '@/services/namespace'
 import {useNamespaceStore} from '@/stores/namespaces'
+import type {INamespace} from '@/modelTypes/INamespace'
 
-export default defineComponent({
-	name: 'NewNamespace',
-	data() {
-		return {
-			showError: false,
-			namespace: new NamespaceModel(),
-			namespaceService: new NamespaceService(),
-		}
-	},
-	components: {
-		Message,
-		ColorPicker,
-		CreateEdit,
-	},
-	mounted() {
-		setTitle(this.$t('namespace.create.title'))
-	},
-	methods: {
-		async newNamespace() {
-			if (this.namespace.title === '') {
-				this.showError = true
-				return
-			}
-			this.showError = false
+import {useTitle} from '@/composables/useTitle'
+import {success} from '@/message'
 
-			const namespace = await this.namespaceService.create(this.namespace)
-			const namespaceStore = useNamespaceStore()
-			namespaceStore.addNamespace(namespace)
-			this.$message.success({message: this.$t('namespace.create.success')})
-			this.$router.back()
-		},
-	},
-})
+const showError = ref(false)
+const namespace = ref<INamespace>(new NamespaceModel())
+const namespaceService = shallowReactive(new NamespaceService())
+
+const {t} = useI18n({useScope: 'global'})
+const router = useRouter()
+
+useTitle(() => t('namespace.create.title'))
+
+async function newNamespace() {
+	if (namespace.value.title === '') {
+		showError.value = true
+		return
+	}
+	showError.value = false
+
+	const newNamespace = await namespaceService.create(namespace.value)
+	useNamespaceStore().addNamespace(newNamespace)
+	success({message: t('namespace.create.success')})
+	router.back()
+}
 </script>
