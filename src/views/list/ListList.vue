@@ -3,7 +3,7 @@
 		<template #header>
 		<div
 			class="filter-container"
-			v-if="list.isSavedFilter && !list.isSavedFilter()"
+			v-if="!isSavedFilter(list)"
 		>
 			<div class="items">
 				<div class="search">
@@ -58,7 +58,7 @@
 			>
 				<add-task
 					@taskAdded="updateTaskList"
-					ref="addTask"
+					ref="addTaskRef"
 					:default-position="firstNewPosition"
 				/>
 			</template>
@@ -76,7 +76,7 @@
 					v-if="tasks && tasks.length > 0"
 				>
 					<draggable
-						v-bind="dragOptions"
+						v-bind="DRAG_OPTIONS"
 						v-model="tasks"
 						group="tasks"
 						@start="() => drag = true"
@@ -94,7 +94,7 @@
 							<single-task-in-list
 								:show-list-color="false"
 								:disabled="!canWrite"
-								:can-mark-as-done="canWrite || (list.isSavedFilter && list.isSavedFilter())"
+								:can-mark-as-done="canWrite || isSavedFilter(list)"
 								:the-task="t"
 								@taskUpdated="updateTasks"
 							>
@@ -114,7 +114,7 @@
 						</template>
 					</draggable>
 				</div>
-				<edit-task 
+				<EditTask
 					v-if="isTaskEdit"
 					class="taskedit mt-0"
 					:title="$t('list.list.editTask')"
@@ -135,25 +135,32 @@
 </template>
 
 <script lang="ts">
-import { ref, toRef, defineComponent } from 'vue'
+export default { name: 'List' }
+</script>
 
+<script setup lang="ts">
+import {ref, computed, toRef, nextTick, onMounted} from 'vue'
+import draggable from 'zhyswan-vuedraggable'
+import {useRoute, useRouter} from 'vue-router'
+
+import ListWrapper from './ListWrapper.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import ButtonLink from '@/components/misc/ButtonLink.vue'
-import ListWrapper from './ListWrapper.vue'
 import EditTask from '@/components/tasks/edit-task.vue'
 import AddTask from '@/components/tasks/add-task.vue'
 import SingleTaskInList from '@/components/tasks/partials/singleTaskInList.vue'
-import { useTaskList } from '@/composables/taskList'
-import {RIGHTS as Rights} from '@/constants/rights'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
-import {HAS_TASKS} from '@/store/mutation-types'
 import Nothing from '@/components/misc/nothing.vue'
 import Pagination from '@/components/misc/pagination.vue'
 import {ALPHABETICAL_SORT} from '@/components/list/partials/filters.vue'
 
-import draggable from 'zhyswan-vuedraggable'
-import {calculateItemPosition} from '../../helpers/calculateItemPosition'
+import {useStore} from '@/store'
+import {HAS_TASKS} from '@/store/mutation-types'
+import {useTaskList} from '@/composables/taskList'
+import {RIGHTS as Rights} from '@/constants/rights'
+import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import type {ITask} from '@/modelTypes/ITask'
+import {isSavedFilter} from '@/helpers/savedFilter'
 
 function sortTasks(tasks: ITask[]) {
 	if (tasks === null || Array.isArray(tasks) && tasks.length === 0) {
@@ -173,153 +180,138 @@ function sortTasks(tasks: ITask[]) {
 	})
 }
 
-export default defineComponent({
-	name: 'List',
-	
-	props: {
-		listId: {
-			type: Number,
-			required: true,
-		},
-	},
-
-	data() {
-		return {
-			ctaVisible: false,
-			showTaskSearch: false,
-
-			drag: false,
-			dragOptions: {
-				animation: 100,
-				ghostClass: 'ghost',
-			},
-		}
-	},
-	components: {
-		BaseButton,
-		ListWrapper,
-		Nothing,
-		FilterPopup,
-		SingleTaskInList,
-		EditTask,
-		AddTask,
-		draggable,
-		Pagination,
-		ButtonLink,
-	},
-
-	setup(props) {
-		const taskEditTask = ref(null)
-		const isTaskEdit = ref(false)
-
-		// This function initializes the tasks page and loads the first page of tasks
-		// function beforeLoad() {
-		// 	taskEditTask.value = null
-		// 	isTaskEdit.value = false
-		// }
-
-		const taskList = useTaskList(toRef(props, 'listId'), {
-			position: 'asc',
-		})
-
-		return {
-			taskEditTask,
-			isTaskEdit,
-			...taskList,
-		}
-	},
-	computed: {
-		isAlphabeticalSorting() {
-			return this.params.sort_by.find( sortBy => sortBy === ALPHABETICAL_SORT ) !== undefined
-		},
-		firstNewPosition() {
-			if (this.tasks.length === 0) {
-				return 0
-			}
-
-			return calculateItemPosition(null, this.tasks[0].position)
-		},
-		canWrite() {
-			return this.list.maxRight > Rights.READ && this.list.id > 0
-		},
-		list() {
-			return this.$store.state.currentList
-		},
-	},
-	mounted() {
-		this.$nextTick(() => (this.ctaVisible = true))
-	},
-	methods: {
-		searchTasks() {
-			// Only search if the search term changed
-			if (this.$route.query === this.searchTerm) {
-				return
-			}
-
-			this.$router.push({
-				name: 'list.list',
-				query: {search: this.searchTerm},
-			})
-		},
-		hideSearchBar() {
-			// This is a workaround.
-			// When clicking on the search button, @blur from the input is fired. If we
-			// would then directly hide the whole search bar directly, no click event
-			// from the button gets fired. To prevent this, we wait 200ms until we hide
-			// everything so the button has a chance of firing the search event.
-			setTimeout(() => {
-				this.showTaskSearch = false
-			}, 200)
-		},
-		focusNewTaskInput() {
-			this.$refs.addTask.focusTaskInput()
-		},
-		updateTaskList(task: ITask) {
-			if ( this.isAlphabeticalSorting ) {
-				// reload tasks with current filter and sorting
-				this.loadTasks(1, undefined, undefined, true)
-			}
-			else {
-				this.tasks = [
-					task,
-					...this.tasks,
-				]
-			}
-
-			this.$store.commit(HAS_TASKS, true)
-		},
-		editTask(id: ITask['id']) {
-			this.taskEditTask = {...this.tasks.find(t => t.id === parseInt(id))}
-			this.isTaskEdit = true
-		},
-		updateTasks(updatedTask: ITask) {
-			for (const t in this.tasks) {
-				if (this.tasks[t].id === updatedTask.id) {
-					this.tasks[t] = updatedTask
-					break
-				}
-			}
-			// FIXME: Use computed
-			sortTasks(this.tasks)
-		},
-
-		async saveTaskPosition(e) {
-			this.drag = false
-
-			const task = this.tasks[e.newIndex]
-			const taskBefore = this.tasks[e.newIndex - 1] ?? null
-			const taskAfter = this.tasks[e.newIndex + 1] ?? null
-
-			const newTask = {
-				...task,
-				position: calculateItemPosition(taskBefore !== null ? taskBefore.position : null, taskAfter !== null ? taskAfter.position : null),
-			}
-
-			const updatedTask = await this.$store.dispatch('tasks/update', newTask)
-			this.tasks[e.newIndex] = updatedTask
-		},
+const props = defineProps({
+	listId: {
+		type: Number,
+		required: true,
 	},
 })
+
+const ctaVisible = ref(false)
+const showTaskSearch = ref(false)
+
+const drag = ref(false)
+const DRAG_OPTIONS = {
+	animation: 100,
+	ghostClass: 'ghost',
+} as const
+
+
+const taskEditTask = ref(null)
+const isTaskEdit = ref(false)
+
+const {
+	tasks,
+	loading,
+	totalPages,
+	currentPage,
+	loadTasks,
+	searchTerm,
+	params,
+	// sortByParam,
+} = useTaskList(toRef(props, 'listId'), {position: 'asc' })
+
+
+const isAlphabeticalSorting = computed(() => {
+	return params.value.sort_by.find(sortBy => sortBy === ALPHABETICAL_SORT) !== undefined
+})
+
+const firstNewPosition = computed(() => {
+	if (tasks.value.length === 0) {
+		return 0
+	}
+
+	return calculateItemPosition(null, tasks.value[0].position)
+})
+
+const store = useStore()
+const list = computed(() => store.state.currentList)
+
+const canWrite = computed(() => {
+	return list.value.maxRight > Rights.READ && list.value.id > 0
+})
+
+onMounted(async () => {
+	await nextTick()
+	ctaVisible.value = true
+})
+
+const route = useRoute()
+const router = useRouter()
+function searchTasks() {
+	// Only search if the search term changed
+	if (route.query as unknown as string === searchTerm.value) {
+		return
+	}
+
+	router.push({
+		name: 'list.list',
+		query: {search: searchTerm.value},
+	})
+}
+
+function hideSearchBar() {
+	// This is a workaround.
+	// When clicking on the search button, @blur from the input is fired. If we
+	// would then directly hide the whole search bar directly, no click event
+	// from the button gets fired. To prevent this, we wait 200ms until we hide
+	// everything so the button has a chance of firing the search event.
+	setTimeout(() => {
+		showTaskSearch.value = false
+	}, 200)
+}
+
+const addTaskRef = ref<typeof AddTask | null>(null)
+function focusNewTaskInput() {
+	addTaskRef.value?.focusTaskInput()
+}
+
+function updateTaskList(task: ITask) {
+	if (isAlphabeticalSorting.value ) {
+		// reload tasks with current filter and sorting
+		loadTasks(1, undefined, undefined, true)
+	}
+	else {
+		tasks.value = [
+			task,
+			...tasks.value,
+		]
+	}
+
+	store.commit(HAS_TASKS, true)
+}
+
+function editTask(id: ITask['id']) {
+	taskEditTask.value = {...tasks.value.find(t => t.id === Number(id))}
+	isTaskEdit.value = true
+}
+
+function updateTasks(updatedTask: ITask) {
+	for (const t in tasks.value) {
+		if (tasks.value[t].id === updatedTask.id) {
+			tasks.value[t] = updatedTask
+			break
+		}
+	}
+	// FIXME: Use computed
+	sortTasks(tasks.value)
+}
+
+async function saveTaskPosition(e) {
+	drag.value = false
+
+	const task = tasks.value[e.newIndex]
+	const taskBefore = tasks.value[e.newIndex - 1] ?? null
+	const taskAfter = tasks.value[e.newIndex + 1] ?? null
+
+	const newTask = {
+		...task,
+		position: calculateItemPosition(taskBefore !== null ? taskBefore.position : null, taskAfter !== null ? taskAfter.position : null),
+	}
+
+	const updatedTask = await this.$store.dispatch('tasks/update', newTask)
+	this.tasks[e.newIndex] = updatedTask
+}
 </script>
 
 <style lang="scss" scoped>

@@ -1,7 +1,7 @@
 <template>
 	<ListWrapper class="list-kanban" :list-id="listId" viewName="kanban">
 		<template #header>
-			<div class="filter-container" v-if="isSavedFilter">
+			<div class="filter-container" v-if="isSavedFilter(list)">
 				<div class="items">
 					<filter-popup
 						v-model="params"
@@ -239,6 +239,7 @@ import {getCollapsedBucketState, saveCollapsedBucketState} from '@/helpers/saveC
 import {calculateItemPosition} from '../../helpers/calculateItemPosition'
 import KanbanCard from '@/components/tasks/partials/kanban-card.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
+import {isSavedFilter} from '@/helpers/savedFilter'
 
 const DRAG_OPTIONS = {
 	// sortable options
@@ -324,9 +325,6 @@ export default defineComponent({
 			})
 		},
 
-		isSavedFilter() {
-			return this.list.isSavedFilter && !this.list.isSavedFilter()
-		},
 		loadBucketParameter() {
 			return {
 				listId: this.listId,
@@ -356,6 +354,8 @@ export default defineComponent({
 	},
 
 	methods: {
+		isSavedFilter,
+
 		loadBuckets() {
 			const {listId, params} = this.loadBucketParameter
 

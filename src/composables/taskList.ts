@@ -2,6 +2,7 @@ import {ref, shallowReactive, watch, computed} from 'vue'
 import {useRoute} from 'vue-router'
 
 import TaskCollectionService from '@/services/taskCollection'
+import type { ITask } from '@/modelTypes/ITask'
 
 // FIXME: merge with DEFAULT_PARAMS in filters.vue
 export const getDefaultParams = () => ({
@@ -70,7 +71,7 @@ export function useTaskList(listId, sortByDefault = SORT_BY_DEFAULT) {
 	const loading = computed(() => taskCollectionService.loading)
 	const totalPages = computed(() => taskCollectionService.totalPages)
 
-	const tasks = ref([])
+	const tasks = ref<ITask[]>([])
 	async function loadTasks() {
 		tasks.value = []
 		tasks.value = await taskCollectionService.getAll(...getAllTasksParams.value)
@@ -81,10 +82,10 @@ export function useTaskList(listId, sortByDefault = SORT_BY_DEFAULT) {
 	watch(() => route.query, (query) => {
 		const { page: pageQueryValue, search: searchQuery } = query
 		if (searchQuery !== undefined) {
-			search.value = searchQuery
+			search.value = searchQuery as string
 		}
 		if (pageQueryValue !== undefined) {
-			page.value = parseInt(pageQueryValue)
+			page.value = Number(pageQueryValue)
 		}
 
 	}, { immediate: true })

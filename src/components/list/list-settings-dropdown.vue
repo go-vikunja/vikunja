@@ -1,6 +1,6 @@
 <template>
 	<dropdown>
-		<template v-if="isSavedFilter">
+		<template v-if="isSavedFilter(list)">
 			<dropdown-item
 				:to="{ name: 'filter.settings.edit', params: { listId: list.id } }"
 				icon="pen"
@@ -78,7 +78,7 @@
 <script setup lang="ts">
 import {ref, computed, watchEffect, type PropType} from 'vue'
 
-import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
+import {isSavedFilter} from '@/helpers/savedFilter'
 import Dropdown from '@/components/misc/dropdown.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 import TaskSubscription from '@/components/misc/subscription.vue'
@@ -100,5 +100,4 @@ watchEffect(() => {
 
 const configStore = useConfigStore()
 const backgroundsEnabled = computed(() => configStore.enabledBackgroundProviders?.length > 0)
-const isSavedFilter = computed(() => getSavedFilterIdFromListId(props.list.id) > 0)
 </script>

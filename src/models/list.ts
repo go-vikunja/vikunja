@@ -9,8 +9,6 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {INamespace} from '@/modelTypes/INamespace'
 import type {ISubscription} from '@/modelTypes/ISubscription'
 
-import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
-
 export default class ListModel extends AbstractModel<IList> implements IList {
 	id = 0
 	title = ''
@@ -51,13 +49,5 @@ export default class ListModel extends AbstractModel<IList> implements IList {
 
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
-	}
-
-	isSavedFilter() {
-		return this.getSavedFilterId() > 0
-	}
-
-	getSavedFilterId() {
-		return getSavedFilterIdFromListId(this.id)
 	}
 }

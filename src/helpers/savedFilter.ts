@@ -8,3 +8,7 @@ export function getSavedFilterIdFromListId(listId: IList['id']) {
 	}
 	return filterId
 }
+
+export function isSavedFilter(list: IList) {
+	return getSavedFilterIdFromListId(list.id) > 0
+}
