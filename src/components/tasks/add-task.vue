@@ -41,17 +41,18 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, unref, computed} from 'vue'
+import {computed, ref, unref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {tryOnMounted, debouncedWatch, useWindowSize, type MaybeRef} from '@vueuse/core'
+import {debouncedWatch, type MaybeRef, tryOnMounted, useWindowSize} from '@vueuse/core'
 
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
+import type {ITask} from '@/modelTypes/ITask'
+import {parseSubtasksViaIndention} from '@/helpers/parseSubtasksViaIndention'
+import TaskRelationService from '@/services/taskRelation'
+import TaskRelationModel from '@/models/taskRelation'
+import {RELATION_KIND} from '@/types/IRelationKind'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
-
-function cleanupTitle(title: string) {
-	return title.replace(/^((\* |\+ |- )(\[ \] )?)/g, '')
-}
 
 function useAutoHeightTextarea(value: MaybeRef<string>) {
 	const textarea = ref<HTMLInputElement>()
@@ -161,24 +162,52 @@ async function addTask() {
 	}
 
 	const taskTitleBackup = newTaskTitle.value
-	const newTasks = newTaskTitle.value.split(/[\r\n]+/).map(async uncleanedTitle => {
-		const title = cleanupTitle(uncleanedTitle)
-		if (title === '') {
+	const createdTasks: ITask[] = []
+	const tasksToCreate = parseSubtasksViaIndention(newTaskTitle.value)
+	const newTasks = tasksToCreate.map(async t => {
+		if (t.title === '') {
 			return
 		}
 
 		const task = await taskStore.createNewTask({
-			title,
+			title: t.title,
 			listId: authStore.settings.defaultListId,
 			position: props.defaultPosition,
 		})
-		emit('taskAdded', task)
+		createdTasks.push(task)
 		return task
 	})
 
 	try {
 		newTaskTitle.value = ''
 		await Promise.all(newTasks)
+		
+		const taskRelationService = new TaskRelationService()
+		const relations = tasksToCreate.map(async t => {
+			const createdTask = createdTasks.find(ct => ct.title === t.title)
+			if (t.parent === null) {
+				emit('taskAdded', createdTask)
+				return
+			}
+			
+			const createdParentTask = createdTasks.find(ct => ct.title === t.parent)
+			if (typeof createdTask === 'undefined' || typeof createdParentTask === 'undefined') {
+				return
+			}
+
+			const rel = await taskRelationService.create(new TaskRelationModel({
+				taskId: createdTask.id,
+				otherTaskId: createdParentTask.id,
+				relationKind: RELATION_KIND.PARENTTASK,
+			}))
+			
+			createdTask.relatedTasks[RELATION_KIND.PARENTTASK] = [createdParentTask]
+			// we're only emitting here so that the relation shows up in the task list
+			emit('taskAdded', createdTask)
+			
+			return rel
+		})
+		await Promise.all(relations)
 	} catch (e: any) {
 		newTaskTitle.value = taskTitleBackup
 		if (e?.message === 'NO_LIST') {
