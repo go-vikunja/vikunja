@@ -37,7 +37,7 @@ Authelia config:
 description: Vikunja
 secret: <vikunja secret>
 redirect_uris:
-  - https://vikunja.mydomain.com/auth/openid/    <----- Matching slash at the end
+  - https://vikunja.mydomain.com/auth/openid/authelia
 scopes:
   - openid
   - email
