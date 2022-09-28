@@ -1,7 +1,7 @@
 <template>
 	<p class="created">
 		<time :datetime="formatISO(task.created)" v-tooltip="formatDateLong(task.created)">
-			<i18n-t keypath="task.detail.created">
+			<i18n-t keypath="task.detail.created" scope="global">
 				<span>{{ formatDateSince(task.created) }}</span>
 				{{ task.createdBy.getDisplayName() }}
 			</i18n-t>
@@ -10,7 +10,7 @@
 			<br/>
 			<!-- Computed properties to show the actual date every time it gets updated -->
 			<time :datetime="formatISO(task.updated)" v-tooltip="updatedFormatted">
-				<i18n-t keypath="task.detail.updated">
+				<i18n-t keypath="task.detail.updated" scope="global">
 					<span>{{ updatedSince }}</span>
 				</i18n-t>
 			</time>
@@ -18,7 +18,7 @@
 		<template v-if="task.done">
 			<br/>
 			<time :datetime="formatISO(task.doneAt)" v-tooltip="doneFormatted">
-				<i18n-t keypath="task.detail.doneAt">
+				<i18n-t keypath="task.detail.doneAt" scope="global">
 					<span>{{ doneSince }}</span>
 				</i18n-t>
 			</time>

@@ -92,7 +92,7 @@
 						</p>
 
 						<p class="mb-2">
-							<i18n-t keypath="list.share.links.sharedBy">
+							<i18n-t keypath="list.share.links.sharedBy" scope="global">
 								<strong>{{ s.sharedBy.getDisplayName() }}</strong>
 							</i18n-t>
 						</p>

@@ -38,7 +38,7 @@
 				<div class="filename">{{ a.file.name }}</div>
 				<div class="info">
 					<p class="attachment-info-meta">
-						<i18n-t keypath="task.attachment.createdBy">
+						<i18n-t keypath="task.attachment.createdBy" scope="global">
 							<span v-tooltip="formatDateLong(a.created)">
 								{{ formatDateSince(a.created) }}
 							</span>

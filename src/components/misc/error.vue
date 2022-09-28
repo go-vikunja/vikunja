@@ -1,6 +1,6 @@
 <template>
 	<message variant="danger">
-		<i18n-t keypath="loadingError.failed">
+		<i18n-t keypath="loadingError.failed" scope="global">
 			<ButtonLink @click="reload">{{ $t('loadingError.tryAgain') }}</ButtonLink>
 			<ButtonLink href="https://vikunja.io/contact/">{{ $t('loadingError.contact') }}</ButtonLink>
 		</i18n-t>

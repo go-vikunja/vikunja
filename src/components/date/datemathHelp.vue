@@ -6,13 +6,13 @@
 			{{ $t('input.datemathHelp.intro') }}
 		</p>
 		<p>
-			<i18n-t keypath="input.datemathHelp.expression">
+			<i18n-t keypath="input.datemathHelp.expression" scope="global">
 				<code>now</code>
 				<code>||</code>
 			</i18n-t>
 		</p>
 		<p>
-			<i18n-t keypath="input.datemathHelp.similar">
+			<i18n-t keypath="input.datemathHelp.similar" scope="global">
 				<BaseButton
 					href="https://grafana.com/docs/grafana/latest/dashboards/time-range-controls/"
 					target="_blank">
@@ -99,7 +99,7 @@
 			<tr>
 				<td><code>{{ exampleDate }}||+1M/d</code></td>
 				<td>
-					<i18n-t keypath="input.datemathHelp.examples.datePlusMonth">
+					<i18n-t keypath="input.datemathHelp.examples.datePlusMonth" scope="global">
 						<code>{{ exampleDate }}</code>
 					</i18n-t>
 				</td>

@@ -23,7 +23,7 @@
 			</div>
 		</div>
 		<div class="api-url-info" v-else>
-			<i18n-t keypath="apiConfig.use">
+			<i18n-t keypath="apiConfig.use" scope="global">
 				<span class="url" v-tooltip="apiUrl"> {{ apiDomain }} </span>
 			</i18n-t>
 			<br/>
