@@ -1,6 +1,8 @@
 import AbstractService from './abstractService'
 import {downloadBlob} from '../helpers/downloadBlob'
 
+const DOWNLOAD_NAME = 'vikunja-export.zip'
+
 export default class DataExportService extends AbstractService {
 	request(password: string) {
 		return this.post('/user/export/request', {password})
@@ -10,7 +12,7 @@ export default class DataExportService extends AbstractService {
 		const clear = this.setLoading()
 		try {
 			const url = await this.getBlobUrl('/user/export/download', 'POST', {password})
-			downloadBlob(url, 'vikunja-export.zip')
+			downloadBlob(url, DOWNLOAD_NAME)
 		} finally {
 			clear()
 		}
