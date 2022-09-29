@@ -181,15 +181,19 @@ async function addTask() {
 	try {
 		newTaskTitle.value = ''
 		await Promise.all(newTasks)
-		
+
 		const taskRelationService = new TaskRelationService()
 		const relations = tasksToCreate.map(async t => {
 			const createdTask = createdTasks.find(ct => ct.title === t.title)
+			if (typeof createdTask === 'undefined') {
+				return
+			}
+
 			if (t.parent === null) {
 				emit('taskAdded', createdTask)
 				return
 			}
-			
+
 			const createdParentTask = createdTasks.find(ct => ct.title === t.parent)
 			if (typeof createdTask === 'undefined' || typeof createdParentTask === 'undefined') {
 				return
@@ -200,11 +204,11 @@ async function addTask() {
 				otherTaskId: createdParentTask.id,
 				relationKind: RELATION_KIND.PARENTTASK,
 			}))
-			
+
 			createdTask.relatedTasks[RELATION_KIND.PARENTTASK] = [createdParentTask]
 			// we're only emitting here so that the relation shows up in the task list
 			emit('taskAdded', createdTask)
-			
+
 			return rel
 		})
 		await Promise.all(relations)
