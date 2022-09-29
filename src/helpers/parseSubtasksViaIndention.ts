@@ -20,10 +20,14 @@ export function parseSubtasksViaIndention(taskTitles: string): TaskWithParent[] 
 			parent: null,
 		}
 
+		if (index === 0) {
+			return task
+		}
+
 		const matched = spaceRegex.exec(title)
 		const matchedSpaces = matched ? matched[0].length : 0
 
-		if (matchedSpaces > 0 && index > 0) {
+		if (matchedSpaces > 0) {
 			// Go up the tree to find the first task with less indention than the current one
 			let pi = 1
 			let parentSpaces = 0
