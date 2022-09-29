@@ -2,7 +2,7 @@ lockfileVersion: 5.3
 
 specifiers:
   '@4tw/cypress-drag-drop': 2.2.1
-  '@cypress/vite-dev-server': 3.1.1
+  '@cypress/vite-dev-server': 3.2.0
   '@cypress/vue': 4.2.0
   '@faker-js/faker': 7.5.0
   '@fortawesome/fontawesome-svg-core': 6.2.0
@@ -131,7 +131,7 @@ dependencies:
 
 devDependencies:
   '@4tw/cypress-drag-drop': 2.2.1_cypress@10.9.0
-  '@cypress/vite-dev-server': 3.1.1
+  '@cypress/vite-dev-server': 3.2.0
   '@cypress/vue': 4.2.0_cypress@10.9.0+vue@3.2.40
   '@faker-js/faker': 7.5.0
   '@types/dompurify': 2.3.4
@@ -1567,8 +1567,8 @@ packages:
       uuid: 8.3.2
     dev: true
 
-  /@cypress/vite-dev-server/3.1.1:
-    resolution: {integrity: sha512-bZhDt3D3KEu8RDCxMb4GpFJoAEZOMOdFPB1xebHyjTZ6wmTs6i3oi4zXhN6FgGL8kXCI7JZXwC70LthEmxIZfw==}
+  /@cypress/vite-dev-server/3.2.0:
+    resolution: {integrity: sha512-tVOtSQst1yjah972nmhFue67UstxyEm69yuvcaOv9BxtI0e1hd5mM6gfLJINHXCeMmCjsoUxM382iUAr6UGu/Q==}
     dependencies:
       debug: 4.3.3
       find-up: 6.3.0
