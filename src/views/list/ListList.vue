@@ -197,7 +197,7 @@ const DRAG_OPTIONS = {
 } as const
 
 
-const taskEditTask = ref(null)
+const taskEditTask = ref<ITask | null>(null)
 const isTaskEdit = ref(false)
 
 const {
@@ -310,7 +310,7 @@ async function saveTaskPosition(e) {
 	}
 
 	const updatedTask = await this.$store.dispatch('tasks/update', newTask)
-	this.tasks[e.newIndex] = updatedTask
+	tasks.value[e.newIndex] = updatedTask
 }
 </script>
 
