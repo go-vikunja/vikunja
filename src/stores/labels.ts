@@ -80,7 +80,7 @@ export const useLabelStore = defineStore('label', {
 				return
 			}
 
-			const cancel = setLoadingPinia(useLabelStore, this.setIsLoading)
+			const cancel = setLoadingPinia(this)
 
 			try {
 				const labels = await getAllLabels()
@@ -92,7 +92,7 @@ export const useLabelStore = defineStore('label', {
 		},
 
 		async deleteLabel(label: ILabel) {
-			const cancel = setLoadingPinia(useLabelStore)
+			const cancel = setLoadingPinia(this)
 			const labelService = new LabelService()
 
 			try {
@@ -106,7 +106,7 @@ export const useLabelStore = defineStore('label', {
 		},
 
 		async updateLabel(label: ILabel) {
-			const cancel = setLoadingPinia(useLabelStore)
+			const cancel = setLoadingPinia(this)
 			const labelService = new LabelService()
 
 			try {
@@ -120,7 +120,7 @@ export const useLabelStore = defineStore('label', {
 		},
 
 		async createLabel(label: ILabel) {
-			const cancel = setLoadingPinia(useLabelStore)
+			const cancel = setLoadingPinia(this)
 			const labelService = new LabelService()
 
 			try {

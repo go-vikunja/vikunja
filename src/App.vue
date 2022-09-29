@@ -36,15 +36,17 @@ import AccountDeleteService from '@/services/accountDelete'
 
 import {useColorScheme} from '@/composables/useColorScheme'
 import {useBodyClass} from '@/composables/useBodyClass'
+import {useAuthStore} from './stores/auth'
 
 const store = useStore()
+const authStore = useAuthStore()
 const router = useRouter()
 
 useBodyClass('is-touch', isTouchDevice())
 const keyboardShortcutsActive = computed(() => store.state.keyboardShortcutsActive)
 
-const authUser = computed(() => store.getters['auth/authUser'])
-const authLinkShare = computed(() => store.getters['auth/authLinkShare'])
+const authUser = computed(() => authStore.authUser)
+const authLinkShare = computed(() => authStore.authLinkShare)
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -58,7 +60,7 @@ watch(accountDeletionConfirm, async (accountDeletionConfirm) => {
 	const accountDeletionService = new AccountDeleteService()
 	await accountDeletionService.confirm(accountDeletionConfirm)
 	success({message: t('user.deletion.confirmSuccess')})
-	store.dispatch('auth/refreshUserInfo')
+	authStore.refreshUserInfo()
 }, { immediate: true })
 
 // setup password reset redirect

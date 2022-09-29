@@ -1,12 +1,13 @@
 import AbstractModel from './abstractModel'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
-import UserModel from '@/models/user'
+import UserModel, {getDisplayName} from '@/models/user'
 import TaskModel from '@/models/task'
 import TaskCommentModel from '@/models/taskComment'
 import ListModel from '@/models/list'
 import TeamModel from '@/models/team'
 
 import {NOTIFICATION_NAMES, type INotification} from '@/modelTypes/INotification'
+import type { IUser } from '@/modelTypes/IUser'
 
 export default class NotificationModel extends AbstractModel<INotification> implements INotification {
 	id = 0
@@ -61,14 +62,14 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 		this.readAt = parseDateOrNull(this.readAt)
 	}
 
-	toText(user = null) {
+	toText(user: IUser | null = null) {
 		let who = ''
 
 		switch (this.name) {
 			case NOTIFICATION_NAMES.TASK_COMMENT:
 				return `commented on ${this.notification.task.getTextIdentifier()}`
 			case NOTIFICATION_NAMES.TASK_ASSIGNED:
-				who = `${this.notification.assignee.getDisplayName()}`
+				who = `${getDisplayName(this.notification.assignee)}`
 
 				if (user !== null && user.id === this.notification.assignee.id) {
 					who = 'you'
@@ -80,7 +81,7 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 			case NOTIFICATION_NAMES.LIST_CREATED:
 				return `created ${this.notification.list.title}`
 			case NOTIFICATION_NAMES.TEAM_MEMBER_ADDED:
-				who = `${this.notification.member.getDisplayName()}`
+				who = `${getDisplayName(this.notification.member)}`
 
 				if (user !== null && user.id === this.notification.member.id) {
 					who = 'you'

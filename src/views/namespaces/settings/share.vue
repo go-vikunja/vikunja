@@ -26,20 +26,21 @@ export default { name: 'namespace-setting-share' }
 
 <script lang="ts" setup>
 import {ref, computed, watchEffect} from 'vue'
-import {useStore} from '@/store'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
-import {useTitle} from '@vueuse/core'
 
 import NamespaceService from '@/services/namespace'
 import NamespaceModel from '@/models/namespace'
 
 import CreateEdit from '@/components/misc/create-edit.vue'
 import manageSharing from '@/components/sharing/userTeam.vue'
+import {useTitle} from '@/composables/useTitle'
+import {useAuthStore} from '@/stores/auth'
+import type {INamespace} from '@/modelTypes/INamespace'
 
 const {t} = useI18n({useScope: 'global'})
 
-const namespace = ref()
+const namespace = ref<INamespace>()
 
 const title = computed(() => namespace.value?.title
 	? t('namespace.share.title', { namespace: namespace.value.title })
@@ -47,8 +48,8 @@ const title = computed(() => namespace.value?.title
 )
 useTitle(title)
 
-const store = useStore()
-const userIsAdmin = computed(() => 'owner' in namespace.value && namespace.value.owner.id === store.state.auth.info.id)
+const authStore = useAuthStore()
+const userIsAdmin = computed(() => 'owner' in namespace.value && namespace.value.owner.id === authStore.info.id)
 
 async function loadNamespace(namespaceId: number) {
 	if (!namespaceId) return

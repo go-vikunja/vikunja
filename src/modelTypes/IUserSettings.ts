@@ -11,4 +11,5 @@ export interface IUserSettings extends IAbstract {
 	defaultListId: undefined | IList['id']
 	weekStart: 0 | 1 | 2 | 3 | 4 | 5 | 6
 	timezone: string
+	language: string
 }

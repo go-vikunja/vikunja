@@ -93,7 +93,6 @@
 <script setup lang="ts">
 import {ref, computed, onMounted, nextTick} from 'vue'
 import {useStore} from '@/store'
-import {useRouter} from 'vue-router'
 
 import {QUICK_ACTIONS_ACTIVE} from '@/store/mutation-types'
 import {RIGHTS as Rights} from '@/constants/rights'
@@ -109,12 +108,14 @@ import MenuButton from '@/components/home/MenuButton.vue'
 
 import {getListTitle} from '@/helpers/getListTitle'
 import {useConfigStore} from '@/stores/config'
+import {useAuthStore} from '@/stores/auth'
 
 const store = useStore()
+const authStore = useAuthStore()
 const configStore = useConfigStore()
 
-const userInfo = computed(() => store.state.auth.info)
-const userAvatar = computed(() => store.state.auth.avatarUrl)
+const userInfo = computed(() => authStore.info)
+const userAvatar = computed(() => authStore.avatarUrl)
 const currentList = computed(() => store.state.currentList)
 const background = computed(() => store.state.background)
 const imprintUrl = computed(() => configStore.legal.imprintUrl)
@@ -134,11 +135,8 @@ onMounted(async () => {
 	listTitle.value.style.setProperty('--nav-username-width', `${usernameWidth}px`)
 })
 
-const router = useRouter()
-
 function logout() {
-	store.dispatch('auth/logout')
-	router.push({name: 'user.login'})
+	authStore.logout()
 }
 
 function openQuickActions() {

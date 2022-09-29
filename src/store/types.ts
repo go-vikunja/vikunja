@@ -4,6 +4,7 @@ import type { IList } from '@/modelTypes/IList'
 import type { IAttachment } from '@/modelTypes/IAttachment'
 import type { ILabel } from '@/modelTypes/ILabel'
 import type { INamespace } from '@/modelTypes/INamespace'
+import type { IUser } from '@/modelTypes/IUser'
 
 export interface RootStoreState {
 	loading: boolean,
@@ -22,29 +23,16 @@ export interface AttachmentState {
 	attachments: IAttachment[],
 }
 
-export const AUTH_TYPES = {
-	'UNKNOWN': 0,
-	'USER': 1,
-	'LINK_SHARE': 2,
-} as const
-
-export interface Info {
-	id: number // what kind of id is this?
-	type: typeof AUTH_TYPES[keyof typeof AUTH_TYPES],
-	getAvatarUrl: () => string
-	settings: IUserSettings
-	name: string
-	email: string
-	exp: any
-}
 export interface AuthState {
 	authenticated: boolean,
 	isLinkShareAuth: boolean,
-	info: Info | null,
+	info: IUser | null,
 	needsTotpPasscode: boolean,
 	avatarUrl: string,
 	lastUserInfoRefresh: Date | null,
 	settings: IUserSettings,
+	isLoading: boolean,
+	isLoadingGeneralSettings: boolean
 }
 
 export interface ConfigState {

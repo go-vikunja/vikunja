@@ -48,6 +48,7 @@ import {tryOnMounted, debouncedWatch, useWindowSize, type MaybeRef} from '@vueus
 
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
+import {useAuthStore} from '@/stores/auth'
 
 function cleanupTitle(title: string) {
 	return title.replace(/^((\* |\+ |- )(\[ \] )?)/g, '')
@@ -135,6 +136,7 @@ const newTaskInput = useAutoHeightTextarea(newTaskTitle)
 
 const {t} = useI18n({useScope: 'global'})
 const store = useStore()
+const authStore = useAuthStore()
 
 const errorMessage = ref('')
 
@@ -168,7 +170,7 @@ async function addTask() {
 
 		const task = await store.dispatch('tasks/createNewTask', {
 			title,
-			listId: store.state.auth.settings.defaultListId,
+			listId: authStore.settings.defaultListId,
 			position: props.defaultPosition,
 		})
 		emit('taskAdded', task)

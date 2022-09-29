@@ -44,22 +44,22 @@ export default {name: 'user-settings-data-export'}
 
 <script setup lang="ts">
 import {ref, computed, shallowReactive} from 'vue'
-import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import DataExportService from '@/services/dataExport'
-import { useTitle } from '@/composables/useTitle'
+import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
+import {useAuthStore} from '@/stores/auth'
 
 const {t} = useI18n({useScope: 'global'})
-const store = useStore()
+const authStore = useAuthStore()
 
 useTitle(() => `${t('user.export.title')} - ${t('user.settings.title')}`)
 
 const dataExportService = shallowReactive(new DataExportService())
 const password = ref('')
 const errPasswordRequired = ref(false)
-const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
+const isLocalUser = computed(() => authStore.info?.isLocalUser)
 const passwordInput = ref()
 
 async function requestDataExport() {

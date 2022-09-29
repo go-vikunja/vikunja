@@ -59,8 +59,10 @@ import {DATE_RANGES} from '@/components/date/dateRanges'
 import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import LlamaCool from '@/assets/llama-cool.svg?component'
 import type {ITask} from '@/modelTypes/ITask'
+import {useAuthStore} from '@/stores/auth'
 
 const store = useStore()
+const authStore = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
@@ -104,7 +106,7 @@ const pageTitle = computed(() => {
 		})
 })
 const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
-const userAuthenticated = computed(() => store.state.auth.authenticated)
+const userAuthenticated = computed(() => authStore.authenticated)
 const loading = computed(() => store.state[LOADING] && store.state[LOADING_MODULE] === 'tasks')
 
 interface dateStrings {

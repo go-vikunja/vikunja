@@ -77,11 +77,14 @@ import {store} from '@/store'
 import Message from '@/components/misc/message.vue'
 import {isEmail} from '@/helpers/isEmail'
 import Password from '@/components/input/password.vue'
+import {useAuthStore} from '@/stores/auth'
+
+const authStore = useAuthStore()
 
 // FIXME: use the `beforeEnter` hook of vue-router
 // Check if the user is already logged in, if so, redirect them to the homepage
 onBeforeMount(() => {
-	if (store.state.auth.authenticated) {
+	if (authStore.authenticated) {
 		router.push({name: 'home'})
 	}
 })
@@ -126,7 +129,7 @@ async function submit() {
 	}
 
 	try {
-		await store.dispatch('auth/register', toRaw(credentials))
+		await authStore.register(toRaw(credentials))
 	} catch (e) {
 		errorMessage.value = e.message
 	}

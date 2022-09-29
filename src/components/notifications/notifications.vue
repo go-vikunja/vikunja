@@ -24,7 +24,7 @@
 					<div class="detail">
 						<div>
 							<span class="has-text-weight-bold mr-1" v-if="n.notification.doer">
-								{{ n.notification.doer.getDisplayName() }}
+								{{ getDisplayName(n.notification.doer) }}
 							</span>
 							<BaseButton @click="() => to(n, index)()">
 								{{ n.toText(userInfo) }}
@@ -48,19 +48,20 @@
 
 <script lang="ts" setup>
 import {computed, onMounted, onUnmounted, ref} from 'vue'
+import {useRouter} from 'vue-router'
 
 import NotificationService from '@/services/notification'
 import BaseButton from '@/components/base/BaseButton.vue'
 import User from '@/components/misc/user.vue'
 import { NOTIFICATION_NAMES as names, type INotification} from '@/modelTypes/INotification'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
-import {useStore} from '@/store'
-import {useRouter} from 'vue-router'
 import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
+import {getDisplayName} from '@/models/user'
+import {useAuthStore} from '@/stores/auth'
 
 const LOAD_NOTIFICATIONS_INTERVAL = 10000
 
-const store = useStore()
+const authStore = useAuthStore()
 const router = useRouter()
 
 const allNotifications = ref<INotification[]>([])
@@ -73,7 +74,7 @@ const unreadNotifications = computed(() => {
 const notifications = computed(() => {
 	return allNotifications.value ? allNotifications.value.filter(n => n.name !== '') : []
 })
-const userInfo = computed(() => store.state.auth.info)
+const userInfo = computed(() => authStore.info)
 
 let interval: number
 

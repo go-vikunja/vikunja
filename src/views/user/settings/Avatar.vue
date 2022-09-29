@@ -64,17 +64,17 @@ export default { name: 'user-settings-avatar' }
 <script setup lang="ts">
 import {computed, ref, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useStore} from '@/store'
 import {Cropper} from 'vue-advanced-cropper'
 import 'vue-advanced-cropper/dist/style.css'
 
 import AvatarService from '@/services/avatar'
 import AvatarModel from '@/models/avatar'
-import { useTitle } from '@/composables/useTitle'
-import { success } from '@/message'
+import {useTitle} from '@/composables/useTitle'
+import {success} from '@/message'
+import {useAuthStore} from '@/stores/auth'
 
 const {t} = useI18n({useScope: 'global'})
-const store = useStore()
+const authStore = useAuthStore()
 
 const AVATAR_PROVIDERS = computed(() => ({
 	default: t('misc.default'),
@@ -102,7 +102,7 @@ avatarStatus()
 async function updateAvatarStatus() {
 	await avatarService.update(new AvatarModel({avatarProvider: avatarProvider.value}))
 	success({message: t('user.settings.avatar.statusUpdateSuccess')})
-	store.commit('auth/reloadAvatar')
+	authStore.reloadAvatar()
 }
 
 const cropper = ref()
@@ -121,7 +121,7 @@ async function uploadAvatar() {
 		const blob = await new Promise(resolve => canvas.toBlob(blob => resolve(blob)))
 		await avatarService.create(blob)
 		success({message: t('user.settings.avatar.setSuccess')})
-		store.commit('auth/reloadAvatar')
+		authStore.reloadAvatar()
 	} finally {
 		loading.value = false
 		isCropAvatar.value = false

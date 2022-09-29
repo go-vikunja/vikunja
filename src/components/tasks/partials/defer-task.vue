@@ -38,13 +38,13 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, type PropType} from 'vue'
-import {useStore} from '@/store'
+import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, toRef, type PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
 import flatPickr from 'vue-flatpickr-component'
 
 import TaskService from '@/services/task'
 import type {ITask} from '@/modelTypes/ITask'
+import {useAuthStore} from '@/stores/auth'
 
 const props = defineProps({
 	modelValue: {
@@ -55,7 +55,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const {t} = useI18n({useScope: 'global'})
-const store = useStore()
+const authStore = useAuthStore()
 
 const taskService = shallowReactive(new TaskService())
 const task = ref<ITask>()
@@ -63,12 +63,12 @@ const task = ref<ITask>()
 // We're saving the due date seperately to prevent null errors in very short periods where the task is null.
 const dueDate = ref<Date>()
 const lastValue = ref<Date>()
-const changeInterval = ref<number>()
+const changeInterval = ref<ReturnType<typeof setInterval>>()
 
 watch(
-	() => props.modelValue,
+	toRef(props, 'modelValue'),
 	(value) => {
-		task.value = value
+		task.value = { ...value }
 		dueDate.value = value.dueDate
 		lastValue.value = value.dueDate
 	},
@@ -103,7 +103,7 @@ const flatPickerConfig = computed(() => ({
 	time_24hr: true,
 	inline: true,
 	locale: {
-		firstDayOfWeek: store.state.auth.settings.weekStart,
+		firstDayOfWeek: authStore.settings.weekStart,
 	},
 }))
 
@@ -123,9 +123,10 @@ async function updateDueDate() {
 		return
 	}
 
-	// FIXME: direct prop manipulation
-	task.value.dueDate = new Date(dueDate.value)
-	const newTask = await taskService.update(task.value)
+	const newTask = await taskService.update({
+		...task.value,
+		dueDate: new Date(dueDate.value),
+	})
 	lastValue.value = newTask.dueDate
 	task.value = newTask
 	emit('update:modelValue', newTask)

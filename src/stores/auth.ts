@@ -1,38 +1,35 @@
-import type { Module } from 'vuex'
+import {defineStore, acceptHMRUpdate} from 'pinia'
 
 import {HTTPFactory, AuthenticatedHTTPFactory} from '@/http-common'
 import {i18n, getCurrentLanguage, saveLanguage} from '@/i18n'
 import {objectToSnakeCase} from '@/helpers/case'
-import {LOADING} from '../mutation-types'
-import UserModel from '@/models/user'
+import UserModel, { getAvatarUrl } from '@/models/user'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
-import {setLoading} from '@/store/helper'
+import {setLoadingPinia} from '@/store/helper'
 import {success} from '@/message'
 import {redirectToProvider} from '@/helpers/redirectToProvider'
-import type { RootStoreState, AuthState, Info} from '@/store/types'
-import {AUTH_TYPES} from '@/store/types'
-import type { IUserSettings } from '@/modelTypes/IUserSettings'
+import {AUTH_TYPES, type IUser} from '@/modelTypes/IUser'
+import type {AuthState} from '@/store/types'
+import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import router from '@/router'
 import {useConfigStore} from '@/stores/config'
+import UserSettingsModel from '@/models/userSettings'
+import {store} from '@/store'
 
-function defaultSettings(settings: Partial<IUserSettings>) {
-	if (typeof settings.weekStart === 'undefined' || settings.weekStart === '') {
-		settings.weekStart = 0
-	}
-	return settings
-}
-
-const authStore : Module<AuthState, RootStoreState> =  {
-	namespaced: true,
-	state: () => ({
+export const useAuthStore = defineStore('auth', {
+	state: () : AuthState => ({
 		authenticated: false,
 		isLinkShareAuth: false,
-		info: null,
 		needsTotpPasscode: false,
+		
+		info: null,
 		avatarUrl: '',
+		settings: new UserSettingsModel(),
+		
 		lastUserInfoRefresh: null,
-		settings: {}, // should be IUserSettings
+		isLoading: false,
+		isLoadingGeneralSettings: false,
 	}),
 	getters: {
 		authUser(state) {
@@ -48,47 +45,56 @@ const authStore : Module<AuthState, RootStoreState> =  {
 			)
 		},
 	},
-	mutations: {
-		info(state, info: Info) {
-			state.info = info
+	actions: {
+		setIsLoading(isLoading: boolean) {
+			this.isLoading = isLoading 
+		},
+
+		setIsLoadingGeneralSettings(isLoading: boolean) {
+			this.isLoadingGeneralSettings = isLoading 
+		},
+
+		setUser(info: IUser | null) {
+			this.info = info
 			if (info !== null) {
-				state.avatarUrl = info.getAvatarUrl()
+				this.reloadAvatar()
 
 				if (info.settings) {
-					state.settings = defaultSettings(info.settings)
+					this.settings = new UserSettingsModel(info.settings)
 				}
 
-				state.isLinkShareAuth = info.id < 0
+				this.isLinkShareAuth = info.id < 0
 			}
 		},
-		setUserSettings(state, settings: IUserSettings) {
-			state.settings = defaultSettings(settings)
-			const info = state.info !== null ? state.info : {} as Info
-			info.name = settings.name
-			state.info = info
+		setUserSettings(settings: IUserSettings) {
+			this.settings = new UserSettingsModel(settings)
+			this.info = new UserModel({
+				...this.info !== null ? this.info : {},
+				name: settings.name,
+			})
 		},
-		authenticated(state, authenticated: boolean) {
-			state.authenticated = authenticated
+		setAuthenticated(authenticated: boolean) {
+			this.authenticated = authenticated
 		},
-		isLinkShareAuth(state, isLinkShareAuth: boolean) {
-			state.isLinkShareAuth = isLinkShareAuth
+		setIsLinkShareAuth(isLinkShareAuth: boolean) {
+			this.isLinkShareAuth = isLinkShareAuth
 		},
-		needsTotpPasscode(state, needsTotpPasscode: boolean) {
-			state.needsTotpPasscode = needsTotpPasscode
+		setNeedsTotpPasscode(needsTotpPasscode: boolean) {
+			this.needsTotpPasscode = needsTotpPasscode
 		},
-		reloadAvatar(state) {
-			if (!state.info) return
-			state.avatarUrl = `${state.info.getAvatarUrl()}&=${+new Date()}`
+		reloadAvatar() {
+			if (!this.info) return
+			this.avatarUrl = `${getAvatarUrl(this.info)}&=${+new Date()}`
 		},
-		lastUserRefresh(state) {
-			state.lastUserInfoRefresh = new Date()
+		updateLastUserRefresh() {
+			this.lastUserInfoRefresh = new Date()
 		},
-	},
-	actions: {
+
 		// Logs a user in with a set of credentials.
-		async login(ctx, credentials) {
+		async login(credentials) {
 			const HTTP = HTTPFactory()
-			ctx.commit(LOADING, true, {root: true})
+			store.commit('loading', true)
+			this.setIsLoading(true)
 
 			// Delete an eventually preexisting old token
 			removeToken()
@@ -99,30 +105,32 @@ const authStore : Module<AuthState, RootStoreState> =  {
 				saveToken(response.data.token, true)
 
 				// Tell others the user is autheticated
-				ctx.dispatch('checkAuth')
+				this.checkAuth()
 			} catch (e) {
 				if (
 					e.response &&
 					e.response.data.code === 1017 &&
 					!credentials.totpPasscode
 				) {
-					ctx.commit('needsTotpPasscode', true)
+					this.setNeedsTotpPasscode(true)
 				}
 
 				throw e
 			} finally {
-				ctx.commit(LOADING, false, {root: true})
+				store.commit('loading', false)
+				this.setIsLoading(false)
 			}
 		},
 
 		// Registers a new user and logs them in.
 		// Not sure if this is the right place to put the logic in, maybe a seperate js component would be better suited.
-		async register(ctx, credentials) {
+		async register(credentials) {
 			const HTTP = HTTPFactory()
-			ctx.commit(LOADING, true, {root: true})
+			store.commit('loading', true)
+			this.setIsLoading(true)
 			try {
 				await HTTP.post('register', credentials)
-				return ctx.dispatch('login', credentials)
+				return this.login(credentials)
 			} catch (e) {
 				if (e.response?.data?.message) {
 					throw e.response.data
@@ -130,13 +138,15 @@ const authStore : Module<AuthState, RootStoreState> =  {
 
 				throw e
 			} finally {
-				ctx.commit(LOADING, false, {root: true})
+			store.commit('loading', false)
+				this.setIsLoading(false)
 			}
 		},
 
-		async openIdAuth(ctx, {provider, code}) {
+		async openIdAuth({provider, code}) {
 			const HTTP = HTTPFactory()
-			ctx.commit(LOADING, true, {root: true})
+			store.commit('loading', true)
+			this.setIsLoading(true)
 
 			const data = {
 				code: code,
@@ -150,28 +160,32 @@ const authStore : Module<AuthState, RootStoreState> =  {
 				saveToken(response.data.token, true)
 
 				// Tell others the user is autheticated
-				ctx.dispatch('checkAuth')
+				this.checkAuth()
 			} finally {
-				ctx.commit(LOADING, false, {root: true})
+				store.commit('loading', false)
+				this.setIsLoading(false)
 			}
 		},
 
-		async linkShareAuth(ctx, {hash, password}) {
+		async linkShareAuth({hash, password}) {
 			const HTTP = HTTPFactory()
 			const response = await HTTP.post('/shares/' + hash + '/auth', {
 				password: password,
 			})
 			saveToken(response.data.token, false)
-			ctx.dispatch('checkAuth')
+			this.checkAuth()
 			return response.data
 		},
 
 		// Populates user information from jwt token saved in local storage in store
-		checkAuth(ctx) {
+		checkAuth() {
 
 			// This function can be called from multiple places at the same time and shortly after one another.
 			// To prevent hitting the api too frequently or race conditions, we check at most once per minute.
-			if (ctx.state.lastUserInfoRefresh !== null && ctx.state.lastUserInfoRefresh > (new Date()).setMinutes((new Date()).getMinutes() + 1)) {
+			if (
+				this.lastUserInfoRefresh !== null &&
+				this.lastUserInfoRefresh > (new Date()).setMinutes((new Date()).getMinutes() + 1)
+			) {
 				return
 			}
 
@@ -185,17 +199,17 @@ const authStore : Module<AuthState, RootStoreState> =  {
 				const info = new UserModel(JSON.parse(atob(base64)))
 				const ts = Math.round((new Date()).getTime() / 1000)
 				authenticated = info.exp >= ts
-				ctx.commit('info', info)
+				this.setUser(info)
 
 				if (authenticated) {
-					ctx.dispatch('refreshUserInfo')
+					this.refreshUserInfo()
 				}
 			}
 
-			ctx.commit('authenticated', authenticated)
+			this.setAuthenticated(authenticated)
 			if (!authenticated) {
-				ctx.commit('info', null)
-				ctx.dispatch('redirectToProviderIfNothingElseIsEnabled')
+				this.setUser(null)
+				this.redirectToProviderIfNothingElseIsEnabled()
 			}
 		},
 
@@ -211,7 +225,7 @@ const authStore : Module<AuthState, RootStoreState> =  {
 			}
 		},
 
-		async refreshUserInfo({state, commit, dispatch}) {
+		async refreshUserInfo() {
 			const jwt = getToken()
 			if (!jwt) {
 				return
@@ -220,19 +234,27 @@ const authStore : Module<AuthState, RootStoreState> =  {
 			const HTTP = AuthenticatedHTTPFactory()
 			try {
 				const response = await HTTP.get('user')
-				const info = new UserModel(response.data)
-				info.type = state.info.type
-				info.email = state.info.email
-				info.exp = state.info.exp
+				const info = new UserModel({
+					...response.data,
+					...(this.info?.type && {type: this.info?.type}),
+					...(this.info?.email && {email: this.info?.email}),
+					...(this.info?.exp && {exp: this.info?.exp}),
+				})
 
-				commit('info', info)
-				commit('lastUserRefresh')
+				this.setUser(info)
+				this.updateLastUserRefresh()
 
-				if (info.type === AUTH_TYPES.USER && (typeof info.settings.language === 'undefined' || info.settings.language === '')) {
+				if (
+						info.type === AUTH_TYPES.USER &&
+						(
+							typeof info.settings.language === 'undefined' ||
+							info.settings.language === ''
+						)
+				) {
 					// save current language
-					await dispatch('saveUserSettings', {
+					await this.saveUserSettings({
 						settings: {
-							...state.settings,
+							...this.settings,
 							language: getCurrentLanguage(),
 						},
 						showMessage: false,
@@ -242,23 +264,28 @@ const authStore : Module<AuthState, RootStoreState> =  {
 				return info
 			} catch (e) {
 				if(e?.response?.data?.message === 'invalid or expired jwt') {
-					dispatch('logout')
+					this.logout()
 					return
 				}
 				throw new Error('Error while refreshing user info:', {cause: e})
 			}
 		},
 
-		async saveUserSettings(ctx, payload) {
-			const {settings} = payload
-			const showMessage = payload.showMessage ?? true
+		async saveUserSettings({
+			settings,
+			showMessage = true,
+		}: {
+			settings: IUserSettings
+			showMessage : boolean
+		}) {
 			const userSettingsService = new UserSettingsService()
 
-			const cancel = setLoading(ctx, 'general-settings')
+			// FIXME
+			const cancel = setLoadingPinia(this, this.setIsLoadingGeneralSettings)
 			try {
 				saveLanguage(settings.language)
 				await userSettingsService.update(settings)
-				ctx.commit('setUserSettings', {...settings})
+				this.setUserSettings({...settings})
 				if (showMessage) {
 					success({message: i18n.global.t('user.settings.general.savedSuccess')})
 				}
@@ -270,34 +297,38 @@ const authStore : Module<AuthState, RootStoreState> =  {
 		},
 
 		// Renews the api token and saves it to local storage
-		renewToken(ctx) {
+		renewToken() {
 			// FIXME: Timeout to avoid race conditions when authenticated as a user (=auth token in localStorage) and as a
 			// link share in another tab. Without the timeout both the token renew and link share auth are executed at
 			// the same time and one might win over the other.
 			setTimeout(async () => {
-				if (!ctx.state.authenticated) {
+				if (!this.authenticated) {
 					return
 				}
 
 				try {
-					await refreshToken(!ctx.state.isLinkShareAuth)
-					ctx.dispatch('checkAuth')
+					await refreshToken(!this.isLinkShareAuth)
+					this.checkAuth()
 				} catch (e) {
 					// Don't logout on network errors as the user would then get logged out if they don't have
 					// internet for a short period of time - such as when the laptop is still reconnecting
 					if (e?.request?.status) {
-						ctx.dispatch('logout')
+						this.logout()
 					}
 				}
 			}, 5000)
 		},
-		logout(ctx) {
+
+		logout() {
 			removeToken()
 			window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
 			router.push({name: 'user.login'})
-			ctx.dispatch('checkAuth')
+			this.checkAuth()
 		},
 	},
-}
+})
 
-export default authStore
+// support hot reloading
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useAuthStore, import.meta.hot))
+}

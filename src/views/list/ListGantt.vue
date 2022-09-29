@@ -67,9 +67,9 @@
 <script setup lang="ts">
 import {ref, computed} from 'vue'
 import flatPickr from 'vue-flatpickr-component'
-
 import {useI18n} from 'vue-i18n'
-import {useStore} from '@/store'
+
+import {useAuthStore} from '@/stores/auth'
 
 import ListWrapper from './ListWrapper.vue'
 import GanttChart from '@/components/tasks/gantt-component.vue'
@@ -92,14 +92,14 @@ const dateFrom = ref(new Date((new Date()).setDate(now.value.getDate() - 15)))
 const dateTo = ref(new Date((new Date()).setDate(now.value.getDate() + 30)))
 
 const {t} = useI18n({useScope: 'global'})
-const store = useStore()
+const authStore = useAuthStore()
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatShort'),
 	altInput: true,
 	dateFormat: 'Y-m-d',
 	enableTime: false,
 	locale: {
-		firstDayOfWeek: store.state.auth.settings.weekStart,
+		firstDayOfWeek: authStore.settings.weekStart,
 	},
 }))
 </script>

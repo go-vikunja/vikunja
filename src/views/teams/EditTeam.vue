@@ -85,7 +85,7 @@
 			<table class="table has-actions is-striped is-hoverable is-fullwidth">
 				<tbody>
 				<tr :key="m.id" v-for="m in team?.members">
-					<td>{{ m.getDisplayName() }}</td>
+					<td>{{ getDisplayName(m) }}</td>
 					<td>
 						<template v-if="m.id === userInfo.id">
 							<b class="is-success">You</b>
@@ -163,9 +163,10 @@
 <script lang="ts" setup>
 import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {useRoute, useRouter} from 'vue-router'
 
 import Editor from '@/components/input/AsyncEditor'
-import {useStore} from '@/store'
+import Multiselect from '@/components/input/multiselect.vue'
 
 import TeamService from '@/services/team'
 import TeamMemberService from '@/services/teamMember'
@@ -173,15 +174,16 @@ import UserService from '@/services/user'
 
 import {RIGHTS as Rights} from '@/constants/rights'
 
-import Multiselect from '@/components/input/multiselect.vue'
-import {useRoute, useRouter} from 'vue-router'
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
+import {getDisplayName} from '@/models/user'
+import {useAuthStore} from '@/stores/auth'
+
 import type {ITeam} from '@/modelTypes/ITeam'
 import type {IUser} from '@/modelTypes/IUser'
 import type {ITeamMember} from '@/modelTypes/ITeamMember'
 
-const store = useStore()
+const authStore = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
@@ -193,7 +195,7 @@ const userIsAdmin = computed(() => {
 		team.value.maxRight > Rights.READ
 	)
 })
-const userInfo = computed(() => store.state.auth.info)
+const userInfo = computed(() => authStore.info)
 
 const teamService = ref<TeamService>(new TeamService())
 const teamMemberService = ref<TeamMemberService>(new TeamMemberService())

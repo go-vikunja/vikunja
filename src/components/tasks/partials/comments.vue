@@ -17,7 +17,7 @@
 			<div :key="c.id" class="media comment" v-for="c in comments">
 				<figure class="media-left is-hidden-mobile">
 					<img
-						:src="c.author.getAvatarUrl(48)"
+						:src="getAvatarUrl(c.author, 48)"
 						alt=""
 						class="image is-avatar"
 						height="48"
@@ -27,13 +27,13 @@
 				<div class="media-content">
 					<div class="comment-info">
 						<img
-							:src="c.author.getAvatarUrl(20)"
+							:src="getAvatarUrl(c.author, 20)"
 							alt=""
 							class="image is-avatar d-print-none"
 							height="20"
 							width="20"
 						/>
-						<strong>{{ c.author.getDisplayName() }}</strong>&nbsp;
+						<strong>{{ getDisplayName(c.author) }}</strong>&nbsp;
 						<span v-tooltip="formatDateLong(c.created)" class="has-text-grey">
 							{{ formatDateSince(c.created) }}
 						</span>
@@ -153,7 +153,6 @@
 
 <script setup lang="ts">
 import {ref, reactive, computed, shallowReactive, watch, nextTick} from 'vue'
-import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import Editor from '@/components/input/AsyncEditor'
@@ -167,7 +166,9 @@ import type {ITask} from '@/modelTypes/ITask'
 import {uploadFile} from '@/helpers/attachments'
 import {success} from '@/message'
 import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
+import {getAvatarUrl, getDisplayName} from '@/models/user'
 import {useConfigStore} from '@/stores/config'
+import {useAuthStore} from '@/stores/auth'
 
 const props = defineProps({
 	taskId: {
@@ -180,8 +181,8 @@ const props = defineProps({
 })
 
 const {t} = useI18n({useScope: 'global'})
-const store = useStore()
 const configStore = useConfigStore()
+const authStore = useAuthStore()
 
 const comments = ref<ITaskComment[]>([])
 
@@ -196,8 +197,8 @@ const newComment = reactive(new TaskCommentModel())
 const saved = ref<ITask['id'] | null>(null)
 const saving = ref<ITask['id'] | null>(null)
 
-const userAvatar = computed(() => store.state.auth.info.getAvatarUrl(48))
-const currentUserId = computed(() => store.state.auth.info.id)
+const userAvatar = computed(() => getAvatarUrl(authStore.info, 48))
+const currentUserId = computed(() => authStore.info.id)
 const enabled = computed(() => configStore.taskCommentsEnabled)
 const actions = computed(() => {
 	if (!props.canWrite) {

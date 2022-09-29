@@ -71,7 +71,6 @@
 
 <script lang="ts" setup>
 import {computed, ref, watch} from 'vue'
-import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import flatPickr from 'vue-flatpickr-component'
@@ -81,8 +80,9 @@ import Popup from '@/components/misc/popup.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import BaseButton from '@/components/base/BaseButton.vue'
 import DatemathHelp from '@/components/date/datemathHelp.vue'
+import {useAuthStore} from '@/stores/auth'
 
-const store = useStore()
+const authStore = useAuthStore()
 const {t} = useI18n({useScope: 'global'})
 
 const emit = defineEmits(['update:modelValue'])
@@ -93,7 +93,7 @@ const props = defineProps({
 })
 
 // FIXME: This seems to always contain the default value - that breaks the picker
-const weekStart = computed<number>(() => store.state.auth.settings.weekStart ?? 0)
+const weekStart = computed(() => authStore.settings.weekStart ?? 0)
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,

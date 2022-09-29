@@ -102,6 +102,8 @@ import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
+import {mapState} from 'pinia'
+import {useAuthStore} from '@/stores/auth'
 
 export default defineComponent({
 	name: 'datepicker',
@@ -145,6 +147,9 @@ export default defineComponent({
 		},
 	},
 	computed: {
+		...mapState(useAuthStore, {
+			weekStart: (state) => state.settings.weekStart,
+		}),
 		flatPickerConfig() {
 			return {
 				altFormat: this.$t('date.altFormatLong'),
@@ -154,7 +159,7 @@ export default defineComponent({
 				time_24hr: true,
 				inline: true,
 				locale: {
-					firstDayOfWeek: this.$store.state.auth.settings.weekStart,
+					firstDayOfWeek: this.weekStart,
 				},
 			}
 		},

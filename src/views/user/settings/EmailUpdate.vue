@@ -43,18 +43,18 @@ export default { name: 'user-settings-update-email' }
 <script setup lang="ts">
 import {reactive, computed, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useStore} from '@/store'
 
 import EmailUpdateService from '@/services/emailUpdate'
 import EmailUpdateModel from '@/models/emailUpdate'
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
+import {useAuthStore} from '@/stores/auth'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.updateEmailTitle')} - ${t('user.settings.title')}`)
 
-const store = useStore()
-const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
+const authStore = useAuthStore()
+const isLocalUser = computed(() => authStore.info?.isLocalUser)
 
 const emailUpdate = reactive(new EmailUpdateModel())
 const emailUpdateService = shallowReactive(new EmailUpdateService())

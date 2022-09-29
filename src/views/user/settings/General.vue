@@ -149,6 +149,7 @@
 <script lang="ts">
 import {defineComponent} from 'vue'
 import { useListStore } from '@/stores/lists'
+import { useAuthStore } from '@/stores/auth'
 
 export default defineComponent({
 	name: 'user-settings-general',
@@ -227,7 +228,8 @@ const playSoundWhenDone = ref(getPlaySoundWhenDoneSetting())
 const quickAddMagicMode = ref(getQuickAddMagicMode())
 
 const store = useStore()
-const settings = ref({...store.state.auth.settings})
+const authStore = useAuthStore()
+const settings = ref({...authStore.settings})
 const id = ref(createRandomID())
 const availableLanguageOptions = ref(
 	Object.entries(availableLanguages)
@@ -236,13 +238,13 @@ const availableLanguageOptions = ref(
 )
 
 watch(
-	() => store.state.auth.settings,
+	() => authStore.settings,
 	() => {
 		// Only setting if we don't have values set yet to avoid overriding edited values
 		if (!objectIsEmpty(settings.value)) {
 			return
 		}
-		settings.value = {...store.state.auth.settings}
+		settings.value = {...authStore.settings}
 	},
 	{immediate: true},
 )
@@ -265,7 +267,7 @@ async function updateSettings() {
 	localStorage.setItem(playSoundWhenDoneKey, playSoundWhenDone.value ? 'true' : 'false')
 	setQuickAddMagicMode(quickAddMagicMode.value)
 
-	await store.dispatch('auth/saveUserSettings', {
+	await authStore.saveUserSettings({
 		settings: {...settings.value},
 	})
 }

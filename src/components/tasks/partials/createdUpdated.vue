@@ -3,7 +3,7 @@
 		<time :datetime="formatISO(task.created)" v-tooltip="formatDateLong(task.created)">
 			<i18n-t keypath="task.detail.created" scope="global">
 				<span>{{ formatDateSince(task.created) }}</span>
-				{{ task.createdBy.getDisplayName() }}
+				{{ getDisplayName(task.createdBy) }}
 			</i18n-t>
 		</time>
 		<template v-if="+new Date(task.created) !== +new Date(task.updated)">
@@ -30,6 +30,7 @@
 import {computed, toRefs, type PropType} from 'vue'
 import type {ITask} from '@/modelTypes/ITask'
 import {formatISO, formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
+import {getDisplayName} from '@/models/user'
 
 const props = defineProps({
 	task: {

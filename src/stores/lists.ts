@@ -87,7 +87,7 @@ export const useListStore = defineStore('list', {
 		},
 
 		async createList(list: IList) {
-			const cancel = setLoadingPinia(useListStore)
+			const cancel = setLoadingPinia(this)
 			const listService = new ListService()
 
 			try {
@@ -103,7 +103,7 @@ export const useListStore = defineStore('list', {
 		},
 
 		async updateList(list: IList) {
-			const cancel = setLoadingPinia(useListStore)
+			const cancel = setLoadingPinia(this)
 			const listService = new ListService()
 
 			try {
@@ -139,7 +139,7 @@ export const useListStore = defineStore('list', {
 		},
 
 		async deleteList(list: IList) {
-			const cancel = setLoadingPinia(useListStore)
+			const cancel = setLoadingPinia(this)
 			const listService = new ListService()
 
 			try {

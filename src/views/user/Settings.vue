@@ -19,19 +19,21 @@
 
 <script setup lang="ts">
 import {computed} from 'vue'
-import { store } from '@/store'
 import { useI18n } from 'vue-i18n'
 import { useTitle } from '@/composables/useTitle'
 import { useConfigStore } from '@/stores/config'
+import { useAuthStore } from '@/stores/auth'
 
 const { t } = useI18n({useScope: 'global'})
 useTitle(() => t('user.settings.title'))
 
 const configStore = useConfigStore()
+const authStore = useAuthStore()
+
 const totpEnabled = computed(() => configStore.totpEnabled)
 const caldavEnabled = computed(() => configStore.caldavEnabled)
 const migratorsEnabled = computed(() => configStore.migratorsEnabled)
-const isLocalUser = computed(() => store.state.auth.info?.isLocalUser)
+const isLocalUser = computed(() => authStore.info?.isLocalUser)
 
 const navigationItems = computed(() => {
 	const items = [
