@@ -228,28 +228,53 @@ func getSubscriberCondForEntity(entityType SubscriptionEntityType, entityID int6
 // that task, if there is none it will look for a subscription on the list the task belongs to and if that also
 // doesn't exist it will check for a subscription for the namespace the list is belonging to.
 func GetSubscription(s *xorm.Session, entityType SubscriptionEntityType, entityID int64, a web.Auth) (subscription *Subscription, err error) {
+	subs, err := GetSubscriptions(s, entityType, []int64{entityID}, a)
+	if err != nil || len(subs) == 0 {
+		return nil, err
+	}
+	if sub, exists := subs[entityID]; exists {
+		return sub, nil // Take exact match first, if available
+	}
+	for _, sub := range subs {
+		return sub, nil // For parents, take next available
+	}
+	return nil, nil
+}
+
+// GetSubscriptions returns a map of subscriptions to a set of given entity IDs
+func GetSubscriptions(s *xorm.Session, entityType SubscriptionEntityType, entityIDs []int64, a web.Auth) (listsToSubscriptions map[int64]*Subscription, err error) {
 	u, is := a.(*user.User)
 	if !is {
 		return
 	}
-
 	if err := entityType.validate(); err != nil {
 		return nil, err
 	}
 
-	subscription = &Subscription{}
-	cond := getSubscriberCondForEntity(entityType, entityID)
-	exists, err := s.
+	var entitiesFilter builder.Cond
+	for _, eID := range entityIDs {
+		if entitiesFilter == nil {
+			entitiesFilter = getSubscriberCondForEntity(entityType, eID)
+			continue
+		}
+		entitiesFilter = entitiesFilter.Or(getSubscriberCondForEntity(entityType, eID))
+	}
+
+	var subscriptions []*Subscription
+	err = s.
 		Where("user_id = ?", u.ID).
-		And(cond).
-		Get(subscription)
-	if !exists {
+		And(entitiesFilter).
+		Find(&subscriptions)
+	if err != nil {
 		return nil, err
 	}
 
-	subscription.Entity = subscription.EntityType.String()
-
-	return subscription, err
+	listsToSubscriptions = make(map[int64]*Subscription)
+	for _, sub := range subscriptions {
+		sub.Entity = sub.EntityType.String()
+		listsToSubscriptions[sub.EntityID] = sub
+	}
+	return listsToSubscriptions, nil
 }
 
 func getSubscribersForEntity(s *xorm.Session, entityType SubscriptionEntityType, entityID int64) (subscriptions []*Subscription, err error) {

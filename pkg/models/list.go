@@ -476,12 +476,22 @@ func addListDetails(s *xorm.Session, lists []*List, a web.Auth) (err error) {
 		return err
 	}
 
+	subscriptions, err := GetSubscriptions(s, SubscriptionEntityList, listIDs, a)
+	if err != nil {
+		log.Errorf("An error occurred while getting list subscriptions for a namespace item: %s", err.Error())
+		subscriptions = make(map[int64]*Subscription)
+	}
+
 	for _, list := range lists {
 		// Don't override the favorite state if it was already set from before (favorite saved filters do this)
 		if list.IsFavorite {
 			continue
 		}
 		list.IsFavorite = favs[list.ID]
+
+		if subscription, exists := subscriptions[list.ID]; exists {
+			list.Subscription = subscription
+		}
 	}
 
 	if len(fileIDs) == 0 {
