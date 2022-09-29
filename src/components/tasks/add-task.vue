@@ -164,13 +164,13 @@ async function addTask() {
 	const taskTitleBackup = newTaskTitle.value
 	const createdTasks: ITask[] = []
 	const tasksToCreate = parseSubtasksViaIndention(newTaskTitle.value)
-	const newTasks = tasksToCreate.map(async t => {
-		if (t.title === '') {
+	const newTasks = tasksToCreate.map(async ({title}) => {
+		if (title === '') {
 			return
 		}
 
 		const task = await taskStore.createNewTask({
-			title: t.title,
+			title,
 			listId: authStore.settings.defaultListId,
 			position: props.defaultPosition,
 		})
