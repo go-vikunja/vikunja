@@ -30,10 +30,7 @@
 			<ButtonLink class="api-config__change-button" @click="() => (configureApi = true)">{{ $t('apiConfig.change') }}</ButtonLink>
 		</div>
 
-		<message variant="success" v-if="successMsg !== '' && errorMsg === ''" class="mt-2">
-			{{ successMsg }}
-		</message>
-		<message variant="danger" v-if="errorMsg !== '' && successMsg === ''" class="mt-2">
+		<message variant="danger" v-if="errorMsg !== ''" class="mt-2">
 			{{ errorMsg }}
 		</message>
 	</div>
@@ -74,7 +71,6 @@ watch(() => props.configureOpen, (value) => {
 const {t} = useI18n({useScope: 'global'})
 
 const errorMsg = ref('')
-const successMsg = ref('')
 
 async function setApiUrl() {
 	if (apiUrl.value === '') {
@@ -99,7 +95,6 @@ async function setApiUrl() {
 		emit('foundApi', apiUrl.value)
 	} catch (e) {
 		// Still not found, url is still invalid
-		successMsg.value = ''
 		errorMsg.value = t('apiConfig.error', {domain: apiDomain.value})
 	}
 }
