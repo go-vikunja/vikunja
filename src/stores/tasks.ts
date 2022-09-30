@@ -38,9 +38,11 @@ function findPropertyByValue(object, key, value) {
 	)
 }
 
-// Check if the user exists
-function validateUsername(users: IUser[], username: IUser['username']) {
-	return findPropertyByValue(users, 'username', username)
+// Check if the user exists in the search results
+function validateUser(users: IUser[], username: IUser['username']) {
+	return findPropertyByValue(users, 'username', username) ||
+		findPropertyByValue(users, 'name', username) ||
+		findPropertyByValue(users, 'email', username)
 }
 
 // Check if the label exists
@@ -67,7 +69,7 @@ async function findAssignees(parsedTaskAssignees: string[]) {
 	const userService = new UserService()
 	const assignees = parsedTaskAssignees.map(async a => {
 		const users = await userService.getAll({}, {s: a})
-		return validateUsername(users, a)
+		return validateUser(users, a)
 	})
 
 	const validatedUsers = await Promise.all(assignees) 
