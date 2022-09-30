@@ -1,7 +1,7 @@
 <template>
 	<card class="filters has-overflow" :title="hasTitle ? $t('filters.title') : ''">
 		<div class="field">
-			<fancycheckbox v-model="params.filter_include_nulls">
+			<fancycheckbox v-model="params.filter_include_nulls" @change="change()">
 				{{ $t('filters.attributes.includeNulls') }}
 			</fancycheckbox>
 			<fancycheckbox
@@ -16,6 +16,7 @@
 			<fancycheckbox
 				v-if="!$route.name.includes('list.kanban') || !$route.name.includes('list.table')"
 				v-model="sortAlphabetically"
+				@change="change()"
 			>
 				{{ $t('filters.attributes.sortAlphabetically') }}
 			</fancycheckbox>
@@ -534,6 +535,7 @@ export default defineComponent({
 			} else {
 				this.params.filter_concat = 'or'
 			}
+			this.change()
 		},
 		setPriority() {
 			this.setSingleValueFilter('priority', 'priority', 'usePriority')
