@@ -118,7 +118,7 @@
 					v-if="isTaskEdit"
 					class="taskedit mt-0"
 					:title="$t('list.list.editTask')"
-					@close="() => isTaskEdit = false"
+					@close="closeTaskEditPane()"
 					:shadow="false"
 					:task="taskEditTask"
 				/>
@@ -139,7 +139,7 @@ export default { name: 'List' }
 </script>
 
 <script setup lang="ts">
-import {ref, computed, toRef, nextTick, onMounted, type PropType} from 'vue'
+import {ref, computed, toRef, nextTick, onMounted, type PropType, watch} from 'vue'
 import draggable from 'zhyswan-vuedraggable'
 import {useRoute, useRouter} from 'vue-router'
 
@@ -202,6 +202,16 @@ const DRAG_OPTIONS = {
 
 const taskEditTask = ref<ITask | null>(null)
 const isTaskEdit = ref(false)
+
+function closeTaskEditPane() {
+	isTaskEdit.value = false
+	taskEditTask.value = null
+}
+
+watch(
+	() => props.listId,
+	closeTaskEditPane,
+)
 
 const {
 	tasks,
