@@ -383,12 +383,12 @@ export const useTaskStore = defineStore('task', {
 					task: createdTask,
 					parsedLabels: parsedTask.labels,
 				})
+				return result
 			} catch (e) {
 				throw e
 			} finally {
 				cancel()
 			}
-			return result
 		},
 	},
 })
