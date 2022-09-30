@@ -70,7 +70,7 @@ require (
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/yaml.v3 v3.0.1
-	src.techknowlogick.com/xgo v1.4.1-0.20210311222705-d25c33fcd864
+	src.techknowlogick.com/xgo v1.5.1-0.20220906164532-735bfdfb90d9
 	src.techknowlogick.com/xormigrate v1.4.0
 	xorm.io/builder v0.3.9
 	xorm.io/core v0.7.3
