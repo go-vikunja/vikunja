@@ -384,8 +384,6 @@ export const useTaskStore = defineStore('task', {
 					parsedLabels: parsedTask.labels,
 				})
 				return result
-			} catch (e) {
-				throw e
 			} finally {
 				cancel()
 			}
