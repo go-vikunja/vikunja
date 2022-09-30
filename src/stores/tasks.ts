@@ -377,12 +377,17 @@ export const useTaskStore = defineStore('task', {
 			task.repeatAfter = parsedTask.repeats
 		
 			const taskService = new TaskService()
-			const createdTask = await taskService.create(task)
-			const result = await this.addLabelsToTask({
-				task: createdTask,
-				parsedLabels: parsedTask.labels,
-			})
-			cancel()
+			try {
+				const createdTask = await taskService.create(task)
+				const result = await this.addLabelsToTask({
+					task: createdTask,
+					parsedLabels: parsedTask.labels,
+				})
+			} catch (e) {
+				throw e
+			} finally {
+				cancel()
+			}
 			return result
 		},
 	},
