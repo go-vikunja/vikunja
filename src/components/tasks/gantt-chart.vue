@@ -40,8 +40,8 @@ import TaskCollectionService from '@/services/taskCollection'
 import TaskService from '@/services/task'
 import {format, parse} from 'date-fns'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
-import {useStore} from 'vuex'
-import Rights from '@/models/constants/rights.json'
+import {useStore} from '@/store'
+import {RIGHTS} from '@/constants/rights'
 import TaskModel from '@/models/task'
 import {useRouter} from 'vue-router'
 import Loading from '@/components/misc/loading.vue'
@@ -125,7 +125,7 @@ const ganttChartWidth = computed(() => {
 	return dateDiff * DAY_WIDTH_PIXELS
 })
 
-const canWrite = computed(() => store.state.currentList.maxRight > Rights.READ)
+const canWrite = computed(() => store.state.currentList.maxRight > RIGHTS.READ)
 
 const tasks = ref<Map<TaskModel['id'], TaskModel>>(new Map())
 const ganttBars = ref<GanttBarObject[][]>([])
