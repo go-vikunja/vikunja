@@ -139,7 +139,7 @@ export default { name: 'List' }
 </script>
 
 <script setup lang="ts">
-import {ref, computed, toRef, nextTick, onMounted} from 'vue'
+import {ref, computed, toRef, nextTick, onMounted, type PropType} from 'vue'
 import draggable from 'zhyswan-vuedraggable'
 import {useRoute, useRouter} from 'vue-router'
 
@@ -161,6 +161,9 @@ import {RIGHTS as Rights} from '@/constants/rights'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import type {ITask} from '@/modelTypes/ITask'
 import {isSavedFilter} from '@/helpers/savedFilter'
+import {useTaskStore} from '@/stores/tasks'
+
+import type {IList} from '@/modelTypes/IList'
 
 function sortTasks(tasks: ITask[]) {
 	if (tasks === null || Array.isArray(tasks) && tasks.length === 0) {
@@ -182,7 +185,7 @@ function sortTasks(tasks: ITask[]) {
 
 const props = defineProps({
 	listId: {
-		type: Number,
+		type: Number as PropType<IList['id']>,
 		required: true,
 	},
 })
@@ -224,6 +227,7 @@ const firstNewPosition = computed(() => {
 	return calculateItemPosition(null, tasks.value[0].position)
 })
 
+const taskStore = useTaskStore()
 const store = useStore()
 const list = computed(() => store.state.currentList)
 
@@ -238,6 +242,7 @@ onMounted(async () => {
 
 const route = useRoute()
 const router = useRouter()
+
 function searchTasks() {
 	// Only search if the search term changed
 	if (route.query as unknown as string === searchTerm.value) {
@@ -309,7 +314,7 @@ async function saveTaskPosition(e) {
 		position: calculateItemPosition(taskBefore !== null ? taskBefore.position : null, taskAfter !== null ? taskAfter.position : null),
 	}
 
-	const updatedTask = await this.$store.dispatch('tasks/update', newTask)
+	const updatedTask = await taskStore.update(newTask)
 	tasks.value[e.newIndex] = updatedTask
 }
 </script>

@@ -1,4 +1,4 @@
-import type { Module } from 'vuex'
+import {defineStore, acceptHMRUpdate} from 'pinia'
 import router from '@/router'
 import {formatISO} from 'date-fns'
 
@@ -7,8 +7,8 @@ import TaskAssigneeService from '@/services/taskAssignee'
 import LabelTaskService from '@/services/labelTask'
 import UserService from '@/services/user'
 
-import {HAS_TASKS} from '../mutation-types'
-import {setLoading} from '../helper'
+import {HAS_TASKS} from '../store/mutation-types'
+import {setLoadingPinia} from '../store/helper'
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {parseTaskText} from '@/modules/parseTaskText'
 
@@ -20,15 +20,16 @@ import LabelModel from '@/models/label'
 
 import type {ILabel} from '@/modelTypes/ILabel'
 import type {ITask} from '@/modelTypes/ITask'
-import type { IUser } from '@/modelTypes/IUser'
-import type { IAttachment } from '@/modelTypes/IAttachment'
-import type { IList } from '@/modelTypes/IList'
+import type {IUser} from '@/modelTypes/IUser'
+import type {IAttachment} from '@/modelTypes/IAttachment'
+import type {IList} from '@/modelTypes/IList'
 
-import type { RootStoreState, TaskState } from '@/store/types'
+import type {TaskState} from '@/store/types'
 import {useLabelStore} from '@/stores/labels'
 import {useListStore} from '@/stores/lists'
 import {useAttachmentStore} from '@/stores/attachments'
 import {playPop} from '@/helpers/playPop'
+import {store} from '@/store'
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
 function findPropertyByValue(object, key, value) {
@@ -43,7 +44,7 @@ function validateUsername(users: IUser[], username: IUser['username']) {
 }
 
 // Check if the label exists
-function validateLabel(labels: ILabel[], label: ILabel) {
+function validateLabel(labels: ILabel[], label: string) {
 	return findPropertyByValue(labels, 'title', label)
 }
 
@@ -58,7 +59,7 @@ async function addLabelToTask(task: ITask, label: ILabel) {
 	return response
 }
 
-async function findAssignees(parsedTaskAssignees) {
+async function findAssignees(parsedTaskAssignees: string[]) {
 	if (parsedTaskAssignees.length <= 0) {
 		return []
 	}
@@ -74,30 +75,31 @@ async function findAssignees(parsedTaskAssignees) {
 }
 
 
-const tasksStore : Module<TaskState, RootStoreState>= {
-	namespaced: true,
-	state: () => ({}),
+export const useTaskStore = defineStore('task', {
+	state: () : TaskState => ({
+		isLoading: false,
+	}),
 	actions: {
-		async loadTasks(ctx, params) {
+		async loadTasks(params) {
 			const taskService = new TaskService()
 
-			const cancel = setLoading(ctx, 'tasks')
+			const cancel = setLoadingPinia(this)
 			try {
 				const tasks = await taskService.getAll({}, params)
-				ctx.commit(HAS_TASKS, tasks.length > 0, {root: true})
+				store.commit(HAS_TASKS, tasks.length > 0)
 				return tasks
 			} finally {
 				cancel()
 			}
 		},
 
-		async update(ctx, task: ITask) {
-			const cancel = setLoading(ctx, 'tasks')
+		async update(task: ITask) {
+			const cancel = setLoadingPinia(this)
 
 			const taskService = new TaskService()
 			try {
 				const updatedTask = await taskService.update(task)
-				ctx.commit('kanban/setTaskInBucket', updatedTask, {root: true})
+				store.commit('kanban/setTaskInBucket', updatedTask)
 				if (task.done) {
 					playPop()
 				}
@@ -107,23 +109,23 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 			}
 		},
 
-		async delete(ctx, task: ITask) {
+		async delete(task: ITask) {
 			const taskService = new TaskService()
 			const response = await taskService.delete(task)
-			ctx.commit('kanban/removeTaskInBucket', task, {root: true})
+			store.commit('kanban/removeTaskInBucket', task)
 			return response
 		},
 
 		// Adds a task attachment in store.
 		// This is an action to be able to commit other mutations
-		addTaskAttachment(ctx, {
+		addTaskAttachment({
 			taskId,
 			attachment,
 		}: {
 			taskId: ITask['id']
 			attachment: IAttachment
 		}) {
-			const t = ctx.rootGetters['kanban/getTaskById'](taskId)
+			const t = store.getters['kanban/getTaskById'](taskId)
 			if (t.task !== null) {
 				const attachments = [
 					...t.task.attachments,
@@ -137,24 +139,25 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 						attachments,
 					},
 				}
-				ctx.commit('kanban/setTaskInBucketByIndex', newTask, {root: true})
+				store.commit('kanban/setTaskInBucketByIndex', newTask)
 			}
 			const attachmentStore = useAttachmentStore()
 			attachmentStore.add(attachment)
 		},
 
-		async addAssignee(ctx, {
+		async addAssignee({
 			user,
 			taskId,
 		}: {
 			user: IUser,
 			taskId: ITask['id']
 		}) {
-			const taskAssignee = new TaskAssigneeModel({userId: user.id, taskId: taskId})
-
 			const taskAssigneeService = new TaskAssigneeService()
-			const r = await taskAssigneeService.create(taskAssignee)
-			const t = ctx.rootGetters['kanban/getTaskById'](taskId)
+			const r = await taskAssigneeService.create(new TaskAssigneeModel({
+				userId: user.id,
+				taskId: taskId,
+			}))
+			const t = store.getters['kanban/getTaskById'](taskId)
 			if (t.task === null) {
 				// Don't try further adding a label if the task is not in kanban
 				// Usually this means the kanban board hasn't been accessed until now.
@@ -163,33 +166,32 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 				return r
 			}
 
-			const assignees = [
-				...t.task.assignees,
-				user,
-			]
-
-			ctx.commit('kanban/setTaskInBucketByIndex', {
+			store.commit('kanban/setTaskInBucketByIndex', {
 				...t,
 				task: {
 					...t.task,
-					assignees,
+					assignees: [
+						...t.task.assignees,
+						user,
+					],
 				},
-			}, {root: true})
+			})
 			return r
 		},
 
-		async removeAssignee(ctx, {
+		async removeAssignee({
 			user,
 			taskId,
 		}: {
 			user: IUser,
 			taskId: ITask['id']
 		}) {
-			const taskAssignee = new TaskAssigneeModel({userId: user.id, taskId: taskId})
-
 			const taskAssigneeService = new TaskAssigneeService()
-			const response = await taskAssigneeService.delete(taskAssignee)
-			const t = ctx.rootGetters['kanban/getTaskById'](taskId)
+			const response = await taskAssigneeService.delete(new TaskAssigneeModel({
+				userId: user.id,
+				taskId: taskId,
+			}))
+			const t = store.getters['kanban/getTaskById'](taskId)
 			if (t.task === null) {
 				// Don't try further adding a label if the task is not in kanban
 				// Usually this means the kanban board hasn't been accessed until now.
@@ -200,29 +202,30 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 
 			const assignees = t.task.assignees.filter(({ id }) => id !== user.id)
 
-			ctx.commit('kanban/setTaskInBucketByIndex', {
+			store.commit('kanban/setTaskInBucketByIndex', {
 				...t,
 				task: {
 					...t.task,
 					assignees,
 				},
-			}, {root: true})
+			})
 			return response
 
 		},
 
-		async addLabel(ctx, {
+		async addLabel({
 			label,
 			taskId,
 		} : {
 			label: ILabel,
 			taskId: ITask['id']
 		}) {
-			const labelTask = new LabelTaskModel({taskId, labelId: label.id})
-
 			const labelTaskService = new LabelTaskService()
-			const r = await labelTaskService.create(labelTask)
-			const t = ctx.rootGetters['kanban/getTaskById'](taskId)
+			const r = await labelTaskService.create(new LabelTaskModel({
+				taskId,
+				labelId: label.id,
+			}))
+			const t = store.getters['kanban/getTaskById'](taskId)
 			if (t.task === null) {
 				// Don't try further adding a label if the task is not in kanban
 				// Usually this means the kanban board hasn't been accessed until now.
@@ -231,28 +234,30 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 				return r
 			}
 
-			const labels = [
-				...t.task.labels,
-				label,
-			]
-
-			ctx.commit('kanban/setTaskInBucketByIndex', {
+			store.commit('kanban/setTaskInBucketByIndex', {
 				...t,
 				task: {
 					...t.task,
-					labels,
+					labels: [
+						...t.task.labels,
+						label,
+					],
 				},
-			}, {root: true})
+			})
 
 			return r
 		},
 
-		async removeLabel(ctx, {label, taskId}) {
-			const labelTask = new LabelTaskModel({taskId, labelId: label.id})
-
+		async removeLabel(
+			{label, taskId}:
+			{label: ILabel, taskId: ITask['id']},
+		) {
 			const labelTaskService = new LabelTaskService()
-			const response = await labelTaskService.delete(labelTask)
-			const t = ctx.rootGetters['kanban/getTaskById'](taskId)
+			const response = await labelTaskService.delete(new LabelTaskModel({
+				taskId, labelId:
+				label.id,
+			}))
+			const t = store.getters['kanban/getTaskById'](taskId)
 			if (t.task === null) {
 				// Don't try further adding a label if the task is not in kanban
 				// Usually this means the kanban board hasn't been accessed until now.
@@ -264,19 +269,22 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 			// Remove the label from the list
 			const labels = t.task.labels.filter(({ id }) => id !== label.id)
 
-			ctx.commit('kanban/setTaskInBucketByIndex', {
+			store.commit('kanban/setTaskInBucketByIndex', {
 				...t,
 				task: {
 					...t.task,
 					labels,
 				},
-			}, {root: true})
+			})
 
 			return response
 		},
 
 		// Do everything that is involved in finding, creating and adding the label to the task
-		async addLabelsToTask(_, { task, parsedLabels }) {
+		async addLabelsToTask(
+			{ task, parsedLabels }:
+			{ task: ITask, parsedLabels: string[] },
+		) {
 			if (parsedLabels.length <= 0) {
 				return task
 			}
@@ -299,10 +307,9 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 			return task
 		},
 
-		findListId(_, { list: listName, listId }: {
-			list: string,
-			listId: IList['id']
-		}) {
+		findListId(
+			{ list: listName, listId }:
+			{ list: string, listId: IList['id'] }) {
 			let foundListId = null
 			
 			// Uses the following ways to get the list id of the new task:
@@ -320,7 +327,7 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 		
 			//  3. Otherwise use the id from the route parameter
 			if (typeof router.currentRoute.value.params.listId !== 'undefined') {
-				foundListId = parseInt(router.currentRoute.value.params.listId)
+				foundListId = Number(router.currentRoute.value.params.listId)
 			}
 			
 			//  4. If none of the above worked, reject the promise with an error.
@@ -331,7 +338,7 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 			return foundListId
 		},
 
-		async createNewTask(ctx, { 
+		async createNewTask({
 			title,
 			bucketId,
 			listId,
@@ -339,10 +346,10 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 		} : 
 			Partial<ITask>,
 		) {
-			const cancel = setLoading(ctx, 'tasks')
+			const cancel = setLoadingPinia(this)
 			const parsedTask = parseTaskText(title, getQuickAddMagicMode())
 		
-			const foundListId = await ctx.dispatch('findListId', {
+			const foundListId = await this.findListId({
 				list: parsedTask.list,
 				listId: listId || 0,
 			})
@@ -369,7 +376,7 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 		
 			const taskService = new TaskService()
 			const createdTask = await taskService.create(task)
-			const result = await ctx.dispatch('addLabelsToTask', {
+			const result = await this.addLabelsToTask({
 				task: createdTask,
 				parsedLabels: parsedTask.labels,
 			})
@@ -377,6 +384,9 @@ const tasksStore : Module<TaskState, RootStoreState>= {
 			return result
 		},
 	},
-}
+})
 
-export default tasksStore
+// support hot reloading
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useTaskStore, import.meta.hot))
+}

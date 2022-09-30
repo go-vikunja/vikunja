@@ -32,11 +32,12 @@
 
 <script setup lang="ts">
 import {ref,computed, watch, type PropType} from 'vue'
-import {useStore} from '@/store'
 
 import Editor from '@/components/input/AsyncEditor'
 
 import type {ITask} from '@/modelTypes/ITask'
+import {useTaskStore} from '@/stores/tasks'
+import TaskModel from '@/models/task'
 
 
 const props = defineProps({
@@ -55,14 +56,14 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const task = ref<ITask>({description: ''})
+const task = ref<ITask>(new TaskModel())
 const saved = ref(false)
 
 // Since loading is global state, this variable ensures we're only showing the saving icon when saving the description.
 const saving = ref(false)
 
-const store = useStore()
-const loading = computed(() => store.state.loading)
+const taskStore = useTaskStore()
+const loading = computed(() => taskStore.isLoading)
 
 watch(
 	() => props.modelValue,
@@ -77,7 +78,7 @@ async function save() {
 
 	try {
 		// FIXME: don't update state from internal.
-		task.value = await store.dispatch('tasks/update', task.value)
+		task.value = await taskStore.update(task.value)
 		emit('update:modelValue', task.value)
 
 		saved.value = true

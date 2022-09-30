@@ -60,9 +60,11 @@ import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import LlamaCool from '@/assets/llama-cool.svg?component'
 import type {ITask} from '@/modelTypes/ITask'
 import {useAuthStore} from '@/stores/auth'
+import {useTaskStore} from '@/stores/tasks'
 
 const store = useStore()
 const authStore = useAuthStore()
+const taskStore = useTaskStore()
 const route = useRoute()
 const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
@@ -180,7 +182,7 @@ async function loadPendingTasks(from: string, to: string) {
 		}
 	}
 
-	tasks.value = await store.dispatch('tasks/loadTasks', params)
+	tasks.value = await taskStore.loadTasks(params)
 }
 
 // FIXME: this modification should happen in the store

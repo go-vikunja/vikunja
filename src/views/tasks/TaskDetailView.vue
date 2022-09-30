@@ -464,6 +464,7 @@ import type {IList} from '@/modelTypes/IList'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import {useNamespaceStore} from '@/stores/namespaces'
 import {useAttachmentStore} from '@/stores/attachments'
+import {useTaskStore} from '@/stores/tasks'
 
 function scrollIntoView(el) {
 	if (!el) {
@@ -696,7 +697,8 @@ export default defineComponent({
 				task.endDate = task.dueDate
 			}
 
-			this.task = await this.$store.dispatch('tasks/update', task)
+			
+			this.task = await useTaskStore().update(task)
 
 			if (!showNotification) {
 				return
@@ -728,7 +730,7 @@ export default defineComponent({
 		},
 
 		async deleteTask() {
-			await this.$store.dispatch('tasks/delete', this.task)
+			await useTaskStore().delete(this.task)
 			this.$message.success({message: this.$t('task.detail.deleteSuccess')})
 			this.$router.push({name: 'list.index', params: {listId: this.task.listId}})
 		},

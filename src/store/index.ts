@@ -14,7 +14,6 @@ import {
 	QUICK_ACTIONS_ACTIVE,
 } from './mutation-types'
 import kanban from './modules/kanban'
-import tasks from './modules/tasks'
 
 import ListModel from '@/models/list'
 
@@ -22,6 +21,7 @@ import ListService from '../services/list'
 import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 
 import type { RootStoreState, StoreState } from './types'
+import pinia from '@/pinia'
 import {useAuthStore} from '@/stores/auth'
 
 export const key: InjectionKey<Store<StoreState>> = Symbol()
@@ -35,7 +35,6 @@ export const store = createStore<RootStoreState>({
 	strict: import.meta.env.DEV,
 	modules: {
 		kanban,
-		tasks,
 	},
 	state: () => ({
 		loading: false,
@@ -132,7 +131,7 @@ export const store = createStore<RootStoreState>({
 		},
 		async loadApp() {
 			await checkAndSetApiUrl(window.API_URL)
-			const authStore = useAuthStore()
+			const authStore = useAuthStore(pinia)
 			await authStore.checkAuth()
 		},
 	},

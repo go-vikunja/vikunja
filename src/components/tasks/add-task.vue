@@ -43,12 +43,11 @@
 <script setup lang="ts">
 import {ref, watch, unref, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useStore} from '@/store'
 import {tryOnMounted, debouncedWatch, useWindowSize, type MaybeRef} from '@vueuse/core'
 
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
-import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import {useAuthStore} from '@/stores/auth'
+import {useTaskStore} from '@/stores/tasks'
 
 function cleanupTitle(title: string) {
 	return title.replace(/^((\* |\+ |- )(\[ \] )?)/g, '')
@@ -135,8 +134,8 @@ const newTaskTitle = ref('')
 const newTaskInput = useAutoHeightTextarea(newTaskTitle)
 
 const {t} = useI18n({useScope: 'global'})
-const store = useStore()
 const authStore = useAuthStore()
+const taskStore = useTaskStore()
 
 const errorMessage = ref('')
 
@@ -149,7 +148,7 @@ function resetEmptyTitleError(e) {
 	}
 }
 
-const loading = computed(() => store.state[LOADING] && store.state[LOADING_MODULE] === 'tasks')
+const loading = computed(() => taskStore.isLoading)
 async function addTask() {
 	if (newTaskTitle.value === '') {
 		errorMessage.value = t('list.create.addTitleRequired')
@@ -168,7 +167,7 @@ async function addTask() {
 			return
 		}
 
-		const task = await store.dispatch('tasks/createNewTask', {
+		const task = await taskStore.createNewTask({
 			title,
 			listId: authStore.settings.defaultListId,
 			position: props.defaultPosition,

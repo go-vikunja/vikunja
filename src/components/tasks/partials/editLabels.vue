@@ -40,7 +40,6 @@
 
 <script setup lang="ts">
 import {type PropType, ref, computed, shallowReactive, watch} from 'vue'
-import {useStore} from '@/store'
 import {useI18n} from 'vue-i18n'
 
 import LabelModel from '@/models/label'
@@ -49,8 +48,9 @@ import {success} from '@/message'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Multiselect from '@/components/input/multiselect.vue'
-import type { ILabel } from '@/modelTypes/ILabel'
-import { useLabelStore } from '@/stores/labels'
+import type {ILabel} from '@/modelTypes/ILabel'
+import {useLabelStore} from '@/stores/labels'
+import {useTaskStore} from '@/stores/tasks'
 
 const props = defineProps({
 	modelValue: {
@@ -69,7 +69,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const store = useStore()
 const {t} = useI18n({useScope: 'global'})
 
 const labelTaskService = shallowReactive(new LabelTaskService())
@@ -87,6 +86,7 @@ watch(
 	},
 )
 
+const taskStore = useTaskStore()
 const labelStore = useLabelStore()
 
 const foundLabels = computed(() => labelStore.filterLabelsByQuery(labels.value, query.value))
@@ -97,17 +97,13 @@ function findLabel(newQuery: string) {
 }
 
 async function addLabel(label: ILabel, showNotification = true) {
-	const bubble = () => {
-		emit('update:modelValue', labels.value)
-	}
-	
 	if (props.taskId === 0) {
-		bubble()
+		emit('update:modelValue', labels.value)
 		return
 	}
 
-	await store.dispatch('tasks/addLabel', {label, taskId: props.taskId})
-	bubble()
+	await taskStore.addLabel({label, taskId: props.taskId})
+	emit('update:modelValue', labels.value)
 	if (showNotification) {
 		success({message: t('task.label.addSuccess')})
 	}
@@ -115,7 +111,7 @@ async function addLabel(label: ILabel, showNotification = true) {
 
 async function removeLabel(label: ILabel) {
 	if (props.taskId !== 0) {
-		await store.dispatch('tasks/removeLabel', {label, taskId: props.taskId})
+		await taskStore.removeLabel({label, taskId: props.taskId})
 	}
 
 	for (const l in labels.value) {
