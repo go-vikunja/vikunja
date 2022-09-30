@@ -9,8 +9,10 @@ function cleanupTitle(title: string) {
 
 const spaceRegex = /^ */
 
-// taskTitles should be multiple lines of task tiles with indention to declare their parent/subtask 
-// relation between each other.
+/**
+ * @param taskTitles should be multiple lines of task tiles with indention to declare their parent/subtask
+ * relation between each other.
+ */
 export function parseSubtasksViaIndention(taskTitles: string): TaskWithParent[] {
 	const titles = taskTitles.split(/[\r\n]+/)
 
