@@ -1,6 +1,6 @@
 <template>
 	<card class="filters has-overflow" :title="hasTitle ? $t('filters.title') : ''">
-		<div class="field">
+		<div class="field is-flex is-flex-direction-column">
 			<fancycheckbox v-model="params.filter_include_nulls" @change="change()">
 				{{ $t('filters.attributes.includeNulls') }}
 			</fancycheckbox>
