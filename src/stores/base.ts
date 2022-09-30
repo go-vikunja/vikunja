@@ -11,7 +11,6 @@ import type {IList} from '@/modelTypes/IList'
 
 export interface RootStoreState {
 	loading: boolean,
-	loadingModule: null,
 
 	currentList: IList,
 	background: string,
@@ -27,7 +26,6 @@ export interface RootStoreState {
 export const useBaseStore = defineStore('base', {
 	state: () : RootStoreState => ({
 		loading: false,
-		loadingModule: null,
 
 		// This is used to highlight the current list in menu for all list related views
 		currentList: new ListModel({
@@ -49,11 +47,6 @@ export const useBaseStore = defineStore('base', {
 			this.loading = loading
 		},
 
-		setLoadingModule(module) {
-			this.loadingModule = module
-		},
-
-		// FIXME: same action as mutation name
 		setCurrentList(currentList: IList) {
 			// Server updates don't return the right. Therefore, the right is reset after updating the list which is
 			// confusing because all the buttons will disappear in that case. To prevent this, we're keeping the right
@@ -102,8 +95,7 @@ export const useBaseStore = defineStore('base', {
 			this.logoVisible = visible
 		},
 
-		// FIXME: update all actions handleSetCurrentList
-		async handleSetCurrentList({list, forceUpdate = false}) {
+		async handleSetCurrentList({list, forceUpdate = false} : {list: IList, forceUpdate: boolean}) {
 			if (list === null) {
 				this.setCurrentList({})
 				this.setBackground('')

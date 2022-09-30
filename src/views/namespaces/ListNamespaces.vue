@@ -79,17 +79,15 @@ import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
 import {useTitle} from '@/composables/useTitle'
 import {useStorage} from '@vueuse/core'
 
-import {useBaseStore} from '@/stores/base'
 import {useNamespaceStore} from '@/stores/namespaces'
 
 const {t} = useI18n()
-const baseStore = useBaseStore()
 const namespaceStore = useNamespaceStore()
 
 useTitle(() => t('namespace.title'))
 const showArchived = useStorage('showArchived', false)
 
-const loading = computed(() => baseStore.loading) // FIXME: shouldn't this reference the namespace store?
+const loading = computed(() => namespaceStore.isLoading)
 const namespaces = computed(() => {
 	return namespaceStore.namespaces.filter(n => showArchived.value ? true : !n.isArchived)
 	// return namespaceStore.namespaces.filter(n => showArchived.value ? true : !n.isArchived).map(n => {

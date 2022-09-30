@@ -3,7 +3,7 @@ import {acceptHMRUpdate, defineStore} from 'pinia'
 import {useI18n} from 'vue-i18n'
 
 import ListService from '@/services/list'
-import {setLoadingPinia} from '@/stores/helper'
+import {setModuleLoading} from '@/stores/helper'
 import {removeListFromHistory} from '@/modules/listHistory'
 import {createNewIndexer} from '@/indexes'
 import {useNamespaceStore} from './namespaces'
@@ -91,7 +91,7 @@ export const useListStore = defineStore('list', {
 		},
 
 		async createList(list: IList) {
-			const cancel = setLoadingPinia(this)
+			const cancel = setModuleLoading(this)
 			const listService = new ListService()
 
 			try {
@@ -107,7 +107,7 @@ export const useListStore = defineStore('list', {
 		},
 
 		async updateList(list: IList) {
-			const cancel = setLoadingPinia(this)
+			const cancel = setModuleLoading(this)
 			const listService = new ListService()
 
 			try {
@@ -143,7 +143,7 @@ export const useListStore = defineStore('list', {
 		},
 
 		async deleteList(list: IList) {
-			const cancel = setLoadingPinia(this)
+			const cancel = setModuleLoading(this)
 			const listService = new ListService()
 
 			try {

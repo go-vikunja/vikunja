@@ -4,7 +4,7 @@ import LabelService from '@/services/label'
 import {success} from '@/message'
 import {i18n} from '@/i18n'
 import {createNewIndexer} from '@/indexes'
-import {setLoadingPinia} from '@/stores/helper'
+import {setModuleLoading} from '@/stores/helper'
 import type {ILabel} from '@/modelTypes/ILabel'
 
 const {add, remove, update, search} = createNewIndexer('labels', ['title', 'description'])
@@ -85,7 +85,7 @@ export const useLabelStore = defineStore('label', {
 				return
 			}
 
-			const cancel = setLoadingPinia(this)
+			const cancel = setModuleLoading(this)
 
 			try {
 				const labels = await getAllLabels()
@@ -97,7 +97,7 @@ export const useLabelStore = defineStore('label', {
 		},
 
 		async deleteLabel(label: ILabel) {
-			const cancel = setLoadingPinia(this)
+			const cancel = setModuleLoading(this)
 			const labelService = new LabelService()
 
 			try {
@@ -111,7 +111,7 @@ export const useLabelStore = defineStore('label', {
 		},
 
 		async updateLabel(label: ILabel) {
-			const cancel = setLoadingPinia(this)
+			const cancel = setModuleLoading(this)
 			const labelService = new LabelService()
 
 			try {
@@ -125,7 +125,7 @@ export const useLabelStore = defineStore('label', {
 		},
 
 		async createLabel(label: ILabel) {
-			const cancel = setLoadingPinia(this)
+			const cancel = setModuleLoading(this)
 			const labelService = new LabelService()
 
 			try {

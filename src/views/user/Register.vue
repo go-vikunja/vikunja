@@ -77,10 +77,8 @@ import Message from '@/components/misc/message.vue'
 import {isEmail} from '@/helpers/isEmail'
 import Password from '@/components/input/password.vue'
 
-import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
 
-const baseStore = useBaseStore()
 const authStore = useAuthStore()
 
 // FIXME: use the `beforeEnter` hook of vue-router
@@ -97,7 +95,7 @@ const credentials = reactive({
 	password: '',
 })
 
-const isLoading = computed(() => baseStore.loading)
+const isLoading = computed(() => authStore.isLoading)
 const errorMessage = ref('')
 const validatePasswordInitially = ref(false)
 

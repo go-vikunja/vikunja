@@ -23,8 +23,7 @@ import type {IUser} from '@/modelTypes/IUser'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {IList} from '@/modelTypes/IList'
 
-import {setLoadingPinia} from '@/stores/helper'
-import {useBaseStore} from '@/stores/base'
+import {setModuleLoading} from '@/stores/helper'
 import {useLabelStore} from '@/stores/labels'
 import {useListStore} from '@/stores/lists'
 import {useAttachmentStore} from '@/stores/attachments'
@@ -79,29 +78,41 @@ async function findAssignees(parsedTaskAssignees: string[]) {
 }
 
 export interface TaskState {
+	tasks: { [id: ITask['id']]: ITask }
 	isLoading: boolean,
 }
 
 export const useTaskStore = defineStore('task', {
 	state: () : TaskState => ({
+		tasks: {},
 		isLoading: false,
 	}),
+	getters: {
+		hasTasks(state) {
+			return Object.keys(state.tasks).length > 0
+		},
+	},
 	actions: {
+		setTasks(tasks: ITask[]) {
+			tasks.forEach(task => {
+				this.tasks[task.id] = task
+			})
+		},
+
 		async loadTasks(params) {
 			const taskService = new TaskService()
 
-			const cancel = setLoadingPinia(this)
+			const cancel = setModuleLoading(this)
 			try {
-				const tasks = await taskService.getAll({}, params)
-				useBaseStore().setHasTasks(tasks.length > 0)
-				return tasks
+				this.tasks = await taskService.getAll({}, params)
+				return this.tasks
 			} finally {
 				cancel()
 			}
 		},
 
 		async update(task: ITask) {
-			const cancel = setLoadingPinia(this)
+			const cancel = setModuleLoading(this)
 
 			const taskService = new TaskService()
 			try {
@@ -358,7 +369,7 @@ export const useTaskStore = defineStore('task', {
 		} : 
 			Partial<ITask>,
 		) {
-			const cancel = setLoadingPinia(this)
+			const cancel = setModuleLoading(this)
 			const parsedTask = parseTaskText(title, getQuickAddMagicMode())
 		
 			const foundListId = await this.findListId({

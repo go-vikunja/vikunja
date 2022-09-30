@@ -6,14 +6,13 @@ import {objectToSnakeCase} from '@/helpers/case'
 import UserModel, { getAvatarUrl } from '@/models/user'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
-import {setLoadingPinia} from '@/stores/helper'
+import {setModuleLoading} from '@/stores/helper'
 import {success} from '@/message'
 import {redirectToProvider} from '@/helpers/redirectToProvider'
 import {AUTH_TYPES, type IUser} from '@/modelTypes/IUser'
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import router from '@/router'
 import {useConfigStore} from '@/stores/config'
-import {useBaseStore} from '@/stores/base'
 import UserSettingsModel from '@/models/userSettings'
 
 export interface AuthState {
@@ -104,8 +103,6 @@ export const useAuthStore = defineStore('auth', {
 		// Logs a user in with a set of credentials.
 		async login(credentials) {
 			const HTTP = HTTPFactory()
-			const baseStore = useBaseStore()
-			baseStore.setLoading(true)
 			this.setIsLoading(true)
 
 			// Delete an eventually preexisting old token
@@ -129,7 +126,6 @@ export const useAuthStore = defineStore('auth', {
 
 				throw e
 			} finally {
-				baseStore.setLoading(false)
 				this.setIsLoading(false)
 			}
 		},
@@ -138,8 +134,6 @@ export const useAuthStore = defineStore('auth', {
 		// Not sure if this is the right place to put the logic in, maybe a seperate js component would be better suited.
 		async register(credentials) {
 			const HTTP = HTTPFactory()
-			const baseStore = useBaseStore()
-			baseStore.setLoading(true)
 			this.setIsLoading(true)
 			try {
 				await HTTP.post('register', credentials)
@@ -151,15 +145,12 @@ export const useAuthStore = defineStore('auth', {
 
 				throw e
 			} finally {
-				baseStore.setLoading(false)
 				this.setIsLoading(false)
 			}
 		},
 
 		async openIdAuth({provider, code}) {
 			const HTTP = HTTPFactory()
-			const baseStore = useBaseStore()
-			baseStore.setLoading(true)
 			this.setIsLoading(true)
 
 			const data = {
@@ -176,7 +167,6 @@ export const useAuthStore = defineStore('auth', {
 				// Tell others the user is autheticated
 				this.checkAuth()
 			} finally {
-				baseStore.setLoading(false)
 				this.setIsLoading(false)
 			}
 		},
@@ -294,8 +284,7 @@ export const useAuthStore = defineStore('auth', {
 		}) {
 			const userSettingsService = new UserSettingsService()
 
-			// FIXME
-			const cancel = setLoadingPinia(this, this.setIsLoadingGeneralSettings)
+			const cancel = setModuleLoading(this, this.setIsLoadingGeneralSettings)
 			try {
 				saveLanguage(settings.language)
 				await userSettingsService.update(settings)

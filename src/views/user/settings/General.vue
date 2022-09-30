@@ -147,13 +147,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-import { useListStore } from '@/stores/lists'
-import { useAuthStore } from '@/stores/auth'
-
-export default defineComponent({
-	name: 'user-settings-general',
-})
+export default {name: 'user-settings-general'}
 </script>
 
 <script setup lang="ts">
@@ -168,14 +162,15 @@ import {availableLanguages} from '@/i18n'
 import {playSoundWhenDoneKey, playPopSound} from '@/helpers/playPop'
 import {getQuickAddMagicMode, setQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {createRandomID} from '@/helpers/randomId'
+import {objectIsEmpty} from '@/helpers/objectIsEmpty'
 import {success} from '@/message'
 import {AuthenticatedHTTPFactory} from '@/http-common'
 
-import {useBaseStore} from '@/stores/base'
-
 import {useColorScheme} from '@/composables/useColorScheme'
 import {useTitle} from '@/composables/useTitle'
-import {objectIsEmpty} from '@/helpers/objectIsEmpty'
+
+import {useListStore} from '@/stores/lists'
+import {useAuthStore} from '@/stores/auth'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.general.title')} - ${t('user.settings.title')}`)
@@ -228,7 +223,6 @@ function getPlaySoundWhenDoneSetting() {
 const playSoundWhenDone = ref(getPlaySoundWhenDoneSetting())
 const quickAddMagicMode = ref(getQuickAddMagicMode())
 
-const baseStore = useBaseStore()
 const authStore = useAuthStore()
 const settings = ref({...authStore.settings})
 const id = ref(createRandomID())
@@ -257,7 +251,7 @@ const defaultList = computed({
 		settings.value.defaultListId = l ? l.id : DEFAULT_LIST_ID
 	},
 })
-const loading = computed(() => baseStore.loading && baseStore.loadingModule === 'general-settings')
+const loading = computed(() => authStore.isLoadingGeneralSettings)
 
 watch(
 	playSoundWhenDone,

@@ -114,7 +114,6 @@ import {getLastVisited, clearLastVisited} from '../../helpers/saveLastVisited'
 import Password from '@/components/input/password.vue'
 import {setTitle} from '@/helpers/setTitle'
 
-import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 
@@ -172,13 +171,11 @@ export default defineComponent({
 		hasOpenIdProviders() {
 			return this.openidConnect.enabled && this.openidConnect.providers?.length > 0
 		},
-		...mapState(useBaseStore, {
-			isLoading: state => state.loading,
-		}),
 
 		...mapState(useAuthStore, {
 			needsTotpPasscode: state => state.needsTotpPasscode,
 			authenticated: state => state.authenticated,
+			isLoading: state => state.isLoading,
 		}),
 
 		...mapState(useConfigStore, {
@@ -195,16 +192,6 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		setLoading() {
-			const timeout = setTimeout(() => {
-				this.isLoading = true
-			}, 100)
-			return () => {
-				clearTimeout(timeout)
-				this.isLoading = false
-			}
-		},
-
 		async submit() {
 			this.errorMessage = ''
 			// Some browsers prevent Vue bindings from working with autofilled values.

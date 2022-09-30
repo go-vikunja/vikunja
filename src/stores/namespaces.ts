@@ -1,7 +1,7 @@
 import {defineStore, acceptHMRUpdate} from 'pinia'
 
 import NamespaceService from '../services/namespace'
-import {setLoadingPinia} from '@/stores/helper'
+import {setModuleLoading} from '@/stores/helper'
 import {createNewIndexer} from '@/indexes'
 import type {INamespace} from '@/modelTypes/INamespace'
 import type {IList} from '@/modelTypes/IList'
@@ -139,7 +139,7 @@ export const useNamespaceStore = defineStore('namespace', {
 		},
 
 		async loadNamespaces() {
-			const cancel = setLoadingPinia(this)
+			const cancel = setModuleLoading(this)
 
 			const namespaceService = new NamespaceService()
 			try {
@@ -174,7 +174,7 @@ export const useNamespaceStore = defineStore('namespace', {
 		},
 
 		async deleteNamespace(namespace: INamespace) {
-			const cancel = setLoadingPinia(this)
+			const cancel = setModuleLoading(this)
 			const namespaceService = new NamespaceService()
 
 			try {
@@ -187,7 +187,7 @@ export const useNamespaceStore = defineStore('namespace', {
 		},
 
 		async createNamespace(namespace: INamespace) {
-			const cancel = setLoadingPinia(this)
+			const cancel = setModuleLoading(this)
 			const namespaceService = new NamespaceService()
 
 			try {

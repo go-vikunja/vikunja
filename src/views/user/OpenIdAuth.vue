@@ -22,7 +22,6 @@ import {getErrorText} from '@/message'
 import Message from '@/components/misc/message.vue'
 import {clearLastVisited, getLastVisited} from '@/helpers/saveLastVisited'
 
-import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
 
 const {t} = useI18n({useScope: 'global'})
@@ -30,10 +29,9 @@ const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
 const route = useRoute()
 
-const baseStore = useBaseStore()
 const authStore = useAuthStore()
 
-const loading = computed(() => baseStore.loading)
+const loading = computed(() => authStore.isLoading)
 const errorMessage = ref('')
 
 async function authenticateWithCode() {

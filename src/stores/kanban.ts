@@ -8,7 +8,7 @@ import {success} from '@/message'
 import BucketService from '@/services/bucket'
 import TaskCollectionService from '@/services/taskCollection'
 
-import {setLoadingPinia} from '@/stores/helper'
+import {setModuleLoading} from '@/stores/helper'
 
 import type { ITask } from '@/modelTypes/ITask'
 import type { IList } from '@/modelTypes/IList'
@@ -261,7 +261,7 @@ export const useKanbanStore = defineStore('kanban', {
 		},
 
 		async loadBucketsForList({listId, params}: {listId: IList['id'], params}) {
-			const cancel = setLoadingPinia(this)
+			const cancel = setModuleLoading(this)
 
 			// Clear everything to prevent having old buckets in the list if loading the buckets from this list takes a few moments
 			this.setBuckets([])
@@ -295,7 +295,7 @@ export const useKanbanStore = defineStore('kanban', {
 				return
 			}
 
-			const cancel = setLoadingPinia(this)
+			const cancel = setModuleLoading(this)
 			this.setBucketLoading({bucketId: bucketId, loading: true})
 
 			const params = JSON.parse(JSON.stringify(ps))
@@ -338,7 +338,7 @@ export const useKanbanStore = defineStore('kanban', {
 		},
 
 		async createBucket(bucket: IBucket) {
-			const cancel = setLoadingPinia(this)
+			const cancel = setModuleLoading(this)
 
 			const bucketService = new BucketService()
 			try {
@@ -351,7 +351,7 @@ export const useKanbanStore = defineStore('kanban', {
 		},
 
 		async deleteBucket({bucket, params}: {bucket: IBucket, params}) {
-			const cancel = setLoadingPinia(this)
+			const cancel = setModuleLoading(this)
 
 			const bucketService = new BucketService()
 			try {
@@ -366,7 +366,7 @@ export const useKanbanStore = defineStore('kanban', {
 		},
 
 		async updateBucket(updatedBucketData: IBucket) {
-			const cancel = setLoadingPinia(this)
+			const cancel = setModuleLoading(this)
 
 			const bucketIndex = findIndexById(this.buckets, updatedBucketData.id)
 			const oldBucket = cloneDeep(this.buckets[bucketIndex])
