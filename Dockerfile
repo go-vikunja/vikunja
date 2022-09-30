@@ -6,34 +6,24 @@ WORKDIR /build
 ARG USE_RELEASE=false
 ARG RELEASE_VERSION=main
 
+ENV PNPM_CACHE_FOLDER .cache/pnpm/
+ADD .  ./
+
 RUN \
   if [ $USE_RELEASE = true ]; then \
     wget https://dl.vikunja.io/frontend/vikunja-frontend-$RELEASE_VERSION.zip -O frontend-release.zip && \
     unzip frontend-release.zip -d dist/ && \
     exit 0; \
-  fi
-
-ENV PNPM_CACHE_FOLDER .cache/pnpm/
-
-# pnpm fetch does require only lockfile
-COPY pnpm-lock.yaml ./
-
-RUN \
+  fi && \
   # https://pnpm.io/installation#using-corepack
   corepack enable && \
-	# we don't use corepack prepare here by intend since
-	# we have renovate to keep our dependencies up to date
+  # we don't use corepack prepare here by intend since
+  # we have renovate to keep our dependencies up to date
   # Build the frontend
-	pnpm fetch --prod
-
-ADD .  ./
-
-RUN apk add --no-cache git
-
-RUN \
-	pnpm install -r --offline --prod && \
-	echo '{"VERSION": "'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'"}' > src/version.json && \
-	pnpm run build
+  pnpm install && \
+  apk add --no-cache git && \
+  echo '{"VERSION": "'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'"}' > src/version.json && \
+  pnpm run build
 
 # Stage 2: copy 
 FROM nginx:alpine
