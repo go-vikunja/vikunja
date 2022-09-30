@@ -92,10 +92,10 @@ func getUndoneOverdueTasks(s *xorm.Session, now time.Time) (usersWithTasks map[i
 			if !exists {
 				uts[t.User.ID] = &userWithTasks{
 					user:  t.User,
-					tasks: []*Task{},
+					tasks: make(map[int64]*Task),
 				}
 			}
-			uts[t.User.ID].tasks = append(uts[t.User.ID].tasks, t.Task)
+			uts[t.User.ID].tasks[t.Task.ID] = t.Task
 		}
 	}
 
@@ -104,7 +104,7 @@ func getUndoneOverdueTasks(s *xorm.Session, now time.Time) (usersWithTasks map[i
 
 type userWithTasks struct {
 	user  *user.User
-	tasks []*Task
+	tasks map[int64]*Task
 }
 
 // RegisterOverdueReminderCron registers a function which checks once a day for tasks that are overdue and not done.

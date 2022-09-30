@@ -18,6 +18,7 @@ package models
 
 import (
 	"bufio"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -230,14 +231,23 @@ func (n *UndoneTaskOverdueNotification) Name() string {
 // UndoneTasksOverdueNotification represents a UndoneTasksOverdueNotification notification
 type UndoneTasksOverdueNotification struct {
 	User  *user.User
-	Tasks []*Task
+	Tasks map[int64]*Task
 }
 
 // ToMail returns the mail notification for UndoneTasksOverdueNotification
 func (n *UndoneTasksOverdueNotification) ToMail() *notifications.Mail {
 
-	overdueLine := ""
+	sortedTasks := make([]*Task, 0, len(n.Tasks))
 	for _, task := range n.Tasks {
+		sortedTasks = append(sortedTasks, task)
+	}
+
+	sort.Slice(sortedTasks, func(i, j int) bool {
+		return sortedTasks[i].DueDate.Before(sortedTasks[j].DueDate)
+	})
+
+	overdueLine := ""
+	for _, task := range sortedTasks {
 		until := time.Until(task.DueDate).Round(1*time.Hour) * -1
 		overdueLine += `* [` + task.Title + `](` + config.ServiceFrontendurl.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `), overdue since ` + utils.HumanizeDuration(until) + "\n"
 	}
