@@ -162,7 +162,9 @@ async function addTask() {
 	}
 
 	const taskTitleBackup = newTaskTitle.value
-	const createdTasks: ITask[] = []
+	// This allows us to find the tasks with the title they had before being parsed
+	// by quick add magic.
+	const createdTasks: { [key: ITask['title']]: ITask } = {}
 	const tasksToCreate = parseSubtasksViaIndention(newTaskTitle.value)
 	const newTasks = tasksToCreate.map(async ({title}) => {
 		if (title === '') {
@@ -174,7 +176,7 @@ async function addTask() {
 			listId: authStore.settings.defaultListId,
 			position: props.defaultPosition,
 		})
-		createdTasks.push(task)
+		createdTasks[title] = task
 		return task
 	})
 
@@ -184,7 +186,7 @@ async function addTask() {
 
 		const taskRelationService = new TaskRelationService()
 		const relations = tasksToCreate.map(async t => {
-			const createdTask = createdTasks.find(ct => ct.title === t.title)
+			const createdTask = createdTasks[t.title]
 			if (typeof createdTask === 'undefined') {
 				return
 			}
@@ -194,7 +196,7 @@ async function addTask() {
 				return
 			}
 
-			const createdParentTask = createdTasks.find(ct => ct.title === t.parent)
+			const createdParentTask = createdTasks[t.parent]
 			if (typeof createdTask === 'undefined' || typeof createdParentTask === 'undefined') {
 				return
 			}
