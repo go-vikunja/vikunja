@@ -54,9 +54,11 @@
 <script setup lang="ts">
 import {ref, shallowRef, computed, watch, unref } from 'vue'
 import {useRouter, useRoute} from 'vue-router'
+import {useStore} from '@/store'
 import {success} from '@/message'
 import {useI18n} from 'vue-i18n'
 import type {MaybeRef} from '@vueuse/core'
+import {CURRENT_LIST} from '@/store/mutation-types'
 
 import {default as Editor} from '@/components/input/AsyncEditor'
 import CreateEdit from '@/components/misc/create-edit.vue'
@@ -113,6 +115,7 @@ function useSavedFilter(listId: MaybeRef<IList['id']>) {
 }
 
 const route = useRoute()
+const store = useStore()
 const listId =	computed(() => Number(route.params.listId as string))
 
 const {
@@ -126,6 +129,7 @@ const router = useRouter()
 
 async function saveSavedFilter() {
 	await save()
+	await store.dispatch(CURRENT_LIST, {list: filter})
 	router.back()
 }
 </script>
