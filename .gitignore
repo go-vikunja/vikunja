@@ -5,6 +5,7 @@ config.yml
 config.yaml
 !docs/config.yml
 !.github/ISSUE_TEMPLATE/config.yml
+!.gitea/ISSUE_TEMPLATE/config.yml
 docs/themes/
 *.db
 Run
