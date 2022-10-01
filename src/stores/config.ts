@@ -9,7 +9,7 @@ export interface ConfigState {
 	frontendUrl: string,
 	motd: string,
 	linkSharingEnabled: boolean,
-	maxFileSize: '20MB',
+	maxFileSize: string,
 	registrationEnabled: boolean,
 	availableMigrators: [],
 	taskAttachmentsEnabled: boolean,
