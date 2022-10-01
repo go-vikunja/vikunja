@@ -335,7 +335,7 @@ func getListsForNamespaces(s *xorm.Session, namespaceIDs []int64, archived bool)
 func getSharedListsInNamespace(s *xorm.Session, archived bool, doer *user.User) (sharedListsNamespace *NamespaceWithLists, err error) {
 	// Create our pseudo namespace to hold the shared lists
 	sharedListsPseudonamespace := SharedListsPseudoNamespace
-	sharedListsPseudonamespace.Owner = doer
+	sharedListsPseudonamespace.OwnerID = doer.ID
 	sharedListsNamespace = &NamespaceWithLists{
 		sharedListsPseudonamespace,
 		[]*List{},
@@ -385,12 +385,13 @@ func getSharedListsInNamespace(s *xorm.Session, archived bool, doer *user.User) 
 func getFavoriteLists(s *xorm.Session, lists []*List, namespaceIDs []int64, doer *user.User) (favoriteNamespace *NamespaceWithLists, err error) {
 	// Create our pseudo namespace with favorite lists
 	pseudoFavoriteNamespace := FavoritesPseudoNamespace
-	pseudoFavoriteNamespace.Owner = doer
+	pseudoFavoriteNamespace.OwnerID = doer.ID
 	favoriteNamespace = &NamespaceWithLists{
 		Namespace: pseudoFavoriteNamespace,
 		Lists:     []*List{{}},
 	}
 	*favoriteNamespace.Lists[0] = FavoritesPseudoList // Copying the list to be able to modify it later
+	favoriteNamespace.Lists[0].Owner = doer
 
 	for _, list := range lists {
 		if !list.IsFavorite {
@@ -448,7 +449,7 @@ func getSavedFilters(s *xorm.Session, doer *user.User) (savedFiltersNamespace *N
 	}
 
 	savedFiltersPseudoNamespace := SavedFiltersPseudoNamespace
-	savedFiltersPseudoNamespace.Owner = doer
+	savedFiltersPseudoNamespace.OwnerID = doer.ID
 	savedFiltersNamespace = &NamespaceWithLists{
 		Namespace: savedFiltersPseudoNamespace,
 		Lists:     make([]*List, 0, len(savedFilters)),
@@ -517,6 +518,7 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 	if err != nil {
 		return nil, 0, 0, err
 	}
+	ownerMap[doer.ID] = doer
 
 	if n.NamespacesOnly {
 		all := makeNamespaceSlice(namespaces, ownerMap, subscriptionsMap)
