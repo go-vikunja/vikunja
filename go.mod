@@ -72,8 +72,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	src.techknowlogick.com/xgo v1.5.1-0.20220906164532-735bfdfb90d9
 	src.techknowlogick.com/xormigrate v1.4.0
-	xorm.io/builder v0.3.9
-	xorm.io/xorm v1.1.2
+	xorm.io/builder v0.3.12
+	xorm.io/xorm v1.3.2
 )
 
 require (
@@ -97,6 +97,7 @@ require (
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/spec v0.20.4 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
+	github.com/goccy/go-json v0.9.11 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
