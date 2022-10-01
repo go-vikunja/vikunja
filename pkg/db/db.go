@@ -149,11 +149,12 @@ func parsePostgreSQLHostPort(info string) (string, string) {
 
 func initPostgresEngine() (engine *xorm.Engine, err error) {
 	host, port := parsePostgreSQLHostPort(config.DatabaseHost.GetString())
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s sslcert=%s sslkey=%s sslrootcert=%s",
-		host,
-		port,
+	// postgresql://username:password@host:port/dbname[?paramspec]
+	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s&sslcert=%s&sslkey=%s&sslrootcert=%s",
 		config.DatabaseUser.GetString(),
 		config.DatabasePassword.GetString(),
+		host,
+		port,
 		config.DatabaseDatabase.GetString(),
 		config.DatabaseSslMode.GetString(),
 		config.DatabaseSslCert.GetString(),
