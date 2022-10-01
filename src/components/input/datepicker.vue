@@ -88,12 +88,10 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
-
+<script setup lang="ts">
+import {ref, onMounted, onBeforeUnmount, toRef, watch, computed, type PropType} from 'vue'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
-import {i18n} from '@/i18n'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
@@ -102,146 +100,140 @@ import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
-import {mapState} from 'pinia'
 import {useAuthStore} from '@/stores/auth'
+import {useI18n} from 'vue-i18n'
 
-export default defineComponent({
-	name: 'datepicker',
-	data() {
-		return {
-			date: null,
-			show: false,
-			changed: false,
-		}
+const props = defineProps({
+	modelValue: {
+		type: [Date, null, String] as PropType<Date | null | string>,
+		validator: prop => prop instanceof Date || prop === null || typeof prop === 'string',
+		default: null,
 	},
-	components: {
-		flatPickr,
-		BaseButton,
-	},
-	props: {
-		modelValue: {
-			validator: prop => prop instanceof Date || prop === null || typeof prop === 'string',
-		},
-		chooseDateLabel: {
-			type: String,
-			default() {
-				return i18n.global.t('input.datepicker.chooseDate')
-			},
-		},
-		disabled: {
-			type: Boolean,
-			default: false,
+	chooseDateLabel: {
+		type: String,
+		default() {
+			const {t} = useI18n({useScope: 'global'})
+			return t('input.datepicker.chooseDate')
 		},
 	},
-	emits: ['update:modelValue', 'close', 'close-on-change'],
-	mounted() {
-		document.addEventListener('click', this.hideDatePopup)
-	},
-	beforeUnmount() {
-		document.removeEventListener('click', this.hideDatePopup)
-	},
-	watch: {
-		modelValue: {
-			handler: 'setDateValue',
-			immediate: true,
-		},
-	},
-	computed: {
-		...mapState(useAuthStore, {
-			weekStart: (state) => state.settings.weekStart,
-		}),
-		flatPickerConfig() {
-			return {
-				altFormat: this.$t('date.altFormatLong'),
-				altInput: true,
-				dateFormat: 'Y-m-d H:i',
-				enableTime: true,
-				time_24hr: true,
-				inline: true,
-				locale: {
-					firstDayOfWeek: this.weekStart,
-				},
-			}
-		},
-		// Since flatpickr dates are strings, we need to convert them to native date objects.
-		// To make that work, we need a separate variable since flatpickr does not have a change event.
-		flatPickrDate: {
-			set(newValue) {
-				this.date = createDateFromString(newValue)
-				this.updateData()
-			},
-			get() {
-				if (!this.date) {
-					return ''
-				}
-
-				return formatDate(this.date, 'yyy-LL-dd H:mm')
-			},
-		},
-	},
-	methods: {
-		formatDateShort,
-		setDateValue(newVal) {
-			if (newVal === null) {
-				this.date = null
-				return
-			}
-			this.date = createDateFromString(newVal)
-		},
-		updateData() {
-			this.changed = true
-			this.$emit('update:modelValue', this.date)
-		},
-		toggleDatePopup() {
-			if (this.disabled) {
-				return
-			}
-
-			this.show = !this.show
-		},
-		hideDatePopup(e) {
-			if (this.show) {
-				closeWhenClickedOutside(e, this.$refs.datepickerPopup, this.close)
-			}
-		},
-		close() {
-			// Kind of dirty, but the timeout allows us to enter a time and click on "confirm" without
-			// having to click on another input field before it is actually used.
-			setTimeout(() => {
-				this.show = false
-				this.$emit('close', this.changed)
-				if (this.changed) {
-					this.changed = false
-					this.$emit('close-on-change', this.changed)
-				}
-			}, 200)
-		},
-		setDate(date) {
-			if (this.date === null) {
-				this.date = new Date()
-			}
-
-			const interval = calculateDayInterval(date)
-			const newDate = new Date()
-			newDate.setDate(newDate.getDate() + interval)
-			newDate.setHours(calculateNearestHours(newDate))
-			newDate.setMinutes(0)
-			newDate.setSeconds(0)
-			this.date = newDate
-			this.flatPickrDate = newDate
-			this.updateData()
-		},
-		getDayIntervalFromString(date) {
-			return calculateDayInterval(date)
-		},
-		getWeekdayFromStringInterval(date) {
-			const interval = calculateDayInterval(date)
-			const newDate = new Date()
-			newDate.setDate(newDate.getDate() + interval)
-			return formatDate(newDate, 'E')
-		},
+	disabled: {
+		type: Boolean,
+		default: false,
 	},
 })
+
+const emit = defineEmits(['update:modelValue', 'close', 'close-on-change'])
+
+const {t} = useI18n({useScope: 'global'})
+
+const date = ref<Date | null>()
+const show = ref(false)
+const changed = ref(false)
+
+onMounted(() => document.addEventListener('click', hideDatePopup))
+onBeforeUnmount(() =>document.removeEventListener('click', hideDatePopup))
+
+const modelValue = toRef(props, 'modelValue')
+watch(
+	modelValue,
+	setDateValue,
+	{immediate: true},
+)
+
+const authStore = useAuthStore()
+const weekStart = computed(() => authStore.settings.weekStart)
+const flatPickerConfig = computed(() => ({
+	altFormat: t('date.altFormatLong'),
+	altInput: true,
+	dateFormat: 'Y-m-d H:i',
+	enableTime: true,
+	time_24hr: true,
+	inline: true,
+	locale: {
+		firstDayOfWeek: weekStart.value,
+	},
+}))
+
+// Since flatpickr dates are strings, we need to convert them to native date objects.
+// To make that work, we need a separate variable since flatpickr does not have a change event.
+const flatPickrDate = computed({
+	set(newValue: string | Date) {
+		date.value = createDateFromString(newValue)
+		updateData()
+	},
+	get() {
+		if (!date.value) {
+			return ''
+		}
+
+		return formatDate(date.value, 'yyy-LL-dd H:mm')
+	},
+})
+
+
+function setDateValue(dateString: string | Date | null) {
+	if (dateString === null) {
+		date.value = null
+		return
+	}
+	date.value = createDateFromString(dateString)
+}
+
+function updateData() {
+	changed.value = true
+	emit('update:modelValue', date.value)
+}
+
+function toggleDatePopup() {
+	if (props.disabled) {
+		return
+	}
+
+	show.value = !show.value
+}
+
+const datepickerPopup = ref<HTMLElement | null>(null)
+function hideDatePopup(e) {
+	if (show.value) {
+		closeWhenClickedOutside(e, datepickerPopup.value, close)
+	}
+}
+
+function close() {
+	// Kind of dirty, but the timeout allows us to enter a time and click on "confirm" without
+	// having to click on another input field before it is actually used.
+	setTimeout(() => {
+		show.value = false
+		emit('close', changed.value)
+		if (changed.value) {
+			changed.value = false
+			emit('close-on-change', changed.value)
+		}
+	}, 200)
+}
+
+function setDate(dateString: string) {
+	if (date.value === null) {
+		date.value = new Date()
+	}
+
+	const interval = calculateDayInterval(dateString)
+	const newDate = new Date()
+	newDate.setDate(newDate.getDate() + interval)
+	newDate.setHours(calculateNearestHours(newDate))
+	newDate.setMinutes(0)
+	newDate.setSeconds(0)
+	date.value = newDate
+	flatPickrDate.value = newDate
+	updateData()
+}
+
+function getWeekdayFromStringInterval(dateString: string) {
+	const interval = calculateDayInterval(dateString)
+	const newDate = new Date()
+	newDate.setDate(newDate.getDate() + interval)
+	return formatDate(newDate, 'E')
+}
 </script>
 
 <style lang="scss" scoped>

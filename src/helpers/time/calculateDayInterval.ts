@@ -1,5 +1,5 @@
-export function calculateDayInterval(date, currentDay = (new Date().getDay())) {
-	switch (date) {
+export function calculateDayInterval(dateString: string, currentDay = (new Date().getDay())) {
+	switch (dateString) {
 		case 'today':
 			return 0
 		case 'tomorrow':
