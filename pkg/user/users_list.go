@@ -19,8 +19,11 @@ package user
 import (
 	"strings"
 
+	"code.vikunja.io/api/pkg/db"
+
 	"xorm.io/builder"
 	"xorm.io/xorm"
+	"xorm.io/xorm/schemas"
 )
 
 type ListUserOpts struct {
@@ -45,14 +48,22 @@ func ListUsers(s *xorm.Session, search string, opts *ListUserOpts) (users []*Use
 
 	if search != "" {
 		for _, queryPart := range strings.Split(search, ",") {
+			var usernameCond builder.Cond = builder.Eq{"username": queryPart}
+			if db.Type() == schemas.POSTGRES {
+				usernameCond = builder.Expr("username ILIKE ?", queryPart)
+			}
+			if db.Type() == schemas.SQLITE {
+				usernameCond = builder.Expr("username = ? COLLATE NOCASE", queryPart)
+			}
+
 			conds = append(conds,
-				builder.Eq{"username": queryPart},
+				usernameCond,
 				builder.And(
 					builder.Eq{"email": queryPart},
 					builder.Eq{"discoverable_by_email": true},
 				),
 				builder.And(
-					builder.Like{"name", "%" + queryPart + "%"},
+					db.ILIKE("name", queryPart),
 					builder.Eq{"discoverable_by_name": true},
 				),
 			)

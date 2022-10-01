@@ -369,6 +369,16 @@ func TestListUsers(t *testing.T) {
 		assert.True(t, len(all) > 0)
 		assert.Equal(t, all[0].Username, "user1")
 	})
+	t.Run("case insensitive", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		all, err := ListUsers(s, "uSEr1", nil)
+		assert.NoError(t, err)
+		assert.True(t, len(all) > 0)
+		assert.Equal(t, all[0].Username, "user1")
+	})
 	t.Run("all users", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
