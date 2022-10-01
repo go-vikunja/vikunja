@@ -105,6 +105,10 @@ type item struct {
 	DateCompleted   time.Time   `json:"date_completed"`
 }
 
+type itemWrapper struct {
+	Item *item `json:"item"`
+}
+
 type doneItem struct {
 	CompletedDate time.Time `json:"completed_date"`
 	Content       string    `json:"content"`
@@ -115,7 +119,8 @@ type doneItem struct {
 }
 
 type doneItemSync struct {
-	Items []*doneItem `json:"items"`
+	Items    []*doneItem         `json:"items"`
+	Projects map[string]*project `json:"projects"`
 }
 
 type fileAttachment struct {
@@ -358,6 +363,11 @@ func convertTodoistToVikunja(sync *sync, doneItems map[int64]*doneItem) (fullVik
 
 		tasks[i.ID] = task
 
+		if _, exists := lists[i.ProjectID]; !exists {
+			log.Debugf("[Todoist Migration] Tried to put item %d in project %d but the project does not exist", i.ID, i.ProjectID)
+			continue
+		}
+
 		lists[i.ProjectID].Tasks = append(lists[i.ProjectID].Tasks, task)
 	}
 
@@ -540,33 +550,62 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 	}
 
 	log.Debugf("[Todoist Migration] Getting done items for user %d", u.ID)
-	// Get all done tasks
-	resp, err = migration.DoPost("https://api.todoist.com/sync/v8/completed/get_all", form)
-	if err != nil {
-		return
-	}
-	defer resp.Body.Close()
 
-	completedSyncResponse := &doneItemSync{}
-	err = json.NewDecoder(resp.Body).Decode(completedSyncResponse)
-	if err != nil {
-		return
-	}
+	// Get all done tasks and projects
+	offset := 0
+	doneItems := make(map[int64]*doneItem)
 
-	sort.Slice(completedSyncResponse.Items, func(i, j int) bool {
-		return completedSyncResponse.Items[i].CompletedDate.After(completedSyncResponse.Items[j].CompletedDate)
-	})
-
-	doneItems := make(map[int64]*doneItem, len(completedSyncResponse.Items))
-	for _, i := range completedSyncResponse.Items {
-		if _, has := doneItems[i.TaskID]; has {
-			// Only set the newest completion date
-			continue
+	for {
+		resp, err = migration.DoPost("https://api.todoist.com/sync/v8/completed/get_all?limit=200&offset="+strconv.Itoa(offset), form)
+		if err != nil {
+			return
 		}
-		doneItems[i.TaskID] = i
+		defer resp.Body.Close()
+
+		completedSyncResponse := &doneItemSync{}
+		err = json.NewDecoder(resp.Body).Decode(completedSyncResponse)
+		if err != nil {
+			return
+		}
+
+		sort.Slice(completedSyncResponse.Items, func(i, j int) bool {
+			return completedSyncResponse.Items[i].CompletedDate.After(completedSyncResponse.Items[j].CompletedDate)
+		})
+
+		for _, i := range completedSyncResponse.Items {
+			if _, has := doneItems[i.TaskID]; has {
+				// Only set the newest completion date
+				continue
+			}
+			doneItems[i.TaskID] = i
+
+			// need to get done item data
+			resp, err = migration.DoPost("https://api.todoist.com/sync/v8/items/get", url.Values{
+				"token":   []string{token},
+				"item_id": []string{strconv.FormatInt(i.TaskID, 10)},
+			})
+			if err != nil {
+				return
+			}
+			defer resp.Body.Close()
+
+			doneI := &itemWrapper{}
+			err = json.NewDecoder(resp.Body).Decode(doneI)
+			if err != nil {
+				return
+			}
+			log.Debugf("[Todoist Migration] Retrieved full task data for done task %d", i.TaskID)
+			syncResponse.Items = append(syncResponse.Items, doneI.Item)
+		}
+
+		if len(completedSyncResponse.Items) < 200 {
+			break
+		}
+		offset++
+		log.Debugf("[Todoist Migration] User %d has more than 200 done tasks or projects, looping to get more; iteration %d", u.ID, offset)
 	}
 
-	log.Debugf("[Todoist Migration] Got %d done items for user %d", len(completedSyncResponse.Items), u.ID)
+	log.Debugf("[Todoist Migration] Got %d done items for user %d", len(doneItems), u.ID)
 	log.Debugf("[Todoist Migration] Getting archived projects for user %d", u.ID)
 
 	// Get all archived projects
