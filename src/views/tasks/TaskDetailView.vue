@@ -465,6 +465,7 @@ import {colorIsDark} from '@/helpers/color/colorIsDark'
 import {useNamespaceStore} from '@/stores/namespaces'
 import {useAttachmentStore} from '@/stores/attachments'
 import {useTaskStore} from '@/stores/tasks'
+import {useKanbanStore} from '@/stores/kanban'
 
 function scrollIntoView(el) {
 	if (!el) {
@@ -748,7 +749,7 @@ export default defineComponent({
 		},
 
 		async changeList(list: IList) {
-			this.$store.commit('kanban/removeTaskInBucket', this.task)
+			useKanbanStore().removeTaskInBucket(this.task)
 			await this.saveTask({
 				task: {
 					...this.task,

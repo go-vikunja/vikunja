@@ -13,7 +13,6 @@ import {
 	MENU_ACTIVE,
 	QUICK_ACTIONS_ACTIVE,
 } from './mutation-types'
-import kanban from './modules/kanban'
 
 import ListModel from '@/models/list'
 
@@ -33,9 +32,6 @@ export function useStore () {
 
 export const store = createStore<RootStoreState>({
 	strict: import.meta.env.DEV,
-	modules: {
-		kanban,
-	},
 	state: () => ({
 		loading: false,
 		loadingModule: null,

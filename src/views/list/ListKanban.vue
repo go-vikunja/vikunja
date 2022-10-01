@@ -229,9 +229,9 @@ import draggable from 'zhyswan-vuedraggable'
 import cloneDeep from 'lodash.clonedeep'
 
 import BucketModel from '../../models/bucket'
-import {mapState} from 'vuex'
+import {mapState as mapStateVuex} from 'vuex'
+import {mapState} from 'pinia'
 import {RIGHTS as Rights} from '@/constants/rights'
-import {LOADING, LOADING_MODULE} from '@/store/mutation-types'
 import ListWrapper from './ListWrapper.vue'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import Dropdown from '@/components/misc/dropdown.vue'
@@ -241,6 +241,7 @@ import KanbanCard from '@/components/tasks/partials/kanban-card.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 import {isSavedFilter} from '@/helpers/savedFilter'
 import {useTaskStore} from '@/stores/tasks'
+import {useKanbanStore} from '@/stores/kanban'
 
 const DRAG_OPTIONS = {
 	// sortable options
@@ -342,15 +343,17 @@ export default defineComponent({
 				],
 			}
 		},
-		buckets() {
-			return this.$store.state.kanban.buckets
-		},
-		...mapState({
-			loadedListId: state => state.kanban.listId,
-			loading: state => state[LOADING] && state[LOADING_MODULE] === 'kanban',
-			taskLoading: state => state[LOADING] && state[LOADING_MODULE] === 'tasks',
+		...mapStateVuex({
 			canWrite: state => state.currentList.maxRight > Rights.READ,
 			list: state => state.currentList,
+		}),
+		...mapState(useKanbanStore, {
+			buckets: state => state.buckets,
+			loadedListId: state => state.listId,
+			loading: state => state.isLoading,
+		}),
+		...mapState(useTaskStore, {
+			taskLoading: state => state.isLoading,
 		}),
 	},
 
@@ -364,7 +367,7 @@ export default defineComponent({
 
 			console.debug(`Loading buckets, loadedListId = ${this.loadedListId}, $attrs = ${this.$attrs} $route.params =`, this.$route.params)
 
-			this.$store.dispatch('kanban/loadBucketsForList', {listId, params})
+			useKanbanStore().loadBucketsForList({listId, params})
 		},
 
 		setTaskContainerRef(id, el) {
@@ -382,7 +385,7 @@ export default defineComponent({
 				return
 			}
 
-			this.$store.dispatch('kanban/loadNextTasksForBucket', {
+			useKanbanStore().loadNextTasksForBucket({
 				listId: listId,
 				params: this.params,
 				bucketId: id,
@@ -390,12 +393,13 @@ export default defineComponent({
 		},
 
 		updateTasks(bucketId, tasks) {
+			const kanbanStore = useKanbanStore()
 			const newBucket = {
-				...this.$store.getters['kanban/getBucketById'](bucketId),
+				...kanbanStore.getBucketById(bucketId),
 				tasks,
 			}
 
-			this.$store.commit('kanban/setBucketById', newBucket)
+			kanbanStore.setBucketById(newBucket)
 		},
 
 		async updateTaskPosition(e) {
@@ -472,7 +476,7 @@ export default defineComponent({
 				listId: this.listId,
 			})
 			this.newTaskText = ''
-			this.$store.commit('kanban/addTaskToBucket', task)
+			useKanbanStore().addTaskToBucket(task)
 			this.scrollTaskContainerToBottom(bucketId)
 		},
 
@@ -494,7 +498,7 @@ export default defineComponent({
 				listId: this.listId,
 			})
 
-			await this.$store.dispatch('kanban/createBucket', newBucket)
+			await useKanbanStore().createBucket(newBucket)
 			this.newBucketTitle = ''
 			this.showNewBucketInput = false
 		},
@@ -515,7 +519,7 @@ export default defineComponent({
 			})
 
 			try {
-				await this.$store.dispatch('kanban/deleteBucket', {
+				await useKanbanStore().deleteBucket({
 					bucket,
 					params: this.params,
 				})
@@ -537,13 +541,13 @@ export default defineComponent({
 				title: bucketTitle,
 			}
 
-			await this.$store.dispatch('kanban/updateBucketTitle', updatedBucketData)
+			await useKanbanStore().updateBucketTitle(updatedBucketData)
 			this.bucketTitleEditable = false
 		},
 
 		updateBuckets(value) {
 			// (1) buckets get updated in store and tasks positions get invalidated
-			this.$store.commit('kanban/setBuckets', value)
+			useKanbanStore().setBuckets(value)
 		},
 
 		updateBucketPosition(e) {
@@ -562,7 +566,7 @@ export default defineComponent({
 				),
 			}
 
-			this.$store.dispatch('kanban/updateBucket', updatedData)
+			useKanbanStore().updateBucket(updatedData)
 		},
 
 		async setBucketLimit(bucketId, limit) {
@@ -570,12 +574,14 @@ export default defineComponent({
 				return
 			}
 
+			const kanbanStore = useKanbanStore()
+
 			const newBucket = {
-				...this.$store.getters['kanban/getBucketById'](bucketId),
+				...kanbanStore.getBucketById(bucketId),
 				limit,
 			}
 
-			await this.$store.dispatch('kanban/updateBucket', newBucket)
+			await kanbanStore.updateBucket(newBucket)
 			this.$message.success({message: this.$t('list.kanban.bucketLimitSavedSuccess')})
 		},
 
@@ -600,7 +606,7 @@ export default defineComponent({
 				...bucket,
 				isDoneBucket: !bucket.isDoneBucket,
 			}
-			await this.$store.dispatch('kanban/updateBucket', newBucket)
+			await useKanbanStore().updateBucket(newBucket)
 			this.$message.success({message: this.$t('list.kanban.doneBucketSavedSuccess')})
 		},
 

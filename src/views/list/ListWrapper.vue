@@ -62,6 +62,7 @@ import {saveListToHistory} from '@/modules/listHistory'
 import {useTitle} from '@/composables/useTitle'
 import {useStore} from '@/store'
 import {useListStore} from '@/stores/lists'
+import {useKanbanStore} from '@/stores/kanban'
 
 const props = defineProps({
 	listId: {
@@ -77,6 +78,7 @@ const props = defineProps({
 const route = useRoute()
 const store = useStore()
 
+const kanbanStore = useKanbanStore()
 const listStore = useListStore()
 const listService = ref(new ListService())
 const loadedListId = ref(0)
@@ -116,7 +118,7 @@ async function loadList(listIdToLoad: number) {
 		props.viewName === 'list.list' ||
 		props.viewName === 'list.gantt'
 	) {
-		store.commit('kanban/setListId', 0)
+		kanbanStore.setListId(0)
 	}
 
 	// Don't load the list if we either already loaded it or aren't dealing with a list at all currently and
