@@ -1,5 +1,5 @@
 ---
-date: "2019-02-12:00:00+02:00"
+date: "2022-09-21:00:00+02:00"
 title: "Development"
 toc: true
 draft: false
@@ -42,8 +42,7 @@ You need to have [pnpm](https://pnpm.io/) and nodejs in version 16 or 18 install
 
 ## Git flow
 
-The `main` branch is the latest and bleeding edge branch with all changes. Unstable releases are automatically 
-created from this branch.
+The `main` branch is the latest and bleeding edge branch with all changes. Unstable releases are automatically created from this branch.
 
 A release gets tagged from the main branch with the version name as tag name.
 
@@ -51,7 +50,6 @@ Backports and point-releases should go to a `release/version` branch, based on t
 
 ## Conventional commits
 
-We're using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) because they greatly simplify 
-generating release notes.
+We're using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) because they greatly simplify generating release notes.
 
 It is not required to use them when creating a PR, but appreciated.
