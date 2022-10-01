@@ -1,7 +1,7 @@
 <template>
 	<div :class="{ 'is-loading': taskService.loading, 'visible': visible}" class="loader-container task-view-container">
 		<div class="task-view">
-			<heading v-model:task="task" :can-write="canWrite" ref="heading"/>
+			<Heading v-model:task="task" :can-write="canWrite" ref="heading"/>
 			<h6 class="subtitle" v-if="parent && parent.namespace && parent.list">
 				{{ getNamespaceTitle(parent.namespace) }} >
 				<router-link :to="{ name: 'list.index', params: { listId: parent.list.id } }">
@@ -260,7 +260,11 @@
 					<comments :can-write="canWrite" :task-id="taskId"/>
 				</div>
 				<div class="column is-one-third action-buttons d-print-none" v-if="canWrite || shouldShowClosePopup">
-					<BaseButton @click="$router.back()" class="is-fullwidth is-block has-text-centered mb-4 has-text-primary" v-if="shouldShowClosePopup">
+					<BaseButton
+						v-if="shouldShowClosePopup"
+						@click="$router.back()"
+						class="is-fullwidth is-block has-text-centered mb-4 has-text-primary"
+					>
 						<icon icon="arrow-left"/>
 						{{ $t('task.detail.closePopup') }}
 					</BaseButton>
@@ -425,349 +429,336 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script lang="ts" setup>
+import {ref, reactive, toRef, shallowReactive, computed, watch, watchEffect, nextTick, type PropType} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import {useI18n} from 'vue-i18n'
+import {unrefElement} from '@vueuse/core'
 import cloneDeep from 'lodash.clonedeep'
 
-import TaskService from '../../services/task'
+import TaskService from '@/services/task'
 import TaskModel, {TASK_DEFAULT_COLOR} from '@/models/task'
+
 import type {ITask} from '@/modelTypes/ITask'
+import type {IList} from '@/modelTypes/IList'
 
-import { PRIORITIES as priorites } from '@/constants/priorities'
-import {RIGHTS as rights} from '@/constants/rights'
+import {PRIORITIES} from '@/constants/priorities'
+import {RIGHTS} from '@/constants/rights'
 
-import PrioritySelect from '../../components/tasks/partials/prioritySelect.vue'
-import PercentDoneSelect from '../../components/tasks/partials/percentDoneSelect.vue'
-import EditLabels from '../../components/tasks/partials/editLabels.vue'
-import EditAssignees from '../../components/tasks/partials/editAssignees.vue'
-import Attachments from '../../components/tasks/partials/attachments.vue'
-import RelatedTasks from '../../components/tasks/partials/relatedTasks.vue'
-import RepeatAfter from '../../components/tasks/partials/repeatAfter.vue'
-import Reminders from '../../components/tasks/partials/reminders.vue'
-import Comments from '../../components/tasks/partials/comments.vue'
-import ListSearch from '../../components/tasks/partials/listSearch.vue'
-import description from '@/components/tasks/partials/description.vue'
-import ColorPicker from '../../components/input/colorPicker.vue'
-import heading from '@/components/tasks/partials/heading.vue'
-import Datepicker from '@/components/input/datepicker.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
+
+// partials
+import Attachments from '@/components/tasks/partials/attachments.vue'
+import ChecklistSummary from '@/components/tasks/partials/checklist-summary.vue'
+import ColorPicker from '@/components/input/colorPicker.vue'
+import Comments from '@/components/tasks/partials/comments.vue'
+import CreatedUpdated from '@/components/tasks/partials/createdUpdated.vue'
+import Datepicker from '@/components/input/datepicker.vue'
+import Description from '@/components/tasks/partials/description.vue'
+import EditAssignees from '@/components/tasks/partials/editAssignees.vue'
+import EditLabels from '@/components/tasks/partials/editLabels.vue'
+import Heading from '@/components/tasks/partials/heading.vue'
+import ListSearch from '@/components/tasks/partials/listSearch.vue'
+import PercentDoneSelect from '@/components/tasks/partials/percentDoneSelect.vue'
+import PrioritySelect from '@/components/tasks/partials/prioritySelect.vue'
+import RelatedTasks from '@/components/tasks/partials/relatedTasks.vue'
+import Reminders from '@/components/tasks/partials/reminders.vue'
+import RepeatAfter from '@/components/tasks/partials/repeatAfter.vue'
 import TaskSubscription from '@/components/misc/subscription.vue'
 
 import {uploadFile} from '@/helpers/attachments'
-import ChecklistSummary from '../../components/tasks/partials/checklist-summary.vue'
-import CreatedUpdated from '@/components/tasks/partials/createdUpdated.vue'
-import { setTitle } from '@/helpers/setTitle'
 import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
 import {getListTitle} from '@/helpers/getListTitle'
-import type {IList} from '@/modelTypes/IList'
-import {colorIsDark} from '@/helpers/color/colorIsDark'
+import {scrollIntoView} from '@/helpers/scrollIntoView'
+
 import {useBaseStore} from '@/stores/base'
 import {useNamespaceStore} from '@/stores/namespaces'
 import {useAttachmentStore} from '@/stores/attachments'
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
 
-function scrollIntoView(el) {
-	if (!el) {
+import {useTitle} from '@/composables/useTitle'
+
+import {success} from '@/message'
+
+const props = defineProps({
+	taskId: {
+		type: Number as PropType<ITask['id']>,
+		required: true,
+	},
+})
+
+defineEmits(['close'])
+
+const route = useRoute()
+const router = useRouter()
+const {t} = useI18n({useScope: 'global'})
+
+const baseStore = useBaseStore()
+const namespaceStore = useNamespaceStore()
+const attachmentStore = useAttachmentStore()
+const taskStore = useTaskStore()
+const kanbanStore = useKanbanStore()
+
+const task = reactive(new TaskModel())
+useTitle(toRef(task, 'title'))
+
+// We doubled the task color property here because verte does not have a real change property, leading
+// to the color property change being triggered when the # is removed from it, leading to an update,
+// which leads in turn to a change... This creates an infinite loop in which the task is updated, changed,
+// updated, changed, updated and so on.
+// To prevent this, we put the task color property in a seperate value which is set to the task color
+// when it is saved and loaded.
+const taskColor = ref<ITask['hexColor']>('')
+
+// Used to avoid flashing of empty elements if the task content is not yet loaded.
+const visible = ref(false)
+
+const taskId = toRef(props, 'taskId')
+
+const parent = computed(() => {
+	if (!task.listId) {
+		return {
+			namespace: null,
+			list: null,
+		}
+	}
+
+	if (!namespaceStore.getListAndNamespaceById) {
+		return null
+	}
+
+	return namespaceStore.getListAndNamespaceById(task.listId)
+})
+
+watch(
+	parent,
+	(parent) => {
+		const parentList = parent !== null ? parent.list : null
+		if (parentList !== null) {
+			baseStore.handleSetCurrentList({list: parentList})
+		}
+	},
+	{immediate: true },
+)
+
+const canWrite = computed(() => (
+	task.maxRight !== null &&
+	task.maxRight > RIGHTS.READ
+))
+
+const color = computed(() => {
+	const color = task.getHexColor
+		? task.getHexColor()
+		: false
+	
+	return color === TASK_DEFAULT_COLOR
+		? ''
+		: color
+})
+
+const hasAttachments = computed(() => attachmentStore.attachments.length > 0)
+
+// HACK:
+const shouldShowClosePopup = computed(() => (route.name as string).includes('kanban'))
+
+function attachmentUpload(...args: any[]) {
+	return uploadFile(taskId.value, ...args)
+}
+
+const heading = ref<HTMLElement | null>(null)
+async function scrollToHeading() {
+	scrollIntoView(unrefElement(heading))
+}
+
+const taskService = shallowReactive(new TaskService())
+
+async function loadTask(taskId: ITask['id']) {
+	if (taskId === undefined) {
 		return
 	}
 
-	const boundingRect = el.getBoundingClientRect()
-	const scrollY = window.scrollY
-
-	if (
-		boundingRect.top > (scrollY + window.innerHeight) ||
-		boundingRect.top < scrollY
-	) {
-		el.scrollIntoView({
-			behavior: 'smooth',
-			block: 'center',
-			inline: 'nearest',
-		})
+	try {
+		Object.assign(task, await taskService.get({id: taskId}))
+		attachmentStore.set(task.attachments)
+		taskColor.value = task.hexColor
+		setActiveFields()
+	} finally {
+		await nextTick()
+		scrollToHeading()
+		visible.value = true
 	}
 }
 
-export default defineComponent({
-	name: 'TaskDetailView',
-	components: {
-		BaseButton,
-		CreatedUpdated,
-		ChecklistSummary,
-		TaskSubscription,
-		Datepicker,
-		ColorPicker,
-		ListSearch,
-		Reminders,
-		RepeatAfter,
-		RelatedTasks,
-		Attachments,
-		EditAssignees,
-		EditLabels,
-		PercentDoneSelect,
-		PrioritySelect,
-		Comments,
-		description,
-		heading,
-	},
+watchEffect(() => taskId.value !== undefined && loadTask(taskId.value))
 
-	props: {
-		taskId: {
-			type: Number,
-			required: true,
-		},
-	},
+type FieldType =
+	| 'assignees'
+	| 'attachments'
+	| 'color'
+	| 'dueDate'
+	| 'endDate'
+	| 'labels'
+	| 'moveList'
+	| 'percentDone'
+	| 'priority'
+	| 'relatedTasks'
+	| 'reminders'
+	| 'repeatAfter'
+	| 'startDate'
 
-	data() {
-		return {
-			taskService: new TaskService(),
-			task: new TaskModel(),
-			// We doubled the task color property here because verte does not have a real change property, leading
-			// to the color property change being triggered when the # is removed from it, leading to an update,
-			// which leads in turn to a change... This creates an infinite loop in which the task is updated, changed,
-			// updated, changed, updated and so on.
-			// To prevent this, we put the task color property in a seperate value which is set to the task color
-			// when it is saved and loaded.
-			taskColor: '',
+const activeFields : {[type in FieldType]: boolean} = reactive({
+	assignees: false,
+	attachments: false,
+	color: false,
+	dueDate: false,
+	endDate: false,
+	labels: false,
+	moveList: false,
+	percentDone: false,
+	priority: false,
+	relatedTasks: false,
+	reminders: false,
+	repeatAfter: false,
+	startDate: false,
+})
 
-			showDeleteModal: false,
-			// Used to avoid flashing of empty elements if the task content is not yet loaded.
-			visible: false,
-			
-			TASK_DEFAULT_COLOR,
+function setActiveFields() {
+	// FIXME: are these lines necessary?
+	// task.startDate = task.startDate || null
+	// task.endDate = task.endDate || null
 
-			activeFields: {
-				assignees: false,
-				priority: false,
-				dueDate: false,
-				percentDone: false,
-				startDate: false,
-				endDate: false,
-				reminders: false,
-				repeatAfter: false,
-				labels: false,
-				attachments: false,
-				relatedTasks: false,
-				moveList: false,
-				color: false,
-			},
+	// Set all active fields based on values in the model
+	activeFields.assignees = task.assignees.length > 0
+	activeFields.attachments = task.attachments.length > 0
+	activeFields.dueDate = task.dueDate !== null
+	activeFields.endDate = task.endDate !== null
+	activeFields.labels = task.labels.length > 0
+	activeFields.percentDone = task.percentDone > 0
+	activeFields.priority = task.priority !== PRIORITIES.UNSET
+	activeFields.relatedTasks = Object.keys(task.relatedTasks).length > 0
+	activeFields.reminders = task.reminderDates.length > 0
+	activeFields.repeatAfter = task.repeatAfter.amount > 0
+	activeFields.startDate = task.startDate !== null
+}
+
+const activeFieldElements : {[id in FieldType]: HTMLElement | null} = reactive({
+	assignees: null,
+	attachments: null,
+	color: null,
+	dueDate: null,
+	endDate: null,
+	labels: null,
+	moveList: null,
+	percentDone: null,
+	priority: null,
+	relatedTasks: null,
+	reminders: null,
+	repeatAfter: null,
+	startDate: null,
+})
+
+function setFieldActive(fieldName: keyof typeof activeFields) {
+	activeFields[fieldName] = true
+	nextTick(() => {
+		const el = unrefElement(activeFieldElements[fieldName])
+
+		if (!el) {
+			return
 		}
-	},
-	watch: {
-		taskId: {
-			handler: 'loadTask',
-			immediate: true,
-		},
-		parent: {
-			handler(parent) {
-				const parentList = parent !== null ? parent.list : null
-				if (parentList !== null) {
-					useBaseStore().handleSetCurrentList({list: parentList})
-				}
-			},
-			immediate: true,
-		},
-		// Using a watcher here because the header component handles saving the task with the api but we want to decouple
-		// it from the page title.
-		'task.title': {
-			handler(title) {
-				setTitle(title)
-			},
-		},
-	},
-	computed: {
-		currentList() {
-			return useBaseStore().currentList
-		},
-		parent() {
-			if (!this.task.listId) {
-				return {
-					namespace: null,
-					list: null,
-				}
-			}
+		
+		el.focus()
 
-			const namespaceStore = useNamespaceStore()
+		// scroll the field to the center of the screen if not in viewport already
+		scrollIntoView(el)
+	})
+}
 
-			if (!namespaceStore.getListAndNamespaceById) {
-				return null
-			}
-
-			return namespaceStore.getListAndNamespaceById(this.task.listId)
-		},
-		canWrite() {
-			return typeof this.task !== 'undefined' && typeof this.task.maxRight !== 'undefined' && this.task.maxRight > rights.READ
-		},
-		hasAttachments() {
-			const attachmentsStore = useAttachmentStore()
-			return attachmentsStore.attachments.length > 0
-		},
-		shouldShowClosePopup() {
-			return this.$route.name.includes('kanban')
-		},
-		color() {
-			const color = this.task.getHexColor
-				? this.task.getHexColor()
-				: false
-			
-			return color === TASK_DEFAULT_COLOR
-				? ''
-				: color
-		},
-	},
-	methods: {
-		getNamespaceTitle,
-		getListTitle,
-		attachmentUpload(...args) {
-			return uploadFile(this.taskId, ...args)
-		},
-
-		async loadTask(taskId: ITask['id']) {
-			if (taskId === undefined) {
-				return
-			}
-
-			try {
-				this.task = await this.taskService.get({id: taskId})
-				const attachmentStore = useAttachmentStore()
-				attachmentStore.set(this.task.attachments)
-				this.taskColor = this.task.hexColor
-				this.setActiveFields()
-				await this.$nextTick()
-				setTitle(this.task.title)
-			} finally {
-				this.scrollToHeading()
-				await this.$nextTick()
-				this.visible = true
-			}
-		},
-		scrollToHeading() {
-			if(!this.$refs?.heading?.$el) {
-				return
-			}
-			this.$refs.heading.$el.scrollIntoView({block: 'center'})
-		},
-		setActiveFields() {
-
-			this.task.startDate = this.task.startDate ? this.task.startDate : null
-			this.task.endDate = this.task.endDate ? this.task.endDate : null
-
-			// Set all active fields based on values in the model
-			this.activeFields.assignees = this.task.assignees.length > 0
-			this.activeFields.priority = this.task.priority !== priorites.UNSET
-			this.activeFields.dueDate = this.task.dueDate !== null
-			this.activeFields.percentDone = this.task.percentDone > 0
-			this.activeFields.startDate = this.task.startDate !== null
-			this.activeFields.endDate = this.task.endDate !== null
-			this.activeFields.reminders = this.task.reminderDates.length > 0
-			this.activeFields.repeatAfter = this.task.repeatAfter.amount > 0
-			this.activeFields.labels = this.task.labels.length > 0
-			this.activeFields.attachments = this.task.attachments.length > 0
-			this.activeFields.relatedTasks = Object.keys(this.task.relatedTasks).length > 0
-		},
-		async saveTask(args?: {
+async function saveTask(args?: {
 			task: ITask,
 			showNotification?: boolean,
 			undoCallback?: () => void,
 		}) {
 			const {
-				task,
+				task: currentTask,
 				showNotification,
 				undoCallback,
 			} = {
 				...{
-					task: cloneDeep(this.task),
+					task: cloneDeep(task),
 					showNotification: true,
 				},
 				...args,
 			}
+	if (!canWrite.value) {
+		return
+	}
 
-			if (!this.canWrite) {
-				return
-			}
+	currentTask.hexColor = taskColor.value
 
-			// We're doing the whole update in a nextTick because sometimes race conditions can occur when
-			// setting the due date on mobile which leads to no due date change being saved.
-			await this.$nextTick()
+	// If no end date is being set, but a start date and due date,
+	// use the due date as the end date
+	if (
+		currentTask.endDate === null &&
+		currentTask.startDate !== null &&
+		currentTask.dueDate !== null
+	) {
+		currentTask.endDate = currentTask.dueDate
+	}
 
+	const newTask = await taskStore.update(currentTask) // TODO: markraw ?
+	Object.assign(task, newTask)
+	setActiveFields()
 
-			task.hexColor = this.taskColor
+	if (!showNotification) {
+		return
+	}
 
-			// If no end date is being set, but a start date and due date,
-			// use the due date as the end date
-			if (task.endDate === null && task.startDate !== null && task.dueDate !== null) {
-				task.endDate = task.dueDate
-			}
+	let actions = []
+	if (undoCallback !== null) {
+		actions = [{
+			title: 'Undo',
+			callback: undoCallback,
+		}]
+	}
+	success({message: t('task.detail.updateSuccess')}, actions)
+}
 
-			
-			this.task = await useTaskStore().update(task)
+const showDeleteModal = ref(false)
+async function deleteTask() {
+	await taskStore.delete(task)
+	success({message: t('task.detail.deleteSuccess')})
+	router.push({name: 'list.index', params: {listId: task.listId}})
+}
 
-			if (!showNotification) {
-				return
-			}
+function toggleTaskDone() {
+	const newTask = {
+		...task,
+		done: !task.done,
+	}
 
-			let actions = []
-			if (undoCallback !== undefined) {
-				actions = [{
-					title: 'Undo',
-					callback: undoCallback,
-				}]
-			}
-			this.$message.success({message: this.$t('task.detail.updateSuccess')}, actions)
+	saveTask({
+		task: newTask,
+		undoCallback: toggleTaskDone,
+	})
+}
+
+async function changeList(list: IList) {
+	kanbanStore.removeTaskInBucket(task)
+	await saveTask({
+		task: {
+			...task,
+			listId: list.id,
 		},
+	})
+}
 
-		setFieldActive(fieldName) {
-			this.activeFields[fieldName] = true
-			this.$nextTick(() => {
-				const el = this.$refs[fieldName]?.$el
-				if (!el) {
-					return
-				}
-				
-				el.focus()
-
-				// scroll the field to the center of the screen if not in viewport already
-				scrollIntoView(el)
-			})
-		},
-
-		async deleteTask() {
-			await useTaskStore().delete(this.task)
-			this.$message.success({message: this.$t('task.detail.deleteSuccess')})
-			this.$router.push({name: 'list.index', params: {listId: this.task.listId}})
-		},
-
-		toggleTaskDone() {
-			const newTask = {
-				...this.task,
-				done: !this.task.done,
-			}
-
-			this.saveTask({
-				task: newTask,
-				undoCallback: this.toggleTaskDone,
-			})
-		},
-
-		async changeList(list: IList) {
-			useKanbanStore().removeTaskInBucket(this.task)
-			await this.saveTask({
-				task: {
-					...this.task,
-					listId: list.id,
-				},
-			})
-		},
-
-		async toggleFavorite() {
-			this.task.isFavorite = !this.task.isFavorite
-			this.task = await this.taskService.update(this.task)
-			const namespaceStore = useNamespaceStore()
-			await namespaceStore.loadNamespacesIfFavoritesDontExist()
-		},
-		
-		colorIsDark,
-	},
-})
+async function toggleFavorite() {
+	task.isFavorite = !task.isFavorite
+	const newTask = await taskService.update(task)
+	Object.assign(task, newTask)
+	await namespaceStore.loadNamespacesIfFavoritesDontExist()
+}
 </script>
 
 <style lang="scss" scoped>

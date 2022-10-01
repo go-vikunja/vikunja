@@ -22,7 +22,8 @@ import DataExportDownload from '../views/user/DataExportDownload.vue'
 import UpcomingTasksComponent from '../views/tasks/ShowTasks.vue'
 import LinkShareAuthComponent from '../views/sharing/LinkSharingAuth.vue'
 import ListNamespaces from '../views/namespaces/ListNamespaces.vue'
-import TaskDetailView from '../views/tasks/TaskDetailView.vue'
+const TaskDetailView = () => import('../views/tasks/TaskDetailView.vue')
+
 // Team Handling
 import ListTeamsComponent from '../views/teams/ListTeams.vue'
 // Label Handling
