@@ -227,7 +227,7 @@ func TestArchived(t *testing.T) {
 				assertHandlerErrorCode(t, err, models.ErrCodeListIsArchived)
 			})
 			t.Run("unarchivable", func(t *testing.T) {
-				rec, err := testListHandler.testUpdateWithUser(nil, map[string]string{"list": "22"}, `{"title":"LoremIpsum","is_archived":false}`)
+				rec, err := testListHandler.testUpdateWithUser(nil, map[string]string{"list": "22"}, `{"title":"LoremIpsum","is_archived":false,"namespace_id":1}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"is_archived":false`)
 			})

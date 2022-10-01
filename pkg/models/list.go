@@ -640,6 +640,13 @@ func UpdateList(s *xorm.Session, list *List, auth web.Auth, updateListBackground
 		return
 	}
 
+	if list.NamespaceID == 0 {
+		return &ErrListMustBelongToANamespace{
+			ListID:      list.ID,
+			NamespaceID: list.NamespaceID,
+		}
+	}
+
 	// We need to specify the cols we want to update here to be able to un-archive lists
 	colsToUpdate := []string{
 		"title",

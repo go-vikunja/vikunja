@@ -140,8 +140,9 @@ func TestList_CreateOrUpdate(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
 			list := List{
-				ID:    99999999,
-				Title: "test",
+				ID:          99999999,
+				Title:       "test",
+				NamespaceID: 1,
 			}
 			err := list.Update(s, usr)
 			assert.Error(t, err)

@@ -232,12 +232,12 @@ func TestLinkSharing(t *testing.T) {
 					assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 				})
 				t.Run("Shared write", func(t *testing.T) {
-					rec, err := testHandlerListWrite.testUpdateWithLinkShare(nil, map[string]string{"list": "2"}, `{"title":"TestLoremIpsum"}`)
+					rec, err := testHandlerListWrite.testUpdateWithLinkShare(nil, map[string]string{"list": "2"}, `{"title":"TestLoremIpsum","namespace_id":1}`)
 					assert.NoError(t, err)
 					assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 				})
 				t.Run("Shared admin", func(t *testing.T) {
-					rec, err := testHandlerListAdmin.testUpdateWithLinkShare(nil, map[string]string{"list": "3"}, `{"title":"TestLoremIpsum"}`)
+					rec, err := testHandlerListAdmin.testUpdateWithLinkShare(nil, map[string]string{"list": "3"}, `{"title":"TestLoremIpsum","namespace_id":2}`)
 					assert.NoError(t, err)
 					assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 				})

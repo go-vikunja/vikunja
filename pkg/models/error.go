@@ -283,6 +283,34 @@ func (err *ErrListCannotBelongToAPseudoNamespace) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrListMustBelongToANamespace represents an error where a list must belong to a namespace
+type ErrListMustBelongToANamespace struct {
+	ListID      int64
+	NamespaceID int64
+}
+
+// IsErrListMustBelongToANamespace checks if an error is a list must belong to a namespace error.
+func IsErrListMustBelongToANamespace(err error) bool {
+	_, ok := err.(*ErrListMustBelongToANamespace)
+	return ok
+}
+
+func (err *ErrListMustBelongToANamespace) Error() string {
+	return fmt.Sprintf("List must belong to a namespace [ListID: %d, NamespaceID: %d]", err.ListID, err.NamespaceID)
+}
+
+// ErrCodeListMustBelongToANamespace holds the unique world-error code of this error
+const ErrCodeListMustBelongToANamespace = 3010
+
+// HTTPError holds the http error description
+func (err *ErrListMustBelongToANamespace) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeListMustBelongToANamespace,
+		Message:  "This list must belong to a namespace.",
+	}
+}
+
 // ================
 // List task errors
 // ================

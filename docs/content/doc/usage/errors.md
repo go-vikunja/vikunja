@@ -54,13 +54,14 @@ This document describes the different errors Vikunja can return.
 
 | ErrorCode | HTTP Status Code | Description                                                                                                                   |
 |-----------|------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| 3001 | 404 | The list does not exist.                                                                                                      |
-| 3004 | 403 | The user needs to have read permissions on that list to perform that action.                                                  |
-| 3005 | 400 | The list title cannot be empty.                                                                                               |
-| 3006 | 404 | The list share does not exist.                                                                                                |
-| 3007 | 400 | A list with this identifier already exists.                                                                                   |
-| 3008 | 412 | The list is archived and can therefore only be accessed read only. This is also true for all tasks associated with this list. |
-| 3009 | 412 | The list cannot belong to a dynamically generated namespace like "Favorites".                                                 |
+| 3001      | 404 | The list does not exist.                                                                                                      |
+| 3004      | 403 | The user needs to have read permissions on that list to perform that action.                                                  |
+| 3005      | 400 | The list title cannot be empty.                                                                                               |
+| 3006      | 404 | The list share does not exist.                                                                                                |
+| 3007      | 400 | A list with this identifier already exists.                                                                                   |
+| 3008      | 412 | The list is archived and can therefore only be accessed read only. This is also true for all tasks associated with this list. |
+| 3009      | 412 | The list cannot belong to a dynamically generated namespace like "Favorites".                                                 |
+| 3010      | 412 | The list must belong to a namespace.                                                                                          |
 
 ## Task
 
