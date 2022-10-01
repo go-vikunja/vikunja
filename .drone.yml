@@ -191,45 +191,46 @@ steps:
         - tag
     depends_on: [ build ]
 
----
-kind: pipeline
-type: exec
-name: release-macos
-
-trigger:
-  ref:
-    - refs/heads/main
-    - "refs/tags/**"
-
-platform:
-  os: darwin
-  arch: amd64
-
-steps:
-  - name: build
-    environment:
-      ACCESS_KEY:
-        from_secret: aws_access_key_id
-      SECRET_KEY:
-        from_secret: aws_secret_access_key
-    commands:
-      - git fetch --tags
-      - export VERSION=${DRONE_TAG##v}
-      - if [ -z "$$VERSION" ]; then export VERSION=unstable; fi
-      # TODO: Move to a yarn script
-      - wget https://dl.vikunja.io/frontend/vikunja-frontend-$$VERSION.zip
-      - unzip vikunja-frontend-$$VERSION.zip -d frontend
-      - sed -i '' 's/\\/api\\/v1//g' frontend/index.html
-      # Make sure that the -unstable suffix is added to release files
-      - sed -i '' "s/\$${version}/$$VERSION/g" package.json
-      - yarn install
-      - yarn dist --mac
-      - mc config host add scw-fr-par https://s3.fr-par.scw.cloud $ACCESS_KEY $SECRET_KEY --api S3v4
-      - mc cp ./dist/*.dmg scw-fr-par/vikunja-releases/desktop/$VERSION/
-      - mc cp ./dist/*.dmg.blockmap scw-fr-par/vikunja-releases/desktop/$VERSION/
+# Disabled until we have a working mac runner
+#---
+#kind: pipeline
+#type: exec
+#name: release-macos
+#
+#trigger:
+#  ref:
+#    - refs/heads/main
+#    - "refs/tags/**"
+#
+#platform:
+#  os: darwin
+#  arch: amd64
+#
+#steps:
+#  - name: build
+#    environment:
+#      ACCESS_KEY:
+#        from_secret: aws_access_key_id
+#      SECRET_KEY:
+#        from_secret: aws_secret_access_key
+#    commands:
+#      - git fetch --tags
+#      - export VERSION=${DRONE_TAG##v}
+#      - if [ -z "$$VERSION" ]; then export VERSION=unstable; fi
+#      # TODO: Move to a yarn script
+#      - wget https://dl.vikunja.io/frontend/vikunja-frontend-$$VERSION.zip
+#      - unzip vikunja-frontend-$$VERSION.zip -d frontend
+#      - sed -i '' 's/\\/api\\/v1//g' frontend/index.html
+#      # Make sure that the -unstable suffix is added to release files
+#      - sed -i '' "s/\$${version}/$$VERSION/g" package.json
+#      - yarn install
+#      - yarn dist --mac
+#      - mc config host add scw-fr-par https://s3.fr-par.scw.cloud $ACCESS_KEY $SECRET_KEY --api S3v4
+#      - mc cp ./dist/*.dmg scw-fr-par/vikunja-releases/desktop/$VERSION/
+#      - mc cp ./dist/*.dmg.blockmap scw-fr-par/vikunja-releases/desktop/$VERSION/
 
 ---
 kind: signature
-hmac: 9edbcd403606bf65619cc1bb6938eb78049423df0500b118aad5d5e14f5a1bac
+hmac: f5aa08e285044e34b02b197a309bb8682b8cc9adf630dabaa18cc09cc6b50cf6
 
 ...
