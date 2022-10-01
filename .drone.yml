@@ -132,14 +132,15 @@ steps:
       event: [ push, tag, pull_request ]
 
   - name: lint
-    image: golang:1.17-alpine
+    image: golang:1.19-alpine
     pull: true
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
     depends_on: [ build ]
     commands:
+      - export "GOROOT=$(go env GOROOT)"
       - apk --no-cache add build-base git
-      - wget -O - -q https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.47.3
+      - wget -O - -q https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.49.0
       - ./mage-static check:all
     when:
       event: [ push, tag, pull_request ]
@@ -878,6 +879,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: d95e5d4b31e22079ce6360f31ec9257b26cd206b614cb1ec660290c061eced8f
+hmac: 9ca8948161dc6ac167aa3f01d2798745f58550b24c6ced4a81bf64b5b129f172
 
 ...

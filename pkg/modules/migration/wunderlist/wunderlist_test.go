@@ -17,7 +17,7 @@
 package wunderlist
 
 import (
-	"io/ioutil"
+	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -46,7 +46,7 @@ func TestWunderlistParsing(t *testing.T) {
 	assert.NoError(t, err)
 	time4 = time4.In(config.GetTimeZone())
 
-	exampleFile, err := ioutil.ReadFile(config.ServiceRootpath.GetString() + "/pkg/modules/migration/wunderlist/testimage.jpg")
+	exampleFile, err := os.ReadFile(config.ServiceRootpath.GetString() + "/pkg/modules/migration/wunderlist/testimage.jpg")
 	assert.NoError(t, err)
 
 	createTestTask := func(id, listID int, done bool) *task {

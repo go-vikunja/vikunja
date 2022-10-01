@@ -20,13 +20,14 @@ import (
 	"bytes"
 	"image"
 	"image/png"
-	"io/ioutil"
+	"io"
 	"strconv"
 
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/disintegration/imaging"
 )
 
@@ -82,7 +83,7 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 		return nil, "", err
 	}
 
-	avatar, err = ioutil.ReadAll(buf)
+	avatar, err = io.ReadAll(buf)
 	if err != nil {
 		return nil, "", err
 	}

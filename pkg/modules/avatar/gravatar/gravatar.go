@@ -18,7 +18,7 @@ package gravatar
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -74,7 +74,7 @@ func (g *Provider) GetAvatar(user *user.User, size int64) ([]byte, string, error
 			return nil, "", err
 		}
 		defer resp.Body.Close()
-		avatarContent, err := ioutil.ReadAll(resp.Body)
+		avatarContent, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return nil, "", err
 		}

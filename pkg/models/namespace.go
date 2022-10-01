@@ -480,6 +480,7 @@ func getSavedFilters(s *xorm.Session, doer *user.User) (savedFiltersNamespace *N
 // @Success 200 {array} models.NamespaceWithLists "The Namespaces."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces [get]
+//
 //nolint:gocyclo
 func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	if _, is := a.(*LinkSharing); is {

@@ -1,7 +1,7 @@
 
 ##############
 # Build stage
-FROM golang:1.18-alpine AS build-env
+FROM golang:1.19-alpine AS build-env
 
 RUN apk --no-cache add build-base git && \
   go install github.com/magefile/mage@latest && \

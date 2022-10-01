@@ -66,6 +66,7 @@ func (ld *ListDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bool,
 // @Failure 403 {object} web.HTTPError "The user does not have access to the list or namespace"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /lists/{listID}/duplicate [put]
+//
 //nolint:gocyclo
 func (ld *ListDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 

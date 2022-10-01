@@ -18,15 +18,14 @@ package migration
 
 import (
 	"bytes"
-	"io/ioutil"
-
-	"code.vikunja.io/api/pkg/modules/background/handler"
+	"io"
 
 	"xorm.io/xorm"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/background/handler"
 	"code.vikunja.io/api/pkg/user"
 )
 
@@ -212,7 +211,7 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithListsAndTas
 					// Check if we have a file to create
 					if len(a.File.FileContent) > 0 {
 						a.TaskID = t.ID
-						fr := ioutil.NopCloser(bytes.NewReader(a.File.FileContent))
+						fr := io.NopCloser(bytes.NewReader(a.File.FileContent))
 						err = a.NewAttachment(s, fr, a.File.Name, a.File.Size, user)
 						if err != nil {
 							return

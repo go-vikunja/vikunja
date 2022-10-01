@@ -18,7 +18,7 @@ package trello
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -36,7 +36,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 
 	time1, err := time.Parse(time.RFC3339Nano, "2014-09-26T08:25:05Z")
 	assert.NoError(t, err)
-	exampleFile, err := ioutil.ReadFile(config.ServiceRootpath.GetString() + "/pkg/modules/migration/wunderlist/testimage.jpg")
+	exampleFile, err := os.ReadFile(config.ServiceRootpath.GetString() + "/pkg/modules/migration/wunderlist/testimage.jpg")
 	assert.NoError(t, err)
 
 	trelloData := []*trello.Board{

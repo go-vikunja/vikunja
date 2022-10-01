@@ -979,6 +979,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 // @Failure 403 {object} web.HTTPError "The user does not have access to the task (aka its list)"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [post]
+//
 //nolint:gocyclo
 func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 
@@ -1331,8 +1332,8 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 // This helper function updates the reminders, doneAt, start and end dates of the *old* task
 // and saves the new values in the newTask object.
 // We make a few assumtions here:
-//   1. Everything in oldTask is the truth - we figure out if we update anything at all if oldTask.RepeatAfter has a value > 0
-//   2. Because of 1., this functions should not be used to update values other than Done in the same go
+//  1. Everything in oldTask is the truth - we figure out if we update anything at all if oldTask.RepeatAfter has a value > 0
+//  2. Because of 1., this functions should not be used to update values other than Done in the same go
 func updateDone(oldTask *Task, newTask *Task) {
 	if !oldTask.Done && newTask.Done {
 		switch oldTask.RepeatMode {

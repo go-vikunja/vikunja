@@ -19,7 +19,7 @@ package caldav
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"reflect"
 	"strconv"
 	"strings"
@@ -61,9 +61,9 @@ func ListHandler(c echo.Context) error {
 	}
 
 	// Try to parse a task from the request payload
-	body, _ := ioutil.ReadAll(c.Request().Body)
+	body, _ := io.ReadAll(c.Request().Body)
 	// Restore the io.ReadCloser to its original state
-	c.Request().Body = ioutil.NopCloser(bytes.NewBuffer(body))
+	c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 	// Parse it
 	vtodo := string(body)
 	if vtodo != "" && strings.HasPrefix(vtodo, `BEGIN:VCALENDAR`) {
@@ -127,9 +127,9 @@ func PrincipalHandler(c echo.Context) error {
 	}
 
 	// Try to parse a task from the request payload
-	body, _ := ioutil.ReadAll(c.Request().Body)
+	body, _ := io.ReadAll(c.Request().Body)
 	// Restore the io.ReadCloser to its original state
-	c.Request().Body = ioutil.NopCloser(bytes.NewBuffer(body))
+	c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 
 	log.Debugf("[CALDAV] Request Body: %v\n", string(body))
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
@@ -157,9 +157,9 @@ func EntryHandler(c echo.Context) error {
 	}
 
 	// Try to parse a task from the request payload
-	body, _ := ioutil.ReadAll(c.Request().Body)
+	body, _ := io.ReadAll(c.Request().Body)
 	// Restore the io.ReadCloser to its original state
-	c.Request().Body = ioutil.NopCloser(bytes.NewBuffer(body))
+	c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 
 	log.Debugf("[CALDAV] Request Body: %v\n", string(body))
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)

@@ -27,7 +27,6 @@ import (
 	"fmt"
 	"github.com/iancoleman/strcase"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -701,14 +700,14 @@ func (Release) Packages() error {
 
 	// Because nfpm does not  support templating, we replace the values in the config file and restore it after running
 	nfpmConfigPath := RootPath + "/nfpm.yaml"
-	nfpmconfig, err := ioutil.ReadFile(nfpmConfigPath)
+	nfpmconfig, err := os.ReadFile(nfpmConfigPath)
 	if err != nil {
 		return err
 	}
 
 	fixedConfig := strings.ReplaceAll(string(nfpmconfig), "<version>", VersionNumber)
 	fixedConfig = strings.ReplaceAll(fixedConfig, "<binlocation>", BinLocation)
-	if err := ioutil.WriteFile(nfpmConfigPath, []byte(fixedConfig), 0); err != nil {
+	if err := os.WriteFile(nfpmConfigPath, []byte(fixedConfig), 0); err != nil {
 		return err
 	}
 
@@ -721,7 +720,7 @@ func (Release) Packages() error {
 	runAndStreamOutput(binpath, "pkg", "--packager", "rpm", "--target", releasePath)
 	runAndStreamOutput(binpath, "pkg", "--packager", "apk", "--target", releasePath)
 
-	return ioutil.WriteFile(nfpmConfigPath, nfpmconfig, 0)
+	return os.WriteFile(nfpmConfigPath, nfpmconfig, 0)
 }
 
 type Dev mg.Namespace
@@ -885,7 +884,7 @@ func (s *` + name + `) Handle(msg *message.Message) (err error) {
 	if _, err := f.Seek(idx, 0); err != nil {
 		return err
 	}
-	remainder, err := ioutil.ReadAll(f)
+	remainder, err := io.ReadAll(f)
 	if err != nil {
 		return err
 	}
@@ -1074,7 +1073,7 @@ const (
 // Generates the config docs from a commented config.yml.sample file in the repo root.
 func GenerateDocs() error {
 
-	config, err := ioutil.ReadFile("config.yml.sample")
+	config, err := os.ReadFile("config.yml.sample")
 	if err != nil {
 		return err
 	}
@@ -1124,7 +1123,7 @@ func GenerateDocs() error {
 
 	// We write the full file to prevent old content leftovers at the end
 	// I know, there are probably better ways to do this.
-	if err := ioutil.WriteFile(configDocPath, []byte(fullConfig), 0); err != nil {
+	if err := os.WriteFile(configDocPath, []byte(fullConfig), 0); err != nil {
 		return err
 	}
 
