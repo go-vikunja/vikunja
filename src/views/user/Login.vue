@@ -14,14 +14,14 @@
 						class="input" id="username"
 						name="username"
 						:placeholder="$t('user.auth.usernamePlaceholder')"
-						ref="username"
+						ref="usernameRef"
 						required
 						type="text"
 						autocomplete="username"
 						v-focus
 						@keyup.enter="submit"
 						tabindex="1"
-						@focusout="validateField('username')"
+						@focusout="validateUsernameField()"
 					/>
 				</div>
 				<p class="help is-danger" v-if="!usernameValid">
@@ -39,7 +39,7 @@
 						{{ $t('user.auth.forgotPassword') }}
 					</router-link>
 				</div>
-				<password tabindex="2" @submit="submit" v-model="password" :validate-initially="validatePasswordInitially"/>
+				<Password tabindex="2" @submit="submit" v-model="password" :validate-initially="validatePasswordInitially"/>
 			</div>
 			<div class="field" v-if="needsTotpPasscode">
 				<label class="label" for="totpPasscode">{{ $t('user.auth.totpTitle') }}</label>
@@ -101,136 +101,112 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script setup lang="ts">
+import {computed, onBeforeMount, ref} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useRouter} from 'vue-router'
 import {useDebounceFn} from '@vueuse/core'
-import {mapState} from 'pinia'
 
-import {HTTPFactory} from '@/http-common'
-import {getErrorText} from '@/message'
 import Message from '@/components/misc/message.vue'
-import {redirectToProvider} from '../../helpers/redirectToProvider'
-import {getLastVisited, clearLastVisited} from '../../helpers/saveLastVisited'
 import Password from '@/components/input/password.vue'
-import {setTitle} from '@/helpers/setTitle'
 
-import {useConfigStore} from '@/stores/config'
+import {getErrorText} from '@/message'
+import {redirectToProvider} from '@/helpers/redirectToProvider'
+import {getLastVisited, clearLastVisited} from '@/helpers/saveLastVisited'
+
 import {useAuthStore} from '@/stores/auth'
+import {useConfigStore} from '@/stores/config'
 
-export default defineComponent({
-	components: {
-		Password,
-		Message,
-	},
-	data() {
-		return {
-			confirmedEmailSuccess: false,
-			errorMessage: '',
-			usernameValid: true,
-			password: '',
-			validatePasswordInitially: false,
-			rememberMe: false,
+import {useTitle} from '@/composables/useTitle'
+
+const router = useRouter()
+const {t} = useI18n({useScope: 'global'})
+useTitle(() => t('user.auth.login'))
+
+const authStore = useAuthStore()
+const configStore = useConfigStore()
+
+const registrationEnabled = computed(() => configStore.registrationEnabled)
+const localAuthEnabled = computed(() => configStore.auth.local.enabled)
+
+const openidConnect = computed(() => configStore.auth.openidConnect)
+const hasOpenIdProviders = computed(() => openidConnect.value.enabled && openidConnect.value.providers?.length > 0)
+
+const isLoading = computed(() => authStore.isLoading)
+
+const confirmedEmailSuccess = ref(false)
+const errorMessage = ref('')
+const password = ref('')
+const validatePasswordInitially = ref(false)
+const rememberMe = ref(false)
+
+const authenticated = computed(() => authStore.authenticated)
+
+onBeforeMount(() => {
+	authStore.verifyEmail().then((confirmed) => {
+		confirmedEmailSuccess.value = confirmed
+	}).catch((e: Error) => {
+		errorMessage.value = e.message
+	})
+
+	// Check if the user is already logged in, if so, redirect them to the homepage
+	if (authenticated.value) {
+		const last = getLastVisited()
+		if (last !== null) {
+			router.push({
+				name: last.name,
+				params: last.params,
+			})
+			clearLastVisited()
+		} else {
+			router.push({name: 'home'})
 		}
-	},
-	beforeMount() {
-		const HTTP = HTTPFactory()
-		// Try to verify the email
-		// FIXME: Why is this here? Can we find a better place for this?
-		let emailVerifyToken = localStorage.getItem('emailConfirmToken')
-		if (emailVerifyToken) {
-			const stopLoading = this.setLoading()
-			HTTP.post('user/confirm', {token: emailVerifyToken})
-				.then(() => {
-					localStorage.removeItem('emailConfirmToken')
-					this.confirmedEmailSuccess = true
-				})
-				.catch(e => {
-					this.errorMessage = e.response.data.message
-				})
-				.finally(stopLoading)
-		}
-
-		// Check if the user is already logged in, if so, redirect them to the homepage
-		if (this.authenticated) {
-			const last = getLastVisited()
-			if (last !== null) {
-				this.$router.push({
-					name: last.name,
-					params: last.params,
-				})
-				clearLastVisited()
-			} else {
-				this.$router.push({name: 'home'})
-			}
-		}
-	},
-	created() {
-		setTitle(this.$t('user.auth.login'))
-	},
-	computed: {
-		hasOpenIdProviders() {
-			return this.openidConnect.enabled && this.openidConnect.providers?.length > 0
-		},
-
-		...mapState(useAuthStore, {
-			needsTotpPasscode: state => state.needsTotpPasscode,
-			authenticated: state => state.authenticated,
-			isLoading: state => state.isLoading,
-		}),
-
-		...mapState(useConfigStore, {
-			registrationEnabled: state => state.registrationEnabled,
-			localAuthEnabled: state => state.auth.local.enabled,
-			openidConnect: state => state.auth.openidConnect,
-		}),
-
-		validateField() {
-			// using computed so that debounced function definition stays
-			return useDebounceFn((field) => {
-				this[`${field}Valid`] = this.$refs[field]?.value !== ''
-			}, 100)
-		},
-	},
-	methods: {
-		async submit() {
-			this.errorMessage = ''
-			// Some browsers prevent Vue bindings from working with autofilled values.
-			// To work around this, we're manually getting the values here instead of relying on vue bindings.
-			// For more info, see https://kolaente.dev/vikunja/frontend/issues/78
-			const credentials = {
-				username: this.$refs.username.value,
-				password: this.password,
-				longToken: this.rememberMe,
-			}
-
-			if (credentials.username === '' || credentials.password === '') {
-				// Trigger the validation error messages
-				this.validateField('username')
-				this.validatePasswordInitially = true
-				return
-			}
-
-			if (this.needsTotpPasscode) {
-				credentials.totpPasscode = this.$refs.totpPasscode.value
-			}
-
-			try {
-				const authStore = useAuthStore()
-				await authStore.login(credentials)
-				authStore.setNeedsTotpPasscode(false)
-			} catch (e) {
-				if (e.response?.data.code === 1017 && !this.credentials.totpPasscode) {
-					return
-				}
-
-				const err = getErrorText(e)
-				this.errorMessage = typeof err[1] !== 'undefined' ? err[1] : err[0]
-			}
-		},
-
-		redirectToProvider,
-	},
+	}
 })
+
+const usernameValid = ref(true)
+const usernameRef = ref<HTMLInputElement | null>(null)
+const validateUsernameField = useDebounceFn(() => {
+	usernameValid.value = usernameRef.value?.value !== ''
+}, 100)
+
+const needsTotpPasscode = computed(() => authStore.needsTotpPasscode)
+const totpPasscode = ref<HTMLInputElement | null>(null)
+
+async function submit() {
+	errorMessage.value = ''
+	// Some browsers prevent Vue bindings from working with autofilled values.
+	// To work around this, we're manually getting the values here instead of relying on vue bindings.
+	// For more info, see https://kolaente.dev/vikunja/frontend/issues/78
+	const credentials = {
+		username: usernameRef.value?.value,
+		password: password.value,
+		longToken: rememberMe.value,
+	}
+
+	if (credentials.username === '' || credentials.password === '') {
+		// Trigger the validation error messages
+		validateUsernameField()
+		validatePasswordInitially.value = true
+		return
+	}
+
+	if (needsTotpPasscode.value) {
+		credentials.totpPasscode = totpPasscode.value?.value
+	}
+
+	try {
+		await authStore.login(credentials)
+		authStore.setNeedsTotpPasscode(false)
+	} catch (e) {
+		if (e.response?.data.code === 1017 && !credentials.totpPasscode) {
+			return
+		}
+
+		const err = getErrorText(e)
+		errorMessage.value = typeof err[1] !== 'undefined' ? err[1] : err[0]
+	}
+}
 </script>
 
 <style lang="scss" scoped>

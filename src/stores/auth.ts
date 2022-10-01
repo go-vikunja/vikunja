@@ -275,6 +275,27 @@ export const useAuthStore = defineStore('auth', {
 			}
 		},
 
+		/**
+		 * Try to verify the email
+		 * @returns {Promise<boolean>} if the email was successfully confirmed
+		 */
+		async verifyEmail() {
+			const emailVerifyToken = localStorage.getItem('emailConfirmToken')
+			if (emailVerifyToken) {
+				const stopLoading = setModuleLoading(this)
+				try {
+					await HTTPFactory().post('user/confirm', {token: emailVerifyToken})
+					localStorage.removeItem('emailConfirmToken')
+					return true
+				} catch(e) {
+					throw new Error(e.response.data.message)
+				} finally {
+					stopLoading()
+				}
+			}
+			return false
+		},
+
 		async saveUserSettings({
 			settings,
 			showMessage = true,

@@ -132,7 +132,7 @@ export const useBaseStore = defineStore('base', {
 
 		async loadApp() {
 			await checkAndSetApiUrl(window.API_URL)
-			await useAuthStore().checkAuth()
+			useAuthStore().checkAuth()
 		},
 	},
 })

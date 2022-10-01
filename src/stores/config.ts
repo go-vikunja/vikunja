@@ -4,6 +4,8 @@ import {parseURL} from 'ufo'
 import {HTTPFactory} from '@/http-common'
 import {objectToCamelCase} from '@/helpers/case'
 
+import type {IProvider} from '@/types/IProvider'
+
 export interface ConfigState {
 	version: string,
 	frontendUrl: string,
@@ -29,7 +31,7 @@ export interface ConfigState {
 		openidConnect: {
 			enabled: boolean,
 			redirectUrl: string,
-			providers: [],
+			providers: IProvider[],
 		},
 	},
 }

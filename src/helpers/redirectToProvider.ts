@@ -1,14 +1,9 @@
-import {createRandomID} from '@/helpers/randomId'
 import {parseURL} from 'ufo'
 
-export interface Provider {
-	name: string
-	key: string
-	authUrl: string
-	clientId: string
-}
+import {createRandomID} from '@/helpers/randomId'
+import type {IProvider} from '@/types/IProvider'
 
-export const redirectToProvider = (provider: Provider, redirectUrl: string = '') => {
+export const redirectToProvider = (provider: IProvider, redirectUrl: string = '') => {
 
 	// We're not using the redirect url provided by the server to allow redirects when using the electron app.
 	// The implications are not quite clear yet hence the logic to pass in another redirect url still exists.
