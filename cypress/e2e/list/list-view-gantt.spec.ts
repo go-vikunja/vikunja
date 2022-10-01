@@ -6,7 +6,7 @@ import '../../support/authenticateUser'
 
 describe('List View Gantt', () => {
 	prepareLists()
-	
+
 	it('Hides tasks with no dates', () => {
 		const tasks = TaskFactory.create(1)
 		cy.visit('/lists/1/gantt')
@@ -16,10 +16,12 @@ describe('List View Gantt', () => {
 	})
 
 	it('Shows tasks from the current and next month', () => {
-		const now = new Date()
-		const nextMonth = now
+		const now = Date.UTC(2022, 8, 25)
+		cy.clock(now, ['Date'])
+
+		const nextMonth = new Date(now)
 		nextMonth.setDate(1)
-		nextMonth.setMonth(now.getMonth() + 1)
+		nextMonth.setMonth(9)
 
 		cy.visit('/lists/1/gantt')
 
@@ -32,7 +34,7 @@ describe('List View Gantt', () => {
 		const now = new Date()
 		const tasks = TaskFactory.create(1, {
 			start_date: formatISO(now),
-			end_date: formatISO(now.setDate(now.getDate() + 4))
+			end_date: formatISO(now.setDate(now.getDate() + 4)),
 		})
 		cy.visit('/lists/1/gantt')
 
@@ -63,7 +65,7 @@ describe('List View Gantt', () => {
 		const now = new Date()
 		TaskFactory.create(1, {
 			start_date: formatISO(now),
-			end_date: formatISO(now.setDate(now.getDate() + 4))
+			end_date: formatISO(now.setDate(now.getDate() + 4)),
 		})
 		cy.visit('/lists/1/gantt')
 
