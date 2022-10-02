@@ -1042,6 +1042,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		"position",
 		"repeat_mode",
 		"kanban_position",
+		"cover_image_attachment_id",
 	}
 
 	// If the task is being moved between lists, make sure to move the bucket + index as well
