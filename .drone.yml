@@ -503,7 +503,7 @@ steps:
     depends_on: [ sign-release ]
 
   # Build os packages and push it to our bucket
-  - name: build-os-packages
+  - name: build-os-packages-unstable
     image: goreleaser/nfpm
     pull: true
     commands:
@@ -512,6 +512,25 @@ steps:
       - mv dist/os-packages/vikunja*.x86_64.rpm dist/os-packages/vikunja-unstable-x86_64.rpm
       - mv dist/os-packages/vikunja*_amd64.deb dist/os-packages/vikunja-unstable-amd64.deb
       - mv dist/os-packages/vikunja*_x86_64.apk dist/os-packages/vikunja-unstable-x86_64.apk
+    when:
+      branch:
+        - main
+      event:
+        - push
+    depends_on: [ static-build-linux ]
+
+  - name: build-os-packages-version
+    image: goreleaser/nfpm
+    pull: true
+    commands:
+      - apk add git go
+      - ./mage-static release:packages
+      - mv dist/os-packages/vikunja*.x86_64.rpm dist/os-packages/vikunja-${DRONE_TAG##v}-x86_64.rpm
+      - mv dist/os-packages/vikunja*_amd64.deb dist/os-packages/vikunja-${DRONE_TAG##v}-amd64.deb
+      - mv dist/os-packages/vikunja*_x86_64.apk dist/os-packages/vikunja-${DRONE_TAG##v}-x86_64.apk
+    when:
+      event:
+        - tag
     depends_on: [ static-build-linux ]
 
   # Push the os releases to our pseudo-s3-bucket
@@ -535,7 +554,7 @@ steps:
         - main
       event:
         - push
-    depends_on: [ build-os-packages ]
+    depends_on: [ build-os-packages-unstable ]
 
   - name: release-os-version
     image: plugins/s3
@@ -555,44 +574,7 @@ steps:
     when:
       event:
         - tag
-    depends_on: [ build-os-packages ]
-
-  ### Broken, disabled until we figure out how to fix it
-  #  - name: deb-structure
-  #    image: kolaente/reprepro
-  #    pull: true
-  #    environment:
-  #      GPG_PRIVATE_KEY:
-  #        from_secret: gpg_privatekey
-  #    commands:
-  #      - export GPG_TTY=$(tty)
-  #      - gpg -qk
-  #      - echo "use-agent" >>  ~/.gnupg/gpg.conf
-  #      - gpgconf --kill gpg-agent
-  #      - echo $GPG_PRIVATE_KEY > ~/frederik.gpg
-  #      - gpg --import ~/frederik.gpg
-  #      - mkdir debian/conf -p
-  #      - cp build/reprepro-dist-conf debian/conf/distributions
-  #      - ./mage-static release:reprepro
-  #    depends_on: [ build-os-packages ]
-
-  # Push the releases to our pseudo-s3-bucket
-  - name: release-deb
-    image: plugins/s3
-    pull: true
-    settings:
-      bucket: vikunja-releases
-      access_key:
-        from_secret: aws_access_key_id
-      secret_key:
-        from_secret: aws_secret_access_key
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
-      path_style: true
-      strip_prefix: debian
-      source: debian/*/*/*/*/*
-      target: /deb/
-#    depends_on: [ deb-structure ]
+    depends_on: [ build-os-packages-version ]
 
 ---
 kind: pipeline
@@ -879,6 +861,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 9ca8948161dc6ac167aa3f01d2798745f58550b24c6ced4a81bf64b5b129f172
+hmac: 8b0e235be5cc1aa66fa02f2c5e86508c183ea50e42dd6ff134568a7a7b7d312c
 
 ...
