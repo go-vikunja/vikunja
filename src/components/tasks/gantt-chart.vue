@@ -36,16 +36,19 @@
 
 <script setup lang="ts">
 import {computed, ref, watchEffect, shallowReactive, type Ref, type PropType} from 'vue'
+import {useRouter} from 'vue-router'
+import {format, parse} from 'date-fns'
+
 import TaskCollectionService from '@/services/taskCollection'
 import TaskService from '@/services/task'
-import {format, parse} from 'date-fns'
-import {colorIsDark} from '@/helpers/color/colorIsDark'
-import {useStore} from '@/store'
-import {RIGHTS} from '@/constants/rights'
 import TaskModel from '@/models/task'
-import {useRouter} from 'vue-router'
-import Loading from '@/components/misc/loading.vue'
 import type ListModel from '@/models/list'
+import {colorIsDark} from '@/helpers/color/colorIsDark'
+import {RIGHTS} from '@/constants/rights'
+
+import Loading from '@/components/misc/loading.vue'
+import TaskForm from '@/components/tasks/TaskForm.vue'
+
 import {useBaseStore} from '@/stores/base'
 
 // FIXME: these types should be exported from vue-ganttastic
