@@ -54,7 +54,17 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 	}
 
 	user.Status = StatusActive
-	user.AvatarProvider = "initials"
+	user.AvatarProvider = config.DefaultSettingsAvatarProvider.GetString()
+	user.AvatarFileID = config.DefaultSettingsAvatarFileID.GetInt64()
+	user.EmailRemindersEnabled = config.DefaultSettingsEmailRemindersEnabled.GetBool()
+	user.DiscoverableByName = config.DefaultSettingsDiscoverableByName.GetBool()
+	user.DiscoverableByEmail = config.DefaultSettingsDiscoverableByEmail.GetBool()
+	user.OverdueTasksRemindersEnabled = config.DefaultSettingsOverdueTaskRemindersEnabled.GetBool()
+	user.OverdueTasksRemindersTime = config.DefaultSettingsOverdueTaskRemindersTime.GetString()
+	user.DefaultListID = config.DefaultSettingsDefaultListID.GetInt64()
+	user.WeekStart = config.DefaultSettingsWeekStart.GetInt()
+	user.Language = config.DefaultSettingsLanguage.GetString()
+	user.Timezone = config.DefaultSettingsTimezone.GetString()
 
 	// Insert it
 	_, err = s.Insert(user)

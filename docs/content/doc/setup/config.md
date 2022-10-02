@@ -1174,3 +1174,132 @@ Full path: `metrics.password`
 Environment path: `VIKUNJA_METRICS_PASSWORD`
 
 
+---
+
+## defaultsettings
+
+Provide default settings for new users. When a new user is created, these settings will automatically be set for the user. If you change them in the config file afterwards they will not be changed back for existing users.
+
+
+
+### avatar_provider
+
+The avatar source for the user. Can be `gravatar`, `initials`, `upload` or `marble`. If you set this to `upload` you'll also need to specify `defaultsettings.avatar_file_id`.
+
+Default: `initials`
+
+Full path: `defaultsettings.avatar_provider`
+
+Environment path: `VIKUNJA_DEFAULTSETTINGS_AVATAR_PROVIDER`
+
+
+### avatar_file_id
+
+The id of the file used as avatar.
+
+Default: `0`
+
+Full path: `defaultsettings.avatar_file_id`
+
+Environment path: `VIKUNJA_DEFAULTSETTINGS_AVATAR_FILE_ID`
+
+
+### email_reminders_enabled
+
+If set to true users will get task reminders via email.
+
+Default: `false`
+
+Full path: `defaultsettings.email_reminders_enabled`
+
+Environment path: `VIKUNJA_DEFAULTSETTINGS_EMAIL_REMINDERS_ENABLED`
+
+
+### discoverable_by_name
+
+If set to true will allow other users to find this user when searching for parts of their name.
+
+Default: `false`
+
+Full path: `defaultsettings.discoverable_by_name`
+
+Environment path: `VIKUNJA_DEFAULTSETTINGS_DISCOVERABLE_BY_NAME`
+
+
+### discoverable_by_email
+
+If set to true will allow other users to find this user when searching for their exact email.
+
+Default: `false`
+
+Full path: `defaultsettings.discoverable_by_email`
+
+Environment path: `VIKUNJA_DEFAULTSETTINGS_DISCOVERABLE_BY_EMAIL`
+
+
+### overdue_tasks_reminders_enabled
+
+If set to true will send an email every day with all overdue tasks at a configured time.
+
+Default: `true`
+
+Full path: `defaultsettings.overdue_tasks_reminders_enabled`
+
+Environment path: `VIKUNJA_DEFAULTSETTINGS_OVERDUE_TASKS_REMINDERS_ENABLED`
+
+
+### overdue_tasks_reminders_time
+
+When to send the overdue task reminder email.
+
+Default: `9:00`
+
+Full path: `defaultsettings.overdue_tasks_reminders_time`
+
+Environment path: `VIKUNJA_DEFAULTSETTINGS_OVERDUE_TASKS_REMINDERS_TIME`
+
+
+### default_list_id
+
+The id of the default list. Make sure users actually have access to this list when setting this value.
+
+Default: `0`
+
+Full path: `defaultsettings.default_list_id`
+
+Environment path: `VIKUNJA_DEFAULTSETTINGS_DEFAULT_LIST_ID`
+
+
+### week_start
+
+Start of the week for the user. `0` is sunday, `1` is monday and so on.
+
+Default: `0`
+
+Full path: `defaultsettings.week_start`
+
+Environment path: `VIKUNJA_DEFAULTSETTINGS_WEEK_START`
+
+
+### language
+
+The language of the user interface. Must be an ISO 639-1 language code. Will default to the browser language the user uses when signing up.
+
+Default: `<unset>`
+
+Full path: `defaultsettings.language`
+
+Environment path: `VIKUNJA_DEFAULTSETTINGS_LANGUAGE`
+
+
+### timezone
+
+The time zone of each individual user. This will affect when users get reminders and overdue task emails.
+
+Default: `<time zone set at service.timezone>`
+
+Full path: `defaultsettings.timezone`
+
+Environment path: `VIKUNJA_DEFAULTSETTINGS_TIMEZONE`
+
+

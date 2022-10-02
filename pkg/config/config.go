@@ -161,6 +161,18 @@ const (
 	MetricsEnabled  Key = `metrics.enabled`
 	MetricsUsername Key = `metrics.username`
 	MetricsPassword Key = `metrics.password`
+
+	DefaultSettingsAvatarProvider              Key = `defaultsettings.avatar_provider`
+	DefaultSettingsAvatarFileID                Key = `defaultsettings.avatar_file_id`
+	DefaultSettingsEmailRemindersEnabled       Key = `defaultsettings.email_reminders_enabled`
+	DefaultSettingsDiscoverableByName          Key = `defaultsettings.discoverable_by_name`
+	DefaultSettingsDiscoverableByEmail         Key = `defaultsettings.discoverable_by_email`
+	DefaultSettingsOverdueTaskRemindersEnabled Key = `defaultsettings.overdue_tasks_reminders_enabled`
+	DefaultSettingsDefaultListID               Key = `defaultsettings.default_list_id`
+	DefaultSettingsWeekStart                   Key = `defaultsettings.week_start`
+	DefaultSettingsLanguage                    Key = `defaultsettings.language`
+	DefaultSettingsTimezone                    Key = `defaultsettings.timezone`
+	DefaultSettingsOverdueTaskRemindersTime    Key = `defaultsettings.overdue_tasks_reminders_time`
 )
 
 // GetString returns a string config value
@@ -371,6 +383,10 @@ func InitDefaultConfig() {
 	KeyvalueType.setDefault("memory")
 	// Metrics
 	MetricsEnabled.setDefault(false)
+	// Settings
+	DefaultSettingsAvatarProvider.setDefault("initials")
+	DefaultSettingsOverdueTaskRemindersEnabled.setDefault(true)
+	DefaultSettingsOverdueTaskRemindersTime.setDefault("9:00")
 }
 
 // InitConfig initializes the config, sets defaults etc.
@@ -436,6 +452,10 @@ func InitConfig() {
 
 	if MigrationMicrosoftTodoRedirectURL.GetString() == "" {
 		MigrationMicrosoftTodoRedirectURL.Set(ServiceFrontendurl.GetString() + "migrate/microsoft-todo")
+	}
+
+	if DefaultSettingsTimezone.GetString() == "" {
+		DefaultSettingsTimezone.Set(ServiceTimeZone.GetString())
 	}
 
 	if ServiceEnableMetrics.GetBool() {
