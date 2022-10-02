@@ -69,7 +69,7 @@
     "@faker-js/faker": "7.5.0",
     "@types/dompurify": "2.3.4",
     "@types/flexsearch": "0.7.3",
-    "@types/node": "16.11.62",
+    "@types/node": "16.11.63",
     "@typescript-eslint/eslint-plugin": "5.38.1",
     "@typescript-eslint/parser": "5.38.1",
     "@vitejs/plugin-legacy": "2.2.0",
