@@ -145,7 +145,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, type PropType} from 'vue'
+import {ref, shallowReactive, computed} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/user.vue'
