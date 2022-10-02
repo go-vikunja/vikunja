@@ -39,11 +39,11 @@
 			<div class="search-results" :class="{'search-results-inline': inline}" v-if="searchResultsVisible">
 				<BaseButton
 					class="is-fullwidth"
-					v-for="(data, key) in filteredSearchResults"
-					:key="key"
-					:ref="`result-${key}`"
-					@keydown.up.prevent="() => preSelect(key - 1)"
-					@keydown.down.prevent="() => preSelect(key + 1)"
+					v-for="(data, index) in filteredSearchResults"
+					:key="index"
+					:ref="(el) => setResult(el, index)"
+					@keydown.up.prevent="() => preSelect(index - 1)"
+					@keydown.down.prevent="() => preSelect(index + 1)"
 					@click.prevent.stop="() => select(data)"
 				>
 					<span>
@@ -59,7 +59,7 @@
 				<BaseButton
 					v-if="creatableAvailable"
 					class="is-fullwidth"
-					:ref="`result-${filteredSearchResults.length}`"
+					:ref="(el) => setResult(el, filteredSearchResults.length)"
 					@keydown.up.prevent="() => preSelect(filteredSearchResults.length - 1)"
 					@keydown.down.prevent="() => preSelect(filteredSearchResults.length + 1)"
 					@keyup.enter.prevent="create"
@@ -82,9 +82,10 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
-import {i18n} from '@/i18n'
+<script setup lang="ts">
+import {computed, onBeforeUnmount, onMounted, ref, toRefs, watch, type ComponentPublicInstance, type PropType} from 'vue'
+import {useI18n} from 'vue-i18n'
+
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -98,294 +99,298 @@ function elementInResults(elem: string | any, label: string, query: string): boo
 	return elem === query
 }
 
-export default defineComponent({
-	name: 'multiselect',
-	components: {
-		BaseButton,
+const props = defineProps({
+	// When true, shows a loading spinner
+	loading: {
+		type: Boolean,
+		default: false,
 	},
-	data() {
-		return {
-			query: '',
-			searchTimeout: null,
-			localLoading: false,
-			showSearchResults: false,
-			internalValue: null,
-		}
+	// The placeholder of the search input
+	placeholder: {
+		type: String,
+		default: '',
 	},
-	props: {
-		// When true, shows a loading spinner
-		loading: {
-			type: Boolean,
-			default() {
-				return false
-			},
-		},
-		// The placeholder of the search input
-		placeholder: {
-			type: String,
-			default() {
-				return ''
-			},
-		},
-		// The search results where the @search listener needs to put the results into
-		searchResults: {
-			type: Array,
-			default() {
-				return []
-			},
-		},
-		// The name of the property of the searched object to show the user.
-		// If empty the component will show all raw data of an entry.
-		label: {
-			type: String,
-			default() {
-				return ''
-			},
-		},
-		// The object with the value, updated every time an entry is selected.
-		modelValue: {
-			default() {
-				return null
-			},
-		},
-		// If true, will provide an "add this as a new value" entry which fires an @create event when clicking on it.
-		creatable: {
-			type: Boolean,
-			default: false,
-		},
-		// The text shown next to the new value option.
-		createPlaceholder: {
-			type: String,
-			default() {
-				return i18n.global.t('input.multiselect.createPlaceholder')
-			},
-		},
-		// The text shown next to an option.
-		selectPlaceholder: {
-			type: String,
-			default() {
-				return i18n.global.t('input.multiselect.selectPlaceholder')
-			},
-		},
-		// If true, allows for selecting multiple items. v-model will be an array with all selected values in that case.
-		multiple: {
-			type: Boolean,
-			default: false,
-		},
-		// If true, displays the search results inline instead of using a dropdown.
-		inline: {
-			type: Boolean,
-			default: false,
-		},
-		// If true, shows search results when no query is specified.
-		showEmpty: {
-			type: Boolean,
-			default: true,
-		},
-		// The delay in ms after which the search event will be fired. Used to avoid hitting the network on every keystroke.
-		searchDelay: {
-			type: Number,
-			default() {
-				return 200
-			},
-		},
-		closeAfterSelect: {
-			type: Boolean,
-			default: true,
+	// The search results where the @search listener needs to put the results into
+	searchResults: {
+		type: Array as PropType<{[id: string]: any}>,
+		default: () => [],
+	},
+	// The name of the property of the searched object to show the user.
+	// If empty the component will show all raw data of an entry.
+	label: {
+		type: String,
+		default: '',
+	},
+	// The object with the value, updated every time an entry is selected.
+	modelValue: {
+		default: null,
+	},
+	// If true, will provide an "add this as a new value" entry which fires an @create event when clicking on it.
+	creatable: {
+		type: Boolean,
+		default: false,
+	},
+	// The text shown next to the new value option.
+	createPlaceholder: {
+		type: String,
+		default() {
+			const {t} = useI18n({useScope: 'global'}) 
+			return t('input.multiselect.createPlaceholder')
 		},
 	},
-
-	/**
-	 * Available events:
-	 *   @search: Triggered every time the search query input changes
-	 *   @select: Triggered every time an option from the search results is selected. Also triggers a change in v-model.
-	 *   @create: If nothing or no exact match was found and `creatable` is true, this event is triggered with the current value of the search query.
-	 *   @remove: If `multiple` is enabled, this will be fired every time an item is removed from the array of selected items.
-	 */
-	emits: ['update:modelValue', 'search', 'select', 'create', 'remove'],
-
-	mounted() {
-		document.addEventListener('click', this.hideSearchResultsHandler)
-	},
-	beforeUnmount() {
-		document.removeEventListener('click', this.hideSearchResultsHandler)
-	},
-	watch: {
-		modelValue: {
-			handler(value) {
-				this.setSelectedObject(value)
-			},
-			immediate: true,
-			deep: true,
+	// The text shown next to an option.
+	selectPlaceholder: {
+		type: String,
+		default() {
+			const {t} = useI18n({useScope: 'global'}) 
+			return t('input.multiselect.selectPlaceholder')
 		},
 	},
-	computed: {
-		searchResultsVisible() {
-			if (this.query === '' && !this.showEmpty) {
-				return false
-			}
-
-			return this.showSearchResults && (
-				(this.filteredSearchResults.length > 0) ||
-				(this.creatable && this.query !== '')
-			)
-		},
-		creatableAvailable() {
-			const hasResult = this.filteredSearchResults.some(elem => elementInResults(elem, this.label, this.query))
-			const hasQueryAlreadyAdded = Array.isArray(this.internalValue) && this.internalValue.some(elem => elementInResults(elem, this.label, this.query))
-
-			return this.creatable 
-				&& this.query !== '' 
-				&& !(hasResult || hasQueryAlreadyAdded)
-		},
-		filteredSearchResults() {
-			if (this.multiple && this.internalValue !== null && Array.isArray(this.internalValue)) {
-				return this.searchResults.filter(item => !this.internalValue.some(e => e === item))
-			}
-
-			return this.searchResults
-		},
-		hasMultiple() {
-			return this.multiple && Array.isArray(this.internalValue) && this.internalValue.length > 0
-		},
+	// If true, allows for selecting multiple items. v-model will be an array with all selected values in that case.
+	multiple: {
+		type: Boolean,
+		default: false,
 	},
-	methods: {
-		// Searching will be triggered with a 200ms delay to avoid searching on every keyup event.
-		search() {
-
-			// Updating the query with a binding does not work on mobile for some reason,
-			// getting the value manual does.
-			this.query = this.$refs.searchInput.value
-
-			if (this.searchTimeout !== null) {
-				clearTimeout(this.searchTimeout)
-				this.searchTimeout = null
-			}
-
-			this.localLoading = true
-
-			this.searchTimeout = setTimeout(() => {
-				this.$emit('search', this.query)
-				setTimeout(() => {
-					this.localLoading = false
-				}, 100) // The duration of the loading timeout of the services
-				this.showSearchResults = true
-			}, this.searchDelay)
-		},
-		hideSearchResultsHandler(e) {
-			closeWhenClickedOutside(e, this.$refs.multiselectRoot, this.closeSearchResults)
-		},
-		closeSearchResults() {
-			this.showSearchResults = false
-		},
-		handleFocus() {
-			// We need the timeout to avoid the hideSearchResultsHandler hiding the search results right after the input
-			// is focused. That would lead to flickering pre-loaded search results and hiding them right after showing.
-			setTimeout(() => {
-				this.showSearchResults = true
-			}, 10)
-		},
-		select(object) {
-			if (this.multiple) {
-				if (this.internalValue === null) {
-					this.internalValue = []
-				}
-
-				this.internalValue.push(object)
-			} else {
-				this.internalValue = object
-			}
-
-			this.$emit('update:modelValue', this.internalValue)
-			this.$emit('select', object)
-			this.setSelectedObject(object)
-			if (this.closeAfterSelect && this.filteredSearchResults.length > 0 && !this.creatableAvailable) {
-				this.closeSearchResults()
-			}
-		},
-		setSelectedObject(object, resetOnly = false) {
-			this.internalValue = object
-
-			// We assume we're getting an array when multiple is enabled and can therefore leave the query
-			// value etc as it is
-			if (this.multiple) {
-				this.query = ''
-				return
-			}
-
-			if (object === null) {
-				this.query = ''
-				return
-			}
-
-			if (resetOnly) {
-				return
-			}
-
-			this.query = this.label !== '' ? object[this.label] : object
-		},
-		preSelect(index) {
-			if (index < 0) {
-				this.$refs.searchInput.focus()
-				return
-			}
-
-			const elems = this.$refs[`result-${index}`]
-			if (typeof elems === 'undefined' || elems.length === 0) {
-				return
-			}
-
-			if (Array.isArray(elems)) {
-				elems[0].focus()
-				return
-			}
-
-			elems.focus()
-		},
-		create() {
-			if (this.query === '') {
-				return
-			}
-
-			this.$emit('create', this.query)
-			this.setSelectedObject(this.query, true)
-			this.closeSearchResults()
-		},
-		createOrSelectOnEnter() {
-
-			if (!this.creatableAvailable && this.searchResults.length === 1) {
-				this.select(this.searchResults[0])
-				return
-			}
-
-			if (!this.creatableAvailable) {
-				// Check if there's an exact match for our search term
-				const exactMatch = this.filteredSearchResults.find(elem => elementInResults(elem, this.label, this.query))
-				if(exactMatch) {
-					this.select(exactMatch)
-				}
-
-				return
-			}
-
-			this.create()
-		},
-		remove(item) {
-			for (const ind in this.internalValue) {
-				if (this.internalValue[ind] === item) {
-					this.internalValue.splice(ind, 1)
-					break
-				}
-			}
-
-			this.$emit('update:modelValue', this.internalValue)
-			this.$emit('remove', item)
-		},
-		focus() {
-			this.$refs.searchInput.focus()
-		},
+	// If true, displays the search results inline instead of using a dropdown.
+	inline: {
+		type: Boolean,
+		default: false,
+	},
+	// If true, shows search results when no query is specified.
+	showEmpty: {
+		type: Boolean,
+		default: true,
+	},
+	// The delay in ms after which the search event will be fired. Used to avoid hitting the network on every keystroke.
+	searchDelay: {
+		type: Number,
+		default: 200,
+	},
+	closeAfterSelect: {
+		type: Boolean,
+		default: true,
 	},
 })
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: null): void
+	// @search: Triggered every time the search query input changes
+  (e: 'search', query: string): void
+	// @select: Triggered every time an option from the search results is selected. Also triggers a change in v-model.
+  (e: 'select', value: null): void
+	// @create: If nothing or no exact match was found and `creatable` is true, this event is triggered with the current value of the search query.
+  (e: 'create', query: string): void
+	// @remove: If `multiple` is enabled, this will be fired every time an item is removed from the array of selected items.
+  (e: 'remove', value: null): void
+}>()
+
+const query = ref('')
+const searchTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
+const localLoading = ref(false)
+const showSearchResults = ref(false)
+const internalValue = ref<string | {[key: string]: any} | any[] | null>(null)
+
+onMounted(() => document.addEventListener('click', hideSearchResultsHandler))
+onBeforeUnmount(() => document.removeEventListener('click', hideSearchResultsHandler))
+
+const {modelValue, searchResults} = toRefs(props)
+
+watch(
+	modelValue,
+	(value) => setSelectedObject(value),
+	{
+		immediate: true,
+		deep: true,
+	},
+)
+
+const searchResultsVisible = computed(() => {
+	if (query.value === '' && !props.showEmpty) {
+		return false
+	}
+
+	return showSearchResults.value && (
+		(filteredSearchResults.value.length > 0) ||
+		(props.creatable && query.value !== '')
+	)
+})
+
+const creatableAvailable = computed(() => {
+	const hasResult = filteredSearchResults.value.some((elem: any) => elementInResults(elem, props.label, query.value))
+	const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some(elem => elementInResults(elem, props.label, query.value))
+
+	return props.creatable 
+		&& query.value !== '' 
+		&& !(hasResult || hasQueryAlreadyAdded)
+})
+
+const filteredSearchResults = computed(() => {
+	const currentInternal = internalValue.value
+	if (props.multiple && currentInternal !== null && Array.isArray(currentInternal)) {
+		return searchResults.value.filter((item: any) => !currentInternal.some(e => e === item))
+	}
+
+	return searchResults.value
+})
+
+const hasMultiple = computed(() => {
+	return props.multiple && Array.isArray(internalValue.value) && internalValue.value.length > 0
+})
+
+const searchInput = ref<HTMLInputElement | null>(null)
+// Searching will be triggered with a 200ms delay to avoid searching on every keyup event.
+function search() {
+
+	// Updating the query with a binding does not work on mobile for some reason,
+	// getting the value manual does.
+	query.value = searchInput.value?.value || ''
+
+	if (searchTimeout.value !== null) {
+		clearTimeout(searchTimeout.value)
+		searchTimeout.value = null
+	}
+
+	localLoading.value = true
+
+	searchTimeout.value = setTimeout(() => {
+		emit('search', query.value)
+		setTimeout(() => {
+			localLoading.value = false
+		}, 100) // The duration of the loading timeout of the services
+		showSearchResults.value = true
+	}, props.searchDelay)
+}
+
+const multiselectRoot = ref<HTMLElement | null>(null)
+function hideSearchResultsHandler(e: MouseEvent) {
+	closeWhenClickedOutside(e, multiselectRoot.value, closeSearchResults)
+}
+
+function closeSearchResults() {
+	showSearchResults.value = false
+}
+
+function handleFocus() {
+	// We need the timeout to avoid the hideSearchResultsHandler hiding the search results right after the input
+	// is focused. That would lead to flickering pre-loaded search results and hiding them right after showing.
+	setTimeout(() => {
+		showSearchResults.value = true
+	}, 10)
+}
+
+function select(object: {[key: string]: any}) {
+	if (props.multiple) {
+		if (internalValue.value === null) {
+			internalValue.value = []
+		}
+
+		(internalValue.value as any[]).push(object)
+	} else {
+		internalValue.value = object
+	}
+
+	emit('update:modelValue', internalValue.value)
+	emit('select', object)
+	setSelectedObject(object)
+	if (props.closeAfterSelect && filteredSearchResults.value.length > 0 && !creatableAvailable.value) {
+		closeSearchResults()
+	}
+}
+
+function setSelectedObject(object: string | {[id: string]: any} | null, resetOnly = false) {
+	internalValue.value = object
+
+	// We assume we're getting an array when multiple is enabled and can therefore leave the query
+	// value etc as it is
+	if (props.multiple) {
+		query.value = ''
+		return
+	}
+
+	if (object === null) {
+		query.value = ''
+		return
+	}
+
+	if (resetOnly) {
+		return
+	}
+
+	query.value = props.label !== '' ? object[props.label] : object
+}
+
+const results = ref<(Element | ComponentPublicInstance)[]>([])
+function setResult(el: Element | ComponentPublicInstance | null, index: number) {
+	if (el === null) {
+		delete results.value[index]
+	} else {
+		results.value[index] = el
+	}
+}
+
+function preSelect(index: number) {
+	if (index < 0) {
+		searchInput.value?.focus()
+		return
+	}
+
+	const elems = results.value[index]
+	if (typeof elems === 'undefined' || elems.length === 0) {
+		return
+	}
+
+	if (Array.isArray(elems)) {
+		elems[0].focus()
+		return
+	}
+
+	elems.focus()
+}
+
+function create() {
+	if (query.value === '') {
+		return
+	}
+
+	emit('create', query.value)
+	setSelectedObject(query.value, true)
+	closeSearchResults()
+}
+
+function createOrSelectOnEnter() {
+	if (!creatableAvailable.value && searchResults.value.length === 1) {
+		select(searchResults.value[0])
+		return
+	}
+
+	if (!creatableAvailable.value) {
+		// Check if there's an exact match for our search term
+		const exactMatch = filteredSearchResults.value.find((elem: any) => elementInResults(elem, props.label, query.value))
+		if(exactMatch) {
+			select(exactMatch)
+		}
+
+		return
+	}
+
+	create()
+}
+
+function remove(item: any) {
+	for (const ind in internalValue.value) {
+		if (internalValue.value[ind] === item) {
+			internalValue.value.splice(ind, 1)
+			break
+		}
+	}
+
+	emit('update:modelValue', internalValue.value)
+	emit('remove', item)
+}
+
+function focus() {
+	searchInput.value?.focus()
+}
 </script>
 
 <style lang="scss" scoped>
