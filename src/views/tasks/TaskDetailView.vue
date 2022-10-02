@@ -218,7 +218,8 @@
 					<div class="content attachments" v-if="activeFields.attachments || hasAttachments">
 						<attachments
 							:edit-enabled="canWrite"
-							:task-id="taskId"
+							:task="task"
+							@task-changed="({coverImageAttachmentId}) => task.coverImageAttachmentId = coverImageAttachmentId"
 							ref="attachments"
 						/>
 					</div>
@@ -500,7 +501,7 @@ const attachmentStore = useAttachmentStore()
 const taskStore = useTaskStore()
 const kanbanStore = useKanbanStore()
 
-const task = reactive(new TaskModel())
+const task = reactive<ITask>(new TaskModel())
 useTitle(toRef(task, 'title'))
 
 // We doubled the task color property here because verte does not have a real change property, leading

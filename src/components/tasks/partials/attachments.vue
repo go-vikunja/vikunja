@@ -9,7 +9,7 @@
 
 		<input
 			v-if="editEnabled"
-			:disabled="attachmentService.loading || undefined"
+			:disabled="loading || undefined"
 			@change="uploadNewAttachment()"
 			id="files"
 			multiple
@@ -78,6 +78,13 @@
 						>
 							{{ $t('misc.delete') }}
 						</BaseButton>
+						<BaseButton
+							v-if="editEnabled"
+							class="attachment-info-meta-button"
+							@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
+						>
+							{{ task.coverImageAttachmentId === a.id ? $t('task.attachment.unsetAsCover') : $t('task.attachment.setAsCover')  }}
+						</BaseButton>
 					</p>
 				</div>
 			</a>
@@ -85,7 +92,7 @@
 
 		<x-button
 			v-if="editEnabled"
-			:disabled="attachmentService.loading"
+			:disabled="loading"
 			@click="filesRef?.click()"
 			class="mb-4"
 			icon="cloud-upload-alt"
@@ -118,7 +125,7 @@
 			<template #header>
 				<span>{{ $t('task.attachment.delete') }}</span>
 			</template>
-			
+
 			<template #text>
 				<p>
 					{{ $t('task.attachment.deleteText1', {filename: attachmentToDelete.file.name}) }}<br/>
@@ -156,24 +163,29 @@ import {uploadFiles, generateAttachmentUrl} from '@/helpers/attachments'
 import {getHumanSize} from '@/helpers/getHumanSize'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {error, success} from '@/message'
+import {useTaskStore} from '@/stores/tasks'
+import {useI18n} from 'vue-i18n'
 
-const props = defineProps({
-	taskId: {
-		type: Number as PropType<ITask['id']>,
-		required: true,
-	},
-	initialAttachments: {
-		type: Array,
-	},
-	editEnabled: {
-		default: true,
-	},
+const taskStore = useTaskStore()
+const {t} = useI18n()
+
+const props = withDefaults(defineProps<{
+	task: ITask,
+	initialAttachments?: IAttachment[],
+	editEnabled: boolean,
+}>(), {
+	editEnabled: true,
 })
+
+// FIXME: this should go through the store
+const emit = defineEmits(['task-changed'])
 
 const attachmentService = shallowReactive(new AttachmentService())
 
 const attachmentStore = useAttachmentStore()
 const attachments = computed(() => attachmentStore.attachments)
+
+const loading = computed(() => attachmentService.loading || taskStore.isLoading)
 
 function onDrop(files: File[] | null) {
 	if (files && files.length !== 0) {
@@ -181,13 +193,14 @@ function onDrop(files: File[] | null) {
 	}
 }
 
-const { isOverDropZone } = useDropZone(document, onDrop)
+const {isOverDropZone} = useDropZone(document, onDrop)
 
 function downloadAttachment(attachment: IAttachment) {
 	attachmentService.download(attachment)
 }
 
 const filesRef = ref<HTMLInputElement | null>(null)
+
 function uploadNewAttachment() {
 	const files = filesRef.value?.files
 
@@ -199,7 +212,7 @@ function uploadNewAttachment() {
 }
 
 function uploadFilesToTask(files: File[] | FileList) {
-	uploadFiles(attachmentService, props.taskId, files)
+	uploadFiles(attachmentService, props.task.id, files)
 }
 
 const attachmentToDelete = ref<AttachmentModel | null>(null)
@@ -218,14 +231,15 @@ async function deleteAttachment() {
 		attachmentStore.removeById(attachmentToDelete.value.id)
 		success(r)
 		setAttachmentToDelete(null)
-	} catch(e) {
+	} catch (e) {
 		error(e)
 	}
 }
 
 const attachmentImageBlobUrl = ref<string | null>(null)
+
 async function viewOrDownload(attachment: AttachmentModel) {
-	if (SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.endsWith(suffix))	) {
+	if (SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.endsWith(suffix))) {
 		attachmentImageBlobUrl.value = await attachmentService.getBlobUrl(attachment)
 	} else {
 		downloadAttachment(attachment)
@@ -233,8 +247,18 @@ async function viewOrDownload(attachment: AttachmentModel) {
 }
 
 const copy = useCopyToClipboard()
+
 function copyUrl(attachment: IAttachment) {
-	copy(generateAttachmentUrl(props.taskId, attachment.id))
+	copy(generateAttachmentUrl(props.task.id, attachment.id))
+}
+
+async function setCoverImage(attachment: IAttachment | null) {
+	const task = await taskStore.update({
+		...props.task,
+		coverImageAttachmentId: attachment ? attachment.id : 0,
+	})
+	emit('task-changed', task)
+	success({message: t('task.attachment.successfullyChangedCoverImage')})
 }
 </script>
 
@@ -315,7 +339,7 @@ function copyUrl(attachment: IAttachment) {
 			height: auto;
 			text-shadow: var(--shadow-md);
 			animation: bounce 2s infinite;
-	
+
 			@media (prefers-reduced-motion: reduce) {
 				animation: none;
 			}
@@ -337,7 +361,7 @@ function copyUrl(attachment: IAttachment) {
 .attachment-info-meta {
 	display: flex;
 	align-items: center;
-	
+
 	:deep(.user) {
 		display: flex !important;
 		align-items: center;
@@ -347,7 +371,7 @@ function copyUrl(attachment: IAttachment) {
 	@media screen and (max-width: $mobile) {
 		flex-direction: column;
 		align-items: flex-start;
-		
+
 		:deep(.user) {
 			margin: .5rem 0;
 		}

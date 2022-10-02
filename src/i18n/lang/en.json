@@ -693,7 +693,10 @@
       "deleteTooltip": "Delete this attachment",
       "deleteText1": "Are you sure you want to delete the attachment {filename}?",
       "copyUrl": "Copy URL",
-      "copyUrlTooltip": "Copy the url of this attachment for usage in text"
+      "copyUrlTooltip": "Copy the url of this attachment for usage in text",
+      "setAsCover": "Set as cover image",
+      "unsetAsCover": "Unset as cover image",
+      "successfullyChangedCoverImage": "The cover image was successfully changed."
     },
     "comment": {
       "title": "Comments",
