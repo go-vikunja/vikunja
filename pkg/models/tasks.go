@@ -1042,7 +1042,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		"position",
 		"repeat_mode",
 		"kanban_position",
-		"cover_image_attachment_id", // TODO: check if the attachment belongs to the task
+		"cover_image_attachment_id",
 	}
 
 	// If the task is being moved between lists, make sure to move the bucket + index as well
@@ -1055,6 +1055,23 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 
 		t.Index = latestTask.Index + 1
 		colsToUpdate = append(colsToUpdate, "index")
+	}
+
+	// If a task attachment is being set as cover image, check if the attachment actually belongs to the task
+	if t.CoverImageAttachmentID != 0 {
+		is, err := s.Exist(&TaskAttachment{
+			TaskID: t.ID,
+			ID:     t.CoverImageAttachmentID,
+		})
+		if err != nil {
+			return err
+		}
+		if !is {
+			return &ErrAttachmentDoesNotBelongToTask{
+				AttachmentID: t.CoverImageAttachmentID,
+				TaskID:       t.ID,
+			}
+		}
 	}
 
 	wasFavorite, err := isFavorite(s, t.ID, a, FavoriteKindTask)
