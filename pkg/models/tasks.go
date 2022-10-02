@@ -98,6 +98,9 @@ type Task struct {
 	// All attachments this task has
 	Attachments []*TaskAttachment `xorm:"-" json:"attachments"`
 
+	// If this task has a cover image, the field will return the id of the attachment that is the cover image.
+	CoverImageAttachmentID int64 `xorm:"bigint default 0" json:"cover_image_attachment_id"`
+
 	// True if a task is a favorite task. Favorite tasks show up in a separate "Important" list. This value depends on the user making the call to the api.
 	IsFavorite bool `xorm:"-" json:"is_favorite"`
 
