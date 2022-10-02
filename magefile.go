@@ -664,7 +664,7 @@ func (Release) Zip() error {
 
 		fmt.Printf("Zipping %s...\n", info.Name())
 
-		c := exec.Command("zip", "-r", RootPath+"/"+DIST+"/zip/"+info.Name(), ".", "-i", "*")
+		c := exec.Command("zip", "-r", RootPath+"/"+DIST+"/zip/"+info.Name()+".zip", ".", "-i", "*")
 		c.Dir = path
 		out, err := c.Output()
 		fmt.Print(string(out))
