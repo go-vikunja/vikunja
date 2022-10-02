@@ -145,6 +145,7 @@ import User from '@/components/misc/user.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import AttachmentService from '@/services/attachment'
+import {SUPPORTED_IMAGE_SUFFIX} from '@/models/attachment'
 import type AttachmentModel from '@/models/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ITask} from '@/modelTypes/ITask'
@@ -223,10 +224,8 @@ async function deleteAttachment() {
 }
 
 const attachmentImageBlobUrl = ref<string | null>(null)
-const SUPPORTED_SUFFIX = ['.jpg', '.png', '.bmp', '.gif']
-
 async function viewOrDownload(attachment: AttachmentModel) {
-	if (SUPPORTED_SUFFIX.some((suffix) => attachment.file.name.endsWith(suffix))	) {
+	if (SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.endsWith(suffix))	) {
 		attachmentImageBlobUrl.value = await attachmentService.getBlobUrl(attachment)
 	} else {
 		downloadAttachment(attachment)

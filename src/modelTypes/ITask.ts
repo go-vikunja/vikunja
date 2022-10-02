@@ -1,4 +1,4 @@
-import type { Priority } from '@/constants/priorities'
+import type {Priority} from '@/constants/priorities'
 
 import type {IAbstract} from './IAbstract'
 import type {IUser} from './IUser'
@@ -11,6 +11,7 @@ import type {IBucket} from './IBucket'
 import type {IRelationKind} from '@/types/IRelationKind'
 import type {IRepeatAfter} from '@/types/IRepeatAfter'
 import type {IRepeatMode} from '@/types/IRepeatMode'
+
 export interface ITask extends IAbstract {
 	id: number
 	title: string
@@ -31,8 +32,9 @@ export interface ITask extends IAbstract {
 	parentTaskId: ITask['id']
 	hexColor: string
 	percentDone: number
-	relatedTasks: Partial<Record<IRelationKind, ITask[]>>,
+	relatedTasks: Partial<Record<IRelationKind, ITask[]>>
 	attachments: IAttachment[]
+	coverImageAttachmentId: IAttachment['id']
 	identifier: string
 	index: number
 	isFavorite: boolean
