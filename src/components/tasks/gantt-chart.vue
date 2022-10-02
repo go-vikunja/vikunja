@@ -46,6 +46,7 @@ import TaskModel from '@/models/task'
 import {useRouter} from 'vue-router'
 import Loading from '@/components/misc/loading.vue'
 import type ListModel from '@/models/list'
+import {useBaseStore} from '@/stores/base'
 
 // FIXME: these types should be exported from vue-ganttastic
 // see: https://github.com/InfectoOne/vue-ganttastic/blob/master/src/models/models.ts
@@ -90,7 +91,7 @@ const PRECISION = 'day'
 
 const DATE_FORMAT = 'yyyy-LL-dd HH:mm'
 
-const store = useStore()
+const baseStore = useBaseStore()
 const router = useRouter()
 
 const props = defineProps({
@@ -125,7 +126,7 @@ const ganttChartWidth = computed(() => {
 	return dateDiff * DAY_WIDTH_PIXELS
 })
 
-const canWrite = computed(() => store.state.currentList.maxRight > RIGHTS.READ)
+const canWrite = computed(() => baseStore.currentList.maxRight > RIGHTS.READ)
 
 const tasks = ref<Map<TaskModel['id'], TaskModel>>(new Map())
 const ganttBars = ref<GanttBarObject[][]>([])
