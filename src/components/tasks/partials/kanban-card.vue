@@ -129,12 +129,12 @@ const coverImageBlobUrl = ref<string | null>(null)
 
 async function maybeDownloadCoverImage() {
 	if (!props.task.coverImageAttachmentId) {
+		coverImageBlobUrl.value = null
 		return
 	}
 
 	const attachment = props.task.attachments.find(a => a.id === props.task.coverImageAttachmentId)
 	if (!attachment || !SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.endsWith(suffix))) {
-		console.log('not an attachment')
 		return
 	}
 
