@@ -34,9 +34,8 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
-
+<script setup lang="ts">
+import {computed, ref, toRef, watch} from 'vue'
 import {createRandomID} from '@/helpers/randomId'
 
 const DEFAULT_COLORS = [
@@ -48,66 +47,57 @@ const DEFAULT_COLORS = [
 	'#00db60',
 ]
 
-export default defineComponent({
-	name: 'colorPicker',
-	data() {
-		return {
-			color: '',
-			lastChangeTimeout: null,
-			defaultColors: DEFAULT_COLORS,
-			colorListID: createRandomID(),
-		}
-	},
-	props: {
-		modelValue: {
-			type: String,
-			required: true,
-		},
-		menuPosition: {
-			type: String,
-			default: 'top',
-		},
-	},
-	emits: ['update:modelValue'],
-	watch: {
-		modelValue: {
-			handler(modelValue) {
-				this.color = modelValue
-			},
-			immediate: true,
-		},
-		color() {
-			this.update()
-		},
-	},
-	computed: {
-		isEmpty() {
-			return this.color === '#000000' || this.color === ''
-		},
-	},
-	methods: {
-		update(force = false) {
+const color = ref('')
+const lastChangeTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
+const defaultColors = ref(DEFAULT_COLORS)
+const colorListID = ref(createRandomID())
 
-			if(this.isEmpty && !force) {
-				return
-			}
-
-			if (this.lastChangeTimeout !== null) {
-				clearTimeout(this.lastChangeTimeout)
-			}
-
-			this.lastChangeTimeout = setTimeout(() => {
-				this.$emit('update:modelValue', this.color)
-			}, 500)
-		},
-		reset() {
-			// FIXME: I havn't found a way to make it clear to the user the color war reset.
-			//  Not sure if verte is capable of this - it does not show the change when setting this.color = ''
-			this.color = ''
-			this.update(true)
-		},
+const props = defineProps({
+	modelValue: {
+		type: String,
+		required: true,
+	},
+	menuPosition: {
+		type: String,
+		default: 'top',
 	},
 })
+
+const emit = defineEmits(['update:modelValue'])
+
+const modelValue = toRef(props, 'modelValue')
+watch(
+	modelValue,
+	(newValue) => {
+		color.value = newValue
+	},
+	{immediate: true},
+)
+
+watch(color, () => update())
+
+const isEmpty = computed(() => color.value === '#000000' || color.value === '')
+
+function update(force = false) {
+	if(isEmpty.value && !force) {
+		return
+	}
+
+	if (lastChangeTimeout.value !== null) {
+		clearTimeout(lastChangeTimeout.value)
+	}
+
+	lastChangeTimeout.value = setTimeout(() => {
+		emit('update:modelValue', color.value)
+	}, 500)
+}
+
+function reset() {
+	// FIXME: I havn't found a way to make it clear to the user the color war reset.
+	//  Not sure if verte is capable of this - it does not show the change when setting this.color = ''
+	color.value = ''
+	update(true)
+}
 </script>
 
 <style lang="scss" scoped>
