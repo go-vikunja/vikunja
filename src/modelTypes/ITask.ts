@@ -47,4 +47,6 @@ export interface ITask extends IAbstract {
 
 	listId: IList['id'] // Meta, only used when creating a new task
 	bucketId: IBucket['id']
+	
+	getHexColor(): string
 }

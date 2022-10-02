@@ -28,7 +28,7 @@ if (!SUPPORTS_TRIGGERED_NOTIFICATION) {
 	console.debug('This browser does not support triggered notifications')
 }
 
-export function	getHexColor(hexColor: string) {
+export function	getHexColor(hexColor: string): string {
 	if (hexColor === '' || hexColor === '#') {
 		return TASK_DEFAULT_COLOR
 	}

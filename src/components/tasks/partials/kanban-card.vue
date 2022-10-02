@@ -12,7 +12,7 @@
 		@click.meta="() => toggleTaskDone(task)"
 	>
 		<span class="task-id">
-			<Done class="kanban-card__done" :is-done="task.done" variant="small" />
+			<Done class="kanban-card__done" :is-done="task.done" variant="small"/>
 			<template v-if="task.identifier === ''">
 				#{{ task.index }}
 			</template>
@@ -65,8 +65,9 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent, type PropType} from 'vue'
+<script lang="ts" setup>
+import {ref, computed} from 'vue'
+import {useRouter} from 'vue-router'
 
 import PriorityLabel from '../../../components/tasks/partials/priorityLabel.vue'
 import User from '../../../components/misc/user.vue'
@@ -80,65 +81,43 @@ import {formatDateLong, formatISO, formatDateSince} from '@/helpers/time/formatD
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import {useTaskStore} from '@/stores/tasks'
 
-export default defineComponent({
-	name: 'kanban-card',
-	components: {
-		ChecklistSummary,
-		Done,
-		PriorityLabel,
-		User,
-		Labels,
-	},
-	data() {
-		return {
-			loadingInternal: false,
-			TASK_DEFAULT_COLOR,
-		}
-	},
-	props: {
-		task: {
-			type: Object as PropType<ITask>,
-			required: true,
-		},
-		loading: {
-			type: Boolean,
-			required: false,
-			default: false,
-		},
-	},
-	computed: {
-		color() {
-			return this.task.getHexColor
-				? this.task.getHexColor() 
-				: TASK_DEFAULT_COLOR
-		},
-	},
-	methods: {
-		formatDateLong,
-		formatISO,
-		formatDateSince,
-		colorIsDark,
-		async toggleTaskDone(task: ITask) {
-			this.loadingInternal = true
-			try {
-				const done = !task.done
-				await useTaskStore().update({
-					...task,
-					done,
-				})
-			} finally {
-				this.loadingInternal = false
-			}
-		},
-		openTaskDetail() {
-			this.$router.push({
-				name: 'task.detail',
-				params: { id: this.task.id },
-				state: { backdropView: this.$router.currentRoute.value.fullPath },
-			})
-		},
-	},
+const router = useRouter()
+
+const loadingInternal = ref(false)
+
+const props = withDefaults(defineProps<{
+	task: ITask,
+	loading: boolean,
+}>(), {
+	loading: false,
 })
+
+const color = computed(() => {
+	return props.task.getHexColor
+		? props.task.getHexColor()
+		: TASK_DEFAULT_COLOR
+})
+
+async function toggleTaskDone(task: ITask) {
+	loadingInternal.value = true
+	try {
+		const done = !task.done
+		await useTaskStore().update({
+			...task,
+			done,
+		})
+	} finally {
+		loadingInternal.value = false
+	}
+}
+
+function openTaskDetail() {
+	router.push({
+		name: 'task.detail',
+		params: {id: props.task.id},
+		state: {backdropView: router.currentRoute.value.fullPath},
+	})
+}
 </script>
 
 <style lang="scss" scoped>
