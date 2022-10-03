@@ -214,7 +214,7 @@ async function deleteAttachment() {
 
 	try {
 		const r = await attachmentService.delete(attachmentToDelete.value)
-		attachmentStore.removeById(this.attachmentToDelete.id)
+		attachmentStore.removeById(attachmentToDelete.value.id)
 		success(r)
 		setAttachmentToDelete(null)
 	} catch(e) {
