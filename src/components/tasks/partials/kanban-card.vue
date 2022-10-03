@@ -74,7 +74,8 @@ import User from '../../../components/misc/user.vue'
 import Done from '@/components/misc/Done.vue'
 import Labels from '../../../components/tasks/partials/labels.vue'
 import ChecklistSummary from './checklist-summary.vue'
-import {TASK_DEFAULT_COLOR} from '@/models/task'
+
+import {TASK_DEFAULT_COLOR, getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 
 import {formatDateLong, formatISO, formatDateSince} from '@/helpers/time/formatDate'
@@ -92,11 +93,7 @@ const props = withDefaults(defineProps<{
 	loading: false,
 })
 
-const color = computed(() => {
-	return props.task.getHexColor
-		? props.task.getHexColor()
-		: TASK_DEFAULT_COLOR
-})
+const color = computed(() => getHexColor(props.task.hexColor))
 
 async function toggleTaskDone(task: ITask) {
 	loadingInternal.value = true
