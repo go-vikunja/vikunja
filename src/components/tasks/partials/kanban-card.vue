@@ -6,13 +6,13 @@
 			'draggable': !(loadingInternal || loading),
 			'has-light-text': color !== TASK_DEFAULT_COLOR && !colorIsDark(color),
 		}"
-		:style="{'background-color': color !== TASK_DEFAULT_COLOR ? color : false}"
+		:style="{'background-color': color !== TASK_DEFAULT_COLOR ? color : undefined}"
 		@click.exact="openTaskDetail()"
 		@click.ctrl="() => toggleTaskDone(task)"
 		@click.meta="() => toggleTaskDone(task)"
 	>
 		<span class="task-id">
-			<Done class="kanban-card__done" :is-done="task.done" variant="small" />
+			<Done class="kanban-card__done" :is-done="task.done" variant="small"/>
 			<template v-if="task.identifier === ''">
 				#{{ task.index }}
 			</template>
@@ -44,11 +44,11 @@
 			<priority-label :priority="task.priority" :done="task.done"/>
 			<div class="assignees" v-if="task.assignees.length > 0">
 				<user
+					v-for="u in task.assignees"
 					:avatar-size="24"
 					:key="task.id + 'assignee' + u.id"
 					:show-username="false"
 					:user="u"
-					v-for="u in task.assignees"
 				/>
 			</div>
 			<checklist-summary :task="task"/>
@@ -65,80 +65,55 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent, type PropType} from 'vue'
+<script lang="ts" setup>
+import {ref, computed} from 'vue'
+import {useRouter} from 'vue-router'
 
-import PriorityLabel from '../../../components/tasks/partials/priorityLabel.vue'
-import User from '../../../components/misc/user.vue'
+import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'
+import User from '@/components/misc/user.vue'
 import Done from '@/components/misc/Done.vue'
-import Labels from '../../../components/tasks/partials/labels.vue'
+import Labels from '@/components/tasks/partials/labels.vue'
 import ChecklistSummary from './checklist-summary.vue'
-import {TASK_DEFAULT_COLOR} from '@/models/task'
+
+import {TASK_DEFAULT_COLOR, getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 
 import {formatDateLong, formatISO, formatDateSince} from '@/helpers/time/formatDate'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import {useTaskStore} from '@/stores/tasks'
 
-export default defineComponent({
-	name: 'kanban-card',
-	components: {
-		ChecklistSummary,
-		Done,
-		PriorityLabel,
-		User,
-		Labels,
-	},
-	data() {
-		return {
-			loadingInternal: false,
-			TASK_DEFAULT_COLOR,
-		}
-	},
-	props: {
-		task: {
-			type: Object as PropType<ITask>,
-			required: true,
-		},
-		loading: {
-			type: Boolean,
-			required: false,
-			default: false,
-		},
-	},
-	computed: {
-		color() {
-			return this.task.getHexColor
-				? this.task.getHexColor() 
-				: TASK_DEFAULT_COLOR
-		},
-	},
-	methods: {
-		formatDateLong,
-		formatISO,
-		formatDateSince,
-		colorIsDark,
-		async toggleTaskDone(task: ITask) {
-			this.loadingInternal = true
-			try {
-				const done = !task.done
-				await useTaskStore().update({
-					...task,
-					done,
-				})
-			} finally {
-				this.loadingInternal = false
-			}
-		},
-		openTaskDetail() {
-			this.$router.push({
-				name: 'task.detail',
-				params: { id: this.task.id },
-				state: { backdropView: this.$router.currentRoute.value.fullPath },
-			})
-		},
-	},
+const router = useRouter()
+
+const loadingInternal = ref(false)
+
+const props = withDefaults(defineProps<{
+	task: ITask,
+	loading: boolean,
+}>(), {
+	loading: false,
 })
+
+const color = computed(() => getHexColor(props.task.hexColor))
+
+async function toggleTaskDone(task: ITask) {
+	loadingInternal.value = true
+	try {
+		await useTaskStore().update({
+			...task,
+			done: !task.done,
+		})
+	} finally {
+		loadingInternal.value = false
+	}
+}
+
+function openTaskDetail() {
+	router.push({
+		name: 'task.detail',
+		params: {id: props.task.id},
+		state: {backdropView: router.currentRoute.value.fullPath},
+	})
+}
 </script>
 
 <style lang="scss" scoped>
