@@ -9,6 +9,28 @@ All releases can be found on https://code.vikunja.io/desktop/releases.
 
 The releases aim at the api and frontend versions which is why there are missing versions.
 
+## [0.19.1 - 2022-08-17]
+
+### Dependencies
+
+* *(deps)* Update dependency electron to v20.0.2 (#111)
+* *(deps)* Update dependency electron to v20.0.3 (#112)
+* *(deps)* Update dependency electron to v20.1.1 (#113)
+* *(deps)* Update dependency electron to v20.1.2 (#114)
+* *(deps)* Update dependency electron to v20.1.3 (#115)
+* *(deps)* Update dependency electron to v20.1.4 (#116)
+* *(deps)* Update dependency electron to v20.2.0 (#117)
+* *(deps)* Update dependency electron to v21 (#118)
+* *(deps)* Update dependency electron to v21.0.1 (#119)
+
+### Features
+
+* Add sponsor to readme (relm) ([5b4d5c7](5b4d5c784b4ea447ea928c8c9ee83a58b51f10f4))
+
+### Miscellaneous Tasks
+
+* Disable mac builds ([0563fb2](0563fb2ee5ae16357cdd9463be33ca3f3977c596))
+
 ## [0.19.0 - 2022-08-03]
 
 ### Dependencies
