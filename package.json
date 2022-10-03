@@ -69,6 +69,7 @@
     "@faker-js/faker": "7.5.0",
     "@types/dompurify": "2.3.4",
     "@types/flexsearch": "0.7.3",
+    "@types/marked": "4.0.7",
     "@types/node": "16.11.64",
     "@typescript-eslint/eslint-plugin": "5.39.0",
     "@typescript-eslint/parser": "5.39.0",

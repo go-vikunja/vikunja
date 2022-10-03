@@ -285,7 +285,7 @@ const getDateFromWeekday = (text: string): dateFoundResult => {
 	// matched string comes with a space at the end (last part of the regex).
 	let foundText = results[0]
 	if (foundText.endsWith(' ')) {
-		foundText = foundText.substr(0, foundText.length - 1)
+		foundText = foundText.slice(0, foundText.length - 1)
 	}
 
 	return {
