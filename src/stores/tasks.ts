@@ -415,7 +415,7 @@ export const useTaskStore = defineStore('task', {
 				...task,
 				coverImageAttachmentId: attachment ? attachment.id : 0,
 			})
-		}
+		},
 	},
 })
 
