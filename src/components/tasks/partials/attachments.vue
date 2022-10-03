@@ -171,7 +171,7 @@ import {useTaskStore} from '@/stores/tasks'
 import {useI18n} from 'vue-i18n'
 
 const taskStore = useTaskStore()
-const {t} = useI18n()
+const {t} = useI18n({useScope: 'global'})
 
 const props = withDefaults(defineProps<{
 	task: ITask,
