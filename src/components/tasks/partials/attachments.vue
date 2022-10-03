@@ -83,7 +83,11 @@
 							class="attachment-info-meta-button"
 							@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
 						>
-							{{ task.coverImageAttachmentId === a.id ? $t('task.attachment.unsetAsCover') : $t('task.attachment.setAsCover')  }}
+							{{ 
+								task.coverImageAttachmentId === a.id
+									? $t('task.attachment.unsetAsCover')
+									: $t('task.attachment.setAsCover')
+							}}
 						</BaseButton>
 					</p>
 				</div>
