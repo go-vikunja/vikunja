@@ -59,7 +59,6 @@ import FontAwesomeIcon from '@/components/misc/Icon'
 import Button from '@/components/input/button.vue'
 import Modal from '@/components/misc/modal.vue'
 import Card from '@/components/misc/card.vue'
-import ganttastic from '@infectoone/vue-ganttastic'
 
 app.component('icon', FontAwesomeIcon)
 app.component('x-button', Button)
@@ -103,8 +102,6 @@ if (window.SENTRY_ENABLED) {
 	import('./sentry').then(sentry => sentry.default(app, router))
 }
 
-
-app.use(ganttastic)
 app.use(pinia)
 app.use(router)
 app.use(i18n)

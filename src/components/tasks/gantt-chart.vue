@@ -1,7 +1,7 @@
 <template>
 	<Loading class="gantt-container" v-if="taskService.loading || taskCollectionService.loading"/>
 	<div class="gantt-container" v-else>
-		<g-gantt-chart
+		<GGanttChart
 			:chart-start="`${dateFrom} 00:00`"
 			:chart-end="`${dateTo} 23:59`"
 			:precision="PRECISION"
@@ -10,7 +10,6 @@
 			:grid="true"
 			@dragend-bar="updateTask"
 			@dblclick-bar="openTask"
-			font="inherit"
 			:width="ganttChartWidth + 'px'"
 		>
 			<template #timeunit="{label, value}">
@@ -23,75 +22,45 @@
 					</span>
 				</div>
 			</template>
-			<g-gantt-row
+			<GGanttRow
 				v-for="(bar, k) in ganttBars"
 				:key="k"
 				label=""
 				:bars="bar"
 			/>
-		</g-gantt-chart>
+		</GGanttChart>
 	</div>
 	<TaskForm v-if="canWrite" @create-task="createTask" />
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watchEffect, shallowReactive, type Ref, type PropType} from 'vue'
+import {computed, ref, watch, watchEffect, shallowReactive, type PropType} from 'vue'
 import {useRouter} from 'vue-router'
 import {format, parse} from 'date-fns'
 
 import TaskCollectionService from '@/services/taskCollection'
 import TaskService from '@/services/task'
-import TaskModel from '@/models/task'
+import TaskModel, { getHexColor } from '@/models/task'
+
 import type ListModel from '@/models/list'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import {RIGHTS} from '@/constants/rights'
+
+import {
+	extendDayjs,
+	GGanttChart,
+	GGanttRow,
+	type GanttBarObject,
+} from '@infectoone/vue-ganttastic'
 
 import Loading from '@/components/misc/loading.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
 
 import {useBaseStore} from '@/stores/base'
 
-// FIXME: these types should be exported from vue-ganttastic
-// see: https://github.com/InfectoOne/vue-ganttastic/blob/master/src/models/models.ts
+extendDayjs()
 
-export interface GanttBarConfig {
-	id: string,
-	label?: string
-	hasHandles?: boolean
-	immobile?: boolean
-	bundle?: string
-	pushOnOverlap?: boolean
-	dragLimitLeft?: number
-	dragLimitRight?: number
-	style?: CSSStyleSheet
-}
-
-export type GanttBarObject = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any,
-  ganttBarConfig: GanttBarConfig
-}
-
-export type GGanttChartPropsRefs = {
-  chartStart: Ref<string>
-  chartEnd: Ref<string>
-  precision: Ref<'hour' | 'day' | 'month'>
-  barStart: Ref<string>
-  barEnd: Ref<string>
-  rowHeight: Ref<number>
-  dateFormat: Ref<string>
-  width: Ref<string>
-  hideTimeaxis: Ref<boolean>
-  colorScheme: Ref<string>
-  grid: Ref<boolean>
-  pushOnOverlap: Ref<boolean>
-  noOverlap: Ref<boolean>
-  gGanttChart: Ref<HTMLElement | null>
-  font: Ref<string>
-}
-
-const PRECISION = 'day'
-
+const PRECISION = 'day' as const
 const DATE_FORMAT = 'yyyy-LL-dd HH:mm'
 
 const baseStore = useBaseStore()
@@ -111,7 +80,7 @@ const props = defineProps({
 		required: true,
 	},
 	showTasksWithoutDates: {
-		type: Boolean as PropType<boolean>,
+		type: Boolean,
 		default: false,
 	},
 })
@@ -134,6 +103,18 @@ const canWrite = computed(() => baseStore.currentList.maxRight > RIGHTS.READ)
 const tasks = ref<Map<TaskModel['id'], TaskModel>>(new Map())
 const ganttBars = ref<GanttBarObject[][]>([])
 
+watch(
+	tasks,
+	// We need a "real" ref object for the gantt bars to instantly update the tasks when they are dragged on the chart.
+	// A computed won't work directly.
+	// function mapGanttBars() {
+	() => {
+		ganttBars.value = []
+		tasks.value.forEach(t => ganttBars.value.push(transformTaskToGanttBar(t)))
+	},
+	{deep: true}
+)
+
 const defaultStartDate = format(new Date(), DATE_FORMAT)
 const defaultEndDate = format(new Date((new Date()).setDate((new Date()).getDate() + 7)), DATE_FORMAT)
 
@@ -143,12 +124,12 @@ function transformTaskToGanttBar(t: TaskModel) {
 		startDate: t.startDate ? format(t.startDate, DATE_FORMAT) : defaultStartDate,
 		endDate: t.endDate ? format(t.endDate, DATE_FORMAT) : defaultEndDate,
 		ganttBarConfig: {
-			id: t.id,
+			id: String(t.id),
 			label: t.title,
 			hasHandles: true,
 			style: {
-				color: t.startDate ? (colorIsDark(t.getHexColor(t.hexColor)) ? black : 'white') : black,
-				backgroundColor: t.startDate ? t.getHexColor(t.hexColor) : 'var(--grey-100)',
+				color: t.startDate ? (colorIsDark(getHexColor(t.hexColor)) ? black : 'white') : black,
+				backgroundColor: t.startDate ? getHexColor(t.hexColor) : 'var(--grey-100)',
 				border: t.startDate ? '' : '2px dashed var(--grey-300)',
 				'text-decoration': t.done ? 'line-through' : null,
 			},
@@ -156,13 +137,7 @@ function transformTaskToGanttBar(t: TaskModel) {
 	} as GanttBarObject]
 }
 
-// We need a "real" ref object for the gantt bars to instantly update the tasks when they are dragged on the chart.
-// A computed won't work directly.
-function mapGanttBars() {
-	ganttBars.value = []
 
-	tasks.value.forEach(t => ganttBars.value.push(transformTaskToGanttBar(t)))
-}
 
 // FIXME: unite with other filter params types
 interface GetAllTasksParams {
@@ -208,8 +183,6 @@ async function loadTasks({
 	const loadedTasks = await getAllTasks(params)
 
 	loadedTasks.forEach(t => tasks.value.set(t.id, t))
-
-	mapGanttBars()
 }
 
 watchEffect(() => loadTasks({
@@ -226,7 +199,6 @@ async function createTask(title: TaskModel['title']) {
 		endDate: defaultEndDate,
 	}))
 	tasks.value.set(newTask.id, newTask)
-	mapGanttBars()
 
 	return newTask
 }
@@ -268,14 +240,25 @@ function dayIsToday(label: string): boolean {
 }
 </script>
 
+<style scoped lang="scss">
+.gantt-container {
+	overflow-x: auto;
+}
+</style>
+	
+
 <style lang="scss">
 // Not scoped because we need to style the elements inside the gantt chart component
+.g-gantt-chart {
+	width: 2000px;
+}
+
 .g-gantt-row-label {
-	display: none !important;
+	display: none;
 }
 
 .g-upper-timeunit, .g-timeunit {
-	background: var(--white) !important;
+	background: var(--white);
 	font-family: $vikunja-font;
 }
 
@@ -287,7 +270,7 @@ function dayIsToday(label: string): boolean {
 
 .g-timeunit .timeunit-wrapper {
 	padding: 0.5rem 0;
-	font-size: 1rem !important;
+	font-size: 1rem;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -306,13 +289,13 @@ function dayIsToday(label: string): boolean {
 }
 
 .g-timeaxis {
-	height: auto !important;
-	box-shadow: none !important;
+	height: auto;
+	box-shadow: none;
 }
 
 .g-gantt-row > .g-gantt-row-bars-container {
-	border-bottom: none !important;
-	border-top: none !important;
+	border-bottom: none;
+	border-top: none;
 }
 
 .g-gantt-row:nth-child(odd) {
@@ -326,21 +309,11 @@ function dayIsToday(label: string): boolean {
 
 	&-handle-left,
 	&-handle-right {
-		width: 6px !important;
-		height: 75% !important;
-		opacity: .75 !important;
-		border-radius: $radius !important;
+		width: 6px;
+		height: 75%;
+		opacity: .75;
+		border-radius: $radius;
 		margin-top: 4px;
 	}
-}
-</style>
-
-<style scoped lang="scss">
-.gantt-container {
-	overflow-x: auto;
-}
-
-#g-gantt-chart {
-	width: 2000px;
 }
 </style>
