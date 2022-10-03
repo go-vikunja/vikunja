@@ -2,6 +2,7 @@
 node_modules
 /dist*
 *.zip
+.direnv/
 
 # local env files
 .env.local
