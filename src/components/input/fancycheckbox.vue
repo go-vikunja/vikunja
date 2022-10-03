@@ -4,8 +4,9 @@
 			:checked="checked"
 			:disabled="disabled || undefined"
 			:id="checkBoxId"
-			@change="(event) => updateData(event.target.checked)"
-			type="checkbox"/>
+			@change="(event: Event) => updateData((event.target as HTMLInputElement).checked)"
+			type="checkbox"
+		/>
 		<label :for="checkBoxId" class="check">
 			<svg height="18px" viewBox="0 0 18 18" width="18px">
 				<path
@@ -19,47 +20,42 @@
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script setup lang="ts">
+import {ref, toRef, watch} from 'vue'
 
 import {createRandomID} from '@/helpers/randomId'
 
-export default defineComponent({
-	name: 'fancycheckbox',
-	data() {
-		return {
-			checked: false,
-			checkBoxId: `fancycheckbox_${createRandomID()}`,
-		}
-	},
-	props: {
-		modelValue: {
-			required: false,
-		},
-		disabled: {
-			type: Boolean,
-			required: false,
-			default: false,
-		},
-	},
-	emits: ['update:modelValue', 'change'],
-	watch: {
-		modelValue: {
-			handler(modelValue) {
-				this.checked = modelValue
+const checked = ref(false)
+const checkBoxId = `fancycheckbox_${createRandomID()}`
 
-			},
-			immediate: true,
-		},
+const props = defineProps({
+	modelValue: {
+		type: Boolean,
+		required: false,
 	},
-	methods: {
-		updateData(checked: boolean) {
-			this.checked = checked
-			this.$emit('update:modelValue', checked)
-			this.$emit('change', checked)
-		},
+	disabled: {
+		type: Boolean,
+		required: false,
+		default: false,
 	},
 })
+const emit = defineEmits(['update:modelValue', 'change'])
+
+const modelValue = toRef(props, 'modelValue')
+
+watch(
+	modelValue,
+	newValue => {
+		checked.value = newValue
+	},
+	{immediate: true},
+)
+
+function updateData(newChecked: boolean) {
+	checked.value = newChecked
+	emit('update:modelValue', newChecked)
+	emit('change', newChecked)
+}
 </script>
 
 
