@@ -22,6 +22,7 @@
     "gantt",
     "kanban"
   ],
+  "type": "module",
   "scripts": {
     "serve": "vite",
     "preview": "vite preview --port 4173",
@@ -29,7 +30,8 @@
     "build": "vite build && workbox copyLibraries dist/",
     "build:modern-only": "BUILD_MODERN_ONLY=true vite build && workbox copyLibraries dist/",
     "build:dev": "vite build --mode development --outDir dist-dev/",
-    "lint": "eslint --ignore-pattern '*.test.*' ./src --ext .vue,.js,.ts",
+    "lint": "eslint 'src/**/*.{js,ts,vue}'",
+    "lint:fix": "eslint --fix 'src/**/*.{js,ts,vue}' ",
     "test:e2e": "start-server-and-test preview http://127.0.0.1:4173 'cypress run --e2e --browser chrome'",
     "test:e2e-record": "start-server-and-test preview http://127.0.0.1:4173 'cypress run --e2e --browser chrome --record'",
     "test:e2e-dev-dev": "start-server-and-test preview:dev http://127.0.0.1:4173 'cypress open --e2e'",
