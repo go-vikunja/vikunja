@@ -47,7 +47,7 @@
 			<div class="field is-grouped">
 				<div class="control">
 					<x-button
-						:loading="this.passwordResetService.loading"
+						:loading="passwordResetService.loading"
 						@click="submit"
 					>
 						{{ $t('user.auth.resetPassword') }}
