@@ -83,7 +83,7 @@
 							class="attachment-info-meta-button"
 							@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
 						>
-							{{ 
+							{{
 								task.coverImageAttachmentId === a.id
 									? $t('task.attachment.unsetAsCover')
 									: $t('task.attachment.setAsCover')
@@ -257,10 +257,7 @@ function copyUrl(attachment: IAttachment) {
 }
 
 async function setCoverImage(attachment: IAttachment | null) {
-	const task = await taskStore.update({
-		...props.task,
-		coverImageAttachmentId: attachment ? attachment.id : 0,
-	})
+	const task = await taskStore.setCoverImage(props.task, attachment)
 	emit('task-changed', task)
 	success({message: t('task.attachment.successfullyChangedCoverImage')})
 }
