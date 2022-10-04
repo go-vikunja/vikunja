@@ -18,7 +18,7 @@ specifiers:
   '@types/flexsearch': 0.7.3
   '@types/is-touch-device': 1.0.0
   '@types/lodash.clonedeep': 4.5.7
-  '@types/lodash.debounce': ^4.0.7
+  '@types/lodash.debounce': 4.0.7
   '@types/marked': 4.0.7
   '@types/node': 16.11.64
   '@types/sortablejs': 1.15.0

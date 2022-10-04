@@ -70,7 +70,7 @@
     "@rushstack/eslint-patch": "1.2.0",
     "@types/dompurify": "2.3.4",
     "@types/flexsearch": "0.7.3",
-    "@types/lodash.debounce": "^4.0.7",
+    "@types/lodash.debounce": "4.0.7",
     "@types/marked": "4.0.7",
     "@types/node": "16.11.64",
     "@typescript-eslint/eslint-plugin": "5.39.0",
