@@ -18,6 +18,7 @@ specifiers:
   '@types/flexsearch': 0.7.3
   '@types/is-touch-device': 1.0.0
   '@types/lodash.clonedeep': 4.5.7
+  '@types/lodash.debounce': ^4.0.7
   '@types/marked': 4.0.7
   '@types/node': 16.11.64
   '@types/sortablejs': 1.15.0
@@ -137,6 +138,7 @@ devDependencies:
   '@rushstack/eslint-patch': 1.2.0
   '@types/dompurify': 2.3.4
   '@types/flexsearch': 0.7.3
+  '@types/lodash.debounce': 4.0.7
   '@types/marked': 4.0.7
   '@types/node': 16.11.64
   '@typescript-eslint/eslint-plugin': 5.39.0_be048b79d04b908735dc19ebba1dbd66
@@ -2997,9 +2999,14 @@ packages:
       '@types/lodash': 4.14.185
     dev: false
 
+  /@types/lodash.debounce/4.0.7:
+    resolution: {integrity: sha512-X1T4wMZ+gT000M2/91SYj0d/7JfeNZ9PeeOldSNoE/lunLeQXKvkmIumI29IaKMotU/ln/McOIvgzZcQ/3TrSA==}
+    dependencies:
+      '@types/lodash': 4.14.185
+    dev: true
+
   /@types/lodash/4.14.185:
     resolution: {integrity: sha512-evMDG1bC4rgQg4ku9tKpuMh5iBNEwNa3tf9zRHdP1qlv+1WUg44xat4IxCE14gIpZRGUUWAx2VhItCZc25NfMA==}
-    dev: false
 
   /@types/marked/4.0.7:
     resolution: {integrity: sha512-eEAhnz21CwvKVW+YvRvcTuFKNU9CV1qH+opcgVK3pIMI6YZzDm6gc8o2vHjldFk6MGKt5pueSB7IOpvpx5Qekw==}
