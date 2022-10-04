@@ -19,7 +19,7 @@ export default class ListModel extends AbstractModel<IList> implements IList {
 	isArchived = false
 	hexColor = ''
 	identifier = ''
-	backgroundInformation: any = null
+	backgroundInformation: unknown | null = null
 	isFavorite = false
 	subscription: ISubscription = null
 	position = 0

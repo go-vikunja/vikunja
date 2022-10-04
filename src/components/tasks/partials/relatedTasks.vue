@@ -348,7 +348,7 @@ async function toggleTaskDone(task: ITask) {
 	
 	// Find the task in the list and update it so that it is correctly strike through
 	Object.entries(relatedTasks.value).some(([kind, tasks]) => {
-		return tasks.some((t, key) => {
+		return (tasks as ITask[]).some((t, key) => {
 			const found = t.id === task.id
 			if (found) {
 				relatedTasks.value[kind as IRelationKind]![key] = task

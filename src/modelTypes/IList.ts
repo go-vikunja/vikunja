@@ -15,7 +15,7 @@ export interface IList extends IAbstract {
 	isArchived: boolean
 	hexColor: string
 	identifier: string
-	backgroundInformation: any // FIXME: improve type
+	backgroundInformation: unknown | null // FIXME: improve type
 	isFavorite: boolean
 	subscription: ISubscription
 	position: number

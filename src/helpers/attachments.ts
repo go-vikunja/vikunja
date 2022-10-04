@@ -4,7 +4,7 @@ import type {IAttachment} from '@/modelTypes/IAttachment'
 import AttachmentService from '@/services/attachment'
 import {useTaskStore} from '@/stores/tasks'
 
-export function uploadFile(taskId: number, file: File, onSuccess: (url: string) => void) {
+export function uploadFile(taskId: number, file: File, onSuccess?: (url: string) => void) {
 	const attachmentService = new AttachmentService()
 	const files = [file]
 
@@ -15,7 +15,7 @@ export async function uploadFiles(
 	attachmentService: AttachmentService,
 	taskId: number,
 	files: File[] | FileList,
-	onSuccess: Function = () => {},
+	onSuccess?: (attachmentUrl: string) => void,
 ) {
 	const attachmentModel = new AttachmentModel({taskId})
 	const response = await attachmentService.create(attachmentModel, files)
@@ -26,7 +26,7 @@ export async function uploadFiles(
 			taskId,
 			attachment,
 		})
-		onSuccess(generateAttachmentUrl(taskId, attachment.id))
+		onSuccess?.(generateAttachmentUrl(taskId, attachment.id))
 	})
 
 	if (response.errors !== null) {

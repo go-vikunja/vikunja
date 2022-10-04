@@ -15,7 +15,7 @@ export function isNil(value: unknown) {
 	return value == null
 }
 
-export function omitBy(obj: {}, check: (value: unknown) => boolean) {
+export function omitBy(obj: Record<string, unknown>, check: (value: unknown) => boolean) {
 	if (isNil(obj)) {
 		return {}
 	}

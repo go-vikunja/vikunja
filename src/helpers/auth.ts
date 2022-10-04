@@ -45,7 +45,6 @@ export async function refreshToken(persist: boolean): Promise<AxiosResponse> {
 		return response
 
 	} catch(e) {
-		// @ts-ignore
 		throw new Error('Error renewing token: ', { cause: e })
 	}
 }

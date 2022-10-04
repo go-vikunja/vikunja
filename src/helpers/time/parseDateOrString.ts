@@ -1,12 +1,11 @@
-export function parseDateOrString(rawValue: string | undefined, fallback: any): string | Date {
+export function parseDateOrString(rawValue: string | undefined, fallback: unknown) {
 	if (typeof rawValue === 'undefined') {
 		return fallback
 	}
 
 	const d = new Date(rawValue)
 
-	// @ts-ignore if rawValue is an invalid date, isNan will return false.
-	return !isNaN(d)
+	return !isNaN(+d)
 		? d
 		: rawValue
 }

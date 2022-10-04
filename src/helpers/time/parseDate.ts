@@ -125,16 +125,16 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 }
 
 export const getDateFromText = (text: string, now: Date = new Date()) => {
-	const fullDateRegex: RegExp = / ([0-9][0-9]?\/[0-9][0-9]?\/[0-9][0-9]([0-9][0-9])?|[0-9][0-9][0-9][0-9]\/[0-9][0-9]?\/[0-9][0-9]?|[0-9][0-9][0-9][0-9]-[0-9][0-9]?-[0-9][0-9]?)/ig
+	const fullDateRegex = / ([0-9][0-9]?\/[0-9][0-9]?\/[0-9][0-9]([0-9][0-9])?|[0-9][0-9][0-9][0-9]\/[0-9][0-9]?\/[0-9][0-9]?|[0-9][0-9][0-9][0-9]-[0-9][0-9]?-[0-9][0-9]?)/ig
 
 	// 1. Try parsing the text as a "usual" date, like 2021-06-24 or 06/24/2021
 	let results: string[] | null = fullDateRegex.exec(text)
 	let result: string | null = results === null ? null : results[0]
 	let foundText: string | null = result
-	let containsYear: boolean = true
+	let containsYear = true
 	if (result === null) {
 		// 2. Try parsing the date as something like "jan 21" or "21 jan"
-		const monthRegex: RegExp = new RegExp(` (${monthsRegexGroup} [0-9][0-9]?|[0-9][0-9]? ${monthsRegexGroup})`, 'ig')
+		const monthRegex = new RegExp(` (${monthsRegexGroup} [0-9][0-9]?|[0-9][0-9]? ${monthsRegexGroup})`, 'ig')
 		results = monthRegex.exec(text)
 		result = results === null ? null : `${results[0]} ${now.getFullYear()}`.trim()
 		foundText = results === null ? '' : results[0].trim()
@@ -142,7 +142,7 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 
 		if (result === null) {
 			// 3. Try parsing the date as "27/01" or "01/27"
-			const monthNumericRegex: RegExp = / ([0-9][0-9]?\/[0-9][0-9]?)/ig
+			const monthNumericRegex = / ([0-9][0-9]?\/[0-9][0-9]?)/ig
 			results = monthNumericRegex.exec(text)
 
 			// Put the year before or after the date, depending on what works
@@ -229,7 +229,7 @@ export const getDateFromTextIn = (text: string, now: Date = new Date()) => {
 }
 
 const getDateFromWeekday = (text: string): dateFoundResult => {
-	const matcher: RegExp = / (next )?(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)($| )/g
+	const matcher = / (next )?(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)($| )/g
 	const results: string[] | null = matcher.exec(text.toLowerCase()) // The i modifier does not seem to work.
 	if (results === null) {
 		return {
@@ -240,7 +240,7 @@ const getDateFromWeekday = (text: string): dateFoundResult => {
 
 	const date: Date = new Date()
 	const currentDay: number = date.getDay()
-	let day: number = 0
+	let day = 0
 
 	switch (results[2]) {
 		case 'mon':

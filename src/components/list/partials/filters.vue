@@ -578,7 +578,7 @@ export default defineComponent({
 				return
 			}
 
-			let ids = []
+			const ids = []
 			this[kind].forEach(u => {
 				ids.push(kind === 'users' ? u.username : u.id)
 			})
@@ -613,7 +613,7 @@ export default defineComponent({
 				return
 			}
 
-			let labelIDs = []
+			const labelIDs = []
 			this.labels.forEach(u => {
 				labelIDs.push(u.id)
 			})

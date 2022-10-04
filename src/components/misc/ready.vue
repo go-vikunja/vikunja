@@ -75,8 +75,8 @@ async function load() {
 			await router.push(redirectTo)
 		}
 		ready.value = true
-	} catch (e: any) {
-		error.value = e
+	} catch (e: unknown) {
+		error.value = String(e)
 	}
 }
 

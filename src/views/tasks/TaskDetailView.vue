@@ -562,8 +562,8 @@ const hasAttachments = computed(() => attachmentStore.attachments.length > 0)
 // HACK:
 const shouldShowClosePopup = computed(() => (route.name as string).includes('kanban'))
 
-function attachmentUpload(...args: any[]) {
-	return uploadFile(taskId.value, ...args)
+function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
+	return uploadFile(taskId.value, file, onSuccess)
 }
 
 const heading = ref<HTMLElement | null>(null)
