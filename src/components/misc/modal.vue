@@ -71,9 +71,8 @@ export default {
 
 <script lang="ts" setup>
 import BaseButton from '@/components/base/BaseButton.vue'
-import {onUnmounted, ref, useAttrs, watch} from 'vue'
+import {ref, useAttrs, watchEffect} from 'vue'
 import {useScrollLock} from '@vueuse/core'
-
 
 const props = withDefaults(defineProps<{
 	enabled?: boolean,
@@ -94,14 +93,9 @@ const attrs = useAttrs()
 const modal = ref<HTMLElement | null>(null)
 const scrollLock = useScrollLock(modal)
 
-watch(
-	() => props.enabled,
-	enabled => {
-		scrollLock.value = enabled
-	},
-)
-
-onUnmounted(() => scrollLock.value = false)
+watchEffect(() => {
+	scrollLock.value = props.enabled
+})
 </script>
 
 <style lang="scss" scoped>
