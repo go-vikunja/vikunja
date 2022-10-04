@@ -60,65 +60,18 @@
 </template>
 
 <script lang="ts" setup>
-import {watch, computed, shallowRef, watchEffect, type VNode, h} from 'vue'
-import {useBaseStore} from '@/stores/base'
-import {useRoute, useRouter} from 'vue-router'
-import {useEventListener} from '@vueuse/core'
+import {watch, computed} from 'vue'
+import {useRoute} from 'vue-router'
 
-import {useLabelStore} from '@/stores/labels'
 import Navigation from '@/components/home/navigation.vue'
 import QuickActions from '@/components/quick-actions/quick-actions.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
-import {useAuthStore} from '@/stores/auth'
 
-function useRouteWithModal() {
-	const router = useRouter()
-	const route = useRoute()
-	const backdropView = computed(() => route.fullPath && window.history.state.backdropView)
+import {useBaseStore} from '@/stores/base'
+import {useLabelStore} from '@/stores/labels'
 
-	const routeWithModal = computed(() => {
-		return backdropView.value
-			? router.resolve(backdropView.value)
-			: route
-	})
-
-	const currentModal = shallowRef<VNode>()
-	watchEffect(() => {
-		if (!backdropView.value) {
-			currentModal.value = undefined
-			return
-		}
-
-		// logic from vue-router
-		// https://github.com/vuejs/vue-router-next/blob/798cab0d1e21f9b4d45a2bd12b840d2c7415f38a/src/RouterView.ts#L125
-		const routePropsOption = route.matched[0]?.props.default
-		const routeProps = routePropsOption
-			? routePropsOption === true
-				? route.params
-				: typeof routePropsOption === 'function'
-					? routePropsOption(route)
-					: routePropsOption
-			: null
-
-		currentModal.value = h(
-			route.matched[0]?.components.default,
-			routeProps,
-		)
-	})
-
-	function closeModal() {
-		const historyState = computed(() => route.fullPath && window.history.state)
-
-		if (historyState.value) {
-			router.back()
-		} else {
-			const backdropRoute = historyState.value?.backdropView && router.resolve(historyState.value.backdropView)
-			router.push(backdropRoute)
-		}
-	}
-
-	return {routeWithModal, currentModal, closeModal}
-}
+import {useRouteWithModal} from '@/composables/useRouteWithModal'
+import {useRenewTokenOnFocus} from '@/composables/useRenewTokenOnFocus'
 
 const {routeWithModal, currentModal, closeModal} = useRouteWithModal()
 
@@ -162,43 +115,8 @@ watch(() => route.name as string, (routeName) => {
 
 // TODO: Reset the title if the page component does not set one itself
 
-function useRenewTokenOnFocus() {
-	const router = useRouter()
-	const authStore = useAuthStore()
-
-
-	const userInfo = computed(() => authStore.info)
-	const authenticated = computed(() => authStore.authenticated)
-
-	// Try renewing the token every time vikunja is loaded initially
-	// (When opening the browser the focus event is not fired)
-	authStore.renewToken()
-
-	// Check if the token is still valid if the window gets focus again to maybe renew it
-	useEventListener('focus', () => {
-		if (!authenticated.value) {
-			return
-		}
-
-		const expiresIn = (userInfo.value !== null ? userInfo.value.exp : 0) - +new Date() / 1000
-
-		// If the token expiry is negative, it is already expired and we have no choice but to redirect
-		// the user to the login page
-		if (expiresIn < 0) {
-			authStore.checkAuth()
-			router.push({name: 'user.login'})
-			return
-		}
-
-		// Check if the token is valid for less than 60 hours and renew if thats the case
-		if (expiresIn < 60 * 3600) {
-			authStore.renewToken()
-			console.debug('renewed token')
-		}
-	})
-}
-
 useRenewTokenOnFocus()
+
 const labelStore = useLabelStore()
 labelStore.loadAllLabels()
 </script>

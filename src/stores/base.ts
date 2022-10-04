@@ -12,7 +12,7 @@ import type {IList} from '@/modelTypes/IList'
 export interface RootStoreState {
 	loading: boolean,
 
-	currentList: IList,
+	currentList: IList | null,
 	background: string,
 	blurHash: string,
 
@@ -47,12 +47,13 @@ export const useBaseStore = defineStore('base', {
 			this.loading = loading
 		},
 
-		setCurrentList(currentList: IList) {
+		setCurrentList(currentList: IList | null) {
 			// Server updates don't return the right. Therefore, the right is reset after updating the list which is
 			// confusing because all the buttons will disappear in that case. To prevent this, we're keeping the right
 			// when updating the list in global state.
 			if (
-				typeof this.currentList.maxRight !== 'undefined' &&
+				typeof this.currentList?.maxRight !== 'undefined' &&
+				currentList !== null &&
 				(
 					typeof currentList.maxRight === 'undefined' ||
 					currentList.maxRight === null
@@ -95,7 +96,7 @@ export const useBaseStore = defineStore('base', {
 			this.logoVisible = visible
 		},
 
-		async handleSetCurrentList({list, forceUpdate = false} : {list: IList, forceUpdate: boolean}) {
+		async handleSetCurrentList({list, forceUpdate = false} : {list: IList | null, forceUpdate: boolean}) {
 			if (list === null) {
 				this.setCurrentList({})
 				this.setBackground('')
