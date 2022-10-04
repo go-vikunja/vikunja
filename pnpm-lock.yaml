@@ -11,6 +11,7 @@ specifiers:
   '@fortawesome/vue-fontawesome': 3.0.1
   '@github/hotkey': 2.0.1
   '@kyvg/vue3-notification': 2.4.1
+  '@rushstack/eslint-patch': ^1.2.0
   '@sentry/tracing': 7.14.1
   '@sentry/vue': 7.14.1
   '@types/dompurify': 2.3.4
@@ -133,6 +134,7 @@ devDependencies:
   '@cypress/vite-dev-server': 3.2.0
   '@cypress/vue': 4.2.0_cypress@10.9.0+vue@3.2.40
   '@faker-js/faker': 7.5.0
+  '@rushstack/eslint-patch': 1.2.0
   '@types/dompurify': 2.3.4
   '@types/flexsearch': 0.7.3
   '@types/marked': 4.0.7
@@ -2665,6 +2667,10 @@ packages:
       estree-walker: 1.0.1
       picomatch: 2.3.1
       rollup: 2.79.1
+    dev: true
+
+  /@rushstack/eslint-patch/1.2.0:
+    resolution: {integrity: sha512-sXo/qW2/pAcmT43VoRKOJbDOfV3cYpq3szSVfIThQXNt+E4DfKj361vaAt3c88U5tPUxzEswam7GW48PJqtKAg==}
     dev: true
 
   /@samverschueren/stream-to-observable/0.3.1_rxjs@6.6.7:

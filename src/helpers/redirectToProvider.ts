@@ -3,7 +3,7 @@ import {parseURL} from 'ufo'
 import {createRandomID} from '@/helpers/randomId'
 import type {IProvider} from '@/types/IProvider'
 
-export const redirectToProvider = (provider: IProvider, redirectUrl: string = '') => {
+export const redirectToProvider = (provider: IProvider, redirectUrl = '') => {
 
 	// We're not using the redirect url provided by the server to allow redirects when using the electron app.
 	// The implications are not quite clear yet hence the logic to pass in another redirect url still exists.

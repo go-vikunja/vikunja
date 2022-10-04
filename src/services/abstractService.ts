@@ -149,7 +149,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 	/**
 	 * Returns a fully-ready-ready-to-make-a-request-to route with replaced parameters.
 	 */
-	getReplacedRoute(path : string, pathparams : {}) : string {
+	getReplacedRoute(path : string, pathparams : Record<string, unknown>) : string {
 		const replacements = this.getRouteReplacements(path, pathparams)
 		return Object.entries(replacements).reduce(
 			(result, [parameter, value]) => result.replace(parameter, value as string),

@@ -1,6 +1,8 @@
-export default {
+import type {Directive} from 'vue'
+
+const focus = <Directive<HTMLElement,string>>{
 	// When the bound element is inserted into the DOM...
-	mounted: (el, {modifiers}) => {
+	mounted(el, {modifiers}) {
 		// Focus the element only if the viewport is big enough
 		// auto focusing elements on mobile can be annoying since in these cases the
 		// keyboard always pops up and takes half of the available space on the screen.
@@ -10,3 +12,5 @@ export default {
 		}
 	},
 }
+
+export default focus

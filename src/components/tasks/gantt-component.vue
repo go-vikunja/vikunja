@@ -278,13 +278,13 @@ export default defineComponent({
 		prepareGanttDays() {
 			console.debug('prepareGanttDays; start date: ', this.startDate, 'end date:', this.endDate)
 			// Layout: years => [months => [days]]
-			let years = {}
+			const years = {}
 			for (
 				let d = this.startDate;
 				d <= this.endDate;
 				d.setDate(d.getDate() + 1)
 			) {
-				let date = new Date(d)
+				const date = new Date(d)
 				if (years[date.getFullYear() + ''] === undefined) {
 					years[date.getFullYear() + ''] = {}
 				}
@@ -353,7 +353,7 @@ export default defineComponent({
 
 			const didntHaveDates = newTask.startDate === null ? true : false
 
-			let startDate = new Date(this.startDate)
+			const startDate = new Date(this.startDate)
 			startDate.setDate(
 				startDate.getDate() + newRect.left / this.dayWidth,
 			)
@@ -362,7 +362,7 @@ export default defineComponent({
 			startDate.setUTCSeconds(0)
 			startDate.setUTCMilliseconds(0)
 			newTask.startDate = startDate
-			let endDate = new Date(startDate)
+			const endDate = new Date(startDate)
 			endDate.setDate(
 				startDate.getDate() + newRect.width / this.dayWidth,
 			)
@@ -430,7 +430,7 @@ export default defineComponent({
 			if (!this.newTaskFieldActive) {
 				return
 			}
-			let task = new TaskModel({
+			const task = new TaskModel({
 				title: this.newTaskTitle,
 				listId: this.listId,
 			})

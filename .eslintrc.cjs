@@ -1,3 +1,6 @@
+/* eslint-env node */
+require("@rushstack/eslint-patch/modern-module-resolution")
+
 module.exports = {
 	'root': true,
 	'env': {
@@ -9,7 +12,7 @@ module.exports = {
 	'extends': [
 		'eslint:recommended',
 		'plugin:vue/vue3-essential',
-		'@vue/typescript',
+		'@vue/eslint-config-typescript/recommended',
 	],
 	'rules': {
 		'vue/html-quotes': [
@@ -28,7 +31,6 @@ module.exports = {
 			'error',
 			'never',
 		],
-		'vue/script-setup-uses-vars': 'error',
 
 		// see https://segmentfault.com/q/1010000040813116/a-1020000041134455 (original in chinese)
 		'no-unused-vars': 'off',
@@ -40,6 +42,7 @@ module.exports = {
 	'parserOptions': {
 		'parser': '@typescript-eslint/parser',
 		'ecmaVersion': 2022,
+		'sourceType': 'module',
 	},
 	'ignorePatterns': [
 		'*.test.*',
