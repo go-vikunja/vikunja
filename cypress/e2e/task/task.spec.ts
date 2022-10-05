@@ -13,14 +13,36 @@ import {BucketFactory} from '../../factories/bucket'
 
 import '../../support/authenticateUser'
 
+function addLabelToTaskAndVerify(labelTitle: string) {
+	cy.get('.task-view .action-buttons .button')
+		.contains('Add Labels')
+		.click()
+	cy.get('.task-view .details.labels-list .multiselect input')
+		.type(labelTitle)
+	cy.get('.task-view .details.labels-list .multiselect .search-results')
+		.children()
+		.first()
+		.click()
+
+	cy.get('.global-notification', { timeout: 4000 })
+		.should('contain', 'Success')
+	cy.get('.task-view .details.labels-list .multiselect .input-wrapper span.tag')
+		.should('exist')
+		.should('contain', labelTitle)
+}
+
 describe('Task', () => {
 	let namespaces
 	let lists
+	let buckets
 
 	beforeEach(() => {
 		UserFactory.create(1)
 		namespaces = NamespaceFactory.create(1)
 		lists = ListFactory.create(1)
+		buckets = BucketFactory.create(1, {
+			list_id: lists[0].id,
+		})
 		TaskFactory.truncate()
 		UserListFactory.truncate()
 	})
@@ -345,21 +367,31 @@ describe('Task', () => {
 
 			cy.visit(`/tasks/${tasks[0].id}`)
 
-			cy.get('.task-view .action-buttons .button')
-				.contains('Add Labels')
+			addLabelToTaskAndVerify(labels[0].title)
+		})
+		
+		it('Can add a label to a task and it shows up on the kanban board afterwards', () => {
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				list_id: lists[0].id,
+				bucket_id: buckets[0].id,
+			})
+			const labels = LabelFactory.create(1)
+			LabelTaskFactory.truncate()
+			
+			cy.visit(`/lists/${lists[0].id}/kanban`)
+			
+			cy.get('.bucket .task')
+				.contains(tasks[0].title)
 				.click()
-			cy.get('.task-view .details.labels-list .multiselect input')
-				.type(labels[0].title)
-			cy.get('.task-view .details.labels-list .multiselect .search-results')
-				.children()
-				.first()
+			
+			addLabelToTaskAndVerify(labels[0].title)
+			
+			cy.get('.modal-content .close')
 				.click()
-
-			cy.get('.global-notification', { timeout: 4000 })
-				.should('contain', 'Success')
-			cy.get('.task-view .details.labels-list .multiselect .input-wrapper span.tag')
-				.should('exist')
-				.should('contain', labels[0].title)
+			
+			cy.get('.bucket .task')
+				.should('contain.text', labels[0].title)
 		})
 
 		it('Can remove a label from a task', () => {
@@ -441,7 +473,7 @@ describe('Task', () => {
 				.should('have.value', '4')
 		})
 
-		it.only('Can set the progress for a task', () => {
+		it('Can set the progress for a task', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 			})

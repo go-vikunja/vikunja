@@ -75,12 +75,11 @@ export const useKanbanStore = defineStore('kanban', {
 		getTaskById(state) {
 			return (id: ITask['id']) => {
 				const { bucketIndex, taskIndex } = getTaskIndicesById(state, id)
-
 				
 				return {
 					bucketIndex,
 					taskIndex,
-					task: bucketIndex && taskIndex && state.buckets[bucketIndex]?.tasks?.[taskIndex] || null,
+					task: bucketIndex !== null && taskIndex !== null && state.buckets[bucketIndex]?.tasks?.[taskIndex] || null,
 				}
 			}
 		},

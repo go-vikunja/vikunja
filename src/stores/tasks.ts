@@ -252,7 +252,7 @@ export const useTaskStore = defineStore('task', {
 				// Don't try further adding a label if the task is not in kanban
 				// Usually this means the kanban board hasn't been accessed until now.
 				// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
-				console.debug('Could not add label to task in kanban, task not found', t)
+				console.debug('Could not add label to task in kanban, task not found', {taskId, t})
 				return r
 			}
 
