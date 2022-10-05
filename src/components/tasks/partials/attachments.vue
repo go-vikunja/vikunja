@@ -35,7 +35,15 @@
 				:key="a.id"
 				@click="viewOrDownload(a)"
 			>
-				<div class="filename">{{ a.file.name }}</div>
+				<div class="filename">
+					{{ a.file.name }}
+					<span 
+						v-if="task.coverImageAttachmentId === a.id" 
+						class="is-task-cover"
+					>
+						{{ $t('task.attachment.usedAsCover') }}
+					</span>
+				</div>
 				<div class="info">
 					<p class="attachment-info-meta">
 						<i18n-t keypath="task.attachment.createdBy" scope="global">
@@ -416,6 +424,14 @@ async function setCoverImage(attachment: IAttachment | null) {
 	90% {
 		transform: translate3d(0, -4px, 0);
 	}
+}
+
+.is-task-cover {
+	background: var(--primary);
+	color: var(--white);
+	padding: .25rem .35rem;
+	border-radius: 4px;
+	font-size: .75rem;
 }
 
 @include modal-transition();
