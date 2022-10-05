@@ -488,4 +488,8 @@ export function getAuthForRoute(route: RouteLocation) {
 	}
 }
 
+router.beforeEach((to, from) => {
+	return getAuthForRoute(to)
+})
+
 export default router
