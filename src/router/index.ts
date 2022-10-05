@@ -488,7 +488,7 @@ export function getAuthForRoute(route: RouteLocation) {
 	}
 }
 
-router.beforeEach((to, from) => {
+router.beforeEach((to) => {
 	return getAuthForRoute(to)
 })
 
