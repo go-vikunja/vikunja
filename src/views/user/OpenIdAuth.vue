@@ -3,6 +3,9 @@
 		<message variant="danger" v-if="errorMessage">
 			{{ errorMessage }}
 		</message>
+		<message variant="danger" v-if="errorMessageFromQuery" class="mt-2">
+			{{ errorMessageFromQuery }}
+		</message>
 		<message v-if="loading">
 			{{ $t('user.auth.authenticating') }}
 		</message>
@@ -33,6 +36,7 @@ const authStore = useAuthStore()
 
 const loading = computed(() => authStore.isLoading)
 const errorMessage = ref('')
+const errorMessageFromQuery = computed(() => route.query.error)
 
 async function authenticateWithCode() {
 	// This component gets mounted twice: The first time when the actual auth request hits the frontend,
