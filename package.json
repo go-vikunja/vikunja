@@ -110,5 +110,5 @@
     }
   },
   "license": "AGPL-3.0-or-later",
-  "packageManager": "pnpm@7.13.1"
+  "packageManager": "pnpm@7.13.2"
 }
