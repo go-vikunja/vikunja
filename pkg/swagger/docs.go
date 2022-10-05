@@ -7774,6 +7774,10 @@ const docTemplate = `{
                     "description": "BucketID is the ID of the kanban bucket this task belongs to.",
                     "type": "integer"
                 },
+                "cover_image_attachment_id": {
+                    "description": "If this task has a cover image, the field will return the id of the attachment that is the cover image.",
+                    "type": "integer"
+                },
                 "created": {
                     "description": "A timestamp when this task was created. You cannot change this value.",
                     "type": "string"
@@ -8386,6 +8390,10 @@ const docTemplate = `{
                 },
                 "bucket_id": {
                     "description": "BucketID is the ID of the kanban bucket this task belongs to.",
+                    "type": "integer"
+                },
+                "cover_image_attachment_id": {
+                    "description": "If this task has a cover image, the field will return the id of the attachment that is the cover image.",
                     "type": "integer"
                 },
                 "created": {

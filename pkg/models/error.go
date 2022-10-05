@@ -819,6 +819,34 @@ func (err ErrInvalidTaskFilterValue) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrAttachmentDoesNotBelongToTask represents an error where the provided task cover attachment does not belong to the same task
+type ErrAttachmentDoesNotBelongToTask struct {
+	TaskID       int64
+	AttachmentID int64
+}
+
+// IsErrAttachmentAndCoverMustBelongToTheSameTask checks if an error is ErrAttachmentDoesNotBelongToTask.
+func IsErrAttachmentAndCoverMustBelongToTheSameTask(err error) bool {
+	_, ok := err.(ErrAttachmentDoesNotBelongToTask)
+	return ok
+}
+
+func (err ErrAttachmentDoesNotBelongToTask) Error() string {
+	return fmt.Sprintf("Task attachment and cover image do not belong to the same task [TaskID: %d, AttachmentID: %d]", err.TaskID, err.AttachmentID)
+}
+
+// ErrCodeAttachmentDoesNotBelongToTask holds the unique world-error code of this error
+const ErrCodeAttachmentDoesNotBelongToTask = 4020
+
+// HTTPError holds the http error description
+func (err ErrAttachmentDoesNotBelongToTask) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeAttachmentDoesNotBelongToTask,
+		Message:  "This attachment does not belong to that task.",
+	}
+}
+
 // =================
 // Namespace errors
 // =================

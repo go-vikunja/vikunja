@@ -82,10 +82,11 @@ This document describes the different errors Vikunja can return.
 | 4013 | 400 | The task sort param is invalid. |
 | 4014 | 400 | The task sort order is invalid. |
 | 4015 | 404 | The task comment does not exist. |
-| 4016 | 403 | Invalid task field. |
-| 4017 | 403 | Invalid task filter comparator. |
-| 4018 | 403 | Invalid task filter concatinator. |
-| 4019 | 403 | Invalid task filter value. |
+| 4016 | 400 | Invalid task field. |
+| 4017 | 400 | Invalid task filter comparator. |
+| 4018 | 400 | Invalid task filter concatinator. |
+| 4019 | 400 | Invalid task filter value. |
+| 4020 | 400 | The provided attachment does not belong to that task. |
 
 ## Namespace
 

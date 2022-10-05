@@ -98,6 +98,9 @@ type Task struct {
 	// All attachments this task has
 	Attachments []*TaskAttachment `xorm:"-" json:"attachments"`
 
+	// If this task has a cover image, the field will return the id of the attachment that is the cover image.
+	CoverImageAttachmentID int64 `xorm:"bigint default 0" json:"cover_image_attachment_id"`
+
 	// True if a task is a favorite task. Favorite tasks show up in a separate "Important" list. This value depends on the user making the call to the api.
 	IsFavorite bool `xorm:"-" json:"is_favorite"`
 
@@ -1039,6 +1042,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		"position",
 		"repeat_mode",
 		"kanban_position",
+		"cover_image_attachment_id",
 	}
 
 	// If the task is being moved between lists, make sure to move the bucket + index as well
@@ -1051,6 +1055,23 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 
 		t.Index = latestTask.Index + 1
 		colsToUpdate = append(colsToUpdate, "index")
+	}
+
+	// If a task attachment is being set as cover image, check if the attachment actually belongs to the task
+	if t.CoverImageAttachmentID != 0 {
+		is, err := s.Exist(&TaskAttachment{
+			TaskID: t.ID,
+			ID:     t.CoverImageAttachmentID,
+		})
+		if err != nil {
+			return err
+		}
+		if !is {
+			return &ErrAttachmentDoesNotBelongToTask{
+				AttachmentID: t.CoverImageAttachmentID,
+				TaskID:       t.ID,
+			}
+		}
 	}
 
 	wasFavorite, err := isFavorite(s, t.ID, a, FavoriteKindTask)
@@ -1147,6 +1168,10 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	// Is Favorite
 	if !t.IsFavorite {
 		ot.IsFavorite = false
+	}
+	// Attachment cover image
+	if t.CoverImageAttachmentID == 0 {
+		ot.CoverImageAttachmentID = 0
 	}
 
 	_, err = s.ID(t.ID).
