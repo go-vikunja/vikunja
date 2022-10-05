@@ -79,7 +79,7 @@
 								</div>
 								<percent-done-select
 									:disabled="!canWrite"
-									@update:model-value="saveTask"
+									@update:model-value="setPercentDone"
 									ref="percentDone"
 									v-model="task.percentDone"/>
 							</div>
@@ -759,6 +759,17 @@ async function setPriority(priority: Priority) {
 	const newTask: ITask = {
 		...task,
 		priority,
+	}
+
+	return saveTask({
+		task: newTask,
+	})
+}
+
+async function setPercentDone(percentDone: number) {
+	const newTask: ITask = {
+		...task,
+		percentDone,
 	}
 
 	return saveTask({

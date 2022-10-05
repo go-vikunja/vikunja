@@ -440,5 +440,30 @@ describe('Task', () => {
 				.get('.select select')
 				.should('have.value', '4')
 		})
+
+		it.only('Can set the progress for a task', () => {
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+			})
+			cy.visit(`/tasks/${tasks[0].id}`)
+
+			cy.get('.task-view .action-buttons .button')
+				.contains('Set Progress')
+				.click()
+			cy.get('.task-view .columns.details .column')
+				.contains('Progress')
+				.get('.select select')
+				.select('50%')
+			cy.get('.global-notification')
+				.should('contain', 'Success')
+			
+			cy.wait(200)
+
+			cy.get('.task-view .columns.details .column')
+				.contains('Progress')
+				.get('.select select')
+				.should('be.visible')
+				.should('have.value', '0.5')
+		})
 	})
 })
