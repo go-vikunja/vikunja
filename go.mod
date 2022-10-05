@@ -42,7 +42,7 @@ require (
 	github.com/imdario/mergo v0.3.13
 	github.com/jinzhu/copier v0.3.5
 	github.com/labstack/echo/v4 v4.9.0
-	github.com/labstack/gommon v0.3.1
+	github.com/labstack/gommon v0.4.0
 	github.com/lib/pq v1.10.7
 	github.com/magefile/mage v1.14.0
 	github.com/mattn/go-sqlite3 v1.14.15
