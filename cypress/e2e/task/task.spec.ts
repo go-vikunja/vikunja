@@ -12,6 +12,7 @@ import {LabelTaskFactory} from '../../factories/label_task'
 import {BucketFactory} from '../../factories/bucket'
 
 import '../../support/authenticateUser'
+import {TaskAttachmentFactory} from '../../factories/task_attachments'
 
 function addLabelToTaskAndVerify(labelTitle: string) {
 	cy.get('.task-view .action-buttons .button')
@@ -29,6 +30,19 @@ function addLabelToTaskAndVerify(labelTitle: string) {
 	cy.get('.task-view .details.labels-list .multiselect .input-wrapper span.tag')
 		.should('exist')
 		.should('contain', labelTitle)
+}
+
+function uploadAttachmentAndVerify(taskId: number) {
+	cy.intercept(`${Cypress.env('API_URL')}/tasks/${taskId}/attachments`).as('uploadAttachment')
+	cy.get('.task-view .action-buttons .button')
+		.contains('Add Attachments')
+		.click()
+	cy.get('input[type=file]', {timeout: 1000})
+		.selectFile('cypress/fixtures/image.jpg', {force: true}) // The input is not visible, but on purpose
+	cy.wait('@uploadAttachment')
+
+	cy.get('.attachments .attachments .files a.attachment')
+		.should('exist')
 }
 
 describe('Task', () => {
@@ -496,6 +510,41 @@ describe('Task', () => {
 				.get('.select select')
 				.should('be.visible')
 				.should('have.value', '0.5')
+		})
+		
+		it('Can add an attachment to a task', () => {
+			TaskAttachmentFactory.truncate()
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+			})
+			cy.visit(`/tasks/${tasks[0].id}`)
+
+			uploadAttachmentAndVerify(tasks[0].id)
+		})
+
+		it('Can add an attachment to a task and see it appearing on kanban', () => {
+			TaskAttachmentFactory.truncate()
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				list_id: lists[0].id,
+				bucket_id: buckets[0].id,
+			})
+			const labels = LabelFactory.create(1)
+			LabelTaskFactory.truncate()
+
+			cy.visit(`/lists/${lists[0].id}/kanban`)
+
+			cy.get('.bucket .task')
+				.contains(tasks[0].title)
+				.click()
+
+			uploadAttachmentAndVerify(tasks[0].id)
+
+			cy.get('.modal-content .close')
+				.click()
+
+			cy.get('.bucket .task .footer .icon svg.fa-paperclip')
+				.should('exist')
 		})
 	})
 })
