@@ -9,7 +9,7 @@
 
 		<input
 			v-if="editEnabled"
-			:disabled="attachmentService.loading || undefined"
+			:disabled="loading || undefined"
 			@change="uploadNewAttachment()"
 			id="files"
 			multiple
@@ -35,7 +35,15 @@
 				:key="a.id"
 				@click="viewOrDownload(a)"
 			>
-				<div class="filename">{{ a.file.name }}</div>
+				<div class="filename">
+					{{ a.file.name }}
+					<span 
+						v-if="task.coverImageAttachmentId === a.id" 
+						class="is-task-cover"
+					>
+						{{ $t('task.attachment.usedAsCover') }}
+					</span>
+				</div>
 				<div class="info">
 					<p class="attachment-info-meta">
 						<i18n-t keypath="task.attachment.createdBy" scope="global">
@@ -78,6 +86,17 @@
 						>
 							{{ $t('misc.delete') }}
 						</BaseButton>
+						<BaseButton
+							v-if="editEnabled"
+							class="attachment-info-meta-button"
+							@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
+						>
+							{{
+								task.coverImageAttachmentId === a.id
+									? $t('task.attachment.unsetAsCover')
+									: $t('task.attachment.setAsCover')
+							}}
+						</BaseButton>
 					</p>
 				</div>
 			</a>
@@ -85,7 +104,7 @@
 
 		<x-button
 			v-if="editEnabled"
-			:disabled="attachmentService.loading"
+			:disabled="loading"
 			@click="filesRef?.click()"
 			class="mb-4"
 			icon="cloud-upload-alt"
@@ -118,7 +137,7 @@
 			<template #header>
 				<span>{{ $t('task.attachment.delete') }}</span>
 			</template>
-			
+
 			<template #text>
 				<p>
 					{{ $t('task.attachment.deleteText1', {filename: attachmentToDelete.file.name}) }}<br/>
@@ -138,13 +157,14 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, type PropType} from 'vue'
+import {ref, shallowReactive, computed} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/user.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import AttachmentService from '@/services/attachment'
+import {SUPPORTED_IMAGE_SUFFIX} from '@/models/attachment'
 import type AttachmentModel from '@/models/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ITask} from '@/modelTypes/ITask'
@@ -155,24 +175,29 @@ import {uploadFiles, generateAttachmentUrl} from '@/helpers/attachments'
 import {getHumanSize} from '@/helpers/getHumanSize'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {error, success} from '@/message'
+import {useTaskStore} from '@/stores/tasks'
+import {useI18n} from 'vue-i18n'
 
-const props = defineProps({
-	taskId: {
-		type: Number as PropType<ITask['id']>,
-		required: true,
-	},
-	initialAttachments: {
-		type: Array,
-	},
-	editEnabled: {
-		default: true,
-	},
+const taskStore = useTaskStore()
+const {t} = useI18n({useScope: 'global'})
+
+const props = withDefaults(defineProps<{
+	task: ITask,
+	initialAttachments?: IAttachment[],
+	editEnabled: boolean,
+}>(), {
+	editEnabled: true,
 })
+
+// FIXME: this should go through the store
+const emit = defineEmits(['task-changed'])
 
 const attachmentService = shallowReactive(new AttachmentService())
 
 const attachmentStore = useAttachmentStore()
 const attachments = computed(() => attachmentStore.attachments)
+
+const loading = computed(() => attachmentService.loading || taskStore.isLoading)
 
 function onDrop(files: File[] | null) {
 	if (files && files.length !== 0) {
@@ -180,13 +205,14 @@ function onDrop(files: File[] | null) {
 	}
 }
 
-const { isOverDropZone } = useDropZone(document, onDrop)
+const {isOverDropZone} = useDropZone(document, onDrop)
 
 function downloadAttachment(attachment: IAttachment) {
 	attachmentService.download(attachment)
 }
 
 const filesRef = ref<HTMLInputElement | null>(null)
+
 function uploadNewAttachment() {
 	const files = filesRef.value?.files
 
@@ -198,7 +224,7 @@ function uploadNewAttachment() {
 }
 
 function uploadFilesToTask(files: File[] | FileList) {
-	uploadFiles(attachmentService, props.taskId, files)
+	uploadFiles(attachmentService, props.task.id, files)
 }
 
 const attachmentToDelete = ref<AttachmentModel | null>(null)
@@ -217,16 +243,15 @@ async function deleteAttachment() {
 		attachmentStore.removeById(attachmentToDelete.value.id)
 		success(r)
 		setAttachmentToDelete(null)
-	} catch(e) {
+	} catch (e) {
 		error(e)
 	}
 }
 
 const attachmentImageBlobUrl = ref<string | null>(null)
-const SUPPORTED_SUFFIX = ['.jpg', '.png', '.bmp', '.gif']
 
 async function viewOrDownload(attachment: AttachmentModel) {
-	if (SUPPORTED_SUFFIX.some((suffix) => attachment.file.name.endsWith(suffix))	) {
+	if (SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.endsWith(suffix))) {
 		attachmentImageBlobUrl.value = await attachmentService.getBlobUrl(attachment)
 	} else {
 		downloadAttachment(attachment)
@@ -234,8 +259,15 @@ async function viewOrDownload(attachment: AttachmentModel) {
 }
 
 const copy = useCopyToClipboard()
+
 function copyUrl(attachment: IAttachment) {
-	copy(generateAttachmentUrl(props.taskId, attachment.id))
+	copy(generateAttachmentUrl(props.task.id, attachment.id))
+}
+
+async function setCoverImage(attachment: IAttachment | null) {
+	const task = await taskStore.setCoverImage(props.task, attachment)
+	emit('task-changed', task)
+	success({message: t('task.attachment.successfullyChangedCoverImage')})
 }
 </script>
 
@@ -316,7 +348,7 @@ function copyUrl(attachment: IAttachment) {
 			height: auto;
 			text-shadow: var(--shadow-md);
 			animation: bounce 2s infinite;
-	
+
 			@media (prefers-reduced-motion: reduce) {
 				animation: none;
 			}
@@ -338,7 +370,7 @@ function copyUrl(attachment: IAttachment) {
 .attachment-info-meta {
 	display: flex;
 	align-items: center;
-	
+
 	:deep(.user) {
 		display: flex !important;
 		align-items: center;
@@ -348,7 +380,7 @@ function copyUrl(attachment: IAttachment) {
 	@media screen and (max-width: $mobile) {
 		flex-direction: column;
 		align-items: flex-start;
-		
+
 		:deep(.user) {
 			margin: .5rem 0;
 		}
@@ -392,6 +424,14 @@ function copyUrl(attachment: IAttachment) {
 	90% {
 		transform: translate3d(0, -4px, 0);
 	}
+}
+
+.is-task-cover {
+	background: var(--primary);
+	color: var(--white);
+	padding: .25rem .35rem;
+	border-radius: 4px;
+	font-size: .75rem;
 }
 
 @include modal-transition();

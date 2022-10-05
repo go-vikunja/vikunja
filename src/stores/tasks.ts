@@ -409,6 +409,13 @@ export const useTaskStore = defineStore('task', {
 				cancel()
 			}
 		},
+		
+		async setCoverImage(task: ITask, attachment: IAttachment | null) {
+			return this.update({
+				...task,
+				coverImageAttachmentId: attachment ? attachment.id : 0,
+			})
+		},
 	},
 })
 

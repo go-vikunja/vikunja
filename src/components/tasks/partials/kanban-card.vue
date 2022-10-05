@@ -11,62 +11,70 @@
 		@click.ctrl="() => toggleTaskDone(task)"
 		@click.meta="() => toggleTaskDone(task)"
 	>
-		<span class="task-id">
-			<Done class="kanban-card__done" :is-done="task.done" variant="small"/>
-			<template v-if="task.identifier === ''">
-				#{{ task.index }}
-			</template>
-			<template v-else>
-				{{ task.identifier }}
-			</template>
-		</span>
-		<span
-			:class="{'overdue': task.dueDate <= new Date() && !task.done}"
-			class="due-date"
-			v-if="task.dueDate > 0"
-			v-tooltip="formatDateLong(task.dueDate)">
-			<span class="icon">
-				<icon :icon="['far', 'calendar-alt']"/>
+		<img
+			v-if="coverImageBlobUrl"
+			:src="coverImageBlobUrl"
+			alt=""
+			class="cover-image"
+		/>
+		<div class="p-2">
+			<span class="task-id">
+				<Done class="kanban-card__done" :is-done="task.done" variant="small"/>
+				<template v-if="task.identifier === ''">
+					#{{ task.index }}
+				</template>
+				<template v-else>
+					{{ task.identifier }}
+				</template>
 			</span>
-			<time :datetime="formatISO(task.dueDate)">
-				{{ formatDateSince(task.dueDate) }}
-			</time>
-		</span>
-		<h3>{{ task.title }}</h3>
-		<progress
-			class="progress is-small"
-			v-if="task.percentDone > 0"
-			:value="task.percentDone * 100" max="100">
-			{{ task.percentDone * 100 }}%
-		</progress>
-		<div class="footer">
-			<labels :labels="task.labels"/>
-			<priority-label :priority="task.priority" :done="task.done"/>
-			<div class="assignees" v-if="task.assignees.length > 0">
-				<user
-					v-for="u in task.assignees"
-					:avatar-size="24"
-					:key="task.id + 'assignee' + u.id"
-					:show-username="false"
-					:user="u"
-				/>
+			<span
+				:class="{'overdue': task.dueDate <= new Date() && !task.done}"
+				class="due-date"
+				v-if="task.dueDate > 0"
+				v-tooltip="formatDateLong(task.dueDate)">
+				<span class="icon">
+					<icon :icon="['far', 'calendar-alt']"/>
+				</span>
+				<time :datetime="formatISO(task.dueDate)">
+					{{ formatDateSince(task.dueDate) }}
+				</time>
+			</span>
+			<h3>{{ task.title }}</h3>
+			<progress
+				class="progress is-small"
+				v-if="task.percentDone > 0"
+				:value="task.percentDone * 100" max="100">
+				{{ task.percentDone * 100 }}%
+			</progress>
+			<div class="footer">
+				<labels :labels="task.labels"/>
+				<priority-label :priority="task.priority" :done="task.done"/>
+				<div class="assignees" v-if="task.assignees.length > 0">
+					<user
+						v-for="u in task.assignees"
+						:avatar-size="24"
+						:key="task.id + 'assignee' + u.id"
+						:show-username="false"
+						:user="u"
+					/>
+				</div>
+				<checklist-summary :task="task"/>
+				<span class="icon" v-if="task.attachments.length > 0">
+					<icon icon="paperclip"/>	
+				</span>
+				<span v-if="task.description" class="icon">
+					<icon icon="align-left"/>
+				</span>
+				<span class="icon" v-if="task.repeatAfter.amount > 0">
+					<icon icon="history"/>
+				</span>
 			</div>
-			<checklist-summary :task="task"/>
-			<span class="icon" v-if="task.attachments.length > 0">
-				<icon icon="paperclip"/>	
-			</span>
-			<span v-if="task.description" class="icon">
-				<icon icon="align-left"/>
-			</span>
-			<span class="icon" v-if="task.repeatAfter.amount > 0">
-				<icon icon="history"/>
-			</span>
 		</div>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import {ref, computed} from 'vue'
+import {ref, computed, watch} from 'vue'
 import {useRouter} from 'vue-router'
 
 import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'
@@ -77,6 +85,8 @@ import ChecklistSummary from './checklist-summary.vue'
 
 import {TASK_DEFAULT_COLOR, getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
+import {SUPPORTED_IMAGE_SUFFIX} from '@/models/attachment'
+import AttachmentService from '@/services/attachment'
 
 import {formatDateLong, formatISO, formatDateSince} from '@/helpers/time/formatDate'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
@@ -114,6 +124,29 @@ function openTaskDetail() {
 		state: {backdropView: router.currentRoute.value.fullPath},
 	})
 }
+
+const coverImageBlobUrl = ref<string | null>(null)
+
+async function maybeDownloadCoverImage() {
+	if (!props.task.coverImageAttachmentId) {
+		coverImageBlobUrl.value = null
+		return
+	}
+
+	const attachment = props.task.attachments.find(a => a.id === props.task.coverImageAttachmentId)
+	if (!attachment || !SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.endsWith(suffix))) {
+		return
+	}
+
+	const attachmentService = new AttachmentService()
+	coverImageBlobUrl.value = await attachmentService.getBlobUrl(attachment)
+}
+
+watch(
+	() => props.task.coverImageAttachmentId,
+	maybeDownloadCoverImage,
+	{immediate: true},
+)
 </script>
 
 <style lang="scss" scoped>
@@ -125,12 +158,11 @@ $task-background: var(--white);
 	cursor: pointer;
 	box-shadow: var(--shadow-xs);
 	display: block;
-	border: 3px solid transparent;
 
 	font-size: .9rem;
-	padding: .4rem;
 	border-radius: $radius;
 	background: $task-background;
+	overflow: hidden;
 
 	&.loader-container.is-loading::after {
 		width: 1.5rem;
