@@ -80,6 +80,7 @@ describe('Task', () => {
 	describe('Task Detail View', () => {
 		beforeEach(() => {
 			TaskCommentFactory.truncate()
+			LabelTaskFactory.truncate()
 		})
 
 		it('Shows all task details', () => {
@@ -416,6 +417,28 @@ describe('Task', () => {
 				.should('not.exist')
 			cy.get('.global-notification')
 				.should('contain', 'Success')
+		})
+		
+		it('Can set a priority for a task', () => {
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+			})
+			cy.visit(`/tasks/${tasks[0].id}`)
+
+			cy.get('.task-view .action-buttons .button')
+				.contains('Set Priority')
+				.click()
+			cy.get('.task-view .columns.details .column')
+				.contains('Priority')
+				.get('.select select')
+				.select('Urgent')
+			cy.get('.global-notification')
+				.should('contain', 'Success')
+
+			cy.get('.task-view .columns.details .column')
+				.contains('Priority')
+				.get('.select select')
+				.should('have.value', '4')
 		})
 	})
 })

@@ -39,7 +39,7 @@
 								</div>
 								<priority-select
 									:disabled="!canWrite"
-									@update:model-value="saveTask"
+									@update:model-value="setPriority"
 									ref="priority"
 									v-model="task.priority"/>
 							</div>
@@ -443,7 +443,7 @@ import TaskModel, {TASK_DEFAULT_COLOR} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IList} from '@/modelTypes/IList'
 
-import {PRIORITIES} from '@/constants/priorities'
+import {PRIORITIES, type Priority} from '@/constants/priorities'
 import {RIGHTS} from '@/constants/rights'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -676,21 +676,19 @@ function setFieldActive(fieldName: keyof typeof activeFields) {
 }
 
 async function saveTask(args?: {
-			task: ITask,
-			showNotification?: boolean,
-			undoCallback?: () => void,
-		}) {
-			const {
-				task: currentTask,
-				showNotification,
-				undoCallback,
-			} = {
-				...{
-					task: cloneDeep(task),
-					showNotification: true,
-				},
-				...args,
-			}
+	task: ITask,
+	undoCallback?: () => void,
+}) {
+	const {
+		task: currentTask,
+		undoCallback,
+	} = {
+		...{
+			task: cloneDeep(task),
+		},
+		...args,
+	}
+			
 	if (!canWrite.value) {
 		return
 	}
@@ -710,10 +708,6 @@ async function saveTask(args?: {
 	const newTask = await taskStore.update(currentTask) // TODO: markraw ?
 	Object.assign(task, newTask)
 	setActiveFields()
-
-	if (!showNotification) {
-		return
-	}
 
 	let actions = []
 	if (undoCallback !== null) {
@@ -759,6 +753,17 @@ async function toggleFavorite() {
 	const newTask = await taskService.update(task)
 	Object.assign(task, newTask)
 	await namespaceStore.loadNamespacesIfFavoritesDontExist()
+}
+
+async function setPriority(priority: Priority) {
+	const newTask: ITask = {
+		...task,
+		priority,
+	}
+
+	return saveTask({
+		task: newTask,
+	})
 }
 </script>
 
