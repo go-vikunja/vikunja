@@ -11,7 +11,7 @@ describe('List View Gantt', () => {
 		const tasks = TaskFactory.create(1)
 		cy.visit('/lists/1/gantt')
 
-		cy.get('#g-gantt-rows-container')
+		cy.get('.g-gantt-rows-container')
 			.should('not.contain', tasks[0].title)
 	})
 
@@ -38,7 +38,7 @@ describe('List View Gantt', () => {
 		})
 		cy.visit('/lists/1/gantt')
 
-		cy.get('#g-gantt-rows-container')
+		cy.get('.g-gantt-rows-container')
 			.should('not.be.empty')
 			.should('contain', tasks[0].title)
 	})
@@ -54,7 +54,7 @@ describe('List View Gantt', () => {
 			.contains('Show tasks which don\'t have dates set')
 			.click()
 
-		cy.get('#g-gantt-rows-container')
+		cy.get('.g-gantt-rows-container')
 			.should('not.be.empty')
 			.should('contain', tasks[0].title)
 	})
@@ -70,7 +70,7 @@ describe('List View Gantt', () => {
 		})
 		cy.visit('/lists/1/gantt')
 
-		cy.get('#g-gantt-rows-container .g-gantt-row .g-gantt-row-bars-container div .g-gantt-bar')
+		cy.get('.g-gantt-rows-container .g-gantt-row .g-gantt-row-bars-container div .g-gantt-bar')
 			.first()
 			.trigger('mousedown', {which: 1})
 			.trigger('mousemove', {clientX: 500, clientY: 0})
