@@ -37,7 +37,11 @@
 						@create="createAndRelateTask"
 					>
 						<template #searchResult="{option: task}">
-							<span v-if="typeof task !== 'string'" class="search-result">
+							<span 
+								v-if="typeof task !== 'string'"
+								class="search-result"
+								:class="{'is-strikethrough': task.done}"
+							>
 								<span
 									class="different-list"
 									v-if="task.listId !== listId"
