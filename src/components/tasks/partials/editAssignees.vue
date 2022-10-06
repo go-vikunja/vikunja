@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, watch, type PropType} from 'vue'
+import {ref, shallowReactive, watch, nextTick, type PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import User from '@/components/misc/user.vue'
@@ -43,22 +43,22 @@ import {useTaskStore} from '@/stores/tasks'
 import type {IUser} from '@/modelTypes/IUser'
 
 const props = defineProps({
-		taskId: {
-			type: Number,
-			required: true,
-		},
-		listId: {
-			type: Number,
-			required: true,
-		},
-		disabled: {
-			default: false,
-		},
-		modelValue: {
-			type: Array as PropType<IUser[]>,
-			default: () => [],
-		},
-	})
+	taskId: {
+		type: Number,
+		required: true,
+	},
+	listId: {
+		type: Number,
+		required: true,
+	},
+	disabled: {
+		default: false,
+	},
+	modelValue: {
+		type: Array as PropType<IUser[]>,
+		default: () => [],
+	},
+})
 const emit = defineEmits(['update:modelValue'])
 
 const taskStore = useTaskStore()
@@ -67,6 +67,7 @@ const {t} = useI18n({useScope: 'global'})
 const listUserService = shallowReactive(new ListUserService())
 const foundUsers = ref([])
 const assignees = ref<IUser[]>([])
+let isAdding = false
 
 watch(
 	() => props.modelValue,
@@ -80,9 +81,19 @@ watch(
 )
 
 async function addAssignee(user: IUser) {
-	await taskStore.addAssignee({user: user, taskId: props.taskId})
-	emit('update:modelValue', assignees.value)
-	success({message: t('task.assignee.assignSuccess')})
+	if (isAdding) {
+		return
+	}
+
+	try {
+		nextTick(() => isAdding = true)
+
+		await taskStore.addAssignee({user: user, taskId: props.taskId})
+		emit('update:modelValue', assignees.value)
+		success({message: t('task.assignee.assignSuccess')})
+	} finally {
+		nextTick(() => isAdding = false)
+	}
 }
 
 async function removeAssignee(user: IUser) {
@@ -119,6 +130,7 @@ function clearAllFoundUsers() {
 }
 
 const multiselect = ref()
+
 function focus() {
 	multiselect.value.focus()
 }

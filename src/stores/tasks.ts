@@ -171,32 +171,39 @@ export const useTaskStore = defineStore('task', {
 			user: IUser,
 			taskId: ITask['id']
 		}) {
-			const kanbanStore = useKanbanStore()
-			const taskAssigneeService = new TaskAssigneeService()
-			const r = await taskAssigneeService.create(new TaskAssigneeModel({
-				userId: user.id,
-				taskId: taskId,
-			}))
-			const t = kanbanStore.getTaskById(taskId)
-			if (t.task === null) {
-				// Don't try further adding a label if the task is not in kanban
-				// Usually this means the kanban board hasn't been accessed until now.
-				// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
-				console.debug('Could not add assignee to task in kanban, task not found', t)
-				return r
-			}
+			const cancel = setModuleLoading(this)
+			
+			try {
+				const kanbanStore = useKanbanStore()
+				const taskAssigneeService = new TaskAssigneeService()
+				const r = await taskAssigneeService.create(new TaskAssigneeModel({
+					userId: user.id,
+					taskId: taskId,
+				}))
+				const t = kanbanStore.getTaskById(taskId)
+				if (t.task === null) {
+					// Don't try further adding a label if the task is not in kanban
+					// Usually this means the kanban board hasn't been accessed until now.
+					// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
+					console.debug('Could not add assignee to task in kanban, task not found', t)
+					return r
+				}
 
-			kanbanStore.setTaskInBucketByIndex({
-				...t,
-				task: {
-					...t.task,
-					assignees: [
-						...t.task.assignees,
-						user,
-					],
-				},
-			})
-			return r
+				kanbanStore.setTaskInBucketByIndex({
+					...t,
+					task: {
+						...t.task,
+						assignees: [
+							...t.task.assignees,
+							user,
+						],
+					},
+				})
+
+				return r
+			} finally {
+				cancel()
+			}
 		},
 
 		async removeAssignee({
