@@ -221,6 +221,19 @@ func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, list *Li
 		return ErrUserDoesNotHaveAccessToList{list.ID, newAssigneeID}
 	}
 
+	exist, err := s.
+		Where("task_id = ? AND user_id = ?", t.ID, newAssigneeID).
+		Exist(&TaskAssginee{})
+	if err != nil {
+		return err
+	}
+	if exist {
+		return &ErrUserAlreadyAssigned{
+			UserID: newAssigneeID,
+			TaskID: t.ID,
+		}
+	}
+
 	_, err = s.Insert(TaskAssginee{
 		TaskID: t.ID,
 		UserID: newAssigneeID,

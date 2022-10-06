@@ -847,6 +847,34 @@ func (err ErrAttachmentDoesNotBelongToTask) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrUserAlreadyAssigned represents an error where the user is already assigned to this task
+type ErrUserAlreadyAssigned struct {
+	TaskID int64
+	UserID int64
+}
+
+// IsErrUserAlreadyAssigned checks if an error is ErrUserAlreadyAssigned.
+func IsErrUserAlreadyAssigned(err error) bool {
+	_, ok := err.(ErrUserAlreadyAssigned)
+	return ok
+}
+
+func (err ErrUserAlreadyAssigned) Error() string {
+	return fmt.Sprintf("User is already assigned to task [TaskID: %d, UserID: %d]", err.TaskID, err.UserID)
+}
+
+// ErrCodeUserAlreadyAssigned holds the unique world-error code of this error
+const ErrCodeUserAlreadyAssigned = 4021
+
+// HTTPError holds the http error description
+func (err ErrUserAlreadyAssigned) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeUserAlreadyAssigned,
+		Message:  "This user is already assigned to that task.",
+	}
+}
+
 // =================
 // Namespace errors
 // =================
