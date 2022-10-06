@@ -69,7 +69,7 @@ specifiers:
   sortablejs: 1.15.0
   typescript: 4.8.4
   ufo: 0.8.5
-  vite: 3.1.5
+  vite: 3.1.6
   vite-plugin-pwa: 0.13.1
   vite-svg-loader: 3.6.0
   vitest: 0.23.4
@@ -143,8 +143,8 @@ devDependencies:
   '@types/node': 16.11.64
   '@typescript-eslint/eslint-plugin': 5.39.0_be048b79d04b908735dc19ebba1dbd66
   '@typescript-eslint/parser': 5.39.0_eslint@8.24.0+typescript@4.8.4
-  '@vitejs/plugin-legacy': 2.2.0_terser@5.10.0+vite@3.1.5
-  '@vitejs/plugin-vue': 3.1.2_vite@3.1.5+vue@3.2.40
+  '@vitejs/plugin-legacy': 2.2.0_terser@5.10.0+vite@3.1.6
+  '@vitejs/plugin-vue': 3.1.2_vite@3.1.6+vue@3.2.40
   '@vue/eslint-config-typescript': 11.0.2_ab5ac96ab635ce1fa6bba69a2b0ff7cb
   '@vue/test-utils': 2.1.0_vue@3.2.40
   '@vue/tsconfig': 0.1.3_@types+node@16.11.64
@@ -164,8 +164,8 @@ devDependencies:
   rollup-plugin-visualizer: 5.8.2_rollup@2.79.1
   sass: 1.55.0
   typescript: 4.8.4
-  vite: 3.1.5_sass@1.55.0+terser@5.10.0
-  vite-plugin-pwa: 0.13.1_vite@3.1.5
+  vite: 3.1.6_sass@1.55.0+terser@5.10.0
+  vite-plugin-pwa: 0.13.1_vite@3.1.6
   vite-svg-loader: 3.6.0
   vitest: 0.23.4_fa62def892c9acf1c99b23b1f0d45084
   vue-tsc: 0.40.13_typescript@4.8.4
@@ -3311,7 +3311,7 @@ packages:
       - supports-color
     dev: true
 
-  /@vitejs/plugin-legacy/2.2.0_terser@5.10.0+vite@3.1.5:
+  /@vitejs/plugin-legacy/2.2.0_terser@5.10.0+vite@3.1.6:
     resolution: {integrity: sha512-xkSXZl2LNk0KKyo5CJknNW84mSlmHIClFzsBuFXkX3yBt+Lr8UO/n4QOg2X7+jvurgBRies9FRn3ZvMem+TmIg==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
@@ -3324,17 +3324,17 @@ packages:
       regenerator-runtime: 0.13.9
       systemjs: 6.12.6
       terser: 5.10.0
-      vite: 3.1.5_sass@1.55.0+terser@5.10.0
+      vite: 3.1.6_sass@1.55.0+terser@5.10.0
     dev: true
 
-  /@vitejs/plugin-vue/3.1.2_vite@3.1.5+vue@3.2.40:
+  /@vitejs/plugin-vue/3.1.2_vite@3.1.6+vue@3.2.40:
     resolution: {integrity: sha512-3zxKNlvA3oNaKDYX0NBclgxTQ1xaFdL7PzwF6zj9tGFziKwmBa3Q/6XcJQxudlT81WxDjEhHmevvIC4Orc1LhQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^3.0.0
       vue: ^3.2.25
     dependencies:
-      vite: 3.1.5_sass@1.55.0+terser@5.10.0
+      vite: 3.1.6_sass@1.55.0+terser@5.10.0
       vue: 3.2.40
     dev: true
 
@@ -12565,7 +12565,7 @@ packages:
       extsprintf: 1.3.0
     dev: true
 
-  /vite-plugin-pwa/0.13.1_vite@3.1.5:
+  /vite-plugin-pwa/0.13.1_vite@3.1.6:
     resolution: {integrity: sha512-NR3dIa+o2hzlzo4lF4Gu0cYvoMjSw2DdRc6Epw1yjmCqWaGuN86WK9JqZie4arNlE1ZuWT3CLiMdiX5wcmmUmg==}
     peerDependencies:
       vite: ^3.1.0
@@ -12574,7 +12574,7 @@ packages:
       fast-glob: 3.2.11
       pretty-bytes: 6.0.0
       rollup: 2.79.1
-      vite: 3.1.5_sass@1.55.0+terser@5.10.0
+      vite: 3.1.6_sass@1.55.0+terser@5.10.0
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
@@ -12589,8 +12589,8 @@ packages:
       svgo: 2.8.0
     dev: true
 
-  /vite/3.1.5_sass@1.55.0+terser@5.10.0:
-    resolution: {integrity: sha512-V4Avke0b7h2zTWVJf8vq6TE3aH061NQ3b1ixHQyqdoE/5HIVsxVLCyTLjJtHVcsJ5fIKSHvOtflWpgavHS8RPw==}
+  /vite/3.1.6_sass@1.55.0+terser@5.10.0:
+    resolution: {integrity: sha512-qMXIwnehvvcK5XfJiXQUiTxoYAEMKhM+jqCY6ZSTKFBKu1hJnAKEzP3AOcnTerI0cMZYAaJ4wpW1wiXLMDt4mA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
@@ -12651,7 +12651,7 @@ packages:
       tinybench: 2.1.5
       tinypool: 0.3.0
       tinyspy: 1.0.2
-      vite: 3.1.5_sass@1.55.0+terser@5.10.0
+      vite: 3.1.6_sass@1.55.0+terser@5.10.0
     transitivePeerDependencies:
       - less
       - sass
