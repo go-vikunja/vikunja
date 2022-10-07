@@ -33,14 +33,13 @@
 			>
 				{{ $t('menu.archive') }}
 			</dropdown-item>
-			<task-subscription
-				v-if="subscription"
+			<Subscription
 				class="has-no-shadow"
 				:is-button="false"
 				entity="namespace"
 				:entity-id="namespace.id"
 				:model-value="subscription"
-				@update:model-value="sub => subscription = sub"
+				@update:model-value="setSubscriptionInStore"
 				type="dropdown"
 			/>
 			<dropdown-item
@@ -59,9 +58,10 @@ import {ref, onMounted, type PropType} from 'vue'
 
 import Dropdown from '@/components/misc/dropdown.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
-import TaskSubscription from '@/components/misc/subscription.vue'
+import Subscription from '@/components/misc/subscription.vue'
 import type {INamespace} from '@/modelTypes/INamespace'
 import type {ISubscription} from '@/modelTypes/ISubscription'
+import {useNamespaceStore} from '@/stores/namespaces'
 
 const props = defineProps({
 	namespace: {
@@ -70,8 +70,20 @@ const props = defineProps({
 	},
 })
 
+const namespaceStore = useNamespaceStore()
+
 const subscription = ref<ISubscription | null>(null)
 onMounted(() => {
 	subscription.value = props.namespace.subscription
 })
+
+function setSubscriptionInStore(sub: ISubscription) {
+	subscription.value = sub
+	namespaceStore.setNamespaces([
+		{
+			...props.namespace,
+			subscription: sub,
+		},
+	])
+}
 </script>

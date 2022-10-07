@@ -43,7 +43,7 @@ export const useNamespaceStore = defineStore('namespace', {
 		getNamespaceById: state => (namespaceId: INamespace['id']) => {
 			return state.namespaces.find(({id}) => id == namespaceId) || null
 		},
-	
+
 		searchNamespace() {
 			return (query: string) => (
 				search(query)
@@ -64,6 +64,13 @@ export const useNamespaceStore = defineStore('namespace', {
 			this.namespaces = namespaces
 			namespaces.forEach(n => {
 				add(n)
+
+				// Check for each list in that namespace if it has a subscription and set it if not
+				n.lists.forEach(l => {
+					if (l.subscription === null || l.subscription.entity !== 'list') {
+						l.subscription = n.subscription
+					}
+				})
 			})
 		},
 
@@ -203,5 +210,5 @@ export const useNamespaceStore = defineStore('namespace', {
 
 // support hot reloading
 if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useNamespaceStore, import.meta.hot))
+	import.meta.hot.accept(acceptHMRUpdate(useNamespaceStore, import.meta.hot))
 }
