@@ -198,6 +198,11 @@ func makeNamespaceSlice(namespaces map[int64]*NamespaceWithLists, userMap map[in
 		n.Owner = userMap[n.OwnerID]
 		n.Subscription = subscriptions[n.ID]
 		all = append(all, n)
+		for _, l := range n.Lists {
+			if n.Subscription != nil && l.Subscription == nil {
+				l.Subscription = n.Subscription
+			}
+		}
 	}
 	sort.Slice(all, func(i, j int) bool {
 		return all[i].ID < all[j].ID
