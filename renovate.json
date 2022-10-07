@@ -6,7 +6,7 @@
   ],
   "packageRules": [
     {
-      "matchPackageNames": ["netlify-cli"],
+      "matchPackageNames": ["netlify-cli", "happy-dom"],
       "extends": ["schedule:weekly"]
     },
     {
