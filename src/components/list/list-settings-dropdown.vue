@@ -55,13 +55,13 @@
 			>
 				{{ $t('menu.archive') }}
 			</dropdown-item>
-			<task-subscription
+			<Subscription
 				class="has-no-shadow"
 				:is-button="false"
 				entity="list"
 				:entity-id="list.id"
 				:model-value="list.subscription"
-				@update:model-value="sub => subscription = sub"
+				@update:model-value="setSubscriptionInStore"
 				type="dropdown"
 			/>
 			<dropdown-item
@@ -81,10 +81,12 @@ import {ref, computed, watchEffect, type PropType} from 'vue'
 import {isSavedFilter} from '@/helpers/savedFilter'
 import Dropdown from '@/components/misc/dropdown.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
-import TaskSubscription from '@/components/misc/subscription.vue'
+import Subscription from '@/components/misc/subscription.vue'
 import type {IList} from '@/modelTypes/IList'
 import type {ISubscription} from '@/modelTypes/ISubscription'
 import {useConfigStore} from '@/stores/config'
+import {useListStore} from '@/stores/lists'
+import {useNamespaceStore} from '@/stores/namespaces'
 
 const props = defineProps({
 	list: {
@@ -93,6 +95,8 @@ const props = defineProps({
 	},
 })
 
+const listStore = useListStore()
+const namespaceStore = useNamespaceStore()
 const subscription = ref<ISubscription | null>(null)
 watchEffect(() => {
 	subscription.value = props.list.subscription ?? null
@@ -100,4 +104,14 @@ watchEffect(() => {
 
 const configStore = useConfigStore()
 const backgroundsEnabled = computed(() => configStore.enabledBackgroundProviders?.length > 0)
+
+function setSubscriptionInStore(sub: ISubscription) {
+	subscription.value = sub
+	const updatedList = {
+		...props.list,
+		subscription: sub,
+	}
+	listStore.setList(updatedList)
+	namespaceStore.setListInNamespaceById(updatedList)
+}
 </script>
