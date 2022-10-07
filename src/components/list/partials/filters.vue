@@ -210,6 +210,7 @@ import ListService from '@/services/list'
 import NamespaceService from '@/services/namespace'
 import EditLabels from '@/components/tasks/partials/editLabels.vue'
 
+import {dateIsValid, formatISO} from '@/helpers/time/formatDate'
 import {objectToSnakeCase} from '@/helpers/case'
 import {getDefaultParams} from '@/composables/taskList'
 import {camelCase} from 'camel-case'
@@ -391,7 +392,14 @@ export default defineComponent({
 					this.params.filter_value.push(dateTo)
 				}
 
-				this.filters[camelCase(filterName)] = {dateFrom, dateTo}
+				this.filters[camelCase(filterName)] = {
+					// Passing the dates as string values avoids an endless loop between values changing 
+					// in the datepicker (bubbling up to here) and changing here and bubbling down to the 
+					// datepicker (because there's a new date instance every time this function gets called).
+					// See https://kolaente.dev/vikunja/frontend/issues/2384
+					dateFrom: dateIsValid(dateFrom) ? formatISO(dateFrom) : dateFrom,
+					dateTo: dateIsValid(dateTo) ? formatISO(dateTo) : dateTo,
+				}
 				this.change()
 				return
 			}
@@ -511,12 +519,12 @@ export default defineComponent({
 			if (typeof this.filters[filterName] === 'undefined' || this.filters[filterName] === '') {
 				return
 			}
-			
+
 			// Don't load things if we already have something loaded.
 			// This is not the most ideal solution because it prevents a re-population when filters are changed 
 			// from the outside. It is still fine because we're not changing them from the outside, other than 
 			// loading them initially.
-			if(this[kind].length > 0) {
+			if (this[kind].length > 0) {
 				return
 			}
 
