@@ -690,7 +690,11 @@
       "deleteTooltip": "De Aahhang lösche",
       "deleteText1": "Bisch du dir sicher, dass du de Aahang {filename} lösche wetsch?",
       "copyUrl": "URL Kopierä",
-      "copyUrlTooltip": "D'Url vo dem Aahang kopiere, um sie im Text zbruuche"
+      "copyUrlTooltip": "D'Url vo dem Aahang kopiere, um sie im Text zbruuche",
+      "setAsCover": "Als Titelbild setzen",
+      "unsetAsCover": "Titelbild entfernen",
+      "successfullyChangedCoverImage": "Das Titelbild wurde erfolgreich geändert.",
+      "usedAsCover": "Titelbild"
     },
     "comment": {
       "title": "Kommentär",

@@ -690,7 +690,11 @@
       "deleteTooltip": "Supprimer cette pièce jointe",
       "deleteText1": "Supprimer la pièce jointe {filename} ?",
       "copyUrl": "Copier l’URL",
-      "copyUrlTooltip": "Copier l’URL de cette pièce jointe pour l’utiliser dans le texte"
+      "copyUrlTooltip": "Copier l’URL de cette pièce jointe pour l’utiliser dans le texte",
+      "setAsCover": "Make cover",
+      "unsetAsCover": "Remove cover",
+      "successfullyChangedCoverImage": "The cover image was successfully changed.",
+      "usedAsCover": "Cover image"
     },
     "comment": {
       "title": "Commentaires",

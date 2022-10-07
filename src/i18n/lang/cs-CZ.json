@@ -690,7 +690,11 @@
       "deleteTooltip": "Smazat tuto přílohu",
       "deleteText1": "Opravdu chcete odstranit přílohu {filename}?",
       "copyUrl": "Kopírovat URL",
-      "copyUrlTooltip": "Kopírovat URL této přílohy pro použití v textu"
+      "copyUrlTooltip": "Kopírovat URL této přílohy pro použití v textu",
+      "setAsCover": "Make cover",
+      "unsetAsCover": "Remove cover",
+      "successfullyChangedCoverImage": "The cover image was successfully changed.",
+      "usedAsCover": "Cover image"
     },
     "comment": {
       "title": "Komentáře",

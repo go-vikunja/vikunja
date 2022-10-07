@@ -690,7 +690,11 @@
       "deleteTooltip": "Verwijder deze bijlage",
       "deleteText1": "Weet je zeker dat je de bijlage {filename} wilt verwijderen?",
       "copyUrl": "URL kopiëren",
-      "copyUrlTooltip": "Copy the url of this attachment for usage in text"
+      "copyUrlTooltip": "Copy the url of this attachment for usage in text",
+      "setAsCover": "Make cover",
+      "unsetAsCover": "Remove cover",
+      "successfullyChangedCoverImage": "The cover image was successfully changed.",
+      "usedAsCover": "Cover image"
     },
     "comment": {
       "title": "Reacties",

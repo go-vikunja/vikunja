@@ -690,7 +690,11 @@
       "deleteTooltip": "Elimina questo allegato",
       "deleteText1": "Sei sicuro di voler eliminare l'allegato {filename}?",
       "copyUrl": "Copia URL",
-      "copyUrlTooltip": "Copia l'URL di questo allegato per usarlo nel testo"
+      "copyUrlTooltip": "Copia l'URL di questo allegato per usarlo nel testo",
+      "setAsCover": "Make cover",
+      "unsetAsCover": "Remove cover",
+      "successfullyChangedCoverImage": "The cover image was successfully changed.",
+      "usedAsCover": "Cover image"
     },
     "comment": {
       "title": "Commenti",

@@ -690,7 +690,11 @@
       "deleteTooltip": "Удалить это вложение",
       "deleteText1": "Удалить вложение {filename}?",
       "copyUrl": "Скопировать URL",
-      "copyUrlTooltip": "Скопировать ссылку на это вложение для использования в тексте"
+      "copyUrlTooltip": "Скопировать ссылку на это вложение для использования в тексте",
+      "setAsCover": "Make cover",
+      "unsetAsCover": "Remove cover",
+      "successfullyChangedCoverImage": "The cover image was successfully changed.",
+      "usedAsCover": "Cover image"
     },
     "comment": {
       "title": "Комментарии",

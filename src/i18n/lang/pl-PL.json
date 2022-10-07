@@ -690,7 +690,11 @@
       "deleteTooltip": "Usuń ten załącznik",
       "deleteText1": "Czy na pewno chcesz usunąć załącznik {filename}?",
       "copyUrl": "Kopiuj URL",
-      "copyUrlTooltip": "Skopiuj adres URL tego załącznika do użycia w tekście"
+      "copyUrlTooltip": "Skopiuj adres URL tego załącznika do użycia w tekście",
+      "setAsCover": "Make cover",
+      "unsetAsCover": "Remove cover",
+      "successfullyChangedCoverImage": "The cover image was successfully changed.",
+      "usedAsCover": "Cover image"
     },
     "comment": {
       "title": "Komentarze",

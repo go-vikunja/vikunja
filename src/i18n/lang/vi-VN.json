@@ -690,7 +690,11 @@
       "deleteTooltip": "Xóa tệp đính kèm này",
       "deleteText1": "Bạn có chắc chắn muốn xóa tệp đính kèm {filename} không?",
       "copyUrl": "Sao chép URL",
-      "copyUrlTooltip": "Sao chép url của tệp đính kèm này để sử dụng trong văn bản"
+      "copyUrlTooltip": "Sao chép url của tệp đính kèm này để sử dụng trong văn bản",
+      "setAsCover": "Make cover",
+      "unsetAsCover": "Remove cover",
+      "successfullyChangedCoverImage": "The cover image was successfully changed.",
+      "usedAsCover": "Cover image"
     },
     "comment": {
       "title": "Bình luận",

@@ -690,7 +690,11 @@
       "deleteTooltip": "Eliminar este anexo",
       "deleteText1": "Tens a certeza que pretendes eliminar o anexo {filename}?",
       "copyUrl": "Copiar URL",
-      "copyUrlTooltip": "Copia o url deste anexo para o utilizar no texto"
+      "copyUrlTooltip": "Copia o url deste anexo para o utilizar no texto",
+      "setAsCover": "Make cover",
+      "unsetAsCover": "Remove cover",
+      "successfullyChangedCoverImage": "The cover image was successfully changed.",
+      "usedAsCover": "Cover image"
     },
     "comment": {
       "title": "Comentários",

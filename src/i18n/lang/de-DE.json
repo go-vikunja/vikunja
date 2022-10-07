@@ -690,7 +690,11 @@
       "deleteTooltip": "Diesen Anhang löschen",
       "deleteText1": "Soll der Anhang {filename} gelöscht werden?",
       "copyUrl": "URL kopieren",
-      "copyUrlTooltip": "Die URL dieses Anhangs zur Verwendung im Text kopieren"
+      "copyUrlTooltip": "Die URL dieses Anhangs zur Verwendung im Text kopieren",
+      "setAsCover": "Als Titelbild setzen",
+      "unsetAsCover": "Titelbild entfernen",
+      "successfullyChangedCoverImage": "Das Titelbild wurde erfolgreich geändert.",
+      "usedAsCover": "Titelbild"
     },
     "comment": {
       "title": "Kommentare",
