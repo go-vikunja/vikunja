@@ -169,6 +169,7 @@
     "title": "List Title",
     "color": "Color",
     "lists": "Lists",
+    "list": "List",
     "search": "Type to search for a list…",
     "searchSelect": "Click or press enter to select this list",
     "shared": "Shared Lists",
@@ -675,13 +676,23 @@
       "updated": "Updated"
     },
     "subscription": {
-      "subscribedThroughParent": "You can't unsubscribe here because you are subscribed to this {entity} through its {parent}.",
-      "subscribed": "You are currently subscribed to this {entity} and will receive notifications for changes.",
-      "notSubscribed": "You are not subscribed to this {entity} and won't receive notifications for changes.",
+      "subscribedListThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this list through its namespace.",
+      "subscribedTaskThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this task through its namespace.",
+      "subscribedTaskThroughParentList": "You can't unsubscribe here because you are subscribed to this task through its list.",
+      "subscribedNamespace": "You are currently subscribed to this namespace and will receive notifications for changes.",
+      "notSubscribedNamespace": "You are not subscribed to this namespace and won't receive notifications for changes.",
+      "subscribedList": "You are currently subscribed to this list and will receive notifications for changes.",
+      "notSubscribedList": "You are not subscribed to this list and won't receive notifications for changes.",
+      "subscribedTask": "You are currently subscribed to this task and will receive notifications for changes.",
+      "notSubscribedTask": "You are not subscribed to this task and won't receive notifications for changes.",
       "subscribe": "Subscribe",
       "unsubscribe": "Unsubscribe",
-      "subscribeSuccess": "You are now subscribed to this {entity}",
-      "unsubscribeSuccess": "You are now unsubscribed to this {entity}"
+      "subscribeSuccessNamespace": "You are now subscribed to this namespace",
+      "unsubscribeSuccessNamespace": "You are now unsubscribed to this namespace",
+      "subscribeSuccessList": "You are now subscribed to this list",
+      "unsubscribeSuccessList": "You are now unsubscribed to this list",
+      "subscribeSuccessTask": "You are now subscribed to this task",
+      "unsubscribeSuccessTask": "You are now unsubscribed to this task"
     },
     "attachment": {
       "title": "Attachments",

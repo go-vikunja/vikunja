@@ -69,17 +69,38 @@ const emit = defineEmits(['update:modelValue'])
 const subscriptionService = shallowRef(new SubscriptionService())
 
 const {t} = useI18n({useScope: 'global'})
+
 const tooltipText = computed(() => {
 	if (disabled.value) {
-		return t('task.subscription.subscribedThroughParent', {
-			entity: props.entity,
-			parent: subscriptionEntity.value,
-		})
+		if (props.entity === 'list' && subscriptionEntity.value === 'namespace') {
+			return t('task.subscription.subscribedListThroughParentNamespace')
+		}
+		if (props.entity === 'task' && subscriptionEntity.value === 'namespace') {
+			return t('task.subscription.subscribedTaskThroughParentNamespace')
+		}
+		if (props.entity === 'task' && subscriptionEntity.value === 'list') {
+			return t('task.subscription.subscribedTaskThroughParentList')
+		}
+
+		return ''
 	}
 
-	return props.modelValue !== null ?
-		t('task.subscription.subscribed', {entity: props.entity}) :
-		t('task.subscription.notSubscribed', {entity: props.entity})
+	switch (props.entity) {
+		case 'namespace':
+			return props.modelValue !== null ?
+				t('task.subscription.subscribedNamespace') :
+				t('task.subscription.notSubscribedNamespace')
+		case 'list':
+			return props.modelValue !== null ?
+				t('task.subscription.subscribedList') :
+				t('task.subscription.notSubscribedList')
+		case 'task':
+			return props.modelValue !== null ?
+				t('task.subscription.subscribedTask') :
+				t('task.subscription.notSubscribedTask')
+	}
+
+	return ''
 })
 
 const buttonText = computed(() => props.modelValue ? t('task.subscription.unsubscribe') : t('task.subscription.subscribe'))
@@ -105,7 +126,20 @@ async function subscribe() {
 	})
 	await subscriptionService.value.create(subscription)
 	emit('update:modelValue', subscription)
-	success({message: t('task.subscription.subscribeSuccess', {entity: props.entity})})
+
+	let message = ''
+	switch (props.entity) {
+		case 'namespace':
+			message = t('task.subscription.subscribeSuccessNamespace')
+			break
+		case 'list':
+			message = t('task.subscription.subscribeSuccessList')
+			break
+		case 'task':
+			message = t('task.subscription.subscribeSuccessTask')
+			break
+	}
+	success({message})
 }
 
 async function unsubscribe() {
@@ -115,6 +149,19 @@ async function unsubscribe() {
 	})
 	await subscriptionService.value.delete(subscription)
 	emit('update:modelValue', null)
-	success({message: t('task.subscription.unsubscribeSuccess', {entity: props.entity})})
+
+	let message = ''
+	switch (props.entity) {
+		case 'namespace':
+			message = t('task.subscription.unsubscribeSuccessNamespace')
+			break
+		case 'list':
+			message = t('task.subscription.unsubscribeSuccessList')
+			break
+		case 'task':
+			message = t('task.subscription.unsubscribeSuccessTask')
+			break
+	}
+	success({message})
 }
 </script>
