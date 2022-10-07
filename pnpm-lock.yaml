@@ -50,7 +50,7 @@ specifiers:
   flatpickr: 4.6.13
   flexsearch: 0.7.21
   floating-vue: 2.0.0-beta.20
-  happy-dom: 7.3.0
+  happy-dom: 7.4.0
   highlight.js: 11.6.0
   is-touch-device: 1.0.1
   lodash.clonedeep: 4.5.0
@@ -156,7 +156,7 @@ devDependencies:
   eslint: 8.24.0
   eslint-plugin-vue: 9.6.0_eslint@8.24.0
   express: 4.18.1
-  happy-dom: 7.3.0
+  happy-dom: 7.4.0
   netlify-cli: 12.0.2
   postcss: 8.4.17
   postcss-preset-env: 7.8.2_postcss@8.4.17
@@ -167,7 +167,7 @@ devDependencies:
   vite: 3.1.6_sass@1.55.0+terser@5.10.0
   vite-plugin-pwa: 0.13.1_vite@3.1.6
   vite-svg-loader: 3.6.0
-  vitest: 0.24.0_dc11c3e7f666e07dbc327a81f99c380a
+  vitest: 0.24.0_7fc655e167cf9da448ccc3b585011dd3
   vue-tsc: 1.0.0_typescript@4.8.4
   wait-on: 6.0.1
   workbox-cli: 6.5.4
@@ -7313,8 +7313,8 @@ packages:
     engines: {node: ^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0}
     dev: true
 
-  /happy-dom/7.3.0:
-    resolution: {integrity: sha512-KJDR6CJ2S9MeOznLUU4iF98sh2yBmwEOTFcJHHZvNCYo8PsmgeeECZqUOr33VmNdSYBO+X9hSOTjeT533hwSXA==}
+  /happy-dom/7.4.0:
+    resolution: {integrity: sha512-vczfEc7g+kUWA7cKTeSDI/pQSCyAInxC0TMTR9Pjy211jHt8ZBo+3HGU51XNHimLmvVWdvaWvMdfOfhvW1H1uw==}
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0
@@ -12625,7 +12625,7 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vitest/0.24.0_dc11c3e7f666e07dbc327a81f99c380a:
+  /vitest/0.24.0_7fc655e167cf9da448ccc3b585011dd3:
     resolution: {integrity: sha512-k5j3FPTor+MJx2x0pDW2gtVk+s9VC6nSHT3SoqOIk9Je5fFpPgict+Xy2eAVXUogvSixs45Ya1oZk+oK93BO0w==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
@@ -12652,7 +12652,7 @@ packages:
       '@types/node': 17.0.17
       chai: 4.3.6
       debug: 4.3.4
-      happy-dom: 7.3.0
+      happy-dom: 7.4.0
       local-pkg: 0.4.2
       strip-literal: 0.4.2
       tinybench: 2.3.0
