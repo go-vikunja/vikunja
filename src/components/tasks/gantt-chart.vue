@@ -203,8 +203,12 @@ async function createTask(title: TaskModel['title']) {
 	return newTask
 }
 
-async function updateTask(e) {
-	const task = tasks.value.get(e.bar.ganttBarConfig.id)
+async function updateTask(e: {
+    bar: GanttBarObject;
+    e: MouseEvent;
+    datetime?: string | undefined;
+}) {
+	const task = tasks.value.get(Number(e.bar.ganttBarConfig.id))
 
 	if (!task) return
 
@@ -212,13 +216,17 @@ async function updateTask(e) {
 	task.endDate = e.bar.endDate
 	const updatedTask = await taskService.update(task)
 	ganttBars.value.map(gantBar => {
-		return gantBar[0].ganttBarConfig.id === task.id
+		return Number(gantBar[0].ganttBarConfig.id) === task.id
 			? transformTaskToGanttBar(updatedTask)
 			: gantBar
 	})
 }
 
-function openTask(e) {
+function openTask(e: {
+    bar: GanttBarObject;
+    e: MouseEvent;
+    datetime?: string | undefined;
+}) {
 	router.push({
 		name: 'task.detail',
 		params: {id: e.bar.ganttBarConfig.id},
