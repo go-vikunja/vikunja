@@ -53,6 +53,8 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/modules/migration/ticktick"
+
 	"github.com/ulule/limiter/v3"
 
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
