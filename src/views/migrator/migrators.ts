@@ -48,5 +48,5 @@ export const MIGRATORS: IMigratorRecord = {
 		name: 'TickTick',
 		icon: tickTickIcon as string,
 		isFileMigrator: true,
-	}
+	},
 }
