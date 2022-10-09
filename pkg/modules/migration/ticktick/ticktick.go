@@ -19,6 +19,7 @@ package ticktick
 import (
 	"encoding/csv"
 	"io"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -52,6 +53,32 @@ type tickTickTask struct {
 	Order         float64
 	TaskID        int64
 	ParentID      int64
+}
+
+// Copied from https://stackoverflow.com/a/57617885
+var durationRegex = regexp.MustCompile(`P([\d\.]+Y)?([\d\.]+M)?([\d\.]+D)?T?([\d\.]+H)?([\d\.]+M)?([\d\.]+?S)?`)
+
+// ParseDuration converts a ISO8601 duration into a time.Duration
+func parseDuration(str string) time.Duration {
+	matches := durationRegex.FindStringSubmatch(str)
+
+	years := parseDurationPart(matches[1], time.Hour*24*365)
+	months := parseDurationPart(matches[2], time.Hour*24*30)
+	days := parseDurationPart(matches[3], time.Hour*24)
+	hours := parseDurationPart(matches[4], time.Hour)
+	minutes := parseDurationPart(matches[5], time.Second*60)
+	seconds := parseDurationPart(matches[6], time.Second)
+
+	return time.Duration(years + months + days + hours + minutes + seconds)
+}
+
+func parseDurationPart(value string, unit time.Duration) time.Duration {
+	if len(value) != 0 {
+		if parsed, err := strconv.ParseFloat(value[:len(value)-1], 64); err == nil {
+			return time.Duration(float64(unit) * parsed)
+		}
+	}
+	return 0
 }
 
 func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.NamespaceWithListsAndTasks) {
@@ -163,11 +190,6 @@ func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error 
 		if err != nil {
 			return err
 		}
-		// TODO: parse properly
-		reminder, err := time.ParseDuration(record[8])
-		if err != nil {
-			return err
-		}
 		priority, err := strconv.Atoi(record[10])
 		if err != nil {
 			return err
@@ -192,6 +214,8 @@ func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error 
 		if err != nil {
 			return err
 		}
+
+		reminder := parseDuration(record[8])
 
 		allTasks = append(allTasks, &tickTickTask{
 			ListName:      record[1],
