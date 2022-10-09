@@ -17,22 +17,19 @@
 package v1
 
 import (
-	"code.vikunja.io/api/pkg/modules/migration/ticktick"
 	"net/http"
 
-	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
-
-	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
-
-	"code.vikunja.io/api/pkg/modules/migration/trello"
-
-	"code.vikunja.io/api/pkg/log"
-
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
+	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
+	"code.vikunja.io/api/pkg/modules/migration/ticktick"
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
+	"code.vikunja.io/api/pkg/modules/migration/trello"
+	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
 	"code.vikunja.io/api/pkg/modules/migration/wunderlist"
 	"code.vikunja.io/api/pkg/version"
+
 	"github.com/labstack/echo/v4"
 )
 

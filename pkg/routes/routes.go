@@ -47,18 +47,11 @@
 package routes
 
 import (
-	"code.vikunja.io/api/pkg/modules/migration/ticktick"
 	"errors"
 	"fmt"
 	"net/url"
 	"strings"
 	"time"
-
-	"code.vikunja.io/api/pkg/modules/migration/ticktick"
-
-	"github.com/ulule/limiter/v3"
-
-	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
@@ -73,8 +66,10 @@ import (
 	"code.vikunja.io/api/pkg/modules/migration"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
 	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
+	"code.vikunja.io/api/pkg/modules/migration/ticktick"
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
 	"code.vikunja.io/api/pkg/modules/migration/trello"
+	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
 	"code.vikunja.io/api/pkg/modules/migration/wunderlist"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/caldav"
@@ -89,6 +84,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	elog "github.com/labstack/gommon/log"
+	"github.com/ulule/limiter/v3"
 )
 
 // NewEcho registers a new Echo instance

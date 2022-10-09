@@ -18,12 +18,15 @@ package ticktick
 
 import (
 	"encoding/csv"
+	"errors"
 	"io"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"code.vikunja.io/api/pkg/log"
 
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
@@ -62,6 +65,10 @@ var durationRegex = regexp.MustCompile(`P([\d\.]+Y)?([\d\.]+M)?([\d\.]+D)?T?([\d
 func parseDuration(str string) time.Duration {
 	matches := durationRegex.FindStringSubmatch(str)
 
+	if len(matches) == 0 {
+		return 0
+	}
+
 	years := parseDurationPart(matches[1], time.Hour*24*365)
 	months := parseDurationPart(matches[2], time.Hour*24*30)
 	days := parseDurationPart(matches[3], time.Hour*24)
@@ -69,7 +76,7 @@ func parseDuration(str string) time.Duration {
 	minutes := parseDurationPart(matches[5], time.Second*60)
 	seconds := parseDurationPart(matches[6], time.Second)
 
-	return time.Duration(years + months + days + hours + minutes + seconds)
+	return years + months + days + hours + minutes + seconds
 }
 
 func parseDurationPart(value string, unit time.Duration) time.Duration {
@@ -170,35 +177,27 @@ func (m *Migrator) Name() string {
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/ticktick/migrate [post]
 func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error {
-	fr := io.NewSectionReader(file, 0, 0)
+	fr := io.NewSectionReader(file, 0, size)
 	r := csv.NewReader(fr)
-	records, err := r.ReadAll()
-	if err != nil {
-		return err
-	}
 
-	allTasks := make([]*tickTickTask, 0, len(records))
-	for line, record := range records {
-		if line <= 3 {
+	allTasks := []*tickTickTask{}
+	line := 0
+	for {
+
+		record, err := r.Read()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			log.Debugf("[TickTick Migration] CSV parse error: %s", err)
+		}
+
+		line++
+		if line <= 4 {
 			continue
 		}
-		startDate, err := time.Parse(timeISO, record[6])
-		if err != nil {
-			return err
-		}
-		dueDate, err := time.Parse(timeISO, record[7])
-		if err != nil {
-			return err
-		}
+
 		priority, err := strconv.Atoi(record[10])
-		if err != nil {
-			return err
-		}
-		createdTime, err := time.Parse(timeISO, record[12])
-		if err != nil {
-			return err
-		}
-		completedTime, err := time.Parse(timeISO, record[13])
 		if err != nil {
 			return err
 		}
@@ -217,24 +216,47 @@ func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error 
 
 		reminder := parseDuration(record[8])
 
-		allTasks = append(allTasks, &tickTickTask{
-			ListName:      record[1],
-			Title:         record[2],
-			Tags:          strings.Split(record[3], ", "),
-			Content:       record[4],
-			IsChecklist:   record[5] == "Y",
-			StartDate:     startDate,
-			DueDate:       dueDate,
-			Reminder:      reminder,
-			Repeat:        record[9],
-			Priority:      priority,
-			Status:        record[11],
-			CreatedTime:   createdTime,
-			CompletedTime: completedTime,
-			Order:         order,
-			TaskID:        taskID,
-			ParentID:      parentID,
-		})
+		t := &tickTickTask{
+			ListName:    record[1],
+			Title:       record[2],
+			Tags:        strings.Split(record[3], ", "),
+			Content:     record[4],
+			IsChecklist: record[5] == "Y",
+			Reminder:    reminder,
+			Repeat:      record[9],
+			Priority:    priority,
+			Status:      record[11],
+			Order:       order,
+			TaskID:      taskID,
+			ParentID:    parentID,
+		}
+
+		if record[6] != "" {
+			t.StartDate, err = time.Parse(timeISO, record[6])
+			if err != nil {
+				return err
+			}
+		}
+		if record[7] != "" {
+			t.DueDate, err = time.Parse(timeISO, record[7])
+			if err != nil {
+				return err
+			}
+		}
+		if record[12] != "" {
+			t.StartDate, err = time.Parse(timeISO, record[12])
+			if err != nil {
+				return err
+			}
+		}
+		if record[13] != "" {
+			t.CompletedTime, err = time.Parse(timeISO, record[13])
+			if err != nil {
+				return err
+			}
+		}
+
+		allTasks = append(allTasks, t)
 	}
 
 	vikunjaTasks := convertTickTickToVikunja(allTasks)
