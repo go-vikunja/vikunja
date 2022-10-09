@@ -127,6 +127,24 @@
 			</table>
 		</card>
 
+		<x-button class="is-fullwidth is-danger" @click="showLeaveModal = true">
+			{{ $t('team.edit.leave.title') }}
+		</x-button>
+
+		<!-- Leave team modal -->
+		<modal
+			v-if="showLeaveModal"
+			@close="showLeaveModal = false"
+			@submit="leave()"
+		>
+			<template #header><span>{{ $t('team.edit.leave.title') }}</span></template>
+
+			<template #text>
+				<p>{{ $t('team.edit.leave.text1') }}<br/>
+					{{ $t('team.edit.leave.text2') }}</p>
+			</template>
+		</modal>
+
 		<!-- Team delete modal -->
 		<transition name="modal">
 			<modal
@@ -202,13 +220,14 @@ const teamMemberService = ref<TeamMemberService>(new TeamMemberService())
 const userService = ref<UserService>(new UserService())
 
 const team = ref<ITeam>()
-const teamId = computed(() => route.params.id)
+const teamId = computed(() => Number(route.params.id))
 const memberToDelete = ref<ITeamMember>()
 const newMember = ref<IUser>()
 const foundUsers = ref<IUser[]>()
 
 const showDeleteModal = ref(false)
 const showUserDeleteModal = ref(false)
+const showLeaveModal = ref(false)
 const showError = ref(false)
 
 const title = ref('')
@@ -286,6 +305,19 @@ async function findUser(query: string) {
 
 	const users = await userService.value.getAll({}, {s: query})
 	foundUsers.value = users.filter((u: IUser) => u.id !== userInfo.value.id)
+}
+
+async function leave() {
+	try {
+		await teamMemberService.value.delete({
+			teamId: teamId.value,
+			username: userInfo.value.username,
+		})
+		success({message: t('team.edit.leave.success')})
+		await router.push({name: 'home'})
+	} finally {
+		showUserDeleteModal.value = false
+	}
 }
 </script>
 
