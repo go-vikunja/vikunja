@@ -22,7 +22,6 @@ export default class AbstractMigrationFileService extends AbstractService {
 	}
 
 	migrate(file: IFile) {
-		console.log(file)
 		return this.uploadFile(
 			this.paths.create,
 			file,
