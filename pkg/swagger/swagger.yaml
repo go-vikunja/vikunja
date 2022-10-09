@@ -3250,6 +3250,55 @@ paths:
       summary: Get migration status
       tags:
       - migration
+  /migration/ticktick/migrate:
+    post:
+      consumes:
+      - application/json
+      description: Imports all projects, tasks, notes, reminders, subtasks and files
+        from a TickTick backup export into Vikunja.
+      parameters:
+      - description: The TickTick backup csv file.
+        in: formData
+        name: import
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A message telling you everything was migrated successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Import all lists, tasks etc. from a TickTick backup export
+      tags:
+      - migration
+  /migration/ticktick/status:
+    get:
+      description: Returns if the current user already did the migation or not. This
+        is useful to show a confirmation message in the frontend if the user is trying
+        to do the same migration again.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The migration status
+          schema:
+            $ref: '#/definitions/migration.Status'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get migration status
+      tags:
+      - migration
   /migration/todoist/auth:
     get:
       description: Returns the auth url where the user needs to get its auth code.
