@@ -169,6 +169,14 @@
     "title": "Listentitel",
     "color": "Farbe",
     "lists": "Listen",
+    "list": {
+      "title": "Liste",
+      "add": "Hinzufügen",
+      "addPlaceholder": "Eine neue Aufgabe hinzufügen …",
+      "empty": "Diese Liste ist derzeit leer.",
+      "newTaskCta": "Eine neue Aufgabe erstellen.",
+      "editTask": "Aufgabe bearbeiten"
+    },
     "search": "Tippe, um nach einer Liste zu suchen…",
     "searchSelect": "Klicke auf oder drücke die Eingabetaste, um diese Liste auszuwählen",
     "shared": "Geteilte Listen",
@@ -269,14 +277,6 @@
         "link": "Link",
         "delete": "Löschen"
       }
-    },
-    "list": {
-      "title": "Liste",
-      "add": "Hinzufügen",
-      "addPlaceholder": "Eine neue Aufgabe hinzufügen …",
-      "empty": "Diese Liste ist derzeit leer.",
-      "newTaskCta": "Eine neue Aufgabe erstellen.",
-      "editTask": "Aufgabe bearbeiten"
     },
     "gantt": {
       "title": "Gantt",
@@ -672,13 +672,23 @@
       "updated": "Aktualisiert"
     },
     "subscription": {
-      "subscribedThroughParent": "Du kannst hier nicht de-abonnieren, da du diese {entity} durch {parent} abonniert hast.",
-      "subscribed": "Du erhältst Benachrichtigungen zu dieser {entity}.",
-      "notSubscribed": "Du hast diese {entity} nicht abonniert und erhältst keine Benachrichtigungen über Änderungen.",
+      "subscribedListThroughParentNamespace": "Du kannst hier nicht de-abonnieren, da du diese Liste über ihren Namespace abonniert hast.",
+      "subscribedTaskThroughParentNamespace": "Du kannst hier nicht de-abonnieren, da du diese Aufgabe über ihren Namespace abonniert hast.",
+      "subscribedTaskThroughParentList": "Du kannst hier nicht de-abonnieren, da du diese Aufgabe über ihre Liste abonniert hast.",
+      "subscribedNamespace": "Du hast diesen Namespace abonniert und erhältst Benachrichtigungen über Änderungen.",
+      "notSubscribedNamespace": "Du hast diesen Namespace nicht abonniert und erhältst keine Benachrichtigungen über Änderungen.",
+      "subscribedList": "Du hast diese Liste abonniert und erhältst Benachrichtigungen über Änderungen.",
+      "notSubscribedList": "Du hast diese Liste nicht abonniert und erhältst keine Benachrichtigungen über Änderungen.",
+      "subscribedTask": "Du hast diese Aufgabe abonniert und erhältst Benachrichtigungen über Änderungen.",
+      "notSubscribedTask": "Du hast diese Aufgabe nicht abonniert und erhältst keine Benachrichtigungen über Änderungen.",
       "subscribe": "Abonnieren",
       "unsubscribe": "Abbestellen",
-      "subscribeSuccess": "Du hast jetzt diese {entity} abonniert",
-      "unsubscribeSuccess": "Du hast diese {entity} jetzt abbestellt"
+      "subscribeSuccessNamespace": "Du hast diesen Namespace jetzt abonniert",
+      "unsubscribeSuccessNamespace": "Du hast diesen Namespace jetzt nicht mehr abonniert",
+      "subscribeSuccessList": "Du hast diese Liste jetzt abonniert",
+      "unsubscribeSuccessList": "Du hast diese Liste jetzt nicht mehr abonniert",
+      "subscribeSuccessTask": "Du hast diese Aufgabe jetzt abonniert",
+      "unsubscribeSuccessTask": "Du hast diese Aufgabe jetzt nicht mehr abonniert"
     },
     "attachment": {
       "title": "Anhänge",

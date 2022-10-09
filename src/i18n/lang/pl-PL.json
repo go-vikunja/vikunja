@@ -169,6 +169,14 @@
     "title": "Tytuł listy",
     "color": "Kolor",
     "lists": "Listy",
+    "list": {
+      "title": "Lista",
+      "add": "Dodaj",
+      "addPlaceholder": "Dodaj nowe zadanie…",
+      "empty": "Ta lista jest obecnie pusta.",
+      "newTaskCta": "Utwórz nowe zadanie.",
+      "editTask": "Edytuj zadanie"
+    },
     "search": "Wpisz, aby wyszukać listę…",
     "searchSelect": "Kliknij lub naciśnij Enter, aby wybrać tę listę",
     "shared": "Współdzielone listy",
@@ -269,14 +277,6 @@
         "link": "Link",
         "delete": "Usuń"
       }
-    },
-    "list": {
-      "title": "Lista",
-      "add": "Dodaj",
-      "addPlaceholder": "Dodaj nowe zadanie…",
-      "empty": "Ta lista jest obecnie pusta.",
-      "newTaskCta": "Utwórz nowe zadanie.",
-      "editTask": "Edytuj zadanie"
     },
     "gantt": {
       "title": "Gantt",
@@ -672,13 +672,23 @@
       "updated": "Zaktualizowano"
     },
     "subscription": {
-      "subscribedThroughParent": "Nie możesz zrezygnować z subskrypcji, ponieważ subskrybujesz {entity} za pośrednictwem {parent}.",
-      "subscribed": "Obecnie subskrybujesz {entity} i będziesz otrzymywać powiadomienia o zmianach.",
-      "notSubscribed": "Nie subskrybujesz {entity} i nie będziesz otrzymywać powiadomień o zmianach.",
+      "subscribedListThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this list through its namespace.",
+      "subscribedTaskThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this task through its namespace.",
+      "subscribedTaskThroughParentList": "You can't unsubscribe here because you are subscribed to this task through its list.",
+      "subscribedNamespace": "You are currently subscribed to this namespace and will receive notifications for changes.",
+      "notSubscribedNamespace": "You are not subscribed to this namespace and won't receive notifications for changes.",
+      "subscribedList": "You are currently subscribed to this list and will receive notifications for changes.",
+      "notSubscribedList": "You are not subscribed to this list and won't receive notifications for changes.",
+      "subscribedTask": "You are currently subscribed to this task and will receive notifications for changes.",
+      "notSubscribedTask": "You are not subscribed to this task and won't receive notifications for changes.",
       "subscribe": "Subskrybuj",
       "unsubscribe": "Anuluj subskrypcję",
-      "subscribeSuccess": "Od teraz subskrybujesz {entity}",
-      "unsubscribeSuccess": "Już nie subskrybujesz {entity}"
+      "subscribeSuccessNamespace": "You are now subscribed to this namespace",
+      "unsubscribeSuccessNamespace": "You are now unsubscribed to this namespace",
+      "subscribeSuccessList": "You are now subscribed to this list",
+      "unsubscribeSuccessList": "You are now unsubscribed to this list",
+      "subscribeSuccessTask": "You are now subscribed to this task",
+      "unsubscribeSuccessTask": "You are now unsubscribed to this task"
     },
     "attachment": {
       "title": "Załączniki",

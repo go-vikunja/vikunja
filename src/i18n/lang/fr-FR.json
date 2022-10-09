@@ -169,6 +169,14 @@
     "title": "Nom de la liste",
     "color": "Couleur",
     "lists": "Listes",
+    "list": {
+      "title": "Liste",
+      "add": "Ajouter",
+      "addPlaceholder": "Ajouter une nouvelle tâche…",
+      "empty": "Cette liste est actuellement vide.",
+      "newTaskCta": "Créer une nouvelle tâche.",
+      "editTask": "Modifier la tâche"
+    },
     "search": "Écris pour rechercher une liste…",
     "searchSelect": "Clique ou appuie sur la touche Entrée pour sélectionner cette liste",
     "shared": "Listes partagées",
@@ -269,14 +277,6 @@
         "link": "Lien",
         "delete": "Supprimer"
       }
-    },
-    "list": {
-      "title": "Liste",
-      "add": "Ajouter",
-      "addPlaceholder": "Ajouter une nouvelle tâche…",
-      "empty": "Cette liste est actuellement vide.",
-      "newTaskCta": "Créer une nouvelle tâche.",
-      "editTask": "Modifier la tâche"
     },
     "gantt": {
       "title": "Gantt",
@@ -672,13 +672,23 @@
       "updated": "Mis à jour"
     },
     "subscription": {
-      "subscribedThroughParent": "Tu ne peux pas te désabonner ici car tu es abonné·e à cette {entity} par le biais de son {parent}.",
-      "subscribed": "Tu es actuellement abonné·e à cette {entity} et recevras des notifications pour les changements.",
-      "notSubscribed": "Tu n’es pas abonné·e à cette {entity} et ne recevras pas de notifications pour les changements.",
+      "subscribedListThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this list through its namespace.",
+      "subscribedTaskThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this task through its namespace.",
+      "subscribedTaskThroughParentList": "You can't unsubscribe here because you are subscribed to this task through its list.",
+      "subscribedNamespace": "You are currently subscribed to this namespace and will receive notifications for changes.",
+      "notSubscribedNamespace": "You are not subscribed to this namespace and won't receive notifications for changes.",
+      "subscribedList": "You are currently subscribed to this list and will receive notifications for changes.",
+      "notSubscribedList": "You are not subscribed to this list and won't receive notifications for changes.",
+      "subscribedTask": "You are currently subscribed to this task and will receive notifications for changes.",
+      "notSubscribedTask": "You are not subscribed to this task and won't receive notifications for changes.",
       "subscribe": "S’abonner",
       "unsubscribe": "Se désabonner",
-      "subscribeSuccess": "Tu es maintenant abonné·e à cette {entity}",
-      "unsubscribeSuccess": "Tu es maintenant désabonné·e de cette {entity}"
+      "subscribeSuccessNamespace": "You are now subscribed to this namespace",
+      "unsubscribeSuccessNamespace": "You are now unsubscribed to this namespace",
+      "subscribeSuccessList": "You are now subscribed to this list",
+      "unsubscribeSuccessList": "You are now unsubscribed to this list",
+      "subscribeSuccessTask": "You are now subscribed to this task",
+      "unsubscribeSuccessTask": "You are now unsubscribed to this task"
     },
     "attachment": {
       "title": "Pièces jointes",

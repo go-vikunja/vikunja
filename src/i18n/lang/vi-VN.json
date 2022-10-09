@@ -169,6 +169,14 @@
     "title": "Tên Danh sách",
     "color": "Màu sắc",
     "lists": "Danh sách",
+    "list": {
+      "title": "Danh sách",
+      "add": "Thêm",
+      "addPlaceholder": "Thêm việc cần làm…",
+      "empty": "Danh sách này đang trống trơn.",
+      "newTaskCta": "Thêm một công việc mới.",
+      "editTask": "Chỉnh sửa Công việc"
+    },
     "search": "Gõ để tìm kiếm danh sách…",
     "searchSelect": "Nhấp hoặc nhấn enter để chọn danh sách này",
     "shared": "Đang tham gia",
@@ -269,14 +277,6 @@
         "link": "Liên kết",
         "delete": "Xóa"
       }
-    },
-    "list": {
-      "title": "Danh sách",
-      "add": "Thêm",
-      "addPlaceholder": "Thêm việc cần làm…",
-      "empty": "Danh sách này đang trống trơn.",
-      "newTaskCta": "Thêm một công việc mới.",
-      "editTask": "Chỉnh sửa Công việc"
     },
     "gantt": {
       "title": "Biểu đồ Gantt",
@@ -672,13 +672,23 @@
       "updated": "Đã cập nhật"
     },
     "subscription": {
-      "subscribedThroughParent": "Bạn không thể hủy theo dõi ở đây vì bạn đã theo dõi {entity} này thông qua {parent} của nó.",
-      "subscribed": "Bạn đang theo dõi {entity} này và sẽ nhận được thông báo về các thay đổi.",
-      "notSubscribed": "Bạn chưa theo dõi {entity} này và sẽ không nhận được thông báo về các thay đổi.",
+      "subscribedListThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this list through its namespace.",
+      "subscribedTaskThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this task through its namespace.",
+      "subscribedTaskThroughParentList": "You can't unsubscribe here because you are subscribed to this task through its list.",
+      "subscribedNamespace": "You are currently subscribed to this namespace and will receive notifications for changes.",
+      "notSubscribedNamespace": "You are not subscribed to this namespace and won't receive notifications for changes.",
+      "subscribedList": "You are currently subscribed to this list and will receive notifications for changes.",
+      "notSubscribedList": "You are not subscribed to this list and won't receive notifications for changes.",
+      "subscribedTask": "You are currently subscribed to this task and will receive notifications for changes.",
+      "notSubscribedTask": "You are not subscribed to this task and won't receive notifications for changes.",
       "subscribe": "Theo dõi",
       "unsubscribe": "Bỏ theo dõi",
-      "subscribeSuccess": "Bạn hiện đã theo dõi {entity} này",
-      "unsubscribeSuccess": "Bạn đã bỏ theo dõi {entity} này"
+      "subscribeSuccessNamespace": "You are now subscribed to this namespace",
+      "unsubscribeSuccessNamespace": "You are now unsubscribed to this namespace",
+      "subscribeSuccessList": "You are now subscribed to this list",
+      "unsubscribeSuccessList": "You are now unsubscribed to this list",
+      "subscribeSuccessTask": "You are now subscribed to this task",
+      "unsubscribeSuccessTask": "You are now unsubscribed to this task"
     },
     "attachment": {
       "title": "Tệp đính kèm",

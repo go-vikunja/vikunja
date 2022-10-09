@@ -169,6 +169,14 @@
     "title": "Název seznamu",
     "color": "Barva",
     "lists": "Seznamy",
+    "list": {
+      "title": "Seznam",
+      "add": "Přidat",
+      "addPlaceholder": "Přidat nový úkol…",
+      "empty": "Tento seznam je nyní prázdný.",
+      "newTaskCta": "Vytvořit nový úkol.",
+      "editTask": "Upravit úkol"
+    },
     "search": "Začni psát pro vyhledání seznamu…",
     "searchSelect": "Klikněte nebo stiskněte Enter pro výběr tohoto seznamu",
     "shared": "Sdílené seznamy",
@@ -269,14 +277,6 @@
         "link": "Odkaz",
         "delete": "Smazat"
       }
-    },
-    "list": {
-      "title": "Seznam",
-      "add": "Přidat",
-      "addPlaceholder": "Přidat nový úkol…",
-      "empty": "Tento seznam je nyní prázdný.",
-      "newTaskCta": "Vytvořit nový úkol.",
-      "editTask": "Upravit úkol"
     },
     "gantt": {
       "title": "Gantt",
@@ -672,13 +672,23 @@
       "updated": "Aktualizováno"
     },
     "subscription": {
-      "subscribedThroughParent": "Zde se nemůžete odhlásit, protože jste přihlášeni k odběru {entity} prostřednictvím jeho {parent}.",
-      "subscribed": "Aktuálně jste přihlášeni k odběru {entity} a budete dostávat oznámení o změnách.",
-      "notSubscribed": "Nejste přihlášeni k odběru {entity} a nebudete dostávat upozornění na změny.",
+      "subscribedListThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this list through its namespace.",
+      "subscribedTaskThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this task through its namespace.",
+      "subscribedTaskThroughParentList": "You can't unsubscribe here because you are subscribed to this task through its list.",
+      "subscribedNamespace": "You are currently subscribed to this namespace and will receive notifications for changes.",
+      "notSubscribedNamespace": "You are not subscribed to this namespace and won't receive notifications for changes.",
+      "subscribedList": "You are currently subscribed to this list and will receive notifications for changes.",
+      "notSubscribedList": "You are not subscribed to this list and won't receive notifications for changes.",
+      "subscribedTask": "You are currently subscribed to this task and will receive notifications for changes.",
+      "notSubscribedTask": "You are not subscribed to this task and won't receive notifications for changes.",
       "subscribe": "Odebírat",
       "unsubscribe": "Odhlásit odběr",
-      "subscribeSuccess": "Nyní jste přihlášeni k odběru {entity}",
-      "unsubscribeSuccess": "Nyní jste odhlášeni od odběru {entity}"
+      "subscribeSuccessNamespace": "You are now subscribed to this namespace",
+      "unsubscribeSuccessNamespace": "You are now unsubscribed to this namespace",
+      "subscribeSuccessList": "You are now subscribed to this list",
+      "unsubscribeSuccessList": "You are now unsubscribed to this list",
+      "subscribeSuccessTask": "You are now subscribed to this task",
+      "unsubscribeSuccessTask": "You are now unsubscribed to this task"
     },
     "attachment": {
       "title": "Přílohy",
