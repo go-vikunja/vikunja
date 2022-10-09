@@ -79,7 +79,7 @@ type TeamMember struct {
 }
 
 // TableName makes beautiful table names
-func (TeamMember) TableName() string {
+func (*TeamMember) TableName() string {
 	return "team_members"
 }
 

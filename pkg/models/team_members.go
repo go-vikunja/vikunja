@@ -79,7 +79,7 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 
 // Delete deletes a user from a team
 // @Summary Remove a user from a team
-// @Description Remove a user from a team. This will also revoke any access this user might have via that team.
+// @Description Remove a user from a team. This will also revoke any access this user might have via that team. A user can remove themselves from the team if they are not the last user in the team.
 // @tags team
 // @Produce json
 // @Security JWTKeyAuth

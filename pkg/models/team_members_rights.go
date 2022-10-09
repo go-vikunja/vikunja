@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"xorm.io/xorm"
 )
@@ -28,6 +29,13 @@ func (tm *TeamMember) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 
 // CanDelete checks if the user can delete a new team member
 func (tm *TeamMember) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	u, err := user.GetUserByUsername(s, tm.Username)
+	if err != nil {
+		return false, err
+	}
+	if u.ID == a.GetID() {
+		return true, nil
+	}
 	return tm.IsAdmin(s, a)
 }
 

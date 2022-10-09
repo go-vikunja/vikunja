@@ -6167,7 +6167,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Remove a user from a team. This will also revoke any access this user might have via that team.",
+                "description": "Remove a user from a team. This will also revoke any access this user might have via that team. A user can remove themselves from the team if they are not the last user in the team.",
                 "produces": [
                     "application/json"
                 ],
