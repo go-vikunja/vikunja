@@ -17,6 +17,7 @@
 package v1
 
 import (
+	"code.vikunja.io/api/pkg/modules/migration/ticktick"
 	"net/http"
 
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
@@ -97,6 +98,7 @@ func Info(c echo.Context) error {
 		TaskCommentsEnabled:    config.ServiceEnableTaskComments.GetBool(),
 		AvailableMigrators: []string{
 			(&vikunja_file.FileMigrator{}).Name(),
+			(&ticktick.Migrator{}).Name(),
 		},
 		Legal: legalInfo{
 			ImprintURL:       config.LegalImprintURL.GetString(),
