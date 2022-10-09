@@ -47,6 +47,7 @@
 package routes
 
 import (
+	"code.vikunja.io/api/pkg/modules/migration/ticktick"
 	"errors"
 	"fmt"
 	"net/url"
@@ -655,12 +656,21 @@ func registerMigrations(m *echo.Group) {
 		microsoftTodoMigrationHandler.RegisterRoutes(m)
 	}
 
+	// Vikunja File Migrator
 	vikunjaFileMigrationHandler := &migrationHandler.FileMigratorWeb{
 		MigrationStruct: func() migration.FileMigrator {
 			return &vikunja_file.FileMigrator{}
 		},
 	}
 	vikunjaFileMigrationHandler.RegisterRoutes(m)
+
+	// TickTick File Migrator
+	tickTickFileMigrator := migrationHandler.FileMigratorWeb{
+		MigrationStruct: func() migration.FileMigrator {
+			return &ticktick.Migrator{}
+		},
+	}
+	tickTickFileMigrator.RegisterRoutes(m)
 }
 
 func registerCalDavRoutes(c *echo.Group) {
