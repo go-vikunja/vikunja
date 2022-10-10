@@ -57,7 +57,7 @@ specifiers:
   lodash.debounce: 4.0.8
   marked: 4.1.1
   minimist: 1.2.6
-  netlify-cli: 12.0.2
+  netlify-cli: 12.0.7
   pinia: 2.0.23
   postcss: 8.4.17
   postcss-preset-env: 7.8.2
@@ -157,7 +157,7 @@ devDependencies:
   eslint-plugin-vue: 9.6.0_eslint@8.25.0
   express: 4.18.2
   happy-dom: 7.4.0
-  netlify-cli: 12.0.2
+  netlify-cli: 12.0.7
   postcss: 8.4.17
   postcss-preset-env: 7.8.2_postcss@8.4.17
   rollup: 2.79.1
@@ -1874,18 +1874,18 @@ packages:
     resolution: {integrity: sha512-4wMPu9iN3/HL97QblBsBay3E1etIciR84izI3U+4iALY+JHCrI+a2jO0qbAZ/nxKoegypYEaiiqWXylm+/zfrw==}
     dev: true
 
-  /@netlify/build/27.18.6:
-    resolution: {integrity: sha512-ZALZHNwZbRieQ8s8mYPkod1zwqkrOzVphPueW8OyyTymXIEsIBKL0YpYBPOtnwfEHHZJBDUg+Utq7yAT3c+SQQ==}
+  /@netlify/build/27.20.3:
+    resolution: {integrity: sha512-dyEt8oDXYju8NYcgDEUUTseOI4ta2eL5NpvgY2Tu5xuMOFYmBEFK9jM6bMvlkfOsVGBEXQ4dmQx1cqqki/Y2Zw==}
     engines: {node: ^12.20.0 || ^14.14.0 || >=16.0.0}
     hasBin: true
     dependencies:
       '@bugsnag/js': 7.16.1
-      '@netlify/cache-utils': 4.1.5_supports-color@9.2.1
+      '@netlify/cache-utils': 4.1.6_supports-color@9.2.1
       '@netlify/config': 18.2.4
-      '@netlify/edge-bundler': 2.2.0
-      '@netlify/functions-utils': 4.2.10_supports-color@9.2.1
-      '@netlify/git-utils': 4.1.2
-      '@netlify/plugins-list': 6.46.0
+      '@netlify/edge-bundler': 2.7.0
+      '@netlify/functions-utils': 4.2.11_supports-color@9.2.1
+      '@netlify/git-utils': 4.1.3
+      '@netlify/plugins-list': 6.49.1
       '@netlify/run-utils': 4.0.2
       '@netlify/zip-it-and-ship-it': 7.1.2_supports-color@9.2.1
       '@sindresorhus/slugify': 2.1.0
@@ -1940,8 +1940,8 @@ packages:
       - encoding
     dev: true
 
-  /@netlify/cache-utils/4.1.5_supports-color@9.2.1:
-    resolution: {integrity: sha512-NqxsL23n5LiLRnmMyAdDWhRJzuNm7OmsnWz7BhykZK2+iJ7PFeMVeZqa0tL4IQRq2JgtkWe7zCSl29035J5ctA==}
+  /@netlify/cache-utils/4.1.6_supports-color@9.2.1:
+    resolution: {integrity: sha512-8n7zVoWs3xetgD2JxNXs0E/WU7MpHNDW9rxhOPnxn5PQWnYGjK18VRoEIISE4ZUnr7stDIUWF8bNDmFcj+l6KQ==}
     engines: {node: ^12.20.0 || ^14.14.0 || >=16.0.0}
     dependencies:
       cpy: 8.1.2_supports-color@9.2.1
@@ -1988,8 +1988,8 @@ packages:
       yargs: 17.5.1
     dev: true
 
-  /@netlify/edge-bundler/2.2.0:
-    resolution: {integrity: sha512-8dvI9y77TULQCcLXya4xJIt1GMTmCAJ0XIPfxjv6lbbB2XU87/tEAQ/8VOzaC2lNf+U5qG0fcrzVjjuKt3K2Sw==}
+  /@netlify/edge-bundler/2.7.0:
+    resolution: {integrity: sha512-BEIZkjSK0HyhGiTImfVHUjIMQ852YyxzNRikgOzvXDGvWVs74y7n3clSm66J55vilvEZmK6GpXZiGtaNN9kH6g==}
     engines: {node: ^12.20.0 || ^14.14.0 || >=16.0.0}
     dependencies:
       '@import-maps/resolve': 1.0.1
@@ -2218,8 +2218,8 @@ packages:
       '@netlify/esbuild-windows-arm64': 0.14.39
     dev: true
 
-  /@netlify/framework-info/9.2.0:
-    resolution: {integrity: sha512-H5KgXjYXYZfWbPbUG+gPLuPZ1vxUjbN2yOb8GPpfnHV8MCn9e7Q3I/1g/rq/CC0DbupF/4rGrXbkJnbdEH7prw==}
+  /@netlify/framework-info/9.3.0:
+    resolution: {integrity: sha512-GfGG6DGHeVNpSN9yesKvgT0LTgrD0d0toV3kU86+E9j+yByKnRUdxVlGXocA454t/eVw0Vww/xeKY10oGUljEw==}
     engines: {node: ^12.20.0 || ^14.14.0 || >=16.0.0}
     dependencies:
       ajv: 8.11.0
@@ -2232,8 +2232,8 @@ packages:
       semver: 7.3.7
     dev: true
 
-  /@netlify/functions-utils/4.2.10_supports-color@9.2.1:
-    resolution: {integrity: sha512-OodKCe8fmD/uK3sGkfcBi6bwOuM/V1/gMf//67/4HkIUj1haaEICcJmpw17r7RwyseIwOEvdBV5oHEmSyOhDhA==}
+  /@netlify/functions-utils/4.2.11_supports-color@9.2.1:
+    resolution: {integrity: sha512-FuVIaUaZERgVzKoXTavVNqLEKDHXWwCxF7yhhmESc77c2Euiv7tqxNAyp3UO5G5hHpLDKE1MPkVX8ff0pJ5WeA==}
     engines: {node: ^12.20.0 || ^14.14.0 || >=16.0.0}
     dependencies:
       '@netlify/zip-it-and-ship-it': 7.1.2_supports-color@9.2.1
@@ -2244,8 +2244,8 @@ packages:
       - supports-color
     dev: true
 
-  /@netlify/git-utils/4.1.2:
-    resolution: {integrity: sha512-Eee5Ht/bHPUV1cGaPF7kqV5V/78cXX0qyVDRDY72Crouw1F7V7D42yWpyf7/HrIg87LdzYoTmNwff7LMUTG4QA==}
+  /@netlify/git-utils/4.1.3:
+    resolution: {integrity: sha512-mSvK6UU+1L6wimoCaXqth/0XUY2/7n09ZRLHKLQAqQBQIEQHIZrnN8goK/J16O7ql+8ddiRVmnQm6cT0RFgRVg==}
     engines: {node: ^12.20.0 || ^14.14.0 || >=16.0.0}
     dependencies:
       execa: 6.1.0
@@ -2384,9 +2384,9 @@ packages:
     resolution: {integrity: sha512-1n9VvO/9qM7cRB5f7NgSNqeUrovM7j9WVAY7ZQ4LtQuXSquFmO9Fku7WrV3zAUC6v2Y62fxGyJ0fRllYz5uXLw==}
     dev: true
 
-  /@netlify/plugins-list/6.46.0:
-    resolution: {integrity: sha512-kUX90Eacqko9ni3cepVZKXFTLmhdwES/HDRlMYxyUh+SmvXWRC+h43b11nA0/6M5PEPolUChQOZN9wZql6oJJw==}
-    engines: {node: ^12.20.0 || ^14.14.0 || >=16.0.0}
+  /@netlify/plugins-list/6.49.1:
+    resolution: {integrity: sha512-+4/v0IeSDSKInz2RuoemmqQXpqxff600Pr2sDhQ+dNaKCdIeeFstG6D9lKlHtztEmpKMmZa4dCUAkBMnd9vcjQ==}
+    engines: {node: ^14.14.0 || >=16.0.0}
     dev: true
 
   /@netlify/run-utils/4.0.2:
@@ -2506,89 +2506,97 @@ packages:
       fastq: 1.13.0
     dev: true
 
-  /@octokit/auth-token/2.5.0:
-    resolution: {integrity: sha512-r5FVUJCOLl19AxiuZD2VRZ/ORjp/4IN98Of6YJoJOkY75CIBuYfmiNHGrDwXr+aLGG55igl9QrxX3hbiXlLb+g==}
+  /@octokit/auth-token/3.0.1:
+    resolution: {integrity: sha512-/USkK4cioY209wXRpund6HZzHo9GmjakpV9ycOkpMcMxMk7QVcVFVyCMtzvXYiHsB2crgDgrtNYSELYFBXhhaA==}
+    engines: {node: '>= 14'}
     dependencies:
-      '@octokit/types': 6.34.0
+      '@octokit/types': 7.5.1
     dev: true
 
-  /@octokit/core/3.5.1:
-    resolution: {integrity: sha512-omncwpLVxMP+GLpLPgeGJBF6IWJFjXDS5flY5VbppePYX9XehevbDykRH9PdCdvqt9TS5AOTiDide7h0qrkHjw==}
+  /@octokit/core/4.0.5:
+    resolution: {integrity: sha512-4R3HeHTYVHCfzSAi0C6pbGXV8UDI5Rk+k3G7kLVNckswN9mvpOzW9oENfjfH3nEmzg8y3AmKmzs8Sg6pLCeOCA==}
+    engines: {node: '>= 14'}
     dependencies:
-      '@octokit/auth-token': 2.5.0
-      '@octokit/graphql': 4.8.0
-      '@octokit/request': 5.6.3
-      '@octokit/request-error': 2.1.0
-      '@octokit/types': 6.34.0
+      '@octokit/auth-token': 3.0.1
+      '@octokit/graphql': 5.0.1
+      '@octokit/request': 6.2.1
+      '@octokit/request-error': 3.0.1
+      '@octokit/types': 7.5.1
       before-after-hook: 2.2.2
       universal-user-agent: 6.0.0
     transitivePeerDependencies:
       - encoding
     dev: true
 
-  /@octokit/endpoint/6.0.12:
-    resolution: {integrity: sha512-lF3puPwkQWGfkMClXb4k/eUT/nZKQfxinRWJrdZaJO85Dqwo/G0yOC434Jr2ojwafWJMYqFGFa5ms4jJUgujdA==}
+  /@octokit/endpoint/7.0.2:
+    resolution: {integrity: sha512-8/AUACfE9vpRpehE6ZLfEtzkibe5nfsSwFZVMsG8qabqRt1M81qZYUFRZa1B8w8lP6cdfDJfRq9HWS+MbmR7tw==}
+    engines: {node: '>= 14'}
     dependencies:
-      '@octokit/types': 6.34.0
+      '@octokit/types': 7.5.1
       is-plain-object: 5.0.0
       universal-user-agent: 6.0.0
     dev: true
 
-  /@octokit/graphql/4.8.0:
-    resolution: {integrity: sha512-0gv+qLSBLKF0z8TKaSKTsS39scVKF9dbMxJpj3U0vC7wjNWFuIpL/z76Qe2fiuCbDRcJSavkXsVtMS6/dtQQsg==}
+  /@octokit/graphql/5.0.1:
+    resolution: {integrity: sha512-sxmnewSwAixkP1TrLdE6yRG53eEhHhDTYUykUwdV9x8f91WcbhunIHk9x1PZLALdBZKRPUO2HRcm4kezZ79HoA==}
+    engines: {node: '>= 14'}
     dependencies:
-      '@octokit/request': 5.6.3
-      '@octokit/types': 6.34.0
+      '@octokit/request': 6.2.1
+      '@octokit/types': 7.5.1
       universal-user-agent: 6.0.0
     transitivePeerDependencies:
       - encoding
     dev: true
 
-  /@octokit/openapi-types/11.2.0:
-    resolution: {integrity: sha512-PBsVO+15KSlGmiI8QAzaqvsNlZlrDlyAJYcrXBCvVUxCp7VnXjkwPoFHgjEJXx3WF9BAwkA6nfCUA7i9sODzKA==}
+  /@octokit/openapi-types/13.13.1:
+    resolution: {integrity: sha512-4EuKSk3N95UBWFau3Bz9b3pheQ8jQYbKmBL5+GSuY8YDPDwu03J4BjI+66yNi8aaX/3h1qDpb0mbBkLdr+cfGQ==}
     dev: true
 
-  /@octokit/plugin-paginate-rest/2.17.0_@octokit+core@3.5.1:
-    resolution: {integrity: sha512-tzMbrbnam2Mt4AhuyCHvpRkS0oZ5MvwwcQPYGtMv4tUa5kkzG58SVB0fcsLulOZQeRnOgdkZWkRUiyBlh0Bkyw==}
+  /@octokit/plugin-paginate-rest/4.3.1_@octokit+core@4.0.5:
+    resolution: {integrity: sha512-h8KKxESmSFTcXX409CAxlaOYscEDvN2KGQRsLCGT1NSqRW+D6EXLVQ8vuHhFznS9MuH9QYw1GfsUN30bg8hjVA==}
+    engines: {node: '>= 14'}
     peerDependencies:
-      '@octokit/core': '>=2'
+      '@octokit/core': '>=4'
     dependencies:
-      '@octokit/core': 3.5.1
-      '@octokit/types': 6.34.0
+      '@octokit/core': 4.0.5
+      '@octokit/types': 7.5.1
     dev: true
 
-  /@octokit/plugin-request-log/1.0.4_@octokit+core@3.5.1:
+  /@octokit/plugin-request-log/1.0.4_@octokit+core@4.0.5:
     resolution: {integrity: sha512-mLUsMkgP7K/cnFEw07kWqXGF5LKrOkD+lhCrKvPHXWDywAwuDUeDwWBpc69XK3pNX0uKiVt8g5z96PJ6z9xCFA==}
     peerDependencies:
       '@octokit/core': '>=3'
     dependencies:
-      '@octokit/core': 3.5.1
+      '@octokit/core': 4.0.5
     dev: true
 
-  /@octokit/plugin-rest-endpoint-methods/5.13.0_@octokit+core@3.5.1:
-    resolution: {integrity: sha512-uJjMTkN1KaOIgNtUPMtIXDOjx6dGYysdIFhgA52x4xSadQCz3b/zJexvITDVpANnfKPW/+E0xkOvLntqMYpviA==}
+  /@octokit/plugin-rest-endpoint-methods/6.6.2_@octokit+core@4.0.5:
+    resolution: {integrity: sha512-n9dL5KMpz9qVFSNdcVWC8ZPbl68QbTk7+CMPXCXqaMZOLn1n1YuoSFFCy84Ge0fx333fUqpnBHv8BFjwGtUQkA==}
+    engines: {node: '>= 14'}
     peerDependencies:
       '@octokit/core': '>=3'
     dependencies:
-      '@octokit/core': 3.5.1
-      '@octokit/types': 6.34.0
+      '@octokit/core': 4.0.5
+      '@octokit/types': 7.5.1
       deprecation: 2.3.1
     dev: true
 
-  /@octokit/request-error/2.1.0:
-    resolution: {integrity: sha512-1VIvgXxs9WHSjicsRwq8PlR2LR2x6DwsJAaFgzdi0JfJoGSO8mYI/cHJQ+9FbN21aa+DrgNLnwObmyeSC8Rmpg==}
+  /@octokit/request-error/3.0.1:
+    resolution: {integrity: sha512-ym4Bp0HTP7F3VFssV88WD1ZyCIRoE8H35pXSKwLeMizcdZAYc/t6N9X9Yr9n6t3aG9IH75XDnZ6UeZph0vHMWQ==}
+    engines: {node: '>= 14'}
     dependencies:
-      '@octokit/types': 6.34.0
+      '@octokit/types': 7.5.1
       deprecation: 2.3.1
       once: 1.4.0
     dev: true
 
-  /@octokit/request/5.6.3:
-    resolution: {integrity: sha512-bFJl0I1KVc9jYTe9tdGGpAMPy32dLBXXo1dS/YwSCTL/2nd9XeHsY616RE3HPXDVk+a+dBuzyz5YdlXwcDTr2A==}
+  /@octokit/request/6.2.1:
+    resolution: {integrity: sha512-gYKRCia3cpajRzDSU+3pt1q2OcuC6PK8PmFIyxZDWCzRXRSIBH8jXjFJ8ZceoygBIm0KsEUg4x1+XcYBz7dHPQ==}
+    engines: {node: '>= 14'}
     dependencies:
-      '@octokit/endpoint': 6.0.12
-      '@octokit/request-error': 2.1.0
-      '@octokit/types': 6.34.0
+      '@octokit/endpoint': 7.0.2
+      '@octokit/request-error': 3.0.1
+      '@octokit/types': 7.5.1
       is-plain-object: 5.0.0
       node-fetch: 2.6.7
       universal-user-agent: 6.0.0
@@ -2596,21 +2604,22 @@ packages:
       - encoding
     dev: true
 
-  /@octokit/rest/18.12.0:
-    resolution: {integrity: sha512-gDPiOHlyGavxr72y0guQEhLsemgVjwRePayJ+FcKc2SJqKUbxbkvf5kAZEWA/MKvsfYlQAMVzNJE3ezQcxMJ2Q==}
+  /@octokit/rest/19.0.4:
+    resolution: {integrity: sha512-LwG668+6lE8zlSYOfwPj4FxWdv/qFXYBpv79TWIQEpBLKA9D/IMcWsF/U9RGpA3YqMVDiTxpgVpEW3zTFfPFTA==}
+    engines: {node: '>= 14'}
     dependencies:
-      '@octokit/core': 3.5.1
-      '@octokit/plugin-paginate-rest': 2.17.0_@octokit+core@3.5.1
-      '@octokit/plugin-request-log': 1.0.4_@octokit+core@3.5.1
-      '@octokit/plugin-rest-endpoint-methods': 5.13.0_@octokit+core@3.5.1
+      '@octokit/core': 4.0.5
+      '@octokit/plugin-paginate-rest': 4.3.1_@octokit+core@4.0.5
+      '@octokit/plugin-request-log': 1.0.4_@octokit+core@4.0.5
+      '@octokit/plugin-rest-endpoint-methods': 6.6.2_@octokit+core@4.0.5
     transitivePeerDependencies:
       - encoding
     dev: true
 
-  /@octokit/types/6.34.0:
-    resolution: {integrity: sha512-s1zLBjWhdEI2zwaoSgyOFoKSl109CUcVBCc7biPJ3aAf6LGLU6szDvi31JPU7bxfla2lqfhjbbg/5DdFNxOwHw==}
+  /@octokit/types/7.5.1:
+    resolution: {integrity: sha512-Zk4OUMLCSpXNI8KZZn47lVLJSsgMyCimsWWQI5hyjZg7hdYm0kjotaIkbG0Pp8SfU2CofMBzonboTqvzn3FrJA==}
     dependencies:
-      '@octokit/openapi-types': 11.2.0
+      '@octokit/openapi-types': 13.13.1
     dev: true
 
   /@rollup/plugin-babel/5.3.0_@babel+core@7.17.2+rollup@2.79.1:
@@ -9225,19 +9234,19 @@ packages:
     resolution: {integrity: sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==}
     dev: true
 
-  /netlify-cli/12.0.2:
-    resolution: {integrity: sha512-nmIsQC+aidQ8AQFTSOLM/ggBCusQu7xgcs8QC1oj9N26tX3T8Ha9DfU9hfxX+jyNQXQhXXhdDNeT92G2+CqTTw==}
+  /netlify-cli/12.0.7:
+    resolution: {integrity: sha512-I9R9WKZ7Loz2NZnbZBc8OsUbl0GPjEI1vJf3zDUG9kGFPMgvJY4/cMymVMeoYfJpMS5MztyIX7Qi4Ry6azxK8w==}
     engines: {node: ^14.16.0 || >=16.0.0}
     hasBin: true
     requiresBuild: true
     dependencies:
-      '@netlify/build': 27.18.6
+      '@netlify/build': 27.20.3
       '@netlify/config': 18.2.4
-      '@netlify/edge-bundler': 2.2.0
-      '@netlify/framework-info': 9.2.0
+      '@netlify/edge-bundler': 2.7.0
+      '@netlify/framework-info': 9.3.0
       '@netlify/local-functions-proxy': 1.1.1
       '@netlify/zip-it-and-ship-it': 7.1.2
-      '@octokit/rest': 18.12.0
+      '@octokit/rest': 19.0.4
       '@sindresorhus/slugify': 1.1.2
       ansi-escapes: 5.0.0
       ansi-styles: 5.2.0
@@ -9313,7 +9322,7 @@ packages:
       p-wait-for: 3.2.0
       parallel-transform: 1.2.0
       parse-github-url: 1.0.2
-      parse-gitignore: 1.0.1
+      parse-gitignore: 2.0.0
       path-key: 3.1.1
       prettyjson: 1.2.5
       pump: 3.0.0
@@ -9987,9 +9996,9 @@ packages:
     hasBin: true
     dev: true
 
-  /parse-gitignore/1.0.1:
-    resolution: {integrity: sha512-UGyowyjtx26n65kdAMWhm6/3uy5uSrpcuH7tt+QEVudiBoVS+eqHxD5kbi9oWVRwj7sCzXqwuM+rUGw7earl6A==}
-    engines: {node: '>=6'}
+  /parse-gitignore/2.0.0:
+    resolution: {integrity: sha512-RmVuCHWsfu0QPNW+mraxh/xjQVw/lhUCUru8Zni3Ctq3AoMhpDTq0OVdKS6iesd6Kqb7viCV3isAL43dciOSog==}
+    engines: {node: '>=14'}
     dev: true
 
   /parse-json/5.2.0:
