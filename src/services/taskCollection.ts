@@ -2,7 +2,7 @@ import AbstractService from './abstractService'
 import TaskModel from '../models/task'
 import {formatISO} from 'date-fns'
 
-export default class TaskCollectionService extends AbstractService {
+export default class TaskCollectionService extends AbstractService<ITask> {
 	constructor() {
 		super({
 			getAll: '/lists/{listId}/tasks',

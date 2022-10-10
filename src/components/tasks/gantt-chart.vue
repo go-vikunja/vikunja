@@ -1,10 +1,14 @@
 <template>
-	<Loading class="gantt-container" v-if="taskService.loading || taskCollectionService.loading"/>
+	<Loading
+		v-if="taskService.loading || taskCollectionService.loading || dayjsLanguageLoading"
+		class="gantt-container"
+	/>
 	<div class="gantt-container" v-else>
 		<GGanttChart
+			dateFormat="YYYY-MM-DDTHH:mm:ssZ[Z]"
 			:chart-start="`${dateFrom} 00:00`"
 			:chart-end="`${dateTo} 23:59`"
-			:precision="PRECISION"
+			precision="day"
 			bar-start="startDate"
 			bar-end="endDate"
 			:grid="true"
@@ -37,14 +41,18 @@
 import {computed, ref, watch, watchEffect, shallowReactive, type PropType} from 'vue'
 import {useRouter} from 'vue-router'
 import {format, parse} from 'date-fns'
+import dayjs from 'dayjs'
 
+import {useDayjsLanguageSync} from '@/i18n'
 import TaskCollectionService from '@/services/taskCollection'
 import TaskService from '@/services/task'
 import TaskModel, { getHexColor } from '@/models/task'
 
-import type ListModel from '@/models/list'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import {RIGHTS} from '@/constants/rights'
+
+import type {ITask} from '@/modelTypes/ITask'
+import type {IList} from '@/modelTypes/IList'
 
 import {
 	extendDayjs,
@@ -58,32 +66,29 @@ import TaskForm from '@/components/tasks/TaskForm.vue'
 
 import {useBaseStore} from '@/stores/base'
 
-extendDayjs()
+export type DateRange = {
+	dateFrom: string,
+	dateTo: string,
+}
 
-const PRECISION = 'day' as const
-const DATE_FORMAT = 'yyyy-LL-dd HH:mm'
+export interface GanttChartProps {
+	listId: IList['id']
+	dateRange: DateRange
+	showTasksWithoutDates: boolean
+}
+
+export const DATE_FORMAT = 'yyyy-LL-dd HH:mm'
+
+const props = withDefaults(defineProps<GanttChartProps>(), {
+	showTasksWithoutDates: false,
+})
+
+// setup dayjs for vue-ganttastic
+const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
+extendDayjs()
 
 const baseStore = useBaseStore()
 const router = useRouter()
-
-const props = defineProps({
-	listId: {
-		type: Number as PropType<ListModel['id']>,
-		required: true,
-	},
-	dateFrom: {
-		type: String as PropType<any>,
-		required: true,
-	},
-	dateTo: {
-		type: String as PropType<any>,
-		required: true,
-	},
-	showTasksWithoutDates: {
-		type: Boolean,
-		default: false,
-	},
-})
 
 const taskCollectionService = shallowReactive(new TaskCollectionService())
 const taskService = shallowReactive(new TaskService())
@@ -100,14 +105,11 @@ const ganttChartWidth = computed(() => {
 
 const canWrite = computed(() => baseStore.currentList.maxRight > RIGHTS.READ)
 
-const tasks = ref<Map<TaskModel['id'], TaskModel>>(new Map())
+const tasks = ref<Map<ITask['id'], ITask>>(new Map())
 const ganttBars = ref<GanttBarObject[][]>([])
 
 watch(
 	tasks,
-	// We need a "real" ref object for the gantt bars to instantly update the tasks when they are dragged on the chart.
-	// A computed won't work directly.
-	// function mapGanttBars() {
 	() => {
 		ganttBars.value = []
 		tasks.value.forEach(t => ganttBars.value.push(transformTaskToGanttBar(t)))
@@ -115,14 +117,15 @@ watch(
 	{deep: true}
 )
 
-const defaultStartDate = format(new Date(), DATE_FORMAT)
-const defaultEndDate = format(new Date((new Date()).setDate((new Date()).getDate() + 7)), DATE_FORMAT)
+const defaultStartDate = new Date().toISOString()
+const defaultEndDate = new Date((new Date()).setDate((new Date()).getDate() + 7)).toISOString()
 
-function transformTaskToGanttBar(t: TaskModel) {
+function transformTaskToGanttBar(t: ITask) {
 	const black = 'var(--grey-800)'
+	console.log(t)
 	return [{
-		startDate: t.startDate ? format(t.startDate, DATE_FORMAT) : defaultStartDate,
-		endDate: t.endDate ? format(t.endDate, DATE_FORMAT) : defaultEndDate,
+		startDate: t.startDate ? new Date(t.startDate).toISOString() : defaultStartDate,
+		endDate: t.endDate ? new Date(t.endDate).toISOString() : defaultEndDate,
 		ganttBarConfig: {
 			id: String(t.id),
 			label: t.title,
@@ -137,8 +140,6 @@ function transformTaskToGanttBar(t: TaskModel) {
 	} as GanttBarObject]
 }
 
-
-
 // FIXME: unite with other filter params types
 interface GetAllTasksParams {
 		sort_by: ('start_date' | 'done' | 'id')[],
@@ -150,8 +151,8 @@ interface GetAllTasksParams {
 		filter_include_nulls: boolean,
 }
 
-async function getAllTasks(params: GetAllTasksParams, page = 1): Promise<TaskModel[]> {
-	const tasks = await taskCollectionService.getAll({listId: props.listId}, params, page) as TaskModel[]
+async function getAllTasks(params: GetAllTasksParams, page = 1): Promise<ITask[]> {
+	const tasks = await taskCollectionService.getAll({listId: props.listId}, params, page) as ITask[]
 	if (page < taskCollectionService.totalPages) {
 		const nextTasks = await getAllTasks(params, page + 1)
 		return tasks.concat(nextTasks)
@@ -170,7 +171,7 @@ async function loadTasks({
 }) {
 	tasks.value = new Map()
 
-	const params = {
+	const params: GetAllTasksParams = {
 		sort_by: ['start_date', 'done', 'id'],
 		order_by: ['asc', 'asc', 'desc'],
 		filter_by: ['start_date', 'start_date'],
@@ -191,7 +192,7 @@ watchEffect(() => loadTasks({
 	showTasksWithoutDates: props.showTasksWithoutDates,
 }))
 
-async function createTask(title: TaskModel['title']) {
+async function createTask(title: ITask['title']) {
 	const newTask = await taskService.create(new TaskModel({
 		title,
 		listId: props.listId,
@@ -212,14 +213,26 @@ async function updateTask(e: {
 
 	if (!task) return
 
-	task.startDate = e.bar.startDate
-	task.endDate = e.bar.endDate
+	console.log(task.startDate.toISOString())
+	console.log(dayjs(task.startDate), "YYYY-MM-DD HH:mm").toISOString()
+	console.log(dayjs(task.startDate, "YYYY-MM-DDTHH:mm:ssZ[Z]").toISOString())
+	console.log(task.startDate)
+	console.log(dayjs(e.bar.startDate).toDate())
+	console.log(e.bar.startDate)
+	console.log(task.endDate.toISOString())
+	console.log(task.endDate)
+	console.log(dayjs(e.bar.startDate).toDate())
+	console.log(e.bar.endDate)
+
+	// task.startDate = e.bar.startDate
+	// task.endDate = e.bar.endDate
 	const updatedTask = await taskService.update(task)
-	ganttBars.value.map(gantBar => {
-		return Number(gantBar[0].ganttBarConfig.id) === task.id
-			? transformTaskToGanttBar(updatedTask)
-			: gantBar
-	})
+
+	// ganttBars.value.map(gantBar => {
+	// 	return Number(gantBar[0].ganttBarConfig.id) === task.id
+	// 		? transformTaskToGanttBar(updatedTask)
+	// 		: gantBar
+	// })
 }
 
 function openTask(e: {

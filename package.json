@@ -38,6 +38,7 @@
     "camel-case": "4.1.2",
     "codemirror": "5.65.9",
     "date-fns": "2.29.3",
+    "dayjs": "^1.11.5",
     "dompurify": "2.4.0",
     "easymde": "2.18.0",
     "flatpickr": "4.6.13",

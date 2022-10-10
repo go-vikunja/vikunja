@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import {nextTick, ref} from 'vue'
-import type {ITask} from '@/models/task'
+import type {ITask} from '@/modelTypes/ITask'
 
 const emit = defineEmits<{
 	(e: 'create-task', title: string): Promise<ITask>
