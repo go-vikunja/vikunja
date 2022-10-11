@@ -853,6 +853,12 @@
         "text1": "Confermi di voler rimuovere questo utente dal gruppo?",
         "text2": "Perderanno l'accesso a tutte le liste e i namespace a cui questo gruppo ha accesso. NON PUÒ ESSERE RIPRISTINATO!",
         "success": "Utente rimosso dal gruppo."
+      },
+      "leave": {
+        "title": "Leave team",
+        "text1": "Are you sure you want to leave this team?",
+        "text2": "You will loose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "success": "You have successfully left the team."
       }
     },
     "attributes": {

@@ -672,23 +672,23 @@
       "updated": "Atualizado"
     },
     "subscription": {
-      "subscribedListThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this list through its namespace.",
-      "subscribedTaskThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this task through its namespace.",
-      "subscribedTaskThroughParentList": "You can't unsubscribe here because you are subscribed to this task through its list.",
-      "subscribedNamespace": "You are currently subscribed to this namespace and will receive notifications for changes.",
-      "notSubscribedNamespace": "You are not subscribed to this namespace and won't receive notifications for changes.",
-      "subscribedList": "You are currently subscribed to this list and will receive notifications for changes.",
-      "notSubscribedList": "You are not subscribed to this list and won't receive notifications for changes.",
-      "subscribedTask": "You are currently subscribed to this task and will receive notifications for changes.",
-      "notSubscribedTask": "You are not subscribed to this task and won't receive notifications for changes.",
+      "subscribedListThroughParentNamespace": "Não podes cancelar a tua subscrição aqui porque estás subscrito nesta lista através do seu espaço.",
+      "subscribedTaskThroughParentNamespace": "Não podes cancelar a tua subscrição aqui porque estás subscrito nesta tarefa através do seu espaço.",
+      "subscribedTaskThroughParentList": "Não podes cancelar a tua subscrição aqui porque estás subscrito nesta tarefa através da sua lista.",
+      "subscribedNamespace": "Estás atualmente subscrito a este espaço e serás notificado de alterações.",
+      "notSubscribedNamespace": "Não estás subscrito a este espaço e não serás notificado de alterações.",
+      "subscribedList": "Estás atualmente subscrito a esta lista e serás notificado de alterações.",
+      "notSubscribedList": "Não estás subscrito a esta lista e não serás notificado de alterações.",
+      "subscribedTask": "Estás atualmente subscrito a esta tarefa e serás notificado de alterações.",
+      "notSubscribedTask": "Não estás subscrito a esta tarefa e não serás notificado de alterações.",
       "subscribe": "Subscrever",
       "unsubscribe": "Remover Subscrição",
-      "subscribeSuccessNamespace": "You are now subscribed to this namespace",
-      "unsubscribeSuccessNamespace": "You are now unsubscribed to this namespace",
-      "subscribeSuccessList": "You are now subscribed to this list",
-      "unsubscribeSuccessList": "You are now unsubscribed to this list",
-      "subscribeSuccessTask": "You are now subscribed to this task",
-      "unsubscribeSuccessTask": "You are now unsubscribed to this task"
+      "subscribeSuccessNamespace": "Estás agora subscrito a este espaço",
+      "unsubscribeSuccessNamespace": "Não estás mais subcrito a este espaço",
+      "subscribeSuccessList": "Estás agora subscrito a esta lista",
+      "unsubscribeSuccessList": "Não estás mais subcrito a esta lista",
+      "subscribeSuccessTask": "Estás agora subscrito a esta tarefa",
+      "unsubscribeSuccessTask": "Não estás mais subcrito a esta tarefa"
     },
     "attachment": {
       "title": "Anexos",
@@ -701,10 +701,10 @@
       "deleteText1": "Tens a certeza que pretendes eliminar o anexo {filename}?",
       "copyUrl": "Copiar URL",
       "copyUrlTooltip": "Copia o url deste anexo para o utilizar no texto",
-      "setAsCover": "Make cover",
-      "unsetAsCover": "Remove cover",
-      "successfullyChangedCoverImage": "The cover image was successfully changed.",
-      "usedAsCover": "Cover image"
+      "setAsCover": "Criar capa",
+      "unsetAsCover": "Remover capa",
+      "successfullyChangedCoverImage": "A imagem de capa foi alterada com sucesso.",
+      "usedAsCover": "Imagem de capa"
     },
     "comment": {
       "title": "Comentários",
@@ -853,6 +853,12 @@
         "text1": "Tens a certeza que pretendes remover este utilizador da equipa?",
         "text2": "Eles perderão o acesso a todas as listas e espaços a que esta equipa tem acesso. Isto NÃO PODER SER REVERTIDO!",
         "success": "O utilizador foi removido da equipa com sucesso."
+      },
+      "leave": {
+        "title": "Sair da equipa",
+        "text1": "Tens a certeza de que queres sair desta equipa?",
+        "text2": "Vais perder acesso a todas as listas e espaços a que esta equipa tem acesso. Se mudares de ideias, vais necessitar que um administrador da equipa te adicione novamente.",
+        "success": "Saíste da equipa com sucesso."
       }
     },
     "attributes": {

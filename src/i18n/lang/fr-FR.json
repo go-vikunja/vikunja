@@ -853,6 +853,12 @@
         "text1": "Retirer cette personne de l’équipe ?",
         "text2": "Ils perdront l'accès à toutes les listes et espaces de noms auxquels cette équipe a accès. Ceci NE PEUT PAS ÊTRE ANNULÉ !",
         "success": "Utilisateur·rice retiré·e de l’équipe."
+      },
+      "leave": {
+        "title": "Leave team",
+        "text1": "Are you sure you want to leave this team?",
+        "text2": "You will loose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "success": "You have successfully left the team."
       }
     },
     "attributes": {

@@ -853,6 +853,12 @@
         "text1": "Opravdu chcete odebrat tohoto uživatele z týmu?",
         "text2": "Ztratí přístup ke všem seznamům a prostorům, k nimž má tento tým přístup. To NEMŮŽE BÝT VZATO ZPĚT!",
         "success": "Uživatel byl úspěšně odstraněn z týmu."
+      },
+      "leave": {
+        "title": "Leave team",
+        "text1": "Are you sure you want to leave this team?",
+        "text2": "You will loose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "success": "You have successfully left the team."
       }
     },
     "attributes": {

@@ -853,6 +853,12 @@
         "text1": "Bist du sicher, dass du diese:n Benutzer:in aus dem Team entfernen willst?",
         "text2": "Diese:r Benutzer:in verliert den Zugriff auf alle Listen und Namespaces auf die dieses Team Zugriff hat. Dies kann nicht rückgängig gemacht werden!",
         "success": "Der:die Benutzer:in wurde erfolgreich aus dem Team gelöscht."
+      },
+      "leave": {
+        "title": "Team verlassen",
+        "text1": "Bist du sicher, dass du dieses Team verlassen willst?",
+        "text2": "Du wirst Zugriff auf alle Listen und Namespaces verlieren, auf die dieses Team Zugriff hat. Wenn du deine Meinung änderst, musst du durch einen Team-Admin wieder hinzugefügt werden.",
+        "success": "Du hast das Team erfolgreich verlassen."
       }
     },
     "attributes": {

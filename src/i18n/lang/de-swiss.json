@@ -853,6 +853,12 @@
         "text1": "Bisch du dir sicher, dass du de Benutzer usm Team werfe wetsch?",
         "text2": "Diese:r Benutzer:in verliert den Zugriff auf alle Listen und Namespaces auf die dieses Team Zugriff hat. Dies kann nicht rückgängig gemacht werden!",
         "success": "Benutzer erfolgriich usegworfe."
+      },
+      "leave": {
+        "title": "Team verlassen",
+        "text1": "Bist du sicher, dass du dieses Team verlassen willst?",
+        "text2": "Du wirst Zugriff auf alle Listen und Namespaces verlieren, auf die dieses Team Zugriff hat. Wenn du deine Meinung änderst, musst du durch einen Team-Admin wieder hinzugefügt werden.",
+        "success": "Du hast das Team erfolgreich verlassen."
       }
     },
     "attributes": {

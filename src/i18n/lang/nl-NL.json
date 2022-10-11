@@ -853,6 +853,12 @@
         "text1": "Weet je zeker dat je deze gebruiker wilt verwijderen uit het team?",
         "text2": "They will lose access to all lists and namespaces this team has access to. This CANNOT BE UNDONE!",
         "success": "The user was successfully deleted from the team."
+      },
+      "leave": {
+        "title": "Leave team",
+        "text1": "Are you sure you want to leave this team?",
+        "text2": "You will loose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "success": "You have successfully left the team."
       }
     },
     "attributes": {

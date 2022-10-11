@@ -853,6 +853,12 @@
         "text1": "Czy na pewno chcesz usunąć tego użytkownika z zespołu?",
         "text2": "Utraci on dostęp do wszystkich list i sekcji, do których ma dostęp ten zespół. Tego NIE DA SIĘ COFNĄĆ!",
         "success": "Użytkownik został pomyślnie usunięty z zespołu."
+      },
+      "leave": {
+        "title": "Leave team",
+        "text1": "Are you sure you want to leave this team?",
+        "text2": "You will loose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "success": "You have successfully left the team."
       }
     },
     "attributes": {

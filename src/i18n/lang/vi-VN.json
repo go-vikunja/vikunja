@@ -853,6 +853,12 @@
         "text1": "Bạn có chắc muốn đưa thành viên này ra khỏi Team không?",
         "text2": "Họ sẽ mất quyền truy cập vào tất cả danh sách và góc làm việc mà Team này có quyền truy cập. Điều đó KHÔNG THỂ HOÀN TÁC!",
         "success": "Thành viên đã rời khỏi Team."
+      },
+      "leave": {
+        "title": "Leave team",
+        "text1": "Are you sure you want to leave this team?",
+        "text2": "You will loose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "success": "You have successfully left the team."
       }
     },
     "attributes": {
