@@ -384,6 +384,7 @@ const router = createRouter({
 				dateFrom: route.query.dateFrom as string,
 				dateTo: route.query.dateTo as string,
 				showTasksWithoutDates: Boolean(route.query.showTasksWithoutDates),
+				route,
 			}),
 		},
 		{

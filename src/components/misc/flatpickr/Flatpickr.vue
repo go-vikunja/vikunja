@@ -186,19 +186,6 @@ watch(config, () => {
 	});
 }, {deep:true})
 
-
-
-// watch(root, () => {
-// 	if (
-// 		fp.value || // Return early if flatpickr is already loaded
-// 		!root.value // our input needs to be mounted
-// 	) {
-// 		return
-// 	}
-
-
-// })
-
 const fpInput = computed(() => {
 	if (!fp.value) return
 	return fp.value.altInput || fp.value.input;

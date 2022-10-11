@@ -71,13 +71,12 @@ export type DateRange = {
 	dateTo: string,
 }
 
-export interface GanttChartProps {
+export interface GanttChartProps extends DateRange {
 	listId: IList['id']
-	dateRange: DateRange
 	showTasksWithoutDates: boolean
 }
 
-export const DATE_FORMAT = 'yyyy-LL-dd HH:mm'
+// export const DATE_FORMAT = 'yyyy-LL-dd HH:mm'
 
 const props = withDefaults(defineProps<GanttChartProps>(), {
 	showTasksWithoutDates: false,

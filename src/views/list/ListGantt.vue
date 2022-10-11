@@ -1,5 +1,5 @@
 <template>
-	<ListWrapper class="list-gantt" :list-id="props.listId" viewName="gantt">
+	<ListWrapper class="list-gantt" :list-id="filters.listId" viewName="gantt">
 		<template #header>
 			<card>
 				<div class="gantt-options">
@@ -16,7 +16,7 @@
 							/>
 						</div>
 					</div>
-					<fancycheckbox class="is-block" v-model="showTasksWithoutDates">
+					<fancycheckbox class="is-block" v-model="filters.showTasksWithoutDates">
 						{{ $t('list.gantt.showTasksWithoutDates') }}
 					</fancycheckbox>
 				</div>
@@ -27,15 +27,14 @@
 			<div class="gantt-chart-container">
 				<card :padding="false" class="has-overflow">
 					<pre>{{dateRange}}</pre>
-					<pre>{{new Date(dateRange.dateFrom).toLocaleDateString()}}</pre>
-					<pre>{{new Date(dateRange.dateTo).toLocaleDateString()}}</pre>
+					<pre>{{new Date(dateRange.dateFrom).toISOString()}}</pre>
+					<pre>{{new Date(dateRange.dateTo).toISOString()}}</pre>
 					<!-- <gantt-chart
-						v-if="false"
-						:date-range="dateRange"
-						:list-id="props.listId"
+						:list-id="filters.listId"
+						:date-from="filters.dateFrom"
+						:date-to="filters.dateTo"
 						:show-tasks-without-dates="showTasksWithoutDates"
 					/> -->
-
 				</card>
 			</div>
 		</template>
@@ -43,12 +42,13 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, type PropType} from 'vue'
+import {computed, reactive, ref, watch, type PropType} from 'vue'
 import Foo from '@/components/misc/flatpickr/Flatpickr.vue'
 // import type FlatPickr from 'vue-flatpickr-component'
+import type Flatpickr from 'flatpickr'
 import {useI18n} from 'vue-i18n'
 import {format} from 'date-fns'
-import {useRoute, useRouter} from 'vue-router'
+import {useRoute, useRouter, type LocationQuery, type RouteLocationNormalized, type RouteLocationRaw} from 'vue-router'
 
 import {useAuthStore} from '@/stores/auth'
 
@@ -56,40 +56,40 @@ import ListWrapper from './ListWrapper.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 
 import {createAsyncComponent} from '@/helpers/createAsyncComponent'
+import type { IList } from '@/modelTypes/IList'
 
-type DateKebab = `${string}-${string}-${string}`
+export type DateKebab = `${string}-${string}-${string}`
+export type DateISO = string
+export type DateRange = {
+	dateFrom: string
+	dateTo: string
+}
+
+export interface GanttParams {
+	listId: IList['id']
+	dateFrom: DateKebab
+	dateTo: DateKebab
+	showTasksWithoutDates: boolean
+	route: RouteLocationNormalized,
+}
+
+export interface GanttFilter {
+	listId: IList['id']
+	dateFrom: DateISO
+	dateTo: DateISO
+	showTasksWithoutDates: boolean
+}
+
+type Options = Flatpickr.Options.Options
 
 const GanttChart = createAsyncComponent(() => import('@/components/tasks/gantt-chart.vue'))
 
-const props = defineProps({
-	listId: {
-		type: Number,
-		required: true,
-	},
-	dateFrom: {
-		type: String as PropType<DateKebab>,
-	},
-	dateTo: {
-		type: String as PropType<DateKebab>,
-	},
-	showTasksWithoutDates: {
-		type: Boolean,
-		default: false,
-	},
-})
+const props = defineProps<GanttParams>()
 
 const router = useRouter()
 const route = useRoute()
 
-const showTasksWithoutDates = computed({
-	get: () => props.showTasksWithoutDates,
-	set: (value) => router.push({ query: {
-		...route.query,
-		showTasksWithoutDates: String(value),
-	}}),
-})
-
-function parseKebabDate(kebabDate: DateKebab | undefined, fallback: () => Date): Date {
+function parseDateProp(kebabDate: DateKebab | undefined): string | undefined {
 	try {
 
 		if (!kebabDate) {
@@ -110,134 +110,120 @@ function parseKebabDate(kebabDate: DateKebab | undefined, fallback: () => Date):
 		if (!dateValuesAreValid) {
 			throw new Error('Invalid date values')
 		}
-		return new Date(year, month, date)
+		return new Date(year, month, date).toISOString()
 	} catch(e) {
 		// ignore nonsense route queries
-		return fallback()
+		return
 	}
 }
+
+function parseBooleanProp(booleanProp: string) {
+	return (booleanProp === 'false' || booleanProp === '0')
+		? false
+		:	Boolean(booleanProp)
+}
+
+const DEFAULT_SHOW_TASKS_WITHOUT_DATES = false
 
 const DEFAULT_DATEFROM_DAY_OFFSET = 0
 // const DEFAULT_DATEFROM_DAY_OFFSET = -15
 const DEFAULT_DATETO_DAY_OFFSET = +55
-// const DEFAULT_DATETO_DAY_OFFSET = +55
 
 const now = new Date()
 
 function getDefaultDateFrom() {
-	return new Date(now.getFullYear(), now.getMonth(), now.getDate() + DEFAULT_DATEFROM_DAY_OFFSET)
+	return new Date(now.getFullYear(), now.getMonth(), now.getDate() + DEFAULT_DATEFROM_DAY_OFFSET).toISOString()
 }
 
 function getDefaultDateTo() {
-	return new Date(now.getFullYear(), now.getMonth(), now.getDate() + DEFAULT_DATETO_DAY_OFFSET)
+	return new Date(now.getFullYear(), now.getMonth(), now.getDate() + DEFAULT_DATETO_DAY_OFFSET).toISOString()
 }
 
-let isChangingRoute = ref<ReturnType<typeof router.push> | false>(false)
+function routeToFilter(route: RouteLocationNormalized): GanttFilter {
+	return {
+		listId: Number(route.params.listId as string),
+		dateFrom: parseDateProp(route.query.dateFrom as DateKebab) || getDefaultDateFrom(),
+		dateTo: parseDateProp(route.query.dateTo as DateKebab) || getDefaultDateTo(),
+		showTasksWithoutDates: parseBooleanProp(route.query.showTasksWithoutDates as string) || DEFAULT_SHOW_TASKS_WITHOUT_DATES,
+	}
+}
 
-const count = ref(0)
-
-const dateRange = computed<{
-	dateFrom: string
-	dateTo: string
-}>({
-	get: () => ({
-		dateFrom: parseKebabDate(props.dateFrom, getDefaultDateFrom).toISOString(),
-		dateTo: parseKebabDate(props.dateTo, getDefaultDateTo).toISOString(),
-	}),
-	async set(range: {
-		dateFrom: string
-		dateTo: string
-	} | null) {
-		if (range === null) {
-			const query = {...route.query}
-			delete query?.dateFrom
-			delete query?.dateTo
-			console.log('set range to null. query is: ', query)
-			router.push(query)
-			return
+function filterToRoute(filters: GanttFilter): RouteLocationRaw {
+	let query: Record<string, string> = {}
+	if (
+		filters.dateFrom !== getDefaultDateFrom() ||
+		filters.dateTo !== getDefaultDateTo()
+	) {
+		query = {
+			dateFrom: format(new Date(filters.dateFrom), 'yyyy-LL-dd'),
+			dateTo: format(new Date(filters.dateTo), 'yyyy-LL-dd'),
 		}
-		const {
-			dateFrom,
-			dateTo,
-		} = range
-		count.value = count.value + 1
-		if (count.value >= 4) {
-			console.log('triggered ', count, ' times, stopping.')
-			return
-		}
-		if (isChangingRoute.value !== false) {
-			console.log('called again while changing route')
-			await isChangingRoute.value
-			console.log('changing route finished, continuing...')
-		}
+	}
 
-		const queryDateFrom = format(new Date(dateFrom || getDefaultDateFrom()), 'yyyy-LL-dd')
-		const queryDateTo = format(new Date(dateTo || getDefaultDateTo()), 'yyyy-LL-dd')
+	if (filters.showTasksWithoutDates) {
+		query.showTasksWithoutDates = String(filters.showTasksWithoutDates)
+	}
 
-		console.log(dateFrom, 'dateFrom')
-		console.log(dateRange.value.dateFrom, 'dateRange.value.dateFrom')
-		console.log(dateTo, 'dateTo')
-		console.log(dateRange.value.dateTo, 'dateRange.value.dateTo')
+	return {
+		name: 'list.gantt',
+		params: {listId: filters.listId},
+		query
+	}
+}
 
-		if (queryDateFrom === route.query.dateFrom || queryDateTo === route.query.dateTo) {
-			console.log('is same date')
-			// only set if the value has changed
-			return
-		}
-		console.log('change url to', {
-			query: {
-				...route.query,
-				dateFrom: format(new Date(dateFrom), 'yyyy-LL-dd'),
-				dateTo: format(new Date(dateTo), 'yyyy-LL-dd'),
-			}
-		})
-		isChangingRoute.value = router.push({
-			query: {
-				...route.query,
-				dateFrom: format(new Date(dateFrom), 'yyyy-LL-dd'),
-				dateTo: format(new Date(dateTo), 'yyyy-LL-dd'),
-			}
-		})
-	},
+const filters: GanttFilter = reactive(routeToFilter(route))
+
+watch(() => JSON.parse(JSON.stringify(props.route)) as RouteLocationNormalized, (route, oldRoute) => {
+	if (route.name !== oldRoute.name) {
+		return
+	}
+	const filterFullPath = router.resolve(filterToRoute(filters)).fullPath
+	if (filterFullPath === route.fullPath) {
+		return
+	}
+
+	Object.assign(filters, routeToFilter(route))
 })
 
-const initialDateRange = [dateRange.value.dateFrom, dateRange.value.dateTo]
+watch(
+	filters,
+	async () => {
+		const newRouteFullPath = router.resolve(filterToRoute(filters)).fullPath
+		if (newRouteFullPath !== route.fullPath) {
+			await router.push(newRouteFullPath)
+		}
+	},
+	{flush: "post"}
+)
 
-function getCurrentDateRangeFromFlatpicker() {
-	return flatPickerEl.value.fp.selectedDates.map((date: Date) => date?.toISOString())
-}
+const dateRange = computed(() => ({
+	dateFrom: filters.dateFrom,
+	dateTo: filters.dateTo,
+}))
 
 const flatPickerEl = ref<typeof FlatPickr | null>(null)
 const flatPickerDateRange = computed({
 	get: () => ([
-		dateRange.value.dateFrom,
-		dateRange.value.dateTo
+		filters.dateFrom,
+		filters.dateTo
 	]),
 	set(newVal) {
-	// set([dateFrom, dateTo]) {
-		// newVal from event does only contain the wrong format
-		console.log(newVal)
-		const [dateFrom, dateTo] = newVal
-		// const [dateFrom, dateTo] = getCurrentDateRangeFromFlatpicker()
+		const [dateFrom, dateTo] = newVal.map((date) => date?.toISOString())
 		
-		if (
-			// only set after whole range has been selected
-			!dateTo ||
-			// only set if the value has changed
-			dateRange.value.dateFrom === dateFrom &&
-			dateRange.value.dateTo === dateTo
-		) {
-			return
-		}
-		// dateRange.value = {dateFrom, dateTo}
+		// only set after whole range has been selected
+		if (!dateTo) return
+
+		Object.assign(filters, {dateFrom, dateTo})
 	}
 })
 
 const ISO_DATE_FORMAT = "YYYY-MM-DDTHH:mm:ssZ[Z]"
 
+const initialDateRange = [filters.dateFrom, filters.dateTo]
+
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
-const flatPickerConfig = computed(() => ({
+const flatPickerConfig = computed<Options>(() => ({
 	altFormat: t('date.altFormatShort'),
 	altInput: true,
 	// dateFornat: ISO_DATE_FORMAT,
