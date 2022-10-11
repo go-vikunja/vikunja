@@ -72,7 +72,7 @@
     "@types/flexsearch": "0.7.3",
     "@types/lodash.debounce": "4.0.7",
     "@types/marked": "4.0.7",
-    "@types/node": "16.11.64",
+    "@types/node": "16.11.65",
     "@typescript-eslint/eslint-plugin": "5.40.0",
     "@typescript-eslint/parser": "5.40.0",
     "@vitejs/plugin-legacy": "2.2.0",
