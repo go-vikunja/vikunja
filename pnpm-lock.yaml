@@ -4,7 +4,7 @@ specifiers:
   '@4tw/cypress-drag-drop': 2.2.1
   '@cypress/vite-dev-server': 3.3.1
   '@cypress/vue': 4.2.0
-  '@faker-js/faker': 7.5.0
+  '@faker-js/faker': 7.6.0
   '@fortawesome/fontawesome-svg-core': 6.2.0
   '@fortawesome/free-regular-svg-icons': 6.2.0
   '@fortawesome/free-solid-svg-icons': 6.2.0
@@ -134,7 +134,7 @@ devDependencies:
   '@4tw/cypress-drag-drop': 2.2.1_cypress@10.10.0
   '@cypress/vite-dev-server': 3.3.1
   '@cypress/vue': 4.2.0_cypress@10.10.0+vue@3.2.40
-  '@faker-js/faker': 7.5.0
+  '@faker-js/faker': 7.6.0
   '@rushstack/eslint-patch': 1.2.0
   '@types/dompurify': 2.3.4
   '@types/flexsearch': 0.7.3
@@ -1650,8 +1650,8 @@ packages:
       - supports-color
     dev: true
 
-  /@faker-js/faker/7.5.0:
-    resolution: {integrity: sha512-8wNUCCUHvfvI0gQpDUho/3gPzABffnCn5um65F8dzQ86zz6dlt4+nmAA7PQUc8L+eH+9RgR/qzy5N/8kN0Ozdw==}
+  /@faker-js/faker/7.6.0:
+    resolution: {integrity: sha512-XK6BTq1NDMo9Xqw/YkYyGjSsg44fbNwYRx7QK2CuoQgyy+f1rrTDHoExVM5PsyXCtfl2vs2vVJ0MN0yN6LppRw==}
     engines: {node: '>=14.0.0', npm: '>=6.0.0'}
     dev: true
 
