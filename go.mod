@@ -60,7 +60,7 @@ require (
 	github.com/tkuchiki/go-timezone v0.2.2
 	github.com/ulule/limiter/v3 v3.10.0
 	github.com/vectordotdev/go-datemath v0.1.1-0.20211214182920-0a4ac8742b93
-	github.com/wneessen/go-mail v0.3.0
+	github.com/wneessen/go-mail v0.3.1
 	github.com/yuin/goldmark v1.5.2
 	golang.org/x/crypto v0.0.0-20221012134737-56aed061732a
 	golang.org/x/image v0.0.0-20220902085622-e7cb96979f69
