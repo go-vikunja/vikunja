@@ -72,7 +72,7 @@ specifiers:
   vite: 3.1.8
   vite-plugin-pwa: 0.13.1
   vite-svg-loader: 3.6.0
-  vitest: 0.24.1
+  vitest: 0.24.3
   vue: 3.2.41
   vue-advanced-cropper: 2.8.6
   vue-drag-resize: 2.0.3
@@ -167,7 +167,7 @@ devDependencies:
   vite: 3.1.8_sass@1.55.0+terser@5.10.0
   vite-plugin-pwa: 0.13.1_vite@3.1.8
   vite-svg-loader: 3.6.0
-  vitest: 0.24.1_7fc655e167cf9da448ccc3b585011dd3
+  vitest: 0.24.3_7fc655e167cf9da448ccc3b585011dd3
   vue-tsc: 1.0.7_typescript@4.8.4
   wait-on: 6.0.1
   workbox-cli: 6.5.4
@@ -12635,8 +12635,8 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vitest/0.24.1_7fc655e167cf9da448ccc3b585011dd3:
-    resolution: {integrity: sha512-NKkK1xnDIOOr42pKBfGQQl6b6IWdFVBpG6ZS1T+nUlJuqcOiZ7lxjVwHy9wrtTYpJ0BWww9y6bSGYXubD29Nag==}
+  /vitest/0.24.3_7fc655e167cf9da448ccc3b585011dd3:
+    resolution: {integrity: sha512-aM0auuPPgMSstWvr851hB74g/LKaKBzSxcG3da7ejfZbx08Y21JpZmbmDYrMTCGhVZKqTGwzcnLMwyfz2WzkhQ==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
     peerDependencies:
