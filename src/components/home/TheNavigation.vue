@@ -44,8 +44,8 @@
 							variant="secondary"
 							:shadow="false"
 						>
-							<img :src="userAvatar" alt="" class="avatar" width="40" height="40"/>
-							<span class="username">{{ userInfo.name !== '' ? userInfo.name : userInfo.username }}</span>
+							<img :src="authStore.avatarUrl" alt="" class="avatar" width="40" height="40"/>
+							<span class="username">{{ authStore.userDisplayName }}</span>
 							<span class="icon is-small">
 								<icon icon="chevron-down"/>
 							</span>
@@ -80,7 +80,7 @@
 						{{ $t('about.title') }}
 					</dropdown-item>
 					<dropdown-item
-						@click="logout()"
+						@click="authStore.logout()"
 					>
 						{{ $t('user.auth.logout') }}
 					</dropdown-item>
@@ -117,8 +117,6 @@ const canWriteCurrentList = computed(() => baseStore.currentList.maxRight > Righ
 const menuActive = computed(() => baseStore.menuActive)
 
 const authStore = useAuthStore()
-const userInfo = computed(() => authStore.info)
-const userAvatar = computed(() => authStore.avatarUrl)
 
 const configStore = useConfigStore()
 const imprintUrl = computed(() => configStore.legal.imprintUrl)
@@ -135,10 +133,6 @@ onMounted(async () => {
 	const usernameWidth = usernameDropdown.value.$el.clientWidth
 	listTitle.value.style.setProperty('--nav-username-width', `${usernameWidth}px`)
 })
-
-function logout() {
-	authStore.logout()
-}
 
 function openQuickActions() {
 	baseStore.setQuickActionsActive(true)
