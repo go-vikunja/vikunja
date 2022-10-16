@@ -20,7 +20,7 @@ specifiers:
   '@types/lodash.clonedeep': 4.5.7
   '@types/lodash.debounce': 4.0.7
   '@types/marked': 4.0.7
-  '@types/node': 16.11.65
+  '@types/node': 16.11.66
   '@types/sortablejs': 1.15.0
   '@typescript-eslint/eslint-plugin': 5.40.0
   '@typescript-eslint/parser': 5.40.0
@@ -140,14 +140,14 @@ devDependencies:
   '@types/flexsearch': 0.7.3
   '@types/lodash.debounce': 4.0.7
   '@types/marked': 4.0.7
-  '@types/node': 16.11.65
+  '@types/node': 16.11.66
   '@typescript-eslint/eslint-plugin': 5.40.0_d765299b94a6a4ae3d9fb8b19a3abfbc
   '@typescript-eslint/parser': 5.40.0_eslint@8.25.0+typescript@4.8.4
   '@vitejs/plugin-legacy': 2.2.0_terser@5.10.0+vite@3.1.8
   '@vitejs/plugin-vue': 3.1.2_vite@3.1.8+vue@3.2.41
   '@vue/eslint-config-typescript': 11.0.2_8498299c5d4240ca64b4886a17da166b
   '@vue/test-utils': 2.1.0_vue@3.2.41
-  '@vue/tsconfig': 0.1.3_@types+node@16.11.65
+  '@vue/tsconfig': 0.1.3_@types+node@16.11.66
   autoprefixer: 10.4.12_postcss@8.4.18
   browserslist: 4.21.4
   caniuse-lite: 1.0.30001418
@@ -1889,7 +1889,7 @@ packages:
       '@netlify/run-utils': 4.0.2
       '@netlify/zip-it-and-ship-it': 7.1.2_supports-color@9.2.1
       '@sindresorhus/slugify': 2.1.0
-      '@types/node': 16.11.65
+      '@types/node': 16.11.66
       ajv: 8.11.0
       ajv-errors: 3.0.0_ajv@8.11.0
       ansi-escapes: 5.0.0
@@ -1929,7 +1929,7 @@ packages:
       strip-ansi: 7.0.1
       supports-color: 9.2.1
       tmp-promise: 3.0.3
-      ts-node: 10.8.1_de9e8fc9b9c84114d4a7b2eb3302e42f
+      ts-node: 10.8.1_363caf04838c8ee1743cc9a7ba10f8fc
       typescript: 4.8.4
       update-notifier: 5.1.0
       uuid: 8.3.2
@@ -3029,8 +3029,8 @@ packages:
     resolution: {integrity: sha512-zCoCEMA+IPpsRkyCFBqew5vGb7r8RSiB3uwdu/map7uwLAfu1MTazW26/pUDWoNnF88vJz4W3U56i5gtXNqxGg==}
     dev: true
 
-  /@types/node/16.11.65:
-    resolution: {integrity: sha512-Vfz7wGMOr4jbQGiQHVJm8VjeQwM9Ya7mHe9LtQ264/Epf5n1KiZShOFqk++nBzw6a/ubgYdB9Od7P+MH/LjoWw==}
+  /@types/node/16.11.66:
+    resolution: {integrity: sha512-+xvMrGl3eAygKcf5jm+4zA4tbfEgmKM9o6/glTmN0RFVdu2VuFXMYYtRmuv3zTGCgAYMnEZLde3B7BTp+Yxcig==}
     dev: true
 
   /@types/node/17.0.17:
@@ -3536,7 +3536,7 @@ packages:
       vue: 3.2.41
     dev: true
 
-  /@vue/tsconfig/0.1.3_@types+node@16.11.65:
+  /@vue/tsconfig/0.1.3_@types+node@16.11.66:
     resolution: {integrity: sha512-kQVsh8yyWPvHpb8gIc9l/HIDiiVUy1amynLNpCy8p+FoCiZXCo6fQos5/097MmnNZc9AtseDsCrfkhqCrJ8Olg==}
     peerDependencies:
       '@types/node': '*'
@@ -3544,7 +3544,7 @@ packages:
       '@types/node':
         optional: true
     dependencies:
-      '@types/node': 16.11.65
+      '@types/node': 16.11.66
     dev: true
 
   /@vueuse/core/9.3.0_vue@3.2.41:
@@ -12184,7 +12184,7 @@ packages:
     resolution: {integrity: sha512-XrHUvV5HpdLmIj4uVMxHggLbFSZYIn7HEWsqePZcI50pco+MPqJ50wMGY794X7AOOhxOBAjbkqfAbEe/QMp2Lw==}
     dev: true
 
-  /ts-node/10.8.1_de9e8fc9b9c84114d4a7b2eb3302e42f:
+  /ts-node/10.8.1_363caf04838c8ee1743cc9a7ba10f8fc:
     resolution: {integrity: sha512-Wwsnao4DQoJsN034wePSg5nZiw4YKXf56mPIAeD6wVmiv+RytNSWqc2f3fKvcUoV+Yn2+yocD71VOfQHbmVX4g==}
     hasBin: true
     peerDependencies:
@@ -12203,7 +12203,7 @@ packages:
       '@tsconfig/node12': 1.0.9
       '@tsconfig/node14': 1.0.1
       '@tsconfig/node16': 1.0.2
-      '@types/node': 16.11.65
+      '@types/node': 16.11.66
       acorn: 8.8.0
       acorn-walk: 8.2.0
       arg: 4.1.3
