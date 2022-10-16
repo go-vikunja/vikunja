@@ -1,8 +1,7 @@
 <template>
 	<div class="content has-text-centered">
-		<h2 v-if="userInfo">
-			{{ salutation }}
-		</h2>
+		<h2 v-if="salutation">{{ salutation }}</h2>
+
 		<message variant="danger" v-if="deletionScheduledAt !== null" class="mb-4">
 			{{
 				$t('user.deletion.scheduled', {
@@ -78,8 +77,7 @@ import {useNamespaceStore} from '@/stores/namespaces'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 
-const username = computed(() => userInfo.name !== '' ? userInfo.name : userInfo.username)
-const salutation = useDateTimeSalutation(username)
+const salutation = useDateTimeSalutation()
 
 const baseStore = useBaseStore()
 const authStore = useAuthStore()
@@ -100,7 +98,6 @@ const listHistory = computed(() => {
 })
 
 const migratorsEnabled = computed(() => configStore.availableMigrators?.length > 0)
-const userInfo = computed(() => authStore.info)
 const hasTasks = computed(() => baseStore.hasTasks)
 const defaultListId = computed(() => authStore.settings.defaultListId)
 const defaultNamespaceId = computed(() => namespaceStore.namespaces?.[0]?.id || 0)

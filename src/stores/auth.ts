@@ -3,7 +3,7 @@ import {defineStore, acceptHMRUpdate} from 'pinia'
 import {HTTPFactory, AuthenticatedHTTPFactory} from '@/http-common'
 import {i18n, getCurrentLanguage, saveLanguage} from '@/i18n'
 import {objectToSnakeCase} from '@/helpers/case'
-import UserModel, { getAvatarUrl } from '@/models/user'
+import UserModel, { getAvatarUrl, getDisplayName } from '@/models/user'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 import {setModuleLoading} from '@/stores/helper'
@@ -53,6 +53,9 @@ export const useAuthStore = defineStore('auth', {
 				state.info &&
 				state.info.type === AUTH_TYPES.LINK_SHARE
 			)
+		},
+		userDisplayName(state) {
+			return state.info ? getDisplayName(state.info) : undefined
 		},
 	},
 	actions: {
