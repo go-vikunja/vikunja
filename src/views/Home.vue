@@ -1,7 +1,7 @@
 <template>
 	<div class="content has-text-centered">
 		<h2 v-if="userInfo">
-			{{ $t(welcome, {username: userInfo.name !== '' ? userInfo.name : userInfo.username}) }}!
+			{{ salutation }}
 		</h2>
 		<message variant="danger" v-if="deletionScheduledAt !== null" class="mb-4">
 			{{
@@ -78,7 +78,8 @@ import {useNamespaceStore} from '@/stores/namespaces'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 
-const welcome = useDateTimeSalutation()
+const username = computed(() => userInfo.name !== '' ? userInfo.name : userInfo.username)
+const salutation = useDateTimeSalutation(username)
 
 const baseStore = useBaseStore()
 const authStore = useAuthStore()

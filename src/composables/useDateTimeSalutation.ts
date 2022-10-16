@@ -1,31 +1,35 @@
-import {computed} from 'vue'
-import {useNow} from '@vueuse/core'
+import {computed, unref} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useNow, type MaybeRef} from '@vueuse/core'
 
-const TRANSLATION_KEY_PREFIX = 'home.welcome'
+type Daytime = 'night' | 'morning' | 'day' | 'evening'
 
-export function hourToSalutation(now: Date) {
+export function hourToDaytime(now: Date): Daytime {
 	const hours = now.getHours()
 
-	if (hours < 5) {
-		return `${TRANSLATION_KEY_PREFIX}Night`
-	}
+	const daytimeMap = {
+		night: hours < 5 || hours > 23,
+		morning: hours < 11,
+		day: hours < 18,
+		evening: hours < 23,
+	 } as Record<Daytime, boolean>
 
-	if (hours < 11) {
-		return `${TRANSLATION_KEY_PREFIX}Morning`
-	}
-
-	if (hours < 18) {
-		return `${TRANSLATION_KEY_PREFIX}Day`
-	}
-
-	if (hours < 23) {
-		return `${TRANSLATION_KEY_PREFIX}Evening`
-	}
-
-	return `${TRANSLATION_KEY_PREFIX}Night`
+	return (Object.keys(daytimeMap) as Daytime[]).find((daytime) => daytimeMap[daytime]) || 'night'
 }
 
-export function useDateTimeSalutation() {
+export function useDateTimeSalutation(username: MaybeRef<string>) {
+	const {t} = useI18n({useScope: 'global'})
 	const now = useNow()
-	return computed(() => hourToSalutation(now.value))
+	
+	const daytime = computed(() => hourToDaytime(now.value))
+	const name = computed(() => unref(username))
+
+	const salutations = {
+		'night': () => t('home.welcomeNight', {username: name.value}),
+		'morning': () => t('home.welcomeMorning', {username: name.value}),
+		'day': () => t('home.welcomeDay', {username: name.value}),
+		'evening': () => t('home.welcomeEvening', {username: name.value}),
+	} as Record<Daytime, () => string>
+
+	return computed(() => salutations[daytime.value]())
 }
