@@ -1,12 +1,10 @@
-import type { StoreDefinition } from 'pinia'
-
 export interface LoadingState {
 	isLoading: boolean
 }
 
 const LOADING_TIMEOUT = 100
 
-export const setModuleLoading = <LoadingStore extends StoreDefinition<string, LoadingState>>(store: LoadingStore, loadFunc : ((isLoading: boolean) => void) | null = null) => {
+export const setModuleLoading = <Store extends LoadingState>(store: Store, loadFunc : ((isLoading: boolean) => void) | null = null) => {
 	const timeout = setTimeout(() => {
 		if (loadFunc === null) {
 			store.isLoading = true
