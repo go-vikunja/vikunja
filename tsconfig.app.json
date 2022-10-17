@@ -18,6 +18,7 @@
     }
   },
   "vueCompilerOptions": {
-    "strictTemplates": true
+    // "strictTemplates": true
+    "jsxTemplates": true
   }
 }
