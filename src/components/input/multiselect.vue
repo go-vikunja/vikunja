@@ -123,6 +123,7 @@ const props = defineProps({
 	},
 	// The object with the value, updated every time an entry is selected.
 	modelValue: {
+		type: [] as PropType<{[key: string]: any}>,
 		default: null,
 	},
 	// If true, will provide an "add this as a new value" entry which fires an @create event when clicking on it.
@@ -177,14 +178,14 @@ const emit = defineEmits<{
 	// @search: Triggered every time the search query input changes
   (e: 'search', query: string): void
 	// @select: Triggered every time an option from the search results is selected. Also triggers a change in v-model.
-  (e: 'select', value: null): void
+  (e: 'select', value: {[key: string]: any}): void
 	// @create: If nothing or no exact match was found and `creatable` is true, this event is triggered with the current value of the search query.
   (e: 'create', query: string): void
 	// @remove: If `multiple` is enabled, this will be fired every time an item is removed from the array of selected items.
   (e: 'remove', value: null): void
 }>()
 
-const query = ref('')
+const query = ref<string | {[key: string]: any}>('')
 const searchTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 const localLoading = ref(false)
 const showSearchResults = ref(false)

@@ -8,6 +8,7 @@ export interface IUserSettings extends IAbstract {
 	discoverableByName: boolean
 	discoverableByEmail: boolean
 	overdueTasksRemindersEnabled: boolean
+	overdueTasksRemindersTime: any
 	defaultListId: undefined | IList['id']
 	weekStart: 0 | 1 | 2 | 3 | 4 | 5 | 6
 	timezone: string

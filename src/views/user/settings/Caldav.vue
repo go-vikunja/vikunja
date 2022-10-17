@@ -41,7 +41,7 @@
 				<td>{{ tk.id }}</td>
 				<td>{{ formatDateShort(tk.created) }}</td>
 				<td class="has-text-right">
-					<x-button type="secondary" @click="deleteToken(tk)">
+					<x-button variant="secondary" @click="deleteToken(tk)">
 						{{ $t('misc.delete') }}
 					</x-button>
 				</td>

@@ -165,7 +165,6 @@ import BaseButton from '@/components/base/BaseButton.vue'
 
 import AttachmentService from '@/services/attachment'
 import {SUPPORTED_IMAGE_SUFFIX} from '@/models/attachment'
-import type AttachmentModel from '@/models/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ITask} from '@/modelTypes/ITask'
 
@@ -227,9 +226,9 @@ function uploadFilesToTask(files: File[] | FileList) {
 	uploadFiles(attachmentService, props.task.id, files)
 }
 
-const attachmentToDelete = ref<AttachmentModel | null>(null)
+const attachmentToDelete = ref<IAttachment | null>(null)
 
-function setAttachmentToDelete(attachment: AttachmentModel | null) {
+function setAttachmentToDelete(attachment: IAttachment | null) {
 	attachmentToDelete.value = attachment
 }
 
@@ -250,7 +249,7 @@ async function deleteAttachment() {
 
 const attachmentImageBlobUrl = ref<string | null>(null)
 
-async function viewOrDownload(attachment: AttachmentModel) {
+async function viewOrDownload(attachment: IAttachment) {
 	if (SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.endsWith(suffix))) {
 		attachmentImageBlobUrl.value = await attachmentService.getBlobUrl(attachment)
 	} else {

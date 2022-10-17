@@ -4,7 +4,8 @@ import {parseTaskText, PrefixMode} from './parseTaskText'
 import {getDateFromText, parseDate} from '../helpers/time/parseDate'
 import {calculateDayInterval} from '../helpers/time/calculateDayInterval'
 import {PRIORITIES} from '@/constants/priorities'
-import { MILLISECONDS_A_DAY } from '@/constants/date'
+import {MILLISECONDS_A_DAY} from '@/constants/date'
+import type {IRepeatAfter} from '@/types/IRepeatAfter'
 
 describe('Parse Task Text', () => {
 	beforeEach(() => {
@@ -31,9 +32,9 @@ describe('Parse Task Text', () => {
 
 		expect(result.text).toBe('Lorem Ipsum')
 		const now = new Date()
-		expect(result.date.getFullYear()).toBe(now.getFullYear())
-		expect(result.date.getMonth()).toBe(now.getMonth())
-		expect(result.date.getDate()).toBe(now.getDate())
+		expect(result?.date?.getFullYear()).toBe(now.getFullYear())
+		expect(result?.date?.getMonth()).toBe(now.getMonth())
+		expect(result?.date?.getDate()).toBe(now.getDate())
 		expect(result.labels).toHaveLength(1)
 		expect(result.labels[0]).toBe('label')
 		expect(result.list).toBe('list')
@@ -61,18 +62,18 @@ describe('Parse Task Text', () => {
 
 			expect(result.text).toBe('Lorem Ipsum')
 			const now = new Date()
-			expect(result.date.getFullYear()).toBe(now.getFullYear())
-			expect(result.date.getMonth()).toBe(now.getMonth())
-			expect(result.date.getDate()).toBe(now.getDate())
+			expect(result?.date?.getFullYear()).toBe(now.getFullYear())
+			expect(result?.date?.getMonth()).toBe(now.getMonth())
+			expect(result?.date?.getDate()).toBe(now.getDate())
 		})
 		it('should recognize today', () => {
 			const result = parseTaskText('Lorem Ipsum today')
 
 			expect(result.text).toBe('Lorem Ipsum')
 			const now = new Date()
-			expect(result.date.getFullYear()).toBe(now.getFullYear())
-			expect(result.date.getMonth()).toBe(now.getMonth())
-			expect(result.date.getDate()).toBe(now.getDate())
+			expect(result?.date?.getFullYear()).toBe(now.getFullYear())
+			expect(result?.date?.getMonth()).toBe(now.getMonth())
+			expect(result?.date?.getDate()).toBe(now.getDate())
 		})
 		describe('should recognize today with a time', () => {
 			const cases = {
@@ -93,11 +94,11 @@ describe('Parse Task Text', () => {
 
 					expect(result.text).toBe('Lorem Ipsum')
 					const now = new Date()
-					expect(result.date.getFullYear()).toBe(now.getFullYear())
-					expect(result.date.getMonth()).toBe(now.getMonth())
-					expect(result.date.getDate()).toBe(now.getDate())
-					expect(`${result.date.getHours()}:${result.date.getMinutes()}`).toBe(cases[c as keyof typeof cases])
-					expect(result.date.getSeconds()).toBe(0)
+					expect(result?.date?.getFullYear()).toBe(now.getFullYear())
+					expect(result?.date?.getMonth()).toBe(now.getMonth())
+					expect(result?.date?.getDate()).toBe(now.getDate())
+					expect(`${result?.date?.getHours()}:${result?.date?.getMinutes()}`).toBe(cases[c as keyof typeof cases])
+					expect(result?.date?.getSeconds()).toBe(0)
 				})
 			}
 		})
@@ -107,9 +108,9 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ipsum')
 			const tomorrow = new Date()
 			tomorrow.setDate(tomorrow.getDate() + 1)
-			expect(result.date.getFullYear()).toBe(tomorrow.getFullYear())
-			expect(result.date.getMonth()).toBe(tomorrow.getMonth())
-			expect(result.date.getDate()).toBe(tomorrow.getDate())
+			expect(result?.date?.getFullYear()).toBe(tomorrow.getFullYear())
+			expect(result?.date?.getMonth()).toBe(tomorrow.getMonth())
+			expect(result?.date?.getDate()).toBe(tomorrow.getDate())
 		})
 		it('should recognize next monday', () => {
 			const result = parseTaskText('Lorem Ipsum next monday')
@@ -119,9 +120,9 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ipsum')
 			const nextMonday = new Date()
 			nextMonday.setDate(nextMonday.getDate() + untilNextMonday)
-			expect(result.date.getFullYear()).toBe(nextMonday.getFullYear())
-			expect(result.date.getMonth()).toBe(nextMonday.getMonth())
-			expect(result.date.getDate()).toBe(nextMonday.getDate())
+			expect(result?.date?.getFullYear()).toBe(nextMonday.getFullYear())
+			expect(result?.date?.getMonth()).toBe(nextMonday.getMonth())
+			expect(result?.date?.getDate()).toBe(nextMonday.getDate())
 		})
 		it('should recognize next monday and ignore casing', () => {
 			const result = parseTaskText('Lorem Ipsum nExt Monday')
@@ -131,9 +132,9 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ipsum')
 			const nextMonday = new Date()
 			nextMonday.setDate(nextMonday.getDate() + untilNextMonday)
-			expect(result.date.getFullYear()).toBe(nextMonday.getFullYear())
-			expect(result.date.getMonth()).toBe(nextMonday.getMonth())
-			expect(result.date.getDate()).toBe(nextMonday.getDate())
+			expect(result?.date?.getFullYear()).toBe(nextMonday.getFullYear())
+			expect(result?.date?.getMonth()).toBe(nextMonday.getMonth())
+			expect(result?.date?.getDate()).toBe(nextMonday.getDate())
 		})
 		it('should recognize this weekend', () => {
 			const result = parseTaskText('Lorem Ipsum this weekend')
@@ -143,9 +144,9 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ipsum')
 			const thisWeekend = new Date()
 			thisWeekend.setDate(thisWeekend.getDate() + untilThisWeekend)
-			expect(result.date.getFullYear()).toBe(thisWeekend.getFullYear())
-			expect(result.date.getMonth()).toBe(thisWeekend.getMonth())
-			expect(result.date.getDate()).toBe(thisWeekend.getDate())
+			expect(result?.date?.getFullYear()).toBe(thisWeekend.getFullYear())
+			expect(result?.date?.getMonth()).toBe(thisWeekend.getMonth())
+			expect(result?.date?.getDate()).toBe(thisWeekend.getDate())
 		})
 		it('should recognize later this week', () => {
 			const result = parseTaskText('Lorem Ipsum later this week')
@@ -155,9 +156,9 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ipsum')
 			const laterThisWeek = new Date()
 			laterThisWeek.setDate(laterThisWeek.getDate() + untilLaterThisWeek)
-			expect(result.date.getFullYear()).toBe(laterThisWeek.getFullYear())
-			expect(result.date.getMonth()).toBe(laterThisWeek.getMonth())
-			expect(result.date.getDate()).toBe(laterThisWeek.getDate())
+			expect(result?.date?.getFullYear()).toBe(laterThisWeek.getFullYear())
+			expect(result?.date?.getMonth()).toBe(laterThisWeek.getMonth())
+			expect(result?.date?.getDate()).toBe(laterThisWeek.getDate())
 		})
 		it('should recognize later next week', () => {
 			const result = parseTaskText('Lorem Ipsum later next week')
@@ -167,9 +168,9 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ipsum')
 			const laterNextWeek = new Date()
 			laterNextWeek.setDate(laterNextWeek.getDate() + untilLaterNextWeek)
-			expect(result.date.getFullYear()).toBe(laterNextWeek.getFullYear())
-			expect(result.date.getMonth()).toBe(laterNextWeek.getMonth())
-			expect(result.date.getDate()).toBe(laterNextWeek.getDate())
+			expect(result?.date?.getFullYear()).toBe(laterNextWeek.getFullYear())
+			expect(result?.date?.getMonth()).toBe(laterNextWeek.getMonth())
+			expect(result?.date?.getDate()).toBe(laterNextWeek.getDate())
 		})
 		it('should recognize next week', () => {
 			const result = parseTaskText('Lorem Ipsum next week')
@@ -179,9 +180,9 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ipsum')
 			const nextWeek = new Date()
 			nextWeek.setDate(nextWeek.getDate() + untilNextWeek)
-			expect(result.date.getFullYear()).toBe(nextWeek.getFullYear())
-			expect(result.date.getMonth()).toBe(nextWeek.getMonth())
-			expect(result.date.getDate()).toBe(nextWeek.getDate())
+			expect(result?.date?.getFullYear()).toBe(nextWeek.getFullYear())
+			expect(result?.date?.getMonth()).toBe(nextWeek.getMonth())
+			expect(result?.date?.getDate()).toBe(nextWeek.getDate())
 		})
 		it('should recognize next month', () => {
 			const result = parseTaskText('Lorem Ipsum next month')
@@ -190,9 +191,9 @@ describe('Parse Task Text', () => {
 			const nextMonth = new Date()
 			nextMonth.setDate(1)
 			nextMonth.setMonth(nextMonth.getMonth() + 1)
-			expect(result.date.getFullYear()).toBe(nextMonth.getFullYear())
-			expect(result.date.getMonth()).toBe(nextMonth.getMonth())
-			expect(result.date.getDate()).toBe(nextMonth.getDate())
+			expect(result?.date?.getFullYear()).toBe(nextMonth.getFullYear())
+			expect(result?.date?.getMonth()).toBe(nextMonth.getMonth())
+			expect(result?.date?.getDate()).toBe(nextMonth.getDate())
 		})
 		it('should recognize a date', () => {
 			const result = parseTaskText('Lorem Ipsum 06/26/2021')
@@ -200,9 +201,9 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ipsum')
 			const date = new Date()
 			date.setFullYear(2021, 5, 26)
-			expect(result.date.getFullYear()).toBe(date.getFullYear())
-			expect(result.date.getMonth()).toBe(date.getMonth())
-			expect(result.date.getDate()).toBe(date.getDate())
+			expect(result?.date?.getFullYear()).toBe(date.getFullYear())
+			expect(result?.date?.getMonth()).toBe(date.getMonth())
+			expect(result?.date?.getDate()).toBe(date.getDate())
 		})
 		it('should recognize end of month', () => {
 			const result = parseTaskText('Lorem Ipsum end of month')
@@ -210,9 +211,9 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ipsum')
 			const curDate = new Date()
 			const date = new Date(curDate.getFullYear(), curDate.getMonth() + 1, 0)
-			expect(result.date.getFullYear()).toBe(date.getFullYear())
-			expect(result.date.getMonth()).toBe(date.getMonth())
-			expect(result.date.getDate()).toBe(date.getDate())
+			expect(result?.date?.getFullYear()).toBe(date.getFullYear())
+			expect(result?.date?.getMonth()).toBe(date.getMonth())
+			expect(result?.date?.getDate()).toBe(date.getDate())
 		})
 
 		const cases = {
@@ -244,7 +245,7 @@ describe('Parse Task Text', () => {
 			'Sunday': 7,
 			'sun': 7,
 			'Sun': 7,
-		}
+		} as Record<string, number>
 		for (const c in cases) {
 			it(`should recognize ${c} as weekday`, () => {
 				const result = parseTaskText(`Lorem Ipsum ${c}`)
@@ -252,7 +253,7 @@ describe('Parse Task Text', () => {
 				expect(result.text).toBe('Lorem Ipsum')
 				const nextDate = new Date()
 				nextDate.setDate(nextDate.getDate() + ((cases[c] + 7 - nextDate.getDay()) % 7))
-				expect(`${result.date.getFullYear()}-${result.date.getMonth()}-${result.date.getDate()}`).toBe(`${nextDate.getFullYear()}-${nextDate.getMonth()}-${nextDate.getDate()}`)
+				expect(`${result?.date?.getFullYear()}-${result?.date?.getMonth()}-${result?.date?.getDate()}`).toBe(`${nextDate.getFullYear()}-${nextDate.getMonth()}-${nextDate.getDate()}`)
 			})
 		}
 		it('should recognize weekdays with time', () => {
@@ -261,8 +262,8 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ipsum')
 			const nextThursday = new Date()
 			nextThursday.setDate(nextThursday.getDate() + ((4 + 7 - nextThursday.getDay()) % 7))
-			expect(`${result.date.getFullYear()}-${result.date.getMonth()}-${result.date.getDate()}`).toBe(`${nextThursday.getFullYear()}-${nextThursday.getMonth()}-${nextThursday.getDate()}`)
-			expect(`${result.date.getHours()}:${result.date.getMinutes()}`).toBe('14:0')
+			expect(`${result?.date?.getFullYear()}-${result?.date?.getMonth()}-${result?.date?.getDate()}`).toBe(`${nextThursday.getFullYear()}-${nextThursday.getMonth()}-${nextThursday.getDate()}`)
+			expect(`${result?.date?.getHours()}:${result?.date?.getMinutes()}`).toBe('14:0')
 		})
 		it('should recognize dates of the month in the past but next month', () => {
 			const time = new Date(2022, 0, 15)
@@ -271,8 +272,8 @@ describe('Parse Task Text', () => {
 			const result = parseTaskText(`Lorem Ipsum ${time.getDate() - 1}th`)
 
 			expect(result.text).toBe('Lorem Ipsum')
-			expect(result.date.getDate()).toBe(time.getDate() - 1)
-			expect(result.date.getMonth()).toBe(time.getMonth() + 1)
+			expect(result?.date?.getDate()).toBe(time.getDate() - 1)
+			expect(result?.date?.getMonth()).toBe(time.getMonth() + 1)
 		})
 		it('should recognize dates of the month in the past but next month when february is the next month', () => {
 			const jan = new Date(2022, 0, 30)
@@ -282,8 +283,8 @@ describe('Parse Task Text', () => {
 
 			const expectedDate = new Date(2022, 2, jan.getDate() - 1)
 			expect(result.text).toBe('Lorem Ipsum')
-			expect(result.date.getDate()).toBe(expectedDate.getDate())
-			expect(result.date.getMonth()).toBe(expectedDate.getMonth())
+			expect(result?.date?.getDate()).toBe(expectedDate.getDate())
+			expect(result?.date?.getMonth()).toBe(expectedDate.getMonth())
 		})
 		it('should recognize dates of the month in the past but next month when the next month has less days than this one', () => {
 			const mar = new Date(2022, 2, 32)
@@ -293,15 +294,15 @@ describe('Parse Task Text', () => {
 
 			const expectedDate = new Date(2022, 4, 31)
 			expect(result.text).toBe('Lorem Ipsum')
-			expect(result.date.getDate()).toBe(expectedDate.getDate())
-			expect(result.date.getMonth()).toBe(expectedDate.getMonth())
+			expect(result?.date?.getDate()).toBe(expectedDate.getDate())
+			expect(result?.date?.getMonth()).toBe(expectedDate.getMonth())
 		})
 		it('should recognize dates of the month in the future', () => {
 			const nextDay = new Date(+new Date() + MILLISECONDS_A_DAY)
 			const result = parseTaskText(`Lorem Ipsum ${nextDay.getDate()}nd`)
 
 			expect(result.text).toBe('Lorem Ipsum')
-			expect(result.date.getDate()).toBe(nextDay.getDate())
+			expect(result?.date?.getDate()).toBe(nextDay.getDate())
 		})
 		it('should only recognize weekdays with a space before or after them 1', () => {
 			const result = parseTaskText('Lorem Ipsum renewed')
@@ -382,7 +383,7 @@ describe('Parse Task Text', () => {
 				'saturday': 6,
 				'sun': 7,
 				'sunday': 7,
-			}
+			} as Record<string, number>
 
 			const prefix = [
 				'next ',
@@ -399,9 +400,9 @@ describe('Parse Task Text', () => {
 						next.setDate(next.getDate() + distance)
 
 						expect(result.text).toBe('Lorem Ipsum')
-						expect(result.date.getFullYear()).toBe(next.getFullYear())
-						expect(result.date.getMonth()).toBe(next.getMonth())
-						expect(result.date.getDate()).toBe(next.getDate())
+						expect(result?.date?.getFullYear()).toBe(next.getFullYear())
+						expect(result?.date?.getMonth()).toBe(next.getMonth())
+						expect(result?.date?.getDate()).toBe(next.getDate())
 					})
 				}
 			})
@@ -462,7 +463,7 @@ describe('Parse Task Text', () => {
 				'dolor sit amet oct 21': '2021-10-21',
 				'dolor sit amet nov 21': '2021-11-21',
 				'dolor sit amet dec 21': '2021-12-21',
-			}
+			} as Record<string, string | null>
 
 			for (const c in cases) {
 				it(`should parse '${c}' as '${cases[c]}'`, () => {
@@ -472,7 +473,7 @@ describe('Parse Task Text', () => {
 						return
 					}
 
-					expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`).toBe(cases[c])
+					expect(`${date?.getFullYear()}-${date.getMonth() + 1}-${date?.getDate()}`).toBe(cases[c])
 				})
 			}
 		})
@@ -510,7 +511,7 @@ describe('Parse Task Text', () => {
 				'Something at 10:00 in 5 days': '2021-6-29 10:0',
 				'Something at 10:00 17th': '2021-7-17 10:0',
 				'Something at 10:00 sep 17th': '2021-9-17 10:0',
-			}
+			} as Record<string, string>
 
 			for (const c in cases) {
 				it(`should parse '${c}' as '${cases[c]}'`, () => {
@@ -695,15 +696,15 @@ describe('Parse Task Text', () => {
 			'every eight hours': {type: 'hours', amount: 8},
 			'every nine hours': {type: 'hours', amount: 9},
 			'every ten hours': {type: 'hours', amount: 10},
-		}
+		} as Record<string, IRepeatAfter>
 
 		for (const c in cases) {
 			it(`should parse ${c} as recurring date every ${cases[c].amount} ${cases[c].type}`, () => {
 				const result = parseTaskText(`Lorem Ipsum ${c}`)
 
 				expect(result.text).toBe('Lorem Ipsum')
-				expect(result.repeats.type).toBe(cases[c].type)
-				expect(result.repeats.amount).toBe(cases[c].amount)
+				expect(result?.repeats?.type).toBe(cases[c].type)
+				expect(result?.repeats?.amount).toBe(cases[c].amount)
 			})
 		}
 	})

@@ -6,7 +6,7 @@ export default class EmailUpdateModel extends AbstractModel<IEmailUpdate> implem
 	newEmail = ''
 	password = ''
 
-	constructor(data : Partial<IEmailUpdate>) {
+	constructor(data : Partial<IEmailUpdate> = {}) {
 		super()
 		this.assignData(data)
 	}

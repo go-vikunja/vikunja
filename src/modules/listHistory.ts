@@ -1,4 +1,4 @@
-interface ListHistory {
+export interface ListHistory {
 	id: number;
 }
 

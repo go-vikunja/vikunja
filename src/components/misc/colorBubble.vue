@@ -6,10 +6,10 @@
 </template>
 
 <script lang="ts" setup>
-import type { Color } from 'csstype'
+import type { DataType } from 'csstype'
 
 defineProps< {
-	color: Color,
+	color: DataType.Color,
 }>()
 </script>
 

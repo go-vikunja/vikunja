@@ -10,7 +10,7 @@ const days = {
     friday:    5,
     saturday:  6,
     sunday:    0,
-}
+} as Record<string, number>
 
 for (const n in days) {
     test(`today on a ${n}`, () => {
@@ -32,7 +32,7 @@ const nextMonday = {
     friday:    3,
     saturday:  2,
     sunday:    1,
-}
+} as Record<string, number>
 
 for (const n in nextMonday) {
     test(`next monday on a ${n}`, () => {
@@ -48,7 +48,7 @@ const thisWeekend = {
     friday:    1,
     saturday:  0,
     sunday:    0,
-}
+} as Record<string, number>
 
 for (const n in thisWeekend) {
     test(`this weekend on a ${n}`, () => {
@@ -64,7 +64,7 @@ const laterThisWeek = {
     friday:    0,
     saturday:  0,
     sunday:    0,
-}
+} as Record<string, number>
 
 for (const n in laterThisWeek) {
     test(`later this week on a ${n}`, () => {
@@ -80,7 +80,7 @@ const laterNextWeek = {
     friday:    7 + 0,
     saturday:  7 + 0,
     sunday:    7 + 0,
-}
+} as Record<string, number>
 
 for (const n in laterNextWeek) {
     test(`later next week on a ${n} (this week)`, () => {

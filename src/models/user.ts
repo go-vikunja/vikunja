@@ -28,6 +28,9 @@ export default class UserModel extends AbstractModel<IUser> implements IUser {
 	updated: Date
 	settings: IUserSettings
 
+	isLocalUser: boolean // FIXME: what should this be
+	deletionScheduledAt: null
+
 	constructor(data: Partial<IUser> = {}) {
 		super()
 		this.assignData(data)

@@ -4,7 +4,7 @@
 		<Done class="heading__done" :is-done="task.done"/>
 		<ColorBubble
 			v-if="task.hexColor !== ''"
-			:color="task.getHexColor()"
+			:color="getHexColor(task.hexColor)"
 			class="mt-1 ml-2"
 		/>
 		<h1
@@ -48,6 +48,7 @@ import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {useTaskStore} from '@/stores/tasks'
 
 import type {ITask} from '@/modelTypes/ITask'
+import {getHexColor} from '@/models/task'
 
 const props = defineProps({
 	task: {

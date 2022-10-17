@@ -8,7 +8,7 @@ import {i18n} from '@/i18n'
 
 const locales = {en: enGB, de, ch: de, fr, ru}
 
-export function dateIsValid(date) {
+export function dateIsValid(date: Date | null) {
 	if (date === null) {
 		return false
 	}

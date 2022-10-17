@@ -7,7 +7,7 @@ import type { IAttachment } from '@/modelTypes/IAttachment'
 
 import {downloadBlob} from '@/helpers/downloadBlob'
 
-export default class AttachmentService extends AbstractService<AttachmentModel> {
+export default class AttachmentService extends AbstractService<IAttachment> {
 	constructor() {
 		super({
 			create: '/tasks/{taskId}/attachments',

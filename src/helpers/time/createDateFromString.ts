@@ -6,7 +6,7 @@
  * @param dateString
  * @returns {Date}
  */
-export const createDateFromString = dateString => {
+export function createDateFromString(dateString: string | Date) {
 	if (dateString instanceof Date) {
 		return dateString
 	}

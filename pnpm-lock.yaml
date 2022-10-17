@@ -41,6 +41,7 @@ specifiers:
   camel-case: 4.1.2
   caniuse-lite: 1.0.30001427
   codemirror: 5.65.9
+  csstype: 3.1.1
   cypress: 10.11.0
   date-fns: 2.29.3
   dayjs: 1.11.6
@@ -157,6 +158,7 @@ devDependencies:
   autoprefixer: 10.4.13_postcss@8.4.18
   browserslist: 4.21.4
   caniuse-lite: 1.0.30001427
+  csstype: 3.1.1
   cypress: 10.11.0
   esbuild: 0.15.12
   eslint: 8.26.0
@@ -5218,6 +5220,10 @@ packages:
 
   /csstype/2.6.19:
     resolution: {integrity: sha512-ZVxXaNy28/k3kJg0Fou5MiYpp88j7H9hLZp8PDC3jV0WFjfH5E9xHb56L0W59cPbKbcHXeP4qyT8PrHp8t6LcQ==}
+
+  /csstype/3.1.1:
+    resolution: {integrity: sha512-DJR/VvkAvSZW9bTouZue2sSxDwdTN92uHjqeKVm+0dAqdfNykRzQ95tay8aXMBAAPpUiq4Qcug2L7neoRh2Egw==}
+    dev: true
 
   /cyclist/1.0.1:
     resolution: {integrity: sha512-NJGVKPS81XejHcLhaLJS7plab0fK3slPh11mESeeDq2W4ZI5kUKK/LRRdVDvjJseojbPB7ZwjnyOybg3Igea/A==}

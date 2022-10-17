@@ -2,7 +2,7 @@ import type {Directive} from 'vue'
 import {install, uninstall} from '@github/hotkey'
 import {isAppleDevice} from '@/helpers/isAppleDevice'
 
-const directive: Directive = {
+const directive = <Directive<HTMLElement,string>>{
 	mounted(el, {value}) {
 		if(value === '') {
 			return

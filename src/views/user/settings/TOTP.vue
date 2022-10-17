@@ -79,13 +79,14 @@ import {success} from '@/message'
 
 import {useTitle} from '@/composables/useTitle'
 import {useConfigStore} from '@/stores/config'
+import type {ITotp} from '@/modelTypes/ITotp'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.totp.title')} - ${t('user.settings.title')}`)
 
 
 const totpService = shallowReactive(new TotpService())
-const totp = ref(new TotpModel())
+const totp = ref<ITotp>(new TotpModel())
 const totpQR = ref('')
 const totpEnrolled = ref(false)
 const totpConfirmPasscode = ref('')
