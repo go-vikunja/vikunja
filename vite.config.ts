@@ -6,6 +6,8 @@ import legacyFn from '@vitejs/plugin-legacy'
 import {VitePWA}  from 'vite-plugin-pwa'
 import {visualizer}  from 'rollup-plugin-visualizer'
 import svgLoader from 'vite-svg-loader'
+import postcssPresetEnv from "postcss-preset-env";
+
 import { fileURLToPath, URL } from 'url'
 
 const pathSrc = fileURLToPath(new URL('./src', import.meta.url))
@@ -39,6 +41,11 @@ export default defineConfig({
 				additionalData: PREFIXED_SCSS_STYLES,
 				charset: false, // fixes  "@charset" must be the first rule in the file" warnings
 			},
+		},
+		postcss: {
+			plugins: [
+				postcssPresetEnv(),
+			],
 		},
 	},
 	plugins: [
