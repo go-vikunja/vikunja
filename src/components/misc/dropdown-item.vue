@@ -1,46 +1,24 @@
 <template>
-	<component
-		:is="componentNodeName"
-		v-bind="elementBindings"
-		:to="to"
-		class="dropdown-item">
+	<BaseButton class="dropdown-item">
 		<span class="icon" v-if="icon">
-			<icon :icon="icon"/>
+			<Icon :icon="icon"/>
 		</span>
 		<span>
-			<slot></slot>
+			<slot  />
 		</span>
-	</component>
+	</BaseButton>
 </template>
 
 <script lang="ts" setup>
-import {ref, useAttrs, watchEffect} from 'vue'
+import BaseButton, { type BaseButtonProps } from '@/components/base//BaseButton.vue'
+import Icon from '@/components/misc/Icon'
+import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 
-const props = defineProps<{
-	to?: object,
-	icon?: string | string[],
-}>()
+export interface DropDownItemProps extends BaseButtonProps {
+	icon?: IconProp,
+}
 
-const componentNodeName = ref<Node['nodeName']>('a')
-const elementBindings = ref({})
-
-const attrs = useAttrs()
-watchEffect(() => {
-	let nodeName = 'a'
-
-	if (props.to) {
-		nodeName = 'router-link'
-	}
-
-	if ('href' in attrs) {
-		nodeName = 'BaseButton'
-	}
-
-	componentNodeName.value = nodeName
-	elementBindings.value = {
-		...attrs,
-	}
-})
+defineProps<DropDownItemProps>()
 </script>
 
 <style scoped lang="scss">
@@ -91,5 +69,4 @@ button.dropdown-item {
 		}
 	}
 }
-
 </style>

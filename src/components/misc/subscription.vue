@@ -13,7 +13,7 @@
 		v-else-if="type === 'dropdown'"
 		v-tooltip="tooltipText"
 		@click="changeSubscription"
-		:class="{'is-disabled': disabled}"
+		:disabled="disabled"
 		:icon="iconName"
 	>
 		{{ buttonText }}
