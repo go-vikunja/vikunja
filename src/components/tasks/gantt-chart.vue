@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch, watchEffect, shallowReactive, type CSSProperties} from 'vue'
+import {computed, ref, watch, watchEffect, shallowReactive} from 'vue'
 import {useRouter} from 'vue-router'
 import {format, parse} from 'date-fns'
 import dayjs from 'dayjs'
@@ -51,9 +51,11 @@ import cloneDeep from 'lodash.clonedeep'
 import {useDayjsLanguageSync} from '@/i18n'
 import TaskCollectionService from '@/services/taskCollection'
 import TaskService from '@/services/task'
-import TaskModel, { getHexColor } from '@/models/task'
+import TaskModel, {getHexColor} from '@/models/task'
 
 import {colorIsDark} from '@/helpers/color/colorIsDark'
+import {isoToKebabDate} from '@/helpers/time/isoToKebabDate'
+import {parseKebabDate} from '@/helpers/time/parseKebabDate'
 import {RIGHTS} from '@/constants/rights'
 
 import type {ITask} from '@/modelTypes/ITask'
@@ -70,22 +72,14 @@ import Loading from '@/components/misc/loading.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
 
 import {useBaseStore} from '@/stores/base'
-import { error, success } from '@/message'
+import {error, success} from '@/message'
 
-export type DateRange = {
-	dateFrom: string,
-	dateTo: string,
-}
-
-// export interface GanttChartProps extends DateRange {
 export interface GanttChartProps {
 	listId: IList['id']
 	showTasksWithoutDates: boolean
 	dateFrom: string,
 	dateTo: string,
 }
-
-// export const DATE_FORMAT = 'yyyy-LL-dd HH:mm'
 
 const DAYJS_ISO_DATE_FORMAT = 'YYYY-MM-DD'
 
@@ -94,8 +88,7 @@ const props = withDefaults(defineProps<GanttChartProps>(), {
 })
 
 // setup dayjs for vue-ganttastic
-const dayjsLanguageLoading = ref(false)
-// const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
+const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
 dayjs.extend(isToday)
 extendDayjs()
 
@@ -126,26 +119,18 @@ watch(
 		ganttBars.value = []
 		tasks.value.forEach(t => ganttBars.value.push(transformTaskToGanttBar(t)))
 	},
-	{deep: true}
+	{deep: true},
 )
 
-type DateKebab = `${string}-${string}-${string}`
-type DateISO = string
-const DATE_FORMAT_KEBAB = 'yyyy-LL-dd'
-function isoToKebabDate(isoDate: DateISO) {
-	return format(new Date(isoDate), DATE_FORMAT_KEBAB) as DateKebab
-}
-
-const now = new Date()
-const defaultStartDate = new Date(now)
-const defaultEndDate = new Date(now.setDate(now.getDate() + 7))
+const today = new Date(new Date(props.dateFrom).setHours(0,0,0,0))
+const defaultTaskStartDate = new Date(today)
+const defaultTaskEndDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7, 23,59,0,0)
 
 function transformTaskToGanttBar(t: ITask) {
 	const black = 'var(--grey-800)'
-	console.log(t)
 	return [{
-		startDate: isoToKebabDate(t.startDate ? t.startDate.toISOString() : defaultStartDate.toISOString()),
-		endDate: isoToKebabDate(t.endDate ? t.endDate.toISOString() : defaultEndDate.toISOString()),
+		startDate: isoToKebabDate(t.startDate ? t.startDate.toISOString() : defaultTaskStartDate.toISOString()),
+		endDate: isoToKebabDate(t.endDate ? t.endDate.toISOString() : defaultTaskEndDate.toISOString()),
 		ganttBarConfig: {
 			id: String(t.id),
 			label: t.title,
@@ -162,13 +147,13 @@ function transformTaskToGanttBar(t: ITask) {
 
 // FIXME: unite with other filter params types
 interface GetAllTasksParams {
-		sort_by: ('start_date' | 'done' | 'id')[],
-		order_by: ('asc' | 'asc' | 'desc')[],
-		filter_by: 'start_date'[],
-		filter_comparator: ('greater_equals' | 'less_equals')[],
-		filter_value: [string, string] // [dateFrom, dateTo],
-		filter_concat: 'and',
-		filter_include_nulls: boolean,
+	sort_by: ('start_date' | 'done' | 'id')[],
+	order_by: ('asc' | 'asc' | 'desc')[],
+	filter_by: 'start_date'[],
+	filter_comparator: ('greater_equals' | 'less_equals')[],
+	filter_value: [string, string] // [dateFrom, dateTo],
+	filter_concat: 'and',
+	filter_include_nulls: boolean,
 }
 
 async function getAllTasks(params: GetAllTasksParams, page = 1): Promise<ITask[]> {
@@ -202,7 +187,6 @@ async function loadTasks({
 	}
 
 	const loadedTasks = await getAllTasks(params)
-
 	loadedTasks.forEach(t => tasks.value.set(t.id, t))
 }
 
@@ -216,8 +200,8 @@ async function createTask(title: ITask['title']) {
 	const newTask = await taskService.create(new TaskModel({
 		title,
 		listId: props.listId,
-		startDate: defaultStartDate,
-		endDate: defaultEndDate,
+		startDate: defaultTaskStartDate.toISOString(),
+		endDate: defaultTaskEndDate.toISOString(),
 	}))
 	tasks.value.set(newTask.id, newTask)
 
@@ -233,41 +217,23 @@ async function updateTask(e: {
 
 	if (!task) return
 
-
-	const startDate = parse(e.bar.startDate, 'yyyy-MM-dd', new Date())
-	const endDate = parse(e.bar.endDate, 'yyyy-MM-dd', new Date())
-
 	const oldTask = cloneDeep(task)
-
 	const newTask: ITask = {
 		...task,
-		startDate,
-		endDate,
+		startDate: new Date(parseKebabDate(e.bar.startDate).setHours(0,0,0,0)),
+		endDate: new Date(parseKebabDate(e.bar.endDate).setHours(23,59,0,0)),
 	}
-
-	const newTaskCopy = cloneDeep(task)
 
 	tasks.value.set(newTask.id, newTask)
 
-	// try {	
-	const updatedTask = await taskService.update(newTask)
-		// tasks.value.set(updatedTask.id, updatedTask)
-	success('Saved')
-	// } catch(e: any) {
-	// 	error('Saved')
-	// 	tasks.value.set(task.id, oldTask)
-	// }
-
-
-	// for (let [idStr, currentTask] of tasks.value) {
-	// 	const id: ITask['id'] = Number(idStr)
-	// }
-
-	// ganttBars.value.map(gantBar => {
-	// 	return Number(gantBar[0].ganttBarConfig.id) === task.id
-	// 		? transformTaskToGanttBar(updatedTask)
-	// 		: gantBar
-	// })
+	try {	
+		const updatedTask = await taskService.update(newTask)
+		tasks.value.set(updatedTask.id, updatedTask)
+		success('Saved')
+	} catch(e: any) {
+		error('Something went wrong saving the task')
+		tasks.value.set(task.id, oldTask)
+	}
 }
 
 function openTask(e: {
@@ -310,11 +276,11 @@ function dayIsToday(label: string): boolean {
 }
 
 .g-gantt-row-label {
-	display: none;
+	display: none !important;
 }
 
 .g-upper-timeunit, .g-timeunit {
-	background: var(--white);
+	background: var(--white) !important;
 	font-family: $vikunja-font;
 }
 
@@ -326,7 +292,7 @@ function dayIsToday(label: string): boolean {
 
 .g-timeunit .timeunit-wrapper {
 	padding: 0.5rem 0;
-	font-size: 1rem;
+	font-size: 1rem !important;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -345,13 +311,13 @@ function dayIsToday(label: string): boolean {
 }
 
 .g-timeaxis {
-	height: auto;
-	box-shadow: none;
+	height: auto !important;
+	box-shadow: none !important;
 }
 
 .g-gantt-row > .g-gantt-row-bars-container {
-	border-bottom: none;
-	border-top: none;
+	border-bottom: none !important;
+	border-top: none !important;
 }
 
 .g-gantt-row:nth-child(odd) {
@@ -365,10 +331,10 @@ function dayIsToday(label: string): boolean {
 
 	&-handle-left,
 	&-handle-right {
-		width: 6px;
-		height: 75%;
-		opacity: .75;
-		border-radius: $radius;
+		width: 6px !important;
+		height: 75% !important;
+		opacity: .75 !important;
+		border-radius: $radius !important;
 		margin-top: 4px;
 	}
 }

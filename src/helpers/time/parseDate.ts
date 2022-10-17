@@ -349,9 +349,7 @@ const getMonthFromText = (text: string, date: Date) => {
 const getDateFromInterval = (interval: number): Date => {
 	const newDate = new Date()
 	newDate.setDate(newDate.getDate() + interval)
-	newDate.setHours(calculateNearestHours(newDate))
-	newDate.setMinutes(0)
-	newDate.setSeconds(0)
+	newDate.setHours(calculateNearestHours(newDate), 0, 0)
 
 	return newDate
 }

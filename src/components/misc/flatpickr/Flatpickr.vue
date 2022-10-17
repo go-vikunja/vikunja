@@ -9,7 +9,7 @@
 </template>
 
 <script lang="ts">
-import Flatpickr from 'flatpickr';
+import Flatpickr from 'flatpickr'
 import 'flatpickr/dist/flatpickr.css'
 
 // FIXME: Not sure how to alias these correctly
@@ -20,18 +20,22 @@ type Options = Flatpickr.Options.Options
 type DateOption = Flatpickr.Options.DateOption
 
 function camelToKebab(string: string) {
-  return string.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-};
-
-function arrayify<T extends unknown>(obj: T) {
-  return obj instanceof Array ? obj : [obj];
+  return string.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
 }
 
-function nullify<T extends unknown>(value: T) {
-  return (value && (value as unknown[]).length) ? value : null;
+function arrayify<T = unknown>(obj: T) {
+  return obj instanceof Array
+		? obj
+		: [obj]
 }
 
-function cloneObject<T extends {}>(obj: T): T {
+function nullify<T = unknown>(value: T) {
+  return (value && (value as unknown[]).length)
+		? value
+		: null
+}
+
+function cloneObject<T = Record<string, unknown>>(obj: T): T {
   return Object.assign({}, obj)
 }
 
@@ -56,13 +60,13 @@ const excludedEvents = [
 ] as HookKey[]
 
 // Keep a copy of all events for later use
-const allEvents = includedEvents.concat(excludedEvents);
+const allEvents = includedEvents.concat(excludedEvents)
 
 export default {inheritAttrs: false}
 </script>
 
 <script setup lang="ts">
-import {computed, onBeforeUnmount, onMounted, ref, toRefs, useAttrs, watch, watchEffect, type PropType} from 'vue';
+import {computed, onBeforeUnmount, onMounted, ref, toRefs, useAttrs, watch, watchEffect, type PropType} from 'vue'
 
 const props = defineProps({
 	modelValue: {
@@ -85,23 +89,23 @@ const props = defineProps({
 		type: Object as PropType<Options>,
 		default: () => ({
 			wrap: false,
-			defaultDate: null
-		})
+			defaultDate: null,
+		}),
 	},
 	events: {
 		type: Array as PropType<HookKey[]>,
-		default: () => includedEvents
+		default: () => includedEvents,
 	},
 	disabled: {
 		type: Boolean,
-		default: false
-	}
+		default: false,
+	},
 })
 
 const emit = defineEmits([
 	'blur',
 	'update:modelValue',
-	...allEvents.map(camelToKebab)
+	...allEvents.map(camelToKebab),
 ])
 
 const {modelValue, config, disabled} = toRefs(props)
@@ -110,12 +114,12 @@ const {modelValue, config, disabled} = toRefs(props)
 const attrs = useAttrs()
 
 const root = ref<HTMLInputElement | null>(null)
-let fp = ref<Flatpickr.Instance | null>(null)
+const fp = ref<Flatpickr.Instance | null>(null)
 const safeConfig = ref<Options>(cloneObject(props.config))
 
 onMounted(() => {
 	// Don't mutate original object on parent component
-	let newConfig = cloneObject(props.config);
+	const newConfig = cloneObject(props.config)
 
 	if (
 		fp.value || // Return early if flatpickr is already loaded
@@ -126,7 +130,7 @@ onMounted(() => {
 
 	props.events.forEach((hook) => {
 		// Respect global callbacks registered via setDefault() method
-		const globalCallbacks = Flatpickr.defaultConfig[hook] || [];
+		const globalCallbacks = Flatpickr.defaultConfig[hook] || []
 	
 		// Inject our own method along with user callback
 		const localCallback: Hook = (...args) => emit(camelToKebab(hook), ...args)
@@ -134,9 +138,9 @@ onMounted(() => {
 		// Overwrite with merged array
 		newConfig[hook] = arrayify(newConfig[hook] || []).concat(
 			globalCallbacks,
-			localCallback
-		);
-	});
+			localCallback,
+		)
+	})
 
 	// Watch for value changed by date-picker itself and notify parent component
 	const onChange: Hook = (dates) => emit('update:modelValue', dates)
@@ -147,7 +151,7 @@ onMounted(() => {
 	// newConfig['onClose'] = arrayify(newConfig['onClose'] || []).concat(onClose)
 
 	// Set initial date without emitting any event
-	newConfig.defaultDate = props.modelValue || newConfig.defaultDate;
+	newConfig.defaultDate = props.modelValue || newConfig.defaultDate
 
 	safeConfig.value = newConfig
 
@@ -156,11 +160,11 @@ onMounted(() => {
 	* Bind on parent element if wrap is true
 	*/
 	const element = props.config.wrap
-		? root.value.parentNode as ParentNode
+		? root.value.parentNode
 		: root.value
 
 	// Init flatpickr
-	fp.value = Flatpickr(element, safeConfig.value);
+	fp.value = Flatpickr(element, safeConfig.value)
 })
 onBeforeUnmount(() => fp.value?.destroy())
 
@@ -171,9 +175,9 @@ watch(config, () => {
 	// Notice: we are looping through all events
 	// This also means that new callbacks can not be passed once component has been initialized
 	allEvents.forEach((hook) => {
-		delete safeConfig.value?.[hook];
-	});
-	fp.value.set(safeConfig.value);
+		delete safeConfig.value?.[hook]
+	})
+	fp.value.set(safeConfig.value)
 
 	// Passing these properties in `set()` method will cause flatpickr to trigger some callbacks
 	const configCallbacks = ['locale', 'showMonths'] as (keyof Options)[]
@@ -181,14 +185,14 @@ watch(config, () => {
 	// Workaround: Allow to change locale dynamically
 	configCallbacks.forEach(name => {
 		if (typeof safeConfig.value?.[name] !== 'undefined' && fp.value) {
-			fp.value.set(name, safeConfig.value[name]);
+			fp.value.set(name, safeConfig.value[name])
 		}
-	});
+	})
 }, {deep:true})
 
 const fpInput = computed(() => {
 	if (!fp.value) return
-	return fp.value.altInput || fp.value.input;
+	return fp.value.altInput || fp.value.input
 })
 
 /**
@@ -196,7 +200,7 @@ const fpInput = computed(() => {
  * (is required by many validation libraries)
  */
 function onBlur(event: Event) {
-	emit('blur', nullify((event.target as HTMLInputElement).value));
+	emit('blur', nullify((event.target as HTMLInputElement).value))
 }
 
 watchEffect(() => fpInput.value?.addEventListener('blur', onBlur))
@@ -207,9 +211,9 @@ onBeforeUnmount(() => fpInput.value?.removeEventListener('blur', onBlur))
 */
 watchEffect(() => {
 	if (disabled.value) {
-		fpInput.value?.setAttribute('disabled', '');
+		fpInput.value?.setAttribute('disabled', '')
 	} else {
-		fpInput.value?.removeAttribute('disabled');
+		fpInput.value?.removeAttribute('disabled')
 	}
 })
 
@@ -220,11 +224,11 @@ watch(
 	modelValue,
 	newValue => {
 		// Prevent updates if v-model value is same as input's current value
-		if (!root.value || newValue === nullify(root.value.value)) return;
+		if (!root.value || newValue === nullify(root.value.value)) return
 		// Make sure we have a flatpickr instanceand
 		// Notify flatpickr instance that there is a change in value
-		fp.value?.setDate(newValue, true);
+		fp.value?.setDate(newValue, true)
 	},
-	{deep: true}
+	{deep: true},
 )
 </script>

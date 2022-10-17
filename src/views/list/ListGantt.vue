@@ -26,14 +26,11 @@
 		<template #default>
 			<div class="gantt-chart-container">
 				<card :padding="false" class="has-overflow">
-					<pre>{{dateRange}}</pre>
-					<pre>{{new Date(dateRange.dateFrom).toISOString()}}</pre>
-					<pre>{{new Date(dateRange.dateTo).toISOString()}}</pre>
 					<gantt-chart
 						:list-id="filters.listId"
 						:date-from="filters.dateFrom"
 						:date-to="filters.dateTo"
-						:show-tasks-without-dates="showTasksWithoutDates"
+						:show-tasks-without-dates="filters.showTasksWithoutDates"
 					/>
 				</card>
 			</div>
@@ -42,13 +39,12 @@
 </template>
 
 <script setup lang="ts">
-import {computed, reactive, ref, watch, type PropType} from 'vue'
+import {computed, reactive, ref, watch} from 'vue'
 import Foo from '@/components/misc/flatpickr/Flatpickr.vue'
-// import type FlatPickr from 'vue-flatpickr-component'
 import type Flatpickr from 'flatpickr'
 import {useI18n} from 'vue-i18n'
-import {format} from 'date-fns'
-import {useRoute, useRouter, type LocationQuery, type RouteLocationNormalized, type RouteLocationRaw} from 'vue-router'
+import {useRoute, useRouter, type RouteLocationNormalized, type RouteLocationRaw} from 'vue-router'
+import cloneDeep from 'lodash.clonedeep'
 
 import {useAuthStore} from '@/stores/auth'
 
@@ -56,24 +52,13 @@ import ListWrapper from './ListWrapper.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 
 import {createAsyncComponent} from '@/helpers/createAsyncComponent'
-import GanttChart from '@/components/tasks/gantt-chart.vue'
-import type { IList } from '@/modelTypes/IList'
+import {isoToKebabDate} from '@/helpers/time/isoToKebabDate'
 
-export type DateKebab = `${string}-${string}-${string}`
-export type DateISO = string
-export type DateRange = {
-	dateFrom: string
-	dateTo: string
-}
+import type {IList} from '@/modelTypes/IList'
+import type {DateISO} from '@/types/DateISO'
+import type {DateKebab} from '@/types/DateKebab'
 
-export interface GanttParams {
-	listId: IList['id']
-	dateFrom: DateKebab
-	dateTo: DateKebab
-	showTasksWithoutDates: boolean
-	route: RouteLocationNormalized,
-}
-
+// convenient internal filter object
 export interface GanttFilter {
 	listId: IList['id']
 	dateFrom: DateISO
@@ -83,9 +68,9 @@ export interface GanttFilter {
 
 type Options = Flatpickr.Options.Options
 
-// const GanttChart = createAsyncComponent(() => import('@/components/tasks/gantt-chart.vue'))
+const GanttChart = createAsyncComponent(() => import('@/components/tasks/gantt-chart.vue'))
 
-const props = defineProps<GanttParams>()
+const props = defineProps<{route: RouteLocationNormalized}>()
 
 const router = useRouter()
 const route = useRoute()
@@ -124,11 +109,6 @@ function parseBooleanProp(booleanProp: string) {
 		:	Boolean(booleanProp)
 }
 
-const DATE_FORMAT_KEBAB = 'yyyy-LL-dd'
-function isoToKebabDate(isoDate: DateISO) {
-	return format(new Date(isoDate), DATE_FORMAT_KEBAB) as DateKebab
-}
-
 const DEFAULT_SHOW_TASKS_WITHOUT_DATES = false
 
 const DEFAULT_DATEFROM_DAY_OFFSET = -15
@@ -145,8 +125,6 @@ function getDefaultDateTo() {
 }
 
 function routeToFilter(route: RouteLocationNormalized): GanttFilter {
-	console.log('parseDateProp', parseDateProp(route.query.dateTo as DateKebab))
-	console.log(parseDateProp(route.query.dateTo as DateKebab))
 	return {
 		listId: Number(route.params.listId as string),
 		dateFrom: parseDateProp(route.query.dateFrom as DateKebab) || getDefaultDateFrom(),
@@ -174,13 +152,13 @@ function filterToRoute(filters: GanttFilter): RouteLocationRaw {
 	return {
 		name: 'list.gantt',
 		params: {listId: filters.listId},
-		query
+		query,
 	}
 }
 
 const filters: GanttFilter = reactive(routeToFilter(route))
 
-watch(() => JSON.parse(JSON.stringify(props.route)) as RouteLocationNormalized, (route, oldRoute) => {
+watch(() => cloneDeep(props.route), (route, oldRoute) => {
 	if (route.name !== oldRoute.name) {
 		return
 	}
@@ -200,19 +178,15 @@ watch(
 			await router.push(newRouteFullPath)
 		}
 	},
-	{flush: "post"}
+	// only apply new route after all filters have changed in component cycle
+	{flush: 'post'},
 )
 
-const dateRange = computed(() => ({
-	dateFrom: filters.dateFrom,
-	dateTo: filters.dateTo,
-}))
-
-const flatPickerEl = ref<typeof FlatPickr | null>(null)
-const flatPickerDateRange = computed({
+const flatPickerEl = ref<typeof Foo | null>(null)
+const flatPickerDateRange = computed<Date[]>({
 	get: () => ([
-		filters.dateFrom,
-		filters.dateTo
+		new Date(filters.dateFrom),
+		new Date(filters.dateTo),
 	]),
 	set(newVal) {
 		const [dateFrom, dateTo] = newVal.map((date) => date?.toISOString())
@@ -221,10 +195,8 @@ const flatPickerDateRange = computed({
 		if (!dateTo) return
 
 		Object.assign(filters, {dateFrom, dateTo})
-	}
+	},
 })
-
-const ISO_DATE_FORMAT = "YYYY-MM-DDTHH:mm:ssZ[Z]"
 
 const initialDateRange = [filters.dateFrom, filters.dateTo]
 
@@ -233,8 +205,6 @@ const authStore = useAuthStore()
 const flatPickerConfig = computed<Options>(() => ({
 	altFormat: t('date.altFormatShort'),
 	altInput: true,
-	// dateFornat: ISO_DATE_FORMAT,
-	// dateFormat: 'Y-m-d',
 	defaultDate: initialDateRange,
 	enableTime: false,
 	mode: 'range',
@@ -287,7 +257,6 @@ const flatPickerConfig = computed<Options>(() => ({
 
 		.label {
 			font-size: .9rem;
-			padding-left: .4rem;
 		}
 	}
 }
