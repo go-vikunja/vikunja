@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest'
-import {hourToDaytime} from './useDateTimeSalutation'
+import {hourToDaytime} from "./hourToDaytime"
 
 function dateWithHour(hours: number): Date {
 	const newDate = new Date()

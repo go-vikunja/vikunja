@@ -68,7 +68,7 @@ import AddTask from '@/components/tasks/add-task.vue'
 import {getHistory} from '@/modules/listHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
-import {useDateTimeSalutation} from '@/composables/useDateTimeSalutation'
+import {useDaytimeSalutation} from '@/composables/useDaytimeSalutation'
 
 import {useBaseStore} from '@/stores/base'
 import {useListStore} from '@/stores/lists'
@@ -77,7 +77,7 @@ import {useNamespaceStore} from '@/stores/namespaces'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 
-const salutation = useDateTimeSalutation()
+const salutation = useDaytimeSalutation()
 
 const baseStore = useBaseStore()
 const authStore = useAuthStore()
