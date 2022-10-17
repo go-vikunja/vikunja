@@ -31,8 +31,8 @@
 					<pre>{{new Date(dateRange.dateTo).toISOString()}}</pre>
 					<gantt-chart
 						:list-id="filters.listId"
-						:date-from="isoToKebabDate(filters.dateFrom)"
-						:date-to="isoToKebabDate(filters.dateTo)"
+						:date-from="filters.dateFrom"
+						:date-to="filters.dateTo"
 						:show-tasks-without-dates="showTasksWithoutDates"
 					/>
 				</card>

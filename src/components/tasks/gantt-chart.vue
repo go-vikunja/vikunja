@@ -1,13 +1,14 @@
 <template>
 	<div>
 		<Loading
-			v-if="taskService.loading || taskCollectionService.loading || dayjsLanguageLoading"
+			v-if="taskCollectionService.loading || dayjsLanguageLoading"
 			class="gantt-container"
 		/>
 		<div class="gantt-container" v-else>
 			<GGanttChart
-				:chart-start="`${props.dateFrom} 00:00`"
-				:chart-end="`${props.dateTo} 23:59`"
+				:date-format="DAYJS_ISO_DATE_FORMAT"
+				:chart-start="isoToKebabDate(props.dateFrom)"
+				:chart-end="isoToKebabDate(props.dateTo)"
 				precision="day"
 				bar-start="startDate"
 				bar-end="endDate"
@@ -40,11 +41,12 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch, watchEffect, shallowReactive} from 'vue'
+import {computed, ref, watch, watchEffect, shallowReactive, type CSSProperties} from 'vue'
 import {useRouter} from 'vue-router'
 import {format, parse} from 'date-fns'
 import dayjs from 'dayjs'
 import isToday from 'dayjs/plugin/isToday'
+import cloneDeep from 'lodash.clonedeep'
 
 import {useDayjsLanguageSync} from '@/i18n'
 import TaskCollectionService from '@/services/taskCollection'
@@ -68,6 +70,7 @@ import Loading from '@/components/misc/loading.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
 
 import {useBaseStore} from '@/stores/base'
+import { error, success } from '@/message'
 
 export type DateRange = {
 	dateFrom: string,
@@ -83,6 +86,8 @@ export interface GanttChartProps {
 }
 
 // export const DATE_FORMAT = 'yyyy-LL-dd HH:mm'
+
+const DAYJS_ISO_DATE_FORMAT = 'YYYY-MM-DD'
 
 const props = withDefaults(defineProps<GanttChartProps>(), {
 	showTasksWithoutDates: false,
@@ -100,12 +105,12 @@ const router = useRouter()
 const taskCollectionService = shallowReactive(new TaskCollectionService())
 const taskService = shallowReactive(new TaskService())
 
-const dateFromDate = computed(() => parse(props.dateFrom, 'yyyy-LL-dd', new Date(new Date().setHours(0,0,0,0))))
-const dateToDate = computed(() => parse(props.dateTo, 'yyyy-LL-dd', new Date(new Date().setHours(23,59,0,0))))
+const dateFromDate = computed(() => new Date(new Date(props.dateFrom).setHours(0,0,0,0)))
+const dateToDate = computed(() => new Date(new Date(props.dateTo).setHours(23,59,0,0)))
 
 const DAY_WIDTH_PIXELS = 30
 const ganttChartWidth = computed(() => {
-	const dateDiff = Math.floor((dateToDate.value - dateFromDate.value) / (1000 * 60 * 60 * 24))
+	const dateDiff = Math.floor((dateToDate.value.valueOf() - dateFromDate.value.valueOf()) / (1000 * 60 * 60 * 24))
 
 	return dateDiff * DAY_WIDTH_PIXELS
 })
@@ -131,15 +136,16 @@ function isoToKebabDate(isoDate: DateISO) {
 	return format(new Date(isoDate), DATE_FORMAT_KEBAB) as DateKebab
 }
 
-const defaultStartDate = new Date().toISOString()
-const defaultEndDate = new Date((new Date()).setDate((new Date()).getDate() + 7)).toISOString()
+const now = new Date()
+const defaultStartDate = new Date(now)
+const defaultEndDate = new Date(now.setDate(now.getDate() + 7))
 
 function transformTaskToGanttBar(t: ITask) {
 	const black = 'var(--grey-800)'
 	console.log(t)
 	return [{
-		startDate: isoToKebabDate(new Date(t.startDate ? t.startDate : defaultStartDate).toISOString()),
-		endDate: isoToKebabDate(new Date(t.endDate ? t.endDate : defaultEndDate).toISOString()),
+		startDate: isoToKebabDate(t.startDate ? t.startDate.toISOString() : defaultStartDate.toISOString()),
+		endDate: isoToKebabDate(t.endDate ? t.endDate.toISOString() : defaultEndDate.toISOString()),
 		ganttBarConfig: {
 			id: String(t.id),
 			label: t.title,
@@ -190,7 +196,7 @@ async function loadTasks({
 		order_by: ['asc', 'asc', 'desc'],
 		filter_by: ['start_date', 'start_date'],
 		filter_comparator: ['greater_equals', 'less_equals'],
-		filter_value: [dateFrom, dateTo],
+		filter_value: [isoToKebabDate(dateFrom), isoToKebabDate(dateTo)],
 		filter_concat: 'and',
 		filter_include_nulls: showTasksWithoutDates,
 	}
@@ -227,20 +233,35 @@ async function updateTask(e: {
 
 	if (!task) return
 
-	console.log(task.startDate.toISOString())
-	console.log(dayjs(task.startDate), "YYYY-MM-DD HH:mm").toISOString()
-	console.log(dayjs(task.startDate, "YYYY-MM-DDTHH:mm:ssZ[Z]").toISOString())
-	console.log(task.startDate)
-	console.log(dayjs(e.bar.startDate).toDate())
-	console.log(e.bar.startDate)
-	console.log(task.endDate.toISOString())
-	console.log(task.endDate)
-	console.log(dayjs(e.bar.startDate).toDate())
-	console.log(e.bar.endDate)
 
-	// task.startDate = e.bar.startDate
-	// task.endDate = e.bar.endDate
-	const updatedTask = await taskService.update(task)
+	const startDate = parse(e.bar.startDate, 'yyyy-MM-dd', new Date())
+	const endDate = parse(e.bar.endDate, 'yyyy-MM-dd', new Date())
+
+	const oldTask = cloneDeep(task)
+
+	const newTask: ITask = {
+		...task,
+		startDate,
+		endDate,
+	}
+
+	const newTaskCopy = cloneDeep(task)
+
+	tasks.value.set(newTask.id, newTask)
+
+	// try {	
+	const updatedTask = await taskService.update(newTask)
+		// tasks.value.set(updatedTask.id, updatedTask)
+	success('Saved')
+	// } catch(e: any) {
+	// 	error('Saved')
+	// 	tasks.value.set(task.id, oldTask)
+	// }
+
+
+	// for (let [idStr, currentTask] of tasks.value) {
+	// 	const id: ITask['id'] = Number(idStr)
+	// }
 
 	// ganttBars.value.map(gantBar => {
 	// 	return Number(gantBar[0].ganttBarConfig.id) === task.id
