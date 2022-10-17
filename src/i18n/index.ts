@@ -15,7 +15,7 @@ export const SUPPORTED_LOCALES = {
 	'pt-PT': 'Português',
 	'zh-CN': 'Chinese',
 	'no-NO': 'Norsk Bokmål',
-} as Record<string, string>
+} as const
 
 export type SupportedLocale = keyof typeof SUPPORTED_LOCALES
 
@@ -23,12 +23,12 @@ export const DEFAULT_LANGUAGE: SupportedLocale= 'en'
 
 export type ISOLanguage = string
 
-// we load all messsages async
+// we load all messages async
 export const i18n = createI18n({
 	fallbackLocale: DEFAULT_LANGUAGE,
 	legacy: false,
 	messages: {
-		en: langEN,
+		[DEFAULT_LANGUAGE]: langEN,
 	} as Record<SupportedLocale, any>,
 })
 
@@ -54,16 +54,16 @@ export async function setLanguage(lang: SupportedLocale = getCurrentLanguage()):
 }
 
 export function getCurrentLanguage(): SupportedLocale {
-	const savedLanguage = localStorage.getItem('language')
+	const savedLanguage = localStorage.getItem('language') as SupportedLocale | null
 	if (savedLanguage !== null) {
 		return savedLanguage
 	}
 
 	const browserLanguage = navigator.language
 
-	const language: SupportedLocale | undefined = Object.keys(SUPPORTED_LOCALES).find(langKey => {
+	const language = Object.keys(SUPPORTED_LOCALES).find(langKey => {
 		return langKey === browserLanguage || langKey.startsWith(browserLanguage + '-')
-	})
+	}) as SupportedLocale | undefined
 
 	return language || DEFAULT_LANGUAGE
 }
