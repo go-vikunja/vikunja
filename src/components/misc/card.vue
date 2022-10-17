@@ -35,6 +35,9 @@
 </template>
 
 <script setup lang="ts">
+import type {PropType} from 'vue'
+import type {IconProp} from '@fortawesome/fontawesome-svg-core'
+
 import BaseButton from '@/components/base/BaseButton.vue'
 
 defineProps({
@@ -51,7 +54,7 @@ defineProps({
 		default: false,
 	},
 	closeIcon: {
-		type: String,
+		type: String as PropType<IconProp>,
 		default: 'times',
 	},
 	shadow: {

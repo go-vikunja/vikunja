@@ -70,6 +70,8 @@ import {
 } from '@fortawesome/free-regular-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 
+import type { FontAwesomeIcon as FontAwesomeIconFixedTypes } from '@/types/vue-fontawesome'
+
 library.add(faAlignLeft)
 library.add(faAngleRight)
 library.add(faArchive)
@@ -136,4 +138,5 @@ library.add(faTrashAlt)
 library.add(faUser)
 library.add(faUsers)
 
-export default FontAwesomeIcon
+// overwriting the wrong types
+export default FontAwesomeIcon as unknown as FontAwesomeIconFixedTypes
