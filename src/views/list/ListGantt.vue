@@ -29,12 +29,12 @@
 					<pre>{{dateRange}}</pre>
 					<pre>{{new Date(dateRange.dateFrom).toISOString()}}</pre>
 					<pre>{{new Date(dateRange.dateTo).toISOString()}}</pre>
-					<!-- <gantt-chart
+					<gantt-chart
 						:list-id="filters.listId"
-						:date-from="filters.dateFrom"
-						:date-to="filters.dateTo"
+						:date-from="isoToKebabDate(filters.dateFrom)"
+						:date-to="isoToKebabDate(filters.dateTo)"
 						:show-tasks-without-dates="showTasksWithoutDates"
-					/> -->
+					/>
 				</card>
 			</div>
 		</template>
@@ -56,6 +56,7 @@ import ListWrapper from './ListWrapper.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 
 import {createAsyncComponent} from '@/helpers/createAsyncComponent'
+import GanttChart from '@/components/tasks/gantt-chart.vue'
 import type { IList } from '@/modelTypes/IList'
 
 export type DateKebab = `${string}-${string}-${string}`
@@ -82,7 +83,7 @@ export interface GanttFilter {
 
 type Options = Flatpickr.Options.Options
 
-const GanttChart = createAsyncComponent(() => import('@/components/tasks/gantt-chart.vue'))
+// const GanttChart = createAsyncComponent(() => import('@/components/tasks/gantt-chart.vue'))
 
 const props = defineProps<GanttParams>()
 
@@ -123,10 +124,14 @@ function parseBooleanProp(booleanProp: string) {
 		:	Boolean(booleanProp)
 }
 
+const DATE_FORMAT_KEBAB = 'yyyy-LL-dd'
+function isoToKebabDate(isoDate: DateISO) {
+	return format(new Date(isoDate), DATE_FORMAT_KEBAB) as DateKebab
+}
+
 const DEFAULT_SHOW_TASKS_WITHOUT_DATES = false
 
-const DEFAULT_DATEFROM_DAY_OFFSET = 0
-// const DEFAULT_DATEFROM_DAY_OFFSET = -15
+const DEFAULT_DATEFROM_DAY_OFFSET = -15
 const DEFAULT_DATETO_DAY_OFFSET = +55
 
 const now = new Date()
@@ -140,6 +145,8 @@ function getDefaultDateTo() {
 }
 
 function routeToFilter(route: RouteLocationNormalized): GanttFilter {
+	console.log('parseDateProp', parseDateProp(route.query.dateTo as DateKebab))
+	console.log(parseDateProp(route.query.dateTo as DateKebab))
 	return {
 		listId: Number(route.params.listId as string),
 		dateFrom: parseDateProp(route.query.dateFrom as DateKebab) || getDefaultDateFrom(),
@@ -155,8 +162,8 @@ function filterToRoute(filters: GanttFilter): RouteLocationRaw {
 		filters.dateTo !== getDefaultDateTo()
 	) {
 		query = {
-			dateFrom: format(new Date(filters.dateFrom), 'yyyy-LL-dd'),
-			dateTo: format(new Date(filters.dateTo), 'yyyy-LL-dd'),
+			dateFrom: isoToKebabDate(filters.dateFrom),
+			dateTo: isoToKebabDate(filters.dateTo),
 		}
 	}
 

@@ -1,31 +1,32 @@
 <template>
-	<Loading
-		v-if="taskService.loading || taskCollectionService.loading || dayjsLanguageLoading"
-		class="gantt-container"
-	/>
-	<div class="gantt-container" v-else>
-		<GGanttChart
-			dateFormat="YYYY-MM-DDTHH:mm:ssZ[Z]"
-			:chart-start="`${dateFrom} 00:00`"
-			:chart-end="`${dateTo} 23:59`"
-			precision="day"
-			bar-start="startDate"
-			bar-end="endDate"
-			:grid="true"
-			@dragend-bar="updateTask"
-			@dblclick-bar="openTask"
-			:width="ganttChartWidth + 'px'"
-		>
-			<template #timeunit="{label, value}">
-				<div
-					class="timeunit-wrapper"
-					:class="{'today': dayIsToday(label)}">
-					<span>{{ value }}</span>
-					<span class="weekday">
-						{{ weekdayFromTimeLabel(label) }}
-					</span>
-				</div>
-			</template>
+	<div>
+		<Loading
+			v-if="taskService.loading || taskCollectionService.loading || dayjsLanguageLoading"
+			class="gantt-container"
+		/>
+		<div class="gantt-container" v-else>
+			<GGanttChart
+				:chart-start="`${props.dateFrom} 00:00`"
+				:chart-end="`${props.dateTo} 23:59`"
+				precision="day"
+				bar-start="startDate"
+				bar-end="endDate"
+				:grid="true"
+				@dragend-bar="updateTask"
+				@dblclick-bar="openTask"
+				:width="ganttChartWidth + 'px'"
+			>
+				<template #timeunit="{label, value}">
+					<div
+						class="timeunit-wrapper"
+						:class="{'today': dayIsToday(label)}"
+					>
+						<span>{{ value }}</span>
+						<span class="weekday">
+							{{ weekdayFromTimeLabel(label) }}
+						</span>
+					</div>
+				</template>
 			<GGanttRow
 				v-for="(bar, k) in ganttBars"
 				:key="k"
@@ -33,15 +34,17 @@
 				:bars="bar"
 			/>
 		</GGanttChart>
+		</div>
+		<TaskForm v-if="canWrite" @create-task="createTask" />
 	</div>
-	<TaskForm v-if="canWrite" @create-task="createTask" />
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch, watchEffect, shallowReactive, type PropType} from 'vue'
+import {computed, ref, watch, watchEffect, shallowReactive} from 'vue'
 import {useRouter} from 'vue-router'
 import {format, parse} from 'date-fns'
 import dayjs from 'dayjs'
+import isToday from 'dayjs/plugin/isToday'
 
 import {useDayjsLanguageSync} from '@/i18n'
 import TaskCollectionService from '@/services/taskCollection'
@@ -71,9 +74,12 @@ export type DateRange = {
 	dateTo: string,
 }
 
-export interface GanttChartProps extends DateRange {
+// export interface GanttChartProps extends DateRange {
+export interface GanttChartProps {
 	listId: IList['id']
 	showTasksWithoutDates: boolean
+	dateFrom: string,
+	dateTo: string,
 }
 
 // export const DATE_FORMAT = 'yyyy-LL-dd HH:mm'
@@ -83,7 +89,9 @@ const props = withDefaults(defineProps<GanttChartProps>(), {
 })
 
 // setup dayjs for vue-ganttastic
-const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
+const dayjsLanguageLoading = ref(false)
+// const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
+dayjs.extend(isToday)
 extendDayjs()
 
 const baseStore = useBaseStore()
@@ -92,8 +100,8 @@ const router = useRouter()
 const taskCollectionService = shallowReactive(new TaskCollectionService())
 const taskService = shallowReactive(new TaskService())
 
-const dateFromDate = computed(() => parse(props.dateFrom, 'yyyy-LL-dd', new Date()))
-const dateToDate = computed(() => parse(props.dateTo, 'yyyy-LL-dd', new Date()))
+const dateFromDate = computed(() => parse(props.dateFrom, 'yyyy-LL-dd', new Date(new Date().setHours(0,0,0,0))))
+const dateToDate = computed(() => parse(props.dateTo, 'yyyy-LL-dd', new Date(new Date().setHours(23,59,0,0))))
 
 const DAY_WIDTH_PIXELS = 30
 const ganttChartWidth = computed(() => {
@@ -116,6 +124,13 @@ watch(
 	{deep: true}
 )
 
+type DateKebab = `${string}-${string}-${string}`
+type DateISO = string
+const DATE_FORMAT_KEBAB = 'yyyy-LL-dd'
+function isoToKebabDate(isoDate: DateISO) {
+	return format(new Date(isoDate), DATE_FORMAT_KEBAB) as DateKebab
+}
+
 const defaultStartDate = new Date().toISOString()
 const defaultEndDate = new Date((new Date()).setDate((new Date()).getDate() + 7)).toISOString()
 
@@ -123,8 +138,8 @@ function transformTaskToGanttBar(t: ITask) {
 	const black = 'var(--grey-800)'
 	console.log(t)
 	return [{
-		startDate: t.startDate ? new Date(t.startDate).toISOString() : defaultStartDate,
-		endDate: t.endDate ? new Date(t.endDate).toISOString() : defaultEndDate,
+		startDate: isoToKebabDate(new Date(t.startDate ? t.startDate : defaultStartDate).toISOString()),
+		endDate: isoToKebabDate(new Date(t.endDate ? t.endDate : defaultEndDate).toISOString()),
 		ganttBarConfig: {
 			id: String(t.id),
 			label: t.title,

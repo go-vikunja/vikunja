@@ -61,7 +61,6 @@ import {useTitle} from '@/composables/useTitle'
 
 import {useBaseStore} from '@/stores/base'
 import {useListStore} from '@/stores/lists'
-import {useKanbanStore} from '@/stores/kanban'
 
 const props = defineProps({
 	listId: {
@@ -77,7 +76,6 @@ const props = defineProps({
 const route = useRoute()
 
 const baseStore = useBaseStore()
-const kanbanStore = useKanbanStore()
 const listStore = useListStore()
 const listService = ref(new ListService())
 const loadedListId = ref(0)
@@ -90,6 +88,7 @@ const currentList = computed(() => {
 		maxRight: null,
 	} : baseStore.currentList
 })
+useTitle(() => currentList.value.id ? getListTitle(currentList.value) : '')
 
 // watchEffect would be called every time the prop would get a value assigned, even if that value was the same as before.
 // This resulted in loading and setting the list multiple times, even when navigating away from it.
@@ -98,62 +97,47 @@ const currentList = computed(() => {
 // of it, most likely due to the rights not being properly populated.
 watch(
 	() => props.listId,
-	listId => loadList(listId),
+	// loadList
+	async (listIdToLoad: number) => {
+		const listData = {id: listIdToLoad}
+		saveListToHistory(listData)
+
+		// Don't load the list if we either already loaded it or aren't dealing with a list at all currently and
+		// the currently loaded list has the right set.
+		if (
+			(
+				listIdToLoad === loadedListId.value ||
+				typeof listIdToLoad === 'undefined' ||
+				listIdToLoad === currentList.value.id
+			)
+			&& typeof currentList.value !== 'undefined' && currentList.value.maxRight !== null
+		) {
+			loadedListId.value = props.listId
+			return
+		}
+
+		console.debug(`Loading list, props.viewName = ${props.viewName}, $route.params =`, route.params, `, loadedListId = ${loadedListId.value}, currentList = `, currentList.value)
+
+		// Set the current list to the one we're about to load so that the title is already shown at the top
+		loadedListId.value = 0
+		const listFromStore = listStore.getListById(listData.id)
+		if (listFromStore !== null) {
+			baseStore.setBackground(null)
+			baseStore.setBlurHash(null)
+			baseStore.handleSetCurrentList({list: listFromStore})
+		}
+
+		// We create an extra list object instead of creating it in list.value because that would trigger a ui update which would result in bad ux.
+		const list = new ListModel(listData)
+		try {
+			const loadedList = await listService.value.get(list)
+			await baseStore.handleSetCurrentList({list: loadedList})
+		} finally {
+			loadedListId.value = props.listId
+		}
+	},
 	{immediate: true},
 )
-
-useTitle(() => currentList.value.id ? getListTitle(currentList.value) : '')
-
-async function loadList(listIdToLoad: number) {
-	const listData = {id: listIdToLoad}
-	saveListToHistory(listData)
-
-	// This invalidates the loaded list at the kanban board which lets it reload its content when
-	// switched to it. This ensures updates done to tasks in the gantt or list views are consistently
-	// shown in all views while preventing reloads when closing a task popup.
-	// We don't do this for the table view because that does not change tasks.
-	// FIXME: remove this
-	if (
-		props.viewName === 'list.list' ||
-		props.viewName === 'list.gantt'
-	) {
-		kanbanStore.setListId(0)
-	}
-
-	// Don't load the list if we either already loaded it or aren't dealing with a list at all currently and
-	// the currently loaded list has the right set.
-	if (
-		(
-			listIdToLoad === loadedListId.value ||
-			typeof listIdToLoad === 'undefined' ||
-			listIdToLoad === currentList.value.id
-		)
-		&& typeof currentList.value !== 'undefined' && currentList.value.maxRight !== null
-	) {
-		loadedListId.value = props.listId
-		return
-	}
-
-	console.debug(`Loading list, props.viewName = ${props.viewName}, $route.params =`, route.params, `, loadedListId = ${loadedListId.value}, currentList = `, currentList.value)
-
-	// Set the current list to the one we're about to load so that the title is already shown at the top
-	loadedListId.value = 0
-	const listFromStore = listStore.getListById(listData.id)
-	if (listFromStore !== null) {
-		baseStore.setBackground(null)
-		baseStore.setBlurHash(null)
-		baseStore.handleSetCurrentList({list: listFromStore})
-	}
-
-	// We create an extra list object instead of creating it in list.value because that would trigger a ui update which would result in bad ux.
-	const list = new ListModel(listData)
-	try {
-		const loadedList = await listService.value.get(list)
-		await baseStore.handleSetCurrentList({list: loadedList})
-	} finally {
-		loadedListId.value = props.listId
-	}
-}
 </script>
 
 <style lang="scss" scoped>
