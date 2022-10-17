@@ -9,64 +9,61 @@
 			}
 		]"
 	>
-		<icon 
-			v-if="showIconOnly"
-			:icon="icon"
-			:style="{'color': iconColor !== '' ? iconColor : false}"
-		/>
-		<span class="icon is-small" v-else-if="icon !== ''">
+		<template v-if="icon">
 			<icon 
+				v-if="showIconOnly"
 				:icon="icon"
 				:style="{'color': iconColor !== '' ? iconColor : false}"
 			/>
-		</span>
+			<span class="icon is-small" v-else>
+				<icon 
+					:icon="icon"
+					:style="{'color': iconColor !== '' ? iconColor : false}"
+				/>
+			</span>
+		</template>
 		<slot />
 	</BaseButton>
 </template>
 
 <script lang="ts">
+const BUTTON_TYPES_MAP = {
+  primary: 'is-primary',
+  secondary: 'is-outlined',
+  tertiary: 'is-text is-inverted underline-none',
+} as const
+
+export type ButtonTypes = keyof typeof BUTTON_TYPES_MAP
+
 export default { name: 'x-button' }
 </script>
 
 <script setup lang="ts">
-import {computed, useSlots, type PropType} from 'vue'
-import BaseButton from '@/components/base/BaseButton.vue'
+import {computed, useSlots} from 'vue'
+import BaseButton, {type BaseButtonProps} from '@/components/base/BaseButton.vue'
+import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 
-const BUTTON_TYPES_MAP =  Object.freeze({
-  primary: 'is-primary',
-  secondary: 'is-outlined',
-  tertiary: 'is-text is-inverted underline-none',
-})
+// extending the props of the BaseButton
+export interface ButtonProps extends BaseButtonProps {
+	variant?: ButtonTypes
+	icon?: IconProp
+	iconColor?: string
+	loading?: boolean
+	shadow?: boolean
+}
 
-type ButtonTypes = keyof typeof BUTTON_TYPES_MAP
+const {
+	variant = 'primary',
+	icon = '',
+	iconColor = '',
+	loading = false,
+	shadow = true,
+} = defineProps<ButtonProps>()
 
-const props = defineProps({
-	variant: {
-		type: String as PropType<ButtonTypes>,
-		default: 'primary',
-	},
-	icon: {
-		type: [String, Array],
-		default: '',
-	},
-	iconColor: {
-		type: String,
-		default: '',
-	},
-	loading: {
-		type: Boolean,
-		default: false,
-	},
-	shadow: {
-		type: Boolean,
-		default: true,
-	},
-})
-
-const variantClass = computed(() => BUTTON_TYPES_MAP[props.variant])
+const variantClass = computed(() => BUTTON_TYPES_MAP[variant])
 
 const slots = useSlots()
-const showIconOnly = computed(() => props.icon !== '' && typeof slots.default === 'undefined')
+const showIconOnly = computed(() => icon !== '' && typeof slots.default === 'undefined')
 </script>
 
 <style lang="scss" scoped>
