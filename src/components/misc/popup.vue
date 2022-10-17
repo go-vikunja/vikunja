@@ -1,20 +1,20 @@
 <template>
 	<slot name="trigger" :isOpen="open" :toggle="toggle"></slot>
-	<div class="popup" :class="{'is-open': open, 'has-overflow': props.hasOverflow && open}" ref="popup">
+	<div
+		class="popup"
+		:class="{
+			'is-open': open,
+			'has-overflow': props.hasOverflow && open
+		}"
+		ref="popup"
+	>
 		<slot name="content" :isOpen="open"/>
 	</div>
 </template>
 
 <script setup lang="ts">
-import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
-import {onBeforeUnmount, onMounted, ref} from 'vue'
-
-const open = ref(false)
-const popup = ref(null)
-
-const toggle = () => {
-	open.value = !open.value
-}
+import {ref} from 'vue'
+import {onClickOutside} from '@vueuse/core'
 
 const props = defineProps({
 	hasOverflow: {
@@ -23,24 +23,22 @@ const props = defineProps({
 	},
 })
 
-function hidePopup(e) {
+const open = ref(false)
+const popup = ref<HTMLElement | null>(null)
+
+function close() {
+	open.value = false
+}
+
+function toggle() {
+	open.value = !open.value
+}
+
+onClickOutside(popup, () => {
 	if (!open.value) {
 		return
 	}
-
-	// we actually want to use popup.$el, not its value.
-	// eslint-disable-next-line vue/no-ref-as-operand
-	closeWhenClickedOutside(e, popup.value, () => {
-		open.value = false
-	})
-}
-
-onMounted(() => {
-	document.addEventListener('click', hidePopup)
-})
-
-onBeforeUnmount(() => {
-	document.removeEventListener('click', hidePopup)
+	close()
 })
 </script>
 
