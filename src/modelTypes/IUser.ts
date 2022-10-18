@@ -7,7 +7,7 @@ export const AUTH_TYPES = {
 	'LINK_SHARE': 2,
 } as const
 
-type AuthType = typeof AUTH_TYPES[keyof typeof AUTH_TYPES]
+export type AuthType = typeof AUTH_TYPES[keyof typeof AUTH_TYPES]
 
 export interface IUser extends IAbstract {
 	id: number

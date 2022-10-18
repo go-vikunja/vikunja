@@ -41,6 +41,7 @@ import {success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
 
 import type {IUser} from '@/modelTypes/IUser'
+import { getDisplayName } from '@/models/user'
 
 const props = defineProps({
 	taskId: {
@@ -65,7 +66,7 @@ const taskStore = useTaskStore()
 const {t} = useI18n({useScope: 'global'})
 
 const listUserService = shallowReactive(new ListUserService())
-const foundUsers = ref([])
+const foundUsers = ref<IUser[]>([])
 const assignees = ref<IUser[]>([])
 let isAdding = false
 
@@ -114,13 +115,14 @@ async function findUser(query: string) {
 		return
 	}
 
-	const response = await listUserService.getAll({listId: props.listId}, {s: query})
+	const response = await listUserService.getAll({listId: props.listId}, {s: query}) as IUser[]
 
 	// Filter the results to not include users who are already assigned
-	foundUsers.value = response.filter(({id}) => !includesById(assignees.value, id))
+	foundUsers.value = response
+		.filter(({id}) => !includesById(assignees.value, id))
 		.map(u => {
 			// Users may not have a display name set, so we fall back on the username in that case
-			u.name = u.name === '' ? u.username : u.name
+			u.name = getDisplayName(u)
 			return u
 		})
 }

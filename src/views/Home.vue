@@ -1,8 +1,7 @@
 <template>
 	<div class="content has-text-centered">
-		<h2 v-if="userInfo">
-			{{ $t(welcome, {username: userInfo.name !== '' ? userInfo.name : userInfo.username}) }}!
-		</h2>
+		<h2 v-if="salutation">{{ salutation }}</h2>
+
 		<message variant="danger" v-if="deletionScheduledAt !== null" class="mb-4">
 			{{
 				$t('user.deletion.scheduled', {
@@ -69,7 +68,7 @@ import AddTask from '@/components/tasks/add-task.vue'
 import {getHistory} from '@/modules/listHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
-import {useDateTimeSalutation} from '@/composables/useDateTimeSalutation'
+import {useDaytimeSalutation} from '@/composables/useDaytimeSalutation'
 
 import {useBaseStore} from '@/stores/base'
 import {useListStore} from '@/stores/lists'
@@ -78,7 +77,7 @@ import {useNamespaceStore} from '@/stores/namespaces'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 
-const welcome = useDateTimeSalutation()
+const salutation = useDaytimeSalutation()
 
 const baseStore = useBaseStore()
 const authStore = useAuthStore()
@@ -99,7 +98,6 @@ const listHistory = computed(() => {
 })
 
 const migratorsEnabled = computed(() => configStore.availableMigrators?.length > 0)
-const userInfo = computed(() => authStore.info)
 const hasTasks = computed(() => baseStore.hasTasks)
 const defaultListId = computed(() => authStore.settings.defaultListId)
 const defaultNamespaceId = computed(() => namespaceStore.namespaces?.[0]?.id || 0)
