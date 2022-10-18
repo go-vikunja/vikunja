@@ -21,7 +21,7 @@ specifiers:
   '@types/lodash.debounce': 4.0.7
   '@types/marked': 4.0.7
   '@types/node': 16.11.66
-  '@types/postcss-preset-env': ^7.7.0
+  '@types/postcss-preset-env': 7.7.0
   '@types/sortablejs': 1.15.0
   '@typescript-eslint/eslint-plugin': 5.40.0
   '@typescript-eslint/parser': 5.40.0
