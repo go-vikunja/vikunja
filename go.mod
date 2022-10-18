@@ -66,8 +66,8 @@ require (
 	golang.org/x/image v0.0.0-20221017200508-ffcb3fe7d1bf
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	golang.org/x/sync v0.1.0
-	golang.org/x/sys v0.0.0-20221013171732-95e765b1cc43
-	golang.org/x/term v0.0.0-20220919170432-7a66f970e087
+	golang.org/x/sys v0.1.0
+	golang.org/x/term v0.0.0-20221017184919-83659145692c
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/yaml.v3 v3.0.1
 	src.techknowlogick.com/xgo v1.5.1-0.20220906164532-735bfdfb90d9
