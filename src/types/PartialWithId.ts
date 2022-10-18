@@ -1,1 +1,1 @@
-export type PartialWithId<T extends { id: any }> = Pick<T, 'id'> & Omit<Partial<T>, 'id'>
+export type PartialWithId<T extends { id: unknown }> = Pick<T, 'id'> & Omit<Partial<T>, 'id'>

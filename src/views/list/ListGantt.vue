@@ -43,7 +43,6 @@
 
 <script setup lang="ts">
 import {computed, ref, toRefs} from 'vue'
-import Foo from '@/components/misc/flatpickr/Flatpickr.vue'
 import type Flatpickr from 'flatpickr'
 import {useI18n} from 'vue-i18n'
 import type {RouteLocationNormalized} from 'vue-router'
@@ -51,6 +50,7 @@ import type {RouteLocationNormalized} from 'vue-router'
 import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
 
+import Foo from '@/components/misc/flatpickr/Flatpickr.vue'
 import ListWrapper from './ListWrapper.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
@@ -58,7 +58,9 @@ import TaskForm from '@/components/tasks/TaskForm.vue'
 import {createAsyncComponent} from '@/helpers/createAsyncComponent'
 import {useGanttFilter} from './helpers/useGanttFilter'
 import {RIGHTS} from '@/constants/rights'
-import type { DateISO } from '@/types/DateISO'
+
+import type {DateISO} from '@/types/DateISO'
+import type {ITask} from '@/modelTypes/ITask'
 
 type Options = Flatpickr.Options.Options
 

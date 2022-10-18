@@ -1,5 +1,5 @@
-import type {DateISO} from "@/types/DateISO"
-import type {DateKebab} from "@/types/DateKebab"
+import type {DateISO} from '@/types/DateISO'
+import type {DateKebab} from '@/types/DateKebab'
 
 export function parseDateProp(kebabDate: DateKebab | undefined): string | undefined {
 	try {

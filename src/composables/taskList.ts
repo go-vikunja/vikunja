@@ -2,7 +2,7 @@ import {ref, shallowReactive, watch, computed} from 'vue'
 import {useRoute} from 'vue-router'
 
 import TaskCollectionService from '@/services/taskCollection'
-import type { ITask } from '@/modelTypes/ITask'
+import type {ITask} from '@/modelTypes/ITask'
 
 // FIXME: merge with DEFAULT_PARAMS in filters.vue
 export const getDefaultParams = () => ({
