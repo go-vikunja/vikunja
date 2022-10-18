@@ -137,42 +137,36 @@ const flatPickerConfig = computed<Options>(() => ({
 	@media screen and (max-width: $tablet) {
 		flex-direction: column;
 	}
-
-	.field {
-		margin-bottom: 0;
-		width: 33%;
-
-		&:not(:last-child) {
-			padding-right: .5rem;
-		}
-
-		@media screen and (max-width: $tablet) {
-			width: 100%;
-			max-width: 100%;
-			margin-top: .5rem;
-			padding-right: 0 !important;
-		}
-
-		&, .input {
-			font-size: .8rem;
-		}
-
-		.select, .select select {
-			height: auto;
-			width: 100%;
-			font-size: .8rem;
-		}
-
-
-		.label {
-			font-size: .9rem;
-		}
-	}
 }
 
-// vue-draggable overwrites
-.vdr.active::before {
-	display: none;
+.field {
+	margin-bottom: 0;
+	width: 33%;
+
+	&:not(:last-child) {
+		padding-right: .5rem;
+	}
+
+	@media screen and (max-width: $tablet) {
+		width: 100%;
+		max-width: 100%;
+		margin-top: .5rem;
+		padding-right: 0 !important;
+	}
+
+	&, .input {
+		font-size: .8rem;
+	}
+
+	.select, .select select {
+		height: auto;
+		width: 100%;
+		font-size: .8rem;
+	}
+
+	.label {
+		font-size: .9rem;
+	}
 }
 
 .link-share-view:not(.has-background) .card.gantt-options {
