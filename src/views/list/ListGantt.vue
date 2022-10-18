@@ -27,11 +27,14 @@
 			<div class="gantt-chart-container">
 				<card :padding="false" class="has-overflow">
 					<gantt-chart
-						:list-id="filters.listId"
-						:date-from="filters.dateFrom"
-						:date-to="filters.dateTo"
-						:show-tasks-without-dates="filters.showTasksWithoutDates"
+						:filters="filters"
+						:tasks="tasks"
+						:isLoading="isLoading"
+						:default-task-start-date="defaultTaskStartDate"
+						:default-task-end-date="defaultTaskEndDate"
+						@update:task="updateTask"
 					/>
+					<TaskForm v-if="canWrite" @create-task="addGanttTask" />
 				</card>
 			</div>
 		</template>
@@ -45,13 +48,17 @@ import type Flatpickr from 'flatpickr'
 import {useI18n} from 'vue-i18n'
 import type {RouteLocationNormalized} from 'vue-router'
 
+import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
 
 import ListWrapper from './ListWrapper.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+import TaskForm from '@/components/tasks/TaskForm.vue'
 
 import {createAsyncComponent} from '@/helpers/createAsyncComponent'
 import {useGanttFilter} from './helpers/useGanttFilter'
+import {RIGHTS} from '@/constants/rights'
+import type { DateISO } from '@/types/DateISO'
 
 type Options = Flatpickr.Options.Options
 
@@ -59,8 +66,30 @@ const GanttChart = createAsyncComponent(() => import('@/components/tasks/gantt-c
 
 const props = defineProps<{route: RouteLocationNormalized}>()
 
+const baseStore = useBaseStore()
+const canWrite = computed(() => baseStore.currentList.maxRight > RIGHTS.READ)
+
 const {route} = toRefs(props)
-const {filters} = useGanttFilter(route)
+const {
+	filters,
+	tasks,
+	isLoading,
+	addTask,
+	updateTask,
+} = useGanttFilter(route)
+
+const today = new Date(new Date().setHours(0,0,0,0))
+const defaultTaskStartDate: DateISO = new Date(today).toISOString()
+const defaultTaskEndDate: DateISO = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7, 23,59,0,0).toISOString()
+
+async function addGanttTask(title: ITask['title']) {
+	return await addTask({
+		title,
+		listId: filters.listId,
+		startDate: defaultTaskStartDate,
+		endDate: defaultTaskEndDate,
+	})
+}
 
 const flatPickerEl = ref<typeof Foo | null>(null)
 const flatPickerDateRange = computed<Date[]>({

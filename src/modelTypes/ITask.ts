@@ -12,6 +12,8 @@ import type {IRelationKind} from '@/types/IRelationKind'
 import type {IRepeatAfter} from '@/types/IRepeatAfter'
 import type {IRepeatMode} from '@/types/IRepeatMode'
 
+import type {PartialWithId} from '@/types/PartialWithId'
+
 export interface ITask extends IAbstract {
 	id: number
 	title: string
@@ -50,3 +52,5 @@ export interface ITask extends IAbstract {
 	listId: IList['id'] // Meta, only used when creating a new task
 	bucketId: IBucket['id']
 }
+
+export type ITaskPartialWithId = PartialWithId<ITask>
