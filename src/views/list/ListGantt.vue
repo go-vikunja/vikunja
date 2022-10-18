@@ -39,12 +39,11 @@
 </template>
 
 <script setup lang="ts">
-import {computed, reactive, ref, watch} from 'vue'
+import {computed, ref, toRefs} from 'vue'
 import Foo from '@/components/misc/flatpickr/Flatpickr.vue'
 import type Flatpickr from 'flatpickr'
 import {useI18n} from 'vue-i18n'
-import {useRoute, useRouter, type RouteLocationNormalized, type RouteLocationRaw} from 'vue-router'
-import cloneDeep from 'lodash.clonedeep'
+import type {RouteLocationNormalized} from 'vue-router'
 
 import {useAuthStore} from '@/stores/auth'
 
@@ -52,19 +51,7 @@ import ListWrapper from './ListWrapper.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 
 import {createAsyncComponent} from '@/helpers/createAsyncComponent'
-import {isoToKebabDate} from '@/helpers/time/isoToKebabDate'
-
-import type {IList} from '@/modelTypes/IList'
-import type {DateISO} from '@/types/DateISO'
-import type {DateKebab} from '@/types/DateKebab'
-
-// convenient internal filter object
-export interface GanttFilter {
-	listId: IList['id']
-	dateFrom: DateISO
-	dateTo: DateISO
-	showTasksWithoutDates: boolean
-}
+import {useGanttFilter} from './helpers/useGanttFilter'
 
 type Options = Flatpickr.Options.Options
 
@@ -72,115 +59,8 @@ const GanttChart = createAsyncComponent(() => import('@/components/tasks/gantt-c
 
 const props = defineProps<{route: RouteLocationNormalized}>()
 
-const router = useRouter()
-const route = useRoute()
-
-function parseDateProp(kebabDate: DateKebab | undefined): string | undefined {
-	try {
-
-		if (!kebabDate) {
-			throw new Error('No value')
-		}
-		const dateValues = kebabDate.split('-')
-		const [, monthString, dateString] = dateValues
-		const [year, month, date] = dateValues.map(val => Number(val))
-		const dateValuesAreValid = (
-			!Number.isNaN(year) &&
-			monthString.length >= 1 && monthString.length <= 2 &&
-			!Number.isNaN(month) &&
-			month >= 1 && month <= 12 &&
-			dateString.length >= 1 && dateString.length <= 31 &&
-			!Number.isNaN(date) &&
-			date >= 1 && date <= 31
-		)
-		if (!dateValuesAreValid) {
-			throw new Error('Invalid date values')
-		}
-		return new Date(year, month, date).toISOString()
-	} catch(e) {
-		// ignore nonsense route queries
-		return
-	}
-}
-
-function parseBooleanProp(booleanProp: string) {
-	return (booleanProp === 'false' || booleanProp === '0')
-		? false
-		:	Boolean(booleanProp)
-}
-
-const DEFAULT_SHOW_TASKS_WITHOUT_DATES = false
-
-const DEFAULT_DATEFROM_DAY_OFFSET = -15
-const DEFAULT_DATETO_DAY_OFFSET = +55
-
-const now = new Date()
-
-function getDefaultDateFrom() {
-	return new Date(now.getFullYear(), now.getMonth(), now.getDate() + DEFAULT_DATEFROM_DAY_OFFSET).toISOString()
-}
-
-function getDefaultDateTo() {
-	return new Date(now.getFullYear(), now.getMonth(), now.getDate() + DEFAULT_DATETO_DAY_OFFSET).toISOString()
-}
-
-function routeToFilter(route: RouteLocationNormalized): GanttFilter {
-	return {
-		listId: Number(route.params.listId as string),
-		dateFrom: parseDateProp(route.query.dateFrom as DateKebab) || getDefaultDateFrom(),
-		dateTo: parseDateProp(route.query.dateTo as DateKebab) || getDefaultDateTo(),
-		showTasksWithoutDates: parseBooleanProp(route.query.showTasksWithoutDates as string) || DEFAULT_SHOW_TASKS_WITHOUT_DATES,
-	}
-}
-
-function filterToRoute(filters: GanttFilter): RouteLocationRaw {
-	let query: Record<string, string> = {}
-	if (
-		filters.dateFrom !== getDefaultDateFrom() ||
-		filters.dateTo !== getDefaultDateTo()
-	) {
-		query = {
-			dateFrom: isoToKebabDate(filters.dateFrom),
-			dateTo: isoToKebabDate(filters.dateTo),
-		}
-	}
-
-	if (filters.showTasksWithoutDates) {
-		query.showTasksWithoutDates = String(filters.showTasksWithoutDates)
-	}
-
-	return {
-		name: 'list.gantt',
-		params: {listId: filters.listId},
-		query,
-	}
-}
-
-const filters: GanttFilter = reactive(routeToFilter(route))
-
-watch(() => cloneDeep(props.route), (route, oldRoute) => {
-	if (route.name !== oldRoute.name) {
-		return
-	}
-	const filterFullPath = router.resolve(filterToRoute(filters)).fullPath
-	if (filterFullPath === route.fullPath) {
-		return
-	}
-
-	Object.assign(filters, routeToFilter(route))
-})
-
-watch(
-	filters,
-	async () => {
-		const newRouteFullPath = router.resolve(filterToRoute(filters)).fullPath
-		if (newRouteFullPath !== route.fullPath) {
-			await router.push(newRouteFullPath)
-		}
-	},
-	// only apply new route after all filters have changed in component cycle
-	{flush: 'post'},
-)
+const {route} = toRefs(props)
+const {filters} = useGanttFilter(route)
 
 const flatPickerEl = ref<typeof Foo | null>(null)
 const flatPickerDateRange = computed<Date[]>({
