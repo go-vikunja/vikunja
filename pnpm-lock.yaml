@@ -20,7 +20,7 @@ specifiers:
   '@types/lodash.clonedeep': 4.5.7
   '@types/lodash.debounce': 4.0.7
   '@types/marked': 4.0.7
-  '@types/node': 16.11.66
+  '@types/node': 16.11.68
   '@types/postcss-preset-env': 7.7.0
   '@types/sortablejs': 1.15.0
   '@typescript-eslint/eslint-plugin': 5.40.1
@@ -141,7 +141,7 @@ devDependencies:
   '@types/flexsearch': 0.7.3
   '@types/lodash.debounce': 4.0.7
   '@types/marked': 4.0.7
-  '@types/node': 16.11.66
+  '@types/node': 16.11.68
   '@types/postcss-preset-env': 7.7.0
   '@typescript-eslint/eslint-plugin': 5.40.1_ukgdydjtebaxmxfqp5v5ulh64y
   '@typescript-eslint/parser': 5.40.1_z4bbprzjrhnsfa24uvmcbu7f5q
@@ -149,7 +149,7 @@ devDependencies:
   '@vitejs/plugin-vue': 3.1.2_vite@3.1.8+vue@3.2.41
   '@vue/eslint-config-typescript': 11.0.2_qsmcthc5ijamuzfurbvbpwqwnm
   '@vue/test-utils': 2.1.0_vue@3.2.41
-  '@vue/tsconfig': 0.1.3_@types+node@16.11.66
+  '@vue/tsconfig': 0.1.3_@types+node@16.11.68
   autoprefixer: 10.4.12_postcss@8.4.18
   browserslist: 4.21.4
   caniuse-lite: 1.0.30001420
@@ -159,7 +159,7 @@ devDependencies:
   eslint-plugin-vue: 9.6.0_eslint@8.25.0
   express: 4.18.2
   happy-dom: 7.5.12
-  netlify-cli: 12.0.9_@types+node@16.11.66
+  netlify-cli: 12.0.9_@types+node@16.11.68
   postcss: 8.4.18
   postcss-preset-env: 7.8.2_postcss@8.4.18
   rollup: 3.2.3
@@ -1876,7 +1876,7 @@ packages:
     resolution: {integrity: sha512-4wMPu9iN3/HL97QblBsBay3E1etIciR84izI3U+4iALY+JHCrI+a2jO0qbAZ/nxKoegypYEaiiqWXylm+/zfrw==}
     dev: true
 
-  /@netlify/build/28.0.0_@types+node@16.11.66:
+  /@netlify/build/28.0.0_@types+node@16.11.68:
     resolution: {integrity: sha512-yeCS2q6rrMftWdk1tDRCJY6BWI5OYgH0qKC+V3zetY1YAFAGY6UVPFmCWwsQBea7VzGa4RUBEUvqZpMBvl4ksg==}
     engines: {node: ^14.16.0 || >=16.0.0}
     hasBin: true
@@ -1930,7 +1930,7 @@ packages:
       strip-ansi: 7.0.1
       supports-color: 9.2.1
       tmp-promise: 3.0.3
-      ts-node: 10.8.1_gy6k6bedrshoc5b4zgt3uehy7q
+      ts-node: 10.8.1_qz5pgscfesxhf7rldkrewqhv5y
       typescript: 4.8.4
       update-notifier: 5.1.0
       uuid: 8.3.2
@@ -3015,8 +3015,8 @@ packages:
     resolution: {integrity: sha512-zCoCEMA+IPpsRkyCFBqew5vGb7r8RSiB3uwdu/map7uwLAfu1MTazW26/pUDWoNnF88vJz4W3U56i5gtXNqxGg==}
     dev: true
 
-  /@types/node/16.11.66:
-    resolution: {integrity: sha512-+xvMrGl3eAygKcf5jm+4zA4tbfEgmKM9o6/glTmN0RFVdu2VuFXMYYtRmuv3zTGCgAYMnEZLde3B7BTp+Yxcig==}
+  /@types/node/16.11.68:
+    resolution: {integrity: sha512-JkRpuVz3xCNCWaeQ5EHLR/6woMbHZz/jZ7Kmc63AkU+1HxnoUugzSWMck7dsR4DvNYX8jp9wTi9K7WvnxOIQZQ==}
     dev: true
 
   /@types/node/17.0.17:
@@ -3530,7 +3530,7 @@ packages:
       vue: 3.2.41
     dev: true
 
-  /@vue/tsconfig/0.1.3_@types+node@16.11.66:
+  /@vue/tsconfig/0.1.3_@types+node@16.11.68:
     resolution: {integrity: sha512-kQVsh8yyWPvHpb8gIc9l/HIDiiVUy1amynLNpCy8p+FoCiZXCo6fQos5/097MmnNZc9AtseDsCrfkhqCrJ8Olg==}
     peerDependencies:
       '@types/node': '*'
@@ -3538,7 +3538,7 @@ packages:
       '@types/node':
         optional: true
     dependencies:
-      '@types/node': 16.11.66
+      '@types/node': 16.11.68
     dev: true
 
   /@vueuse/core/9.3.1_vue@3.2.41:
@@ -9214,13 +9214,13 @@ packages:
     resolution: {integrity: sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==}
     dev: true
 
-  /netlify-cli/12.0.9_@types+node@16.11.66:
+  /netlify-cli/12.0.9_@types+node@16.11.68:
     resolution: {integrity: sha512-AbQZvKKkvQi0WV20G9kr7HlkY6yMnGeq00o9pK2Qox/owzjn4p6zq/a//SmgWuiqaIkXMOTlDd+3vwtfSPwywg==}
     engines: {node: ^14.16.0 || >=16.0.0}
     hasBin: true
     requiresBuild: true
     dependencies:
-      '@netlify/build': 28.0.0_@types+node@16.11.66
+      '@netlify/build': 28.0.0_@types+node@16.11.68
       '@netlify/config': 19.0.0
       '@netlify/edge-bundler': 2.7.0
       '@netlify/framework-info': 9.3.0
@@ -12177,7 +12177,7 @@ packages:
     resolution: {integrity: sha512-XrHUvV5HpdLmIj4uVMxHggLbFSZYIn7HEWsqePZcI50pco+MPqJ50wMGY794X7AOOhxOBAjbkqfAbEe/QMp2Lw==}
     dev: true
 
-  /ts-node/10.8.1_gy6k6bedrshoc5b4zgt3uehy7q:
+  /ts-node/10.8.1_qz5pgscfesxhf7rldkrewqhv5y:
     resolution: {integrity: sha512-Wwsnao4DQoJsN034wePSg5nZiw4YKXf56mPIAeD6wVmiv+RytNSWqc2f3fKvcUoV+Yn2+yocD71VOfQHbmVX4g==}
     hasBin: true
     peerDependencies:
@@ -12196,7 +12196,7 @@ packages:
       '@tsconfig/node12': 1.0.9
       '@tsconfig/node14': 1.0.1
       '@tsconfig/node16': 1.0.2
-      '@types/node': 16.11.66
+      '@types/node': 16.11.68
       acorn: 8.8.0
       acorn-walk: 8.2.0
       arg: 4.1.3
