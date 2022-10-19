@@ -1,33 +1,32 @@
 <template>
-	<div>
-		<Loading
-			v-if="props.isLoading && tasks.size || dayjsLanguageLoading"
-			class="gantt-container"
-		/>
-		<div class="gantt-container" v-else>
-			<GGanttChart
-				:date-format="DAYJS_ISO_DATE_FORMAT"
-				:chart-start="isoToKebabDate(filters.dateFrom)"
-				:chart-end="isoToKebabDate(filters.dateTo)"
-				precision="day"
-				bar-start="startDate"
-				bar-end="endDate"
-				:grid="true"
-				@dragend-bar="updateGanttTask"
-				@dblclick-bar="openTask"
-				:width="ganttChartWidth + 'px'"
-			>
-				<template #timeunit="{label, value}">
-					<div
-						class="timeunit-wrapper"
-						:class="{'today': dayIsToday(label)}"
-					>
-						<span>{{ value }}</span>
-						<span class="weekday">
-							{{ weekdayFromTimeLabel(label) }}
-						</span>
-					</div>
-				</template>
+	<Loading
+		v-if="props.isLoading && tasks.size || dayjsLanguageLoading"
+		class="gantt-container"
+	/>
+	<div class="gantt-container" v-else>
+		<GGanttChart
+			:date-format="DAYJS_ISO_DATE_FORMAT"
+			:chart-start="isoToKebabDate(filters.dateFrom)"
+			:chart-end="isoToKebabDate(filters.dateTo)"
+			precision="day"
+			bar-start="startDate"
+			bar-end="endDate"
+			:grid="true"
+			@dragend-bar="updateGanttTask"
+			@dblclick-bar="openTask"
+			:width="ganttChartWidth + 'px'"
+		>
+			<template #timeunit="{label, value}">
+				<div
+					class="timeunit-wrapper"
+					:class="{'today': dayIsToday(label)}"
+				>
+					<span>{{ value }}</span>
+					<span class="weekday">
+						{{ weekdayFromTimeLabel(label) }}
+					</span>
+				</div>
+			</template>
 			<GGanttRow
 				v-for="(bar, k) in ganttBars"
 				:key="k"
@@ -35,7 +34,6 @@
 				:bars="bar"
 			/>
 		</GGanttChart>
-		</div>
 	</div>
 </template>
 
@@ -181,7 +179,7 @@ function dayIsToday(label: string): boolean {
 <style lang="scss">
 // Not scoped because we need to style the elements inside the gantt chart component
 .g-gantt-chart {
-	width: 2000px;
+	width: max-content;
 }
 
 .g-gantt-row-label {
