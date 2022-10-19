@@ -1,9 +1,9 @@
 {
   "home": {
-    "welcomeNight": "Goede nacht {username}",
-    "welcomeMorning": "Goedemorgen {username}",
-    "welcomeDay": "Hallo {username}",
-    "welcomeEvening": "Goedenavond {username}",
+    "welcomeNight": "Good Night {username}!",
+    "welcomeMorning": "Good Morning {username}!",
+    "welcomeDay": "Hi {username}!",
+    "welcomeEvening": "Good Evening {username}!",
     "lastViewed": "Laatst bekeken",
     "list": {
       "newText": "Je kan een nieuwe lijst maken voor je nieuwe taken:",

@@ -1,9 +1,9 @@
 {
   "home": {
-    "welcomeNight": "Ngủ ngon nhé, {username}",
-    "welcomeMorning": "Chào buổi sáng, {username}",
-    "welcomeDay": "Hi {username}",
-    "welcomeEvening": "Chào buổi tối, {username}",
+    "welcomeNight": "Good Night {username}!",
+    "welcomeMorning": "Good Morning {username}!",
+    "welcomeDay": "Hi {username}!",
+    "welcomeEvening": "Good Evening {username}!",
     "lastViewed": "Xem gần đây",
     "list": {
       "newText": "Bạn có thể tạo một danh sách công việc mới cho mình:",

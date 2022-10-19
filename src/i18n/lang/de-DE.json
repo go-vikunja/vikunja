@@ -1,9 +1,9 @@
 {
   "home": {
-    "welcomeNight": "Gute Nacht, {username}",
-    "welcomeMorning": "Guten Morgen, {username}",
-    "welcomeDay": "Hallo, {username}",
-    "welcomeEvening": "Guten Abend, {username}",
+    "welcomeNight": "Good Night {username}!",
+    "welcomeMorning": "Good Morning {username}!",
+    "welcomeDay": "Hi {username}!",
+    "welcomeEvening": "Good Evening {username}!",
     "lastViewed": "Zuletzt angesehen",
     "list": {
       "newText": "Du kannst eine neue Liste für deine neuen Aufgaben erstellen:",
@@ -335,7 +335,7 @@
     "create": {
       "title": "Neuer Namespace",
       "titleRequired": "Bitte gebe einen Titel an.",
-      "explanation": "Ein Namespace ist eine Sammlung von Listen, die du teilen und zur Organisation verwenden kannst. Jede Liste zu einem Namespace.",
+      "explanation": "Ein Namespace ist eine Sammlung von Listen, die du teilen und zur Organisation verwenden kannst. Jede Liste gehört zu einem Namespace.",
       "tooltip": "Was ist ein Namespace?",
       "success": "Der Namespace wurde erfolgreich erstellt."
     },

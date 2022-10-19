@@ -1,9 +1,9 @@
 {
   "home": {
-    "welcomeNight": "Dobrou noc {username}",
-    "welcomeMorning": "Dobré ráno {username}",
-    "welcomeDay": "Ahoj {username}",
-    "welcomeEvening": "Dobrý večer {username}",
+    "welcomeNight": "Good Night {username}!",
+    "welcomeMorning": "Good Morning {username}!",
+    "welcomeDay": "Hi {username}!",
+    "welcomeEvening": "Good Evening {username}!",
     "lastViewed": "Naposledy zobrazeno",
     "list": {
       "newText": "Můžete vytvořit nový seznam pro své nové úkoly:",
