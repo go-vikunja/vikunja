@@ -109,7 +109,7 @@ watch(
 		ganttBars.value = []
 		tasks.value.forEach(t => ganttBars.value.push(transformTaskToGanttBar(t)))
 	},
-	{deep: true},
+	{deep: true, immediate: true},
 )
 
 function transformTaskToGanttBar(t: ITask) {
