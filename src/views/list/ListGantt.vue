@@ -125,7 +125,7 @@ const flatPickerConfig = computed<Options>(() => ({
 }))
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .gantt-chart-container {
 	padding-bottom: 1rem;
 }
@@ -138,6 +138,15 @@ const flatPickerConfig = computed<Options>(() => ({
 
 	@media screen and (max-width: $tablet) {
 		flex-direction: column;
+	}
+}
+
+:global(.link-share-view:not(.has-background)) .gantt-options {
+	border: none;
+	box-shadow: none;
+
+	.card-content {
+		padding: .5rem;
 	}
 }
 
@@ -160,7 +169,8 @@ const flatPickerConfig = computed<Options>(() => ({
 		font-size: .8rem;
 	}
 
-	.select, .select select {
+	.select,
+	.select select {
 		height: auto;
 		width: 100%;
 		font-size: .8rem;
@@ -168,15 +178,6 @@ const flatPickerConfig = computed<Options>(() => ({
 
 	.label {
 		font-size: .9rem;
-	}
-}
-
-.link-share-view:not(.has-background) .card.gantt-options {
-	border: none;
-	box-shadow: none;
-
-	.card-content {
-		padding: .5rem;
 	}
 }
 </style>
