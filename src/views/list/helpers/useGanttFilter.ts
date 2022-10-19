@@ -36,7 +36,8 @@ function getDefaultDateTo() {
 	return new Date(now.getFullYear(), now.getMonth(), now.getDate() + DEFAULT_DATETO_DAY_OFFSET).toISOString()
 }
 
-function routeToFilter(route: RouteLocationNormalized): GanttFilter {
+// FIXME: use zod for this
+function ganttRouteToFilter(route: RouteLocationNormalized): GanttFilter {
 	return {
 		listId: Number(route.params.listId as string),
 		dateFrom: parseDateProp(route.query.dateFrom as DateKebab) || getDefaultDateFrom(),
@@ -45,7 +46,8 @@ function routeToFilter(route: RouteLocationNormalized): GanttFilter {
 	}
 }
 
-function filterToRoute(filters: GanttFilter): RouteLocationRaw {
+// FIXME: use zod for this
+function ganttFilterToRoute(filters: GanttFilter): RouteLocationRaw {
 	let query: Record<string, string> = {}
 	if (
 		filters.dateFrom !== getDefaultDateFrom() ||
@@ -80,8 +82,8 @@ function ganttFiltersToApiParams(filters: GanttFilter): GetAllTasksParams {
 	}
 }
 
-export function useGanttFilter(route: Ref<RouteLocationNormalized>) {
-	const {filters} = useRouteFilter<GanttFilter>(route, routeToFilter, filterToRoute)
+export function useGanttFilter(route: Ref<RouteLocationNormalized>): ReturnType<typeof useRouteFilter> & ReturnType<typeof useGanttTaskList> {
+	const {filters} = useRouteFilter<GanttFilter>(route, ganttRouteToFilter, ganttFilterToRoute)
 
 	const {
 		tasks,

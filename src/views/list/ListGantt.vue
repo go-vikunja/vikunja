@@ -87,7 +87,7 @@ const defaultTaskEndDate: DateISO = new Date(today.getFullYear(), today.getMonth
 async function addGanttTask(title: ITask['title']) {
 	return await addTask({
 		title,
-		listId: filters.listId,
+		listId: filters.value.listId,
 		startDate: defaultTaskStartDate,
 		endDate: defaultTaskEndDate,
 	})
@@ -96,8 +96,8 @@ async function addGanttTask(title: ITask['title']) {
 const flatPickerEl = ref<typeof Foo | null>(null)
 const flatPickerDateRange = computed<Date[]>({
 	get: () => ([
-		new Date(filters.dateFrom),
-		new Date(filters.dateTo),
+		new Date(filters.value.dateFrom),
+		new Date(filters.value.dateTo),
 	]),
 	set(newVal) {
 		const [dateFrom, dateTo] = newVal.map((date) => date?.toISOString())
@@ -105,11 +105,11 @@ const flatPickerDateRange = computed<Date[]>({
 		// only set after whole range has been selected
 		if (!dateTo) return
 
-		Object.assign(filters, {dateFrom, dateTo})
+		Object.assign(filters.value, {dateFrom, dateTo})
 	},
 })
 
-const initialDateRange = [filters.dateFrom, filters.dateTo]
+const initialDateRange = [filters.value.dateFrom, filters.value.dateTo]
 
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()

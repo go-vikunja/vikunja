@@ -1,10 +1,10 @@
-import {computed, ref, shallowReactive, watchEffect} from 'vue'
+import {computed, ref, shallowReactive, watch, type Ref} from 'vue'
 import cloneDeep from 'lodash.clonedeep'
 
 import type {Filter} from '@/composables/useRouteFilter'
 import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
 
-import TaskCollectionService, { type GetAllTasksParams } from '@/services/taskCollection'
+import TaskCollectionService, {type GetAllTasksParams} from '@/services/taskCollection'
 import TaskService from '@/services/task'
 
 import TaskModel from '@/models/task'
@@ -12,7 +12,7 @@ import {error, success} from '@/message'
 
 // FIXME: unify with general `useTaskList`
 export function useGanttTaskList<F extends Filter>(
-	filters: F,
+	filters: Ref<F>,
 	filterToApiParams: (filters: F) => GetAllTasksParams,
 	options: {
 		loadAll?: boolean,
@@ -27,7 +27,7 @@ export function useGanttTaskList<F extends Filter>(
 	const tasks = ref<Map<ITask['id'], ITask>>(new Map())
 
 	async function fetchTasks(params: GetAllTasksParams, page = 1): Promise<ITask[]> {
-		const tasks = await taskCollectionService.getAll({listId: filters.listId}, params, page) as ITask[]
+		const tasks = await taskCollectionService.getAll({listId: filters.value.listId}, params, page) as ITask[]
 		if (options.loadAll && page < taskCollectionService.totalPages) {
 			const nextTasks = await fetchTasks(params, page + 1)
 			return tasks.concat(nextTasks)
@@ -35,15 +35,26 @@ export function useGanttTaskList<F extends Filter>(
 		return tasks
 	}
 
-	async function loadTasks(filters: F) {
-		const params: GetAllTasksParams = filterToApiParams(filters)
+	/**
+	 * Load and assign new tasks
+	 * Normally there is no need to trigger this manually
+	 */
+	async function loadTasks() {
+		const params: GetAllTasksParams = filterToApiParams(filters.value)
 
 		const loadedTasks = await fetchTasks(params)
 		tasks.value = new Map()
 		loadedTasks.forEach(t => tasks.value.set(t.id, t))
 	}
 
-	watchEffect(() => loadTasks(filters))
+	/**
+	 * Load tasks when filters change
+	 */
+	watch(
+		filters,
+		() => loadTasks(),
+		{immediate: true, deep: true},
+	)
 
 	async function addTask(task: Partial<ITask>) {
 		const newTask = await taskService.create(new TaskModel({...task}))
@@ -83,6 +94,8 @@ export function useGanttTaskList<F extends Filter>(
 		tasks,
 
 		isLoading,
+		loadTasks,
+
 		addTask,
 		updateTask,
 	}

@@ -1,4 +1,4 @@
-import {reactive, watch, type Ref} from 'vue'
+import {computed, ref, watch, type Ref} from 'vue'
 import {useRouter, type RouteLocationNormalized, type RouteLocationRaw} from 'vue-router'
 import cloneDeep from 'lodash.clonedeep'
 
@@ -11,26 +11,26 @@ export function useRouteFilter<F extends Filter = Filter>(
 	) {
 	const router = useRouter()
 
-	const filters: F = reactive(routeToFilter(route.value))
+	const filters = ref<F>(routeToFilter(route.value))
+
+	const routeFromFiltersFullPath = computed(() => router.resolve(filterToRoute(filters.value)).fullPath)
 
   watch(() => cloneDeep(route.value), (route, oldRoute) => {
-    if (route.name !== oldRoute.name) {
-      return
-    }
-    const filterFullPath = router.resolve(filterToRoute(filters)).fullPath
-    if (filterFullPath === route.fullPath) {
+    if (
+			route.name !== oldRoute.name ||
+			routeFromFiltersFullPath.value === route.fullPath
+		) {
       return
     }
   
-    Object.assign(filters, routeToFilter(route))
+    filters.value = routeToFilter(route)
   })
 
   watch(
     filters,
     async () => {
-      const newRouteFullPath = router.resolve(filterToRoute(filters)).fullPath
-      if (newRouteFullPath !== route.value.fullPath) {
-        await router.push(newRouteFullPath)
+      if (routeFromFiltersFullPath.value !== route.value.fullPath) {
+        await router.push(routeFromFiltersFullPath.value)
       }
     },
     // only apply new route after all filters have changed in component cycle
