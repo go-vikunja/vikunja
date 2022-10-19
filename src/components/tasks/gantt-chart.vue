@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<Loading
-			v-if="props.isLoading"
+			v-if="props.isLoading && tasks.size || dayjsLanguageLoading"
 			class="gantt-container"
 		/>
 		<div class="gantt-container" v-else>
