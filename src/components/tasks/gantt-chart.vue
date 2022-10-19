@@ -64,6 +64,7 @@ import {
 } from '@infectoone/vue-ganttastic'
 
 import Loading from '@/components/misc/loading.vue'
+import {MILLISECONDS_A_DAY} from '@/constants/date'
 
 export interface GanttChartProps {
 	isLoading: boolean,
@@ -94,7 +95,7 @@ const dateToDate = computed(() => new Date(new Date(filters.value.dateTo).setHou
 
 const DAY_WIDTH_PIXELS = 30
 const ganttChartWidth = computed(() => {
-	const dateDiff = Math.floor((dateToDate.value.valueOf() - dateFromDate.value.valueOf()) / (1000 * 60 * 60 * 24))
+	const dateDiff = Math.floor((dateToDate.value.valueOf() - dateFromDate.value.valueOf()) / MILLISECONDS_A_DAY)
 
 	return dateDiff * DAY_WIDTH_PIXELS
 })

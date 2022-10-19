@@ -6,6 +6,7 @@ import LabelService from './label'
 
 import {formatISO} from 'date-fns'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
+import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK, SECONDS_A_MONTH, SECONDS_A_YEAR} from '@/constants/date'
 
 const parseDate = date => {
 	if (date) {
@@ -73,19 +74,19 @@ export default class TaskService extends AbstractService<ITask> {
 		if (model.repeatAfter !== null && (model.repeatAfter.amount !== null || model.repeatAfter.amount !== 0)) {
 			switch (model.repeatAfter.type) {
 				case 'hours':
-					repeatAfterSeconds = model.repeatAfter.amount * 60 * 60
+					repeatAfterSeconds = model.repeatAfter.amount * SECONDS_A_HOUR
 					break
 				case 'days':
-					repeatAfterSeconds = model.repeatAfter.amount * 60 * 60 * 24
+					repeatAfterSeconds = model.repeatAfter.amount * SECONDS_A_DAY
 					break
 				case 'weeks':
-					repeatAfterSeconds = model.repeatAfter.amount * 60 * 60 * 24 * 7
+					repeatAfterSeconds = model.repeatAfter.amount * SECONDS_A_WEEK
 					break
 				case 'months':
-					repeatAfterSeconds = model.repeatAfter.amount * 60 * 60 * 24 * 30
+					repeatAfterSeconds = model.repeatAfter.amount * SECONDS_A_MONTH
 					break
 				case 'years':
-					repeatAfterSeconds = model.repeatAfter.amount * 60 * 60 * 24 * 365
+					repeatAfterSeconds = model.repeatAfter.amount * SECONDS_A_YEAR
 					break
 			}
 		}

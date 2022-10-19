@@ -14,6 +14,7 @@ import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import router from '@/router'
 import {useConfigStore} from '@/stores/config'
 import UserSettingsModel from '@/models/userSettings'
+import {MILLISECONDS_A_SECOND} from '@/constants/date'
 
 export interface AuthState {
 	authenticated: boolean,
@@ -133,8 +134,10 @@ export const useAuthStore = defineStore('auth', {
 			}
 		},
 
-		// Registers a new user and logs them in.
-		// Not sure if this is the right place to put the logic in, maybe a seperate js component would be better suited.
+		/**
+		 * Registers a new user and logs them in.
+		 * Not sure if this is the right place to put the logic in, maybe a seperate js component would be better suited. 
+		 */
 		async register(credentials) {
 			const HTTP = HTTPFactory()
 			this.setIsLoading(true)
@@ -184,14 +187,17 @@ export const useAuthStore = defineStore('auth', {
 			return response.data
 		},
 
-		// Populates user information from jwt token saved in local storage in store
+		/**
+		 * Populates user information from jwt token saved in local storage in store
+		 */
 		async checkAuth() {
-
+			const now = new Date()
+			const inOneMinute = new Date(new Date().setMinutes(now.getMinutes() + 1))
 			// This function can be called from multiple places at the same time and shortly after one another.
 			// To prevent hitting the api too frequently or race conditions, we check at most once per minute.
 			if (
 				this.lastUserInfoRefresh !== null &&
-				this.lastUserInfoRefresh > (new Date()).setMinutes((new Date()).getMinutes() + 1)
+				this.lastUserInfoRefresh > inOneMinute
 			) {
 				return
 			}
@@ -204,7 +210,7 @@ export const useAuthStore = defineStore('auth', {
 					.replace('-', '+')
 					.replace('_', '/')
 				const info = new UserModel(JSON.parse(atob(base64)))
-				const ts = Math.round((new Date()).getTime() / 1000)
+				const ts = Math.round((new Date()).getTime() / MILLISECONDS_A_SECOND)
 				authenticated = info.exp >= ts
 				this.setUser(info)
 
@@ -282,9 +288,8 @@ export const useAuthStore = defineStore('auth', {
 
 		/**
 		 * Try to verify the email
-		 * @returns {Promise<boolean>} if the email was successfully confirmed
 		 */
-		async verifyEmail() {
+		async verifyEmail(): Promise<boolean> {
 			const emailVerifyToken = localStorage.getItem('emailConfirmToken')
 			if (emailVerifyToken) {
 				const stopLoading = setModuleLoading(this)
@@ -325,7 +330,9 @@ export const useAuthStore = defineStore('auth', {
 			}
 		},
 
-		// Renews the api token and saves it to local storage
+		/**
+		 * Renews the api token and saves it to local storage
+		 */
 		renewToken() {
 			// FIXME: Timeout to avoid race conditions when authenticated as a user (=auth token in localStorage) and as a
 			// link share in another tab. Without the timeout both the token renew and link share auth are executed at

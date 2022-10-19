@@ -1,5 +1,5 @@
-
-import { PRIORITIES, type Priority } from '@/constants/priorities'
+import {PRIORITIES, type Priority} from '@/constants/priorities'
+import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_MONTH, SECONDS_A_WEEK, SECONDS_A_YEAR} from '@/constants/date'
 
 import type {ITask} from '@/modelTypes/ITask'
 import type {ILabel} from '@/modelTypes/ILabel'
@@ -10,10 +10,10 @@ import type {ISubscription} from '@/modelTypes/ISubscription'
 import type {IBucket} from '@/modelTypes/IBucket'
 
 import type {IRepeatAfter} from '@/types/IRepeatAfter'
+import type {IRelationKind} from '@/types/IRelationKind'
 import {TASK_REPEAT_MODES, type IRepeatMode} from '@/types/IRepeatMode'
 
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
-import type { IRelationKind } from '@/types/IRelationKind'
 
 import AbstractModel from './abstractModel'
 import LabelModel from './label'
@@ -34,6 +34,27 @@ export function	getHexColor(hexColor: string): string {
 	}
 
 	return hexColor
+}
+
+/**
+ * Parses `repeatAfterSeconds` into a usable js object.
+ */
+export function parseRepeatAfter(repeatAfterSeconds: number): IRepeatAfter {
+	let repeatAfter: IRepeatAfter = {type: 'hours', amount: repeatAfterSeconds / SECONDS_A_HOUR}
+
+	// if its dividable by 24, its something with days, otherwise hours
+	if (repeatAfterSeconds % SECONDS_A_DAY === 0) {
+		if (repeatAfterSeconds % SECONDS_A_WEEK === 0) {
+			repeatAfter = {type: 'weeks', amount: repeatAfterSeconds / SECONDS_A_WEEK}
+		} else if (repeatAfterSeconds % SECONDS_A_MONTH === 0) {
+			repeatAfter = {type:'months', amount: repeatAfterSeconds / SECONDS_A_MONTH}
+		} else if (repeatAfterSeconds % SECONDS_A_YEAR === 0) {
+			repeatAfter = {type: 'years', amount: repeatAfterSeconds / SECONDS_A_YEAR}
+		} else {
+			repeatAfter = {type: 'days', amount: repeatAfterSeconds / SECONDS_A_DAY}
+		}
+	}
+	return repeatAfter
 }
 
 export default class TaskModel extends AbstractModel<ITask> implements ITask {
@@ -95,7 +116,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		this.endDate = parseDateOrNull(this.endDate)
 
 		// Parse the repeat after into something usable
-		this.parseRepeatAfter()
+		this.repeatAfter = parseRepeatAfter(this.repeatAfter as number)
 
 		this.reminderDates = this.reminderDates.map(d => new Date(d))
 
@@ -150,33 +171,6 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	/////////////////
 	// Helper functions
 	///////////////
-
-	/**
-	 * Parses the "repeat after x seconds" from the task into a usable js object inside the task.
-	 * This function should only be called from the constructor.
-	 */
-	parseRepeatAfter() {
-		const repeatAfterHours = (this.repeatAfter as number / 60) / 60
-		this.repeatAfter = {type: 'hours', amount: repeatAfterHours}
-
-		// if its dividable by 24, its something with days, otherwise hours
-		if (repeatAfterHours % 24 === 0) {
-			const repeatAfterDays = repeatAfterHours / 24
-			if (repeatAfterDays % 7 === 0) {
-				this.repeatAfter.type = 'weeks'
-				this.repeatAfter.amount = repeatAfterDays / 7
-			} else if (repeatAfterDays % 30 === 0) {
-				this.repeatAfter.type = 'months'
-				this.repeatAfter.amount = repeatAfterDays / 30
-			} else if (repeatAfterDays % 365 === 0) {
-				this.repeatAfter.type = 'years'
-				this.repeatAfter.amount = repeatAfterDays / 365
-			} else {
-				this.repeatAfter.type = 'days'
-				this.repeatAfter.amount = repeatAfterDays
-			}
-		}
-	}
 
 	async cancelScheduledNotifications() {
 		if (!SUPPORTS_TRIGGERED_NOTIFICATION) {
