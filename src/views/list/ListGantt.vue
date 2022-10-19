@@ -64,7 +64,7 @@ import type {ITask} from '@/modelTypes/ITask'
 
 type Options = Flatpickr.Options.Options
 
-const GanttChart = createAsyncComponent(() => import('@/components/tasks/gantt-chart.vue'))
+const GanttChart = createAsyncComponent(() => import('@/components/tasks/GanttChart.vue'))
 
 const props = defineProps<{route: RouteLocationNormalized}>()
 
