@@ -1,9 +1,9 @@
 {
   "home": {
-    "welcomeNight": "Good Night {username}!",
-    "welcomeMorning": "Good Morning {username}!",
-    "welcomeDay": "Hi {username}!",
-    "welcomeEvening": "Good Evening {username}!",
+    "welcomeNight": "Boa Noite {username}!",
+    "welcomeMorning": "Bom Dia {username}!",
+    "welcomeDay": "Olá {username}!",
+    "welcomeEvening": "Boa Tarde {username}!",
     "lastViewed": "Visto recentemente",
     "list": {
       "newText": "Podes criar uma nova lista para as tuas novas tarefas:",
