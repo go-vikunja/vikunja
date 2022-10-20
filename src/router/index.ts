@@ -481,9 +481,18 @@ export function getAuthForRoute(route: RouteLocation) {
 			'openid.auth',
 		].includes(route.name as string) &&
 		localStorage.getItem('passwordResetToken') === null &&
-		localStorage.getItem('emailConfirmToken') === null
+		localStorage.getItem('emailConfirmToken') === null &&
+		!(route.name === 'home' && typeof route.query.userPasswordReset !== 'undefined')
 	) {
 		saveLastVisited(route.name as string, route.params)
+		return {name: 'user.login'}
+	}
+	
+	if(localStorage.getItem('passwordResetToken') !== null && route.name !== 'user.password-reset.reset') {
+		return {name: 'user.password-reset.reset'}
+	}
+	
+	if(localStorage.getItem('emailConfirmToken') !== null && route.name !== 'user.login') {
 		return {name: 'user.login'}
 	}
 }

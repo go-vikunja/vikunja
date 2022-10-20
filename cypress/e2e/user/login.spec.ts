@@ -55,4 +55,9 @@ context('Login', () => {
 
 		testAndAssertFailed(fixture)
 	})
+	
+	it('Should redirect to /login when no user is logged in', () => {
+		cy.visit('/')
+		cy.url().should('include', '/login')
+	})
 })

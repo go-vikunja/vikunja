@@ -7,7 +7,7 @@
 			<message variant="success">
 				{{ successMessage }}
 			</message>
-			<x-button :to="{ name: 'user.login' }">
+			<x-button :to="{ name: 'user.login' }" class="mt-4">
 				{{ $t('user.auth.login') }}
 			</x-button>
 		</div>
@@ -34,6 +34,7 @@
 <script setup lang="ts">
 import {ref, reactive} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {useRouter} from 'vue-router'
 
 import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
@@ -41,6 +42,7 @@ import Message from '@/components/misc/message.vue'
 import Password from '@/components/input/password.vue'
 
 const {t} = useI18n({useScope: 'global'})
+const router = useRouter()
 
 const credentials = reactive({
 	password: '',
@@ -59,7 +61,7 @@ async function submit() {
 
 	const passwordReset = new PasswordResetModel({newPassword: credentials.password})
 	try {
-		const {message} = passwordResetService.resetPassword(passwordReset)
+		const {message} = await passwordResetService.resetPassword(passwordReset)
 		successMessage.value = message
 		localStorage.removeItem('passwordResetToken')
 	} catch (e) {

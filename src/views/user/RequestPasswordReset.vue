@@ -7,7 +7,7 @@
 			<message variant="success">
 				{{ $t('user.auth.resetPasswordSuccess') }}
 			</message>
-			<x-button :to="{ name: 'user.login' }">
+			<x-button :to="{ name: 'user.login' }" class="mt-4">
 				{{ $t('user.auth.login') }}
 			</x-button>
 		</div>
