@@ -482,7 +482,7 @@ export function getAuthForRoute(route: RouteLocation) {
 		].includes(route.name as string) &&
 		localStorage.getItem('passwordResetToken') === null &&
 		localStorage.getItem('emailConfirmToken') === null &&
-		!(route.name === 'home' && typeof route.query.userPasswordReset !== 'undefined')
+		!(route.name === 'home' && (typeof route.query.userPasswordReset !== 'undefined' || typeof route.query.userEmailConfirm !== 'undefined'))
 	) {
 		saveLastVisited(route.name as string, route.params)
 		return {name: 'user.login'}

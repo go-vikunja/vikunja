@@ -288,11 +288,11 @@ export const useAuthStore = defineStore('auth', {
 				const stopLoading = setModuleLoading(this)
 				try {
 					await HTTPFactory().post('user/confirm', {token: emailVerifyToken})
-					localStorage.removeItem('emailConfirmToken')
 					return true
 				} catch(e) {
 					throw new Error(e.response.data.message)
 				} finally {
+					localStorage.removeItem('emailConfirmToken')
 					stopLoading()
 				}
 			}
