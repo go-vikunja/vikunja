@@ -33,16 +33,11 @@
 
 <script setup lang="ts">
 import {ref, reactive} from 'vue'
-import {useI18n} from 'vue-i18n'
-import {useRouter} from 'vue-router'
 
 import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
 import Message from '@/components/misc/message.vue'
 import Password from '@/components/input/password.vue'
-
-const {t} = useI18n({useScope: 'global'})
-const router = useRouter()
 
 const credentials = reactive({
 	password: '',
