@@ -13,35 +13,8 @@
 		</div>
 		<form @submit.prevent="submit" id="form" v-if="!successMessage">
 			<div class="field">
-				<label class="label" for="password1">{{ $t('user.auth.password') }}</label>
-				<div class="control">
-					<input
-						class="input"
-						id="password1"
-						name="password1"
-						:placeholder="$t('user.auth.passwordPlaceholder')"
-						required
-						type="password"
-						autocomplete="new-password"
-						v-focus
-						v-model="credentials.password"/>
-				</div>
-			</div>
-			<div class="field">
-				<label class="label" for="password2">{{ $t('user.auth.passwordRepeat') }}</label>
-				<div class="control">
-					<input
-						class="input"
-						id="password2"
-						name="password2"
-						:placeholder="$t('user.auth.passwordPlaceholder')"
-						required
-						type="password"
-						autocomplete="new-password"
-						v-model="credentials.password2"
-						@keyup.enter="submit"
-					/>
-				</div>
+				<label class="label" for="password">{{ $t('user.auth.password') }}</label>
+				<Password @submit="submit" @update:modelValue="v => credentials.password = v"/>
 			</div>
 
 			<div class="field is-grouped">
@@ -65,12 +38,12 @@ import {useI18n} from 'vue-i18n'
 import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
 import Message from '@/components/misc/message.vue'
+import Password from '@/components/input/password.vue'
 
 const {t} = useI18n({useScope: 'global'})
 
 const credentials = reactive({
 	password: '',
-	password2: '',
 })
 
 const passwordResetService = reactive(new PasswordResetService())
@@ -79,9 +52,8 @@ const successMessage = ref('')
 
 async function submit() {
 	errorMsg.value = ''
-
-	if (credentials.password2 !== credentials.password) {
-		errorMsg.value = t('user.auth.passwordsDontMatch')
+	
+	if(credentials.password === '') {
 		return
 	}
 
