@@ -77,7 +77,7 @@ specifiers:
   vue: 3.2.41
   vue-advanced-cropper: 2.8.6
   vue-drag-resize: 2.0.3
-  vue-flatpickr-component: 9.0.8
+  vue-flatpickr-component: 10.0.0
   vue-i18n: 9.2.2
   vue-router: 4.1.5
   vue-tsc: 1.0.8
@@ -125,7 +125,7 @@ dependencies:
   vue: 3.2.41
   vue-advanced-cropper: 2.8.6_vue@3.2.41
   vue-drag-resize: 2.0.3
-  vue-flatpickr-component: 9.0.8_vue@3.2.41
+  vue-flatpickr-component: 10.0.0_vue@3.2.41
   vue-i18n: 9.2.2_vue@3.2.41
   vue-router: 4.1.5_vue@3.2.41
   workbox-precaching: 6.5.4
@@ -12710,11 +12710,11 @@ packages:
       - supports-color
     dev: true
 
-  /vue-flatpickr-component/9.0.8_vue@3.2.41:
-    resolution: {integrity: sha512-wuvG3ijNkGwUKP+F5l4Jai5za46pI7T2AQ+boPY0QB2Y4EP6hcaubfaYwMqrs4w69u8JCnqsKqGg+mWpqF5j3A==}
-    engines: {node: '>=12.13.0'}
+  /vue-flatpickr-component/10.0.0_vue@3.2.41:
+    resolution: {integrity: sha512-1l8DYSLwoyn+LoRz4lia0TcQQtXFAZpd99SiKYf4RO6f7JSIVX6PMYyGwEKpWZBJfxGBCZpTgeyMLDZwFFYyZg==}
+    engines: {node: '>=14.13.0'}
     peerDependencies:
-      vue: ^3.0.0
+      vue: ^3.2.0
     dependencies:
       flatpickr: 4.6.13
       vue: 3.2.41
