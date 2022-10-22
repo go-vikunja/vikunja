@@ -43,7 +43,7 @@
       "confirmEmailSuccess": "You successfully confirmed your email! You can log in now.",
       "totpTitle": "Two Factor Authentication Code",
       "totpPlaceholder": "e.g. 123456",
-      "login": "Login",
+      "login": "Iniciar sesión",
       "createAccount": "Create account",
       "loginWith": "Log in with {provider}",
       "authenticating": "Authenticating…",
