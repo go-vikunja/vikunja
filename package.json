@@ -23,7 +23,7 @@
     "@fortawesome/free-solid-svg-icons": "6.2.0",
     "@fortawesome/vue-fontawesome": "3.0.1",
     "@github/hotkey": "2.0.1",
-    "@infectoone/vue-ganttastic": "./vendor/infectoone-vue-ganttastic-2.1.1.tgz",
+    "@infectoone/vue-ganttastic": "2.1.2",
     "@kyvg/vue3-notification": "2.4.1",
     "@sentry/tracing": "7.17.0",
     "@sentry/vue": "7.17.0",

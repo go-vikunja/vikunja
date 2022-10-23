@@ -10,7 +10,7 @@ specifiers:
   '@fortawesome/free-solid-svg-icons': 6.2.0
   '@fortawesome/vue-fontawesome': 3.0.1
   '@github/hotkey': 2.0.1
-  '@infectoone/vue-ganttastic': ./vendor/infectoone-vue-ganttastic-2.1.1.tgz
+  '@infectoone/vue-ganttastic': 2.1.2
   '@kyvg/vue3-notification': 2.4.1
   '@rushstack/eslint-patch': 1.2.0
   '@sentry/tracing': 7.16.0
@@ -94,7 +94,7 @@ dependencies:
   '@fortawesome/free-solid-svg-icons': 6.2.0
   '@fortawesome/vue-fontawesome': 3.0.1_lteq7vqmz6gtgcgatkvrcm56su
   '@github/hotkey': 2.0.1
-  '@infectoone/vue-ganttastic': file:vendor/infectoone-vue-ganttastic-2.1.1.tgz_dayjs@1.11.5+vue@3.2.41
+  '@infectoone/vue-ganttastic': 2.1.2_dayjs@1.11.5+vue@3.2.41
   '@kyvg/vue3-notification': 2.4.1_vue@3.2.41
   '@sentry/tracing': 7.16.0
   '@sentry/vue': 7.16.0_vue@3.2.41
@@ -1761,6 +1761,16 @@ packages:
   /@import-maps/resolve/1.0.1:
     resolution: {integrity: sha512-tWZNBIS1CoekcwlMuyG2mr0a1Wo5lb5lEHwwWvZo+5GLgr3e9LLDTtmgtCWEwBpXMkxn9D+2W9j2FY6eZQq0tA==}
     dev: true
+
+  /@infectoone/vue-ganttastic/2.1.2_dayjs@1.11.5+vue@3.2.41:
+    resolution: {integrity: sha512-xYjhA1bUUSVNjbFmM5eeN0mdKdDg7LWMO9RSh+9fFqfnqu24VwazTumHBYQZFGvGfdJW0DE7ZN3tbLhL9vkYlA==}
+    peerDependencies:
+      dayjs: ^1.11.5
+      vue: ^3.2.40
+    dependencies:
+      dayjs: 1.11.5
+      vue: 3.2.41
+    dev: false
 
   /@intlify/core-base/9.2.2:
     resolution: {integrity: sha512-JjUpQtNfn+joMbrXvpR4hTF8iJQ2sEFzzK3KIESOx+f+uwIjgw20igOyaIdhfsVVBCds8ZM64MoeNSx+PHQMkA==}
@@ -13293,16 +13303,3 @@ packages:
       compress-commons: 4.1.1
       readable-stream: 3.6.0
     dev: true
-
-  file:vendor/infectoone-vue-ganttastic-2.1.1.tgz_dayjs@1.11.5+vue@3.2.41:
-    resolution: {integrity: sha512-FCOa5sioj/e6k9QXzCHHt0Qydy733BdQMrCcjz4Dag5e7lBFPAoL1EgAA+JfmL4ZXldVpukjnmNYEPWdeIaftQ==, tarball: file:vendor/infectoone-vue-ganttastic-2.1.1.tgz}
-    id: file:vendor/infectoone-vue-ganttastic-2.1.1.tgz
-    name: '@infectoone/vue-ganttastic'
-    version: 2.1.1
-    peerDependencies:
-      dayjs: ^1.11.5
-      vue: ^3.2.40
-    dependencies:
-      dayjs: 1.11.5
-      vue: 3.2.41
-    dev: false
