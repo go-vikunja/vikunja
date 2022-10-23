@@ -28,6 +28,7 @@ import {useLabelStore} from '@/stores/labels'
 import {useListStore} from '@/stores/lists'
 import {useAttachmentStore} from '@/stores/attachments'
 import {useKanbanStore} from '@/stores/kanban'
+import {useBaseStore} from '@/stores/base'
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
 function findPropertyByValue(object, key, value) {
@@ -105,6 +106,7 @@ export const useTaskStore = defineStore('task', {
 			const cancel = setModuleLoading(this)
 			try {
 				this.tasks = await taskService.getAll({}, params)
+				useBaseStore().setHasTasks(this.tasks.length > 0)
 				return this.tasks
 			} finally {
 				cancel()

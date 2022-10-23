@@ -128,4 +128,24 @@ describe('Home Page Task Overview', () => {
 			.last()
 			.should('contain.text', newTaskTitle)
 	})
+	
+	it('Should show the cta buttons for new list when there are no tasks', () => {
+		TaskFactory.truncate()
+		
+		cy.visit('/')
+		
+		cy.get('.home.app-content .content')
+			.should('contain.text', 'You can create a new list for your new tasks:')
+			.should('contain.text', 'Or import your lists and tasks from other services into Vikunja:')
+	})
+	
+	it('Should not show the cta buttons for new list when there are tasks', () => {
+		seedTasks()
+
+		cy.visit('/')
+
+		cy.get('.home.app-content .content')
+			.should('not.contain.text', 'You can create a new list for your new tasks:')
+			.should('not.contain.text', 'Or import your lists and tasks from other services into Vikunja:')
+	})
 })
