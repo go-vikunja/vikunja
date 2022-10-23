@@ -11,6 +11,7 @@ import type {IList} from '@/modelTypes/IList'
 
 export interface RootStoreState {
 	loading: boolean,
+	ready: boolean,
 
 	currentList: IList | null,
 	background: string,
@@ -26,6 +27,7 @@ export interface RootStoreState {
 export const useBaseStore = defineStore('base', {
 	state: () : RootStoreState => ({
 		loading: false,
+		ready: false,
 
 		// This is used to highlight the current list in menu for all list related views
 		currentList: new ListModel({
@@ -95,6 +97,10 @@ export const useBaseStore = defineStore('base', {
 		setLogoVisible(visible: boolean) {
 			this.logoVisible = visible
 		},
+		
+		setReady(ready: boolean) {
+			this.ready = ready
+		},
 
 		async handleSetCurrentList({list, forceUpdate = false} : {list: IList | null, forceUpdate: boolean}) {
 			if (list === null) {
@@ -133,7 +139,8 @@ export const useBaseStore = defineStore('base', {
 
 		async loadApp() {
 			await checkAndSetApiUrl(window.API_URL)
-			useAuthStore().checkAuth()
+			await useAuthStore().checkAuth()
+			this.ready = true
 		},
 	},
 })

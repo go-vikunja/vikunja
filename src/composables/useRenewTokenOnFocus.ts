@@ -16,7 +16,7 @@ export function useRenewTokenOnFocus() {
 	authStore.renewToken()
 
 	// Check if the token is still valid if the window gets focus again to maybe renew it
-	useEventListener('focus', () => {
+	useEventListener('focus', async () => {
 		if (!authenticated.value) {
 			return
 		}
@@ -26,8 +26,8 @@ export function useRenewTokenOnFocus() {
 		// If the token expiry is negative, it is already expired and we have no choice but to redirect
 		// the user to the login page
 		if (expiresIn < 0) {
-			authStore.checkAuth()
-			router.push({name: 'user.login'})
+			await authStore.checkAuth()
+			await router.push({name: 'user.login'})
 			return
 		}
 

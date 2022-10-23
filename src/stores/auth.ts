@@ -117,7 +117,7 @@ export const useAuthStore = defineStore('auth', {
 				saveToken(response.data.token, true)
 
 				// Tell others the user is autheticated
-				this.checkAuth()
+				await this.checkAuth()
 			} catch (e) {
 				if (
 					e.response &&
@@ -168,7 +168,7 @@ export const useAuthStore = defineStore('auth', {
 				saveToken(response.data.token, true)
 
 				// Tell others the user is autheticated
-				this.checkAuth()
+				await this.checkAuth()
 			} finally {
 				this.setIsLoading(false)
 			}
@@ -180,12 +180,12 @@ export const useAuthStore = defineStore('auth', {
 				password: password,
 			})
 			saveToken(response.data.token, false)
-			this.checkAuth()
+			await this.checkAuth()
 			return response.data
 		},
 
 		// Populates user information from jwt token saved in local storage in store
-		checkAuth() {
+		async checkAuth() {
 
 			// This function can be called from multiple places at the same time and shortly after one another.
 			// To prevent hitting the api too frequently or race conditions, we check at most once per minute.
@@ -209,7 +209,7 @@ export const useAuthStore = defineStore('auth', {
 				this.setUser(info)
 
 				if (authenticated) {
-					this.refreshUserInfo()
+					await this.refreshUserInfo()
 				}
 			}
 
@@ -218,6 +218,8 @@ export const useAuthStore = defineStore('auth', {
 				this.setUser(null)
 				this.redirectToProviderIfNothingElseIsEnabled()
 			}
+			
+			return Promise.resolve(authenticated)
 		},
 
 		redirectToProviderIfNothingElseIsEnabled() {
@@ -335,22 +337,22 @@ export const useAuthStore = defineStore('auth', {
 
 				try {
 					await refreshToken(!this.isLinkShareAuth)
-					this.checkAuth()
+					await this.checkAuth()
 				} catch (e) {
 					// Don't logout on network errors as the user would then get logged out if they don't have
 					// internet for a short period of time - such as when the laptop is still reconnecting
 					if (e?.request?.status) {
-						this.logout()
+						await this.logout()
 					}
 				}
 			}, 5000)
 		},
 
-		logout() {
+		async logout() {
 			removeToken()
 			window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
-			router.push({name: 'user.login'})
-			this.checkAuth()
+			await router.push({name: 'user.login'})
+			await this.checkAuth()
 		},
 	},
 })

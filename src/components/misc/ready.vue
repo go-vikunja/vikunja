@@ -61,7 +61,7 @@ const route = useRoute()
 
 const baseStore = useBaseStore()
 
-const ready = ref(false)
+const ready = computed(() => baseStore.ready)
 const online = useOnline()
 
 const error = ref('')
@@ -70,11 +70,11 @@ const showLoading = computed(() => !ready.value && error.value === '')
 async function load() {
 	try {
 		await baseStore.loadApp()
-		const redirectTo = getAuthForRoute(route)
+		baseStore.setReady(true)
+		const redirectTo = await getAuthForRoute(route)
 		if (typeof redirectTo !== 'undefined') {
 			await router.push(redirectTo)
 		}
-		ready.value = true
 	} catch (e: unknown) {
 		error.value = String(e)
 	}

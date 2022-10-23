@@ -9,6 +9,7 @@ import {setTitle} from '@/helpers/setTitle'
 
 import {useListStore} from '@/stores/lists'
 import {useAuthStore} from '@/stores/auth'
+import {useBaseStore} from '@/stores/base'
 
 import HomeComponent from '../views/Home.vue'
 import NotFoundComponent from '../views/404.vue'
@@ -464,9 +465,16 @@ const router = createRouter({
 	],
 })
 
-export function getAuthForRoute(route: RouteLocation) {
+export async function getAuthForRoute(route: RouteLocation) {
 	const authStore = useAuthStore()
 	if (authStore.authUser || authStore.authLinkShare) {
+		return
+	}
+	
+	const baseStore = useBaseStore()
+	// When trying this before the current user was fully loaded we might get a flash of the login screen 
+	// in the user shell. To make shure this does not happen we check if everything is ready before trying.
+	if (!baseStore.ready) {
 		return
 	}
 
@@ -497,7 +505,7 @@ export function getAuthForRoute(route: RouteLocation) {
 	}
 }
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
 	return getAuthForRoute(to)
 })
 
