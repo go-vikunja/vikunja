@@ -782,8 +782,6 @@ async function setPercentDone(percentDone: number) {
 $flash-background-duration: 750ms;
 
 .task-view {
-  // This is a workaround to hide the llama background from the top on the task detail page
-  margin-top: -1.5rem;
   padding: 1rem;
   background-color: var(--site-background);
 
