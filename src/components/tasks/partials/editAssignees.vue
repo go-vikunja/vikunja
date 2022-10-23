@@ -1,30 +1,25 @@
 <template>
-	<div
-		tabindex="-1"
-		@focus="focus"
+	<Multiselect
+		:loading="listUserService.loading"
+		:placeholder="$t('task.assignee.placeholder')"
+		:multiple="true"
+		@search="findUser"
+		:search-results="foundUsers"
+		@select="addAssignee"
+		label="name"
+		:select-placeholder="$t('task.assignee.selectPlaceholder')"
+		v-model="assignees"
+		ref="userSearchInputRef"
 	>
-		<Multiselect
-			:loading="listUserService.loading"
-			:placeholder="$t('task.assignee.placeholder')"
-			:multiple="true"
-			@search="findUser"
-			:search-results="foundUsers"
-			@select="addAssignee"
-			label="name"
-			:select-placeholder="$t('task.assignee.selectPlaceholder')"
-			v-model="assignees"
-			ref="multiselect"
-		>
-			<template #tag="{item: user}">
-				<span class="assignee">
-					<user :avatar-size="32" :show-username="false" :user="user"/>
-					<BaseButton @click="removeAssignee(user)" class="remove-assignee" v-if="!disabled">
-						<icon icon="times"/>
-					</BaseButton>
-				</span>
-			</template>
-		</Multiselect>
-	</div>
+		<template #tag="{item: user}">
+			<span class="assignee">
+				<user :avatar-size="32" :show-username="false" :user="user"/>
+				<BaseButton @click="removeAssignee(user)" class="remove-assignee" v-if="!disabled">
+					<icon icon="times"/>
+				</BaseButton>
+			</span>
+		</template>
+	</Multiselect>
 </template>
 
 <script setup lang="ts">
@@ -41,7 +36,7 @@ import {success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
 
 import type {IUser} from '@/modelTypes/IUser'
-import { getDisplayName } from '@/models/user'
+import {getDisplayName} from '@/models/user'
 
 const props = defineProps({
 	taskId: {
@@ -129,12 +124,6 @@ async function findUser(query: string) {
 
 function clearAllFoundUsers() {
 	foundUsers.value = []
-}
-
-const multiselect = ref()
-
-function focus() {
-	multiselect.value.focus()
 }
 </script>
 
