@@ -104,7 +104,6 @@
 <script setup lang="ts">
 import {computed, onBeforeMount, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useRouter} from 'vue-router'
 import {useDebounceFn} from '@vueuse/core'
 
 import Message from '@/components/misc/message.vue'
@@ -112,19 +111,19 @@ import Password from '@/components/input/password.vue'
 
 import {getErrorText} from '@/message'
 import {redirectToProvider} from '@/helpers/redirectToProvider'
-import {getLastVisited, clearLastVisited} from '@/helpers/saveLastVisited'
+import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 
 import {useTitle} from '@/composables/useTitle'
 
-const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('user.auth.login'))
 
 const authStore = useAuthStore()
 const configStore = useConfigStore()
+const {redirectIfSaved} = useRedirectToLastVisited()
 
 const registrationEnabled = computed(() => configStore.registrationEnabled)
 const localAuthEnabled = computed(() => configStore.auth.local.enabled)
@@ -151,16 +150,7 @@ onBeforeMount(() => {
 
 	// Check if the user is already logged in, if so, redirect them to the homepage
 	if (authenticated.value) {
-		const last = getLastVisited()
-		if (last !== null) {
-			router.push({
-				name: last.name,
-				params: last.params,
-			})
-			clearLastVisited()
-		} else {
-			router.push({name: 'home'})
-		}
+		redirectIfSaved()
 	}
 })
 

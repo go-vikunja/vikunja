@@ -484,7 +484,7 @@ export function getAuthForRoute(route: RouteLocation) {
 		localStorage.getItem('emailConfirmToken') === null &&
 		!(route.name === 'home' && (typeof route.query.userPasswordReset !== 'undefined' || typeof route.query.userEmailConfirm !== 'undefined'))
 	) {
-		saveLastVisited(route.name as string, route.params)
+		saveLastVisited(route.name as string, route.params, route.query)
 		return {name: 'user.login'}
 	}
 	

@@ -18,19 +18,19 @@ export default { name: 'Auth' }
 
 <script setup lang="ts">
 import {ref, computed, onMounted} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
+import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import {getErrorText} from '@/message'
 import Message from '@/components/misc/message.vue'
-import {clearLastVisited, getLastVisited} from '@/helpers/saveLastVisited'
+import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 
 import {useAuthStore} from '@/stores/auth'
 
 const {t} = useI18n({useScope: 'global'})
 
-const router = useRouter()
 const route = useRoute()
+const {redirectIfSaved} = useRedirectToLastVisited()
 
 const authStore = useAuthStore()
 
@@ -74,16 +74,7 @@ async function authenticateWithCode() {
 			provider: route.params.provider,
 			code: route.query.code,
 		})
-		const last = getLastVisited()
-		if (last !== null) {
-			router.push({
-				name: last.name,
-				params: last.params,
-			})
-			clearLastVisited()
-		} else {
-			router.push({name: 'home'})
-		}
+		redirectIfSaved()
 	} catch(e) {
 		const err = getErrorText(e)
 		errorMessage.value = typeof err[1] !== 'undefined' ? err[1] : err[0]

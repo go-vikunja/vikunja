@@ -1,7 +1,7 @@
 const LAST_VISITED_KEY = 'lastVisited'
 
-export const saveLastVisited = (name: string, params: object) => {
-	localStorage.setItem(LAST_VISITED_KEY, JSON.stringify({name, params}))
+export const saveLastVisited = (name: string, params: object, query: object) => {
+	localStorage.setItem(LAST_VISITED_KEY, JSON.stringify({name, params, query}))
 }
 
 export const getLastVisited = () => {
