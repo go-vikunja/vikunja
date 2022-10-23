@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<Loading
-			v-if="props.isLoading || dayjsLanguageLoading"
+			v-if="props.isLoading"
 			class="gantt-container"
 		/>
 		<div class="gantt-container" v-else>
@@ -46,7 +46,6 @@ import {format, parse} from 'date-fns'
 import dayjs from 'dayjs'
 import isToday from 'dayjs/plugin/isToday'
 
-import {useDayjsLanguageSync} from '@/i18n'
 import {getHexColor} from '@/models/task'
 
 import {colorIsDark} from '@/helpers/color/colorIsDark'
@@ -85,7 +84,6 @@ const emit = defineEmits<{
 const {tasks, filters} = toRefs(props)
 
 // setup dayjs for vue-ganttastic
-const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
 dayjs.extend(isToday)
 extendDayjs()
 

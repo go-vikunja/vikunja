@@ -91,6 +91,9 @@ export function setLanguage() {
 
 import type dayjs from 'dayjs'
 
+// FIXME: This function is not used at the moment because it does not seem to work.
+// It should be reworked and cleaned up. An even better way would be to get rid of 
+// this completely by using date-fns for everything.
 export function useDayjsLanguageSync(dayjsGlobal: typeof dayjs) {
 	const dayjsLanguageLoaded = ref(false)
 	watch(
