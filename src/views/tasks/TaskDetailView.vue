@@ -26,7 +26,7 @@
 								:disabled="!canWrite"
 								:list-id="task.listId"
 								:task-id="task.id"
-								ref="assignees"
+								:ref="e => setFieldRef('assignees', e)"
 								v-model="task.assignees"
 							/>
 						</div>
@@ -40,7 +40,7 @@
 								<priority-select
 									:disabled="!canWrite"
 									@update:model-value="setPriority"
-									ref="priority"
+									:ref="e => setFieldRef('priority', e)"
 									v-model="task.priority"/>
 							</div>
 						</transition>
@@ -57,7 +57,7 @@
 										@close-on-change="() => saveTask()"
 										:choose-date-label="$t('task.detail.chooseDueDate')"
 										:disabled="taskService.loading || !canWrite"
-										ref="dueDate"
+										:ref="e => setFieldRef('dueDate', e)"
 									/>
 									<BaseButton
 										@click="() => {task.dueDate = null;saveTask()}"
@@ -80,7 +80,7 @@
 								<percent-done-select
 									:disabled="!canWrite"
 									@update:model-value="setPercentDone"
-									ref="percentDone"
+									:ref="e => setFieldRef('percentDone', e)"
 									v-model="task.percentDone"/>
 							</div>
 						</transition>
@@ -97,7 +97,7 @@
 										@close-on-change="() => saveTask()"
 										:choose-date-label="$t('task.detail.chooseStartDate')"
 										:disabled="taskService.loading || !canWrite"
-										ref="startDate"
+										:ref="e => setFieldRef('startDate', e)"
 									/>
 									<BaseButton
 										@click="() => {task.startDate = null;saveTask()}"
@@ -124,7 +124,7 @@
 										@close-on-change="() => saveTask()"
 										:choose-date-label="$t('task.detail.chooseEndDate')"
 										:disabled="taskService.loading || !canWrite"
-										ref="endDate"
+										:ref="e => setFieldRef('endDate', e)"
 									/>
 									<BaseButton
 										@click="() => {task.endDate = null;saveTask()}"
@@ -146,7 +146,7 @@
 								</div>
 								<reminders
 									:disabled="!canWrite"
-									ref="reminders"
+									:ref="e => setFieldRef('reminders', e)"
 									v-model="task.reminderDates"
 									@update:model-value="saveTask"
 								/>
@@ -171,7 +171,7 @@
 								</div>
 								<repeat-after
 									:disabled="!canWrite"
-									ref="repeatAfter"
+									:ref="e => setFieldRef('repeatAfter', e)"
 									v-model="task"
 									@update:model-value="saveTask"
 								/>
@@ -186,7 +186,7 @@
 								</div>
 								<color-picker
 									menu-position="bottom"
-									ref="color"
+									:ref="e => setFieldRef('color', e)"
 									v-model="taskColor"
 									@update:model-value="saveTask"
 								/>
@@ -202,7 +202,11 @@
 							</span>
 							{{ $t('task.attributes.labels') }}
 						</div>
-						<edit-labels :disabled="!canWrite" :task-id="taskId" ref="labels" v-model="task.labels"/>
+						<edit-labels
+							:disabled="!canWrite" 
+							:task-id="taskId"
+							:ref="e => setFieldRef('labels', e)"
+							v-model="task.labels"/>
 					</div>
 
 					<!-- Description -->
@@ -220,7 +224,7 @@
 							:edit-enabled="canWrite"
 							:task="task"
 							@task-changed="({coverImageAttachmentId}) => task.coverImageAttachmentId = coverImageAttachmentId"
-							ref="attachments"
+							:ref="e => setFieldRef('attachments', e)"
 						/>
 					</div>
 
@@ -238,7 +242,7 @@
 							:list-id="task.listId"
 							:show-no-relations-notice="true"
 							:task-id="taskId"
-							ref="relatedTasks"
+							:ref="e => setFieldRef('relatedTasks', e)"
 						/>
 					</div>
 
@@ -252,7 +256,10 @@
 						</h3>
 						<div class="field has-addons">
 							<div class="control is-expanded">
-								<list-search @update:modelValue="changeList" ref="moveList"/>
+								<list-search 
+									@update:modelValue="changeList"
+									:ref="e => setFieldRef('moveList', e)"
+								/>
 							</div>
 						</div>
 					</div>
@@ -659,10 +666,14 @@ const activeFieldElements : {[id in FieldType]: HTMLElement | null} = reactive({
 	startDate: null,
 })
 
+function setFieldRef(name, e) {
+	activeFieldElements[name] = unrefElement(e)
+}
+
 function setFieldActive(fieldName: keyof typeof activeFields) {
 	activeFields[fieldName] = true
 	nextTick(() => {
-		const el = unrefElement(activeFieldElements[fieldName])
+		const el = activeFieldElements[fieldName]
 
 		if (!el) {
 			return
