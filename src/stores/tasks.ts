@@ -385,6 +385,7 @@ export const useTaskStore = defineStore('task', {
 			})
 			
 			if(foundListId === null || foundListId === 0) {
+				cancel()
 				throw new Error('NO_LIST')
 			}
 		
