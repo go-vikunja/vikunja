@@ -1,7 +1,7 @@
 <template>
 	<ListWrapper class="list-kanban" :list-id="listId" viewName="kanban">
 		<template #header>
-			<div class="filter-container" v-if="isSavedFilter(list)">
+			<div class="filter-container" v-if="!isSavedFilter(listId)">
 				<div class="items">
 					<filter-popup
 						v-model="params"

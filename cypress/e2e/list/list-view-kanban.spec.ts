@@ -193,4 +193,15 @@ describe('List View Kanban', () => {
 		cy.get('.kanban .bucket')
 			.should('not.contain', task.title)
 	})
+	
+	it('Shows a button to filter the kanban board', () => {
+		const data = TaskFactory.create(10, {
+			list_id: 1,
+			bucket_id: 1,
+		})
+		cy.visit('/lists/1/kanban')
+		
+		cy.get('.list-kanban .filter-container .base-button')
+			.should('exist')
+	})
 })
