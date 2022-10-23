@@ -285,9 +285,9 @@ function handleCheckboxClick(e: Event) {
 		console.debug('no index found')
 		return
 	}
-	console.debug(index, text.value.slice(index, 9))
-
-	const listPrefix = text.value.slice(index, 1)
+	const listPrefix = text.value.substring(index, index + 1)
+	
+	console.debug({index, listPrefix, checked, text: text.value})
 
 	text.value = replaceAt(text.value, index, `${listPrefix} ${checked ? '[x]' : '[ ]'} `)
 	bubble()

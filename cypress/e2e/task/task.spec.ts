@@ -546,5 +546,35 @@ describe('Task', () => {
 			cy.get('.bucket .task .footer .icon svg.fa-paperclip')
 				.should('exist')
 		})
+		
+		it('Can check items off a checklist', () => {
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				description: `
+This is a checklist:
+
+* [ ] one item
+* [ ] another item
+* [ ] third item
+* [ ] fourth item
+* [x] and this one is already done
+`,
+			})
+			cy.visit(`/tasks/${tasks[0].id}`)
+			
+			cy.get('.task-view .checklist-summary')
+				.should('contain.text', '1 of 5 tasks')
+			cy.get('.editor .content ul > li input[type=checkbox]')
+				.eq(2)
+				.click()
+			
+			cy.get('.editor .content ul > li input[type=checkbox]')
+				.eq(2)
+				.should('be.checked')
+			cy.get('.editor .content input[type=checkbox]')
+				.should('have.length', 5)
+			cy.get('.task-view .checklist-summary')
+				.should('contain.text', '2 of 5 tasks')
+		})
 	})
 })
