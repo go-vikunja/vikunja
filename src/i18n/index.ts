@@ -1,4 +1,3 @@
-import {computed, ref, watch} from 'vue'
 import {createI18n} from 'vue-i18n'
 import langEN from './lang/en.json'
 
@@ -89,35 +88,33 @@ export function setLanguage() {
 	return loadLanguageAsync(getCurrentLanguage())
 }
 
-import type dayjs from 'dayjs'
-
 // FIXME: This function is not used at the moment because it does not seem to work.
 // It should be reworked and cleaned up. An even better way would be to get rid of 
 // this completely by using date-fns for everything.
-export function useDayjsLanguageSync(dayjsGlobal: typeof dayjs) {
-	const dayjsLanguageLoaded = ref(false)
-	watch(
-		() => i18n.global.locale,
-		async (currentLanguage: string) => {
-			if (!dayjsGlobal) {
-				return
-			}
-			const dayjsLanguageCode = DAYJS_LOCALE_MAPPING[currentLanguage.toLowerCase()] || currentLanguage.toLowerCase()
-			dayjsLanguageLoaded.value = dayjsGlobal.locale() === dayjsLanguageCode
-			if (dayjsLanguageLoaded.value) {
-				return
-			}
-			console.log('foo')
-			await import(`../../node_modules/dayjs/locale/${dayjsLanguageCode}.js`)
-			console.log('bar')
-			dayjsGlobal.locale(dayjsLanguageCode)
-			dayjsLanguageLoaded.value = true
-		},
-		{immediate: true},
-	)
-
-	// we export the loading state since that's easier to work with
-	const isLoading = computed(() => !dayjsLanguageLoaded.value)
-
-	return isLoading
-}
+// export function useDayjsLanguageSync(dayjsGlobal: typeof dayjs) {
+// 	const dayjsLanguageLoaded = ref(false)
+// 	watch(
+// 		() => i18n.global.locale,
+// 		async (currentLanguage: string) => {
+// 			if (!dayjsGlobal) {
+// 				return
+// 			}
+// 			const dayjsLanguageCode = DAYJS_LOCALE_MAPPING[currentLanguage.toLowerCase()] || currentLanguage.toLowerCase()
+// 			dayjsLanguageLoaded.value = dayjsGlobal.locale() === dayjsLanguageCode
+// 			if (dayjsLanguageLoaded.value) {
+// 				return
+// 			}
+// 			console.log('foo')
+// 			await import(`../../node_modules/dayjs/locale/${dayjsLanguageCode}.js`)
+// 			console.log('bar')
+// 			dayjsGlobal.locale(dayjsLanguageCode)
+// 			dayjsLanguageLoaded.value = true
+// 		},
+// 		{immediate: true},
+// 	)
+//
+// 	// we export the loading state since that's easier to work with
+// 	const isLoading = computed(() => !dayjsLanguageLoaded.value)
+//
+// 	return isLoading
+// }
