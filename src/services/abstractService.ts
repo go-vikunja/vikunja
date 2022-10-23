@@ -182,11 +182,11 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 	////////////////
 
 	/**
-	 * The modelFactory returns an model from an object.
+	 * The modelFactory returns a model from an object.
 	 * This one here is the default one, usually the service definitions for a model will override this.
 	 */
 	modelFactory(data : Partial<Model>) {
-		return new AbstractModel(data)
+		return data as Model
 	}
 
 	/**
