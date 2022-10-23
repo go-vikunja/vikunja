@@ -1,7 +1,7 @@
 <template>
 	<create-edit
 		:title="$t('list.share.header')"
-		primary-label=""
+		:has-primary-action="false"
 	>
 		<template v-if="list">
 			<userTeam

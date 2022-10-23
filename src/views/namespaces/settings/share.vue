@@ -1,7 +1,7 @@
 <template>
 	<create-edit
 		:title="title"
-		primary-label=""
+		:has-primary-action="false"
 	>
 		<template v-if="namespace">
 			<manageSharing

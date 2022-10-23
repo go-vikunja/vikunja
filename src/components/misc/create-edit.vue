@@ -10,7 +10,7 @@
 			:loading="loading"
 		>
 			<div class="p-4">
-				<slot />
+				<slot/>
 			</div>
 
 			<template #footer>
@@ -30,10 +30,12 @@
 						{{ $t('misc.cancel') }}
 					</x-button>
 					<x-button
+						v-if="hasPrimaryAction"
 						variant="primary"
 						@click.prevent.stop="primary()"
 						:icon="primaryIcon"
 						:disabled="primaryDisabled || loading"
+						class="ml-2"
 					>
 						{{ primaryLabel || $t('misc.create') }}
 					</x-button>
@@ -59,6 +61,10 @@ defineProps({
 	primaryDisabled: {
 		type: Boolean,
 		default: false,
+	},
+	hasPrimaryAction: {
+		type: Boolean,
+		default: true,
 	},
 	tertiary: {
 		type: String,
