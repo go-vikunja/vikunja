@@ -47,6 +47,10 @@ function ganttRouteToFilters(route: Partial<RouteLocationNormalized>): GanttFilt
 	}
 }
 
+function ganttGetDefaultFilters(route: Partial<RouteLocationNormalized>): GanttFilters {
+	return ganttRouteToFilters({params: {listId: route.params?.listId as string}})
+}
+
 // FIXME: use zod for this
 function ganttFiltersToRoute(filters: GanttFilters): RouteLocationRaw {
 	let query: Record<string, string> = {}
@@ -88,9 +92,12 @@ export type UseGanttFiltersReturn = ReturnType<typeof useRouteFilters> & ReturnT
 export function useGanttFilters(route: Ref<RouteLocationNormalized>): UseGanttFiltersReturn {
 	const {
 		filters,
+		hasDefaultFilters,
+		setDefaultFilters,
 	} = useRouteFilters<GanttFilters>(
 		route,
 		ganttRouteToFilters,
+		ganttGetDefaultFilters,
 		ganttFiltersToRoute
 	)
 
@@ -105,6 +112,8 @@ export function useGanttFilters(route: Ref<RouteLocationNormalized>): UseGanttFi
 
 	return {
 		filters,
+		hasDefaultFilters,
+		setDefaultFilters,
 
 		tasks,
 		loadTasks,

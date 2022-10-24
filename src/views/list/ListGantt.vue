@@ -16,6 +16,12 @@
 							/>
 						</div>
 					</div>
+					<div class="field" v-if="!hasDefaultFilters">
+						<label class="label" for="range">Reset</label>
+						<div class="control">
+							<x-button @click="setDefaultFilters">Reset</x-button>
+						</div>
+					</div>
 					<fancycheckbox class="is-block" v-model="filters.showTasksWithoutDates">
 						{{ $t('list.gantt.showTasksWithoutDates') }}
 					</fancycheckbox>
@@ -74,6 +80,8 @@ const canWrite = computed(() => baseStore.currentList.maxRight > RIGHTS.READ)
 const {route} = toRefs(props)
 const {
 	filters,
+	hasDefaultFilters,
+	setDefaultFilters,
 	tasks,
 	isLoading,
 	addTask,
