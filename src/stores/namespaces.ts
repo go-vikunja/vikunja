@@ -84,6 +84,13 @@ export const useNamespaceStore = defineStore('namespace', {
 			if (!namespace.lists || namespace.lists.length === 0) {
 				namespace.lists = this.namespaces[namespaceIndex].lists
 			}
+			
+			// Check for each list in that namespace if it has a subscription and set it if not
+			namespace.lists.forEach(l => {
+				if (l.subscription === null || l.subscription.entity !== 'list') {
+					l.subscription = namespace.subscription
+				}
+			})
 
 			this.namespaces[namespaceIndex] = namespace
 			update(namespace)

@@ -79,11 +79,9 @@ onMounted(() => {
 
 function setSubscriptionInStore(sub: ISubscription) {
 	subscription.value = sub
-	namespaceStore.setNamespaces([
-		{
-			...props.namespace,
-			subscription: sub,
-		},
-	])
+	namespaceStore.setNamespaceById({
+		...props.namespace,
+		subscription: sub,
+	})
 }
 </script>
