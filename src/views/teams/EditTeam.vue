@@ -22,7 +22,7 @@
 				</div>
 				<p
 					class="help is-danger"
-					v-if="showError && team.name === ''"
+					v-if="showErrorTeamnameRequired && team.name === ''"
 				>
 					{{ $t('team.attributes.nameRequired') }}
 				</p>
@@ -81,6 +81,9 @@
 						</x-button>
 					</div>
 				</div>
+				<p class="help is-danger" v-if="showMustSelectUserError">
+					{{ $t('team.edit.mustSelectUser') }}
+				</p>
 			</div>
 			<table class="table has-actions is-striped is-hoverable is-fullwidth">
 				<tbody>
@@ -228,7 +231,8 @@ const foundUsers = ref<IUser[]>()
 const showDeleteModal = ref(false)
 const showUserDeleteModal = ref(false)
 const showLeaveModal = ref(false)
-const showError = ref(false)
+const showErrorTeamnameRequired = ref(false)
+const showMustSelectUserError = ref(false)
 
 const title = ref('')
 
@@ -242,10 +246,10 @@ async function loadTeam() {
 
 async function save() {
 	if (team.value?.name === '') {
-		showError.value = true
+		showErrorTeamnameRequired.value = true
 		return
 	}
-	showError.value = false
+	showErrorTeamnameRequired.value = false
 
 	team.value = await teamService.value.update(team.value)
 	success({message: t('team.edit.success')})
@@ -271,10 +275,16 @@ async function deleteMember() {
 }
 
 async function addUser() {
+	showMustSelectUserError.value = false
+	if(!newMember.value) {
+		showMustSelectUserError.value = true
+		return
+	}
 	await teamMemberService.value.create({
 		teamId: teamId.value,
 		username: newMember.value.username,
 	})
+	newMember.value = null
 	await loadTeam()
 	success({message: t('team.edit.userAddedSuccess')})
 }
