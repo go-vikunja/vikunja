@@ -49,18 +49,17 @@ export async function loadLanguageAsync(lang: SupportedLocale) {
 		throw new Error()
 	}
 
-	if (
-		// If the same language
-		i18n.global.locale === lang ||
-		// If the language was already loaded
-		i18n.global.availableLocales.includes(lang)
-	) {
-		return setI18nLanguage(lang)
+	// do not change language to the current one
+	if (i18n.global.locale === lang) {
+		return
 	}
 
 	// If the language hasn't been loaded yet
-	const messages = await import(`./lang/${lang}.json`)
-	i18n.global.setLocaleMessage(lang, messages.default)
+	if (!i18n.global.availableLocales.includes(lang)) {
+		const messages = await import(`./lang/${lang}.json`)
+		i18n.global.setLocaleMessage(lang, messages.default)
+	}
+
 	return setI18nLanguage(lang)
 }
 
