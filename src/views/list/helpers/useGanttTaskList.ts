@@ -1,7 +1,7 @@
 import {computed, ref, shallowReactive, watch, type Ref} from 'vue'
 import cloneDeep from 'lodash.clonedeep'
 
-import type {Filter} from '@/composables/useRouteFilter'
+import type {Filters} from '@/composables/useRouteFilters'
 import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
 
 import TaskCollectionService, {type GetAllTasksParams} from '@/services/taskCollection'
@@ -11,7 +11,7 @@ import TaskModel from '@/models/task'
 import {error, success} from '@/message'
 
 // FIXME: unify with general `useTaskList`
-export function useGanttTaskList<F extends Filter>(
+export function useGanttTaskList<F extends Filters>(
 	filters: Ref<F>,
 	filterToApiParams: (filters: F) => GetAllTasksParams,
 	options: {

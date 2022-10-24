@@ -2,18 +2,18 @@ import {computed, ref, watch, type Ref} from 'vue'
 import {useRouter, type RouteLocationNormalized, type RouteLocationRaw} from 'vue-router'
 import cloneDeep from 'lodash.clonedeep'
 
-export type Filter = Record<string, any>
+export type Filters = Record<string, any>
 
-export function useRouteFilter<F extends Filter = Filter>(
+export function useRouteFilters<CurrentFilters extends Filters>(
 		route: Ref<RouteLocationNormalized>,
-		routeToFilter: (route: RouteLocationNormalized) => F,
-		filterToRoute: (filter: F) => RouteLocationRaw,
+		routeToFilters: (route: RouteLocationNormalized) => CurrentFilters,
+		filtersToRoute: (filters: CurrentFilters) => RouteLocationRaw,
 	) {
 	const router = useRouter()
 
-	const filters = ref<F>(routeToFilter(route.value))
+	const filters = ref<CurrentFilters>(routeToFilters(route.value))
 
-	const routeFromFiltersFullPath = computed(() => router.resolve(filterToRoute(filters.value)).fullPath)
+	const routeFromFiltersFullPath = computed(() => router.resolve(filtersToRoute(filters.value)).fullPath)
 
   watch(() => cloneDeep(route.value), (route, oldRoute) => {
     if (
@@ -23,7 +23,7 @@ export function useRouteFilter<F extends Filter = Filter>(
       return
     }
   
-    filters.value = routeToFilter(route)
+    filters.value = routeToFilters(route)
   })
 
   watch(

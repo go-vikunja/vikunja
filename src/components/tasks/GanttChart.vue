@@ -52,7 +52,7 @@ import {parseKebabDate} from '@/helpers/time/parseKebabDate'
 
 import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
 import type {DateISO} from '@/types/DateISO'
-import type {GanttFilter} from '@/views/list/helpers/useGanttFilter'
+import type {GanttFilters} from '@/views/list/helpers/useGanttFilters'
 
 import {
 	extendDayjs,
@@ -66,7 +66,7 @@ import {MILLISECONDS_A_DAY} from '@/constants/date'
 
 export interface GanttChartProps {
 	isLoading: boolean,
-	filters: GanttFilter,
+	filters: GanttFilters,
 	tasks: Map<ITask['id'], ITask>,
 	defaultTaskStartDate: DateISO
 	defaultTaskEndDate: DateISO

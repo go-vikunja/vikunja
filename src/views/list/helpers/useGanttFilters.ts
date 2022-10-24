@@ -4,7 +4,7 @@ import type {RouteLocationNormalized, RouteLocationRaw} from 'vue-router'
 import {isoToKebabDate} from '@/helpers/time/isoToKebabDate'
 import {parseDateProp} from '@/helpers/time/parseDateProp'
 import {parseBooleanProp} from '@/helpers/time/parseBooleanProp'
-import {useRouteFilter} from '@/composables/useRouteFilter'
+import {useRouteFilters} from '@/composables/useRouteFilters'
 import {useGanttTaskList} from './useGanttTaskList'
 
 import type {IList} from '@/modelTypes/IList'
@@ -14,7 +14,7 @@ import type {DateISO} from '@/types/DateISO'
 import type {DateKebab} from '@/types/DateKebab'
 
 // convenient internal filter object
-export interface GanttFilter {
+export interface GanttFilters {
 	listId: IList['id']
 	dateFrom: DateISO
 	dateTo: DateISO
@@ -37,17 +37,18 @@ function getDefaultDateTo() {
 }
 
 // FIXME: use zod for this
-function ganttRouteToFilter(route: RouteLocationNormalized): GanttFilter {
+function ganttRouteToFilters(route: Partial<RouteLocationNormalized>): GanttFilters {
+	const ganttRoute = route
 	return {
-		listId: Number(route.params.listId as string),
-		dateFrom: parseDateProp(route.query.dateFrom as DateKebab) || getDefaultDateFrom(),
-		dateTo: parseDateProp(route.query.dateTo as DateKebab) || getDefaultDateTo(),
-		showTasksWithoutDates: parseBooleanProp(route.query.showTasksWithoutDates as string) || DEFAULT_SHOW_TASKS_WITHOUT_DATES,
+		listId: Number(ganttRoute.params?.listId),
+		dateFrom: parseDateProp(ganttRoute.query?.dateFrom as DateKebab) || getDefaultDateFrom(),
+		dateTo: parseDateProp(ganttRoute.query?.dateTo as DateKebab) || getDefaultDateTo(),
+		showTasksWithoutDates: parseBooleanProp(ganttRoute.query?.showTasksWithoutDates as string) || DEFAULT_SHOW_TASKS_WITHOUT_DATES,
 	}
 }
 
 // FIXME: use zod for this
-function ganttFilterToRoute(filters: GanttFilter): RouteLocationRaw {
+function ganttFiltersToRoute(filters: GanttFilters): RouteLocationRaw {
 	let query: Record<string, string> = {}
 	if (
 		filters.dateFrom !== getDefaultDateFrom() ||
@@ -70,7 +71,7 @@ function ganttFilterToRoute(filters: GanttFilter): RouteLocationRaw {
 	}
 }
 
-function ganttFiltersToApiParams(filters: GanttFilter): GetAllTasksParams {
+function ganttFiltersToApiParams(filters: GanttFilters): GetAllTasksParams {
 	return {
 		sort_by: ['start_date', 'done', 'id'],
 		order_by: ['asc', 'asc', 'desc'],
@@ -82,22 +83,31 @@ function ganttFiltersToApiParams(filters: GanttFilter): GetAllTasksParams {
 	}
 }
 
-export function useGanttFilter(route: Ref<RouteLocationNormalized>): ReturnType<typeof useRouteFilter> & ReturnType<typeof useGanttTaskList> {
-	const {filters} = useRouteFilter<GanttFilter>(route, ganttRouteToFilter, ganttFilterToRoute)
+export type UseGanttFiltersReturn = ReturnType<typeof useRouteFilters> & ReturnType<typeof useGanttTaskList>
+
+export function useGanttFilters(route: Ref<RouteLocationNormalized>): UseGanttFiltersReturn {
+	const {
+		filters,
+	} = useRouteFilters<GanttFilters>(
+		route,
+		ganttRouteToFilters,
+		ganttFiltersToRoute
+	)
 
 	const {
 		tasks,
+		loadTasks,
 
 		isLoading,
 		addTask,
 		updateTask,
-	} = useGanttTaskList<GanttFilter>(filters, ganttFiltersToApiParams)
-
+	} = useGanttTaskList<GanttFilters>(filters, ganttFiltersToApiParams)
 
 	return {
 		filters,
 
 		tasks,
+		loadTasks,
 
 		isLoading,
 		addTask,

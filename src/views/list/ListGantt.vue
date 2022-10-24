@@ -56,7 +56,7 @@ import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
 
 import {createAsyncComponent} from '@/helpers/createAsyncComponent'
-import {useGanttFilter} from './helpers/useGanttFilter'
+import {useGanttFilters} from './helpers/useGanttFilters'
 import {RIGHTS} from '@/constants/rights'
 
 import type {DateISO} from '@/types/DateISO'
@@ -78,7 +78,7 @@ const {
 	isLoading,
 	addTask,
 	updateTask,
-} = useGanttFilter(route)
+} = useGanttFilters(route)
 
 const today = new Date(new Date().setHours(0,0,0,0))
 const defaultTaskStartDate: DateISO = new Date(today).toISOString()
