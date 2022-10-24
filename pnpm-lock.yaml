@@ -28,7 +28,7 @@ specifiers:
   '@vitejs/plugin-legacy': 2.2.0
   '@vitejs/plugin-vue': 3.1.2
   '@vue/eslint-config-typescript': 11.0.2
-  '@vue/test-utils': 2.1.0
+  '@vue/test-utils': 2.2.0
   '@vue/tsconfig': 0.1.3
   '@vueuse/core': 9.3.1
   '@vueuse/router': 9.3.1
@@ -148,7 +148,7 @@ devDependencies:
   '@vitejs/plugin-legacy': 2.2.0_terser@5.10.0+vite@3.1.8
   '@vitejs/plugin-vue': 3.1.2_vite@3.1.8+vue@3.2.41
   '@vue/eslint-config-typescript': 11.0.2_dssioqymv64e7t7ogoe3tncpcu
-  '@vue/test-utils': 2.1.0_vue@3.2.41
+  '@vue/test-utils': 2.2.0_vue@3.2.41
   '@vue/tsconfig': 0.1.3_@types+node@16.18.0
   autoprefixer: 10.4.12_postcss@8.4.18
   browserslist: 4.21.4
@@ -3522,8 +3522,8 @@ packages:
   /@vue/shared/3.2.41:
     resolution: {integrity: sha512-W9mfWLHmJhkfAmV+7gDjcHeAWALQtgGT3JErxULl0oz6R6+3ug91I7IErs93eCFhPCZPHBs4QJS7YWEV7A3sxw==}
 
-  /@vue/test-utils/2.1.0_vue@3.2.41:
-    resolution: {integrity: sha512-U4AxAD/tKJ3ajxYew1gkfEotpr96DE/gLXpbl+nPbsNRqGBfQZZA7YhwGoQNDPgon56v+IGZDrYq7pe3GDl9aw==}
+  /@vue/test-utils/2.2.0_vue@3.2.41:
+    resolution: {integrity: sha512-EKp5/N7ieNZdoLTkD16j/irUjIEDN63QUIc41vLUMqGvSsTQN0QxbFiQqh5v49RPfS5vZH+DhjNUEkijCMOCSg==}
     peerDependencies:
       vue: ^3.0.1
     dependencies:
