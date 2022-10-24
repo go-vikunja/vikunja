@@ -379,13 +379,8 @@ const router = createRouter({
 			name: 'list.gantt',
 			component: ListGantt,
 			beforeEnter: (to) => saveListView(to.params.listId, to.name),
-			props: route => ({
-				listId: Number(route.params.listId as string),
-				dateFrom: route.query.dateFrom as string,
-				dateTo: route.query.dateTo as string,
-				showTasksWithoutDates: Boolean(route.query.showTasksWithoutDates),
-				route,
-			}),
+			// FIXME: test if `useRoute` would be the same. If it would use it instead.
+			props: route => ({route}),
 		},
 		{
 			path: '/lists/:listId/table',
