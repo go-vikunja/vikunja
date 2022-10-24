@@ -84,7 +84,7 @@ const props = defineProps({
 		// 	);
 		// }
 	},
-	// https://chmln.github.io/flatpickr/options/
+	// https://flatpickr.js.org/options/
 	config: {
 		type: Object as PropType<Options>,
 		default: () => ({
@@ -117,16 +117,9 @@ const root = ref<HTMLInputElement | null>(null)
 const fp = ref<Flatpickr.Instance | null>(null)
 const safeConfig = ref<Options>(cloneObject(props.config))
 
-onMounted(() => {
+function prepareConfig() {
 	// Don't mutate original object on parent component
 	const newConfig = cloneObject(props.config)
-
-	if (
-		fp.value || // Return early if flatpickr is already loaded
-		!root.value // our input needs to be mounted
-	) {
-		return
-	}
 
 	props.events.forEach((hook) => {
 		// Respect global callbacks registered via setDefault() method
@@ -154,6 +147,19 @@ onMounted(() => {
 	newConfig.defaultDate = props.modelValue || newConfig.defaultDate
 
 	safeConfig.value = newConfig
+
+	return safeConfig.value
+}
+
+onMounted(() => {
+	if (
+		fp.value || // Return early if flatpickr is already loaded
+		!root.value // our input needs to be mounted
+	) {
+		return
+	}
+
+	prepareConfig()
 
 	/**
 	* Get the HTML node where flatpickr to be attached
@@ -225,8 +231,8 @@ watch(
 	newValue => {
 		// Prevent updates if v-model value is same as input's current value
 		if (!root.value || newValue === nullify(root.value.value)) return
-		// Make sure we have a flatpickr instanceand
-		// Notify flatpickr instance that there is a change in value
+		// Make sure we have a flatpickr instance and
+		// notify flatpickr instance that there is a change in value
 		fp.value?.setDate(newValue, true)
 	},
 	{deep: true},
