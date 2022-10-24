@@ -79,7 +79,7 @@ specifiers:
   vue-drag-resize: 2.0.3
   vue-flatpickr-component: 10.0.0
   vue-i18n: 9.2.2
-  vue-router: 4.1.5
+  vue-router: 4.1.6
   vue-tsc: 1.0.9
   wait-on: 6.0.1
   workbox-cli: 6.5.4
@@ -99,7 +99,7 @@ dependencies:
   '@types/lodash.clonedeep': 4.5.7
   '@types/sortablejs': 1.15.0
   '@vueuse/core': 9.3.1_vue@3.2.41
-  '@vueuse/router': 9.3.1_4g567gsol3fv3jos66rjdswwp4
+  '@vueuse/router': 9.3.1_4dzfggngbcv3f6kocd3r4z3f4q
   axios: 0.27.2
   blurhash: 2.0.3
   bulma-css-variables: 0.9.33
@@ -127,7 +127,7 @@ dependencies:
   vue-drag-resize: 2.0.3
   vue-flatpickr-component: 10.0.0_vue@3.2.41
   vue-i18n: 9.2.2_vue@3.2.41
-  vue-router: 4.1.5_vue@3.2.41
+  vue-router: 4.1.6_vue@3.2.41
   workbox-precaching: 6.5.4
   zhyswan-vuedraggable: 4.1.3_vue@3.2.41
 
@@ -3298,7 +3298,7 @@ packages:
       bindings: 1.5.0
       estree-walker: 2.0.2
       glob: 7.2.0
-      graceful-fs: 4.2.9
+      graceful-fs: 4.2.10
       micromatch: 4.0.4
       node-gyp-build: 4.3.0
       resolve-from: 5.0.0
@@ -3318,7 +3318,7 @@ packages:
       bindings: 1.5.0
       estree-walker: 2.0.2
       glob: 7.2.0
-      graceful-fs: 4.2.9
+      graceful-fs: 4.2.10
       micromatch: 4.0.4
       node-gyp-build: 4.3.0
       resolve-from: 5.0.0
@@ -3475,6 +3475,10 @@ packages:
     resolution: {integrity: sha512-Ku31WzpOV/8cruFaXaEZKF81WkNnvCSlBY4eOGtz5WMSdJvX1v1WWlSMGZeqUwPtQ27ZZz7B62erEMq8JDjcXw==}
     dev: false
 
+  /@vue/devtools-api/6.4.5:
+    resolution: {integrity: sha512-JD5fcdIuFxU4fQyXUu3w2KpAJHzTVdN+p4iOX2lMWSHMOoQdMAcpFLZzm9Z/2nmsoZ1a96QEhZ26e50xLBsgOQ==}
+    dev: false
+
   /@vue/eslint-config-typescript/11.0.2_dssioqymv64e7t7ogoe3tncpcu:
     resolution: {integrity: sha512-EiKud1NqlWmSapBFkeSrE994qpKx7/27uCGnhdqzllYDpQZroyX/O6bwjEpeuyKamvLbsGdO6PMR2faIf+zFnw==}
     engines: {node: ^14.17.0 || >=16.0.0}
@@ -3584,14 +3588,14 @@ packages:
     resolution: {integrity: sha512-G1BPhtx3OHaL/y4OZBofh6Xt02G1VA9PuOO8nac9sTKMkMqfyez5VfkF3D9GUjSRNO7cVWyH4rceeGXfr2wdMg==}
     dev: false
 
-  /@vueuse/router/9.3.1_4g567gsol3fv3jos66rjdswwp4:
+  /@vueuse/router/9.3.1_4dzfggngbcv3f6kocd3r4z3f4q:
     resolution: {integrity: sha512-iyxyGNAeK8y4xaKjidnTI2H6eFiCiHypjoKPDEE8kdfESoxjegigp/DYfrbFt3IIeAHXPvBMq11m9IFuZ+LyLw==}
     peerDependencies:
       vue-router: '>=4.0.0-rc.1'
     dependencies:
       '@vueuse/shared': 9.3.1_vue@3.2.41
       vue-demi: 0.12.1_vue@3.2.41
-      vue-router: 4.1.5_vue@3.2.41
+      vue-router: 4.1.6_vue@3.2.41
     transitivePeerDependencies:
       - '@vue/composition-api'
       - vue
@@ -3856,7 +3860,7 @@ packages:
     engines: {node: '>= 6'}
     dependencies:
       glob: 7.2.0
-      graceful-fs: 4.2.9
+      graceful-fs: 4.2.10
       lazystream: 1.0.1
       lodash.defaults: 4.2.0
       lodash.difference: 4.5.0
@@ -4954,7 +4958,7 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       dot-prop: 5.3.0
-      graceful-fs: 4.2.9
+      graceful-fs: 4.2.10
       make-dir: 3.1.0
       unique-string: 2.0.0
       write-file-atomic: 3.0.3
@@ -4966,7 +4970,7 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       dot-prop: 6.0.1
-      graceful-fs: 4.2.9
+      graceful-fs: 4.2.10
       unique-string: 3.0.0
       write-file-atomic: 3.0.3
       xdg-basedir: 5.1.0
@@ -5012,7 +5016,7 @@ packages:
     resolution: {integrity: sha512-xkXSJhvKz4MfLbVkZ7GyCaFo4ciB3uKI/HHzkGwj1eyTH5+7RTFxW5CE0irWAZgV5oFcO9hd6+NVXAtY9hlo7Q==}
     dependencies:
       end-of-stream: 1.4.4
-      graceful-fs: 4.2.9
+      graceful-fs: 4.2.10
       maxstache: 1.0.7
       maxstache-stream: 1.0.4
       mkdirp: 0.5.5
@@ -5048,7 +5052,7 @@ packages:
     resolution: {integrity: sha512-0Cbj7gyvFVApzpK/uhCtQ/9kE9UnYpxMzaq5nQQC/Dh4iaj5fxp7iEFIullrYwzj8nf0qnsI1Qsx34hAeAebvw==}
     engines: {node: '>=8'}
     dependencies:
-      graceful-fs: 4.2.9
+      graceful-fs: 4.2.10
       make-dir: 3.1.0
       nested-error-stacks: 2.1.0
       p-event: 4.2.0
@@ -5058,7 +5062,7 @@ packages:
     resolution: {integrity: sha512-3scnzFj/94eb7y4wyXRWwvzLFaQp87yyfTnChIjlfYrVqp5lVO3E2hIJMeQIltUT0K2ZAB3An1qXcBmwGyvuwA==}
     engines: {node: '>=10'}
     dependencies:
-      graceful-fs: 4.2.9
+      graceful-fs: 4.2.10
       make-dir: 3.1.0
       nested-error-stacks: 2.1.0
       p-event: 4.2.0
@@ -5480,7 +5484,7 @@ packages:
       decompress-tarbz2: 4.1.1
       decompress-targz: 4.1.1
       decompress-unzip: 4.0.1
-      graceful-fs: 4.2.9
+      graceful-fs: 4.2.10
       make-dir: 1.3.0
       pify: 2.3.0
       strip-dirs: 2.1.0
@@ -5561,7 +5565,7 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       globby: 11.1.0
-      graceful-fs: 4.2.9
+      graceful-fs: 4.2.10
       is-glob: 4.0.3
       is-path-cwd: 2.2.0
       is-path-inside: 3.0.3
@@ -8510,7 +8514,7 @@ packages:
     dependencies:
       universalify: 2.0.0
     optionalDependencies:
-      graceful-fs: 4.2.9
+      graceful-fs: 4.2.10
     dev: true
 
   /jsonpointer/5.0.0:
@@ -11083,7 +11087,7 @@ packages:
     resolution: {integrity: sha512-1JU/8q+VgFZyxwrJ+SVIOsh+KywWGpds3NTqikiKpDMZWScmAYyKIgqkO+ARvNWJfXeXR1zxz7aHF4u4CyH6vQ==}
     engines: {node: '>=0.10'}
     dependencies:
-      graceful-fs: 4.2.9
+      graceful-fs: 4.2.10
       micromatch: 3.1.10
       readable-stream: 2.3.7
     transitivePeerDependencies:
@@ -13068,12 +13072,12 @@ packages:
       vue: 3.2.41
     dev: false
 
-  /vue-router/4.1.5_vue@3.2.41:
-    resolution: {integrity: sha512-IsvoF5D2GQ/EGTs/Th4NQms9gd2NSqV+yylxIyp/OYp8xOwxmU8Kj/74E9DTSYAyH5LX7idVUngN3JSj1X4xcQ==}
+  /vue-router/4.1.6_vue@3.2.41:
+    resolution: {integrity: sha512-DYWYwsG6xNPmLq/FmZn8Ip+qrhFEzA14EI12MsMgVxvHFDYvlr4NXpVF5hrRH1wVcDP8fGi5F4rxuJSl8/r+EQ==}
     peerDependencies:
       vue: ^3.2.0
     dependencies:
-      '@vue/devtools-api': 6.2.1
+      '@vue/devtools-api': 6.4.5
       vue: 3.2.41
     dev: false
 
