@@ -9,15 +9,15 @@
 </template>
 
 <script lang="ts">
-import Flatpickr from 'flatpickr'
+import flatpickr from 'flatpickr'
 import 'flatpickr/dist/flatpickr.css'
 
 // FIXME: Not sure how to alias these correctly
 // import Options = Flatpickr.Options doesn't work
-type Hook = Flatpickr.Options.Hook
-type HookKey = Flatpickr.Options.HookKey
-type Options = Flatpickr.Options.Options
-type DateOption = Flatpickr.Options.DateOption
+type Hook = flatpickr.Options.Hook
+type HookKey = flatpickr.Options.HookKey
+type Options = flatpickr.Options.Options
+type DateOption = flatpickr.Options.DateOption
 
 function camelToKebab(string: string) {
   return string.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
@@ -33,10 +33,6 @@ function nullify<T = unknown>(value: T) {
   return (value && (value as unknown[]).length)
 		? value
 		: null
-}
-
-function cloneObject<T = Record<string, unknown>>(obj: T): T {
-  return Object.assign({}, obj)
 }
 
 // Events to emit, copied from flatpickr source
@@ -88,8 +84,8 @@ const props = defineProps({
 	config: {
 		type: Object as PropType<Options>,
 		default: () => ({
-			wrap: false,
 			defaultDate: null,
+			wrap: false,
 		}),
 	},
 	events: {
@@ -114,16 +110,16 @@ const {modelValue, config, disabled} = toRefs(props)
 const attrs = useAttrs()
 
 const root = ref<HTMLInputElement | null>(null)
-const fp = ref<Flatpickr.Instance | null>(null)
-const safeConfig = ref<Options>(cloneObject(props.config))
+const fp = ref<flatpickr.Instance | null>(null)
+const safeConfig = ref<Options>({ ...props.config })
 
 function prepareConfig() {
 	// Don't mutate original object on parent component
-	const newConfig = cloneObject(props.config)
+	const newConfig: Options = { ...props.config }
 
 	props.events.forEach((hook) => {
 		// Respect global callbacks registered via setDefault() method
-		const globalCallbacks = Flatpickr.defaultConfig[hook] || []
+		const globalCallbacks = flatpickr.defaultConfig[hook] || []
 	
 		// Inject our own method along with user callback
 		const localCallback: Hook = (...args) => emit(camelToKebab(hook), ...args)
@@ -170,7 +166,7 @@ onMounted(() => {
 		: root.value
 
 	// Init flatpickr
-	fp.value = Flatpickr(element, safeConfig.value)
+	fp.value = flatpickr(element, safeConfig.value)
 })
 onBeforeUnmount(() => fp.value?.destroy())
 
