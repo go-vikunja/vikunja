@@ -14,6 +14,7 @@ import type {MaybeRef} from '@vueuse/core'
 
 import ListModel from '@/models/list'
 import {success} from '@/message'
+import {useBaseStore} from '@/stores/base'
 
 const {add, remove, search, update} = createNewIndexer('lists', ['title', 'description'])
 
@@ -64,6 +65,11 @@ export const useListStore = defineStore('list', {
 		setList(list: IList) {
 			this.lists[list.id] = list
 			update(list)
+	
+			const baseStore = useBaseStore()
+			if (baseStore.currentList?.id === list.id) {
+				baseStore.setCurrentList(list)
+			}
 		},
 
 		setLists(lists: IList[]) {
