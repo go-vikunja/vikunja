@@ -98,7 +98,7 @@ export function useGanttFilters(route: Ref<RouteLocationNormalized>): UseGanttFi
 		route,
 		ganttRouteToFilters,
 		ganttGetDefaultFilters,
-		ganttFiltersToRoute
+		ganttFiltersToRoute,
 	)
 
 	const {
