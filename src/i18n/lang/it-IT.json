@@ -1,9 +1,9 @@
 {
   "home": {
-    "welcomeNight": "Good Night {username}!",
-    "welcomeMorning": "Good Morning {username}!",
-    "welcomeDay": "Hi {username}!",
-    "welcomeEvening": "Good Evening {username}!",
+    "welcomeNight": "Buonanotte {username}!",
+    "welcomeMorning": "Buongiorno {username}!",
+    "welcomeDay": "Ciao {username}!",
+    "welcomeEvening": "Buonasera {username}!",
     "lastViewed": "Ultima visualizzazione",
     "list": {
       "newText": "È possibile creare una nuova lista per le nuove attività:",
@@ -268,7 +268,7 @@
         "updatedSuccess": "{type} aggiunto."
       },
       "right": {
-        "title": "Permessi",
+        "title": "Permission",
         "read": "Sola lettura",
         "readWrite": "Lettura e scrittura",
         "admin": "Amministratore"
@@ -701,10 +701,10 @@
       "deleteText1": "Sei sicuro di voler eliminare l'allegato {filename}?",
       "copyUrl": "Copia URL",
       "copyUrlTooltip": "Copia l'URL di questo allegato per usarlo nel testo",
-      "setAsCover": "Make cover",
-      "unsetAsCover": "Remove cover",
-      "successfullyChangedCoverImage": "The cover image was successfully changed.",
-      "usedAsCover": "Cover image"
+      "setAsCover": "Crea copertina",
+      "unsetAsCover": "Rimuovi copertina",
+      "successfullyChangedCoverImage": "L'immagine di copertina è stata cambiata con successo.",
+      "usedAsCover": "Immagine di copertina"
     },
     "comment": {
       "title": "Commenti",
@@ -842,6 +842,7 @@
       "userAddedSuccess": "Membro del gruppo aggiunto.",
       "madeMember": "Membro del gruppo reso membro.",
       "madeAdmin": "Membro del gruppo reso amministratore.",
+      "mustSelectUser": "Please select a user.",
       "delete": {
         "header": "Elimina il gruppo",
         "text1": "Sei sicuro di voler eliminare questo gruppo e tutti i suoi membri?",
@@ -855,9 +856,9 @@
         "success": "Utente rimosso dal gruppo."
       },
       "leave": {
-        "title": "Leave team",
-        "text1": "Are you sure you want to leave this team?",
-        "text2": "You will loose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "title": "Lascia il gruppo",
+        "text1": "Sei sicuro di voler abbandonare questo gruppo?",
+        "text2": "You will lose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "You have successfully left the team."
       }
     },

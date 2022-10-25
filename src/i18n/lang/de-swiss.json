@@ -268,7 +268,7 @@
         "updatedSuccess": "De {type} isch erfolgriich hinzuegfüegt wore."
       },
       "right": {
-        "title": "Rechts",
+        "title": "Permission",
         "read": "Nur Lese",
         "readWrite": "Lese und Schriibe",
         "admin": "Chef"
@@ -842,6 +842,7 @@
       "userAddedSuccess": "Teammitglied hinzugefüegt.",
       "madeMember": "Das Teammitglied ist ez es normals Mitglied.",
       "madeAdmin": "Teammitglied isch ez en Chef.",
+      "mustSelectUser": "Please select a user.",
       "delete": {
         "header": "Das Team chüble",
         "text1": "Bischder sicher, dasst wetsch da Team mit allne Mitglieder lösche?",
@@ -857,7 +858,7 @@
       "leave": {
         "title": "Team verlassen",
         "text1": "Bist du sicher, dass du dieses Team verlassen willst?",
-        "text2": "Du wirst Zugriff auf alle Listen und Namespaces verlieren, auf die dieses Team Zugriff hat. Wenn du deine Meinung änderst, musst du durch einen Team-Admin wieder hinzugefügt werden.",
+        "text2": "You will lose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "Du hast das Team erfolgreich verlassen."
       }
     },

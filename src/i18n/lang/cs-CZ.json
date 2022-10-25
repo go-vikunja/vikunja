@@ -268,7 +268,7 @@
         "updatedSuccess": "{type} byl úspěšně přidán."
       },
       "right": {
-        "title": "Právo",
+        "title": "Permission",
         "read": "Pouze pro čtení",
         "readWrite": "Čtení a zápis",
         "admin": "Administrátor"
@@ -842,6 +842,7 @@
       "userAddedSuccess": "Člen týmu byl úspěšně přidán.",
       "madeMember": "Člen týmu se úspěšně stal členem.",
       "madeAdmin": "Člen týmu byl úspěšně jmenován správcem.",
+      "mustSelectUser": "Please select a user.",
       "delete": {
         "header": "Smazat tým",
         "text1": "Jste si jisti, že chcete smazat tento tým a všechny jeho členy?",
@@ -857,7 +858,7 @@
       "leave": {
         "title": "Opustit tým",
         "text1": "Opravdu chcete opustit tento tým?",
-        "text2": "Ztratíte přístup ke všem seznamům a prostorům, k nimž má tento tým přístup. Pokud změníte názor, budete potřebovat správce týmu, aby vás znovu přidal.",
+        "text2": "You will lose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "Úspěšně jste opustili tým."
       }
     },

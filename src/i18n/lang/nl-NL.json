@@ -268,7 +268,7 @@
         "updatedSuccess": "The {type} was successfully added."
       },
       "right": {
-        "title": "Rechten",
+        "title": "Permission",
         "read": "Alleen lezen",
         "readWrite": "Lezen & schrijven",
         "admin": "Beheerder"
@@ -842,6 +842,7 @@
       "userAddedSuccess": "Het teamlid is succesvol toegevoegd.",
       "madeMember": "Het teamlid is succesvol tot lid gemaakt.",
       "madeAdmin": "Het teamlid is succesvol beheerder gemaakt.",
+      "mustSelectUser": "Please select a user.",
       "delete": {
         "header": "Verwijder het team",
         "text1": "Are you sure you want to delete this team and all of its members?",
@@ -857,7 +858,7 @@
       "leave": {
         "title": "Leave team",
         "text1": "Are you sure you want to leave this team?",
-        "text2": "You will loose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "text2": "You will lose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "You have successfully left the team."
       }
     },

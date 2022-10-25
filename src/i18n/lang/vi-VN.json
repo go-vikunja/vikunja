@@ -268,7 +268,7 @@
         "updatedSuccess": "{type} đã được thêm thành công."
       },
       "right": {
-        "title": "Quyền hạn",
+        "title": "Permission",
         "read": "Chỉ đọc",
         "readWrite": "Đọc & ghi",
         "admin": "Quản trị viên"
@@ -842,6 +842,7 @@
       "userAddedSuccess": "Thành viên Team đã được thêm.",
       "madeMember": "Vai trò thanh viên đã được cập nhật.",
       "madeAdmin": "Vai trò thành viên đã được cập nhật.",
+      "mustSelectUser": "Please select a user.",
       "delete": {
         "header": "Giải tán Team",
         "text1": "Bạn có chắc giải tán Team này không?",
@@ -857,7 +858,7 @@
       "leave": {
         "title": "Leave team",
         "text1": "Are you sure you want to leave this team?",
-        "text2": "You will loose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "text2": "You will lose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "You have successfully left the team."
       }
     },

@@ -268,7 +268,7 @@
         "updatedSuccess": "{type} wurde erfolgreich hinzugefügt."
       },
       "right": {
-        "title": "Berechtigungen",
+        "title": "Permission",
         "read": "Nur Leserechte",
         "readWrite": "Lesen & Schreiben",
         "admin": "Admin"
@@ -842,6 +842,7 @@
       "userAddedSuccess": "Das Teammitglied wurde erfolgreich hinzugefügt.",
       "madeMember": "Das Teammitglied ist nun ein normales Mitglied.",
       "madeAdmin": "Das Teammitglied ist nun ein Admin.",
+      "mustSelectUser": "Please select a user.",
       "delete": {
         "header": "Team löschen",
         "text1": "Bist du sicher, dass du dieses Team und alle seine Mitglieder löschen willst?",
@@ -857,7 +858,7 @@
       "leave": {
         "title": "Team verlassen",
         "text1": "Bist du sicher, dass du dieses Team verlassen willst?",
-        "text2": "Du wirst Zugriff auf alle Listen und Namespaces verlieren, auf die dieses Team Zugriff hat. Wenn du deine Meinung änderst, musst du durch einen Team-Admin wieder hinzugefügt werden.",
+        "text2": "You will lose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "Du hast das Team erfolgreich verlassen."
       }
     },
