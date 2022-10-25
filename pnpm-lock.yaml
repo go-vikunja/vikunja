@@ -40,7 +40,7 @@ specifiers:
   camel-case: 4.1.2
   caniuse-lite: 1.0.30001423
   codemirror: 5.65.9
-  cypress: 10.10.0
+  cypress: 10.11.0
   date-fns: 2.29.3
   dompurify: 2.4.0
   easymde: 2.18.0
@@ -132,9 +132,9 @@ dependencies:
   zhyswan-vuedraggable: 4.1.3_vue@3.2.41
 
 devDependencies:
-  '@4tw/cypress-drag-drop': 2.2.1_cypress@10.10.0
+  '@4tw/cypress-drag-drop': 2.2.1_cypress@10.11.0
   '@cypress/vite-dev-server': 3.3.1
-  '@cypress/vue': 4.2.1_cypress@10.10.0+vue@3.2.41
+  '@cypress/vue': 4.2.1_cypress@10.11.0+vue@3.2.41
   '@faker-js/faker': 7.6.0
   '@rushstack/eslint-patch': 1.2.0
   '@types/dompurify': 2.3.4
@@ -153,7 +153,7 @@ devDependencies:
   autoprefixer: 10.4.12_postcss@8.4.18
   browserslist: 4.21.4
   caniuse-lite: 1.0.30001423
-  cypress: 10.10.0
+  cypress: 10.11.0
   esbuild: 0.15.12
   eslint: 8.26.0
   eslint-plugin-vue: 9.6.0_eslint@8.26.0
@@ -176,12 +176,12 @@ devDependencies:
 
 packages:
 
-  /@4tw/cypress-drag-drop/2.2.1_cypress@10.10.0:
+  /@4tw/cypress-drag-drop/2.2.1_cypress@10.11.0:
     resolution: {integrity: sha512-+ioJSnEwx70IiMyb4pLEjOS5u6AMWRIVCV20toCY7lb0YcvA0ipbjQBa9DdxEI7Zg2E2jtcIj7Rx0e3WNUbk/w==}
     peerDependencies:
       cypress: ^2.1.0 || ^3.1.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0
     dependencies:
-      cypress: 10.10.0
+      cypress: 10.11.0
     dev: true
 
   /@ampproject/remapping/2.1.1:
@@ -1585,7 +1585,7 @@ packages:
       - supports-color
     dev: true
 
-  /@cypress/vue/4.2.1_cypress@10.10.0+vue@3.2.41:
+  /@cypress/vue/4.2.1_cypress@10.11.0+vue@3.2.41:
     resolution: {integrity: sha512-L43vxC7vlr2dV9/NstouMiItxJs0yXq+85/VpC/Ar+tyM53p1I4VtzVkJAB1bunL+yHz+UZuWddF1lFCuRlbmg==}
     engines: {node: '>=8'}
     peerDependencies:
@@ -1596,7 +1596,7 @@ packages:
       '@cypress/webpack-dev-server':
         optional: true
     dependencies:
-      cypress: 10.10.0
+      cypress: 10.11.0
       vue: 3.2.41
     dev: true
 
@@ -1894,7 +1894,7 @@ packages:
       ajv: 8.11.0
       ajv-errors: 3.0.0_ajv@8.11.0
       ansi-escapes: 5.0.0
-      chalk: 5.0.0
+      chalk: 5.1.2
       clean-stack: 4.1.0
       execa: 6.1.0
       figures: 4.0.0
@@ -1926,7 +1926,7 @@ packages:
       safe-json-stringify: 1.2.0
       semver: 7.3.7
       statsd-client: 0.4.7
-      string-width: 5.1.0
+      string-width: 5.1.2
       strip-ansi: 7.0.1
       supports-color: 9.2.1
       tmp-promise: 3.0.3
@@ -1964,7 +1964,7 @@ packages:
     engines: {node: ^14.16.0 || >=16.0.0}
     hasBin: true
     dependencies:
-      chalk: 5.0.0
+      chalk: 5.1.2
       cron-parser: 4.2.1
       deepmerge: 4.2.2
       dot-prop: 7.1.1
@@ -4581,11 +4581,6 @@ packages:
       supports-color: 7.2.0
     dev: true
 
-  /chalk/5.0.0:
-    resolution: {integrity: sha512-/duVOqst+luxCQRKEo4bNxinsOQtMP80ZYm7mMqzuh5PociNL0PvmHFvREJ9ueYL2TxlHjBcmLCdmocx9Vg+IQ==}
-    engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
-    dev: true
-
   /chalk/5.1.2:
     resolution: {integrity: sha512-E5CkT4jWURs1Vy5qGJye+XwCkNj7Od3Af7CP6SujMetSMkLs8Do2RWJK5yx1wamHV/op8Rz+9rltjaTQWDnEFQ==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
@@ -5213,8 +5208,8 @@ packages:
     resolution: {integrity: sha512-NJGVKPS81XejHcLhaLJS7plab0fK3slPh11mESeeDq2W4ZI5kUKK/LRRdVDvjJseojbPB7ZwjnyOybg3Igea/A==}
     dev: true
 
-  /cypress/10.10.0:
-    resolution: {integrity: sha512-bU8r44x1NIYAUNNXt3CwJpLOVth7HUv2hUhYCxZmgZ1IugowDvuHNpevnoZRQx1KKOEisLvIJW+Xen5Pjn41pg==}
+  /cypress/10.11.0:
+    resolution: {integrity: sha512-lsaE7dprw5DoXM00skni6W5ElVVLGAdRUUdZjX2dYsGjbY/QnpzWZ95Zom1mkGg0hAaO/QVTZoFVS7Jgr/GUPA==}
     engines: {node: '>=12.0.0'}
     hasBin: true
     requiresBuild: true
@@ -5787,7 +5782,7 @@ packages:
     resolution: {integrity: sha512-1Rux9sph1ofNp/Bi3+zzW7XGz7Kbz+GJMKw8ncks+zS9o/zQ/+xs1livKWfQcBLYYZjEpbpzf3RrIecwb5afFQ==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dependencies:
-      type-fest: 2.11.2
+      type-fest: 2.19.0
     dev: true
 
   /dotenv/10.0.0:
@@ -11029,7 +11024,7 @@ packages:
     dependencies:
       find-up: 6.3.0
       read-pkg: 7.1.0
-      type-fest: 2.11.2
+      type-fest: 2.19.0
     dev: true
 
   /read-pkg/5.2.0:
@@ -11921,15 +11916,6 @@ packages:
       strip-ansi: 6.0.1
     dev: true
 
-  /string-width/5.1.0:
-    resolution: {integrity: sha512-7x54QnN21P+XL/v8SuNKvfgsUre6PXpN7mc77N3HlZv+f1SBRGmjxtOud2Z6FZ8DmdkD/IdjCaf9XXbnqmTZGQ==}
-    engines: {node: '>=12'}
-    dependencies:
-      eastasianwidth: 0.2.0
-      emoji-regex: 9.2.2
-      strip-ansi: 7.0.1
-    dev: true
-
   /string-width/5.1.2:
     resolution: {integrity: sha512-HnLOCR3vjcY8beoNLtcjZ5/nxn2afmME6lhrDrebokqMap+XbeW8n9TXpPDOqdGK5qcI3oT0GKTW6wC7EMiVqA==}
     engines: {node: '>=12'}
@@ -12586,11 +12572,6 @@ packages:
   /type-fest/1.4.0:
     resolution: {integrity: sha512-yGSza74xk0UG8k+pLh5oeoYirvIiWo5t0/o3zHHAO2tRDiZcxWP7fywNlXhqb6/r6sWvwi+RsyQMWhVLe4BVuA==}
     engines: {node: '>=10'}
-    dev: true
-
-  /type-fest/2.11.2:
-    resolution: {integrity: sha512-reW2Y2Mpn0QNA/5fvtm5doROLwDPu2zOm5RtY7xQQS05Q7xgC8MOZ3yPNaP9m/s/sNjjFQtHo7VCNqYW2iI+Ig==}
-    engines: {node: '>=12.20'}
     dev: true
 
   /type-fest/2.19.0:
@@ -13459,7 +13440,7 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       ansi-styles: 6.1.0
-      string-width: 5.1.0
+      string-width: 5.1.2
       strip-ansi: 7.0.1
     dev: true
 
