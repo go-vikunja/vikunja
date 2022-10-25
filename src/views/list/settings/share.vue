@@ -34,6 +34,8 @@ import {useTitle} from '@vueuse/core'
 
 import ListService from '@/services/list'
 import ListModel from '@/models/list'
+import type {IList} from '@/modelTypes/IList'
+import {RIGHTS} from '@/constants/rights'
 
 import CreateEdit from '@/components/misc/create-edit.vue'
 import LinkSharing from '@/components/sharing/linkSharing.vue'
@@ -45,7 +47,7 @@ import {useAuthStore} from '@/stores/auth'
 
 const {t} = useI18n({useScope: 'global'})
 
-const list = ref()
+const list = ref<IList>()
 const title = computed(() => list.value?.title
 	? t('list.share.title', {list: list.value.title})
 	: '',
@@ -56,7 +58,7 @@ const authStore = useAuthStore()
 const configStore = useConfigStore()
 
 const linkSharingEnabled = computed(() => configStore.linkSharingEnabled)
-const userIsAdmin = computed(() => 'owner' in list.value && list.value.owner.id === authStore.info.id)
+const userIsAdmin = computed(() => list?.value?.maxRight === RIGHTS.ADMIN)
 
 async function loadList(listId: number) {
 	const listService = new ListService()

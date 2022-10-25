@@ -31,12 +31,13 @@ import {useI18n} from 'vue-i18n'
 
 import NamespaceService from '@/services/namespace'
 import NamespaceModel from '@/models/namespace'
+import type {INamespace} from '@/modelTypes/INamespace'
+import {RIGHTS} from '@/constants/rights'
 
 import CreateEdit from '@/components/misc/create-edit.vue'
 import manageSharing from '@/components/sharing/userTeam.vue'
 import {useTitle} from '@/composables/useTitle'
 import {useAuthStore} from '@/stores/auth'
-import type {INamespace} from '@/modelTypes/INamespace'
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -49,7 +50,7 @@ const title = computed(() => namespace.value?.title
 useTitle(title)
 
 const authStore = useAuthStore()
-const userIsAdmin = computed(() => 'owner' in namespace.value && namespace.value.owner.id === authStore.info.id)
+const userIsAdmin = computed(() => namespace?.value?.maxRight === RIGHTS.ADMIN)
 
 async function loadNamespace(namespaceId: number) {
 	if (!namespaceId) return
