@@ -760,6 +760,8 @@ github.com/wneessen/go-mail v0.3.1 h1:9hSthi8T57gDHMI0fgl58O667OQJm9wZ1EHyuy3hcl
 github.com/wneessen/go-mail v0.3.1/go.mod h1:m25lkU2GYQnlVr6tdwK533/UXxo57V0kLOjaFYmub0E=
 github.com/wneessen/go-mail v0.3.2 h1:nTjAF4Ek2+JG7qunyk6oImf5YKrAE5a7A3uIazYsdM0=
 github.com/wneessen/go-mail v0.3.2/go.mod h1:m25lkU2GYQnlVr6tdwK533/UXxo57V0kLOjaFYmub0E=
+github.com/wneessen/go-mail v0.3.3 h1:mhqM18uWiBFA3TdfO2IyFfQ6dEj4kGKW1KQJJNSKLME=
+github.com/wneessen/go-mail v0.3.3/go.mod h1:m25lkU2GYQnlVr6tdwK533/UXxo57V0kLOjaFYmub0E=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
