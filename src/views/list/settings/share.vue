@@ -43,7 +43,6 @@ import userTeam from '@/components/sharing/userTeam.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
-import {useAuthStore} from '@/stores/auth'
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -54,7 +53,6 @@ const title = computed(() => list.value?.title
 )
 useTitle(title)
 
-const authStore = useAuthStore()
 const configStore = useConfigStore()
 
 const linkSharingEnabled = computed(() => configStore.linkSharingEnabled)

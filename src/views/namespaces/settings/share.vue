@@ -37,7 +37,6 @@ import {RIGHTS} from '@/constants/rights'
 import CreateEdit from '@/components/misc/create-edit.vue'
 import manageSharing from '@/components/sharing/userTeam.vue'
 import {useTitle} from '@/composables/useTitle'
-import {useAuthStore} from '@/stores/auth'
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -49,7 +48,6 @@ const title = computed(() => namespace.value?.title
 )
 useTitle(title)
 
-const authStore = useAuthStore()
 const userIsAdmin = computed(() => namespace?.value?.maxRight === RIGHTS.ADMIN)
 
 async function loadNamespace(namespaceId: number) {
