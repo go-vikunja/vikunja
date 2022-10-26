@@ -69,7 +69,7 @@ export function getCurrentLanguage(): SupportedLocale {
 		return savedLanguage
 	}
 
-	const browserLanguage = navigator.language || navigator.userLanguage
+	const browserLanguage = navigator.language
 
 	const language: SupportedLocale | undefined = Object.keys(SUPPORTED_LOCALES).find(langKey => {
 		return langKey === browserLanguage || langKey.startsWith(browserLanguage + '-')
