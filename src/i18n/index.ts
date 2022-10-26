@@ -22,10 +22,6 @@ export const DEFAULT_LANGUAGE: SupportedLocale= 'en'
 
 export type ISOLanguage = string
 
-export const DAYJS_LOCALE_MAPPING = {
-	'de-swiss': 'de-AT',
-} as Record<SupportedLocale, ISOLanguage>
-
 export const i18n = createI18n({
 	locale: DEFAULT_LANGUAGE, // set locale
 	fallbackLocale: DEFAULT_LANGUAGE,
@@ -86,34 +82,3 @@ export function saveLanguage(lang: SupportedLocale) {
 export function setLanguage() {
 	return loadLanguageAsync(getCurrentLanguage())
 }
-
-// FIXME: This function is not used at the moment because it does not seem to work.
-// It should be reworked and cleaned up. An even better way would be to get rid of 
-// this completely by using date-fns for everything.
-// export function useDayjsLanguageSync(dayjsGlobal: typeof dayjs) {
-// 	const dayjsLanguageLoaded = ref(false)
-// 	watch(
-// 		() => i18n.global.locale,
-// 		async (currentLanguage: string) => {
-// 			if (!dayjsGlobal) {
-// 				return
-// 			}
-// 			const dayjsLanguageCode = DAYJS_LOCALE_MAPPING[currentLanguage.toLowerCase()] || currentLanguage.toLowerCase()
-// 			dayjsLanguageLoaded.value = dayjsGlobal.locale() === dayjsLanguageCode
-// 			if (dayjsLanguageLoaded.value) {
-// 				return
-// 			}
-// 			console.log('foo')
-// 			await import(`../../node_modules/dayjs/locale/${dayjsLanguageCode}.js`)
-// 			console.log('bar')
-// 			dayjsGlobal.locale(dayjsLanguageCode)
-// 			dayjsLanguageLoaded.value = true
-// 		},
-// 		{immediate: true},
-// 	)
-//
-// 	// we export the loading state since that's easier to work with
-// 	const isLoading = computed(() => !dayjsLanguageLoaded.value)
-//
-// 	return isLoading
-// }
