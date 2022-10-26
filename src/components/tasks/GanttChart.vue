@@ -157,13 +157,18 @@ function openTask(e: {
 	})
 }
 
+function parseTimeLabel(label: string) {
+	return parse(label, 'dd.MMM', dateFromDate.value)
+}
+
 function weekdayFromTimeLabel(label: string): string {
-	const parsed = parse(label, 'dd.MMM', dateFromDate.value)
+	const parsed = parseTimeLabel(label)
 	return format(parsed, 'E')
 }
 
 function dayIsToday(label: string): boolean {
-	const parsed = parse(label, 'dd.MMM', dateFromDate.value)
+	const parsed = parseTimeLabel(label)
+
 	const today = new Date()
 	return parsed.getDate() === today.getDate() &&
 		parsed.getMonth() === today.getMonth() &&
