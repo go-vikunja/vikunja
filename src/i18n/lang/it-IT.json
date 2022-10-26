@@ -268,7 +268,7 @@
         "updatedSuccess": "{type} aggiunto."
       },
       "right": {
-        "title": "Permission",
+        "title": "Permessi",
         "read": "Sola lettura",
         "readWrite": "Lettura e scrittura",
         "admin": "Amministratore"
@@ -842,7 +842,7 @@
       "userAddedSuccess": "Membro del gruppo aggiunto.",
       "madeMember": "Membro del gruppo reso membro.",
       "madeAdmin": "Membro del gruppo reso amministratore.",
-      "mustSelectUser": "Please select a user.",
+      "mustSelectUser": "Seleziona un utente.",
       "delete": {
         "header": "Elimina il gruppo",
         "text1": "Sei sicuro di voler eliminare questo gruppo e tutti i suoi membri?",
