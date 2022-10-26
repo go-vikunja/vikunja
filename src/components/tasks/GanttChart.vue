@@ -83,6 +83,8 @@ const emit = defineEmits<{
 const {tasks, filters} = toRefs(props)
 
 // setup dayjs for vue-ganttastic
+const dayjsLanguageLoading = ref(false)
+// const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
 dayjs.extend(isToday)
 extendDayjs()
 
