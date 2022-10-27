@@ -2,6 +2,12 @@
 	<div class="loader-container is-loading"></div>
 </template>
 
+<script lang="ts">
+export default {
+	inheritAttrs: false,
+}
+</script>
+
 <style scoped lang="scss">
 .loader-container {
 	height: 100%;

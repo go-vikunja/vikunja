@@ -158,7 +158,7 @@ import {PrefixMode} from '@/modules/parseTaskText'
 
 import ListSearch from '@/components/tasks/partials/listSearch.vue'
 
-import {availableLanguages} from '@/i18n'
+import {SUPPORTED_LOCALES} from '@/i18n'
 import {playSoundWhenDoneKey, playPopSound} from '@/helpers/playPop'
 import {getQuickAddMagicMode, setQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {createRandomID} from '@/helpers/randomId'
@@ -227,7 +227,7 @@ const authStore = useAuthStore()
 const settings = ref({...authStore.settings})
 const id = ref(createRandomID())
 const availableLanguageOptions = ref(
-	Object.entries(availableLanguages)
+	Object.entries(SUPPORTED_LOCALES)
 		.map(l => ({code: l[0], title: l[1]}))
 		.sort((a, b) => a.title.localeCompare(b.title)),
 )

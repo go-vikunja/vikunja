@@ -46,7 +46,6 @@
 }
 
 // FIXME: is only used where <edit-task> is used aswell:
-// - gantt-component.vue
 // - List.vue
 // -> Move the <card> wrapper including this class definition inside <edit-task>
 .is-max-width-desktop .tasks .task {

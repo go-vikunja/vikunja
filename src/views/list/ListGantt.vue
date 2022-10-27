@@ -1,47 +1,30 @@
 <template>
-	<ListWrapper class="list-gantt" :list-id="props.listId" viewName="gantt">
+	<ListWrapper class="list-gantt" :list-id="filters.listId" viewName="gantt">
 		<template #header>
-			<card class="gantt-options">
-				<fancycheckbox class="is-block" v-model="showTaskswithoutDates">
-					{{ $t('list.gantt.showTasksWithoutDates') }}
-				</fancycheckbox>
-				<div class="range-picker">
+			<card>
+				<div class="gantt-options">
 					<div class="field">
-						<label class="label" for="dayWidth">{{ $t('list.gantt.size') }}</label>
+						<label class="label" for="range">{{ $t('list.gantt.range') }}</label>
 						<div class="control">
-							<div class="select">
-								<select id="dayWidth" v-model.number="dayWidth">
-									<option value="35">{{ $t('list.gantt.default') }}</option>
-									<option value="10">{{ $t('list.gantt.month') }}</option>
-									<option value="80">{{ $t('list.gantt.day') }}</option>
-								</select>
-							</div>
-						</div>
-					</div>
-					<div class="field">
-						<label class="label" for="fromDate">{{ $t('list.gantt.from') }}</label>
-						<div class="control">
-							<flat-pickr
+							<Foo
+								ref="flatPickerEl"
 								:config="flatPickerConfig"
 								class="input"
-								id="fromDate"
-								:placeholder="$t('list.gantt.from')"
-								v-model="dateFrom"
+								id="range"
+								:placeholder="$t('list.gantt.range')"
+								v-model="flatPickerDateRange"
 							/>
 						</div>
 					</div>
-					<div class="field">
-						<label class="label" for="toDate">{{ $t('list.gantt.to') }}</label>
+					<div class="field" v-if="!hasDefaultFilters">
+						<label class="label" for="range">Reset</label>
 						<div class="control">
-							<flat-pickr
-								:config="flatPickerConfig"
-								class="input"
-								id="toDate"
-								:placeholder="$t('list.gantt.to')"
-								v-model="dateTo"
-							/>
+							<x-button @click="setDefaultFilters">Reset</x-button>
 						</div>
 					</div>
+					<fancycheckbox class="is-block" v-model="filters.showTasksWithoutDates">
+						{{ $t('list.gantt.showTasksWithoutDates') }}
+					</fancycheckbox>
 				</div>
 			</card>
 		</template>
@@ -49,15 +32,15 @@
 		<template #default>
 			<div class="gantt-chart-container">
 				<card :padding="false" class="has-overflow">
-
 					<gantt-chart
-						:date-from="dateFrom"
-						:date-to="dateTo"
-						:day-width="dayWidth"
-						:list-id="props.listId"
-						:show-taskswithout-dates="showTaskswithoutDates"
+						:filters="filters"
+						:tasks="tasks"
+						:isLoading="isLoading"
+						:default-task-start-date="defaultTaskStartDate"
+						:default-task-end-date="defaultTaskEndDate"
+						@update:task="updateTask"
 					/>
-
+					<TaskForm v-if="canWrite" @create-task="addGanttTask" />
 				</card>
 			</div>
 		</template>
@@ -65,46 +48,92 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed} from 'vue'
-import flatPickr from 'vue-flatpickr-component'
+import {computed, ref, toRefs} from 'vue'
+import type Flatpickr from 'flatpickr'
 import {useI18n} from 'vue-i18n'
+import type {RouteLocationNormalized} from 'vue-router'
 
+import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
 
+import Foo from '@/components/misc/flatpickr/Flatpickr.vue'
 import ListWrapper from './ListWrapper.vue'
-import GanttChart from '@/components/tasks/gantt-component.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+import TaskForm from '@/components/tasks/TaskForm.vue'
 
-const props = defineProps({
-	listId: {
-		type: Number,
-		required: true,
+import {createAsyncComponent} from '@/helpers/createAsyncComponent'
+import {useGanttFilters} from './helpers/useGanttFilters'
+import {RIGHTS} from '@/constants/rights'
+
+import type {DateISO} from '@/types/DateISO'
+import type {ITask} from '@/modelTypes/ITask'
+
+type Options = Flatpickr.Options.Options
+
+const GanttChart = createAsyncComponent(() => import('@/components/tasks/GanttChart.vue'))
+
+const props = defineProps<{route: RouteLocationNormalized}>()
+
+const baseStore = useBaseStore()
+const canWrite = computed(() => baseStore.currentList.maxRight > RIGHTS.READ)
+
+const {route} = toRefs(props)
+const {
+	filters,
+	hasDefaultFilters,
+	setDefaultFilters,
+	tasks,
+	isLoading,
+	addTask,
+	updateTask,
+} = useGanttFilters(route)
+
+const today = new Date(new Date().setHours(0,0,0,0))
+const defaultTaskStartDate: DateISO = new Date(today).toISOString()
+const defaultTaskEndDate: DateISO = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7, 23,59,0,0).toISOString()
+
+async function addGanttTask(title: ITask['title']) {
+	return await addTask({
+		title,
+		listId: filters.value.listId,
+		startDate: defaultTaskStartDate,
+		endDate: defaultTaskEndDate,
+	})
+}
+
+const flatPickerEl = ref<typeof Foo | null>(null)
+const flatPickerDateRange = computed<Date[]>({
+	get: () => ([
+		new Date(filters.value.dateFrom),
+		new Date(filters.value.dateTo),
+	]),
+	set(newVal) {
+		const [dateFrom, dateTo] = newVal.map((date) => date?.toISOString())
+		
+		// only set after whole range has been selected
+		if (!dateTo) return
+
+		Object.assign(filters.value, {dateFrom, dateTo})
 	},
 })
 
-const DEFAULT_DAY_COUNT = 35
-
-const showTaskswithoutDates = ref(false)
-const dayWidth = ref(DEFAULT_DAY_COUNT)
-
-const now = ref(new Date())
-const dateFrom = ref(new Date((new Date()).setDate(now.value.getDate() - 15)))
-const dateTo = ref(new Date((new Date()).setDate(now.value.getDate() + 30)))
+const initialDateRange = [filters.value.dateFrom, filters.value.dateTo]
 
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
-const flatPickerConfig = computed(() => ({
+const flatPickerConfig = computed<Options>(() => ({
 	altFormat: t('date.altFormatShort'),
 	altInput: true,
-	dateFormat: 'Y-m-d',
+	defaultDate: initialDateRange,
 	enableTime: false,
+	mode: 'range',
 	locale: {
 		firstDayOfWeek: authStore.settings.weekStart,
 	},
 }))
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .gantt-chart-container {
 	padding-bottom: 1rem;
 }
@@ -118,62 +147,45 @@ const flatPickerConfig = computed(() => ({
 	@media screen and (max-width: $tablet) {
 		flex-direction: column;
 	}
-
-	.range-picker {
-		display: flex;
-		margin-bottom: 1rem;
-		width: 50%;
-
-		@media screen and (max-width: $tablet) {
-			flex-direction: column;
-			width: 100%;
-		}
-
-		.field {
-			margin-bottom: 0;
-			width: 33%;
-
-			&:not(:last-child) {
-				padding-right: .5rem;
-			}
-
-			@media screen and (max-width: $tablet) {
-				width: 100%;
-				max-width: 100%;
-				margin-top: .5rem;
-				padding-right: 0 !important;
-			}
-
-			&, .input {
-				font-size: .8rem;
-			}
-
-			.select, .select select {
-				height: auto;
-				width: 100%;
-				font-size: .8rem;
-			}
-
-
-			.label {
-				font-size: .9rem;
-				padding-left: .4rem;
-			}
-		}
-	}
 }
 
-// vue-draggable overwrites
-.vdr.active::before {
-	display: none;
-}
-
-.link-share-view:not(.has-background) .card.gantt-options {
+:global(.link-share-view:not(.has-background)) .gantt-options {
 	border: none;
 	box-shadow: none;
 
 	.card-content {
 		padding: .5rem;
+	}
+}
+
+.field {
+	margin-bottom: 0;
+	width: 33%;
+
+	&:not(:last-child) {
+		padding-right: .5rem;
+	}
+
+	@media screen and (max-width: $tablet) {
+		width: 100%;
+		max-width: 100%;
+		margin-top: .5rem;
+		padding-right: 0 !important;
+	}
+
+	&, .input {
+		font-size: .8rem;
+	}
+
+	.select,
+	.select select {
+		height: auto;
+		width: 100%;
+		font-size: .8rem;
+	}
+
+	.label {
+		font-size: .9rem;
 	}
 }
 </style>

@@ -11,7 +11,7 @@ describe('List View Gantt', () => {
 		const tasks = TaskFactory.create(1)
 		cy.visit('/lists/1/gantt')
 
-		cy.get('.gantt-chart .tasks')
+		cy.get('.g-gantt-rows-container')
 			.should('not.contain', tasks[0].title)
 	})
 
@@ -25,7 +25,7 @@ describe('List View Gantt', () => {
 
 		cy.visit('/lists/1/gantt')
 
-		cy.get('.gantt-chart .months')
+		cy.get('.g-timeunits-container')
 			.should('contain', format(now, 'MMMM'))
 			.should('contain', format(nextMonth, 'MMMM'))
 	})
@@ -38,14 +38,13 @@ describe('List View Gantt', () => {
 		})
 		cy.visit('/lists/1/gantt')
 
-		cy.get('.gantt-chart .tasks')
+		cy.get('.g-gantt-rows-container')
 			.should('not.be.empty')
-		cy.get('.gantt-chart .tasks')
 			.should('contain', tasks[0].title)
 	})
 
 	it('Shows tasks with no dates after enabling them', () => {
-		TaskFactory.create(1, {
+		const tasks = TaskFactory.create(1, {
 			start_date: null,
 			end_date: null,
 		})
@@ -55,13 +54,15 @@ describe('List View Gantt', () => {
 			.contains('Show tasks which don\'t have dates set')
 			.click()
 
-		cy.get('.gantt-chart .tasks')
+		cy.get('.g-gantt-rows-container')
 			.should('not.be.empty')
-		cy.get('.gantt-chart .tasks .task.nodate')
-			.should('exist')
+			.should('contain', tasks[0].title)
 	})
 
 	it('Drags a task around', () => {
+		cy.intercept('**/api/v1/tasks/*')
+			.as('taskUpdate')
+		
 		const now = new Date()
 		TaskFactory.create(1, {
 			start_date: formatISO(now),
@@ -69,10 +70,11 @@ describe('List View Gantt', () => {
 		})
 		cy.visit('/lists/1/gantt')
 
-		cy.get('.gantt-chart .tasks .task')
+		cy.get('.g-gantt-rows-container .g-gantt-row .g-gantt-row-bars-container div .g-gantt-bar')
 			.first()
 			.trigger('mousedown', {which: 1})
 			.trigger('mousemove', {clientX: 500, clientY: 0})
 			.trigger('mouseup', {force: true})
+		cy.wait('@taskUpdate')
 	})
 })

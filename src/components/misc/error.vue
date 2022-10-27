@@ -7,6 +7,12 @@
 	</message>
 </template>
 
+<script lang="ts">
+export default {
+	inheritAttrs: false,
+}
+</script>
+
 <script lang="ts" setup>
 import Message from '@/components/misc/message.vue'
 import ButtonLink from '@/components/misc/ButtonLink.vue'

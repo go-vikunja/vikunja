@@ -2,8 +2,9 @@ import {AuthenticatedHTTPFactory} from '@/http-common'
 import type {Method} from 'axios'
 
 import {objectToSnakeCase} from '@/helpers/case'
-import AbstractModel, { type IAbstract } from '@/models/abstractModel'
-import type { Right } from '@/constants/rights'
+import AbstractModel from '@/models/abstractModel'
+import type {IAbstract} from '@/modelTypes/IAbstract'
+import type {Right} from '@/constants/rights'
 import type {IFile} from '@/modelTypes/IFile'
 
 interface Paths {

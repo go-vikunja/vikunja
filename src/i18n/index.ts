@@ -1,19 +1,8 @@
 import {createI18n} from 'vue-i18n'
 import langEN from './lang/en.json'
 
-export const i18n = createI18n({
-	locale: 'en', // set locale
-	fallbackLocale: 'en',
-	legacy: true,
-	globalInjection: true,
-	allowComposition: true,
-	messages: {
-		en: langEN,
-	},
-})
-
-export const availableLanguages = {
-	en: 'English',
+export const SUPPORTED_LOCALES = {
+	'en': 'English',
 	'de-DE': 'Deutsch',
 	'de-swiss': 'Schwizertütsch',
 	'ru-RU': 'Русский',
@@ -24,62 +13,72 @@ export const availableLanguages = {
 	'pl-PL': 'Polski',
 	'nl-NL': 'Nederlands',
 	'pt-PT': 'Português',
-}
+	'zh-CN': 'Chinese',
+} as Record<string, string>
 
-const loadedLanguages = ['en'] // our default language that is preloaded
+export type SupportedLocale = keyof typeof SUPPORTED_LOCALES
 
-const setI18nLanguage = (lang: string) => {
+export const DEFAULT_LANGUAGE: SupportedLocale= 'en'
+
+export type ISOLanguage = string
+
+export const i18n = createI18n({
+	locale: DEFAULT_LANGUAGE, // set locale
+	fallbackLocale: DEFAULT_LANGUAGE,
+	legacy: true,
+	globalInjection: true,
+	allowComposition: true,
+	inheritLocale: true,
+	messages: {
+		en: langEN,
+	} as Record<SupportedLocale, any>,
+})
+
+function setI18nLanguage(lang: SupportedLocale): SupportedLocale {
 	i18n.global.locale = lang
-	document.documentElement.lang =lang
+	document.documentElement.lang = lang
 	return lang
 }
 
-export const loadLanguageAsync = lang => {
+export async function loadLanguageAsync(lang: SupportedLocale) {
 	if (!lang) {
+		throw new Error()
+	}
+
+	// do not change language to the current one
+	if (i18n.global.locale === lang) {
 		return
 	}
 
-	if (
-		// If the same language
-		i18n.global.locale === lang ||
-		// If the language was already loaded
-		loadedLanguages.includes(lang)
-	) {
-		return setI18nLanguage(lang)
+	// If the language hasn't been loaded yet
+	if (!i18n.global.availableLocales.includes(lang)) {
+		const messages = await import(`./lang/${lang}.json`)
+		i18n.global.setLocaleMessage(lang, messages.default)
 	}
 
-	// If the language hasn't been loaded yet
-	return import(`./lang/${lang}.json`).then(
-		messages => {
-			i18n.global.setLocaleMessage(lang, messages.default)
-			loadedLanguages.push(lang)
-			return setI18nLanguage(lang)
-		},
-	)
+	return setI18nLanguage(lang)
 }
 
-export const getCurrentLanguage = () => {
+export function getCurrentLanguage(): SupportedLocale {
 	const savedLanguage = localStorage.getItem('language')
 	if (savedLanguage !== null) {
 		return savedLanguage
 	}
 
-	const browserLanguage = navigator.language || navigator.userLanguage
+	const browserLanguage = navigator.language
 
-	for (const k in availableLanguages) {
-		if (browserLanguage[k] === browserLanguage || k.startsWith(browserLanguage + '-')) {
-			return k
-		}
-	}
+	const language: SupportedLocale | undefined = Object.keys(SUPPORTED_LOCALES).find(langKey => {
+		return langKey === browserLanguage || langKey.startsWith(browserLanguage + '-')
+	})
 
-	return 'en'
+	return language || DEFAULT_LANGUAGE
 }
 
-export const saveLanguage = (lang: string) => {
+export function saveLanguage(lang: SupportedLocale) {
 	localStorage.setItem('language', lang)
 	setLanguage()
 }
 
-export const setLanguage = () => {
-	loadLanguageAsync(getCurrentLanguage())
+export function setLanguage() {
+	return loadLanguageAsync(getCurrentLanguage())
 }

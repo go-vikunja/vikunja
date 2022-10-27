@@ -1,9 +1,10 @@
 import {beforeEach, afterEach, describe, it, expect, vi} from 'vitest'
 
 import {parseTaskText, PrefixMode} from './parseTaskText'
-import {getDateFromText, getDateFromTextIn, parseDate} from '../helpers/time/parseDate'
+import {getDateFromText, parseDate} from '../helpers/time/parseDate'
 import {calculateDayInterval} from '../helpers/time/calculateDayInterval'
 import {PRIORITIES} from '@/constants/priorities'
+import { MILLISECONDS_A_DAY } from '@/constants/date'
 
 describe('Parse Task Text', () => {
 	beforeEach(() => {
@@ -296,7 +297,7 @@ describe('Parse Task Text', () => {
 			expect(result.date.getMonth()).toBe(expectedDate.getMonth())
 		})
 		it('should recognize dates of the month in the future', () => {
-			const nextDay = new Date(+new Date() + 60 * 60 * 24 * 1000)
+			const nextDay = new Date(+new Date() + MILLISECONDS_A_DAY)
 			const result = parseTaskText(`Lorem Ipsum ${nextDay.getDate()}nd`)
 
 			expect(result.text).toBe('Lorem Ipsum')

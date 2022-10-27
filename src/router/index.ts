@@ -35,7 +35,7 @@ import MigrationComponent from '../views/migrator/Migrate.vue'
 import MigrateServiceComponent from '../views/migrator/MigrateService.vue'
 // List Views
 import ListList from '../views/list/ListList.vue'
-import ListGantt from '../views/list/ListGantt.vue'
+const ListGantt = () => import('../views/list/ListGantt.vue')
 import ListTable from '../views/list/ListTable.vue'
 import ListKanban from '../views/list/ListKanban.vue'
 const ListInfo = () => import('../views/list/ListInfo.vue')
@@ -379,7 +379,8 @@ const router = createRouter({
 			name: 'list.gantt',
 			component: ListGantt,
 			beforeEnter: (to) => saveListView(to.params.listId, to.name),
-			props: route => ({ listId: Number(route.params.listId as string) }),
+			// FIXME: test if `useRoute` would be the same. If it would use it instead.
+			props: route => ({route}),
 		},
 		{
 			path: '/lists/:listId/table',

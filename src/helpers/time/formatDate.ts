@@ -1,5 +1,7 @@
 import {createDateFromString} from '@/helpers/time/createDateFromString'
 import {format, formatDistanceToNow, formatISO as formatISOfns} from 'date-fns'
+
+// FIXME: support all locales and load dynamically
 import {enGB, de, fr, ru} from 'date-fns/locale'
 
 import {i18n} from '@/i18n'
