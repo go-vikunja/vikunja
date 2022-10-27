@@ -18,23 +18,12 @@ const SORT_BY_DEFAULT = {
 	id: 'desc',
 }
 
-/**
- * This mixin provides a base set of methods and properties to get tasks on a list.
- */
-export function useTaskList(listId, sortByDefault = SORT_BY_DEFAULT) {
-	const params = ref({...getDefaultParams()})
-	
-	const search = ref('')
-	const page = ref(1)
-
-	const sortBy = ref({ ...sortByDefault })
-
 	// This makes sure an id sort order is always sorted last.
 	// When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
 	// precedence over everything else, making any other sort columns pretty useless.
-	function formatSortOrder(params) {
+	function formatSortOrder(sortBy, params) {
 		let hasIdFilter = false
-		const sortKeys = Object.keys(sortBy.value)
+		const sortKeys = Object.keys(sortBy)
 		for (const s of sortKeys) {
 			if (s === 'id') {
 				sortKeys.splice(s, 1)
@@ -46,10 +35,23 @@ export function useTaskList(listId, sortByDefault = SORT_BY_DEFAULT) {
 			sortKeys.push('id')
 		}
 		params.sort_by = sortKeys
-		params.order_by = sortKeys.map(s => sortBy.value[s])
+		params.order_by = sortKeys.map(s => sortBy[s])
 
 		return params
 	}
+
+/**
+ * This mixin provides a base set of methods and properties to get tasks on a list.
+ */
+export function useTaskList(listId, sortByDefault = SORT_BY_DEFAULT) {
+	const params = ref({...getDefaultParams()})
+	
+	const search = ref('')
+	const page = ref(1)
+
+	const sortBy = ref({ ...sortByDefault })
+
+
 
 	const getAllTasksParams = computed(() => {
 		let loadParams = {...params.value}
@@ -58,7 +60,7 @@ export function useTaskList(listId, sortByDefault = SORT_BY_DEFAULT) {
 			loadParams.s = search.value
 		}
 
-		loadParams = formatSortOrder(loadParams)
+		loadParams = formatSortOrder(sortBy.value, loadParams)
 
 		return [
 			{listId: listId.value},

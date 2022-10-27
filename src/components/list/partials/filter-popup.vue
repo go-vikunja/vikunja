@@ -34,7 +34,7 @@ import {computed, ref, watch} from 'vue'
 
 import Filters from '@/components/list/partials/filters.vue'
 
-import {getDefaultParams} from '@/composables/taskList'
+import {getDefaultParams} from '@/composables/useTaskList'
 
 const	props = defineProps({
 	modelValue: {

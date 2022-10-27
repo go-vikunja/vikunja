@@ -212,7 +212,7 @@ import EditLabels from '@/components/tasks/partials/editLabels.vue'
 
 import {dateIsValid, formatISO} from '@/helpers/time/formatDate'
 import {objectToSnakeCase} from '@/helpers/case'
-import {getDefaultParams} from '@/composables/taskList'
+import {getDefaultParams} from '@/composables/useTaskList'
 import {camelCase} from 'camel-case'
 
 // FIXME: merge with DEFAULT_PARAMS in taskList.js
