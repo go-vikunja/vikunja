@@ -672,23 +672,23 @@
       "updated": "Aggiornato"
     },
     "subscription": {
-      "subscribedListThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this list through its namespace.",
-      "subscribedTaskThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this task through its namespace.",
-      "subscribedTaskThroughParentList": "You can't unsubscribe here because you are subscribed to this task through its list.",
-      "subscribedNamespace": "You are currently subscribed to this namespace and will receive notifications for changes.",
-      "notSubscribedNamespace": "You are not subscribed to this namespace and won't receive notifications for changes.",
-      "subscribedList": "You are currently subscribed to this list and will receive notifications for changes.",
-      "notSubscribedList": "You are not subscribed to this list and won't receive notifications for changes.",
-      "subscribedTask": "You are currently subscribed to this task and will receive notifications for changes.",
-      "notSubscribedTask": "You are not subscribed to this task and won't receive notifications for changes.",
+      "subscribedListThroughParentNamespace": "Non puoi annullare l'iscrizione perché sei iscritto al namespace di questa lista.",
+      "subscribedTaskThroughParentNamespace": "Non puoi annullare l'iscrizione perché sei iscritto al namespace di questa attività.",
+      "subscribedTaskThroughParentList": "Non puoi annullare l'iscrizione perché sei iscritto alla lista di questa attività.",
+      "subscribedNamespace": "Sei iscritto a questo namespace e verrai notificato delle modifiche.",
+      "notSubscribedNamespace": "Non sei iscritto a questo namespace e non verrai notificato delle modifiche.",
+      "subscribedList": "Sei iscritto a questa lista e verrai notificato delle modifiche.",
+      "notSubscribedList": "Non sei iscritto a questa lista e non verrai notificato delle modifiche.",
+      "subscribedTask": "Sei iscritto a questa attività e verrai notificato delle modifiche.",
+      "notSubscribedTask": "Non sei iscritto a questa attività e non verrai notificato delle modifiche.",
       "subscribe": "Iscriviti",
       "unsubscribe": "Disiscriviti",
-      "subscribeSuccessNamespace": "You are now subscribed to this namespace",
-      "unsubscribeSuccessNamespace": "You are now unsubscribed to this namespace",
-      "subscribeSuccessList": "You are now subscribed to this list",
-      "unsubscribeSuccessList": "You are now unsubscribed to this list",
-      "subscribeSuccessTask": "You are now subscribed to this task",
-      "unsubscribeSuccessTask": "You are now unsubscribed to this task"
+      "subscribeSuccessNamespace": "Sei iscritto a questo namespace",
+      "unsubscribeSuccessNamespace": "Non sei più iscritto a questo namespace",
+      "subscribeSuccessList": "Sei iscritto a questa lista",
+      "unsubscribeSuccessList": "Non sei più iscritto a questa lista",
+      "subscribeSuccessTask": "Sei iscritto a questa attività",
+      "unsubscribeSuccessTask": "Non sei più iscritto a questa attività"
     },
     "attachment": {
       "title": "Allegati",
@@ -856,10 +856,10 @@
         "success": "Utente rimosso dal gruppo."
       },
       "leave": {
-        "title": "Lascia il gruppo",
+        "title": "Abbandona il gruppo",
         "text1": "Sei sicuro di voler abbandonare questo gruppo?",
-        "text2": "You will lose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
-        "success": "You have successfully left the team."
+        "text2": "Perderai l'accesso a tutte le liste e namespace a cui questo gruppo ha accesso. Se cambi idea, dovrai farti aggiungere di nuovo da un amministratore del gruppo.",
+        "success": "Hai abbandonato il gruppo."
       }
     },
     "attributes": {
