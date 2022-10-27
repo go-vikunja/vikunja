@@ -16,11 +16,7 @@
 				</div>
 				<div
 					class="buttons is-right"
-					v-if="
-						item.data &&
-						item.data.actions &&
-						item.data.actions.length > 0
-					"
+					v-if="item.data?.actions?.length > 0"
 				>
 					<x-button
 						:key="'action_' + i"
