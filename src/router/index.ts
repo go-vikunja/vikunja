@@ -332,6 +332,7 @@ const router = createRouter({
 			meta: {
 				showAsModal: true,
 			},
+			props: route => ({ listId: Number(route.params.listId as string) }),
 		},
 		{
 			path: '/lists/:listId/settings/delete',
@@ -340,6 +341,7 @@ const router = createRouter({
 			meta: {
 				showAsModal: true,
 			},
+			props: route => ({ listId: Number(route.params.listId as string) }),
 		},
 		{
 			path: '/lists/:listId/info',

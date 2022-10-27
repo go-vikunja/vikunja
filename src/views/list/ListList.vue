@@ -158,7 +158,7 @@ import {useTaskList} from '@/composables/useTaskList'
 import {RIGHTS as Rights} from '@/constants/rights'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import type {ITask} from '@/modelTypes/ITask'
-import {isSavedFilter} from '@/helpers/savedFilter'
+import {isSavedFilter} from '@/services/savedFilter'
 
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'

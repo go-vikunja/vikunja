@@ -1,9 +1,11 @@
 <template>
 	<modal
 		@close="$router.back()"
-		@submit="deleteSavedFilter()"
+		@submit="deleteFilter()"
 	>
-		<template #header><span>{{ $t('filters.delete.header') }}</span></template>
+		<template #header>
+			<span>{{ $t('filters.delete.header') }}</span>
+		</template>
 		
 		<template #text>
 			<p>{{ $t('filters.delete.text') }}</p>
@@ -12,30 +14,11 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
-import { useRouter, useRoute } from 'vue-router'
-import {success} from '@/message'
+import {toRef} from 'vue'
+import type {IList} from '@/modelTypes/IList'
+import {useSavedFilter} from '@/services/savedFilter'
 
-import SavedFilterModel from '@/models/savedFilter'
-import SavedFilterService from '@/services/savedFilter'
-import {getSavedFilterIdFromListId} from '@/helpers/savedFilter'
-import {useNamespaceStore} from '@/stores/namespaces'
+const props = defineProps<{ listId: IList['id'] }>()
 
-const { t } = useI18n({useScope: 'global'})
-const router = useRouter()
-const route = useRoute()
-const namespaceStore = useNamespaceStore()
-
-async function deleteSavedFilter() {
-	// We assume the listId in the route is the pseudolist
-	const savedFilterId = getSavedFilterIdFromListId(Number((route.params.listId as string)))
-
-	const filterService = new SavedFilterService()
-	const filter = new SavedFilterModel({id: savedFilterId})
-
-	await filterService.delete(filter)
-	await namespaceStore.loadNamespaces()
-	success({message: t('filters.delete.success')})
-	router.push({name: 'namespaces.index'})
-}
+const {deleteFilter} = useSavedFilter(toRef(props, 'listId'))
 </script>

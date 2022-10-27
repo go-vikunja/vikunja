@@ -238,7 +238,7 @@ import {getCollapsedBucketState, saveCollapsedBucketState} from '@/helpers/saveC
 import {calculateItemPosition} from '../../helpers/calculateItemPosition'
 import KanbanCard from '@/components/tasks/partials/kanban-card.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
-import {isSavedFilter} from '@/helpers/savedFilter'
+import {isSavedFilter} from '@/services/savedFilter'
 
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'

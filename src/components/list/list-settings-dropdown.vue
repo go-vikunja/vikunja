@@ -78,12 +78,13 @@
 <script setup lang="ts">
 import {ref, computed, watchEffect, type PropType} from 'vue'
 
-import {isSavedFilter} from '@/helpers/savedFilter'
 import Dropdown from '@/components/misc/dropdown.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 import Subscription from '@/components/misc/subscription.vue'
 import type {IList} from '@/modelTypes/IList'
 import type {ISubscription} from '@/modelTypes/ISubscription'
+
+import {isSavedFilter} from '@/services/savedFilter'
 import {useConfigStore} from '@/stores/config'
 import {useListStore} from '@/stores/lists'
 import {useNamespaceStore} from '@/stores/namespaces'

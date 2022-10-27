@@ -11,9 +11,9 @@
 						<label class="label" for="title">{{ $t('filters.attributes.title') }}</label>
 						<div class="control">
 							<input
-								v-model="savedFilter.title"
-								:class="{ 'disabled': savedFilterService.loading}"
-								:disabled="savedFilterService.loading || undefined"
+								v-model="filter.title"
+								:class="{ 'disabled': filterService.loading}"
+								:disabled="filterService.loading || undefined"
 								class="input"
 								id="Title"
 								:placeholder="$t('filters.attributes.titlePlaceholder')"
@@ -26,10 +26,10 @@
 						<label class="label" for="description">{{ $t('filters.attributes.description') }}</label>
 						<div class="control">
 							<editor
-								:key="savedFilter.id"
-								v-model="savedFilter.description"
-								:class="{ 'disabled': savedFilterService.loading}"
-								:disabled="savedFilterService.loading"
+								:key="filter.id"
+								v-model="filter.description"
+								:class="{ 'disabled': filterService.loading}"
+								:disabled="filterService.loading"
 								:preview-is-default="false"
 								id="description"
 								:placeholder="$t('filters.attributes.descriptionPlaceholder')"
@@ -40,8 +40,8 @@
 						<label class="label" for="filters">{{ $t('filters.title') }}</label>
 						<div class="control">
 							<Filters
-								:class="{ 'disabled': savedFilterService.loading}"
-								:disabled="savedFilterService.loading"
+								:class="{ 'disabled': filterService.loading}"
+								:disabled="filterService.loading"
 								class="has-no-shadow has-no-border"
 								v-model="filters"
 							/>
@@ -50,9 +50,9 @@
 
 					<template #footer>
 						<x-button
-							:loading="savedFilterService.loading"
-							:disabled="savedFilterService.loading"
-							@click="create()"
+							:loading="filterService.loading"
+							:disabled="filterService.loading"
+							@click="createFilter()"
 							class="is-fullwidth"
 						>
 							{{ $t('filters.create.action') }}
@@ -63,31 +63,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, shallowRef, computed } from 'vue'
-
-import { useRouter } from 'vue-router'
-
-import {default as Editor} from '@/components/input/AsyncEditor'
+import Editor from '@/components/input/AsyncEditor'
 import Filters from '@/components/list/partials/filters.vue'
 
-import SavedFilterService from '@/services/savedFilter'
-import SavedFilterModel from '@/models/savedFilter'
-import {useNamespaceStore} from '@/stores/namespaces'
+import {useSavedFilter} from '@/services/savedFilter'
 
-const namespaceStore = useNamespaceStore()
-
-const savedFilterService = shallowRef(new SavedFilterService())
-
-const savedFilter = ref(new SavedFilterModel())
-const filters = computed({
-	get: () => savedFilter.value.filters,
-	set: (value) => (savedFilter.value.filters = value),
-})
-
-const router = useRouter()
-async function create() {
-	savedFilter.value = await savedFilterService.value.create(savedFilter.value)
-	await namespaceStore.loadNamespaces()
-	router.push({name: 'list.index', params: {listId: savedFilter.value.getListId()}})
-}
+const {
+	filter,
+	filters,
+	createFilter,
+	filterService,
+} = useSavedFilter()
 </script>

@@ -31,17 +31,4 @@ export default class SavedFilterModel extends AbstractModel<ISavedFilter> implem
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
 	}
-
-	/**
-	 * Calculates the corresponding list id to this saved filter.
-	 * This function matches the one in the api.
-	 * @returns {number}
-	 */
-	getListId() {
-		let listId = this.id * -1 - 1
-		if (listId > 0) {
-			listId = 0
-		}
-		return listId
-	}
 }
