@@ -93,7 +93,7 @@ const namespaceStore = useNamespaceStore()
 const labelStore = useLabelStore()
 const taskStore = useTaskStore()
 
-type DoAction<Type = {}> = { type: ACTION_TYPE } & Type
+type DoAction<Type = any> = { type: ACTION_TYPE } & Type
 
 enum ACTION_TYPE {
 	CMD = 'cmd',
