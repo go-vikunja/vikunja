@@ -13,7 +13,7 @@
 					:placeholder="placeholder"
 					@keyup="search"
 					ref="searchInput"
-					@keydown.down.prevent="() => select(0, 0)"
+					@keydown.down.prevent="select(0, 0)"
 					@keyup.prevent.delete="unselectCmd"
 					@keyup.prevent.enter="doCmd"
 					@keyup.prevent.esc="closeQuickActions"
@@ -35,13 +35,14 @@
 						<BaseButton
 							v-for="(i, key) in r.items"
 							:key="key"
-							:ref="`result-${k}_${key}`"
-							@keydown.up.prevent="() => select(k, key - 1)"
-							@keydown.down.prevent="() => select(k, key + 1)"
-							@click.prevent.stop="() => doAction(r.type, i)"
-							@keyup.prevent.enter="() => doAction(r.type, i)"
-							@keyup.prevent.esc="() => $refs.searchInput.focus()"
-							:class="{'is-strikethrough': i.done}"
+							class="result-item-button"
+							:class="{'is-strikethrough': (i as DoAction<ITask>)?.done}"
+							:ref="(el: Element | ComponentPublicInstance | null) => setResultRefs(el, k, key)"
+							@keydown.up.prevent="select(k, key - 1)"
+							@keydown.down.prevent="select(k, key + 1)"
+							@click.prevent.stop="doAction(r.type, i)"
+							@keyup.prevent.enter="doAction(r.type, i)"
+							@keyup.prevent.esc="searchInput?.focus()"
 						>
 							{{ i.title }}
 						</BaseButton>
@@ -52,23 +53,20 @@
 	</modal>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script setup lang="ts">
+import {ref, computed, watchEffect, shallowReactive, type ComponentPublicInstance} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useRouter} from 'vue-router'
 
 import TaskService from '@/services/task'
 import TeamService from '@/services/team'
 
 import NamespaceModel from '@/models/namespace'
 import TeamModel from '@/models/team'
-
 import ListModel from '@/models/list'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
-import {getHistory} from '@/modules/listHistory'
-import {parseTaskText, PrefixMode} from '@/modules/parseTaskText'
-import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
-import {PREFIXES} from '@/modules/parseTaskText'
 
 import {useBaseStore} from '@/stores/base'
 import {useListStore} from '@/stores/lists'
@@ -76,429 +74,504 @@ import {useNamespaceStore} from '@/stores/namespaces'
 import {useLabelStore} from '@/stores/labels'
 import {useTaskStore} from '@/stores/tasks'
 
-const TYPE_LIST = 'list'
-const TYPE_TASK = 'task'
-const TYPE_CMD = 'cmd'
-const TYPE_TEAM = 'team'
+import {getHistory} from '@/modules/listHistory'
+import {parseTaskText, PrefixMode, PREFIXES} from '@/modules/parseTaskText'
+import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
+import {success} from '@/message'
 
-const CMD_NEW_TASK = 'newTask'
-const CMD_NEW_LIST = 'newList'
-const CMD_NEW_NAMESPACE = 'newNamespace'
-const CMD_NEW_TEAM = 'newTeam'
+import type {ITeam} from '@/modelTypes/ITeam'
+import type {ITask} from '@/modelTypes/ITask'
+import type {INamespace} from '@/modelTypes/INamespace'
+import type {IList} from '@/modelTypes/IList'
 
-const SEARCH_MODE_ALL = 'all'
-const SEARCH_MODE_TASKS = 'tasks'
-const SEARCH_MODE_LISTS = 'lists'
-const SEARCH_MODE_TEAMS = 'teams'
+const {t} = useI18n({useScope: 'global'})
+const router = useRouter()
 
-export default defineComponent({
-	name: 'quick-actions',
-	components: {
-		BaseButton,
-		QuickAddMagic,
-	},
-	data() {
-		return {
-			query: '',
-			selectedCmd: null,
+const baseStore = useBaseStore()
+const listStore = useListStore()
+const namespaceStore = useNamespaceStore()
+const labelStore = useLabelStore()
+const taskStore = useTaskStore()
 
-			foundTasks: [],
-			taskSearchTimeout: null,
-			taskService: new TaskService(),
+type DoAction<Type = {}> = { type: ACTION_TYPE } & Type
 
-			foundTeams: [],
-			teamSearchTimeout: null,
-			teamService: new TeamService(),
-		}
-	},
-	computed: {
-		active() {
-			const active = useBaseStore().quickActionsActive
-			if (!active) {
-				// FIXME: computeds shouldn't have side effects.
-				// create a watcher instead
-				this.reset()
-			}
-			return active
-		},
-		results() {
-			let lists = []
-			const listStore = useListStore()
+enum ACTION_TYPE {
+	CMD = 'cmd',
+	TASK = 'task',
+	LIST = 'list',
+	TEAM = 'team',
+}
 
-			if (this.searchMode === SEARCH_MODE_ALL || this.searchMode === SEARCH_MODE_LISTS) {
-				const {list} = this.parsedQuery
+enum COMMAND_TYPE {
+	NEW_TASK = 'newTask',
+	NEW_LIST = 'newList',
+	NEW_NAMESPACE = 'newNamespace',
+	NEW_TEAM = 'newTeam',
+}
 
-				if (list === null) {
-					lists = []
-				} else {
-					const ncache = {}
-					const history = getHistory()
-					// Puts recently visited lists at the top
-					const allLists = [...new Set([
-						...history.map(l => listStore.getListById(l.id)),
-						...listStore.searchList(list),
-					])]
+enum SEARCH_MODE {
+	ALL = 'all',
+	TASKS = 'tasks',
+	LISTS = 'lists',
+	TEAMS = 'teams',
+}
 
-					lists = allLists.filter(l => {
-						if (typeof l === 'undefined' || l === null) {
-							return false
-						}
+const query = ref('')
+const selectedCmd = ref<Command | null>(null)
 
-						if (typeof ncache[l.namespaceId] === 'undefined') {
-							ncache[l.namespaceId] = useNamespaceStore().getNamespaceById(l.namespaceId)
-						}
+const foundTasks = ref<DoAction<ITask>[]>([])
+const taskService = shallowReactive(new TaskService())
 
-						return !ncache[l.namespaceId].isArchived
-					})
-				}
-			}
+const foundTeams = ref<ITeam[]>([])
+const teamService = shallowReactive(new TeamService())
 
-			const cmds = this.availableCmds
-				.filter(a => a.title.toLowerCase().includes(this.query.toLowerCase()))
+const active = computed(() => baseStore.quickActionsActive)
 
-			return [
-				{
-					type: TYPE_CMD,
-					title: this.$t('quickActions.commands'),
-					items: cmds,
-				},
-				{
-					type: TYPE_TASK,
-					title: this.$t('quickActions.tasks'),
-					items: this.foundTasks,
-				},
-				{
-					type: TYPE_LIST,
-					title: this.$t('quickActions.lists'),
-					items: lists,
-				},
-				{
-					type: TYPE_TEAM,
-					title: this.$t('quickActions.teams'),
-					items: this.foundTeams,
-				},
-			].filter(i => i.items.length > 0)
-		},
-		nothing() {
-			return this.search === '' || Object.keys(this.results).length === 0
-		},
-		loading() {
-			return this.taskService.loading ||
-				useNamespaceStore().isLoading || useListStore().isLoading ||
-				this.teamService.loading
-		},
-		placeholder() {
-			if (this.selectedCmd !== null) {
-				switch (this.selectedCmd.action) {
-					case CMD_NEW_TASK:
-						return this.$t('quickActions.newTask')
-					case CMD_NEW_LIST:
-						return this.$t('quickActions.newList')
-					case CMD_NEW_NAMESPACE:
-						return this.$t('quickActions.newNamespace')
-					case CMD_NEW_TEAM:
-						return this.$t('quickActions.newTeam')
-				}
-			}
-
-			return this.$t('quickActions.placeholder')
-		},
-		hintText() {
-			let namespace
-
-			if (this.selectedCmd !== null && this.currentList !== null) {
-				switch (this.selectedCmd.action) {
-					case CMD_NEW_TASK:
-						return this.$t('quickActions.createTask', {title: this.currentList.title})
-					case CMD_NEW_LIST:
-						namespace = useNamespaceStore().getNamespaceById(this.currentList.namespaceId)
-						return this.$t('quickActions.createList', {title: namespace.title})
-				}
-			}
-
-			const prefixes = PREFIXES[getQuickAddMagicMode()] ?? PREFIXES[PrefixMode.Default]
-
-			return this.$t('quickActions.hint', prefixes)
-		},
-		currentList() {
-			const currentList = useBaseStore().currentList
-			return Object.keys(currentList).length === 0 ? null : currentList
-		},
-		availableCmds() {
-			const cmds = []
-
-			if (this.currentList !== null) {
-				cmds.push({
-					title: this.$t('quickActions.cmds.newTask'),
-					action: CMD_NEW_TASK,
-				})
-				cmds.push({
-					title: this.$t('quickActions.cmds.newList'),
-					action: CMD_NEW_LIST,
-				})
-			}
-			cmds.push({
-				title: this.$t('quickActions.cmds.newNamespace'),
-				action: CMD_NEW_NAMESPACE,
-			})
-			cmds.push({
-				title: this.$t('quickActions.cmds.newTeam'),
-				action: CMD_NEW_TEAM,
-			})
-
-			return cmds
-		},
-		parsedQuery() {
-			return parseTaskText(this.query, getQuickAddMagicMode())
-		},
-		searchMode() {
-			if (this.query === '') {
-				return SEARCH_MODE_ALL
-			}
-
-			const {text, list, labels, assignees} = this.parsedQuery
-
-			if (assignees.length === 0 && text !== '') {
-				return SEARCH_MODE_TASKS
-			}
-			if (assignees.length === 0 && list !== null && text === '' && labels.length === 0) {
-				return SEARCH_MODE_LISTS
-			}
-			if (assignees.length > 0 && list === null && text === '' && labels.length === 0) {
-				return SEARCH_MODE_TEAMS
-			}
-
-			return SEARCH_MODE_ALL
-		},
-		isNewTaskCommand() {
-			return this.selectedCmd !== null && this.selectedCmd.action === CMD_NEW_TASK
-		},
-	},
-	methods: {
-		search() {
-			this.searchTasks()
-			this.searchTeams()
-		},
-		searchTasks() {
-			if (this.searchMode !== SEARCH_MODE_ALL && this.searchMode !== SEARCH_MODE_TASKS) {
-				this.foundTasks = []
-				return
-			}
-
-			if (this.selectedCmd !== null) {
-				return
-			}
-
-			if (this.taskSearchTimeout !== null) {
-				clearTimeout(this.taskSearchTimeout)
-				this.taskSearchTimeout = null
-			}
-
-			const {text, list, labels} = this.parsedQuery
-
-			const params = {
-				s: text,
-				filter_by: [],
-				filter_value: [],
-				filter_comparator: [],
-			}
-
-			const listStore = useListStore()
-
-			if (list !== null) {
-				const l = listStore.findListByExactname(list)
-				if (l !== null) {
-					params.filter_by.push('list_id')
-					params.filter_value.push(l.id)
-					params.filter_comparator.push('equals')
-				}
-			}
-
-			if (labels.length > 0) {
-				const labelIds = useLabelStore().getLabelsByExactTitles(labels).map(l => l.id)
-				if (labelIds.length > 0) {
-					params.filter_by.push('labels')
-					params.filter_value.push(labelIds.join())
-					params.filter_comparator.push('in')
-				}
-			}
-
-			this.taskSearchTimeout = setTimeout(async () => {
-				const r = await this.taskService.getAll({}, params)
-				this.foundTasks = r.map(t => {
-					t.type = TYPE_TASK
-					const list = listStore.getListById(t.listId)
-					if (list !== null) {
-						t.title = `${t.title} (${list.title})`
-					}
-
-					return t
-				})
-			}, 150)
-		},
-		searchTeams() {
-			if (this.searchMode !== SEARCH_MODE_ALL && this.searchMode !== SEARCH_MODE_TEAMS) {
-				this.foundTeams = []
-				return
-			}
-
-			if (this.query === '' || this.selectedCmd !== null) {
-				return
-			}
-
-			if (this.teamSearchTimeout !== null) {
-				clearTimeout(this.teamSearchTimeout)
-				this.teamSearchTimeout = null
-			}
-
-			const {assignees} = this.parsedQuery
-
-			this.teamSearchTimeout = setTimeout(async () => {
-				const teamSearchPromises = assignees.map((t) => this.teamService.getAll({}, {s: t}))
-				const teamsResult = await Promise.all(teamSearchPromises)
-				this.foundTeams = teamsResult.flatMap(team => {
-					team.title = team.name
-					return team
-				})
-			}, 150)
-		},
-		closeQuickActions() {
-			useBaseStore().setQuickActionsActive(false)
-		},
-		doAction(type, item) {
-			switch (type) {
-				case TYPE_LIST:
-					this.$router.push({name: 'list.index', params: {listId: item.id}})
-					this.closeQuickActions()
-					break
-				case TYPE_TASK:
-					this.$router.push({name: 'task.detail', params: {id: item.id}})
-					this.closeQuickActions()
-					break
-				case TYPE_CMD:
-					this.query = ''
-					this.selectedCmd = item
-					this.$refs.searchInput.focus()
-					break
-			}
-		},
-		doCmd() {
-			if (this.results.length === 1 && this.results[0].items.length === 1) {
-				this.doAction(this.results[0].type, this.results[0].items[0])
-				return
-			}
-
-			if (this.selectedCmd === null) {
-				return
-			}
-
-			if (this.query === '') {
-				return
-			}
-
-			switch (this.selectedCmd.action) {
-				case CMD_NEW_TASK:
-					this.newTask()
-					break
-				case CMD_NEW_LIST:
-					this.newList()
-					break
-				case CMD_NEW_NAMESPACE:
-					this.newNamespace()
-					break
-				case CMD_NEW_TEAM:
-					this.newTeam()
-					break
-			}
-		},
-		async newTask() {
-			if (this.currentList === null) {
-				return
-			}
-
-			const taskStore = useTaskStore()
-			const task = await taskStore.createNewTask({
-				title: this.query,
-				listId: this.currentList.id,
-			})
-			this.$message.success({message: this.$t('task.createSuccess')})
-			this.$router.push({name: 'task.detail', params: {id: task.id}})
-			this.closeQuickActions()
-		},
-		async newList() {
-			if (this.currentList === null) {
-				return
-			}
-
-			const newList = new ListModel({
-				title: this.query,
-				namespaceId: this.currentList.namespaceId,
-			})
-			const listStore = useListStore()
-			const list = await listStore.createList(newList)
-			this.$message.success({message: this.$t('list.create.createdSuccess')})
-			this.$router.push({name: 'list.index', params: {listId: list.id}})
-			this.closeQuickActions()
-		},
-		async newNamespace() {
-			const newNamespace = new NamespaceModel({title: this.query})
-
-			await useNamespaceStore().createNamespace(newNamespace)
-			this.$message.success({message: this.$t('namespace.create.success')})
-			this.closeQuickActions()
-		},
-		async newTeam() {
-			const newTeam = new TeamModel({name: this.query})
-			const team = await this.teamService.create(newTeam)
-			this.$router.push({
-				name: 'teams.edit',
-				params: {id: team.id},
-			})
-			this.$message.success({message: this.$t('team.create.success')})
-			this.closeQuickActions()
-		},
-		select(parentIndex, index) {
-
-			if (index < 0 && parentIndex === 0) {
-				this.$refs.searchInput.focus()
-				return
-			}
-
-			if (index < 0) {
-				parentIndex--
-				index = this.results[parentIndex].items.length - 1
-			}
-
-			let elems = this.$refs[`result-${parentIndex}_${index}`]
-
-			if (this.results[parentIndex].items.length === index) {
-				elems = this.$refs[`result-${parentIndex + 1}_0`]
-			}
-
-			if (typeof elems === 'undefined' || elems.length === 0) {
-				return
-			}
-
-			if (Array.isArray(elems)) {
-				elems[0].focus()
-				return
-			}
-
-			elems.focus()
-		},
-		unselectCmd() {
-			if (this.query !== '') {
-				return
-			}
-
-			this.selectedCmd = null
-		},
-		reset() {
-			this.query = ''
-			this.selectedCmd = null
-		},
-	},
+watchEffect(() => {
+	if (!active.value) {
+		reset()
+	}
 })
+
+function closeQuickActions() {
+	baseStore.setQuickActionsActive(false)
+}
+
+const foundLists = computed(() => {
+	const { list } = parsedQuery.value
+	if (
+		searchMode.value === SEARCH_MODE.ALL ||
+		searchMode.value === SEARCH_MODE.LISTS ||
+		list === null
+	) {
+		return []
+	}
+
+	const ncache: { [id: ListModel['id']]: INamespace } = {}
+	const history = getHistory()
+	const allLists = [
+		...new Set([
+			...history.map((l) => listStore.getListById(l.id)),
+			...listStore.searchList(list),
+		]),
+	]
+
+	return allLists.filter((l) => {
+		if (typeof l === 'undefined' || l === null) {
+			return false
+		}
+		if (typeof ncache[l.namespaceId] === 'undefined') {
+			ncache[l.namespaceId] = namespaceStore.getNamespaceById(l.namespaceId)
+		}
+		return !ncache[l.namespaceId].isArchived
+	})
+})
+
+// FIXME: use fuzzysearch
+const foundCommands = computed(() => availableCmds.value.filter((a) =>
+	a.title.toLowerCase().includes(query.value.toLowerCase()),
+))
+
+interface Result {
+	type: ACTION_TYPE
+	title: string
+	items: DoAction<any>
+}
+
+const results = computed<Result[]>(() => {
+	return [
+		{
+			type: ACTION_TYPE.CMD,
+			title: t('quickActions.commands'),
+			items: foundCommands.value,
+		},
+		{
+			type: ACTION_TYPE.TASK,
+			title: t('quickActions.tasks'),
+			items: foundTasks.value,
+		},
+		{
+			type: ACTION_TYPE.LIST,
+			title: t('quickActions.lists'),
+			items: foundLists.value,
+		},
+		{
+			type: ACTION_TYPE.TEAM,
+			title: t('quickActions.teams'),
+			items: foundTeams.value,
+		},
+	].filter((i) => i.items.length > 0)
+})
+
+const loading = computed(() => 
+	taskService.loading ||
+	namespaceStore.isLoading ||
+	listStore.isLoading ||
+	teamService.loading,
+)
+
+interface Command {
+	type: COMMAND_TYPE
+	title: string
+	placeholder: string
+	action: () => Promise<void>
+}
+
+const commands = computed<{ [key in COMMAND_TYPE]: Command }>(() => ({
+	newTask: {
+		type: COMMAND_TYPE.NEW_TASK,
+		title: t('quickActions.cmds.newTask'),
+		placeholder: t('quickActions.newTask'),
+		action: newTask,
+	},
+	newList: {
+		type: COMMAND_TYPE.NEW_LIST,
+		title: t('quickActions.cmds.newList'),
+		placeholder: t('quickActions.newList'),
+		action: newList,
+	},
+	newNamespace: {
+		type: COMMAND_TYPE.NEW_NAMESPACE,
+		title: t('quickActions.cmds.newNamespace'),
+		placeholder: t('quickActions.newNamespace'),
+		action: newNamespace,
+	},
+	newTeam: {
+		type: COMMAND_TYPE.NEW_TEAM,
+		title: t('quickActions.cmds.newTeam'),
+		placeholder: t('quickActions.newTeam'),
+		action: newTeam,
+	},
+}))
+
+const placeholder = computed(() => selectedCmd.value?.placeholder || t('quickActions.placeholder'))
+
+const currentList = computed(() => Object.keys(baseStore.currentList).length === 0
+	? null
+	: baseStore.currentList,
+)
+
+const hintText = computed(() => {
+	let namespace
+	if (selectedCmd.value !== null && currentList.value !== null) {
+		switch (selectedCmd.value.type) {
+			case COMMAND_TYPE.NEW_TASK:
+				return t('quickActions.createTask', {
+					title: currentList.value.title,
+				})
+			case COMMAND_TYPE.NEW_LIST:
+				namespace = namespaceStore.getNamespaceById(
+					currentList.value.namespaceId,
+				)
+				return t('quickActions.createList', {
+					title: namespace?.title,
+				})
+		}
+	}
+	const prefixes =
+		PREFIXES[getQuickAddMagicMode()] ?? PREFIXES[PrefixMode.Default]
+	return t('quickActions.hint', prefixes)
+})
+
+const availableCmds = computed(() => {
+	const cmds = []
+	if (currentList.value !== null) {
+		cmds.push(commands.value.newTask, commands.value.newList)
+	}
+	cmds.push(commands.value.newNamespace, commands.value.newTeam)
+	return cmds
+})
+
+const parsedQuery = computed(() => parseTaskText(query.value, getQuickAddMagicMode()))
+
+const searchMode = computed(() => {
+	if (query.value === '') {
+		return SEARCH_MODE.ALL
+	}
+	const { text, list, labels, assignees } = parsedQuery.value
+	if (assignees.length === 0 && text !== '') {
+		return SEARCH_MODE.TASKS
+	}
+	if (
+		assignees.length === 0 &&
+		list !== null &&
+		text === '' &&
+		labels.length === 0
+	) {
+		return SEARCH_MODE.LISTS
+	}
+	if (
+		assignees.length > 0 &&
+		list === null &&
+		text === '' &&
+		labels.length === 0
+	) {
+		return SEARCH_MODE.TEAMS
+	}
+	return SEARCH_MODE.ALL
+})
+
+const isNewTaskCommand = computed(() => (
+	selectedCmd.value !== null &&
+	selectedCmd.value.type === COMMAND_TYPE.NEW_TASK
+))
+
+const taskSearchTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
+
+type Filter = {by: string, value: string | number, comparator: string}
+
+function filtersToParams(filters: Filter[]) {
+	const filter_by : Filter['by'][] = []
+	const filter_value : Filter['value'][] = []
+	const filter_comparator : Filter['comparator'][] = []
+
+	filters.forEach(({by, value, comparator}) => {
+		filter_by.push(by)
+		filter_value.push(value)
+		filter_comparator.push(comparator)
+	})
+
+	return {
+		filter_by,
+		filter_value,
+		filter_comparator,
+	}
+}
+
+function searchTasks() {
+	if (
+		searchMode.value !== SEARCH_MODE.ALL &&
+		searchMode.value !== SEARCH_MODE.TASKS
+	) {
+		foundTasks.value = []
+		return
+	}
+
+	if (selectedCmd.value !== null) {
+		return
+	}
+
+	if (taskSearchTimeout.value !== null) {
+		clearTimeout(taskSearchTimeout.value)
+		taskSearchTimeout.value = null
+	}
+
+	const { text, list: listName, labels } = parsedQuery.value
+
+	const filters: Filter[] = []
+
+	// FIXME: improve types
+	function addFilter(
+		by: Filter['by'],
+		value: Filter['value'],
+		comparator: Filter['comparator'],
+	) {
+		filters.push({
+			by,
+			value,
+			comparator,
+		})
+	}
+
+	if (listName !== null) {
+		const list = listStore.findListByExactname(listName)
+		if (list !== null) {
+			addFilter('listId', list.id, 'equals')
+		}
+	}
+
+	if (labels.length > 0) {
+		const labelIds = labelStore.getLabelsByExactTitles(labels).map((l) => l.id)
+		if (labelIds.length > 0) {
+			addFilter('labels', labelIds.join(), 'in')
+		}
+	}
+
+		const params = {
+			s: text,
+			...filtersToParams(filters),
+		}
+
+	taskSearchTimeout.value = setTimeout(async () => {
+		const r = await taskService.getAll({}, params) as  DoAction<ITask>[]
+		foundTasks.value = r.map((t) => {
+			t.type = ACTION_TYPE.TASK
+			const list = listStore.getListById(t.listId)
+			if (list !== null) {
+				t.title = `${t.title} (${list.title})`
+			}
+			return t
+		})
+	}, 150)
+}
+
+const teamSearchTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
+
+function searchTeams() {
+	if (
+		searchMode.value !== SEARCH_MODE.ALL &&
+		searchMode.value !== SEARCH_MODE.TEAMS
+	) {
+		foundTeams.value = []
+		return
+	}
+	if (query.value === '' || selectedCmd.value !== null) {
+		return
+	}
+	if (teamSearchTimeout.value !== null) {
+		clearTimeout(teamSearchTimeout.value)
+		teamSearchTimeout.value = null
+	}
+	const { assignees } = parsedQuery.value
+	teamSearchTimeout.value = setTimeout(async () => {
+		const teamSearchPromises = assignees.map((t) =>
+			teamService.getAll({}, { s: t }),
+		)
+		const teamsResult = await Promise.all(teamSearchPromises)
+		foundTeams.value = teamsResult.flatMap((team) => {
+			team.title = team.name
+			return team
+		})
+	}, 150)
+}
+
+function search() {
+	searchTasks()
+	searchTeams()
+}
+
+const searchInput = ref<HTMLElement | null>(null)
+
+async function doAction(type: ACTION_TYPE, item: DoAction) {
+	switch (type) {
+		case ACTION_TYPE.LIST:
+			closeQuickActions()
+			await router.push({
+				name: 'list.index',
+				params: { listId: (item as DoAction<IList>).id },
+			})
+			break
+		case ACTION_TYPE.TASK:
+			closeQuickActions()
+			await router.push({
+				name: 'task.detail',
+				params: { id: (item as DoAction<ITask>).id },
+			})
+			break
+		case ACTION_TYPE.CMD:
+			query.value = ''
+			selectedCmd.value = item as DoAction<Command>
+			searchInput.value?.focus()
+			break
+	}
+}
+
+async function doCmd() {
+	if (results.value.length === 1 && results.value[0].items.length === 1) {
+		const result = results.value[0]
+		doAction(result.type, result.items[0])
+		return
+	}
+
+	if (selectedCmd.value === null || query.value === '') {
+		return
+	}
+
+	closeQuickActions()
+	await selectedCmd.value.action()
+}
+
+async function newTask() {
+	if (currentList.value === null) {
+		return
+	}
+	const task = await taskStore.createNewTask({
+		title: query.value,
+		listId: currentList.value.id,
+	})
+	success({ message: t('task.createSuccess') })
+	await router.push({ name: 'task.detail', params: { id: task.id } })
+}
+
+async function newList() {
+	if (currentList.value === null) {
+		return
+	}
+	const newList = await listStore.createList(new ListModel({
+		title: query.value,
+		namespaceId: currentList.value.namespaceId,
+	}))
+	success({ message: t('list.create.createdSuccess')})
+	await router.push({
+		name: 'list.index',
+		params: { listId: newList.id },
+	})
+}
+
+async function newNamespace() {
+	const newNamespace = new NamespaceModel({ title: query.value })
+	await namespaceStore.createNamespace(newNamespace)
+	success({ message: t('namespace.create.success')  })
+}
+
+async function newTeam() {
+	const newTeam = new TeamModel({ name: query.value })
+	const team = await teamService.create(newTeam)
+	await router.push({
+		name: 'teams.edit',
+		params: { id: team.id },
+	})
+	success({ message: t('team.create.success') })
+}
+
+type BaseButtonInstance = InstanceType<typeof BaseButton>
+const resultRefs = ref<(BaseButtonInstance | null)[][]>([])
+
+function setResultRefs(el: Element | ComponentPublicInstance | null, index: number, key: number) {
+	if (resultRefs.value[index] === undefined) {
+		resultRefs.value[index] = []
+	}
+
+	resultRefs.value[index][key] =  el as (BaseButtonInstance | null)
+}
+
+function select(parentIndex: number, index: number) {
+	if (index < 0 && parentIndex === 0) {
+		searchInput.value?.focus()
+		return
+	}
+	if (index < 0) {
+		parentIndex--
+		index = results.value[parentIndex].items.length - 1
+	}
+	let elems = resultRefs.value[parentIndex][index]
+	if (results.value[parentIndex].items.length === index) {
+		elems = resultRefs.value[parentIndex + 1][0]
+	}
+	if (
+		typeof elems === 'undefined'
+		/* || elems.length === 0 */
+	) {
+		return
+	}
+	if (Array.isArray(elems)) {
+		elems[0].focus()
+		return
+	}
+	elems?.focus()
+}
+
+function unselectCmd() {
+	if (query.value !== '') {
+		return
+	}
+	selectedCmd.value = null
+}
+
+function reset() {
+	query.value = ''
+	selectedCmd.value = null
+}
 </script>
 
 <style lang="scss" scoped>
@@ -508,68 +581,65 @@ export default defineComponent({
 		top: 3rem;
 		transform: translate(-50%, 0);
 	}
+}
 
-	.action-input {
-		display: flex;
-		align-items: center;
+.action-input {
+	display: flex;
+	align-items: center;
 
-		.input {
-			border: 0;
-			font-size: 1.5rem;
-		}
-
-		&.has-active-cmd .input {
-			padding-left: .5rem;
-		}
-
-		.active-cmd {
-			font-size: 1.25rem;
-			margin-left: .5rem;
-			background-color: var(--grey-100);
-			color: var(--grey-800);
-		}
+	.input {
+		border: 0;
+		font-size: 1.5rem;
 	}
 
-	.results {
-		text-align: left;
-		width: 100%;
-		color: var(--grey-800);
+	&.has-active-cmd .input {
+		padding-left: .5rem;
+	}
 
-		.result {
-			&-title {
-				background: var(--grey-100);
-				padding: .5rem;
-				display: block;
-				font-size: .75rem;
-			}
+}
+.active-cmd {
+	font-size: 1.25rem;
+	margin-left: .5rem;
+	background-color: var(--grey-100);
+	color: var(--grey-800);
+}
 
-			&-items {
-				button {
-					font-size: .9rem;
-					width: 100%;
-					background: transparent;
-					color: var(--grey-800);
-					text-align: left;
-					box-shadow: none;
-					border-radius: 0;
-					text-transform: none;
-					font-family: $family-sans-serif;
-					font-weight: normal;
-					padding: .5rem .75rem;
-					border: none;
-					cursor: pointer;
+.results {
+	text-align: left;
+	width: 100%;
+	color: var(--grey-800);
+}
 
-					&:focus, &:hover {
-						background: var(--grey-100);
-						box-shadow: none !important;
-					}
+.result-title {
+	background: var(--grey-100);
+	padding: .5rem;
+	display: block;
+	font-size: .75rem;
+}
 
-					&:active {
-						background: var(--grey-100);
-					}
-				}
-			}
-		}
+.result-item-button {
+	font-size: .9rem;
+	width: 100%;
+	background: transparent;
+	color: var(--grey-800);
+	text-align: left;
+	box-shadow: none;
+	border-radius: 0;
+	text-transform: none;
+	font-family: $family-sans-serif;
+	font-weight: normal;
+	padding: .5rem .75rem;
+	border: none;
+	cursor: pointer;
+
+	&:focus,
+	&:hover {
+		background: var(--grey-100);
+		box-shadow: none !important;
+	}
+
+	&:active {
+		background: var(--grey-100);
 	}
 }
 
