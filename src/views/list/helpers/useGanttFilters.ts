@@ -87,7 +87,9 @@ function ganttFiltersToApiParams(filters: GanttFilters): GetAllTasksParams {
 	}
 }
 
-export type UseGanttFiltersReturn = ReturnType<typeof useRouteFilters> & ReturnType<typeof useGanttTaskList>
+export type UseGanttFiltersReturn =
+	ReturnType<typeof useRouteFilters<GanttFilters>> &
+	ReturnType<typeof useGanttTaskList<GanttFilters>>
 
 export function useGanttFilters(route: Ref<RouteLocationNormalized>): UseGanttFiltersReturn {
 	const {
