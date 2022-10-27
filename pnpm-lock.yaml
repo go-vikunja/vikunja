@@ -25,7 +25,7 @@ specifiers:
   '@types/sortablejs': 1.15.0
   '@typescript-eslint/eslint-plugin': 5.41.0
   '@typescript-eslint/parser': 5.41.0
-  '@vitejs/plugin-legacy': 2.2.0
+  '@vitejs/plugin-legacy': 2.3.0
   '@vitejs/plugin-vue': 3.1.2
   '@vue/eslint-config-typescript': 11.0.2
   '@vue/test-utils': 2.2.0
@@ -145,7 +145,7 @@ devDependencies:
   '@types/postcss-preset-env': 7.7.0
   '@typescript-eslint/eslint-plugin': 5.41.0_huremdigmcnkianavgfk3x6iou
   '@typescript-eslint/parser': 5.41.0_wyqvi574yv7oiwfeinomdzmc3m
-  '@vitejs/plugin-legacy': 2.2.0_terser@5.10.0+vite@3.2.0
+  '@vitejs/plugin-legacy': 2.3.0_terser@5.10.0+vite@3.2.0
   '@vitejs/plugin-vue': 3.1.2_vite@3.2.0+vue@3.2.41
   '@vue/eslint-config-typescript': 11.0.2_dssioqymv64e7t7ogoe3tncpcu
   '@vue/test-utils': 2.2.0_vue@3.2.41
@@ -1298,11 +1298,11 @@ packages:
     resolution: {integrity: sha512-hzeyJyMA1YGdJTuWU0e/j4wKXrU4OMFvY2MSlaI9B7VQb0r5cxTE3EAIS2Q7Tn2RIcDkRvTA/v2JsAEhxe99uw==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      regenerator-runtime: 0.13.9
+      regenerator-runtime: 0.13.10
     dev: true
 
-  /@babel/standalone/7.19.2:
-    resolution: {integrity: sha512-p+U+TYGevnPUemfHeQVFwABp9kWe5+h20MKxCzvyeAD1SIm7tlvo6lGRFz1WakAxmVZvLz7WDuWjwdC8FZKp+A==}
+  /@babel/standalone/7.19.6:
+    resolution: {integrity: sha512-SUOBMtHlxGpXf14X85c1vtHyxYgIODBUdclntETSEGkgI274MNPBUkOVWpvFmRhMuLokK3CL07qJoK2e5CIToA==}
     engines: {node: '>=6.9.0'}
     dev: true
 
@@ -3324,18 +3324,18 @@ packages:
       - supports-color
     dev: true
 
-  /@vitejs/plugin-legacy/2.2.0_terser@5.10.0+vite@3.2.0:
-    resolution: {integrity: sha512-xkSXZl2LNk0KKyo5CJknNW84mSlmHIClFzsBuFXkX3yBt+Lr8UO/n4QOg2X7+jvurgBRies9FRn3ZvMem+TmIg==}
+  /@vitejs/plugin-legacy/2.3.0_terser@5.10.0+vite@3.2.0:
+    resolution: {integrity: sha512-Bh62i0gzQvvT8AeAAb78nOnqSYXypkRmQmOTImdPZ39meHR9e2une3AIFmVo4s1SDmcmJ6qj18Sa/lRc/14KaA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       terser: ^5.4.0
       vite: ^3.0.0
     dependencies:
-      '@babel/standalone': 7.19.2
-      core-js: 3.25.2
-      magic-string: 0.26.3
-      regenerator-runtime: 0.13.9
-      systemjs: 6.12.6
+      '@babel/standalone': 7.19.6
+      core-js: 3.26.0
+      magic-string: 0.26.7
+      regenerator-runtime: 0.13.10
+      systemjs: 6.13.0
       terser: 5.10.0_acorn@8.8.0
       vite: 3.2.0_sass@1.55.0+terser@5.10.0
     dev: true
@@ -5026,8 +5026,8 @@ packages:
       semver: 7.0.0
     dev: true
 
-  /core-js/3.25.2:
-    resolution: {integrity: sha512-YB4IAT1bjEfxTJ1XYy11hJAKskO+qmhuDBM8/guIfMz4JvdsAQAqvyb97zXX7JgSrfPLG5mRGFWJwJD39ruq2A==}
+  /core-js/3.26.0:
+    resolution: {integrity: sha512-+DkDrhoR4Y0PxDz6rurahuB+I45OsEUv8E1maPTB6OuHRohMMcznBq9TMpdpDMm/hUPob/mJJS3PqgbHpMTQgw==}
     requiresBuild: true
     dev: true
 
@@ -8988,8 +8988,8 @@ packages:
     dependencies:
       sourcemap-codec: 1.4.8
 
-  /magic-string/0.26.3:
-    resolution: {integrity: sha512-u1Po0NDyFcwdg2nzHT88wSK0+Rih0N1M+Ph1Sp08k8yvFFU3KR72wryS7e1qMPJypt99WB7fIFVCA92mQrMjrg==}
+  /magic-string/0.26.7:
+    resolution: {integrity: sha512-hX9XH3ziStPoPhJxLq1syWuZMxbDvGNbVchfrdCtanC7D13888bMFow61x8axrx+GfHLtVeAx2kxL7tTGRl+Ow==}
     engines: {node: '>=12'}
     dependencies:
       sourcemap-codec: 1.4.8
@@ -11111,8 +11111,8 @@ packages:
     resolution: {integrity: sha512-zrceR/XhGYU/d/opr2EKO7aRHUeiBI8qjtfHqADTwZd6Szfy16la6kqD0MIUs5z5hx6AaKa+PixpPrR289+I0A==}
     dev: true
 
-  /regenerator-runtime/0.13.9:
-    resolution: {integrity: sha512-p3VT+cOEgxFsRRA9X4lkI1E+k2/CtnKtU4gcxyaCUreilL/vqI6CdZ3wxVUx3UOUg+gnUOQQcRI7BmSI656MYA==}
+  /regenerator-runtime/0.13.10:
+    resolution: {integrity: sha512-KepLsg4dU12hryUO7bp/axHAKvwGOCV0sGloQtpagJ12ai+ojVDqkeGSiRX1zlq+kjIMZ1t7gpze+26QqtdGqw==}
     dev: true
 
   /regenerator-transform/0.14.5:
@@ -12147,8 +12147,8 @@ packages:
       get-port: 3.2.0
     dev: true
 
-  /systemjs/6.12.6:
-    resolution: {integrity: sha512-SawLiWya8/uNR4p12OggSYZ35tP4U4QTpfV57DdZEOPr6+J6zlLSeeEpMmzYTEoBAsMhctdEE+SWJUDYX4EaKw==}
+  /systemjs/6.13.0:
+    resolution: {integrity: sha512-P3cgh2bpaPvAO2NE3uRp/n6hmk4xPX4DQf+UzTlCAycssKdqhp6hjw+ENWe+aUS7TogKRFtptMosTSFeC6R55g==}
     dev: true
 
   /tabtab/3.0.2:
