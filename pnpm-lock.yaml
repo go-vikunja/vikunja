@@ -39,7 +39,7 @@ specifiers:
   browserslist: 4.21.4
   bulma-css-variables: 0.9.33
   camel-case: 4.1.2
-  caniuse-lite: 1.0.30001426
+  caniuse-lite: 1.0.30001423
   codemirror: 5.65.9
   cypress: 10.11.0
   date-fns: 2.29.3
@@ -156,7 +156,7 @@ devDependencies:
   '@vue/tsconfig': 0.1.3_@types+node@18.11.7
   autoprefixer: 10.4.12_postcss@8.4.18
   browserslist: 4.21.4
-  caniuse-lite: 1.0.30001426
+  caniuse-lite: 1.0.30001423
   cypress: 10.11.0
   esbuild: 0.15.12
   eslint: 8.26.0
@@ -4525,6 +4525,10 @@ packages:
   /camelcase/7.0.0:
     resolution: {integrity: sha512-JToIvOmz6nhGsUhAYScbo2d6Py5wojjNfoxoc2mEVLUdJ70gJK2gnd+ABY1Tc3sVMyK7QDPtN0T/XdlCQWITyQ==}
     engines: {node: '>=14.16'}
+    dev: true
+
+  /caniuse-lite/1.0.30001423:
+    resolution: {integrity: sha512-09iwWGOlifvE1XuHokFMP7eR38a0JnajoyL3/i87c8ZjRWRrdKo1fqjNfugfBD0UDBIOz0U+jtNhJ0EPm1VleQ==}
     dev: true
 
   /caniuse-lite/1.0.30001426:
