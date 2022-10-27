@@ -22,6 +22,7 @@
 	</router-link>
 	<a v-else-if="href !== undefined"
 		class="base-button"
+		:href="href"
 		rel="noreferrer noopener nofollow"
 		target="_blank"
 		ref="button"
