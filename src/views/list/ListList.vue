@@ -154,7 +154,7 @@ import Nothing from '@/components/misc/nothing.vue'
 import Pagination from '@/components/misc/pagination.vue'
 import {ALPHABETICAL_SORT} from '@/components/list/partials/filters.vue'
 
-import {useTaskList} from '@/composables/taskList'
+import {useTaskList} from '@/composables/useTaskList'
 import {RIGHTS as Rights} from '@/constants/rights'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import type {ITask} from '@/modelTypes/ITask'
