@@ -9,6 +9,563 @@ All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
 
+## [0.20.0] - 2022-10-28
+
+### Bug Fixes
+
+* *(filters)* Changing filter checkbox values not being emitted to parent components
+* *(filters)* Make sure all checkboxes are aligned properly
+* *(filters)* Page freezing when entering a date as a result of an endless loop
+* *(gantt)* Only unmount chart if there aren't any loaded tasks yet
+* *(gantt)* UseDayjsLanguageSync and move to separate file
+* *(i18n)* Spelling typo
+* *(i18n)* Rename "right" to permission so that it's clearer what it is used for
+* *(labels)* Unset loading state after loading all labels
+* *(lint)* Unnecessary catch clause
+* *(list)* Automatically close task edit pane when switching between lists
+* *(quick add magic)* Time parsing for certain conditions (#2367)
+* *(sharing)* Correctly check if the user has admin rights when sharing
+* *(subscription)* Don't remove every namespace but the one subscribing to
+* *(subscription)* Make sure list subscription state is propagated everywhere for the current list
+* *(task)* Make sure users can be assigned via quick add magic via their real name as well
+* *(task)* Cancel loading state when creating a new task does not work
+* *(task)* Cancel loading state when creating a new task does not work
+* *(task)* New tasks with quick add magic not showing up in task list
+* *(task)* Setting a priority was not properly saved
+* *(task)* Setting progress was not properly saved
+* *(task)* Setting a label would not show up on the kanban board after setting it
+* *(task)* Stop loading when no list was specified while creating a task
+* *(task)* Only show create list or import cta when there are no tasks
+* *(task)* Marking checklist items as done
+* *(task)* Focusing on assignee search field when activating it
+* *(task)* Scroll the task field into view after activating it
+* *(tasks)* Don't allow adding the same assignee multiple times
+* *(teams)* Show an error message when no user is selected to add to a team
+* *(tests)* Fake current time in gantt tests to make them more reliable
+* *(tests)* Adjust gantt rows identifier* Authenticate per request (#2258) ([6e4a3ff](6e4a3ff1996f55d99896a0e8267c1915de09dd39))
+* Add lodash.clonedeep types ([80eaf38](80eaf38090413b74524ddc5a7dfcc9a845a6ba26))
+* Use correct model for generics ([3ba423e](3ba423ed238a5f8f445246793829c7645dfe42aa))
+* Merge duplicate types ([106abfc](106abfc842ca0c916ef7574b0fe5c89940869ac2))
+* CreateNewTask typing ([f9b5130](f9b51306c396ceb0d8fa0c4af3fea24d2b28b64b))
+* Improve some types ([4a50e6a](4a50e6aae28d22c3d441f1fead4edce7d0e30ff1))
+* Use definite assignment assertion operator ([96f5f00](96f5f00c073f71c71d85c351f86ad16a67db6992))
+* Mark abstractModel and abstractService abstract ([d36577c](d36577c04e1eea00fb21a5fb774e7f6b1f667d54))
+* Use IAbstract to extend model interface ([8be1f81](8be1f81848303d590adb890743dd688fbf5cdf1c))
+* Use new assignData method for default data ([8416b1f](8416b1f44811ff477d81db20370ff68e899c7252))
+* Don't push a select event when nothing was selected ([9616bad](9616badc33173483e0b5cc0c99655e0c9a4907f9))
+* Don't try to set the bucket of a task when it was moved to a new list ([c06b781](c06b781837c66174be41f40c967fbfcbcc35495e))
+* Mutation error in TaskDetailView ([b4cba6f](b4cba6f7d96334b46e5e2d6be5ac87432b01f0c0))
+* DefaultListId ([878b5bf](878b5bf236f7d1ddc9825d8dca8415313b08fd94))
+* Use typed useStore ([54de368](54de368642519fc900ce89e4ee38989555054a05))
+* Don't encode attachment upload file blob as json ([d819b9b](d819b9b0ba08db24a77751061ae285fc11205c2c))
+* Dragging a list on mobile Safari ([6bf5f6e](6bf5f6efd46c47293fb54b9e9a25d91d8c6bec0d))
+* Introduce a ListView type to properly type all available list views ([23598dd](23598dd2ee649449f2176ae86acbc16ecbf01e6f))
+* Use proper computed for available views list ([e67fc7f](e67fc7fb7e1678b1b691fee77d3237b222ad50c6))
+* Only warn once if triggeredNotifications are not supported (#2344) ([f083f18](f083f181e2c8aa0af3ac1381303f61792d5975f5))
+* Bucket title edit success message appearing twice ([4921788](49217889b50da73d0f4851c4ee21f0dec11c7958))
+* Don't parse dates in urls ([92f24e5](92f24e59a794a25098f5fb50f2101d516829cd36))
+* Vue-i18n global scope (#2366) ([602ab83](602ab8379e3fb11eb8b547d036921311f193fb12))
+* Redirect to login when the jwt token expires ([91976e2](91976e23f989f39fb25d3341aa3f4b632ea66f35))
+* Only try to save user settings when a user is authenticated ([2df2bd3](2df2bd38e2b9f86be7e7c5aab744f27cbf2644c3))
+* Remove margin from the color bubble component itself ([4fce71f](4fce71f729878d47c3ec79d0c10fae8fbaabbd91))
+* Test pnpm cache ([e5d04c9](e5d04c98dabc6b597ecc32dd01ab31c4dd9882d1))
+* Remove console.log ([43e2d03](43e2d036d77731fcce18cbea1d82196b10016609))
+* Explicitly install cypress ([62e227c](62e227c767a43578f4487e3dc244f4756e073f5d))
+* Only pass date to flatpickr if it's a valid date ([ede5cdd](ede5cdd8cf5575bba96d3e7b6824a7ad7b414ea7))
+* Loading state when creating a new task from list view ([aa64e98](aa64e9835c6b9ef2bb10ab8d2a1b4a695cb4321b))
+* Make add task button 100% height ([3c9c5ef](3c9c5eff1258b6e04e3d0e9299110fa9b5c9757d))
+* Lint ([2bf9771](2bf9771e2894acb7ad3e563b7b31442d91c49e1a))
+* Color list titles so that they are visible on cards with a background ([62ed7c5](62ed7c5964f1252f09fe432c42aaf327da5a8c4f))
+* Missed porting these getters and commits ([95ad245](95ad245b59b0c6398b0bca217572ca36f6ea5a54))
+* Use https for api url (#2425) ([9f39365](9f3936544d5906f0031412139b53c286023c2405))
+* Don't use corepack prepare at all ([a199fc7](a199fc7a8e7f621ee96b2079e9558987f1350493))
+* Add types for node ([6a82807](6a828078a398ab920f0e29d0801b918ae092ef30))
+* VueI18n global scope fallback warnings (#2437) ([e9cf562](e9cf562969e42cc3ce3ffba3ed093db7a2089395))
+* Fix missed conversion to ref (#2445) ([94d6f38](94d6f38e89174f879be4e5b1897b52603b40a745))
+* Don't emit a possible null task ([5f5ed41](5f5ed410df1a2fe73e821d7dee7ebd4c0b918069))
+* Docker build ([5b60693](5b606936c3f7b0dc1232ad269f3666f8170c6e11))
+* Update top header list title when saving a filter ([fd3c15d](fd3c15d0642a8d91260ba24eaae52e0ba62c2871))
+* Type of config stores maxFileSize (#2455) ([78a6d38](78a6d38641c5e4e68f117e37ee36a4ca3b40a24b))
+* Don't add class method to interface ([367ad1e](367ad1e5a5972ac6ff353275b31f309ebcf5cb4c))
+* Attachment deletion (#2472) ([f1852f1](f1852f1f33401576ae5033f54613c96cd80e0f95))
+* Add lodash.debounce types (#2487) ([00e0a23](00e0a23d48c19c440aea7857c8b162a0dfa34361))
+* Initial modal scroll lock (#2489) ([eae7cc5](eae7cc5a6b506cbbbe694b831cba7c5d1febaf05))
+* Unset cover image when the task does not have one ([054d70c](054d70cbe5344e39d0e5f277a7db2f26573e1efa))
+* Lint ([43258ab](43258ab74e0733e91be3ade1f0b13dcf9342cc18))
+* Lint ([84a1abf](84a1abf3477abbbee136979bd0bde08ae6c54ceb))
+* Don't try to render auth routes when the user is not authenticated ([3af20b6](3af20b6220d8fcded9c8c2f0bdef21dc26d748f6))
+* Lint ([f405b21](f405b2105bf4d1cfd4f6acf03210b37ac91eff5e))
+* Make sure subscriptions are properly inherited between lists and namespaces ([a895bde](a895bde6612e7a2b22a84b6ca7c583bafc9ebc9e))
+* Make sure subscription strings work consistently across languages ([172d353](172d353df7a86baa9c2759907c7f855679138cc0))
+* Make sure subscriptions are properly inherited between namespaces and lists ([0a29197](0a29197715f22602faf353fb8fe850150aa710d1))
+* Lint ([c6d6da3](c6d6da31712906f094a88dbfdb5e9b6db66c29e3))
+* Move hourToDaytime to separate file in order to pass tests ([5afafb7](5afafb7c82837a3af58c7bdc18174a785691b885))
+* Postcss-preset-env configuration (#2554) ([b80f82c](b80f82c4118bb372263130df80d15a2a79d2191e))
+* Password reset ([7357530](73575302debbe095ce031e4871fb3797a801db18))
+* Email confirmation ([e6f7ddc](e6f7ddc9ce90ddcb3b58b2c001320b6b2c3ac169))
+* Lint ([643a5b6](643a5b6d7d00bfab4b338582c85217dffa7d9b22))
+* Make sure services without a modelFactory override still return data ([8fdd3e7](8fdd3e785d3c55281b557827860d0532b94ac758))
+* Make sure share modals don't have a create button ([ae27502](ae27502022469882656459b0a9e7e8a4b6972c58))
+* Redirect with query parameters ([f61723d](f61723dac251c9d85102beae73c6a03df10bd4bf))
+* Task detail view top spacing on mobile ([a695719](a6957191284a8da38e56b4ed3fe0a57b69d6e2b9))
+* Make sure the filter button is always shown on the kanban board ([8023006](80230069c6f09ced484cd356b816df6b1dd296d6))
+* Wait until everything is loaded before replacing the current view with the last or login view ([6083301](6083301d1f410ede5fe62127e484169d74ff6dc0))
+* Show frontend version in about dialog ([5ddce38](5ddce387fe589c574adf0cce438732faf4ad9fd1))
+* Building version into releases ([a0795db](a0795db0408b5fece13d8a74e9e243375883ca6f))
+* Lint ([e13e477](e13e477682ef9fd647925f459d8d4527d3c55b9b))
+* New task input styling ([c3cae78](c3cae78213b791c9e6fd8143ee59e3ca256c374a))
+* Handle bar styling so they can actually be used ([10c6db3](10c6db3849e734d0508c8d435164a0f771175740))
+* Make sure the date format is actually valid ([2c012e1](2c012e1a080bd9519384d65ee0653483aa52d1c3))
+* Make tests work again with new selectors ([091beec](091beecc19cf5ff49fc252c4eeb98aa8a65ddb67))
+* Use inherit for font family ([b7b4530](b7b4530a111d93e81fc6398dc3f7267cc6e255fb))
+* Remove precision setting ([970a04d](970a04d9733f4cbdc35e5b772ce4a34fa71e6c4c))
+* Fix imports ([d91bc50](d91bc5090a6cec38e655c944df7cf57ac16e4133))
+* Use base store ([f5fd141](f5fd14124fa139f3e76f7a4915b2efc85de6c789))
+* Correctly import all components ([31f2065](31f2065d2005b27ff8a0abbc4efaa7138cfe27c1))
+* Update eslint env to 2022 ([0b194bb](0b194bb0cf326104c249c953194997a1f9a80dbf))
+* Don't try to dynamically load dayjs locales ([b8e7b87](b8e7b87f96bdccf19066ce31d40cf40379014bbe))
+* Disable dayjsLanguageSync function ([e1f49f2](e1f49f2ff15286ee8903c29dbe708cda90e5d70d))
+* Scope ListGantt styles ([73eab6c](73eab6c5b5bfe0d72393ab378cce77ad5cbb59b6))
+* Initial transformation of ganttBars ([407f5f2](407f5f2ef8c4759ea46f5fb74717bafb16f606c5))
+* ParseBooleanProp ([8dea408](8dea4082bb0766297f74acef0352f8a6a6168d3c))
+* Do not change language to the current one ([abc2649](abc26496cf0e20d0124af327d47e086b39e2bd23))
+* Remove IE fallback ([b4f88bd](b4f88bd4a6ba50be1f972794c3e87b7a09f7c2ca))
+* Improve return type ([0665538](066553838ad289d6c6c0a8b1c6ed0b84139ace54))
+* Improve notifications (#2583) ([9ded3d0](9ded3d0cd69dd974ffea2531e3ca92438e420f29))
+* Lint ([9894337](98943377b8344f1f5a8e38c23eff79d7678f51bc))
+* Label multiselect styling on focus ([da2a7a2](da2a7a224e3c8015939e189692813bc215dbd72c))
+
+
+### Dependencies
+
+* *(deps)* Update sentry-javascript monorepo to v7.11.0 (#2274)
+* *(deps)* Update sentry-javascript monorepo to v7.11.1 (#2275)
+* *(deps)* Update dependency vitest to v0.22.1 (#2276)
+* *(deps)* Update dependency sass to v1.54.8 (#2281)
+* *(deps)* Update dependency caniuse-lite to v1.0.30001387 (#2285)
+* *(deps)* Update dependency rollup to v2.79.0 (#2278)
+* *(deps)* Update dependency marked to v4.1.0 (#2284)
+* *(deps)* Update dependency netlify-cli to v11 (#2287)
+* *(deps)* Update dependency vite to v3.0.9 (#2279)
+* *(deps)* Update dependency date-fns to v2.29.2 (#2277)
+* *(deps)* Update dependency esbuild to v0.15.6 (#2290)
+* *(deps)* Update dependency vite-plugin-pwa to v0.12.4 (#2291)
+* *(deps)* Update dependency rollup-plugin-visualizer to v5.8.0 (#2282)
+* *(deps)* Update dependency easymde to v2.17.0 (#2283)
+* *(deps)* Update dependency vue-tsc to v0.40.5 (#2292)
+* *(deps)* Update dependency vue to v3.2.38 (#2293)
+* *(deps)* Update dependency vue-router to v4.1.5 (#2294)
+* *(deps)* Update vueuse to v9.1.1 (#2295)
+* *(deps)* Update dependency @cypress/vue to v4.2.0 (#2296)
+* *(deps)* Update dependency @faker-js/faker to v7.5.0 (#2297)
+* *(deps)* Update dependency eslint to v8.23.0 (#2299)
+* *(deps)* Update dependency cypress to v10.7.0 (#2298)
+* *(deps)* Update dependency eslint-plugin-vue to v9.4.0 (#2300)
+* *(deps)* Update sentry-javascript monorepo to v7.12.0 (#2307)
+* *(deps)* Update dependency dompurify to v2.4.0 (#2306)
+* *(deps)* Update typescript-eslint monorepo to v5.36.1 (#2304)
+* *(deps)* Update dependency vite-svg-loader to v3.5.1 (#2302)
+* *(deps)* Update dependency typescript to v4.8.2 (#2301)
+* *(deps)* Update font awesome to v6.2.0 (#2303)
+* *(deps)* Update dependency @kyvg/vue3-notification to v2.4.1 (#2305)
+* *(deps)* Update sentry-javascript monorepo to v7.12.1 (#2308)
+* *(deps)* Update dependency vite-plugin-pwa to v0.12.6 (#2309)
+* *(deps)* Update dependency vue-tsc to v0.40.6 (#2310)
+* *(deps)* Update dependency rollup-plugin-visualizer to v5.8.1 (#2311)
+* *(deps)* Update dependency vitest to v0.23.0 (#2312)
+* *(deps)* Update dependency esbuild to v0.15.7 (#2313)
+* *(deps)* Update dependency caniuse-lite to v1.0.30001390 (#2314)
+* *(deps)* Update dependency vue-tsc to v0.40.7 (#2315)
+* *(deps)* Update dependency vitest to v0.23.1 (#2316)
+* *(deps)* Update dependency @vitejs/plugin-legacy to v2.1.0 (#2317)
+* *(deps)* Update dependency @vitejs/plugin-vue to v3.1.0 (#2318)
+* *(deps)* Update dependency vite to v3.1.0 (#2319)
+* *(deps)* Update vueuse to v9.2.0 (#2320)
+* *(deps)* Update typescript-eslint monorepo to v5.36.2 (#2321)
+* *(deps)* Update dependency vue-tsc to v0.40.9 (#2322)
+* *(deps)* Pin dependency @types/lodash.clonedeep to 4.5.7 (#2323)
+* *(deps)* Update dependency @vue/eslint-config-typescript to v11.0.1 (#2324)
+* *(deps)* Update dependency vite-plugin-pwa to v0.12.7 (#2325)
+* *(deps)* Update dependency vue-tsc to v0.40.10 (#2326)
+* *(deps)* Update dependency postcss-preset-env to v7.8.1 (#2328)
+* *(deps)* Update dependency vite-svg-loader to v3.6.0 (#2327)
+* *(deps)* Update dependency vue-tsc to v0.40.11 (#2333)
+* *(deps)* Update dependency sass to v1.54.9 (#2336)
+* *(deps)* Update dependency vue-tsc to v0.40.13
+* *(deps)* Update dependency vue to v3.2.39
+* *(deps)* Update dependency typescript to v4.8.3 (#2341)
+* *(deps)* Update dependency vitest to v0.23.2
+* *(deps)* Update dependency autoprefixer to v10.4.9
+* *(deps)* Update dependency caniuse-lite to v1.0.30001397
+* *(deps)* Update dependency netlify-cli to v11.7.1
+* *(deps)* Update dependency eslint to v8.23.1
+* *(deps)* Update typescript-eslint monorepo to v5.37.0
+* *(deps)* Update dependency blurhash to v2 (#2351)
+* *(deps)* Update dependency date-fns to v2.29.3 (#2354)
+* *(deps)* Update dependency autoprefixer to v10.4.10 (#2355)
+* *(deps)* Update dependency cypress to v10.8.0 (#2359)
+* *(deps)* Update dependency autoprefixer to v10.4.11 (#2363)
+* *(deps)* Update dependency postcss-preset-env to v7.8.2
+* *(deps)* Update dependency vite to v3.1.1 (#2365)
+* *(deps)* Pin dependency @types/dompurify to 2.3.4
+* *(deps)* Update sentry-javascript monorepo to v7.13.0
+* *(deps)* Update dependency eslint-plugin-vue to v9.5.0 (#2371)
+* *(deps)* Update dependency eslint-plugin-vue to v9.5.1 (#2373)
+* *(deps)* Update dependency vite to v3.1.2
+* *(deps)* Update dependency @types/sortablejs to v1.15.0
+* *(deps)* Update dependency vitest to v0.23.4
+* *(deps)* Update dependency esbuild to v0.15.8
+* *(deps)* Update dependency vite-plugin-pwa to v0.12.8 (#2375)
+* *(deps)* Update caniuse-and-related to v4.21.4 (#2379)
+* *(deps)* Update dependency netlify-cli to v11.8.0 (#2380)
+* *(deps)* Update dependency @vitejs/plugin-legacy to v2.2.0 (#2381)
+* *(deps)* Update dependency vite to v3.1.3 (#2382)
+* *(deps)* Update typescript-eslint monorepo to v5.38.0 (#2383)
+* *(deps)* Update dependency vite-plugin-pwa to v0.13.0 (#2385)
+* *(deps)* Update dependency easymde to v2.18.0 (#2386)
+* *(deps)* Update dependency autoprefixer to v10.4.12
+* *(deps)* Update dependency pinia to v2.0.22 (#2400)
+* *(deps)* Update dependency @vue/eslint-config-typescript to v11.0.2
+* *(deps)* Update dependency vite-plugin-pwa to v0.13.1
+* *(deps)* Update dependency rollup to v2.79.1
+* *(deps)* Update dependency codemirror to v5.65.9
+* *(deps)* Update pnpm to v7.12.1
+* *(deps)* Update dependency sass to v1.55.0
+* *(deps)* Update dependency esbuild to v0.15.9
+* *(deps)* Update pnpm to v7.12.2 (#2408)
+* *(deps)* Update dependency caniuse-lite to v1.0.30001412 (#2421)
+* *(deps)* Update dependency netlify-cli to v11.8.3 (#2422)
+* *(deps)* Update dependency eslint to v8.24.0 (#2410)
+* *(deps)* Update vueuse to v9.3.0 (#2423)
+* *(deps)* Update dependency rollup-plugin-visualizer to v5.8.2 (#2420)
+* *(deps)* Update typescript-eslint monorepo to v5.38.1 (#2426)
+* *(deps)* Update dependency blurhash to v2.0.1
+* *(deps)* Update dependency cypress to v10.9.0 (#2429)
+* *(deps)* Update dependency @types/node to v16.11.62 (#2430)
+* *(deps)* Update dependency typescript to v4.8.4
+* *(deps)* Update dependency vue to v3.2.40
+* *(deps)* Update dependency blurhash to v2.0.2
+* *(deps)* Update sentry-javascript monorepo to v7.14.0 (#2440)
+* *(deps)* Update dependency vite to v3.1.4 (#2439)
+* *(deps)* Update dependency @vue/test-utils to v2.1.0
+* *(deps)* Update dependency esbuild to v0.15.10
+* *(deps)* Update dependency @cypress/vite-dev-server to v3.2.0 (#2448)
+* *(deps)* Update dependency postcss to v8.4.17 (#2449)
+* *(deps)* Update dependency marked to v4.1.1
+* *(deps)* Update dependency @vitejs/plugin-vue to v3.1.2 (#2461)
+* *(deps)* Update dependency @types/node to v16.11.63 (#2464)
+* *(deps)* Update dependency caniuse-lite to v1.0.30001414 (#2465)
+* *(deps)* Update pnpm to v7.13.0 (#2467)
+* *(deps)* Update dependency netlify-cli to v12 (#2466)
+* *(deps)* Update dependency vue-advanced-cropper to v2.8.5 (#2469)
+* *(deps)* Update dependency blurhash to v2.0.3 (#2468)
+* *(deps)* Update sentry-javascript monorepo to v7.14.1 (#2471)
+* *(deps)* Update typescript-eslint monorepo to v5.39.0
+* *(deps)* Update dependency @types/node to v16.11.64 (#2479)
+* *(deps)* Update dependency eslint-plugin-vue to v9.6.0 (#2480)
+* *(deps)* Update pnpm to v7.13.1
+* *(deps)* Update dependency vue-advanced-cropper to v2.8.6 (#2483)
+* *(deps)* Pin dependency @rushstack/eslint-patch to 1.2.0 (#2486)
+* *(deps)* Pin dependency @types/lodash.debounce to 4.0.7 (#2488)
+* *(deps)* Update dependency happy-dom to v7 (#2492)
+* *(deps)* Update dependency vite to v3.1.5
+* *(deps)* Update dependency happy-dom to v7.0.2
+* *(deps)* Update sentry-javascript monorepo to v7.14.2
+* *(deps)* Update pnpm to v7.13.2
+* *(deps)* Update dependency vue-flatpickr-component to v9.0.8 (#2494)
+* *(deps)* Update dependency vite to v3.1.6
+* *(deps)* Update dependency happy-dom to v7.0.4 (#2499)
+* *(deps)* Update dependency @cypress/vite-dev-server to v3.3.0 (#2501)
+* *(deps)* Update dependency happy-dom to v7.0.6 (#2500)
+* *(deps)* Update dependency happy-dom to v7.3.0 (#2502)
+* *(deps)* Update dependency vitest to v0.24.0 (#2503)
+* *(deps)* Update dependency vue-tsc to v1 (#2504)
+* *(deps)* Update dependency happy-dom to v7.4.0 (#2505)
+* *(deps)* Update dependency eslint to v8.25.0
+* *(deps)* Update dependency vue-tsc to v1.0.1 (#2507)
+* *(deps)* Update dependency pinia to v2.0.23 (#2509)
+* *(deps)* Update dependency express to v4.18.2
+* *(deps)* Update pnpm to v7.13.3 (#2511)
+* *(deps)* Update dependency vue-tsc to v1.0.2 (#2510)
+* *(deps)* Update dependency vue-tsc to v1.0.3 (#2512)
+* *(deps)* Update dependency netlify-cli to v12.0.7 (#2514)
+* *(deps)* Update dependency caniuse-lite to v1.0.30001418 (#2513)
+* *(deps)* Update dependency vite to v3.1.7 (#2515)
+* *(deps)* Update sentry-javascript monorepo to v7.15.0 (#2516)
+* *(deps)* Update dependency vitest to v0.24.1 (#2517)
+* *(deps)* Update pnpm to v7.13.4 (#2518)
+* *(deps)* Update typescript-eslint monorepo to v5.40.0 (#2519)
+* *(deps)* Update dependency @types/node to v16.11.65 (#2520)
+* *(deps)* Update dependency minimist to v1.2.7 (#2521)
+* *(deps)* Update dependency rollup to v3 (#2524)
+* *(deps)* Update dependency @cypress/vite-dev-server to v3.3.1 (#2523)
+* *(deps)* Update dependency cypress to v10.10.0 (#2525)
+* *(deps)* Update dependency vue-tsc to v1.0.4 (#2526)
+* *(deps)* Update dependency vue-tsc to v1.0.5 (#2527)
+* *(deps)* Update dependency rollup to v3.1.0 (#2528)
+* *(deps)* Update dependency @faker-js/faker to v7.6.0 (#2530)
+* *(deps)* Update dependency vue-tsc to v1.0.6 (#2529)
+* *(deps)* Update dependency postcss to v8.4.18 (#2532)
+* *(deps)* Update dependency vue-tsc to v1.0.7 (#2533)
+* *(deps)* Update dependency vite to v3.1.8 (#2534)
+* *(deps)* Update dependency vue to v3.2.41 (#2538)
+* *(deps)* Update dependency vitest to v0.24.3 (#2536)
+* *(deps)* Update dependency @cypress/vue to v4.2.1 (#2535)
+* *(deps)* Update dependency esbuild to v0.15.11 (#2539)
+* *(deps)* Update dependency rollup to v3.2.0 (#2541)
+* *(deps)* Update dependency vue-tsc to v1.0.8 (#2540)
+* *(deps)* Update dependency rollup to v3.2.1 (#2545)
+* *(deps)* Update dependency @types/node to v16.11.66 (#2544)
+* *(deps)* Update dependency ufo to v0.8.6 (#2542)
+* *(deps)* Update dependency rollup-plugin-visualizer to v5.8.3 (#2543)
+* *(deps)* Update pnpm to v7.13.5
+* *(deps)* Update dependency rollup to v3.2.2 (#2549)
+* *(deps)* Update dependency netlify-cli to v12.0.9 (#2551)
+* *(deps)* Update vueuse to v9.3.1 (#2552)
+* *(deps)* Update dependency caniuse-lite to v1.0.30001420 (#2550)
+* *(deps)* Update dependency happy-dom to v7.5.12 (#2553)
+* *(deps)* Pin dependency @types/postcss-preset-env to 7.7.0 (#2555)
+* *(deps)* Update dependency rollup to v3.2.3 (#2556)
+* *(deps)* Update typescript-eslint monorepo to v5.40.1 (#2557)
+* *(deps)* Update dependency @types/node to v16.11.68 (#2558)
+* *(deps)* Update sentry-javascript monorepo to v7.16.0 (#2560)
+* *(deps)* Update dependency esbuild to v0.15.12 (#2561)
+* *(deps)* Update pnpm to v7.13.6 (#2562)
+* *(deps)* Update dependency vue-flatpickr-component to v10 (#2563)
+* *(deps)* Update dependency eslint to v8.26.0 (#2564)
+* *(deps)* Update pnpm to v7.14.0 (#2565)
+* *(deps)* Update dependency vue-tsc to v1.0.9 (#2566)
+* *(deps)* Update dependency @types/node to v16.18.0 (#2567)
+* *(deps)* Update dependency happy-dom to v7.6.0 (#2571)
+* *(deps)* Update dependency @vue/test-utils to v2.2.0 (#2570)
+* *(deps)* Update dependency caniuse-lite to v1.0.30001423 (#2568)
+* *(deps)* Update dependency netlify-cli to v12.0.11 (#2569)
+* *(deps)* Update dependency vue-router to v4.1.6 (#2572)
+* *(deps)* Update typescript-eslint monorepo to v5.41.0 (#2573)
+* *(deps)* Update dependency @types/node to v18 (#2574)
+* *(deps)* Update vueuse to v9.4.0 (#2575)
+* *(deps)* Update dependency cypress to v10.11.0 (#2576)
+* *(deps)* Update dependency @types/node to v18.11.6
+* *(deps)* Update dependency vite to v3.2.0 (#2580)
+* *(deps)* Update dependency @types/node to v18.11.7 (#2581)
+* *(deps)* Update dependency @vitejs/plugin-legacy to v2.3.0 (#2578)
+* *(deps)* Update dependency @vitejs/plugin-vue to v3.2.0 (#2579)
+* *(deps)* Update sentry-javascript monorepo to v7.17.0
+* *(deps)* Update sentry-javascript monorepo to v7.17.1 (#2585)
+* *(deps)* Update dependency autoprefixer to v10.4.13 (#2586)
+
+### Features
+
+* *(gantt)* Trying to load gantt-chart
+* *(gantt)* Add task collection to useGanttFilter
+* *(gantt)* Use time constants
+* *(gantt)* Reset gantt filter
+* *(gantt)* Disable useDayjsLanguageSync
+* *(link shares)* Hide the logo if a query parameter was passed
+* *(link shares)* Allows switching the initial view by passing a query parameter
+* *(link shares)* Cleanup link share table
+* *(link shares)* Allows switching the initial view by passing a query parameter (#2335)
+* *(list)* Add info dialoge to show list description (#2368)
+* *(openid)* Show error message from query after being redirected from third party
+* *(task)* Cover image for tasks (#2460)
+* *(tests)* Add tests for task attachments* Settings background script setup (#2104) ([ff65580](ff655808b3cb562bd1c843ff70bf3641718ae61d))
+* List settings edit script setup (#1988) ([f6437c8](f6437c81da73b7e3406c28b9bd7b201e376f15c3))
+* Convert abstractService to ts ([74ad6e6](74ad6e65e88d6aa5702686dd0b6f55e2dc6b7b77))
+* Add properties to models ([797de0c](797de0c5432face3887f4d77bcb7dd7ee2e7e0c1))
+* Constants ([8fb0065](8fb00653e47c6f41a0e461c944b401d58b4a2351))
+* Function attribute typing ([332acf0](332acf012c423d3201ec1811093226447cd065e8))
+* Improve types ([c9e85cb](c9e85cb52b562cf9dcfac3ed54d8289e2b499992))
+* Improve store and model typing ([3766b5e](3766b5e51ba9c40a6affa91ce5cc11519e2da5c3))
+* Use lib ESNext setting for typescript ([79e7e4a](79e7e4a8aefe9f4d00bcbad76c4206c409384b61))
+* Extend mode interface from class instead from interface ([a6b96f8](a6b96f857d949874ba75f657b887a7c997aa7c57))
+* Improve store typing ([2444784](244478400ad8b8243ae2b29d741c03fa2b83601b))
+* Add modelTypes ([7d4ba62](7d4ba6249e300b6711369476f5d6a84728668b0f))
+* Convert services and models to ts (#1798) ([dbea1f7](dbea1f7a51f3cf5173b5f381944c4ef19ef97ec8))
+* Add sponsor logo to readme (relm) ([e959043](e95904351fbd30776306225f3be55978d70ae42e))
+* Show user display name when searching for assignees on a list ([65fd2f1](65fd2f14a067ea9d79b352af00f3c316be883fdf))
+* Add keyboard shortcut to toggle task description edit (#2332) ([7f6f896](7f6f8963e7db236f3beb9e6a36fab4ba479b969b))
+* Programmatically generate list of available views ([26d02d5](26d02d5593283c3ad2fb961348ba2f412cc9eaa8))
+* Add fallback for useCopyToClipboard (#2343) ([7b398f7](7b398f73f604d6564a41c3ce5031883c677f02c7))
+* Improve models ([1a11b43](1a11b43ca8d51bf998019fbc741e845b07d70157))
+* Use v-model more consequent (#2356) ([db8b881](db8b8812af731fb6acbdd1aec173e37b84066eea))
+* Make share link name italic ([224cea3](224cea33ced403f45c7d833ab576be44c89d199a))
+* Move the url link to the bottom of the items ([6576b61](6576b6148ce1b02dbe6a335778592c4b72e275de))
+* Color the task color button when the task has a color set ([51c806c](51c806c12b90aa124384497856590f5010b9ff49))
+* Color the color button icon instead of the button itself ([bdf992c](bdf992c9bfe9de176a22f7b5a6fdae1bc5e5010f))
+* Move the update available dialoge always to the bottom ([a18c6ab](a18c6ab8d860a496905f58278315222992bacd07))
+* Show the task color bubble everywhere ([2683fec](2683fec0a67f6afd16579bb44a6ceadc0edd565f))
+* Color the task color button when the task has a color set (#2331) ([f70b1d2](f70b1d2902f91a88eaf33f1a9799489c20a6a143))
+* Namespace settings archive script setup ([ad6b335](ad6b335d41e07e8ce2e74e4282d572ba4c04ea30))
+* ListNamespaces script setup (#2389) ([ff5d1fc](ff5d1fc8c1961134ef3baec09be52b02c0b6898e))
+* NewTeam script setup (#2388) ([e91b5fd](e91b5fde0216e15f739da22efbcaae3829e31ba1))
+* Port label store to pinia | pinia 1/9 (#2391) ([d67e5e3](d67e5e386d7d1901694fe0004f580807754bcae1))
+* Use pnpm ([d76b526](d76b526916d4aca279670d2690f7bb8e63e432a7))
+* Move list store to pina (#2392) ([a38075f](a38075f376aa5cc2d8a06943cf8932366a0d4011))
+* Task relatedTasks script setup ([943d5f7](943d5f79757b73f447c51641812e7766edeffe9e))
+* Allow marking a related task done directly from the list ([ce0f58c](ce0f58c7833bbb37974709112cdedad88ae07cc8))
+* DeleteNamespace script setup (#2387) ([0814890](0814890cac92b813b5b93bb42c7a40e2dc13cb94))
+* Task relatedTasks script setup (#1939) ([d57e27b](d57e27b4a62aaa0f0a739f030515fff72a56f7fc))
+* Use pnpm (#1789) ([f7ca064](f7ca064127863de4a4c1e3ae29d84d6bd5311cb9))
+* Add hot reloading support ([1c58fcc](1c58fccd926586b2303ce41939a535b2044a78a9))
+* Move namespaces store to stores ([9474240](9474240cb9159a0e1b42f82cb492cc267782ce4f))
+* Port namespace store to pinia ([093ab76](093ab766d45247b3b1d12740dc6b24c6b48f21c4))
+* Feat-attachments-script-setup (#2358) ([4dfcd8e](4dfcd8e70f54d2ed977d4b8de5fb8bf9469819aa))
+* Convert namespaces store to pina (#2393) ([937fd36](937fd36f724f2b383fe51ae25a55ba90f58c8975))
+* Move attachments store to stores ([c2ba1b2](c2ba1b2828439d3bd1e846a4bb9a4c456562c460))
+* Port attachments store to pinia ([20e9420](20e94206388ab694248942996fdb67b7be87e76f))
+* Move config to stores ([9e8c429](9e8c429864923215be5b110fdcb7c4a586c60f3d))
+* Port config store to pinia ([a737fc5](a737fc5bc2affc87b209746ecf04c66e1f6077db))
+* Filter-popup script setup (#2418) ([ba2605a](ba2605af1bb6f9ba7d3bd1b99ed862d510c6bb31))
+* ListLabels script setup (#2416) ([89e428b](89e428b4d285f3465a40773fbda564c432fb371e))
+* Possible fix for pnpm ci errors ([e8f0b56](e8f0b5665161e77bcc961ec0dc57c5b127b93a1f))
+* NewLabel script setup (#2414) ([7f581cb](7f581cbe2780633fdfa03609824182fe93fe77e3))
+* Possible fix for pnpm ci errors (#2413) ([bc83309](bc833091f2b919177ce75815b562818c93ea2884))
+* Feat NewNamespace script setup (#2415) ([63f2e6b](63f2e6ba6f22502becf61aa89c729fa9d01cdc7b))
+* ListList script setup (#2441) ([bbf4ef4](bbf4ef4697fc6338ad603e2491fe4aed61057cd8))
+* Move auth to stores ([f30c964](f30c964c06987f87b615c3eec25197241175db96))
+* Port auth store to pinia ([7b53e68](7b53e684aa405a7874f189dcb404c031dfed1388))
+* Auth store type improvements ([176ad56](176ad565cc64e2212eedb1601c844e458d7e4bb6))
+* Improve api-config (#2444) ([8f25f5d](8f25f5d353064f383e97bbc524ce6e00ba559d0f))
+* Convert model methods to named functions ([8e3f54a](8e3f54ae42c21fdae62225892ad340877651df27))
+* Migrate auth store to pina (#2398) ([9856fab](9856fab38f62f82a42d5cb3b69b232eb319b8050))
+* Move tasks to stores ([1fdda07](1fdda07f650702b7e3943e0afc7532367ee20100))
+* Port tasks store to pinia ([34ffd1d](34ffd1d5729341bdede217387a4a4c490d7d60d8))
+* Move kanban to stores ([9f26ae1](9f26ae1ee6241b2ef529f01d3511380c9d7a4576))
+* Port kanban store to pinia ([c35810f](c35810f28fc5aacefabad7526b0ac4e982d53cc7))
+* Port tasks store to pina (#2409) ([8c394d8](8c394d8024a825b961e825543453d188c28fa370))
+* Automatically create subtask relations based on indention ([cc378b8](cc378b83fee2b326610cdda1997cc5236f947fbf))
+* Automatically create subtask relations based on indention (#2443) ([ec227a6](ec227a6872ababb612cb0b7e68ca0c20676117c1))
+* Migrate kanban store to pina (#2411) ([d1d7cd5](d1d7cd535ed992fc0a8be8afaf13250ac9b61132))
+* Move base store to stores ([df74f9d](df74f9d80cdd44315a29189ecb2f236482cb70f5))
+* Port base store to pinia ([7f281fc](7f281fc5e98c5eb83f926100c7f79ee374c5a784))
+* Rework loading state of stores ([1d7f857](1d7f857070651f676bbb5bd7e6d79c7fed56be5f))
+* TaskDetail as script setup (#1792) ([2dc36c0](2dc36c032bad93654fbd64a68682685870972feb))
+* Add github issue template ([9400637](940063784b3ec129e99fe18c4eb2b205ffb15163))
+* Login script setup (#2417) ([63fb8a1](63fb8a1962f9ecd8c9a079e2770b4658c5559d84))
+* Datepicker script setup (#2456) ([ff1968a](ff1968aa36254d788d0d80ba2d156ce66f4a9df8))
+* Multiselect script setup (#2458) ([0620b8f](0620b8f0b308e358526bed0d82322ffb9c0627cf))
+* ColorPicker script setup (#2457) ([b08dd58](b08dd58552edb763f007f355f5c0d36d6dccbd05))
+* Migrate kanban card to script setup ([a5925ba](a5925baff03ac2809b7c601b45b93363b6188083))
+* Migrate kanban card to script setup (#2459) ([3e21a8e](3e21a8ed6ee74d85628feedd8855c817af8de538))
+* Add nix flake for dev shell ([12215c0](12215c043d45d2f2294e65671587a923997e6f6f))
+* Fancycheckbox script setup (#2462) ([06c1a54](06c1a548867e37a74a8493bd44fef728e10c658b))
+* Editor script setup ([db627ed](db627ed28af8432e6971ad08864d11e56d3512c6))
+* Use floating-ui (#2482) ([f360ebf](f360ebfe9854aeae9cb426c67b1bb48aa74a9c08))
+* Update eslint config ([4655e1c](4655e1ce34223337c953ebbe52f94ef811034e6b))
+* Feature/update-eslint-config (#2484) ([6f2dedc](6f2dedcb488ec6a38182e85e702ec880263ecbd3))
+* Move composables in separate files (#2485) ([c206fc6](c206fc6f3462be2e0ebc0bd16d96b3c0099fdda1))
+* Add display of kanban card attachment image ([3d88fda](3d88fdaaddca15b98efa938f0b2813420d56ad84))
+* Promote an attachment to task cover image ([877e425](877e4250554b31db2d57f44a7443c5d04c783e59))
+* Add indicator if an attachment is task cover ([f01107f](f01107fd737e2205bf60498b3d2954a251c3d9d4))
+* Show done tasks as strikethrough when searching for new tasks to relate ([74a9b9a](74a9b9ab1b31740fe84a7dddd91a04995c1eb58d))
+* Allow users to leave a team they're in ([feeaca2](feeaca2c02fb233c35a81f786acd5cbdf5c5d21d))
+* Add TickTick migrator support ([1af4f78](1af4f7811a63826c4aa4740a55f606757e22c7ae))
+* Make salutation i18n static ([c20de51](c20de51a3c98792580c0a2f2751648582ac5ac0c))
+* Get username from store getter ([c4d7f6f](c4d7f6fdfa18c221597b28198d5fa432b1e934dc))
+* Use getter and helper in other components as well ([9de20b4](9de20b4c54d192a20f9135388de9fa13121ed322))
+* Make salutation i18n static (#2546) ([29f6874](29f68747bbd7da50d37ae3238b6b19782ec8022b))
+* Refactor password reset to use a single password field ([4ed665f](4ed665fbd9dc4db1ecb6afc1a75d1818c3518186))
+* Rename useTaskList ([7ce8802](7ce880239ec3ce16313d93bfefa657c499bbfb29))
+* Add basic implementation of ganttastic ([2b0df8c](2b0df8c2375ec5f9afe43207807e999bcc693d21))
+* Allow passing props down to the gantt component ([49a2497](49a24977f96cff1e90e706321505ae43bf7efadf))
+* Only load tasks which start in the currently selected range ([ed241d2](ed241d21bea91795a10cdc1af92561d435c9eedc))
+* Dynamically set default date ([736e5a8](736e5a8bf55ccf7cbed23fd3af48122c459bcdc6))
+* Dynamically set default date ([3b48ada](3b48adad675b0b20dc91a08f8ebbfe1dd1c3806b))
+* Create new tasks ([ef46893](ef4689335b3e738b7e1338657e9dcd69c82fbcb9))
+* Add open task detail when double clicking ([d2c4092](d2c40926ded479db92d0f3b77d2ece5842bcacbb))
+* Scroll ([c8eac91](c8eac914d10a09453afb70d35c6d16faac9cd00c))
+* Styling ([80c151c](80c151ca6c4a76a5f912505672eee471f77a3bba))
+* Update task in gantt bar after dragging to make sure it changes its color ([ebd824b](ebd824bddf8d37a66d2dbf7f330b39c8849db9b2))
+* Show done tasks strikethrough ([3eacc07](3eacc0754ff50fed2d5a50198480c5c8d697f6ce))
+* Handle changing props ([29dcc02](29dcc02217dfe9d52b3cdd6166ca82cc8be1022e))
+* Loading animation ([8c62a9e](8c62a9e198fb5b8221a13747e9510f5036ed3095))
+* Create task when pressing the button ([0a9588e](0a9588e09730e83ddc61630012e62c0530a9997d))
+* Increase the default date range ([5f7159e](5f7159ebc49e73bc4757c7cefa9a10ed14d65b46))
+* Only use one watcher ([64fdae8](64fdae81ec8a1b807a1b1788a6954c8d7850dc36))
+* Review changes ([f21a4e1](f21a4e1e9f558e999e1f6638847aeab4d73b9636))
+* Update ganttastic version ([2f820e5](2f820e517f6dea384440a9574da4f82c02c86143))
+* Improve types ([3b244df](3b244dfdbecf2f1feaa766b5c9e52c7e66dfe52a))
+* Working route sync ([acdbf2f](acdbf2f8f5b8e28e923d7598696dadec373c7a67))
+* Working gantt-chart ([eaf7778](eaf777864ac857275bc657bf39f1886460d307d2))
+* Abstract to useGanttFilter / and useRouteFilter ([2c732eb](2c732eb0d55c9161b8d47cbc850421136994bff4))
+* Simplify ListGantt styles ([c7dd20e](c7dd20ef57f037db0ac8bbdc583463ae98ffe9ac))
+* Move useGanttTaskList in separate file ([7f4114b](7f4114b7032c24d9305c7c731ad1fef2f9390dcd))
+* Remove gantt-chart wrapper ([aefda38](aefda38bdd8fa5f5b4f4d2c7486566f669dd6929))
+* Use PascalCase for component name ([acb3ddc](acb3ddc73fd7a8240d42774c80c68b5a725c3734))
+* Use ref for filters ([51dc123](51dc123d893517a30c2dbb26a68e877b493ec95e))
+* Use plural for filters consequently ([6bf6357](6bf6357cbd281fa5b99b7aae9845fee90c758ae7))
+* Move config preparation in separate function ([e74e6fc](e74e6fcc996cced93f040782ac278db6baea975e))
+* Align with vue-flatpickr-component 10 ([874dc1e](874dc1e5fc9f76ad3d45f555b9d04585cd9a2704))
+* Replace our home-grown gantt implementation with ganttastic (#2180) ([fd3e7e6](fd3e7e655dbbd59f9a94db0f18a3ef4876cec059))
+* Improve useTaskList (#2582) ([d5258b7](d5258b73153a477a82c750482a6fd504c5823b7a))
+* Unify savedFilter logic in service (#2491) ([9807858](9807858436e4b7d6de8dcb71b2a03a55ed8a7d52))
+* Quick-actions script setup (#2478) ([386fd79](386fd79b4983b9d472d46219fc60c1a1a2cc1012))
+
+
+### Miscellaneous Tasks
+
+* *(ci)* Sign drone config
+* *(ci)* Sign drone config
+* *(gantt)* Wip daterange
+* *(gantt)* Upgrade packages
+* *(gantt)* Upgrade packages
+* *(gantt)* Pnpm install after merge
+* *(i18n)* Use global scope
+* *(task)* Move cover image setter to store* Improve type imports ([af630d3](af630d3b8c1536c1a9a320172aaf19e000bb2517))
+* Remove date mixins ([b0ee316](b0ee316a262ca71b9cfecbaaeccab7f9465ec09d))
+* Remove global mixing ([4a247b2](4a247b2a7d6741bfec9fbdb387c9313d7b6381d1))
+* Remove unnecessary defineComponent ([6f93d63](6f93d6343c1c518fec3591b83b999efcbccf9607))
+* Better variable typing ([42e72d1](42e72d14a4a804aa38908cc2a9d6b4cb120c988a))
+* Align docker cypress image version with drone ([2445f0e](2445f0eec8b130d8d71e5fc399a399c0d1cf6836))
+* Minor fixes ([49f3b92](49f3b928cbc16031cf65fa3ed1cc908968e1083b))
+* Automerge renovate dev dependency updates ([d822709](d822709991ee4dc52ee8aa56a03248c6e4a3a709))
+* Rearrange non-dev dependencies ([b8d77a6](b8d77a617b0b205fbf8553d3ce060547c96f0f22))
+* Remove &nbsp; ([d91d1fe](d91d1fecf1b34734ef8af21c3c34bdaaa6d53e09))
+* Remove unused id ([5f678e2](5f678e2449529758cd6ade233c52a0c091889fd9))
+* Set more expressive variable names for available views dropdowns ([7e7fa80](7e7fa807fd1c6a34c5236cca4fb20141ca9d0454))
+* Improve types ([6d9c4a7](6d9c4a7aa083425e252b96729b57c16ab13fd295))
+* Don't cache node_modules ([b542221](b542221dac6a14cd84aab446ceab0888bc98bb38))
+* Don't use node alpine image ([6624db1](6624db1d49545524083d124698fa5b6e02bbfb0c))
+* Use node alpine image ([dfb3561](dfb3561310bec49043a630136a2d51cc80184cc1))
+* Optimise loading order (#2435) ([ca899d3](ca899d3b5172be6f39a60bdaffab58330225ecd9))
+* Make const out of export download file name (#2436) ([878c6ea](878c6ea9e17527b3f199f4acf10588e910b5727c))
+* Spread title ([3970d0f](3970d0fd315488427df0c4a37447eb52dca322b4))
+* Use better variable names ([8ce242b](8ce242bb6595ef12442a6ba0fb37eb66c65dd71b))
+* Break earlier if index === 0 ([d58f8b4](d58f8b4ba1d873abb0fc8dc4c2cec64a33b55ab8))
+* Use jsDoc to explain param ([5bd7c77](5bd7c77b68f08ab4771f3d80d5191def9d634204))
+* Small review adjustments ([af7f840](af7f8400e901c2f4d9c5c4cca7614af62892a75e))
+* Remove unneeded this from PasswordReset.vue (#2473) ([c232170](c2321703a767395b77523d4551ea508396b7cae8))
+* Remove IE edge fallback (#2477) ([3248dcd](3248dcd6636627548f2df869900a7943c0dde0ba))
+* Add line-wrap ([eb80bfa](eb80bfa00de891ee12643d664e8610d1f3bc851f))
+* Better wording for cover set button ([a773137](a7731370a0bcdd8a393036a617dd1953cd39f5df))
+* Update happy-dom less frequently ([458df80](458df8044306642e5da813ff8341bed07f67f26a))
+* Move helper function outside of composable ([aa2278a](aa2278a56411dc8045fa468b090755cf5d899d09))
+* Use flatpickr range instead of two datepickers ([c289a6a](c289a6ae18fd5936b789270cc72408374a790edc))
+* Use width property ([7a7a1c9](7a7a1c985e0feb8de62ddbdd54f36f2a09a9d765))
+* Remove old component and dependencies ([6cb331e](6cb331ee0f26dffcbf700426da17acb6159aea3e))
+* Use Loading component ([766b4c6](766b4c669ff52f6d6c888727e62142eaa90de54d))
+* Use @/models ([d3925b8](d3925b8d80e16e25e9b82d057fb47ed9f41f61a0))
+* Uppercase const ([98d0398](98d0398ca840d8d8077f850c8ca4e65784373b61))
+* Don't set required if there's a default value ([ed5d3be](ed5d3be7cba7992eb18a3ed1844c085cf88b3bdd))
+* Define types ([56a2573](56a25734d7557663e2ba43ba41f4922f0b10ed8b))
+* Don't use for..in ([6975a2b](6975a2b286628294b8909bce3d43334cc383d987))
+* Add types for template ref ([4be0977](4be097701449b74bbeb7218b539db65961539591))
+* Don't use ref when not nessecary ([fd9d0ad](fd9d0ad1553756414696315508bc2d8928f63d9d))
+* Update lockfile ([957d8f0](957d8f05a5e9548138f8dce192513928deb02669))
+* Better naming for input ([df02dd5](df02dd529181e9701ce586dba9025c83eeaf48d8))
+* Clean up ([2acb70c](2acb70c56257202fe7d136b36ceaaa2fe122491e))
+* Pnpm install after merge ([26e522c](26e522cf8c302f5d63b26134e5fa37bed5c808ef))
+* Use vue-ganttastic release ([6c61907](6c619072b4863328c24588bb08a9543806942be1))
+* Don't pass other params to ListGantt than route ([cf0eaf9](cf0eaf9ba1816b610ba1cbc9b4a6c661f00f61a5))
+* Refactor parseTimeLabel to own function ([443e1a0](443e1a063dfff3cbb82a9f625e05bf7e2b606cbe))
+* Add git-cliff to flake ([b817720](b817720907b0c4bb848e9624e3fdf71437ba0bde))
+
+
+### Other
+
+* *(other)* [skip ci] Updated translations via Crowdin
+
+
 ## [0.19.1] - 2022-08-17
 
 ### Bug Fixes
