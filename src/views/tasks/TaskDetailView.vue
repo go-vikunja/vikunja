@@ -908,8 +908,8 @@ $flash-background-duration: 750ms;
       :deep(.multiselect) {
         .input-wrapper {
           &:not(:focus-within):not(:hover) {
-            background: transparent !important;
-            border-color: transparent !important;
+            background: transparent;
+            border-color: transparent;
           }
         }
       }
@@ -921,8 +921,6 @@ $flash-background-duration: 750ms;
     .input:not(.has-defaults),
     .textarea,
     .select:not(.has-defaults) select {
-      border-color: transparent;
-      background: transparent;
       cursor: pointer;
       transition: all $transition-duration;
 

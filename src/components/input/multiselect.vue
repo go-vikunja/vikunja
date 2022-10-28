@@ -414,8 +414,8 @@ function focus() {
 
 	.input-wrapper {
 		padding: 0;
-		background: var(--white) !important;
-		border-color: var(--grey-200) !important;
+		background: var(--white);
+		border-color: var(--grey-200);
 		flex-wrap: wrap;
 		height: auto;
 
