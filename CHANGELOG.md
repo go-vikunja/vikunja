@@ -7,6 +7,115 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.20.0] - 2022-10-28
+
+### Bug Fixes
+
+* *(caldav)* Make sure duration and due date follow rfc5545
+* *(caldav)* No failed login emails for tokens (#1252)
+* *(ci)* Make sure release zip files have a .zip ending
+* *(ci)* Make sure release os packages are properly named
+* *(docs)* Clarify using port 25 as mail port when mail does not work
+* *(docs)* Document pnpm instead of yarn
+* *(docs)* Fix redirect_url example (#50)
+* *(lists)* Return correct max right for lists where the user has created the namespace
+* *(mail)* Pass mail server timeout (#1253)
+* *(migration)* Properly parse duration
+* *(migration)* Expose ticktick migrator to /info
+* *(migration)* Make sure importing works when the csv file has errors and don't try to parse empty values as dates
+* *(namespaces)* Add list subscriptions (#1254)
+* *(todoist)* Properly import all done tasks* Properly log extra message ([c194797](c19479757a20d72484b4e071b45055746ff2b67e))
+* Don't try to compress riscv64 binaries in releases ([d8f387f](d8f387f7967ffb94035de2fcfc4578247ae1023e))
+* Preserve dates for repeating tasks (#47) ([090c671](090c67138a16258480b866b05c6fdc2e02d12c89))
+* Tasks with the same assignee as doer should not appear twice in overdue task mails ([45defeb](45defebcf435cade4b72763236e1e2dfdac770cc))
+* Don't allow setting a list namespace to 0 ([96ed1e3](96ed1e33e38beec1bb1ab0813074b035dd02fade))
+* Make sure pseudo namespaces and lists always have the current user as owner ([878d19b](878d19beb81869392e33a8ffc1ec247d1cf1e4d6))
+* Use connection string for postgres ([fcb205a](fcb205a842a4e828e6e933339b23f5aa8b297125))
+* Make sure user searches are always case-insensitive ([c076f73](c076f73a87bc9b39b17389e25d0186ab71aa24bf))
+* Make cover image id actually updatable ([0e1904d](0e1904d50b8576a2e9ea5812314aa3c8f304edb5))
+* Make cover image id actually updatable ([0eb4709](0eb47096db02ceb5032c7439b3b901fbadd0d1bb))
+* Make sure a user can only be assigned once to a task ([008908e](008908eb49eeb50a554c416422feb3b465efa165))
+* Make sure list subscriptions are set correctly when their namespace has a subscription already ([2fc690a](2fc690a783f5b702fad71da627aa616017727f56))
+
+
+### Dependencies
+
+* *(deps)* Update klakegg/hugo docker tag to v0.101.0
+* *(deps)* Update golang.org/x/sync digest to 8fcdb60
+* *(deps)* Update golang.org/x/oauth2 digest to f213421
+* *(deps)* Update module src.techknowlogick.com/xgo to v1.5.0+1.19
+* *(deps)* Update module github.com/coreos/go-oidc/v3 to v3.4.0
+* *(deps)* Update golang.org/x/image digest to e7cb969
+* *(deps)* Update golang.org/x/term digest to 7a66f97
+* *(deps)* Update module github.com/lib/pq to v1.10.7
+* *(deps)* Update module github.com/spf13/viper to v1.13.0 (#1260)
+* *(deps)* Update dependency golang to v1.19 (#1228)
+* *(deps)* Update module github.com/wneessen/go-mail to v0.2.8 (#1258)
+* *(deps)* Update module github.com/yuin/goldmark to v1.5.2 (#1261)
+* *(deps)* Update module src.techknowlogick.com/xormigrate to v1.5.0 (#1262)
+* *(deps)* Update module github.com/magefile/mage to v1.14.0 (#1259)
+* *(deps)* Update module github.com/swaggo/swag to v1.8.6 (#1243)
+* *(deps)* Update module github.com/wneessen/go-mail to v0.2.9 (#1264)
+* *(deps)* Update dependency klakegg/hugo to v0.102.3 (#1265)
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.14.0 (#1266)
+* *(deps)* Update module github.com/labstack/gommon to v0.4.0 (#1269)
+* *(deps)* Update golang.org/x/crypto digest to 4161e89 (#1268)
+* *(deps)* Update golang.org/x/oauth2 digest to b44042a (#1270)
+* *(deps)* Update golang.org/x/sys digest to 84dc82d (#1271)
+* *(deps)* Update dependency klakegg/hugo to v0.104.2 (#1267)
+* *(deps)* Update golang.org/x/crypto digest to d6f0a8c (#1275)
+* *(deps)* Update golang.org/x/sys digest to 090e330 (#1276)
+* *(deps)* Update module github.com/spf13/cobra to v1.6.0 (#1277)
+* *(deps)* Update module github.com/wneessen/go-mail to v0.3.0 (#1278)
+* *(deps)* Update golang.org/x/crypto digest to 56aed06 (#1280)
+* *(deps)* Update golang.org/x/text to v0.3.8
+* *(deps)* Update module github.com/wneessen/go-mail to v0.3.1 (#1281)
+* *(deps)* Update module github.com/labstack/echo/v4 to v4.9.1 (#1282)
+* *(deps)* Update golang.org/x/sys digest to 95e765b (#1283)
+* *(deps)* Update golang.org/x/oauth2 digest to 6fdb5e3 (#1284)
+* *(deps)* Update golang.org/x/image digest to ffcb3fe (#1288)
+* *(deps)* Update module golang.org/x/sync to v0.1.0 (#1291)
+* *(deps)* Update module github.com/swaggo/swag to v1.8.7 (#1290)
+* *(deps)* Update golang.org/x/term digest to 8365914 (#1289)
+* *(deps)* Update module github.com/coreos/go-systemd/v22 to v22.4.0 (#1287)
+* *(deps)* Update module golang.org/x/oauth2 to v0.1.0 (#1296)
+* *(deps)* Update module golang.org/x/crypto to v0.1.0 (#1295)
+* *(deps)* Update module golang.org/x/image to v0.1.0 (#1293)
+* *(deps)* Update module github.com/wneessen/go-mail to v0.3.2 (#1297)
+* *(deps)* Update module github.com/stretchr/testify to v1.8.1 (#1298)
+* *(deps)* Update module github.com/spf13/cobra to v1.6.1 (#1299)
+* *(deps)* Update module github.com/wneessen/go-mail to v0.3.3 (#1300)
+* *(deps)* Update module github.com/wneessen/go-mail to v0.3.4 (#1302)
+* *(deps)* Update module github.com/mattn/go-sqlite3 to v1.14.16 (#1301)
+
+### Features
+
+* *(docs)* Add docs about how to deploy Vikunja in a subdirectory
+* *(docs)* Document pnpm (#1251)
+* *(migration)* Add TickTick migrator
+* *(migration)* Add routes for TickTick migrator
+* *(migration)* Generate swagger docs
+* *(task)* Add cover image attachment id property
+* *(task)* Add cover image attachment id property (#1263)* Add sponsor to readme (relm) ([f814dd0](f814dd03eb7f1ae08ea67ae0e3e89b8b4e684ce3))
+* Upgrade xorm ([b1fd13b](b1fd13bbcbc551d1bbfe78d91fe6209369709df5))
+* Upgrade xorm ([4323803](4323803fd6801e21121eac0d9f9cd62879f090f7))
+* Upgrade xorm (#1197) ([5341918](53419180be386d675b4513e7ec70aca85b5ac99b))
+* Add github issue templates ([9c4bb5a](9c4bb5a24429dec686e3ccdcd2b920ce5528031c))
+* Remove gitea issue template so that only the form is used ([ce621ee](ce621ee5d6b47a0776628073bbd53312a97d116b))
+* Add gitea issue template ([0612f4d](0612f4d0e03fbe85018f51056c4833557e78cd3f))
+* Provide default user settings for new users via config ([5a40100](5a40100ac5be33d2cbce3c25e355d4036b9b4d3f))
+* Add proper checks and errors to see if an attachment belongs to the task it's being used as cover image in ([631a265](631a265d2de9a6196faf28574023fc3cdcc0bfc7))
+* Allow a user to remove themselves from a team ([b8769c7](b8769c746ceddc9818f91d6a8a404293ea2e837e))
+* TickTick migrator (#1273) ([df2e36c](df2e36c2a378d4bd1b81d959da180b6e9b9a37b9))
+
+
+### Miscellaneous Tasks
+
+* Upgrade echo ([86ee827](86ee8273bce36c7b4767a34e0d878d63b37ea1b4))
+* Go mod tidy ([903b8ff](903b8ff43871234f41f706d571ee2caaba5f4232))
+* Generate swagger docs ([e113fe3](e113fe34d074f698f4b0cb237821f359976daa5c))
+* Remove unused dependencies ([f5fd849](f5fd849a0b93ff3bba53ac4907bb3fb04fa8692b))
+
 ## [0.19.2] - 2022-08-17
 
 ### Bug Fixes
