@@ -133,7 +133,7 @@ const props = defineProps({
 	 * The object with the value, updated every time an entry is selected.
 	 */
 	modelValue: {
-		type: [] as PropType<{[key: string]: any}>,
+		type: [Object] as PropType<{[key: string]: any}>,
 		default: null,
 	},
 	/**
