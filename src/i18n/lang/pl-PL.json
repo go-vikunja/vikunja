@@ -285,8 +285,8 @@
       "default": "Domyślny",
       "month": "Miesiąc",
       "day": "Dzień",
-      "from": "Od",
-      "to": "Do",
+      "hour": "Hour",
+      "range": "Date Range",
       "noDates": "To zadanie nie ma ustawionych dat."
     },
     "table": {

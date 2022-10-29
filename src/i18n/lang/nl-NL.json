@@ -285,8 +285,8 @@
       "default": "Standaard",
       "month": "Maand",
       "day": "Dag",
-      "from": "Van",
-      "to": "Aan",
+      "hour": "Hour",
+      "range": "Date Range",
       "noDates": "This task has no dates set."
     },
     "table": {

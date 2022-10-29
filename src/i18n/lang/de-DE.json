@@ -285,8 +285,8 @@
       "default": "Standard",
       "month": "Monat",
       "day": "Tag",
-      "from": "Von",
-      "to": "Bis",
+      "hour": "Stunde",
+      "range": "Zeitraum",
       "noDates": "Diese Aufgabe hat keine Daten definiert."
     },
     "table": {

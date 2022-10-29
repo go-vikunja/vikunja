@@ -285,8 +285,8 @@
       "default": "Mặc định",
       "month": "Tháng",
       "day": "Ngày",
-      "from": "Từ",
-      "to": "Đến",
+      "hour": "Hour",
+      "range": "Date Range",
       "noDates": "Công việc này không thiết lập ngày."
     },
     "table": {

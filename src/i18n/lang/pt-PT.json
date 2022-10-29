@@ -285,8 +285,8 @@
       "default": "Padrão",
       "month": "Mês",
       "day": "Dia",
-      "from": "De",
-      "to": "Até",
+      "hour": "Hora",
+      "range": "Intervalo de Datas",
       "noDates": "Esta tarefa não tem datas definidas."
     },
     "table": {

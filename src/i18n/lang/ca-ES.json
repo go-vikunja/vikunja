@@ -285,8 +285,8 @@
       "default": "Default",
       "month": "Month",
       "day": "Day",
-      "from": "From",
-      "to": "To",
+      "hour": "Hour",
+      "range": "Date Range",
       "noDates": "This task has no dates set."
     },
     "table": {

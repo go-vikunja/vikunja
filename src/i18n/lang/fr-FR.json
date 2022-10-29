@@ -285,8 +285,8 @@
       "default": "Par défaut",
       "month": "Mois",
       "day": "Jour",
-      "from": "De",
-      "to": "À",
+      "hour": "Hour",
+      "range": "Date Range",
       "noDates": "Aucune date n’a été fixée pour cette tâche."
     },
     "table": {

@@ -285,8 +285,8 @@
       "default": "Standard",
       "month": "Monet",
       "day": "Taag",
-      "from": "Vo",
-      "to": "Bis",
+      "hour": "Stunde",
+      "range": "Zeitraum",
       "noDates": "Die Uufgab het no kei Datum gsetzt."
     },
     "table": {

@@ -285,8 +285,8 @@
       "default": "Predefinito",
       "month": "Mese",
       "day": "Giorno",
-      "from": "Da",
-      "to": "A",
+      "hour": "Hour",
+      "range": "Date Range",
       "noDates": "Questa attività non ha date impostate."
     },
     "table": {
