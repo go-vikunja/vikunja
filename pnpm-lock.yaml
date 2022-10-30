@@ -35,7 +35,7 @@ specifiers:
   '@vueuse/router': 9.4.0
   autoprefixer: 10.4.13
   axios: 0.27.2
-  blurhash: 2.0.3
+  blurhash: 2.0.4
   browserslist: 4.21.4
   bulma-css-variables: 0.9.33
   camel-case: 4.1.2
@@ -104,7 +104,7 @@ dependencies:
   '@vueuse/core': 9.4.0_vue@3.2.41
   '@vueuse/router': 9.4.0_4dzfggngbcv3f6kocd3r4z3f4q
   axios: 0.27.2
-  blurhash: 2.0.3
+  blurhash: 2.0.4
   bulma-css-variables: 0.9.33
   camel-case: 4.1.2
   codemirror: 5.65.9
@@ -4195,8 +4195,8 @@ packages:
     resolution: {integrity: sha512-DRQrD6gJyy8FbiE4s+bDoXS9hiW3Vbx5uCdwvcCf3zLHL+Iv7LtGHLpr+GZV8rHG8tK766FGYBwRbu8pELTt+w==}
     dev: true
 
-  /blurhash/2.0.3:
-    resolution: {integrity: sha512-nTnJTOheiaV3b189f7rH5AbbrnQB2r3CcOZBg47GUDaE9DrxyBPD2w0HYp4ME2UBlTP7LMIa6nMWqg/58oyIzA==}
+  /blurhash/2.0.4:
+    resolution: {integrity: sha512-r/As72u2FbucLoK5NTegM/GucxJc3d8GvHc4ngo13IO/nt2HU4gONxNLq1XPN6EM/V8Y9URIa7PcSz2RZu553A==}
     dev: false
 
   /body-parser/1.20.1:
