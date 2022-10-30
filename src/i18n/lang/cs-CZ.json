@@ -285,8 +285,8 @@
       "default": "Výchozí",
       "month": "Měsíc",
       "day": "Den",
-      "hour": "Hour",
-      "range": "Date Range",
+      "hour": "Hodina",
+      "range": "Časové období",
       "noDates": "Tento úkol nemá nastaveno žádné datum."
     },
     "table": {
