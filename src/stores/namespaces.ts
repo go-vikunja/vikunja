@@ -1,3 +1,4 @@
+import {computed, readonly, ref} from 'vue'
 import {defineStore, acceptHMRUpdate} from 'pinia'
 
 import NamespaceService from '../services/namespace'
@@ -9,210 +10,224 @@ import {useListStore} from '@/stores/lists'
 
 const {add, remove, search, update} = createNewIndexer('namespaces', ['title', 'description'])
 
-export interface NamespaceState {
-	namespaces: INamespace[]
-	isLoading: boolean,
-}
+export const useNamespaceStore = defineStore('namespace', () => {
+	const listStore = useListStore()
 
-export const useNamespaceStore = defineStore('namespace', {
-	state: (): NamespaceState => ({
-		isLoading: false,
-		// FIXME: should be object with id as key
-		namespaces: [],
-	}),
-	getters: {
-		getListAndNamespaceById: (state) => (listId: IList['id'], ignorePseudoNamespaces = false) => {
-			for (const n in state.namespaces) {
+	const isLoading = ref(false)
+	// FIXME: should be object with id as key
+	const namespaces = ref<INamespace[]>([])
 
-				if (ignorePseudoNamespaces && state.namespaces[n].id < 0) {
-					continue
-				}
+	const getListAndNamespaceById = computed(() => (listId: IList['id'], ignorePseudoNamespaces = false) => {
+		for (const n in namespaces.value) {
 
-				for (const l in state.namespaces[n].lists) {
-					if (state.namespaces[n].lists[l].id === listId) {
-						return {
-							list: state.namespaces[n].lists[l],
-							namespace: state.namespaces[n],
-						}
+			if (ignorePseudoNamespaces && namespaces.value[n].id < 0) {
+				continue
+			}
+
+			for (const l in namespaces.value[n].lists) {
+				if (namespaces.value[n].lists[l].id === listId) {
+					return {
+						list: namespaces.value[n].lists[l],
+						namespace: namespaces.value[n],
 					}
 				}
 			}
-			return null
-		},
+		}
+		return null
+	})
 
-		getNamespaceById: state => (namespaceId: INamespace['id']) => {
-			return state.namespaces.find(({id}) => id == namespaceId) || null
-		},
+	const getNamespaceById = computed(() => (namespaceId: INamespace['id']) => {
+		return namespaces.value.find(({id}) => id == namespaceId) || null
+	})
 
-		searchNamespace() {
-			return (query: string) => (
-				search(query)
-					?.filter(value => value > 0)
-					.map(this.getNamespaceById)
-					.filter(n => n !== null)
-				|| []
-			)
-		},
-	},
+	const searchNamespace = computed(() => {
+		return (query: string) => (
+			search(query)
+				?.filter(value => value > 0)
+				.map(getNamespaceById.value)
+				.filter(n => n !== null)
+			|| []
+		)
+	})
 
-	actions: {
-		setIsLoading(isLoading: boolean) {
-			this.isLoading = isLoading
-		},
 
-		setNamespaces(namespaces: INamespace[]) {
-			this.namespaces = namespaces
-			namespaces.forEach(n => {
-				add(n)
+	function setIsLoading(newIsLoading: boolean) {
+		isLoading.value = newIsLoading
+	}
 
-				// Check for each list in that namespace if it has a subscription and set it if not
-				n.lists.forEach(l => {
-					if (l.subscription === null || l.subscription.entity !== 'list') {
-						l.subscription = n.subscription
-					}
-				})
-			})
-		},
+	function setNamespaces(newNamespaces: INamespace[]) {
+		namespaces.value = newNamespaces
+		newNamespaces.forEach(n => {
+			add(n)
 
-		setNamespaceById(namespace: INamespace) {
-			const namespaceIndex = this.namespaces.findIndex(n => n.id === namespace.id)
-
-			if (namespaceIndex === -1) {
-				return
-			}
-
-			if (!namespace.lists || namespace.lists.length === 0) {
-				namespace.lists = this.namespaces[namespaceIndex].lists
-			}
-			
 			// Check for each list in that namespace if it has a subscription and set it if not
-			namespace.lists.forEach(l => {
+			n.lists.forEach(l => {
 				if (l.subscription === null || l.subscription.entity !== 'list') {
-					l.subscription = namespace.subscription
+					l.subscription = n.subscription
 				}
 			})
+		})
+	}
 
-			this.namespaces[namespaceIndex] = namespace
-			update(namespace)
-		},
+	function setNamespaceById(namespace: INamespace) {
+		const namespaceIndex = namespaces.value.findIndex(n => n.id === namespace.id)
 
-		setListInNamespaceById(list: IList) {
-			for (const n in this.namespaces) {
-				// We don't have the namespace id on the list which means we need to loop over all lists until we find it.
-				// FIXME: Not ideal at all - we should fix that at the api level.
-				if (this.namespaces[n].id === list.namespaceId) {
-					for (const l in this.namespaces[n].lists) {
-						if (this.namespaces[n].lists[l].id === list.id) {
-							const namespace = this.namespaces[n]
-							namespace.lists[l] = list
-							this.namespaces[n] = namespace
-							return
-						}
+		if (namespaceIndex === -1) {
+			return
+		}
+
+		if (!namespace.lists || namespace.lists.length === 0) {
+			namespace.lists = namespaces.value[namespaceIndex].lists
+		}
+		
+		// Check for each list in that namespace if it has a subscription and set it if not
+		namespace.lists.forEach(l => {
+			if (l.subscription === null || l.subscription.entity !== 'list') {
+				l.subscription = namespace.subscription
+			}
+		})
+
+		namespaces.value[namespaceIndex] = namespace
+		update(namespace)
+	}
+
+	function setListInNamespaceById(list: IList) {
+		for (const n in namespaces.value) {
+			// We don't have the namespace id on the list which means we need to loop over all lists until we find it.
+			// FIXME: Not ideal at all - we should fix that at the api level.
+			if (namespaces.value[n].id === list.namespaceId) {
+				for (const l in namespaces.value[n].lists) {
+					if (namespaces.value[n].lists[l].id === list.id) {
+						const namespace = namespaces.value[n]
+						namespace.lists[l] = list
+						namespaces.value[n] = namespace
+						return
 					}
 				}
 			}
-		},
+		}
+	}
 
-		addNamespace(namespace: INamespace) {
-			this.namespaces.push(namespace)
-			add(namespace)
-		},
+	function addNamespace(namespace: INamespace) {
+		namespaces.value.push(namespace)
+		add(namespace)
+	}
 
-		removeNamespaceById(namespaceId: INamespace['id']) {
-			for (const n in this.namespaces) {
-				if (this.namespaces[n].id === namespaceId) {
-					remove(this.namespaces[n])
-					this.namespaces.splice(n, 1)
-					return
-				}
-			}
-		},
-
-		addListToNamespace(list: IList) {
-			for (const n in this.namespaces) {
-				if (this.namespaces[n].id === list.namespaceId) {
-					this.namespaces[n].lists.push(list)
-					return
-				}
-			}
-		},
-
-		removeListFromNamespaceById(list: IList) {
-			for (const n in this.namespaces) {
-				// We don't have the namespace id on the list which means we need to loop over all lists until we find it.
-				// FIXME: Not ideal at all - we should fix that at the api level.
-				if (this.namespaces[n].id === list.namespaceId) {
-					for (const l in this.namespaces[n].lists) {
-						if (this.namespaces[n].lists[l].id === list.id) {
-							this.namespaces[n].lists.splice(l, 1)
-							return
-						}
-					}
-				}
-			}
-		},
-
-		async loadNamespaces() {
-			const cancel = setModuleLoading(this)
-
-			const namespaceService = new NamespaceService()
-			try {
-				// We always load all namespaces and filter them on the frontend
-				const namespaces = await namespaceService.getAll({}, {is_archived: true}) as INamespace[]
-				this.setNamespaces(namespaces)
-
-				// Put all lists in the list state
-				const lists = namespaces.flatMap(({lists}) => lists)
-
-				const listStore = useListStore()
-				listStore.setLists(lists)
-
-				return namespaces
-			} finally {
-				cancel()
-			}
-		},
-
-		loadNamespacesIfFavoritesDontExist() {
-			// The first or second namespace should be the one holding all favorites
-			if (this.namespaces[0].id === -2 || this.namespaces[1]?.id === -2) {
+	function removeNamespaceById(namespaceId: INamespace['id']) {
+		for (const n in namespaces.value) {
+			if (namespaces.value[n].id === namespaceId) {
+				remove(namespaces.value[n])
+				namespaces.value.splice(n, 1)
 				return
 			}
-			return this.loadNamespaces()
-		},
+		}
+	}
 
-		removeFavoritesNamespaceIfEmpty() {
-			if (this.namespaces[0].id === -2 && this.namespaces[0].lists.length === 0) {
-				this.namespaces.splice(0, 1)
+	function addListToNamespace(list: IList) {
+		for (const n in namespaces.value) {
+			if (namespaces.value[n].id === list.namespaceId) {
+				namespaces.value[n].lists.push(list)
+				return
 			}
-		},
+		}
+	}
 
-		async deleteNamespace(namespace: INamespace) {
-			const cancel = setModuleLoading(this)
-			const namespaceService = new NamespaceService()
-
-			try {
-				const response = await namespaceService.delete(namespace)
-				this.removeNamespaceById(namespace.id)
-				return response
-			} finally {
-				cancel()
+	function removeListFromNamespaceById(list: IList) {
+		for (const n in namespaces.value) {
+			// We don't have the namespace id on the list which means we need to loop over all lists until we find it.
+			// FIXME: Not ideal at all - we should fix that at the api level.
+			if (namespaces.value[n].id === list.namespaceId) {
+				for (const l in namespaces.value[n].lists) {
+					if (namespaces.value[n].lists[l].id === list.id) {
+						namespaces.value[n].lists.splice(l, 1)
+						return
+					}
+				}
 			}
-		},
+		}
+	}
 
-		async createNamespace(namespace: INamespace) {
-			const cancel = setModuleLoading(this)
-			const namespaceService = new NamespaceService()
+	async function loadNamespaces() {
+		const cancel = setModuleLoading(this, setIsLoading)
 
-			try {
-				const createdNamespace = await namespaceService.create(namespace)
-				this.addNamespace(createdNamespace)
-				return createdNamespace
-			} finally {
-				cancel()
-			}
-		},
-	},
+		const namespaceService = new NamespaceService()
+		try {
+			// We always load all namespaces and filter them on the frontend
+			const namespaces = await namespaceService.getAll({}, {is_archived: true}) as INamespace[]
+			setNamespaces(namespaces)
+
+			// Put all lists in the list state
+			const lists = namespaces.flatMap(({lists}) => lists)
+
+			listStore.setLists(lists)
+
+			return namespaces
+		} finally {
+			cancel()
+		}
+	}
+
+	function loadNamespacesIfFavoritesDontExist() {
+		// The first or second namespace should be the one holding all favorites
+		if (namespaces.value[0].id === -2 || namespaces.value[1]?.id === -2) {
+			return
+		}
+		return loadNamespaces()
+	}
+
+	function removeFavoritesNamespaceIfEmpty() {
+		if (namespaces.value[0].id === -2 && namespaces.value[0].lists.length === 0) {
+			namespaces.value.splice(0, 1)
+		}
+	}
+
+	async function deleteNamespace(namespace: INamespace) {
+		const cancel = setModuleLoading(this, setIsLoading)
+		const namespaceService = new NamespaceService()
+
+		try {
+			const response = await namespaceService.delete(namespace)
+			removeNamespaceById(namespace.id)
+			return response
+		} finally {
+			cancel()
+		}
+	}
+
+	async function createNamespace(namespace: INamespace) {
+		const cancel = setModuleLoading(this, setIsLoading)
+		const namespaceService = new NamespaceService()
+
+		try {
+			const createdNamespace = await namespaceService.create(namespace)
+			addNamespace(createdNamespace)
+			return createdNamespace
+		} finally {
+			cancel()
+		}
+	}
+
+	return {
+		isLoading: readonly(isLoading),
+		namespaces: readonly(namespaces),
+
+		getListAndNamespaceById,
+		getNamespaceById,
+		searchNamespace,
+
+		setNamespaces,
+		setNamespaceById,
+		setListInNamespaceById,
+		addNamespace,
+		removeNamespaceById,
+		addListToNamespace,
+		removeListFromNamespaceById,
+		loadNamespaces,
+		loadNamespacesIfFavoritesDontExist,
+		removeFavoritesNamespaceIfEmpty,
+		deleteNamespace,
+		createNamespace,
+	}
 })
 
 // support hot reloading
