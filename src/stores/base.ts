@@ -1,3 +1,4 @@
+import {readonly, ref} from 'vue'
 import {defineStore, acceptHMRUpdate} from 'pinia'
 
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
@@ -9,140 +10,155 @@ import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 import {useAuthStore} from '@/stores/auth'
 import type {IList} from '@/modelTypes/IList'
 
-export interface RootStoreState {
-	loading: boolean,
-	ready: boolean,
+export const useBaseStore = defineStore('base', () => {
+	const loading = ref(false)
+	const ready = ref(false)
 
-	currentList: IList | null,
-	background: string,
-	blurHash: string,
+	// This is used to highlight the current list in menu for all list related views
+	const currentList = ref<IList | null>(new ListModel({
+		id: 0,
+		isArchived: false,
+	}))
+	const background = ref('')
+	const blurHash = ref('')
 
-	hasTasks: boolean,
-	menuActive: boolean,
-	keyboardShortcutsActive: boolean,
-	quickActionsActive: boolean,
-	logoVisible: boolean,
-}
+	const hasTasks = ref(false)
+	const menuActive = ref(true)
+	const keyboardShortcutsActive = ref(false)
+	const quickActionsActive = ref(false)
+	const logoVisible = ref(true)
 
-export const useBaseStore = defineStore('base', {
-	state: () : RootStoreState => ({
-		loading: false,
-		ready: false,
+	function setLoading(newLoading: boolean) {
+		loading.value = newLoading
+	}
 
-		// This is used to highlight the current list in menu for all list related views
-		currentList: new ListModel({
-			id: 0,
-			isArchived: false,
-		}),
-		background: '',
-		blurHash: '',
+	function setCurrentList(newCurrentList: IList | null) {
+		// Server updates don't return the right. Therefore, the right is reset after updating the list which is
+		// confusing because all the buttons will disappear in that case. To prevent this, we're keeping the right
+		// when updating the list in global state.
+		if (
+			typeof currentList.value?.maxRight !== 'undefined' &&
+			newCurrentList !== null &&
+			(
+				typeof newCurrentList.maxRight === 'undefined' ||
+				newCurrentList.maxRight === null
+			)
+		) {
+			newCurrentList.maxRight = currentList.value.maxRight
+		}
+		currentList.value = newCurrentList
+	}
 
-		hasTasks: false,
-		menuActive: true,
-		keyboardShortcutsActive: false,
-		quickActionsActive: false,
-		logoVisible: true,
-	}),
+	function setHasTasks(newHasTasks: boolean) {
+		hasTasks.value = newHasTasks
+	}
 
-	actions: {
-		setLoading(loading: boolean) {
-			this.loading = loading
-		},
+	function setMenuActive(newMenuActive: boolean) {
+		menuActive.value = newMenuActive
+	}
 
-		setCurrentList(currentList: IList | null) {
-			// Server updates don't return the right. Therefore, the right is reset after updating the list which is
-			// confusing because all the buttons will disappear in that case. To prevent this, we're keeping the right
-			// when updating the list in global state.
-			if (
-				typeof this.currentList?.maxRight !== 'undefined' &&
-				currentList !== null &&
-				(
-					typeof currentList.maxRight === 'undefined' ||
-					currentList.maxRight === null
-				)
-			) {
-				currentList.maxRight = this.currentList.maxRight
-			}
-			this.currentList = currentList
-		},
+	function toggleMenu() {
+		menuActive.value = !menuActive.value
+	}
 
-		setHasTasks(hasTasks: boolean) {
-			this.hasTasks = hasTasks
-		},
+	function setKeyboardShortcutsActive(value: boolean) {
+		keyboardShortcutsActive.value = value
+	}
 
-		setMenuActive(menuActive: boolean) {
-			this.menuActive = menuActive
-		},
+	function setQuickActionsActive(value: boolean) {
+		quickActionsActive.value = value
+	}
 
-		toggleMenu() {
-			this.menuActive = !this.menuActive
-		},
+	function setBackground(newBackground: string) {
+		background.value = newBackground
+	}
 
-		setKeyboardShortcutsActive(active: boolean) {
-			this.keyboardShortcutsActive = active
-		},
+	function setBlurHash(newBlurHash: string) {
+		blurHash.value = newBlurHash
+	}
 
-		setQuickActionsActive(active: boolean) {
-			this.quickActionsActive = active
-		},
+	function setLogoVisible(visible: boolean) {
+		logoVisible.value = visible
+	}
+	
+	function setReady(value: boolean) {
+		ready.value = value
+	}
 
-		setBackground(background: string) {
-			this.background = background
-		},
+	async function handleSetCurrentList(
+		{list, forceUpdate = false}: {list: IList | null, forceUpdate: boolean},
+	) {
+		if (list === null) {
+			setCurrentList({})
+			setBackground('')
+			setBlurHash('')
+			return
+		}
 
-		setBlurHash(blurHash: string) {
-			this.blurHash = blurHash
-		},
-
-		setLogoVisible(visible: boolean) {
-			this.logoVisible = visible
-		},
-		
-		setReady(ready: boolean) {
-			this.ready = ready
-		},
-
-		async handleSetCurrentList({list, forceUpdate = false} : {list: IList | null, forceUpdate: boolean}) {
-			if (list === null) {
-				this.setCurrentList({})
-				this.setBackground('')
-				this.setBlurHash('')
-				return
-			}
-
-			// The forceUpdate parameter is used only when updating a list background directly because in that case 
-			// the current list stays the same, but we want to show the new background right away.
-			if (list.id !== this.currentList.id || forceUpdate) {
-				if (list.backgroundInformation) {
-					try {
-						const blurHash = await getBlobFromBlurHash(list.backgroundBlurHash)
-						if (blurHash) {
-							this.setBlurHash(window.URL.createObjectURL(blurHash))
-						}
-
-						const listService = new ListService()
-						const background = await listService.background(list)
-						this.setBackground(background)
-					} catch (e) {
-						console.error('Error getting background image for list', list.id, e)
+		// The forceUpdate parameter is used only when updating a list background directly because in that case 
+		// the current list stays the same, but we want to show the new background right away.
+		if (list.id !== currentList.value.id || forceUpdate) {
+			if (list.backgroundInformation) {
+				try {
+					const blurHash = await getBlobFromBlurHash(list.backgroundBlurHash)
+					if (blurHash) {
+						setBlurHash(window.URL.createObjectURL(blurHash))
 					}
+
+					const listService = new ListService()
+					const background = await listService.background(list)
+					setBackground(background)
+				} catch (e) {
+					console.error('Error getting background image for list', list.id, e)
 				}
 			}
+		}
 
-			if (typeof list.backgroundInformation === 'undefined' || list.backgroundInformation === null) {
-				this.setBackground('')
-				this.setBlurHash('')
-			}
+		if (
+			typeof list.backgroundInformation === 'undefined' ||
+			list.backgroundInformation === null
+		) {
+			setBackground('')
+			setBlurHash('')
+		}
 
-			this.setCurrentList(list)
-		},
+		setCurrentList(list)
+	}
 
-		async loadApp() {
-			await checkAndSetApiUrl(window.API_URL)
-			await useAuthStore().checkAuth()
-			this.ready = true
-		},
-	},
+	const authStore = useAuthStore()
+	async function loadApp() {
+		await checkAndSetApiUrl(window.API_URL)
+		await authStore.checkAuth()
+		ready.value = true
+	}
+
+	return {
+		loading: readonly(loading),
+		ready: readonly(ready),
+		currentList: readonly(currentList),
+		background: readonly(background),
+		blurHash: readonly(blurHash),
+		hasTasks: readonly(hasTasks),
+		menuActive: readonly(menuActive),
+		keyboardShortcutsActive: readonly(keyboardShortcutsActive),
+		quickActionsActive: readonly(quickActionsActive),
+		logoVisible: readonly(logoVisible),
+
+		setLoading,
+		setCurrentList,
+		setHasTasks,
+		setMenuActive,
+		toggleMenu,
+		setKeyboardShortcutsActive,
+		setQuickActionsActive,
+		setBackground,
+		setBlurHash,
+		setLogoVisible,
+		setReady,
+
+		handleSetCurrentList,
+		loadApp,
+	}
 })
 
 // support hot reloading
