@@ -1,3 +1,4 @@
+import {computed, readonly, ref} from 'vue'
 import {defineStore, acceptHMRUpdate} from 'pinia'
 
 import {HTTPFactory, AuthenticatedHTTPFactory} from '@/http-common'
@@ -16,352 +17,386 @@ import {useConfigStore} from '@/stores/config'
 import UserSettingsModel from '@/models/userSettings'
 import {MILLISECONDS_A_SECOND} from '@/constants/date'
 
-export interface AuthState {
-	authenticated: boolean,
-	isLinkShareAuth: boolean,
-	info: IUser | null,
-	needsTotpPasscode: boolean,
-	avatarUrl: string,
-	lastUserInfoRefresh: Date | null,
-	settings: IUserSettings,
-	isLoading: boolean,
-	isLoadingGeneralSettings: boolean
+function redirectToProviderIfNothingElseIsEnabled() {
+	const {auth} = useConfigStore()
+	if (
+		auth.local.enabled === false &&
+		auth.openidConnect.enabled &&
+		auth.openidConnect.providers?.length === 1 &&
+		window.location.pathname.startsWith('/login') // Kinda hacky, but prevents an endless loop.
+	) {
+		redirectToProvider(auth.openidConnect.providers[0], auth.openidConnect.redirectUrl)
+	}
 }
 
-export const useAuthStore = defineStore('auth', {
-	state: () : AuthState => ({
-		authenticated: false,
-		isLinkShareAuth: false,
-		needsTotpPasscode: false,
-		
-		info: null,
-		avatarUrl: '',
-		settings: new UserSettingsModel(),
-		
-		lastUserInfoRefresh: null,
-		isLoading: false,
-		isLoadingGeneralSettings: false,
-	}),
-	getters: {
-		authUser(state) {
-			return state.authenticated && (
-				state.info &&
-				state.info.type === AUTH_TYPES.USER
-			)
-		},
-		authLinkShare(state) {
-			return state.authenticated && (
-				state.info &&
-				state.info.type === AUTH_TYPES.LINK_SHARE
-			)
-		},
-		userDisplayName(state) {
-			return state.info ? getDisplayName(state.info) : undefined
-		},
-	},
-	actions: {
-		setIsLoading(isLoading: boolean) {
-			this.isLoading = isLoading 
-		},
+export const useAuthStore = defineStore('auth', () => {
+	const authenticated = ref(false)
+	const isLinkShareAuth = ref(false)
+	const needsTotpPasscode = ref(false)
+	
+	const info = ref<IUser | null>(null)
+	const avatarUrl = ref('')
+	const settings = ref<IUserSettings>(new UserSettingsModel())
+	
+	const lastUserInfoRefresh = ref<Date | null>(null)
+	const isLoading = ref(false)
+	const isLoadingGeneralSettings = ref(false)
 
-		setIsLoadingGeneralSettings(isLoading: boolean) {
-			this.isLoadingGeneralSettings = isLoading 
-		},
+	const authUser = computed(() => {
+		return authenticated.value && (
+			info.value &&
+			info.value.type === AUTH_TYPES.USER
+		)
+	})
 
-		setUser(info: IUser | null) {
-			this.info = info
-			if (info !== null) {
-				this.reloadAvatar()
+	const authLinkShare = computed(() => {
+		return authenticated.value && (
+			info.value &&
+			info.value.type === AUTH_TYPES.LINK_SHARE
+		)
+	})
 
-				if (info.settings) {
-					this.settings = new UserSettingsModel(info.settings)
-				}
+	const userDisplayName = computed(() => info.value ? getDisplayName(info.value) : undefined)
 
-				this.isLinkShareAuth = info.id < 0
-			}
-		},
-		setUserSettings(settings: IUserSettings) {
-			this.settings = new UserSettingsModel(settings)
-			this.info = new UserModel({
-				...this.info !== null ? this.info : {},
-				name: settings.name,
-			})
-		},
-		setAuthenticated(authenticated: boolean) {
-			this.authenticated = authenticated
-		},
-		setIsLinkShareAuth(isLinkShareAuth: boolean) {
-			this.isLinkShareAuth = isLinkShareAuth
-		},
-		setNeedsTotpPasscode(needsTotpPasscode: boolean) {
-			this.needsTotpPasscode = needsTotpPasscode
-		},
-		reloadAvatar() {
-			if (!this.info) return
-			this.avatarUrl = `${getAvatarUrl(this.info)}&=${+new Date()}`
-		},
-		updateLastUserRefresh() {
-			this.lastUserInfoRefresh = new Date()
-		},
 
-		// Logs a user in with a set of credentials.
-		async login(credentials) {
-			const HTTP = HTTPFactory()
-			this.setIsLoading(true)
+	function setIsLoading(newIsLoading: boolean) {
+		isLoading.value = newIsLoading 
+	}
 
-			// Delete an eventually preexisting old token
-			removeToken()
+	function setIsLoadingGeneralSettings(isLoading: boolean) {
+		isLoadingGeneralSettings.value = isLoading 
+	}
 
-			try {
-				const response = await HTTP.post('login', objectToSnakeCase(credentials))
-				// Save the token to local storage for later use
-				saveToken(response.data.token, true)
+	function setUser(newUser: IUser | null) {
+		info.value = newUser
+		if (newUser !== null) {
+			reloadAvatar()
 
-				// Tell others the user is autheticated
-				await this.checkAuth()
-			} catch (e) {
-				if (
-					e.response &&
-					e.response.data.code === 1017 &&
-					!credentials.totpPasscode
-				) {
-					this.setNeedsTotpPasscode(true)
-				}
-
-				throw e
-			} finally {
-				this.setIsLoading(false)
-			}
-		},
-
-		/**
-		 * Registers a new user and logs them in.
-		 * Not sure if this is the right place to put the logic in, maybe a seperate js component would be better suited. 
-		 */
-		async register(credentials) {
-			const HTTP = HTTPFactory()
-			this.setIsLoading(true)
-			try {
-				await HTTP.post('register', credentials)
-				return this.login(credentials)
-			} catch (e) {
-				if (e.response?.data?.message) {
-					throw e.response.data
-				}
-
-				throw e
-			} finally {
-				this.setIsLoading(false)
-			}
-		},
-
-		async openIdAuth({provider, code}) {
-			const HTTP = HTTPFactory()
-			this.setIsLoading(true)
-
-			const data = {
-				code: code,
+			if (newUser.settings) {
+				settings.value = new UserSettingsModel(newUser.settings)
 			}
 
-			// Delete an eventually preexisting old token
-			removeToken()
-			try {
-				const response = await HTTP.post(`/auth/openid/${provider}/callback`, data)
-				// Save the token to local storage for later use
-				saveToken(response.data.token, true)
+			isLinkShareAuth.value = newUser.id < 0
+		}
+	}
 
-				// Tell others the user is autheticated
-				await this.checkAuth()
-			} finally {
-				this.setIsLoading(false)
-			}
-		},
+	function setUserSettings(newSettings: IUserSettings) {
+		settings.value = new UserSettingsModel(newSettings)
+		info.value = new UserModel({
+			...info.value !== null ? info.value : {},
+			name: newSettings.name,
+		})
+	}
 
-		async linkShareAuth({hash, password}) {
-			const HTTP = HTTPFactory()
-			const response = await HTTP.post('/shares/' + hash + '/auth', {
-				password: password,
-			})
-			saveToken(response.data.token, false)
-			await this.checkAuth()
-			return response.data
-		},
+	function setAuthenticated(newAuthenticated: boolean) {
+		authenticated.value = newAuthenticated
+	}
 
-		/**
-		 * Populates user information from jwt token saved in local storage in store
-		 */
-		async checkAuth() {
-			const now = new Date()
-			const inOneMinute = new Date(new Date().setMinutes(now.getMinutes() + 1))
-			// This function can be called from multiple places at the same time and shortly after one another.
-			// To prevent hitting the api too frequently or race conditions, we check at most once per minute.
+	function setIsLinkShareAuth(newIsLinkShareAuth: boolean) {
+		isLinkShareAuth.value = newIsLinkShareAuth
+	}
+
+	function setNeedsTotpPasscode(newNeedsTotpPasscode: boolean) {
+		needsTotpPasscode.value = newNeedsTotpPasscode
+	}
+
+	function reloadAvatar() {
+		if (!info.value) return
+		avatarUrl.value = `${getAvatarUrl(info.value)}&=${new Date().valueOf()}`
+	}
+
+	function updateLastUserRefresh() {
+		lastUserInfoRefresh.value = new Date()
+	}
+
+	// Logs a user in with a set of credentials.
+	async function login(credentials) {
+		const HTTP = HTTPFactory()
+		setIsLoading(true)
+
+		// Delete an eventually preexisting old token
+		removeToken()
+
+		try {
+			const response = await HTTP.post('login', objectToSnakeCase(credentials))
+			// Save the token to local storage for later use
+			saveToken(response.data.token, true)
+
+			// Tell others the user is autheticated
+			await checkAuth()
+		} catch (e) {
 			if (
-				this.lastUserInfoRefresh !== null &&
-				this.lastUserInfoRefresh > inOneMinute
+				e.response &&
+				e.response.data.code === 1017 &&
+				!credentials.totpPasscode
 			) {
-				return
+				setNeedsTotpPasscode(true)
 			}
 
-			const jwt = getToken()
-			let authenticated = false
-			if (jwt) {
-				const base64 = jwt
-					.split('.')[1]
-					.replace('-', '+')
-					.replace('_', '/')
-				const info = new UserModel(JSON.parse(atob(base64)))
-				const ts = Math.round((new Date()).getTime() / MILLISECONDS_A_SECOND)
-				authenticated = info.exp >= ts
-				this.setUser(info)
+			throw e
+		} finally {
+			setIsLoading(false)
+		}
+	}
 
-				if (authenticated) {
-					await this.refreshUserInfo()
-				}
+	/**
+	 * Registers a new user and logs them in.
+	 * Not sure if this is the right place to put the logic in, maybe a seperate js component would be better suited. 
+	 */
+	async function register(credentials) {
+		const HTTP = HTTPFactory()
+		setIsLoading(true)
+		try {
+			await HTTP.post('register', credentials)
+			return login(credentials)
+		} catch (e) {
+			if (e.response?.data?.message) {
+				throw e.response.data
 			}
 
-			this.setAuthenticated(authenticated)
-			if (!authenticated) {
-				this.setUser(null)
-				this.redirectToProviderIfNothingElseIsEnabled()
-			}
-			
-			return Promise.resolve(authenticated)
-		},
+			throw e
+		} finally {
+			setIsLoading(false)
+		}
+	}
 
-		redirectToProviderIfNothingElseIsEnabled() {
-			const {auth} = useConfigStore()
+	async function openIdAuth({provider, code}) {
+		const HTTP = HTTPFactory()
+		setIsLoading(true)
+
+		const data = {
+			code: code,
+		}
+
+		// Delete an eventually preexisting old token
+		removeToken()
+		try {
+			const response = await HTTP.post(`/auth/openid/${provider}/callback`, data)
+			// Save the token to local storage for later use
+			saveToken(response.data.token, true)
+
+			// Tell others the user is autheticated
+			await checkAuth()
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	async function linkShareAuth({hash, password}) {
+		const HTTP = HTTPFactory()
+		const response = await HTTP.post('/shares/' + hash + '/auth', {
+			password: password,
+		})
+		saveToken(response.data.token, false)
+		await checkAuth()
+		return response.data
+	}
+
+	/**
+	 * Populates user information from jwt token saved in local storage in store
+	 */
+	async function checkAuth() {
+		const now = new Date()
+		const inOneMinute = new Date(new Date().setMinutes(now.getMinutes() + 1))
+		// This function can be called from multiple places at the same time and shortly after one another.
+		// To prevent hitting the api too frequently or race conditions, we check at most once per minute.
+		if (
+			lastUserInfoRefresh.value !== null &&
+			lastUserInfoRefresh.value > inOneMinute
+		) {
+			return
+		}
+
+		const jwt = getToken()
+		let isAuthenticated = false
+		if (jwt) {
+			const base64 = jwt
+				.split('.')[1]
+				.replace('-', '+')
+				.replace('_', '/')
+			const info = new UserModel(JSON.parse(atob(base64)))
+			const ts = Math.round((new Date()).getTime() / MILLISECONDS_A_SECOND)
+			isAuthenticated = info.exp >= ts
+			setUser(info)
+
+			if (isAuthenticated) {
+				await refreshUserInfo()
+			}
+		}
+
+		setAuthenticated(isAuthenticated)
+		if (!isAuthenticated) {
+			setUser(null)
+			redirectToProviderIfNothingElseIsEnabled()
+		}
+		
+		return Promise.resolve(authenticated)
+	}
+
+	async function refreshUserInfo() {
+		const jwt = getToken()
+		if (!jwt) {
+			return
+		}
+
+		const HTTP = AuthenticatedHTTPFactory()
+		try {
+			const response = await HTTP.get('user')
+			const newUser = new UserModel({
+				...response.data,
+				...(info.value?.type && {type: info.value?.type}),
+				...(info.value?.email && {email: info.value?.email}),
+				...(info.value?.exp && {exp: info.value?.exp}),
+			})
+
+			setUser(newUser)
+			updateLastUserRefresh()
+
 			if (
-				auth.local.enabled === false &&
-				auth.openidConnect.enabled &&
-				auth.openidConnect.providers?.length === 1 &&
-				window.location.pathname.startsWith('/login') // Kinda hacky, but prevents an endless loop.
+				newUser.type === AUTH_TYPES.USER &&
+					(
+						typeof newUser.settings.language === 'undefined' ||
+						newUser.settings.language === ''
+					)
 			) {
-				redirectToProvider(auth.openidConnect.providers[0], auth.openidConnect.redirectUrl)
-			}
-		},
-
-		async refreshUserInfo() {
-			const jwt = getToken()
-			if (!jwt) {
-				return
-			}
-
-			const HTTP = AuthenticatedHTTPFactory()
-			try {
-				const response = await HTTP.get('user')
-				const info = new UserModel({
-					...response.data,
-					...(this.info?.type && {type: this.info?.type}),
-					...(this.info?.email && {email: this.info?.email}),
-					...(this.info?.exp && {exp: this.info?.exp}),
+				// save current language
+				await saveUserSettings({
+					settings: {
+						...settings.value,
+						language: getCurrentLanguage(),
+					},
+					showMessage: false,
 				})
-
-				this.setUser(info)
-				this.updateLastUserRefresh()
-
-				if (
-						info.type === AUTH_TYPES.USER &&
-						(
-							typeof info.settings.language === 'undefined' ||
-							info.settings.language === ''
-						)
-				) {
-					// save current language
-					await this.saveUserSettings({
-						settings: {
-							...this.settings,
-							language: getCurrentLanguage(),
-						},
-						showMessage: false,
-					})
-				}
-
-				return info
-			} catch (e) {
-				if(e?.response?.data?.message === 'invalid or expired jwt') {
-					this.logout()
-					return
-				}
-				throw new Error('Error while refreshing user info:', {cause: e})
 			}
-		},
 
-		/**
-		 * Try to verify the email
-		 */
-		async verifyEmail(): Promise<boolean> {
-			const emailVerifyToken = localStorage.getItem('emailConfirmToken')
-			if (emailVerifyToken) {
-				const stopLoading = setModuleLoading(this)
-				try {
-					await HTTPFactory().post('user/confirm', {token: emailVerifyToken})
-					return true
-				} catch(e) {
-					throw new Error(e.response.data.message)
-				} finally {
-					localStorage.removeItem('emailConfirmToken')
-					stopLoading()
-				}
+			return newUser
+		} catch (e) {
+			if(e?.response?.data?.message === 'invalid or expired jwt') {
+				logout()
+				return
 			}
-			return false
-		},
+			throw new Error('Error while refreshing user info:', {cause: e})
+		}
+	}
 
-		async saveUserSettings({
-			settings,
-			showMessage = true,
-		}: {
-			settings: IUserSettings
-			showMessage : boolean
-		}) {
-			const userSettingsService = new UserSettingsService()
-
-			const cancel = setModuleLoading(this, this.setIsLoadingGeneralSettings)
+	/**
+	 * Try to verify the email
+	 */
+	async function verifyEmail(): Promise<boolean> {
+		const emailVerifyToken = localStorage.getItem('emailConfirmToken')
+		if (emailVerifyToken) {
+			const stopLoading = setModuleLoading(this, setIsLoading)
 			try {
-				saveLanguage(settings.language)
-				await userSettingsService.update(settings)
-				this.setUserSettings({...settings})
-				if (showMessage) {
-					success({message: i18n.global.t('user.settings.general.savedSuccess')})
-				}
-			} catch (e) {
-				throw new Error('Error while saving user settings:', {cause: e})
+				await HTTPFactory().post('user/confirm', {token: emailVerifyToken})
+				return true
+			} catch(e) {
+				throw new Error(e.response.data.message)
 			} finally {
-				cancel()
+				localStorage.removeItem('emailConfirmToken')
+				stopLoading()
 			}
-		},
+		}
+		return false
+	}
 
-		/**
-		 * Renews the api token and saves it to local storage
-		 */
-		renewToken() {
-			// FIXME: Timeout to avoid race conditions when authenticated as a user (=auth token in localStorage) and as a
-			// link share in another tab. Without the timeout both the token renew and link share auth are executed at
-			// the same time and one might win over the other.
-			setTimeout(async () => {
-				if (!this.authenticated) {
-					return
+	async function saveUserSettings({
+		settings,
+		showMessage = true,
+	}: {
+		settings: IUserSettings
+		showMessage : boolean
+	}) {
+		const userSettingsService = new UserSettingsService()
+
+		const cancel = setModuleLoading(this, setIsLoadingGeneralSettings)
+		try {
+			saveLanguage(settings.language)
+			await userSettingsService.update(settings)
+			setUserSettings({...settings})
+			if (showMessage) {
+				success({message: i18n.global.t('user.settings.general.savedSuccess')})
+			}
+		} catch (e) {
+			throw new Error('Error while saving user settings:', {cause: e})
+		} finally {
+			cancel()
+		}
+	}
+
+	/**
+	 * Renews the api token and saves it to local storage
+	 */
+		function renewToken() {
+		// FIXME: Timeout to avoid race conditions when authenticated as a user (=auth token in localStorage) and as a
+		// link share in another tab. Without the timeout both the token renew and link share auth are executed at
+		// the same time and one might win over the other.
+		setTimeout(async () => {
+			if (!authenticated.value) {
+				return
+			}
+
+			try {
+				await refreshToken(!isLinkShareAuth.value)
+				await checkAuth()
+			} catch (e) {
+				// Don't logout on network errors as the user would then get logged out if they don't have
+				// internet for a short period of time - such as when the laptop is still reconnecting
+				if (e?.request?.status) {
+					await logout()
 				}
+			}
+		}, 5000)
+	}
 
-				try {
-					await refreshToken(!this.isLinkShareAuth)
-					await this.checkAuth()
-				} catch (e) {
-					// Don't logout on network errors as the user would then get logged out if they don't have
-					// internet for a short period of time - such as when the laptop is still reconnecting
-					if (e?.request?.status) {
-						await this.logout()
-					}
-				}
-			}, 5000)
-		},
+	async function logout() {
+		removeToken()
+		window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
+		await router.push({name: 'user.login'})
+		await checkAuth()
+	}
 
-		async logout() {
-			removeToken()
-			window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
-			await router.push({name: 'user.login'})
-			await this.checkAuth()
-		},
-	},
+	return {
+		// state
+		authenticated: readonly(authenticated),
+		isLinkShareAuth: readonly(isLinkShareAuth),
+		needsTotpPasscode: readonly(needsTotpPasscode),
+
+		info: readonly(info),
+		avatarUrl: readonly(avatarUrl),
+		settings: readonly(settings),
+
+		lastUserInfoRefresh: readonly(lastUserInfoRefresh),
+
+		authUser,
+		authLinkShare,
+		userDisplayName,
+
+		isLoading: readonly(isLoading),
+		setIsLoading,
+
+		isLoadingGeneralSettings: readonly(isLoadingGeneralSettings),
+		setIsLoadingGeneralSettings,
+
+		setUser,
+		setUserSettings,
+		setAuthenticated,
+		setIsLinkShareAuth,
+		setNeedsTotpPasscode,
+
+		reloadAvatar,
+		updateLastUserRefresh,
+
+		login,
+		register,
+		openIdAuth,
+		linkShareAuth,
+		checkAuth,
+		refreshUserInfo,
+		verifyEmail,
+		saveUserSettings,
+		renewToken,
+		logout,
+	}
 })
 
 // support hot reloading
