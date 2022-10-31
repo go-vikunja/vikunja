@@ -1,4 +1,5 @@
-import { acceptHMRUpdate, defineStore } from 'pinia'
+import {computed, ref} from 'vue'
+import {acceptHMRUpdate, defineStore} from 'pinia'
 
 import LabelService from '@/services/label'
 import {success} from '@/message'
@@ -21,122 +22,134 @@ async function getAllLabels(page = 1): Promise<ILabel[]> {
 }
 
 export interface LabelState {
-	labels: {
-		[id: ILabel['id']]: ILabel
-	},
-	isLoading: boolean,
+	[id: ILabel['id']]: ILabel
 }
 
-export const useLabelStore = defineStore('label', {
-	state: () : LabelState => ({
-		// The labels are stored as an object which has the label ids as keys.
-		labels: {},
-		isLoading: false,
-	}),
-	
-	getters: {
-		getLabelsByIds(state) {
-			return (ids: ILabel['id'][]) => Object.values(state.labels).filter(({id}) => ids.includes(id))
-		},
-		// **
-		// * Checks if a list of labels is available in the store and filters them then query
-		// **
-		filterLabelsByQuery(state) {
-			return (labelsToHide: ILabel[], query: string) => {
-				const labelIdsToHide: number[] = labelsToHide.map(({id}) => id)
-			
-				return search(query)
-						?.filter(value => !labelIdsToHide.includes(value))
-						.map(id => state.labels[id])
-					|| []
-			}
-		},
-		getLabelsByExactTitles(state) {
-			return (labelTitles: string[]) => Object
-				.values(state.labels)
-				.filter(({title}) => labelTitles.some(l => l.toLowerCase() === title.toLowerCase()))
-		},
-	},
+export const useLabelStore = defineStore('label', () => {
+	// The labels are stored as an object which has the label ids as keys.
+	const labels = ref<LabelState>({})
+	const isLoading = ref(false)
 
-	actions: {
-		setIsLoading(isLoading: boolean) {
-			this.isLoading = isLoading
-		},
+	const getLabelsByIds = computed(() => {
+		return (ids: ILabel['id'][]) => Object.values(labels.value).filter(({id}) => ids.includes(id))
+	})
 
-		setLabels(labels: ILabel[]) {
-			labels.forEach(l => {
-				this.labels[l.id] = l
-				add(l)
-			})
-		},
+	// **
+	// * Checks if a list of labels is available in the store and filters them then query
+	// **
+	const filterLabelsByQuery = computed(() => {
+		return (labelsToHide: ILabel[], query: string) => {
+			const labelIdsToHide: number[] = labelsToHide.map(({id}) => id)
+		
+			return search(query)
+					?.filter(value => !labelIdsToHide.includes(value))
+					.map(id => labels.value[id])
+				|| []
+		}
+	})
 
-		setLabel(label: ILabel) {
-			this.labels[label.id] = label
-			update(label)
-		},
+	const getLabelsByExactTitles = computed(() => {
+		return (labelTitles: string[]) => Object
+			.values(labels.value)
+			.filter(({title}) => labelTitles.some(l => l.toLowerCase() === title.toLowerCase()))
+	})
 
-		removeLabelById(label: ILabel) {
-			remove(label)
-			delete this.labels[label.id]
-		},
 
-		async loadAllLabels({forceLoad} : {forceLoad?: boolean} = {}) {
-			if (this.isLoading && !forceLoad) {
-				return
-			}
+	function setIsLoading(newIsLoading: boolean) {
+		isLoading.value = newIsLoading
+	}
 
-			const cancel = setModuleLoading(this)
+	function setLabels(newLabels: ILabel[]) {
+		newLabels.forEach(l => {
+			labels.value[l.id] = l
+			add(l)
+		})
+	}
 
-			try {
-				const labels = await getAllLabels()
-				this.setLabels(labels)
-				return labels
-			} finally {
-				cancel()
-			}
-		},
+	function setLabel(label: ILabel) {
+		labels.value[label.id] = label
+		update(label)
+	}
 
-		async deleteLabel(label: ILabel) {
-			const cancel = setModuleLoading(this)
-			const labelService = new LabelService()
+	function removeLabelById(label: ILabel) {
+		remove(label)
+		delete labels.value[label.id]
+	}
 
-			try {
-				const result = await labelService.delete(label)
-				this.removeLabelById(label)
-				success({message: i18n.global.t('label.deleteSuccess')})
-				return result
-			} finally {
-				cancel()
-			}
-		},
+	async function loadAllLabels({forceLoad} : {forceLoad?: boolean} = {}) {
+		if (isLoading.value && !forceLoad) {
+			return
+		}
 
-		async updateLabel(label: ILabel) {
-			const cancel = setModuleLoading(this)
-			const labelService = new LabelService()
+		const cancel = setModuleLoading(this, setIsLoading)
 
-			try {
-				const newLabel = await labelService.update(label)
-				this.setLabel(newLabel)
-				success({message: i18n.global.t('label.edit.success')})
-				return newLabel
-			} finally {
-				cancel()
-			}
-		},
+		try {
+			const newLabels = await getAllLabels()
+			setLabels(newLabels)
+			return newLabels
+		} finally {
+			cancel()
+		}
+	}
 
-		async createLabel(label: ILabel) {
-			const cancel = setModuleLoading(this)
-			const labelService = new LabelService()
+	async function deleteLabel(label: ILabel) {
+		const cancel = setModuleLoading(this, setIsLoading)
+		const labelService = new LabelService()
 
-			try {
-				const newLabel = await labelService.create(label) as ILabel
-				this.setLabel(newLabel)
-				return newLabel
-			} finally {
-				cancel()
-			}
-		},
-	},
+		try {
+			const result = await labelService.delete(label)
+			removeLabelById(label)
+			success({message: i18n.global.t('label.deleteSuccess')})
+			return result
+		} finally {
+			cancel()
+		}
+	}
+
+	async function updateLabel(label: ILabel) {
+		const cancel = setModuleLoading(this, setIsLoading)
+		const labelService = new LabelService()
+
+		try {
+			const newLabel = await labelService.update(label)
+			setLabel(newLabel)
+			success({message: i18n.global.t('label.edit.success')})
+			return newLabel
+		} finally {
+			cancel()
+		}
+	}
+
+	async function createLabel(label: ILabel) {
+		const cancel = setModuleLoading(this, setIsLoading)
+		const labelService = new LabelService()
+
+		try {
+			const newLabel = await labelService.create(label) as ILabel
+			setLabel(newLabel)
+			return newLabel
+		} finally {
+			cancel()
+		}
+	}
+
+	return {
+		labels,
+		isLoading,
+
+		getLabelsByIds,
+		filterLabelsByQuery,
+		getLabelsByExactTitles,
+
+		setLabels,
+		setLabel,
+		removeLabelById,
+		loadAllLabels,
+		deleteLabel,
+		updateLabel,
+		createLabel,
+		
+	}
 })
 
 // support hot reloading
