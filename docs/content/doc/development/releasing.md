@@ -10,7 +10,7 @@ menu:
 # Releasing a new Vikunja version
 
 This checklist is a collection of all steps usually involved when releasing a new version of Vikunja.
-Not all steps are nessecary for every release.
+Not all steps are necessary for every release.
 
 * Website update :
 	* New Features: If there are new features worth mentioning the feature page should be updated.

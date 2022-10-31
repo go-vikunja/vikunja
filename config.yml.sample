@@ -162,7 +162,7 @@ log:
   databaselevel: "WARNING"
   # Whether to log http requests or not. Possible values are stdout, stderr, file or off to disable http logging.
   http: "stdout"
-  # Echo has its own logging which usually is unnessecary, which is why it is disabled by default. Possible values are stdout, stderr, file or off to disable standard logging.
+  # Echo has its own logging which usually is unnecessary, which is why it is disabled by default. Possible values are stdout, stderr, file or off to disable standard logging.
   echo: "off"
   # Whether or not to log events. Useful for debugging. Possible values are stdout, stderr, file or off to disable events logging.
   events: "stdout"

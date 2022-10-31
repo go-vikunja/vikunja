@@ -840,7 +840,7 @@ Environment path: `VIKUNJA_LOG_HTTP`
 
 ### echo
 
-Echo has its own logging which usually is unnessecary, which is why it is disabled by default. Possible values are stdout, stderr, file or off to disable standard logging.
+Echo has its own logging which usually is unnecessary, which is why it is disabled by default. Possible values are stdout, stderr, file or off to disable standard logging.
 
 Default: `off`
 

@@ -83,7 +83,7 @@ WantedBy=multi-user.target
 
 If you've installed Vikunja to a directory other than `/opt/vikunja`, you need to adapt `WorkingDirectory` accordingly.
 
-After you made all nessecary modifications, it's time to start the service:
+After you made all necessary modifications, it's time to start the service:
 
 {{< highlight bash >}}
 sudo systemctl enable vikunja
@@ -97,7 +97,7 @@ To build vikunja from source, see [building from source]({{< ref "build-from-sou
 ### Updating
 
 Simply replace the binary and templates with the new version, then restart Vikunja.
-It will automatically run all nessecary database migrations.
+It will automatically run all necessary database migrations.
 **Make sure to take a look at the changelog for the new version to not miss any manual steps the update may involve!**
 
 ## Docker

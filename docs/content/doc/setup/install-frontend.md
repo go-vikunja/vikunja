@@ -35,7 +35,7 @@ Just open the file with a text editor - there are comments which will explain ho
 
 ## Docker
 
-The docker image is based on nginx and just contains all nessecary files for the frontend.
+The docker image is based on nginx and just contains all necessary files for the frontend.
 
 To run it, all you need is
 
