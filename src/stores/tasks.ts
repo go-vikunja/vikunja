@@ -1,3 +1,4 @@
+import {computed, ref} from 'vue'
 import {defineStore, acceptHMRUpdate} from 'pinia'
 import router from '@/router'
 import {formatISO} from 'date-fns'
@@ -78,146 +79,104 @@ async function findAssignees(parsedTaskAssignees: string[]) {
 	return validatedUsers.filter((item) => Boolean(item))
 }
 
-export interface TaskState {
-	tasks: { [id: ITask['id']]: ITask }
-	isLoading: boolean,
-}
+export const useTaskStore = defineStore('task', () => {
+	const baseStore = useBaseStore()
+	const kanbanStore = useKanbanStore()
+	const attachmentStore = useAttachmentStore()
+	const labelStore = useLabelStore()
+	const listStore = useListStore()
 
-export const useTaskStore = defineStore('task', {
-	state: () : TaskState => ({
-		tasks: {},
-		isLoading: false,
-	}),
-	getters: {
-		hasTasks(state) {
-			return Object.keys(state.tasks).length > 0
-		},
-	},
-	actions: {
-		setTasks(tasks: ITask[]) {
-			tasks.forEach(task => {
-				this.tasks[task.id] = task
-			})
-		},
+	const tasks = ref<{ [id: ITask['id']]: ITask }>({}) // TODO: or is this ITask[]
+	const isLoading = ref(false)
 
-		async loadTasks(params) {
-			const taskService = new TaskService()
+	const hasTasks = computed(() => Object.keys(tasks.value).length > 0)
 
-			const cancel = setModuleLoading(this)
-			try {
-				this.tasks = await taskService.getAll({}, params)
-				useBaseStore().setHasTasks(this.tasks.length > 0)
-				return this.tasks
-			} finally {
-				cancel()
+	function setIsLoading(newIsLoading: boolean) {
+		isLoading.value = newIsLoading
+	}
+
+	function setTasks(newTasks: ITask[]) {
+		newTasks.forEach(task => {
+			tasks.value[task.id] = task
+		})
+	}
+
+	async function loadTasks(params) {
+		const taskService = new TaskService()
+
+		const cancel = setModuleLoading(this, setIsLoading)
+		try {
+			tasks.value = await taskService.getAll({}, params)
+			baseStore.setHasTasks(tasks.value.length > 0)
+			return tasks.value
+		} finally {
+			cancel()
+		}
+	}
+
+	async function update(task: ITask) {
+		const cancel = setModuleLoading(this, setIsLoading)
+
+		const taskService = new TaskService()
+		try {
+			const updatedTask = await taskService.update(task)
+			kanbanStore.setTaskInBucket(updatedTask)
+			if (task.done) {
+				playPop()
 			}
-		},
+			return updatedTask
+		} finally {
+			cancel()
+		}
+	}
 
-		async update(task: ITask) {
-			const cancel = setModuleLoading(this)
+	async function deleteTask(task: ITask) {
+		const taskService = new TaskService()
+		const response = await taskService.delete(task)
+		kanbanStore.removeTaskInBucket(task)
+		return response
+	}
 
-			const taskService = new TaskService()
-			try {
-				const updatedTask = await taskService.update(task)
-				useKanbanStore().setTaskInBucket(updatedTask)
-				if (task.done) {
-					playPop()
-				}
-				return updatedTask
-			} finally {
-				cancel()
+	// Adds a task attachment in store.
+	// This is an action to be able to commit other mutations
+	function addTaskAttachment({
+		taskId,
+		attachment,
+	}: {
+		taskId: ITask['id']
+		attachment: IAttachment
+	}) {
+		const t = kanbanStore.getTaskById(taskId)
+		if (t.task !== null) {
+			const attachments = [
+				...t.task.attachments,
+				attachment,
+			]
+
+			const newTask = {
+				...t,
+				task: {
+					...t.task,
+					attachments,
+				},
 			}
-		},
+			kanbanStore.setTaskInBucketByIndex(newTask)
+		}
+		attachmentStore.add(attachment)
+	}
 
-		async delete(task: ITask) {
-			const taskService = new TaskService()
-			const response = await taskService.delete(task)
-			useKanbanStore().removeTaskInBucket(task)
-			return response
-		},
-
-		// Adds a task attachment in store.
-		// This is an action to be able to commit other mutations
-		addTaskAttachment({
-			taskId,
-			attachment,
-		}: {
-			taskId: ITask['id']
-			attachment: IAttachment
-		}) {
-			const kanbanStore = useKanbanStore()
-			const t = kanbanStore.getTaskById(taskId)
-			if (t.task !== null) {
-				const attachments = [
-					...t.task.attachments,
-					attachment,
-				]
-
-				const newTask = {
-					...t,
-					task: {
-						...t.task,
-						attachments,
-					},
-				}
-				kanbanStore.setTaskInBucketByIndex(newTask)
-			}
-			const attachmentStore = useAttachmentStore()
-			attachmentStore.add(attachment)
-		},
-
-		async addAssignee({
-			user,
-			taskId,
-		}: {
-			user: IUser,
-			taskId: ITask['id']
-		}) {
-			const cancel = setModuleLoading(this)
-			
-			try {
-				const kanbanStore = useKanbanStore()
-				const taskAssigneeService = new TaskAssigneeService()
-				const r = await taskAssigneeService.create(new TaskAssigneeModel({
-					userId: user.id,
-					taskId: taskId,
-				}))
-				const t = kanbanStore.getTaskById(taskId)
-				if (t.task === null) {
-					// Don't try further adding a label if the task is not in kanban
-					// Usually this means the kanban board hasn't been accessed until now.
-					// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
-					console.debug('Could not add assignee to task in kanban, task not found', t)
-					return r
-				}
-
-				kanbanStore.setTaskInBucketByIndex({
-					...t,
-					task: {
-						...t.task,
-						assignees: [
-							...t.task.assignees,
-							user,
-						],
-					},
-				})
-
-				return r
-			} finally {
-				cancel()
-			}
-		},
-
-		async removeAssignee({
-			user,
-			taskId,
-		}: {
-			user: IUser,
-			taskId: ITask['id']
-		}) {
-			const kanbanStore = useKanbanStore()
+	async function addAssignee({
+		user,
+		taskId,
+	}: {
+		user: IUser,
+		taskId: ITask['id']
+	}) {
+		const cancel = setModuleLoading(this, setIsLoading)
+		
+		try {
 			const taskAssigneeService = new TaskAssigneeService()
-			const response = await taskAssigneeService.delete(new TaskAssigneeModel({
+			const r = await taskAssigneeService.create(new TaskAssigneeModel({
 				userId: user.id,
 				taskId: taskId,
 			}))
@@ -226,42 +185,7 @@ export const useTaskStore = defineStore('task', {
 				// Don't try further adding a label if the task is not in kanban
 				// Usually this means the kanban board hasn't been accessed until now.
 				// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
-				console.debug('Could not remove assignee from task in kanban, task not found', t)
-				return response
-			}
-
-			const assignees = t.task.assignees.filter(({ id }) => id !== user.id)
-
-			kanbanStore.setTaskInBucketByIndex({
-				...t,
-				task: {
-					...t.task,
-					assignees,
-				},
-			})
-			return response
-
-		},
-
-		async addLabel({
-			label,
-			taskId,
-		} : {
-			label: ILabel,
-			taskId: ITask['id']
-		}) {
-			const kanbanStore = useKanbanStore()
-			const labelTaskService = new LabelTaskService()
-			const r = await labelTaskService.create(new LabelTaskModel({
-				taskId,
-				labelId: label.id,
-			}))
-			const t = kanbanStore.getTaskById(taskId)
-			if (t.task === null) {
-				// Don't try further adding a label if the task is not in kanban
-				// Usually this means the kanban board hasn't been accessed until now.
-				// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
-				console.debug('Could not add label to task in kanban, task not found', {taskId, t})
+				console.debug('Could not add assignee to task in kanban, task not found', t)
 				return r
 			}
 
@@ -269,164 +193,251 @@ export const useTaskStore = defineStore('task', {
 				...t,
 				task: {
 					...t.task,
-					labels: [
-						...t.task.labels,
-						label,
+					assignees: [
+						...t.task.assignees,
+						user,
 					],
 				},
 			})
 
 			return r
-		},
+		} finally {
+			cancel()
+		}
+	}
 
-		async removeLabel(
-			{label, taskId}:
-			{label: ILabel, taskId: ITask['id']},
-		) {
-			const kanbanStore = useKanbanStore()
-			const labelTaskService = new LabelTaskService()
-			const response = await labelTaskService.delete(new LabelTaskModel({
-				taskId, labelId:
-				label.id,
-			}))
-			const t = kanbanStore.getTaskById(taskId)
-			if (t.task === null) {
-				// Don't try further adding a label if the task is not in kanban
-				// Usually this means the kanban board hasn't been accessed until now.
-				// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
-				console.debug('Could not remove label from task in kanban, task not found', t)
-				return response
-			}
-
-			// Remove the label from the list
-			const labels = t.task.labels.filter(({ id }) => id !== label.id)
-
-			kanbanStore.setTaskInBucketByIndex({
-				...t,
-				task: {
-					...t.task,
-					labels,
-				},
-			})
-
+	async function removeAssignee({
+		user,
+		taskId,
+	}: {
+		user: IUser,
+		taskId: ITask['id']
+	}) {
+		const taskAssigneeService = new TaskAssigneeService()
+		const response = await taskAssigneeService.delete(new TaskAssigneeModel({
+			userId: user.id,
+			taskId: taskId,
+		}))
+		const t = kanbanStore.getTaskById(taskId)
+		if (t.task === null) {
+			// Don't try further adding a label if the task is not in kanban
+			// Usually this means the kanban board hasn't been accessed until now.
+			// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
+			console.debug('Could not remove assignee from task in kanban, task not found', t)
 			return response
-		},
+		}
 
-		// Do everything that is involved in finding, creating and adding the label to the task
-		async addLabelsToTask(
-			{ task, parsedLabels }:
-			{ task: ITask, parsedLabels: string[] },
-		) {
-			if (parsedLabels.length <= 0) {
-				return task
-			}
+		const assignees = t.task.assignees.filter(({ id }) => id !== user.id)
 
-			const labelStore = useLabelStore()
-
-			const labelAddsToWaitFor = parsedLabels.map(async labelTitle => {
-				let label = validateLabel(Object.values(labelStore.labels), labelTitle)
-				if (typeof label === 'undefined') {
-					// label not found, create it
-					const labelModel = new LabelModel({title: labelTitle})
-					label = await labelStore.createLabel(labelModel)
-				}
-
-				return addLabelToTask(task, label)
-			})
-
-			// This waits until all labels are created and added to the task
-			await Promise.all(labelAddsToWaitFor)
-			return task
-		},
-
-		findListId(
-			{ list: listName, listId }:
-			{ list: string, listId: IList['id'] }) {
-			let foundListId = null
-			
-			// Uses the following ways to get the list id of the new task:
-			//  1. If specified in quick add magic, look in store if it exists and use it if it does
-			if (listName !== null) {
-				const listStore = useListStore()
-				const list = listStore.findListByExactname(listName)
-				foundListId = list === null ? null : list.id
-			}
-			
-			//  2. Else check if a list was passed as parameter
-			if (foundListId === null && listId !== 0) {
-				foundListId = listId
-			}
-		
-			//  3. Otherwise use the id from the route parameter
-			if (typeof router.currentRoute.value.params.listId !== 'undefined') {
-				foundListId = Number(router.currentRoute.value.params.listId)
-			}
-			
-			//  4. If none of the above worked, reject the promise with an error.
-			if (typeof foundListId === 'undefined' || listId === null) {
-				throw new Error('NO_LIST')
-			}
-		
-			return foundListId
-		},
-
-		async createNewTask({
-			title,
-			bucketId,
-			listId,
-			position,
-		} : 
-			Partial<ITask>,
-		) {
-			const cancel = setModuleLoading(this)
-			const parsedTask = parseTaskText(title, getQuickAddMagicMode())
-		
-			const foundListId = await this.findListId({
-				list: parsedTask.list,
-				listId: listId || 0,
-			})
-			
-			if(foundListId === null || foundListId === 0) {
-				cancel()
-				throw new Error('NO_LIST')
-			}
-		
-			const assignees = await findAssignees(parsedTask.assignees)
-			
-			// I don't know why, but it all goes up in flames when I just pass in the date normally.
-			const dueDate = parsedTask.date !== null ? formatISO(parsedTask.date) : null
-		
-			const task = new TaskModel({
-				title: parsedTask.text,
-				listId: foundListId,
-				dueDate,
-				priority: parsedTask.priority,
+		kanbanStore.setTaskInBucketByIndex({
+			...t,
+			task: {
+				...t.task,
 				assignees,
-				bucketId: bucketId || 0,
-				position,
-			})
-			task.repeatAfter = parsedTask.repeats
-		
-			const taskService = new TaskService()
-			try {
-				const createdTask = await taskService.create(task)
-				const result = await this.addLabelsToTask({
-					task: createdTask,
-					parsedLabels: parsedTask.labels,
-				})
-				return result
-			} finally {
-				cancel()
+			},
+		})
+		return response
+
+	}
+
+	async function addLabel({
+		label,
+		taskId,
+	} : {
+		label: ILabel,
+		taskId: ITask['id']
+	}) {
+		const labelTaskService = new LabelTaskService()
+		const r = await labelTaskService.create(new LabelTaskModel({
+			taskId,
+			labelId: label.id,
+		}))
+		const t = kanbanStore.getTaskById(taskId)
+		if (t.task === null) {
+			// Don't try further adding a label if the task is not in kanban
+			// Usually this means the kanban board hasn't been accessed until now.
+			// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
+			console.debug('Could not add label to task in kanban, task not found', {taskId, t})
+			return r
+		}
+
+		kanbanStore.setTaskInBucketByIndex({
+			...t,
+			task: {
+				...t.task,
+				labels: [
+					...t.task.labels,
+					label,
+				],
+			},
+		})
+
+		return r
+	}
+
+	async function removeLabel(
+		{label, taskId}:
+		{label: ILabel, taskId: ITask['id']},
+	) {
+		const labelTaskService = new LabelTaskService()
+		const response = await labelTaskService.delete(new LabelTaskModel({
+			taskId, labelId:
+			label.id,
+		}))
+		const t = kanbanStore.getTaskById(taskId)
+		if (t.task === null) {
+			// Don't try further adding a label if the task is not in kanban
+			// Usually this means the kanban board hasn't been accessed until now.
+			// Vuex seems to have its difficulties with that, so we just log the error and fail silently.
+			console.debug('Could not remove label from task in kanban, task not found', t)
+			return response
+		}
+
+		// Remove the label from the list
+		const labels = t.task.labels.filter(({ id }) => id !== label.id)
+
+		kanbanStore.setTaskInBucketByIndex({
+			...t,
+			task: {
+				...t.task,
+				labels,
+			},
+		})
+
+		return response
+	}
+
+	// Do everything that is involved in finding, creating and adding the label to the task
+	async function addLabelsToTask(
+		{ task, parsedLabels }:
+		{ task: ITask, parsedLabels: string[] },
+	) {
+		if (parsedLabels.length <= 0) {
+			return task
+		}
+
+		const labelAddsToWaitFor = parsedLabels.map(async labelTitle => {
+			let label = validateLabel(Object.values(labelStore.labels), labelTitle)
+			if (typeof label === 'undefined') {
+				// label not found, create it
+				const labelModel = new LabelModel({title: labelTitle})
+				label = await labelStore.createLabel(labelModel)
 			}
-		},
+
+			return addLabelToTask(task, label)
+		})
+
+		// This waits until all labels are created and added to the task
+		await Promise.all(labelAddsToWaitFor)
+		return task
+	}
+
+	function findListId(
+		{ list: listName, listId }:
+		{ list: string, listId: IList['id'] }) {
+		let foundListId = null
 		
-		async setCoverImage(task: ITask, attachment: IAttachment | null) {
-			return this.update({
-				...task,
-				coverImageAttachmentId: attachment ? attachment.id : 0,
+		// Uses the following ways to get the list id of the new task:
+		//  1. If specified in quick add magic, look in store if it exists and use it if it does
+		if (listName !== null) {
+			const list = listStore.findListByExactname(listName)
+			foundListId = list === null ? null : list.id
+		}
+		
+		//  2. Else check if a list was passed as parameter
+		if (foundListId === null && listId !== 0) {
+			foundListId = listId
+		}
+	
+		//  3. Otherwise use the id from the route parameter
+		if (typeof router.currentRoute.value.params.listId !== 'undefined') {
+			foundListId = Number(router.currentRoute.value.params.listId)
+		}
+		
+		//  4. If none of the above worked, reject the promise with an error.
+		if (typeof foundListId === 'undefined' || listId === null) {
+			throw new Error('NO_LIST')
+		}
+	
+		return foundListId
+	}
+
+	async function createNewTask({
+		title,
+		bucketId,
+		listId,
+		position,
+	} : 
+		Partial<ITask>,
+	) {
+		const cancel = setModuleLoading(this, setIsLoading)
+		const parsedTask = parseTaskText(title, getQuickAddMagicMode())
+	
+		const foundListId = await findListId({
+			list: parsedTask.list,
+			listId: listId || 0,
+		})
+		
+		if(foundListId === null || foundListId === 0) {
+			cancel()
+			throw new Error('NO_LIST')
+		}
+	
+		const assignees = await findAssignees(parsedTask.assignees)
+		
+		// I don't know why, but it all goes up in flames when I just pass in the date normally.
+		const dueDate = parsedTask.date !== null ? formatISO(parsedTask.date) : null
+	
+		const task = new TaskModel({
+			title: parsedTask.text,
+			listId: foundListId,
+			dueDate,
+			priority: parsedTask.priority,
+			assignees,
+			bucketId: bucketId || 0,
+			position,
+		})
+		task.repeatAfter = parsedTask.repeats
+	
+		const taskService = new TaskService()
+		try {
+			const createdTask = await taskService.create(task)
+			const result = await addLabelsToTask({
+				task: createdTask,
+				parsedLabels: parsedTask.labels,
 			})
-		},
-	},
+			return result
+		} finally {
+			cancel()
+		}
+	}
+	
+	async function setCoverImage(task: ITask, attachment: IAttachment | null) {
+		return update({
+			...task,
+			coverImageAttachmentId: attachment ? attachment.id : 0,
+		})
+	}
+
+	return {
+		tasks,
+		isLoading,
+
+		hasTasks,
+
+		setTasks,
+		loadTasks,
+		update,
+		delete: deleteTask, // since delete is a reserved word we have to alias here
+		addTaskAttachment,
+		addAssignee,
+		removeAssignee,
+		addLabel,
+		removeLabel,
+		addLabelsToTask,
+		createNewTask,
+		setCoverImage,
+	}
 })
 
 // support hot reloading
