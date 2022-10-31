@@ -1,34 +1,34 @@
+import {ref, readonly} from 'vue'
 import {defineStore, acceptHMRUpdate} from 'pinia'
 import {findIndexById} from '@/helpers/utils'
 
 import type {IAttachment} from '@/modelTypes/IAttachment'
 
-export interface AttachmentState {
-	attachments: IAttachment[],
-}
+export const useAttachmentStore = defineStore('attachment', () => {
+	const attachments = ref<IAttachment[]>([])
 
-export const useAttachmentStore = defineStore('attachment', {
-	state: (): AttachmentState => ({
-		attachments: [],
-	}),
+	function set(newAttachments: IAttachment[]) {
+		console.debug('Set attachments', newAttachments)
+		attachments.value = newAttachments
+	}
 
-	actions: {
-		set(attachments: IAttachment[]) {
-			console.debug('Set attachments', attachments)
-			this.attachments = attachments
-		},
+	function add(attachment: IAttachment) {
+		console.debug('Add attachement', attachment)
+		attachments.value.push(attachment)
+	}
 
-		add(attachment: IAttachment) {
-			console.debug('Add attachement', attachment)
-			this.attachments.push(attachment)
-		},
+	function removeById(id: IAttachment['id']) {
+		const attachmentIndex = findIndexById(attachments.value, id)
+		attachments.value.splice(attachmentIndex, 1)
+		console.debug('Remove attachement', id)
+	}
 
-		removeById(id: IAttachment['id']) {
-			const attachmentIndex = findIndexById(this.attachments, id)
-			this.attachments.splice(attachmentIndex, 1)
-			console.debug('Remove attachement', id)
-		},
-	},
+	return {
+		attachments: readonly(attachments),
+		set,
+		add,
+		removeById,
+	}
 })
 
 // support hot reloading
