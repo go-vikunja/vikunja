@@ -11,7 +11,7 @@ specifiers:
   '@fortawesome/vue-fontawesome': 3.0.1
   '@github/hotkey': 2.0.1
   '@infectoone/vue-ganttastic': 2.1.2
-  '@kyvg/vue3-notification': 2.4.1
+  '@kyvg/vue3-notification': 2.5.0
   '@rushstack/eslint-patch': 1.2.0
   '@sentry/tracing': 7.17.3
   '@sentry/vue': 7.17.3
@@ -95,7 +95,7 @@ dependencies:
   '@fortawesome/vue-fontawesome': 3.0.1_lteq7vqmz6gtgcgatkvrcm56su
   '@github/hotkey': 2.0.1
   '@infectoone/vue-ganttastic': 2.1.2_dayjs@1.11.6+vue@3.2.41
-  '@kyvg/vue3-notification': 2.4.1_vue@3.2.41
+  '@kyvg/vue3-notification': 2.5.0_vue@3.2.41
   '@sentry/tracing': 7.17.3
   '@sentry/vue': 7.17.3_vue@3.2.41
   '@types/is-touch-device': 1.0.0
@@ -1834,8 +1834,8 @@ packages:
       '@jridgewell/sourcemap-codec': 1.4.11
     dev: true
 
-  /@kyvg/vue3-notification/2.4.1_vue@3.2.41:
-    resolution: {integrity: sha512-SYwnGsTTKJ2TwFQ60hgYHEvuhkLscrnqSGPvdFRRiOwUb1sULJAPl5s+h+EEjan24kbizBtsxLTPC1D1qLs1EA==}
+  /@kyvg/vue3-notification/2.5.0_vue@3.2.41:
+    resolution: {integrity: sha512-YQx+Ve3fJRynjGwIV4aj1v4o+9E4E7oHLzyjLAElx9K4Q8povQIMm1FZTrCH72/dfijDrsIsd0LOasXIhiNt8g==}
     peerDependencies:
       vue: ^3.0.0
     dependencies:
