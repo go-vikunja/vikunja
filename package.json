@@ -24,7 +24,7 @@
     "@fortawesome/vue-fontawesome": "3.0.1",
     "@github/hotkey": "2.0.1",
     "@infectoone/vue-ganttastic": "2.1.2",
-    "@kyvg/vue3-notification": "2.5.1",
+    "@kyvg/vue3-notification": "2.6.0",
     "@sentry/tracing": "7.17.3",
     "@sentry/vue": "7.17.3",
     "@types/is-touch-device": "1.0.0",
