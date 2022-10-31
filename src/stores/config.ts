@@ -1,3 +1,4 @@
+import {computed, reactive, toRefs} from 'vue'
 import {defineStore, acceptHMRUpdate} from 'pinia'
 import {parseURL} from 'ufo'
 
@@ -36,8 +37,8 @@ export interface ConfigState {
 	},
 }
 
-export const useConfigStore = defineStore('config', {
-	state: (): ConfigState => ({
+export const useConfigStore = defineStore('config', () => {
+	const state = reactive({
 		// These are the api defaults.
 		version: '',
 		frontendUrl: '',
@@ -66,25 +67,33 @@ export const useConfigStore = defineStore('config', {
 				providers: [],
 			},
 		},
-	}),
-	getters: {
-		migratorsEnabled: (state) => state.availableMigrators?.length > 0,
-		apiBase() {
-			const {host, protocol} = parseURL(window.API_URL)
-			return protocol + '//' + host
-		},
-	},
-	actions: {
-		setConfig(config: ConfigState) {
-			Object.assign(this, config)
-		},
-		async update() {
-			const HTTP = HTTPFactory()
-			const {data: config} = await HTTP.get('info')
-			this.setConfig(objectToCamelCase(config))
-			return config
-		},
-	},
+	})
+
+	const migratorsEnabled = computed(() => state.availableMigrators?.length > 0)
+	const apiBase = computed(() => {
+		const {host, protocol} = parseURL(window.API_URL)
+		return protocol + '//' + host
+	})
+
+	function setConfig(config: ConfigState) {
+		Object.assign(state, config)
+	}
+	async function update() {
+		const HTTP = HTTPFactory()
+		const {data: config} = await HTTP.get('info')
+		setConfig(objectToCamelCase(config))
+		return config
+	}
+
+	return {
+		...toRefs(state),
+
+		migratorsEnabled,
+		apiBase,
+		setConfig,
+		update,
+	}
+
 })
 
 // support hot reloading
