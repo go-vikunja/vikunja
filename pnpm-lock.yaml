@@ -66,7 +66,7 @@ specifiers:
   postcss: 8.4.18
   postcss-preset-env: 7.8.2
   register-service-worker: 1.7.2
-  rollup: 3.2.4
+  rollup: 3.2.5
   rollup-plugin-visualizer: 5.8.3
   sass: 1.55.0
   snake-case: 3.0.4
@@ -166,8 +166,8 @@ devDependencies:
   netlify-cli: 12.0.11_@types+node@18.11.8
   postcss: 8.4.18
   postcss-preset-env: 7.8.2_postcss@8.4.18
-  rollup: 3.2.4
-  rollup-plugin-visualizer: 5.8.3_rollup@3.2.4
+  rollup: 3.2.5
+  rollup-plugin-visualizer: 5.8.3_rollup@3.2.5
   sass: 1.55.0
   typescript: 4.8.4
   vite: 3.2.2_sass@1.55.0+terser@5.10.0
@@ -11370,7 +11370,7 @@ packages:
       - acorn
     dev: true
 
-  /rollup-plugin-visualizer/5.8.3_rollup@3.2.4:
+  /rollup-plugin-visualizer/5.8.3_rollup@3.2.5:
     resolution: {integrity: sha512-QGJk4Bqe4AOat5AjipOh8esZH1nck5X2KFpf4VytUdSUuuuSwvIQZjMGgjcxe/zXexltqaXp5Vx1V3LmnQH15Q==}
     engines: {node: '>=14'}
     hasBin: true
@@ -11381,7 +11381,7 @@ packages:
         optional: true
     dependencies:
       open: 8.4.0
-      rollup: 3.2.4
+      rollup: 3.2.5
       source-map: 0.7.4
       yargs: 17.5.1
     dev: true
@@ -11400,8 +11400,8 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /rollup/3.2.4:
-    resolution: {integrity: sha512-1cAfF/u8Pf7XNo7eg3u/55+FkjNX5e4yPIVDQyUIO3MVBYMsTg+0C5FkEWzNlrEfRAYbunAIuTJ0jVp+01S3uA==}
+  /rollup/3.2.5:
+    resolution: {integrity: sha512-/Ha7HhVVofduy+RKWOQJrxe4Qb3xyZo+chcpYiD8SoQa4AG7llhupUtyfKSSrdBM2mWJjhM8wZwmbY23NmlIYw==}
     engines: {node: '>=14.18.0', npm: '>=8.0.0'}
     hasBin: true
     optionalDependencies:
