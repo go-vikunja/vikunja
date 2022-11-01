@@ -84,6 +84,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	index = 0
 	isFavorite = false
 	subscription: ISubscription = null
+	coverImageAttachmentId: IAttachment['id'] = null
 
 	position = 0
 	kanbanPosition = 0

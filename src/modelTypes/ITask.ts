@@ -36,7 +36,7 @@ export interface ITask extends IAbstract {
 	percentDone: number
 	relatedTasks: Partial<Record<IRelationKind, ITask[]>>
 	attachments: IAttachment[]
-	coverImageAttachmentId: IAttachment['id']
+	coverImageAttachmentId: IAttachment['id'] | null
 	identifier: string
 	index: number
 	isFavorite: boolean
