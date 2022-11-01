@@ -67,7 +67,7 @@
   "devDependencies": {
     "@4tw/cypress-drag-drop": "2.2.1",
     "@cypress/vite-dev-server": "3.4.0",
-    "@cypress/vue": "4.2.1",
+    "@cypress/vue": "4.2.2",
     "@faker-js/faker": "7.6.0",
     "@rushstack/eslint-patch": "1.2.0",
     "@types/dompurify": "2.3.4",
