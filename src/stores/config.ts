@@ -2,7 +2,7 @@ import {computed, reactive, toRefs} from 'vue'
 import {defineStore, acceptHMRUpdate} from 'pinia'
 import {parseURL} from 'ufo'
 
-import {HTTPFactory} from '@/http-common'
+import {HTTPFactory} from '@/helpers/fetcher'
 import {objectToCamelCase} from '@/helpers/case'
 
 import type {IProvider} from '@/types/IProvider'

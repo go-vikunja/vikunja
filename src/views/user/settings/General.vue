@@ -164,7 +164,7 @@ import {getQuickAddMagicMode, setQuickAddMagicMode} from '@/helpers/quickAddMagi
 import {createRandomID} from '@/helpers/randomId'
 import {objectIsEmpty} from '@/helpers/objectIsEmpty'
 import {success} from '@/message'
-import {AuthenticatedHTTPFactory} from '@/http-common'
+import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 
 import {useColorScheme} from '@/composables/useColorScheme'
 import {useTitle} from '@/composables/useTitle'
