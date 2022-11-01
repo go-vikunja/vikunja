@@ -4,16 +4,16 @@
     "welcomeMorning": "Good Morning {username}!",
     "welcomeDay": "Hi {username}!",
     "welcomeEvening": "Good Evening {username}!",
-    "lastViewed": "Last viewed",
+    "lastViewed": "Visto por último",
     "list": {
-      "newText": "You can create a new list for your new tasks:",
-      "new": "New list",
+      "newText": "Você pode criar uma nova lista para suas novas tarefas:",
+      "new": "Nova lista",
       "importText": "Or import your lists and tasks from other services into Vikunja:",
       "import": "Import your data into Vikunja"
     }
   },
   "404": {
-    "title": "Not found",
+    "title": "Não encontrado",
     "text": "The page you requested does not exist."
   },
   "ready": {
@@ -28,8 +28,8 @@
   },
   "user": {
     "auth": {
-      "username": "Username",
-      "usernameEmail": "Username Or Email Address",
+      "username": "Nome de usuário",
+      "usernameEmail": "Nome de usuário ou endereço de e-mail",
       "usernamePlaceholder": "e.g. frederick",
       "email": "Email address",
       "emailPlaceholder": "e.g. frederic{'@'}vikunja.io",
@@ -52,9 +52,9 @@
       "logout": "Logout",
       "emailInvalid": "Please enter a valid email address.",
       "usernameRequired": "Please provide a username.",
-      "passwordRequired": "Please provide a password.",
-      "showPassword": "Show the password",
-      "hidePassword": "Hide the password",
+      "passwordRequired": "Por favor, insira uma senha.",
+      "showPassword": "Exibir senha",
+      "hidePassword": "Ocultar senha",
       "noAccountYet": "Don't have an account yet?",
       "alreadyHaveAnAccount": "Already have an account?",
       "remember": "Stay logged in"
