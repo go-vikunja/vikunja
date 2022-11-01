@@ -1,30 +1,38 @@
 <template>
 	<div :class="{'is-loading': taskService.loading}" class="task loader-container">
-		<fancycheckbox :disabled="(isArchived || disabled) && !canMarkAsDone" @change="markAsDone" v-model="task.done"/>
+		<fancycheckbox
+			:disabled="(isArchived || disabled) && !canMarkAsDone"
+			@change="markAsDone"
+			v-model="task.done"
+		/>
+		
 		<ColorBubble
 			v-if="showListColor && listColor !== ''"
 			:color="listColor"
 			class="mr-1"
 		/>
+		
 		<router-link
 			:to="taskDetailRoute"
 			:class="{ 'done': task.done}"
-			class="tasktext">
+			class="tasktext"
+		>
 			<span>
 				<router-link
+					v-if="showList && taskList !== null"
 					:to="{ name: 'list.list', params: { listId: task.listId } }"
 					class="task-list"
 					:class="{'mr-2': task.hexColor !== ''}"
-					v-if="showList && getListById(task.listId) !== null"
-					v-tooltip="$t('task.detail.belongsToList', {list: getListById(task.listId).title})">
-					{{ getListById(task.listId).title }}
+					v-tooltip="$t('task.detail.belongsToList', {list: taskList.title})">
+					{{ taskList.title }}
 				</router-link>
 
 				<ColorBubble
 					v-if="task.hexColor !== ''"
-					:color="task.getHexColor()"
+					:color="getHexColor(task.hexColor)"
 					class="mr-1"
 				/>
+
 				<!-- Show any parent tasks to make it clear this task is a sub task of something -->
 				<span class="parent-tasks" v-if="typeof task.relatedTasks.parenttask !== 'undefined'">
 					<template v-for="(pt, i) in task.relatedTasks.parenttask">
@@ -35,15 +43,22 @@
 				{{ task.title }}
 			</span>
 
-			<labels class="labels ml-2 mr-1" :labels="task.labels" v-if="task.labels.length > 0" />
-			<user
+			<labels
+				v-if="task.labels.length > 0"
+				class="labels ml-2 mr-1"
+				:labels="task.labels"
+			/>
+
+			<User
+				v-for="(a, i) in task.assignees"
 				:avatar-size="27"
 				:is-inline="true"
 				:key="task.id + 'assignee' + a.id + i"
 				:show-username="false"
 				:user="a"
-				v-for="(a, i) in task.assignees"
 			/>
+
+			<!-- FIXME: use popup -->
 			<BaseButton
 				v-if="+new Date(task.dueDate) > 0"
 				class="dueDate"
@@ -62,7 +77,9 @@
 			<transition name="fade">
 				<defer-task v-if="+new Date(task.dueDate) > 0 && showDefer" v-model="task" ref="deferDueDate"/>
 			</transition>
+
 			<priority-label :priority="task.priority" :done="task.done"/>
+
 			<span>
 				<span class="list-task-icon" v-if="task.attachments.length > 0">
 					<icon icon="paperclip"/>
@@ -74,184 +91,186 @@
 					<icon icon="history"/>
 				</span>
 			</span>
+
 			<checklist-summary :task="task"/>
 		</router-link>
+
 		<progress
 			class="progress is-small"
 			v-if="task.percentDone > 0"
-			:value="task.percentDone * 100" max="100">
+			:value="task.percentDone * 100" max="100"
+		>
 			{{ task.percentDone * 100 }}%
 		</progress>
+
 		<router-link
+			v-if="!showList && currentList.id !== task.listId && taskList !== null"
 			:to="{ name: 'list.list', params: { listId: task.listId } }"
 			class="task-list"
-			v-if="!showList && currentList.id !== task.listId && getListById(task.listId) !== null"
-			v-tooltip="$t('task.detail.belongsToList', {list: getListById(task.listId).title})">
-			{{ getListById(task.listId).title }}
+			v-tooltip="$t('task.detail.belongsToList', {list: taskList.title})"
+		>
+			{{ taskList.title }}
 		</router-link>
+
 		<BaseButton
 			:class="{'is-favorite': task.isFavorite}"
 			@click="toggleFavorite"
-			class="favorite">
+			class="favorite"
+		>
 			<icon icon="star" v-if="task.isFavorite"/>
 			<icon :icon="['far', 'star']" v-else/>
 		</BaseButton>
-		<slot></slot>
+		<slot />
 	</div>
 </template>
 
-<script lang="ts">
-import {defineComponent, type PropType} from 'vue'
-import {mapState} from 'pinia'
+<script setup lang="ts">
+import {ref, watch, shallowReactive, toRef, type PropType, onMounted, onBeforeUnmount, computed} from 'vue'
+import {useI18n} from 'vue-i18n'
 
-import TaskModel from '@/models/task'
+import TaskModel, { getHexColor } from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
-import PriorityLabel from './priorityLabel.vue'
-import TaskService from '../../../services/task'
-import Labels from '@/components/tasks/partials/labels.vue'
+
+import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'
+import Labels from '@/components/tasks/partials//labels.vue'
+import DeferTask from '@/components/tasks/partials//defer-task.vue'
+import ChecklistSummary from '@/components/tasks/partials/checklist-summary.vue'
+
 import User from '@/components/misc/user.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
-import Fancycheckbox from '../../input/fancycheckbox.vue'
-import DeferTask from './defer-task.vue'
-import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
-import ChecklistSummary from './checklist-summary.vue'
-import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatDate'
+import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import ColorBubble from '@/components/misc/colorBubble.vue'
+
+import TaskService from '@/services/task'
+
+import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
+import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatDate'
+import {success} from '@/message'
+
 import {useListStore} from '@/stores/lists'
 import {useNamespaceStore} from '@/stores/namespaces'
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
 
-export default defineComponent({
-	name: 'singleTaskInList',
-	data() {
-		return {
-			taskService: new TaskService(),
-			task: new TaskModel(),
-			showDefer: false,
-		}
+const props = defineProps({
+	theTask: {
+		type: Object as PropType<ITask>,
+		required: true,
 	},
-	components: {
-		ColorBubble,
-		BaseButton,
-		ChecklistSummary,
-		DeferTask,
-		Fancycheckbox,
-		User,
-		Labels,
-		PriorityLabel,
+	isArchived: {
+		type: Boolean,
+		default: false,
 	},
-	props: {
-		theTask: {
-			type: Object as PropType<ITask>,
-			required: true,
-		},
-		isArchived: {
-			type: Boolean,
-			default: false,
-		},
-		showList: {
-			type: Boolean,
-			default: false,
-		},
-		disabled: {
-			type: Boolean,
-			default: false,
-		},
-		showListColor: {
-			type: Boolean,
-			default: true,
-		},
-		canMarkAsDone: {
-			type: Boolean,
-			default: true,
-		},
+	showList: {
+		type: Boolean,
+		default: false,
 	},
-	emits: ['task-updated'],
-	watch: {
-		theTask(newVal) {
-			this.task = newVal
-		},
+	disabled: {
+		type: Boolean,
+		default: false,
 	},
-	mounted() {
-		this.task = this.theTask
-		document.addEventListener('click', this.hideDeferDueDatePopup)
+	showListColor: {
+		type: Boolean,
+		default: true,
 	},
-	beforeUnmount() {
-		document.removeEventListener('click', this.hideDeferDueDatePopup)
-	},
-	computed: {
-		...mapState(useListStore, {
-			getListById: 'getListById',
-		}),
-		listColor() {
-			const list = this.getListById(this.task.listId)
-			return list !== null ? list.hexColor : ''
-		},
-		currentList() {
-			const baseStore = useBaseStore()
-			return typeof baseStore.currentList === 'undefined' ? {
-				id: 0,
-				title: '',
-			} : baseStore.currentList
-		},
-		taskDetailRoute() {
-			return {
-				name: 'task.detail',
-				params: {id: this.task.id},
-				// TODO: re-enable opening task detail in modal
-				// state: { backdropView: this.$router.currentRoute.value.fullPath },
-			}
-		},
-	},
-	methods: {
-		formatDateSince,
-		formatISO,
-		formatDateLong,
-
-		async markAsDone(checked: boolean) {
-			const updateFunc = async () => {
-				const task = await useTaskStore().update(this.task)
-				this.task = task
-				this.$emit('task-updated', task)
-				this.$message.success({
-					message: this.task.done ?
-						this.$t('task.doneSuccess') :
-						this.$t('task.undoneSuccess'),
-				}, [{
-					title: 'Undo',
-					callback: () => this.undoDone(checked),
-				}])
-			}
-
-			if (checked) {
-				setTimeout(updateFunc, 300) // Delay it to show the animation when marking a task as done
-			} else {
-				await updateFunc() // Don't delay it when un-marking it as it doesn't have an animation the other way around
-			}
-		},
-
-		undoDone(checked: boolean) {
-			this.task.done = !this.task.done
-			this.markAsDone(!checked)
-		},
-
-		async toggleFavorite() {
-			this.task.isFavorite = !this.task.isFavorite
-			this.task = await this.taskService.update(this.task)
-			this.$emit('task-updated', this.task)
-			useNamespaceStore().loadNamespacesIfFavoritesDontExist()
-		},
-		hideDeferDueDatePopup(e) {
-			if (!this.showDefer) {
-				return
-			}
-			closeWhenClickedOutside(e, this.$refs.deferDueDate.$el, () => {
-				this.showDefer = false
-			})
-		},
+	canMarkAsDone: {
+		type: Boolean,
+		default: true,
 	},
 })
+
+const emit = defineEmits(['task-updated'])
+
+const {t} = useI18n({useScope: 'global'})
+
+const taskService = shallowReactive(new TaskService())
+const task = ref<ITask>(new TaskModel())
+const showDefer = ref(false)
+
+const theTask = toRef(props, 'theTask')
+
+watch(
+	theTask,
+	newVal => {
+		task.value = newVal
+	},
+)
+
+onMounted(() => {
+	task.value = theTask.value
+	document.addEventListener('click', hideDeferDueDatePopup)
+})
+
+onBeforeUnmount(() => {
+	document.removeEventListener('click', hideDeferDueDatePopup)
+})
+
+const baseStore = useBaseStore()
+const listStore = useListStore()
+const taskStore = useTaskStore()
+const namespaceStore = useNamespaceStore()
+
+const taskList = computed(() => listStore.getListById(task.value.listId))
+const listColor = computed(() => taskList.value !== null ? taskList.value.hexColor : '')
+
+const currentList = computed(() => {
+	return typeof baseStore.currentList === 'undefined' ? {
+		id: 0,
+		title: '',
+	} : baseStore.currentList
+})
+
+const taskDetailRoute = computed(() => ({
+	name: 'task.detail',
+	params: {id: task.value.id},
+	// TODO: re-enable opening task detail in modal
+	// state: { backdropView: router.currentRoute.value.fullPath },
+}))
+
+
+async function markAsDone(checked: boolean) {
+	const updateFunc = async () => {
+		const newTask = await taskStore.update(task.value)
+		task.value = newTask
+		emit('task-updated', newTask)
+		success({
+			message: task.value.done ?
+				t('task.doneSuccess') :
+				t('task.undoneSuccess'),
+		}, [{
+			title: 'Undo',
+			callback: () => undoDone(checked),
+		}])
+	}
+
+	if (checked) {
+		setTimeout(updateFunc, 300) // Delay it to show the animation when marking a task as done
+	} else {
+		await updateFunc() // Don't delay it when un-marking it as it doesn't have an animation the other way around
+	}
+}
+
+function undoDone(checked: boolean) {
+	task.value.done = !task.value.done
+	markAsDone(!checked)
+}
+
+async function toggleFavorite() {
+	task.value.isFavorite = !task.value.isFavorite
+	task.value = await taskService.update(task.value)
+	emit('task-updated', task.value)
+	namespaceStore.loadNamespacesIfFavoritesDontExist()
+}
+
+const deferDueDate = ref<typeof DeferTask | null>(null)
+function hideDeferDueDatePopup(e) {
+	if (!showDefer.value) {
+		return
+	}
+	closeWhenClickedOutside(e, deferDueDate.value.$el, () => {
+		showDefer.value = false
+	})
+}
 </script>
 
 <style lang="scss" scoped>
