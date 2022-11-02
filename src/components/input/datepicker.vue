@@ -193,7 +193,7 @@ function toggleDatePopup() {
 }
 
 const datepickerPopup = ref<HTMLElement | null>(null)
-function hideDatePopup(e) {
+function hideDatePopup(e: MouseEvent) {
 	if (show.value) {
 		closeWhenClickedOutside(e, datepickerPopup.value, close)
 	}

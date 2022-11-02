@@ -1,21 +1,29 @@
-// Save the current list view to local storage
-// We use local storage and not a store here to make it persistent across reloads.
-export const saveListView = (listId, routeName) => {
+import type { IList } from '@/modelTypes/IList'
+
+type ListView = Record<IList['id'], string>
+
+const DEFAULT_LIST_VIEW = 'list.list' as const
+
+/**
+ * Save the current list view to local storage
+ */
+export function saveListView(listId: IList['id'], routeName: string) {
 	if (routeName.includes('settings.')) {
 		return
 	}
-
+	
 	if (!listId) {
 		return
 	}
-
+	
+	// We use local storage and not the store here to make it persistent across reloads.
 	const savedListView = localStorage.getItem('listView')
-	let savedListViewJson = false
+	let savedListViewJson: ListView | false = false
 	if (savedListView !== null) {
-		savedListViewJson = JSON.parse(savedListView)
+		savedListViewJson = JSON.parse(savedListView) as ListView
 	}
 
-	let listView = {}
+	let listView: ListView = {}
 	if (savedListViewJson) {
 		listView = savedListViewJson
 	}
@@ -24,7 +32,7 @@ export const saveListView = (listId, routeName) => {
 	localStorage.setItem('listView', JSON.stringify(listView))
 }
 
-export const getListView = listId => {
+export const getListView = (listId: IList['id']) => {
 	// Remove old stored settings
 	const savedListView = localStorage.getItem('listView')
 	if (savedListView !== null && savedListView.startsWith('list.')) {
@@ -32,13 +40,13 @@ export const getListView = listId => {
 	}
 
 	if (!savedListView) {
-		return 'list.list'
+		return DEFAULT_LIST_VIEW
 	}
 
-	const savedListViewJson = JSON.parse(savedListView)
+	const savedListViewJson: ListView = JSON.parse(savedListView)
 
 	if (!savedListViewJson[listId]) {
-		return 'list.list'
+		return DEFAULT_LIST_VIEW
 	}
 
 	return savedListViewJson[listId]

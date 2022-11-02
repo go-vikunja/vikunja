@@ -84,7 +84,7 @@ export function useSavedFilter(listId?: MaybeRef<IList['id']>) {
 
 	const filterService = shallowReactive(new SavedFilterService())
 
-	const filter = ref(new SavedFilterModel())
+	const filter = ref<ISavedFilter>(new SavedFilterModel())
 	const filters = computed({
 		get: () => filter.value.filters,
 		set(value) {
@@ -92,7 +92,7 @@ export function useSavedFilter(listId?: MaybeRef<IList['id']>) {
 		},
 	})
 
-	// loadSavedFilter
+	// load SavedFilter
 	watch(() => unref(listId), async (watchedListId) => {
 		if (watchedListId === undefined) {
 			return

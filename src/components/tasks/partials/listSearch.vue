@@ -9,9 +9,9 @@
 		v-model="list"
 		:select-placeholder="$t('list.searchSelect')"
 	>
-		<template #searchResult="props">
-			<span class="list-namespace-title search-result">{{ namespace(props.option.namespaceId) }} ></span>
-			{{ props.option.title }}
+		<template #searchResult="{option}">
+			<span class="list-namespace-title search-result">{{ namespace((option as IList).namespaceId) }} ></span>
+			{{ (option as IList).title }}
 		</template>
 	</Multiselect>
 </template>
@@ -25,6 +25,7 @@ import type {IList} from '@/modelTypes/IList'
 import Multiselect from '@/components/input/multiselect.vue'
 import {useListStore} from '@/stores/lists'
 import {useNamespaceStore} from '@/stores/namespaces'
+import type { INamespace } from '@/modelTypes/INamespace'
 
 const props = defineProps({
 	modelValue: {
@@ -65,7 +66,7 @@ function select(l: IList | null) {
 	emit('update:modelValue', list)
 }
 
-function namespace(namespaceId: number) {
+function namespace(namespaceId: INamespace['id']) {
 	const namespace = namespaceStore.getNamespaceById(namespaceId)
 	return namespace !== null
 		? namespace.title

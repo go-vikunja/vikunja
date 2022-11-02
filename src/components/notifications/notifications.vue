@@ -76,7 +76,7 @@ const notifications = computed(() => {
 })
 const userInfo = computed(() => authStore.info)
 
-let interval: number
+let interval: ReturnType<typeof setInterval>
 
 onMounted(() => {
 	loadNotifications()

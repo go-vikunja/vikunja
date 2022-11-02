@@ -26,7 +26,7 @@ if (navigator && navigator.serviceWorker) {
 	)
 }
 
-function showRefreshUI(e) {
+function showRefreshUI(e: Event) {
 	console.log('recieved refresh event', e)
 	registration.value = e.detail
 	updateAvailable.value = true

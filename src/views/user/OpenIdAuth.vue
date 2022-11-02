@@ -50,14 +50,14 @@ async function authenticateWithCode() {
 	if (localStorage.getItem('authenticating')) {
 		return
 	}
-	localStorage.setItem('authenticating', true)
+	localStorage.setItem('authenticating', 'true')
 
 	errorMessage.value = ''
 
 	if (typeof route.query.error !== 'undefined') {
 		localStorage.removeItem('authenticating')
 		errorMessage.value = typeof route.query.message !== 'undefined'
-			? route.query.message
+			? route.query.message as string
 			: t('user.auth.openIdGeneralError')
 		return
 	}

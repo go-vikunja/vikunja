@@ -364,7 +364,7 @@ export const useKanbanStore = defineStore('kanban', {
 			}
 		},
 
-		async updateBucket(updatedBucketData: IBucket) {
+		async updateBucket(updatedBucketData: Partial<IBucket>) {
 			const cancel = setModuleLoading(this)
 
 			const bucketIndex = findIndexById(this.buckets, updatedBucketData.id)

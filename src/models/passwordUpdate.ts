@@ -6,7 +6,7 @@ export default class PasswordUpdateModel extends AbstractModel<IPasswordUpdate> 
 	newPassword = ''
 	oldPassword = ''
 
-	constructor(data: Partial<IPasswordUpdate>) {
+	constructor(data: Partial<IPasswordUpdate> = {}) {
 		super()
 		this.assignData(data)
 	}

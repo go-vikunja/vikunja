@@ -17,14 +17,15 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue'
+import {ref, type PropType} from 'vue'
 import {onClickOutside} from '@vueuse/core'
+import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
 defineProps({
 	triggerIcon: {
-		type: String,
+		type: String as PropType<IconProp>,
 		default: 'ellipsis-h',
 	},
 })

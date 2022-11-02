@@ -71,11 +71,13 @@ import {useI18n} from 'vue-i18n'
 import {useTitle} from '@/composables/useTitle'
 import {useNamespaceStore} from '@/stores/namespaces'
 
+import type {INamespace} from '@/modelTypes/INamespace'
+
 const {t} = useI18n({useScope: 'global'})
 const namespaceStore = useNamespaceStore()
 
 const namespaceService = ref(new NamespaceService())
-const namespace = ref(new NamespaceModel())
+const namespace = ref<INamespace>(new NamespaceModel())
 const editorActive = ref(false)
 const title = ref('')
 useTitle(() => title.value)

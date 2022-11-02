@@ -180,7 +180,7 @@ export const useListStore = defineStore('list', () => {
 export function useList(listId: MaybeRef<IList['id']>) {
 	const listService = shallowReactive(new ListService())
 	const {loading: isLoading} = toRefs(listService)
-	const list: ListModel = reactive(new ListModel())
+	const list: IList = reactive(new ListModel())
 	const {t} = useI18n({useScope: 'global'})
 
 	watch(

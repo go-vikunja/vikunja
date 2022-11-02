@@ -1,6 +1,8 @@
+import type { App } from 'vue'
+import type { Router } from 'vue-router'
 import {VERSION} from './version.json'
 
-export default async function setupSentry(app, router) {
+export default async function setupSentry(app: App, router: Router) {
 	const Sentry = await import('@sentry/vue')
 	const {Integrations} = await import('@sentry/tracing')
 

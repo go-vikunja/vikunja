@@ -100,37 +100,52 @@ function elementInResults(elem: string | any, label: string, query: string): boo
 }
 
 const props = defineProps({
-	// When true, shows a loading spinner
+	/**
+	 * When true, shows a loading spinner
+	 */
 	loading: {
 		type: Boolean,
 		default: false,
 	},
-	// The placeholder of the search input
+	/**
+	 * The placeholder of the search input
+	 */
 	placeholder: {
 		type: String,
 		default: '',
 	},
-	// The search results where the @search listener needs to put the results into
+	/**
+	 * The search results where the @search listener needs to put the results into
+	 */
 	searchResults: {
 		type: Array as PropType<{[id: string]: any}>,
 		default: () => [],
 	},
-	// The name of the property of the searched object to show the user.
-	// If empty the component will show all raw data of an entry.
+	/**
+	 * The name of the property of the searched object to show the user.
+	 * If empty the component will show all raw data of an entry.
+	 */
 	label: {
 		type: String,
 		default: '',
 	},
-	// The object with the value, updated every time an entry is selected.
+	/**
+	 * The object with the value, updated every time an entry is selected.
+	 */
 	modelValue: {
+		type: [Object] as PropType<{[key: string]: any}>,
 		default: null,
 	},
-	// If true, will provide an "add this as a new value" entry which fires an @create event when clicking on it.
+	/**
+	 * If true, will provide an "add this as a new value" entry which fires an @create event when clicking on it.
+	 */
 	creatable: {
 		type: Boolean,
 		default: false,
 	},
-	// The text shown next to the new value option.
+	/**
+	 * The text shown next to the new value option.
+	 */
 	createPlaceholder: {
 		type: String,
 		default() {
@@ -138,7 +153,9 @@ const props = defineProps({
 			return t('input.multiselect.createPlaceholder')
 		},
 	},
-	// The text shown next to an option.
+	/**
+	 * The text shown next to an option.
+	 */
 	selectPlaceholder: {
 		type: String,
 		default() {
@@ -146,22 +163,30 @@ const props = defineProps({
 			return t('input.multiselect.selectPlaceholder')
 		},
 	},
-	// If true, allows for selecting multiple items. v-model will be an array with all selected values in that case.
+	/**
+	 * If true, allows for selecting multiple items. v-model will be an array with all selected values in that case.
+	 */
 	multiple: {
 		type: Boolean,
 		default: false,
 	},
-	// If true, displays the search results inline instead of using a dropdown.
+	/**
+	 * If true, displays the search results inline instead of using a dropdown.
+	 */
 	inline: {
 		type: Boolean,
 		default: false,
 	},
-	// If true, shows search results when no query is specified.
+	/**
+	 * If true, shows search results when no query is specified.
+	 */
 	showEmpty: {
 		type: Boolean,
 		default: true,
 	},
-	// The delay in ms after which the search event will be fired. Used to avoid hitting the network on every keystroke.
+	/**
+	 * The delay in ms after which the search event will be fired. Used to avoid hitting the network on every keystroke.
+	 */
 	searchDelay: {
 		type: Number,
 		default: 200,
@@ -174,17 +199,25 @@ const props = defineProps({
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: null): void
-	// @search: Triggered every time the search query input changes
+	/**
+	 * Triggered every time the search query input changes
+	 */
   (e: 'search', query: string): void
-	// @select: Triggered every time an option from the search results is selected. Also triggers a change in v-model.
-  (e: 'select', value: null): void
-	// @create: If nothing or no exact match was found and `creatable` is true, this event is triggered with the current value of the search query.
+	/**
+	 * Triggered every time an option from the search results is selected. Also triggers a change in v-model.
+	 */
+  (e: 'select', value: {[key: string]: any}): void
+	/**
+	 * If nothing or no exact match was found and `creatable` is true, this event is triggered with the current value of the search query.
+	 */
   (e: 'create', query: string): void
-	// @remove: If `multiple` is enabled, this will be fired every time an item is removed from the array of selected items.
+	/**
+	 * If `multiple` is enabled, this will be fired every time an item is removed from the array of selected items.
+	 */
   (e: 'remove', value: null): void
 }>()
 
-const query = ref('')
+const query = ref<string | {[key: string]: any}>('')
 const searchTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 const localLoading = ref(false)
 const showSearchResults = ref(false)

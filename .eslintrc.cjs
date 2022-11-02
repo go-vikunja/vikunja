@@ -37,6 +37,10 @@ module.exports = {
 		'@typescript-eslint/no-unused-vars': ['error', { vars: 'all', args: 'after-used', ignoreRestSiblings: true }],
 
 		'vue/multi-word-component-names': 0,
+		// disabled until we have support for reactivityTransform
+		// See https://github.com/vuejs/eslint-plugin-vue/issues/1948
+		// see also setting in `vite.config`
+		'vue/no-setup-props-destructure': 0,
 	},
 	'parser': 'vue-eslint-parser',
 	'parserOptions': {

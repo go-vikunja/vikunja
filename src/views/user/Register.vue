@@ -130,8 +130,8 @@ async function submit() {
 
 	try {
 		await authStore.register(toRaw(credentials))
-	} catch (e) {
-		errorMessage.value = e.message
+	} catch (e: any) {
+		errorMessage.value = e?.message
 	}
 }
 </script>

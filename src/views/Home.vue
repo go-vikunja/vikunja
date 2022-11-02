@@ -14,7 +14,6 @@
 			</router-link>
 		</message>
 		<add-task
-			:listId="defaultListId"
 			@taskAdded="updateTaskList"
 			class="is-max-width-desktop"
 		/>
@@ -76,6 +75,7 @@ import {useConfigStore} from '@/stores/config'
 import {useNamespaceStore} from '@/stores/namespaces'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
+import type {IList} from '@/modelTypes/IList'
 
 const salutation = useDaytimeSalutation()
 
@@ -94,12 +94,11 @@ const listHistory = computed(() => {
 	
 	return getHistory()
 		.map(l => listStore.getListById(l.id))
-		.filter(l => l !== null)
+		.filter((l): l is IList => l !== null)
 })
 
 const migratorsEnabled = computed(() => configStore.availableMigrators?.length > 0)
 const hasTasks = computed(() => baseStore.hasTasks)
-const defaultListId = computed(() => authStore.settings.defaultListId)
 const defaultNamespaceId = computed(() => namespaceStore.namespaces?.[0]?.id || 0)
 const hasLists = computed(() => namespaceStore.namespaces?.[0]?.lists.length > 0)
 const loading = computed(() => taskStore.isLoading)

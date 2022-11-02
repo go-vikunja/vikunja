@@ -66,7 +66,7 @@ async function newLabel() {
 	showError.value = false
 
 	const labelStore = useLabelStore()
-	const newLabel = labelStore.createLabel(label.value)
+	const newLabel = await labelStore.createLabel(label.value)
 	router.push({
 		name: 'labels.index',
 		params: {id: newLabel.id},

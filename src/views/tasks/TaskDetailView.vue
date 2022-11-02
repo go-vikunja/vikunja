@@ -558,7 +558,7 @@ const canWrite = computed(() => (
 const color = computed(() => {
 	const color = task.getHexColor
 		? task.getHexColor()
-		: false
+		: undefined
 	
 	return color === TASK_DEFAULT_COLOR
 		? ''

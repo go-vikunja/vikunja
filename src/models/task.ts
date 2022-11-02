@@ -79,10 +79,12 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	percentDone = 0
 	relatedTasks:  Partial<Record<IRelationKind, ITask[]>> = {}
 	attachments: IAttachment[] = []
+	coverImageAttachmentId: IAttachment['id'] = null
 	identifier = ''
 	index = 0
 	isFavorite = false
 	subscription: ISubscription = null
+	coverImageAttachmentId: IAttachment['id'] = null
 
 	position = 0
 	kanbanPosition = 0

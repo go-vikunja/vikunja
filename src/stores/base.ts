@@ -86,7 +86,7 @@ export const useBaseStore = defineStore('base', () => {
 	}
 
 	async function handleSetCurrentList(
-		{list, forceUpdate = false}: {list: IList | null, forceUpdate: boolean},
+		{list, forceUpdate = false}: {list: IList | null, forceUpdate?: boolean},
 	) {
 		if (list === null) {
 			setCurrentList({})

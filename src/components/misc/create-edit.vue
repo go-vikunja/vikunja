@@ -46,6 +46,9 @@
 </template>
 
 <script setup lang="ts">
+import type {PropType} from 'vue'
+import type {IconProp} from '@fortawesome/fontawesome-svg-core'
+
 defineProps({
 	title: {
 		type: String,
@@ -55,7 +58,7 @@ defineProps({
 		type: String,
 	},
 	primaryIcon: {
-		type: String,
+		type: String as PropType<IconProp>,
 		default: 'plus',
 	},
 	primaryDisabled: {

@@ -115,6 +115,7 @@ const props = defineProps({
 		default: true,
 	},
 	bottomActions: {
+		type: Array, 
 		default: () => [],
 	},
 	emptyText: {

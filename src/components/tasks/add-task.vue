@@ -214,7 +214,7 @@ async function addTask() {
 			return rel
 		})
 		await Promise.all(relations)
-	} catch (e: { message?: string }) {
+	} catch (e: any) {
 		newTaskTitle.value = taskTitleBackup
 		if (e?.message === 'NO_LIST') {
 			errorMessage.value = t('list.create.addListRequired')

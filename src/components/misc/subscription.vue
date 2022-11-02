@@ -13,7 +13,7 @@
 		v-else-if="type === 'dropdown'"
 		v-tooltip="tooltipText"
 		@click="changeSubscription"
-		:class="{'is-disabled': disabled}"
+		:disabled="disabled"
 		:icon="iconName"
 	>
 		{{ buttonText }}
@@ -44,6 +44,7 @@ import SubscriptionModel from '@/models/subscription'
 import type {ISubscription} from '@/modelTypes/ISubscription'
 
 import {success} from '@/message'
+import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 
 const props = defineProps({
 	entity: String,
@@ -104,7 +105,7 @@ const tooltipText = computed(() => {
 })
 
 const buttonText = computed(() => props.modelValue ? t('task.subscription.unsubscribe') : t('task.subscription.subscribe'))
-const iconName = computed(() => props.modelValue ? ['far', 'bell-slash'] : 'bell')
+const iconName = computed<IconProp>(() => props.modelValue ? ['far', 'bell-slash'] : 'bell')
 const disabled = computed(() => props.modelValue && subscriptionEntity.value !== props.entity)
 
 function changeSubscription() {

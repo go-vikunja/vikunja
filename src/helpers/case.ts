@@ -3,17 +3,15 @@ import {snakeCase} from 'snake-case'
 
 /**
  * Transforms field names to camel case.
- * @param object
- * @returns {*}
  */
-export function objectToCamelCase(object) {
+export function objectToCamelCase(object: Record<string, any>) {
 
 	// When calling recursively, this can be called without being and object or array in which case we just return the value
 	if (typeof object !== 'object') {
 		return object
 	}
 
-	const parsedObject = {}
+	const parsedObject: Record<string, any> = {}
 	for (const m in object) {
 		parsedObject[camelCase(m)] = object[m]
 
@@ -25,7 +23,7 @@ export function objectToCamelCase(object) {
 
 		// Call it again for arrays
 		if (Array.isArray(object[m])) {
-			parsedObject[camelCase(m)] = object[m].map(o => objectToCamelCase(o))
+			parsedObject[camelCase(m)] = object[m].map((o: Record<string, any>) => objectToCamelCase(o))
 			// Because typeof [] === 'object' is true for arrays, we leave the loop here to prevent converting arrays to objects.
 			continue
 		}
@@ -40,17 +38,15 @@ export function objectToCamelCase(object) {
 
 /**
  * Transforms field names to snake case - used before making an api request.
- * @param object
- * @returns {*}
  */
-export function objectToSnakeCase(object) {
+export function objectToSnakeCase(object: Record<string, any>) {
 
 	// When calling recursively, this can be called without being and object or array in which case we just return the value
 	if (typeof object !== 'object') {
 		return object
 	}
 
-	const parsedObject = {}
+	const parsedObject: Record<string, any> = {}
 	for (const m in object) {
 		parsedObject[snakeCase(m)] = object[m]
 
@@ -65,7 +61,7 @@ export function objectToSnakeCase(object) {
 
 		// Call it again for arrays
 		if (Array.isArray(object[m])) {
-			parsedObject[snakeCase(m)] = object[m].map(o => objectToSnakeCase(o))
+			parsedObject[snakeCase(m)] = object[m].map((o: Record<string, any>) => objectToSnakeCase(o))
 			// Because typeof [] === 'object' is true for arrays, we leave the loop here to prevent converting arrays to objects.
 			continue
 		}

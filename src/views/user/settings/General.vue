@@ -246,7 +246,7 @@ watch(
 
 const listStore = useListStore()
 const defaultList = computed({
-	get: () => listStore.getListById(settings.value.defaultListId),
+	get: () => listStore.getListById(settings.value.defaultListId) || undefined,
 	set(l) {
 		settings.value.defaultListId = l ? l.id : DEFAULT_LIST_ID
 	},

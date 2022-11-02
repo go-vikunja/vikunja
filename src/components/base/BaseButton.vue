@@ -1,18 +1,53 @@
+<!-- a disabled link of any kind is not a link -->
+<!-- we have a router link -->
+<!-- just a normal link -->
+<!-- a button it shall be -->
+<!-- note that we only pass the click listener here -->
 <template>
-	<component
-		:is="componentNodeName"
+	<div
+		v-if="disabled === true && (to !== undefined || href !== undefined)"
 		class="base-button"
-		:class="{ 'base-button--type-button': isButton }"
-		v-bind="elementBindings"
-		:disabled="disabled || undefined"
+		:aria-disabled="disabled || undefined"
 		ref="button"
 	>
 		<slot/>
-	</component>
+	</div>
+	<router-link
+		v-else-if="to !== undefined"
+		:to="to"
+		class="base-button"
+		ref="button"
+	>
+		<slot/>
+	</router-link>
+	<a v-else-if="href !== undefined"
+		class="base-button"
+		:href="href"
+		rel="noreferrer noopener nofollow"
+		target="_blank"
+		ref="button"
+	>
+		<slot/>
+	</a>
+	<button
+		v-else
+		:type="type"
+		class="base-button base-button--type-button"
+		:disabled="disabled || undefined"
+		ref="button"
+		@click="(event: MouseEvent) => emit('click', event)"
+	>
+		<slot/>
+	</button>
 </template>
 
 <script lang="ts">
-export default { inheritAttrs: false }
+const BASE_BUTTON_TYPES_MAP = {
+	BUTTON: 'button',
+	SUBMIT: 'submit',
+} as const
+
+export type BaseButtonTypes = typeof BASE_BUTTON_TYPES_MAP[keyof typeof BASE_BUTTON_TYPES_MAP] | undefined
 </script>
 
 <script lang="ts" setup>
@@ -20,77 +55,36 @@ export default { inheritAttrs: false }
 // by doing so we make it easy abstract the functionality from style and enable easier and semantic
 // correct button and link usage. Also see: https://css-tricks.com/a-complete-guide-to-links-and-buttons/#accessibility-considerations
 
-// the component tries to heuristically determine what it should be checking the props (see the
-// componentNodeName and elementBindings ref for this).
+// the component tries to heuristically determine what it should be checking the props 
 
 // NOTE: Do NOT use buttons with @click to push routes. => Use router-links instead!
 
-import { ref, watchEffect, computed, useAttrs, type PropType } from 'vue'
+import {unrefElement} from '@vueuse/core'
+import {ref, type HTMLAttributes} from 'vue'
+import type {RouteLocationNamedRaw} from 'vue-router'
 
-const BASE_BUTTON_TYPES_MAP = Object.freeze({
-	button: 'button',
-	submit: 'submit',
-})
-
-type BaseButtonTypes = keyof typeof BASE_BUTTON_TYPES_MAP
-
-const props = defineProps({
-	type: {
-		type: String as PropType<BaseButtonTypes>,
-		default: 'button',
-	},
-	disabled: {
-		type: Boolean,
-		default: false,
-	},
-})
-
-
-const componentNodeName = ref<Node['nodeName']>('button')
-
-interface ElementBindings {
-	type?: string;
-	rel?: string;
-	target?: string;
+export interface BaseButtonProps extends HTMLAttributes {
+	type?: BaseButtonTypes
+	disabled?: boolean
+	to?: RouteLocationNamedRaw
+	href?: string
 }
 
-const elementBindings = ref({})
+export interface BaseButtonEmits {
+	(e: 'click', payload: MouseEvent): void
+}
 
-const attrs = useAttrs()
-watchEffect(() => {
-	// by default this component is a button element with the attribute of the type "button" (default prop value)
-	let nodeName = 'button'
-	let bindings: ElementBindings = {type: props.type}
+const {
+	type = BASE_BUTTON_TYPES_MAP.BUTTON,
+	disabled = false,
+} = defineProps<BaseButtonProps>()
 
-	// if we find a "to" prop we set it as router-link
-	if ('to' in attrs) {
-		nodeName = 'router-link'
-		bindings = {}
-	}
+const emit = defineEmits<BaseButtonEmits>()
 
-	// if there is a href we assume the user wants an external link via a link element
-	// we also set a predefined value for the attribute rel, but make it possible to overwrite this by the user.
-	if ('href' in attrs) {
-		nodeName = 'a'
-		bindings = {
-			rel: 'noreferrer noopener nofollow',
-			target: '_blank',
-		}
-	}
-
-	componentNodeName.value = nodeName
-	elementBindings.value = {
-		...bindings,
-		...attrs,
-	}
-})
-
-const isButton = computed(() => componentNodeName.value === 'button')
-
-const button = ref()
+const button = ref<HTMLElement | null>(null)
 
 function focus() {
-	button.value.focus()
+	unrefElement(button)?.focus()
 }
 
 defineExpose({

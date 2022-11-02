@@ -1,4 +1,6 @@
-export function calculateDayInterval(dateString: string, currentDay = (new Date().getDay())) {
+type Day<T extends number = number> = T
+
+export function calculateDayInterval(dateString: string, currentDay = (new Date().getDay())): Day {
 	switch (dateString) {
 		case 'today':
 			return 0
