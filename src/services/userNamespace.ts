@@ -1,5 +1,3 @@
-import {formatISO} from 'date-fns'
-
 import AbstractService from './abstractService'
 import UserNamespaceModel from '@/models/userNamespace'
 import type {IUserNamespace} from '@/modelTypes/IUserNamespace'
@@ -13,12 +11,6 @@ export default class UserNamespaceService extends AbstractService<IUserNamespace
 			update: '/namespaces/{namespaceId}/users/{userId}',
 			delete: '/namespaces/{namespaceId}/users/{userId}',
 		})
-	}
-
-	processModel(model) {
-		model.created = formatISO(new Date(model.created))
-		model.updated = formatISO(new Date(model.updated))
-		return model
 	}
 
 	modelFactory(data) {

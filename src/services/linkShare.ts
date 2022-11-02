@@ -1,7 +1,6 @@
 import AbstractService from './abstractService'
 import LinkShareModel from '@/models/linkShare'
 import type {ILinkShare} from '@/modelTypes/ILinkShare'
-import {formatISO} from 'date-fns'
 
 export default class LinkShareService extends AbstractService<ILinkShare> {
 	constructor() {
@@ -11,12 +10,6 @@ export default class LinkShareService extends AbstractService<ILinkShare> {
 			create: '/lists/{listId}/shares',
 			delete: '/lists/{listId}/shares/{id}',
 		})
-	}
-
-	processModel(model) {
-		model.created = formatISO(new Date(model.created))
-		model.updated = formatISO(new Date(model.updated))
-		return model
 	}
 
 	modelFactory(data) {

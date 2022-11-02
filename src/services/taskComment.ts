@@ -1,7 +1,6 @@
 import AbstractService from './abstractService'
 import TaskCommentModel from '@/models/taskComment'
 import type {ITaskComment} from '@/modelTypes/ITaskComment'
-import {formatISO} from 'date-fns'
 
 export default class TaskCommentService extends AbstractService<ITaskComment> {
 	constructor() {
@@ -12,12 +11,6 @@ export default class TaskCommentService extends AbstractService<ITaskComment> {
 			update: '/tasks/{taskId}/comments/{id}',
 			delete: '/tasks/{taskId}/comments/{id}',
 		})
-	}
-
-	processModel(model) {
-		model.created = formatISO(new Date(model.created))
-		model.updated = formatISO(new Date(model.updated))
-		return model
 	}
 
 	modelFactory(data) {

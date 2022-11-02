@@ -1,5 +1,3 @@
-import {formatISO} from 'date-fns'
-
 import AbstractService from '@/services/abstractService'
 import TaskModel from '@/models/task'
 
@@ -21,12 +19,6 @@ export default class TaskCollectionService extends AbstractService<ITask> {
 		super({
 			getAll: '/lists/{listId}/tasks',
 		})
-	}
-
-	processModel(model) {
-		model.created = formatISO(new Date(model.created))
-		model.updated = formatISO(new Date(model.updated))
-		return model
 	}
 
 	modelFactory(data) {

@@ -2,7 +2,6 @@ import AbstractService from './abstractService'
 import ListModel from '@/models/list'
 import type {IList} from '@/modelTypes/IList'
 import TaskService from './task'
-import {formatISO} from 'date-fns'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 
 export default class ListService extends AbstractService<IList> {
@@ -14,12 +13,6 @@ export default class ListService extends AbstractService<IList> {
 			update: '/lists/{id}',
 			delete: '/lists/{id}',
 		})
-	}
-
-	processModel(model) {
-		model.created = formatISO(new Date(model.created))
-		model.updated = formatISO(new Date(model.updated))
-		return model
 	}
 
 	modelFactory(data) {

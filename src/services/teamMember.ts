@@ -1,7 +1,6 @@
 import AbstractService from './abstractService'
 import TeamMemberModel from '@/models/teamMember'
 import type {ITeamMember} from '@/modelTypes/ITeamMember'
-import {formatISO} from 'date-fns'
 
 export default class TeamMemberService extends AbstractService<ITeamMember> {
 	constructor() {
@@ -10,12 +9,6 @@ export default class TeamMemberService extends AbstractService<ITeamMember> {
 			delete: '/teams/{teamId}/members/{username}',
 			update: '/teams/{teamId}/members/{username}/admin',
 		})
-	}
-
-	processModel(model) {
-		model.created = formatISO(new Date(model.created))
-		model.updated = formatISO(new Date(model.updated))
-		return model
 	}
 
 	modelFactory(data) {
