@@ -869,6 +869,19 @@ func calculateDefaultPosition(entityID int64, position float64) float64 {
 	return position
 }
 
+func getNextTaskIndex(s *xorm.Session, listID int64) (nextIndex int64, err error) {
+	latestTask := &Task{}
+	_, err = s.
+		Where("list_id = ?", listID).
+		OrderBy("`index` desc").
+		Get(latestTask)
+	if err != nil {
+		return 0, err
+	}
+
+	return latestTask.Index + 1, nil
+}
+
 // Create is the implementation to create a list task
 // @Summary Create a task
 // @Description Inserts a task into a list.
@@ -920,16 +933,14 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 	}
 
 	// Get the index for this task
-	latestTask := &Task{}
-	_, err = s.Where("list_id = ?", t.ListID).OrderBy("id desc").Get(latestTask)
+	t.Index, err = getNextTaskIndex(s, t.ListID)
 	if err != nil {
 		return err
 	}
 
-	t.Index = latestTask.Index + 1
 	// If no position was supplied, set a default one
-	t.Position = calculateDefaultPosition(latestTask.ID+1, t.Position)
-	t.KanbanPosition = calculateDefaultPosition(latestTask.ID+1, t.KanbanPosition)
+	t.Position = calculateDefaultPosition(t.Index, t.Position)
+	t.KanbanPosition = calculateDefaultPosition(t.Index, t.KanbanPosition)
 	if _, err = s.Insert(t); err != nil {
 		return err
 	}
@@ -1047,13 +1058,10 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	// If the task is being moved between lists, make sure to move the bucket + index as well
 	if t.ListID != 0 && ot.ListID != t.ListID {
-		latestTask := &Task{}
-		_, err = s.Where("list_id = ?", t.ListID).OrderBy("id desc").Get(latestTask)
+		t.Index, err = getNextTaskIndex(s, t.ListID)
 		if err != nil {
 			return err
 		}
-
-		t.Index = latestTask.Index + 1
 		colsToUpdate = append(colsToUpdate, "index")
 	}
 

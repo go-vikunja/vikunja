@@ -20,10 +20,10 @@ import (
 	"testing"
 	"time"
 
-	"code.vikunja.io/api/pkg/events"
-
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -323,6 +323,21 @@ func TestTask_Update(t *testing.T) {
 			"done":      false,
 			"bucket_id": 1,
 		}, false)
+	})
+	t.Run("moving a task between lists should give it a correct index", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:     12,
+			ListID: 2, // From list 1
+		}
+		err := task.Update(s, u)
+		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+		assert.Equal(t, int64(3), task.Index)
 	})
 }
 
