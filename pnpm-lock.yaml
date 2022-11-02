@@ -59,7 +59,7 @@ specifiers:
   is-touch-device: 1.0.1
   lodash.clonedeep: 4.5.0
   lodash.debounce: 4.0.8
-  marked: 4.2.0
+  marked: 4.2.1
   minimist: 1.2.7
   netlify-cli: 12.0.11
   pinia: 2.0.23
@@ -120,7 +120,7 @@ dependencies:
   is-touch-device: 1.0.1
   lodash.clonedeep: 4.5.0
   lodash.debounce: 4.0.8
-  marked: 4.2.0
+  marked: 4.2.1
   minimist: 1.2.7
   pinia: 2.0.23_l7r24p6nevbtlimqmqcwa3ouhu
   register-service-worker: 1.7.2
@@ -5845,7 +5845,7 @@ packages:
       '@types/marked': 4.0.7
       codemirror: 5.65.9
       codemirror-spell-checker: 1.1.2
-      marked: 4.2.0
+      marked: 4.2.1
     dev: false
 
   /ecc-jsbn/0.1.2:
@@ -9061,8 +9061,8 @@ packages:
       object-visit: 1.0.1
     dev: true
 
-  /marked/4.2.0:
-    resolution: {integrity: sha512-1qWHjHlBKwjnDfrkxd0L3Yx4LTad/WO7+d13YsXAC/ZfKj7p0xkLV3sDXJzfWgL7GfW4IBZwMAYWaz+ifyQouQ==}
+  /marked/4.2.1:
+    resolution: {integrity: sha512-VK1/jNtwqDLvPktNpL0Fdg3qoeUZhmRsuiIjPEy/lHwXW4ouLoZfO4XoWd4ClDt+hupV1VLpkZhEovjU0W/kqA==}
     engines: {node: '>= 12'}
     hasBin: true
     dev: false
