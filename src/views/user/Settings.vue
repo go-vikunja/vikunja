@@ -34,6 +34,7 @@ const totpEnabled = computed(() => configStore.totpEnabled)
 const caldavEnabled = computed(() => configStore.caldavEnabled)
 const migratorsEnabled = computed(() => configStore.migratorsEnabled)
 const isLocalUser = computed(() => authStore.info?.isLocalUser)
+const userDeletionEnabled = computed(() => configStore.userDeletionEnabled)
 
 const navigationItems = computed(() => {
 	const items = [
@@ -77,6 +78,7 @@ const navigationItems = computed(() => {
 		{
 			title: t('user.deletion.title'),
 			routeName: 'user.settings.deletion',
+			condition: userDeletionEnabled.value,
 		},
 	]
 	
