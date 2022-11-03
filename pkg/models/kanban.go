@@ -81,7 +81,7 @@ func getDefaultBucket(s *xorm.Session, listID int64) (bucket *Bucket, err error)
 	bucket = &Bucket{}
 	_, err = s.
 		Where("list_id = ?", listID).
-		OrderBy("id asc").
+		OrderBy("position asc").
 		Get(bucket)
 	return
 }
