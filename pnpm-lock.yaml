@@ -15,6 +15,7 @@ specifiers:
   '@rushstack/eslint-patch': 1.2.0
   '@sentry/tracing': 7.17.4
   '@sentry/vue': 7.17.4
+  '@types/codemirror': ^5.60.5
   '@types/dompurify': 2.3.4
   '@types/flexsearch': 0.7.3
   '@types/is-touch-device': 1.0.0
@@ -142,6 +143,7 @@ devDependencies:
   '@cypress/vue': 4.2.2_cypress@10.11.0+vue@3.2.41
   '@faker-js/faker': 7.6.0
   '@rushstack/eslint-patch': 1.2.0
+  '@types/codemirror': 5.60.5
   '@types/dompurify': 2.3.4
   '@types/flexsearch': 0.7.3
   '@types/lodash.debounce': 4.0.7
@@ -2911,7 +2913,6 @@ packages:
     resolution: {integrity: sha512-TiECZmm8St5YxjFUp64LK0c8WU5bxMDt9YaAek1UqUb9swrSCoJhh92fWu1p3mTEqlHjhB5sY7OFBhWroJXZVg==}
     dependencies:
       '@types/tern': 0.23.4
-    dev: false
 
   /@types/concat-stream/1.6.1:
     resolution: {integrity: sha512-eHE4cQPoj6ngxBZMvVf6Hw7Mh4jMW4U9lpGmS5GBPB9RYxlFg+CHaVN7ErNY4W9XfLIEn20b4VDYaIrbq0q4uA==}
@@ -2945,7 +2946,6 @@ packages:
 
   /@types/estree/0.0.51:
     resolution: {integrity: sha512-CuPgU6f3eT/XgKKPqKd/gLZV1Xmvf1a2R5POBOGQa6uv82xpls89HU5zKeVoyR8XzHd1RGNOlQlvUe3CFkjWNQ==}
-    dev: false
 
   /@types/flexsearch/0.7.3:
     resolution: {integrity: sha512-HXwADeHEP4exXkCIwy2n1+i0f1ilP1ETQOH5KDOugjkTFZPntWo0Gr8stZOaebkxsdx+k0X/K6obU/+it07ocg==}
@@ -3117,7 +3117,6 @@ packages:
     resolution: {integrity: sha512-JAUw1iXGO1qaWwEOzxTKJZ/5JxVeON9kvGZ/osgZaJImBnyjyn0cjovPsf6FNLmyGY8Vw9DoXZCMlfMkMwHRWg==}
     dependencies:
       '@types/estree': 0.0.51
-    dev: false
 
   /@types/trusted-types/2.0.2:
     resolution: {integrity: sha512-F5DIZ36YVLE+PN+Zwws4kJogq47hNgX3Nx6WyDJ3kcplxyke3XIzB8uK5n/Lpm1HBsbGzd6nmGehL8cPekP+Tg==}

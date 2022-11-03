@@ -4,22 +4,28 @@
       class="vue-simplemde-textarea"
       :name="name"
       :value="modelValue"
-      @input="handleInput($event.target.value)"
+      @input="handleInput(($event.target as HTMLTextAreaElement).value)"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import {ref, watch, onMounted, onDeactivated, onBeforeUnmount, nextTick, shallowReactive} from 'vue'
-import type { ShallowReactive } from 'vue'
-
-import EasyMDE from 'easymde'
+import {ref, watch, onMounted, onDeactivated, onBeforeUnmount, nextTick, shallowReactive, type ShallowReactive, type PropType} from 'vue'
+import EasyMDE, {toggleFullScreen} from 'easymde'
 import {marked} from 'marked'
+import type CodeMirror from 'codemirror'
 
 const props = defineProps({
-	modelValue: String,
-	name: String,
-	previewClass: String,
+	modelValue: {
+		type: String,
+		default: '',
+	},
+	name: {
+		type: String,
+	},
+	previewClass: {
+		type: String,
+	},
 	autoinit: {
 		type: Boolean,
 		default: true,
@@ -37,7 +43,7 @@ const props = defineProps({
 		default: () => ({}),
 	},
 	previewRender: {
-		type: Function,
+		type: Function as PropType<EasyMDE.Options['previewRender']>,
 	},
 })
 
@@ -51,9 +57,9 @@ onMounted(() => {
 })
 
 onDeactivated(() => {
-	if (!easymde) return
-	const isFullScreen = easymde.codemirror.getOption('fullScreen')
-	if (isFullScreen) easymde.toggleFullScreen()
+	if (easymde === undefined) return
+	if (easymde.isFullscreenActive()) toggleFullScreen(easymde)
+	easymde.toTextArea
 })
 
 onBeforeUnmount(() => {
@@ -67,8 +73,8 @@ onBeforeUnmount(() => {
 const easymdeRef = ref<HTMLElement | null>(null)
 
 function initialize() {
-	const configs = Object.assign({
-		element: easymdeRef.value?.firstElementChild,
+	const configs: EasyMDE.Options = Object.assign({
+		element: easymdeRef.value?.firstElementChild as HTMLElement,
 		initialValue: props.modelValue,
 		previewRender: props.previewRender,
 		renderingConfig: {},
@@ -81,7 +87,7 @@ function initialize() {
 
 	// Determine whether to enable code highlighting
 	if (props.highlight) {
-		configs.renderingConfig.codeSyntaxHighlighting = true
+		configs.renderingConfig!.codeSyntaxHighlighting = true
 	}
 
 	// Set whether to render the input html
@@ -92,15 +98,16 @@ function initialize() {
 
 	// Add a custom previewClass
 	const className = props.previewClass || ''
-	addPreviewClass(className)
+	addPreviewClass(easymde, className)
 
 	// Binding event
-	bindingEvents()
+	easymde.codemirror.on('change', handleCodemirrorInput)
+	easymde.codemirror.on('blur', handleCodemirrorBlur)
 
 	nextTick(() => emit('initialized', easymde))
 }
 
-function addPreviewClass(className: string) {
+function addPreviewClass(easymde: EasyMDE, className: string) {
 	const wrapper = easymde.codemirror.getWrapperElement()
 	const preview = document.createElement('div')
 	wrapper.nextSibling.className += ` ${className}`
@@ -108,28 +115,24 @@ function addPreviewClass(className: string) {
 	wrapper.appendChild(preview)
 }
 
-function bindingEvents() {
-	easymde.codemirror.on('change', handleCodemirrorInput)
-	easymde.codemirror.on('blur', handleCodemirrorBlur)
+function handleInput(val: string) {
+	isValueUpdateFromInner.value = true
+	emit('update:modelValue', val)
 }
 
-function handleCodemirrorInput(instance, changeObj)  {
-	if (changeObj.origin === 'setValue') {
+function handleCodemirrorInput(instance: CodeMirror.Editor, changeObj: CodeMirror.EditorChange)  {
+	if (changeObj.origin === 'setValue' || easymde === undefined) {
 		return
 	}
-	const val = easymde.value()
-	handleInput(val)
+	handleInput(easymde.value())
 }
 
 function handleCodemirrorBlur() {
-	const val = easymde.value()
+	if (easymde === undefined) {
+		return
+	}
 	isValueUpdateFromInner.value = true
-	emit('blur', val)
-}
-
-function handleInput(val) {
-	isValueUpdateFromInner.value = true
-	emit('update:modelValue', val)
+	emit('blur', easymde.value())
 }
 
 watch(
@@ -138,7 +141,7 @@ watch(
 		if (isValueUpdateFromInner.value) {
 			isValueUpdateFromInner.value = false
 		} else {
-			easymde.value(val)
+			easymde?.value(val)
 		}
 	},
 )
