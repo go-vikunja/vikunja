@@ -49,4 +49,4 @@ export const MIGRATORS: IMigratorRecord = {
 		icon: tickTickIcon as string,
 		isFileMigrator: true,
 	},
-}
+} as const

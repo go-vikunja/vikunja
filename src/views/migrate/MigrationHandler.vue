@@ -14,9 +14,9 @@
 						type="file"
 					/>
 					<x-button
-						:loading="migrationService.loading"
-						:disabled="migrationService.loading || undefined"
-						@click="$refs.uploadInput.click()"
+						:loading="migrationFileService.loading"
+						:disabled="migrationFileService.loading || undefined"
+						@click="uploadInput?.click()"
 					>
 						{{ $t('migrate.upload') }}
 					</x-button>
@@ -57,129 +57,118 @@
 			</div>
 		</div>
 		<div v-else>
-			<message class="mb-4">
+			<Message class="mb-4">
 				{{ message }}
-			</message>
+			</Message>
 			<x-button :to="{name: 'home'}">{{ $t('misc.refresh') }}</x-button>
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
-
-import AbstractMigrationService from '@/services/migrator/abstractMigration'
-import AbstractMigrationFileService from '@/services/migrator/abstractMigrationFile'
-import Logo from '@/assets/logo.svg?component'
-import Message from '@/components/misc/message.vue'
-import { setTitle } from '@/helpers/setTitle'
-
-import {formatDateLong} from '@/helpers/time/formatDate'
-
-import {MIGRATORS} from './migrators'
-import { useNamespaceStore } from '@/stores/namespaces'
-
-const PROGRESS_DOTS_COUNT = 8
-
-export default defineComponent({
-	name: 'MigrateService',
-
-	components: {
-		Logo,
-		Message,
-	},
-
-	data() {
-		return {
-			progressDotsCount: PROGRESS_DOTS_COUNT,
-			authUrl: '',
-			isMigrating: false,
-			lastMigrationDate: null,
-			message: '',
-			migratorAuthCode: '',
-			migrationService: null,
-		}
-	},
-
-	computed: {
-		migrator() {
-			return MIGRATORS[this.$route.params.service]
-		},
-	},
-
+export default {
 	beforeRouteEnter(to) {
-		if (MIGRATORS[to.params.service] === undefined) {
+		if (MIGRATORS[to.params.service as string] === undefined) {
 			return {name: 'not-found'}
 		}
 	},
+}
+</script>
 
-	created() {
-		this.initMigration()
-	},
+<script setup lang="ts">
+import {computed, ref, shallowReactive} from 'vue'
+import {useI18n} from 'vue-i18n'
 
-	mounted() {
-		setTitle(this.$t('migrate.titleService', {name: this.migrator.name}))
-	},
+import Logo from '@/assets/logo.svg?component'
+import Message from '@/components/misc/message.vue'
 
-	methods: {
-		formatDateLong,
+import AbstractMigrationService, { type MigrationConfig } from '@/services/migrator/abstractMigration'
+import AbstractMigrationFileService from '@/services/migrator/abstractMigrationFile'
 
-		async initMigration() {
-			this.migrationService = this.migrator.isFileMigrator
-				? new AbstractMigrationFileService(this.migrator.id)
-				: new AbstractMigrationService(this.migrator.id)
+import {formatDateLong} from '@/helpers/time/formatDate'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
-			if (this.migrator.isFileMigrator) {
-				return
-			}
+import {MIGRATORS} from './migrators'
+import {useNamespaceStore} from '@/stores/namespaces'
+import {useTitle} from '@/composables/useTitle'
 
-			this.authUrl = await this.migrationService.getAuthUrl().then(({url}) => url)
+const PROGRESS_DOTS_COUNT = 8
 
-			this.migratorAuthCode = location.hash.startsWith('#token=')
-				? location.hash.substring(7)
-				: this.$route.query.code
+const props = defineProps<{
+	service: string,
+	code?: string,
+}>()
 
-			if (!this.migratorAuthCode) {
-				return
-			}
-			const {time} = await this.migrationService.getStatus()
-			if (time) {
-				this.lastMigrationDate = typeof time === 'string' && time?.startsWith('0001-')
-					? null
-					: new Date(time)
+const {t} = useI18n({useScope: 'global'})
 
-				if (this.lastMigrationDate) {
-					return
-				}
-			}
-			await this.migrate()
-		},
+const progressDotsCount = ref(PROGRESS_DOTS_COUNT)
+const authUrl = ref('')
+const isMigrating = ref(false)
+const lastMigrationDate = ref<Date | null>(null)
+const message = ref('')
+const migratorAuthCode = ref('')
 
-		async migrate() {
-			this.isMigrating = true
-			this.lastMigrationDate = null
-			this.message = ''
+const migrator = computed(() => MIGRATORS[props.service])
 
-			let migrationConfig = {code: this.migratorAuthCode}
+const migrationService = shallowReactive(new AbstractMigrationService(migrator.value.id))
+const migrationFileService = shallowReactive(new AbstractMigrationFileService(migrator.value.id))
 
-			if (this.migrator.isFileMigrator) {
-				if (this.$refs.uploadInput.files.length === 0) {
-					return
-				}
-				migrationConfig = this.$refs.uploadInput.files[0]
-			}
+useTitle(() => t('migrate.titleService', {name: migrator.value.name}))
 
-			try {
-				const {message} = await this.migrationService.migrate(migrationConfig)
-				this.message = message
-				const namespaceStore = useNamespaceStore()
-				return namespaceStore.loadNamespaces()
-			} finally {
-				this.isMigrating = false
-			}
-		},
-	},
-})
+async function initMigration() {
+	if (migrator.value.isFileMigrator) {
+		return
+	}
+
+	authUrl.value = await migrationService.getAuthUrl().then(({url}) => url)
+
+	const TOKEN_HASH_PREFIX = '#token='
+	migratorAuthCode.value = location.hash.startsWith(TOKEN_HASH_PREFIX)
+		? location.hash.substring(TOKEN_HASH_PREFIX.length)
+		: props.code as string
+
+	if (!migratorAuthCode.value) {
+		return
+	}
+	const {time} = await migrationService.getStatus()
+	if (time) {
+		lastMigrationDate.value = parseDateOrNull(time)
+
+		if (lastMigrationDate.value) {
+			return
+		}
+	}
+	await migrate()
+}
+
+initMigration()
+
+const uploadInput = ref<HTMLInputElement | null>(null)
+async function migrate() {
+	isMigrating.value = true
+	lastMigrationDate.value = null
+	message.value = ''
+
+	let migrationConfig: MigrationConfig | File = {code: migratorAuthCode.value}
+
+	if (migrator.value.isFileMigrator) {
+		if (uploadInput.value?.files?.length === 0) {
+			return
+		}
+		migrationConfig = uploadInput.value?.files?.[0] as File
+	}
+
+	try {
+		const result = migrator.value.isFileMigrator
+			? await migrationFileService.migrate(migrationConfig as File)
+			: await migrationService.migrate(migrationConfig as MigrationConfig)
+		message.value = result.message
+		const namespaceStore = useNamespaceStore()
+		return namespaceStore.loadNamespaces()
+	} finally {
+		isMigrating.value = false
+	}
+}
 </script>
 
 <style lang="scss" scoped>

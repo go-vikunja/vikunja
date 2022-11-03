@@ -31,8 +31,8 @@ import ListTeamsComponent from '../views/teams/ListTeams.vue'
 import ListLabelsComponent from '../views/labels/ListLabels.vue'
 import NewLabelComponent from '../views/labels/NewLabel.vue'
 // Migration
-import MigrationComponent from '../views/migrator/Migrate.vue'
-import MigrateServiceComponent from '../views/migrator/MigrateService.vue'
+const MigrationComponent = () => import('@/views/migrate/Migration.vue')
+const MigrationHandlerComponent = () => import('@/views/migrate/MigrationHandler.vue')
 // List Views
 import ListList from '../views/list/ListList.vue'
 const ListGantt = () => import('../views/list/ListGantt.vue')
@@ -445,7 +445,11 @@ const router = createRouter({
 		{
 			path: '/migrate/:service',
 			name: 'migrate.service',
-			component: MigrateServiceComponent,
+			component: MigrationHandlerComponent,
+			props: route => ({
+				service: route.params.service as string,
+				code: route.params.code as string,
+			}),
 		},
 		{
 			path: '/filters/new',
