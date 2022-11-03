@@ -26,6 +26,15 @@ If you don't specify a command, the [`web`](#web) command will be executed.
 
 All commands use the same standard [config file]({{< ref "../setup/config.md">}}).
 
+## Using the cli in docker
+
+When running Vikunja in docker, you'll need to execute all commands in the `api` container.
+Instead of running the `vikunja` binary directly, run it like this:
+
+```
+docker exec <name of the vikunja api container> /app/vikunja/vikunja <subcommand>
+```
+
 ### `dump`
 
 Creates a zip file with all vikunja-related files.
