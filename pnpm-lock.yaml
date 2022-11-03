@@ -15,7 +15,7 @@ specifiers:
   '@rushstack/eslint-patch': 1.2.0
   '@sentry/tracing': 7.17.4
   '@sentry/vue': 7.17.4
-  '@types/codemirror': ^5.60.5
+  '@types/codemirror': 5.60.5
   '@types/dompurify': 2.3.4
   '@types/flexsearch': 0.7.3
   '@types/is-touch-device': 1.0.0

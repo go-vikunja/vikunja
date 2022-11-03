@@ -70,7 +70,7 @@
     "@cypress/vue": "4.2.2",
     "@faker-js/faker": "7.6.0",
     "@rushstack/eslint-patch": "1.2.0",
-    "@types/codemirror": "^5.60.5",
+    "@types/codemirror": "5.60.5",
     "@types/dompurify": "2.3.4",
     "@types/flexsearch": "0.7.3",
     "@types/lodash.debounce": "4.0.7",
