@@ -24,7 +24,7 @@
 				@end="updateBucketPosition"
 				@start="() => dragBucket = true"
 				group="buckets"
-				:disabled="!canWrite"
+				:disabled="!canWrite || newTaskInputFocused"
 				tag="ul"
 				:item-key="({id}) => `bucket${id}`"
 				:component-data="bucketDraggableComponentData"
@@ -142,6 +142,7 @@
 												class="input"
 												:disabled="loading || taskLoading || undefined"
 												@focusout="toggleShowNewTaskInput(bucket.id)"
+												@focusin="() => newTaskInputFocused = true"
 												@keyup.enter="addTaskToBucket(bucket.id)"
 												@keyup.esc="toggleShowNewTaskInput(bucket.id)"
 												:placeholder="$t('list.kanban.addTaskPlaceholder')"
@@ -294,6 +295,7 @@ export default defineComponent({
 			newTaskError: {},
 			showSetLimitInput: false,
 			collapsedBuckets: {},
+			newTaskInputFocused: false,
 
 			// We're using this to show the loading animation only at the task when updating it
 			taskUpdating: {},
@@ -462,6 +464,7 @@ export default defineComponent({
 
 		toggleShowNewTaskInput(bucketId) {
 			this.showNewTaskInput[bucketId] = !this.showNewTaskInput[bucketId]
+			this.newTaskInputFocused = false
 		},
 
 		async addTaskToBucket(bucketId) {
