@@ -19,6 +19,7 @@ package db
 import (
 	"encoding/gob"
 	"fmt"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -147,14 +148,28 @@ func parsePostgreSQLHostPort(info string) (string, string) {
 	return host, port
 }
 
+// Copied and adopted from https://github.com/go-gitea/gitea/blob/f337c32e868381c6d2d948221aca0c59f8420c13/modules/setting/database.go#L176-L186
+func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert string) (connStr string) {
+	dbParam := "?"
+	if strings.Contains(dbName, dbParam) {
+		dbParam = "&"
+	}
+	host, port := parsePostgreSQLHostPort(dbHost)
+	if host[0] == '/' { // looks like a unix socket
+		connStr = fmt.Sprintf("postgres://%s:%s@:%s/%s%ssslmode=%s&sslcert=%s&sslkey=%s&sslrootcert=%s&host=%s",
+			url.PathEscape(dbUser), url.PathEscape(dbPasswd), port, dbName, dbParam, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert, host)
+	} else {
+		connStr = fmt.Sprintf("postgres://%s:%s@%s:%s/%s%ssslmode=%s&sslcert=%s&sslkey=%s&sslrootcert=%s",
+			url.PathEscape(dbUser), url.PathEscape(dbPasswd), host, port, dbName, dbParam, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert)
+	}
+	return connStr
+}
+
 func initPostgresEngine() (engine *xorm.Engine, err error) {
-	host, port := parsePostgreSQLHostPort(config.DatabaseHost.GetString())
-	// postgresql://username:password@host:port/dbname[?paramspec]
-	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s&sslcert=%s&sslkey=%s&sslrootcert=%s",
+	connStr := getPostgreSQLConnectionString(
+		config.DatabaseHost.GetString(),
 		config.DatabaseUser.GetString(),
 		config.DatabasePassword.GetString(),
-		host,
-		port,
 		config.DatabaseDatabase.GetString(),
 		config.DatabaseSslMode.GetString(),
 		config.DatabaseSslCert.GetString(),
