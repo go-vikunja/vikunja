@@ -162,7 +162,6 @@ import {SUPPORTED_LOCALES} from '@/i18n'
 import {playSoundWhenDoneKey, playPopSound} from '@/helpers/playPop'
 import {getQuickAddMagicMode, setQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {createRandomID} from '@/helpers/randomId'
-import {objectIsEmpty} from '@/helpers/objectIsEmpty'
 import {success} from '@/message'
 import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 
@@ -235,8 +234,8 @@ const availableLanguageOptions = ref(
 watch(
 	() => authStore.settings,
 	() => {
-		// Only setting if we don't have values set yet to avoid overriding edited values
-		if (!objectIsEmpty(settings.value)) {
+		// Only set setting if we don't have edited values yet to avoid overriding
+		if (Object.keys(settings.value).length !== 0) {
 			return
 		}
 		settings.value = {...authStore.settings}
