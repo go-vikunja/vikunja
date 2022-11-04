@@ -22,7 +22,7 @@ steps:
 # Disabled until we figure out why it is so slow
 #  - name: restore-cache
 #    image: meltwater/drone-cache:dev
-#    pull: true
+#    pull: always
 #    environment:
 #      AWS_ACCESS_KEY_ID:
 #        from_secret: cache_aws_access_key_id
@@ -41,7 +41,7 @@ steps:
 
   - name: dependencies
     image: node:18-alpine
-    pull: true
+    pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
       CYPRESS_CACHE_FOLDER: .cache/cypress
@@ -53,7 +53,7 @@ steps:
 
   - name: lint
     image: node:18-alpine
-    pull: true
+    pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
@@ -64,7 +64,7 @@ steps:
 
   - name: build-prod
     image: node:18-alpine
-    pull: true
+    pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
@@ -75,7 +75,7 @@ steps:
 
   - name: test-unit
     image: node:18-alpine
-    pull: true
+    pull: always
     commands:
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run test:unit
@@ -85,7 +85,7 @@ steps:
   - name: typecheck
     failure: ignore
     image: node:18-alpine
-    pull: true
+    pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
@@ -96,7 +96,7 @@ steps:
 
   - name: test-frontend
     image: cypress/browsers:node16.14.0-chrome99-ff97
-    pull: true
+    pull: always
     environment:
       CYPRESS_API_URL: http://api:3456/api/v1
       CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB
@@ -116,7 +116,7 @@ steps:
 
 #  - name: rebuild-cache
 #    image: meltwater/drone-cache:dev
-#    pull: true
+#    pull: always
 #    environment:
 #      AWS_ACCESS_KEY_ID:
 #        from_secret: cache_aws_access_key_id
@@ -136,7 +136,7 @@ steps:
 
   - name: deploy-preview
     image: node:18-alpine
-    pull: true
+    pull: always
     environment:
       NETLIFY_AUTH_TOKEN:
         from_secret: netlify_auth_token
@@ -179,7 +179,7 @@ steps:
 
 #  - name: restore-cache
 #    image: meltwater/drone-cache:dev
-#    pull: true
+#    pull: always
 #    environment:
 #      AWS_ACCESS_KEY_ID:
 #        from_secret: cache_aws_access_key_id
@@ -197,8 +197,7 @@ steps:
 
   - name: build
     image: node:18-alpine
-    pull: true
-    group: build-static
+    pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
@@ -214,7 +213,7 @@ steps:
 
   - name: static
     image: kolaente/zip
-    pull: true
+    pull: always
     commands:
       - cd dist
       - zip -r ../vikunja-frontend-unstable.zip *
@@ -223,7 +222,7 @@ steps:
 
   - name: release
     image: plugins/s3
-    pull: true
+    pull: always
     settings:
       bucket: vikunja-releases
       access_key:
@@ -256,7 +255,7 @@ steps:
 
 #  - name: restore-cache
 #    image: meltwater/drone-cache:dev
-#    pull: true
+#    pull: always
 #    environment:
 #      AWS_ACCESS_KEY_ID:
 #        from_secret: cache_aws_access_key_id
@@ -274,8 +273,7 @@ steps:
 
   - name: build
     image: node:18-alpine
-    pull: true
-    group: build-static
+    pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
@@ -291,7 +289,7 @@ steps:
 
   - name: static
     image: kolaente/zip
-    pull: true
+    pull: always
     commands:
       - cd dist
       - zip -r ../vikunja-frontend-${DRONE_TAG##v}.zip *
@@ -300,7 +298,7 @@ steps:
 
   - name: release
     image: plugins/s3
-    pull: true
+    pull: always
     settings:
       bucket: vikunja-releases
       access_key:
@@ -361,7 +359,7 @@ trigger:
 steps:
   - name: docker-unstable
     image: plugins/docker:linux-arm
-    pull: true
+    pull: always
     settings:
       username:
         from_secret: docker_username
@@ -380,7 +378,7 @@ steps:
 
   - name: docker-version
     image: plugins/docker:linux-arm
-    pull: true
+    pull: always
     settings:
       username:
         from_secret: docker_username
@@ -400,7 +398,7 @@ steps:
 
   - name: docker-unstable-arm64
     image: plugins/docker:linux-arm64
-    pull: true
+    pull: always
     settings:
       username:
         from_secret: docker_username
@@ -419,7 +417,7 @@ steps:
 
   - name: docker-version-arm64
     image: plugins/docker:linux-arm64
-    pull: true
+    pull: always
     settings:
       username:
         from_secret: docker_username
@@ -461,7 +459,7 @@ trigger:
 steps:
   - name: docker-unstable
     image: plugins/docker:linux-amd64
-    pull: true
+    pull: always
     settings:
       username:
         from_secret: docker_username
@@ -478,7 +476,7 @@ steps:
 
   - name: docker-version
     image: plugins/docker:linux-amd64
-    pull: true
+    pull: always
     settings:
       username:
         from_secret: docker_username
