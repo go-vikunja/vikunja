@@ -284,7 +284,7 @@ function focusNewTaskInput() {
 function updateTaskList(task: ITask) {
 	if (isAlphabeticalSorting.value ) {
 		// reload tasks with current filter and sorting
-		loadTasks(1, undefined, undefined, true)
+		loadTasks()
 	}
 	else {
 		tasks.value = [
