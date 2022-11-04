@@ -99,6 +99,9 @@ watchEffect(() => {
 </script>
 
 <style lang="scss" scoped>
+$modal-margin: 4rem;
+$modal-width: 1024px;
+
 .modal-mask {
 	position: fixed;
 	z-index: 4000;
@@ -147,16 +150,16 @@ watchEffect(() => {
 // scrolling-content
 // used e.g. for <TaskDetailViewModal>
 .scrolling .modal-content {
-	max-width: 1024px;
+	max-width: $modal-width;
 	width: 100%;
-	margin: 4rem auto;
+	margin: $modal-margin auto;
 
 	max-height: none; // reset bulma
 	overflow: visible; // reset bulma
 
 	@media screen and (min-width: $tablet) {
 		max-height: none; // reset bulma
-		margin: 4rem auto; // reset bulma
+		margin: $modal-margin auto; // reset bulma
 		width: 100%;
 	}
 
@@ -189,14 +192,23 @@ watchEffect(() => {
 }
 
 .close {
+	$close-button-min-space: 84px;
+	$close-button-padding: 26px;
 	position: fixed;
 	top: 5px;
-	right: 26px;
-	color: var(--white);
+	right: $close-button-padding;
+	color: var(--grey-900);
 	font-size: 2rem;
-
-	@media screen and (max-width: $desktop) {
-		color: var(--grey-900);
+	
+	@media screen and (min-width: $desktop) and (max-width: calc(#{$desktop	} + #{$close-button-min-space})) {
+		top: calc(5px + $modal-margin);
+    right: 50%;
+		// we align the close button to the modal until there is enough space outside for it
+		transform: translateX(calc((#{$modal-width} / 2) - #{$close-button-padding}));
+	}
+	// we can only use light color when there is enough space for the close button next to the modal
+	@media screen and (min-width: calc(#{$desktop	} + #{$close-button-min-space})) {
+		color: var(--white);
 	}
 }
 </style>

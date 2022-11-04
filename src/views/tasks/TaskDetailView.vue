@@ -1,5 +1,12 @@
 <template>
-	<div :class="{ 'is-loading': taskService.loading, 'visible': visible}" class="loader-container task-view-container">
+	<div
+		class="loader-container task-view-container"
+		:class="{
+			'is-loading': taskService.loading,
+			'visible': visible,
+			'is-modal': isModal,
+		}"
+	>
 		<div class="task-view">
 			<Heading v-model:task="task" :can-write="canWrite" ref="heading"/>
 			<h6 class="subtitle" v-if="parent && parent.namespace && parent.list">
@@ -267,15 +274,7 @@
 					<!-- Comments -->
 					<comments :can-write="canWrite" :task-id="taskId"/>
 				</div>
-				<div class="column is-one-third action-buttons d-print-none" v-if="canWrite || shouldShowClosePopup">
-					<BaseButton
-						v-if="shouldShowClosePopup"
-						@click="$router.back()"
-						class="is-fullwidth is-block has-text-centered mb-4 has-text-primary"
-					>
-						<icon icon="arrow-left"/>
-						{{ $t('task.detail.closePopup') }}
-					</BaseButton>
+				<div class="column is-one-third action-buttons d-print-none" v-if="canWrite || isModal">
 					<template v-if="canWrite">
 						<x-button
 							:class="{'is-success': !task.done}"
@@ -419,7 +418,7 @@
 				</div>
 			</div>
 			<!-- Created / Updated [by] -->
-			<created-updated :task="task" v-if="!canWrite && !shouldShowClosePopup"/>
+			<created-updated :task="task" v-if="!canWrite && !isModal"/>
 		</div>
 
 		<modal
@@ -439,7 +438,7 @@
 
 <script lang="ts" setup>
 import {ref, reactive, toRef, shallowReactive, computed, watch, watchEffect, nextTick, type PropType} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
+import {useRouter, type RouteLocation} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {unrefElement} from '@vueuse/core'
 import cloneDeep from 'lodash.clonedeep'
@@ -494,11 +493,13 @@ const props = defineProps({
 		type: Number as PropType<ITask['id']>,
 		required: true,
 	},
+	backdropView: {
+		type: String as PropType<RouteLocation['fullPath']>,
+	},
 })
 
 defineEmits(['close'])
 
-const route = useRoute()
 const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
 
@@ -567,8 +568,7 @@ const color = computed(() => {
 
 const hasAttachments = computed(() => attachmentStore.attachments.length > 0)
 
-// HACK:
-const shouldShowClosePopup = computed(() => (route.name as string).includes('kanban'))
+const isModal = computed(() => Boolean(props.backdropView))
 
 function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
 	return uploadFile(taskId.value, file, onSuccess)
@@ -799,6 +799,7 @@ $flash-background-duration: 750ms;
   @media screen and (max-width: $desktop) {
     padding-bottom: 0;
   }
+}
 
   .subtitle {
     color: var(--grey-500);
@@ -965,6 +966,12 @@ $flash-background-duration: 750ms;
   }
 
   .action-buttons {
+    @media screen and (min-width: $tablet) {
+      position: sticky;
+      top: $navbar-height + 1.5rem;
+      align-self: flex-start;
+    }
+		
     .button {
       width: 100%;
       margin-bottom: .5rem;
@@ -976,6 +983,18 @@ $flash-background-duration: 750ms;
     }
   }
 
+	.is-modal .action-buttons {
+		// we need same top margin for the modal close button 
+		@media screen and (min-width: $tablet) {
+			top: 6.5rem;
+		}
+		// this is the moment when the fixed close button is outside the modal
+		// => we can fill up the space again
+		@media screen and (min-width: calc(#{$desktop} + 84px)) {
+			top: 0;
+		}
+	}
+
   .created {
     font-size: .75rem;
     color: var(--grey-500);
@@ -985,7 +1004,7 @@ $flash-background-duration: 750ms;
   .checklist-summary {
     padding-left: .25rem;
   }
-}
+
 
 .task-view-container {
   padding-bottom: 1rem;

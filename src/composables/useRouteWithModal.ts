@@ -19,7 +19,7 @@ export function useRouteWithModal() {
 			return
 		}
 
-		// logic from vue-router
+		// this is adapted from vue-router
 		// https://github.com/vuejs/vue-router-next/blob/798cab0d1e21f9b4d45a2bd12b840d2c7415f38a/src/RouterView.ts#L125
 		const routePropsOption = route.matched[0]?.props.default
 		const routeProps = routePropsOption
@@ -28,7 +28,9 @@ export function useRouteWithModal() {
 				: typeof routePropsOption === 'function'
 					? routePropsOption(route)
 					: routePropsOption
-			: null
+			: {}
+
+		routeProps.backdropView = backdropView.value
 
 		const component = route.matched[0]?.components?.default
 
