@@ -1,5 +1,6 @@
 ---
 kind: pipeline
+type: docker
 name: build
 
 trigger:
@@ -160,6 +161,7 @@ steps:
 
 ---
 kind: pipeline
+type: docker
 name: release-latest
 
 depends_on:
@@ -238,6 +240,7 @@ steps:
 
 ---
 kind: pipeline
+type: docker
 name: release-version
 
 depends_on:
@@ -314,6 +317,7 @@ steps:
 
 ---
 kind: pipeline
+type: docker
 name: trigger-desktop-update
 
 trigger:
