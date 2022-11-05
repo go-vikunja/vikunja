@@ -1,9 +1,9 @@
 {
   "home": {
-    "welcomeNight": "Good Night {username}!",
-    "welcomeMorning": "Good Morning {username}!",
-    "welcomeDay": "Hi {username}!",
-    "welcomeEvening": "Good Evening {username}!",
+    "welcomeNight": "Boa noite, {username}!",
+    "welcomeMorning": "Bom dia, {username}!",
+    "welcomeDay": "Olá, {username}!",
+    "welcomeEvening": "Boa noite, {username}!",
     "lastViewed": "Visto por último",
     "list": {
       "newText": "Você pode criar uma nova lista para suas novas tarefas:",
@@ -383,77 +383,77 @@
     }
   },
   "filters": {
-    "title": "Filters",
-    "clear": "Clear Filters",
+    "title": "Filtros",
+    "clear": "Limpar Filtros",
     "attributes": {
-      "title": "Title",
-      "titlePlaceholder": "The saved filter title goes here…",
-      "description": "Description",
-      "descriptionPlaceholder": "The description goes here…",
-      "includeNulls": "Include Tasks which don't have a value set",
-      "requireAll": "Require all filters to be true for a task to show up",
-      "showDoneTasks": "Show Done Tasks",
-      "sortAlphabetically": "Sort Alphabetically",
-      "enablePriority": "Enable Filter By Priority",
-      "enablePercentDone": "Enable Filter By Progress",
+      "title": "Título",
+      "titlePlaceholder": "O título do filtro salvo fica aqui…",
+      "description": "Descrição",
+      "descriptionPlaceholder": "A descrição fica aqui…",
+      "includeNulls": "Incluir tarefas que não possuem um conjunto de valores",
+      "requireAll": "Exigir que todos os filtros sejam verdadeiros para uma tarefa ser exibida",
+      "showDoneTasks": "Mostrar tarefas concluídas",
+      "sortAlphabetically": "Ordernar alfabeticamente",
+      "enablePriority": "Ativar Filtro por Prioridade",
+      "enablePercentDone": "Ativar Filtro por Progresso",
       "dueDateRange": "Due Date Range",
-      "startDateRange": "Start Date Range",
+      "startDateRange": "Data de início",
       "endDateRange": "End Date Range",
       "reminderRange": "Reminder Date Range"
     },
     "create": {
-      "title": "New Saved Filter",
+      "title": "Novo filtro salvo",
       "description": "A saved filter is a virtual list which is computed from a set of filters each time it is accessed. Once created, it will appear in a special namespace.",
       "action": "Create new saved filter"
     },
     "delete": {
       "header": "Delete this saved filter",
       "text": "Are you sure you want to delete this saved filter?",
-      "success": "The filter was deleted successfully."
+      "success": "O filtro foi excluído com sucesso."
     },
     "edit": {
       "title": "Edit This Saved Filter",
-      "success": "The filter was saved successfully."
+      "success": "O filtro foi salvo com sucesso."
     }
   },
   "migrate": {
     "title": "Migrate from other services to Vikunja",
     "titleService": "Import your data from {name} into Vikunja",
-    "import": "Import your data into Vikunja",
+    "import": "Importe seus dados para o Vikunja",
     "description": "Click on the logo of one of the third-party services below to get started.",
     "descriptionDo": "Vikunja will import all lists, tasks, notes, reminders and files you have access to.",
     "authorize": "To authorize Vikunja to access your {name} Account, click the button below.",
     "getStarted": "Get Started",
-    "inProgress": "Importing in progress…",
+    "inProgress": "Importação em andamento…",
     "alreadyMigrated1": "It looks like you've already imported your stuff from {name} at {date}.",
     "alreadyMigrated2": "Importing again is possible, but might create duplicates. Are you sure?",
-    "confirm": "I am sure, please start migrating now!",
+    "confirm": "Tenho certeza, comece a migrar agora, por favor!",
     "importUpload": "To import data from {name} into Vikunja, click the button below to select a file.",
-    "upload": "Upload file"
+    "upload": "Enviar arquivo"
   },
   "label": {
-    "title": "Labels",
-    "manage": "Manage labels",
+    "title": "Etiquetas",
+    "manage": "Editar etiquetas",
     "description": "Click on a label to edit it. You can edit all labels you created, you can use all labels which are associated with a task to whose list you have access.",
-    "newCTA": "You currently do not have any labels.",
-    "search": "Type to search for a label…",
+    "newCTA": "Você não tem nenhuma etiqueta atualmente.",
+    "search": "Digite para procurar por uma etiqueta…",
     "create": {
-      "header": "New label",
-      "title": "Create a new label",
-      "titleRequired": "Please specify a title.",
-      "success": "The label was successfully created."
+      "header": "Nova etiqueta",
+      "title": "Criar uma nova etiqueta",
+      "titleRequired": "Por favor, especifique um título.",
+      "success": "A etiqueta foi criada com sucesso."
     },
     "edit": {
-      "header": "Edit Label",
+      "header": "Editar etiqueta",
       "forbidden": "You are not allowed to edit this label because you dont own it.",
-      "success": "The label was successfully updated."
+      "success": "A etiqueta foi atualizada com sucesso."
     },
-    "deleteSuccess": "The label was successfully deleted.",
+    "deleteSuccess": "A etiqueta foi excluída com sucesso.",
     "attributes": {
-      "title": "Title",
-      "titlePlaceholder": "The label title goes here…",
-      "description": "Description",
-      "descriptionPlaceholder": "Label description",
+      "title": "Título",
+      "titlePlaceholder": "O título da etiqueta fica aqui…",
+      "description": "Descrição",
+      "descriptionPlaceholder": "Descrição da etiqueta",
       "color": "Cor"
     }
   },
@@ -524,17 +524,17 @@
       "headingBigger": "Heading Bigger",
       "bold": "Negrito",
       "italic": "Itálico",
-      "strikethrough": "Strikethrough",
-      "code": "Code",
-      "quote": "Quote",
-      "unorderedList": "Unordered List",
-      "orderedList": "Ordered List",
+      "strikethrough": "Riscado",
+      "code": "Código",
+      "quote": "Citação",
+      "unorderedList": "Lista não ordenada",
+      "orderedList": "Lista ordenada",
       "cleanBlock": "Clean Block",
       "link": "Link",
-      "image": "Image",
-      "table": "Table",
-      "horizontalRule": "Horizontal Rule",
-      "sideBySide": "Side By Side",
+      "image": "Imagem",
+      "table": "Tabela",
+      "horizontalRule": "Linha horizontal",
+      "sideBySide": "Lado a Lado",
       "guide": "Guide"
     },
     "multiselect": {
@@ -711,12 +711,12 @@
       "loading": "Loading comments…",
       "edited": "edited {date}",
       "creating": "Creating comment…",
-      "placeholder": "Add your comment…",
-      "comment": "Comment",
-      "delete": "Delete this comment",
-      "deleteText1": "Are you sure you want to delete this comment?",
-      "deleteSuccess": "The comment was deleted successfully.",
-      "addedSuccess": "The comment was added successfully."
+      "placeholder": "Adicione seu comentário…",
+      "comment": "Comentário",
+      "delete": "Apagar este comentário",
+      "deleteText1": "Tem certeza que deseja apagar este comentário?",
+      "deleteSuccess": "O comentário foi apagado com sucesso.",
+      "addedSuccess": "O comentário foi adicionado com sucesso."
     },
     "deferDueDate": {
       "title": "Defer due date",
