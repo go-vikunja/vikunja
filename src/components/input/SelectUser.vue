@@ -1,0 +1,63 @@
+<template>
+	<multiselect
+		v-model="selectedUsers"
+		:search-results="foundUsers"
+		:loading="userService.loading"
+		:multiple="true"
+		:placeholder="$t('team.edit.search')"
+		label="username"
+		@search="findUsers"
+	/>
+</template>
+
+<script setup lang="ts">
+import {computed, ref, shallowReactive, watchEffect, type PropType} from 'vue'
+
+import Multiselect from '@/components/input/multiselect.vue'
+
+import type {IUser} from '@/modelTypes/IUser'
+
+import UserService from '@/services/user'
+import {includesById} from '@/helpers/utils'
+
+const props = defineProps({
+	modelValue: {
+		type: Array as PropType<IUser[]>,
+		default: () => [],
+	},
+})
+const emit = defineEmits<{
+	(e: 'update:modelValue', value: IUser[]): void
+}>()
+
+const users = ref<IUser[]>([])
+
+watchEffect(() => {
+	users.value = props.modelValue
+})
+
+const selectedUsers = computed({
+	get() {
+		return users.value
+	},
+	set: (value) => {
+		users.value = value
+		emit('update:modelValue', value)
+	},
+})
+
+const userService = shallowReactive(new UserService())
+const foundUsers = ref<IUser[]>([])
+
+async function findUsers(query: string) {
+	if (query === '') {
+		foundUsers.value = []
+		return
+	}
+
+	const response = await userService.getAll({}, {s: query}) as IUser[]
+
+	// Filter selected items from the results
+	foundUsers.value = response.filter(({id}) => !includesById(users.value, id))
+}
+</script>

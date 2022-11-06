@@ -135,16 +135,10 @@
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.assignees') }}</label>
 			<div class="control">
-				<multiselect
-					:loading="services.users.loading"
-					:placeholder="$t('team.edit.search')"
-					@search="(query: string) => find('users', query)"
-					:search-results="foundEntities.users"
-					@select="() => add('users', 'assignees')"
-					label="username"
-					:multiple="true"
-					@remove="() => remove('users', 'assignees')"
+				<SelectUser
 					v-model="entities.users"
+					@select="changeMultiselectFilter('users', 'assignees')"
+					@remove="changeMultiselectFilter('users', 'assignees')"
 				/>
 			</div>
 		</div>
@@ -152,7 +146,10 @@
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.labels') }}</label>
 			<div class="control labels-list">
-				<edit-labels v-model="entities.labels" @update:model-value="changeLabelFilter"/>
+				<edit-labels
+					v-model="entities.labels"
+					@update:model-value="changeLabelFilter"
+				/>
 			</div>
 		</div>
 
@@ -161,32 +158,20 @@
 			<div class="field">
 				<label class="label">{{ $t('list.lists') }}</label>
 				<div class="control">
-					<multiselect
-						:loading="services.lists.loading"
-						:placeholder="$t('list.search')"
-						@search="(query: string) => find('lists', query)"
-						:search-results="foundEntities.lists"
-						@select="() => add('lists', 'list_id')"
-						label="title"
-						@remove="() => remove('lists', 'list_id')"
-						:multiple="true"
+					<SelectList
 						v-model="entities.lists"
+						@select="changeMultiselectFilter('lists', 'list_id')"
+						@remove="changeMultiselectFilter('lists', 'list_id')"
 					/>
 				</div>
 			</div>
 			<div class="field">
 				<label class="label">{{ $t('namespace.namespaces') }}</label>
 				<div class="control">
-					<multiselect
-						:loading="services.namespace.loading"
-						:placeholder="$t('namespace.search')"
-						@search="(query: string) => find('namespace', query)"
-						:search-results="foundEntities.namespace"
-						@select="() => add('namespace', 'namespace')"
-						label="title"
-						@remove="() => remove('namespace', 'namespace')"
-						:multiple="true"
+					<SelectNamespace
 						v-model="entities.namespace"
+						@select="changeMultiselectFilter('namespace', 'namespace')"
+						@remove="changeMultiselectFilter('namespace', 'namespace')"
 					/>
 				</div>
 			</div>
@@ -214,10 +199,11 @@ import PrioritySelect from '@/components/tasks/partials/prioritySelect.vue'
 import PercentDoneSelect from '@/components/tasks/partials/percentDoneSelect.vue'
 import EditLabels from '@/components/tasks/partials/editLabels.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
-import Multiselect from '@/components/input/multiselect.vue'
+import SelectUser from '@/components/input/SelectUser.vue'
+import SelectList from '@/components/input/SelectList.vue'
+import SelectNamespace from '@/components/input/SelectNamespace.vue'
 
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
-import {includesById} from '@/helpers/utils'
 import {dateIsValid, formatISO} from '@/helpers/time/formatDate'
 import {objectToSnakeCase} from '@/helpers/case'
 
@@ -294,12 +280,6 @@ type EntityType = 'users' | 'labels' | 'lists' | 'namespace'
 const entities: Entities = reactive({
 	users: [],
 	labels: [],
-	lists: [],
-	namespace: [],
-})
-
-const foundEntities: Omit<Entities, 'labels'> = reactive({
-	users: [],
 	lists: [],
 	namespace: [],
 })
@@ -579,31 +559,9 @@ function setPercentDoneFilter() {
 	setSingleValueFilter('percent_done', 'percentDone', 'usePercentDone')
 }
 
-async function find(kind: Omit<EntityType, 'labels'>, query: string) {
-	if (query === '') {
-		foundEntities[kind] = []
-		return
-	}
+async function changeMultiselectFilter(kind: EntityType, filterName) {
+	await nextTick()
 
-	const response = await services[kind].getAll({}, {s: query})
-
-	// Filter users from the results who are already assigned
-	foundEntities[kind] = response.filter(({id}) => !includesById(entities[kind], id))
-}
-
-function add(kind, filterName) {
-	nextTick(() => {
-		changeMultiselectFilter(kind, filterName)
-	})
-}
-
-function remove(kind, filterName) {
-	nextTick(() => {
-		changeMultiselectFilter(kind, filterName)
-	})
-}
-
-function changeMultiselectFilter(kind: EntityType, filterName) {
 	if (entities[kind].length === 0) {
 		removePropertyFromFilter(filterName)
 		change()
