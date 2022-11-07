@@ -2,7 +2,7 @@ lockfileVersion: 5.4
 
 specifiers:
   '@4tw/cypress-drag-drop': 2.2.1
-  '@cypress/vite-dev-server': 3.4.0
+  '@cypress/vite-dev-server': 4.0.0
   '@cypress/vue': 4.2.2
   '@faker-js/faker': 7.6.0
   '@fortawesome/fontawesome-svg-core': 6.2.0
@@ -139,7 +139,7 @@ dependencies:
 
 devDependencies:
   '@4tw/cypress-drag-drop': 2.2.1_cypress@10.11.0
-  '@cypress/vite-dev-server': 3.4.0
+  '@cypress/vite-dev-server': 4.0.0
   '@cypress/vue': 4.2.2_cypress@10.11.0+vue@3.2.41
   '@faker-js/faker': 7.6.0
   '@rushstack/eslint-patch': 1.2.0
@@ -1581,14 +1581,12 @@ packages:
       uuid: 8.3.2
     dev: true
 
-  /@cypress/vite-dev-server/3.4.0:
-    resolution: {integrity: sha512-mrqJlzQUSUCNHVshApTOCUT83W9M+B0ivr1JY1UkPlWoeQD6ZFFgvdg6Ov8G/gpWhV0oYDe2QNOwLvAd9szgOA==}
+  /@cypress/vite-dev-server/4.0.0:
+    resolution: {integrity: sha512-fMbaHgr87vKJq/eR9DyE15p9bCDCXR8ySrZJ/MsDxSuJrQotxNMBiSEEOS46jcGqBUQzwjxTzQDI8M1YssBfAA==}
     dependencies:
       debug: 4.3.3
       find-up: 6.3.0
-      local-pkg: 0.4.1
       node-html-parser: 5.3.3
-      pathe: 0.2.0
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -8810,11 +8808,6 @@ packages:
       wrap-ansi: 7.0.0
     dev: true
 
-  /local-pkg/0.4.1:
-    resolution: {integrity: sha512-lL87ytIGP2FU5PWwNDo0w3WhIo2gopIAxPg9RxDYF7m4rr5ahuZxP22xnJHIvaLTe4Z9P6uKKY2UHiwyB4pcrw==}
-    engines: {node: '>=14'}
-    dev: true
-
   /local-pkg/0.4.2:
     resolution: {integrity: sha512-mlERgSPrbxU3BP4qBqAvvwlgW4MTg78iwJdGGnv7kibKjWcJksrG3t6LB5lXI93wXRDvG4NpUgJFmTG4T6rdrg==}
     engines: {node: '>=14'}
@@ -10362,10 +10355,6 @@ packages:
   /path-type/5.0.0:
     resolution: {integrity: sha512-5HviZNaZcfqP95rwpv+1HDgUamezbqdSYTyzjTvwtJSnIH+3vnbmWsItli8OFEndS984VT55M3jduxZbX351gg==}
     engines: {node: '>=12'}
-    dev: true
-
-  /pathe/0.2.0:
-    resolution: {integrity: sha512-sTitTPYnn23esFR3RlqYBWn4c45WGeLcsKzQiUpXJAyfcWkolvlYpV8FLo7JishK946oQwMFUCHXQ9AjGPKExw==}
     dev: true
 
   /pathval/1.1.1:
