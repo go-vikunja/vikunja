@@ -75,7 +75,7 @@ specifiers:
   sortablejs: 1.15.0
   typescript: 4.8.4
   ufo: 0.8.6
-  vite: 3.2.2
+  vite: 3.2.3
   vite-plugin-pwa: 0.13.2
   vite-svg-loader: 3.6.0
   vitest: 0.24.5
@@ -152,8 +152,8 @@ devDependencies:
   '@types/postcss-preset-env': 7.7.0
   '@typescript-eslint/eslint-plugin': 5.42.0_ofgjrzjuekeo7s3hdyz2yuzw34
   '@typescript-eslint/parser': 5.42.0_rmayb2veg2btbq6mbmnyivgasy
-  '@vitejs/plugin-legacy': 2.3.0_terser@5.10.0+vite@3.2.2
-  '@vitejs/plugin-vue': 3.2.0_vite@3.2.2+vue@3.2.41
+  '@vitejs/plugin-legacy': 2.3.0_terser@5.10.0+vite@3.2.3
+  '@vitejs/plugin-vue': 3.2.0_vite@3.2.3+vue@3.2.41
   '@vue/eslint-config-typescript': 11.0.2_ykuth4hqtpqqhzrv7pgjq6rjby
   '@vue/test-utils': 2.2.1_vue@3.2.41
   '@vue/tsconfig': 0.1.3_@types+node@18.11.9
@@ -174,8 +174,8 @@ devDependencies:
   rollup-plugin-visualizer: 5.8.3_rollup@3.2.5
   sass: 1.56.0
   typescript: 4.8.4
-  vite: 3.2.2_sass@1.56.0+terser@5.10.0
-  vite-plugin-pwa: 0.13.2_3bowiggcnrfgb4q2iavuqqt6vu
+  vite: 3.2.3_r6c6sealr4d6e6goouigf2vxtu
+  vite-plugin-pwa: 0.13.2_jklrv2undatkozcsn24zow6xuu
   vite-svg-loader: 3.6.0
   vitest: 0.24.5_55dneq6lizwzyprtj5vtp4rzay
   vue-tsc: 1.0.9_typescript@4.8.4
@@ -3340,7 +3340,7 @@ packages:
       - supports-color
     dev: true
 
-  /@vitejs/plugin-legacy/2.3.0_terser@5.10.0+vite@3.2.2:
+  /@vitejs/plugin-legacy/2.3.0_terser@5.10.0+vite@3.2.3:
     resolution: {integrity: sha512-Bh62i0gzQvvT8AeAAb78nOnqSYXypkRmQmOTImdPZ39meHR9e2une3AIFmVo4s1SDmcmJ6qj18Sa/lRc/14KaA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
@@ -3353,17 +3353,17 @@ packages:
       regenerator-runtime: 0.13.10
       systemjs: 6.13.0
       terser: 5.10.0_acorn@8.8.0
-      vite: 3.2.2_sass@1.56.0+terser@5.10.0
+      vite: 3.2.3_r6c6sealr4d6e6goouigf2vxtu
     dev: true
 
-  /@vitejs/plugin-vue/3.2.0_vite@3.2.2+vue@3.2.41:
+  /@vitejs/plugin-vue/3.2.0_vite@3.2.3+vue@3.2.41:
     resolution: {integrity: sha512-E0tnaL4fr+qkdCNxJ+Xd0yM31UwMkQje76fsDVBBUCoGOUPexu2VDUYHL8P4CwV+zMvWw6nlRw19OnRKmYAJpw==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^3.0.0
       vue: ^3.2.25
     dependencies:
-      vite: 3.2.2_sass@1.56.0+terser@5.10.0
+      vite: 3.2.3_r6c6sealr4d6e6goouigf2vxtu
       vue: 3.2.41
     dev: true
 
@@ -12919,7 +12919,7 @@ packages:
       extsprintf: 1.3.0
     dev: true
 
-  /vite-plugin-pwa/0.13.2_3bowiggcnrfgb4q2iavuqqt6vu:
+  /vite-plugin-pwa/0.13.2_jklrv2undatkozcsn24zow6xuu:
     resolution: {integrity: sha512-RwWJBaeMATrdicNFCXWb3aUELnmTk4Um72hE97nz9HKYG165kQGUE/TSrXOLExiPWJ23doV1Uw4IcHnOix17aA==}
     peerDependencies:
       vite: ^3.1.0
@@ -12930,7 +12930,7 @@ packages:
       fast-glob: 3.2.11
       pretty-bytes: 6.0.0
       rollup: 2.79.1
-      vite: 3.2.2_sass@1.56.0+terser@5.10.0
+      vite: 3.2.3_r6c6sealr4d6e6goouigf2vxtu
       workbox-build: 6.5.4_acorn@8.8.0
       workbox-window: 6.5.4
     transitivePeerDependencies:
@@ -12944,17 +12944,20 @@ packages:
       svgo: 2.8.0
     dev: true
 
-  /vite/3.2.2_sass@1.56.0+terser@5.10.0:
-    resolution: {integrity: sha512-pLrhatFFOWO9kS19bQ658CnRYzv0WLbsPih6R+iFeEEhDOuYgYCX2rztUViMz/uy/V8cLCJvLFeiOK7RJEzHcw==}
+  /vite/3.2.3_r6c6sealr4d6e6goouigf2vxtu:
+    resolution: {integrity: sha512-h8jl1TZ76eGs3o2dIBSsvXDLb1m/Ec1iej8ZMdz+PsaFUsftZeWe2CZOI3qogEsMNaywc17gu0q6cQDzh/weCQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
+      '@types/node': '>= 14'
       less: '*'
       sass: '*'
       stylus: '*'
       sugarss: '*'
       terser: ^5.4.0
     peerDependenciesMeta:
+      '@types/node':
+        optional: true
       less:
         optional: true
       sass:
@@ -12966,6 +12969,7 @@ packages:
       terser:
         optional: true
     dependencies:
+      '@types/node': 18.11.9
       esbuild: 0.15.13
       postcss: 8.4.18
       resolve: 1.22.1
@@ -13009,7 +13013,7 @@ packages:
       tinybench: 2.3.1
       tinypool: 0.3.0
       tinyspy: 1.0.2
-      vite: 3.2.2_sass@1.56.0+terser@5.10.0
+      vite: 3.2.3_r6c6sealr4d6e6goouigf2vxtu
     transitivePeerDependencies:
       - less
       - sass
