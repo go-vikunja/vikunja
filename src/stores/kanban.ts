@@ -69,7 +69,7 @@ export const useKanbanStore = defineStore('kanban', {
 
 	getters: {
 		getBucketById(state) {
-			return (bucketId: IBucket['id']) => findById(state.buckets, bucketId)
+			return (bucketId: IBucket['id']): IBucket | undefined => findById(state.buckets, bucketId)
 		},
 
 		getTaskById(state) {
@@ -265,11 +265,12 @@ export const useKanbanStore = defineStore('kanban', {
 			// Clear everything to prevent having old buckets in the list if loading the buckets from this list takes a few moments
 			this.setBuckets([])
 
-			params.per_page = TASKS_PER_BUCKET
-
 			const bucketService = new BucketService()
 			try {
-				const buckets = await bucketService.getAll({listId}, params)
+				const buckets = await bucketService.getAll({listId}, {
+					...params,
+					per_page: TASKS_PER_BUCKET,
+				})
 				this.setBuckets(buckets)
 				this.setListId(listId)
 				return buckets

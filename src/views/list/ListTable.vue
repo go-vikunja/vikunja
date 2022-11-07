@@ -184,7 +184,7 @@ import {toRef, computed, type Ref} from 'vue'
 
 import {useStorage} from '@vueuse/core'
 
-import ListWrapper from './ListWrapper.vue'
+import ListWrapper from '@/components/list/ListWrapper.vue'
 import Done from '@/components/misc/Done.vue'
 import User from '@/components/misc/user.vue'
 import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'

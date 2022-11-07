@@ -1,12 +1,13 @@
 <template>
-	<ListWrapper class="list-kanban" :list-id="listId" viewName="kanban">
+	<ListWrapper	
+		class="list-kanban"
+		:list-id="listId"
+		viewName="kanban"
+	>
 		<template #header>
-			<div class="filter-container" v-if="!isSavedFilter(listId)">
+			<div class="filter-container" v-if="!isSavedFilter(list)">
 				<div class="items">
-					<filter-popup
-						v-model="params"
-						@update:modelValue="loadBuckets"
-					/>
+					<filter-popup v-model="params" />
 				</div>
 			</div>
 		</template>
@@ -18,7 +19,7 @@
 				class="kanban kanban-bucket-container loader-container"
 			>
 			<draggable
-				v-bind="dragOptions"
+				v-bind="DRAG_OPTIONS"
 				:modelValue="buckets"
 				@update:modelValue="updateBuckets"
 				@end="updateBucketPosition"
@@ -26,7 +27,7 @@
 				group="buckets"
 				:disabled="!canWrite || newTaskInputFocused"
 				tag="ul"
-				:item-key="({id}) => `bucket${id}`"
+				:item-key="({id}: IBucket) => `bucket${id}`"
 				:component-data="bucketDraggableComponentData"
 			>
 				<template #item="{element: bucket, index: bucketIndex }">
@@ -43,9 +44,9 @@
 								<icon icon="check-double"/>
 							</span>
 							<h2
-								@keydown.enter.prevent.stop="$event.target.blur()"
-								@keydown.esc.prevent.stop="$event.target.blur()"
-								@blur="saveBucketTitle(bucket.id, $event.target.textContent)"
+								@keydown.enter.prevent.stop="($event.target as HTMLElement).blur()"
+								@keydown.esc.prevent.stop="($event.target as HTMLElement).blur()"
+								@blur="saveBucketTitle(bucket.id, ($event.target as HTMLElement).textContent as string)"
 								@click="focusBucketTitle"
 								class="title input"
 								:contenteditable="(bucketTitleEditable && canWrite && !collapsedBuckets[bucket.id]) ? true : undefined"
@@ -71,7 +72,7 @@
 												@keyup.esc="() => showSetLimitInput = false"
 												@keyup.enter="() => showSetLimitInput = false"
 												:value="bucket.limit"
-												@input="(event) => setBucketLimit(bucket.id, parseInt(event.target.value))"
+												@input="(event) => setBucketLimit(bucket.id, parseInt((event.target as HTMLInputElement).value))"
 												class="input"
 												type="number"
 												min="0"
@@ -122,7 +123,7 @@
 						</div>
 
 						<draggable
-							v-bind="dragOptions"
+							v-bind="DRAG_OPTIONS"
 							:modelValue="bucket.tasks"
 							@update:modelValue="(tasks) => updateTasks(bucket.id, tasks)"
 							@start="() => dragstart(bucket)"
@@ -131,7 +132,7 @@
 							:disabled="!canWrite"
 							:data-bucket-index="bucketIndex"
 							tag="ul"
-							:item-key="(task) => `bucket${bucket.id}-task${task.id}`"
+							:item-key="(task: ITask) => `bucket${bucket.id}-task${task.id}`"
 							:component-data="getTaskDraggableTaskComponentData(bucket)"
 						>
 							<template #footer>
@@ -184,7 +185,7 @@
 					:disabled="loading || undefined"
 					@blur="() => showNewBucketInput = false"
 					@keyup.enter="createNewBucket"
-					@keyup.esc="$event.target.blur()"
+					@keyup.esc="($event.target as HTMLInputElement).blur()"
 					class="input"
 					:placeholder="$t('list.kanban.addBucketPlaceholder')"
 					type="text"
@@ -224,26 +225,34 @@
 	</ListWrapper>
 </template>
 
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script setup lang="ts">
+import {computed, nextTick, ref, watch, type PropType} from 'vue'
+import {useI18n} from 'vue-i18n'
 import draggable from 'zhyswan-vuedraggable'
 import cloneDeep from 'lodash.clonedeep'
-import {mapState} from 'pinia'
 
-import BucketModel from '../../models/bucket'
 import {RIGHTS as Rights} from '@/constants/rights'
-import ListWrapper from './ListWrapper.vue'
-import FilterPopup from '@/components/list/partials/filter-popup.vue'
-import Dropdown from '@/components/misc/dropdown.vue'
-import {getCollapsedBucketState, saveCollapsedBucketState} from '@/helpers/saveCollapsedBucketState'
-import {calculateItemPosition} from '../../helpers/calculateItemPosition'
-import KanbanCard from '@/components/tasks/partials/kanban-card.vue'
-import DropdownItem from '@/components/misc/dropdown-item.vue'
-import {isSavedFilter} from '@/services/savedFilter'
+import BucketModel from '@/models/bucket'
+
+import type {IBucket} from '@/modelTypes/IBucket'
+import type {IList} from '@/modelTypes/IList'
+import type {ITask} from '@/modelTypes/ITask'
 
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
+
+import ListWrapper from '@/components/list/ListWrapper.vue'
+import FilterPopup from '@/components/list/partials/filter-popup.vue'
+import KanbanCard from '@/components/tasks/partials/kanban-card.vue'
+import Dropdown from '@/components/misc/dropdown.vue'
+import DropdownItem from '@/components/misc/dropdown-item.vue'
+
+import {getCollapsedBucketState, saveCollapsedBucketState, type CollapsedBuckets} from '@/helpers/saveCollapsedBucketState'
+import {calculateItemPosition} from '@/helpers/calculateItemPosition'
+
+import {isSavedFilter} from '@/services/savedFilter'
+import {success} from '@/message'
 
 const DRAG_OPTIONS = {
 	// sortable options
@@ -252,382 +261,346 @@ const DRAG_OPTIONS = {
 	dragClass: 'task-dragging',
 	delayOnTouchOnly: true,
 	delay: 150,
-}
+} as const
 
 const MIN_SCROLL_HEIGHT_PERCENT = 0.25
 
-export default defineComponent({
-	name: 'Kanban',
-	components: {
-		DropdownItem,
-		ListWrapper,
-		KanbanCard,
-		Dropdown,
-		FilterPopup,
-		draggable,
-	},
-
-	props: {
-		listId: {
-			type: Number,
-			required: true,
-		},
-	},
-
-	data() {
-		return {
-			taskContainerRefs: {},
-
-			dragOptions: DRAG_OPTIONS,
-
-			drag: false,
-			dragBucket: false,
-			sourceBucket: 0,
-
-			showBucketDeleteModal: false,
-			bucketToDelete: 0,
-			bucketTitleEditable: false,
-
-			newTaskText: '',
-			showNewTaskInput: {},
-			newBucketTitle: '',
-			showNewBucketInput: false,
-			newTaskError: {},
-			showSetLimitInput: false,
-			collapsedBuckets: {},
-			newTaskInputFocused: false,
-
-			// We're using this to show the loading animation only at the task when updating it
-			taskUpdating: {},
-			oneTaskUpdating: false,
-
-			params: {
-				filter_by: [],
-				filter_value: [],
-				filter_comparator: [],
-				filter_concat: 'and',
-			},
-		}
-	},
-
-	watch: {
-		loadBucketParameter: {
-			handler: 'loadBuckets',
-			immediate: true,
-		},
-	},
-	computed: {
-		getTaskDraggableTaskComponentData() {
-			return (bucket) => ({
-				ref: (el) => this.setTaskContainerRef(bucket.id, el),
-				onScroll: (event) => this.handleTaskContainerScroll(bucket.id, bucket.listId, event.target),
-				type: 'transition-group',
-				name: !this.drag ? 'move-card' : null,
-				class: [
-					'tasks',
-					{'dragging-disabled': !this.canWrite},
-				],
-			})
-		},
-
-		loadBucketParameter() {
-			return {
-				listId: this.listId,
-				params: this.params,
-			}
-		},
-		bucketDraggableComponentData() {
-			return {
-				type: 'transition-group',
-				name: !this.dragBucket ? 'move-bucket' : null,
-				class: [
-					'kanban-bucket-container',
-					{'dragging-disabled': !this.canWrite},
-				],
-			}
-		},
-		...mapState(useBaseStore, {
-			canWrite: state => state.currentList.maxRight > Rights.READ,
-			list: state => state.currentList,
-		}),
-		...mapState(useKanbanStore, {
-			buckets: state => state.buckets,
-			loadedListId: state => state.listId,
-			loading: state => state.isLoading,
-		}),
-		...mapState(useTaskStore, {
-			taskLoading: state => state.isLoading,
-		}),
-	},
-
-	methods: {
-		isSavedFilter,
-
-		loadBuckets() {
-			const {listId, params} = this.loadBucketParameter
-
-			this.collapsedBuckets = getCollapsedBucketState(listId)
-
-			console.debug(`Loading buckets, loadedListId = ${this.loadedListId}, $attrs = ${this.$attrs} $route.params =`, this.$route.params)
-
-			useKanbanStore().loadBucketsForList({listId, params})
-		},
-
-		setTaskContainerRef(id, el) {
-			if (!el) return
-			this.taskContainerRefs[id] = el
-		},
-
-		handleTaskContainerScroll(id, listId, el) {
-			if (!el) {
-				return
-			}
-			const scrollTopMax = el.scrollHeight - el.clientHeight
-			const threshold = el.scrollTop + el.scrollTop * MIN_SCROLL_HEIGHT_PERCENT
-			if (scrollTopMax > threshold) {
-				return
-			}
-
-			useKanbanStore().loadNextTasksForBucket({
-				listId: listId,
-				params: this.params,
-				bucketId: id,
-			})
-		},
-
-		updateTasks(bucketId, tasks) {
-			const kanbanStore = useKanbanStore()
-			const newBucket = {
-				...kanbanStore.getBucketById(bucketId),
-				tasks,
-			}
-
-			kanbanStore.setBucketById(newBucket)
-		},
-
-		async updateTaskPosition(e) {
-			this.drag = false
-
-			// While we could just pass the bucket index in through the function call, this would not give us the 
-			// new bucket id when a task has been moved between buckets, only the new bucket. Using the data-bucket-id
-			// of the drop target works all the time.
-			const bucketIndex = parseInt(e.to.dataset.bucketIndex)
-
-			const newBucket = this.buckets[bucketIndex]
-
-			// HACK:
-			// this is a hacky workaround for a known problem of vue.draggable.next when using the footer slot
-			// the problem: https://github.com/SortableJS/vue.draggable.next/issues/108
-			// This hack doesn't remove the problem that the ghost item is still displayed below the footer
-			// It just makes releasing the item possible.
-
-			// The newIndex of the event doesn't count in the elements of the footer slot.
-			// This is why in case the length of the tasks is identical with the newIndex
-			// we have to remove 1 to get the correct index.
-			const newTaskIndex = newBucket.tasks.length === e.newIndex
-				? e.newIndex - 1
-				: e.newIndex
-
-			const task = newBucket.tasks[newTaskIndex]
-			const taskBefore = newBucket.tasks[newTaskIndex - 1] ?? null
-			const taskAfter = newBucket.tasks[newTaskIndex + 1] ?? null
-			this.taskUpdating[task.id] = true
-
-			const newTask = cloneDeep(task) // cloning the task to avoid pinia store manipulation
-			newTask.bucketId = newBucket.id
-			newTask.kanbanPosition = calculateItemPosition(
-				taskBefore !== null ? taskBefore.kanbanPosition : null,
-				taskAfter !== null ? taskAfter.kanbanPosition : null,
-			)
-
-			try {
-				const taskStore = useTaskStore()
-				await taskStore.update(newTask)
-				
-				// Make sure the first and second task don't both get position 0 assigned
-				if(newTaskIndex === 0 && taskAfter !== null && taskAfter.kanbanPosition === 0) {
-					const taskAfterAfter = newBucket.tasks[newTaskIndex + 2] ?? null
-					const newTaskAfter = cloneDeep(taskAfter) // cloning the task to avoid pinia store manipulation
-					newTaskAfter.bucketId = newBucket.id
-					newTaskAfter.kanbanPosition = calculateItemPosition(
-						0,
-						taskAfterAfter !== null ? taskAfterAfter.kanbanPosition : null,
-					)
-
-					await taskStore.update(newTaskAfter)
-				}
-			} finally {
-				this.taskUpdating[task.id] = false
-				this.oneTaskUpdating = false
-			}
-		},
-
-		toggleShowNewTaskInput(bucketId) {
-			this.showNewTaskInput[bucketId] = !this.showNewTaskInput[bucketId]
-			this.newTaskInputFocused = false
-		},
-
-		async addTaskToBucket(bucketId) {
-			if (this.newTaskText === '') {
-				this.newTaskError[bucketId] = true
-				return
-			}
-			this.newTaskError[bucketId] = false
-			
-			const task = await useTaskStore().createNewTask({
-				title: this.newTaskText,
-				bucketId,
-				listId: this.listId,
-			})
-			this.newTaskText = ''
-			useKanbanStore().addTaskToBucket(task)
-			this.scrollTaskContainerToBottom(bucketId)
-		},
-
-		scrollTaskContainerToBottom(bucketId) {
-			const bucketEl = this.taskContainerRefs[bucketId]
-			if (!bucketEl) {
-				return
-			}
-			bucketEl.scrollTop = bucketEl.scrollHeight
-		},
-
-		async createNewBucket() {
-			if (this.newBucketTitle === '') {
-				return
-			}
-
-			const newBucket = new BucketModel({
-				title: this.newBucketTitle,
-				listId: this.listId,
-			})
-
-			await useKanbanStore().createBucket(newBucket)
-			this.newBucketTitle = ''
-			this.showNewBucketInput = false
-		},
-
-		deleteBucketModal(bucketId) {
-			if (this.buckets.length <= 1) {
-				return
-			}
-
-			this.bucketToDelete = bucketId
-			this.showBucketDeleteModal = true
-		},
-
-		async deleteBucket() {
-			const bucket = new BucketModel({
-				id: this.bucketToDelete,
-				listId: this.listId,
-			})
-
-			try {
-				await useKanbanStore().deleteBucket({
-					bucket,
-					params: this.params,
-				})
-				this.$message.success({message: this.$t('list.kanban.deleteBucketSuccess')})
-			} finally {
-				this.showBucketDeleteModal = false
-			}
-		},
-
-		focusBucketTitle(e) {
-			// This little helper allows us to drag a bucket around at the title without focusing on it right away.
-			this.bucketTitleEditable = true
-			this.$nextTick(() => e.target.focus())
-		},
-
-		async saveBucketTitle(bucketId, bucketTitle) {
-			const updatedBucketData = {
-				id: bucketId,
-				title: bucketTitle,
-			}
-
-			await useKanbanStore().updateBucketTitle(updatedBucketData)
-			this.bucketTitleEditable = false
-		},
-
-		updateBuckets(value) {
-			// (1) buckets get updated in store and tasks positions get invalidated
-			useKanbanStore().setBuckets(value)
-		},
-
-		updateBucketPosition(e) {
-			// (2) bucket positon is changed
-			this.dragBucket = false
-
-			const bucket = this.buckets[e.newIndex]
-			const bucketBefore = this.buckets[e.newIndex - 1] ?? null
-			const bucketAfter = this.buckets[e.newIndex + 1] ?? null
-
-			const updatedData = {
-				id: bucket.id,
-				position: calculateItemPosition(
-					bucketBefore !== null ? bucketBefore.position : null,
-					bucketAfter !== null ? bucketAfter.position : null,
-				),
-			}
-
-			useKanbanStore().updateBucket(updatedData)
-		},
-
-		async setBucketLimit(bucketId, limit) {
-			if (limit < 0) {
-				return
-			}
-
-			const kanbanStore = useKanbanStore()
-
-			const newBucket = {
-				...kanbanStore.getBucketById(bucketId),
-				limit,
-			}
-
-			await kanbanStore.updateBucket(newBucket)
-			this.$message.success({message: this.$t('list.kanban.bucketLimitSavedSuccess')})
-		},
-
-		shouldAcceptDrop(bucket) {
-			return (
-				// When dragging from a bucket who has its limit reached, dragging should still be possible
-				bucket.id === this.sourceBucket ||
-				// If there is no limit set, dragging & dropping should always work
-				bucket.limit === 0 ||
-				// Disallow dropping to buckets which have their limit reached
-				bucket.tasks.length < bucket.limit
-			)
-		},
-
-		dragstart(bucket) {
-			this.drag = true
-			this.sourceBucket = bucket.id
-		},
-
-		async toggleDoneBucket(bucket) {
-			const newBucket = {
-				...bucket,
-				isDoneBucket: !bucket.isDoneBucket,
-			}
-			await useKanbanStore().updateBucket(newBucket)
-			this.$message.success({message: this.$t('list.kanban.doneBucketSavedSuccess')})
-		},
-
-		collapseBucket(bucket) {
-			this.collapsedBuckets[bucket.id] = true
-			saveCollapsedBucketState(this.listId, this.collapsedBuckets)
-		},
-		unCollapseBucket(bucket) {
-			if (!this.collapsedBuckets[bucket.id]) {
-				return
-			}
-
-			this.collapsedBuckets[bucket.id] = false
-			saveCollapsedBucketState(this.listId, this.collapsedBuckets)
-		},
+const props = defineProps({
+	listId: {
+		type: Number as PropType<IList['id']>,
+		required: true,
 	},
 })
+
+const {t} = useI18n({useScope: 'global'})
+
+const baseStore = useBaseStore()
+const kanbanStore = useKanbanStore()
+const taskStore = useTaskStore()
+
+const taskContainerRefs = ref<{[id: IBucket['id']]: HTMLElement}>({})
+
+const drag = ref(false)
+const dragBucket = ref(false)
+const sourceBucket = ref(0)
+
+const showBucketDeleteModal = ref(false)
+const bucketToDelete = ref(0)
+const bucketTitleEditable = ref(false)
+
+const newTaskText = ref('')
+const showNewTaskInput = ref<{[id: IBucket['id']]: boolean}>({})
+
+const newBucketTitle = ref('')
+const showNewBucketInput = ref(false)
+const newTaskError = ref<{[id: IBucket['id']]: boolean}>({})
+const newTaskInputFocused = ref(false)
+
+const showSetLimitInput = ref(false)
+const collapsedBuckets = ref<CollapsedBuckets>({})
+
+// We're using this to show the loading animation only at the task when updating it
+const taskUpdating = ref<{[id: ITask['id']]: boolean}>({})
+const oneTaskUpdating = ref(false)
+
+const params = ref({
+	filter_by: [],
+	filter_value: [],
+	filter_comparator: [],
+	filter_concat: 'and',
+})
+
+const getTaskDraggableTaskComponentData = computed(() => (bucket: IBucket) => {
+	return {
+		ref: (el: HTMLElement) => setTaskContainerRef(bucket.id, el),
+		onScroll: (event: Event) => handleTaskContainerScroll(bucket.id, bucket.listId, event.target as HTMLElement),
+		type: 'transition-group',
+		name: !drag.value ? 'move-card' : null,
+		class: [
+			'tasks',
+			{'dragging-disabled': !canWrite.value},
+		],
+	}
+})
+
+const bucketDraggableComponentData = computed(() => ({
+	type: 'transition-group',
+	name: !dragBucket.value ? 'move-bucket' : null,
+	class: [
+		'kanban-bucket-container',
+		{'dragging-disabled': !canWrite.value},
+	],
+}))
+
+const canWrite = computed(() => baseStore.currentList.maxRight > Rights.READ)
+const list = computed(() => baseStore.currentList)
+
+const buckets = computed(() => kanbanStore.buckets)
+const loading = computed(() => kanbanStore.isLoading)
+
+const taskLoading = computed(() => taskStore.isLoading)
+
+watch(
+	() => ({
+		listId: props.listId,
+		params: params.value,
+	}),
+	({listId, params}) => {
+		collapsedBuckets.value = getCollapsedBucketState(listId)
+		kanbanStore.loadBucketsForList({listId, params})
+	},
+	{
+		immediate: true,
+		deep: true,
+	},
+)
+
+function setTaskContainerRef(id: IBucket['id'], el: HTMLElement) {
+	if (!el) return
+	taskContainerRefs.value[id] = el
+}
+
+function handleTaskContainerScroll(id: IBucket['id'], listId: IList['id'], el: HTMLElement) {
+	if (!el) {
+		return
+	}
+	const scrollTopMax = el.scrollHeight - el.clientHeight
+	const threshold = el.scrollTop + el.scrollTop * MIN_SCROLL_HEIGHT_PERCENT
+	if (scrollTopMax > threshold) {
+		return
+	}
+
+	kanbanStore.loadNextTasksForBucket({
+		listId: listId,
+		params: params.value,
+		bucketId: id,
+	})
+}
+
+function updateTasks(bucketId: IBucket['id'], tasks: IBucket['tasks']) {
+	const bucket = kanbanStore.getBucketById(bucketId)
+
+	if (bucket === undefined) {
+		return
+	}
+
+	kanbanStore.setBucketById({
+		...bucket,
+		tasks,
+	})
+}
+
+async function updateTaskPosition(e) {
+	drag.value = false
+
+	// While we could just pass the bucket index in through the function call, this would not give us the 
+	// new bucket id when a task has been moved between buckets, only the new bucket. Using the data-bucket-id
+	// of the drop target works all the time.
+	const bucketIndex = parseInt(e.to.dataset.bucketIndex)
+
+	const newBucket = buckets.value[bucketIndex]
+
+	// HACK:
+	// this is a hacky workaround for a known problem of vue.draggable.next when using the footer slot
+	// the problem: https://github.com/SortableJS/vue.draggable.next/issues/108
+	// This hack doesn't remove the problem that the ghost item is still displayed below the footer
+	// It just makes releasing the item possible.
+
+	// The newIndex of the event doesn't count in the elements of the footer slot.
+	// This is why in case the length of the tasks is identical with the newIndex
+	// we have to remove 1 to get the correct index.
+	const newTaskIndex = newBucket.tasks.length === e.newIndex
+		? e.newIndex - 1
+		: e.newIndex
+
+	const task = newBucket.tasks[newTaskIndex]
+	const taskBefore = newBucket.tasks[newTaskIndex - 1] ?? null
+	const taskAfter = newBucket.tasks[newTaskIndex + 1] ?? null
+	taskUpdating.value[task.id] = true
+
+	const newTask = cloneDeep(task) // cloning the task to avoid pinia store manipulation
+	newTask.bucketId = newBucket.id
+	newTask.kanbanPosition = calculateItemPosition(
+		taskBefore !== null ? taskBefore.kanbanPosition : null,
+		taskAfter !== null ? taskAfter.kanbanPosition : null,
+	)
+
+	try {
+		await taskStore.update(newTask)
+		
+		// Make sure the first and second task don't both get position 0 assigned
+		if(newTaskIndex === 0 && taskAfter !== null && taskAfter.kanbanPosition === 0) {
+			const taskAfterAfter = newBucket.tasks[newTaskIndex + 2] ?? null
+			const newTaskAfter = cloneDeep(taskAfter) // cloning the task to avoid pinia store manipulation
+			newTaskAfter.bucketId = newBucket.id
+			newTaskAfter.kanbanPosition = calculateItemPosition(
+				0,
+				taskAfterAfter !== null ? taskAfterAfter.kanbanPosition : null,
+			)
+
+			await taskStore.update(newTaskAfter)
+		}
+	} finally {
+		taskUpdating.value[task.id] = false
+		oneTaskUpdating.value = false
+	}
+}
+
+function toggleShowNewTaskInput(bucketId: IBucket['id']) {
+	showNewTaskInput.value[bucketId] = !showNewTaskInput.value[bucketId]
+	newTaskInputFocused.value = false
+}
+
+async function addTaskToBucket(bucketId: IBucket['id']) {
+	if (newTaskText.value === '') {
+		newTaskError.value[bucketId] = true
+		return
+	}
+	newTaskError.value[bucketId] = false
+	
+	const task = await taskStore.createNewTask({
+		title: newTaskText.value,
+		bucketId,
+		listId: props.listId,
+	})
+	newTaskText.value = ''
+	kanbanStore.addTaskToBucket(task)
+	scrollTaskContainerToBottom(bucketId)
+}
+
+function scrollTaskContainerToBottom(bucketId: IBucket['id']) {
+	const bucketEl = taskContainerRefs.value[bucketId]
+	if (!bucketEl) {
+		return
+	}
+	bucketEl.scrollTop = bucketEl.scrollHeight
+}
+
+async function createNewBucket() {
+	if (newBucketTitle.value === '') {
+		return
+	}
+
+	await kanbanStore.createBucket(new BucketModel({
+		title: newBucketTitle.value,
+		listId: props.listId,
+	}))
+	newBucketTitle.value = ''
+	showNewBucketInput.value = false
+}
+
+function deleteBucketModal(bucketId: IBucket['id']) {
+	if (buckets.value.length <= 1) {
+		return
+	}
+
+	bucketToDelete.value = bucketId
+	showBucketDeleteModal.value = true
+}
+
+async function deleteBucket() {
+	try {
+		await kanbanStore.deleteBucket({
+			bucket: new BucketModel({
+				id: bucketToDelete.value,
+				listId: props.listId,
+			}),
+			params: params.value,
+		})
+		success({message: t('list.kanban.deleteBucketSuccess')})
+	} finally {
+		showBucketDeleteModal.value = false
+	}
+}
+
+/** This little helper allows us to drag a bucket around at the title without focusing on it right away. */
+async function focusBucketTitle(e: Event) {
+	bucketTitleEditable.value = true
+	await nextTick()
+	const target = e.target as HTMLInputElement
+	target.focus()
+}
+
+async function saveBucketTitle(bucketId: IBucket['id'], bucketTitle: string) {
+	await kanbanStore.updateBucketTitle({
+		id: bucketId,
+		title: bucketTitle,
+	})
+	bucketTitleEditable.value = false
+}
+
+function updateBuckets(value: IBucket[]) {
+	// (1) buckets get updated in store and tasks positions get invalidated
+	kanbanStore.setBuckets(value)
+}
+
+// TODO: fix type
+function updateBucketPosition(e: {newIndex: number}) {
+	// (2) bucket positon is changed
+	dragBucket.value = false
+
+	const bucket = buckets.value[e.newIndex]
+	const bucketBefore = buckets.value[e.newIndex - 1] ?? null
+	const bucketAfter = buckets.value[e.newIndex + 1] ?? null
+
+	kanbanStore.updateBucket({
+		id: bucket.id,
+		position: calculateItemPosition(
+			bucketBefore !== null ? bucketBefore.position : null,
+			bucketAfter !== null ? bucketAfter.position : null,
+		),
+	})
+}
+
+async function setBucketLimit(bucketId: IBucket['id'], limit: number) {
+	if (limit < 0) {
+		return
+	}
+
+	await kanbanStore.updateBucket({
+		...kanbanStore.getBucketById(bucketId),
+		limit,
+	})
+	success({message: t('list.kanban.bucketLimitSavedSuccess')})
+}
+
+function shouldAcceptDrop(bucket: IBucket) {
+	return (
+		// When dragging from a bucket who has its limit reached, dragging should still be possible
+		bucket.id === sourceBucket.value ||
+		// If there is no limit set, dragging & dropping should always work
+		bucket.limit === 0 ||
+		// Disallow dropping to buckets which have their limit reached
+		bucket.tasks.length < bucket.limit
+	)
+}
+
+function dragstart(bucket: IBucket) {
+	drag.value = true
+	sourceBucket.value = bucket.id
+}
+
+async function toggleDoneBucket(bucket: IBucket) {
+	await kanbanStore.updateBucket({
+		...bucket,
+		isDoneBucket: !bucket.isDoneBucket,
+	})
+	success({message: t('list.kanban.doneBucketSavedSuccess')})
+}
+
+function collapseBucket(bucket: IBucket) {
+	collapsedBuckets.value[bucket.id] = true
+	saveCollapsedBucketState(props.listId, collapsedBuckets.value)
+}
+
+function unCollapseBucket(bucket: IBucket) {
+	if (!collapsedBuckets.value[bucket.id]) {
+		return
+	}
+
+	collapsedBuckets.value[bucket.id] = false
+	saveCollapsedBucketState(props.listId, collapsedBuckets.value)
+}
 </script>
 
 <style lang="scss">

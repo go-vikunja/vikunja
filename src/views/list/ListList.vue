@@ -143,7 +143,7 @@ import {ref, computed, toRef, nextTick, onMounted, type PropType, watch} from 'v
 import draggable from 'zhyswan-vuedraggable'
 import {useRoute, useRouter} from 'vue-router'
 
-import ListWrapper from './ListWrapper.vue'
+import ListWrapper from '@/components/list/ListWrapper.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import ButtonLink from '@/components/misc/ButtonLink.vue'
 import EditTask from '@/components/tasks/edit-task.vue'

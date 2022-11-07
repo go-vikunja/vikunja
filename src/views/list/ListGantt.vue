@@ -57,7 +57,7 @@ import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
 
 import Foo from '@/components/misc/flatpickr/Flatpickr.vue'
-import ListWrapper from './ListWrapper.vue'
+import ListWrapper from '@/components/list/ListWrapper.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
 
