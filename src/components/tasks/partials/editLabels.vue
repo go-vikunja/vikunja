@@ -128,7 +128,6 @@ async function createAndAddLabel(title: string) {
 		return
 	}
 
-	const labelStore = useLabelStore()
 	const newLabel = await labelStore.createLabel(new LabelModel({title}))
 	addLabel(newLabel, false)
 	labels.value.push(newLabel)
