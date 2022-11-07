@@ -9,7 +9,6 @@
 		label="name"
 		:select-placeholder="$t('task.assignee.selectPlaceholder')"
 		v-model="assignees"
-		ref="userSearchInputRef"
 	>
 		<template #tag="{item: user}">
 			<span class="assignee">
@@ -106,7 +105,7 @@ async function removeAssignee(user: IUser) {
 
 async function findUser(query: string) {
 	if (query === '') {
-		clearAllFoundUsers()
+		foundUsers.value = []
 		return
 	}
 
@@ -120,10 +119,6 @@ async function findUser(query: string) {
 			u.name = getDisplayName(u)
 			return u
 		})
-}
-
-function clearAllFoundUsers() {
-	foundUsers.value = []
 }
 </script>
 
@@ -140,19 +135,20 @@ function clearAllFoundUsers() {
 		margin-right: 0;
 	}
 
-	.remove-assignee {
-		position: absolute;
-		top: 4px;
-		left: 2px;
-		color: var(--danger);
-		background: var(--white);
-		padding: 0 4px;
-		display: block;
-		border-radius: 100%;
-		font-size: .75rem;
-		width: 18px;
-		height: 18px;
-		z-index: 100;
-	}
+}
+
+.remove-assignee {
+	position: absolute;
+	top: 4px;
+	left: 2px;
+	color: var(--danger);
+	background: var(--white);
+	padding: 0 4px;
+	display: block;
+	border-radius: 100%;
+	font-size: .75rem;
+	width: 18px;
+	height: 18px;
+	z-index: 100;
 }
 </style>
