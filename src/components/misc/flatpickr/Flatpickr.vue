@@ -66,19 +66,8 @@ import {computed, onBeforeUnmount, onMounted, ref, toRefs, useAttrs, watch, watc
 
 const props = defineProps({
 	modelValue: {
-		type: [String, Number, Date, Array] as PropType<DateOption | DateOption[]>,
+		type: [String, Number, Date, Array] as PropType<DateOption | DateOption[] | null>,
 		default: null,
-		required: true,
-		// validator(value) {
-		// 	return (
-		// 		value === null ||
-		// 		value instanceof Date ||
-		// 		typeof value === 'string' ||
-		// 		value instanceof String ||
-		// 		value instanceof Array ||
-		// 		typeof value === 'number'
-		// 	);
-		// }
 	},
 	// https://flatpickr.js.org/options/
 	config: {
