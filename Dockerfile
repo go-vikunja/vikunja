@@ -29,7 +29,7 @@ RUN \
 FROM nginx:alpine
 
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY run.sh /run.sh
+COPY scripts/run.sh /run.sh
 
 # copy compiled files from stage 1
 COPY --from=compile-image /build/dist /usr/share/nginx/html
