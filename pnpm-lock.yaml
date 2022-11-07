@@ -8,7 +8,7 @@ specifiers:
   '@fortawesome/fontawesome-svg-core': 6.2.0
   '@fortawesome/free-regular-svg-icons': 6.2.0
   '@fortawesome/free-solid-svg-icons': 6.2.0
-  '@fortawesome/vue-fontawesome': 3.0.1
+  '@fortawesome/vue-fontawesome': 3.0.2
   '@github/hotkey': 2.0.1
   '@infectoone/vue-ganttastic': 2.1.2
   '@kyvg/vue3-notification': 2.6.1
@@ -94,7 +94,7 @@ dependencies:
   '@fortawesome/fontawesome-svg-core': 6.2.0
   '@fortawesome/free-regular-svg-icons': 6.2.0
   '@fortawesome/free-solid-svg-icons': 6.2.0
-  '@fortawesome/vue-fontawesome': 3.0.1_d6efiukuzkaawettnnvs7de55e
+  '@fortawesome/vue-fontawesome': 3.0.2_d6efiukuzkaawettnnvs7de55e
   '@github/hotkey': 2.0.1
   '@infectoone/vue-ganttastic': 2.1.2_dayjs@1.11.6+vue@3.2.42
   '@kyvg/vue3-notification': 2.6.1_vue@3.2.42
@@ -1703,8 +1703,8 @@ packages:
       '@fortawesome/fontawesome-common-types': 6.2.0
     dev: false
 
-  /@fortawesome/vue-fontawesome/3.0.1_d6efiukuzkaawettnnvs7de55e:
-    resolution: {integrity: sha512-CdXZJoCS+aEPec26ZP7hWWU3SaJlQPZSCGdgpQ2qGl2HUmtUUNrI3zC4XWdn1JUmh3t5OuDeRG1qB4eGRNSD4A==}
+  /@fortawesome/vue-fontawesome/3.0.2_d6efiukuzkaawettnnvs7de55e:
+    resolution: {integrity: sha512-xHVtVY8ASUeEvgcA/7vULUesENhD+pi/EirRHdMBqooHlXBqK+yrV6d8tUye1m5UKQKVgYAHMhUBfOnoiwvc8Q==}
     peerDependencies:
       '@fortawesome/fontawesome-svg-core': ~1 || ~6
       vue: '>= 3.0.0 < 4'
@@ -3379,7 +3379,7 @@ packages:
     resolution: {integrity: sha512-5Fty3slLet6svXiJw2YxhYeo6c7wFdtILrql5bZymYLM+HbiZtJbryW1YnUEKAP7MO9Mbeh+TNH4Z0HFxHgIqw==}
     dependencies:
       '@volar/source-map': 1.0.9
-      '@vue/reactivity': 3.2.42
+      '@vue/reactivity': 3.2.41
       muggle-string: 0.1.0
     dev: true
 
