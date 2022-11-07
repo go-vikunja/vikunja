@@ -28,13 +28,10 @@ const props = defineProps({
 		default: false,
 	},
 })
-
 const emit = defineEmits(['update:modelValue'])
 
 const priority = ref(0)
 
-// FIXME: store value outside
-// Set the priority to the :value every time it changes from the outside
 watch(
 	() => props.modelValue,
 	(value) => {
