@@ -72,15 +72,19 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 	}
 
 	result.labels = getItemsFromPrefix(text, prefixes.label)
+	result.text = cleanupItemText(result.text, result.labels, prefixes.label)
 
-	const lists: string[] = getItemsFromPrefix(text, prefixes.list)
+	const lists: string[] = getItemsFromPrefix(result.text, prefixes.list)
 	result.list = lists.length > 0 ? lists[0] : null
+	result.text = result.list !== null ? cleanupItemText(result.text, [result.list], prefixes.list) : result.text
 
-	result.priority = getPriority(text, prefixes.priority)
+	result.priority = getPriority(result.text, prefixes.priority)
+	result.text = result.priority !== null ? cleanupItemText(result.text, [String(result.priority)], prefixes.priority) : result.text
 
-	result.assignees = getItemsFromPrefix(text, prefixes.assignee)
+	result.assignees = getItemsFromPrefix(result.text, prefixes.assignee)
+	result.text = cleanupItemText(result.text, result.assignees, prefixes.assignee)
 
-	const {textWithoutMatched, repeats} = getRepeats(text)
+	const {textWithoutMatched, repeats} = getRepeats(result.text)
 	result.text = textWithoutMatched
 	result.repeats = repeats
 
@@ -117,7 +121,10 @@ const getItemsFromPrefix = (text: string, prefix: string): string[] => {
 			// Only until the next space
 			itemText = p.split(' ')[0]
 		}
-		items.push(itemText)
+		
+		if(itemText !== '')  {
+			items.push(itemText)
+		}
 	})
 
 	return Array.from(new Set(items))

@@ -566,6 +566,13 @@ describe('Parse Task Text', () => {
 			expect(result.labels).toHaveLength(1)
 			expect(result.labels[0]).toBe('label with space')
 		})
+		it('should not parse labels called date expressions as dates', () => {
+			const result = parseTaskText('Lorem Ipsum *today')
+
+			expect(result.text).toBe('Lorem Ipsum')
+			expect(result.labels).toHaveLength(1)
+			expect(result.labels[0]).toBe('today')
+		})
 	})
 
 	describe('List', () => {
@@ -592,6 +599,12 @@ describe('Parse Task Text', () => {
 
 			expect(result.text).toBe('Lorem Ipsum +list2 +list3')
 			expect(result.list).toBe('list1')
+		})
+		it('should parse a list that\'s called like a date as list', () => {
+			const result = parseTaskText(`Lorem Ipsum +today`)
+
+			expect(result.text).toBe('Lorem Ipsum')
+			expect(result.list).toBe('today')
 		})
 	})
 
@@ -656,6 +669,13 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.assignees).toHaveLength(1)
 			expect(result.assignees[0]).toBe('user with long name')
+		})
+		it('should parse an assignee who is called like a date as assignee', () => {
+			const result = parseTaskText(`Lorem Ipsum @today`)
+
+			expect(result.text).toBe('Lorem Ipsum')
+			expect(result.assignees).toHaveLength(1)
+			expect(result.assignees[0]).toBe('today')
 		})
 	})
 
