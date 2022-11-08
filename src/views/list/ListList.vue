@@ -41,7 +41,7 @@
 				</div>
 				<filter-popup
 					v-model="params"
-					@update:modelValue="loadTasks()"
+					@update:modelValue="prepareFiltersAndLoadTasks()"
 				/>
 			</div>
 		</div>
@@ -221,7 +221,7 @@ const {
 	loadTasks,
 	searchTerm,
 	params,
-	// sortByParam,
+	sortByParam,
 } = useTaskList(toRef(props, 'listId'), {position: 'asc' })
 
 
@@ -326,6 +326,15 @@ async function saveTaskPosition(e) {
 
 	const updatedTask = await taskStore.update(newTask)
 	tasks.value[e.newIndex] = updatedTask
+}
+
+function prepareFiltersAndLoadTasks() {
+	if(isAlphabeticalSorting.value) {
+		sortByParam.value = {} 
+		sortByParam.value[ALPHABETICAL_SORT] = 'asc'
+	}
+	
+	loadTasks()
 }
 </script>
 
