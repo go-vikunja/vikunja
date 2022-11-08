@@ -3,7 +3,7 @@ lockfileVersion: 5.4
 specifiers:
   '@4tw/cypress-drag-drop': 2.2.1
   '@cypress/vite-dev-server': 4.0.0
-  '@cypress/vue': 5.0.0
+  '@cypress/vue': 5.0.1
   '@faker-js/faker': 7.6.0
   '@fortawesome/fontawesome-svg-core': 6.2.0
   '@fortawesome/free-regular-svg-icons': 6.2.0
@@ -140,7 +140,7 @@ dependencies:
 devDependencies:
   '@4tw/cypress-drag-drop': 2.2.1_cypress@10.11.0
   '@cypress/vite-dev-server': 4.0.0
-  '@cypress/vue': 5.0.0_cypress@10.11.0+vue@3.2.41
+  '@cypress/vue': 5.0.1_cypress@10.11.0+vue@3.2.41
   '@faker-js/faker': 7.6.0
   '@rushstack/eslint-patch': 1.2.0
   '@types/codemirror': 5.60.5
@@ -1591,8 +1591,8 @@ packages:
       - supports-color
     dev: true
 
-  /@cypress/vue/5.0.0_cypress@10.11.0+vue@3.2.41:
-    resolution: {integrity: sha512-3vqbmftcP6Xf+/gKOhzDj/HKcmzPqGFQ1CVQLK2HNnmKELFfP2Y12J37atpEOAyst2y5Txl2sE60JBHAPZWGDQ==}
+  /@cypress/vue/5.0.1_cypress@10.11.0+vue@3.2.41:
+    resolution: {integrity: sha512-Sy7eh7LUJX8CCMkMp8clGQaro513WXLYeApUKaWVrPGuEgdIYPSbquHDxl77Ei3VGg9PLqwIMU291kfdwOCuLg==}
     engines: {node: '>=8'}
     peerDependencies:
       '@cypress/webpack-dev-server': '*'
