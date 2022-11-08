@@ -226,7 +226,7 @@ func getFilterCond(f *taskFilter, includeNulls bool) (cond builder.Cond, err err
 	}
 
 	if includeNulls {
-		cond = builder.Or(cond, &builder.IsNull{field})
+		cond = builder.Or(cond, &builder.IsNull{field}, &builder.Eq{field: 0})
 	}
 
 	return
