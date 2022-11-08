@@ -580,7 +580,9 @@ func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, 
 
 func getRemindersForTasks(s *xorm.Session, taskIDs []int64) (reminders []*TaskReminder, err error) {
 	reminders = []*TaskReminder{}
-	err = s.In("task_id", taskIDs).Find(&reminders)
+	err = s.In("task_id", taskIDs).
+		OrderBy("reminder asc").
+		Find(&reminders)
 	return
 }
 
@@ -1400,8 +1402,14 @@ func (t *Task) updateReminders(s *xorm.Session, reminders []time.Time) (err erro
 		return
 	}
 
+	// Resolve duplicates and sort them
+	reminderMap := make(map[string]time.Time, len(reminders))
+	for _, reminder := range reminders {
+		reminderMap[reminder.UTC().String()] = reminder
+	}
+
 	// Loop through all reminders and add them
-	for _, r := range reminders {
+	for _, r := range reminderMap {
 		_, err = s.Insert(&TaskReminder{TaskID: t.ID, Reminder: r})
 		if err != nil {
 			return err
