@@ -88,9 +88,15 @@ const {
 	updateTask,
 } = useGanttFilters(route)
 
-const today = new Date(new Date().setHours(0,0,0,0))
-const defaultTaskStartDate: DateISO = new Date(today).toISOString()
-const defaultTaskEndDate: DateISO = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7, 23,59,0,0).toISOString()
+const DEFAULT_DATE_RANGE_DAYS = 7
+
+const today = new Date()
+const defaultTaskStartDate: DateISO = new Date(today.setHours(0, 0, 0, 0)).toISOString()
+const defaultTaskEndDate: DateISO = new Date(new Date(
+	today.getFullYear(),
+	today.getMonth(),
+	today.getDate() + DEFAULT_DATE_RANGE_DAYS,
+).setHours(23, 59, 0, 0)).toISOString()
 
 async function addGanttTask(title: ITask['title']) {
 	return await addTask({
