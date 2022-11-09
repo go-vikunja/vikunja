@@ -28,7 +28,7 @@ import (
 )
 
 // SecondsUntilInactive defines the seconds until a user is considered inactive
-const SecondsUntilInactive = 60
+const SecondsUntilInactive = 30
 
 // ActiveUsersKey is the key used to store active users in redis
 const ActiveUsersKey = `activeusers`
@@ -55,12 +55,13 @@ func init() {
 		users: make(map[int64]*ActiveUser),
 		mutex: &sync.Mutex{},
 	}
+}
 
-	promauto.NewGaugeFunc(prometheus.GaugeOpts{
+func setupActiveUsersMetric() {
+	err := registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
 		Name: "vikunja_active_users",
-		Help: "The currently active users on this node",
+		Help: "The number of users active within the last 30 seconds on this node",
 	}, func() float64 {
-
 		allActiveUsers, err := getActiveUsers()
 		if err != nil {
 			log.Error(err.Error())
@@ -75,7 +76,10 @@ func init() {
 			}
 		}
 		return float64(activeUsersCount)
-	})
+	}))
+	if err != nil {
+		log.Criticalf("Could not register metrics for currently active users: %s", err)
+	}
 }
 
 // SetUserActive sets a user as active and pushes it to redis

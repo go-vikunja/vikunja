@@ -113,7 +113,7 @@ func InitMetrics() {
 		log.Criticalf("Could not register metrics for %s: %s", TaskCountKey, err)
 	}
 
-	// Register total user count metric
+	// Register total teams count metric
 	err = registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
 		Name: "vikunja_team_count",
 		Help: "The total number of teams on this instance",
@@ -124,9 +124,11 @@ func InitMetrics() {
 	if err != nil {
 		log.Criticalf("Could not register metrics for %s: %s", TeamCountKey, err)
 	}
+
+	setupActiveUsersMetric()
 }
 
-// GetCount returns the current count from redis
+// GetCount returns the current count from keyvalue
 func GetCount(key string) (count int64, err error) {
 	cnt, exists, err := keyvalue.Get(key)
 	if err != nil {
