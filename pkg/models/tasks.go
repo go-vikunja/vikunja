@@ -309,10 +309,10 @@ func getRawTasksForLists(s *xorm.Session, lists []*List, a web.Auth, opts *taskO
 		// Because it does not have support for NULLS FIRST or NULLS LAST we work around this by
 		// first sorting for null (or not null) values and then the order we actually want to.
 		if db.Type() == schemas.MYSQL {
-			orderby += param.sortBy + " IS NULL, "
+			orderby += "`" + param.sortBy + "` IS NULL, "
 		}
 
-		orderby += param.sortBy + " " + param.orderBy.String()
+		orderby += "`" + param.sortBy + "` " + param.orderBy.String()
 
 		// Postgres and sqlite allow us to control how columns with null values are sorted.
 		// To make that consistent with the sort order we have and other dbms, we're adding a separate clause here.

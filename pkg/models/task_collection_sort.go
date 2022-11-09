@@ -46,6 +46,7 @@ const (
 	taskPropertyPosition       string = "position"
 	taskPropertyKanbanPosition string = "kanban_position"
 	taskPropertyBucketID       string = "bucket_id"
+	taskPropertyIndex          string = "index"
 )
 
 const (
