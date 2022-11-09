@@ -22,7 +22,7 @@ export function parseDateProp(kebabDate: DateKebab | undefined): string | undefi
 		if (!dateValuesAreValid) {
 			throw new Error('Invalid date values')
 		}
-		return new Date(year, month, date).toISOString() as DateISO
+		return new Date(year, month - 1, date).toISOString() as DateISO
 	} catch(e) {
 		// ignore nonsense route queries
 		return

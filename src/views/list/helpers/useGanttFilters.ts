@@ -98,8 +98,8 @@ export function useGanttFilters(route: Ref<RouteLocationNormalized>): UseGanttFi
 		setDefaultFilters,
 	} = useRouteFilters<GanttFilters>(
 		route,
-		ganttRouteToFilters,
 		ganttGetDefaultFilters,
+		ganttRouteToFilters,
 		ganttFiltersToRoute,
 	)
 

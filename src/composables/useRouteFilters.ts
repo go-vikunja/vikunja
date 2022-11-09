@@ -16,16 +16,23 @@ export function useRouteFilters<CurrentFilters extends Filters>(
 
 	const routeFromFiltersFullPath = computed(() => router.resolve(filtersToRoute(filters.value)).fullPath)
 
-	watch(() => route.value, (route, oldRoute) => {
-		if (
-			(route && oldRoute && typeof route.name !== 'undefined' && typeof oldRoute.name !== 'undefined' && route.name !== oldRoute.name) ||
-			routeFromFiltersFullPath.value === route.fullPath
-		) {
-			return
-		}
+	watch(
+		route,
+		(route, oldRoute) => {
+			if (
+				route?.name !== oldRoute?.name ||
+				routeFromFiltersFullPath.value === route.fullPath
+			) {
+				return
+			}
 
-		filters.value = routeToFilters(route)
-	})
+			filters.value = routeToFilters(route)
+		},
+		{
+			deep: true,
+			immediate: true, // set the filter from the initial route
+		},
+	)
 
 	watch(
 		filters,
@@ -35,12 +42,23 @@ export function useRouteFilters<CurrentFilters extends Filters>(
 			}
 		},
 		// only apply new route after all filters have changed in component cycle
-		{flush: 'post'},
+		{
+			deep: true,
+			flush: 'post',
+		},
 	)
 
-	const hasDefaultFilters = computed(() => {
-		return equal(filters.value, getDefaultFilters(route.value))
-	})
+	const hasDefaultFilters = ref(false)
+	watch(
+		[filters, route],
+		([filters, route]) => {
+			hasDefaultFilters.value = equal(filters, getDefaultFilters(route))
+		},
+		{
+			deep: true,
+			immediate: true,
+		},
+	)
 
 	function setDefaultFilters() {
 		filters.value = getDefaultFilters(route.value)
