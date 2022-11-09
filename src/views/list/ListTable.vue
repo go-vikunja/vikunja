@@ -15,7 +15,7 @@
 						</template>
 						<template #content="{isOpen}">
 							<card class="columns-filter" :class="{'is-open': isOpen}">
-								<fancycheckbox v-model="activeColumns.id">#</fancycheckbox>
+								<fancycheckbox v-model="activeColumns.index">#</fancycheckbox>
 								<fancycheckbox v-model="activeColumns.done">
 									{{ $t('task.attributes.done') }}
 								</fancycheckbox>
@@ -67,9 +67,9 @@
 						<table class="table has-actions is-hoverable is-fullwidth mb-0">
 							<thead>
 							<tr>
-								<th v-if="activeColumns.id">
+								<th v-if="activeColumns.index">
 									#
-									<Sort :order="sortBy.id" @click="sort('id')"/>
+									<Sort :order="sortBy.index" @click="sort('index')"/>
 								</th>
 								<th v-if="activeColumns.done">
 									{{ $t('task.attributes.done') }}
@@ -120,7 +120,7 @@
 							</thead>
 							<tbody>
 							<tr :key="t.id" v-for="t in tasks">
-								<td v-if="activeColumns.id">
+								<td v-if="activeColumns.index">
 									<router-link :to="taskDetailRoutes[t.id]">
 										<template v-if="t.identifier === ''">
 											#{{ t.index }}
@@ -200,7 +200,7 @@ import {useTaskList} from '@/composables/useTaskList'
 import type {ITask} from '@/modelTypes/ITask'
 
 const ACTIVE_COLUMNS_DEFAULT = {
-	id: true,
+	index: true,
 	done: true,
 	title: true,
 	priority: false,
@@ -225,7 +225,7 @@ const props = defineProps({
 type Order = 'asc' | 'desc' | 'none'
 
 interface SortBy {
-	id: Order
+	index: Order
 	done?: Order
 	title?: Order
 	priority?: Order
@@ -238,7 +238,7 @@ interface SortBy {
 }
 
 const SORT_BY_DEFAULT: SortBy = {
-	id: 'desc',
+	index: 'desc',
 }
 
 const activeColumns = useStorage('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT})
