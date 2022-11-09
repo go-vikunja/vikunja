@@ -99,7 +99,7 @@
     "postcss-preset-env": "7.8.2",
     "rollup": "3.2.5",
     "rollup-plugin-visualizer": "5.8.3",
-    "sass": "1.56.0",
+    "sass": "1.56.1",
     "typescript": "4.8.4",
     "vite": "3.2.3",
     "vite-plugin-pwa": "0.13.3",
