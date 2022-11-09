@@ -29,7 +29,6 @@ export function useRouteFilters<CurrentFilters extends Filters>(
 			filters.value = routeToFilters(route)
 		},
 		{
-			deep: true,
 			immediate: true, // set the filter from the initial route
 		},
 	)
