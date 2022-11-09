@@ -17,9 +17,9 @@ export function useRouteFilters<CurrentFilters extends Filters>(
 
 	const routeFromFiltersFullPath = computed(() => router.resolve(filtersToRoute(filters.value)).fullPath)
 
-  watch(() => cloneDeep(route.value), (route, oldRoute) => {
-    if (
-			route.name !== oldRoute.name ||
+	watch(() => route.value, (route, oldRoute) => {
+		if (
+			(route && oldRoute && typeof route.name !== 'undefined' && typeof oldRoute.name !== 'undefined' && route.name !== oldRoute.name) ||
 			routeFromFiltersFullPath.value === route.fullPath
 		) {
       return
