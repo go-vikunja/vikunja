@@ -32,8 +32,8 @@ specifiers:
   '@vue/eslint-config-typescript': 11.0.2
   '@vue/test-utils': 2.2.1
   '@vue/tsconfig': 0.1.3
-  '@vueuse/core': 9.4.0
-  '@vueuse/router': 9.4.0
+  '@vueuse/core': 9.5.0
+  '@vueuse/router': 9.5.0
   autoprefixer: 10.4.13
   axios: 0.27.2
   blurhash: 2.0.4
@@ -103,8 +103,8 @@ dependencies:
   '@types/is-touch-device': 1.0.0
   '@types/lodash.clonedeep': 4.5.7
   '@types/sortablejs': 1.15.0
-  '@vueuse/core': 9.4.0_vue@3.2.41
-  '@vueuse/router': 9.4.0_4dzfggngbcv3f6kocd3r4z3f4q
+  '@vueuse/core': 9.5.0_vue@3.2.41
+  '@vueuse/router': 9.5.0_4dzfggngbcv3f6kocd3r4z3f4q
   axios: 0.27.2
   blurhash: 2.0.4
   bulma-css-variables: 0.9.33
@@ -3592,28 +3592,28 @@ packages:
       '@types/node': 18.11.9
     dev: true
 
-  /@vueuse/core/9.4.0_vue@3.2.41:
-    resolution: {integrity: sha512-JzgenGj1ZF2BHOen5rsFiAyyI9sXAv7aKhNLlm9b7SwYQeKTcxTWdhudonURCSP3Egl9NQaRBzes2lv/1JUt/Q==}
+  /@vueuse/core/9.5.0_vue@3.2.41:
+    resolution: {integrity: sha512-6GsWBsJHEb3sYw15mbLrcbslAVY45pkzjJYTKYKCXv88z7srAF0VEW0q+oXKsl58tCbqooplInahXFg8Yo1m4w==}
     dependencies:
       '@types/web-bluetooth': 0.0.16
-      '@vueuse/metadata': 9.4.0
-      '@vueuse/shared': 9.4.0_vue@3.2.41
+      '@vueuse/metadata': 9.5.0
+      '@vueuse/shared': 9.5.0_vue@3.2.41
       vue-demi: 0.12.1_vue@3.2.41
     transitivePeerDependencies:
       - '@vue/composition-api'
       - vue
     dev: false
 
-  /@vueuse/metadata/9.4.0:
-    resolution: {integrity: sha512-7GKMdGAsJyQJl35MYOz/RDpP0FxuiZBRDSN79QIPbdqYx4Sd0sVTnIC68KJ6Oln0t0SouvSUMvRHuno216Ud2Q==}
+  /@vueuse/metadata/9.5.0:
+    resolution: {integrity: sha512-4M1AyPZmIv41pym+K5+4wup3bKuYebbH8w8BROY1hmT7rIwcyS4tEL+UsGz0Hiu1FCOxcoBrwtAizc0YmBJjyQ==}
     dev: false
 
-  /@vueuse/router/9.4.0_4dzfggngbcv3f6kocd3r4z3f4q:
-    resolution: {integrity: sha512-nq7FJMDucngIxvvBvkdg8mgzqhyX9YnptOZozh5oVfbR3ZPVy/9U8VyDEt4CUsxs2Xwg4taA2PaO9xPsgkyruQ==}
+  /@vueuse/router/9.5.0_4dzfggngbcv3f6kocd3r4z3f4q:
+    resolution: {integrity: sha512-OtgV3iqC3CqbnXVy98Lv3PMf5exr/jntjxRDnAetsV+VAG9ipuzna3JW95KntW1m6I5EEsuQYdU3MXtCvvNlKQ==}
     peerDependencies:
       vue-router: '>=4.0.0-rc.1'
     dependencies:
-      '@vueuse/shared': 9.4.0_vue@3.2.41
+      '@vueuse/shared': 9.5.0_vue@3.2.41
       vue-demi: 0.12.1_vue@3.2.41
       vue-router: 4.1.6_vue@3.2.41
     transitivePeerDependencies:
@@ -3621,8 +3621,8 @@ packages:
       - vue
     dev: false
 
-  /@vueuse/shared/9.4.0_vue@3.2.41:
-    resolution: {integrity: sha512-fTuem51KwMCnqUKkI8B57qAIMcFovtGgsCtAeqxIzH3i6nE9VYge+gVfneNHAAy7lj8twbkNfqQSygOPJTm4tQ==}
+  /@vueuse/shared/9.5.0_vue@3.2.41:
+    resolution: {integrity: sha512-HnnCWU1Vg9CVWRCcI8ohDKDRB2Sc4bTgT1XAIaoLSfVHHn+TKbrox6pd3klCSw4UDxkhDfOk8cAdcK+Z5KleCA==}
     dependencies:
       vue-demi: 0.12.1_vue@3.2.41
     transitivePeerDependencies:
