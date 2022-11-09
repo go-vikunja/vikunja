@@ -77,4 +77,34 @@ describe('List View Gantt', () => {
 			.trigger('mouseup', {force: true})
 		cy.wait('@taskUpdate')
 	})
+	
+	it('Should change the query parameters when selecting a date range', () => {
+		const now = Date.UTC(2022, 10, 9)
+		cy.clock(now, ['Date'])
+		
+		cy.visit('/lists/1/gantt')
+		
+		cy.get('.list-gantt .gantt-options .field .control input.input.form-control')
+			.click()
+		cy.get('.flatpickr-calendar .flatpickr-innerContainer .dayContainer .flatpickr-day')
+			.first()
+			.click()
+		cy.get('.flatpickr-calendar .flatpickr-innerContainer .dayContainer .flatpickr-day')
+			.last()
+			.click()
+		
+		cy.url().should('contain', 'dateFrom=2022-09-25')
+		cy.url().should('contain', 'dateTo=2022-11-05')
+	})
+	
+	it('Should change the date range based on date query parameters', () => {
+		cy.visit('/lists/1/gantt?dateFrom=2022-09-25&dateTo=2022-11-05')
+		
+		cy.get('.g-timeunits-container')
+			.should('contain', 'September 2022')
+			.should('contain', 'October 2022')
+			.should('contain', 'November 2022')
+		cy.get('.list-gantt .gantt-options .field .control input.input.form-control')
+			.should('have.value', '25 Sep 2022 to 5 Nov 2022')
+	})
 })
