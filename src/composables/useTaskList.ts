@@ -3,6 +3,7 @@ import {useRoute} from 'vue-router'
 
 import TaskCollectionService from '@/services/taskCollection'
 import type {ITask} from '@/modelTypes/ITask'
+import {error} from '@/message'
 
 // FIXME: merge with DEFAULT_PARAMS in filters.vue
 export const getDefaultParams = () => ({
@@ -76,7 +77,11 @@ export function useTaskList(listId, sortByDefault = SORT_BY_DEFAULT) {
 	const tasks = ref<ITask[]>([])
 	async function loadTasks() {
 		tasks.value = []
-		tasks.value = await taskCollectionService.getAll(...getAllTasksParams.value)
+		try {
+			tasks.value = await taskCollectionService.getAll(...getAllTasksParams.value)
+		} catch (e) {
+			error(e)
+		}
 		return tasks.value
 	}
 
