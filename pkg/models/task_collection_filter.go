@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+
 	"github.com/iancoleman/strcase"
 	"github.com/vectordotdev/go-datemath"
 	"xorm.io/xorm/schemas"
@@ -44,11 +45,22 @@ const (
 	taskFilterComparatorIn           taskFilterComparator = "in"
 )
 
+// Guess what you get back if you ask Safari for a rfc 3339 formatted date?
+const safariDate = "2006-01-02 15:04"
+
 type taskFilter struct {
 	field      string
 	value      interface{} // Needs to be an interface to be able to hold the field's native value
 	comparator taskFilterComparator
 	isNumeric  bool
+}
+
+func parseTimeFromUserInput(timeString string) (value time.Time, err error) {
+	value, err = time.Parse(time.RFC3339, timeString)
+	if err != nil {
+		value, err = time.Parse(safariDate, timeString)
+	}
+	return value.In(config.GetTimeZone()), err
 }
 
 func getTaskFiltersByCollections(c *TaskCollection) (filters []*taskFilter, err error) {
@@ -170,8 +182,7 @@ func getValueForField(field reflect.StructField, rawValue string) (value interfa
 			if err == nil {
 				value = t.Time(datemath.WithLocation(config.GetTimeZone()))
 			} else {
-				value, err = time.Parse(time.RFC3339, rawValue)
-				value = value.(time.Time).In(config.GetTimeZone())
+				value, err = parseTimeFromUserInput(rawValue)
 			}
 		}
 	case reflect.Slice:
