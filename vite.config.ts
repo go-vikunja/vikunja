@@ -132,6 +132,7 @@ export default defineConfig({
 		strictPort: true,
 	},
 	build: {
+		target: 'esnext',
 		rollupOptions: {
 			plugins: [
 				visualizer({
