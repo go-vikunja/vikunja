@@ -95,7 +95,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "Unsplash Image ID",
-                        "name": "thumb",
+                        "name": "image",
                         "in": "path",
                         "required": true
                     }
@@ -141,7 +141,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "Unsplash Image ID",
-                        "name": "thumb",
+                        "name": "image",
                         "in": "path",
                         "required": true
                     }
@@ -5688,7 +5688,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "The id of the other task.",
-                        "name": "otherTaskID",
+                        "name": "otherTaskId",
                         "in": "path",
                         "required": true
                     }

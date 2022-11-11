@@ -1509,7 +1509,7 @@ paths:
       parameters:
       - description: Unsplash Image ID
         in: path
-        name: thumb
+        name: image
         required: true
         type: integer
       produces:
@@ -1539,7 +1539,7 @@ paths:
       parameters:
       - description: Unsplash Image ID
         in: path
-        name: thumb
+        name: image
         required: true
         type: integer
       produces:
@@ -5247,7 +5247,7 @@ paths:
         type: string
       - description: The id of the other task.
         in: path
-        name: otherTaskID
+        name: otherTaskId
         required: true
         type: integer
       produces:
