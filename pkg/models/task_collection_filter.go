@@ -46,7 +46,8 @@ const (
 )
 
 // Guess what you get back if you ask Safari for a rfc 3339 formatted date?
-const safariDate = "2006-01-02 15:04"
+const safariDateAndTime = "2006-01-02 15:04"
+const safariDate = "2006-01-02"
 
 type taskFilter struct {
 	field      string
@@ -57,6 +58,9 @@ type taskFilter struct {
 
 func parseTimeFromUserInput(timeString string) (value time.Time, err error) {
 	value, err = time.Parse(time.RFC3339, timeString)
+	if err != nil {
+		value, err = time.Parse(safariDateAndTime, timeString)
+	}
 	if err != nil {
 		value, err = time.Parse(safariDate, timeString)
 	}
