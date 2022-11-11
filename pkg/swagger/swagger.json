@@ -86,7 +86,7 @@
                     {
                         "type": "integer",
                         "description": "Unsplash Image ID",
-                        "name": "thumb",
+                        "name": "image",
                         "in": "path",
                         "required": true
                     }
@@ -132,7 +132,7 @@
                     {
                         "type": "integer",
                         "description": "Unsplash Image ID",
-                        "name": "thumb",
+                        "name": "image",
                         "in": "path",
                         "required": true
                     }
@@ -5679,7 +5679,7 @@
                     {
                         "type": "integer",
                         "description": "The id of the other task.",
-                        "name": "otherTaskID",
+                        "name": "otherTaskId",
                         "in": "path",
                         "required": true
                     }

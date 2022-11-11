@@ -47,7 +47,7 @@ func unsplashImage(url string, c echo.Context) error {
 // @Description Get an unsplash image. **Returns json on error.**
 // @tags list
 // @Produce octet-stream
-// @Param thumb path int true "Unsplash Image ID"
+// @Param image path int true "Unsplash Image ID"
 // @Security JWTKeyAuth
 // @Success 200 {} string "The image"
 // @Failure 404 {object} models.Message "The image does not exist."
@@ -67,7 +67,7 @@ func ProxyUnsplashImage(c echo.Context) error {
 // @Description Get an unsplash thumbnail image. The thumbnail is cropped to a max width of 200px. **Returns json on error.**
 // @tags list
 // @Produce octet-stream
-// @Param thumb path int true "Unsplash Image ID"
+// @Param image path int true "Unsplash Image ID"
 // @Security JWTKeyAuth
 // @Success 200 {} string "The thumbnail"
 // @Failure 404 {object} models.Message "The image does not exist."
