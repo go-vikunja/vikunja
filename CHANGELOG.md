@@ -9,6 +9,135 @@ All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
 
+## [0.20.1] - 2022-11-11
+
+### Bug Fixes
+
+* *(auth)* Always redirect to external openid provider if only one is enabled
+* *(ci)* Cache folder name
+* *(gantt)* Don't try to load list NaN when opening a task from the gantt chart
+* *(kanban)* Don't allow dragging a bucket if a task input is focused
+* *(quick add magic)* Don't parse labels, assignees or lists as date expressions if they are called that
+* *(table)* Sort tasks by index instead of id
+* *(tasks)* Show any errors happening during task load* SetModuleLoading LoadingState type ([35f4bb1](35f4bb138554d300757420261d70d1a6bf6b9cc0))
+* Better kanban updateBucket types ([964aba4](964aba4824418e431955881be284e35f412e873b))
+* Disable props destructure error ([d6cb965](d6cb965ea7330f80f1e3c213442a049f63cba57e))
+* Missing href ([5d601ca](5d601ca4b34cd7368ff6061659617fff2836cdbc))
+* Multiselect modelValue prop type ([480aa88](480aa8813ec28e1228e02ba78dd3ee3037f4928a))
+* Potential issue with refs in Avatar ([3c5bfcc](3c5bfcc6f3cece0f3bd6e4f862a187c17a2c4d6c))
+* CoverImageAttachmentId ([e01df4d](e01df4d36996aa281ef73ee74f3ac5316a0b8a98))
+* Don't show user deletion menu entry in user settings if the server disabled it ([09b76b7](09b76b7bd476b9de653e53de579f1c533d101d4d))
+* Resolve issues with vue-easymde (#2629) ([eb59ca5](eb59ca5836ae8454885827bcf28a8476600bd122))
+* Remove wrong loadTask params (#2635) ([f7728e5](f7728e538408d15fcbfcd9ce02cd235447dfa6f0))
+* Remove duplicate store assignment (#2644) ([38cef79](38cef79f680ddf3612376a90c69198e01283a5a0))
+* Flatpickr types (#2647) ([7fbb6e8](7fbb6e8f700157238f8924ce95424d79a34b7543))
+* Sort task alphabetically ([612e592](612e592da799ee6a76d32c8ebc567aeadde3ee11))
+* Too much recursion error when opening a task from the gantt chart ([d47791b](d47791b95793aabf1524544494621b237479c15d))
+* Lint & formatting ([c2dd18e](c2dd18edaa8ac29446845a5028d1a04c1f39fc76))
+* Gantt route sync ([7ec2b6c](7ec2b6c0d28a1ae1799b1ed7a781efbf4c4542d7))
+* Gantt route sync (#2664) ([9450817](94508173dcfc75d606d490a536f80e10397fb69c))
+
+### Dependencies
+
+* *(deps)* Update dependency vite to v3.2.1
+* *(deps)* Update dependency @vue/test-utils to v2.2.1 (#2591)
+* *(deps)* Update pnpm to v7.14.1 (#2593)
+* *(deps)* Update dependency vue-flatpickr-component to v11
+* *(deps)* Update sentry-javascript monorepo to v7.17.3
+* *(deps)* Update dependency eslint-plugin-vue to v9.7.0
+* *(deps)* Update dependency caniuse-lite to v1.0.30001427
+* *(deps)* Update dependency blurhash to v2.0.4
+* *(deps)* Update dependency vitest to v0.24.4
+* *(deps)* Update dependency @types/node to v18.11.8
+* *(deps)* Update dependency vite to v3.2.2
+* *(deps)* Update dependency @kyvg/vue3-notification to v2.5.0
+* *(deps)* Update dependency @kyvg/vue3-notification to v2.5.1
+* *(deps)* Update dependency @kyvg/vue3-notification to v2.6.0 (#2612)
+* *(deps)* Update typescript-eslint monorepo to v5.42.0
+* *(deps)* Update dependency rollup to v3.2.4 (#2614)
+* *(deps)* Update dependency @kyvg/vue3-notification to v2.6.1 (#2615)
+* *(deps)* Update dependency rollup to v3.2.5 (#2618)
+* *(deps)* Update dependency @cypress/vite-dev-server to v3.4.0 (#2617)
+* *(deps)* Update dependency marked to v4.2.0 (#2616)
+* *(deps)* Update dependency @types/node to v18.11.9 (#2619)
+* *(deps)* Update dependency vitest to v0.24.5 (#2621)
+* *(deps)* Update dependency @cypress/vue to v4.2.2
+* *(deps)* Update dependency marked to v4.2.1 (#2625)
+* *(deps)* Update pnpm to v7.14.2
+* *(deps)* Update dependency esbuild to v0.15.13 (#2627)
+* *(deps)* Update sentry-javascript monorepo to v7.17.4 (#2628)
+* *(deps)* Pin dependency @types/codemirror to 5.60.5
+* *(deps)* Update dependency vite-plugin-pwa to v0.13.2 (#2632)
+* *(deps)* Update dependency sass to v1.56.0 (#2633)
+* *(deps)* Update dependency marked to v4.2.2 (#2636)
+* *(deps)* Update dependency eslint to v8.27.0
+* *(deps)* Update dependency caniuse-lite to v1.0.30001430 (#2639)
+* *(deps)* Update dependency netlify-cli to v12.1.0 (#2640)
+* *(deps)* Update dependency vite to v3.2.3
+* *(deps)* Update dependency @vitejs/plugin-legacy to v2.3.1 (#2641)
+* *(deps)* Update dependency vite-plugin-pwa to v0.13.3 (#2648)
+* *(deps)* Update dependency @cypress/vite-dev-server to v4 (#2651)
+* *(deps)* Update dependency vitest to v0.25.0 (#2650)
+* *(deps)* Update dependency @cypress/vue to v5 (#2652)
+* *(deps)* Update typescript-eslint monorepo to v5.42.1 (#2653)
+* *(deps)* Update dependency @cypress/vue to v5.0.1 (#2655)
+* *(deps)* Update sentry-javascript monorepo to v7.18.0
+* *(deps)* Update dependency vitest to v0.25.1 (#2657)
+* *(deps)* Update dependency @cypress/vite-dev-server to v4.0.1 (#2658)
+* *(deps)* Update vueuse to v9.5.0 (#2660)
+* *(deps)* Update dependency sass to v1.56.1 (#2661)
+* *(deps)* Update dependency vue to v3.2.42
+* *(deps)* Update dependency @fortawesome/vue-fontawesome to v3.0.2
+* *(deps)* Update dependency vue to v3.2.43 (#2663)
+* *(deps)* Update dependency vue to v3.2.44 (#2666)
+* *(deps)* Update pnpm to v7.15.0 (#2667)
+* *(deps)* Update dependency cypress to v11 (#2659)
+* *(deps)* Update dependency dompurify to v2.4.1 (#2669)
+
+### Features
+
+* *(ci)* Use 'always' for pull
+* *(ci)* Add kind everywhere
+* *(ci)* Update cypress image
+* *(ci)* Improve drone config (#2637)
+* *(tests)* Add tests for gantt chart time range
+* *(tests)* Add tests for gantt chart task detail open* Task store with composition api (#2610) ([839d331](839d331bf51f9a0e9742b9972dbd6a88fa38f1c3))
+* Auth store with composition api (#2602) ([825ba10](825ba100f0c05e1ab98d401157c30aad8658afa6))
+* Config store with composition api (#2604) ([15ef86d](15ef86d597ceb8731febf789f1b812a339273e40))
+* Base store with composition api (#2601) ([b4f4fd4](b4f4fd45a4c98629de182033e808cf7b22a1fe4a))
+* Attachments store with composition api (#2603) ([a50eca8](a50eca852fcb841166baa07a6cc405eeb70c6e9d))
+* Namespaces store with composition api (#2607) ([0832184](08321842220798b478ffaef7e9e11c527cb5b3bd))
+* Lists store with composition api (#2606) ([5ae8bac](5ae8bace820b05d3ad05f40ab51164ec2c35c068))
+* Label store with composition api (#2605) ([1002579](1002579173bd4b89e157c78ac607abd7969d85bc))
+* Type improvements ([599e28e](599e28e5e5d56e4ced338ec1c79fea7d4576b85a))
+* Type global components and especially icon prop ([a2c1702](a2c1702eef64dd779c86940898bd49fc2c96233f))
+* Rework BaseButton ([e8c6afc](e8c6afce7298267f2f77ece0a746218c2eb3f7b7))
+* Rework XButton ([4cd0e90](4cd0e90feaab05a2275e92affda23dde7453013f))
+* Rework dropdown-item ([02deb0b](02deb0beddbc9221bdcafd0d09cee383571dae55))
+* Rework popup ([0b58973](0b58973d872d8d54c9a829a06c8535a7a7115613))
+* SingleTaskInList script setup (#2463) ([44e6981](44e6981759261cdada6388384cbad96e5401b8a9))
+* Add type info ([0182695](0182695cda1252a65df3f48fdc316e82cd7fadbd))
+* Rename http-common to fetcher (#2620) ([096daad](096daad80a9c089e732116ce3b8aa4310a611368))
+* Improved types (#2547) ([0ff0d8c](0ff0d8c5b89bd6a8b628ddbe6074f61797b6b9c1))
+* MigrateService script setup (#2432) ([8b7b4d6](8b7b4d61a3b9dd01ab58b7e7dd30bf649b62fcf6))
+* Sticky action buttons (#2622) ([f4bc2b9](f4bc2b94f0466a357361a69cfb3562e84d1ea439))
+* Simpliy editAssignees (#2646) ([d9a8382](d9a83820495f34ddbd776f70cabdc24bbb1c3f32))
+* Remove comments from prioritySelect (#2645) ([6a93701](6a93701649d35622d13dda969aae4aedf145d4d0))
+* ListKanban script setup (#2643) ([d85abbd](d85abbd77a8197e977fdbfec0ee309736cce05fa))
+* Kanban store with composition api ([f0492d4](f0492d49ef5cd99d95085deec066cec85f4688b3))
+
+### Miscellaneous Tasks
+
+* *(ci)* Sign drone config* Remove comment ([1101fcb](1101fcb3fff1fce102a7418b1e2734a71cdf84e2))
+* Improve multiselect hover types ([caa29c1](caa29c152d35b28658773b838de0a8909d0e509f))
+* Remove unused processModel in services (#2624) ([7f00c7d](7f00c7dabd1e55ec0e9a86ca495f702a38ddb18d))
+* Inline simple helper (#2631) ([e49f960](e49f960aea2ead5baca6965649821db6584cbac2))
+* Move run.sh in scripts folder (#2649) ([5057b69](5057b69382ca65659b624206b381d8f1500bae82))
+
+### Other
+
+* *(other)* [skip ci] Updated translations via Crowdin
+
 ## [0.20.0] - 2022-10-28
 
 ### Bug Fixes
