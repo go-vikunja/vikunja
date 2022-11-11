@@ -7,6 +7,39 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.20.1] - 2022-11-11
+
+### Bug Fixes
+
+* *(docs)* Add explanation on how to run the cli in docker
+* *(filter)* Also check for 0 values if the filter should include nulls
+* *(filter)* Only check for 0 values in filter fields with numeric values
+* *(filters)* Try to parse date filter fields of the provided dates are not valid iso dates
+* *(filters)* Try parsing dates without time
+* *(filters)* Try parsing invalid dates like 2022-11-1
+* *(metrics)* Make currently active users actually work
+* *(task)* Duplicate reminders when adding different ones between winter / summer time
+* *(tasks)* Allow sorting by task index* Make sure task indexes are calculated correctly when moving tasks between lists ([c495096](c4950964443a9bffc4cdd8fc25004ad951520f20))
+* Look for the default bucket based on the position instead of the index ([622f2f0](622f2f0562bd8e3a5c97ec0b001c646a33a86c2b))
+* Usage with postgres over unix socket (#1308) ([641a9da](641a9da93d24a18d6cbad2929eea1be6c1e0d0b2))
+
+### Dependencies
+
+* *(deps)* Update module github.com/prometheus/client_golang to v1.13.1 (#1307)
+* *(deps)* Update module github.com/spf13/viper to v1.14.0 (#1309)
+* *(deps)* Update module golang.org/x/sys to v0.2.0 (#1311)
+* *(deps)* Update module golang.org/x/term to v0.2.0 (#1312)
+* *(deps)* Update module github.com/prometheus/client_golang to v1.14.0 (#1313)
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.15.0 (#1314)
+
+### Features
+
+* *(docs)* Add relase checklist
+
+### Other
+
+* *(other)* Nessecary is a common misspelling of necessary (#1304)
+
 ## [0.20.0] - 2022-10-28
 
 ### Bug Fixes
