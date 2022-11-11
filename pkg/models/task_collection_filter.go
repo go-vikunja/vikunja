@@ -64,6 +64,27 @@ func parseTimeFromUserInput(timeString string) (value time.Time, err error) {
 	if err != nil {
 		value, err = time.Parse(safariDate, timeString)
 	}
+	if err != nil {
+		// Here we assume a date like 2022-11-1 and try to parse it manually
+		parts := strings.Split(timeString, "-")
+		if len(parts) < 3 {
+			return
+		}
+		year, err := strconv.Atoi(parts[0])
+		if err != nil {
+			return value, err
+		}
+		month, err := strconv.Atoi(parts[1])
+		if err != nil {
+			return value, err
+		}
+		day, err := strconv.Atoi(parts[2])
+		if err != nil {
+			return value, err
+		}
+		value = time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
+		return value.In(config.GetTimeZone()), nil
+	}
 	return value.In(config.GetTimeZone()), err
 }
 
