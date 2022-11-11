@@ -9,6 +9,13 @@ All releases can be found on https://code.vikunja.io/desktop/releases.
 
 The releases aim at the api and frontend versions which is why there are missing versions.
 
+## [0.20.1] - 2022-11-11
+
+### Dependencies
+
+* *(deps)* Update dependency electron to v21.2.1 (#125)
+* *(deps)* Update dependency electron to v21.2.2 (#126)
+
 ## [0.20.0] - 2022-10-28
 
 ### Dependencies
