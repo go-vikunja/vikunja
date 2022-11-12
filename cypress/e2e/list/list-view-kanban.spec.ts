@@ -204,4 +204,37 @@ describe('List View Kanban', () => {
 		cy.get('.list-kanban .filter-container .base-button')
 			.should('exist')
 	})
+	
+	it('Should remove a task from the board when deleting it', () => {
+		const lists = ListFactory.create(1)
+		const buckets = BucketFactory.create(2, {
+			list_id: lists[0].id,
+		})
+		const tasks = TaskFactory.create(5, {
+			list_id: 1,
+			bucket_id: buckets[0].id,
+		})
+		const task = tasks[0]
+		cy.visit('/lists/1/kanban')
+
+		cy.getSettled('.kanban .bucket .tasks .task')
+			.contains(task.title)
+			.should('be.visible')
+			.click()
+		cy.get('.task-view .action-buttons .button')
+			.should('be.visible')
+			.contains('Delete')
+			.click()
+		cy.get('.modal-mask .modal-container .modal-content .header')
+			.should('contain', 'Delete this task')
+		cy.get('.modal-mask .modal-container .modal-content .actions .button')
+			.contains('Do it!')
+			.click()
+
+		cy.get('.global-notification')
+			.should('contain', 'Success')
+		
+		cy.getSettled('.kanban .bucket .tasks')
+			.should('not.contain', task.title)
+	})
 })

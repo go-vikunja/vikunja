@@ -200,9 +200,9 @@ export const useKanbanStore = defineStore('kanban', () => {
 		const { bucketIndex, taskIndex } = getTaskIndicesById(buckets.value, task.id)
 
 		if (
-			!bucketIndex || 
+			bucketIndex === null ||
 			buckets.value[bucketIndex]?.id !== task.bucketId ||
-			!taskIndex ||
+			taskIndex === null ||
 			(buckets.value[bucketIndex]?.tasks[taskIndex]?.id !== task.id)
 		) {
 			return
