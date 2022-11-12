@@ -627,101 +627,10 @@ steps:
 ---
 kind: pipeline
 type: docker
-name: docker-arm-release
+name: docker-release
 
 depends_on:
   - testing
-
-platform:
-  os: linux
-  arch: arm64
-
-trigger:
-  ref:
-    - refs/heads/main
-    - "refs/tags/**"
-
-steps:
-  - name: fetch-tags
-    image: docker:git
-    commands:
-      - git fetch --tags
-
-  - name: docker-arm-unstable
-    image: plugins/docker:linux-arm
-    pull: true
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/api
-      tags: unstable-linux-arm
-      dockerfile: Dockerfile.arm32
-    depends_on: [ fetch-tags ]
-    when:
-      ref:
-        - refs/heads/main
-
-  - name: docker-arm
-    image: plugins/docker:linux-arm
-    pull: true
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/api
-      auto_tag: true
-      auto_tag_suffix: linux-arm
-      dockerfile: Dockerfile.arm32
-    depends_on: [ fetch-tags ]
-    when:
-      ref:
-        - "refs/tags/**"
-
-  - name: docker-arm64-unstable
-    image: plugins/docker:linux-arm64
-    pull: true
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/api
-      tags: unstable-linux-arm64
-    depends_on: [ fetch-tags ]
-    when:
-      ref:
-        - refs/heads/main
-
-  - name: docker-arm64
-    image: plugins/docker:linux-arm64
-    pull: true
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/api
-      auto_tag: true
-      auto_tag_suffix: linux-arm64
-    depends_on: [ fetch-tags ]
-    when:
-      ref:
-        - "refs/tags/**"
-
----
-kind: pipeline
-type: docker
-name: docker-amd64-release
-
-depends_on:
-  - testing
-
-platform:
-  os: linux
-  arch: amd64
 
 trigger:
   ref:
@@ -735,7 +644,8 @@ steps:
       - git fetch --tags
 
   - name: docker-unstable
-    image: plugins/docker:linux-amd64
+    image: thegeeklab/drone-docker-buildx
+    privileged: true
     pull: true
     settings:
       username:
@@ -743,86 +653,36 @@ steps:
       password:
         from_secret: docker_password
       repo: vikunja/api
-      tags: unstable-linux-amd64
-    depends_on: [ fetch-tags ]
-    when:
-      ref:
-        - refs/heads/main
-
-  - name: docker
-    image: plugins/docker:linux-amd64
-    pull: true
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/api
-      auto_tag: true
-      auto_tag_suffix: linux-amd64
-    depends_on: [ fetch-tags ]
-    when:
-      ref:
-        - "refs/tags/**"
-
----
-kind: pipeline
-type: docker
-name: docker-manifest
-
-trigger:
-  ref:
-    - refs/heads/main
-    - "refs/tags/**"
-
-depends_on:
-  - docker-amd64-release
-  - docker-arm-release
-
-steps:
-  - name: manifest-unstable
-    pull: always
-    image: plugins/manifest
-    settings:
       tags: unstable
-      ignore_missing: true
-      spec: docker-manifest-unstable.tmpl
-      password:
-        from_secret: docker_password
-      username:
-        from_secret: docker_username
+      platforms:
+        - linux/386
+        - linux/amd64
+        - linux/arm/v6
+        - linux/arm/v7
+        - linux/arm64/v8
+    depends_on: [ fetch-tags ]
     when:
       ref:
         - refs/heads/main
 
-  - name: manifest-release
-    pull: always
-    image: plugins/manifest
+  - name: docker-release
+    image: thegeeklab/drone-docker-buildx
+    privileged: true
+    pull: true
     settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/api
       auto_tag: true
-      ignore_missing: true
-      spec: docker-manifest.tmpl
-      password:
-        from_secret: docker_password
-      username:
-        from_secret: docker_username
-    when:
-      ref:
-        - "refs/tags/**"
-
-  - name: manifest-release-latest
-    pull: always
-    image: plugins/manifest
-    depends_on:
-      - clone
-    settings:
-      tags: latest
-      ignore_missing: true
-      spec: docker-manifest.tmpl
-      password:
-        from_secret: docker_password
-      username:
-        from_secret: docker_username
+      platforms:
+        - linux/386
+        - linux/amd64
+        - linux/arm/v6
+        - linux/arm/v7
+        - linux/arm64/v8
+    depends_on: [ fetch-tags ]
     when:
       ref:
         - "refs/tags/**"
@@ -861,6 +721,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 5500acb776acae4975592637767035c45af277f1f56c8d10ffd99f38761cd5c8
+hmac: 9af6de023ca9e78e0b485948b58764007cb169ee3cbcdd9e909c2049f5d20740
 
 ...

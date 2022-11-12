@@ -546,6 +546,20 @@ func (Release) Darwin() error {
 	return runXgo("darwin-10.15/*")
 }
 
+func (Release) Xgo(target string) error {
+	parts := strings.Split(target, "/")
+	if len(parts) < 2 {
+		return fmt.Errorf("invalid target")
+	}
+
+	variant := ""
+	if len(parts) > 2 && parts[2] != "" {
+		variant = "-" + strings.ReplaceAll(parts[2], "v", "")
+	}
+
+	return runXgo(parts[0] + "/" + parts[1] + variant)
+}
+
 // Compresses the built binaries in dist/binaries/ to reduce their filesize
 func (Release) Compress(ctx context.Context) error {
 	// $(foreach file,$(filter-out $(wildcard $(wildcard $(DIST)/binaries/$(EXECUTABLE)-*mips*)),$(wildcard $(DIST)/binaries/$(EXECUTABLE)-*)), upx -9 $(file);)
