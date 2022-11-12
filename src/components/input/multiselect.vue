@@ -9,7 +9,8 @@
 		<div class="control" :class="{'is-loading': loading || localLoading}">
 			<div
 				class="input-wrapper input"
-				:class="{'has-multiple': hasMultiple}">
+				:class="{'has-multiple': hasMultiple}"
+			>
 				<template v-if="Array.isArray(internalValue)">
 					<template v-for="(item, key) in internalValue">
 						<slot name="tag" :item="item">
@@ -38,7 +39,7 @@
 		<transition name="fade">
 			<div class="search-results" :class="{'search-results-inline': inline}" v-if="searchResultsVisible">
 				<BaseButton
-					class="is-fullwidth"
+					class="search-result-button is-fullwidth"
 					v-for="(data, index) in filteredSearchResults"
 					:key="index"
 					:ref="(el) => setResult(el, index)"
@@ -58,7 +59,7 @@
 
 				<BaseButton
 					v-if="creatableAvailable"
-					class="is-fullwidth"
+					class="search-result-button is-fullwidth"
 					:ref="(el) => setResult(el, filteredSearchResults.length)"
 					@keydown.up.prevent="() => preSelect(filteredSearchResults.length - 1)"
 					@keydown.down.prevent="() => preSelect(filteredSearchResults.length + 1)"
@@ -434,122 +435,125 @@ function focus() {
 	.control.is-loading::after {
 		top: .75rem;
 	}
+}
 
-	&.has-search-results .input-wrapper {
-		border-radius: $radius $radius 0 0;
-		border-color: var(--primary) !important;
-		background: var(--white) !important;
+.input-wrapper {
+	padding: 0;
+	background: var(--white);
+	border-color: var(--grey-200);
+	flex-wrap: wrap;
+	height: auto;
 
-		&, &:focus-within {
-			border-bottom-color: var(--grey-200) !important;
-		}
+	&:hover {
+		border-color: var(--grey-300) !important;
 	}
 
-	.input-wrapper {
-		padding: 0;
-		background: var(--white);
-		border-color: var(--grey-200);
-		flex-wrap: wrap;
+	.input {
+		display: flex;
+		max-width: 100%;
+		width: 100%;
+		align-items: center;
+		border: none !important;
+		background: transparent;
 		height: auto;
 
-		&:hover {
-			border-color: var(--grey-300) !important;
-		}
-
-		.input {
-			display: flex;
-			max-width: 100%;
-			width: 100%;
-			align-items: center;
-			border: none !important;
-			background: transparent;
-			height: auto;
-
-			&::placeholder {
-				font-style: normal !important;
-			}
-		}
-
-		&.has-multiple .input {
-			max-width: 250px;
-
-			input {
-				padding-left: 0;
-			}
-		}
-
-		&:focus-within {
-			border-color: var(--primary) !important;
-			background: var(--white) !important;
-		}
-
-		.loader {
-			margin: 0 .5rem;
+		&::placeholder {
+			font-style: normal !important;
 		}
 	}
 
-	.search-results {
-		background: var(--white);
-		border-radius: 0 0 $radius $radius;
-		border: 1px solid var(--primary);
-		border-top: none;
+	&.has-multiple .input {
+		max-width: 250px;
 
-		max-height: 50vh;
-		overflow-x: auto;
-		position: absolute;
-		z-index: 100;
-		max-width: 100%;
-		min-width: 100%;
-
-		&-inline {
-			position: static;
-		}
-
-		button {
-			background: transparent;
-			text-align: left;
-			box-shadow: none;
-			border-radius: 0;
-			text-transform: none;
-			font-family: $family-sans-serif;
-			font-weight: normal;
-			padding: .5rem;
-			border: none;
-			cursor: pointer;
-			color: var(--grey-800);
-
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			overflow: hidden;
-
-			.search-result {
-				white-space: nowrap;
-				text-overflow: ellipsis;
-				overflow: hidden;
-				padding: .5rem .75rem;
-			}
-
-			.hint-text {
-				font-size: .75rem;
-				color: transparent;
-				transition: color $transition;
-				padding-left: .5rem;
-			}
-
-			&:focus, &:hover {
-				background: var(--grey-100);
-				box-shadow: none !important;
-
-				.hint-text {
-					color: var(--text);
-				}
-			}
-
-			&:active {
-				background: var(--grey-200);
-			}
+		input {
+			padding-left: 0;
 		}
 	}
+
+	&:focus-within {
+		border-color: var(--primary) !important;
+		background: var(--white) !important;
+	}
+
+	// doesn't seem to be used. maybe inside the slot?
+	.loader {
+		margin: 0 .5rem;
+	}
+}
+
+.has-search-results .input-wrapper {
+	border-radius: $radius $radius 0 0;
+	border-color: var(--primary) !important;
+	background: var(--white) !important;
+
+	&, &:focus-within {
+		border-bottom-color: var(--grey-200) !important;
+	}
+}
+
+.search-results {
+	background: var(--white);
+	border-radius: 0 0 $radius $radius;
+	border: 1px solid var(--primary);
+	border-top: none;
+
+	max-height: 50vh;
+	overflow-x: auto;
+	position: absolute;
+	z-index: 100;
+	max-width: 100%;
+	min-width: 100%;
+}
+
+.search-results-inline {
+	position: static;
+}
+
+.search-result-button {
+	background: transparent;
+	text-align: left;
+	box-shadow: none;
+	border-radius: 0;
+	text-transform: none;
+	font-family: $family-sans-serif;
+	font-weight: normal;
+	padding: .5rem;
+	border: none;
+	cursor: pointer;
+	color: var(--grey-800);
+
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	overflow: hidden;
+
+	&:focus,
+	&:hover {
+		background: var(--grey-100);
+		box-shadow: none !important;
+
+		.hint-text {
+			color: var(--text);
+		}
+	}
+
+	&:active {
+		background: var(--grey-200);
+	}
+}
+
+.search-result {
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	padding: .5rem .75rem;
+}
+
+
+.hint-text {
+	font-size: .75rem;
+	color: transparent;
+	transition: color $transition;
+	padding-left: .5rem;
 }
 </style>
