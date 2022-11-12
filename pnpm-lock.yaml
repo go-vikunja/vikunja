@@ -16,7 +16,7 @@ specifiers:
   '@sentry/tracing': 7.19.0
   '@sentry/vue': 7.19.0
   '@types/codemirror': 5.60.5
-  '@types/dompurify': 2.3.4
+  '@types/dompurify': 2.4.0
   '@types/flexsearch': 0.7.3
   '@types/is-touch-device': 1.0.0
   '@types/lodash.clonedeep': 4.5.7
@@ -144,7 +144,7 @@ devDependencies:
   '@faker-js/faker': 7.6.0
   '@rushstack/eslint-patch': 1.2.0
   '@types/codemirror': 5.60.5
-  '@types/dompurify': 2.3.4
+  '@types/dompurify': 2.4.0
   '@types/flexsearch': 0.7.3
   '@types/lodash.debounce': 4.0.7
   '@types/marked': 4.0.7
@@ -2934,8 +2934,8 @@ packages:
       '@types/node': 18.11.9
     dev: true
 
-  /@types/dompurify/2.3.4:
-    resolution: {integrity: sha512-EXzDatIb5EspL2eb/xPGmaC8pePcTHrkDCONjeisusLFrVfl38Pjea/R0YJGu3k9ZQadSvMqW0WXPI2hEo2Ajg==}
+  /@types/dompurify/2.4.0:
+    resolution: {integrity: sha512-IDBwO5IZhrKvHFUl+clZxgf3hn2b/lU6H1KaBShPkQyGJUQ0xwebezIPSuiyGwfz1UzJWQl4M7BDxtHtCCPlTg==}
     dependencies:
       '@types/trusted-types': 2.0.2
     dev: true
