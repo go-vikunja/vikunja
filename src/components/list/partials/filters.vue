@@ -13,11 +13,14 @@
 			>
 				{{ $t('filters.attributes.requireAll') }}
 			</fancycheckbox>
-			<fancycheckbox v-model="filters.done" @update:model-value="setDoneFilter">
+			<fancycheckbox
+				v-model="filters.done"
+				@update:model-value="setDoneFilter"
+			>
 				{{ $t('filters.attributes.showDoneTasks') }}
 			</fancycheckbox>
 			<fancycheckbox
-				v-if="!$route.name.includes('list.kanban') || !$route.name.includes('list.table')"
+				v-if="!['list.kanban', 'list.table'].includes($route.name as string)"
 				v-model="sortAlphabetically"
 				@update:model-value="change()"
 			>
@@ -40,9 +43,9 @@
 			<label class="label">{{ $t('task.attributes.priority') }}</label>
 			<div class="control single-value-control">
 				<priority-select
-					:disabled="!filters.usePriority || undefined"
 					v-model.number="filters.priority"
 					@update:model-value="setPriority"
+					:disabled="!filters.usePriority || undefined"
 				/>
 				<fancycheckbox
 					v-model="filters.usePriority"
@@ -132,16 +135,10 @@
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.assignees') }}</label>
 			<div class="control">
-				<multiselect
-					:loading="usersService.loading"
-					:placeholder="$t('team.edit.search')"
-					@search="query => find('users', query)"
-					:search-results="foundusers"
-					@select="() => add('users', 'assignees')"
-					label="username"
-					:multiple="true"
-					@remove="() => remove('users', 'assignees')"
-					v-model="users"
+				<SelectUser
+					v-model="entities.users"
+					@select="changeMultiselectFilter('users', 'assignees')"
+					@remove="changeMultiselectFilter('users', 'assignees')"
 				/>
 			</div>
 		</div>
@@ -149,41 +146,32 @@
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.labels') }}</label>
 			<div class="control labels-list">
-				<edit-labels v-model="labels" @update:model-value="changeLabelFilter"/>
+				<edit-labels
+					v-model="entities.labels"
+					@update:model-value="changeLabelFilter"
+				/>
 			</div>
 		</div>
 
 		<template
-			v-if="$route.name === 'filters.create' || $route.name === 'list.edit' || $route.name === 'filter.settings.edit'">
+			v-if="['filters.create', 'list.edit', 'filter.settings.edit'].includes($route.name as string)">
 			<div class="field">
 				<label class="label">{{ $t('list.lists') }}</label>
 				<div class="control">
-					<multiselect
-						:loading="listsService.loading"
-						:placeholder="$t('list.search')"
-						@search="query => find('lists', query)"
-						:search-results="foundlists"
-						@select="() => add('lists', 'list_id')"
-						label="title"
-						@remove="() => remove('lists', 'list_id')"
-						:multiple="true"
-						v-model="lists"
+					<SelectList
+						v-model="entities.lists"
+						@select="changeMultiselectFilter('lists', 'list_id')"
+						@remove="changeMultiselectFilter('lists', 'list_id')"
 					/>
 				</div>
 			</div>
 			<div class="field">
 				<label class="label">{{ $t('namespace.namespaces') }}</label>
 				<div class="control">
-					<multiselect
-						:loading="namespaceService.loading"
-						:placeholder="$t('namespace.search')"
-						@search="query => find('namespace', query)"
-						:search-results="foundnamespace"
-						@select="() => add('namespace', 'namespace')"
-						label="title"
-						@remove="() => remove('namespace', 'namespace')"
-						:multiple="true"
-						v-model="namespace"
+					<SelectNamespace
+						v-model="entities.namespace"
+						@select="changeMultiselectFilter('namespace', 'namespace')"
+						@remove="changeMultiselectFilter('namespace', 'namespace')"
 					/>
 				</div>
 			</div>
@@ -192,28 +180,39 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
+export const ALPHABETICAL_SORT = 'title'
+</script>
+
+<script setup lang="ts">
+import {computed, nextTick, onMounted, reactive, ref, shallowReactive, toRefs, watch} from 'vue'
+import {camelCase} from 'camel-case'
+
+import type {ILabel} from '@/modelTypes/ILabel'
+import type {IUser} from '@/modelTypes/IUser'
+import type {INamespace} from '@/modelTypes/INamespace'
+import type {IList} from '@/modelTypes/IList'
 
 import {useLabelStore} from '@/stores/labels'
 
 import DatepickerWithRange from '@/components/date/datepickerWithRange.vue'
-import Fancycheckbox from '@/components/input/fancycheckbox.vue'
-
-import {includesById} from '@/helpers/utils'
 import PrioritySelect from '@/components/tasks/partials/prioritySelect.vue'
 import PercentDoneSelect from '@/components/tasks/partials/percentDoneSelect.vue'
-import Multiselect from '@/components/input/multiselect.vue'
+import EditLabels from '@/components/tasks/partials/editLabels.vue'
+import Fancycheckbox from '@/components/input/fancycheckbox.vue'
+import SelectUser from '@/components/input/SelectUser.vue'
+import SelectList from '@/components/input/SelectList.vue'
+import SelectNamespace from '@/components/input/SelectNamespace.vue'
+
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
+import {dateIsValid, formatISO} from '@/helpers/time/formatDate'
+import {objectToSnakeCase} from '@/helpers/case'
 
 import UserService from '@/services/user'
 import ListService from '@/services/list'
 import NamespaceService from '@/services/namespace'
-import EditLabels from '@/components/tasks/partials/editLabels.vue'
 
-import {dateIsValid, formatISO} from '@/helpers/time/formatDate'
-import {objectToSnakeCase} from '@/helpers/case'
+// FIXME: do not use this here for now. instead create new version from DEFAULT_PARAMS
 import {getDefaultParams} from '@/composables/useTaskList'
-import {camelCase} from 'camel-case'
 
 // FIXME: merge with DEFAULT_PARAMS in taskList.js
 const DEFAULT_PARAMS = {
@@ -225,7 +224,7 @@ const DEFAULT_PARAMS = {
 	filter_include_nulls: true,
 	filter_concat: 'or',
 	s: '',
-}
+} as const
 
 const DEFAULT_FILTERS = {
 	done: false,
@@ -242,395 +241,350 @@ const DEFAULT_FILTERS = {
 	labels: '',
 	list_id: '',
 	namespace: '',
-}
+} as const
 
-export const ALPHABETICAL_SORT = 'title'
-
-export default defineComponent({
-	name: 'filters',
-	components: {
-		DatepickerWithRange,
-		EditLabels,
-		PrioritySelect,
-		Fancycheckbox,
-		PercentDoneSelect,
-		Multiselect,
+const props = defineProps({
+	modelValue: {
+		required: true,
 	},
-	data() {
-		return {
-			params: DEFAULT_PARAMS,
-			filters: DEFAULT_FILTERS,
-
-			usersService: new UserService(),
-			foundusers: [],
-			users: [],
-
-			labelQuery: '',
-			labels: [],
-
-			listsService: new ListService(),
-			foundlists: [],
-			lists: [],
-
-			namespaceService: new NamespaceService(),
-			foundnamespace: [],
-			namespace: [],
-		}
-	},
-	mounted() {
-		this.filters.requireAllFilters = this.params.filter_concat === 'and'
-	},
-	props: {
-		modelValue: {
-			required: true,
-		},
-		hasTitle: {
-			type: Boolean,
-			default: false,
-		},
-	},
-	emits: ['update:modelValue'],
-	watch: {
-		modelValue: {
-			handler(value) {
-				// FIXME: filters should only be converted to snake case in
-				// the last moment
-				this.params = objectToSnakeCase(value)
-				this.prepareFilters()
-			},
-			immediate: true,
-		},
-	},
-	computed: {
-		sortAlphabetically: {
-			get() {
-				return this.params?.sort_by?.find(sortBy => sortBy === ALPHABETICAL_SORT) !== undefined
-			},
-			set(sortAlphabetically) {
-				this.params.sort_by = sortAlphabetically
-					? [ALPHABETICAL_SORT]
-					: getDefaultParams().sort_by
-
-				this.change()
-			},
-		},
-
-		foundLabels() {
-			const labelStore = useLabelStore()
-			return labelStore.filterLabelsByQuery(this.labels, this.labelQuery)
-		},
-	},
-	methods: {
-		change() {
-			const params = {...this.params}
-			params.filter_value = params.filter_value.map(v => v instanceof Date ? v.toISOString() : v)
-			this.$emit('update:modelValue', params)
-		},
-		prepareFilters() {
-			this.prepareDone()
-			this.prepareDate('due_date', 'dueDate')
-			this.prepareDate('start_date', 'startDate')
-			this.prepareDate('end_date', 'endDate')
-			this.prepareSingleValue('priority', 'priority', 'usePriority', true)
-			this.prepareSingleValue('percent_done', 'percentDone', 'usePercentDone', true)
-			this.prepareDate('reminders')
-			this.prepareRelatedObjectFilter('users', 'assignees')
-			this.prepareRelatedObjectFilter('lists', 'list_id')
-			this.prepareRelatedObjectFilter('namespace')
-
-			this.prepareSingleValue('labels')
-
-			const labels = typeof this.filters.labels === 'string'
-				? this.filters.labels
-				: ''
-			const labelIds = labels.split(',').map(i => parseInt(i))
-
-			const labelStore = useLabelStore()
-			this.labels = labelStore.getLabelsByIds(labelIds)
-		},
-		removePropertyFromFilter(propertyName) {
-			// Because of the way arrays work, we can only ever remove one element at once.
-			// To remove multiple filter elements of the same name this function has to be called multiple times.
-			for (const i in this.params.filter_by) {
-				if (this.params.filter_by[i] === propertyName) {
-					this.params.filter_by.splice(i, 1)
-					this.params.filter_comparator.splice(i, 1)
-					this.params.filter_value.splice(i, 1)
-					break
-				}
-			}
-		},
-		setDateFilter(filterName, {dateFrom, dateTo}) {
-			dateFrom = parseDateOrString(dateFrom, null)
-			dateTo = parseDateOrString(dateTo, null)
-
-			// Only filter if we have a date
-			if (dateFrom !== null && dateTo !== null) {
-
-				// Check if we already have values in params and only update them if we do
-				let foundStart = false
-				let foundEnd = false
-				this.params.filter_by.forEach((f, i) => {
-					if (f === filterName && this.params.filter_comparator[i] === 'greater_equals') {
-						foundStart = true
-						this.params.filter_value[i] = dateFrom
-					}
-					if (f === filterName && this.params.filter_comparator[i] === 'less_equals') {
-						foundEnd = true
-						this.params.filter_value[i] = dateTo
-					}
-				})
-
-				if (!foundStart) {
-					this.params.filter_by.push(filterName)
-					this.params.filter_comparator.push('greater_equals')
-					this.params.filter_value.push(dateFrom)
-				}
-				if (!foundEnd) {
-					this.params.filter_by.push(filterName)
-					this.params.filter_comparator.push('less_equals')
-					this.params.filter_value.push(dateTo)
-				}
-
-				this.filters[camelCase(filterName)] = {
-					// Passing the dates as string values avoids an endless loop between values changing 
-					// in the datepicker (bubbling up to here) and changing here and bubbling down to the 
-					// datepicker (because there's a new date instance every time this function gets called).
-					// See https://kolaente.dev/vikunja/frontend/issues/2384
-					dateFrom: dateIsValid(dateFrom) ? formatISO(dateFrom) : dateFrom,
-					dateTo: dateIsValid(dateTo) ? formatISO(dateTo) : dateTo,
-				}
-				this.change()
-				return
-			}
-
-			this.removePropertyFromFilter(filterName)
-			this.removePropertyFromFilter(filterName)
-			this.change()
-		},
-		prepareDate(filterName, variableName) {
-			if (typeof this.params.filter_by === 'undefined') {
-				return
-			}
-
-			let foundDateStart = false
-			let foundDateEnd = false
-			for (const i in this.params.filter_by) {
-				if (this.params.filter_by[i] === filterName && this.params.filter_comparator[i] === 'greater_equals') {
-					foundDateStart = i
-				}
-				if (this.params.filter_by[i] === filterName && this.params.filter_comparator[i] === 'less_equals') {
-					foundDateEnd = i
-				}
-
-				if (foundDateStart !== false && foundDateEnd !== false) {
-					break
-				}
-			}
-
-			if (foundDateStart !== false && foundDateEnd !== false) {
-				const startDate = new Date(this.params.filter_value[foundDateStart])
-				const endDate = new Date(this.params.filter_value[foundDateEnd])
-				this.filters[variableName] = {
-					dateFrom: !isNaN(startDate)
-						? `${startDate.getFullYear()}-${startDate.getMonth() + 1}-${startDate.getDate()}`
-						: this.params.filter_value[foundDateStart],
-					dateTo: !isNaN(endDate)
-						? `${endDate.getFullYear()}-${endDate.getMonth() + 1}-${endDate.getDate()}`
-						: this.params.filter_value[foundDateEnd],
-				}
-			}
-		},
-		setSingleValueFilter(filterName, variableName, useVariableName = '', comparator = 'equals') {
-			if (useVariableName !== '' && !this.filters[useVariableName]) {
-				this.removePropertyFromFilter(filterName)
-				return
-			}
-
-			let found = false
-			this.params.filter_by.forEach((f, i) => {
-				if (f === filterName) {
-					found = true
-					this.params.filter_value[i] = this.filters[variableName]
-				}
-			})
-
-			if (!found) {
-				this.params.filter_by.push(filterName)
-				this.params.filter_comparator.push(comparator)
-				this.params.filter_value.push(this.filters[variableName])
-			}
-
-			this.change()
-		},
-		/**
-		 *
-		 * @param filterName The filter name in the api.
-		 * @param variableName The name of the variable in this.filters.
-		 * @param useVariableName The name of the variable of the "Use this filter" variable. Will only be set if the parameter is not null.
-		 * @param isNumber Toggles if the value should be parsed as a number.
-		 */
-		prepareSingleValue(filterName, variableName = null, useVariableName = null, isNumber = false) {
-			if (variableName === null) {
-				variableName = filterName
-			}
-
-			let found = false
-			for (const i in this.params.filter_by) {
-				if (this.params.filter_by[i] === filterName) {
-					found = i
-					break
-				}
-			}
-
-			if (found === false && useVariableName !== null) {
-				this.filters[useVariableName] = false
-				return
-			}
-
-			if (isNumber) {
-				this.filters[variableName] = Number(this.params.filter_value[found])
-			} else {
-				this.filters[variableName] = this.params.filter_value[found]
-			}
-
-			if (useVariableName !== null) {
-				this.filters[useVariableName] = true
-			}
-		},
-		prepareDone() {
-			// Set filters.done based on params
-			if (typeof this.params.filter_by === 'undefined') {
-				return
-			}
-
-			this.filters.done = this.params.filter_by.some((f) => f === 'done') === false
-		},
-		async prepareRelatedObjectFilter(kind, filterName = null, servicePrefix = null) {
-			if (filterName === null) {
-				filterName = kind
-			}
-
-			if (servicePrefix === null) {
-				servicePrefix = kind
-			}
-
-			this.prepareSingleValue(filterName)
-			if (typeof this.filters[filterName] === 'undefined' || this.filters[filterName] === '') {
-				return
-			}
-
-			// Don't load things if we already have something loaded.
-			// This is not the most ideal solution because it prevents a re-population when filters are changed 
-			// from the outside. It is still fine because we're not changing them from the outside, other than 
-			// loading them initially.
-			if (this[kind].length > 0) {
-				return
-			}
-
-			this[kind] = await this[`${servicePrefix}Service`].getAll({}, {s: this.filters[filterName]})
-		},
-		setDoneFilter() {
-			if (this.filters.done) {
-				this.removePropertyFromFilter('done')
-			} else {
-				this.params.filter_by.push('done')
-				this.params.filter_comparator.push('equals')
-				this.params.filter_value.push('false')
-			}
-			this.change()
-		},
-		setFilterConcat() {
-			if (this.filters.requireAllFilters) {
-				this.params.filter_concat = 'and'
-			} else {
-				this.params.filter_concat = 'or'
-			}
-			this.change()
-		},
-		setPriority() {
-			this.setSingleValueFilter('priority', 'priority', 'usePriority')
-		},
-		setPercentDoneFilter() {
-			this.setSingleValueFilter('percent_done', 'percentDone', 'usePercentDone')
-		},
-		clear(kind) {
-			this[`found${kind}`] = []
-		},
-		async find(kind, query) {
-
-			if (query === '') {
-				this.clear(kind)
-				return
-			}
-
-			const response = await this[`${kind}Service`].getAll({}, {s: query})
-
-			// Filter users from the results who are already assigned
-			this[`found${kind}`] = response.filter(({id}) => !includesById(this[kind], id))
-		},
-		add(kind, filterName) {
-			this.$nextTick(() => {
-				this.changeMultiselectFilter(kind, filterName)
-			})
-		},
-		remove(kind, filterName) {
-			this.$nextTick(() => {
-				this.changeMultiselectFilter(kind, filterName)
-			})
-		},
-		changeMultiselectFilter(kind, filterName) {
-			if (this[kind].length === 0) {
-				this.removePropertyFromFilter(filterName)
-				this.change()
-				return
-			}
-
-			const ids = []
-			this[kind].forEach(u => {
-				ids.push(kind === 'users' ? u.username : u.id)
-			})
-
-			this.filters[filterName] = ids.join(',')
-			this.setSingleValueFilter(filterName, filterName, '', 'in')
-		},
-		findLabels(query) {
-			this.labelQuery = query
-		},
-		addLabel() {
-			this.$nextTick(() => {
-				this.changeLabelFilter()
-			})
-		},
-		removeLabel(label) {
-			this.$nextTick(() => {
-				for (const l in this.labels) {
-					if (this.labels[l].id === label.id) {
-						this.labels.splice(l, 1)
-					}
-					break
-				}
-
-				this.changeLabelFilter()
-			})
-		},
-		changeLabelFilter() {
-			if (this.labels.length === 0) {
-				this.removePropertyFromFilter('labels')
-				this.change()
-				return
-			}
-
-			const labelIDs = []
-			this.labels.forEach(u => {
-				labelIDs.push(u.id)
-			})
-
-			this.filters.labels = labelIDs.join(',')
-			this.setSingleValueFilter('labels', 'labels', '', 'in')
-		},
+	hasTitle: {
+		type: Boolean,
+		default: false,
 	},
 })
+
+const emit = defineEmits(['update:modelValue'])
+
+const {modelValue} = toRefs(props)
+
+const labelStore = useLabelStore()
+
+const params = ref({...DEFAULT_PARAMS})
+const filters = ref({...DEFAULT_FILTERS})
+
+const services = {
+	users: shallowReactive(new UserService()),
+	lists: shallowReactive(new ListService()),
+  namespace: shallowReactive(new NamespaceService()),
+}
+
+interface Entities {
+	users: IUser[]
+	labels: ILabel[]
+	lists: IList[]
+	namespace: INamespace[]
+}
+
+type EntityType = 'users' | 'labels' | 'lists' | 'namespace'
+
+const entities: Entities = reactive({
+	users: [],
+	labels: [],
+	lists: [],
+	namespace: [],
+})
+
+onMounted(() => {
+	filters.value.requireAllFilters = params.value.filter_concat === 'and'
+})
+
+watch(
+	modelValue,
+	(value) => {
+		// FIXME: filters should only be converted to snake case in
+		// the last moment
+		params.value = objectToSnakeCase(value)
+		prepareFilters()
+	},
+	{immediate: true},
+)
+
+const sortAlphabetically = computed({
+	get() {
+		return params.value?.sort_by?.find(sortBy => sortBy === ALPHABETICAL_SORT) !== undefined
+	},
+	set(sortAlphabetically) {
+		params.value.sort_by = sortAlphabetically
+			? [ALPHABETICAL_SORT]
+			: getDefaultParams().sort_by
+
+		change()
+	},
+})
+
+function change() {
+	const newParams = {...params.value}
+	newParams.filter_value = newParams.filter_value.map(v => v instanceof Date ? v.toISOString() : v)
+	emit('update:modelValue', newParams)
+}
+
+function prepareFilters() {
+	prepareDone()
+	prepareDate('due_date', 'dueDate')
+	prepareDate('start_date', 'startDate')
+	prepareDate('end_date', 'endDate')
+	prepareSingleValue('priority', 'priority', 'usePriority', true)
+	prepareSingleValue('percent_done', 'percentDone', 'usePercentDone', true)
+	prepareDate('reminders')
+	prepareRelatedObjectFilter('users', 'assignees')
+	prepareRelatedObjectFilter('lists', 'list_id')
+	prepareRelatedObjectFilter('namespace')
+
+	prepareSingleValue('labels')
+
+	const newLabels = typeof filters.value.labels === 'string'
+		? filters.value.labels
+		: ''
+	const labelIds = newLabels.split(',').map(i => parseInt(i))
+
+	entities.labels = labelStore.getLabelsByIds(labelIds)
+}
+
+function removePropertyFromFilter(filterName) {
+	// Because of the way arrays work, we can only ever remove one element at once.
+	// To remove multiple filter elements of the same name this function has to be called multiple times.
+	for (const i in params.value.filter_by) {
+		if (params.value.filter_by[i] === filterName) {
+			params.value.filter_by.splice(i, 1)
+			params.value.filter_comparator.splice(i, 1)
+			params.value.filter_value.splice(i, 1)
+			break
+		}
+	}
+}
+
+function setDateFilter(filterName, {dateFrom, dateTo}) {
+	dateFrom = parseDateOrString(dateFrom, null)
+	dateTo = parseDateOrString(dateTo, null)
+
+	// Only filter if we have a date
+	if (dateFrom !== null && dateTo !== null) {
+
+		// Check if we already have values in params and only update them if we do
+		let foundStart = false
+		let foundEnd = false
+		params.value.filter_by.forEach((f, i) => {
+			if (f === filterName && params.value.filter_comparator[i] === 'greater_equals') {
+				foundStart = true
+				params.value.filter_value[i] = dateFrom
+			}
+			if (f === filterName && params.value.filter_comparator[i] === 'less_equals') {
+				foundEnd = true
+				params.value.filter_value[i] = dateTo
+			}
+		})
+
+		if (!foundStart) {
+			params.value.filter_by.push(filterName)
+			params.value.filter_comparator.push('greater_equals')
+			params.value.filter_value.push(dateFrom)
+		}
+		if (!foundEnd) {
+			params.value.filter_by.push(filterName)
+			params.value.filter_comparator.push('less_equals')
+			params.value.filter_value.push(dateTo)
+		}
+
+		filters.value[camelCase(filterName)] = {
+			// Passing the dates as string values avoids an endless loop between values changing 
+			// in the datepicker (bubbling up to here) and changing here and bubbling down to the 
+			// datepicker (because there's a new date instance every time this function gets called).
+			// See https://kolaente.dev/vikunja/frontend/issues/2384
+			dateFrom: dateIsValid(dateFrom) ? formatISO(dateFrom) : dateFrom,
+			dateTo: dateIsValid(dateTo) ? formatISO(dateTo) : dateTo,
+		}
+		change()
+		return
+	}
+
+	removePropertyFromFilter(filterName)
+	removePropertyFromFilter(filterName)
+	change()
+}
+
+function prepareDate(filterName, variableName) {
+	if (typeof params.value.filter_by === 'undefined') {
+		return
+	}
+
+	let foundDateStart = false
+	let foundDateEnd = false
+	for (const i in params.value.filter_by) {
+		if (params.value.filter_by[i] === filterName && params.value.filter_comparator[i] === 'greater_equals') {
+			foundDateStart = i
+		}
+		if (params.value.filter_by[i] === filterName && params.value.filter_comparator[i] === 'less_equals') {
+			foundDateEnd = i
+		}
+
+		if (foundDateStart !== false && foundDateEnd !== false) {
+			break
+		}
+	}
+
+	if (foundDateStart !== false && foundDateEnd !== false) {
+		const startDate = new Date(params.value.filter_value[foundDateStart])
+		const endDate = new Date(params.value.filter_value[foundDateEnd])
+		filters.value[variableName] = {
+			dateFrom: !isNaN(startDate)
+				? `${startDate.getFullYear()}-${startDate.getMonth() + 1}-${startDate.getDate()}`
+				: params.value.filter_value[foundDateStart],
+			dateTo: !isNaN(endDate)
+				? `${endDate.getFullYear()}-${endDate.getMonth() + 1}-${endDate.getDate()}`
+				: params.value.filter_value[foundDateEnd],
+		}
+	}
+}
+
+function setSingleValueFilter(filterName, variableName, useVariableName = '', comparator = 'equals') {
+	if (useVariableName !== '' && !filters.value[useVariableName]) {
+		removePropertyFromFilter(filterName)
+		return
+	}
+
+	let found = false
+	params.value.filter_by.forEach((f, i) => {
+		if (f === filterName) {
+			found = true
+			params.value.filter_value[i] = filters.value[variableName]
+		}
+	})
+
+	if (!found) {
+		params.value.filter_by.push(filterName)
+		params.value.filter_comparator.push(comparator)
+		params.value.filter_value.push(filters.value[variableName])
+	}
+
+	change()
+}
+
+function prepareSingleValue(
+	/** The filter name in the api. */
+	filterName,
+	/** The name of the variable in filters ref. */
+	variableName = null,
+	/** The name of the variable of the "Use this filter" variable. Will only be set if the parameter is not null. */
+	useVariableName = null,
+	/** Toggles if the value should be parsed as a number. */
+	isNumber = false,
+) {
+	if (variableName === null) {
+		variableName = filterName
+	}
+
+	let found = false
+	for (const i in params.value.filter_by) {
+		if (params.value.filter_by[i] === filterName) {
+			found = i
+			break
+		}
+	}
+
+	if (found === false && useVariableName !== null) {
+		filters.value[useVariableName] = false
+		return
+	}
+
+	if (isNumber) {
+		filters.value[variableName] = Number(params.value.filter_value[found])
+	} else {
+		filters.value[variableName] = params.value.filter_value[found]
+	}
+
+	if (useVariableName !== null) {
+		filters.value[useVariableName] = true
+	}
+}
+
+function prepareDone() {
+	// Set filters.done based on params
+	if (typeof params.value.filter_by === 'undefined') {
+		return
+	}
+
+	filters.value.done = params.value.filter_by.some((f) => f === 'done') === false
+}
+
+async function prepareRelatedObjectFilter(kind: EntityType, filterName = null, servicePrefix: Omit<EntityType, 'labels'> | null = null) {
+	if (filterName === null) {
+		filterName = kind
+	}
+
+	if (servicePrefix === null) {
+		servicePrefix = kind
+	}
+
+	prepareSingleValue(filterName)
+	if (typeof filters.value[filterName] === 'undefined' || filters.value[filterName] === '') {
+		return
+	}
+
+	// Don't load things if we already have something loaded.
+	// This is not the most ideal solution because it prevents a re-population when filters are changed 
+	// from the outside. It is still fine because we're not changing them from the outside, other than 
+	// loading them initially.
+	if (entities[kind].length > 0) {
+		return
+	}
+
+	entities[kind] = await services[servicePrefix].getAll({}, {s: filters.value[filterName]})
+}
+
+function setDoneFilter() {
+	if (filters.value.done) {
+		removePropertyFromFilter('done')
+	} else {
+		params.value.filter_by.push('done')
+		params.value.filter_comparator.push('equals')
+		params.value.filter_value.push('false')
+	}
+	change()
+}
+
+function setFilterConcat() {
+	if (filters.value.requireAllFilters) {
+		params.value.filter_concat = 'and'
+	} else {
+		params.value.filter_concat = 'or'
+	}
+	change()
+}
+
+function setPriority() {
+	setSingleValueFilter('priority', 'priority', 'usePriority')
+}
+
+function setPercentDoneFilter() {
+	setSingleValueFilter('percent_done', 'percentDone', 'usePercentDone')
+}
+
+async function changeMultiselectFilter(kind: EntityType, filterName) {
+	await nextTick()
+
+	if (entities[kind].length === 0) {
+		removePropertyFromFilter(filterName)
+		change()
+		return
+	}
+
+	const ids = entities[kind].map(u => kind === 'users' ? u.username : u.id)
+
+	filters.value[filterName] = ids.join(',')
+	setSingleValueFilter(filterName, filterName, '', 'in')
+}
+
+function changeLabelFilter() {
+	if (entities.labels.length === 0) {
+		removePropertyFromFilter('labels')
+		change()
+		return
+	}
+
+	const labelIDs = entities.labels.map(u => u.id)
+	filters.value.labels = labelIDs.join(',')
+	setSingleValueFilter('labels', 'labels', '', 'in')
+}
 </script>
 
 <style lang="scss" scoped>

@@ -6,7 +6,7 @@ export function findById<T extends {id: string | number}>(array : T[], id : stri
 	return array.find(({id: currentId}) => currentId === id)
 }
 
-export function includesById(array: [], id: string | number) {
+export function includesById(array: any[], id: string | number) {
 	return array.some(({id: currentId}) => currentId === id)
 }
 
