@@ -5,34 +5,42 @@
 	>
 		<div class="switch-view-container">
 			<div class="switch-view">
-				<router-link
+				<BaseButton
 					v-shortcut="'g l'"
 					:title="$t('keyboardShortcuts.list.switchToListView')"
+					class="switch-view-button"
 					:class="{'is-active': viewName === 'list'}"
-					:to="{ name: 'list.list',   params: { listId } }">
+					:to="{ name: 'list.list',   params: { listId } }"
+				>
 					{{ $t('list.list.title') }}
-				</router-link>
-				<router-link
+				</BaseButton>
+				<BaseButton
 					v-shortcut="'g g'"
 					:title="$t('keyboardShortcuts.list.switchToGanttView')"
+					class="switch-view-button"
 					:class="{'is-active': viewName === 'gantt'}"
-					:to="{ name: 'list.gantt',  params: { listId } }">
+					:to="{ name: 'list.gantt',  params: { listId } }"
+				>
 					{{ $t('list.gantt.title') }}
-				</router-link>
-				<router-link
+				</BaseButton>
+				<BaseButton
 					v-shortcut="'g t'"
 					:title="$t('keyboardShortcuts.list.switchToTableView')"
+					class="switch-view-button"
 					:class="{'is-active': viewName === 'table'}"
-					:to="{ name: 'list.table',  params: { listId } }">
+					:to="{ name: 'list.table',  params: { listId } }"
+				>
 					{{ $t('list.table.title') }}
-				</router-link>
-				<router-link
+				</BaseButton>
+				<BaseButton
 					v-shortcut="'g k'"
 					:title="$t('keyboardShortcuts.list.switchToKanbanView')"
+					class="switch-view-button"
 					:class="{'is-active': viewName === 'kanban'}"
-					:to="{ name: 'list.kanban', params: { listId } }">
+					:to="{ name: 'list.kanban', params: { listId } }"
+				>
 					{{ $t('list.kanban.title') }}
-				</router-link>
+				</BaseButton>
 			</div>
 			<slot name="header" />
 		</div>
@@ -50,6 +58,7 @@
 import {ref, computed, watch} from 'vue'
 import {useRoute} from 'vue-router'
 
+import BaseButton from '@/components/base/BaseButton.vue'
 import Message from '@/components/misc/message.vue'
 
 import ListModel from '@/models/list'
@@ -158,35 +167,32 @@ watch(
   height: $switch-view-height;
   margin: 0 auto 1rem;
   padding: .5rem;
-
-  a {
-    padding: .25rem .5rem;
-    display: block;
-    border-radius: $radius;
-
-    transition: all 100ms;
-
-    &:not(:last-child) {
-      margin-right: .5rem;
-    }
-
-    &.is-active,
-    &:hover {
-      color: var(--switch-view-color);
-    }
-
-    &.is-active {
-      background: var(--primary);
-      font-weight: bold;
-      box-shadow: var(--shadow-xs);
-    }
-
-    &:hover {
-      background: var(--primary);
-    }
-  }
 }
 
+.switch-view-button {
+	padding: .25rem .5rem;
+	display: block;
+	border-radius: $radius;
+	transition: all 100ms;
+
+	&:not(:last-child) {
+		margin-right: .5rem;
+	}
+
+	&:hover {
+		color: var(--switch-view-color);
+		background: var(--primary);
+	}
+
+	&.is-active {
+		color: var(--switch-view-color);
+		background: var(--primary);
+		font-weight: bold;
+		box-shadow: var(--shadow-xs);
+	}
+}
+
+// FIXME: this should be in notification and set via a prop
 .is-archived .notification.is-warning {
   margin-bottom: 1rem;
 }
