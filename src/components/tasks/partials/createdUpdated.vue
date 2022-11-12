@@ -46,3 +46,11 @@ const updatedFormatted = computed(() => formatDateLong(task.value.updated))
 const doneSince = computed(() => formatDateSince(task.value.doneAt))
 const doneFormatted = computed(() => formatDateLong(task.value.doneAt))
 </script>
+
+<style lang="scss" scoped>
+.created {
+	font-size: .75rem;
+	color: var(--grey-500);
+	text-align: right;
+}
+</style>

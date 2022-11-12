@@ -995,12 +995,6 @@ $flash-background-duration: 750ms;
 		}
 	}
 
-  .created {
-    font-size: .75rem;
-    color: var(--grey-500);
-    text-align: right;
-  }
-
   .checklist-summary {
     padding-left: .25rem;
   }
