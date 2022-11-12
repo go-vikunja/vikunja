@@ -32,7 +32,7 @@
       "usernameEmail": "Gebruikersnaam of e-mailadres",
       "usernamePlaceholder": "bv. frederick",
       "email": "Email address",
-      "emailPlaceholder": "bijv. frederic@vikunja.io",
+      "emailPlaceholder": "bv. frederic{'@'}vikunja.io",
       "password": "Wachtwoord",
       "passwordPlaceholder": "bv. •••••••••••",
       "forgotPassword": "Wachtwoord vergeten?",
