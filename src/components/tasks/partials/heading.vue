@@ -110,6 +110,36 @@ async function save(title: string) {
 </script>
 
 <style lang="scss" scoped>
+.heading {
+	display: flex;
+	justify-content: space-between;
+	text-transform: none;
+	align-items: center;
+
+	@media screen and (max-width: $tablet) {
+		flex-direction: column;
+		align-items: start;
+	}
+}
+
+.title {
+	margin-bottom: 0;
+}
+
+.title.input {
+	// 1.8rem is the font-size, 1.125 is the line-height, .3rem padding everywhere, 1px border around the whole thing.
+	min-height: calc(1.8rem * 1.125 + .6rem + 2px);
+
+	@media screen and (max-width: $tablet) {
+		margin: 0 -.3rem .5rem -.3rem; // the title has 0.3rem padding - this make the text inside of it align with the rest
+	}
+}
+
+.title.task-id {
+	color: var(--grey-400);
+	white-space: nowrap;
+}
+
 .heading__done {
 	margin-left: .5rem;
 }
