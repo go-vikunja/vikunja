@@ -154,41 +154,43 @@ labelStore.loadAllLabels()
 	@media screen and (max-width: $tablet) {
 		padding-top: $navbar-height;
 	}
+}
 
-	.app-content {
-		z-index: 10;
-		position: relative;
-		padding-top: 1rem;
+.app-content {
+	z-index: 10;
+	position: relative;
+	padding-top: 1rem;
 
-		@media screen {
-			padding: $navbar-height + 1.5rem 1.5rem 1rem 1.5rem;
-		}
+	@media screen {
+		padding: $navbar-height + 1.5rem 1.5rem 1rem 1.5rem;
+	}
 
-		// Used to make sure the spinner is always in the middle while loading
-		> .loader-container {
-			min-height: calc(100vh - #{$navbar-height + 1.5rem + 1rem});
-		}
+	@media screen and (max-width: $tablet) {
+		margin-left: 0;
+		padding-top: 1.5rem;
+		min-height: calc(100vh - 4rem);
+	}
 
-		@media screen and (max-width: $tablet) {
-			margin-left: 0;
-			padding-top: 1.5rem;
-			min-height: calc(100vh - 4rem);
-		}
 
-		@media screen {
-			&.is-menu-enabled {
-				margin-left: $navbar-width;
+	@media screen {
+		&.is-menu-enabled {
+			margin-left: $navbar-width;
 
-				@media screen and (max-width: $tablet) {
-					min-width: 100%;
-					margin-left: 0;
-				}
+			@media screen and (max-width: $tablet) {
+				min-width: 100%;
+				margin-left: 0;
 			}
 		}
+	}
 
-		.card {
-			background: var(--white);
-		}
+	// Used to make sure the spinner is always in the middle while loading
+	> .loader-container {
+		min-height: calc(100vh - #{$navbar-height + 1.5rem + 1rem});
+	}
+
+	// FIXME: This should be somehow defined inside Card.vue
+	.card {
+		background: var(--white);
 	}
 }
 
