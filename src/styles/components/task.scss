@@ -2,16 +2,3 @@
 .link-share-container:not(.has-background) .task-view {
   background: transparent;
 }
-
-// FIXME: should be a prop of TaskDetailView.vue
-.modal-container .task-view {
-  border-radius: $radius;
-  padding: 1rem;
-  color: var(--text);
-  background-color: var(--site-background) !important;
-
-  @media screen and (max-width: 800px) {
-    border-radius: 0;
-    padding-top: 2rem;
-  }
-}

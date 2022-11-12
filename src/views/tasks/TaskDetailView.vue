@@ -41,7 +41,7 @@
 								v-model="task.assignees"
 							/>
 						</div>
-						<transition name="flash-background" appear>
+						<CustomTransition name="flash-background" appear>
 							<div class="column" v-if="activeFields.priority">
 								<!-- Priority -->
 								<div class="detail-title">
@@ -54,8 +54,8 @@
 									:ref="e => setFieldRef('priority', e)"
 									v-model="task.priority"/>
 							</div>
-						</transition>
-						<transition name="flash-background" appear>
+						</CustomTransition>
+						<CustomTransition name="flash-background" appear>
 							<div class="column" v-if="activeFields.dueDate">
 								<!-- Due Date -->
 								<div class="detail-title">
@@ -80,8 +80,8 @@
 									</BaseButton>
 								</div>
 							</div>
-						</transition>
-						<transition name="flash-background" appear>
+						</CustomTransition>
+						<CustomTransition name="flash-background" appear>
 							<div class="column" v-if="activeFields.percentDone">
 								<!-- Progress -->
 								<div class="detail-title">
@@ -94,8 +94,8 @@
 									:ref="e => setFieldRef('percentDone', e)"
 									v-model="task.percentDone"/>
 							</div>
-						</transition>
-						<transition name="flash-background" appear>
+						</CustomTransition>
+						<CustomTransition name="flash-background" appear>
 							<div class="column" v-if="activeFields.startDate">
 								<!-- Start Date -->
 								<div class="detail-title">
@@ -121,8 +121,8 @@
 									</BaseButton>
 								</div>
 							</div>
-						</transition>
-						<transition name="flash-background" appear>
+						</CustomTransition>
+						<CustomTransition name="flash-background" appear>
 							<div class="column" v-if="activeFields.endDate">
 								<!-- End Date -->
 								<div class="detail-title">
@@ -147,8 +147,8 @@
 									</BaseButton>
 								</div>
 							</div>
-						</transition>
-						<transition name="flash-background" appear>
+						</CustomTransition>
+						<CustomTransition name="flash-background" appear>
 							<div class="column" v-if="activeFields.reminders">
 								<!-- Reminders -->
 								<div class="detail-title">
@@ -162,8 +162,8 @@
 									@update:model-value="saveTask"
 								/>
 							</div>
-						</transition>
-						<transition name="flash-background" appear>
+						</CustomTransition>
+						<CustomTransition name="flash-background" appear>
 							<div class="column" v-if="activeFields.repeatAfter">
 								<!-- Repeat after -->
 								<div class="is-flex is-justify-content-space-between">
@@ -190,8 +190,8 @@
 									}"
 								/>
 							</div>
-						</transition>
-						<transition name="flash-background" appear>
+						</CustomTransition>
+						<CustomTransition name="flash-background" appear>
 							<div class="column" v-if="activeFields.color">
 								<!-- Color -->
 								<div class="detail-title">
@@ -205,7 +205,7 @@
 									@update:model-value="saveTask"
 								/>
 							</div>
-						</transition>
+						</CustomTransition>
 					</div>
 
 					<!-- Labels -->
@@ -480,6 +480,7 @@ import RelatedTasks from '@/components/tasks/partials/relatedTasks.vue'
 import Reminders from '@/components/tasks/partials/reminders.vue'
 import RepeatAfter from '@/components/tasks/partials/repeatAfter.vue'
 import TaskSubscription from '@/components/misc/subscription.vue'
+import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 import {uploadFile} from '@/helpers/attachments'
 import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
@@ -798,8 +799,6 @@ async function setPercentDone(percentDone: number) {
 </script>
 
 <style lang="scss" scoped>
-$flash-background-duration: 750ms;
-
 .task-view-container {
 	// simulate sass lighten($primary, 30) by increasing lightness 30% to 73%
 	--primary-light: hsla(var(--primary-h), var(--primary-s), 73%, var(--primary-a));
@@ -817,6 +816,18 @@ $flash-background-duration: 750ms;
 	
   @media screen and (min-width: $desktop) {
 		padding: 1rem;
+  }
+}
+
+.is-modal .task-view {
+  border-radius: $radius;
+  padding: 1rem;
+  color: var(--text);
+  background-color: var(--site-background) !important;
+
+  @media screen and (max-width: 800px) {
+    border-radius: 0;
+    padding-top: 2rem;
   }
 }
 
@@ -996,33 +1007,11 @@ line-height: 1;
 	padding-left: .25rem;
 }
 
-.flash-background-enter-from,
-.flash-background-enter-active {
-  animation: flash-background $flash-background-duration ease 1;
-}
-
-@keyframes flash-background {
-  0% {
-    background: var(--primary-light);
-  }
-  100% {
-    background: transparent;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-	@keyframes flash-background {
-		0% {
-			background: transparent;
-		}
-	}
-}
-
 @include modal-transition();
 
 .detail-content {
   @media print {
-	width: 100% !important;
+		width: 100% !important;
   }
 }
 </style>
