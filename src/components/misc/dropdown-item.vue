@@ -29,10 +29,6 @@ defineProps<DropDownItemProps>()
 	line-height: 1.5;
 	padding: $item-padding;
 	position: relative;
-}
-
-a.dropdown-item,
-button.dropdown-item {
 	text-align: inherit;
 	white-space: nowrap;
 	width: 100%;
@@ -40,33 +36,29 @@ button.dropdown-item {
 	align-items: center;
 	justify-content: left !important;
 
-	&:hover {
-		background-color: var(--grey-100) !important;
-	}
-
 	&.is-active {
 		background-color: var(--link);
 		color: var(--link-invert);
 	}
 
-	.icon {
-		padding-right: .5rem;
-	}
-
-	.icon:not(.has-text-success) {
-		color: var(--grey-300) !important;
-	}
-
-	&.has-text-danger .icon {
-		color: var(--danger) !important;
+	&:hover:not(.is-disabled) {
+		background-color: var(--grey-100);
 	}
 
 	&.is-disabled {
 		cursor: not-allowed;
-
-		&:hover {
-			background-color: transparent;
-		}
 	}
+}
+
+.icon {
+	padding-right: .5rem;
+	
+	&:not(.has-text-success) {
+		color: var(--grey-300) !important;
+	}
+}
+
+.has-text-danger .icon {
+	color: var(--danger) !important;
 }
 </style>
