@@ -1,9 +1,9 @@
 
 ##############
 # Build stage
-FROM golang:1.19-alpine AS build-env
+FROM --platform=$BUILDPLATFORM techknowlogick/xgo:latest AS build-env
 
-RUN apk --no-cache add build-base git && \
+RUN \
   go install github.com/magefile/mage@latest && \
   mv /go/bin/mage /usr/local/go/bin
 
@@ -13,9 +13,11 @@ ARG VIKUNJA_VERSION
 COPY . /go/src/code.vikunja.io/api
 WORKDIR /go/src/code.vikunja.io/api
 
+ARG TARGETOS TARGETARCH TARGETVARIANT
 # Checkout version if set
-RUN if [ -n "${VIKUNJA_VERSION}" ]; then git checkout "${VIKUNJA_VERSION}"; fi \
- && mage build:clean build
+RUN if [ -n "${VIKUNJA_VERSION}" ]; then git checkout "${VIKUNJA_VERSION}"; fi && \
+  mage build:clean && \
+  mage release:xgo $TARGETOS/$TARGETARCH/$TARGETVARIANT
 
 ###################
 # The actual image
@@ -25,7 +27,7 @@ FROM alpine:3.16
 LABEL maintainer="maintainers@vikunja.io"
 
 WORKDIR /app/vikunja/
-COPY --from=build-env /go/src/code.vikunja.io/api/vikunja .
+COPY --from=build-env /build/vikunja-* vikunja
 ENV VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/
 
 # Dynamic permission changing stuff
