@@ -342,111 +342,7 @@ steps:
 ---
 kind: pipeline
 type: docker
-name: docker-arm-release
-
-depends_on:
-  - release-latest
-  - release-version
-
-platform:
-  os: linux
-  arch: arm64
-
-trigger:
-  ref:
-    - refs/heads/main
-    - "refs/tags/**"
-  event:
-    exclude:
-      - cron
-
-steps:
-  - name: docker-unstable
-    image: plugins/docker:linux-arm
-    pull: always
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/frontend
-      tags: unstable-linux-arm
-      build_args:
-        - USE_RELEASE=true
-        - RELEASE_VERSION=unstable
-    when:
-      ref:
-        - refs/heads/main
-    depends_on:
-      - clone
-
-  - name: docker-version
-    image: plugins/docker:linux-arm
-    pull: always
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/frontend
-      auto_tag: true
-      auto_tag_suffix: linux-arm
-      build_args:
-        - USE_RELEASE=true
-        - RELEASE_VERSION=${DRONE_TAG##v}
-    when:
-      ref:
-        - "refs/tags/**"
-    depends_on:
-      - clone
-
-  - name: docker-unstable-arm64
-    image: plugins/docker:linux-arm64
-    pull: always
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/frontend
-      tags: unstable-linux-arm64
-      build_args:
-        - USE_RELEASE=true
-        - RELEASE_VERSION=unstable
-    when:
-      ref:
-        - refs/heads/main
-    depends_on:
-      - clone
-
-  - name: docker-version-arm64
-    image: plugins/docker:linux-arm64
-    pull: always
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/frontend
-      auto_tag: true
-      auto_tag_suffix: linux-arm64
-      build_args:
-        - USE_RELEASE=true
-        - RELEASE_VERSION=${DRONE_TAG##v}
-    when:
-      ref:
-        - "refs/tags/**"
-    depends_on:
-      - clone
-
----
-kind: pipeline
-type: docker
-name: docker-amd64-release
-
-platform:
-  os: linux
-  arch: amd64
+name: docker-release
 
 depends_on:
   - release-latest
@@ -461,101 +357,57 @@ trigger:
       - cron
 
 steps:
+  - name: fetch-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
+
   - name: docker-unstable
-    image: plugins/docker:linux-amd64
-    pull: always
+    image: thegeeklab/drone-docker-buildx
+    privileged: true
+    pull: true
     settings:
       username:
         from_secret: docker_username
       password:
         from_secret: docker_password
       repo: vikunja/frontend
-      tags: unstable-linux-amd64
-      build_args:
-        - USE_RELEASE=true
-        - RELEASE_VERSION=unstable
-    when:
-      ref:
-        - refs/heads/main
-
-  - name: docker-version
-    image: plugins/docker:linux-amd64
-    pull: always
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/frontend
-      auto_tag: true
-      auto_tag_suffix: linux-amd64
-      build_args:
-        - USE_RELEASE=true
-        - RELEASE_VERSION=${DRONE_TAG##v}
-    when:
-      ref:
-        - "refs/tags/**"
-
----
-kind: pipeline
-type: docker
-name: docker-manifest
-
-trigger:
-  ref:
-    - refs/heads/main
-    - "refs/tags/**"
-  event:
-    exclude:
-      - cron
-
-depends_on:
-  - docker-amd64-release
-  - docker-arm-release
-
-steps:
-  - name: manifest-unstable
-    pull: always
-    image: plugins/manifest
-    settings:
       tags: unstable
-      spec: docker-manifest-unstable.tmpl
-      password:
-        from_secret: docker_password
-      username:
-        from_secret: docker_username
+      build_args:
+        - USE_RELEASE=true
+        - RELEASE_VERSION=unstable
+      platforms:
+        - linux/386
+        - linux/amd64
+        - linux/arm/v6
+        - linux/arm/v7
+        - linux/arm64/v8
+    depends_on: [ fetch-tags ]
     when:
       ref:
         - refs/heads/main
 
-  - name: manifest-release
-    pull: always
-    image: plugins/manifest
+  - name: docker-release
+    image: thegeeklab/drone-docker-buildx
+    privileged: true
+    pull: true
     settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/frontend
       auto_tag: true
-      ignore_missing: true
-      spec: docker-manifest.tmpl
-      password:
-        from_secret: docker_password
-      username:
-        from_secret: docker_username
-    when:
-      ref:
-        - "refs/tags/**"
-  
-  - name: manifest-release-latest
-    pull: always
-    image: plugins/manifest
-    depends_on:
-      - clone
-    settings:
-      tags: latest
-      ignore_missing: true
-      spec: docker-manifest.tmpl
-      password:
-        from_secret: docker_password
-      username:
-        from_secret: docker_username
+      build_args:
+        - USE_RELEASE=true
+        - RELEASE_VERSION=${DRONE_TAG##v}
+      platforms:
+        - linux/386
+        - linux/amd64
+        - linux/arm/v6
+        - linux/arm/v7
+        - linux/arm64/v8
+    depends_on: [ fetch-tags ]
     when:
       ref:
         - "refs/tags/**"
@@ -578,9 +430,7 @@ depends_on:
   - release-version
   - release-latest
   - trigger-desktop-update
-  - docker-arm-release
-  - docker-amd64-release
-  - docker-manifest
+  - docker-release
 
 steps:
   - name: notify
@@ -663,6 +513,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: 6784e836f6568c67abfb909449c6e845cc73cbe9a31e9e7ad9166a0eb59e30a2
+hmac: 9f26b5af73e3464e9ee1b5fbcb96854ca8a7e5f8d6ee2d85fd8376aad951b446
 
 ...

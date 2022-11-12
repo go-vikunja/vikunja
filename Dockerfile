@@ -1,5 +1,5 @@
 # Stage 1: Build application
-FROM node:18-alpine AS compile-image
+FROM --platform=$BUILDPLATFORM node:18-alpine AS compile-image
 
 WORKDIR /build
 
