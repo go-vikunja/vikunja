@@ -2,12 +2,13 @@
 	<Multiselect
 		class="control is-expanded"
 		:placeholder="$t('list.search')"
-		@search="findLists"
 		:search-results="foundLists"
-		@select="select"
 		label="title"
-		v-model="list"
 		:select-placeholder="$t('list.searchSelect')"
+		:model-value="list"
+		@update:model-value="Object.assign(list, $event)"
+		@select="select"
+		@search="findLists"
 	>
 		<template #searchResult="{option}">
 			<span class="list-namespace-title search-result">{{ namespace((option as IList).namespaceId) }} ></span>
@@ -20,12 +21,16 @@
 import {reactive, ref, watch} from 'vue'
 import type {PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
-import ListModel from '@/models/list'
+
 import type {IList} from '@/modelTypes/IList'
-import Multiselect from '@/components/input/multiselect.vue'
+import type {INamespace} from '@/modelTypes/INamespace'
+
 import {useListStore} from '@/stores/lists'
 import {useNamespaceStore} from '@/stores/namespaces'
-import type { INamespace } from '@/modelTypes/INamespace'
+
+import ListModel from '@/models/list'
+
+import Multiselect from '@/components/input/multiselect.vue'
 
 const props = defineProps({
 	modelValue: {

@@ -8,7 +8,12 @@
 		}"
 	>
 		<div class="task-view">
-			<Heading v-model:task="task" :can-write="canWrite" ref="heading"/>
+			<Heading
+				:task="task"
+				@update:task="Object.assign(task, $event)"
+				:can-write="canWrite"
+				ref="heading"
+			/>
 			<h6 class="subtitle" v-if="parent && parent.namespace && parent.list">
 				{{ getNamespaceTitle(parent.namespace) }} >
 				<router-link :to="{ name: 'list.index', params: { listId: parent.list.id } }">
@@ -61,14 +66,14 @@
 								<div class="date-input">
 									<datepicker
 										v-model="task.dueDate"
-										@close-on-change="() => saveTask()"
+										@close-on-change="saveTask()"
 										:choose-date-label="$t('task.detail.chooseDueDate')"
 										:disabled="taskService.loading || !canWrite"
 										:ref="e => setFieldRef('dueDate', e)"
 									/>
 									<BaseButton
-										@click="() => {task.dueDate = null;saveTask()}"
 										v-if="task.dueDate && canWrite"
+										@click="() => {task.dueDate = null;saveTask()}"
 										class="remove">
 										<span class="icon is-small">
 											<icon icon="times"></icon>
@@ -101,7 +106,7 @@
 								<div class="date-input">
 									<datepicker
 										v-model="task.startDate"
-										@close-on-change="() => saveTask()"
+										@close-on-change="saveTask()"
 										:choose-date-label="$t('task.detail.chooseStartDate')"
 										:disabled="taskService.loading || !canWrite"
 										:ref="e => setFieldRef('startDate', e)"
@@ -128,7 +133,7 @@
 								<div class="date-input">
 									<datepicker
 										v-model="task.endDate"
-										@close-on-change="() => saveTask()"
+										@close-on-change="saveTask()"
 										:choose-date-label="$t('task.detail.chooseEndDate')"
 										:disabled="taskService.loading || !canWrite"
 										:ref="e => setFieldRef('endDate', e)"
@@ -179,8 +184,11 @@
 								<repeat-after
 									:disabled="!canWrite"
 									:ref="e => setFieldRef('repeatAfter', e)"
-									v-model="task"
-									@update:model-value="saveTask"
+									:model-value="task"
+									@update:model-value="(newTask) => {
+										Object.assign(task, newTask)
+										saveTask()
+									}"
 								/>
 							</div>
 						</transition>
@@ -219,7 +227,8 @@
 					<!-- Description -->
 					<div class="details content description">
 						<description
-							v-model="task"
+							:model-value="task"
+							@update:modelValue="Object.assign(task, $event)"
 							:can-write="canWrite"
 							:attachment-upload="attachmentUpload"
 						/>

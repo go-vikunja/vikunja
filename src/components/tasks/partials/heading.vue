@@ -85,9 +85,7 @@ const showSavedMessage = ref(false)
 
 async function save(title: string) {
 	// We only want to save if the title was actually changed.
-	// Because the contenteditable does not have a change event
-	// we're building it ourselves and only continue
-	// if the task title changed.
+	// so we only continue if the task title changed.
 	if (title === props.task.title) {
 		return
 	}
