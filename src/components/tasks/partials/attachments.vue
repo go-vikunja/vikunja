@@ -334,35 +334,35 @@ async function setCoverImage(attachment: IAttachment | null) {
 	&.hidden {
 		display: none;
 	}
+}
 
-	.drop-hint {
-		position: absolute;
-		bottom: 0;
-		left: 0;
-		right: 0;
+.drop-hint {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
 
-		.icon {
-			width: 100%;
-			font-size: 5rem;
-			height: auto;
-			text-shadow: var(--shadow-md);
-			animation: bounce 2s infinite;
+	.icon {
+		width: 100%;
+		font-size: 5rem;
+		height: auto;
+		text-shadow: var(--shadow-md);
+		animation: bounce 2s infinite;
 
-			@media (prefers-reduced-motion: reduce) {
-				animation: none;
-			}
+		@media (prefers-reduced-motion: reduce) {
+			animation: none;
 		}
+	}
 
-		.hint {
-			margin: .5rem auto 2rem;
-			border-radius: 2px;
-			box-shadow: var(--shadow-md);
-			background: var(--primary);
-			padding: 1rem;
-			color: var(--white);
-			width: 100%;
-			max-width: 300px;
-		}
+	.hint {
+		margin: .5rem auto 2rem;
+		border-radius: 2px;
+		box-shadow: var(--shadow-md);
+		background: var(--primary);
+		padding: 1rem;
+		color: var(--white);
+		width: 100%;
+		max-width: 300px;
 	}
 }
 
