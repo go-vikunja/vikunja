@@ -3,7 +3,7 @@
 	<div class="offline" style="height: 0;width: 0;"></div>
 	<div class="app offline" v-if="!online">
 		<div class="offline-message">
-			<h1>{{ $t('offline.title') }}</h1>
+			<h1 class="title">{{ $t('offline.title') }}</h1>
 			<p>{{ $t('offline.text') }}</p>
 		</div>
 	</div>
@@ -128,14 +128,14 @@ load()
 	bottom: 5vh;
 	color: $white;
 	padding: 0 1rem;
+}
 
-	h1 {
-		font-weight: bold;
-		font-size: 1.5rem;
-		text-align: center;
-		color: $white;
-		font-weight: 700 !important;
-		font-size: 1.5rem;
-	}
+.title {
+	font-weight: bold;
+	font-size: 1.5rem;
+	text-align: center;
+	color: $white;
+	font-weight: 700 !important;
+	font-size: 1.5rem;
 }
 </style>
