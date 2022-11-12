@@ -701,9 +701,7 @@ depends_on:
   - testing
   - release
   - deploy-docs
-  - docker-arm-release
-  - docker-amd64-release
-  - docker-manifest
+  - docker-release
 
 steps:
   - name: notify
@@ -721,6 +719,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 9af6de023ca9e78e0b485948b58764007cb169ee3cbcdd9e909c2049f5d20740
+hmac: 768d54fc8433705fb63f754adf19536a16152a4046a040afdbcbb7df60614056
 
 ...
