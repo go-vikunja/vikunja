@@ -113,22 +113,20 @@
 			{{ $t('list.share.userTeam.notShared', {type: shareTypeNames}) }}
 		</nothing>
 
-		<transition name="modal">
-			<modal
-				@close="showDeleteModal = false"
-				@submit="deleteSharable()"
-				v-if="showDeleteModal"
-			>
-				<template #header>
-					<span>{{
-							$t('list.share.userTeam.removeHeader', {type: shareTypeName, sharable: sharableName})
-						}}</span>
-				</template>
-				<template #text>
-					<p>{{ $t('list.share.userTeam.removeText', {type: shareTypeName, sharable: sharableName}) }}</p>
-				</template>
-			</modal>
-		</transition>
+		<modal
+			:enabled="showDeleteModal"
+			@close="showDeleteModal = false"
+			@submit="deleteSharable()"
+		>
+			<template #header>
+				<span>{{
+						$t('list.share.userTeam.removeHeader', {type: shareTypeName, sharable: sharableName})
+					}}</span>
+			</template>
+			<template #text>
+				<p>{{ $t('list.share.userTeam.removeText', {type: shareTypeName, sharable: sharableName}) }}</p>
+			</template>
+		</modal>
 	</div>
 </template>
 
@@ -382,7 +380,3 @@ async function find(query: string) {
 		})
 }
 </script>
-
-<style lang="scss" scoped>
-@include modal-transition();
-</style>

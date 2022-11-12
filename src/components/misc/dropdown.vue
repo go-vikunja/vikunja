@@ -6,13 +6,13 @@
 			</BaseButton>
 		</slot>
 
-		<transition name="fade">
+		<CustomTransition name="fade">
 			<div class="dropdown-menu" v-if="open">
 				<div class="dropdown-content">
 					<slot :close="close"></slot>
 				</div>
 			</div>
-		</transition>
+		</CustomTransition>
 	</div>
 </template>
 
@@ -21,6 +21,7 @@ import {ref, type PropType} from 'vue'
 import {onClickOutside} from '@vueuse/core'
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
+import CustomTransition from '@/components/misc/CustomTransition.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 defineProps({

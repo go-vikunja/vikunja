@@ -94,9 +94,9 @@
 			</div>
 
 			<modal
+				:enabled="showDeleteModal"
 				@close="showDeleteModal = false"
 				@submit="deleteLabel(labelToDelete)"
-				v-if="showDeleteModal"
 			>
 				<template #header><span>{{ $t('task.label.delete.header') }}</span></template>
 

@@ -54,8 +54,8 @@
 						</p>
 
 						<modal
-							@close="() => showHowItWorks = false"
 							:enabled="showHowItWorks"
+							@close="() => showHowItWorks = false"
 							transition-name="fade"
 							:overflow="true"
 							variant="hint-modal"

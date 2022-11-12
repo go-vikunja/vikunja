@@ -29,7 +29,7 @@
 			</card>
 		</no-auth-wrapper>
 	</section>
-	<transition name="fade">
+	<CustomTransition name="fade">
 		<section class="vikunja-loading" v-if="showLoading">
 			<Logo class="logo"/>
 			<p>
@@ -37,7 +37,7 @@
 				{{ $t('ready.loading') }}
 			</p>
 		</section>
-	</transition>
+	</CustomTransition>
 </template>
 
 <script lang="ts" setup>
@@ -47,6 +47,7 @@ import {useRouter, useRoute} from 'vue-router'
 import Logo from '@/assets/logo.svg?component'
 import ApiConfig from '@/components/misc/api-config.vue'
 import Message from '@/components/misc/message.vue'
+import CustomTransition from '@/components/misc/CustomTransition.vue'
 import NoAuthWrapper from '@/components/misc/no-auth-wrapper.vue'
 
 import {ERROR_NO_API_URL} from '@/helpers/checkAndSetApiUrl'

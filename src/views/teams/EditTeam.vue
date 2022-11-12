@@ -149,35 +149,32 @@
 		</modal>
 
 		<!-- Team delete modal -->
-		<transition name="modal">
-			<modal
-				@close="showDeleteModal = false"
-				@submit="deleteTeam()"
-				v-if="showDeleteModal"
-			>
-				<template #header><span>{{ $t('team.edit.delete.header') }}</span></template>
+		<modal
+			:enabled="showDeleteModal"
+			@close="showDeleteModal = false"
+			@submit="deleteTeam()"
+		>
+			<template #header><span>{{ $t('team.edit.delete.header') }}</span></template>
 
-				<template #text>
-					<p>{{ $t('team.edit.delete.text1') }}<br/>
-						{{ $t('team.edit.delete.text2') }}</p>
-				</template>
-			</modal>
-		</transition>
+			<template #text>
+				<p>{{ $t('team.edit.delete.text1') }}<br/>
+					{{ $t('team.edit.delete.text2') }}</p>
+			</template>
+		</modal>
+
 		<!-- User delete modal -->
-		<transition name="modal">
-			<modal
-				@close="showUserDeleteModal = false"
-				@submit="deleteMember()"
-				v-if="showUserDeleteModal"
-			>
-				<template #header><span>{{ $t('team.edit.deleteUser.header') }}</span></template>
+		<modal
+			:enabled="showUserDeleteModal"
+			@close="showUserDeleteModal = false"
+			@submit="deleteMember()"
+		>
+			<template #header><span>{{ $t('team.edit.deleteUser.header') }}</span></template>
 
-				<template #text>
-					<p>{{ $t('team.edit.deleteUser.text1') }}<br/>
-						{{ $t('team.edit.deleteUser.text2') }}</p>
-				</template>
-			</modal>
-		</transition>
+			<template #text>
+				<p>{{ $t('team.edit.deleteUser.text1') }}<br/>
+					{{ $t('team.edit.deleteUser.text2') }}</p>
+			</template>
+		</modal>
 	</div>
 </template>
 
@@ -339,6 +336,4 @@ async function leave() {
 		padding: 0;
 	}
 }
-
-@include modal-transition();
 </style>

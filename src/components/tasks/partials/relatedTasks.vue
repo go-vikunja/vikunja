@@ -14,7 +14,7 @@
 			<template v-if="editEnabled && showCreate">
 				<label class="label" key="label">
 					{{ $t('task.relation.new') }}
-					<transition name="fade">
+					<CustomTransition name="fade">
 						<span class="is-inline-flex" v-if="taskRelationService.loading">
 							<span class="loader is-inline-block mr-2"></span>
 							{{ $t('misc.saving') }}
@@ -22,7 +22,7 @@
 						<span class="has-text-success" v-else-if="!taskRelationService.loading && saved">
 							{{ $t('misc.saved') }}
 						</span>
-					</transition>
+					</CustomTransition>
 				</label>
 				<div class="field" key="field-search">
 					<Multiselect
@@ -133,7 +133,7 @@
 		</p>
 
 		<modal
-			v-if="relationToDelete !== undefined"
+			:enabled="relationToDelete !== undefined"
 			@close="relationToDelete = undefined"
 			@submit="removeTaskRelation()"
 		>
@@ -163,6 +163,7 @@ import {RELATION_KINDS, RELATION_KIND, type IRelationKind} from '@/types/IRelati
 import TaskRelationService from '@/services/taskRelation'
 import TaskRelationModel from '@/models/taskRelation'
 
+import CustomTransition from '@/components/misc/CustomTransition.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Multiselect from '@/components/input/multiselect.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
@@ -442,6 +443,4 @@ async function toggleTaskDone(task: ITask) {
 	padding: 0;
 	height: 18px; // The exact height of the checkbox in the container
 }
-
-@include modal-transition();
 </style>

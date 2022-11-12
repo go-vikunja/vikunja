@@ -74,9 +74,9 @@
 					- {{ $t('task.detail.due', {at: formatDateSince(task.dueDate)}) }}
 				</time>
 			</BaseButton>
-			<transition name="fade">
+			<CustomTransition name="fade">
 				<defer-task v-if="+new Date(task.dueDate) > 0 && showDefer" v-model="task" ref="deferDueDate"/>
-			</transition>
+			</CustomTransition>
 
 			<priority-label :priority="task.priority" :done="task.done"/>
 
@@ -140,6 +140,7 @@ import User from '@/components/misc/user.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import ColorBubble from '@/components/misc/colorBubble.vue'
+import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 import TaskService from '@/services/task'
 

@@ -4,7 +4,7 @@
 			{{ date === null ? chooseDateLabel : formatDateShort(date) }}
 		</BaseButton>
 
-		<transition name="fade">
+		<CustomTransition name="fade">
 			<div v-if="show" class="datepicker-popup" ref="datepickerPopup">
 
 				<BaseButton
@@ -84,7 +84,7 @@
 					{{ $t('misc.confirm') }}
 				</x-button>
 			</div>
-		</transition>
+		</CustomTransition>
 	</div>
 </template>
 
@@ -94,6 +94,7 @@ import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 import {formatDate, formatDateShort} from '@/helpers/time/formatDate'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'

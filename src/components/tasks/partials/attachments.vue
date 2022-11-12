@@ -130,7 +130,7 @@
 
 		<!-- Delete modal -->
 		<modal
-			v-if="attachmentToDelete !== null"
+			:enabled="attachmentToDelete !== null"
 			@close="setAttachmentToDelete(null)"
 			@submit="deleteAttachment()"
 		>
@@ -148,7 +148,7 @@
 
 		<!-- Attachment image modal -->
 		<modal
-			v-if="attachmentImageBlobUrl !== null"
+			:enabled="attachmentImageBlobUrl !== null"
 			@close="attachmentImageBlobUrl = null"
 		>
 			<img :src="attachmentImageBlobUrl" alt=""/>
@@ -432,6 +432,4 @@ async function setCoverImage(attachment: IAttachment | null) {
 	border-radius: 4px;
 	font-size: .75rem;
 }
-
-@include modal-transition();
 </style>

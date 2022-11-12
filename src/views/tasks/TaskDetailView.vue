@@ -430,9 +430,9 @@
 		</div>
 
 		<modal
+			:enabled="showDeleteModal"
 			@close="showDeleteModal = false"
 			@submit="deleteTask()"
-			v-if="showDeleteModal"
 		>
 			<template #header><span>{{ $t('task.detail.delete.header') }}</span></template>
 
@@ -1006,8 +1006,6 @@ line-height: 1;
 .checklist-summary {
 	padding-left: .25rem;
 }
-
-@include modal-transition();
 
 .detail-content {
   @media print {

@@ -44,11 +44,11 @@
 			</div>
 			<slot name="header" />
 		</div>
-		<transition name="fade">
+		<CustomTransition name="fade">
 			<Message variant="warning" v-if="currentList.isArchived" class="mb-4">
 				{{ $t('list.archived') }}
 			</Message>
-		</transition>
+		</CustomTransition>
 
 		<slot v-if="loadedListId"/>
 	</div>
@@ -60,6 +60,7 @@ import {useRoute} from 'vue-router'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Message from '@/components/misc/message.vue'
+import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 import ListModel from '@/models/list'
 import ListService from '@/services/list'

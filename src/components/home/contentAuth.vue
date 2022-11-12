@@ -39,7 +39,7 @@
 				</router-view>
 
 				<modal
-					v-if="currentModal"
+					:enabled="Boolean(currentModal)"
 					@close="closeModal()"
 					variant="scrolling"
 					class="task-detail-view-modal"
@@ -237,6 +237,4 @@ labelStore.loadAllLabels()
 .content-auth.z-unset {
 	z-index: unset;
 }
-
-@include modal-transition();
 </style>

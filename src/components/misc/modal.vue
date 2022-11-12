@@ -1,7 +1,7 @@
 <template>
 	<Teleport to="body">
 		<!-- FIXME: transition should not be included in the modal -->
-		<transition :name="transitionName">
+		<CustomTransition :name="transitionName" appear>
 			<section
 				v-if="enabled"
 				class="modal-mask"
@@ -59,7 +59,7 @@
 					</div>
 				</div>
 			</section>
-		</transition>
+		</CustomTransition>
 	</Teleport>
 </template>
 
@@ -70,6 +70,7 @@ export default {
 </script>
 
 <script lang="ts" setup>
+import CustomTransition from '@/components/misc/CustomTransition.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import {ref, useAttrs, watchEffect} from 'vue'
 import {useScrollLock} from '@vueuse/core'

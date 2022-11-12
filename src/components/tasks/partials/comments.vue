@@ -43,7 +43,7 @@
 						>
 							· {{ $t('task.comment.edited', {date: formatDateSince(c.updated)}) }}
 						</span>
-						<transition name="fade">
+						<CustomTransition name="fade">
 							<span
 								class="is-inline-flex"
 								v-if="
@@ -63,7 +63,7 @@
 							>
 								{{ $t('misc.saved') }}
 							</span>
-						</transition>
+						</CustomTransition>
 					</div>
 					<editor
 						:hasPreview="true"
@@ -94,15 +94,15 @@
 				</figure>
 				<div class="media-content">
 					<div class="form">
-						<transition name="fade">
+						<CustomTransition name="fade">
 							<span
-								class="is-inline-flex"
 								v-if="taskCommentService.loading && creating"
+								class="is-inline-flex"
 							>
 								<span class="loader is-inline-block mr-2"></span>
 								{{ $t('task.comment.creating') }}
 							</span>
-						</transition>
+						</CustomTransition>
 						<div class="field">
 							<editor
 								:class="{
@@ -132,22 +132,20 @@
 			</div>
 		</div>
 
-		<transition name="modal">
-			<modal
-				v-if="showDeleteModal"
-				@close="showDeleteModal = false"
-				@submit="() => deleteComment(commentToDelete)"
-			>
-				<template #header><span>{{ $t('task.comment.delete') }}</span></template>
+		<modal
+			:enabled="showDeleteModal"
+			@close="showDeleteModal = false"
+			@submit="() => deleteComment(commentToDelete)"
+		>
+			<template #header><span>{{ $t('task.comment.delete') }}</span></template>
 
-				<template #text>
-					<p>
-						{{ $t('task.comment.deleteText1') }}<br/>
-						<strong class="has-text-white">{{ $t('misc.cannotBeUndone') }}</strong>
-					</p>
-				</template>
-			</modal>
-		</transition>
+			<template #text>
+				<p>
+					{{ $t('task.comment.deleteText1') }}<br/>
+					<strong class="has-text-white">{{ $t('misc.cannotBeUndone') }}</strong>
+				</p>
+			</template>
+		</modal>
 	</div>
 </template>
 
@@ -155,6 +153,7 @@
 import {ref, reactive, computed, shallowReactive, watch, nextTick} from 'vue'
 import {useI18n} from 'vue-i18n'
 
+import CustomTransition from '@/components/misc/CustomTransition.vue'
 import Editor from '@/components/input/AsyncEditor'
 
 import TaskCommentService from '@/services/taskComment'
@@ -351,6 +350,4 @@ async function deleteComment(commentToDelete: ITaskComment) {
 .media-content {
 	width: calc(100% - 48px - 2rem);
 }
-
-@include modal-transition();
 </style>

@@ -206,20 +206,18 @@
 			</div>
 		</div>
 
-		<transition name="modal">
-			<modal
-				v-if="showBucketDeleteModal"
-				@close="showBucketDeleteModal = false"
-				@submit="deleteBucket()"
-			>
-				<template #header><span>{{ $t('list.kanban.deleteHeaderBucket') }}</span></template>
+		<modal
+			:enabled="showBucketDeleteModal"
+			@close="showBucketDeleteModal = false"
+			@submit="deleteBucket()"
+		>
+			<template #header><span>{{ $t('list.kanban.deleteHeaderBucket') }}</span></template>
 
-				<template #text>
-					<p>{{ $t('list.kanban.deleteBucketText1') }}<br/>
-						{{ $t('list.kanban.deleteBucketText2') }}</p>
-				</template>
-			</modal>
-		</transition>
+			<template #text>
+				<p>{{ $t('list.kanban.deleteBucketText1') }}<br/>
+					{{ $t('list.kanban.deleteBucketText2') }}</p>
+			</template>
+		</modal>
 		</div>
 		</template>
 	</ListWrapper>
@@ -792,6 +790,4 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 .move-card-leave-active {
 	display: none;
 }
-
-@include modal-transition();
 </style>
