@@ -110,13 +110,13 @@
 </template>
 
 <script lang="ts" setup>
-import { formatDate } from '@/helpers/time/formatDate'
+import {formatDate} from '@/helpers/time/formatDate'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 const exampleDate = formatDate(new Date(), 'yyyy-MM-dd')
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .how-it-works-modal {
 	font-size: 1rem;
 }
