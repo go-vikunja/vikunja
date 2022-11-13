@@ -72,7 +72,7 @@
 							({{ namespaceListsCount[nk] }})
 						</span>
 					</BaseButton>
-					<namespace-settings-dropdown :namespace="n" v-if="n.id > 0"/>
+					<namespace-settings-dropdown class="menu-list-dropdown" :namespace="n" v-if="n.id > 0"/>
 				</div>
 					<!--
 						NOTE: a v-model / computed setter is not possible, since the updateActiveLists function
@@ -128,7 +128,7 @@
 								>
 									<icon :icon="l.isFavorite ? 'star' : ['far', 'star']"/>
 								</BaseButton>
-								<list-settings-dropdown :list="l" v-if="l.id > 0"/>
+								<list-settings-dropdown class="menu-list-dropdown" :list="l" v-if="l.id > 0" />
 								<span class="list-setting-spacer" v-else></span>
 							</li>
 						</template>
@@ -318,21 +318,6 @@ $vikunja-nav-selected-width: 0.4rem;
 }
 
 .menu {
-	// good
-	.menu-label {
-		font-size: 1rem;
-		font-weight: 700;
-		font-weight: bold;
-		font-family: $vikunja-font;
-		color: $vikunja-nav-color;
-		font-weight: 500;
-		min-height: 2.5rem;
-		padding-top: 0;
-		padding-left: $navbar-padding;
-
-		overflow: hidden;
-	}
-
 	.menu-label,
 	.menu-list .list-menu-link,
 	.menu-list a {
@@ -341,44 +326,9 @@ $vikunja-nav-selected-width: 0.4rem;
 		justify-content: space-between;
 		cursor: pointer;
 
-		// good
-		.list-menu-title {
-			overflow: hidden;
-			text-overflow: ellipsis;
-			width: 100%;
-		}
-
 		.color-bubble {
 			height: 12px;
 			flex: 0 0 12px;
-		}
-
-	}
-	.favorite {
-		margin-left: .25rem;
-		transition: opacity $transition, color $transition;
-		opacity: 0;
-
-		&:hover,
-		&.is-favorite {
-			color: var(--warning);
-		}
-	}
-
-	.favorite.is-favorite,
-	.list-menu:hover .favorite {
-		opacity: 1;
-	}
-
-	.menu-label {
-		.color-bubble {
-			width: 14px;
-			height: 14px;
-			flex-basis: auto;
-		}
-
-		.is-archived {
-			min-width: 85px;
 		}
 	}
 
@@ -399,14 +349,12 @@ $vikunja-nav-selected-width: 0.4rem;
 				background: var(--white);
 			}
 
-			:deep(.dropdown-trigger) {
+			.menu-list-dropdown {
 				opacity: 0;
-				padding: .5rem;
-				cursor: pointer;
 				transition: $transition;
 			}
 
-			&:hover :deep(.dropdown-trigger) {
+			&:hover .menu-list-dropdown {
 				opacity: 1;
 			}
 		}
@@ -499,55 +447,93 @@ $vikunja-nav-selected-width: 0.4rem;
 .namespaces-lists {
 	padding-top: math.div($navbar-padding, 2);
 
-	.namespace-title {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
+	.menu-label {
+		font-size: 1rem;
+		font-weight: 700;
+		font-weight: bold;
+		font-family: $vikunja-font;
 		color: $vikunja-nav-color;
-		padding: 0 .25rem;
+		font-weight: 500;
+		min-height: 2.5rem;
+		padding-top: 0;
+		padding-left: $navbar-padding;
 
-		.menu-label {
-			margin-bottom: 0;
-			flex: 1 1 auto;
+		overflow: hidden;
+		margin-bottom: 0;
+		flex: 1 1 auto;
 
-			.name {
-				overflow: hidden;
-				text-overflow: ellipsis;
-				white-space: nowrap;
-				margin-right: auto;
-			}
-
-			.count {
-				color: var(--grey-500);
-				margin-right: .5rem;
-			}
+		.name {
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			margin-right: auto;
 		}
 
-		:deep(.dropdown-trigger) {
-			padding: .5rem;
-			cursor: pointer;
+		.count {
+			color: var(--grey-500);
+			margin-right: .5rem;
 		}
+	}
 
-		.toggle-lists-icon {
-			svg {
-				transition: all $transition;
-				transform: rotate(90deg);
-				opacity: 1;
-			}
+	.favorite {
+		margin-left: .25rem;
+		transition: opacity $transition, color $transition;
+		opacity: 0;
 
-			&.active svg {
-				transform: rotate(0deg);
-				opacity: 0;
-			}
+		&:hover,
+		&.is-favorite {
+			color: var(--warning);
 		}
+	}
 
-		&:hover .toggle-lists-icon svg {
+	.favorite.is-favorite,
+	.list-menu:hover .favorite {
+		opacity: 1;
+	}
+
+	.list-menu-title {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		width: 100%;
+	}
+
+	.color-bubble {
+		width: 14px;
+		height: 14px;
+		flex-basis: auto;
+	}
+
+	.is-archived {
+		min-width: 85px;
+	}
+}
+
+.namespace-title {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	color: $vikunja-nav-color;
+	padding: 0 .25rem;
+
+	.toggle-lists-icon {
+		svg {
+			transition: all $transition;
+			transform: rotate(90deg);
 			opacity: 1;
 		}
 
-		&:not(.has-menu) .toggle-lists-icon {
-			padding-right: 1rem;
+		&.active svg {
+			transform: rotate(0deg);
+			opacity: 0;
 		}
+	}
+
+	&:hover .toggle-lists-icon svg {
+		opacity: 1;
+	}
+
+	&:not(.has-menu) .toggle-lists-icon {
+		padding-right: 1rem;
 	}
 }
 
