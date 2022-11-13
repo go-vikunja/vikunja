@@ -228,9 +228,9 @@ func TestProjectUsersFromProject(t *testing.T) {
 			s := db.NewSession()
 			defer s.Close()
 
-			gotUsers, err := ProjectUsersFromProject(s, tt.args.l, tt.args.search)
+			gotUsers, err := ListUsersFromProject(s, tt.args.l, tt.args.search)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ProjectUsersFromProject() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ListUsersFromProject() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if diff, equal := messagediff.PrettyDiff(tt.wantUsers, gotUsers); !equal {

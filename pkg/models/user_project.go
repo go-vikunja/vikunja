@@ -32,8 +32,8 @@ type ProjectUIDs struct {
 	TeamProjectUserID    int64 `xorm:"tlUID"`
 }
 
-// ProjectUsersFromProject returns a project with all users who have access to a project, regardless of the method which gave them access
-func ProjectUsersFromProject(s *xorm.Session, l *Project, search string) (users []*user.User, err error) {
+// ListUsersFromProject returns a list with all users who have access to a project, regardless of the method which gave them access
+func ListUsersFromProject(s *xorm.Session, l *Project, search string) (users []*user.User, err error) {
 
 	userids := []*ProjectUIDs{}
 
@@ -102,7 +102,7 @@ func ProjectUsersFromProject(s *xorm.Session, l *Project, search string) (users 
 		cond = builder.In("id", uids)
 	}
 
-	users, err = user.ProjectUsers(s, search, &user.ProjectUserOpts{
+	users, err = user.ListUsers(s, search, &user.ProjectUserOpts{
 		AdditionalCond:              cond,
 		ReturnAllIfNoSearchProvided: true,
 	})

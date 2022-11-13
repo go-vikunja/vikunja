@@ -29,7 +29,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// UserProject gets all information about a user
+// UserList gets all information about a list of users
 // @Summary Get users
 // @Description Search for a user by its username, name or full email. Name (not username) or email require that the user has enabled this in their settings.
 // @tags user
@@ -41,13 +41,13 @@ import (
 // @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /users [get]
-func UserProject(c echo.Context) error {
+func UserList(c echo.Context) error {
 	search := c.QueryParam("s")
 
 	s := db.NewSession()
 	defer s.Close()
 
-	users, err := user.ProjectUsers(s, search, nil)
+	users, err := user.ListUsers(s, search, nil)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
@@ -66,9 +66,9 @@ func UserProject(c echo.Context) error {
 	return c.JSON(http.StatusOK, users)
 }
 
-// ProjectUsersForProject returns a project with all users who have access to a project, regardless of the method the project was shared with them.
+// ListUsersForProject returns a list with all users who have access to a project, regardless of the method the project was shared with them.
 // @Summary Get users
-// @Description Projects all users (without emailadresses). Also possible to search for a specific user.
+// @Description Lists all users (without emailadresses). Also possible to search for a specific user.
 // @tags project
 // @Accept json
 // @Produce json
@@ -80,7 +80,7 @@ func UserProject(c echo.Context) error {
 // @Failure 401 {object} web.HTTPError "The user does not have the right to see the project."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /projects/{id}/projectusers [get]
-func ProjectUsersForProject(c echo.Context) error {
+func ListUsersForProject(c echo.Context) error {
 	projectID, err := strconv.ParseInt(c.Param("project"), 10, 64)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
@@ -105,7 +105,7 @@ func ProjectUsersForProject(c echo.Context) error {
 	}
 
 	search := c.QueryParam("s")
-	users, err := models.ProjectUsersFromProject(s, &project, search)
+	users, err := models.ListUsersFromProject(s, &project, search)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
