@@ -30,10 +30,10 @@
 				{{ $t('menu.share') }}
 			</dropdown-item>
 			<dropdown-item
-				:to="{ name: 'list.create', params: { namespaceId: namespace.id } }"
+				:to="{ name: 'project.create', params: { namespaceId: namespace.id } }"
 				icon="plus"
 			>
-				{{ $t('menu.newList') }}
+				{{ $t('menu.newProject') }}
 			</dropdown-item>
 			<dropdown-item
 				:to="{ name: 'namespace.settings.archive', params: { id: namespace.id } }"

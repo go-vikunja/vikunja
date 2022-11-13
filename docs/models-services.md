@@ -30,21 +30,21 @@ A basic service can look like this:
 
 ```javascript
 import AbstractService from './abstractService'
-import ListModel from '../models/list'
+import ProjectModel from '../models/project'
 
-export default class ListService extends AbstractService {
+export default class ProjectService extends AbstractService {
 	constructor() {
 		super({
-			getAll: '/lists',
-			get: '/lists/{id}',
-			create: '/namespaces/{namespaceID}/lists',
-			update: '/lists/{id}',
-			delete: '/lists/{id}',
+			getAll: '/projects',
+			get: '/projects/{id}',
+			create: '/namespaces/{namespaceID}/projects',
+			update: '/projects/{id}',
+			delete: '/projects/{id}',
 		})
 	}
 	
 	modelFactory(data) {
-		return new ListModel(data)
+		return new ProjectModel(data)
 	}
 }
 ```
@@ -132,7 +132,7 @@ import AbstractModel from './abstractModel'
 import TaskModel from './task'
 import UserModel from './user'
 
-export default class ListModel extends AbstractModel {
+export default class ProjectModel extends AbstractModel {
 	
 	constructor(data) {
 		// The constructor of AbstractModel handles all the default parsing.

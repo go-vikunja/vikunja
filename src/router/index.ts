@@ -2,12 +2,12 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteLocation } from 'vue-router'
 import {saveLastVisited} from '@/helpers/saveLastVisited'
 
-import {saveListView, getListView} from '@/helpers/saveListView'
+import {saveProjectView, getProjectView} from '@/helpers/saveProjectView'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 import {setTitle} from '@/helpers/setTitle'
 
-import {useListStore} from '@/stores/lists'
+import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
 
@@ -33,20 +33,20 @@ const NewLabelComponent = () => import('@/views/labels/NewLabel.vue')
 // Migration
 const MigrationComponent = () => import('@/views/migrate/Migration.vue')
 const MigrationHandlerComponent = () => import('@/views/migrate/MigrationHandler.vue')
-// List Views
-const ListList = () => import('@/views/list/ListList.vue')
-const ListGantt = () => import('@/views/list/ListGantt.vue')
-const ListTable = () => import('@/views/list/ListTable.vue')
-const ListKanban = () => import('@/views/list/ListKanban.vue')
-const ListInfo = () => import('@/views/list/ListInfo.vue')
+// Project Views
+const ProjectList = () => import('@/views/project/ProjectList.vue')
+const ProjectGantt = () => import('@/views/project/ProjectGantt.vue')
+const ProjectTable = () => import('@/views/project/ProjectTable.vue')
+const ProjectKanban = () => import('@/views/project/ProjectKanban.vue')
+const ProjectInfo = () => import('@/views/project/ProjectInfo.vue')
 
-// List Settings
-const ListSettingEdit = () => import('@/views/list/settings/edit.vue')
-const ListSettingBackground = () => import('@/views/list/settings/background.vue')
-const ListSettingDuplicate = () => import('@/views/list/settings/duplicate.vue')
-const ListSettingShare = () => import('@/views/list/settings/share.vue')
-const ListSettingDelete = () => import('@/views/list/settings/delete.vue')
-const ListSettingArchive = () => import('@/views/list/settings/archive.vue')
+// Project Settings
+const ProjectSettingEdit = () => import('@/views/project/settings/edit.vue')
+const ProjectSettingBackground = () => import('@/views/project/settings/background.vue')
+const ProjectSettingDuplicate = () => import('@/views/project/settings/duplicate.vue')
+const ProjectSettingShare = () => import('@/views/project/settings/share.vue')
+const ProjectSettingDelete = () => import('@/views/project/settings/delete.vue')
+const ProjectSettingArchive = () => import('@/views/project/settings/archive.vue')
 
 // Namespace Settings
 const NamespaceSettingEdit = () => import('@/views/namespaces/settings/edit.vue')
@@ -71,8 +71,8 @@ const UserSettingsGeneralComponent = () => import('@/views/user/settings/General
 const UserSettingsPasswordUpdateComponent = () => import('@/views/user/settings/PasswordUpdate.vue')
 const UserSettingsTOTPComponent = () => import('@/views/user/settings/TOTP.vue')
 
-// List Handling
-const NewListComponent = () => import('@/views/list/NewList.vue')
+// Project Handling
+const NewProjectComponent = () => import('@/views/project/NewProject.vue')
 
 // Namespace Handling
 const NewNamespaceComponent = () => import('@/views/namespaces/NewNamespace.vue')
@@ -269,142 +269,142 @@ const router = createRouter({
 			}),
 		},
 		{
-			path: '/lists/new/:namespaceId/',
-			name: 'list.create',
-			component: NewListComponent,
+			path: '/projects/new/:namespaceId/',
+			name: 'project.create',
+			component: NewProjectComponent,
 			meta: {
 				showAsModal: true,
 			},
 		},
 		{
-			path: '/lists/:listId/settings/edit',
-			name: 'list.settings.edit',
-			component: ListSettingEdit,
-			props: route => ({ listId: Number(route.params.listId as string) }),
+			path: '/projects/:projectId/settings/edit',
+			name: 'project.settings.edit',
+			component: ProjectSettingEdit,
+			props: route => ({ projectId: Number(route.params.projectId as string) }),
 			meta: {
 				showAsModal: true,
 			},
 		},
 		{
-			path: '/lists/:listId/settings/background',
-			name: 'list.settings.background',
-			component: ListSettingBackground,
+			path: '/projects/:projectId/settings/background',
+			name: 'project.settings.background',
+			component: ProjectSettingBackground,
 			meta: {
 				showAsModal: true,
 			},
 		},
 		{
-			path: '/lists/:listId/settings/duplicate',
-			name: 'list.settings.duplicate',
-			component: ListSettingDuplicate,
+			path: '/projects/:projectId/settings/duplicate',
+			name: 'project.settings.duplicate',
+			component: ProjectSettingDuplicate,
 			meta: {
 				showAsModal: true,
 			},
 		},
 		{
-			path: '/lists/:listId/settings/share',
-			name: 'list.settings.share',
-			component: ListSettingShare,
+			path: '/projects/:projectId/settings/share',
+			name: 'project.settings.share',
+			component: ProjectSettingShare,
 			meta: {
 				showAsModal: true,
 			},
 		},
 		{
-			path: '/lists/:listId/settings/delete',
-			name: 'list.settings.delete',
-			component: ListSettingDelete,
+			path: '/projects/:projectId/settings/delete',
+			name: 'project.settings.delete',
+			component: ProjectSettingDelete,
 			meta: {
 				showAsModal: true,
 			},
 		},
 		{
-			path: '/lists/:listId/settings/archive',
-			name: 'list.settings.archive',
-			component: ListSettingArchive,
+			path: '/projects/:projectId/settings/archive',
+			name: 'project.settings.archive',
+			component: ProjectSettingArchive,
 			meta: {
 				showAsModal: true,
 			},
 		},
 		{
-			path: '/lists/:listId/settings/edit',
+			path: '/projects/:projectId/settings/edit',
 			name: 'filter.settings.edit',
 			component: FilterEdit,
 			meta: {
 				showAsModal: true,
 			},
-			props: route => ({ listId: Number(route.params.listId as string) }),
+			props: route => ({ projectId: Number(route.params.projectId as string) }),
 		},
 		{
-			path: '/lists/:listId/settings/delete',
+			path: '/projects/:projectId/settings/delete',
 			name: 'filter.settings.delete',
 			component: FilterDelete,
 			meta: {
 				showAsModal: true,
 			},
-			props: route => ({ listId: Number(route.params.listId as string) }),
+			props: route => ({ projectId: Number(route.params.projectId as string) }),
 		},
 		{
-			path: '/lists/:listId/info',
-			name: 'list.info',
-			component: ListInfo,
+			path: '/projects/:projectId/info',
+			name: 'project.info',
+			component: ProjectInfo,
 			meta: {
 				showAsModal: true,
 			},
-			props: route => ({ listId: Number(route.params.listId as string) }),
+			props: route => ({ projectId: Number(route.params.projectId as string) }),
 		},
 		{
-			path: '/lists/:listId',
-			name: 'list.index',
+			path: '/projects/:projectId',
+			name: 'project.index',
 			redirect(to) {
 				// Redirect the user to list view by default
 
-				const savedListView = getListView(to.params.listId)
-				console.debug('Replaced list view with', savedListView)
+				const savedProjectView = getProjectView(to.params.projectId)
+				console.debug('Replaced list view with', savedProjectView)
 
 				return {
-					name:  router.hasRoute(savedListView)
-						? savedListView
-						: 'list.list',
-					params: {listId: to.params.listId},
+					name:  router.hasRoute(savedProjectView)
+						? savedProjectView
+						: 'project.list',
+					params: {projectId: to.params.projectId},
 				}
 			},
 		},
 		{
-			path: '/lists/:listId/list',
-			name: 'list.list',
-			component: ListList,
-			beforeEnter: (to) => saveListView(to.params.listId, to.name),
-			props: route => ({ listId: Number(route.params.listId as string) }),
+			path: '/projects/:projectId/list',
+			name: 'project.list',
+			component: ProjectList,
+			beforeEnter: (to) => saveProjectView(to.params.projectId, to.name),
+			props: route => ({ projectId: Number(route.params.projectId as string) }),
 		},
 		{
-			path: '/lists/:listId/gantt',
-			name: 'list.gantt',
-			component: ListGantt,
-			beforeEnter: (to) => saveListView(to.params.listId, to.name),
+			path: '/projects/:projectId/gantt',
+			name: 'project.gantt',
+			component: ProjectGantt,
+			beforeEnter: (to) => saveProjectView(to.params.projectId, to.name),
 			// FIXME: test if `useRoute` would be the same. If it would use it instead.
 			props: route => ({route}),
 		},
 		{
-			path: '/lists/:listId/table',
-			name: 'list.table',
-			component: ListTable,
-			beforeEnter: (to) => saveListView(to.params.listId, to.name),
-			props: route => ({ listId: Number(route.params.listId as string) }),
+			path: '/projects/:projectId/table',
+			name: 'project.table',
+			component: ProjectTable,
+			beforeEnter: (to) => saveProjectView(to.params.projectId, to.name),
+			props: route => ({ projectId: Number(route.params.projectId as string) }),
 		},
 		{
-			path: '/lists/:listId/kanban',
-			name: 'list.kanban',
-			component: ListKanban,
+			path: '/projects/:projectId/kanban',
+			name: 'project.kanban',
+			component: ProjectKanban,
 			beforeEnter: (to) => {
-				saveListView(to.params.listId, to.name)
+				saveProjectView(to.params.projectId, to.name)
 				// Properly set the page title when a task popup is closed
-				const listStore = useListStore()
-				const listFromStore = listStore.getListById(Number(to.params.listId))
-				if(listFromStore) {
-					setTitle(listFromStore.title)
+				const projectStore = useProjectStore()
+				const projectFromStore = projectStore.getProjectById(Number(to.params.projectId))
+				if(projectFromStore) {
+					setTitle(projectFromStore.title)
 				}
 			},
-			props: route => ({ listId: Number(route.params.listId as string) }),
+			props: route => ({ projectId: Number(route.params.projectId as string) }),
 		},
 		{
 			path: '/teams',

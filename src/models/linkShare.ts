@@ -11,7 +11,7 @@ export default class LinkShareModel extends AbstractModel<ILinkShare> implements
 	right: Right = RIGHTS.READ
 	sharedBy: IUser = UserModel
 	sharingType = 0 // FIXME: use correct numbers
-	listId = 0
+	projectId = 0
 	name: ''
 	password: ''
 	created: Date = null

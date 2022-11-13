@@ -1,29 +1,29 @@
 <template>
 	<create-edit
-		:title="$t('list.share.header')"
+		:title="$t('project.share.header')"
 		:has-primary-action="false"
 	>
-		<template v-if="list">
+		<template v-if="project">
 			<userTeam
-				:id="list.id"
+				:id="project.id"
 				:userIsAdmin="userIsAdmin"
 				shareType="user"
-				type="list"
+				type="project"
 			/>
 			<userTeam
-				:id="list.id"
+				:id="project.id"
 				:userIsAdmin="userIsAdmin"
 				shareType="team"
-				type="list"
+				type="project"
 			/>
 		</template>
 
-		<link-sharing :list-id="listId" v-if="linkSharingEnabled" class="mt-4"/>
+		<link-sharing :project-id="projectId" v-if="linkSharingEnabled" class="mt-4"/>
 	</create-edit>
 </template>
 
 <script lang="ts">
-export default {name: 'list-setting-share'}
+export default {name: 'project-setting-share'}
 </script>
 
 <script lang="ts" setup>
@@ -32,9 +32,9 @@ import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {useTitle} from '@vueuse/core'
 
-import ListService from '@/services/list'
-import ListModel from '@/models/list'
-import type {IList} from '@/modelTypes/IList'
+import ProjectService from '@/services/project'
+import ProjectModel from '@/models/project'
+import type {IProject} from '@/modelTypes/IProject'
 import {RIGHTS} from '@/constants/rights'
 
 import CreateEdit from '@/components/misc/create-edit.vue'
@@ -46,9 +46,9 @@ import {useConfigStore} from '@/stores/config'
 
 const {t} = useI18n({useScope: 'global'})
 
-const list = ref<IList>()
-const title = computed(() => list.value?.title
-	? t('list.share.title', {list: list.value.title})
+const project = ref<IProject>()
+const title = computed(() => project.value?.title
+	? t('project.share.title', {project: project.value.title})
 	: '',
 )
 useTitle(title)
@@ -56,19 +56,19 @@ useTitle(title)
 const configStore = useConfigStore()
 
 const linkSharingEnabled = computed(() => configStore.linkSharingEnabled)
-const userIsAdmin = computed(() => list?.value?.maxRight === RIGHTS.ADMIN)
+const userIsAdmin = computed(() => project?.value?.maxRight === RIGHTS.ADMIN)
 
-async function loadList(listId: number) {
-	const listService = new ListService()
-	const newList = await listService.get(new ListModel({id: listId}))
-	await useBaseStore().handleSetCurrentList({list: newList})
-	list.value = newList
+async function loadProject(projectId: number) {
+	const projectService = new ProjectService()
+	const newProject = await projectService.get(new ProjectModel({id: projectId}))
+	await useBaseStore().handleSetCurrentProject({project: newProject})
+	project.value = newProject
 }
 
 const route = useRoute()
-const listId = computed(() => route.params.listId !== undefined
-	? parseInt(route.params.listId as string)
+const projectId = computed(() => route.params.projectId !== undefined
+	? parseInt(route.params.projectId as string)
 	: undefined,
 )
-watchEffect(() => listId.value !== undefined && loadList(listId.value))
+watchEffect(() => projectId.value !== undefined && loadProject(projectId.value))
 </script>

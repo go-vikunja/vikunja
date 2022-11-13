@@ -10,7 +10,7 @@ export class LinkShareFactory extends Factory {
 		return {
 			id: '{increment}',
 			hash: faker.random.word(32),
-			list_id: 1,
+			project_id: 1,
 			right: 0,
 			sharing_type: 0,
 			shared_by_id: 1,

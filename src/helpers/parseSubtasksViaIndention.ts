@@ -1,4 +1,4 @@
-import {getListFromPrefix} from '@/modules/parseTaskText'
+import {getProjectFromPrefix} from '@/modules/parseTaskText'
 
 export interface TaskWithParent {
 	title: string,
@@ -26,7 +26,7 @@ export function parseSubtasksViaIndention(taskTitles: string): TaskWithParent[] 
 			list: null,
 		}
 
-		task.list = getListFromPrefix(task.title)
+		task.list = getProjectFromPrefix(task.title)
 
 		if (index === 0) {
 			return task
@@ -49,7 +49,7 @@ export function parseSubtasksViaIndention(taskTitles: string): TaskWithParent[] 
 			task.parent = task.parent.replace(spaceRegex, '')
 			if (task.list === null) {
 				// This allows to specify a list once for the parent task and inherit it to all subtasks
-				task.list = getListFromPrefix(task.parent)
+				task.list = getProjectFromPrefix(task.parent)
 			}
 		}
 

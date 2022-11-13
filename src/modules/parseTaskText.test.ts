@@ -21,14 +21,14 @@ describe('Parse Task Text', () => {
 	})
 
 	it('should not parse text when disabled', () => {
-		const text = 'Lorem Ipsum today *label +list !2 @user'
+		const text = 'Lorem Ipsum today *label +project !2 @user'
 		const result = parseTaskText(text, PrefixMode.Disabled)
 
 		expect(result.text).toBe(text)
 	})
 
 	it('should parse text in todoist mode when configured', () => {
-		const result = parseTaskText('Lorem Ipsum today @label #list !2 +user', PrefixMode.Todoist)
+		const result = parseTaskText('Lorem Ipsum today @label #project !2 +user', PrefixMode.Todoist)
 
 		expect(result.text).toBe('Lorem Ipsum  +user')
 		const now = new Date()
@@ -37,7 +37,7 @@ describe('Parse Task Text', () => {
 		expect(result?.date?.getDate()).toBe(now.getDate())
 		expect(result.labels).toHaveLength(1)
 		expect(result.labels[0]).toBe('label')
-		expect(result.list).toBe('list')
+		expect(result.project).toBe('project')
 		expect(result.priority).toBe(2)
 		expect(result.assignees).toHaveLength(1)
 		expect(result.assignees[0]).toBe('user')
@@ -574,36 +574,36 @@ describe('Parse Task Text', () => {
 		})
 	})
 
-	describe('List', () => {
-		it('should parse a list', () => {
-			const result = parseTaskText('Lorem Ipsum +list')
+	describe('Project', () => {
+		it('should parse a project', () => {
+			const result = parseTaskText('Lorem Ipsum +project')
 
 			expect(result.text).toBe('Lorem Ipsum')
-			expect(result.list).toBe('list')
+			expect(result.project).toBe('project')
 		})
-		it('should parse a list with a space in it', () => {
-			const result = parseTaskText(`Lorem Ipsum +'list with long name'`)
+		it('should parse a project with a space in it', () => {
+			const result = parseTaskText(`Lorem Ipsum +'project with long name'`)
 
 			expect(result.text).toBe('Lorem Ipsum')
-			expect(result.list).toBe('list with long name')
+			expect(result.project).toBe('project with long name')
 		})
-		it('should parse a list with a space in it and "', () => {
-			const result = parseTaskText(`Lorem Ipsum +"list with long name"`)
+		it('should parse a project with a space in it and "', () => {
+			const result = parseTaskText(`Lorem Ipsum +"project with long name"`)
 
 			expect(result.text).toBe('Lorem Ipsum')
-			expect(result.list).toBe('list with long name')
+			expect(result.project).toBe('project with long name')
 		})
-		it('should parse only the first list', () => {
-			const result = parseTaskText(`Lorem Ipsum +list1 +list2 +list3`)
+		it('should parse only the first project', () => {
+			const result = parseTaskText(`Lorem Ipsum +project1 +project2 +project3`)
 
-			expect(result.text).toBe('Lorem Ipsum +list2 +list3')
-			expect(result.list).toBe('list1')
+			expect(result.text).toBe('Lorem Ipsum +project2 +project3')
+			expect(result.project).toBe('project1')
 		})
-		it('should parse a list that\'s called like a date as list', () => {
+		it('should parse a project that\'s called like a date as project', () => {
 			const result = parseTaskText(`Lorem Ipsum +today`)
 
 			expect(result.text).toBe('Lorem Ipsum')
-			expect(result.list).toBe('today')
+			expect(result.project).toBe('today')
 		})
 	})
 

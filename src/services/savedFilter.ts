@@ -4,7 +4,7 @@ import {useI18n} from 'vue-i18n'
 import type {MaybeRef} from '@vueuse/core'
 import {useDebounceFn} from '@vueuse/core'
 
-import type {IList} from '@/modelTypes/IList'
+import type {IProject} from '@/modelTypes/IProject'
 import type {ISavedFilter} from '@/modelTypes/ISavedFilter'
 
 import AbstractService from '@/services/abstractService'
@@ -16,31 +16,31 @@ import {useNamespaceStore} from '@/stores/namespaces'
 
 import {objectToSnakeCase, objectToCamelCase} from '@/helpers/case'
 import {success} from '@/message'
-import ListModel from '@/models/list'
+import ProjectModel from '@/models/project'
 
 /**
-* Calculates the corresponding list id to this saved filter.
+* Calculates the corresponding project id to this saved filter.
 * This function matches the one in the api.
 */
-function getListId(savedFilter: ISavedFilter) {
-	let listId = savedFilter.id * -1 - 1
-	if (listId > 0) {
-		listId = 0
+function getProjectId(savedFilter: ISavedFilter) {
+	let projectId = savedFilter.id * -1 - 1
+	if (projectId > 0) {
+		projectId = 0
 	}
-	return listId
+	return projectId
 }
 
-export function getSavedFilterIdFromListId(listId: IList['id']) {
-	let filterId = listId * -1 - 1
-	// FilterIds from listIds are always positive
+export function getSavedFilterIdFromProjectId(projectId: IProject['id']) {
+	let filterId = projectId * -1 - 1
+	// FilterIds from projectIds are always positive
 	if (filterId < 0) {
 		filterId = 0
 	}
 	return filterId
 }
 
-export function isSavedFilter(list: IList) {
-	return getSavedFilterIdFromListId(list.id) > 0
+export function isSavedFilter(project: IProject) {
+	return getSavedFilterIdFromProjectId(project.id) > 0
 }
 
 export default class SavedFilterService extends AbstractService<ISavedFilter> {
@@ -78,7 +78,7 @@ export default class SavedFilterService extends AbstractService<ISavedFilter> {
 	}
 }
 
-export function useSavedFilter(listId?: MaybeRef<IList['id']>) {
+export function useSavedFilter(projectId?: MaybeRef<IProject['id']>) {
 	const router = useRouter()
 	const {t} = useI18n({useScope:'global'})
 	const namespaceStore = useNamespaceStore()
@@ -94,13 +94,13 @@ export function useSavedFilter(listId?: MaybeRef<IList['id']>) {
 	})
 
 	// load SavedFilter
-	watch(() => unref(listId), async (watchedListId) => {
-		if (watchedListId === undefined) {
+	watch(() => unref(projectId), async (watchedProjectId) => {
+		if (watchedProjectId === undefined) {
 			return
 		}
 
-		// We assume the listId in the route is the pseudolist
-		const savedFilterId = getSavedFilterIdFromListId(watchedListId)
+		// We assume the projectId in the route is the pseudoproject
+		const savedFilterId = getSavedFilterIdFromProjectId(watchedProjectId)
 
 		filter.value = new SavedFilterModel({id: savedFilterId})
 		const response = await filterService.get(filter.value)
@@ -111,7 +111,7 @@ export function useSavedFilter(listId?: MaybeRef<IList['id']>) {
 	async function createFilter() {
 		filter.value = await filterService.create(filter.value)
 		await namespaceStore.loadNamespaces()
-		router.push({name: 'list.index', params: {listId: getListId(filter.value)}})
+		router.push({name: 'project.index', params: {projectId: getProjectId(filter.value)}})
 	}
 
 	async function saveFilter() {
@@ -120,8 +120,8 @@ export function useSavedFilter(listId?: MaybeRef<IList['id']>) {
 		success({message: t('filters.edit.success')})
 		response.filters = objectToSnakeCase(response.filters)
 		filter.value = response
-		await useBaseStore().setCurrentList(new ListModel({
-			id: getListId(filter.value),
+		await useBaseStore().setCurrentProject(new ProjectModel({
+			id: getProjectId(filter.value),
 			title: filter.value.title,
 		}))
 		router.back()

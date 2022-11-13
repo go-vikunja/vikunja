@@ -117,9 +117,9 @@ function to(n, index) {
 		case names.TASK_DELETED:
 			// Nothing
 			break
-		case names.LIST_CREATED:
+		case names.PROJECT_CREATED:
 			to.name = 'task.index'
-			to.params.listId = n.notification.list.id
+			to.params.projectId = n.notification.project.id
 			break
 		case names.TEAM_MEMBER_ADDED:
 			to.name = 'teams.edit'

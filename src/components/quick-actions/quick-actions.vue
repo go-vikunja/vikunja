@@ -63,18 +63,18 @@ import TeamService from '@/services/team'
 
 import NamespaceModel from '@/models/namespace'
 import TeamModel from '@/models/team'
-import ListModel from '@/models/list'
+import ProjectModel from '@/models/project'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
 
 import {useBaseStore} from '@/stores/base'
-import {useListStore} from '@/stores/lists'
+import {useProjectStore} from '@/stores/projects'
 import {useNamespaceStore} from '@/stores/namespaces'
 import {useLabelStore} from '@/stores/labels'
 import {useTaskStore} from '@/stores/tasks'
 
-import {getHistory} from '@/modules/listHistory'
+import {getHistory} from '@/modules/projectHistory'
 import {parseTaskText, PrefixMode, PREFIXES} from '@/modules/parseTaskText'
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {success} from '@/message'
@@ -82,13 +82,13 @@ import {success} from '@/message'
 import type {ITeam} from '@/modelTypes/ITeam'
 import type {ITask} from '@/modelTypes/ITask'
 import type {INamespace} from '@/modelTypes/INamespace'
-import type {IList} from '@/modelTypes/IList'
+import type {IProject} from '@/modelTypes/IProject'
 
 const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
 
 const baseStore = useBaseStore()
-const listStore = useListStore()
+const projectStore = useProjectStore()
 const namespaceStore = useNamespaceStore()
 const labelStore = useLabelStore()
 const taskStore = useTaskStore()
@@ -98,13 +98,13 @@ type DoAction<Type = any> = { type: ACTION_TYPE } & Type
 enum ACTION_TYPE {
 	CMD = 'cmd',
 	TASK = 'task',
-	LIST = 'list',
+	PROJECT = 'project',
 	TEAM = 'team',
 }
 
 enum COMMAND_TYPE {
 	NEW_TASK = 'newTask',
-	NEW_LIST = 'newList',
+	NEW_PROJECT = 'newProject',
 	NEW_NAMESPACE = 'newNamespace',
 	NEW_TEAM = 'newTeam',
 }
@@ -112,7 +112,7 @@ enum COMMAND_TYPE {
 enum SEARCH_MODE {
 	ALL = 'all',
 	TASKS = 'tasks',
-	LISTS = 'lists',
+	PROJECTS = 'projects',
 	TEAMS = 'teams',
 }
 
@@ -137,26 +137,26 @@ function closeQuickActions() {
 	baseStore.setQuickActionsActive(false)
 }
 
-const foundLists = computed(() => {
-	const { list } = parsedQuery.value
+const foundProjects = computed(() => {
+	const { project } = parsedQuery.value
 	if (
 		searchMode.value === SEARCH_MODE.ALL ||
-		searchMode.value === SEARCH_MODE.LISTS ||
-		list === null
+		searchMode.value === SEARCH_MODE.PROJECTS ||
+		project === null
 	) {
 		return []
 	}
 
-	const ncache: { [id: ListModel['id']]: INamespace } = {}
+	const ncache: { [id: ProjectModel['id']]: INamespace } = {}
 	const history = getHistory()
-	const allLists = [
+	const allProjects = [
 		...new Set([
-			...history.map((l) => listStore.getListById(l.id)),
-			...listStore.searchList(list),
+			...history.map((l) => projectStore.getProjectById(l.id)),
+			...projectStore.searchProject(project),
 		]),
 	]
 
-	return allLists.filter((l) => {
+	return allProjects.filter((l) => {
 		if (typeof l === 'undefined' || l === null) {
 			return false
 		}
@@ -191,9 +191,9 @@ const results = computed<Result[]>(() => {
 			items: foundTasks.value,
 		},
 		{
-			type: ACTION_TYPE.LIST,
-			title: t('quickActions.lists'),
-			items: foundLists.value,
+			type: ACTION_TYPE.PROJECT,
+			title: t('quickActions.projects'),
+			items: foundProjects.value,
 		},
 		{
 			type: ACTION_TYPE.TEAM,
@@ -206,7 +206,7 @@ const results = computed<Result[]>(() => {
 const loading = computed(() => 
 	taskService.loading ||
 	namespaceStore.isLoading ||
-	listStore.isLoading ||
+	projectStore.isLoading ||
 	teamService.loading,
 )
 
@@ -224,11 +224,11 @@ const commands = computed<{ [key in COMMAND_TYPE]: Command }>(() => ({
 		placeholder: t('quickActions.newTask'),
 		action: newTask,
 	},
-	newList: {
-		type: COMMAND_TYPE.NEW_LIST,
-		title: t('quickActions.cmds.newList'),
-		placeholder: t('quickActions.newList'),
-		action: newList,
+	newProject: {
+		type: COMMAND_TYPE.NEW_PROJECT,
+		title: t('quickActions.cmds.newProject'),
+		placeholder: t('quickActions.newProject'),
+		action: newProject,
 	},
 	newNamespace: {
 		type: COMMAND_TYPE.NEW_NAMESPACE,
@@ -246,24 +246,24 @@ const commands = computed<{ [key in COMMAND_TYPE]: Command }>(() => ({
 
 const placeholder = computed(() => selectedCmd.value?.placeholder || t('quickActions.placeholder'))
 
-const currentList = computed(() => Object.keys(baseStore.currentList).length === 0
+const currentProject = computed(() => Object.keys(baseStore.currentProject).length === 0
 	? null
-	: baseStore.currentList,
+	: baseStore.currentProject,
 )
 
 const hintText = computed(() => {
 	let namespace
-	if (selectedCmd.value !== null && currentList.value !== null) {
+	if (selectedCmd.value !== null && currentProject.value !== null) {
 		switch (selectedCmd.value.type) {
 			case COMMAND_TYPE.NEW_TASK:
 				return t('quickActions.createTask', {
-					title: currentList.value.title,
+					title: currentProject.value.title,
 				})
-			case COMMAND_TYPE.NEW_LIST:
+			case COMMAND_TYPE.NEW_PROJECT:
 				namespace = namespaceStore.getNamespaceById(
-					currentList.value.namespaceId,
+					currentProject.value.namespaceId,
 				)
-				return t('quickActions.createList', {
+				return t('quickActions.createProject', {
 					title: namespace?.title,
 				})
 		}
@@ -275,8 +275,8 @@ const hintText = computed(() => {
 
 const availableCmds = computed(() => {
 	const cmds = []
-	if (currentList.value !== null) {
-		cmds.push(commands.value.newTask, commands.value.newList)
+	if (currentProject.value !== null) {
+		cmds.push(commands.value.newTask, commands.value.newProject)
 	}
 	cmds.push(commands.value.newNamespace, commands.value.newTeam)
 	return cmds
@@ -288,21 +288,21 @@ const searchMode = computed(() => {
 	if (query.value === '') {
 		return SEARCH_MODE.ALL
 	}
-	const { text, list, labels, assignees } = parsedQuery.value
+	const { text, project, labels, assignees } = parsedQuery.value
 	if (assignees.length === 0 && text !== '') {
 		return SEARCH_MODE.TASKS
 	}
 	if (
 		assignees.length === 0 &&
-		list !== null &&
+		project !== null &&
 		text === '' &&
 		labels.length === 0
 	) {
-		return SEARCH_MODE.LISTS
+		return SEARCH_MODE.PROJECTS
 	}
 	if (
 		assignees.length > 0 &&
-		list === null &&
+		project === null &&
 		text === '' &&
 		labels.length === 0
 	) {
@@ -356,7 +356,7 @@ function searchTasks() {
 		taskSearchTimeout.value = null
 	}
 
-	const { text, list: listName, labels } = parsedQuery.value
+	const { text, project: projectName, labels } = parsedQuery.value
 
 	const filters: Filter[] = []
 
@@ -373,10 +373,10 @@ function searchTasks() {
 		})
 	}
 
-	if (listName !== null) {
-		const list = listStore.findListByExactname(listName)
-		if (list !== null) {
-			addFilter('listId', list.id, 'equals')
+	if (projectName !== null) {
+		const project = projectStore.findProjectByExactname(projectName)
+		if (project !== null) {
+			addFilter('projectId', project.id, 'equals')
 		}
 	}
 
@@ -396,9 +396,9 @@ function searchTasks() {
 		const r = await taskService.getAll({}, params) as  DoAction<ITask>[]
 		foundTasks.value = r.map((t) => {
 			t.type = ACTION_TYPE.TASK
-			const list = listStore.getListById(t.listId)
-			if (list !== null) {
-				t.title = `${t.title} (${list.title})`
+			const project = projectStore.getProjectById(t.projectId)
+			if (project !== null) {
+				t.title = `${t.title} (${project.title})`
 			}
 			return t
 		})
@@ -444,11 +444,11 @@ const searchInput = ref<HTMLElement | null>(null)
 
 async function doAction(type: ACTION_TYPE, item: DoAction) {
 	switch (type) {
-		case ACTION_TYPE.LIST:
+		case ACTION_TYPE.PROJECT:
 			closeQuickActions()
 			await router.push({
-				name: 'list.index',
-				params: { listId: (item as DoAction<IList>).id },
+				name: 'project.index',
+				params: { projectId: (item as DoAction<IProject>).id },
 			})
 			break
 		case ACTION_TYPE.TASK:
@@ -489,29 +489,29 @@ async function doCmd() {
 }
 
 async function newTask() {
-	if (currentList.value === null) {
+	if (currentProject.value === null) {
 		return
 	}
 	const task = await taskStore.createNewTask({
 		title: query.value,
-		listId: currentList.value.id,
+		projectId: currentProject.value.id,
 	})
 	success({ message: t('task.createSuccess') })
 	await router.push({ name: 'task.detail', params: { id: task.id } })
 }
 
-async function newList() {
-	if (currentList.value === null) {
+async function newProject() {
+	if (currentProject.value === null) {
 		return
 	}
-	const newList = await listStore.createList(new ListModel({
+	const newProject = await projectStore.createProject(new ProjectModel({
 		title: query.value,
-		namespaceId: currentList.value.namespaceId,
+		namespaceId: currentProject.value.namespaceId,
 	}))
-	success({ message: t('list.create.createdSuccess')})
+	success({ message: t('project.create.createdSuccess')})
 	await router.push({
-		name: 'list.index',
-		params: { listId: newList.id },
+		name: 'project.index',
+		params: { projectId: newProject.id },
 	})
 }
 

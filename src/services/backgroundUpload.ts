@@ -1,13 +1,13 @@
 import AbstractService from './abstractService'
-import ListModel from '@/models/list'
+import ProjectModel from '@/models/project'
 
-import type { IList } from '@/modelTypes/IList'
+import type { IProject } from '@/modelTypes/IProject'
 import type { IFile } from '@/modelTypes/IFile'
 
 export default class BackgroundUploadService extends AbstractService {
 	constructor() {
 		super({
-			create: '/lists/{listId}/backgrounds/upload',
+			create: '/projects/{projectId}/backgrounds/upload',
 		})
 	}
 
@@ -15,16 +15,16 @@ export default class BackgroundUploadService extends AbstractService {
 		return false
 	}
 
-	modelCreateFactory(data: Partial<IList>) {
-		return new ListModel(data)
+	modelCreateFactory(data: Partial<IProject>) {
+		return new ProjectModel(data)
 	}
 
 	/**
 	 * Uploads a file to the server
 	 */
-	create(listId: IList['id'], file: IFile) {
+	create(projectId: IProject['id'], file: IFile) {
 		return this.uploadFile(
-			this.getReplacedRoute(this.paths.create, {listId}),
+			this.getReplacedRoute(this.paths.create, {projectId}),
 			file,
 			'background',
 		)

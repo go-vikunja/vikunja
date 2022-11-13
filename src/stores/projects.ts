@@ -2,57 +2,57 @@ import {watch, reactive, shallowReactive, unref, toRefs, readonly, ref, computed
 import {acceptHMRUpdate, defineStore} from 'pinia'
 import {useI18n} from 'vue-i18n'
 
-import ListService from '@/services/list'
+import ProjectService from '@/services/project'
 import {setModuleLoading} from '@/stores/helper'
-import {removeListFromHistory} from '@/modules/listHistory'
+import {removeProjectFromHistory} from '@/modules/projectHistory'
 import {createNewIndexer} from '@/indexes'
 import {useNamespaceStore} from './namespaces'
 
-import type {IList} from '@/modelTypes/IList'
+import type {IProject} from '@/modelTypes/IProject'
 
 import type {MaybeRef} from '@vueuse/core'
 
-import ListModel from '@/models/list'
+import ProjectModel from '@/models/project'
 import {success} from '@/message'
 import {useBaseStore} from '@/stores/base'
 
-const {add, remove, search, update} = createNewIndexer('lists', ['title', 'description'])
+const {add, remove, search, update} = createNewIndexer('projects', ['title', 'description'])
 
-const FavoriteListsNamespace = -2
+const FavoriteProjectsNamespace = -2
 
-export interface ListState {
-	[id: IList['id']]: IList
+export interface ProjectState {
+	[id: IProject['id']]: IProject
 }
 
-export const useListStore = defineStore('list', () => {
+export const useProjectStore = defineStore('project', () => {
 	const baseStore = useBaseStore()
 	const namespaceStore = useNamespaceStore()
 
 	const isLoading = ref(false)
 
-	// The lists are stored as an object which has the list ids as keys.
-	const lists = ref<ListState>({})
+	// The projects are stored as an object which has the project ids as keys.
+	const projects = ref<ProjectState>({})
 
 
-	const getListById = computed(() => {
-		return (id: IList['id']) => typeof lists.value[id] !== 'undefined' ? lists.value[id] : null
+	const getProjectById = computed(() => {
+		return (id: IProject['id']) => typeof projects.value[id] !== 'undefined' ? projects.value[id] : null
 	})
 
-	const findListByExactname = computed(() => {
+	const findProjectByExactname = computed(() => {
 		return (name: string) => {
-			const list = Object.values(lists.value).find(l => {
+			const project = Object.values(projects.value).find(l => {
 				return l.title.toLowerCase() === name.toLowerCase()
 			})
-			return typeof list === 'undefined' ? null : list
+			return typeof project === 'undefined' ? null : project
 		}
 	})
 
-	const searchList = computed(() => {
+	const searchProject = computed(() => {
 		return (query: string, includeArchived = false) => {
 			return search(query)
 				?.filter(value => value > 0)
-				.map(id => lists.value[id])
-				.filter(list => list.isArchived === includeArchived)
+				.map(id => projects.value[id])
+				.filter(project => project.isArchived === includeArchived)
 				|| []
 		}
 	})
@@ -61,82 +61,82 @@ export const useListStore = defineStore('list', () => {
 		isLoading.value = newIsLoading
 	}
 
-	function setList(list: IList) {
-		lists.value[list.id] = list
-		update(list)
+	function setProject(project: IProject) {
+		projects.value[project.id] = project
+		update(project)
 
-		if (baseStore.currentList?.id === list.id) {
-			baseStore.setCurrentList(list)
+		if (baseStore.currentProject?.id === project.id) {
+			baseStore.setCurrentProject(project)
 		}
 	}
 
-	function setLists(newLists: IList[]) {
-		newLists.forEach(l => {
-			lists.value[l.id] = l
+	function setProjects(newProjects: IProject[]) {
+		newProjects.forEach(l => {
+			projects.value[l.id] = l
 			add(l)
 		})
 	}
 
-	function removeListById(list: IList) {
-		remove(list)
-		delete lists.value[list.id]
+	function removeProjectById(project: IProject) {
+		remove(project)
+		delete projects.value[project.id]
 	}
 
-	function toggleListFavorite(list: IList) {
-		// The favorites pseudo list is always favorite
-		// Archived lists cannot be marked favorite
-		if (list.id === -1 || list.isArchived) {
+	function toggleProjectFavorite(project: IProject) {
+		// The favorites pseudo project is always favorite
+		// Archived projects cannot be marked favorite
+		if (project.id === -1 || project.isArchived) {
 			return
 		}
-		return updateList({
-			...list,
-			isFavorite: !list.isFavorite,
+		return updateProject({
+			...project,
+			isFavorite: !project.isFavorite,
 		})
 	}
 
-	async function createList(list: IList) {
+	async function createProject(project: IProject) {
 		const cancel = setModuleLoading(setIsLoading)
-		const listService = new ListService()
+		const projectService = new ProjectService()
 
 		try {
-			const createdList = await listService.create(list)
-			createdList.namespaceId = list.namespaceId
-			namespaceStore.addListToNamespace(createdList)
-			setList(createdList)
-			return createdList
+			const createdProject = await projectService.create(project)
+			createdProject.namespaceId = project.namespaceId
+			namespaceStore.addProjectToNamespace(createdProject)
+			setProject(createdProject)
+			return createdProject
 		} finally {
 			cancel()
 		}
 	}
 
-	async function updateList(list: IList) {
+	async function updateProject(project: IProject) {
 		const cancel = setModuleLoading(setIsLoading)
-		const listService = new ListService()
+		const projectService = new ProjectService()
 
 		try {
-			await listService.update(list)
-			setList(list)
-			namespaceStore.setListInNamespaceById(list)
+			await projectService.update(project)
+			setProject(project)
+			namespaceStore.setProjectInNamespaceById(project)
 
-			// the returned list from listService.update is the same!
+			// the returned project from projectService.update is the same!
 			// in order to not create a manipulation in pinia store we have to create a new copy
-			const newList = {
-				...list,
-				namespaceId: FavoriteListsNamespace,
+			const newProject = {
+				...project,
+				namespaceId: FavoriteProjectsNamespace,
 			}
 			
-			namespaceStore.removeListFromNamespaceById(newList)
-			if (list.isFavorite) {
-				namespaceStore.addListToNamespace(newList)
+			namespaceStore.removeProjectFromNamespaceById(newProject)
+			if (project.isFavorite) {
+				namespaceStore.addProjectToNamespace(newProject)
 			}
 			namespaceStore.loadNamespacesIfFavoritesDontExist()
 			namespaceStore.removeFavoritesNamespaceIfEmpty()
-			return newList
+			return newProject
 		} catch (e) {
-			// Reset the list state to the initial one to avoid confusion for the user
-			setList({
-				...list,
-				isFavorite: !list.isFavorite,
+			// Reset the project state to the initial one to avoid confusion for the user
+			setProject({
+				...project,
+				isFavorite: !project.isFavorite,
 			})
 			throw e
 		} finally {
@@ -144,15 +144,15 @@ export const useListStore = defineStore('list', () => {
 		}
 	}
 
-	async function deleteList(list: IList) {
+	async function deleteProject(project: IProject) {
 		const cancel = setModuleLoading(setIsLoading)
-		const listService = new ListService()
+		const projectService = new ProjectService()
 
 		try {
-			const response = await listService.delete(list)
-			removeListById(list)
-			namespaceStore.removeListFromNamespaceById(list)
-			removeListFromHistory({id: list.id})
+			const response = await projectService.delete(project)
+			removeProjectById(project)
+			namespaceStore.removeProjectFromNamespaceById(project)
+			removeProjectFromHistory({id: project.id})
 			return response
 		} finally {
 			cancel()
@@ -161,51 +161,51 @@ export const useListStore = defineStore('list', () => {
 
 	return {
 		isLoading: readonly(isLoading),
-		lists: readonly(lists),
+		projects: readonly(projects),
 
-		getListById,
-		findListByExactname,
-		searchList,
+		getProjectById,
+		findProjectByExactname,
+		searchProject,
 
-		setList,
-		setLists,
-		removeListById,
-		toggleListFavorite,
-		createList,
-		updateList,
-		deleteList,
+		setProject,
+		setProjects,
+		removeProjectById,
+		toggleProjectFavorite,
+		createProject,
+		updateProject,
+		deleteProject,
 	}
 })
 
-export function useList(listId: MaybeRef<IList['id']>) {
-	const listService = shallowReactive(new ListService())
-	const {loading: isLoading} = toRefs(listService)
-	const list: IList = reactive(new ListModel())
+export function useProject(projectId: MaybeRef<IProject['id']>) {
+	const projectService = shallowReactive(new ProjectService())
+	const {loading: isLoading} = toRefs(projectService)
+	const project: IProject = reactive(new ProjectModel())
 	const {t} = useI18n({useScope: 'global'})
 
 	watch(
-		() => unref(listId),
-		async (listId) => {
-			const loadedList = await listService.get(new ListModel({id: listId}))
-			Object.assign(list, loadedList)
+		() => unref(projectId),
+		async (projectId) => {
+			const loadedProject = await projectService.get(new ProjectModel({id: projectId}))
+			Object.assign(project, loadedProject)
 		},
 		{immediate: true},
 	)
 
-	const listStore = useListStore()
+	const projectStore = useProjectStore()
 	async function save() {
-		await listStore.updateList(list)
-		success({message: t('list.edit.success')})
+		await projectStore.updateProject(project)
+		success({message: t('project.edit.success')})
 	}
 
 	return {
 		isLoading: readonly(isLoading),
-		list,
+		project,
 		save,
 	}
 }
 
 // support hot reloading
 if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useListStore, import.meta.hot))
+  import.meta.hot.accept(acceptHMRUpdate(useProjectStore, import.meta.hot))
 }

@@ -1,24 +1,24 @@
 <template>
-    <ul class="list-grid">
+    <ul class="project-grid">
 			<li
-				v-for="(item, index) in filteredLists"
-				:key="`list_${item.id}_${index}`"
-				class="list-grid-item"
+				v-for="(item, index) in filteredProjects"
+				:key="`project_${item.id}_${index}`"
+				class="project-grid-item"
 			>
-				<ListCard :list="item" />
+				<ProjectCard :project="item" />
 			</li>
     </ul>
 </template>
 
 <script lang="ts" setup>
 import {computed, type PropType} from 'vue'
-import type {IList} from '@/modelTypes/IList'
+import type {IProject} from '@/modelTypes/IProject'
 
-import ListCard from './ListCard.vue'
+import ProjectCard from './ProjectCard.vue'
 
 const props = defineProps({
-	lists: {
-		type: Array as PropType<IList[]>,
+	projects: {
+		type: Array as PropType<IProject[]>,
 		default: () => [],
 	},
 	showArchived: {
@@ -31,46 +31,46 @@ const props = defineProps({
 	},
 })
 
-const filteredLists = computed(() => {
+const filteredProjects = computed(() => {
 	return props.showArchived
-		? props.lists
-		: props.lists.filter(l => !l.isArchived)
+		? props.projects
+		: props.projects.filter(l => !l.isArchived)
 })
 </script>
 
 <style lang="scss" scoped>
-$list-height: 150px;
-$list-spacing: 1rem;
+$project-height: 150px;
+$project-spacing: 1rem;
 
-.list-grid {
+.project-grid {
 	margin: 0; // reset li
-	list-style-type: none;
+	project-style-type: none;
 	display: grid;
-	grid-template-columns: repeat(var(--list-columns), 1fr);
-	grid-auto-rows: $list-height;
-	gap: $list-spacing;
+	grid-template-columns: repeat(var(--project-columns), 1fr);
+	grid-auto-rows: $project-height;
+	gap: $project-spacing;
 
 	@media screen and (min-width: $mobile) {
-		--list-rows: 4;
-		--list-columns: 1;
+		--project-rows: 4;
+		--project-columns: 1;
 	}
 
 	@media screen and (min-width: $mobile) and (max-width: $tablet) {
-		--list-columns: 2;
+		--project-columns: 2;
 	}
 
 	@media screen and (min-width: $tablet) and (max-width: $widescreen) {
-		--list-columns: 3;
-		--list-rows: 3;
+		--project-columns: 3;
+		--project-rows: 3;
 	}
 
 	@media screen and (min-width: $widescreen) {
-		--list-columns: 5;
-		--list-rows: 2;
+		--project-columns: 5;
+		--project-rows: 2;
 	}
 }
 
-.list-grid-item {
+.project-grid-item {
 	display: grid;
 	margin-top: 0; // remove padding coming form .content li + li
 }

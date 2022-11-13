@@ -1,18 +1,18 @@
 import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
 import {TaskFactory} from '../../factories/task'
-import {ListFactory} from '../../factories/list'
+import {ProjectFactory} from '../../factories/project'
 import {NamespaceFactory} from '../../factories/namespace'
-import {UserListFactory} from '../../factories/users_list'
+import {UserProjectFactory} from '../../factories/users_project'
 
 describe('Editor', () => {
 	createFakeUserAndLogin()
 	
 	beforeEach(() => {
 		NamespaceFactory.create(1)
-		ListFactory.create(1)
+		ProjectFactory.create(1)
 		TaskFactory.truncate()
-		UserListFactory.truncate()
+		UserProjectFactory.truncate()
 	})
 
 	it('Has a preview with checkable checkboxes', () => {

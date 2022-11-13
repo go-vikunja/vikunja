@@ -1,19 +1,19 @@
 import AbstractModel from './abstractModel'
-import ListModel from './list'
+import ProjectModel from './project'
 
-import type {IListDuplicate} from '@/modelTypes/IListDuplicate'
+import type {IProjectDuplicate} from '@/modelTypes/IProjectDuplicate'
 import type {INamespace} from '@/modelTypes/INamespace'
-import type {IList} from '@/modelTypes/IList'
+import type {IProject} from '@/modelTypes/IProject'
 
-export default class ListDuplicateModel extends AbstractModel<IListDuplicate> implements IListDuplicate {
-	listId = 0
+export default class ProjectDuplicateModel extends AbstractModel<IProjectDuplicate> implements IProjectDuplicate {
+	projectId = 0
 	namespaceId: INamespace['id'] = 0
-	list: IList = ListModel
+	project: IProject = ProjectModel
 
-	constructor(data : Partial<IListDuplicate>) {
+	constructor(data : Partial<IProjectDuplicate>) {
 		super()
 		this.assignData(data)
 
-		this.list = new ListModel(this.list)
+		this.project = new ProjectModel(this.project)
 	}
 }

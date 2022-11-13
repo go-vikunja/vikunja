@@ -1,6 +1,6 @@
 import type {ITeamShareBase} from './ITeamShareBase'
-import type {IList} from './IList'
+import type {IProject} from './IProject'
 
-export interface ITeamList extends ITeamShareBase {
-	listId: IList['id']
+export interface ITeamProject extends ITeamShareBase {
+	projectId: IProject['id']
 }

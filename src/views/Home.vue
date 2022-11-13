@@ -14,36 +14,36 @@
 			</router-link>
 		</message>
 		<add-task
-			@taskAdded="updateTaskList"
+			@taskAdded="updateTaskKey"
 			class="is-max-width-desktop"
 		/>
 		<template v-if="!hasTasks && !loading">
 			<template v-if="defaultNamespaceId > 0">
-				<p class="mt-4">{{ $t('home.list.newText') }}</p>
+				<p class="mt-4">{{ $t('home.project.newText') }}</p>
 				<x-button
-					:to="{ name: 'list.create', params: { namespaceId: defaultNamespaceId } }"
+					:to="{ name: 'project.create', params: { namespaceId: defaultNamespaceId } }"
 					:shadow="false"
 					class="ml-2"
 				>
-					{{ $t('home.list.new') }}
+					{{ $t('home.project.new') }}
 				</x-button>
 			</template>
 			<p class="mt-4" v-if="migratorsEnabled">
-				{{ $t('home.list.importText') }}
+				{{ $t('home.project.importText') }}
 			</p>
 			<x-button
 				v-if="migratorsEnabled"
 				:to="{ name: 'migrate.start' }"
 				:shadow="false">
-				{{ $t('home.list.import') }}
+				{{ $t('home.project.import') }}
 			</x-button>
 		</template>
-		<div v-if="listHistory.length > 0" class="is-max-width-desktop has-text-left mt-4">
+		<div v-if="projectHistory.length > 0" class="is-max-width-desktop has-text-left mt-4">
 			<h3>{{ $t('home.lastViewed') }}</h3>
-			<ListCardGrid :lists="listHistory" v-cy="'listCardGrid'" />
+			<ProjectCardGrid :projects="projectHistory" v-cy="'projectCardGrid'" />
 		</div>
 		<ShowTasks
-			v-if="hasLists"
+			v-if="hasProjects"
 			class="show-tasks"
 			:key="showTasksKey"
 		/>
@@ -55,21 +55,21 @@ import {ref, computed} from 'vue'
 
 import Message from '@/components/misc/message.vue'
 import ShowTasks from '@/views/tasks/ShowTasks.vue'
-import ListCardGrid from '@/components/list/partials/ListCardGrid.vue'
+import ProjectCardGrid from '@/components/project/partials/ProjectCardGrid.vue'
 import AddTask from '@/components/tasks/add-task.vue'
 
-import {getHistory} from '@/modules/listHistory'
+import {getHistory} from '@/modules/projectHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
 import {useDaytimeSalutation} from '@/composables/useDaytimeSalutation'
 
 import {useBaseStore} from '@/stores/base'
-import {useListStore} from '@/stores/lists'
+import {useProjectStore} from '@/stores/projects'
 import {useConfigStore} from '@/stores/config'
 import {useNamespaceStore} from '@/stores/namespaces'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
-import type {IList} from '@/modelTypes/IList'
+import type {IProject} from '@/modelTypes/IProject'
 
 const salutation = useDaytimeSalutation()
 
@@ -77,24 +77,24 @@ const baseStore = useBaseStore()
 const authStore = useAuthStore()
 const configStore = useConfigStore()
 const namespaceStore = useNamespaceStore()
-const listStore = useListStore()
+const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 
-const listHistory = computed(() => {
-	// If we don't check this, it tries to load the list background right after logging out	
+const projectHistory = computed(() => {
+	// If we don't check this, it tries to load the project background right after logging out	
 	if(!authStore.authenticated) {
 		return []
 	}
 	
 	return getHistory()
-		.map(l => listStore.getListById(l.id))
-		.filter((l): l is IList => l !== null)
+		.map(l => projectStore.getProjectById(l.id))
+		.filter((l): l is IProject => l !== null)
 })
 
 const migratorsEnabled = computed(() => configStore.availableMigrators?.length > 0)
 const hasTasks = computed(() => baseStore.hasTasks)
 const defaultNamespaceId = computed(() => namespaceStore.namespaces?.[0]?.id || 0)
-const hasLists = computed(() => namespaceStore.namespaces?.[0]?.lists.length > 0)
+const hasProjects = computed(() => namespaceStore.namespaces?.[0]?.projects.length > 0)
 const loading = computed(() => taskStore.isLoading)
 const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt))
 
@@ -102,7 +102,7 @@ const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.delet
 // FIXME: Should use pinia (somehow?)
 const showTasksKey = ref(0)
 
-function updateTaskList() {
+function updateTaskKey() {
 	showTasksKey.value++
 }
 </script>

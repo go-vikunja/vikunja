@@ -24,13 +24,13 @@
 
 		<section :key="`n${n.id}`" class="namespace" v-for="n in namespaces">
 			<x-button
-				v-if="n.id > 0 && n.lists.length > 0"
-				:to="{name: 'list.create', params: {namespaceId:  n.id}}"
+				v-if="n.id > 0 && n.projects.length > 0"
+				:to="{name: 'project.create', params: {namespaceId:  n.id}}"
 				class="is-pulled-right"
 				variant="secondary"
 				icon="plus"
 			>
-				{{ $t('list.create.header') }}
+				{{ $t('project.create.header') }}
 			</x-button>
 			<x-button
 				v-if="n.isArchived"
@@ -49,15 +49,15 @@
 				</span>
 			</h2>
 
-			<p v-if="n.lists.length === 0" class="has-text-centered has-text-grey mt-4 is-italic">
-				{{ $t('namespace.noLists') }}
-				<BaseButton :to="{name: 'list.create', params: {namespaceId:  n.id}}">
-					{{ $t('namespace.createList') }}
+			<p v-if="n.projects.length === 0" class="has-text-centered has-text-grey mt-4 is-italic">
+				{{ $t('namespace.noProjects') }}
+				<BaseButton :to="{name: 'project.create', params: {namespaceId:  n.id}}">
+					{{ $t('namespace.createProject') }}
 				</BaseButton>
 			</p>
 
-			<ListCardGrid v-else 			
-				:lists="n.lists"
+			<ProjectCardGrid v-else 			
+				:projects="n.projects"
 				:show-archived="showArchived"
 			/>
 		</section>
@@ -70,7 +70,7 @@ import {useI18n} from 'vue-i18n'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
-import ListCardGrid from '@/components/list/partials/ListCardGrid.vue'
+import ProjectCardGrid from '@/components/project/partials/ProjectCardGrid.vue'
 
 import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
 import {useTitle} from '@/composables/useTitle'

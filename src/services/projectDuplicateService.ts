@@ -1,21 +1,21 @@
 import AbstractService from './abstractService'
-import listDuplicateModel from '@/models/listDuplicateModel'
-import type {IListDuplicate} from '@/modelTypes/IListDuplicate'
+import projectDuplicateModel from '@/models/projectDuplicateModel'
+import type {IProjectDuplicate} from '@/modelTypes/IProjectDuplicate'
 
-export default class ListDuplicateService extends AbstractService<IListDuplicate> {
+export default class ProjectDuplicateService extends AbstractService<IProjectDuplicate> {
 	constructor() {
 		super({
-			create: '/lists/{listId}/duplicate',
+			create: '/projects/{projectId}/duplicate',
 		})
 	}
 
 	beforeCreate(model) {
 
-		model.list = null
+		model.project = null
 		return model
 	}
 
 	modelFactory(data) {
-		return new listDuplicateModel(data)
+		return new projectDuplicateModel(data)
 	}
 }

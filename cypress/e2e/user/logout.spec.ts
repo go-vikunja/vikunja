@@ -1,5 +1,5 @@
 import {createFakeUserAndLogin} from '../../support/authenticateUser'
-import {createLists} from '../list/prepareLists'
+import {createProjects} from '../project/prepareProjects'
 
 function logout() {
 	cy.get('.navbar .username-dropdown-trigger')
@@ -26,21 +26,21 @@ describe('Log out', () => {
 			})
 	})
 	
-	it.skip('Should clear the list history after logging the user out', () => {
-		const lists = createLists()
-		cy.visit(`/lists/${lists[0].id}`)
+	it.skip('Should clear the project history after logging the user out', () => {
+		const projects = createProjects()
+		cy.visit(`/projects/${projects[0].id}`)
 			.then(() => {
-				expect(localStorage.getItem('listHistory')).to.not.eq(null)
+				expect(localStorage.getItem('projectHistory')).to.not.eq(null)
 			})
 
 		logout()
 
-		cy.wait(1000) // This makes re-loading of the list and associated entities (and the resulting error) visible
+		cy.wait(1000) // This makes re-loading of the project and associated entities (and the resulting error) visible
 		
 		cy.url()
 			.should('contain', '/login')
 			.then(() => {
-				expect(localStorage.getItem('listHistory')).to.eq(null)
+				expect(localStorage.getItem('projectHistory')).to.eq(null)
 			})
 	})
 })

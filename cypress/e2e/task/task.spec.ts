@@ -1,11 +1,11 @@
 import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
 import {TaskFactory} from '../../factories/task'
-import {ListFactory} from '../../factories/list'
+import {ProjectFactory} from '../../factories/project'
 import {TaskCommentFactory} from '../../factories/task_comment'
 import {UserFactory} from '../../factories/user'
 import {NamespaceFactory} from '../../factories/namespace'
-import {UserListFactory} from '../../factories/users_list'
+import {UserProjectFactory} from '../../factories/users_project'
 import {TaskAssigneeFactory} from '../../factories/task_assignee'
 import {LabelFactory} from '../../factories/labels'
 import {LabelTaskFactory} from '../../factories/label_task'
@@ -48,22 +48,22 @@ describe('Task', () => {
 	createFakeUserAndLogin()
 
 	let namespaces
-	let lists
+	let projects
 	let buckets
 
 	beforeEach(() => {
 		// UserFactory.create(1)
 		namespaces = NamespaceFactory.create(1)
-		lists = ListFactory.create(1)
+		projects = ProjectFactory.create(1)
 		buckets = BucketFactory.create(1, {
-			list_id: lists[0].id,
+			project_id: projects[0].id,
 		})
 		TaskFactory.truncate()
-		UserListFactory.truncate()
+		UserProjectFactory.truncate()
 	})
 
 	it('Should be created new', () => {
-		cy.visit('/lists/1/list')
+		cy.visit('/projects/1/list')
 		cy.get('.input[placeholder="Add a new task…"')
 			.type('New Task')
 		cy.get('.button')
@@ -74,11 +74,11 @@ describe('Task', () => {
 			.should('contain', 'New Task')
 	})
 
-	it('Inserts new tasks at the top of the list', () => {
+	it('Inserts new tasks at the top of the project', () => {
 		TaskFactory.create(1)
 
-		cy.visit('/lists/1/list')
-		cy.get('.list-is-empty-notice')
+		cy.visit('/projects/1/list')
+		cy.get('.project-is-empty-notice')
 			.should('not.exist')
 		cy.get('.input[placeholder="Add a new task…"')
 			.type('New Task')
@@ -95,7 +95,7 @@ describe('Task', () => {
 	it('Marks a task as done', () => {
 		TaskFactory.create(1)
 
-		cy.visit('/lists/1/list')
+		cy.visit('/projects/1/list')
 		cy.get('.tasks .task .fancycheckbox label.check')
 			.first()
 			.click()
@@ -106,7 +106,7 @@ describe('Task', () => {
 	it('Can add a task to favorites', () => {
 		TaskFactory.create(1)
 
-		cy.visit('/lists/1/list')
+		cy.visit('/projects/1/list')
 		cy.get('.tasks .task .favorite')
 			.first()
 			.click()
@@ -134,7 +134,7 @@ describe('Task', () => {
 				.should('contain', '#1')
 			cy.get('.task-view h6.subtitle')
 				.should('contain', namespaces[0].title)
-				.should('contain', lists[0].title)
+				.should('contain', projects[0].title)
 			cy.get('.task-view .details.content.description')
 				.should('contain', tasks[0].description)
 			cy.get('.task-view .action-buttons p.created')
@@ -179,21 +179,21 @@ describe('Task', () => {
 				.should('contain', 'Mark as undone')
 		})
 
-		it('Shows a task identifier since the list has one', () => {
-			const lists = ListFactory.create(1, {
+		it('Shows a task identifier since the project has one', () => {
+			const projects = ProjectFactory.create(1, {
 				id: 1,
 				identifier: 'TEST',
 			})
 			const tasks = TaskFactory.create(1, {
 				id: 1,
-				list_id: lists[0].id,
+				project_id: projects[0].id,
 				index: 1,
 			})
 
 			cy.visit(`/tasks/${tasks[0].id}`)
 
 			cy.get('.task-view h1.title.task-id')
-				.should('contain', `${lists[0].identifier}-${tasks[0].index}`)
+				.should('contain', `${projects[0].identifier}-${tasks[0].index}`)
 		})
 
 		it('Can edit the description', () => {
@@ -236,14 +236,14 @@ describe('Task', () => {
 				.should('contain', 'Success')
 		})
 
-		it('Can move a task to another list', () => {
-			const lists = ListFactory.create(2)
+		it('Can move a task to another project', () => {
+			const projects = ProjectFactory.create(2)
 			BucketFactory.create(2, {
-				list_id: '{increment}'
+				project_id: '{increment}'
 			})
 			const tasks = TaskFactory.create(1, {
 				id: 1,
-				list_id: lists[0].id,
+				project_id: projects[0].id,
 			})
 			cy.visit(`/tasks/${tasks[0].id}`)
 
@@ -251,7 +251,7 @@ describe('Task', () => {
 				.contains('Move')
 				.click()
 			cy.get('.task-view .content.details .field .multiselect.control .input-wrapper input')
-				.type(`${lists[1].title}{enter}`)
+				.type(`${projects[1].title}{enter}`)
 			// The requests happen with a 200ms timeout. Because of that, the results are not yet there when cypress 
 			// presses enter and we can't simulate pressing on enter to select the item.
 			cy.get('.task-view .content.details .field .multiselect.control .search-results')
@@ -261,7 +261,7 @@ describe('Task', () => {
 
 			cy.get('.task-view h6.subtitle')
 				.should('contain', namespaces[0].title)
-				.should('contain', lists[1].title)
+				.should('contain', projects[1].title)
 			cy.get('.global-notification')
 				.should('contain', 'Success')
 		})
@@ -269,7 +269,7 @@ describe('Task', () => {
 		it('Can delete a task', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
-				list_id: 1,
+				project_id: 1,
 			})
 			cy.visit(`/tasks/${tasks[0].id}`)
 
@@ -286,17 +286,17 @@ describe('Task', () => {
 			cy.get('.global-notification')
 				.should('contain', 'Success')
 			cy.url()
-				.should('contain', `/lists/${tasks[0].list_id}/`)
+				.should('contain', `/projects/${tasks[0].project_id}/`)
 		})
 
 		it('Can add an assignee to a task', () => {
 			const users = UserFactory.create(5)
 			const tasks = TaskFactory.create(1, {
 				id: 1,
-				list_id: 1,
+				project_id: 1,
 			})
-			UserListFactory.create(5, {
-				list_id: 1,
+			UserProjectFactory.create(5, {
+				project_id: 1,
 				user_id: '{increment}',
 			})
 
@@ -321,10 +321,10 @@ describe('Task', () => {
 			const users = UserFactory.create(2)
 			const tasks = TaskFactory.create(1, {
 				id: 1,
-				list_id: 1,
+				project_id: 1,
 			})
-			UserListFactory.create(5, {
-				list_id: 1,
+			UserProjectFactory.create(5, {
+				project_id: 1,
 				user_id: '{increment}',
 			})
 			TaskAssigneeFactory.create(1, {
@@ -347,7 +347,7 @@ describe('Task', () => {
 		it('Can add a new label to a task', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
-				list_id: 1,
+				project_id: 1,
 			})
 			LabelFactory.truncate()
 			const newLabelText = 'some new label'
@@ -375,7 +375,7 @@ describe('Task', () => {
 		it('Can add an existing label to a task', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
-				list_id: 1,
+				project_id: 1,
 			})
 			const labels = LabelFactory.create(1)
 			LabelTaskFactory.truncate()
@@ -388,13 +388,13 @@ describe('Task', () => {
 		it('Can add a label to a task and it shows up on the kanban board afterwards', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
-				list_id: lists[0].id,
+				project_id: projects[0].id,
 				bucket_id: buckets[0].id,
 			})
 			const labels = LabelFactory.create(1)
 			LabelTaskFactory.truncate()
 			
-			cy.visit(`/lists/${lists[0].id}/kanban`)
+			cy.visit(`/projects/${projects[0].id}/kanban`)
 			
 			cy.get('.bucket .task')
 				.contains(tasks[0].title)
@@ -412,7 +412,7 @@ describe('Task', () => {
 		it('Can remove a label from a task', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
-				list_id: 1,
+				project_id: 1,
 			})
 			const labels = LabelFactory.create(1)
 			LabelTaskFactory.create(1, {
@@ -527,13 +527,13 @@ describe('Task', () => {
 			TaskAttachmentFactory.truncate()
 			const tasks = TaskFactory.create(1, {
 				id: 1,
-				list_id: lists[0].id,
+				project_id: projects[0].id,
 				bucket_id: buckets[0].id,
 			})
 			const labels = LabelFactory.create(1)
 			LabelTaskFactory.truncate()
 
-			cy.visit(`/lists/${lists[0].id}/kanban`)
+			cy.visit(`/projects/${projects[0].id}/kanban`)
 
 			cy.get('.bucket .task')
 				.contains(tasks[0].title)

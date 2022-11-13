@@ -9,9 +9,9 @@
 				<Logo class="logo" v-if="logoVisible"/>
 				<h1
 					:class="{'m-0': !logoVisible}"
-					:style="{ 'opacity': currentList.title === '' ? '0': '1' }"
+					:style="{ 'opacity': currentProject.title === '' ? '0': '1' }"
 					class="title">
-					{{ currentList.title === '' ? $t('misc.loading') : currentList.title }}
+					{{ currentProject.title === '' ? $t('misc.loading') : currentProject.title }}
 				</h1>
 				<div class="box has-text-left view">
 					<router-view/>
@@ -31,7 +31,7 @@ import Logo from '@/components/home/Logo.vue'
 import PoweredByLink from './PoweredByLink.vue'
 
 const baseStore = useBaseStore()
-const currentList = computed(() => baseStore.currentList)
+const currentProject = computed(() => baseStore.currentProject)
 const background = computed(() => baseStore.background)
 const logoVisible = computed(() => baseStore.logoVisible)
 </script>

@@ -15,10 +15,10 @@
 
 <script setup lang="ts">
 import {toRef} from 'vue'
-import type {IList} from '@/modelTypes/IList'
+import type {IProject} from '@/modelTypes/IProject'
 import {useSavedFilter} from '@/services/savedFilter'
 
-const props = defineProps<{ listId: IList['id'] }>()
+const props = defineProps<{ projectId: IProject['id'] }>()
 
-const {deleteFilter} = useSavedFilter(toRef(props, 'listId'))
+const {deleteFilter} = useSavedFilter(toRef(props, 'projectId'))
 </script>

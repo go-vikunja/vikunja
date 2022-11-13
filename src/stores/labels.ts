@@ -35,7 +35,7 @@ export const useLabelStore = defineStore('label', () => {
 	})
 
 	// **
-	// * Checks if a list of labels is available in the store and filters them then query
+	// * Checks if a project of labels is available in the store and filters them then query
 	// **
 	const filterLabelsByQuery = computed(() => {
 		return (labelsToHide: ILabel[], query: string) => {

@@ -1,20 +1,20 @@
 import AbstractService from './abstractService'
-import TeamListModel from '@/models/teamList'
-import type {ITeamList} from '@/modelTypes/ITeamList'
+import TeamProjectModel from '@/models/teamProject'
+import type {ITeamProject} from '@/modelTypes/ITeamProject'
 import TeamModel from '@/models/team'
 
-export default class TeamListService extends AbstractService<ITeamList> {
+export default class TeamProjectService extends AbstractService<ITeamProject> {
 	constructor() {
 		super({
-			create: '/lists/{listId}/teams',
-			getAll: '/lists/{listId}/teams',
-			update: '/lists/{listId}/teams/{teamId}',
-			delete: '/lists/{listId}/teams/{teamId}',
+			create: '/projects/{projectId}/teams',
+			getAll: '/projects/{projectId}/teams',
+			update: '/projects/{projectId}/teams/{teamId}',
+			delete: '/projects/{projectId}/teams/{teamId}',
 		})
 	}
 
 	modelFactory(data) {
-		return new TeamListModel(data)
+		return new TeamProjectModel(data)
 	}
 
 	modelGetAllFactory(data) {

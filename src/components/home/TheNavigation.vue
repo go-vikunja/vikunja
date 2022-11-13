@@ -1,67 +1,50 @@
 <template>
-	<header
-		:class="{'has-background': background, 'menu-active': menuActive}"
-		aria-label="main navigation"
-		class="navbar d-print-none"
-	>
-		<router-link :to="{name: 'home'}" class="logo-link">
-			<Logo width="164" height="48"/>
+	<header :class="{ 'has-background': background, 'menu-active': menuActive }" aria-label="main navigation"
+		class="navbar d-print-none">
+		<router-link :to="{ name: 'home' }" class="logo-link">
+			<Logo width="164" height="48" />
 		</router-link>
 
-		<MenuButton class="menu-button"/>
+		<MenuButton class="menu-button" />
 
-		<div
-			v-if="currentList.id"
-			class="list-title-wrapper"
-		>
-			<h1 class="list-title">{{ currentList.title === '' ? $t('misc.loading') : getListTitle(currentList) }}</h1>
-			
-			<BaseButton :to="{name: 'list.info', params: {listId: currentList.id}}" class="list-title-button">
-				<icon icon="circle-info"/>
+		<div v-if="currentProject.id" class="project-title-wrapper">
+			<h1 class="project-title">{{ currentProject.title === '' ? $t('misc.loading') : getProjectTitle(currentProject) }}
+			</h1>
+
+			<BaseButton :to="{ name: 'project.info', params: { projectId: currentProject.id } }" class="project-title-button">
+				<icon icon="circle-info" />
 			</BaseButton>
 
-			<list-settings-dropdown
-				v-if="canWriteCurrentList && currentList.id !== -1"
-				class="list-title-dropdown"
-				:list="currentList"
-			>
-				<template #trigger="{toggleOpen}">
-					<BaseButton class="list-title-button" @click="toggleOpen">
-						<icon icon="ellipsis-h" class="icon"/>
+			<project-settings-dropdown v-if="canWriteCurrentProject && currentProject.id !== -1"
+				class="project-title-dropdown" :project="currentProject">
+				<template #trigger="{ toggleOpen }">
+					<BaseButton class="project-title-button" @click="toggleOpen">
+						<icon icon="ellipsis-h" class="icon" />
 					</BaseButton>
 				</template>
-			</list-settings-dropdown>
+			</project-settings-dropdown>
 		</div>
 
 		<div class="navbar-end">
-			<BaseButton
-				@click="openQuickActions"
-				class="trigger-button"
-				v-shortcut="'Control+k'"
-				:title="$t('keyboardShortcuts.quickSearch')"
-			>
-				<icon icon="search"/>
+			<BaseButton @click="openQuickActions" class="trigger-button" v-shortcut="'Control+k'"
+				:title="$t('keyboardShortcuts.quickSearch')">
+				<icon icon="search" />
 			</BaseButton>
 			<Notifications />
 			<dropdown>
-				<template #trigger="{toggleOpen, open}">
-					<BaseButton
-						class="username-dropdown-trigger"
-						@click="toggleOpen"
-						variant="secondary"
-						:shadow="false"
-					>
-						<img :src="authStore.avatarUrl" alt="" class="avatar" width="40" height="40"/>
+				<template #trigger="{ toggleOpen, open }">
+					<BaseButton class="username-dropdown-trigger" @click="toggleOpen" variant="secondary" :shadow="false">
+						<img :src="authStore.avatarUrl" alt="" class="avatar" width="40" height="40" />
 						<span class="username">{{ authStore.userDisplayName }}</span>
 						<span class="icon is-small" :style="{
 							transform: open ? 'rotate(180deg)' : 'rotate(0)',
 						}">
-							<icon icon="chevron-down"/>
+							<icon icon="chevron-down" />
 						</span>
 					</BaseButton>
 				</template>
 
-				<dropdown-item :to="{name: 'user.settings'}">
+				<dropdown-item :to="{ name: 'user.settings' }">
 					{{ $t('user.settings.title') }}
 				</dropdown-item>
 				<dropdown-item v-if="imprintUrl" :href="imprintUrl">
@@ -73,7 +56,7 @@
 				<dropdown-item @click="baseStore.setKeyboardShortcutsActive(true)">
 					{{ $t('keyboardShortcuts.title') }}
 				</dropdown-item>
-				<dropdown-item :to="{name: 'about'}">
+				<dropdown-item :to="{ name: 'about' }">
 					{{ $t('about.title') }}
 				</dropdown-item>
 				<dropdown-item @click="authStore.logout()">
@@ -85,11 +68,11 @@
 </template>
 
 <script setup lang="ts">
-import {computed} from 'vue'
+import { computed } from 'vue'
 
-import {RIGHTS as Rights} from '@/constants/rights'
+import { RIGHTS as Rights } from '@/constants/rights'
 
-import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
+import ProjectSettingsDropdown from '@/components/project/project-settings-dropdown.vue'
 import Dropdown from '@/components/misc/dropdown.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 import Notifications from '@/components/notifications/notifications.vue'
@@ -97,16 +80,16 @@ import Logo from '@/components/home/Logo.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import MenuButton from '@/components/home/MenuButton.vue'
 
-import {getListTitle} from '@/helpers/getListTitle'
+import { getProjectTitle } from '@/helpers/getProjectTitle'
 
-import {useBaseStore} from '@/stores/base'
-import {useConfigStore} from '@/stores/config'
-import {useAuthStore} from '@/stores/auth'
+import { useBaseStore } from '@/stores/base'
+import { useConfigStore } from '@/stores/config'
+import { useAuthStore } from '@/stores/auth'
 
 const baseStore = useBaseStore()
-const currentList = computed(() => baseStore.currentList)
+const currentProject = computed(() => baseStore.currentProject)
 const background = computed(() => baseStore.background)
-const canWriteCurrentList = computed(() => baseStore.currentList.maxRight > Rights.READ)
+const canWriteCurrentProject = computed(() => baseStore.currentProject.maxRight > Rights.READ)
 const menuActive = computed(() => baseStore.menuActive)
 
 const authStore = useAuthStore()
@@ -166,7 +149,7 @@ $user-dropdown-width-mobile: 5rem;
 
 .logo-link {
 	display: none;
-	
+
 	@media screen and (min-width: $tablet) {
 		align-self: stretch;
 		display: flex;
@@ -185,12 +168,12 @@ $user-dropdown-width-mobile: 5rem;
 	}
 }
 
-.list-title-wrapper {
+.project-title-wrapper {
 	margin-inline: auto;
 	display: flex;
 	align-items: center;
 
-	// this makes the truncated text of the list title work
+	// this makes the truncated text of the project title work
 	// inside the flexbox parent
 	min-width: 0;
 
@@ -199,7 +182,7 @@ $user-dropdown-width-mobile: 5rem;
 	}
 }
 
-.list-title {
+.project-title {
 	font-size: 1rem;
 	// We need the following for overflowing ellipsis to work
 	text-overflow: ellipsis;
@@ -211,15 +194,15 @@ $user-dropdown-width-mobile: 5rem;
 	}
 }
 
-.list-title-dropdown {
+.project-title-dropdown {
 	align-self: stretch;
 
-	.list-title-button {
+	.project-title-button {
 		flex-grow: 1;
 	}
 }
 
-.list-title-button {
+.project-title-button {
 	align-self: stretch;
 	min-width: var(--navbar-button-min-width);
 	display: flex;
@@ -235,7 +218,7 @@ $user-dropdown-width-mobile: 5rem;
 	display: flex;
 	align-items: stretch;
 
-	> * {
+	>* {
 		min-width: var(--navbar-button-min-width);
 	}
 }

@@ -1,9 +1,9 @@
 import type {IAbstract} from './IAbstract'
-import type {IList} from './IList'
+import type {IProject} from './IProject'
 import type {INamespace} from './INamespace'
 
-export interface IListDuplicate extends IAbstract {
-	listId: number
+export interface IProjectDuplicate extends IAbstract {
+	projectId: number
 	namespaceId: INamespace['id']
-	list: IList
+	project: IProject
 }

@@ -5,7 +5,7 @@
 				<textarea
 					class="add-task-textarea input"
 					:class="{'textarea-empty': newTaskTitle === ''}"
-					:placeholder="$t('list.list.addPlaceholder')"
+					:placeholder="$t('project.list.addPlaceholder')"
 					rows="1"
 					v-focus
 					v-model="newTaskTitle"
@@ -24,10 +24,10 @@
 					@click="addTask()"
 					icon="plus"
 					:loading="loading"
-					:aria-label="$t('list.list.add')"
+					:aria-label="$t('project.list.add')"
 				>
 					<span class="button-text">
-						{{ $t('list.list.add') }}
+						{{ $t('project.list.add') }}
 					</span>
 				</x-button>
 			</p>
@@ -107,7 +107,7 @@ const loading = computed(() => taskStore.isLoading)
 
 async function addTask() {
 	if (newTaskTitle.value === '') {
-		errorMessage.value = t('list.create.addTitleRequired')
+		errorMessage.value = t('project.create.addTitleRequired')
 		return
 	}
 	errorMessage.value = ''
@@ -128,20 +128,20 @@ async function addTask() {
 	const allLabels = tasksToCreate.map(({title}) => getLabelsFromPrefix(title) ?? [])
 	await taskStore.ensureLabelsExist(allLabels.flat())
 
-	const newTasks = tasksToCreate.map(async ({title, list}) => {
+	const newTasks = tasksToCreate.map(async ({title, project}) => {
 		if (title === '') {
 			return
 		}
 
-		// If the task has a list specified, make sure to use it
-		let listId = null
-		if (list !== null) {
-			listId = await taskStore.findListId({list, listId: 0})
+		// If the task has a project specified, make sure to use it
+		let projectId = null
+		if (project !== null) {
+			projectId = await taskStore.findProjectId({project, projectId: 0})
 		}
 
 		const task = await taskStore.createNewTask({
 			title,
-			listId: listId || authStore.settings.defaultListId,
+			projectId: projectId || authStore.settings.defaultProjectId,
 			position: props.defaultPosition,
 		})
 		createdTasks[title] = task
@@ -176,7 +176,7 @@ async function addTask() {
 			}))
 
 			createdTask.relatedTasks[RELATION_KIND.PARENTTASK] = [createdParentTask]
-			// we're only emitting here so that the relation shows up in the task list
+			// we're only emitting here so that the relation shows up in the project
 			emit('taskAdded', createdTask)
 
 			return rel
@@ -184,8 +184,8 @@ async function addTask() {
 		await Promise.all(relations)
 	} catch (e: any) {
 		newTaskTitle.value = taskTitleBackup
-		if (e?.message === 'NO_LIST') {
-			errorMessage.value = t('list.create.addListRequired')
+		if (e?.message === 'NO_PROJECT') {
+			errorMessage.value = t('project.create.addProjectRequired')
 			return
 		}
 		throw e

@@ -5,10 +5,10 @@ import type {ILinkShare} from '@/modelTypes/ILinkShare'
 export default class LinkShareService extends AbstractService<ILinkShare> {
 	constructor() {
 		super({
-			getAll: '/lists/{listId}/shares',
-			get: '/lists/{listId}/shares/{id}',
-			create: '/lists/{listId}/shares',
-			delete: '/lists/{listId}/shares/{id}',
+			getAll: '/projects/{projectId}/shares',
+			get: '/projects/{projectId}/shares/{id}',
+			create: '/projects/{projectId}/shares',
+			delete: '/projects/{projectId}/shares/{id}',
 		})
 	}
 

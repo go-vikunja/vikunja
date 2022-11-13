@@ -73,14 +73,14 @@ const {t} = useI18n({useScope: 'global'})
 
 const tooltipText = computed(() => {
 	if (disabled.value) {
-		if (props.entity === 'list' && subscriptionEntity.value === 'namespace') {
-			return t('task.subscription.subscribedListThroughParentNamespace')
+		if (props.entity === 'project' && subscriptionEntity.value === 'namespace') {
+			return t('task.subscription.subscribedProjectThroughParentNamespace')
 		}
 		if (props.entity === 'task' && subscriptionEntity.value === 'namespace') {
 			return t('task.subscription.subscribedTaskThroughParentNamespace')
 		}
-		if (props.entity === 'task' && subscriptionEntity.value === 'list') {
-			return t('task.subscription.subscribedTaskThroughParentList')
+		if (props.entity === 'task' && subscriptionEntity.value === 'project') {
+			return t('task.subscription.subscribedTaskThroughParentProject')
 		}
 
 		return ''
@@ -91,10 +91,10 @@ const tooltipText = computed(() => {
 			return props.modelValue !== null ?
 				t('task.subscription.subscribedNamespace') :
 				t('task.subscription.notSubscribedNamespace')
-		case 'list':
+		case 'project':
 			return props.modelValue !== null ?
-				t('task.subscription.subscribedList') :
-				t('task.subscription.notSubscribedList')
+				t('task.subscription.subscribedProject') :
+				t('task.subscription.notSubscribedProject')
 		case 'task':
 			return props.modelValue !== null ?
 				t('task.subscription.subscribedTask') :
@@ -133,8 +133,8 @@ async function subscribe() {
 		case 'namespace':
 			message = t('task.subscription.subscribeSuccessNamespace')
 			break
-		case 'list':
-			message = t('task.subscription.subscribeSuccessList')
+		case 'project':
+			message = t('task.subscription.subscribeSuccessProject')
 			break
 		case 'task':
 			message = t('task.subscription.subscribeSuccessTask')
@@ -156,8 +156,8 @@ async function unsubscribe() {
 		case 'namespace':
 			message = t('task.subscription.unsubscribeSuccessNamespace')
 			break
-		case 'list':
-			message = t('task.subscription.unsubscribeSuccessList')
+		case 'project':
+			message = t('task.subscription.unsubscribeSuccessProject')
 			break
 		case 'task':
 			message = t('task.subscription.unsubscribeSuccessTask')

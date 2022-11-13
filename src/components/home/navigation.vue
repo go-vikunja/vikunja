@@ -52,37 +52,37 @@
 			<template v-for="(n, nk) in namespaces" :key="n.id">
 				<div class="namespace-title" :class="{'has-menu': n.id > 0}">
 					<BaseButton
-						@click="toggleLists(n.id)"
+						@click="toggleProjects(n.id)"
 						class="menu-label"
 						v-tooltip="namespaceTitles[nk]"
 					>
 						<ColorBubble
-							v-if="n.hexColor !== ''"
-							:color="n.hexColor"
-							class="mr-1"
+								v-if="n.hexColor !== ''"
+								:color="n.hexColor"
+								class="mr-1"
 						/>
 						<span class="name">{{ namespaceTitles[nk] }}</span>
 						<div
-							class="icon menu-item-icon is-small toggle-lists-icon pl-2"
-							:class="{'active': typeof listsVisible[n.id] !== 'undefined' ? listsVisible[n.id] : true}"
+								class="icon menu-item-icon is-small toggle-lists-icon pl-2"
+								:class="{'active': typeof projectsVisible[n.id] !== 'undefined' ? projectsVisible[n.id] : true}"
 						>
 							<icon icon="chevron-down"/>
 						</div>
 						<span class="count" :class="{'ml-2 mr-0': n.id > 0}">
-							({{ namespaceListsCount[nk] }})
+							({{ namespaceProjectsCount[nk] }})
 						</span>
 					</BaseButton>
 					<namespace-settings-dropdown class="menu-list-dropdown" :namespace="n" v-if="n.id > 0"/>
 				</div>
-					<!--
-						NOTE: a v-model / computed setter is not possible, since the updateActiveLists function
-						triggered by the change needs to have access to the current namespace
-					-->
-					<draggable
-						v-if="listsVisible[n.id] ?? true"
+				<!--
+					NOTE: a v-model / computed setter is not possible, since the updateActiveProjects function
+					triggered by the change needs to have access to the current namespace
+				-->
+				<draggable
+						v-if="projectsVisible[n.id] ?? true"
 						v-bind="dragOptions"
-						:modelValue="activeLists[nk]"
-						@update:modelValue="(lists) => updateActiveLists(n, lists)"
+						:modelValue="activeProjects[nk]"
+						@update:modelValue="(projects) => updateActiveProjects(n, projects)"
 						group="namespace-lists"
 						@start="() => drag = true"
 						@end="saveListPosition"
@@ -100,46 +100,46 @@
 								{ 'dragging-disabled': n.id < 0 }
 							]
 						}"
-					>
-						<template #item="{element: l}">
-							<li
-								class="list-menu loader-container is-loading-small"
-								:class="{'is-loading': listUpdating[l.id]}"
+				>
+					<template #item="{element: l}">
+						<li
+							class="list-menu loader-container is-loading-small"
+							:class="{'is-loading': projectUpdating[l.id]}"
+						>
+							<BaseButton
+								:to="{ name: 'project.index', params: { projectId: l.id} }"
+								class="list-menu-link"
+								:class="{'router-link-exact-active': currentProject.id === l.id}"
 							>
-								<BaseButton
-									:to="{ name: 'list.index', params: { listId: l.id} }"
-									class="list-menu-link"
-									:class="{'router-link-exact-active': currentList.id === l.id}"
-								>
-									<span class="icon menu-item-icon handle">
-										<icon icon="grip-lines"/>
-									</span>
-									<ColorBubble
+								<span class="icon menu-item-icon handle">
+									<icon icon="grip-lines"/>
+								</span>
+								<ColorBubble
 										v-if="l.hexColor !== ''"
 										:color="l.hexColor"
 										class="mr-1"
-									/>
-									<span class="list-menu-title">{{ getListTitle(l) }}</span>
-								</BaseButton>
-								<BaseButton
-									v-if="l.id > 0"
-									class="favorite"
-									:class="{'is-favorite': l.isFavorite}"
-									@click="listStore.toggleListFavorite(l)"
-								>
-									<icon :icon="l.isFavorite ? 'star' : ['far', 'star']"/>
-								</BaseButton>
-								<list-settings-dropdown class="menu-list-dropdown" :list="l" v-if="l.id > 0">
-									<template #trigger="{toggleOpen}">
-										<BaseButton class="menu-list-dropdown-trigger" @click="toggleOpen">
-											<icon icon="ellipsis-h" class="icon"/>
-										</BaseButton>
-									</template>
-								</list-settings-dropdown>
-								<span class="list-setting-spacer" v-else></span>
-							</li>
-						</template>
-					</draggable>
+								/>
+								<span class="list-menu-title">{{ getProjectTitle(l) }}</span>
+							</BaseButton>
+							<BaseButton
+								v-if="l.id > 0"
+								class="favorite"
+								:class="{'is-favorite': l.isFavorite}"
+								@click="projectStore.toggleProjectFavorite(l)"
+							>
+								<icon :icon="l.isFavorite ? 'star' : ['far', 'star']"/>
+							</BaseButton>
+							<ProjectSettingsDropdown class="menu-list-dropdown" :project="l" v-if="l.id > 0">
+								<template #trigger="{toggleOpen}">
+									<BaseButton class="menu-list-dropdown-trigger" @click="toggleOpen">
+										<icon icon="ellipsis-h" class="icon"/>
+									</BaseButton>
+								</template>
+							</ProjectSettingsDropdown>
+							<span class="list-setting-spacer" v-else></span>
+						</li>
+					</template>
+				</draggable>
 			</template>
 		</nav>
 		<PoweredByLink/>
@@ -152,20 +152,20 @@ import draggable from 'zhyswan-vuedraggable'
 import type {SortableEvent} from 'sortablejs'
 
 import BaseButton from '@/components/base/BaseButton.vue'
-import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
+import ProjectSettingsDropdown from '@/components/project/project-settings-dropdown.vue'
 import NamespaceSettingsDropdown from '@/components/namespace/namespace-settings-dropdown.vue'
 import PoweredByLink from '@/components/home/PoweredByLink.vue'
 import Logo from '@/components/home/Logo.vue'
 
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
-import {getListTitle} from '@/helpers/getListTitle'
-import type {IList} from '@/modelTypes/IList'
+import {getProjectTitle} from '@/helpers/getProjectTitle'
+import type {IProject} from '@/modelTypes/IProject'
 import type {INamespace} from '@/modelTypes/INamespace'
 import ColorBubble from '@/components/misc/colorBubble.vue'
 
 import {useBaseStore} from '@/stores/base'
-import {useListStore} from '@/stores/lists'
+import {useProjectStore} from '@/stores/projects'
 import {useNamespaceStore} from '@/stores/namespaces'
 
 const drag = ref(false)
@@ -176,7 +176,7 @@ const dragOptions = {
 
 const baseStore = useBaseStore()
 const namespaceStore = useNamespaceStore()
-const currentList = computed(() => baseStore.currentList)
+const currentProject = computed(() => baseStore.currentProject)
 const menuActive = computed(() => baseStore.menuActive)
 const loading = computed(() => namespaceStore.isLoading)
 
@@ -184,9 +184,9 @@ const loading = computed(() => namespaceStore.isLoading)
 const namespaces = computed(() => {
 	return namespaceStore.namespaces.filter(n => !n.isArchived)
 })
-const activeLists = computed(() => {
-	return namespaces.value.map(({lists}) => {
-		return lists?.filter(item => {
+const activeProjects = computed(() => {
+	return namespaces.value.map(({projects}) => {
+		return projects?.filter(item => {
 			return typeof item !== 'undefined' && !item.isArchived
 		})
 	})
@@ -196,45 +196,45 @@ const namespaceTitles = computed(() => {
 	return namespaces.value.map((namespace) => getNamespaceTitle(namespace))
 })
 
-const namespaceListsCount = computed(() => {
-	return namespaces.value.map((_, index) => activeLists.value[index]?.length ?? 0)
+const namespaceProjectsCount = computed(() => {
+	return namespaces.value.map((_, index) => activeProjects.value[index]?.length ?? 0)
 })
 
-const listStore = useListStore()
+const projectStore = useProjectStore()
 
-function toggleLists(namespaceId: INamespace['id']) {
-	listsVisible.value[namespaceId] = !listsVisible.value[namespaceId]
+function toggleProjects(namespaceId: INamespace['id']) {
+	projectsVisible.value[namespaceId] = !projectsVisible.value[namespaceId]
 }
 
-const listsVisible = ref<{ [id: INamespace['id']]: boolean }>({})
+const projectsVisible = ref<{ [id: INamespace['id']]: boolean }>({})
 // FIXME: async action will be unfinished when component mounts
 onBeforeMount(async () => {
 	const namespaces = await namespaceStore.loadNamespaces()
 	namespaces.forEach(n => {
-		if (typeof listsVisible.value[n.id] === 'undefined') {
-			listsVisible.value[n.id] = true
+		if (typeof projectsVisible.value[n.id] === 'undefined') {
+			projectsVisible.value[n.id] = true
 		}
 	})
 })
 
-function updateActiveLists(namespace: INamespace, activeLists: IList[]) {
+function updateActiveProjects(namespace: INamespace, activeProjects: IProject[]) {
 	// This is a bit hacky: since we do have to filter out the archived items from the list
 	// for vue draggable updating it is not as simple as replacing it.
-	// To work around this, we merge the active lists with the archived ones. Doing so breaks the order
-	// because now all archived lists are sorted after the active ones. This is fine because they are sorted
+	// To work around this, we merge the active projects with the archived ones. Doing so breaks the order
+	// because now all archived projects are sorted after the active ones. This is fine because they are sorted
 	// later when showing them anyway, and it makes the merging happening here a lot easier.
-	const lists = [
-		...activeLists,
-		...namespace.lists.filter(l => l.isArchived),
+	const projects = [
+		...activeProjects,
+		...namespace.projects.filter(l => l.isArchived),
 	]
 
 	namespaceStore.setNamespaceById({
 		...namespace,
-		lists,
+		projects,
 	})
 }
 
-const listUpdating = ref<{ [id: INamespace['id']]: boolean }>({})
+const projectUpdating = ref<{ [id: INamespace['id']]: boolean }>({})
 
 async function saveListPosition(e: SortableEvent) {
 	if (!e.newIndex && e.newIndex !== 0) return
@@ -242,31 +242,31 @@ async function saveListPosition(e: SortableEvent) {
 	const namespaceId = parseInt(e.to.dataset.namespaceId as string)
 	const newNamespaceIndex = parseInt(e.to.dataset.namespaceIndex as string)
 
-	const listsActive = activeLists.value[newNamespaceIndex]
-	// If the list was dragged to the last position, Safari will report e.newIndex as the size of the listsActive
-	// array instead of using the position. Because the index is wrong in that case, dragging the list will fail.
+	const projectsActive = activeProjects.value[newNamespaceIndex]
+	// If the project was dragged to the last position, Safari will report e.newIndex as the size of the projectsActive
+	// array instead of using the position. Because the index is wrong in that case, dragging the project will fail.
 	// To work around that we're explicitly checking that case here and decrease the index.
-	const newIndex = e.newIndex === listsActive.length ? e.newIndex - 1 : e.newIndex
+	const newIndex = e.newIndex === projectsActive.length ? e.newIndex - 1 : e.newIndex
 
-	const list = listsActive[newIndex]
-	const listBefore = listsActive[newIndex - 1] ?? null
-	const listAfter = listsActive[newIndex + 1] ?? null
-	listUpdating.value[list.id] = true
+	const project = projectsActive[newIndex]
+	const projectBefore = projectsActive[newIndex - 1] ?? null
+	const projectAfter = projectsActive[newIndex + 1] ?? null
+	projectUpdating.value[project.id] = true
 
 	const position = calculateItemPosition(
-		listBefore !== null ? listBefore.position : null,
-		listAfter !== null ? listAfter.position : null,
+		projectBefore !== null ? projectBefore.position : null,
+		projectAfter !== null ? projectAfter.position : null,
 	)
 
 	try {
-		// create a copy of the list in order to not violate pinia manipulation
-		await listStore.updateList({
-			...list,
+		// create a copy of the project in order to not violate pinia manipulation
+		await projectStore.updateProject({
+			...project,
 			position,
 			namespaceId,
 		})
 	} finally {
-		listUpdating.value[list.id] = false
+		projectUpdating.value[project.id] = false
 	}
 }
 </script>

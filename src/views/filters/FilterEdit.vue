@@ -5,7 +5,7 @@
 		:primary-label="$t('misc.save')"
 		@primary="saveFilterWithValidation"
 		:tertiary="$t('misc.delete')"
-		@tertiary="$router.push({ name: 'filter.settings.delete', params: { id: listId } })"
+		@tertiary="$router.push({ name: 'filter.settings.delete', params: { id: projectId } })"
 	>
 		<form @submit.prevent="saveFilterWithValidation()">
 			<div class="field">
@@ -58,13 +58,13 @@ import {toRef} from 'vue'
 
 import Editor from '@/components/input/AsyncEditor'
 import CreateEdit from '@/components/misc/create-edit.vue'
-import Filters from '@/components/list/partials/filters.vue'
+import Filters from '@/components/project/partials/filters.vue'
 
 import {useSavedFilter} from '@/services/savedFilter'
 
-import type {IList} from '@/modelTypes/IList'
+import type {IProject} from '@/modelTypes/IProject'
 
-const props = defineProps<{ listId: IList['id'] }>()
+const props = defineProps<{ projectId: IProject['id'] }>()
 
 const {
 	saveFilterWithValidation,
@@ -73,5 +73,5 @@ const {
 	filterService,
 	titleValid,
 	validateTitleField,
-} = useSavedFilter(toRef(props, 'listId'))
+} = useSavedFilter(toRef(props, 'projectId'))
 </script>

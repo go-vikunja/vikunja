@@ -18,7 +18,7 @@ const parseDate = date => {
 export default class TaskService extends AbstractService<ITask> {
 	constructor() {
 		super({
-			create: '/lists/{listId}',
+			create: '/projects/{projectId}',
 			getAll: '/tasks/all',
 			get: '/tasks/{id}',
 			update: '/tasks/{id}',
@@ -43,8 +43,8 @@ export default class TaskService extends AbstractService<ITask> {
 
 		model.title = model.title?.trim()
 
-		// Ensure that listId is an int
-		model.listId = Number(model.listId)
+		// Ensure that projectId is an int
+		model.projectId = Number(model.projectId)
 
 		// Convert dates into an iso string
 		model.dueDate = parseDate(model.dueDate)

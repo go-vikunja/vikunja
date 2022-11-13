@@ -5,7 +5,7 @@ import type {ITask} from './ITask'
 export interface IBucket extends IAbstract {
 	id: number
 	title: string
-	listId: number
+	projectId: number
 	limit: number
 	tasks: ITask[]
 	isDoneBucket: boolean

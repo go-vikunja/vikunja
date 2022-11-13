@@ -13,10 +13,10 @@
 				:can-write="canWrite"
 				ref="heading"
 			/>
-			<h6 class="subtitle" v-if="parent && parent.namespace && parent.list">
+			<h6 class="subtitle" v-if="parent && parent.namespace && parent.project">
 				{{ getNamespaceTitle(parent.namespace) }} &rsaquo;
-				<router-link :to="{ name: 'list.index', params: { listId: parent.list.id } }">
-					{{ getListTitle(parent.list) }}
+				<router-link :to="{ name: 'project.index', params: { projectId: parent.project.id } }">
+					{{ getProjectTitle(parent.project) }}
 				</router-link>
 			</h6>
 
@@ -35,7 +35,7 @@
 							</div>
 							<edit-assignees
 								:disabled="!canWrite"
-								:list-id="task.listId"
+								:project-id="task.projectId"
 								:task-id="task.id"
 								:ref="e => setFieldRef('assignees', e)"
 								v-model="task.assignees"
@@ -254,7 +254,7 @@
 						<related-tasks
 							:edit-enabled="canWrite"
 							:initial-related-tasks="task.relatedTasks"
-							:list-id="task.listId"
+							:project-id="task.projectId"
 							:show-no-relations-notice="true"
 							:task-id="taskId"
 							:ref="e => setFieldRef('relatedTasks', e)"
@@ -262,7 +262,7 @@
 					</div>
 
 					<!-- Move Task -->
-					<div class="content details" v-if="activeFields.moveList">
+					<div class="content details" v-if="activeFields.moveProject">
 						<h3>
 							<span class="icon is-grey">
 								<icon icon="list"/>
@@ -271,9 +271,9 @@
 						</h3>
 						<div class="field has-addons">
 							<div class="control is-expanded">
-								<list-search 
-									@update:modelValue="changeList"
-									:ref="e => setFieldRef('moveList', e)"
+								<project-search 
+									@update:modelValue="changeProject"
+									:ref="e => setFieldRef('moveProject', e)"
 								/>
 							</div>
 						</div>
@@ -386,12 +386,12 @@
 							{{ $t('task.detail.actions.relatedTasks') }}
 						</x-button>
 						<x-button
-							@click="setFieldActive('moveList')"
+							@click="setFieldActive('moveProject')"
 							variant="secondary"
 							icon="list"
 							v-shortcut="'m'"
 						>
-							{{ $t('task.detail.actions.moveList') }}
+							{{ $t('task.detail.actions.moveProject') }}
 						</x-button>
 						<x-button
 							@click="setFieldActive('color')"
@@ -455,7 +455,7 @@ import TaskService from '@/services/task'
 import TaskModel, {TASK_DEFAULT_COLOR} from '@/models/task'
 
 import type {ITask} from '@/modelTypes/ITask'
-import type {IList} from '@/modelTypes/IList'
+import type {IProject} from '@/modelTypes/IProject'
 
 import {PRIORITIES, type Priority} from '@/constants/priorities'
 import {RIGHTS} from '@/constants/rights'
@@ -473,7 +473,7 @@ import Description from '@/components/tasks/partials/description.vue'
 import EditAssignees from '@/components/tasks/partials/editAssignees.vue'
 import EditLabels from '@/components/tasks/partials/editLabels.vue'
 import Heading from '@/components/tasks/partials/heading.vue'
-import ListSearch from '@/components/tasks/partials/listSearch.vue'
+import ProjectSearch from '@/components/tasks/partials/projectSearch.vue'
 import PercentDoneSelect from '@/components/tasks/partials/percentDoneSelect.vue'
 import PrioritySelect from '@/components/tasks/partials/prioritySelect.vue'
 import RelatedTasks from '@/components/tasks/partials/relatedTasks.vue'
@@ -484,7 +484,7 @@ import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 import {uploadFile} from '@/helpers/attachments'
 import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
-import {getListTitle} from '@/helpers/getListTitle'
+import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 
 import {useBaseStore} from '@/stores/base'
@@ -536,26 +536,26 @@ const visible = ref(false)
 const taskId = toRef(props, 'taskId')
 
 const parent = computed(() => {
-	if (!task.listId) {
+	if (!task.projectId) {
 		return {
 			namespace: null,
-			list: null,
+			project: null,
 		}
 	}
 
-	if (!namespaceStore.getListAndNamespaceById) {
+	if (!namespaceStore.getProjectAndNamespaceById) {
 		return null
 	}
 
-	return namespaceStore.getListAndNamespaceById(task.listId)
+	return namespaceStore.getProjectAndNamespaceById(task.projectId)
 })
 
 watch(
 	parent,
 	(parent) => {
-		const parentList = parent !== null ? parent.list : null
-		if (parentList !== null) {
-			baseStore.handleSetCurrentList({list: parentList})
+		const parentProject = parent !== null ? parent.project : null
+		if (parentProject !== null) {
+			baseStore.handleSetCurrentProject({project: parentProject})
 		}
 	},
 	{immediate: true},
@@ -616,7 +616,7 @@ type FieldType =
 	| 'dueDate'
 	| 'endDate'
 	| 'labels'
-	| 'moveList'
+	| 'moveProject'
 	| 'percentDone'
 	| 'priority'
 	| 'relatedTasks'
@@ -631,7 +631,7 @@ const activeFields : {[type in FieldType]: boolean} = reactive({
 	dueDate: false,
 	endDate: false,
 	labels: false,
-	moveList: false,
+	moveProject: false,
 	percentDone: false,
 	priority: false,
 	relatedTasks: false,
@@ -666,7 +666,7 @@ const activeFieldElements : {[id in FieldType]: HTMLElement | null} = reactive({
 	dueDate: null,
 	endDate: null,
 	labels: null,
-	moveList: null,
+	moveProject: null,
 	percentDone: null,
 	priority: null,
 	relatedTasks: null,
@@ -743,7 +743,7 @@ const showDeleteModal = ref(false)
 async function deleteTask() {
 	await taskStore.delete(task)
 	success({message: t('task.detail.deleteSuccess')})
-	router.push({name: 'list.index', params: {listId: task.listId}})
+	router.push({name: 'project.index', params: {projectId: task.projectId}})
 }
 
 function toggleTaskDone() {
@@ -758,12 +758,12 @@ function toggleTaskDone() {
 	})
 }
 
-async function changeList(list: IList) {
+async function changeProject(project: IProject) {
 	kanbanStore.removeTaskInBucket(task)
 	await saveTask({
 		task: {
 			...task,
-			listId: list.id,
+			projectId: project.id,
 		},
 	})
 }

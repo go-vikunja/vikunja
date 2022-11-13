@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<p class="has-text-weight-bold">
-			{{ $t('list.share.userTeam.shared', {type: shareTypeNames}) }}
+			{{ $t('project.share.userTeam.shared', {type: shareTypeNames}) }}
 		</p>
 		<div v-if="userIsAdmin">
 			<div class="field has-addons">
@@ -19,7 +19,7 @@
 					/>
 				</p>
 				<p class="control">
-					<x-button @click="add()">{{ $t('list.share.share') }}</x-button>
+					<x-button @click="add()">{{ $t('project.share.share') }}</x-button>
 				</p>
 			</div>
 		</div>
@@ -31,7 +31,7 @@
 					<td>{{ getDisplayName(s) }}</td>
 					<td>
 						<template v-if="s.id === userInfo.id">
-							<b class="is-success">{{ $t('list.share.userTeam.you') }}</b>
+							<b class="is-success">{{ $t('project.share.userTeam.you') }}</b>
 						</template>
 					</td>
 				</template>
@@ -52,19 +52,19 @@
 							<span class="icon is-small">
 								<icon icon="lock"/>
 							</span>
-						{{ $t('list.share.right.admin') }}
+						{{ $t('project.share.right.admin') }}
 					</template>
 					<template v-else-if="s.right === RIGHTS.READ_WRITE">
 							<span class="icon is-small">
 								<icon icon="pen"/>
 							</span>
-						{{ $t('list.share.right.readWrite') }}
+						{{ $t('project.share.right.readWrite') }}
 					</template>
 					<template v-else>
 							<span class="icon is-small">
 								<icon icon="users"/>
 							</span>
-						{{ $t('list.share.right.read') }}
+						{{ $t('project.share.right.read') }}
 					</template>
 				</td>
 				<td class="actions" v-if="userIsAdmin">
@@ -78,19 +78,19 @@
 								:selected="s.right === RIGHTS.READ"
 								:value="RIGHTS.READ"
 							>
-								{{ $t('list.share.right.read') }}
+								{{ $t('project.share.right.read') }}
 							</option>
 							<option
 								:selected="s.right === RIGHTS.READ_WRITE"
 								:value="RIGHTS.READ_WRITE"
 							>
-								{{ $t('list.share.right.readWrite') }}
+								{{ $t('project.share.right.readWrite') }}
 							</option>
 							<option
 								:selected="s.right === RIGHTS.ADMIN"
 								:value="RIGHTS.ADMIN"
 							>
-								{{ $t('list.share.right.admin') }}
+								{{ $t('project.share.right.admin') }}
 							</option>
 						</select>
 					</div>
@@ -110,7 +110,7 @@
 		</table>
 
 		<nothing v-else>
-			{{ $t('list.share.userTeam.notShared', {type: shareTypeNames}) }}
+			{{ $t('project.share.userTeam.notShared', {type: shareTypeNames}) }}
 		</nothing>
 
 		<modal
@@ -120,11 +120,11 @@
 		>
 			<template #header>
 				<span>{{
-						$t('list.share.userTeam.removeHeader', {type: shareTypeName, sharable: sharableName})
+						$t('project.share.userTeam.removeHeader', {type: shareTypeName, sharable: sharableName})
 					}}</span>
 			</template>
 			<template #text>
-				<p>{{ $t('list.share.userTeam.removeText', {type: shareTypeName, sharable: sharableName}) }}</p>
+				<p>{{ $t('project.share.userTeam.removeText', {type: shareTypeName, sharable: sharableName}) }}</p>
 			</template>
 		</modal>
 	</div>
@@ -143,9 +143,9 @@ import UserNamespaceService from '@/services/userNamespace'
 import UserNamespaceModel from '@/models/userNamespace'
 import type {IUserNamespace} from '@/modelTypes/IUserNamespace'
 
-import UserListService from '@/services/userList'
-import UserListModel from '@/models/userList'
-import type {IUserList} from '@/modelTypes/IUserList'
+import UserProjectService from '@/services/userProject'
+import UserProjectModel from '@/models/userProject'
+import type {IUserProject} from '@/modelTypes/IUserProject'
 
 import UserService from '@/services/user'
 import UserModel, { getDisplayName } from '@/models/user'
@@ -155,9 +155,9 @@ import TeamNamespaceService from '@/services/teamNamespace'
 import TeamNamespaceModel from '@/models/teamNamespace'
 import type { ITeamNamespace } from '@/modelTypes/ITeamNamespace'
 
-import TeamListService from '@/services/teamList'
-import TeamListModel from '@/models/teamList'
-import type { ITeamList } from '@/modelTypes/ITeamList'
+import TeamProjectService from '@/services/teamProject'
+import TeamProjectModel from '@/models/teamProject'
+import type { ITeamProject } from '@/modelTypes/ITeamProject'
 
 import TeamService from '@/services/team'
 import TeamModel from '@/models/team'
@@ -172,7 +172,7 @@ import {useAuthStore} from '@/stores/auth'
 
 const props = defineProps({
 	type: {
-		type: String as PropType<'list' | 'namespace'>,
+		type: String as PropType<'project' | 'namespace'>,
 		default: '',
 	},
 	shareType: {
@@ -191,9 +191,9 @@ const props = defineProps({
 
 const {t} = useI18n({useScope: 'global'})
 
-// This user service is either a userNamespaceService or a userListService, depending on the type we are using
-let stuffService: UserNamespaceService | UserListService | TeamListService | TeamNamespaceService
-let stuffModel: IUserNamespace | IUserList | ITeamList | ITeamNamespace
+// This user service is either a userNamespaceService or a userProjectService, depending on the type we are using
+let stuffService: UserNamespaceService | UserProjectService | TeamProjectService | TeamNamespaceService
+let stuffModel: IUserNamespace | IUserProject | ITeamProject | ITeamNamespace
 let searchService: UserService | TeamService
 let sharable: Ref<IUser | ITeam>
 
@@ -201,7 +201,7 @@ const searchLabel = ref('')
 const selectedRight = ref({})
 
 
-// This holds either teams or users who this namepace or list is shared with
+// This holds either teams or users who this namepace or project is shared with
 const sharables = ref([])
 const showDeleteModal = ref(false)
 
@@ -212,11 +212,11 @@ const userInfo = computed(() => authStore.info)
 function createShareTypeNameComputed(count: number) {
 	return computed(() => {
 		if (props.shareType === 'user') {
-			return t('list.share.userTeam.typeUser', count)
+			return t('project.share.userTeam.typeUser', count)
 		}
 
 		if (props.shareType === 'team') {
-			return t('list.share.userTeam.typeTeam', count)
+			return t('project.share.userTeam.typeTeam', count)
 		}
 
 		return ''
@@ -227,8 +227,8 @@ const shareTypeNames = createShareTypeNameComputed(2)
 const shareTypeName = createShareTypeNameComputed(1)
 
 const sharableName = computed(() => {
-	if (props.type === 'list') {
-		return t('list.list.title')
+	if (props.type === 'project') {
+		return t('project.list.title')
 	}
 
 	if (props.shareType === 'namespace') {
@@ -244,9 +244,9 @@ if (props.shareType === 'user') {
 	sharable = ref(new UserModel())
 	searchLabel.value = 'username'
 
-	if (props.type === 'list') {
-		stuffService = shallowReactive(new UserListService())
-		stuffModel = reactive(new UserListModel({listId: props.id}))
+	if (props.type === 'project') {
+		stuffService = shallowReactive(new UserProjectService())
+		stuffModel = reactive(new UserProjectModel({projectId: props.id}))
 	} else if (props.type === 'namespace') {
 		stuffService = shallowReactive(new UserNamespaceService())
 		stuffModel = reactive(new UserNamespaceModel({
@@ -261,9 +261,9 @@ if (props.shareType === 'user') {
 	sharable = ref(new TeamModel())
 	searchLabel.value = 'name'
 
-	if (props.type === 'list') {
-		stuffService = shallowReactive(new TeamListService())
-		stuffModel = reactive(new TeamListModel({listId: props.id}))
+	if (props.type === 'project') {
+		stuffService = shallowReactive(new TeamProjectService())
+		stuffModel = reactive(new TeamProjectModel({projectId: props.id}))
 	} else if (props.type === 'namespace') {
 		stuffService = shallowReactive(new TeamNamespaceService())
 		stuffModel = reactive(new TeamNamespaceModel({
@@ -303,7 +303,7 @@ async function deleteSharable() {
 		}
 	}
 	success({
-		message: t('list.share.userTeam.removeSuccess', {
+		message: t('project.share.userTeam.removeSuccess', {
 			type: shareTypeName.value,
 			sharable: sharableName.value,
 		}),
@@ -326,7 +326,7 @@ async function add(admin) {
 	}
 
 	await stuffService.create(stuffModel)
-	success({message: t('list.share.userTeam.addedSuccess', {type: shareTypeName.value})})
+	success({message: t('project.share.userTeam.addedSuccess', {type: shareTypeName.value})})
 	await load()
 }
 
@@ -358,7 +358,7 @@ async function toggleType(sharable) {
 			sharables.value[i].right = r.right
 		}
 	}
-	success({message: t('list.share.userTeam.updatedSuccess', {type: shareTypeName.value})})
+	success({message: t('project.share.userTeam.updatedSuccess', {type: shareTypeName.value})})
 }
 
 const found = ref([])

@@ -1,12 +1,12 @@
 <template>
 	<multiselect
-		v-model="selectedLists"
-		:search-results="foundLists"
-		:loading="listService.loading"
+		v-model="selectedProjects"
+		:search-results="foundProjects"
+		:loading="projectService.loading"
 		:multiple="true"
-		:placeholder="$t('list.search')"
+		:placeholder="$t('project.search')"
 		label="title"
-		@search="findLists"
+		@search="findProjects"
 	/>
 </template>
 
@@ -15,49 +15,49 @@ import {computed, ref, shallowReactive, watchEffect, type PropType} from 'vue'
 
 import Multiselect from '@/components/input/multiselect.vue'
 
-import type {IList} from '@/modelTypes/IList'
+import type {IProject} from '@/modelTypes/IProject'
 
-import ListService from '@/services/list'
+import ProjectService from '@/services/project'
 import {includesById} from '@/helpers/utils'
 
 const props = defineProps({
 	modelValue: {
-		type: Array as PropType<IList[]>,
+		type: Array as PropType<IProject[]>,
 		default: () => [],
 	},
 })
 const emit = defineEmits<{
-	(e: 'update:modelValue', value: IList[]): void
+	(e: 'update:modelValue', value: IProject[]): void
 }>()
 
-const lists = ref<IList[]>([])
+const projects = ref<IProject[]>([])
 
 watchEffect(() => {
-	lists.value = props.modelValue
+	projects.value = props.modelValue
 })
 
-const selectedLists = computed({
+const selectedProjects = computed({
 	get() {
-		return lists.value
+		return projects.value
 	},
 	set: (value) => {
-		lists.value = value
+		projects.value = value
 		emit('update:modelValue', value)
 	},
 })
 
-const listService = shallowReactive(new ListService())
-const foundLists = ref<IList[]>([])
+const projectService = shallowReactive(new ProjectService())
+const foundProjects = ref<IProject[]>([])
 
-async function findLists(query: string) {
+async function findProjects(query: string) {
 	if (query === '') {
-		foundLists.value = []
+		foundProjects.value = []
 		return
 	}
 
-	const response = await listService.getAll({}, {s: query}) as IList[]
+	const response = await projectService.getAll({}, {s: query}) as IProject[]
 
 	// Filter selected items from the results
-	foundLists.value = response.filter(({id}) => !includesById(lists.value, id))
+	foundProjects.value = response.filter(({id}) => !includesById(projects.value, id))
 }
 </script>

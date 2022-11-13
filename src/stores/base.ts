@@ -3,21 +3,21 @@ import {defineStore, acceptHMRUpdate} from 'pinia'
 
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 
-import ListModel from '@/models/list'
-import ListService from '../services/list'
+import ProjectModel from '@/models/project'
+import ProjectService from '../services/project'
 import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 
 import {useMenuActive} from '@/composables/useMenuActive'
 
 import {useAuthStore} from '@/stores/auth'
-import type {IList} from '@/modelTypes/IList'
+import type {IProject} from '@/modelTypes/IProject'
 
 export const useBaseStore = defineStore('base', () => {
 	const loading = ref(false)
 	const ready = ref(false)
 
-	// This is used to highlight the current list in menu for all list related views
-	const currentList = ref<IList | null>(new ListModel({
+	// This is used to highlight the current project in menu for all project related views
+	const currentProject = ref<IProject | null>(new ProjectModel({
 		id: 0,
 		isArchived: false,
 	}))
@@ -33,21 +33,21 @@ export const useBaseStore = defineStore('base', () => {
 		loading.value = newLoading
 	}
 
-	function setCurrentList(newCurrentList: IList | null) {
-		// Server updates don't return the right. Therefore, the right is reset after updating the list which is
+	function setCurrentProject(newCurrentProject: IProject | null) {
+		// Server updates don't return the right. Therefore, the right is reset after updating the project which is
 		// confusing because all the buttons will disappear in that case. To prevent this, we're keeping the right
-		// when updating the list in global state.
+		// when updating the project in global state.
 		if (
-			typeof currentList.value?.maxRight !== 'undefined' &&
-			newCurrentList !== null &&
+			typeof currentProject.value?.maxRight !== 'undefined' &&
+			newCurrentProject !== null &&
 			(
-				typeof newCurrentList.maxRight === 'undefined' ||
-				newCurrentList.maxRight === null
+				typeof newCurrentProject.maxRight === 'undefined' ||
+				newCurrentProject.maxRight === null
 			)
 		) {
-			newCurrentList.maxRight = currentList.value.maxRight
+			newCurrentProject.maxRight = currentProject.value.maxRight
 		}
-		currentList.value = newCurrentList
+		currentProject.value = newCurrentProject
 	}
 
 	function setHasTasks(newHasTasks: boolean) {
@@ -78,44 +78,44 @@ export const useBaseStore = defineStore('base', () => {
 		ready.value = value
 	}
 
-	async function handleSetCurrentList(
-		{list, forceUpdate = false}: {list: IList | null, forceUpdate?: boolean},
+	async function handleSetCurrentProject(
+		{project, forceUpdate = false}: {project: IProject | null, forceUpdate?: boolean},
 	) {
-		if (list === null) {
-			setCurrentList({})
+		if (project === null) {
+			setCurrentProject({})
 			setBackground('')
 			setBlurHash('')
 			return
 		}
 
-		// The forceUpdate parameter is used only when updating a list background directly because in that case 
-		// the current list stays the same, but we want to show the new background right away.
-		if (list.id !== currentList.value?.id || forceUpdate) {
-			if (list.backgroundInformation) {
+		// The forceUpdate parameter is used only when updating a project background directly because in that case 
+		// the current project stays the same, but we want to show the new background right away.
+		if (project.id !== currentProject.value?.id || forceUpdate) {
+			if (project.backgroundInformation) {
 				try {
-					const blurHash = await getBlobFromBlurHash(list.backgroundBlurHash)
+					const blurHash = await getBlobFromBlurHash(project.backgroundBlurHash)
 					if (blurHash) {
 						setBlurHash(window.URL.createObjectURL(blurHash))
 					}
 
-					const listService = new ListService()
-					const background = await listService.background(list)
+					const projectService = new ProjectService()
+					const background = await projectService.background(project)
 					setBackground(background)
 				} catch (e) {
-					console.error('Error getting background image for list', list.id, e)
+					console.error('Error getting background image for project', project.id, e)
 				}
 			}
 		}
 
 		if (
-			typeof list.backgroundInformation === 'undefined' ||
-			list.backgroundInformation === null
+			typeof project.backgroundInformation === 'undefined' ||
+			project.backgroundInformation === null
 		) {
 			setBackground('')
 			setBlurHash('')
 		}
 
-		setCurrentList(list)
+		setCurrentProject(project)
 	}
 
 	const authStore = useAuthStore()
@@ -128,7 +128,7 @@ export const useBaseStore = defineStore('base', () => {
 	return {
 		loading: readonly(loading),
 		ready: readonly(ready),
-		currentList: readonly(currentList),
+		currentProject: readonly(currentProject),
 		background: readonly(background),
 		blurHash: readonly(blurHash),
 		hasTasks: readonly(hasTasks),
@@ -138,7 +138,7 @@ export const useBaseStore = defineStore('base', () => {
 
 		setLoading,
 		setReady,
-		setCurrentList,
+		setCurrentProject,
 		setHasTasks,
 		setKeyboardShortcutsActive,
 		setQuickActionsActive,
@@ -146,7 +146,7 @@ export const useBaseStore = defineStore('base', () => {
 		setBlurHash,
 		setLogoVisible,
 
-		handleSetCurrentList,
+		handleSetCurrentProject,
 		loadApp,
 
 		...useMenuActive(),

@@ -8,7 +8,7 @@ export interface ILinkShare extends IAbstract {
 	right: Right
 	sharedBy: IUser
 	sharingType: number // FIXME: use correct numbers
-	listId: number
+	projectId: number
 	name: string
 	password: string
 

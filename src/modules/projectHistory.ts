@@ -1,9 +1,9 @@
-export interface ListHistory {
+export interface ProjectHistory {
 	id: number;
 }
 
-export function getHistory(): ListHistory[] {
-	const savedHistory = localStorage.getItem('listHistory')
+export function getHistory(): ProjectHistory[] {
+	const savedHistory = localStorage.getItem('projectHistory')
 	if (savedHistory === null) {
 		return []
 	}
@@ -11,27 +11,27 @@ export function getHistory(): ListHistory[] {
 	return JSON.parse(savedHistory)
 }
 
-function saveHistory(history: ListHistory[]) {
+function saveHistory(history: ProjectHistory[]) {
 	if (history.length === 0) {
-		localStorage.removeItem('listHistory')
+		localStorage.removeItem('projectHistory')
 		return
 	}
 
-	localStorage.setItem('listHistory', JSON.stringify(history))
+	localStorage.setItem('projectHistory', JSON.stringify(history))
 }
 
-export function saveListToHistory(list: ListHistory) {
-	const history: ListHistory[] = getHistory()
+export function saveProjectToHistory(project: ProjectHistory) {
+	const history: ProjectHistory[] = getHistory()
 
 	// Remove the element if it already exists in history, preventing duplicates and essentially moving it to the beginning
 	history.forEach((l, i) => {
-		if (l.id === list.id) {
+		if (l.id === project.id) {
 			history.splice(i, 1)
 		}
 	})
 
-	// Add the new list to the beginning of the list
-	history.unshift(list)
+	// Add the new project to the beginning of the project
+	history.unshift(project)
 
 	if (history.length > 5) {
 		history.pop()
@@ -39,11 +39,11 @@ export function saveListToHistory(list: ListHistory) {
 	saveHistory(history)
 }
 
-export function removeListFromHistory(list: ListHistory) {
-	const history: ListHistory[] = getHistory()
+export function removeProjectFromHistory(project: ProjectHistory) {
+	const history: ProjectHistory[] = getHistory()
 
 	history.forEach((l, i) => {
-		if (l.id === list.id) {
+		if (l.id === project.id) {
 			history.splice(i, 1)
 		}
 	})

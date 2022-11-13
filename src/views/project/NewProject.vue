@@ -1,31 +1,31 @@
 <template>
-	<create-edit :title="$t('list.create.header')" @create="createNewList()" :primary-disabled="list.title === ''">
+	<create-edit :title="$t('project.create.header')" @create="createNewProject()" :primary-disabled="project.title === ''">
 		<div class="field">
-			<label class="label" for="listTitle">{{ $t('list.title') }}</label>
+			<label class="label" for="projectTitle">{{ $t('project.title') }}</label>
 			<div
-				:class="{ 'is-loading': listService.loading }"
+				:class="{ 'is-loading': projectService.loading }"
 				class="control"
 			>
 				<input
-					:class="{ disabled: listService.loading }"
-					@keyup.enter="createNewList()"
+					:class="{ disabled: projectService.loading }"
+					@keyup.enter="createNewProject()"
 					@keyup.esc="$router.back()"
 					class="input"
-					:placeholder="$t('list.create.titlePlaceholder')"
+					:placeholder="$t('project.create.titlePlaceholder')"
 					type="text"
-					name="listTitle"
+					name="projectTitle"
 					v-focus
-					v-model="list.title"
+					v-model="project.title"
 				/>
 			</div>
 		</div>
-		<p class="help is-danger" v-if="showError && list.title === ''">
-			{{ $t('list.create.addTitleRequired') }}
+		<p class="help is-danger" v-if="showError && project.title === ''">
+			{{ $t('project.create.addTitleRequired') }}
 		</p>
 		<div class="field">
-			<label class="label">{{ $t('list.color') }}</label>
+			<label class="label">{{ $t('project.color') }}</label>
 			<div class="control">
-				<color-picker v-model="list.hexColor" />
+				<color-picker v-model="project.hexColor" />
 			</div>
 		</div>
 	</create-edit>
@@ -36,39 +36,39 @@ import {ref, reactive, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRouter, useRoute} from 'vue-router'
 
-import ListService from '@/services/list'
-import ListModel from '@/models/list'
+import ProjectService from '@/services/project'
+import ProjectModel from '@/models/project'
 import CreateEdit from '@/components/misc/create-edit.vue'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
-import {useListStore} from '@/stores/lists'
+import {useProjectStore} from '@/stores/projects'
 
 const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
 const route = useRoute()
 
-useTitle(() => t('list.create.header'))
+useTitle(() => t('project.create.header'))
 
 const showError = ref(false)
-const list = reactive(new ListModel())
-const listService = shallowReactive(new ListService())
-const listStore = useListStore()
+const project = reactive(new ProjectModel())
+const projectService = shallowReactive(new ProjectService())
+const projectStore = useProjectStore()
 
-async function createNewList() {
-	if (list.title === '') {
+async function createNewProject() {
+	if (project.title === '') {
 		showError.value = true
 		return
 	}
 	showError.value = false
 
-	list.namespaceId = Number(route.params.namespaceId as string)
-	const newList = await listStore.createList(list)
+	project.namespaceId = Number(route.params.namespaceId as string)
+	const newProject = await projectStore.createProject(project)
 	await router.push({
-		name: 'list.index',
-		params: { listId: newList.id },
+		name: 'project.index',
+		params: { projectId: newProject.id },
 	})
-	success({message: t('list.create.createdSuccess') })
+	success({message: t('project.create.createdSuccess') })
 }
 </script>

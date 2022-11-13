@@ -1,13 +1,13 @@
 import UserShareBaseModel from './userShareBase'
 
-import type {IUserList} from '@/modelTypes/IUserList'
-import type {IList} from '@/modelTypes/IList'
+import type {IUserProject} from '@/modelTypes/IUserProject'
+import type {IProject} from '@/modelTypes/IProject'
 
 // This class extends the user share model with a 'rights' parameter which is used in sharing
-export default class UserListModel extends UserShareBaseModel implements IUserList {
-	listId: IList['id'] = 0
+export default class UserProjectModel extends UserShareBaseModel implements IUserProject {
+	projectId: IProject['id'] = 0
 
-	constructor(data: Partial<IUserList>) {
+	constructor(data: Partial<IUserProject>) {
 		super(data)
 		this.assignData(data)
 	}

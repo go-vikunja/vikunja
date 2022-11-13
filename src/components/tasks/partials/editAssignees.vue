@@ -1,6 +1,6 @@
 <template>
 	<Multiselect
-		:loading="listUserService.loading"
+		:loading="projectUserService.loading"
 		:placeholder="$t('task.assignee.placeholder')"
 		:multiple="true"
 		@search="findUser"
@@ -30,7 +30,7 @@ import Multiselect from '@/components/input/multiselect.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import {includesById} from '@/helpers/utils'
-import ListUserService from '@/services/listUsers'
+import ProjectUserService from '@/services/projectUsers'
 import {success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
 
@@ -42,7 +42,7 @@ const props = defineProps({
 		type: Number,
 		required: true,
 	},
-	listId: {
+	projectId: {
 		type: Number,
 		required: true,
 	},
@@ -59,7 +59,7 @@ const emit = defineEmits(['update:modelValue'])
 const taskStore = useTaskStore()
 const {t} = useI18n({useScope: 'global'})
 
-const listUserService = shallowReactive(new ListUserService())
+const projectUserService = shallowReactive(new ProjectUserService())
 const foundUsers = ref<IUser[]>([])
 const assignees = ref<IUser[]>([])
 let isAdding = false
@@ -94,7 +94,7 @@ async function addAssignee(user: IUser) {
 async function removeAssignee(user: IUser) {
 	await taskStore.removeAssignee({user: user, taskId: props.taskId})
 
-	// Remove the assignee from the list
+	// Remove the assignee from the project
 	for (const a in assignees.value) {
 		if (assignees.value[a].id === user.id) {
 			assignees.value.splice(a, 1)
@@ -109,7 +109,7 @@ async function findUser(query: string) {
 		return
 	}
 
-	const response = await listUserService.getAll({listId: props.listId}, {s: query}) as IUser[]
+	const response = await projectUserService.getAll({projectId: props.projectId}, {s: query}) as IUser[]
 
 	// Filter the results to not include users who are already assigned
 	foundUsers.value = response

@@ -1,19 +1,19 @@
-import {ListFactory} from '../../factories/list'
+import {ProjectFactory} from '../../factories/project'
 import {NamespaceFactory} from '../../factories/namespace'
 import {TaskFactory} from '../../factories/task'
 
-export function createLists() {
+export function createProjects() {
 	NamespaceFactory.create(1)
-	const lists = ListFactory.create(1, {
-		title: 'First List'
+	const projects = ProjectFactory.create(1, {
+		title: 'First Project'
 	})
 	TaskFactory.truncate()
-	return lists
+	return projects
 }
 
-export function prepareLists(setLists = (...args: any[]) => {}) {
+export function prepareProjects(setProjects = (...args: any[]) => {}) {
 	beforeEach(() => {
-		const lists = createLists()
-		setLists(lists)
+		const projects = createProjects()
+		setProjects(projects)
 	})
 }

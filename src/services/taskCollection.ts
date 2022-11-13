@@ -17,7 +17,7 @@ export interface GetAllTasksParams {
 export default class TaskCollectionService extends AbstractService<ITask> {
 	constructor() {
 		super({
-			getAll: '/lists/{listId}/tasks',
+			getAll: '/projects/{projectId}/tasks',
 		})
 	}
 

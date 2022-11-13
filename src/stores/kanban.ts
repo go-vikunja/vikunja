@@ -12,7 +12,7 @@ import TaskCollectionService from '@/services/taskCollection'
 import {setModuleLoading} from '@/stores/helper'
 
 import type {ITask} from '@/modelTypes/ITask'
-import type {IList} from '@/modelTypes/IList'
+import type {IProject} from '@/modelTypes/IProject'
 import type {IBucket} from '@/modelTypes/IBucket'
 
 const TASKS_PER_BUCKET = 25
@@ -45,7 +45,7 @@ const addTaskToBucketAndSort = (buckets: IBucket[], task: ITask) => {
  */
 export const useKanbanStore = defineStore('kanban', () => {
 	const buckets = ref<IBucket[]>([])
-	const listId = ref<IList['id']>(0)
+	const projectId = ref<IProject['id']>(0)
 	const bucketLoading = ref<{[id: IBucket['id']]: boolean}>({})
 	const taskPagesPerBucket = ref<{[id: IBucket['id']]: number}>({})
 	const allTasksLoadedForBucket = ref<{[id: IBucket['id']]: boolean}>({})
@@ -68,8 +68,8 @@ export const useKanbanStore = defineStore('kanban', () => {
 		isLoading.value = newIsLoading
 	}
 
-	function setListId(newListId: IList['id']) {
-		listId.value = Number(newListId)
+	function setProjectId(newProjectId: IProject['id']) {
+		projectId.value = Number(newProjectId)
 	}
 
 	function setBuckets(newBuckets: IBucket[]) {
@@ -223,20 +223,20 @@ export const useKanbanStore = defineStore('kanban', () => {
 		allTasksLoadedForBucket.value[bucketId] = true
 	}
 
-	async function loadBucketsForList({listId, params}: {listId: IList['id'], params}) {
+	async function loadBucketsForProject({projectId, params}: {projectId: IProject['id'], params}) {
 		const cancel = setModuleLoading(setIsLoading)
 
-		// Clear everything to prevent having old buckets in the list if loading the buckets from this list takes a few moments
+		// Clear everything to prevent having old buckets in the project if loading the buckets from this project takes a few moments
 		setBuckets([])
 
 		const bucketService = new BucketService()
 		try {
-			const newBuckets = await bucketService.getAll({listId}, {
+			const newBuckets = await bucketService.getAll({projectId}, {
 				...params,
 				per_page: TASKS_PER_BUCKET,
 			})
 			setBuckets(newBuckets)
-			setListId(listId)
+			setProjectId(projectId)
 			return newBuckets
 		} finally {
 			cancel()
@@ -244,8 +244,8 @@ export const useKanbanStore = defineStore('kanban', () => {
 	}
 
 	async function loadNextTasksForBucket(
-		{listId, ps = {}, bucketId} :
-		{listId: IList['id'], ps, bucketId: IBucket['id']},
+		{projectId, ps = {}, bucketId} :
+		{projectId: IProject['id'], ps, bucketId: IBucket['id']},
 	) {
 		const isLoading = bucketLoading.value[bucketId] ?? false
 		if (isLoading) {
@@ -288,7 +288,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const taskService = new TaskCollectionService()
 		try {
-			const tasks = await taskService.getAll({listId}, params, page)
+			const tasks = await taskService.getAll({projectId}, params, page)
 			addTasksToBucket({tasks, bucketId: bucketId})
 			setTasksLoadedForBucketPage({bucketId, page})
 			if (taskService.totalPages <= page) {
@@ -322,7 +322,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 			const response = await bucketService.delete(bucket)
 			removeBucket(bucket)
 			// We reload all buckets because tasks are being moved from the deleted bucket
-			loadBucketsForList({listId: bucket.listId, params})
+			loadBucketsForProject({projectId: bucket.projectId, params})
 			return response
 		} finally {
 			cancel()
@@ -366,7 +366,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		}
 
 		await updateBucket({ id, title })
-		success({message: i18n.global.t('list.kanban.bucketTitleSavedSuccess')})
+		success({message: i18n.global.t('project.kanban.bucketTitleSavedSuccess')})
 	}
 	
 	return {
@@ -382,7 +382,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		setTaskInBucket,
 		addTaskToBucket,
 		removeTaskInBucket,
-		loadBucketsForList,
+		loadBucketsForProject,
 		loadNextTasksForBucket,
 		createBucket,
 		deleteBucket,

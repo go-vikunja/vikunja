@@ -3,7 +3,7 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import UserModel, {getDisplayName} from '@/models/user'
 import TaskModel from '@/models/task'
 import TaskCommentModel from '@/models/taskComment'
-import ListModel from '@/models/list'
+import ProjectModel from '@/models/project'
 import TeamModel from '@/models/team'
 
 import {NOTIFICATION_NAMES, type INotification} from '@/modelTypes/INotification'
@@ -43,10 +43,10 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 					task: new TaskModel(this.notification.task),
 				}
 				break
-			case NOTIFICATION_NAMES.LIST_CREATED:
+			case NOTIFICATION_NAMES.PROJECT_CREATED:
 				this.notification = {
 					doer: new UserModel(this.notification.doer),
-					list: new ListModel(this.notification.list),
+					project: new ProjectModel(this.notification.project),
 				}
 				break
 			case NOTIFICATION_NAMES.TEAM_MEMBER_ADDED:
@@ -78,8 +78,8 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 				return `assigned ${who} to ${this.notification.task.getTextIdentifier()}`
 			case NOTIFICATION_NAMES.TASK_DELETED:
 				return `deleted ${this.notification.task.getTextIdentifier()}`
-			case NOTIFICATION_NAMES.LIST_CREATED:
-				return `created ${this.notification.list.title}`
+			case NOTIFICATION_NAMES.PROJECT_CREATED:
+				return `created ${this.notification.project.title}`
 			case NOTIFICATION_NAMES.TEAM_MEMBER_ADDED:
 				who = `${getDisplayName(this.notification.member)}`
 

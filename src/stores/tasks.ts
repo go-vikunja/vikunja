@@ -21,11 +21,11 @@ import type {ILabel} from '@/modelTypes/ILabel'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IUser} from '@/modelTypes/IUser'
 import type {IAttachment} from '@/modelTypes/IAttachment'
-import type {IList} from '@/modelTypes/IList'
+import type {IProject} from '@/modelTypes/IProject'
 
 import {setModuleLoading} from '@/stores/helper'
 import {useLabelStore} from '@/stores/labels'
-import {useListStore} from '@/stores/lists'
+import {useProjectStore} from '@/stores/projects'
 import {useAttachmentStore} from '@/stores/attachments'
 import {useKanbanStore} from '@/stores/kanban'
 import {useBaseStore} from '@/stores/base'
@@ -83,7 +83,7 @@ export const useTaskStore = defineStore('task', () => {
 	const kanbanStore = useKanbanStore()
 	const attachmentStore = useAttachmentStore()
 	const labelStore = useLabelStore()
-	const listStore = useListStore()
+	const projectStore = useProjectStore()
 
 	const tasks = ref<{ [id: ITask['id']]: ITask }>({}) // TODO: or is this ITask[]
 	const isLoading = ref(false)
@@ -292,7 +292,7 @@ export const useTaskStore = defineStore('task', () => {
 			return response
 		}
 
-		// Remove the label from the list
+		// Remove the label from the project
 		const labels = t.task.labels.filter(({ id }) => id !== label.id)
 
 		kanbanStore.setTaskInBucketByIndex({
@@ -337,40 +337,40 @@ export const useTaskStore = defineStore('task', () => {
 		return task
 	}
 
-	function findListId(
-		{ list: listName, listId }:
-		{ list: string, listId: IList['id'] }) {
-		let foundListId = null
-		
-		// Uses the following ways to get the list id of the new task:
+	function findProjectId(
+		{ project: projectName, projectId }:
+		{ project: string, projectId: IProject['id'] }) {
+		let foundProjectId = null
+
+		// Uses the following ways to get the project id of the new task:
 		//  1. If specified in quick add magic, look in store if it exists and use it if it does
-		if (listName !== null) {
-			const list = listStore.findListByExactname(listName)
-			foundListId = list === null ? null : list.id
+		if (typeof projectName !== 'undefined' && projectName !== null) {
+			const project = projectStore.findProjectByExactname(projectName)
+			foundProjectId = project === null ? null : project.id
 		}
 		
-		//  2. Else check if a list was passed as parameter
-		if (foundListId === null && listId !== 0) {
-			foundListId = listId
+		//  2. Else check if a project was passed as parameter
+		if (foundProjectId === null && projectId !== 0) {
+			foundProjectId = projectId
 		}
 	
 		//  3. Otherwise use the id from the route parameter
-		if (typeof router.currentRoute.value.params.listId !== 'undefined') {
-			foundListId = Number(router.currentRoute.value.params.listId)
+		if (typeof router.currentRoute.value.params.projectId !== 'undefined') {
+			foundProjectId = Number(router.currentRoute.value.params.projectId)
 		}
 		
 		//  4. If none of the above worked, reject the promise with an error.
-		if (typeof foundListId === 'undefined' || listId === null) {
-			throw new Error('NO_LIST')
+		if (typeof foundProjectId === 'undefined' || projectId === null) {
+			throw new Error('NO_PROJECT')
 		}
 	
-		return foundListId
+		return foundProjectId
 	}
 
 	async function createNewTask({
 		title,
 		bucketId,
-		listId,
+		projectId,
 		position,
 	} : 
 		Partial<ITask>,
@@ -379,14 +379,14 @@ export const useTaskStore = defineStore('task', () => {
 		const quickAddMagicMode = getQuickAddMagicMode()
 		const parsedTask = parseTaskText(title, quickAddMagicMode)
 	
-		const foundListId = await findListId({
-			list: parsedTask.list,
-			listId: listId || 0,
+		const foundProjectId = await findProjectId({
+			project: parsedTask.project,
+			projectId: projectId || 0,
 		})
 		
-		if(foundListId === null || foundListId === 0) {
+		if(foundProjectId === null || foundProjectId === 0) {
 			cancel()
-			throw new Error('NO_LIST')
+			throw new Error('NO_PROJECT')
 		}
 	
 		const assignees = await findAssignees(parsedTask.assignees)
@@ -405,7 +405,7 @@ export const useTaskStore = defineStore('task', () => {
 	
 		const task = new TaskModel({
 			title: cleanedTitle,
-			listId: foundListId,
+			projectId: foundProjectId,
 			dueDate,
 			priority: parsedTask.priority,
 			assignees,
@@ -451,7 +451,7 @@ export const useTaskStore = defineStore('task', () => {
 		addLabelsToTask,
 		createNewTask,
 		setCoverImage,
-		findListId,
+		findProjectId,
 		ensureLabelsExist,
 	}
 })

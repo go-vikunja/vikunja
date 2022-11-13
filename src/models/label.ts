@@ -16,7 +16,7 @@ export default class LabelModel extends AbstractModel<ILabel> implements ILabel 
 	hexColor = DEFAULT_LABEL_BACKGROUND_COLOR
 	description = ''
 	createdBy: IUser
-	listId = 0
+	projectId = 0
 	textColor = ''
 
 	created: Date = null

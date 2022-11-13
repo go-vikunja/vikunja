@@ -1,13 +1,13 @@
 import AbstractService from './abstractService'
 import BackgroundImageModel from '../models/backgroundImage'
-import ListModel from '@/models/list'
+import ProjectModel from '@/models/project'
 import type { IBackgroundImage } from '@/modelTypes/IBackgroundImage'
 
 export default class BackgroundUnsplashService extends AbstractService<IBackgroundImage> {
 	constructor() {
 		super({
 			getAll: '/backgrounds/unsplash/search',
-			update: '/lists/{listId}/backgrounds/unsplash',
+			update: '/projects/{projectId}/backgrounds/unsplash',
 		})
 	}
 
@@ -16,7 +16,7 @@ export default class BackgroundUnsplashService extends AbstractService<IBackgrou
 	}
 
 	modelUpdateFactory(data) {
-		return new ListModel(data)
+		return new ProjectModel(data)
 	}
 
 	async thumb(model) {

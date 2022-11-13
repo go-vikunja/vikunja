@@ -43,8 +43,8 @@
 								:class="{'is-strikethrough': task.done}"
 							>
 								<span
-									class="different-list"
-									v-if="task.listId !== listId"
+									class="different-project"
+									v-if="task.projectId !== projectId"
 								>
 									<span
 										v-if="task.differentNamespace !== null"
@@ -52,9 +52,9 @@
 										{{ task.differentNamespace }} >
 									</span>
 									<span
-										v-if="task.differentList !== null"
-										v-tooltip="$t('task.relation.differentList')">
-										{{ task.differentList }} >
+										v-if="task.differentProject !== null"
+										v-tooltip="$t('task.relation.differentProject')">
+										{{ task.differentProject }} >
 									</span>
 								</span>
 								{{ task.title }}
@@ -98,8 +98,8 @@
 							:class="{ 'is-strikethrough': t.done}"
 						>
 							<span
-								class="different-list"
-								v-if="t.listId !== listId"
+								class="different-project"
+								v-if="t.projectId !== projectId"
 							>
 								<span
 									v-if="t.differentNamespace !== null"
@@ -107,9 +107,9 @@
 									{{ t.differentNamespace }} >
 								</span>
 								<span
-									v-if="t.differentList !== null"
-									v-tooltip="$t('task.relation.differentList')">
-									{{ t.differentList }} >
+									v-if="t.differentProject !== null"
+									v-tooltip="$t('task.relation.differentProject')">
+									{{ t.differentProject }} >
 								</span>
 							</span>
 							{{ t.title }}
@@ -186,7 +186,7 @@ const props = defineProps({
 		type: Boolean,
 		default: false,
 	},
-	listId: {
+	projectId: {
 		type: Number,
 		default: 0,
 	},
@@ -230,17 +230,17 @@ async function findTasks(newQuery: string) {
 	foundTasks.value = await taskService.getAll({}, {s: newQuery})
 }
 
-const getListAndNamespaceById = (listId: number) => namespaceStore.getListAndNamespaceById(listId, true)
+const getProjectAndNamespaceById = (projectId: number) => namespaceStore.getProjectAndNamespaceById(projectId, true)
 
-const namespace = computed(() => getListAndNamespaceById(props.listId)?.namespace)
+const namespace = computed(() => getProjectAndNamespaceById(props.projectId)?.namespace)
 
 function mapRelatedTasks(tasks: ITask[]) {
 	return tasks.map(task => {
 		// by doing this here once we can save a lot of duplicate calls in the template
 		const {
-			list,
+			project,
 			namespace: taskNamespace,
-		} = getListAndNamespaceById(task.listId) || {list: null, namespace: null}
+		} = getProjectAndNamespaceById(task.projectId) || {project: null, namespace: null}
 
 		return {
 			...task,
@@ -248,10 +248,10 @@ function mapRelatedTasks(tasks: ITask[]) {
 				(taskNamespace !== null &&
 					taskNamespace.id !== namespace.value.id &&
 					taskNamespace?.title) || null,
-			differentList:
-				(list !== null &&
-					task.listId !== props.listId &&
-					list?.title) || null,
+			differentProject:
+				(project !== null &&
+					task.projectId !== props.projectId &&
+					project?.title) || null,
 		}
 	})
 }
@@ -343,7 +343,7 @@ async function removeTaskRelation() {
 }
 
 async function createAndRelateTask(title: string) {
-	const newTask = await taskService.create(new TaskModel({title, listId: props.listId}))
+	const newTask = await taskService.create(new TaskModel({title, projectId: props.projectId}))
 	newTaskRelation.task = newTask
 	await addTaskRelation()
 }
@@ -351,7 +351,7 @@ async function createAndRelateTask(title: string) {
 async function toggleTaskDone(task: ITask) {
 	await taskStore.update(task)
 	
-	// Find the task in the list and update it so that it is correctly strike through
+	// Find the task in the project and update it so that it is correctly strike through
 	Object.entries(relatedTasks.value).some(([kind, tasks]) => {
 		return (tasks as ITask[]).some((t, key) => {
 			const found = t.id === task.id
@@ -379,7 +379,7 @@ async function toggleTaskDone(task: ITask) {
 	}
 }
 
-.different-list {
+.different-project {
 	color: var(--grey-500);
 	width: auto;
 }

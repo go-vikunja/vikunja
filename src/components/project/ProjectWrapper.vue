@@ -1,56 +1,56 @@
 <template>
 	<div
-		:class="{ 'is-loading': listService.loading, 'is-archived': currentList.isArchived}"
+		:class="{ 'is-loading': projectService.loading, 'is-archived': currentProject.isArchived}"
 		class="loader-container"
 	>
 		<div class="switch-view-container">
 			<div class="switch-view">
 				<BaseButton
 					v-shortcut="'g l'"
-					:title="$t('keyboardShortcuts.list.switchToListView')"
+					:title="$t('keyboardShortcuts.project.switchToProjectView')"
 					class="switch-view-button"
-					:class="{'is-active': viewName === 'list'}"
-					:to="{ name: 'list.list',   params: { listId } }"
+					:class="{'is-active': viewName === 'project'}"
+					:to="{ name: 'project.list',   params: { projectId } }"
 				>
-					{{ $t('list.list.title') }}
+					{{ $t('project.list.title') }}
 				</BaseButton>
 				<BaseButton
 					v-shortcut="'g g'"
-					:title="$t('keyboardShortcuts.list.switchToGanttView')"
+					:title="$t('keyboardShortcuts.project.switchToGanttView')"
 					class="switch-view-button"
 					:class="{'is-active': viewName === 'gantt'}"
-					:to="{ name: 'list.gantt',  params: { listId } }"
+					:to="{ name: 'project.gantt',  params: { projectId } }"
 				>
-					{{ $t('list.gantt.title') }}
+					{{ $t('project.gantt.title') }}
 				</BaseButton>
 				<BaseButton
 					v-shortcut="'g t'"
-					:title="$t('keyboardShortcuts.list.switchToTableView')"
+					:title="$t('keyboardShortcuts.project.switchToTableView')"
 					class="switch-view-button"
 					:class="{'is-active': viewName === 'table'}"
-					:to="{ name: 'list.table',  params: { listId } }"
+					:to="{ name: 'project.table',  params: { projectId } }"
 				>
-					{{ $t('list.table.title') }}
+					{{ $t('project.table.title') }}
 				</BaseButton>
 				<BaseButton
 					v-shortcut="'g k'"
-					:title="$t('keyboardShortcuts.list.switchToKanbanView')"
+					:title="$t('keyboardShortcuts.project.switchToKanbanView')"
 					class="switch-view-button"
 					:class="{'is-active': viewName === 'kanban'}"
-					:to="{ name: 'list.kanban', params: { listId } }"
+					:to="{ name: 'project.kanban', params: { projectId } }"
 				>
-					{{ $t('list.kanban.title') }}
+					{{ $t('project.kanban.title') }}
 				</BaseButton>
 			</div>
 			<slot name="header" />
 		</div>
-		<CustomTransition name="fade">
-			<Message variant="warning" v-if="currentList.isArchived" class="mb-4">
-				{{ $t('list.archived') }}
+		<transition name="fade">
+			<Message variant="warning" v-if="currentProject.isArchived" class="mb-4">
+				{{ $t('project.archived') }}
 			</Message>
-		</CustomTransition>
+		</transition>
 
-		<slot v-if="loadedListId"/>
+		<slot v-if="loadedProjectId"/>
 	</div>
 </template>
 
@@ -60,20 +60,19 @@ import {useRoute} from 'vue-router'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Message from '@/components/misc/message.vue'
-import CustomTransition from '@/components/misc/CustomTransition.vue'
 
-import ListModel from '@/models/list'
-import ListService from '@/services/list'
+import ProjectModel from '@/models/project'
+import ProjectService from '@/services/project'
 
-import {getListTitle} from '@/helpers/getListTitle'
-import {saveListToHistory} from '@/modules/listHistory'
+import {getProjectTitle} from '@/helpers/getProjectTitle'
+import {saveProjectToHistory} from '@/modules/projectHistory'
 import {useTitle} from '@/composables/useTitle'
 
 import {useBaseStore} from '@/stores/base'
-import {useListStore} from '@/stores/lists'
+import {useProjectStore} from '@/stores/projects'
 
 const props = defineProps({
-	listId: {
+	projectId: {
 		type: Number,
 		required: true,
 	},
@@ -86,64 +85,64 @@ const props = defineProps({
 const route = useRoute()
 
 const baseStore = useBaseStore()
-const listStore = useListStore()
-const listService = ref(new ListService())
-const loadedListId = ref(0)
+const projectStore = useProjectStore()
+const projectService = ref(new ProjectService())
+const loadedProjectId = ref(0)
 
-const currentList = computed(() => {
-	return typeof baseStore.currentList === 'undefined' ? {
+const currentProject = computed(() => {
+	return typeof baseStore.currentProject === 'undefined' ? {
 		id: 0,
 		title: '',
 		isArchived: false,
 		maxRight: null,
-	} : baseStore.currentList
+	} : baseStore.currentProject
 })
-useTitle(() => currentList.value.id ? getListTitle(currentList.value) : '')
+useTitle(() => currentProject.value.id ? getProjectTitle(currentProject.value) : '')
 
 // watchEffect would be called every time the prop would get a value assigned, even if that value was the same as before.
-// This resulted in loading and setting the list multiple times, even when navigating away from it.
-// This caused wired bugs where the list background would be set on the home page but only right after setting a new 
-// list background and then navigating to home. It also highlighted the list in the menu and didn't allow changing any
+// This resulted in loading and setting the project multiple times, even when navigating away from it.
+// This caused wired bugs where the project background would be set on the home page but only right after setting a new 
+// project background and then navigating to home. It also highlighted the project in the menu and didn't allow changing any
 // of it, most likely due to the rights not being properly populated.
 watch(
-	() => props.listId,
-	// loadList
-	async (listIdToLoad: number) => {
-		const listData = {id: listIdToLoad}
-		saveListToHistory(listData)
+	() => props.projectId,
+	// loadProject
+	async (projectIdToLoad: number) => {
+		const projectData = {id: projectIdToLoad}
+		saveProjectToHistory(projectData)
 
-		// Don't load the list if we either already loaded it or aren't dealing with a list at all currently and
-		// the currently loaded list has the right set.
+		// Don't load the project if we either already loaded it or aren't dealing with a project at all currently and
+		// the currently loaded project has the right set.
 		if (
 			(
-				listIdToLoad === loadedListId.value ||
-				typeof listIdToLoad === 'undefined' ||
-				listIdToLoad === currentList.value.id
+				projectIdToLoad === loadedProjectId.value ||
+				typeof projectIdToLoad === 'undefined' ||
+				projectIdToLoad === currentProject.value.id
 			)
-			&& typeof currentList.value !== 'undefined' && currentList.value.maxRight !== null
+			&& typeof currentProject.value !== 'undefined' && currentProject.value.maxRight !== null
 		) {
-			loadedListId.value = props.listId
+			loadedProjectId.value = props.projectId
 			return
 		}
 
-		console.debug(`Loading list, props.viewName = ${props.viewName}, $route.params =`, route.params, `, loadedListId = ${loadedListId.value}, currentList = `, currentList.value)
+		console.debug(`Loading project, props.viewName = ${props.viewName}, $route.params =`, route.params, `, loadedProjectId = ${loadedProjectId.value}, currentProject = `, currentProject.value)
 
-		// Set the current list to the one we're about to load so that the title is already shown at the top
-		loadedListId.value = 0
-		const listFromStore = listStore.getListById(listData.id)
-		if (listFromStore !== null) {
+		// Set the current project to the one we're about to load so that the title is already shown at the top
+		loadedProjectId.value = 0
+		const projectFromStore = projectStore.getProjectById(projectData.id)
+		if (projectFromStore !== null) {
 			baseStore.setBackground(null)
 			baseStore.setBlurHash(null)
-			baseStore.handleSetCurrentList({list: listFromStore})
+			baseStore.handleSetCurrentProject({project: projectFromStore})
 		}
 
-		// We create an extra list object instead of creating it in list.value because that would trigger a ui update which would result in bad ux.
-		const list = new ListModel(listData)
+		// We create an extra project object instead of creating it in project.value because that would trigger a ui update which would result in bad ux.
+		const project = new ProjectModel(projectData)
 		try {
-			const loadedList = await listService.value.get(list)
-			baseStore.handleSetCurrentList({list: loadedList})
+			const loadedProject = await projectService.value.get(project)
+			baseStore.handleSetCurrentProject({project: loadedProject})
 		} finally {
-			loadedListId.value = props.listId
+			loadedProjectId.value = props.projectId
 		}
 	},
 	{immediate: true},

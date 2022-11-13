@@ -7,7 +7,7 @@ export interface ILabel extends IAbstract {
 	hexColor: string
 	description: string
 	createdBy: IUser
-	listId: number
+	projectId: number
 	textColor: string
 
 	created: Date

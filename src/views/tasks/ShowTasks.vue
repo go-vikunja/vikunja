@@ -31,10 +31,10 @@
 			:loading="loading"
 		>
 			<div class="p-2">
-				<single-task-in-list
+				<single-task-in-project
 					v-for="t in tasks"
 					:key="t.id"
-					:show-list="true"
+					:show-project="true"
 					:the-task="t"
 					@taskUpdated="updateTasks"/>
 			</div>
@@ -52,7 +52,7 @@ import {formatDate} from '@/helpers/time/formatDate'
 import {setTitle} from '@/helpers/setTitle'
 
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
-import SingleTaskInList from '@/components/tasks/partials/singleTaskInList.vue'
+import SingleTaskInProject from '@/components/tasks/partials/singleTaskInProject.vue'
 import DatepickerWithRange from '@/components/date/datepickerWithRange.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import LlamaCool from '@/assets/llama-cool.svg?component'

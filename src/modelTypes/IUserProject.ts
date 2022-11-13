@@ -1,6 +1,6 @@
 import type {IUserShareBase} from './IUserShareBase'
-import type {IList} from './IList'
+import type {IProject} from './IProject'
 
-export interface IUserList extends IUserShareBase {
-	listId: IList['id']
+export interface IUserProject extends IUserShareBase {
+	projectId: IProject['id']
 }

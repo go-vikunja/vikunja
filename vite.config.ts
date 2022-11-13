@@ -147,8 +147,8 @@ export default defineConfig(({mode}) => {
 							url: '/',
 						},
 						{
-							name: 'Namespaces And Lists Overview',
-							short_name: 'Namespaces & Lists',
+							name: 'Namespaces And Projects Overview',
+							short_name: 'Namespaces & Projects',
 							url: '/namespaces',
 						},
 						{

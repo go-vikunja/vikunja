@@ -39,7 +39,7 @@ import {useI18n} from 'vue-i18n'
 import {useTitle} from '@vueuse/core'
 
 import Message from '@/components/misc/message.vue'
-import {LIST_VIEWS, type ListView} from '@/types/ListView'
+import {PROJECT_VIEWS, type ProjectView} from '@/types/ProjectView'
 
 import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
@@ -65,7 +65,7 @@ function useAuth() {
 		errorMessage.value = ''
 
 		if (authLinkShare.value) {
-			// FIXME: push to 'list.list' since authenticated?
+			// FIXME: push to 'project.list' since authenticated?
 			return
 		}
 
@@ -74,7 +74,7 @@ function useAuth() {
 		loading.value = true
 
 		try {
-			const {list_id: listId} = await authStore.linkShareAuth({
+			const {project_id: projectId} = await authStore.linkShareAuth({
 				hash: route.params.share,
 				password: password.value,
 			})
@@ -83,11 +83,11 @@ function useAuth() {
 				: true
 			baseStore.setLogoVisible(logoVisible)
 
-			const view = route.query.view && Object.values(LIST_VIEWS).includes(route.query.view as ListView)
+			const view = route.query.view && Object.values(PROJECT_VIEWS).includes(route.query.view as ProjectView)
 				? route.query.view
-				: 'list'
+				: 'project'
 
-			router.push({name: `list.${view}`, params: {listId}})
+			router.push({name: `project.${view}`, params: {projectId}})
 		} catch (e: any) {
 			if (e.response?.data?.code === 13001) {
 				authenticateWithPassword.value = true

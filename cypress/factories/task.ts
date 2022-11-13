@@ -11,7 +11,7 @@ export class TaskFactory extends Factory {
 			id: '{increment}',
 			title: faker.lorem.words(3),
 			done: false,
-			list_id: 1,
+			project_id: 1,
 			created_by_id: 1,
 			index: '{increment}',
 			position: '{increment}',

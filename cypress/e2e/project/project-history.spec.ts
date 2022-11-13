@@ -1,41 +1,41 @@
 import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
-import {ListFactory} from '../../factories/list'
-import {prepareLists} from './prepareLists'
+import {ProjectFactory} from '../../factories/project'
+import {prepareProjects} from './prepareProjects'
 
-describe('List History', () => {
+describe('Project History', () => {
 	createFakeUserAndLogin()
-	prepareLists()
+	prepareProjects()
 	
-	it('should show a list history on the home page', () => {
+	it('should show a project history on the home page', () => {
 		cy.intercept(Cypress.env('API_URL') + '/namespaces*').as('loadNamespaces')
-		cy.intercept(Cypress.env('API_URL') + '/lists/*').as('loadList')
+		cy.intercept(Cypress.env('API_URL') + '/projects/*').as('loadProject')
 		
-		const lists = ListFactory.create(6)
+		const projects = ProjectFactory.create(6)
 
 		cy.visit('/')
 		cy.wait('@loadNamespaces')
 		cy.get('body')
 			.should('not.contain', 'Last viewed')
 
-		cy.visit(`/lists/${lists[0].id}`)
+		cy.visit(`/projects/${projects[0].id}`)
 		cy.wait('@loadNamespaces')
-		cy.wait('@loadList')
-		cy.visit(`/lists/${lists[1].id}`)
+		cy.wait('@loadProject')
+		cy.visit(`/projects/${projects[1].id}`)
 		cy.wait('@loadNamespaces')
-		cy.wait('@loadList')
-		cy.visit(`/lists/${lists[2].id}`)
+		cy.wait('@loadProject')
+		cy.visit(`/projects/${projects[2].id}`)
 		cy.wait('@loadNamespaces')
-		cy.wait('@loadList')
-		cy.visit(`/lists/${lists[3].id}`)
+		cy.wait('@loadProject')
+		cy.visit(`/projects/${projects[3].id}`)
 		cy.wait('@loadNamespaces')
-		cy.wait('@loadList')
-		cy.visit(`/lists/${lists[4].id}`)
+		cy.wait('@loadProject')
+		cy.visit(`/projects/${projects[4].id}`)
 		cy.wait('@loadNamespaces')
-		cy.wait('@loadList')
-		cy.visit(`/lists/${lists[5].id}`)
+		cy.wait('@loadProject')
+		cy.visit(`/projects/${projects[5].id}`)
 		cy.wait('@loadNamespaces')
-		cy.wait('@loadList')
+		cy.wait('@loadProject')
 
 		// cy.visit('/')
 		// cy.wait('@loadNamespaces')
@@ -46,12 +46,12 @@ describe('List History', () => {
 		
 		cy.get('body')
 			.should('contain', 'Last viewed')
-		cy.get('[data-cy="listCardGrid"]')
-			.should('not.contain', lists[0].title)
-			.should('contain', lists[1].title)
-			.should('contain', lists[2].title)
-			.should('contain', lists[3].title)
-			.should('contain', lists[4].title)
-			.should('contain', lists[5].title)
+		cy.get('[data-cy="projectCardGrid"]')
+			.should('not.contain', projects[0].title)
+			.should('contain', projects[1].title)
+			.should('contain', projects[2].title)
+			.should('contain', projects[3].title)
+			.should('contain', projects[4].title)
+			.should('contain', projects[5].title)
 	})
 })

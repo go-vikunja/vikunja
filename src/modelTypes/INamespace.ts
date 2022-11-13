@@ -1,5 +1,5 @@
 import type {IAbstract} from './IAbstract'
-import type {IList} from './IList'
+import type {IProject} from './IProject'
 import type {IUser} from './IUser'
 import type {ISubscription} from './ISubscription'
 
@@ -8,7 +8,7 @@ export interface INamespace extends IAbstract {
 	title: string
 	description: string
 	owner: IUser
-	lists: IList[]
+	projects: IProject[]
 	isArchived: boolean
 	hexColor: string
 	subscription: ISubscription

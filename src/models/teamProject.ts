@@ -1,12 +1,12 @@
 import TeamShareBaseModel from './teamShareBase'
 
-import type {ITeamList} from '@/modelTypes/ITeamList'
-import type {IList} from '@/modelTypes/IList'
+import type {ITeamProject} from '@/modelTypes/ITeamProject'
+import type {IProject} from '@/modelTypes/IProject'
 
-export default class TeamListModel extends TeamShareBaseModel implements ITeamList {
-	listId: IList['id'] = 0
+export default class TeamProjectModel extends TeamShareBaseModel implements ITeamProject {
+	projectId: IProject['id'] = 0
 
-	constructor(data: Partial<ITeamList>) {
+	constructor(data: Partial<ITeamProject>) {
 		super(data)
 		this.assignData(data)
 	}

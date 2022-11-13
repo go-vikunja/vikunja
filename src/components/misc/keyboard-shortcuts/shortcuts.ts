@@ -61,8 +61,8 @@ export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
 		],
 	},
 	{
-		title: 'list.kanban.title',
-		available: (route) => route.name === 'list.kanban',
+		title: 'project.kanban.title',
+		available: (route) => route.name === 'project.kanban',
 		shortcuts: [
 			{
 				title: 'keyboardShortcuts.task.done',
@@ -71,26 +71,26 @@ export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
 		],
 	},
 	{
-		title: 'keyboardShortcuts.list.title',
-		available: (route) => (route.name as string)?.startsWith('list.'),
+		title: 'keyboardShortcuts.project.title',
+		available: (route) => (route.name as string)?.startsWith('project.'),
 		shortcuts: [
 			{
-				title: 'keyboardShortcuts.list.switchToListView',
+				title: 'keyboardShortcuts.project.switchToProjectView',
 				keys: ['g', 'l'],
 				combination: 'then',
 			},
 			{
-				title: 'keyboardShortcuts.list.switchToGanttView',
+				title: 'keyboardShortcuts.project.switchToGanttView',
 				keys: ['g', 'g'],
 				combination: 'then',
 			},
 			{
-				title: 'keyboardShortcuts.list.switchToTableView',
+				title: 'keyboardShortcuts.project.switchToTableView',
 				keys: ['g', 't'],
 				combination: 'then',
 			},
 			{
-				title: 'keyboardShortcuts.list.switchToKanbanView',
+				title: 'keyboardShortcuts.project.switchToKanbanView',
 				keys: ['g', 'k'],
 				combination: 'then',
 			},

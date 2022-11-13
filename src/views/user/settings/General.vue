@@ -14,9 +14,9 @@
 		</div>
 		<div class="field">
 			<label class="label">
-				{{ $t('user.settings.general.defaultList') }}
+				{{ $t('user.settings.general.defaultProject') }}
 			</label>
-			<list-search v-model="defaultList"/>
+			<project-search v-model="defaultProject"/>
 		</div>
 		<div class="field">
 			<label class="checkbox">
@@ -156,7 +156,7 @@ import {useI18n} from 'vue-i18n'
 
 import {PrefixMode} from '@/modules/parseTaskText'
 
-import ListSearch from '@/components/tasks/partials/listSearch.vue'
+import ProjectSearch from '@/components/tasks/partials/projectSearch.vue'
 
 import {SUPPORTED_LOCALES} from '@/i18n'
 import {playSoundWhenDoneKey, playPopSound} from '@/helpers/playPop'
@@ -168,13 +168,13 @@ import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 import {useColorScheme} from '@/composables/useColorScheme'
 import {useTitle} from '@/composables/useTitle'
 
-import {useListStore} from '@/stores/lists'
+import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.general.title')} - ${t('user.settings.title')}`)
 
-const DEFAULT_LIST_ID = 0
+const DEFAULT_PROJECT_ID = 0
 
 function useColorSchemeSetting() {
 	const {t} = useI18n({useScope: 'global'})
@@ -243,11 +243,11 @@ watch(
 	{immediate: true},
 )
 
-const listStore = useListStore()
-const defaultList = computed({
-	get: () => listStore.getListById(settings.value.defaultListId) || undefined,
+const projectStore = useProjectStore()
+const defaultProject = computed({
+	get: () => projectStore.getProjectById(settings.value.defaultProjectId) || undefined,
 	set(l) {
-		settings.value.defaultListId = l ? l.id : DEFAULT_LIST_ID
+		settings.value.defaultProjectId = l ? l.id : DEFAULT_PROJECT_ID
 	},
 })
 const loading = computed(() => authStore.isLoadingGeneralSettings)

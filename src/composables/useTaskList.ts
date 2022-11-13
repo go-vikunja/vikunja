@@ -58,9 +58,9 @@ const SORT_BY_DEFAULT: SortBy = {
 	}
 
 /**
- * This mixin provides a base set of methods and properties to get tasks on a list.
+ * This mixin provides a base set of methods and properties to get tasks.
  */
-export function useTaskList(listId, sortByDefault: SortBy = SORT_BY_DEFAULT) {
+export function useTaskList(projectId, sortByDefault: SortBy = SORT_BY_DEFAULT) {
 	const params = ref({...getDefaultParams()})
 	
 	const search = ref('')
@@ -80,7 +80,7 @@ export function useTaskList(listId, sortByDefault: SortBy = SORT_BY_DEFAULT) {
 		loadParams = formatSortOrder(sortBy.value, loadParams)
 
 		return [
-			{listId: listId.value},
+			{projectId: projectId.value},
 			loadParams,
 			page.value || 1,
 		]

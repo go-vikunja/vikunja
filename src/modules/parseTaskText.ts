@@ -5,14 +5,14 @@ import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 
 const VIKUNJA_PREFIXES: Prefixes = {
 	label: '*',
-	list: '+',
+	project: '+',
 	priority: '!',
 	assignee: '@',
 }
 
 const TODOIST_PREFIXES: Prefixes = {
 	label: '@',
-	list: '#',
+	project: '#',
 	priority: '!',
 	assignee: '+',
 }
@@ -38,7 +38,7 @@ export interface ParsedTaskText {
 	text: string,
 	date: Date | null,
 	labels: string[],
-	list: string | null,
+	project: string | null,
 	priority: number | null,
 	assignees: string[],
 	repeats: IRepeatAfter | null,
@@ -46,13 +46,13 @@ export interface ParsedTaskText {
 
 interface Prefixes {
 	label: string,
-	list: string,
+	project: string,
 	priority: string,
 	assignee: string,
 }
 
 /**
- * Parses task text for dates, assignees, labels, lists, priorities and returns an object with all found intents.
+ * Parses task text for dates, assignees, labels, projects, priorities and returns an object with all found intents.
  *
  * @param text
  */
@@ -61,7 +61,7 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 		text: text,
 		date: null,
 		labels: [],
-		list: null,
+		project: null,
 		priority: null,
 		assignees: [],
 		repeats: null,
@@ -75,8 +75,8 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 	result.labels = getLabelsFromPrefix(text, prefixes.label) ?? []
 	result.text = cleanupItemText(result.text, result.labels, prefixes.label)
 
-	result.list = getListFromPrefix(result.text, prefixes.list)
-	result.text = result.list !== null ? cleanupItemText(result.text, [result.list], prefixes.list) : result.text
+	result.project = getProjectFromPrefix(result.text, prefixes.project)
+	result.text = result.project !== null ? cleanupItemText(result.text, [result.project], prefixes.project) : result.text
 
 	result.priority = getPriority(result.text, prefixes.priority)
 	result.text = result.priority !== null ? cleanupItemText(result.text, [String(result.priority)], prefixes.priority) : result.text
@@ -129,27 +129,27 @@ const getItemsFromPrefix = (text: string, prefix: string): string[] => {
 	return Array.from(new Set(items))
 }
 
-export const getListFromPrefix = (text: string, listPrefix: string | null = null): string | null => {
-	if (listPrefix === null) {
+export const getProjectFromPrefix = (text: string, projectPrefix: string | null = null): string | null => {
+	if (projectPrefix === null) {
 		const prefixes = PREFIXES[getQuickAddMagicMode()]
 		if (prefixes === undefined) {
 			return null
 		}
-		listPrefix = prefixes.list
+		projectPrefix = prefixes.project
 	}
-	const lists: string[] = getItemsFromPrefix(text, listPrefix)
-	return lists.length > 0 ? lists[0] : null
+	const projects: string[] = getItemsFromPrefix(text, projectPrefix)
+	return projects.length > 0 ? projects[0] : null
 }
 
-export const getLabelsFromPrefix = (text: string, listPrefix: string | null = null): string[] | null => {
-	if (listPrefix === null) {
+export const getLabelsFromPrefix = (text: string, projectPrefix: string | null = null): string[] | null => {
+	if (projectPrefix === null) {
 		const prefixes = PREFIXES[getQuickAddMagicMode()]
 		if (prefixes === undefined) {
 			return null
 		}
-		listPrefix = prefixes.label
+		projectPrefix = prefixes.label
 	}
-	return getItemsFromPrefix(text, listPrefix)
+	return getItemsFromPrefix(text, projectPrefix)
 }
 
 const getPriority = (text: string, prefix: string): number | null => {
@@ -291,7 +291,7 @@ export const cleanupItemText = (text: string, items: string[], prefix: string): 
 
 const cleanupResult = (result: ParsedTaskText, prefixes: Prefixes): ParsedTaskText => {
 	result.text = cleanupItemText(result.text, result.labels, prefixes.label)
-	result.text = result.list !== null ? cleanupItemText(result.text, [result.list], prefixes.list) : result.text
+	result.text = result.project !== null ? cleanupItemText(result.text, [result.project], prefixes.project) : result.text
 	result.text = result.priority !== null ? cleanupItemText(result.text, [String(result.priority)], prefixes.priority) : result.text
 	// Not removing assignees to avoid removing @text where the user does not exist
 	result.text = result.text.trim()

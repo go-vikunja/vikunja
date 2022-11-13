@@ -5,7 +5,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {ILabel} from '@/modelTypes/ILabel'
 import type {IUser} from '@/modelTypes/IUser'
 import type {IAttachment} from '@/modelTypes/IAttachment'
-import type {IList} from '@/modelTypes/IList'
+import type {IProject} from '@/modelTypes/IProject'
 import type {ISubscription} from '@/modelTypes/ISubscription'
 import type {IBucket} from '@/modelTypes/IBucket'
 
@@ -93,7 +93,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	created: Date = null
 	updated: Date = null
 
-	listId: IList['id'] = 0
+	projectId: IProject['id'] = 0
 	bucketId: IBucket['id'] = 0
 
 	constructor(data: Partial<ITask> = {}) {
@@ -142,7 +142,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		// Make all attachments to attachment models
 		this.attachments = this.attachments.map(a => new AttachmentModel(a))
 
-		// Set the task identifier to empty if the list does not have one
+		// Set the task identifier to empty if the project does not have one
 		if (this.identifier === `-${this.index}`) {
 			this.identifier = ''
 		}
@@ -155,7 +155,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
 
-		this.listId = Number(this.listId)
+		this.projectId = Number(this.projectId)
 	}
 
 	getTextIdentifier() {

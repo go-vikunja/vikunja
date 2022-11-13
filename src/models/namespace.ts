@@ -1,11 +1,11 @@
 import AbstractModel from './abstractModel'
-import ListModel from './list'
+import ProjectModel from './project'
 import UserModel from './user'
 import SubscriptionModel from '@/models/subscription'
 
 import type {INamespace} from '@/modelTypes/INamespace'
 import type {IUser} from '@/modelTypes/IUser'
-import type {IList} from '@/modelTypes/IList'
+import type {IProject} from '@/modelTypes/IProject'
 import type {ISubscription} from '@/modelTypes/ISubscription'
 
 export default class NamespaceModel extends AbstractModel<INamespace> implements INamespace {
@@ -13,7 +13,7 @@ export default class NamespaceModel extends AbstractModel<INamespace> implements
 	title = ''
 	description = ''
 	owner: IUser = UserModel
-	lists: IList[] = []
+	projects: IProject[] = []
 	isArchived = false
 	hexColor = ''
 	subscription: ISubscription = null
@@ -29,8 +29,8 @@ export default class NamespaceModel extends AbstractModel<INamespace> implements
 			this.hexColor = '#' + this.hexColor
 		}
 
-		this.lists = this.lists.map(l => {
-			return new ListModel(l)
+		this.projects = this.projects.map(l => {
+			return new ProjectModel(l)
 		})
 
 		this.owner = new UserModel(this.owner)

@@ -5,29 +5,29 @@ import NamespaceService from '../services/namespace'
 import {setModuleLoading} from '@/stores/helper'
 import {createNewIndexer} from '@/indexes'
 import type {INamespace} from '@/modelTypes/INamespace'
-import type {IList} from '@/modelTypes/IList'
-import {useListStore} from '@/stores/lists'
+import type {IProject} from '@/modelTypes/IProject'
+import {useProjectStore} from '@/stores/projects'
 
 const {add, remove, search, update} = createNewIndexer('namespaces', ['title', 'description'])
 
 export const useNamespaceStore = defineStore('namespace', () => {
-	const listStore = useListStore()
+	const projectStore = useProjectStore()
 
 	const isLoading = ref(false)
 	// FIXME: should be object with id as key
 	const namespaces = ref<INamespace[]>([])
 
-	const getListAndNamespaceById = computed(() => (listId: IList['id'], ignorePseudoNamespaces = false) => {
+	const getProjectAndNamespaceById = computed(() => (projectId: IProject['id'], ignorePseudoNamespaces = false) => {
 		for (const n in namespaces.value) {
 
 			if (ignorePseudoNamespaces && namespaces.value[n].id < 0) {
 				continue
 			}
 
-			for (const l in namespaces.value[n].lists) {
-				if (namespaces.value[n].lists[l].id === listId) {
+			for (const l in namespaces.value[n].projects) {
+				if (namespaces.value[n].projects[l].id === projectId) {
 					return {
-						list: namespaces.value[n].lists[l],
+						project: namespaces.value[n].projects[l],
 						namespace: namespaces.value[n],
 					}
 				}
@@ -60,9 +60,9 @@ export const useNamespaceStore = defineStore('namespace', () => {
 		newNamespaces.forEach(n => {
 			add(n)
 
-			// Check for each list in that namespace if it has a subscription and set it if not
-			n.lists.forEach(l => {
-				if (l.subscription === null || l.subscription.entity !== 'list') {
+			// Check for each project in that namespace if it has a subscription and set it if not
+			n.projects.forEach(l => {
+				if (l.subscription === null || l.subscription.entity !== 'project') {
 					l.subscription = n.subscription
 				}
 			})
@@ -76,13 +76,13 @@ export const useNamespaceStore = defineStore('namespace', () => {
 			return
 		}
 
-		if (!namespace.lists || namespace.lists.length === 0) {
-			namespace.lists = namespaces.value[namespaceIndex].lists
+		if (!namespace.projects || namespace.projects.length === 0) {
+			namespace.projects = namespaces.value[namespaceIndex].projects
 		}
 		
-		// Check for each list in that namespace if it has a subscription and set it if not
-		namespace.lists.forEach(l => {
-			if (l.subscription === null || l.subscription.entity !== 'list') {
+		// Check for each project in that namespace if it has a subscription and set it if not
+		namespace.projects.forEach(l => {
+			if (l.subscription === null || l.subscription.entity !== 'project') {
 				l.subscription = namespace.subscription
 			}
 		})
@@ -91,15 +91,15 @@ export const useNamespaceStore = defineStore('namespace', () => {
 		update(namespace)
 	}
 
-	function setListInNamespaceById(list: IList) {
+	function setProjectInNamespaceById(project: IProject) {
 		for (const n in namespaces.value) {
-			// We don't have the namespace id on the list which means we need to loop over all lists until we find it.
+			// We don't have the namespace id on the project which means we need to loop over all projects until we find it.
 			// FIXME: Not ideal at all - we should fix that at the api level.
-			if (namespaces.value[n].id === list.namespaceId) {
-				for (const l in namespaces.value[n].lists) {
-					if (namespaces.value[n].lists[l].id === list.id) {
+			if (namespaces.value[n].id === project.namespaceId) {
+				for (const l in namespaces.value[n].projects) {
+					if (namespaces.value[n].projects[l].id === project.id) {
 						const namespace = namespaces.value[n]
-						namespace.lists[l] = list
+						namespace.projects[l] = project
 						namespaces.value[n] = namespace
 						return
 					}
@@ -123,23 +123,23 @@ export const useNamespaceStore = defineStore('namespace', () => {
 		}
 	}
 
-	function addListToNamespace(list: IList) {
+	function addProjectToNamespace(project: IProject) {
 		for (const n in namespaces.value) {
-			if (namespaces.value[n].id === list.namespaceId) {
-				namespaces.value[n].lists.push(list)
+			if (namespaces.value[n].id === project.namespaceId) {
+				namespaces.value[n].projects.push(project)
 				return
 			}
 		}
 	}
 
-	function removeListFromNamespaceById(list: IList) {
+	function removeProjectFromNamespaceById(project: IProject) {
 		for (const n in namespaces.value) {
-			// We don't have the namespace id on the list which means we need to loop over all lists until we find it.
+			// We don't have the namespace id on the project which means we need to loop over all projects until we find it.
 			// FIXME: Not ideal at all - we should fix that at the api level.
-			if (namespaces.value[n].id === list.namespaceId) {
-				for (const l in namespaces.value[n].lists) {
-					if (namespaces.value[n].lists[l].id === list.id) {
-						namespaces.value[n].lists.splice(l, 1)
+			if (namespaces.value[n].id === project.namespaceId) {
+				for (const l in namespaces.value[n].projects) {
+					if (namespaces.value[n].projects[l].id === project.id) {
+						namespaces.value[n].projects.splice(l, 1)
 						return
 					}
 				}
@@ -156,10 +156,10 @@ export const useNamespaceStore = defineStore('namespace', () => {
 			const namespaces = await namespaceService.getAll({}, {is_archived: true}) as INamespace[]
 			setNamespaces(namespaces)
 
-			// Put all lists in the list state
-			const lists = namespaces.flatMap(({lists}) => lists)
+			// Put all projects in the project state
+			const projects = namespaces.flatMap(({projects}) => projects)
 
-			listStore.setLists(lists)
+			projectStore.setProjects(projects)
 
 			return namespaces
 		} finally {
@@ -176,7 +176,7 @@ export const useNamespaceStore = defineStore('namespace', () => {
 	}
 
 	function removeFavoritesNamespaceIfEmpty() {
-		if (namespaces.value[0].id === -2 && namespaces.value[0].lists.length === 0) {
+		if (namespaces.value[0].id === -2 && namespaces.value[0].projects.length === 0) {
 			namespaces.value.splice(0, 1)
 		}
 	}
@@ -211,17 +211,17 @@ export const useNamespaceStore = defineStore('namespace', () => {
 		isLoading: readonly(isLoading),
 		namespaces: readonly(namespaces),
 
-		getListAndNamespaceById,
+		getProjectAndNamespaceById,
 		getNamespaceById,
 		searchNamespace,
 
 		setNamespaces,
 		setNamespaceById,
-		setListInNamespaceById,
+		setProjectInNamespaceById,
 		addNamespace,
 		removeNamespaceById,
-		addListToNamespace,
-		removeListFromNamespaceById,
+		addProjectToNamespace,
+		removeProjectFromNamespaceById,
 		loadNamespaces,
 		loadNamespacesIfFavoritesDontExist,
 		removeFavoritesNamespaceIfEmpty,

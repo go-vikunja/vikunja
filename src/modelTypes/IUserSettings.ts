@@ -1,6 +1,6 @@
 
 import type {IAbstract} from './IAbstract'
-import type {IList} from './IList'
+import type {IProject} from './IProject'
 
 export interface IUserSettings extends IAbstract {
 	name: string
@@ -9,7 +9,7 @@ export interface IUserSettings extends IAbstract {
 	discoverableByEmail: boolean
 	overdueTasksRemindersEnabled: boolean
 	overdueTasksRemindersTime: any
-	defaultListId: undefined | IList['id']
+	defaultProjectId: undefined | IProject['id']
 	weekStart: 0 | 1 | 2 | 3 | 4 | 5 | 6
 	timezone: string
 	language: string

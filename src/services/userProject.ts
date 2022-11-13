@@ -1,20 +1,20 @@
 import AbstractService from './abstractService'
-import UserListModel from '@/models/userList'
-import type {IUserList} from '@/modelTypes/IUserList'
+import UserProjectModel from '@/models/userProject'
+import type {IUserProject} from '@/modelTypes/IUserProject'
 import UserModel from '@/models/user'
 
-export default class UserListService extends AbstractService<IUserList> {
+export default class UserProjectService extends AbstractService<IUserProject> {
 	constructor() {
 		super({
-			create: '/lists/{listId}/users',
-			getAll: '/lists/{listId}/users',
-			update: '/lists/{listId}/users/{userId}',
-			delete: '/lists/{listId}/users/{userId}',
+			create: '/projects/{projectId}/users',
+			getAll: '/projects/{projectId}/users',
+			update: '/projects/{projectId}/users/{userId}',
+			delete: '/projects/{projectId}/users/{userId}',
 		})
 	}
 
 	modelFactory(data) {
-		return new UserListModel(data)
+		return new UserProjectModel(data)
 	}
 
 	modelGetAllFactory(data) {

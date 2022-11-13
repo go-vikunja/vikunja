@@ -1,6 +1,6 @@
 import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
-import {ListFactory} from '../../factories/list'
+import {ProjectFactory} from '../../factories/project'
 import {seed} from '../../support/seed'
 import {TaskFactory} from '../../factories/task'
 import {NamespaceFactory} from '../../factories/namespace'
@@ -9,9 +9,9 @@ import {updateUserSettings} from '../../support/updateUserSettings'
 
 function seedTasks(numberOfTasks = 50, startDueDate = new Date()) {
 	NamespaceFactory.create(1)
-	const list = ListFactory.create()[0]
+	const project = ProjectFactory.create()[0]
 	BucketFactory.create(1, {
-		list_id: list.id,
+		project_id: project.id,
 	})
 	const tasks = []
 	let dueDate = startDueDate
@@ -20,7 +20,7 @@ function seedTasks(numberOfTasks = 50, startDueDate = new Date()) {
 		dueDate = new Date(new Date(dueDate).setDate(dueDate.getDate() + 2))
 		tasks.push({
 			id: i + 1,
-			list_id: list.id,
+			project_id: project.id,
 			done: false,
 			created_by_id: 1,
 			title: 'Test Task ' + i,
@@ -31,7 +31,7 @@ function seedTasks(numberOfTasks = 50, startDueDate = new Date()) {
 		})
 	}
 	seed(TaskFactory.table, tasks)
-	return {tasks, list}
+	return {tasks, project}
 }
 
 describe('Home Page Task Overview', () => {
@@ -73,7 +73,7 @@ describe('Home Page Task Overview', () => {
 			due_date: new Date().toISOString(),
 		}, false)
 		
-		cy.visit(`/lists/${tasks[0].list_id}/list`)
+		cy.visit(`/projects/${tasks[0].project_id}/list`)
 		cy.get('.tasks .task')
 			.first()
 			.should('contain.text', newTaskTitle)
@@ -90,7 +90,7 @@ describe('Home Page Task Overview', () => {
 
 		cy.visit('/')
 
-		cy.visit(`/lists/${tasks[0].list_id}/list`)
+		cy.visit(`/projects/${tasks[0].project_id}/list`)
 		cy.get('.task-add textarea')
 			.type(newTaskTitle+'{enter}')
 		cy.visit('/')
@@ -113,10 +113,10 @@ describe('Home Page Task Overview', () => {
 			.should('contain.text', newTaskTitle)
 	})
 	
-	it('Should show a task without a due date added via default list at the bottom', () => {
-		const {list} = seedTasks(40)
+	it('Should show a task without a due date added via default project at the bottom', () => {
+		const {project} = seedTasks(40)
 		updateUserSettings({
-			default_list_id: list.id,
+			default_project_id: project.id,
 			overdue_tasks_reminders_time: '9:00',
 		})
 		
@@ -131,23 +131,23 @@ describe('Home Page Task Overview', () => {
 			.should('contain.text', newTaskTitle)
 	})
 	
-	it('Should show the cta buttons for new list when there are no tasks', () => {
+	it('Should show the cta buttons for new project when there are no tasks', () => {
 		TaskFactory.truncate()
 		
 		cy.visit('/')
 		
 		cy.get('.home.app-content .content')
-			.should('contain.text', 'You can create a new list for your new tasks:')
-			.should('contain.text', 'Or import your lists and tasks from other services into Vikunja:')
+			.should('contain.text', 'You can create a new project for your new tasks:')
+			.should('contain.text', 'Or import your projects and tasks from other services into Vikunja:')
 	})
 	
-	it('Should not show the cta buttons for new list when there are tasks', () => {
+	it('Should not show the cta buttons for new project when there are tasks', () => {
 		seedTasks()
 
 		cy.visit('/')
 
 		cy.get('.home.app-content .content')
-			.should('not.contain.text', 'You can create a new list for your new tasks:')
-			.should('not.contain.text', 'Or import your lists and tasks from other services into Vikunja:')
+			.should('not.contain.text', 'You can create a new project for your new tasks:')
+			.should('not.contain.text', 'Or import your projects and tasks from other services into Vikunja:')
 	})
 })

@@ -33,7 +33,7 @@
 				<quick-actions/>
 
 				<router-view :route="routeWithModal" v-slot="{ Component }">
-					<keep-alive :include="['list.list', 'list.gantt', 'list.table', 'list.kanban']">
+					<keep-alive :include="['project.list', 'project.gantt', 'project.table', 'project.kanban']">
 						<component :is="Component"/>
 					</keep-alive>
 				</router-view>
@@ -87,7 +87,7 @@ function showKeyboardShortcuts() {
 const route = useRoute()
 
 // FIXME: this is really error prone
-// Reset the current list highlight in menu if the current route is not list related.
+// Reset the current project highlight in menu if the current route is not project related.
 watch(() => route.name as string, (routeName) => {
 	if (
 		routeName &&
@@ -106,7 +106,7 @@ watch(() => route.name as string, (routeName) => {
 			routeName.startsWith('user.settings')
 		)
 	) {
-		baseStore.handleSetCurrentList({list: null})
+		baseStore.handleSetCurrentProject({project: null})
 	}
 })
 

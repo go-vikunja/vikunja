@@ -1,18 +1,18 @@
 <template>
 	<modal
 		@close="$router.back()"
-		@submit="archiveList()"
+		@submit="archiveProject()"
 	>
-		<template #header><span>{{ list.isArchived ? $t('list.archive.unarchive') : $t('list.archive.archive') }}</span></template>
+		<template #header><span>{{ project.isArchived ? $t('project.archive.unarchive') : $t('project.archive.archive') }}</span></template>
 		
 		<template #text>
-			<p>{{ list.isArchived ? $t('list.archive.unarchiveText') : $t('list.archive.archiveText') }}</p>
+			<p>{{ project.isArchived ? $t('project.archive.unarchiveText') : $t('project.archive.archiveText') }}</p>
 		</template>
 	</modal>
 </template>
 
 <script lang="ts">
-export default {name: 'list-setting-archive'}
+export default {name: 'project-setting-archive'}
 </script>
 
 <script setup lang="ts">
@@ -24,24 +24,24 @@ import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
 
 import {useBaseStore} from '@/stores/base'
-import {useListStore} from '@/stores/lists'
+import {useProjectStore} from '@/stores/projects'
 
 const {t} = useI18n({useScope: 'global'})
-const listStore = useListStore()
+const projectStore = useProjectStore()
 const router = useRouter()
 const route = useRoute()
 
-const list = computed(() => listStore.getListById(route.params.listId))
-useTitle(() => t('list.archive.title', {list: list.value.title}))
+const project = computed(() => projectStore.getProjectById(route.params.projectId))
+useTitle(() => t('project.archive.title', {project: project.value.title}))
 
-async function archiveList() {
+async function archiveProject() {
 	try {
-		const newList = await listStore.updateList({
-			...list.value,
-			isArchived: !list.value.isArchived,
+		const newProject = await projectStore.updateProject({
+			...project.value,
+			isArchived: !project.value.isArchived,
 		})
-		useBaseStore().setCurrentList(newList)
-		success({message: t('list.archive.success')})
+		useBaseStore().setCurrentProject(newProject)
+		success({message: t('project.archive.success')})
 	} finally {
 		router.back()
 	}
