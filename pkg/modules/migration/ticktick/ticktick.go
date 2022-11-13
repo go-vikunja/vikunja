@@ -105,21 +105,21 @@ func parseDurationPart(value string, unit time.Duration) time.Duration {
 	return 0
 }
 
-func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.NamespaceWithListsAndTasks) {
-	namespace := &models.NamespaceWithListsAndTasks{
+func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.NamespaceWithProjectsAndTasks) {
+	namespace := &models.NamespaceWithProjectsAndTasks{
 		Namespace: models.Namespace{
 			Title: "Migrated from TickTick",
 		},
-		Lists: []*models.ListWithTasksAndBuckets{},
+		Projects: []*models.ProjectWithTasksAndBuckets{},
 	}
 
-	lists := make(map[string]*models.ListWithTasksAndBuckets)
+	projects := make(map[string]*models.ProjectWithTasksAndBuckets)
 	for _, t := range tasks {
-		_, has := lists[t.ListName]
+		_, has := projects[t.ProjectName]
 		if !has {
-			lists[t.ListName] = &models.ListWithTasksAndBuckets{
-				List: models.List{
-					Title: t.ListName,
+			projects[t.ProjectName] = &models.ProjectWithTasksAndBuckets{
+				Project: models.Project{
+					Title: t.ProjectName,
 				},
 			}
 		}
@@ -158,18 +158,18 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.Namespace
 			}
 		}
 
-		lists[t.ListName].Tasks = append(lists[t.ListName].Tasks, task)
+		projects[t.ProjectName].Tasks = append(projects[t.ProjectName].Tasks, task)
 	}
 
-	for _, l := range lists {
-		namespace.Lists = append(namespace.Lists, l)
+	for _, l := range projects {
+		namespace.Projects = append(namespace.Projects, l)
 	}
 
-	sort.Slice(namespace.Lists, func(i, j int) bool {
-		return namespace.Lists[i].Title < namespace.Lists[j].Title
+	sort.Slice(namespace.Projects, func(i, j int) bool {
+		return namespace.Projects[i].Title < namespace.Projects[j].Title
 	})
 
-	return []*models.NamespaceWithListsAndTasks{namespace}
+	return []*models.NamespaceWithProjectsAndTasks{namespace}
 }
 
 // Name is used to get the name of the ticktick migration - we're using the docs here to annotate the status route.
@@ -202,7 +202,7 @@ func newLineSkipDecoder(r io.Reader, linesToSkip int) gocsv.SimpleDecoder {
 }
 
 // Migrate takes a ticktick export, parses it and imports everything in it into Vikunja.
-// @Summary Import all lists, tasks etc. from a TickTick backup export
+// @Summary Import all projects, tasks etc. from a TickTick backup export
 // @Description Imports all projects, tasks, notes, reminders, subtasks and files from a TickTick backup export into Vikunja.
 // @tags migration
 // @Accept json

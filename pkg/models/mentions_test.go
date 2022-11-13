@@ -103,7 +103,7 @@ func TestSendingMentionNotification(t *testing.T) {
 		assert.NoError(t, err)
 		tc := &TaskComment{
 			Comment: "Lorem Ipsum @user1 @user2 @user3 @user4 @user5 @user6",
-			TaskID:  32, // user2 has access to the list that task belongs to
+			TaskID:  32, // user2 has access to the project that task belongs to
 		}
 		err = tc.Create(s, u)
 		assert.NoError(t, err)
@@ -156,7 +156,7 @@ func TestSendingMentionNotification(t *testing.T) {
 		assert.NoError(t, err)
 		tc := &TaskComment{
 			Comment: "Lorem Ipsum @user2",
-			TaskID:  32, // user2 has access to the list that task belongs to
+			TaskID:  32, // user2 has access to the project that task belongs to
 		}
 		err = tc.Create(s, u)
 		assert.NoError(t, err)

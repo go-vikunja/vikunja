@@ -99,14 +99,14 @@ func getTrelloData(token string) (trelloData []*trello.Board, err error) {
 	log.Debugf("[Trello Migration] Got %d trello boards", len(trelloData))
 
 	for _, board := range trelloData {
-		log.Debugf("[Trello Migration] Getting lists for board %s", board.ID)
+		log.Debugf("[Trello Migration] Getting projects for board %s", board.ID)
 
 		board.Lists, err = board.GetLists(trello.Defaults())
 		if err != nil {
 			return
 		}
 
-		log.Debugf("[Trello Migration] Got %d lists for board %s", len(board.Lists), board.ID)
+		log.Debugf("[Trello Migration] Got %d projects for board %s", len(board.Lists), board.ID)
 
 		listMap := make(map[string]*trello.List, len(board.Lists))
 		for _, list := range board.Lists {
@@ -161,27 +161,27 @@ func getTrelloData(token string) (trelloData []*trello.Board, err error) {
 }
 
 // Converts all previously obtained data from trello into the vikunja format.
-// `trelloData` should contain all boards with their lists and cards respectively.
-func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullVikunjaHierachie []*models.NamespaceWithListsAndTasks, err error) {
+// `trelloData` should contain all boards with their projects and cards respectively.
+func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullVikunjaHierachie []*models.NamespaceWithProjectsAndTasks, err error) {
 
 	log.Debugf("[Trello Migration] ")
 
-	fullVikunjaHierachie = []*models.NamespaceWithListsAndTasks{
+	fullVikunjaHierachie = []*models.NamespaceWithProjectsAndTasks{
 		{
 			Namespace: models.Namespace{
 				Title: "Imported from Trello",
 			},
-			Lists: []*models.ListWithTasksAndBuckets{},
+			Projects: []*models.ProjectWithTasksAndBuckets{},
 		},
 	}
 
 	var bucketID int64 = 1
 
-	log.Debugf("[Trello Migration] Converting %d boards to vikunja lists", len(trelloData))
+	log.Debugf("[Trello Migration] Converting %d boards to vikunja projects", len(trelloData))
 
 	for _, board := range trelloData {
-		list := &models.ListWithTasksAndBuckets{
-			List: models.List{
+		project := &models.ProjectWithTasksAndBuckets{
+			Project: models.Project{
 				Title:       board.Name,
 				Description: board.Desc,
 				IsArchived:  board.Closed,
@@ -189,7 +189,7 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullV
 		}
 
 		// Background
-		// We're pretty much abusing the backgroundinformation field here - not sure if this is really better than adding a new property to the list
+		// We're pretty much abusing the backgroundinformation field here - not sure if this is really better than adding a new property to the project
 		if board.Prefs.BackgroundImage != "" {
 			log.Debugf("[Trello Migration] Downloading background %s for board %s", board.Prefs.BackgroundImage, board.ID)
 			buf, err := migration.DownloadFile(board.Prefs.BackgroundImage)
@@ -197,7 +197,7 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullV
 				return nil, err
 			}
 			log.Debugf("[Trello Migration] Downloaded background %s for board %s", board.Prefs.BackgroundImage, board.ID)
-			list.BackgroundInformation = buf
+			project.BackgroundInformation = buf
 		} else {
 			log.Debugf("[Trello Migration] Board %s does not have a background image, not copying...", board.ID)
 		}
@@ -291,23 +291,23 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullV
 					log.Debugf("[Trello Migration] Downloaded card attachment %s", attachment.ID)
 				}
 
-				list.Tasks = append(list.Tasks, &models.TaskWithComments{Task: *task})
+				project.Tasks = append(project.Tasks, &models.TaskWithComments{Task: *task})
 			}
 
-			list.Buckets = append(list.Buckets, bucket)
+			project.Buckets = append(project.Buckets, bucket)
 			bucketID++
 		}
 
 		log.Debugf("[Trello Migration] Converted all cards to tasks for board %s", board.ID)
 
-		fullVikunjaHierachie[0].Lists = append(fullVikunjaHierachie[0].Lists, list)
+		fullVikunjaHierachie[0].Projects = append(fullVikunjaHierachie[0].Projects, project)
 	}
 
 	return
 }
 
 // Migrate gets all tasks from trello for a user and puts them into vikunja
-// @Summary Migrate all lists, tasks etc. from trello
+// @Summary Migrate all projects, tasks etc. from trello
 // @Description Migrates all projects, tasks, notes, reminders, subtasks and files from trello to vikunja.
 // @tags migration
 // @Accept json

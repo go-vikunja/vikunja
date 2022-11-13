@@ -54,7 +54,7 @@ func GenerateCaldavToken(c echo.Context) (err error) {
 	return c.JSON(http.StatusCreated, token)
 }
 
-// GetCaldavTokens is the handler to return a list of all caldav tokens for the current user
+// GetCaldavTokens is the handler to return a project of all caldav tokens for the current user
 // @Summary Returns the caldav tokens for the current user
 // @Description Return the IDs and created dates of all caldav tokens for the current user.
 // @tags user

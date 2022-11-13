@@ -44,9 +44,9 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 			Name:   "TestBoard",
 			Desc:   "This is a description",
 			Closed: false,
-			Lists: []*trello.List{
+			Projects: []*trello.Project{
 				{
-					Name: "Test List 1",
+					Name: "Test Project 1",
 					Cards: []*trello.Card{
 						{
 							Name: "Test Card 1",
@@ -77,9 +77,9 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 						{
 							Name: "Test Card 2",
 							Pos:  124,
-							Checklists: []*trello.Checklist{
+							Checkprojects: []*trello.Checkproject{
 								{
-									Name: "Checklist 1",
+									Name: "Checkproject 1",
 									CheckItems: []trello.CheckItem{
 										{
 											State: "pending",
@@ -92,7 +92,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 									},
 								},
 								{
-									Name: "Checklist 2",
+									Name: "Checkproject 2",
 									CheckItems: []trello.CheckItem{
 										{
 											State: "pending",
@@ -124,7 +124,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 					},
 				},
 				{
-					Name: "Test List 2",
+					Name: "Test Project 2",
 					Cards: []*trello.Card{
 						{
 							Name: "Test Card 5",
@@ -157,9 +157,9 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 		{
 			Name:   "TestBoard 2",
 			Closed: false,
-			Lists: []*trello.List{
+			Projects: []*trello.Project{
 				{
-					Name: "Test List 4",
+					Name: "Test Project 4",
 					Cards: []*trello.Card{
 						{
 							Name: "Test Card 634",
@@ -172,9 +172,9 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 		{
 			Name:   "TestBoard Archived",
 			Closed: true,
-			Lists: []*trello.List{
+			Projects: []*trello.Project{
 				{
-					Name: "Test List 5",
+					Name: "Test Project 5",
 					Cards: []*trello.Card{
 						{
 							Name: "Test Card 63423",
@@ -187,14 +187,14 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 	}
 	trelloData[0].Prefs.BackgroundImage = "https://vikunja.io/testimage.jpg" // Using an image which we are hosting, so it'll still be up
 
-	expectedHierachie := []*models.NamespaceWithListsAndTasks{
+	expectedHierachie := []*models.NamespaceWithProjectsAndTasks{
 		{
 			Namespace: models.Namespace{
 				Title: "Imported from Trello",
 			},
-			Lists: []*models.ListWithTasksAndBuckets{
+			Projects: []*models.ProjectWithTasksAndBuckets{
 				{
-					List: models.List{
+					Project: models.Project{
 						Title:                 "TestBoard",
 						Description:           "This is a description",
 						BackgroundInformation: bytes.NewBuffer(exampleFile),
@@ -202,11 +202,11 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 					Buckets: []*models.Bucket{
 						{
 							ID:    1,
-							Title: "Test List 1",
+							Title: "Test Project 1",
 						},
 						{
 							ID:    2,
-							Title: "Test List 2",
+							Title: "Test Project 2",
 						},
 					},
 					Tasks: []*models.TaskWithComments{
@@ -244,12 +244,12 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 								Title: "Test Card 2",
 								Description: `
 
-## Checklist 1
+## Checkproject 1
 
 * [ ] Pending Task
 * [x] Completed Task
 
-## Checklist 2
+## Checkproject 2
 
 * [ ] Pending Task
 * [ ] Another Pending Task`,
@@ -315,13 +315,13 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 					},
 				},
 				{
-					List: models.List{
+					Project: models.Project{
 						Title: "TestBoard 2",
 					},
 					Buckets: []*models.Bucket{
 						{
 							ID:    3,
-							Title: "Test List 4",
+							Title: "Test Project 4",
 						},
 					},
 					Tasks: []*models.TaskWithComments{
@@ -335,14 +335,14 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 					},
 				},
 				{
-					List: models.List{
+					Project: models.Project{
 						Title:      "TestBoard Archived",
 						IsArchived: true,
 					},
 					Buckets: []*models.Bucket{
 						{
 							ID:    4,
-							Title: "Test List 5",
+							Title: "Test Project 5",
 						},
 					},
 					Tasks: []*models.TaskWithComments{

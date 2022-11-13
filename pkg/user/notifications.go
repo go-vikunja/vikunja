@@ -204,7 +204,7 @@ func (n *AccountDeletionConfirmNotification) ToMail() *notifications.Mail {
 		Action("Confirm the deletion of my account", config.ServiceFrontendurl.GetString()+"?accountDeletionConfirm="+n.ConfirmToken).
 		Line("This link will be valid for 24 hours.").
 		Line("Once you confirm the deletion we will schedule the deletion of your account in three days and send you another email until then.").
-		Line("If you proceed with the deletion of your account, we will remove all of your namespaces, lists and tasks you created. Everything you shared with another user or team will transfer ownership to them.").
+		Line("If you proceed with the deletion of your account, we will remove all of your namespaces, projects and tasks you created. Everything you shared with another user or team will transfer ownership to them.").
 		Line("If you did not requested the deletion or changed your mind, you can simply ignore this email.").
 		Line("Have a nice day!")
 }

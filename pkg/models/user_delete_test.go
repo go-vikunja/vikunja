@@ -38,13 +38,13 @@ func TestDeleteUser(t *testing.T) {
 
 		assert.NoError(t, err)
 		db.AssertMissing(t, "users", map[string]interface{}{"id": u.ID})
-		db.AssertMissing(t, "lists", map[string]interface{}{"id": 24}) // only user6 had access to this list
-		db.AssertExists(t, "lists", map[string]interface{}{"id": 6}, false)
-		db.AssertExists(t, "lists", map[string]interface{}{"id": 7}, false)
-		db.AssertExists(t, "lists", map[string]interface{}{"id": 8}, false)
-		db.AssertExists(t, "lists", map[string]interface{}{"id": 9}, false)
-		db.AssertExists(t, "lists", map[string]interface{}{"id": 10}, false)
-		db.AssertExists(t, "lists", map[string]interface{}{"id": 11}, false)
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 24}) // only user6 had access to this project
+		db.AssertExists(t, "projects", map[string]interface{}{"id": 6}, false)
+		db.AssertExists(t, "projects", map[string]interface{}{"id": 7}, false)
+		db.AssertExists(t, "projects", map[string]interface{}{"id": 8}, false)
+		db.AssertExists(t, "projects", map[string]interface{}{"id": 9}, false)
+		db.AssertExists(t, "projects", map[string]interface{}{"id": 10}, false)
+		db.AssertExists(t, "projects", map[string]interface{}{"id": 11}, false)
 	})
 	t.Run("user with no namespaces", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -56,6 +56,6 @@ func TestDeleteUser(t *testing.T) {
 		err := DeleteUser(s, u)
 
 		assert.NoError(t, err)
-		// No assertions for deleted lists and namespaces since that user doesn't have any
+		// No assertions for deleted projects and namespaces since that user doesn't have any
 	})
 }

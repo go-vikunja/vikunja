@@ -79,7 +79,7 @@ func TestNamespaceUser_Create(t *testing.T) {
 			errType: IsErrInvalidRight,
 		},
 		{
-			name: "NamespaceUsers Create with inexisting list",
+			name: "NamespaceUsers Create with inexisting project",
 			fields: fields{
 				Username:    "user1",
 				NamespaceID: 2000,
@@ -208,7 +208,7 @@ func TestNamespaceUser_ReadAll(t *testing.T) {
 			},
 		},
 		{
-			name: "Test ReadAll by a user who does not have access to the list",
+			name: "Test ReadAll by a user who does not have access to the project",
 			fields: fields{
 				NamespaceID: 3,
 			},

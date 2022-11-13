@@ -33,123 +33,123 @@ import (
 	"xorm.io/xorm"
 )
 
-// List represents a list of tasks
-type List struct {
-	// The unique, numeric id of this list.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"list"`
-	// The title of the list. You'll see this in the namespace overview.
+// Project represents a project of tasks
+type Project struct {
+	// The unique, numeric id of this project.
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"project"`
+	// The title of the project. You'll see this in the namespace overview.
 	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(1|250)" minLength:"1" maxLength:"250"`
-	// The description of the list.
+	// The description of the project.
 	Description string `xorm:"longtext null" json:"description"`
-	// The unique list short identifier. Used to build task identifiers.
+	// The unique project short identifier. Used to build task identifiers.
 	Identifier string `xorm:"varchar(10) null" json:"identifier" valid:"runelength(0|10)" minLength:"0" maxLength:"10"`
-	// The hex color of this list
+	// The hex color of this project
 	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
 
 	OwnerID     int64 `xorm:"bigint INDEX not null" json:"-"`
 	NamespaceID int64 `xorm:"bigint INDEX not null" json:"namespace_id" param:"namespace"`
 
-	// The user who created this list.
+	// The user who created this project.
 	Owner *user.User `xorm:"-" json:"owner" valid:"-"`
 
-	// Whether or not a list is archived.
+	// Whether or not a project is archived.
 	IsArchived bool `xorm:"not null default false" json:"is_archived" query:"is_archived"`
 
-	// The id of the file this list has set as background
+	// The id of the file this project has set as background
 	BackgroundFileID int64 `xorm:"null" json:"-"`
-	// Holds extra information about the background set since some background providers require attribution or similar. If not null, the background can be accessed at /lists/{listID}/background
+	// Holds extra information about the background set since some background providers require attribution or similar. If not null, the background can be accessed at /projects/{projectID}/background
 	BackgroundInformation interface{} `xorm:"-" json:"background_information"`
-	// Contains a very small version of the list background to use as a blurry preview until the actual background is loaded. Check out https://blurha.sh/ to learn how it works.
+	// Contains a very small version of the project background to use as a blurry preview until the actual background is loaded. Check out https://blurha.sh/ to learn how it works.
 	BackgroundBlurHash string `xorm:"varchar(50) null" json:"background_blur_hash"`
 
-	// True if a list is a favorite. Favorite lists show up in a separate namespace. This value depends on the user making the call to the api.
+	// True if a project is a favorite. Favorite projects show up in a separate namespace. This value depends on the user making the call to the api.
 	IsFavorite bool `xorm:"-" json:"is_favorite"`
 
-	// The subscription status for the user reading this list. You can only read this property, use the subscription endpoints to modify it.
-	// Will only returned when retreiving one list.
+	// The subscription status for the user reading this project. You can only read this property, use the subscription endpoints to modify it.
+	// Will only returned when retreiving one project.
 	Subscription *Subscription `xorm:"-" json:"subscription,omitempty"`
 
-	// The position this list has when querying all lists. See the tasks.position property on how to use this.
+	// The position this project has when querying all projects. See the tasks.position property on how to use this.
 	Position float64 `xorm:"double null" json:"position"`
 
-	// A timestamp when this list was created. You cannot change this value.
+	// A timestamp when this project was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
-	// A timestamp when this list was last updated. You cannot change this value.
+	// A timestamp when this project was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
 }
 
-type ListWithTasksAndBuckets struct {
-	List
-	// An array of tasks which belong to the list.
+type ProjectWithTasksAndBuckets struct {
+	Project
+	// An array of tasks which belong to the project.
 	Tasks []*TaskWithComments `xorm:"-" json:"tasks"`
 	// Only used for migration.
 	Buckets          []*Bucket `xorm:"-" json:"buckets"`
 	BackgroundFileID int64     `xorm:"null" json:"background_file_id"`
 }
 
-// TableName returns a better name for the lists table
-func (l *List) TableName() string {
-	return "lists"
+// TableName returns a better name for the projects table
+func (l *Project) TableName() string {
+	return "projects"
 }
 
-// ListBackgroundType holds a list background type
-type ListBackgroundType struct {
+// ProjectBackgroundType holds a project background type
+type ProjectBackgroundType struct {
 	Type string
 }
 
-// ListBackgroundUpload represents the list upload background type
-const ListBackgroundUpload string = "upload"
+// ProjectBackgroundUpload represents the project upload background type
+const ProjectBackgroundUpload string = "upload"
 
-// FavoritesPseudoList holds all tasks marked as favorites
-var FavoritesPseudoList = List{
+// FavoritesPseudoProject holds all tasks marked as favorites
+var FavoritesPseudoProject = Project{
 	ID:          -1,
 	Title:       "Favorites",
-	Description: "This list has all tasks marked as favorites.",
+	Description: "This project has all tasks marked as favorites.",
 	NamespaceID: FavoritesPseudoNamespace.ID,
 	IsFavorite:  true,
 	Created:     time.Now(),
 	Updated:     time.Now(),
 }
 
-// GetListsByNamespaceID gets all lists in a namespace
-func GetListsByNamespaceID(s *xorm.Session, nID int64, doer *user.User) (lists []*List, err error) {
+// GetProjectsByNamespaceID gets all projects in a namespace
+func GetProjectsByNamespaceID(s *xorm.Session, nID int64, doer *user.User) (projects []*Project, err error) {
 	switch nID {
-	case SharedListsPseudoNamespace.ID:
-		nnn, err := getSharedListsInNamespace(s, false, doer)
+	case SharedProjectsPseudoNamespace.ID:
+		nnn, err := getSharedProjectsInNamespace(s, false, doer)
 		if err != nil {
 			return nil, err
 		}
-		if nnn != nil && nnn.Lists != nil {
-			lists = nnn.Lists
+		if nnn != nil && nnn.Projects != nil {
+			projects = nnn.Projects
 		}
 	case FavoritesPseudoNamespace.ID:
-		namespaces := make(map[int64]*NamespaceWithLists)
-		_, err := getNamespacesWithLists(s, &namespaces, "", false, 0, -1, doer.ID)
+		namespaces := make(map[int64]*NamespaceWithProjects)
+		_, err := getNamespacesWithProjects(s, &namespaces, "", false, 0, -1, doer.ID)
 		if err != nil {
 			return nil, err
 		}
 		namespaceIDs, _ := getNamespaceOwnerIDs(namespaces)
-		ls, err := getListsForNamespaces(s, namespaceIDs, false)
+		ls, err := getProjectsForNamespaces(s, namespaceIDs, false)
 		if err != nil {
 			return nil, err
 		}
-		nnn, err := getFavoriteLists(s, ls, namespaceIDs, doer)
+		nnn, err := getFavoriteProjects(s, ls, namespaceIDs, doer)
 		if err != nil {
 			return nil, err
 		}
-		if nnn != nil && nnn.Lists != nil {
-			lists = nnn.Lists
+		if nnn != nil && nnn.Projects != nil {
+			projects = nnn.Projects
 		}
 	case SavedFiltersPseudoNamespace.ID:
 		nnn, err := getSavedFilters(s, doer)
 		if err != nil {
 			return nil, err
 		}
-		if nnn != nil && nnn.Lists != nil {
-			lists = nnn.Lists
+		if nnn != nil && nnn.Projects != nil {
+			projects = nnn.Projects
 		}
 	default:
 		err = s.Select("l.*").
@@ -158,48 +158,48 @@ func GetListsByNamespaceID(s *xorm.Session, nID int64, doer *user.User) (lists [
 			Where("l.is_archived = false").
 			Where("n.is_archived = false OR n.is_archived IS NULL").
 			Where("namespace_id = ?", nID).
-			Find(&lists)
+			Find(&projects)
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	// get more list details
-	err = addListDetails(s, lists, doer)
-	return lists, err
+	// get more project details
+	err = addProjectDetails(s, projects, doer)
+	return projects, err
 }
 
-// ReadAll gets all lists a user has access to
-// @Summary Get all lists a user has access to
-// @Description Returns all lists a user has access to.
-// @tags list
+// ReadAll gets all projects a user has access to
+// @Summary Get all projects a user has access to
+// @Description Returns all projects a user has access to.
+// @tags project
 // @Accept json
 // @Produce json
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
-// @Param s query string false "Search lists by title."
-// @Param is_archived query bool false "If true, also returns all archived lists."
+// @Param s query string false "Search projects by title."
+// @Param is_archived query bool false "If true, also returns all archived projects."
 // @Security JWTKeyAuth
-// @Success 200 {array} models.List "The lists"
-// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
+// @Success 200 {array} models.Project "The projects"
+// @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists [get]
-func (l *List) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+// @Router /projects [get]
+func (l *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	// Check if we're dealing with a share auth
 	shareAuth, ok := a.(*LinkSharing)
 	if ok {
-		list, err := GetListSimpleByID(s, shareAuth.ListID)
+		project, err := GetProjectSimpleByID(s, shareAuth.ProjectID)
 		if err != nil {
 			return nil, 0, 0, err
 		}
-		lists := []*List{list}
-		err = addListDetails(s, lists, a)
-		return lists, 0, 0, err
+		projects := []*Project{project}
+		err = addProjectDetails(s, projects, a)
+		return projects, 0, 0, err
 	}
 
-	lists, resultCount, totalItems, err := getRawListsForUser(
+	projects, resultCount, totalItems, err := getRawProjectsForUser(
 		s,
-		&listOptions{
+		&projectOptions{
 			search:     search,
 			user:       &user.User{ID: a.GetID()},
 			page:       page,
@@ -210,33 +210,33 @@ func (l *List) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 		return nil, 0, 0, err
 	}
 
-	// Add more list details
-	err = addListDetails(s, lists, a)
-	return lists, resultCount, totalItems, err
+	// Add more project details
+	err = addProjectDetails(s, projects, a)
+	return projects, resultCount, totalItems, err
 }
 
-// ReadOne gets one list by its ID
-// @Summary Gets one list
-// @Description Returns a list by its ID.
-// @tags list
+// ReadOne gets one project by its ID
+// @Summary Gets one project
+// @Description Returns a project by its ID.
+// @tags project
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param id path int true "List ID"
-// @Success 200 {object} models.List "The list"
-// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
+// @Param id path int true "Project ID"
+// @Success 200 {object} models.Project "The project"
+// @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{id} [get]
-func (l *List) ReadOne(s *xorm.Session, a web.Auth) (err error) {
+// @Router /projects/{id} [get]
+func (l *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
-	if l.ID == FavoritesPseudoList.ID {
-		// Already "built" the list in CanRead
+	if l.ID == FavoritesPseudoProject.ID {
+		// Already "built" the project in CanRead
 		return nil
 	}
 
 	// Check for saved filters
-	if getSavedFilterIDFromListID(l.ID) > 0 {
-		sf, err := getSavedFilterSimpleByID(s, getSavedFilterIDFromListID(l.ID))
+	if getSavedFilterIDFromProjectID(l.ID) > 0 {
+		sf, err := getSavedFilterSimpleByID(s, getSavedFilterIDFromProjectID(l.ID))
 		if err != nil {
 			return err
 		}
@@ -247,7 +247,7 @@ func (l *List) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		l.OwnerID = sf.OwnerID
 	}
 
-	// Get list owner
+	// Get project owner
 	l.Owner, err = user.GetUserByID(s, l.OwnerID)
 	if err != nil {
 		return err
@@ -256,7 +256,7 @@ func (l *List) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	if !l.IsArchived {
 		err = l.CheckIsArchived(s)
 		if err != nil {
-			if !IsErrNamespaceIsArchived(err) && !IsErrListIsArchived(err) {
+			if !IsErrNamespaceIsArchived(err) && !IsErrProjectIsArchived(err) {
 				return
 			}
 			l.IsArchived = true
@@ -272,78 +272,78 @@ func (l *List) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		}
 
 		if err != nil && files.IsErrFileIsNotUnsplashFile(err) {
-			l.BackgroundInformation = &ListBackgroundType{Type: ListBackgroundUpload}
+			l.BackgroundInformation = &ProjectBackgroundType{Type: ProjectBackgroundUpload}
 		}
 	}
 
-	l.IsFavorite, err = isFavorite(s, l.ID, a, FavoriteKindList)
+	l.IsFavorite, err = isFavorite(s, l.ID, a, FavoriteKindProject)
 	if err != nil {
 		return
 	}
 
-	l.Subscription, err = GetSubscription(s, SubscriptionEntityList, l.ID, a)
+	l.Subscription, err = GetSubscription(s, SubscriptionEntityProject, l.ID, a)
 	return
 }
 
-// GetListSimpleByID gets a list with only the basic items, aka no tasks or user objects. Returns an error if the list does not exist.
-func GetListSimpleByID(s *xorm.Session, listID int64) (list *List, err error) {
+// GetProjectSimpleByID gets a project with only the basic items, aka no tasks or user objects. Returns an error if the project does not exist.
+func GetProjectSimpleByID(s *xorm.Session, projectID int64) (project *Project, err error) {
 
-	list = &List{}
+	project = &Project{}
 
-	if listID < 1 {
-		return nil, ErrListDoesNotExist{ID: listID}
+	if projectID < 1 {
+		return nil, ErrProjectDoesNotExist{ID: projectID}
 	}
 
 	exists, err := s.
-		Where("id = ?", listID).
+		Where("id = ?", projectID).
 		OrderBy("position").
-		Get(list)
+		Get(project)
 	if err != nil {
 		return
 	}
 
 	if !exists {
-		return nil, ErrListDoesNotExist{ID: listID}
+		return nil, ErrProjectDoesNotExist{ID: projectID}
 	}
 
 	return
 }
 
-// GetListSimplByTaskID gets a list by a task id
-func GetListSimplByTaskID(s *xorm.Session, taskID int64) (l *List, err error) {
-	// We need to re-init our list object, because otherwise xorm creates a "where for every item in that list object,
+// GetProjectSimplByTaskID gets a project by a task id
+func GetProjectSimplByTaskID(s *xorm.Session, taskID int64) (l *Project, err error) {
+	// We need to re-init our project object, because otherwise xorm creates a "where for every item in that project object,
 	// leading to not finding anything if the id is good, but for example the title is different.
-	var list List
+	var project Project
 	exists, err := s.
-		Select("lists.*").
-		Table(List{}).
-		Join("INNER", "tasks", "lists.id = tasks.list_id").
+		Select("projects.*").
+		Table(Project{}).
+		Join("INNER", "tasks", "projects.id = tasks.project_id").
 		Where("tasks.id = ?", taskID).
-		Get(&list)
+		Get(&project)
 	if err != nil {
 		return
 	}
 
 	if !exists {
-		return &List{}, ErrListDoesNotExist{ID: l.ID}
+		return &Project{}, ErrProjectDoesNotExist{ID: l.ID}
 	}
 
-	return &list, nil
+	return &project, nil
 }
 
-// GetListsByIDs returns a map of lists from a slice with list ids
-func GetListsByIDs(s *xorm.Session, listIDs []int64) (lists map[int64]*List, err error) {
-	lists = make(map[int64]*List, len(listIDs))
+// GetProjectsByIDs returns a map of projects from a slice with project ids
+func GetProjectsByIDs(s *xorm.Session, projectIDs []int64) (projects map[int64]*Project, err error) {
+	projects = make(map[int64]*Project, len(projectIDs))
 
-	if len(listIDs) == 0 {
+	if len(projectIDs) == 0 {
 		return
 	}
 
-	err = s.In("id", listIDs).Find(&lists)
+	err = s.In("id", projectIDs).Find(&projects)
 	return
 }
 
-type listOptions struct {
+type projectOptions struct {
 	search     string
 	user       *user.User
 	page       int
@@ -351,7 +351,7 @@ type listOptions struct {
 	isArchived bool
 }
 
-func getUserListsStatement(userID int64) *builder.Builder {
+func getUserProjectsStatement(userID int64) *builder.Builder {
 	dialect := config.DatabaseType.GetString()
 	if dialect == "sqlite" {
 		dialect = builder.SQLITE
@@ -359,13 +359,13 @@ func getUserListsStatement(userID int64) *builder.Builder {
 
 	return builder.Dialect(dialect).
 		Select("l.*").
-		From("lists", "l").
+		From("projects", "l").
 		Join("INNER", "namespaces n", "l.namespace_id = n.id").
 		Join("LEFT", "team_namespaces tn", "tn.namespace_id = n.id").
 		Join("LEFT", "team_members tm", "tm.team_id = tn.team_id").
-		Join("LEFT", "team_lists tl", "l.id = tl.list_id").
+		Join("LEFT", "team_projects tl", "l.id = tl.project_id").
 		Join("LEFT", "team_members tm2", "tm2.team_id = tl.team_id").
-		Join("LEFT", "users_lists ul", "ul.list_id = l.id").
+		Join("LEFT", "users_projects ul", "ul.project_id = l.id").
 		Join("LEFT", "users_namespaces un", "un.namespace_id = l.namespace_id").
 		Where(builder.Or(
 			builder.Eq{"tm.user_id": userID},
@@ -378,8 +378,8 @@ func getUserListsStatement(userID int64) *builder.Builder {
 		GroupBy("l.id")
 }
 
-// Gets the lists only, without any tasks or so
-func getRawListsForUser(s *xorm.Session, opts *listOptions) (lists []*List, resultCount int, totalItems int64, err error) {
+// Gets the projects only, without any tasks or so
+func getRawProjectsForUser(s *xorm.Session, opts *projectOptions) (projects []*Project, resultCount int, totalItems int64, err error) {
 	fullUser, err := user.GetUserByID(s, opts.user.ID)
 	if err != nil {
 		return nil, 0, 0, err
@@ -403,7 +403,7 @@ func getRawListsForUser(s *xorm.Session, opts *listOptions) (lists []*List, resu
 		for _, val := range vals {
 			v, err := strconv.ParseInt(val, 10, 64)
 			if err != nil {
-				log.Debugf("List search string part '%s' is not a number: %s", val, err)
+				log.Debugf("Project search string part '%s' is not a number: %s", val, err)
 				continue
 			}
 			ids = append(ids, v)
@@ -415,41 +415,41 @@ func getRawListsForUser(s *xorm.Session, opts *listOptions) (lists []*List, resu
 		filterCond = builder.In("l.id", ids)
 	}
 
-	// Gets all Lists where the user is either owner or in a team which has access to the list
+	// Gets all Projects where the user is either owner or in a team which has access to the project
 	// Or in a team which has namespace read access
 
-	query := getUserListsStatement(fullUser.ID).
+	query := getUserProjectsStatement(fullUser.ID).
 		Where(filterCond).
 		Where(isArchivedCond)
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
-	err = s.SQL(query).Find(&lists)
+	err = s.SQL(query).Find(&projects)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	query = getUserListsStatement(fullUser.ID).
+	query = getUserProjectsStatement(fullUser.ID).
 		Where(filterCond).
 		Where(isArchivedCond)
 	totalItems, err = s.
 		SQL(query.Select("count(*)")).
-		Count(&List{})
-	return lists, len(lists), totalItems, err
+		Count(&Project{})
+	return projects, len(projects), totalItems, err
 }
 
-// addListDetails adds owner user objects and list tasks to all lists in the slice
-func addListDetails(s *xorm.Session, lists []*List, a web.Auth) (err error) {
-	if len(lists) == 0 {
+// addProjectDetails adds owner user objects and project tasks to all projects in the slice
+func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err error) {
+	if len(projects) == 0 {
 		return
 	}
 
 	var ownerIDs []int64
-	for _, l := range lists {
+	for _, l := range projects {
 		ownerIDs = append(ownerIDs, l.OwnerID)
 	}
 
-	// Get all list owners
+	// Get all project owners
 	owners := map[int64]*user.User{}
 	if len(ownerIDs) > 0 {
 		err = s.In("id", ownerIDs).Find(&owners)
@@ -459,38 +459,38 @@ func addListDetails(s *xorm.Session, lists []*List, a web.Auth) (err error) {
 	}
 
 	var fileIDs []int64
-	var listIDs []int64
-	for _, l := range lists {
-		listIDs = append(listIDs, l.ID)
+	var projectIDs []int64
+	for _, l := range projects {
+		projectIDs = append(projectIDs, l.ID)
 		if o, exists := owners[l.OwnerID]; exists {
 			l.Owner = o
 		}
 		if l.BackgroundFileID != 0 {
-			l.BackgroundInformation = &ListBackgroundType{Type: ListBackgroundUpload}
+			l.BackgroundInformation = &ProjectBackgroundType{Type: ProjectBackgroundUpload}
 		}
 		fileIDs = append(fileIDs, l.BackgroundFileID)
 	}
 
-	favs, err := getFavorites(s, listIDs, a, FavoriteKindList)
+	favs, err := getFavorites(s, projectIDs, a, FavoriteKindProject)
 	if err != nil {
 		return err
 	}
 
-	subscriptions, err := GetSubscriptions(s, SubscriptionEntityList, listIDs, a)
+	subscriptions, err := GetSubscriptions(s, SubscriptionEntityProject, projectIDs, a)
 	if err != nil {
-		log.Errorf("An error occurred while getting list subscriptions for a namespace item: %s", err.Error())
+		log.Errorf("An error occurred while getting project subscriptions for a namespace item: %s", err.Error())
 		subscriptions = make(map[int64]*Subscription)
 	}
 
-	for _, list := range lists {
+	for _, project := range projects {
 		// Don't override the favorite state if it was already set from before (favorite saved filters do this)
-		if list.IsFavorite {
+		if project.IsFavorite {
 			continue
 		}
-		list.IsFavorite = favs[list.ID]
+		project.IsFavorite = favs[project.ID]
 
-		if subscription, exists := subscriptions[list.ID]; exists {
-			list.Subscription = subscription
+		if subscription, exists := subscriptions[project.ID]; exists {
+			project.Subscription = subscription
 		}
 	}
 
@@ -509,8 +509,8 @@ func addListDetails(s *xorm.Session, lists []*List, a web.Auth) (err error) {
 		unsplashPhotos[u.FileID] = u
 	}
 
-	// Build it all into the lists slice
-	for _, l := range lists {
+	// Build it all into the projects slice
+	for _, l := range projects {
 		// Only override the file info if we have info for unsplash backgrounds
 		if _, exists := unsplashPhotos[l.BackgroundFileID]; exists {
 			l.BackgroundInformation = unsplashPhotos[l.BackgroundFileID]
@@ -520,31 +520,31 @@ func addListDetails(s *xorm.Session, lists []*List, a web.Auth) (err error) {
 	return
 }
 
-// NamespaceList is a meta type to be able  to join a list with its namespace
-type NamespaceList struct {
-	List      List      `xorm:"extends"`
+// NamespaceProject is a meta type to be able  to join a project with its namespace
+type NamespaceProject struct {
+	Project   Project   `xorm:"extends"`
 	Namespace Namespace `xorm:"extends"`
 }
 
-// CheckIsArchived returns an ErrListIsArchived or ErrNamespaceIsArchived if the list or its namespace is archived.
-func (l *List) CheckIsArchived(s *xorm.Session) (err error) {
-	// When creating a new list, we check if the namespace is archived
+// CheckIsArchived returns an ErrProjectIsArchived or ErrNamespaceIsArchived if the project or its namespace is archived.
+func (l *Project) CheckIsArchived(s *xorm.Session) (err error) {
+	// When creating a new project, we check if the namespace is archived
 	if l.ID == 0 {
 		n := &Namespace{ID: l.NamespaceID}
 		return n.CheckIsArchived(s)
 	}
 
-	nl := &NamespaceList{}
+	nl := &NamespaceProject{}
 	exists, err := s.
-		Table("lists").
-		Join("LEFT", "namespaces", "lists.namespace_id = namespaces.id").
-		Where("lists.id = ? AND (lists.is_archived = true OR namespaces.is_archived = true)", l.ID).
+		Table("projects").
+		Join("LEFT", "namespaces", "projects.namespace_id = namespaces.id").
+		Where("projects.id = ? AND (projects.is_archived = true OR namespaces.is_archived = true)", l.ID).
 		Get(nl)
 	if err != nil {
 		return
 	}
-	if exists && nl.List.ID != 0 && nl.List.IsArchived {
-		return ErrListIsArchived{ListID: l.ID}
+	if exists && nl.Project.ID != 0 && nl.Project.IsArchived {
+		return ErrProjectIsArchived{ProjectID: l.ID}
 	}
 	if exists && nl.Namespace.ID != 0 && nl.Namespace.IsArchived {
 		return ErrNamespaceIsArchived{NamespaceID: nl.Namespace.ID}
@@ -552,38 +552,38 @@ func (l *List) CheckIsArchived(s *xorm.Session) (err error) {
 	return nil
 }
 
-func checkListBeforeUpdateOrDelete(s *xorm.Session, list *List) error {
-	if list.NamespaceID < 0 {
-		return &ErrListCannotBelongToAPseudoNamespace{ListID: list.ID, NamespaceID: list.NamespaceID}
+func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) error {
+	if project.NamespaceID < 0 {
+		return &ErrProjectCannotBelongToAPseudoNamespace{ProjectID: project.ID, NamespaceID: project.NamespaceID}
 	}
 
 	// Check if the namespace exists
-	if list.NamespaceID > 0 {
-		_, err := GetNamespaceByID(s, list.NamespaceID)
+	if project.NamespaceID > 0 {
+		_, err := GetNamespaceByID(s, project.NamespaceID)
 		if err != nil {
 			return err
 		}
 	}
 
 	// Check if the identifier is unique and not empty
-	if list.Identifier != "" {
+	if project.Identifier != "" {
 		exists, err := s.
-			Where("identifier = ?", list.Identifier).
-			And("id != ?", list.ID).
-			Exist(&List{})
+			Where("identifier = ?", project.Identifier).
+			And("id != ?", project.ID).
+			Exist(&Project{})
 		if err != nil {
 			return err
 		}
 		if exists {
-			return ErrListIdentifierIsNotUnique{Identifier: list.Identifier}
+			return ErrProjectIdentifierIsNotUnique{Identifier: project.Identifier}
 		}
 	}
 
 	return nil
 }
 
-func CreateList(s *xorm.Session, list *List, auth web.Auth) (err error) {
-	err = list.CheckIsArchived(s)
+func CreateProject(s *xorm.Session, project *Project, auth web.Auth) (err error) {
+	err = project.CheckIsArchived(s)
 	if err != nil {
 		return err
 	}
@@ -593,61 +593,61 @@ func CreateList(s *xorm.Session, list *List, auth web.Auth) (err error) {
 		return err
 	}
 
-	list.OwnerID = doer.ID
-	list.Owner = doer
-	list.ID = 0 // Otherwise only the first time a new list would be created
+	project.OwnerID = doer.ID
+	project.Owner = doer
+	project.ID = 0 // Otherwise only the first time a new project would be created
 
-	err = checkListBeforeUpdateOrDelete(s, list)
+	err = checkProjectBeforeUpdateOrDelete(s, project)
 	if err != nil {
 		return
 	}
 
-	_, err = s.Insert(list)
+	_, err = s.Insert(project)
 	if err != nil {
 		return
 	}
 
-	list.Position = calculateDefaultPosition(list.ID, list.Position)
-	_, err = s.Where("id = ?", list.ID).Update(list)
+	project.Position = calculateDefaultPosition(project.ID, project.Position)
+	_, err = s.Where("id = ?", project.ID).Update(project)
 	if err != nil {
 		return
 	}
-	if list.IsFavorite {
-		if err := addToFavorites(s, list.ID, auth, FavoriteKindList); err != nil {
+	if project.IsFavorite {
+		if err := addToFavorites(s, project.ID, auth, FavoriteKindProject); err != nil {
 			return err
 		}
 	}
 
-	// Create a new first bucket for this list
+	// Create a new first bucket for this project
 	b := &Bucket{
-		ListID: list.ID,
-		Title:  "Backlog",
+		ProjectID: project.ID,
+		Title:     "Backlog",
 	}
 	err = b.Create(s, auth)
 	if err != nil {
 		return
 	}
 
-	return events.Dispatch(&ListCreatedEvent{
-		List: list,
-		Doer: doer,
+	return events.Dispatch(&ProjectCreatedEvent{
+		Project: project,
+		Doer:    doer,
 	})
 }
 
-func UpdateList(s *xorm.Session, list *List, auth web.Auth, updateListBackground bool) (err error) {
-	err = checkListBeforeUpdateOrDelete(s, list)
+func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProjectBackground bool) (err error) {
+	err = checkProjectBeforeUpdateOrDelete(s, project)
 	if err != nil {
 		return
 	}
 
-	if list.NamespaceID == 0 {
-		return &ErrListMustBelongToANamespace{
-			ListID:      list.ID,
-			NamespaceID: list.NamespaceID,
+	if project.NamespaceID == 0 {
+		return &ErrProjectMustBelongToANamespace{
+			ProjectID:   project.ID,
+			NamespaceID: project.NamespaceID,
 		}
 	}
 
-	// We need to specify the cols we want to update here to be able to un-archive lists
+	// We need to specify the cols we want to update here to be able to un-archive projects
 	colsToUpdate := []string{
 		"title",
 		"is_archived",
@@ -656,72 +656,72 @@ func UpdateList(s *xorm.Session, list *List, auth web.Auth, updateListBackground
 		"namespace_id",
 		"position",
 	}
-	if list.Description != "" {
+	if project.Description != "" {
 		colsToUpdate = append(colsToUpdate, "description")
 	}
 
-	if updateListBackground {
+	if updateProjectBackground {
 		colsToUpdate = append(colsToUpdate, "background_file_id", "background_blur_hash")
 	}
 
-	wasFavorite, err := isFavorite(s, list.ID, auth, FavoriteKindList)
+	wasFavorite, err := isFavorite(s, project.ID, auth, FavoriteKindProject)
 	if err != nil {
 		return err
 	}
-	if list.IsFavorite && !wasFavorite {
-		if err := addToFavorites(s, list.ID, auth, FavoriteKindList); err != nil {
+	if project.IsFavorite && !wasFavorite {
+		if err := addToFavorites(s, project.ID, auth, FavoriteKindProject); err != nil {
 			return err
 		}
 	}
 
-	if !list.IsFavorite && wasFavorite {
-		if err := removeFromFavorite(s, list.ID, auth, FavoriteKindList); err != nil {
+	if !project.IsFavorite && wasFavorite {
+		if err := removeFromFavorite(s, project.ID, auth, FavoriteKindProject); err != nil {
 			return err
 		}
 	}
 
 	_, err = s.
-		ID(list.ID).
+		ID(project.ID).
 		Cols(colsToUpdate...).
-		Update(list)
+		Update(project)
 	if err != nil {
 		return err
 	}
 
-	err = events.Dispatch(&ListUpdatedEvent{
-		List: list,
-		Doer: auth,
+	err = events.Dispatch(&ProjectUpdatedEvent{
+		Project: project,
+		Doer:    auth,
 	})
 	if err != nil {
 		return err
 	}
 
-	l, err := GetListSimpleByID(s, list.ID)
+	l, err := GetProjectSimpleByID(s, project.ID)
 	if err != nil {
 		return err
 	}
 
-	*list = *l
-	err = list.ReadOne(s, auth)
+	*project = *l
+	err = project.ReadOne(s, auth)
 	return
 }
 
 // Update implements the update method of CRUDable
-// @Summary Updates a list
-// @Description Updates a list. This does not include adding a task (see below).
-// @tags list
+// @Summary Updates a project
+// @Description Updates a project. This does not include adding a task (see below).
+// @tags project
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param id path int true "List ID"
-// @Param list body models.List true "The list with updated values you want to update."
-// @Success 200 {object} models.List "The updated list."
-// @Failure 400 {object} web.HTTPError "Invalid list object provided."
-// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
+// @Param id path int true "Project ID"
+// @Param project body models.Project true "The project with updated values you want to update."
+// @Success 200 {object} models.Project "The updated project."
+// @Failure 400 {object} web.HTTPError "Invalid project object provided."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{id} [post]
-func (l *List) Update(s *xorm.Session, a web.Auth) (err error) {
-	fid := getSavedFilterIDFromListID(l.ID)
+// @Router /projects/{id} [post]
+func (l *Project) Update(s *xorm.Session, a web.Auth) (err error) {
+	fid := getSavedFilterIDFromProjectID(l.ID)
 	if fid > 0 {
 		f, err := getSavedFilterSimpleByID(s, fid)
 		if err != nil {
@@ -736,44 +736,44 @@ func (l *List) Update(s *xorm.Session, a web.Auth) (err error) {
 			return err
 		}
 
-		*l = *f.toList()
+		*l = *f.toProject()
 		return nil
 	}
 
-	return UpdateList(s, l, a, false)
+	return UpdateProject(s, l, a, false)
 }
 
-func updateListLastUpdated(s *xorm.Session, list *List) error {
-	_, err := s.ID(list.ID).Cols("updated").Update(list)
+func updateProjectLastUpdated(s *xorm.Session, project *Project) error {
+	_, err := s.ID(project.ID).Cols("updated").Update(project)
 	return err
 }
 
-func updateListByTaskID(s *xorm.Session, taskID int64) (err error) {
-	// need to get the task to update the list last updated timestamp
+func updateProjectByTaskID(s *xorm.Session, taskID int64) (err error) {
+	// need to get the task to update the project last updated timestamp
 	task, err := GetTaskByIDSimple(s, taskID)
 	if err != nil {
 		return err
 	}
 
-	return updateListLastUpdated(s, &List{ID: task.ListID})
+	return updateProjectLastUpdated(s, &Project{ID: task.ProjectID})
 }
 
 // Create implements the create method of CRUDable
-// @Summary Creates a new list
-// @Description Creates a new list in a given namespace. The user needs write-access to the namespace.
-// @tags list
+// @Summary Creates a new project
+// @Description Creates a new project in a given namespace. The user needs write-access to the namespace.
+// @tags project
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
 // @Param namespaceID path int true "Namespace ID"
-// @Param list body models.List true "The list you want to create."
-// @Success 201 {object} models.List "The created list."
-// @Failure 400 {object} web.HTTPError "Invalid list object provided."
-// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
+// @Param project body models.Project true "The project you want to create."
+// @Success 201 {object} models.Project "The created project."
+// @Failure 400 {object} web.HTTPError "Invalid project object provided."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /namespaces/{namespaceID}/lists [put]
-func (l *List) Create(s *xorm.Session, a web.Auth) (err error) {
-	err = CreateList(s, l, a)
+// @Router /namespaces/{namespaceID}/projects [put]
+func (l *Project) Create(s *xorm.Session, a web.Auth) (err error) {
+	err = CreateProject(s, l, a)
 	if err != nil {
 		return
 	}
@@ -782,33 +782,33 @@ func (l *List) Create(s *xorm.Session, a web.Auth) (err error) {
 }
 
 // Delete implements the delete method of CRUDable
-// @Summary Deletes a list
-// @Description Delets a list
-// @tags list
+// @Summary Deletes a project
+// @Description Delets a project
+// @tags project
 // @Produce json
 // @Security JWTKeyAuth
-// @Param id path int true "List ID"
-// @Success 200 {object} models.Message "The list was successfully deleted."
-// @Failure 400 {object} web.HTTPError "Invalid list object provided."
-// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
+// @Param id path int true "Project ID"
+// @Success 200 {object} models.Message "The project was successfully deleted."
+// @Failure 400 {object} web.HTTPError "Invalid project object provided."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{id} [delete]
-func (l *List) Delete(s *xorm.Session, a web.Auth) (err error) {
+// @Router /projects/{id} [delete]
+func (l *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 
-	fullList, err := GetListSimpleByID(s, l.ID)
+	fullList, err := GetProjectSimpleByID(s, l.ID)
 	if err != nil {
 		return
 	}
 
-	// Delete the list
-	_, err = s.ID(l.ID).Delete(&List{})
+	// Delete the project
+	_, err = s.ID(l.ID).Delete(&Project{})
 	if err != nil {
 		return
 	}
 
-	// Delete all tasks on that list
+	// Delete all tasks on that project
 	// Using the loop to make sure all related entities to all tasks are properly deleted as well.
-	tasks, _, _, err := getRawTasksForLists(s, []*List{l}, a, &taskOptions{})
+	tasks, _, _, err := getRawTasksForProjects(s, []*Project{l}, a, &taskOptions{})
 	if err != nil {
 		return
 	}
@@ -825,15 +825,15 @@ func (l *List) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	return events.Dispatch(&ListDeletedEvent{
-		List: l,
-		Doer: a,
+	return events.Dispatch(&ProjectDeletedEvent{
+		Project: l,
+		Doer:    a,
 	})
 }
 
 // DeleteBackgroundFileIfExists deletes the list's background file from the db and the filesystem,
 // if one exists
-func (l *List) DeleteBackgroundFileIfExists() (err error) {
+func (l *Project) DeleteBackgroundFileIfExists() (err error) {
 	if l.BackgroundFileID == 0 {
 		return
 	}
@@ -842,10 +842,10 @@ func (l *List) DeleteBackgroundFileIfExists() (err error) {
 	return file.Delete()
 }
 
-// SetListBackground sets a background file as list background in the db
-func SetListBackground(s *xorm.Session, listID int64, background *files.File, blurHash string) (err error) {
-	l := &List{
-		ID:                 listID,
+// SetProjectBackground sets a background file as project background in the db
+func SetProjectBackground(s *xorm.Session, projectID int64, background *files.File, blurHash string) (err error) {
+	l := &Project{
+		ID:                 projectID,
 		BackgroundFileID:   background.ID,
 		BackgroundBlurHash: blurHash,
 	}

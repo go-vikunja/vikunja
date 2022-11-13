@@ -25,21 +25,21 @@ import (
 	"xorm.io/xorm/schemas"
 )
 
-func TestSavedFilter_getListIDFromFilter(t *testing.T) {
+func TestSavedFilter_getProjectIDFromFilter(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		assert.Equal(t, int64(-2), getListIDFromSavedFilterID(1))
+		assert.Equal(t, int64(-2), getProjectIDFromSavedFilterID(1))
 	})
 	t.Run("invalid", func(t *testing.T) {
-		assert.Equal(t, int64(0), getListIDFromSavedFilterID(-1))
+		assert.Equal(t, int64(0), getProjectIDFromSavedFilterID(-1))
 	})
 }
 
-func TestSavedFilter_getFilterIDFromListID(t *testing.T) {
+func TestSavedFilter_getFilterIDFromProjectID(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		assert.Equal(t, int64(1), getSavedFilterIDFromListID(-2))
+		assert.Equal(t, int64(1), getSavedFilterIDFromProjectID(-2))
 	})
 	t.Run("invalid", func(t *testing.T) {
-		assert.Equal(t, int64(0), getSavedFilterIDFromListID(2))
+		assert.Equal(t, int64(0), getSavedFilterIDFromProjectID(2))
 	})
 }
 

@@ -28,16 +28,16 @@ import (
 	"xorm.io/xorm"
 )
 
-// ListUser represents a list <-> user relation
-type ListUser struct {
-	// The unique, numeric id of this list <-> user relation.
+// ProjectUser represents a project <-> user relation
+type ProjectUser struct {
+	// The unique, numeric id of this project <-> user relation.
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"namespace"`
 	// The username.
 	Username string `xorm:"-" json:"user_id" param:"user"`
 	// Used internally to reference the user
 	UserID int64 `xorm:"bigint not null INDEX" json:"-"`
-	// The list id.
-	ListID int64 `xorm:"bigint not null INDEX" json:"-" param:"list"`
+	// The project id.
+	ProjectID int64 `xorm:"bigint not null INDEX" json:"-" param:"project"`
 	// The right this user has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
 	Right Right `xorm:"bigint INDEX not null default 0" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
 
@@ -50,41 +50,41 @@ type ListUser struct {
 	web.Rights   `xorm:"-" json:"-"`
 }
 
-// TableName is the table name for ListUser
-func (ListUser) TableName() string {
-	return "users_lists"
+// TableName is the table name for ProjectUser
+func (ProjectUser) TableName() string {
+	return "users_projects"
 }
 
-// UserWithRight represents a user in combination with the right it can have on a list/namespace
+// UserWithRight represents a user in combination with the right it can have on a project/namespace
 type UserWithRight struct {
 	user.User `xorm:"extends"`
 	Right     Right `json:"right"`
 }
 
-// Create creates a new list <-> user relation
-// @Summary Add a user to a list
-// @Description Gives a user access to a list.
+// Create creates a new project <-> user relation
+// @Summary Add a user to a project
+// @Description Gives a user access to a project.
 // @tags sharing
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param id path int true "List ID"
-// @Param list body models.ListUser true "The user you want to add to the list."
-// @Success 201 {object} models.ListUser "The created user<->list relation."
-// @Failure 400 {object} web.HTTPError "Invalid user list object provided."
+// @Param id path int true "Project ID"
+// @Param project body models.ProjectUser true "The user you want to add to the project."
+// @Success 201 {object} models.ProjectUser "The created user<->project relation."
+// @Failure 400 {object} web.HTTPError "Invalid user project object provided."
 // @Failure 404 {object} web.HTTPError "The user does not exist."
-// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
+// @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{id}/users [put]
-func (lu *ListUser) Create(s *xorm.Session, a web.Auth) (err error) {
+// @Router /projects/{id}/users [put]
+func (lu *ProjectUser) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the right is valid
 	if err := lu.Right.isValid(); err != nil {
 		return err
 	}
 
-	// Check if the list exists
-	l, err := GetListSimpleByID(s, lu.ListID)
+	// Check if the project exists
+	l, err := GetProjectSimpleByID(s, lu.ProjectID)
 	if err != nil {
 		return
 	}
@@ -96,53 +96,53 @@ func (lu *ListUser) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 	lu.UserID = u.ID
 
-	// Check if the user already has access or is owner of that list
+	// Check if the user already has access or is owner of that project
 	// We explicitly DONT check for teams here
 	if l.OwnerID == lu.UserID {
-		return ErrUserAlreadyHasAccess{UserID: lu.UserID, ListID: lu.ListID}
+		return ErrUserAlreadyHasAccess{UserID: lu.UserID, ProjectID: lu.ProjectID}
 	}
 
-	exist, err := s.Where("list_id = ? AND user_id = ?", lu.ListID, lu.UserID).Get(&ListUser{})
+	exist, err := s.Where("project_id = ? AND user_id = ?", lu.ProjectID, lu.UserID).Get(&ProjectUser{})
 	if err != nil {
 		return
 	}
 	if exist {
-		return ErrUserAlreadyHasAccess{UserID: lu.UserID, ListID: lu.ListID}
+		return ErrUserAlreadyHasAccess{UserID: lu.UserID, ProjectID: lu.ProjectID}
 	}
 
-	// Insert user <-> list relation
+	// Insert user <-> project relation
 	_, err = s.Insert(lu)
 	if err != nil {
 		return err
 	}
 
-	err = events.Dispatch(&ListSharedWithUserEvent{
-		List: l,
-		User: u,
-		Doer: a,
+	err = events.Dispatch(&ProjectSharedWithUserEvent{
+		Project: l,
+		User:    u,
+		Doer:    a,
 	})
 	if err != nil {
 		return err
 	}
 
-	err = updateListLastUpdated(s, l)
+	err = updateProjectLastUpdated(s, l)
 	return
 }
 
-// Delete deletes a list <-> user relation
-// @Summary Delete a user from a list
-// @Description Delets a user from a list. The user won't have access to the list anymore.
+// Delete deletes a project <-> user relation
+// @Summary Delete a user from a project
+// @Description Delets a user from a project. The user won't have access to the project anymore.
 // @tags sharing
 // @Produce json
 // @Security JWTKeyAuth
-// @Param listID path int true "List ID"
+// @Param projectID path int true "Project ID"
 // @Param userID path int true "User ID"
-// @Success 200 {object} models.Message "The user was successfully removed from the list."
-// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
-// @Failure 404 {object} web.HTTPError "user or list does not exist."
+// @Success 200 {object} models.Message "The user was successfully removed from the project."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the project"
+// @Failure 404 {object} web.HTTPError "user or project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{listID}/users/{userID} [delete]
-func (lu *ListUser) Delete(s *xorm.Session, a web.Auth) (err error) {
+// @Router /projects/{projectID}/users/{userID} [delete]
+func (lu *ProjectUser) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the user exists
 	u, err := user.GetUserByUsername(s, lu.Username)
@@ -151,52 +151,52 @@ func (lu *ListUser) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 	lu.UserID = u.ID
 
-	// Check if the user has access to the list
+	// Check if the user has access to the project
 	has, err := s.
-		Where("user_id = ? AND list_id = ?", lu.UserID, lu.ListID).
-		Get(&ListUser{})
+		Where("user_id = ? AND project_id = ?", lu.UserID, lu.ProjectID).
+		Get(&ProjectUser{})
 	if err != nil {
 		return
 	}
 	if !has {
-		return ErrUserDoesNotHaveAccessToList{ListID: lu.ListID, UserID: lu.UserID}
+		return ErrUserDoesNotHaveAccessToProject{ProjectID: lu.ProjectID, UserID: lu.UserID}
 	}
 
 	_, err = s.
-		Where("user_id = ? AND list_id = ?", lu.UserID, lu.ListID).
-		Delete(&ListUser{})
+		Where("user_id = ? AND project_id = ?", lu.UserID, lu.ProjectID).
+		Delete(&ProjectUser{})
 	if err != nil {
 		return err
 	}
 
-	err = updateListLastUpdated(s, &List{ID: lu.ListID})
+	err = updateProjectLastUpdated(s, &Project{ID: lu.ProjectID})
 	return
 }
 
-// ReadAll gets all users who have access to a list
-// @Summary Get users on a list
-// @Description Returns a list with all users which have access on a given list.
+// ReadAll gets all users who have access to a project
+// @Summary Get users on a project
+// @Description Returns a project with all users which have access on a given project.
 // @tags sharing
 // @Accept json
 // @Produce json
-// @Param id path int true "List ID"
+// @Param id path int true "Project ID"
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search users by its name."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.UserWithRight "The users with the right they have."
-// @Failure 403 {object} web.HTTPError "No right to see the list."
+// @Failure 403 {object} web.HTTPError "No right to see the project."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{id}/users [get]
-func (lu *ListUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
-	// Check if the user has access to the list
-	l := &List{ID: lu.ListID}
+// @Router /projects/{id}/users [get]
+func (lu *ProjectUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+	// Check if the user has access to the project
+	l := &Project{ID: lu.ProjectID}
 	canRead, _, err := l.CanRead(s, a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 	if !canRead {
-		return nil, 0, 0, ErrNeedToHaveListReadAccess{UserID: a.GetID(), ListID: lu.ListID}
+		return nil, 0, 0, ErrNeedToHaveProjectReadAccess{UserID: a.GetID(), ProjectID: lu.ProjectID}
 	}
 
 	limit, start := getLimitFromPageIndex(page, perPage)
@@ -204,8 +204,8 @@ func (lu *ListUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 	// Get all users
 	all := []*UserWithRight{}
 	query := s.
-		Join("INNER", "users_lists", "user_id = users.id").
-		Where("users_lists.list_id = ?", lu.ListID).
+		Join("INNER", "users_projects", "user_id = users.id").
+		Where("users_projects.project_id = ?", lu.ProjectID).
 		Where(db.ILIKE("users.username", search))
 	if limit > 0 {
 		query = query.Limit(limit, start)
@@ -221,30 +221,30 @@ func (lu *ListUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 	}
 
 	numberOfTotalItems, err = s.
-		Join("INNER", "users_lists", "user_id = users.id").
-		Where("users_lists.list_id = ?", lu.ListID).
+		Join("INNER", "users_projects", "user_id = users.id").
+		Where("users_projects.project_id = ?", lu.ProjectID).
 		Where("users.username LIKE ?", "%"+search+"%").
 		Count(&UserWithRight{})
 
 	return all, len(all), numberOfTotalItems, err
 }
 
-// Update updates a user <-> list relation
-// @Summary Update a user <-> list relation
-// @Description Update a user <-> list relation. Mostly used to update the right that user has.
+// Update updates a user <-> project relation
+// @Summary Update a user <-> project relation
+// @Description Update a user <-> project relation. Mostly used to update the right that user has.
 // @tags sharing
 // @Accept json
 // @Produce json
-// @Param listID path int true "List ID"
+// @Param projectID path int true "Project ID"
 // @Param userID path int true "User ID"
-// @Param list body models.ListUser true "The user you want to update."
+// @Param project body models.ProjectUser true "The user you want to update."
 // @Security JWTKeyAuth
-// @Success 200 {object} models.ListUser "The updated user <-> list relation."
-// @Failure 403 {object} web.HTTPError "The user does not have admin-access to the list"
-// @Failure 404 {object} web.HTTPError "User or list does not exist."
+// @Success 200 {object} models.ProjectUser "The updated user <-> project relation."
+// @Failure 403 {object} web.HTTPError "The user does not have admin-access to the project"
+// @Failure 404 {object} web.HTTPError "User or project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{listID}/users/{userID} [post]
-func (lu *ListUser) Update(s *xorm.Session, a web.Auth) (err error) {
+// @Router /projects/{projectID}/users/{userID} [post]
+func (lu *ProjectUser) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the right is valid
 	if err := lu.Right.isValid(); err != nil {
@@ -259,13 +259,13 @@ func (lu *ListUser) Update(s *xorm.Session, a web.Auth) (err error) {
 	lu.UserID = u.ID
 
 	_, err = s.
-		Where("list_id = ? AND user_id = ?", lu.ListID, lu.UserID).
+		Where("project_id = ? AND user_id = ?", lu.ProjectID, lu.UserID).
 		Cols("right").
 		Update(lu)
 	if err != nil {
 		return err
 	}
 
-	err = updateListLastUpdated(s, &List{ID: lu.ListID})
+	err = updateProjectLastUpdated(s, &Project{ID: lu.ProjectID})
 	return
 }

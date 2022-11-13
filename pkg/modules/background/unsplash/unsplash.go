@@ -142,8 +142,8 @@ func getUnsplashPhotoInfoByID(photoID string) (photo *Photo, err error) {
 
 // Search is the implementation to search on unsplash
 // @Summary Search for a background from unsplash
-// @Description Search for a list background from unsplash
-// @tags list
+// @Description Search for a project background from unsplash
+// @tags project
 // @Produce json
 // @Security JWTKeyAuth
 // @Param s query string false "Search backgrounds from unsplash with this search term."
@@ -232,21 +232,21 @@ func (p *Provider) Search(s *xorm.Session, search string, page int64) (result []
 	return
 }
 
-// Set sets an unsplash photo as list background
-// @Summary Set an unsplash photo as list background
-// @Description Sets a photo from unsplash as list background.
-// @tags list
+// Set sets an unsplash photo as project background
+// @Summary Set an unsplash photo as project background
+// @Description Sets a photo from unsplash as project background.
+// @tags project
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param id path int true "List ID"
-// @Param list body background.Image true "The image you want to set as background"
-// @Success 200 {object} models.List "The background has been successfully set."
+// @Param id path int true "Project ID"
+// @Param project body background.Image true "The image you want to set as background"
+// @Success 200 {object} models.Project "The background has been successfully set."
 // @Failure 400 {object} web.HTTPError "Invalid image object provided."
-// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
+// @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{id}/backgrounds/unsplash [post]
-func (p *Provider) Set(s *xorm.Session, image *background.Image, list *models.List, auth web.Auth) (err error) {
+// @Router /projects/{id}/backgrounds/unsplash [post]
+func (p *Provider) Set(s *xorm.Session, image *background.Image, project *models.Project, auth web.Auth) (err error) {
 
 	// Find the photo
 	photo, err := getUnsplashPhotoInfoByID(image.ID)
@@ -289,13 +289,13 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, list *models.Li
 	}
 
 	// Remove the old background if one exists
-	if list.BackgroundFileID != 0 {
-		file := files.File{ID: list.BackgroundFileID}
+	if project.BackgroundFileID != 0 {
+		file := files.File{ID: project.BackgroundFileID}
 		if err := file.Delete(); err != nil {
 			return err
 		}
 
-		if err := models.RemoveUnsplashPhoto(s, list.BackgroundFileID); err != nil {
+		if err := models.RemoveUnsplashPhoto(s, project.BackgroundFileID); err != nil {
 			return err
 		}
 	}
@@ -313,12 +313,12 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, list *models.Li
 	}
 	log.Debugf("Saved unsplash photo %s as file %d with new entry %d", image.ID, file.ID, unsplashPhoto.ID)
 
-	// Set the file in the list
-	list.BackgroundFileID = file.ID
-	list.BackgroundInformation = unsplashPhoto
+	// Set the file in the project
+	project.BackgroundFileID = file.ID
+	project.BackgroundInformation = unsplashPhoto
 
-	// Set it as the list background
-	return models.SetListBackground(s, list.ID, file, photo.BlurHash)
+	// Set it as the project background
+	return models.SetProjectBackground(s, project.ID, file, photo.BlurHash)
 }
 
 // Pingback pings the unsplash api if an unsplash photo has been accessed.

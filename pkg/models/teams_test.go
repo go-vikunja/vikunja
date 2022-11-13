@@ -117,7 +117,7 @@ func TestTeam_ReadAll(t *testing.T) {
 		defer s.Close()
 
 		team := &Team{}
-		teams, _, _, err := team.ReadAll(s, doer, "READ_only_on_list6", 1, 50)
+		teams, _, _, err := team.ReadAll(s, doer, "READ_only_on_project6", 1, 50)
 		assert.NoError(t, err)
 		assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
 		ts := teams.([]*Team)

@@ -51,7 +51,7 @@ func (v *FileMigrator) Name() string {
 }
 
 // Migrate takes a vikunja file export, parses it and imports everything in it into Vikunja.
-// @Summary Import all lists, tasks etc. from a Vikunja data export
+// @Summary Import all projects, tasks etc. from a Vikunja data export
 // @Description Imports all projects, tasks, notes, reminders, subtasks and files from a Vikunjda data export into Vikunja.
 // @tags migration
 // @Accept json
@@ -113,21 +113,21 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 		return fmt.Errorf("could not read data file: %w", err)
 	}
 
-	namespaces := []*models.NamespaceWithListsAndTasks{}
+	namespaces := []*models.NamespaceWithProjectsAndTasks{}
 	if err := json.Unmarshal(bufData.Bytes(), &namespaces); err != nil {
 		return fmt.Errorf("could not read data: %w", err)
 	}
 
 	for _, n := range namespaces {
-		for _, l := range n.Lists {
+		for _, l := range n.Projects {
 			if b, exists := storedFiles[l.BackgroundFileID]; exists {
 				bf, err := b.Open()
 				if err != nil {
-					return fmt.Errorf("could not open list background file %d for reading: %w", l.BackgroundFileID, err)
+					return fmt.Errorf("could not open project background file %d for reading: %w", l.BackgroundFileID, err)
 				}
 				var buf bytes.Buffer
 				if _, err := buf.ReadFrom(bf); err != nil {
-					return fmt.Errorf("could not read list background file %d: %w", l.BackgroundFileID, err)
+					return fmt.Errorf("could not read project background file %d: %w", l.BackgroundFileID, err)
 				}
 
 				l.BackgroundInformation = &buf

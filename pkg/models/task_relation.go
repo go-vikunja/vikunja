@@ -110,7 +110,7 @@ type RelatedTaskMap map[RelationKind][]*Task
 
 // Create creates a new task relation
 // @Summary Create a new relation between two tasks
-// @Description Creates a new relation between two tasks. The user needs to have update rights on the base task and at least read rights on the other task. Both tasks do not need to be on the same list. Take a look at the docs for available task relation kinds.
+// @Description Creates a new relation between two tasks. The user needs to have update rights on the base task and at least read rights on the other task. Both tasks do not need to be on the same project. Take a look at the docs for available task relation kinds.
 // @tags task
 // @Accept json
 // @Produce json

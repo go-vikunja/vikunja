@@ -25,7 +25,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestListDuplicate(t *testing.T) {
+func TestProjectDuplicate(t *testing.T) {
 
 	db.LoadAndAssertFixtures(t)
 	files.InitTestFileFixtures(t)
@@ -36,8 +36,8 @@ func TestListDuplicate(t *testing.T) {
 		ID: 1,
 	}
 
-	l := &ListDuplicate{
-		ListID:      1,
+	l := &ProjectDuplicate{
+		ProjectID:   1,
 		NamespaceID: 1,
 	}
 	can, err := l.CanCreate(s, u)

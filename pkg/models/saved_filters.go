@@ -39,7 +39,7 @@ type SavedFilter struct {
 	// The user who owns this filter
 	Owner *user.User `xorm:"-" json:"owner" valid:"-"`
 
-	// True if the filter is a favorite. Favorite filters show up in a separate namespace together with favorite lists.
+	// True if the filter is a favorite. Favorite filters show up in a separate namespace together with favorite projects.
 	IsFavorite bool `xorm:"default false" json:"is_favorite"`
 
 	// A timestamp when this filter was created. You cannot change this value.
@@ -57,28 +57,28 @@ func (sf *SavedFilter) TableName() string {
 }
 
 func (sf *SavedFilter) getTaskCollection() *TaskCollection {
-	// We're resetting the listID to return tasks from all lists
-	sf.Filters.ListID = 0
+	// We're resetting the projectID to return tasks from all projects
+	sf.Filters.ProjectID = 0
 	return sf.Filters
 }
 
-// Returns the saved filter ID from a list ID. Will not check if the filter actually exists.
+// Returns the saved filter ID from a project ID. Will not check if the filter actually exists.
 // If the returned ID is zero, means that it is probably invalid.
-func getSavedFilterIDFromListID(listID int64) (filterID int64) {
-	// We get the id of the saved filter by multiplying the ListID with -1 and subtracting one
-	filterID = listID*-1 - 1
-	// FilterIDs from listIDs are always positive
+func getSavedFilterIDFromProjectID(projectID int64) (filterID int64) {
+	// We get the id of the saved filter by multiplying the ProjectID with -1 and subtracting one
+	filterID = projectID*-1 - 1
+	// FilterIDs from projectIDs are always positive
 	if filterID < 0 {
 		filterID = 0
 	}
 	return
 }
 
-func getListIDFromSavedFilterID(filterID int64) (listID int64) {
-	listID = filterID*-1 - 1
-	// ListIDs from saved filters are always negative
-	if listID > 0 {
-		listID = 0
+func getProjectIDFromSavedFilterID(filterID int64) (projectID int64) {
+	projectID = filterID*-1 - 1
+	// ProjectIDs from saved filters are always negative
+	if projectID > 0 {
+		projectID = 0
 	}
 	return
 }
@@ -93,9 +93,9 @@ func getSavedFiltersForUser(s *xorm.Session, auth web.Auth) (filters []*SavedFil
 	return
 }
 
-func (sf *SavedFilter) toList() *List {
-	return &List{
-		ID:          getListIDFromSavedFilterID(sf.ID),
+func (sf *SavedFilter) toProject() *Project {
+	return &Project{
+		ID:          getProjectIDFromSavedFilterID(sf.ID),
 		Title:       sf.Title,
 		Description: sf.Description,
 		IsFavorite:  sf.IsFavorite,

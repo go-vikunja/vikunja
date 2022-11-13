@@ -37,10 +37,10 @@ func (la *TaskAssginee) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 func canDoTaskAssingee(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
-	// Check if the current user can edit the list
-	list, err := GetListSimplByTaskID(s, taskID)
+	// Check if the current user can edit the project
+	project, err := GetProjectSimplByTaskID(s, taskID)
 	if err != nil {
 		return false, err
 	}
-	return list.CanUpdate(s, a)
+	return project.CanUpdate(s, a)
 }

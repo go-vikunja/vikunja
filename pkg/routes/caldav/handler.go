@@ -42,9 +42,9 @@ func getBasicAuthUserFromContext(c echo.Context) (*user.User, error) {
 	return u, nil
 }
 
-// ListHandler returns all tasks from a list
-func ListHandler(c echo.Context) error {
-	listID, err := getIntParam(c, "list")
+// ProjectHandler returns all tasks from a project
+func ProjectHandler(c echo.Context) error {
+	projectID, err := getIntParam(c, "project")
 	if err != nil {
 		return err
 	}
@@ -55,9 +55,9 @@ func ListHandler(c echo.Context) error {
 		return echo.ErrInternalServerError
 	}
 
-	storage := &VikunjaCaldavListStorage{
-		list: &models.ListWithTasksAndBuckets{List: models.List{ID: listID}},
-		user: u,
+	storage := &VikunjaCaldavProjectStorage{
+		project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: projectID}},
+		user:    u,
 	}
 
 	// Try to parse a task from the request payload
@@ -78,7 +78,7 @@ func ListHandler(c echo.Context) error {
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
 	caldav.SetupStorage(storage)
-	caldav.SetupUser("dav/lists")
+	caldav.SetupUser("dav/projects")
 	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
 	response := caldav.HandleRequest(c.Request())
 	response.Write(c.Response())
@@ -87,7 +87,7 @@ func ListHandler(c echo.Context) error {
 
 // TaskHandler is the handler which manages updating/deleting a single task
 func TaskHandler(c echo.Context) error {
-	listID, err := getIntParam(c, "list")
+	projectID, err := getIntParam(c, "project")
 	if err != nil {
 		return err
 	}
@@ -101,10 +101,10 @@ func TaskHandler(c echo.Context) error {
 	// Get the task uid
 	taskUID := strings.TrimSuffix(c.Param("task"), ".ics")
 
-	storage := &VikunjaCaldavListStorage{
-		list: &models.ListWithTasksAndBuckets{List: models.List{ID: listID}},
-		task: &models.Task{UID: taskUID},
-		user: u,
+	storage := &VikunjaCaldavProjectStorage{
+		project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: projectID}},
+		task:    &models.Task{UID: taskUID},
+		user:    u,
 	}
 
 	caldav.SetupStorage(storage)
@@ -121,7 +121,7 @@ func PrincipalHandler(c echo.Context) error {
 		return echo.ErrInternalServerError
 	}
 
-	storage := &VikunjaCaldavListStorage{
+	storage := &VikunjaCaldavProjectStorage{
 		user:        u,
 		isPrincipal: true,
 	}
@@ -151,7 +151,7 @@ func EntryHandler(c echo.Context) error {
 		return echo.ErrInternalServerError
 	}
 
-	storage := &VikunjaCaldavListStorage{
+	storage := &VikunjaCaldavProjectStorage{
 		user:    u,
 		isEntry: true,
 	}

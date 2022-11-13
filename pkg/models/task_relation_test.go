@@ -46,7 +46,7 @@ func TestTaskRelation_Create(t *testing.T) {
 			"created_by_id": 1,
 		}, false)
 	})
-	t.Run("Two Tasks In Different Lists", func(t *testing.T) {
+	t.Run("Two Tasks In Different Projects", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -150,7 +150,7 @@ func TestTaskRelation_CanCreate(t *testing.T) {
 		assert.NoError(t, err)
 		assert.True(t, can)
 	})
-	t.Run("Two tasks on different lists", func(t *testing.T) {
+	t.Run("Two tasks on different projects", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()

@@ -73,7 +73,7 @@ func init() {
 	// User deletion flags
 	userDeleteCmd.Flags().BoolVarP(&userFlagDeleteNow, "now", "n", false, "If provided, deletes the user immediately instead of sending them an email first.")
 
-	userCmd.AddCommand(userListCmd, userCreateCmd, userUpdateCmd, userResetPasswordCmd, userChangeEnabledCmd, userDeleteCmd)
+	userCmd.AddCommand(userProjectCmd, userCreateCmd, userUpdateCmd, userResetPasswordCmd, userChangeEnabledCmd, userDeleteCmd)
 	rootCmd.AddCommand(userCmd)
 }
 
@@ -117,9 +117,9 @@ var userCmd = &cobra.Command{
 	Short: "Manage users locally through the cli.",
 }
 
-var userListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "Shows a list of all users.",
+var userProjectCmd = &cobra.Command{
+	Use:   "project",
+	Short: "Shows a project of all users.",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		initialize.FullInit()
 	},
@@ -127,7 +127,7 @@ var userListCmd = &cobra.Command{
 		s := db.NewSession()
 		defer s.Close()
 
-		users, err := user.ListAllUsers(s)
+		users, err := user.ProjectAllUsers(s)
 		if err != nil {
 			_ = s.Rollback()
 			log.Fatalf("Error getting users: %s", err)

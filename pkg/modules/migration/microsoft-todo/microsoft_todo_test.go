@@ -35,9 +35,9 @@ func TestConverting(t *testing.T) {
 	testtimeTime, err := time.Parse(time.RFC3339Nano, "2020-12-18T03:00:00.4770000Z")
 	assert.NoError(t, err)
 
-	microsoftTodoData := []*list{
+	microsoftTodoData := []*project{
 		{
-			DisplayName: "List 1",
+			DisplayName: "Project 1",
 			Tasks: []*task{
 				{
 					Title:  "Task 1",
@@ -88,7 +88,7 @@ func TestConverting(t *testing.T) {
 			},
 		},
 		{
-			DisplayName: "List 2",
+			DisplayName: "Project 2",
 			Tasks: []*task{
 				{
 					Title:  "Task 1",
@@ -102,15 +102,15 @@ func TestConverting(t *testing.T) {
 		},
 	}
 
-	expectedHierachie := []*models.NamespaceWithListsAndTasks{
+	expectedHierachie := []*models.NamespaceWithProjectsAndTasks{
 		{
 			Namespace: models.Namespace{
 				Title: "Migrated from Microsoft Todo",
 			},
-			Lists: []*models.ListWithTasksAndBuckets{
+			Projects: []*models.ProjectWithTasksAndBuckets{
 				{
-					List: models.List{
-						Title: "List 1",
+					Project: models.Project{
+						Title: "Project 1",
 					},
 					Tasks: []*models.TaskWithComments{
 						{
@@ -162,8 +162,8 @@ func TestConverting(t *testing.T) {
 					},
 				},
 				{
-					List: models.List{
-						Title: "List 2",
+					Project: models.Project{
+						Title: "Project 2",
 					},
 					Tasks: []*models.TaskWithComments{
 						{

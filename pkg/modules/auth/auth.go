@@ -89,7 +89,7 @@ func NewLinkShareJWTAuthtoken(share *models.LinkSharing) (token string, err erro
 	claims["type"] = AuthTypeLinkShare
 	claims["id"] = share.ID
 	claims["hash"] = share.Hash
-	claims["list_id"] = share.ListID
+	claims["project_id"] = share.ProjectID
 	claims["right"] = share.Right
 	claims["sharedByID"] = share.SharedByID
 	claims["exp"] = exp

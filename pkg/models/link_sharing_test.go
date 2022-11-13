@@ -33,8 +33,8 @@ func TestLinkSharing_Create(t *testing.T) {
 		defer s.Close()
 
 		share := &LinkSharing{
-			ListID: 1,
-			Right:  RightRead,
+			ProjectID: 1,
+			Right:     RightRead,
 		}
 		err := share.Create(s, doer)
 
@@ -52,8 +52,8 @@ func TestLinkSharing_Create(t *testing.T) {
 		defer s.Close()
 
 		share := &LinkSharing{
-			ListID: 1,
-			Right:  Right(123),
+			ProjectID: 1,
+			Right:     Right(123),
 		}
 		err := share.Create(s, doer)
 
@@ -66,9 +66,9 @@ func TestLinkSharing_Create(t *testing.T) {
 		defer s.Close()
 
 		share := &LinkSharing{
-			ListID:   1,
-			Right:    RightRead,
-			Password: "somePassword",
+			ProjectID: 1,
+			Right:     RightRead,
+			Password:  "somePassword",
 		}
 		err := share.Create(s, doer)
 
@@ -92,7 +92,7 @@ func TestLinkSharing_ReadAll(t *testing.T) {
 		defer s.Close()
 
 		share := &LinkSharing{
-			ListID: 1,
+			ProjectID: 1,
 		}
 		all, _, _, err := share.ReadAll(s, doer, "", 1, -1)
 		shares := all.([]*LinkSharing)
@@ -109,7 +109,7 @@ func TestLinkSharing_ReadAll(t *testing.T) {
 		defer s.Close()
 
 		share := &LinkSharing{
-			ListID: 1,
+			ProjectID: 1,
 		}
 		all, _, _, err := share.ReadAll(s, doer, "wITHPASS", 1, -1)
 		shares := all.([]*LinkSharing)

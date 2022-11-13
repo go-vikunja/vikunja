@@ -45,7 +45,7 @@ func unsplashImage(url string, c echo.Context) error {
 // ProxyUnsplashImage proxies a thumbnail from unsplash for privacy reasons.
 // @Summary Get an unsplash image
 // @Description Get an unsplash image. **Returns json on error.**
-// @tags list
+// @tags project
 // @Produce octet-stream
 // @Param image path int true "Unsplash Image ID"
 // @Security JWTKeyAuth
@@ -65,7 +65,7 @@ func ProxyUnsplashImage(c echo.Context) error {
 // ProxyUnsplashThumb proxies a thumbnail from unsplash for privacy reasons.
 // @Summary Get an unsplash thumbnail image
 // @Description Get an unsplash thumbnail image. The thumbnail is cropped to a max width of 200px. **Returns json on error.**
-// @tags list
+// @tags project
 // @Produce octet-stream
 // @Param image path int true "Unsplash Image ID"
 // @Security JWTKeyAuth

@@ -22,38 +22,38 @@ import (
 	"xorm.io/xorm"
 )
 
-// ListUIDs hold all kinds of user IDs from accounts who have somehow access to a list
-type ListUIDs struct {
-	ListOwnerID          int64 `xorm:"listOwner"`
+// ProjectUIDs hold all kinds of user IDs from accounts who have somehow access to a project
+type ProjectUIDs struct {
+	ProjectOwnerID       int64 `xorm:"projectOwner"`
 	NamespaceUserID      int64 `xorm:"unID"`
-	ListUserID           int64 `xorm:"ulID"`
+	ProjectUserID        int64 `xorm:"ulID"`
 	NamespaceOwnerUserID int64 `xorm:"nOwner"`
 	TeamNamespaceUserID  int64 `xorm:"tnUID"`
-	TeamListUserID       int64 `xorm:"tlUID"`
+	TeamProjectUserID    int64 `xorm:"tlUID"`
 }
 
-// ListUsersFromList returns a list with all users who have access to a list, regardless of the method which gave them access
-func ListUsersFromList(s *xorm.Session, l *List, search string) (users []*user.User, err error) {
+// ProjectUsersFromProject returns a project with all users who have access to a project, regardless of the method which gave them access
+func ProjectUsersFromProject(s *xorm.Session, l *Project, search string) (users []*user.User, err error) {
 
-	userids := []*ListUIDs{}
+	userids := []*ProjectUIDs{}
 
 	err = s.
-		Select(`l.owner_id as listOwner,
+		Select(`l.owner_id as projectOwner,
 			un.user_id as unID,
 			ul.user_id as ulID,
 			n.owner_id as nOwner,
 			tm.user_id as tnUID,
 			tm2.user_id as tlUID`).
-		Table("lists").
+		Table("projects").
 		Alias("l").
 		// User stuff
 		Join("LEFT", []string{"users_namespaces", "un"}, "un.namespace_id = l.namespace_id").
-		Join("LEFT", []string{"users_lists", "ul"}, "ul.list_id = l.id").
+		Join("LEFT", []string{"users_projects", "ul"}, "ul.project_id = l.id").
 		Join("LEFT", []string{"namespaces", "n"}, "n.id = l.namespace_id").
 		// Team stuff
 		Join("LEFT", []string{"team_namespaces", "tn"}, " l.namespace_id = tn.namespace_id").
 		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tn.team_id").
-		Join("LEFT", []string{"team_lists", "tl"}, "l.id = tl.list_id").
+		Join("LEFT", []string{"team_projects", "tl"}, "l.id = tl.project_id").
 		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
 		// The actual condition
 		Where(
@@ -80,14 +80,14 @@ func ListUsersFromList(s *xorm.Session, l *List, search string) (users []*user.U
 		return
 	}
 
-	// Remove duplicates from the list of ids and make it a slice
+	// Remove duplicates from the project of ids and make it a slice
 	uidmap := make(map[int64]bool)
 	uidmap[l.OwnerID] = true
 	for _, u := range userids {
-		uidmap[u.ListUserID] = true
+		uidmap[u.ProjectUserID] = true
 		uidmap[u.NamespaceOwnerUserID] = true
 		uidmap[u.NamespaceUserID] = true
-		uidmap[u.TeamListUserID] = true
+		uidmap[u.TeamProjectUserID] = true
 		uidmap[u.TeamNamespaceUserID] = true
 	}
 
@@ -102,7 +102,7 @@ func ListUsersFromList(s *xorm.Session, l *List, search string) (users []*user.U
 		cond = builder.In("id", uids)
 	}
 
-	users, err = user.ListUsers(s, search, &user.ListUserOpts{
+	users, err = user.ProjectUsers(s, search, &user.ProjectUserOpts{
 		AdditionalCond:              cond,
 		ReturnAllIfNoSearchProvided: true,
 	})

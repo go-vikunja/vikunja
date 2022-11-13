@@ -33,7 +33,7 @@ import (
 // TaskAssginee represents an assignment of a user to a task
 type TaskAssginee struct {
 	ID      int64     `xorm:"bigint autoincr not null unique pk" json:"-"`
-	TaskID  int64     `xorm:"bigint INDEX not null" json:"-" param:"listtask"`
+	TaskID  int64     `xorm:"bigint INDEX not null" json:"-" param:"projecttask"`
 	UserID  int64     `xorm:"bigint INDEX not null" json:"user_id" param:"user"`
 	Created time.Time `xorm:"created not null"`
 
@@ -102,10 +102,10 @@ func (t *Task) updateTaskAssignees(s *xorm.Session, assignees []*user.User, doer
 	for _, oldAssignee := range t.Assignees {
 		found = false
 		if newAssignees[oldAssignee.ID] != nil {
-			found = true // If a new assignee is already in the list with old assignees
+			found = true // If a new assignee is already in the project with old assignees
 		}
 
-		// Put all assignees which are only on the old list to the trash
+		// Put all assignees which are only on the old project to the trash
 		if !found {
 			assigneesToDelete = append(assigneesToDelete, oldAssignee.ID)
 		}
@@ -123,8 +123,8 @@ func (t *Task) updateTaskAssignees(s *xorm.Session, assignees []*user.User, doer
 		}
 	}
 
-	// Get the list to perform later checks
-	list, err := GetListSimpleByID(s, t.ListID)
+	// Get the project to perform later checks
+	project, err := GetProjectSimpleByID(s, t.ProjectID)
 	if err != nil {
 		return
 	}
@@ -138,7 +138,7 @@ func (t *Task) updateTaskAssignees(s *xorm.Session, assignees []*user.User, doer
 		}
 
 		// Add the new assignee
-		err = t.addNewAssigneeByID(s, u.ID, list, doer)
+		err = t.addNewAssigneeByID(s, u.ID, project, doer)
 		if err != nil {
 			return err
 		}
@@ -146,7 +146,7 @@ func (t *Task) updateTaskAssignees(s *xorm.Session, assignees []*user.User, doer
 
 	t.setTaskAssignees(assignees)
 
-	err = updateListLastUpdated(s, &List{ID: t.ListID})
+	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 	return
 }
 
@@ -178,7 +178,7 @@ func (la *TaskAssginee) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	err = updateListByTaskID(s, la.TaskID)
+	err = updateProjectByTaskID(s, la.TaskID)
 	if err != nil {
 		return err
 	}
@@ -193,7 +193,7 @@ func (la *TaskAssginee) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 // Create adds a new assignee to a task
 // @Summary Add a new assignee to a task
-// @Description Adds a new assignee to a task. The assignee needs to have access to the list, the doer must be able to edit this task.
+// @Description Adds a new assignee to a task. The assignee needs to have access to the project, the doer must be able to edit this task.
 // @tags assignees
 // @Accept json
 // @Produce json
@@ -206,28 +206,28 @@ func (la *TaskAssginee) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Router /tasks/{taskID}/assignees [put]
 func (la *TaskAssginee) Create(s *xorm.Session, a web.Auth) (err error) {
 
-	// Get the list to perform later checks
-	list, err := GetListSimplByTaskID(s, la.TaskID)
+	// Get the project to perform later checks
+	project, err := GetProjectSimplByTaskID(s, la.TaskID)
 	if err != nil {
 		return
 	}
 
 	task := &Task{ID: la.TaskID}
-	return task.addNewAssigneeByID(s, la.UserID, list, a)
+	return task.addNewAssigneeByID(s, la.UserID, project, a)
 }
 
-func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, list *List, auth web.Auth) (err error) {
-	// Check if the user exists and has access to the list
+func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, project *Project, auth web.Auth) (err error) {
+	// Check if the user exists and has access to the project
 	newAssignee, err := user.GetUserByID(s, newAssigneeID)
 	if err != nil {
 		return err
 	}
-	canRead, _, err := list.CanRead(s, newAssignee)
+	canRead, _, err := project.CanRead(s, newAssignee)
 	if err != nil {
 		return err
 	}
 	if !canRead {
-		return ErrUserDoesNotHaveAccessToList{list.ID, newAssigneeID}
+		return ErrUserDoesNotHaveAccessToProject{project.ID, newAssigneeID}
 	}
 
 	exist, err := s.
@@ -261,7 +261,7 @@ func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, list *Li
 		return err
 	}
 
-	err = updateListLastUpdated(s, &List{ID: t.ListID})
+	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 	return
 }
 
@@ -280,7 +280,7 @@ func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, list *Li
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees [get]
 func (la *TaskAssginee) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
-	task, err := GetListSimplByTaskID(s, la.TaskID)
+	task, err := GetProjectSimplByTaskID(s, la.TaskID)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -319,9 +319,9 @@ func (la *TaskAssginee) ReadAll(s *xorm.Session, a web.Auth, search string, page
 
 // BulkAssignees is a helper struct used to update multiple assignees at once.
 type BulkAssignees struct {
-	// A list with all assignees
+	// A project with all assignees
 	Assignees []*user.User `json:"assignees"`
-	TaskID    int64        `json:"-" param:"listtask"`
+	TaskID    int64        `json:"-" param:"projecttask"`
 
 	web.CRUDable `json:"-"`
 	web.Rights   `json:"-"`
@@ -329,7 +329,7 @@ type BulkAssignees struct {
 
 // Create adds new assignees to a task
 // @Summary Add multiple new assignees to a task
-// @Description Adds multiple new assignees to a task. The assignee needs to have access to the list, the doer must be able to edit this task. Every user not in the list will be unassigned from the task, pass an empty array to unassign everyone.
+// @Description Adds multiple new assignees to a task. The assignee needs to have access to the project, the doer must be able to edit this task. Every user not in the project will be unassigned from the task, pass an empty array to unassign everyone.
 // @tags assignees
 // @Accept json
 // @Produce json

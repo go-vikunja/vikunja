@@ -31,7 +31,7 @@ import (
 type LinkShareToken struct {
 	auth.Token
 	*models.LinkSharing
-	ListID int64 `json:"list_id"`
+	ProjectID int64 `json:"project_id"`
 }
 
 // LinkShareAuth represents everything required to authenticate a link share
@@ -42,7 +42,7 @@ type LinkShareAuth struct {
 
 // AuthenticateLinkShare gives a jwt auth token for valid share hashes
 // @Summary Get an auth token for a share
-// @Description Get a jwt auth token for a shared list from a share hash.
+// @Description Get a jwt auth token for a shared project from a share hash.
 // @tags sharing
 // @Accept json
 // @Produce json
@@ -84,6 +84,6 @@ func AuthenticateLinkShare(c echo.Context) error {
 	return c.JSON(http.StatusOK, LinkShareToken{
 		Token:       auth.Token{Token: t},
 		LinkSharing: share,
-		ListID:      share.ListID,
+		ProjectID:   share.ProjectID,
 	})
 }

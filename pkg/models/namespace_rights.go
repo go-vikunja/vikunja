@@ -73,7 +73,7 @@ func (n *Namespace) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bo
 	}
 
 	if a.GetID() == nn.OwnerID ||
-		nn.ID == SharedListsPseudoNamespace.ID ||
+		nn.ID == SharedProjectsPseudoNamespace.ID ||
 		nn.ID == FavoritesPseudoNamespace.ID ||
 		nn.ID == SavedFiltersPseudoNamespace.ID {
 		return true, int(RightAdmin), nil
@@ -88,7 +88,7 @@ func (n *Namespace) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bo
 
 
 		for each passed right. That way, we can check with a single sql query (instead if 8)
-		if the user has the right to see the list or not.
+		if the user has the right to see the project or not.
 	*/
 
 	var conds []builder.Cond

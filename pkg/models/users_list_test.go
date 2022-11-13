@@ -24,7 +24,7 @@ import (
 	"gopkg.in/d4l3k/messagediff.v1"
 )
 
-func TestListUsersFromList(t *testing.T) {
+func TestProjectUsersFromProject(t *testing.T) {
 	testuser1 := &user.User{
 		ID:                           1,
 		Username:                     "user1",
@@ -176,7 +176,7 @@ func TestListUsersFromList(t *testing.T) {
 	}
 
 	type args struct {
-		l      *List
+		l      *Project
 		search string
 	}
 	tests := []struct {
@@ -187,13 +187,13 @@ func TestListUsersFromList(t *testing.T) {
 	}{
 		{
 			name:      "Check owner only",
-			args:      args{l: &List{ID: 18, OwnerID: 7}},
+			args:      args{l: &Project{ID: 18, OwnerID: 7}},
 			wantUsers: []*user.User{testuser7},
 		},
 		{
-			// This list has another different user shared for each possible method
+			// This project has another different user shared for each possible method
 			name: "Check with owner and other users",
-			args: args{l: &List{ID: 19, OwnerID: 7}},
+			args: args{l: &Project{ID: 19, OwnerID: 7}},
 			wantUsers: []*user.User{
 				testuser1, // Shared Via Team readonly
 				testuser2, // Shared Via Team write
@@ -216,7 +216,7 @@ func TestListUsersFromList(t *testing.T) {
 		},
 		{
 			name: "search for user1",
-			args: args{l: &List{ID: 19, OwnerID: 7}, search: "user1"},
+			args: args{l: &Project{ID: 19, OwnerID: 7}, search: "user1"},
 			wantUsers: []*user.User{
 				testuser1, // Shared Via Team readonly
 			},
@@ -228,9 +228,9 @@ func TestListUsersFromList(t *testing.T) {
 			s := db.NewSession()
 			defer s.Close()
 
-			gotUsers, err := ListUsersFromList(s, tt.args.l, tt.args.search)
+			gotUsers, err := ProjectUsersFromProject(s, tt.args.l, tt.args.search)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ListUsersFromList() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ProjectUsersFromProject() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if diff, equal := messagediff.PrettyDiff(tt.wantUsers, gotUsers); !equal {

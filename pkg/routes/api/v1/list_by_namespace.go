@@ -29,21 +29,21 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// GetListsByNamespaceID is the web handler to delete a namespace
-// TODO: depricate this in favour of namespace.ReadOne() <-- should also return the lists
-// @Summary Get all lists in a namespace
-// @Description Returns all lists inside of a namespace.
+// GetProjectsByNamespaceID is the web handler to delete a namespace
+// TODO: depricate this in favour of namespace.ReadOne() <-- should also return the projects
+// @Summary Get all projects in a namespace
+// @Description Returns all projects inside of a namespace.
 // @tags namespace
 // @Accept json
 // @Produce json
 // @Param id path int true "Namespace ID"
 // @Security JWTKeyAuth
-// @Success 200 {array} models.List "The lists."
+// @Success 200 {array} models.Project "The projects."
 // @Failure 403 {object} models.Message "No access to that namespace."
 // @Failure 404 {object} models.Message "The namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /namespaces/{id}/lists [get]
-func GetListsByNamespaceID(c echo.Context) error {
+// @Router /namespaces/{id}/projects [get]
+func GetProjectsByNamespaceID(c echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -53,17 +53,17 @@ func GetListsByNamespaceID(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	// Get the lists
+	// Get the projects
 	doer, err := user.GetCurrentUser(c)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	lists, err := models.GetListsByNamespaceID(s, namespace.ID, doer)
+	projects, err := models.GetProjectsByNamespaceID(s, namespace.ID, doer)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
-	return c.JSON(http.StatusOK, lists)
+	return c.JSON(http.StatusOK, projects)
 }
 
 func getNamespace(s *xorm.Session, c echo.Context) (namespace *models.Namespace, err error) {
@@ -76,7 +76,7 @@ func getNamespace(s *xorm.Session, c echo.Context) (namespace *models.Namespace,
 	}
 
 	if namespaceID == -1 {
-		namespace = &models.SharedListsPseudoNamespace
+		namespace = &models.SharedProjectsPseudoNamespace
 		return
 	}
 

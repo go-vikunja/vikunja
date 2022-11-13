@@ -26,15 +26,15 @@ func (t *Task) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 	return t.canDoTask(s, a)
 }
 
-// CanUpdate determines if a user has the right to update a list task
+// CanUpdate determines if a user has the right to update a project task
 func (t *Task) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	return t.canDoTask(s, a)
 }
 
-// CanCreate determines if a user has the right to create a list task
+// CanCreate determines if a user has the right to create a project task
 func (t *Task) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	// A user can do a task if he has write acces to its list
-	l := &List{ID: t.ListID}
+	// A user can do a task if he has write acces to its project
+	l := &Project{ID: t.ProjectID}
 	return l.CanWrite(s, a)
 }
 
@@ -46,8 +46,8 @@ func (t *Task) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxRight int,
 		return
 	}
 
-	// A user can read a task if it has access to the list
-	l := &List{ID: t.ListID}
+	// A user can read a task if it has access to the project
+	l := &Project{ID: t.ProjectID}
 	return l.CanRead(s, a)
 }
 
@@ -56,7 +56,7 @@ func (t *Task) CanWrite(s *xorm.Session, a web.Auth) (canWrite bool, err error) 
 	return t.canDoTask(s, a)
 }
 
-// Helper function to check if a user can do stuff on a list task
+// Helper function to check if a user can do stuff on a project task
 func (t *Task) canDoTask(s *xorm.Session, a web.Auth) (bool, error) {
 	// Get the task
 	ot, err := GetTaskByIDSimple(s, t.ID)
@@ -64,10 +64,10 @@ func (t *Task) canDoTask(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	// Check if we're moving the task into a different list to check if the user has sufficient rights for that on the new list
-	if t.ListID != 0 && t.ListID != ot.ListID {
-		newList := &List{ID: t.ListID}
-		can, err := newList.CanWrite(s, a)
+	// Check if we're moving the task into a different project to check if the user has sufficient rights for that on the new project
+	if t.ProjectID != 0 && t.ProjectID != ot.ProjectID {
+		newProject := &Project{ID: t.ProjectID}
+		can, err := newProject.CanWrite(s, a)
 		if err != nil {
 			return false, err
 		}
@@ -76,7 +76,7 @@ func (t *Task) canDoTask(s *xorm.Session, a web.Auth) (bool, error) {
 		}
 	}
 
-	// A user can do a task if it has write acces to its list
-	l := &List{ID: ot.ListID}
+	// A user can do a task if it has write acces to its project
+	l := &Project{ID: ot.ProjectID}
 	return l.CanWrite(s, a)
 }

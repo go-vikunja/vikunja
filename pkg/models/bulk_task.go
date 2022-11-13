@@ -24,13 +24,13 @@ import (
 
 // BulkTask is the definition of a bulk update task
 type BulkTask struct {
-	// A list of task ids to update
+	// A project of task ids to update
 	IDs   []int64 `json:"task_ids"`
 	Tasks []*Task `json:"-"`
 	Task
 }
 
-func (bt *BulkTask) checkIfTasksAreOnTheSameList(s *xorm.Session) (err error) {
+func (bt *BulkTask) checkIfTasksAreOnTheSameProject(s *xorm.Session) (err error) {
 	// Get the tasks
 	err = bt.GetTasksByIDs(s)
 	if err != nil {
@@ -41,11 +41,11 @@ func (bt *BulkTask) checkIfTasksAreOnTheSameList(s *xorm.Session) (err error) {
 		return ErrBulkTasksNeedAtLeastOne{}
 	}
 
-	// Check if all tasks are in the same list
-	var firstListID = bt.Tasks[0].ListID
+	// Check if all tasks are in the same project
+	var firstProjectID = bt.Tasks[0].ProjectID
 	for _, t := range bt.Tasks {
-		if t.ListID != firstListID {
-			return ErrBulkTasksMustBeInSameList{firstListID, t.ListID}
+		if t.ProjectID != firstProjectID {
+			return ErrBulkTasksMustBeInSameProject{firstProjectID, t.ProjectID}
 		}
 	}
 
@@ -55,13 +55,13 @@ func (bt *BulkTask) checkIfTasksAreOnTheSameList(s *xorm.Session) (err error) {
 // CanUpdate checks if a user is allowed to update a task
 func (bt *BulkTask) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 
-	err := bt.checkIfTasksAreOnTheSameList(s)
+	err := bt.checkIfTasksAreOnTheSameProject(s)
 	if err != nil {
 		return false, err
 	}
 
-	// A user can update an task if he has write acces to its list
-	l := &List{ID: bt.Tasks[0].ListID}
+	// A user can update an task if he has write acces to its project
+	l := &Project{ID: bt.Tasks[0].ProjectID}
 	return l.CanWrite(s, a)
 }
 
@@ -72,10 +72,10 @@ func (bt *BulkTask) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param task body models.BulkTask true "The task object. Looks like a normal task, the only difference is it uses an array of list_ids to update."
+// @Param task body models.BulkTask true "The task object. Looks like a normal task, the only difference is it uses an array of project_ids to update."
 // @Success 200 {object} models.Task "The updated task object."
 // @Failure 400 {object} web.HTTPError "Invalid task object provided."
-// @Failure 403 {object} web.HTTPError "The user does not have access to the task (aka its list)"
+// @Failure 403 {object} web.HTTPError "The user does not have access to the task (aka its project)"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/bulk [post]
 func (bt *BulkTask) Update(s *xorm.Session, a web.Auth) (err error) {

@@ -44,8 +44,8 @@ func setupMetrics(a *echo.Group) {
 
 	for _, c := range []countable{
 		{
-			metrics.ListCountKey,
-			models.List{},
+			metrics.ProjectCountKey,
+			models.Project{},
 		},
 		{
 			metrics.UserCountKey,

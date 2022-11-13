@@ -48,12 +48,12 @@ func TestVikunjaFileMigrator_Migrate(t *testing.T) {
 		"title":    "test",
 		"owner_id": u.ID,
 	}, false)
-	db.AssertExists(t, "lists", map[string]interface{}{
-		"title":    "Test list",
+	db.AssertExists(t, "projects", map[string]interface{}{
+		"title":    "Test project",
 		"owner_id": u.ID,
 	}, false)
-	db.AssertExists(t, "lists", map[string]interface{}{
-		"title":    "A list with a background",
+	db.AssertExists(t, "projects", map[string]interface{}{
+		"title":    "A project with a background",
 		"owner_id": u.ID,
 	}, false)
 	db.AssertExists(t, "tasks", map[string]interface{}{

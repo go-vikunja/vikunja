@@ -80,7 +80,7 @@ func getUndoneOverdueTasks(s *xorm.Session, now time.Time) (usersWithTasks map[i
 			tzs[t.User.Timezone] = tz
 		}
 
-		// If it is time for that current user, add the task to their list of overdue tasks
+		// If it is time for that current user, add the task to their project of overdue tasks
 		tm, err := time.Parse("15:04", t.User.OverdueTasksRemindersTime)
 		if err != nil {
 			return nil, err

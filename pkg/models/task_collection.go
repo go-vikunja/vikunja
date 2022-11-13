@@ -24,8 +24,8 @@ import (
 
 // TaskCollection is a struct used to hold filter details and not clutter the Task struct with information not related to actual tasks.
 type TaskCollection struct {
-	ListID int64   `param:"list" json:"-"`
-	Lists  []*List `json:"-"`
+	ProjectID int64      `param:"project" json:"-"`
+	Projects  []*Project `json:"-"`
 
 	// The query parameter to sort by. This is for ex. done, priority, etc.
 	SortBy    []string `query:"sort_by" json:"sort_by"`
@@ -62,7 +62,7 @@ func validateTaskField(fieldName string) error {
 		taskPropertyDoneAt,
 		taskPropertyDueDate,
 		taskPropertyCreatedByID,
-		taskPropertyListID,
+		taskPropertyProjectID,
 		taskPropertyRepeatAfter,
 		taskPropertyPriority,
 		taskPropertyStartDate,
@@ -120,16 +120,16 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskOptions, err
 }
 
 // ReadAll gets all tasks for a collection
-// @Summary Get tasks in a list
-// @Description Returns all tasks for the current list.
+// @Summary Get tasks in a project
+// @Description Returns all tasks for the current project.
 // @tags task
 // @Accept json
 // @Produce json
-// @Param listID path int true "The list ID."
+// @Param projectID path int true "The project ID."
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
-// @Param sort_by query string false "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`."
+// @Param sort_by query string false "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`."
 // @Param order_by query string false "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`."
 // @Param filter_by query string false "The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match."
 // @Param filter_value query string false "The value to filter for. You can use [grafana](https://grafana.com/docs/grafana/latest/dashboards/time-range-controls)- or [elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#date-math)-style relative dates for all date fields like `due_date`, `start_date`, `end_date`, etc."
@@ -139,13 +139,13 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskOptions, err
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{listID}/tasks [get]
+// @Router /projects/{projectID}/tasks [get]
 func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 
-	// If the list id is < -1 this means we're dealing with a saved filter - in that case we get and populate the filter
-	// -1 is the favorites list which works as intended
-	if tf.ListID < -1 {
-		sf, err := getSavedFilterSimpleByID(s, getSavedFilterIDFromListID(tf.ListID))
+	// If the project id is < -1 this means we're dealing with a saved filter - in that case we get and populate the filter
+	// -1 is the favorites project which works as intended
+	if tf.ProjectID < -1 {
+		sf, err := getSavedFilterSimpleByID(s, getSavedFilterIDFromProjectID(tf.ProjectID))
 		if err != nil {
 			return nil, 0, 0, err
 		}
@@ -169,19 +169,19 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 
 	shareAuth, is := a.(*LinkSharing)
 	if is {
-		list, err := GetListSimpleByID(s, shareAuth.ListID)
+		project, err := GetProjectSimpleByID(s, shareAuth.ProjectID)
 		if err != nil {
 			return nil, 0, 0, err
 		}
-		return getTasksForLists(s, []*List{list}, a, taskopts)
+		return getTasksForProjects(s, []*Project{project}, a, taskopts)
 	}
 
-	// If the list ID is not set, we get all tasks for the user.
+	// If the project ID is not set, we get all tasks for the user.
 	// This allows to use this function in Task.ReadAll with a possibility to deprecate the latter at some point.
-	if tf.ListID == 0 {
-		tf.Lists, _, _, err = getRawListsForUser(
+	if tf.ProjectID == 0 {
+		tf.Projects, _, _, err = getRawProjectsForUser(
 			s,
-			&listOptions{
+			&projectOptions{
 				user: &user.User{ID: a.GetID()},
 				page: -1,
 			},
@@ -190,17 +190,17 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			return nil, 0, 0, err
 		}
 	} else {
-		// Check the list exists and the user has acess on it
-		list := &List{ID: tf.ListID}
-		canRead, _, err := list.CanRead(s, a)
+		// Check the project exists and the user has acess on it
+		project := &Project{ID: tf.ProjectID}
+		canRead, _, err := project.CanRead(s, a)
 		if err != nil {
 			return nil, 0, 0, err
 		}
 		if !canRead {
-			return nil, 0, 0, ErrUserDoesNotHaveAccessToList{ListID: tf.ListID}
+			return nil, 0, 0, ErrUserDoesNotHaveAccessToProject{ProjectID: tf.ProjectID}
 		}
-		tf.Lists = []*List{{ID: tf.ListID}}
+		tf.Projects = []*Project{{ID: tf.ProjectID}}
 	}
 
-	return getTasksForLists(s, tf.Lists, a, taskopts)
+	return getTasksForProjects(s, tf.Projects, a, taskopts)
 }

@@ -21,27 +21,27 @@ import (
 	"xorm.io/xorm"
 )
 
-// CanCreate checks if the user can create a team <-> list relation
-func (tl *TeamList) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	return tl.canDoTeamList(s, a)
+// CanCreate checks if the user can create a team <-> project relation
+func (tl *TeamProject) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	return tl.canDoTeamProject(s, a)
 }
 
-// CanDelete checks if the user can delete a team <-> list relation
-func (tl *TeamList) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	return tl.canDoTeamList(s, a)
+// CanDelete checks if the user can delete a team <-> project relation
+func (tl *TeamProject) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	return tl.canDoTeamProject(s, a)
 }
 
-// CanUpdate checks if the user can update a team <-> list relation
-func (tl *TeamList) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	return tl.canDoTeamList(s, a)
+// CanUpdate checks if the user can update a team <-> project relation
+func (tl *TeamProject) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	return tl.canDoTeamProject(s, a)
 }
 
-func (tl *TeamList) canDoTeamList(s *xorm.Session, a web.Auth) (bool, error) {
+func (tl *TeamProject) canDoTeamProject(s *xorm.Session, a web.Auth) (bool, error) {
 	// Link shares aren't allowed to do anything
 	if _, is := a.(*LinkSharing); is {
 		return false, nil
 	}
 
-	l := List{ID: tl.ListID}
+	l := Project{ID: tl.ProjectID}
 	return l.IsAdmin(s, a)
 }

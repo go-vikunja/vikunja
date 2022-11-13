@@ -15,14 +15,14 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // @title Vikunja API
-// @description This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform To-do-application with a lot of features, such as sharing lists with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
+// @description This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform To-do-application with a lot of features, such as sharing projects with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
 
 // @description # Pagination
 // @description Every endpoint capable of pagination will return two headers:
 // @description * `x-pagination-total-pages`: The total number of available pages for this request
 // @description * `x-pagination-result-count`: The number of items returned for this request.
 // @description # Rights
-// @description All endpoints which return a single item (list, task, namespace, etc.) - no array - will also return a `x-max-right` header with the max right the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.
+// @description All endpoints which return a single item (project, task, namespace, etc.) - no array - will also return a `x-max-right` header with the max right the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.
 // @description This can be used to show or hide ui elements based on the rights the user has.
 // @description # Authorization
 // @description **JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer <jwt-token>`-header to authenticate successfully.
@@ -47,6 +47,7 @@
 package routes
 
 import (
+	"code.vikunja.io/api/pkg/modules/migration/wunderlist"
 	"errors"
 	"net/url"
 	"strings"
@@ -287,7 +288,7 @@ func registerAPIRoutes(a *echo.Group) {
 
 	u.GET("", apiv1.UserShow)
 	u.POST("/password", apiv1.UserChangePassword)
-	u.GET("s", apiv1.UserList)
+	u.GET("s", apiv1.UserProject)
 	u.POST("/token", apiv1.RenewToken)
 	u.POST("/settings/email", apiv1.UpdateUserEmail)
 	u.GET("/settings/avatar", apiv1.GetUserAvatarProvider)
@@ -316,28 +317,28 @@ func registerAPIRoutes(a *echo.Group) {
 		u.POST("/deletion/cancel", apiv1.UserCancelDeletion)
 	}
 
-	listHandler := &handler.WebHandler{
+	projectHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
-			return &models.List{}
+			return &models.Project{}
 		},
 	}
-	a.GET("/lists", listHandler.ReadAllWeb)
-	a.GET("/lists/:list", listHandler.ReadOneWeb)
-	a.POST("/lists/:list", listHandler.UpdateWeb)
-	a.DELETE("/lists/:list", listHandler.DeleteWeb)
-	a.PUT("/namespaces/:namespace/lists", listHandler.CreateWeb)
-	a.GET("/lists/:list/listusers", apiv1.ListUsersForList)
+	a.GET("/projects", projectHandler.ReadAllWeb)
+	a.GET("/projects/:project", projectHandler.ReadOneWeb)
+	a.POST("/projects/:project", projectHandler.UpdateWeb)
+	a.DELETE("/projects/:project", projectHandler.DeleteWeb)
+	a.PUT("/namespaces/:namespace/projects", projectHandler.CreateWeb)
+	a.GET("/projects/:project/projectusers", apiv1.ProjectUsersForProject)
 
 	if config.ServiceEnableLinkSharing.GetBool() {
-		listSharingHandler := &handler.WebHandler{
+		projectSharingHandler := &handler.WebHandler{
 			EmptyStruct: func() handler.CObject {
 				return &models.LinkSharing{}
 			},
 		}
-		a.PUT("/lists/:list/shares", listSharingHandler.CreateWeb)
-		a.GET("/lists/:list/shares", listSharingHandler.ReadAllWeb)
-		a.GET("/lists/:list/shares/:share", listSharingHandler.ReadOneWeb)
-		a.DELETE("/lists/:list/shares/:share", listSharingHandler.DeleteWeb)
+		a.PUT("/projects/:project/shares", projectSharingHandler.CreateWeb)
+		a.GET("/projects/:project/shares", projectSharingHandler.ReadAllWeb)
+		a.GET("/projects/:project/shares/:share", projectSharingHandler.ReadOneWeb)
+		a.DELETE("/projects/:project/shares/:share", projectSharingHandler.DeleteWeb)
 	}
 
 	taskCollectionHandler := &handler.WebHandler{
@@ -345,35 +346,35 @@ func registerAPIRoutes(a *echo.Group) {
 			return &models.TaskCollection{}
 		},
 	}
-	a.GET("/lists/:list/tasks", taskCollectionHandler.ReadAllWeb)
+	a.GET("/projects/:project/tasks", taskCollectionHandler.ReadAllWeb)
 
 	kanbanBucketHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.Bucket{}
 		},
 	}
-	a.GET("/lists/:list/buckets", kanbanBucketHandler.ReadAllWeb)
-	a.PUT("/lists/:list/buckets", kanbanBucketHandler.CreateWeb)
-	a.POST("/lists/:list/buckets/:bucket", kanbanBucketHandler.UpdateWeb)
-	a.DELETE("/lists/:list/buckets/:bucket", kanbanBucketHandler.DeleteWeb)
+	a.GET("/projects/:project/buckets", kanbanBucketHandler.ReadAllWeb)
+	a.PUT("/projects/:project/buckets", kanbanBucketHandler.CreateWeb)
+	a.POST("/projects/:project/buckets/:bucket", kanbanBucketHandler.UpdateWeb)
+	a.DELETE("/projects/:project/buckets/:bucket", kanbanBucketHandler.DeleteWeb)
 
-	listDuplicateHandler := &handler.WebHandler{
+	projectDuplicateHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
-			return &models.ListDuplicate{}
+			return &models.ProjectDuplicate{}
 		},
 	}
-	a.PUT("/lists/:listid/duplicate", listDuplicateHandler.CreateWeb)
+	a.PUT("/projects/:projectid/duplicate", projectDuplicateHandler.CreateWeb)
 
 	taskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.Task{}
 		},
 	}
-	a.PUT("/lists/:list", taskHandler.CreateWeb)
-	a.GET("/tasks/:listtask", taskHandler.ReadOneWeb)
+	a.PUT("/projects/:project", taskHandler.CreateWeb)
+	a.GET("/tasks/:projecttask", taskHandler.ReadOneWeb)
 	a.GET("/tasks/all", taskCollectionHandler.ReadAllWeb)
-	a.DELETE("/tasks/:listtask", taskHandler.DeleteWeb)
-	a.POST("/tasks/:listtask", taskHandler.UpdateWeb)
+	a.DELETE("/tasks/:projecttask", taskHandler.DeleteWeb)
+	a.POST("/tasks/:projecttask", taskHandler.UpdateWeb)
 
 	bulkTaskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
@@ -387,32 +388,32 @@ func registerAPIRoutes(a *echo.Group) {
 			return &models.TaskAssginee{}
 		},
 	}
-	a.PUT("/tasks/:listtask/assignees", assigneeTaskHandler.CreateWeb)
-	a.DELETE("/tasks/:listtask/assignees/:user", assigneeTaskHandler.DeleteWeb)
-	a.GET("/tasks/:listtask/assignees", assigneeTaskHandler.ReadAllWeb)
+	a.PUT("/tasks/:projecttask/assignees", assigneeTaskHandler.CreateWeb)
+	a.DELETE("/tasks/:projecttask/assignees/:user", assigneeTaskHandler.DeleteWeb)
+	a.GET("/tasks/:projecttask/assignees", assigneeTaskHandler.ReadAllWeb)
 
 	bulkAssigneeHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.BulkAssignees{}
 		},
 	}
-	a.POST("/tasks/:listtask/assignees/bulk", bulkAssigneeHandler.CreateWeb)
+	a.POST("/tasks/:projecttask/assignees/bulk", bulkAssigneeHandler.CreateWeb)
 
 	labelTaskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.LabelTask{}
 		},
 	}
-	a.PUT("/tasks/:listtask/labels", labelTaskHandler.CreateWeb)
-	a.DELETE("/tasks/:listtask/labels/:label", labelTaskHandler.DeleteWeb)
-	a.GET("/tasks/:listtask/labels", labelTaskHandler.ReadAllWeb)
+	a.PUT("/tasks/:projecttask/labels", labelTaskHandler.CreateWeb)
+	a.DELETE("/tasks/:projecttask/labels/:label", labelTaskHandler.DeleteWeb)
+	a.GET("/tasks/:projecttask/labels", labelTaskHandler.ReadAllWeb)
 
 	bulkLabelTaskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.LabelTaskBulk{}
 		},
 	}
-	a.POST("/tasks/:listtask/labels/bulk", bulkLabelTaskHandler.CreateWeb)
+	a.POST("/tasks/:projecttask/labels/bulk", bulkLabelTaskHandler.CreateWeb)
 
 	taskRelationHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
@@ -458,25 +459,25 @@ func registerAPIRoutes(a *echo.Group) {
 	a.DELETE("/labels/:label", labelHandler.DeleteWeb)
 	a.POST("/labels/:label", labelHandler.UpdateWeb)
 
-	listTeamHandler := &handler.WebHandler{
+	projectTeamHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
-			return &models.TeamList{}
+			return &models.TeamProject{}
 		},
 	}
-	a.GET("/lists/:list/teams", listTeamHandler.ReadAllWeb)
-	a.PUT("/lists/:list/teams", listTeamHandler.CreateWeb)
-	a.DELETE("/lists/:list/teams/:team", listTeamHandler.DeleteWeb)
-	a.POST("/lists/:list/teams/:team", listTeamHandler.UpdateWeb)
+	a.GET("/projects/:project/teams", projectTeamHandler.ReadAllWeb)
+	a.PUT("/projects/:project/teams", projectTeamHandler.CreateWeb)
+	a.DELETE("/projects/:project/teams/:team", projectTeamHandler.DeleteWeb)
+	a.POST("/projects/:project/teams/:team", projectTeamHandler.UpdateWeb)
 
-	listUserHandler := &handler.WebHandler{
+	projectUserHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
-			return &models.ListUser{}
+			return &models.ProjectUser{}
 		},
 	}
-	a.GET("/lists/:list/users", listUserHandler.ReadAllWeb)
-	a.PUT("/lists/:list/users", listUserHandler.CreateWeb)
-	a.DELETE("/lists/:list/users/:user", listUserHandler.DeleteWeb)
-	a.POST("/lists/:list/users/:user", listUserHandler.UpdateWeb)
+	a.GET("/projects/:project/users", projectUserHandler.ReadAllWeb)
+	a.PUT("/projects/:project/users", projectUserHandler.CreateWeb)
+	a.DELETE("/projects/:project/users/:user", projectUserHandler.DeleteWeb)
+	a.POST("/projects/:project/users/:user", projectUserHandler.UpdateWeb)
 
 	savedFiltersHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
@@ -498,7 +499,7 @@ func registerAPIRoutes(a *echo.Group) {
 	a.GET("/namespaces/:namespace", namespaceHandler.ReadOneWeb)
 	a.POST("/namespaces/:namespace", namespaceHandler.UpdateWeb)
 	a.DELETE("/namespaces/:namespace", namespaceHandler.DeleteWeb)
-	a.GET("/namespaces/:namespace/lists", apiv1.GetListsByNamespaceID)
+	a.GET("/namespaces/:namespace/projects", apiv1.GetProjectsByNamespaceID)
 
 	namespaceTeamHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
@@ -562,17 +563,17 @@ func registerAPIRoutes(a *echo.Group) {
 	m := a.Group("/migration")
 	registerMigrations(m)
 
-	// List Backgrounds
+	// Project Backgrounds
 	if config.BackgroundsEnabled.GetBool() {
-		a.GET("/lists/:list/background", backgroundHandler.GetListBackground)
-		a.DELETE("/lists/:list/background", backgroundHandler.RemoveListBackground)
+		a.GET("/projects/:project/background", backgroundHandler.GetProjectBackground)
+		a.DELETE("/projects/:project/background", backgroundHandler.RemoveProjectBackground)
 		if config.BackgroundsUploadEnabled.GetBool() {
 			uploadBackgroundProvider := &backgroundHandler.BackgroundProvider{
 				Provider: func() background.Provider {
 					return &upload.Provider{}
 				},
 			}
-			a.PUT("/lists/:list/backgrounds/upload", uploadBackgroundProvider.UploadBackground)
+			a.PUT("/projects/:project/backgrounds/upload", uploadBackgroundProvider.UploadBackground)
 		}
 		if config.BackgroundsUnsplashEnabled.GetBool() {
 			unsplashBackgroundProvider := &backgroundHandler.BackgroundProvider{
@@ -581,7 +582,7 @@ func registerAPIRoutes(a *echo.Group) {
 				},
 			}
 			a.GET("/backgrounds/unsplash/search", unsplashBackgroundProvider.SearchBackgrounds)
-			a.POST("/lists/:list/backgrounds/unsplash", unsplashBackgroundProvider.SetBackground)
+			a.POST("/projects/:project/backgrounds/unsplash", unsplashBackgroundProvider.SetBackground)
 			a.GET("/backgrounds/unsplash/images/:image/thumb", unsplash.ProxyUnsplashThumb)
 			a.GET("/backgrounds/unsplash/images/:image", unsplash.ProxyUnsplashImage)
 		}
@@ -641,13 +642,13 @@ func registerCalDavRoutes(c *echo.Group) {
 	// Basic auth middleware
 	c.Use(middleware.BasicAuth(caldav.BasicAuth))
 
-	// THIS is the entry point for caldav clients, otherwise lists will show up double
+	// THIS is the entry point for caldav clients, otherwise projects will show up double
 	c.Any("", caldav.EntryHandler)
 	c.Any("/", caldav.EntryHandler)
 	c.Any("/principals/*/", caldav.PrincipalHandler)
-	c.Any("/lists", caldav.ListHandler)
-	c.Any("/lists/", caldav.ListHandler)
-	c.Any("/lists/:list", caldav.ListHandler)
-	c.Any("/lists/:list/", caldav.ListHandler)
-	c.Any("/lists/:list/:task", caldav.TaskHandler) // Mostly used for editing
+	c.Any("/projects", caldav.ProjectHandler)
+	c.Any("/projects/", caldav.ProjectHandler)
+	c.Any("/projects/:project", caldav.ProjectHandler)
+	c.Any("/projects/:project/", caldav.ProjectHandler)
+	c.Any("/projects/:project/:task", caldav.TaskHandler) // Mostly used for editing
 }

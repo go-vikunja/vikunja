@@ -57,7 +57,7 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 	defer dumpWriter.Close()
 
 	// Get the data
-	err = exportListsAndTasks(s, u, dumpWriter)
+	err = exportProjectsAndTasks(s, u, dumpWriter)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 		return err
 	}
 	// Background files
-	err = exportListBackgrounds(s, u, dumpWriter)
+	err = exportProjectBackgrounds(s, u, dumpWriter)
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 	})
 }
 
-func exportListsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err error) {
+func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err error) {
 
 	namspaces, _, _, err := (&Namespace{IsArchived: true}).ReadAll(s, u, "", -1, 0)
 	if err != nil {
@@ -129,29 +129,29 @@ func exportListsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err err
 	}
 
 	namespaceIDs := []int64{}
-	namespaces := []*NamespaceWithListsAndTasks{}
-	listMap := make(map[int64]*ListWithTasksAndBuckets)
-	listIDs := []int64{}
-	for _, n := range namspaces.([]*NamespaceWithLists) {
+	namespaces := []*NamespaceWithProjectsAndTasks{}
+	projectMap := make(map[int64]*ProjectWithTasksAndBuckets)
+	projectIDs := []int64{}
+	for _, n := range namspaces.([]*NamespaceWithProjects) {
 		if n.ID < 1 {
 			// Don't include filters
 			continue
 		}
 
-		nn := &NamespaceWithListsAndTasks{
+		nn := &NamespaceWithProjectsAndTasks{
 			Namespace: n.Namespace,
-			Lists:     []*ListWithTasksAndBuckets{},
+			Projects:  []*ProjectWithTasksAndBuckets{},
 		}
 
-		for _, l := range n.Lists {
-			ll := &ListWithTasksAndBuckets{
-				List:             *l,
+		for _, l := range n.Projects {
+			ll := &ProjectWithTasksAndBuckets{
+				Project:          *l,
 				BackgroundFileID: l.BackgroundFileID,
 				Tasks:            []*TaskWithComments{},
 			}
-			nn.Lists = append(nn.Lists, ll)
-			listMap[l.ID] = ll
-			listIDs = append(listIDs, l.ID)
+			nn.Projects = append(nn.Projects, ll)
+			projectMap[l.ID] = ll
+			projectIDs = append(projectIDs, l.ID)
 		}
 
 		namespaceIDs = append(namespaceIDs, n.ID)
@@ -162,13 +162,13 @@ func exportListsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err err
 		return nil
 	}
 
-	// Get all lists
-	lists, err := getListsForNamespaces(s, namespaceIDs, true)
+	// Get all projects
+	projects, err := getProjectsForNamespaces(s, namespaceIDs, true)
 	if err != nil {
 		return err
 	}
 
-	tasks, _, _, err := getTasksForLists(s, lists, u, &taskOptions{
+	tasks, _, _, err := getTasksForProjects(s, projects, u, &taskOptions{
 		page:    0,
 		perPage: -1,
 	})
@@ -181,17 +181,17 @@ func exportListsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err err
 		taskMap[t.ID] = &TaskWithComments{
 			Task: *t,
 		}
-		if _, exists := listMap[t.ListID]; !exists {
-			log.Debugf("[User Data Export] List %d does not exist for task %d, omitting", t.ListID, t.ID)
+		if _, exists := projectMap[t.ProjectID]; !exists {
+			log.Debugf("[User Data Export] Project %d does not exist for task %d, omitting", t.ProjectID, t.ID)
 			continue
 		}
-		listMap[t.ListID].Tasks = append(listMap[t.ListID].Tasks, taskMap[t.ID])
+		projectMap[t.ProjectID].Tasks = append(projectMap[t.ProjectID].Tasks, taskMap[t.ID])
 	}
 
 	comments := []*TaskComment{}
 	err = s.
 		Join("LEFT", "tasks", "tasks.id = task_comments.task_id").
-		In("tasks.list_id", listIDs).
+		In("tasks.project_id", projectIDs).
 		Find(&comments)
 	if err != nil {
 		return
@@ -206,17 +206,17 @@ func exportListsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err err
 	}
 
 	buckets := []*Bucket{}
-	err = s.In("list_id", listIDs).Find(&buckets)
+	err = s.In("project_id", projectIDs).Find(&buckets)
 	if err != nil {
 		return
 	}
 
 	for _, b := range buckets {
-		if _, exists := listMap[b.ListID]; !exists {
-			log.Debugf("[User Data Export] List %d does not exist for bucket %d, omitting", b.ListID, b.ID)
+		if _, exists := projectMap[b.ProjectID]; !exists {
+			log.Debugf("[User Data Export] Project %d does not exist for bucket %d, omitting", b.ProjectID, b.ID)
 			continue
 		}
-		listMap[b.ListID].Buckets = append(listMap[b.ListID].Buckets, b)
+		projectMap[b.ProjectID].Buckets = append(projectMap[b.ProjectID].Buckets, b)
 	}
 
 	data, err := json.Marshal(namespaces)
@@ -228,9 +228,9 @@ func exportListsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err err
 }
 
 func exportTaskAttachments(s *xorm.Session, u *user.User, wr *zip.Writer) (err error) {
-	lists, _, _, err := getRawListsForUser(
+	projects, _, _, err := getRawProjectsForUser(
 		s,
-		&listOptions{
+		&projectOptions{
 			user: u,
 			page: -1,
 		},
@@ -239,7 +239,7 @@ func exportTaskAttachments(s *xorm.Session, u *user.User, wr *zip.Writer) (err e
 		return err
 	}
 
-	tasks, _, _, err := getRawTasksForLists(s, lists, u, &taskOptions{page: -1})
+	tasks, _, _, err := getRawTasksForProjects(s, projects, u, &taskOptions{page: -1})
 	if err != nil {
 		return err
 	}
@@ -279,10 +279,10 @@ func exportSavedFilters(s *xorm.Session, u *user.User, wr *zip.Writer) (err erro
 	return utils.WriteBytesToZip("filters.json", data, wr)
 }
 
-func exportListBackgrounds(s *xorm.Session, u *user.User, wr *zip.Writer) (err error) {
-	lists, _, _, err := getRawListsForUser(
+func exportProjectBackgrounds(s *xorm.Session, u *user.User, wr *zip.Writer) (err error) {
+	projects, _, _, err := getRawProjectsForUser(
 		s,
-		&listOptions{
+		&projectOptions{
 			user: u,
 			page: -1,
 		},
@@ -292,7 +292,7 @@ func exportListBackgrounds(s *xorm.Session, u *user.User, wr *zip.Writer) (err e
 	}
 
 	fs := make(map[int64]io.ReadCloser)
-	for _, l := range lists {
+	for _, l := range projects {
 		if l.BackgroundFileID == 0 {
 			continue
 		}

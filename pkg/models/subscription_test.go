@@ -29,9 +29,9 @@ func TestSubscriptionGetTypeFromString(t *testing.T) {
 		entityType := getEntityTypeFromString("namespace")
 		assert.Equal(t, SubscriptionEntityType(SubscriptionEntityNamespace), entityType)
 	})
-	t.Run("list", func(t *testing.T) {
-		entityType := getEntityTypeFromString("list")
-		assert.Equal(t, SubscriptionEntityType(SubscriptionEntityList), entityType)
+	t.Run("project", func(t *testing.T) {
+		entityType := getEntityTypeFromString("project")
+		assert.Equal(t, SubscriptionEntityType(SubscriptionEntityProject), entityType)
 	})
 	t.Run("task", func(t *testing.T) {
 		entityType := getEntityTypeFromString("task")
@@ -104,20 +104,20 @@ func TestSubscription_Create(t *testing.T) {
 		assert.True(t, IsErrNamespaceDoesNotExist(err))
 		assert.False(t, can)
 	})
-	t.Run("noneixsting list", func(t *testing.T) {
+	t.Run("noneixsting project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
 		sb := &Subscription{
-			Entity:   "list",
+			Entity:   "project",
 			EntityID: 99999999,
 			UserID:   u.ID,
 		}
 
 		can, err := sb.CanCreate(s, u)
 		assert.Error(t, err)
-		assert.True(t, IsErrListDoesNotExist(err))
+		assert.True(t, IsErrProjectDoesNotExist(err))
 		assert.False(t, can)
 	})
 	t.Run("noneixsting task", func(t *testing.T) {
@@ -151,13 +151,13 @@ func TestSubscription_Create(t *testing.T) {
 		assert.NoError(t, err)
 		assert.False(t, can)
 	})
-	t.Run("no rights to see list", func(t *testing.T) {
+	t.Run("no rights to see project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
 		sb := &Subscription{
-			Entity:   "list",
+			Entity:   "project",
 			EntityID: 20,
 			UserID:   u.ID,
 		}
@@ -278,12 +278,12 @@ func TestSubscriptionGet(t *testing.T) {
 			assert.NotNil(t, sub)
 			assert.Equal(t, int64(2), sub.ID)
 		})
-		t.Run("list", func(t *testing.T) {
+		t.Run("project", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
 			defer s.Close()
 
-			sub, err := GetSubscription(s, SubscriptionEntityList, 12, u)
+			sub, err := GetSubscription(s, SubscriptionEntityProject, 12, u)
 			assert.NoError(t, err)
 			assert.NotNil(t, sub)
 			assert.Equal(t, int64(3), sub.ID)
@@ -300,13 +300,13 @@ func TestSubscriptionGet(t *testing.T) {
 		})
 	})
 	t.Run("inherited", func(t *testing.T) {
-		t.Run("list from namespace", func(t *testing.T) {
+		t.Run("project from namespace", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
 			defer s.Close()
 
-			// List 6 belongs to namespace 6 where user 6 has subscribed to
-			sub, err := GetSubscription(s, SubscriptionEntityList, 6, u)
+			// Project 6 belongs to namespace 6 where user 6 has subscribed to
+			sub, err := GetSubscription(s, SubscriptionEntityProject, 6, u)
 			assert.NoError(t, err)
 			assert.NotNil(t, sub)
 			assert.Equal(t, int64(2), sub.ID)
@@ -316,18 +316,18 @@ func TestSubscriptionGet(t *testing.T) {
 			s := db.NewSession()
 			defer s.Close()
 
-			// Task 20 belongs to list 11 which belongs to namespace 6 where the user has subscribed
+			// Task 20 belongs to project 11 which belongs to namespace 6 where the user has subscribed
 			sub, err := GetSubscription(s, SubscriptionEntityTask, 20, u)
 			assert.NoError(t, err)
 			assert.NotNil(t, sub)
 			assert.Equal(t, int64(2), sub.ID)
 		})
-		t.Run("task from list", func(t *testing.T) {
+		t.Run("task from project", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
 			defer s.Close()
 
-			// Task 21 belongs to list 12 which the user has subscribed to
+			// Task 21 belongs to project 12 which the user has subscribed to
 			sub, err := GetSubscription(s, SubscriptionEntityTask, 21, u)
 			assert.NoError(t, err)
 			assert.NotNil(t, sub)

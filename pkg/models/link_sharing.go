@@ -42,17 +42,17 @@ const (
 	SharingTypeWithPassword
 )
 
-// LinkSharing represents a shared list
+// LinkSharing represents a shared project
 type LinkSharing struct {
 	// The ID of the shared thing
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"share"`
-	// The public id to get this shared list
+	// The public id to get this shared project
 	Hash string `xorm:"varchar(40) not null unique" json:"hash" param:"hash"`
 	// The name of this link share. All actions someone takes while being authenticated with that link will appear with that name.
 	Name string `xorm:"text null" json:"name"`
-	// The ID of the shared list
-	ListID int64 `xorm:"bigint not null" json:"-" param:"list"`
-	// The right this list is shared with. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
+	// The ID of the shared project
+	ProjectID int64 `xorm:"bigint not null" json:"-" param:"project"`
+	// The right this project is shared with. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
 	Right Right `xorm:"bigint INDEX not null default 0" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
 
 	// The kind of this link. 0 = undefined, 1 = without password, 2 = with password.
@@ -61,11 +61,11 @@ type LinkSharing struct {
 	// The password of this link share. You can only set it, not retrieve it after the link share has been created.
 	Password string `xorm:"text null" json:"password"`
 
-	// The user who shared this list
+	// The user who shared this project
 	SharedBy   *user.User `xorm:"-" json:"shared_by"`
 	SharedByID int64      `xorm:"bigint INDEX not null" json:"-"`
 
-	// A timestamp when this list was shared. You cannot change this value.
+	// A timestamp when this project was shared. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this share was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`
@@ -89,7 +89,7 @@ func GetLinkShareFromClaims(claims jwt.MapClaims) (share *LinkSharing, err error
 	share = &LinkSharing{}
 	share.ID = int64(claims["id"].(float64))
 	share.Hash = claims["hash"].(string)
-	share.ListID = int64(claims["list_id"].(float64))
+	share.ProjectID = int64(claims["project_id"].(float64))
 	share.Right = Right(claims["right"].(float64))
 	share.SharedByID = int64(claims["sharedByID"].(float64))
 	return
@@ -114,21 +114,21 @@ func (share *LinkSharing) toUser() *user.User {
 	}
 }
 
-// Create creates a new link share for a given list
-// @Summary Share a list via link
-// @Description Share a list via link. The user needs to have write-access to the list to be able do this.
+// Create creates a new link share for a given project
+// @Summary Share a project via link
+// @Description Share a project via link. The user needs to have write-access to the project to be able do this.
 // @tags sharing
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param list path int true "List ID"
+// @Param project path int true "Project ID"
 // @Param label body models.LinkSharing true "The new link share object"
 // @Success 201 {object} models.LinkSharing "The created link share object."
 // @Failure 400 {object} web.HTTPError "Invalid link share object provided."
-// @Failure 403 {object} web.HTTPError "Not allowed to add the list share."
-// @Failure 404 {object} web.HTTPError "The list does not exist."
+// @Failure 403 {object} web.HTTPError "Not allowed to add the project share."
+// @Failure 404 {object} web.HTTPError "The project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{list}/shares [put]
+// @Router /projects/{project}/shares [put]
 func (share *LinkSharing) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	err = share.Right.isValid()
@@ -156,48 +156,48 @@ func (share *LinkSharing) Create(s *xorm.Session, a web.Auth) (err error) {
 }
 
 // ReadOne returns one share
-// @Summary Get one link shares for a list
+// @Summary Get one link shares for a project
 // @Description Returns one link share by its ID.
 // @tags sharing
 // @Accept json
 // @Produce json
-// @Param list path int true "List ID"
+// @Param project path int true "Project ID"
 // @Param share path int true "Share ID"
 // @Security JWTKeyAuth
 // @Success 200 {object} models.LinkSharing "The share links"
-// @Failure 403 {object} web.HTTPError "No access to the list"
+// @Failure 403 {object} web.HTTPError "No access to the project"
 // @Failure 404 {object} web.HTTPError "Share Link not found."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{list}/shares/{share} [get]
+// @Router /projects/{project}/shares/{share} [get]
 func (share *LinkSharing) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	exists, err := s.Where("id = ?", share.ID).Get(share)
 	if err != nil {
 		return err
 	}
 	if !exists {
-		return ErrListShareDoesNotExist{ID: share.ID, Hash: share.Hash}
+		return ErrProjectShareDoesNotExist{ID: share.ID, Hash: share.Hash}
 	}
 	share.Password = ""
 	return
 }
 
-// ReadAll returns all shares for a given list
-// @Summary Get all link shares for a list
-// @Description Returns all link shares which exist for a given list
+// ReadAll returns all shares for a given project
+// @Summary Get all link shares for a project
+// @Description Returns all link shares which exist for a given project
 // @tags sharing
 // @Accept json
 // @Produce json
-// @Param list path int true "List ID"
+// @Param project path int true "Project ID"
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search shares by hash."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.LinkSharing "The share links"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{list}/shares [get]
+// @Router /projects/{project}/shares [get]
 func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
-	list := &List{ID: share.ListID}
-	can, _, err := list.CanRead(s, a)
+	project := &Project{ID: share.ProjectID}
+	can, _, err := project.CanRead(s, a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -210,7 +210,7 @@ func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	var shares []*LinkSharing
 	query := s.
 		Where(builder.And(
-			builder.Eq{"list_id": share.ListID},
+			builder.Eq{"project_id": share.ProjectID},
 			builder.Or(
 				db.ILIKE("hash", search),
 				db.ILIKE("name", search),
@@ -246,7 +246,7 @@ func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 
 	// Total count
 	totalItems, err = s.
-		Where("list_id = ? AND hash LIKE ?", share.ListID, "%"+search+"%").
+		Where("project_id = ? AND hash LIKE ?", share.ProjectID, "%"+search+"%").
 		Count(&LinkSharing{})
 	if err != nil {
 		return nil, 0, 0, err
@@ -257,18 +257,18 @@ func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 
 // Delete removes a link share
 // @Summary Remove a link share
-// @Description Remove a link share. The user needs to have write-access to the list to be able do this.
+// @Description Remove a link share. The user needs to have write-access to the project to be able do this.
 // @tags sharing
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param list path int true "List ID"
+// @Param project path int true "Project ID"
 // @Param share path int true "Share Link ID"
 // @Success 200 {object} models.Message "The link was successfully removed."
 // @Failure 403 {object} web.HTTPError "Not allowed to remove the link."
 // @Failure 404 {object} web.HTTPError "Share Link not found."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{list}/shares/{share} [delete]
+// @Router /projects/{project}/shares/{share} [delete]
 func (share *LinkSharing) Delete(s *xorm.Session, a web.Auth) (err error) {
 	_, err = s.Where("id = ?", share.ID).Delete(share)
 	return
@@ -282,19 +282,19 @@ func GetLinkShareByHash(s *xorm.Session, hash string) (share *LinkSharing, err e
 		return
 	}
 	if !has {
-		return share, ErrListShareDoesNotExist{Hash: hash}
+		return share, ErrProjectShareDoesNotExist{Hash: hash}
 	}
 	return
 }
 
-// GetListByShareHash returns a link share by its hash
-func GetListByShareHash(s *xorm.Session, hash string) (list *List, err error) {
+// GetProjectByShareHash returns a link share by its hash
+func GetProjectByShareHash(s *xorm.Session, hash string) (project *Project, err error) {
 	share, err := GetLinkShareByHash(s, hash)
 	if err != nil {
 		return
 	}
 
-	list, err = GetListSimpleByID(s, share.ListID)
+	project, err = GetProjectSimpleByID(s, share.ProjectID)
 	return
 }
 
@@ -306,7 +306,7 @@ func GetLinkShareByID(s *xorm.Session, id int64) (share *LinkSharing, err error)
 		return
 	}
 	if !has {
-		return share, ErrListShareDoesNotExist{ID: id}
+		return share, ErrProjectShareDoesNotExist{ID: id}
 	}
 	return
 }

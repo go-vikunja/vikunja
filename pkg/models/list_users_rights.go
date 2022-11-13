@@ -21,28 +21,28 @@ import (
 	"xorm.io/xorm"
 )
 
-// CanCreate checks if the user can create a new user <-> list relation
-func (lu *ListUser) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	return lu.canDoListUser(s, a)
+// CanCreate checks if the user can create a new user <-> project relation
+func (lu *ProjectUser) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	return lu.canDoProjectUser(s, a)
 }
 
-// CanDelete checks if the user can delete a user <-> list relation
-func (lu *ListUser) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	return lu.canDoListUser(s, a)
+// CanDelete checks if the user can delete a user <-> project relation
+func (lu *ProjectUser) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	return lu.canDoProjectUser(s, a)
 }
 
-// CanUpdate checks if the user can update a user <-> list relation
-func (lu *ListUser) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	return lu.canDoListUser(s, a)
+// CanUpdate checks if the user can update a user <-> project relation
+func (lu *ProjectUser) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	return lu.canDoProjectUser(s, a)
 }
 
-func (lu *ListUser) canDoListUser(s *xorm.Session, a web.Auth) (bool, error) {
+func (lu *ProjectUser) canDoProjectUser(s *xorm.Session, a web.Auth) (bool, error) {
 	// Link shares aren't allowed to do anything
 	if _, is := a.(*LinkSharing); is {
 		return false, nil
 	}
 
-	// Get the list and check if the user has write access on it
-	l := List{ID: lu.ListID}
+	// Get the project and check if the user has write access on it
+	l := Project{ID: lu.ProjectID}
 	return l.IsAdmin(s, a)
 }

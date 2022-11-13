@@ -35,13 +35,13 @@ import (
 // DavBasePath is the base url path
 const DavBasePath = `/dav/`
 
-// ListBasePath is the base path for all lists resources
-const ListBasePath = DavBasePath + `lists`
+// ProjectBasePath is the base path for all projects resources
+const ProjectBasePath = DavBasePath + `projects`
 
-// VikunjaCaldavListStorage represents a list storage
-type VikunjaCaldavListStorage struct {
-	// Used when handling a list
-	list *models.ListWithTasksAndBuckets
+// VikunjaCaldavProjectStorage represents a project storage
+type VikunjaCaldavProjectStorage struct {
+	// Used when handling a project
+	project *models.ProjectWithTasksAndBuckets
 	// Used when handling a single task, like updating
 	task *models.Task
 	// The current user
@@ -50,8 +50,8 @@ type VikunjaCaldavListStorage struct {
 	isEntry     bool // Entry level handling should only return a link to the principal url
 }
 
-// GetResources returns either all lists, links to the principal, or only one list, depending on the request
-func (vcls *VikunjaCaldavListStorage) GetResources(rpath string, withChildren bool) ([]data.Resource, error) {
+// GetResources returns either all projects, links to the principal, or only one project, depending on the request
+func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren bool) ([]data.Resource, error) {
 
 	// It looks like we need to have the same handler for returning both the calendar home set and the user principal
 	// Since the client seems to ignore the whatever is being returned in the first request and just makes a second one
@@ -61,12 +61,12 @@ func (vcls *VikunjaCaldavListStorage) GetResources(rpath string, withChildren bo
 	// the home or principal url. Ough.
 
 	// Ok, maybe the problem is more the client making a request to /dav/ and getting a response which says
-	// something like "hey, for /dav/lists, the calendar home is /dav/lists", but the client expects a
-	// response to go something like "hey, for /dav/, the calendar home is /dav/lists" since it requested /dav/
-	// and not /dav/lists. I'm not sure if thats a bug in the client or in caldav-go.
+	// something like "hey, for /dav/projects, the calendar home is /dav/projects", but the client expects a
+	// response to go something like "hey, for /dav/, the calendar home is /dav/projects" since it requested /dav/
+	// and not /dav/projects. I'm not sure if thats a bug in the client or in caldav-go.
 
 	if vcls.isEntry {
-		r := data.NewResource(rpath, &VikunjaListResourceAdapter{
+		r := data.NewResource(rpath, &VikunjaProjectResourceAdapter{
 			isPrincipal:  true,
 			isCollection: true,
 		})
@@ -75,30 +75,30 @@ func (vcls *VikunjaCaldavListStorage) GetResources(rpath string, withChildren bo
 
 	// If the request wants the principal url, we'll return that and nothing else
 	if vcls.isPrincipal {
-		r := data.NewResource(DavBasePath+`/lists/`, &VikunjaListResourceAdapter{
+		r := data.NewResource(DavBasePath+`/projects/`, &VikunjaProjectResourceAdapter{
 			isPrincipal:  true,
 			isCollection: true,
 		})
 		return []data.Resource{r}, nil
 	}
 
-	// If vcls.list.ID is != 0, this means the user is doing a PROPFIND request to /lists/:list
-	// Which means we need to get only one list
-	if vcls.list != nil && vcls.list.ID != 0 {
-		rr, err := vcls.getListRessource(true)
+	// If vcls.project.ID is != 0, this means the user is doing a PROPFIND request to /projects/:project
+	// Which means we need to get only one project
+	if vcls.project != nil && vcls.project.ID != 0 {
+		rr, err := vcls.getProjectRessource(true)
 		if err != nil {
 			return nil, err
 		}
 		r := data.NewResource(rpath, &rr)
-		r.Name = vcls.list.Title
+		r.Name = vcls.project.Title
 		return []data.Resource{r}, nil
 	}
 
 	s := db.NewSession()
 	defer s.Close()
 
-	// Otherwise get all lists
-	thelists, _, _, err := vcls.list.ReadAll(s, vcls.user, "", -1, 50)
+	// Otherwise get all projects
+	theprojects, _, _, err := vcls.project.ReadAll(s, vcls.user, "", -1, 50)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, err
@@ -106,17 +106,17 @@ func (vcls *VikunjaCaldavListStorage) GetResources(rpath string, withChildren bo
 	if err := s.Commit(); err != nil {
 		return nil, err
 	}
-	lists := thelists.([]*models.List)
+	projects := theprojects.([]*models.Project)
 
 	var resources []data.Resource
-	for _, l := range lists {
-		rr := VikunjaListResourceAdapter{
-			list: &models.ListWithTasksAndBuckets{
-				List: *l,
+	for _, l := range projects {
+		rr := VikunjaProjectResourceAdapter{
+			project: &models.ProjectWithTasksAndBuckets{
+				Project: *l,
 			},
 			isCollection: true,
 		}
-		r := data.NewResource(ListBasePath+"/"+strconv.FormatInt(l.ID, 10), &rr)
+		r := data.NewResource(ProjectBasePath+"/"+strconv.FormatInt(l.ID, 10), &rr)
 		r.Name = l.Title
 		resources = append(resources, r)
 	}
@@ -124,11 +124,11 @@ func (vcls *VikunjaCaldavListStorage) GetResources(rpath string, withChildren bo
 	return resources, nil
 }
 
-// GetResourcesByList fetches a list of resources from a slice of paths
-func (vcls *VikunjaCaldavListStorage) GetResourcesByList(rpaths []string) ([]data.Resource, error) {
+// GetResourcesByList fetches a project of resources from a slice of paths
+func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) ([]data.Resource, error) {
 
 	// Parse the set of resourcepaths into usable uids
-	// A path looks like this: /dav/lists/10/a6eb526d5748a5c499da202fe74f36ed1aea2aef.ics
+	// A path looks like this: /dav/projects/10/a6eb526d5748a5c499da202fe74f36ed1aea2aef.ics
 	// So we split the url in parts, take the last one and strip the ".ics" at the end
 	var uids []string
 	for _, path := range rpaths {
@@ -154,7 +154,7 @@ func (vcls *VikunjaCaldavListStorage) GetResourcesByList(rpaths []string) ([]dat
 
 	var resources []data.Resource
 	for _, t := range tasks {
-		rr := VikunjaListResourceAdapter{
+		rr := VikunjaProjectResourceAdapter{
 			task: t,
 		}
 		r := data.NewResource(getTaskURL(t), &rr)
@@ -165,17 +165,17 @@ func (vcls *VikunjaCaldavListStorage) GetResourcesByList(rpaths []string) ([]dat
 	return resources, nil
 }
 
-// GetResourcesByFilters fetches a list of resources with a filter
-func (vcls *VikunjaCaldavListStorage) GetResourcesByFilters(rpath string, filters *data.ResourceFilter) ([]data.Resource, error) {
+// GetResourcesByFilters fetches a project of resources with a filter
+func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, filters *data.ResourceFilter) ([]data.Resource, error) {
 
-	// If we already have a list saved, that means the user is making a REPORT request to find out if
+	// If we already have a project saved, that means the user is making a REPORT request to find out if
 	// anything changed, in that case we need to return all tasks.
-	// That list is coming from a previous "getListRessource" in L177
-	if vcls.list.Tasks != nil {
+	// That project is coming from a previous "getProjectRessource" in L177
+	if vcls.project.Tasks != nil {
 		var resources []data.Resource
-		for _, t := range vcls.list.Tasks {
-			rr := VikunjaListResourceAdapter{
-				list:         vcls.list,
+		for _, t := range vcls.project.Tasks {
+			rr := VikunjaProjectResourceAdapter{
+				project:      vcls.project,
 				task:         &t.Task,
 				isCollection: false,
 			}
@@ -187,25 +187,25 @@ func (vcls *VikunjaCaldavListStorage) GetResourcesByFilters(rpath string, filter
 	}
 
 	// This is used to get all
-	rr, err := vcls.getListRessource(false)
+	rr, err := vcls.getProjectRessource(false)
 	if err != nil {
 		return nil, err
 	}
 	r := data.NewResource(rpath, &rr)
-	r.Name = vcls.list.Title
+	r.Name = vcls.project.Title
 	return []data.Resource{r}, nil
 	// For now, filtering is disabled.
 	// return vcls.GetResources(rpath, false)
 }
 
 func getTaskURL(task *models.Task) string {
-	return ListBasePath + "/" + strconv.FormatInt(task.ListID, 10) + `/` + task.UID + `.ics`
+	return ProjectBasePath + "/" + strconv.FormatInt(task.ProjectID, 10) + `/` + task.UID + `.ics`
 }
 
 // GetResource fetches a single resource
-func (vcls *VikunjaCaldavListStorage) GetResource(rpath string) (*data.Resource, bool, error) {
+func (vcls *VikunjaCaldavProjectStorage) GetResource(rpath string) (*data.Resource, bool, error) {
 
-	// If the task is not nil, we need to get the task and not the list
+	// If the task is not nil, we need to get the task and not the project
 	if vcls.task != nil {
 		s := db.NewSession()
 		defer s.Close()
@@ -233,16 +233,16 @@ func (vcls *VikunjaCaldavListStorage) GetResource(rpath string) (*data.Resource,
 			vcls.task.Updated = updated
 		}
 
-		rr := VikunjaListResourceAdapter{
-			list: vcls.list,
-			task: vcls.task,
+		rr := VikunjaProjectResourceAdapter{
+			project: vcls.project,
+			task:    vcls.task,
 		}
 		r := data.NewResource(rpath, &rr)
 		return &r, true, nil
 	}
 
-	// Otherwise get the list with all tasks
-	rr, err := vcls.getListRessource(true)
+	// Otherwise get the project with all tasks
+	rr, err := vcls.getProjectRessource(true)
 	if err != nil {
 		return nil, false, err
 	}
@@ -252,14 +252,14 @@ func (vcls *VikunjaCaldavListStorage) GetResource(rpath string) (*data.Resource,
 
 // GetShallowResource gets a ressource without childs
 // Since Vikunja has no children, this is the same as GetResource
-func (vcls *VikunjaCaldavListStorage) GetShallowResource(rpath string) (*data.Resource, bool, error) {
+func (vcls *VikunjaCaldavProjectStorage) GetShallowResource(rpath string) (*data.Resource, bool, error) {
 	// Since Vikunja has no childs, this just returns the same as GetResource()
-	// FIXME: This should just get the list with no tasks whatsoever, nothing else
+	// FIXME: This should just get the project with no tasks whatsoever, nothing else
 	return vcls.GetResource(rpath)
 }
 
 // CreateResource creates a new resource
-func (vcls *VikunjaCaldavListStorage) CreateResource(rpath, content string) (*data.Resource, error) {
+func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (*data.Resource, error) {
 
 	s := db.NewSession()
 	defer s.Close()
@@ -269,7 +269,7 @@ func (vcls *VikunjaCaldavListStorage) CreateResource(rpath, content string) (*da
 		return nil, err
 	}
 
-	vTask.ListID = vcls.list.ID
+	vTask.ProjectID = vcls.project.ID
 
 	// Check the rights
 	canCreate, err := vTask.CanCreate(s, vcls.user)
@@ -299,16 +299,16 @@ func (vcls *VikunjaCaldavListStorage) CreateResource(rpath, content string) (*da
 	}
 
 	// Build up the proper response
-	rr := VikunjaListResourceAdapter{
-		list: vcls.list,
-		task: vTask,
+	rr := VikunjaProjectResourceAdapter{
+		project: vcls.project,
+		task:    vTask,
 	}
 	r := data.NewResource(rpath, &rr)
 	return &r, nil
 }
 
 // UpdateResource updates a resource
-func (vcls *VikunjaCaldavListStorage) UpdateResource(rpath, content string) (*data.Resource, error) {
+func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (*data.Resource, error) {
 
 	vTask, err := caldav.ParseTaskFromVTODO(content)
 	if err != nil {
@@ -350,16 +350,16 @@ func (vcls *VikunjaCaldavListStorage) UpdateResource(rpath, content string) (*da
 	}
 
 	// Build up the proper response
-	rr := VikunjaListResourceAdapter{
-		list: vcls.list,
-		task: vTask,
+	rr := VikunjaProjectResourceAdapter{
+		project: vcls.project,
+		task:    vTask,
 	}
 	r := data.NewResource(rpath, &rr)
 	return &r, nil
 }
 
 // DeleteResource deletes a resource
-func (vcls *VikunjaCaldavListStorage) DeleteResource(rpath string) error {
+func (vcls *VikunjaCaldavProjectStorage) DeleteResource(rpath string) error {
 	if vcls.task != nil {
 		s := db.NewSession()
 		defer s.Close()
@@ -432,31 +432,31 @@ func persistLabels(s *xorm.Session, a web.Auth, task *models.Task, labels []*mod
 	return task.UpdateTaskLabels(s, a, labels)
 }
 
-// VikunjaListResourceAdapter holds the actual resource
-type VikunjaListResourceAdapter struct {
-	list      *models.ListWithTasksAndBuckets
-	listTasks []*models.TaskWithComments
-	task      *models.Task
+// VikunjaProjectResourceAdapter holds the actual resource
+type VikunjaProjectResourceAdapter struct {
+	project      *models.ProjectWithTasksAndBuckets
+	projectTasks []*models.TaskWithComments
+	task         *models.Task
 
 	isPrincipal  bool
 	isCollection bool
 }
 
 // IsCollection checks if the resoure in the adapter is a collection
-func (vlra *VikunjaListResourceAdapter) IsCollection() bool {
+func (vlra *VikunjaProjectResourceAdapter) IsCollection() bool {
 	// If the discovery does not work, setting this to true makes it work again.
 	return vlra.isCollection
 }
 
 // CalculateEtag returns the etag of a resource
-func (vlra *VikunjaListResourceAdapter) CalculateEtag() string {
+func (vlra *VikunjaProjectResourceAdapter) CalculateEtag() string {
 
-	// If we're updating a task, the client sends the etag of the list instead of the one from the task.
+	// If we're updating a task, the client sends the etag of the project instead of the one from the task.
 	// And therefore, updating the task fails since these etags don't match.
 	// To fix that, we use this extra field to determine if we're currently updating a task and return the
-	// etag of the list instead.
-	// if vlra.list != nil {
-	//	 return `"` + strconv.FormatInt(vlra.list.ID, 10) + `-` + strconv.FormatInt(vlra.list.Updated, 10) + `"`
+	// etag of the project instead.
+	// if vlra.project != nil {
+	//	 return `"` + strconv.FormatInt(vlra.project.ID, 10) + `-` + strconv.FormatInt(vlra.project.Updated, 10) + `"`
 	// }
 
 	// Return the etag of a task if we have one
@@ -464,76 +464,76 @@ func (vlra *VikunjaListResourceAdapter) CalculateEtag() string {
 		return `"` + strconv.FormatInt(vlra.task.ID, 10) + `-` + strconv.FormatInt(vlra.task.Updated.Unix(), 10) + `"`
 	}
 
-	if vlra.list == nil {
+	if vlra.project == nil {
 		return ""
 	}
 
-	// This also returns the etag of the list, and not of the task,
-	// which becomes problematic because the client uses this etag (= the one from the list) to make
+	// This also returns the etag of the project, and not of the task,
+	// which becomes problematic because the client uses this etag (= the one from the project) to make
 	// Requests to update a task. These do not match and thus updating a task fails.
-	return `"` + strconv.FormatInt(vlra.list.ID, 10) + `-` + strconv.FormatInt(vlra.list.Updated.Unix(), 10) + `"`
+	return `"` + strconv.FormatInt(vlra.project.ID, 10) + `-` + strconv.FormatInt(vlra.project.Updated.Unix(), 10) + `"`
 }
 
 // GetContent returns the content string of a resource (a task in our case)
-func (vlra *VikunjaListResourceAdapter) GetContent() string {
-	if vlra.list != nil && vlra.list.Tasks != nil {
-		return caldav.GetCaldavTodosForTasks(vlra.list, vlra.listTasks)
+func (vlra *VikunjaProjectResourceAdapter) GetContent() string {
+	if vlra.project != nil && vlra.project.Tasks != nil {
+		return caldav.GetCaldavTodosForTasks(vlra.project, vlra.projectTasks)
 	}
 
 	if vlra.task != nil {
-		list := models.ListWithTasksAndBuckets{Tasks: []*models.TaskWithComments{{Task: *vlra.task}}}
-		return caldav.GetCaldavTodosForTasks(&list, list.Tasks)
+		project := models.ProjectWithTasksAndBuckets{Tasks: []*models.TaskWithComments{{Task: *vlra.task}}}
+		return caldav.GetCaldavTodosForTasks(&project, project.Tasks)
 	}
 
 	return ""
 }
 
 // GetContentSize is the size of a caldav content
-func (vlra *VikunjaListResourceAdapter) GetContentSize() int64 {
+func (vlra *VikunjaProjectResourceAdapter) GetContentSize() int64 {
 	return int64(len(vlra.GetContent()))
 }
 
 // GetModTime returns when the resource was last modified
-func (vlra *VikunjaListResourceAdapter) GetModTime() time.Time {
+func (vlra *VikunjaProjectResourceAdapter) GetModTime() time.Time {
 	if vlra.task != nil {
 		return vlra.task.Updated
 	}
 
-	if vlra.list != nil {
-		return vlra.list.Updated
+	if vlra.project != nil {
+		return vlra.project.Updated
 	}
 
 	return time.Time{}
 }
 
-func (vcls *VikunjaCaldavListStorage) getListRessource(isCollection bool) (rr VikunjaListResourceAdapter, err error) {
+func (vcls *VikunjaCaldavProjectStorage) getProjectRessource(isCollection bool) (rr VikunjaProjectResourceAdapter, err error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	if vcls.list == nil {
+	if vcls.project == nil {
 		return
 	}
 
-	can, _, err := vcls.list.CanRead(s, vcls.user)
+	can, _, err := vcls.project.CanRead(s, vcls.user)
 	if err != nil {
 		_ = s.Rollback()
 		return
 	}
 	if !can {
 		_ = s.Rollback()
-		log.Errorf("User %v tried to access a caldav resource (List %v) which they are not allowed to access", vcls.user.Username, vcls.list.ID)
-		return rr, models.ErrUserDoesNotHaveAccessToList{ListID: vcls.list.ID}
+		log.Errorf("User %v tried to access a caldav resource (Project %v) which they are not allowed to access", vcls.user.Username, vcls.project.ID)
+		return rr, models.ErrUserDoesNotHaveAccessToProject{ProjectID: vcls.project.ID}
 	}
-	err = vcls.list.ReadOne(s, vcls.user)
+	err = vcls.project.ReadOne(s, vcls.user)
 	if err != nil {
 		_ = s.Rollback()
 		return
 	}
 
-	listTasks := vcls.list.Tasks
-	if listTasks == nil {
+	projectTasks := vcls.project.Tasks
+	if projectTasks == nil {
 		tk := models.TaskCollection{
-			ListID: vcls.list.ID,
+			ProjectID: vcls.project.ID,
 		}
 		iface, _, _, err := tk.ReadAll(s, vcls.user, "", 1, 1000)
 		if err != nil {
@@ -546,18 +546,18 @@ func (vcls *VikunjaCaldavListStorage) getListRessource(isCollection bool) (rr Vi
 		}
 
 		for _, t := range tasks {
-			listTasks = append(listTasks, &models.TaskWithComments{Task: *t})
+			projectTasks = append(projectTasks, &models.TaskWithComments{Task: *t})
 		}
-		vcls.list.Tasks = listTasks
+		vcls.project.Tasks = projectTasks
 	}
 
 	if err := s.Commit(); err != nil {
 		return rr, err
 	}
 
-	rr = VikunjaListResourceAdapter{
-		list:         vcls.list,
-		listTasks:    listTasks,
+	rr = VikunjaProjectResourceAdapter{
+		project:      vcls.project,
+		projectTasks: projectTasks,
 		isCollection: isCollection,
 	}
 

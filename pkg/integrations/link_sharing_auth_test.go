@@ -31,14 +31,14 @@ func TestLinkSharingAuth(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Contains(t, rec.Body.String(), `"token":"`)
-		assert.Contains(t, rec.Body.String(), `"list_id":1`)
+		assert.Contains(t, rec.Body.String(), `"project_id":1`)
 	})
 	t.Run("Without Password, Password Provided", func(t *testing.T) {
 		rec, err := newTestRequest(t, http.MethodPost, apiv1.AuthenticateLinkShare, `{"password":"somethingsomething"}`, nil, map[string]string{"share": "test"})
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Contains(t, rec.Body.String(), `"token":"`)
-		assert.Contains(t, rec.Body.String(), `"list_id":1`)
+		assert.Contains(t, rec.Body.String(), `"project_id":1`)
 	})
 	t.Run("With Password, No Password Provided", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.AuthenticateLinkShare, ``, nil, map[string]string{"share": "testWithPassword"})
@@ -50,7 +50,7 @@ func TestLinkSharingAuth(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Contains(t, rec.Body.String(), `"token":"`)
-		assert.Contains(t, rec.Body.String(), `"list_id":1`)
+		assert.Contains(t, rec.Body.String(), `"project_id":1`)
 	})
 	t.Run("With Wrong Password", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.AuthenticateLinkShare, `{"password":"someWrongPassword"}`, nil, map[string]string{"share": "testWithPassword"})

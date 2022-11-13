@@ -31,7 +31,7 @@ func TestLinkSharing(t *testing.T) {
 	linkshareRead := &models.LinkSharing{
 		ID:          1,
 		Hash:        "test1",
-		ListID:      1,
+		ProjectID:   1,
 		Right:       models.RightRead,
 		SharingType: models.SharingTypeWithoutPassword,
 		SharedByID:  1,
@@ -40,7 +40,7 @@ func TestLinkSharing(t *testing.T) {
 	linkShareWrite := &models.LinkSharing{
 		ID:          2,
 		Hash:        "test2",
-		ListID:      2,
+		ProjectID:   2,
 		Right:       models.RightWrite,
 		SharingType: models.SharingTypeWithoutPassword,
 		SharedByID:  1,
@@ -49,7 +49,7 @@ func TestLinkSharing(t *testing.T) {
 	linkShareAdmin := &models.LinkSharing{
 		ID:          3,
 		Hash:        "test3",
-		ListID:      3,
+		ProjectID:   3,
 		Right:       models.RightAdmin,
 		SharingType: models.SharingTypeWithoutPassword,
 		SharedByID:  1,
@@ -65,102 +65,102 @@ func TestLinkSharing(t *testing.T) {
 		}
 		t.Run("Forbidden", func(t *testing.T) {
 			t.Run("read only", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "20"}, `{"right":0}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "20"}, `{"right":0}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("write", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "20"}, `{"right":1}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "20"}, `{"right":1}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("admin", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "20"}, `{"right":2}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "20"}, `{"right":2}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 		})
 		t.Run("Read only access", func(t *testing.T) {
 			t.Run("read only", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "9"}, `{"right":0}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "9"}, `{"right":0}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("write", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "9"}, `{"right":1}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "9"}, `{"right":1}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("admin", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "9"}, `{"right":2}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "9"}, `{"right":2}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 		})
 		t.Run("Write access", func(t *testing.T) {
 			t.Run("read only", func(t *testing.T) {
-				req, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "10"}, `{"right":0}`)
+				req, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "10"}, `{"right":0}`)
 				assert.NoError(t, err)
 				assert.Contains(t, req.Body.String(), `"hash":`)
 			})
 			t.Run("write", func(t *testing.T) {
-				req, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "10"}, `{"right":1}`)
+				req, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "10"}, `{"right":1}`)
 				assert.NoError(t, err)
 				assert.Contains(t, req.Body.String(), `"hash":`)
 			})
 			t.Run("admin", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "10"}, `{"right":2}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "10"}, `{"right":2}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 		})
 		t.Run("Admin access", func(t *testing.T) {
 			t.Run("read only", func(t *testing.T) {
-				req, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "11"}, `{"right":0}`)
+				req, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "11"}, `{"right":0}`)
 				assert.NoError(t, err)
 				assert.Contains(t, req.Body.String(), `"hash":`)
 			})
 			t.Run("write", func(t *testing.T) {
-				req, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "11"}, `{"right":1}`)
+				req, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "11"}, `{"right":1}`)
 				assert.NoError(t, err)
 				assert.Contains(t, req.Body.String(), `"hash":`)
 			})
 			t.Run("admin", func(t *testing.T) {
-				req, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "11"}, `{"right":2}`)
+				req, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "11"}, `{"right":2}`)
 				assert.NoError(t, err)
 				assert.Contains(t, req.Body.String(), `"hash":`)
 			})
 		})
 	})
 
-	t.Run("Lists", func(t *testing.T) {
-		testHandlerListReadOnly := webHandlerTest{
+	t.Run("Projects", func(t *testing.T) {
+		testHandlerProjectReadOnly := webHandlerTest{
 			linkShare: linkshareRead,
 			strFunc: func() handler.CObject {
-				return &models.List{}
+				return &models.Project{}
 			},
 			t: t,
 		}
-		testHandlerListWrite := webHandlerTest{
+		testHandlerProjectWrite := webHandlerTest{
 			linkShare: linkShareWrite,
 			strFunc: func() handler.CObject {
-				return &models.List{}
+				return &models.Project{}
 			},
 			t: t,
 		}
-		testHandlerListAdmin := webHandlerTest{
+		testHandlerProjectAdmin := webHandlerTest{
 			linkShare: linkShareAdmin,
 			strFunc: func() handler.CObject {
-				return &models.List{}
+				return &models.Project{}
 			},
 			t: t,
 		}
 
 		t.Run("ReadAll", func(t *testing.T) {
 			t.Run("Normal", func(t *testing.T) {
-				rec, err := testHandlerListReadOnly.testReadAllWithLinkShare(nil, nil)
+				rec, err := testHandlerProjectReadOnly.testReadAllWithLinkShare(nil, nil)
 				assert.NoError(t, err)
-				// Should only return the shared list, nothing else
+				// Should only return the shared project, nothing else
 				assert.Contains(t, rec.Body.String(), `Test1`)
 				assert.NotContains(t, rec.Body.String(), `Test2`)
 				assert.NotContains(t, rec.Body.String(), `Test3`)
@@ -168,9 +168,9 @@ func TestLinkSharing(t *testing.T) {
 				assert.NotContains(t, rec.Body.String(), `Test5`)
 			})
 			t.Run("Search", func(t *testing.T) {
-				rec, err := testHandlerListReadOnly.testReadAllWithLinkShare(url.Values{"s": []string{"est1"}}, nil)
+				rec, err := testHandlerProjectReadOnly.testReadAllWithLinkShare(url.Values{"s": []string{"est1"}}, nil)
 				assert.NoError(t, err)
-				// Should only return the shared list, nothing else
+				// Should only return the shared project, nothing else
 				assert.Contains(t, rec.Body.String(), `Test1`)
 				assert.NotContains(t, rec.Body.String(), `Test2`)
 				assert.NotContains(t, rec.Body.String(), `Test3`)
@@ -180,35 +180,35 @@ func TestLinkSharing(t *testing.T) {
 		})
 		t.Run("ReadOne", func(t *testing.T) {
 			t.Run("Normal", func(t *testing.T) {
-				rec, err := testHandlerListReadOnly.testReadOneWithLinkShare(nil, map[string]string{"list": "1"})
+				rec, err := testHandlerProjectReadOnly.testReadOneWithLinkShare(nil, map[string]string{"project": "1"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test1"`)
 				assert.NotContains(t, rec.Body.String(), `"title":"Test2"`)
 			})
 			t.Run("Nonexisting", func(t *testing.T) {
-				_, err := testHandlerListReadOnly.testReadOneWithLinkShare(nil, map[string]string{"list": "9999999"})
+				_, err := testHandlerProjectReadOnly.testReadOneWithLinkShare(nil, map[string]string{"project": "9999999"})
 				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeListDoesNotExist)
+				assertHandlerErrorCode(t, err, models.ErrCodeProjectDoesNotExist)
 			})
 			t.Run("Rights check", func(t *testing.T) {
 				t.Run("Forbidden", func(t *testing.T) {
-					// List 2, not shared with this token
-					_, err := testHandlerListReadOnly.testReadOneWithLinkShare(nil, map[string]string{"list": "2"})
+					// Project 2, not shared with this token
+					_, err := testHandlerProjectReadOnly.testReadOneWithLinkShare(nil, map[string]string{"project": "2"})
 					assert.Error(t, err)
 					assert.Contains(t, err.(*echo.HTTPError).Message, `You don't have the right to see this`)
 				})
 				t.Run("Shared readonly", func(t *testing.T) {
-					rec, err := testHandlerListReadOnly.testReadOneWithLinkShare(nil, map[string]string{"list": "1"})
+					rec, err := testHandlerProjectReadOnly.testReadOneWithLinkShare(nil, map[string]string{"project": "1"})
 					assert.NoError(t, err)
 					assert.Contains(t, rec.Body.String(), `"title":"Test1"`)
 				})
 				t.Run("Shared write", func(t *testing.T) {
-					rec, err := testHandlerListWrite.testReadOneWithLinkShare(nil, map[string]string{"list": "2"})
+					rec, err := testHandlerProjectWrite.testReadOneWithLinkShare(nil, map[string]string{"project": "2"})
 					assert.NoError(t, err)
 					assert.Contains(t, rec.Body.String(), `"title":"Test2"`)
 				})
 				t.Run("Shared admin", func(t *testing.T) {
-					rec, err := testHandlerListAdmin.testReadOneWithLinkShare(nil, map[string]string{"list": "3"})
+					rec, err := testHandlerProjectAdmin.testReadOneWithLinkShare(nil, map[string]string{"project": "3"})
 					assert.NoError(t, err)
 					assert.Contains(t, rec.Body.String(), `"title":"Test3"`)
 				})
@@ -216,28 +216,28 @@ func TestLinkSharing(t *testing.T) {
 		})
 		t.Run("Update", func(t *testing.T) {
 			t.Run("Nonexisting", func(t *testing.T) {
-				_, err := testHandlerListReadOnly.testUpdateWithLinkShare(nil, map[string]string{"list": "9999999"}, `{"title":"TestLoremIpsum"}`)
+				_, err := testHandlerProjectReadOnly.testUpdateWithLinkShare(nil, map[string]string{"project": "9999999"}, `{"title":"TestLoremIpsum"}`)
 				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeListDoesNotExist)
+				assertHandlerErrorCode(t, err, models.ErrCodeProjectDoesNotExist)
 			})
 			t.Run("Rights check", func(t *testing.T) {
 				t.Run("Forbidden", func(t *testing.T) {
-					_, err := testHandlerListReadOnly.testUpdateWithLinkShare(nil, map[string]string{"list": "2"}, `{"title":"TestLoremIpsum"}`)
+					_, err := testHandlerProjectReadOnly.testUpdateWithLinkShare(nil, map[string]string{"project": "2"}, `{"title":"TestLoremIpsum"}`)
 					assert.Error(t, err)
 					assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 				})
 				t.Run("Shared readonly", func(t *testing.T) {
-					_, err := testHandlerListReadOnly.testUpdateWithLinkShare(nil, map[string]string{"list": "1"}, `{"title":"TestLoremIpsum"}`)
+					_, err := testHandlerProjectReadOnly.testUpdateWithLinkShare(nil, map[string]string{"project": "1"}, `{"title":"TestLoremIpsum"}`)
 					assert.Error(t, err)
 					assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 				})
 				t.Run("Shared write", func(t *testing.T) {
-					rec, err := testHandlerListWrite.testUpdateWithLinkShare(nil, map[string]string{"list": "2"}, `{"title":"TestLoremIpsum","namespace_id":1}`)
+					rec, err := testHandlerProjectWrite.testUpdateWithLinkShare(nil, map[string]string{"project": "2"}, `{"title":"TestLoremIpsum","namespace_id":1}`)
 					assert.NoError(t, err)
 					assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 				})
 				t.Run("Shared admin", func(t *testing.T) {
-					rec, err := testHandlerListAdmin.testUpdateWithLinkShare(nil, map[string]string{"list": "3"}, `{"title":"TestLoremIpsum","namespace_id":2}`)
+					rec, err := testHandlerProjectAdmin.testUpdateWithLinkShare(nil, map[string]string{"project": "3"}, `{"title":"TestLoremIpsum","namespace_id":2}`)
 					assert.NoError(t, err)
 					assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 				})
@@ -245,54 +245,54 @@ func TestLinkSharing(t *testing.T) {
 		})
 		t.Run("Delete", func(t *testing.T) {
 			t.Run("Nonexisting", func(t *testing.T) {
-				_, err := testHandlerListReadOnly.testDeleteWithLinkShare(nil, map[string]string{"list": "9999999"})
+				_, err := testHandlerProjectReadOnly.testDeleteWithLinkShare(nil, map[string]string{"project": "9999999"})
 				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeListDoesNotExist)
+				assertHandlerErrorCode(t, err, models.ErrCodeProjectDoesNotExist)
 			})
 			t.Run("Rights check", func(t *testing.T) {
 				t.Run("Forbidden", func(t *testing.T) {
-					_, err := testHandlerListReadOnly.testDeleteWithLinkShare(nil, map[string]string{"list": "1"})
+					_, err := testHandlerProjectReadOnly.testDeleteWithLinkShare(nil, map[string]string{"project": "1"})
 					assert.Error(t, err)
 					assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 				})
 				t.Run("Shared readonly", func(t *testing.T) {
-					_, err := testHandlerListReadOnly.testDeleteWithLinkShare(nil, map[string]string{"list": "1"})
+					_, err := testHandlerProjectReadOnly.testDeleteWithLinkShare(nil, map[string]string{"project": "1"})
 					assert.Error(t, err)
 					assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 				})
 				t.Run("Shared write", func(t *testing.T) {
-					_, err := testHandlerListWrite.testDeleteWithLinkShare(nil, map[string]string{"list": "2"})
+					_, err := testHandlerProjectWrite.testDeleteWithLinkShare(nil, map[string]string{"project": "2"})
 					assert.Error(t, err)
 					assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 				})
 				t.Run("Shared admin", func(t *testing.T) {
-					rec, err := testHandlerListAdmin.testDeleteWithLinkShare(nil, map[string]string{"list": "3"})
+					rec, err := testHandlerProjectAdmin.testDeleteWithLinkShare(nil, map[string]string{"project": "3"})
 					assert.NoError(t, err)
 					assert.Contains(t, rec.Body.String(), `"message":"Successfully deleted."`)
 				})
 			})
 		})
 
-		// Creating a list should always be forbidden, since users need access to a namespace to create a list
+		// Creating a project should always be forbidden, since users need access to a namespace to create a project
 		t.Run("Create", func(t *testing.T) {
 			t.Run("Nonexisting", func(t *testing.T) {
-				_, err := testHandlerListReadOnly.testCreateWithLinkShare(nil, map[string]string{"namespace": "999999"}, `{"title":"Lorem"}`)
+				_, err := testHandlerProjectReadOnly.testCreateWithLinkShare(nil, map[string]string{"namespace": "999999"}, `{"title":"Lorem"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Rights check", func(t *testing.T) {
 				t.Run("Shared readonly", func(t *testing.T) {
-					_, err := testHandlerListReadOnly.testCreateWithLinkShare(nil, map[string]string{"namespace": "1"}, `{"title":"Lorem","description":"Lorem Ipsum"}`)
+					_, err := testHandlerProjectReadOnly.testCreateWithLinkShare(nil, map[string]string{"namespace": "1"}, `{"title":"Lorem","description":"Lorem Ipsum"}`)
 					assert.Error(t, err)
 					assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 				})
 				t.Run("Shared write", func(t *testing.T) {
-					_, err := testHandlerListWrite.testCreateWithLinkShare(nil, map[string]string{"namespace": "2"}, `{"title":"Lorem","description":"Lorem Ipsum"}`)
+					_, err := testHandlerProjectWrite.testCreateWithLinkShare(nil, map[string]string{"namespace": "2"}, `{"title":"Lorem","description":"Lorem Ipsum"}`)
 					assert.Error(t, err)
 					assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 				})
 				t.Run("Shared admin", func(t *testing.T) {
-					_, err := testHandlerListAdmin.testCreateWithLinkShare(nil, map[string]string{"namespace": "3"}, `{"title":"Lorem","description":"Lorem Ipsum"}`)
+					_, err := testHandlerProjectAdmin.testCreateWithLinkShare(nil, map[string]string{"namespace": "3"}, `{"title":"Lorem","description":"Lorem Ipsum"}`)
 					assert.Error(t, err)
 					assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 				})
@@ -301,74 +301,74 @@ func TestLinkSharing(t *testing.T) {
 
 		t.Run("Right Management", func(t *testing.T) {
 			t.Run("Users", func(t *testing.T) {
-				testHandlerListUserReadOnly := webHandlerTest{
+				testHandlerProjectUserReadOnly := webHandlerTest{
 					linkShare: linkshareRead,
 					strFunc: func() handler.CObject {
-						return &models.ListUser{}
+						return &models.ProjectUser{}
 					},
 					t: t,
 				}
-				testHandlerListUserWrite := webHandlerTest{
+				testHandlerProjectUserWrite := webHandlerTest{
 					linkShare: linkShareWrite,
 					strFunc: func() handler.CObject {
-						return &models.ListUser{}
+						return &models.ProjectUser{}
 					},
 					t: t,
 				}
-				testHandlerListUserAdmin := webHandlerTest{
+				testHandlerProjectUserAdmin := webHandlerTest{
 					linkShare: linkShareAdmin,
 					strFunc: func() handler.CObject {
-						return &models.ListUser{}
+						return &models.ProjectUser{}
 					},
 					t: t,
 				}
 				t.Run("ReadAll", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
-						rec, err := testHandlerListUserReadOnly.testReadAllWithLinkShare(nil, map[string]string{"list": "1"})
+						rec, err := testHandlerProjectUserReadOnly.testReadAllWithLinkShare(nil, map[string]string{"project": "1"})
 						assert.NoError(t, err)
 						assert.Contains(t, rec.Body.String(), `[]`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						rec, err := testHandlerListUserWrite.testReadAllWithLinkShare(nil, map[string]string{"list": "2"})
+						rec, err := testHandlerProjectUserWrite.testReadAllWithLinkShare(nil, map[string]string{"project": "2"})
 						assert.NoError(t, err)
 						assert.Contains(t, rec.Body.String(), `[]`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						rec, err := testHandlerListUserAdmin.testReadAllWithLinkShare(nil, map[string]string{"list": "3"})
+						rec, err := testHandlerProjectUserAdmin.testReadAllWithLinkShare(nil, map[string]string{"project": "3"})
 						assert.NoError(t, err)
 						assert.Contains(t, rec.Body.String(), `"username":"user1"`)
 					})
 				})
 				t.Run("Create", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
-						_, err := testHandlerListUserReadOnly.testCreateWithLinkShare(nil, map[string]string{"list": "1"}, `{"user_id":"user1"}`)
+						_, err := testHandlerProjectUserReadOnly.testCreateWithLinkShare(nil, map[string]string{"project": "1"}, `{"user_id":"user1"}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						_, err := testHandlerListUserWrite.testCreateWithLinkShare(nil, map[string]string{"list": "2"}, `{"user_id":"user1"}`)
+						_, err := testHandlerProjectUserWrite.testCreateWithLinkShare(nil, map[string]string{"project": "2"}, `{"user_id":"user1"}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						_, err := testHandlerListUserAdmin.testCreateWithLinkShare(nil, map[string]string{"list": "3"}, `{"user_id":"user1"}`)
+						_, err := testHandlerProjectUserAdmin.testCreateWithLinkShare(nil, map[string]string{"project": "3"}, `{"user_id":"user1"}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 				})
 				t.Run("Update", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
-						_, err := testHandlerListUserReadOnly.testUpdateWithLinkShare(nil, map[string]string{"list": "1"}, `{"user_id":"user1"}`)
+						_, err := testHandlerProjectUserReadOnly.testUpdateWithLinkShare(nil, map[string]string{"project": "1"}, `{"user_id":"user1"}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						_, err := testHandlerListUserWrite.testUpdateWithLinkShare(nil, map[string]string{"list": "2"}, `{"user_id":"user1"}`)
+						_, err := testHandlerProjectUserWrite.testUpdateWithLinkShare(nil, map[string]string{"project": "2"}, `{"user_id":"user1"}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						_, err := testHandlerListUserAdmin.testUpdateWithLinkShare(nil, map[string]string{"list": "3"}, `{"user_id":"user1"}`)
+						_, err := testHandlerProjectUserAdmin.testUpdateWithLinkShare(nil, map[string]string{"project": "3"}, `{"user_id":"user1"}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
@@ -376,91 +376,91 @@ func TestLinkSharing(t *testing.T) {
 				})
 				t.Run("Delete", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
-						_, err := testHandlerListUserReadOnly.testDeleteWithLinkShare(nil, map[string]string{"list": "1"})
+						_, err := testHandlerProjectUserReadOnly.testDeleteWithLinkShare(nil, map[string]string{"project": "1"})
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						_, err := testHandlerListUserWrite.testDeleteWithLinkShare(nil, map[string]string{"list": "2"})
+						_, err := testHandlerProjectUserWrite.testDeleteWithLinkShare(nil, map[string]string{"project": "2"})
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						_, err := testHandlerListUserAdmin.testDeleteWithLinkShare(nil, map[string]string{"list": "3"})
+						_, err := testHandlerProjectUserAdmin.testDeleteWithLinkShare(nil, map[string]string{"project": "3"})
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 				})
 			})
 			t.Run("Teams", func(t *testing.T) {
-				testHandlerListTeamReadOnly := webHandlerTest{
+				testHandlerProjectTeamReadOnly := webHandlerTest{
 					linkShare: linkshareRead,
 					strFunc: func() handler.CObject {
-						return &models.TeamList{}
+						return &models.TeamProject{}
 					},
 					t: t,
 				}
-				testHandlerListTeamWrite := webHandlerTest{
+				testHandlerProjectTeamWrite := webHandlerTest{
 					linkShare: linkShareWrite,
 					strFunc: func() handler.CObject {
-						return &models.TeamList{}
+						return &models.TeamProject{}
 					},
 					t: t,
 				}
-				testHandlerListTeamAdmin := webHandlerTest{
+				testHandlerProjectTeamAdmin := webHandlerTest{
 					linkShare: linkShareAdmin,
 					strFunc: func() handler.CObject {
-						return &models.TeamList{}
+						return &models.TeamProject{}
 					},
 					t: t,
 				}
 				t.Run("ReadAll", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
-						rec, err := testHandlerListTeamReadOnly.testReadAllWithLinkShare(nil, map[string]string{"list": "1"})
+						rec, err := testHandlerProjectTeamReadOnly.testReadAllWithLinkShare(nil, map[string]string{"project": "1"})
 						assert.NoError(t, err)
 						assert.Contains(t, rec.Body.String(), `[]`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						rec, err := testHandlerListTeamWrite.testReadAllWithLinkShare(nil, map[string]string{"list": "2"})
+						rec, err := testHandlerProjectTeamWrite.testReadAllWithLinkShare(nil, map[string]string{"project": "2"})
 						assert.NoError(t, err)
 						assert.Contains(t, rec.Body.String(), `[]`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						rec, err := testHandlerListTeamAdmin.testReadAllWithLinkShare(nil, map[string]string{"list": "3"})
+						rec, err := testHandlerProjectTeamAdmin.testReadAllWithLinkShare(nil, map[string]string{"project": "3"})
 						assert.NoError(t, err)
 						assert.Contains(t, rec.Body.String(), `"name":"testteam1"`)
 					})
 				})
 				t.Run("Create", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
-						_, err := testHandlerListTeamReadOnly.testCreateWithLinkShare(nil, map[string]string{"list": "1"}, `{"team_id":1}`)
+						_, err := testHandlerProjectTeamReadOnly.testCreateWithLinkShare(nil, map[string]string{"project": "1"}, `{"team_id":1}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						_, err := testHandlerListTeamWrite.testCreateWithLinkShare(nil, map[string]string{"list": "2"}, `{"team_id":1}`)
+						_, err := testHandlerProjectTeamWrite.testCreateWithLinkShare(nil, map[string]string{"project": "2"}, `{"team_id":1}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						_, err := testHandlerListTeamAdmin.testCreateWithLinkShare(nil, map[string]string{"list": "3"}, `{"team_id":1}`)
+						_, err := testHandlerProjectTeamAdmin.testCreateWithLinkShare(nil, map[string]string{"project": "3"}, `{"team_id":1}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 				})
 				t.Run("Update", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
-						_, err := testHandlerListTeamReadOnly.testUpdateWithLinkShare(nil, map[string]string{"list": "1"}, `{"team_id":1}`)
+						_, err := testHandlerProjectTeamReadOnly.testUpdateWithLinkShare(nil, map[string]string{"project": "1"}, `{"team_id":1}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						_, err := testHandlerListTeamWrite.testUpdateWithLinkShare(nil, map[string]string{"list": "2"}, `{"team_id":1}`)
+						_, err := testHandlerProjectTeamWrite.testUpdateWithLinkShare(nil, map[string]string{"project": "2"}, `{"team_id":1}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						_, err := testHandlerListTeamAdmin.testUpdateWithLinkShare(nil, map[string]string{"list": "3"}, `{"team_id":1}`)
+						_, err := testHandlerProjectTeamAdmin.testUpdateWithLinkShare(nil, map[string]string{"project": "3"}, `{"team_id":1}`)
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
@@ -468,17 +468,17 @@ func TestLinkSharing(t *testing.T) {
 				})
 				t.Run("Delete", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
-						_, err := testHandlerListTeamReadOnly.testDeleteWithLinkShare(nil, map[string]string{"list": "1"})
+						_, err := testHandlerProjectTeamReadOnly.testDeleteWithLinkShare(nil, map[string]string{"project": "1"})
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						_, err := testHandlerListTeamWrite.testDeleteWithLinkShare(nil, map[string]string{"list": "2"})
+						_, err := testHandlerProjectTeamWrite.testDeleteWithLinkShare(nil, map[string]string{"project": "2"})
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						_, err := testHandlerListTeamAdmin.testDeleteWithLinkShare(nil, map[string]string{"list": "3"})
+						_, err := testHandlerProjectTeamAdmin.testDeleteWithLinkShare(nil, map[string]string{"project": "3"})
 						assert.Error(t, err)
 						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 					})
@@ -586,34 +586,34 @@ func TestLinkSharing(t *testing.T) {
 		})
 		t.Run("Create", func(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
-				_, err := testHandlerTaskReadOnly.testCreateWithLinkShare(nil, map[string]string{"list": "1"}, `{"title":"Lorem Ipsum"}`)
+				_, err := testHandlerTaskReadOnly.testCreateWithLinkShare(nil, map[string]string{"project": "1"}, `{"title":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
-				rec, err := testHandlerTaskWrite.testCreateWithLinkShare(nil, map[string]string{"list": "2"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandlerTaskWrite.testCreateWithLinkShare(nil, map[string]string{"project": "2"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 			t.Run("Shared admin", func(t *testing.T) {
-				rec, err := testHandlerTaskAdmin.testCreateWithLinkShare(nil, map[string]string{"list": "3"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandlerTaskAdmin.testCreateWithLinkShare(nil, map[string]string{"project": "3"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 		})
 		t.Run("Update", func(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
-				_, err := testHandlerTaskReadOnly.testUpdateWithLinkShare(nil, map[string]string{"listtask": "1"}, `{"title":"Lorem Ipsum"}`)
+				_, err := testHandlerTaskReadOnly.testUpdateWithLinkShare(nil, map[string]string{"projecttask": "1"}, `{"title":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
-				rec, err := testHandlerTaskWrite.testUpdateWithLinkShare(nil, map[string]string{"listtask": "13"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandlerTaskWrite.testUpdateWithLinkShare(nil, map[string]string{"projecttask": "13"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 			t.Run("Shared admin", func(t *testing.T) {
-				rec, err := testHandlerTaskAdmin.testUpdateWithLinkShare(nil, map[string]string{"listtask": "32"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandlerTaskAdmin.testUpdateWithLinkShare(nil, map[string]string{"projecttask": "32"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
@@ -621,17 +621,17 @@ func TestLinkSharing(t *testing.T) {
 		})
 		t.Run("Delete", func(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
-				_, err := testHandlerTaskReadOnly.testDeleteWithLinkShare(nil, map[string]string{"listtask": "1"})
+				_, err := testHandlerTaskReadOnly.testDeleteWithLinkShare(nil, map[string]string{"projecttask": "1"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
-				rec, err := testHandlerTaskWrite.testDeleteWithLinkShare(nil, map[string]string{"listtask": "13"})
+				rec, err := testHandlerTaskWrite.testDeleteWithLinkShare(nil, map[string]string{"projecttask": "13"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
 			})
 			t.Run("Shared admin", func(t *testing.T) {
-				rec, err := testHandlerTaskAdmin.testDeleteWithLinkShare(nil, map[string]string{"listtask": "32"})
+				rec, err := testHandlerTaskAdmin.testDeleteWithLinkShare(nil, map[string]string{"projecttask": "32"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
 			})
@@ -738,34 +738,34 @@ func TestLinkSharing(t *testing.T) {
 		}
 		t.Run("ReadAll", func(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
-				rec, err := testHandlerLinkShareReadOnly.testReadAllWithLinkShare(nil, map[string]string{"list": "1"})
+				rec, err := testHandlerLinkShareReadOnly.testReadAllWithLinkShare(nil, map[string]string{"project": "1"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"hash":"test"`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
-				rec, err := testHandlerLinkShareWrite.testReadAllWithLinkShare(nil, map[string]string{"list": "2"})
+				rec, err := testHandlerLinkShareWrite.testReadAllWithLinkShare(nil, map[string]string{"project": "2"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"hash":"test2"`)
 			})
 			t.Run("Shared admin", func(t *testing.T) {
-				rec, err := testHandlerLinkShareAdmin.testReadAllWithLinkShare(nil, map[string]string{"list": "3"})
+				rec, err := testHandlerLinkShareAdmin.testReadAllWithLinkShare(nil, map[string]string{"project": "3"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"hash":"test3"`)
 			})
 		})
 		t.Run("Create", func(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
-				_, err := testHandlerLinkShareReadOnly.testCreateWithLinkShare(nil, map[string]string{"list": "1"}, `{}`)
+				_, err := testHandlerLinkShareReadOnly.testCreateWithLinkShare(nil, map[string]string{"project": "1"}, `{}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
-				_, err := testHandlerLinkShareWrite.testCreateWithLinkShare(nil, map[string]string{"list": "2"}, `{}`)
+				_, err := testHandlerLinkShareWrite.testCreateWithLinkShare(nil, map[string]string{"project": "2"}, `{}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared admin", func(t *testing.T) {
-				_, err := testHandlerLinkShareAdmin.testCreateWithLinkShare(nil, map[string]string{"list": "3"}, `{}`)
+				_, err := testHandlerLinkShareAdmin.testCreateWithLinkShare(nil, map[string]string{"project": "3"}, `{}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})

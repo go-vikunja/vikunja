@@ -31,8 +31,8 @@ type Bucket struct {
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"bucket"`
 	// The title of this bucket.
 	Title string `xorm:"text not null" valid:"required" minLength:"1" json:"title"`
-	// The list this bucket belongs to.
-	ListID int64 `xorm:"bigint not null" json:"list_id" param:"list"`
+	// The project this bucket belongs to.
+	ProjectID int64 `xorm:"bigint not null" json:"project_id" param:"project"`
 	// All tasks which belong to this bucket.
 	Tasks []*Task `xorm:"-" json:"tasks"`
 
@@ -77,19 +77,19 @@ func getBucketByID(s *xorm.Session, id int64) (b *Bucket, err error) {
 	return
 }
 
-func getDefaultBucket(s *xorm.Session, listID int64) (bucket *Bucket, err error) {
+func getDefaultBucket(s *xorm.Session, projectID int64) (bucket *Bucket, err error) {
 	bucket = &Bucket{}
 	_, err = s.
-		Where("list_id = ?", listID).
+		Where("project_id = ?", projectID).
 		OrderBy("position asc").
 		Get(bucket)
 	return
 }
 
-func getDoneBucketForList(s *xorm.Session, listID int64) (bucket *Bucket, err error) {
+func getDoneBucketForProject(s *xorm.Session, projectID int64) (bucket *Bucket, err error) {
 	bucket = &Bucket{}
 	exists, err := s.
-		Where("list_id = ? and is_done_bucket = ?", listID, true).
+		Where("project_id = ? and is_done_bucket = ?", projectID, true).
 		Get(bucket)
 	if err != nil {
 		return nil, err
@@ -101,14 +101,14 @@ func getDoneBucketForList(s *xorm.Session, listID int64) (bucket *Bucket, err er
 	return
 }
 
-// ReadAll returns all buckets with their tasks for a certain list
-// @Summary Get all kanban buckets of a list
-// @Description Returns all kanban buckets with belong to a list including their tasks.
+// ReadAll returns all buckets with their tasks for a certain project
+// @Summary Get all kanban buckets of a project
+// @Description Returns all kanban buckets with belong to a project including their tasks.
 // @tags task
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param id path int true "List Id"
+// @Param id path int true "Project Id"
 // @Param page query int false "The page number for tasks. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of tasks per bucket per page. This parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
@@ -119,15 +119,15 @@ func getDoneBucketForList(s *xorm.Session, listID int64) (bucket *Bucket, err er
 // @Param filter_include_nulls query string false "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`."
 // @Success 200 {array} models.Bucket "The buckets with their tasks"
 // @Failure 500 {object} models.Message "Internal server error"
-// @Router /lists/{id}/buckets [get]
+// @Router /projects/{id}/buckets [get]
 func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 
-	list, err := GetListSimpleByID(s, b.ListID)
+	project, err := GetProjectSimpleByID(s, b.ProjectID)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	can, _, err := list.CanRead(s, auth)
+	can, _, err := project.CanRead(s, auth)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -135,10 +135,10 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
-	// Get all buckets for this list
+	// Get all buckets for this project
 	buckets := []*Bucket{}
 	err = s.
-		Where("list_id = ?", b.ListID).
+		Where("project_id = ?", b.ProjectID).
 		OrderBy("position").
 		Find(&buckets)
 	if err != nil {
@@ -202,7 +202,7 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 
 		opts.filters[bucketFilterIndex].value = id
 
-		ts, _, _, err := getRawTasksForLists(s, []*List{{ID: bucket.ListID}}, auth, opts)
+		ts, _, _, err := getRawTasksForProjects(s, []*Project{{ID: bucket.ProjectID}}, auth, opts)
 		if err != nil {
 			return nil, 0, 0, err
 		}
@@ -226,7 +226,7 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 	for _, task := range tasks {
 		// Check if the bucket exists in the map to prevent nil pointer panics
 		if _, exists := bucketMap[task.BucketID]; !exists {
-			log.Debugf("Tried to put task %d into bucket %d which does not exist in list %d", task.ID, task.BucketID, b.ListID)
+			log.Debugf("Tried to put task %d into bucket %d which does not exist in project %d", task.ID, task.BucketID, b.ProjectID)
 			continue
 		}
 		bucketMap[task.BucketID].Tasks = append(bucketMap[task.BucketID].Tasks, task)
@@ -237,18 +237,18 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 
 // Create creates a new bucket
 // @Summary Create a new bucket
-// @Description Creates a new kanban bucket on a list.
+// @Description Creates a new kanban bucket on a project.
 // @tags task
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param id path int true "List Id"
+// @Param id path int true "Project Id"
 // @Param bucket body models.Bucket true "The bucket object"
 // @Success 200 {object} models.Bucket "The created bucket object."
 // @Failure 400 {object} web.HTTPError "Invalid bucket object provided."
-// @Failure 404 {object} web.HTTPError "The list does not exist."
+// @Failure 404 {object} web.HTTPError "The project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{id}/buckets [put]
+// @Router /projects/{id}/buckets [put]
 func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
 	b.CreatedBy, err = GetUserOrLinkShareUser(s, a)
 	if err != nil {
@@ -273,24 +273,24 @@ func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param listID path int true "List Id"
+// @Param projectID path int true "Project Id"
 // @Param bucketID path int true "Bucket Id"
 // @Param bucket body models.Bucket true "The bucket object"
 // @Success 200 {object} models.Bucket "The created bucket object."
 // @Failure 400 {object} web.HTTPError "Invalid bucket object provided."
 // @Failure 404 {object} web.HTTPError "The bucket does not exist."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{listID}/buckets/{bucketID} [post]
+// @Router /projects/{projectID}/buckets/{bucketID} [post]
 func (b *Bucket) Update(s *xorm.Session, a web.Auth) (err error) {
-	doneBucket, err := getDoneBucketForList(s, b.ListID)
+	doneBucket, err := getDoneBucketForProject(s, b.ProjectID)
 	if err != nil {
 		return err
 	}
 
 	if doneBucket != nil && doneBucket.IsDoneBucket && b.IsDoneBucket && doneBucket.ID != b.ID {
-		return &ErrOnlyOneDoneBucketPerList{
+		return &ErrOnlyOneDoneBucketPerProject{
 			BucketID:     b.ID,
-			ListID:       b.ListID,
+			ProjectID:    b.ProjectID,
 			DoneBucketID: doneBucket.ID,
 		}
 	}
@@ -309,28 +309,28 @@ func (b *Bucket) Update(s *xorm.Session, a web.Auth) (err error) {
 
 // Delete removes a bucket, but no tasks
 // @Summary Deletes an existing bucket
-// @Description Deletes an existing kanban bucket and dissociates all of its task. It does not delete any tasks. You cannot delete the last bucket on a list.
+// @Description Deletes an existing kanban bucket and dissociates all of its task. It does not delete any tasks. You cannot delete the last bucket on a project.
 // @tags task
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param listID path int true "List Id"
+// @Param projectID path int true "Project Id"
 // @Param bucketID path int true "Bucket Id"
 // @Success 200 {object} models.Message "Successfully deleted."
 // @Failure 404 {object} web.HTTPError "The bucket does not exist."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{listID}/buckets/{bucketID} [delete]
+// @Router /projects/{projectID}/buckets/{bucketID} [delete]
 func (b *Bucket) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// Prevent removing the last bucket
-	total, err := s.Where("list_id = ?", b.ListID).Count(&Bucket{})
+	total, err := s.Where("project_id = ?", b.ProjectID).Count(&Bucket{})
 	if err != nil {
 		return
 	}
 	if total <= 1 {
 		return ErrCannotRemoveLastBucket{
-			BucketID: b.ID,
-			ListID:   b.ListID,
+			BucketID:  b.ID,
+			ProjectID: b.ProjectID,
 		}
 	}
 
@@ -341,7 +341,7 @@ func (b *Bucket) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Get the default bucket
-	defaultBucket, err := getDefaultBucket(s, b.ListID)
+	defaultBucket, err := getDefaultBucket(s, b.ProjectID)
 	if err != nil {
 		return
 	}

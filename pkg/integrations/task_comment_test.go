@@ -39,7 +39,7 @@ func TestTaskComments(t *testing.T) {
 		linkShare: &models.LinkSharing{
 			ID:          2,
 			Hash:        "test2",
-			ListID:      2,
+			ProjectID:   2,
 			Right:       models.RightWrite,
 			SharingType: models.SharingTypeWithoutPassword,
 			SharedByID:  1,

@@ -33,7 +33,7 @@ func TestBucket_ReadAll(t *testing.T) {
 		defer s.Close()
 
 		testuser := &user.User{ID: 1}
-		b := &Bucket{ListID: 1}
+		b := &Bucket{ProjectID: 1}
 		bucketsInterface, _, _, err := b.ReadAll(s, testuser, "", 0, 0)
 		assert.NoError(t, err)
 
@@ -53,7 +53,7 @@ func TestBucket_ReadAll(t *testing.T) {
 		assert.Len(t, buckets[1].Tasks, 3)
 		assert.Len(t, buckets[2].Tasks, 3)
 
-		// Assert we have bucket 1, 2, 3 but not 4 (that belongs to a different list) and their position
+		// Assert we have bucket 1, 2, 3 but not 4 (that belongs to a different project) and their position
 		assert.Equal(t, int64(1), buckets[0].ID)
 		assert.Equal(t, int64(2), buckets[1].ID)
 		assert.Equal(t, int64(3), buckets[2].ID)
@@ -77,7 +77,7 @@ func TestBucket_ReadAll(t *testing.T) {
 
 		testuser := &user.User{ID: 1}
 		b := &Bucket{
-			ListID: 1,
+			ProjectID: 1,
 			TaskCollection: TaskCollection{
 				FilterBy:         []string{"title"},
 				FilterComparator: []string{"like"},
@@ -98,11 +98,11 @@ func TestBucket_ReadAll(t *testing.T) {
 		defer s.Close()
 
 		linkShare := &LinkSharing{
-			ID:     1,
-			ListID: 1,
-			Right:  RightRead,
+			ID:        1,
+			ProjectID: 1,
+			Right:     RightRead,
 		}
-		b := &Bucket{ListID: 1}
+		b := &Bucket{ProjectID: 1}
 		result, _, _, err := b.ReadAll(s, linkShare, "", 0, 0)
 		assert.NoError(t, err)
 		buckets, _ := result.([]*Bucket)
@@ -116,7 +116,7 @@ func TestBucket_ReadAll(t *testing.T) {
 		defer s.Close()
 
 		testuser := &user.User{ID: 12}
-		b := &Bucket{ListID: 23}
+		b := &Bucket{ProjectID: 23}
 		result, _, _, err := b.ReadAll(s, testuser, "", 0, 0)
 		assert.NoError(t, err)
 		buckets, _ := result.([]*Bucket)
@@ -135,8 +135,8 @@ func TestBucket_Delete(t *testing.T) {
 		defer s.Close()
 
 		b := &Bucket{
-			ID:     2, // The second bucket only has 3 tasks
-			ListID: 1,
+			ID:        2, // The second bucket only has 3 tasks
+			ProjectID: 1,
 		}
 		err := b.Delete(s, user)
 		assert.NoError(t, err)
@@ -149,18 +149,18 @@ func TestBucket_Delete(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Len(t, tasks, 16)
 		db.AssertMissing(t, "buckets", map[string]interface{}{
-			"id":      2,
-			"list_id": 1,
+			"id":         2,
+			"project_id": 1,
 		})
 	})
-	t.Run("last bucket in list", func(t *testing.T) {
+	t.Run("last bucket in project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
 		b := &Bucket{
-			ID:     34,
-			ListID: 18,
+			ID:        34,
+			ProjectID: 18,
 		}
 		err := b.Delete(s, user)
 		assert.Error(t, err)
@@ -169,8 +169,8 @@ func TestBucket_Delete(t *testing.T) {
 		assert.NoError(t, err)
 
 		db.AssertExists(t, "buckets", map[string]interface{}{
-			"id":      34,
-			"list_id": 18,
+			"id":         34,
+			"project_id": 18,
 		}, false)
 	})
 }
@@ -217,19 +217,19 @@ func TestBucket_Update(t *testing.T) {
 
 		testAndAssertBucketUpdate(t, b, s)
 	})
-	t.Run("only one done bucket per list", func(t *testing.T) {
+	t.Run("only one done bucket per project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
 		b := &Bucket{
 			ID:           1,
-			ListID:       1,
+			ProjectID:    1,
 			IsDoneBucket: true,
 		}
 
 		err := b.Update(s, &user.User{ID: 1})
 		assert.Error(t, err)
-		assert.True(t, IsErrOnlyOneDoneBucketPerList(err))
+		assert.True(t, IsErrOnlyOneDoneBucketPerProject(err))
 	})
 }

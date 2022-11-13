@@ -42,7 +42,7 @@ func (rel *TaskRelation) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	// We explicitly don't check if the two tasks are on the same list.
+	// We explicitly don't check if the two tasks are on the same project.
 	otherTask := &Task{ID: rel.OtherTaskID}
 	has, _, err = otherTask.CanRead(s, a)
 	if err != nil {

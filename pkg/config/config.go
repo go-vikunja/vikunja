@@ -164,7 +164,7 @@ const (
 	DefaultSettingsDiscoverableByName          Key = `defaultsettings.discoverable_by_name`
 	DefaultSettingsDiscoverableByEmail         Key = `defaultsettings.discoverable_by_email`
 	DefaultSettingsOverdueTaskRemindersEnabled Key = `defaultsettings.overdue_tasks_reminders_enabled`
-	DefaultSettingsDefaultListID               Key = `defaultsettings.default_list_id`
+	DefaultSettingsDefaultProjectID            Key = `defaultsettings.default_project_id`
 	DefaultSettingsWeekStart                   Key = `defaultsettings.week_start`
 	DefaultSettingsLanguage                    Key = `defaultsettings.language`
 	DefaultSettingsTimezone                    Key = `defaultsettings.timezone`
@@ -370,7 +370,7 @@ func InitDefaultConfig() {
 	MigrationMicrosoftTodoEnable.setDefault(false)
 	// Avatar
 	AvatarGravaterExpiration.setDefault(3600)
-	// List Backgrounds
+	// Project Backgrounds
 	BackgroundsEnabled.setDefault(true)
 	BackgroundsUploadEnabled.setDefault(true)
 	BackgroundsUnsplashEnabled.setDefault(false)

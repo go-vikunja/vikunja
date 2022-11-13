@@ -32,13 +32,13 @@ type SubscriptionEntityType int
 const (
 	SubscriptionEntityUnknown = iota
 	SubscriptionEntityNamespace
-	SubscriptionEntityList
+	SubscriptionEntityProject
 	SubscriptionEntityTask
 )
 
 const (
 	entityNamespace = `namespace`
-	entityList      = `list`
+	entityProject   = `project`
 	entityTask      = `task`
 )
 
@@ -72,8 +72,8 @@ func getEntityTypeFromString(entityType string) SubscriptionEntityType {
 	switch entityType {
 	case entityNamespace:
 		return SubscriptionEntityNamespace
-	case entityList:
-		return SubscriptionEntityList
+	case entityProject:
+		return SubscriptionEntityProject
 	case entityTask:
 		return SubscriptionEntityTask
 	}
@@ -86,8 +86,8 @@ func (et SubscriptionEntityType) String() string {
 	switch et {
 	case SubscriptionEntityNamespace:
 		return entityNamespace
-	case SubscriptionEntityList:
-		return entityList
+	case SubscriptionEntityProject:
+		return entityProject
 	case SubscriptionEntityTask:
 		return entityTask
 	}
@@ -97,7 +97,7 @@ func (et SubscriptionEntityType) String() string {
 
 func (et SubscriptionEntityType) validate() error {
 	if et == SubscriptionEntityNamespace ||
-		et == SubscriptionEntityList ||
+		et == SubscriptionEntityProject ||
 		et == SubscriptionEntityTask {
 		return nil
 	}
@@ -112,7 +112,7 @@ func (et SubscriptionEntityType) validate() error {
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param entity path string true "The entity the user subscribes to. Can be either `namespace`, `list` or `task`."
+// @Param entity path string true "The entity the user subscribes to. Can be either `namespace`, `project` or `task`."
 // @Param entityID path string true "The numeric id of the entity to subscribe to."
 // @Success 201 {object} models.Subscription "The subscription"
 // @Failure 403 {object} web.HTTPError "The user does not have access to subscribe to this entity."
@@ -153,7 +153,7 @@ func (sb *Subscription) Create(s *xorm.Session, auth web.Auth) (err error) {
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param entity path string true "The entity the user subscribed to. Can be either `namespace`, `list` or `task`."
+// @Param entity path string true "The entity the user subscribed to. Can be either `namespace`, `project` or `task`."
 // @Param entityID path string true "The numeric id of the subscribed entity to."
 // @Success 200 {object} models.Subscription "The subscription"
 // @Failure 403 {object} web.HTTPError "The user does not have access to subscribe to this entity."
@@ -177,16 +177,16 @@ func getSubscriberCondForEntity(entityType SubscriptionEntityType, entityID int6
 		)
 	}
 
-	if entityType == SubscriptionEntityList {
+	if entityType == SubscriptionEntityProject {
 		cond = builder.Or(
 			builder.And(
 				builder.Eq{"entity_id": entityID},
-				builder.Eq{"entity_type": SubscriptionEntityList},
+				builder.Eq{"entity_type": SubscriptionEntityProject},
 			),
 			builder.And(
 				builder.Eq{"entity_id": builder.
 					Select("namespace_id").
-					From("lists").
+					From("projects").
 					Where(builder.Eq{"id": entityID}),
 				},
 				builder.Eq{"entity_type": SubscriptionEntityNamespace},
@@ -203,19 +203,19 @@ func getSubscriberCondForEntity(entityType SubscriptionEntityType, entityID int6
 			builder.And(
 				builder.Eq{"entity_id": builder.
 					Select("namespace_id").
-					From("lists").
-					Join("INNER", "tasks", "lists.id = tasks.list_id").
+					From("projects").
+					Join("INNER", "tasks", "projects.id = tasks.project_id").
 					Where(builder.Eq{"tasks.id": entityID}),
 				},
 				builder.Eq{"entity_type": SubscriptionEntityNamespace},
 			),
 			builder.And(
 				builder.Eq{"entity_id": builder.
-					Select("list_id").
+					Select("project_id").
 					From("tasks").
 					Where(builder.Eq{"id": entityID}),
 				},
-				builder.Eq{"entity_type": SubscriptionEntityList},
+				builder.Eq{"entity_type": SubscriptionEntityProject},
 			),
 		)
 	}
@@ -225,8 +225,8 @@ func getSubscriberCondForEntity(entityType SubscriptionEntityType, entityID int6
 
 // GetSubscription returns a matching subscription for an entity and user.
 // It will return the next parent of a subscription. That means for tasks, it will first look for a subscription for
-// that task, if there is none it will look for a subscription on the list the task belongs to and if that also
-// doesn't exist it will check for a subscription for the namespace the list is belonging to.
+// that task, if there is none it will look for a subscription on the project the task belongs to and if that also
+// doesn't exist it will check for a subscription for the namespace the project is belonging to.
 func GetSubscription(s *xorm.Session, entityType SubscriptionEntityType, entityID int64, a web.Auth) (subscription *Subscription, err error) {
 	subs, err := GetSubscriptions(s, entityType, []int64{entityID}, a)
 	if err != nil || len(subs) == 0 {
@@ -242,7 +242,7 @@ func GetSubscription(s *xorm.Session, entityType SubscriptionEntityType, entityI
 }
 
 // GetSubscriptions returns a map of subscriptions to a set of given entity IDs
-func GetSubscriptions(s *xorm.Session, entityType SubscriptionEntityType, entityIDs []int64, a web.Auth) (listsToSubscriptions map[int64]*Subscription, err error) {
+func GetSubscriptions(s *xorm.Session, entityType SubscriptionEntityType, entityIDs []int64, a web.Auth) (projectsToSubscriptions map[int64]*Subscription, err error) {
 	u, is := a.(*user.User)
 	if !is {
 		return
@@ -269,12 +269,12 @@ func GetSubscriptions(s *xorm.Session, entityType SubscriptionEntityType, entity
 		return nil, err
 	}
 
-	listsToSubscriptions = make(map[int64]*Subscription)
+	projectsToSubscriptions = make(map[int64]*Subscription)
 	for _, sub := range subscriptions {
 		sub.Entity = sub.EntityType.String()
-		listsToSubscriptions[sub.EntityID] = sub
+		projectsToSubscriptions[sub.EntityID] = sub
 	}
-	return listsToSubscriptions, nil
+	return projectsToSubscriptions, nil
 }
 
 func getSubscribersForEntity(s *xorm.Session, entityType SubscriptionEntityType, entityID int64) (subscriptions []*Subscription, err error) {

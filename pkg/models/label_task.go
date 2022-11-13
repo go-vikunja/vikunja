@@ -35,7 +35,7 @@ import (
 type LabelTask struct {
 	// The unique, numeric id of this label.
 	ID     int64 `xorm:"bigint autoincr not null unique pk" json:"-"`
-	TaskID int64 `xorm:"bigint INDEX not null" json:"-" param:"listtask"`
+	TaskID int64 `xorm:"bigint INDEX not null" json:"-" param:"projecttask"`
 	// The label id you want to associate with a task.
 	LabelID int64 `xorm:"bigint INDEX not null" json:"label_id" param:"label"`
 	// A timestamp when this task was created. You cannot change this value.
@@ -52,7 +52,7 @@ func (LabelTask) TableName() string {
 
 // Delete deletes a label on a task
 // @Summary Remove a label from a task
-// @Description Remove a label from a task. The user needs to have write-access to the list to be able do this.
+// @Description Remove a label from a task. The user needs to have write-access to the project to be able do this.
 // @tags labels
 // @Accept json
 // @Produce json
@@ -71,7 +71,7 @@ func (lt *LabelTask) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 // Create adds a label to a task
 // @Summary Add a label to a task
-// @Description Add a label to a task. The user needs to have write-access to the list to be able do this.
+// @Description Add a label to a task. The user needs to have write-access to the project to be able do this.
 // @tags labels
 // @Accept json
 // @Produce json
@@ -100,7 +100,7 @@ func (lt *LabelTask) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	err = updateListByTaskID(s, lt.TaskID)
+	err = updateProjectByTaskID(s, lt.TaskID)
 	return
 }
 
@@ -180,7 +180,7 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*Lab
 			builder.
 				Select("id").
 				From("tasks").
-				Where(builder.In("list_id", getUserListsStatement(opts.GetForUser).Select("l.id"))),
+				Where(builder.In("project_id", getUserProjectsStatement(opts.GetForUser).Select("l.id"))),
 		), cond)
 	}
 	if opts.GetUnusedLabels {
@@ -309,17 +309,17 @@ func (t *Task) UpdateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Lab
 	for _, oldLabel := range allLabels {
 		found = false
 		if newLabels[oldLabel.ID] != nil {
-			found = true // If a new label is already in the list with old labels
+			found = true // If a new label is already in the project with old labels
 		}
 
-		// Put all labels which are only on the old list to the trash
+		// Put all labels which are only on the old project to the trash
 		if !found {
 			labelsToDelete = append(labelsToDelete, oldLabel.ID)
 		} else {
 			t.Labels = append(t.Labels, oldLabel)
 		}
 
-		// Put it in a list with all old labels, just using the loop here
+		// Put it in a project with all old labels, just using the loop here
 		oldLabels[oldLabel.ID] = oldLabel
 	}
 
@@ -365,7 +365,7 @@ func (t *Task) UpdateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Lab
 		t.Labels = append(t.Labels, label)
 	}
 
-	err = updateListLastUpdated(s, &List{ID: t.ListID})
+	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 	return
 }
 
@@ -373,7 +373,7 @@ func (t *Task) UpdateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Lab
 type LabelTaskBulk struct {
 	// All labels you want to update at once.
 	Labels []*Label `json:"labels"`
-	TaskID int64    `json:"-" param:"listtask"`
+	TaskID int64    `json:"-" param:"projecttask"`
 
 	web.CRUDable `json:"-"`
 	web.Rights   `json:"-"`

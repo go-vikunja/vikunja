@@ -27,14 +27,14 @@ import (
 	"xorm.io/xorm"
 )
 
-// TeamList defines the relation between a team and a list
-type TeamList struct {
-	// The unique, numeric id of this list <-> team relation.
+// TeamProject defines the relation between a team and a project
+type TeamProject struct {
+	// The unique, numeric id of this project <-> team relation.
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id"`
 	// The team id.
 	TeamID int64 `xorm:"bigint not null INDEX" json:"team_id" param:"team"`
-	// The list id.
-	ListID int64 `xorm:"bigint not null INDEX" json:"-" param:"list"`
+	// The project id.
+	ProjectID int64 `xorm:"bigint not null INDEX" json:"-" param:"project"`
 	// The right this team has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
 	Right Right `xorm:"bigint INDEX not null default 0" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
 
@@ -48,8 +48,8 @@ type TeamList struct {
 }
 
 // TableName makes beautiful table names
-func (TeamList) TableName() string {
-	return "team_lists"
+func (TeamProject) TableName() string {
+	return "team_projects"
 }
 
 // TeamWithRight represents a team, combined with rights.
@@ -58,22 +58,22 @@ type TeamWithRight struct {
 	Right Right `json:"right"`
 }
 
-// Create creates a new team <-> list relation
-// @Summary Add a team to a list
-// @Description Gives a team access to a list.
+// Create creates a new team <-> project relation
+// @Summary Add a team to a project
+// @Description Gives a team access to a project.
 // @tags sharing
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param id path int true "List ID"
-// @Param list body models.TeamList true "The team you want to add to the list."
-// @Success 201 {object} models.TeamList "The created team<->list relation."
-// @Failure 400 {object} web.HTTPError "Invalid team list object provided."
+// @Param id path int true "Project ID"
+// @Param project body models.TeamProject true "The team you want to add to the project."
+// @Success 201 {object} models.TeamProject "The created team<->project relation."
+// @Failure 400 {object} web.HTTPError "Invalid team project object provided."
 // @Failure 404 {object} web.HTTPError "The team does not exist."
-// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
+// @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{id}/teams [put]
-func (tl *TeamList) Create(s *xorm.Session, a web.Auth) (err error) {
+// @Router /projects/{id}/teams [put]
+func (tl *TeamProject) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the rights are valid
 	if err = tl.Right.isValid(); err != nil {
@@ -86,21 +86,21 @@ func (tl *TeamList) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	// Check if the list exists
-	l, err := GetListSimpleByID(s, tl.ListID)
+	// Check if the project exists
+	l, err := GetProjectSimpleByID(s, tl.ProjectID)
 	if err != nil {
 		return err
 	}
 
-	// Check if the team is already on the list
+	// Check if the team is already on the project
 	exists, err := s.Where("team_id = ?", tl.TeamID).
-		And("list_id = ?", tl.ListID).
-		Get(&TeamList{})
+		And("project_id = ?", tl.ProjectID).
+		Get(&TeamProject{})
 	if err != nil {
 		return
 	}
 	if exists {
-		return ErrTeamAlreadyHasAccess{tl.TeamID, tl.ListID}
+		return ErrTeamAlreadyHasAccess{tl.TeamID, tl.ProjectID}
 	}
 
 	// Insert the new team
@@ -109,33 +109,33 @@ func (tl *TeamList) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	err = events.Dispatch(&ListSharedWithTeamEvent{
-		List: l,
-		Team: team,
-		Doer: a,
+	err = events.Dispatch(&ProjectSharedWithTeamEvent{
+		Project: l,
+		Team:    team,
+		Doer:    a,
 	})
 	if err != nil {
 		return err
 	}
 
-	err = updateListLastUpdated(s, l)
+	err = updateProjectLastUpdated(s, l)
 	return
 }
 
-// Delete deletes a team <-> list relation based on the list & team id
-// @Summary Delete a team from a list
-// @Description Delets a team from a list. The team won't have access to the list anymore.
+// Delete deletes a team <-> project relation based on the project & team id
+// @Summary Delete a team from a project
+// @Description Delets a team from a project. The team won't have access to the project anymore.
 // @tags sharing
 // @Produce json
 // @Security JWTKeyAuth
-// @Param listID path int true "List ID"
+// @Param projectID path int true "Project ID"
 // @Param teamID path int true "Team ID"
 // @Success 200 {object} models.Message "The team was successfully deleted."
-// @Failure 403 {object} web.HTTPError "The user does not have access to the list"
-// @Failure 404 {object} web.HTTPError "Team or list does not exist."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the project"
+// @Failure 404 {object} web.HTTPError "Team or project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{listID}/teams/{teamID} [delete]
-func (tl *TeamList) Delete(s *xorm.Session, a web.Auth) (err error) {
+// @Router /projects/{projectID}/teams/{teamID} [delete]
+func (tl *TeamProject) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the team exists
 	_, err = GetTeamByID(s, tl.TeamID)
@@ -143,53 +143,53 @@ func (tl *TeamList) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	// Check if the team has access to the list
+	// Check if the team has access to the project
 	has, err := s.
-		Where("team_id = ? AND list_id = ?", tl.TeamID, tl.ListID).
-		Get(&TeamList{})
+		Where("team_id = ? AND project_id = ?", tl.TeamID, tl.ProjectID).
+		Get(&TeamProject{})
 	if err != nil {
 		return
 	}
 	if !has {
-		return ErrTeamDoesNotHaveAccessToList{TeamID: tl.TeamID, ListID: tl.ListID}
+		return ErrTeamDoesNotHaveAccessToProject{TeamID: tl.TeamID, ProjectID: tl.ProjectID}
 	}
 
 	// Delete the relation
 	_, err = s.Where("team_id = ?", tl.TeamID).
-		And("list_id = ?", tl.ListID).
-		Delete(TeamList{})
+		And("project_id = ?", tl.ProjectID).
+		Delete(TeamProject{})
 	if err != nil {
 		return err
 	}
 
-	err = updateListLastUpdated(s, &List{ID: tl.ListID})
+	err = updateProjectLastUpdated(s, &Project{ID: tl.ProjectID})
 	return
 }
 
-// ReadAll implements the method to read all teams of a list
-// @Summary Get teams on a list
-// @Description Returns a list with all teams which have access on a given list.
+// ReadAll implements the method to read all teams of a project
+// @Summary Get teams on a project
+// @Description Returns a project with all teams which have access on a given project.
 // @tags sharing
 // @Accept json
 // @Produce json
-// @Param id path int true "List ID"
+// @Param id path int true "Project ID"
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search teams by its name."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.TeamWithRight "The teams with their right."
-// @Failure 403 {object} web.HTTPError "No right to see the list."
+// @Failure 403 {object} web.HTTPError "No right to see the project."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{id}/teams [get]
-func (tl *TeamList) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+// @Router /projects/{id}/teams [get]
+func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	// Check if the user can read the namespace
-	l := &List{ID: tl.ListID}
+	l := &Project{ID: tl.ProjectID}
 	canRead, _, err := l.CanRead(s, a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 	if !canRead {
-		return nil, 0, 0, ErrNeedToHaveListReadAccess{ListID: tl.ListID, UserID: a.GetID()}
+		return nil, 0, 0, ErrNeedToHaveProjectReadAccess{ProjectID: tl.ProjectID, UserID: a.GetID()}
 	}
 
 	limit, start := getLimitFromPageIndex(page, perPage)
@@ -198,8 +198,8 @@ func (tl *TeamList) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 	all := []*TeamWithRight{}
 	query := s.
 		Table("teams").
-		Join("INNER", "team_lists", "team_id = teams.id").
-		Where("team_lists.list_id = ?", tl.ListID).
+		Join("INNER", "team_projects", "team_id = teams.id").
+		Where("team_projects.project_id = ?", tl.ProjectID).
 		Where(db.ILIKE("teams.name", search))
 	if limit > 0 {
 		query = query.Limit(limit, start)
@@ -221,8 +221,8 @@ func (tl *TeamList) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 
 	totalItems, err = s.
 		Table("teams").
-		Join("INNER", "team_lists", "team_id = teams.id").
-		Where("team_lists.list_id = ?", tl.ListID).
+		Join("INNER", "team_projects", "team_id = teams.id").
+		Where("team_projects.project_id = ?", tl.ProjectID).
 		Where("teams.name LIKE ?", "%"+search+"%").
 		Count(&TeamWithRight{})
 	if err != nil {
@@ -232,22 +232,22 @@ func (tl *TeamList) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 	return all, len(all), totalItems, err
 }
 
-// Update updates a team <-> list relation
-// @Summary Update a team <-> list relation
-// @Description Update a team <-> list relation. Mostly used to update the right that team has.
+// Update updates a team <-> project relation
+// @Summary Update a team <-> project relation
+// @Description Update a team <-> project relation. Mostly used to update the right that team has.
 // @tags sharing
 // @Accept json
 // @Produce json
-// @Param listID path int true "List ID"
+// @Param projectID path int true "Project ID"
 // @Param teamID path int true "Team ID"
-// @Param list body models.TeamList true "The team you want to update."
+// @Param project body models.TeamProject true "The team you want to update."
 // @Security JWTKeyAuth
-// @Success 200 {object} models.TeamList "The updated team <-> list relation."
-// @Failure 403 {object} web.HTTPError "The user does not have admin-access to the list"
-// @Failure 404 {object} web.HTTPError "Team or list does not exist."
+// @Success 200 {object} models.TeamProject "The updated team <-> project relation."
+// @Failure 403 {object} web.HTTPError "The user does not have admin-access to the project"
+// @Failure 404 {object} web.HTTPError "Team or project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{listID}/teams/{teamID} [post]
-func (tl *TeamList) Update(s *xorm.Session, a web.Auth) (err error) {
+// @Router /projects/{projectID}/teams/{teamID} [post]
+func (tl *TeamProject) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the right is valid
 	if err := tl.Right.isValid(); err != nil {
@@ -255,13 +255,13 @@ func (tl *TeamList) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	_, err = s.
-		Where("list_id = ? AND team_id = ?", tl.ListID, tl.TeamID).
+		Where("project_id = ? AND team_id = ?", tl.ProjectID, tl.TeamID).
 		Cols("right").
 		Update(tl)
 	if err != nil {
 		return err
 	}
 
-	err = updateListLastUpdated(s, &List{ID: tl.ListID})
+	err = updateProjectLastUpdated(s, &Project{ID: tl.ProjectID})
 	return
 }

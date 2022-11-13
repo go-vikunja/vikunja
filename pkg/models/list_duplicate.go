@@ -24,89 +24,89 @@ import (
 	"xorm.io/xorm"
 )
 
-// ListDuplicate holds everything needed to duplicate a list
-type ListDuplicate struct {
-	// The list id of the list to duplicate
-	ListID int64 `json:"-" param:"listid"`
+// ProjectDuplicate holds everything needed to duplicate a project
+type ProjectDuplicate struct {
+	// The project id of the project to duplicate
+	ProjectID int64 `json:"-" param:"projectid"`
 	// The target namespace ID
 	NamespaceID int64 `json:"namespace_id,omitempty"`
 
-	// The copied list
-	List *List `json:",omitempty"`
+	// The copied project
+	Project *Project `json:",omitempty"`
 
 	web.Rights   `json:"-"`
 	web.CRUDable `json:"-"`
 }
 
-// CanCreate checks if a user has the right to duplicate a list
-func (ld *ListDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bool, err error) {
-	// List Exists + user has read access to list
-	ld.List = &List{ID: ld.ListID}
-	canRead, _, err := ld.List.CanRead(s, a)
+// CanCreate checks if a user has the right to duplicate a project
+func (ld *ProjectDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bool, err error) {
+	// Project Exists + user has read access to project
+	ld.Project = &Project{ID: ld.ProjectID}
+	canRead, _, err := ld.Project.CanRead(s, a)
 	if err != nil || !canRead {
 		return canRead, err
 	}
 
-	// Namespace exists + user has write access to is (-> can create new lists)
-	ld.List.NamespaceID = ld.NamespaceID
-	return ld.List.CanCreate(s, a)
+	// Namespace exists + user has write access to is (-> can create new projects)
+	ld.Project.NamespaceID = ld.NamespaceID
+	return ld.Project.CanCreate(s, a)
 }
 
-// Create duplicates a list
-// @Summary Duplicate an existing list
-// @Description Copies the list, tasks, files, kanban data, assignees, comments, attachments, lables, relations, backgrounds, user/team rights and link shares from one list to a new namespace. The user needs read access in the list and write access in the namespace of the new list.
-// @tags list
+// Create duplicates a project
+// @Summary Duplicate an existing project
+// @Description Copies the project, tasks, files, kanban data, assignees, comments, attachments, lables, relations, backgrounds, user/team rights and link shares from one project to a new namespace. The user needs read access in the project and write access in the namespace of the new project.
+// @tags project
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param listID path int true "The list ID to duplicate"
-// @Param list body models.ListDuplicate true "The target namespace which should hold the copied list."
-// @Success 201 {object} models.ListDuplicate "The created list."
-// @Failure 400 {object} web.HTTPError "Invalid list duplicate object provided."
-// @Failure 403 {object} web.HTTPError "The user does not have access to the list or namespace"
+// @Param projectID path int true "The project ID to duplicate"
+// @Param project body models.ProjectDuplicate true "The target namespace which should hold the copied project."
+// @Success 201 {object} models.ProjectDuplicate "The created project."
+// @Failure 400 {object} web.HTTPError "Invalid project duplicate object provided."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the project or namespace"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{listID}/duplicate [put]
+// @Router /projects/{projectID}/duplicate [put]
 //
 //nolint:gocyclo
-func (ld *ListDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
+func (ld *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
-	log.Debugf("Duplicating list %d", ld.ListID)
+	log.Debugf("Duplicating project %d", ld.ProjectID)
 
-	ld.List.ID = 0
-	ld.List.Identifier = "" // Reset the identifier to trigger regenerating a new one
+	ld.Project.ID = 0
+	ld.Project.Identifier = "" // Reset the identifier to trigger regenerating a new one
 	// Set the owner to the current user
-	ld.List.OwnerID = doer.GetID()
-	if err := CreateList(s, ld.List, doer); err != nil {
-		// If there is no available unique list identifier, just reset it.
-		if IsErrListIdentifierIsNotUnique(err) {
-			ld.List.Identifier = ""
+	ld.Project.OwnerID = doer.GetID()
+	if err := CreateProject(s, ld.Project, doer); err != nil {
+		// If there is no available unique project identifier, just reset it.
+		if IsErrProjectIdentifierIsNotUnique(err) {
+			ld.Project.Identifier = ""
 		} else {
 			return err
 		}
 	}
 
-	log.Debugf("Duplicated list %d into new list %d", ld.ListID, ld.List.ID)
+	log.Debugf("Duplicated project %d into new project %d", ld.ProjectID, ld.Project.ID)
 
 	// Duplicate kanban buckets
 	// Old bucket ID as key, new id as value
 	// Used to map the newly created tasks to their new buckets
 	bucketMap := make(map[int64]int64)
 	buckets := []*Bucket{}
-	err = s.Where("list_id = ?", ld.ListID).Find(&buckets)
+	err = s.Where("project_id = ?", ld.ProjectID).Find(&buckets)
 	if err != nil {
 		return
 	}
 	for _, b := range buckets {
 		oldID := b.ID
 		b.ID = 0
-		b.ListID = ld.List.ID
+		b.ProjectID = ld.Project.ID
 		if err := b.Create(s, doer); err != nil {
 			return err
 		}
 		bucketMap[oldID] = b.ID
 	}
 
-	log.Debugf("Duplicated all buckets from list %d into %d", ld.ListID, ld.List.ID)
+	log.Debugf("Duplicated all buckets from project %d into %d", ld.ProjectID, ld.Project.ID)
 
 	err = duplicateTasks(s, doer, ld, bucketMap)
 	if err != nil {
@@ -114,11 +114,11 @@ func (ld *ListDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 	}
 
 	// Background files + unsplash info
-	if ld.List.BackgroundFileID != 0 {
+	if ld.Project.BackgroundFileID != 0 {
 
-		log.Debugf("Duplicating background %d from list %d into %d", ld.List.BackgroundFileID, ld.ListID, ld.List.ID)
+		log.Debugf("Duplicating background %d from project %d into %d", ld.Project.BackgroundFileID, ld.ProjectID, ld.Project.ID)
 
-		f := &files.File{ID: ld.List.BackgroundFileID}
+		f := &files.File{ID: ld.Project.BackgroundFileID}
 		if err := f.LoadFileMetaByID(); err != nil {
 			return err
 		}
@@ -133,7 +133,7 @@ func (ld *ListDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		}
 
 		// Get unsplash info if applicable
-		up, err := GetUnsplashPhotoByFileID(s, ld.List.BackgroundFileID)
+		up, err := GetUnsplashPhotoByFileID(s, ld.Project.BackgroundFileID)
 		if err != nil && files.IsErrFileIsNotUnsplashFile(err) {
 			return err
 		}
@@ -145,38 +145,38 @@ func (ld *ListDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 			}
 		}
 
-		if err := SetListBackground(s, ld.List.ID, file, ld.List.BackgroundBlurHash); err != nil {
+		if err := SetProjectBackground(s, ld.Project.ID, file, ld.Project.BackgroundBlurHash); err != nil {
 			return err
 		}
 
-		log.Debugf("Duplicated list background from list %d into %d", ld.ListID, ld.List.ID)
+		log.Debugf("Duplicated project background from project %d into %d", ld.ProjectID, ld.Project.ID)
 	}
 
 	// Rights / Shares
-	// To keep it simple(r) we will only copy rights which are directly used with the list, no namespace changes.
-	users := []*ListUser{}
-	err = s.Where("list_id = ?", ld.ListID).Find(&users)
+	// To keep it simple(r) we will only copy rights which are directly used with the project, no namespace changes.
+	users := []*ProjectUser{}
+	err = s.Where("project_id = ?", ld.ProjectID).Find(&users)
 	if err != nil {
 		return
 	}
 	for _, u := range users {
 		u.ID = 0
-		u.ListID = ld.List.ID
+		u.ProjectID = ld.Project.ID
 		if _, err := s.Insert(u); err != nil {
 			return err
 		}
 	}
 
-	log.Debugf("Duplicated user shares from list %d into %d", ld.ListID, ld.List.ID)
+	log.Debugf("Duplicated user shares from project %d into %d", ld.ProjectID, ld.Project.ID)
 
-	teams := []*TeamList{}
-	err = s.Where("list_id = ?", ld.ListID).Find(&teams)
+	teams := []*TeamProject{}
+	err = s.Where("project_id = ?", ld.ProjectID).Find(&teams)
 	if err != nil {
 		return
 	}
 	for _, t := range teams {
 		t.ID = 0
-		t.ListID = ld.List.ID
+		t.ProjectID = ld.Project.ID
 		if _, err := s.Insert(t); err != nil {
 			return err
 		}
@@ -184,27 +184,27 @@ func (ld *ListDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 	// Generate new link shares if any are available
 	linkShares := []*LinkSharing{}
-	err = s.Where("list_id = ?", ld.ListID).Find(&linkShares)
+	err = s.Where("project_id = ?", ld.ProjectID).Find(&linkShares)
 	if err != nil {
 		return
 	}
 	for _, share := range linkShares {
 		share.ID = 0
-		share.ListID = ld.List.ID
+		share.ProjectID = ld.Project.ID
 		share.Hash = utils.MakeRandomString(40)
 		if _, err := s.Insert(share); err != nil {
 			return err
 		}
 	}
 
-	log.Debugf("Duplicated all link shares from list %d into %d", ld.ListID, ld.List.ID)
+	log.Debugf("Duplicated all link shares from project %d into %d", ld.ProjectID, ld.Project.ID)
 
 	return
 }
 
-func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ListDuplicate, bucketMap map[int64]int64) (err error) {
+func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate, bucketMap map[int64]int64) (err error) {
 	// Get all tasks + all task details
-	tasks, _, _, err := getTasksForLists(s, []*List{{ID: ld.ListID}}, doer, &taskOptions{})
+	tasks, _, _, err := getTasksForProjects(s, []*Project{{ID: ld.ProjectID}}, doer, &taskOptions{})
 	if err != nil {
 		return err
 	}
@@ -221,7 +221,7 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ListDuplicate, bucketMap
 	for _, t := range tasks {
 		oldID := t.ID
 		t.ID = 0
-		t.ListID = ld.List.ID
+		t.ProjectID = ld.Project.ID
 		t.BucketID = bucketMap[t.BucketID]
 		t.UID = ""
 		err := createTask(s, t, doer, false)
@@ -232,11 +232,11 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ListDuplicate, bucketMap
 		oldTaskIDs = append(oldTaskIDs, oldID)
 	}
 
-	log.Debugf("Duplicated all tasks from list %d into %d", ld.ListID, ld.List.ID)
+	log.Debugf("Duplicated all tasks from project %d into %d", ld.ProjectID, ld.Project.ID)
 
 	// Save all attachments
-	// We also duplicate all underlying files since they could be modified in one list which would result in
-	// file changes in the other list which is not something we want.
+	// We also duplicate all underlying files since they could be modified in one project which would result in
+	// file changes in the other project which is not something we want.
 	attachments, err := getTaskAttachmentsByTaskIDs(s, oldTaskIDs)
 	if err != nil {
 		return err
@@ -254,7 +254,7 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ListDuplicate, bucketMap
 		attachment.File = &files.File{ID: attachment.FileID}
 		if err := attachment.File.LoadFileMetaByID(); err != nil {
 			if files.IsErrFileDoesNotExist(err) {
-				log.Debugf("Not duplicating attachment %d (file %d) because it does not exist from list %d into %d", oldAttachmentID, attachment.FileID, ld.ListID, ld.List.ID)
+				log.Debugf("Not duplicating attachment %d (file %d) because it does not exist from project %d into %d", oldAttachmentID, attachment.FileID, ld.ProjectID, ld.Project.ID)
 				continue
 			}
 			return err
@@ -272,10 +272,10 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ListDuplicate, bucketMap
 			_ = attachment.File.File.Close()
 		}
 
-		log.Debugf("Duplicated attachment %d into %d from list %d into %d", oldAttachmentID, attachment.ID, ld.ListID, ld.List.ID)
+		log.Debugf("Duplicated attachment %d into %d from project %d into %d", oldAttachmentID, attachment.ID, ld.ProjectID, ld.Project.ID)
 	}
 
-	log.Debugf("Duplicated all attachments from list %d into %d", ld.ListID, ld.List.ID)
+	log.Debugf("Duplicated all attachments from project %d into %d", ld.ProjectID, ld.Project.ID)
 
 	// Copy label tasks (not the labels)
 	labelTasks := []*LabelTask{}
@@ -292,7 +292,7 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ListDuplicate, bucketMap
 		}
 	}
 
-	log.Debugf("Duplicated all labels from list %d into %d", ld.ListID, ld.List.ID)
+	log.Debugf("Duplicated all labels from project %d into %d", ld.ProjectID, ld.Project.ID)
 
 	// Assignees
 	// Only copy those assignees who have access to the task
@@ -303,18 +303,18 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ListDuplicate, bucketMap
 	}
 	for _, a := range assignees {
 		t := &Task{
-			ID:     taskMap[a.TaskID],
-			ListID: ld.List.ID,
+			ID:        taskMap[a.TaskID],
+			ProjectID: ld.Project.ID,
 		}
-		if err := t.addNewAssigneeByID(s, a.UserID, ld.List, doer); err != nil {
-			if IsErrUserDoesNotHaveAccessToList(err) {
+		if err := t.addNewAssigneeByID(s, a.UserID, ld.Project, doer); err != nil {
+			if IsErrUserDoesNotHaveAccessToProject(err) {
 				continue
 			}
 			return err
 		}
 	}
 
-	log.Debugf("Duplicated all assignees from list %d into %d", ld.ListID, ld.List.ID)
+	log.Debugf("Duplicated all assignees from project %d into %d", ld.ProjectID, ld.Project.ID)
 
 	// Comments
 	comments := []*TaskComment{}
@@ -330,10 +330,10 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ListDuplicate, bucketMap
 		}
 	}
 
-	log.Debugf("Duplicated all comments from list %d into %d", ld.ListID, ld.List.ID)
+	log.Debugf("Duplicated all comments from project %d into %d", ld.ProjectID, ld.Project.ID)
 
-	// Relations in that list
-	// Low-Effort: Only copy those relations which are between tasks in the same list
+	// Relations in that project
+	// Low-Effort: Only copy those relations which are between tasks in the same project
 	// because we can do that without a lot of hassle
 	relations := []*TaskRelation{}
 	err = s.In("task_id", oldTaskIDs).Find(&relations)
@@ -353,7 +353,7 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ListDuplicate, bucketMap
 		}
 	}
 
-	log.Debugf("Duplicated all task relations from list %d into %d", ld.ListID, ld.List.ID)
+	log.Debugf("Duplicated all task relations from project %d into %d", ld.ProjectID, ld.Project.ID)
 
 	return nil
 }

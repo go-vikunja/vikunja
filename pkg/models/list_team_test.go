@@ -28,13 +28,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTeamList_ReadAll(t *testing.T) {
+func TestTeamProject_ReadAll(t *testing.T) {
 	u := &user.User{ID: 1}
 
 	t.Run("normal", func(t *testing.T) {
-		tl := TeamList{
-			TeamID: 1,
-			ListID: 3,
+		tl := TeamProject{
+			TeamID:    1,
+			ProjectID: 3,
 		}
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -45,22 +45,22 @@ func TestTeamList_ReadAll(t *testing.T) {
 		assert.Equal(t, ts.Len(), 1)
 		_ = s.Close()
 	})
-	t.Run("nonexistant list", func(t *testing.T) {
-		tl := TeamList{
-			ListID: 99999,
+	t.Run("nonexistant project", func(t *testing.T) {
+		tl := TeamProject{
+			ProjectID: 99999,
 		}
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		_, _, _, err := tl.ReadAll(s, u, "", 1, 50)
 		assert.Error(t, err)
-		assert.True(t, IsErrListDoesNotExist(err))
+		assert.True(t, IsErrProjectDoesNotExist(err))
 		_ = s.Close()
 	})
 	t.Run("namespace owner", func(t *testing.T) {
-		tl := TeamList{
-			TeamID: 1,
-			ListID: 2,
-			Right:  RightAdmin,
+		tl := TeamProject{
+			TeamID:    1,
+			ProjectID: 2,
+			Right:     RightAdmin,
 		}
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -69,21 +69,21 @@ func TestTeamList_ReadAll(t *testing.T) {
 		_ = s.Close()
 	})
 	t.Run("no access", func(t *testing.T) {
-		tl := TeamList{
-			TeamID: 1,
-			ListID: 5,
-			Right:  RightAdmin,
+		tl := TeamProject{
+			TeamID:    1,
+			ProjectID: 5,
+			Right:     RightAdmin,
 		}
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		_, _, _, err := tl.ReadAll(s, u, "", 1, 50)
 		assert.Error(t, err)
-		assert.True(t, IsErrNeedToHaveListReadAccess(err))
+		assert.True(t, IsErrNeedToHaveProjectReadAccess(err))
 		_ = s.Close()
 	})
 	t.Run("search", func(t *testing.T) {
-		tl := TeamList{
-			ListID: 19,
+		tl := TeamProject{
+			ProjectID: 19,
 		}
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -97,15 +97,15 @@ func TestTeamList_ReadAll(t *testing.T) {
 	})
 }
 
-func TestTeamList_Create(t *testing.T) {
+func TestTeamProject_Create(t *testing.T) {
 	u := &user.User{ID: 1}
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
-		tl := TeamList{
-			TeamID: 1,
-			ListID: 1,
-			Right:  RightAdmin,
+		tl := TeamProject{
+			TeamID:    1,
+			ProjectID: 1,
+			Right:     RightAdmin,
 		}
 		allowed, _ := tl.CanCreate(s, u)
 		assert.True(t, allowed)
@@ -113,19 +113,19 @@ func TestTeamList_Create(t *testing.T) {
 		assert.NoError(t, err)
 		err = s.Commit()
 		assert.NoError(t, err)
-		db.AssertExists(t, "team_lists", map[string]interface{}{
-			"team_id": 1,
-			"list_id": 1,
-			"right":   RightAdmin,
+		db.AssertExists(t, "team_projects", map[string]interface{}{
+			"team_id":    1,
+			"project_id": 1,
+			"right":      RightAdmin,
 		}, false)
 	})
 	t.Run("team already has access", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
-		tl := TeamList{
-			TeamID: 1,
-			ListID: 3,
-			Right:  RightAdmin,
+		tl := TeamProject{
+			TeamID:    1,
+			ProjectID: 3,
+			Right:     RightAdmin,
 		}
 		err := tl.Create(s, u)
 		assert.Error(t, err)
@@ -135,10 +135,10 @@ func TestTeamList_Create(t *testing.T) {
 	t.Run("wrong rights", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
-		tl := TeamList{
-			TeamID: 1,
-			ListID: 1,
-			Right:  RightUnknown,
+		tl := TeamProject{
+			TeamID:    1,
+			ProjectID: 1,
+			Right:     RightUnknown,
 		}
 		err := tl.Create(s, u)
 		assert.Error(t, err)
@@ -148,84 +148,84 @@ func TestTeamList_Create(t *testing.T) {
 	t.Run("nonexistant team", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
-		tl := TeamList{
-			TeamID: 9999,
-			ListID: 1,
+		tl := TeamProject{
+			TeamID:    9999,
+			ProjectID: 1,
 		}
 		err := tl.Create(s, u)
 		assert.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
 		_ = s.Close()
 	})
-	t.Run("nonexistant list", func(t *testing.T) {
+	t.Run("nonexistant project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
-		tl := TeamList{
-			TeamID: 1,
-			ListID: 9999,
+		tl := TeamProject{
+			TeamID:    1,
+			ProjectID: 9999,
 		}
 		err := tl.Create(s, u)
 		assert.Error(t, err)
-		assert.True(t, IsErrListDoesNotExist(err))
+		assert.True(t, IsErrProjectDoesNotExist(err))
 		_ = s.Close()
 	})
 }
 
-func TestTeamList_Delete(t *testing.T) {
+func TestTeamProject_Delete(t *testing.T) {
 	user := &user.User{ID: 1}
 
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
-		tl := TeamList{
-			TeamID: 1,
-			ListID: 3,
+		tl := TeamProject{
+			TeamID:    1,
+			ProjectID: 3,
 		}
 		err := tl.Delete(s, user)
 		assert.NoError(t, err)
 		err = s.Commit()
 		assert.NoError(t, err)
-		db.AssertMissing(t, "team_lists", map[string]interface{}{
-			"team_id": 1,
-			"list_id": 3,
+		db.AssertMissing(t, "team_projects", map[string]interface{}{
+			"team_id":    1,
+			"project_id": 3,
 		})
 	})
 	t.Run("nonexistant team", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
-		tl := TeamList{
-			TeamID: 9999,
-			ListID: 1,
+		tl := TeamProject{
+			TeamID:    9999,
+			ProjectID: 1,
 		}
 		err := tl.Delete(s, user)
 		assert.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
 		_ = s.Close()
 	})
-	t.Run("nonexistant list", func(t *testing.T) {
+	t.Run("nonexistant project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
-		tl := TeamList{
-			TeamID: 1,
-			ListID: 9999,
+		tl := TeamProject{
+			TeamID:    1,
+			ProjectID: 9999,
 		}
 		err := tl.Delete(s, user)
 		assert.Error(t, err)
-		assert.True(t, IsErrTeamDoesNotHaveAccessToList(err))
+		assert.True(t, IsErrTeamDoesNotHaveAccessToProject(err))
 		_ = s.Close()
 	})
 }
 
-func TestTeamList_Update(t *testing.T) {
+func TestTeamProject_Update(t *testing.T) {
 	type fields struct {
-		ID       int64
-		TeamID   int64
-		ListID   int64
-		Right    Right
-		Created  time.Time
-		Updated  time.Time
-		CRUDable web.CRUDable
-		Rights   web.Rights
+		ID        int64
+		TeamID    int64
+		ProjectID int64
+		Right     Right
+		Created   time.Time
+		Updated   time.Time
+		CRUDable  web.CRUDable
+		Rights    web.Rights
 	}
 	tests := []struct {
 		name    string
@@ -236,33 +236,33 @@ func TestTeamList_Update(t *testing.T) {
 		{
 			name: "Test Update Normally",
 			fields: fields{
-				ListID: 3,
-				TeamID: 1,
-				Right:  RightAdmin,
+				ProjectID: 3,
+				TeamID:    1,
+				Right:     RightAdmin,
 			},
 		},
 		{
 			name: "Test Update to write",
 			fields: fields{
-				ListID: 3,
-				TeamID: 1,
-				Right:  RightWrite,
+				ProjectID: 3,
+				TeamID:    1,
+				Right:     RightWrite,
 			},
 		},
 		{
 			name: "Test Update to Read",
 			fields: fields{
-				ListID: 3,
-				TeamID: 1,
-				Right:  RightRead,
+				ProjectID: 3,
+				TeamID:    1,
+				Right:     RightRead,
 			},
 		},
 		{
 			name: "Test Update with invalid right",
 			fields: fields{
-				ListID: 3,
-				TeamID: 1,
-				Right:  500,
+				ProjectID: 3,
+				TeamID:    1,
+				Right:     500,
 			},
 			wantErr: true,
 			errType: IsErrInvalidRight,
@@ -273,30 +273,30 @@ func TestTeamList_Update(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
 
-			tl := &TeamList{
-				ID:       tt.fields.ID,
-				TeamID:   tt.fields.TeamID,
-				ListID:   tt.fields.ListID,
-				Right:    tt.fields.Right,
-				Created:  tt.fields.Created,
-				Updated:  tt.fields.Updated,
-				CRUDable: tt.fields.CRUDable,
-				Rights:   tt.fields.Rights,
+			tl := &TeamProject{
+				ID:        tt.fields.ID,
+				TeamID:    tt.fields.TeamID,
+				ProjectID: tt.fields.ProjectID,
+				Right:     tt.fields.Right,
+				Created:   tt.fields.Created,
+				Updated:   tt.fields.Updated,
+				CRUDable:  tt.fields.CRUDable,
+				Rights:    tt.fields.Rights,
 			}
 			err := tl.Update(s, &user.User{ID: 1})
 			if (err != nil) != tt.wantErr {
-				t.Errorf("TeamList.Update() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("TeamProject.Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
-				t.Errorf("TeamList.Update() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
+				t.Errorf("TeamProject.Update() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
 			err = s.Commit()
 			assert.NoError(t, err)
 			if !tt.wantErr {
-				db.AssertExists(t, "team_lists", map[string]interface{}{
-					"list_id": tt.fields.ListID,
-					"team_id": tt.fields.TeamID,
-					"right":   tt.fields.Right,
+				db.AssertExists(t, "team_projects", map[string]interface{}{
+					"project_id": tt.fields.ProjectID,
+					"team_id":    tt.fields.TeamID,
+					"right":      tt.fields.Right,
 				}, false)
 			}
 		})

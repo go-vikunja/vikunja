@@ -29,7 +29,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// UserList gets all information about a user
+// UserProject gets all information about a user
 // @Summary Get users
 // @Description Search for a user by its username, name or full email. Name (not username) or email require that the user has enabled this in their settings.
 // @tags user
@@ -41,13 +41,13 @@ import (
 // @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /users [get]
-func UserList(c echo.Context) error {
+func UserProject(c echo.Context) error {
 	search := c.QueryParam("s")
 
 	s := db.NewSession()
 	defer s.Close()
 
-	users, err := user.ListUsers(s, search, nil)
+	users, err := user.ProjectUsers(s, search, nil)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
@@ -66,27 +66,27 @@ func UserList(c echo.Context) error {
 	return c.JSON(http.StatusOK, users)
 }
 
-// ListUsersForList returns a list with all users who have access to a list, regardless of the method the list was shared with them.
+// ProjectUsersForProject returns a project with all users who have access to a project, regardless of the method the project was shared with them.
 // @Summary Get users
-// @Description Lists all users (without emailadresses). Also possible to search for a specific user.
-// @tags list
+// @Description Projects all users (without emailadresses). Also possible to search for a specific user.
+// @tags project
 // @Accept json
 // @Produce json
 // @Param s query string false "Search for a user by its name."
 // @Security JWTKeyAuth
-// @Param id path int true "List ID"
+// @Param id path int true "Project ID"
 // @Success 200 {array} user.User "All (found) users."
 // @Failure 400 {object} web.HTTPError "Something's invalid."
-// @Failure 401 {object} web.HTTPError "The user does not have the right to see the list."
+// @Failure 401 {object} web.HTTPError "The user does not have the right to see the project."
 // @Failure 500 {object} models.Message "Internal server error."
-// @Router /lists/{id}/listusers [get]
-func ListUsersForList(c echo.Context) error {
-	listID, err := strconv.ParseInt(c.Param("list"), 10, 64)
+// @Router /projects/{id}/projectusers [get]
+func ProjectUsersForProject(c echo.Context) error {
+	projectID, err := strconv.ParseInt(c.Param("project"), 10, 64)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	list := models.List{ID: listID}
+	project := models.Project{ID: projectID}
 	auth, err := auth2.GetAuthFromClaims(c)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
@@ -95,7 +95,7 @@ func ListUsersForList(c echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	canRead, _, err := list.CanRead(s, auth)
+	canRead, _, err := project.CanRead(s, auth)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
@@ -105,7 +105,7 @@ func ListUsersForList(c echo.Context) error {
 	}
 
 	search := c.QueryParam("s")
-	users, err := models.ListUsersFromList(s, &list, search)
+	users, err := models.ProjectUsersFromProject(s, &project, search)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
