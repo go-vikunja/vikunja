@@ -280,6 +280,18 @@ $vikunja-nav-background: var(--site-background);
 $vikunja-nav-color: var(--grey-700);
 $vikunja-nav-selected-width: 0.4rem;
 
+.logo {
+	display: block;
+
+	padding-left: 1rem;
+	margin-right: 1rem;
+	margin-bottom: 1rem;
+
+	@media screen and (min-width: $tablet) {
+		display: none;
+	}
+}
+
 .namespace-container {
 	background: $vikunja-nav-background;
 	color: $vikunja-nav-color;
@@ -455,18 +467,6 @@ $vikunja-nav-selected-width: 0.4rem;
 			&:hover .icon.handle {
 				opacity: 1;
 			}
-		}
-	}
-
-	.logo {
-		display: block;
-
-		padding-left: 1rem;
-		margin-right: 1rem;
-		margin-bottom: 1rem;
-
-		@media screen and (min-width: $tablet) {
-			display: none;
 		}
 	}
 
