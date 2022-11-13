@@ -11,74 +11,74 @@ import {useListStore} from '@/stores/lists'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
 
-import HomeComponent from '../views/Home.vue'
-import NotFoundComponent from '../views/404.vue'
-import About from '../views/About.vue'
+import HomeComponent from '@/views/Home.vue'
+import NotFoundComponent from '@/views/404.vue'
+const About = () => import('@/views/About.vue')
 // User Handling
-import LoginComponent from '../views/user/Login.vue'
-import RegisterComponent from '../views/user/Register.vue'
-import OpenIdAuth from '../views/user/OpenIdAuth.vue'
-import DataExportDownload from '../views/user/DataExportDownload.vue'
+import LoginComponent from '@/views/user/Login.vue'
+import RegisterComponent from '@/views/user/Register.vue'
+import OpenIdAuth from '@/views/user/OpenIdAuth.vue'
+const DataExportDownload = () => import('@/views/user/DataExportDownload.vue')
 // Tasks
-import UpcomingTasksComponent from '../views/tasks/ShowTasks.vue'
-import LinkShareAuthComponent from '../views/sharing/LinkSharingAuth.vue'
-import ListNamespaces from '../views/namespaces/ListNamespaces.vue'
-const TaskDetailView = () => import('../views/tasks/TaskDetailView.vue')
+import UpcomingTasksComponent from '@/views/tasks/ShowTasks.vue'
+import LinkShareAuthComponent from '@/views/sharing/LinkSharingAuth.vue'
+const ListNamespaces = () => import('@/views/namespaces/ListNamespaces.vue')
+const TaskDetailView = () => import('@/views/tasks/TaskDetailView.vue')
 
 // Team Handling
-import ListTeamsComponent from '../views/teams/ListTeams.vue'
+const ListTeamsComponent = () => import('@/views/teams/ListTeams.vue')
 // Label Handling
-import ListLabelsComponent from '../views/labels/ListLabels.vue'
-import NewLabelComponent from '../views/labels/NewLabel.vue'
+const ListLabelsComponent = () => import('@/views/labels/ListLabels.vue')
+const NewLabelComponent = () => import('@/views/labels/NewLabel.vue')
 // Migration
 const MigrationComponent = () => import('@/views/migrate/Migration.vue')
 const MigrationHandlerComponent = () => import('@/views/migrate/MigrationHandler.vue')
 // List Views
-import ListList from '../views/list/ListList.vue'
-const ListGantt = () => import('../views/list/ListGantt.vue')
-import ListTable from '../views/list/ListTable.vue'
-import ListKanban from '../views/list/ListKanban.vue'
-const ListInfo = () => import('../views/list/ListInfo.vue')
+const ListList = () => import('@/views/list/ListList.vue')
+const ListGantt = () => import('@/views/list/ListGantt.vue')
+const ListTable = () => import('@/views/list/ListTable.vue')
+const ListKanban = () => import('@/views/list/ListKanban.vue')
+const ListInfo = () => import('@/views/list/ListInfo.vue')
 
 // List Settings
-import ListSettingEdit from '../views/list/settings/edit.vue'
-import ListSettingBackground from '../views/list/settings/background.vue'
-import ListSettingDuplicate from '../views/list/settings/duplicate.vue'
-import ListSettingShare from '../views/list/settings/share.vue'
-import ListSettingDelete from '../views/list/settings/delete.vue'
-import ListSettingArchive from '../views/list/settings/archive.vue'
+const ListSettingEdit = () => import('@/views/list/settings/edit.vue')
+const ListSettingBackground = () => import('@/views/list/settings/background.vue')
+const ListSettingDuplicate = () => import('@/views/list/settings/duplicate.vue')
+const ListSettingShare = () => import('@/views/list/settings/share.vue')
+const ListSettingDelete = () => import('@/views/list/settings/delete.vue')
+const ListSettingArchive = () => import('@/views/list/settings/archive.vue')
 
 // Namespace Settings
-import NamespaceSettingEdit from '../views/namespaces/settings/edit.vue'
-import NamespaceSettingShare from '../views/namespaces/settings/share.vue'
-import NamespaceSettingArchive from '../views/namespaces/settings/archive.vue'
-import NamespaceSettingDelete from '../views/namespaces/settings/delete.vue'
+const NamespaceSettingEdit = () => import('@/views/namespaces/settings/edit.vue')
+const NamespaceSettingShare = () => import('@/views/namespaces/settings/share.vue')
+const NamespaceSettingArchive = () => import('@/views/namespaces/settings/archive.vue')
+const NamespaceSettingDelete = () => import('@/views/namespaces/settings/delete.vue')
 
 // Saved Filters
-import FilterNew from '@/views/filters/FilterNew.vue'
-import FilterEdit from '@/views/filters/FilterEdit.vue'
-import FilterDelete from '@/views/filters/FilterDelete.vue'
+const FilterNew = () => import('@/views/filters/FilterNew.vue')
+const FilterEdit = () => import('@/views/filters/FilterEdit.vue')
+const FilterDelete = () => import('@/views/filters/FilterDelete.vue')
 
-const PasswordResetComponent = () => import('../views/user/PasswordReset.vue')
-const GetPasswordResetComponent = () => import('../views/user/RequestPasswordReset.vue')
-const UserSettingsComponent = () => import('../views/user/Settings.vue')
-const UserSettingsAvatarComponent = () => import('../views/user/settings/Avatar.vue')
-const UserSettingsCaldavComponent = () => import('../views/user/settings/Caldav.vue')
-const UserSettingsDataExportComponent = () => import('../views/user/settings/DataExport.vue')
-const UserSettingsDeletionComponent = () => import('../views/user/settings/Deletion.vue')
-const UserSettingsEmailUpdateComponent = () => import('../views/user/settings/EmailUpdate.vue')
-const UserSettingsGeneralComponent = () => import('../views/user/settings/General.vue')
-const UserSettingsPasswordUpdateComponent = () => import('../views/user/settings/PasswordUpdate.vue')
-const UserSettingsTOTPComponent = () => import('../views/user/settings/TOTP.vue')
+const PasswordResetComponent = () => import('@/views/user/PasswordReset.vue')
+const GetPasswordResetComponent = () => import('@/views/user/RequestPasswordReset.vue')
+const UserSettingsComponent = () => import('@/views/user/Settings.vue')
+const UserSettingsAvatarComponent = () => import('@/views/user/settings/Avatar.vue')
+const UserSettingsCaldavComponent = () => import('@/views/user/settings/Caldav.vue')
+const UserSettingsDataExportComponent = () => import('@/views/user/settings/DataExport.vue')
+const UserSettingsDeletionComponent = () => import('@/views/user/settings/Deletion.vue')
+const UserSettingsEmailUpdateComponent = () => import('@/views/user/settings/EmailUpdate.vue')
+const UserSettingsGeneralComponent = () => import('@/views/user/settings/General.vue')
+const UserSettingsPasswordUpdateComponent = () => import('@/views/user/settings/PasswordUpdate.vue')
+const UserSettingsTOTPComponent = () => import('@/views/user/settings/TOTP.vue')
 
 // List Handling
-const NewListComponent = () => import('../views/list/NewList.vue')
+const NewListComponent = () => import('@/views/list/NewList.vue')
 
 // Namespace Handling
-const NewNamespaceComponent = () => import('../views/namespaces/NewNamespace.vue')
+const NewNamespaceComponent = () => import('@/views/namespaces/NewNamespace.vue')
 
-const EditTeamComponent = () => import('../views/teams/EditTeam.vue')
-const NewTeamComponent = () =>  import('../views/teams/NewTeam.vue')
+const EditTeamComponent = () => import('@/views/teams/EditTeam.vue')
+const NewTeamComponent = () =>  import('@/views/teams/NewTeam.vue')
 
 const router = createRouter({
 	history: createWebHistory(),

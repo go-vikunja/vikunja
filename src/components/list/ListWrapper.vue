@@ -140,7 +140,7 @@ watch(
 		const list = new ListModel(listData)
 		try {
 			const loadedList = await listService.value.get(list)
-			await baseStore.handleSetCurrentList({list: loadedList})
+			baseStore.handleSetCurrentList({list: loadedList})
 		} finally {
 			loadedListId.value = props.listId
 		}
