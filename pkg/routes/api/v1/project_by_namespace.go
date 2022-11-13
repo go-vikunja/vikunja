@@ -29,8 +29,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// GetProjectsByNamespaceID is the web handler to delete a namespace
-// TODO: depricate this in favour of namespace.ReadOne() <-- should also return the projects
+// GetProjectsByNamespaceID is the web handler to get all projects belonging to a namespace
+// TODO: deprecate this in favour of namespace.ReadOne() <-- should also return the projects
 // @Summary Get all projects in a namespace
 // @Description Returns all projects inside of a namespace.
 // @tags namespace
