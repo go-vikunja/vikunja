@@ -115,7 +115,7 @@
 										<icon icon="grip-lines"/>
 									</span>
 									<ColorBubble
-											v-if="l.hexColor !== ''"
+										v-if="l.hexColor !== ''"
 										:color="l.hexColor"
 										class="mr-1"
 									/>
@@ -303,247 +303,250 @@ $vikunja-nav-selected-width: 0.4rem;
 		transform: translateX(0);
 		transition: transform $transition-duration ease-out;
 	}
+}
 
-	.menu {
-		.menu-label {
-			font-size: 1rem;
-			font-weight: 700;
-			font-weight: bold;
-			font-family: $vikunja-font;
-			color: $vikunja-nav-color;
-			font-weight: 500;
-			min-height: 2.5rem;
-			padding-top: 0;
-			padding-left: $navbar-padding;
+.menu {
+	// good
+	.menu-label {
+		font-size: 1rem;
+		font-weight: 700;
+		font-weight: bold;
+		font-family: $vikunja-font;
+		color: $vikunja-nav-color;
+		font-weight: 500;
+		min-height: 2.5rem;
+		padding-top: 0;
+		padding-left: $navbar-padding;
 
+		overflow: hidden;
+	}
+
+	.menu-label,
+	.menu-list .list-menu-link,
+	.menu-list a {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		cursor: pointer;
+
+		// good
+		.list-menu-title {
 			overflow: hidden;
+			text-overflow: ellipsis;
+			width: 100%;
 		}
 
-		.menu-label,
-		.menu-list .list-menu-link,
-		.menu-list a {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			cursor: pointer;
-
-			.list-menu-title {
-				overflow: hidden;
-				text-overflow: ellipsis;
-				width: 100%;
-			}
-
-			.color-bubble {
-				height: 12px;
-				flex: 0 0 12px;
-			}
-
-		}
-		.favorite {
-			margin-left: .25rem;
-			transition: opacity $transition, color $transition;
-			opacity: 0;
-
-			&:hover,
-			&.is-favorite {
-				color: var(--warning);
-			}
+		.color-bubble {
+			height: 12px;
+			flex: 0 0 12px;
 		}
 
-		.favorite.is-favorite,
-		.list-menu:hover .favorite {
-			opacity: 1;
-		}
+	}
+	.favorite {
+		margin-left: .25rem;
+		transition: opacity $transition, color $transition;
+		opacity: 0;
 
-		.menu-label {
-			.color-bubble {
-				width: 14px;
-				height: 14px;
-				flex-basis: auto;
-			}
-
-			.is-archived {
-				min-width: 85px;
-			}
-		}
-
-		.namespace-title {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			color: $vikunja-nav-color;
-			padding: 0 .25rem;
-
-			.menu-label {
-				margin-bottom: 0;
-				flex: 1 1 auto;
-
-				.name {
-					overflow: hidden;
-					text-overflow: ellipsis;
-					white-space: nowrap;
-					margin-right: auto;
-				}
-
-				.count {
-					color: var(--grey-500);
-					margin-right: .5rem;
-				}
-			}
-
-			:deep(.dropdown-trigger) {
-				padding: .5rem;
-				cursor: pointer;
-			}
-
-			.toggle-lists-icon {
-				svg {
-					transition: all $transition;
-					transform: rotate(90deg);
-					opacity: 1;
-				}
-
-				&.active svg {
-					transform: rotate(0deg);
-					opacity: 0;
-				}
-			}
-
-			&:hover .toggle-lists-icon svg {
-				opacity: 1;
-			}
-
-			&:not(.has-menu) .toggle-lists-icon {
-				padding-right: 1rem;
-			}
-		}
-
-		.menu-label,
-		.nsettings,
-		.menu-list .list-menu-link,
-		.menu-list a {
-			color: $vikunja-nav-color;
-		}
-
-		.menu-list {
-			li {
-				height: 44px;
-				display: flex;
-				align-items: center;
-
-				&:hover {
-					background: var(--white);
-				}
-
-				:deep(.dropdown-trigger) {
-					opacity: 0;
-					padding: .5rem;
-					cursor: pointer;
-					transition: $transition;
-				}
-
-				&:hover :deep(.dropdown-trigger) {
-					opacity: 1;
-				}
-			}
-
-			.flip-list-move {
-				transition: transform $transition-duration;
-			}
-
-			.ghost {
-				background: var(--grey-200);
-
-				* {
-					opacity: 0;
-				}
-			}
-
-			a:hover {
-				background: transparent;
-			}
-
-			.list-menu-link, li > a {
-				padding: 0.75rem .5rem 0.75rem ($navbar-padding * 1.5 - 1.75rem);
-				transition: all 0.2s ease;
-
-				border-radius: 0;
-				white-space: nowrap;
-				text-overflow: ellipsis;
-				overflow: hidden;
-				width: 100%;
-				border-left: $vikunja-nav-selected-width solid transparent;
-
-				.icon {
-					height: 1rem;
-					vertical-align: middle;
-					padding-right: 0.5rem;
-
-					&.handle {
-						opacity: 0;
-						transition: opacity $transition;
-						margin-right: .25rem;
-						cursor: grab;
-					}
-				}
-
-				&:hover .icon.handle {
-					opacity: 1;
-				}
-
-				&.router-link-exact-active {
-					color: var(--primary);
-					border-left: $vikunja-nav-selected-width solid var(--primary);
-
-					.icon {
-						color: var(--primary);
-					}
-				}
-
-				&:hover {
-					border-left: $vikunja-nav-selected-width solid var(--primary);
-				}
-			}
-		}
-
-		.logo {
-			display: block;
-
-			padding-left: 1rem;
-			margin-right: 1rem;
-			margin-bottom: 1rem;
-
-			@media screen and (min-width: $tablet) {
-				display: none;
-			}
-		}
-
-		&.namespaces-lists {
-			padding-top: math.div($navbar-padding, 2);
-		}
-
-		.icon {
-			color: var(--grey-400) !important;
+		&:hover,
+		&.is-favorite {
+			color: var(--warning);
 		}
 	}
 
-	.top-menu {
-		margin-top: math.div($navbar-padding, 2);
+	.favorite.is-favorite,
+	.list-menu:hover .favorite {
+		opacity: 1;
+	}
 
-		.menu-list {
-			li {
-				font-weight: 500;
-				font-family: $vikunja-font;
+	.menu-label {
+		.color-bubble {
+			width: 14px;
+			height: 14px;
+			flex-basis: auto;
+		}
+
+		.is-archived {
+			min-width: 85px;
+		}
+	}
+
+	.menu-label,
+	.nsettings,
+	.menu-list .list-menu-link,
+	.menu-list a {
+		color: $vikunja-nav-color;
+	}
+
+	.menu-list {
+		li {
+			height: 44px;
+			display: flex;
+			align-items: center;
+
+			&:hover {
+				background: var(--white);
 			}
 
-			.list-menu-link, li > a {
-				padding-left: 2rem;
-				display: inline-block;
-
-				.icon {
-					padding-bottom: .25rem;
-				}
+			:deep(.dropdown-trigger) {
+				opacity: 0;
+				padding: .5rem;
+				cursor: pointer;
+				transition: $transition;
 			}
+
+			&:hover :deep(.dropdown-trigger) {
+				opacity: 1;
+			}
+		}
+
+		.flip-list-move {
+			transition: transform $transition-duration;
+		}
+
+		.ghost {
+			background: var(--grey-200);
+
+			* {
+				opacity: 0;
+			}
+		}
+
+		a:hover {
+			background: transparent;
+		}
+
+		.list-menu-link,
+		li > a {
+			padding: 0.75rem .5rem 0.75rem ($navbar-padding * 1.5 - 1.75rem);
+			transition: all 0.2s ease;
+
+			border-radius: 0;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+			overflow: hidden;
+			width: 100%;
+			border-left: $vikunja-nav-selected-width solid transparent;
+
+			&:hover {
+				border-left: $vikunja-nav-selected-width solid var(--primary);
+			}
+
+			&.router-link-exact-active {
+				color: var(--primary);
+				border-left: $vikunja-nav-selected-width solid var(--primary);
+			}
+
+			.icon {
+				height: 1rem;
+				vertical-align: middle;
+				padding-right: 0.5rem;
+			}
+
+			&.router-link-exact-active .icon {
+				color: var(--primary);
+			}
+
+			.icon.handle {
+				opacity: 0;
+				transition: opacity $transition;
+				margin-right: .25rem;
+				cursor: grab;
+			}
+			&:hover .icon.handle {
+				opacity: 1;
+			}
+		}
+	}
+
+	.logo {
+		display: block;
+
+		padding-left: 1rem;
+		margin-right: 1rem;
+		margin-bottom: 1rem;
+
+		@media screen and (min-width: $tablet) {
+			display: none;
+		}
+	}
+
+	.icon {
+		color: var(--grey-400) !important;
+	}
+}
+
+.top-menu {
+	margin-top: math.div($navbar-padding, 2);
+
+	.menu-list {
+		li {
+			font-weight: 500;
+			font-family: $vikunja-font;
+		}
+
+		.list-menu-link,
+		li > a {
+			padding-left: 2rem;
+			display: inline-block;
+
+			.icon {
+				padding-bottom: .25rem;
+			}
+		}
+	}
+}
+
+.namespaces-lists {
+	padding-top: math.div($navbar-padding, 2);
+
+	.namespace-title {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		color: $vikunja-nav-color;
+		padding: 0 .25rem;
+
+		.menu-label {
+			margin-bottom: 0;
+			flex: 1 1 auto;
+
+			.name {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				margin-right: auto;
+			}
+
+			.count {
+				color: var(--grey-500);
+				margin-right: .5rem;
+			}
+		}
+
+		:deep(.dropdown-trigger) {
+			padding: .5rem;
+			cursor: pointer;
+		}
+
+		.toggle-lists-icon {
+			svg {
+				transition: all $transition;
+				transform: rotate(90deg);
+				opacity: 1;
+			}
+
+			&.active svg {
+				transform: rotate(0deg);
+				opacity: 0;
+			}
+		}
+
+		&:hover .toggle-lists-icon svg {
+			opacity: 1;
+		}
+
+		&:not(.has-menu) .toggle-lists-icon {
+			padding-right: 1rem;
 		}
 	}
 }
