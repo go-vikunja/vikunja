@@ -325,7 +325,7 @@ func registerAPIRoutes(a *echo.Group) {
 	a.GET("/projects/:project", projectHandler.ReadOneWeb)
 	a.POST("/projects/:project", projectHandler.UpdateWeb)
 	a.DELETE("/projects/:project", projectHandler.DeleteWeb)
-	a.PUT("/namespaces/:namespace/projects", projectHandler.CreateWeb)
+	a.PUT("/projects", projectHandler.CreateWeb)
 	a.GET("/projects/:project/projectusers", apiv1.ListUsersForProject)
 
 	if config.ServiceEnableLinkSharing.GetBool() {

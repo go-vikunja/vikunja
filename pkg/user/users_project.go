@@ -32,7 +32,7 @@ type ProjectUserOpts struct {
 	MatchFuzzily                bool
 }
 
-// ProjectUsers returns a project with all users, filtered by an optional search string
+// ListUsers returns a list with all users, filtered by an optional search string
 func ProjectUsers(s *xorm.Session, search string, opts *ProjectUserOpts) (users []*User, err error) {
 	if opts == nil {
 		opts = &ProjectUserOpts{}
