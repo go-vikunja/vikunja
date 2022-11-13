@@ -332,13 +332,6 @@ $vikunja-nav-selected-width: 0.4rem;
 		}
 	}
 
-	.menu-label,
-	.nsettings,
-	.menu-list .list-menu-link,
-	.menu-list a {
-		color: $vikunja-nav-color;
-	}
-
 	.menu-list {
 		li {
 			height: 44px;
@@ -377,6 +370,7 @@ $vikunja-nav-selected-width: 0.4rem;
 
 		.list-menu-link,
 		li > a {
+			color: $vikunja-nav-color;
 			padding: 0.75rem .5rem 0.75rem ($navbar-padding * 1.5 - 1.75rem);
 			transition: all 0.2s ease;
 
