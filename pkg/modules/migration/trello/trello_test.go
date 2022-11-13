@@ -44,7 +44,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 			Name:   "TestBoard",
 			Desc:   "This is a description",
 			Closed: false,
-			Lists: []*trello.List{
+			Projects: []*trello.Project{
 				{
 					Name: "Test Project 1",
 					Cards: []*trello.Card{
@@ -77,7 +77,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 						{
 							Name: "Test Card 2",
 							Pos:  124,
-							Checklists: []*trello.Checklist{
+							Checkprojects: []*trello.Checkproject{
 								{
 									Name: "Checkproject 1",
 									CheckItems: []trello.CheckItem{
@@ -157,7 +157,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 		{
 			Name:   "TestBoard 2",
 			Closed: false,
-			Lists: []*trello.List{
+			Projects: []*trello.Project{
 				{
 					Name: "Test Project 4",
 					Cards: []*trello.Card{
@@ -172,7 +172,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 		{
 			Name:   "TestBoard Archived",
 			Closed: true,
-			Lists: []*trello.List{
+			Projects: []*trello.Project{
 				{
 					Name: "Test Project 5",
 					Cards: []*trello.Card{

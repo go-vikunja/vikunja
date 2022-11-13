@@ -39,26 +39,26 @@ type Migrator struct {
 }
 
 type tickTickTask struct {
-	FolderName        string        `csv:"Folder Name"`
-	ListName          string        `csv:"List Name"`
-	Title             string        `csv:"Title"`
+	FolderName     string`csv:"Folder Name"`
+	ProjectName    string`csv:"List Name"`
+	Title          string`csv:"Title"`
 	TagsList          string        `csv:"Tags"`
-	Tags              []string      `csv:"-"`
-	Content           string        `csv:"Content"`
+	Tags           []string`csv:"-"`
+	Content        string`csv:"Content"`
 	IsChecklistString string        `csv:"Is Check list"`
-	IsChecklist       bool          `csv:"-"`
-	StartDate         tickTickTime  `csv:"Start Date"`
-	DueDate           tickTickTime  `csv:"Due Date"`
+	IsCheckproject bool`csv:"-"`
+	StartDate      tickTickTime  `csv:"Start Date"`
+	DueDate        tickTickTime  `csv:"Due Date"`
 	ReminderDuration  string        `csv:"Reminder"`
-	Reminder          time.Duration `csv:"-"`
-	Repeat            string        `csv:"Repeat"`
-	Priority          int           `csv:"Priority"`
-	Status            string        `csv:"Status"`
-	CreatedTime       tickTickTime  `csv:"Created Time"`
-	CompletedTime     tickTickTime  `csv:"Completed Time"`
-	Order             float64       `csv:"Order"`
-	TaskID            int64         `csv:"taskId"`
-	ParentID          int64         `csv:"parentId"`
+	Reminder       time.Duration`csv:"-"`
+	Repeat         string`csv:"Repeat"`
+	Priority       int`csv:"Priority"`
+	Status         string`csv:"Status"`
+	CreatedTime    tickTickTime  `csv:"Created Time"`
+	CompletedTime  tickTickTime  `csv:"Completed Time"`
+	Order          float64`csv:"Order"`
+	TaskID         int64`csv:"taskId"`
+	ParentID       int64`csv:"parentId"`
 }
 
 type tickTickTime struct {
@@ -84,11 +84,11 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.Namespace
 
 	projects := make(map[string]*models.ProjectWithTasksAndBuckets)
 	for _, t := range tasks {
-		_, has := projects[t.ListName]
+		_, has := projects[t.ProjectName]
 		if !has {
-			projects[t.ListName] = &models.ProjectWithTasksAndBuckets{
+			projects[t.ProjectName] = &models.ProjectWithTasksAndBuckets{
 				Project: models.Project{
-					Title: t.ListName,
+					Title: t.ProjectName,
 				},
 			}
 		}
@@ -130,7 +130,7 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.Namespace
 			}
 		}
 
-		projects[t.ListName].Tasks = append(projects[t.ListName].Tasks, task)
+		projects[t.ProjectName].Tasks = append(projects[t.ProjectName].Tasks, task)
 	}
 
 	for _, l := range projects {
