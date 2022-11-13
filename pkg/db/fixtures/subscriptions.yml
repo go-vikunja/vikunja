@@ -9,13 +9,13 @@
   user_id: 6
   created: 2021-02-01 15:13:12
 - id: 3
-  entity_type: 2 # List
+  entity_type: 2 # project
   entity_id: 12 # belongs to namespace 7
   user_id: 6
   created: 2021-02-01 15:13:12
 - id: 4
   entity_type: 3 # Task
-  entity_id: 22 # belongs to list 13 which belongs to namespace 8
+  entity_id: 22 # belongs to project 13 which belongs to namespace 8
   user_id: 6
   created: 2021-02-01 15:13:12
 - id: 5
@@ -24,7 +24,7 @@
   user_id: 6
   created: 2021-02-01 15:13:12
 - id: 6
-  entity_type: 2 # List
+  entity_type: 2 # project
   entity_id: 13
   user_id: 6
   created: 2021-02-01 15:13:12
