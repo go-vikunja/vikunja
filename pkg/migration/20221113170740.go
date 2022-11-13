@@ -392,7 +392,7 @@ func init() {
 						newName: "default_project_id",
 					},
 					{
-						table:   "users_list",
+						table:   "users_lists",
 						oldName: "list_id",
 						newName: "project_id",
 					},
