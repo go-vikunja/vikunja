@@ -110,5 +110,5 @@
     "workbox-cli": "6.5.4"
   },
   "license": "AGPL-3.0-or-later",
-  "packageManager": "pnpm@7.15.0"
+  "packageManager": "pnpm@7.16.0"
 }
