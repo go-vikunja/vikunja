@@ -66,7 +66,7 @@ specifiers:
   netlify-cli: 12.1.1
   pinia: 2.0.23
   postcss: 8.4.19
-  postcss-preset-env: 7.8.2
+  postcss-preset-env: 7.8.3
   register-service-worker: 1.7.2
   rollup: 3.3.0
   rollup-plugin-visualizer: 5.8.3
@@ -169,7 +169,7 @@ devDependencies:
   happy-dom: 7.7.0
   netlify-cli: 12.1.1_@types+node@18.11.9
   postcss: 8.4.19
-  postcss-preset-env: 7.8.2_postcss@8.4.19
+  postcss-preset-env: 7.8.3_postcss@8.4.19
   rollup: 3.3.0
   rollup-plugin-visualizer: 5.8.3_rollup@3.3.0
   sass: 1.56.1
@@ -5331,8 +5331,8 @@ packages:
     resolution: {integrity: sha512-YUifsXXuknHlUsmlgyY0PKzgPOr7/FjCePfHNt0jxm83wHZi44VDMQ7/fGNkjY3/jV1MC+1CmZbaHzugyeRtpg==}
     dev: true
 
-  /cssdb/7.0.1:
-    resolution: {integrity: sha512-pT3nzyGM78poCKLAEy2zWIVX2hikq6dIrjuZzLV98MumBg+xMTNYfHx7paUlfiRTgg91O/vR889CIf+qiv79Rw==}
+  /cssdb/7.1.0:
+    resolution: {integrity: sha512-Sd99PrFgx28ez4GHu8yoQIufc/70h9oYowDf4EjeIKi8mac9whxRjhM3IaMr6EllP6KKKWtJrMfN6C7T9tIWvQ==}
     dev: true
 
   /cssesc/3.0.0:
@@ -10591,8 +10591,8 @@ packages:
       postcss-value-parser: 4.2.0
     dev: true
 
-  /postcss-custom-properties/12.1.9_postcss@8.4.19:
-    resolution: {integrity: sha512-/E7PRvK8DAVljBbeWrcEQJPG72jaImxF3vvCNFwv9cC8CzigVoNIpeyfnJzphnN3Fd8/auBf5wvkw6W9MfmTyg==}
+  /postcss-custom-properties/12.1.10_postcss@8.4.19:
+    resolution: {integrity: sha512-U3BHdgrYhCrwTVcByFHs9EOBoqcKq4Lf3kXwbTi4hhq0qWhl/pDWq2THbv/ICX/Fl9KqeHBb8OVrTf2OaYF07A==}
     engines: {node: ^12 || ^14 || >=16}
     peerDependencies:
       postcss: ^8.2
@@ -10770,8 +10770,8 @@ packages:
       postcss-value-parser: 4.2.0
     dev: true
 
-  /postcss-preset-env/7.8.2_postcss@8.4.19:
-    resolution: {integrity: sha512-rSMUEaOCnovKnwc5LvBDHUDzpGP+nrUeWZGWt9M72fBvckCi45JmnJigUr4QG4zZeOHmOCNCZnd2LKDvP++ZuQ==}
+  /postcss-preset-env/7.8.3_postcss@8.4.19:
+    resolution: {integrity: sha512-T1LgRm5uEVFSEF83vHZJV2z19lHg4yJuZ6gXZZkqVsqv63nlr6zabMH3l4Pc01FQCyfWVrh2GaUeCVy9Po+Aag==}
     engines: {node: ^12 || ^14 || >=16}
     peerDependencies:
       postcss: ^8.2
@@ -10795,7 +10795,7 @@ packages:
       css-blank-pseudo: 3.0.3_postcss@8.4.19
       css-has-pseudo: 3.0.4_postcss@8.4.19
       css-prefers-color-scheme: 6.0.3_postcss@8.4.19
-      cssdb: 7.0.1
+      cssdb: 7.1.0
       postcss: 8.4.19
       postcss-attribute-case-insensitive: 5.0.2_postcss@8.4.19
       postcss-clamp: 4.1.0_postcss@8.4.19
@@ -10803,7 +10803,7 @@ packages:
       postcss-color-hex-alpha: 8.0.4_postcss@8.4.19
       postcss-color-rebeccapurple: 7.1.1_postcss@8.4.19
       postcss-custom-media: 8.0.2_postcss@8.4.19
-      postcss-custom-properties: 12.1.9_postcss@8.4.19
+      postcss-custom-properties: 12.1.10_postcss@8.4.19
       postcss-custom-selectors: 6.0.3_postcss@8.4.19
       postcss-dir-pseudo-class: 6.0.5_postcss@8.4.19
       postcss-double-position-gradients: 3.1.2_postcss@8.4.19
