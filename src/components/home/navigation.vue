@@ -317,6 +317,8 @@ $vikunja-nav-selected-width: 0.4rem;
 	}
 }
 
+// these are general menu styles
+// should be in own components
 .menu {
 	.menu-label,
 	.menu-list .list-menu-link,
@@ -419,7 +421,7 @@ $vikunja-nav-selected-width: 0.4rem;
 
 .top-menu {
 	margin-top: math.div($navbar-padding, 2);
-
+ 
 	.menu-list {
 		li {
 			font-weight: 500;
