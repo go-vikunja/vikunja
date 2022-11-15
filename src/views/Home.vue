@@ -40,17 +40,11 @@
 		</template>
 		<div v-if="listHistory.length > 0" class="is-max-width-desktop has-text-left mt-4">
 			<h3>{{ $t('home.lastViewed') }}</h3>
-			<div class="is-flex list-cards-wrapper-2-rows">
-				<list-card
-					v-for="(l, k) in listHistory"
-					:key="`l${k}`"
-					:list="l"
-				/>
-			</div>
+			<ListCardGrid :lists="listHistory" v-cy="'listCardGrid'" />
 		</div>
 		<ShowTasks
 			v-if="hasLists"
-			class="mt-4"
+			class="show-tasks"
 			:key="showTasksKey"
 		/>
 	</div>
@@ -61,7 +55,7 @@ import {ref, computed} from 'vue'
 
 import Message from '@/components/misc/message.vue'
 import ShowTasks from '@/views/tasks/ShowTasks.vue'
-import ListCard from '@/components/list/partials/list-card.vue'
+import ListCardGrid from '@/components/list/partials/ListCardGrid.vue'
 import AddTask from '@/components/tasks/add-task.vue'
 
 import {getHistory} from '@/modules/listHistory'
@@ -113,14 +107,8 @@ function updateTaskList() {
 }
 </script>
 
-<style lang="scss" scoped>
-.list-cards-wrapper-2-rows {
-	flex-wrap: wrap;
-	max-height: calc(#{$list-height * 2} + #{$list-spacing * 2} - 4px);
-	overflow: hidden;
-
-	@media screen and (max-width: $mobile) {
-		max-height: calc(#{$list-height * 4} + #{$list-spacing * 4} - 4px);
-	}
+<style scoped lang="scss">
+.show-tasks {
+	margin-top: 2rem;
 }
 </style>

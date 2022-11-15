@@ -45,7 +45,7 @@ describe('List History', () => {
 		
 		cy.get('body')
 			.should('contain', 'Last viewed')
-		cy.get('.list-cards-wrapper-2-rows')
+		cy.get('[data-cy="listCardGrid"]')
 			.should('not.contain', lists[0].title)
 			.should('contain', lists[1].title)
 			.should('contain', lists[2].title)

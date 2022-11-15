@@ -39,8 +39,8 @@ export default class ListService extends AbstractService<IList> {
 		return list
 	}
 
-	async background(list) {
-		if (list.background === null) {
+	async background(list: Pick<IList, 'id' | 'backgroundInformation'>) {
+		if (list.backgroundInformation === null) {
 			return ''
 		}
 
@@ -52,7 +52,7 @@ export default class ListService extends AbstractService<IList> {
 		return window.URL.createObjectURL(new Blob([response.data]))
 	}
 
-	async removeBackground(list) {
+	async removeBackground(list: Pick<IList, 'id'>) {
 		const cancel = this.setLoading()
 
 		try {

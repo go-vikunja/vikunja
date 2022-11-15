@@ -15,28 +15,28 @@
 			</div>
 		</header>
 
-		<p class="has-text-centered has-text-grey mt-4 is-italic" v-if="namespaces.length === 0">
+		<p v-if="namespaces.length === 0" class="has-text-centered has-text-grey mt-4 is-italic">
 			{{ $t('namespace.noneAvailable') }}
-			<router-link :to="{name: 'namespace.create'}">
+			<BaseButton :to="{name: 'namespace.create'}">
 				{{ $t('namespace.create.title') }}.
-			</router-link>
+			</BaseButton>
 		</p>
 
 		<section :key="`n${n.id}`" class="namespace" v-for="n in namespaces">
 			<x-button
+				v-if="n.id > 0 && n.lists.length > 0"
 				:to="{name: 'list.create', params: {namespaceId:  n.id}}"
 				class="is-pulled-right"
 				variant="secondary"
-				v-if="n.id > 0 && n.lists.length > 0"
 				icon="plus"
 			>
 				{{ $t('list.create.header') }}
 			</x-button>
 			<x-button
+				v-if="n.isArchived"
 				:to="{name: 'namespace.settings.archive', params: {id:  n.id}}"
 				class="is-pulled-right mr-4"
 				variant="secondary"
-				v-if="n.isArchived"
 				icon="archive"
 			>
 				{{ $t('namespace.unarchive') }}
@@ -44,26 +44,22 @@
 
 			<h2 class="namespace-title">
 				<span v-cy="'namespace-title'">{{ getNamespaceTitle(n) }}</span>
-				<span class="is-archived" v-if="n.isArchived">
+				<span v-if="n.isArchived" class="is-archived">
 					{{ $t('namespace.archived') }}
 				</span>
 			</h2>
 
-			<p class="has-text-centered has-text-grey mt-4 is-italic" v-if="n.lists.length === 0">
+			<p v-if="n.lists.length === 0" class="has-text-centered has-text-grey mt-4 is-italic">
 				{{ $t('namespace.noLists') }}
-				<router-link :to="{name: 'list.create', params: {namespaceId:  n.id}}">
+				<BaseButton :to="{name: 'list.create', params: {namespaceId:  n.id}}">
 					{{ $t('namespace.createList') }}
-				</router-link>
+				</BaseButton>
 			</p>
 
-			<div class="lists">
-				<list-card
-					v-for="l in n.lists"
-					:key="`l${l.id}`"
-					:list="l"
-					:show-archived="showArchived"
-				/>
-			</div>
+			<ListCardGrid v-else 			
+				:lists="n.lists"
+				:show-archived="showArchived"
+			/>
 		</section>
 	</div>
 </template>
@@ -72,8 +68,9 @@
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
+import BaseButton from '@/components/base/BaseButton.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
-import ListCard from '@/components/list/partials/list-card.vue'
+import ListCardGrid from '@/components/list/partials/ListCardGrid.vue'
 
 import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
 import {useTitle} from '@/composables/useTitle'
@@ -89,11 +86,10 @@ const showArchived = useStorage('showArchived', false)
 
 const loading = computed(() => namespaceStore.isLoading)
 const namespaces = computed(() => {
-	return namespaceStore.namespaces.filter(n => showArchived.value ? true : !n.isArchived)
-	// return namespaceStore.namespaces.filter(n => showArchived.value ? true : !n.isArchived).map(n => {
-	// 	n.lists = n.lists.filter(l => !l.isArchived)
-	// 	return n
-	// })
+	return namespaceStore.namespaces.filter(namespace => showArchived.value
+		? true
+		: !namespace.isArchived,
+	)
 })
 </script>
 
@@ -121,10 +117,8 @@ const namespaces = computed(() => {
 	}
 }
 
-.namespace {
-	& + & {
-		margin-top: 1rem;
-	}
+.namespace:not(:first-child) {
+	margin-top: 1rem;
 }
 
 .namespace-title {
@@ -141,10 +135,5 @@ const namespaces = computed(() => {
 	font-family: $vikunja-font;
 	background: var(--white-translucent);
 	margin-left: .5rem;
-}
-
-.lists {
-	display: flex;
-	flex-flow: row wrap;
 }
 </style>
