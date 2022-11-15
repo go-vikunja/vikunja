@@ -136,6 +136,21 @@ Flags:
 * `-p`, `--password`: The password of the new user. You will be asked to enter it if not provided through the flag.
 * `-u`, `--username`: The username of the new user.
 
+#### `user delete`
+
+Start the user deletion process. 
+If called without the `--now` flag, this command will only trigger an email to the user in order for them to confirm and start the deletion process (this is the same behavoir as if the user requested their deletion via the web interface).
+With the flag the user is deleted **immediately**. 
+
+**USE WITH CAUTION.**
+
+{{< highlight bash >}}
+$ vikunja user delete <id> <flags>
+{{< /highlight >}}
+
+Flags:
+* `-n`, `--now` If provided, deletes the user immediately instead of emailing them first.
+
 #### `user list`
 
 Shows a list of all users.
