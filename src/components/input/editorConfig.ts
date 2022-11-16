@@ -9,6 +9,7 @@ export function createEasyMDEConfig({ placeholder, uploadImage, imageUploadFunct
         uploadImage,
         imageUploadFunction,
         minHeight: '150px',
+        sideBySideFullscreen: false,
         toolbar: [
             {
                 name: 'heading-1',
