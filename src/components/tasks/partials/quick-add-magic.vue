@@ -5,8 +5,8 @@
 			<ButtonLink @click="() => visible = true">{{ $t('task.quickAddMagic.what') }}</ButtonLink>
 		</p>
 		<modal
-			@close="() => visible = false"
 			:enabled="visible"
+			@close="() => visible = false"
 			transition-name="fade"
 			:overflow="true"
 			variant="hint-modal"

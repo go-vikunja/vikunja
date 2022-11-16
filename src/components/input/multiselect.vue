@@ -36,7 +36,7 @@
 			</div>
 		</div>
 
-		<transition name="fade">
+		<CustomTransition name="fade">
 			<div class="search-results" :class="{'search-results-inline': inline}" v-if="searchResultsVisible">
 				<BaseButton
 					class="search-result-button is-fullwidth"
@@ -78,8 +78,7 @@
 					</span>
 				</BaseButton>
 			</div>
-		</transition>
-
+		</CustomTransition>
 	</div>
 </template>
 
@@ -90,6 +89,7 @@ import {useI18n} from 'vue-i18n'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 function elementInResults(elem: string | any, label: string, query: string): boolean {
 	// Don't make create available if we have an exact match in our search results.

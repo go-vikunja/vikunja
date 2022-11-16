@@ -17,7 +17,7 @@
 		>
 			{{ task.title.trim() }}
 		</h1>
-		<transition name="fade">
+		<CustomTransition name="fade">
 			<span
 				v-if="loading && saving"
 				class="is-inline-flex is-align-items-center"
@@ -32,7 +32,7 @@
 				<icon icon="check" class="mr-2"/>
 				{{ $t('misc.saved') }}
 			</span>
-		</transition>
+		</CustomTransition>
 	</div>
 </template>
 
@@ -41,6 +41,7 @@ import {ref, computed, type PropType} from 'vue'
 import {useRouter} from 'vue-router'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import CustomTransition from '@/components/misc/CustomTransition.vue'
 import ColorBubble from '@/components/misc/colorBubble.vue'
 import Done from '@/components/misc/Done.vue'
 

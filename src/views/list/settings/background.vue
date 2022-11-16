@@ -43,7 +43,7 @@
 					:key="im.id"
 					:style="{'background-image': `url(${backgroundBlurHashes[im.id]})`}"
 				>
-					<transition name="fade">
+					<CustomTransition name="fade">
 						<BaseButton
 							v-if="backgroundThumbs[im.id]"
 							class="image-search__image-button"
@@ -51,7 +51,7 @@
 						>
 							<img class="image-search__image" :src="backgroundThumbs[im.id]" alt="" />
 						</BaseButton>
-					</transition>
+					</CustomTransition>
 
 					<BaseButton
 						:href="`https://unsplash.com/@${im.info.author}`"
@@ -102,7 +102,9 @@ import {ref, computed, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
 import debounce from 'lodash.debounce'
+
 import BaseButton from '@/components/base/BaseButton.vue'
+import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useListStore} from '@/stores/lists'

@@ -3,7 +3,7 @@
 		@submit.prevent="createTask"
 		class="add-new-task"
 	>
-		<transition name="width">
+		<CustomTransition name="width">
 			<input
 				v-if="newTaskFieldActive"
 				v-model="newTaskTitle"
@@ -13,7 +13,7 @@
 				ref="newTaskTitleField"
 				type="text"
 			/>
-		</transition>
+		</CustomTransition>
 		<x-button @click="showCreateTaskOrCreate" :shadow="false" icon="plus">
 			{{ $t('task.new') }}
 		</x-button>
@@ -23,6 +23,8 @@
 <script setup lang="ts">
 import {nextTick, ref} from 'vue'
 import type {ITask} from '@/modelTypes/ITask'
+
+import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 const emit = defineEmits<{
 	(e: 'create-task', title: string): Promise<ITask>

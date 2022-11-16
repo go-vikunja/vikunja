@@ -49,14 +49,12 @@ const label = computed(() => {
 	align-items: center;
 	padding-left: .5rem;
 	font-size: .9rem;
-
 }
 
 svg {
 	transform: rotate(-90deg);
 	transition: stroke-dashoffset 0.35s;
 	margin-right: .25rem;
-
 }
 
 circle {

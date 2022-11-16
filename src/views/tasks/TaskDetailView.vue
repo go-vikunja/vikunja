@@ -2,8 +2,7 @@
 	<div
 		class="loader-container task-view-container"
 		:class="{
-			'is-loading': taskService.loading,
-			'visible': visible,
+			'is-loading': taskService.loading || !visible,
 			'is-modal': isModal,
 		}"
 	>
@@ -42,7 +41,7 @@
 								v-model="task.assignees"
 							/>
 						</div>
-						<transition name="flash-background" appear>
+						<CustomTransition name="flash-background" appear>
 							<div class="column" v-if="activeFields.priority">
 								<!-- Priority -->
 								<div class="detail-title">
@@ -55,8 +54,8 @@
 									:ref="e => setFieldRef('priority', e)"
 									v-model="task.priority"/>
 							</div>
-						</transition>
-						<transition name="flash-background" appear>
+						</CustomTransition>
+						<CustomTransition name="flash-background" appear>
 							<div class="column" v-if="activeFields.dueDate">
 								<!-- Due Date -->
 								<div class="detail-title">
@@ -81,8 +80,8 @@
 									</BaseButton>
 								</div>
 							</div>
-						</transition>
-						<transition name="flash-background" appear>
+						</CustomTransition>
+						<CustomTransition name="flash-background" appear>
 							<div class="column" v-if="activeFields.percentDone">
 								<!-- Progress -->
 								<div class="detail-title">
@@ -95,8 +94,8 @@
 									:ref="e => setFieldRef('percentDone', e)"
 									v-model="task.percentDone"/>
 							</div>
-						</transition>
-						<transition name="flash-background" appear>
+						</CustomTransition>
+						<CustomTransition name="flash-background" appear>
 							<div class="column" v-if="activeFields.startDate">
 								<!-- Start Date -->
 								<div class="detail-title">
@@ -122,8 +121,8 @@
 									</BaseButton>
 								</div>
 							</div>
-						</transition>
-						<transition name="flash-background" appear>
+						</CustomTransition>
+						<CustomTransition name="flash-background" appear>
 							<div class="column" v-if="activeFields.endDate">
 								<!-- End Date -->
 								<div class="detail-title">
@@ -148,8 +147,8 @@
 									</BaseButton>
 								</div>
 							</div>
-						</transition>
-						<transition name="flash-background" appear>
+						</CustomTransition>
+						<CustomTransition name="flash-background" appear>
 							<div class="column" v-if="activeFields.reminders">
 								<!-- Reminders -->
 								<div class="detail-title">
@@ -163,8 +162,8 @@
 									@update:model-value="saveTask"
 								/>
 							</div>
-						</transition>
-						<transition name="flash-background" appear>
+						</CustomTransition>
+						<CustomTransition name="flash-background" appear>
 							<div class="column" v-if="activeFields.repeatAfter">
 								<!-- Repeat after -->
 								<div class="is-flex is-justify-content-space-between">
@@ -191,8 +190,8 @@
 									}"
 								/>
 							</div>
-						</transition>
-						<transition name="flash-background" appear>
+						</CustomTransition>
+						<CustomTransition name="flash-background" appear>
 							<div class="column" v-if="activeFields.color">
 								<!-- Color -->
 								<div class="detail-title">
@@ -206,7 +205,7 @@
 									@update:model-value="saveTask"
 								/>
 							</div>
-						</transition>
+						</CustomTransition>
 					</div>
 
 					<!-- Labels -->
@@ -431,9 +430,9 @@
 		</div>
 
 		<modal
+			:enabled="showDeleteModal"
 			@close="showDeleteModal = false"
 			@submit="deleteTask()"
-			v-if="showDeleteModal"
 		>
 			<template #header><span>{{ $t('task.detail.delete.header') }}</span></template>
 
@@ -481,6 +480,7 @@ import RelatedTasks from '@/components/tasks/partials/relatedTasks.vue'
 import Reminders from '@/components/tasks/partials/reminders.vue'
 import RepeatAfter from '@/components/tasks/partials/repeatAfter.vue'
 import TaskSubscription from '@/components/misc/subscription.vue'
+import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 import {uploadFile} from '@/helpers/attachments'
 import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
@@ -799,244 +799,217 @@ async function setPercentDone(percentDone: number) {
 </script>
 
 <style lang="scss" scoped>
-$flash-background-duration: 750ms;
+.task-view-container {
+	// simulate sass lighten($primary, 30) by increasing lightness 30% to 73%
+	--primary-light: hsla(var(--primary-h), var(--primary-s), 73%, var(--primary-a));
+	padding-bottom: 0;
+	
+  @media screen and (min-width: $desktop) {
+		padding-bottom: 1rem;
+  }
+}
 
 .task-view {
-  padding: 1rem;
+	padding: 1rem;
+	padding-bottom: 0;
   background-color: var(--site-background);
-
-  @media screen and (max-width: $desktop) {
-    padding-bottom: 0;
+	
+  @media screen and (min-width: $desktop) {
+		padding: 1rem;
   }
 }
 
-  .subtitle {
-    color: var(--grey-500);
-    margin-bottom: 1rem;
+.is-modal .task-view {
+  border-radius: $radius;
+  padding: 1rem;
+  color: var(--text);
+  background-color: var(--site-background) !important;
 
-    a {
-      color: var(--grey-800);
-    }
+  @media screen and (max-width: 800px) {
+    border-radius: 0;
+    padding-top: 2rem;
   }
+}
 
-  h3 .button {
-    vertical-align: middle;
-  }
+.task-view * {
+	transition: opacity 50ms ease;
+}
 
-  .icon.is-grey {
-    color: var(--grey-400);
-  }
+.is-loading .task-view * {
+	opacity: 0;
+}
 
 
+.subtitle {
+	color: var(--grey-500);
+	margin-bottom: 1rem;
 
-  .date-input {
-    display: flex;
-    align-items: center;
-  }
+	a {
+		color: var(--grey-800);
+	}
+}
 
-  .remove {
-	color: var(--danger);
+h3 .button {
 	vertical-align: middle;
-	padding-left: .5rem;
-	line-height: 1;
-  }
+}
 
-  :deep(.datepicker) {
-    width: 100%;
+.icon.is-grey {
+	color: var(--grey-400);
+}
+.date-input {
+	display: flex;
+	align-items: center;
+}
 
-    .show {
-      color: var(--text);
-      padding: .25rem .5rem;
-      transition: background-color $transition;
-      border-radius: $radius;
-      display: block;
-      margin: .1rem 0;
-      width: 100%;
-      text-align: left;
+.remove {
+color: var(--danger);
+vertical-align: middle;
+padding-left: .5rem;
+line-height: 1;
+}
 
-      &:hover {
-        background: var(--white);
-      }
-    }
+:deep(.datepicker) {
+	width: 100%;
 
-    &.disabled .show:hover {
-      background: transparent;
-    }
-  }
+	.show {
+		color: var(--text);
+		padding: .25rem .5rem;
+		transition: background-color $transition;
+		border-radius: $radius;
+		display: block;
+		margin: .1rem 0;
+		width: 100%;
+		text-align: left;
 
-  .details {
-    padding-bottom: 0.75rem;
-    flex-flow: row wrap;
-    margin-bottom: 0;
-
-    .detail-title {
-      display: block;
-      color: var(--grey-400);
-    }
-
-    .none {
-      font-style: italic;
-    }
-
-    // Break after the 2nd element
-    .column:nth-child(2n) {
-      page-break-after: always; // CSS 2.1 syntax
-      break-after: always; // New syntax
-    }
-
-    &.labels-list,
-    .assignees {
-      :deep(.multiselect) {
-        .input-wrapper {
-          &:not(:focus-within):not(:hover) {
-            background: transparent;
-            border-color: transparent;
-          }
-        }
-      }
-    }
-  }
-
-  :deep(.details),
-  :deep(.heading) {
-    .input:not(.has-defaults),
-    .textarea,
-    .select:not(.has-defaults) select {
-      cursor: pointer;
-      transition: all $transition-duration;
-
-      &::placeholder {
-        color: var(--text-light);
-        opacity: 1;
-        font-style: italic;
-      }
-
-      &:not(:disabled) {
-        &:hover,
-        &:active,
-        &:focus {
-          background: var(--scheme-main);
-          border-color: var(--border);
-          cursor: text;
-        }
-
-        &:hover,
-        &:active {
-          cursor: text;
-          border-color: var(--link)
-        }
-      }
-    }
-
-    .select:not(.has-defaults):after {
-      opacity: 0;
-    }
-
-    .select:not(.has-defaults):hover:after {
-      opacity: 1;
-    }
-  }
-
-  .attachments {
-    margin-bottom: 0;
-
-    table tr:last-child td {
-      border-bottom: none;
-    }
-  }
-
-  .action-buttons {
-    @media screen and (min-width: $tablet) {
-      position: sticky;
-      top: $navbar-height + 1.5rem;
-      align-self: flex-start;
-    }
-		
-    .button {
-      width: 100%;
-      margin-bottom: .5rem;
-      justify-content: left; 
-
-      &.has-light-text {
-		color: var(--white);
-      }
-    }
-  }
-
-	.is-modal .action-buttons {
-		// we need same top margin for the modal close button 
-		@media screen and (min-width: $tablet) {
-			top: 6.5rem;
-		}
-		// this is the moment when the fixed close button is outside the modal
-		// => we can fill up the space again
-		@media screen and (min-width: calc(#{$desktop} + 84px)) {
-			top: 0;
+		&:hover {
+			background: var(--white);
 		}
 	}
 
-  .checklist-summary {
-    padding-left: .25rem;
-  }
-
-
-.task-view-container {
-  padding-bottom: 1rem;
-
-  @media screen and (max-width: $desktop) {
-    padding-bottom: 0;
-  }
-
-  .task-view * {
-    opacity: 0;
-    transition: opacity 50ms ease;
-  }
-
-  &.is-loading {
-    opacity: 1;
-
-    .task-view * {
-      opacity: 0;
-    }
-  }
-
-  &.visible:not(.is-loading) .task-view * {
-    opacity: 1;
-  }
+	&.disabled .show:hover {
+		background: transparent;
+	}
 }
 
-.task-view-container {
-  // simulate sass lighten($primary, 30) by increasing lightness 30% to 73%
-  --primary-light: hsla(var(--primary-h), var(--primary-s), 73%, var(--primary-a));
+.details {
+	padding-bottom: 0.75rem;
+	flex-flow: row wrap;
+	margin-bottom: 0;
+
+	.detail-title {
+		display: block;
+		color: var(--grey-400);
+	}
+
+	.none {
+		font-style: italic;
+	}
+
+	// Break after the 2nd element
+	.column:nth-child(2n) {
+		page-break-after: always; // CSS 2.1 syntax
+		break-after: always; // New syntax
+	}
+
 }
 
-.flash-background-enter-from,
-.flash-background-enter-active {
-  animation: flash-background $flash-background-duration ease 1;
-}
-
-@keyframes flash-background {
-  0% {
-    background: var(--primary-light);
-  }
-  100% {
-    background: transparent;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-	@keyframes flash-background {
-		0% {
-			background: transparent;
+.details.labels-list,
+.assignees {
+	:deep(.multiselect) {
+		.input-wrapper {
+			&:not(:focus-within):not(:hover) {
+				background: transparent;
+				border-color: transparent;
+			}
 		}
 	}
 }
 
-@include modal-transition();
+:deep(.details),
+:deep(.heading) {
+	.input:not(.has-defaults),
+	.textarea,
+	.select:not(.has-defaults) select {
+		cursor: pointer;
+		transition: all $transition-duration;
+
+		&::placeholder {
+			color: var(--text-light);
+			opacity: 1;
+			font-style: italic;
+		}
+
+		&:not(:disabled) {
+			&:hover,
+			&:active,
+			&:focus {
+				background: var(--scheme-main);
+				border-color: var(--border);
+				cursor: text;
+			}
+
+			&:hover,
+			&:active {
+				cursor: text;
+				border-color: var(--link)
+			}
+		}
+	}
+
+	.select:not(.has-defaults):after {
+		opacity: 0;
+	}
+
+	.select:not(.has-defaults):hover:after {
+		opacity: 1;
+	}
+}
+
+.attachments {
+	margin-bottom: 0;
+
+	table tr:last-child td {
+		border-bottom: none;
+	}
+}
+
+.action-buttons {
+	@media screen and (min-width: $tablet) {
+		position: sticky;
+		top: $navbar-height + 1.5rem;
+		align-self: flex-start;
+	}
+	
+	.button {
+		width: 100%;
+		margin-bottom: .5rem;
+		justify-content: left; 
+
+		&.has-light-text {
+			color: var(--white);
+		}
+	}
+}
+
+.is-modal .action-buttons {
+	// we need same top margin for the modal close button 
+	@media screen and (min-width: $tablet) {
+		top: 6.5rem;
+	}
+	// this is the moment when the fixed close button is outside the modal
+	// => we can fill up the space again
+	@media screen and (min-width: calc(#{$desktop} + 84px)) {
+		top: 0;
+	}
+}
+
+.checklist-summary {
+	padding-left: .25rem;
+}
 
 .detail-content {
   @media print {
-	width: 100% !important;
+		width: 100% !important;
   }
 }
 </style>

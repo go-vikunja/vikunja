@@ -169,21 +169,19 @@
 			</table>
 		</div>
 
-		<transition name="modal">
-			<modal
-				@close="showDeleteModal = false"
-				@submit="remove(listId)"
-				v-if="showDeleteModal"
-			>
-				<template #header>
-					<span>{{ $t('list.share.links.remove') }}</span>
-				</template>
+		<modal
+			:enabled="showDeleteModal"
+			@close="showDeleteModal = false"
+			@submit="remove(listId)"
+		>
+			<template #header>
+				<span>{{ $t('list.share.links.remove') }}</span>
+			</template>
 
-				<template #text>
-					<p>{{ $t('list.share.links.removeText') }}</p>
-				</template>
-			</modal>
-		</transition>
+			<template #text>
+				<p>{{ $t('list.share.links.removeText') }}</p>
+			</template>
+		</modal>
 	</div>
 </template>
 
@@ -297,6 +295,4 @@ function getShareLink(hash: string, view: ListView = LIST_VIEWS.LIST) {
 .sharables-list:not(.card-content) {
 	overflow-y: auto
 }
-
-@include modal-transition();
 </style>

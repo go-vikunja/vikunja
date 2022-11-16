@@ -5,7 +5,7 @@
 				<icon icon="align-left"/>
 			</span>
 			{{ $t('task.attributes.description') }}
-			<transition name="fade">
+			<CustomTransition name="fade">
 				<span class="is-small is-inline-flex" v-if="loading && saving">
 					<span class="loader is-inline-block mr-2"></span>
 					{{ $t('misc.saving') }}
@@ -14,7 +14,7 @@
 					<icon icon="check"/>
 					{{ $t('misc.saved') }}
 				</span>
-			</transition>
+			</CustomTransition>
 		</h3>
 		<editor
 			:is-edit-enabled="canWrite"
@@ -33,6 +33,7 @@
 <script setup lang="ts">
 import {ref,computed, watch, type PropType} from 'vue'
 
+import CustomTransition from '@/components/misc/CustomTransition.vue'
 import Editor from '@/components/input/AsyncEditor'
 
 import type {ITask} from '@/modelTypes/ITask'

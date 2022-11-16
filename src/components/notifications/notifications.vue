@@ -7,7 +7,7 @@
 			</BaseButton>
 		</div>
 
-		<transition name="fade">
+		<CustomTransition name="fade">
 			<div class="notifications-list" v-if="showNotifications" ref="popup">
 				<span class="head">{{ $t('notification.title') }}</span>
 				<div
@@ -42,7 +42,7 @@
 					</span>
 				</p>
 			</div>
-		</transition>
+		</CustomTransition>
 	</div>
 </template>
 
@@ -52,6 +52,7 @@ import {useRouter} from 'vue-router'
 
 import NotificationService from '@/services/notification'
 import BaseButton from '@/components/base/BaseButton.vue'
+import CustomTransition from '@/components/misc/CustomTransition.vue'
 import User from '@/components/misc/user.vue'
 import { NOTIFICATION_NAMES as names, type INotification} from '@/modelTypes/INotification'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
