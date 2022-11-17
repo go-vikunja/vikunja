@@ -64,7 +64,7 @@ specifiers:
   marked: 4.2.2
   minimist: 1.2.7
   netlify-cli: 12.1.1
-  pinia: 2.0.23
+  pinia: 2.0.24
   postcss: 8.4.19
   postcss-preset-env: 7.8.3
   register-service-worker: 1.7.2
@@ -124,7 +124,7 @@ dependencies:
   lodash.debounce: 4.0.8
   marked: 4.2.2
   minimist: 1.2.7
-  pinia: 2.0.23_mgnvym7yiazkylwwogi5r767ue
+  pinia: 2.0.24_mgnvym7yiazkylwwogi5r767ue
   register-service-worker: 1.7.2
   snake-case: 3.0.4
   sortablejs: 1.15.0
@@ -3583,10 +3583,6 @@ packages:
 
   /@vue/devtools-api/6.2.1:
     resolution: {integrity: sha512-OEgAMeQXvCoJ+1x8WyQuVZzFo0wcyCmUR3baRVLmKBo1LmYZWMlRiXlux5jd0fqVJu6PfDbOrZItVqUEzLobeQ==}
-    dev: false
-
-  /@vue/devtools-api/6.4.4:
-    resolution: {integrity: sha512-Ku31WzpOV/8cruFaXaEZKF81WkNnvCSlBY4eOGtz5WMSdJvX1v1WWlSMGZeqUwPtQ27ZZz7B62erEMq8JDjcXw==}
     dev: false
 
   /@vue/devtools-api/6.4.5:
@@ -10489,8 +10485,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /pinia/2.0.23_mgnvym7yiazkylwwogi5r767ue:
-    resolution: {integrity: sha512-N15hFf4o5STrxpNrib1IEb1GOArvPYf1zPvQVRGOO1G1d74Ak0J0lVyalX/SmrzdT4Q0nlEFjbURsmBmIGUR5Q==}
+  /pinia/2.0.24_mgnvym7yiazkylwwogi5r767ue:
+    resolution: {integrity: sha512-DDLd4Iphyc+6PYYYbx7jkb6WP9gecgu9bz9huyB5rb7CdJI3DhzYiZI+/Ih8MLewRrP9DSpslF/BgSNrJtZU7A==}
     peerDependencies:
       '@vue/composition-api': ^1.4.0
       typescript: '>=4.4.4'
@@ -10501,7 +10497,7 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@vue/devtools-api': 6.4.4
+      '@vue/devtools-api': 6.4.5
       typescript: 4.9.3
       vue: 3.2.45
       vue-demi: 0.12.1_vue@3.2.45
