@@ -445,7 +445,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, toRef, shallowReactive, computed, watch, watchEffect, nextTick, type PropType} from 'vue'
+import {ref, reactive, toRef, shallowReactive, computed, watch, nextTick, type PropType} from 'vue'
 import {useRouter, type RouteLocation} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {unrefElement} from '@vueuse/core'
@@ -590,13 +590,14 @@ async function scrollToHeading() {
 
 const taskService = shallowReactive(new TaskService())
 
-async function loadTask(taskId: ITask['id']) {
-	if (taskId === undefined) {
+// load task
+watch(taskId, async (id) => {
+	if (id === undefined) {
 		return
 	}
 
 	try {
-		Object.assign(task, await taskService.get({id: taskId}))
+		Object.assign(task, await taskService.get({id}))
 		attachmentStore.set(task.attachments)
 		taskColor.value = task.hexColor
 		setActiveFields()
@@ -605,9 +606,7 @@ async function loadTask(taskId: ITask['id']) {
 		scrollToHeading()
 		visible.value = true
 	}
-}
-
-watchEffect(() => taskId.value !== undefined && loadTask(taskId.value))
+}, {immediate: true})
 
 type FieldType =
 	| 'assignees'
