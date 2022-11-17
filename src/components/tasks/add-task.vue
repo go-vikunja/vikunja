@@ -41,9 +41,8 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, unref, watch} from 'vue'
+import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {debouncedWatch, type MaybeRef, tryOnMounted, useWindowSize} from '@vueuse/core'
 
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
 import type {ITask} from '@/modelTypes/ITask'
@@ -53,74 +52,7 @@ import TaskRelationModel from '@/models/taskRelation'
 import {RELATION_KIND} from '@/types/IRelationKind'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
-
-function useAutoHeightTextarea(value: MaybeRef<string>) {
-	const textarea = ref<HTMLInputElement>()
-	const minHeight = ref(0)
-
-	// adapted from https://github.com/LeaVerou/stretchy/blob/47f5f065c733029acccb755cae793009645809e2/src/stretchy.js#L34
-	function resize(textareaEl: HTMLInputElement | undefined) {
-		if (!textareaEl) return
-
-		let empty
-
-		// the value here is the attribute value
-		if (!textareaEl.value && textareaEl.placeholder) {
-			empty = true
-			textareaEl.value = textareaEl.placeholder
-		}
-
-		const cs = getComputedStyle(textareaEl)
-
-		textareaEl.style.minHeight = ''
-		textareaEl.style.height = '0'
-		const offset = textareaEl.offsetHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
-		const height = textareaEl.scrollHeight + offset + 'px'
-
-		textareaEl.style.height = height
-
-		// calculate min-height for the first time
-		if (!minHeight.value) {
-			minHeight.value = parseFloat(height)
-		}
-
-		textareaEl.style.minHeight = minHeight.value.toString()
-
-
-		if (empty) {
-			textareaEl.value = ''
-		}
-
-	}
-
-	tryOnMounted(() => {
-		if (textarea.value) {
-			// we don't want scrollbars
-			textarea.value.style.overflowY = 'hidden'
-		}
-	})
-
-	const {width: windowWidth} = useWindowSize()
-
-	debouncedWatch(
-		windowWidth,
-		() => resize(textarea.value),
-		{debounce: 200},
-	)
-
-	// It is not possible to get notified of a change of the value attribute of a textarea without workarounds (setTimeout) 
-	// So instead we watch the value that we bound to it.
-	watch(
-		() => [textarea.value, unref(value)],
-		() => resize(textarea.value),
-		{
-			immediate: true, // calculate initial size
-			flush: 'post', // resize after value change is rendered to DOM
-		},
-	)
-
-	return textarea
-}
+import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
 
 const props = defineProps({
 	defaultPosition: {
