@@ -224,7 +224,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 	}
 
 	async function loadBucketsForList({listId, params}: {listId: IList['id'], params}) {
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 
 		// Clear everything to prevent having old buckets in the list if loading the buckets from this list takes a few moments
 		setBuckets([])
@@ -259,7 +259,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 			return
 		}
 
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 		setBucketLoading({bucketId: bucketId, loading: true})
 
 		const params = JSON.parse(JSON.stringify(ps))
@@ -302,7 +302,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 	}
 
 	async function createBucket(bucket: IBucket) {
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 
 		const bucketService = new BucketService()
 		try {
@@ -315,7 +315,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 	}
 
 	async function deleteBucket({bucket, params}: {bucket: IBucket, params}) {
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 
 		const bucketService = new BucketService()
 		try {
@@ -330,7 +330,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 	}
 
 	async function updateBucket(updatedBucketData: Partial<IBucket>) {
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 
 		const bucketIndex = findIndexById(buckets.value, updatedBucketData.id)
 		const oldBucket = cloneDeep(buckets.value[bucketIndex])

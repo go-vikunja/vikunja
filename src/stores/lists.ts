@@ -95,7 +95,7 @@ export const useListStore = defineStore('list', () => {
 	}
 
 	async function createList(list: IList) {
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 		const listService = new ListService()
 
 		try {
@@ -110,7 +110,7 @@ export const useListStore = defineStore('list', () => {
 	}
 
 	async function updateList(list: IList) {
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 		const listService = new ListService()
 
 		try {
@@ -145,7 +145,7 @@ export const useListStore = defineStore('list', () => {
 	}
 
 	async function deleteList(list: IList) {
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 		const listService = new ListService()
 
 		try {

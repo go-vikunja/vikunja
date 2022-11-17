@@ -286,7 +286,7 @@ export const useAuthStore = defineStore('auth', () => {
 	async function verifyEmail(): Promise<boolean> {
 		const emailVerifyToken = localStorage.getItem('emailConfirmToken')
 		if (emailVerifyToken) {
-			const stopLoading = setModuleLoading(this, setIsLoading)
+			const stopLoading = setModuleLoading(setIsLoading)
 			try {
 				await HTTPFactory().post('user/confirm', {token: emailVerifyToken})
 				return true
@@ -309,7 +309,7 @@ export const useAuthStore = defineStore('auth', () => {
 	}) {
 		const userSettingsService = new UserSettingsService()
 
-		const cancel = setModuleLoading(this, setIsLoadingGeneralSettings)
+		const cancel = setModuleLoading(setIsLoadingGeneralSettings)
 		try {
 			saveLanguage(settings.language)
 			await userSettingsService.update(settings)

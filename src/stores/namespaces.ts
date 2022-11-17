@@ -148,7 +148,7 @@ export const useNamespaceStore = defineStore('namespace', () => {
 	}
 
 	async function loadNamespaces() {
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 
 		const namespaceService = new NamespaceService()
 		try {
@@ -182,7 +182,7 @@ export const useNamespaceStore = defineStore('namespace', () => {
 	}
 
 	async function deleteNamespace(namespace: INamespace) {
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 		const namespaceService = new NamespaceService()
 
 		try {
@@ -195,7 +195,7 @@ export const useNamespaceStore = defineStore('namespace', () => {
 	}
 
 	async function createNamespace(namespace: INamespace) {
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 		const namespaceService = new NamespaceService()
 
 		try {

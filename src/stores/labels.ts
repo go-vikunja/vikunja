@@ -81,7 +81,7 @@ export const useLabelStore = defineStore('label', () => {
 			return
 		}
 
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 
 		try {
 			const newLabels = await getAllLabels()
@@ -93,7 +93,7 @@ export const useLabelStore = defineStore('label', () => {
 	}
 
 	async function deleteLabel(label: ILabel) {
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 		const labelService = new LabelService()
 
 		try {
@@ -107,7 +107,7 @@ export const useLabelStore = defineStore('label', () => {
 	}
 
 	async function updateLabel(label: ILabel) {
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 		const labelService = new LabelService()
 
 		try {
@@ -121,7 +121,7 @@ export const useLabelStore = defineStore('label', () => {
 	}
 
 	async function createLabel(label: ILabel) {
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 		const labelService = new LabelService()
 
 		try {

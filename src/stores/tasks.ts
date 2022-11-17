@@ -104,7 +104,7 @@ export const useTaskStore = defineStore('task', () => {
 	async function loadTasks(params) {
 		const taskService = new TaskService()
 
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 		try {
 			tasks.value = await taskService.getAll({}, params)
 			baseStore.setHasTasks(tasks.value.length > 0)
@@ -115,7 +115,7 @@ export const useTaskStore = defineStore('task', () => {
 	}
 
 	async function update(task: ITask) {
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 
 		const taskService = new TaskService()
 		try {
@@ -172,7 +172,7 @@ export const useTaskStore = defineStore('task', () => {
 		user: IUser,
 		taskId: ITask['id']
 	}) {
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 		
 		try {
 			const taskAssigneeService = new TaskAssigneeService()
@@ -370,7 +370,7 @@ export const useTaskStore = defineStore('task', () => {
 	} : 
 		Partial<ITask>,
 	) {
-		const cancel = setModuleLoading(this, setIsLoading)
+		const cancel = setModuleLoading(setIsLoading)
 		const parsedTask = parseTaskText(title, getQuickAddMagicMode())
 	
 		const foundListId = await findListId({
