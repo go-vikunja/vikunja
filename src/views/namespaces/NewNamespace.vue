@@ -50,7 +50,7 @@ import {useRouter} from 'vue-router'
 
 import Message from '@/components/misc/message.vue'
 import CreateEdit from '@/components/misc/create-edit.vue'
-import ColorPicker from '@/components/input/colorPicker.vue'
+import ColorPicker from '@/components/input/ColorPicker.vue'
 
 import NamespaceModel from '@/models/namespace'
 import NamespaceService from '@/services/namespace'

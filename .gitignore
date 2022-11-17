@@ -36,3 +36,6 @@ cypress/videos
 
 # Local Netlify folder
 .netlify
+
+# histoire
+.histoire

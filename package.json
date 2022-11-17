@@ -19,7 +19,10 @@
     "browserslist:update": "pnpm dlx browserslist@latest --update-db",
     "fonts:update": "pnpm fonts:download && pnpm fonts:subset",
     "fonts:download": "./scripts/fonts-download.sh",
-    "fonts:subset": "./scripts/fonts-subset.sh"
+    "fonts:subset": "./scripts/fonts-subset.sh",
+    "story:dev": "histoire dev",
+    "story:build": "histoire build",
+    "story:preview": "histoire preview"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "6.2.1",
@@ -74,6 +77,8 @@
     "@cypress/vite-dev-server": "5.0.2",
     "@cypress/vue": "5.0.3",
     "@faker-js/faker": "7.6.0",
+    "@histoire/plugin-screenshot": "0.12.4",
+    "@histoire/plugin-vue": "0.12.4",
     "@rushstack/eslint-patch": "1.2.0",
     "@types/codemirror": "5.60.6",
     "@types/dompurify": "2.4.0",
@@ -99,6 +104,7 @@
     "eslint": "8.31.0",
     "eslint-plugin-vue": "9.8.0",
     "happy-dom": "8.1.1",
+    "histoire": "0.12.4",
     "netlify-cli": "12.5.0",
     "postcss": "8.4.20",
     "postcss-easing-gradients": "3.0.1",
