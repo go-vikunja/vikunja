@@ -26,7 +26,10 @@
 
   .task-view {
     border-radius: $radius;
-    margin: 0 1rem;
+
+    @media screen and (min-width: $tablet) {
+      margin-inline: 1rem;
+    }
   }
 
   .kanban .tasks {

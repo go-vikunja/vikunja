@@ -809,8 +809,8 @@ async function setPercentDone(percentDone: number) {
 }
 
 .task-view {
-	padding: 1rem;
-	padding-bottom: 0;
+	padding-top: 1rem;
+	padding-inline: .5rem;
   background-color: var(--site-background);
 	
   @media screen and (min-width: $desktop) {
@@ -861,10 +861,10 @@ h3 .button {
 }
 
 .remove {
-color: var(--danger);
-vertical-align: middle;
-padding-left: .5rem;
-line-height: 1;
+	color: var(--danger);
+	vertical-align: middle;
+	padding-left: .5rem;
+	line-height: 1;
 }
 
 :deep(.datepicker) {

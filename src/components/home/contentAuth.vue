@@ -159,27 +159,20 @@ labelStore.loadAllLabels()
 .app-content {
 	z-index: 10;
 	position: relative;
-	padding-top: 1rem;
-
-	@media screen {
-		padding: $navbar-height + 1.5rem 1.5rem 1rem 1.5rem;
-	}
+	padding: 1.5rem 0.5rem 1rem;
 
 	@media screen and (max-width: $tablet) {
 		margin-left: 0;
-		padding-top: 1.5rem;
 		min-height: calc(100vh - 4rem);
 	}
 
+	@media screen and (min-width: $tablet) {
+		padding: $navbar-height + 1.5rem 1.5rem 1rem 1.5rem;
+	}
 
-	@media screen {
-		&.is-menu-enabled {
+	&.is-menu-enabled {
+		@media screen and (min-width: $tablet) {
 			margin-left: $navbar-width;
-
-			@media screen and (max-width: $tablet) {
-				min-width: 100%;
-				margin-left: 0;
-			}
 		}
 	}
 
