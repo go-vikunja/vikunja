@@ -78,7 +78,7 @@ describe('List View List', () => {
 
 		cy.get('.menu-list li .list-menu-link .color-bubble')
 			.should('have.css', 'background-color', 'rgb(0, 219, 96)')
-		cy.get('.tasks-container .tasks .color-bubble')
+		cy.get('.tasks .color-bubble')
 			.should('not.exist')
 	})
 
@@ -90,9 +90,9 @@ describe('List View List', () => {
 		})
 		cy.visit('/lists/1/list')
 
-		cy.get('.tasks-container .tasks')
+		cy.get('.tasks')
 			.should('contain', tasks[1].title)
-		cy.get('.tasks-container .tasks')
+		cy.get('.tasks')
 			.should('not.contain', tasks[99].title)
 
 		cy.get('.card-content .pagination .pagination-link')
@@ -101,9 +101,9 @@ describe('List View List', () => {
 
 		cy.url()
 			.should('contain', '?page=2')
-		cy.get('.tasks-container .tasks')
+		cy.get('.tasks')
 			.should('contain', tasks[99].title)
-		cy.get('.tasks-container .tasks')
+		cy.get('.tasks')
 			.should('not.contain', tasks[1].title)
 	})
 })

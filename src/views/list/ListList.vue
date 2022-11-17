@@ -53,15 +53,13 @@
 			class="loader-container is-max-width-desktop list-view"
 		>
 		<card :padding="false" :has-content="false" class="has-overflow">
-			<template
+			<add-task
 				v-if="!list.isArchived && canWrite"
-			>
-				<add-task
-					@taskAdded="updateTaskList"
-					ref="addTaskRef"
-					:default-position="firstNewPosition"
-				/>
-			</template>
+				class="list-view__add-task"
+				ref="addTaskRef"
+				:default-position="firstNewPosition"
+				@taskAdded="updateTaskList"
+			/>
 
 			<nothing v-if="ctaVisible && tasks.length === 0 && !loading">
 				{{ $t('list.list.empty') }}
@@ -70,59 +68,42 @@
 				</ButtonLink>
 			</nothing>
 
-			<div class="tasks-container" :class="{ 'has-task-edit-open': isTaskEdit }">
-				<div
-					class="tasks mt-0"
-					v-if="tasks && tasks.length > 0"
-				>
-					<draggable
-						v-bind="DRAG_OPTIONS"
-						v-model="tasks"
-						group="tasks"
-						@start="() => drag = true"
-						@end="saveTaskPosition"
-						handle=".handle"
+
+			<draggable
+				v-if="tasks && tasks.length > 0"
+				v-bind="DRAG_OPTIONS"
+				v-model="tasks"
+				group="tasks"
+				@start="() => drag = true"
+				@end="saveTaskPosition"
+				handle=".handle"
+				:disabled="!canWrite"
+				item-key="id"
+				tag="ul"
+				:component-data="{
+					class: {
+						tasks: true,
+						'dragging-disabled': !canWrite || isAlphabeticalSorting
+					},
+					type: 'transition-group'
+				}"
+			>
+				<template #item="{element: t}">
+					<single-task-in-list
+						:show-list-color="false"
 						:disabled="!canWrite"
-						item-key="id"
-						tag="ul"
-						:component-data="{
-							class: { 'dragging-disabled': !canWrite || isAlphabeticalSorting },
-							type: 'transition-group'
-						}"
+						:can-mark-as-done="canWrite || isSavedFilter(list)"
+						:the-task="t"
+						@taskUpdated="updateTasks"
 					>
-						<template #item="{element: t}">
-							<single-task-in-list
-								:show-list-color="false"
-								:disabled="!canWrite"
-								:can-mark-as-done="canWrite || isSavedFilter(list)"
-								:the-task="t"
-								@taskUpdated="updateTasks"
-							>
-								<template v-if="canWrite">
-									<span class="icon handle">
-										<icon icon="grip-lines"/>
-									</span>
-									<BaseButton
-										@click="editTask(t.id)"
-										class="icon settings"
-										v-if="!list.isArchived"
-									>
-										<icon icon="pencil-alt"/>
-									</BaseButton>
-								</template>
-							</single-task-in-list>
+						<template v-if="canWrite">
+							<span class="icon handle">
+								<icon icon="grip-lines"/>
+							</span>
 						</template>
-					</draggable>
-				</div>
-				<EditTask
-					v-if="isTaskEdit"
-					class="taskedit mt-0"
-					:title="$t('list.list.editTask')"
-					@close="closeTaskEditPane()"
-					:shadow="false"
-					:task="taskEditTask"
-				/>
-			</div>
+					</single-task-in-list>
+				</template>
+			</draggable>
 
 			<Pagination 
 				:total-pages="totalPages"
@@ -139,14 +120,12 @@ export default { name: 'List' }
 </script>
 
 <script setup lang="ts">
-import {ref, computed, toRef, nextTick, onMounted, type PropType, watch} from 'vue'
+import {ref, computed, toRef, nextTick, onMounted, type PropType} from 'vue'
 import draggable from 'zhyswan-vuedraggable'
 import {useRoute, useRouter} from 'vue-router'
 
 import ListWrapper from '@/components/list/ListWrapper.vue'
-import BaseButton from '@/components/base/BaseButton.vue'
 import ButtonLink from '@/components/misc/ButtonLink.vue'
-import EditTask from '@/components/tasks/edit-task.vue'
 import AddTask from '@/components/tasks/add-task.vue'
 import SingleTaskInList from '@/components/tasks/partials/singleTaskInList.vue'
 import FilterPopup from '@/components/list/partials/filter-popup.vue'
@@ -196,22 +175,8 @@ const showTaskSearch = ref(false)
 const drag = ref(false)
 const DRAG_OPTIONS = {
 	animation: 100,
-	ghostClass: 'ghost',
+	ghostClass: 'task-ghost',
 } as const
-
-
-const taskEditTask = ref<ITask | null>(null)
-const isTaskEdit = ref(false)
-
-function closeTaskEditPane() {
-	isTaskEdit.value = false
-	taskEditTask.value = null
-}
-
-watch(
-	() => props.listId,
-	closeTaskEditPane,
-)
 
 const {
 	tasks,
@@ -296,11 +261,6 @@ function updateTaskList(task: ITask) {
 	baseStore.setHasTasks(true)
 }
 
-function editTask(id: ITask['id']) {
-	taskEditTask.value = {...tasks.value.find(t => t.id === Number(id))}
-	isTaskEdit.value = true
-}
-
 function updateTasks(updatedTask: ITask) {
 	for (const t in tasks.value) {
 		if (tasks.value[t].id === updatedTask.id) {
@@ -339,54 +299,21 @@ function prepareFiltersAndLoadTasks() {
 </script>
 
 <style lang="scss" scoped>
-.tasks-container {
-	display: flex;
+.tasks {
+	padding: .5rem;
+}
 
-	&.has-task-edit-open {
-		flex-direction: column;
-
-		@media screen and (min-width: $tablet) {
-			flex-direction: row;
-
-			.tasks {
-				width: 66%;
-			}
-		}
-	}
-
-	.tasks {
-		width: 100%;
-		padding: .5rem;
-
-		.ghost {
-			border-radius: $radius;
-			background: var(--grey-100);
-			border: 2px dashed var(--grey-300);
-
-			* {
-				opacity: 0;
-			}
-		}
-	}
-
-	.taskedit {
-		width: 33%;
-		margin-right: 1rem;
-		margin-left: .5rem;
-		min-height: calc(100% - 1rem);
-
-		@media screen and (max-width: $tablet) {
-			width: 100%;
-			border-radius: 0;
-			margin: 0;
-			border-left: 0;
-			border-right: 0;
-			border-bottom: 0;
-		}
+.task-ghost {
+	border-radius: $radius;
+	background: var(--grey-100);
+	border: 2px dashed var(--grey-300);
+	
+	* {
+		opacity: 0;
 	}
 }
 
-.list-view .task-add {
+.list-view__add-task {
 	padding: 1rem 1rem 0;
 }
 
