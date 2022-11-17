@@ -5,7 +5,7 @@
 			'has-background': blurHashUrl !== '' || background !== null,
 		}"
 		:style="{
-			'background-color': list.hexColor,
+			'border-color': `${list.hexColor}`,
 			'background-image': blurHashUrl !== null ? `url(${blurHashUrl})` : false,
 		}"
 		:to="{ name: 'list.index', params: { listId: list.id} }"
@@ -85,6 +85,7 @@ async function loadBackground() {
 }
 
 const listStore = useListStore()
+
 </script>
 
 <style lang="scss" scoped>
@@ -92,6 +93,8 @@ const listStore = useListStore()
 	cursor: pointer;
 	width: calc((100% - #{($lists-per-row - 1) * 1rem}) / #{$lists-per-row});
 	height: $list-height;
+	border-left-width: 0.8rem;
+	border-left-style: solid;
 	background: var(--white);
 	margin: 0 $list-spacing $list-spacing 0;
 	border-radius: $radius;
@@ -172,8 +175,9 @@ const listStore = useListStore()
 
 	.list-content {
 		display: flex;
-		align-content: space-between;
+		align-content: flex-start;
 		flex-wrap: wrap;
+		row-gap: 0.8rem;
 		padding: 1rem;
 		position: absolute;
 		height: 100%;
@@ -202,7 +206,7 @@ const listStore = useListStore()
 		}
 
 		.title {
-			align-self: flex-end;
+			align-self: flex-start;
 			font-family: $vikunja-font;
 			font-weight: 400;
 			font-size: 1.5rem;
