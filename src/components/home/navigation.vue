@@ -7,7 +7,7 @@
 			<ul class="menu-list">
 				<li>
 					<router-link :to="{ name: 'home'}" v-shortcut="'g o'">
-						<span class="icon">
+						<span class="menu-item-icon icon">
 							<icon icon="calendar"/>
 						</span>
 						{{ $t('navigation.overview') }}
@@ -15,7 +15,7 @@
 				</li>
 				<li>
 					<router-link :to="{ name: 'tasks.range'}" v-shortcut="'g u'">
-						<span class="icon">
+						<span class="menu-item-icon icon">
 							<icon :icon="['far', 'calendar-alt']"/>
 						</span>
 						{{ $t('navigation.upcoming') }}
@@ -23,7 +23,7 @@
 				</li>
 				<li>
 					<router-link :to="{ name: 'namespaces.index'}" v-shortcut="'g n'">
-						<span class="icon">
+						<span class="menu-item-icon icon">
 							<icon icon="layer-group"/>
 						</span>
 						{{ $t('namespace.title') }}
@@ -31,7 +31,7 @@
 				</li>
 				<li>
 					<router-link :to="{ name: 'labels.index'}" v-shortcut="'g a'">
-						<span class="icon">
+						<span class="menu-item-icon icon">
 							<icon icon="tags"/>
 						</span>
 						{{ $t('label.title') }}
@@ -39,7 +39,7 @@
 				</li>
 				<li>
 					<router-link :to="{ name: 'teams.index'}" v-shortcut="'g m'">
-						<span class="icon">
+						<span class="menu-item-icon icon">
 							<icon icon="users"/>
 						</span>
 						{{ $t('team.title') }}
@@ -63,7 +63,7 @@
 						/>
 						<span class="name">{{ namespaceTitles[nk] }}</span>
 						<div
-							class="icon is-small toggle-lists-icon pl-2"
+							class="icon menu-item-icon is-small toggle-lists-icon pl-2"
 							:class="{'active': typeof listsVisible[n.id] !== 'undefined' ? listsVisible[n.id] : true}"
 						>
 							<icon icon="chevron-down"/>
@@ -111,7 +111,7 @@
 									class="list-menu-link"
 									:class="{'router-link-exact-active': currentList.id === l.id}"
 								>
-									<span class="icon handle">
+									<span class="icon menu-item-icon handle">
 										<icon icon="grip-lines"/>
 									</span>
 									<ColorBubble
@@ -128,7 +128,13 @@
 								>
 									<icon :icon="l.isFavorite ? 'star' : ['far', 'star']"/>
 								</BaseButton>
-								<list-settings-dropdown class="menu-list-dropdown" :list="l" v-if="l.id > 0" />
+								<list-settings-dropdown class="menu-list-dropdown" :list="l" v-if="l.id > 0">
+									<template #trigger="{toggleOpen}">
+										<BaseButton class="menu-list-dropdown-trigger" @click="toggleOpen">
+											<icon icon="ellipsis-h" class="icon"/>
+										</BaseButton>
+									</template>
+								</list-settings-dropdown>
 								<span class="list-setting-spacer" v-else></span>
 							</li>
 						</template>
@@ -354,6 +360,15 @@ $vikunja-nav-selected-width: 0.4rem;
 			}
 		}
 
+		.menu-item-icon {
+			color: var(--grey-400);
+		}
+
+		.menu-list-dropdown-trigger {
+			display: flex;
+			padding: 0.5rem;
+		}
+
 		.flip-list-move {
 			transition: transform $transition-duration;
 		}
@@ -398,24 +413,20 @@ $vikunja-nav-selected-width: 0.4rem;
 				padding-right: 0.5rem;
 			}
 
-			&.router-link-exact-active .icon {
+			&.router-link-exact-active .icon:not(.handle) {
 				color: var(--primary);
 			}
 
-			.icon.handle {
+			.handle {
 				opacity: 0;
 				transition: opacity $transition;
 				margin-right: .25rem;
 				cursor: grab;
 			}
-			&:hover .icon.handle {
+			&:hover .handle {
 				opacity: 1;
 			}
 		}
-	}
-
-	.icon {
-		color: var(--grey-400) !important;
 	}
 }
 

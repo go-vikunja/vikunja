@@ -52,7 +52,7 @@ describe('Lists', () => {
 		cy.get('.list-title h1')
 			.should('contain', 'First List')
 
-		cy.get('.namespace-container .menu.namespaces-lists .menu-list li:first-child .dropdown .dropdown-trigger')
+		cy.get('.namespace-container .menu.namespaces-lists .menu-list li:first-child .dropdown .menu-list-dropdown-trigger')
 			.click()
 		cy.get('.namespace-container .menu.namespaces-lists .menu-list li:first-child .dropdown .dropdown-content')
 			.contains('Edit')
@@ -80,7 +80,7 @@ describe('Lists', () => {
 	it('Should remove a list', () => {
 		cy.visit(`/lists/${lists[0].id}`)
 
-		cy.get('.namespace-container .menu.namespaces-lists .menu-list li:first-child .dropdown .dropdown-trigger')
+		cy.get('.namespace-container .menu.namespaces-lists .menu-list li:first-child .dropdown .menu-list-dropdown-trigger')
 			.click()
 		cy.get('.namespace-container .menu.namespaces-lists .menu-list li:first-child .dropdown .dropdown-content')
 			.contains('Delete')

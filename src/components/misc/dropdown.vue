@@ -59,10 +59,6 @@ onClickOutside(dropdown, (e: Event) => {
 	vertical-align: top;
 }
 
-.dropdown-trigger {
-	padding: .5rem;
-}
-
 .dropdown-menu {
 	min-width: 12rem;
 	padding-top: 4px;

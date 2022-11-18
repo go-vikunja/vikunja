@@ -1,5 +1,13 @@
 <template>
 	<dropdown>
+		<template #trigger="triggerProps">
+			<slot name="trigger" v-bind="triggerProps">
+				<BaseButton class="dropdown-trigger" @click="triggerProps.toggleOpen">
+					<icon icon="ellipsis-h" class="icon"/>
+				</BaseButton>
+			</slot>
+		</template>
+
 		<template v-if="isSavedFilter(list)">
 			<dropdown-item
 				:to="{ name: 'filter.settings.edit', params: { listId: list.id } }"
@@ -78,6 +86,7 @@
 <script setup lang="ts">
 import {ref, computed, watchEffect, type PropType} from 'vue'
 
+import BaseButton from '@/components/base/BaseButton.vue'
 import Dropdown from '@/components/misc/dropdown.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 import Subscription from '@/components/misc/subscription.vue'

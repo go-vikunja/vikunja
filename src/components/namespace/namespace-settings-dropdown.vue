@@ -1,5 +1,13 @@
 <template>
 	<dropdown>
+		<template #trigger="triggerProps">
+			<slot name="trigger" v-bind="triggerProps">
+				<BaseButton class="dropdown-trigger" @click="triggerProps.toggleOpen">
+					<icon icon="ellipsis-h" class="icon"/>
+				</BaseButton>
+			</slot>
+		</template>
+
 		<template v-if="namespace.isArchived">
 			<dropdown-item
 				:to="{ name: 'namespace.settings.archive', params: { id: namespace.id } }"
@@ -56,6 +64,7 @@
 <script setup lang="ts">
 import {ref, onMounted, type PropType} from 'vue'
 
+import BaseButton from '@/components/base/BaseButton.vue'
 import Dropdown from '@/components/misc/dropdown.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 import Subscription from '@/components/misc/subscription.vue'
@@ -85,3 +94,9 @@ function setSubscriptionInStore(sub: ISubscription) {
 	})
 }
 </script>
+
+<style scoped lang="scss">
+.dropdown-trigger {
+	padding: 0.5rem;
+}
+</style>
