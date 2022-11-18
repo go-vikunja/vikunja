@@ -347,6 +347,10 @@ async function deleteComment(commentToDelete: ITaskComment) {
 	}
 }
 
+.image.is-avatar {
+  border-radius: 100%;
+}
+
 .media-content {
 	width: calc(100% - 48px - 2rem);
 }
