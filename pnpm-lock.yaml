@@ -41,7 +41,7 @@ specifiers:
   bulma-css-variables: 0.9.33
   camel-case: 4.1.2
   caniuse-lite: 1.0.30001431
-  codemirror: 5.65.9
+  codemirror: 5.65.10
   csstype: 3.1.1
   cypress: 11.1.0
   date-fns: 2.29.3
@@ -109,7 +109,7 @@ dependencies:
   blurhash: 2.0.4
   bulma-css-variables: 0.9.33
   camel-case: 4.1.2
-  codemirror: 5.65.9
+  codemirror: 5.65.10
   date-fns: 2.29.3
   dayjs: 1.11.6
   dompurify: 2.4.1
@@ -4859,8 +4859,8 @@ packages:
       typo-js: 1.2.1
     dev: false
 
-  /codemirror/5.65.9:
-    resolution: {integrity: sha512-19Jox5sAKpusTDgqgKB5dawPpQcY+ipQK7xoEI+MVucEF9qqFaXpeqY1KaoyGBso/wHQoDa4HMMxMjdsS3Zzzw==}
+  /codemirror/5.65.10:
+    resolution: {integrity: sha512-IXAG5wlhbgcTJ6rZZcmi4+sjWIbJqIGfeg3tNa3yX84Jb3T4huS5qzQAo/cUisc1l3bI47WZodpyf7cYcocDKg==}
     dev: false
 
   /collection-visit/1.0.0:
@@ -5924,7 +5924,7 @@ packages:
     dependencies:
       '@types/codemirror': 5.60.5
       '@types/marked': 4.0.7
-      codemirror: 5.65.9
+      codemirror: 5.65.10
       codemirror-spell-checker: 1.1.2
       marked: 4.2.3
     dev: false
