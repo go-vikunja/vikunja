@@ -85,7 +85,7 @@ func getMessage(opts *Opts) *mail.Msg {
 	m.Subject(opts.Subject)
 
 	for _, h := range opts.Headers {
-		m.SetHeader(h.Field, h.Content)
+		m.SetGenHeader(h.Field, h.Content)
 	}
 
 	for name, content := range opts.Embeds {
