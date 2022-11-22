@@ -92,7 +92,7 @@
       "totp": {
         "title": "Two Factor Authentication",
         "enroll": "Enroll",
-        "finishSetupPart1": "To finish your setup, use this secret in your totp app (Google Authenticator or similar):",
+        "finishSetupPart1": "Para finalizar tu configuración, utiliza este secreto en tu aplicación totp (Google Authenticator o similar):",
         "finishSetupPart2": "After that, enter a code from your app below.",
         "scanQR": "Alternatively you can scan this QR code:",
         "passcode": "Passcode",
@@ -178,7 +178,7 @@
       "editTask": "Edit Task"
     },
     "search": "Type to search for a list…",
-    "searchSelect": "Click or press enter to select this list",
+    "searchSelect": "Haga clic o presione enter para seleccionar esta lista",
     "shared": "Shared Lists",
     "noDescriptionAvailable": "No list description is available.",
     "create": {
