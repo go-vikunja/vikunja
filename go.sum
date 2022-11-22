@@ -103,6 +103,8 @@ github.com/arran4/golang-ical v0.0.0-20220517104411-fd89fefb0182 h1:mUsKridvWp4d
 github.com/arran4/golang-ical v0.0.0-20220517104411-fd89fefb0182/go.mod h1:BSTTrYHuM12oAL8jDdcmPdw02SBThKYWNFHQlvEG6b0=
 github.com/arran4/golang-ical v0.0.0-20221118224027-a67735377457 h1:92BQ/SqY/2cFSA0Nq0O2Ei7WIdjLg9Jz7pyBDX4qKRI=
 github.com/arran4/golang-ical v0.0.0-20221118224027-a67735377457/go.mod h1:BSTTrYHuM12oAL8jDdcmPdw02SBThKYWNFHQlvEG6b0=
+github.com/arran4/golang-ical v0.0.0-20221122102835-109346913e54 h1:HfAA5Vxbo64UTckj+EW/hfBjvvcUcbcwWCASvypy8JU=
+github.com/arran4/golang-ical v0.0.0-20221122102835-109346913e54/go.mod h1:BSTTrYHuM12oAL8jDdcmPdw02SBThKYWNFHQlvEG6b0=
 github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a/go.mod h1:DAHtR1m6lCRdSC2Tm3DSWRPvIPr6xNKyeHdqDQSQT+A=
 github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef h1:46PFijGLmAjMPwCCCo7Jf0W6f9slllCkkv7vyc1yOSg=
 github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef/go.mod h1:WaHUgvxTVq04UNunO+XhnAqY/wQc+bxr74GqbsZ/Jqw=
