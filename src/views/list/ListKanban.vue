@@ -1,5 +1,5 @@
 <template>
-	<ListWrapper	
+	<ListWrapper
 		class="list-kanban"
 		:list-id="listId"
 		viewName="kanban"
@@ -344,6 +344,9 @@ watch(
 		params: params.value,
 	}),
 	({listId, params}) => {
+		if (listId === undefined) {
+			return
+		}
 		collapsedBuckets.value = getCollapsedBucketState(listId)
 		kanbanStore.loadBucketsForList({listId, params})
 	},
