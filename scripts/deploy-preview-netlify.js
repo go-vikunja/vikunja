@@ -1,5 +1,4 @@
-const {exec} = require('child_process')
-const axios = require('axios')
+const { exec } = require('child_process')
 
 const BOT_USER_ID = 513
 const giteaToken = process.env.GITEA_TOKEN
@@ -35,7 +34,7 @@ const promiseExec = cmd => {
 	stdout = await promiseExec(`./node_modules/.bin/netlify deploy --alias ${alias}`)
 	console.log(stdout)
 
-	const {data} = await axios.get(prIssueCommentsUrl)
+	const data = await fetch(prIssueCommentsUrl).then(response => response.json())
 	const hasComment = data.some(c => c.user.id === BOT_USER_ID)
 
 	if (hasComment) {
@@ -43,8 +42,7 @@ const promiseExec = cmd => {
 		return
 	}
 
-	await axios.post(prIssueCommentsUrl, {
-		body: `
+	const message = `
 Hi ${process.env.DRONE_COMMIT_AUTHOR}!
 
 Thank you for creating a PR!
@@ -57,14 +55,25 @@ You will need to manually connect this to an api running somehwere. The easiest 
 Have a nice day!
 
 > Beep boop, I'm a bot.
-`,
-	}, {
-		headers: {
-			'Content-Type': 'application/json',
-			'accept': 'application/json',
-			'Authorization': `token ${giteaToken}`,
-		},
-	})
+`
 
-	console.log(`Preview comment sent successfully to PR #${prNumber}!`)
+	try {
+		const response = await fetch(prIssueCommentsUrl, {
+			method: 'POST',
+			body: JSON.stringify({
+				body: message,
+			}),
+			headers: {
+				'Content-Type': 'application/json',
+				'accept': 'application/json',
+				'Authorization': `token ${giteaToken}`,
+			},
+		})
+		if (!response.ok) {
+			throw new Error(`HTTP error, status = ${response.status}`)
+		}
+		console.log(`Preview comment sent successfully to PR #${prNumber}!`)
+	} catch (e) {
+		console.log(`Could not send preview comment to PR #${prNumber}! ${e.message}`)
+	}
 })()
