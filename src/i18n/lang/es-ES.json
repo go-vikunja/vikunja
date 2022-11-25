@@ -427,7 +427,7 @@
     "inProgress": "Importing in progress…",
     "alreadyMigrated1": "It looks like you've already imported your stuff from {name} at {date}.",
     "alreadyMigrated2": "Importing again is possible, but might create duplicates. Are you sure?",
-    "confirm": "I am sure, please start migrating now!",
+    "confirm": "Estoy seguro, ¡por favor empieza a migrar ahora!",
     "importUpload": "To import data from {name} into Vikunja, click the button below to select a file.",
     "upload": "Upload file"
   },
@@ -624,7 +624,7 @@
       "updated": "Updated {0}",
       "doneAt": "Done {0}",
       "updateSuccess": "The task was saved successfully.",
-      "deleteSuccess": "The task has been deleted successfully.",
+      "deleteSuccess": "La tarea se ha eliminado con éxito.",
       "belongsToList": "This task belongs to list '{list}'",
       "due": "Due {at}",
       "closePopup": "Close popup",
@@ -715,8 +715,8 @@
       "comment": "Comment",
       "delete": "Delete this comment",
       "deleteText1": "Are you sure you want to delete this comment?",
-      "deleteSuccess": "The comment was deleted successfully.",
-      "addedSuccess": "The comment was added successfully."
+      "deleteSuccess": "El comentario fue eliminado con éxito.",
+      "addedSuccess": "El comentario fue añadido con éxito."
     },
     "deferDueDate": {
       "title": "Defer due date",
@@ -731,16 +731,16 @@
     "assignee": {
       "placeholder": "Type to assign a user…",
       "selectPlaceholder": "Assign this user",
-      "assignSuccess": "The user has been assigned successfully.",
-      "unassignSuccess": "The user has been unassigned successfully."
+      "assignSuccess": "El usuario ha sido asignado con éxito.",
+      "unassignSuccess": "El usuario ha sido desasignado con éxito."
     },
     "label": {
       "placeholder": "Type to add a new label…",
       "createPlaceholder": "Add this as new label",
-      "addSuccess": "The label has been added successfully.",
-      "createSuccess": "The label has been created successfully.",
-      "removeSuccess": "The label has been removed successfully.",
-      "addCreateSuccess": "The label has been created and added successfully.",
+      "addSuccess": "La etiqueta ha sido añadida con éxito.",
+      "createSuccess": "La etiqueta ha sido creada con éxito.",
+      "removeSuccess": "La etiqueta ha sido quitada con éxito.",
+      "addCreateSuccess": "La etiqueta ha sido creada y añadida con éxito.",
       "delete": {
         "header": "Delete this label",
         "text1": "Are you sure you want to delete this label?",
@@ -829,7 +829,7 @@
     "noTeams": "You are currently not part of any teams.",
     "create": {
       "title": "Create a new team",
-      "success": "The team was successfully created."
+      "success": "El equipo fue creado con éxito."
     },
     "edit": {
       "title": "Edit Team \"{team}\"",
@@ -838,28 +838,28 @@
       "addUser": "Add to team",
       "makeMember": "Make Member",
       "makeAdmin": "Make Admin",
-      "success": "The team was successfully updated.",
-      "userAddedSuccess": "The team member was successfully added.",
-      "madeMember": "The team member was successfully made member.",
-      "madeAdmin": "The team member was successfully made admin.",
+      "success": "El equipo fue actualizado con éxito.",
+      "userAddedSuccess": "El miembro del equipo fue añadido con éxito.",
+      "madeMember": "El miembro del equipo se ha hecho miembro con éxito.",
+      "madeAdmin": "El miembro del equipo se ha hecho admin con éxito.",
       "mustSelectUser": "Please select a user.",
       "delete": {
         "header": "Delete the team",
         "text1": "Are you sure you want to delete this team and all of its members?",
         "text2": "All team members will lose access to lists and namespaces shared with this team. This CANNOT BE UNDONE!",
-        "success": "The team was successfully deleted."
+        "success": "El equipo fue eliminado con éxito."
       },
       "deleteUser": {
         "header": "Remove a user from the team",
         "text1": "Are you sure you want to remove this user from the team?",
         "text2": "They will lose access to all lists and namespaces this team has access to. This CANNOT BE UNDONE!",
-        "success": "The user was successfully deleted from the team."
+        "success": "El usuario fue quitado del equipo con éxito."
       },
       "leave": {
         "title": "Leave team",
         "text1": "Are you sure you want to leave this team?",
         "text2": "You will lose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
-        "success": "You have successfully left the team."
+        "success": "Has abandonado el equipo con éxito."
       }
     },
     "attributes": {
