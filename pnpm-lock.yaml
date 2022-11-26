@@ -10,7 +10,7 @@ specifiers:
   '@fortawesome/free-solid-svg-icons': 6.2.1
   '@fortawesome/vue-fontawesome': 3.0.2
   '@github/hotkey': 2.0.1
-  '@infectoone/vue-ganttastic': 2.1.2
+  '@infectoone/vue-ganttastic': 2.1.3
   '@kyvg/vue3-notification': 2.6.1
   '@rushstack/eslint-patch': 1.2.0
   '@sentry/tracing': 7.21.1
@@ -96,7 +96,7 @@ dependencies:
   '@fortawesome/free-solid-svg-icons': 6.2.1
   '@fortawesome/vue-fontawesome': 3.0.2_bd5ipvhrqmkjz6wvo6sgrei224
   '@github/hotkey': 2.0.1
-  '@infectoone/vue-ganttastic': 2.1.2_dayjs@1.11.6+vue@3.2.45
+  '@infectoone/vue-ganttastic': 2.1.3_dayjs@1.11.6+vue@3.2.45
   '@kyvg/vue3-notification': 2.6.1_vue@3.2.45
   '@sentry/tracing': 7.21.1
   '@sentry/vue': 7.21.1_vue@3.2.45
@@ -1751,14 +1751,17 @@ packages:
     resolution: {integrity: sha512-tWZNBIS1CoekcwlMuyG2mr0a1Wo5lb5lEHwwWvZo+5GLgr3e9LLDTtmgtCWEwBpXMkxn9D+2W9j2FY6eZQq0tA==}
     dev: true
 
-  /@infectoone/vue-ganttastic/2.1.2_dayjs@1.11.6+vue@3.2.45:
-    resolution: {integrity: sha512-xYjhA1bUUSVNjbFmM5eeN0mdKdDg7LWMO9RSh+9fFqfnqu24VwazTumHBYQZFGvGfdJW0DE7ZN3tbLhL9vkYlA==}
+  /@infectoone/vue-ganttastic/2.1.3_dayjs@1.11.6+vue@3.2.45:
+    resolution: {integrity: sha512-04K1J+LBANzaXOOZ6QRv1Rfkuk1UoIFdmQEBiA7I1mSDqlskNe7eEa6yoJPoXKhaiYXDuWeCu0DjexZPKEgkFQ==}
     peerDependencies:
       dayjs: ^1.11.5
       vue: ^3.2.40
     dependencies:
+      '@vueuse/core': 9.6.0_vue@3.2.45
       dayjs: 1.11.6
       vue: 3.2.45
+    transitivePeerDependencies:
+      - '@vue/composition-api'
     dev: false
 
   /@intlify/core-base/9.2.2:
