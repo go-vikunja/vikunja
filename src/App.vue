@@ -15,9 +15,8 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, watch, type Ref} from 'vue'
-import {useRouter} from 'vue-router'
-import {useRouteQuery} from '@vueuse/router'
+import {computed, watch} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import isTouchDevice from 'is-touch-device'
 import {success} from '@/message'
@@ -41,6 +40,7 @@ import {useAuthStore} from './stores/auth'
 const baseStore = useBaseStore()
 const authStore = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 
 useBodyClass('is-touch', isTouchDevice())
 const keyboardShortcutsActive = computed(() => baseStore.keyboardShortcutsActive)
@@ -51,9 +51,9 @@ const authLinkShare = computed(() => authStore.authLinkShare)
 const {t} = useI18n({useScope: 'global'})
 
 // setup account deletion verification
-const accountDeletionConfirm = useRouteQuery('accountDeletionConfirm') as Ref<null | string>
+const accountDeletionConfirm = computed(() => route.query?.accountDeletionConfirm as (string | undefined))
 watch(accountDeletionConfirm, async (accountDeletionConfirm) => {
-	if (accountDeletionConfirm === null) {
+	if (accountDeletionConfirm === undefined) {
 		return
 	}
 
@@ -64,9 +64,9 @@ watch(accountDeletionConfirm, async (accountDeletionConfirm) => {
 }, { immediate: true })
 
 // setup password reset redirect
-const userPasswordReset = useRouteQuery('userPasswordReset') as Ref<null | string>
+const userPasswordReset = computed(() => route.query?.userPasswordReset as (string | undefined))
 watch(userPasswordReset, (userPasswordReset) => {
-	if (userPasswordReset === null) {
+	if (userPasswordReset === undefined) {
 		return
 	}
 
@@ -75,9 +75,9 @@ watch(userPasswordReset, (userPasswordReset) => {
 }, { immediate: true })
 
 // setup email verification redirect
-const userEmailConfirm = useRouteQuery('userEmailConfirm') as Ref<null | string>
+const userEmailConfirm = computed(() => route.query?.userEmailConfirm as (string | undefined))
 watch(userEmailConfirm, (userEmailConfirm) => {
-	if (userEmailConfirm === null) {
+	if (userEmailConfirm === undefined) {
 		return
 	}
 
