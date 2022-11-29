@@ -73,7 +73,7 @@ specifiers:
   snake-case: 3.0.4
   sortablejs: 1.15.0
   typescript: 4.9.3
-  ufo: 1.0.0
+  ufo: 1.0.1
   vite: 3.2.4
   vite-plugin-pwa: 0.13.3
   vite-svg-loader: 3.6.0
@@ -126,7 +126,7 @@ dependencies:
   register-service-worker: 1.7.2
   snake-case: 3.0.4
   sortablejs: 1.15.0
-  ufo: 1.0.0
+  ufo: 1.0.1
   vue: 3.2.45
   vue-advanced-cropper: 2.8.6_vue@3.2.45
   vue-flatpickr-component: 11.0.1_vue@3.2.45
@@ -12754,8 +12754,8 @@ packages:
     resolution: {integrity: sha512-bTGLjbD3WqZDR3CgEFkyi9Q/SS2oM29ipXrWfDb4M74ea69QwKAECVceYpaBu0GfdnASMg9Qfl67ttB23nePHg==}
     dev: false
 
-  /ufo/1.0.0:
-    resolution: {integrity: sha512-DRty0ZBNlJ2R59y4mEupJRKLbkLQsc4qtxjpQv78AwEDuBkaUogMc2LkeqW3HddFlw6NwnXYfdThEZOiNgkmmQ==}
+  /ufo/1.0.1:
+    resolution: {integrity: sha512-boAm74ubXHY7KJQZLlXrtMz52qFvpsbOxDcZOnw/Wf+LS4Mmyu7JxmzD4tDLtUQtmZECypJ0FrCz4QIe6dvKRA==}
     dev: false
 
   /uid-safe/2.1.5:
