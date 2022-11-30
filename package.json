@@ -74,7 +74,7 @@
     "@types/flexsearch": "0.7.3",
     "@types/lodash.debounce": "4.0.7",
     "@types/marked": "4.0.7",
-    "@types/node": "18.11.9",
+    "@types/node": "18.11.10",
     "@types/postcss-preset-env": "7.7.0",
     "@typescript-eslint/eslint-plugin": "5.45.0",
     "@typescript-eslint/parser": "5.45.0",
