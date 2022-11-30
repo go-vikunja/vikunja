@@ -5,6 +5,8 @@ import {format, formatDistanceToNow, formatISO as formatISOfns} from 'date-fns'
 import {enGB, de, fr, ru} from 'date-fns/locale'
 
 import {i18n} from '@/i18n'
+import { createSharedComposable, type MaybeRef } from '@vueuse/core'
+import { computed, unref } from 'vue'
 
 const locales = {en: enGB, de, ch: de, fr, ru}
 
@@ -49,4 +51,18 @@ export const formatDateSince = (date) => {
 
 export function formatISO(date) {
 	return date ? formatISOfns(date) : ''
+}
+
+/**
+ * Because `Intl.DateTimeFormat` is expensive to instatiate we try to reuse it as often as possible,
+ * by creating a shared composable.
+ */
+export const useDateTimeFormatter = createSharedComposable((options?: MaybeRef<Intl.DateTimeFormatOptions>) => {
+	return computed(() => new Intl.DateTimeFormat(i18n.global.locale, unref(options)))
+})
+
+export function useWeekDayFromDate() {
+	const dateTimeFormatter = useDateTimeFormatter({ weekday: 'short' })
+
+	return computed(() => (date: Date) => dateTimeFormatter.value.format(date))
 }

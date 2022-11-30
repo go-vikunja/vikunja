@@ -1,6 +1,6 @@
 <template>
 	<Loading
-		v-if="props.isLoading && tasks.size || dayjsLanguageLoading"
+		v-if="props.isLoading && !ganttBars.length || dayjsLanguageLoading"
 		class="gantt-container"
 	/>
 	<div class="gantt-container" v-else>
@@ -16,14 +16,14 @@
 			@dblclick-bar="openTask"
 			:width="ganttChartWidth + 'px'"
 		>
-			<template #timeunit="{label, value}">
+			<template #timeunit="{value, date}">
 				<div
 					class="timeunit-wrapper"
-					:class="{'today': dayIsToday(label)}"
+					:class="{'today': dateIsToday(date)}"
 				>
 					<span>{{ value }}</span>
 					<span class="weekday">
-						{{ weekdayFromTimeLabel(label) }}
+						{{ weekDayFromDate(date) }}
 					</span>
 				</div>
 			</template>
@@ -40,9 +40,7 @@
 <script setup lang="ts">
 import {computed, ref, watch, toRefs} from 'vue'
 import {useRouter} from 'vue-router'
-import {format, parse} from 'date-fns'
-import dayjs from 'dayjs'
-import isToday from 'dayjs/plugin/isToday'
+import {useNow} from '@vueuse/core'
 
 import {getHexColor} from '@/models/task'
 
@@ -63,6 +61,7 @@ import {
 
 import Loading from '@/components/misc/loading.vue'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
+import {useWeekDayFromDate} from '@/helpers/time/formatDate'
 
 export interface GanttChartProps {
 	isLoading: boolean,
@@ -85,7 +84,6 @@ const {tasks, filters} = toRefs(props)
 // setup dayjs for vue-ganttastic
 const dayjsLanguageLoading = ref(false)
 // const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
-dayjs.extend(isToday)
 extendDayjs()
 
 const router = useRouter()
@@ -157,23 +155,16 @@ function openTask(e: {
 	})
 }
 
-function parseTimeLabel(label: string) {
-	return parse(label, 'dd.MMM', dateFromDate.value)
-}
+const weekDayFromDate = useWeekDayFromDate()
 
-function weekdayFromTimeLabel(label: string): string {
-	const parsed = parseTimeLabel(label)
-	return format(parsed, 'E')
-}
-
-function dayIsToday(label: string): boolean {
-	const parsed = parseTimeLabel(label)
-
-	const today = new Date()
-	return parsed.getDate() === today.getDate() &&
-		parsed.getMonth() === today.getMonth() &&
-		parsed.getFullYear() === today.getFullYear()
-}
+const today = useNow()
+const dateIsToday = computed(() => (date: Date) => {
+	return (
+		date.getDate() === today.value.getDate() &&
+		date.getMonth() === today.value.getMonth() &&
+		date.getFullYear() === today.value.getFullYear()
+	)
+})
 </script>
 
 <style scoped lang="scss">
