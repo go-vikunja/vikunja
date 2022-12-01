@@ -1,7 +1,7 @@
 
 ##############
 # Build stage
-FROM --platform=$BUILDPLATFORM techknowlogick/xgo:latest AS build-env
+FROM --platform=$BUILDPLATFORM techknowlogick/xgo:go-1.19.2 AS build-env
 
 RUN \
   go install github.com/magefile/mage@latest && \
