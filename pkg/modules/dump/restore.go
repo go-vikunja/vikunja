@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -144,9 +145,14 @@ func Restore(filename string) error {
 		// FIXME: There has to be a general way to do this but this works for now.
 		if table == "notifications" {
 			for i := range content {
-				decoded, err := base64.StdEncoding.DecodeString(content[i]["notification"].(string))
-				if err != nil {
+				var decoded []byte
+				decoded, err = base64.StdEncoding.DecodeString(content[i]["notification"].(string))
+				if err != nil && !errors.Is(err, base64.CorruptInputError(0)) {
 					return fmt.Errorf("could not decode notification %s: %w", content[i]["notification"], err)
+				}
+
+				if err != nil && errors.Is(err, base64.CorruptInputError(0)) {
+					decoded = []byte(content[i]["notification"].(string))
 				}
 
 				content[i]["notification"] = string(decoded)
