@@ -37,9 +37,9 @@ func getUndoneOverdueTasks(s *xorm.Session, now time.Time) (usersWithTasks map[i
 
 	var tasks []*Task
 	err = s.
-		Where("due_date is not null AND due_date < ? AND lists.is_archived = ? AND namespaces.is_archived = ?", nextMinute.Add(time.Hour*14).Format(dbTimeFormat), false, false).
-		Join("INNER", "lists", "lists.id = tasks.list_id").
-		Join("INNER", "namespaces", "lists.namespace_id = lists.id").
+		Where("due_date is not null AND due_date < ? AND lists.is_archived = false AND namespaces.is_archived = false", nextMinute.Add(time.Hour*14).Format(dbTimeFormat)).
+		Join("LEFT", "lists", "lists.id = tasks.list_id").
+		Join("LEFT", "namespaces", "lists.namespace_id = namespaces.id").
 		And("done = false").
 		Find(&tasks)
 	if err != nil {
