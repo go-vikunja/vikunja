@@ -140,9 +140,13 @@ func RegisterOverdueReminderCron() {
 			}
 
 			if len(ut.tasks) == 1 {
-				n = &UndoneTaskOverdueNotification{
-					User: ut.user,
-					Task: ut.tasks[0],
+				// We know there's only one entry in the map so this is actually O(1) and we can use it to get the
+				// first entry without knowing the key of it.
+				for _, t := range ut.tasks {
+					n = &UndoneTaskOverdueNotification{
+						User: ut.user,
+						Task: t,
+					}
 				}
 			}
 
