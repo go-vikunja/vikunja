@@ -18,6 +18,7 @@ package db
 
 import (
 	"encoding/json"
+	"strings"
 
 	"code.vikunja.io/api/pkg/log"
 
@@ -53,7 +54,34 @@ func Restore(table string, contents []map[string]interface{}) (err error) {
 		return err
 	}
 
+	meta, err := x.DBMetas()
+	if err != nil {
+		return err
+	}
+
+	var metaForCurrentTable *schemas.Table
+	for _, m := range meta {
+		if m.Name == table {
+			metaForCurrentTable = m
+			break
+		}
+	}
+
+	if metaForCurrentTable == nil {
+		log.Fatalf("Could not find table definition for table %s", table)
+	}
+
 	for _, content := range contents {
+		for colName, value := range content {
+			// Date fields might get restored as 0001-01-01 from null dates. This can have unintended side-effects like
+			// users being scheduled for deletion after a restore.
+			// To avoid this, we set these dates to nil so that they'll end up as null in the db.
+			col := metaForCurrentTable.GetColumn(colName)
+			if col.SQLType.IsTime() && (value.(string) == "" || strings.HasPrefix(value.(string), "0001-")) {
+				content[colName] = nil
+			}
+		}
+
 		if _, err := x.Table(table).Insert(content); err != nil {
 			return err
 		}
