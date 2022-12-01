@@ -377,7 +377,7 @@ steps:
       event: [ push, tag, pull_request ]
 
   - name: before-static-build
-    image: techknowlogick/xgo:latest
+    image: techknowlogick/xgo:go-1.19.2
     pull: true
     commands:
       - export PATH=$PATH:$GOPATH/bin
@@ -386,7 +386,7 @@ steps:
     depends_on: [ fetch-tags, mage ]
 
   - name: static-build-windows
-    image: techknowlogick/xgo:latest
+    image: techknowlogick/xgo:go-1.19.2
     pull: true
     environment:
       # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
@@ -399,7 +399,7 @@ steps:
     depends_on: [ before-static-build ]
 
   - name: static-build-linux
-    image: techknowlogick/xgo:latest
+    image: techknowlogick/xgo:go-1.19.2
     pull: true
     environment:
       # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
@@ -412,7 +412,7 @@ steps:
     depends_on: [ before-static-build ]
 
   - name: static-build-darwin
-    image: techknowlogick/xgo:latest
+    image: techknowlogick/xgo:go-1.19.2
     pull: true
     environment:
       # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
@@ -435,7 +435,7 @@ steps:
       - ./mage-static release:compress
 
   - name: after-build-static
-    image: techknowlogick/xgo:latest
+    image: techknowlogick/xgo:go-1.19.2
     pull: true
     depends_on:
       - after-build-compress
@@ -719,6 +719,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 768d54fc8433705fb63f754adf19536a16152a4046a040afdbcbb7df60614056
+hmac: 4bd42cd21b4861300b8fdc2fc130e3da23e6008fbea996efcf03dc92bf43b063
 
 ...
