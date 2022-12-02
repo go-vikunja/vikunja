@@ -14,7 +14,7 @@
 		
 		<router-link
 			:to="taskDetailRoute"
-			:class="{ 'done': task.done}"
+			:class="{ 'done': task.done, 'show-list': showList && taskList !== null}"
 			class="tasktext"
 		>
 			<span>
@@ -389,6 +389,10 @@ function hideDeferDueDatePopup(e) {
 	span.parent-tasks {
 		color: var(--grey-500);
 		width: auto;
+	}
+
+	.show-list .parent-tasks {
+		padding-left: .25rem;
 	}
 
 	.remove {
