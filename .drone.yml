@@ -517,7 +517,7 @@ steps:
         - main
       event:
         - push
-    depends_on: [ static-build-linux ]
+    depends_on: [ after-build-compress ]
 
   - name: build-os-packages-version
     image: goreleaser/nfpm
@@ -531,7 +531,7 @@ steps:
     when:
       event:
         - tag
-    depends_on: [ static-build-linux ]
+    depends_on: [ after-build-compress ]
 
   # Push the os releases to our pseudo-s3-bucket
   - name: release-os-latest
@@ -719,6 +719,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 4bd42cd21b4861300b8fdc2fc130e3da23e6008fbea996efcf03dc92bf43b063
+hmac: a8937e26dc5d29676571fd36ab58a883e65eee13b6cd0f86b9a115c234179685
 
 ...
