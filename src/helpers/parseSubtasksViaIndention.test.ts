@@ -106,4 +106,15 @@ task two`)
 		expect(tasks).to.have.length(1)
 		expect(tasks[0].parent).toBeNull()
 	})
+	it('Should add the list of the parent task as list for all sub tasks', () => {
+		const tasks = parseSubtasksViaIndention(
+`parent task +list
+  sub task 1
+  sub task 2`)
+		
+		expect(tasks).to.have.length(3)
+		expect(tasks[0].list).to.eq('list')
+		expect(tasks[1].list).to.eq('list')
+		expect(tasks[2].list).to.eq('list')
+	})
 })

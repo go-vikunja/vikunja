@@ -1,6 +1,7 @@
 import {parseDate} from '../helpers/time/parseDate'
 import {PRIORITIES} from '@/constants/priorities'
 import {REPEAT_TYPES, type IRepeatAfter, type IRepeatType} from '@/types/IRepeatAfter'
+import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 
 const VIKUNJA_PREFIXES: Prefixes = {
 	label: '*',
@@ -74,8 +75,7 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 	result.labels = getItemsFromPrefix(text, prefixes.label)
 	result.text = cleanupItemText(result.text, result.labels, prefixes.label)
 
-	const lists: string[] = getItemsFromPrefix(result.text, prefixes.list)
-	result.list = lists.length > 0 ? lists[0] : null
+	result.list = getListFromPrefix(result.text, prefixes.list)
 	result.text = result.list !== null ? cleanupItemText(result.text, [result.list], prefixes.list) : result.text
 
 	result.priority = getPriority(result.text, prefixes.priority)
@@ -128,6 +128,18 @@ const getItemsFromPrefix = (text: string, prefix: string): string[] => {
 	})
 
 	return Array.from(new Set(items))
+}
+
+export const getListFromPrefix = (text: string, listPrefix: string | null = null): string | null => {
+	if (listPrefix === null) {
+		const prefixes = PREFIXES[getQuickAddMagicMode()]
+		if (prefixes === undefined) {
+			return null
+		}
+		listPrefix = prefixes.list
+	}
+	const lists: string[] = getItemsFromPrefix(text, listPrefix)
+	return lists.length > 0 ? lists[0] : null
 }
 
 const getPriority = (text: string, prefix: string): number | null => {

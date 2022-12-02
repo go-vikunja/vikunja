@@ -1,6 +1,9 @@
+import {getListFromPrefix} from '@/modules/parseTaskText'
+
 export interface TaskWithParent {
 	title: string,
 	parent: string | null,
+	list: string | null,
 }
 
 function cleanupTitle(title: string) {
@@ -20,7 +23,10 @@ export function parseSubtasksViaIndention(taskTitles: string): TaskWithParent[] 
 		const task: TaskWithParent = {
 			title: cleanupTitle(title),
 			parent: null,
+			list: null,
 		}
+
+		task.list = getListFromPrefix(task.title)
 
 		if (index === 0) {
 			return task
@@ -41,6 +47,10 @@ export function parseSubtasksViaIndention(taskTitles: string): TaskWithParent[] 
 			} while (parentSpaces >= matchedSpaces)
 			task.title = cleanupTitle(title.replace(spaceRegex, ''))
 			task.parent = task.parent.replace(spaceRegex, '')
+			if (task.list === null) {
+				// This allows to specify a list once for the parent task and inherit it to all subtasks
+				task.list = getListFromPrefix(task.parent)
+			}
 		}
 
 		return task

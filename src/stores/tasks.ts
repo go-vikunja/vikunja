@@ -437,6 +437,7 @@ export const useTaskStore = defineStore('task', () => {
 		addLabelsToTask,
 		createNewTask,
 		setCoverImage,
+		findListId,
 	}
 })
 

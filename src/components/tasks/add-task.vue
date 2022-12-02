@@ -98,14 +98,20 @@ async function addTask() {
 	// by quick add magic.
 	const createdTasks: { [key: ITask['title']]: ITask } = {}
 	const tasksToCreate = parseSubtasksViaIndention(newTaskTitle.value)
-	const newTasks = tasksToCreate.map(async ({title}) => {
+	const newTasks = tasksToCreate.map(async ({title, list}) => {
 		if (title === '') {
 			return
+		}
+		
+		// If the task has a list specified, make sure to use it
+		let listId = null
+		if (list !== null) {
+			listId = await taskStore.findListId({list, listId: 0})
 		}
 
 		const task = await taskStore.createNewTask({
 			title,
-			listId: authStore.settings.defaultListId,
+			listId: listId || authStore.settings.defaultListId,
 			position: props.defaultPosition,
 		})
 		createdTasks[title] = task
