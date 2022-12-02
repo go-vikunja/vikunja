@@ -15,7 +15,7 @@ import Notifications from '@kyvg/vue3-notification'
 import './registerServiceWorker'
 
 // i18n
-import {i18n} from './i18n'
+import {i18n, setLanguage} from './i18n'
 
 declare global {
 	interface Window {
@@ -106,4 +106,6 @@ app.use(pinia)
 app.use(router)
 app.use(i18n)
 
-app.mount('#app')
+setLanguage().then(() => {
+	app.mount('#app')
+})

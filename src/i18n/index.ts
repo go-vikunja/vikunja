@@ -22,31 +22,22 @@ export const DEFAULT_LANGUAGE: SupportedLocale= 'en'
 
 export type ISOLanguage = string
 
+// we load all messsages async
 export const i18n = createI18n({
-	locale: DEFAULT_LANGUAGE, // set locale
 	fallbackLocale: DEFAULT_LANGUAGE,
-	legacy: true,
-	globalInjection: true,
-	allowComposition: true,
-	inheritLocale: true,
+	legacy: false,
 	messages: {
 		en: langEN,
 	} as Record<SupportedLocale, any>,
 })
 
-function setI18nLanguage(lang: SupportedLocale): SupportedLocale {
-	i18n.global.locale = lang
-	document.documentElement.lang = lang
-	return lang
-}
-
-export async function loadLanguageAsync(lang: SupportedLocale) {
+export async function setLanguage(lang: SupportedLocale = getCurrentLanguage()): Promise<SupportedLocale | undefined> {
 	if (!lang) {
 		throw new Error()
 	}
 
 	// do not change language to the current one
-	if (i18n.global.locale === lang) {
+	if (i18n.global.locale.value === lang) {
 		return
 	}
 
@@ -56,7 +47,9 @@ export async function loadLanguageAsync(lang: SupportedLocale) {
 		i18n.global.setLocaleMessage(lang, messages.default)
 	}
 
-	return setI18nLanguage(lang)
+	i18n.global.locale.value = lang
+	document.documentElement.lang = lang
+	return lang
 }
 
 export function getCurrentLanguage(): SupportedLocale {
@@ -74,11 +67,7 @@ export function getCurrentLanguage(): SupportedLocale {
 	return language || DEFAULT_LANGUAGE
 }
 
-export function saveLanguage(lang: SupportedLocale) {
+export async function saveLanguage(lang: SupportedLocale) {
 	localStorage.setItem('language', lang)
-	setLanguage()
-}
-
-export function setLanguage() {
-	return loadLanguageAsync(getCurrentLanguage())
+	await setLanguage()
 }

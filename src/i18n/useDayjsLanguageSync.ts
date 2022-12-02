@@ -1,6 +1,5 @@
 import {computed, ref, watch} from 'vue'
 import type dayjs from 'dayjs'
-import type ILocale from 'dayjs/locale/*'
 
 import {i18n, type SupportedLocale, type ISOLanguage} from '@/i18n'
 
@@ -36,7 +35,7 @@ export function useDayjsLanguageSync(dayjsGlobal: typeof dayjs) {
 
 	const dayjsLanguageLoaded = ref(false)
 	watch(
-		() => i18n.global.locale,
+		() => i18n.global.locale.value,
 		async (currentLanguage: string) => {
 			if (!dayjsGlobal) {
 				return

@@ -2,13 +2,15 @@
 import {defineConfig} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import legacyFn from '@vitejs/plugin-legacy'
+import { URL, fileURLToPath } from "url";
+import { dirname, resolve } from "path";
 
+import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import {VitePWA}  from 'vite-plugin-pwa'
 import {visualizer}  from 'rollup-plugin-visualizer'
 import svgLoader from 'vite-svg-loader'
 import postcssPresetEnv from "postcss-preset-env";
 
-import { fileURLToPath, URL } from 'url'
 
 const pathSrc = fileURLToPath(new URL('./src', import.meta.url))
 
@@ -57,6 +59,13 @@ export default defineConfig({
 			// Since the svgs are already manually optimized via https://jakearchibald.github.io/svgomg/
 			// we don't need to optimize them again.
 			svgo: false,
+		}),
+		VueI18nPlugin({
+			// TODO: only install needed stuff
+			// Whether to install the full set of APIs, components, etc. provided by Vue I18n.
+			// By default, all of them will be installed.
+			fullInstall: true,
+			include: resolve(dirname(pathSrc), './src/i18n/lang/**'),
 		}),
 		VitePWA({
 			srcDir: 'src',

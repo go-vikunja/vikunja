@@ -58,7 +58,7 @@ export function formatISO(date) {
  * by creating a shared composable.
  */
 export const useDateTimeFormatter = createSharedComposable((options?: MaybeRef<Intl.DateTimeFormatOptions>) => {
-	return computed(() => new Intl.DateTimeFormat(i18n.global.locale, unref(options)))
+	return computed(() => new Intl.DateTimeFormat(i18n.global.locale.value, unref(options)))
 })
 
 export function useWeekDayFromDate() {
