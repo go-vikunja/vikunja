@@ -77,7 +77,8 @@ func Restore(table string, contents []map[string]interface{}) (err error) {
 			// users being scheduled for deletion after a restore.
 			// To avoid this, we set these dates to nil so that they'll end up as null in the db.
 			col := metaForCurrentTable.GetColumn(colName)
-			if col.SQLType.IsTime() && (value.(string) == "" || strings.HasPrefix(value.(string), "0001-")) {
+			strVal, is := value.(string)
+			if is && col.SQLType.IsTime() && (strVal == "" || strings.HasPrefix(strVal, "0001-")) {
 				content[colName] = nil
 			}
 		}
