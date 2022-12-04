@@ -53,6 +53,7 @@ import {RELATION_KIND} from '@/types/IRelationKind'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
+import {getLabelsFromPrefix} from '@/modules/parseTaskText'
 
 const props = defineProps({
 	defaultPosition: {
@@ -82,6 +83,7 @@ function resetEmptyTitleError(e) {
 }
 
 const loading = computed(() => taskStore.isLoading)
+
 async function addTask() {
 	if (newTaskTitle.value === '') {
 		errorMessage.value = t('list.create.addTitleRequired')
@@ -98,11 +100,18 @@ async function addTask() {
 	// by quick add magic.
 	const createdTasks: { [key: ITask['title']]: ITask } = {}
 	const tasksToCreate = parseSubtasksViaIndention(newTaskTitle.value)
+
+	// We ensure all labels exist prior to passing them down to the create task method
+	// In the store it will only ever see one task at a time so there's no way to reliably 
+	// check if a new label was created before (because everything happens async).
+	const allLabels = tasksToCreate.map(({title}) => getLabelsFromPrefix(title) ?? [])
+	await taskStore.ensureLabelsExist(allLabels.flat())
+
 	const newTasks = tasksToCreate.map(async ({title, list}) => {
 		if (title === '') {
 			return
 		}
-		
+
 		// If the task has a list specified, make sure to use it
 		let listId = null
 		if (list !== null) {

@@ -1,5 +1,5 @@
 import {computed, ref} from 'vue'
-import {defineStore, acceptHMRUpdate} from 'pinia'
+import {acceptHMRUpdate, defineStore} from 'pinia'
 import router from '@/router'
 import {formatISO} from 'date-fns'
 
@@ -14,8 +14,8 @@ import {parseTaskText} from '@/modules/parseTaskText'
 
 import TaskAssigneeModel from '@/models/taskAssignee'
 import LabelTaskModel from '@/models/labelTask'
-import TaskModel from '@/models/task'
 import LabelTask from '@/models/labelTask'
+import TaskModel from '@/models/task'
 import LabelModel from '@/models/label'
 
 import type {ILabel} from '@/modelTypes/ILabel'
@@ -306,6 +306,20 @@ export const useTaskStore = defineStore('task', () => {
 
 		return response
 	}
+	
+	async function ensureLabelsExist(labels: string[]): Promise<LabelModel[]> {
+		const all = [...new Set(labels)]
+		const mustCreateLabel = all.map(async labelTitle => {
+			let label = validateLabel(Object.values(labelStore.labels), labelTitle)
+			if (typeof label === 'undefined') {
+				// label not found, create it
+				const labelModel = new LabelModel({title: labelTitle})
+				label = await labelStore.createLabel(labelModel)
+			}
+			return label
+		})
+		return Promise.all(mustCreateLabel)
+	}
 
 	// Do everything that is involved in finding, creating and adding the label to the task
 	async function addLabelsToTask(
@@ -316,16 +330,8 @@ export const useTaskStore = defineStore('task', () => {
 			return task
 		}
 
-		const labelAddsToWaitFor = parsedLabels.map(async labelTitle => {
-			let label = validateLabel(Object.values(labelStore.labels), labelTitle)
-			if (typeof label === 'undefined') {
-				// label not found, create it
-				const labelModel = new LabelModel({title: labelTitle})
-				label = await labelStore.createLabel(labelModel)
-			}
-
-			return addLabelToTask(task, label)
-		})
+		const labels = await ensureLabelsExist(parsedLabels)
+		const labelAddsToWaitFor = labels.map(async l => addLabelToTask(task, l))
 
 		// This waits until all labels are created and added to the task
 		await Promise.all(labelAddsToWaitFor)
@@ -402,11 +408,10 @@ export const useTaskStore = defineStore('task', () => {
 		const taskService = new TaskService()
 		try {
 			const createdTask = await taskService.create(task)
-			const result = await addLabelsToTask({
+			return await addLabelsToTask({
 				task: createdTask,
 				parsedLabels: parsedTask.labels,
 			})
-			return result
 		} finally {
 			cancel()
 		}
@@ -438,6 +443,7 @@ export const useTaskStore = defineStore('task', () => {
 		createNewTask,
 		setCoverImage,
 		findListId,
+		ensureLabelsExist,
 	}
 })
 

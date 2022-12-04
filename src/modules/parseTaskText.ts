@@ -72,7 +72,7 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 		return result
 	}
 
-	result.labels = getItemsFromPrefix(text, prefixes.label)
+	result.labels = getLabelsFromPrefix(text, prefixes.label) ?? []
 	result.text = cleanupItemText(result.text, result.labels, prefixes.label)
 
 	result.list = getListFromPrefix(result.text, prefixes.list)
@@ -140,6 +140,17 @@ export const getListFromPrefix = (text: string, listPrefix: string | null = null
 	}
 	const lists: string[] = getItemsFromPrefix(text, listPrefix)
 	return lists.length > 0 ? lists[0] : null
+}
+
+export const getLabelsFromPrefix = (text: string, listPrefix: string | null = null): string[] | null => {
+	if (listPrefix === null) {
+		const prefixes = PREFIXES[getQuickAddMagicMode()]
+		if (prefixes === undefined) {
+			return null
+		}
+		listPrefix = prefixes.label
+	}
+	return getItemsFromPrefix(text, listPrefix)
 }
 
 const getPriority = (text: string, prefix: string): number | null => {
