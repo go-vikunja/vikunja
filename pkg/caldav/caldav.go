@@ -22,7 +22,6 @@ import (
 	"strings"
 	"time"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 )
@@ -240,7 +239,7 @@ END:VCALENDAR` // Need a line break
 }
 
 func makeCalDavTimeFromTimeStamp(ts time.Time) (caldavtime string) {
-	return ts.In(config.GetTimeZone()).Format(DateFormat)
+	return ts.In(time.UTC).Format(DateFormat) + "Z"
 }
 
 func calcAlarmDateFromReminder(eventStart, reminder time.Time) (alarmTime string) {
