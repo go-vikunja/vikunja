@@ -63,7 +63,7 @@ require (
 	github.com/wneessen/go-mail v0.3.5
 	github.com/yuin/goldmark v1.5.3
 	golang.org/x/crypto v0.3.0
-	golang.org/x/image v0.1.0
+	golang.org/x/image v0.2.0
 	golang.org/x/oauth2 v0.1.0
 	golang.org/x/sync v0.1.0
 	golang.org/x/sys v0.3.0
@@ -136,7 +136,7 @@ require (
 	github.com/valyala/fasttemplate v1.2.1 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/net v0.2.0 // indirect
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/text v0.5.0 // indirect
 	golang.org/x/time v0.0.0-20220922220347-f3bd1da661af // indirect
 	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
