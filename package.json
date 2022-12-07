@@ -49,7 +49,7 @@
     "is-touch-device": "1.0.1",
     "lodash.clonedeep": "4.5.0",
     "lodash.debounce": "4.0.8",
-    "marked": "4.2.3",
+    "marked": "4.2.4",
     "minimist": "1.2.7",
     "pinia": "2.0.27",
     "register-service-worker": "1.7.2",
