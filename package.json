@@ -74,7 +74,7 @@
     "@types/dompurify": "2.4.0",
     "@types/flexsearch": "0.7.3",
     "@types/lodash.debounce": "4.0.7",
-    "@types/marked": "4.0.7",
+    "@types/marked": "4.0.8",
     "@types/node": "18.11.11",
     "@types/postcss-preset-env": "7.7.0",
     "@typescript-eslint/eslint-plugin": "5.46.0",

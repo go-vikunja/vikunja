@@ -22,7 +22,7 @@ specifiers:
   '@types/is-touch-device': 1.0.0
   '@types/lodash.clonedeep': 4.5.7
   '@types/lodash.debounce': 4.0.7
-  '@types/marked': 4.0.7
+  '@types/marked': 4.0.8
   '@types/node': 18.11.11
   '@types/postcss-preset-env': 7.7.0
   '@types/sortablejs': 1.15.0
@@ -147,7 +147,7 @@ devDependencies:
   '@types/dompurify': 2.4.0
   '@types/flexsearch': 0.7.3
   '@types/lodash.debounce': 4.0.7
-  '@types/marked': 4.0.7
+  '@types/marked': 4.0.8
   '@types/node': 18.11.11
   '@types/postcss-preset-env': 7.7.0
   '@typescript-eslint/eslint-plugin': 5.46.0_5mle7isnkfgjmrghnnczirv6iy
@@ -3321,8 +3321,8 @@ packages:
   /@types/lodash/4.14.185:
     resolution: {integrity: sha512-evMDG1bC4rgQg4ku9tKpuMh5iBNEwNa3tf9zRHdP1qlv+1WUg44xat4IxCE14gIpZRGUUWAx2VhItCZc25NfMA==}
 
-  /@types/marked/4.0.7:
-    resolution: {integrity: sha512-eEAhnz21CwvKVW+YvRvcTuFKNU9CV1qH+opcgVK3pIMI6YZzDm6gc8o2vHjldFk6MGKt5pueSB7IOpvpx5Qekw==}
+  /@types/marked/4.0.8:
+    resolution: {integrity: sha512-HVNzMT5QlWCOdeuBsgXP8EZzKUf0+AXzN+sLmjvaB3ZlLqO+e4u0uXrdw9ub69wBKFs+c6/pA4r9sy6cCDvImw==}
 
   /@types/minimatch/3.0.5:
     resolution: {integrity: sha512-Klz949h02Gz2uZCMGwDUSDS1YBlTdDDgbWHi+81l29tQALUtvz4rAYi5uoVhE5Lagoq6DeqAUlbrHvW/mXDgdQ==}
@@ -6150,7 +6150,7 @@ packages:
     resolution: {integrity: sha512-IxVVUxNWIoXLeqtBU4BLc+eS/ScYhT1Dcb6yF5Wchoj1iXAV+TIIDWx+NCaZhY7RcSHqDPKllbYq7nwGKILnoA==}
     dependencies:
       '@types/codemirror': 5.60.5
-      '@types/marked': 4.0.7
+      '@types/marked': 4.0.8
       codemirror: 5.65.10
       codemirror-spell-checker: 1.1.2
       marked: 4.2.4
