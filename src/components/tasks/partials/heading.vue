@@ -1,12 +1,14 @@
 <template>
 	<div class="heading">
-		<BaseButton @click="copyUrl"><h1 class="title task-id">{{ textIdentifier }}</h1></BaseButton>
-		<Done class="heading__done" :is-done="task.done"/>
-		<ColorBubble
-			v-if="task.hexColor !== ''"
-			:color="getHexColor(task.hexColor)"
-			class="mt-1 ml-2"
-		/>
+		<div class="flex is-align-items-center">
+			<BaseButton @click="copyUrl"><h1 class="title task-id">{{ textIdentifier }}</h1></BaseButton>
+			<Done class="heading__done" :is-done="task.done"/>
+			<ColorBubble
+				v-if="task.hexColor !== ''"
+				:color="getHexColor(task.hexColor)"
+				class="ml-2"
+			/>
+		</div>
 		<h1
 			class="title input"
 			:class="{'disabled': !canWrite}"
