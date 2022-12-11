@@ -554,41 +554,41 @@
         "lastWeek": "Last Week",
         "thisMonth": "This Month",
         "restOfThisMonth": "The Rest of This Month",
-        "nextMonth": "Next Month",
-        "next30Days": "Next 30 Days",
-        "lastMonth": "Last Month",
-        "thisYear": "This Year",
-        "restOfThisYear": "The Rest of This Year"
+        "nextMonth": "Próximo mês",
+        "next30Days": "Próximos 30 dias",
+        "lastMonth": "Último mês",
+        "thisYear": "Este ano",
+        "restOfThisYear": "O resto deste ano"
       }
     },
     "datemathHelp": {
-      "canuse": "You can use date math to filter for relative dates.",
-      "learnhow": "Check out how it works",
-      "title": "Date Math",
-      "intro": "Date Math allows you to specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
+      "canuse": "Você pode usar matemática de data para filtrar datas relativas.",
+      "learnhow": "Veja como funciona",
+      "title": "Matemática de Data",
+      "intro": "A matemática de data permite que você especifique datas relativas que são resolvidas em tempo real pelo Vikunja ao aplicar o filtro.",
       "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
       "similar": "These expressions are similar to the ones provided by {0} and {1}.",
-      "add1Day": "Add one day",
-      "minus1Day": "Subtract one day",
+      "add1Day": "Adicionar um dia",
+      "minus1Day": "Subtrair um dia",
       "roundDay": "Round down to the nearest day",
-      "supportedUnits": "Supported time units are:",
-      "someExamples": "Some examples of time expressions:",
+      "supportedUnits": "As unidades de tempo suportadas são:",
+      "someExamples": "Alguns exemplos de expressões temporais:",
       "units": {
-        "seconds": "Seconds",
-        "minutes": "Minutes",
-        "hours": "Hours",
-        "days": "Days",
-        "weeks": "Weeks",
-        "months": "Months",
-        "years": "Years"
+        "seconds": "Segundos",
+        "minutes": "Minutos",
+        "hours": "Horas",
+        "days": "Dias",
+        "weeks": "Semanas",
+        "months": "Meses",
+        "years": "Anos"
       },
       "examples": {
-        "now": "Right now",
-        "in24h": "In 24h",
-        "today": "Today at 00:00",
-        "beginningOfThisWeek": "The beginning of this week at 00:00",
-        "endOfThisWeek": "The end of this week",
-        "in30Days": "In 30 days",
+        "now": "Neste momento",
+        "in24h": "Em 24h",
+        "today": "Hoje às 00:00",
+        "beginningOfThisWeek": "O começo desta semana às 00:00",
+        "endOfThisWeek": "O fim desta semana",
+        "in30Days": "Em 30 dias",
         "datePlusMonth": "{0} mais um mês às 00:00 desse dia"
       }
     }
@@ -663,13 +663,13 @@
       "endDate": "Data de término",
       "labels": "Etiquetas",
       "percentDone": "Progresso",
-      "priority": "Priority",
-      "relatedTasks": "Related Tasks",
+      "priority": "Prioridade",
+      "relatedTasks": "Tarefas relacionadas",
       "reminders": "Reminders",
       "repeat": "Repeat",
-      "startDate": "Start Date",
-      "title": "Title",
-      "updated": "Updated"
+      "startDate": "Data de ínicio",
+      "title": "Título",
+      "updated": "Atualizado"
     },
     "subscription": {
       "subscribedListThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this list through its namespace.",
@@ -681,8 +681,8 @@
       "notSubscribedList": "You are not subscribed to this list and won't receive notifications for changes.",
       "subscribedTask": "You are currently subscribed to this task and will receive notifications for changes.",
       "notSubscribedTask": "You are not subscribed to this task and won't receive notifications for changes.",
-      "subscribe": "Subscribe",
-      "unsubscribe": "Unsubscribe",
+      "subscribe": "Inscrever-se",
+      "unsubscribe": "Desinscrever-se",
       "subscribeSuccessNamespace": "You are now subscribed to this namespace",
       "unsubscribeSuccessNamespace": "You are now unsubscribed to this namespace",
       "subscribeSuccessList": "You are now subscribed to this list",
@@ -691,15 +691,15 @@
       "unsubscribeSuccessTask": "You are now unsubscribed to this task"
     },
     "attachment": {
-      "title": "Attachments",
+      "title": "Anexos",
       "createdBy": "created {0} by {1}",
       "downloadTooltip": "Download this attachment",
-      "upload": "Upload attachment",
+      "upload": "Enviar anexo",
       "drop": "Drop files here to upload",
       "delete": "Delete attachment",
       "deleteTooltip": "Delete this attachment",
       "deleteText1": "Are you sure you want to delete the attachment {filename}?",
-      "copyUrl": "Copy URL",
+      "copyUrl": "Copiar URL",
       "copyUrlTooltip": "Copy the url of this attachment for usage in text",
       "setAsCover": "Make cover",
       "unsetAsCover": "Remove cover",
@@ -710,7 +710,7 @@
       "title": "Comments",
       "loading": "Loading comments…",
       "edited": "edited {date}",
-      "creating": "Creating comment…",
+      "creating": "Criando comentário…",
       "placeholder": "Adicione seu comentário…",
       "comment": "Comentário",
       "delete": "Apagar este comentário",
@@ -720,27 +720,27 @@
     },
     "deferDueDate": {
       "title": "Defer due date",
-      "1day": "1 day",
-      "3days": "3 days",
-      "1week": "1 week"
+      "1day": "1 dia",
+      "3days": "3 dias",
+      "1week": "1 semana"
     },
     "description": {
-      "placeholder": "Click here to enter a description…",
-      "empty": "No description available yet."
+      "placeholder": "Clique aqui para inserir uma descrição…",
+      "empty": "Nenhuma descrição disponível ainda."
     },
     "assignee": {
-      "placeholder": "Type to assign a user…",
+      "placeholder": "Digite para atribuir um usuário…",
       "selectPlaceholder": "Assign this user",
-      "assignSuccess": "The user has been assigned successfully.",
-      "unassignSuccess": "The user has been unassigned successfully."
+      "assignSuccess": "O usuário foi atribuído com sucesso.",
+      "unassignSuccess": "O usuário foi desatribuído com sucesso."
     },
     "label": {
-      "placeholder": "Type to add a new label…",
-      "createPlaceholder": "Add this as new label",
-      "addSuccess": "The label has been added successfully.",
-      "createSuccess": "The label has been created successfully.",
-      "removeSuccess": "The label has been removed successfully.",
-      "addCreateSuccess": "The label has been created and added successfully.",
+      "placeholder": "Digite para adicionar uma nova etiqueta…",
+      "createPlaceholder": "Adicionar como nova etiqueta",
+      "addSuccess": "A etiqueta foi adicionada com sucesso.",
+      "createSuccess": "A etiqueta foi criada com sucesso.",
+      "removeSuccess": "A etiqueta foi removida com sucesso.",
+      "addCreateSuccess": "A etiqueta foi criada e adicionada com sucesso.",
       "delete": {
         "header": "Delete this label",
         "text1": "Are you sure you want to delete this label?",
@@ -748,12 +748,12 @@
       }
     },
     "priority": {
-      "unset": "Unset",
-      "low": "Low",
-      "medium": "Medium",
+      "unset": "Indefinida",
+      "low": "Baixa",
+      "medium": "Média",
       "high": "High",
-      "urgent": "Urgent",
-      "doNow": "DO NOW"
+      "urgent": "Urgente",
+      "doNow": "FAÇA AGORA"
     },
     "relation": {
       "add": "Add a New Task Relation",
@@ -766,7 +766,7 @@
       "delete": "Delete Task Relation",
       "deleteText1": "Are you sure you want to delete this task relation?",
       "select": "Select a relation kind",
-      "taskRequired": "Please select a task or enter a new task title.",
+      "taskRequired": "Por favor, selecione uma tarefa ou digite um novo título para a tarefa.",
       "kinds": {
         "subtask": "Subtask | Subtasks",
         "parenttask": "Parent Task | Parent Tasks",
@@ -782,24 +782,24 @@
       }
     },
     "repeat": {
-      "everyDay": "Every Day",
-      "everyWeek": "Every Week",
-      "everyMonth": "Every Month",
-      "mode": "Repeat mode",
+      "everyDay": "Diariamente",
+      "everyWeek": "Toda semana",
+      "everyMonth": "Todo mês",
+      "mode": "Modo repetição",
       "monthly": "Monthly",
       "fromCurrentDate": "From Current Date",
       "each": "Each",
       "specifyAmount": "Specify an amount…",
-      "hours": "Hours",
-      "days": "Days",
-      "weeks": "Weeks",
-      "months": "Months",
-      "years": "Years",
+      "hours": "Horas",
+      "days": "Dias",
+      "weeks": "Semanas",
+      "months": "Meses",
+      "years": "Anos",
       "invalidAmount": "Please enter more than 0."
     },
     "quickAddMagic": {
       "hint": "You can use Quick Add Magic",
-      "what": "What?",
+      "what": "O quê?",
       "title": "Quick Add Magic",
       "intro": "When creating a task, you can use special keywords to directly add attributes to the newly created task. This allows to add commonly used attributes to tasks much faster.",
       "multiple": "You can use this multiple times.",
@@ -807,14 +807,14 @@
       "label2": "Vikunja will first check if the label already exist and create it if not.",
       "label3": "To use spaces, simply add a \" or ' around the label name.",
       "label4": "For example: {prefix}\"Label with spaces\".",
-      "priority1": "To set a task's priority, add a number 1-5, prefixed with a {prefix}.",
-      "priority2": "The higher the number, the higher the priority.",
+      "priority1": "Para definir a prioridade de uma tarefa, adicione um número de 1 a 5, precedido de um {prefix}.",
+      "priority2": "Quanto maior o número, maior a prioridade.",
       "assignees": "To directly assign the task to a user, add their username prefixed with {prefix} to the task.",
       "list1": "To set a list for the task to appear in, enter its name prefixed with {prefix}.",
       "list2": "This will return an error if the list does not exist.",
       "list3": "To use spaces, simply add a \" or ' around the list name.",
       "list4": "For example: {prefix}\"List with spaces\".",
-      "dateAndTime": "Date and time",
+      "dateAndTime": "Data e hora",
       "date": "Any date will be used as the due date of the new task. You can use dates in any of these formats:",
       "dateWeekday": "any weekday, will use the next date with that date",
       "dateCurrentYear": "will use the current year",
@@ -912,7 +912,7 @@
   },
   "update": {
     "available": "There is an update for Vikunja available!",
-    "do": "Update Now"
+    "do": "Atualizar agora"
   },
   "menu": {
     "edit": "Editar",
