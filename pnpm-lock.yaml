@@ -11,7 +11,7 @@ specifiers:
   '@fortawesome/vue-fontawesome': 3.0.2
   '@github/hotkey': 2.0.1
   '@infectoone/vue-ganttastic': 2.1.3
-  '@intlify/unplugin-vue-i18n': 0.8.0
+  '@intlify/unplugin-vue-i18n': 0.8.1
   '@kyvg/vue3-notification': 2.7.0
   '@rushstack/eslint-patch': 1.2.0
   '@sentry/tracing': 7.24.2
@@ -97,7 +97,7 @@ dependencies:
   '@fortawesome/vue-fontawesome': 3.0.2_bd5ipvhrqmkjz6wvo6sgrei224
   '@github/hotkey': 2.0.1
   '@infectoone/vue-ganttastic': 2.1.3_dayjs@1.11.7+vue@3.2.45
-  '@intlify/unplugin-vue-i18n': 0.8.0_vue-i18n@9.2.2
+  '@intlify/unplugin-vue-i18n': 0.8.1_vue-i18n@9.2.2
   '@kyvg/vue3-notification': 2.7.0_vue@3.2.45
   '@sentry/tracing': 7.24.2
   '@sentry/vue': 7.24.2_vue@3.2.45
@@ -2030,8 +2030,8 @@ packages:
     engines: {node: '>= 14'}
     dev: false
 
-  /@intlify/unplugin-vue-i18n/0.8.0_vue-i18n@9.2.2:
-    resolution: {integrity: sha512-bqMDYrbmV0oMLGHTdYMUXfcEsy2rPwQnGrQAg4gvw5FimvJfTQt3RliLVayT5ldOfeT2g0IUc/0t7LPeGrFUag==}
+  /@intlify/unplugin-vue-i18n/0.8.1_vue-i18n@9.2.2:
+    resolution: {integrity: sha512-BhigujPmP6JL1FSxmpogCaL+REozncHCVkJuUnefz4GWBu3X+pRe5O7PeJn8/g+Iml2ieQJz4ISPMmEbuGQjqQ==}
     engines: {node: '>= 14.16'}
     peerDependencies:
       petite-vue-i18n: '*'
