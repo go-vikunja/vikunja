@@ -1,7 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@4tw/cypress-drag-drop': 2.2.2
+  '@4tw/cypress-drag-drop': 2.2.3
   '@cypress/vite-dev-server': 5.0.2
   '@cypress/vue': 5.0.3
   '@faker-js/faker': 7.6.0
@@ -138,7 +138,7 @@ dependencies:
   zhyswan-vuedraggable: 4.1.3_vue@3.2.45
 
 devDependencies:
-  '@4tw/cypress-drag-drop': 2.2.2_cypress@12.0.2
+  '@4tw/cypress-drag-drop': 2.2.3_cypress@12.0.2
   '@cypress/vite-dev-server': 5.0.2
   '@cypress/vue': 5.0.3_cypress@12.0.2+vue@3.2.45
   '@faker-js/faker': 7.6.0
@@ -184,10 +184,10 @@ devDependencies:
 
 packages:
 
-  /@4tw/cypress-drag-drop/2.2.2_cypress@12.0.2:
-    resolution: {integrity: sha512-WlDkChwUKIn+8z8vLmmGARIOHlbymPu1sVFj3Hvxtuy+8Db7lBROcpmmYolYFBGGhFm9mgb7yG39La8wT4N5jA==}
+  /@4tw/cypress-drag-drop/2.2.3_cypress@12.0.2:
+    resolution: {integrity: sha512-ADMNoELeQdcGLPjfTJ5jWupBKU3rmQAnTqaRhuEa3hQGZ6suR49Ya5SReUrwvJnfAR4pgMcnSkqLqi1F4EPuwA==}
     peerDependencies:
-      cypress: ^2.1.0 || ^3.1.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0
+      cypress: ^2.1.0 || ^3.1.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0 || ^12.0.0
     dependencies:
       cypress: 12.0.2
     dev: true
