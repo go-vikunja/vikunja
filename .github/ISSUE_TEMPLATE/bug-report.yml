@@ -1,6 +1,7 @@
 name: Bug Report
 description: Found something you weren't expecting? Report it here!
-labels: kind/bug
+labels:
+  - kind/bug
 body:
   - type: markdown
     attributes:
