@@ -2,14 +2,14 @@
 import {defineConfig} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import legacyFn from '@vitejs/plugin-legacy'
-import { URL, fileURLToPath } from "url";
-import { dirname, resolve } from "path";
+import { URL, fileURLToPath } from 'node:url'
+import { dirname, resolve } from 'node:path'
 
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import {VitePWA}  from 'vite-plugin-pwa'
 import {visualizer}  from 'rollup-plugin-visualizer'
 import svgLoader from 'vite-svg-loader'
-import postcssPresetEnv from "postcss-preset-env";
+import postcssPresetEnv from 'postcss-preset-env'
 
 
 const pathSrc = fileURLToPath(new URL('./src', import.meta.url))
@@ -28,7 +28,7 @@ const legacy = isModernBuild
 
 console.log(isModernBuild
 	? 'Building "modern-only" build'
-	: 'Building "legacy" build with "@vitejs/plugin-legacy"'
+	: 'Building "legacy" build with "@vitejs/plugin-legacy"',
 )
 
 // https://vitejs.dev/config/
