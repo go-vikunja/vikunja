@@ -68,7 +68,7 @@ specifiers:
   postcss: 8.4.20
   postcss-preset-env: 7.8.3
   register-service-worker: 1.7.2
-  rollup: 3.7.3
+  rollup: 3.7.4
   rollup-plugin-visualizer: 5.8.3
   sass: 1.56.2
   snake-case: 3.0.4
@@ -170,8 +170,8 @@ devDependencies:
   netlify-cli: 12.2.10_@types+node@18.11.14
   postcss: 8.4.20
   postcss-preset-env: 7.8.3_postcss@8.4.20
-  rollup: 3.7.3
-  rollup-plugin-visualizer: 5.8.3_rollup@3.7.3
+  rollup: 3.7.4
+  rollup-plugin-visualizer: 5.8.3_rollup@3.7.4
   sass: 1.56.2
   typescript: 4.9.4
   vite: 4.0.1_oikvjtnnftwzouvzlvvzpaj54a
@@ -2977,7 +2977,7 @@ packages:
       rollup: 2.79.1
     dev: true
 
-  /@rollup/plugin-replace/5.0.1_rollup@3.7.3:
+  /@rollup/plugin-replace/5.0.1_rollup@3.7.4:
     resolution: {integrity: sha512-Z3MfsJ4CK17BfGrZgvrcp/l6WXoKb0kokULO+zt/7bmcyayokDaQ2K3eDJcRLCTAlp5FPI4/gz9MHAsosz4Rag==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -2986,9 +2986,9 @@ packages:
       rollup:
         optional: true
     dependencies:
-      '@rollup/pluginutils': 5.0.2_rollup@3.7.3
+      '@rollup/pluginutils': 5.0.2_rollup@3.7.4
       magic-string: 0.26.7
-      rollup: 3.7.3
+      rollup: 3.7.4
     dev: true
 
   /@rollup/pluginutils/3.1.0_rollup@2.79.1:
@@ -3011,7 +3011,7 @@ packages:
       picomatch: 2.3.1
     dev: false
 
-  /@rollup/pluginutils/5.0.2_rollup@3.7.3:
+  /@rollup/pluginutils/5.0.2_rollup@3.7.4:
     resolution: {integrity: sha512-pTd9rIsP92h+B6wWwFbW8RkZv4hiR/xKsqre4SIuAOaOEQRxi0lqLke9k2/7WegC85GgUs9pjmOjCUi3In4vwA==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -3023,7 +3023,7 @@ packages:
       '@types/estree': 1.0.0
       estree-walker: 2.0.2
       picomatch: 2.3.1
-      rollup: 3.7.3
+      rollup: 3.7.4
     dev: true
 
   /@rushstack/eslint-patch/1.2.0:
@@ -11491,7 +11491,7 @@ packages:
       - acorn
     dev: true
 
-  /rollup-plugin-visualizer/5.8.3_rollup@3.7.3:
+  /rollup-plugin-visualizer/5.8.3_rollup@3.7.4:
     resolution: {integrity: sha512-QGJk4Bqe4AOat5AjipOh8esZH1nck5X2KFpf4VytUdSUuuuSwvIQZjMGgjcxe/zXexltqaXp5Vx1V3LmnQH15Q==}
     engines: {node: '>=14'}
     hasBin: true
@@ -11502,7 +11502,7 @@ packages:
         optional: true
     dependencies:
       open: 8.4.0
-      rollup: 3.7.3
+      rollup: 3.7.4
       source-map: 0.7.4
       yargs: 17.5.1
     dev: true
@@ -11521,8 +11521,8 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /rollup/3.7.3:
-    resolution: {integrity: sha512-7e68MQbAWCX6mI4/0lG1WHd+NdNAlVamg0Zkd+8LZ/oXojligdGnCNyHlzXqXCZObyjs5FRc3AH0b17iJESGIQ==}
+  /rollup/3.7.4:
+    resolution: {integrity: sha512-jN9rx3k5pfg9H9al0r0y1EYKSeiRANZRYX32SuNXAnKzh6cVyf4LZVto1KAuDnbHT03E1CpsgqDKaqQ8FZtgxw==}
     engines: {node: '>=14.18.0', npm: '>=8.0.0'}
     hasBin: true
     optionalDependencies:
@@ -12996,11 +12996,11 @@ packages:
       workbox-build: ^6.5.4
       workbox-window: ^6.5.4
     dependencies:
-      '@rollup/plugin-replace': 5.0.1_rollup@3.7.3
+      '@rollup/plugin-replace': 5.0.1_rollup@3.7.4
       debug: 4.3.4
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
-      rollup: 3.7.3
+      rollup: 3.7.4
       vite: 4.0.1_oikvjtnnftwzouvzlvvzpaj54a
       workbox-build: 6.5.4_acorn@7.4.1
       workbox-window: 6.5.4
@@ -13044,7 +13044,7 @@ packages:
       esbuild: 0.16.4
       postcss: 8.4.20
       resolve: 1.22.1
-      rollup: 3.7.3
+      rollup: 3.7.4
       sass: 1.56.2
       terser: 5.10.0_acorn@7.4.1
     optionalDependencies:
