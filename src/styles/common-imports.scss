@@ -10,13 +10,14 @@
 // are defined here.
 //
 
+$family-sans-serif: 'Open Sans', Helvetica, Arial, sans-serif;
+
 // the default values get overwritten by the definitions above
 @import "bulma-css-variables/sass/utilities/_all";
 
 // since $tablet is defined by bulma we can just define it after importing the utilities
 $mobile: math.div($tablet, 2);
 
-$family-sans-serif: 'Open Sans', Helvetica, Arial, sans-serif;
 $vikunja-font: 'Quicksand', sans-serif;
 
 $pagination-current-border: var(--primary);

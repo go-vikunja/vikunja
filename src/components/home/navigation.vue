@@ -435,7 +435,7 @@ $vikunja-nav-selected-width: 0.4rem;
  
 	.menu-list {
 		li {
-			font-weight: 500;
+			font-weight: 600;
 			font-family: $vikunja-font;
 		}
 
@@ -460,7 +460,7 @@ $vikunja-nav-selected-width: 0.4rem;
 		font-weight: bold;
 		font-family: $vikunja-font;
 		color: $vikunja-nav-color;
-		font-weight: 500;
+		font-weight: 600;
 		min-height: 2.5rem;
 		padding-top: 0;
 		padding-left: $navbar-padding;
@@ -479,6 +479,8 @@ $vikunja-nav-selected-width: 0.4rem;
 		.count {
 			color: var(--grey-500);
 			margin-right: .5rem;
+			// align brackets with number
+			font-feature-settings: "case";
 		}
 	}
 

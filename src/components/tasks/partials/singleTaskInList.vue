@@ -38,7 +38,7 @@
 					<template v-for="(pt, i) in task.relatedTasks.parenttask">
 						{{ pt.title }}<template v-if="(i + 1) < task.relatedTasks.parenttask.length">,&nbsp;</template>
 					</template>
-					>
+					&rsaquo;
 				</span>
 				{{ task.title }}
 			</span>
@@ -71,7 +71,7 @@
 					class="is-italic"
 					:aria-expanded="showDefer ? 'true' : 'false'"
 				>
-					- {{ $t('task.detail.due', {at: formatDateSince(task.dueDate)}) }}
+					– {{ $t('task.detail.due', {at: formatDateSince(task.dueDate)}) }}
 				</time>
 			</BaseButton>
 			<CustomTransition name="fade">

@@ -98,5 +98,6 @@ function setSubscriptionInStore(sub: ISubscription) {
 <style scoped lang="scss">
 .dropdown-trigger {
 	padding: 0.5rem;
+	display: flex;
 }
 </style>

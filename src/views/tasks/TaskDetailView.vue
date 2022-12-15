@@ -14,7 +14,7 @@
 				ref="heading"
 			/>
 			<h6 class="subtitle" v-if="parent && parent.namespace && parent.list">
-				{{ getNamespaceTitle(parent.namespace) }} >
+				{{ getNamespaceTitle(parent.namespace) }} &rsaquo;
 				<router-link :to="{ name: 'list.index', params: { listId: parent.list.id } }">
 					{{ getListTitle(parent.list) }}
 				</router-link>

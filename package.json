@@ -15,7 +15,10 @@
     "test:unit-watch": "vitest watch",
     "test:frontend": "cypress run",
     "typecheck": "vue-tsc --noEmit && vue-tsc --noEmit -p tsconfig.vitest.json --composite false",
-    "browserslist:update": "npx browserslist@latest --update-db"
+    "browserslist:update": "npx browserslist@latest --update-db",
+    "fonts:update": "pnpm run fonts:download && pnpm run fonts:subset",
+    "fonts:download": "./scripts/fonts-download.sh",
+    "fonts:subset": "./scripts/fonts-subset.sh"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "6.2.1",
