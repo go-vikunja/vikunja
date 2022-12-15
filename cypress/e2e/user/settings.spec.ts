@@ -1,11 +1,7 @@
-import {UserFactory} from '../../factories/user'
-
-import '../../support/authenticateUser'
+import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
 describe('User Settings', () => {
-	beforeEach(() => {
-		UserFactory.create(1)
-	})
+	createFakeUserAndLogin()
 
 	it('Changes the user avatar', () => {
 		cy.intercept(`${Cypress.env('API_URL')}/user/settings/avatar/upload`).as('uploadAvatar')

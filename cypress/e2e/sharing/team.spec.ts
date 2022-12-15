@@ -1,9 +1,12 @@
+import {createFakeUserAndLogin} from '../../support/authenticateUser'
+
 import {TeamFactory} from '../../factories/team'
 import {TeamMemberFactory} from '../../factories/team_member'
 import {UserFactory} from '../../factories/user'
-import '../../support/authenticateUser'
 
 describe('Team', () => {
+	createFakeUserAndLogin()
+
     it('Creates a new team', () => {
         TeamFactory.truncate()
         cy.visit('/teams')

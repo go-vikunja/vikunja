@@ -1,8 +1,10 @@
+import {createFakeUserAndLogin} from '../../support/authenticateUser'
+
 import {TaskFactory} from '../../factories/task'
 
-import '../../support/authenticateUser'
-
 describe('List View Table', () => {
+	createFakeUserAndLogin()
+
 	it('Should show a table with tasks', () => {
 		const tasks = TaskFactory.create(1)
 		cy.visit('/lists/1/table')

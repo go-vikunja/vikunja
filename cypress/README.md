@@ -36,7 +36,7 @@ to get a shell inside the cypress container.
 In that shell you can then execute the tests with
 
 ```shell
-pnpm run test:frontend
+pnpm run test:e2e
 ```
 
 ### Using The Cypress Dashboard
@@ -44,5 +44,5 @@ pnpm run test:frontend
 To open the Cypress Dashboard and run tests from there, run
 
 ```shell
-pnpm run cypress:open
+pnpm run test:e2e:dev
 ```

@@ -1,9 +1,11 @@
+import {createFakeUserAndLogin} from '../../support/authenticateUser'
+
 import {TaskFactory} from '../../factories/task'
 import {prepareLists} from './prepareLists'
 
-import '../../support/authenticateUser'
-
 describe('Lists', () => {
+	createFakeUserAndLogin()
+
 	let lists
 	prepareLists((newLists) => (lists = newLists))
 

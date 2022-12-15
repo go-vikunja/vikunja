@@ -1,16 +1,13 @@
+import {createFakeUserAndLogin} from '../../support/authenticateUser'
+
 import {ListFactory} from '../../factories/list'
 import {seed} from '../../support/seed'
 import {TaskFactory} from '../../factories/task'
-import {formatISO} from 'date-fns'
-import {UserFactory} from '../../factories/user'
 import {NamespaceFactory} from '../../factories/namespace'
 import {BucketFactory} from '../../factories/bucket'
 import {updateUserSettings} from '../../support/updateUserSettings'
 
-import '../../support/authenticateUser'
-
-function seedTasks(numberOfTasks = 100, startDueDate = new Date()) {
-	UserFactory.create(1)
+function seedTasks(numberOfTasks = 50, startDueDate = new Date()) {
 	NamespaceFactory.create(1)
 	const list = ListFactory.create()[0]
 	BucketFactory.create(1, {
@@ -20,7 +17,7 @@ function seedTasks(numberOfTasks = 100, startDueDate = new Date()) {
 	let dueDate = startDueDate
 	for (let i = 0; i < numberOfTasks; i++) {
 		const now = new Date()
-		dueDate = (new Date(dueDate.valueOf())).setDate((new Date(dueDate.valueOf())).getDate() + 2)
+		dueDate = new Date(new Date(dueDate).setDate(dueDate.getDate() + 2))
 		tasks.push({
 			id: i + 1,
 			list_id: list.id,
@@ -28,9 +25,9 @@ function seedTasks(numberOfTasks = 100, startDueDate = new Date()) {
 			created_by_id: 1,
 			title: 'Test Task ' + i,
 			index: i + 1,
-			due_date: formatISO(dueDate),
-			created: formatISO(now),
-			updated: formatISO(now),
+			due_date: dueDate.toISOString(),
+			created: now.toISOString(),
+			updated: now.toISOString(),
 		})
 	}
 	seed(TaskFactory.table, tasks)
@@ -38,8 +35,11 @@ function seedTasks(numberOfTasks = 100, startDueDate = new Date()) {
 }
 
 describe('Home Page Task Overview', () => {
+	createFakeUserAndLogin()
+
 	it('Should show tasks with a near due date first on the home page overview', () => {
-		const {tasks} = seedTasks()
+		const taskCount = 50
+		const {tasks} = seedTasks(taskCount)
 
 		cy.visit('/')
 		cy.get('[data-cy="showTasks"] .card .task')
@@ -49,8 +49,10 @@ describe('Home Page Task Overview', () => {
 	})
 
 	it('Should show overdue tasks first, then show other tasks', () => {
-		const oldDate = (new Date()).setDate((new Date()).getDate() - 14)
-		const {tasks} = seedTasks(100, oldDate)
+		const now = new Date()
+		const oldDate = new Date(new Date(now).setDate(now.getDate() - 14))
+		const taskCount = 50
+		const {tasks} = seedTasks(taskCount, oldDate)
 
 		cy.visit('/')
 		cy.get('[data-cy="showTasks"] .card .task')
@@ -68,7 +70,7 @@ describe('Home Page Task Overview', () => {
 		TaskFactory.create(1, {
 			id: 999,
 			title: newTaskTitle,
-			due_date: formatISO(new Date()),
+			due_date: new Date().toISOString(),
 		}, false)
 		
 		cy.visit(`/lists/${tasks[0].list_id}/list`)
@@ -83,7 +85,7 @@ describe('Home Page Task Overview', () => {
 	
 	it('Should not show a new task without a date at the bottom when there are > 50 tasks', () => {
 		// We're not using the api here to create the task in order to verify the flow
-		const {tasks} = seedTasks()
+		const {tasks} = seedTasks(100)
 		const newTaskTitle = 'New Task'
 
 		cy.visit('/')

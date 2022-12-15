@@ -1,14 +1,16 @@
+import {createFakeUserAndLogin} from '../../support/authenticateUser'
+
 import {TaskFactory} from '../../factories/task'
 import {ListFactory} from '../../factories/list'
 import {NamespaceFactory} from '../../factories/namespace'
 import {UserListFactory} from '../../factories/users_list'
 
-import '../../support/authenticateUser'
-
 describe('Editor', () => {
+	createFakeUserAndLogin()
+	
 	beforeEach(() => {
 		NamespaceFactory.create(1)
-		const lists = ListFactory.create(1)
+		ListFactory.create(1)
 		TaskFactory.truncate()
 		UserListFactory.truncate()
 	})

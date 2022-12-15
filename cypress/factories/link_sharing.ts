@@ -1,5 +1,4 @@
 import {Factory} from '../support/factory'
-import {formatISO} from "date-fns"
 import {faker} from '@faker-js/faker'
 
 export class LinkShareFactory extends Factory {
@@ -15,8 +14,8 @@ export class LinkShareFactory extends Factory {
 			right: 0,
 			sharing_type: 0,
 			shared_by_id: 1,
-			created: formatISO(now),
-			updated: formatISO(now)
+			created: now.toISOString(),
+			updated: now.toISOString(),
 		}
 	}
 }

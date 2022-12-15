@@ -1,14 +1,15 @@
+import {createFakeUserAndLogin} from '../../support/authenticateUser'
+
 import {BucketFactory} from '../../factories/bucket'
 import {ListFactory} from '../../factories/list'
 import {TaskFactory} from '../../factories/task'
 import {prepareLists} from './prepareLists'
 
-import '../../support/authenticateUser'
-
 describe('List View Kanban', () => {
-	let buckets
+	createFakeUserAndLogin()
 	prepareLists()
-
+	
+	let buckets
 	beforeEach(() => {
 		buckets = BucketFactory.create(2)
 	})

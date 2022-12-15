@@ -1,9 +1,10 @@
-import {ListFactory} from '../../factories/list'
+import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
-import '../../support/authenticateUser'
+import {ListFactory} from '../../factories/list'
 import {prepareLists} from './prepareLists'
 
 describe('List History', () => {
+	createFakeUserAndLogin()
 	prepareLists()
 	
 	it('should show a list history on the home page', () => {

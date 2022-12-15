@@ -4,26 +4,32 @@
 
 import {UserFactory} from '../factories/user'
 
-let token
-
-before(() => {
-	const users = UserFactory.create(1)
-
-	cy.request('POST', `${Cypress.env('API_URL')}/login`, {
-		username: users[0].username,
-		password: '1234',
-	})
-		.its('body')
-		.then(r => {
-			token = r.token
+export function login(user, cacheAcrossSpecs = false) {
+	if (!user) {
+		throw new Error('Needs user')
+	}
+	// Caching session when logging in via page visit
+	cy.session(`user__${user.username}`, () => {
+		cy.request('POST', `${Cypress.env('API_URL')}/login`, {
+			username: user.username,
+			password: '1234',
+		}).then(({ body }) => {
+			window.localStorage.setItem('token', body.token)
 		})
-})
+	}, {
+    cacheAcrossSpecs,
+  })
+}
 
-beforeEach(() => {
-	cy.log(`Using token ${token} to make authenticated requests`)
-	cy.visit('/', {
-		onBeforeLoad(win) {
-			win.localStorage.setItem('token', token)
-		},
+export function createFakeUserAndLogin() {
+	let user
+	before(() => {
+		user = UserFactory.create(1)[0]
 	})
-})
+
+	beforeEach(() => {
+		login(user, true)
+	})
+
+	return user
+}

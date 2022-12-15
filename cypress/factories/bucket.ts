@@ -1,6 +1,5 @@
 import {faker} from '@faker-js/faker'
 import {Factory} from '../support/factory'
-import {formatISO} from 'date-fns'
 
 export class BucketFactory extends Factory {
 	static table = 'buckets'
@@ -13,8 +12,8 @@ export class BucketFactory extends Factory {
 			title: faker.lorem.words(3),
 			list_id: 1,
 			created_by_id: 1,
-			created: formatISO(now),
-			updated: formatISO(now)
+			created: now.toISOString(),
+			updated: now.toISOString(),
 		}
 	}
 }

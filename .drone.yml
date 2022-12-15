@@ -96,7 +96,7 @@ steps:
       - dependencies
 
   - name: test-frontend
-    image: cypress/browsers:node18.12.0-chrome106-ff106
+    image: cypress/browsers:node18.12.0-chrome107
     pull: always
     environment:
       CYPRESS_API_URL: http://api:3456/api/v1
@@ -110,8 +110,7 @@ steps:
       - sed -i 's/localhost/api/g' dist/index.html
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm cypress install
-      - pnpm run serve:dist & npx wait-on http://localhost:4173
-      - pnpm run test:frontend --browser chrome --record
+      - pnpm run test:e2e-record
     depends_on:
       - build-prod
 
