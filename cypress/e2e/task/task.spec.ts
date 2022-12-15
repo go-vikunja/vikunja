@@ -421,10 +421,10 @@ describe('Task', () => {
 
 			cy.visit(`/tasks/${tasks[0].id}`)
 
-			cy.getSettled('.task-view .details.labels-list .multiselect .input-wrapper')
+			cy.get('.task-view .details.labels-list .multiselect .input-wrapper')
 				.should('be.visible')
 				.should('contain', labels[0].title)
-			cy.getSettled('.task-view .details.labels-list .multiselect .input-wrapper')
+			cy.get('.task-view .details.labels-list .multiselect .input-wrapper')
 				.children()
 				.first()
 				.get('[data-cy="taskDetail.removeLabel"]')
