@@ -71,7 +71,7 @@
 							<select v-model="newTaskRelation.kind">
 								<option value="unset">{{ $t('task.relation.select') }}</option>
 								<option :key="`option_${rk}`" :value="rk" v-for="rk in RELATION_KINDS">
-									{{ $tc(`task.relation.kinds.${rk}`, 1) }}
+									{{ $t(`task.relation.kinds.${rk}`, 1) }}
 								</option>
 							</select>
 						</div>
