@@ -45,28 +45,25 @@ type apiTokenResponse struct {
 }
 
 type label struct {
-	ID         int64  `json:"id"`
+	ID         string `json:"id"`
 	Name       string `json:"name"`
-	Color      int64  `json:"color"`
+	Color      string `json:"color"`
 	ItemOrder  int64  `json:"item_order"`
-	IsDeleted  int64  `json:"is_deleted"`
-	IsFavorite int64  `json:"is_favorite"`
+	IsDeleted  bool   `json:"is_deleted"`
+	IsFavorite bool   `json:"is_favorite"`
 }
 
 type project struct {
-	ID             int64  `json:"id"`
-	LegacyID       int64  `json:"legacy_id"`
-	Name           string `json:"name"`
-	Color          int64  `json:"color"`
-	ParentID       int64  `json:"parent_id"`
-	ChildOrder     int64  `json:"child_order"`
-	Collapsed      int64  `json:"collapsed"`
-	Shared         bool   `json:"shared"`
-	LegacyParentID int64  `json:"legacy_parent_id"`
-	SyncID         int64  `json:"sync_id"`
-	IsDeleted      int64  `json:"is_deleted"`
-	IsArchived     int64  `json:"is_archived"`
-	IsFavorite     int64  `json:"is_favorite"`
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	Color      string `json:"color"`
+	ParentID   string `json:"parent_id"`
+	ChildOrder int64  `json:"child_order"`
+	Collapsed  bool   `json:"collapsed"`
+	Shared     bool   `json:"shared"`
+	IsDeleted  bool   `json:"is_deleted"`
+	IsArchived bool   `json:"is_archived"`
+	IsFavorite bool   `json:"is_favorite"`
 }
 
 type dueDate struct {
@@ -78,31 +75,26 @@ type dueDate struct {
 }
 
 type item struct {
-	ID              int64       `json:"id"`
-	LegacyID        int64       `json:"legacy_id"`
-	UserID          int64       `json:"user_id"`
-	ProjectID       int64       `json:"project_id"`
-	LegacyProjectID int64       `json:"legacy_project_id"`
-	Content         string      `json:"content"`
-	Priority        int64       `json:"priority"`
-	Due             *dueDate    `json:"due"`
-	ParentID        int64       `json:"parent_id"`
-	LegacyParentID  int64       `json:"legacy_parent_id"`
-	ChildOrder      int64       `json:"child_order"`
-	SectionID       int64       `json:"section_id"`
-	DayOrder        int64       `json:"day_order"`
-	Collapsed       int64       `json:"collapsed"`
-	Children        interface{} `json:"children"`
-	Labels          []int64     `json:"labels"`
-	AddedByUID      int64       `json:"added_by_uid"`
-	AssignedByUID   int64       `json:"assigned_by_uid"`
-	ResponsibleUID  int64       `json:"responsible_uid"`
-	Checked         int64       `json:"checked"`
-	InHistory       int64       `json:"in_history"`
-	IsDeleted       int64       `json:"is_deleted"`
-	DateAdded       time.Time   `json:"date_added"`
-	HasMoreNotes    bool        `json:"has_more_notes"`
-	DateCompleted   time.Time   `json:"date_completed"`
+	ID             string      `json:"id"`
+	LegacyID       string      `json:"legacy_id"`
+	UserID         string      `json:"user_id"`
+	ProjectID      string      `json:"project_id"`
+	Content        string      `json:"content"`
+	Priority       int64       `json:"priority"`
+	Due            *dueDate    `json:"due"`
+	ParentID       string      `json:"parent_id"`
+	ChildOrder     int64       `json:"child_order"`
+	SectionID      string      `json:"section_id"`
+	Children       interface{} `json:"children"`
+	Labels         []string    `json:"labels"`
+	AddedByUID     string      `json:"added_by_uid"`
+	AssignedByUID  string      `json:"assigned_by_uid"`
+	ResponsibleUID string      `json:"responsible_uid"`
+	Checked        bool        `json:"checked"`
+	IsDeleted      bool        `json:"is_deleted"`
+	DateAdded      time.Time   `json:"added_at"`
+	HasMoreNotes   bool        `json:"has_more_notes"`
+	DateCompleted  time.Time   `json:"completed_at"`
 }
 
 type itemWrapper struct {
@@ -110,12 +102,11 @@ type itemWrapper struct {
 }
 
 type doneItem struct {
-	CompletedDate time.Time `json:"completed_date"`
+	CompletedDate time.Time `json:"completed_at"`
 	Content       string    `json:"content"`
-	ID            int64     `json:"id"`
-	ProjectID     int64     `json:"project_id"`
-	TaskID        int64     `json:"task_id"`
-	UserID        int       `json:"user_id"`
+	ID            string    `json:"id"`
+	ProjectID     string    `json:"project_id"`
+	TaskID        string    `json:"task_id"`
 }
 
 type doneItemSync struct {
@@ -132,18 +123,14 @@ type fileAttachment struct {
 }
 
 type note struct {
-	ID              int64           `json:"id"`
-	LegacyID        int64           `json:"legacy_id"`
-	PostedUID       int64           `json:"posted_uid"`
-	ProjectID       int64           `json:"project_id"`
-	LegacyProjectID int64           `json:"legacy_project_id"`
-	ItemID          int64           `json:"item_id"`
-	LegacyItemID    int64           `json:"legacy_item_id"`
-	Content         string          `json:"content"`
-	FileAttachment  *fileAttachment `json:"file_attachment"`
-	UidsToNotify    []int64         `json:"uids_to_notify"`
-	IsDeleted       int64           `json:"is_deleted"`
-	Posted          time.Time       `json:"posted"`
+	ID             string          `json:"id"`
+	PostedUID      int64           `json:"posted_uid"`
+	ProjectID      string          `json:"project_id"`
+	ItemID         string          `json:"item_id"`
+	Content        string          `json:"content"`
+	FileAttachment *fileAttachment `json:"file_attachment"`
+	IsDeleted      bool            `json:"is_deleted"`
+	Posted         time.Time       `json:"posted_at"`
 }
 
 type projectNote struct {
@@ -153,15 +140,13 @@ type projectNote struct {
 	IsDeleted      int64           `json:"is_deleted"`
 	Posted         time.Time       `json:"posted"`
 	PostedUID      int64           `json:"posted_uid"`
-	ProjectID      int64           `json:"project_id"`
+	ProjectID      string          `json:"project_id"`
 	UidsToNotify   []int64         `json:"uids_to_notify"`
 }
 
 type reminder struct {
-	ID        int64    `json:"id"`
-	NotifyUID int64    `json:"notify_uid"`
-	ItemID    int64    `json:"item_id"`
-	Service   string   `json:"service"`
+	ID        string   `json:"id"`
+	ItemID    string   `json:"item_id"`
 	Type      string   `json:"type"`
 	Due       *dueDate `json:"due"`
 	MmOffset  int64    `json:"mm_offset"`
@@ -169,11 +154,11 @@ type reminder struct {
 }
 
 type section struct {
-	ID           int64     `json:"id"`
-	DateAdded    time.Time `json:"date_added"`
+	ID           string    `json:"id"`
+	DateAdded    time.Time `json:"added_at"`
 	IsDeleted    bool      `json:"is_deleted"`
 	Name         string    `json:"name"`
-	ProjectID    int64     `json:"project_id"`
+	ProjectID    string    `json:"project_id"`
 	SectionOrder int64     `json:"section_order"`
 }
 
@@ -187,32 +172,32 @@ type sync struct {
 	Sections     []*section     `json:"sections"`
 }
 
-var todoistColors = map[int64]string{}
+var todoistColors = map[string]string{}
 
 func init() {
-	todoistColors = make(map[int64]string, 19)
-	// The todoists colors are static, taken from https://developer.todoist.com/sync/v8/#colors
-	todoistColors = map[int64]string{
-		30: "b8256f",
-		31: "db4035",
-		32: "ff9933",
-		33: "fad000",
-		34: "afb83b",
-		35: "7ecc49",
-		36: "299438",
-		37: "6accbc",
-		38: "158fad",
-		39: "14aaf5",
-		40: "96c3eb",
-		41: "4073ff",
-		42: "884dff",
-		43: "af38eb",
-		44: "eb96eb",
-		45: "e05194",
-		46: "ff8d85",
-		47: "808080",
-		48: "b8b8b8",
-		49: "ccac93",
+	todoistColors = make(map[string]string, 19)
+	// The todoists colors are static, taken from https://developer.todoist.com/guides/#colors
+	todoistColors = map[string]string{
+		"berry_red":   "b8256f",
+		"red":         "db4035",
+		"orange":      "ff9933",
+		"yellow":      "fad000",
+		"olive_green": "afb83b",
+		"lime_green":  "7ecc49",
+		"green":       "299438",
+		"mint_green":  "6accbc",
+		"teal":        "158fad",
+		"sky_blue":    "14aaf5",
+		"light_blue":  "96c3eb",
+		"blue":        "4073ff",
+		"grape":       "884dff",
+		"violet":      "af38eb",
+		"lavender":    "eb96eb",
+		"magenta":     "e05194",
+		"salmon":      "ff8d85",
+		"charcoal":    "808080",
+		"grey":        "b8b8b8",
+		"taupe":       "ccac93",
 	}
 }
 
@@ -266,7 +251,7 @@ func parseDate(dateString string) (date time.Time, err error) {
 	return date, err
 }
 
-func convertTodoistToVikunja(sync *sync, doneItems map[int64]*doneItem) (fullVikunjaHierachie []*models.NamespaceWithListsAndTasks, err error) {
+func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVikunjaHierachie []*models.NamespaceWithListsAndTasks, err error) {
 
 	newNamespace := &models.NamespaceWithListsAndTasks{
 		Namespace: models.Namespace{
@@ -275,20 +260,22 @@ func convertTodoistToVikunja(sync *sync, doneItems map[int64]*doneItem) (fullVik
 	}
 
 	// A map for all vikunja lists with the project id they're coming from as key
-	lists := make(map[int64]*models.ListWithTasksAndBuckets, len(sync.Projects))
+	lists := make(map[string]*models.ListWithTasksAndBuckets, len(sync.Projects))
 
 	// A map for all vikunja tasks with the todoist task id as key to find them easily and add more data
-	tasks := make(map[int64]*models.TaskWithComments, len(sync.Items))
+	tasks := make(map[string]*models.TaskWithComments, len(sync.Items))
 
 	// A map for all vikunja labels with the todoist id as key to find them easier
-	labels := make(map[int64]*models.Label, len(sync.Labels))
+	labels := make(map[string]*models.Label, len(sync.Labels))
+
+	sections := make(map[string]int64)
 
 	for _, p := range sync.Projects {
 		list := &models.ListWithTasksAndBuckets{
 			List: models.List{
 				Title:      p.Name,
 				HexColor:   todoistColors[p.Color],
-				IsArchived: p.IsArchived == 1,
+				IsArchived: p.IsArchived,
 			},
 		}
 
@@ -301,20 +288,22 @@ func convertTodoistToVikunja(sync *sync, doneItems map[int64]*doneItem) (fullVik
 		return sync.Sections[i].SectionOrder < sync.Sections[j].SectionOrder
 	})
 
+	var fabricatedSectionID int64 = 1
 	for _, section := range sync.Sections {
-		if section.IsDeleted || section.ProjectID == 0 {
+		if section.IsDeleted || section.ProjectID == "" {
 			continue
 		}
 
 		lists[section.ProjectID].Buckets = append(lists[section.ProjectID].Buckets, &models.Bucket{
-			ID:      section.ID,
+			ID:      fabricatedSectionID,
 			Title:   section.Name,
 			Created: section.DateAdded,
 		})
+		sections[section.ID] = fabricatedSectionID
 	}
 
 	for _, label := range sync.Labels {
-		labels[label.ID] = &models.Label{
+		labels[label.Name] = &models.Label{
 			Title:    label.Name,
 			HexColor: todoistColors[label.Color],
 		}
@@ -325,8 +314,8 @@ func convertTodoistToVikunja(sync *sync, doneItems map[int64]*doneItem) (fullVik
 			Task: models.Task{
 				Title:    i.Content,
 				Created:  i.DateAdded.In(config.GetTimeZone()),
-				Done:     i.Checked == 1,
-				BucketID: i.SectionID,
+				Done:     i.Checked,
+				BucketID: sections[i.SectionID],
 			},
 		}
 
@@ -357,29 +346,31 @@ func convertTodoistToVikunja(sync *sync, doneItems map[int64]*doneItem) (fullVik
 		}
 
 		// Put all labels together from earlier
-		for _, lID := range i.Labels {
-			task.Labels = append(task.Labels, labels[lID])
+		for _, lName := range i.Labels {
+			task.Labels = append(task.Labels, labels[lName])
 		}
 
 		tasks[i.ID] = task
 
 		if _, exists := lists[i.ProjectID]; !exists {
-			log.Debugf("[Todoist Migration] Tried to put item %d in project %d but the project does not exist", i.ID, i.ProjectID)
+			log.Debugf("[Todoist Migration] Tried to put item %s in project %s but the project does not exist", i.ID, i.ProjectID)
 			continue
 		}
 
 		lists[i.ProjectID].Tasks = append(lists[i.ProjectID].Tasks, task)
+
+		fabricatedSectionID++
 	}
 
 	// If the parenId of a task is not 0, create a task relation
 	// We're looping again here to make sure we have seem all tasks before and have them in our map
 	for _, i := range sync.Items {
-		if i.ParentID == 0 {
+		if i.ParentID == "" {
 			continue
 		}
 
 		if _, exists := tasks[i.ParentID]; !exists {
-			log.Debugf("[Todoist Migration] Could not find task %d in tasks map while trying to get resolve subtasks for task %d", i.ParentID, i.ID)
+			log.Debugf("[Todoist Migration] Could not find task %s in tasks map while trying to get resolve subtasks for task %s", i.ParentID, i.ID)
 			continue
 		}
 
@@ -407,7 +398,7 @@ func convertTodoistToVikunja(sync *sync, doneItems map[int64]*doneItem) (fullVik
 	// FIXME: Should be comments
 	for _, n := range sync.Notes {
 		if _, exists := tasks[n.ItemID]; !exists {
-			log.Debugf("[Todoist Migration] Could not find task %d for note %d", n.ItemID, n.ID)
+			log.Debugf("[Todoist Migration] Could not find task %s for note %s", n.ItemID, n.ID)
 			continue
 		}
 
@@ -460,7 +451,7 @@ func convertTodoistToVikunja(sync *sync, doneItems map[int64]*doneItem) (fullVik
 		}
 
 		if _, exists := tasks[r.ItemID]; !exists {
-			log.Debugf("Could not find task %d for reminder %d while trying to resolve reminders", r.ItemID, r.ID)
+			log.Debugf("Could not find task %s for reminder %s while trying to resolve reminders", r.ItemID, r.ID)
 			continue
 		}
 
@@ -537,7 +528,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 		"sync_token":     []string{"*"},
 		"resource_types": []string{"[\"all\"]"},
 	}
-	resp, err := migration.DoPost("https://api.todoist.com/sync/v8/sync", form)
+	resp, err := migration.DoPost("https://api.todoist.com/sync/v9/sync", form)
 	if err != nil {
 		return
 	}
@@ -553,10 +544,10 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 
 	// Get all done tasks and projects
 	offset := 0
-	doneItems := make(map[int64]*doneItem)
+	doneItems := make(map[string]*doneItem)
 
 	for {
-		resp, err = migration.DoPost("https://api.todoist.com/sync/v8/completed/get_all?limit=200&offset="+strconv.Itoa(offset), form)
+		resp, err = migration.DoPost("https://api.todoist.com/sync/v9/completed/get_all?limit=200&offset="+strconv.Itoa(offset), form)
 		if err != nil {
 			return
 		}
@@ -580,9 +571,9 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 			doneItems[i.TaskID] = i
 
 			// need to get done item data
-			resp, err = migration.DoPost("https://api.todoist.com/sync/v8/items/get", url.Values{
+			resp, err = migration.DoPost("https://api.todoist.com/sync/v9/items/get", url.Values{
 				"token":   []string{token},
-				"item_id": []string{strconv.FormatInt(i.TaskID, 10)},
+				"item_id": []string{i.TaskID},
 			})
 			if err != nil {
 				return
@@ -594,7 +585,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 			if err != nil {
 				return
 			}
-			log.Debugf("[Todoist Migration] Retrieved full task data for done task %d", i.TaskID)
+			log.Debugf("[Todoist Migration] Retrieved full task data for done task %s", i.TaskID)
 			syncResponse.Items = append(syncResponse.Items, doneI.Item)
 		}
 
@@ -609,7 +600,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 	log.Debugf("[Todoist Migration] Getting archived projects for user %d", u.ID)
 
 	// Get all archived projects
-	resp, err = migration.DoPost("https://api.todoist.com/sync/v8/projects/get_archived", form)
+	resp, err = migration.DoPost("https://api.todoist.com/sync/v9/projects/get_archived", form)
 	if err != nil {
 		return
 	}
@@ -626,9 +617,8 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 	log.Debugf("[Todoist Migration] Getting data for archived projects for user %d", u.ID)
 
 	// Project data is not included in the regular sync for archived projects so we need to get all of those by hand
-	//https://api.todoist.com/sync/v8/projects/get_data\?project_id\=2269005399
 	for _, p := range archivedProjects {
-		resp, err = migration.DoPost("https://api.todoist.com/sync/v8/projects/get_data?project_id="+strconv.FormatInt(p.ID, 10), form)
+		resp, err = migration.DoPost("https://api.todoist.com/sync/v9/projects/get_data?project_id="+p.ID, form)
 		if err != nil {
 			return
 		}

@@ -18,7 +18,6 @@ package todoist
 
 import (
 	"os"
-	"strconv"
 	"testing"
 	"time"
 
@@ -50,30 +49,29 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 	exampleFile, err := os.ReadFile(config.ServiceRootpath.GetString() + "/pkg/modules/migration/wunderlist/testimage.jpg")
 	assert.NoError(t, err)
 
-	makeTestItem := func(id, projectId int64, hasDueDate, hasLabels, done bool) *item {
+	makeTestItem := func(id, projectId string, hasDueDate, hasLabels, done bool) *item {
 		item := &item{
 			ID:            id,
-			UserID:        1855589,
+			UserID:        "1855589",
 			ProjectID:     projectId,
-			Content:       "Task" + strconv.FormatInt(id, 10),
+			Content:       "Task" + id,
 			Priority:      1,
-			ParentID:      0,
 			ChildOrder:    1,
 			DateAdded:     time1,
 			DateCompleted: nilTime,
 		}
 
 		if done {
-			item.Checked = 1
+			item.Checked = true
 			item.DateCompleted = time3
 		}
 
 		if hasLabels {
-			item.Labels = []int64{
-				80000,
-				80001,
-				80002,
-				80003,
+			item.Labels = []string{
+				"Label1",
+				"Label2",
+				"Label3",
+				"Label4",
 			}
 		}
 
@@ -91,163 +89,163 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 	testSync := &sync{
 		Projects: []*project{
 			{
-				ID:         396936926,
+				ID:         "396936926",
 				Name:       "Project1",
-				Color:      30,
+				Color:      "berry_red",
 				ChildOrder: 1,
-				Collapsed:  0,
+				Collapsed:  false,
 				Shared:     false,
-				IsDeleted:  0,
-				IsArchived: 0,
-				IsFavorite: 0,
+				IsDeleted:  false,
+				IsArchived: false,
+				IsFavorite: false,
 			},
 			{
-				ID:         396936927,
+				ID:         "396936927",
 				Name:       "Project2",
-				Color:      37,
+				Color:      "mint_green",
 				ChildOrder: 1,
-				Collapsed:  0,
+				Collapsed:  false,
 				Shared:     false,
-				IsDeleted:  0,
-				IsArchived: 0,
-				IsFavorite: 0,
+				IsDeleted:  false,
+				IsArchived: false,
+				IsFavorite: false,
 			},
 			{
-				ID:         396936928,
+				ID:         "396936928",
 				Name:       "Project3 - Archived",
-				Color:      37,
+				Color:      "mint_green",
 				ChildOrder: 1,
-				Collapsed:  0,
+				Collapsed:  false,
 				Shared:     false,
-				IsDeleted:  0,
-				IsArchived: 1,
-				IsFavorite: 0,
+				IsDeleted:  false,
+				IsArchived: true,
+				IsFavorite: false,
 			},
 		},
 		Items: []*item{
-			makeTestItem(400000000, 396936926, false, false, false),
-			makeTestItem(400000001, 396936926, false, false, false),
-			makeTestItem(400000002, 396936926, false, false, false),
-			makeTestItem(400000003, 396936926, true, true, true),
-			makeTestItem(400000004, 396936926, false, true, false),
-			makeTestItem(400000005, 396936926, true, false, true),
-			makeTestItem(400000006, 396936926, true, false, true),
+			makeTestItem("400000000", "396936926", false, false, false),
+			makeTestItem("400000001", "396936926", false, false, false),
+			makeTestItem("400000002", "396936926", false, false, false),
+			makeTestItem("400000003", "396936926", true, true, true),
+			makeTestItem("400000004", "396936926", false, true, false),
+			makeTestItem("400000005", "396936926", true, false, true),
+			makeTestItem("400000006", "396936926", true, false, true),
 			{
-				ID:         400000110,
-				UserID:     1855589,
-				ProjectID:  396936926,
+				ID:         "400000110",
+				UserID:     "1855589",
+				ProjectID:  "396936926",
 				Content:    "Task with parent",
 				Priority:   2,
-				ParentID:   400000006,
+				ParentID:   "400000006",
 				ChildOrder: 1,
-				Checked:    0,
+				Checked:    false,
 				DateAdded:  time1,
 			},
 			{
-				ID:            400000106,
-				UserID:        1855589,
-				ProjectID:     396936926,
+				ID:            "400000106",
+				UserID:        "1855589",
+				ProjectID:     "396936926",
 				Content:       "Task400000106",
 				Priority:      1,
-				ParentID:      0,
+				ParentID:      "",
 				ChildOrder:    1,
 				DateAdded:     time1,
-				Checked:       1,
+				Checked:       true,
 				DateCompleted: time3,
 				Due: &dueDate{
 					Date:        "2021-01-31T19:00:00Z",
 					Timezone:    nil,
 					IsRecurring: false,
 				},
-				Labels: []int64{
-					80000,
-					80001,
-					80002,
-					80003,
+				Labels: []string{
+					"Label1",
+					"Label2",
+					"Label3",
+					"Label4",
 				},
 			},
-			makeTestItem(400000107, 396936926, false, false, true),
-			makeTestItem(400000108, 396936926, false, false, true),
+			makeTestItem("400000107", "396936926", false, false, true),
+			makeTestItem("400000108", "396936926", false, false, true),
 			{
-				ID:            400000109,
-				UserID:        1855589,
-				ProjectID:     396936926,
+				ID:            "400000109",
+				UserID:        "1855589",
+				ProjectID:     "396936926",
 				Content:       "Task400000109",
 				Priority:      1,
 				ChildOrder:    1,
-				Checked:       1,
+				Checked:       true,
 				DateAdded:     time1,
 				DateCompleted: time3,
-				SectionID:     1234,
+				SectionID:     "1234",
 			},
 
-			makeTestItem(400000007, 396936927, true, false, false),
-			makeTestItem(400000008, 396936927, true, false, false),
-			makeTestItem(400000009, 396936927, false, false, false),
-			makeTestItem(400000010, 396936927, false, false, true),
-			makeTestItem(400000101, 396936927, false, false, false),
-			makeTestItem(400000102, 396936927, true, true, false),
-			makeTestItem(400000103, 396936927, false, true, false),
-			makeTestItem(400000104, 396936927, false, true, false),
-			makeTestItem(400000105, 396936927, true, true, false),
+			makeTestItem("400000007", "396936927", true, false, false),
+			makeTestItem("400000008", "396936927", true, false, false),
+			makeTestItem("400000009", "396936927", false, false, false),
+			makeTestItem("400000010", "396936927", false, false, true),
+			makeTestItem("400000101", "396936927", false, false, false),
+			makeTestItem("400000102", "396936927", true, true, false),
+			makeTestItem("400000103", "396936927", false, true, false),
+			makeTestItem("400000104", "396936927", false, true, false),
+			makeTestItem("400000105", "396936927", true, true, false),
 
-			makeTestItem(400000111, 396936928, false, false, true),
+			makeTestItem("400000111", "396936928", false, false, true),
 		},
 		Labels: []*label{
 			{
-				ID:    80000,
+				ID:    "80000",
 				Name:  "Label1",
-				Color: 30,
+				Color: "berry_red",
 			},
 			{
-				ID:    80001,
+				ID:    "80001",
 				Name:  "Label2",
-				Color: 31,
+				Color: "red",
 			},
 			{
-				ID:    80002,
+				ID:    "80002",
 				Name:  "Label3",
-				Color: 32,
+				Color: "orange",
 			},
 			{
-				ID:    80003,
+				ID:    "80003",
 				Name:  "Label4",
-				Color: 33,
+				Color: "yellow",
 			},
 		},
 		Notes: []*note{
 			{
-				ID:        101476,
+				ID:        "101476",
 				PostedUID: 1855589,
-				ItemID:    400000000,
+				ItemID:    "400000000",
 				Content:   "Lorem Ipsum dolor sit amet",
 				Posted:    time1,
 			},
 			{
-				ID:        101477,
+				ID:        "101477",
 				PostedUID: 1855589,
-				ItemID:    400000001,
+				ItemID:    "400000001",
 				Content:   "Lorem Ipsum dolor sit amet",
 				Posted:    time1,
 			},
 			{
-				ID:        101478,
+				ID:        "101478",
 				PostedUID: 1855589,
-				ItemID:    400000003,
+				ItemID:    "400000003",
 				Content:   "Lorem Ipsum dolor sit amet",
 				Posted:    time1,
 			},
 			{
-				ID:        101479,
+				ID:        "101479",
 				PostedUID: 1855589,
-				ItemID:    400000010,
+				ItemID:    "400000010",
 				Content:   "Lorem Ipsum dolor sit amet",
 				Posted:    time1,
 			},
 			{
-				ID:        101480,
+				ID:        "101480",
 				PostedUID: 1855589,
-				ItemID:    400000101,
+				ItemID:    "400000101",
 				Content:   "Lorem Ipsum dolor sit amet",
 				FileAttachment: &fileAttachment{
 					FileName:    "file.md",
@@ -263,43 +261,43 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 			{
 				ID:        102000,
 				Content:   "Lorem Ipsum dolor sit amet",
-				ProjectID: 396936926,
+				ProjectID: "396936926",
 				Posted:    time3,
 				PostedUID: 1855589,
 			},
 			{
 				ID:        102001,
 				Content:   "Lorem Ipsum dolor sit amet 2",
-				ProjectID: 396936926,
+				ProjectID: "396936926",
 				Posted:    time3,
 				PostedUID: 1855589,
 			},
 			{
 				ID:        102002,
 				Content:   "Lorem Ipsum dolor sit amet 3",
-				ProjectID: 396936926,
+				ProjectID: "396936926",
 				Posted:    time3,
 				PostedUID: 1855589,
 			},
 			{
 				ID:        102003,
 				Content:   "Lorem Ipsum dolor sit amet 4",
-				ProjectID: 396936927,
+				ProjectID: "396936927",
 				Posted:    time3,
 				PostedUID: 1855589,
 			},
 			{
 				ID:        102004,
 				Content:   "Lorem Ipsum dolor sit amet 5",
-				ProjectID: 396936927,
+				ProjectID: "396936927",
 				Posted:    time3,
 				PostedUID: 1855589,
 			},
 		},
 		Reminders: []*reminder{
 			{
-				ID:     103000,
-				ItemID: 400000000,
+				ID:     "103000",
+				ItemID: "400000000",
 				Due: &dueDate{
 					Date:        "2020-06-15",
 					IsRecurring: false,
@@ -307,40 +305,40 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 				MmOffset: 180,
 			},
 			{
-				ID:     103001,
-				ItemID: 400000000,
+				ID:     "103001",
+				ItemID: "400000000",
 				Due: &dueDate{
 					Date:        "2020-06-16T07:00:00",
 					IsRecurring: false,
 				},
 			},
 			{
-				ID:     103002,
-				ItemID: 400000002,
+				ID:     "103002",
+				ItemID: "400000002",
 				Due: &dueDate{
 					Date:        "2020-07-15T07:00:00Z",
 					IsRecurring: true,
 				},
 			},
 			{
-				ID:     103003,
-				ItemID: 400000003,
+				ID:     "103003",
+				ItemID: "400000003",
 				Due: &dueDate{
 					Date:        "2020-06-15T07:00:00",
 					IsRecurring: false,
 				},
 			},
 			{
-				ID:     103004,
-				ItemID: 400000005,
+				ID:     "103004",
+				ItemID: "400000005",
 				Due: &dueDate{
 					Date:        "2020-06-15T07:00:00",
 					IsRecurring: false,
 				},
 			},
 			{
-				ID:     103006,
-				ItemID: 400000009,
+				ID:     "103006",
+				ItemID: "400000009",
 				Due: &dueDate{
 					Date:        "2020-06-15T07:00:00",
 					IsRecurring: false,
@@ -349,9 +347,9 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 		},
 		Sections: []*section{
 			{
-				ID:        1234,
+				ID:        "1234",
 				Name:      "Some Bucket",
-				ProjectID: 396936926,
+				ProjectID: "396936926",
 			},
 		},
 	}
@@ -359,19 +357,19 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 	vikunjaLabels := []*models.Label{
 		{
 			Title:    "Label1",
-			HexColor: todoistColors[30],
+			HexColor: todoistColors["berry_red"],
 		},
 		{
 			Title:    "Label2",
-			HexColor: todoistColors[31],
+			HexColor: todoistColors["red"],
 		},
 		{
 			Title:    "Label3",
-			HexColor: todoistColors[32],
+			HexColor: todoistColors["orange"],
 		},
 		{
 			Title:    "Label4",
-			HexColor: todoistColors[33],
+			HexColor: todoistColors["yellow"],
 		},
 	}
 
@@ -385,11 +383,11 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 					List: models.List{
 						Title:       "Project1",
 						Description: "Lorem Ipsum dolor sit amet\nLorem Ipsum dolor sit amet 2\nLorem Ipsum dolor sit amet 3",
-						HexColor:    todoistColors[30],
+						HexColor:    todoistColors["berry_red"],
 					},
 					Buckets: []*models.Bucket{
 						{
-							ID:    1234,
+							ID:    1,
 							Title: "Some Bucket",
 						},
 					},
@@ -510,7 +508,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 								Done:     true,
 								Created:  time1,
 								DoneAt:   time3,
-								BucketID: 1234,
+								BucketID: 1,
 							},
 						},
 					},
@@ -519,7 +517,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 					List: models.List{
 						Title:       "Project2",
 						Description: "Lorem Ipsum dolor sit amet 4\nLorem Ipsum dolor sit amet 5",
-						HexColor:    todoistColors[37],
+						HexColor:    todoistColors["mint_green"],
 					},
 					Tasks: []*models.TaskWithComments{
 						{
@@ -616,7 +614,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 				{
 					List: models.List{
 						Title:      "Project3 - Archived",
-						HexColor:   todoistColors[37],
+						HexColor:   todoistColors["mint_green"],
 						IsArchived: true,
 					},
 					Tasks: []*models.TaskWithComments{
@@ -634,7 +632,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 		},
 	}
 
-	doneItems := make(map[int64]*doneItem)
+	doneItems := make(map[string]*doneItem)
 	hierachie, err := convertTodoistToVikunja(testSync, doneItems)
 	assert.NoError(t, err)
 	assert.NotNil(t, hierachie)
