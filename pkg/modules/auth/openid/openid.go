@@ -51,6 +51,7 @@ type Provider struct {
 	Key             string `json:"key"`
 	OriginalAuthURL string `json:"-"`
 	AuthURL         string `json:"auth_url"`
+	LogoutURL       string `json:"logout_url"`
 	ClientID        string `json:"client_id"`
 	ClientSecret    string `json:"-"`
 	openIDProvider  *oidc.Provider

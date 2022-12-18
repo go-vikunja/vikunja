@@ -1120,6 +1120,8 @@ definitions:
         type: string
       key:
         type: string
+      logout_url:
+        type: string
       name:
         type: string
     type: object

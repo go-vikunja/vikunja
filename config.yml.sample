@@ -311,6 +311,9 @@ auth:
       - name:
         # The auth url to send users to if they want to authenticate using OpenID Connect.
         authurl:
+        # The oidc logouturl that users will be redirected to on logout.
+        # Leave empty or delete key, if you do not want to be redirected.
+        logouturl:
         # The client ID used to authenticate Vikunja at the OpenID Connect provider.
         clientid:
         # The client secret used to authenticate Vikunja at the OpenID Connect provider.
