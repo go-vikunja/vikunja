@@ -448,7 +448,7 @@ const router = createRouter({
 			component: MigrationHandlerComponent,
 			props: route => ({
 				service: route.params.service as string,
-				code: route.params.code as string,
+				code: route.query.code as string,
 			}),
 		},
 		{
