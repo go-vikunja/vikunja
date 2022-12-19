@@ -703,7 +703,7 @@ func (Release) Packages() error {
 	binpath := "nfpm"
 	err = exec.Command(binpath).Run()
 	if err != nil && strings.Contains(err.Error(), "executable file not found") {
-		binpath = "/nfpm"
+		binpath = "/usr/bin/nfpm"
 		err = exec.Command(binpath).Run()
 	}
 	if err != nil && strings.Contains(err.Error(), "executable file not found") {
@@ -712,7 +712,7 @@ func (Release) Packages() error {
 		os.Exit(1)
 	}
 
-	// Because nfpm does not  support templating, we replace the values in the config file and restore it after running
+	// Because nfpm does not support templating, we replace the values in the config file and restore it after running
 	nfpmConfigPath := RootPath + "/nfpm.yaml"
 	nfpmconfig, err := os.ReadFile(nfpmConfigPath)
 	if err != nil {
