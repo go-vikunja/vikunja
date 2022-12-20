@@ -33,7 +33,7 @@ specifiers:
   '@vue/eslint-config-typescript': 11.0.2
   '@vue/test-utils': 2.2.6
   '@vue/tsconfig': 0.1.3
-  '@vueuse/core': 9.8.1
+  '@vueuse/core': 9.8.2
   autoprefixer: 10.4.13
   axios: 0.27.2
   blurhash: 2.0.4
@@ -103,7 +103,7 @@ dependencies:
   '@types/is-touch-device': 1.0.0
   '@types/lodash.clonedeep': 4.5.7
   '@types/sortablejs': 1.15.0
-  '@vueuse/core': 9.8.1_vue@3.2.45
+  '@vueuse/core': 9.8.2_vue@3.2.45
   axios: 0.27.2
   blurhash: 2.0.4
   bulma-css-variables: 0.9.33
@@ -1940,7 +1940,7 @@ packages:
       dayjs: ^1.11.5
       vue: ^3.2.40
     dependencies:
-      '@vueuse/core': 9.8.1_vue@3.2.45
+      '@vueuse/core': 9.8.2_vue@3.2.45
       dayjs: 1.11.7
       vue: 3.2.45
     transitivePeerDependencies:
@@ -3892,24 +3892,24 @@ packages:
       '@types/node': 18.11.17
     dev: true
 
-  /@vueuse/core/9.8.1_vue@3.2.45:
-    resolution: {integrity: sha512-QgJ8XVlOXZwNiaxSztS71KmqmhbDnOmIt+WR2HukHcb1KWYQxDot9YyIXnUX6fLF+GtTzL0DqPl3sRvEe7sr4g==}
+  /@vueuse/core/9.8.2_vue@3.2.45:
+    resolution: {integrity: sha512-aWiCmcYIpPt7xjuqYiceODEMHchDYthrJ4AqI+FXPZrR23PZOqdiktbUVyQl2kGlR3H4i9UJ/uimQrwhz9UouQ==}
     dependencies:
       '@types/web-bluetooth': 0.0.16
-      '@vueuse/metadata': 9.8.1
-      '@vueuse/shared': 9.8.1_vue@3.2.45
+      '@vueuse/metadata': 9.8.2
+      '@vueuse/shared': 9.8.2_vue@3.2.45
       vue-demi: 0.12.1_vue@3.2.45
     transitivePeerDependencies:
       - '@vue/composition-api'
       - vue
     dev: false
 
-  /@vueuse/metadata/9.8.1:
-    resolution: {integrity: sha512-9/qHh71tC7Mc0Lt7hAsKaiRRX3etWim22eRvSOjZyaAnFgvlHxYv4UbEkREt4diYBSs2Pjx9Jb93JTETy8tv1w==}
+  /@vueuse/metadata/9.8.2:
+    resolution: {integrity: sha512-N4E/BKS+9VsUeD4WLVRU1J2kCOLh+iikBcMtipFcTyL204132vDYHs27zLAVabJYGnhC0dIVGdhg9pbOZiY2TQ==}
     dev: false
 
-  /@vueuse/shared/9.8.1_vue@3.2.45:
-    resolution: {integrity: sha512-CkrAkr8ZuTdvK3ZJbkitWCKU0iv17KmmoNNHQwiMReSn+d8hUd4XJU9qd4d/qXykVAeC/jxkJLsMsuLzpjNa+Q==}
+  /@vueuse/shared/9.8.2_vue@3.2.45:
+    resolution: {integrity: sha512-ACjrPQzowd5dnabNJt9EoGVobco9/ENiA5qP53vjiuxndlJYuc/UegwhXC7KdQbPX4F45a50+45K3g1wNqOzmA==}
     dependencies:
       vue-demi: 0.12.1_vue@3.2.45
     transitivePeerDependencies:
