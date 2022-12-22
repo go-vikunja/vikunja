@@ -14,6 +14,7 @@ export const SUPPORTED_LOCALES = {
 	'nl-NL': 'Nederlands',
 	'pt-PT': 'Português',
 	'zh-CN': 'Chinese',
+	'no-NO': 'Norsk Bokmål',
 } as Record<string, string>
 
 export type SupportedLocale = keyof typeof SUPPORTED_LOCALES
