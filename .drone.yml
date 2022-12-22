@@ -451,9 +451,6 @@ kind: pipeline
 type: docker
 name: update-translations
 
-depends_on:
-  - build
-
 trigger:
   branch:
     - main
