@@ -510,6 +510,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: 9f26b5af73e3464e9ee1b5fbcb96854ca8a7e5f8d6ee2d85fd8376aad951b446
+hmac: 381766491766da14ff022383ce0107955f811f7ccb55e95c9c03094e4df809e1
 
 ...
