@@ -156,7 +156,7 @@ func GetListsByNamespaceID(s *xorm.Session, nID int64, doer *user.User) (lists [
 			Alias("l").
 			Join("LEFT", []string{"namespaces", "n"}, "l.namespace_id = n.id").
 			Where("l.is_archived = false").
-			Where("n.is_archived = false").
+			Where("n.is_archived = false OR n.is_archived IS NULL").
 			Where("namespace_id = ?", nID).
 			Find(&lists)
 	}
