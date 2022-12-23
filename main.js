@@ -17,10 +17,10 @@ function createWindow() {
 	})
 
 	// Open external links in the browser
-	mainWindow.webContents.on('new-window', function (e, url) {
-		e.preventDefault()
-		shell.openExternal(url)
-	})
+	mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+  	shell.openExternal(url);
+	  return { action: 'deny' };
+	});
 
 	// Hide the toolbar
 	mainWindow.setMenuBarVisibility(false)
