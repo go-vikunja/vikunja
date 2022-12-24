@@ -20,6 +20,8 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/models"
+
 	"code.vikunja.io/api/pkg/config"
 	"github.com/stretchr/testify/assert"
 )
@@ -406,6 +408,77 @@ DTSTAMP:20181201T011204Z
 SUMMARY:Todo #1
 DESCRIPTION:Lorem Ipsum
 PRIORITY:9
+LAST-MODIFIED:00010101T000000Z
+END:VTODO
+END:VCALENDAR`,
+		},
+		{
+			name: "with repeating monthly",
+			args: args{
+				config: &Config{
+					Name:   "test",
+					ProdID: "RandomProdID which is not random",
+				},
+				todos: []*Todo{
+					{
+						Summary:     "Todo #1",
+						Description: "Lorem Ipsum",
+						UID:         "randommduid",
+						Timestamp:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						RepeatMode:  models.TaskRepeatModeMonth,
+						DueDate:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+					},
+				},
+			},
+			wantCaldavtasks: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randommduid
+DTSTAMP:20181201T011204Z
+SUMMARY:Todo #1
+DESCRIPTION:Lorem Ipsum
+DUE:20181201T011204Z
+RRULE:FREQ=MONTHLY;BYMONTHDAY=01
+LAST-MODIFIED:00010101T000000Z
+END:VTODO
+END:VCALENDAR`,
+		},
+		{
+			name: "with repeat mode default",
+			args: args{
+				config: &Config{
+					Name:   "test",
+					ProdID: "RandomProdID which is not random",
+				},
+				todos: []*Todo{
+					{
+						Summary:     "Todo #1",
+						Description: "Lorem Ipsum",
+						UID:         "randommduid",
+						Timestamp:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						RepeatMode:  models.TaskRepeatModeDefault,
+						DueDate:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						RepeatAfter: 435,
+					},
+				},
+			},
+			wantCaldavtasks: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randommduid
+DTSTAMP:20181201T011204Z
+SUMMARY:Todo #1
+DESCRIPTION:Lorem Ipsum
+DUE:20181201T011204Z
+RRULE:FREQ=SECONDLY;INTERVAL=435
 LAST-MODIFIED:00010101T000000Z
 END:VTODO
 END:VCALENDAR`,
