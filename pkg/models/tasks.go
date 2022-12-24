@@ -830,6 +830,11 @@ func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, doCheckBucke
 		}
 	}
 
+	if task.BucketID == 0 && originalTask != nil && originalTask.BucketID != 0 {
+		task.BucketID = originalTask.BucketID
+	}
+
+	// Either no bucket was provided or the task was moved between lists
 	if task.BucketID == 0 || (originalTask != nil && task.ListID != 0 && originalTask.ListID != task.ListID) {
 		bucket, err = getDefaultBucket(s, task.ListID)
 		if err != nil {
@@ -1026,7 +1031,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
 	updateDone(&ot, t)
 
-	if err := setTaskBucket(s, t, &ot, t.BucketID != ot.BucketID); err != nil {
+	if err := setTaskBucket(s, t, &ot, t.BucketID != 0 && t.BucketID != ot.BucketID); err != nil {
 		return err
 	}
 
