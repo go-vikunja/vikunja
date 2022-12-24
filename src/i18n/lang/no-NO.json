@@ -2,7 +2,7 @@
   "home": {
     "welcomeNight": "God Morgen {username}!",
     "welcomeMorning": "God Morgen {username}!",
-    "welcomeDay": "Hei {username},",
+    "welcomeDay": "Hei {username}!",
     "welcomeEvening": "God Morgen {username}!",
     "lastViewed": "Sist sett",
     "list": {
