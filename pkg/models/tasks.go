@@ -1369,7 +1369,7 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 
 // This helper function updates the reminders, doneAt, start and end dates of the *old* task
 // and saves the new values in the newTask object.
-// We make a few assumtions here:
+// We make a few assumptions here:
 //  1. Everything in oldTask is the truth - we figure out if we update anything at all if oldTask.RepeatAfter has a value > 0
 //  2. Because of 1., this functions should not be used to update values other than Done in the same go
 func updateDone(oldTask *Task, newTask *Task) {

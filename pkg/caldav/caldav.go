@@ -57,10 +57,12 @@ type Todo struct {
 	RelatedToUID string
 	Color        string
 
-	Start    time.Time
-	End      time.Time
-	DueDate  time.Time
-	Duration time.Duration
+	Start       time.Time
+	End         time.Time
+	DueDate     time.Time
+	Duration    time.Duration
+	RepeatAfter int64
+	RepeatMode  string
 
 	Created time.Time
 	Updated time.Time // last-mod
@@ -223,6 +225,16 @@ CREATED:` + makeCalDavTimeFromTimeStamp(t.Created)
 		if t.Priority != 0 {
 			caldavtodos += `
 PRIORITY:` + strconv.Itoa(mapPriorityToCaldav(t.Priority))
+		}
+
+		if t.RepeatAfter > 0 || t.RepeatMode == "MONTHLY" {
+			if t.RepeatMode == "MONTHLY" {
+				caldavtodos += `
+RRULE:FREQ=MONTHLY;BYMONTHDAY=` + t.DueDate.Format("02") // Day of the month
+			} else {
+				caldavtodos += `
+RRULE:FREQ=SECONDLY;INTERVAL=` + strconv.FormatInt(t.RepeatAfter, 10)
+			}
 		}
 
 		caldavtodos += `
