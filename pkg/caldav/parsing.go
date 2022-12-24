@@ -35,11 +35,6 @@ func GetCaldavTodosForTasks(list *models.ListWithTasksAndBuckets, listTasks []*m
 
 		duration := t.EndDate.Sub(t.StartDate)
 
-		repeatMode := "DEFAULT"
-		if t.RepeatMode == models.TaskRepeatModeMonth {
-			repeatMode = "MONTHLY"
-		}
-
 		caldavtodos = append(caldavtodos, &Todo{
 			Timestamp:   t.Updated,
 			UID:         t.UID,
@@ -55,7 +50,7 @@ func GetCaldavTodosForTasks(list *models.ListWithTasksAndBuckets, listTasks []*m
 			DueDate:     t.DueDate,
 			Duration:    duration,
 			RepeatAfter: t.RepeatAfter,
-			RepeatMode:  repeatMode,
+			RepeatMode:  t.RepeatMode,
 		})
 	}
 

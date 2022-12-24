@@ -20,6 +20,8 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/models"
+
 	"code.vikunja.io/api/pkg/config"
 	"github.com/stretchr/testify/assert"
 )
@@ -423,7 +425,7 @@ END:VCALENDAR`,
 						Description: "Lorem Ipsum",
 						UID:         "randommduid",
 						Timestamp:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
-						RepeatMode:  "MONTHLY",
+						RepeatMode:  models.TaskRepeatModeMonth,
 						DueDate:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
 					},
 				},
@@ -458,7 +460,7 @@ END:VCALENDAR`,
 						Description: "Lorem Ipsum",
 						UID:         "randommduid",
 						Timestamp:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
-						RepeatMode:  "DEFAULT",
+						RepeatMode:  models.TaskRepeatModeDefault,
 						DueDate:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
 						RepeatAfter: 435,
 					},

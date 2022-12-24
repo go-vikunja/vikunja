@@ -22,6 +22,8 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/models"
+
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 )
@@ -62,7 +64,7 @@ type Todo struct {
 	DueDate     time.Time
 	Duration    time.Duration
 	RepeatAfter int64
-	RepeatMode  string
+	RepeatMode  models.TaskRepeatMode
 
 	Created time.Time
 	Updated time.Time // last-mod
@@ -227,8 +229,8 @@ CREATED:` + makeCalDavTimeFromTimeStamp(t.Created)
 PRIORITY:` + strconv.Itoa(mapPriorityToCaldav(t.Priority))
 		}
 
-		if t.RepeatAfter > 0 || t.RepeatMode == "MONTHLY" {
-			if t.RepeatMode == "MONTHLY" {
+		if t.RepeatAfter > 0 || t.RepeatMode == models.TaskRepeatModeMonth {
+			if t.RepeatMode == models.TaskRepeatModeMonth {
 				caldavtodos += `
 RRULE:FREQ=MONTHLY;BYMONTHDAY=` + t.DueDate.Format("02") // Day of the month
 			} else {
