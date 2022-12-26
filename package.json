@@ -95,7 +95,7 @@
     "esbuild": "0.16.10",
     "eslint": "8.30.0",
     "eslint-plugin-vue": "9.8.0",
-    "happy-dom": "8.1.0",
+    "happy-dom": "8.1.1",
     "netlify-cli": "12.5.0",
     "postcss": "8.4.20",
     "postcss-preset-env": "7.8.3",
