@@ -46,8 +46,9 @@ type Project struct {
 	// The hex color of this project
 	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
 
-	OwnerID     int64 `xorm:"bigint INDEX not null" json:"-"`
-	NamespaceID int64 `xorm:"bigint INDEX not null" json:"namespace_id" param:"namespace"`
+	OwnerID         int64 `xorm:"bigint INDEX not null" json:"-"`
+	NamespaceID     int64 `xorm:"bigint INDEX not null" json:"namespace_id" param:"namespace"`
+	ParentProjectID int64 `xorm:"bigint INDEX null" json:"parent_project_id"`
 
 	// The user who created this project.
 	Owner *user.User `xorm:"-" json:"owner" valid:"-"`
