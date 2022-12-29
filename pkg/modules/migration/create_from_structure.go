@@ -30,7 +30,7 @@ import (
 )
 
 // InsertFromStructure takes a fully nested Vikunja data structure and a user and then creates everything for this user
-// (Namespaces, tasks, etc. Even attachments and relations.)
+// (Projects, tasks, etc. Even attachments and relations.)
 func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, user *user.User) (err error) {
 	s := db.NewSession()
 	defer s.Close()
@@ -52,26 +52,14 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 	labels := make(map[string]*models.Label)
 
 	archivedProjects := []int64{}
-	archivedNamespaces := []int64{}
 
 	// Create all namespaces
 	for _, p := range str {
 		p.ID = 0
 
-		// Saving the archived status to archive the namespace again after creating it
-		var wasArchived bool
-		if p.IsArchived {
-			p.IsArchived = false
-			wasArchived = true
-		}
-
 		err = p.Create(s, user)
 		if err != nil {
 			return
-		}
-
-		if wasArchived {
-			archivedNamespaces = append(archivedNamespaces, p.ID)
 		}
 
 		log.Debugf("[creating structure] Created project %d", p.ID)
@@ -284,16 +272,6 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 		_, err = s.
 			Cols("is_archived").
 			In("id", archivedProjects).
-			Update(&models.Project{IsArchived: true})
-		if err != nil {
-			return err
-		}
-	}
-
-	if len(archivedNamespaces) > 0 {
-		_, err = s.
-			Cols("is_archived").
-			In("id", archivedNamespaces).
 			Update(&models.Project{IsArchived: true})
 		if err != nil {
 			return err
