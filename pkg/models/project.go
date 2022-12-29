@@ -366,7 +366,7 @@ type projectOptions struct {
 	getArchived bool
 }
 
-func getUserProjectsStatement(userID int64, search string, getArchived bool) *builder.Builder {
+func getUserProjectsStatement(parentProjectIDs []int64, userID int64, search string, getArchived bool) *builder.Builder {
 	dialect := config.DatabaseType.GetString()
 	if dialect == "sqlite" {
 		dialect = builder.SQLITE
@@ -377,7 +377,6 @@ func getUserProjectsStatement(userID int64, search string, getArchived bool) *bu
 	if !getArchived {
 		getArchivedCond = builder.And(
 			builder.Eq{"l.is_archived": false},
-			builder.Eq{"n.is_archived": false},
 		)
 	}
 
@@ -400,6 +399,15 @@ func getUserProjectsStatement(userID int64, search string, getArchived bool) *bu
 		filterCond = builder.In("l.id", ids)
 	}
 
+	var parentCondition builder.Cond
+	parentCondition = builder.Or(
+		builder.IsNull{"parent_project_id"},
+		builder.Eq{"parent_project_id": 0},
+	)
+	if len(parentProjectIDs) > 0 {
+		parentCondition = builder.In("parent_project_id", parentProjectIDs)
+	}
+
 	return builder.Dialect(dialect).
 		Select("l.*").
 		From("projects", "l").
@@ -414,9 +422,46 @@ func getUserProjectsStatement(userID int64, search string, getArchived bool) *bu
 			),
 			filterCond,
 			getArchivedCond,
+			parentCondition,
 		)).
 		OrderBy("position").
 		GroupBy("l.id")
+}
+
+func getAllProjectsForUser(s *xorm.Session, userID int64, parentProjectIDs []int64, opts *projectOptions, projects *[]*Project, oldTotalCount int64) (resultCount int, totalCount int64, err error) {
+
+	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
+	query := getUserProjectsStatement(parentProjectIDs, userID, opts.search, opts.getArchived)
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+
+	currentProjects := []*Project{}
+	err = s.SQL(query).Find(&currentProjects)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	if len(currentProjects) == 0 {
+		return 0, oldTotalCount, err
+	}
+
+	query = getUserProjectsStatement(parentProjectIDs, userID, opts.search, opts.getArchived)
+	totalCount, err = s.
+		SQL(query.Select("count(*)")).
+		Count(&Project{})
+	if err != nil {
+		return 0, 0, err
+	}
+
+	newParentIDs := []int64{}
+	for _, project := range currentProjects {
+		newParentIDs = append(newParentIDs, project.ID)
+	}
+
+	*projects = append(*projects, currentProjects...)
+
+	return getAllProjectsForUser(s, userID, newParentIDs, opts, projects, oldTotalCount+totalCount)
 }
 
 // Gets the projects with their children without any tasks
@@ -426,28 +471,19 @@ func getRawProjectsForUser(s *xorm.Session, opts *projectOptions) (projects map[
 		return nil, 0, 0, err
 	}
 
-	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
-
-	// Gets all projects where the user is either owner or it was shared to them
-
-	allProjects := make(map[int64]*Project)
-
-	query := getUserProjectsStatement(fullUser.ID, opts.search, opts.getArchived)
-	if limit > 0 {
-		query = query.Limit(limit, start)
-	}
-	err = s.SQL(query).Find(&allProjects)
+	allProjects := []*Project{}
+	resultCount, totalItems, err = getAllProjectsForUser(s, fullUser.ID, nil, opts, &allProjects, 0)
 	if err != nil {
-		return nil, 0, 0, err
+		return
 	}
-
-	query = getUserProjectsStatement(fullUser.ID, opts.search, opts.getArchived)
-	totalItems, err = s.
-		SQL(query.Select("count(*)")).
-		Count(&Project{})
 
 	if len(allProjects) == 0 {
 		return nil, 0, totalItems, nil
+	}
+
+	projects = make(map[int64]*Project, len(allProjects))
+	for _, p := range allProjects {
+		projects[p.ID] = p
 	}
 
 	return projects, len(allProjects), totalItems, err

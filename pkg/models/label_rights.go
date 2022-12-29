@@ -77,7 +77,7 @@ func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxRigh
 		builder.
 			Select("id").
 			From("tasks").
-			Where(builder.In("project_id", getUserProjectsStatement(u.ID, "", false).Select("l.id"))),
+			Where(builder.In("project_id", getUserProjectsStatement(nil, u.ID, "", false).Select("l.id"))),
 	)
 
 	ll := &LabelTask{}
