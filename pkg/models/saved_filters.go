@@ -102,7 +102,7 @@ func (sf *SavedFilter) toProject() *Project {
 		Created:     sf.Created,
 		Updated:     sf.Updated,
 		Owner:       sf.Owner,
-		NamespaceID: SavedFiltersPseudoNamespace.ID,
+		NamespaceID: SavedFiltersPseudoProject.ID,
 	}
 }
 

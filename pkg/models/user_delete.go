@@ -87,45 +87,6 @@ func deleteUsers() {
 	}
 }
 
-func getNamespacesToDelete(s *xorm.Session, u *user.User) (namespacesToDelete []*Namespace, err error) {
-	namespacesToDelete = []*Namespace{}
-	nm := &Namespace{IsArchived: true}
-	res, _, _, err := nm.ReadAll(s, u, "", 1, -1)
-	if err != nil {
-		return nil, err
-	}
-
-	if res == nil {
-		return nil, nil
-	}
-
-	namespaces := res.([]*NamespaceWithProjects)
-	for _, n := range namespaces {
-		if n.ID < 0 {
-			continue
-		}
-
-		hadUsers, err := ensureNamespaceAdminUser(s, &n.Namespace)
-		if err != nil {
-			return nil, err
-		}
-		if hadUsers {
-			continue
-		}
-		hadTeams, err := ensureNamespaceAdminTeam(s, &n.Namespace)
-		if err != nil {
-			return nil, err
-		}
-		if hadTeams {
-			continue
-		}
-
-		namespacesToDelete = append(namespacesToDelete, &n.Namespace)
-	}
-
-	return
-}
-
 func getProjectsToDelete(s *xorm.Session, u *user.User) (projectsToDelete []*Project, err error) {
 	projectsToDelete = []*Project{}
 	lm := &Project{IsArchived: true}
@@ -170,22 +131,9 @@ func getProjectsToDelete(s *xorm.Session, u *user.User) (projectsToDelete []*Pro
 // This action is irrevocable.
 // Public to allow deletion from the CLI.
 func DeleteUser(s *xorm.Session, u *user.User) (err error) {
-	namespacesToDelete, err := getNamespacesToDelete(s, u)
-	if err != nil {
-		return err
-	}
-
 	projectsToDelete, err := getProjectsToDelete(s, u)
 	if err != nil {
 		return err
-	}
-
-	// Delete everything not shared with anybody else
-	for _, n := range namespacesToDelete {
-		err = deleteNamespace(s, n, u, false)
-		if err != nil {
-			return err
-		}
 	}
 
 	for _, l := range projectsToDelete {
@@ -203,58 +151,6 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 	return notifications.Notify(u, &user.AccountDeletedNotification{
 		User: u,
 	})
-}
-
-func ensureNamespaceAdminUser(s *xorm.Session, n *Namespace) (hadUsers bool, err error) {
-	namespaceUsers := []*NamespaceUser{}
-	err = s.Where("namespace_id = ?", n.ID).Find(&namespaceUsers)
-	if err != nil {
-		return
-	}
-
-	if len(namespaceUsers) == 0 {
-		return false, nil
-	}
-
-	for _, lu := range namespaceUsers {
-		if lu.Right == RightAdmin {
-			// Project already has more than one admin, no need to do anything
-			return true, nil
-		}
-	}
-
-	firstUser := namespaceUsers[0]
-	firstUser.Right = RightAdmin
-	_, err = s.Where("id = ?", firstUser.ID).
-		Cols("right").
-		Update(firstUser)
-	return true, err
-}
-
-func ensureNamespaceAdminTeam(s *xorm.Session, n *Namespace) (hadTeams bool, err error) {
-	namespaceTeams := []*TeamNamespace{}
-	err = s.Where("namespace_id = ?", n.ID).Find(&namespaceTeams)
-	if err != nil {
-		return
-	}
-
-	if len(namespaceTeams) == 0 {
-		return false, nil
-	}
-
-	for _, lu := range namespaceTeams {
-		if lu.Right == RightAdmin {
-			// Project already has more than one admin, no need to do anything
-			return true, nil
-		}
-	}
-
-	firstTeam := namespaceTeams[0]
-	firstTeam.Right = RightAdmin
-	_, err = s.Where("id = ?", firstTeam.ID).
-		Cols("right").
-		Update(firstTeam)
-	return true, err
 }
 
 func ensureProjectAdminUser(s *xorm.Session, l *Project) (hadUsers bool, err error) {
