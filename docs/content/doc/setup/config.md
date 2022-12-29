@@ -969,17 +969,6 @@ Environment path: `VIKUNJA_FILES_MAXSIZE`
 
 
 
-### wunderlist
-
-These are the settings for the wunderlist migrator
-
-Default: `<empty>`
-
-Full path: `migration.wunderlist`
-
-Environment path: `VIKUNJA_MIGRATION_WUNDERLIST`
-
-
 ### todoist
 
 Default: `<empty>`

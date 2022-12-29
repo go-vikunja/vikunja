@@ -69,7 +69,6 @@ import (
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
 	"code.vikunja.io/api/pkg/modules/migration/trello"
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
-	"code.vikunja.io/api/pkg/modules/migration/wunderlist"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	_ "code.vikunja.io/api/pkg/swagger" // To generate swagger docs
@@ -590,16 +589,6 @@ func registerAPIRoutes(a *echo.Group) {
 }
 
 func registerMigrations(m *echo.Group) {
-	// Wunderlist
-	if config.MigrationWunderlistEnable.GetBool() {
-		wunderlistMigrationHandler := &migrationHandler.MigrationWeb{
-			MigrationStruct: func() migration.Migrator {
-				return &wunderlist.Migration{}
-			},
-		}
-		wunderlistMigrationHandler.RegisterRoutes(m)
-	}
-
 	// Todoist
 	if config.MigrationTodoistEnable.GetBool() {
 		todoistMigrationHandler := &migrationHandler.MigrationWeb{

@@ -46,7 +46,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 	dueTimeWithTime = dueTimeWithTime.In(config.GetTimeZone())
 	nilTime, err := time.Parse(time.RFC3339Nano, "0001-01-01T00:00:00Z")
 	assert.NoError(t, err)
-	exampleFile, err := os.ReadFile(config.ServiceRootpath.GetString() + "/pkg/modules/migration/wunderlist/testimage.jpg")
+	exampleFile, err := os.ReadFile(config.ServiceRootpath.GetString() + "/pkg/modules/migration/testimage.jpg")
 	assert.NoError(t, err)
 
 	makeTestItem := func(id, projectId string, hasDueDate, hasLabels, done bool) *item {

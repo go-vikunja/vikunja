@@ -128,10 +128,6 @@ const (
 	FilesBasePath Key = `files.basepath`
 	FilesMaxSize  Key = `files.maxsize`
 
-	MigrationWunderlistEnable          Key = `migration.wunderlist.enable`
-	MigrationWunderlistClientID        Key = `migration.wunderlist.clientid`
-	MigrationWunderlistClientSecret    Key = `migration.wunderlist.clientsecret`
-	MigrationWunderlistRedirectURL     Key = `migration.wunderlist.redirecturl`
 	MigrationTodoistEnable             Key = `migration.todoist.enable`
 	MigrationTodoistClientID           Key = `migration.todoist.clientid`
 	MigrationTodoistClientSecret       Key = `migration.todoist.clientsecret`
@@ -369,7 +365,6 @@ func InitDefaultConfig() {
 	CorsOrigins.setDefault([]string{"*"})
 	CorsMaxAge.setDefault(0)
 	// Migration
-	MigrationWunderlistEnable.setDefault(false)
 	MigrationTodoistEnable.setDefault(false)
 	MigrationTrelloEnable.setDefault(false)
 	MigrationMicrosoftTodoEnable.setDefault(false)
