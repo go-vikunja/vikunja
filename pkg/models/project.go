@@ -403,20 +403,13 @@ func getUserProjectsStatement(userID int64, search string, getArchived bool) *bu
 	return builder.Dialect(dialect).
 		Select("l.*").
 		From("projects", "l").
-		// TODO: remove namespaces
-		Join("INNER", "namespaces n", "l.namespace_id = n.id").
-		Join("LEFT", "team_namespaces tn", "tn.namespace_id = n.id").
-		Join("LEFT", "team_members tm", "tm.team_id = tn.team_id").
 		Join("LEFT", "team_projects tl", "l.id = tl.project_id").
 		Join("LEFT", "team_members tm2", "tm2.team_id = tl.team_id").
 		Join("LEFT", "users_projects ul", "ul.project_id = l.id").
-		Join("LEFT", "users_namespaces un", "un.namespace_id = l.namespace_id").
 		Where(builder.And(
 			builder.Or(
-				builder.Eq{"tm.user_id": userID},
 				builder.Eq{"tm2.user_id": userID},
 				builder.Eq{"ul.user_id": userID},
-				builder.Eq{"un.user_id": userID},
 				builder.Eq{"l.owner_id": userID},
 			),
 			filterCond,
