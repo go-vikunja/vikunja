@@ -31,7 +31,7 @@ import (
 
 // InsertFromStructure takes a fully nested Vikunja data structure and a user and then creates everything for this user
 // (Namespaces, tasks, etc. Even attachments and relations.)
-func InsertFromStructure(str []*models.NamespaceWithProjectsAndTasks, user *user.User) (err error) {
+func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, user *user.User) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -45,7 +45,7 @@ func InsertFromStructure(str []*models.NamespaceWithProjectsAndTasks, user *user
 	return s.Commit()
 }
 
-func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithProjectsAndTasks, user *user.User) (err error) {
+func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBuckets, user *user.User) (err error) {
 
 	log.Debugf("[creating structure] Creating %d namespaces", len(str))
 
@@ -55,30 +55,30 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithProjectsAnd
 	archivedNamespaces := []int64{}
 
 	// Create all namespaces
-	for _, n := range str {
-		n.ID = 0
+	for _, p := range str {
+		p.ID = 0
 
 		// Saving the archived status to archive the namespace again after creating it
 		var wasArchived bool
-		if n.IsArchived {
-			n.IsArchived = false
+		if p.IsArchived {
+			p.IsArchived = false
 			wasArchived = true
 		}
 
-		err = n.Create(s, user)
+		err = p.Create(s, user)
 		if err != nil {
 			return
 		}
 
 		if wasArchived {
-			archivedNamespaces = append(archivedNamespaces, n.ID)
+			archivedNamespaces = append(archivedNamespaces, p.ID)
 		}
 
-		log.Debugf("[creating structure] Created namespace %d", n.ID)
-		log.Debugf("[creating structure] Creating %d projects", len(n.Projects))
+		log.Debugf("[creating structure] Created project %d", p.ID)
+		log.Debugf("[creating structure] Creating %d projects", len(p.ChildProjects))
 
 		// Create all projects
-		for _, l := range n.Projects {
+		for _, l := range p.ChildProjects {
 			// The tasks and bucket slices are going to be reset during the creation of the project so we rescue it here
 			// to be able to still loop over them aftere the project was created.
 			tasks := l.Tasks
@@ -93,7 +93,7 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithProjectsAnd
 				l.IsArchived = false
 			}
 
-			l.NamespaceID = n.ID
+			l.ParentProjectID = p.ID
 			l.ID = 0
 			err = l.Create(s, user)
 			if err != nil {
@@ -294,7 +294,7 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithProjectsAnd
 		_, err = s.
 			Cols("is_archived").
 			In("id", archivedNamespaces).
-			Update(&models.Namespace{IsArchived: true})
+			Update(&models.Project{IsArchived: true})
 		if err != nil {
 			return err
 		}

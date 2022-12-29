@@ -162,16 +162,16 @@ func getTrelloData(token string) (trelloData []*trello.Board, err error) {
 
 // Converts all previously obtained data from trello into the vikunja format.
 // `trelloData` should contain all boards with their projects and cards respectively.
-func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullVikunjaHierachie []*models.NamespaceWithProjectsAndTasks, err error) {
+func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullVikunjaHierachie []*models.ProjectWithTasksAndBuckets, err error) {
 
 	log.Debugf("[Trello Migration] ")
 
-	fullVikunjaHierachie = []*models.NamespaceWithProjectsAndTasks{
+	fullVikunjaHierachie = []*models.ProjectWithTasksAndBuckets{
 		{
-			Namespace: models.Namespace{
+			Project: models.Project{
 				Title: "Imported from Trello",
 			},
-			Projects: []*models.ProjectWithTasksAndBuckets{},
+			ChildProjects: []*models.ProjectWithTasksAndBuckets{},
 		},
 	}
 
@@ -300,7 +300,7 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullV
 
 		log.Debugf("[Trello Migration] Converted all cards to tasks for board %s", board.ID)
 
-		fullVikunjaHierachie[0].Projects = append(fullVikunjaHierachie[0].Projects, project)
+		fullVikunjaHierachie[0].ChildProjects = append(fullVikunjaHierachie[0].ChildProjects, project)
 	}
 
 	return

@@ -113,13 +113,13 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 		return fmt.Errorf("could not read data file: %w", err)
 	}
 
-	namespaces := []*models.NamespaceWithProjectsAndTasks{}
-	if err := json.Unmarshal(bufData.Bytes(), &namespaces); err != nil {
+	parent := []*models.ProjectWithTasksAndBuckets{}
+	if err := json.Unmarshal(bufData.Bytes(), &parent); err != nil {
 		return fmt.Errorf("could not read data: %w", err)
 	}
 
-	for _, n := range namespaces {
-		for _, l := range n.Projects {
+	for _, n := range parent {
+		for _, l := range n.ChildProjects {
 			if b, exists := storedFiles[l.BackgroundFileID]; exists {
 				bf, err := b.Open()
 				if err != nil {
@@ -163,7 +163,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 		}
 	}
 
-	err = migration.InsertFromStructure(namespaces, user)
+	err = migration.InsertFromStructure(parent, user)
 	if err != nil {
 		return fmt.Errorf("could not insert data: %w", err)
 	}

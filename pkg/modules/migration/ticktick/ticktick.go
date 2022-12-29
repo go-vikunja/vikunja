@@ -74,12 +74,12 @@ func (date *tickTickTime) UnmarshalCSV(csv string) (err error) {
 	return err
 }
 
-func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.NamespaceWithProjectsAndTasks) {
-	namespace := &models.NamespaceWithProjectsAndTasks{
-		Namespace: models.Namespace{
+func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWithTasksAndBuckets) {
+	parent := &models.ProjectWithTasksAndBuckets{
+		Project: models.Project{
 			Title: "Migrated from TickTick",
 		},
-		Projects: []*models.ProjectWithTasksAndBuckets{},
+		ChildProjects: []*models.ProjectWithTasksAndBuckets{},
 	}
 
 	projects := make(map[string]*models.ProjectWithTasksAndBuckets)
@@ -134,14 +134,14 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.Namespace
 	}
 
 	for _, l := range projects {
-		namespace.Projects = append(namespace.Projects, l)
+		parent.ChildProjects = append(parent.ChildProjects, l)
 	}
 
-	sort.Slice(namespace.Projects, func(i, j int) bool {
-		return namespace.Projects[i].Title < namespace.Projects[j].Title
+	sort.Slice(parent.ChildProjects, func(i, j int) bool {
+		return parent.ChildProjects[i].Title < parent.ChildProjects[j].Title
 	})
 
-	return []*models.NamespaceWithProjectsAndTasks{namespace}
+	return []*models.ProjectWithTasksAndBuckets{parent}
 }
 
 // Name is used to get the name of the ticktick migration - we're using the docs here to annotate the status route.

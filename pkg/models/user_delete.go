@@ -127,7 +127,7 @@ func getProjectsToDelete(s *xorm.Session, u *user.User) (projectsToDelete []*Pro
 	return
 }
 
-// DeleteUser completely removes a user and all their associated projects, namespaces and tasks.
+// DeleteUser completely removes a user and all their associated projects and tasks.
 // This action is irrevocable.
 // Public to allow deletion from the CLI.
 func DeleteUser(s *xorm.Session, u *user.User) (err error) {

@@ -85,6 +85,8 @@ type Project struct {
 
 type ProjectWithTasksAndBuckets struct {
 	Project
+	ChildProjects []*ProjectWithTasksAndBuckets `xorm:"-" json:"child_projects"`
+
 	// An array of tasks which belong to the project.
 	Tasks []*TaskWithComments `xorm:"-" json:"tasks"`
 	// Only used for migration.

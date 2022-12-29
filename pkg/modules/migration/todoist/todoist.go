@@ -246,10 +246,10 @@ func parseDate(dateString string) (date time.Time, err error) {
 	return date, err
 }
 
-func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVikunjaHierachie []*models.NamespaceWithProjectsAndTasks, err error) {
+func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVikunjaHierachie []*models.ProjectWithTasksAndBuckets, err error) {
 
-	newNamespace := &models.NamespaceWithProjectsAndTasks{
-		Namespace: models.Namespace{
+	parent := &models.ProjectWithTasksAndBuckets{
+		Project: models.Project{
 			Title: "Migrated from todoist",
 		},
 	}
@@ -276,7 +276,7 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 
 		lists[p.ID] = project
 
-		newNamespace.Projects = append(newNamespace.Projects, project)
+		parent.ChildProjects = append(parent.ChildProjects, project)
 	}
 
 	sort.Slice(sync.Sections, func(i, j int) bool {
@@ -472,9 +472,7 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 		)
 	}
 
-	return []*models.NamespaceWithProjectsAndTasks{
-		newNamespace,
-	}, err
+	return []*models.ProjectWithTasksAndBuckets{parent}, err
 }
 
 func getAccessTokenFromAuthToken(authToken string) (accessToken string, err error) {
