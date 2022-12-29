@@ -160,15 +160,7 @@ func (p *Project) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 
 // CanCreate checks if the user can create a project
 func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	// If the new project has a parent, check that
-	if p.ParentProjectID != 0 {
-		// TODO: check the parent's parent (and so on)
-		parent := &Project{ID: p.ParentProjectID}
-		return parent.CanCreate(s, a)
-	}
-
-	// Otherwise just allow
-	return true, nil
+	return p.CanWrite(s, a)
 }
 
 // IsAdmin returns whether the user has admin rights on the project or not
@@ -206,16 +198,6 @@ func (p *Project) isOwner(u *user.User) bool {
 
 // Checks n different rights for any given user
 func (p *Project) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bool, int, error) {
-
-	/*
-			The following loop creates a sql condition like this one:
-
-		    (ul.user_id = 1 AND ul.right = 1) OR (un.user_id = 1 AND un.right = 1) OR
-			(tm.user_id = 1 AND tn.right = 1) OR (tm2.user_id = 1 AND tl.right = 1) OR
-
-			for each passed right. That way, we can check with a single sql query (instead if 8)
-			if the user has the right to see the project or not.
-	*/
 
 	var conds []builder.Cond
 	for _, r := range rights {
@@ -260,6 +242,16 @@ func (p *Project) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bool
 			builder.Eq{"p.id": p.ID},
 		)).
 		Get(r)
+
+	// If there's noting shared for this project, and it has a parent, go up the tree
+	if !exists && p.ParentProjectID > 0 {
+		parent, err := GetProjectSimpleByID(s, p.ParentProjectID)
+		if err != nil {
+			return false, 0, err
+		}
+
+		return parent.checkRight(s, a, rights...)
+	}
 
 	// Figure out the max right and return it
 	if int(r.UserProject.Right) > maxRight {
