@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "# Pagination\nEvery endpoint capable of pagination will return two headers:\n* `x-pagination-total-pages`: The total number of available pages for this request\n* `x-pagination-result-count`: The number of items returned for this request.\n# Rights\nAll endpoints which return a single item (list, task, namespace, etc.) - no array - will also return a `x-max-right` header with the max right the user has on this item as an int where `0` is `Read Only`, `1` is `Read \u0026 Write` and `2` is `Admin`.\nThis can be used to show or hide ui elements based on the rights the user has.\n# Authorization\n**JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer \u003cjwt-token\u003e`-header to authenticate successfully.\n\n**BasicAuth:** Only used when requesting tasks via caldav.\n\u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e",
+        "description": "# Pagination\nEvery endpoint capable of pagination will return two headers:\n* `x-pagination-total-pages`: The total number of available pages for this request\n* `x-pagination-result-count`: The number of items returned for this request.\n# Rights\nAll endpoints which return a single item (project, task, namespace, etc.) - no array - will also return a `x-max-right` header with the max right the user has on this item as an int where `0` is `Read Only`, `1` is `Read \u0026 Write` and `2` is `Admin`.\nThis can be used to show or hide ui elements based on the rights the user has.\n# Authorization\n**JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer \u003cjwt-token\u003e`-header to authenticate successfully.\n\n**BasicAuth:** Only used when requesting tasks via caldav.\n\u003c!-- ReDoc-Inject: \u003csecurity-definitions\u003e --\u003e",
         "title": "Vikunja API",
         "contact": {
             "name": "General Vikunja contact",
@@ -79,7 +79,7 @@
                     "application/octet-stream"
                 ],
                 "tags": [
-                    "list"
+                    "project"
                 ],
                 "summary": "Get an unsplash image",
                 "parameters": [
@@ -125,7 +125,7 @@
                     "application/octet-stream"
                 ],
                 "tags": [
-                    "list"
+                    "project"
                 ],
                 "summary": "Get an unsplash thumbnail image",
                 "parameters": [
@@ -166,12 +166,12 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Search for a list background from unsplash",
+                "description": "Search for a project background from unsplash",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "list"
+                    "project"
                 ],
                 "summary": "Search for a background from unsplash",
                 "parameters": [
@@ -704,1833 +704,6 @@
                 }
             }
         },
-        "/lists": {
-            "get": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Returns all lists a user has access to.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "list"
-                ],
-                "summary": "Get all lists a user has access to",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
-                        "name": "per_page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Search lists by title.",
-                        "name": "s",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "If true, also returns all archived lists.",
-                        "name": "is_archived",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The lists",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.List"
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "The user does not have access to the list",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/lists/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Returns a list by its ID.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "list"
-                ],
-                "summary": "Gets one list",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The list",
-                        "schema": {
-                            "$ref": "#/definitions/models.List"
-                        }
-                    },
-                    "403": {
-                        "description": "The user does not have access to the list",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Inserts a task into a list.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "task"
-                ],
-                "summary": "Create a task",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "The task object",
-                        "name": "task",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Task"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "The created task object.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Task"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid task object provided.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "403": {
-                        "description": "The user does not have access to the list",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Updates a list. This does not include adding a task (see below).",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "list"
-                ],
-                "summary": "Updates a list",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "The list with updated values you want to update.",
-                        "name": "list",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.List"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The updated list.",
-                        "schema": {
-                            "$ref": "#/definitions/models.List"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid list object provided.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "403": {
-                        "description": "The user does not have access to the list",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Delets a list",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "list"
-                ],
-                "summary": "Deletes a list",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The list was successfully deleted.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid list object provided.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "403": {
-                        "description": "The user does not have access to the list",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/lists/{id}/background": {
-            "get": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Get the list background of a specific list. **Returns json on error.**",
-                "produces": [
-                    "application/octet-stream"
-                ],
-                "tags": [
-                    "list"
-                ],
-                "summary": "Get the list background",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The list background file.",
-                        "schema": {
-                            "type": ""
-                        }
-                    },
-                    "403": {
-                        "description": "No access to this list.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "404": {
-                        "description": "The list does not exist.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Removes a previously set list background, regardless of the list provider used to set the background. It does not throw an error if the list does not have a background.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "list"
-                ],
-                "summary": "Remove a list background",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The list",
-                        "schema": {
-                            "$ref": "#/definitions/models.List"
-                        }
-                    },
-                    "403": {
-                        "description": "No access to this list.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "404": {
-                        "description": "The list does not exist.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/lists/{id}/backgrounds/unsplash": {
-            "post": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Sets a photo from unsplash as list background.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "list"
-                ],
-                "summary": "Set an unsplash photo as list background",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "The image you want to set as background",
-                        "name": "list",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/background.Image"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The background has been successfully set.",
-                        "schema": {
-                            "$ref": "#/definitions/models.List"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid image object provided.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "403": {
-                        "description": "The user does not have access to the list",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/lists/{id}/backgrounds/upload": {
-            "put": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Upload a list background.",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "list"
-                ],
-                "summary": "Upload a list background",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "The file as single file.",
-                        "name": "background",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The background was set successfully.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "400": {
-                        "description": "File is no image.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "403": {
-                        "description": "File too large.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "404": {
-                        "description": "The list does not exist.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/lists/{id}/buckets": {
-            "get": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Returns all kanban buckets with belong to a list including their tasks.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "task"
-                ],
-                "summary": "Get all kanban buckets of a list",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List Id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "The page number for tasks. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "The maximum number of tasks per bucket per page. This parameter is limited by the configured maximum of items per page.",
-                        "name": "per_page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Search tasks by task text.",
-                        "name": "s",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.",
-                        "name": "filter_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The value to filter for.",
-                        "name": "filter_value",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in` expects comma-separated values in `filter_value`. Defaults to `equals`",
-                        "name": "filter_comparator",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`.",
-                        "name": "filter_concat",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`.",
-                        "name": "filter_include_nulls",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The buckets with their tasks",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Bucket"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Creates a new kanban bucket on a list.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "task"
-                ],
-                "summary": "Create a new bucket",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List Id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "The bucket object",
-                        "name": "bucket",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Bucket"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The created bucket object.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Bucket"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid bucket object provided.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "The list does not exist.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/lists/{id}/listusers": {
-            "get": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Lists all users (without emailadresses). Also possible to search for a specific user.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "list"
-                ],
-                "summary": "Get users",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Search for a user by its name.",
-                        "name": "s",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "All (found) users.",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/user.User"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Something's invalid.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "The user does not have the right to see the list.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/lists/{id}/teams": {
-            "get": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Returns a list with all teams which have access on a given list.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sharing"
-                ],
-                "summary": "Get teams on a list",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
-                        "name": "per_page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Search teams by its name.",
-                        "name": "s",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The teams with their right.",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.TeamWithRight"
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "No right to see the list.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Gives a team access to a list.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sharing"
-                ],
-                "summary": "Add a team to a list",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "The team you want to add to the list.",
-                        "name": "list",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.TeamList"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "The created team\u003c-\u003elist relation.",
-                        "schema": {
-                            "$ref": "#/definitions/models.TeamList"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid team list object provided.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "403": {
-                        "description": "The user does not have access to the list",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "The team does not exist.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/lists/{id}/users": {
-            "get": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Returns a list with all users which have access on a given list.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sharing"
-                ],
-                "summary": "Get users on a list",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
-                        "name": "per_page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Search users by its name.",
-                        "name": "s",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The users with the right they have.",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.UserWithRight"
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "No right to see the list.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Gives a user access to a list.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sharing"
-                ],
-                "summary": "Add a user to a list",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "The user you want to add to the list.",
-                        "name": "list",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.ListUser"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "The created user\u003c-\u003elist relation.",
-                        "schema": {
-                            "$ref": "#/definitions/models.ListUser"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid user list object provided.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "403": {
-                        "description": "The user does not have access to the list",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "The user does not exist.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/lists/{listID}/buckets/{bucketID}": {
-            "post": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Updates an existing kanban bucket.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "task"
-                ],
-                "summary": "Update an existing bucket",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List Id",
-                        "name": "listID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Bucket Id",
-                        "name": "bucketID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "The bucket object",
-                        "name": "bucket",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Bucket"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The created bucket object.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Bucket"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid bucket object provided.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "The bucket does not exist.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Deletes an existing kanban bucket and dissociates all of its task. It does not delete any tasks. You cannot delete the last bucket on a list.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "task"
-                ],
-                "summary": "Deletes an existing bucket",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List Id",
-                        "name": "listID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Bucket Id",
-                        "name": "bucketID",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successfully deleted.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "404": {
-                        "description": "The bucket does not exist.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/lists/{listID}/duplicate": {
-            "put": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Copies the list, tasks, files, kanban data, assignees, comments, attachments, lables, relations, backgrounds, user/team rights and link shares from one list to a new namespace. The user needs read access in the list and write access in the namespace of the new list.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "list"
-                ],
-                "summary": "Duplicate an existing list",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "The list ID to duplicate",
-                        "name": "listID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "The target namespace which should hold the copied list.",
-                        "name": "list",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.ListDuplicate"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "The created list.",
-                        "schema": {
-                            "$ref": "#/definitions/models.ListDuplicate"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid list duplicate object provided.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "403": {
-                        "description": "The user does not have access to the list or namespace",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/lists/{listID}/tasks": {
-            "get": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Returns all tasks for the current list.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "task"
-                ],
-                "summary": "Get tasks in a list",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "The list ID.",
-                        "name": "listID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
-                        "name": "per_page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Search tasks by task text.",
-                        "name": "s",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`.",
-                        "name": "sort_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`.",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.",
-                        "name": "filter_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The value to filter for. You can use [grafana](https://grafana.com/docs/grafana/latest/dashboards/time-range-controls)- or [elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#date-math)-style relative dates for all date fields like `due_date`, `start_date`, `end_date`, etc.",
-                        "name": "filter_value",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in` expects comma-separated values in `filter_value`. Defaults to `equals`",
-                        "name": "filter_comparator",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`.",
-                        "name": "filter_concat",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`.",
-                        "name": "filter_include_nulls",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The tasks",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Task"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/lists/{listID}/teams/{teamID}": {
-            "post": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Update a team \u003c-\u003e list relation. Mostly used to update the right that team has.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sharing"
-                ],
-                "summary": "Update a team \u003c-\u003e list relation",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "listID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Team ID",
-                        "name": "teamID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "The team you want to update.",
-                        "name": "list",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.TeamList"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The updated team \u003c-\u003e list relation.",
-                        "schema": {
-                            "$ref": "#/definitions/models.TeamList"
-                        }
-                    },
-                    "403": {
-                        "description": "The user does not have admin-access to the list",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Team or list does not exist.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Delets a team from a list. The team won't have access to the list anymore.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sharing"
-                ],
-                "summary": "Delete a team from a list",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "listID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Team ID",
-                        "name": "teamID",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The team was successfully deleted.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "403": {
-                        "description": "The user does not have access to the list",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Team or list does not exist.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/lists/{listID}/users/{userID}": {
-            "post": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Update a user \u003c-\u003e list relation. Mostly used to update the right that user has.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sharing"
-                ],
-                "summary": "Update a user \u003c-\u003e list relation",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "listID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "userID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "The user you want to update.",
-                        "name": "list",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.ListUser"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The updated user \u003c-\u003e list relation.",
-                        "schema": {
-                            "$ref": "#/definitions/models.ListUser"
-                        }
-                    },
-                    "403": {
-                        "description": "The user does not have admin-access to the list",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "User or list does not exist.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Delets a user from a list. The user won't have access to the list anymore.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sharing"
-                ],
-                "summary": "Delete a user from a list",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "listID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "userID",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The user was successfully removed from the list.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "403": {
-                        "description": "The user does not have access to the list",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "user or list does not exist.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/lists/{list}/shares": {
-            "get": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Returns all link shares which exist for a given list",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sharing"
-                ],
-                "summary": "Get all link shares for a list",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "list",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
-                        "name": "per_page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Search shares by hash.",
-                        "name": "s",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The share links",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.LinkSharing"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Share a list via link. The user needs to have write-access to the list to be able do this.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sharing"
-                ],
-                "summary": "Share a list via link",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "list",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "The new link share object",
-                        "name": "label",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.LinkSharing"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "The created link share object.",
-                        "schema": {
-                            "$ref": "#/definitions/models.LinkSharing"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid link share object provided.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "403": {
-                        "description": "Not allowed to add the list share.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "The list does not exist.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/lists/{list}/shares/{share}": {
-            "get": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Returns one link share by its ID.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sharing"
-                ],
-                "summary": "Get one link shares for a list",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "list",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Share ID",
-                        "name": "share",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The share links",
-                        "schema": {
-                            "$ref": "#/definitions/models.LinkSharing"
-                        }
-                    },
-                    "403": {
-                        "description": "No access to the list",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Share Link not found.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Remove a link share. The user needs to have write-access to the list to be able do this.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sharing"
-                ],
-                "summary": "Remove a link share",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "List ID",
-                        "name": "list",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Share Link ID",
-                        "name": "share",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The link was successfully removed.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "403": {
-                        "description": "Not allowed to remove the link.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Share Link not found.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
         "/login": {
             "post": {
                 "description": "Logs a user in. Returns a JWT-Token to authenticate further requests.",
@@ -2631,7 +804,7 @@
                 "tags": [
                     "migration"
                 ],
-                "summary": "Migrate all lists, tasks etc. from Microsoft Todo",
+                "summary": "Migrate all projects, tasks etc. from Microsoft Todo",
                 "parameters": [
                     {
                         "description": "The auth token previously obtained from the auth url. See the docs for /migration/microsoft-todo/auth.",
@@ -2707,7 +880,7 @@
                 "tags": [
                     "migration"
                 ],
-                "summary": "Import all lists, tasks etc. from a TickTick backup export",
+                "summary": "Import all projects, tasks etc. from a TickTick backup export",
                 "parameters": [
                     {
                         "type": "string",
@@ -2919,7 +1092,7 @@
                 "tags": [
                     "migration"
                 ],
-                "summary": "Migrate all lists, tasks etc. from trello",
+                "summary": "Migrate all projects, tasks etc. from trello",
                 "parameters": [
                     {
                         "description": "The auth token previously obtained from the auth url. See the docs for /migration/trello/auth.",
@@ -2995,7 +1168,7 @@
                 "tags": [
                     "migration"
                 ],
-                "summary": "Import all lists, tasks etc. from a Vikunja data export",
+                "summary": "Import all projects, tasks etc. from a Vikunja data export",
                 "parameters": [
                     {
                         "type": "string",
@@ -3161,7 +1334,7 @@
                     },
                     {
                         "type": "boolean",
-                        "description": "If true, also returns only namespaces without their lists.",
+                        "description": "If true, also returns only namespaces without their projects.",
                         "name": "namespaces_only",
                         "in": "query"
                     }
@@ -3172,7 +1345,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.NamespaceWithLists"
+                                "$ref": "#/definitions/models.NamespaceWithProjects"
                             }
                         }
                     },
@@ -3339,14 +1512,14 @@
                 }
             }
         },
-        "/namespaces/{id}/lists": {
+        "/namespaces/{id}/projects": {
             "get": {
                 "security": [
                     {
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns all lists inside of a namespace.",
+                "description": "Returns all projects inside of a namespace.",
                 "consumes": [
                     "application/json"
                 ],
@@ -3356,7 +1529,7 @@
                 "tags": [
                     "namespace"
                 ],
-                "summary": "Get all lists in a namespace",
+                "summary": "Get all projects in a namespace",
                 "parameters": [
                     {
                         "type": "integer",
@@ -3368,11 +1541,11 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "The lists.",
+                        "description": "The projects.",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.List"
+                                "$ref": "#/definitions/models.Project"
                             }
                         }
                     },
@@ -3673,14 +1846,14 @@
                 }
             }
         },
-        "/namespaces/{namespaceID}/lists": {
+        "/namespaces/{namespaceID}/projects": {
             "put": {
                 "security": [
                     {
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Creates a new list in a given namespace. The user needs write-access to the namespace.",
+                "description": "Creates a new project in a given namespace. The user needs write-access to the namespace.",
                 "consumes": [
                     "application/json"
                 ],
@@ -3688,9 +1861,9 @@
                     "application/json"
                 ],
                 "tags": [
-                    "list"
+                    "project"
                 ],
-                "summary": "Creates a new list",
+                "summary": "Creates a new project",
                 "parameters": [
                     {
                         "type": "integer",
@@ -3700,30 +1873,30 @@
                         "required": true
                     },
                     {
-                        "description": "The list you want to create.",
-                        "name": "list",
+                        "description": "The project you want to create.",
+                        "name": "project",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.List"
+                            "$ref": "#/definitions/models.Project"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "The created list.",
+                        "description": "The created project.",
                         "schema": {
-                            "$ref": "#/definitions/models.List"
+                            "$ref": "#/definitions/models.Project"
                         }
                     },
                     "400": {
-                        "description": "Invalid list object provided.",
+                        "description": "Invalid project object provided.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
-                        "description": "The user does not have access to the list",
+                        "description": "The user does not have access to the project",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -4105,6 +2278,1833 @@
                 }
             }
         },
+        "/projects": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns all projects a user has access to.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Get all projects a user has access to",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search projects by title.",
+                        "name": "s",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "If true, also returns all archived projects.",
+                        "name": "is_archived",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The projects",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Project"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the project",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns a project by its ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Gets one project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The project",
+                        "schema": {
+                            "$ref": "#/definitions/models.Project"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the project",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Inserts a task into a project.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Create a task",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The task object",
+                        "name": "task",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Task"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The created task object.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Task"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid task object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the project",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Updates a project. This does not include adding a task (see below).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Updates a project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The project with updated values you want to update.",
+                        "name": "project",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Project"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The updated project.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Project"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid project object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the project",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Delets a project",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Deletes a project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The project was successfully deleted.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid project object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the project",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{id}/background": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Get the project background of a specific project. **Returns json on error.**",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Get the project background",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The project background file.",
+                        "schema": {
+                            "type": ""
+                        }
+                    },
+                    "403": {
+                        "description": "No access to this project.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "404": {
+                        "description": "The project does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Removes a previously set project background, regardless of the project provider used to set the background. It does not throw an error if the project does not have a background.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Remove a project background",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The project",
+                        "schema": {
+                            "$ref": "#/definitions/models.Project"
+                        }
+                    },
+                    "403": {
+                        "description": "No access to this project.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "404": {
+                        "description": "The project does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{id}/backgrounds/unsplash": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Sets a photo from unsplash as project background.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Set an unsplash photo as project background",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The image you want to set as background",
+                        "name": "project",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/background.Image"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The background has been successfully set.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Project"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid image object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the project",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{id}/backgrounds/upload": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Upload a project background.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Upload a project background",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The file as single file.",
+                        "name": "background",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The background was set successfully.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "File is no image.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "403": {
+                        "description": "File too large.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "404": {
+                        "description": "The project does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{id}/buckets": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns all kanban buckets with belong to a project including their tasks.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Get all kanban buckets of a project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The page number for tasks. Used for pagination. If not provided, the first page of results is returned.",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of tasks per bucket per page. This parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search tasks by task text.",
+                        "name": "s",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.",
+                        "name": "filter_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The value to filter for.",
+                        "name": "filter_value",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in` expects comma-separated values in `filter_value`. Defaults to `equals`",
+                        "name": "filter_comparator",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`.",
+                        "name": "filter_concat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`.",
+                        "name": "filter_include_nulls",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The buckets with their tasks",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Bucket"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Creates a new kanban bucket on a project.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Create a new bucket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The bucket object",
+                        "name": "bucket",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Bucket"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created bucket object.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Bucket"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid bucket object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The project does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{id}/projectusers": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Lists all users (without emailadresses). Also possible to search for a specific user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Get users",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search for a user by its name.",
+                        "name": "s",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "All (found) users.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/user.User"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Something's invalid.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "The user does not have the right to see the project.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{id}/teams": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns a project with all teams which have access on a given project.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sharing"
+                ],
+                "summary": "Get teams on a project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search teams by its name.",
+                        "name": "s",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The teams with their right.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.TeamWithRight"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No right to see the project.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Gives a team access to a project.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sharing"
+                ],
+                "summary": "Add a team to a project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The team you want to add to the project.",
+                        "name": "project",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.TeamProject"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The created team\u003c-\u003eproject relation.",
+                        "schema": {
+                            "$ref": "#/definitions/models.TeamProject"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid team project object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the project",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The team does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{id}/users": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns a project with all users which have access on a given project.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sharing"
+                ],
+                "summary": "Get users on a project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search users by its name.",
+                        "name": "s",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The users with the right they have.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.UserWithRight"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No right to see the project.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Gives a user access to a project.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sharing"
+                ],
+                "summary": "Add a user to a project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The user you want to add to the project.",
+                        "name": "project",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ProjectUser"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The created user\u003c-\u003eproject relation.",
+                        "schema": {
+                            "$ref": "#/definitions/models.ProjectUser"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid user project object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the project",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The user does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{projectID}/buckets/{bucketID}": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Updates an existing kanban bucket.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Update an existing bucket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project Id",
+                        "name": "projectID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Bucket Id",
+                        "name": "bucketID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The bucket object",
+                        "name": "bucket",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Bucket"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created bucket object.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Bucket"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid bucket object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The bucket does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Deletes an existing kanban bucket and dissociates all of its task. It does not delete any tasks. You cannot delete the last bucket on a project.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Deletes an existing bucket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project Id",
+                        "name": "projectID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Bucket Id",
+                        "name": "bucketID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully deleted.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "404": {
+                        "description": "The bucket does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{projectID}/duplicate": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Copies the project, tasks, files, kanban data, assignees, comments, attachments, lables, relations, backgrounds, user/team rights and link shares from one project to a new namespace. The user needs read access in the project and write access in the namespace of the new project.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Duplicate an existing project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The project ID to duplicate",
+                        "name": "projectID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The target namespace which should hold the copied project.",
+                        "name": "project",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ProjectDuplicate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The created project.",
+                        "schema": {
+                            "$ref": "#/definitions/models.ProjectDuplicate"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid project duplicate object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the project or namespace",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{projectID}/tasks": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns all tasks for the current project.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Get tasks in a project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The project ID.",
+                        "name": "projectID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search tasks by task text.",
+                        "name": "s",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`.",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`.",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.",
+                        "name": "filter_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The value to filter for. You can use [grafana](https://grafana.com/docs/grafana/latest/dashboards/time-range-controls)- or [elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#date-math)-style relative dates for all date fields like `due_date`, `start_date`, `end_date`, etc.",
+                        "name": "filter_value",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in` expects comma-separated values in `filter_value`. Defaults to `equals`",
+                        "name": "filter_comparator",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`.",
+                        "name": "filter_concat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`.",
+                        "name": "filter_include_nulls",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The tasks",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Task"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{projectID}/teams/{teamID}": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Update a team \u003c-\u003e project relation. Mostly used to update the right that team has.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sharing"
+                ],
+                "summary": "Update a team \u003c-\u003e project relation",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "projectID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Team ID",
+                        "name": "teamID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The team you want to update.",
+                        "name": "project",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.TeamProject"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The updated team \u003c-\u003e project relation.",
+                        "schema": {
+                            "$ref": "#/definitions/models.TeamProject"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have admin-access to the project",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Team or project does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Delets a team from a project. The team won't have access to the project anymore.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sharing"
+                ],
+                "summary": "Delete a team from a project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "projectID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Team ID",
+                        "name": "teamID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The team was successfully deleted.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the project",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Team or project does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{projectID}/users/{userID}": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Update a user \u003c-\u003e project relation. Mostly used to update the right that user has.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sharing"
+                ],
+                "summary": "Update a user \u003c-\u003e project relation",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "projectID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "userID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The user you want to update.",
+                        "name": "project",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ProjectUser"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The updated user \u003c-\u003e project relation.",
+                        "schema": {
+                            "$ref": "#/definitions/models.ProjectUser"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have admin-access to the project",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "User or project does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Delets a user from a project. The user won't have access to the project anymore.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sharing"
+                ],
+                "summary": "Delete a user from a project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "projectID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "userID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The user was successfully removed from the project.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the project",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "user or project does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{project}/shares": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns all link shares which exist for a given project",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sharing"
+                ],
+                "summary": "Get all link shares for a project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "project",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search shares by hash.",
+                        "name": "s",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The share links",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.LinkSharing"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Share a project via link. The user needs to have write-access to the project to be able do this.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sharing"
+                ],
+                "summary": "Share a project via link",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "project",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The new link share object",
+                        "name": "label",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.LinkSharing"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The created link share object.",
+                        "schema": {
+                            "$ref": "#/definitions/models.LinkSharing"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid link share object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "Not allowed to add the project share.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The project does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{project}/shares/{share}": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns one link share by its ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sharing"
+                ],
+                "summary": "Get one link shares for a project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "project",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Share ID",
+                        "name": "share",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The share links",
+                        "schema": {
+                            "$ref": "#/definitions/models.LinkSharing"
+                        }
+                    },
+                    "403": {
+                        "description": "No access to the project",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Share Link not found.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Remove a link share. The user needs to have write-access to the project to be able do this.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sharing"
+                ],
+                "summary": "Remove a link share",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "project",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Share Link ID",
+                        "name": "share",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The link was successfully removed.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "403": {
+                        "description": "Not allowed to remove the link.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Share Link not found.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/register": {
             "post": {
                 "description": "Creates a new user account.",
@@ -4153,7 +4153,7 @@
         },
         "/shares/{share}/auth": {
             "post": {
-                "description": "Get a jwt auth token for a shared list from a share hash.",
+                "description": "Get a jwt auth token for a shared project from a share hash.",
                 "consumes": [
                     "application/json"
                 ],
@@ -4225,7 +4225,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "The entity the user subscribes to. Can be either `namespace`, `list` or `task`.",
+                        "description": "The entity the user subscribes to. Can be either `namespace`, `project` or `task`.",
                         "name": "entity",
                         "in": "path",
                         "required": true
@@ -4285,7 +4285,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "The entity the user subscribed to. Can be either `namespace`, `list` or `task`.",
+                        "description": "The entity the user subscribed to. Can be either `namespace`, `project` or `task`.",
                         "name": "entity",
                         "in": "path",
                         "required": true
@@ -4333,7 +4333,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns all tasks on any list the user has access to.",
+                "description": "Returns all tasks on any project the user has access to.",
                 "consumes": [
                     "application/json"
                 ],
@@ -4365,7 +4365,7 @@
                     },
                     {
                         "type": "string",
-                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`.",
+                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`.",
                         "name": "sort_by",
                         "in": "query"
                     },
@@ -4445,7 +4445,7 @@
                 "summary": "Update a bunch of tasks at once",
                 "parameters": [
                     {
-                        "description": "The task object. Looks like a normal task, the only difference is it uses an array of list_ids to update.",
+                        "description": "The task object. Looks like a normal task, the only difference is it uses an array of project_ids to update.",
                         "name": "task",
                         "in": "body",
                         "required": true,
@@ -4468,7 +4468,7 @@
                         }
                     },
                     "403": {
-                        "description": "The user does not have access to the task (aka its list)",
+                        "description": "The user does not have access to the task (aka its project)",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -4581,7 +4581,7 @@
                         }
                     },
                     "403": {
-                        "description": "The user does not have access to the task (aka its list)",
+                        "description": "The user does not have access to the task (aka its project)",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -4600,7 +4600,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Deletes a task from a list. This does not mean \"mark it done\".",
+                "description": "Deletes a task from a project. This does not mean \"mark it done\".",
                 "produces": [
                     "application/json"
                 ],
@@ -4631,7 +4631,7 @@
                         }
                     },
                     "403": {
-                        "description": "The user does not have access to the list",
+                        "description": "The user does not have access to the project",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -4963,7 +4963,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Adds a new assignee to a task. The assignee needs to have access to the list, the doer must be able to edit this task.",
+                "description": "Adds a new assignee to a task. The assignee needs to have access to the project, the doer must be able to edit this task.",
                 "consumes": [
                     "application/json"
                 ],
@@ -5021,7 +5021,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Adds multiple new assignees to a task. The assignee needs to have access to the list, the doer must be able to edit this task. Every user not in the list will be unassigned from the task, pass an empty array to unassign everyone.",
+                "description": "Adds multiple new assignees to a task. The assignee needs to have access to the project, the doer must be able to edit this task. Every user not in the project will be unassigned from the task, pass an empty array to unassign everyone.",
                 "consumes": [
                     "application/json"
                 ],
@@ -5477,7 +5477,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Creates a new relation between two tasks. The user needs to have update rights on the base task and at least read rights on the other task. Both tasks do not need to be on the same list. Take a look at the docs for available task relation kinds.",
+                "description": "Creates a new relation between two tasks. The user needs to have update rights on the base task and at least read rights on the other task. Both tasks do not need to be on the same project. Take a look at the docs for available task relation kinds.",
                 "consumes": [
                     "application/json"
                 ],
@@ -5674,7 +5674,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Add a label to a task. The user needs to have write-access to the list to be able do this.",
+                "description": "Add a label to a task. The user needs to have write-access to the project to be able do this.",
                 "consumes": [
                     "application/json"
                 ],
@@ -5744,7 +5744,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Remove a label from a task. The user needs to have write-access to the list to be able do this.",
+                "description": "Remove a label from a task. The user needs to have write-access to the project to be able do this.",
                 "consumes": [
                     "application/json"
                 ],
@@ -7365,7 +7365,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Because available time zones depend on the system Vikunja is running on, this endpoint returns a list of all valid time zones this particular Vikunja instance can handle. The list of time zones is not sorted, you should sort it on the client.",
+                "description": "Because available time zones depend on the system Vikunja is running on, this endpoint returns a project of all valid time zones this particular Vikunja instance can handle. The project of time zones is not sorted, you should sort it on the client.",
                 "consumes": [
                     "application/json"
                 ],
@@ -7630,13 +7630,13 @@
                     "type": "integer",
                     "minimum": 0
                 },
-                "list_id": {
-                    "description": "The list this bucket belongs to.",
-                    "type": "integer"
-                },
                 "position": {
                     "description": "The position this bucket has when querying all buckets. See the tasks.position property on how to use this.",
                     "type": "number"
+                },
+                "project_id": {
+                    "description": "The project this bucket belongs to.",
+                    "type": "integer"
                 },
                 "tasks": {
                     "description": "All tasks which belong to this bucket.",
@@ -7660,7 +7660,7 @@
             "type": "object",
             "properties": {
                 "assignees": {
-                    "description": "A list with all assignees",
+                    "description": "A project with all assignees",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/user.User"
@@ -7735,15 +7735,15 @@
                     "type": "integer"
                 },
                 "identifier": {
-                    "description": "The task identifier, based on the list identifier and the task's index",
+                    "description": "The task identifier, based on the project identifier and the task's index",
                     "type": "string"
                 },
                 "index": {
-                    "description": "The task index, calculated per list",
+                    "description": "The task index, calculated per project",
                     "type": "integer"
                 },
                 "is_favorite": {
-                    "description": "True if a task is a favorite task. Favorite tasks show up in a separate \"Important\" list. This value depends on the user making the call to the api.",
+                    "description": "True if a task is a favorite task. Favorite tasks show up in a separate \"Important\" project. This value depends on the user making the call to the api.",
                     "type": "boolean"
                 },
                 "kanban_position": {
@@ -7757,20 +7757,20 @@
                         "$ref": "#/definitions/models.Label"
                     }
                 },
-                "list_id": {
-                    "description": "The list this task belongs to.",
-                    "type": "integer"
-                },
                 "percent_done": {
                     "description": "Determines how far a task is left from being done",
                     "type": "number"
                 },
                 "position": {
-                    "description": "The position of the task - any task list can be sorted as usual by this parameter.\nWhen accessing tasks via kanban buckets, this is primarily used to sort them based on a range\nWe're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).\nYou would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.\nA 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task\nwhich also leaves a lot of room for rearranging and sorting later.",
+                    "description": "The position of the task - any task project can be sorted as usual by this parameter.\nWhen accessing tasks via kanban buckets, this is primarily used to sort them based on a range\nWe're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).\nYou would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.\nA 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task\nwhich also leaves a lot of room for rearranging and sorting later.",
                     "type": "number"
                 },
                 "priority": {
                     "description": "The task priority. Can be anything you want, it is possible to sort by this later.",
+                    "type": "integer"
+                },
+                "project_id": {
+                    "description": "The project this task belongs to.",
                     "type": "integer"
                 },
                 "related_tasks": {
@@ -7813,14 +7813,14 @@
                     ]
                 },
                 "task_ids": {
-                    "description": "A list of task ids to update",
+                    "description": "A project of task ids to update",
                     "type": "array",
                     "items": {
                         "type": "integer"
                     }
                 },
                 "title": {
-                    "description": "The task text. This is what you'll see in the list.",
+                    "description": "The task text. This is what you'll see in the project.",
                     "type": "string",
                     "minLength": 1
                 },
@@ -7927,11 +7927,11 @@
             "type": "object",
             "properties": {
                 "created": {
-                    "description": "A timestamp when this list was shared. You cannot change this value.",
+                    "description": "A timestamp when this project was shared. You cannot change this value.",
                     "type": "string"
                 },
                 "hash": {
-                    "description": "The public id to get this shared list",
+                    "description": "The public id to get this shared project",
                     "type": "string"
                 },
                 "id": {
@@ -7947,7 +7947,7 @@
                     "type": "string"
                 },
                 "right": {
-                    "description": "The right this list is shared with. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                    "description": "The right this project is shared with. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
                     "default": 0,
                     "maximum": 2,
                     "allOf": [
@@ -7957,7 +7957,7 @@
                     ]
                 },
                 "shared_by": {
-                    "description": "The user who shared this list",
+                    "description": "The user who shared this project",
                     "allOf": [
                         {
                             "$ref": "#/definitions/user.User"
@@ -7976,130 +7976,6 @@
                 },
                 "updated": {
                     "description": "A timestamp when this share was last updated. You cannot change this value.",
-                    "type": "string"
-                }
-            }
-        },
-        "models.List": {
-            "type": "object",
-            "properties": {
-                "background_blur_hash": {
-                    "description": "Contains a very small version of the list background to use as a blurry preview until the actual background is loaded. Check out https://blurha.sh/ to learn how it works.",
-                    "type": "string"
-                },
-                "background_information": {
-                    "description": "Holds extra information about the background set since some background providers require attribution or similar. If not null, the background can be accessed at /lists/{listID}/background"
-                },
-                "created": {
-                    "description": "A timestamp when this list was created. You cannot change this value.",
-                    "type": "string"
-                },
-                "description": {
-                    "description": "The description of the list.",
-                    "type": "string"
-                },
-                "hex_color": {
-                    "description": "The hex color of this list",
-                    "type": "string",
-                    "maxLength": 6
-                },
-                "id": {
-                    "description": "The unique, numeric id of this list.",
-                    "type": "integer"
-                },
-                "identifier": {
-                    "description": "The unique list short identifier. Used to build task identifiers.",
-                    "type": "string",
-                    "maxLength": 10,
-                    "minLength": 0
-                },
-                "is_archived": {
-                    "description": "Whether or not a list is archived.",
-                    "type": "boolean"
-                },
-                "is_favorite": {
-                    "description": "True if a list is a favorite. Favorite lists show up in a separate namespace. This value depends on the user making the call to the api.",
-                    "type": "boolean"
-                },
-                "namespace_id": {
-                    "type": "integer"
-                },
-                "owner": {
-                    "description": "The user who created this list.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/user.User"
-                        }
-                    ]
-                },
-                "position": {
-                    "description": "The position this list has when querying all lists. See the tasks.position property on how to use this.",
-                    "type": "number"
-                },
-                "subscription": {
-                    "description": "The subscription status for the user reading this list. You can only read this property, use the subscription endpoints to modify it.\nWill only returned when retreiving one list.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.Subscription"
-                        }
-                    ]
-                },
-                "title": {
-                    "description": "The title of the list. You'll see this in the namespace overview.",
-                    "type": "string",
-                    "maxLength": 250,
-                    "minLength": 1
-                },
-                "updated": {
-                    "description": "A timestamp when this list was last updated. You cannot change this value.",
-                    "type": "string"
-                }
-            }
-        },
-        "models.ListDuplicate": {
-            "type": "object",
-            "properties": {
-                "list": {
-                    "description": "The copied list",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.List"
-                        }
-                    ]
-                },
-                "namespace_id": {
-                    "description": "The target namespace ID",
-                    "type": "integer"
-                }
-            }
-        },
-        "models.ListUser": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "description": "A timestamp when this relation was created. You cannot change this value.",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "The unique, numeric id of this list \u003c-\u003e user relation.",
-                    "type": "integer"
-                },
-                "right": {
-                    "description": "The right this user has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
-                    "default": 0,
-                    "maximum": 2,
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.Right"
-                        }
-                    ]
-                },
-                "updated": {
-                    "description": "A timestamp when this relation was last updated. You cannot change this value.",
-                    "type": "string"
-                },
-                "user_id": {
-                    "description": "The username.",
                     "type": "string"
                 }
             }
@@ -8196,7 +8072,7 @@
                 }
             }
         },
-        "models.NamespaceWithLists": {
+        "models.NamespaceWithProjects": {
             "type": "object",
             "properties": {
                 "created": {
@@ -8220,12 +8096,6 @@
                     "description": "Whether or not a namespace is archived.",
                     "type": "boolean"
                 },
-                "lists": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.List"
-                    }
-                },
                 "owner": {
                     "description": "The user who owns this namespace",
                     "allOf": [
@@ -8233,6 +8103,12 @@
                             "$ref": "#/definitions/user.User"
                         }
                     ]
+                },
+                "projects": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Project"
+                    }
                 },
                 "subscription": {
                     "description": "The subscription status for the user reading this namespace. You can only read this property, use the subscription endpoints to modify it.\nWill only returned when retreiving one namespace.",
@@ -8250,6 +8126,130 @@
                 },
                 "updated": {
                     "description": "A timestamp when this namespace was last updated. You cannot change this value.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.Project": {
+            "type": "object",
+            "properties": {
+                "background_blur_hash": {
+                    "description": "Contains a very small version of the project background to use as a blurry preview until the actual background is loaded. Check out https://blurha.sh/ to learn how it works.",
+                    "type": "string"
+                },
+                "background_information": {
+                    "description": "Holds extra information about the background set since some background providers require attribution or similar. If not null, the background can be accessed at /projects/{projectID}/background"
+                },
+                "created": {
+                    "description": "A timestamp when this project was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "The description of the project.",
+                    "type": "string"
+                },
+                "hex_color": {
+                    "description": "The hex color of this project",
+                    "type": "string",
+                    "maxLength": 6
+                },
+                "id": {
+                    "description": "The unique, numeric id of this project.",
+                    "type": "integer"
+                },
+                "identifier": {
+                    "description": "The unique project short identifier. Used to build task identifiers.",
+                    "type": "string",
+                    "maxLength": 10,
+                    "minLength": 0
+                },
+                "is_archived": {
+                    "description": "Whether or not a project is archived.",
+                    "type": "boolean"
+                },
+                "is_favorite": {
+                    "description": "True if a project is a favorite. Favorite projects show up in a separate namespace. This value depends on the user making the call to the api.",
+                    "type": "boolean"
+                },
+                "namespace_id": {
+                    "type": "integer"
+                },
+                "owner": {
+                    "description": "The user who created this project.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/user.User"
+                        }
+                    ]
+                },
+                "position": {
+                    "description": "The position this project has when querying all projects. See the tasks.position property on how to use this.",
+                    "type": "number"
+                },
+                "subscription": {
+                    "description": "The subscription status for the user reading this project. You can only read this property, use the subscription endpoints to modify it.\nWill only returned when retreiving one project.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.Subscription"
+                        }
+                    ]
+                },
+                "title": {
+                    "description": "The title of the project. You'll see this in the namespace overview.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 1
+                },
+                "updated": {
+                    "description": "A timestamp when this project was last updated. You cannot change this value.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.ProjectDuplicate": {
+            "type": "object",
+            "properties": {
+                "namespace_id": {
+                    "description": "The target namespace ID",
+                    "type": "integer"
+                },
+                "project": {
+                    "description": "The copied project",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.Project"
+                        }
+                    ]
+                }
+            }
+        },
+        "models.ProjectUser": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this relation was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The unique, numeric id of this project \u003c-\u003e user relation.",
+                    "type": "integer"
+                },
+                "right": {
+                    "description": "The right this user has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                    "default": 0,
+                    "maximum": 2,
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.Right"
+                        }
+                    ]
+                },
+                "updated": {
+                    "description": "A timestamp when this relation was last updated. You cannot change this value.",
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "The username.",
                     "type": "string"
                 }
             }
@@ -8331,7 +8331,7 @@
                     "type": "integer"
                 },
                 "is_favorite": {
-                    "description": "True if the filter is a favorite. Favorite filters show up in a separate namespace together with favorite lists.",
+                    "description": "True if the filter is a favorite. Favorite filters show up in a separate namespace together with favorite projects.",
                     "type": "boolean"
                 },
                 "owner": {
@@ -8462,15 +8462,15 @@
                     "type": "integer"
                 },
                 "identifier": {
-                    "description": "The task identifier, based on the list identifier and the task's index",
+                    "description": "The task identifier, based on the project identifier and the task's index",
                     "type": "string"
                 },
                 "index": {
-                    "description": "The task index, calculated per list",
+                    "description": "The task index, calculated per project",
                     "type": "integer"
                 },
                 "is_favorite": {
-                    "description": "True if a task is a favorite task. Favorite tasks show up in a separate \"Important\" list. This value depends on the user making the call to the api.",
+                    "description": "True if a task is a favorite task. Favorite tasks show up in a separate \"Important\" project. This value depends on the user making the call to the api.",
                     "type": "boolean"
                 },
                 "kanban_position": {
@@ -8484,20 +8484,20 @@
                         "$ref": "#/definitions/models.Label"
                     }
                 },
-                "list_id": {
-                    "description": "The list this task belongs to.",
-                    "type": "integer"
-                },
                 "percent_done": {
                     "description": "Determines how far a task is left from being done",
                     "type": "number"
                 },
                 "position": {
-                    "description": "The position of the task - any task list can be sorted as usual by this parameter.\nWhen accessing tasks via kanban buckets, this is primarily used to sort them based on a range\nWe're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).\nYou would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.\nA 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task\nwhich also leaves a lot of room for rearranging and sorting later.",
+                    "description": "The position of the task - any task project can be sorted as usual by this parameter.\nWhen accessing tasks via kanban buckets, this is primarily used to sort them based on a range\nWe're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).\nYou would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.\nA 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task\nwhich also leaves a lot of room for rearranging and sorting later.",
                     "type": "number"
                 },
                 "priority": {
                     "description": "The task priority. Can be anything you want, it is possible to sort by this later.",
+                    "type": "integer"
+                },
+                "project_id": {
+                    "description": "The project this task belongs to.",
                     "type": "integer"
                 },
                 "related_tasks": {
@@ -8540,7 +8540,7 @@
                     ]
                 },
                 "title": {
-                    "description": "The task text. This is what you'll see in the list.",
+                    "description": "The task text. This is what you'll see in the project.",
                     "type": "string",
                     "minLength": 1
                 },
@@ -8737,37 +8737,6 @@
                 }
             }
         },
-        "models.TeamList": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "description": "A timestamp when this relation was created. You cannot change this value.",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "The unique, numeric id of this list \u003c-\u003e team relation.",
-                    "type": "integer"
-                },
-                "right": {
-                    "description": "The right this team has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
-                    "default": 0,
-                    "maximum": 2,
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.Right"
-                        }
-                    ]
-                },
-                "team_id": {
-                    "description": "The team id.",
-                    "type": "integer"
-                },
-                "updated": {
-                    "description": "A timestamp when this relation was last updated. You cannot change this value.",
-                    "type": "string"
-                }
-            }
-        },
         "models.TeamMember": {
             "type": "object",
             "properties": {
@@ -8798,6 +8767,37 @@
                 },
                 "id": {
                     "description": "The unique, numeric id of this namespace \u003c-\u003e team relation.",
+                    "type": "integer"
+                },
+                "right": {
+                    "description": "The right this team has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                    "default": 0,
+                    "maximum": 2,
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.Right"
+                        }
+                    ]
+                },
+                "team_id": {
+                    "description": "The team id.",
+                    "type": "integer"
+                },
+                "updated": {
+                    "description": "A timestamp when this relation was last updated. You cannot change this value.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.TeamProject": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this relation was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The unique, numeric id of this project \u003c-\u003e team relation.",
                     "type": "integer"
                 },
                 "right": {
@@ -9215,8 +9215,8 @@
         "v1.UserSettings": {
             "type": "object",
             "properties": {
-                "default_list_id": {
-                    "description": "If a task is created without a specified list this value should be used. Applies\nto tasks made directly in API and from clients.",
+                "default_project_id": {
+                    "description": "If a task is created without a specified project this value should be used. Applies\nto tasks made directly in API and from clients.",
                     "type": "integer"
                 },
                 "discoverable_by_email": {
