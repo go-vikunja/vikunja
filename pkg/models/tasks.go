@@ -333,7 +333,7 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 	reminderFilters := []builder.Cond{}
 	assigneeFilters := []builder.Cond{}
 	labelFilters := []builder.Cond{}
-	namespaceFilters := []builder.Cond{}
+	projectFilters := []builder.Cond{}
 
 	var filters = make([]builder.Cond, 0, len(opts.filters))
 	// To still find tasks with nil values, we exclude 0s when comparing with >/< values.
@@ -371,13 +371,13 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 			continue
 		}
 
-		if f.field == "namespace" || f.field == "namespace_id" {
-			f.field = "namespace_id"
+		if f.field == "parent_project" || f.field == "parent_project_id" {
+			f.field = "parent_project_id"
 			filter, err := getFilterCond(f, opts.filterIncludeNulls)
 			if err != nil {
 				return nil, 0, 0, err
 			}
-			namespaceFilters = append(namespaceFilters, filter)
+			projectFilters = append(projectFilters, filter)
 			continue
 		}
 
@@ -456,13 +456,13 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 		filters = append(filters, getFilterCondForSeparateTable("label_tasks", opts.filterConcat, labelFilters))
 	}
 
-	if len(namespaceFilters) > 0 {
+	if len(projectFilters) > 0 {
 		var filtercond builder.Cond
 		if opts.filterConcat == filterConcatOr {
-			filtercond = builder.Or(namespaceFilters...)
+			filtercond = builder.Or(projectFilters...)
 		}
 		if opts.filterConcat == filterConcatAnd {
-			filtercond = builder.And(namespaceFilters...)
+			filtercond = builder.And(projectFilters...)
 		}
 
 		cond := builder.In(
