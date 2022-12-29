@@ -168,8 +168,7 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 		if err != nil {
 			return nil, 0, 0, err
 		}
-		projects := map[int64]*Project{}
-		projects[project.ID] = project
+		projects := []*Project{project}
 		err = addProjectDetails(s, projects, a)
 		return projects, 0, 0, err
 	}
@@ -179,7 +178,7 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 		return nil, 0, 0, err
 	}
 
-	allProjects, resultCount, totalItems, err := getRawProjectsForUser(
+	prs, resultCount, totalItems, err := getRawProjectsForUser(
 		s,
 		&projectOptions{
 			search:      search,
@@ -190,6 +189,12 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 		})
 	if err != nil {
 		return nil, 0, 0, err
+	}
+
+	// FIXME: I wonder if we could get rid of this extra loop?
+	allProjects := make(map[int64]*Project, len(prs))
+	for _, p := range prs {
+		allProjects[p.ID] = p
 	}
 
 	/////////////////
@@ -206,7 +211,7 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 
 	/////////////////
 	// Add project details (favorite state, among other things)
-	err = addProjectDetails(s, allProjects, a)
+	err = addProjectDetails(s, prs, a)
 	if err != nil {
 		return
 	}
@@ -214,7 +219,6 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 	//////////////////////////
 	// Putting it all together
 
-	var projects []*Project
 	for _, p := range allProjects {
 		if p.ParentProjectID != 0 {
 			if allProjects[p.ParentProjectID].ChildProjects == nil {
@@ -226,10 +230,9 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 
 		// The projects variable will contain all projects which have no parents
 		// And because we're using the same pointers for everything, those will contain child projects
-		projects = append(projects, p)
 	}
 
-	return projects, resultCount, totalItems, err
+	return prs, resultCount, totalItems, err
 }
 
 // ReadOne gets one project by its ID
@@ -465,7 +468,7 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, parentProjectIDs []int
 }
 
 // Gets the projects with their children without any tasks
-func getRawProjectsForUser(s *xorm.Session, opts *projectOptions) (projects map[int64]*Project, resultCount int, totalItems int64, err error) {
+func getRawProjectsForUser(s *xorm.Session, opts *projectOptions) (projects []*Project, resultCount int, totalItems int64, err error) {
 	fullUser, err := user.GetUserByID(s, opts.user.ID)
 	if err != nil {
 		return nil, 0, 0, err
@@ -481,12 +484,7 @@ func getRawProjectsForUser(s *xorm.Session, opts *projectOptions) (projects map[
 		return nil, 0, totalItems, nil
 	}
 
-	projects = make(map[int64]*Project, len(allProjects))
-	for _, p := range allProjects {
-		projects[p.ID] = p
-	}
-
-	return projects, len(allProjects), totalItems, err
+	return allProjects, len(allProjects), totalItems, err
 }
 
 func getSavedFilterProjects(s *xorm.Session, doer *user.User) (savedFiltersProject *Project, err error) {
@@ -501,6 +499,7 @@ func getSavedFilterProjects(s *xorm.Session, doer *user.User) (savedFiltersProje
 
 	savedFiltersPseudoParentProject := SavedFiltersPseudoProject
 	savedFiltersPseudoParentProject.OwnerID = doer.ID
+	savedFiltersProject = &Project{}
 	*savedFiltersProject = *savedFiltersPseudoParentProject
 	savedFiltersProject.ChildProjects = make([]*Project, 0, len(savedFilters))
 
@@ -515,7 +514,7 @@ func getSavedFilterProjects(s *xorm.Session, doer *user.User) (savedFiltersProje
 }
 
 // addProjectDetails adds owner user objects and project tasks to all projects in the slice
-func addProjectDetails(s *xorm.Session, projects map[int64]*Project, a web.Auth) (err error) {
+func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err error) {
 	if len(projects) == 0 {
 		return
 	}
