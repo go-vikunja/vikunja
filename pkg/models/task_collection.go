@@ -24,8 +24,7 @@ import (
 
 // TaskCollection is a struct used to hold filter details and not clutter the Task struct with information not related to actual tasks.
 type TaskCollection struct {
-	ProjectID int64      `param:"project" json:"-"`
-	Projects  []*Project `json:"-"`
+	ProjectID int64 `param:"project" json:"-"`
 
 	// The query parameter to sort by. This is for ex. done, priority, etc.
 	SortBy    []string `query:"sort_by" json:"sort_by"`
@@ -181,8 +180,9 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 
 	// If the project ID is not set, we get all tasks for the user.
 	// This allows to use this function in Task.ReadAll with a possibility to deprecate the latter at some point.
+	var projects []*Project
 	if tf.ProjectID == 0 {
-		tf.Projects, _, _, err = getRawProjectsForUser(
+		projectMap, _, _, err := getRawProjectsForUser(
 			s,
 			&projectOptions{
 				user: &user.User{ID: a.GetID()},
@@ -191,6 +191,9 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		)
 		if err != nil {
 			return nil, 0, 0, err
+		}
+		for _, project := range projectMap {
+			projects = append(projects, project)
 		}
 	} else {
 		// Check the project exists and the user has acess on it
@@ -202,8 +205,8 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		if !canRead {
 			return nil, 0, 0, ErrUserDoesNotHaveAccessToProject{ProjectID: tf.ProjectID}
 		}
-		tf.Projects = []*Project{{ID: tf.ProjectID}}
+		projects = []*Project{{ID: tf.ProjectID}}
 	}
 
-	return getTasksForProjects(s, tf.Projects, a, taskopts)
+	return getTasksForProjects(s, projects, a, taskopts)
 }

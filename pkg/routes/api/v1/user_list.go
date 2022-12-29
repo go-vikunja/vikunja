@@ -47,7 +47,7 @@ func UserProject(c echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	users, err := user.ProjectUsers(s, search, nil)
+	users, err := user.ListUsers(s, search, nil)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
