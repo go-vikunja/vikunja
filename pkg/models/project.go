@@ -592,8 +592,7 @@ func addProjectDetails(s *xorm.Session, projects map[int64]*Project, a web.Auth)
 
 // CheckIsArchived returns an ErrProjectIsArchived if the project or any of its parent projects is archived.
 func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
-	// When creating a new project, we check if the parent is archived
-	if p.ID == 0 {
+	if p.ParentProjectID > 0 {
 		p := &Project{ID: p.ParentProjectID}
 		return p.CheckIsArchived(s)
 	}
@@ -602,8 +601,6 @@ func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
 	if err != nil {
 		return err
 	}
-
-	// TODO: parent project
 
 	if project.IsArchived {
 		return ErrProjectIsArchived{ProjectID: p.ID}
@@ -655,7 +652,6 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth) (err error)
 
 	project.OwnerID = doer.ID
 	project.Owner = doer
-	project.ID = 0 // Otherwise only the first time a new project would be created
 
 	err = checkProjectBeforeUpdateOrDelete(s, project)
 	if err != nil {
