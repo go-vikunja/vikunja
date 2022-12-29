@@ -226,7 +226,7 @@ func (p *Project) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bool
 	r := &allProjectRights{}
 	var maxRight = 0
 	exists, err := s.
-		Select("p.*, ul.right tl.right").
+		Select("p.*, ul.right, tl.right").
 		Table("projects").
 		Alias("p").
 		// User stuff
