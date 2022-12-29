@@ -216,8 +216,6 @@ func (p *Project) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bool
 		))
 	}
 
-	// TODO: parents
-
 	type allProjectRights struct {
 		UserProject *ProjectUser `xorm:"extends"`
 		TeamProject *TeamProject `xorm:"extends"`

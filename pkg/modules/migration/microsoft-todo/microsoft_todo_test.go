@@ -102,12 +102,12 @@ func TestConverting(t *testing.T) {
 		},
 	}
 
-	expectedHierachie := []*models.NamespaceWithProjectsAndTasks{
+	expectedHierachie := []*models.ProjectWithTasksAndBuckets{
 		{
-			Namespace: models.Namespace{
+			Project: models.Project{
 				Title: "Migrated from Microsoft Todo",
 			},
-			Projects: []*models.ProjectWithTasksAndBuckets{
+			ChildProjects: []*models.ProjectWithTasksAndBuckets{
 				{
 					Project: models.Project{
 						Title: "Project 1",

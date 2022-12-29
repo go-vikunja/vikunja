@@ -1079,33 +1079,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "filter namespace",
-			fields: fields{
-				FilterBy:         []string{"namespace"},
-				FilterValue:      []string{"7"},
-				FilterComparator: []string{"equals"},
-			},
-			args: defaultArgs,
-			want: []*Task{
-				task21,
-			},
-			wantErr: false,
-		},
-		{
-			name: "filter namespace in",
-			fields: fields{
-				FilterBy:         []string{"namespace"},
-				FilterValue:      []string{"7,8"},
-				FilterComparator: []string{"in"},
-			},
-			args: defaultArgs,
-			want: []*Task{
-				task21,
-				task22,
-			},
-			wantErr: false,
-		},
+		// TODO filter parent project?
 		{
 			name: "filter by index",
 			fields: fields{

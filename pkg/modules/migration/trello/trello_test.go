@@ -44,7 +44,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 			Name:   "TestBoard",
 			Desc:   "This is a description",
 			Closed: false,
-			Projects: []*trello.Project{
+			Lists: []*trello.List{
 				{
 					Name: "Test Project 1",
 					Cards: []*trello.Card{
@@ -77,7 +77,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 						{
 							Name: "Test Card 2",
 							Pos:  124,
-							Checkprojects: []*trello.Checkproject{
+							Checklists: []*trello.Checklist{
 								{
 									Name: "Checkproject 1",
 									CheckItems: []trello.CheckItem{
@@ -157,7 +157,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 		{
 			Name:   "TestBoard 2",
 			Closed: false,
-			Projects: []*trello.Project{
+			Lists: []*trello.List{
 				{
 					Name: "Test Project 4",
 					Cards: []*trello.Card{
@@ -172,7 +172,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 		{
 			Name:   "TestBoard Archived",
 			Closed: true,
-			Projects: []*trello.Project{
+			Lists: []*trello.List{
 				{
 					Name: "Test Project 5",
 					Cards: []*trello.Card{
@@ -187,12 +187,12 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 	}
 	trelloData[0].Prefs.BackgroundImage = "https://vikunja.io/testimage.jpg" // Using an image which we are hosting, so it'll still be up
 
-	expectedHierachie := []*models.NamespaceWithProjectsAndTasks{
+	expectedHierachie := []*models.ProjectWithTasksAndBuckets{
 		{
-			Namespace: models.Namespace{
+			Project: models.Project{
 				Title: "Imported from Trello",
 			},
-			Projects: []*models.ProjectWithTasksAndBuckets{
+			ChildProjects: []*models.ProjectWithTasksAndBuckets{
 				{
 					Project: models.Project{
 						Title:                 "TestBoard",

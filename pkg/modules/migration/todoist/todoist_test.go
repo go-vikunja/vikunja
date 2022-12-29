@@ -363,12 +363,12 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 		},
 	}
 
-	expectedHierachie := []*models.NamespaceWithProjectsAndTasks{
+	expectedHierachie := []*models.ProjectWithTasksAndBuckets{
 		{
-			Namespace: models.Namespace{
+			Project: models.Project{
 				Title: "Migrated from todoist",
 			},
-			Projects: []*models.ProjectWithTasksAndBuckets{
+			ChildProjects: []*models.ProjectWithTasksAndBuckets{
 				{
 					Project: models.Project{
 						Title:       "Project1",

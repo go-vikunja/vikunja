@@ -110,7 +110,7 @@ func TestTeam_ReadAll(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
 		ts := reflect.ValueOf(teams)
-		assert.Equal(t, 8, ts.Len())
+		assert.Equal(t, 5, ts.Len())
 	})
 	t.Run("search", func(t *testing.T) {
 		s := db.NewSession()

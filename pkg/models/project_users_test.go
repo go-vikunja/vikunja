@@ -52,14 +52,14 @@ func TestProjectUser_Create(t *testing.T) {
 		errType func(err error) bool
 	}{
 		{
-			name: "ProjectUsers Create normally",
+			name: "ListUsers Create normally",
 			fields: fields{
 				Username:  "user1",
 				ProjectID: 2,
 			},
 		},
 		{
-			name: "ProjectUsers Create for duplicate",
+			name: "ListUsers Create for duplicate",
 			fields: fields{
 				Username:  "user1",
 				ProjectID: 3,
@@ -68,7 +68,7 @@ func TestProjectUser_Create(t *testing.T) {
 			errType: IsErrUserAlreadyHasAccess,
 		},
 		{
-			name: "ProjectUsers Create with invalid right",
+			name: "ListUsers Create with invalid right",
 			fields: fields{
 				Username:  "user1",
 				ProjectID: 2,
@@ -78,7 +78,7 @@ func TestProjectUser_Create(t *testing.T) {
 			errType: IsErrInvalidRight,
 		},
 		{
-			name: "ProjectUsers Create with inexisting project",
+			name: "ListUsers Create with inexisting project",
 			fields: fields{
 				Username:  "user1",
 				ProjectID: 2000,
@@ -87,7 +87,7 @@ func TestProjectUser_Create(t *testing.T) {
 			errType: IsErrProjectDoesNotExist,
 		},
 		{
-			name: "ProjectUsers Create with inexisting user",
+			name: "ListUsers Create with inexisting user",
 			fields: fields{
 				Username:  "user500",
 				ProjectID: 2,
@@ -96,7 +96,7 @@ func TestProjectUser_Create(t *testing.T) {
 			errType: user.IsErrUserDoesNotExist,
 		},
 		{
-			name: "ProjectUsers Create with the owner as shared user",
+			name: "ListUsers Create with the owner as shared user",
 			fields: fields{
 				Username:  "user1",
 				ProjectID: 1,

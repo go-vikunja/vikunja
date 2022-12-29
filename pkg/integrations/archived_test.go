@@ -158,20 +158,20 @@ func TestArchived(t *testing.T) {
 			t.Run("not editable", func(t *testing.T) {
 				_, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "21"}, `{"title":"TestIpsum","is_archived":true}`)
 				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeNamespaceIsArchived)
+				assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
 			})
 			t.Run("no new tasks", func(t *testing.T) {
 				_, err := testTaskHandler.testCreateWithUser(nil, map[string]string{"project": "21"}, `{"title":"Lorem"}`)
 				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeNamespaceIsArchived)
+				assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
 			})
 			t.Run("not unarchivable", func(t *testing.T) {
 				_, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "21"}, `{"title":"LoremIpsum","is_archived":false}`)
 				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeNamespaceIsArchived)
+				assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
 			})
 
-			taskTests("35", models.ErrCodeNamespaceIsArchived, t)
+			taskTests("35", models.ErrCodeProjectIsArchived, t)
 		})
 		// The project itself is archived
 		t.Run("archived individually", func(t *testing.T) {
@@ -186,7 +186,7 @@ func TestArchived(t *testing.T) {
 				assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
 			})
 			t.Run("unarchivable", func(t *testing.T) {
-				rec, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "22"}, `{"title":"LoremIpsum","is_archived":false,"namespace_id":1}`)
+				rec, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "22"}, `{"title":"LoremIpsum","is_archived":false}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"is_archived":false`)
 			})

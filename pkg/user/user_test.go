@@ -371,13 +371,13 @@ func TestUpdateUserPassword(t *testing.T) {
 	})
 }
 
-func TestProjectUsers(t *testing.T) {
+func TestListUsers(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ProjectUsers(s, "user1", nil)
+		all, err := ListUsers(s, "user1", nil)
 		assert.NoError(t, err)
 		assert.True(t, len(all) > 0)
 		assert.Equal(t, all[0].Username, "user1")
@@ -387,7 +387,7 @@ func TestProjectUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ProjectUsers(s, "uSEr1", nil)
+		all, err := ListUsers(s, "uSEr1", nil)
 		assert.NoError(t, err)
 		assert.True(t, len(all) > 0)
 		assert.Equal(t, all[0].Username, "user1")
@@ -406,7 +406,7 @@ func TestProjectUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ProjectUsers(s, "", nil)
+		all, err := ListUsers(s, "", nil)
 		assert.NoError(t, err)
 		assert.Len(t, all, 0)
 	})
@@ -415,7 +415,7 @@ func TestProjectUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ProjectUsers(s, "user1@example.com", nil)
+		all, err := ListUsers(s, "user1@example.com", nil)
 		assert.NoError(t, err)
 		assert.Len(t, all, 0)
 		db.AssertExists(t, "users", map[string]interface{}{
@@ -428,7 +428,7 @@ func TestProjectUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ProjectUsers(s, "one else", nil)
+		all, err := ListUsers(s, "one else", nil)
 		assert.NoError(t, err)
 		assert.Len(t, all, 0)
 		db.AssertExists(t, "users", map[string]interface{}{
@@ -441,7 +441,7 @@ func TestProjectUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ProjectUsers(s, "user7@example.com", nil)
+		all, err := ListUsers(s, "user7@example.com", nil)
 		assert.NoError(t, err)
 		assert.Len(t, all, 1)
 		assert.Equal(t, int64(7), all[0].ID)
@@ -455,7 +455,7 @@ func TestProjectUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ProjectUsers(s, "with space", nil)
+		all, err := ListUsers(s, "with space", nil)
 		assert.NoError(t, err)
 		assert.Len(t, all, 1)
 		assert.Equal(t, int64(12), all[0].ID)
@@ -483,7 +483,7 @@ func TestProjectUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ProjectUsers(s, "user7", nil)
+		all, err := ListUsers(s, "user7", nil)
 		assert.NoError(t, err)
 		assert.Len(t, all, 1)
 		assert.Equal(t, int64(7), all[0].ID)
@@ -496,7 +496,7 @@ func TestProjectUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ProjectUsers(s, "user", nil)
+		all, err := ListUsers(s, "user", nil)
 		assert.NoError(t, err)
 		assert.Len(t, all, 0)
 		db.AssertExists(t, "users", map[string]interface{}{

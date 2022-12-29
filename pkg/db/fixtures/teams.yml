@@ -11,15 +11,6 @@
 - id: 4
   name: testteam4_admin_on_project8
   created_by_id: 1
-- id: 5
-  name: testteam2_read_only_on_namespace7
-  created_by_id: 1
-- id: 6
-  name: testteam3_write_on_namespace8
-  created_by_id: 1
-- id: 7
-  name: testteam4_admin_on_namespace9
-  created_by_id: 1
 - id: 8
   name: testteam8
   created_by_id: 7

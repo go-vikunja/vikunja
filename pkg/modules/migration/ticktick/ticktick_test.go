@@ -87,30 +87,30 @@ func TestConvertTicktickTasksToVikunja(t *testing.T) {
 	vikunjaTasks := convertTickTickToVikunja(tickTickTasks)
 
 	assert.Len(t, vikunjaTasks, 1)
-	assert.Len(t, vikunjaTasks[0].Projects, 2)
+	assert.Len(t, vikunjaTasks[0].ChildProjects, 2)
 
-	assert.Len(t, vikunjaTasks[0].Projects[0].Tasks, 3)
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Title, tickTickTasks[0].ProjectName)
+	assert.Len(t, vikunjaTasks[0].ChildProjects[0].Tasks, 3)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Title, tickTickTasks[0].ProjectName)
 
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[0].Title, tickTickTasks[0].Title)
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[0].Description, tickTickTasks[0].Content)
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[0].StartDate, tickTickTasks[0].StartDate.Time)
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[0].EndDate, tickTickTasks[0].DueDate.Time)
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[0].DueDate, tickTickTasks[0].DueDate.Time)
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[0].Labels, []*models.Label{
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[0].Title, tickTickTasks[0].Title)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[0].Description, tickTickTasks[0].Content)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[0].StartDate, tickTickTasks[0].StartDate.Time)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[0].EndDate, tickTickTasks[0].DueDate.Time)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[0].DueDate, tickTickTasks[0].DueDate.Time)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[0].Labels, []*models.Label{
 		{Title: "label1"},
 		{Title: "label2"},
 	})
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[0].Reminders[0].RelativeTo, models.ReminderRelation("due_date"))
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[0].Reminders[0].RelativePeriod, int64(-24*3600))
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[0].Position, tickTickTasks[0].Order)
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[0].Done, false)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[0].Reminders[0].RelativeTo, models.ReminderRelation("due_date"))
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[0].Reminders[0].RelativePeriod, int64(-24*3600))
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[0].Position, tickTickTasks[0].Order)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[0].Done, false)
 
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[1].Title, tickTickTasks[1].Title)
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[1].Position, tickTickTasks[1].Order)
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[1].Done, true)
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[1].DoneAt, tickTickTasks[1].CompletedTime.Time)
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[1].RelatedTasks, models.RelatedTaskMap{
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[1].Title, tickTickTasks[1].Title)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[1].Position, tickTickTasks[1].Order)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[1].Done, true)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[1].DoneAt, tickTickTasks[1].CompletedTime.Time)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[1].RelatedTasks, models.RelatedTaskMap{
 		models.RelationKindParenttask: []*models.Task{
 			{
 				ID: tickTickTasks[1].ParentID,
@@ -118,24 +118,24 @@ func TestConvertTicktickTasksToVikunja(t *testing.T) {
 		},
 	})
 
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[2].Title, tickTickTasks[2].Title)
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[2].Description, tickTickTasks[2].Content)
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[2].StartDate, tickTickTasks[2].StartDate.Time)
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[2].EndDate, tickTickTasks[2].DueDate.Time)
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[2].DueDate, tickTickTasks[2].DueDate.Time)
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[2].Labels, []*models.Label{
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[2].Title, tickTickTasks[2].Title)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[2].Description, tickTickTasks[2].Content)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[2].StartDate, tickTickTasks[2].StartDate.Time)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[2].EndDate, tickTickTasks[2].DueDate.Time)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[2].DueDate, tickTickTasks[2].DueDate.Time)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[2].Labels, []*models.Label{
 		{Title: "label1"},
 		{Title: "label2"},
 		{Title: "other label"},
 	})
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[2].Reminders[0].RelativeTo, models.ReminderRelation("due_date"))
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[2].Reminders[0].RelativePeriod, int64(-24*3600))
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[2].Position, tickTickTasks[2].Order)
-	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[2].Done, false)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[2].Reminders[0].RelativeTo, models.ReminderRelation("due_date"))
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[2].Reminders[0].RelativePeriod, int64(-24*3600))
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[2].Position, tickTickTasks[2].Order)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[0].Tasks[2].Done, false)
 
-	assert.Len(t, vikunjaTasks[0].Projects[1].Tasks, 1)
-	assert.Equal(t, vikunjaTasks[0].Projects[1].Title, tickTickTasks[3].ProjectName)
+	assert.Len(t, vikunjaTasks[0].ChildProjects[1].Tasks, 1)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[1].Title, tickTickTasks[3].ProjectName)
 
-	assert.Equal(t, vikunjaTasks[0].Projects[1].Tasks[0].Title, tickTickTasks[3].Title)
-	assert.Equal(t, vikunjaTasks[0].Projects[1].Tasks[0].Position, tickTickTasks[3].Order)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[1].Tasks[0].Title, tickTickTasks[3].Title)
+	assert.Equal(t, vikunjaTasks[0].ChildProjects[1].Tasks[0].Position, tickTickTasks[3].Order)
 }

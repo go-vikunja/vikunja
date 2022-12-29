@@ -44,10 +44,6 @@ func TestVikunjaFileMigrator_Migrate(t *testing.T) {
 
 	err = m.Migrate(u, f, s.Size())
 	assert.NoError(t, err)
-	db.AssertExists(t, "namespaces", map[string]interface{}{
-		"title":    "test",
-		"owner_id": u.ID,
-	}, false)
 	db.AssertExists(t, "projects", map[string]interface{}{
 		"title":    "Test project",
 		"owner_id": u.ID,

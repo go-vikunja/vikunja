@@ -32,13 +32,13 @@ func TestInsertFromStructure(t *testing.T) {
 	}
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		testStructure := []*models.NamespaceWithProjectsAndTasks{
+		testStructure := []*models.ProjectWithTasksAndBuckets{
 			{
-				Namespace: models.Namespace{
+				Project: models.Project{
 					Title:       "Test1",
 					Description: "Lorem Ipsum",
 				},
-				Projects: []*models.ProjectWithTasksAndBuckets{
+				ChildProjects: []*models.ProjectWithTasksAndBuckets{
 					{
 						Project: models.Project{
 							Title:       "Testproject1",
@@ -129,23 +129,19 @@ func TestInsertFromStructure(t *testing.T) {
 		}
 		err := InsertFromStructure(testStructure, u)
 		assert.NoError(t, err)
-		db.AssertExists(t, "namespaces", map[string]interface{}{
-			"title":       testStructure[0].Namespace.Title,
-			"description": testStructure[0].Namespace.Description,
-		}, false)
 		db.AssertExists(t, "projects", map[string]interface{}{
-			"title":       testStructure[0].Projects[0].Title,
-			"description": testStructure[0].Projects[0].Description,
+			"title":       testStructure[0].ChildProjects[0].Title,
+			"description": testStructure[0].ChildProjects[0].Description,
 		}, false)
 		db.AssertExists(t, "tasks", map[string]interface{}{
-			"title":     testStructure[0].Projects[0].Tasks[5].Title,
-			"bucket_id": testStructure[0].Projects[0].Buckets[0].ID,
+			"title":     testStructure[0].ChildProjects[0].Tasks[5].Title,
+			"bucket_id": testStructure[0].ChildProjects[0].Buckets[0].ID,
 		}, false)
 		db.AssertMissing(t, "tasks", map[string]interface{}{
-			"title":     testStructure[0].Projects[0].Tasks[6].Title,
+			"title":     testStructure[0].ChildProjects[0].Tasks[6].Title,
 			"bucket_id": 1111, // No task with that bucket should exist
 		})
-		assert.NotEqual(t, 0, testStructure[0].Projects[0].Tasks[0].BucketID) // Should get the default bucket
-		assert.NotEqual(t, 0, testStructure[0].Projects[0].Tasks[6].BucketID) // Should get the default bucket
+		assert.NotEqual(t, 0, testStructure[0].ChildProjects[0].Tasks[0].BucketID) // Should get the default bucket
+		assert.NotEqual(t, 0, testStructure[0].ChildProjects[0].Tasks[6].BucketID) // Should get the default bucket
 	})
 }
