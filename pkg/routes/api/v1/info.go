@@ -27,7 +27,6 @@ import (
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
 	"code.vikunja.io/api/pkg/modules/migration/trello"
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
-	"code.vikunja.io/api/pkg/modules/migration/wunderlist"
 	"code.vikunja.io/api/pkg/version"
 
 	"github.com/labstack/echo/v4"
@@ -121,10 +120,6 @@ func Info(c echo.Context) error {
 	info.AuthInfo.OpenIDConnect.Providers = providers
 
 	// Migrators
-	if config.MigrationWunderlistEnable.GetBool() {
-		m := &wunderlist.Migration{}
-		info.AvailableMigrators = append(info.AvailableMigrators, m.Name())
-	}
 	if config.MigrationTodoistEnable.GetBool() {
 		m := &todoist.Migration{}
 		info.AvailableMigrators = append(info.AvailableMigrators, m.Name())
