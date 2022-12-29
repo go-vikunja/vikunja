@@ -63,7 +63,6 @@ This document describes the different errors Vikunja can return.
 | 3007      | 400 | A project with this identifier already exists.                                                                                   |
 | 3008      | 412 | The project is archived and can therefore only be accessed read only. This is also true for all tasks associated with this project. |
 | 3009      | 412 | The project cannot belong to a dynamically generated namespace like "Favorites".                                                 |
-| 3010      | 412 | The project must belong to a namespace.                                                                                          |
 
 ## Task
 
@@ -92,27 +91,15 @@ This document describes the different errors Vikunja can return.
 | 4021 | 400 | This user is already assigned to that task. |
 | 4022 | 400 | The task has a relative reminder which does not specify relative to what. |
 
-## Namespace
-
-| ErrorCode | HTTP Status Code | Description |
-|-----------|------------------|-------------|
-| 5001 | 404 | The namespace does not exist. |
-| 5003 | 403 | The user does not have access to the specified namespace. |
-| 5006 | 400 | The namespace name cannot be empty. |
-| 5009 | 403 | The user needs to have namespace read access to perform that action. |
-| 5010 | 403 | This team does not have access to that namespace. |
-| 5011 | 409 | This user has already access to that namespace. |
-| 5012 | 412 | The namespace is archived and can therefore only be accessed read only. |
-
 ## Team
 
-| ErrorCode | HTTP Status Code | Description |
-|-----------|------------------|-------------|
-| 6001 | 400 | The team name cannot be empty. |
-| 6002 | 404 | The team does not exist. |
-| 6004 | 409 | The team already has access to that namespace or project. |
-| 6005 | 409 | The user is already a member of that team. |
-| 6006 | 400 | Cannot delete the last team member. |
+| ErrorCode | HTTP Status Code | Description                                                          |
+|-----------|------------------|----------------------------------------------------------------------|
+| 6001 | 400 | The team name cannot be empty.                                       |
+| 6002 | 404 | The team does not exist.                                             |
+| 6004 | 409 | The team already has access to that project.                         |
+| 6005 | 409 | The user is already a member of that team.                           |
+| 6006 | 400 | Cannot delete the last team member.                                  |
 | 6007 | 403 | The team does not have access to the project to perform that action. |
 
 ## User Project Access
