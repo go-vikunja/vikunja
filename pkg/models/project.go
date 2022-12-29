@@ -596,6 +596,10 @@ func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
 		return p.CheckIsArchived(s)
 	}
 
+	if p.ID == 0 { // don't check new projects
+		return nil
+	}
+
 	project, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
 		return err
