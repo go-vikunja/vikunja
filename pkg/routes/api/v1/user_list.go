@@ -41,7 +41,7 @@ import (
 // @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /users [get]
-func UserProject(c echo.Context) error {
+func UserList(c echo.Context) error {
 	search := c.QueryParam("s")
 
 	s := db.NewSession()
