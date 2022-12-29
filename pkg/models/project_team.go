@@ -182,7 +182,7 @@ func (tl *TeamProject) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/teams [get]
 func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
-	// Check if the user can read the namespace
+	// Check if the user can read the project
 	l := &Project{ID: tl.ProjectID}
 	canRead, _, err := l.CanRead(s, a)
 	if err != nil {

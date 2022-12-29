@@ -160,7 +160,7 @@ func (p *Project) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 
 // CanCreate checks if the user can create a project
 func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	// If the new namespace has a parent, check that
+	// If the new project has a parent, check that
 	if p.ParentProjectID != 0 {
 		// TODO: check the parent's parent (and so on)
 		parent := &Project{ID: p.ParentProjectID}
@@ -225,11 +225,6 @@ func (p *Project) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bool
 			builder.Eq{"ul.user_id": a.GetID()},
 			builder.Eq{"ul.right": r},
 		))
-		// If the namespace this project belongs to was shared directly with the user and the user has the right
-		conds = append(conds, builder.And(
-			builder.Eq{"un.user_id": a.GetID()},
-			builder.Eq{"un.right": r},
-		))
 
 		// Team rights
 		// If the project was shared directly with the team and the team has the right
@@ -237,36 +232,24 @@ func (p *Project) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bool
 			builder.Eq{"tm2.user_id": a.GetID()},
 			builder.Eq{"tl.right": r},
 		))
-		// If the namespace this project belongs to was shared directly with the team and the team has the right
-		conds = append(conds, builder.And(
-			builder.Eq{"tm.user_id": a.GetID()},
-			builder.Eq{"tn.right": r},
-		))
 	}
 
-	// If the user is the owner of a namespace, it has any right, all the time
-	conds = append(conds, builder.Eq{"n.owner_id": a.GetID()})
+	// TODO: parents
 
 	type allProjectRights struct {
 		UserProject *ProjectUser `xorm:"extends"`
 		TeamProject *TeamProject `xorm:"extends"`
-
-		OwnerID int64 `xorm:"namespaces_owner_id"`
 	}
 
 	r := &allProjectRights{}
 	var maxRight = 0
 	exists, err := s.
-		Select("p.*, un.right, ul.right, tn.right, tl.right, n.owner_id as namespaces_owner_id").
+		Select("p.*, ul.right tl.right").
 		Table("projects").
 		Alias("p").
 		// User stuff
-		Join("LEFT", []string{"users_namespaces", "un"}, "un.namespace_id = p.namespace_id").
 		Join("LEFT", []string{"users_projects", "ul"}, "ul.project_id = p.id").
-		Join("LEFT", []string{"namespaces", "n"}, "n.id = p.namespace_id").
 		// Team stuff
-		Join("LEFT", []string{"team_namespaces", "tn"}, " p.namespace_id = tn.namespace_id").
-		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tn.team_id").
 		Join("LEFT", []string{"team_projects", "tl"}, "p.id = tl.project_id").
 		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
 		// The actual condition
@@ -284,9 +267,6 @@ func (p *Project) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bool
 	}
 	if int(r.TeamProject.Right) > maxRight {
 		maxRight = int(r.TeamProject.Right)
-	}
-	if r.OwnerID == a.GetID() {
-		maxRight = int(RightAdmin)
 	}
 
 	return exists, maxRight, err
