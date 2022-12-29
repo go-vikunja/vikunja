@@ -261,7 +261,7 @@ func getMicrosoftTodoData(token string) (microsoftTodoData []*project, err error
 
 func convertMicrosoftTodoData(todoData []*project) (vikunjsStructure []*models.ProjectWithTasksAndBuckets, err error) {
 
-	// One namespace with all projects
+	// One project with all child projects
 	vikunjsStructure = []*models.ProjectWithTasksAndBuckets{
 		{
 			Project: models.Project{

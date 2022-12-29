@@ -31,7 +31,7 @@ import (
 // ProjectUser represents a project <-> user relation
 type ProjectUser struct {
 	// The unique, numeric id of this project <-> user relation.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"namespace"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id"`
 	// The username.
 	Username string `xorm:"-" json:"user_id" param:"user"`
 	// Used internally to reference the user
@@ -55,7 +55,7 @@ func (ProjectUser) TableName() string {
 	return "users_projects"
 }
 
-// UserWithRight represents a user in combination with the right it can have on a project/namespace
+// UserWithRight represents a user in combination with the right it can have on a project
 type UserWithRight struct {
 	user.User `xorm:"extends"`
 	Right     Right `json:"right"`

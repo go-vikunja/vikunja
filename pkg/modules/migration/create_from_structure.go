@@ -47,13 +47,13 @@ func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, user *user.Us
 
 func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBuckets, user *user.User) (err error) {
 
-	log.Debugf("[creating structure] Creating %d namespaces", len(str))
+	log.Debugf("[creating structure] Creating %d projects", len(str))
 
 	labels := make(map[string]*models.Label)
 
 	archivedProjects := []int64{}
 
-	// Create all namespaces
+	// Create all projects
 	for _, p := range str {
 		p.ID = 0
 
