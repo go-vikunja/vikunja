@@ -196,7 +196,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			projects = append(projects, project)
 		}
 	} else {
-		// Check the project exists and the user has acess on it
+		// Check the project exists and the user has access on it
 		project := &Project{ID: tf.ProjectID}
 		canRead, _, err := project.CanRead(s, a)
 		if err != nil {
