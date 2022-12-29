@@ -278,30 +278,6 @@ func (l *ProjectSharedWithTeamEvent) Name() string {
 	return "project.shared.team"
 }
 
-// NamespaceSharedWithUserEvent represents an event where a namespace has been shared with a user
-type NamespaceSharedWithUserEvent struct {
-	Namespace *Namespace
-	User      *user.User
-	Doer      web.Auth
-}
-
-// Name defines the name for NamespaceSharedWithUserEvent
-func (n *NamespaceSharedWithUserEvent) Name() string {
-	return "namespace.shared.user"
-}
-
-// NamespaceSharedWithTeamEvent represents an event where a namespace has been shared with a team
-type NamespaceSharedWithTeamEvent struct {
-	Namespace *Namespace
-	Team      *Team
-	Doer      web.Auth
-}
-
-// Name defines the name for NamespaceSharedWithTeamEvent
-func (n *NamespaceSharedWithTeamEvent) Name() string {
-	return "namespace.shared.team"
-}
-
 /////////////////
 // Team Events //
 /////////////////

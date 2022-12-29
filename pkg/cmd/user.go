@@ -191,7 +191,7 @@ var userCreateCmd = &cobra.Command{
 		err = models.CreateNewProjectForUser(s, newUser)
 		if err != nil {
 			_ = s.Rollback()
-			log.Fatalf("Error creating new namespace for user: %s", err)
+			log.Fatalf("Error creating new project for user: %s", err)
 		}
 
 		if err := s.Commit(); err != nil {

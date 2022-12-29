@@ -57,12 +57,12 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 	defer dumpWriter.Close()
 
 	// Get the data
-	err = exportProjectsAndTasks(s, u, dumpWriter)
+	taskIDs, err := exportProjectsAndTasks(s, u, dumpWriter)
 	if err != nil {
 		return err
 	}
 	// Task attachment files
-	err = exportTaskAttachments(s, u, dumpWriter)
+	err = exportTaskAttachments(s, u, dumpWriter, taskIDs)
 	if err != nil {
 		return err
 	}
@@ -121,51 +121,35 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 	})
 }
 
-func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err error) {
-
-	namspaces, _, _, err := (&Namespace{IsArchived: true}).ReadAll(s, u, "", -1, 0)
-	if err != nil {
-		return err
-	}
-
-	namespaceIDs := []int64{}
-	namespaces := []*NamespaceWithProjectsAndTasks{}
-	projectMap := make(map[int64]*ProjectWithTasksAndBuckets)
-	projectIDs := []int64{}
-	for _, n := range namspaces.([]*NamespaceWithProjects) {
-		if n.ID < 1 {
-			// Don't include filters
-			continue
-		}
-
-		nn := &NamespaceWithProjectsAndTasks{
-			Namespace: n.Namespace,
-			Projects:  []*ProjectWithTasksAndBuckets{},
-		}
-
-		for _, l := range n.Projects {
-			ll := &ProjectWithTasksAndBuckets{
-				Project:          *l,
-				BackgroundFileID: l.BackgroundFileID,
-				Tasks:            []*TaskWithComments{},
-			}
-			nn.Projects = append(nn.Projects, ll)
-			projectMap[l.ID] = ll
-			projectIDs = append(projectIDs, l.ID)
-		}
-
-		namespaceIDs = append(namespaceIDs, n.ID)
-		namespaces = append(namespaces, nn)
-	}
-
-	if len(namespaceIDs) == 0 {
-		return nil
-	}
+func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (taskIDs []int64, err error) {
 
 	// Get all projects
-	projects, err := getProjectsForNamespaces(s, namespaceIDs, true)
+	rawProjectsMap, _, _, err := getRawProjectsForUser(
+		s,
+		&projectOptions{
+			search:      "",
+			user:        u,
+			page:        0,
+			perPage:     -1,
+			getArchived: true,
+		})
 	if err != nil {
-		return err
+		return taskIDs, err
+	}
+
+	if len(rawProjectsMap) == 0 {
+		return
+	}
+
+	projects := []*Project{}
+	projectsMap := make(map[int64]*ProjectWithTasksAndBuckets, len(rawProjectsMap))
+	projectIDs := []int64{}
+	for _, p := range rawProjectsMap {
+		projects = append(projects, p)
+		projectsMap[p.ID] = &ProjectWithTasksAndBuckets{
+			Project: *p,
+		}
+		projectIDs = append(projectIDs, p.ID)
 	}
 
 	tasks, _, _, err := getTasksForProjects(s, projects, u, &taskOptions{
@@ -173,7 +157,7 @@ func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err 
 		perPage: -1,
 	})
 	if err != nil {
-		return err
+		return taskIDs, err
 	}
 
 	taskMap := make(map[int64]*TaskWithComments, len(tasks))
@@ -181,11 +165,12 @@ func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err 
 		taskMap[t.ID] = &TaskWithComments{
 			Task: *t,
 		}
-		if _, exists := projectMap[t.ProjectID]; !exists {
+		if _, exists := projectsMap[t.ProjectID]; !exists {
 			log.Debugf("[User Data Export] Project %d does not exist for task %d, omitting", t.ProjectID, t.ID)
 			continue
 		}
-		projectMap[t.ProjectID].Tasks = append(projectMap[t.ProjectID].Tasks, taskMap[t.ID])
+		projectsMap[t.ProjectID].Tasks = append(projectsMap[t.ProjectID].Tasks, taskMap[t.ID])
+		taskIDs = append(taskIDs, t.ID)
 	}
 
 	comments := []*TaskComment{}
@@ -212,43 +197,22 @@ func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (err 
 	}
 
 	for _, b := range buckets {
-		if _, exists := projectMap[b.ProjectID]; !exists {
+		if _, exists := projectsMap[b.ProjectID]; !exists {
 			log.Debugf("[User Data Export] Project %d does not exist for bucket %d, omitting", b.ProjectID, b.ID)
 			continue
 		}
-		projectMap[b.ProjectID].Buckets = append(projectMap[b.ProjectID].Buckets, b)
+		projectsMap[b.ProjectID].Buckets = append(projectsMap[b.ProjectID].Buckets, b)
 	}
 
-	data, err := json.Marshal(namespaces)
+	data, err := json.Marshal(projects)
 	if err != nil {
-		return err
+		return taskIDs, err
 	}
 
-	return utils.WriteBytesToZip("data.json", data, wr)
+	return taskIDs, utils.WriteBytesToZip("data.json", data, wr)
 }
 
-func exportTaskAttachments(s *xorm.Session, u *user.User, wr *zip.Writer) (err error) {
-	projects, _, _, err := getRawProjectsForUser(
-		s,
-		&projectOptions{
-			user: u,
-			page: -1,
-		},
-	)
-	if err != nil {
-		return err
-	}
-
-	tasks, _, _, err := getRawTasksForProjects(s, projects, u, &taskOptions{page: -1})
-	if err != nil {
-		return err
-	}
-
-	taskIDs := []int64{}
-	for _, t := range tasks {
-		taskIDs = append(taskIDs, t.ID)
-	}
-
+func exportTaskAttachments(s *xorm.Session, u *user.User, wr *zip.Writer, taskIDs []int64) (err error) {
 	tas, err := getTaskAttachmentsByTaskIDs(s, taskIDs)
 	if err != nil {
 		return err

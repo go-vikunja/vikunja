@@ -37,7 +37,7 @@ import (
 type Project struct {
 	// The unique, numeric id of this project.
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"project"`
-	// The title of the project. You'll see this in the namespace overview.
+	// The title of the project. You'll see this in the overview.
 	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(1|250)" minLength:"1" maxLength:"250"`
 	// The description of the project.
 	Description string `xorm:"longtext null" json:"description"`
@@ -64,7 +64,7 @@ type Project struct {
 	// Contains a very small version of the project background to use as a blurry preview until the actual background is loaded. Check out https://blurha.sh/ to learn how it works.
 	BackgroundBlurHash string `xorm:"varchar(50) null" json:"background_blur_hash"`
 
-	// True if a project is a favorite. Favorite projects show up in a separate namespace. This value depends on the user making the call to the api.
+	// True if a project is a favorite. Favorite projects show up in a separate parent project. This value depends on the user making the call to the api.
 	IsFavorite bool `xorm:"-" json:"is_favorite"`
 
 	// The subscription status for the user reading this project. You can only read this property, use the subscription endpoints to modify it.
@@ -114,7 +114,7 @@ var SharedProjectsPseudoProject = &Project{
 	Updated:     time.Now(),
 }
 
-// FavoriteProjectsPseudoProject is a pseudo namespace used to hold favorite projects and tasks
+// FavoriteProjectsPseudoProject is a pseudo parent project used to hold favorite projects and tasks
 var FavoriteProjectsPseudoProject = &Project{
 	ID:          -2,
 	Title:       "Favorites",
@@ -123,7 +123,7 @@ var FavoriteProjectsPseudoProject = &Project{
 	Updated:     time.Now(),
 }
 
-// SavedFiltersPseudoProject is a pseudo namespace used to hold saved filters
+// SavedFiltersPseudoProject is a pseudo parent project used to hold saved filters
 var SavedFiltersPseudoProject = &Project{
 	ID:          -3,
 	Title:       "Filters",
@@ -267,13 +267,11 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
-	// Check if the namespace is archived and set the namespace to archived if it is not already archived individually.
+
+	// Check if the project is archived and set it to archived if it is not already archived individually.
 	if !p.IsArchived {
 		err = p.CheckIsArchived(s)
 		if err != nil {
-			if !IsErrNamespaceIsArchived(err) && !IsErrProjectIsArchived(err) {
-				return
-			}
 			p.IsArchived = true
 		}
 	}
@@ -561,7 +559,7 @@ func addProjectDetails(s *xorm.Session, projects map[int64]*Project, a web.Auth)
 	return
 }
 
-// CheckIsArchived returns an ErrProjectIsArchived or ErrNamespaceIsArchived if the project or any of its parent projects is archived.
+// CheckIsArchived returns an ErrProjectIsArchived if the project or any of its parent projects is archived.
 func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
 	// When creating a new project, we check if the parent is archived
 	if p.ID == 0 {
@@ -569,14 +567,14 @@ func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
 		return p.CheckIsArchived(s)
 	}
 
-	p, err := GetProjectSimpleByID(s, p.ID)
+	project, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
 		return err
 	}
 
 	// TODO: parent project
 
-	if p.IsArchived {
+	if project.IsArchived {
 		return ErrProjectIsArchived{ProjectID: p.ID}
 	}
 
@@ -585,7 +583,7 @@ func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
 
 func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) error {
 	if project.ParentProjectID < 0 {
-		return &ErrProjectCannotBelongToAPseudoNamespace{ProjectID: project.ID, NamespaceID: project.ParentProjectID}
+		return &ErrProjectCannotBelongToAPseudoParentProject{ProjectID: project.ID, ParentProjectID: project.ParentProjectID}
 	}
 
 	// Check if the parent project exists

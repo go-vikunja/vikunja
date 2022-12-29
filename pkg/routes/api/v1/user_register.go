@@ -62,7 +62,7 @@ func RegisterUser(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	// Add its namespace
+	// Create their initial project
 	err = models.CreateNewProjectForUser(s, newUser)
 	if err != nil {
 		_ = s.Rollback()
