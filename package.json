@@ -52,7 +52,7 @@
     "is-touch-device": "1.0.1",
     "lodash.clonedeep": "4.5.0",
     "lodash.debounce": "4.0.8",
-    "marked": "4.2.4",
+    "marked": "4.2.5",
     "minimist": "1.2.7",
     "pinia": "2.0.28",
     "register-service-worker": "1.7.2",
