@@ -1,5 +1,5 @@
 /// <reference types="vitest" />
-import {defineConfig} from 'vite'
+import {defineConfig, type PluginOption} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import legacyFn from '@vitejs/plugin-legacy'
 import { URL, fileURLToPath } from 'node:url'
@@ -146,7 +146,10 @@ export default defineConfig({
 			plugins: [
 				visualizer({
 					filename: 'stats.html',
-				}),
+					gzipSize: true,
+					// template: 'sunburst',
+					// brotliSize: true,
+				}) as PluginOption,
 			],
 		},
 	},
