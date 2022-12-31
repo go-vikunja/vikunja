@@ -16,7 +16,7 @@ specifiers:
   '@rushstack/eslint-patch': 1.2.0
   '@sentry/tracing': 7.28.1
   '@sentry/vue': 7.28.1
-  '@types/codemirror': 5.60.5
+  '@types/codemirror': 5.60.6
   '@types/dompurify': 2.4.0
   '@types/flexsearch': 0.7.3
   '@types/is-touch-device': 1.0.0
@@ -142,7 +142,7 @@ devDependencies:
   '@cypress/vue': 5.0.3_cypress@12.2.0+vue@3.2.45
   '@faker-js/faker': 7.6.0
   '@rushstack/eslint-patch': 1.2.0
-  '@types/codemirror': 5.60.5
+  '@types/codemirror': 5.60.6
   '@types/dompurify': 2.4.0
   '@types/flexsearch': 0.7.3
   '@types/lodash.debounce': 4.0.7
@@ -3215,8 +3215,8 @@ packages:
     resolution: {integrity: sha512-KnRanxnpfpjUTqTCXslZSEdLfXExwgNxYPdiO2WGUj8+HDjFi8R3k5RVKPeSCzLjCcshCAtVO2QBbVuAV4kTnw==}
     dev: true
 
-  /@types/codemirror/5.60.5:
-    resolution: {integrity: sha512-TiECZmm8St5YxjFUp64LK0c8WU5bxMDt9YaAek1UqUb9swrSCoJhh92fWu1p3mTEqlHjhB5sY7OFBhWroJXZVg==}
+  /@types/codemirror/5.60.6:
+    resolution: {integrity: sha512-JIDPSvkYRlcv/2F0erqD+de2ni/Mz6FJMEGb0vwF6ByQOcHIKfiEfwrO4d6dSRwYeHyNUMpGjev0PyjX2M0XWw==}
     dependencies:
       '@types/tern': 0.23.4
 
@@ -3244,12 +3244,8 @@ packages:
     resolution: {integrity: sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==}
     dev: true
 
-  /@types/estree/0.0.51:
-    resolution: {integrity: sha512-CuPgU6f3eT/XgKKPqKd/gLZV1Xmvf1a2R5POBOGQa6uv82xpls89HU5zKeVoyR8XzHd1RGNOlQlvUe3CFkjWNQ==}
-
   /@types/estree/1.0.0:
     resolution: {integrity: sha512-WulqXMDUTYAXCjZnk6JtIHPigp55cVtDgDrO2gHRwhyJto21+1zbVCtOYB2L1F9w4qCQ0rOGWBnBe0FNTiEJIQ==}
-    dev: true
 
   /@types/flexsearch/0.7.3:
     resolution: {integrity: sha512-HXwADeHEP4exXkCIwy2n1+i0f1ilP1ETQOH5KDOugjkTFZPntWo0Gr8stZOaebkxsdx+k0X/K6obU/+it07ocg==}
@@ -3402,7 +3398,7 @@ packages:
   /@types/tern/0.23.4:
     resolution: {integrity: sha512-JAUw1iXGO1qaWwEOzxTKJZ/5JxVeON9kvGZ/osgZaJImBnyjyn0cjovPsf6FNLmyGY8Vw9DoXZCMlfMkMwHRWg==}
     dependencies:
-      '@types/estree': 0.0.51
+      '@types/estree': 1.0.0
 
   /@types/trusted-types/2.0.2:
     resolution: {integrity: sha512-F5DIZ36YVLE+PN+Zwws4kJogq47hNgX3Nx6WyDJ3kcplxyke3XIzB8uK5n/Lpm1HBsbGzd6nmGehL8cPekP+Tg==}
@@ -6098,7 +6094,7 @@ packages:
   /easymde/2.18.0:
     resolution: {integrity: sha512-IxVVUxNWIoXLeqtBU4BLc+eS/ScYhT1Dcb6yF5Wchoj1iXAV+TIIDWx+NCaZhY7RcSHqDPKllbYq7nwGKILnoA==}
     dependencies:
-      '@types/codemirror': 5.60.5
+      '@types/codemirror': 5.60.6
       '@types/marked': 4.0.8
       codemirror: 5.65.11
       codemirror-spell-checker: 1.1.2
