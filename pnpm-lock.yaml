@@ -77,7 +77,7 @@ specifiers:
   vite: 4.0.3
   vite-plugin-pwa: 0.14.0
   vite-svg-loader: 4.0.0
-  vitest: 0.26.2
+  vitest: 0.26.3
   vue: 3.2.45
   vue-advanced-cropper: 2.8.6
   vue-flatpickr-component: 11.0.1
@@ -175,7 +175,7 @@ devDependencies:
   vite: 4.0.3_4ljv3kzetn75ixk7nciffo2yk4
   vite-plugin-pwa: 0.14.0_d6hwg7klbxt3x5xmvc2y355a7m
   vite-svg-loader: 4.0.0
-  vitest: 0.26.2_i2tgr4c4qd7xm3mpxid2fsgqla
+  vitest: 0.26.3_i2tgr4c4qd7xm3mpxid2fsgqla
   vue-tsc: 1.0.19_typescript@4.9.4
   wait-on: 7.0.1
   workbox-cli: 6.5.4_acorn@7.4.1
@@ -12965,8 +12965,8 @@ packages:
       extsprintf: 1.3.0
     dev: true
 
-  /vite-node/0.26.2_4ljv3kzetn75ixk7nciffo2yk4:
-    resolution: {integrity: sha512-4M/zlatItZAyvrQG+82zQBhgDjRZRhVJYFW4T9wcAKh7eMmSiPOVSeI5zsV9UzHXgCcIDKX0o0r3s4OxExTHqg==}
+  /vite-node/0.26.3_4ljv3kzetn75ixk7nciffo2yk4:
+    resolution: {integrity: sha512-Te2bq0Bfvq6XiO718I+1EinMjpNYKws6SNHKOmVbILAQimKoZKDd+IZLlkaYcBXPpK3HFe2U80k8Zw+m3w/a2w==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
     dependencies:
@@ -13048,8 +13048,8 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vitest/0.26.2_i2tgr4c4qd7xm3mpxid2fsgqla:
-    resolution: {integrity: sha512-Jvqxh6SDy9SsuslkDjts0iDewDIdq4rveEt69YgDuAb1tVDGV0lDepVaeAFraoySWqneJmOt4TngFFNhlw7GfA==}
+  /vitest/0.26.3_i2tgr4c4qd7xm3mpxid2fsgqla:
+    resolution: {integrity: sha512-FmHxU9aUCxTi23keF3vxb/Qp0lYXaaJ+jRLGOUmMS3qVTOJvgGE+f1VArupA6pEhaG2Ans4X+zV9dqM5WISMbg==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
     peerDependencies:
@@ -13085,7 +13085,7 @@ packages:
       tinypool: 0.3.0
       tinyspy: 1.0.2
       vite: 4.0.3_4ljv3kzetn75ixk7nciffo2yk4
-      vite-node: 0.26.2_4ljv3kzetn75ixk7nciffo2yk4
+      vite-node: 0.26.3_4ljv3kzetn75ixk7nciffo2yk4
     transitivePeerDependencies:
       - less
       - sass
