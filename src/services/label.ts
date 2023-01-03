@@ -1,7 +1,6 @@
 import AbstractService from './abstractService'
 import LabelModel from '@/models/label'
 import type {ILabel} from '@/modelTypes/ILabel'
-import {formatISO} from 'date-fns'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 
 export default class LabelService extends AbstractService<ILabel> {
@@ -16,8 +15,8 @@ export default class LabelService extends AbstractService<ILabel> {
 	}
 
 	processModel(label) {
-		label.created = formatISO(new Date(label.created))
-		label.updated = formatISO(new Date(label.updated))
+		label.created = new Date(label.created).toISOString()
+		label.updated = new Date(label.updated).toISOString()
 		label.hexColor = colorFromHex(label.hexColor)
 		return label
 	}

@@ -1,5 +1,4 @@
 import AbstractService from '@/services/abstractService'
-import {formatISO} from 'date-fns'
 import NotificationModel from '@/models/notification'
 import type {INotification} from '@/modelTypes/INotification'
 
@@ -16,8 +15,8 @@ export default class NotificationService extends AbstractService<INotification> 
 	}
 
 	beforeUpdate(model) {
-		model.created = formatISO(new Date(model.created))
-		model.readAt = formatISO(new Date(model.readAt))
+		model.created = new Date(model.created).toISOString()
+		model.readAt = new Date(model.readAt).toISOString()
 		return model
 	}
 }

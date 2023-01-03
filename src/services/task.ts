@@ -4,13 +4,12 @@ import type {ITask} from '@/modelTypes/ITask'
 import AttachmentService from './attachment'
 import LabelService from './label'
 
-import {formatISO} from 'date-fns'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK, SECONDS_A_MONTH, SECONDS_A_YEAR} from '@/constants/date'
 
 const parseDate = date => {
 	if (date) {
-		return formatISO(new Date(date))
+		return new Date(date).toISOString()
 	}
 
 	return null
@@ -52,8 +51,8 @@ export default class TaskService extends AbstractService<ITask> {
 		model.startDate = parseDate(model.startDate)
 		model.endDate = parseDate(model.endDate)
 		model.doneAt = parseDate(model.doneAt)
-		model.created = formatISO(new Date(model.created))
-		model.updated = formatISO(new Date(model.updated))
+		model.created = new Date(model.created).toISOString()
+		model.updated = new Date(model.updated).toISOString()
 
 		// remove all nulls, these would create empty reminders
 		for (const index in model.reminderDates) {
@@ -65,7 +64,7 @@ export default class TaskService extends AbstractService<ITask> {
 		// Make normal timestamps from js dates
 		if (model.reminderDates.length > 0) {
 			model.reminderDates = model.reminderDates.map(r => {
-				return formatISO(new Date(r))
+				return new Date(r).toISOString()
 			})
 		}
 

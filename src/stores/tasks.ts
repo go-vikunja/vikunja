@@ -1,7 +1,6 @@
 import {computed, ref} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 import router from '@/router'
-import {formatISO} from 'date-fns'
 
 import TaskService from '@/services/task'
 import TaskAssigneeService from '@/services/taskAssignee'
@@ -392,7 +391,7 @@ export const useTaskStore = defineStore('task', () => {
 		const assignees = await findAssignees(parsedTask.assignees)
 		
 		// I don't know why, but it all goes up in flames when I just pass in the date normally.
-		const dueDate = parsedTask.date !== null ? formatISO(parsedTask.date) : null
+		const dueDate = parsedTask.date !== null ? new Date(parsedTask.date).toISOString() : null
 	
 		const task = new TaskModel({
 			title: parsedTask.text,

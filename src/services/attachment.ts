@@ -1,5 +1,3 @@
-import {formatISO} from 'date-fns'
-
 import AbstractService from './abstractService'
 import AttachmentModel from '../models/attachment'
 
@@ -19,7 +17,7 @@ export default class AttachmentService extends AbstractService<IAttachment> {
 	processModel(model: IAttachment) {
 		return {
 			...model,
-			created: formatISO(new Date(model.created)),
+			created: new Date(model.created).toISOString(),
 		}
 	}
 
