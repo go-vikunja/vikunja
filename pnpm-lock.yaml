@@ -75,7 +75,7 @@ specifiers:
   typescript: 4.9.4
   ufo: 1.0.1
   vite: 4.0.3
-  vite-plugin-pwa: 0.14.0
+  vite-plugin-pwa: 0.14.1
   vite-svg-loader: 4.0.0
   vitest: 0.26.3
   vue: 3.2.45
@@ -173,7 +173,7 @@ devDependencies:
   sass: 1.57.1
   typescript: 4.9.4
   vite: 4.0.3_4ljv3kzetn75ixk7nciffo2yk4
-  vite-plugin-pwa: 0.14.0_d6hwg7klbxt3x5xmvc2y355a7m
+  vite-plugin-pwa: 0.14.1_d6hwg7klbxt3x5xmvc2y355a7m
   vite-svg-loader: 4.0.0
   vitest: 0.26.3_i2tgr4c4qd7xm3mpxid2fsgqla
   vue-tsc: 1.0.19_typescript@4.9.4
@@ -12986,8 +12986,8 @@ packages:
       - terser
     dev: true
 
-  /vite-plugin-pwa/0.14.0_d6hwg7klbxt3x5xmvc2y355a7m:
-    resolution: {integrity: sha512-3wZx47PLWTckOQhc8Y6YZjAbNZ89Ovh4TdCT97MGhgl7aFd2LUekVnAmIgFwgMqyxzJ93nmkPF/ALpEW/i2qCg==}
+  /vite-plugin-pwa/0.14.1_d6hwg7klbxt3x5xmvc2y355a7m:
+    resolution: {integrity: sha512-5zx7yhQ8RTLwV71+GA9YsQQ63ALKG8XXIMqRJDdZkR8ZYftFcRgnzM7wOWmQZ/DATspyhPih5wCdcZnAIsM+mA==}
     peerDependencies:
       vite: ^3.1.0 || ^4.0.0
       workbox-build: ^6.5.4
