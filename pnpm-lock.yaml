@@ -43,7 +43,7 @@ specifiers:
   caniuse-lite: 1.0.30001441
   codemirror: 5.65.11
   csstype: 3.1.1
-  cypress: 12.2.0
+  cypress: 12.3.0
   date-fns: 2.29.3
   dayjs: 1.11.7
   dompurify: 2.4.1
@@ -138,9 +138,9 @@ dependencies:
   zhyswan-vuedraggable: 4.1.3_vue@3.2.45
 
 devDependencies:
-  '@4tw/cypress-drag-drop': 2.2.3_cypress@12.2.0
+  '@4tw/cypress-drag-drop': 2.2.3_cypress@12.3.0
   '@cypress/vite-dev-server': 5.0.2
-  '@cypress/vue': 5.0.3_cypress@12.2.0+vue@3.2.45
+  '@cypress/vue': 5.0.3_cypress@12.3.0+vue@3.2.45
   '@faker-js/faker': 7.6.0
   '@rushstack/eslint-patch': 1.2.0
   '@types/codemirror': 5.60.6
@@ -161,7 +161,7 @@ devDependencies:
   browserslist: 4.21.4
   caniuse-lite: 1.0.30001441
   csstype: 3.1.1
-  cypress: 12.2.0
+  cypress: 12.3.0
   esbuild: 0.16.13
   eslint: 8.31.0
   eslint-plugin-vue: 9.8.0_eslint@8.31.0
@@ -184,12 +184,12 @@ devDependencies:
 
 packages:
 
-  /@4tw/cypress-drag-drop/2.2.3_cypress@12.2.0:
+  /@4tw/cypress-drag-drop/2.2.3_cypress@12.3.0:
     resolution: {integrity: sha512-ADMNoELeQdcGLPjfTJ5jWupBKU3rmQAnTqaRhuEa3hQGZ6suR49Ya5SReUrwvJnfAR4pgMcnSkqLqi1F4EPuwA==}
     peerDependencies:
       cypress: ^2.1.0 || ^3.1.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0 || ^12.0.0
     dependencies:
-      cypress: 12.2.0
+      cypress: 12.3.0
     dev: true
 
   /@ampproject/remapping/2.1.1:
@@ -1591,7 +1591,7 @@ packages:
       - supports-color
     dev: true
 
-  /@cypress/vue/5.0.3_cypress@12.2.0+vue@3.2.45:
+  /@cypress/vue/5.0.3_cypress@12.3.0+vue@3.2.45:
     resolution: {integrity: sha512-wGOr/aI5KAwpbO44Anb0lgi3mdOUg8V+F16Mam7txBqSCIoX4nRHNDVOx6MR3fSUEsDRhYi3reF+mQgdZdc9rQ==}
     engines: {node: '>=8'}
     peerDependencies:
@@ -1602,7 +1602,7 @@ packages:
       '@cypress/webpack-dev-server':
         optional: true
     dependencies:
-      cypress: 12.2.0
+      cypress: 12.3.0
       vue: 3.2.45
     dev: true
 
@@ -5466,8 +5466,8 @@ packages:
     resolution: {integrity: sha512-NJGVKPS81XejHcLhaLJS7plab0fK3slPh11mESeeDq2W4ZI5kUKK/LRRdVDvjJseojbPB7ZwjnyOybg3Igea/A==}
     dev: true
 
-  /cypress/12.2.0:
-    resolution: {integrity: sha512-kvl95ri95KK8mAy++tEU/wUgzAOMiIciZSL97LQvnOinb532m7dGvwN0mDSIGbOd71RREtmT9o4h088RjK5pKw==}
+  /cypress/12.3.0:
+    resolution: {integrity: sha512-ZQNebibi6NBt51TRxRMYKeFvIiQZ01t50HSy7z/JMgRVqBUey3cdjog5MYEbzG6Ktti5ckDt1tfcC47lmFwXkw==}
     engines: {node: ^14.0.0 || ^16.0.0 || >=18.0.0}
     hasBin: true
     requiresBuild: true
