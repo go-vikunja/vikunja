@@ -61,12 +61,12 @@ export type BaseButtonTypes = typeof BASE_BUTTON_TYPES_MAP[keyof typeof BASE_BUT
 
 import {unrefElement} from '@vueuse/core'
 import {ref, type HTMLAttributes} from 'vue'
-import type {RouteLocationNamedRaw} from 'vue-router'
+import type {RouteLocationRaw} from 'vue-router'
 
 export interface BaseButtonProps extends HTMLAttributes {
 	type?: BaseButtonTypes
 	disabled?: boolean
-	to?: RouteLocationNamedRaw
+	to?: RouteLocationRaw
 	href?: string
 }
 
