@@ -10,8 +10,6 @@
     "importHelpers": true,
     "sourceMap": true,
     "strictNullChecks": true,
-    // "allowJs": true,
-    // "allowSyntheticDefaultImports": true,
     
     "paths": {
       "@/*": ["./src/*"]

@@ -1,4 +1,4 @@
-import {formatISO} from 'date-fns'
+import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
 import {TaskFactory} from '../../factories/task'
 import {ListFactory} from '../../factories/list'
@@ -11,7 +11,6 @@ import {LabelFactory} from '../../factories/labels'
 import {LabelTaskFactory} from '../../factories/label_task'
 import {BucketFactory} from '../../factories/bucket'
 
-import '../../support/authenticateUser'
 import {TaskAttachmentFactory} from '../../factories/task_attachments'
 
 function addLabelToTaskAndVerify(labelTitle: string) {
@@ -46,12 +45,14 @@ function uploadAttachmentAndVerify(taskId: number) {
 }
 
 describe('Task', () => {
+	createFakeUserAndLogin()
+
 	let namespaces
 	let lists
 	let buckets
 
 	beforeEach(() => {
-		UserFactory.create(1)
+		// UserFactory.create(1)
 		namespaces = NamespaceFactory.create(1)
 		lists = ListFactory.create(1)
 		buckets = BucketFactory.create(1, {
@@ -145,7 +146,7 @@ describe('Task', () => {
 				id: 1,
 				index: 1,
 				done: true,
-				done_at: formatISO(new Date())
+				done_at: new Date().toISOString()
 			})
 			cy.visit(`/tasks/${tasks[0].id}`)
 
@@ -421,10 +422,10 @@ describe('Task', () => {
 
 			cy.visit(`/tasks/${tasks[0].id}`)
 
-			cy.getSettled('.task-view .details.labels-list .multiselect .input-wrapper')
+			cy.get('.task-view .details.labels-list .multiselect .input-wrapper')
 				.should('be.visible')
 				.should('contain', labels[0].title)
-			cy.getSettled('.task-view .details.labels-list .multiselect .input-wrapper')
+			cy.get('.task-view .details.labels-list .multiselect .input-wrapper')
 				.children()
 				.first()
 				.get('[data-cy="taskDetail.removeLabel"]')

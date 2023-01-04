@@ -1,14 +1,15 @@
+import {createFakeUserAndLogin} from '../../support/authenticateUser'
+
 import {BucketFactory} from '../../factories/bucket'
 import {ListFactory} from '../../factories/list'
 import {TaskFactory} from '../../factories/task'
 import {prepareLists} from './prepareLists'
 
-import '../../support/authenticateUser'
-
 describe('List View Kanban', () => {
-	let buckets
+	createFakeUserAndLogin()
 	prepareLists()
-
+	
+	let buckets
 	beforeEach(() => {
 		buckets = BucketFactory.create(2)
 	})
@@ -38,7 +39,7 @@ describe('List View Kanban', () => {
 		})
 		cy.visit('/lists/1/kanban')
 
-		cy.getSettled('.kanban .bucket')
+		cy.get('.kanban .bucket')
 			.contains(buckets[0].title)
 			.get('.bucket-footer .button')
 			.contains('Add another task')
@@ -70,7 +71,7 @@ describe('List View Kanban', () => {
 	it('Can set a bucket limit', () => {
 		cy.visit('/lists/1/kanban')
 
-		cy.getSettled('.kanban .bucket .bucket-header .dropdown.options .dropdown-trigger')
+		cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-trigger')
 			.first()
 			.click()
 		cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-menu .dropdown-item')
@@ -91,7 +92,7 @@ describe('List View Kanban', () => {
 	it('Can rename a bucket', () => {
 		cy.visit('/lists/1/kanban')
 
-		cy.getSettled('.kanban .bucket .bucket-header .title')
+		cy.get('.kanban .bucket .bucket-header .title')
 			.first()
 			.type('{selectall}New Bucket Title{enter}')
 		cy.get('.kanban .bucket .bucket-header .title')
@@ -102,7 +103,7 @@ describe('List View Kanban', () => {
 	it('Can delete a bucket', () => {
 		cy.visit('/lists/1/kanban')
 
-		cy.getSettled('.kanban .bucket .bucket-header .dropdown.options .dropdown-trigger')
+		cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-trigger')
 			.first()
 			.click()
 		cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-menu .dropdown-item')
@@ -129,7 +130,7 @@ describe('List View Kanban', () => {
 		})
 		cy.visit('/lists/1/kanban')
 
-		cy.getSettled('.kanban .bucket .tasks .task')
+		cy.get('.kanban .bucket .tasks .task')
 			.contains(tasks[0].title)
 			.first()
 			.drag('.kanban .bucket:nth-child(2) .tasks')
@@ -148,7 +149,7 @@ describe('List View Kanban', () => {
 		})
 		cy.visit('/lists/1/kanban')
 
-		cy.getSettled('.kanban .bucket .tasks .task')
+		cy.get('.kanban .bucket .tasks .task')
 			.contains(tasks[0].title)
 			.should('be.visible')
 			.click()
@@ -170,7 +171,7 @@ describe('List View Kanban', () => {
 		const task = tasks[0]
 		cy.visit('/lists/1/kanban')
 
-		cy.getSettled('.kanban .bucket .tasks .task')
+		cy.get('.kanban .bucket .tasks .task')
 			.contains(task.title)
 			.should('be.visible')
 			.click()
@@ -217,7 +218,7 @@ describe('List View Kanban', () => {
 		const task = tasks[0]
 		cy.visit('/lists/1/kanban')
 
-		cy.getSettled('.kanban .bucket .tasks .task')
+		cy.get('.kanban .bucket .tasks .task')
 			.contains(task.title)
 			.should('be.visible')
 			.click()
@@ -234,7 +235,7 @@ describe('List View Kanban', () => {
 		cy.get('.global-notification')
 			.should('contain', 'Success')
 		
-		cy.getSettled('.kanban .bucket .tasks')
+		cy.get('.kanban .bucket .tasks')
 			.should('not.contain', task.title)
 	})
 })

@@ -1,6 +1,12 @@
-import '../../support/authenticateUser'
+import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
 describe('The Menu', () => {
+	createFakeUserAndLogin()
+
+	beforeEach(() => {
+		cy.visit('/')
+	})
+
 	it('Is visible by default on desktop', () => {
 		cy.get('.namespace-container')
 			.should('have.class', 'is-active')

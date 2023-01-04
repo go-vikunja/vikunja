@@ -1,5 +1,4 @@
 import {Factory} from '../support/factory'
-import {formatISO} from 'date-fns'
 
 export class LabelTaskFactory extends Factory {
 	static table = 'label_tasks'
@@ -11,7 +10,7 @@ export class LabelTaskFactory extends Factory {
 			id: '{increment}',
 			task_id: 1,
 			label_id: 1,
-			created: formatISO(now),
+			created: now.toISOString(),
 		}
 	}
 }

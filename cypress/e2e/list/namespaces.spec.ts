@@ -1,14 +1,14 @@
-import {UserFactory} from '../../factories/user'
+import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
-import '../../support/authenticateUser'
 import {ListFactory} from '../../factories/list'
 import {NamespaceFactory} from '../../factories/namespace'
 
 describe('Namepaces', () => {
+	createFakeUserAndLogin()
+
 	let namespaces
 
 	beforeEach(() => {
-		UserFactory.create(1)
 		namespaces = NamespaceFactory.create(1)
 		ListFactory.create(1)
 	})

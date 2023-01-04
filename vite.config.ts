@@ -137,6 +137,7 @@ export default defineConfig({
 		extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue'],
 	},
 	server: {
+		host: '127.0.0.1', // see: https://github.com/vitejs/vite/pull/8543
 		port: 4173,
 		strictPort: true,
 	},

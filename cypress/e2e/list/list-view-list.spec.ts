@@ -1,12 +1,13 @@
+import {createFakeUserAndLogin} from '../../support/authenticateUser'
+
 import {UserListFactory} from '../../factories/users_list'
 import {TaskFactory} from '../../factories/task'
 import {UserFactory} from '../../factories/user'
 import {ListFactory} from '../../factories/list'
 import {prepareLists} from './prepareLists'
 
-import '../../support/authenticateUser'
-
 describe('List View List', () => {
+	createFakeUserAndLogin()
 	prepareLists()
 
 	it('Should be an empty list', () => {

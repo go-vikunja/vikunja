@@ -1,5 +1,4 @@
 import {Factory} from '../support/factory'
-import {formatISO} from 'date-fns'
 
 export class TaskAttachmentFactory extends Factory {
 	static table = 'task_attachments'
@@ -11,7 +10,7 @@ export class TaskAttachmentFactory extends Factory {
 			id: '{increment}',
 			task_id: 1,
 			file_id: 1,
-			created: formatISO(now),
+			created: now.toISOString(),
 		}
 	}
 }

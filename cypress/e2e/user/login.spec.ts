@@ -11,16 +11,11 @@ const testAndAssertFailed = fixture => {
 	cy.get('div.message.danger').contains('Wrong username or password.')
 }
 
+const username = 'test'
+
 context('Login', () => {
 	beforeEach(() => {
-		UserFactory.create(1, {
-			username: 'test',
-		})
-		cy.visit('/', {
-			onBeforeLoad(win) {
-				win.localStorage.removeItem('token')
-			},
-		})
+		UserFactory.create(1, {username})
 	})
 
 	it('Should log in with the right credentials', () => {

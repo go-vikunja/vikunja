@@ -1,4 +1,4 @@
-import '../../support/authenticateUser'
+import {createFakeUserAndLogin} from '../../support/authenticateUser'
 import {createLists} from '../list/prepareLists'
 
 function logout() {
@@ -10,6 +10,8 @@ function logout() {
 }
 
 describe('Log out', () => {
+	createFakeUserAndLogin()
+
 	it('Logs the user out', () => {
 		cy.visit('/')
 

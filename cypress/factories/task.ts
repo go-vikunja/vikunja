@@ -1,6 +1,5 @@
 import {faker} from '@faker-js/faker'
 import {Factory} from '../support/factory'
-import {formatISO} from 'date-fns'
 
 export class TaskFactory extends Factory {
 	static table = 'tasks'
@@ -16,8 +15,8 @@ export class TaskFactory extends Factory {
 			created_by_id: 1,
 			index: '{increment}',
 			position: '{increment}',
-			created: formatISO(now),
-			updated: formatISO(now)
+			created: now.toISOString(),
+			updated: now.toISOString()
 		}
 	}
 }

@@ -1,6 +1,5 @@
 import {faker} from '@faker-js/faker'
 import {Factory} from '../support/factory'
-import {formatISO} from 'date-fns'
 
 export class NamespaceFactory extends Factory {
 	static table = 'namespaces'
@@ -12,8 +11,8 @@ export class NamespaceFactory extends Factory {
 			id: '{increment}',
 			title: faker.lorem.words(3),
 			owner_id: 1,
-			created: formatISO(now),
-			updated: formatISO(now)
+			created: now.toISOString(),
+			updated: now.toISOString(),
 		}
 	}
 }

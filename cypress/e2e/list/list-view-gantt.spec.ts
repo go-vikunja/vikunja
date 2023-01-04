@@ -1,10 +1,12 @@
 import {formatISO, format} from 'date-fns'
+
+import {createFakeUserAndLogin} from '../../support/authenticateUser'
+
 import {TaskFactory} from '../../factories/task'
 import {prepareLists} from './prepareLists'
 
-import '../../support/authenticateUser'
-
 describe('List View Gantt', () => {
+	createFakeUserAndLogin()
 	prepareLists()
 
 	it('Hides tasks with no dates', () => {
@@ -33,8 +35,8 @@ describe('List View Gantt', () => {
 	it('Shows tasks with dates', () => {
 		const now = new Date()
 		const tasks = TaskFactory.create(1, {
-			start_date: formatISO(now),
-			end_date: formatISO(now.setDate(now.getDate() + 4)),
+			start_date: now.toISOString(),
+			end_date: new Date(new Date(now).setDate(now.getDate() + 4)).toISOString(),
 		})
 		cy.visit('/lists/1/gantt')
 

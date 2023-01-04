@@ -1,7 +1,6 @@
 import {faker} from '@faker-js/faker'
 
 import {Factory} from '../support/factory'
-import {formatISO} from "date-fns"
 
 export class UserFactory extends Factory {
 	static table = 'users'
@@ -15,8 +14,8 @@ export class UserFactory extends Factory {
             password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.', // 1234
 			status: 0,
 			issuer: 'local',
-			created: formatISO(now),
-			updated: formatISO(now)
+			created: now.toISOString(),
+			updated: now.toISOString(),
 		}
 	}
 }
