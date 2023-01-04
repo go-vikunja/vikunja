@@ -260,19 +260,32 @@ func TestSubscriptionGet(t *testing.T) {
 			s := db.NewSession()
 			defer s.Close()
 
-			// Project 6 belongs to project 6 where user 6 has subscribed to
-			sub, err := GetSubscription(s, SubscriptionEntityProject, 6, u)
+			// Project 25 belongs to project 12 where user 6 has subscribed to
+			sub, err := GetSubscription(s, SubscriptionEntityProject, 25, u)
 			assert.NoError(t, err)
 			assert.NotNil(t, sub)
-			//			assert.Equal(t, int64(2), sub.ID) // TODO
+			assert.Equal(t, int64(12), sub.EntityID)
+			assert.Equal(t, int64(3), sub.ID)
+		})
+		t.Run("project from parent's parent", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			// Project 26 belongs to project 25 which belongs to project 12 where user 6 has subscribed to
+			sub, err := GetSubscription(s, SubscriptionEntityProject, 26, u)
+			assert.NoError(t, err)
+			assert.NotNil(t, sub)
+			assert.Equal(t, int64(12), sub.EntityID)
+			assert.Equal(t, int64(3), sub.ID)
 		})
 		t.Run("task from parent", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
 			defer s.Close()
 
-			// Task 20 belongs to project 11 which belongs to project 6 where the user has subscribed
-			sub, err := GetSubscription(s, SubscriptionEntityTask, 20, u)
+			// Task 39 belongs to project 25 which belongs to project 12 where the user has subscribed
+			sub, err := GetSubscription(s, SubscriptionEntityTask, 39, u)
 			assert.NoError(t, err)
 			assert.NotNil(t, sub)
 			// assert.Equal(t, int64(2), sub.ID) TODO

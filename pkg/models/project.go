@@ -46,8 +46,9 @@ type Project struct {
 	// The hex color of this project
 	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
 
-	OwnerID         int64 `xorm:"bigint INDEX not null" json:"-"`
-	ParentProjectID int64 `xorm:"bigint INDEX null" json:"parent_project_id"`
+	OwnerID         int64    `xorm:"bigint INDEX not null" json:"-"`
+	ParentProjectID int64    `xorm:"bigint INDEX null" json:"parent_project_id"`
+	ParentProject   *Project `xorm:"-" json:"-"`
 
 	ChildProjects []*Project `xorm:"-" json:"child_projects"`
 
@@ -513,6 +514,22 @@ func getSavedFilterProjects(s *xorm.Session, doer *user.User) (savedFiltersProje
 	return
 }
 
+// GetAllParentProjects returns all parents of a given project
+func (p *Project) GetAllParentProjects(s *xorm.Session) (err error) {
+	if p.ParentProjectID == 0 {
+		return
+	}
+
+	parent, err := GetProjectSimpleByID(s, p.ParentProjectID)
+	if err != nil {
+		return err
+	}
+
+	p.ParentProject = parent
+
+	return parent.GetAllParentProjects(s)
+}
+
 // addProjectDetails adds owner user objects and project tasks to all projects in the slice
 func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err error) {
 	if len(projects) == 0 {
@@ -541,7 +558,7 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 	subscriptions, err := GetSubscriptions(s, SubscriptionEntityProject, projectIDs, a)
 	if err != nil {
 		log.Errorf("An error occurred while getting project subscriptions for a project: %s", err.Error())
-		subscriptions = make(map[int64]*Subscription)
+		subscriptions = make(map[int64][]*Subscription)
 	}
 
 	for _, p := range projects {
@@ -558,8 +575,8 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 		}
 		p.IsFavorite = favs[p.ID]
 
-		if subscription, exists := subscriptions[p.ID]; exists {
-			p.Subscription = subscription
+		if subscription, exists := subscriptions[p.ID]; exists && len(subscription) > 0 {
+			p.Subscription = subscription[0]
 		}
 	}
 
