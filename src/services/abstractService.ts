@@ -5,7 +5,6 @@ import {objectToSnakeCase} from '@/helpers/case'
 import AbstractModel from '@/models/abstractModel'
 import type {IAbstract} from '@/modelTypes/IAbstract'
 import type {Right} from '@/constants/rights'
-import type {IFile} from '@/modelTypes/IFile'
 
 interface Paths {
 	create : string
@@ -413,7 +412,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 	 * @param file {IFile}
 	 * @param fieldName The name of the field the file is uploaded to.
 	 */
-	uploadFile(url : string, file: IFile, fieldName : string) {
+	uploadFile(url : string, file: File, fieldName : string) {
 		return this.uploadBlob(url, new Blob([file]), fieldName, file.name)
 	}
 
@@ -440,8 +439,11 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 						'Content-Type':
 							'multipart/form-data; boundary=' + formData._boundary,
 					},
-					onUploadProgress: progressEvent => {
-						this.uploadProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+					// fix upload issue after upgrading to axios to 1.0.0
+					// see: https://github.com/axios/axios/issues/4885#issuecomment-1222419132
+					transformRequest: formData => formData,
+					onUploadProgress: ({progress}) => {
+						this.uploadProgress = progress? Math.round((progress * 100)) : 0
 					},
 				},
 			)
