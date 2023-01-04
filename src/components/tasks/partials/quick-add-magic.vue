@@ -1,5 +1,5 @@
 <template>
-	<div v-if="available">
+	<div v-if="mode !== 'disabled' && prefixes !== undefined">
 		<p class="help has-text-grey">
 			{{ $t('task.quickAddMagic.hint') }}.
 			<ButtonLink @click="() => visible = true">{{ $t('task.quickAddMagic.what') }}</ButtonLink>
@@ -100,6 +100,5 @@ import {PREFIXES} from '@/modules/parseTaskText'
 const visible = ref(false)
 const mode = ref(getQuickAddMagicMode())
 
-const available = computed(() => mode.value !== 'disabled')
 const prefixes = computed(() => PREFIXES[mode.value])
 </script>

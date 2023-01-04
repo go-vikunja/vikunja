@@ -4,11 +4,11 @@ import {debouncedWatch, tryOnMounted, useWindowSize, type MaybeRef} from '@vueus
 // TODO: also add related styles
 // OR: replace with vueuse function
 export function useAutoHeightTextarea(value: MaybeRef<string>) {
-	const textarea = ref<HTMLInputElement>()
+	const textarea = ref<HTMLTextAreaElement | null>(null)
 	const minHeight = ref(0)
 
 	// adapted from https://github.com/LeaVerou/stretchy/blob/47f5f065c733029acccb755cae793009645809e2/src/stretchy.js#L34
-	function resize(textareaEl: HTMLInputElement | undefined) {
+	function resize(textareaEl: HTMLTextAreaElement | null) {
 		if (!textareaEl) return
 
 		let empty

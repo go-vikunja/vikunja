@@ -1,9 +1,8 @@
 <template>
-	<div class="task-add">
-		<div class="field is-grouped">
+	<div class="task-add" ref="taskAdd">
+		<div class="add-task__field field is-grouped">
 			<p class="control has-icons-left is-expanded">
 				<textarea
-					:disabled="loading || undefined"
 					class="add-task-textarea input"
 					:class="{'textarea-empty': newTaskTitle === ''}"
 					:placeholder="$t('list.list.addPlaceholder')"
@@ -33,27 +32,34 @@
 				</x-button>
 			</p>
 		</div>
-		<p class="help is-danger" v-if="errorMessage !== ''">
-			{{ errorMessage }}
-		</p>
-		<quick-add-magic v-else/>
+		<Expandable :open="errorMessage !== '' || taskAddFocused || taskAddHovered && debouncedTaskAddHovered">
+			<p class="pt-3 mt-0 help is-danger" v-if="errorMessage !== ''">
+				{{ errorMessage }}
+			</p>
+			<quick-add-magic v-else class="quick-add-magic" />
+		</Expandable>
 	</div>
 </template>
 
 <script setup lang="ts">
 import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {refDebounced, useElementHover, useFocusWithin} from '@vueuse/core'
 
-import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
+import {RELATION_KIND} from '@/types/IRelationKind'
 import type {ITask} from '@/modelTypes/ITask'
+
+import Expandable from '@/components/base/Expandable.vue'
+import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
 import {parseSubtasksViaIndention} from '@/helpers/parseSubtasksViaIndention'
 import TaskRelationService from '@/services/taskRelation'
 import TaskRelationModel from '@/models/taskRelation'
-import {RELATION_KIND} from '@/types/IRelationKind'
+import {getLabelsFromPrefix} from '@/modules/parseTaskText'
+
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
+
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
-import {getLabelsFromPrefix} from '@/modules/parseTaskText'
 
 const props = defineProps({
 	defaultPosition: {
@@ -71,9 +77,24 @@ const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
 const taskStore = useTaskStore()
 
+const taskAdd = ref<HTMLTextAreaElement | null>(null)
+
+// enable only if we don't have a modal
+// onStartTyping(() => {
+// 	if (newTaskInput.value === null || document.activeElement === newTaskInput.value) {
+// 		return
+// 	}
+// 	newTaskInput.value.focus()
+// })
+
+const { focused: taskAddFocused } = useFocusWithin(taskAdd)
+
+const taskAddHovered = useElementHover(taskAdd)
+const debouncedTaskAddHovered = refDebounced(taskAddHovered, 500)
+
 const errorMessage = ref('')
 
-function resetEmptyTitleError(e) {
+function resetEmptyTitleError(e: KeyboardEvent) {
 	if (
 		(e.which <= 90 && e.which >= 48 || e.which >= 96 && e.which <= 105)
 		&& newTaskTitle.value !== ''
@@ -192,7 +213,9 @@ defineExpose({
 </script>
 
 <style lang="scss" scoped>
-.task-add {
+.task-add,
+// overwrite bulma styles
+.task-add .add-task__field {
 	margin-bottom: 0;
 }
 
@@ -219,5 +242,9 @@ defineExpose({
 .textarea-empty {
 	white-space: nowrap;
 	text-overflow: ellipsis;
+}
+
+.quick-add-magic {
+	padding-top: 0.75rem;
 }
 </style>

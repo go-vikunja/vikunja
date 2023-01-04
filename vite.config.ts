@@ -10,6 +10,8 @@ import {VitePWA}  from 'vite-plugin-pwa'
 import {visualizer}  from 'rollup-plugin-visualizer'
 import svgLoader from 'vite-svg-loader'
 import postcssPresetEnv from 'postcss-preset-env'
+import postcssEasings from 'postcss-easings'
+import postcssEasingGradients from 'postcss-easing-gradients'
 
 
 const pathSrc = fileURLToPath(new URL('./src', import.meta.url))
@@ -46,7 +48,19 @@ export default defineConfig({
 		},
 		postcss: {
 			plugins: [
-				postcssPresetEnv(),
+				postcssEasings(),
+				postcssEasingGradients(),
+				postcssPresetEnv({
+					// These plugins are enabled by default but require
+					// a polyfill that we don't include
+					// see also './src/polyfills.ts'
+					features: {
+						'blank-pseudo-class': false,
+						'focus-visible-pseudo-class': false,
+						'has-pseudo-class': false,
+						'prefers-color-scheme-query': false,
+					},
+				}),
 			],
 		},
 	},
