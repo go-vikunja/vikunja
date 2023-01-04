@@ -67,7 +67,7 @@ require (
 	golang.org/x/image v0.2.0
 	golang.org/x/oauth2 v0.3.0
 	golang.org/x/sync v0.1.0
-	golang.org/x/sys v0.3.0
+	golang.org/x/sys v0.4.0
 	golang.org/x/term v0.3.0
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/yaml.v3 v3.0.1
