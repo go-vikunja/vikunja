@@ -10,7 +10,7 @@ menu:
 
 # Full docker example
 
-This docker compose configuration will run Vikunja with backend and frontend with a mariadb as database.
+This docker compose configuration will run Vikunja with backend and frontend with a mariadb database.
 It uses an nginx container or traefik on the host to proxy backend and frontend into a single port.
 
 For all available configuration options, see [configuration]({{< ref "config.md">}}).
@@ -76,7 +76,7 @@ This example lets you host Vikunja without any reverse proxy in front of it. Thi
 you need to get something up and running. If you want to host Vikunja on one single port instead of two different ones 
 or need tls termination, check out one of the other examples.
 
-Not that you need to change the `VIKUNJA_API_URL` environment variable to the ip (the docker host you're running this on) 
+Note that you need to change the `VIKUNJA_API_URL` environment variable to the ip (the docker host you're running this on) 
 is reachable at. Because the browser you'll use to access the Vikunja frontend uses that url to make the requests, it 
 has to be able to reach that ip + port from the outside. Putting everything in a private network won't work.
 
@@ -125,7 +125,7 @@ services:
 
 This example assumes [traefik](https://traefik.io) version 2 installed and configured to [use docker as a configuration provider](https://docs.traefik.io/providers/docker/).
 
-We also make a few assumtions here which you'll most likely need to adjust for your traefik setup:
+We also make a few assumptions here which you'll most likely need to adjust for your traefik setup:
 
 * Your domain is `vikunja.example.com`
 * The entrypoint you want to make vikunja available from is called `https`
@@ -398,7 +398,7 @@ docker main folders:
   * vikunja
   * mariadb
 
-Synology has it's own GUI for managing Docker containers... But it's easier via docker compose.
+Synology has its own GUI for managing Docker containers... But it's easier via docker compose.
 
 To do that, you can
 
@@ -407,7 +407,7 @@ To do that, you can
 * without activating SSH, by using Portainer (you have to install first, check out [this tutorial](https://www.portainer.io/blog/how-to-install-portainer-on-a-synology-nas) for exmple):
   1. Go to **Dashboard / Stacks** click the button **"Add Stack"**
   2. Give it the name Vikunja and paste the adapted docker compose file 
-  3. Deploy the Stack with the "Delpoy Stack" button: 
+  3. Deploy the Stack with the "Deploy Stack" button: 
 
 ![Portainer Stack deploy](/docs/synology-proxy-2.png)
 
