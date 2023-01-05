@@ -62,8 +62,7 @@ describe('List View Gantt', () => {
 	})
 
 	it('Drags a task around', () => {
-		cy.intercept('**/api/v1/tasks/*')
-			.as('taskUpdate')
+		cy.intercept(Cypress.env('API_URL') + '/tasks/*').as('taskUpdate')
 
 		const now = new Date()
 		TaskFactory.create(1, {
