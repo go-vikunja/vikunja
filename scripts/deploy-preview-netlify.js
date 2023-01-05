@@ -1,14 +1,18 @@
 const { exec } = require('child_process')
 
+function createSlug(string) {
+	return String(string)
+		.trim()
+		.normalize('NFKD')
+		.toLowerCase()
+		.replace(/[.\s/]/g, '-')
+		.replace(/[^A-Za-z\d-]/g, '')
+}
+
 const BOT_USER_ID = 513
 const giteaToken = process.env.GITEA_TOKEN
 const siteId = process.env.NETLIFY_SITE_ID
-const branchSlug = String(process.env.DRONE_SOURCE_BRANCH)
-						.trim()
-						.normalize('NFKD')
-						.toLowerCase()
-						.replace(/[.\s/]/g, '-')
-						.replace(/[^A-Za-z\d-]/g, '')
+const branchSlug = createSlug(process.env.DRONE_SOURCE_BRANCH)
 const prNumber = process.env.DRONE_PULL_REQUEST
 
 const prIssueCommentsUrl = `https://kolaente.dev/api/v1/repos/vikunja/frontend/issues/${prNumber}/comments`
