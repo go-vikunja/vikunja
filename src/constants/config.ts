@@ -1,1 +1,0 @@
-export const URL_PREFIX = '/api/v1' // _without_ slash at the end
