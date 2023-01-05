@@ -3,12 +3,11 @@ import {useOnline as useNetworkOnline} from '@vueuse/core'
 import type {ConfigurableWindow} from '@vueuse/core'
 
 export function useOnline(options?: ConfigurableWindow) {
+	const isOnline = useNetworkOnline(options)
 	const fakeOnlineState = !!import.meta.env.VITE_IS_ONLINE
-	if (fakeOnlineState) {
+	if (isOnline.value === false && fakeOnlineState) {
 		console.log('Setting fake online state', fakeOnlineState)
+		return ref(true)
 	}
-
-	return fakeOnlineState
-		? ref(true)
-		: useNetworkOnline(options)
+	return isOnline
 }
