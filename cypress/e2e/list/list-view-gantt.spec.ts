@@ -67,8 +67,8 @@ describe('List View Gantt', () => {
 
 		const now = new Date()
 		TaskFactory.create(1, {
-			start_date: formatISO(now),
-			end_date: formatISO(now.setDate(now.getDate() + 4)),
+			start_date: now.toISOString(),
+			end_date: new Date(new Date(now).setDate(now.getDate() + 4)).toISOString(),
 		})
 		cy.visit('/lists/1/gantt')
 
