@@ -115,7 +115,7 @@ import {useI18n} from 'vue-i18n'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Editor from '@/components/input/AsyncEditor'
-import ColorPicker from '@/components/input/colorPicker.vue'
+import ColorPicker from '@/components/input/ColorPicker.vue'
 
 import LabelModel from '@/models/label'
 import type {ILabel} from '@/modelTypes/ILabel'

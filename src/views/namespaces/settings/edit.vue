@@ -62,7 +62,7 @@ import router from '@/router'
 
 import AsyncEditor from '@/components/input/AsyncEditor'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
-import ColorPicker from '@/components/input/colorPicker.vue'
+import ColorPicker from '@/components/input/ColorPicker.vue'
 import CreateEdit from '@/components/misc/create-edit.vue'
 
 import NamespaceService from '@/services/namespace'

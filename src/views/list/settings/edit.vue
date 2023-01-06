@@ -75,7 +75,7 @@ import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import Editor from '@/components/input/AsyncEditor'
-import ColorPicker from '@/components/input/colorPicker.vue'
+import ColorPicker from '@/components/input/ColorPicker.vue'
 import CreateEdit from '@/components/misc/create-edit.vue'
 
 import type {IList} from '@/modelTypes/IList'

@@ -39,7 +39,7 @@ import {useRouter, useRoute} from 'vue-router'
 import ListService from '@/services/list'
 import ListModel from '@/models/list'
 import CreateEdit from '@/components/misc/create-edit.vue'
-import ColorPicker from '@/components/input/colorPicker.vue'
+import ColorPicker from '@/components/input/ColorPicker.vue'
 
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'

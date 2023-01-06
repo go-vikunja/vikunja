@@ -37,6 +37,7 @@
 <script setup lang="ts">
 import {computed, ref, toRef, watch} from 'vue'
 import {createRandomID} from '@/helpers/randomId'
+import XButton from '@/components/input/button.vue'
 
 const DEFAULT_COLORS = [
 	'#1973ff',

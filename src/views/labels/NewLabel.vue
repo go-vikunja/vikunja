@@ -40,7 +40,7 @@ import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
 
 import CreateEdit from '@/components/misc/create-edit.vue'
-import ColorPicker from '@/components/input/colorPicker.vue'
+import ColorPicker from '@/components/input/ColorPicker.vue'
 
 import LabelModel from '@/models/label'
 import {useLabelStore} from '@/stores/labels'
