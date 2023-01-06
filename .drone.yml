@@ -203,7 +203,7 @@ steps:
       PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
       - apk add git
-      - corepack enable && pnpm config set store-dir .cache/.pnpm
+      - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000 --frozen-lockfile
       - pnpm run lint
       - "echo '{\"VERSION\": \"'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'\"}' > src/version.json"
@@ -509,6 +509,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: dd67ef81f5bd85633fa72c9335fbceebbba5baebce5ebc310452459fd3dae2a8
+hmac: 492ac7c090012a3d61c0953871c7270646f9405dc1b042c6956f539931c8ad8c
 
 ...
