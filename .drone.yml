@@ -1,5 +1,6 @@
 ---
 kind: pipeline
+type: docker
 name: testing
 
 workspace:
@@ -111,7 +112,7 @@ steps:
   # compiling the same magefile at the same time. It's also faster if each step does not need to compile it first.
   - name: mage
     image: vikunja/golang-build:latest
-    pull: true
+    pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
     commands:
@@ -122,7 +123,7 @@ steps:
 
   - name: build
     image: vikunja/golang-build:latest
-    pull: true
+    pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
     depends_on: [ mage ]
@@ -133,7 +134,7 @@ steps:
 
   - name: lint
     image: golang:1.19-alpine
-    pull: true
+    pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
     depends_on: [ build ]
@@ -147,7 +148,7 @@ steps:
 
   - name: test-migration-prepare
     image: kolaente/toolbox:latest
-    pull: true
+    pull: always
     commands:
       # Get the latest version
       - wget https://dl.vikunja.io/api/unstable/vikunja-unstable-linux-amd64-full.zip -q -O vikunja-latest.zip
@@ -155,7 +156,7 @@ steps:
 
   - name: test-migration-sqlite
     image: vikunja/golang-build:latest
-    pull: true
+    pull: always
     depends_on: [ test-migration-prepare, build ]
     environment:
       VIKUNJA_DATABASE_TYPE: sqlite
@@ -174,7 +175,7 @@ steps:
 
   - name: test-migration-mysql
     image: vikunja/golang-build:latest
-    pull: true
+    pull: always
     depends_on: [ test-migration-prepare, build ]
     environment:
       VIKUNJA_DATABASE_TYPE: mysql
@@ -193,7 +194,7 @@ steps:
 
   - name: test-migration-psql
     image: vikunja/golang-build:latest
-    pull: true
+    pull: always
     depends_on: [ test-migration-prepare, build ]
     environment:
       VIKUNJA_DATABASE_TYPE: postgres
@@ -213,7 +214,7 @@ steps:
 
   - name: test
     image: vikunja/golang-build:latest
-    pull: true
+    pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
     commands:
@@ -224,7 +225,7 @@ steps:
 
   - name: test-sqlite
     image: vikunja/golang-build:latest
-    pull: true
+    pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
       VIKUNJA_TESTS_USE_CONFIG: 1
@@ -241,7 +242,7 @@ steps:
 
   - name: test-mysql
     image: vikunja/golang-build:latest
-    pull: true
+    pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
       VIKUNJA_TESTS_USE_CONFIG: 1
@@ -258,7 +259,7 @@ steps:
 
   - name: test-postgres
     image: vikunja/golang-build:latest
-    pull: true
+    pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
       VIKUNJA_TESTS_USE_CONFIG: 1
@@ -276,7 +277,7 @@ steps:
 
   - name: integration-test
     image: vikunja/golang-build:latest
-    pull: true
+    pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
     commands:
@@ -287,7 +288,7 @@ steps:
 
   - name: integration-test-sqlite
     image: vikunja/golang-build:latest
-    pull: true
+    pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
       VIKUNJA_TESTS_USE_CONFIG: 1
@@ -304,7 +305,7 @@ steps:
 
   - name: integration-test-mysql
     image: vikunja/golang-build:latest
-    pull: true
+    pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
       VIKUNJA_TESTS_USE_CONFIG: 1
@@ -321,7 +322,7 @@ steps:
 
   - name: integration-test-postgres
     image: vikunja/golang-build:latest
-    pull: true
+    pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
       VIKUNJA_TESTS_USE_CONFIG: 1
@@ -343,6 +344,7 @@ steps:
 ########
 
 kind: pipeline
+type: docker
 name: release
 
 depends_on:
@@ -368,7 +370,7 @@ steps:
   # compiling the same magefile at the same time. It's also faster if each step does not need to compile it first.
   - name: mage
     image: vikunja/golang-build:latest
-    pull: true
+    pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
     commands:
@@ -378,7 +380,7 @@ steps:
 
   - name: before-static-build
     image: techknowlogick/xgo:latest
-    pull: true
+    pull: always
     commands:
       - export PATH=$PATH:$GOPATH/bin
       - go install github.com/magefile/mage
@@ -387,7 +389,7 @@ steps:
 
   - name: static-build-windows
     image: techknowlogick/xgo:latest
-    pull: true
+    pull: always
     environment:
       # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
       # Leaving this here until we know how to resolve this properly.
@@ -400,7 +402,7 @@ steps:
 
   - name: static-build-linux
     image: techknowlogick/xgo:latest
-    pull: true
+    pull: always
     environment:
       # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
       # Leaving this here until we know how to resolve this properly.
@@ -413,7 +415,7 @@ steps:
 
   - name: static-build-darwin
     image: techknowlogick/xgo:latest
-    pull: true
+    pull: always
     environment:
       # This path does not exist. However, when we set the gopath to /go, the build fails. Not sure why.
       # Leaving this here until we know how to resolve this properly.
@@ -426,7 +428,7 @@ steps:
 
   - name: after-build-compress
     image: kolaente/upx
-    pull: true
+    pull: always
     depends_on:
       - static-build-windows
       - static-build-linux
@@ -436,7 +438,7 @@ steps:
 
   - name: after-build-static
     image: techknowlogick/xgo:latest
-    pull: true
+    pull: always
     depends_on:
       - after-build-compress
     commands:
@@ -448,7 +450,7 @@ steps:
 
   - name: sign-release
     image: plugins/gpgsign:1
-    pull: true
+    pull: always
     depends_on: [ after-build-static ]
     settings:
       key:
@@ -462,7 +464,7 @@ steps:
   # Push the releases to our pseudo-s3-bucket
   - name: release-latest
     image: plugins/s3
-    pull: true
+    pull: always
     settings:
       bucket: vikunja-releases
       access_key:
@@ -484,7 +486,7 @@ steps:
 
   - name: release-version
     image: plugins/s3
-    pull: true
+    pull: always
     settings:
       bucket: vikunja-releases
       access_key:
@@ -505,7 +507,7 @@ steps:
   # Build os packages and push it to our bucket
   - name: build-os-packages-unstable
     image: goreleaser/nfpm:v2.22.2
-    pull: true
+    pull: always
     commands:
       - apk add git go
       - ./mage-static release:packages
@@ -521,7 +523,7 @@ steps:
 
   - name: build-os-packages-version
     image: goreleaser/nfpm:v2.22.2
-    pull: true
+    pull: always
     commands:
       - apk add git go
       - ./mage-static release:packages
@@ -536,7 +538,7 @@ steps:
   # Push the os releases to our pseudo-s3-bucket
   - name: release-os-latest
     image: plugins/s3
-    pull: true
+    pull: always
     settings:
       bucket: vikunja-releases
       access_key:
@@ -558,7 +560,7 @@ steps:
 
   - name: release-os-version
     image: plugins/s3
-    pull: true
+    pull: always
     settings:
       bucket: vikunja-releases
       access_key:
@@ -578,6 +580,7 @@ steps:
 
 ---
 kind: pipeline
+type: docker
 name: deploy-docs
 
 workspace:
@@ -596,8 +599,7 @@ trigger:
 steps:
   - name: theme
     image: kolaente/toolbox
-    pull: true
-    group: build-static
+    pull: always
     commands:
       - mkdir docs/themes/vikunja -p
       - cd docs/themes/vikunja
@@ -606,7 +608,7 @@ steps:
 
   - name: build
     image: klakegg/hugo:0.104.2
-    pull: true
+    pull: always
     commands:
       - cd docs
       - hugo
@@ -614,7 +616,7 @@ steps:
 
   - name: docker
     image: plugins/docker
-    pull: true
+    pull: always
     settings:
       username:
         from_secret: docker_username
@@ -646,7 +648,7 @@ steps:
   - name: docker-unstable
     image: thegeeklab/drone-docker-buildx
     privileged: true
-    pull: true
+    pull: always
     settings:
       username:
         from_secret: docker_username
@@ -668,7 +670,7 @@ steps:
   - name: docker-release
     image: thegeeklab/drone-docker-buildx
     privileged: true
-    pull: true
+    pull: always
     settings:
       username:
         from_secret: docker_username
@@ -719,6 +721,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: f8ce17f7158088a124039f579ba10364788d306feac3feeb51689dce440d6213
+hmac: 2c7e3250304826cb62d54db4e6d2638bc8f182097306fb93772d07d7bc3cf7e8
 
 ...
