@@ -538,22 +538,22 @@
       "guide": "Guide"
     },
     "multiselect": {
-      "createPlaceholder": "Create new",
-      "selectPlaceholder": "Click or press enter to select"
+      "createPlaceholder": "Criar novo",
+      "selectPlaceholder": "Clique ou pressione Enter para selecionar"
     },
     "datepickerRange": {
-      "to": "To",
-      "from": "From",
-      "fromto": "{from} to {to}",
+      "to": "Para",
+      "from": "De",
+      "fromto": "{from} até {to}",
       "ranges": {
-        "today": "Today",
-        "thisWeek": "This Week",
-        "restOfThisWeek": "The Rest of This Week",
-        "nextWeek": "Next Week",
-        "next7Days": "Next 7 Days",
-        "lastWeek": "Last Week",
-        "thisMonth": "This Month",
-        "restOfThisMonth": "The Rest of This Month",
+        "today": "Hoje",
+        "thisWeek": "Esta semana",
+        "restOfThisWeek": "O resto desta semana",
+        "nextWeek": "Próxima semana",
+        "next7Days": "Próximos 7 dias",
+        "lastWeek": "Semana passada",
+        "thisMonth": "Este mês",
+        "restOfThisMonth": "O resto deste mês",
         "nextMonth": "Próximo mês",
         "next30Days": "Próximos 30 dias",
         "lastMonth": "Último mês",
@@ -615,7 +615,7 @@
     },
     "detail": {
       "chooseDueDate": "Click here to set a due date",
-      "chooseStartDate": "Click here to set a start date",
+      "chooseStartDate": "Clique aqui para definir uma data de início",
       "chooseEndDate": "Click here to set an end date",
       "move": "Move task to a different list",
       "done": "Marcar tarefa como concluída!",
