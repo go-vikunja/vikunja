@@ -405,19 +405,21 @@ func getUserProjectsStatement(parentProjectIDs []int64, userID int64, search str
 
 	var parentCondition builder.Cond
 	parentCondition = builder.Or(
-		builder.IsNull{"parent_project_id"},
-		builder.Eq{"parent_project_id": 0},
+		builder.IsNull{"l.parent_project_id"},
+		builder.Eq{"l.parent_project_id": 0},
 	)
+	projectCol := "id"
 	if len(parentProjectIDs) > 0 {
-		parentCondition = builder.In("parent_project_id", parentProjectIDs)
+		parentCondition = builder.In("l.parent_project_id", parentProjectIDs)
+		projectCol = "parent_project_id"
 	}
 
 	return builder.Dialect(dialect).
 		Select("l.*").
 		From("projects", "l").
-		Join("LEFT", "team_projects tl", "l.id = tl.project_id").
+		Join("LEFT", "team_projects tl", "tl.project_id = l."+projectCol).
 		Join("LEFT", "team_members tm2", "tm2.team_id = tl.team_id").
-		Join("LEFT", "users_projects ul", "ul.project_id = l.id").
+		Join("LEFT", "users_projects ul", "ul.project_id = l."+projectCol).
 		Where(builder.And(
 			builder.Or(
 				builder.Eq{"tm2.user_id": userID},

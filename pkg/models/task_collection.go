@@ -182,7 +182,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	// This allows to use this function in Task.ReadAll with a possibility to deprecate the latter at some point.
 	var projects []*Project
 	if tf.ProjectID == 0 {
-		projectMap, _, _, err := getRawProjectsForUser(
+		projects, _, _, err = getRawProjectsForUser(
 			s,
 			&projectOptions{
 				user: &user.User{ID: a.GetID()},
@@ -191,9 +191,6 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		)
 		if err != nil {
 			return nil, 0, 0, err
-		}
-		for _, project := range projectMap {
-			projects = append(projects, project)
 		}
 	} else {
 		// Check the project exists and the user has access on it

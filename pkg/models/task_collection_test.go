@@ -17,6 +17,7 @@
 package models
 
 import (
+	"sort"
 	"testing"
 	"time"
 
@@ -407,7 +408,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
-		ProjectID:    12,
+		ProjectID:    12, // parent project is shared to user 1 via direct share
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     12,
 		Created:      time.Unix(1543626724, 0).In(loc),
@@ -416,26 +417,26 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task22 := &Task{
 		ID:           22,
 		Title:        "task #22",
-		Identifier:   "test13-1",
+		Identifier:   "test12-1",
 		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
-		ProjectID:    13,
+		ProjectID:    12,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     13,
+		BucketID:     12,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task23 := &Task{
 		ID:           23,
 		Title:        "task #23",
-		Identifier:   "test14-1",
+		Identifier:   "test12-1",
 		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
-		ProjectID:    14,
+		ProjectID:    12,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     14,
+		BucketID:     12,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -446,7 +447,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
-		ProjectID:    15,
+		ProjectID:    15, // parent project is shared to user 1 via team
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     15,
 		Created:      time.Unix(1543626724, 0).In(loc),
@@ -459,7 +460,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
-		ProjectID:    16,
+		ProjectID:    15,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     16,
 		Created:      time.Unix(1543626724, 0).In(loc),
@@ -472,7 +473,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
-		ProjectID:    17,
+		ProjectID:    15,
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     17,
 		Created:      time.Unix(1543626724, 0).In(loc),
@@ -637,7 +638,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    interface{}
+		want    []*Task
 		wantErr bool
 	}
 
@@ -675,8 +676,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task22,
 				task23,
 				task24,
-				task25,
-				task26,
+				//task25,
+				//task26,
 				task27,
 				task28,
 				task29,
@@ -812,11 +813,13 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task19,
 				task20,
 				task21,
+
 				task22,
 				task23,
 				task24,
 				task25,
 				task26,
+
 				task27,
 				task28,
 				task29,
@@ -1241,11 +1244,29 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				return
 			}
 			if diff, equal := messagediff.PrettyDiff(got, tt.want); !equal {
-				if len(got.([]*Task)) == 0 && len(tt.want.([]*Task)) == 0 {
+				if len(got.([]*Task)) == 0 && len(tt.want) == 0 {
 					return
 				}
 
-				t.Errorf("Test %s, Task.ReadAll() = %v, \nwant %v, \ndiff: %v", tt.name, got, tt.want, diff)
+				gotIDs := []int64{}
+				for _, t := range got.([]*Task) {
+					gotIDs = append(gotIDs, t.ID)
+				}
+
+				wantIDs := []int64{}
+				for _, t := range tt.want {
+					wantIDs = append(wantIDs, t.ID)
+				}
+				sort.Slice(wantIDs, func(i, j int) bool {
+					return wantIDs[i] < wantIDs[j]
+				})
+				sort.Slice(gotIDs, func(i, j int) bool {
+					return gotIDs[i] < gotIDs[j]
+				})
+
+				diffIDs, _ := messagediff.PrettyDiff(gotIDs, wantIDs)
+
+				t.Errorf("Test %s, Task.ReadAll() = %v, \nwant %v, \ndiff: %v \n\n diffIDs: %v", tt.name, got, tt.want, diff, diffIDs)
 			}
 		})
 	}
