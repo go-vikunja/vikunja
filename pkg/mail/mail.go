@@ -58,6 +58,10 @@ func getClient() (*mail.Client, error) {
 		mail.WithTimeout((config.MailerQueueTimeout.GetDuration() + 3) * time.Second), // 3s more for us to close before mail server timeout
 	}
 
+	if config.MailerForceSSL.GetBool() {
+		opts = append(opts, mail.WithSSL())
+	}
+
 	if config.MailerUsername.GetString() != "" && config.MailerPassword.GetString() != "" {
 		opts = append(opts, mail.WithSMTPAuth(authType))
 	}
