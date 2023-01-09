@@ -85,7 +85,7 @@ specifiers:
   vite: 4.0.4
   vite-plugin-pwa: 0.14.1
   vite-svg-loader: 4.0.0
-  vitest: 0.26.3
+  vitest: 0.27.0
   vue: 3.2.45
   vue-advanced-cropper: 2.8.6
   vue-flatpickr-component: 11.0.1
@@ -191,7 +191,7 @@ devDependencies:
   vite: 4.0.4_4ljv3kzetn75ixk7nciffo2yk4
   vite-plugin-pwa: 0.14.1_fh56thzkyakgjs6jm6gbtbzxsq
   vite-svg-loader: 4.0.0
-  vitest: 0.26.3_2qnrwkso2yksj3jwe73qft3kzy
+  vitest: 0.27.0_2qnrwkso2yksj3jwe73qft3kzy
   vue-tsc: 1.0.24_typescript@4.9.4
   wait-on: 7.0.1
   workbox-cli: 6.5.4_acorn@7.4.1
@@ -4944,6 +4944,11 @@ packages:
   /bytes/3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
     engines: {node: '>= 0.8'}
+    dev: true
+
+  /cac/6.7.14:
+    resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
+    engines: {node: '>=8'}
     dev: true
 
   /cache-base/1.0.1:
@@ -14010,14 +14015,16 @@ packages:
       - terser
     dev: true
 
-  /vite-node/0.26.3_4ljv3kzetn75ixk7nciffo2yk4:
-    resolution: {integrity: sha512-Te2bq0Bfvq6XiO718I+1EinMjpNYKws6SNHKOmVbILAQimKoZKDd+IZLlkaYcBXPpK3HFe2U80k8Zw+m3w/a2w==}
+  /vite-node/0.27.0_4ljv3kzetn75ixk7nciffo2yk4:
+    resolution: {integrity: sha512-O1o9joT0qCGx5Om6W0VNLr7M00ttrnFlfZX2d+oxt2T9oZ9DvYSv8kDRhNJDVhAgNgUm3Tc0h/+jppNf3mVKbA==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
     dependencies:
+      cac: 6.7.14
       debug: 4.3.4
       mlly: 1.0.0
       pathe: 0.2.0
+      picocolors: 1.0.0
       source-map: 0.6.1
       source-map-support: 0.5.21
       vite: 4.0.4_4ljv3kzetn75ixk7nciffo2yk4
@@ -14093,8 +14100,8 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vitest/0.26.3_2qnrwkso2yksj3jwe73qft3kzy:
-    resolution: {integrity: sha512-FmHxU9aUCxTi23keF3vxb/Qp0lYXaaJ+jRLGOUmMS3qVTOJvgGE+f1VArupA6pEhaG2Ans4X+zV9dqM5WISMbg==}
+  /vitest/0.27.0_2qnrwkso2yksj3jwe73qft3kzy:
+    resolution: {integrity: sha512-BnOa7T6CnXVC6UgcAsvFOZ2Dtvqkt+/Nl6CRgh4qVT70vElf65XwEL6zMRyTF+h2QXJziEkxYdrLo5WCxckMLQ==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
     peerDependencies:
@@ -14120,17 +14127,19 @@ packages:
       '@types/node': 18.11.18
       acorn: 8.8.1
       acorn-walk: 8.2.0
+      cac: 6.7.14
       chai: 4.3.7
       debug: 4.3.4
       happy-dom: 8.1.3
       local-pkg: 0.4.2
+      picocolors: 1.0.0
       source-map: 0.6.1
       strip-literal: 1.0.0
       tinybench: 2.3.1
       tinypool: 0.3.0
       tinyspy: 1.0.2
       vite: 4.0.4_4ljv3kzetn75ixk7nciffo2yk4
-      vite-node: 0.26.3_4ljv3kzetn75ixk7nciffo2yk4
+      vite-node: 0.27.0_4ljv3kzetn75ixk7nciffo2yk4
     transitivePeerDependencies:
       - less
       - sass
