@@ -386,6 +386,16 @@ steps:
       ref:
         - refs/heads/main
 
+  - name: generate-tags
+    image: thegeeklab/docker-autotag
+    environment:
+      DOCKER_AUTOTAG_VERSION: ${DRONE_TAG}
+      DOCKER_AUTOTAG_EXTRA_TAGS: latest
+    depends_on: [ fetch-tags ]
+    when:
+      ref:
+        - "refs/tags/**"
+
   - name: docker-release
     image: thegeeklab/drone-docker-buildx
     privileged: true
@@ -406,7 +416,7 @@ steps:
         - linux/arm/v6
         - linux/arm/v7
         - linux/arm64/v8
-    depends_on: [ fetch-tags ]
+    depends_on: [ generate-tags ]
     when:
       ref:
         - "refs/tags/**"
