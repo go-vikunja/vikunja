@@ -3,4 +3,5 @@ export interface IProvider {
 	key: string;
 	authUrl: string;
 	clientId: string;
+	logoutUrl: string;
 }

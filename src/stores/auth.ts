@@ -9,7 +9,7 @@ import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 import {setModuleLoading} from '@/stores/helper'
 import {success} from '@/message'
-import {redirectToProvider} from '@/helpers/redirectToProvider'
+import {redirectToProvider, redirectToProviderOnLogout} from '@/helpers/redirectToProvider'
 import {AUTH_TYPES, type IUser} from '@/modelTypes/IUser'
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import router from '@/router'
@@ -356,6 +356,16 @@ export const useAuthStore = defineStore('auth', () => {
 		window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
 		await router.push({name: 'user.login'})
 		await checkAuth()
+
+		// if configured, redirect to OIDC Provider on logout
+		const {auth} = useConfigStore()
+		if (
+			auth.local.enabled === false &&
+			auth.openidConnect.enabled &&
+			auth.openidConnect.providers?.length === 1)
+		{
+			redirectToProviderOnLogout(auth.openidConnect.providers[0])
+		}
 	}
 
 	return {

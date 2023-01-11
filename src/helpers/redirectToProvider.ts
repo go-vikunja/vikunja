@@ -17,3 +17,8 @@ export const redirectToProvider = (provider: IProvider, redirectUrl = '') => {
 
 	window.location.href = `${provider.authUrl}?client_id=${provider.clientId}&redirect_uri=${redirectUrl}${provider.key}&response_type=code&scope=openid email profile&state=${state}`
 }
+export const redirectToProviderOnLogout = (provider: IProvider) => {
+	if (provider.logoutUrl.length > 0){
+		window.location.href = `${provider.logoutUrl}`
+	}
+}
