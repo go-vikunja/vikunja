@@ -243,6 +243,33 @@ func TestTask_Update(t *testing.T) {
 			"bucket_id": 3,
 		}, false)
 	})
+	t.Run("moving a repeating task to the done bucket", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:          28,
+			Title:       "test updated",
+			ListID:      1,
+			BucketID:    3, // Bucket 3 is the done bucket
+			RepeatAfter: 3600,
+		}
+		err := task.Update(s, u)
+		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+		assert.False(t, task.Done)
+		assert.Equal(t, int64(1), task.BucketID) // Bucket should not be updated
+
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":        28,
+			"done":      false,
+			"title":     "test updated",
+			"list_id":   1,
+			"bucket_id": 1,
+		}, false)
+	})
 	t.Run("default bucket when moving a task between lists", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -308,8 +335,9 @@ func TestTask_Update(t *testing.T) {
 		defer s.Close()
 
 		task := &Task{
-			ID:   28,
-			Done: true,
+			ID:          28,
+			Done:        true,
+			RepeatAfter: 3600,
 		}
 		err := task.Update(s, u)
 		assert.NoError(t, err)
