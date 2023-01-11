@@ -97,7 +97,7 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 		return err
 	}
 
-	exportFile, err := files.CreateWithMimeAndSession(s, exported, tmpFilename, uint64(stat.Size()), u, "application/zip")
+	exportFile, err := files.CreateWithMimeAndSession(s, exported, tmpFilename, uint64(stat.Size()), u, "application/zip", false)
 	if err != nil {
 		return err
 	}

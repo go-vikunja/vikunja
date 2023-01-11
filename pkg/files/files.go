@@ -83,7 +83,7 @@ func CreateWithMime(f io.Reader, realname string, realsize uint64, a web.Auth, m
 	s := db.NewSession()
 	defer s.Close()
 
-	file, err = CreateWithMimeAndSession(s, f, realname, realsize, a, mime)
+	file, err = CreateWithMimeAndSession(s, f, realname, realsize, a, mime, true)
 	if err != nil {
 		_ = s.Rollback()
 		return
@@ -91,14 +91,14 @@ func CreateWithMime(f io.Reader, realname string, realsize uint64, a web.Auth, m
 	return
 }
 
-func CreateWithMimeAndSession(s *xorm.Session, f io.Reader, realname string, realsize uint64, a web.Auth, mime string) (file *File, err error) {
+func CreateWithMimeAndSession(s *xorm.Session, f io.Reader, realname string, realsize uint64, a web.Auth, mime string, checkFileSizeLimit bool) (file *File, err error) {
 	// Get and parse the configured file size
 	var maxSize datasize.ByteSize
 	err = maxSize.UnmarshalText([]byte(config.FilesMaxSize.GetString()))
 	if err != nil {
 		return nil, err
 	}
-	if realsize > maxSize.Bytes() {
+	if realsize > maxSize.Bytes() && checkFileSizeLimit {
 		return nil, ErrFileIsTooLarge{Size: realsize}
 	}
 
