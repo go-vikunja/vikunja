@@ -667,6 +667,16 @@ steps:
       ref:
         - refs/heads/main
 
+  - name: generate-tags
+    image: thegeeklab/docker-autotag
+    environment:
+      DOCKER_AUTOTAG_VERSION: ${DRONE_TAG}
+      DOCKER_AUTOTAG_EXTRA_TAGS: latest
+    depends_on: [ fetch-tags ]
+    when:
+      ref:
+        - "refs/tags/**"
+
   - name: docker-release
     image: thegeeklab/drone-docker-buildx
     privileged: true
@@ -677,14 +687,13 @@ steps:
       password:
         from_secret: docker_password
       repo: vikunja/api
-      auto_tag: true
       platforms:
         - linux/386
         - linux/amd64
         - linux/arm/v6
         - linux/arm/v7
         - linux/arm64/v8
-    depends_on: [ fetch-tags ]
+    depends_on: [ generate-tags ]
     when:
       ref:
         - "refs/tags/**"
@@ -721,6 +730,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: b72d8116bc58feb2817a33c470c231b34c93a3650f402010217d50bf8b3ca341
+hmac: 37d091b9fe138091044e4dc44633bf6e059478006b3e697c3eff80a49a4837d8
 
 ...
