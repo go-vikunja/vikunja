@@ -97,7 +97,7 @@ export const useBaseStore = defineStore('base', () => {
 
 		// The forceUpdate parameter is used only when updating a list background directly because in that case 
 		// the current list stays the same, but we want to show the new background right away.
-		if (list.id !== currentList.value.id || forceUpdate) {
+		if (list.id !== currentList.value?.id || forceUpdate) {
 			if (list.backgroundInformation) {
 				try {
 					const blurHash = await getBlobFromBlurHash(list.backgroundBlurHash)

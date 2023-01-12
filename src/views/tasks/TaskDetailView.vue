@@ -557,7 +557,7 @@ watch(
 			baseStore.handleSetCurrentList({list: parentList})
 		}
 	},
-	{immediate: true },
+	{immediate: true},
 )
 
 const canWrite = computed(() => (

@@ -82,7 +82,6 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 	result.text = result.priority !== null ? cleanupItemText(result.text, [String(result.priority)], prefixes.priority) : result.text
 
 	result.assignees = getItemsFromPrefix(result.text, prefixes.assignee)
-	result.text = cleanupItemText(result.text, result.assignees, prefixes.assignee)
 
 	const {textWithoutMatched, repeats} = getRepeats(result.text)
 	result.text = textWithoutMatched
@@ -277,7 +276,7 @@ const getRepeats = (text: string): repeatParsedResult => {
 	}
 }
 
-const cleanupItemText = (text: string, items: string[], prefix: string): string => {
+export const cleanupItemText = (text: string, items: string[], prefix: string): string => {
 	items.forEach(l => {
 		text = text
 			.replace(`${prefix}'${l}' `, '')
@@ -294,7 +293,7 @@ const cleanupResult = (result: ParsedTaskText, prefixes: Prefixes): ParsedTaskTe
 	result.text = cleanupItemText(result.text, result.labels, prefixes.label)
 	result.text = result.list !== null ? cleanupItemText(result.text, [result.list], prefixes.list) : result.text
 	result.text = result.priority !== null ? cleanupItemText(result.text, [String(result.priority)], prefixes.priority) : result.text
-	result.text = cleanupItemText(result.text, result.assignees, prefixes.assignee)
+	// Not removing assignees to avoid removing @text where the user does not exist
 	result.text = result.text.trim()
 
 	return result

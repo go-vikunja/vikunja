@@ -9,7 +9,7 @@ import UserService from '@/services/user'
 
 import {playPop} from '@/helpers/playPop'
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
-import {parseTaskText} from '@/modules/parseTaskText'
+import {cleanupItemText, parseTaskText, PREFIXES} from '@/modules/parseTaskText'
 
 import TaskAssigneeModel from '@/models/taskAssignee'
 import LabelTaskModel from '@/models/labelTask'
@@ -63,7 +63,7 @@ async function addLabelToTask(task: ITask, label: ILabel) {
 	return response
 }
 
-async function findAssignees(parsedTaskAssignees: string[]) {
+async function findAssignees(parsedTaskAssignees: string[]): Promise<IUser[]> {
 	if (parsedTaskAssignees.length <= 0) {
 		return []
 	}
@@ -376,7 +376,8 @@ export const useTaskStore = defineStore('task', () => {
 		Partial<ITask>,
 	) {
 		const cancel = setModuleLoading(setIsLoading)
-		const parsedTask = parseTaskText(title, getQuickAddMagicMode())
+		const quickAddMagicMode = getQuickAddMagicMode()
+		const parsedTask = parseTaskText(title, quickAddMagicMode)
 	
 		const foundListId = await findListId({
 			list: parsedTask.list,
@@ -390,11 +391,20 @@ export const useTaskStore = defineStore('task', () => {
 	
 		const assignees = await findAssignees(parsedTask.assignees)
 		
+		// Only clean up those assignees from the task title which actually exist
+		let cleanedTitle = parsedTask.text
+		if (assignees.length > 0) {
+			const assigneePrefix = PREFIXES[quickAddMagicMode]?.assignee
+			if (assigneePrefix) {
+				cleanedTitle = cleanupItemText(cleanedTitle, assignees.map(a  => a.username), assigneePrefix)
+			}
+		}
+
 		// I don't know why, but it all goes up in flames when I just pass in the date normally.
 		const dueDate = parsedTask.date !== null ? new Date(parsedTask.date).toISOString() : null
 	
 		const task = new TaskModel({
-			title: parsedTask.text,
+			title: cleanedTitle,
 			listId: foundListId,
 			dueDate,
 			priority: parsedTask.priority,
