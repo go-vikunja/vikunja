@@ -157,7 +157,7 @@ func TestTaskRelation_CanCreate(t *testing.T) {
 
 		rel := TaskRelation{
 			TaskID:       1,
-			OtherTaskID:  13,
+			OtherTaskID:  32,
 			RelationKind: RelationKindSubtask,
 		}
 		can, err := rel.CanCreate(s, &user.User{ID: 1})
