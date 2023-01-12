@@ -279,35 +279,41 @@
   id: 29
   title: Test29
   owner_id: 6
+  position: 2900
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
   id: 30
   title: Test30
   owner_id: 6
+  position: 3000
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
   id: 31
   title: Test31
   owner_id: 6
+  position: 3100
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
   id: 32
   title: Test32
   owner_id: 6
+  position: 3200
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
   id: 33
   title: Test33
   owner_id: 6
+  position: 3300
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
   id: 34
   title: Test34
   owner_id: 6
+  position: 3400
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12

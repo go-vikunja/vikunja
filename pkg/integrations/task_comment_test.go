@@ -101,33 +101,33 @@ func TestTaskComments(t *testing.T) {
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 
-			t.Run("Shared Via NamespaceTeam readonly", func(t *testing.T) {
+			t.Run("Shared Via Parent Project Team readonly", func(t *testing.T) {
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "21", "commentid": "9"}, `{"comment":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
-			t.Run("Shared Via NamespaceTeam write", func(t *testing.T) {
+			t.Run("Shared Via Parent Project Team write", func(t *testing.T) {
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "22", "commentid": "10"}, `{"comment":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
-			t.Run("Shared Via NamespaceTeam admin", func(t *testing.T) {
+			t.Run("Shared Via Parent Project Team admin", func(t *testing.T) {
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "23", "commentid": "11"}, `{"comment":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 
-			t.Run("Shared Via NamespaceUser readonly", func(t *testing.T) {
+			t.Run("Shared Via Parent Project User readonly", func(t *testing.T) {
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "24", "commentid": "12"}, `{"comment":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
-			t.Run("Shared Via NamespaceUser write", func(t *testing.T) {
+			t.Run("Shared Via Parent Project User write", func(t *testing.T) {
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "25", "commentid": "13"}, `{"comment":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
-			t.Run("Shared Via NamespaceUser admin", func(t *testing.T) {
+			t.Run("Shared Via Parent Project User admin", func(t *testing.T) {
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "26", "commentid": "14"}, `{"comment":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
@@ -184,33 +184,33 @@ func TestTaskComments(t *testing.T) {
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 
-			t.Run("Shared Via NamespaceTeam readonly", func(t *testing.T) {
+			t.Run("Shared Via Parent Project Team readonly", func(t *testing.T) {
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "21", "commentid": "9"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
-			t.Run("Shared Via NamespaceTeam write", func(t *testing.T) {
+			t.Run("Shared Via Parent Project Team write", func(t *testing.T) {
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "22", "commentid": "10"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
-			t.Run("Shared Via NamespaceTeam admin", func(t *testing.T) {
+			t.Run("Shared Via Parent Project Team admin", func(t *testing.T) {
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "23", "commentid": "11"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 
-			t.Run("Shared Via NamespaceUser readonly", func(t *testing.T) {
+			t.Run("Shared Via Parent Project User readonly", func(t *testing.T) {
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "24", "commentid": "12"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
-			t.Run("Shared Via NamespaceUser write", func(t *testing.T) {
+			t.Run("Shared Via Parent Project User write", func(t *testing.T) {
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "25", "commentid": "13"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
-			t.Run("Shared Via NamespaceUser admin", func(t *testing.T) {
+			t.Run("Shared Via Parent Project User admin", func(t *testing.T) {
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "26", "commentid": "14"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
@@ -267,33 +267,33 @@ func TestTaskComments(t *testing.T) {
 				assert.Contains(t, rec.Body.String(), `"comment":"Lorem Ipsum"`)
 			})
 
-			t.Run("Shared Via NamespaceTeam readonly", func(t *testing.T) {
+			t.Run("Shared Via Parent Project Team readonly", func(t *testing.T) {
 				_, err := testHandler.testCreateWithUser(nil, map[string]string{"task": "21"}, `{"comment":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
-			t.Run("Shared Via NamespaceTeam write", func(t *testing.T) {
+			t.Run("Shared Via Parent Project Team write", func(t *testing.T) {
 				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"task": "22"}, `{"comment":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"comment":"Lorem Ipsum"`)
 			})
-			t.Run("Shared Via NamespaceTeam admin", func(t *testing.T) {
+			t.Run("Shared Via Parent Project Team admin", func(t *testing.T) {
 				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"task": "23"}, `{"comment":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"comment":"Lorem Ipsum"`)
 			})
 
-			t.Run("Shared Via NamespaceUser readonly", func(t *testing.T) {
+			t.Run("Shared Via Parent Project User readonly", func(t *testing.T) {
 				_, err := testHandler.testCreateWithUser(nil, map[string]string{"task": "24"}, `{"comment":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
-			t.Run("Shared Via NamespaceUser write", func(t *testing.T) {
+			t.Run("Shared Via Parent Project User write", func(t *testing.T) {
 				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"task": "25"}, `{"comment":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"comment":"Lorem Ipsum"`)
 			})
-			t.Run("Shared Via NamespaceUser admin", func(t *testing.T) {
+			t.Run("Shared Via Parent Project User admin", func(t *testing.T) {
 				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"task": "26"}, `{"comment":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"comment":"Lorem Ipsum"`)
