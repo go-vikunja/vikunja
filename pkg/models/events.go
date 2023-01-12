@@ -21,16 +21,6 @@ import (
 	"code.vikunja.io/web"
 )
 
-// DataExportRequestEvent represents a DataExportRequestEvent event
-type DataExportRequestEvent struct {
-	User *user.User
-}
-
-// Name defines the name for DataExportRequestEvent
-func (t *DataExportRequestEvent) Name() string {
-	return "user.export.request"
-}
-
 /////////////////
 // Task Events //
 /////////////////
