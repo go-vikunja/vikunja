@@ -264,11 +264,11 @@ func TestTask_Update(t *testing.T) {
 		assert.Equal(t, int64(1), task.BucketID) // Bucket should not be updated
 
 		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":        28,
-			"done":      false,
-			"title":     "test updated",
-			"list_id":   1,
-			"bucket_id": 1,
+			"id":         28,
+			"done":       false,
+			"title":      "test updated",
+			"project_id": 1,
+			"bucket_id":  1,
 		}, false)
 	})
 	t.Run("default bucket when moving a task between projects", func(t *testing.T) {
