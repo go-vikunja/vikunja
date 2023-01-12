@@ -453,32 +453,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task25 := &Task{
-		ID:           25,
-		Title:        "task #25",
-		Identifier:   "test16-1",
-		Index:        1,
-		CreatedByID:  6,
-		CreatedBy:    user6,
-		ProjectID:    15,
-		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     16,
-		Created:      time.Unix(1543626724, 0).In(loc),
-		Updated:      time.Unix(1543626724, 0).In(loc),
-	}
-	task26 := &Task{
-		ID:           26,
-		Title:        "task #26",
-		Identifier:   "test17-1",
-		Index:        1,
-		CreatedByID:  6,
-		CreatedBy:    user6,
-		ProjectID:    15,
-		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     17,
-		Created:      time.Unix(1543626724, 0).In(loc),
-		Updated:      time.Unix(1543626724, 0).In(loc),
-	}
 	task27 := &Task{
 		ID:          27,
 		Title:       "task #27 with reminders and start_date",
@@ -690,7 +664,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		},
 		{
 			// For more sorting tests see task_collection_sort_test.go
-			name: "ReadAll Tasks sorted by done asc and id desc",
+			name: "sorted by done asc and id desc",
 			fields: fields{
 				SortBy:  []string{"done", "id"},
 				OrderBy: []string{"asc", "desc"},
@@ -704,8 +678,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task29,
 				task28,
 				task27,
-				task26,
-				task25,
 				task24,
 				task23,
 				task22,
@@ -817,8 +789,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task22,
 				task23,
 				task24,
-				task25,
-				task26,
 
 				task27,
 				task28,
@@ -888,8 +858,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task22, // has nil dates
 				task23, // has nil dates
 				task24, // has nil dates
-				task25, // has nil dates
-				task26, // has nil dates
 				task27, // has nil dates
 				task28, // has nil dates
 				task29, // has nil dates
@@ -1143,8 +1111,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task22,
 				task23,
 				task24,
-				task25,
-				task26,
 				task27,
 				task28,
 				task29,
@@ -1175,8 +1141,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task29,
 				task28,
 				task27,
-				task26,
-				task25,
 				task24,
 				task23,
 				task22,
@@ -1244,7 +1208,13 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				return
 			}
 			if diff, equal := messagediff.PrettyDiff(got, tt.want); !equal {
-				if len(got.([]*Task)) == 0 && len(tt.want) == 0 {
+				var is bool
+				var gotTasks []*Task
+				gotTasks, is = got.([]*Task)
+				if !is {
+					gotTasks = []*Task{}
+				}
+				if len(gotTasks) == 0 && len(tt.want) == 0 {
 					return
 				}
 
