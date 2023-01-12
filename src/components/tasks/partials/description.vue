@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref,computed, watch, type PropType} from 'vue'
+import {ref, computed, watch, type PropType} from 'vue'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import Editor from '@/components/input/AsyncEditor'
@@ -67,7 +67,7 @@ const taskStore = useTaskStore()
 const loading = computed(() => taskStore.isLoading)
 
 watch(
-	() => props.modelValue,
+	props.modelValue,
 	(value) => {
 		task.value = value
 	},
