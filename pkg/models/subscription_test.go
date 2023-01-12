@@ -295,11 +295,11 @@ func TestSubscriptionGet(t *testing.T) {
 			s := db.NewSession()
 			defer s.Close()
 
-			// Task 21 belongs to project 12 which the user has subscribed to
+			// Task 21 belongs to project 32 which the user has subscribed to
 			sub, err := GetSubscription(s, SubscriptionEntityTask, 21, u)
 			assert.NoError(t, err)
 			assert.NotNil(t, sub)
-			assert.Equal(t, int64(3), sub.ID)
+			assert.Equal(t, int64(8), sub.ID)
 		})
 	})
 	t.Run("invalid type", func(t *testing.T) {
