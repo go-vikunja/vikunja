@@ -404,11 +404,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task21 := &Task{
 		ID:           21,
 		Title:        "task #21",
-		Identifier:   "test12-1",
+		Identifier:   "-1",
 		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
-		ProjectID:    12, // parent project is shared to user 1 via direct share
+		ProjectID:    32, // parent project is shared to user 1 via direct share
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     12,
 		Created:      time.Unix(1543626724, 0).In(loc),
@@ -417,26 +417,26 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task22 := &Task{
 		ID:           22,
 		Title:        "task #22",
-		Identifier:   "test12-1",
+		Identifier:   "-1",
 		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
-		ProjectID:    12,
+		ProjectID:    33,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     12,
+		BucketID:     36,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task23 := &Task{
 		ID:           23,
 		Title:        "task #23",
-		Identifier:   "test12-1",
+		Identifier:   "-1",
 		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
-		ProjectID:    12,
+		ProjectID:    34,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     12,
+		BucketID:     37,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -450,6 +450,32 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		ProjectID:    15, // parent project is shared to user 1 via team
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     15,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
+	}
+	task25 := &Task{
+		ID:           25,
+		Title:        "task #25",
+		Identifier:   "test16-1",
+		Index:        1,
+		CreatedByID:  6,
+		CreatedBy:    user6,
+		ProjectID:    16,
+		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     16,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
+	}
+	task26 := &Task{
+		ID:           26,
+		Title:        "task #26",
+		Identifier:   "test17-1",
+		Index:        1,
+		CreatedByID:  6,
+		CreatedBy:    user6,
+		ProjectID:    17,
+		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     17,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -650,8 +676,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task22,
 				task23,
 				task24,
-				//task25,
-				//task26,
+				task25,
+				task26,
 				task27,
 				task28,
 				task29,
@@ -678,6 +704,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task29,
 				task28,
 				task27,
+				task26,
+				task25,
 				task24,
 				task23,
 				task22,
@@ -789,6 +817,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task22,
 				task23,
 				task24,
+				task25,
+				task26,
 
 				task27,
 				task28,
@@ -858,6 +888,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task22, // has nil dates
 				task23, // has nil dates
 				task24, // has nil dates
+				task25, // has nil dates
+				task26, // has nil dates
 				task27, // has nil dates
 				task28, // has nil dates
 				task29, // has nil dates
@@ -1111,6 +1143,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task22,
 				task23,
 				task24,
+				task25,
+				task26,
 				task27,
 				task28,
 				task29,
@@ -1141,6 +1175,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task29,
 				task28,
 				task27,
+				task26,
+				task25,
 				task24,
 				task23,
 				task22,
