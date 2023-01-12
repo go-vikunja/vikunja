@@ -76,3 +76,27 @@
   right: 2
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+- id: 13
+  user_id: 1
+  project_id: 30
+  right: 1
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+- id: 14
+  user_id: 1
+  project_id: 31
+  right: 2
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+- id: 15
+  user_id: 1
+  project_id: 28
+  right: 1
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+- id: 16
+  user_id: 1
+  project_id: 29
+  right: 2
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
