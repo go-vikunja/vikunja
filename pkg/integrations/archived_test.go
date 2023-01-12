@@ -92,106 +92,103 @@ func TestArchived(t *testing.T) {
 		t: t,
 	}
 
-	t.Run("project", func(t *testing.T) {
-
-		taskTests := func(taskID string, errCode int, t *testing.T) {
-			t.Run("task", func(t *testing.T) {
-				t.Run("edit task", func(t *testing.T) {
-					_, err := testTaskHandler.testUpdateWithUser(nil, map[string]string{"projecttask": taskID}, `{"title":"TestIpsum"}`)
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-				t.Run("delete", func(t *testing.T) {
-					_, err := testTaskHandler.testDeleteWithUser(nil, map[string]string{"projecttask": taskID})
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-				t.Run("add new labels", func(t *testing.T) {
-					_, err := testLabelHandler.testCreateWithUser(nil, map[string]string{"projecttask": taskID}, `{"label_id":1}`)
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-				t.Run("remove lables", func(t *testing.T) {
-					_, err := testLabelHandler.testDeleteWithUser(nil, map[string]string{"projecttask": taskID, "label": "4"})
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-				t.Run("add assignees", func(t *testing.T) {
-					_, err := testAssigneeHandler.testCreateWithUser(nil, map[string]string{"projecttask": taskID}, `{"user_id":3}`)
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-				t.Run("remove assignees", func(t *testing.T) {
-					_, err := testAssigneeHandler.testDeleteWithUser(nil, map[string]string{"projecttask": taskID, "user": "2"})
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-				t.Run("add relation", func(t *testing.T) {
-					_, err := testRelationHandler.testCreateWithUser(nil, map[string]string{"task": taskID}, `{"other_task_id":1,"relation_kind":"related"}`)
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-				t.Run("remove relation", func(t *testing.T) {
-					_, err := testRelationHandler.testDeleteWithUser(nil, map[string]string{"task": taskID}, `{"other_task_id":2,"relation_kind":"related"}`)
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-				t.Run("add comment", func(t *testing.T) {
-					_, err := testCommentHandler.testCreateWithUser(nil, map[string]string{"task": taskID}, `{"comment":"Lorem"}`)
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-				t.Run("remove comment", func(t *testing.T) {
-					var commentID = "15"
-					if taskID == "36" {
-						commentID = "16"
-					}
-					_, err := testCommentHandler.testDeleteWithUser(nil, map[string]string{"task": taskID, "commentid": commentID})
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-			})
-		}
-
-		// The project belongs to an archived parent project
-		t.Run("archived parent project", func(t *testing.T) {
-			t.Run("not editable", func(t *testing.T) {
-				_, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "21"}, `{"title":"TestIpsum","is_archived":true}`)
+	taskTests := func(taskID string, errCode int, t *testing.T) {
+		t.Run("task", func(t *testing.T) {
+			t.Run("edit task", func(t *testing.T) {
+				_, err := testTaskHandler.testUpdateWithUser(nil, map[string]string{"projecttask": taskID}, `{"title":"TestIpsum"}`)
 				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+				assertHandlerErrorCode(t, err, errCode)
 			})
-			t.Run("no new tasks", func(t *testing.T) {
-				_, err := testTaskHandler.testCreateWithUser(nil, map[string]string{"project": "21"}, `{"title":"Lorem"}`)
+			t.Run("delete", func(t *testing.T) {
+				_, err := testTaskHandler.testDeleteWithUser(nil, map[string]string{"projecttask": taskID})
 				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+				assertHandlerErrorCode(t, err, errCode)
 			})
-			t.Run("not unarchivable", func(t *testing.T) {
-				_, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "21"}, `{"title":"LoremIpsum","is_archived":false}`)
+			t.Run("add new labels", func(t *testing.T) {
+				_, err := testLabelHandler.testCreateWithUser(nil, map[string]string{"projecttask": taskID}, `{"label_id":1}`)
 				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+				assertHandlerErrorCode(t, err, errCode)
 			})
-
-			taskTests("35", models.ErrCodeProjectIsArchived, t)
+			t.Run("remove lables", func(t *testing.T) {
+				_, err := testLabelHandler.testDeleteWithUser(nil, map[string]string{"projecttask": taskID, "label": "4"})
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, errCode)
+			})
+			t.Run("add assignees", func(t *testing.T) {
+				_, err := testAssigneeHandler.testCreateWithUser(nil, map[string]string{"projecttask": taskID}, `{"user_id":3}`)
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, errCode)
+			})
+			t.Run("remove assignees", func(t *testing.T) {
+				_, err := testAssigneeHandler.testDeleteWithUser(nil, map[string]string{"projecttask": taskID, "user": "2"})
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, errCode)
+			})
+			t.Run("add relation", func(t *testing.T) {
+				_, err := testRelationHandler.testCreateWithUser(nil, map[string]string{"task": taskID}, `{"other_task_id":1,"relation_kind":"related"}`)
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, errCode)
+			})
+			t.Run("remove relation", func(t *testing.T) {
+				_, err := testRelationHandler.testDeleteWithUser(nil, map[string]string{"task": taskID}, `{"other_task_id":2,"relation_kind":"related"}`)
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, errCode)
+			})
+			t.Run("add comment", func(t *testing.T) {
+				_, err := testCommentHandler.testCreateWithUser(nil, map[string]string{"task": taskID}, `{"comment":"Lorem"}`)
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, errCode)
+			})
+			t.Run("remove comment", func(t *testing.T) {
+				var commentID = "15"
+				if taskID == "36" {
+					commentID = "16"
+				}
+				_, err := testCommentHandler.testDeleteWithUser(nil, map[string]string{"task": taskID, "commentid": commentID})
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, errCode)
+			})
 		})
-		// The project itself is archived
-		t.Run("archived individually", func(t *testing.T) {
-			t.Run("not editable", func(t *testing.T) {
-				_, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "22"}, `{"title":"TestIpsum","is_archived":true}`)
-				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
-			})
-			t.Run("no new tasks", func(t *testing.T) {
-				_, err := testTaskHandler.testCreateWithUser(nil, map[string]string{"project": "22"}, `{"title":"Lorem"}`)
-				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
-			})
-			t.Run("unarchivable", func(t *testing.T) {
-				rec, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "22"}, `{"title":"LoremIpsum","is_archived":false}`)
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"is_archived":false`)
-			})
+	}
 
-			taskTests("36", models.ErrCodeProjectIsArchived, t)
+	// The project belongs to an archived parent project
+	t.Run("archived parent project", func(t *testing.T) {
+		t.Run("not editable", func(t *testing.T) {
+			_, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "21"}, `{"title":"TestIpsum","is_archived":true}`)
+			assert.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
 		})
+		t.Run("no new tasks", func(t *testing.T) {
+			_, err := testTaskHandler.testCreateWithUser(nil, map[string]string{"project": "21"}, `{"title":"Lorem"}`)
+			assert.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+		})
+		t.Run("not unarchivable", func(t *testing.T) {
+			_, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "21"}, `{"title":"LoremIpsum","is_archived":false}`)
+			assert.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+		})
+
+		taskTests("35", models.ErrCodeProjectIsArchived, t)
+	})
+	// The project itself is archived
+	t.Run("archived individually", func(t *testing.T) {
+		t.Run("not editable", func(t *testing.T) {
+			_, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "22"}, `{"title":"TestIpsum","is_archived":true}`)
+			assert.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+		})
+		t.Run("no new tasks", func(t *testing.T) {
+			_, err := testTaskHandler.testCreateWithUser(nil, map[string]string{"project": "22"}, `{"title":"Lorem"}`)
+			assert.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+		})
+		t.Run("unarchivable", func(t *testing.T) {
+			rec, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "22"}, `{"title":"LoremIpsum","is_archived":false}`)
+			assert.NoError(t, err)
+			assert.Contains(t, rec.Body.String(), `"is_archived":false`)
+		})
+
+		taskTests("36", models.ErrCodeProjectIsArchived, t)
 	})
 }
