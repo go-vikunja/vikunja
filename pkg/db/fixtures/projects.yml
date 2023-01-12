@@ -171,6 +171,7 @@
   identifier: test19
   owner_id: 7
   position: 19
+  parent_project_id: 29
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 # User 1 does not have access to this project
@@ -260,11 +261,19 @@
   id: 27
   title: Test27
   owner_id: 6
+  position: 2700
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
   id: 28
   title: Test28
+  owner_id: 6
+  position: 2800
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+-
+  id: 29
+  title: Test29
   owner_id: 6
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12

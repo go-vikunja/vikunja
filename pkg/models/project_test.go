@@ -303,7 +303,7 @@ func TestProject_ReadAll(t *testing.T) {
 		projects := []*Project{}
 		_, _, err := getAllProjectsForUser(s, 1, nil, &projectOptions{}, &projects, 0)
 		assert.NoError(t, err)
-		assert.Equal(t, 10, len(projects))
+		assert.Equal(t, 12, len(projects))
 		_ = s.Close()
 	})
 	t.Run("only child projects for one project", func(t *testing.T) {
@@ -319,7 +319,7 @@ func TestProject_ReadAll(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, reflect.TypeOf(projects3).Kind(), reflect.Slice)
 		ls := projects3.([]*Project)
-		assert.Equal(t, 10, len(ls))
+		assert.Equal(t, 12, len(ls))
 		assert.Equal(t, int64(3), ls[0].ID) // Project 3 has a position of 1 and should be sorted first
 		assert.Equal(t, int64(1), ls[1].ID)
 		assert.Equal(t, int64(6), ls[2].ID)

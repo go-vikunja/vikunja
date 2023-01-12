@@ -34,34 +34,58 @@ func ListUsersFromProject(s *xorm.Session, l *Project, search string) (users []*
 
 	userids := []*ProjectUIDs{}
 
-	err = s.
-		Select(`l.owner_id as projectOwner,
+	var currentProject *Project
+	currentProject, err = GetProjectSimpleByID(s, l.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		currentUserIDs := []*ProjectUIDs{}
+		err = s.
+			Select(`l.owner_id as projectOwner,
 			ul.user_id as ulID,
 			tm2.user_id as tlUID`).
-		Table("projects").
-		Alias("l").
-		// User stuff
-		Join("LEFT", []string{"users_projects", "ul"}, "ul.project_id = l.id").
-		// Team stuff
-		Join("LEFT", []string{"team_projects", "tl"}, "l.id = tl.project_id").
-		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
-		// The actual condition
-		Where(
-			builder.Or(
-				builder.Or(builder.Eq{"ul.right": RightRead}),
-				builder.Or(builder.Eq{"tl.right": RightRead}),
+			Table("projects").
+			Alias("l").
+			// User stuff
+			Join("LEFT", []string{"users_projects", "ul"}, "ul.project_id = l.id").
+			// Team stuff
+			Join("LEFT", []string{"team_projects", "tl"}, "l.id = tl.project_id").
+			Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
+			// The actual condition
+			Where(
+				builder.Or(
+					builder.Or(builder.Eq{"ul.right": RightRead}),
+					builder.Or(builder.Eq{"tl.right": RightRead}),
 
-				builder.Or(builder.Eq{"ul.right": RightWrite}),
-				builder.Or(builder.Eq{"tl.right": RightWrite}),
+					builder.Or(builder.Eq{"ul.right": RightWrite}),
+					builder.Or(builder.Eq{"tl.right": RightWrite}),
 
-				builder.Or(builder.Eq{"ul.right": RightAdmin}),
-				builder.Or(builder.Eq{"tl.right": RightAdmin}),
-			),
-			builder.Eq{"l.id": l.ID},
-		).
-		Find(&userids)
-	if err != nil {
-		return
+					builder.Or(builder.Eq{"ul.right": RightAdmin}),
+					builder.Or(builder.Eq{"tl.right": RightAdmin}),
+				),
+				builder.Eq{"l.id": currentProject.ID},
+			).
+			Find(&currentUserIDs)
+		if err != nil {
+			return
+		}
+		userids = append(userids, currentUserIDs...)
+
+		if currentProject.ParentProjectID == 0 {
+			break
+		}
+
+		parent, err := GetProjectSimpleByID(s, currentProject.ParentProjectID)
+		if err != nil && !IsErrProjectDoesNotExist(err) {
+			return nil, err
+		}
+		if err != nil && IsErrProjectDoesNotExist(err) {
+			break
+		}
+
+		currentProject = parent
 	}
 
 	// Remove duplicates from the project of ids and make it a slice
