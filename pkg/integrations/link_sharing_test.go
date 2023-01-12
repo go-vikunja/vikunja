@@ -276,7 +276,7 @@ func TestLinkSharing(t *testing.T) {
 		// Creating a project should always be forbidden
 		t.Run("Create", func(t *testing.T) {
 			t.Run("Nonexisting", func(t *testing.T) {
-				_, err := testHandlerProjectReadOnly.testCreateWithLinkShare(nil, map[string]string{"namespace": "999999"}, `{"title":"Lorem"}`)
+				_, err := testHandlerProjectReadOnly.testCreateWithLinkShare(nil, nil, `{"title":"Lorem"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})

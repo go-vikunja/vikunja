@@ -161,7 +161,16 @@ func (p *Project) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 
 // CanCreate checks if the user can create a project
 func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	return p.CanWrite(s, a)
+	if p.ParentProjectID != 0 {
+		parent := &Project{ID: p.ParentProjectID}
+		return parent.CanWrite(s, a)
+	}
+	// Check if we're dealing with a share auth
+	_, is := a.(*LinkSharing)
+	if is {
+		return false, nil
+	}
+	return true, nil
 }
 
 // IsAdmin returns whether the user has admin rights on the project or not
