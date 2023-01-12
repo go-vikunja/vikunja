@@ -147,7 +147,8 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 
 	canUpdate, err = p.CanWrite(s, a)
 	// If the project is archived and the user tries to un-archive it, let the request through
-	if IsErrProjectIsArchived(err) && !p.IsArchived {
+	archivedErr, is := err.(ErrProjectIsArchived)
+	if is && !p.IsArchived && archivedErr.ProjectID == p.ID {
 		err = nil
 	}
 	return canUpdate, err
