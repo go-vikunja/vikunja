@@ -38,6 +38,13 @@ func TestInsertFromStructure(t *testing.T) {
 					Title:       "Test1",
 					Description: "Lorem Ipsum",
 				},
+				Tasks: []*models.TaskWithComments{
+					{
+						Task: models.Task{
+							Title: "Task on parent",
+						},
+					},
+				},
 				ChildProjects: []*models.ProjectWithTasksAndBuckets{
 					{
 						Project: models.Project{
@@ -141,6 +148,9 @@ func TestInsertFromStructure(t *testing.T) {
 			"title":     testStructure[0].ChildProjects[0].Tasks[6].Title,
 			"bucket_id": 1111, // No task with that bucket should exist
 		})
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"title": testStructure[0].Tasks[0].Title,
+		}, false)
 		assert.NotEqual(t, 0, testStructure[0].ChildProjects[0].Tasks[0].BucketID) // Should get the default bucket
 		assert.NotEqual(t, 0, testStructure[0].ChildProjects[0].Tasks[6].BucketID) // Should get the default bucket
 	})
