@@ -17,6 +17,7 @@
 package db
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -93,7 +94,16 @@ func AssertExists(t *testing.T, table string, values map[string]interface{}, cus
 		exists, err = x.Table(table).Where(values).Get(&v)
 	}
 	assert.NoError(t, err, fmt.Sprintf("Failed to assert entries exist in db, error was: %s", err))
-	assert.True(t, exists, fmt.Sprintf("Entries %v do not exist in table %s", values, table))
+	if !exists {
+
+		all := []map[string]interface{}{}
+		err = x.Table(table).Find(&all)
+		assert.NoError(t, err, fmt.Sprintf("Failed to assert entries exist in db, error was: %s", err))
+		pretty, err := json.MarshalIndent(all, "", "    ")
+		assert.NoError(t, err, fmt.Sprintf("Failed to assert entries exist in db, error was: %s", err))
+
+		t.Errorf(fmt.Sprintf("Entries %v do not exist in table %s\n\nFound entries instead: %v", values, table, string(pretty)))
+	}
 }
 
 // AssertMissing checks and asserts the nonexiste nce of certain entries in the db
