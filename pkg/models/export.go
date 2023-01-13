@@ -124,7 +124,7 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (taskIDs []int64, err error) {
 
 	// Get all projects
-	rawProjectsMap, _, _, err := getRawProjectsForUser(
+	rawProjects, _, _, err := getRawProjectsForUser(
 		s,
 		&projectOptions{
 			search:      "",
@@ -137,22 +137,23 @@ func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (task
 		return taskIDs, err
 	}
 
-	if len(rawProjectsMap) == 0 {
+	if len(rawProjects) == 0 {
 		return
 	}
 
-	projects := []*Project{}
-	projectsMap := make(map[int64]*ProjectWithTasksAndBuckets, len(rawProjectsMap))
+	projects := []*ProjectWithTasksAndBuckets{}
+	projectsMap := make(map[int64]*ProjectWithTasksAndBuckets, len(rawProjects))
 	projectIDs := []int64{}
-	for _, p := range rawProjectsMap {
-		projects = append(projects, p)
-		projectsMap[p.ID] = &ProjectWithTasksAndBuckets{
+	for _, p := range rawProjects {
+		pp := &ProjectWithTasksAndBuckets{
 			Project: *p,
 		}
+		projects = append(projects, pp)
+		projectsMap[p.ID] = pp
 		projectIDs = append(projectIDs, p.ID)
 	}
 
-	tasks, _, _, err := getTasksForProjects(s, projects, u, &taskOptions{
+	tasks, _, _, err := getTasksForProjects(s, rawProjects, u, &taskOptions{
 		page:    0,
 		perPage: -1,
 	})
