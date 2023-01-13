@@ -17,8 +17,9 @@
 package migration
 
 import (
-	"src.techknowlogick.com/xormigrate"
 	"time"
+
+	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"
 )

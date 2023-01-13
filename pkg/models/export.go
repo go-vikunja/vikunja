@@ -62,7 +62,7 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 		return err
 	}
 	// Task attachment files
-	err = exportTaskAttachments(s, u, dumpWriter, taskIDs)
+	err = exportTaskAttachments(s, dumpWriter, taskIDs)
 	if err != nil {
 		return err
 	}
@@ -213,7 +213,7 @@ func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (task
 	return taskIDs, utils.WriteBytesToZip("data.json", data, wr)
 }
 
-func exportTaskAttachments(s *xorm.Session, u *user.User, wr *zip.Writer, taskIDs []int64) (err error) {
+func exportTaskAttachments(s *xorm.Session, wr *zip.Writer, taskIDs []int64) (err error) {
 	tas, err := getTaskAttachmentsByTaskIDs(s, taskIDs)
 	if err != nil {
 		return err

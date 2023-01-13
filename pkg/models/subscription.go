@@ -361,7 +361,7 @@ func getSubscribersForEntity(s *xorm.Session, entityType SubscriptionEntityType,
 	}
 
 	userIDs := []int64{}
-	subscriptions = make([]*Subscription, len(subs))
+	subscriptions = make([]*Subscription, 0, len(subs))
 	for _, subss := range subs {
 		for _, subscription := range subss {
 			userIDs = append(userIDs, subscription.UserID)

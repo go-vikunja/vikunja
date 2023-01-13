@@ -17,6 +17,8 @@
 package models
 
 import (
+	"errors"
+
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"xorm.io/builder"
@@ -147,7 +149,8 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 
 	canUpdate, err = p.CanWrite(s, a)
 	// If the project is archived and the user tries to un-archive it, let the request through
-	archivedErr, is := err.(ErrProjectIsArchived)
+	archivedErr := ErrProjectIsArchived{}
+	is := errors.As(err, &archivedErr)
 	if is && !p.IsArchived && archivedErr.ProjectID == p.ID {
 		err = nil
 	}
