@@ -14,7 +14,7 @@ specifiers:
   '@histoire/plugin-vue': 0.12.4
   '@infectoone/vue-ganttastic': 2.1.3
   '@intlify/unplugin-vue-i18n': 0.8.1
-  '@kyvg/vue3-notification': 2.7.0
+  '@kyvg/vue3-notification': 2.8.0
   '@rushstack/eslint-patch': 1.2.0
   '@sentry/tracing': 7.30.0
   '@sentry/vue': 7.30.0
@@ -105,7 +105,7 @@ dependencies:
   '@github/hotkey': 2.0.1
   '@infectoone/vue-ganttastic': 2.1.3_dayjs@1.11.7+vue@3.2.45
   '@intlify/unplugin-vue-i18n': 0.8.1_vue-i18n@9.2.2
-  '@kyvg/vue3-notification': 2.7.0_vue@3.2.45
+  '@kyvg/vue3-notification': 2.8.0_vue@3.2.45
   '@sentry/tracing': 7.30.0
   '@sentry/vue': 7.30.0_vue@3.2.45
   '@types/is-touch-device': 1.0.0
@@ -2466,8 +2466,8 @@ packages:
       '@jridgewell/sourcemap-codec': 1.4.14
     dev: true
 
-  /@kyvg/vue3-notification/2.7.0_vue@3.2.45:
-    resolution: {integrity: sha512-Eti6jRGips9fpf2WdRjlOOJGyjCZ35qt84CeTeFr5piAwXaMpvgzea4dqqTK5KCfqK3qz/zwwxAd/8AToLYL8A==}
+  /@kyvg/vue3-notification/2.8.0_vue@3.2.45:
+    resolution: {integrity: sha512-jHa90wSpafIYfYgMHc4WZVkrjxhQdSUFWEJFYR7i4fertev4BYuOh46FRuSYOL8DQdVoP4tH3gdtyEuNuBuUww==}
     peerDependencies:
       vue: ^3.0.0
     dependencies:
