@@ -87,7 +87,7 @@ specifiers:
   vite-svg-loader: 4.0.0
   vitest: 0.27.1
   vue: 3.2.45
-  vue-advanced-cropper: 2.8.6
+  vue-advanced-cropper: 2.8.8
   vue-flatpickr-component: 11.0.1
   vue-i18n: 9.2.2
   vue-router: 4.1.6
@@ -138,7 +138,7 @@ dependencies:
   sortablejs: 1.15.0
   ufo: 1.0.1
   vue: 3.2.45
-  vue-advanced-cropper: 2.8.6_vue@3.2.45
+  vue-advanced-cropper: 2.8.8_vue@3.2.45
   vue-flatpickr-component: 11.0.1_vue@3.2.45
   vue-i18n: 9.2.2_vue@3.2.45
   vue-router: 4.1.6_vue@3.2.45
@@ -14395,8 +14395,8 @@ packages:
       - terser
     dev: true
 
-  /vue-advanced-cropper/2.8.6_vue@3.2.45:
-    resolution: {integrity: sha512-R1vkXG/Vam3OEd3vMJsVSJkXUc9ejM9l/NzPcPvkyzKGHwF69c2v1lh2Kqj2A5MCqrTmk76bmzmWFuYj+AcwmA==}
+  /vue-advanced-cropper/2.8.8_vue@3.2.45:
+    resolution: {integrity: sha512-yDM7Jb/gnxcs//JdbOogBUoHr1bhCQSto7/ohgETKAe4wvRpmqIkKSppMm1huVQr+GP1YoVlX/fkjKxvYzwwDQ==}
     engines: {node: '>=8', npm: '>=5'}
     peerDependencies:
       vue: ^3.0.0
