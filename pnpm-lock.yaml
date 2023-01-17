@@ -85,7 +85,7 @@ specifiers:
   vite: 4.0.4
   vite-plugin-pwa: 0.14.1
   vite-svg-loader: 4.0.0
-  vitest: 0.27.1
+  vitest: 0.27.2
   vue: 3.2.45
   vue-advanced-cropper: 2.8.8
   vue-flatpickr-component: 11.0.1
@@ -191,7 +191,7 @@ devDependencies:
   vite: 4.0.4_4ljv3kzetn75ixk7nciffo2yk4
   vite-plugin-pwa: 0.14.1_fh56thzkyakgjs6jm6gbtbzxsq
   vite-svg-loader: 4.0.0
-  vitest: 0.27.1_doo2ppxqrldppg5xgkcjnkztci
+  vitest: 0.27.2_doo2ppxqrldppg5xgkcjnkztci
   vue-tsc: 1.0.24_typescript@4.9.4
   wait-on: 7.0.1
   workbox-cli: 6.5.4_acorn@7.4.1
@@ -10504,15 +10504,6 @@ packages:
     hasBin: true
     dev: true
 
-  /mlly/1.0.0:
-    resolution: {integrity: sha512-QL108Hwt+u9bXdWgOI0dhzZfACovn5Aen4Xvc8Jasd9ouRH4NjnrXEiyP3nVvJo91zPlYjVRckta0Nt2zfoR6g==}
-    dependencies:
-      acorn: 8.8.1
-      pathe: 1.0.0
-      pkg-types: 1.0.1
-      ufo: 1.0.1
-    dev: true
-
   /mlly/1.1.0:
     resolution: {integrity: sha512-cwzBrBfwGC1gYJyfcy8TcZU1f+dbH/T+TuOhtYP2wLv/Fb51/uV7HJQfBPtEupZ2ORLRU1EKFS/QfS3eo9+kBQ==}
     dependencies:
@@ -11669,7 +11660,7 @@ packages:
     resolution: {integrity: sha512-jHv9HB+Ho7dj6ItwppRDDl0iZRYBD0jsakHXtFgoLr+cHSF6xC+QL54sJmWxyGxOLYSHm0afhXhXcQDQqH9z8g==}
     dependencies:
       jsonc-parser: 3.2.0
-      mlly: 1.0.0
+      mlly: 1.1.0
       pathe: 1.0.0
     dev: true
 
@@ -14443,7 +14434,7 @@ packages:
     hasBin: true
     dependencies:
       debug: 4.3.4
-      mlly: 1.0.0
+      mlly: 1.1.0
       pathe: 0.2.0
       source-map: 0.6.1
       source-map-support: 0.5.21
@@ -14458,8 +14449,8 @@ packages:
       - terser
     dev: true
 
-  /vite-node/0.27.1_4ljv3kzetn75ixk7nciffo2yk4:
-    resolution: {integrity: sha512-d6+ue/3NzsfndWaPbYh/bFkHbmAWfDXI4B874zRx+WREnG6CUHUbBC8lKaRYZjeR6gCPN5m1aVNNRXBYICA9XA==}
+  /vite-node/0.27.2_4ljv3kzetn75ixk7nciffo2yk4:
+    resolution: {integrity: sha512-IDwuVhslF10qCnWOGJui7/2KksAOBHi+UbVo6Pqt4f5lgn+kS2sVvYDsETRG5PSuslisGB5CFGvb9I6FQgymBQ==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
     dependencies:
@@ -14543,8 +14534,8 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vitest/0.27.1_doo2ppxqrldppg5xgkcjnkztci:
-    resolution: {integrity: sha512-1sIpQ1DVFTEn7c1ici1XHcVfdU4nKiBmPtPAtGKJJJLuJjojTv/OHGgcf69P57alM4ty8V4NMv+7Yoi5Cxqx9g==}
+  /vitest/0.27.2_doo2ppxqrldppg5xgkcjnkztci:
+    resolution: {integrity: sha512-y7tdsL2uaQy+KF18AlmNHZe29ukyFytlxrpSTwwmgLE2XHR/aPucJP9FLjWoqjgqFlXzRAjHlFJLU+HDyI/OsA==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
     peerDependencies:
@@ -14582,7 +14573,7 @@ packages:
       tinypool: 0.3.0
       tinyspy: 1.0.2
       vite: 4.0.4_4ljv3kzetn75ixk7nciffo2yk4
-      vite-node: 0.27.1_4ljv3kzetn75ixk7nciffo2yk4
+      vite-node: 0.27.2_4ljv3kzetn75ixk7nciffo2yk4
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
       - less
