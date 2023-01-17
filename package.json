@@ -38,7 +38,7 @@
     "@types/is-touch-device": "1.0.0",
     "@types/lodash.clonedeep": "4.5.7",
     "@types/sortablejs": "1.15.0",
-    "@vueuse/core": "9.10.0",
+    "@vueuse/core": "9.11.0",
     "axios": "1.2.2",
     "blurhash": "2.0.4",
     "bulma-css-variables": "0.9.33",
