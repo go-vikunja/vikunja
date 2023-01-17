@@ -1,7 +1,7 @@
 <template>
 	<ListWrapper class="list-gantt" :list-id="filters.listId" viewName="gantt">
 		<template #header>
-			<card>
+			<card :has-content="false">
 				<div class="gantt-options">
 					<div class="field">
 						<label class="label" for="range">{{ $t('list.gantt.range') }}</label>
@@ -31,7 +31,7 @@
 
 		<template #default>
 			<div class="gantt-chart-container">
-				<card :padding="false" class="has-overflow">
+				<card :has-content="false" :padding="false" class="has-overflow">
 					<gantt-chart
 						:filters="filters"
 						:tasks="tasks"
