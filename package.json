@@ -1,7 +1,27 @@
 {
   "name": "vikunja-frontend",
-  "version": "0.10.0",
+  "description": "The todo app to organize your life.",
   "private": true,
+  "version": "0.10.0",
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://kolaente.dev/vikunja/frontend"
+  },
+  "bugs": {
+    "url": "https://kolaente.dev/vikunja/frontend/issues"
+  },
+  "homepage": "https://vikunja.io/",
+  "funding": "https://opencollective.com/vikunja",
+  "packageManager": "pnpm@7.25.0",
+  "keywords": [
+    "todo",
+    "productivity",
+    "task management",
+    "organisation",
+    "gantt",
+    "kanban"
+  ],
   "scripts": {
     "serve": "vite",
     "preview": "vite preview --port 4173",
@@ -122,7 +142,5 @@
     "vue-tsc": "1.0.24",
     "wait-on": "7.0.1",
     "workbox-cli": "6.5.4"
-  },
-  "license": "AGPL-3.0-or-later",
-  "packageManager": "pnpm@7.25.0"
+  }
 }
