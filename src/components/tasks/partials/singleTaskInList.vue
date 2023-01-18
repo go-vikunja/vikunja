@@ -7,7 +7,7 @@
 		/>
 		
 		<ColorBubble
-			v-if="showListColor && listColor !== ''"
+			v-if="showListColor && listColor !== '' && currentList.id !== task.listId"
 			:color="listColor"
 			class="mr-1"
 		/>
