@@ -1,4 +1,4 @@
-const { exec } = require('child_process')
+import { exec } from 'node:child_process'
 
 function createSlug(string) {
 	return String(string)

@@ -149,8 +149,10 @@ steps:
       # Override the default api url used for preview
       - sed -i 's|http://localhost:3456|https://try.vikunja.io|g' dist-preview/index.html
       - apk add --no-cache perl-utils
-      - shasum -a 384 -c ./scripts/deploy-preview-netlify.js.sha384
-      - node ./scripts/deploy-preview-netlify.js
+      # create via:
+      # `shasum -a 384 ./scripts/deploy-preview-netlify.mjs > ./scripts/deploy-preview-netlify.mjs.sha384`
+      - shasum -a 384 -c ./scripts/deploy-preview-netlify.mjs.sha384
+      - node ./scripts/deploy-preview-netlify.mjs
     depends_on:
       - build-prod
     when:
@@ -519,6 +521,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: 0a65a032008f2d1911866dcb0d9536b26c1d6b105943ed5328ac13abc99c423f
+hmac: aa44c442f3901546cad1d83f4251b000f5b95d8af7597553fdacd0838ee8eabe
 
 ...
