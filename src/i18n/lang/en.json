@@ -901,7 +901,7 @@
     },
     "project": {
       "title": "Project Views",
-      "switchToListView": "Switch to project view",
+      "switchToListView": "Switch to list view",
       "switchToGanttView": "Switch to gantt view",
       "switchToKanbanView": "Switch to kanban view",
       "switchToTableView": "Switch to table view"
