@@ -44,11 +44,11 @@
 			</div>
 			<slot name="header" />
 		</div>
-		<transition name="fade">
+		<CustomTransition name="fade">
 			<Message variant="warning" v-if="currentProject.isArchived" class="mb-4">
 				{{ $t('project.archived') }}
 			</Message>
-		</transition>
+		</CustomTransition>
 
 		<slot v-if="loadedProjectId"/>
 	</div>
@@ -60,6 +60,7 @@ import {useRoute} from 'vue-router'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Message from '@/components/misc/message.vue'
+import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 import ProjectModel from '@/models/project'
 import ProjectService from '@/services/project'
