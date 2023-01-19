@@ -7,7 +7,7 @@
 			<div class="switch-view">
 				<BaseButton
 					v-shortcut="'g l'"
-					:title="$t('keyboardShortcuts.project.switchToProjectView')"
+					:title="$t('keyboardShortcuts.project.switchToListView')"
 					class="switch-view-button"
 					:class="{'is-active': viewName === 'project'}"
 					:to="{ name: 'project.list',   params: { projectId } }"

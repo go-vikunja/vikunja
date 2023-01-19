@@ -75,7 +75,7 @@ export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
 		available: (route) => (route.name as string)?.startsWith('project.'),
 		shortcuts: [
 			{
-				title: 'keyboardShortcuts.project.switchToProjectView',
+				title: 'keyboardShortcuts.project.switchToListView',
 				keys: ['g', 'l'],
 				combination: 'then',
 			},
