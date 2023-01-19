@@ -417,7 +417,7 @@
     }
   },
   "migrate": {
-    "title": "从其他服务迁移到 Vikunja",
+    "title": "Import from other services",
     "titleService": "从 {name} 导入您的数据到 Vikunja",
     "import": "导入数据到 Vikunja",
     "description": "点击下面的第三方服务的徽标开始操作。",

@@ -417,7 +417,7 @@
     }
   },
   "migrate": {
-    "title": "Migrer d’autres services vers Vikunja",
+    "title": "Import from other services",
     "titleService": "Importe tes données depuis {name} dans Vikunja",
     "import": "Importer tes données dans Vikunja",
     "description": "Clique sur le logo d’un des services tiers ci-dessous pour commencer.",

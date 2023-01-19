@@ -417,7 +417,7 @@
     }
   },
   "migrate": {
-    "title": "Vomene andere Dienst zu Vikunja migriere",
+    "title": "Aus anderen Diensten importieren",
     "titleService": "Dini Date vo {name} in Vikunja importiere",
     "import": "Dini Date in Vikunja importiere",
     "description": "Klick ufs Logo une vo eine vo de Drittabüüter um aahzfange.",
