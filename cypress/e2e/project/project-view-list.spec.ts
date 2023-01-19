@@ -68,7 +68,7 @@ describe('Project View Project', () => {
 			.should('not.exist')
 	})
 
-	it('Should only show the color of a project in the navigation and not in the project view', () => {
+	it('Should only show the color of a project in the navigation and not in the list view', () => {
 		const projects = ProjectFactory.create(1, {
 			hex_color: '00db60',
 		})
