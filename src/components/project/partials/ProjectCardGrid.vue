@@ -39,34 +39,30 @@ const filteredProjects = computed(() => {
 </script>
 
 <style lang="scss" scoped>
-$project-height: 150px;
-$project-spacing: 1rem;
-
 .project-grid {
+	--project-grid-item-height: 150px;
+	--project-grid-gap: 1rem;
 	margin: 0; // reset li
-	project-style-type: none;
+	list-style-type: none;
 	display: grid;
-	grid-template-columns: repeat(var(--project-columns), 1fr);
-	grid-auto-rows: $project-height;
-	gap: $project-spacing;
+	grid-template-columns: repeat(var(--project-grid-columns), 1fr);
+	grid-auto-rows: var(--project-grid-item-height);
+	gap: var(--project-grid-gap);
 
 	@media screen and (min-width: $mobile) {
-		--project-rows: 4;
-		--project-columns: 1;
+		--project-grid-columns: 1;
 	}
 
 	@media screen and (min-width: $mobile) and (max-width: $tablet) {
-		--project-columns: 2;
+		--project-grid-columns: 2;
 	}
 
 	@media screen and (min-width: $tablet) and (max-width: $widescreen) {
-		--project-columns: 3;
-		--project-rows: 3;
+		--project-grid-columns: 3;
 	}
 
 	@media screen and (min-width: $widescreen) {
-		--project-columns: 5;
-		--project-rows: 2;
+		--project-grid-columns: 5;
 	}
 }
 
