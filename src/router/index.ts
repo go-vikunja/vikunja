@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteLocation } from 'vue-router'
 import {saveLastVisited} from '@/helpers/saveLastVisited'
 
-import {saveProjectView, getProjectView} from '@/helpers/saveProjectView'
+import {saveProjectView, getProjectView} from '@/helpers/projectView'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 import {setTitle} from '@/helpers/setTitle'
@@ -357,14 +357,14 @@ const router = createRouter({
 			name: 'project.index',
 			redirect(to) {
 				// Redirect the user to list view by default
+				const savedProjectView = getProjectView(Number(to.params.projectId as string))
 
-				const savedProjectView = getProjectView(to.params.projectId)
-				console.debug('Replaced list view with', savedProjectView)
+				if (savedProjectView) {
+					console.log('Replaced list view with', savedProjectView)
+				}
 
 				return {
-					name: router.hasRoute(savedProjectView)
-						? savedProjectView
-						: 'project.list',
+					name: savedProjectView || 'project.list',
 					params: {projectId: to.params.projectId},
 				}
 			},
