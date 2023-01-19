@@ -362,7 +362,7 @@ const router = createRouter({
 				console.debug('Replaced list view with', savedProjectView)
 
 				return {
-					name:  router.hasRoute(savedProjectView)
+					name: router.hasRoute(savedProjectView)
 						? savedProjectView
 						: 'project.list',
 					params: {projectId: to.params.projectId},
