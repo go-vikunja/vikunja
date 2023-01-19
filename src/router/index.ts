@@ -269,6 +269,19 @@ const router = createRouter({
 			}),
 		},
 		{
+			// Redirect old list routes to the respective project routes
+			// see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#catch-all-404-not-found-route
+			path: '/lists:pathMatch(.*)*',
+			name: 'lists',
+			redirect(to) {
+				return {
+					path: to.path.replace('/lists', '/projects'),
+					query: to.query,
+					hash: to.hash,
+				}
+			},
+		},
+		{
 			path: '/projects/new/:namespaceId/',
 			name: 'project.create',
 			component: NewProjectComponent,
