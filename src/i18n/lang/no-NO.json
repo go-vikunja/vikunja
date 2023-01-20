@@ -1,6 +1,6 @@
 {
   "home": {
-    "welcomeNight": "God Morgen {username}!",
+    "welcomeNight": "God Natt {username}!",
     "welcomeMorning": "God Morgen {username}!",
     "welcomeDay": "Hei {username}!",
     "welcomeEvening": "God Morgen {username}!",
@@ -417,7 +417,7 @@
     }
   },
   "migrate": {
-    "title": "Import from other services",
+    "title": "Importer fra andre tjenester",
     "titleService": "Importer dine data fra {name} til Vikunja",
     "import": "Importer dine data til Vikunja",
     "description": "Klikk på logoen til en av tjenester fra tredjeparter nedenfor for å starte.",
