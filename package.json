@@ -136,6 +136,7 @@
     "start-server-and-test": "1.15.2",
     "typescript": "4.9.4",
     "vite": "4.0.4",
+    "vite-plugin-inject-preload": "1.1.2",
     "vite-plugin-pwa": "0.14.1",
     "vite-svg-loader": "4.0.0",
     "vitest": "0.27.2",

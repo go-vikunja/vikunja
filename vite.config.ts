@@ -7,6 +7,7 @@ import { dirname, resolve } from 'node:path'
 
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import {VitePWA}  from 'vite-plugin-pwa'
+import VitePluginInjectPreload from 'vite-plugin-inject-preload'
 import {visualizer}  from 'rollup-plugin-visualizer'
 import svgLoader from 'vite-svg-loader'
 import postcssPresetEnv from 'postcss-preset-env'
@@ -32,6 +33,20 @@ console.log(isModernBuild
 	? 'Building "modern-only" build'
 	: 'Building "legacy" build with "@vitejs/plugin-legacy"',
 )
+
+/**
+ * @param fontNames Array of the file names of the fonts without axis and hash suffixes
+ */
+function createFontMatcher(fontNames: string[]) {
+	// The `match` option for the files of VitePluginInjectPreload
+	// matches the _output_ files.
+	// Since we only want to mach variable fonts, we exploit here the fact
+	// that we added the `wght` term to indicate the variable weiht axis.
+	// The format is something like:
+	// `/assets/OpenSans-Italic_wght__c9a8fe68-5f21f1e7.woff2`
+	// see: https://regex101.com/r/UgUWr1/1
+	return new RegExp(`^.+\\/(${fontNames.join('|')})_wght__[a-z1-9]{8}-[a-z1-9]{8}\\.woff2$`)
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -80,6 +95,14 @@ export default defineConfig({
 			// By default, all of them will be installed.
 			fullInstall: true,
 			include: resolve(dirname(pathSrc), './src/i18n/lang/**'),
+		}),
+		// https://github.com/Applelo/vite-plugin-inject-preload
+		VitePluginInjectPreload({
+			files: [{
+				match: createFontMatcher(['Quicksand', 'OpenSans', 'OpenSans-Italic']),
+				attributes: {crossorigin: 'anonymous'},
+			}],
+			injectTo: 'custom',
 		}),
 		VitePWA({
 			srcDir: 'src',
