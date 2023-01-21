@@ -143,7 +143,6 @@ labelStore.loadAllLabels()
 
 	&:hover,
 	&:focus {
-		height: 1rem;
 		color: var(--grey-600);
 	}
 }
