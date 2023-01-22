@@ -83,7 +83,7 @@ specifiers:
   typescript: 4.9.4
   ufo: 1.0.1
   vite: 4.0.4
-  vite-plugin-inject-preload: 1.1.2
+  vite-plugin-inject-preload: 1.2.0
   vite-plugin-pwa: 0.14.1
   vite-svg-loader: 4.0.0
   vitest: 0.27.2
@@ -190,7 +190,7 @@ devDependencies:
   start-server-and-test: 1.15.2
   typescript: 4.9.4
   vite: 4.0.4_4ljv3kzetn75ixk7nciffo2yk4
-  vite-plugin-inject-preload: 1.1.2_vite@4.0.4
+  vite-plugin-inject-preload: 1.2.0_vite@4.0.4
   vite-plugin-pwa: 0.14.1_fh56thzkyakgjs6jm6gbtbzxsq
   vite-svg-loader: 4.0.0
   vitest: 0.27.2_doo2ppxqrldppg5xgkcjnkztci
@@ -14474,8 +14474,8 @@ packages:
       - terser
     dev: true
 
-  /vite-plugin-inject-preload/1.1.2_vite@4.0.4:
-    resolution: {integrity: sha512-K5q2WACSQMg3IpR4+Bopxj1nMCHHnu7FQnz3ZubvLWAJGZi6XakdtTLepMzgUBBT2LXMaRSt6b/1WhKer6n8Fg==}
+  /vite-plugin-inject-preload/1.2.0_vite@4.0.4:
+    resolution: {integrity: sha512-rfFXKRsJ6uZXed0HQjy52IpTjxxV1Pt0LfnJaPBtGiCZ8a4rUfG8UszDic7roz1QPV8eeuw4pZPgOBB7FqvKFw==}
     engines: {node: '>=14.18.0'}
     peerDependencies:
       vite: ^3.0.0 || ^4.0.0
