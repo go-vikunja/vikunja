@@ -100,7 +100,7 @@
     "@histoire/plugin-screenshot": "0.12.4",
     "@histoire/plugin-vue": "0.12.4",
     "@rushstack/eslint-patch": "1.2.0",
-    "@types/codemirror": "5.60.6",
+    "@types/codemirror": "5.60.7",
     "@types/dompurify": "2.4.0",
     "@types/flexsearch": "0.7.3",
     "@types/focus-within": "1.0.1",

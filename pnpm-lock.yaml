@@ -18,7 +18,7 @@ specifiers:
   '@rushstack/eslint-patch': 1.2.0
   '@sentry/tracing': 7.32.1
   '@sentry/vue': 7.32.1
-  '@types/codemirror': 5.60.6
+  '@types/codemirror': 5.60.7
   '@types/dompurify': 2.4.0
   '@types/flexsearch': 0.7.3
   '@types/focus-within': 1.0.1
@@ -154,7 +154,7 @@ devDependencies:
   '@histoire/plugin-screenshot': 0.12.4_histoire@0.12.4
   '@histoire/plugin-vue': 0.12.4_g2z5j6khglwshlruxalygxktly
   '@rushstack/eslint-patch': 1.2.0
-  '@types/codemirror': 5.60.6
+  '@types/codemirror': 5.60.7
   '@types/dompurify': 2.4.0
   '@types/flexsearch': 0.7.3
   '@types/focus-within': 1.0.1
@@ -3744,8 +3744,8 @@ packages:
       '@types/har-format': 1.2.10
     dev: true
 
-  /@types/codemirror/5.60.6:
-    resolution: {integrity: sha512-JIDPSvkYRlcv/2F0erqD+de2ni/Mz6FJMEGb0vwF6ByQOcHIKfiEfwrO4d6dSRwYeHyNUMpGjev0PyjX2M0XWw==}
+  /@types/codemirror/5.60.7:
+    resolution: {integrity: sha512-QXIC+RPzt/1BGSuD6iFn6UMC9TDp+9hkOANYNPVsjjrDdzKphfRkwQDKGp2YaC54Yhz0g6P5uYTCCibZZEiMAA==}
     dependencies:
       '@types/tern': 0.23.4
 
@@ -6925,7 +6925,7 @@ packages:
   /easymde/2.18.0:
     resolution: {integrity: sha512-IxVVUxNWIoXLeqtBU4BLc+eS/ScYhT1Dcb6yF5Wchoj1iXAV+TIIDWx+NCaZhY7RcSHqDPKllbYq7nwGKILnoA==}
     dependencies:
-      '@types/codemirror': 5.60.6
+      '@types/codemirror': 5.60.7
       '@types/marked': 4.0.8
       codemirror: 5.65.11
       codemirror-spell-checker: 1.1.2
