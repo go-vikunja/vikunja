@@ -8,9 +8,9 @@
 			<icon icon="times"/>
 		</BaseButton>
 		<div
+			class="app-container"
 			:class="{'has-background': background || blurHash}"
 			:style="{'background-image': blurHash && `url(${blurHash})`}"
-			class="app-container"
 		>
 			<div
 				:class="{'is-visible': background}"
@@ -18,6 +18,7 @@
 				:style="{'background-image': background && `url(${background})`}"></div>
 			<navigation class="d-print-none"/>
 			<main
+				class="app-content"
 				:class="[
 					{ 'is-menu-enabled': menuActive },
 					$route.name,
