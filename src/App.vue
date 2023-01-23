@@ -1,5 +1,6 @@
 <template>
 	<ready>
+		<Update/>
 		<template v-if="authUser">
 			<TheNavigation/>
 			<content-auth/>
@@ -19,23 +20,25 @@ import {computed, watch} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import isTouchDevice from 'is-touch-device'
-import {success} from '@/message'
 
 import Notification from '@/components/misc/notification.vue'
-import KeyboardShortcuts from './components/misc/keyboard-shortcuts/index.vue'
+import KeyboardShortcuts from '@/components/misc/keyboard-shortcuts/index.vue'
 import TheNavigation from '@/components/home/TheNavigation.vue'
-import ContentAuth from './components/home/contentAuth.vue'
-import ContentLinkShare from './components/home/contentLinkShare.vue'
+import ContentAuth from '@/components/home/contentAuth.vue'
+import ContentLinkShare from '@/components/home/contentLinkShare.vue'
 import NoAuthWrapper from '@/components/misc/no-auth-wrapper.vue'
 import Ready from '@/components/misc/ready.vue'
+import Update from '@/components/home/Update.vue'
 
-import {setLanguage} from './i18n'
+import {setLanguage} from '@/i18n'
 import AccountDeleteService from '@/services/accountDelete'
+import {success} from '@/message'
 
+import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
+
 import {useColorScheme} from '@/composables/useColorScheme'
 import {useBodyClass} from '@/composables/useBodyClass'
-import {useAuthStore} from './stores/auth'
 
 const baseStore = useBaseStore()
 const authStore = useAuthStore()

@@ -16,15 +16,13 @@ const refreshing = ref(false)
 
 document.addEventListener('swUpdated', showRefreshUI, {once: true})
 
-if (navigator && navigator.serviceWorker) {
-	navigator.serviceWorker.addEventListener(
-		'controllerchange', () => {
-			if (refreshing.value) return
-			refreshing.value = true
-			window.location.reload()
-		},
-	)
-}
+navigator?.serviceWorker?.addEventListener(
+	'controllerchange', () => {
+		if (refreshing.value) return
+		refreshing.value = true
+		window.location.reload()
+	},
+)
 
 function showRefreshUI(e: Event) {
 	console.log('recieved refresh event', e)
@@ -33,6 +31,7 @@ function showRefreshUI(e: Event) {
 }
 
 function refreshApp() {
+	updateAvailable.value = false
 	if (!registration.value || !registration.value.waiting) {
 		return
 	}
@@ -75,7 +74,7 @@ function refreshApp() {
 	}
 }
 
-.dark .update-notification {
+:global(.dark) .update-notification {
 	color: var(--grey-200);
 }
 </style>

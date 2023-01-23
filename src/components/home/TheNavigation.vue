@@ -25,7 +25,6 @@
 		</div>
 
 		<div class="navbar-end">
-			<update/>
 			<BaseButton
 				@click="openQuickActions"
 				class="trigger-button pr-0"
@@ -95,7 +94,6 @@ import {ref, computed, onMounted, nextTick} from 'vue'
 
 import {RIGHTS as Rights} from '@/constants/rights'
 
-import Update from '@/components/home/update.vue'
 import ListSettingsDropdown from '@/components/list/list-settings-dropdown.vue'
 import Dropdown from '@/components/misc/dropdown.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
