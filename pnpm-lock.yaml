@@ -59,7 +59,7 @@ specifiers:
   flexsearch: 0.7.21
   floating-vue: 2.0.0-beta.20
   focus-within: 3.0.2
-  happy-dom: 8.1.4
+  happy-dom: 8.1.5
   highlight.js: 11.7.0
   histoire: 0.12.4
   is-touch-device: 1.0.1
@@ -177,7 +177,7 @@ devDependencies:
   esbuild: 0.17.4
   eslint: 8.32.0
   eslint-plugin-vue: 9.9.0_eslint@8.32.0
-  happy-dom: 8.1.4
+  happy-dom: 8.1.5
   histoire: 0.12.4_jtbuayq2ea5xwom4rabzheoelm
   netlify-cli: 12.7.2_@types+node@18.11.18
   postcss: 8.4.21
@@ -193,7 +193,7 @@ devDependencies:
   vite-plugin-inject-preload: 1.2.0_vite@4.0.4
   vite-plugin-pwa: 0.14.1_fh56thzkyakgjs6jm6gbtbzxsq
   vite-svg-loader: 4.0.0
-  vitest: 0.27.3_doo2ppxqrldppg5xgkcjnkztci
+  vitest: 0.27.3_5hy6pa4h5xxdexdfm2lcv7lpku
   vue-tsc: 1.0.24_typescript@4.9.4
   wait-on: 7.0.1
   workbox-cli: 6.5.4_acorn@7.4.1
@@ -8482,8 +8482,8 @@ packages:
       strip-bom-string: 1.0.0
     dev: true
 
-  /happy-dom/8.1.4:
-    resolution: {integrity: sha512-mUCzXHhSO6fOQlZwKW6z2f/+rYavKNxNrgY4nJ4dp+r8gTGbTENgMZGfM6eJD0DJPRFF8DFyngXdBF93wF96UA==}
+  /happy-dom/8.1.5:
+    resolution: {integrity: sha512-/UXAJ2fHTs4H3vy7TS7c9PKFvPyaNialk2Er9NdXfpBKNaCITMOH03rkjHXp5jnJnSmRBa+av8E08PUAaIB1jQ==}
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0
@@ -14550,7 +14550,7 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vitest/0.27.3_doo2ppxqrldppg5xgkcjnkztci:
+  /vitest/0.27.3_5hy6pa4h5xxdexdfm2lcv7lpku:
     resolution: {integrity: sha512-Ld3UVgRVhJUtqvQ3dW89GxiApFAgBsWJZBCWzK+gA3w2yG68csXlGZZ4WDJURf+8ecNfgrScga6xY+8YSOpiMg==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
@@ -14580,7 +14580,7 @@ packages:
       cac: 6.7.14
       chai: 4.3.7
       debug: 4.3.4
-      happy-dom: 8.1.4
+      happy-dom: 8.1.5
       local-pkg: 0.4.2
       picocolors: 1.0.0
       source-map: 0.6.1
