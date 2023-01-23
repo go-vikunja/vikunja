@@ -133,7 +133,7 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 
 	user.AvatarProvider = uap.AvatarProvider
 
-	_, err = user2.UpdateUser(s, user)
+	_, err = user2.UpdateUser(s, user, false)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
@@ -199,7 +199,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	user.Timezone = us.Timezone
 	user.OverdueTasksRemindersTime = us.OverdueTasksRemindersTime
 
-	_, err = user2.UpdateUser(s, user)
+	_, err = user2.UpdateUser(s, user, true)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
