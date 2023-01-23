@@ -1419,9 +1419,9 @@ func (t *Task) updateReminders(s *xorm.Session, reminders []time.Time) (err erro
 	}
 
 	// Resolve duplicates and sort them
-	reminderMap := make(map[string]time.Time, len(reminders))
+	reminderMap := make(map[int64]time.Time, len(reminders))
 	for _, reminder := range reminders {
-		reminderMap[reminder.UTC().String()] = reminder
+		reminderMap[reminder.UTC().Unix()] = reminder
 	}
 
 	// Loop through all reminders and add them
