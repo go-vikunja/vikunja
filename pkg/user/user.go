@@ -419,7 +419,7 @@ func GetUserFromClaims(claims jwt.MapClaims) (user *User, err error) {
 }
 
 // UpdateUser updates a user
-func UpdateUser(s *xorm.Session, user *User) (updatedUser *User, err error) {
+func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *User, err error) {
 
 	// Check if it exists
 	theUser, err := GetUserWithEmail(s, &User{ID: user.ID})
@@ -442,7 +442,7 @@ func UpdateUser(s *xorm.Session, user *User) (updatedUser *User, err error) {
 	}
 
 	// Check if we have a name
-	if user.Name == "" {
+	if user.Name == "" && !forceOverride {
 		user.Name = theUser.Name
 	}
 

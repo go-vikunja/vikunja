@@ -225,7 +225,7 @@ var userUpdateCmd = &cobra.Command{
 			u.AvatarProvider = userFlagAvatar
 		}
 
-		_, err := user.UpdateUser(s, u)
+		_, err := user.UpdateUser(s, u, false)
 		if err != nil {
 			_ = s.Rollback()
 			log.Fatalf("Error updating the user: %s", err)
@@ -299,7 +299,7 @@ var userChangeEnabledCmd = &cobra.Command{
 				u.Status = user.StatusActive
 			}
 		}
-		_, err := user.UpdateUser(s, u)
+		_, err := user.UpdateUser(s, u, false)
 		if err != nil {
 			_ = s.Rollback()
 			log.Fatalf("Could not enable the user")

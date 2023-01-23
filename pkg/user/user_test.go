@@ -292,7 +292,7 @@ func TestUpdateUser(t *testing.T) {
 			ID:       1,
 			Password: "LoremIpsum",
 			Email:    "testing@example.com",
-		})
+		}, false)
 		assert.NoError(t, err)
 		assert.Equal(t, "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.", uuser.Password) // Password should not change
 		assert.Equal(t, "user1", uuser.Username)                                                        // Username should not change either
@@ -305,7 +305,7 @@ func TestUpdateUser(t *testing.T) {
 		uuser, err := UpdateUser(s, &User{
 			ID:       1,
 			Username: "changedname",
-		})
+		}, false)
 		assert.NoError(t, err)
 		assert.Equal(t, "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.", uuser.Password) // Password should not change
 		assert.Equal(t, "changedname", uuser.Username)
@@ -317,7 +317,7 @@ func TestUpdateUser(t *testing.T) {
 
 		_, err := UpdateUser(s, &User{
 			ID: 99999,
-		})
+		}, false)
 		assert.Error(t, err)
 		assert.True(t, IsErrUserDoesNotExist(err))
 	})

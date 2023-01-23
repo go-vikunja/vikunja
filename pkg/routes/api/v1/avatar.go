@@ -205,7 +205,7 @@ func UploadAvatar(c echo.Context) (err error) {
 	u.AvatarFileID = f.ID
 	u.AvatarProvider = "upload"
 
-	if _, err := user.UpdateUser(s, u); err != nil {
+	if _, err := user.UpdateUser(s, u, false); err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}

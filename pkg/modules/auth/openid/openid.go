@@ -267,7 +267,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, issuer, subject string) (u *us
 			Name:    u.Name,
 			Issuer:  issuer,
 			Subject: subject,
-		})
+		}, false)
 		if err != nil {
 			return nil, err
 		}
