@@ -56,12 +56,22 @@ func DownloadFileWithHeaders(url string, headers http.Header) (buf *bytes.Buffer
 
 // DoPost makes a form encoded post request
 func DoPost(url string, form url.Values) (resp *http.Response, err error) {
+	return DoPostWithHeaders(url, form, map[string]string{})
+}
+
+// DoPostWithHeaders does an api request and allows to pass in arbitrary headers
+func DoPostWithHeaders(url string, form url.Values, headers map[string]string) (resp *http.Response, err error) {
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, strings.NewReader(form.Encode()))
 	if err != nil {
 		return
 	}
 
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	for key, value := range headers {
+		req.Header.Add(key, value)
+	}
+
 	hc := http.Client{}
 	return hc.Do(req)
 }

@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"sort"
 	"strconv"
@@ -76,7 +77,6 @@ type dueDate struct {
 
 type item struct {
 	ID             string      `json:"id"`
-	LegacyID       string      `json:"legacy_id"`
 	UserID         string      `json:"user_id"`
 	ProjectID      string      `json:"project_id"`
 	Content        string      `json:"content"`
@@ -310,6 +310,12 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 	}
 
 	for _, i := range sync.Items {
+
+		if i == nil {
+			// This should never happen
+			continue
+		}
+
 		task := &models.TaskWithComments{
 			Task: models.Task{
 				Title:    i.Content,
@@ -524,11 +530,14 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 
 	// Get everything with the sync api
 	form := url.Values{
-		"token":          []string{token},
 		"sync_token":     []string{"*"},
 		"resource_types": []string{"[\"all\"]"},
 	}
-	resp, err := migration.DoPost("https://api.todoist.com/sync/v9/sync", form)
+	bearerHeader := map[string]string{
+		"Authorization": "Bearer " + token,
+	}
+
+	resp, err := migration.DoPostWithHeaders("https://api.todoist.com/sync/v9/sync", form, bearerHeader)
 	if err != nil {
 		return
 	}
@@ -547,7 +556,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 	doneItems := make(map[string]*doneItem)
 
 	for {
-		resp, err = migration.DoPost("https://api.todoist.com/sync/v9/completed/get_all?limit=200&offset="+strconv.Itoa(offset), form)
+		resp, err = migration.DoPostWithHeaders("https://api.todoist.com/sync/v9/completed/get_all?limit=200&offset="+strconv.Itoa(offset), form, bearerHeader)
 		if err != nil {
 			return
 		}
@@ -571,21 +580,26 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 			doneItems[i.TaskID] = i
 
 			// need to get done item data
-			resp, err = migration.DoPost("https://api.todoist.com/sync/v9/items/get", url.Values{
-				"token":   []string{token},
+			resp, err = migration.DoPostWithHeaders("https://api.todoist.com/sync/v9/items/get", url.Values{
 				"item_id": []string{i.TaskID},
-			})
+			}, bearerHeader)
 			if err != nil {
 				return
 			}
 			defer resp.Body.Close()
+
+			if resp.StatusCode == http.StatusNotFound {
+				// Done items of deleted projects may show up here but since the project is already deleted
+				// we can't show them individually and the api returns a 404.
+				continue
+			}
 
 			doneI := &itemWrapper{}
 			err = json.NewDecoder(resp.Body).Decode(doneI)
 			if err != nil {
 				return
 			}
-			log.Debugf("[Todoist Migration] Retrieved full task data for done task %s", i.TaskID)
+			log.Debugf("[Todoist Migration] Retrieved full task data for done task %s", i.ID)
 			syncResponse.Items = append(syncResponse.Items, doneI.Item)
 		}
 
@@ -600,7 +614,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 	log.Debugf("[Todoist Migration] Getting archived projects for user %d", u.ID)
 
 	// Get all archived projects
-	resp, err = migration.DoPost("https://api.todoist.com/sync/v9/projects/get_archived", form)
+	resp, err = migration.DoPostWithHeaders("https://api.todoist.com/sync/v9/projects/get_archived", form, bearerHeader)
 	if err != nil {
 		return
 	}
@@ -616,9 +630,9 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 	log.Debugf("[Todoist Migration] Got %d archived projects for user %d", len(archivedProjects), u.ID)
 	log.Debugf("[Todoist Migration] Getting data for archived projects for user %d", u.ID)
 
-	// Project data is not included in the regular sync for archived projects so we need to get all of those by hand
+	// Project data is not included in the regular sync for archived projects, so we need to get all of those by hand
 	for _, p := range archivedProjects {
-		resp, err = migration.DoPost("https://api.todoist.com/sync/v9/projects/get_data?project_id="+p.ID, form)
+		resp, err = migration.DoPostWithHeaders("https://api.todoist.com/sync/v9/projects/get_data?project_id="+p.ID, form, bearerHeader)
 		if err != nil {
 			return
 		}
