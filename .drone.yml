@@ -393,6 +393,7 @@ steps:
     environment:
       DOCKER_AUTOTAG_VERSION: ${DRONE_TAG}
       DOCKER_AUTOTAG_EXTRA_TAGS: latest
+      DOCKER_AUTOTAG_OUTPUT_FILE: .tags
     depends_on: [ fetch-tags ]
     when:
       ref:
@@ -521,6 +522,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: aa44c442f3901546cad1d83f4251b000f5b95d8af7597553fdacd0838ee8eabe
+hmac: c9795fb35e54378cdfa1f8c1eec5cdf0a5ffbf1b0b00d46d3af379af6be94f4e
 
 ...
