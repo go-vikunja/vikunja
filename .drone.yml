@@ -409,7 +409,6 @@ steps:
       password:
         from_secret: docker_password
       repo: vikunja/frontend
-      auto_tag: true
       build_args:
         - USE_RELEASE=true
         - RELEASE_VERSION=${DRONE_TAG##v}
@@ -522,6 +521,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: c9795fb35e54378cdfa1f8c1eec5cdf0a5ffbf1b0b00d46d3af379af6be94f4e
+hmac: 971875b90c7bb1649d1b00d022d0b594ba9b68f927bf8f0dbe840190816d676b
 
 ...
