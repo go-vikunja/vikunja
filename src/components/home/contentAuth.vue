@@ -1,16 +1,16 @@
 <template>
 	<div class="content-auth">
 		<BaseButton
-			v-if="menuActive"
+			v-show="menuActive"
 			@click="baseStore.setMenuActive(false)"
 			class="menu-hide-button d-print-none"
 		>
 			<icon icon="times"/>
 		</BaseButton>
 		<div
+			class="app-container"
 			:class="{'has-background': background || blurHash}"
 			:style="{'background-image': blurHash && `url(${blurHash})`}"
-			class="app-container"
 		>
 			<div
 				:class="{'is-visible': background}"
@@ -18,14 +18,14 @@
 				:style="{'background-image': background && `url(${background})`}"></div>
 			<navigation class="d-print-none"/>
 			<main
+				class="app-content"
 				:class="[
 					{ 'is-menu-enabled': menuActive },
 					$route.name,
 				]"
-				class="app-content"
 			>
 				<BaseButton
-					v-if="menuActive"
+					v-show="menuActive"
 					@click="baseStore.setMenuActive(false)"
 					class="mobile-overlay d-print-none"
 				/>
