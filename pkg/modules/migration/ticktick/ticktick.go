@@ -27,10 +27,11 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/log"
-
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
+
+	"github.com/gocarina/gocsv"
 )
 
 const timeISO = "2006-01-02T15:04:05-0700"
@@ -39,23 +40,39 @@ type Migrator struct {
 }
 
 type tickTickTask struct {
-	FolderName    string
-	ListName      string
-	Title         string
-	Tags          []string
-	Content       string
-	IsChecklist   bool
-	StartDate     time.Time
-	DueDate       time.Time
-	Reminder      time.Duration
-	Repeat        string
-	Priority      int
-	Status        string
-	CreatedTime   time.Time
-	CompletedTime time.Time
-	Order         float64
-	TaskID        int64
-	ParentID      int64
+	FolderName        string        `csv:"Folder Name"`
+	ListName          string        `csv:"List Name"`
+	Title             string        `csv:"Title"`
+	TagsList          string        `csv:"Tags"`
+	Tags              []string      `csv:"-"`
+	Content           string        `csv:"Content"`
+	IsChecklistString string        `csv:"Is Check list"`
+	IsChecklist       bool          `csv:"-"`
+	StartDate         tickTickTime  `csv:"Start Date"`
+	DueDate           tickTickTime  `csv:"Due Date"`
+	ReminderDuration  string        `csv:"Reminder"`
+	Reminder          time.Duration `csv:"-"`
+	Repeat            string        `csv:"Repeat"`
+	Priority          int           `csv:"Priority"`
+	Status            string        `csv:"Status"`
+	CreatedTime       tickTickTime  `csv:"Created Time"`
+	CompletedTime     tickTickTime  `csv:"Completed Time"`
+	Order             float64       `csv:"Order"`
+	TaskID            int64         `csv:"taskId"`
+	ParentID          int64         `csv:"parentId"`
+}
+
+type tickTickTime struct {
+	time.Time
+}
+
+func (date *tickTickTime) UnmarshalCSV(csv string) (err error) {
+	date.Time = time.Time{}
+	if csv == "" {
+		return nil
+	}
+	date.Time, err = time.Parse(timeISO, csv)
+	return err
 }
 
 // Copied from https://stackoverflow.com/a/57617885
@@ -119,17 +136,20 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.Namespace
 				ID:          t.TaskID,
 				Title:       t.Title,
 				Description: t.Content,
-				StartDate:   t.StartDate,
-				EndDate:     t.DueDate,
-				DueDate:     t.DueDate,
-				Reminders: []time.Time{
-					t.DueDate.Add(t.Reminder * -1),
-				},
-				Done:     t.Status == "1",
-				DoneAt:   t.CompletedTime,
-				Position: t.Order,
-				Labels:   labels,
+				StartDate:   t.StartDate.Time,
+				EndDate:     t.DueDate.Time,
+				DueDate:     t.DueDate.Time,
+				Done:        t.Status == "1",
+				DoneAt:      t.CompletedTime.Time,
+				Position:    t.Order,
+				Labels:      labels,
 			},
+		}
+
+		if !t.DueDate.IsZero() && t.Reminder > 0 {
+			task.Task.Reminders = []time.Time{
+				t.DueDate.Add(t.Reminder * -1),
+			}
 		}
 
 		if t.ParentID != 0 {
@@ -165,6 +185,22 @@ func (m *Migrator) Name() string {
 	return "ticktick"
 }
 
+func newLineSkipDecoder(r io.Reader, linesToSkip int) gocsv.SimpleDecoder {
+	reader := csv.NewReader(r)
+	//	reader.FieldsPerRecord = -1
+	for i := 0; i < linesToSkip; i++ {
+		_, err := reader.Read()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			log.Debugf("[TickTick Migration] CSV parse error: %s", err)
+		}
+	}
+	reader.FieldsPerRecord = 0
+	return gocsv.NewSimpleDecoderFromCSVReader(reader)
+}
+
 // Migrate takes a ticktick export, parses it and imports everything in it into Vikunja.
 // @Summary Import all lists, tasks etc. from a TickTick backup export
 // @Description Imports all projects, tasks, notes, reminders, subtasks and files from a TickTick backup export into Vikunja.
@@ -178,85 +214,26 @@ func (m *Migrator) Name() string {
 // @Router /migration/ticktick/migrate [post]
 func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error {
 	fr := io.NewSectionReader(file, 0, size)
-	r := csv.NewReader(fr)
+	//r := csv.NewReader(fr)
 
 	allTasks := []*tickTickTask{}
-	line := 0
-	for {
+	decode := newLineSkipDecoder(fr, 3)
+	err := gocsv.UnmarshalDecoder(decode, &allTasks)
+	if err != nil {
+		return err
+	}
 
-		record, err := r.Read()
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			log.Debugf("[TickTick Migration] CSV parse error: %s", err)
-		}
-
-		line++
-		if line <= 4 {
-			continue
+	for _, task := range allTasks {
+		if task.IsChecklistString == "Y" {
+			task.IsChecklist = true
 		}
 
-		priority, err := strconv.Atoi(record[10])
-		if err != nil {
-			return err
-		}
-		order, err := strconv.ParseFloat(record[14], 64)
-		if err != nil {
-			return err
-		}
-		taskID, err := strconv.ParseInt(record[21], 10, 64)
-		if err != nil {
-			return err
-		}
-		parentID, err := strconv.ParseInt(record[21], 10, 64)
-		if err != nil {
-			return err
+		reminder := parseDuration(task.ReminderDuration)
+		if reminder > 0 {
+			task.Reminder = reminder
 		}
 
-		reminder := parseDuration(record[8])
-
-		t := &tickTickTask{
-			ListName:    record[1],
-			Title:       record[2],
-			Tags:        strings.Split(record[3], ", "),
-			Content:     record[4],
-			IsChecklist: record[5] == "Y",
-			Reminder:    reminder,
-			Repeat:      record[9],
-			Priority:    priority,
-			Status:      record[11],
-			Order:       order,
-			TaskID:      taskID,
-			ParentID:    parentID,
-		}
-
-		if record[6] != "" {
-			t.StartDate, err = time.Parse(timeISO, record[6])
-			if err != nil {
-				return err
-			}
-		}
-		if record[7] != "" {
-			t.DueDate, err = time.Parse(timeISO, record[7])
-			if err != nil {
-				return err
-			}
-		}
-		if record[12] != "" {
-			t.StartDate, err = time.Parse(timeISO, record[12])
-			if err != nil {
-				return err
-			}
-		}
-		if record[13] != "" {
-			t.CompletedTime, err = time.Parse(timeISO, record[13])
-			if err != nil {
-				return err
-			}
-		}
-
-		allTasks = append(allTasks, t)
+		task.Tags = strings.Split(task.TagsList, ", ")
 	}
 
 	vikunjaTasks := convertTickTickToVikunja(allTasks)
