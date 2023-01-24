@@ -9,6 +9,18 @@ All releases can be found on https://code.vikunja.io/desktop/releases.
 
 The releases aim at the api and frontend versions which is why there are missing versions.
 
+## [0.20.3] - 2023-01-24
+
+### Bug Fixes
+
+* Open links in OS default browser ([9915318](99153187d77d5b2311bc2a87864f70b9d2563370))
+
+### Dependencies
+
+* *(deps)* Update dependency electron to v22.0.1 (#131)
+* *(deps)* Update dependency electron to v22.0.2 (#132)
+* *(deps)* Update dependency electron to v22.0.3 (#133)
+
 ## [0.20.2] - 2022-12-18
 
 ### Dependencies
