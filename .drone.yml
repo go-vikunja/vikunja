@@ -672,6 +672,7 @@ steps:
     environment:
       DOCKER_AUTOTAG_VERSION: ${DRONE_TAG}
       DOCKER_AUTOTAG_EXTRA_TAGS: latest
+      DOCKER_AUTOTAG_OUTPUT_FILE: .tags
     depends_on: [ fetch-tags ]
     when:
       ref:
