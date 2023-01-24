@@ -11,7 +11,7 @@ export function createLists() {
 	return lists
 }
 
-export function prepareLists(setLists = () => {}) {
+export function prepareLists(setLists = (...args: any[]) => {}) {
 	beforeEach(() => {
 		const lists = createLists()
 		setLists(lists)

@@ -2,9 +2,9 @@ import {createFakeUserAndLogin} from '../../support/authenticateUser'
 import {createLists} from '../list/prepareLists'
 
 function logout() {
-	cy.get('.navbar .user .username')
+	cy.get('.navbar .username-dropdown-trigger')
 		.click()
-	cy.get('.navbar .user .dropdown-menu .dropdown-item')
+	cy.get('.navbar .dropdown-item')
 		.contains('Logout')
 		.click()
 }

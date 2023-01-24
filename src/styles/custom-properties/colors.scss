@@ -256,8 +256,8 @@
   --card-border-color: var(--grey-200);
   --logo-text-color: hsl(180, 1%, 15%);
 
-  @media screen {
-    &.dark {
+  &.dark {
+    @media screen {
       // Light mode colours reversed for dark mode
       --grey-900-hsl: 210, 20%, 98%;
       --grey-900: hsl(var(--grey-900-hsl));

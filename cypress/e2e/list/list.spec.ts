@@ -30,7 +30,7 @@ describe('Lists', () => {
 			.should('contain', 'Success')
 		cy.url()
 			.should('contain', '/lists/')
-		cy.get('.list-title h1')
+		cy.get('.list-title')
 			.should('contain', 'New List')
 	})
 
@@ -51,7 +51,7 @@ describe('Lists', () => {
 		const newListName = 'New list name'
 
 		cy.visit('/lists/1')
-		cy.get('.list-title h1')
+		cy.get('.list-title')
 			.should('contain', 'First List')
 
 		cy.get('.namespace-container .menu.namespaces-lists .menu-list li:first-child .dropdown .menu-list-dropdown-trigger')
@@ -67,7 +67,7 @@ describe('Lists', () => {
 
 		cy.get('.global-notification')
 			.should('contain', 'Success')
-		cy.get('.list-title h1')
+		cy.get('.list-title')
 			.should('contain', newListName)
 			.should('not.contain', lists[0].title)
 		cy.get('.namespace-container .menu.namespaces-lists .menu-list li:first-child')
@@ -104,9 +104,9 @@ describe('Lists', () => {
 	it('Should archive a list', () => {
 		cy.visit(`/lists/${lists[0].id}`)
 		
-		cy.get('.list-title .dropdown')
+		cy.get('.list-title-dropdown')
 			.click()
-		cy.get('.list-title .dropdown .dropdown-menu .dropdown-item')
+		cy.get('.list-title-dropdown .dropdown-menu .dropdown-item')
 			.contains('Archive')
 			.click()
 		cy.get('.modal-content')

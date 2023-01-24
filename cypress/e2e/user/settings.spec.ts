@@ -37,7 +37,7 @@ describe('User Settings', () => {
 
 		cy.get('.global-notification')
 			.should('contain', 'Success')
-		cy.get('.navbar .user .username')
+		cy.get('.navbar .username-dropdown-trigger .username')
 			.should('contain', 'Lorem Ipsum')
 	})
 })

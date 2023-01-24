@@ -1,11 +1,11 @@
 <template>
 	<div class="notifications">
-		<div class="is-flex is-justify-content-center">
-			<BaseButton @click.stop="showNotifications = !showNotifications" class="trigger-button">
+		<slot name="trigger" toggleOpen="() => showNotifications = !showNotifications" :has-unread-notifications="unreadNotifications > 0">
+			<BaseButton class="trigger-button" @click.stop="showNotifications = !showNotifications">
 				<span class="unread-indicator" v-if="unreadNotifications > 0"></span>
 				<icon icon="bell"/>
 			</BaseButton>
-		</div>
+		</slot>
 
 		<CustomTransition name="fade">
 			<div class="notifications-list" v-if="showNotifications" ref="popup">
@@ -141,7 +141,11 @@ function to(n, index) {
 
 <style lang="scss" scoped>
 .notifications {
-	width: $navbar-icon-width;
+	display: flex;
+
+	.trigger-button {
+		width: 100%;
+	}
 
 	.unread-indicator {
 		position: absolute;
@@ -156,9 +160,9 @@ function to(n, index) {
 	}
 
 	.notifications-list {
-		position: fixed;
+		position: absolute;
 		right: 1rem;
-		margin-top: 1rem;
+		top: calc(100% + 1rem);
 		max-height: 400px;
 		overflow-y: auto;
 

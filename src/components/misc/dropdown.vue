@@ -1,6 +1,6 @@
 <template>
 	<div class="dropdown" ref="dropdown">
-		<slot name="trigger" :close="close" :toggleOpen="toggleOpen">
+		<slot name="trigger" :close="close" :toggleOpen="toggleOpen" :open="open">
 			<BaseButton class="dropdown-trigger is-flex" @click="toggleOpen">
 				<icon :icon="triggerIcon" class="icon"/>
 			</BaseButton>
@@ -56,7 +56,6 @@ onClickOutside(dropdown, (e: Event) => {
 .dropdown {
 	display: inline-flex;
 	position: relative;
-	vertical-align: top;
 }
 
 .dropdown-menu {
