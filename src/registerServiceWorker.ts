@@ -2,8 +2,10 @@
 
 import {register} from 'register-service-worker'
 
+import {getFullBaseUrl} from './helpers/getFullBaseUrl'
+
 if (import.meta.env.PROD) {
-	register('/sw.js', {
+	register(getFullBaseUrl() + 'sw.js', {
 		ready() {
 			console.log('App is being served from cache by a service worker.')
 		},

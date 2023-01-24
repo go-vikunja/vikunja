@@ -1,10 +1,16 @@
 /* eslint-disable no-console */
 /* eslint-disable no-undef */
 
+import {getFullBaseUrl} from './helpers/getFullBaseUrl'
+
+declare let self: ServiceWorkerGlobalScope
+
+const fullBaseUrl = getFullBaseUrl()
 const workboxVersion = 'v6.5.4'
-importScripts( `/workbox-${workboxVersion}/workbox-sw.js`)
+
+importScripts(`${fullBaseUrl}workbox-${workboxVersion}/workbox-sw.js`)
 workbox.setConfig({
-	modulePathPrefix: `/workbox-${workboxVersion}`,
+	modulePathPrefix: `${fullBaseUrl}workbox-${workboxVersion}`,
 	debug: Boolean(import.meta.env.VITE_WORKBOX_DEBUG),
 })
 
@@ -47,7 +53,7 @@ self.addEventListener('notificationclick', function (event) {
 
 	switch (event.action) {
 		case 'show-task':
-			clients.openWindow(`/tasks/${taskId}`)
+			clients.openWindow(`${fullBaseUrl}tasks/${taskId}`)
 			break
 	}
 })

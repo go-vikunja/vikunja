@@ -5,7 +5,7 @@
   "compilerOptions": {
     "composite": true,
     "baseUrl": ".",
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM", "WebWorker"],
 
     "importHelpers": true,
     "sourceMap": true,
