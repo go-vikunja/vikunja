@@ -26,12 +26,15 @@ import (
 )
 
 func TestConvertTicktickTasksToVikunja(t *testing.T) {
-	time1, err := time.Parse(time.RFC3339Nano, "2022-11-18T03:00:00.4770000Z")
+	t1, err := time.Parse(time.RFC3339Nano, "2022-11-18T03:00:00.4770000Z")
 	require.NoError(t, err)
-	time2, err := time.Parse(time.RFC3339Nano, "2022-12-18T03:00:00.4770000Z")
+	time1 := tickTickTime{Time: t1}
+	t2, err := time.Parse(time.RFC3339Nano, "2022-12-18T03:00:00.4770000Z")
 	require.NoError(t, err)
-	time3, err := time.Parse(time.RFC3339Nano, "2022-12-10T03:00:00.4770000Z")
+	time2 := tickTickTime{Time: t2}
+	t3, err := time.Parse(time.RFC3339Nano, "2022-12-10T03:00:00.4770000Z")
 	require.NoError(t, err)
+	time3 := tickTickTime{Time: t3}
 	duration, err := time.ParseDuration("24h")
 	require.NoError(t, err)
 
@@ -91,9 +94,9 @@ func TestConvertTicktickTasksToVikunja(t *testing.T) {
 
 	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[0].Title, tickTickTasks[0].Title)
 	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[0].Description, tickTickTasks[0].Content)
-	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[0].StartDate, tickTickTasks[0].StartDate)
-	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[0].EndDate, tickTickTasks[0].DueDate)
-	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[0].DueDate, tickTickTasks[0].DueDate)
+	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[0].StartDate, tickTickTasks[0].StartDate.Time)
+	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[0].EndDate, tickTickTasks[0].DueDate.Time)
+	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[0].DueDate, tickTickTasks[0].DueDate.Time)
 	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[0].Labels, []*models.Label{
 		{Title: "label1"},
 		{Title: "label2"},
@@ -105,7 +108,7 @@ func TestConvertTicktickTasksToVikunja(t *testing.T) {
 	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[1].Title, tickTickTasks[1].Title)
 	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[1].Position, tickTickTasks[1].Order)
 	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[1].Done, true)
-	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[1].DoneAt, tickTickTasks[1].CompletedTime)
+	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[1].DoneAt, tickTickTasks[1].CompletedTime.Time)
 	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[1].RelatedTasks, models.RelatedTaskMap{
 		models.RelationKindParenttask: []*models.Task{
 			{
@@ -116,9 +119,9 @@ func TestConvertTicktickTasksToVikunja(t *testing.T) {
 
 	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[2].Title, tickTickTasks[2].Title)
 	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[2].Description, tickTickTasks[2].Content)
-	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[2].StartDate, tickTickTasks[2].StartDate)
-	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[2].EndDate, tickTickTasks[2].DueDate)
-	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[2].DueDate, tickTickTasks[2].DueDate)
+	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[2].StartDate, tickTickTasks[2].StartDate.Time)
+	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[2].EndDate, tickTickTasks[2].DueDate.Time)
+	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[2].DueDate, tickTickTasks[2].DueDate.Time)
 	assert.Equal(t, vikunjaTasks[0].Lists[0].Tasks[2].Labels, []*models.Label{
 		{Title: "label1"},
 		{Title: "label2"},
