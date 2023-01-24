@@ -226,6 +226,9 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithListsAndTas
 					// If not, create one and save it for later
 					var lb *models.Label
 					var exists bool
+					if label == nil {
+						continue
+					}
 					lb, exists = labels[label.Title+label.HexColor]
 					if !exists {
 						err = label.Create(s, user)

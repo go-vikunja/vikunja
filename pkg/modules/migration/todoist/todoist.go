@@ -35,6 +35,8 @@ import (
 	"code.vikunja.io/api/pkg/utils"
 )
 
+const paginationLimit = 200
+
 // Migration is the todoist migration struct
 type Migration struct {
 	Code string `json:"code"`
@@ -554,7 +556,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 	doneItems := make(map[string]*doneItem)
 
 	for {
-		resp, err = migration.DoPostWithHeaders("https://api.todoist.com/sync/v9/completed/get_all?limit=200&offset="+strconv.Itoa(offset), form, bearerHeader)
+		resp, err = migration.DoPostWithHeaders("https://api.todoist.com/sync/v9/completed/get_all?limit="+strconv.Itoa(paginationLimit)+"&offset="+strconv.Itoa(offset*paginationLimit), form, bearerHeader)
 		if err != nil {
 			return
 		}
