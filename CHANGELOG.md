@@ -7,6 +7,90 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.20.2] - 2023-01-24
+
+### Bug Fixes
+
+* *(build)* Downgrade xgo to 1.19.2 so that builds work again
+* *(caldav)* Add Z suffix to dates make it clear dates are in UTC
+* *(caldav)* Use const for repeat modes
+* *(ci)* Pipeline dependency
+* *(ci)* Pin nfpm container version and binary location
+* *(ci)* Set release path to /source
+* *(ci)* Tagging logic for release docker images
+* *(docs)* Add docs about cli user delete
+* *(docs)* Old helm charts url (#1344)
+* *(docs)* Fix a few minor typos (#59)
+* *(drone)* Add type, fix pull, remove group (#1355)
+* *(dump)* Make sure null dates are properly set when restoring from a dump
+* *(export)* Ignore file size for export files
+* *(list)* Return lists for a namespace id even if that namespace is deleted
+* *(mailer)* Forcessl config (#60)
+* *(migration)* Use Todoist v9 api to migrate tasks from them
+* *(migration)* Import TickTick data by column name instead of index (#1356)
+* *(migration)* Use the proper authorization method for Todoist's api, fix issues with importing deleted items
+* *(reminders)* Overdue tasks join condition
+* *(reminders)* Make sure an overdue reminder is sent when there is only one overdue task
+* *(reminders)* Prevent duplicate reminders when updating task details
+* *(restore)* Check if we're really dealing with a string
+* *(tasks)* Don't include undone overdue tasks from archived lists or namespaces in notification mails
+* *(tasks)* Don't reset the kanban bucket when updating a task and not providing one
+* *(tasks)* Don't set a repeating task done when moving it do the done bucket
+* *(user)* Make reset the user's name to empty actually work* Swagger docs ([41c9e3f](41c9e3f9a47280887b56941280904aea6ef31f85))
+* Restore notifications table from dump when it already had the correct format ([15811fd](15811fd4d4485cd25cf8d2f8fdd04ebfea8e6663))
+
+
+### Dependencies
+
+* *(deps)* Update module github.com/yuin/goldmark to v1.5.3 (#1317)
+* *(deps)* Update module golang.org/x/crypto to v0.2.0 (#1315)
+* *(deps)* Update module github.com/spf13/afero to v1.9.3 (#1320)
+* *(deps)* Update module golang.org/x/crypto to v0.3.0 (#1321)
+* *(deps)* Update github.com/arran4/golang-ical digest to a677353 (#1323)
+* *(deps)* Update module github.com/wneessen/go-mail to v0.3.5 (#1325)
+* *(deps)* Update github.com/arran4/golang-ical digest to 1093469 (#1326)
+* *(deps)* Update module github.com/golang-jwt/jwt/v4 to v4.4.3 (#1328)
+* *(deps)* Update module github.com/go-sql-driver/mysql to v1.7.0 (#1332)
+* *(deps)* Update module golang.org/x/sys to v0.3.0 (#1333)
+* *(deps)* Update module golang.org/x/term to v0.3.0 (#1336)
+* *(deps)* Update module golang.org/x/image to v0.2.0 (#1335)
+* *(deps)* Update module golang.org/x/oauth2 to v0.2.0 (#1316)
+* *(deps)* Update module golang.org/x/oauth2 to v0.3.0 (#1337)
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.16.0 (#1338)
+* *(deps)* Update module golang.org/x/crypto to v0.4.0 (#1339)
+* *(deps)* Update module github.com/pquerna/otp to v1.4.0 (#1341)
+* *(deps)* Update module github.com/swaggo/swag to v1.8.9 (#1327)
+* *(deps)* Update module github.com/wneessen/go-mail to v0.3.6 (#1342)
+* *(deps)* Update module github.com/labstack/echo/v4 to v4.10.0 (#1343)
+* *(deps)* Update module github.com/wneessen/go-mail to v0.3.7 (#1348)
+* *(deps)* Update module github.com/coreos/go-oidc/v3 to v3.5.0 (#1349)
+* *(deps)* Update module golang.org/x/sys to v0.4.0 (#1351)
+* *(deps)* Update module golang.org/x/image to v0.3.0 (#1350)
+* *(deps)* Update module golang.org/x/term to v0.4.0 (#1352)
+* *(deps)* Update module golang.org/x/crypto to v0.5.0 (#1353)
+* *(deps)* Update goreleaser/nfpm docker tag to v2.23.0 (#1347)
+* *(deps)* Update module github.com/wneessen/go-mail to v0.3.8 (#1357)
+* *(deps)* Update module src.techknowlogick.com/xgo to v1.6.0+1.19.5 (#1358)
+* *(deps)* Update klakegg/hugo docker tag to v0.107.0 (#1272)
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.17.0 (#1361)
+* *(deps)* Update module src.techknowlogick.com/xgo to v1.7.0+1.19.5 (#1364)
+* *(deps)* Update module github.com/spf13/viper to v1.15.0 (#1365)
+* *(deps)* Update module github.com/labstack/echo-jwt/v4 to v4.0.1 (#1369)
+
+### Features
+
+* *(migrators)* Remove wunderlist (#1346)
+* *(release)* Use compressed binaries for package releases
+* Use docker buildx to build multiarch images ([9bd6795](9bd6795266fd54ae42664c20ed7633ac7daf6199))
+
+### Miscellaneous Tasks
+
+* Remove custom gitea bug template in favor of githubs ([7b1e1c7](7b1e1c79e358f3fcecb217259491f016402cdcc7))
+
+### Other
+
+* *(other)* Added Google & Google Workspace to OpenId examples (#1319)
+
 ## [0.20.1] - 2022-11-11
 
 ### Bug Fixes
