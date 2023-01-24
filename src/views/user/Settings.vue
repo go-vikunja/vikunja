@@ -4,7 +4,7 @@
 			<nav class="navigation">
 				<ul>
 					<li v-for="({routeName, title }, index) in navigationItems" :key="index">
-						<router-link :to="{name: routeName}">
+						<router-link class="navigation-link" :to="{name: routeName}">
 							{{ title }}
 						</router-link>
 					</li>
@@ -90,39 +90,42 @@ const navigationItems = computed(() => {
 .user-settings {
 	display: flex;
 
-	.navigation {
-		width: 25%;
-		padding-right: 1rem;
-
-		a {
-			display: block;
-			padding: .5rem;
-			color: var(--text);
-			width: 100%;
-			border-left: 3px solid transparent;
-
-			&:hover, &.router-link-active {
-				background: var(--white);
-				border-color: var(--primary);
-			}
-		}
-	}
-
-	.view {
-		width: 75%;
-	}
-
 	@media screen and (max-width: $tablet) {
 		flex-direction: column;
+	}
+}
 
-		.navigation, .view {
-			width: 100%;
-			padding-left: 0;
-		}
+.navigation {
+	width: 25%;
+	padding-right: 1rem;
 
-		.view {
-			padding-top: 1rem;
-		}
+	@media screen and (max-width: $tablet) {
+		width: 100%;
+		padding-left: 0;
+	}
+}
+
+.navigation-link {
+	display: block;
+	padding: .5rem;
+	color: var(--text);
+	width: 100%;
+	border-left: 3px solid transparent;
+
+	&:hover,
+	&.router-link-active {
+		background: var(--white);
+		border-color: var(--primary);
+	}
+}
+
+.view {
+	width: 75%;
+
+	@media screen and (max-width: $tablet) {
+		width: 100%;
+		padding-left: 0;
+		padding-top: 1rem;
 	}
 }
 </style>
