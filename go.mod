@@ -35,7 +35,7 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/go-testfixtures/testfixtures/v3 v3.8.1
-	github.com/gocarina/gocsv v0.0.0-20221216233619-1fea7ae8d380
+	github.com/gocarina/gocsv v0.0.0-20230123225133-763e25b40669
 	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/google/uuid v1.3.0
