@@ -124,7 +124,6 @@ type fileAttachment struct {
 
 type note struct {
 	ID             string          `json:"id"`
-	PostedUID      int64           `json:"posted_uid"`
 	ProjectID      string          `json:"project_id"`
 	ItemID         string          `json:"item_id"`
 	Content        string          `json:"content"`
@@ -139,7 +138,6 @@ type projectNote struct {
 	ID             int64           `json:"id"`
 	IsDeleted      int64           `json:"is_deleted"`
 	Posted         time.Time       `json:"posted"`
-	PostedUID      int64           `json:"posted_uid"`
 	ProjectID      string          `json:"project_id"`
 	UidsToNotify   []int64         `json:"uids_to_notify"`
 }
