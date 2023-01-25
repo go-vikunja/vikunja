@@ -546,7 +546,7 @@ function select(parentIndex: number, index: number) {
 	}
 	let elems = resultRefs.value[parentIndex][index]
 	if (results.value[parentIndex].items.length === index) {
-		elems = resultRefs.value[parentIndex + 1][0]
+		elems = resultRefs.value[parentIndex + 1] ? resultRefs.value[parentIndex + 1][0] : undefined
 	}
 	if (
 		typeof elems === 'undefined'
