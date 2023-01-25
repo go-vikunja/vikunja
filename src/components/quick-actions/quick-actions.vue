@@ -576,6 +576,8 @@ function reset() {
 
 <style lang="scss" scoped>
 .quick-actions {
+	overflow: hidden;
+	
 	// FIXME: changed position should be an option of the modal
 	:deep(.modal-content) {
 		top: 3rem;
