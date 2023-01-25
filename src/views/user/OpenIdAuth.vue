@@ -76,8 +76,7 @@ async function authenticateWithCode() {
 		})
 		redirectIfSaved()
 	} catch(e) {
-		const err = getErrorText(e)
-		errorMessage.value = typeof err[1] !== 'undefined' ? err[1] : err[0]
+		errorMessage.value = getErrorText(e)
 	} finally {
 		localStorage.removeItem('authenticating')
 	}

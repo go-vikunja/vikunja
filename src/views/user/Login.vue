@@ -193,8 +193,7 @@ async function submit() {
 			return
 		}
 
-		const err = getErrorText(e)
-		errorMessage.value = typeof err[1] !== 'undefined' ? err[1] : err[0]
+		errorMessage.value = getErrorText(e)
 	}
 }
 </script>
