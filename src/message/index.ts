@@ -2,32 +2,19 @@ import {i18n} from '@/i18n'
 import {notify} from '@kyvg/vue3-notification'
 
 export function getErrorText(r): string {
-	let data = undefined
-	if (r?.response?.data) {
-		data = r.response.data
-	}
-	
-	if (r?.reason?.response?.data) {
-		data = r.reason.response.data
-	}
-	
-	if (data) {
-		if(data.code) {
-			const path = `error.${data.code}`
-			const message = i18n.global.t(path)
+	const data = r?.reason?.response?.data || r?.response?.data
 
-			// If message and path are equal no translation exists for that error code
-			if (path !== message) {
-				return message
-			}
-		}
+	if (data?.code) {
+		const path = `error.${data.code}`
+		const message = i18n.global.t(path)
 
-		if (data.message) {
-			return data.message
+		// If message and path are equal no translation exists for that error code
+		if (path !== message) {
+			return message
 		}
 	}
 
-	return r.message
+	return data?.message || r.message
 }
 
 export function error(e, actions = []) {
