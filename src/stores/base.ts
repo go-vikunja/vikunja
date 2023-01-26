@@ -9,6 +9,7 @@ import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 
 import {useAuthStore} from '@/stores/auth'
 import type {IList} from '@/modelTypes/IList'
+import { useStorage } from '@vueuse/core'
 
 export const useBaseStore = defineStore('base', () => {
 	const loading = ref(false)
@@ -23,7 +24,7 @@ export const useBaseStore = defineStore('base', () => {
 	const blurHash = ref('')
 
 	const hasTasks = ref(false)
-	const menuActive = ref(true)
+	const menuActive = useStorage('menuActive', true)
 	const keyboardShortcutsActive = ref(false)
 	const quickActionsActive = ref(false)
 	const logoVisible = ref(true)
@@ -51,10 +52,6 @@ export const useBaseStore = defineStore('base', () => {
 
 	function setHasTasks(newHasTasks: boolean) {
 		hasTasks.value = newHasTasks
-	}
-
-	function setMenuActive(newMenuActive: boolean) {
-		menuActive.value = newMenuActive
 	}
 
 	function toggleMenu() {
@@ -147,7 +144,6 @@ export const useBaseStore = defineStore('base', () => {
 		setLoading,
 		setCurrentList,
 		setHasTasks,
-		setMenuActive,
 		toggleMenu,
 		setKeyboardShortcutsActive,
 		setQuickActionsActive,
