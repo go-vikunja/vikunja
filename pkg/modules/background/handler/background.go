@@ -331,6 +331,11 @@ func RemoveListBackground(c echo.Context) error {
 		return err
 	}
 
+	err = list.DeleteBackgroundFileIfExists()
+	if err != nil {
+		return err
+	}
+
 	list.BackgroundFileID = 0
 	list.BackgroundInformation = nil
 	list.BackgroundBlurHash = ""

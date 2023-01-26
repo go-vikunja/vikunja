@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 )
@@ -246,17 +247,76 @@ func TestList_CreateOrUpdate(t *testing.T) {
 }
 
 func TestList_Delete(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	list := List{
-		ID: 1,
-	}
-	err := list.Delete(s, &user.User{ID: 1})
-	assert.NoError(t, err)
-	err = s.Commit()
-	assert.NoError(t, err)
-	db.AssertMissing(t, "lists", map[string]interface{}{
-		"id": 1,
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		list := List{
+			ID: 1,
+		}
+		err := list.Delete(s, &user.User{ID: 1})
+		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+		db.AssertMissing(t, "lists", map[string]interface{}{
+			"id": 1,
+		})
+	})
+	t.Run("with background", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		files.InitTestFileFixtures(t)
+		s := db.NewSession()
+		list := List{
+			ID: 25,
+		}
+		err := list.Delete(s, &user.User{ID: 6})
+		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+		db.AssertMissing(t, "lists", map[string]interface{}{
+			"id": 25,
+		})
+		db.AssertMissing(t, "files", map[string]interface{}{
+			"id": 1,
+		})
+	})
+}
+
+func TestList_DeleteBackgroundFileIfExists(t *testing.T) {
+	t.Run("list with background", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		files.InitTestFileFixtures(t)
+		s := db.NewSession()
+		file := &files.File{ID: 1}
+		list := List{
+			ID:               1,
+			BackgroundFileID: file.ID,
+		}
+		err := SetListBackground(s, list.ID, file, "")
+		assert.NoError(t, err)
+		err = list.DeleteBackgroundFileIfExists()
+		assert.NoError(t, err)
+	})
+	t.Run("list with invalid background", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		files.InitTestFileFixtures(t)
+		s := db.NewSession()
+		file := &files.File{ID: 9999}
+		list := List{
+			ID:               1,
+			BackgroundFileID: file.ID,
+		}
+		err := SetListBackground(s, list.ID, file, "")
+		assert.NoError(t, err)
+		err = list.DeleteBackgroundFileIfExists()
+		assert.Error(t, err)
+		assert.True(t, files.IsErrFileDoesNotExist(err))
+	})
+	t.Run("list without background", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		files.InitTestFileFixtures(t)
+		list := List{ID: 1}
+		err := list.DeleteBackgroundFileIfExists()
+		assert.NoError(t, err)
 	})
 }
 
