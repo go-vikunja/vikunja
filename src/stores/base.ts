@@ -54,6 +54,10 @@ export const useBaseStore = defineStore('base', () => {
 		hasTasks.value = newHasTasks
 	}
 
+	function setMenuActive(newMenuActive: boolean) {
+		menuActive.value = newMenuActive
+	}
+
 	function toggleMenu() {
 		menuActive.value = !menuActive.value
 	}
@@ -144,6 +148,7 @@ export const useBaseStore = defineStore('base', () => {
 		setLoading,
 		setCurrentList,
 		setHasTasks,
+		setMenuActive,
 		toggleMenu,
 		setKeyboardShortcutsActive,
 		setQuickActionsActive,

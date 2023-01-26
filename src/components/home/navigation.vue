@@ -208,7 +208,7 @@ const listStore = useListStore()
 
 function resize() {
 	// Hide the menu by default on mobile
-	baseStore.setMenuActive(window.innerWidth >= 770)
+	baseStore.menuActive && baseStore.setMenuActive(window.innerWidth >= 770)
 }
 
 function toggleLists(namespaceId: INamespace['id']) {
