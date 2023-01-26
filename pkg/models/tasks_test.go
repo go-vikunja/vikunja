@@ -19,6 +19,7 @@ package models
 import (
 	"testing"
 	"time"
+	"xorm.io/builder"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
@@ -366,6 +367,27 @@ func TestTask_Update(t *testing.T) {
 		err = s.Commit()
 		assert.NoError(t, err)
 		assert.Equal(t, int64(3), task.Index)
+	})
+	t.Run("the same date multiple times should be saved once", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:    1,
+			Title: "test",
+			Reminders: []time.Time{
+				time.Unix(1674745156, 0),
+				time.Unix(1674745156, 223),
+			},
+			ListID: 1,
+		}
+		err := task.Update(s, u)
+		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+
+		db.AssertCount(t, "task_reminders", builder.Eq{"task_id": 1}, 1)
 	})
 }
 

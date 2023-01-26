@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"xorm.io/builder"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
@@ -101,4 +102,11 @@ func AssertMissing(t *testing.T, table string, values map[string]interface{}) {
 	exists, err := x.Table(table).Where(values).Exist(&v)
 	assert.NoError(t, err, fmt.Sprintf("Failed to assert entries don't exist in db, error was: %s", err))
 	assert.False(t, exists, fmt.Sprintf("Entries %v exist in table %s", values, table))
+}
+
+// AssertCount checks if a number of entries exists in the database
+func AssertCount(t *testing.T, table string, where builder.Cond, count int64) {
+	dbCount, err := x.Table(table).Where(where).Count()
+	assert.NoError(t, err, fmt.Sprintf("Failed to assert count in db, error was: %s", err))
+	assert.Equal(t, count, dbCount, fmt.Sprintf("Found %d entries instead of expected %d in table %s", dbCount, count, table))
 }
