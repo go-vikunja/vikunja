@@ -50,6 +50,7 @@ function refreshApp() {
 	font-size: .9rem;
 	color: var(--grey-900);
 	justify-content: space-between;
+	z-index: 10;
 
 	position: fixed;
 	bottom: 1rem;
