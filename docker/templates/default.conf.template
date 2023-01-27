@@ -1,7 +1,7 @@
 server {
   listen      ${VIKUNJA_HTTP_PORT};
   listen      [::]:${VIKUNJA_HTTP_PORT};
-   ## Needed when behind HAProxy with SSL termination + HTTP/2 support
+  ## Needed when behind HAProxy with SSL termination + HTTP/2 support
   listen      ${VIKUNJA_HTTP2_PORT}  default_server http2 proxy_protocol;
   listen      [::]:${VIKUNJA_HTTP2_PORT} default_server http2 proxy_protocol;
 

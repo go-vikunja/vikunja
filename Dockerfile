@@ -64,6 +64,7 @@ COPY --from=builder /build/dist ./
 # manage permissions
 RUN chmod 0755 /docker-entrypoint.d/*.sh /etc/nginx/templates && \
     chmod -R 0644 /etc/nginx/nginx.conf && \
-    chown -R nginx:nginx ./ /etc/nginx/conf.d /etc/nginx/templates
+    chown -R nginx:nginx ./ /etc/nginx/conf.d /etc/nginx/templates && \
+    rm -f /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
 # unprivileged user
 USER nginx
