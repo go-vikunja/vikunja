@@ -34,7 +34,7 @@ specifiers:
   '@vitejs/plugin-legacy': 3.0.2
   '@vitejs/plugin-vue': 4.0.0
   '@vue/eslint-config-typescript': 11.0.2
-  '@vue/test-utils': 2.2.7
+  '@vue/test-utils': 2.2.8
   '@vue/tsconfig': 0.1.3
   '@vueuse/core': 9.11.1
   autoprefixer: 10.4.13
@@ -167,7 +167,7 @@ devDependencies:
   '@vitejs/plugin-legacy': 3.0.2_terser@5.10.0+vite@4.0.4
   '@vitejs/plugin-vue': 4.0.0_vite@4.0.4+vue@3.2.45
   '@vue/eslint-config-typescript': 11.0.2_5gm7ezxcdo2zu65gboxarjsumy
-  '@vue/test-utils': 2.2.7_vue@3.2.45
+  '@vue/test-utils': 2.2.8_o3nmwetfthgqihjljurbyiqgn4
   '@vue/tsconfig': 0.1.3_@types+node@18.11.18
   autoprefixer: 10.4.13_postcss@8.4.21
   browserslist: 4.21.4
@@ -4394,11 +4394,14 @@ packages:
   /@vue/shared/3.2.45:
     resolution: {integrity: sha512-Ewzq5Yhimg7pSztDV+RH1UDKBzmtqieXQlpTVm2AwraoRL/Rks96mvd8Vgi7Lj+h+TH8dv7mXD3FRZR3TUvbSg==}
 
-  /@vue/test-utils/2.2.7_vue@3.2.45:
-    resolution: {integrity: sha512-BMuoruUFTEqhLoOgsMcgNVMiByYbfHCKGr2C4CPdGtz/affUtDVX5zr1RnPuq0tYSiaqq+Enw5voUpG6JY8Q7g==}
+  /@vue/test-utils/2.2.8_o3nmwetfthgqihjljurbyiqgn4:
+    resolution: {integrity: sha512-/R8DKzp41Ip/RqTt1jvOVi5gxby3EwNWiYHNYsG9FAjEvt0gzDvYN55lCKzX7IdnI5zVIOo5tHtts0SLT+JrWw==}
     peerDependencies:
+      '@vue/compiler-dom': ^3.0.1
       vue: ^3.0.1
     dependencies:
+      '@vue/compiler-dom': 3.2.45
+      js-beautify: 1.14.6
       vue: 3.2.45
     dev: true
 
@@ -6944,6 +6947,16 @@ packages:
     resolution: {integrity: sha512-nagl3RYrbNv6kQkeJIpt6NJZy8twLB/2vtz6yN9Z4vRKHN4/QZJIEbqohALSgwKdnksuY3k5Addp5lg8sVoVcQ==}
     dependencies:
       safe-buffer: 5.2.1
+    dev: true
+
+  /editorconfig/0.15.3:
+    resolution: {integrity: sha512-M9wIMFx96vq0R4F+gRpY3o2exzb8hEj/n9S8unZtHSvYjibBp/iMufSzvmOcV/laG0ZtuTVGtiJggPOSW2r93g==}
+    hasBin: true
+    dependencies:
+      commander: 2.20.3
+      lru-cache: 4.1.5
+      semver: 5.7.1
+      sigmund: 1.0.1
     dev: true
 
   /ee-first/1.1.1:
@@ -9619,6 +9632,17 @@ packages:
       '@sideway/pinpoint': 2.0.0
     dev: true
 
+  /js-beautify/1.14.6:
+    resolution: {integrity: sha512-GfofQY5zDp+cuHc+gsEXKPpNw2KbPddreEo35O6jT6i0RVK6LhsoYBhq5TvK4/n74wnA0QbK8gGd+jUZwTMKJw==}
+    engines: {node: '>=10'}
+    hasBin: true
+    dependencies:
+      config-chain: 1.1.13
+      editorconfig: 0.15.3
+      glob: 8.0.3
+      nopt: 6.0.0
+    dev: true
+
   /js-sdsl/4.1.4:
     resolution: {integrity: sha512-Y2/yD55y5jteOAmY50JbUZYwk3CP3wnLPEZnlR1w9oKhITrBEtAxwuWKebFf8hMrPMgbYwFoWK/lH2sBkErELw==}
     dev: true
@@ -10196,6 +10220,13 @@ packages:
   /lowercase-keys/3.0.0:
     resolution: {integrity: sha512-ozCC6gdQ+glXOQsveKD0YsDy8DSQFjDTz4zyzEHNV5+JP5D62LmfDZ6o1cycFx9ouG940M5dE8C8CTewdj2YWQ==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    dev: true
+
+  /lru-cache/4.1.5:
+    resolution: {integrity: sha512-sWZlbEP2OsHNkXrMl5GYk/jKk70MBng6UU4YI/qGDYbgf6YbP4EvmqISbXCoJiRKs+1bSpFHVgQxvJ17F2li5g==}
+    dependencies:
+      pseudomap: 1.0.2
+      yallist: 2.1.2
     dev: true
 
   /lru-cache/6.0.0:
@@ -10994,6 +11025,14 @@ packages:
   /nopt/5.0.0:
     resolution: {integrity: sha512-Tbj67rffqceeLpcRXrT7vKAN8CwfPeIBgM7E6iBkmKLV7bEMwpGgYLGv0jACUsECaa/vuxP0IjEont6umdMgtQ==}
     engines: {node: '>=6'}
+    hasBin: true
+    dependencies:
+      abbrev: 1.1.1
+    dev: true
+
+  /nopt/6.0.0:
+    resolution: {integrity: sha512-ZwLpbTgdhuZUnZzjd7nb1ZV+4DoiC6/sfiVKok72ym/4Tlf+DFdlHYmT2JPmcNNWV6Pi3SDf1kT+A4r9RTuT9g==}
+    engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
     hasBin: true
     dependencies:
       abbrev: 1.1.1
@@ -12317,6 +12356,10 @@ packages:
       event-stream: 3.3.4
     dev: true
 
+  /pseudomap/1.0.2:
+    resolution: {integrity: sha512-b/YwNhb8lk1Zz2+bXXpS/LK9OisiZZ1SNsSLxN1x2OXVEhW2Ckr/7mWE5vrC1ZTiJlD9g19jWszTmJsB+oEpFQ==}
+    dev: true
+
   /psl/1.8.0:
     resolution: {integrity: sha512-RIdOzyoavK+hA18OGGWDqUTsCLhtA7IcZ/6NCs4fFJaHBDab+pDDmDIByWFRQJq2Cd7r1OoQxBGKOaztq+hjIQ==}
     dev: true
@@ -13122,6 +13165,10 @@ packages:
 
   /siginfo/2.0.0:
     resolution: {integrity: sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g==}
+    dev: true
+
+  /sigmund/1.0.1:
+    resolution: {integrity: sha512-fCvEXfh6NWpm+YSuY2bpXb/VIihqWA6hLsgboC+0nl71Q7N7o2eaCW8mJa/NLvQhs6jpd3VZV4UiUQlV6+lc8g==}
     dev: true
 
   /signal-exit/3.0.7:
@@ -15298,6 +15345,10 @@ packages:
   /y18n/5.0.8:
     resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
     engines: {node: '>=10'}
+    dev: true
+
+  /yallist/2.1.2:
+    resolution: {integrity: sha512-ncTzHV7NvsQZkYe1DW7cbDLm0YpzHmZF5r/iyP3ZnQtMiJ+pjzisCiMNI+Sj+xQF5pXhSHxSB3uDbsBTzY/c2A==}
     dev: true
 
   /yallist/4.0.0:
