@@ -91,7 +91,7 @@
       },
       "totp": {
         "title": "To-faktor-autentisering",
-        "enroll": "Delta",
+        "enroll": "Registrere",
         "finishSetupPart1": "For å fullføre oppsettet, bruk denne appen (Google Authenticator eller lignende):",
         "finishSetupPart2": "Etter det, skriv inn en kode fra appen under.",
         "scanQR": "Alternativt kan du skanne denne QR-koden:",
