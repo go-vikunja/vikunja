@@ -18,6 +18,14 @@ If you find any security-related issues you don't want to disclose publicly, ple
 ## Docker
 
 There is a [docker image available](https://hub.docker.com/r/vikunja/api) with support for http/2 and aggressive caching enabled.
+In order to build it from sources run the command below. (Docker >= v19.03)
+
+```shell
+export DOCKER_BUILDKIT=1
+docker build -t vikunja/frontend .
+```
+
+Refer to Refer [to multi-platform documentation](https://docs.docker.com/build/building/multi-platform/) in order to build for the different platform.
 
 ## Project setup
 
