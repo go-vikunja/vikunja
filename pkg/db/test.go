@@ -20,12 +20,12 @@ import (
 	"fmt"
 	"os"
 	"testing"
-	"xorm.io/builder"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 
 	"github.com/stretchr/testify/assert"
+	"xorm.io/builder"
 	"xorm.io/xorm"
 	"xorm.io/xorm/names"
 )

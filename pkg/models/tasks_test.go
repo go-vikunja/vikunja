@@ -19,13 +19,13 @@ package models
 import (
 	"testing"
 	"time"
-	"xorm.io/builder"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
+	"xorm.io/builder"
 )
 
 func TestTask_Create(t *testing.T) {
