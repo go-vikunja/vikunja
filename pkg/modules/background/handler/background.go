@@ -295,6 +295,11 @@ func GetListBackground(c echo.Context) error {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
+	stat, err := bgFile.File.Stat()
+	if err != nil {
+		_ = s.Rollback()
+		return handler.HandleHTTPError(err, c)
+	}
 
 	// Unsplash requires pingbacks as per their api usage guidelines.
 	// To do this in a privacy-preserving manner, we do the ping from inside of Vikunja to not expose any user details.
@@ -304,6 +309,11 @@ func GetListBackground(c echo.Context) error {
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
+	}
+
+	// Set Last-Modified header if we have the file stat, so clients can decide whether to use cached files
+	if stat != nil {
+		c.Response().Header().Set(echo.HeaderLastModified, stat.ModTime().UTC().Format(http.TimeFormat))
 	}
 
 	// Serve the file
