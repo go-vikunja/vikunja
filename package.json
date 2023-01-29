@@ -121,7 +121,7 @@
     "csstype": "3.1.1",
     "cypress": "12.4.1",
     "esbuild": "0.17.5",
-    "eslint": "8.32.0",
+    "eslint": "8.33.0",
     "eslint-plugin-vue": "9.9.0",
     "happy-dom": "8.1.5",
     "histoire": "0.12.4",
