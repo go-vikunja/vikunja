@@ -124,6 +124,18 @@ describe('Parse Task Text', () => {
 			expect(result?.date?.getMonth()).toBe(nextMonday.getMonth())
 			expect(result?.date?.getDate()).toBe(nextMonday.getDate())
 		})
+		it('should recognize next monday on the beginning of the sentence', () => {
+			const result = parseTaskText('next monday Lorem Ipsum')
+
+			const untilNextMonday = calculateDayInterval('nextMonday')
+
+			expect(result.text).toBe('Lorem Ipsum')
+			const nextMonday = new Date()
+			nextMonday.setDate(nextMonday.getDate() + untilNextMonday)
+			expect(result?.date?.getFullYear()).toBe(nextMonday.getFullYear())
+			expect(result?.date?.getMonth()).toBe(nextMonday.getMonth())
+			expect(result?.date?.getDate()).toBe(nextMonday.getDate())
+		})
 		it('should recognize next monday and ignore casing', () => {
 			const result = parseTaskText('Lorem Ipsum nExt Monday')
 
@@ -216,46 +228,7 @@ describe('Parse Task Text', () => {
 			expect(result?.date?.getDate()).toBe(date.getDate())
 		})
 
-		const cases = {
-			'monday': 1,
-			'Monday': 1,
-			'mon': 1,
-			'Mon': 1,
-			'tuesday': 2,
-			'Tuesday': 2,
-			'tue': 2,
-			'Tue': 2,
-			'wednesday': 3,
-			'Wednesday': 3,
-			'wed': 3,
-			'Wed': 3,
-			'thursday': 4,
-			'Thursday': 4,
-			'thu': 4,
-			'Thu': 4,
-			'friday': 5,
-			'Friday': 5,
-			'fri': 5,
-			'Fri': 5,
-			'saturday': 6,
-			'Saturday': 6,
-			'sat': 6,
-			'Sat': 6,
-			'sunday': 7,
-			'Sunday': 7,
-			'sun': 7,
-			'Sun': 7,
-		} as Record<string, number>
-		for (const c in cases) {
-			it(`should recognize ${c} as weekday`, () => {
-				const result = parseTaskText(`Lorem Ipsum ${c}`)
 
-				expect(result.text).toBe('Lorem Ipsum')
-				const nextDate = new Date()
-				nextDate.setDate(nextDate.getDate() + ((cases[c] + 7 - nextDate.getDay()) % 7))
-				expect(`${result?.date?.getFullYear()}-${result?.date?.getMonth()}-${result?.date?.getDate()}`).toBe(`${nextDate.getFullYear()}-${nextDate.getMonth()}-${nextDate.getDate()}`)
-			})
-		}
 		it('should recognize weekdays with time', () => {
 			const result = parseTaskText('Lorem Ipsum thu at 14:00')
 
@@ -369,20 +342,34 @@ describe('Parse Task Text', () => {
 		describe('Parse weekdays', () => {
 
 			const days = {
-				'mon': 1,
 				'monday': 1,
-				'tue': 2,
+				'Monday': 1,
+				'mon': 1,
+				'Mon': 1,
 				'tuesday': 2,
-				'wed': 3,
+				'Tuesday': 2,
+				'tue': 2,
+				'Tue': 2,
 				'wednesday': 3,
-				'thu': 4,
+				'Wednesday': 3,
+				'wed': 3,
+				'Wed': 3,
 				'thursday': 4,
-				'fri': 5,
+				'Thursday': 4,
+				'thu': 4,
+				'Thu': 4,
 				'friday': 5,
-				'sat': 6,
+				'Friday': 5,
+				'fri': 5,
+				'Fri': 5,
 				'saturday': 6,
-				'sun': 7,
+				'Saturday': 6,
+				'sat': 6,
+				'Sat': 6,
 				'sunday': 7,
+				'Sunday': 7,
+				'sun': 7,
+				'Sun': 7,
 			} as Record<string, number>
 
 			const prefix = [
@@ -394,6 +381,18 @@ describe('Parse Task Text', () => {
 				for (const d in days) {
 					it(`should recognize ${p}${d}`, () => {
 						const result = parseTaskText(`Lorem Ipsum ${p}${d}`)
+
+						const next = new Date()
+						const distance = (days[d] + 7 - next.getDay()) % 7
+						next.setDate(next.getDate() + distance)
+
+						expect(result.text).toBe('Lorem Ipsum')
+						expect(result?.date?.getFullYear()).toBe(next.getFullYear())
+						expect(result?.date?.getMonth()).toBe(next.getMonth())
+						expect(result?.date?.getDate()).toBe(next.getDate())
+					})
+					it(`should recognize ${p}${d} at the beginning of the text`, () => {
+						const result = parseTaskText(`${p}${d} Lorem Ipsum`)
 
 						const next = new Date()
 						const distance = (days[d] + 7 - next.getDay()) % 7
