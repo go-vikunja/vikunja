@@ -124,10 +124,10 @@ export const useListStore = defineStore('list', () => {
 				...list,
 				namespaceId: FavoriteListsNamespace,
 			}
+			
+			namespaceStore.removeListFromNamespaceById(newList)
 			if (list.isFavorite) {
 				namespaceStore.addListToNamespace(newList)
-			} else {
-				namespaceStore.removeListFromNamespaceById(newList)
 			}
 			namespaceStore.loadNamespacesIfFavoritesDontExist()
 			namespaceStore.removeFavoritesNamespaceIfEmpty()
