@@ -23,7 +23,7 @@ import (
 	"errors"
 
 	"code.vikunja.io/api/pkg/red"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 // Storage is a redis implementation of a keyvalue storage
