@@ -155,7 +155,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.vikunja-api.rule=Host(`vikunja.example.com`) && PathPrefix(`/api/v1`, `/dav/`, `/.well-known/`)"
+      - "traefik.http.routers.vikunja-api.rule=Host(`vikunja.example.com`) && (PathPrefix(`/api/v1`) || PathPrefix(`/dav/`) || PathPrefix(`/.well-known/`))"
       - "traefik.http.routers.vikunja-api.entrypoints=https"
       - "traefik.http.routers.vikunja-api.tls.certResolver=acme"
   frontend:
