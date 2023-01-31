@@ -60,7 +60,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/swaggo/swag v1.8.10
 	github.com/tkuchiki/go-timezone v0.2.2
-	github.com/ulule/limiter/v3 v3.10.0
+	github.com/ulule/limiter/v3 v3.11.0
 	github.com/vectordotdev/go-datemath v0.1.1-0.20211214182920-0a4ac8742b93
 	github.com/wneessen/go-mail v0.3.8
 	github.com/yuin/goldmark v1.5.3
@@ -151,7 +151,6 @@ require (
 
 replace (
 	github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20190524174923-9e5cd1688227+incompatible // Branch: feature/dynamic-supported-components, PR: https://github.com/samedi/caldav-go/pull/6 and https://github.com/samedi/caldav-go/pull/7
-	github.com/ulule/limiter/v3 => github.com/kolaente/go-limiter/v3 v3.0.0-20230131162509-7193d1e06b18 // PR: https://github.com/ulule/limiter/pull/214
 	gopkg.in/fsnotify.v1 => github.com/kolaente/fsnotify v1.4.10-0.20200411160148-1bc3c8ff4048 // See https://github.com/fsnotify/fsnotify/issues/328 and https://github.com/golang/go/issues/26904
 )
 
