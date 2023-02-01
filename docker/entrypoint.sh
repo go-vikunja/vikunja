@@ -7,9 +7,8 @@ if [ -n "$PUID" ] && [ "$PUID" -ne 0 ] && \
   addgroup -g "$PGID" vikunja
   adduser -s /bin/sh -D -G vikunja -u "$PUID" vikunja -h /app/vikunja -H
   chown -R vikunja:vikunja ./
-  su -pc /app/vikunja/vikunja - vikunja "$@"
+  exec su vikunja -c /app/vikunja/vikunja "$@"
 else
   echo "info: creation of non-root user is skipped"
   exec /app/vikunja/vikunja "$@"
 fi
-
