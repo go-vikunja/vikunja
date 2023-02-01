@@ -54,11 +54,9 @@ func (p *Provider) Search(s *xorm.Session, search string, page int64) (result []
 // @Router /lists/{id}/backgrounds/upload [put]
 func (p *Provider) Set(s *xorm.Session, img *background.Image, list *models.List, auth web.Auth) (err error) {
 	// Remove the old background if one exists
-	if list.BackgroundFileID != 0 {
-		file := files.File{ID: list.BackgroundFileID}
-		if err := file.Delete(); err != nil {
-			return err
-		}
+	err = list.DeleteBackgroundFileIfExists()
+	if err != nil {
+		return err
 	}
 
 	file := &files.File{}

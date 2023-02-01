@@ -795,6 +795,11 @@ func (l *List) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Router /lists/{id} [delete]
 func (l *List) Delete(s *xorm.Session, a web.Auth) (err error) {
 
+	fullList, err := GetListSimpleByID(s, l.ID)
+	if err != nil {
+		return
+	}
+
 	// Delete the list
 	_, err = s.ID(l.ID).Delete(&List{})
 	if err != nil {
@@ -815,10 +820,26 @@ func (l *List) Delete(s *xorm.Session, a web.Auth) (err error) {
 		}
 	}
 
+	err = fullList.DeleteBackgroundFileIfExists()
+	if err != nil {
+		return
+	}
+
 	return events.Dispatch(&ListDeletedEvent{
 		List: l,
 		Doer: a,
 	})
+}
+
+// DeleteBackgroundFileIfExists deletes the list's background file from the db and the filesystem,
+// if one exists
+func (l *List) DeleteBackgroundFileIfExists() (err error) {
+	if l.BackgroundFileID == 0 {
+		return
+	}
+
+	file := files.File{ID: l.BackgroundFileID}
+	return file.Delete()
 }
 
 // SetListBackground sets a background file as list background in the db
