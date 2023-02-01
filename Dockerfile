@@ -27,6 +27,7 @@ FROM alpine:3.16 AS runner
 LABEL maintainer="maintainers@vikunja.io"
 WORKDIR /app/vikunja
 ENTRYPOINT [ "/sbin/tini", "-g", "--", "/entrypoint.sh" ]
+EXPOSE 3456
 
 ENV VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/
 ENV PUID 1000
