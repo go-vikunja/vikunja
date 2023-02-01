@@ -79,7 +79,7 @@
     "lodash.debounce": "4.0.8",
     "marked": "4.2.12",
     "minimist": "1.2.7",
-    "pinia": "2.0.29",
+    "pinia": "2.0.30",
     "register-service-worker": "1.7.2",
     "snake-case": "3.0.4",
     "sortablejs": "1.15.0",
