@@ -135,7 +135,7 @@ END:VCALENDAR`,
 
 func TestGetCaldavTodosForTasks(t *testing.T) {
 	type args struct {
-		list  *models.ListWithTasksAndBuckets
+		list  *models.ProjectWithTasksAndBuckets
 		tasks []*models.TaskWithComments
 	}
 	tests := []struct {
@@ -146,8 +146,8 @@ func TestGetCaldavTodosForTasks(t *testing.T) {
 		{
 			name: "Format single Task as Caldav",
 			args: args{
-				list: &models.ListWithTasksAndBuckets{
-					List: models.List{
+				list: &models.ProjectWithTasksAndBuckets{
+					Project: models.Project{
 						Title: "List title",
 					},
 				},

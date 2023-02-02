@@ -380,7 +380,7 @@ func TestTask_Update(t *testing.T) {
 				time.Unix(1674745156, 0),
 				time.Unix(1674745156, 223),
 			},
-			ListID: 1,
+			ProjectID: 1,
 		}
 		err := task.Update(s, u)
 		assert.NoError(t, err)

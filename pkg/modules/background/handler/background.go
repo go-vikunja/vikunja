@@ -341,7 +341,7 @@ func RemoveProjectBackground(c echo.Context) error {
 		return err
 	}
 
-	err = list.DeleteBackgroundFileIfExists()
+	err = project.DeleteBackgroundFileIfExists()
 	if err != nil {
 		return err
 	}

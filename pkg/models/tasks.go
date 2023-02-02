@@ -1210,7 +1210,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	// Update all positions if the newly saved position is < 0.1
 	if ot.Position < 0.1 {
-		err = recalculateTaskPositions(s, t.ListID)
+		err = recalculateTaskPositions(s, t.ProjectID)
 		if err != nil {
 			return err
 		}
@@ -1273,11 +1273,11 @@ func recalculateTaskKanbanPositions(s *xorm.Session, bucketID int64) (err error)
 	return
 }
 
-func recalculateTaskPositions(s *xorm.Session, listID int64) (err error) {
+func recalculateTaskPositions(s *xorm.Session, projectID int64) (err error) {
 
 	allTasks := []*Task{}
 	err = s.
-		Where("list_id = ?", listID).
+		Where("project_id = ?", projectID).
 		OrderBy("position asc").
 		Find(&allTasks)
 	if err != nil {
