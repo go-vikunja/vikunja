@@ -65,17 +65,7 @@ export default defineConfig({
 			plugins: [
 				postcssEasings(),
 				postcssEasingGradients(),
-				postcssPresetEnv({
-					// These plugins are enabled by default but require
-					// a polyfill that we don't include
-					// see also './src/polyfills.ts'
-					features: {
-						'blank-pseudo-class': false,
-						'focus-visible-pseudo-class': false,
-						'has-pseudo-class': false,
-						'prefers-color-scheme-query': false,
-					},
-				}),
+				postcssPresetEnv(),
 			],
 		},
 	},
