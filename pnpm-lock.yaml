@@ -34,7 +34,7 @@ specifiers:
   '@vitejs/plugin-legacy': 3.0.2
   '@vitejs/plugin-vue': 4.0.0
   '@vue/eslint-config-typescript': 11.0.2
-  '@vue/test-utils': 2.2.8
+  '@vue/test-utils': 2.2.9
   '@vue/tsconfig': 0.1.3
   '@vueuse/core': 9.12.0
   autoprefixer: 10.4.13
@@ -167,7 +167,7 @@ devDependencies:
   '@vitejs/plugin-legacy': 3.0.2_terser@5.10.0+vite@4.0.4
   '@vitejs/plugin-vue': 4.0.0_vite@4.0.4+vue@3.2.45
   '@vue/eslint-config-typescript': 11.0.2_tf6rgb5i7kw5m4rbu3ajzgw7l4
-  '@vue/test-utils': 2.2.8_o3nmwetfthgqihjljurbyiqgn4
+  '@vue/test-utils': 2.2.9_vue@3.2.45
   '@vue/tsconfig': 0.1.3_@types+node@18.11.18
   autoprefixer: 10.4.13_postcss@8.4.21
   browserslist: 4.21.4
@@ -4369,15 +4369,15 @@ packages:
   /@vue/shared/3.2.45:
     resolution: {integrity: sha512-Ewzq5Yhimg7pSztDV+RH1UDKBzmtqieXQlpTVm2AwraoRL/Rks96mvd8Vgi7Lj+h+TH8dv7mXD3FRZR3TUvbSg==}
 
-  /@vue/test-utils/2.2.8_o3nmwetfthgqihjljurbyiqgn4:
-    resolution: {integrity: sha512-/R8DKzp41Ip/RqTt1jvOVi5gxby3EwNWiYHNYsG9FAjEvt0gzDvYN55lCKzX7IdnI5zVIOo5tHtts0SLT+JrWw==}
+  /@vue/test-utils/2.2.9_vue@3.2.45:
+    resolution: {integrity: sha512-WP2gmUX9hucNGCE+FMqdTwisRQcPkY+f9oaZOcUP/xdJbIbTwdCGeOpQzXe8h+W218SC7RPzfTFc6r8T3tkggg==}
     peerDependencies:
-      '@vue/compiler-dom': ^3.0.1
       vue: ^3.0.1
     dependencies:
-      '@vue/compiler-dom': 3.2.45
       js-beautify: 1.14.6
       vue: 3.2.45
+    optionalDependencies:
+      '@vue/compiler-dom': 3.2.45
     dev: true
 
   /@vue/tsconfig/0.1.3_@types+node@18.11.18:
