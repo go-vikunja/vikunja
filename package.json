@@ -135,7 +135,7 @@
     "sass": "1.58.0",
     "start-server-and-test": "1.15.3",
     "typescript": "4.9.5",
-    "vite": "4.0.4",
+    "vite": "4.1.0",
     "vite-plugin-inject-preload": "1.2.0",
     "vite-plugin-pwa": "0.14.1",
     "vite-svg-loader": "4.0.0",
