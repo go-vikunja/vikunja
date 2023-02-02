@@ -88,3 +88,6 @@ issues:
     - path: pkg/models/favorites\.go
       linters:
         - nilerr
+    - path: pkg/models/events\.go
+      linters:
+        - musttag

@@ -49,31 +49,6 @@ var (
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		Email:    "user1@example.com",
 	}
-	testuser2 = user.User{
-		ID:       2,
-		Username: "user2",
-		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-		Email:    "user2@example.com",
-	}
-	testuser3 = user.User{
-		ID:       3,
-		Username: "user3",
-		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-		Email:    "user3@example.com",
-	}
-	testuser4 = user.User{
-		ID:       4,
-		Username: "user4",
-		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-		Email:    "user4@example.com",
-	}
-	testuser5 = user.User{
-		ID:       4,
-		Username: "user5",
-		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
-		Email:    "user5@example.com",
-		Status:   user.StatusDisabled,
-	}
 )
 
 func setupTestEnv() (e *echo.Echo, err error) {
