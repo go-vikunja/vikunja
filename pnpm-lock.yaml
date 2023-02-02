@@ -31,7 +31,7 @@ specifiers:
   '@types/sortablejs': 1.15.0
   '@typescript-eslint/eslint-plugin': 5.50.0
   '@typescript-eslint/parser': 5.50.0
-  '@vitejs/plugin-legacy': 4.0.0
+  '@vitejs/plugin-legacy': 4.0.1
   '@vitejs/plugin-vue': 4.0.0
   '@vue/eslint-config-typescript': 11.0.2
   '@vue/test-utils': 2.2.9
@@ -164,7 +164,7 @@ devDependencies:
   '@types/postcss-preset-env': 7.7.0
   '@typescript-eslint/eslint-plugin': 5.50.0_go4drrxstycfikanvu45pi4vgq
   '@typescript-eslint/parser': 5.50.0_4vsywjlpuriuw3tl5oq6zy5a64
-  '@vitejs/plugin-legacy': 4.0.0_terser@5.10.0+vite@4.1.0
+  '@vitejs/plugin-legacy': 4.0.1_terser@5.10.0+vite@4.1.0
   '@vitejs/plugin-vue': 4.0.0_vite@4.1.0+vue@3.2.47
   '@vue/eslint-config-typescript': 11.0.2_tf6rgb5i7kw5m4rbu3ajzgw7l4
   '@vue/test-utils': 2.2.9_vue@3.2.47
@@ -4285,8 +4285,8 @@ packages:
       - supports-color
     dev: true
 
-  /@vitejs/plugin-legacy/4.0.0_terser@5.10.0+vite@4.1.0:
-    resolution: {integrity: sha512-m+PPFgHePSK8he2yZFjw6SwyqxNNDCLpXNzsfmMEDF3IK0WkVOW0/+iNBLQnCd+royaujPFYkuOqXpdOkPMTdQ==}
+  /@vitejs/plugin-legacy/4.0.1_terser@5.10.0+vite@4.1.0:
+    resolution: {integrity: sha512-/ZV63NagI1c9TB5E4ijGmycY//fNm/2L02nsnXXxACwYaF9W+/OyVlgIW24jYUIS+g0yQRtn+N5hzBc8RLNhGA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       terser: ^5.4.0
