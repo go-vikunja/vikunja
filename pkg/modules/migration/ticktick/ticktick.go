@@ -115,11 +115,11 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.Namespace
 
 	projects := make(map[string]*models.ProjectWithTasksAndBuckets)
 	for _, t := range tasks {
-		_, has := projects[t.ProjectName]
+		_, has := projects[t.ListName]
 		if !has {
-			projects[t.ProjectName] = &models.ProjectWithTasksAndBuckets{
+			projects[t.ListName] = &models.ProjectWithTasksAndBuckets{
 				Project: models.Project{
-					Title: t.ProjectName,
+					Title: t.ListName,
 				},
 			}
 		}
@@ -158,7 +158,7 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.Namespace
 			}
 		}
 
-		projects[t.ProjectName].Tasks = append(projects[t.ProjectName].Tasks, task)
+		projects[t.ListName].Tasks = append(projects[t.ListName].Tasks, task)
 	}
 
 	for _, l := range projects {
