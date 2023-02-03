@@ -1,7 +1,11 @@
 <template>
 	<div class="update-notification" v-if="updateAvailable">
-		<p>{{ $t('update.available') }}</p>
-		<x-button @click="refreshApp()" :shadow="false" class="has-no-text-wrap">
+		<p class="update-notification__message">{{ $t('update.available') }}</p>
+		<x-button
+			@click="refreshApp()"
+			:shadow="false"
+			:wrap="false"
+			>
 			{{ $t('update.do') }}
 		</x-button>
 	</div>
@@ -42,40 +46,30 @@ function refreshApp() {
 
 <style lang="scss" scoped>
 .update-notification {
+	position: fixed;
+	// FIXME: We should prevent usage of z-index or
+	// at least define it centrally
+	// the highest z-index of a modal is .hint-modal with 4500
+	z-index: 5000;
+	bottom: 1rem;
+	inset-inline: 1rem;
+	max-width: max-content;
+	margin-inline: auto;
+
 	display: flex;
 	align-items: center;
-	background: $warning;
+	justify-content: space-between;
+	gap: 1rem;
 	padding: .5rem;
+	background: $warning;
 	border-radius: $radius;
 	font-size: .9rem;
 	color: var(--grey-900);
-	justify-content: space-between;
-	z-index: 10;
 
-	position: fixed;
-	bottom: 1rem;
-	width: 450px;
-	left: calc(50vw - 225px);
-
-	@media screen and (max-width: $tablet) {
-		position: fixed;
-		left: 1rem;
-		right: 1rem;
-		bottom: 1rem;
-		width: auto;
-	}
-
-	p {
-		text-align: center;
-		width: 100%;
-	}
-
-	> * + * {
-		margin-left: .5rem;
-	}
 }
 
-:global(.dark) .update-notification {
-	color: var(--grey-200);
+.update-notification__message {
+	width: 100%;
+	text-align: center;
 }
 </style>

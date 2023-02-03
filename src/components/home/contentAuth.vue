@@ -224,9 +224,4 @@ labelStore.loadAllLabels()
 	position: relative;
 	z-index: 1;
 }
-
-.is-touch .content-auth,
-.content-auth.z-unset {
-	z-index: unset;
-}
 </style>

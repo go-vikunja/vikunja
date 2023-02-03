@@ -1,6 +1,5 @@
 <template>
 	<ready>
-		<Update/>
 		<template v-if="authUser">
 			<TheNavigation/>
 			<content-auth/>
@@ -9,9 +8,13 @@
 		<no-auth-wrapper v-else>
 			<router-view/>
 		</no-auth-wrapper>
-		<Notification/>
-
+		
 		<keyboard-shortcuts v-if="keyboardShortcutsActive"/>
+		
+		<Teleport to="body">
+			<UpdateNotification/>
+			<Notification/>
+		</Teleport>
 	</ready>
 </template>
 
@@ -22,13 +25,14 @@ import {useI18n} from 'vue-i18n'
 import isTouchDevice from 'is-touch-device'
 
 import Notification from '@/components/misc/notification.vue'
+import UpdateNotification from '@/components/home/UpdateNotification.vue'
 import KeyboardShortcuts from '@/components/misc/keyboard-shortcuts/index.vue'
+
 import TheNavigation from '@/components/home/TheNavigation.vue'
 import ContentAuth from '@/components/home/contentAuth.vue'
 import ContentLinkShare from '@/components/home/contentLinkShare.vue'
 import NoAuthWrapper from '@/components/misc/no-auth-wrapper.vue'
 import Ready from '@/components/misc/ready.vue'
-import Update from '@/components/home/Update.vue'
 
 import {setLanguage} from '@/i18n'
 import AccountDeleteService from '@/services/accountDelete'

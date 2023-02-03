@@ -8,17 +8,20 @@
 				'has-no-shadow': !shadow || variant === 'tertiary',
 			}
 		]"
+		:style="{
+			'--button-white-space': wrap ? 'break-spaces' : 'nowrap',
+		}"
 	>
 		<template v-if="icon">
 			<icon 
 				v-if="showIconOnly"
 				:icon="icon"
-				:style="{'color': iconColor !== '' ? iconColor : false}"
+				:style="{'color': iconColor !== '' ? iconColor : undefined}"
 			/>
 			<span class="icon is-small" v-else>
 				<icon 
 					:icon="icon"
-					:style="{'color': iconColor !== '' ? iconColor : false}"
+					:style="{'color': iconColor !== '' ? iconColor : undefined}"
 				/>
 			</span>
 		</template>
@@ -50,6 +53,7 @@ export interface ButtonProps extends BaseButtonProps {
 	iconColor?: string
 	loading?: boolean
 	shadow?: boolean
+	wrap?: boolean
 }
 
 const {
@@ -58,6 +62,7 @@ const {
 	iconColor = '',
 	loading = false,
 	shadow = true,
+	wrap = true,
 } = defineProps<ButtonProps>()
 
 const variantClass = computed(() => BUTTON_TYPES_MAP[variant])
@@ -67,7 +72,7 @@ const showIconOnly = computed(() => icon !== '' && typeof slots.default === 'und
 </script>
 
 <style lang="scss" scoped>
-.button {
+:where(.button) {
   transition: all $transition;
   border: 0;
   text-transform: uppercase;
@@ -77,7 +82,7 @@ const showIconOnly = computed(() => icon !== '' && typeof slots.default === 'und
   min-height: $button-height;
   box-shadow: var(--shadow-sm);
   display: inline-flex;
-  white-space: break-spaces;
+  white-space: var(--button-white-space);
 
   &:hover {
     box-shadow: var(--shadow-md);
@@ -99,7 +104,6 @@ const showIconOnly = computed(() => icon !== '' && typeof slots.default === 'und
   &.is-primary.is-outlined:hover {
     color: var(--white);
   }
-
 }
 
 .is-small {
