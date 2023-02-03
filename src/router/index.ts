@@ -81,7 +81,7 @@ const EditTeamComponent = () => import('@/views/teams/EditTeam.vue')
 const NewTeamComponent = () =>  import('@/views/teams/NewTeam.vue')
 
 const router = createRouter({
-	history: createWebHistory(),
+	history: createWebHistory(import.meta.env.BASE_URL),
 	scrollBehavior(to, from, savedPosition) {
 		// If the user is using their forward/backward keys to navigate, we want to restore the scroll view
 		if (savedPosition) {
