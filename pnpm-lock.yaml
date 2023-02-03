@@ -34,7 +34,7 @@ specifiers:
   '@vitejs/plugin-legacy': 4.0.1
   '@vitejs/plugin-vue': 4.0.0
   '@vue/eslint-config-typescript': 11.0.2
-  '@vue/test-utils': 2.2.9
+  '@vue/test-utils': 2.2.10
   '@vue/tsconfig': 0.1.3
   '@vueuse/core': 9.12.0
   autoprefixer: 10.4.13
@@ -167,7 +167,7 @@ devDependencies:
   '@vitejs/plugin-legacy': 4.0.1_terser@5.10.0+vite@4.1.1
   '@vitejs/plugin-vue': 4.0.0_vite@4.1.1+vue@3.2.47
   '@vue/eslint-config-typescript': 11.0.2_tf6rgb5i7kw5m4rbu3ajzgw7l4
-  '@vue/test-utils': 2.2.9_vue@3.2.47
+  '@vue/test-utils': 2.2.10_vue@3.2.47
   '@vue/tsconfig': 0.1.3_@types+node@18.11.18
   autoprefixer: 10.4.13_postcss@8.4.21
   browserslist: 4.21.4
@@ -4398,7 +4398,7 @@ packages:
   /@vue/compiler-core/3.2.47:
     resolution: {integrity: sha512-p4D7FDnQb7+YJmO2iPEv0SQNeNzcbHdGByJDsT4lynf63AFkOTFN07HsiRSvjGo0QrxR/o3d0hUyNCUnBU2Tig==}
     dependencies:
-      '@babel/parser': 7.17.0
+      '@babel/parser': 7.20.13
       '@vue/shared': 3.2.47
       estree-walker: 2.0.2
       source-map: 0.6.1
@@ -4432,7 +4432,7 @@ packages:
   /@vue/compiler-sfc/3.2.47:
     resolution: {integrity: sha512-rog05W+2IFfxjMcFw10tM9+f7i/+FFpZJJ5XHX72NP9eC2uRD+42M3pYcQqDXVYoj74kHMSEdQ/WmCjt8JFksQ==}
     dependencies:
-      '@babel/parser': 7.17.0
+      '@babel/parser': 7.20.13
       '@vue/compiler-core': 3.2.47
       '@vue/compiler-dom': 3.2.47
       '@vue/compiler-ssr': 3.2.47
@@ -4541,8 +4541,8 @@ packages:
   /@vue/shared/3.2.47:
     resolution: {integrity: sha512-BHGyyGN3Q97EZx0taMQ+OLNuZcW3d37ZEVmEAyeoA9ERdGvm9Irc/0Fua8SNyOtV1w6BS4q25wbMzJujO9HIfQ==}
 
-  /@vue/test-utils/2.2.9_vue@3.2.47:
-    resolution: {integrity: sha512-WP2gmUX9hucNGCE+FMqdTwisRQcPkY+f9oaZOcUP/xdJbIbTwdCGeOpQzXe8h+W218SC7RPzfTFc6r8T3tkggg==}
+  /@vue/test-utils/2.2.10_vue@3.2.47:
+    resolution: {integrity: sha512-UPY+VdWST5vYZ/Qhl+sLuJAv596e6kTbrOPgdGY82qd9kGN/MfjzLT5KXlmpChkiCbPP3abZ8XT25u1n5h+mRg==}
     peerDependencies:
       vue: ^3.0.1
     dependencies:
