@@ -17,14 +17,26 @@ However, you can still run it in a subdirectory but need to build the frontend y
 First, make sure you're able to build the frontend from source.
 Check [the guide about building from source]({{< ref "build-from-source.md">}}#frontend) about that.
 
-Then, run 
+### Dynamicly set with build command
+
+Run the build with the `VIKUNJA_FRONTEND_BASE` variable specified.
 
 ```
-pnpm vite build --base=/SUBPATH
-pnpm workbox copyLibraries dist/
+VIKUNJA_FRONTEND_BASE=/SUBPATH/ pnpm run build
 ```
 
 Where `SUBPATH` is the subdirectory you want to run Vikunja on.
+
+### Set via .env.local
+
+* Copy `.env.local.example` to `.env.local`
+* Uncomment `VIKUNJA_FRONTEND_BASE` and set `/subpath/` to the desired path.
+
+After saving, build Vikunja as normal.
+
+```
+pnpm run build
+```
 
 Once you have the build files you can deploy them as usual.
 Note that when deploying in docker you'll need to put the files in a web container yourself, you 
