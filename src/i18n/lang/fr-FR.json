@@ -911,7 +911,7 @@
     }
   },
   "update": {
-    "available": "Il y a une mise à jour pour Vikunja disponible !",
+    "available": "There is an update available!",
     "do": "Mettre à jour maintenant"
   },
   "menu": {

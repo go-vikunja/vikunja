@@ -911,7 +911,7 @@
     }
   },
   "update": {
-    "available": "Vikunja 有可用的更新！",
+    "available": "There is an update available!",
     "do": "立即更新"
   },
   "menu": {
