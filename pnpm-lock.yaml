@@ -11,7 +11,7 @@ specifiers:
   '@fortawesome/vue-fontawesome': 3.0.3
   '@github/hotkey': 2.0.1
   '@histoire/plugin-screenshot': 0.13.0
-  '@histoire/plugin-vue': 0.12.4
+  '@histoire/plugin-vue': 0.13.0
   '@infectoone/vue-ganttastic': 2.1.4
   '@intlify/unplugin-vue-i18n': 0.8.1
   '@kyvg/vue3-notification': 2.8.0
@@ -152,7 +152,7 @@ devDependencies:
   '@cypress/vue': 5.0.3_cypress@12.5.1+vue@3.2.47
   '@faker-js/faker': 7.6.0
   '@histoire/plugin-screenshot': 0.13.0_histoire@0.13.0
-  '@histoire/plugin-vue': 0.12.4_o4qesjlrxn6fcyni6znghz2wsu
+  '@histoire/plugin-vue': 0.13.0_o4qesjlrxn6fcyni6znghz2wsu
   '@rushstack/eslint-patch': 1.2.0
   '@types/codemirror': 5.60.7
   '@types/dompurify': 2.4.0
@@ -2388,19 +2388,6 @@ packages:
       - vite
     dev: true
 
-  /@histoire/controls/0.12.4:
-    resolution: {integrity: sha512-p4qa11vXqhSMsnXW1p+n7ZqawoHVErLFL24yNnA9peMuXnR306/0cvdAnsLMQJdq5mDNayOY5Di69YKVQ0Shqg==}
-    dependencies:
-      '@codemirror/commands': 6.1.3
-      '@codemirror/lang-json': 6.0.1
-      '@codemirror/language': 6.3.2
-      '@codemirror/lint': 6.1.0
-      '@codemirror/state': 6.2.0
-      '@codemirror/theme-one-dark': 6.1.0
-      '@codemirror/view': 6.7.2
-      '@histoire/vendors': 0.12.4
-    dev: true
-
   /@histoire/controls/0.13.0:
     resolution: {integrity: sha512-9JhP3rrl97ffmRt1U0z7LgKKDrctsH/NgKTP/WaGF2WZxxT8jPgxlq0tPrJnyjj6skVgH819xVB7Lk75l9+VHg==}
     dependencies:
@@ -2431,32 +2418,19 @@ packages:
       - utf-8-validate
     dev: true
 
-  /@histoire/plugin-vue/0.12.4_o4qesjlrxn6fcyni6znghz2wsu:
-    resolution: {integrity: sha512-2xgBDwEHmiY053hPWy4rKnnMjntVcg8qfIYJGyITwFWSfNTq+6ez/HjWzUcHT6qwFMglUHq+rDlQb9gYZF+Edw==}
+  /@histoire/plugin-vue/0.13.0_o4qesjlrxn6fcyni6znghz2wsu:
+    resolution: {integrity: sha512-xPvOWaJ4OISSKoBrLFLQZySHyoiQxa3vgI9vLA0FlhJ+YSie+R3lCsS6/9XAnuaOK6h0t9CkXZfe59yg68CJ5Q==}
     peerDependencies:
-      histoire: ^0.12.4
-      vue: ^3.2.31
+      histoire: ^0.13.0
+      vue: ^3.2.47
     dependencies:
-      '@histoire/controls': 0.12.4
-      '@histoire/shared': 0.12.4_vite@4.1.1
-      '@histoire/vendors': 0.12.4
+      '@histoire/controls': 0.13.0
+      '@histoire/shared': 0.13.0_vite@4.1.1
+      '@histoire/vendors': 0.13.0
       histoire: 0.13.0_iyhmbassvf4bq735wyfjob5pgu
       vue: 3.2.47
     transitivePeerDependencies:
       - vite
-    dev: true
-
-  /@histoire/shared/0.12.4_vite@4.1.1:
-    resolution: {integrity: sha512-dVSrfsEu17KczjyHVW8yPvSlguhEV7hWjDSwsjlUrRdbe7hwztX4GbbcCIWvG5hy5gASpKpQq6FJa5uTs0HOsg==}
-    peerDependencies:
-      vite: ^2.9.0 || ^3.0.0 || ^4.0.0
-    dependencies:
-      '@types/fs-extra': 9.0.13
-      '@types/markdown-it': 12.2.3
-      chokidar: 3.5.3
-      pathe: 0.2.0
-      picocolors: 1.0.0
-      vite: 4.1.1_ujwjgemboz5znyjzipw3voo47a
     dev: true
 
   /@histoire/shared/0.13.0_vite@4.1.1:
@@ -2470,10 +2444,6 @@ packages:
       pathe: 0.2.0
       picocolors: 1.0.0
       vite: 4.1.1_ujwjgemboz5znyjzipw3voo47a
-    dev: true
-
-  /@histoire/vendors/0.12.4:
-    resolution: {integrity: sha512-NIi0krz19iSjPHhIsGLrW4Q3tvrCLfvCet2kFA8crKPX6inaMZm8g/+pDQBqlh9DRCXVbxV5RWQKcumrIFbrmw==}
     dev: true
 
   /@histoire/vendors/0.13.0:
