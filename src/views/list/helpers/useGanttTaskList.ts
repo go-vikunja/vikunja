@@ -1,5 +1,5 @@
 import {computed, ref, shallowReactive, watch, type Ref} from 'vue'
-import cloneDeep from 'lodash.clonedeep'
+import {klona} from 'klona/lite'
 
 import type {Filters} from '@/composables/useRouteFilters'
 import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
@@ -64,7 +64,7 @@ export function useGanttTaskList<F extends Filters>(
 	}
 
 	async function updateTask(task: ITaskPartialWithId) {
-		const oldTask = cloneDeep(tasks.value.get(task.id))
+		const oldTask = klona(tasks.value.get(task.id))
 
 		if (!oldTask) return
 

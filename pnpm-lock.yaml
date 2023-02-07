@@ -63,7 +63,7 @@ specifiers:
   highlight.js: 11.7.0
   histoire: 0.13.0
   is-touch-device: 1.0.1
-  lodash.clonedeep: 4.5.0
+  klona: 2.0.6
   lodash.debounce: 4.0.8
   marked: 4.2.12
   minimist: 1.2.7
@@ -129,7 +129,7 @@ dependencies:
   focus-within: 3.0.2
   highlight.js: 11.7.0
   is-touch-device: 1.0.1
-  lodash.clonedeep: 4.5.0
+  klona: 2.0.6
   lodash.debounce: 4.0.8
   marked: 4.2.12
   minimist: 1.2.7
@@ -10037,6 +10037,11 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
+  /klona/2.0.6:
+    resolution: {integrity: sha512-dhG34DXATL5hSxJbIexCft8FChFXtmskoZYnoPWjXQuebWYCNkVeV3KkGegCK9CP1oswI/vQibS2GY7Em/sJJA==}
+    engines: {node: '>= 8'}
+    dev: false
+
   /kuler/2.0.0:
     resolution: {integrity: sha512-Xq9nH7KlWZmXAtodXDDRE7vs6DU1gTU8zYDHDiWLSip45Egwq3plLHzPn27NgvzL2r1LMPC1vdqh98sQxtqj4A==}
     dev: true
@@ -10215,10 +10220,6 @@ packages:
   /lodash-es/4.17.21:
     resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
     dev: true
-
-  /lodash.clonedeep/4.5.0:
-    resolution: {integrity: sha1-4j8/nE+Pvd6HJSnBBxhXoIblzO8=}
-    dev: false
 
   /lodash.debounce/4.0.8:
     resolution: {integrity: sha1-gteb/zCmfEAF/9XiUVMArZyk168=}

@@ -1,6 +1,6 @@
 import {computed, readonly, ref} from 'vue'
 import {defineStore, acceptHMRUpdate} from 'pinia'
-import cloneDeep from 'lodash.clonedeep'
+import {klona} from 'klona/lite'
 
 import {findById, findIndexById} from '@/helpers/utils'
 import {i18n} from '@/i18n'
@@ -333,7 +333,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		const cancel = setModuleLoading(setIsLoading)
 
 		const bucketIndex = findIndexById(buckets.value, updatedBucketData.id)
-		const oldBucket = cloneDeep(buckets.value[bucketIndex])
+		const oldBucket = klona(buckets.value[bucketIndex])
 
 		const updatedBucket = {
 			...oldBucket,

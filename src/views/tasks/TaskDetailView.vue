@@ -449,7 +449,7 @@ import {ref, reactive, toRef, shallowReactive, computed, watch, nextTick, type P
 import {useRouter, type RouteLocation} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {unrefElement} from '@vueuse/core'
-import cloneDeep from 'lodash.clonedeep'
+import {klona} from 'klona/lite'
 
 import TaskService from '@/services/task'
 import TaskModel, {TASK_DEFAULT_COLOR} from '@/models/task'
@@ -703,7 +703,7 @@ async function saveTask(args?: {
 		undoCallback,
 	} = {
 		...{
-			task: cloneDeep(task),
+			task: klona(task),
 		},
 		...args,
 	}

@@ -227,7 +227,7 @@
 import {computed, nextTick, ref, watch, type PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
 import draggable from 'zhyswan-vuedraggable'
-import cloneDeep from 'lodash.clonedeep'
+import {klona} from 'klona/lite'
 
 import {RIGHTS as Rights} from '@/constants/rights'
 import BucketModel from '@/models/bucket'
@@ -419,7 +419,7 @@ async function updateTaskPosition(e) {
 	const taskAfter = newBucket.tasks[newTaskIndex + 1] ?? null
 	taskUpdating.value[task.id] = true
 
-	const newTask = cloneDeep(task) // cloning the task to avoid pinia store manipulation
+	const newTask = klona(task) // cloning the task to avoid pinia store manipulation
 	newTask.bucketId = newBucket.id
 	newTask.kanbanPosition = calculateItemPosition(
 		taskBefore !== null ? taskBefore.kanbanPosition : null,
@@ -432,7 +432,7 @@ async function updateTaskPosition(e) {
 		// Make sure the first and second task don't both get position 0 assigned
 		if(newTaskIndex === 0 && taskAfter !== null && taskAfter.kanbanPosition === 0) {
 			const taskAfterAfter = newBucket.tasks[newTaskIndex + 2] ?? null
-			const newTaskAfter = cloneDeep(taskAfter) // cloning the task to avoid pinia store manipulation
+			const newTaskAfter = klona(taskAfter) // cloning the task to avoid pinia store manipulation
 			newTaskAfter.bucketId = newBucket.id
 			newTaskAfter.kanbanPosition = calculateItemPosition(
 				0,
