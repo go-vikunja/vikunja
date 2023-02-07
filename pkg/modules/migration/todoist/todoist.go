@@ -369,20 +369,25 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 	}
 
 	// If the parenId of a task is not 0, create a task relation
-	// We're looping again here to make sure we have seem all tasks before and have them in our map
+	// We're looping again here to make sure we have seen all tasks before and have them in our map
 	for _, i := range sync.Items {
 		if i.ParentID == "" {
 			continue
 		}
 
 		if _, exists := tasks[i.ParentID]; !exists {
-			log.Debugf("[Todoist Migration] Could not find task %s in tasks map while trying to get resolve subtasks for task %s", i.ParentID, i.ID)
+			log.Debugf("[Todoist Migration] Could not find task %s in tasks map while trying to resolve subtasks for task %s", i.ParentID, i.ID)
 			continue
 		}
 
 		// Prevent all those nil errors
 		if tasks[i.ParentID].RelatedTasks == nil {
 			tasks[i.ParentID].RelatedTasks = make(models.RelatedTaskMap)
+		}
+
+		if _, exists := tasks[i.ID]; !exists {
+			log.Debugf("[Todoist Migration] Could not find task %s in tasks map while trying to add it as subtask", i.ID)
+			continue
 		}
 
 		tasks[i.ParentID].RelatedTasks[models.RelationKindSubtask] = append(tasks[i.ParentID].RelatedTasks[models.RelationKindSubtask], &tasks[i.ID].Task)
