@@ -10,7 +10,7 @@ specifiers:
   '@fortawesome/free-solid-svg-icons': 6.3.0
   '@fortawesome/vue-fontawesome': 3.0.3
   '@github/hotkey': 2.0.1
-  '@histoire/plugin-screenshot': 0.13.1
+  '@histoire/plugin-screenshot': 0.13.2
   '@histoire/plugin-vue': 0.13.1
   '@infectoone/vue-ganttastic': 2.1.4
   '@intlify/unplugin-vue-i18n': 0.8.1
@@ -151,7 +151,7 @@ devDependencies:
   '@cypress/vite-dev-server': 5.0.2
   '@cypress/vue': 5.0.4_cypress@12.5.1+vue@3.2.47
   '@faker-js/faker': 7.6.0
-  '@histoire/plugin-screenshot': 0.13.1_histoire@0.13.1
+  '@histoire/plugin-screenshot': 0.13.2_histoire@0.13.1
   '@histoire/plugin-vue': 0.13.1_tpv7oxkyi2i6fl5476k4gco6si
   '@rushstack/eslint-patch': 1.2.0
   '@types/codemirror': 5.60.7
@@ -2401,10 +2401,10 @@ packages:
       '@histoire/vendors': 0.13.1
     dev: true
 
-  /@histoire/plugin-screenshot/0.13.1_histoire@0.13.1:
-    resolution: {integrity: sha512-jXeQuFiML5XauCsxi7juIQ8zCJ3UTRdvXj+9aEsadpulcDBd9tMrJInRaJN4PI+w5DWDi8mcO9bnWPxJDYPYFw==}
+  /@histoire/plugin-screenshot/0.13.2_histoire@0.13.1:
+    resolution: {integrity: sha512-2wgQtoP6jRsYitWZYMzLxf8G7kcwofCvLr6FoD7YpbkT38PC0Zl3vuzYguFYwFiorS2IAqz9REReb23X+Q1Deg==}
     peerDependencies:
-      histoire: ^0.13.1
+      histoire: ^0.13.2
     dependencies:
       capture-website: 2.4.1
       defu: 6.1.1
