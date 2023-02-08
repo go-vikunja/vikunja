@@ -7,9 +7,10 @@ import ListModel from '@/models/list'
 import ListService from '../services/list'
 import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
 
+import {useMenuActive} from '@/composables/useMenuActive'
+
 import {useAuthStore} from '@/stores/auth'
 import type {IList} from '@/modelTypes/IList'
-import { useStorage, useWindowSize, whenever } from '@vueuse/core'
 
 export const useBaseStore = defineStore('base', () => {
 	const loading = ref(false)
@@ -24,21 +25,9 @@ export const useBaseStore = defineStore('base', () => {
 	const blurHash = ref('')
 
 	const hasTasks = ref(false)
-	const windowSize = useWindowSize()
-	const menuActivePreference = useStorage('menuActive', true)
-	const menuActive = ref(windowSize.width.value >= 770 && menuActivePreference.value)
 	const keyboardShortcutsActive = ref(false)
 	const quickActionsActive = ref(false)
 	const logoVisible = ref(true)
-
-	whenever(windowSize.width, (value, previous) => {
-		if (value < 770 && previous >= 770) {
-			setMenuActive(false)
-		}
-		if (value >= 770 && previous < 770 && menuActivePreference.value) {
-			setMenuActive(menuActivePreference.value)
-		}
-	})
 
 	function setLoading(newLoading: boolean) {
 		loading.value = newLoading
@@ -63,19 +52,6 @@ export const useBaseStore = defineStore('base', () => {
 
 	function setHasTasks(newHasTasks: boolean) {
 		hasTasks.value = newHasTasks
-	}
-
-	function setMenuActive(newMenuActive: boolean) {
-		menuActive.value = newMenuActive
-	}
-
-	function setMenuActivePreference(newMenuActivePreference: boolean) {
-		menuActivePreference.value = newMenuActivePreference
-	}
-
-	function toggleMenu() {
-		menuActive.value = !menuActive.value
-		windowSize.width.value >= 770 && setMenuActivePreference(menuActive.value)
 	}
 
 	function setKeyboardShortcutsActive(value: boolean) {
@@ -156,18 +132,14 @@ export const useBaseStore = defineStore('base', () => {
 		background: readonly(background),
 		blurHash: readonly(blurHash),
 		hasTasks: readonly(hasTasks),
-		menuActive: readonly(menuActive),
 		keyboardShortcutsActive: readonly(keyboardShortcutsActive),
 		quickActionsActive: readonly(quickActionsActive),
 		logoVisible: readonly(logoVisible),
-		windowSize: readonly(windowSize),
 
 		setLoading,
 		setReady,
 		setCurrentList,
 		setHasTasks,
-		setMenuActive,
-		toggleMenu,
 		setKeyboardShortcutsActive,
 		setQuickActionsActive,
 		setBackground,
@@ -176,6 +148,8 @@ export const useBaseStore = defineStore('base', () => {
 
 		handleSetCurrentList,
 		loadApp,
+
+		...useMenuActive(),
 	}
 })
 
