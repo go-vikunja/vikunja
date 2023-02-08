@@ -97,7 +97,7 @@
     "@cypress/vite-dev-server": "5.0.2",
     "@cypress/vue": "5.0.4",
     "@faker-js/faker": "7.6.0",
-    "@histoire/plugin-screenshot": "0.13.0",
+    "@histoire/plugin-screenshot": "0.13.1",
     "@histoire/plugin-vue": "0.13.0",
     "@rushstack/eslint-patch": "1.2.0",
     "@types/codemirror": "5.60.7",
