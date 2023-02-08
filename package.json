@@ -124,7 +124,7 @@
     "eslint": "8.33.0",
     "eslint-plugin-vue": "9.9.0",
     "happy-dom": "8.2.6",
-    "histoire": "0.13.1",
+    "histoire": "0.13.2",
     "netlify-cli": "12.10.0",
     "postcss": "8.4.21",
     "postcss-easing-gradients": "3.0.1",
