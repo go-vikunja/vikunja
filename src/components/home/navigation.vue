@@ -146,7 +146,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted, onBeforeMount} from 'vue'
+import {ref, computed, onBeforeMount} from 'vue'
 import draggable from 'zhyswan-vuedraggable'
 import type {SortableEvent} from 'sortablejs'
 
@@ -159,7 +159,6 @@ import Logo from '@/components/home/Logo.vue'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
 import {getListTitle} from '@/helpers/getListTitle'
-import {useEventListener} from '@vueuse/core'
 import type {IList} from '@/modelTypes/IList'
 import type {INamespace} from '@/modelTypes/INamespace'
 import ColorBubble from '@/components/misc/colorBubble.vue'
@@ -200,16 +199,7 @@ const namespaceListsCount = computed(() => {
 	return namespaces.value.map((_, index) => activeLists.value[index]?.length ?? 0)
 })
 
-
-useEventListener('resize', resize)
-onMounted(() => resize())
-
 const listStore = useListStore()
-
-function resize() {
-	// Hide the menu by default on mobile
-	baseStore.setMenuActive(window.innerWidth >= 770)
-}
 
 function toggleLists(namespaceId: INamespace['id']) {
 	listsVisible.value[namespaceId] = !listsVisible.value[namespaceId]

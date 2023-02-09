@@ -1,4 +1,4 @@
-import {readonly, ref} from 'vue'
+import { readonly, ref} from 'vue'
 import {defineStore, acceptHMRUpdate} from 'pinia'
 
 import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
@@ -6,6 +6,8 @@ import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 import ListModel from '@/models/list'
 import ListService from '../services/list'
 import {checkAndSetApiUrl} from '@/helpers/checkAndSetApiUrl'
+
+import {useMenuActive} from '@/composables/useMenuActive'
 
 import {useAuthStore} from '@/stores/auth'
 import type {IList} from '@/modelTypes/IList'
@@ -23,7 +25,6 @@ export const useBaseStore = defineStore('base', () => {
 	const blurHash = ref('')
 
 	const hasTasks = ref(false)
-	const menuActive = ref(true)
 	const keyboardShortcutsActive = ref(false)
 	const quickActionsActive = ref(false)
 	const logoVisible = ref(true)
@@ -51,14 +52,6 @@ export const useBaseStore = defineStore('base', () => {
 
 	function setHasTasks(newHasTasks: boolean) {
 		hasTasks.value = newHasTasks
-	}
-
-	function setMenuActive(newMenuActive: boolean) {
-		menuActive.value = newMenuActive
-	}
-
-	function toggleMenu() {
-		menuActive.value = !menuActive.value
 	}
 
 	function setKeyboardShortcutsActive(value: boolean) {
@@ -139,25 +132,24 @@ export const useBaseStore = defineStore('base', () => {
 		background: readonly(background),
 		blurHash: readonly(blurHash),
 		hasTasks: readonly(hasTasks),
-		menuActive: readonly(menuActive),
 		keyboardShortcutsActive: readonly(keyboardShortcutsActive),
 		quickActionsActive: readonly(quickActionsActive),
 		logoVisible: readonly(logoVisible),
 
 		setLoading,
+		setReady,
 		setCurrentList,
 		setHasTasks,
-		setMenuActive,
-		toggleMenu,
 		setKeyboardShortcutsActive,
 		setQuickActionsActive,
 		setBackground,
 		setBlurHash,
 		setLogoVisible,
-		setReady,
 
 		handleSetCurrentList,
 		loadApp,
+
+		...useMenuActive(),
 	}
 })
 

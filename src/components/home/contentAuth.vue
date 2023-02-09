@@ -86,9 +86,6 @@ function showKeyboardShortcuts() {
 
 const route = useRoute()
 
-// hide menu on mobile
-watch(() => route.fullPath, () => window.innerWidth < 769 && baseStore.setMenuActive(false))
-
 // FIXME: this is really error prone
 // Reset the current list highlight in menu if the current route is not list related.
 watch(() => route.name as string, (routeName) => {
