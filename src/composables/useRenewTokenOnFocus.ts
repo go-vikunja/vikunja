@@ -3,7 +3,7 @@ import {useRouter} from 'vue-router'
 import {useEventListener} from '@vueuse/core'
 
 import {useAuthStore} from '@/stores/auth'
-import {MILLISECONDS_A_HOUR, SECONDS_A_HOUR} from '@/constants/date'
+import {MILLISECONDS_A_SECOND, SECONDS_A_HOUR} from '@/constants/date'
 
 const SECONDS_TOKEN_VALID = 60 * SECONDS_A_HOUR
 
@@ -24,11 +24,14 @@ export function useRenewTokenOnFocus() {
 			return
 		}
 
-		const expiresIn = (userInfo.value !== null ? userInfo.value.exp : 0) - new Date().valueOf() / MILLISECONDS_A_HOUR
+		const nowInSeconds = new Date().getTime() / MILLISECONDS_A_SECOND
+		const expiresIn = userInfo.value !== null
+			? userInfo.value.exp - nowInSeconds
+			: 0
 
 		// If the token expiry is negative, it is already expired and we have no choice but to redirect
 		// the user to the login page
-		if (expiresIn < 0) {
+		if (expiresIn <= 0) {
 			await authStore.checkAuth()
 			await router.push({name: 'user.login'})
 			return
