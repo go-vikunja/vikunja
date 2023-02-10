@@ -66,7 +66,6 @@ specifiers:
   klona: 2.0.6
   lodash.debounce: 4.0.8
   marked: 4.2.12
-  minimist: 1.2.7
   netlify-cli: 12.10.0
   pinia: 2.0.30
   postcss: 8.4.21
@@ -132,7 +131,6 @@ dependencies:
   klona: 2.0.6
   lodash.debounce: 4.0.8
   marked: 4.2.12
-  minimist: 1.2.7
   pinia: 2.0.30_hmuptsblhheur2tugfgucj7gc4
   register-service-worker: 1.7.2
   snake-case: 3.0.4
@@ -10726,6 +10724,7 @@ packages:
 
   /minimist/1.2.7:
     resolution: {integrity: sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g==}
+    dev: true
 
   /minipass/3.1.6:
     resolution: {integrity: sha512-rty5kpw9/z8SX9dmxblFA6edItUmwJgMeYDZRrwlIVN27i8gysGbznJwUggw2V/FVqFSDdWy040ZPS811DYAqQ==}
