@@ -10,8 +10,8 @@ specifiers:
   '@fortawesome/free-solid-svg-icons': 6.3.0
   '@fortawesome/vue-fontawesome': 3.0.3
   '@github/hotkey': 2.0.1
-  '@histoire/plugin-screenshot': 0.13.2
-  '@histoire/plugin-vue': 0.14.0
+  '@histoire/plugin-screenshot': 0.14.0
+  '@histoire/plugin-vue': 0.13.2
   '@infectoone/vue-ganttastic': 2.1.4
   '@intlify/unplugin-vue-i18n': 0.8.2
   '@kyvg/vue3-notification': 2.8.0
@@ -149,8 +149,8 @@ devDependencies:
   '@cypress/vite-dev-server': 5.0.2
   '@cypress/vue': 5.0.4_cypress@12.5.1+vue@3.2.47
   '@faker-js/faker': 7.6.0
-  '@histoire/plugin-screenshot': 0.13.2_histoire@0.13.2
-  '@histoire/plugin-vue': 0.14.0_r6ydtjusswlesyql26bksiytve
+  '@histoire/plugin-screenshot': 0.14.0_histoire@0.13.2
+  '@histoire/plugin-vue': 0.13.2_r6ydtjusswlesyql26bksiytve
   '@rushstack/eslint-patch': 1.2.0
   '@types/codemirror': 5.60.7
   '@types/dompurify': 2.4.0
@@ -2400,23 +2400,10 @@ packages:
       '@histoire/vendors': 0.13.2
     dev: true
 
-  /@histoire/controls/0.14.0:
-    resolution: {integrity: sha512-q9QMYshCkEKO2ObUgbT12u73F6leNzHdwiK0P7lcvSFDP/QS2WwLk/xNCFZd5t9rBMkdKPvsy8eBf7p7tN4K8w==}
-    dependencies:
-      '@codemirror/commands': 6.1.3
-      '@codemirror/lang-json': 6.0.1
-      '@codemirror/language': 6.3.2
-      '@codemirror/lint': 6.1.0
-      '@codemirror/state': 6.2.0
-      '@codemirror/theme-one-dark': 6.1.0
-      '@codemirror/view': 6.7.2
-      '@histoire/vendors': 0.14.0
-    dev: true
-
-  /@histoire/plugin-screenshot/0.13.2_histoire@0.13.2:
-    resolution: {integrity: sha512-2wgQtoP6jRsYitWZYMzLxf8G7kcwofCvLr6FoD7YpbkT38PC0Zl3vuzYguFYwFiorS2IAqz9REReb23X+Q1Deg==}
+  /@histoire/plugin-screenshot/0.14.0_histoire@0.13.2:
+    resolution: {integrity: sha512-kXCPMSvCV2JNYrNKzoumKEQfZa8XwuDmqnGiec3ENznuu3IDpgKlYdw/wJ6ZVlM3gIkMT5HpC3LgDZQrdRUteg==}
     peerDependencies:
-      histoire: ^0.13.2
+      histoire: ^0.14.0
     dependencies:
       capture-website: 2.4.1
       defu: 6.1.1
@@ -2430,19 +2417,16 @@ packages:
       - utf-8-validate
     dev: true
 
-  /@histoire/plugin-vue/0.14.0_r6ydtjusswlesyql26bksiytve:
-    resolution: {integrity: sha512-rnvJCKzZMvpCdnpo+rXRFBcyelNC7fHBw6NjqVyj0ROm+P/VYxeB3X8EIBTaUIXV8+CYp/dz6dowPsM71V1bwg==}
+  /@histoire/plugin-vue/0.13.2_r6ydtjusswlesyql26bksiytve:
+    resolution: {integrity: sha512-7WA33qpEzU1vvsnWseI3dJHMtls0x7G12W6pXWLLaxL0XZGhyKbFKA0Y0i9HAEILffqp8GJ6DjCHkty+EOFt5g==}
     peerDependencies:
-      histoire: ^0.14.0
+      histoire: ^0.13.2
       vue: ^3.2.47
     dependencies:
-      '@histoire/controls': 0.14.0
-      '@histoire/shared': 0.14.0_vite@4.1.1
-      '@histoire/vendors': 0.14.0
-      globby: 13.1.2
+      '@histoire/controls': 0.13.2
+      '@histoire/shared': 0.13.2_vite@4.1.1
+      '@histoire/vendors': 0.13.2
       histoire: 0.13.2_iohryfbsjwrykvni6zah2stjvi
-      launch-editor: 2.6.0
-      pathe: 0.2.0
       vue: 3.2.47
     transitivePeerDependencies:
       - vite
@@ -2461,26 +2445,8 @@ packages:
       vite: 4.1.1_mhcbtvh6ovyyhzxuxk7bvtjvzq
     dev: true
 
-  /@histoire/shared/0.14.0_vite@4.1.1:
-    resolution: {integrity: sha512-VGvTIWFt0Fe+b16WZyHdilNPVpuHDm9ePXrBF+TIfmmsnzxyKutL6XefH38Sy4GPVFc25eeC3MqfQjtCineVEg==}
-    peerDependencies:
-      vite: ^2.9.0 || ^3.0.0 || ^4.0.0
-    dependencies:
-      '@histoire/vendors': 0.14.0
-      '@types/fs-extra': 9.0.13
-      '@types/markdown-it': 12.2.3
-      chokidar: 3.5.3
-      pathe: 0.2.0
-      picocolors: 1.0.0
-      vite: 4.1.1_mhcbtvh6ovyyhzxuxk7bvtjvzq
-    dev: true
-
   /@histoire/vendors/0.13.2:
     resolution: {integrity: sha512-VpzPZ3JG3SvBz/VEVw14dCyk+1EnEMsk2DY90HgSaeczlBlu4e3xoBtReYMdYTLFwL2QLp51Kn4HKRnUJ6Pk+g==}
-    dev: true
-
-  /@histoire/vendors/0.14.0:
-    resolution: {integrity: sha512-UeNH7J6MpFdD22czOmydQK5PUEF2pyWxLwNPLleGXw5sy7YcCLD+tkT3S9wgeIT7YZvTkKxAKL99qJeRjmSXfA==}
     dev: true
 
   /@humanwhocodes/config-array/0.11.8:
@@ -10088,13 +10054,6 @@ packages:
       package-json: 8.1.0
     dev: true
 
-  /launch-editor/2.6.0:
-    resolution: {integrity: sha512-JpDCcQnyAAzZZaZ7vEiSqL690w7dAEyLao+KC96zBplnYbJS7TYNjvM3M7y3dGz+v7aIsJk3hllWuc0kWAjyRQ==}
-    dependencies:
-      picocolors: 1.0.0
-      shell-quote: 1.8.0
-    dev: true
-
   /lazy-ass/1.6.0:
     resolution: {integrity: sha512-cc8oEVoctTvsFZ/Oje/kGnHbpWHYBe8IAJe4C0QNc3t8uM/0Y8+erSz/7Y1ALuXTEZTMvxXwO6YbX1ey3ujiZw==}
     engines: {node: '> 0.8'}
@@ -13326,10 +13285,6 @@ packages:
   /shebang-regex/3.0.0:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
-    dev: true
-
-  /shell-quote/1.8.0:
-    resolution: {integrity: sha512-QHsz8GgQIGKlRi24yFc6a6lN69Idnx634w49ay6+jA5yFh7a1UY+4Rp6HPx/L/1zcEDPEij8cIsiqR6bQsE5VQ==}
     dev: true
 
   /shiki-es/0.2.0:
