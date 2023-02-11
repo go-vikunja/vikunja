@@ -83,7 +83,7 @@ specifiers:
   ufo: 1.0.1
   vite: 4.1.1
   vite-plugin-inject-preload: 1.2.0
-  vite-plugin-pwa: 0.14.3
+  vite-plugin-pwa: 0.14.4
   vite-svg-loader: 4.0.0
   vitest: 0.28.4
   vue: 3.2.47
@@ -189,7 +189,7 @@ devDependencies:
   typescript: 4.9.5
   vite: 4.1.1_mhcbtvh6ovyyhzxuxk7bvtjvzq
   vite-plugin-inject-preload: 1.2.0_vite@4.1.1
-  vite-plugin-pwa: 0.14.3_3vd7o33jrhd5kouhgwquhspjhi
+  vite-plugin-pwa: 0.14.4_3vd7o33jrhd5kouhgwquhspjhi
   vite-svg-loader: 4.0.0
   vitest: 0.28.4_ch6mjtnq5d6ebkm44hqbsjq7kq
   vue-tsc: 1.0.24_typescript@4.9.5
@@ -14762,8 +14762,8 @@ packages:
       vite: 4.1.1_mhcbtvh6ovyyhzxuxk7bvtjvzq
     dev: true
 
-  /vite-plugin-pwa/0.14.3_3vd7o33jrhd5kouhgwquhspjhi:
-    resolution: {integrity: sha512-o/CEzdHXamdSV4WJ6hp1EQNe+yVvoFf9b5q1nMhOSqKxaW7BaDqAHAwnq8jt21wakDmcaipnuF3/j78AzZJ6wg==}
+  /vite-plugin-pwa/0.14.4_3vd7o33jrhd5kouhgwquhspjhi:
+    resolution: {integrity: sha512-M7Ct0so8OlouMkTWgXnl8W1xU95glITSKIe7qswZf1tniAstO2idElGCnsrTJ5NPNSx1XqfTCOUj8j94S6FD7Q==}
     peerDependencies:
       vite: ^3.1.0 || ^4.0.0
       workbox-build: ^6.5.4
