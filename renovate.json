@@ -23,7 +23,8 @@
     {
       "groupName": "histoire",
       "matchPackagePrefixes": [
-        "@histoire/"
+        "@histoire/",
+        "histoiree"
       ]
     },
     {
