@@ -49,7 +49,7 @@ specifiers:
   cypress: 12.5.1
   date-fns: 2.29.3
   dayjs: 1.11.7
-  dompurify: 2.4.3
+  dompurify: 3.0.0
   easymde: 2.18.0
   esbuild: 0.17.8
   eslint: 8.34.0
@@ -119,7 +119,7 @@ dependencies:
   codemirror: 5.65.11
   date-fns: 2.29.3
   dayjs: 1.11.7
-  dompurify: 2.4.3
+  dompurify: 3.0.0
   easymde: 2.18.0
   fast-deep-equal: 3.1.3
   flatpickr: 4.6.13
@@ -6979,8 +6979,8 @@ packages:
       domelementtype: 2.3.0
     dev: true
 
-  /dompurify/2.4.3:
-    resolution: {integrity: sha512-q6QaLcakcRjebxjg8/+NP+h0rPfatOgOzc46Fst9VAA3jF2ApfKBNKMzdP4DYTqtUMXSCd5pRS/8Po/OmoCHZQ==}
+  /dompurify/3.0.0:
+    resolution: {integrity: sha512-0g/yr2IJn4nTbxwL785YxS7/AvvgGFJw6LLWP+BzWzB1+BYOqPUT9Hy0rXrZh5HLdHnxH72aDdzvC9SdTjsuaA==}
     dev: false
 
   /domutils/2.8.0:
