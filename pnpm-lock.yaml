@@ -85,7 +85,7 @@ specifiers:
   vite-plugin-inject-preload: 1.3.0
   vite-plugin-pwa: 0.14.4
   vite-svg-loader: 4.0.0
-  vitest: 0.28.4
+  vitest: 0.28.5
   vue: 3.2.47
   vue-advanced-cropper: 2.8.8
   vue-flatpickr-component: 11.0.1
@@ -191,7 +191,7 @@ devDependencies:
   vite-plugin-inject-preload: 1.3.0_vite@4.1.1
   vite-plugin-pwa: 0.14.4_3vd7o33jrhd5kouhgwquhspjhi
   vite-svg-loader: 4.0.0
-  vitest: 0.28.4_ch6mjtnq5d6ebkm44hqbsjq7kq
+  vitest: 0.28.5_ch6mjtnq5d6ebkm44hqbsjq7kq
   vue-tsc: 1.0.24_typescript@4.9.5
   wait-on: 7.0.1
   workbox-cli: 6.5.4_acorn@7.4.1
@@ -4294,30 +4294,30 @@ packages:
       vue: 3.2.47
     dev: true
 
-  /@vitest/expect/0.28.4:
-    resolution: {integrity: sha512-JqK0NZ4brjvOSL8hXAnIsfi+jxDF7rH/ZWCGCt0FAqRnVFc1hXsfwXksQvEnKqD84avRt3gmeXoK4tNbmkoVsQ==}
+  /@vitest/expect/0.28.5:
+    resolution: {integrity: sha512-gqTZwoUTwepwGIatnw4UKpQfnoyV0Z9Czn9+Lo2/jLIt4/AXLTn+oVZxlQ7Ng8bzcNkR+3DqLJ08kNr8jRmdNQ==}
     dependencies:
-      '@vitest/spy': 0.28.4
-      '@vitest/utils': 0.28.4
+      '@vitest/spy': 0.28.5
+      '@vitest/utils': 0.28.5
       chai: 4.3.7
     dev: true
 
-  /@vitest/runner/0.28.4:
-    resolution: {integrity: sha512-Q8UV6GjDvBSTfUoq0QXVCNpNOUrWu4P2qvRq7ssJWzn0+S0ojbVOxEjMt+8a32X6SdkhF8ak+2nkppsqV0JyNQ==}
+  /@vitest/runner/0.28.5:
+    resolution: {integrity: sha512-NKkHtLB+FGjpp5KmneQjTcPLWPTDfB7ie+MmF1PnUBf/tGe2OjGxWyB62ySYZ25EYp9krR5Bw0YPLS/VWh1QiA==}
     dependencies:
-      '@vitest/utils': 0.28.4
+      '@vitest/utils': 0.28.5
       p-limit: 4.0.0
       pathe: 1.1.0
     dev: true
 
-  /@vitest/spy/0.28.4:
-    resolution: {integrity: sha512-8WuhfXLlvCXpNXEGJW6Gc+IKWI32435fQJLh43u70HnZ1otJOa2Cmg2Wy2Aym47ZnNCP4NolF+8cUPwd0MigKQ==}
+  /@vitest/spy/0.28.5:
+    resolution: {integrity: sha512-7if6rsHQr9zbmvxN7h+gGh2L9eIIErgf8nSKYDlg07HHimCxp4H6I/X/DPXktVPPLQfiZ1Cw2cbDIx9fSqDjGw==}
     dependencies:
       tinyspy: 1.0.2
     dev: true
 
-  /@vitest/utils/0.28.4:
-    resolution: {integrity: sha512-l2QztOLdc2LkR+w/lP52RGh8hW+Ul4KESmCAgVE8q737I7e7bQoAfkARKpkPJ4JQtGpwW4deqlj1732VZD7TFw==}
+  /@vitest/utils/0.28.5:
+    resolution: {integrity: sha512-UyZdYwdULlOa4LTUSwZ+Paz7nBHGTT72jKwdFSV4IjHF1xsokp+CabMdhjvVhYwkLfO88ylJT46YMilnkSARZA==}
     dependencies:
       cli-truncate: 3.1.0
       diff: 5.1.0
@@ -14691,6 +14691,29 @@ packages:
       - terser
     dev: true
 
+  /vite-node/0.28.5_mhcbtvh6ovyyhzxuxk7bvtjvzq:
+    resolution: {integrity: sha512-LmXb9saMGlrMZbXTvOveJKwMTBTNUH66c8rJnQ0ZPNX+myPEol64+szRzXtV5ORb0Hb/91yq+/D3oERoyAt6LA==}
+    engines: {node: '>=v14.16.0'}
+    hasBin: true
+    dependencies:
+      cac: 6.7.14
+      debug: 4.3.4
+      mlly: 1.1.0
+      pathe: 1.1.0
+      picocolors: 1.0.0
+      source-map: 0.6.1
+      source-map-support: 0.5.21
+      vite: 4.1.1_mhcbtvh6ovyyhzxuxk7bvtjvzq
+    transitivePeerDependencies:
+      - '@types/node'
+      - less
+      - sass
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+    dev: true
+
   /vite-plugin-inject-preload/1.3.0_vite@4.1.1:
     resolution: {integrity: sha512-dPbSjifHgoMdE0c7FYjzg3GHwCc6IL5Tkty+tNG2/ZV5jDg+XPxvQ35Eo8dznxHt20kcMF9yvlkeKe1WOWrv/Q==}
     engines: {node: '>=14.18.0'}
@@ -14763,8 +14786,8 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vitest/0.28.4_ch6mjtnq5d6ebkm44hqbsjq7kq:
-    resolution: {integrity: sha512-sfWIy0AdlbyGRhunm+TLQEJrFH9XuRPdApfubsyLcDbCRrUX717BRQKInTgzEfyl2Ipi1HWoHB84Nqtcwxogcg==}
+  /vitest/0.28.5_ch6mjtnq5d6ebkm44hqbsjq7kq:
+    resolution: {integrity: sha512-pyCQ+wcAOX7mKMcBNkzDwEHRGqQvHUl0XnoHR+3Pb1hytAHISgSxv9h0gUiSiYtISXUU3rMrKiKzFYDrI6ZIHA==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
     peerDependencies:
@@ -14788,10 +14811,10 @@ packages:
       '@types/chai': 4.3.4
       '@types/chai-subset': 1.3.3
       '@types/node': 18.13.0
-      '@vitest/expect': 0.28.4
-      '@vitest/runner': 0.28.4
-      '@vitest/spy': 0.28.4
-      '@vitest/utils': 0.28.4
+      '@vitest/expect': 0.28.5
+      '@vitest/runner': 0.28.5
+      '@vitest/spy': 0.28.5
+      '@vitest/utils': 0.28.5
       acorn: 8.8.1
       acorn-walk: 8.2.0
       cac: 6.7.14
@@ -14808,7 +14831,7 @@ packages:
       tinypool: 0.3.1
       tinyspy: 1.0.2
       vite: 4.1.1_mhcbtvh6ovyyhzxuxk7bvtjvzq
-      vite-node: 0.28.4_mhcbtvh6ovyyhzxuxk7bvtjvzq
+      vite-node: 0.28.5_mhcbtvh6ovyyhzxuxk7bvtjvzq
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
       - less
