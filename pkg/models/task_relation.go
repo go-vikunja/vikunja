@@ -17,8 +17,9 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/events"
 	"time"
+
+	"code.vikunja.io/api/pkg/events"
 
 	"xorm.io/builder"
 	"xorm.io/xorm"

@@ -17,9 +17,10 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/events"
 	"io"
 	"time"
+
+	"code.vikunja.io/api/pkg/events"
 
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"

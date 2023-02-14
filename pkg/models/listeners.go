@@ -448,17 +448,17 @@ func (s *HandleTaskUpdateLastUpdated) Handle(msg *message.Message) (err error) {
 	}
 
 	var taskIDInt int64
-	switch taskID.(type) {
+	switch v := taskID.(type) {
 	case int64:
-		taskIDInt = taskID.(int64)
+		taskIDInt = v
 	case int:
-		taskIDInt = int64(taskID.(int))
+		taskIDInt = int64(v)
 	case int32:
-		taskIDInt = int64(taskID.(int32))
+		taskIDInt = int64(v)
 	case float64:
-		taskIDInt = int64(taskID.(float64))
+		taskIDInt = int64(v)
 	case float32:
-		taskIDInt = int64(taskID.(float32))
+		taskIDInt = int64(v)
 	default:
 		log.Errorf("Event payload does not contain a valid task ID")
 		return
