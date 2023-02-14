@@ -52,7 +52,7 @@
     "@github/hotkey": "2.0.1",
     "@infectoone/vue-ganttastic": "2.1.4",
     "@intlify/unplugin-vue-i18n": "0.8.2",
-    "@kyvg/vue3-notification": "2.8.0",
+    "@kyvg/vue3-notification": "2.9.0",
     "@sentry/tracing": "7.37.2",
     "@sentry/vue": "7.37.2",
     "@types/is-touch-device": "1.0.0",
