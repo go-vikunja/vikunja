@@ -1441,6 +1441,11 @@ func (t *Task) updateReminders(s *xorm.Session, reminders []time.Time) (err erro
 	return
 }
 
+func updateTaskLastUpdated(s *xorm.Session, task *Task) error {
+	_, err := s.ID(task.ID).Cols("updated").Update(task)
+	return err
+}
+
 // Delete implements the delete method for listTask
 // @Summary Delete a task
 // @Description Deletes a task from a list. This does not mean "mark it done".

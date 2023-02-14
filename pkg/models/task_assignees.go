@@ -179,7 +179,16 @@ func (la *TaskAssginee) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	err = updateListByTaskID(s, la.TaskID)
-	return
+	if err != nil {
+		return err
+	}
+
+	doer, _ := user.GetFromAuth(a)
+	return events.Dispatch(&TaskAssigneeDeletedEvent{
+		Task:     &Task{ID: la.TaskID},
+		Assignee: &user.User{ID: la.UserID},
+		Doer:     doer,
+	})
 }
 
 // Create adds a new assignee to a task

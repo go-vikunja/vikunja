@@ -109,7 +109,16 @@ func (tc *TaskComment) Delete(s *xorm.Session, a web.Auth) error {
 	if deleted == 0 {
 		return ErrTaskCommentDoesNotExist{ID: tc.ID}
 	}
-	return err
+
+	if err != nil {
+		return err
+	}
+
+	return events.Dispatch(&TaskCommentDeletedEvent{
+		Task:    &Task{ID: tc.TaskID},
+		Comment: tc,
+		Doer:    tc.Author,
+	})
 }
 
 // Update updates a task text by its ID

@@ -51,6 +51,15 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskCreatedEvent{}).Name(), &HandleTaskCreateMentions{})
 	events.RegisterListener((&TaskUpdatedEvent{}).Name(), &HandleTaskUpdatedMentions{})
 	events.RegisterListener((&UserDataExportRequestedEvent{}).Name(), &HandleUserDataExport{})
+	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
+	events.RegisterListener((&TaskCommentUpdatedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
+	events.RegisterListener((&TaskCommentDeletedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
+	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
+	events.RegisterListener((&TaskAssigneeDeletedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
+	events.RegisterListener((&TaskAttachmentCreatedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
+	events.RegisterListener((&TaskAttachmentDeletedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
+	events.RegisterListener((&TaskRelationCreatedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
+	events.RegisterListener((&TaskRelationDeletedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
 }
 
 //////
@@ -403,9 +412,62 @@ func (s *HandleTaskUpdatedMentions) Handle(msg *message.Message) (err error) {
 		Doer:  event.Doer,
 		IsNew: false,
 	}
+
 	_, err = notifyMentionedUsers(sess, event.Task, event.Task.Description, n)
 	return err
+}
 
+// HandleTaskUpdateLastUpdated  represents a listener
+type HandleTaskUpdateLastUpdated struct {
+}
+
+// Name defines the name for the HandleTaskUpdateLastUpdated listener
+func (s *HandleTaskUpdateLastUpdated) Name() string {
+	return "handle.task.update.last.updated"
+}
+
+// Handle is executed when the event HandleTaskUpdateLastUpdated listens on is fired
+func (s *HandleTaskUpdateLastUpdated) Handle(msg *message.Message) (err error) {
+	// Using a map here allows us to plug this listener to all kinds of task events
+	event := map[string]interface{}{}
+	err = json.Unmarshal(msg.Payload, &event)
+	if err != nil {
+		return err
+	}
+
+	task, is := event["Task"].(map[string]interface{})
+	if !is {
+		log.Errorf("Event payload does not contain task ID")
+		return
+	}
+
+	taskID, is := task["id"]
+	if !is {
+		log.Errorf("Event payload does not contain a valid task ID")
+		return
+	}
+
+	var taskIDInt int64
+	switch taskID.(type) {
+	case int64:
+		taskIDInt = taskID.(int64)
+	case int:
+		taskIDInt = int64(taskID.(int))
+	case int32:
+		taskIDInt = int64(taskID.(int32))
+	case float64:
+		taskIDInt = int64(taskID.(float64))
+	case float32:
+		taskIDInt = int64(taskID.(float32))
+	default:
+		log.Errorf("Event payload does not contain a valid task ID")
+		return
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+
+	return updateTaskLastUpdated(sess, &Task{ID: taskIDInt})
 }
 
 ///////

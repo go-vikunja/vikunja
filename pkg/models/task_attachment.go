@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/events"
 	"io"
 	"time"
 
@@ -44,7 +45,7 @@ type TaskAttachment struct {
 }
 
 // TableName returns the table name for task attachments
-func (TaskAttachment) TableName() string {
+func (*TaskAttachment) TableName() string {
 	return "task_attachments"
 }
 
@@ -84,7 +85,11 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadCloser, realna
 		return err
 	}
 
-	return nil
+	return events.Dispatch(&TaskAttachmentCreatedEvent{
+		Task:       &Task{ID: ta.TaskID},
+		Attachment: ta,
+		Doer:       ta.CreatedBy,
+	})
 }
 
 // ReadOne returns a task attachment
@@ -209,7 +214,16 @@ func (ta *TaskAttachment) Delete(s *xorm.Session, a web.Auth) error {
 	if err != nil && files.IsErrFileDoesNotExist(err) {
 		return nil
 	}
-	return err
+	if err != nil {
+		return err
+	}
+
+	doer, _ := user.GetFromAuth(a)
+	return events.Dispatch(&TaskAttachmentDeletedEvent{
+		Task:       &Task{ID: ta.TaskID},
+		Attachment: ta,
+		Doer:       doer,
+	})
 }
 
 func getTaskAttachmentsByTaskIDs(s *xorm.Session, taskIDs []int64) (attachments []*TaskAttachment, err error) {

@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/events"
 	"time"
 
 	"xorm.io/builder"
@@ -98,7 +99,7 @@ type TaskRelation struct {
 }
 
 // TableName holds the table name for the task relation table
-func (TaskRelation) TableName() string {
+func (*TaskRelation) TableName() string {
 	return "task_relations"
 }
 
@@ -190,7 +191,16 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 		rel,
 		otherRelation,
 	})
-	return err
+	if err != nil {
+		return err
+	}
+
+	doer, _ := user.GetFromAuth(a)
+	return events.Dispatch(&TaskRelationCreatedEvent{
+		Task:     &Task{ID: rel.TaskID},
+		Relation: rel,
+		Doer:     doer,
+	})
 }
 
 // Delete removes a task relation
@@ -241,5 +251,14 @@ func (rel *TaskRelation) Delete(s *xorm.Session, a web.Auth) error {
 	_, err = s.
 		Where(cond).
 		Delete(&TaskRelation{})
-	return err
+	if err != nil {
+		return err
+	}
+
+	doer, _ := user.GetFromAuth(a)
+	return events.Dispatch(&TaskRelationDeletedEvent{
+		Task:     &Task{ID: rel.TaskID},
+		Relation: rel,
+		Doer:     doer,
+	})
 }

@@ -80,6 +80,18 @@ func (t *TaskAssigneeCreatedEvent) Name() string {
 	return "task.assignee.created"
 }
 
+// TaskAssigneeDeletedEvent represents a TaskAssigneeDeletedEvent event
+type TaskAssigneeDeletedEvent struct {
+	Task     *Task
+	Assignee *user.User
+	Doer     *user.User
+}
+
+// Name defines the name for TaskAssigneeDeletedEvent
+func (t *TaskAssigneeDeletedEvent) Name() string {
+	return "task.assignee.deleted"
+}
+
 // TaskCommentCreatedEvent represents an event where a task comment has been created
 type TaskCommentCreatedEvent struct {
 	Task    *Task
@@ -102,6 +114,66 @@ type TaskCommentUpdatedEvent struct {
 // Name defines the name for TaskCommentUpdatedEvent
 func (t *TaskCommentUpdatedEvent) Name() string {
 	return "task.comment.edited"
+}
+
+// TaskCommentDeletedEvent represents a TaskCommentDeletedEvent event
+type TaskCommentDeletedEvent struct {
+	Task    *Task
+	Comment *TaskComment
+	Doer    *user.User
+}
+
+// Name defines the name for TaskCommentDeletedEvent
+func (t *TaskCommentDeletedEvent) Name() string {
+	return "task.comment.deleted"
+}
+
+// TaskAttachmentCreatedEvent represents a TaskAttachmentCreatedEvent event
+type TaskAttachmentCreatedEvent struct {
+	Task       *Task
+	Attachment *TaskAttachment
+	Doer       *user.User
+}
+
+// Name defines the name for TaskAttachmentCreatedEvent
+func (t *TaskAttachmentCreatedEvent) Name() string {
+	return "task.attachment.created"
+}
+
+// TaskAttachmentDeletedEvent represents a TaskAttachmentDeletedEvent event
+type TaskAttachmentDeletedEvent struct {
+	Task       *Task
+	Attachment *TaskAttachment
+	Doer       *user.User
+}
+
+// Name defines the name for TaskAttachmentDeletedEvent
+func (t *TaskAttachmentDeletedEvent) Name() string {
+	return "task.attachment.deleted"
+}
+
+// TaskRelationCreatedEvent represents a TaskRelationCreatedEvent event
+type TaskRelationCreatedEvent struct {
+	Task     *Task
+	Relation *TaskRelation
+	Doer     *user.User
+}
+
+// Name defines the name for TaskRelationCreatedEvent
+func (t *TaskRelationCreatedEvent) Name() string {
+	return "task.relation.created"
+}
+
+// TaskRelationDeletedEvent represents a TaskRelationDeletedEvent event
+type TaskRelationDeletedEvent struct {
+	Task     *Task
+	Relation *TaskRelation
+	Doer     *user.User
+}
+
+// Name defines the name for TaskRelationDeletedEvent
+func (t *TaskRelationDeletedEvent) Name() string {
+	return "task.relation.deleted"
 }
 
 //////////////////////
