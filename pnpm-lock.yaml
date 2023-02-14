@@ -88,7 +88,7 @@ specifiers:
   vitest: 0.28.5
   vue: 3.2.47
   vue-advanced-cropper: 2.8.8
-  vue-flatpickr-component: 11.0.1
+  vue-flatpickr-component: 11.0.2
   vue-i18n: 9.2.2
   vue-router: 4.1.6
   vue-tsc: 1.0.24
@@ -138,7 +138,7 @@ dependencies:
   ufo: 1.0.1
   vue: 3.2.47
   vue-advanced-cropper: 2.8.8_vue@3.2.47
-  vue-flatpickr-component: 11.0.1_vue@3.2.47
+  vue-flatpickr-component: 11.0.2_vue@3.2.47
   vue-i18n: 9.2.2_vue@3.2.47
   vue-router: 4.1.6_vue@3.2.47
   workbox-precaching: 6.5.4
@@ -14887,8 +14887,8 @@ packages:
       - supports-color
     dev: true
 
-  /vue-flatpickr-component/11.0.1_vue@3.2.47:
-    resolution: {integrity: sha512-dbBDC5a7XhsapGeejGrE7r2dj9SALJFAwMXJf/IYvbJhqsUZ8LZbFcK80vwOB6zgoSOrbrtBiVas2IQySLp1+w==}
+  /vue-flatpickr-component/11.0.2_vue@3.2.47:
+    resolution: {integrity: sha512-EUkB0IdF+LGt/+wMDtGgw3CY7bt8UuY9XWkse+/phydMKiK9FA5tflhFNcdmQ7kYJ3+gTMqOrDbl++mX04nwNQ==}
     engines: {node: '>=14.13.0'}
     peerDependencies:
       vue: ^3.2.0
