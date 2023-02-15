@@ -4,8 +4,8 @@ set -e
 if [ -n "$PUID" ] && [ "$PUID" -ne 0 ] && \
    [ -n "$PGID" ] && [ "$PGID" -ne 0 ] ; then
   echo "info: creating the new user vikunja with $PUID:$PGID"
-  addgroup -g "$PGID" vikunja
-  adduser -s /bin/sh -D -G vikunja -u "$PUID" vikunja -h /app/vikunja -H
+  groupmod -g "$PGID" vikunja
+  usermod -u "$PUID" vikunja
   chown -R vikunja:vikunja ./
   exec su vikunja -c /app/vikunja/vikunja "$@"
 else

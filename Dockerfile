@@ -33,7 +33,9 @@ ENV VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/
 ENV PUID 1000
 ENV PGID 1000
 
-RUN apk --update --no-cache add tzdata tini
+RUN apk --update --no-cache add tzdata tini shadow && \
+    addgroup vikunja && \
+    adduser -s /bin/sh -D -G vikunja vikunja -h /app/vikunja -H
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod 0755 /entrypoint.sh && mkdir files
 
