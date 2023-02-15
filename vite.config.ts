@@ -72,7 +72,17 @@ export default defineConfig(({mode}) => {
 				plugins: [
 					postcssEasings(),
 					postcssEasingGradients(),
-					postcssPresetEnv(),
+					postcssPresetEnv({
+						// Since postcss-preset-env v8.0.0 the 'enableClientSidePolyfills' option is disabled by default.
+						// This is the list of features that require a client side library:
+						// https://github.com/csstools/postcss-plugins/tree/main/plugin-packs/postcss-preset-env#plugins-that-need-client-library
+						// Since we only use 'focus-within-pseudo-class' we have to force enable
+						// that plugin now manually in order to keep the browser support as it was.
+						// See also './src/polyfills.ts'
+						features: {
+							'focus-within-pseudo-class': true,
+						},
+					}),
 				],
 			},
 		},
