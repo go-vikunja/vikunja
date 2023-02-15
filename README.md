@@ -51,6 +51,3 @@ pnpm run build
 pnpm run lint
 ```
 
-## Sponsors
-
-[![Relm](https://vikunja.io/images/sponsors/relm.png)](https://relm.us)
