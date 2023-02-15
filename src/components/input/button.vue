@@ -72,7 +72,7 @@ const showIconOnly = computed(() => icon !== '' && typeof slots.default === 'und
 </script>
 
 <style lang="scss" scoped>
-:where(.button) {
+.button {
   transition: all $transition;
   border: 0;
   text-transform: uppercase;
