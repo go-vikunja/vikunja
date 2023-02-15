@@ -349,7 +349,7 @@ func InitDefaultConfig() {
 	LogHTTP.setDefault("stdout")
 	LogEcho.setDefault("off")
 	LogPath.setDefault(ServiceRootpath.GetString() + "/logs")
-	LogEvents.setDefault("stdout")
+	LogEvents.setDefault("off")
 	LogEventsLevel.setDefault("INFO")
 	// Rate Limit
 	RateLimitEnabled.setDefault(false)

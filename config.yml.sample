@@ -165,7 +165,7 @@ log:
   # Echo has its own logging which usually is unnecessary, which is why it is disabled by default. Possible values are stdout, stderr, file or off to disable standard logging.
   echo: "off"
   # Whether or not to log events. Useful for debugging. Possible values are stdout, stderr, file or off to disable events logging.
-  events: "stdout"
+  events: "off"
   # The log level for event log messages. Possible values (case-insensitive) are ERROR, INFO, DEBUG.
   eventslevel: "info"
 

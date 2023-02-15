@@ -853,7 +853,7 @@ Environment path: `VIKUNJA_LOG_ECHO`
 
 Whether or not to log events. Useful for debugging. Possible values are stdout, stderr, file or off to disable events logging.
 
-Default: `stdout`
+Default: `off`
 
 Full path: `log.events`
 
