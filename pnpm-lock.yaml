@@ -2,7 +2,7 @@ lockfileVersion: 5.4
 
 specifiers:
   '@4tw/cypress-drag-drop': 2.2.3
-  '@cypress/vite-dev-server': 5.0.2
+  '@cypress/vite-dev-server': 5.0.3
   '@cypress/vue': 5.0.4
   '@faker-js/faker': 7.6.0
   '@fortawesome/fontawesome-svg-core': 6.3.0
@@ -146,7 +146,7 @@ dependencies:
 
 devDependencies:
   '@4tw/cypress-drag-drop': 2.2.3_cypress@12.6.0
-  '@cypress/vite-dev-server': 5.0.2
+  '@cypress/vite-dev-server': 5.0.3
   '@cypress/vue': 5.0.4_cypress@12.6.0+vue@3.2.47
   '@faker-js/faker': 7.6.0
   '@histoire/plugin-screenshot': 0.15.7_histoire@0.15.7
@@ -1793,8 +1793,8 @@ packages:
       uuid: 8.3.2
     dev: true
 
-  /@cypress/vite-dev-server/5.0.2:
-    resolution: {integrity: sha512-bhG5P0p423SiucYnFyGjQrPkIfNDKF+R0pwcB78y71soHXzh0cJ6dSAn67c8moU5YtQnAGgO3FKQmWcx8LFubw==}
+  /@cypress/vite-dev-server/5.0.3:
+    resolution: {integrity: sha512-Ihej1rtojDOZUMfBxeTqH39yBxYeVLlqrK2sgSDLgUNQJ3loXKakcnyfaeJhVg4cwG73fU9vFIAu2tJLjtxZgg==}
     dependencies:
       debug: 4.3.4
       find-up: 6.3.0
@@ -6939,7 +6939,7 @@ packages:
   /dom-serializer/1.3.2:
     resolution: {integrity: sha512-5c54Bk5Dw4qAxNOI1pFEizPSjVsx5+bpJKmL2kPn8JhBUq2q09tTCa3mjijun2NfK78NMouDYNMBkOrPZiS+ig==}
     dependencies:
-      domelementtype: 2.2.0
+      domelementtype: 2.3.0
       domhandler: 4.3.0
       entities: 2.2.0
     dev: true
@@ -6950,10 +6950,6 @@ packages:
       domelementtype: 2.3.0
       domhandler: 5.0.3
       entities: 4.4.0
-    dev: true
-
-  /domelementtype/2.2.0:
-    resolution: {integrity: sha512-DtBMo82pv1dFtUmHyr48beiuq792Sxohr+8Hm9zoxklYPfa6n0Z3Byjj2IV7bmr2IyqClnqEQhfgHJJ5QF0R5A==}
     dev: true
 
   /domelementtype/2.3.0:
@@ -6971,7 +6967,7 @@ packages:
     resolution: {integrity: sha512-fC0aXNQXqKSFTr2wDNZDhsEYjCiYsDWl3D01kwt25hm1YIPyDGHvvi3rw+PLqHAl/m71MaiF7d5zvBr0p5UB2g==}
     engines: {node: '>= 4'}
     dependencies:
-      domelementtype: 2.2.0
+      domelementtype: 2.3.0
     dev: true
 
   /domhandler/5.0.3:
@@ -6989,7 +6985,7 @@ packages:
     resolution: {integrity: sha512-w96Cjofp72M5IIhpjgobBimYEfoPjx1Vx0BSX9P30WBdZW2WIKU0T1Bd0kz2eNZ9ikjKgHbEyKx8BB6H1L3h3A==}
     dependencies:
       dom-serializer: 1.3.2
-      domelementtype: 2.2.0
+      domelementtype: 2.3.0
       domhandler: 4.3.0
     dev: true
 
