@@ -129,7 +129,7 @@
     "postcss-easing-gradients": "3.0.1",
     "postcss-easings": "3.0.1",
     "postcss-preset-env": "8.0.1",
-    "rollup": "3.17.0",
+    "rollup": "3.17.1",
     "rollup-plugin-visualizer": "5.9.0",
     "sass": "1.58.3",
     "start-server-and-test": "1.15.4",
