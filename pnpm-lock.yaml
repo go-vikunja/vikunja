@@ -10,8 +10,8 @@ specifiers:
   '@fortawesome/free-solid-svg-icons': 6.3.0
   '@fortawesome/vue-fontawesome': 3.0.3
   '@github/hotkey': 2.0.1
-  '@histoire/plugin-screenshot': 0.15.7
-  '@histoire/plugin-vue': 0.15.7
+  '@histoire/plugin-screenshot': 0.15.8
+  '@histoire/plugin-vue': 0.15.8
   '@infectoone/vue-ganttastic': 2.1.4
   '@intlify/unplugin-vue-i18n': 0.8.2
   '@kyvg/vue3-notification': 2.9.0
@@ -61,7 +61,7 @@ specifiers:
   focus-within: 3.0.2
   happy-dom: 8.2.6
   highlight.js: 11.7.0
-  histoire: 0.15.7
+  histoire: 0.15.8
   is-touch-device: 1.0.1
   klona: 2.0.6
   lodash.debounce: 4.0.8
@@ -149,8 +149,8 @@ devDependencies:
   '@cypress/vite-dev-server': 5.0.3
   '@cypress/vue': 5.0.4_cypress@12.6.0+vue@3.2.47
   '@faker-js/faker': 7.6.0
-  '@histoire/plugin-screenshot': 0.15.7_histoire@0.15.7
-  '@histoire/plugin-vue': 0.15.7_ixltx4i2kd3ruwnuxizaycmhne
+  '@histoire/plugin-screenshot': 0.15.8_histoire@0.15.8
+  '@histoire/plugin-vue': 0.15.8_hvrwrv5pdvaqqcvyumfocgg3pi
   '@rushstack/eslint-patch': 1.2.0
   '@types/codemirror': 5.60.7
   '@types/dompurify': 2.4.0
@@ -176,7 +176,7 @@ devDependencies:
   eslint: 8.34.0
   eslint-plugin-vue: 9.9.0_eslint@8.34.0
   happy-dom: 8.2.6
-  histoire: 0.15.7_3jxmp2i4o65h64prmku2n3ugla
+  histoire: 0.15.8_3jxmp2i4o65h64prmku2n3ugla
   netlify-cli: 12.12.0_@types+node@18.14.0
   postcss: 8.4.21
   postcss-easing-gradients: 3.0.1
@@ -2379,12 +2379,12 @@ packages:
       '@hapi/hoek': 9.2.1
     dev: true
 
-  /@histoire/app/0.15.7_vite@4.1.2:
-    resolution: {integrity: sha512-cPj4c14vGJUc5xRdvsgi3oPqENbY869XV8GOPxEFP85nrWiWkLMdTiUoF0Sy3ru2ZCCu8jcjMaZ7SeAkxUvkdA==}
+  /@histoire/app/0.15.8_vite@4.1.2:
+    resolution: {integrity: sha512-kVMqd07PS7RyI+XGQ2pMxXcj/UtsuHZc3nwNV8CfislUir9eK+itQBI3K8okqFt513tX85zUe82Dob2knrJ9NQ==}
     dependencies:
-      '@histoire/controls': 0.15.7_vite@4.1.2
-      '@histoire/shared': 0.15.7_vite@4.1.2
-      '@histoire/vendors': 0.15.7
+      '@histoire/controls': 0.15.8_vite@4.1.2
+      '@histoire/shared': 0.15.8_vite@4.1.2
+      '@histoire/vendors': 0.15.8
       '@types/flexsearch': 0.7.3
       flexsearch: 0.7.21
       shiki-es: 0.2.0
@@ -2392,8 +2392,8 @@ packages:
       - vite
     dev: true
 
-  /@histoire/controls/0.15.7_vite@4.1.2:
-    resolution: {integrity: sha512-WB2TbKNskgqID1wMzA3yv/NUmjhficBI8hoRJJfg1DEkyWEU8YnmSRvb6q1HpeU34I/rsskaC6CcMWMCdCB2RA==}
+  /@histoire/controls/0.15.8_vite@4.1.2:
+    resolution: {integrity: sha512-P4BNxVXM+lkL45rTZHV8+aHXvuTo2o7uir0Is7iWxR7jOtMr3ujBa/NQBXrp6+5TPw5whJXYRNAPJ1+jXiVfpQ==}
     dependencies:
       '@codemirror/commands': 6.1.3
       '@codemirror/lang-json': 6.0.1
@@ -2402,21 +2402,21 @@ packages:
       '@codemirror/state': 6.2.0
       '@codemirror/theme-one-dark': 6.1.0
       '@codemirror/view': 6.7.2
-      '@histoire/shared': 0.15.7_vite@4.1.2
-      '@histoire/vendors': 0.15.7
+      '@histoire/shared': 0.15.8_vite@4.1.2
+      '@histoire/vendors': 0.15.8
     transitivePeerDependencies:
       - vite
     dev: true
 
-  /@histoire/plugin-screenshot/0.15.7_histoire@0.15.7:
-    resolution: {integrity: sha512-b++6aiZk81KNcQs7E4IYDoLno6aTCQZz+odECmJkLQdrhaBDxdQl55pY6RKqN6pfMOFvP8mkZQtwnojsdkQcMw==}
+  /@histoire/plugin-screenshot/0.15.8_histoire@0.15.8:
+    resolution: {integrity: sha512-9Dz08on0pQZ5JYp8nmqgH2sH7/mOutavmst/MejWz9WBptmnJXWVAb7Ku7NiiFJLNMmxAWqO65i1AOTMeIUcDQ==}
     peerDependencies:
-      histoire: ^0.15.7
+      histoire: ^0.15.8
     dependencies:
       capture-website: 2.4.1
       defu: 6.1.1
       fs-extra: 10.1.0
-      histoire: 0.15.7_3jxmp2i4o65h64prmku2n3ugla
+      histoire: 0.15.8_3jxmp2i4o65h64prmku2n3ugla
       pathe: 0.2.0
     transitivePeerDependencies:
       - bufferutil
@@ -2425,18 +2425,18 @@ packages:
       - utf-8-validate
     dev: true
 
-  /@histoire/plugin-vue/0.15.7_ixltx4i2kd3ruwnuxizaycmhne:
-    resolution: {integrity: sha512-ll2jaXDeR2VFqr1X5Nn/mIT3cERpxPTTqocPyTFyHmutbzr0rPH50xK5OFEBtv6sYKMRL64FNnAMBt1Ya2y/aA==}
+  /@histoire/plugin-vue/0.15.8_hvrwrv5pdvaqqcvyumfocgg3pi:
+    resolution: {integrity: sha512-7KNZyTiXZOHcOfN3BeZSFjkSnKAIgKBN4hGcpOQ8uB8crWF4J4MIHxmdRns3ysvIIb+QdqfkkWEabenpaQmCcw==}
     peerDependencies:
-      histoire: ^0.15.7
+      histoire: ^0.15.8
       vue: ^3.2.47
     dependencies:
-      '@histoire/controls': 0.15.7_vite@4.1.2
-      '@histoire/shared': 0.15.7_vite@4.1.2
-      '@histoire/vendors': 0.15.7
+      '@histoire/controls': 0.15.8_vite@4.1.2
+      '@histoire/shared': 0.15.8_vite@4.1.2
+      '@histoire/vendors': 0.15.8
       change-case: 4.1.2
       globby: 13.1.2
-      histoire: 0.15.7_3jxmp2i4o65h64prmku2n3ugla
+      histoire: 0.15.8_3jxmp2i4o65h64prmku2n3ugla
       launch-editor: 2.6.0
       pathe: 0.2.0
       vue: 3.2.47
@@ -2444,12 +2444,12 @@ packages:
       - vite
     dev: true
 
-  /@histoire/shared/0.15.7_vite@4.1.2:
-    resolution: {integrity: sha512-UzJ/QMnx/xKe63etZrkjtzvNzzno0sHhbwqHFiUkzVzsrQAnESGTaYpZrAm1BI3b0KlUp7xO1F/v3Cjt6fF/nw==}
+  /@histoire/shared/0.15.8_vite@4.1.2:
+    resolution: {integrity: sha512-pHtCUJy6Zr8IUtKIXv4LCU80xD+5nx+bhqef6nfdVFsZhMp2WbtqGkIThUk74P/NPQTFoJSFECn/HmBqdXZlrg==}
     peerDependencies:
       vite: ^2.9.0 || ^3.0.0 || ^4.0.0
     dependencies:
-      '@histoire/vendors': 0.15.7
+      '@histoire/vendors': 0.15.8
       '@types/fs-extra': 9.0.13
       '@types/markdown-it': 12.2.3
       chokidar: 3.5.3
@@ -2458,8 +2458,8 @@ packages:
       vite: 4.1.2_bzncmu5eitp5xjtqkiggsaghdu
     dev: true
 
-  /@histoire/vendors/0.15.7:
-    resolution: {integrity: sha512-1Rl7HexJVs0tytp/ebF/GaIXqHujFBqxPVyV/K6bz+jiRbf9rhx2I+SbZuo0kIlVdUkthABBcK7k9+DqRuPCDA==}
+  /@histoire/vendors/0.15.8:
+    resolution: {integrity: sha512-RVvJmWlpRHa5dEdcAB+IB8OYKvw2Mv/tXF/Xu42SP2PwKkgQnTkDXmg+2HPMu9Uc+2i0u2cc9Lz+hqvkvS34kQ==}
     dev: true
 
   /@humanwhocodes/config-array/0.11.8:
@@ -8863,17 +8863,17 @@ packages:
     engines: {node: '>=12.0.0'}
     dev: false
 
-  /histoire/0.15.7_3jxmp2i4o65h64prmku2n3ugla:
-    resolution: {integrity: sha512-RJ2gHHv4ShdSqHs+BGC6qV6DY3HTL1nKEZ1YishxjqyAVudYPUhgOAb4tI0+dfmtdwCLgJVkBLxGu9W/qlpPoA==}
+  /histoire/0.15.8_3jxmp2i4o65h64prmku2n3ugla:
+    resolution: {integrity: sha512-weDuhDeguNy+9MNTm04OCk2tyJCKndzxp9pcOivxrIeuwmxA1nv7L5bye1YG7gjKWEOuifxRt9VWYAHo2Nc8VA==}
     hasBin: true
     peerDependencies:
       vite: ^2.9.0 || ^3.0.0 || ^4.0.0
     dependencies:
       '@akryum/tinypool': 0.3.1
-      '@histoire/app': 0.15.7_vite@4.1.2
-      '@histoire/controls': 0.15.7_vite@4.1.2
-      '@histoire/shared': 0.15.7_vite@4.1.2
-      '@histoire/vendors': 0.15.7
+      '@histoire/app': 0.15.8_vite@4.1.2
+      '@histoire/controls': 0.15.8_vite@4.1.2
+      '@histoire/shared': 0.15.8_vite@4.1.2
+      '@histoire/vendors': 0.15.8
       '@types/flexsearch': 0.7.3
       '@types/markdown-it': 12.2.3
       birpc: 0.1.1
