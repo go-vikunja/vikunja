@@ -36,7 +36,7 @@ specifiers:
   '@vue/eslint-config-typescript': 11.0.2
   '@vue/test-utils': 2.2.10
   '@vue/tsconfig': 0.1.3
-  '@vueuse/core': 9.12.0
+  '@vueuse/core': 9.13.0
   autoprefixer: 10.4.13
   axios: 1.3.3
   blurhash: 2.0.5
@@ -111,7 +111,7 @@ dependencies:
   '@types/is-touch-device': 1.0.0
   '@types/lodash.clonedeep': 4.5.7
   '@types/sortablejs': 1.15.0
-  '@vueuse/core': 9.12.0_vue@3.2.47
+  '@vueuse/core': 9.13.0_vue@3.2.47
   axios: 1.3.3
   blurhash: 2.0.5
   bulma-css-variables: 0.9.33
@@ -2497,7 +2497,7 @@ packages:
       dayjs: ^1.11.5
       vue: ^3.2.40
     dependencies:
-      '@vueuse/core': 9.12.0_vue@3.2.47
+      '@vueuse/core': 9.13.0_vue@3.2.47
       dayjs: 1.11.7
       vue: 3.2.47
     transitivePeerDependencies:
@@ -4549,24 +4549,24 @@ packages:
       '@types/node': 18.14.0
     dev: true
 
-  /@vueuse/core/9.12.0_vue@3.2.47:
-    resolution: {integrity: sha512-h/Di8Bvf6xRcvS/PvUVheiMYYz3U0tH3X25YxONSaAUBa841ayMwxkuzx/DGUMCW/wHWzD8tRy2zYmOC36r4sg==}
+  /@vueuse/core/9.13.0_vue@3.2.47:
+    resolution: {integrity: sha512-pujnclbeHWxxPRqXWmdkKV5OX4Wk4YeK7wusHqRwU0Q7EFusHoqNA/aPhB6KCh9hEqJkLAJo7bb0Lh9b+OIVzw==}
     dependencies:
       '@types/web-bluetooth': 0.0.16
-      '@vueuse/metadata': 9.12.0
-      '@vueuse/shared': 9.12.0_vue@3.2.47
+      '@vueuse/metadata': 9.13.0
+      '@vueuse/shared': 9.13.0_vue@3.2.47
       vue-demi: 0.12.1_vue@3.2.47
     transitivePeerDependencies:
       - '@vue/composition-api'
       - vue
     dev: false
 
-  /@vueuse/metadata/9.12.0:
-    resolution: {integrity: sha512-9oJ9MM9lFLlmvxXUqsR1wLt1uF7EVbP5iYaHJYqk+G2PbMjY6EXvZeTjbdO89HgoF5cI6z49o2zT/jD9SVoNpQ==}
+  /@vueuse/metadata/9.13.0:
+    resolution: {integrity: sha512-gdU7TKNAUVlXXLbaF+ZCfte8BjRJQWPCa2J55+7/h+yDtzw3vOoGQDRXzI6pyKyo6bXFT5/QoPE4hAknExjRLQ==}
     dev: false
 
-  /@vueuse/shared/9.12.0_vue@3.2.47:
-    resolution: {integrity: sha512-TWuJLACQ0BVithVTRbex4Wf1a1VaRuSpVeyEd4vMUWl54PzlE0ciFUshKCXnlLuD0lxIaLK4Ypj3NXYzZh4+SQ==}
+  /@vueuse/shared/9.13.0_vue@3.2.47:
+    resolution: {integrity: sha512-UrnhU+Cnufu4S6JLCPZnkWh0WwZGUp72ktOF2DFptMlOs3TOdVv8xJN53zhHGARmVOsz5KqOls09+J1NR6sBKw==}
     dependencies:
       vue-demi: 0.12.1_vue@3.2.47
     transitivePeerDependencies:
