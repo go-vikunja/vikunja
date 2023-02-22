@@ -412,11 +412,15 @@ $vikunja-nav-selected-width: 0.4rem;
 				opacity: 0;
 				transition: opacity $transition;
 				margin-right: .25rem;
-				cursor: grab;
 			}
+
 			&:hover .handle {
 				opacity: 1;
 			}
+		}
+		
+		&:not(.dragging-disabled) .handle {
+			cursor: grab;
 		}
 	}
 }
