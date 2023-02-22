@@ -3,25 +3,27 @@
 		:title="$t('filters.edit.title')"
 		primary-icon=""
 		:primary-label="$t('misc.save')"
-		@primary="saveFilter"
+		@primary="saveFilterWithValidation"
 		:tertiary="$t('misc.delete')"
 		@tertiary="$router.push({ name: 'filter.settings.delete', params: { id: listId } })"
 	>
-		<form @submit.prevent="saveFilter()">
+		<form @submit.prevent="saveFilterWithValidation()">
 			<div class="field">
 				<label class="label" for="title">{{ $t('filters.attributes.title') }}</label>
 				<div class="control">
 					<input
-						:class="{ 'disabled': filterService.loading}"
+						v-model="filter.title"
+						:class="{ 'disabled': filterService.loading, 'is-danger': !titleValid  }"
 						:disabled="filterService.loading || undefined"
-						@keyup.enter="saveFilter"
 						class="input"
-						id="title"
+						id="Title"
 						:placeholder="$t('filters.attributes.titlePlaceholder')"
 						type="text"
 						v-focus
-						v-model="filter.title"/>
+						@focusout="validateTitleField"
+					/>
 				</div>
+				<p class="help is-danger" v-if="!titleValid">{{ $t('filters.create.titleRequired') }}</p>
 			</div>
 			<div class="field">
 				<label class="label" for="description">{{ $t('filters.attributes.description') }}</label>
@@ -65,9 +67,11 @@ import type {IList} from '@/modelTypes/IList'
 const props = defineProps<{ listId: IList['id'] }>()
 
 const {
-	saveFilter,
+	saveFilterWithValidation,
 	filter,
 	filters,
 	filterService,
+	titleValid,
+	validateTitleField,
 } = useSavedFilter(toRef(props, 'listId'))
 </script>

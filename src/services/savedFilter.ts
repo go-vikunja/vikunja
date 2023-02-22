@@ -2,6 +2,7 @@ import {computed, ref, shallowReactive, unref, watch} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import type {MaybeRef} from '@vueuse/core'
+import {useDebounceFn} from '@vueuse/core'
 
 import type {IList} from '@/modelTypes/IList'
 import type {ISavedFilter} from '@/modelTypes/ISavedFilter'
@@ -133,14 +134,38 @@ export function useSavedFilter(listId?: MaybeRef<IList['id']>) {
 		router.push({name: 'namespaces.index'})
 	}
 
+	const titleValid = ref(true)
+	const validateTitleField = useDebounceFn(() => {
+		titleValid.value = filter.value.title !== ''
+	}, 100)
+
+	async function createFilterWithValidation() {
+		if (!titleValid.value) {
+			return
+		}
+		return createFilter()
+	}
+	
+	async function saveFilterWithValidation() {
+		if (!titleValid.value) {
+			return
+		}
+		return saveFilter()
+	}
+
 	return {
 		createFilter,
+		createFilterWithValidation,
 		saveFilter,
+		saveFilterWithValidation,
 		deleteFilter,
 
 		filter,
 		filters,
 
 		filterService,
+		
+		titleValid,
+		validateTitleField,
 	}
 }

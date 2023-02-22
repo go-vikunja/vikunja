@@ -12,15 +12,17 @@
 						<div class="control">
 							<input
 								v-model="filter.title"
-								:class="{ 'disabled': filterService.loading}"
+								:class="{ 'disabled': filterService.loading, 'is-danger': !titleValid  }"
 								:disabled="filterService.loading || undefined"
 								class="input"
 								id="Title"
 								:placeholder="$t('filters.attributes.titlePlaceholder')"
 								type="text"
 								v-focus
+								@focusout="validateTitleField"
 							/>
 						</div>
+						<p class="help is-danger" v-if="!titleValid">{{ $t('filters.create.titleRequired') }}</p>
 					</div>
 					<div class="field">
 						<label class="label" for="description">{{ $t('filters.attributes.description') }}</label>
@@ -51,8 +53,8 @@
 					<template #footer>
 						<x-button
 							:loading="filterService.loading"
-							:disabled="filterService.loading"
-							@click="createFilter()"
+							:disabled="filterService.loading || !titleValid"
+							@click="createFilterWithValidation()"
 							class="is-fullwidth"
 						>
 							{{ $t('filters.create.action') }}
@@ -71,7 +73,9 @@ import {useSavedFilter} from '@/services/savedFilter'
 const {
 	filter,
 	filters,
-	createFilter,
+	createFilterWithValidation,
 	filterService,
+	titleValid,
+	validateTitleField,
 } = useSavedFilter()
 </script>
