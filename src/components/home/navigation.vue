@@ -122,6 +122,7 @@
 									<span class="list-menu-title">{{ getListTitle(l) }}</span>
 								</BaseButton>
 								<BaseButton
+									v-if="l.id > 0"
 									class="favorite"
 									:class="{'is-favorite': l.isFavorite}"
 									@click="listStore.toggleListFavorite(l)"
