@@ -28,6 +28,20 @@ server {
     add_header Cache-Control "public, max-age=0, s-maxage=0, must-revalidate" always;
     try_files $uri /index.html =404;
   }
+  
+  # Disable caching for sw
+  location = /sw.js {
+    autoindex off;
+    expires off;
+    add_header Cache-Control "public, max-age=0, s-maxage=0, must-revalidate" always;
+  }
+
+  # Disable caching for webmanifest
+  location = /manifest.webmanifest {
+    autoindex off;
+    expires off;
+    add_header Cache-Control "public, max-age=0, s-maxage=0, must-revalidate" always;
+  }
 
   # favicon.ico
   location = /favicon.ico {
