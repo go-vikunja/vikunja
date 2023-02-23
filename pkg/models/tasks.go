@@ -140,7 +140,7 @@ type TaskWithComments struct {
 }
 
 // TableName returns the table name for listtasks
-func (Task) TableName() string {
+func (*Task) TableName() string {
 	return "tasks"
 }
 
@@ -1207,6 +1207,21 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
+
+	// Update all positions if the newly saved position is < 0.1
+	if ot.Position < 0.1 {
+		err = recalculateTaskPositions(s, t.ListID)
+		if err != nil {
+			return err
+		}
+	}
+	if ot.KanbanPosition < 0.1 {
+		err = recalculateTaskKanbanPositions(s, t.BucketID)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Get the task updated timestamp in a new struct - if we'd just try to put it into t which we already have, it
 	// would still contain the old updated date.
 	nt := &Task{}
@@ -1215,6 +1230,8 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 	t.Updated = nt.Updated
+	t.Position = nt.Position
+	t.KanbanPosition = nt.KanbanPosition
 
 	doer, _ := user.GetFromAuth(a)
 	err = events.Dispatch(&TaskUpdatedEvent{
@@ -1226,6 +1243,56 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	return updateListLastUpdated(s, &List{ID: t.ListID})
+}
+
+func recalculateTaskKanbanPositions(s *xorm.Session, bucketID int64) (err error) {
+
+	allTasks := []*Task{}
+	err = s.Where("bucket_id = ?", bucketID).Find(&allTasks)
+	if err != nil {
+		return
+	}
+
+	maxPosition := math.Pow(2, 32)
+
+	for i, task := range allTasks {
+
+		currentPosition := maxPosition / float64(len(allTasks)) * (float64(i + 1))
+
+		_, err = s.Cols("kanban_position").
+			Where("id = ?", task.ID).
+			Update(&Task{KanbanPosition: currentPosition})
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}
+
+func recalculateTaskPositions(s *xorm.Session, listID int64) (err error) {
+
+	allTasks := []*Task{}
+	err = s.Where("list_id = ?", listID).Find(&allTasks)
+	if err != nil {
+		return
+	}
+
+	maxPosition := math.Pow(2, 32)
+
+	for i, task := range allTasks {
+
+		currentPosition := maxPosition / float64(len(allTasks)) * (float64(i + 1))
+
+		_, err = s.Cols("position").
+			Where("id = ?", task.ID).
+			Update(&Task{Position: currentPosition})
+		if err != nil {
+			return
+		}
+	}
+
+	return
 }
 
 func addOneMonthToDate(d time.Time) time.Time {
