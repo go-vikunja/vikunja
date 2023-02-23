@@ -105,7 +105,7 @@
     "@types/focus-within": "1.0.1",
     "@types/lodash.debounce": "4.0.7",
     "@types/marked": "4.0.8",
-    "@types/node": "18.14.0",
+    "@types/node": "18.14.1",
     "@types/postcss-preset-env": "7.7.0",
     "@typescript-eslint/eslint-plugin": "5.53.0",
     "@typescript-eslint/parser": "5.53.0",
