@@ -1248,7 +1248,10 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 func recalculateTaskKanbanPositions(s *xorm.Session, bucketID int64) (err error) {
 
 	allTasks := []*Task{}
-	err = s.Where("bucket_id = ?", bucketID).Find(&allTasks)
+	err = s.
+		Where("bucket_id = ?", bucketID).
+		OrderBy("kanban_position asc").
+		Find(&allTasks)
 	if err != nil {
 		return
 	}
@@ -1273,7 +1276,10 @@ func recalculateTaskKanbanPositions(s *xorm.Session, bucketID int64) (err error)
 func recalculateTaskPositions(s *xorm.Session, listID int64) (err error) {
 
 	allTasks := []*Task{}
-	err = s.Where("list_id = ?", listID).Find(&allTasks)
+	err = s.
+		Where("list_id = ?", listID).
+		OrderBy("position asc").
+		Find(&allTasks)
 	if err != nil {
 		return
 	}
