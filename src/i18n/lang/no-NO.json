@@ -404,7 +404,8 @@
     "create": {
       "title": "Nytt lagret filter",
       "description": "Et lagret filter er en virtuell liste som beregnes fra et sett med filtre hver gang det åpnes. Når du er opprettet, vil det vises i et eget navneområde.",
-      "action": "Opprett nytt filter"
+      "action": "Opprett nytt filter",
+      "titleRequired": "Please provide a title for the filter."
     },
     "delete": {
       "header": "Slett dette lagrede filteret",

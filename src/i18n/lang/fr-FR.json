@@ -404,7 +404,8 @@
     "create": {
       "title": "Nouveau filtre enregistré",
       "description": "Un filtre enregistré est une liste virtuelle qui est calculée à partir d’un ensemble de filtres à chaque fois qu’on y accède. Une fois créé, il apparaît dans un espace de noms spécial.",
-      "action": "Créer un nouveau filtre enregistré"
+      "action": "Créer un nouveau filtre enregistré",
+      "titleRequired": "Please provide a title for the filter."
     },
     "delete": {
       "header": "Supprimer ce filtre enregistré",

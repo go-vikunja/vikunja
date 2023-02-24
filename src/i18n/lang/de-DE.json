@@ -404,7 +404,8 @@
     "create": {
       "title": "Neuer gespeicherter Filter",
       "description": "Ein gespeicherter Filter ist eine virtuelle Liste, die bei jedem Zugriff aus einem Satz von Filtern errechnet wird. Einmal erstellt, erscheint diese in einem speziellen Namespace.",
-      "action": "Neuen gespeicherten Filter erstellen"
+      "action": "Neuen gespeicherten Filter erstellen",
+      "titleRequired": "Bitte gib den Titel für den Filter an."
     },
     "delete": {
       "header": "Diesen gespeicherten Filter löschen",

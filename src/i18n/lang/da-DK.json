@@ -404,7 +404,8 @@
     "create": {
       "title": "Nyt Gemt Filter",
       "description": "Et gemt filter er en virtuel liste, som beregnes ud fra et sæt filtre, hver gang det er tilgået. Når den er oprettet, vises den i et særligt navneområde.",
-      "action": "Opret nyt gemt filter"
+      "action": "Opret nyt gemt filter",
+      "titleRequired": "Please provide a title for the filter."
     },
     "delete": {
       "header": "Slet dette gemte filter",

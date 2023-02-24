@@ -404,7 +404,8 @@
     "create": {
       "title": "Novo Filtro Memorizado",
       "description": "Um filtro memorizado é uma lista virtual que é compilada a partir de um conjunto de filtros de cada vez que é acedido. Uma vez criado, irá aparecer num espaço especial.",
-      "action": "Criar novo filtro memorizado"
+      "action": "Criar novo filtro memorizado",
+      "titleRequired": "Por favor, insere um título para o filtro."
     },
     "delete": {
       "header": "Eliminar este filtro memorizado",

@@ -404,7 +404,8 @@
     "create": {
       "title": "Neuer gespeicherter Filter",
       "description": "En gspeicherete Filter isch e virtuelli Liste, welche vomene Satz a Filter zemmegsetzt wird, sobald me uf sie zuegriift. Wenn sie mal erstellt worde isch, erhaltet si ihren eigene Namensruum.",
-      "action": "Neue gspeicherete Filter erstelle"
+      "action": "Neue gspeicherete Filter erstelle",
+      "titleRequired": "Bitte gib den Titel für den Filter an."
     },
     "delete": {
       "header": "De g'speicheret Filter chüble",

@@ -404,7 +404,8 @@
     "create": {
       "title": "Nuovo Filtro Salvato",
       "description": "Un filtro salvato è una lista virtuale che viene calcolata da un insieme di filtri di volta in volta. Una volta creato, apparirà in un namespace speciale.",
-      "action": "Crea nuovo filtro salvato"
+      "action": "Crea nuovo filtro salvato",
+      "titleRequired": "Please provide a title for the filter."
     },
     "delete": {
       "header": "Elimina questo filtro salvato",

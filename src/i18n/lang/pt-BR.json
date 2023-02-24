@@ -404,7 +404,8 @@
     "create": {
       "title": "Novo filtro salvo",
       "description": "A saved filter is a virtual list which is computed from a set of filters each time it is accessed. Once created, it will appear in a special namespace.",
-      "action": "Create new saved filter"
+      "action": "Create new saved filter",
+      "titleRequired": "Please provide a title for the filter."
     },
     "delete": {
       "header": "Delete this saved filter",

@@ -404,7 +404,8 @@
     "create": {
       "title": "Nový uložený filtr",
       "description": "Uložený filtr je virtuální seznam, který se počítá ze sady filtrů pokaždé, když je přístupný. Jakmile bude vytvořen, objeví se ve speciálním prostoru.",
-      "action": "Vytvořit uložený filtr"
+      "action": "Vytvořit uložený filtr",
+      "titleRequired": "Please provide a title for the filter."
     },
     "delete": {
       "header": "Smazat tento uložený filtr",

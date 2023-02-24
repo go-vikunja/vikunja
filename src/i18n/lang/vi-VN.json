@@ -404,7 +404,8 @@
     "create": {
       "title": "Bộ lọc đã lưu mới",
       "description": "Bộ lọc sẵn là một danh sách ảo được chọn từ một tập hợp các bộ lọc. Sau khi được tạo, nó sẽ xuất hiện trong một không gian làm việc đặc biệt.",
-      "action": "Tạo thêm bộ lọc sẵn"
+      "action": "Tạo thêm bộ lọc sẵn",
+      "titleRequired": "Please provide a title for the filter."
     },
     "delete": {
       "header": "Xóa bộ lọc sẵn này",

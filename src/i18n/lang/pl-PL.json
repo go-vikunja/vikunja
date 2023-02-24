@@ -404,7 +404,8 @@
     "create": {
       "title": "Nowy filtr stały",
       "description": "Filtr stały to wirtualna lista, która jest kalkulowana na podstawie zestawu filtrów przy każdym wejściu w nią. Po utworzeniu pojawi się w specjalnej sekcji.",
-      "action": "Utwórz nowy filtr stały"
+      "action": "Utwórz nowy filtr stały",
+      "titleRequired": "Please provide a title for the filter."
     },
     "delete": {
       "header": "Usuń ten filtr stały",

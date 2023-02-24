@@ -404,7 +404,8 @@
     "create": {
       "title": "新保存的过滤器",
       "description": "保存的过滤器是一个虚拟列表，在每次访问时从一组过滤器中计算出来。 创建后，它将出现在一个特殊的命名空间里。",
-      "action": "创建新保存的过滤器"
+      "action": "创建新保存的过滤器",
+      "titleRequired": "Please provide a title for the filter."
     },
     "delete": {
       "header": "删除此保存的过滤器",
