@@ -86,7 +86,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 											Name:  "Pending Task",
 										},
 										{
-											State: "completed",
+											State: "complete",
 											Name:  "Completed Task",
 										},
 									},

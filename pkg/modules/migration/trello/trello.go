@@ -133,6 +133,24 @@ func getTrelloData(token string) (trelloData []*trello.Board, err error) {
 				return nil, err
 			}
 
+			if len(card.IDCheckLists) > 0 {
+				for _, checkListID := range card.IDCheckLists {
+					checklist, err := client.GetChecklist(checkListID, allArg)
+					if err != nil {
+						return nil, err
+					}
+
+					checklist.CheckItems = []trello.CheckItem{}
+					err = client.Get("checklists/"+checkListID+"/checkItems", allArg, &checklist.CheckItems)
+					if err != nil {
+						return nil, err
+					}
+
+					card.Checklists = append(card.Checklists, checklist)
+					log.Debugf("Retrieved checklist %s for card %s", checkListID, card.ID)
+				}
+			}
+
 			list.Cards = append(list.Cards, card)
 		}
 
@@ -214,7 +232,7 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullV
 
 					for _, item := range checklist.CheckItems {
 						task.Description += "\n* "
-						if item.State == "completed" {
+						if item.State == "complete" {
 							task.Description += "[x]"
 						} else {
 							task.Description += "[ ]"
