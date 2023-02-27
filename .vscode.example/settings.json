@@ -18,6 +18,12 @@
     "javascriptreact",
     "vue"
   ],
+
+  "volar.completion.preferredTagNameCase": "pascal",
+
+  // disable vetur in case it is installed
+  "vetur.validation.template": false,
+
   // i18n ally
   "i18n-ally.localesPaths": [
     "src/i18n/lang"
