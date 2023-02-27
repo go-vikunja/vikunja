@@ -66,7 +66,7 @@ specifiers:
   klona: 2.0.6
   lodash.debounce: 4.0.8
   marked: 4.2.12
-  netlify-cli: 12.13.2
+  netlify-cli: 13.0.0
   pinia: 2.0.32
   postcss: 8.4.21
   postcss-easing-gradients: 3.0.1
@@ -177,7 +177,7 @@ devDependencies:
   eslint-plugin-vue: 9.9.0_eslint@8.35.0
   happy-dom: 8.6.0
   histoire: 0.15.8_x7zvqn52jpfvwegv2nza3rzceu
-  netlify-cli: 12.13.2_@types+node@18.14.1
+  netlify-cli: 13.0.0_@types+node@18.14.1
   postcss: 8.4.21
   postcss-easing-gradients: 3.0.1
   postcss-easings: 3.0.1_postcss@8.4.21
@@ -10908,8 +10908,8 @@ packages:
     resolution: {integrity: sha512-9iN1ka/9zmX1ZvLV9ewJYEk9h7RyRRtqdK0woXcqohu8EWIerfPUjYJPg0ULy0UqP7cslmdGc8xKDJcojlKiaw==}
     dev: true
 
-  /netlify-cli/12.13.2_@types+node@18.14.1:
-    resolution: {integrity: sha512-9Y+QjzKuxXixwPpMEtmiyCHNejTDb46lO62se6gyfBhTnnTtuPHRY1nPGBJiqA6jj1squt4APgdWY0qGaJg3OA==}
+  /netlify-cli/13.0.0_@types+node@18.14.1:
+    resolution: {integrity: sha512-yn1ZulpkwaScv3ke75tRQkEuJKGGwfYgKBUStOCg5ma8Kqcmgaw+cU4eiUk4dQUa5ojWDXg15tZJgkMZPpKJUQ==}
     engines: {node: ^14.16.0 || >=16.0.0}
     hasBin: true
     requiresBuild: true
@@ -11013,6 +11013,7 @@ packages:
       through2-map: 3.0.0
       to-readable-stream: 2.1.0
       toml: 3.0.0
+      ulid: 2.3.0
       unixify: 1.0.0
       update-notifier: 6.0.2
       uuid: 9.0.0
@@ -14393,6 +14394,11 @@ packages:
     engines: {node: '>= 0.8'}
     dependencies:
       random-bytes: 1.0.0
+    dev: true
+
+  /ulid/2.3.0:
+    resolution: {integrity: sha512-keqHubrlpvT6G2wH0OEfSW4mquYRcbe/J8NMmveoQOjUqmo+hXtO+ORCpWhdbZ7k72UtY61BL7haGxW6enBnjw==}
+    hasBin: true
     dev: true
 
   /unbox-primitive/1.0.1:
