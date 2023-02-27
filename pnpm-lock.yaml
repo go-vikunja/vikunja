@@ -78,7 +78,7 @@ specifiers:
   sass: 1.58.3
   snake-case: 3.0.4
   sortablejs: 1.15.0
-  start-server-and-test: 1.15.5
+  start-server-and-test: 2.0.0
   typescript: 4.9.5
   ufo: 1.1.0
   vite: 4.1.4
@@ -185,7 +185,7 @@ devDependencies:
   rollup: 3.17.3
   rollup-plugin-visualizer: 5.9.0_rollup@3.17.3
   sass: 1.58.3
-  start-server-and-test: 1.15.5
+  start-server-and-test: 2.0.0
   typescript: 4.9.5
   vite: 4.1.4_echm5rv26x5chjjnqjmf3saroi
   vite-plugin-inject-preload: 1.3.0_vite@4.1.4
@@ -13598,8 +13598,8 @@ packages:
     resolution: {integrity: sha512-h88QkzREN/hy8eRdyNhhsO7RSJ5oyTqxxmmn0dzBIMUclZsjpfmrsg81vp8mjjAs2vAZ72nyWxRUwSwmh0e4xg==}
     dev: true
 
-  /start-server-and-test/1.15.5:
-    resolution: {integrity: sha512-o3EmkX0++GV+qsvIJ/OKWm3w91fD8uS/bPQVPrh/7loaxkpXSuAIHdnmN/P/regQK9eNAK76aBJcHt+OSTk+nA==}
+  /start-server-and-test/2.0.0:
+    resolution: {integrity: sha512-UqKLw0mJbfrsG1jcRLTUlvuRi9sjNuUiDOLI42r7R5fA9dsFoywAy9DoLXNYys9B886E4RCKb+qM1Gzu96h7DQ==}
     engines: {node: '>=6'}
     hasBin: true
     dependencies:
