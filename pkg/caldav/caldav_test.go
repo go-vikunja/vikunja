@@ -483,6 +483,45 @@ LAST-MODIFIED:00010101T000000Z
 END:VTODO
 END:VCALENDAR`,
 		},
+		{
+			name: "with categories",
+			args: args{
+				config: &Config{
+					Name:   "test",
+					ProdID: "RandomProdID which is not random",
+					Color:  "ffffff",
+				},
+				todos: []*Todo{
+					{
+						Summary:    "Todo #1",
+						UID:        "randommduid",
+						Timestamp:  time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						Color:      "affffe",
+						Categories: []string{"label1", "label2"},
+					},
+				},
+			},
+			wantCaldavtasks: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+X-APPLE-CALENDAR-COLOR:#ffffffFF
+X-OUTLOOK-COLOR:#ffffffFF
+X-FUNAMBOL-COLOR:#ffffffFF
+BEGIN:VTODO
+UID:randommduid
+DTSTAMP:20181201T011204Z
+SUMMARY:Todo #1
+X-APPLE-CALENDAR-COLOR:#affffeFF
+X-OUTLOOK-COLOR:#affffeFF
+X-FUNAMBOL-COLOR:#affffeFF
+CATEGORIES:label1,label2
+LAST-MODIFIED:00010101T000000Z
+END:VTODO
+END:VCALENDAR`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

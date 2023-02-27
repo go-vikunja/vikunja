@@ -58,13 +58,13 @@ type Todo struct {
 	Priority     int64 // 0-9, 1 is highest
 	RelatedToUID string
 	Color        string
-
-	Start       time.Time
-	End         time.Time
-	DueDate     time.Time
-	Duration    time.Duration
-	RepeatAfter int64
-	RepeatMode  models.TaskRepeatMode
+	Categories   []string
+	Start        time.Time
+	End          time.Time
+	DueDate      time.Time
+	Duration     time.Duration
+	RepeatAfter  int64
+	RepeatMode   models.TaskRepeatMode
 
 	Created time.Time
 	Updated time.Time // last-mod
@@ -237,6 +237,11 @@ RRULE:FREQ=MONTHLY;BYMONTHDAY=` + t.DueDate.Format("02") // Day of the month
 				caldavtodos += `
 RRULE:FREQ=SECONDLY;INTERVAL=` + strconv.FormatInt(t.RepeatAfter, 10)
 			}
+		}
+
+		if len(t.Categories) > 0 {
+			caldavtodos += `
+CATEGORIES:` + strings.Join(t.Categories, ",")
 		}
 
 		caldavtodos += `

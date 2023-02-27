@@ -99,3 +99,84 @@ END:VCALENDAR`,
 		})
 	}
 }
+
+func TestGetCaldavTodosForTasks(t *testing.T) {
+	type args struct {
+		list  *models.ListWithTasksAndBuckets
+		tasks []*models.TaskWithComments
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantCaldav string
+	}{
+		{
+			name: "Format single Task as Caldav",
+			args: args{
+				list: &models.ListWithTasksAndBuckets{
+					List: models.List{
+						Title: "List title",
+					},
+				},
+				tasks: []*models.TaskWithComments{
+					{
+						Task: models.Task{
+							Title:       "Task 1",
+							UID:         "randomuid",
+							Description: "Description",
+							Priority:    3,
+							Created:     time.Unix(1543626721, 0).In(config.GetTimeZone()),
+							DueDate:     time.Unix(1543626722, 0).In(config.GetTimeZone()),
+							StartDate:   time.Unix(1543626723, 0).In(config.GetTimeZone()),
+							EndDate:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+							Updated:     time.Unix(1543626725, 0).In(config.GetTimeZone()),
+							DoneAt:      time.Unix(1543626726, 0).In(config.GetTimeZone()),
+							RepeatAfter: 86400,
+							Labels: []*models.Label{
+								{
+									ID:    1,
+									Title: "label1",
+								},
+								{
+									ID:    2,
+									Title: "label2",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantCaldav: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:List title
+PRODID:-//Vikunja Todo App//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011205Z
+SUMMARY:Task 1
+DTSTART:20181201T011203Z
+DTEND:20181201T011204Z
+DESCRIPTION:Description
+COMPLETED:20181201T011206Z
+STATUS:COMPLETED
+DUE:20181201T011202Z
+CREATED:20181201T011201Z
+PRIORITY:3
+RRULE:FREQ=SECONDLY;INTERVAL=86400
+CATEGORIES:label1,label2
+LAST-MODIFIED:20181201T011205Z
+END:VTODO
+END:VCALENDAR`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := GetCaldavTodosForTasks(tt.args.list, tt.args.tasks)
+			if diff, equal := messagediff.PrettyDiff(got, tt.wantCaldav); !equal {
+				t.Errorf("GetCaldavTodosForTasks() gotVTask = %v, want %v, diff = %s", got, tt.wantCaldav, diff)
+			}
+		})
+	}
+}

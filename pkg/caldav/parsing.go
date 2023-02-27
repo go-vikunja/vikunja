@@ -34,6 +34,10 @@ func GetCaldavTodosForTasks(list *models.ListWithTasksAndBuckets, listTasks []*m
 	for _, t := range listTasks {
 
 		duration := t.EndDate.Sub(t.StartDate)
+		var categories []string
+		for _, label := range t.Labels {
+			categories = append(categories, label.Title)
+		}
 
 		caldavtodos = append(caldavtodos, &Todo{
 			Timestamp:   t.Updated,
@@ -42,6 +46,7 @@ func GetCaldavTodosForTasks(list *models.ListWithTasksAndBuckets, listTasks []*m
 			Description: t.Description,
 			Completed:   t.DoneAt,
 			// Organizer:     &t.CreatedBy, // Disabled until we figure out how this works
+			Categories:  categories,
 			Priority:    t.Priority,
 			Start:       t.StartDate,
 			End:         t.EndDate,
