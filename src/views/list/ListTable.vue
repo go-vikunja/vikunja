@@ -196,7 +196,7 @@ import FilterPopup from '@/components/list/partials/filter-popup.vue'
 import Pagination from '@/components/misc/pagination.vue'
 import Popup from '@/components/misc/popup.vue'
 
-import {useTaskList} from '@/composables/useTaskList'
+import {useTaskList, SortBy} from '@/composables/useTaskList'
 import type {ITask} from '@/modelTypes/ITask'
 
 const ACTIVE_COLUMNS_DEFAULT = {
@@ -222,21 +222,6 @@ const props = defineProps({
 	},
 })
 
-type Order = 'asc' | 'desc' | 'none'
-
-interface SortBy {
-	index: Order
-	done?: Order
-	title?: Order
-	priority?: Order
-	due_date?: Order
-	start_date?: Order
-	end_date?: Order
-	percent_done?: Order
-	created?: Order
-	updated?: Order
-}
-
 const SORT_BY_DEFAULT: SortBy = {
 	index: 'desc',
 }
@@ -244,7 +229,7 @@ const SORT_BY_DEFAULT: SortBy = {
 const activeColumns = useStorage('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT})
 const sortBy = useStorage<SortBy>('tableViewSortBy', {...SORT_BY_DEFAULT})
 
-const taskList = useTaskList(toRef(props, 'listId'))
+const taskList = useTaskList(toRef(props, 'listId'), sortBy.value)
 
 const {
 	loading,

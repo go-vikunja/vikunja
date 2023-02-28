@@ -5,6 +5,22 @@ import TaskCollectionService from '@/services/taskCollection'
 import type {ITask} from '@/modelTypes/ITask'
 import {error} from '@/message'
 
+export type Order = 'asc' | 'desc' | 'none'
+
+export interface SortBy {
+	id?: Order
+	index?: Order
+	done?: Order
+	title?: Order
+	priority?: Order
+	due_date?: Order
+	start_date?: Order
+	end_date?: Order
+	percent_done?: Order
+	created?: Order
+	updated?: Order
+}
+
 // FIXME: merge with DEFAULT_PARAMS in filters.vue
 export const getDefaultParams = () => ({
 	sort_by: ['position', 'id'],
@@ -15,7 +31,7 @@ export const getDefaultParams = () => ({
 	filter_concat: 'and',
 })
 
-const SORT_BY_DEFAULT = {
+const SORT_BY_DEFAULT: SortBy = {
 	id: 'desc',
 }
 
@@ -44,7 +60,7 @@ const SORT_BY_DEFAULT = {
 /**
  * This mixin provides a base set of methods and properties to get tasks on a list.
  */
-export function useTaskList(listId, sortByDefault = SORT_BY_DEFAULT) {
+export function useTaskList(listId, sortByDefault: SortBy = SORT_BY_DEFAULT) {
 	const params = ref({...getDefaultParams()})
 	
 	const search = ref('')
