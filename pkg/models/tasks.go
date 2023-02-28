@@ -1612,12 +1612,12 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Router /tasks/{ID} [get]
 func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
-	taskMap := make(map[int64]*Task, 1)
-	taskMap[t.ID] = &Task{}
-	*taskMap[t.ID], err = GetTaskByIDSimple(s, t.ID)
+	*t, err = GetTaskSimple(s, t)
 	if err != nil {
 		return
 	}
+	taskMap := make(map[int64]*Task, 1)
+	taskMap[t.ID] = t
 
 	err = addMoreInfoToTasks(s, taskMap, a)
 	if err != nil {
