@@ -46,6 +46,7 @@ Vikunja currently supports the following properties:
 * `CREATED`
 * `DTSTAMP`
 * `LAST-MODIFIED`
+* Recurrence
 
 Vikunja **currently does not** support these properties:
 
@@ -61,7 +62,6 @@ Vikunja **currently does not** support these properties:
 * `CONTACT`
 * `RECURRENCE-ID`
 * `URL`
-* Recurrence
 * `SEQUENCE`
 
 ## Tested Clients
