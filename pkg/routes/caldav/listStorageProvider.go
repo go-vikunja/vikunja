@@ -210,7 +210,7 @@ func (vcls *VikunjaCaldavListStorage) GetResource(rpath string) (*data.Resource,
 
 		// save and override the updated unix date to not break any later etag checks
 		updated := vcls.task.Updated
-		err := vcls.task.ReadOne(s, vcls.user)
+		tasks, err := models.GetTasksByUIDs(s, []string{vcls.task.UID}, vcls.user)
 		if err != nil {
 			_ = s.Rollback()
 			if models.IsErrTaskDoesNotExist(err) {
@@ -221,6 +221,11 @@ func (vcls *VikunjaCaldavListStorage) GetResource(rpath string) (*data.Resource,
 		if err := s.Commit(); err != nil {
 			return nil, false, err
 		}
+
+		if len(tasks) < 1 {
+			return nil, false, errs.ResourceNotFoundError
+		}
+		vcls.task = tasks[0]
 
 		if updated.Unix() > 0 {
 			vcls.task.Updated = updated

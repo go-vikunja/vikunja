@@ -1612,7 +1612,7 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Router /tasks/{ID} [get]
 func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
-	*t, err = GetTaskSimple(s, t)
+	*t, err = GetTaskByIDSimple(s, t.ID)
 	if err != nil {
 		return
 	}
