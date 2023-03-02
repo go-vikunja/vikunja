@@ -428,7 +428,7 @@ function searchTeams() {
 			teamService.getAll({}, { s: t }),
 		)
 		const teamsResult = await Promise.all(teamSearchPromises)
-		foundTeams.value = teamsResult.flatMap((team) => {
+		foundTeams.value = teamsResult.flat().map((team) => {
 			team.title = team.name
 			return team
 		})
@@ -456,6 +456,13 @@ async function doAction(type: ACTION_TYPE, item: DoAction) {
 			await router.push({
 				name: 'task.detail',
 				params: { id: (item as DoAction<ITask>).id },
+			})
+			break
+		case ACTION_TYPE.TEAM:
+			closeQuickActions()
+			await router.push({
+				name: 'teams.edit',
+				params: { id: (item as DoAction<ITeam>).id },
 			})
 			break
 		case ACTION_TYPE.CMD:
