@@ -126,6 +126,12 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 
 	/**
 	 * Returns an object with all route parameters and their values.
+	 * @example
+	 * getRouteReplacements(
+	 * 	'/tasks/{taskId}/assignees/{userId}',
+	 * 	{ taskId: 7, userId: 2 },
+	 * )
+	 * // { "{taskId}": 7, "{userId}": 2 }
 	 */
 	getRouteReplacements(route : string, parameters : Record<string, unknown> = {}) {
 		const replace$$1: Record<string, unknown> = {}
@@ -148,6 +154,8 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 
 	/**
 	 * Returns a fully-ready-ready-to-make-a-request-to route with replaced parameters.
+	 * @example
+	 * getReplacedRoute('/lists/{listId}/tasks', { listId: 3 }) === '/lists/1/tasks'
 	 */
 	getReplacedRoute(path : string, pathparams : Record<string, unknown>) : string {
 		const replacements = this.getRouteReplacements(path, pathparams)
