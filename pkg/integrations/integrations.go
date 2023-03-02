@@ -33,6 +33,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/routes"
+	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"code.vikunja.io/web/handler"
@@ -48,6 +49,12 @@ var (
 		Username: "user1",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		Email:    "user1@example.com",
+	}
+	testuser15 = user.User{
+		ID:       15,
+		Username: "user15",
+		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Email:    "user15@example.com",
 	}
 )
 
@@ -141,6 +148,19 @@ func newTestRequestWithUser(t *testing.T, method string, handler echo.HandlerFun
 func newTestRequestWithLinkShare(t *testing.T, method string, handler echo.HandlerFunc, share *models.LinkSharing, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
 	rec, c := testRequestSetup(t, method, payload, queryParams, urlParams)
 	addLinkShareTokenToContext(t, share, c)
+	err = handler(c)
+	return
+}
+
+func newCaldavTestRequestWithUser(t *testing.T, method string, handler echo.HandlerFunc, user *user.User, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
+	rec, c := testRequestSetup(t, method, payload, queryParams, urlParams)
+	c.Request().Header.Set(echo.HeaderContentType, echo.MIMETextPlain)
+
+	result, _ := caldav.BasicAuth(user.Username, "1234", c)
+	if !result {
+		t.Error("BasicAuth for caldav failed")
+		t.FailNow()
+	}
 	err = handler(c)
 	return
 }

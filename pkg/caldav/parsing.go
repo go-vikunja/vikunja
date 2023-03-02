@@ -96,11 +96,23 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 	description := strings.ReplaceAll(task["DESCRIPTION"], "\\,", ",")
 	description = strings.ReplaceAll(description, "\\n", "\n")
 
+	var labels []*models.Label
+	if val, ok := task["CATEGORIES"]; ok {
+		categories := strings.Split(val, ",")
+		labels = make([]*models.Label, 0, len(categories))
+		for _, category := range categories {
+			labels = append(labels, &models.Label{
+				Title: category,
+			})
+		}
+	}
+
 	vTask = &models.Task{
 		UID:         task["UID"],
 		Title:       task["SUMMARY"],
 		Description: description,
 		Priority:    priority,
+		Labels:      labels,
 		DueDate:     caldavTimeToTimestamp(task["DUE"]),
 		Updated:     caldavTimeToTimestamp(task["DTSTAMP"]),
 		StartDate:   caldavTimeToTimestamp(task["DTSTART"]),

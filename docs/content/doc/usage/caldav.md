@@ -10,9 +10,9 @@ menu:
 
 # Caldav
 
-> **Warning:** The caldav integration is in an early alpha stage and has bugs. 
+> **Warning:** The caldav integration is in an early alpha stage and has bugs.
 > It works well with some clients while having issues with others.
-> If you encounter issues, please [report them](https://code.vikunja.io/api/issues/new?body=[caldav]) 
+> If you encounter issues, please [report them](https://code.vikunja.io/api/issues/new?body=[caldav])
 
 Vikunja supports managing tasks via the [caldav VTODO](https://tools.ietf.org/html/rfc5545#section-3.6.2) extension.
 
@@ -37,6 +37,7 @@ Vikunja currently supports the following properties:
 * `SUMMARY`
 * `DESCRIPTION`
 * `PRIORITY`
+* `CATEGORIES`
 * `COMPLETED`
 * `DUE`
 * `DTSTART`
@@ -51,7 +52,6 @@ Vikunja currently supports the following properties:
 Vikunja **currently does not** support these properties:
 
 * `ATTACH`
-* `CATEGORIES`
 * `CLASS`
 * `COMMENT`
 * `GEO`

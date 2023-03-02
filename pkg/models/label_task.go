@@ -264,7 +264,7 @@ func getLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*lab
 }
 
 // Create or update a bunch of task labels
-func (t *Task) updateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Label) (err error) {
+func (t *Task) UpdateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Label) (err error) {
 
 	// If we don't have any new labels, delete everything right away. Saves us some hassle.
 	if len(labels) == 0 && len(t.Labels) > 0 {
@@ -390,5 +390,5 @@ func (ltb *LabelTaskBulk) Create(s *xorm.Session, a web.Auth) (err error) {
 	for _, l := range labels {
 		task.Labels = append(task.Labels, &l.Label)
 	}
-	return task.updateTaskLabels(s, a, ltb.Labels)
+	return task.UpdateTaskLabels(s, a, ltb.Labels)
 }

@@ -178,13 +178,13 @@ func (l *Label) ReadAll(s *xorm.Session, a web.Auth, search string, page int, pe
 func (l *Label) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	label, err := getLabelByIDSimple(s, l.ID)
 	if err != nil {
-		return err
+		return
 	}
 	*l = *label
 
 	u, err := user.GetUserByID(s, l.CreatedByID)
 	if err != nil {
-		return err
+		return
 	}
 
 	l.CreatedBy = u
@@ -192,14 +192,16 @@ func (l *Label) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 }
 
 func getLabelByIDSimple(s *xorm.Session, labelID int64) (*Label, error) {
-	label := Label{}
-	exists, err := s.ID(labelID).Get(&label)
-	if err != nil {
-		return &label, err
-	}
+	return GetLabelSimple(s, &Label{ID: labelID})
+}
 
-	if !exists {
-		return &Label{}, ErrLabelDoesNotExist{labelID}
+func GetLabelSimple(s *xorm.Session, l *Label) (*Label, error) {
+	exists, err := s.Get(l)
+	if err != nil {
+		return l, err
 	}
-	return &label, err
+	if !exists {
+		return &Label{}, ErrLabelDoesNotExist{l.ID}
+	}
+	return l, err
 }

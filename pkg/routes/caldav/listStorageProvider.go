@@ -26,8 +26,10 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	user2 "code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/web"
 	"github.com/samedi/caldav-go/data"
 	"github.com/samedi/caldav-go/errs"
+	"xorm.io/xorm"
 )
 
 // DavBasePath is the base url path
@@ -285,6 +287,13 @@ func (vcls *VikunjaCaldavListStorage) CreateResource(rpath, content string) (*da
 		return nil, err
 	}
 
+	vcls.task.ID = vTask.ID
+	err = persistLabels(s, vcls.user, vcls.task, vTask.Labels)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+
 	if err := s.Commit(); err != nil {
 		return nil, err
 	}
@@ -330,6 +339,12 @@ func (vcls *VikunjaCaldavListStorage) UpdateResource(rpath, content string) (*da
 		return nil, err
 	}
 
+	err = persistLabels(s, vcls.user, vcls.task, vTask.Labels)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+
 	if err := s.Commit(); err != nil {
 		return nil, err
 	}
@@ -369,6 +384,31 @@ func (vcls *VikunjaCaldavListStorage) DeleteResource(rpath string) error {
 		return s.Commit()
 	}
 
+	return nil
+}
+
+func persistLabels(s *xorm.Session, a web.Auth, task *models.Task, labels []*models.Label) (err error) {
+	// Find or create Labels by title
+	for _, label := range labels {
+		l, err := models.GetLabelSimple(s, &models.Label{Title: label.Title})
+		if err != nil {
+			if models.IsErrLabelDoesNotExist(err) {
+				err = label.Create(s, a)
+				if err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
+		} else {
+			*label = *l
+		}
+	}
+	// Insert LabelTask relation
+	err = task.UpdateTaskLabels(s, a, labels)
+	if err != nil {
+		return
+	}
 	return nil
 }
 

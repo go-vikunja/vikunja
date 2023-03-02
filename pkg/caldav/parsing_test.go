@@ -85,6 +85,39 @@ END:VCALENDAR`,
 				Updated:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
 			},
 		},
+		{
+			name: "With categories",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+DESCRIPTION:Lorem Ipsum
+CATEGORIES:cat1,cat2
+LAST-MODIFIED:00010101T000000
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:       "Todo #1",
+				UID:         "randomuid",
+				Description: "Lorem Ipsum",
+				Labels: []*models.Label{
+					{
+						Title: "cat1",
+					},
+					{
+						Title: "cat2",
+					},
+				},
+				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
