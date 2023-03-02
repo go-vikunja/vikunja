@@ -311,7 +311,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 	 * @param params Optional query parameters
 	 * @param page The page to get
 	 */
-	async getAll(model : Model = new AbstractModel({}), params = {}, page = 1) {
+	async getAll(model : Model = new AbstractModel({}), params = {}, page = 1): Promise<Model[]> {
 		if (this.paths.getAll === '') {
 			throw new Error('This model is not able to get data.')
 		}
@@ -331,10 +331,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 				return []
 			}
 
-			if (Array.isArray(response.data)) {
-				return response.data.map(entry => this.modelGetAllFactory(entry))
-			}
-			return this.modelGetAllFactory(response.data)
+			return response.data.map(entry => this.modelGetAllFactory(entry))
 		} finally {
 			cancel()
 		}
