@@ -16,7 +16,7 @@ interface IMigratorRecord {
 	[key: Migrator['id']]: Migrator
  }
 
-export const MIGRATORS: IMigratorRecord = {
+export const MIGRATORS = {
 	wunderlist: {
 		id: 'wunderlist',
 		name: 'Wunderlist',
@@ -49,4 +49,4 @@ export const MIGRATORS: IMigratorRecord = {
 		icon: tickTickIcon as string,
 		isFileMigrator: true,
 	},
-} as const
+} as const satisfies IMigratorRecord

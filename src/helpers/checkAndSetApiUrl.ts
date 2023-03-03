@@ -113,8 +113,8 @@ export const checkAndSetApiUrl = (url: string): Promise<string> => {
 			window.API_URL = oldUrl
 			throw e
 		})
-		.then(r => {
-			if (typeof r !== 'undefined') {
+		.then(success => {
+			if (success) {
 				localStorage.setItem('API_URL', window.API_URL)
 				return window.API_URL
 			}

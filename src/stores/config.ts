@@ -6,6 +6,7 @@ import {HTTPFactory} from '@/helpers/fetcher'
 import {objectToCamelCase} from '@/helpers/case'
 
 import type {IProvider} from '@/types/IProvider'
+import type {MIGRATORS} from '@/views/migrate/migrators'
 
 export interface ConfigState {
 	version: string,
@@ -14,10 +15,10 @@ export interface ConfigState {
 	linkSharingEnabled: boolean,
 	maxFileSize: string,
 	registrationEnabled: boolean,
-	availableMigrators: [],
+	availableMigrators: Array<keyof typeof MIGRATORS>,
 	taskAttachmentsEnabled: boolean,
 	totpEnabled: boolean,
-	enabledBackgroundProviders: [],
+	enabledBackgroundProviders: Array<'unsplash' | 'upload'>,
 	legal: {
 		imprintUrl: string,
 		privacyPolicyUrl: string,
@@ -78,11 +79,12 @@ export const useConfigStore = defineStore('config', () => {
 	function setConfig(config: ConfigState) {
 		Object.assign(state, config)
 	}
-	async function update() {
+	async function update(): Promise<boolean> {
 		const HTTP = HTTPFactory()
 		const {data: config} = await HTTP.get('info')
 		setConfig(objectToCamelCase(config))
-		return config
+		const success = !!config
+		return success
 	}
 
 	return {
