@@ -147,7 +147,7 @@ const listStore = useListStore()
 	top: var(--list-card-padding);
 	right: var(--list-card-padding);
 	transition: opacity $transition, color $transition;
-	opacity: 0;
+	opacity: 1;
 
 	&:hover {
 		color: var(--warning);
@@ -160,8 +160,14 @@ const listStore = useListStore()
 	}
 }
 
-.list-card:hover .favorite {
-	opacity: 1;
+@media(hover: hover) and (pointer: fine) {
+	.list-card .favorite {
+		opacity: 0;
+	}
+
+	.list-card:hover .favorite {
+		opacity: 1;
+	}
 }
 
 .background-fade-in {

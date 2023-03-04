@@ -9,13 +9,13 @@
 			@change="markAsDone"
 			v-model="task.done"
 		/>
-		
+
 		<ColorBubble
 			v-if="showListColor && listColor !== '' && currentList.id !== task.listId"
 			:color="listColor"
 			class="mr-1"
 		/>
-		
+
 		<div
 			:class="{ 'done': task.done, 'show-list': showList && taskList !== null}"
 			class="tasktext"
@@ -287,7 +287,7 @@ function hideDeferDueDatePopup(e) {
 	cursor: pointer;
 	border-radius: $radius;
 	border: 2px solid transparent;
-	
+
 	color: var(--text);
 	transition: color ease $transition-duration;
 
@@ -339,7 +339,7 @@ function hideDeferDueDatePopup(e) {
 	}
 
 	.favorite {
-		opacity: 0;
+		opacity: 1;
 		text-align: center;
 		width: 27px;
 		transition: opacity $transition, color $transition;
@@ -354,20 +354,25 @@ function hideDeferDueDatePopup(e) {
 		}
 	}
 
-	&:hover .favorite {
-		opacity: 1;
-	}
-
 	.handle {
-		opacity: 0;
+		opacity: 1;
 		transition: opacity $transition;
 		margin-right: .25rem;
 		cursor: grab;
 	}
 
-	&:hover .handle {
-		opacity: 1;
+	@media(hover: hover) and (pointer: fine) {
+		& .favorite,
+		& .handle {
+			opacity: 0;
+		}
+
+		&:hover .favorite,
+		&:hover .handle {
+			opacity: 1;
+		}
 	}
+
 
 	:deep(.fancycheckbox) {
 		height: 18px;

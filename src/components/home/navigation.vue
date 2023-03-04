@@ -221,7 +221,7 @@ function updateActiveLists(namespace: INamespace, activeLists: IList[]) {
 	// This is a bit hacky: since we do have to filter out the archived items from the list
 	// for vue draggable updating it is not as simple as replacing it.
 	// To work around this, we merge the active lists with the archived ones. Doing so breaks the order
-	// because now all archived lists are sorted after the active ones. This is fine because they are sorted 
+	// because now all archived lists are sorted after the active ones. This is fine because they are sorted
 	// later when showing them anyway, and it makes the merging happening here a lot easier.
 	const lists = [
 		...activeLists,
@@ -246,8 +246,8 @@ async function saveListPosition(e: SortableEvent) {
 	// If the list was dragged to the last position, Safari will report e.newIndex as the size of the listsActive
 	// array instead of using the position. Because the index is wrong in that case, dragging the list will fail.
 	// To work around that we're explicitly checking that case here and decrease the index.
-	const newIndex = e.newIndex === listsActive.length ? e.newIndex - 1 : e.newIndex 
-	
+	const newIndex = e.newIndex === listsActive.length ? e.newIndex - 1 : e.newIndex
+
 	const list = listsActive[newIndex]
 	const listBefore = listsActive[newIndex - 1] ?? null
 	const listAfter = listsActive[newIndex + 1] ?? null
@@ -342,13 +342,20 @@ $vikunja-nav-selected-width: 0.4rem;
 			}
 
 			.menu-list-dropdown {
-				opacity: 0;
+				opacity: 1;
 				transition: $transition;
 			}
 
-			&:hover .menu-list-dropdown {
-				opacity: 1;
+			@media(hover: hover) and (pointer: fine) {
+				.menu-list-dropdown {
+					opacity: 0;
+				}
+
+				&:hover .menu-list-dropdown {
+					opacity: 1;
+				}
 			}
+
 		}
 
 		.menu-item-icon {
@@ -418,7 +425,6 @@ $vikunja-nav-selected-width: 0.4rem;
 				opacity: 1;
 			}
 		}
-		
 		&:not(.dragging-disabled) .handle {
 			cursor: grab;
 		}
@@ -427,7 +433,7 @@ $vikunja-nav-selected-width: 0.4rem;
 
 .top-menu {
 	margin-top: math.div($navbar-padding, 2);
- 
+
 	.menu-list {
 		li {
 			font-weight: 600;
@@ -482,17 +488,24 @@ $vikunja-nav-selected-width: 0.4rem;
 	.favorite {
 		margin-left: .25rem;
 		transition: opacity $transition, color $transition;
-		opacity: 0;
+		opacity: 1;
 
-		&:hover,
 		&.is-favorite {
 			color: var(--warning);
+			opacity: 1;
 		}
 	}
 
-	.favorite.is-favorite,
-	.list-menu:hover .favorite {
-		opacity: 1;
+
+	@media(hover: hover) and (pointer: fine) {
+		.list-menu .favorite {
+			opacity: 0;
+		}
+
+		.list-menu:hover .favorite,
+		.favorite.is-favorite {
+			opacity: 1;
+		}
 	}
 
 	.list-menu-title {
