@@ -441,6 +441,8 @@ github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvW
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/kolaente/caldav-go v3.0.1-0.20190524174923-9e5cd1688227+incompatible h1:PkEEpmbrFXlMul8cOplR8nkcIM/NDbx+H6fq2+vaKAA=
 github.com/kolaente/caldav-go v3.0.1-0.20190524174923-9e5cd1688227+incompatible/go.mod h1:y1UhTNI4g0hVymJrI6yJ5/ohy09hNBeU8iJEZjgdDOw=
+github.com/kolaente/caldav-go v3.0.1-0.20190610114120-2a4eb8b5dcc9+incompatible h1:q7DbyV+sFjEoTuuUdRDNl2nlyfztkZgxVVCV7JhzIkY=
+github.com/kolaente/caldav-go v3.0.1-0.20190610114120-2a4eb8b5dcc9+incompatible/go.mod h1:y1UhTNI4g0hVymJrI6yJ5/ohy09hNBeU8iJEZjgdDOw=
 github.com/kolaente/fsnotify v1.4.10-0.20200411160148-1bc3c8ff4048/go.mod h1:dv6KyzAg9UuJWiE1pwkvvB2i0TvcQM6QhdsXLZ7K5KI=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
