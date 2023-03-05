@@ -1,5 +1,6 @@
 import {ref, watch, readonly} from 'vue'
 import {useLocalStorage, useMediaQuery} from '@vueuse/core'
+import {useRoute} from 'vue-router'
 
 const BULMA_MOBILE_BREAKPOINT = 768
 
@@ -15,7 +16,8 @@ export function useMenuActive() {
 	)
 
 	const menuActive = ref(false)
-	
+	const route = useRoute()
+
 	// set to prefered value
 	watch(isMobile, (current) => {
 		menuActive.value = current
@@ -30,6 +32,9 @@ export function useMenuActive() {
 			desktopPreference.value = current
 		}
 	})
+
+	// Hide the menu on mobile when the route changes (e.g. when the user taps a menu item)
+	watch(() => route.fullPath, () => isMobile.value && setMenuActive(false))
 
 	function setMenuActive(newMenuActive: boolean) {
 		menuActive.value = newMenuActive
