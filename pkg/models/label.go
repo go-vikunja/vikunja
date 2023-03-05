@@ -151,8 +151,8 @@ func (l *Label) ReadAll(s *xorm.Session, a web.Auth, search string, page int, pe
 		return nil, 0, 0, err
 	}
 
-	return getLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
-		Search:              search,
+	return GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
+		Search:              []string{search},
 		User:                u,
 		GetForUser:          u.ID,
 		Page:                page,

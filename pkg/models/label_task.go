@@ -129,9 +129,9 @@ func (lt *LabelTask) ReadAll(s *xorm.Session, a web.Auth, search string, page in
 		return nil, 0, 0, ErrNoRightToSeeTask{lt.TaskID, a.GetID()}
 	}
 
-	return getLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
+	return GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
 		User:    &user.User{ID: a.GetID()},
-		Search:  search,
+		Search:  []string{search},
 		Page:    page,
 		TaskIDs: []int64{lt.TaskID},
 	})
@@ -146,7 +146,7 @@ type labelWithTaskID struct {
 // LabelByTaskIDsOptions is a struct to not clutter the function with too many optional parameters.
 type LabelByTaskIDsOptions struct {
 	User                *user.User
-	Search              string
+	Search              []string
 	Page                int
 	PerPage             int
 	TaskIDs             []int64
@@ -155,9 +155,9 @@ type LabelByTaskIDsOptions struct {
 	GetForUser          int64
 }
 
-// Helper function to get all labels for a set of tasks
+// GetLabelsByTaskIDs is a helper function to get all labels for a set of tasks
 // Used when getting all labels for one task as well when getting all lables
-func getLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, resultCount int, totalEntries int64, err error) {
+func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, resultCount int, totalEntries int64, err error) {
 	// We still need the task ID when we want to get all labels for a task, but because of this, we get the same label
 	// multiple times when it is associated to more than one task.
 	// Because of this whole thing, we need this extra switch here to only group by Task IDs if needed.
@@ -188,8 +188,14 @@ func getLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*lab
 	}
 
 	ids := []int64{}
-	if opts.Search != "" {
-		vals := strings.Split(opts.Search, ",")
+
+	for _, search := range opts.Search {
+		search = strings.Trim(search, " ")
+		if search == "" {
+			continue
+		}
+
+		vals := strings.Split(search, ",")
 		for _, val := range vals {
 			v, err := strconv.ParseInt(val, 10, 64)
 			if err != nil {
@@ -203,7 +209,21 @@ func getLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*lab
 	if len(ids) > 0 {
 		cond = builder.And(cond, builder.In("labels.id", ids))
 	} else {
-		cond = builder.And(cond, db.ILIKE("labels.title", opts.Search))
+
+		if len(opts.Search) > 0 {
+
+			var searchcond builder.Cond
+			for _, search := range opts.Search {
+				search = strings.Trim(search, " ")
+				if search == "" {
+					continue
+				}
+
+				searchcond = builder.Or(searchcond, db.ILIKE("labels.title", search))
+			}
+
+			cond = builder.And(cond, searchcond)
+		}
 	}
 
 	limit, start := getLimitFromPageIndex(opts.Page, opts.PerPage)
@@ -254,7 +274,6 @@ func getLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*lab
 		Select("count(DISTINCT labels.id)").
 		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
 		Where(cond).
-		And("labels.title LIKE ?", "%"+opts.Search+"%").
 		Count(&Label{})
 	if err != nil {
 		return nil, 0, 0, err
@@ -381,7 +400,7 @@ func (ltb *LabelTaskBulk) Create(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return
 	}
-	labels, _, _, err := getLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
+	labels, _, _, err := GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
 		TaskIDs: []int64{ltb.TaskID},
 	})
 	if err != nil {

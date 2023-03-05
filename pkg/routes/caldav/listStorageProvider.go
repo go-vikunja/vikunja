@@ -388,28 +388,48 @@ func (vcls *VikunjaCaldavListStorage) DeleteResource(rpath string) error {
 }
 
 func persistLabels(s *xorm.Session, a web.Auth, task *models.Task, labels []*models.Label) (err error) {
-	// Find or create Labels by title
+
+	labelTitles := []string{}
+
 	for _, label := range labels {
-		l, err := models.GetLabelSimple(s, &models.Label{Title: label.Title})
+		labelTitles = append(labelTitles, label.Title)
+	}
+
+	u := &user2.User{
+		ID: a.GetID(),
+	}
+
+	// Using readall ensures the current user has the permission to see the labels they provided via caldav.
+	existingLabels, _, _, err := models.GetLabelsByTaskIDs(s, &models.LabelByTaskIDsOptions{
+		Search:              labelTitles,
+		User:                u,
+		GetForUser:          u.ID,
+		GetUnusedLabels:     true,
+		GroupByLabelIDsOnly: true,
+	})
+	if err != nil {
+		return err
+	}
+
+	labelMap := make(map[int64]*models.Label)
+	for _, l := range existingLabels {
+		labelMap[l.ID] = &l.Label
+	}
+
+	for _, label := range labels {
+		if l, has := labelMap[label.ID]; has {
+			label = l
+			continue
+		}
+
+		err = label.Create(s, a)
 		if err != nil {
-			if models.IsErrLabelDoesNotExist(err) {
-				err = label.Create(s, a)
-				if err != nil {
-					return err
-				}
-			} else {
-				return err
-			}
-		} else {
-			*label = *l
+			return err
 		}
 	}
-	// Insert LabelTask relation
-	err = task.UpdateTaskLabels(s, a, labels)
-	if err != nil {
-		return
-	}
-	return nil
+
+	// Create the label <-> task relation
+	return task.UpdateTaskLabels(s, a, labels)
 }
 
 // VikunjaListResourceAdapter holds the actual resource

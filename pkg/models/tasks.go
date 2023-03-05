@@ -612,7 +612,7 @@ func addAssigneesToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Ta
 
 // Get all labels for all the tasks
 func addLabelsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task) (err error) {
-	labels, _, _, err := getLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
+	labels, _, _, err := GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
 		TaskIDs: taskIDs,
 		Page:    -1,
 	})
