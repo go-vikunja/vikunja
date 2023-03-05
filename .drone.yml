@@ -133,7 +133,7 @@ steps:
       event: [ push, tag, pull_request ]
 
   - name: lint
-    image: golang:1.19-alpine
+    image: golang:1.20-alpine
     pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
