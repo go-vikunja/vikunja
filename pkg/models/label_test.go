@@ -70,7 +70,7 @@ func TestLabel_ReadAll(t *testing.T) {
 			args: args{
 				a: &user.User{ID: 1},
 			},
-			wantLs: []*labelWithTaskID{
+			wantLs: []*LabelWithTaskID{
 				{
 					Label: Label{
 						ID:          1,

@@ -78,7 +78,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 			args: args{
 				a: &user.User{ID: 1},
 			},
-			wantLabels: []*labelWithTaskID{
+			wantLabels: []*LabelWithTaskID{
 				{
 					TaskID: 1,
 					Label:  label,
@@ -116,7 +116,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 				a:      &user.User{ID: 1},
 				search: "VISIBLE",
 			},
-			wantLabels: []*labelWithTaskID{
+			wantLabels: []*LabelWithTaskID{
 				{
 					TaskID: 1,
 					Label:  label,

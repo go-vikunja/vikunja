@@ -418,7 +418,7 @@ func persistLabels(s *xorm.Session, a web.Auth, task *models.Task, labels []*mod
 
 	for _, label := range labels {
 		if l, has := labelMap[label.ID]; has {
-			label = l
+			*label = *l
 			continue
 		}
 

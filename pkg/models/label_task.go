@@ -137,8 +137,8 @@ func (lt *LabelTask) ReadAll(s *xorm.Session, a web.Auth, search string, page in
 	})
 }
 
-// Helper struct, contains the label + its task ID
-type labelWithTaskID struct {
+// LabelWithTaskID is a helper struct, contains the label + its task ID
+type LabelWithTaskID struct {
 	TaskID int64 `json:"-"`
 	Label  `xorm:"extends"`
 }
@@ -157,7 +157,7 @@ type LabelByTaskIDsOptions struct {
 
 // GetLabelsByTaskIDs is a helper function to get all labels for a set of tasks
 // Used when getting all labels for one task as well when getting all lables
-func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*labelWithTaskID, resultCount int, totalEntries int64, err error) {
+func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*LabelWithTaskID, resultCount int, totalEntries int64, err error) {
 	// We still need the task ID when we want to get all labels for a task, but because of this, we get the same label
 	// multiple times when it is associated to more than one task.
 	// Because of this whole thing, we need this extra switch here to only group by Task IDs if needed.
@@ -170,7 +170,7 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*lab
 	}
 
 	// Get all labels associated with these tasks
-	var labels []*labelWithTaskID
+	var labels []*LabelWithTaskID
 	cond := builder.And(builder.NotNull{"label_tasks.label_id"})
 	if len(opts.TaskIDs) > 0 && opts.GetForUser == 0 {
 		cond = builder.And(builder.In("label_tasks.task_id", opts.TaskIDs), cond)
@@ -208,22 +208,19 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*lab
 
 	if len(ids) > 0 {
 		cond = builder.And(cond, builder.In("labels.id", ids))
-	} else {
+	} else if len(opts.Search) > 0 {
 
-		if len(opts.Search) > 0 {
-
-			var searchcond builder.Cond
-			for _, search := range opts.Search {
-				search = strings.Trim(search, " ")
-				if search == "" {
-					continue
-				}
-
-				searchcond = builder.Or(searchcond, db.ILIKE("labels.title", search))
+		var searchcond builder.Cond
+		for _, search := range opts.Search {
+			search = strings.Trim(search, " ")
+			if search == "" {
+				continue
 			}
 
-			cond = builder.And(cond, searchcond)
+			searchcond = builder.Or(searchcond, db.ILIKE("labels.title", search))
 		}
+
+		cond = builder.And(cond, searchcond)
 	}
 
 	limit, start := getLimitFromPageIndex(opts.Page, opts.PerPage)
