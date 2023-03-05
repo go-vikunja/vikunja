@@ -20,9 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"math/rand"
 	"net/http"
-	"time"
 
 	"code.vikunja.io/web/handler"
 
@@ -66,7 +64,7 @@ type claims struct {
 }
 
 func init() {
-	rand.Seed(time.Now().UTC().UnixNano())
+	petname.NonDeterministicMode()
 }
 
 func (p *Provider) setOicdProvider() (err error) {
