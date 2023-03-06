@@ -67,7 +67,7 @@ specifiers:
   lodash.debounce: 4.0.8
   marked: 4.2.12
   netlify-cli: 13.0.1
-  pinia: 2.0.32
+  pinia: 2.0.33
   postcss: 8.4.21
   postcss-easing-gradients: 3.0.1
   postcss-easings: 3.0.1
@@ -131,7 +131,7 @@ dependencies:
   klona: 2.0.6
   lodash.debounce: 4.0.8
   marked: 4.2.12
-  pinia: 2.0.32_hmuptsblhheur2tugfgucj7gc4
+  pinia: 2.0.33_hmuptsblhheur2tugfgucj7gc4
   register-service-worker: 1.7.2
   snake-case: 3.0.4
   sortablejs: 1.15.0
@@ -11860,8 +11860,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /pinia/2.0.32_hmuptsblhheur2tugfgucj7gc4:
-    resolution: {integrity: sha512-8Tw4OrpCSJ028UUyp0gYPP/wyjigLoEceuO/x1G+FlHVf73337e5vLm4uDmrRIoBG1hvaed/eSHnrCFjOc4nkA==}
+  /pinia/2.0.33_hmuptsblhheur2tugfgucj7gc4:
+    resolution: {integrity: sha512-HOj1yVV2itw6rNIrR2f7+MirGNxhORjrULL8GWgRwXsGSvEqIQ+SE0MYt6cwtpegzCda3i+rVTZM+AM7CG+kRg==}
     peerDependencies:
       '@vue/composition-api': ^1.4.0
       typescript: '>=4.4.4'
