@@ -156,6 +156,8 @@ labelStore.loadAllLabels()
 	z-index: 10;
 	position: relative;
 	padding: 1.5rem 0.5rem 1rem;
+	// TODO refactor: DRY `transition-timing-function` with `./navigation.vue`.
+	transition: margin-left $transition-duration;
 
 	@media screen and (max-width: $tablet) {
 		margin-left: 0;
