@@ -28,7 +28,7 @@ export default defineConfig({
 		// 	light: './img/light.png',
 		// 	dark: './img/dark.png',
 		// },
-		// logoHref: 'https://acme.com',
+		logoHref: 'https://vikunja.io',
 		// favicon: './favicon.ico',
 	},
 })
