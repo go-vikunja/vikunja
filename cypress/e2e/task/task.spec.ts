@@ -96,7 +96,7 @@ describe('Task', () => {
 		TaskFactory.create(1)
 
 		cy.visit('/projects/1/list')
-		cy.get('.tasks .task .fancycheckbox label.check')
+		cy.get('.tasks .task .fancycheckbox')
 			.first()
 			.click()
 		cy.get('.global-notification')

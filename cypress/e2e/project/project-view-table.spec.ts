@@ -22,10 +22,10 @@ describe('Project View Table', () => {
 		cy.get('.project-table .filter-container .items .button')
 			.contains('Columns')
 			.click()
-		cy.get('.project-table .filter-container .card.columns-filter .card-content .fancycheckbox .check')
+		cy.get('.project-table .filter-container .card.columns-filter .card-content .fancycheckbox')
 			.contains('Priority')
 			.click()
-		cy.get('.project-table .filter-container .card.columns-filter .card-content .fancycheckbox .check')
+		cy.get('.project-table .filter-container .card.columns-filter .card-content .fancycheckbox')
 			.contains('Done')
 			.click()
 

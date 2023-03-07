@@ -22,7 +22,7 @@
 							<x-button @click="setDefaultFilters">Reset</x-button>
 						</div>
 					</div>
-					<fancycheckbox class="is-block" v-model="filters.showTasksWithoutDates">
+					<fancycheckbox is-block v-model="filters.showTasksWithoutDates">
 						{{ $t('project.gantt.showTasksWithoutDates') }}
 					</fancycheckbox>
 				</div>

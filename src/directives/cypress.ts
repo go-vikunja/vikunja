@@ -6,13 +6,11 @@ declare global {
 	}
 }
 
-const cypressDirective: Directive = {
-	mounted(el, {value}) {
-		if (
-			(window.Cypress || import.meta.env.DEV) &&
-			value
-		) {
-			el.setAttribute('data-cy', value)
+const cypressDirective = <Directive<HTMLElement,string>>{
+	mounted(el, {arg, value}) {
+		const testingId = arg || value
+		if ((window.Cypress || import.meta.env.DEV) && testingId) {
+			el.setAttribute('data-cy', testingId)
 		}
 	},
 	beforeUnmount(el) {

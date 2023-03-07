@@ -11,10 +11,10 @@
 					</x-button>
 				</template>
 			</datepicker-with-range>
-			<fancycheckbox @change="setShowNulls" class="mr-2">
+			<fancycheckbox @update:model-value="setShowNulls" class="mr-2">
 				{{ $t('task.show.noDates') }}
 			</fancycheckbox>
-			<fancycheckbox @change="setShowOverdue">
+			<fancycheckbox @update:model-value="setShowOverdue">
 				{{ $t('task.show.overdue') }}
 			</fancycheckbox>
 		</p>
