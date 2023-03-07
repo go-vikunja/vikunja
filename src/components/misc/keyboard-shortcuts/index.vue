@@ -1,6 +1,6 @@
 <template>
 	<modal @close="close()">
-		<card class="has-background-white has-no-shadow keyboard-shortcuts" :title="$t('keyboardShortcuts.title')">
+		<card class="has-background-white keyboard-shortcuts"  :shadow="false" :title="$t('keyboardShortcuts.title')">
 			<template v-for="(s, i) in shortcuts" :key="i">
 				<h3>{{ $t(s.title) }}</h3>
 
