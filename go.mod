@@ -60,7 +60,7 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/swaggo/swag v1.8.10
 	github.com/tkuchiki/go-timezone v0.2.2
-	github.com/ulule/limiter/v3 v3.11.0
+	github.com/ulule/limiter/v3 v3.11.1
 	github.com/vectordotdev/go-datemath v0.1.1-0.20220323213446-f3954d0b18ae
 	github.com/wneessen/go-mail v0.3.8
 	github.com/yuin/goldmark v1.5.4
