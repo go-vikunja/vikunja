@@ -1,7 +1,8 @@
 <template>
 	<card
 		class="has-no-shadow how-it-works-modal"
-		:title="$t('input.datemathHelp.title')">
+		:title="$t('input.datemathHelp.title')"
+	>
 		<p>
 			{{ $t('input.datemathHelp.intro') }}
 		</p>
@@ -27,11 +28,11 @@
 		</p>
 		<p>{{ $t('misc.forExample') }}</p>
 		<ul>
-			<li><code>+1d</code>{{ $t('input.datemathHelp.add1Day') }}</li>
-			<li><code>-1d</code>{{ $t('input.datemathHelp.minus1Day') }}</li>
-			<li><code>/d</code>{{ $t('input.datemathHelp.roundDay') }}</li>
+			<li><code>+1d</code> {{ $t('input.datemathHelp.add1Day') }}</li>
+			<li><code>-1d</code> {{ $t('input.datemathHelp.minus1Day') }}</li>
+			<li><code>/d</code> {{ $t('input.datemathHelp.roundDay') }}</li>
 		</ul>
-		<p>{{ $t('input.datemathHelp.supportedUnits') }}</p>
+		<h3>{{ $t('input.datemathHelp.supportedUnits') }}</h3>
 		<table class="table">
 			<tbody>
 			<tr>
@@ -69,7 +70,7 @@
 			</tbody>
 		</table>
 
-		<p>{{ $t('input.datemathHelp.someExamples') }}</p>
+		<h3>{{ $t('input.datemathHelp.someExamples') }}</h3>
 		<table class="table">
 			<tbody>
 			<tr>
@@ -100,7 +101,7 @@
 				<td><code>{{ exampleDate }}||+1M/d</code></td>
 				<td>
 					<i18n-t keypath="input.datemathHelp.examples.datePlusMonth" scope="global">
-						<code>{{ exampleDate }}</code>
+						<strong>{{ exampleDate }}</strong>
 					</i18n-t>
 				</td>
 			</tr>
@@ -110,13 +111,15 @@
 </template>
 
 <script lang="ts" setup>
-import {formatDate} from '@/helpers/time/formatDate'
+import {formatDateShort} from '@/helpers/time/formatDate'
+
 import BaseButton from '@/components/base/BaseButton.vue'
 
-const exampleDate = formatDate(new Date(), 'yyyy-MM-dd')
+const exampleDate = formatDateShort(new Date())
 </script>
 
 <style scoped lang="scss">
+// FIXME: Remove style overwrites
 .how-it-works-modal {
 	font-size: 1rem;
 }
