@@ -496,6 +496,7 @@ import {useKanbanStore} from '@/stores/kanban'
 import {useTitle} from '@/composables/useTitle'
 
 import {success} from '@/message'
+import type {Action as MessageAction} from '@/message'
 
 const props = defineProps({
 	taskId: {
@@ -728,7 +729,7 @@ async function saveTask(args?: {
 	Object.assign(task, newTask)
 	setActiveFields()
 
-	let actions = []
+	let actions: MessageAction[] = []
 	if (undoCallback !== null) {
 		actions = [{
 			title: t('task.undo'),

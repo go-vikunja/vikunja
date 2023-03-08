@@ -17,7 +17,12 @@ export function getErrorText(r): string {
 	return data?.message || r.message
 }
 
-export function error(e, actions = []) {
+export interface Action {
+	title: string,
+	callback: () => void,
+}
+
+export function error(e, actions: Action[] = []) {
 	notify({
 		type: 'error',
 		title: i18n.global.t('error.error'),
@@ -26,7 +31,7 @@ export function error(e, actions = []) {
 	})
 }
 
-export function success(e, actions = []) {
+export function success(e, actions: Action[] = []) {
 	notify({
 		type: 'success',
 		title: i18n.global.t('error.success'),
