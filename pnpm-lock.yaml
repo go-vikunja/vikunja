@@ -13,7 +13,7 @@ specifiers:
   '@histoire/plugin-screenshot': 0.15.8
   '@histoire/plugin-vue': 0.15.8
   '@infectoone/vue-ganttastic': 2.1.4
-  '@intlify/unplugin-vue-i18n': 0.9.0
+  '@intlify/unplugin-vue-i18n': 0.9.1
   '@kyvg/vue3-notification': 2.9.0
   '@rushstack/eslint-patch': 1.2.0
   '@sentry/tracing': 7.41.0
@@ -104,7 +104,7 @@ dependencies:
   '@fortawesome/vue-fontawesome': 3.0.3_g53m6cvcbg5vm4kvi53csl4bcu
   '@github/hotkey': 2.0.1
   '@infectoone/vue-ganttastic': 2.1.4_dayjs@1.11.7+vue@3.2.47
-  '@intlify/unplugin-vue-i18n': 0.9.0_xdctbar5z562jhmek53k5okcfq
+  '@intlify/unplugin-vue-i18n': 0.9.1_xdctbar5z562jhmek53k5okcfq
   '@kyvg/vue3-notification': 2.9.0_vue@3.2.47
   '@sentry/tracing': 7.41.0
   '@sentry/vue': 7.41.0_vue@3.2.47
@@ -2595,8 +2595,8 @@ packages:
     engines: {node: '>= 14'}
     dev: false
 
-  /@intlify/unplugin-vue-i18n/0.9.0_xdctbar5z562jhmek53k5okcfq:
-    resolution: {integrity: sha512-SacQ/dmj9XYZfnGzj22n+pl7IYRSBOMO/368nqHkAoRfgbakua/Zyi/CEVDUH0aHLzGCHKEvJtBifW76fV5lFA==}
+  /@intlify/unplugin-vue-i18n/0.9.1_xdctbar5z562jhmek53k5okcfq:
+    resolution: {integrity: sha512-7HLs5VjzK702Bqofrq9aA2yujcg8EJEtikspr0Zx6wXuI5rYq5VnejUWns+ZTdRjqfbd6DkFGNBooOLVfkezBQ==}
     engines: {node: '>= 14.16'}
     peerDependencies:
       petite-vue-i18n: '*'
@@ -4645,12 +4645,12 @@ packages:
       acorn: 7.4.1
     dev: false
 
-  /acorn-jsx/5.3.2_acorn@8.8.1:
+  /acorn-jsx/5.3.2_acorn@8.8.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
     peerDependencies:
       acorn: ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
-      acorn: 8.8.1
+      acorn: 8.8.2
     dev: true
 
   /acorn-walk/8.2.0:
@@ -7486,8 +7486,8 @@ packages:
     resolution: {integrity: sha512-DQmnRpLj7f6TgN/NYb0MTzJXL+vJF9h3pHy4JhCIs3zwcgez8xmGg3sXHcEO97BrmO2OSvCwMdfdlyl+E9KjOw==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dependencies:
-      acorn: 8.8.1
-      acorn-jsx: 5.3.2_acorn@8.8.1
+      acorn: 8.8.2
+      acorn-jsx: 5.3.2_acorn@8.8.2
       eslint-visitor-keys: 3.3.0
     dev: true
 
@@ -9826,7 +9826,7 @@ packages:
         optional: true
     dependencies:
       abab: 2.0.6
-      acorn: 8.8.1
+      acorn: 8.8.2
       acorn-globals: 7.0.1
       cssom: 0.5.0
       cssstyle: 2.3.0
@@ -10787,7 +10787,7 @@ packages:
   /mlly/1.1.0:
     resolution: {integrity: sha512-cwzBrBfwGC1gYJyfcy8TcZU1f+dbH/T+TuOhtYP2wLv/Fb51/uV7HJQfBPtEupZ2ORLRU1EKFS/QfS3eo9+kBQ==}
     dependencies:
-      acorn: 8.8.1
+      acorn: 8.8.2
       pathe: 1.1.0
       pkg-types: 1.0.1
       ufo: 1.1.1
@@ -13833,7 +13833,7 @@ packages:
   /strip-literal/1.0.0:
     resolution: {integrity: sha512-5o4LsH1lzBzO9UFH63AJ2ad2/S2AVx6NtjOcaz+VTT2h1RiRvbipW72z8M/lxEhcPHDBQwpDrnTF7sXy/7OwCQ==}
     dependencies:
-      acorn: 8.8.1
+      acorn: 8.8.2
     dev: true
 
   /strip-outer/1.0.1:
