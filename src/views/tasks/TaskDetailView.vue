@@ -731,7 +731,7 @@ async function saveTask(args?: {
 	let actions = []
 	if (undoCallback !== null) {
 		actions = [{
-			title: 'Undo',
+			title: t('task.undo'),
 			callback: undoCallback,
 		}]
 	}

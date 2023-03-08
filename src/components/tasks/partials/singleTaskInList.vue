@@ -242,7 +242,7 @@ async function markAsDone(checked: boolean) {
 				t('task.doneSuccess') :
 				t('task.undoneSuccess'),
 		}, [{
-			title: 'Undo',
+			title: t('task.undo'),
 			callback: () => undoDone(checked),
 		}])
 	}
