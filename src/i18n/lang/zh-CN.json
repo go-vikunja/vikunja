@@ -169,14 +169,6 @@
     "title": "列表名",
     "color": "列表颜色",
     "lists": "列表",
-    "list": {
-      "title": "列表",
-      "add": "新建",
-      "addPlaceholder": "添加新任务",
-      "empty": "此列表目前为空。",
-      "newTaskCta": "新建任务。",
-      "editTask": "编辑任务"
-    },
     "search": "输入以搜索列表…",
     "searchSelect": "点击或按下回车键以选择",
     "shared": "共享列表",
@@ -277,6 +269,14 @@
         "link": "链接",
         "delete": "删除"
       }
+    },
+    "list": {
+      "title": "列表",
+      "add": "新建",
+      "addPlaceholder": "添加新任务",
+      "empty": "此列表目前为空。",
+      "newTaskCta": "新建任务。",
+      "editTask": "编辑任务"
     },
     "gantt": {
       "title": "甘特图",
@@ -602,6 +602,7 @@
     "addReminder": "添加一个新的提醒…",
     "doneSuccess": "待办事项已标记为完成。",
     "undoneSuccess": "待办事项已标记为未完成。",
+    "undo": "Undo",
     "openDetail": "查看任务详细信息",
     "checklistTotal": "{checked} 项任务，共 {total} 项。",
     "checklistAllDone": "一共 {total} 项任务",

@@ -169,14 +169,6 @@
     "title": "Liste Titl",
     "color": "Farb",
     "lists": "Listene",
-    "list": {
-      "title": "Liste",
-      "add": "Hinzuefüege",
-      "addPlaceholder": "E neui Uufgab erstelle…",
-      "empty": "D'Liste isch momentan leer.",
-      "newTaskCta": "Neui Uufgab erstelle.",
-      "editTask": "Uufgab bearbeite"
-    },
     "search": "Schriib, um nachere Liste z'sueche…",
     "searchSelect": "Druck uf Enter um die Liste uuszwähle",
     "shared": "Teilti Liste",
@@ -277,6 +269,14 @@
         "link": "Link",
         "delete": "Chüble"
       }
+    },
+    "list": {
+      "title": "Liste",
+      "add": "Hinzuefüege",
+      "addPlaceholder": "E neui Uufgab erstelle…",
+      "empty": "D'Liste isch momentan leer.",
+      "newTaskCta": "Neui Uufgab erstelle.",
+      "editTask": "Uufgab bearbeite"
     },
     "gantt": {
       "title": "Gantt",
@@ -602,6 +602,7 @@
     "addReminder": "Neui Errinnerig erstelle…",
     "doneSuccess": "Die Uufgab isch erfolgriich als \"Fertig\" markiert wordä.",
     "undoneSuccess": "Die Uufgaab isch nüme als fertig markiert.",
+    "undo": "Undo",
     "openDetail": "Uufgab i de Detailaahsicht öffne",
     "checklistTotal": "{checked} von {total} Aufgaben",
     "checklistAllDone": "{total} Aufgaben",

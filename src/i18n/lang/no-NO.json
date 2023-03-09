@@ -169,14 +169,6 @@
     "title": "Listenavn",
     "color": "Farge",
     "lists": "Lister",
-    "list": {
-      "title": "Liste",
-      "add": "Legg til",
-      "addPlaceholder": "Legg til ny oppgave…",
-      "empty": "Denne listen er for øyeblikket tom.",
-      "newTaskCta": "Lage en ny oppgave.",
-      "editTask": "Endre oppgave"
-    },
     "search": "Skriv for å søke etter en liste…",
     "searchSelect": "Klikk eller trykk enter for å velge denne listen",
     "shared": "Delte lister",
@@ -277,6 +269,14 @@
         "link": "Link",
         "delete": "Slett"
       }
+    },
+    "list": {
+      "title": "Liste",
+      "add": "Legg til",
+      "addPlaceholder": "Legg til ny oppgave…",
+      "empty": "Denne listen er for øyeblikket tom.",
+      "newTaskCta": "Lage en ny oppgave.",
+      "editTask": "Endre oppgave"
     },
     "gantt": {
       "title": "Gantt",
@@ -602,6 +602,7 @@
     "addReminder": "Legg til en ny påminnelse…",
     "doneSuccess": "Oppgaven ble markert som ferdig.",
     "undoneSuccess": "Oppgaven ble fjernet som ferdig.",
+    "undo": "Undo",
     "openDetail": "Åpne detaljvisning",
     "checklistTotal": "{checked} av {total} oppgaver",
     "checklistAllDone": "{total} oppgaver",

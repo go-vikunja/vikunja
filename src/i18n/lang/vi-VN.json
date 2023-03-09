@@ -169,14 +169,6 @@
     "title": "Tên Danh sách",
     "color": "Màu sắc",
     "lists": "Danh sách",
-    "list": {
-      "title": "Danh sách",
-      "add": "Thêm",
-      "addPlaceholder": "Thêm việc cần làm…",
-      "empty": "Danh sách này đang trống trơn.",
-      "newTaskCta": "Thêm một công việc mới.",
-      "editTask": "Chỉnh sửa Công việc"
-    },
     "search": "Gõ để tìm kiếm danh sách…",
     "searchSelect": "Nhấp hoặc nhấn enter để chọn danh sách này",
     "shared": "Đang tham gia",
@@ -277,6 +269,14 @@
         "link": "Liên kết",
         "delete": "Xóa"
       }
+    },
+    "list": {
+      "title": "Danh sách",
+      "add": "Thêm",
+      "addPlaceholder": "Thêm việc cần làm…",
+      "empty": "Danh sách này đang trống trơn.",
+      "newTaskCta": "Thêm một công việc mới.",
+      "editTask": "Chỉnh sửa Công việc"
     },
     "gantt": {
       "title": "Biểu đồ Gantt",
@@ -602,6 +602,7 @@
     "addReminder": "Thêm lời nhắc mới…",
     "doneSuccess": "Công việc đã được đánh dấu Hoàn thành.",
     "undoneSuccess": "Công việc đã được bỏ đánh dấu Hoàn thành.",
+    "undo": "Undo",
     "openDetail": "Xem chi tiết công việc",
     "checklistTotal": "{checked} trong số {total} công việc",
     "checklistAllDone": "{total} coogn việc",

@@ -169,14 +169,6 @@
     "title": "Titolo della Lista",
     "color": "Colore",
     "lists": "Liste",
-    "list": {
-      "title": "Lista",
-      "add": "Aggiungi",
-      "addPlaceholder": "Aggiungi una nuova attività…",
-      "empty": "Questa lista è attualmente vuota.",
-      "newTaskCta": "Crea una nuova attività.",
-      "editTask": "Modifica Attività"
-    },
     "search": "Digita per cercare una lista…",
     "searchSelect": "Fare clic o premere invio per selezionare questa lista",
     "shared": "Liste Condivise",
@@ -277,6 +269,14 @@
         "link": "Link",
         "delete": "Elimina"
       }
+    },
+    "list": {
+      "title": "Lista",
+      "add": "Aggiungi",
+      "addPlaceholder": "Aggiungi una nuova attività…",
+      "empty": "Questa lista è attualmente vuota.",
+      "newTaskCta": "Crea una nuova attività.",
+      "editTask": "Modifica Attività"
     },
     "gantt": {
       "title": "Gantt",
@@ -602,6 +602,7 @@
     "addReminder": "Aggiungi un nuovo promemoria…",
     "doneSuccess": "Attività segnata come completata.",
     "undoneSuccess": "Attività segnata come non completata.",
+    "undo": "Undo",
     "openDetail": "Apri vista dettagli attività",
     "checklistTotal": "{checked} di {total} attività",
     "checklistAllDone": "{total} attività",

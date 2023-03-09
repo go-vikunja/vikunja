@@ -169,14 +169,6 @@
     "title": "Lijst titel",
     "color": "Kleur",
     "lists": "Lijsten",
-    "list": {
-      "title": "Lijst",
-      "add": "Toevoegen",
-      "addPlaceholder": "Voeg een nieuwe taak toe…",
-      "empty": "Deze lijst is momenteel leeg.",
-      "newTaskCta": "Creëer een nieuwe taak.",
-      "editTask": "Taak bewerken"
-    },
     "search": "Typ om naar een lijst te zoeken…",
     "searchSelect": "Klik of druk op enter om deze lijst te selecteren",
     "shared": "Gedeelde lijsten",
@@ -277,6 +269,14 @@
         "link": "Link",
         "delete": "Verwijderen"
       }
+    },
+    "list": {
+      "title": "Lijst",
+      "add": "Toevoegen",
+      "addPlaceholder": "Voeg een nieuwe taak toe…",
+      "empty": "Deze lijst is momenteel leeg.",
+      "newTaskCta": "Creëer een nieuwe taak.",
+      "editTask": "Taak bewerken"
     },
     "gantt": {
       "title": "Gantt",
@@ -602,6 +602,7 @@
     "addReminder": "Nieuwe herinnering toevoegen…",
     "doneSuccess": "The task was successfully marked as done.",
     "undoneSuccess": "The task was successfully un-marked as done.",
+    "undo": "Undo",
     "openDetail": "Open task detail view",
     "checklistTotal": "{checked} van {total} taken",
     "checklistAllDone": "{total} taken",

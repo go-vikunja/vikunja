@@ -169,14 +169,6 @@
     "title": "Tytuł listy",
     "color": "Kolor",
     "lists": "Listy",
-    "list": {
-      "title": "Lista",
-      "add": "Dodaj",
-      "addPlaceholder": "Dodaj nowe zadanie…",
-      "empty": "Ta lista jest obecnie pusta.",
-      "newTaskCta": "Utwórz nowe zadanie.",
-      "editTask": "Edytuj zadanie"
-    },
     "search": "Wpisz, aby wyszukać listę…",
     "searchSelect": "Kliknij lub naciśnij Enter, aby wybrać tę listę",
     "shared": "Współdzielone listy",
@@ -277,6 +269,14 @@
         "link": "Link",
         "delete": "Usuń"
       }
+    },
+    "list": {
+      "title": "Lista",
+      "add": "Dodaj",
+      "addPlaceholder": "Dodaj nowe zadanie…",
+      "empty": "Ta lista jest obecnie pusta.",
+      "newTaskCta": "Utwórz nowe zadanie.",
+      "editTask": "Edytuj zadanie"
     },
     "gantt": {
       "title": "Gantt",
@@ -602,6 +602,7 @@
     "addReminder": "Dodaj nowe przypomnienie…",
     "doneSuccess": "Zadanie zostało pomyślnie oznaczone jako ukończone.",
     "undoneSuccess": "Zadanie zostało pomyślnie otwarte ponownie.",
+    "undo": "Undo",
     "openDetail": "Otwórz szczegółowy widok zadania",
     "checklistTotal": "{checked} z {total} zadań",
     "checklistAllDone": "{total} zadań",
