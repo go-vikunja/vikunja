@@ -169,14 +169,6 @@
     "title": "Listetitel",
     "color": "Farve",
     "lists": "Lister",
-    "list": {
-      "title": "Liste",
-      "add": "Tilføj",
-      "addPlaceholder": "Tilføj en ny opgave…",
-      "empty": "Denne liste er i øjeblikket tom.",
-      "newTaskCta": "Opret en ny opgave.",
-      "editTask": "Rediger opgave"
-    },
     "search": "Skriv for at søge efter en liste…",
     "searchSelect": "Klik eller tryk på Enter for at vælge denne liste",
     "shared": "Delte Lister",
@@ -277,6 +269,14 @@
         "link": "Link",
         "delete": "Slet"
       }
+    },
+    "list": {
+      "title": "Liste",
+      "add": "Tilføj",
+      "addPlaceholder": "Tilføj en ny opgave…",
+      "empty": "Denne liste er i øjeblikket tom.",
+      "newTaskCta": "Opret en ny opgave.",
+      "editTask": "Rediger opgave"
     },
     "gantt": {
       "title": "Gantt",
@@ -602,6 +602,7 @@
     "addReminder": "Tilføj en ny påmindelse…",
     "doneSuccess": "Opgaven blev markeret som udført.",
     "undoneSuccess": "Opgaven fik fjernet sin udført-markering.",
+    "undo": "Undo",
     "openDetail": "Åbn detaljeret opgavevisning",
     "checklistTotal": "{checked} af {total} opgaver",
     "checklistAllDone": "{total} opgaver",

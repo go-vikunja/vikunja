@@ -169,14 +169,6 @@
     "title": "Název seznamu",
     "color": "Barva",
     "lists": "Seznamy",
-    "list": {
-      "title": "Seznam",
-      "add": "Přidat",
-      "addPlaceholder": "Přidat nový úkol…",
-      "empty": "Tento seznam je nyní prázdný.",
-      "newTaskCta": "Vytvořit nový úkol.",
-      "editTask": "Upravit úkol"
-    },
     "search": "Začni psát pro vyhledání seznamu…",
     "searchSelect": "Klikněte nebo stiskněte Enter pro výběr tohoto seznamu",
     "shared": "Sdílené seznamy",
@@ -277,6 +269,14 @@
         "link": "Odkaz",
         "delete": "Smazat"
       }
+    },
+    "list": {
+      "title": "Seznam",
+      "add": "Přidat",
+      "addPlaceholder": "Přidat nový úkol…",
+      "empty": "Tento seznam je nyní prázdný.",
+      "newTaskCta": "Vytvořit nový úkol.",
+      "editTask": "Upravit úkol"
     },
     "gantt": {
       "title": "Gantt",
@@ -602,6 +602,7 @@
     "addReminder": "Přidat novou připomínku…",
     "doneSuccess": "Úkol byl úspěšně označen jako dokončený.",
     "undoneSuccess": "Úkol byl úspěšně znovu otevřen.",
+    "undo": "Undo",
     "openDetail": "Otevřít zobrazení detailu úkolu",
     "checklistTotal": "{checked} z {total} úkolů",
     "checklistAllDone": "{total} úkolů",

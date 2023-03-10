@@ -169,14 +169,6 @@
     "title": "List Title",
     "color": "Color",
     "lists": "Lists",
-    "list": {
-      "title": "List",
-      "add": "Add",
-      "addPlaceholder": "Add a new task…",
-      "empty": "This list is currently empty.",
-      "newTaskCta": "Create a new task.",
-      "editTask": "Edit Task"
-    },
     "search": "Type to search for a list…",
     "searchSelect": "Click or press enter to select this list",
     "shared": "Shared Lists",
@@ -277,6 +269,14 @@
         "link": "Link",
         "delete": "Delete"
       }
+    },
+    "list": {
+      "title": "List",
+      "add": "Add",
+      "addPlaceholder": "Add a new task…",
+      "empty": "This list is currently empty.",
+      "newTaskCta": "Create a new task.",
+      "editTask": "Edit Task"
     },
     "gantt": {
       "title": "Gantt",
@@ -602,6 +602,7 @@
     "addReminder": "Add a new reminder…",
     "doneSuccess": "The task was successfully marked as done.",
     "undoneSuccess": "The task was successfully un-marked as done.",
+    "undo": "Undo",
     "openDetail": "Open task detail view",
     "checklistTotal": "{checked} of {total} tasks",
     "checklistAllDone": "{total} tasks",

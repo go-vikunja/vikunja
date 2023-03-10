@@ -169,14 +169,6 @@
     "title": "Listentitel",
     "color": "Farbe",
     "lists": "Listen",
-    "list": {
-      "title": "Liste",
-      "add": "Hinzufügen",
-      "addPlaceholder": "Neue Aufgabe hinzufügen …",
-      "empty": "Diese Liste ist derzeit leer.",
-      "newTaskCta": "Eine neue Aufgabe erstellen.",
-      "editTask": "Aufgabe bearbeiten"
-    },
     "search": "Tippe, um nach einer Liste zu suchen…",
     "searchSelect": "Klicke auf oder drücke die Eingabetaste, um diese Liste auszuwählen",
     "shared": "Geteilte Listen",
@@ -277,6 +269,14 @@
         "link": "Link",
         "delete": "Löschen"
       }
+    },
+    "list": {
+      "title": "Liste",
+      "add": "Hinzufügen",
+      "addPlaceholder": "Neue Aufgabe hinzufügen …",
+      "empty": "Diese Liste ist derzeit leer.",
+      "newTaskCta": "Eine neue Aufgabe erstellen.",
+      "editTask": "Aufgabe bearbeiten"
     },
     "gantt": {
       "title": "Gantt",
@@ -602,6 +602,7 @@
     "addReminder": "Eine Erinnerung hinzufügen…",
     "doneSuccess": "Die Aufgabe wurde erfolgreich als erledigt markiert.",
     "undoneSuccess": "Die Aufgabe wurde erfolgreich als nicht-erledigt markiert.",
+    "undo": "Rückgängig",
     "openDetail": "Aufgabe in der Detailansicht anzeigen",
     "checklistTotal": "{checked} von {total} Aufgaben",
     "checklistAllDone": "{total} Aufgaben",

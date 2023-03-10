@@ -602,7 +602,7 @@
     "addReminder": "Adicionar um novo lembrete…",
     "doneSuccess": "A tarefa foi marcada como concluída.",
     "undoneSuccess": "A tarefa foi desmarcada como concluída.",
-    "undo": "Undo",
+    "undo": "Desfazer",
     "openDetail": "Abrir vista detalhada da tarefa",
     "checklistTotal": "{checked} de {total} tarefas",
     "checklistAllDone": "{total} tarefas",
