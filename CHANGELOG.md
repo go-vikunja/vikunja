@@ -9,6 +9,267 @@ All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
 
+## [0.20.4] - 2023-03-10
+
+### Bug Fixes
+
+* *(base)* Use Build Time Base Path
+* *(docker)* Cross compilation with buildx
+* *(docker)* Default api url
+* *(docker)* Make sure the service worker and webmanifest are never cached
+* *(filter)* Validate title before creating or editing a filter
+* *(filter)* Don't allow marking a filter as favorite
+* *(i18n)* Load language files before doing anything else (#3218)
+* *(keyboard-shortcuts)* Use card prop
+* *(list)* Make sure favorite lists are not duplicated in the menu when renaming them
+* *(menu)* Don't show drag handle for not draggable menu items
+* *(postcss-preset-env)* Client side polyfills (#3051)
+* *(quick actions)* Don't throw an error message when selecting the last items with the arrow keys
+* *(quick actions)* Hide edges of last entry on hover
+* *(quick add magic)* Correctly parse "next {weekday}" on the beginning of the text
+* *(quick-actions)* Nothing happening on team click (#3186)
+* *(table view)* Correctly load sort order from local storage
+* *(task)* Allow clicking on the whole task to open the task detail view
+* *(tests)* Only look in src for tests
+* Make sure global error handler handles unrejected promises correctly ([4576da0](4576da0dd394ee68801b1dc424c9550896d63737))
+* Use Build Time Base Path (#2964) ([6572f75](6572f75e5d111f7f2dd06e8c2ad0e0d16091fca6))
+* Always show update popup on top ([7cbf0ac](7cbf0acac503c508a44e0491ae51e6d5749dfa04))
+* Button styles ([d40729c](d40729cbe70b760bcc64d56130a410b05ef9d3dc))
+* Stop revealing elements on hover if hover is not supported (#3191) ([7b6f76d](7b6f76d1b4698d0d6c6889aaab3f1cdad80469f8))
+* Sync sidebar transition with `<main>` (#3200) ([0f97ba6](0f97ba6ec904226ed91cd3ade8223e2959e9207a))
+* Collapse menu on mobile when path changes ([1b06112](1b06112db4ba5ad4144b5868dd04e954be1d77f7))
+* I18ze a string (#3210) ([b4dd23b](b4dd23b85d909f7e629e953f1d8543ccbf963a1c))
+
+
+### Dependencies
+
+* *(deps)* Update sentry-javascript monorepo to v7.33.0 (#3004)
+* *(deps)* Update dependency axios to v1.2.4 (#3005)
+* *(deps)* Update pnpm to v7.26.0 (#3002)
+* *(deps)* Update dependency cypress to v12.4.0 (#3006)
+* *(deps)* Update dependency @infectoone/vue-ganttastic to v2.1.4 (#3009)
+* *(deps)* Update dependency vitest to v0.28.2 (#3008)
+* *(deps)* Update dependency rollup to v3.11.0 (#3013)
+* *(deps)* Update dependency @vitejs/plugin-legacy to v3.0.2 (#3012)
+* *(deps)* Update dependency axios to v1.2.5
+* *(deps)* Update sentry-javascript monorepo to v7.34.0
+* *(deps)* Update pnpm to v7.26.1
+* *(deps)* Update dependency @vue/test-utils to v2.2.8
+* *(deps)* Update dependency vitest to v0.28.3 (#3019)
+* *(deps)* Update dependency cypress to v12.4.1
+* *(deps)* Update dependency rollup to v3.12.0
+* *(deps)* Update dependency esbuild to v0.17.5
+* *(deps)* Update dependency axios to v1.2.6
+* *(deps)* Update dependency @vueuse/core to v9.12.0
+* *(deps)* Update pnpm to v7.26.2
+* *(deps)* Update dependency eslint to v8.33.0
+* *(deps)* Update dependency netlify-cli to v12.10.0
+* *(deps)* Update dependency happy-dom to v8.2.0
+* *(deps)* Update dependency caniuse-lite to v1.0.30001449
+* *(deps)* Update dependency typescript to v4.9.5
+* *(deps)* Update typescript-eslint monorepo to v5.50.0
+* *(deps)* Update dependency axios to v1.3.0 (#3036)
+* *(deps)* Update dependency sass to v1.58.0
+* *(deps)* Update dependency cypress to v12.5.0
+* *(deps)* Update pnpm to v7.26.3
+* *(deps)* Update dependency rollup to v3.12.1
+* *(deps)* Update sentry-javascript monorepo to v7.35.0 (#3041)
+* *(deps)* Update dependency pinia to v2.0.30 (#3042)
+* *(deps)* Update dependency @vue/test-utils to v2.2.9
+* *(deps)* Update dependency axios to v1.3.1
+* *(deps)* Update dependency vue to v3.2.47
+* *(deps)* Update dependency vite to v4.1.0
+* *(deps)* Update dependency postcss-preset-env to v8 (#3000)
+* *(deps)* Update dependency @vitejs/plugin-legacy to v4
+* *(deps)* Update dependency @vitejs/plugin-legacy to v4.0.1
+* *(deps)* Update sentry-javascript monorepo to v7.36.0
+* *(deps)* Update dependency vite to v4.1.1
+* *(deps)* Update dependency cypress to v12.5.1
+* *(deps)* Update dependency @vue/test-utils to v2.2.10
+* *(deps)* Update dependency vitest to v0.28.4
+* *(deps)* Update dependency rollup to v3.13.0
+* *(deps)* Update dependency axios to v1.3.2
+* *(deps)* Update dependency rollup to v3.14.0
+* *(deps)* Update dependency @types/node to v18.11.19
+* *(deps)* Update dependency @histoire/plugin-screenshot to v0.13.0
+* *(deps)* Update dependency histoire to v0.13.0
+* *(deps)* Update caniuse-and-related
+* *(deps)* Update dependency @histoire/plugin-vue to v0.13.0
+* *(deps)* Update dependency happy-dom to v8.2.6
+* *(deps)* Update typescript-eslint monorepo to v5.51.0
+* *(deps)* Update dependency esbuild to v0.17.6
+* *(deps)* Update dependency @cypress/vue to v5.0.4
+* *(deps)* Update dependency @types/node to v18.13.0
+* *(deps)* Update dependency vite-plugin-pwa to v0.14.2
+* *(deps)* Update font awesome to v6.3.0
+* *(deps)* Update pnpm to v7.27.0
+* *(deps)* Update dependency @histoire/plugin-screenshot to v0.13.1
+* *(deps)* Update dependency @histoire/plugin-vue to v0.13.1
+* *(deps)* Update dependency vite-plugin-pwa to v0.14.3
+* *(deps)* Update dependency histoire to v0.13.1
+* *(deps)* Update dependency @histoire/plugin-screenshot to v0.13.2
+* *(deps)* Update dependency @histoire/plugin-vue to v0.13.2
+* *(deps)* Update dependency histoire to v0.13.2
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v0.8.2
+* *(deps)* Update sentry-javascript monorepo to v7.37.0
+* *(deps)* Update dependency esbuild to v0.17.7
+* *(deps)* Update dependency rollup to v3.15.0
+* *(deps)* Create a group for all histoire dependencies
+* *(deps)* Update dependency @histoire/plugin-vue to v0.14.0
+* *(deps)* Update dependency @histoire/plugin-screenshot to v0.14.0
+* *(deps)* Update dependency @histoire/plugin-vue to v0.14.0
+* *(deps)* Update dependency histoire to v0.14.0
+* *(deps)* Update sentry-javascript monorepo to v7.37.1
+* *(deps)* Update dependency histoire to v0.14.2
+* *(deps)* Include histoire main package in histoire renovate group
+* *(deps)* Histoire renovate group
+* *(deps)* Update dependency eslint to v8.34.0
+* *(deps)* Update histoire to v0.14.2
+* *(deps)* Update dependency vite-plugin-pwa to v0.14.4
+* *(deps)* Update dependency esbuild to v0.17.8
+* *(deps)* Update dependency netlify-cli to v12.12.0
+* *(deps)* Update dependency caniuse-lite to v1.0.30001451
+* *(deps)* Update dependency vite-plugin-inject-preload to v1.3.0
+* *(deps)* Update dependency vitest to v0.28.5
+* *(deps)* Update sentry-javascript monorepo to v7.37.2
+* *(deps)* Update dependency dompurify to v3 (#3107)
+* *(deps)* Update typescript-eslint monorepo to v5.52.0
+* *(deps)* Update dependency axios to v1.3.3
+* *(deps)* Update dependency start-server-and-test to v1.15.4 (#3109)
+* *(deps)* Update dependency sass to v1.58.1
+* *(deps)* Update dependency vue-flatpickr-component to v11.0.2 (#3112)
+* *(deps)* Update dependency @kyvg/vue3-notification to v2.9.0 (#3113)
+* *(deps)* Update histoire to v0.15.1
+* *(deps)* Update histoire to v0.15.3
+* *(deps)* Update dependency vue-tsc to v1.1.0
+* *(deps)* Pin node.js to 18.14.0
+* *(deps)* Update dependency cypress to v12.6.0 (#3115)
+* *(deps)* Update histoire to v0.15.4
+* *(deps)* Update dependency vue-tsc to v1.1.2
+* *(deps)* Update dependency sass to v1.58.2
+* *(deps)* Update dependency ufo to v1.1.0
+* *(deps)* Update node.js to v18.14.1
+* *(deps)* Update dependency vite to v4.1.2
+* *(deps)* Update sentry-javascript monorepo to v7.38.0
+* *(deps)* Update dependency rollup to v3.16.0
+* *(deps)* Update histoire to v0.15.7
+* *(deps)* Update dependency blurhash to v2.0.5
+* *(deps)* Update dependency @cypress/vite-dev-server to v5.0.3
+* *(deps)* Update dependency @types/node to v18.14.0
+* *(deps)* Update histoire to v0.15.8
+* *(deps)* Update dependency @vueuse/core to v9.13.0
+* *(deps)* Update dependency rollup to v3.17.0
+* *(deps)* Update pnpm to v7.27.1
+* *(deps)* Update dependency vue-tsc to v1.1.3
+* *(deps)* Update dependency sass to v1.58.3
+* *(deps)* Update dependency rollup to v3.17.1
+* *(deps)* Update dependency esbuild to v0.17.9
+* *(deps)* Update dependency vite to v4.1.3
+* *(deps)* Update dependency @vue/test-utils to v2.3.0
+* *(deps)* Update dependency caniuse-lite to v1.0.30001457
+* *(deps)* Update dependency codemirror to v5.65.12
+* *(deps)* Update dependency pinia to v2.0.31
+* *(deps)* Update dependency vue-tsc to v1.1.4
+* *(deps)* Update dependency rollup to v3.17.2
+* *(deps)* Update dependency happy-dom to v8.6.0
+* *(deps)* Update dependency netlify-cli to v12.13.2
+* *(deps)* Update dependency esbuild to v0.17.10
+* *(deps)* Update typescript-eslint monorepo to v5.53.0
+* *(deps)* Update dependency vue-tsc to v1.1.5
+* *(deps)* Update dependency pinia to v2.0.32
+* *(deps)* Update node.js to v18.14.2
+* *(deps)* Update dependency vite to v4.1.4
+* *(deps)* Update dependency vue-tsc to v1.1.7
+* *(deps)* Update dependency axios to v1.3.4
+* *(deps)* Update dependency @types/node to v18.14.1
+* *(deps)* Update dependency @cypress/vite-dev-server to v5.0.4
+* *(deps)* Update dependency cypress to v12.7.0
+* *(deps)* Update dependency vue-tsc to v1.2.0
+* *(deps)* Update dependency vitest to v0.29.1
+* *(deps)* Update pnpm to v7.28.0
+* *(deps)* Update dependency eslint to v8.35.0
+* *(deps)* Update dependency rollup to v3.17.3
+* *(deps)* Update dependency netlify-cli to v13
+* *(deps)* Update dependency happy-dom to v8.9.0
+* *(deps)* Update dependency caniuse-lite to v1.0.30001458
+* *(deps)* Update dependency start-server-and-test to v1.15.5
+* *(deps)* Update dependency start-server-and-test to v2
+* *(deps)* Update dependency @types/node to v18.14.2
+* *(deps)* Update sentry-javascript monorepo to v7.39.0
+* *(deps)* Update typescript-eslint monorepo to v5.54.0
+* *(deps)* Update dependency ufo to v1.1.1
+* *(deps)* Update dependency vitest to v0.29.2
+* *(deps)* Update dependency rollup to v3.18.0
+* *(deps)* Update dependency dompurify to v3.0.1
+* *(deps)* Update sentry-javascript monorepo to v7.40.0
+* *(deps)* Update dependency @types/node to v18.14.4
+* *(deps)* Update dependency @types/node to v18.14.5
+* *(deps)* Update dependency @types/node to v18.14.6
+* *(deps)* Update dependency esbuild to v0.17.11
+* *(deps)* Update dependency netlify-cli to v13.0.1
+* *(deps)* Update dependency caniuse-lite to v1.0.30001460
+* *(deps)* Update pnpm to v7.29.0
+* *(deps)* Update sentry-javascript monorepo to v7.41.0
+* *(deps)* Update typescript-eslint monorepo to v5.54.1
+* *(deps)* Update dependency pinia to v2.0.33
+* *(deps)* Update node.js to v18.15.0
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v0.9.0
+* *(deps)* Update pnpm to v7.29.1
+* *(deps)* Update dependency @vue/test-utils to v2.3.1
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v0.9.1
+* *(deps)* Update sentry-javascript monorepo to v7.42.0
+* *(deps)* Update dependency rollup to v3.19.0
+* *(deps)* Update dependency vite-plugin-inject-preload to v1.3.1
+* *(deps)* Update dependency @types/node to v18.15.0
+* *(deps)* Update dependency autoprefixer to v10.4.14
+* *(deps)* Update dependency rollup to v3.19.1
+
+### Features
+
+* *(config)* Support Setting Base Path in .env
+* Use v-show for navigation buttons ([7ed1a37](7ed1a37de53cb8c15994e9524a52080170db5950))
+* Unindent settings page (#2996) ([13a39be](13a39be3de4d0f7e0f6be9c20e0464e86b87c676))
+* Small content auth improvements (#2998) ([2be7847](2be784766f54810f8969e48291ce9181f2854a5b))
+* Move update from navigation to app ([3db5ea4](3db5ea45d768d10458eaab0f5ee9dad0df2996e4))
+* Improve naming and styles ([eaeddda](eaeddda4e468c2040862d18c9b2d37a1c0ba099e))
+* Use klona instead of lodash.clonedeep (#3073) ([7b96397](7b96397e3bfa43a393ca84439069290bc4c8a5c8))
+* Refactor to composable ([c502f9b](c502f9b840ee2d65193aa4ef29c7f260b49db0d2))
+* Header improvements ([e8db2c2](e8db2c2b458bcae592609d5a5bc3f1b333651b25))
+* Persistent menuActive state with Local Storage (#3011) ([e3dd4ef](e3dd4ef78ac818add138d0323bf65abe8a4caa29))
+* Fix calculation of token invalidation (#3077) ([d6b55c7](d6b55c757067413bbc34acd48af9fb553f36db8a))
+* Use renovate js-app as preset (#3087) ([97c8970](97c8970dd60b2ba1e894ca0039524c8f6a5cd5df))
+* Improve recommended vscode settings ([e0f0699](e0f06999beb0a9fb5da817323744307401e85e47))
+
+
+### Miscellaneous Tasks
+
+* *(refactor)* Improve `stores/config` types (#3190)
+* *(services)* Add examples for some functions
+* *(services)* Let `getAll`: always return `Model[]`
+* Move class name to top ([c6ed925](c6ed9254247efeb43e0763e095b145d6ec1965e1))
+* Simplify error handling for login and OpenId Auth ([e67088f](e67088fdb7bd3b24cea6ee37851ef45f1fb7bdad))
+* Simplify getting the error text from an exception ([9adf1ab](9adf1aba895a02f416148ddf8b6925689d6e2687))
+* Typo ([81a4f2d](81a4f2d9775716bc0056348664fc24185af040d4))
+* Update funding links ([7cb0cd2](7cb0cd293d6d277172eccf2558a62427bc86dfe6))
+* Update funding links ([b26ea45](b26ea45fe0d1d6f5f070ef42a5d68aa6db8e6b70))
+* Remove minimist dependency (not used anywhere) ([f697640](f697640636466e8f035c7d31597ee589379fa017))
+* Remove sponsor ([fa0e46a](fa0e46a3991ab423c9364b65439d9e8e5a28cb7b))
+* Histoire add logo link ([af4a039](af4a039502b29e9e7e21cf30d44715c7af056c15))
+* Improve `@/message` `action` type (#3209) ([0eb78e3](0eb78e32f994e7032725e38d564320a5a04cbf2a))
+* Remove an unused duplicate key ([9db3aed](9db3aedde9566fb94717e1dd66a21abdbda6e84a))
+
+
+### Other
+
+* *(other)* Add Ipv6 support to nginx (#100)
+* *(other)* Added ipv6 control script
+* *(other)* Disable listening on IPv6 ports when IPv6 is not supported (#102)
+* *(other)* Docker refactoring (#3018)
+* *(other)* Persist menuActive state in Local Storage
+* *(other)* Refactor to only used local storage value when on desktop viewport widths
+* *(other)* Solve for resize()
+* *(other)* [skip ci] Updated translations via Crowdin
+
 ## [0.20.3] - 2023-01-24
 
 ### Bug Fixes
