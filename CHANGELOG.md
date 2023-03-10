@@ -7,6 +7,179 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.20.3] - 2023-03-10
+
+### Bug Fixes
+
+* *(build)* Downgrade xgo to 1.19.2 so that builds work again
+* *(caldav)* Add Z suffix to dates make it clear dates are in UTC
+* *(caldav)* Use const for repeat modes
+* *(caldav)* Make sure only labels where the user has permission to use them are used
+* *(ci)* Pipeline dependency
+* *(ci)* Pin nfpm container version and binary location
+* *(ci)* Set release path to /source
+* *(ci)* Tagging logic for release docker images
+* *(ci)* Save generated .tags file to correctly tag docker releases
+* *(ci)* Sign drone config
+* *(docd)* Update Subdirectory Documentation (#1363)
+* *(docker)* Cross compilation with buildx
+* *(docker)* Re-add expose
+* *(docker)* Passing environment variables into the container
+* *(docker)* Make sure the vikunja user always exists and only modify the uid instead of recreating the user
+* *(docs)* Add docs about cli user delete
+* *(docs)* Old helm charts url (#1344)
+* *(docs)* Fix a few minor typos (#59)
+* *(docs)* Fix traefik v2 example (#65)
+* *(docs)* Clarify support for caldav reccurrence
+* *(drone)* Add type, fix pull, remove group (#1355)
+* *(dump)* Make sure null dates are properly set when restoring from a dump
+* *(export)* Ignore file size for export files
+* *(list)* Return lists for a namespace id even if that namespace is deleted
+* *(list)* When list background is removed, delete file from file system and DB (#1372)
+* *(mailer)* Forcessl config (#60)
+* *(migration)* Use Todoist v9 api to migrate tasks from them
+* *(migration)* Import TickTick data by column name instead of index (#1356)
+* *(migration)* Use the proper authorization method for Todoist's api, fix issues with importing deleted items
+* *(migration)* Remove unused todoist parameters
+* *(migration)* Todoist pagination now avoids too many loops
+* *(migration)* Don't try to add nonexistent tasks as related
+* *(migration)* Make sure trello checklists are properly imported
+* *(reminders)* Overdue tasks join condition
+* *(reminders)* Make sure an overdue reminder is sent when there is only one overdue task
+* *(reminders)* Prevent duplicate reminders when updating task details
+* *(restore)* Check if we're really dealing with a string
+* *(task)* Make sure the task's last updated timestamp is always updated when releated entities changed
+* *(task)* Correctly load tasks by id and uuid in caldav
+* *(tasks)* Don't include undone overdue tasks from archived lists or namespaces in notification mails
+* *(tasks)* Don't reset the kanban bucket when updating a task and not providing one
+* *(tasks)* Don't set a repeating task done when moving it do the done bucket
+* *(tasks)* Recalculate position of all tasks in a list or bucket when it would hit 0
+* *(tasks)* Make sure tasks are sorted by position before recalculating them
+* *(user)* Make reset the user's name to empty actually work
+* Swagger docs ([96b5e93](96b5e933796275e87f3007e31db0623688dbdb3a))
+* Restore notifications table from dump when it already had the correct format ([8c67be5](8c67be558f697ab52740c51ab453092c0f8f7c14))
+* Make sure labels are always exported as caldav (#1412) ([1afc72e](1afc72e1906c02b093bb6d9748235b93ab0eb181))
+* Lint ([491a142](491a1423788b76f236d070071cb46f5b2f5d3fd0))
+* Lint ([20a5994](20a5994b1717e7751750f14a9a164825a8e6ade6))
+* Lint ([077baba](077baba2eaff2f10b97384f07375ece7f51ec0fa))
+* Lint ([9f14466](9f14466dfa8660362a4e51b3c8c6810bf8d66a22))
+
+
+### Dependencies
+
+* *(deps)* Update module github.com/yuin/goldmark to v1.5.3 (#1317)
+* *(deps)* Update module golang.org/x/crypto to v0.2.0 (#1315)
+* *(deps)* Update module github.com/spf13/afero to v1.9.3 (#1320)
+* *(deps)* Update module golang.org/x/crypto to v0.3.0 (#1321)
+* *(deps)* Update github.com/arran4/golang-ical digest to a677353 (#1323)
+* *(deps)* Update module github.com/wneessen/go-mail to v0.3.5 (#1325)
+* *(deps)* Update github.com/arran4/golang-ical digest to 1093469 (#1326)
+* *(deps)* Update module github.com/golang-jwt/jwt/v4 to v4.4.3 (#1328)
+* *(deps)* Update module github.com/go-sql-driver/mysql to v1.7.0 (#1332)
+* *(deps)* Update module golang.org/x/sys to v0.3.0 (#1333)
+* *(deps)* Update module golang.org/x/term to v0.3.0 (#1336)
+* *(deps)* Update module golang.org/x/image to v0.2.0 (#1335)
+* *(deps)* Update module golang.org/x/oauth2 to v0.2.0 (#1316)
+* *(deps)* Update module golang.org/x/oauth2 to v0.3.0 (#1337)
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.16.0 (#1338)
+* *(deps)* Update module golang.org/x/crypto to v0.4.0 (#1339)
+* *(deps)* Update module github.com/pquerna/otp to v1.4.0 (#1341)
+* *(deps)* Update module github.com/swaggo/swag to v1.8.9 (#1327)
+* *(deps)* Update module github.com/wneessen/go-mail to v0.3.6 (#1342)
+* *(deps)* Update module github.com/labstack/echo/v4 to v4.10.0 (#1343)
+* *(deps)* Update module github.com/wneessen/go-mail to v0.3.7 (#1348)
+* *(deps)* Update module github.com/coreos/go-oidc/v3 to v3.5.0 (#1349)
+* *(deps)* Update module golang.org/x/sys to v0.4.0 (#1351)
+* *(deps)* Update module golang.org/x/image to v0.3.0 (#1350)
+* *(deps)* Update module golang.org/x/term to v0.4.0 (#1352)
+* *(deps)* Update module golang.org/x/crypto to v0.5.0 (#1353)
+* *(deps)* Update goreleaser/nfpm docker tag to v2.23.0 (#1347)
+* *(deps)* Update module github.com/wneessen/go-mail to v0.3.8 (#1357)
+* *(deps)* Update module src.techknowlogick.com/xgo to v1.6.0+1.19.5 (#1358)
+* *(deps)* Update klakegg/hugo docker tag to v0.107.0 (#1272)
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.17.0 (#1361)
+* *(deps)* Update module src.techknowlogick.com/xgo to v1.7.0+1.19.5 (#1364)
+* *(deps)* Update module github.com/spf13/viper to v1.15.0 (#1365)
+* *(deps)* Update module github.com/labstack/echo-jwt/v4 to v4.0.1 (#1369)
+* *(deps)* Update module golang.org/x/oauth2 to v0.4.0 (#1354)
+* *(deps)* Update github.com/gocarina/gocsv digest to 763e25b (#1370)
+* *(deps)* Update goreleaser/nfpm docker tag to v2.24.0 (#1367)
+* *(deps)* Update module github.com/swaggo/swag to v1.8.10 (#1371)
+* *(deps)* Update module github.com/go-redis/redis/v8 to v9 (#1377)
+* *(deps)* Update module github.com/labstack/echo-jwt/v4 to v4.1.0
+* *(deps)* Update module github.com/ulule/limiter/v3 to v3.11.0 (#1378)
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.0.2
+* *(deps)* Update goreleaser/nfpm docker tag to v2.25.0 (#1382)
+* *(deps)* Upgrade golangci-lint to 1.51.0
+* *(deps)* Update module github.com/yuin/goldmark to v1.5.4
+* *(deps)* Update module go to 1.20
+* *(deps)* Update xgo to 1.20
+* *(deps)* Update module golang.org/x/sys to v0.5.0
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.18.0 (#1386)
+* *(deps)* Update module golang.org/x/term to v0.5.0
+* *(deps)* Update module golang.org/x/crypto to v0.6.0
+* *(deps)* Update module golang.org/x/oauth2 to v0.5.0
+* *(deps)* Update module golang.org/x/image to v0.4.0
+* *(deps)* Update goreleaser/nfpm docker tag to v2.26.0 (#1394)
+* *(deps)* Update github.com/arran4/golang-ical digest to 07c6aad
+* *(deps)* Update module github.com/threedotslabs/watermill to v1.2.0 (#1384)
+* *(deps)* Update module golang.org/x/image to v0.5.0 (#1396)
+* *(deps)* Update golang.org/x/net to 0.7.0
+* *(deps)* Update module github.com/golang-jwt/jwt/v4 to v4.5.0 (#1399)
+* *(deps)* Update github.com/gocarina/gocsv digest to bcce7dc
+* *(deps)* Update golangci-lint to 1.51.2
+* *(deps)* Update module github.com/labstack/echo/v4 to v4.10.1
+* *(deps)* Update github.com/gocarina/gocsv digest to bee85ea
+* *(deps)* Update module github.com/labstack/echo/v4 to v4.10.2
+* *(deps)* Update module github.com/spf13/afero to v1.9.4
+* *(deps)* Update github.com/gocarina/gocsv digest to dc4ee9d
+* *(deps)* Update module github.com/stretchr/testify to v1.8.2
+* *(deps)* Update github.com/gocarina/gocsv digest to 70c27cb
+* *(deps)* Update module golang.org/x/sys to v0.6.0
+* *(deps)* Update module golang.org/x/term to v0.6.0
+* *(deps)* Update module golang.org/x/crypto to v0.7.0
+* *(deps)* Update module golang.org/x/oauth2 to v0.6.0
+* *(deps)* Update module golang.org/x/image to v0.6.0
+* *(deps)* Update github.com/kolaente/caldav-go digest to 2a4eb8b
+* *(deps)* Remove fsnotify replacement
+* *(deps)* Update github.com/vectordotdev/go-datemath digest to f3954d0
+* *(deps)* Update src.techknowlogick.com/xgo digest to 44f7e66
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.19.0
+* *(deps)* Update module github.com/spf13/afero to v1.9.5
+* *(deps)* Update module github.com/ulule/limiter/v3 to v3.11.1
+* *(deps)* Update src.techknowlogick.com/xgo digest to b607086
+* *(deps)* Update module github.com/gabriel-vasile/mimetype to v1.4.2
+
+### Features
+
+* *(background)* Add Last-Modified header (#1376)
+* *(caldav)* Add support for repeating tasks
+* *(caldav)* Export Labels to Caldav (#1409)
+* *(caldav)* Import caldav categories as Labels (#1413)
+* *(migrators)* Remove wunderlist (#1346)
+* *(release)* Use compressed binaries for package releases
+* Use docker buildx to build multiarch images ([a6e214b](a6e214b654f28836cc8b93683dbfd5999282d11c))
+* Provide logout url for openid providers (#1340) ([a79b1de](a79b1de2d0247a424f49cecaa267d30e8fa70a83))
+* Refactored Dockerfile (#1375) ([522bf7d](522bf7d2fc3cc1704f58299b6435baccc7add533))
+* Disable events log by default ([da9d25c](da9d25cf727c56acd7394b4b74e17a2959ee5242))
+  - **BREAKING**: events log level is now off unless explicitly enabled
+
+
+### Miscellaneous Tasks
+
+* *(docs)* Adjust docs about frontend docker container
+* *(docs)* Remove sponsors
+* *(task)* Add test to check if a task's reminders are duplicated
+* Remove custom gitea bug template in favor of githubs ([4fa45bf](4fa45bf9dcbaa8a41a53fc2305c4c2c1aa15691c))
+* 0.20.2 release preperations ([d19fc80](d19fc80b8be08673136d84e10187cadb293822bf))
+* Update funding links ([aa25ccd](aa25ccdc917684583a9bff4b7cb272004386f0fa))
+
+
+### Other
+
+* *(other)* Added Google & Google Workspace to OpenId examples (#1319)
+
+
 ## [0.20.2] - 2023-01-24
 
 ### Bug Fixes
