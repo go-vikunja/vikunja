@@ -73,7 +73,7 @@ specifiers:
   postcss-easings: 3.0.1
   postcss-preset-env: 8.0.1
   register-service-worker: 1.7.2
-  rollup: 3.19.0
+  rollup: 3.19.1
   rollup-plugin-visualizer: 5.9.0
   sass: 1.58.3
   snake-case: 3.0.4
@@ -104,7 +104,7 @@ dependencies:
   '@fortawesome/vue-fontawesome': 3.0.3_g53m6cvcbg5vm4kvi53csl4bcu
   '@github/hotkey': 2.0.1
   '@infectoone/vue-ganttastic': 2.1.4_dayjs@1.11.7+vue@3.2.47
-  '@intlify/unplugin-vue-i18n': 0.9.1_42j6amms34itpzylyjrrhdu4rq
+  '@intlify/unplugin-vue-i18n': 0.9.1_icxg3waybfrgz27zpg2dz2fmwi
   '@kyvg/vue3-notification': 2.9.0_vue@3.2.47
   '@sentry/tracing': 7.42.0
   '@sentry/vue': 7.42.0_vue@3.2.47
@@ -182,8 +182,8 @@ devDependencies:
   postcss-easing-gradients: 3.0.1
   postcss-easings: 3.0.1_postcss@8.4.21
   postcss-preset-env: 8.0.1_postcss@8.4.21
-  rollup: 3.19.0
-  rollup-plugin-visualizer: 5.9.0_rollup@3.19.0
+  rollup: 3.19.1
+  rollup-plugin-visualizer: 5.9.0_rollup@3.19.1
   sass: 1.58.3
   start-server-and-test: 2.0.0
   typescript: 4.9.5
@@ -2595,7 +2595,7 @@ packages:
     engines: {node: '>= 14'}
     dev: false
 
-  /@intlify/unplugin-vue-i18n/0.9.1_42j6amms34itpzylyjrrhdu4rq:
+  /@intlify/unplugin-vue-i18n/0.9.1_icxg3waybfrgz27zpg2dz2fmwi:
     resolution: {integrity: sha512-7HLs5VjzK702Bqofrq9aA2yujcg8EJEtikspr0Zx6wXuI5rYq5VnejUWns+ZTdRjqfbd6DkFGNBooOLVfkezBQ==}
     engines: {node: '>= 14.16'}
     peerDependencies:
@@ -2612,7 +2612,7 @@ packages:
     dependencies:
       '@intlify/bundle-utils': 5.0.1_vue-i18n@9.2.2
       '@intlify/shared': 9.3.0-beta.16
-      '@rollup/pluginutils': 5.0.2_rollup@3.19.0
+      '@rollup/pluginutils': 5.0.2_rollup@3.19.1
       '@vue/compiler-sfc': 3.2.47
       debug: 4.3.4
       fast-glob: 3.2.12
@@ -3597,7 +3597,7 @@ packages:
       rollup: 2.79.1
     dev: true
 
-  /@rollup/plugin-replace/5.0.1_rollup@3.19.0:
+  /@rollup/plugin-replace/5.0.1_rollup@3.19.1:
     resolution: {integrity: sha512-Z3MfsJ4CK17BfGrZgvrcp/l6WXoKb0kokULO+zt/7bmcyayokDaQ2K3eDJcRLCTAlp5FPI4/gz9MHAsosz4Rag==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -3606,9 +3606,9 @@ packages:
       rollup:
         optional: true
     dependencies:
-      '@rollup/pluginutils': 5.0.2_rollup@3.19.0
+      '@rollup/pluginutils': 5.0.2_rollup@3.19.1
       magic-string: 0.26.7
-      rollup: 3.19.0
+      rollup: 3.19.1
     dev: true
 
   /@rollup/pluginutils/3.1.0_rollup@2.79.1:
@@ -3623,7 +3623,7 @@ packages:
       rollup: 2.79.1
     dev: true
 
-  /@rollup/pluginutils/5.0.2_rollup@3.19.0:
+  /@rollup/pluginutils/5.0.2_rollup@3.19.1:
     resolution: {integrity: sha512-pTd9rIsP92h+B6wWwFbW8RkZv4hiR/xKsqre4SIuAOaOEQRxi0lqLke9k2/7WegC85GgUs9pjmOjCUi3In4vwA==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -3635,7 +3635,7 @@ packages:
       '@types/estree': 1.0.0
       estree-walker: 2.0.2
       picomatch: 2.3.1
-      rollup: 3.19.0
+      rollup: 3.19.1
 
   /@rushstack/eslint-patch/1.2.0:
     resolution: {integrity: sha512-sXo/qW2/pAcmT43VoRKOJbDOfV3cYpq3szSVfIThQXNt+E4DfKj361vaAt3c88U5tPUxzEswam7GW48PJqtKAg==}
@@ -13040,7 +13040,7 @@ packages:
       - acorn
     dev: true
 
-  /rollup-plugin-visualizer/5.9.0_rollup@3.19.0:
+  /rollup-plugin-visualizer/5.9.0_rollup@3.19.1:
     resolution: {integrity: sha512-bbDOv47+Bw4C/cgs0czZqfm8L82xOZssk4ayZjG40y9zbXclNk7YikrZTDao6p7+HDiGxrN0b65SgZiVm9k1Cg==}
     engines: {node: '>=14'}
     hasBin: true
@@ -13052,7 +13052,7 @@ packages:
     dependencies:
       open: 8.4.0
       picomatch: 2.3.1
-      rollup: 3.19.0
+      rollup: 3.19.1
       source-map: 0.7.4
       yargs: 17.6.0
     dev: true
@@ -13071,8 +13071,8 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /rollup/3.19.0:
-    resolution: {integrity: sha512-xZzJZlH9Ca6cosfdNGPwl2z7Pby8dTi9TrYLPeg6/j7aUoDOhBd706tCUFvbiBj45h/cS7z/a4gS8xd5Yg0jBw==}
+  /rollup/3.19.1:
+    resolution: {integrity: sha512-lAbrdN7neYCg/8WaoWn/ckzCtz+jr70GFfYdlf50OF7387HTg+wiuiqJRFYawwSPpqfqDNYqK7smY/ks2iAudg==}
     engines: {node: '>=14.18.0', npm: '>=8.0.0'}
     hasBin: true
     optionalDependencies:
@@ -14765,11 +14765,11 @@ packages:
       workbox-build: ^6.5.4
       workbox-window: ^6.5.4
     dependencies:
-      '@rollup/plugin-replace': 5.0.1_rollup@3.19.0
+      '@rollup/plugin-replace': 5.0.1_rollup@3.19.1
       debug: 4.3.4
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
-      rollup: 3.19.0
+      rollup: 3.19.1
       vite: 4.1.4_xz33gco2ca66fgt2nwhu3qmcme
       workbox-build: 6.5.4_acorn@7.4.1
       workbox-window: 6.5.4
@@ -14813,7 +14813,7 @@ packages:
       esbuild: 0.16.17
       postcss: 8.4.21
       resolve: 1.22.1
-      rollup: 3.19.0
+      rollup: 3.19.1
       sass: 1.58.3
       terser: 5.10.0_acorn@7.4.1
     optionalDependencies:
