@@ -37,7 +37,7 @@ specifiers:
   '@vue/test-utils': 2.3.1
   '@vue/tsconfig': 0.1.3
   '@vueuse/core': 9.13.0
-  autoprefixer: 10.4.13
+  autoprefixer: 10.4.14
   axios: 1.3.4
   blurhash: 2.0.5
   browserslist: 4.21.5
@@ -167,7 +167,7 @@ devDependencies:
   '@vue/eslint-config-typescript': 11.0.2_mwzft5yawf6e3vmm364a6avhx4
   '@vue/test-utils': 2.3.1_vue@3.2.47
   '@vue/tsconfig': 0.1.3_@types+node@18.15.0
-  autoprefixer: 10.4.13_postcss@8.4.21
+  autoprefixer: 10.4.14_postcss@8.4.21
   browserslist: 4.21.5
   caniuse-lite: 1.0.30001460
   csstype: 3.1.1
@@ -4037,7 +4037,7 @@ packages:
   /@types/postcss-preset-env/7.7.0:
     resolution: {integrity: sha512-biD8MwSiZo1Nztn1cIBPMcKNKzgFyU05AB96HIF9y3G4f9vdx2O60DHCSpWXChTp6mOEGu15fqIw2DetVVjghw==}
     dependencies:
-      autoprefixer: 10.4.13_postcss@8.4.21
+      autoprefixer: 10.4.14_postcss@8.4.21
       postcss: 8.4.21
     dev: true
 
@@ -5069,15 +5069,15 @@ packages:
     engines: {node: '>=8.0.0'}
     dev: true
 
-  /autoprefixer/10.4.13_postcss@8.4.21:
-    resolution: {integrity: sha512-49vKpMqcZYsJjwotvt4+h/BCjJVnhGwcLpDt5xkcaOG3eLrG/HUYLagrihYsQ+qrIBgIzX1Rw7a6L8I/ZA1Atg==}
+  /autoprefixer/10.4.14_postcss@8.4.21:
+    resolution: {integrity: sha512-FQzyfOsTlwVzjHxKEqRIAdJx9niO6VCBCoEwax/VLSoQF29ggECcPuBqUMZ+u8jCZOPSy8b8/8KnuFbp0SaFZQ==}
     engines: {node: ^10 || ^12 || >=14}
     hasBin: true
     peerDependencies:
       postcss: ^8.1.0
     dependencies:
       browserslist: 4.21.5
-      caniuse-lite: 1.0.30001460
+      caniuse-lite: 1.0.30001464
       fraction.js: 4.2.0
       normalize-range: 0.1.2
       picocolors: 1.0.0
@@ -5594,6 +5594,10 @@ packages:
 
   /caniuse-lite/1.0.30001460:
     resolution: {integrity: sha512-Bud7abqjvEjipUkpLs4D7gR0l8hBYBHoa+tGtKJHvT2AYzLp1z7EmVkUT4ERpVUfca8S2HGIVs883D8pUH1ZzQ==}
+    dev: true
+
+  /caniuse-lite/1.0.30001464:
+    resolution: {integrity: sha512-oww27MtUmusatpRpCGSOneQk2/l5czXANDSFvsc7VuOQ86s3ANhZetpwXNf1zY/zdfP63Xvjz325DAdAoES13g==}
     dev: true
 
   /capital-case/1.0.4:
@@ -12247,7 +12251,7 @@ packages:
       '@csstools/postcss-text-decoration-shorthand': 2.1.0_postcss@8.4.21
       '@csstools/postcss-trigonometric-functions': 2.0.1_postcss@8.4.21
       '@csstools/postcss-unset-value': 2.0.1_postcss@8.4.21
-      autoprefixer: 10.4.13_postcss@8.4.21
+      autoprefixer: 10.4.14_postcss@8.4.21
       browserslist: 4.21.5
       css-blank-pseudo: 5.0.1_postcss@8.4.21
       css-has-pseudo: 5.0.1_postcss@8.4.21
