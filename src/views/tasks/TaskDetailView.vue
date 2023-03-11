@@ -160,7 +160,7 @@
 								<reminders
 									:disabled="!canWrite"
 									:ref="e => setFieldRef('reminders', e)"
-									v-model="task.reminderDates"
+									v-model="task.reminders"
 									@update:model-value="saveTask"
 								/>
 							</div>
@@ -639,7 +639,7 @@ function setActiveFields() {
 	activeFields.percentDone = task.percentDone > 0
 	activeFields.priority = task.priority !== PRIORITIES.UNSET
 	activeFields.relatedTasks = Object.keys(task.relatedTasks).length > 0
-	activeFields.reminders = task.reminderDates.length > 0
+	activeFields.reminders = task.reminders.length > 0
 	activeFields.repeatAfter = task.repeatAfter.amount > 0
 	activeFields.startDate = task.startDate !== null
 }

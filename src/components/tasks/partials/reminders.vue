@@ -3,11 +3,11 @@
 		<div
 			v-for="(r, index) in reminders"
 			:key="index"
-			:class="{ 'overdue': r < new Date()}"
+			:class="{ 'overdue': r.reminder < new Date()}"
 			class="reminder-input"
 		>
 			<Datepicker
-				v-model="reminders[index]"
+				v-model="reminders[index].reminder"
 				:disabled="disabled"
 				@close-on-change="() => addReminderDate(index)"
 			/>
@@ -30,28 +30,17 @@ import {type PropType, ref, onMounted, watch} from 'vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Datepicker from '@/components/input/datepicker.vue'
-
-type Reminder = Date | string
-
-
+import TaskReminderModel from '@/models/taskReminder'
+import type { ITaskReminder } from '@/modelTypes/ITaskReminder'
 
 const props = defineProps({
 	modelValue: {
-		type: Array as PropType<Reminder[]>,
+		type: Array as PropType<ITaskReminder[]>,
 		default: () => [],
 		validator(prop) {
-			// This allows arrays of Dates and strings
+			// This allows arrays
 			if (!(prop instanceof Array)) {
 				return false
-			}
-
-			const isDate = (e: unknown) => e instanceof Date
-			const isString = (e: unknown) => typeof e === 'string'
-
-			for (const e of prop) {
-				if (!isDate(e) && !isString(e)) {
-					return false
-				}
 			}
 
 			return true
@@ -65,7 +54,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const reminders = ref<Reminder[]>([])
+const reminders = ref<ITaskReminder[]>([])
 
 onMounted(() => {
 	reminders.value = [...props.modelValue]
@@ -75,8 +64,8 @@ watch(
 	() => props.modelValue,
 	(newVal) => {
 		for (const i in newVal) {
-			if (typeof newVal[i] === 'string') {
-				newVal[i] = new Date(newVal[i])
+			if (typeof newVal[i].reminder === 'string') {
+				newVal[i].reminder = new Date(newVal[i].reminder)
 			}
 		}
 		reminders.value = newVal
@@ -95,9 +84,9 @@ function addReminderDate(index : number | null = null) {
 		if (newReminder.value === null) {
 			return
 		}
-		reminders.value.push(new Date(newReminder.value))
+		reminders.value.push(new TaskReminderModel({reminder: new Date(newReminder.value)}))
 		newReminder.value = null
-	} else if(reminders.value[index] === null) {
+	} else if(reminders.value[index].reminder === null) {
 		return
 	}
 

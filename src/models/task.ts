@@ -20,6 +20,8 @@ import LabelModel from './label'
 import UserModel from './user'
 import AttachmentModel from './attachment'
 import SubscriptionModel from './subscription'
+import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
+import TaskReminderModel from '@/models/taskReminder'
 
 export const TASK_DEFAULT_COLOR = '#1973ff'
 
@@ -68,7 +70,8 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	repeatAfter: number | IRepeatAfter = 0
 	repeatFromCurrentDate = false
 	repeatMode: IRepeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
-	reminderDates: Date[] = []
+	reminderDates = null
+	reminders: ITaskReminder[] = []
 	parentTaskId: ITask['id'] = 0
 	hexColor = ''
 	percentDone = 0
@@ -115,7 +118,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		// Parse the repeat after into something usable
 		this.repeatAfter = parseRepeatAfter(this.repeatAfter as number)
 
-		this.reminderDates = this.reminderDates.map(d => new Date(d))
+		this.reminders = this.reminders.map(r => new TaskReminderModel(r))
 
 		if (this.hexColor !== '' && this.hexColor.substring(0, 1) !== '#') {
 			this.hexColor = '#' + this.hexColor
