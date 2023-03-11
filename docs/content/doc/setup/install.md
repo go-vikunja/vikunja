@@ -56,3 +56,4 @@ A third-party Helm Chart is available from the k8s-at-home project [here](https:
 * [Install Vikunja in Docker for self-hosted Task Tracking](https://smarthomepursuits.com/install-vikunja-in-docker-for-self-hosted-task-tracking/)
 * [Self-Hosted To-Do List with Vikunja in Docker](https://www.youtube.com/watch?v=DqyqDWpEvKI) (Youtube)
 * [Vikunja self-hosted (step by step)](https://nguyenminhhung.com/vikunja-self-hosted-step-by-step/)
+* [How to Install Vikunja on Your Synology NAS](https://mariushosting.com/how-to-install-vikunja-on-your-synology-nas/)
