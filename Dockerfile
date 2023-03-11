@@ -66,5 +66,7 @@ RUN chmod 0755 /docker-entrypoint.d/*.sh /etc/nginx/templates && \
     chmod -R 0644 /etc/nginx/nginx.conf && \
     chown -R nginx:nginx ./ /etc/nginx/conf.d /etc/nginx/templates && \
     rm -f /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+# Allow the unprivileged user to run nginx on port 80 
+RUN apk add libcap && setcap cap_net_bind_service=+ep /usr/sbin/nginx
 # unprivileged user
 USER nginx
