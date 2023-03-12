@@ -17,6 +17,8 @@
 package user
 
 import (
+	"strings"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/notifications"
@@ -33,7 +35,7 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 		user.Issuer = IssuerLocal
 	}
 
-	// Check if we have all needed information
+	// Check if we have all required information
 	err = checkIfUserIsValid(user)
 	if err != nil {
 		return nil, err
@@ -126,6 +128,12 @@ func checkIfUserIsValid(user *User) error {
 		(user.Issuer == IssuerLocal && (user.Password == "" ||
 			user.Username == "")) {
 		return ErrNoUsernamePassword{}
+	}
+
+	if strings.Contains(user.Username, " ") {
+		return &ErrUsernameMustNotContainSpaces{
+			Username: user.Username,
+		}
 	}
 
 	return nil

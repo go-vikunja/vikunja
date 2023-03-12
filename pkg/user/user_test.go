@@ -133,6 +133,19 @@ func TestCreateUser(t *testing.T) {
 		})
 		assert.NoError(t, err)
 	})
+	t.Run("space in username", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CreateUser(s, &User{
+			Username: "user name",
+			Password: "12345",
+			Email:    "user1@example.com",
+		})
+		assert.Error(t, err)
+		assert.True(t, IsErrUsernameMustNotContainSpaces(err))
+	})
 }
 
 func TestGetUser(t *testing.T) {

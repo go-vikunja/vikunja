@@ -479,3 +479,30 @@ func (err *ErrAccountIsNotLocal) HTTPError() web.HTTPError {
 		Message:  "This account is managed by a third-party authentication provider.",
 	}
 }
+
+// ErrUsernameMustNotContainSpaces represents a "UsernameMustNotContainSpaces" kind of error.
+type ErrUsernameMustNotContainSpaces struct {
+	Username string
+}
+
+// IsErrUsernameMustNotContainSpaces checks if an error is a ErrUsernameMustNotContainSpaces.
+func IsErrUsernameMustNotContainSpaces(err error) bool {
+	_, ok := err.(*ErrUsernameMustNotContainSpaces)
+	return ok
+}
+
+func (err *ErrUsernameMustNotContainSpaces) Error() string {
+	return "username must not contain spaces"
+}
+
+// ErrCodeUsernameMustNotContainSpaces holds the unique world-error code of this error
+const ErrCodeUsernameMustNotContainSpaces = 1022
+
+// HTTPError holds the http error description
+func (err *ErrUsernameMustNotContainSpaces) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeUsernameMustNotContainSpaces,
+		Message:  "The username must not contain spaces.",
+	}
+}

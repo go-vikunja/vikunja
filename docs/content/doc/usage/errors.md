@@ -24,24 +24,26 @@ This document describes the different errors Vikunja can return.
 
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
-| 1001 | 400 | A user with this username already exists. |
-| 1002 | 400 | A user with this email address already exists. |
-| 1004 | 400 | No username and password specified. |
-| 1005 | 404 | The user does not exist. |
-| 1006 | 400 | Could not get the user id. |
-| 1008 | 412 | No password reset token provided. |
-| 1009 | 412 | Invalid password reset token. |
-| 1010 | 412 | Invalid email confirm token. |
-| 1011 | 412 | Wrong username or password. |
-| 1012 | 412 | Email address of the user not confirmed. |
-| 1013 | 412 | New password is empty. |
-| 1014 | 412 | Old password is empty. |
-| 1015 | 412 | Totp is already enabled for this user. |
-| 1016 | 412 | Totp is not enabled for this user. |
-| 1017 | 412 | The provided Totp passcode is invalid. |
-| 1018 | 412 | The provided user avatar provider type setting is invalid. |
-| 1019 | 412 | No openid email address was provided. |
-| 1020 | 412 | This user account is disabled. |
+| 1001      | 400 | A user with this username already exists. |
+| 1002      | 400 | A user with this email address already exists. |
+| 1004      | 400 | No username and password specified. |
+| 1005      | 404 | The user does not exist. |
+| 1006      | 400 | Could not get the user id. |
+| 1008      | 412 | No password reset token provided. |
+| 1009      | 412 | Invalid password reset token. |
+| 1010      | 412 | Invalid email confirm token. |
+| 1011      | 412 | Wrong username or password. |
+| 1012      | 412 | Email address of the user not confirmed. |
+| 1013      | 412 | New password is empty. |
+| 1014      | 412 | Old password is empty. |
+| 1015      | 412 | Totp is already enabled for this user. |
+| 1016      | 412 | Totp is not enabled for this user. |
+| 1017      | 412 | The provided Totp passcode is invalid. |
+| 1018      | 412 | The provided user avatar provider type setting is invalid. |
+| 1019      | 412 | No openid email address was provided. |
+| 1020      | 412 | This user account is disabled. |
+| 1021      | 412 | This account is managed by a third-party authentication provider. |
+| 1021      | 412 | The username must not contain spaces. |
 
 ## Validation
 
