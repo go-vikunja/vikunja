@@ -7,6 +7,17 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.20.4] - 2023-03-12
+
+### Bug Fixes
+
+* *(docker)* Allow non-unique group id
+
+### Documentation
+
+* Add link to tutorial for installing Vikunja on Synology ([4de0efe](4de0efec1dd7da95dbf936728d7e23791396a63a))
+
+
 ## [0.20.3] - 2023-03-10
 
 ### Bug Fixes
