@@ -9,6 +9,18 @@ All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
 
+## [0.20.5] - 2023-03-12
+
+### Bug Fixes
+
+* *(docker)* Add cap_net_bind to the nginx binary in the docker container
+* *(docker)* Revert unprivileged user
+
+### Dependencies
+
+* *(deps)* Update dependency sass to v1.59.2
+* *(deps)* Update dependency eslint to v8.36.0
+
 ## [0.20.4] - 2023-03-10
 
 ### Bug Fixes
