@@ -28,7 +28,7 @@ markup:
 menu:
   page:
     - name: Home
-      url: https://vikunja.io/en/
+      url: https://vikunja.io/
       weight: 10
     - name: Features
       url: https://vikunja.io/features
@@ -36,6 +36,9 @@ menu:
     - name: Download
       url: https://vikunja.io/download
       weight: 30
+    - name: Blog
+      url: https://vikunja.io/blog/
+      weight: 35
     - name: Docs
       url: https://vikunja.io/docs
       weight: 40
@@ -45,6 +48,9 @@ menu:
     - name: Community
       url: https://community.vikunja.io/
       weight: 60
+    - name: Stickers
+      url: https://vikunja.cloud/stickers?utm_source=io&utm_medium=io&utm_campaign=menu
+      weight: 65
     - name: Get it Hosted
       url: https://vikunja.cloud/?utm_source=io&utm_medium=io&utm_campaign=menu
       weight: 70
