@@ -6,7 +6,8 @@ if [ -n "$PUID" ] && [ "$PUID" -ne 0 ] && \
   echo "info: creating the new user vikunja with $PUID:$PGID"
   groupmod -g "$PGID" -o vikunja
   usermod -u "$PUID" -o vikunja
-  chown -R vikunja:vikunja ./
+  chown -R vikunja:vikunja ./files/
+  chown vikunja:vikunja .
   exec su vikunja -c /app/vikunja/vikunja "$@"
 else
   echo "info: creation of non-root user is skipped"
