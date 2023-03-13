@@ -19,7 +19,7 @@ specifiers:
   '@sentry/tracing': 7.43.0
   '@sentry/vue': 7.43.0
   '@types/codemirror': 5.60.7
-  '@types/dompurify': 2.4.0
+  '@types/dompurify': 3.0.0
   '@types/flexsearch': 0.7.3
   '@types/focus-within': 1.0.1
   '@types/is-touch-device': 1.0.0
@@ -153,7 +153,7 @@ devDependencies:
   '@histoire/plugin-vue': 0.15.8_7zgdlnqgt2sigbxfvcwphqv3a4
   '@rushstack/eslint-patch': 1.2.0
   '@types/codemirror': 5.60.7
-  '@types/dompurify': 2.4.0
+  '@types/dompurify': 3.0.0
   '@types/flexsearch': 0.7.3
   '@types/focus-within': 1.0.1
   '@types/lodash.debounce': 4.0.7
@@ -3924,8 +3924,8 @@ packages:
       '@types/node': 18.15.2
     dev: true
 
-  /@types/dompurify/2.4.0:
-    resolution: {integrity: sha512-IDBwO5IZhrKvHFUl+clZxgf3hn2b/lU6H1KaBShPkQyGJUQ0xwebezIPSuiyGwfz1UzJWQl4M7BDxtHtCCPlTg==}
+  /@types/dompurify/3.0.0:
+    resolution: {integrity: sha512-EcSqmgm/xJwH8CcJPy9AHNypp/j58CYga3nWdl93/wLxX6OH+rSD3aAj75NQazcZd1YKHJ/pjNZ9qmgVajggwQ==}
     dependencies:
       '@types/trusted-types': 2.0.2
     dev: true
