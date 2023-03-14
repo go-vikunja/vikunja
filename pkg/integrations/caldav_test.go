@@ -28,7 +28,7 @@ const vtodo = `BEGIN:VCALENDAR
 VERSION:2.0
 METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
-X-WR-CALNAME:List 26 for Caldav tests
+X-WR-CALNAME:List 36 for Caldav tests
 PRODID:-//Vikunja Todo App//EN
 BEGIN:VTODO
 UID:uid
@@ -46,22 +46,22 @@ END:VCALENDAR`
 
 func TestCaldav(t *testing.T) {
 	t.Run("Delivers VTODO for project", func(t *testing.T) {
-		rec, err := newCaldavTestRequestWithUser(t, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "26"})
+		rec, err := newCaldavTestRequestWithUser(t, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "36"})
 		assert.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), "BEGIN:VCALENDAR")
 		assert.Contains(t, rec.Body.String(), "PRODID:-//Vikunja Todo App//EN")
-		assert.Contains(t, rec.Body.String(), "X-WR-CALNAME:List 26 for Caldav tests")
+		assert.Contains(t, rec.Body.String(), "X-WR-CALNAME:Project 36 for Caldav tests")
 		assert.Contains(t, rec.Body.String(), "BEGIN:VTODO")
 		assert.Contains(t, rec.Body.String(), "END:VTODO")
 		assert.Contains(t, rec.Body.String(), "END:VCALENDAR")
 	})
 	t.Run("Import VTODO", func(t *testing.T) {
-		rec, err := newCaldavTestRequestWithUser(t, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "26", "task": "uid"})
+		rec, err := newCaldavTestRequestWithUser(t, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid"})
 		assert.NoError(t, err)
-		assert.Equal(t, rec.Result().StatusCode, 201)
+		assert.Equal(t, 201, rec.Result().StatusCode)
 	})
 	t.Run("Export VTODO", func(t *testing.T) {
-		rec, err := newCaldavTestRequestWithUser(t, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "26", "task": "uid-caldav-test"})
+		rec, err := newCaldavTestRequestWithUser(t, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
 		assert.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), "BEGIN:VCALENDAR")
 		assert.Contains(t, rec.Body.String(), "SUMMARY:Title Caldav Test")
