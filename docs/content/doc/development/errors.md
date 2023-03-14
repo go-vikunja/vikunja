@@ -49,7 +49,7 @@ func (err ErrUserDoesNotExist) Error() string {
 // This needs to be unique, so you should check whether the error code exists or not.
 // The general convention for error codes is as follows:
 // * Every "group" errors lives in a thousend something. For example all user issues are 1000-something, all 
-//   list errors are 3000-something and so on.
+//   project errors are 3000-something and so on.
 // * New error codes should be the current max error code + 1. Don't take free numbers to prevent old errors
 //   which are depricated and removed from being "new ones". For example, if there are error codes 1001, 1002, 1004,
 //   a new error should be 1005 and not 1003.

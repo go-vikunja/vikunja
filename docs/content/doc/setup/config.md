@@ -208,7 +208,7 @@ Environment path: `VIKUNJA_SERVICE_MOTD`
 
 ### enablelinksharing
 
-Enable sharing of lists via a link
+Enable sharing of project via a link
 
 Default: `true`
 
@@ -1021,7 +1021,7 @@ Environment path: `VIKUNJA_AVATAR_GRAVATAREXPIRATION`
 
 ### enabled
 
-Whether to enable backgrounds for lists at all.
+Whether to enable backgrounds for projects at all.
 
 Default: `true`
 
@@ -1248,15 +1248,15 @@ Full path: `defaultsettings.overdue_tasks_reminders_time`
 Environment path: `VIKUNJA_DEFAULTSETTINGS_OVERDUE_TASKS_REMINDERS_TIME`
 
 
-### default_list_id
+### default_project_id
 
-The id of the default list. Make sure users actually have access to this list when setting this value.
+The id of the default project. Make sure users actually have access to this project when setting this value.
 
 Default: `0`
 
-Full path: `defaultsettings.default_list_id`
+Full path: `defaultsettings.default_project_id`
 
-Environment path: `VIKUNJA_DEFAULTSETTINGS_DEFAULT_LIST_ID`
+Environment path: `VIKUNJA_DEFAULTSETTINGS_DEFAULT_PROJECT_ID`
 
 
 ### week_start

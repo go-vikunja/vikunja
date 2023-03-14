@@ -24,10 +24,10 @@ All urls are located under the `/dav` subspace.
 
 Urls are:
 
-* `/principals/<username>/`: Returns urls for list discovery. *Use this url to initially make connections to new clients.*
-* `/lists/`: Used to manage lists
-* `/lists/<List ID>/`: Used to manage a single list
-* `/lists/<List ID>/<Task UID>`: Used to manage a task on a list
+* `/principals/<username>/`: Returns urls for project discovery. *Use this url to initially make connections to new clients.*
+* `/projects/`: Used to manage projects
+* `/projects/<List ID>/`: Used to manage a single project
+* `/projects/<List ID>/<Task UID>`: Used to manage a task on a project
 
 ## Supported properties
 

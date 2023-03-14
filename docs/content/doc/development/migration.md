@@ -20,8 +20,8 @@ There are two ways of migrating data from another service:
 1. Through the auth-based flow where the user gives you access to their data at the third-party service through an 
    oauth flow. You can then call the service's api on behalf of your user to get all the data.
    The Todoist, Trello and Microsoft To-Do Migrators use this pattern.
-2. A file migration where the user uploads a file obtained from some third-party service. In your migrator, you need 
-   to parse the file and create the lists, tasks etc.
+2. A file migration where the user uploads a file obtained from some third-party service. In your migrator, you need
+   to parse the file and create the projects, tasks etc.
    The Vikunja File Import uses this pattern.
 
 To differentiate the two, there are two different interfaces you must implement.
@@ -61,7 +61,7 @@ type FileMigrator interface {
 	// Name holds the name of the migration.
 	// This is used to show the name to users and to keep track of users who already migrated.
 	Name() string
-	// Migrate is the interface used to migrate a user's tasks, list and other things from a file to vikunja.
+	// Migrate is the interface used to migrate a user's tasks, projects and other things from a file to vikunja.
 	// The user object is the user who's tasks will be migrated.
 	Migrate(user *user.User, file io.ReaderAt, size int64) error
 }
@@ -103,9 +103,9 @@ You should also document the routes with [swagger annotations]({{< ref "swagger-
 ## Insertion helper method
 
 There is a method available in the `migration` package which takes a fully nested Vikunja structure and creates it with all relations. 
-This means you start by adding a namespace, then add lists inside of that namespace, then tasks in the lists and so on.
+This means you start by adding a namespace, then add projects inside that namespace, then tasks in the lists and so on.
 
-The root structure must be present as `[]*models.NamespaceWithListsAndTasks`. It allows to represent all of Vikunja's 
+The root structure must be present as `[]*models.NamespaceWithProjectsAndTasks`. It allows to represent all of Vikunja's 
 hierachie as a single data structure.
 
 Then call the method like so:

@@ -26,8 +26,8 @@ It returns the `limit` (max-length) and `offset` parameters needed for SQL-Queri
 You can feed this function directly into xorm's `Limit`-Function like so:
 
 {{< highlight golang >}}
-lists := []List{}
-err := x.Limit(getLimitFromPageIndex(pageIndex, itemsPerPage)).Find(&lists)
+projects := []*Project{}
+err := x.Limit(getLimitFromPageIndex(pageIndex, itemsPerPage)).Find(&projects)
 {{< /highlight >}}
 
 // TODO: Add a full example from start to finish, like a tutorial on how to create a new endpoint?

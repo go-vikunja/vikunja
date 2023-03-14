@@ -76,7 +76,7 @@ This defines four services, each with their own container:
 
 * An api service which runs the vikunja api. Most of the core logic lives here.
 * The frontend which will make vikunja actually usable for most people.
-* A database container which will store all lists, tasks, etc. We're using mariadb here, but you're free to use mysql or postgres if you want.
+* A database container which will store all projects, tasks, etc. We're using mariadb here, but you're free to use mysql or postgres if you want.
 * A proxy service which makes the frontend and api available on the same port, redirecting all requests to `/api` to the api container. 
 If you already have a proxy on your host, you may want to check out the [reverse proxy examples]() to use that.
 By default, it uses port 80 on the host.
@@ -201,7 +201,6 @@ You should see something like this:
   "max_file_size": "20MB",
   "registration_enabled": true,
   "available_migrators": [
-    "wunderlist",
     "todoist"
   ],
   "task_attachments_enabled": true

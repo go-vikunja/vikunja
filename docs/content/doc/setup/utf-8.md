@@ -12,7 +12,7 @@ menu:
 
 Vikunja itself is always fully capable of handling utf-8 characters.
 However, your database might be not. 
-Vikunja itself will work just fine until you want to use non-latin characters in your tasks/lists/etc.
+Vikunja itself will work just fine until you want to use non-latin characters in your tasks/projects/etc.
 
 On this page, you will find information about how to fully ensure non-latin characters like aüäß or emojis work 
 with your installation.

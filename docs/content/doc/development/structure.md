@@ -108,7 +108,7 @@ Contains all possible avatar providers a user can choose to set their avatar.
 
 #### background
 
-All list background providers are in sub-packages of this package.
+All project background providers are in sub-packages of this package.
 
 #### dump
 
