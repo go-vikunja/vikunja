@@ -118,7 +118,7 @@
     "browserslist": "4.21.5",
     "caniuse-lite": "1.0.30001465",
     "csstype": "3.1.1",
-    "cypress": "12.7.0",
+    "cypress": "12.8.0",
     "esbuild": "0.17.11",
     "eslint": "8.36.0",
     "eslint-plugin-vue": "9.9.0",
