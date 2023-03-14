@@ -85,7 +85,7 @@ function useAuth() {
 
 			const view = route.query.view && Object.values(PROJECT_VIEWS).includes(route.query.view as ProjectView)
 				? route.query.view
-				: 'project'
+				: 'list'
 
 			router.push({name: `project.${view}`, params: {projectId}})
 		} catch (e: any) {
