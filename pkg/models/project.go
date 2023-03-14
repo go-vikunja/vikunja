@@ -912,12 +912,12 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 // DeleteBackgroundFileIfExists deletes the list's background file from the db and the filesystem,
 // if one exists
-func (l *Project) DeleteBackgroundFileIfExists() (err error) {
-	if l.BackgroundFileID == 0 {
+func (p *Project) DeleteBackgroundFileIfExists() (err error) {
+	if p.BackgroundFileID == 0 {
 		return
 	}
 
-	file := files.File{ID: l.BackgroundFileID}
+	file := files.File{ID: p.BackgroundFileID}
 	return file.Delete()
 }
 
