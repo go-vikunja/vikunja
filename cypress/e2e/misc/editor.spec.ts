@@ -4,6 +4,7 @@ import {TaskFactory} from '../../factories/task'
 import {ProjectFactory} from '../../factories/project'
 import {NamespaceFactory} from '../../factories/namespace'
 import {UserProjectFactory} from '../../factories/users_project'
+import {BucketFactory} from '../../factories/bucket'
 
 describe('Editor', () => {
 	createFakeUserAndLogin()
@@ -11,6 +12,7 @@ describe('Editor', () => {
 	beforeEach(() => {
 		NamespaceFactory.create(1)
 		ProjectFactory.create(1)
+		BucketFactory.create(1)
 		TaskFactory.truncate()
 		UserProjectFactory.truncate()
 	})
@@ -24,6 +26,7 @@ describe('Editor', () => {
 * [ ] Checklist
 * [x] Checklist checked
 `,
+			bucket_id: 1,
 		})
 
 		cy.visit(`/tasks/${tasks[0].id}`)
