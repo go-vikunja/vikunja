@@ -52,26 +52,26 @@ This document describes the different errors Vikunja can return.
 | 2001 | 400 | ID cannot be empty or 0. |
 | 2002 | 400 | Some of the request data was invalid. The response contains an aditional array with all invalid fields. |
 
-## List
+## Project
 
 | ErrorCode | HTTP Status Code | Description                                                                                                                   |
 |-----------|------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| 3001      | 404 | The list does not exist.                                                                                                      |
-| 3004      | 403 | The user needs to have read permissions on that list to perform that action.                                                  |
-| 3005      | 400 | The list title cannot be empty.                                                                                               |
-| 3006      | 404 | The list share does not exist.                                                                                                |
-| 3007      | 400 | A list with this identifier already exists.                                                                                   |
-| 3008      | 412 | The list is archived and can therefore only be accessed read only. This is also true for all tasks associated with this list. |
-| 3009      | 412 | The list cannot belong to a dynamically generated namespace like "Favorites".                                                 |
-| 3010      | 412 | The list must belong to a namespace.                                                                                          |
+| 3001      | 404 | The project does not exist.                                                                                                      |
+| 3004      | 403 | The user needs to have read permissions on that project to perform that action.                                                  |
+| 3005      | 400 | The project title cannot be empty.                                                                                               |
+| 3006      | 404 | The project share does not exist.                                                                                                |
+| 3007      | 400 | A project with this identifier already exists.                                                                                   |
+| 3008      | 412 | The project is archived and can therefore only be accessed read only. This is also true for all tasks associated with this project. |
+| 3009      | 412 | The project cannot belong to a dynamically generated namespace like "Favorites".                                                 |
+| 3010      | 412 | The project must belong to a namespace.                                                                                          |
 
 ## Task
 
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
-| 4001 | 400 | The list task text cannot be empty. |
-| 4002 | 404 | The list task does not exist. |
-| 4003 | 403 | All bulk editing tasks must belong to the same list. |
+| 4001 | 400 | The project task text cannot be empty. |
+| 4002 | 404 | The project task does not exist. |
+| 4003 | 403 | All bulk editing tasks must belong to the same project. |
 | 4004 | 403 | Need at least one task when bulk editing tasks. |
 | 4005 | 403 | The user does not have the right to see the task. |
 | 4006 | 403 | The user tried to set a parent task as the task itself. |
@@ -109,17 +109,17 @@ This document describes the different errors Vikunja can return.
 |-----------|------------------|-------------|
 | 6001 | 400 | The team name cannot be emtpy. |
 | 6002 | 404 | The team does not exist. |
-| 6004 | 409 | The team already has access to that namespace or list. |
+| 6004 | 409 | The team already has access to that namespace or project. |
 | 6005 | 409 | The user is already a member of that team. |
 | 6006 | 400 | Cannot delete the last team member. |
-| 6007 | 403 | The team does not have access to the list to perform that action. |
+| 6007 | 403 | The team does not have access to the project to perform that action. |
 
-## User List Access
+## User Project Access
 
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
-| 7002 | 409 | The user already has access to that list. |
-| 7003 | 403 | The user does not have access to that list. |
+| 7002 | 409 | The user already has access to that project. |
+| 7003 | 403 | The user does not have access to that project. |
 
 ## Label
 
@@ -140,10 +140,10 @@ This document describes the different errors Vikunja can return.
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
 | 10001 | 404 | The bucket does not exist. |
-| 10002 | 400 | The bucket does not belong to that list. |
-| 10003 | 412 | You cannot remove the last bucket on a list. |
+| 10002 | 400 | The bucket does not belong to that project. |
+| 10003 | 412 | You cannot remove the last bucket on a project. |
 | 10004 | 412 | You cannot add the task to this bucket as it already exceeded the limit of tasks it can hold. |
-| 10005 | 412 | There can be only one done bucket per list. |
+| 10005 | 412 | There can be only one done bucket per project. |
 
 ## Saved Filters
 
