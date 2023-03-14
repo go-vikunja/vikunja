@@ -15,6 +15,7 @@ trigger:
 services:
   - name: api
     image: vikunja/api:unstable
+    pull: always
     environment:
       VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
       VIKUNJA_LOG_LEVEL: DEBUG
@@ -521,6 +522,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: 971875b90c7bb1649d1b00d022d0b594ba9b68f927bf8f0dbe840190816d676b
+hmac: 303afeb09b75a57ba88720b45dc06c8bf2c7320e19d738d8299f325438246f75
 
 ...
