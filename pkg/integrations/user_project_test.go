@@ -14,37 +14,29 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package models
+package integrations
 
 import (
+	"net/http"
 	"testing"
 
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/files"
-	"code.vikunja.io/api/pkg/user"
+	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestListDuplicate(t *testing.T) {
-
-	db.LoadAndAssertFixtures(t)
-	files.InitTestFileFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
-	u := &user.User{
-		ID: 1,
-	}
-
-	l := &ListDuplicate{
-		ListID:      1,
-		NamespaceID: 1,
-	}
-	can, err := l.CanCreate(s, u)
-	assert.NoError(t, err)
-	assert.True(t, can)
-	err = l.Create(s, u)
-	assert.NoError(t, err)
-	// To make this test 100% useful, it would need to assert a lot more stuff, but it is good enough for now.
-	// Also, we're lacking utility functions to do all needed assertions.
+func TestUserProject(t *testing.T) {
+	t.Run("Normal test", func(t *testing.T) {
+		rec, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserList, &testuser1, "", nil, nil)
+		assert.NoError(t, err)
+		assert.Equal(t, "null\n", rec.Body.String())
+	})
+	t.Run("Search for user3", func(t *testing.T) {
+		rec, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserList, &testuser1, "", map[string][]string{"s": {"user3"}}, nil)
+		assert.NoError(t, err)
+		assert.Contains(t, rec.Body.String(), `user3`)
+		assert.NotContains(t, rec.Body.String(), `user1`)
+		assert.NotContains(t, rec.Body.String(), `user2`)
+		assert.NotContains(t, rec.Body.String(), `user4`)
+		assert.NotContains(t, rec.Body.String(), `user5`)
+	})
 }

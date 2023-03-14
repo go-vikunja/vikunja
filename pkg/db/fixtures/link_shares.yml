@@ -1,6 +1,6 @@
 - id: 1
   hash: test
-  list_id: 1
+  project_id: 1
   right: 0
   sharing_type: 1
   shared_by_id: 1
@@ -8,7 +8,7 @@
   updated: 2018-12-02 15:13:12
 - id: 2
   hash: test2
-  list_id: 2
+  project_id: 2
   right: 1
   sharing_type: 1
   shared_by_id: 1
@@ -16,7 +16,7 @@
   updated: 2018-12-02 15:13:12
 - id: 3
   hash: test3
-  list_id: 3
+  project_id: 3
   right: 2
   sharing_type: 1
   shared_by_id: 1
@@ -24,7 +24,7 @@
   updated: 2018-12-02 15:13:12
 - id: 4
   hash: testWithPassword
-  list_id: 1
+  project_id: 1
   right: 0
   password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.' # 1234
   sharing_type: 2

@@ -16,7 +16,7 @@
 
 package models
 
-// Right defines the rights users/teams can have for lists/namespaces
+// Right defines the rights users/teams can have for projects/namespaces
 type Right int
 
 // define unknown right
@@ -26,11 +26,11 @@ const (
 
 // Enumerate all the team rights
 const (
-	// Can read lists in a
+	// Can read projects in a
 	RightRead Right = iota
-	// Can write in a like lists and tasks. Cannot create new lists.
+	// Can write in a like projects and tasks. Cannot create new projects.
 	RightWrite
-	// Can manage a list/namespace, can do everything
+	// Can manage a project/namespace, can do everything
 	RightAdmin
 )
 

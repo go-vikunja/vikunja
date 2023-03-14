@@ -43,7 +43,7 @@ type Migrator interface {
 // FileMigrator handles importing Vikunja data from a file. The implementation of it determines the format.
 type FileMigrator interface {
 	MigratorName
-	// Migrate is the interface used to migrate a user's tasks, list and other things from a file to vikunja.
+	// Migrate is the interface used to migrate a user's tasks, project and other things from a file to vikunja.
 	// The user object is the user who's tasks will be migrated.
 	Migrate(user *user.User, file io.ReaderAt, size int64) error
 }

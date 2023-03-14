@@ -29,7 +29,7 @@ type FavoriteKind int
 const (
 	FavoriteKindUnknown FavoriteKind = iota
 	FavoriteKindTask
-	FavoriteKindList
+	FavoriteKindProject
 )
 
 // Favorite represents an entity which is a favorite to someone

@@ -99,7 +99,7 @@ func getNamespacesToDelete(s *xorm.Session, u *user.User) (namespacesToDelete []
 		return nil, nil
 	}
 
-	namespaces := res.([]*NamespaceWithLists)
+	namespaces := res.([]*NamespaceWithProjects)
 	for _, n := range namespaces {
 		if n.ID < 0 {
 			continue
@@ -126,9 +126,9 @@ func getNamespacesToDelete(s *xorm.Session, u *user.User) (namespacesToDelete []
 	return
 }
 
-func getListsToDelete(s *xorm.Session, u *user.User) (listsToDelete []*List, err error) {
-	listsToDelete = []*List{}
-	lm := &List{IsArchived: true}
+func getProjectsToDelete(s *xorm.Session, u *user.User) (projectsToDelete []*Project, err error) {
+	projectsToDelete = []*Project{}
+	lm := &Project{IsArchived: true}
 	res, _, _, err := lm.ReadAll(s, u, "", 0, -1)
 	if err != nil {
 		return nil, err
@@ -138,20 +138,20 @@ func getListsToDelete(s *xorm.Session, u *user.User) (listsToDelete []*List, err
 		return nil, nil
 	}
 
-	lists := res.([]*List)
-	for _, l := range lists {
+	projects := res.([]*Project)
+	for _, l := range projects {
 		if l.ID < 0 {
 			continue
 		}
 
-		hadUsers, err := ensureListAdminUser(s, l)
+		hadUsers, err := ensureProjectAdminUser(s, l)
 		if err != nil {
 			return nil, err
 		}
 		if hadUsers {
 			continue
 		}
-		hadTeams, err := ensureListAdminTeam(s, l)
+		hadTeams, err := ensureProjectAdminTeam(s, l)
 		if err != nil {
 			return nil, err
 		}
@@ -160,13 +160,13 @@ func getListsToDelete(s *xorm.Session, u *user.User) (listsToDelete []*List, err
 			continue
 		}
 
-		listsToDelete = append(listsToDelete, l)
+		projectsToDelete = append(projectsToDelete, l)
 	}
 
 	return
 }
 
-// DeleteUser completely removes a user and all their associated lists, namespaces and tasks.
+// DeleteUser completely removes a user and all their associated projects, namespaces and tasks.
 // This action is irrevocable.
 // Public to allow deletion from the CLI.
 func DeleteUser(s *xorm.Session, u *user.User) (err error) {
@@ -175,7 +175,7 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		return err
 	}
 
-	listsToDelete, err := getListsToDelete(s, u)
+	projectsToDelete, err := getProjectsToDelete(s, u)
 	if err != nil {
 		return err
 	}
@@ -188,7 +188,7 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		}
 	}
 
-	for _, l := range listsToDelete {
+	for _, l := range projectsToDelete {
 		err = l.Delete(s, u)
 		if err != nil {
 			return err
@@ -218,7 +218,7 @@ func ensureNamespaceAdminUser(s *xorm.Session, n *Namespace) (hadUsers bool, err
 
 	for _, lu := range namespaceUsers {
 		if lu.Right == RightAdmin {
-			// List already has more than one admin, no need to do anything
+			// Project already has more than one admin, no need to do anything
 			return true, nil
 		}
 	}
@@ -244,7 +244,7 @@ func ensureNamespaceAdminTeam(s *xorm.Session, n *Namespace) (hadTeams bool, err
 
 	for _, lu := range namespaceTeams {
 		if lu.Right == RightAdmin {
-			// List already has more than one admin, no need to do anything
+			// Project already has more than one admin, no need to do anything
 			return true, nil
 		}
 	}
@@ -257,25 +257,25 @@ func ensureNamespaceAdminTeam(s *xorm.Session, n *Namespace) (hadTeams bool, err
 	return true, err
 }
 
-func ensureListAdminUser(s *xorm.Session, l *List) (hadUsers bool, err error) {
-	listUsers := []*ListUser{}
-	err = s.Where("list_id = ?", l.ID).Find(&listUsers)
+func ensureProjectAdminUser(s *xorm.Session, l *Project) (hadUsers bool, err error) {
+	projectUsers := []*ProjectUser{}
+	err = s.Where("project_id = ?", l.ID).Find(&projectUsers)
 	if err != nil {
 		return
 	}
 
-	if len(listUsers) == 0 {
+	if len(projectUsers) == 0 {
 		return false, nil
 	}
 
-	for _, lu := range listUsers {
+	for _, lu := range projectUsers {
 		if lu.Right == RightAdmin {
-			// List already has more than one admin, no need to do anything
+			// Project already has more than one admin, no need to do anything
 			return true, nil
 		}
 	}
 
-	firstUser := listUsers[0]
+	firstUser := projectUsers[0]
 	firstUser.Right = RightAdmin
 	_, err = s.Where("id = ?", firstUser.ID).
 		Cols("right").
@@ -283,25 +283,25 @@ func ensureListAdminUser(s *xorm.Session, l *List) (hadUsers bool, err error) {
 	return true, err
 }
 
-func ensureListAdminTeam(s *xorm.Session, l *List) (hadTeams bool, err error) {
-	listTeams := []*TeamList{}
-	err = s.Where("list_id = ?", l.ID).Find(&listTeams)
+func ensureProjectAdminTeam(s *xorm.Session, l *Project) (hadTeams bool, err error) {
+	projectTeams := []*TeamProject{}
+	err = s.Where("project_id = ?", l.ID).Find(&projectTeams)
 	if err != nil {
 		return
 	}
 
-	if len(listTeams) == 0 {
+	if len(projectTeams) == 0 {
 		return false, nil
 	}
 
-	for _, lu := range listTeams {
+	for _, lu := range projectTeams {
 		if lu.Right == RightAdmin {
-			// List already has more than one admin, no need to do anything
+			// Project already has more than one admin, no need to do anything
 			return true, nil
 		}
 	}
 
-	firstTeam := listTeams[0]
+	firstTeam := projectTeams[0]
 	firstTeam.Right = RightAdmin
 	_, err = s.Where("id = ?", firstTeam.ID).
 		Cols("right").

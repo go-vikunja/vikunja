@@ -72,7 +72,7 @@ func TestTeamNamespace_ReadAll(t *testing.T) {
 		}
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
-		teams, _, _, err := tn.ReadAll(s, u, "READ_only_on_list6", 1, 50)
+		teams, _, _, err := tn.ReadAll(s, u, "READ_only_on_project6", 1, 50)
 		assert.NoError(t, err)
 		assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
 		ts := teams.([]*TeamWithRight)

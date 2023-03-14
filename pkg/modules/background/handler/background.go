@@ -92,38 +92,38 @@ func (bp *BackgroundProvider) SearchBackgrounds(c echo.Context) error {
 }
 
 // This function does all kinds of preparations for setting and uploading a background
-func (bp *BackgroundProvider) setBackgroundPreparations(s *xorm.Session, c echo.Context) (list *models.List, auth web.Auth, err error) {
+func (bp *BackgroundProvider) setBackgroundPreparations(s *xorm.Session, c echo.Context) (project *models.Project, auth web.Auth, err error) {
 	auth, err = auth2.GetAuthFromClaims(c)
 	if err != nil {
 		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error())
 	}
 
-	listID, err := strconv.ParseInt(c.Param("list"), 10, 64)
+	projectID, err := strconv.ParseInt(c.Param("project"), 10, 64)
 	if err != nil {
-		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid list ID: "+err.Error())
+		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID: "+err.Error())
 	}
 
-	// Check if the user has the right to change the list background
-	list = &models.List{ID: listID}
-	can, err := list.CanUpdate(s, auth)
+	// Check if the user has the right to change the project background
+	project = &models.Project{ID: projectID}
+	can, err := project.CanUpdate(s, auth)
 	if err != nil {
 		return
 	}
 	if !can {
-		log.Infof("Tried to update list background of list %d while not having the rights for it (User: %v)", listID, auth)
-		return list, auth, models.ErrGenericForbidden{}
+		log.Infof("Tried to update project background of project %d while not having the rights for it (User: %v)", projectID, auth)
+		return project, auth, models.ErrGenericForbidden{}
 	}
-	// Load the list
-	list, err = models.GetListSimpleByID(s, list.ID)
+	// Load the project
+	project, err = models.GetProjectSimpleByID(s, project.ID)
 	return
 }
 
-// SetBackground sets an Image as list background
+// SetBackground sets an Image as project background
 func (bp *BackgroundProvider) SetBackground(c echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	list, auth, err := bp.setBackgroundPreparations(s, c)
+	project, auth, err := bp.setBackgroundPreparations(s, c)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
@@ -138,12 +138,12 @@ func (bp *BackgroundProvider) SetBackground(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error())
 	}
 
-	err = p.Set(s, image, list, auth)
+	err = p.Set(s, image, project, auth)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
 	}
-	return c.JSON(http.StatusOK, list)
+	return c.JSON(http.StatusOK, project)
 }
 
 func CreateBlurHash(srcf io.Reader) (hash string, err error) {
@@ -163,7 +163,7 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	list, auth, err := bp.setBackgroundPreparations(s, c)
+	project, auth, err := bp.setBackgroundPreparations(s, c)
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)
@@ -193,7 +193,7 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
 	}
 
-	err = SaveBackgroundFile(s, auth, list, srcf, file.Filename, uint64(file.Size))
+	err = SaveBackgroundFile(s, auth, project, srcf, file.Filename, uint64(file.Size))
 	if err != nil {
 		_ = s.Rollback()
 		if files.IsErrFileIsTooLarge(err) {
@@ -208,10 +208,10 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	return c.JSON(http.StatusOK, list)
+	return c.JSON(http.StatusOK, project)
 }
 
-func SaveBackgroundFile(s *xorm.Session, auth web.Auth, list *models.List, srcf io.ReadSeeker, filename string, filesize uint64) (err error) {
+func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, filesize uint64) (err error) {
 	_, _ = srcf.Seek(0, io.SeekStart)
 	f, err := files.Create(srcf, filename, filesize, auth)
 	if err != nil {
@@ -220,7 +220,7 @@ func SaveBackgroundFile(s *xorm.Session, auth web.Auth, list *models.List, srcf 
 
 	// Generate a blurHash
 	_, _ = srcf.Seek(0, io.SeekStart)
-	list.BackgroundBlurHash, err = CreateBlurHash(srcf)
+	project.BackgroundBlurHash, err = CreateBlurHash(srcf)
 	if err != nil {
 		return err
 	}
@@ -228,68 +228,68 @@ func SaveBackgroundFile(s *xorm.Session, auth web.Auth, list *models.List, srcf 
 	// Save it
 	p := upload.Provider{}
 	img := &background.Image{ID: strconv.FormatInt(f.ID, 10)}
-	err = p.Set(s, img, list, auth)
+	err = p.Set(s, img, project, auth)
 	return err
 }
 
-func checkListBackgroundRights(s *xorm.Session, c echo.Context) (list *models.List, auth web.Auth, err error) {
+func checkProjectBackgroundRights(s *xorm.Session, c echo.Context) (project *models.Project, auth web.Auth, err error) {
 	auth, err = auth2.GetAuthFromClaims(c)
 	if err != nil {
 		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error())
 	}
 
-	listID, err := strconv.ParseInt(c.Param("list"), 10, 64)
+	projectID, err := strconv.ParseInt(c.Param("project"), 10, 64)
 	if err != nil {
-		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid list ID: "+err.Error())
+		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID: "+err.Error())
 	}
 
-	// Check if a background for this list exists + Rights
-	list = &models.List{ID: listID}
-	can, _, err := list.CanRead(s, auth)
+	// Check if a background for this project exists + Rights
+	project = &models.Project{ID: projectID}
+	can, _, err := project.CanRead(s, auth)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, auth, handler.HandleHTTPError(err, c)
 	}
 	if !can {
 		_ = s.Rollback()
-		log.Infof("Tried to get list background of list %d while not having the rights for it (User: %v)", listID, auth)
+		log.Infof("Tried to get project background of project %d while not having the rights for it (User: %v)", projectID, auth)
 		return nil, auth, echo.NewHTTPError(http.StatusForbidden)
 	}
 
 	return
 }
 
-// GetListBackground serves a previously set background from a list
+// GetProjectBackground serves a previously set background from a project
 // It has no knowledge of the provider that was responsible for setting the background.
-// @Summary Get the list background
-// @Description Get the list background of a specific list. **Returns json on error.**
-// @tags list
+// @Summary Get the project background
+// @Description Get the project background of a specific project. **Returns json on error.**
+// @tags project
 // @Produce octet-stream
-// @Param id path int true "List ID"
+// @Param id path int true "Project ID"
 // @Security JWTKeyAuth
-// @Success 200 {} string "The list background file."
-// @Failure 403 {object} models.Message "No access to this list."
-// @Failure 404 {object} models.Message "The list does not exist."
+// @Success 200 {} string "The project background file."
+// @Failure 403 {object} models.Message "No access to this project."
+// @Failure 404 {object} models.Message "The project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{id}/background [get]
-func GetListBackground(c echo.Context) error {
+// @Router /projects/{id}/background [get]
+func GetProjectBackground(c echo.Context) error {
 
 	s := db.NewSession()
 	defer s.Close()
 
-	list, _, err := checkListBackgroundRights(s, c)
+	project, _, err := checkProjectBackgroundRights(s, c)
 	if err != nil {
 		return err
 	}
 
-	if list.BackgroundFileID == 0 {
+	if project.BackgroundFileID == 0 {
 		_ = s.Rollback()
 		return echo.NotFoundHandler(c)
 	}
 
 	// Get the file
 	bgFile := &files.File{
-		ID: list.BackgroundFileID,
+		ID: project.BackgroundFileID,
 	}
 	if err := bgFile.LoadFileByID(); err != nil {
 		_ = s.Rollback()
@@ -320,39 +320,39 @@ func GetListBackground(c echo.Context) error {
 	return c.Stream(http.StatusOK, "image/jpg", bgFile.File)
 }
 
-// RemoveListBackground removes a list background, no matter the background provider
-// @Summary Remove a list background
-// @Description Removes a previously set list background, regardless of the list provider used to set the background. It does not throw an error if the list does not have a background.
-// @tags list
+// RemoveProjectBackground removes a project background, no matter the background provider
+// @Summary Remove a project background
+// @Description Removes a previously set project background, regardless of the project provider used to set the background. It does not throw an error if the project does not have a background.
+// @tags project
 // @Produce json
-// @Param id path int true "List ID"
+// @Param id path int true "Project ID"
 // @Security JWTKeyAuth
-// @Success 200 {object} models.List "The list"
-// @Failure 403 {object} models.Message "No access to this list."
-// @Failure 404 {object} models.Message "The list does not exist."
+// @Success 200 {object} models.Project "The project"
+// @Failure 403 {object} models.Message "No access to this project."
+// @Failure 404 {object} models.Message "The project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{id}/background [delete]
-func RemoveListBackground(c echo.Context) error {
+// @Router /projects/{id}/background [delete]
+func RemoveProjectBackground(c echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	list, auth, err := checkListBackgroundRights(s, c)
+	project, auth, err := checkProjectBackgroundRights(s, c)
 	if err != nil {
 		return err
 	}
 
-	err = list.DeleteBackgroundFileIfExists()
+	err = project.DeleteBackgroundFileIfExists()
 	if err != nil {
 		return err
 	}
 
-	list.BackgroundFileID = 0
-	list.BackgroundInformation = nil
-	list.BackgroundBlurHash = ""
-	err = models.UpdateList(s, list, auth, true)
+	project.BackgroundFileID = 0
+	project.BackgroundInformation = nil
+	project.BackgroundBlurHash = ""
+	err = models.UpdateProject(s, project, auth, true)
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, list)
+	return c.JSON(http.StatusOK, project)
 }

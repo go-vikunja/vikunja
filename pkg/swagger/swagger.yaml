@@ -73,13 +73,13 @@ definitions:
         description: How many tasks can be at the same time on this board max
         minimum: 0
         type: integer
-      list_id:
-        description: The list this bucket belongs to.
-        type: integer
       position:
         description: The position this bucket has when querying all buckets. See the
           tasks.position property on how to use this.
         type: number
+      project_id:
+        description: The project this bucket belongs to.
+        type: integer
       tasks:
         description: All tasks which belong to this bucket.
         items:
@@ -97,7 +97,7 @@ definitions:
   models.BulkAssignees:
     properties:
       assignees:
-        description: A list with all assignees
+        description: A project with all assignees
         items:
           $ref: '#/definitions/user.User'
         type: array
@@ -152,16 +152,16 @@ definitions:
         description: The unique, numeric id of this task.
         type: integer
       identifier:
-        description: The task identifier, based on the list identifier and the task's
-          index
+        description: The task identifier, based on the project identifier and the
+          task's index
         type: string
       index:
-        description: The task index, calculated per list
+        description: The task index, calculated per project
         type: integer
       is_favorite:
         description: True if a task is a favorite task. Favorite tasks show up in
-          a separate "Important" list. This value depends on the user making the call
-          to the api.
+          a separate "Important" project. This value depends on the user making the
+          call to the api.
         type: boolean
       kanban_position:
         description: The position of tasks in the kanban board. See the docs for the
@@ -172,15 +172,12 @@ definitions:
         items:
           $ref: '#/definitions/models.Label'
         type: array
-      list_id:
-        description: The list this task belongs to.
-        type: integer
       percent_done:
         description: Determines how far a task is left from being done
         type: number
       position:
         description: |-
-          The position of the task - any task list can be sorted as usual by this parameter.
+          The position of the task - any task project can be sorted as usual by this parameter.
           When accessing tasks via kanban buckets, this is primarily used to sort them based on a range
           We're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).
           You would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.
@@ -190,6 +187,9 @@ definitions:
       priority:
         description: The task priority. Can be anything you want, it is possible to
           sort by this later.
+        type: integer
+      project_id:
+        description: The project this task belongs to.
         type: integer
       related_tasks:
         allOf:
@@ -223,12 +223,12 @@ definitions:
           The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
           Will only returned when retreiving one task.
       task_ids:
-        description: A list of task ids to update
+        description: A project of task ids to update
         items:
           type: integer
         type: array
       title:
-        description: The task text. This is what you'll see in the list.
+        description: The task text. This is what you'll see in the project.
         minLength: 1
         type: string
       updated:
@@ -312,11 +312,11 @@ definitions:
   models.LinkSharing:
     properties:
       created:
-        description: A timestamp when this list was shared. You cannot change this
+        description: A timestamp when this project was shared. You cannot change this
           value.
         type: string
       hash:
-        description: The public id to get this shared list
+        description: The public id to get this shared project
         type: string
       id:
         description: The ID of the shared thing
@@ -333,13 +333,13 @@ definitions:
         allOf:
         - $ref: '#/definitions/models.Right'
         default: 0
-        description: The right this list is shared with. 0 = Read only, 1 = Read &
-          Write, 2 = Admin. See the docs for more details.
+        description: The right this project is shared with. 0 = Read only, 1 = Read
+          & Write, 2 = Admin. See the docs for more details.
         maximum: 2
       shared_by:
         allOf:
         - $ref: '#/definitions/user.User'
-        description: The user who shared this list
+        description: The user who shared this project
       sharing_type:
         allOf:
         - $ref: '#/definitions/models.SharingType'
@@ -350,103 +350,6 @@ definitions:
       updated:
         description: A timestamp when this share was last updated. You cannot change
           this value.
-        type: string
-    type: object
-  models.List:
-    properties:
-      background_blur_hash:
-        description: Contains a very small version of the list background to use as
-          a blurry preview until the actual background is loaded. Check out https://blurha.sh/
-          to learn how it works.
-        type: string
-      background_information:
-        description: Holds extra information about the background set since some background
-          providers require attribution or similar. If not null, the background can
-          be accessed at /lists/{listID}/background
-      created:
-        description: A timestamp when this list was created. You cannot change this
-          value.
-        type: string
-      description:
-        description: The description of the list.
-        type: string
-      hex_color:
-        description: The hex color of this list
-        maxLength: 6
-        type: string
-      id:
-        description: The unique, numeric id of this list.
-        type: integer
-      identifier:
-        description: The unique list short identifier. Used to build task identifiers.
-        maxLength: 10
-        minLength: 0
-        type: string
-      is_archived:
-        description: Whether or not a list is archived.
-        type: boolean
-      is_favorite:
-        description: True if a list is a favorite. Favorite lists show up in a separate
-          namespace. This value depends on the user making the call to the api.
-        type: boolean
-      namespace_id:
-        type: integer
-      owner:
-        allOf:
-        - $ref: '#/definitions/user.User'
-        description: The user who created this list.
-      position:
-        description: The position this list has when querying all lists. See the tasks.position
-          property on how to use this.
-        type: number
-      subscription:
-        allOf:
-        - $ref: '#/definitions/models.Subscription'
-        description: |-
-          The subscription status for the user reading this list. You can only read this property, use the subscription endpoints to modify it.
-          Will only returned when retreiving one list.
-      title:
-        description: The title of the list. You'll see this in the namespace overview.
-        maxLength: 250
-        minLength: 1
-        type: string
-      updated:
-        description: A timestamp when this list was last updated. You cannot change
-          this value.
-        type: string
-    type: object
-  models.ListDuplicate:
-    properties:
-      list:
-        allOf:
-        - $ref: '#/definitions/models.List'
-        description: The copied list
-      namespace_id:
-        description: The target namespace ID
-        type: integer
-    type: object
-  models.ListUser:
-    properties:
-      created:
-        description: A timestamp when this relation was created. You cannot change
-          this value.
-        type: string
-      id:
-        description: The unique, numeric id of this list <-> user relation.
-        type: integer
-      right:
-        allOf:
-        - $ref: '#/definitions/models.Right'
-        default: 0
-        description: The right this user has. 0 = Read only, 1 = Read & Write, 2 =
-          Admin. See the docs for more details.
-        maximum: 2
-      updated:
-        description: A timestamp when this relation was last updated. You cannot change
-          this value.
-        type: string
-      user_id:
-        description: The username.
         type: string
     type: object
   models.Message:
@@ -518,7 +421,7 @@ definitions:
         description: The username.
         type: string
     type: object
-  models.NamespaceWithLists:
+  models.NamespaceWithProjects:
     properties:
       created:
         description: A timestamp when this namespace was created. You cannot change
@@ -537,14 +440,14 @@ definitions:
       is_archived:
         description: Whether or not a namespace is archived.
         type: boolean
-      lists:
-        items:
-          $ref: '#/definitions/models.List'
-        type: array
       owner:
         allOf:
         - $ref: '#/definitions/user.User'
         description: The user who owns this namespace
+      projects:
+        items:
+          $ref: '#/definitions/models.Project'
+        type: array
       subscription:
         allOf:
         - $ref: '#/definitions/models.Subscription'
@@ -559,6 +462,104 @@ definitions:
       updated:
         description: A timestamp when this namespace was last updated. You cannot
           change this value.
+        type: string
+    type: object
+  models.Project:
+    properties:
+      background_blur_hash:
+        description: Contains a very small version of the project background to use
+          as a blurry preview until the actual background is loaded. Check out https://blurha.sh/
+          to learn how it works.
+        type: string
+      background_information:
+        description: Holds extra information about the background set since some background
+          providers require attribution or similar. If not null, the background can
+          be accessed at /projects/{projectID}/background
+      created:
+        description: A timestamp when this project was created. You cannot change
+          this value.
+        type: string
+      description:
+        description: The description of the project.
+        type: string
+      hex_color:
+        description: The hex color of this project
+        maxLength: 6
+        type: string
+      id:
+        description: The unique, numeric id of this project.
+        type: integer
+      identifier:
+        description: The unique project short identifier. Used to build task identifiers.
+        maxLength: 10
+        minLength: 0
+        type: string
+      is_archived:
+        description: Whether or not a project is archived.
+        type: boolean
+      is_favorite:
+        description: True if a project is a favorite. Favorite projects show up in
+          a separate namespace. This value depends on the user making the call to
+          the api.
+        type: boolean
+      namespace_id:
+        type: integer
+      owner:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who created this project.
+      position:
+        description: The position this project has when querying all projects. See
+          the tasks.position property on how to use this.
+        type: number
+      subscription:
+        allOf:
+        - $ref: '#/definitions/models.Subscription'
+        description: |-
+          The subscription status for the user reading this project. You can only read this property, use the subscription endpoints to modify it.
+          Will only returned when retreiving one project.
+      title:
+        description: The title of the project. You'll see this in the namespace overview.
+        maxLength: 250
+        minLength: 1
+        type: string
+      updated:
+        description: A timestamp when this project was last updated. You cannot change
+          this value.
+        type: string
+    type: object
+  models.ProjectDuplicate:
+    properties:
+      namespace_id:
+        description: The target namespace ID
+        type: integer
+      project:
+        allOf:
+        - $ref: '#/definitions/models.Project'
+        description: The copied project
+    type: object
+  models.ProjectUser:
+    properties:
+      created:
+        description: A timestamp when this relation was created. You cannot change
+          this value.
+        type: string
+      id:
+        description: The unique, numeric id of this project <-> user relation.
+        type: integer
+      right:
+        allOf:
+        - $ref: '#/definitions/models.Right'
+        default: 0
+        description: The right this user has. 0 = Read only, 1 = Read & Write, 2 =
+          Admin. See the docs for more details.
+        maximum: 2
+      updated:
+        description: A timestamp when this relation was last updated. You cannot change
+          this value.
+        type: string
+      user_id:
+        description: The username.
         type: string
     type: object
   models.RelatedTaskMap:
@@ -623,7 +624,7 @@ definitions:
         type: integer
       is_favorite:
         description: True if the filter is a favorite. Favorite filters show up in
-          a separate namespace together with favorite lists.
+          a separate namespace together with favorite projects.
         type: boolean
       owner:
         allOf:
@@ -718,16 +719,16 @@ definitions:
         description: The unique, numeric id of this task.
         type: integer
       identifier:
-        description: The task identifier, based on the list identifier and the task's
-          index
+        description: The task identifier, based on the project identifier and the
+          task's index
         type: string
       index:
-        description: The task index, calculated per list
+        description: The task index, calculated per project
         type: integer
       is_favorite:
         description: True if a task is a favorite task. Favorite tasks show up in
-          a separate "Important" list. This value depends on the user making the call
-          to the api.
+          a separate "Important" project. This value depends on the user making the
+          call to the api.
         type: boolean
       kanban_position:
         description: The position of tasks in the kanban board. See the docs for the
@@ -738,15 +739,12 @@ definitions:
         items:
           $ref: '#/definitions/models.Label'
         type: array
-      list_id:
-        description: The list this task belongs to.
-        type: integer
       percent_done:
         description: Determines how far a task is left from being done
         type: number
       position:
         description: |-
-          The position of the task - any task list can be sorted as usual by this parameter.
+          The position of the task - any task project can be sorted as usual by this parameter.
           When accessing tasks via kanban buckets, this is primarily used to sort them based on a range
           We're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).
           You would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.
@@ -756,6 +754,9 @@ definitions:
       priority:
         description: The task priority. Can be anything you want, it is possible to
           sort by this later.
+        type: integer
+      project_id:
+        description: The project this task belongs to.
         type: integer
       related_tasks:
         allOf:
@@ -789,7 +790,7 @@ definitions:
           The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
           Will only returned when retreiving one task.
       title:
-        description: The task text. This is what you'll see in the list.
+        description: The task text. This is what you'll see in the project.
         minLength: 1
         type: string
       updated:
@@ -929,30 +930,6 @@ definitions:
           this value.
         type: string
     type: object
-  models.TeamList:
-    properties:
-      created:
-        description: A timestamp when this relation was created. You cannot change
-          this value.
-        type: string
-      id:
-        description: The unique, numeric id of this list <-> team relation.
-        type: integer
-      right:
-        allOf:
-        - $ref: '#/definitions/models.Right'
-        default: 0
-        description: The right this team has. 0 = Read only, 1 = Read & Write, 2 =
-          Admin. See the docs for more details.
-        maximum: 2
-      team_id:
-        description: The team id.
-        type: integer
-      updated:
-        description: A timestamp when this relation was last updated. You cannot change
-          this value.
-        type: string
-    type: object
   models.TeamMember:
     properties:
       admin:
@@ -979,6 +956,30 @@ definitions:
         type: string
       id:
         description: The unique, numeric id of this namespace <-> team relation.
+        type: integer
+      right:
+        allOf:
+        - $ref: '#/definitions/models.Right'
+        default: 0
+        description: The right this team has. 0 = Read only, 1 = Read & Write, 2 =
+          Admin. See the docs for more details.
+        maximum: 2
+      team_id:
+        description: The team id.
+        type: integer
+      updated:
+        description: A timestamp when this relation was last updated. You cannot change
+          this value.
+        type: string
+    type: object
+  models.TeamProject:
+    properties:
+      created:
+        description: A timestamp when this relation was created. You cannot change
+          this value.
+        type: string
+      id:
+        description: The unique, numeric id of this project <-> team relation.
         type: integer
       right:
         allOf:
@@ -1286,9 +1287,9 @@ definitions:
     type: object
   v1.UserSettings:
     properties:
-      default_list_id:
+      default_project_id:
         description: |-
-          If a task is created without a specified list this value should be used. Applies
+          If a task is created without a specified project this value should be used. Applies
           to tasks made directly in API and from clients.
         type: integer
       discoverable_by_email:
@@ -1412,7 +1413,7 @@ info:
     * `x-pagination-total-pages`: The total number of available pages for this request
     * `x-pagination-result-count`: The number of items returned for this request.
     # Rights
-    All endpoints which return a single item (list, task, namespace, etc.) - no array - will also return a `x-max-right` header with the max right the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.
+    All endpoints which return a single item (project, task, namespace, etc.) - no array - will also return a `x-max-right` header with the max right the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.
     This can be used to show or hide ui elements based on the rights the user has.
     # Authorization
     **JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer <jwt-token>`-header to authenticate successfully.
@@ -1519,7 +1520,7 @@ paths:
       - JWTKeyAuth: []
       summary: Get an unsplash image
       tags:
-      - list
+      - project
   /backgrounds/unsplash/image/{image}/thumb:
     get:
       description: Get an unsplash thumbnail image. The thumbnail is cropped to a
@@ -1549,10 +1550,10 @@ paths:
       - JWTKeyAuth: []
       summary: Get an unsplash thumbnail image
       tags:
-      - list
+      - project
   /backgrounds/unsplash/search:
     get:
-      description: Search for a list background from unsplash
+      description: Search for a project background from unsplash
       parameters:
       - description: Search backgrounds from unsplash with this search term.
         in: query
@@ -1580,7 +1581,7 @@ paths:
       - JWTKeyAuth: []
       summary: Search for a background from unsplash
       tags:
-      - list
+      - project
   /filters:
     put:
       consumes:
@@ -1904,1235 +1905,6 @@ paths:
       summary: Update a label
       tags:
       - labels
-  /lists:
-    get:
-      consumes:
-      - application/json
-      description: Returns all lists a user has access to.
-      parameters:
-      - description: The page number. Used for pagination. If not provided, the first
-          page of results is returned.
-        in: query
-        name: page
-        type: integer
-      - description: The maximum number of items per page. Note this parameter is
-          limited by the configured maximum of items per page.
-        in: query
-        name: per_page
-        type: integer
-      - description: Search lists by title.
-        in: query
-        name: s
-        type: string
-      - description: If true, also returns all archived lists.
-        in: query
-        name: is_archived
-        type: boolean
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The lists
-          schema:
-            items:
-              $ref: '#/definitions/models.List'
-            type: array
-        "403":
-          description: The user does not have access to the list
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Get all lists a user has access to
-      tags:
-      - list
-  /lists/{id}:
-    delete:
-      description: Delets a list
-      parameters:
-      - description: List ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The list was successfully deleted.
-          schema:
-            $ref: '#/definitions/models.Message'
-        "400":
-          description: Invalid list object provided.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "403":
-          description: The user does not have access to the list
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Deletes a list
-      tags:
-      - list
-    get:
-      consumes:
-      - application/json
-      description: Returns a list by its ID.
-      parameters:
-      - description: List ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The list
-          schema:
-            $ref: '#/definitions/models.List'
-        "403":
-          description: The user does not have access to the list
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Gets one list
-      tags:
-      - list
-    post:
-      consumes:
-      - application/json
-      description: Updates a list. This does not include adding a task (see below).
-      parameters:
-      - description: List ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: The list with updated values you want to update.
-        in: body
-        name: list
-        required: true
-        schema:
-          $ref: '#/definitions/models.List'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The updated list.
-          schema:
-            $ref: '#/definitions/models.List'
-        "400":
-          description: Invalid list object provided.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "403":
-          description: The user does not have access to the list
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Updates a list
-      tags:
-      - list
-    put:
-      consumes:
-      - application/json
-      description: Inserts a task into a list.
-      parameters:
-      - description: List ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: The task object
-        in: body
-        name: task
-        required: true
-        schema:
-          $ref: '#/definitions/models.Task'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: The created task object.
-          schema:
-            $ref: '#/definitions/models.Task'
-        "400":
-          description: Invalid task object provided.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "403":
-          description: The user does not have access to the list
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Create a task
-      tags:
-      - task
-  /lists/{id}/background:
-    delete:
-      description: Removes a previously set list background, regardless of the list
-        provider used to set the background. It does not throw an error if the list
-        does not have a background.
-      parameters:
-      - description: List ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The list
-          schema:
-            $ref: '#/definitions/models.List'
-        "403":
-          description: No access to this list.
-          schema:
-            $ref: '#/definitions/models.Message'
-        "404":
-          description: The list does not exist.
-          schema:
-            $ref: '#/definitions/models.Message'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Remove a list background
-      tags:
-      - list
-    get:
-      description: Get the list background of a specific list. **Returns json on error.**
-      parameters:
-      - description: List ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/octet-stream
-      responses:
-        "200":
-          description: The list background file.
-          schema:
-            type: ""
-        "403":
-          description: No access to this list.
-          schema:
-            $ref: '#/definitions/models.Message'
-        "404":
-          description: The list does not exist.
-          schema:
-            $ref: '#/definitions/models.Message'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Get the list background
-      tags:
-      - list
-  /lists/{id}/backgrounds/unsplash:
-    post:
-      consumes:
-      - application/json
-      description: Sets a photo from unsplash as list background.
-      parameters:
-      - description: List ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: The image you want to set as background
-        in: body
-        name: list
-        required: true
-        schema:
-          $ref: '#/definitions/background.Image'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The background has been successfully set.
-          schema:
-            $ref: '#/definitions/models.List'
-        "400":
-          description: Invalid image object provided.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "403":
-          description: The user does not have access to the list
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Set an unsplash photo as list background
-      tags:
-      - list
-  /lists/{id}/backgrounds/upload:
-    put:
-      consumes:
-      - multipart/form-data
-      description: Upload a list background.
-      parameters:
-      - description: List ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: The file as single file.
-        in: formData
-        name: background
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The background was set successfully.
-          schema:
-            $ref: '#/definitions/models.Message'
-        "400":
-          description: File is no image.
-          schema:
-            $ref: '#/definitions/models.Message'
-        "403":
-          description: File too large.
-          schema:
-            $ref: '#/definitions/models.Message'
-        "404":
-          description: The list does not exist.
-          schema:
-            $ref: '#/definitions/models.Message'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Upload a list background
-      tags:
-      - list
-  /lists/{id}/buckets:
-    get:
-      consumes:
-      - application/json
-      description: Returns all kanban buckets with belong to a list including their
-        tasks.
-      parameters:
-      - description: List Id
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: The page number for tasks. Used for pagination. If not provided,
-          the first page of results is returned.
-        in: query
-        name: page
-        type: integer
-      - description: The maximum number of tasks per bucket per page. This parameter
-          is limited by the configured maximum of items per page.
-        in: query
-        name: per_page
-        type: integer
-      - description: Search tasks by task text.
-        in: query
-        name: s
-        type: string
-      - description: The name of the field to filter by. Allowed values are all task
-          properties. Task properties which are their own object require passing in
-          the id of that entity. Accepts an array for multiple filters which will
-          be chanied together, all supplied filter must match.
-        in: query
-        name: filter_by
-        type: string
-      - description: The value to filter for.
-        in: query
-        name: filter_value
-        type: string
-      - description: The comparator to use for a filter. Available values are `equals`,
-          `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in`
-          expects comma-separated values in `filter_value`. Defaults to `equals`
-        in: query
-        name: filter_comparator
-        type: string
-      - description: The concatinator to use for filters. Available values are `and`
-          or `or`. Defaults to `or`.
-        in: query
-        name: filter_concat
-        type: string
-      - description: If set to true the result will include filtered fields whose
-          value is set to `null`. Available values are `true` or `false`. Defaults
-          to `false`.
-        in: query
-        name: filter_include_nulls
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The buckets with their tasks
-          schema:
-            items:
-              $ref: '#/definitions/models.Bucket'
-            type: array
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Get all kanban buckets of a list
-      tags:
-      - task
-    put:
-      consumes:
-      - application/json
-      description: Creates a new kanban bucket on a list.
-      parameters:
-      - description: List Id
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: The bucket object
-        in: body
-        name: bucket
-        required: true
-        schema:
-          $ref: '#/definitions/models.Bucket'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The created bucket object.
-          schema:
-            $ref: '#/definitions/models.Bucket'
-        "400":
-          description: Invalid bucket object provided.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "404":
-          description: The list does not exist.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Create a new bucket
-      tags:
-      - task
-  /lists/{id}/listusers:
-    get:
-      consumes:
-      - application/json
-      description: Lists all users (without emailadresses). Also possible to search
-        for a specific user.
-      parameters:
-      - description: Search for a user by its name.
-        in: query
-        name: s
-        type: string
-      - description: List ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: All (found) users.
-          schema:
-            items:
-              $ref: '#/definitions/user.User'
-            type: array
-        "400":
-          description: Something's invalid.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "401":
-          description: The user does not have the right to see the list.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal server error.
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Get users
-      tags:
-      - list
-  /lists/{id}/teams:
-    get:
-      consumes:
-      - application/json
-      description: Returns a list with all teams which have access on a given list.
-      parameters:
-      - description: List ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: The page number. Used for pagination. If not provided, the first
-          page of results is returned.
-        in: query
-        name: page
-        type: integer
-      - description: The maximum number of items per page. Note this parameter is
-          limited by the configured maximum of items per page.
-        in: query
-        name: per_page
-        type: integer
-      - description: Search teams by its name.
-        in: query
-        name: s
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The teams with their right.
-          schema:
-            items:
-              $ref: '#/definitions/models.TeamWithRight'
-            type: array
-        "403":
-          description: No right to see the list.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Get teams on a list
-      tags:
-      - sharing
-    put:
-      consumes:
-      - application/json
-      description: Gives a team access to a list.
-      parameters:
-      - description: List ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: The team you want to add to the list.
-        in: body
-        name: list
-        required: true
-        schema:
-          $ref: '#/definitions/models.TeamList'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: The created team<->list relation.
-          schema:
-            $ref: '#/definitions/models.TeamList'
-        "400":
-          description: Invalid team list object provided.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "403":
-          description: The user does not have access to the list
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "404":
-          description: The team does not exist.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Add a team to a list
-      tags:
-      - sharing
-  /lists/{id}/users:
-    get:
-      consumes:
-      - application/json
-      description: Returns a list with all users which have access on a given list.
-      parameters:
-      - description: List ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: The page number. Used for pagination. If not provided, the first
-          page of results is returned.
-        in: query
-        name: page
-        type: integer
-      - description: The maximum number of items per page. Note this parameter is
-          limited by the configured maximum of items per page.
-        in: query
-        name: per_page
-        type: integer
-      - description: Search users by its name.
-        in: query
-        name: s
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The users with the right they have.
-          schema:
-            items:
-              $ref: '#/definitions/models.UserWithRight'
-            type: array
-        "403":
-          description: No right to see the list.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Get users on a list
-      tags:
-      - sharing
-    put:
-      consumes:
-      - application/json
-      description: Gives a user access to a list.
-      parameters:
-      - description: List ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: The user you want to add to the list.
-        in: body
-        name: list
-        required: true
-        schema:
-          $ref: '#/definitions/models.ListUser'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: The created user<->list relation.
-          schema:
-            $ref: '#/definitions/models.ListUser'
-        "400":
-          description: Invalid user list object provided.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "403":
-          description: The user does not have access to the list
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "404":
-          description: The user does not exist.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Add a user to a list
-      tags:
-      - sharing
-  /lists/{list}/shares:
-    get:
-      consumes:
-      - application/json
-      description: Returns all link shares which exist for a given list
-      parameters:
-      - description: List ID
-        in: path
-        name: list
-        required: true
-        type: integer
-      - description: The page number. Used for pagination. If not provided, the first
-          page of results is returned.
-        in: query
-        name: page
-        type: integer
-      - description: The maximum number of items per page. Note this parameter is
-          limited by the configured maximum of items per page.
-        in: query
-        name: per_page
-        type: integer
-      - description: Search shares by hash.
-        in: query
-        name: s
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The share links
-          schema:
-            items:
-              $ref: '#/definitions/models.LinkSharing'
-            type: array
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Get all link shares for a list
-      tags:
-      - sharing
-    put:
-      consumes:
-      - application/json
-      description: Share a list via link. The user needs to have write-access to the
-        list to be able do this.
-      parameters:
-      - description: List ID
-        in: path
-        name: list
-        required: true
-        type: integer
-      - description: The new link share object
-        in: body
-        name: label
-        required: true
-        schema:
-          $ref: '#/definitions/models.LinkSharing'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: The created link share object.
-          schema:
-            $ref: '#/definitions/models.LinkSharing'
-        "400":
-          description: Invalid link share object provided.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "403":
-          description: Not allowed to add the list share.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "404":
-          description: The list does not exist.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Share a list via link
-      tags:
-      - sharing
-  /lists/{list}/shares/{share}:
-    delete:
-      consumes:
-      - application/json
-      description: Remove a link share. The user needs to have write-access to the
-        list to be able do this.
-      parameters:
-      - description: List ID
-        in: path
-        name: list
-        required: true
-        type: integer
-      - description: Share Link ID
-        in: path
-        name: share
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The link was successfully removed.
-          schema:
-            $ref: '#/definitions/models.Message'
-        "403":
-          description: Not allowed to remove the link.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "404":
-          description: Share Link not found.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Remove a link share
-      tags:
-      - sharing
-    get:
-      consumes:
-      - application/json
-      description: Returns one link share by its ID.
-      parameters:
-      - description: List ID
-        in: path
-        name: list
-        required: true
-        type: integer
-      - description: Share ID
-        in: path
-        name: share
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The share links
-          schema:
-            $ref: '#/definitions/models.LinkSharing'
-        "403":
-          description: No access to the list
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "404":
-          description: Share Link not found.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Get one link shares for a list
-      tags:
-      - sharing
-  /lists/{listID}/buckets/{bucketID}:
-    delete:
-      consumes:
-      - application/json
-      description: Deletes an existing kanban bucket and dissociates all of its task.
-        It does not delete any tasks. You cannot delete the last bucket on a list.
-      parameters:
-      - description: List Id
-        in: path
-        name: listID
-        required: true
-        type: integer
-      - description: Bucket Id
-        in: path
-        name: bucketID
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Successfully deleted.
-          schema:
-            $ref: '#/definitions/models.Message'
-        "404":
-          description: The bucket does not exist.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Deletes an existing bucket
-      tags:
-      - task
-    post:
-      consumes:
-      - application/json
-      description: Updates an existing kanban bucket.
-      parameters:
-      - description: List Id
-        in: path
-        name: listID
-        required: true
-        type: integer
-      - description: Bucket Id
-        in: path
-        name: bucketID
-        required: true
-        type: integer
-      - description: The bucket object
-        in: body
-        name: bucket
-        required: true
-        schema:
-          $ref: '#/definitions/models.Bucket'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The created bucket object.
-          schema:
-            $ref: '#/definitions/models.Bucket'
-        "400":
-          description: Invalid bucket object provided.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "404":
-          description: The bucket does not exist.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Update an existing bucket
-      tags:
-      - task
-  /lists/{listID}/duplicate:
-    put:
-      consumes:
-      - application/json
-      description: Copies the list, tasks, files, kanban data, assignees, comments,
-        attachments, lables, relations, backgrounds, user/team rights and link shares
-        from one list to a new namespace. The user needs read access in the list and
-        write access in the namespace of the new list.
-      parameters:
-      - description: The list ID to duplicate
-        in: path
-        name: listID
-        required: true
-        type: integer
-      - description: The target namespace which should hold the copied list.
-        in: body
-        name: list
-        required: true
-        schema:
-          $ref: '#/definitions/models.ListDuplicate'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: The created list.
-          schema:
-            $ref: '#/definitions/models.ListDuplicate'
-        "400":
-          description: Invalid list duplicate object provided.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "403":
-          description: The user does not have access to the list or namespace
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Duplicate an existing list
-      tags:
-      - list
-  /lists/{listID}/tasks:
-    get:
-      consumes:
-      - application/json
-      description: Returns all tasks for the current list.
-      parameters:
-      - description: The list ID.
-        in: path
-        name: listID
-        required: true
-        type: integer
-      - description: The page number. Used for pagination. If not provided, the first
-          page of results is returned.
-        in: query
-        name: page
-        type: integer
-      - description: The maximum number of items per page. Note this parameter is
-          limited by the configured maximum of items per page.
-        in: query
-        name: per_page
-        type: integer
-      - description: Search tasks by task text.
-        in: query
-        name: s
-        type: string
-      - description: The sorting parameter. You can pass this multiple times to get
-          the tasks ordered by multiple different parametes, along with `order_by`.
-          Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`,
-          `due_date`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date`,
-          `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default
-          is `id`.
-        in: query
-        name: sort_by
-        type: string
-      - description: The ordering parameter. Possible values to order by are `asc`
-          or `desc`. Default is `asc`.
-        in: query
-        name: order_by
-        type: string
-      - description: The name of the field to filter by. Allowed values are all task
-          properties. Task properties which are their own object require passing in
-          the id of that entity. Accepts an array for multiple filters which will
-          be chanied together, all supplied filter must match.
-        in: query
-        name: filter_by
-        type: string
-      - description: The value to filter for. You can use [grafana](https://grafana.com/docs/grafana/latest/dashboards/time-range-controls)-
-          or [elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#date-math)-style
-          relative dates for all date fields like `due_date`, `start_date`, `end_date`,
-          etc.
-        in: query
-        name: filter_value
-        type: string
-      - description: The comparator to use for a filter. Available values are `equals`,
-          `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in`
-          expects comma-separated values in `filter_value`. Defaults to `equals`
-        in: query
-        name: filter_comparator
-        type: string
-      - description: The concatinator to use for filters. Available values are `and`
-          or `or`. Defaults to `or`.
-        in: query
-        name: filter_concat
-        type: string
-      - description: If set to true the result will include filtered fields whose
-          value is set to `null`. Available values are `true` or `false`. Defaults
-          to `false`.
-        in: query
-        name: filter_include_nulls
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The tasks
-          schema:
-            items:
-              $ref: '#/definitions/models.Task'
-            type: array
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Get tasks in a list
-      tags:
-      - task
-  /lists/{listID}/teams/{teamID}:
-    delete:
-      description: Delets a team from a list. The team won't have access to the list
-        anymore.
-      parameters:
-      - description: List ID
-        in: path
-        name: listID
-        required: true
-        type: integer
-      - description: Team ID
-        in: path
-        name: teamID
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The team was successfully deleted.
-          schema:
-            $ref: '#/definitions/models.Message'
-        "403":
-          description: The user does not have access to the list
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "404":
-          description: Team or list does not exist.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Delete a team from a list
-      tags:
-      - sharing
-    post:
-      consumes:
-      - application/json
-      description: Update a team <-> list relation. Mostly used to update the right
-        that team has.
-      parameters:
-      - description: List ID
-        in: path
-        name: listID
-        required: true
-        type: integer
-      - description: Team ID
-        in: path
-        name: teamID
-        required: true
-        type: integer
-      - description: The team you want to update.
-        in: body
-        name: list
-        required: true
-        schema:
-          $ref: '#/definitions/models.TeamList'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The updated team <-> list relation.
-          schema:
-            $ref: '#/definitions/models.TeamList'
-        "403":
-          description: The user does not have admin-access to the list
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "404":
-          description: Team or list does not exist.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Update a team <-> list relation
-      tags:
-      - sharing
-  /lists/{listID}/users/{userID}:
-    delete:
-      description: Delets a user from a list. The user won't have access to the list
-        anymore.
-      parameters:
-      - description: List ID
-        in: path
-        name: listID
-        required: true
-        type: integer
-      - description: User ID
-        in: path
-        name: userID
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The user was successfully removed from the list.
-          schema:
-            $ref: '#/definitions/models.Message'
-        "403":
-          description: The user does not have access to the list
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "404":
-          description: user or list does not exist.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Delete a user from a list
-      tags:
-      - sharing
-    post:
-      consumes:
-      - application/json
-      description: Update a user <-> list relation. Mostly used to update the right
-        that user has.
-      parameters:
-      - description: List ID
-        in: path
-        name: listID
-        required: true
-        type: integer
-      - description: User ID
-        in: path
-        name: userID
-        required: true
-        type: integer
-      - description: The user you want to update.
-        in: body
-        name: list
-        required: true
-        schema:
-          $ref: '#/definitions/models.ListUser'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The updated user <-> list relation.
-          schema:
-            $ref: '#/definitions/models.ListUser'
-        "403":
-          description: The user does not have admin-access to the list
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "404":
-          description: User or list does not exist.
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Update a user <-> list relation
-      tags:
-      - sharing
   /login:
     post:
       consumes:
@@ -3214,7 +1986,7 @@ paths:
             $ref: '#/definitions/models.Message'
       security:
       - JWTKeyAuth: []
-      summary: Migrate all lists, tasks etc. from Microsoft Todo
+      summary: Migrate all projects, tasks etc. from Microsoft Todo
       tags:
       - migration
   /migration/microsoft-todo/status:
@@ -3263,7 +2035,7 @@ paths:
             $ref: '#/definitions/models.Message'
       security:
       - JWTKeyAuth: []
-      summary: Import all lists, tasks etc. from a TickTick backup export
+      summary: Import all projects, tasks etc. from a TickTick backup export
       tags:
       - migration
   /migration/ticktick/status:
@@ -3405,7 +2177,7 @@ paths:
             $ref: '#/definitions/models.Message'
       security:
       - JWTKeyAuth: []
-      summary: Migrate all lists, tasks etc. from trello
+      summary: Migrate all projects, tasks etc. from trello
       tags:
       - migration
   /migration/trello/status:
@@ -3454,7 +2226,7 @@ paths:
             $ref: '#/definitions/models.Message'
       security:
       - JWTKeyAuth: []
-      summary: Import all lists, tasks etc. from a Vikunja data export
+      summary: Import all projects, tasks etc. from a Vikunja data export
       tags:
       - migration
   /migration/vikunja-file/status:
@@ -3543,7 +2315,7 @@ paths:
         in: query
         name: is_archived
         type: boolean
-      - description: If true, also returns only namespaces without their lists.
+      - description: If true, also returns only namespaces without their projects.
         in: query
         name: namespaces_only
         type: boolean
@@ -3554,7 +2326,7 @@ paths:
           description: The Namespaces.
           schema:
             items:
-              $ref: '#/definitions/models.NamespaceWithLists'
+              $ref: '#/definitions/models.NamespaceWithProjects'
             type: array
         "500":
           description: Internal error
@@ -3663,11 +2435,11 @@ paths:
       summary: Gets one namespace
       tags:
       - namespace
-  /namespaces/{id}/lists:
+  /namespaces/{id}/projects:
     get:
       consumes:
       - application/json
-      description: Returns all lists inside of a namespace.
+      description: Returns all projects inside of a namespace.
       parameters:
       - description: Namespace ID
         in: path
@@ -3678,10 +2450,10 @@ paths:
       - application/json
       responses:
         "200":
-          description: The lists.
+          description: The projects.
           schema:
             items:
-              $ref: '#/definitions/models.List'
+              $ref: '#/definitions/models.Project'
             type: array
         "403":
           description: No access to that namespace.
@@ -3697,7 +2469,7 @@ paths:
             $ref: '#/definitions/models.Message'
       security:
       - JWTKeyAuth: []
-      summary: Get all lists in a namespace
+      summary: Get all projects in a namespace
       tags:
       - namespace
   /namespaces/{id}/teams:
@@ -3884,11 +2656,11 @@ paths:
       summary: Add a user to a namespace
       tags:
       - sharing
-  /namespaces/{namespaceID}/lists:
+  /namespaces/{namespaceID}/projects:
     put:
       consumes:
       - application/json
-      description: Creates a new list in a given namespace. The user needs write-access
+      description: Creates a new project in a given namespace. The user needs write-access
         to the namespace.
       parameters:
       - description: Namespace ID
@@ -3896,25 +2668,25 @@ paths:
         name: namespaceID
         required: true
         type: integer
-      - description: The list you want to create.
+      - description: The project you want to create.
         in: body
-        name: list
+        name: project
         required: true
         schema:
-          $ref: '#/definitions/models.List'
+          $ref: '#/definitions/models.Project'
       produces:
       - application/json
       responses:
         "201":
-          description: The created list.
+          description: The created project.
           schema:
-            $ref: '#/definitions/models.List'
+            $ref: '#/definitions/models.Project'
         "400":
-          description: Invalid list object provided.
+          description: Invalid project object provided.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "403":
-          description: The user does not have access to the list
+          description: The user does not have access to the project
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -3923,9 +2695,9 @@ paths:
             $ref: '#/definitions/models.Message'
       security:
       - JWTKeyAuth: []
-      summary: Creates a new list
+      summary: Creates a new project
       tags:
-      - list
+      - project
   /namespaces/{namespaceID}/teams/{teamID}:
     delete:
       description: Delets a team from a namespace. The team won't have access to the
@@ -4170,6 +2942,1236 @@ paths:
       summary: Mark a notification as (un-)read
       tags:
       - subscriptions
+  /projects:
+    get:
+      consumes:
+      - application/json
+      description: Returns all projects a user has access to.
+      parameters:
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search projects by title.
+        in: query
+        name: s
+        type: string
+      - description: If true, also returns all archived projects.
+        in: query
+        name: is_archived
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The projects
+          schema:
+            items:
+              $ref: '#/definitions/models.Project'
+            type: array
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all projects a user has access to
+      tags:
+      - project
+  /projects/{id}:
+    delete:
+      description: Delets a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The project was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Invalid project object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Deletes a project
+      tags:
+      - project
+    get:
+      consumes:
+      - application/json
+      description: Returns a project by its ID.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The project
+          schema:
+            $ref: '#/definitions/models.Project'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Gets one project
+      tags:
+      - project
+    post:
+      consumes:
+      - application/json
+      description: Updates a project. This does not include adding a task (see below).
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The project with updated values you want to update.
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.Project'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated project.
+          schema:
+            $ref: '#/definitions/models.Project'
+        "400":
+          description: Invalid project object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Updates a project
+      tags:
+      - project
+    put:
+      consumes:
+      - application/json
+      description: Inserts a task into a project.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The task object
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/models.Task'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created task object.
+          schema:
+            $ref: '#/definitions/models.Task'
+        "400":
+          description: Invalid task object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Create a task
+      tags:
+      - task
+  /projects/{id}/background:
+    delete:
+      description: Removes a previously set project background, regardless of the
+        project provider used to set the background. It does not throw an error if
+        the project does not have a background.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The project
+          schema:
+            $ref: '#/definitions/models.Project'
+        "403":
+          description: No access to this project.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The project does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Remove a project background
+      tags:
+      - project
+    get:
+      description: Get the project background of a specific project. **Returns json
+        on error.**
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: The project background file.
+          schema:
+            type: ""
+        "403":
+          description: No access to this project.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The project does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get the project background
+      tags:
+      - project
+  /projects/{id}/backgrounds/unsplash:
+    post:
+      consumes:
+      - application/json
+      description: Sets a photo from unsplash as project background.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The image you want to set as background
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/background.Image'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The background has been successfully set.
+          schema:
+            $ref: '#/definitions/models.Project'
+        "400":
+          description: Invalid image object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Set an unsplash photo as project background
+      tags:
+      - project
+  /projects/{id}/backgrounds/upload:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload a project background.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The file as single file.
+        in: formData
+        name: background
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The background was set successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: File is no image.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: File too large.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The project does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Upload a project background
+      tags:
+      - project
+  /projects/{id}/buckets:
+    get:
+      consumes:
+      - application/json
+      description: Returns all kanban buckets with belong to a project including their
+        tasks.
+      parameters:
+      - description: Project Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The page number for tasks. Used for pagination. If not provided,
+          the first page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of tasks per bucket per page. This parameter
+          is limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search tasks by task text.
+        in: query
+        name: s
+        type: string
+      - description: The name of the field to filter by. Allowed values are all task
+          properties. Task properties which are their own object require passing in
+          the id of that entity. Accepts an array for multiple filters which will
+          be chanied together, all supplied filter must match.
+        in: query
+        name: filter_by
+        type: string
+      - description: The value to filter for.
+        in: query
+        name: filter_value
+        type: string
+      - description: The comparator to use for a filter. Available values are `equals`,
+          `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in`
+          expects comma-separated values in `filter_value`. Defaults to `equals`
+        in: query
+        name: filter_comparator
+        type: string
+      - description: The concatinator to use for filters. Available values are `and`
+          or `or`. Defaults to `or`.
+        in: query
+        name: filter_concat
+        type: string
+      - description: If set to true the result will include filtered fields whose
+          value is set to `null`. Available values are `true` or `false`. Defaults
+          to `false`.
+        in: query
+        name: filter_include_nulls
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The buckets with their tasks
+          schema:
+            items:
+              $ref: '#/definitions/models.Bucket'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all kanban buckets of a project
+      tags:
+      - task
+    put:
+      consumes:
+      - application/json
+      description: Creates a new kanban bucket on a project.
+      parameters:
+      - description: Project Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The bucket object
+        in: body
+        name: bucket
+        required: true
+        schema:
+          $ref: '#/definitions/models.Bucket'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created bucket object.
+          schema:
+            $ref: '#/definitions/models.Bucket'
+        "400":
+          description: Invalid bucket object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The project does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Create a new bucket
+      tags:
+      - task
+  /projects/{id}/projectusers:
+    get:
+      consumes:
+      - application/json
+      description: Lists all users (without emailadresses). Also possible to search
+        for a specific user.
+      parameters:
+      - description: Search for a user by its name.
+        in: query
+        name: s
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All (found) users.
+          schema:
+            items:
+              $ref: '#/definitions/user.User'
+            type: array
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "401":
+          description: The user does not have the right to see the project.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get users
+      tags:
+      - project
+  /projects/{id}/teams:
+    get:
+      consumes:
+      - application/json
+      description: Returns a project with all teams which have access on a given project.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search teams by its name.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The teams with their right.
+          schema:
+            items:
+              $ref: '#/definitions/models.TeamWithRight'
+            type: array
+        "403":
+          description: No right to see the project.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get teams on a project
+      tags:
+      - sharing
+    put:
+      consumes:
+      - application/json
+      description: Gives a team access to a project.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The team you want to add to the project.
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.TeamProject'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created team<->project relation.
+          schema:
+            $ref: '#/definitions/models.TeamProject'
+        "400":
+          description: Invalid team project object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The team does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Add a team to a project
+      tags:
+      - sharing
+  /projects/{id}/users:
+    get:
+      consumes:
+      - application/json
+      description: Returns a project with all users which have access on a given project.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search users by its name.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The users with the right they have.
+          schema:
+            items:
+              $ref: '#/definitions/models.UserWithRight'
+            type: array
+        "403":
+          description: No right to see the project.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get users on a project
+      tags:
+      - sharing
+    put:
+      consumes:
+      - application/json
+      description: Gives a user access to a project.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The user you want to add to the project.
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProjectUser'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created user<->project relation.
+          schema:
+            $ref: '#/definitions/models.ProjectUser'
+        "400":
+          description: Invalid user project object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The user does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Add a user to a project
+      tags:
+      - sharing
+  /projects/{project}/shares:
+    get:
+      consumes:
+      - application/json
+      description: Returns all link shares which exist for a given project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search shares by hash.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The share links
+          schema:
+            items:
+              $ref: '#/definitions/models.LinkSharing'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all link shares for a project
+      tags:
+      - sharing
+    put:
+      consumes:
+      - application/json
+      description: Share a project via link. The user needs to have write-access to
+        the project to be able do this.
+      parameters:
+      - description: Project ID
+        in: path
+        name: project
+        required: true
+        type: integer
+      - description: The new link share object
+        in: body
+        name: label
+        required: true
+        schema:
+          $ref: '#/definitions/models.LinkSharing'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created link share object.
+          schema:
+            $ref: '#/definitions/models.LinkSharing'
+        "400":
+          description: Invalid link share object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: Not allowed to add the project share.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The project does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Share a project via link
+      tags:
+      - sharing
+  /projects/{project}/shares/{share}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a link share. The user needs to have write-access to the
+        project to be able do this.
+      parameters:
+      - description: Project ID
+        in: path
+        name: project
+        required: true
+        type: integer
+      - description: Share Link ID
+        in: path
+        name: share
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The link was successfully removed.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: Not allowed to remove the link.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Share Link not found.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Remove a link share
+      tags:
+      - sharing
+    get:
+      consumes:
+      - application/json
+      description: Returns one link share by its ID.
+      parameters:
+      - description: Project ID
+        in: path
+        name: project
+        required: true
+        type: integer
+      - description: Share ID
+        in: path
+        name: share
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The share links
+          schema:
+            $ref: '#/definitions/models.LinkSharing'
+        "403":
+          description: No access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Share Link not found.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get one link shares for a project
+      tags:
+      - sharing
+  /projects/{projectID}/buckets/{bucketID}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes an existing kanban bucket and dissociates all of its task.
+        It does not delete any tasks. You cannot delete the last bucket on a project.
+      parameters:
+      - description: Project Id
+        in: path
+        name: projectID
+        required: true
+        type: integer
+      - description: Bucket Id
+        in: path
+        name: bucketID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The bucket does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Deletes an existing bucket
+      tags:
+      - task
+    post:
+      consumes:
+      - application/json
+      description: Updates an existing kanban bucket.
+      parameters:
+      - description: Project Id
+        in: path
+        name: projectID
+        required: true
+        type: integer
+      - description: Bucket Id
+        in: path
+        name: bucketID
+        required: true
+        type: integer
+      - description: The bucket object
+        in: body
+        name: bucket
+        required: true
+        schema:
+          $ref: '#/definitions/models.Bucket'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created bucket object.
+          schema:
+            $ref: '#/definitions/models.Bucket'
+        "400":
+          description: Invalid bucket object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The bucket does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Update an existing bucket
+      tags:
+      - task
+  /projects/{projectID}/duplicate:
+    put:
+      consumes:
+      - application/json
+      description: Copies the project, tasks, files, kanban data, assignees, comments,
+        attachments, lables, relations, backgrounds, user/team rights and link shares
+        from one project to a new namespace. The user needs read access in the project
+        and write access in the namespace of the new project.
+      parameters:
+      - description: The project ID to duplicate
+        in: path
+        name: projectID
+        required: true
+        type: integer
+      - description: The target namespace which should hold the copied project.
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProjectDuplicate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created project.
+          schema:
+            $ref: '#/definitions/models.ProjectDuplicate'
+        "400":
+          description: Invalid project duplicate object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the project or namespace
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Duplicate an existing project
+      tags:
+      - project
+  /projects/{projectID}/tasks:
+    get:
+      consumes:
+      - application/json
+      description: Returns all tasks for the current project.
+      parameters:
+      - description: The project ID.
+        in: path
+        name: projectID
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search tasks by task text.
+        in: query
+        name: s
+        type: string
+      - description: The sorting parameter. You can pass this multiple times to get
+          the tasks ordered by multiple different parametes, along with `order_by`.
+          Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`,
+          `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`,
+          `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default
+          is `id`.
+        in: query
+        name: sort_by
+        type: string
+      - description: The ordering parameter. Possible values to order by are `asc`
+          or `desc`. Default is `asc`.
+        in: query
+        name: order_by
+        type: string
+      - description: The name of the field to filter by. Allowed values are all task
+          properties. Task properties which are their own object require passing in
+          the id of that entity. Accepts an array for multiple filters which will
+          be chanied together, all supplied filter must match.
+        in: query
+        name: filter_by
+        type: string
+      - description: The value to filter for. You can use [grafana](https://grafana.com/docs/grafana/latest/dashboards/time-range-controls)-
+          or [elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#date-math)-style
+          relative dates for all date fields like `due_date`, `start_date`, `end_date`,
+          etc.
+        in: query
+        name: filter_value
+        type: string
+      - description: The comparator to use for a filter. Available values are `equals`,
+          `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in`
+          expects comma-separated values in `filter_value`. Defaults to `equals`
+        in: query
+        name: filter_comparator
+        type: string
+      - description: The concatinator to use for filters. Available values are `and`
+          or `or`. Defaults to `or`.
+        in: query
+        name: filter_concat
+        type: string
+      - description: If set to true the result will include filtered fields whose
+          value is set to `null`. Available values are `true` or `false`. Defaults
+          to `false`.
+        in: query
+        name: filter_include_nulls
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The tasks
+          schema:
+            items:
+              $ref: '#/definitions/models.Task'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get tasks in a project
+      tags:
+      - task
+  /projects/{projectID}/teams/{teamID}:
+    delete:
+      description: Delets a team from a project. The team won't have access to the
+        project anymore.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: integer
+      - description: Team ID
+        in: path
+        name: teamID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The team was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Team or project does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Delete a team from a project
+      tags:
+      - sharing
+    post:
+      consumes:
+      - application/json
+      description: Update a team <-> project relation. Mostly used to update the right
+        that team has.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: integer
+      - description: Team ID
+        in: path
+        name: teamID
+        required: true
+        type: integer
+      - description: The team you want to update.
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.TeamProject'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated team <-> project relation.
+          schema:
+            $ref: '#/definitions/models.TeamProject'
+        "403":
+          description: The user does not have admin-access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Team or project does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Update a team <-> project relation
+      tags:
+      - sharing
+  /projects/{projectID}/users/{userID}:
+    delete:
+      description: Delets a user from a project. The user won't have access to the
+        project anymore.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The user was successfully removed from the project.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: user or project does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Delete a user from a project
+      tags:
+      - sharing
+    post:
+      consumes:
+      - application/json
+      description: Update a user <-> project relation. Mostly used to update the right
+        that user has.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      - description: The user you want to update.
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProjectUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated user <-> project relation.
+          schema:
+            $ref: '#/definitions/models.ProjectUser'
+        "403":
+          description: The user does not have admin-access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: User or project does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Update a user <-> project relation
+      tags:
+      - sharing
   /register:
     post:
       consumes:
@@ -4205,7 +4207,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Get a jwt auth token for a shared list from a share hash.
+      description: Get a jwt auth token for a shared project from a share hash.
       parameters:
       - description: The password for link shares which require one.
         in: body
@@ -4243,7 +4245,7 @@ paths:
       description: Unsubscribes the current user to an entity.
       parameters:
       - description: The entity the user subscribed to. Can be either `namespace`,
-          `list` or `task`.
+          `project` or `task`.
         in: path
         name: entity
         required: true
@@ -4283,7 +4285,7 @@ paths:
       description: Subscribes the current user to an entity.
       parameters:
       - description: The entity the user subscribes to. Can be either `namespace`,
-          `list` or `task`.
+          `project` or `task`.
         in: path
         name: entity
         required: true
@@ -4350,7 +4352,7 @@ paths:
       - task
   /tasks/{id}:
     delete:
-      description: Deletes a task from a list. This does not mean "mark it done".
+      description: Deletes a task from a project. This does not mean "mark it done".
       parameters:
       - description: Task ID
         in: path
@@ -4369,7 +4371,7 @@ paths:
           schema:
             $ref: '#/definitions/web.HTTPError'
         "403":
-          description: The user does not have access to the list
+          description: The user does not have access to the project
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -4411,7 +4413,7 @@ paths:
           schema:
             $ref: '#/definitions/web.HTTPError'
         "403":
-          description: The user does not have access to the task (aka its list)
+          description: The user does not have access to the task (aka its project)
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -4634,7 +4636,7 @@ paths:
       consumes:
       - application/json
       description: Add a label to a task. The user needs to have write-access to the
-        list to be able do this.
+        project to be able do this.
       parameters:
       - description: Task ID
         in: path
@@ -4680,7 +4682,7 @@ paths:
       consumes:
       - application/json
       description: Remove a label from a task. The user needs to have write-access
-        to the list to be able do this.
+        to the project to be able do this.
       parameters:
       - description: Task ID
         in: path
@@ -4763,7 +4765,7 @@ paths:
       consumes:
       - application/json
       description: Adds a new assignee to a task. The assignee needs to have access
-        to the list, the doer must be able to edit this task.
+        to the project, the doer must be able to edit this task.
       parameters:
       - description: The assingee object
         in: body
@@ -4837,9 +4839,9 @@ paths:
       consumes:
       - application/json
       description: Adds multiple new assignees to a task. The assignee needs to have
-        access to the list, the doer must be able to edit this task. Every user not
-        in the list will be unassigned from the task, pass an empty array to unassign
-        everyone.
+        access to the project, the doer must be able to edit this task. Every user
+        not in the project will be unassigned from the task, pass an empty array to
+        unassign everyone.
       parameters:
       - description: The array of assignees
         in: body
@@ -5106,8 +5108,8 @@ paths:
       - application/json
       description: Creates a new relation between two tasks. The user needs to have
         update rights on the base task and at least read rights on the other task.
-        Both tasks do not need to be on the same list. Take a look at the docs for
-        available task relation kinds.
+        Both tasks do not need to be on the same project. Take a look at the docs
+        for available task relation kinds.
       parameters:
       - description: The relation object
         in: body
@@ -5195,7 +5197,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns all tasks on any list the user has access to.
+      description: Returns all tasks on any project the user has access to.
       parameters:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
@@ -5214,7 +5216,7 @@ paths:
       - description: The sorting parameter. You can pass this multiple times to get
           the tasks ordered by multiple different parametes, along with `order_by`.
           Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`,
-          `due_date`, `created_by_id`, `list_id`, `repeat_after`, `priority`, `start_date`,
+          `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`,
           `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default
           is `id`.
         in: query
@@ -5280,7 +5282,7 @@ paths:
         task_ids instead.'
       parameters:
       - description: The task object. Looks like a normal task, the only difference
-          is it uses an array of list_ids to update.
+          is it uses an array of project_ids to update.
         in: body
         name: task
         required: true
@@ -5298,7 +5300,7 @@ paths:
           schema:
             $ref: '#/definitions/web.HTTPError'
         "403":
-          description: The user does not have access to the task (aka its list)
+          description: The user does not have access to the task (aka its project)
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -6325,9 +6327,9 @@ paths:
       consumes:
       - application/json
       description: Because available time zones depend on the system Vikunja is running
-        on, this endpoint returns a list of all valid time zones this particular Vikunja
-        instance can handle. The list of time zones is not sorted, you should sort
-        it on the client.
+        on, this endpoint returns a project of all valid time zones this particular
+        Vikunja instance can handle. The project of time zones is not sorted, you
+        should sort it on the client.
       produces:
       - application/json
       responses:

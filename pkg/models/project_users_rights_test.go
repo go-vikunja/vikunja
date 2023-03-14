@@ -26,16 +26,16 @@ import (
 	"code.vikunja.io/web"
 )
 
-func TestListUser_CanDoSomething(t *testing.T) {
+func TestProjectUser_CanDoSomething(t *testing.T) {
 	type fields struct {
-		ID       int64
-		UserID   int64
-		ListID   int64
-		Right    Right
-		Created  time.Time
-		Updated  time.Time
-		CRUDable web.CRUDable
-		Rights   web.Rights
+		ID        int64
+		UserID    int64
+		ProjectID int64
+		Right     Right
+		Created   time.Time
+		Updated   time.Time
+		CRUDable  web.CRUDable
+		Rights    web.Rights
 	}
 	type args struct {
 		a web.Auth
@@ -49,7 +49,7 @@ func TestListUser_CanDoSomething(t *testing.T) {
 		{
 			name: "CanDoSomething Normally",
 			fields: fields{
-				ListID: 3,
+				ProjectID: 3,
 			},
 			args: args{
 				a: &user.User{ID: 3},
@@ -57,9 +57,9 @@ func TestListUser_CanDoSomething(t *testing.T) {
 			want: map[string]bool{"CanCreate": true, "CanDelete": true, "CanUpdate": true},
 		},
 		{
-			name: "CanDoSomething for a nonexistant list",
+			name: "CanDoSomething for a nonexistant project",
 			fields: fields{
-				ListID: 300,
+				ProjectID: 300,
 			},
 			args: args{
 				a: &user.User{ID: 3},
@@ -69,7 +69,7 @@ func TestListUser_CanDoSomething(t *testing.T) {
 		{
 			name: "CanDoSomething where the user does not have the rights",
 			fields: fields{
-				ListID: 3,
+				ProjectID: 3,
 			},
 			args: args{
 				a: &user.User{ID: 4},
@@ -82,24 +82,24 @@ func TestListUser_CanDoSomething(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
 
-			lu := &ListUser{
-				ID:       tt.fields.ID,
-				UserID:   tt.fields.UserID,
-				ListID:   tt.fields.ListID,
-				Right:    tt.fields.Right,
-				Created:  tt.fields.Created,
-				Updated:  tt.fields.Updated,
-				CRUDable: tt.fields.CRUDable,
-				Rights:   tt.fields.Rights,
+			lu := &ProjectUser{
+				ID:        tt.fields.ID,
+				UserID:    tt.fields.UserID,
+				ProjectID: tt.fields.ProjectID,
+				Right:     tt.fields.Right,
+				Created:   tt.fields.Created,
+				Updated:   tt.fields.Updated,
+				CRUDable:  tt.fields.CRUDable,
+				Rights:    tt.fields.Rights,
 			}
 			if got, _ := lu.CanCreate(s, tt.args.a); got != tt.want["CanCreate"] {
-				t.Errorf("ListUser.CanCreate() = %v, want %v", got, tt.want["CanCreate"])
+				t.Errorf("ProjectUser.CanCreate() = %v, want %v", got, tt.want["CanCreate"])
 			}
 			if got, _ := lu.CanDelete(s, tt.args.a); got != tt.want["CanDelete"] {
-				t.Errorf("ListUser.CanDelete() = %v, want %v", got, tt.want["CanDelete"])
+				t.Errorf("ProjectUser.CanDelete() = %v, want %v", got, tt.want["CanDelete"])
 			}
 			if got, _ := lu.CanUpdate(s, tt.args.a); got != tt.want["CanUpdate"] {
-				t.Errorf("ListUser.CanUpdate() = %v, want %v", got, tt.want["CanUpdate"])
+				t.Errorf("ProjectUser.CanUpdate() = %v, want %v", got, tt.want["CanUpdate"])
 			}
 			_ = s.Close()
 		})

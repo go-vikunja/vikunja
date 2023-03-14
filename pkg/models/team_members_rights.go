@@ -46,7 +46,7 @@ func (tm *TeamMember) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 
 // IsAdmin checks if the user is team admin
 func (tm *TeamMember) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
-	// Don't allow anything if we're dealing with a list share here
+	// Don't allow anything if we're dealing with a project share here
 	if _, is := a.(*LinkSharing); is {
 		return false, nil
 	}

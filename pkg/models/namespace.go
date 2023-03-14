@@ -61,27 +61,27 @@ type Namespace struct {
 	// A timestamp when this namespace was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`
 
-	// If set to true, will only return the namespaces, not their lists.
+	// If set to true, will only return the namespaces, not their projects.
 	NamespacesOnly bool `xorm:"-" json:"-" query:"namespaces_only"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
 }
 
-// SharedListsPseudoNamespace is a pseudo namespace used to hold shared lists
-var SharedListsPseudoNamespace = Namespace{
+// SharedProjectsPseudoNamespace is a pseudo namespace used to hold shared projects
+var SharedProjectsPseudoNamespace = Namespace{
 	ID:          -1,
-	Title:       "Shared Lists",
-	Description: "Lists of other users shared with you via teams or directly.",
+	Title:       "Shared Projects",
+	Description: "Projects of other users shared with you via teams or directly.",
 	Created:     time.Now(),
 	Updated:     time.Now(),
 }
 
-// FavoritesPseudoNamespace is a pseudo namespace used to hold favorited lists and tasks
+// FavoritesPseudoNamespace is a pseudo namespace used to hold favorited projects and tasks
 var FavoritesPseudoNamespace = Namespace{
 	ID:          -2,
 	Title:       "Favorites",
-	Description: "Favorite lists and tasks.",
+	Description: "Favorite projects and tasks.",
 	Created:     time.Now(),
 	Updated:     time.Now(),
 }
@@ -106,9 +106,9 @@ func getNamespaceSimpleByID(s *xorm.Session, id int64) (namespace *Namespace, er
 		return nil, ErrNamespaceDoesNotExist{ID: id}
 	}
 
-	// Get the namesapce with shared lists
+	// Get the namesapce with shared projects
 	if id == -1 {
-		return &SharedListsPseudoNamespace, nil
+		return &SharedProjectsPseudoNamespace, nil
 	}
 
 	if id == FavoritesPseudoNamespace.ID {
@@ -181,24 +181,24 @@ func (n *Namespace) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	return
 }
 
-// NamespaceWithLists represents a namespace with list meta informations
-type NamespaceWithLists struct {
+// NamespaceWithProjects represents a namespace with project meta informations
+type NamespaceWithProjects struct {
 	Namespace `xorm:"extends"`
-	Lists     []*List `xorm:"-" json:"lists"`
+	Projects  []*Project `xorm:"-" json:"projects"`
 }
 
-type NamespaceWithListsAndTasks struct {
+type NamespaceWithProjectsAndTasks struct {
 	Namespace
-	Lists []*ListWithTasksAndBuckets `xorm:"-" json:"lists"`
+	Projects []*ProjectWithTasksAndBuckets `xorm:"-" json:"projects"`
 }
 
-func makeNamespaceSlice(namespaces map[int64]*NamespaceWithLists, userMap map[int64]*user.User, subscriptions map[int64]*Subscription) []*NamespaceWithLists {
-	all := make([]*NamespaceWithLists, 0, len(namespaces))
+func makeNamespaceSlice(namespaces map[int64]*NamespaceWithProjects, userMap map[int64]*user.User, subscriptions map[int64]*Subscription) []*NamespaceWithProjects {
+	all := make([]*NamespaceWithProjects, 0, len(namespaces))
 	for _, n := range namespaces {
 		n.Owner = userMap[n.OwnerID]
 		n.Subscription = subscriptions[n.ID]
 		all = append(all, n)
-		for _, l := range n.Lists {
+		for _, l := range n.Projects {
 			if n.Subscription != nil && l.Subscription == nil {
 				l.Subscription = n.Subscription
 			}
@@ -253,7 +253,7 @@ func getNamespaceArchivedCond(archived bool) builder.Cond {
 	return isArchivedCond
 }
 
-func getNamespacesWithLists(s *xorm.Session, namespaces *map[int64]*NamespaceWithLists, search string, isArchived bool, page, perPage int, userID int64) (numberOfTotalItems int64, err error) {
+func getNamespacesWithProjects(s *xorm.Session, namespaces *map[int64]*NamespaceWithProjects, search string, isArchived bool, page, perPage int, userID int64) (numberOfTotalItems int64, err error) {
 	isArchivedCond := getNamespaceArchivedCond(isArchived)
 	filterCond := getNamespaceFilterCond(search)
 
@@ -289,11 +289,11 @@ func getNamespacesWithLists(s *xorm.Session, namespaces *map[int64]*NamespaceWit
 		GroupBy("namespaces.id").
 		Where(filterCond).
 		Where(isArchivedCond).
-		Count(&NamespaceWithLists{})
+		Count(&NamespaceWithProjects{})
 	return numberOfTotalItems, err
 }
 
-func getNamespaceOwnerIDs(namespaces map[int64]*NamespaceWithLists) (namespaceIDs, ownerIDs []int64) {
+func getNamespaceOwnerIDs(namespaces map[int64]*NamespaceWithProjects) (namespaceIDs, ownerIDs []int64) {
 	for _, nsp := range namespaces {
 		namespaceIDs = append(namespaceIDs, nsp.ID)
 		ownerIDs = append(ownerIDs, nsp.OwnerID)
@@ -324,36 +324,36 @@ func getNamespaceSubscriptions(s *xorm.Session, namespaceIDs []int64, userID int
 	return subscriptionsMap, err
 }
 
-func getListsForNamespaces(s *xorm.Session, namespaceIDs []int64, archived bool) ([]*List, error) {
-	lists := []*List{}
-	listQuery := s.
+func getProjectsForNamespaces(s *xorm.Session, namespaceIDs []int64, archived bool) ([]*Project, error) {
+	projects := []*Project{}
+	projectQuery := s.
 		OrderBy("position").
 		In("namespace_id", namespaceIDs)
 
 	if !archived {
-		listQuery.And("is_archived = false")
+		projectQuery.And("is_archived = false")
 	}
-	err := listQuery.Find(&lists)
-	return lists, err
+	err := projectQuery.Find(&projects)
+	return projects, err
 }
 
-func getSharedListsInNamespace(s *xorm.Session, archived bool, doer *user.User) (sharedListsNamespace *NamespaceWithLists, err error) {
-	// Create our pseudo namespace to hold the shared lists
-	sharedListsPseudonamespace := SharedListsPseudoNamespace
-	sharedListsPseudonamespace.OwnerID = doer.ID
-	sharedListsNamespace = &NamespaceWithLists{
-		sharedListsPseudonamespace,
-		[]*List{},
+func getSharedProjectsInNamespace(s *xorm.Session, archived bool, doer *user.User) (sharedProjectsNamespace *NamespaceWithProjects, err error) {
+	// Create our pseudo namespace to hold the shared projects
+	sharedProjectsPseudonamespace := SharedProjectsPseudoNamespace
+	sharedProjectsPseudonamespace.OwnerID = doer.ID
+	sharedProjectsNamespace = &NamespaceWithProjects{
+		sharedProjectsPseudonamespace,
+		[]*Project{},
 	}
 
-	// Get all lists individually shared with our user (not via a namespace)
-	individualLists := []*List{}
-	iListQuery := s.Select("l.*").
-		Table("lists").
+	// Get all projects individually shared with our user (not via a namespace)
+	individualProjects := []*Project{}
+	iProjectQuery := s.Select("l.*").
+		Table("projects").
 		Alias("l").
-		Join("LEFT", []string{"team_lists", "tl"}, "l.id = tl.list_id").
+		Join("LEFT", []string{"team_projects", "tl"}, "l.id = tl.project_id").
 		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tl.team_id").
-		Join("LEFT", []string{"users_lists", "ul"}, "ul.list_id = l.id").
+		Join("LEFT", []string{"users_projects", "ul"}, "ul.project_id = l.id").
 		Where(builder.And(
 			builder.Eq{"tm.user_id": doer.ID},
 			builder.Neq{"l.owner_id": doer.ID},
@@ -364,53 +364,53 @@ func getSharedListsInNamespace(s *xorm.Session, archived bool, doer *user.User) 
 		)).
 		GroupBy("l.id")
 	if !archived {
-		iListQuery.And("l.is_archived = false")
+		iProjectQuery.And("l.is_archived = false")
 	}
-	err = iListQuery.Find(&individualLists)
+	err = iProjectQuery.Find(&individualProjects)
 	if err != nil {
 		return
 	}
 
 	// Make the namespace -1 so we now later which one it was
-	// + Append it to all lists we already have
-	for _, l := range individualLists {
-		l.NamespaceID = sharedListsNamespace.ID
+	// + Append it to all projects we already have
+	for _, l := range individualProjects {
+		l.NamespaceID = sharedProjectsNamespace.ID
 	}
 
-	sharedListsNamespace.Lists = individualLists
+	sharedProjectsNamespace.Projects = individualProjects
 
-	// Remove the sharedListsPseudonamespace if we don't have any shared lists
-	if len(individualLists) == 0 {
-		sharedListsNamespace = nil
+	// Remove the sharedProjectsPseudonamespace if we don't have any shared projects
+	if len(individualProjects) == 0 {
+		sharedProjectsNamespace = nil
 	}
 
 	return
 }
 
-func getFavoriteLists(s *xorm.Session, lists []*List, namespaceIDs []int64, doer *user.User) (favoriteNamespace *NamespaceWithLists, err error) {
-	// Create our pseudo namespace with favorite lists
+func getFavoriteProjects(s *xorm.Session, projects []*Project, namespaceIDs []int64, doer *user.User) (favoriteNamespace *NamespaceWithProjects, err error) {
+	// Create our pseudo namespace with favorite projects
 	pseudoFavoriteNamespace := FavoritesPseudoNamespace
 	pseudoFavoriteNamespace.OwnerID = doer.ID
-	favoriteNamespace = &NamespaceWithLists{
+	favoriteNamespace = &NamespaceWithProjects{
 		Namespace: pseudoFavoriteNamespace,
-		Lists:     []*List{{}},
+		Projects:  []*Project{{}},
 	}
-	*favoriteNamespace.Lists[0] = FavoritesPseudoList // Copying the list to be able to modify it later
-	favoriteNamespace.Lists[0].Owner = doer
+	*favoriteNamespace.Projects[0] = FavoritesPseudoProject // Copying the project to be able to modify it later
+	favoriteNamespace.Projects[0].Owner = doer
 
-	for _, list := range lists {
-		if !list.IsFavorite {
+	for _, project := range projects {
+		if !project.IsFavorite {
 			continue
 		}
-		favoriteNamespace.Lists = append(favoriteNamespace.Lists, list)
+		favoriteNamespace.Projects = append(favoriteNamespace.Projects, project)
 	}
 
-	// Check if we have any favorites or favorited lists and remove the favorites namespace from the list if not
+	// Check if we have any favorites or favorited projects and remove the favorites namespace from the project if not
 	cond := builder.
 		Select("tasks.id").
 		From("tasks").
-		Join("INNER", "lists", "tasks.list_id = lists.id").
-		Join("INNER", "namespaces", "lists.namespace_id = namespaces.id").
+		Join("INNER", "projects", "tasks.project_id = projects.id").
+		Join("INNER", "namespaces", "projects.namespace_id = namespaces.id").
 		Where(builder.In("namespaces.id", namespaceIDs))
 
 	var favoriteCount int64
@@ -425,25 +425,25 @@ func getFavoriteLists(s *xorm.Session, lists []*List, namespaceIDs []int64, doer
 		return
 	}
 
-	// If we don't have any favorites in the favorites pseudo list, remove that pseudo list from the namespace
+	// If we don't have any favorites in the favorites pseudo project, remove that pseudo project from the namespace
 	if favoriteCount == 0 {
-		for in, l := range favoriteNamespace.Lists {
-			if l.ID == FavoritesPseudoList.ID {
-				favoriteNamespace.Lists = append(favoriteNamespace.Lists[:in], favoriteNamespace.Lists[in+1:]...)
+		for in, l := range favoriteNamespace.Projects {
+			if l.ID == FavoritesPseudoProject.ID {
+				favoriteNamespace.Projects = append(favoriteNamespace.Projects[:in], favoriteNamespace.Projects[in+1:]...)
 				break
 			}
 		}
 	}
 
 	// If we don't have any favorites in the namespace, remove it
-	if len(favoriteNamespace.Lists) == 0 {
+	if len(favoriteNamespace.Projects) == 0 {
 		return nil, nil
 	}
 
 	return
 }
 
-func getSavedFilters(s *xorm.Session, doer *user.User) (savedFiltersNamespace *NamespaceWithLists, err error) {
+func getSavedFilters(s *xorm.Session, doer *user.User) (savedFiltersNamespace *NamespaceWithProjects, err error) {
 	savedFilters, err := getSavedFiltersForUser(s, doer)
 	if err != nil {
 		return
@@ -455,16 +455,16 @@ func getSavedFilters(s *xorm.Session, doer *user.User) (savedFiltersNamespace *N
 
 	savedFiltersPseudoNamespace := SavedFiltersPseudoNamespace
 	savedFiltersPseudoNamespace.OwnerID = doer.ID
-	savedFiltersNamespace = &NamespaceWithLists{
+	savedFiltersNamespace = &NamespaceWithProjects{
 		Namespace: savedFiltersPseudoNamespace,
-		Lists:     make([]*List, 0, len(savedFilters)),
+		Projects:  make([]*Project, 0, len(savedFilters)),
 	}
 
 	for _, filter := range savedFilters {
-		filterList := filter.toList()
-		filterList.NamespaceID = savedFiltersNamespace.ID
-		filterList.Owner = doer
-		savedFiltersNamespace.Lists = append(savedFiltersNamespace.Lists, filterList)
+		filterProject := filter.toProject()
+		filterProject.NamespaceID = savedFiltersNamespace.ID
+		filterProject.Owner = doer
+		savedFiltersNamespace.Projects = append(savedFiltersNamespace.Projects, filterProject)
 	}
 
 	return
@@ -480,9 +480,9 @@ func getSavedFilters(s *xorm.Session, doer *user.User) (savedFiltersNamespace *N
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search namespaces by name."
 // @Param is_archived query bool false "If true, also returns all archived namespaces."
-// @Param namespaces_only query bool false "If true, also returns only namespaces without their lists."
+// @Param namespaces_only query bool false "If true, also returns only namespaces without their projects."
 // @Security JWTKeyAuth
-// @Success 200 {array} models.NamespaceWithLists "The Namespaces."
+// @Success 200 {array} models.NamespaceWithProjects "The Namespaces."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces [get]
 //
@@ -492,19 +492,19 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
-	// This map will hold all namespaces and their lists. The key is usually the id of the namespace.
-	// We're using a map here because it makes a few things like adding lists or removing pseudo namespaces easier.
-	namespaces := make(map[int64]*NamespaceWithLists)
+	// This map will hold all namespaces and their projects. The key is usually the id of the namespace.
+	// We're using a map here because it makes a few things like adding projects or removing pseudo namespaces easier.
+	namespaces := make(map[int64]*NamespaceWithProjects)
 
 	//////////////////////////////
-	// Lists with their namespaces
+	// Projects with their namespaces
 
 	doer, err := user.GetFromAuth(a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	numberOfTotalItems, err = getNamespacesWithLists(s, &namespaces, search, n.IsArchived, page, perPage, doer.ID)
+	numberOfTotalItems, err = getNamespacesWithProjects(s, &namespaces, search, n.IsArchived, page, perPage, doer.ID)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -531,23 +531,23 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 		return all, len(all), numberOfTotalItems, nil
 	}
 
-	// Get all lists
-	lists, err := getListsForNamespaces(s, namespaceIDs, n.IsArchived)
+	// Get all projects
+	projects, err := getProjectsForNamespaces(s, namespaceIDs, n.IsArchived)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
 	///////////////
-	// Shared Lists
+	// Shared Projects
 
-	sharedListsNamespace, err := getSharedListsInNamespace(s, n.IsArchived, doer)
+	sharedProjectsNamespace, err := getSharedProjectsInNamespace(s, n.IsArchived, doer)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	if sharedListsNamespace != nil {
-		namespaces[sharedListsNamespace.ID] = sharedListsNamespace
-		lists = append(lists, sharedListsNamespace.Lists...)
+	if sharedProjectsNamespace != nil {
+		namespaces[sharedProjectsNamespace.ID] = sharedProjectsNamespace
+		projects = append(projects, sharedProjectsNamespace.Projects...)
 	}
 
 	/////////////////
@@ -560,20 +560,20 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 
 	if savedFiltersNamespace != nil {
 		namespaces[savedFiltersNamespace.ID] = savedFiltersNamespace
-		lists = append(lists, savedFiltersNamespace.Lists...)
+		projects = append(projects, savedFiltersNamespace.Projects...)
 	}
 
 	/////////////////
-	// Add list details (favorite state, among other things)
-	err = addListDetails(s, lists, a)
+	// Add project details (favorite state, among other things)
+	err = addProjectDetails(s, projects, a)
 	if err != nil {
 		return
 	}
 
 	/////////////////
-	// Favorite lists
+	// Favorite projects
 
-	favoritesNamespace, err := getFavoriteLists(s, lists, namespaceIDs, doer)
+	favoritesNamespace, err := getFavoriteProjects(s, projects, namespaceIDs, doer)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -585,12 +585,12 @@ func (n *Namespace) ReadAll(s *xorm.Session, a web.Auth, search string, page int
 	//////////////////////
 	// Put it all together
 
-	for _, list := range lists {
-		if list.NamespaceID == SharedListsPseudoNamespace.ID || list.NamespaceID == SavedFiltersPseudoNamespace.ID {
-			// Shared lists and filtered lists are already in the namespace
+	for _, project := range projects {
+		if project.NamespaceID == SharedProjectsPseudoNamespace.ID || project.NamespaceID == SavedFiltersPseudoNamespace.ID {
+			// Shared projects and filtered projects are already in the namespace
 			continue
 		}
-		namespaces[list.NamespaceID].Lists = append(namespaces[list.NamespaceID].Lists, list)
+		namespaces[project.NamespaceID].Projects = append(namespaces[project.NamespaceID].Projects, project)
 	}
 
 	all := makeNamespaceSlice(namespaces, ownerMap, subscriptionsMap)
@@ -663,7 +663,7 @@ func (n *Namespace) Delete(s *xorm.Session, a web.Auth) (err error) {
 	return deleteNamespace(s, n, a, true)
 }
 
-func deleteNamespace(s *xorm.Session, n *Namespace, a web.Auth, withLists bool) (err error) {
+func deleteNamespace(s *xorm.Session, n *Namespace, a web.Auth, withProjects bool) (err error) {
 	// Check if the namespace exists
 	_, err = GetNamespaceByID(s, n.ID)
 	if err != nil {
@@ -681,23 +681,23 @@ func deleteNamespace(s *xorm.Session, n *Namespace, a web.Auth, withLists bool) 
 		Doer:      a,
 	}
 
-	if !withLists {
+	if !withProjects {
 		return events.Dispatch(namespaceDeleted)
 	}
 
-	// Delete all lists with their tasks
-	lists, err := GetListsByNamespaceID(s, n.ID, &user.User{})
+	// Delete all projects with their tasks
+	projects, err := GetProjectsByNamespaceID(s, n.ID, &user.User{})
 	if err != nil {
 		return
 	}
 
-	if len(lists) == 0 {
+	if len(projects) == 0 {
 		return events.Dispatch(namespaceDeleted)
 	}
 
-	// Looping over all lists to let the list handle properly cleaning up the tasks and everything else associated with it.
-	for _, list := range lists {
-		err = list.Delete(s, a)
+	// Looping over all projects to let the project handle properly cleaning up the tasks and everything else associated with it.
+	for _, project := range projects {
+		err = project.Delete(s, a)
 		if err != nil {
 			return err
 		}
@@ -748,7 +748,7 @@ func (n *Namespace) Update(s *xorm.Session, a web.Auth) (err error) {
 		}
 	}
 
-	// We need to specify the cols we want to update here to be able to un-archive lists
+	// We need to specify the cols we want to update here to be able to un-archive projects
 	colsToUpdate := []string{
 		"title",
 		"is_archived",

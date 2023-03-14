@@ -39,7 +39,7 @@ func TestTask(t *testing.T) {
 		linkShare: &models.LinkSharing{
 			ID:          2,
 			Hash:        "test2",
-			ListID:      2,
+			ProjectID:   2,
 			Right:       models.RightWrite,
 			SharingType: models.SharingTypeWithoutPassword,
 			SharedByID:  1,
@@ -54,157 +54,157 @@ func TestTask(t *testing.T) {
 	t.Run("Update", func(t *testing.T) {
 		t.Run("Update task items", func(t *testing.T) {
 			t.Run("Title", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 				assert.NotContains(t, rec.Body.String(), `"title":"task #1"`)
 			})
 			t.Run("Description", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"description":"Dolor sit amet"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"description":"Dolor sit amet"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"description":"Dolor sit amet"`)
 				assert.NotContains(t, rec.Body.String(), `"description":"Lorem Ipsum"`)
 			})
 			t.Run("Description to empty", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"description":""}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"description":""}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"description":""`)
 				assert.NotContains(t, rec.Body.String(), `"description":"Lorem Ipsum"`)
 			})
 			t.Run("Done", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"done":true}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"done":true}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"done":true`)
 				assert.NotContains(t, rec.Body.String(), `"done":false`)
 			})
 			t.Run("Undone", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "2"}, `{"done":false}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "2"}, `{"done":false}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"done":false`)
 				assert.NotContains(t, rec.Body.String(), `"done":true`)
 			})
 			t.Run("Due date", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"due_date": "2020-02-10T10:00:00Z"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"due_date": "2020-02-10T10:00:00Z"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"due_date":"2020-02-10T10:00:00Z"`)
 				assert.NotContains(t, rec.Body.String(), `"due_date":0`)
 			})
 			t.Run("Due date unset", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "5"}, `{"due_date": null}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "5"}, `{"due_date": null}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"due_date":"0001-01-01T00:00:00Z"`)
 				assert.NotContains(t, rec.Body.String(), `"due_date":"2020-02-10T10:00:00Z"`)
 			})
 			t.Run("Reminders", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"reminder_dates": ["2020-02-10T10:00:00Z","2020-02-11T10:00:00Z"]}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"reminder_dates": ["2020-02-10T10:00:00Z","2020-02-11T10:00:00Z"]}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"reminder_dates":["2020-02-10T10:00:00Z","2020-02-11T10:00:00Z"]`)
 				assert.NotContains(t, rec.Body.String(), `"reminder_dates": null`)
 			})
 			t.Run("Reminders unset to empty array", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "27"}, `{"reminder_dates": []}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "27"}, `{"reminder_dates": []}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"reminder_dates":null`)
 				assert.NotContains(t, rec.Body.String(), `"reminder_dates":[1543626724,1543626824]`)
 			})
 			t.Run("Reminders unset to null", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "27"}, `{"reminder_dates": null}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "27"}, `{"reminder_dates": null}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"reminder_dates":null`)
 				assert.NotContains(t, rec.Body.String(), `"reminder_dates":[1543626724,1543626824]`)
 			})
 			t.Run("Repeat after", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"repeat_after":3600}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"repeat_after":3600}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"repeat_after":3600`)
 				assert.NotContains(t, rec.Body.String(), `"repeat_after":0`)
 			})
 			t.Run("Repeat after unset", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "28"}, `{"repeat_after":0}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "28"}, `{"repeat_after":0}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"repeat_after":0`)
 				assert.NotContains(t, rec.Body.String(), `"repeat_after":3600`)
 			})
 			t.Run("Repeat after update done", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "28"}, `{"done":true}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "28"}, `{"done":true}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"done":false`)
 				assert.NotContains(t, rec.Body.String(), `"done":true`)
 			})
 			t.Run("Assignees", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"assignees":[{"id":1}]}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"assignees":[{"id":1}]}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"assignees":[{"id":1`)
 				assert.NotContains(t, rec.Body.String(), `"assignees":[]`)
 			})
 			t.Run("Removing Assignees empty array", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "30"}, `{"assignees":[]}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "30"}, `{"assignees":[]}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"assignees":null`)
 				assert.NotContains(t, rec.Body.String(), `"assignees":[{"id":1`)
 			})
 			t.Run("Removing Assignees null", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "30"}, `{"assignees":null}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "30"}, `{"assignees":null}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"assignees":null`)
 				assert.NotContains(t, rec.Body.String(), `"assignees":[{"id":1`)
 			})
 			t.Run("Priority", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"priority":100}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"priority":100}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"priority":100`)
 				assert.NotContains(t, rec.Body.String(), `"priority":0`)
 			})
 			t.Run("Priority to 0", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "3"}, `{"priority":0}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "3"}, `{"priority":0}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"priority":0`)
 				assert.NotContains(t, rec.Body.String(), `"priority":100`)
 			})
 			t.Run("Start date", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"start_date":"2020-02-10T10:00:00Z"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"start_date":"2020-02-10T10:00:00Z"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"start_date":"2020-02-10T10:00:00Z"`)
 				assert.NotContains(t, rec.Body.String(), `"start_date":0`)
 			})
 			t.Run("Start date unset", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "7"}, `{"start_date":"0001-01-01T00:00:00Z"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "7"}, `{"start_date":"0001-01-01T00:00:00Z"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"start_date":"0001-01-01T00:00:00Z"`)
 				assert.NotContains(t, rec.Body.String(), `"start_date":"2020-02-10T10:00:00Z"`)
 			})
 			t.Run("End date", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"end_date":"2020-02-10T12:00:00Z"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"end_date":"2020-02-10T12:00:00Z"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"end_date":"2020-02-10T12:00:00Z"`)
 				assert.NotContains(t, rec.Body.String(), `"end_date":""`)
 			})
 			t.Run("End date unset", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "8"}, `{"end_date":"0001-01-01T00:00:00Z"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "8"}, `{"end_date":"0001-01-01T00:00:00Z"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"end_date":"0001-01-01T00:00:00Z"`)
 				assert.NotContains(t, rec.Body.String(), `"end_date":"2020-02-10T10:00:00Z"`)
 			})
 			t.Run("Color", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"hex_color":"f0f0f0"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"hex_color":"f0f0f0"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"hex_color":"f0f0f0"`)
 				assert.NotContains(t, rec.Body.String(), `"hex_color":""`)
 			})
 			t.Run("Color unset", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "31"}, `{"hex_color":""}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "31"}, `{"hex_color":""}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"hex_color":""`)
 				assert.NotContains(t, rec.Body.String(), `"hex_color":"f0f0f0"`)
 			})
 			t.Run("Percent Done", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"percent_done":0.1}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"percent_done":0.1}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"percent_done":0.1`)
 				assert.NotContains(t, rec.Body.String(), `"percent_done":0,`)
 			})
 			t.Run("Percent Done unset", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "33"}, `{"percent_done":0}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "33"}, `{"percent_done":0}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"percent_done":0,`)
 				assert.NotContains(t, rec.Body.String(), `"percent_done":0.1`)
@@ -212,112 +212,112 @@ func TestTask(t *testing.T) {
 		})
 
 		t.Run("Nonexisting", func(t *testing.T) {
-			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "99999"}, `{"title":"Lorem Ipsum"}`)
+			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "99999"}, `{"title":"Lorem Ipsum"}`)
 			assert.Error(t, err)
 			assertHandlerErrorCode(t, err, models.ErrCodeTaskDoesNotExist)
 		})
 		t.Run("Rights check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
-				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "14"}, `{"title":"Lorem Ipsum"}`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "14"}, `{"title":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
-				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "15"}, `{"title":"Lorem Ipsum"}`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "15"}, `{"title":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "16"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "16"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 			t.Run("Shared Via Team admin", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "17"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "17"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 
 			t.Run("Shared Via User readonly", func(t *testing.T) {
-				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "18"}, `{"title":"Lorem Ipsum"}`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "18"}, `{"title":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via User write", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "19"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "19"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 			t.Run("Shared Via User admin", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "20"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "20"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 
 			t.Run("Shared Via NamespaceTeam readonly", func(t *testing.T) {
-				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "21"}, `{"title":"Lorem Ipsum"}`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "21"}, `{"title":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceTeam write", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "22"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "22"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 			t.Run("Shared Via NamespaceTeam admin", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "23"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "23"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 
 			t.Run("Shared Via NamespaceUser readonly", func(t *testing.T) {
-				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "24"}, `{"title":"Lorem Ipsum"}`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "24"}, `{"title":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceUser write", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "25"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "25"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 			t.Run("Shared Via NamespaceUser admin", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "26"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "26"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 		})
-		t.Run("Move to other list", func(t *testing.T) {
+		t.Run("Move to other project", func(t *testing.T) {
 			t.Run("normal", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"list_id":7}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"project_id":7}`)
 				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"list_id":7`)
-				assert.NotContains(t, rec.Body.String(), `"list_id":1`)
+				assert.Contains(t, rec.Body.String(), `"project_id":7`)
+				assert.NotContains(t, rec.Body.String(), `"project_id":1`)
 			})
 			t.Run("Forbidden", func(t *testing.T) {
-				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"list_id":20}`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"project_id":20}`)
 				assert.Error(t, err)
 				assertHandlerErrorCode(t, err, models.ErrorCodeGenericForbidden)
 			})
 			t.Run("Read Only", func(t *testing.T) {
-				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"list_id":6}`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"project_id":6}`)
 				assert.Error(t, err)
 				assertHandlerErrorCode(t, err, models.ErrorCodeGenericForbidden)
 			})
 		})
 		t.Run("Bucket", func(t *testing.T) {
 			t.Run("Normal", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"bucket_id":3}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"bucket_id":3}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"bucket_id":3`)
 				assert.NotContains(t, rec.Body.String(), `"bucket_id":1`)
 			})
-			t.Run("Different List", func(t *testing.T) {
-				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"bucket_id":4}`)
+			t.Run("Different Project", func(t *testing.T) {
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"bucket_id":4}`)
 				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotBelongToList)
+				assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotBelongToProject)
 			})
 			t.Run("Nonexisting Bucket", func(t *testing.T) {
-				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"listtask": "1"}, `{"bucket_id":9999}`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"bucket_id":9999}`)
 				assert.Error(t, err)
 				assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotExist)
 			})
@@ -325,81 +325,81 @@ func TestTask(t *testing.T) {
 	})
 	t.Run("Delete", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
-			rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"listtask": "1"})
+			rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "1"})
 			assert.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
-			_, err := testHandler.testDeleteWithUser(nil, map[string]string{"listtask": "99999"})
+			_, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "99999"})
 			assert.Error(t, err)
 			assertHandlerErrorCode(t, err, models.ErrCodeTaskDoesNotExist)
 		})
 		t.Run("Rights check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"listtask": "14"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "14"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"listtask": "15"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "15"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"listtask": "16"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "16"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
 			})
 			t.Run("Shared Via Team admin", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"listtask": "17"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "17"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
 			})
 
 			t.Run("Shared Via User readonly", func(t *testing.T) {
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"listtask": "18"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "18"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via User write", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"listtask": "19"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "19"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
 			})
 			t.Run("Shared Via User admin", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"listtask": "20"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "20"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
 			})
 
 			t.Run("Shared Via NamespaceTeam readonly", func(t *testing.T) {
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"listtask": "21"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "21"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceTeam write", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"listtask": "22"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "22"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
 			})
 			t.Run("Shared Via NamespaceTeam admin", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"listtask": "23"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "23"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
 			})
 
 			t.Run("Shared Via NamespaceUser readonly", func(t *testing.T) {
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"listtask": "24"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "24"})
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceUser write", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"listtask": "25"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "25"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
 			})
 			t.Run("Shared Via NamespaceUser admin", func(t *testing.T) {
-				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"listtask": "26"})
+				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"projecttask": "26"})
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
 			})
@@ -407,110 +407,110 @@ func TestTask(t *testing.T) {
 	})
 	t.Run("Create", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
-			rec, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "1"}, `{"title":"Lorem Ipsum"}`)
+			rec, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "1"}, `{"title":"Lorem Ipsum"}`)
 			assert.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
-			_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "9999"}, `{"title":"Lorem Ipsum"}`)
+			_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "9999"}, `{"title":"Lorem Ipsum"}`)
 			assert.Error(t, err)
-			assertHandlerErrorCode(t, err, models.ErrCodeListDoesNotExist)
+			assertHandlerErrorCode(t, err, models.ErrCodeProjectDoesNotExist)
 		})
 		t.Run("Rights check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				// Owned by user13
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "20"}, `{"title":"Lorem Ipsum"}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "20"}, `{"title":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "6"}, `{"title":"Lorem Ipsum"}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "6"}, `{"title":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
-				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "7"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "7"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 			t.Run("Shared Via Team admin", func(t *testing.T) {
-				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "8"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "8"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 
 			t.Run("Shared Via User readonly", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "9"}, `{"title":"Lorem Ipsum"}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "9"}, `{"title":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via User write", func(t *testing.T) {
-				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "10"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "10"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 			t.Run("Shared Via User admin", func(t *testing.T) {
-				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "11"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "11"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 
 			t.Run("Shared Via NamespaceTeam readonly", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "12"}, `{"title":"Lorem Ipsum"}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "12"}, `{"title":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceTeam write", func(t *testing.T) {
-				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "13"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "13"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 			t.Run("Shared Via NamespaceTeam admin", func(t *testing.T) {
-				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "14"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "14"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 
 			t.Run("Shared Via NamespaceUser readonly", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "15"}, `{"title":"Lorem Ipsum"}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "15"}, `{"title":"Lorem Ipsum"}`)
 				assert.Error(t, err)
 				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
 			})
 			t.Run("Shared Via NamespaceUser write", func(t *testing.T) {
-				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "16"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "16"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 			t.Run("Shared Via NamespaceUser admin", func(t *testing.T) {
-				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "17"}, `{"title":"Lorem Ipsum"}`)
+				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "17"}, `{"title":"Lorem Ipsum"}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			})
 		})
 		t.Run("Bucket", func(t *testing.T) {
 			t.Run("Normal", func(t *testing.T) {
-				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "1"}, `{"title":"Lorem Ipsum","bucket_id":3}`)
+				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "1"}, `{"title":"Lorem Ipsum","bucket_id":3}`)
 				assert.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"bucket_id":3`)
 				assert.NotContains(t, rec.Body.String(), `"bucket_id":1`)
 			})
-			t.Run("Different List", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "1"}, `{"title":"Lorem Ipsum","bucket_id":4}`)
+			t.Run("Different Project", func(t *testing.T) {
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "1"}, `{"title":"Lorem Ipsum","bucket_id":4}`)
 				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotBelongToList)
+				assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotBelongToProject)
 			})
 			t.Run("Nonexisting Bucket", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"list": "1"}, `{"title":"Lorem Ipsum","bucket_id":9999}`)
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "1"}, `{"title":"Lorem Ipsum","bucket_id":9999}`)
 				assert.Error(t, err)
 				assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotExist)
 			})
 		})
 		t.Run("Link Share", func(t *testing.T) {
-			rec, err := testHandlerLinkShareWrite.testCreateWithLinkShare(nil, map[string]string{"list": "2"}, `{"title":"Lorem Ipsum"}`)
+			rec, err := testHandlerLinkShareWrite.testCreateWithLinkShare(nil, map[string]string{"project": "2"}, `{"title":"Lorem Ipsum"}`)
 			assert.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
 			db.AssertExists(t, "tasks", map[string]interface{}{
-				"list_id":       2,
+				"project_id":    2,
 				"title":         "Lorem Ipsum",
 				"created_by_id": -2,
 			}, false)

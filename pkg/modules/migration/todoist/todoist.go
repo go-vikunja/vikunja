@@ -251,16 +251,16 @@ func parseDate(dateString string) (date time.Time, err error) {
 	return date, err
 }
 
-func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVikunjaHierachie []*models.NamespaceWithListsAndTasks, err error) {
+func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVikunjaHierachie []*models.NamespaceWithProjectsAndTasks, err error) {
 
-	newNamespace := &models.NamespaceWithListsAndTasks{
+	newNamespace := &models.NamespaceWithProjectsAndTasks{
 		Namespace: models.Namespace{
 			Title: "Migrated from todoist",
 		},
 	}
 
 	// A map for all vikunja lists with the project id they're coming from as key
-	lists := make(map[string]*models.ListWithTasksAndBuckets, len(sync.Projects))
+	lists := make(map[string]*models.ProjectWithTasksAndBuckets, len(sync.Projects))
 
 	// A map for all vikunja tasks with the todoist task id as key to find them easily and add more data
 	tasks := make(map[string]*models.TaskWithComments, len(sync.Items))
@@ -271,17 +271,17 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 	sections := make(map[string]int64)
 
 	for _, p := range sync.Projects {
-		list := &models.ListWithTasksAndBuckets{
-			List: models.List{
+		project := &models.ProjectWithTasksAndBuckets{
+			Project: models.Project{
 				Title:      p.Name,
 				HexColor:   todoistColors[p.Color],
 				IsArchived: p.IsArchived,
 			},
 		}
 
-		lists[p.ID] = list
+		lists[p.ID] = project
 
-		newNamespace.Lists = append(newNamespace.Lists, list)
+		newNamespace.Projects = append(newNamespace.Projects, project)
 	}
 
 	sort.Slice(sync.Sections, func(i, j int) bool {
@@ -446,7 +446,7 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 		}
 	}
 
-	// Project Notes -> List Descriptions
+	// Project Notes -> Project Descriptions
 	for _, pn := range sync.ProjectNotes {
 		if lists[pn.ProjectID].Description != "" {
 			lists[pn.ProjectID].Description += "\n"
@@ -474,7 +474,7 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 		tasks[r.ItemID].Reminders = append(tasks[r.ItemID].Reminders, date.In(config.GetTimeZone()))
 	}
 
-	return []*models.NamespaceWithListsAndTasks{
+	return []*models.NamespaceWithProjectsAndTasks{
 		newNamespace,
 	}, err
 }

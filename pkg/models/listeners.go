@@ -33,8 +33,8 @@ import (
 
 // RegisterListeners registers all event listeners
 func RegisterListeners() {
-	events.RegisterListener((&ListCreatedEvent{}).Name(), &IncreaseListCounter{})
-	events.RegisterListener((&ListDeletedEvent{}).Name(), &DecreaseListCounter{})
+	events.RegisterListener((&ProjectCreatedEvent{}).Name(), &IncreaseProjectCounter{})
+	events.RegisterListener((&ProjectDeletedEvent{}).Name(), &DecreaseProjectCounter{})
 	events.RegisterListener((&NamespaceCreatedEvent{}).Name(), &IncreaseNamespaceCounter{})
 	events.RegisterListener((&NamespaceDeletedEvent{}).Name(), &DecreaseNamespaceCounter{})
 	events.RegisterListener((&TaskCreatedEvent{}).Name(), &IncreaseTaskCounter{})
@@ -44,7 +44,7 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &SendTaskCommentNotification{})
 	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &SendTaskAssignedNotification{})
 	events.RegisterListener((&TaskDeletedEvent{}).Name(), &SendTaskDeletedNotification{})
-	events.RegisterListener((&ListCreatedEvent{}).Name(), &SendListCreatedNotification{})
+	events.RegisterListener((&ProjectCreatedEvent{}).Name(), &SendProjectCreatedNotification{})
 	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &SubscribeAssigneeToTask{})
 	events.RegisterListener((&TeamMemberAddedEvent{}).Name(), &SendTeamMemberAddedNotification{})
 	events.RegisterListener((&TaskCommentUpdatedEvent{}).Name(), &HandleTaskCommentEditMentions{})
@@ -471,42 +471,42 @@ func (s *HandleTaskUpdateLastUpdated) Handle(msg *message.Message) (err error) {
 }
 
 ///////
-// List Event Listeners
+// Project Event Listeners
 
-type IncreaseListCounter struct {
+type IncreaseProjectCounter struct {
 }
 
-func (s *IncreaseListCounter) Name() string {
-	return "list.counter.increase"
+func (s *IncreaseProjectCounter) Name() string {
+	return "project.counter.increase"
 }
 
-func (s *IncreaseListCounter) Handle(msg *message.Message) (err error) {
-	return keyvalue.IncrBy(metrics.ListCountKey, 1)
+func (s *IncreaseProjectCounter) Handle(msg *message.Message) (err error) {
+	return keyvalue.IncrBy(metrics.ProjectCountKey, 1)
 }
 
-type DecreaseListCounter struct {
+type DecreaseProjectCounter struct {
 }
 
-func (s *DecreaseListCounter) Name() string {
-	return "list.counter.decrease"
+func (s *DecreaseProjectCounter) Name() string {
+	return "project.counter.decrease"
 }
 
-func (s *DecreaseListCounter) Handle(msg *message.Message) (err error) {
-	return keyvalue.DecrBy(metrics.ListCountKey, 1)
+func (s *DecreaseProjectCounter) Handle(msg *message.Message) (err error) {
+	return keyvalue.DecrBy(metrics.ProjectCountKey, 1)
 }
 
-// SendListCreatedNotification  represents a listener
-type SendListCreatedNotification struct {
+// SendProjectCreatedNotification  represents a listener
+type SendProjectCreatedNotification struct {
 }
 
-// Name defines the name for the SendListCreatedNotification listener
-func (s *SendListCreatedNotification) Name() string {
-	return "send.list.created.notification"
+// Name defines the name for the SendProjectCreatedNotification listener
+func (s *SendProjectCreatedNotification) Name() string {
+	return "send.project.created.notification"
 }
 
-// Handle is executed when the event SendListCreatedNotification listens on is fired
-func (s *SendListCreatedNotification) Handle(msg *message.Message) (err error) {
-	event := &ListCreatedEvent{}
+// Handle is executed when the event SendProjectCreatedNotification listens on is fired
+func (s *SendProjectCreatedNotification) Handle(msg *message.Message) (err error) {
+	event := &ProjectCreatedEvent{}
 	err = json.Unmarshal(msg.Payload, event)
 	if err != nil {
 		return err
@@ -515,21 +515,21 @@ func (s *SendListCreatedNotification) Handle(msg *message.Message) (err error) {
 	sess := db.NewSession()
 	defer sess.Close()
 
-	subscribers, err := getSubscribersForEntity(sess, SubscriptionEntityList, event.List.ID)
+	subscribers, err := getSubscribersForEntity(sess, SubscriptionEntityProject, event.Project.ID)
 	if err != nil {
 		return err
 	}
 
-	log.Debugf("Sending list created notifications to %d subscribers for list %d", len(subscribers), event.List.ID)
+	log.Debugf("Sending project created notifications to %d subscribers for project %d", len(subscribers), event.Project.ID)
 
 	for _, subscriber := range subscribers {
 		if subscriber.UserID == event.Doer.ID {
 			continue
 		}
 
-		n := &ListCreatedNotification{
-			Doer: event.Doer,
-			List: event.List,
+		n := &ProjectCreatedNotification{
+			Doer:    event.Doer,
+			Project: event.Project,
 		}
 		err = notifications.Notify(subscriber.User, n)
 		if err != nil {

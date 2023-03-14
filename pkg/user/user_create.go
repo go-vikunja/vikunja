@@ -63,7 +63,7 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 	user.DiscoverableByEmail = config.DefaultSettingsDiscoverableByEmail.GetBool()
 	user.OverdueTasksRemindersEnabled = config.DefaultSettingsOverdueTaskRemindersEnabled.GetBool()
 	user.OverdueTasksRemindersTime = config.DefaultSettingsOverdueTaskRemindersTime.GetString()
-	user.DefaultListID = config.DefaultSettingsDefaultListID.GetInt64()
+	user.DefaultProjectID = config.DefaultSettingsDefaultProjectID.GetInt64()
 	user.WeekStart = config.DefaultSettingsWeekStart.GetInt()
 	user.Language = config.DefaultSettingsLanguage.GetString()
 	user.Timezone = config.DefaultSettingsTimezone.GetString()

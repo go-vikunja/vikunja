@@ -207,21 +207,21 @@ func TestNamespace_ReadAll(t *testing.T) {
 		n := &Namespace{}
 		nn, _, _, err := n.ReadAll(s, user1, "", 1, -1)
 		assert.NoError(t, err)
-		namespaces := nn.([]*NamespaceWithLists)
+		namespaces := nn.([]*NamespaceWithProjects)
 		assert.NotNil(t, namespaces)
 		assert.Len(t, namespaces, 11)                // Total of 11 including shared, favorites and saved filters
 		assert.Equal(t, int64(-3), namespaces[0].ID) // The first one should be the one with saved filters
 		assert.Equal(t, int64(-2), namespaces[1].ID) // The second one should be the one with favorites
 		assert.Equal(t, int64(-1), namespaces[2].ID) // The third one should be the one with the shared namespaces
-		// Ensure every list and namespace are not archived
+		// Ensure every project and namespace are not archived
 		for _, namespace := range namespaces {
 			assert.False(t, namespace.IsArchived)
-			for _, list := range namespace.Lists {
-				assert.False(t, list.IsArchived)
+			for _, project := range namespace.Projects {
+				assert.False(t, project.IsArchived)
 			}
 		}
 	})
-	t.Run("no own shared lists", func(t *testing.T) {
+	t.Run("no own shared projects", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -229,18 +229,18 @@ func TestNamespace_ReadAll(t *testing.T) {
 		n := &Namespace{}
 		nn, _, _, err := n.ReadAll(s, user6, "", 1, -1)
 		assert.NoError(t, err)
-		namespaces := nn.([]*NamespaceWithLists)
+		namespaces := nn.([]*NamespaceWithProjects)
 		assert.NotNil(t, namespaces)
 		assert.Equal(t, int64(-1), namespaces[1].ID) // The third one should be the one with the shared namespaces
 
-		sharedListOccurences := make(map[int64]int64)
-		for _, list := range namespaces[1].Lists {
-			assert.NotEqual(t, user1.ID, list.OwnerID)
-			sharedListOccurences[list.ID]++
+		sharedProjectOccurences := make(map[int64]int64)
+		for _, project := range namespaces[1].Projects {
+			assert.NotEqual(t, user1.ID, project.OwnerID)
+			sharedProjectOccurences[project.ID]++
 		}
 
-		for listID, occ := range sharedListOccurences {
-			assert.Equal(t, int64(1), occ, "shared list %d is present %d times, should be 1", listID, occ)
+		for projectID, occ := range sharedProjectOccurences {
+			assert.Equal(t, int64(1), occ, "shared project %d is present %d times, should be 1", projectID, occ)
 		}
 	})
 	t.Run("namespaces only", func(t *testing.T) {
@@ -253,12 +253,12 @@ func TestNamespace_ReadAll(t *testing.T) {
 		}
 		nn, _, _, err := n.ReadAll(s, user1, "", 1, -1)
 		assert.NoError(t, err)
-		namespaces := nn.([]*NamespaceWithLists)
+		namespaces := nn.([]*NamespaceWithProjects)
 		assert.NotNil(t, namespaces)
 		assert.Len(t, namespaces, 8) // Total of 8 - excluding shared, favorites and saved filters (normally 11)
-		// Ensure every namespace does not contain lists
+		// Ensure every namespace does not contain projects
 		for _, namespace := range namespaces {
-			assert.Nil(t, namespace.Lists)
+			assert.Nil(t, namespace.Projects)
 		}
 	})
 	t.Run("ids only", func(t *testing.T) {
@@ -271,7 +271,7 @@ func TestNamespace_ReadAll(t *testing.T) {
 		}
 		nn, _, _, err := n.ReadAll(s, user7, "13,14", 1, -1)
 		assert.NoError(t, err)
-		namespaces := nn.([]*NamespaceWithLists)
+		namespaces := nn.([]*NamespaceWithProjects)
 		assert.NotNil(t, namespaces)
 		assert.Len(t, namespaces, 2)
 		assert.Equal(t, int64(13), namespaces[0].ID)
@@ -287,7 +287,7 @@ func TestNamespace_ReadAll(t *testing.T) {
 		}
 		nn, _, _, err := n.ReadAll(s, user1, "1,w", 1, -1)
 		assert.NoError(t, err)
-		namespaces := nn.([]*NamespaceWithLists)
+		namespaces := nn.([]*NamespaceWithProjects)
 		assert.NotNil(t, namespaces)
 		assert.Len(t, namespaces, 1)
 		assert.Equal(t, int64(1), namespaces[0].ID)
@@ -301,7 +301,7 @@ func TestNamespace_ReadAll(t *testing.T) {
 			IsArchived: true,
 		}
 		nn, _, _, err := n.ReadAll(s, user1, "", 1, -1)
-		namespaces := nn.([]*NamespaceWithLists)
+		namespaces := nn.([]*NamespaceWithProjects)
 		assert.NoError(t, err)
 		assert.NotNil(t, namespaces)
 		assert.Len(t, namespaces, 12)                // Total of 12 including shared & favorites, one is archived
@@ -316,7 +316,7 @@ func TestNamespace_ReadAll(t *testing.T) {
 
 		n := &Namespace{}
 		nn, _, _, err := n.ReadAll(s, user11, "", 1, -1)
-		namespaces := nn.([]*NamespaceWithLists)
+		namespaces := nn.([]*NamespaceWithProjects)
 		assert.NoError(t, err)
 		// Assert the first namespace is not the favorites namespace
 		assert.NotEqual(t, FavoritesPseudoNamespace.ID, namespaces[0].ID)
@@ -328,11 +328,11 @@ func TestNamespace_ReadAll(t *testing.T) {
 
 		n := &Namespace{}
 		nn, _, _, err := n.ReadAll(s, user12, "", 1, -1)
-		namespaces := nn.([]*NamespaceWithLists)
+		namespaces := nn.([]*NamespaceWithProjects)
 		assert.NoError(t, err)
-		// Assert the first namespace is the favorites namespace and contains lists
+		// Assert the first namespace is the favorites namespace and contains projects
 		assert.Equal(t, FavoritesPseudoNamespace.ID, namespaces[0].ID)
-		assert.NotEqual(t, 0, namespaces[0].Lists)
+		assert.NotEqual(t, 0, namespaces[0].Projects)
 	})
 	t.Run("no saved filters", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -341,7 +341,7 @@ func TestNamespace_ReadAll(t *testing.T) {
 
 		n := &Namespace{}
 		nn, _, _, err := n.ReadAll(s, user11, "", 1, -1)
-		namespaces := nn.([]*NamespaceWithLists)
+		namespaces := nn.([]*NamespaceWithProjects)
 		assert.NoError(t, err)
 		// Assert the first namespace is not the favorites namespace
 		assert.NotEqual(t, SavedFiltersPseudoNamespace.ID, namespaces[0].ID)
@@ -364,7 +364,7 @@ func TestNamespace_ReadAll(t *testing.T) {
 		n := &Namespace{}
 		nn, _, _, err := n.ReadAll(s, user6, "NamespACE7", 1, -1)
 		assert.NoError(t, err)
-		namespaces := nn.([]*NamespaceWithLists)
+		namespaces := nn.([]*NamespaceWithProjects)
 		assert.NotNil(t, namespaces)
 		assert.Len(t, namespaces, 2)
 		assert.Equal(t, int64(7), namespaces[1].ID)

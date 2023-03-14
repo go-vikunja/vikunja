@@ -363,14 +363,14 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 		},
 	}
 
-	expectedHierachie := []*models.NamespaceWithListsAndTasks{
+	expectedHierachie := []*models.NamespaceWithProjectsAndTasks{
 		{
 			Namespace: models.Namespace{
 				Title: "Migrated from todoist",
 			},
-			Lists: []*models.ListWithTasksAndBuckets{
+			Projects: []*models.ProjectWithTasksAndBuckets{
 				{
-					List: models.List{
+					Project: models.Project{
 						Title:       "Project1",
 						Description: "Lorem Ipsum dolor sit amet\nLorem Ipsum dolor sit amet 2\nLorem Ipsum dolor sit amet 3",
 						HexColor:    todoistColors["berry_red"],
@@ -504,7 +504,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 					},
 				},
 				{
-					List: models.List{
+					Project: models.Project{
 						Title:       "Project2",
 						Description: "Lorem Ipsum dolor sit amet 4\nLorem Ipsum dolor sit amet 5",
 						HexColor:    todoistColors["mint_green"],
@@ -602,7 +602,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 					},
 				},
 				{
-					List: models.List{
+					Project: models.Project{
 						Title:      "Project3 - Archived",
 						HexColor:   todoistColors["mint_green"],
 						IsArchived: true,

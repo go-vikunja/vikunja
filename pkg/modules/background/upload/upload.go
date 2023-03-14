@@ -37,24 +37,24 @@ func (p *Provider) Search(s *xorm.Session, search string, page int64) (result []
 }
 
 // Set handles setting a background through a file upload
-// @Summary Upload a list background
-// @Description Upload a list background.
-// @tags list
+// @Summary Upload a project background
+// @Description Upload a project background.
+// @tags project
 // @Accept mpfd
 // @Produce json
-// @Param id path int true "List ID"
+// @Param id path int true "Project ID"
 // @Param background formData string true "The file as single file."
 // @Security JWTKeyAuth
 // @Success 200 {object} models.Message "The background was set successfully."
 // @Failure 400 {object} models.Message "File is no image."
-// @Failure 403 {object} models.Message "No access to the list."
+// @Failure 403 {object} models.Message "No access to the project."
 // @Failure 403 {object} models.Message "File too large."
-// @Failure 404 {object} models.Message "The list does not exist."
+// @Failure 404 {object} models.Message "The project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /lists/{id}/backgrounds/upload [put]
-func (p *Provider) Set(s *xorm.Session, img *background.Image, list *models.List, auth web.Auth) (err error) {
+// @Router /projects/{id}/backgrounds/upload [put]
+func (p *Provider) Set(s *xorm.Session, img *background.Image, project *models.Project, auth web.Auth) (err error) {
 	// Remove the old background if one exists
-	err = list.DeleteBackgroundFileIfExists()
+	err = project.DeleteBackgroundFileIfExists()
 	if err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func (p *Provider) Set(s *xorm.Session, img *background.Image, list *models.List
 		return
 	}
 
-	list.BackgroundInformation = &models.ListBackgroundType{Type: models.ListBackgroundUpload}
+	project.BackgroundInformation = &models.ProjectBackgroundType{Type: models.ProjectBackgroundUpload}
 
-	return models.SetListBackground(s, list.ID, file, list.BackgroundBlurHash)
+	return models.SetProjectBackground(s, project.ID, file, project.BackgroundBlurHash)
 }

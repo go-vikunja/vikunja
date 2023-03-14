@@ -39,14 +39,14 @@ var (
 // GetTables returns all structs which are also a table.
 func GetTables() []interface{} {
 	return []interface{}{
-		&List{},
+		&Project{},
 		&Task{},
 		&Team{},
 		&TeamMember{},
-		&TeamList{},
+		&TeamProject{},
 		&TeamNamespace{},
 		&Namespace{},
-		&ListUser{},
+		&ProjectUser{},
 		&NamespaceUser{},
 		&TaskAssginee{},
 		&Label{},

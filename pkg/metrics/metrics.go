@@ -28,8 +28,8 @@ import (
 )
 
 const (
-	// ListCountKey is the name of the key in which we save the list count
-	ListCountKey = `listcount`
+	// ProjectCountKey is the name of the key in which we save the project count
+	ProjectCountKey = `projectcount`
 
 	// UserCountKey is the name of the key we use to store total users in redis
 	UserCountKey = `usercount`
@@ -65,16 +65,16 @@ func InitMetrics() {
 
 	GetRegistry()
 
-	// Register total list count metric
+	// Register total project count metric
 	err := registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
-		Name: "vikunja_list_count",
-		Help: "The number of lists on this instance",
+		Name: "vikunja_project_count",
+		Help: "The number of projects on this instance",
 	}, func() float64 {
-		count, _ := GetCount(ListCountKey)
+		count, _ := GetCount(ProjectCountKey)
 		return float64(count)
 	}))
 	if err != nil {
-		log.Criticalf("Could not register metrics for %s: %s", ListCountKey, err)
+		log.Criticalf("Could not register metrics for %s: %s", ProjectCountKey, err)
 	}
 
 	// Register total user count metric
@@ -147,7 +147,7 @@ func GetCount(key string) (count int64, err error) {
 	return
 }
 
-// SetCount sets the list count to a given value
+// SetCount sets the project count to a given value
 func SetCount(count int64, key string) error {
 	return keyvalue.Put(key, count)
 }

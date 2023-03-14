@@ -110,222 +110,222 @@ func (err ValidationHTTPError) Error() string {
 }
 
 // ===========
-// List errors
+// Project errors
 // ===========
 
-// ErrListDoesNotExist represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
-type ErrListDoesNotExist struct {
+// ErrProjectDoesNotExist represents a "ErrProjectDoesNotExist" kind of error. Used if the project does not exist.
+type ErrProjectDoesNotExist struct {
 	ID int64
 }
 
-// IsErrListDoesNotExist checks if an error is a ErrListDoesNotExist.
-func IsErrListDoesNotExist(err error) bool {
-	_, ok := err.(ErrListDoesNotExist)
+// IsErrProjectDoesNotExist checks if an error is a ErrProjectDoesNotExist.
+func IsErrProjectDoesNotExist(err error) bool {
+	_, ok := err.(ErrProjectDoesNotExist)
 	return ok
 }
 
-func (err ErrListDoesNotExist) Error() string {
-	return fmt.Sprintf("List does not exist [ID: %d]", err.ID)
+func (err ErrProjectDoesNotExist) Error() string {
+	return fmt.Sprintf("Project does not exist [ID: %d]", err.ID)
 }
 
-// ErrCodeListDoesNotExist holds the unique world-error code of this error
-const ErrCodeListDoesNotExist = 3001
+// ErrCodeProjectDoesNotExist holds the unique world-error code of this error
+const ErrCodeProjectDoesNotExist = 3001
 
 // HTTPError holds the http error description
-func (err ErrListDoesNotExist) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeListDoesNotExist, Message: "This list does not exist."}
+func (err ErrProjectDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeProjectDoesNotExist, Message: "This project does not exist."}
 }
 
-// ErrNeedToHaveListReadAccess represents an error, where the user dont has read access to that List
-type ErrNeedToHaveListReadAccess struct {
-	ListID int64
-	UserID int64
+// ErrNeedToHaveProjectReadAccess represents an error, where the user dont has read access to that Project
+type ErrNeedToHaveProjectReadAccess struct {
+	ProjectID int64
+	UserID    int64
 }
 
-// IsErrNeedToHaveListReadAccess checks if an error is a ErrListDoesNotExist.
-func IsErrNeedToHaveListReadAccess(err error) bool {
-	_, ok := err.(ErrNeedToHaveListReadAccess)
+// IsErrNeedToHaveProjectReadAccess checks if an error is a ErrProjectDoesNotExist.
+func IsErrNeedToHaveProjectReadAccess(err error) bool {
+	_, ok := err.(ErrNeedToHaveProjectReadAccess)
 	return ok
 }
 
-func (err ErrNeedToHaveListReadAccess) Error() string {
-	return fmt.Sprintf("User needs to have read access to that list [ListID: %d, UserID: %d]", err.ListID, err.UserID)
+func (err ErrNeedToHaveProjectReadAccess) Error() string {
+	return fmt.Sprintf("User needs to have read access to that project [ProjectID: %d, UserID: %d]", err.ProjectID, err.UserID)
 }
 
-// ErrCodeNeedToHaveListReadAccess holds the unique world-error code of this error
-const ErrCodeNeedToHaveListReadAccess = 3004
+// ErrCodeNeedToHaveProjectReadAccess holds the unique world-error code of this error
+const ErrCodeNeedToHaveProjectReadAccess = 3004
 
 // HTTPError holds the http error description
-func (err ErrNeedToHaveListReadAccess) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeNeedToHaveListReadAccess, Message: "You need to have read access to this list."}
+func (err ErrNeedToHaveProjectReadAccess) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeNeedToHaveProjectReadAccess, Message: "You need to have read access to this project."}
 }
 
-// ErrListTitleCannotBeEmpty represents a "ErrListTitleCannotBeEmpty" kind of error. Used if the list does not exist.
-type ErrListTitleCannotBeEmpty struct{}
+// ErrProjectTitleCannotBeEmpty represents a "ErrProjectTitleCannotBeEmpty" kind of error. Used if the project does not exist.
+type ErrProjectTitleCannotBeEmpty struct{}
 
-// IsErrListTitleCannotBeEmpty checks if an error is a ErrListTitleCannotBeEmpty.
-func IsErrListTitleCannotBeEmpty(err error) bool {
-	_, ok := err.(ErrListTitleCannotBeEmpty)
+// IsErrProjectTitleCannotBeEmpty checks if an error is a ErrProjectTitleCannotBeEmpty.
+func IsErrProjectTitleCannotBeEmpty(err error) bool {
+	_, ok := err.(ErrProjectTitleCannotBeEmpty)
 	return ok
 }
 
-func (err ErrListTitleCannotBeEmpty) Error() string {
-	return "List title cannot be empty."
+func (err ErrProjectTitleCannotBeEmpty) Error() string {
+	return "Project title cannot be empty."
 }
 
-// ErrCodeListTitleCannotBeEmpty holds the unique world-error code of this error
-const ErrCodeListTitleCannotBeEmpty = 3005
+// ErrCodeProjectTitleCannotBeEmpty holds the unique world-error code of this error
+const ErrCodeProjectTitleCannotBeEmpty = 3005
 
 // HTTPError holds the http error description
-func (err ErrListTitleCannotBeEmpty) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeListTitleCannotBeEmpty, Message: "You must provide at least a list title."}
+func (err ErrProjectTitleCannotBeEmpty) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeProjectTitleCannotBeEmpty, Message: "You must provide at least a project title."}
 }
 
-// ErrListShareDoesNotExist represents a "ErrListShareDoesNotExist" kind of error. Used if the list share does not exist.
-type ErrListShareDoesNotExist struct {
+// ErrProjectShareDoesNotExist represents a "ErrProjectShareDoesNotExist" kind of error. Used if the project share does not exist.
+type ErrProjectShareDoesNotExist struct {
 	ID   int64
 	Hash string
 }
 
-// IsErrListShareDoesNotExist checks if an error is a ErrListShareDoesNotExist.
-func IsErrListShareDoesNotExist(err error) bool {
-	_, ok := err.(ErrListShareDoesNotExist)
+// IsErrProjectShareDoesNotExist checks if an error is a ErrProjectShareDoesNotExist.
+func IsErrProjectShareDoesNotExist(err error) bool {
+	_, ok := err.(ErrProjectShareDoesNotExist)
 	return ok
 }
 
-func (err ErrListShareDoesNotExist) Error() string {
-	return "List share does not exist."
+func (err ErrProjectShareDoesNotExist) Error() string {
+	return "Project share does not exist."
 }
 
-// ErrCodeListShareDoesNotExist holds the unique world-error code of this error
-const ErrCodeListShareDoesNotExist = 3006
+// ErrCodeProjectShareDoesNotExist holds the unique world-error code of this error
+const ErrCodeProjectShareDoesNotExist = 3006
 
 // HTTPError holds the http error description
-func (err ErrListShareDoesNotExist) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeListShareDoesNotExist, Message: "The list share does not exist."}
+func (err ErrProjectShareDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeProjectShareDoesNotExist, Message: "The project share does not exist."}
 }
 
-// ErrListIdentifierIsNotUnique represents a "ErrListIdentifierIsNotUnique" kind of error. Used if the provided list identifier is not unique.
-type ErrListIdentifierIsNotUnique struct {
+// ErrProjectIdentifierIsNotUnique represents a "ErrProjectIdentifierIsNotUnique" kind of error. Used if the provided project identifier is not unique.
+type ErrProjectIdentifierIsNotUnique struct {
 	Identifier string
 }
 
-// IsErrListIdentifierIsNotUnique checks if an error is a ErrListIdentifierIsNotUnique.
-func IsErrListIdentifierIsNotUnique(err error) bool {
-	_, ok := err.(ErrListIdentifierIsNotUnique)
+// IsErrProjectIdentifierIsNotUnique checks if an error is a ErrProjectIdentifierIsNotUnique.
+func IsErrProjectIdentifierIsNotUnique(err error) bool {
+	_, ok := err.(ErrProjectIdentifierIsNotUnique)
 	return ok
 }
 
-func (err ErrListIdentifierIsNotUnique) Error() string {
-	return "List identifier is not unique."
+func (err ErrProjectIdentifierIsNotUnique) Error() string {
+	return "Project identifier is not unique."
 }
 
-// ErrCodeListIdentifierIsNotUnique holds the unique world-error code of this error
-const ErrCodeListIdentifierIsNotUnique = 3007
+// ErrCodeProjectIdentifierIsNotUnique holds the unique world-error code of this error
+const ErrCodeProjectIdentifierIsNotUnique = 3007
 
 // HTTPError holds the http error description
-func (err ErrListIdentifierIsNotUnique) HTTPError() web.HTTPError {
+func (err ErrProjectIdentifierIsNotUnique) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
-		Code:     ErrCodeListIdentifierIsNotUnique,
-		Message:  "A list with this identifier already exists.",
+		Code:     ErrCodeProjectIdentifierIsNotUnique,
+		Message:  "A project with this identifier already exists.",
 	}
 }
 
-// ErrListIsArchived represents an error, where a list is archived
-type ErrListIsArchived struct {
-	ListID int64
+// ErrProjectIsArchived represents an error, where a project is archived
+type ErrProjectIsArchived struct {
+	ProjectID int64
 }
 
-// IsErrListIsArchived checks if an error is a list is archived error.
-func IsErrListIsArchived(err error) bool {
-	_, ok := err.(ErrListIsArchived)
+// IsErrProjectIsArchived checks if an error is a project is archived error.
+func IsErrProjectIsArchived(err error) bool {
+	_, ok := err.(ErrProjectIsArchived)
 	return ok
 }
 
-func (err ErrListIsArchived) Error() string {
-	return fmt.Sprintf("List is archived [ListID: %d]", err.ListID)
+func (err ErrProjectIsArchived) Error() string {
+	return fmt.Sprintf("Project is archived [ProjectID: %d]", err.ProjectID)
 }
 
-// ErrCodeListIsArchived holds the unique world-error code of this error
-const ErrCodeListIsArchived = 3008
+// ErrCodeProjectIsArchived holds the unique world-error code of this error
+const ErrCodeProjectIsArchived = 3008
 
 // HTTPError holds the http error description
-func (err ErrListIsArchived) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeListIsArchived, Message: "This list is archived. Editing or creating new tasks is not possible."}
+func (err ErrProjectIsArchived) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeProjectIsArchived, Message: "This project is archived. Editing or creating new tasks is not possible."}
 }
 
-// ErrListCannotBelongToAPseudoNamespace represents an error where a list cannot belong to a pseudo namespace
-type ErrListCannotBelongToAPseudoNamespace struct {
-	ListID      int64
+// ErrProjectCannotBelongToAPseudoNamespace represents an error where a project cannot belong to a pseudo namespace
+type ErrProjectCannotBelongToAPseudoNamespace struct {
+	ProjectID   int64
 	NamespaceID int64
 }
 
-// IsErrListCannotBelongToAPseudoNamespace checks if an error is a list is archived error.
-func IsErrListCannotBelongToAPseudoNamespace(err error) bool {
-	_, ok := err.(*ErrListCannotBelongToAPseudoNamespace)
+// IsErrProjectCannotBelongToAPseudoNamespace checks if an error is a project is archived error.
+func IsErrProjectCannotBelongToAPseudoNamespace(err error) bool {
+	_, ok := err.(*ErrProjectCannotBelongToAPseudoNamespace)
 	return ok
 }
 
-func (err *ErrListCannotBelongToAPseudoNamespace) Error() string {
-	return fmt.Sprintf("List cannot belong to a pseudo namespace [ListID: %d, NamespaceID: %d]", err.ListID, err.NamespaceID)
+func (err *ErrProjectCannotBelongToAPseudoNamespace) Error() string {
+	return fmt.Sprintf("Project cannot belong to a pseudo namespace [ProjectID: %d, NamespaceID: %d]", err.ProjectID, err.NamespaceID)
 }
 
-// ErrCodeListCannotBelongToAPseudoNamespace holds the unique world-error code of this error
-const ErrCodeListCannotBelongToAPseudoNamespace = 3009
+// ErrCodeProjectCannotBelongToAPseudoNamespace holds the unique world-error code of this error
+const ErrCodeProjectCannotBelongToAPseudoNamespace = 3009
 
 // HTTPError holds the http error description
-func (err *ErrListCannotBelongToAPseudoNamespace) HTTPError() web.HTTPError {
+func (err *ErrProjectCannotBelongToAPseudoNamespace) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusPreconditionFailed,
-		Code:     ErrCodeListCannotBelongToAPseudoNamespace,
-		Message:  "This list cannot belong a dynamically generated namespace.",
+		Code:     ErrCodeProjectCannotBelongToAPseudoNamespace,
+		Message:  "This project cannot belong a dynamically generated namespace.",
 	}
 }
 
-// ErrListMustBelongToANamespace represents an error where a list must belong to a namespace
-type ErrListMustBelongToANamespace struct {
-	ListID      int64
+// ErrProjectMustBelongToANamespace represents an error where a project must belong to a namespace
+type ErrProjectMustBelongToANamespace struct {
+	ProjectID   int64
 	NamespaceID int64
 }
 
-// IsErrListMustBelongToANamespace checks if an error is a list must belong to a namespace error.
-func IsErrListMustBelongToANamespace(err error) bool {
-	_, ok := err.(*ErrListMustBelongToANamespace)
+// IsErrProjectMustBelongToANamespace checks if an error is a project must belong to a namespace error.
+func IsErrProjectMustBelongToANamespace(err error) bool {
+	_, ok := err.(*ErrProjectMustBelongToANamespace)
 	return ok
 }
 
-func (err *ErrListMustBelongToANamespace) Error() string {
-	return fmt.Sprintf("List must belong to a namespace [ListID: %d, NamespaceID: %d]", err.ListID, err.NamespaceID)
+func (err *ErrProjectMustBelongToANamespace) Error() string {
+	return fmt.Sprintf("Project must belong to a namespace [ProjectID: %d, NamespaceID: %d]", err.ProjectID, err.NamespaceID)
 }
 
-// ErrCodeListMustBelongToANamespace holds the unique world-error code of this error
-const ErrCodeListMustBelongToANamespace = 3010
+// ErrCodeProjectMustBelongToANamespace holds the unique world-error code of this error
+const ErrCodeProjectMustBelongToANamespace = 3010
 
 // HTTPError holds the http error description
-func (err *ErrListMustBelongToANamespace) HTTPError() web.HTTPError {
+func (err *ErrProjectMustBelongToANamespace) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusPreconditionFailed,
-		Code:     ErrCodeListMustBelongToANamespace,
-		Message:  "This list must belong to a namespace.",
+		Code:     ErrCodeProjectMustBelongToANamespace,
+		Message:  "This project must belong to a namespace.",
 	}
 }
 
 // ================
-// List task errors
+// Project task errors
 // ================
 
-// ErrTaskCannotBeEmpty represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
+// ErrTaskCannotBeEmpty represents a "ErrProjectDoesNotExist" kind of error. Used if the project does not exist.
 type ErrTaskCannotBeEmpty struct{}
 
-// IsErrTaskCannotBeEmpty checks if an error is a ErrListDoesNotExist.
+// IsErrTaskCannotBeEmpty checks if an error is a ErrProjectDoesNotExist.
 func IsErrTaskCannotBeEmpty(err error) bool {
 	_, ok := err.(ErrTaskCannotBeEmpty)
 	return ok
 }
 
 func (err ErrTaskCannotBeEmpty) Error() string {
-	return "List task title cannot be empty."
+	return "Project task title cannot be empty."
 }
 
 // ErrCodeTaskCannotBeEmpty holds the unique world-error code of this error
@@ -333,22 +333,22 @@ const ErrCodeTaskCannotBeEmpty = 4001
 
 // HTTPError holds the http error description
 func (err ErrTaskCannotBeEmpty) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeTaskCannotBeEmpty, Message: "You must provide at least a list task title."}
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeTaskCannotBeEmpty, Message: "You must provide at least a project task title."}
 }
 
-// ErrTaskDoesNotExist represents a "ErrListDoesNotExist" kind of error. Used if the list does not exist.
+// ErrTaskDoesNotExist represents a "ErrProjectDoesNotExist" kind of error. Used if the project does not exist.
 type ErrTaskDoesNotExist struct {
 	ID int64
 }
 
-// IsErrTaskDoesNotExist checks if an error is a ErrListDoesNotExist.
+// IsErrTaskDoesNotExist checks if an error is a ErrProjectDoesNotExist.
 func IsErrTaskDoesNotExist(err error) bool {
 	_, ok := err.(ErrTaskDoesNotExist)
 	return ok
 }
 
 func (err ErrTaskDoesNotExist) Error() string {
-	return fmt.Sprintf("List task does not exist. [ID: %d]", err.ID)
+	return fmt.Sprintf("Project task does not exist. [ID: %d]", err.ID)
 }
 
 // ErrCodeTaskDoesNotExist holds the unique world-error code of this error
@@ -359,28 +359,28 @@ func (err ErrTaskDoesNotExist) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeTaskDoesNotExist, Message: "This task does not exist"}
 }
 
-// ErrBulkTasksMustBeInSameList represents a "ErrBulkTasksMustBeInSameList" kind of error.
-type ErrBulkTasksMustBeInSameList struct {
+// ErrBulkTasksMustBeInSameProject represents a "ErrBulkTasksMustBeInSameProject" kind of error.
+type ErrBulkTasksMustBeInSameProject struct {
 	ShouldBeID int64
 	IsID       int64
 }
 
-// IsErrBulkTasksMustBeInSameList checks if an error is a ErrBulkTasksMustBeInSameList.
-func IsErrBulkTasksMustBeInSameList(err error) bool {
-	_, ok := err.(ErrBulkTasksMustBeInSameList)
+// IsErrBulkTasksMustBeInSameProject checks if an error is a ErrBulkTasksMustBeInSameProject.
+func IsErrBulkTasksMustBeInSameProject(err error) bool {
+	_, ok := err.(ErrBulkTasksMustBeInSameProject)
 	return ok
 }
 
-func (err ErrBulkTasksMustBeInSameList) Error() string {
-	return fmt.Sprintf("All bulk editing tasks must be in the same list. [Should be: %d, is: %d]", err.ShouldBeID, err.IsID)
+func (err ErrBulkTasksMustBeInSameProject) Error() string {
+	return fmt.Sprintf("All bulk editing tasks must be in the same project. [Should be: %d, is: %d]", err.ShouldBeID, err.IsID)
 }
 
-// ErrCodeBulkTasksMustBeInSameList holds the unique world-error code of this error
-const ErrCodeBulkTasksMustBeInSameList = 4003
+// ErrCodeBulkTasksMustBeInSameProject holds the unique world-error code of this error
+const ErrCodeBulkTasksMustBeInSameProject = 4003
 
 // HTTPError holds the http error description
-func (err ErrBulkTasksMustBeInSameList) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeBulkTasksMustBeInSameList, Message: "All tasks must be in the same list."}
+func (err ErrBulkTasksMustBeInSameProject) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeBulkTasksMustBeInSameProject, Message: "All tasks must be in the same project."}
 }
 
 // ErrBulkTasksNeedAtLeastOne represents a "ErrBulkTasksNeedAtLeastOne" kind of error.
@@ -1042,7 +1042,7 @@ const ErrCodeNamespaceIsArchived = 5012
 
 // HTTPError holds the http error description
 func (err ErrNamespaceIsArchived) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeNamespaceIsArchived, Message: "This namespaces is archived. Editing or creating new lists is not possible."}
+	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeNamespaceIsArchived, Message: "This namespaces is archived. Editing or creating new projects is not possible."}
 }
 
 // ============
@@ -1095,7 +1095,7 @@ func (err ErrTeamDoesNotExist) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeTeamDoesNotExist, Message: "This team does not exist."}
 }
 
-// ErrTeamAlreadyHasAccess represents an error where a team already has access to a list/namespace
+// ErrTeamAlreadyHasAccess represents an error where a team already has access to a project/namespace
 type ErrTeamAlreadyHasAccess struct {
 	TeamID int64
 	ID     int64
@@ -1167,38 +1167,38 @@ func (err ErrCannotDeleteLastTeamMember) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeCannotDeleteLastTeamMember, Message: "You cannot delete the last member of a team."}
 }
 
-// ErrTeamDoesNotHaveAccessToList represents an error, where the Team is not the owner of that List (used i.e. when deleting a List)
-type ErrTeamDoesNotHaveAccessToList struct {
-	ListID int64
-	TeamID int64
+// ErrTeamDoesNotHaveAccessToProject represents an error, where the Team is not the owner of that Project (used i.e. when deleting a Project)
+type ErrTeamDoesNotHaveAccessToProject struct {
+	ProjectID int64
+	TeamID    int64
 }
 
-// IsErrTeamDoesNotHaveAccessToList checks if an error is a ErrListDoesNotExist.
-func IsErrTeamDoesNotHaveAccessToList(err error) bool {
-	_, ok := err.(ErrTeamDoesNotHaveAccessToList)
+// IsErrTeamDoesNotHaveAccessToProject checks if an error is a ErrProjectDoesNotExist.
+func IsErrTeamDoesNotHaveAccessToProject(err error) bool {
+	_, ok := err.(ErrTeamDoesNotHaveAccessToProject)
 	return ok
 }
 
-func (err ErrTeamDoesNotHaveAccessToList) Error() string {
-	return fmt.Sprintf("Team does not have access to the list [ListID: %d, TeamID: %d]", err.ListID, err.TeamID)
+func (err ErrTeamDoesNotHaveAccessToProject) Error() string {
+	return fmt.Sprintf("Team does not have access to the project [ProjectID: %d, TeamID: %d]", err.ProjectID, err.TeamID)
 }
 
-// ErrCodeTeamDoesNotHaveAccessToList holds the unique world-error code of this error
-const ErrCodeTeamDoesNotHaveAccessToList = 6007
+// ErrCodeTeamDoesNotHaveAccessToProject holds the unique world-error code of this error
+const ErrCodeTeamDoesNotHaveAccessToProject = 6007
 
 // HTTPError holds the http error description
-func (err ErrTeamDoesNotHaveAccessToList) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeTeamDoesNotHaveAccessToList, Message: "This team does not have access to the list."}
+func (err ErrTeamDoesNotHaveAccessToProject) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeTeamDoesNotHaveAccessToProject, Message: "This team does not have access to the project."}
 }
 
 // ====================
-// User <-> List errors
+// User <-> Project errors
 // ====================
 
-// ErrUserAlreadyHasAccess represents an error where a user already has access to a list/namespace
+// ErrUserAlreadyHasAccess represents an error where a user already has access to a project/namespace
 type ErrUserAlreadyHasAccess struct {
-	UserID int64
-	ListID int64
+	UserID    int64
+	ProjectID int64
 }
 
 // IsErrUserAlreadyHasAccess checks if an error is ErrUserAlreadyHasAccess.
@@ -1208,7 +1208,7 @@ func IsErrUserAlreadyHasAccess(err error) bool {
 }
 
 func (err ErrUserAlreadyHasAccess) Error() string {
-	return fmt.Sprintf("User already has access to that list. [User ID: %d, List ID: %d]", err.UserID, err.ListID)
+	return fmt.Sprintf("User already has access to that project. [User ID: %d, Project ID: %d]", err.UserID, err.ProjectID)
 }
 
 // ErrCodeUserAlreadyHasAccess holds the unique world-error code of this error
@@ -1216,31 +1216,31 @@ const ErrCodeUserAlreadyHasAccess = 7002
 
 // HTTPError holds the http error description
 func (err ErrUserAlreadyHasAccess) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusConflict, Code: ErrCodeUserAlreadyHasAccess, Message: "This user already has access to this list."}
+	return web.HTTPError{HTTPCode: http.StatusConflict, Code: ErrCodeUserAlreadyHasAccess, Message: "This user already has access to this project."}
 }
 
-// ErrUserDoesNotHaveAccessToList represents an error, where the user is not the owner of that List (used i.e. when deleting a List)
-type ErrUserDoesNotHaveAccessToList struct {
-	ListID int64
-	UserID int64
+// ErrUserDoesNotHaveAccessToProject represents an error, where the user is not the owner of that Project (used i.e. when deleting a Project)
+type ErrUserDoesNotHaveAccessToProject struct {
+	ProjectID int64
+	UserID    int64
 }
 
-// IsErrUserDoesNotHaveAccessToList checks if an error is a ErrListDoesNotExist.
-func IsErrUserDoesNotHaveAccessToList(err error) bool {
-	_, ok := err.(ErrUserDoesNotHaveAccessToList)
+// IsErrUserDoesNotHaveAccessToProject checks if an error is a ErrProjectDoesNotExist.
+func IsErrUserDoesNotHaveAccessToProject(err error) bool {
+	_, ok := err.(ErrUserDoesNotHaveAccessToProject)
 	return ok
 }
 
-func (err ErrUserDoesNotHaveAccessToList) Error() string {
-	return fmt.Sprintf("User does not have access to the list [ListID: %d, UserID: %d]", err.ListID, err.UserID)
+func (err ErrUserDoesNotHaveAccessToProject) Error() string {
+	return fmt.Sprintf("User does not have access to the project [ProjectID: %d, UserID: %d]", err.ProjectID, err.UserID)
 }
 
-// ErrCodeUserDoesNotHaveAccessToList holds the unique world-error code of this error
-const ErrCodeUserDoesNotHaveAccessToList = 7003
+// ErrCodeUserDoesNotHaveAccessToProject holds the unique world-error code of this error
+const ErrCodeUserDoesNotHaveAccessToProject = 7003
 
 // HTTPError holds the http error description
-func (err ErrUserDoesNotHaveAccessToList) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeUserDoesNotHaveAccessToList, Message: "This user does not have access to the list."}
+func (err ErrUserDoesNotHaveAccessToProject) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeUserDoesNotHaveAccessToProject, Message: "This user does not have access to the project."}
 }
 
 // =============
@@ -1392,38 +1392,38 @@ func (err ErrBucketDoesNotExist) HTTPError() web.HTTPError {
 	}
 }
 
-// ErrBucketDoesNotBelongToList represents an error where a kanban bucket does not belong to a list
-type ErrBucketDoesNotBelongToList struct {
-	BucketID int64
-	ListID   int64
+// ErrBucketDoesNotBelongToProject represents an error where a kanban bucket does not belong to a project
+type ErrBucketDoesNotBelongToProject struct {
+	BucketID  int64
+	ProjectID int64
 }
 
-// IsErrBucketDoesNotBelongToList checks if an error is ErrBucketDoesNotBelongToList.
-func IsErrBucketDoesNotBelongToList(err error) bool {
-	_, ok := err.(ErrBucketDoesNotBelongToList)
+// IsErrBucketDoesNotBelongToProject checks if an error is ErrBucketDoesNotBelongToProject.
+func IsErrBucketDoesNotBelongToProject(err error) bool {
+	_, ok := err.(ErrBucketDoesNotBelongToProject)
 	return ok
 }
 
-func (err ErrBucketDoesNotBelongToList) Error() string {
-	return fmt.Sprintf("Bucket does not not belong to list [BucketID: %d, ListID: %d]", err.BucketID, err.ListID)
+func (err ErrBucketDoesNotBelongToProject) Error() string {
+	return fmt.Sprintf("Bucket does not not belong to project [BucketID: %d, ProjectID: %d]", err.BucketID, err.ProjectID)
 }
 
-// ErrCodeBucketDoesNotBelongToList holds the unique world-error code of this error
-const ErrCodeBucketDoesNotBelongToList = 10002
+// ErrCodeBucketDoesNotBelongToProject holds the unique world-error code of this error
+const ErrCodeBucketDoesNotBelongToProject = 10002
 
 // HTTPError holds the http error description
-func (err ErrBucketDoesNotBelongToList) HTTPError() web.HTTPError {
+func (err ErrBucketDoesNotBelongToProject) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
-		Code:     ErrCodeBucketDoesNotBelongToList,
-		Message:  "This bucket does not belong to that list.",
+		Code:     ErrCodeBucketDoesNotBelongToProject,
+		Message:  "This bucket does not belong to that project.",
 	}
 }
 
-// ErrCannotRemoveLastBucket represents an error where a kanban bucket is the last on a list and thus cannot be removed.
+// ErrCannotRemoveLastBucket represents an error where a kanban bucket is the last on a project and thus cannot be removed.
 type ErrCannotRemoveLastBucket struct {
-	BucketID int64
-	ListID   int64
+	BucketID  int64
+	ProjectID int64
 }
 
 // IsErrCannotRemoveLastBucket checks if an error is ErrCannotRemoveLastBucket.
@@ -1433,7 +1433,7 @@ func IsErrCannotRemoveLastBucket(err error) bool {
 }
 
 func (err ErrCannotRemoveLastBucket) Error() string {
-	return fmt.Sprintf("Cannot remove last bucket of list [BucketID: %d, ListID: %d]", err.BucketID, err.ListID)
+	return fmt.Sprintf("Cannot remove last bucket of project [BucketID: %d, ProjectID: %d]", err.BucketID, err.ProjectID)
 }
 
 // ErrCodeCannotRemoveLastBucket holds the unique world-error code of this error
@@ -1444,7 +1444,7 @@ func (err ErrCannotRemoveLastBucket) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusPreconditionFailed,
 		Code:     ErrCodeCannotRemoveLastBucket,
-		Message:  "You cannot remove the last bucket on this list.",
+		Message:  "You cannot remove the last bucket on this project.",
 	}
 }
 
@@ -1477,32 +1477,32 @@ func (err ErrBucketLimitExceeded) HTTPError() web.HTTPError {
 	}
 }
 
-// ErrOnlyOneDoneBucketPerList represents an error where a bucket is set to the done bucket but one already exists for its list.
-type ErrOnlyOneDoneBucketPerList struct {
+// ErrOnlyOneDoneBucketPerProject represents an error where a bucket is set to the done bucket but one already exists for its project.
+type ErrOnlyOneDoneBucketPerProject struct {
 	BucketID     int64
-	ListID       int64
+	ProjectID    int64
 	DoneBucketID int64
 }
 
-// IsErrOnlyOneDoneBucketPerList checks if an error is ErrBucketLimitExceeded.
-func IsErrOnlyOneDoneBucketPerList(err error) bool {
-	_, ok := err.(*ErrOnlyOneDoneBucketPerList)
+// IsErrOnlyOneDoneBucketPerProject checks if an error is ErrBucketLimitExceeded.
+func IsErrOnlyOneDoneBucketPerProject(err error) bool {
+	_, ok := err.(*ErrOnlyOneDoneBucketPerProject)
 	return ok
 }
 
-func (err *ErrOnlyOneDoneBucketPerList) Error() string {
-	return fmt.Sprintf("There can be only one done bucket per list [BucketID: %d, ListID: %d]", err.BucketID, err.ListID)
+func (err *ErrOnlyOneDoneBucketPerProject) Error() string {
+	return fmt.Sprintf("There can be only one done bucket per project [BucketID: %d, ProjectID: %d]", err.BucketID, err.ProjectID)
 }
 
-// ErrCodeOnlyOneDoneBucketPerList holds the unique world-error code of this error
-const ErrCodeOnlyOneDoneBucketPerList = 10005
+// ErrCodeOnlyOneDoneBucketPerProject holds the unique world-error code of this error
+const ErrCodeOnlyOneDoneBucketPerProject = 10005
 
 // HTTPError holds the http error description
-func (err *ErrOnlyOneDoneBucketPerList) HTTPError() web.HTTPError {
+func (err *ErrOnlyOneDoneBucketPerProject) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusPreconditionFailed,
-		Code:     ErrCodeOnlyOneDoneBucketPerList,
-		Message:  "There can be only one done bucket per list.",
+		Code:     ErrCodeOnlyOneDoneBucketPerProject,
+		Message:  "There can be only one done bucket per project.",
 	}
 }
 

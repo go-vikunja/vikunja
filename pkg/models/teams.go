@@ -163,7 +163,7 @@ func addMoreInfoToTeams(s *xorm.Session, teams []*Team) (err error) {
 		teamMap[u.TeamID].Members = append(teamMap[u.TeamID].Members, u)
 	}
 
-	// We need to do this in a second loop as owners might not be the last ones in the list
+	// We need to do this in a second loop as owners might not be the last ones in the project
 	for _, team := range teamMap {
 		if teamUser, has := users[team.CreatedByID]; has {
 			team.CreatedBy = &teamUser.User
@@ -313,8 +313,8 @@ func (t *Team) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	// Delete team <-> lists relations
-	_, err = s.Where("team_id = ?", t.ID).Delete(&TeamList{})
+	// Delete team <-> projects relations
+	_, err = s.Where("team_id = ?", t.ID).Delete(&TeamProject{})
 	if err != nil {
 		return
 	}

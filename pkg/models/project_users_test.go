@@ -29,17 +29,17 @@ import (
 	"gopkg.in/d4l3k/messagediff.v1"
 )
 
-func TestListUser_Create(t *testing.T) {
+func TestProjectUser_Create(t *testing.T) {
 	type fields struct {
-		ID       int64
-		UserID   int64
-		Username string
-		ListID   int64
-		Right    Right
-		Created  time.Time
-		Updated  time.Time
-		CRUDable web.CRUDable
-		Rights   web.Rights
+		ID        int64
+		UserID    int64
+		Username  string
+		ProjectID int64
+		Right     Right
+		Created   time.Time
+		Updated   time.Time
+		CRUDable  web.CRUDable
+		Rights    web.Rights
 	}
 	type args struct {
 		a web.Auth
@@ -52,54 +52,54 @@ func TestListUser_Create(t *testing.T) {
 		errType func(err error) bool
 	}{
 		{
-			name: "ListUsers Create normally",
+			name: "ProjectUsers Create normally",
 			fields: fields{
-				Username: "user1",
-				ListID:   2,
+				Username:  "user1",
+				ProjectID: 2,
 			},
 		},
 		{
-			name: "ListUsers Create for duplicate",
+			name: "ProjectUsers Create for duplicate",
 			fields: fields{
-				Username: "user1",
-				ListID:   3,
+				Username:  "user1",
+				ProjectID: 3,
 			},
 			wantErr: true,
 			errType: IsErrUserAlreadyHasAccess,
 		},
 		{
-			name: "ListUsers Create with invalid right",
+			name: "ProjectUsers Create with invalid right",
 			fields: fields{
-				Username: "user1",
-				ListID:   2,
-				Right:    500,
+				Username:  "user1",
+				ProjectID: 2,
+				Right:     500,
 			},
 			wantErr: true,
 			errType: IsErrInvalidRight,
 		},
 		{
-			name: "ListUsers Create with inexisting list",
+			name: "ProjectUsers Create with inexisting project",
 			fields: fields{
-				Username: "user1",
-				ListID:   2000,
+				Username:  "user1",
+				ProjectID: 2000,
 			},
 			wantErr: true,
-			errType: IsErrListDoesNotExist,
+			errType: IsErrProjectDoesNotExist,
 		},
 		{
-			name: "ListUsers Create with inexisting user",
+			name: "ProjectUsers Create with inexisting user",
 			fields: fields{
-				Username: "user500",
-				ListID:   2,
+				Username:  "user500",
+				ProjectID: 2,
 			},
 			wantErr: true,
 			errType: user.IsErrUserDoesNotExist,
 		},
 		{
-			name: "ListUsers Create with the owner as shared user",
+			name: "ProjectUsers Create with the owner as shared user",
 			fields: fields{
-				Username: "user1",
-				ListID:   1,
+				Username:  "user1",
+				ProjectID: 1,
 			},
 			wantErr: true,
 			errType: IsErrUserAlreadyHasAccess,
@@ -110,39 +110,39 @@ func TestListUser_Create(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
 
-			ul := &ListUser{
-				ID:       tt.fields.ID,
-				UserID:   tt.fields.UserID,
-				Username: tt.fields.Username,
-				ListID:   tt.fields.ListID,
-				Right:    tt.fields.Right,
-				Created:  tt.fields.Created,
-				Updated:  tt.fields.Updated,
-				CRUDable: tt.fields.CRUDable,
-				Rights:   tt.fields.Rights,
+			ul := &ProjectUser{
+				ID:        tt.fields.ID,
+				UserID:    tt.fields.UserID,
+				Username:  tt.fields.Username,
+				ProjectID: tt.fields.ProjectID,
+				Right:     tt.fields.Right,
+				Created:   tt.fields.Created,
+				Updated:   tt.fields.Updated,
+				CRUDable:  tt.fields.CRUDable,
+				Rights:    tt.fields.Rights,
 			}
 			err := ul.Create(s, tt.args.a)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ListUser.Create() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ProjectUser.Create() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
-				t.Errorf("ListUser.Create() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
+				t.Errorf("ProjectUser.Create() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
 
 			err = s.Commit()
 			assert.NoError(t, err)
 
 			if !tt.wantErr {
-				db.AssertExists(t, "users_lists", map[string]interface{}{
-					"user_id": ul.UserID,
-					"list_id": tt.fields.ListID,
+				db.AssertExists(t, "users_projects", map[string]interface{}{
+					"user_id":    ul.UserID,
+					"project_id": tt.fields.ProjectID,
 				}, false)
 			}
 		})
 	}
 }
 
-func TestListUser_ReadAll(t *testing.T) {
+func TestProjectUser_ReadAll(t *testing.T) {
 	user1Read := &UserWithRight{
 		User: user.User{
 			ID:                           1,
@@ -173,14 +173,14 @@ func TestListUser_ReadAll(t *testing.T) {
 	}
 
 	type fields struct {
-		ID       int64
-		UserID   int64
-		ListID   int64
-		Right    Right
-		Created  time.Time
-		Updated  time.Time
-		CRUDable web.CRUDable
-		Rights   web.Rights
+		ID        int64
+		UserID    int64
+		ProjectID int64
+		Right     Right
+		Created   time.Time
+		Updated   time.Time
+		CRUDable  web.CRUDable
+		Rights    web.Rights
 	}
 	type args struct {
 		search string
@@ -198,7 +198,7 @@ func TestListUser_ReadAll(t *testing.T) {
 		{
 			name: "Test readall normal",
 			fields: fields{
-				ListID: 3,
+				ProjectID: 3,
 			},
 			args: args{
 				a: &user.User{ID: 3},
@@ -209,20 +209,20 @@ func TestListUser_ReadAll(t *testing.T) {
 			},
 		},
 		{
-			name: "Test ReadAll by a user who does not have access to the list",
+			name: "Test ReadAll by a user who does not have access to the project",
 			fields: fields{
-				ListID: 3,
+				ProjectID: 3,
 			},
 			args: args{
 				a: &user.User{ID: 4},
 			},
 			wantErr: true,
-			errType: IsErrNeedToHaveListReadAccess,
+			errType: IsErrNeedToHaveProjectReadAccess,
 		},
 		{
 			name: "Search",
 			fields: fields{
-				ListID: 3,
+				ProjectID: 3,
 			},
 			args: args{
 				a:      &user.User{ID: 3},
@@ -238,41 +238,41 @@ func TestListUser_ReadAll(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
 
-			ul := &ListUser{
-				ID:       tt.fields.ID,
-				UserID:   tt.fields.UserID,
-				ListID:   tt.fields.ListID,
-				Right:    tt.fields.Right,
-				Created:  tt.fields.Created,
-				Updated:  tt.fields.Updated,
-				CRUDable: tt.fields.CRUDable,
-				Rights:   tt.fields.Rights,
+			ul := &ProjectUser{
+				ID:        tt.fields.ID,
+				UserID:    tt.fields.UserID,
+				ProjectID: tt.fields.ProjectID,
+				Right:     tt.fields.Right,
+				Created:   tt.fields.Created,
+				Updated:   tt.fields.Updated,
+				CRUDable:  tt.fields.CRUDable,
+				Rights:    tt.fields.Rights,
 			}
 			got, _, _, err := ul.ReadAll(s, tt.args.a, tt.args.search, tt.args.page, 50)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ListUser.ReadAll() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ProjectUser.ReadAll() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
-				t.Errorf("ListUser.ReadAll() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
+				t.Errorf("ProjectUser.ReadAll() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
 			if diff, equal := messagediff.PrettyDiff(got, tt.want); !equal {
-				t.Errorf("ListUser.ReadAll() = %v, want %v, diff: %v", got, tt.want, diff)
+				t.Errorf("ProjectUser.ReadAll() = %v, want %v, diff: %v", got, tt.want, diff)
 			}
 			_ = s.Close()
 		})
 	}
 }
 
-func TestListUser_Update(t *testing.T) {
+func TestProjectUser_Update(t *testing.T) {
 	type fields struct {
-		ID       int64
-		Username string
-		ListID   int64
-		Right    Right
-		Created  time.Time
-		Updated  time.Time
-		CRUDable web.CRUDable
-		Rights   web.Rights
+		ID        int64
+		Username  string
+		ProjectID int64
+		Right     Right
+		Created   time.Time
+		Updated   time.Time
+		CRUDable  web.CRUDable
+		Rights    web.Rights
 	}
 	tests := []struct {
 		name    string
@@ -283,33 +283,33 @@ func TestListUser_Update(t *testing.T) {
 		{
 			name: "Test Update Normally",
 			fields: fields{
-				ListID:   3,
-				Username: "user1",
-				Right:    RightAdmin,
+				ProjectID: 3,
+				Username:  "user1",
+				Right:     RightAdmin,
 			},
 		},
 		{
 			name: "Test Update to write",
 			fields: fields{
-				ListID:   3,
-				Username: "user1",
-				Right:    RightWrite,
+				ProjectID: 3,
+				Username:  "user1",
+				Right:     RightWrite,
 			},
 		},
 		{
 			name: "Test Update to Read",
 			fields: fields{
-				ListID:   3,
-				Username: "user1",
-				Right:    RightRead,
+				ProjectID: 3,
+				Username:  "user1",
+				Right:     RightRead,
 			},
 		},
 		{
 			name: "Test Update with invalid right",
 			fields: fields{
-				ListID:   3,
-				Username: "user1",
-				Right:    500,
+				ProjectID: 3,
+				Username:  "user1",
+				Right:     500,
 			},
 			wantErr: true,
 			errType: IsErrInvalidRight,
@@ -320,49 +320,49 @@ func TestListUser_Update(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
 
-			lu := &ListUser{
-				ID:       tt.fields.ID,
-				Username: tt.fields.Username,
-				ListID:   tt.fields.ListID,
-				Right:    tt.fields.Right,
-				Created:  tt.fields.Created,
-				Updated:  tt.fields.Updated,
-				CRUDable: tt.fields.CRUDable,
-				Rights:   tt.fields.Rights,
+			lu := &ProjectUser{
+				ID:        tt.fields.ID,
+				Username:  tt.fields.Username,
+				ProjectID: tt.fields.ProjectID,
+				Right:     tt.fields.Right,
+				Created:   tt.fields.Created,
+				Updated:   tt.fields.Updated,
+				CRUDable:  tt.fields.CRUDable,
+				Rights:    tt.fields.Rights,
 			}
 			err := lu.Update(s, &user.User{ID: 1})
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ListUser.Update() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ProjectUser.Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
-				t.Errorf("ListUser.Update() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
+				t.Errorf("ProjectUser.Update() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
 
 			err = s.Commit()
 			assert.NoError(t, err)
 
 			if !tt.wantErr {
-				db.AssertExists(t, "users_lists", map[string]interface{}{
-					"list_id": tt.fields.ListID,
-					"user_id": lu.UserID,
-					"right":   tt.fields.Right,
+				db.AssertExists(t, "users_projects", map[string]interface{}{
+					"project_id": tt.fields.ProjectID,
+					"user_id":    lu.UserID,
+					"right":      tt.fields.Right,
 				}, false)
 			}
 		})
 	}
 }
 
-func TestListUser_Delete(t *testing.T) {
+func TestProjectUser_Delete(t *testing.T) {
 	type fields struct {
-		ID       int64
-		Username string
-		UserID   int64
-		ListID   int64
-		Right    Right
-		Created  time.Time
-		Updated  time.Time
-		CRUDable web.CRUDable
-		Rights   web.Rights
+		ID        int64
+		Username  string
+		UserID    int64
+		ProjectID int64
+		Right     Right
+		Created   time.Time
+		Updated   time.Time
+		CRUDable  web.CRUDable
+		Rights    web.Rights
 	}
 	tests := []struct {
 		name    string
@@ -373,8 +373,8 @@ func TestListUser_Delete(t *testing.T) {
 		{
 			name: "Try deleting some unexistant user",
 			fields: fields{
-				Username: "user1000",
-				ListID:   2,
+				Username:  "user1000",
+				ProjectID: 2,
 			},
 			wantErr: true,
 			errType: user.IsErrUserDoesNotExist,
@@ -382,18 +382,18 @@ func TestListUser_Delete(t *testing.T) {
 		{
 			name: "Try deleting a user which does not has access but exists",
 			fields: fields{
-				Username: "user1",
-				ListID:   4,
+				Username:  "user1",
+				ProjectID: 4,
 			},
 			wantErr: true,
-			errType: IsErrUserDoesNotHaveAccessToList,
+			errType: IsErrUserDoesNotHaveAccessToProject,
 		},
 		{
 			name: "Try deleting normally",
 			fields: fields{
-				Username: "user1",
-				UserID:   1,
-				ListID:   3,
+				Username:  "user1",
+				UserID:    1,
+				ProjectID: 3,
 			},
 		},
 	}
@@ -402,31 +402,31 @@ func TestListUser_Delete(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
 
-			lu := &ListUser{
-				ID:       tt.fields.ID,
-				Username: tt.fields.Username,
-				ListID:   tt.fields.ListID,
-				Right:    tt.fields.Right,
-				Created:  tt.fields.Created,
-				Updated:  tt.fields.Updated,
-				CRUDable: tt.fields.CRUDable,
-				Rights:   tt.fields.Rights,
+			lu := &ProjectUser{
+				ID:        tt.fields.ID,
+				Username:  tt.fields.Username,
+				ProjectID: tt.fields.ProjectID,
+				Right:     tt.fields.Right,
+				Created:   tt.fields.Created,
+				Updated:   tt.fields.Updated,
+				CRUDable:  tt.fields.CRUDable,
+				Rights:    tt.fields.Rights,
 			}
 			err := lu.Delete(s, &user.User{ID: 1})
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ListUser.Delete() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ProjectUser.Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
-				t.Errorf("ListUser.Delete() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
+				t.Errorf("ProjectUser.Delete() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
 
 			err = s.Commit()
 			assert.NoError(t, err)
 
 			if !tt.wantErr {
-				db.AssertMissing(t, "users_lists", map[string]interface{}{
-					"user_id": tt.fields.UserID,
-					"list_id": tt.fields.ListID,
+				db.AssertMissing(t, "users_projects", map[string]interface{}{
+					"user_id":    tt.fields.UserID,
+					"project_id": tt.fields.ProjectID,
 				})
 			}
 		})

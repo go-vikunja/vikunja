@@ -21,28 +21,27 @@ import (
 	"xorm.io/xorm"
 )
 
-// CanCreate checks if a user can create a new bucket
-func (b *Bucket) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	l := &Project{ID: b.ProjectID}
-	return l.CanWrite(s, a)
+// CanCreate checks if the user can create a team <-> project relation
+func (tl *TeamProject) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	return tl.canDoTeamProject(s, a)
 }
 
-// CanUpdate checks if a user can update an existing bucket
-func (b *Bucket) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	return b.canDoBucket(s, a)
+// CanDelete checks if the user can delete a team <-> project relation
+func (tl *TeamProject) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	return tl.canDoTeamProject(s, a)
 }
 
-// CanDelete checks if a user can delete an existing bucket
-func (b *Bucket) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	return b.canDoBucket(s, a)
+// CanUpdate checks if the user can update a team <-> project relation
+func (tl *TeamProject) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	return tl.canDoTeamProject(s, a)
 }
 
-// canDoBucket checks if the bucket exists and if the user has the right to act on it
-func (b *Bucket) canDoBucket(s *xorm.Session, a web.Auth) (bool, error) {
-	bb, err := getBucketByID(s, b.ID)
-	if err != nil {
-		return false, err
+func (tl *TeamProject) canDoTeamProject(s *xorm.Session, a web.Auth) (bool, error) {
+	// Link shares aren't allowed to do anything
+	if _, is := a.(*LinkSharing); is {
+		return false, nil
 	}
-	l := &Project{ID: bb.ProjectID}
-	return l.CanWrite(s, a)
+
+	l := Project{ID: tl.ProjectID}
+	return l.IsAdmin(s, a)
 }

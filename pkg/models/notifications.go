@@ -150,28 +150,28 @@ func (n *TaskDeletedNotification) Name() string {
 	return "task.deleted"
 }
 
-// ListCreatedNotification represents a ListCreatedNotification notification
-type ListCreatedNotification struct {
-	Doer *user.User `json:"doer"`
-	List *List      `json:"list"`
+// ProjectCreatedNotification represents a ProjectCreatedNotification notification
+type ProjectCreatedNotification struct {
+	Doer    *user.User `json:"doer"`
+	Project *Project   `json:"project"`
 }
 
-// ToMail returns the mail notification for ListCreatedNotification
-func (n *ListCreatedNotification) ToMail() *notifications.Mail {
+// ToMail returns the mail notification for ProjectCreatedNotification
+func (n *ProjectCreatedNotification) ToMail() *notifications.Mail {
 	return notifications.NewMail().
-		Subject(n.Doer.GetName()+` created the list "`+n.List.Title+`"`).
-		Line(n.Doer.GetName()+` created the list "`+n.List.Title+`"`).
-		Action("View List", config.ServiceFrontendurl.GetString()+"lists/")
+		Subject(n.Doer.GetName()+` created the project "`+n.Project.Title+`"`).
+		Line(n.Doer.GetName()+` created the project "`+n.Project.Title+`"`).
+		Action("View Project", config.ServiceFrontendurl.GetString()+"projects/")
 }
 
-// ToDB returns the ListCreatedNotification notification in a format which can be saved in the db
-func (n *ListCreatedNotification) ToDB() interface{} {
+// ToDB returns the ProjectCreatedNotification notification in a format which can be saved in the db
+func (n *ProjectCreatedNotification) ToDB() interface{} {
 	return n
 }
 
 // Name returns the name of the notification
-func (n *ListCreatedNotification) Name() string {
-	return "list.created"
+func (n *ProjectCreatedNotification) Name() string {
+	return "project.created"
 }
 
 // TeamMemberAddedNotification represents a TeamMemberAddedNotification notification

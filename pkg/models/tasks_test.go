@@ -45,7 +45,7 @@ func TestTask_Create(t *testing.T) {
 		task := &Task{
 			Title:       "Lorem",
 			Description: "Lorem Ipsum Dolor",
-			ListID:      1,
+			ProjectID:   1,
 		}
 		err := task.Create(s, usr)
 		assert.NoError(t, err)
@@ -63,7 +63,7 @@ func TestTask_Create(t *testing.T) {
 			"id":            task.ID,
 			"title":         "Lorem",
 			"description":   "Lorem Ipsum Dolor",
-			"list_id":       1,
+			"project_id":    1,
 			"created_by_id": 1,
 			"bucket_id":     1,
 		}, false)
@@ -78,13 +78,13 @@ func TestTask_Create(t *testing.T) {
 		task := &Task{
 			Title:       "",
 			Description: "Lorem Ipsum Dolor",
-			ListID:      1,
+			ProjectID:   1,
 		}
 		err := task.Create(s, usr)
 		assert.Error(t, err)
 		assert.True(t, IsErrTaskCannotBeEmpty(err))
 	})
-	t.Run("nonexistant list", func(t *testing.T) {
+	t.Run("nonexistant project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -92,11 +92,11 @@ func TestTask_Create(t *testing.T) {
 		task := &Task{
 			Title:       "Test",
 			Description: "Lorem Ipsum Dolor",
-			ListID:      9999999,
+			ProjectID:   9999999,
 		}
 		err := task.Create(s, usr)
 		assert.Error(t, err)
-		assert.True(t, IsErrListDoesNotExist(err))
+		assert.True(t, IsErrProjectDoesNotExist(err))
 	})
 	t.Run("noneixtant user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -107,7 +107,7 @@ func TestTask_Create(t *testing.T) {
 		task := &Task{
 			Title:       "Test",
 			Description: "Lorem Ipsum Dolor",
-			ListID:      1,
+			ProjectID:   1,
 		}
 		err := task.Create(s, nUser)
 		assert.Error(t, err)
@@ -121,7 +121,7 @@ func TestTask_Create(t *testing.T) {
 		task := &Task{
 			Title:       "Lorem",
 			Description: "Lorem Ipsum Dolor",
-			ListID:      1,
+			ProjectID:   1,
 			BucketID:    2, // Bucket 2 already has 3 tasks and a limit of 3
 		}
 		err := task.Create(s, usr)
@@ -142,7 +142,7 @@ func TestTask_Update(t *testing.T) {
 			ID:          1,
 			Title:       "test10000",
 			Description: "Lorem Ipsum Dolor",
-			ListID:      1,
+			ProjectID:   1,
 		}
 		err := task.Update(s, u)
 		assert.NoError(t, err)
@@ -153,7 +153,7 @@ func TestTask_Update(t *testing.T) {
 			"id":          1,
 			"title":       "test10000",
 			"description": "Lorem Ipsum Dolor",
-			"list_id":     1,
+			"project_id":  1,
 		}, false)
 	})
 	t.Run("nonexistant task", func(t *testing.T) {
@@ -165,7 +165,7 @@ func TestTask_Update(t *testing.T) {
 			ID:          9999999,
 			Title:       "test10000",
 			Description: "Lorem Ipsum Dolor",
-			ListID:      1,
+			ProjectID:   1,
 		}
 		err := task.Update(s, u)
 		assert.Error(t, err)
@@ -180,7 +180,7 @@ func TestTask_Update(t *testing.T) {
 			ID:          1,
 			Title:       "test10000",
 			Description: "Lorem Ipsum Dolor",
-			ListID:      1,
+			ProjectID:   1,
 			BucketID:    2, // Bucket 2 already has 3 tasks and a limit of 3
 		}
 		err := task.Update(s, u)
@@ -197,13 +197,13 @@ func TestTask_Update(t *testing.T) {
 			Title:          "test10000",
 			Description:    "Lorem Ipsum Dolor",
 			KanbanPosition: 10,
-			ListID:         1,
+			ProjectID:      1,
 			BucketID:       2, // Bucket 2 already has 3 tasks and a limit of 3
 		}
 		err := task.Update(s, u)
 		assert.NoError(t, err)
 	})
-	t.Run("bucket on other list", func(t *testing.T) {
+	t.Run("bucket on other project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -212,12 +212,12 @@ func TestTask_Update(t *testing.T) {
 			ID:          1,
 			Title:       "test10000",
 			Description: "Lorem Ipsum Dolor",
-			ListID:      1,
-			BucketID:    4, // Bucket 4 belongs to list 2
+			ProjectID:   1,
+			BucketID:    4, // Bucket 4 belongs to project 2
 		}
 		err := task.Update(s, u)
 		assert.Error(t, err)
-		assert.True(t, IsErrBucketDoesNotBelongToList(err))
+		assert.True(t, IsErrBucketDoesNotBelongToProject(err))
 	})
 	t.Run("moving a task to the done bucket", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -225,10 +225,10 @@ func TestTask_Update(t *testing.T) {
 		defer s.Close()
 
 		task := &Task{
-			ID:       1,
-			Title:    "test",
-			ListID:   1,
-			BucketID: 3, // Bucket 3 is the done bucket
+			ID:        1,
+			Title:     "test",
+			ProjectID: 1,
+			BucketID:  3, // Bucket 3 is the done bucket
 		}
 		err := task.Update(s, u)
 		assert.NoError(t, err)
@@ -237,11 +237,11 @@ func TestTask_Update(t *testing.T) {
 		assert.True(t, task.Done)
 
 		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":        1,
-			"done":      true,
-			"title":     "test",
-			"list_id":   1,
-			"bucket_id": 3,
+			"id":         1,
+			"done":       true,
+			"title":      "test",
+			"project_id": 1,
+			"bucket_id":  3,
 		}, false)
 	})
 	t.Run("moving a repeating task to the done bucket", func(t *testing.T) {
@@ -252,7 +252,7 @@ func TestTask_Update(t *testing.T) {
 		task := &Task{
 			ID:          28,
 			Title:       "test updated",
-			ListID:      1,
+			ProjectID:   1,
 			BucketID:    3, // Bucket 3 is the done bucket
 			RepeatAfter: 3600,
 		}
@@ -264,28 +264,28 @@ func TestTask_Update(t *testing.T) {
 		assert.Equal(t, int64(1), task.BucketID) // Bucket should not be updated
 
 		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":        28,
-			"done":      false,
-			"title":     "test updated",
-			"list_id":   1,
-			"bucket_id": 1,
+			"id":         28,
+			"done":       false,
+			"title":      "test updated",
+			"project_id": 1,
+			"bucket_id":  1,
 		}, false)
 	})
-	t.Run("default bucket when moving a task between lists", func(t *testing.T) {
+	t.Run("default bucket when moving a task between projects", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
 		task := &Task{
-			ID:     1,
-			ListID: 2,
+			ID:        1,
+			ProjectID: 2,
 		}
 		err := task.Update(s, u)
 		assert.NoError(t, err)
 		err = s.Commit()
 		assert.NoError(t, err)
 
-		assert.Equal(t, int64(4), task.BucketID) // bucket 4 is the default bucket on list 2
+		assert.Equal(t, int64(4), task.BucketID) // bucket 4 is the default bucket on project 2
 		assert.True(t, task.Done)                // bucket 4 is the done bucket, so the task should be marked as done as well
 	})
 	t.Run("marking a task as done should move it to the done bucket", func(t *testing.T) {
@@ -310,14 +310,14 @@ func TestTask_Update(t *testing.T) {
 			"bucket_id": 3,
 		}, false)
 	})
-	t.Run("move task to another list", func(t *testing.T) {
+	t.Run("move task to another project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
 		task := &Task{
-			ID:     1,
-			ListID: 2,
+			ID:        1,
+			ProjectID: 2,
 		}
 		err := task.Update(s, u)
 		assert.NoError(t, err)
@@ -325,9 +325,9 @@ func TestTask_Update(t *testing.T) {
 		assert.NoError(t, err)
 
 		db.AssertExists(t, "tasks", map[string]interface{}{
-			"id":        1,
-			"list_id":   2,
-			"bucket_id": 4,
+			"id":         1,
+			"project_id": 2,
+			"bucket_id":  4,
 		}, false)
 	})
 	t.Run("repeating tasks should not be moved to the done bucket", func(t *testing.T) {
@@ -353,14 +353,14 @@ func TestTask_Update(t *testing.T) {
 			"bucket_id": 1,
 		}, false)
 	})
-	t.Run("moving a task between lists should give it a correct index", func(t *testing.T) {
+	t.Run("moving a task between projects should give it a correct index", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
 		task := &Task{
-			ID:     12,
-			ListID: 2, // From list 1
+			ID:        12,
+			ProjectID: 2, // From project 1
 		}
 		err := task.Update(s, u)
 		assert.NoError(t, err)
@@ -380,7 +380,7 @@ func TestTask_Update(t *testing.T) {
 				time.Unix(1674745156, 0),
 				time.Unix(1674745156, 223),
 			},
-			ListID: 1,
+			ProjectID: 1,
 		}
 		err := task.Update(s, u)
 		assert.NoError(t, err)

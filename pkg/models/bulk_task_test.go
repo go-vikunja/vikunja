@@ -47,7 +47,7 @@ func TestBulkTask_Update(t *testing.T) {
 			},
 		},
 		{
-			name: "Test with one task on different list",
+			name: "Test with one task on different project",
 			fields: fields{
 				IDs: []int64{10, 11, 12, 13},
 				Task: Task{

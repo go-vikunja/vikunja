@@ -31,7 +31,7 @@ import (
 
 // InsertFromStructure takes a fully nested Vikunja data structure and a user and then creates everything for this user
 // (Namespaces, tasks, etc. Even attachments and relations.)
-func InsertFromStructure(str []*models.NamespaceWithListsAndTasks, user *user.User) (err error) {
+func InsertFromStructure(str []*models.NamespaceWithProjectsAndTasks, user *user.User) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -45,13 +45,13 @@ func InsertFromStructure(str []*models.NamespaceWithListsAndTasks, user *user.Us
 	return s.Commit()
 }
 
-func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithListsAndTasks, user *user.User) (err error) {
+func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithProjectsAndTasks, user *user.User) (err error) {
 
 	log.Debugf("[creating structure] Creating %d namespaces", len(str))
 
 	labels := make(map[string]*models.Label)
 
-	archivedLists := []int64{}
+	archivedProjects := []int64{}
 	archivedNamespaces := []int64{}
 
 	// Create all namespaces
@@ -75,18 +75,18 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithListsAndTas
 		}
 
 		log.Debugf("[creating structure] Created namespace %d", n.ID)
-		log.Debugf("[creating structure] Creating %d lists", len(n.Lists))
+		log.Debugf("[creating structure] Creating %d projects", len(n.Projects))
 
-		// Create all lists
-		for _, l := range n.Lists {
-			// The tasks and bucket slices are going to be reset during the creation of the list so we rescue it here
-			// to be able to still loop over them aftere the list was created.
+		// Create all projects
+		for _, l := range n.Projects {
+			// The tasks and bucket slices are going to be reset during the creation of the project so we rescue it here
+			// to be able to still loop over them aftere the project was created.
 			tasks := l.Tasks
 			originalBuckets := l.Buckets
 			originalBackgroundInformation := l.BackgroundInformation
 			needsDefaultBucket := false
 
-			// Saving the archived status to archive the list again after creating it
+			// Saving the archived status to archive the project again after creating it
 			var wasArchived bool
 			if l.IsArchived {
 				wasArchived = true
@@ -101,24 +101,24 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithListsAndTas
 			}
 
 			if wasArchived {
-				archivedLists = append(archivedLists, l.ID)
+				archivedProjects = append(archivedProjects, l.ID)
 			}
 
-			log.Debugf("[creating structure] Created list %d", l.ID)
+			log.Debugf("[creating structure] Created project %d", l.ID)
 
 			bf, is := originalBackgroundInformation.(*bytes.Buffer)
 			if is {
 
 				backgroundFile := bytes.NewReader(bf.Bytes())
 
-				log.Debugf("[creating structure] Creating a background file for list %d", l.ID)
+				log.Debugf("[creating structure] Creating a background file for project %d", l.ID)
 
-				err = handler.SaveBackgroundFile(s, user, &l.List, backgroundFile, "", uint64(backgroundFile.Len()))
+				err = handler.SaveBackgroundFile(s, user, &l.Project, backgroundFile, "", uint64(backgroundFile.Len()))
 				if err != nil {
 					return err
 				}
 
-				log.Debugf("[creating structure] Created a background file for list %d", l.ID)
+				log.Debugf("[creating structure] Created a background file for project %d", l.ID)
 			}
 
 			// Create all buckets
@@ -129,7 +129,7 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithListsAndTas
 			for _, bucket := range originalBuckets {
 				oldID := bucket.ID
 				bucket.ID = 0 // We want a new id
-				bucket.ListID = l.ID
+				bucket.ProjectID = l.ID
 				err = bucket.Create(s, user)
 				if err != nil {
 					return
@@ -157,7 +157,7 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithListsAndTas
 			for _, t := range tasks {
 				setBucketOrDefault(&t.Task)
 
-				t.ListID = l.ID
+				t.ProjectID = l.ID
 				err = t.Create(s, user)
 				if err != nil {
 					return
@@ -179,7 +179,7 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithListsAndTas
 						// First create the related tasks if they do not exist
 						if rt.ID == 0 {
 							setBucketOrDefault(rt)
-							rt.ListID = t.ListID
+							rt.ProjectID = t.ProjectID
 							err = rt.Create(s, user)
 							if err != nil {
 								return
@@ -263,7 +263,7 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithListsAndTas
 
 			// All tasks brought their own bucket with them, therefore the newly created default bucket is just extra space
 			if !needsDefaultBucket {
-				b := &models.Bucket{ListID: l.ID}
+				b := &models.Bucket{ProjectID: l.ID}
 				bucketsIn, _, _, err := b.ReadAll(s, user, "", 1, 1)
 				if err != nil {
 					return err
@@ -280,11 +280,11 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithListsAndTas
 		}
 	}
 
-	if len(archivedLists) > 0 {
+	if len(archivedProjects) > 0 {
 		_, err = s.
 			Cols("is_archived").
-			In("id", archivedLists).
-			Update(&models.List{IsArchived: true})
+			In("id", archivedProjects).
+			Update(&models.Project{IsArchived: true})
 		if err != nil {
 			return err
 		}

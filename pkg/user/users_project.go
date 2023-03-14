@@ -26,15 +26,15 @@ import (
 	"xorm.io/xorm/schemas"
 )
 
-type ListUserOpts struct {
+type ProjectUserOpts struct {
 	AdditionalCond              builder.Cond
 	ReturnAllIfNoSearchProvided bool
 }
 
-// ListUsers returns a list with all users, filtered by an optional search string
-func ListUsers(s *xorm.Session, search string, opts *ListUserOpts) (users []*User, err error) {
+// ListUsers returns a project with all users, filtered by an optional search string
+func ListUsers(s *xorm.Session, search string, opts *ProjectUserOpts) (users []*User, err error) {
 	if opts == nil {
-		opts = &ListUserOpts{}
+		opts = &ProjectUserOpts{}
 	}
 
 	// Prevent searching for placeholders
@@ -89,8 +89,8 @@ func ListUsers(s *xorm.Session, search string, opts *ListUserOpts) (users []*Use
 	return
 }
 
-// ListAllUsers returns all users
-func ListAllUsers(s *xorm.Session) (users []*User, err error) {
+// ProjectAllUsers returns all users
+func ProjectAllUsers(s *xorm.Session) (users []*User, err error) {
 	err = s.Find(&users)
 	return
 }

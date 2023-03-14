@@ -17,31 +17,34 @@
 package models
 
 import (
-	"code.vikunja.io/web"
-	"xorm.io/xorm"
+	"testing"
+
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/user"
+	"github.com/stretchr/testify/assert"
 )
 
-// CanCreate checks if the user can create a team <-> list relation
-func (tl *TeamList) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	return tl.canDoTeamList(s, a)
-}
+func TestProjectDuplicate(t *testing.T) {
 
-// CanDelete checks if the user can delete a team <-> list relation
-func (tl *TeamList) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	return tl.canDoTeamList(s, a)
-}
+	db.LoadAndAssertFixtures(t)
+	files.InitTestFileFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
 
-// CanUpdate checks if the user can update a team <-> list relation
-func (tl *TeamList) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	return tl.canDoTeamList(s, a)
-}
-
-func (tl *TeamList) canDoTeamList(s *xorm.Session, a web.Auth) (bool, error) {
-	// Link shares aren't allowed to do anything
-	if _, is := a.(*LinkSharing); is {
-		return false, nil
+	u := &user.User{
+		ID: 1,
 	}
 
-	l := List{ID: tl.ListID}
-	return l.IsAdmin(s, a)
+	l := &ProjectDuplicate{
+		ProjectID:   1,
+		NamespaceID: 1,
+	}
+	can, err := l.CanCreate(s, u)
+	assert.NoError(t, err)
+	assert.True(t, can)
+	err = l.Create(s, u)
+	assert.NoError(t, err)
+	// To make this test 100% useful, it would need to assert a lot more stuff, but it is good enough for now.
+	// Also, we're lacking utility functions to do all needed assertions.
 }

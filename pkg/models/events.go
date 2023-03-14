@@ -214,68 +214,68 @@ func (t *NamespaceDeletedEvent) Name() string {
 }
 
 /////////////////
-// List Events //
+// Project Events //
 /////////////////
 
-// ListCreatedEvent represents an event where a list has been created
-type ListCreatedEvent struct {
-	List *List
-	Doer *user.User
+// ProjectCreatedEvent represents an event where a project has been created
+type ProjectCreatedEvent struct {
+	Project *Project
+	Doer    *user.User
 }
 
-// Name defines the name for ListCreatedEvent
-func (l *ListCreatedEvent) Name() string {
-	return "list.created"
+// Name defines the name for ProjectCreatedEvent
+func (l *ProjectCreatedEvent) Name() string {
+	return "project.created"
 }
 
-// ListUpdatedEvent represents an event where a list has been updated
-type ListUpdatedEvent struct {
-	List *List
-	Doer web.Auth
+// ProjectUpdatedEvent represents an event where a project has been updated
+type ProjectUpdatedEvent struct {
+	Project *Project
+	Doer    web.Auth
 }
 
-// Name defines the name for ListUpdatedEvent
-func (l *ListUpdatedEvent) Name() string {
-	return "list.updated"
+// Name defines the name for ProjectUpdatedEvent
+func (l *ProjectUpdatedEvent) Name() string {
+	return "project.updated"
 }
 
-// ListDeletedEvent represents an event where a list has been deleted
-type ListDeletedEvent struct {
-	List *List
-	Doer web.Auth
+// ProjectDeletedEvent represents an event where a project has been deleted
+type ProjectDeletedEvent struct {
+	Project *Project
+	Doer    web.Auth
 }
 
-// Name defines the name for ListDeletedEvent
-func (t *ListDeletedEvent) Name() string {
-	return "list.deleted"
+// Name defines the name for ProjectDeletedEvent
+func (t *ProjectDeletedEvent) Name() string {
+	return "project.deleted"
 }
 
 ////////////////////
 // Sharing Events //
 ////////////////////
 
-// ListSharedWithUserEvent represents an event where a list has been shared with a user
-type ListSharedWithUserEvent struct {
-	List *List
-	User *user.User
-	Doer web.Auth
+// ProjectSharedWithUserEvent represents an event where a project has been shared with a user
+type ProjectSharedWithUserEvent struct {
+	Project *Project
+	User    *user.User
+	Doer    web.Auth
 }
 
-// Name defines the name for ListSharedWithUserEvent
-func (l *ListSharedWithUserEvent) Name() string {
-	return "list.shared.user"
+// Name defines the name for ProjectSharedWithUserEvent
+func (l *ProjectSharedWithUserEvent) Name() string {
+	return "project.shared.user"
 }
 
-// ListSharedWithTeamEvent represents an event where a list has been shared with a team
-type ListSharedWithTeamEvent struct {
-	List *List
-	Team *Team
-	Doer web.Auth
+// ProjectSharedWithTeamEvent represents an event where a project has been shared with a team
+type ProjectSharedWithTeamEvent struct {
+	Project *Project
+	Team    *Team
+	Doer    web.Auth
 }
 
-// Name defines the name for ListSharedWithTeamEvent
-func (l *ListSharedWithTeamEvent) Name() string {
-	return "list.shared.team"
+// Name defines the name for ProjectSharedWithTeamEvent
+func (l *ProjectSharedWithTeamEvent) Name() string {
+	return "project.shared.team"
 }
 
 // NamespaceSharedWithUserEvent represents an event where a namespace has been shared with a user

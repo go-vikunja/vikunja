@@ -371,7 +371,7 @@ func TestUpdateUserPassword(t *testing.T) {
 	})
 }
 
-func TestListUsers(t *testing.T) {
+func TestProjectUsers(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -397,7 +397,7 @@ func TestListUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ListAllUsers(s)
+		all, err := ProjectAllUsers(s)
 		assert.NoError(t, err)
 		assert.Len(t, all, 15)
 	})
@@ -469,7 +469,7 @@ func TestListUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ListUsers(s, "user7@example.com", &ListUserOpts{AdditionalCond: builder.In("id", 7)})
+		all, err := ListUsers(s, "user7@example.com", &ProjectUserOpts{AdditionalCond: builder.In("id", 7)})
 		assert.NoError(t, err)
 		assert.Len(t, all, 1)
 		assert.Equal(t, int64(7), all[0].ID)

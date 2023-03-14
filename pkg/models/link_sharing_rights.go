@@ -28,7 +28,7 @@ func (share *LinkSharing) CanRead(s *xorm.Session, a web.Auth) (bool, int, error
 		return false, 0, nil
 	}
 
-	l, err := GetListByShareHash(s, share.Hash)
+	l, err := GetProjectByShareHash(s, share.Hash)
 	if err != nil {
 		return false, 0, err
 	}
@@ -56,7 +56,7 @@ func (share *LinkSharing) canDoLinkShare(s *xorm.Session, a web.Auth) (bool, err
 		return false, nil
 	}
 
-	l, err := GetListSimpleByID(s, share.ListID)
+	l, err := GetProjectSimpleByID(s, share.ProjectID)
 	if err != nil {
 		return false, err
 	}

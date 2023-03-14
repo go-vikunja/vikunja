@@ -27,11 +27,11 @@ import (
 	ics "github.com/arran4/golang-ical"
 )
 
-func GetCaldavTodosForTasks(list *models.ListWithTasksAndBuckets, listTasks []*models.TaskWithComments) string {
+func GetCaldavTodosForTasks(project *models.ProjectWithTasksAndBuckets, projectTasks []*models.TaskWithComments) string {
 
 	// Make caldav todos from Vikunja todos
 	var caldavtodos []*Todo
-	for _, t := range listTasks {
+	for _, t := range projectTasks {
 
 		duration := t.EndDate.Sub(t.StartDate)
 		var categories []string
@@ -60,7 +60,7 @@ func GetCaldavTodosForTasks(list *models.ListWithTasksAndBuckets, listTasks []*m
 	}
 
 	caldavConfig := &Config{
-		Name:   list.Title,
+		Name:   project.Title,
 		ProdID: "Vikunja Todo App",
 	}
 

@@ -33,8 +33,8 @@ func (sb *Subscription) CanCreate(s *xorm.Session, a web.Auth) (can bool, err er
 	case SubscriptionEntityNamespace:
 		n := &Namespace{ID: sb.EntityID}
 		can, _, err = n.CanRead(s, a)
-	case SubscriptionEntityList:
-		l := &List{ID: sb.EntityID}
+	case SubscriptionEntityProject:
+		l := &Project{ID: sb.EntityID}
 		can, _, err = l.CanRead(s, a)
 	case SubscriptionEntityTask:
 		t := &Task{ID: sb.EntityID}

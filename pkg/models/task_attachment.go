@@ -112,7 +112,7 @@ func (ta *TaskAttachment) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	return
 }
 
-// ReadAll returns a list with all attachments
+// ReadAll returns a project with all attachments
 // @Summary Get  all attachments for one task.
 // @Description Get all task attachments for one task.
 // @tags task

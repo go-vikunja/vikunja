@@ -168,8 +168,8 @@
   position: 17
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
-# This list is owned by user 7, and several other users have access to it via different methods.
-# It is used to test the listUsers method.
+# This project is owned by user 7, and several other users have access to it via different methods.
+# It is used to test the projectUsers method.
 -
   id: 18
   title: Test18
@@ -190,7 +190,7 @@
   position: 19
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
-# User 1 does not have access to this list
+# User 1 does not have access to this project
 -
   id: 20
   title: Test20

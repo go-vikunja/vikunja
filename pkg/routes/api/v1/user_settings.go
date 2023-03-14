@@ -50,9 +50,9 @@ type UserSettings struct {
 	OverdueTasksRemindersEnabled bool `json:"overdue_tasks_reminders_enabled"`
 	// The time when the daily summary of overdue tasks will be sent via email.
 	OverdueTasksRemindersTime string `json:"overdue_tasks_reminders_time" valid:"time,required"`
-	// If a task is created without a specified list this value should be used. Applies
+	// If a task is created without a specified project this value should be used. Applies
 	// to tasks made directly in API and from clients.
-	DefaultListID int64 `json:"default_list_id"`
+	DefaultProjectID int64 `json:"default_project_id"`
 	// The day when the week starts for this user. 0 = sunday, 1 = monday, etc.
 	WeekStart int `json:"week_start" valid:"range(0|7)"`
 	// The user's language
@@ -193,7 +193,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	user.DiscoverableByEmail = us.DiscoverableByEmail
 	user.DiscoverableByName = us.DiscoverableByName
 	user.OverdueTasksRemindersEnabled = us.OverdueTasksRemindersEnabled
-	user.DefaultListID = us.DefaultListID
+	user.DefaultProjectID = us.DefaultProjectID
 	user.WeekStart = us.WeekStart
 	user.Language = us.Language
 	user.Timezone = us.Timezone
@@ -215,7 +215,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 
 // GetAvailableTimezones
 // @Summary Get all available time zones on this vikunja instance
-// @Description Because available time zones depend on the system Vikunja is running on, this endpoint returns a list of all valid time zones this particular Vikunja instance can handle. The list of time zones is not sorted, you should sort it on the client.
+// @Description Because available time zones depend on the system Vikunja is running on, this endpoint returns a project of all valid time zones this particular Vikunja instance can handle. The project of time zones is not sorted, you should sort it on the client.
 // @tags user
 // @Accept json
 // @Produce json

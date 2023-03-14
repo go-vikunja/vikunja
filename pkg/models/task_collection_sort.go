@@ -33,7 +33,7 @@ const (
 	taskPropertyDoneAt         string = "done_at"
 	taskPropertyDueDate        string = "due_date"
 	taskPropertyCreatedByID    string = "created_by_id"
-	taskPropertyListID         string = "list_id"
+	taskPropertyProjectID      string = "project_id"
 	taskPropertyRepeatAfter    string = "repeat_after"
 	taskPropertyPriority       string = "priority"
 	taskPropertyStartDate      string = "start_date"

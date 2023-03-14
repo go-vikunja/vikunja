@@ -41,8 +41,8 @@ END:VTODO
 END:VCALENDAR`
 
 func TestCaldav(t *testing.T) {
-	t.Run("Delivers VTODO for list", func(t *testing.T) {
-		rec, err := newCaldavTestRequestWithUser(t, http.MethodGet, caldav.ListHandler, &testuser15, ``, nil, map[string]string{"list": "26"})
+	t.Run("Delivers VTODO for project", func(t *testing.T) {
+		rec, err := newCaldavTestRequestWithUser(t, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "26"})
 		assert.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), "BEGIN:VCALENDAR")
 		assert.Contains(t, rec.Body.String(), "PRODID:-//Vikunja Todo App//EN")
@@ -52,12 +52,12 @@ func TestCaldav(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), "END:VCALENDAR")
 	})
 	t.Run("Import VTODO", func(t *testing.T) {
-		rec, err := newCaldavTestRequestWithUser(t, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"list": "26", "task": "uid"})
+		rec, err := newCaldavTestRequestWithUser(t, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "26", "task": "uid"})
 		assert.NoError(t, err)
 		assert.Equal(t, rec.Result().StatusCode, 201)
 	})
 	t.Run("Export VTODO", func(t *testing.T) {
-		rec, err := newCaldavTestRequestWithUser(t, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"list": "26", "task": "uid-caldav-test"})
+		rec, err := newCaldavTestRequestWithUser(t, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "26", "task": "uid-caldav-test"})
 		assert.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), "BEGIN:VCALENDAR")
 		assert.Contains(t, rec.Body.String(), "SUMMARY:Title Caldav Test")
