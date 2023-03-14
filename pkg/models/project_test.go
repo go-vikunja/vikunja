@@ -242,14 +242,14 @@ func TestProject_Delete(t *testing.T) {
 		files.InitTestFileFixtures(t)
 		s := db.NewSession()
 		project := Project{
-			ID: 25,
+			ID: 35,
 		}
 		err := project.Delete(s, &user.User{ID: 6})
 		assert.NoError(t, err)
 		err = s.Commit()
 		assert.NoError(t, err)
 		db.AssertMissing(t, "projects", map[string]interface{}{
-			"id": 25,
+			"id": 35,
 		})
 		db.AssertMissing(t, "files", map[string]interface{}{
 			"id": 1,
