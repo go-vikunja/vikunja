@@ -196,7 +196,9 @@ import FilterPopup from '@/components/project/partials/filter-popup.vue'
 import Pagination from '@/components/misc/pagination.vue'
 import Popup from '@/components/misc/popup.vue'
 
-import {useTaskList, SortBy} from '@/composables/useTaskList'
+import {useTaskList} from '@/composables/useTaskList'
+
+import type {SortBy} from '@/composables/useTaskList'
 import type {ITask} from '@/modelTypes/ITask'
 
 const ACTIVE_COLUMNS_DEFAULT = {
