@@ -90,7 +90,7 @@ export const getProjectView = (projectId: IProject['id']) => {
 		}
 		
 		const projectViewSettings = JSON.parse(projectViewSettingsString) as ProjectViewSettings
-		if (router.hasRoute(projectViewSettings[projectId])) {
+		if (!router.hasRoute(projectViewSettings[projectId])) {
 			throw new Error()
 		}
 		return projectViewSettings[projectId]

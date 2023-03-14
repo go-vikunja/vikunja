@@ -35,9 +35,11 @@ describe('Projects', () => {
 	})
 
 	it('Should redirect to a specific project view after visited', () => {
+		cy.intercept(Cypress.env('API_URL') + '/projects/*/buckets*').as('loadBuckets')
 		cy.visit('/projects/1/kanban')
 		cy.url()
 			.should('contain', '/projects/1/kanban')
+		cy.wait('@loadBuckets')
 		cy.visit('/projects/1')
 		cy.url()
 			.should('contain', '/projects/1/kanban')
