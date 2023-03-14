@@ -6,7 +6,10 @@
 			:class="{ 'overdue': r.reminder < new Date()}"
 			class="reminder-input"
 		>
+			<ReminderDetail v-if="!!r.relativePeriod" v-model="reminders[index]" @close-on-change="() => addReminder(index)"
+				/>
 			<Datepicker
+				v-if="!r.relativePeriod"
 				v-model="reminders[index].reminder"
 				:disabled="disabled"
 				@close-on-change="() => addReminderDate(index)"
@@ -26,10 +29,11 @@
 </template>
 
 <script setup lang="ts">
-import {type PropType, ref, onMounted, watch} from 'vue'
+import { onMounted, ref, watch, type PropType } from 'vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Datepicker from '@/components/input/datepicker.vue'
+import ReminderDetail from '@/components/tasks/partials/reminder-detail.vue'
 import TaskReminderModel from '@/models/taskReminder'
 import type { ITaskReminder } from '@/modelTypes/ITaskReminder'
 
@@ -39,11 +43,7 @@ const props = defineProps({
 		default: () => [],
 		validator(prop) {
 			// This allows arrays
-			if (!(prop instanceof Array)) {
-				return false
-			}
-
-			return true
+			return prop instanceof Array
 		},
 	},
 	disabled: {
@@ -78,7 +78,11 @@ function updateData() {
 }
 
 const newReminder = ref(null)
-function addReminderDate(index : number | null = null) {
+function addReminder(index: number | null = null) {
+	updateData()
+}
+
+function addReminderDate(index: number | null = null) {
 	// New Date
 	if (index === null) {
 		if (newReminder.value === null) {
