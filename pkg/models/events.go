@@ -166,46 +166,9 @@ func (t *TaskRelationDeletedEvent) Name() string {
 	return "task.relation.deleted"
 }
 
-//////////////////////
-// Namespace Events //
-//////////////////////
-
-// NamespaceCreatedEvent represents an event where a namespace has been created
-type NamespaceCreatedEvent struct {
-	Namespace *Namespace
-	Doer      web.Auth
-}
-
-// Name defines the name for NamespaceCreatedEvent
-func (n *NamespaceCreatedEvent) Name() string {
-	return "namespace.created"
-}
-
-// NamespaceUpdatedEvent represents an event where a namespace has been updated
-type NamespaceUpdatedEvent struct {
-	Namespace *Namespace
-	Doer      web.Auth
-}
-
-// Name defines the name for NamespaceUpdatedEvent
-func (n *NamespaceUpdatedEvent) Name() string {
-	return "namespace.updated"
-}
-
-// NamespaceDeletedEvent represents a NamespaceDeletedEvent event
-type NamespaceDeletedEvent struct {
-	Namespace *Namespace
-	Doer      web.Auth
-}
-
-// TopicName defines the name for NamespaceDeletedEvent
-func (t *NamespaceDeletedEvent) Name() string {
-	return "namespace.deleted"
-}
-
-/////////////////
+////////////////////
 // Project Events //
-/////////////////
+////////////////////
 
 // ProjectCreatedEvent represents an event where a project has been created
 type ProjectCreatedEvent struct {

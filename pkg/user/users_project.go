@@ -33,7 +33,7 @@ type ProjectUserOpts struct {
 }
 
 // ListUsers returns a list with all users, filtered by an optional search string
-func ProjectUsers(s *xorm.Session, search string, opts *ProjectUserOpts) (users []*User, err error) {
+func ListUsers(s *xorm.Session, search string, opts *ProjectUserOpts) (users []*User, err error) {
 	if opts == nil {
 		opts = &ProjectUserOpts{}
 	}

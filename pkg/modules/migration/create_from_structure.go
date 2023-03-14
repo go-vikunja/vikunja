@@ -248,8 +248,9 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			var lb *models.Label
 			var exists bool
 			if label == nil {
-						continue
-					}lb, exists = labels[label.Title+label.HexColor]
+				continue
+			}
+			lb, exists = labels[label.Title+label.HexColor]
 			if !exists {
 				err = label.Create(s, user)
 				if err != nil {

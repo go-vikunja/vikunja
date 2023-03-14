@@ -874,7 +874,7 @@ func (p *Project) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Router /projects/{id} [delete]
 func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 
-	fullList, err := GetProjectSimpleByID(s, l.ID)
+	fullList, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
 		return
 	}
