@@ -1,12 +1,14 @@
 import {UserFactory} from '../../factories/user'
 
 const testAndAssertFailed = fixture => {
+	cy.intercept(Cypress.env('API_URL') + '/login*').as('login')
+	
 	cy.visit('/login')
 	cy.get('input[id=username]').type(fixture.username)
 	cy.get('input[id=password]').type(fixture.password)
 	cy.get('.button').contains('Login').click()
 
-	cy.wait(5000) // It can take waaaayy too long to log the user in
+	cy.wait('@login')
 	cy.url().should('include', '/')
 	cy.get('div.message.danger').contains('Wrong username or password.')
 }
