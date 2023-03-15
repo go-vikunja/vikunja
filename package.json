@@ -85,7 +85,7 @@
     "ufo": "1.1.1",
     "vue": "3.2.47",
     "vue-advanced-cropper": "2.8.8",
-    "vue-flatpickr-component": "11.0.2",
+    "vue-flatpickr-component": "11.0.3",
     "vue-i18n": "9.2.2",
     "vue-router": "4.1.6",
     "workbox-precaching": "6.5.4",
