@@ -161,7 +161,7 @@ const projectStore = useProjectStore()
 }
 
 @media(hover: hover) and (pointer: fine) {
-	.list-card .favorite {
+	.project-card .favorite {
 		opacity: 0;
 	}
 
