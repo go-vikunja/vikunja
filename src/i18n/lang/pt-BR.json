@@ -5,10 +5,10 @@
     "welcomeDay": "Olá, {username}!",
     "welcomeEvening": "Boa noite, {username}!",
     "lastViewed": "Visto por último",
-    "list": {
-      "newText": "Você pode criar uma nova lista para suas novas tarefas:",
-      "new": "Nova lista",
-      "importText": "Or import your lists and tasks from other services into Vikunja:",
+    "project": {
+      "newText": "You can create a new project for your new tasks:",
+      "new": "New project",
+      "importText": "Or import your projects and tasks from other services into Vikunja:",
       "import": "Import your data into Vikunja"
     }
   },
@@ -85,7 +85,7 @@
         "weekStartSunday": "Sunday",
         "weekStartMonday": "Monday",
         "language": "Language",
-        "defaultList": "Default List",
+        "defaultProject": "Default Project",
         "timezone": "Fuso horário",
         "overdueTasksRemindersTime": "Overdue tasks reminder email time"
       },
@@ -143,7 +143,7 @@
     },
     "deletion": {
       "title": "Delete your Vikunja Account",
-      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your namespaces, lists, tasks and everything associated with it.",
+      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your namespaces, projects, tasks and everything associated with it.",
       "text2": "To proceed, please enter your password. You will receive an email with further instructions.",
       "confirm": "Delete my account",
       "requestSuccess": "The request was successful. You'll receive an email with further instructions.",
@@ -157,39 +157,39 @@
     },
     "export": {
       "title": "Export your Vikunja data",
-      "description": "You can request a copy of all your Vikunja data. This include Namespaces, Lists, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
+      "description": "You can request a copy of all your Vikunja data. This include Namespaces, Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
       "descriptionPasswordRequired": "Please enter your password to proceed:",
       "request": "Request a copy of my Vikunja Data",
       "success": "You've successfully requested your Vikunja Data! We will send you an email once it's ready to download.",
       "downloadTitle": "Download your exported Vikunja data"
     }
   },
-  "list": {
-    "archived": "This list is archived. It is not possible to create new or edit tasks for it.",
-    "title": "List Title",
+  "project": {
+    "archived": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "title": "Project Title",
     "color": "Color",
-    "lists": "Lists",
-    "search": "Type to search for a list…",
-    "searchSelect": "Click or press enter to select this list",
-    "shared": "Shared Lists",
-    "noDescriptionAvailable": "No list description is available.",
+    "projects": "Projects",
+    "search": "Type to search for a project…",
+    "searchSelect": "Click or press enter to select this project",
+    "shared": "Shared Projects",
+    "noDescriptionAvailable": "No project description is available.",
     "create": {
-      "header": "Nova lista",
-      "titlePlaceholder": "The list's title goes here…",
+      "header": "New project",
+      "titlePlaceholder": "The project's title goes here…",
       "addTitleRequired": "Please specify a title.",
-      "createdSuccess": "The list was successfully created.",
-      "addListRequired": "Please specify a list or set a default list in the settings."
+      "createdSuccess": "The project was successfully created.",
+      "addProjectRequired": "Please specify a project or set a default project in the settings."
     },
     "archive": {
-      "title": "Archive \"{list}\"",
-      "archive": "Archive this list",
-      "unarchive": "Un-Archive this list",
+      "title": "Archive \"{project}\"",
+      "archive": "Archive this project",
+      "unarchive": "Un-Archive this project",
       "unarchiveText": "You will be able to create new tasks or edit it.",
-      "archiveText": "You won't be able to edit this list or create new tasks until you un-archive it.",
-      "success": "The list was successfully archived."
+      "archiveText": "You won't be able to edit this project or create new tasks until you un-archive it.",
+      "success": "The project was successfully archived."
     },
     "background": {
-      "title": "Set list background",
+      "title": "Set project background",
       "remove": "Remove Background",
       "upload": "Choose a background from your pc",
       "searchPlaceholder": "Search for a background…",
@@ -199,40 +199,40 @@
       "removeSuccess": "The background has been removed successfully!"
     },
     "delete": {
-      "title": "Delete \"{list}\"",
-      "header": "Delete this list",
-      "text1": "Are you sure you want to delete this list and all of its contents?",
+      "title": "Delete \"{project}\"",
+      "header": "Delete this project",
+      "text1": "Are you sure you want to delete this project and all of its contents?",
       "text2": "This includes all tasks and CANNOT BE UNDONE!",
-      "success": "The list was successfully deleted.",
-      "tasksToDelete": "Isto irá remover irrevogavelmente aprox. {count} tarefas.",
-      "noTasksToDelete": "Esta lista não contém tarefas, deve ser segura para excluir."
+      "success": "The project was successfully deleted.",
+      "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
+      "noTasksToDelete": "This project does not contain any tasks, it should be safe to delete."
     },
     "duplicate": {
-      "title": "Duplicate this list",
+      "title": "Duplicate this project",
       "label": "Duplicate",
-      "text": "Select a namespace which should hold the duplicated list:",
-      "success": "The list was successfully duplicated."
+      "text": "Select a namespace which should hold the duplicated project:",
+      "success": "The project was successfully duplicated."
     },
     "edit": {
-      "header": "Edit This List",
-      "title": "Edit \"{list}\"",
-      "titlePlaceholder": "The list title goes here…",
-      "identifierTooltip": "The list identifier can be used to uniquely identify a task across lists. You can set it to empty to disable it.",
-      "identifier": "List Identifier",
-      "identifierPlaceholder": "The list identifier goes here…",
+      "header": "Edit This Project",
+      "title": "Edit \"{project}\"",
+      "titlePlaceholder": "The project title goes here…",
+      "identifierTooltip": "The project identifier can be used to uniquely identify a task across projects. You can set it to empty to disable it.",
+      "identifier": "Project Identifier",
+      "identifierPlaceholder": "The project identifier goes here…",
       "description": "Description",
-      "descriptionPlaceholder": "The lists description goes here…",
+      "descriptionPlaceholder": "The projects description goes here…",
       "color": "Color",
-      "success": "The list was successfully updated."
+      "success": "The project was successfully updated."
     },
     "share": {
-      "header": "Share this list",
-      "title": "Share \"{list}\"",
+      "header": "Share this project",
+      "title": "Share \"{project}\"",
       "share": "Share",
       "links": {
         "title": "Share Links",
         "what": "What is a share link?",
-        "explanation": "Share Links allow you to easily share a list with other users who don't have an account on Vikunja.",
+        "explanation": "Share Links allow you to easily share a project with other users who don't have an account on Vikunja.",
         "create": "Create a new link share",
         "name": "Name (optional)",
         "namePlaceholder": "e.g. Lorem Ipsum",
@@ -241,7 +241,7 @@
         "passwordExplanation": "When authenticating, the user will be required to enter this password.",
         "noName": "No name set",
         "remove": "Remove a link share",
-        "removeText": "Are you sure you want to remove this link share? It will no longer be possible to access this list with this link share. This cannot be undone!",
+        "removeText": "Are you sure you want to remove this link share? It will no longer be possible to access this project with this link share. This cannot be undone!",
         "createSuccess": "The link share was successfully created.",
         "deleteSuccess": "The link share was successfully deleted",
         "view": "View",
@@ -260,7 +260,7 @@
         "updatedSuccess": "The {type} was successfully added."
       },
       "right": {
-        "title": "Permissão",
+        "title": "Permission",
         "read": "Read only",
         "readWrite": "Read & write",
         "admin": "Admin"
@@ -274,84 +274,84 @@
       "title": "List",
       "add": "Add",
       "addPlaceholder": "Add a new task…",
-      "empty": "Esta lista está atualmente vazia.",
-      "newTaskCta": "Criar uma nova tarefa.",
-      "editTask": "Editar Tarefa"
+      "empty": "This project is currently empty.",
+      "newTaskCta": "Create a new task.",
+      "editTask": "Edit Task"
     },
     "gantt": {
       "title": "Gantt",
-      "showTasksWithoutDates": "Mostrar tarefas que não possuem datas definidas",
-      "size": "Tamanho",
-      "default": "Padrão",
-      "month": "Mês",
-      "day": "Dia",
+      "showTasksWithoutDates": "Show tasks which don't have dates set",
+      "size": "Size",
+      "default": "Default",
+      "month": "Month",
+      "day": "Day",
       "hour": "Hour",
       "range": "Date Range",
-      "noDates": "Esta tarefa não tem datas definidas."
+      "noDates": "This task has no dates set."
     },
     "table": {
-      "title": "Tabela",
-      "columns": "Colunas"
+      "title": "Table",
+      "columns": "Columns"
     },
     "kanban": {
       "title": "Kanban",
-      "limit": "Limite: {limit}",
-      "noLimit": "Não definido",
-      "doneBucket": "Bucket concluído",
-      "doneBucketHint": "Todas as tarefas movidas para este bucket serão marcadas automaticamente como concluídas.",
-      "doneBucketHintExtended": "Todas as tarefas movidas para o bucket concluído serão automaticamente concluídas também. Todas as tarefas concluídas de outro lugar serão movidas também.",
-      "doneBucketSavedSuccess": "O bucket foi marcado como concluído com sucesso.",
-      "deleteLast": "Você não pode remover o último bucket.",
-      "addTaskPlaceholder": "Digite o novo título da tarefa…",
-      "addTask": "Adicionar uma tarefa",
-      "addAnotherTask": "Adicionar outra tarefa",
-      "addBucket": "Criar um novo bucket",
-      "addBucketPlaceholder": "Digite o novo título do bucket…",
-      "deleteHeaderBucket": "Excluir o bucket",
-      "deleteBucketText1": "Tem certeza que deseja excluir este bucket?",
-      "deleteBucketText2": "Isto não vai apagar nenhuma tarefa, mas as moverá para o bucket padrão.",
-      "deleteBucketSuccess": "O bucket foi excluído com sucesso.",
-      "bucketTitleSavedSuccess": "O título do bucket foi salvo com sucesso.",
-      "bucketLimitSavedSuccess": "O limite do bucket foi salvo com sucesso.",
-      "collapse": "Recolher este bucket"
+      "limit": "Limit: {limit}",
+      "noLimit": "Not Set",
+      "doneBucket": "Done bucket",
+      "doneBucketHint": "All tasks moved into this bucket will automatically marked as done.",
+      "doneBucketHintExtended": "All tasks moved into the done bucket will be marked as done automatically. All tasks marked as done from elsewhere will be moved as well.",
+      "doneBucketSavedSuccess": "The done bucket has been saved successfully.",
+      "deleteLast": "You cannot remove the last bucket.",
+      "addTaskPlaceholder": "Enter the new task title…",
+      "addTask": "Add a task",
+      "addAnotherTask": "Add another task",
+      "addBucket": "Create a new bucket",
+      "addBucketPlaceholder": "Enter the new bucket title…",
+      "deleteHeaderBucket": "Delete the bucket",
+      "deleteBucketText1": "Are you sure you want to delete this bucket?",
+      "deleteBucketText2": "This will not delete any tasks but move them into the default bucket.",
+      "deleteBucketSuccess": "The bucket has been deleted successfully.",
+      "bucketTitleSavedSuccess": "The bucket title has been saved successfully.",
+      "bucketLimitSavedSuccess": "The bucket limit been saved successfully.",
+      "collapse": "Collapse this bucket"
     },
     "pseudo": {
       "favorites": {
-        "title": "Favoritos"
+        "title": "Favorites"
       }
     }
   },
   "namespace": {
-    "title": "Listas & Namespaces",
+    "title": "Namespaces & Projects",
     "namespace": "Namespace",
     "showArchived": "Show Archived",
     "noneAvailable": "Você não tem nenhum namespace no momento.",
     "unarchive": "Desarquivar",
     "archived": "Arquivado",
-    "noLists": "Este namespace não contém nenhuma lista.",
-    "createList": "Criar uma nova lista neste namespace.",
+    "noProjects": "This namespace does not contain any projects.",
+    "createProject": "Create a new project in this namespace.",
     "namespaces": "Namespaces",
     "search": "Digite para procurar por um namespace…",
     "create": {
       "title": "Novo namespace",
       "titleRequired": "Por favor, especifique um título.",
-      "explanation": "Um namespace é uma coleção de listas que você pode compartilhar e usar para organizar suas listas. Na verdade, todas as listas pertencem a um namespace.",
+      "explanation": "A namespace is a collection of projects you can share and use to organize your projects with. In fact, every project belongs to a namespace.",
       "tooltip": "O que é um namespace?",
       "success": "O namespace foi criado com sucesso."
     },
     "archive": {
       "titleArchive": "Arquivar \"{namespace}\"",
       "titleUnarchive": "Desarquivar \"{namespace}\"",
-      "archiveText": "You won't be able to edit this namespace or create new lists until you un-archive it. This will also archive all lists in this namespace.",
-      "unarchiveText": "Você será capaz de criar novas listas ou editá-las.",
+      "archiveText": "You won't be able to edit this namespace or create new projects until you un-archive it. This will also archive all projects in this namespace.",
+      "unarchiveText": "You will be able to create new projects or edit it.",
       "success": "O namespace foi arquivado com sucesso.",
       "unarchiveSuccess": "O namespace foi desarquivado com sucesso.",
-      "description": "If a namespace is archived, you cannot create new lists or edit it."
+      "description": "If a namespace is archived, you cannot create new projects or edit it."
     },
     "delete": {
       "title": "Excluir \"{namespace}\"",
       "text1": "Are you sure you want to delete this namespace and all of its contents?",
-      "text2": "This includes all lists and tasks and CANNOT BE UNDONE!",
+      "text2": "This includes all projects and tasks and CANNOT BE UNDONE!",
       "success": "O namespace foi excluído com sucesso."
     },
     "edit": {
@@ -371,8 +371,8 @@
       "isArchived": "Este namespace está arquivado"
     },
     "pseudo": {
-      "sharedLists": {
-        "title": "Listas Compartilhadas"
+      "sharedProjects": {
+        "title": "Shared Projects"
       },
       "favorites": {
         "title": "Favoritos"
@@ -403,7 +403,7 @@
     },
     "create": {
       "title": "Novo filtro salvo",
-      "description": "A saved filter is a virtual list which is computed from a set of filters each time it is accessed. Once created, it will appear in a special namespace.",
+      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed. Once created, it will appear in a special namespace.",
       "action": "Create new saved filter",
       "titleRequired": "Please provide a title for the filter."
     },
@@ -435,7 +435,7 @@
   "label": {
     "title": "Etiquetas",
     "manage": "Editar etiquetas",
-    "description": "Click on a label to edit it. You can edit all labels you created, you can use all labels which are associated with a task to whose list you have access.",
+    "description": "Click on a label to edit it. You can edit all labels you created, you can use all labels which are associated with a task to whose project you have access.",
     "newCTA": "Você não tem nenhuma etiqueta atualmente.",
     "search": "Digite para procurar por uma etiqueta…",
     "create": {
@@ -460,7 +460,7 @@
   },
   "sharing": {
     "authenticating": "Autenticando…",
-    "passwordRequired": "Esta lista compartilhada requer uma senha. Por favor, digite-a abaixo:",
+    "passwordRequired": "This shared project requires a password. Please enter it below:",
     "error": "Ocorreu um erro.",
     "invalidPassword": "A senha é inválida."
   },
@@ -529,7 +529,7 @@
       "code": "Código",
       "quote": "Citação",
       "unorderedList": "Lista não ordenada",
-      "orderedList": "Lista ordenada",
+      "orderedList  ": "Ordered List",
       "cleanBlock": "Clean Block",
       "link": "Link",
       "image": "Imagem",
@@ -619,7 +619,7 @@
       "chooseDueDate": "Click here to set a due date",
       "chooseStartDate": "Clique aqui para definir uma data de início",
       "chooseEndDate": "Click here to set an end date",
-      "move": "Move task to a different list",
+      "move": "Move task to a different project",
       "done": "Marcar tarefa como concluída!",
       "undone": "Marcar como não concluído",
       "created": "Criado {0} por {1}",
@@ -627,7 +627,7 @@
       "doneAt": "Concluído {0}",
       "updateSuccess": "A tarefa foi salva com sucesso.",
       "deleteSuccess": "A tarefa foi excluída com sucesso.",
-      "belongsToList": "This task belongs to list '{list}'",
+      "belongsToProject": "This task belongs to project '{project}'",
       "due": "Due {at}",
       "closePopup": "Fechar janela",
       "delete": {
@@ -647,7 +647,7 @@
         "percentDone": "Definir progresso",
         "attachments": "Adicionar anexos",
         "relatedTasks": "Add Relation",
-        "moveList": "Mover",
+        "moveProject": "Move",
         "color": "Definir cor",
         "delete": "Excluir",
         "favorite": "Adicionar aos favoritos",
@@ -674,21 +674,21 @@
       "updated": "Atualizado"
     },
     "subscription": {
-      "subscribedListThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this list through its namespace.",
+      "subscribedProjectThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this project through its namespace.",
       "subscribedTaskThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this task through its namespace.",
-      "subscribedTaskThroughParentList": "You can't unsubscribe here because you are subscribed to this task through its list.",
+      "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",
       "subscribedNamespace": "You are currently subscribed to this namespace and will receive notifications for changes.",
       "notSubscribedNamespace": "You are not subscribed to this namespace and won't receive notifications for changes.",
-      "subscribedList": "You are currently subscribed to this list and will receive notifications for changes.",
-      "notSubscribedList": "You are not subscribed to this list and won't receive notifications for changes.",
+      "subscribedProject": "You are currently subscribed to this project and will receive notifications for changes.",
+      "notSubscribedProject": "You are not subscribed to this project and won't receive notifications for changes.",
       "subscribedTask": "You are currently subscribed to this task and will receive notifications for changes.",
       "notSubscribedTask": "You are not subscribed to this task and won't receive notifications for changes.",
       "subscribe": "Inscrever-se",
       "unsubscribe": "Desinscrever-se",
       "subscribeSuccessNamespace": "You are now subscribed to this namespace",
       "unsubscribeSuccessNamespace": "You are now unsubscribed to this namespace",
-      "subscribeSuccessList": "You are now subscribed to this list",
-      "unsubscribeSuccessList": "You are now unsubscribed to this list",
+      "subscribeSuccessProject": "You are now subscribed to this project",
+      "unsubscribeSuccessProject": "You are now unsubscribed to this project",
       "subscribeSuccessTask": "You are now subscribed to this task",
       "unsubscribeSuccessTask": "You are now unsubscribed to this task"
     },
@@ -762,7 +762,7 @@
       "new": "New Task Relation",
       "searchPlaceholder": "Type search for a new task to add as related…",
       "createPlaceholder": "Add this as new related task",
-      "differentList": "This task belongs to a different list.",
+      "differentProject": "This task belongs to a different project.",
       "differentNamespace": "This task belongs to a different namespace.",
       "noneYet": "No task relations yet.",
       "delete": "Delete Task Relation",
@@ -812,10 +812,10 @@
       "priority1": "Para definir a prioridade de uma tarefa, adicione um número de 1 a 5, precedido de um {prefix}.",
       "priority2": "Quanto maior o número, maior a prioridade.",
       "assignees": "To directly assign the task to a user, add their username prefixed with {prefix} to the task.",
-      "list1": "To set a list for the task to appear in, enter its name prefixed with {prefix}.",
-      "list2": "This will return an error if the list does not exist.",
-      "list3": "To use spaces, simply add a \" or ' around the list name.",
-      "list4": "For example: {prefix}\"List with spaces\".",
+      "project1": "To set a project for the task to appear in, enter its name prefixed with {prefix}.",
+      "project2": "This will return an error if the project does not exist.",
+      "project3": "To use spaces, simply add a \" or ' around the project name.",
+      "project4": "For example: {prefix}\"Project with spaces\".",
       "dateAndTime": "Data e hora",
       "date": "Any date will be used as the due date of the new task. You can use dates in any of these formats:",
       "dateWeekday": "any weekday, will use the next date with that date",
@@ -848,19 +848,19 @@
       "delete": {
         "header": "Excluir a equipe",
         "text1": "Are you sure you want to delete this team and all of its members?",
-        "text2": "All team members will lose access to lists and namespaces shared with this team. This CANNOT BE UNDONE!",
+        "text2": "All team members will lose access to projects and namespaces shared with this team. This CANNOT BE UNDONE!",
         "success": "A equipe foi excluída com sucesso."
       },
       "deleteUser": {
         "header": "Remove a user from the team",
         "text1": "Are you sure you want to remove this user from the team?",
-        "text2": "They will lose access to all lists and namespaces this team has access to. This CANNOT BE UNDONE!",
+        "text2": "They will lose access to all projects and namespaces this team has access to. This CANNOT BE UNDONE!",
         "success": "O usuário foi removido da equipe com sucesso."
       },
       "leave": {
         "title": "Leave team",
         "text1": "Are you sure you want to leave this team?",
-        "text2": "You will lose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "text2": "You will lose access to all projects and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "You have successfully left the team."
       }
     },
@@ -892,12 +892,12 @@
       "attachment": "Add an attachment to this task",
       "related": "Modify related tasks of this task",
       "color": "Change the color of this task",
-      "move": "Move this task to another list",
+      "move": "Move this task to another project",
       "reminder": "Manage reminders of this task",
       "description": "Toggle editing of the task description"
     },
-    "list": {
-      "title": "List Views",
+    "project": {
+      "title": "Project Views",
       "switchToListView": "Switch to list view",
       "switchToGanttView": "Switch to gantt view",
       "switchToKanbanView": "Switch to kanban view",
@@ -907,7 +907,7 @@
       "title": "Navigation",
       "overview": "Navigate to overview",
       "upcoming": "Navigate to upcoming tasks",
-      "namespaces": "Navigate to namespaces & lists",
+      "namespaces": "Navigate to namespaces & projects",
       "labels": "Navigate to labels",
       "teams": "Navigate to teams"
     }
@@ -924,7 +924,7 @@
     "unarchive": "Un-Archive",
     "setBackground": "Set background",
     "share": "Share",
-    "newList": "New list"
+    "newProject": "New project"
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -943,24 +943,24 @@
   "notification": {
     "title": "Notificações",
     "none": "You don't have any notifications. Have a nice day!",
-    "explainer": "Notifications will appear here when actions on namespaces, lists or tasks you subscribed to happen."
+    "explainer": "Notifications will appear here when actions on namespaces, projects or tasks you subscribed to happen."
   },
   "quickActions": {
     "commands": "Comandos",
     "placeholder": "Digite um comando ou pesquise…",
-    "hint": "You can use {list} to limit the search to a list. Combine {list} or {label} (labels) with a search query to search for a task with these labels or on that list. Use {assignee} to only search for teams.",
+    "hint": "You can use {project} to limit the search to a project. Combine {project} or {label} (labels) with a search query to search for a task with these labels or on that project. Use {assignee} to only search for teams.",
     "tasks": "Tarefas",
-    "lists": "Listas",
+    "projects": "Projects",
     "teams": "Equipes",
-    "newList": "Digite o título da nova lista…",
+    "newProject": "Enter the title of the new project…",
     "newTask": "Enter the title of the new task…",
     "newNamespace": "Enter the title of the new namespace…",
     "newTeam": "Enter the name of the new team…",
-    "createTask": "Create a task in the current list ({title})",
-    "createList": "Create a list in the current namespace ({title})",
+    "createTask": "Create a task in the current project ({title})",
+    "createProject": "Create a project in the current namespace ({title})",
     "cmds": {
       "newTask": "Nova tarefa",
-      "newList": "Nova lista",
+      "newProject": "New project",
       "newNamespace": "Novo namespace",
       "newTeam": "Nova equipe"
     }
@@ -992,15 +992,15 @@
     "1018": "The user avatar type setting is invalid.",
     "2001": "ID cannot be empty or 0.",
     "2002": "Some of the request data was invalid.",
-    "3001": "The list does not exist.",
-    "3004": "You need to have read permissions on that list to perform that action.",
-    "3005": "The list title cannot be empty.",
-    "3006": "The list share does not exist.",
-    "3007": "A list with this identifier already exists.",
-    "3008": "The list is archived and can therefore only be accessed read only. This is also true for all tasks associated with this list.",
-    "4001": "The list task text cannot be empty.",
-    "4002": "The list task does not exist.",
-    "4003": "All bulk editing tasks must belong to the same list.",
+    "3001": "The project does not exist.",
+    "3004": "You need to have read permissions on that project to perform that action.",
+    "3005": "The project title cannot be empty.",
+    "3006": "The project share does not exist.",
+    "3007": "A project with this identifier already exists.",
+    "3008": "The project is archived and can therefore only be accessed read only. This is also true for all tasks associated with this project.",
+    "4001": "The project task text cannot be empty.",
+    "4002": "The project task does not exist.",
+    "4003": "All bulk editing tasks must belong to the same project.",
     "4004": "Need at least one task when bulk editing tasks.",
     "4005": "You do not have the right to see the task.",
     "4006": "You can't set a parent task as the task itself.",
@@ -1026,21 +1026,21 @@
     "5012": "The namespace is archived and can therefore only be accessed read only.",
     "6001": "The team name cannot be empty.",
     "6002": "The team does not exist.",
-    "6004": "The team already has access to that namespace or list.",
+    "6004": "The team already has access to that namespace or project.",
     "6005": "The user is already a member of that team.",
     "6006": "Cannot delete the last team member.",
-    "6007": "The team does not have access to the list to perform that action.",
-    "7002": "The user already has access to that list.",
-    "7003": "You do not have access to that list.",
+    "6007": "The team does not have access to the project to perform that action.",
+    "7002": "The user already has access to that project.",
+    "7003": "You do not have access to that project.",
     "8001": "This label already exists on that task.",
     "8002": "The label does not exist.",
     "8003": "You do not have access to this label.",
     "9001": "The right is invalid.",
     "10001": "The bucket does not exist.",
-    "10002": "The bucket does not belong to that list.",
-    "10003": "You cannot remove the last bucket on a list.",
+    "10002": "The bucket does not belong to that project.",
+    "10003": "You cannot remove the last bucket on a project.",
     "10004": "You cannot add the task to this bucket as it already exceeded the limit of tasks it can hold.",
-    "10005": "There can be only one done bucket per list.",
+    "10005": "There can be only one done bucket per project.",
     "11001": "The saved filter does not exist.",
     "11002": "Saved filters are not available for link shares.",
     "12001": "The subscription entity type is invalid.",

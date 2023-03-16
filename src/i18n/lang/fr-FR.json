@@ -5,11 +5,11 @@
     "welcomeDay": "Hi {username}!",
     "welcomeEvening": "Good Evening {username}!",
     "lastViewed": "Dernière consultation",
-    "list": {
-      "newText": "Tu peux créer une nouvelle liste pour tes nouvelles tâches :",
-      "new": "Nouvelle liste",
-      "importText": "Ou importe tes listes et tâches d’autres services dans Vikunja :",
-      "import": "Importer tes données dans Vikunja"
+    "project": {
+      "newText": "You can create a new project for your new tasks:",
+      "new": "New project",
+      "importText": "Or import your projects and tasks from other services into Vikunja:",
+      "import": "Import your data into Vikunja"
     }
   },
   "404": {
@@ -85,7 +85,7 @@
         "weekStartSunday": "dimanche",
         "weekStartMonday": "lundi",
         "language": "Langue",
-        "defaultList": "Liste par défaut",
+        "defaultProject": "Default Project",
         "timezone": "Fuseau horaire",
         "overdueTasksRemindersTime": "Overdue tasks reminder email time"
       },
@@ -143,7 +143,7 @@
     },
     "deletion": {
       "title": "Supprimer ton compte Vikunja",
-      "text1": "La suppression de ton compte est permanente et ne peut pas être annulée. Nous supprimerons tous tes espaces de noms, listes, tâches et tout ce qui y est associés.",
+      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your namespaces, projects, tasks and everything associated with it.",
       "text2": "Pour continuer, entre ton mot de passe. Tu recevras un courriel contenant les instructions suivantes.",
       "confirm": "Supprimer mon compte",
       "requestSuccess": "La demande a réussi. Tu recevras un courriel avec des instructions supplémentaires.",
@@ -157,201 +157,201 @@
     },
     "export": {
       "title": "Exporter tes données Vikunja",
-      "description": "Tu peux demander une copie de toutes tes données de Vikunja. Ceci inclut les espaces de noms, les listes, les tâches et tout ce qui leur est associé. Tu peux importer ces données dans n'importe quelle instance de Vikunja par le biais de la fonction migration.",
+      "description": "You can request a copy of all your Vikunja data. This include Namespaces, Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
       "descriptionPasswordRequired": "Entre ton mot de passe pour continuer :",
       "request": "Demander une copie de mes données Vikunja",
       "success": "Tu as bien demandé tes données Vikunja ! Nous t'enverrons un courriel dès qu'elles seront prêtes à être téléchargées.",
       "downloadTitle": "Télécharger tes données exportées de Vikunja"
     }
   },
-  "list": {
-    "archived": "Cette liste est archivée. Il n’est pas possible d’y créer de nouvelles tâches ou de les modifier.",
-    "title": "Nom de la liste",
-    "color": "Couleur",
-    "lists": "Listes",
-    "search": "Écris pour rechercher une liste…",
-    "searchSelect": "Clique ou appuie sur la touche Entrée pour sélectionner cette liste",
-    "shared": "Listes partagées",
-    "noDescriptionAvailable": "No list description is available.",
+  "project": {
+    "archived": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "title": "Project Title",
+    "color": "Color",
+    "projects": "Projects",
+    "search": "Type to search for a project…",
+    "searchSelect": "Click or press enter to select this project",
+    "shared": "Shared Projects",
+    "noDescriptionAvailable": "No project description is available.",
     "create": {
-      "header": "Nouvelle liste",
-      "titlePlaceholder": "Entre le nom de la liste…",
-      "addTitleRequired": "Indique un nom.",
-      "createdSuccess": "Liste créée.",
-      "addListRequired": "Indique une liste ou définis une liste par défaut dans les paramètres."
+      "header": "New project",
+      "titlePlaceholder": "The project's title goes here…",
+      "addTitleRequired": "Please specify a title.",
+      "createdSuccess": "The project was successfully created.",
+      "addProjectRequired": "Please specify a project or set a default project in the settings."
     },
     "archive": {
-      "title": "Archiver « {list} »",
-      "archive": "Archiver cette liste",
-      "unarchive": "Désarchiver cette liste",
-      "unarchiveText": "Tu pourras créer de nouvelles tâches ou les modifier.",
-      "archiveText": "Tu ne pourras pas modifier cette liste ni créer de nouvelles tâches tant que tu ne l’auras pas désarchivée.",
-      "success": "Liste archivée."
+      "title": "Archive \"{project}\"",
+      "archive": "Archive this project",
+      "unarchive": "Un-Archive this project",
+      "unarchiveText": "You will be able to create new tasks or edit it.",
+      "archiveText": "You won't be able to edit this project or create new tasks until you un-archive it.",
+      "success": "The project was successfully archived."
     },
     "background": {
-      "title": "Définir l’arrière-plan de la liste",
-      "remove": "Retirer l’arrière-plan",
-      "upload": "Choisis un arrière-plan depuis ton ordinateur",
-      "searchPlaceholder": "Rechercher un arrière-plan…",
-      "poweredByUnsplash": "Propulsé par Unsplash",
-      "loadMore": "Charger plus de photos",
-      "success": "Arrière-plan défini.",
-      "removeSuccess": "Arrière-plan supprimé."
+      "title": "Set project background",
+      "remove": "Remove Background",
+      "upload": "Choose a background from your pc",
+      "searchPlaceholder": "Search for a background…",
+      "poweredByUnsplash": "Powered by Unsplash",
+      "loadMore": "Load more photos",
+      "success": "The background has been set successfully!",
+      "removeSuccess": "The background has been removed successfully!"
     },
     "delete": {
-      "title": "Supprimer « {list} »",
-      "header": "Supprimer cette liste",
-      "text1": "Supprimer cette liste et tout son contenu ?",
-      "text2": "Ceci inclut toutes les tâches et ne peut pas être annulé !",
-      "success": "Liste supprimée.",
+      "title": "Delete \"{project}\"",
+      "header": "Delete this project",
+      "text1": "Are you sure you want to delete this project and all of its contents?",
+      "text2": "This includes all tasks and CANNOT BE UNDONE!",
+      "success": "The project was successfully deleted.",
       "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
-      "noTasksToDelete": "This list does not contain any tasks, it should be safe to delete."
+      "noTasksToDelete": "This project does not contain any tasks, it should be safe to delete."
     },
     "duplicate": {
-      "title": "Dupliquer cette liste",
-      "label": "Dupliquer",
-      "text": "Sélectionne un espace de noms qui doit contenir la liste dupliquée :",
-      "success": "Liste dupliquée."
+      "title": "Duplicate this project",
+      "label": "Duplicate",
+      "text": "Select a namespace which should hold the duplicated project:",
+      "success": "The project was successfully duplicated."
     },
     "edit": {
-      "header": "Modifier cette liste",
-      "title": "Modifier « {list} »",
-      "titlePlaceholder": "Entre le nom de la liste…",
-      "identifierTooltip": "L’identifiant de liste peut être utilisé pour identifier de manière unique une tâche dans toutes les listes. Tu peux le régler sur vide pour le désactiver.",
-      "identifier": "Identifiant de la liste",
-      "identifierPlaceholder": "L’identifiant de la liste va ici…",
+      "header": "Edit This Project",
+      "title": "Edit \"{project}\"",
+      "titlePlaceholder": "The project title goes here…",
+      "identifierTooltip": "The project identifier can be used to uniquely identify a task across projects. You can set it to empty to disable it.",
+      "identifier": "Project Identifier",
+      "identifierPlaceholder": "The project identifier goes here…",
       "description": "Description",
-      "descriptionPlaceholder": "Entre la description de la liste…",
-      "color": "Couleur",
-      "success": "Liste mise à jour."
+      "descriptionPlaceholder": "The projects description goes here…",
+      "color": "Color",
+      "success": "The project was successfully updated."
     },
     "share": {
-      "header": "Partager cette liste",
-      "title": "Partager « {list} »",
-      "share": "Partager",
+      "header": "Share this project",
+      "title": "Share \"{project}\"",
+      "share": "Share",
       "links": {
-        "title": "Liens de partage",
-        "what": "Qu’est-ce qu’un lien de partage ?",
-        "explanation": "Permet de partager une liste avec les personnes qui n’ont pas de compte sur Vikunja.",
-        "create": "Créer un nouveau lien de partage",
-        "name": "Nom (facultatif)",
-        "namePlaceholder": "p. ex. Lorem Ipsum",
-        "nameExplanation": "Toutes les actions effectuées par ce partage de lien apparaîtront avec le nom.",
-        "password": "Mot de passe (facultatif)",
-        "passwordExplanation": "L’utilisateur·rice doit saisir ce mot de passe pour se connecter.",
-        "noName": "Aucun nom défini",
-        "remove": "Retirer un lien de partage",
-        "removeText": "Retirer ce partage de lien ? Il ne sera plus possible d’accéder à cette liste avec ce partage de lien. Cette opération ne peut être annulée !",
-        "createSuccess": "Partage créé.",
-        "deleteSuccess": "Lien supprimé",
+        "title": "Share Links",
+        "what": "What is a share link?",
+        "explanation": "Share Links allow you to easily share a project with other users who don't have an account on Vikunja.",
+        "create": "Create a new link share",
+        "name": "Name (optional)",
+        "namePlaceholder": "e.g. Lorem Ipsum",
+        "nameExplanation": "All actions done by this link share will show up with the name.",
+        "password": "Password (optional)",
+        "passwordExplanation": "When authenticating, the user will be required to enter this password.",
+        "noName": "No name set",
+        "remove": "Remove a link share",
+        "removeText": "Are you sure you want to remove this link share? It will no longer be possible to access this project with this link share. This cannot be undone!",
+        "createSuccess": "The link share was successfully created.",
+        "deleteSuccess": "The link share was successfully deleted",
         "view": "View",
         "sharedBy": "Shared by {0}"
       },
       "userTeam": {
-        "typeUser": "utilisateur·rice | utilisateur·rice·s",
-        "typeTeam": "équipe | équipes",
-        "shared": "Partagé avec ces {type}",
-        "you": "Toi",
-        "notShared": "Pas encore partagé avec des {type}.",
-        "removeHeader": "Retirer un {type} de la liste {sharable}",
-        "removeText": "Retirer ce {sharable} du {type} ? Ceci ne peut pas être annulé !",
-        "removeSuccess": "{sharable} retiré de {type}.",
-        "addedSuccess": "{type} ajouté.",
-        "updatedSuccess": "{type} ajouté."
+        "typeUser": "user | users",
+        "typeTeam": "team | teams",
+        "shared": "Shared with these {type}",
+        "you": "You",
+        "notShared": "Not shared with any {type} yet.",
+        "removeHeader": "Remove a {type} from the {sharable}",
+        "removeText": "Are you sure you want to remove this {sharable} from the {type}? This cannot be undone!",
+        "removeSuccess": "The {sharable} was successfully removed from the {type}.",
+        "addedSuccess": "The {type} was successfully added.",
+        "updatedSuccess": "The {type} was successfully added."
       },
       "right": {
         "title": "Permission",
-        "read": "Lecture seule",
-        "readWrite": "Lecture et écriture",
+        "read": "Read only",
+        "readWrite": "Read & write",
         "admin": "Admin"
       },
       "attributes": {
-        "link": "Lien",
-        "delete": "Supprimer"
+        "link": "Link",
+        "delete": "Delete"
       }
     },
     "list": {
-      "title": "Liste",
-      "add": "Ajouter",
-      "addPlaceholder": "Ajouter une nouvelle tâche…",
-      "empty": "Cette liste est actuellement vide.",
-      "newTaskCta": "Créer une nouvelle tâche.",
-      "editTask": "Modifier la tâche"
+      "title": "List",
+      "add": "Add",
+      "addPlaceholder": "Add a new task…",
+      "empty": "This project is currently empty.",
+      "newTaskCta": "Create a new task.",
+      "editTask": "Edit Task"
     },
     "gantt": {
       "title": "Gantt",
-      "showTasksWithoutDates": "Afficher les tâches pour lesquelles aucune date n’a été fixée",
-      "size": "Taille",
-      "default": "Par défaut",
-      "month": "Mois",
-      "day": "Jour",
+      "showTasksWithoutDates": "Show tasks which don't have dates set",
+      "size": "Size",
+      "default": "Default",
+      "month": "Month",
+      "day": "Day",
       "hour": "Hour",
       "range": "Date Range",
-      "noDates": "Aucune date n’a été fixée pour cette tâche."
+      "noDates": "This task has no dates set."
     },
     "table": {
-      "title": "Tableau",
-      "columns": "Colonnes"
+      "title": "Table",
+      "columns": "Columns"
     },
     "kanban": {
       "title": "Kanban",
-      "limit": "Limite : {limit}",
-      "noLimit": "Non défini",
-      "doneBucket": "Seau des terminés",
-      "doneBucketHint": "Toutes les tâches déplacées dans ce seau seront automatiquement marquées comme faites.",
-      "doneBucketHintExtended": "Toutes les tâches déplacées dans le seau des choses terminées seront marquées comme terminées automatiquement. Toutes les tâches marquées comme terminées ailleurs seront également déplacées.",
-      "doneBucketSavedSuccess": "Seau des terminés enregistré.",
-      "deleteLast": "Tu ne peux pas supprimer le dernier seau.",
-      "addTaskPlaceholder": "Entre le nom de la tâche…",
-      "addTask": "Ajouter une tâche",
-      "addAnotherTask": "Ajouter une autre tâche",
-      "addBucket": "Créer un nouveau seau",
-      "addBucketPlaceholder": "Entre le nouveau nom du seau…",
-      "deleteHeaderBucket": "Supprimer le seau",
-      "deleteBucketText1": "Supprimer ce seau ?",
-      "deleteBucketText2": "Ceci ne supprimera pas les tâches mais les déplacera dans le seau par défaut.",
-      "deleteBucketSuccess": "Seau supprimé.",
-      "bucketTitleSavedSuccess": "Nom du seau enregistré.",
-      "bucketLimitSavedSuccess": "Limite du seau enregistrée.",
-      "collapse": "Réduire ce seau"
+      "limit": "Limit: {limit}",
+      "noLimit": "Not Set",
+      "doneBucket": "Done bucket",
+      "doneBucketHint": "All tasks moved into this bucket will automatically marked as done.",
+      "doneBucketHintExtended": "All tasks moved into the done bucket will be marked as done automatically. All tasks marked as done from elsewhere will be moved as well.",
+      "doneBucketSavedSuccess": "The done bucket has been saved successfully.",
+      "deleteLast": "You cannot remove the last bucket.",
+      "addTaskPlaceholder": "Enter the new task title…",
+      "addTask": "Add a task",
+      "addAnotherTask": "Add another task",
+      "addBucket": "Create a new bucket",
+      "addBucketPlaceholder": "Enter the new bucket title…",
+      "deleteHeaderBucket": "Delete the bucket",
+      "deleteBucketText1": "Are you sure you want to delete this bucket?",
+      "deleteBucketText2": "This will not delete any tasks but move them into the default bucket.",
+      "deleteBucketSuccess": "The bucket has been deleted successfully.",
+      "bucketTitleSavedSuccess": "The bucket title has been saved successfully.",
+      "bucketLimitSavedSuccess": "The bucket limit been saved successfully.",
+      "collapse": "Collapse this bucket"
     },
     "pseudo": {
       "favorites": {
-        "title": "Favoris"
+        "title": "Favorites"
       }
     }
   },
   "namespace": {
-    "title": "Espaces de noms et listes",
+    "title": "Namespaces & Projects",
     "namespace": "Espace de noms",
     "showArchived": "Montrer les archivés",
     "noneAvailable": "Tu n’as pas d’espace de noms pour le moment.",
     "unarchive": "Désarchiver",
     "archived": "Archivé",
-    "noLists": "Cet espace de noms ne contient pas de listes.",
-    "createList": "Créer une nouvelle liste dans cet espace de noms.",
+    "noProjects": "This namespace does not contain any projects.",
+    "createProject": "Create a new project in this namespace.",
     "namespaces": "Espaces de noms",
     "search": "Écris pour rechercher un espace de noms…",
     "create": {
       "title": "Nouvel espace de noms",
       "titleRequired": "Indique un nom.",
-      "explanation": "A namespace is a collection of lists you can share and use to organize your lists with. In fact, every list belongs to a namespace.",
+      "explanation": "A namespace is a collection of projects you can share and use to organize your projects with. In fact, every project belongs to a namespace.",
       "tooltip": "Qu’est-ce qu’un espace de noms ?",
       "success": "Espace de noms créé."
     },
     "archive": {
       "titleArchive": "Archiver « {namespace} »",
       "titleUnarchive": "Désarchiver « {namespace} »",
-      "archiveText": "Tu ne pourras pas modifier cet espace de noms ou créer de nouvelles listes tant que tu ne l’auras pas désarchivé. Ceci archivera également toutes les listes de cet espace de noms.",
-      "unarchiveText": "Tu pourras créer de nouvelles listes ou les modifier.",
+      "archiveText": "You won't be able to edit this namespace or create new projects until you un-archive it. This will also archive all projects in this namespace.",
+      "unarchiveText": "You will be able to create new projects or edit it.",
       "success": "Espace de noms archivé.",
       "unarchiveSuccess": "Espace de noms archivé.",
-      "description": "L’archivage d’un espace de noms signifie qu’on ne peut pas créer de nouvelles listes dans cet espace, ni le modifier."
+      "description": "If a namespace is archived, you cannot create new projects or edit it."
     },
     "delete": {
       "title": "Supprimer « {namespace} »",
       "text1": "Supprimer cet espace de noms et tout son contenu ?",
-      "text2": "Ceci inclut toutes les listes et les tâches et ne peut être annulé !",
+      "text2": "This includes all projects and tasks and CANNOT BE UNDONE!",
       "success": "Espace de noms supprimé."
     },
     "edit": {
@@ -371,8 +371,8 @@
       "isArchived": "Cet espace de noms est archivé"
     },
     "pseudo": {
-      "sharedLists": {
-        "title": "Listes partagées"
+      "sharedProjects": {
+        "title": "Shared Projects"
       },
       "favorites": {
         "title": "Favoris"
@@ -403,7 +403,7 @@
     },
     "create": {
       "title": "Nouveau filtre enregistré",
-      "description": "Un filtre enregistré est une liste virtuelle qui est calculée à partir d’un ensemble de filtres à chaque fois qu’on y accède. Une fois créé, il apparaît dans un espace de noms spécial.",
+      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed. Once created, it will appear in a special namespace.",
       "action": "Créer un nouveau filtre enregistré",
       "titleRequired": "Please provide a title for the filter."
     },
@@ -435,7 +435,7 @@
   "label": {
     "title": "Étiquettes",
     "manage": "Gérer les étiquettes",
-    "description": "Clique sur une étiquette pour la modifier. Tu peux modifier toutes les étiquettes que tu as créées, tu peux utiliser toutes les étiquettes qui sont associées à une tâche dont tu as accès à la liste.",
+    "description": "Click on a label to edit it. You can edit all labels you created, you can use all labels which are associated with a task to whose project you have access.",
     "newCTA": "Tu n’as actuellement aucune étiquette.",
     "search": "Écris pour rechercher une étiquette…",
     "create": {
@@ -460,7 +460,7 @@
   },
   "sharing": {
     "authenticating": "Authentification…",
-    "passwordRequired": "Cette liste partagée nécessite un mot de passe. Entre-le ci-dessous :",
+    "passwordRequired": "This shared project requires a password. Please enter it below:",
     "error": "Une erreur s’est produite.",
     "invalidPassword": "Le mot de passe est invalide."
   },
@@ -529,7 +529,7 @@
       "code": "Code",
       "quote": "Citation",
       "unorderedList": "Liste non ordonnée",
-      "orderedList": "Liste ordonnée",
+      "orderedList  ": "Ordered List",
       "cleanBlock": "Bloc propre",
       "link": "Lien",
       "image": "Image",
@@ -619,7 +619,7 @@
       "chooseDueDate": "Clique ici pour définir une date d’échéance",
       "chooseStartDate": "Clique ici pour fixer une date de début",
       "chooseEndDate": "Clique ici pour fixer une date de fin",
-      "move": "Déplacer une tâche vers une autre liste",
+      "move": "Move task to a different project",
       "done": "Marquer la tâche comme terminée !",
       "undone": "Marquer comme inachevé",
       "created": "Créé {0} par {1}",
@@ -627,7 +627,7 @@
       "doneAt": "Terminé {0}",
       "updateSuccess": "Tâche enregistrée.",
       "deleteSuccess": "Tâche supprimée.",
-      "belongsToList": "Cette tâche appartient à la liste « {list} »",
+      "belongsToProject": "This task belongs to project '{project}'",
       "due": "Échéance {at}",
       "closePopup": "Fermer la fenêtre",
       "delete": {
@@ -647,7 +647,7 @@
         "percentDone": "Définir la progression",
         "attachments": "Ajouter des pièces jointes",
         "relatedTasks": "Ajouter une relation",
-        "moveList": "Déplacer",
+        "moveProject": "Move",
         "color": "Définir la couleur",
         "delete": "Supprimer",
         "favorite": "Ajouter aux favoris",
@@ -674,21 +674,21 @@
       "updated": "Mis à jour"
     },
     "subscription": {
-      "subscribedListThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this list through its namespace.",
+      "subscribedProjectThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this project through its namespace.",
       "subscribedTaskThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this task through its namespace.",
-      "subscribedTaskThroughParentList": "You can't unsubscribe here because you are subscribed to this task through its list.",
+      "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",
       "subscribedNamespace": "You are currently subscribed to this namespace and will receive notifications for changes.",
       "notSubscribedNamespace": "You are not subscribed to this namespace and won't receive notifications for changes.",
-      "subscribedList": "You are currently subscribed to this list and will receive notifications for changes.",
-      "notSubscribedList": "You are not subscribed to this list and won't receive notifications for changes.",
+      "subscribedProject": "You are currently subscribed to this project and will receive notifications for changes.",
+      "notSubscribedProject": "You are not subscribed to this project and won't receive notifications for changes.",
       "subscribedTask": "You are currently subscribed to this task and will receive notifications for changes.",
       "notSubscribedTask": "You are not subscribed to this task and won't receive notifications for changes.",
       "subscribe": "S’abonner",
       "unsubscribe": "Se désabonner",
       "subscribeSuccessNamespace": "You are now subscribed to this namespace",
       "unsubscribeSuccessNamespace": "You are now unsubscribed to this namespace",
-      "subscribeSuccessList": "You are now subscribed to this list",
-      "unsubscribeSuccessList": "You are now unsubscribed to this list",
+      "subscribeSuccessProject": "You are now subscribed to this project",
+      "unsubscribeSuccessProject": "You are now unsubscribed to this project",
       "subscribeSuccessTask": "You are now subscribed to this task",
       "unsubscribeSuccessTask": "You are now unsubscribed to this task"
     },
@@ -762,7 +762,7 @@
       "new": "Nouvelle relation de tâche",
       "searchPlaceholder": "Écris la recherche d’une nouvelle tâche à ajouter comme connexe…",
       "createPlaceholder": "Ajouter cette tâche comme nouvelle tâche connexe",
-      "differentList": "Cette tâche appartient à une autre liste.",
+      "differentProject": "This task belongs to a different project.",
       "differentNamespace": "Cette tâche fait partie d'un espace de noms différent.",
       "noneYet": "Pas encore de relations de tâches.",
       "delete": "Supprimer la relation de tâche",
@@ -812,10 +812,10 @@
       "priority1": "Pour définir la priorité d’une tâche, ajoutez un chiffre de 1 à 5, précédé d’un {prefix}.",
       "priority2": "Plus le numéro est élevé, plus la priorité est élevée.",
       "assignees": "Pour assigner directement la tâche à un utilisateur, ajoutez son nom d'utilisateur préfixé avec {prefix} à la tâche.",
-      "list1": "Pour définir une liste dans laquelle la tâche doit apparaître, entrez son nom précédé de {prefix}.",
-      "list2": "Ceci renverra une erreur si la liste n’existe pas.",
-      "list3": "To use spaces, simply add a \" or ' around the list name.",
-      "list4": "For example: {prefix}\"List with spaces\".",
+      "project1": "To set a project for the task to appear in, enter its name prefixed with {prefix}.",
+      "project2": "This will return an error if the project does not exist.",
+      "project3": "To use spaces, simply add a \" or ' around the project name.",
+      "project4": "For example: {prefix}\"Project with spaces\".",
       "dateAndTime": "Date et heure",
       "date": "Toute date sera utilisée comme date d’échéance de la nouvelle tâche. Vous pouvez utiliser des dates dans un des formats suivants :",
       "dateWeekday": "n’importe quel jour de la semaine, utilisera la date suivante avec cette date",
@@ -848,19 +848,19 @@
       "delete": {
         "header": "Supprimer l’équipe",
         "text1": "Supprimer cette équipe et tous ses membres ?",
-        "text2": "Tous les membres de l'équipe perdront l'accès aux listes et aux espaces de noms partagés avec cette équipe. Ceci NE PEUT PAS ÊTRE ANNULÉ !",
+        "text2": "All team members will lose access to projects and namespaces shared with this team. This CANNOT BE UNDONE!",
         "success": "Équipe supprimée."
       },
       "deleteUser": {
         "header": "Retirer un·e utilisateur·rice de l’équipe",
         "text1": "Retirer cette personne de l’équipe ?",
-        "text2": "Ils perdront l'accès à toutes les listes et espaces de noms auxquels cette équipe a accès. Ceci NE PEUT PAS ÊTRE ANNULÉ !",
+        "text2": "They will lose access to all projects and namespaces this team has access to. This CANNOT BE UNDONE!",
         "success": "Utilisateur·rice retiré·e de l’équipe."
       },
       "leave": {
         "title": "Leave team",
         "text1": "Are you sure you want to leave this team?",
-        "text2": "You will lose access to all lists and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "text2": "You will lose access to all projects and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "You have successfully left the team."
       }
     },
@@ -892,22 +892,22 @@
       "attachment": "Ajouter une pièce jointe à cette tâche",
       "related": "Modifier les tâches connexes de cette tâche",
       "color": "Changer la couleur de cette tâche",
-      "move": "Déplacer cette tâche dans une autre liste",
+      "move": "Move this task to another project",
       "reminder": "Manage reminders of this task",
       "description": "Toggle editing of the task description"
     },
-    "list": {
-      "title": "Vues en liste",
-      "switchToListView": "Passer en vue liste",
-      "switchToGanttView": "Passer en vue Gantt",
-      "switchToKanbanView": "Passer en vue kanban",
-      "switchToTableView": "Passer en vue tableau"
+    "project": {
+      "title": "Project Views",
+      "switchToListView": "Switch to list view",
+      "switchToGanttView": "Switch to gantt view",
+      "switchToKanbanView": "Switch to kanban view",
+      "switchToTableView": "Switch to table view"
     },
     "navigation": {
       "title": "Navigation",
       "overview": "Navigate to overview",
       "upcoming": "Navigate to upcoming tasks",
-      "namespaces": "Navigate to namespaces & lists",
+      "namespaces": "Navigate to namespaces & projects",
       "labels": "Accéder aux étiquettes",
       "teams": "Accéder aux équipes"
     }
@@ -924,7 +924,7 @@
     "unarchive": "Désarchiver",
     "setBackground": "Définir l’arrière-plan",
     "share": "Partager",
-    "newList": "Nouvelle liste"
+    "newProject": "New project"
   },
   "apiConfig": {
     "url": "URL Vikunja",
@@ -943,24 +943,24 @@
   "notification": {
     "title": "Notifications",
     "none": "Tu n’as pas de notifications. Passe une bonne journée !",
-    "explainer": "Les notifications apparaissent ici lorsque des actions (pour les espaces de noms, les listes ou les tâches) auxquelles tu es abonné·e se produisent."
+    "explainer": "Notifications will appear here when actions on namespaces, projects or tasks you subscribed to happen."
   },
   "quickActions": {
     "commands": "Commandes",
     "placeholder": "Écris une commande ou une recherche…",
-    "hint": "Vous pouvez utiliser {list} pour limiter la recherche à une liste. Combiner {list} ou {label} (étiquettes) avec une requête de recherche pour rechercher une tâche avec ces étiquettes ou sur cette liste. Utilisez {assignee} pour rechercher uniquement des équipes.",
+    "hint": "You can use {project} to limit the search to a project. Combine {project} or {label} (labels) with a search query to search for a task with these labels or on that project. Use {assignee} to only search for teams.",
     "tasks": "Tâches",
-    "lists": "Listes",
+    "projects": "Projects",
     "teams": "Équipes",
-    "newList": "Entre le nom de la liste…",
+    "newProject": "Enter the title of the new project…",
     "newTask": "Entre le nom de la tâche…",
     "newNamespace": "Entre le nom de l’espace de noms…",
     "newTeam": "Entre le nom de la nouvelle équipe…",
-    "createTask": "Créer une tâche dans la liste actuelle ({title})",
-    "createList": "Créer une liste dans l’espace de noms actuel ({title})",
+    "createTask": "Create a task in the current project ({title})",
+    "createProject": "Create a project in the current namespace ({title})",
     "cmds": {
       "newTask": "Nouvelle tâche",
-      "newList": "Nouvelle liste",
+      "newProject": "New project",
       "newNamespace": "Nouvel espace de noms",
       "newTeam": "Nouvelle équipe"
     }
@@ -992,15 +992,15 @@
     "1018": "Le paramètre du type d’avatar de l’utilisateur·rice est invalide.",
     "2001": "L’identifiant ne peut pas être vide ou égal à 0.",
     "2002": "Certaines des données de la requête étaient invalides.",
-    "3001": "La liste n’existe pas.",
-    "3004": "Tu dois avoir des droits de lecture sur cette liste pour effectuer cette action.",
-    "3005": "Tu dois entrer un nom de liste.",
-    "3006": "Le partage de liste n’existe pas.",
-    "3007": "Une liste avec cet identifiant existe déjà.",
-    "3008": "La liste est archivée et ne peut donc être consultée qu’en lecture seule. Ceci est également vrai pour toutes les tâches associées à cette liste.",
-    "4001": "Le texte de la tâche de liste ne peut pas être vide.",
-    "4002": "La tâche de liste n’existe pas.",
-    "4003": "Toutes les tâches de modification en bloc doivent appartenir à la même liste.",
+    "3001": "The project does not exist.",
+    "3004": "You need to have read permissions on that project to perform that action.",
+    "3005": "The project title cannot be empty.",
+    "3006": "The project share does not exist.",
+    "3007": "A project with this identifier already exists.",
+    "3008": "The project is archived and can therefore only be accessed read only. This is also true for all tasks associated with this project.",
+    "4001": "The project task text cannot be empty.",
+    "4002": "The project task does not exist.",
+    "4003": "All bulk editing tasks must belong to the same project.",
     "4004": "Besoin d’au moins une tâche lors de la modification en bloc de tâches.",
     "4005": "Tu n’as pas le droit de voir la tâche.",
     "4006": "Tu ne peux pas définir une tâche parente comme tâche elle-même.",
@@ -1026,21 +1026,21 @@
     "5012": "L’espace de noms est archivé et ne peut donc être consulté qu’en lecture seule.",
     "6001": "Le nom de l'équipe ne peut pas être vide.",
     "6002": "L’équipe n’existe pas.",
-    "6004": "L’équipe a déjà accès à cet espace de noms ou à cette liste.",
+    "6004": "The team already has access to that namespace or project.",
     "6005": "L’utilisateur·rice est déjà membre de cette équipe.",
     "6006": "Impossible de supprimer le dernier membre de l’équipe.",
-    "6007": "L’équipe n’a pas accès à la liste pour effectuer cette action.",
-    "7002": "L’utilisateur·rice a déjà accès à cette liste.",
-    "7003": "Tu n’as pas accès à cette liste.",
+    "6007": "The team does not have access to the project to perform that action.",
+    "7002": "The user already has access to that project.",
+    "7003": "You do not have access to that project.",
     "8001": "Cette étiquette existe déjà sur cette tâche.",
     "8002": "L’étiquette n’existe pas.",
     "8003": "Tu n’as pas accès à cette étiquette.",
     "9001": "Le droit est invalide.",
     "10001": "Le seau n’existe pas.",
-    "10002": "Le seau ne fait pas partie de cette liste.",
-    "10003": "Tu ne peux pas supprimer le dernier seau d’une liste.",
+    "10002": "The bucket does not belong to that project.",
+    "10003": "You cannot remove the last bucket on a project.",
     "10004": "Tu ne peux pas ajouter la tâche à ce seau car il a déjà dépassé la limite de tâches qu’il peut contenir.",
-    "10005": "Il peut y avoir seulement un seau des terminés par liste.",
+    "10005": "There can be only one done bucket per project.",
     "11001": "Le filtre enregistré n’existe pas.",
     "11002": "Les filtres enregistrés ne sont pas disponibles pour les partages de liens.",
     "12001": "Le type d’entité d’abonnement est invalide.",

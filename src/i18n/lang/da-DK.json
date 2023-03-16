@@ -5,11 +5,11 @@
     "welcomeDay": "Hej {username}!",
     "welcomeEvening": "Godaften {username}!",
     "lastViewed": "Sidst vist",
-    "list": {
-      "newText": "Du kan oprette en ny liste til dine nye opgaver:",
-      "new": "Ny liste",
-      "importText": "Eller importere dine lister og opgaver fra andre værktøjer til Vikunja:",
-      "import": "Importer dine data til Vikunja"
+    "project": {
+      "newText": "You can create a new project for your new tasks:",
+      "new": "New project",
+      "importText": "Or import your projects and tasks from other services into Vikunja:",
+      "import": "Import your data into Vikunja"
     }
   },
   "404": {
@@ -85,7 +85,7 @@
         "weekStartSunday": "Søndag",
         "weekStartMonday": "Mandag",
         "language": "Sprog",
-        "defaultList": "Standard liste",
+        "defaultProject": "Default Project",
         "timezone": "Tidszone",
         "overdueTasksRemindersTime": "Forfaldne opgaver påmindelse e-mail tidspunkt"
       },
@@ -143,7 +143,7 @@
     },
     "deletion": {
       "title": "Slet din Vikunja konto",
-      "text1": "Sletningen af din konto er permanent og kan ikke fortrydes. Vi vil slette alle dine navneområder, lister, opgaver og alt, hvad der er knyttet til den.",
+      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your namespaces, projects, tasks and everything associated with it.",
       "text2": "For at fortsætte, skal du indtaste din adgangskode. Du vil modtage en e-mail med yderligere instruktioner.",
       "confirm": "Slet min konto",
       "requestSuccess": "Anmodningen blev gennemført. Du vil modtage en e-mail med yderligere instruktioner.",
@@ -157,201 +157,201 @@
     },
     "export": {
       "title": "Eksporter dine Vikunja-data",
-      "description": "Du kan anmode om en kopi af alle dine Vikunja-data. Dette omfatter Navneområder, Lister, Opgaver og alt, hvad der er knyttet til dem. Du kan importere disse data i enhver Vikunja-instans gennem migrationsfunktionen.",
+      "description": "You can request a copy of all your Vikunja data. This include Namespaces, Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
       "descriptionPasswordRequired": "Indtast venligst din adgangskode for at fortsætte:",
       "request": "Anmod om en kopi af mine Vikunja-data",
       "success": "Du har anmodet om dine Vikunja-data! Vi sender dig en e-mail, når den er klar til hentning.",
       "downloadTitle": "Download dine eksporterede Vikunja-data"
     }
   },
-  "list": {
-    "archived": "Denne liste er arkiveret. Det er ikke muligt at oprette eller redigere opgaver i den.",
-    "title": "Listetitel",
-    "color": "Farve",
-    "lists": "Lister",
-    "search": "Skriv for at søge efter en liste…",
-    "searchSelect": "Klik eller tryk på Enter for at vælge denne liste",
-    "shared": "Delte Lister",
-    "noDescriptionAvailable": "Ingen listebeskrivelse er tilgængelig.",
+  "project": {
+    "archived": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "title": "Project Title",
+    "color": "Color",
+    "projects": "Projects",
+    "search": "Type to search for a project…",
+    "searchSelect": "Click or press enter to select this project",
+    "shared": "Shared Projects",
+    "noDescriptionAvailable": "No project description is available.",
     "create": {
-      "header": "Ny liste",
-      "titlePlaceholder": "Listens titel skrives her…",
-      "addTitleRequired": "Angiv venligst en titel.",
-      "createdSuccess": "Listen blev oprettet.",
-      "addListRequired": "Angiv venligst en liste eller opsæt en standardliste i indstillingerne."
+      "header": "New project",
+      "titlePlaceholder": "The project's title goes here…",
+      "addTitleRequired": "Please specify a title.",
+      "createdSuccess": "The project was successfully created.",
+      "addProjectRequired": "Please specify a project or set a default project in the settings."
     },
     "archive": {
-      "title": "Arkiver \"{list}\"",
-      "archive": "Arkiver denne liste",
-      "unarchive": "Fjern arkivering af denne liste",
-      "unarchiveText": "Du vil være i stand til at oprette nye opgaver eller redigere den.",
-      "archiveText": "Du vil ikke være i stand til at redigere denne liste, eller oprette nye opgaver, før du fjerner arkiveringen af den.",
-      "success": "Listen blev arkiveret."
+      "title": "Archive \"{project}\"",
+      "archive": "Archive this project",
+      "unarchive": "Un-Archive this project",
+      "unarchiveText": "You will be able to create new tasks or edit it.",
+      "archiveText": "You won't be able to edit this project or create new tasks until you un-archive it.",
+      "success": "The project was successfully archived."
     },
     "background": {
-      "title": "Indstil listebaggrund",
-      "remove": "Fjern baggrund",
-      "upload": "Vælg en baggrund fra din pc",
-      "searchPlaceholder": "Søg efter en baggrund…",
-      "poweredByUnsplash": "Leveret af Unsplash",
-      "loadMore": "Indlæs flere billeder",
-      "success": "Baggrunden er indstillet!",
-      "removeSuccess": "Baggrunden er blevet fjernet!"
+      "title": "Set project background",
+      "remove": "Remove Background",
+      "upload": "Choose a background from your pc",
+      "searchPlaceholder": "Search for a background…",
+      "poweredByUnsplash": "Powered by Unsplash",
+      "loadMore": "Load more photos",
+      "success": "The background has been set successfully!",
+      "removeSuccess": "The background has been removed successfully!"
     },
     "delete": {
-      "title": "Slet \"{list}\"",
-      "header": "Slet denne liste",
-      "text1": "Er du sikker på, at du vil slette denne liste og alt dens indhold?",
-      "text2": "Dette omfatter alle opgaver og KAN IKKE GØRES OM!",
-      "success": "Listen blev slettet.",
-      "tasksToDelete": "Dette vil uigenkaldeligt fjerne ca. {count} opgaver.",
-      "noTasksToDelete": "Denne liste indeholder ingen opgaver, den bør være sikker at slette."
+      "title": "Delete \"{project}\"",
+      "header": "Delete this project",
+      "text1": "Are you sure you want to delete this project and all of its contents?",
+      "text2": "This includes all tasks and CANNOT BE UNDONE!",
+      "success": "The project was successfully deleted.",
+      "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
+      "noTasksToDelete": "This project does not contain any tasks, it should be safe to delete."
     },
     "duplicate": {
-      "title": "Dupliker denne liste",
-      "label": "Dupliker",
-      "text": "Vælg et navneområde som skal indeholde kopien:",
-      "success": "Listen blev kopieret."
+      "title": "Duplicate this project",
+      "label": "Duplicate",
+      "text": "Select a namespace which should hold the duplicated project:",
+      "success": "The project was successfully duplicated."
     },
     "edit": {
-      "header": "Rediger Denne Liste",
-      "title": "Rediger \"{list}\"",
-      "titlePlaceholder": "Listens titel skrives her…",
-      "identifierTooltip": "Liste identifikatoren kan bruges til entydigt at identificere en opgave på tværs af lister. Du kan sætte den til tom for at deaktivere det.",
-      "identifier": "Liste identifikator",
-      "identifierPlaceholder": "Liste-identifikatoren skal være her…",
-      "description": "Beskrivelse",
-      "descriptionPlaceholder": "Listernes beskrivelse skrives her…",
-      "color": "Farve",
-      "success": "Listen blev opdateret."
+      "header": "Edit This Project",
+      "title": "Edit \"{project}\"",
+      "titlePlaceholder": "The project title goes here…",
+      "identifierTooltip": "The project identifier can be used to uniquely identify a task across projects. You can set it to empty to disable it.",
+      "identifier": "Project Identifier",
+      "identifierPlaceholder": "The project identifier goes here…",
+      "description": "Description",
+      "descriptionPlaceholder": "The projects description goes here…",
+      "color": "Color",
+      "success": "The project was successfully updated."
     },
     "share": {
-      "header": "Del denne liste",
-      "title": "Del \"{list}\"",
-      "share": "Del",
+      "header": "Share this project",
+      "title": "Share \"{project}\"",
+      "share": "Share",
       "links": {
-        "title": "Delingslink",
-        "what": "Hvad er et delingslink?",
-        "explanation": "Delinglinks giver dig mulighed for nemt at dele en liste med andre brugere, som ikke har en konto på Vikunja.",
-        "create": "Opret et nyt delingslink",
-        "name": "Navn (valgfrit)",
-        "namePlaceholder": "f.eks. Lorem Ipsum",
-        "nameExplanation": "Alle handlinger udført med dette link deling vil blive vist med navnet.",
-        "password": "Adgangskode (valgfrit)",
-        "passwordExplanation": "Ved indlogning vil brugeren blive bedt om at indtaste denne adgangskode.",
-        "noName": "Intet navn indstillet",
-        "remove": "Fjern et delingslink",
-        "removeText": "Er du sikker på, at du vil fjerne dette delingslink? Det vil ikke længere være muligt at få adgang til denne liste med dette delingslink. Dette kan ikke gøres om!",
-        "createSuccess": "Delingslinket blev oprettet.",
-        "deleteSuccess": "Delingslinket blev slettet",
-        "view": "Vis",
-        "sharedBy": "Delt af {0}"
+        "title": "Share Links",
+        "what": "What is a share link?",
+        "explanation": "Share Links allow you to easily share a project with other users who don't have an account on Vikunja.",
+        "create": "Create a new link share",
+        "name": "Name (optional)",
+        "namePlaceholder": "e.g. Lorem Ipsum",
+        "nameExplanation": "All actions done by this link share will show up with the name.",
+        "password": "Password (optional)",
+        "passwordExplanation": "When authenticating, the user will be required to enter this password.",
+        "noName": "No name set",
+        "remove": "Remove a link share",
+        "removeText": "Are you sure you want to remove this link share? It will no longer be possible to access this project with this link share. This cannot be undone!",
+        "createSuccess": "The link share was successfully created.",
+        "deleteSuccess": "The link share was successfully deleted",
+        "view": "View",
+        "sharedBy": "Shared by {0}"
       },
       "userTeam": {
-        "typeUser": "bruger | brugere",
-        "typeTeam": "hold | hold",
-        "shared": "Delt med disse {type}",
-        "you": "Dig",
-        "notShared": "Ikke delt med nogen {type} endnu.",
-        "removeHeader": "Fjern en {type} fra {sharable}",
-        "removeText": "Er du sikker på at du vil fjerne denne {sharable} fra {type}? Dette kan ikke fortrydes!",
-        "removeSuccess": "{sharable} blev fjernet fra {type}.",
-        "addedSuccess": "{type} blev tilføjet.",
-        "updatedSuccess": "{type} blev tilføjet."
+        "typeUser": "user | users",
+        "typeTeam": "team | teams",
+        "shared": "Shared with these {type}",
+        "you": "You",
+        "notShared": "Not shared with any {type} yet.",
+        "removeHeader": "Remove a {type} from the {sharable}",
+        "removeText": "Are you sure you want to remove this {sharable} from the {type}? This cannot be undone!",
+        "removeSuccess": "The {sharable} was successfully removed from the {type}.",
+        "addedSuccess": "The {type} was successfully added.",
+        "updatedSuccess": "The {type} was successfully added."
       },
       "right": {
-        "title": "Tilladelse",
-        "read": "Skrivebeskyttet",
-        "readWrite": "Læse & skrive",
-        "admin": "Administrator"
+        "title": "Permission",
+        "read": "Read only",
+        "readWrite": "Read & write",
+        "admin": "Admin"
       },
       "attributes": {
         "link": "Link",
-        "delete": "Slet"
+        "delete": "Delete"
       }
     },
     "list": {
-      "title": "Liste",
-      "add": "Tilføj",
-      "addPlaceholder": "Tilføj en ny opgave…",
-      "empty": "Denne liste er i øjeblikket tom.",
-      "newTaskCta": "Opret en ny opgave.",
-      "editTask": "Rediger opgave"
+      "title": "List",
+      "add": "Add",
+      "addPlaceholder": "Add a new task…",
+      "empty": "This project is currently empty.",
+      "newTaskCta": "Create a new task.",
+      "editTask": "Edit Task"
     },
     "gantt": {
       "title": "Gantt",
-      "showTasksWithoutDates": "Vis opgaver som ikke har angivet datoer",
-      "size": "Størrelse",
-      "default": "Standard",
-      "month": "Måned",
-      "day": "Dag",
-      "hour": "Time",
-      "range": "Datointerval",
-      "noDates": "Denne opgave har ingen datoer angivet."
+      "showTasksWithoutDates": "Show tasks which don't have dates set",
+      "size": "Size",
+      "default": "Default",
+      "month": "Month",
+      "day": "Day",
+      "hour": "Hour",
+      "range": "Date Range",
+      "noDates": "This task has no dates set."
     },
     "table": {
-      "title": "Tabel",
-      "columns": "Kolonner"
+      "title": "Table",
+      "columns": "Columns"
     },
     "kanban": {
       "title": "Kanban",
-      "limit": "Grænse: {limit}",
-      "noLimit": "Ikke angivet",
-      "doneBucket": "Udført-bøtte",
-      "doneBucketHint": "Alle opgaver der flyttes ind i denne bøtte, vil automatisk blive markeret som udført.",
-      "doneBucketHintExtended": "Alle opgaver der flyttes ind i den udført-bøtten vil blive markeret som udført automatisk. Alle opgaver markeret som udført fra andre steder vil også blive flyttet.",
-      "doneBucketSavedSuccess": "Udført-bøtten er blevet gemt.",
-      "deleteLast": "Du kan ikke fjerne den sidste bøtte.",
-      "addTaskPlaceholder": "Indtast den nye opgavetitel…",
-      "addTask": "Tilføj en opgave",
-      "addAnotherTask": "Tilføj en anden opgave",
-      "addBucket": "Tilføj en ny bøtte",
-      "addBucketPlaceholder": "Indtast den nye titel på bøtten…",
-      "deleteHeaderBucket": "Slet bøtten",
-      "deleteBucketText1": "Er du sikker på, at du vil slette denne bøtte?",
-      "deleteBucketText2": "Dette vil ikke slette nogen opgaver, men flytter dem ind i standard-bøtten.",
-      "deleteBucketSuccess": "Bøtten er blevet slettet.",
-      "bucketTitleSavedSuccess": "Titlen på bøtten er blevet gemt.",
-      "bucketLimitSavedSuccess": "Grænsen for bøtten er blevet gemt.",
-      "collapse": "Sammenfold denne spand"
+      "limit": "Limit: {limit}",
+      "noLimit": "Not Set",
+      "doneBucket": "Done bucket",
+      "doneBucketHint": "All tasks moved into this bucket will automatically marked as done.",
+      "doneBucketHintExtended": "All tasks moved into the done bucket will be marked as done automatically. All tasks marked as done from elsewhere will be moved as well.",
+      "doneBucketSavedSuccess": "The done bucket has been saved successfully.",
+      "deleteLast": "You cannot remove the last bucket.",
+      "addTaskPlaceholder": "Enter the new task title…",
+      "addTask": "Add a task",
+      "addAnotherTask": "Add another task",
+      "addBucket": "Create a new bucket",
+      "addBucketPlaceholder": "Enter the new bucket title…",
+      "deleteHeaderBucket": "Delete the bucket",
+      "deleteBucketText1": "Are you sure you want to delete this bucket?",
+      "deleteBucketText2": "This will not delete any tasks but move them into the default bucket.",
+      "deleteBucketSuccess": "The bucket has been deleted successfully.",
+      "bucketTitleSavedSuccess": "The bucket title has been saved successfully.",
+      "bucketLimitSavedSuccess": "The bucket limit been saved successfully.",
+      "collapse": "Collapse this bucket"
     },
     "pseudo": {
       "favorites": {
-        "title": "Favoritter"
+        "title": "Favorites"
       }
     }
   },
   "namespace": {
-    "title": "Navneområder & Lister",
+    "title": "Namespaces & Projects",
     "namespace": "Navneområde",
     "showArchived": "Vis arkiverede",
     "noneAvailable": "Du har ingen navneområder lige nu.",
     "unarchive": "Tilbagekald",
     "archived": "Arkiveret",
-    "noLists": "Dette navneområde indeholder ikke nogen lister.",
-    "createList": "Opret en ny liste i dette navneområde.",
+    "noProjects": "This namespace does not contain any projects.",
+    "createProject": "Create a new project in this namespace.",
     "namespaces": "Navneområder",
     "search": "Skriv for at søge efter et navneområde…",
     "create": {
       "title": "Nyt navneområde",
       "titleRequired": "Angiv venligst en titel.",
-      "explanation": "Et navneområde er en samling af lister du kan dele og bruge til at organisere dine lister med. Faktisk tilhører hver liste et navneområde.",
+      "explanation": "A namespace is a collection of projects you can share and use to organize your projects with. In fact, every project belongs to a namespace.",
       "tooltip": "Hvad er et navneområde?",
       "success": "Navneområdet blev oprettet."
     },
     "archive": {
       "titleArchive": "Arkiver \"{namespace}\"",
       "titleUnarchive": "Fjern arkivering \"{namespace}\"",
-      "archiveText": "Du vil ikke være i stand til at redigere dette navneområde eller oprette nye lister, før du fjerner arkiveringen fra den. Dette vil også arkivere alle lister i dette navneområde.",
-      "unarchiveText": "Du vil kunne oprette nye lister eller redigere det.",
+      "archiveText": "You won't be able to edit this namespace or create new projects until you un-archive it. This will also archive all projects in this namespace.",
+      "unarchiveText": "You will be able to create new projects or edit it.",
       "success": "Navneområdet blev arkiveret.",
       "unarchiveSuccess": "Navneområdet blev tilbagekaldt.",
-      "description": "Hvis et navneområde arkiveres, kan du ikke oprette nye lister eller redigere det."
+      "description": "If a namespace is archived, you cannot create new projects or edit it."
     },
     "delete": {
       "title": "Slet \"{namespace}\"",
       "text1": "Er du sikker på, at du vil slette dette navneområde og alt dets indhold?",
-      "text2": "Dette omfatter alle lister og opgaver og KAN IKKE GØRES OM!",
+      "text2": "This includes all projects and tasks and CANNOT BE UNDONE!",
       "success": "Navneområdet blev slettet."
     },
     "edit": {
@@ -371,8 +371,8 @@
       "isArchived": "Dette navneområde er arkiveret"
     },
     "pseudo": {
-      "sharedLists": {
-        "title": "Delte Lister"
+      "sharedProjects": {
+        "title": "Shared Projects"
       },
       "favorites": {
         "title": "Favoritter"
@@ -403,7 +403,7 @@
     },
     "create": {
       "title": "Nyt Gemt Filter",
-      "description": "Et gemt filter er en virtuel liste, som beregnes ud fra et sæt filtre, hver gang det er tilgået. Når den er oprettet, vises den i et særligt navneområde.",
+      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed. Once created, it will appear in a special namespace.",
       "action": "Opret nyt gemt filter",
       "titleRequired": "Please provide a title for the filter."
     },
@@ -435,7 +435,7 @@
   "label": {
     "title": "Etiketter",
     "manage": "Administrer etiketter",
-    "description": "Klik på en etiket for at redigere den. Du kan redigere alle etiketter du har oprettet, du kan bruge alle etiketter som er tilknyttet en opgave tilhørende en liste du har adgang til.",
+    "description": "Click on a label to edit it. You can edit all labels you created, you can use all labels which are associated with a task to whose project you have access.",
     "newCTA": "Du har i øjeblikket ingen etiketter.",
     "search": "Skriv for at søge efter en etiket…",
     "create": {
@@ -460,7 +460,7 @@
   },
   "sharing": {
     "authenticating": "Godkender…",
-    "passwordRequired": "Denne delte liste kræver en adgangskode. Indtast den nedenfor:",
+    "passwordRequired": "This shared project requires a password. Please enter it below:",
     "error": "Der opstod en fejl.",
     "invalidPassword": "Adgangskoden er ugyldig."
   },
@@ -529,7 +529,7 @@
       "code": "Kode",
       "quote": "Citat",
       "unorderedList": "Usorteret liste",
-      "orderedList": "Sorteret liste",
+      "orderedList  ": "Ordered List",
       "cleanBlock": "Ryd Blok",
       "link": "Link",
       "image": "Billede",
@@ -619,7 +619,7 @@
       "chooseDueDate": "Klik her for at angive en forfaldsdato",
       "chooseStartDate": "Klik her for at angive en startdato",
       "chooseEndDate": "Klik her for at angive en slutdato",
-      "move": "Flyt opgave til en anden liste",
+      "move": "Move task to a different project",
       "done": "Markér opgave som udført!",
       "undone": "Markér opgave som ikke-udført",
       "created": "Oprettet {0} af {1}",
@@ -627,7 +627,7 @@
       "doneAt": "Udført {0}",
       "updateSuccess": "Opgaven blev gemt.",
       "deleteSuccess": "Opgaven er blevet slettet.",
-      "belongsToList": "Denne opgave tilhører listen '{list}'",
+      "belongsToProject": "This task belongs to project '{project}'",
       "due": "Forfalder {at}",
       "closePopup": "Luk pop-up",
       "delete": {
@@ -647,7 +647,7 @@
         "percentDone": "Indstil Fremskridt",
         "attachments": "Tilføj Vedhæftninger",
         "relatedTasks": "Tilføj Relation",
-        "moveList": "Flyt",
+        "moveProject": "Move",
         "color": "Indstil Farve",
         "delete": "Slet",
         "favorite": "Tilføj til Favoritter",
@@ -674,21 +674,21 @@
       "updated": "Opdateret"
     },
     "subscription": {
-      "subscribedListThroughParentNamespace": "Du kan ikke afmelde dig her, fordi du abonnerer på denne liste gennem dens navneområde.",
+      "subscribedProjectThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this project through its namespace.",
       "subscribedTaskThroughParentNamespace": "Du kan ikke afmelde dig her, fordi du abonnerer på denne opgave gennem dens navneområde.",
-      "subscribedTaskThroughParentList": "Du kan ikke afmelde dig her, fordi du abonnerer på denne opgave gennem dens liste.",
+      "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",
       "subscribedNamespace": "Du abonnerer i øjeblikket på dette navneområde og vil modtage notifikationer om ændringer.",
       "notSubscribedNamespace": "Du abonnerer ikke på dette navneområde og modtager ikke notifikationer om ændringer.",
-      "subscribedList": "Du abonnerer på denne liste og vil modtage notifikationer om ændringer.",
-      "notSubscribedList": "Du abonnerer ikke på denne liste og modtager ikke meddelelser om ændringer.",
+      "subscribedProject": "You are currently subscribed to this project and will receive notifications for changes.",
+      "notSubscribedProject": "You are not subscribed to this project and won't receive notifications for changes.",
       "subscribedTask": "Du abonnerer på denne opgave og vil modtage notifikationer om ændringer.",
       "notSubscribedTask": "Du abonnerer ikke på denne opgave og modtager ikke notifikationer om ændringer.",
       "subscribe": "Abonner",
       "unsubscribe": "Afmeld",
       "subscribeSuccessNamespace": "Du abonnerer nu på dette navneområde",
       "unsubscribeSuccessNamespace": "Du er nu afmeldt dette navneområde",
-      "subscribeSuccessList": "Du abonnerer nu på denne liste",
-      "unsubscribeSuccessList": "Du er nu afmeldt denne liste",
+      "subscribeSuccessProject": "You are now subscribed to this project",
+      "unsubscribeSuccessProject": "You are now unsubscribed to this project",
       "subscribeSuccessTask": "Du abonnerer nu på denne opgave",
       "unsubscribeSuccessTask": "Du er nu afmeldt denne opgave"
     },
@@ -762,7 +762,7 @@
       "new": "Ny Opgaverelation",
       "searchPlaceholder": "Indtast søgning efter en ny opgave der tilføjes som relateret…",
       "createPlaceholder": "Tilføj dette som en ny relateret opgave",
-      "differentList": "Denne opgave hører til en anden liste.",
+      "differentProject": "This task belongs to a different project.",
       "differentNamespace": "Denne opgave hører til et andet navneområde.",
       "noneYet": "Ingen opgaverelationer endnu.",
       "delete": "Slet Opgaverelation",
@@ -812,10 +812,10 @@
       "priority1": "For at sætte en opgaves prioritet, tilføj et nummer 1-5, præfikset med {prefix}.",
       "priority2": "Jo højere nummer, des højere prioritet.",
       "assignees": "For at tildele opgaven direkte til en bruger, tilføj deres brugernavn præfikset med {prefix} til opgaven.",
-      "list1": "For at angive en liste som opgaven skal høre til, skal du indtaste dens navn præfikset med {prefix}.",
-      "list2": "Dette vil returnere en fejl, hvis listen ikke eksisterer.",
-      "list3": "For at bruge mellemrum, skal du blot tilføje \" eller ' omkring listens navn.",
-      "list4": "For eksempel: {prefix}\"Liste med mellemrum\".",
+      "project1": "To set a project for the task to appear in, enter its name prefixed with {prefix}.",
+      "project2": "This will return an error if the project does not exist.",
+      "project3": "To use spaces, simply add a \" or ' around the project name.",
+      "project4": "For example: {prefix}\"Project with spaces\".",
       "dateAndTime": "Dato og tid",
       "date": "En dato vil blive brugt som forfaldsdato for den nye opgave. Du kan bruge datoer i enhver af disse formater:",
       "dateWeekday": "enhver ugedag, vil bruge den næste dato med på den dag",
@@ -848,19 +848,19 @@
       "delete": {
         "header": "Slet holdet",
         "text1": "Er du sikker på du vil slette dette hold og alle dets medlemmer?",
-        "text2": "Alle holdmedlemmer vil miste adgang til lister og navneområder, der er delt med dette team. Dette kan IKKE GØRES OM!",
+        "text2": "All team members will lose access to projects and namespaces shared with this team. This CANNOT BE UNDONE!",
         "success": "Holdet blev slettet."
       },
       "deleteUser": {
         "header": "Fjern en bruger fra holdet",
         "text1": "Er du sikker på du vil fjerne denne bruger fra holdet?",
-        "text2": "De vil miste adgang til alle lister og navneområder, som dette hold har adgang til. Dette IKKE GØRES OM!",
+        "text2": "They will lose access to all projects and namespaces this team has access to. This CANNOT BE UNDONE!",
         "success": "Brugeren blev fjernet fra holdet."
       },
       "leave": {
         "title": "Forlad hold",
         "text1": "Er du sikker på du vil forlade dette hold?",
-        "text2": "De vil miste adgang til alle lister og navneområder, som dette hold har adgang til. Hvis du ombestemmer dig, skal du have en holdadministrator til at tilføje dig igen.",
+        "text2": "You will lose access to all projects and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "Du har forladt holdet."
       }
     },
@@ -892,22 +892,22 @@
       "attachment": "Tilføj en vedhæftet fil til denne opgave",
       "related": "Rediger relaterede opgaver for denne opgave",
       "color": "Skift farven på denne opgave",
-      "move": "Flyt denne opgave til en anden liste",
+      "move": "Move this task to another project",
       "reminder": "Administrer påmindelser om denne opgave",
       "description": "Slå redigering af opgavebeskrivelse til/fra"
     },
-    "list": {
-      "title": "Listevisning",
-      "switchToListView": "Skift til listevisning",
-      "switchToGanttView": "Skift til gantt- visning",
-      "switchToKanbanView": "Skift til kanban visning",
-      "switchToTableView": "Skift til tabelvisning"
+    "project": {
+      "title": "Project Views",
+      "switchToListView": "Switch to list view",
+      "switchToGanttView": "Switch to gantt view",
+      "switchToKanbanView": "Switch to kanban view",
+      "switchToTableView": "Switch to table view"
     },
     "navigation": {
       "title": "Navigation",
       "overview": "Gå til oversigt",
       "upcoming": "Gå til kommende opgaver",
-      "namespaces": "Gå til navneområder & lister",
+      "namespaces": "Navigate to namespaces & projects",
       "labels": "Naviger til etiketter",
       "teams": "Naviger til hold"
     }
@@ -924,7 +924,7 @@
     "unarchive": "Tilbagekald",
     "setBackground": "Indstil baggrund",
     "share": "Del",
-    "newList": "Ny liste"
+    "newProject": "New project"
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -943,24 +943,24 @@
   "notification": {
     "title": "Notifikationer",
     "none": "Du har ingen notifikationer. Hav en dejlig dag!",
-    "explainer": "Notifikationer vises her, når handlinger på navneområder, lister eller opgaver du abonnerede på er nødvendige."
+    "explainer": "Notifications will appear here when actions on namespaces, projects or tasks you subscribed to happen."
   },
   "quickActions": {
     "commands": "Kommandoer",
     "placeholder": "Indtast en kommando eller søg…",
-    "hint": "Du kan bruge {list} til at begrænse søgningen til en liste. Kombiner {list} eller {label} (etiketter) med en søgning for at søge efter en opgave med disse etiketter eller på listen. Brug {assignee} til kun at søge efter hold.",
+    "hint": "You can use {project} to limit the search to a project. Combine {project} or {label} (labels) with a search query to search for a task with these labels or on that project. Use {assignee} to only search for teams.",
     "tasks": "Opgaver",
-    "lists": "Lister",
+    "projects": "Projects",
     "teams": "Hold",
-    "newList": "Indtast titlen på den nye liste…",
+    "newProject": "Enter the title of the new project…",
     "newTask": "Indtast titlen på den nye opgave…",
     "newNamespace": "Indtast titlen på det nye navneområde…",
     "newTeam": "Indtast navnet på det nye hold…",
-    "createTask": "Opret en opgave i den nuværende liste ({title})",
-    "createList": "Opret en liste i det nuværende navneområde ({title})",
+    "createTask": "Create a task in the current project ({title})",
+    "createProject": "Create a project in the current namespace ({title})",
     "cmds": {
       "newTask": "Ny Opgave",
-      "newList": "Ny liste",
+      "newProject": "New project",
       "newNamespace": "Nyt navneområde",
       "newTeam": "Nyt hold"
     }
@@ -992,15 +992,15 @@
     "1018": "Brugerens avatartype indstilling er ugyldig.",
     "2001": "ID kan ikke være tomt eller 0.",
     "2002": "Nogle af forespørgselsdataene var ugyldige.",
-    "3001": "Listen eksisterer ikke.",
-    "3004": "Du skal have læserettigheder på listen for at udføre denne handling.",
-    "3005": "Listens titel må ikke være tom.",
-    "3006": "Listendelingen findes ikke.",
-    "3007": "En liste med dette id findes allerede.",
-    "3008": "Listen er arkiveret og kan derfor kun tilgås skrivebeskyttet. Dette gælder også for alle opgaver der er tilknyttet denne liste.",
-    "4001": "Listeopgaveteksten kan ikke være tom.",
-    "4002": "Listeopgave eksisterer ikke.",
-    "4003": "Alle masseredigeringsopgaver skal tilhøre den samme liste.",
+    "3001": "The project does not exist.",
+    "3004": "You need to have read permissions on that project to perform that action.",
+    "3005": "The project title cannot be empty.",
+    "3006": "The project share does not exist.",
+    "3007": "A project with this identifier already exists.",
+    "3008": "The project is archived and can therefore only be accessed read only. This is also true for all tasks associated with this project.",
+    "4001": "The project task text cannot be empty.",
+    "4002": "The project task does not exist.",
+    "4003": "All bulk editing tasks must belong to the same project.",
     "4004": "Der skal være mindst én opgave for at masseredigere opgaver.",
     "4005": "Du har ikke rettigheder til at se opgaven.",
     "4006": "Du kan ikke indstille en overordnet opgave som opgaven selv.",
@@ -1026,21 +1026,21 @@
     "5012": "Navneområdet er arkiveret og kan derfor kun læses.",
     "6001": "Holdnavnet må ikke være tomt.",
     "6002": "Holdet findes ikke.",
-    "6004": "Holdet har allerede adgang til dette navneområde eller liste.",
+    "6004": "The team already has access to that namespace or project.",
     "6005": "Brugeren er allerede medlem af holdet.",
     "6006": "Kan ikke slette det sidste holdmedlem.",
-    "6007": "Holdet har ikke adgang til listen for at udføre denne handling.",
-    "7002": "Brugeren har allerede adgang til denne liste.",
-    "7003": "Du har ikke adgang til denne liste.",
+    "6007": "The team does not have access to the project to perform that action.",
+    "7002": "The user already has access to that project.",
+    "7003": "You do not have access to that project.",
     "8001": "Denne etiket findes allerede på denne opgave.",
     "8002": "Etiketten findes ikke.",
     "8003": "Du har ikke adgang til denne etiket.",
     "9001": "Rettigheden er ugyldig.",
     "10001": "Kurven findes ikke.",
-    "10002": "Kurven tilhører ikke denne liste.",
-    "10003": "Du kan ikke fjerne den sidste kurv på en liste.",
+    "10002": "The bucket does not belong to that project.",
+    "10003": "You cannot remove the last bucket on a project.",
     "10004": "Du kan ikke tilføje opgaven til denne kurv, da den allerede overskrider grænsen for opgaver, den kan holde.",
-    "10005": "Der kan kun være en færdig kurv pr. liste.",
+    "10005": "There can be only one done bucket per project.",
     "11001": "Det gemte filter eksisterer ikke.",
     "11002": "Gemte filtre er ikke tilgængelige for delingslink.",
     "12001": "Enhedstypen for abonnementet er ugyldigt.",
