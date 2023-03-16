@@ -155,7 +155,8 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 	/**
 	 * Returns a fully-ready-ready-to-make-a-request-to route with replaced parameters.
 	 * @example
-	 * getReplacedRoute('/lists/{listId}/tasks', { listId: 3 }) === '/lists/1/tasks'
+	 * getReplacedRoute('/projects/{projectId}/tasks', { projectId: 3 })
+	 * === '/projects/{projectId}/tasks'
 	 */
 	getReplacedRoute(path : string, pathparams : Record<string, unknown>) : string {
 		const replacements = this.getRouteReplacements(path, pathparams)
