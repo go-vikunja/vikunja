@@ -1,78 +1,79 @@
 <template>
 	<div class="datepicker">
-		<BaseButton class="show" v-if="!!reminder?.relativeTo" @click.stop="togglePeriodPopup"
-								:disabled="disabled || undefined">
+		<BaseButton :disabled="disabled" class="show" v-if="!!reminder?.relativeTo" @click.stop="togglePeriodPopup">
 			{{ formatDuration(reminder.relativePeriod) }} <span v-html="formatBeforeAfter(reminder.relativePeriod)"></span>
 			{{ formatRelativeTo(reminder.relativeTo) }}
 		</BaseButton>
 		<CustomTransition name="fade">
-			<div v-if="show" class="control is-flex is-align-items-center mb-2">
-				<input
-						:disabled="disabled || undefined"
-						class="input"
-						placeholder="d"
-						v-model="periodInput.duration.days"
-						type="number"
-						min="0"
-				/> d
-				<input
-						:disabled="disabled || undefined"
-						class="input"
-						placeholder="HH"
-						v-model="periodInput.duration.hours"
-						type="number"
-						min="0"
-				/>:
-				<input
-						:disabled="disabled || undefined"
-						class="input"
-						placeholder="MM"
-						v-model="periodInput.duration.minutes"
-						type="number"
-						min="0"
-				/>
-				<div class="select">
-					<select v-model="periodInput.sign" id="sign">
-						<option value="-1">&le;</option>
-						<option value="1">&gt;</option>
-					</select>
-				</div>
-				<div class="control">
+			<div v-if="isShowForm" class="mt-2" ref="periodPopup">
+				<div class="control is-flex is-align-items-center">
+					<input
+							:disabled="disabled"
+							class="input"
+							placeholder="d"
+							v-model="periodInput.duration.days"
+							type="number"
+							min="0"
+					/> d
+					<input
+							:disabled="disabled"
+							class="input"
+							placeholder="HH"
+							v-model="periodInput.duration.hours"
+							type="number"
+							min="0"
+					/>:
+					<input
+							:disabled="disabled"
+							class="input"
+							placeholder="MM"
+							v-model="periodInput.duration.minutes"
+							type="number"
+							min="0"
+					/>
 					<div class="select">
-						<select v-model="periodInput.relativeTo" id="relativeTo">
-							<option :value="REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE">{{ $t('task.attributes.dueDate') }}</option>
-							<option :value="REMINDER_PERIOD_RELATIVE_TO_TYPES.STARTDATE">{{
-									$t('task.attributes.startDate')
-								}}
-							</option>
-							<option :value="REMINDER_PERIOD_RELATIVE_TO_TYPES.ENDDATE">{{ $t('task.attributes.endDate') }}</option>
+						<select :disabled="disabled" v-model="periodInput.sign" id="sign">
+							<option value="-1">&le;</option>
+							<option value="1">&gt;</option>
 						</select>
 					</div>
+					<div class="control">
+						<div class="select">
+							<select :disabled="disabled" v-model="periodInput.relativeTo" id="relativeTo">
+								<option :value="REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE">{{ $t('task.attributes.dueDate') }}</option>
+								<option :value="REMINDER_PERIOD_RELATIVE_TO_TYPES.STARTDATE">{{
+										$t('task.attributes.startDate')
+									}}
+								</option>
+								<option :value="REMINDER_PERIOD_RELATIVE_TO_TYPES.ENDDATE">{{ $t('task.attributes.endDate') }}</option>
+							</select>
+						</div>
+					</div>
 				</div>
-
-				<x-button
-						class="datepicker__close-button"
-						:shadow="false"
-						@click="close"
-						v-cy="'closeDatepicker'"
-				>
-					{{ $t('misc.confirm') }}
-				</x-button>
-
+				<div class="control">
+					<x-button
+							:disabled="disabled"
+							class="close-button"
+							:shadow="false"
+							@click="submitForm"
+					>
+						{{ $t('misc.confirm') }}
+					</x-button>
+				</div>
 			</div>
 		</CustomTransition>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, watch, type PropType } from 'vue'
-
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
+import { closeWhenClickedOutside } from '@/helpers/closeWhenClickedOutside'
 import { periodToSeconds, secondsToPeriod } from '@/helpers/time/period'
 import TaskReminderModel from '@/models/taskReminder'
 import type { ITaskReminder } from '@/modelTypes/ITaskReminder'
 import { REMINDER_PERIOD_RELATIVE_TO_TYPES, type IReminderPeriodRelativeTo } from '@/types/IReminderPeriodRelativeTo'
+import { onMounted, onBeforeUnmount, reactive, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const {t} = useI18n({useScope: 'global'})
@@ -91,7 +92,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'close', 'close-on-change'])
 
 const reminder = ref<ITaskReminder>()
-const show = ref(false)
+const isShowForm = ref(false)
 
 const periodInput = reactive({
 	duration: {days: 0, hours: 0, minutes: 0, seconds: 0},
@@ -99,11 +100,12 @@ const periodInput = reactive({
 	sign: -1,
 })
 
+onMounted(() => document.addEventListener('click', hidePeriodPopup))
+onBeforeUnmount(() =>document.removeEventListener('click', hidePeriodPopup))
 
 watch(
 		() => props.modelValue,
 		(value) => {
-			console.log('reminders-period.watch', value)
 			reminder.value = value
 			if (value && value.relativeTo != null) {
 				Object.assign(periodInput.duration, secondsToPeriod(Math.abs(value.relativePeriod)))
@@ -111,7 +113,7 @@ watch(
 				periodInput.sign = value.relativePeriod <= 0 ? -1 : 1
 			} else {
 				reminder.value = new TaskReminderModel()
-				show.value = true
+				isShowForm.value = true
 			}
 		},
 		{immediate: true},
@@ -120,10 +122,11 @@ watch(
 
 function updateData() {
 	changed.value = true
-	reminder.value.relativePeriod = parseInt(periodInput.sign) * periodToSeconds(periodInput.duration.days, periodInput.duration.hours, periodInput.duration.minutes, 0)
-	reminder.value.relativeTo = periodInput.relativeTo
-	reminder.value.reminder = null
-	console.log('reminders-period.updateData', reminder.value)
+	if (reminder.value) {
+		reminder.value.relativePeriod = parseInt(periodInput.sign) * periodToSeconds(periodInput.duration.days, periodInput.duration.hours, periodInput.duration.minutes, 0)
+		reminder.value.relativeTo = periodInput.relativeTo
+		reminder.value.reminder = null
+	}
 	emit('update:modelValue', reminder.value)
 }
 
@@ -131,18 +134,25 @@ function togglePeriodPopup() {
 	if (props.disabled) {
 		return
 	}
+	isShowForm.value = !isShowForm.value
+}
 
-	show.value = !show.value
+const periodPopup = ref<HTMLElement | null>(null)
+function hidePeriodPopup(e: MouseEvent) {
+	if (isShowForm.value) {
+		closeWhenClickedOutside(e, periodPopup.value, close)
+	}
+}
+
+function submitForm() {
+	updateData()
+	close()
 }
 
 const changed = ref(false)
-
 function close() {
-	// Kind of dirty, but the timeout allows us to enter a time and click on "confirm" without
-	// having to click on another input field before it is actually used.
-	updateData()
 	setTimeout(() => {
-		show.value = false
+		isShowForm.value = false
 		emit('close', changed.value)
 		if (changed.value) {
 			changed.value = false
@@ -150,7 +160,6 @@ function close() {
 		}
 	}, 200)
 }
-
 
 function formatDuration(reminderPeriod: number): string {
 	if (Math.abs(reminderPeriod) < 60) {
@@ -181,38 +190,18 @@ function formatRelativeTo(relativeTo: IReminderPeriodRelativeTo | null): string 
 			return relativeTo
 	}
 }
+
 </script>
 
 <style lang="scss" scoped>
-.reminders {
-	.reminder-input {
-		display: flex;
-		align-items: center;
-
-		&.overdue :deep(.datepicker .show) {
-			color: var(--danger);
-		}
-
-		&:last-child {
-			margin-bottom: 0.75rem;
-		}
-
-		.remove {
-			color: var(--danger);
-			padding-left: .5rem;
-		}
-	}
-}
-
 .input {
 	max-width: 70px;
 	width: 70px;
 }
 
-.datepicker__close-button {
-	margin: 1rem;
-	width: calc(100% - 2rem);
+.close-button {
+	margin: 0.5rem;
+	width: calc(100% - 1rem);
 }
-
 
 </style>
