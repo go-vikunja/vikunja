@@ -157,7 +157,9 @@ function openTask(e: {
 
 const weekDayFromDate = useWeekDayFromDate()
 
-const today = useNow()
+const today = useNow({
+	interval: 6 * 60 * 60 * 1000, // Every 6 hours
+})
 const dateIsToday = computed(() => (date: Date) => {
 	return (
 		date.getDate() === today.value.getDate() &&

@@ -9,7 +9,9 @@ export type Daytime = 'night' | 'morning' | 'day' | 'evening'
 
 export function useDaytimeSalutation() {
 	const {t} = useI18n({useScope: 'global'})
-	const now = useNow()
+	const now = useNow({ 
+		interval: 30 * 60 * 1000, // Every 30 minutes
+	})
 	const authStore = useAuthStore()
 
 	const name = computed(() => authStore.userDisplayName)
