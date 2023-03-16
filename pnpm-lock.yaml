@@ -15,7 +15,7 @@ specifiers:
   '@fortawesome/free-solid-svg-icons': 6.3.0
   '@fortawesome/vue-fontawesome': 3.0.3
   '@github/hotkey': 2.0.1
-  '@histoire/plugin-screenshot': 0.15.8
+  '@histoire/plugin-screenshot': 0.15.9
   '@histoire/plugin-vue': 0.15.8
   '@infectoone/vue-ganttastic': 2.1.4
   '@intlify/unplugin-vue-i18n': 0.9.2
@@ -66,7 +66,7 @@ specifiers:
   focus-within: 3.0.2
   happy-dom: 8.9.0
   highlight.js: 11.7.0
-  histoire: 0.15.8
+  histoire: 0.15.9
   is-touch-device: 1.0.1
   klona: 2.0.6
   lodash.debounce: 4.0.8
@@ -154,8 +154,8 @@ devDependencies:
   '@cypress/vite-dev-server': 5.0.4
   '@cypress/vue': 5.0.4_cypress@12.8.1+vue@3.2.47
   '@faker-js/faker': 7.6.0
-  '@histoire/plugin-screenshot': 0.15.8_histoire@0.15.8
-  '@histoire/plugin-vue': 0.15.8_trxxajhggqi6ul3ehkuuyds7hq
+  '@histoire/plugin-screenshot': 0.15.9_histoire@0.15.9
+  '@histoire/plugin-vue': 0.15.8_um6ykffzo3rtsztblu5hrnoiwm
   '@rushstack/eslint-patch': 1.2.0
   '@types/codemirror': 5.60.7
   '@types/dompurify': 3.0.0
@@ -181,7 +181,7 @@ devDependencies:
   eslint: 8.36.0
   eslint-plugin-vue: 9.9.0_eslint@8.36.0
   happy-dom: 8.9.0
-  histoire: 0.15.8_lceu2gcz3dznugjpqyxjubcgmq
+  histoire: 0.15.9_lceu2gcz3dznugjpqyxjubcgmq
   netlify-cli: 13.1.2_@types+node@18.15.3
   postcss: 8.4.21
   postcss-easing-gradients: 3.0.1
@@ -2252,15 +2252,15 @@ packages:
       - vite
     dev: true
 
-  /@histoire/plugin-screenshot/0.15.8_histoire@0.15.8:
-    resolution: {integrity: sha512-9Dz08on0pQZ5JYp8nmqgH2sH7/mOutavmst/MejWz9WBptmnJXWVAb7Ku7NiiFJLNMmxAWqO65i1AOTMeIUcDQ==}
+  /@histoire/plugin-screenshot/0.15.9_histoire@0.15.9:
+    resolution: {integrity: sha512-9sdLKM41u1EsEf7Tni7X1rRRjPJPqxKwzU2qpg8I5Z+blwuCyUMzG9qDow9Cf0DGfWO+hUKt3Ea94cm/eMkaUA==}
     peerDependencies:
       histoire: ^0.15.8
     dependencies:
       capture-website: 2.4.1
       defu: 6.1.1
       fs-extra: 10.1.0
-      histoire: 0.15.8_lceu2gcz3dznugjpqyxjubcgmq
+      histoire: 0.15.9_lceu2gcz3dznugjpqyxjubcgmq
       pathe: 0.2.0
     transitivePeerDependencies:
       - bufferutil
@@ -2269,7 +2269,7 @@ packages:
       - utf-8-validate
     dev: true
 
-  /@histoire/plugin-vue/0.15.8_trxxajhggqi6ul3ehkuuyds7hq:
+  /@histoire/plugin-vue/0.15.8_um6ykffzo3rtsztblu5hrnoiwm:
     resolution: {integrity: sha512-7KNZyTiXZOHcOfN3BeZSFjkSnKAIgKBN4hGcpOQ8uB8crWF4J4MIHxmdRns3ysvIIb+QdqfkkWEabenpaQmCcw==}
     peerDependencies:
       histoire: ^0.15.8
@@ -2280,7 +2280,7 @@ packages:
       '@histoire/vendors': 0.15.8
       change-case: 4.1.2
       globby: 13.1.2
-      histoire: 0.15.8_lceu2gcz3dznugjpqyxjubcgmq
+      histoire: 0.15.9_lceu2gcz3dznugjpqyxjubcgmq
       launch-editor: 2.6.0
       pathe: 0.2.0
       vue: 3.2.47
@@ -8735,8 +8735,8 @@ packages:
     engines: {node: '>=12.0.0'}
     dev: false
 
-  /histoire/0.15.8_lceu2gcz3dznugjpqyxjubcgmq:
-    resolution: {integrity: sha512-weDuhDeguNy+9MNTm04OCk2tyJCKndzxp9pcOivxrIeuwmxA1nv7L5bye1YG7gjKWEOuifxRt9VWYAHo2Nc8VA==}
+  /histoire/0.15.9_lceu2gcz3dznugjpqyxjubcgmq:
+    resolution: {integrity: sha512-Mb9185Sq/SckVhtHpUdf3dqSrAdf9HDsOFbTcBIZ6W9TYCdsSLY5kLzPU2sHaHHM/myxh5DC+9SLBaTFeNJSug==}
     hasBin: true
     peerDependencies:
       vite: ^2.9.0 || ^3.0.0 || ^4.0.0
