@@ -720,6 +720,11 @@
         "copiedto": "Copied To | Copied To"
       }
     },
+    "reminder": {
+      "hoursShort": "HH",
+      "minutesShort": "MM",
+      "daysShort": "d"
+    },
     "repeat": {
       "everyDay": "Every Day",
       "everyWeek": "Every Week",

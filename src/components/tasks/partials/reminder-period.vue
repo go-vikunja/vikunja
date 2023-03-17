@@ -1,7 +1,7 @@
 <template>
 	<div class="datepicker">
 		<BaseButton :disabled="disabled" class="show" v-if="!!reminder?.relativeTo" @click.stop="togglePeriodPopup">
-			{{ formatDuration(reminder.relativePeriod) }} <span v-html="formatBeforeAfter(reminder.relativePeriod)"></span>
+			{{ formatDuration(reminder.relativePeriod) }} {{ reminder.relativePeriod <= 0 ? '&le;' : '&gt;' }}
 			{{ formatRelativeTo(reminder.relativeTo) }}
 		</BaseButton>
 		<CustomTransition name="fade">
@@ -10,15 +10,15 @@
 					<input
 							:disabled="disabled"
 							class="input"
-							placeholder="d"
+							:placeholder="$t('task.reminder.daysShort')"
 							v-model="periodInput.duration.days"
 							type="number"
 							min="0"
-					/> d
+					/> {{ $t('task.reminder.daysShort') }}
 					<input
 							:disabled="disabled"
 							class="input"
-							placeholder="HH"
+							:placeholder="$t('task.reminder.hoursShort')"
 							v-model="periodInput.duration.hours"
 							type="number"
 							min="0"
@@ -26,7 +26,7 @@
 					<input
 							:disabled="disabled"
 							class="input"
-							placeholder="MM"
+							:placeholder="$t('task.reminder.minutesShort')"
 							v-model="periodInput.duration.minutes"
 							type="number"
 							min="0"
@@ -37,17 +37,15 @@
 							<option value="1">&gt;</option>
 						</select>
 					</div>
-					<div class="control">
-						<div class="select">
-							<select :disabled="disabled" v-model="periodInput.relativeTo" id="relativeTo">
-								<option :value="REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE">{{ $t('task.attributes.dueDate') }}</option>
-								<option :value="REMINDER_PERIOD_RELATIVE_TO_TYPES.STARTDATE">{{
-										$t('task.attributes.startDate')
-									}}
-								</option>
-								<option :value="REMINDER_PERIOD_RELATIVE_TO_TYPES.ENDDATE">{{ $t('task.attributes.endDate') }}</option>
-							</select>
-						</div>
+					<div class="select">
+						<select :disabled="disabled" v-model="periodInput.relativeTo" id="relativeTo">
+							<option :value="REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE">{{ $t('task.attributes.dueDate') }}</option>
+							<option :value="REMINDER_PERIOD_RELATIVE_TO_TYPES.STARTDATE">{{
+									$t('task.attributes.startDate')
+								}}
+							</option>
+							<option :value="REMINDER_PERIOD_RELATIVE_TO_TYPES.ENDDATE">{{ $t('task.attributes.endDate') }}</option>
+						</select>
 					</div>
 				</div>
 				<div class="control">
@@ -68,13 +66,13 @@
 <script setup lang="ts">
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
-import { closeWhenClickedOutside } from '@/helpers/closeWhenClickedOutside'
-import { periodToSeconds, secondsToPeriod } from '@/helpers/time/period'
+import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
+import {periodToSeconds, secondsToPeriod} from '@/helpers/time/period'
 import TaskReminderModel from '@/models/taskReminder'
-import type { ITaskReminder } from '@/modelTypes/ITaskReminder'
-import { REMINDER_PERIOD_RELATIVE_TO_TYPES, type IReminderPeriodRelativeTo } from '@/types/IReminderPeriodRelativeTo'
-import { onMounted, onBeforeUnmount, reactive, ref, watch, type PropType } from 'vue'
-import { useI18n } from 'vue-i18n'
+import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
+import {REMINDER_PERIOD_RELATIVE_TO_TYPES, type IReminderPeriodRelativeTo} from '@/types/IReminderPeriodRelativeTo'
+import {onMounted, onBeforeUnmount, reactive, ref, watch, type PropType} from 'vue'
+import {useI18n} from 'vue-i18n'
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -101,7 +99,7 @@ const periodInput = reactive({
 })
 
 onMounted(() => document.addEventListener('click', hidePeriodPopup))
-onBeforeUnmount(() =>document.removeEventListener('click', hidePeriodPopup))
+onBeforeUnmount(() => document.removeEventListener('click', hidePeriodPopup))
 
 watch(
 		() => props.modelValue,
@@ -138,6 +136,7 @@ function togglePeriodPopup() {
 }
 
 const periodPopup = ref<HTMLElement | null>(null)
+
 function hidePeriodPopup(e: MouseEvent) {
 	if (isShowForm.value) {
 		closeWhenClickedOutside(e, periodPopup.value, close)
@@ -150,6 +149,7 @@ function submitForm() {
 }
 
 const changed = ref(false)
+
 function close() {
 	setTimeout(() => {
 		isShowForm.value = false
@@ -171,13 +171,6 @@ function formatDuration(reminderPeriod: number): string {
 			('' + duration.minutes).padStart(2, '0')
 }
 
-function formatBeforeAfter(reminderPeriod: number): string {
-	if (reminderPeriod <= 0) {
-		return '&le;'
-	}
-	return '&gt;'
-}
-
 function formatRelativeTo(relativeTo: IReminderPeriodRelativeTo | null): string | null {
 	switch (relativeTo) {
 		case REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE:
@@ -195,8 +188,8 @@ function formatRelativeTo(relativeTo: IReminderPeriodRelativeTo | null): string 
 
 <style lang="scss" scoped>
 .input {
-	max-width: 70px;
-	width: 70px;
+	max-width: 5rem;
+	width: 4rem;
 }
 
 .close-button {

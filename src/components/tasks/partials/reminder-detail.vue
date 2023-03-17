@@ -1,8 +1,9 @@
 <template>
 	<div>
-		<ReminderPeriod v-if="showRelativeReminder()" v-model="reminder" :disabled="disabled" @update:modelValue="() => updateData()"></ReminderPeriod>
+		<ReminderPeriod v-if="showRelativeReminder" v-model="reminder" :disabled="disabled"
+										@update:modelValue="() => updateData()"></ReminderPeriod>
 		<Datepicker
-				v-if="showAbsoluteReminder()"
+				v-if="showAbsoluteReminder"
 				v-model="reminderDate"
 				:disabled="disabled"
 				@close-on-change="() => setReminderDate()"
@@ -14,8 +15,8 @@
 import Datepicker from '@/components/input/datepicker.vue'
 import ReminderPeriod from '@/components/tasks/partials/reminder-period.vue'
 import TaskReminderModel from '@/models/taskReminder'
-import type { ITaskReminder } from '@/modelTypes/ITaskReminder'
-import { ref, watch, type PropType } from 'vue'
+import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
+import {computed, ref, watch, type PropType} from 'vue'
 
 const props = defineProps({
 	modelValue: {
@@ -32,9 +33,12 @@ const emit = defineEmits(['update:modelValue'])
 const reminder = ref<ITaskReminder>()
 const reminderDate = ref()
 
+const showAbsoluteReminder = computed(() => !reminder.value || !reminder.value?.relativeTo)
+const showRelativeReminder = computed(() => !reminder.value || reminder.value?.relativeTo)
+
 watch(
-	() => props.modelValue,
-	(value) => {
+		() => props.modelValue,
+		(value) => {
 			reminder.value = value
 			if (reminder.value && reminder.value.reminder) {
 				reminderDate.value = new Date(reminder.value.reminder)
@@ -45,14 +49,6 @@ watch(
 
 function updateData() {
 	emit('update:modelValue', reminder.value)
-}
-
-function showAbsoluteReminder() {
-	return !reminder.value || !reminder.value?.relativeTo
-}
-
-function showRelativeReminder() {
-	return !reminder.value || reminder.value?.relativeTo
 }
 
 function setReminderDate() {
