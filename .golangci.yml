@@ -79,6 +79,7 @@ issues:
     - path: pkg/routes/api/v1/docs.go
       linters:
         - goheader
+        - misspell
     - text: "Missed string"
       linters:
         - goheader
