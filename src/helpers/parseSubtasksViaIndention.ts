@@ -48,7 +48,7 @@ export function parseSubtasksViaIndention(taskTitles: string): TaskWithParent[] 
 			task.title = cleanupTitle(title.replace(spaceRegex, ''))
 			task.parent = task.parent.replace(spaceRegex, '')
 			if (task.project === null) {
-				// This allows to specify a list once for the parent task and inherit it to all subtasks
+				// This allows to specify a project once for the parent task and inherit it to all subtasks
 				task.project = getProjectFromPrefix(task.parent)
 			}
 		}
