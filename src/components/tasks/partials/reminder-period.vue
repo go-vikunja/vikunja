@@ -14,7 +14,7 @@
 							v-model="periodInput.duration.days"
 							type="number"
 							min="0"
-					/> {{ $t('task.reminder.daysShort') }}
+					/> {{ $t('task.reminder.days') }}
 					<input
 							:disabled="disabled"
 							class="input"
@@ -166,7 +166,7 @@ function formatDuration(reminderPeriod: number): string {
 		return '00:00'
 	}
 	const duration = secondsToPeriod(Math.abs(reminderPeriod))
-	return (duration.days > 0 ? duration.days + ' d ' : '') +
+	return (duration.days > 0 ? `${duration.days} ${t('task.reminder.days')} `: '') +
 			('' + duration.hours).padStart(2, '0') + ':' +
 			('' + duration.minutes).padStart(2, '0')
 }

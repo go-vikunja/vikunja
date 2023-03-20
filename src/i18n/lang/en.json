@@ -723,7 +723,8 @@
     "reminder": {
       "hoursShort": "HH",
       "minutesShort": "MM",
-      "daysShort": "d"
+      "daysShort": "d",
+      "days": "days"
     },
     "repeat": {
       "everyDay": "Every Day",
