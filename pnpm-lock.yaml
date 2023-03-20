@@ -90,7 +90,7 @@ specifiers:
   vite-plugin-inject-preload: 1.3.1
   vite-plugin-pwa: 0.14.4
   vite-svg-loader: 4.0.0
-  vitest: 0.29.3
+  vitest: 0.29.4
   vue: 3.2.47
   vue-advanced-cropper: 2.8.8
   vue-flatpickr-component: 11.0.3
@@ -196,7 +196,7 @@ devDependencies:
   vite-plugin-inject-preload: 1.3.1_vite@4.2.1
   vite-plugin-pwa: 0.14.4_h7yo2zok6ssdtcsppnnx4hllne
   vite-svg-loader: 4.0.0
-  vitest: 0.29.3_qkiijodw3iekfhhsd7gvopg4tm
+  vitest: 0.29.4_qkiijodw3iekfhhsd7gvopg4tm
   vue-tsc: 1.2.0_typescript@4.9.5
   wait-on: 7.0.1
   workbox-cli: 6.5.4_acorn@7.4.1
@@ -4162,30 +4162,30 @@ packages:
       vue: 3.2.47
     dev: true
 
-  /@vitest/expect/0.29.3:
-    resolution: {integrity: sha512-z/0JqBqqrdtrT/wzxNrWC76EpkOHdl+SvuNGxWulLaoluygntYyG5wJul5u/rQs5875zfFz/F+JaDf90SkLUIg==}
+  /@vitest/expect/0.29.4:
+    resolution: {integrity: sha512-U61q5xci/wwspkH0qWUfLllR8TuzYS1caNVu5KHfI2Ef0k+q4Zd1YVHjTSvbspEeTXhjgWBO7Qm3TYTjBxdJFw==}
     dependencies:
-      '@vitest/spy': 0.29.3
-      '@vitest/utils': 0.29.3
+      '@vitest/spy': 0.29.4
+      '@vitest/utils': 0.29.4
       chai: 4.3.7
     dev: true
 
-  /@vitest/runner/0.29.3:
-    resolution: {integrity: sha512-XLi8ctbvOWhUWmuvBUSIBf8POEDH4zCh6bOuVxm/KGfARpgmVF1ku+vVNvyq85va+7qXxtl+MFmzyXQ2xzhAvw==}
+  /@vitest/runner/0.29.4:
+    resolution: {integrity: sha512-Mc38t19WSB9TP5rQLCUg/poRPY3mTnWfy2jnvLvkiwdDB8yvXWeMErp/pOH3Mm/bC5KPIMzCFd1E8RWPtL1Z9g==}
     dependencies:
-      '@vitest/utils': 0.29.3
+      '@vitest/utils': 0.29.4
       p-limit: 4.0.0
       pathe: 1.1.0
     dev: true
 
-  /@vitest/spy/0.29.3:
-    resolution: {integrity: sha512-LLpCb1oOCOZcBm0/Oxbr1DQTuKLRBsSIHyLYof7z4QVE8/v8NcZKdORjMUq645fcfX55+nLXwU/1AQ+c2rND+w==}
+  /@vitest/spy/0.29.4:
+    resolution: {integrity: sha512-gXSotZUpV13votTAHQpFQZ/KBLzWlmYh1Hhp7mvAGZ5kQrnLyU4VB15OgpsNpsCbJPNCpdMzVZWb2+WMDbLRag==}
     dependencies:
       tinyspy: 1.0.2
     dev: true
 
-  /@vitest/utils/0.29.3:
-    resolution: {integrity: sha512-hg4Ff8AM1GtUnLpUJlNMxrf9f4lZr/xRJjh3uJ0QFP+vjaW82HAxKrmeBmLnhc8Os2eRf+f+VBu4ts7TafPPkA==}
+  /@vitest/utils/0.29.4:
+    resolution: {integrity: sha512-A1h+hEaoWYecEeIgz9lwLXo9zgvMLu8ZyGs/LtliqurI+JgWggm2dYRq2ceN/0vvEL7AeTMYOa1buZ2YmhJW2Q==}
     dependencies:
       cli-truncate: 3.1.0
       diff: 5.1.0
@@ -13972,8 +13972,8 @@ packages:
     resolution: {integrity: sha512-hGYWYBMPr7p4g5IarQE7XhlyWveh1EKhy4wUBS1LrHXCKYgvz+4/jCqgmJqZxxldesn05vccrtME2RLLZNW7iA==}
     dev: true
 
-  /tinypool/0.3.1:
-    resolution: {integrity: sha512-zLA1ZXlstbU2rlpA4CIeVaqvWq41MTWqLY3FfsAXgC8+f7Pk7zroaJQxDgxn1xNudKW6Kmj4808rPFShUlIRmQ==}
+  /tinypool/0.4.0:
+    resolution: {integrity: sha512-2ksntHOKf893wSAH4z/+JbPpi92esw8Gn9N2deXX+B0EO92hexAVI9GIZZPx7P5aYo5KULfeOSt3kMOmSOy6uA==}
     engines: {node: '>=14.0.0'}
     dev: true
 
@@ -14602,8 +14602,8 @@ packages:
       - terser
     dev: true
 
-  /vite-node/0.29.3_snuxutxh24snajebi7e7upfm6u:
-    resolution: {integrity: sha512-QYzYSA4Yt2IiduEjYbccfZQfxKp+T1Do8/HEpSX/G5WIECTFKJADwLs9c94aQH4o0A+UtCKU61lj1m5KvbxxQA==}
+  /vite-node/0.29.4_snuxutxh24snajebi7e7upfm6u:
+    resolution: {integrity: sha512-sPhnCzGm3rCI1BMgOUHiGJN4MObLUOzdCjrNU5A2miNTat/7k96hmvVLxKXPLb0wjX160oG1ZhLVYBzF80UJlQ==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
     dependencies:
@@ -14695,8 +14695,8 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vitest/0.29.3_qkiijodw3iekfhhsd7gvopg4tm:
-    resolution: {integrity: sha512-muMsbXnZsrzDGiyqf/09BKQsGeUxxlyLeLK/sFFM4EXdURPQRv8y7dco32DXaRORYP0bvyN19C835dT23mL0ow==}
+  /vitest/0.29.4_qkiijodw3iekfhhsd7gvopg4tm:
+    resolution: {integrity: sha512-CJBD3K6klNMfrOoSWhpfKAhGLrQzFx+21QYuXZthUW7cuK9pC9o7yU8MpPs5vwkgKpqhaL62WyoDAS5zgqfm6g==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
     peerDependencies:
@@ -14705,6 +14705,8 @@ packages:
       '@vitest/ui': '*'
       happy-dom: '*'
       jsdom: '*'
+      safaridriver: '*'
+      webdriverio: '*'
     peerDependenciesMeta:
       '@edge-runtime/vm':
         optional: true
@@ -14716,14 +14718,18 @@ packages:
         optional: true
       jsdom:
         optional: true
+      safaridriver:
+        optional: true
+      webdriverio:
+        optional: true
     dependencies:
       '@types/chai': 4.3.4
       '@types/chai-subset': 1.3.3
       '@types/node': 18.15.3
-      '@vitest/expect': 0.29.3
-      '@vitest/runner': 0.29.3
-      '@vitest/spy': 0.29.3
-      '@vitest/utils': 0.29.3
+      '@vitest/expect': 0.29.4
+      '@vitest/runner': 0.29.4
+      '@vitest/spy': 0.29.4
+      '@vitest/utils': 0.29.4
       acorn: 8.8.2
       acorn-walk: 8.2.0
       cac: 6.7.14
@@ -14737,10 +14743,10 @@ packages:
       std-env: 3.3.1
       strip-literal: 1.0.0
       tinybench: 2.3.1
-      tinypool: 0.3.1
+      tinypool: 0.4.0
       tinyspy: 1.0.2
       vite: 4.2.1_snuxutxh24snajebi7e7upfm6u
-      vite-node: 0.29.3_snuxutxh24snajebi7e7upfm6u
+      vite-node: 0.29.4_snuxutxh24snajebi7e7upfm6u
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
       - less
