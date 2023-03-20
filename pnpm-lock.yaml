@@ -7,7 +7,7 @@ patchedDependencies:
 
 specifiers:
   '@4tw/cypress-drag-drop': 2.2.3
-  '@cypress/vite-dev-server': 5.0.4
+  '@cypress/vite-dev-server': 5.0.5
   '@cypress/vue': 5.0.5
   '@faker-js/faker': 7.6.0
   '@fortawesome/fontawesome-svg-core': 6.3.0
@@ -151,7 +151,7 @@ dependencies:
 
 devDependencies:
   '@4tw/cypress-drag-drop': 2.2.3_cypress@12.8.1
-  '@cypress/vite-dev-server': 5.0.4
+  '@cypress/vite-dev-server': 5.0.5
   '@cypress/vue': 5.0.5_cypress@12.8.1+vue@3.2.47
   '@faker-js/faker': 7.6.0
   '@histoire/plugin-screenshot': 0.15.9_histoire@0.15.9
@@ -1815,12 +1815,13 @@ packages:
       uuid: 8.3.2
     dev: true
 
-  /@cypress/vite-dev-server/5.0.4:
-    resolution: {integrity: sha512-F9ZkoBcHoILYKEQHDPnsBdzVbnudLoav3iMCOPRvgWfuMlen+zVed1g0nBBYTwfVYMfc9Xqn37ePC3GLSl1aYw==}
+  /@cypress/vite-dev-server/5.0.5:
+    resolution: {integrity: sha512-ZR6Smfe2Jpe7V//yrISgbe4CfLfjpMuqr9ryCmx7NV3XiKJVBMIYmDUQ0lVIR6m7JaHv0/rElM8dTA6R987olQ==}
     dependencies:
       debug: 4.3.4
       find-up: 6.3.0
       node-html-parser: 5.3.3
+      semver: 7.3.8
     transitivePeerDependencies:
       - supports-color
     dev: true
