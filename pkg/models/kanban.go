@@ -103,7 +103,7 @@ func getDoneBucketForProject(s *xorm.Session, projectID int64) (bucket *Bucket, 
 
 // ReadAll returns all buckets with their tasks for a certain project
 // @Summary Get all kanban buckets of a project
-// @Description Returns all kanban buckets with belong to a project including their tasks.
+// @Description Returns all kanban buckets with belong to a project including their tasks. Buckets are always sorted by their `position` in ascending order. Tasks are sorted by their `kanban_position` in ascending order.
 // @tags task
 // @Accept json
 // @Produce json
