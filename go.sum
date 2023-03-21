@@ -688,6 +688,8 @@ github.com/subosito/gotenv v1.4.2 h1:X1TuBLAMDFbaTAChgCBLu3DU3UPyELpnF2jjJ2cz/S8
 github.com/subosito/gotenv v1.4.2/go.mod h1:ayKnFf/c6rvx/2iiLrJUk1e6plDbT3edrFNGqEflhK0=
 github.com/swaggo/swag v1.8.10 h1:eExW4bFa52WOjqRzRD58bgWsWfdFJso50lpbeTcmTfo=
 github.com/swaggo/swag v1.8.10/go.mod h1:ezQVUUhly8dludpVk+/PuwJWvLLanB13ygV5Pr9enSk=
+github.com/swaggo/swag v1.8.11 h1:Fp1dNNtDvbCf+8kvehZbHQnlF6AxHGjmw6H/xAMrZfY=
+github.com/swaggo/swag v1.8.11/go.mod h1:2GXgpNI9iy5OdsYWu8zXfRAGnOAPxYxTWTyM0XOTYZQ=
 github.com/syndtr/goleveldb v1.0.0 h1:fBdIW9lB4Iz0n9khmH8w27SJ3QEJ7+IgjPEwGSZiFdE=
 github.com/syndtr/goleveldb v1.0.0/go.mod h1:ZVVdQEZoIme9iO1Ch2Jdy24qqXrMMOU6lpPAyBWyWuQ=
 github.com/tkuchiki/go-timezone v0.2.2 h1:MdHR65KwgVTwWFQrota4SKzc4L5EfuH5SdZZGtk/P2Q=

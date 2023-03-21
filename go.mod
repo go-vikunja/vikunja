@@ -58,7 +58,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.2
-	github.com/swaggo/swag v1.8.10
+	github.com/swaggo/swag v1.8.11
 	github.com/tkuchiki/go-timezone v0.2.2
 	github.com/ulule/limiter/v3 v3.11.1
 	github.com/vectordotdev/go-datemath v0.1.1-0.20220323213446-f3954d0b18ae
