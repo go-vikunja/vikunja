@@ -6,6 +6,7 @@
     "isolatedModules": false,
     "target": "ES2015",
     "lib": ["ESNext", "dom"],
-    "types": ["cypress"]
+    "types": ["cypress"],
+    "ignoreDeprecations": "5.0"
   }
 }
