@@ -36,15 +36,6 @@ dependencies:
   '@sentry/vue':
     specifier: 7.45.0
     version: 7.45.0(vue@3.2.47)
-  '@types/is-touch-device':
-    specifier: 1.0.0
-    version: 1.0.0
-  '@types/lodash.clonedeep':
-    specifier: 4.5.7
-    version: 4.5.7
-  '@types/sortablejs':
-    specifier: 1.15.1
-    version: 1.15.1
   '@vueuse/core':
     specifier: 9.13.0
     version: 9.13.0(vue@3.2.47)
@@ -170,6 +161,9 @@ devDependencies:
   '@types/flexsearch':
     specifier: 0.7.3
     version: 0.7.3
+  '@types/is-touch-device':
+    specifier: 1.0.0
+    version: 1.0.0
   '@types/lodash.debounce':
     specifier: 4.0.7
     version: 4.0.7
@@ -182,6 +176,9 @@ devDependencies:
   '@types/postcss-preset-env':
     specifier: 7.7.0
     version: 7.7.0
+  '@types/sortablejs':
+    specifier: 1.15.1
+    version: 1.15.1
   '@typescript-eslint/eslint-plugin':
     specifier: 5.57.0
     version: 5.57.0(@typescript-eslint/parser@5.57.0)(eslint@8.37.0)(typescript@5.0.2)
@@ -3935,7 +3932,7 @@ packages:
 
   /@types/is-touch-device@1.0.0:
     resolution: {integrity: sha512-/rErV0NuroAR9EZF1xK0TrihQ/7BbVckGfSr/suq/E4tJQLr4TrADR0qAUpDs/hxtl1NiP0V/ho+fSA/5EIO9Q==}
-    dev: false
+    dev: true
 
   /@types/istanbul-lib-coverage@2.0.4:
     resolution: {integrity: sha512-z/QT1XN4K4KYuslS23k62yDIDLwLFkzxOuMplDtObz0+y7VqJCaO2o+SPwHCvLFZh7xazvvoor2tA/hPz9ee7g==}
@@ -3967,12 +3964,6 @@ packages:
     resolution: {integrity: sha512-HZQYqbiFVWufzCwexrvh694SOim8z2d+xJl5UNamcvQFejLY/2YUtzXHYi3cHdI7PMlS8ejH2slRAOJQ32aNbA==}
     dev: true
 
-  /@types/lodash.clonedeep@4.5.7:
-    resolution: {integrity: sha512-ccNqkPptFIXrpVqUECi60/DFxjNKsfoQxSQsgcBJCX/fuX1wgyQieojkcWH/KpE3xzLoWN/2k+ZeGqIN3paSvw==}
-    dependencies:
-      '@types/lodash': 4.14.185
-    dev: false
-
   /@types/lodash.debounce@4.0.7:
     resolution: {integrity: sha512-X1T4wMZ+gT000M2/91SYj0d/7JfeNZ9PeeOldSNoE/lunLeQXKvkmIumI29IaKMotU/ln/McOIvgzZcQ/3TrSA==}
     dependencies:
@@ -3981,6 +3972,7 @@ packages:
 
   /@types/lodash@4.14.185:
     resolution: {integrity: sha512-evMDG1bC4rgQg4ku9tKpuMh5iBNEwNa3tf9zRHdP1qlv+1WUg44xat4IxCE14gIpZRGUUWAx2VhItCZc25NfMA==}
+    dev: true
 
   /@types/markdown-it@12.2.3:
     resolution: {integrity: sha512-GKMHFfv3458yYy+v/N8gjufHO6MSZKCOXpZc5GXIWWy8uldwfmPn98vp81gZ5f9SVw8YYBctgfJ22a2d7AOMeQ==}
@@ -4060,7 +4052,7 @@ packages:
 
   /@types/sortablejs@1.15.1:
     resolution: {integrity: sha512-g/JwBNToh6oCTAwNS8UGVmjO7NLDKsejVhvE4x1eWiPTC3uCuNsa/TD4ssvX3du+MLiM+SHPNDuijp8y76JzLQ==}
-    dev: false
+    dev: true
 
   /@types/tern@0.23.4:
     resolution: {integrity: sha512-JAUw1iXGO1qaWwEOzxTKJZ/5JxVeON9kvGZ/osgZaJImBnyjyn0cjovPsf6FNLmyGY8Vw9DoXZCMlfMkMwHRWg==}
