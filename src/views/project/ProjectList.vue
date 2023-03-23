@@ -144,24 +144,6 @@ import {useTaskStore} from '@/stores/tasks'
 
 import type {IProject} from '@/modelTypes/IProject'
 
-function sortTasks(tasks: ITask[]) {
-	if (tasks === null || Array.isArray(tasks) && tasks.length === 0) {
-		return
-	}
-	return tasks.sort((a, b) => {
-		if (a.done < b.done)
-			return -1
-		if (a.done > b.done)
-			return 1
-
-		if (a.position < b.position)
-			return -1
-		if (a.position > b.position)
-			return 1
-		return 0
-	})
-}
-
 const props = defineProps({
 	projectId: {
 		type: Number as PropType<IProject['id']>,
@@ -268,8 +250,6 @@ function updateTasks(updatedTask: ITask) {
 			break
 		}
 	}
-	// FIXME: Use computed
-	sortTasks(tasks.value)
 }
 
 async function saveTaskPosition(e) {
