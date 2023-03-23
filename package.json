@@ -121,7 +121,7 @@
     "cypress": "12.8.1",
     "esbuild": "0.17.12",
     "eslint": "8.36.0",
-    "eslint-plugin-vue": "9.9.0",
+    "eslint-plugin-vue": "9.10.0",
     "happy-dom": "8.9.0",
     "histoire": "0.15.9",
     "netlify-cli": "13.1.6",
