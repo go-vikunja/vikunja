@@ -3,7 +3,7 @@
 #  │─││ │││  │ │
 #  ┘─┘┘─┘┘┘─┘┘─┘
 
-FROM --platform=$BUILDPLATFORM techknowlogick/xgo:go-1.20.0 AS builder
+FROM --platform=$BUILDPLATFORM techknowlogick/xgo:go-1.20.x AS builder
 
 RUN go install github.com/magefile/mage@latest && \
     mv /go/bin/mage /usr/local/go/bin
