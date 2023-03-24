@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch, toRefs, onMounted} from 'vue'
+import {computed, ref, watch, toRefs, onActivated} from 'vue'
 import {useRouter} from 'vue-router'
 
 import {getHexColor} from '@/models/task'
@@ -157,7 +157,7 @@ function openTask(e: {
 const weekDayFromDate = useWeekDayFromDate()
 
 const today = ref(new Date())
-onMounted(() => today.value = new Date())
+onActivated(() => today.value = new Date())
 const dateIsToday = computed(() => (date: Date) => {
 	return (
 		date.getDate() === today.value.getDate() &&

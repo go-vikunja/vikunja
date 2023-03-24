@@ -1,4 +1,4 @@
-import {computed, onMounted, ref} from 'vue'
+import {computed, onActivated, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import {useAuthStore} from '@/stores/auth'
@@ -9,7 +9,7 @@ export type Daytime = 'night' | 'morning' | 'day' | 'evening'
 export function useDaytimeSalutation() {
 	const {t} = useI18n({useScope: 'global'})
 	const now = ref(new Date())
-	onMounted(() => now.value = new Date())
+	onActivated(() => now.value = new Date())
 	const authStore = useAuthStore()
 
 	const name = computed(() => authStore.userDisplayName)
