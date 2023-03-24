@@ -168,6 +168,10 @@ log:
   events: "off"
   # The log level for event log messages. Possible values (case-insensitive) are ERROR, INFO, DEBUG.
   eventslevel: "info"
+  # Whether or not to log mail log messages. This will not log mail contents. Possible values are stdout, stderr, file or off to disable mail-related logging.
+  mail: "off"
+  # The log level for mail log messages. Possible values (case-insensitive) are ERROR, WARNING, INFO, DEBUG.
+  maillevel: "info"
 
 ratelimit:
   # whether or not to enable the rate limit

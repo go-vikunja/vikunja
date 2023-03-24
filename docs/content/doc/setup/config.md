@@ -871,6 +871,28 @@ Full path: `log.eventslevel`
 Environment path: `VIKUNJA_LOG_EVENTSLEVEL`
 
 
+### mail
+
+Whether or not to log mail log messages. This will not log mail contents. Possible values are stdout, stderr, file or off to disable mail-related logging.
+
+Default: `off`
+
+Full path: `log.mail`
+
+Environment path: `VIKUNJA_LOG_MAIL`
+
+
+### maillevel
+
+The log level for mail log messages. Possible values (case-insensitive) are ERROR, WARNING, INFO, DEBUG.
+
+Default: `info`
+
+Full path: `log.maillevel`
+
+Environment path: `VIKUNJA_LOG_MAILLEVEL`
+
+
 ---
 
 ## ratelimit

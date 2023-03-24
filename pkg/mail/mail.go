@@ -56,6 +56,8 @@ func getClient() (*mail.Client, error) {
 			ServerName:         config.MailerHost.GetString(),
 		}),
 		mail.WithTimeout((config.MailerQueueTimeout.GetDuration() + 3) * time.Second), // 3s more for us to close before mail server timeout
+		mail.WithLogger(log.NewMailLogger()),
+		mail.WithDebugLog(),
 	}
 
 	if config.MailerForceSSL.GetBool() {

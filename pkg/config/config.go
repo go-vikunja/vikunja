@@ -118,6 +118,8 @@ const (
 	LogPath          Key = `log.path`
 	LogEvents        Key = `log.events`
 	LogEventsLevel   Key = `log.eventslevel`
+	LogMail          Key = `log.mail`
+	LogMailLevel     Key = `log.maillevel`
 
 	RateLimitEnabled Key = `ratelimit.enabled`
 	RateLimitKind    Key = `ratelimit.kind`
@@ -351,6 +353,8 @@ func InitDefaultConfig() {
 	LogPath.setDefault(ServiceRootpath.GetString() + "/logs")
 	LogEvents.setDefault("off")
 	LogEventsLevel.setDefault("INFO")
+	LogMail.setDefault("off")
+	LogMailLevel.setDefault("INFO")
 	// Rate Limit
 	RateLimitEnabled.setDefault(false)
 	RateLimitKind.setDefault("user")
