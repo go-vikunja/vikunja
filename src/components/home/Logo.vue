@@ -4,9 +4,10 @@ import { useNow } from '@vueuse/core'
 
 import LogoFull from '@/assets/logo-full.svg?component'
 import LogoFullPride from '@/assets/logo-full-pride.svg?component'
+import {MILLISECONDS_A_DAY} from '@/constants/date'
 
 const now = useNow({
-	interval: 24 * 60 * 60 * 1000, // Every day
+	interval: MILLISECONDS_A_DAY,
 })
 const Logo = computed(() => now.value.getMonth() === 5 ? LogoFullPride : LogoFull)
 </script>
