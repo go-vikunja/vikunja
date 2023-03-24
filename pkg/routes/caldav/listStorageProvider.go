@@ -411,13 +411,13 @@ func persistLabels(s *xorm.Session, a web.Auth, task *models.Task, labels []*mod
 		return err
 	}
 
-	labelMap := make(map[int64]*models.Label)
+	labelMap := make(map[string]*models.Label)
 	for _, l := range existingLabels {
-		labelMap[l.ID] = &l.Label
+		labelMap[l.Title] = &l.Label
 	}
 
 	for _, label := range labels {
-		if l, has := labelMap[label.ID]; has {
+		if l, has := labelMap[label.Title]; has {
 			*label = *l
 			continue
 		}
