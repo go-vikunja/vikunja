@@ -1,6 +1,5 @@
-import {computed} from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useNow} from '@vueuse/core'
 
 import {useAuthStore} from '@/stores/auth'
 import {hourToDaytime} from '@/helpers/hourToDaytime'
@@ -9,9 +8,8 @@ export type Daytime = 'night' | 'morning' | 'day' | 'evening'
 
 export function useDaytimeSalutation() {
 	const {t} = useI18n({useScope: 'global'})
-	const now = useNow({ 
-		interval: 30 * 60 * 1000, // Every 30 minutes
-	})
+	const now = ref(new Date())
+	onMounted(() => now.value = new Date())
 	const authStore = useAuthStore()
 
 	const name = computed(() => authStore.userDisplayName)
