@@ -123,7 +123,7 @@ func (l *Label) Update(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "Label not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [delete]
-func (l *Label) Delete(s *xorm.Session, a web.Auth) (err error) {
+func (l *Label) Delete(s *xorm.Session, _ web.Auth) (err error) {
 	_, err = s.ID(l.ID).Delete(&Label{})
 	return err
 }
@@ -175,7 +175,7 @@ func (l *Label) ReadAll(s *xorm.Session, a web.Auth, search string, page int, pe
 // @Failure 404 {object} web.HTTPError "Label not found"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [get]
-func (l *Label) ReadOne(s *xorm.Session, a web.Auth) (err error) {
+func (l *Label) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 	label, err := getLabelByIDSimple(s, l.ID)
 	if err != nil {
 		return

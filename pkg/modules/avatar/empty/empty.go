@@ -40,6 +40,6 @@ const defaultAvatar string = `<?xml version="1.0" encoding="UTF-8"?>
 </svg>`
 
 // GetAvatar implements getting the avatar method
-func (p *Provider) GetAvatar(user *user.User, size int64) (avatar []byte, mimeType string, err error) {
+func (p *Provider) GetAvatar(_ *user.User, _ int64) (avatar []byte, mimeType string, err error) {
 	return []byte(defaultAvatar), "image/svg+xml", nil
 }

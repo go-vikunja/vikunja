@@ -23,6 +23,6 @@ import (
 // NoopBackend doesn't log anything. Used in cases where we want to disable logging completely.
 type NoopBackend struct{}
 
-func (n *NoopBackend) Log(level logging.Level, i int, record *logging.Record) error {
+func (n *NoopBackend) Log(_ logging.Level, _ int, _ *logging.Record) error {
 	return nil
 }

@@ -47,7 +47,7 @@ type DatabaseNotifications struct {
 // @Failure 403 {object} web.HTTPError "Link shares cannot have notifications."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /notifications [get]
-func (d *DatabaseNotifications) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (ls interface{}, resultCount int, numberOfEntries int64, err error) {
+func (d *DatabaseNotifications) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPage int) (ls interface{}, resultCount int, numberOfEntries int64, err error) {
 	if _, is := a.(*LinkSharing); is {
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
@@ -79,6 +79,6 @@ func (d *DatabaseNotifications) CanUpdate(s *xorm.Session, a web.Auth) (bool, er
 // @Failure 404 {object} web.HTTPError "The notification does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /notifications/{id} [post]
-func (d *DatabaseNotifications) Update(s *xorm.Session, a web.Auth) (err error) {
+func (d *DatabaseNotifications) Update(s *xorm.Session, _ web.Auth) (err error) {
 	return notifications.MarkNotificationAsRead(s, &d.DatabaseNotification, d.Read)
 }

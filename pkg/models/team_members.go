@@ -88,7 +88,7 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Success 200 {object} models.Message "The user was successfully removed from the team."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id}/members/{userID} [delete]
-func (tm *TeamMember) Delete(s *xorm.Session, a web.Auth) (err error) {
+func (tm *TeamMember) Delete(s *xorm.Session, _ web.Auth) (err error) {
 
 	total, err := s.Where("team_id = ?", tm.TeamID).Count(&TeamMember{})
 	if err != nil {
@@ -120,7 +120,7 @@ func (tm *TeamMember) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Success 200 {object} models.Message "The member right was successfully changed."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id}/members/{userID}/admin [post]
-func (tm *TeamMember) Update(s *xorm.Session, a web.Auth) (err error) {
+func (tm *TeamMember) Update(s *xorm.Session, _ web.Auth) (err error) {
 	// Find the numeric user id
 	user, err := user2.GetUserByUsername(s, tm.Username)
 	if err != nil {

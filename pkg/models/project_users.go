@@ -142,7 +142,7 @@ func (lu *ProjectUser) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "user or project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/users/{userID} [delete]
-func (lu *ProjectUser) Delete(s *xorm.Session, a web.Auth) (err error) {
+func (lu *ProjectUser) Delete(s *xorm.Session, _ web.Auth) (err error) {
 
 	// Check if the user exists
 	u, err := user.GetUserByUsername(s, lu.Username)
@@ -244,7 +244,7 @@ func (lu *ProjectUser) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 // @Failure 404 {object} web.HTTPError "User or project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/users/{userID} [post]
-func (lu *ProjectUser) Update(s *xorm.Session, a web.Auth) (err error) {
+func (lu *ProjectUser) Update(s *xorm.Session, _ web.Auth) (err error) {
 
 	// Check if the right is valid
 	if err := lu.Right.isValid(); err != nil {

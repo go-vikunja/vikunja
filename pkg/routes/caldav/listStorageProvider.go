@@ -51,7 +51,7 @@ type VikunjaCaldavProjectStorage struct {
 }
 
 // GetResources returns either all projects, links to the principal, or only one project, depending on the request
-func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren bool) ([]data.Resource, error) {
+func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, _ bool) ([]data.Resource, error) {
 
 	// It looks like we need to have the same handler for returning both the calendar home set and the user principal
 	// Since the client seems to ignore the whatever is being returned in the first request and just makes a second one
@@ -166,7 +166,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) ([]
 }
 
 // GetResourcesByFilters fetches a project of resources with a filter
-func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, filters *data.ResourceFilter) ([]data.Resource, error) {
+func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, _ *data.ResourceFilter) ([]data.Resource, error) {
 
 	// If we already have a project saved, that means the user is making a REPORT request to find out if
 	// anything changed, in that case we need to return all tasks.
@@ -359,7 +359,7 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 }
 
 // DeleteResource deletes a resource
-func (vcls *VikunjaCaldavProjectStorage) DeleteResource(rpath string) error {
+func (vcls *VikunjaCaldavProjectStorage) DeleteResource(_ string) error {
 	if vcls.task != nil {
 		s := db.NewSession()
 		defer s.Close()

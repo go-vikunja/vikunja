@@ -94,7 +94,7 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadCloser, realna
 }
 
 // ReadOne returns a task attachment
-func (ta *TaskAttachment) ReadOne(s *xorm.Session, a web.Auth) (err error) {
+func (ta *TaskAttachment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 	exists, err := s.Where("id = ?", ta.ID).Get(ta)
 	if err != nil {
 		return
@@ -127,7 +127,7 @@ func (ta *TaskAttachment) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} models.Message "The task does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id}/attachments [get]
-func (ta *TaskAttachment) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (ta *TaskAttachment) ReadAll(s *xorm.Session, _ web.Auth, _ string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	attachments := []*TaskAttachment{}
 
 	limit, start := getLimitFromPageIndex(page, perPage)

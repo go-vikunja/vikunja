@@ -75,7 +75,7 @@ func (s *IncreaseTaskCounter) Name() string {
 }
 
 // Handle is executed when the event IncreaseTaskCounter listens on is fired
-func (s *IncreaseTaskCounter) Handle(msg *message.Message) (err error) {
+func (s *IncreaseTaskCounter) Handle(_ *message.Message) (err error) {
 	return keyvalue.IncrBy(metrics.TaskCountKey, 1)
 }
 
@@ -89,7 +89,7 @@ func (s *DecreaseTaskCounter) Name() string {
 }
 
 // Handle is executed when the event DecreaseTaskCounter listens on is fired
-func (s *DecreaseTaskCounter) Handle(msg *message.Message) (err error) {
+func (s *DecreaseTaskCounter) Handle(_ *message.Message) (err error) {
 	return keyvalue.DecrBy(metrics.TaskCountKey, 1)
 }
 
@@ -480,7 +480,7 @@ func (s *IncreaseProjectCounter) Name() string {
 	return "project.counter.increase"
 }
 
-func (s *IncreaseProjectCounter) Handle(msg *message.Message) (err error) {
+func (s *IncreaseProjectCounter) Handle(_ *message.Message) (err error) {
 	return keyvalue.IncrBy(metrics.ProjectCountKey, 1)
 }
 
@@ -491,7 +491,7 @@ func (s *DecreaseProjectCounter) Name() string {
 	return "project.counter.decrease"
 }
 
-func (s *DecreaseProjectCounter) Handle(msg *message.Message) (err error) {
+func (s *DecreaseProjectCounter) Handle(_ *message.Message) (err error) {
 	return keyvalue.DecrBy(metrics.ProjectCountKey, 1)
 }
 
@@ -553,7 +553,7 @@ func (s *IncreaseNamespaceCounter) Name() string {
 }
 
 // Hanlde is executed when the event IncreaseNamespaceCounter listens on is fired
-func (s *IncreaseNamespaceCounter) Handle(msg *message.Message) (err error) {
+func (s *IncreaseNamespaceCounter) Handle(_ *message.Message) (err error) {
 	return keyvalue.IncrBy(metrics.NamespaceCountKey, 1)
 }
 
@@ -566,8 +566,8 @@ func (s *DecreaseNamespaceCounter) Name() string {
 	return "namespace.counter.decrease"
 }
 
-// Hanlde is executed when the event DecreaseNamespaceCounter listens on is fired
-func (s *DecreaseNamespaceCounter) Handle(msg *message.Message) (err error) {
+// Handle is executed when the event DecreaseNamespaceCounter listens on is fired
+func (s *DecreaseNamespaceCounter) Handle(_ *message.Message) (err error) {
 	return keyvalue.DecrBy(metrics.NamespaceCountKey, 1)
 }
 
@@ -583,8 +583,8 @@ func (s *IncreaseTeamCounter) Name() string {
 	return "team.counter.increase"
 }
 
-// Hanlde is executed when the event IncreaseTeamCounter listens on is fired
-func (s *IncreaseTeamCounter) Handle(msg *message.Message) (err error) {
+// Handle is executed when the event IncreaseTeamCounter listens on is fired
+func (s *IncreaseTeamCounter) Handle(_ *message.Message) (err error) {
 	return keyvalue.IncrBy(metrics.TeamCountKey, 1)
 }
 
@@ -597,8 +597,8 @@ func (s *DecreaseTeamCounter) Name() string {
 	return "team.counter.decrease"
 }
 
-// Hanlde is executed when the event DecreaseTeamCounter listens on is fired
-func (s *DecreaseTeamCounter) Handle(msg *message.Message) (err error) {
+// Handle is executed when the event DecreaseTeamCounter listens on is fired
+func (s *DecreaseTeamCounter) Handle(_ *message.Message) (err error) {
 	return keyvalue.DecrBy(metrics.TeamCountKey, 1)
 }
 

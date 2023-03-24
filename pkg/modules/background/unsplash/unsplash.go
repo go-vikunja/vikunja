@@ -151,7 +151,7 @@ func getUnsplashPhotoInfoByID(photoID string) (photo *Photo, err error) {
 // @Success 200 {array} background.Image "An array with photos"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /backgrounds/unsplash/search [get]
-func (p *Provider) Search(s *xorm.Session, search string, page int64) (result []*background.Image, err error) {
+func (p *Provider) Search(_ *xorm.Session, search string, page int64) (result []*background.Image, err error) {
 
 	// If we don't have a search query, return results from the unsplash featured collection
 	if search == "" {

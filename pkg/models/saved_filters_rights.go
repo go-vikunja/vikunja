@@ -40,7 +40,7 @@ func (sf *SavedFilter) CanUpdate(s *xorm.Session, auth web.Auth) (bool, error) {
 }
 
 // CanCreate checks if a user has the right to update a saved filter
-func (sf *SavedFilter) CanCreate(s *xorm.Session, auth web.Auth) (bool, error) {
+func (sf *SavedFilter) CanCreate(_ *xorm.Session, auth web.Auth) (bool, error) {
 	if _, is := auth.(*LinkSharing); is {
 		return false, nil
 	}

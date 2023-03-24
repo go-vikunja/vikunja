@@ -149,7 +149,7 @@ func getSavedFilterSimpleByID(s *xorm.Session, id int64) (sf *SavedFilter, err e
 // @Failure 403 {object} web.HTTPError "The user does not have access to that saved filter."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters/{id} [get]
-func (sf *SavedFilter) ReadOne(s *xorm.Session, a web.Auth) error {
+func (sf *SavedFilter) ReadOne(s *xorm.Session, _ web.Auth) error {
 	// s already contains almost the full saved filter from the rights check, we only need to add the user
 	u, err := user.GetUserByID(s, sf.OwnerID)
 	sf.Owner = u
@@ -169,7 +169,7 @@ func (sf *SavedFilter) ReadOne(s *xorm.Session, a web.Auth) error {
 // @Failure 404 {object} web.HTTPError "The saved filter does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters/{id} [post]
-func (sf *SavedFilter) Update(s *xorm.Session, a web.Auth) error {
+func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 	origFilter, err := getSavedFilterSimpleByID(s, sf.ID)
 	if err != nil {
 		return err
@@ -204,7 +204,7 @@ func (sf *SavedFilter) Update(s *xorm.Session, a web.Auth) error {
 // @Failure 404 {object} web.HTTPError "The saved filter does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters/{id} [delete]
-func (sf *SavedFilter) Delete(s *xorm.Session, a web.Auth) error {
+func (sf *SavedFilter) Delete(s *xorm.Session, _ web.Auth) error {
 	_, err := s.
 		Where("id = ?", sf.ID).
 		Delete(sf)

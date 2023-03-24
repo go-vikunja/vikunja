@@ -135,7 +135,7 @@ func (tl *TeamProject) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "Team or project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/teams/{teamID} [delete]
-func (tl *TeamProject) Delete(s *xorm.Session, a web.Auth) (err error) {
+func (tl *TeamProject) Delete(s *xorm.Session, _ web.Auth) (err error) {
 
 	// Check if the team exists
 	_, err = GetTeamByID(s, tl.TeamID)
@@ -247,7 +247,7 @@ func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 // @Failure 404 {object} web.HTTPError "Team or project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/teams/{teamID} [post]
-func (tl *TeamProject) Update(s *xorm.Session, a web.Auth) (err error) {
+func (tl *TeamProject) Update(s *xorm.Session, _ web.Auth) (err error) {
 
 	// Check if the right is valid
 	if err := tl.Right.isValid(); err != nil {

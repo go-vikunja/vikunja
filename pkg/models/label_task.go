@@ -64,7 +64,7 @@ func (LabelTask) TableName() string {
 // @Failure 404 {object} web.HTTPError "Label not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels/{label} [delete]
-func (lt *LabelTask) Delete(s *xorm.Session, a web.Auth) (err error) {
+func (lt *LabelTask) Delete(s *xorm.Session, _ web.Auth) (err error) {
 	_, err = s.Delete(&LabelTask{LabelID: lt.LabelID, TaskID: lt.TaskID})
 	return err
 }
@@ -84,7 +84,7 @@ func (lt *LabelTask) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "The label does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels [put]
-func (lt *LabelTask) Create(s *xorm.Session, a web.Auth) (err error) {
+func (lt *LabelTask) Create(s *xorm.Session, _ web.Auth) (err error) {
 	// Check if the label is already added
 	exists, err := s.Exist(&LabelTask{LabelID: lt.LabelID, TaskID: lt.TaskID})
 	if err != nil {
@@ -118,7 +118,7 @@ func (lt *LabelTask) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Success 200 {array} models.Label "The labels"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels [get]
-func (lt *LabelTask) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (lt *LabelTask) ReadAll(s *xorm.Session, a web.Auth, search string, page int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	// Check if the user has the right to see the task
 	task := Task{ID: lt.TaskID}
 	canRead, _, err := task.CanRead(s, a)

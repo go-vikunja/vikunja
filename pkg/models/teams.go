@@ -184,7 +184,7 @@ func addMoreInfoToTeams(s *xorm.Session, teams []*Team) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the team"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [get]
-func (t *Team) ReadOne(s *xorm.Session, a web.Auth) (err error) {
+func (t *Team) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 	team, err := GetTeamByID(s, t.ID)
 	if team != nil {
 		*t = *team
@@ -338,7 +338,7 @@ func (t *Team) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 400 {object} web.HTTPError "Invalid team object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id} [post]
-func (t *Team) Update(s *xorm.Session, a web.Auth) (err error) {
+func (t *Team) Update(s *xorm.Session, _ web.Auth) (err error) {
 	// Check if we have a name
 	if t.Name == "" {
 		return ErrTeamNameCannotBeEmpty{}

@@ -40,7 +40,7 @@ func (l *Label) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 
 // CanCreate checks if the user can create a label
 // Currently a dummy.
-func (l *Label) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+func (l *Label) CanCreate(_ *xorm.Session, a web.Auth) (bool, error) {
 	if _, is := a.(*LinkSharing); is {
 		return false, nil
 	}

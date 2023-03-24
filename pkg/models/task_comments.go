@@ -101,7 +101,7 @@ func (tc *TaskComment) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [delete]
-func (tc *TaskComment) Delete(s *xorm.Session, a web.Auth) error {
+func (tc *TaskComment) Delete(s *xorm.Session, _ web.Auth) error {
 	deleted, err := s.
 		ID(tc.ID).
 		NoAutoCondition().
@@ -135,7 +135,7 @@ func (tc *TaskComment) Delete(s *xorm.Session, a web.Auth) error {
 // @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [post]
-func (tc *TaskComment) Update(s *xorm.Session, a web.Auth) error {
+func (tc *TaskComment) Update(s *xorm.Session, _ web.Auth) error {
 	updated, err := s.
 		ID(tc.ID).
 		Cols("comment").
@@ -192,7 +192,7 @@ func getTaskCommentSimple(s *xorm.Session, tc *TaskComment) error {
 // @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [get]
-func (tc *TaskComment) ReadOne(s *xorm.Session, a web.Auth) (err error) {
+func (tc *TaskComment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 	err = getTaskCommentSimple(s, tc)
 	if err != nil {
 		return err

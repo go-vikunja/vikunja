@@ -281,7 +281,7 @@ func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "The bucket does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/buckets/{bucketID} [post]
-func (b *Bucket) Update(s *xorm.Session, a web.Auth) (err error) {
+func (b *Bucket) Update(s *xorm.Session, _ web.Auth) (err error) {
 	doneBucket, err := getDoneBucketForProject(s, b.ProjectID)
 	if err != nil {
 		return err
@@ -320,7 +320,7 @@ func (b *Bucket) Update(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "The bucket does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/buckets/{bucketID} [delete]
-func (b *Bucket) Delete(s *xorm.Session, a web.Auth) (err error) {
+func (b *Bucket) Delete(s *xorm.Session, _ web.Auth) (err error) {
 
 	// Prevent removing the last bucket
 	total, err := s.Where("project_id = ?", b.ProjectID).Count(&Bucket{})

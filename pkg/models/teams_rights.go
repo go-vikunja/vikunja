@@ -22,7 +22,7 @@ import (
 )
 
 // CanCreate checks if the user can create a new team
-func (t *Team) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+func (t *Team) CanCreate(_ *xorm.Session, a web.Auth) (bool, error) {
 	if _, is := a.(*LinkSharing); is {
 		return false, nil
 	}

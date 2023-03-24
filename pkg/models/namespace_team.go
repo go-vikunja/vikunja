@@ -124,7 +124,7 @@ func (tn *TeamNamespace) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "team or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/teams/{teamID} [delete]
-func (tn *TeamNamespace) Delete(s *xorm.Session, a web.Auth) (err error) {
+func (tn *TeamNamespace) Delete(s *xorm.Session, _ web.Auth) (err error) {
 
 	// Check if the team exists
 	_, err = GetTeamByID(s, tn.TeamID)
@@ -229,7 +229,7 @@ func (tn *TeamNamespace) ReadAll(s *xorm.Session, a web.Auth, search string, pag
 // @Failure 404 {object} web.HTTPError "Team or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/teams/{teamID} [post]
-func (tn *TeamNamespace) Update(s *xorm.Session, a web.Auth) (err error) {
+func (tn *TeamNamespace) Update(s *xorm.Session, _ web.Auth) (err error) {
 
 	// Check if the right is valid
 	if err := tn.Right.isValid(); err != nil {

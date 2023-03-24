@@ -32,7 +32,7 @@ type Provider struct {
 }
 
 // Search is only used to implement the interface
-func (p *Provider) Search(s *xorm.Session, search string, page int64) (result []*background.Image, err error) {
+func (p *Provider) Search(_ *xorm.Session, _ string, _ int64) (result []*background.Image, err error) {
 	return
 }
 
@@ -52,7 +52,7 @@ func (p *Provider) Search(s *xorm.Session, search string, page int64) (result []
 // @Failure 404 {object} models.Message "The project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/backgrounds/upload [put]
-func (p *Provider) Set(s *xorm.Session, img *background.Image, project *models.Project, auth web.Auth) (err error) {
+func (p *Provider) Set(s *xorm.Session, img *background.Image, project *models.Project, _ web.Auth) (err error) {
 	// Remove the old background if one exists
 	err = project.DeleteBackgroundFileIfExists()
 	if err != nil {

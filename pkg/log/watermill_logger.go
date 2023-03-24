@@ -91,6 +91,6 @@ func (w *WatermillLogger) Trace(msg string, fields watermill.LogFields) {
 	w.logger.Debugf("%s, %s", msg, concatFields(fields))
 }
 
-func (w *WatermillLogger) With(fields watermill.LogFields) watermill.LoggerAdapter {
+func (w *WatermillLogger) With(_ watermill.LogFields) watermill.LoggerAdapter {
 	return w
 }

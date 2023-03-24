@@ -109,10 +109,7 @@ func Rollback(migrationID string) {
 // MigrateTo executes all migrations up to a certain point
 func MigrateTo(migrationID string, x *xorm.Engine) error {
 	m := initMigration(x)
-	if err := m.MigrateTo(migrationID); err != nil {
-		return err
-	}
-	return nil
+	return m.MigrateTo(migrationID)
 }
 
 // Deletes a column from a table. All arguments are strings, to let them be standalone and not depending on any struct.

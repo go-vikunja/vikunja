@@ -39,7 +39,7 @@ func (s *IncreaseUserCounter) Name() string {
 	return "increase.user.counter"
 }
 
-// Hanlde is executed when the event IncreaseUserCounter listens on is fired
-func (s *IncreaseUserCounter) Handle(msg *message.Message) (err error) {
+// Handle is executed when the event IncreaseUserCounter listens on is fired
+func (s *IncreaseUserCounter) Handle(_ *message.Message) (err error) {
 	return keyvalue.IncrBy(metrics.UserCountKey, 1)
 }

@@ -133,7 +133,7 @@ func (nu *NamespaceUser) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "user or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/users/{userID} [delete]
-func (nu *NamespaceUser) Delete(s *xorm.Session, a web.Auth) (err error) {
+func (nu *NamespaceUser) Delete(s *xorm.Session, _ web.Auth) (err error) {
 
 	// Check if the user exists
 	user, err := user2.GetUserByUsername(s, nu.Username)
@@ -229,7 +229,7 @@ func (nu *NamespaceUser) ReadAll(s *xorm.Session, a web.Auth, search string, pag
 // @Failure 404 {object} web.HTTPError "User or namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /namespaces/{namespaceID}/users/{userID} [post]
-func (nu *NamespaceUser) Update(s *xorm.Session, a web.Auth) (err error) {
+func (nu *NamespaceUser) Update(s *xorm.Session, _ web.Auth) (err error) {
 
 	// Check if the right is valid
 	if err := nu.Right.isValid(); err != nil {
