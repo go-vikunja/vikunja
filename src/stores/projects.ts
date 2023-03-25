@@ -115,11 +115,9 @@ export const useProjectStore = defineStore('project', () => {
 
 			// the returned project from projectService.update is the same!
 			// in order to not create a manipulation in pinia store we have to create a new copy
-			const newProject = {
+			return {
 				...project,
 			}
-			
-			return newProject
 		} catch (e) {
 			// Reset the project state to the initial one to avoid confusion for the user
 			setProject({
