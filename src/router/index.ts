@@ -282,7 +282,7 @@ const router = createRouter({
 			component: ListProjects,
 		},
 		{
-			path: '/projects/new/:namespaceId/',
+			path: '/projects/new',
 			name: 'project.create',
 			component: NewProjectComponent,
 			meta: {

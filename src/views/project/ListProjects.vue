@@ -10,7 +10,7 @@
 					{{ $t('filters.create.title') }}
 				</x-button>
 				<x-button :to="{name: 'project.create'}" icon="plus" v-cy="'new-project'">
-					{{ $t('project.create.title') }}
+					{{ $t('project.create.header') }}
 				</x-button>
 			</div>
 		</header>
