@@ -158,6 +158,20 @@ export const useProjectStore = defineStore('project', () => {
 			cancel()
 		}
 	}
+	
+	async function loadProjects() {
+		const cancel = setModuleLoading(setIsLoading)
+
+		const projectService = new ProjectService()
+		try {
+			const projects = await projectService.getAll({}, {is_archived: true}) as IProject[]
+			setProjects(projects)
+
+			return projects
+		} finally {
+			cancel()
+		}
+	}
 
 	return {
 		isLoading: readonly(isLoading),
@@ -171,6 +185,7 @@ export const useProjectStore = defineStore('project', () => {
 		setProjects,
 		removeProjectById,
 		toggleProjectFavorite,
+		loadProjects,
 		createProject,
 		updateProject,
 		deleteProject,

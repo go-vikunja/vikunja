@@ -131,7 +131,7 @@ export function useSavedFilter(projectId?: MaybeRef<IProject['id']>) {
 		await filterService.delete(filter.value)
 		await namespaceStore.loadNamespaces()
 		success({message: t('filters.delete.success')})
-		router.push({name: 'namespaces.index'})
+		router.push({name: 'projects.index'})
 	}
 
 	const titleValid = ref(true)

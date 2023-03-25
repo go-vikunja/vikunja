@@ -22,11 +22,11 @@
 					</router-link>
 				</li>
 				<li>
-					<router-link :to="{ name: 'namespaces.index'}" v-shortcut="'g n'">
+					<router-link :to="{ name: 'projects.index'}" v-shortcut="'g n'">
 						<span class="menu-item-icon icon">
 							<icon icon="layer-group"/>
 						</span>
-						{{ $t('namespace.title') }}
+						{{ $t('project.projects') }}
 					</router-link>
 				</li>
 				<li>
@@ -47,101 +47,107 @@
 				</li>
 			</ul>
 		</nav>
-
-		<nav class="menu namespaces-lists loader-container is-loading-small" :class="{'is-loading': loading}">
-			<template v-for="(n, nk) in namespaces" :key="n.id">
-				<div class="namespace-title" :class="{'has-menu': n.id > 0}">
-					<BaseButton
-						@click="toggleProjects(n.id)"
-						class="menu-label"
-						v-tooltip="namespaceTitles[nk]"
-					>
-						<ColorBubble
-								v-if="n.hexColor !== ''"
-								:color="n.hexColor"
-								class="mr-1"
-						/>
-						<span class="name">{{ namespaceTitles[nk] }}</span>
-						<div
-								class="icon menu-item-icon is-small toggle-lists-icon pl-2"
-								:class="{'active': typeof projectsVisible[n.id] !== 'undefined' ? projectsVisible[n.id] : true}"
-						>
-							<icon icon="chevron-down"/>
-						</div>
-						<span class="count" :class="{'ml-2 mr-0': n.id > 0}">
-							({{ namespaceProjectsCount[nk] }})
-						</span>
-					</BaseButton>
-					<namespace-settings-dropdown class="menu-list-dropdown" :namespace="n" v-if="n.id > 0"/>
-				</div>
-				<!--
-					NOTE: a v-model / computed setter is not possible, since the updateActiveProjects function
-					triggered by the change needs to have access to the current namespace
-				-->
-				<draggable
-						v-if="projectsVisible[n.id] ?? true"
-						v-bind="dragOptions"
-						:modelValue="activeProjects[nk]"
-						@update:modelValue="(projects) => updateActiveProjects(n, projects)"
-						group="namespace-lists"
-						@start="() => drag = true"
-						@end="saveListPosition"
-						handle=".handle"
-						:disabled="n.id < 0 || undefined"
-						tag="ul"
-						item-key="id"
-						:data-namespace-id="n.id"
-						:data-namespace-index="nk"
-						:component-data="{
-							type: 'transition-group',
-							name: !drag ? 'flip-list' : null,
-							class: [
-								'menu-list can-be-hidden',
-								{ 'dragging-disabled': n.id < 0 }
-							]
-						}"
-				>
-					<template #item="{element: l}">
-						<li
-							class="list-menu loader-container is-loading-small"
-							:class="{'is-loading': projectUpdating[l.id]}"
-						>
-							<BaseButton
-								:to="{ name: 'project.index', params: { projectId: l.id} }"
-								class="list-menu-link"
-								:class="{'router-link-exact-active': currentProject.id === l.id}"
-							>
-								<span class="icon menu-item-icon handle">
-									<icon icon="grip-lines"/>
-								</span>
-								<ColorBubble
-										v-if="l.hexColor !== ''"
-										:color="l.hexColor"
-										class="mr-1"
-								/>
-								<span class="list-menu-title">{{ getProjectTitle(l) }}</span>
-							</BaseButton>
-							<BaseButton
-								v-if="l.id > 0"
-								class="favorite"
-								:class="{'is-favorite': l.isFavorite}"
-								@click="projectStore.toggleProjectFavorite(l)"
-							>
-								<icon :icon="l.isFavorite ? 'star' : ['far', 'star']"/>
-							</BaseButton>
-							<ProjectSettingsDropdown class="menu-list-dropdown" :project="l" v-if="l.id > 0">
-								<template #trigger="{toggleOpen}">
-									<BaseButton class="menu-list-dropdown-trigger" @click="toggleOpen">
-										<icon icon="ellipsis-h" class="icon"/>
-									</BaseButton>
-								</template>
-							</ProjectSettingsDropdown>
-							<span class="list-setting-spacer" v-else></span>
-						</li>
-					</template>
-				</draggable>
+		
+		<nav>
+			<template v-for="(p, pk) in projects" :key="p.id">
+				{{ p. title }}<br/>
 			</template>
 		</nav>
+
+<!--		<nav class="menu namespaces-lists loader-container is-loading-small" :class="{'is-loading': loading}">-->
+<!--			<template v-for="(n, nk) in namespaces" :key="n.id">-->
+<!--				<div class="namespace-title" :class="{'has-menu': n.id > 0}">-->
+<!--					<BaseButton-->
+<!--						@click="toggleProjects(n.id)"-->
+<!--						class="menu-label"-->
+<!--						v-tooltip="namespaceTitles[nk]"-->
+<!--					>-->
+<!--						<ColorBubble-->
+<!--								v-if="n.hexColor !== ''"-->
+<!--								:color="n.hexColor"-->
+<!--								class="mr-1"-->
+<!--						/>-->
+<!--						<span class="name">{{ namespaceTitles[nk] }}</span>-->
+<!--						<div-->
+<!--								class="icon menu-item-icon is-small toggle-lists-icon pl-2"-->
+<!--								:class="{'active': typeof projectsVisible[n.id] !== 'undefined' ? projectsVisible[n.id] : true}"-->
+<!--						>-->
+<!--							<icon icon="chevron-down"/>-->
+<!--						</div>-->
+<!--						<span class="count" :class="{'ml-2 mr-0': n.id > 0}">-->
+<!--							({{ namespaceProjectsCount[nk] }})-->
+<!--						</span>-->
+<!--					</BaseButton>-->
+<!--					<namespace-settings-dropdown class="menu-list-dropdown" :namespace="n" v-if="n.id > 0"/>-->
+<!--				</div>-->
+<!--				&lt;!&ndash;-->
+<!--					NOTE: a v-model / computed setter is not possible, since the updateActiveProjects function-->
+<!--					triggered by the change needs to have access to the current namespace-->
+<!--				&ndash;&gt;-->
+<!--				<draggable-->
+<!--						v-if="projectsVisible[n.id] ?? true"-->
+<!--						v-bind="dragOptions"-->
+<!--						:modelValue="activeProjects[nk]"-->
+<!--						@update:modelValue="(projects) => updateActiveProjects(n, projects)"-->
+<!--						group="namespace-lists"-->
+<!--						@start="() => drag = true"-->
+<!--						@end="saveListPosition"-->
+<!--						handle=".handle"-->
+<!--						:disabled="n.id < 0 || undefined"-->
+<!--						tag="ul"-->
+<!--						item-key="id"-->
+<!--						:data-namespace-id="n.id"-->
+<!--						:data-namespace-index="nk"-->
+<!--						:component-data="{-->
+<!--							type: 'transition-group',-->
+<!--							name: !drag ? 'flip-list' : null,-->
+<!--							class: [-->
+<!--								'menu-list can-be-hidden',-->
+<!--								{ 'dragging-disabled': n.id < 0 }-->
+<!--							]-->
+<!--						}"-->
+<!--				>-->
+<!--					<template #item="{element: l}">-->
+<!--						<li-->
+<!--							class="list-menu loader-container is-loading-small"-->
+<!--							:class="{'is-loading': projectUpdating[l.id]}"-->
+<!--						>-->
+<!--							<BaseButton-->
+<!--								:to="{ name: 'project.index', params: { projectId: l.id} }"-->
+<!--								class="list-menu-link"-->
+<!--								:class="{'router-link-exact-active': currentProject.id === l.id}"-->
+<!--							>-->
+<!--								<span class="icon menu-item-icon handle">-->
+<!--									<icon icon="grip-lines"/>-->
+<!--								</span>-->
+<!--								<ColorBubble-->
+<!--										v-if="l.hexColor !== ''"-->
+<!--										:color="l.hexColor"-->
+<!--										class="mr-1"-->
+<!--								/>-->
+<!--								<span class="list-menu-title">{{ getProjectTitle(l) }}</span>-->
+<!--							</BaseButton>-->
+<!--							<BaseButton-->
+<!--								v-if="l.id > 0"-->
+<!--								class="favorite"-->
+<!--								:class="{'is-favorite': l.isFavorite}"-->
+<!--								@click="projectStore.toggleProjectFavorite(l)"-->
+<!--							>-->
+<!--								<icon :icon="l.isFavorite ? 'star' : ['far', 'star']"/>-->
+<!--							</BaseButton>-->
+<!--							<ProjectSettingsDropdown class="menu-list-dropdown" :project="l" v-if="l.id > 0">-->
+<!--								<template #trigger="{toggleOpen}">-->
+<!--									<BaseButton class="menu-list-dropdown-trigger" @click="toggleOpen">-->
+<!--										<icon icon="ellipsis-h" class="icon"/>-->
+<!--									</BaseButton>-->
+<!--								</template>-->
+<!--							</ProjectSettingsDropdown>-->
+<!--							<span class="list-setting-spacer" v-else></span>-->
+<!--						</li>-->
+<!--					</template>-->
+<!--				</draggable>-->
+<!--			</template>-->
+<!--		</nav>-->
 		<PoweredByLink/>
 	</aside>
 </template>
@@ -209,13 +215,10 @@ function toggleProjects(namespaceId: INamespace['id']) {
 const projectsVisible = ref<{ [id: INamespace['id']]: boolean }>({})
 // FIXME: async action will be unfinished when component mounts
 onBeforeMount(async () => {
-	const namespaces = await namespaceStore.loadNamespaces()
-	namespaces.forEach(n => {
-		if (typeof projectsVisible.value[n.id] === 'undefined') {
-			projectsVisible.value[n.id] = true
-		}
-	})
+	await projectStore.loadProjects()
 })
+
+const projects = computed(() => projectStore.projects)
 
 function updateActiveProjects(namespace: INamespace, activeProjects: IProject[]) {
 	// This is a bit hacky: since we do have to filter out the archived items from the list
@@ -236,7 +239,7 @@ function updateActiveProjects(namespace: INamespace, activeProjects: IProject[])
 
 const projectUpdating = ref<{ [id: INamespace['id']]: boolean }>({})
 
-async function saveListPosition(e: SortableEvent) {
+async function saveProjectPosition(e: SortableEvent) {
 	if (!e.newIndex && e.newIndex !== 0) return
 
 	const namespaceId = parseInt(e.to.dataset.namespaceId as string)

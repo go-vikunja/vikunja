@@ -166,6 +166,7 @@
   },
   "project": {
     "archived": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "showArchived": "Show Archived",
     "title": "Project Title",
     "color": "Color",
     "projects": "Projects",
@@ -324,7 +325,6 @@
   "namespace": {
     "title": "Namespaces & Projects",
     "namespace": "Namespace",
-    "showArchived": "Show Archived",
     "noneAvailable": "You don't have any namespaces right now.",
     "unarchive": "Un-Archive",
     "archived": "Archived",

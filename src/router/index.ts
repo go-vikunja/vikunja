@@ -22,7 +22,6 @@ const DataExportDownload = () => import('@/views/user/DataExportDownload.vue')
 // Tasks
 import UpcomingTasksComponent from '@/views/tasks/ShowTasks.vue'
 import LinkShareAuthComponent from '@/views/sharing/LinkSharingAuth.vue'
-const ListNamespaces = () => import('@/views/namespaces/ListNamespaces.vue')
 const TaskDetailView = () => import('@/views/tasks/TaskDetailView.vue')
 
 // Team Handling
@@ -41,6 +40,7 @@ const ProjectKanban = () => import('@/views/project/ProjectKanban.vue')
 const ProjectInfo = () => import('@/views/project/ProjectInfo.vue')
 
 // Project Settings
+const ListProjects = () => import('@/views/project/ListProjects.vue')
 const ProjectSettingEdit = () => import('@/views/project/settings/edit.vue')
 const ProjectSettingBackground = () => import('@/views/project/settings/background.vue')
 const ProjectSettingDuplicate = () => import('@/views/project/settings/duplicate.vue')
@@ -204,11 +204,6 @@ const router = createRouter({
 			component: LinkShareAuthComponent,
 		},
 		{
-			path: '/namespaces',
-			name: 'namespaces.index',
-			component: ListNamespaces,
-		},
-		{
 			path: '/namespaces/new',
 			name: 'namespace.create',
 			component: NewNamespaceComponent,
@@ -280,6 +275,11 @@ const router = createRouter({
 					hash: to.hash,
 				}
 			},
+		},
+		{
+			path: '/projects',
+			name: 'projects.index',
+			component: ListProjects,
 		},
 		{
 			path: '/projects/new/:namespaceId/',
