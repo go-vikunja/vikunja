@@ -11,7 +11,6 @@
 		@search="findProjects"
 	>
 		<template #searchResult="{option}">
-			<span class="project-namespace-title search-result">{{ namespace((option as IProject).namespaceId) }} ></span>
 			{{ (option as IProject).title }}
 		</template>
 	</Multiselect>
@@ -23,10 +22,8 @@ import type {PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import type {IProject} from '@/modelTypes/IProject'
-import type {INamespace} from '@/modelTypes/INamespace'
 
 import {useProjectStore} from '@/stores/projects'
-import {useNamespaceStore} from '@/stores/namespaces'
 
 import ProjectModel from '@/models/project'
 
@@ -54,7 +51,6 @@ watch(
 )
 
 const projectStore = useProjectStore()
-const namespaceStore = useNamespaceStore()
 const foundProjects = ref<IProject[]>([])
 function findProjects(query: string) {
 	if (query === '') {
@@ -70,17 +66,4 @@ function select(l: IProject | null) {
 	Object.assign(project, l)
 	emit('update:modelValue', project)
 }
-
-function namespace(namespaceId: INamespace['id']) {
-	const namespace = namespaceStore.getNamespaceById(namespaceId)
-	return namespace !== null
-		? namespace.title
-		: t('project.shared')
-}
 </script>
-
-<style lang="scss" scoped>
-.project-namespace-title {
-	color: var(--grey-500);
-}
-</style>

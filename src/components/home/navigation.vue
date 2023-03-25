@@ -159,12 +159,10 @@ import type {SortableEvent} from 'sortablejs'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import ProjectSettingsDropdown from '@/components/project/project-settings-dropdown.vue'
-import NamespaceSettingsDropdown from '@/components/namespace/namespace-settings-dropdown.vue'
 import PoweredByLink from '@/components/home/PoweredByLink.vue'
 import Logo from '@/components/home/Logo.vue'
 
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
-import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import type {IProject} from '@/modelTypes/IProject'
 import type {INamespace} from '@/modelTypes/INamespace'
@@ -172,7 +170,6 @@ import ColorBubble from '@/components/misc/colorBubble.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
-import {useNamespaceStore} from '@/stores/namespaces'
 
 const drag = ref(false)
 const dragOptions = {
@@ -199,7 +196,7 @@ const activeProjects = computed(() => {
 })
 
 const namespaceTitles = computed(() => {
-	return namespaces.value.map((namespace) => getNamespaceTitle(namespace))
+	return []
 })
 
 const namespaceProjectsCount = computed(() => {

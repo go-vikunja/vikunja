@@ -17,22 +17,11 @@
 			@taskAdded="updateTaskKey"
 			class="is-max-width-desktop"
 		/>
-		<template v-if="!hasTasks && !loading">
-			<template v-if="defaultNamespaceId > 0">
-				<p class="mt-4">{{ $t('home.project.newText') }}</p>
-				<x-button
-					:to="{ name: 'project.create', params: { namespaceId: defaultNamespaceId } }"
-					:shadow="false"
-					class="ml-2"
-				>
-					{{ $t('home.project.new') }}
-				</x-button>
-			</template>
-			<p class="mt-4" v-if="migratorsEnabled">
+		<template v-if="!hasTasks && !loading && migratorsEnabled">
+			<p class="mt-4">
 				{{ $t('home.project.importText') }}
 			</p>
 			<x-button
-				v-if="migratorsEnabled"
 				:to="{ name: 'migrate.start' }"
 				:shadow="false">
 				{{ $t('home.project.import') }}
@@ -66,7 +55,6 @@ import {useDaytimeSalutation} from '@/composables/useDaytimeSalutation'
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
 import {useConfigStore} from '@/stores/config'
-import {useNamespaceStore} from '@/stores/namespaces'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 import type {IProject} from '@/modelTypes/IProject'
@@ -76,7 +64,6 @@ const salutation = useDaytimeSalutation()
 const baseStore = useBaseStore()
 const authStore = useAuthStore()
 const configStore = useConfigStore()
-const namespaceStore = useNamespaceStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 
@@ -93,8 +80,7 @@ const projectHistory = computed(() => {
 
 const migratorsEnabled = computed(() => configStore.availableMigrators?.length > 0)
 const hasTasks = computed(() => baseStore.hasTasks)
-const defaultNamespaceId = computed(() => namespaceStore.namespaces?.[0]?.id || 0)
-const hasProjects = computed(() => namespaceStore.namespaces?.[0]?.projects.length > 0)
+const hasProjects = computed(() => projectStore.projects.length > 0)
 const loading = computed(() => taskStore.isLoading)
 const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt))
 

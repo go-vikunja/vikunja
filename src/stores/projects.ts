@@ -6,7 +6,6 @@ import ProjectService from '@/services/project'
 import {setModuleLoading} from '@/stores/helper'
 import {removeProjectFromHistory} from '@/modules/projectHistory'
 import {createNewIndexer} from '@/indexes'
-import {useNamespaceStore} from './namespaces'
 
 import type {IProject} from '@/modelTypes/IProject'
 
@@ -26,7 +25,6 @@ export interface ProjectState {
 
 export const useProjectStore = defineStore('project', () => {
 	const baseStore = useBaseStore()
-	const namespaceStore = useNamespaceStore()
 
 	const isLoading = ref(false)
 
@@ -100,8 +98,6 @@ export const useProjectStore = defineStore('project', () => {
 
 		try {
 			const createdProject = await projectService.create(project)
-			createdProject.namespaceId = project.namespaceId
-			namespaceStore.addProjectToNamespace(createdProject)
 			setProject(createdProject)
 			return createdProject
 		} finally {
@@ -116,21 +112,13 @@ export const useProjectStore = defineStore('project', () => {
 		try {
 			await projectService.update(project)
 			setProject(project)
-			namespaceStore.setProjectInNamespaceById(project)
 
 			// the returned project from projectService.update is the same!
 			// in order to not create a manipulation in pinia store we have to create a new copy
 			const newProject = {
 				...project,
-				namespaceId: FavoriteProjectsNamespace,
 			}
 			
-			namespaceStore.removeProjectFromNamespaceById(newProject)
-			if (project.isFavorite) {
-				namespaceStore.addProjectToNamespace(newProject)
-			}
-			namespaceStore.loadNamespacesIfFavoritesDontExist()
-			namespaceStore.removeFavoritesNamespaceIfEmpty()
 			return newProject
 		} catch (e) {
 			// Reset the project state to the initial one to avoid confusion for the user
@@ -151,7 +139,6 @@ export const useProjectStore = defineStore('project', () => {
 		try {
 			const response = await projectService.delete(project)
 			removeProjectById(project)
-			namespaceStore.removeProjectFromNamespaceById(project)
 			removeProjectFromHistory({id: project.id})
 			return response
 		} finally {

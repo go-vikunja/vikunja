@@ -165,16 +165,6 @@
 					/>
 				</div>
 			</div>
-			<div class="field">
-				<label class="label">{{ $t('namespace.namespaces') }}</label>
-				<div class="control">
-					<SelectNamespace
-						v-model="entities.namespace"
-						@select="changeMultiselectFilter('namespace', 'namespace')"
-						@remove="changeMultiselectFilter('namespace', 'namespace')"
-					/>
-				</div>
-			</div>
 		</template>
 	</card>
 </template>
@@ -189,7 +179,6 @@ import {camelCase} from 'camel-case'
 
 import type {ILabel} from '@/modelTypes/ILabel'
 import type {IUser} from '@/modelTypes/IUser'
-import type {INamespace} from '@/modelTypes/INamespace'
 import type {IProject} from '@/modelTypes/IProject'
 
 import {useLabelStore} from '@/stores/labels'
@@ -201,7 +190,6 @@ import EditLabels from '@/components/tasks/partials/editLabels.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import SelectUser from '@/components/input/SelectUser.vue'
 import SelectProject from '@/components/input/SelectProject.vue'
-import SelectNamespace from '@/components/input/SelectNamespace.vue'
 
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {dateIsValid, formatISO} from '@/helpers/time/formatDate'
@@ -209,7 +197,6 @@ import {objectToSnakeCase} from '@/helpers/case'
 
 import UserService from '@/services/user'
 import ProjectService from '@/services/project'
-import NamespaceService from '@/services/namespace'
 
 // FIXME: do not use this here for now. instead create new version from DEFAULT_PARAMS
 import {getDefaultParams} from '@/composables/useTaskList'
@@ -240,7 +227,6 @@ const DEFAULT_FILTERS = {
 	assignees: '',
 	labels: '',
 	project_id: '',
-	namespace: '',
 } as const
 
 const props = defineProps({
@@ -265,23 +251,20 @@ const filters = ref({...DEFAULT_FILTERS})
 const services = {
 	users: shallowReactive(new UserService()),
 	projects: shallowReactive(new ProjectService()),
-  namespace: shallowReactive(new NamespaceService()),
 }
 
 interface Entities {
 	users: IUser[]
 	labels: ILabel[]
 	projects: IProject[]
-	namespace: INamespace[]
 }
 
-type EntityType = 'users' | 'labels' | 'projects' | 'namespace'
+type EntityType = 'users' | 'labels' | 'projects'
 
 const entities: Entities = reactive({
 	users: [],
 	labels: [],
 	projects: [],
-	namespace: [],
 })
 
 onMounted(() => {
@@ -328,7 +311,6 @@ function prepareFilters() {
 	prepareDate('reminders')
 	prepareRelatedObjectFilter('users', 'assignees')
 	prepareRelatedObjectFilter('projects', 'project_id')
-	prepareRelatedObjectFilter('namespace')
 
 	prepareSingleValue('labels')
 

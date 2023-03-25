@@ -2,7 +2,6 @@ import type {IAbstract} from './IAbstract'
 import type {ITask} from './ITask'
 import type {IUser} from './IUser'
 import type {ISubscription} from './ISubscription'
-import type {INamespace} from './INamespace'
 
 
 export interface IProject extends IAbstract {
@@ -11,7 +10,6 @@ export interface IProject extends IAbstract {
 	description: string
 	owner: IUser
 	tasks: ITask[]
-	namespaceId: INamespace['id']
 	isArchived: boolean
 	hexColor: string
 	identifier: string

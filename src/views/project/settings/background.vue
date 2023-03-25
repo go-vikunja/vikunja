@@ -108,7 +108,6 @@ import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
-import {useNamespaceStore} from '@/stores/namespaces'
 import {useConfigStore} from '@/stores/config'
 
 import BackgroundUnsplashService from '@/services/backgroundUnsplash'
@@ -146,7 +145,6 @@ const debounceNewBackgroundSearch = debounce(newBackgroundSearch, SEARCH_DEBOUNC
 const backgroundUploadService = ref(new BackgroundUploadService())
 const projectService = ref(new ProjectService())
 const projectStore = useProjectStore()
-const namespaceStore = useNamespaceStore()
 const configStore = useConfigStore()
 
 const unsplashBackgroundEnabled = computed(() => configStore.enabledBackgroundProviders.includes('unsplash'))
@@ -195,7 +193,6 @@ async function setBackground(backgroundId: string) {
 		projectId: route.params.projectId,
 	})
 	await baseStore.handleSetCurrentProject({project, forceUpdate: true})
-	namespaceStore.setProjectInNamespaceById(project)
 	projectStore.setProject(project)
 	success({message: t('project.background.success')})
 }
@@ -211,7 +208,6 @@ async function uploadBackground() {
 		backgroundUploadInput.value?.files[0],
 	)
 	await baseStore.handleSetCurrentProject({project, forceUpdate: true})
-	namespaceStore.setProjectInNamespaceById(project)
 	projectStore.setProject(project)
 	success({message: t('project.background.success')})
 }
@@ -219,7 +215,6 @@ async function uploadBackground() {
 async function removeBackground() {
 	const project = await projectService.value.removeBackground(currentProject.value)
 	await baseStore.handleSetCurrentProject({project, forceUpdate: true})
-	namespaceStore.setProjectInNamespaceById(project)
 	projectStore.setProject(project)
 	success({message: t('project.background.removeSuccess')})
 	router.back()

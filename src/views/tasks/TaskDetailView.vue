@@ -13,8 +13,7 @@
 				:can-write="canWrite"
 				ref="heading"
 			/>
-			<h6 class="subtitle" v-if="parent && parent.namespace && parent.project">
-				{{ getNamespaceTitle(parent.namespace) }} &rsaquo;
+			<h6 class="subtitle" v-if="parent && parent.project">
 				<router-link :to="{ name: 'project.index', params: { projectId: parent.project.id } }">
 					{{ getProjectTitle(parent.project) }}
 				</router-link>
@@ -486,12 +485,10 @@ import TaskSubscription from '@/components/misc/subscription.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 import {uploadFile} from '@/helpers/attachments'
-import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 
 import {useBaseStore} from '@/stores/base'
-import {useNamespaceStore} from '@/stores/namespaces'
 import {useAttachmentStore} from '@/stores/attachments'
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
@@ -500,6 +497,7 @@ import {useTitle} from '@/composables/useTitle'
 
 import {success} from '@/message'
 import type {Action as MessageAction} from '@/message'
+import {useProjectStore} from '@/stores/projects'
 
 const props = defineProps({
 	taskId: {
@@ -517,7 +515,7 @@ const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
 
 const baseStore = useBaseStore()
-const namespaceStore = useNamespaceStore()
+const projectStore = useProjectStore()
 const attachmentStore = useAttachmentStore()
 const taskStore = useTaskStore()
 const kanbanStore = useKanbanStore()
@@ -541,16 +539,11 @@ const taskId = toRef(props, 'taskId')
 const parent = computed(() => {
 	if (!task.projectId) {
 		return {
-			namespace: null,
 			project: null,
 		}
 	}
-
-	if (!namespaceStore.getProjectAndNamespaceById) {
-		return null
-	}
-
-	return namespaceStore.getProjectAndNamespaceById(task.projectId)
+	
+	return projectStore.getProjectById(task.projectId)
 })
 
 watch(
@@ -775,7 +768,6 @@ async function toggleFavorite() {
 	task.isFavorite = !task.isFavorite
 	const newTask = await taskService.update(task)
 	Object.assign(task, newTask)
-	await namespaceStore.loadNamespacesIfFavoritesDontExist()
 }
 
 async function setPriority(priority: Priority) {

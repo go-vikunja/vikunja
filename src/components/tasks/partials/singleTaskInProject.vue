@@ -149,7 +149,6 @@ import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatD
 import {success} from '@/message'
 
 import {useProjectStore} from '@/stores/projects'
-import {useNamespaceStore} from '@/stores/namespaces'
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
 
@@ -209,7 +208,6 @@ onBeforeUnmount(() => {
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
-const namespaceStore = useNamespaceStore()
 
 const project = computed(() => projectStore.getProjectById(task.value.projectId))
 const projectColor = computed(() => project.value !== null ? project.value.hexColor : '')
@@ -260,7 +258,6 @@ async function toggleFavorite() {
 	task.value.isFavorite = !task.value.isFavorite
 	task.value = await taskService.update(task.value)
 	emit('task-updated', task.value)
-	namespaceStore.loadNamespacesIfFavoritesDontExist()
 }
 
 const deferDueDate = ref<typeof DeferTask | null>(null)

@@ -96,7 +96,6 @@ import type {ISubscription} from '@/modelTypes/ISubscription'
 import {isSavedFilter} from '@/services/savedFilter'
 import {useConfigStore} from '@/stores/config'
 import {useProjectStore} from '@/stores/projects'
-import {useNamespaceStore} from '@/stores/namespaces'
 
 const props = defineProps({
 	project: {
@@ -106,7 +105,6 @@ const props = defineProps({
 })
 
 const projectStore = useProjectStore()
-const namespaceStore = useNamespaceStore()
 const subscription = ref<ISubscription | null>(null)
 watchEffect(() => {
 	subscription.value = props.project.subscription ?? null
@@ -122,6 +120,5 @@ function setSubscriptionInStore(sub: ISubscription) {
 		subscription: sub,
 	}
 	projectStore.setProject(updatedProject)
-	namespaceStore.setProjectInNamespaceById(updatedProject)
 }
 </script>

@@ -6,7 +6,6 @@ import SubscriptionModel from '@/models/subscription'
 import type {IProject} from '@/modelTypes/IProject'
 import type {IUser} from '@/modelTypes/IUser'
 import type {ITask} from '@/modelTypes/ITask'
-import type {INamespace} from '@/modelTypes/INamespace'
 import type {ISubscription} from '@/modelTypes/ISubscription'
 
 export default class ProjectModel extends AbstractModel<IProject> implements IProject {
@@ -15,7 +14,6 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 	description = ''
 	owner: IUser = UserModel
 	tasks: ITask[] = []
-	namespaceId: INamespace['id'] = 0
 	isArchived = false
 	hexColor = ''
 	identifier = ''

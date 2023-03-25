@@ -15,7 +15,7 @@
 			:class="{'is-visible': background}"
 			:style="{'background-image': background !== null ? `url(${background})` : undefined}"
 		/>
-		<span v-if="project.isArchived" class="is-archived" >{{ $t('namespace.archived') }}</span>
+		<span v-if="project.isArchived" class="is-archived" >{{ $t('project.archived') }}</span>
 
 		<div class="project-title" aria-hidden="true">{{ project.title }}</div>
 		<BaseButton

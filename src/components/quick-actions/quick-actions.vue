@@ -61,7 +61,6 @@ import {useRouter} from 'vue-router'
 import TaskService from '@/services/task'
 import TeamService from '@/services/team'
 
-import NamespaceModel from '@/models/namespace'
 import TeamModel from '@/models/team'
 import ProjectModel from '@/models/project'
 
@@ -70,7 +69,6 @@ import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
-import {useNamespaceStore} from '@/stores/namespaces'
 import {useLabelStore} from '@/stores/labels'
 import {useTaskStore} from '@/stores/tasks'
 
@@ -81,7 +79,6 @@ import {success} from '@/message'
 
 import type {ITeam} from '@/modelTypes/ITeam'
 import type {ITask} from '@/modelTypes/ITask'
-import type {INamespace} from '@/modelTypes/INamespace'
 import type {IProject} from '@/modelTypes/IProject'
 
 const {t} = useI18n({useScope: 'global'})
@@ -89,7 +86,6 @@ const router = useRouter()
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
-const namespaceStore = useNamespaceStore()
 const labelStore = useLabelStore()
 const taskStore = useTaskStore()
 
@@ -105,7 +101,6 @@ enum ACTION_TYPE {
 enum COMMAND_TYPE {
 	NEW_TASK = 'newTask',
 	NEW_PROJECT = 'newProject',
-	NEW_NAMESPACE = 'newNamespace',
 	NEW_TEAM = 'newTeam',
 }
 
@@ -147,7 +142,6 @@ const foundProjects = computed(() => {
 		return []
 	}
 
-	const ncache: { [id: ProjectModel['id']]: INamespace } = {}
 	const history = getHistory()
 	const allProjects = [
 		...new Set([
@@ -156,15 +150,7 @@ const foundProjects = computed(() => {
 		]),
 	]
 
-	return allProjects.filter((l) => {
-		if (typeof l === 'undefined' || l === null) {
-			return false
-		}
-		if (typeof ncache[l.namespaceId] === 'undefined') {
-			ncache[l.namespaceId] = namespaceStore.getNamespaceById(l.namespaceId)
-		}
-		return !ncache[l.namespaceId].isArchived
-	})
+	return allProjects.filter((l) => typeof l !== 'undefined' && l !== null)
 })
 
 // FIXME: use fuzzysearch
@@ -205,7 +191,6 @@ const results = computed<Result[]>(() => {
 
 const loading = computed(() => 
 	taskService.loading ||
-	namespaceStore.isLoading ||
 	projectStore.isLoading ||
 	teamService.loading,
 )
@@ -230,12 +215,6 @@ const commands = computed<{ [key in COMMAND_TYPE]: Command }>(() => ({
 		placeholder: t('quickActions.newProject'),
 		action: newProject,
 	},
-	newNamespace: {
-		type: COMMAND_TYPE.NEW_NAMESPACE,
-		title: t('quickActions.cmds.newNamespace'),
-		placeholder: t('quickActions.newNamespace'),
-		action: newNamespace,
-	},
 	newTeam: {
 		type: COMMAND_TYPE.NEW_TEAM,
 		title: t('quickActions.cmds.newTeam'),
@@ -252,7 +231,6 @@ const currentProject = computed(() => Object.keys(baseStore.currentProject).leng
 )
 
 const hintText = computed(() => {
-	let namespace
 	if (selectedCmd.value !== null && currentProject.value !== null) {
 		switch (selectedCmd.value.type) {
 			case COMMAND_TYPE.NEW_TASK:
@@ -260,12 +238,7 @@ const hintText = computed(() => {
 					title: currentProject.value.title,
 				})
 			case COMMAND_TYPE.NEW_PROJECT:
-				namespace = namespaceStore.getNamespaceById(
-					currentProject.value.namespaceId,
-				)
-				return t('quickActions.createProject', {
-					title: namespace?.title,
-				})
+				return t('quickActions.createProject')
 		}
 	}
 	const prefixes =
@@ -278,7 +251,7 @@ const availableCmds = computed(() => {
 	if (currentProject.value !== null) {
 		cmds.push(commands.value.newTask, commands.value.newProject)
 	}
-	cmds.push(commands.value.newNamespace, commands.value.newTeam)
+	cmds.push(commands.value.newTeam)
 	return cmds
 })
 
@@ -506,19 +479,12 @@ async function newProject() {
 	}
 	const newProject = await projectStore.createProject(new ProjectModel({
 		title: query.value,
-		namespaceId: currentProject.value.namespaceId,
 	}))
 	success({ message: t('project.create.createdSuccess')})
 	await router.push({
 		name: 'project.index',
 		params: { projectId: newProject.id },
 	})
-}
-
-async function newNamespace() {
-	const newNamespace = new NamespaceModel({ title: query.value })
-	await namespaceStore.createNamespace(newNamespace)
-	success({ message: t('namespace.create.success')  })
 }
 
 async function newTeam() {

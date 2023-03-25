@@ -7,7 +7,7 @@ import {colorFromHex} from '@/helpers/color/colorFromHex'
 export default class ProjectService extends AbstractService<IProject> {
 	constructor() {
 		super({
-			create: '/namespaces/{namespaceId}/projects',
+			create: '/projects',
 			get: '/projects/{id}',
 			getAll: '/projects',
 			update: '/projects/{id}',

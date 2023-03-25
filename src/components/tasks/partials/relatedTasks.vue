@@ -47,11 +47,6 @@
 									v-if="task.projectId !== projectId"
 								>
 									<span
-										v-if="task.differentNamespace !== null"
-										v-tooltip="$t('task.relation.differentNamespace')">
-										{{ task.differentNamespace }} >
-									</span>
-									<span
 										v-if="task.differentProject !== null"
 										v-tooltip="$t('task.relation.differentProject')">
 										{{ task.differentProject }} >
@@ -101,11 +96,6 @@
 								class="different-project"
 								v-if="t.projectId !== projectId"
 							>
-								<span
-									v-if="t.differentNamespace !== null"
-									v-tooltip="$t('task.relation.differentNamespace')">
-									{{ t.differentNamespace }} >
-								</span>
 								<span
 									v-if="t.differentProject !== null"
 									v-tooltip="$t('task.relation.differentProject')">
@@ -168,10 +158,9 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import Multiselect from '@/components/input/multiselect.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 
-import {useNamespaceStore} from '@/stores/namespaces'
-
 import {error, success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
+import {useProjectStore} from '@/stores/projects'
 
 const props = defineProps({
 	taskId: {
@@ -196,7 +185,7 @@ const props = defineProps({
 })
 
 const taskStore = useTaskStore()
-const namespaceStore = useNamespaceStore()
+const projectStore = useProjectStore()
 const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
 
@@ -230,24 +219,13 @@ async function findTasks(newQuery: string) {
 	foundTasks.value = await taskService.getAll({}, {s: newQuery})
 }
 
-const getProjectAndNamespaceById = (projectId: number) => namespaceStore.getProjectAndNamespaceById(projectId, true)
-
-const namespace = computed(() => getProjectAndNamespaceById(props.projectId)?.namespace)
-
 function mapRelatedTasks(tasks: ITask[]) {
 	return tasks.map(task => {
 		// by doing this here once we can save a lot of duplicate calls in the template
-		const {
-			project,
-			namespace: taskNamespace,
-		} = getProjectAndNamespaceById(task.projectId) || {project: null, namespace: null}
+		const project = projectStore.getProjectById(task.ProjectId)
 
 		return {
 			...task,
-			differentNamespace:
-				(taskNamespace !== null &&
-					taskNamespace.id !== namespace.value.id &&
-					taskNamespace?.title) || null,
 			differentProject:
 				(project !== null &&
 					task.projectId !== props.projectId &&

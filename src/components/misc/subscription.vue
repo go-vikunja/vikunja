@@ -73,12 +73,6 @@ const {t} = useI18n({useScope: 'global'})
 
 const tooltipText = computed(() => {
 	if (disabled.value) {
-		if (props.entity === 'project' && subscriptionEntity.value === 'namespace') {
-			return t('task.subscription.subscribedProjectThroughParentNamespace')
-		}
-		if (props.entity === 'task' && subscriptionEntity.value === 'namespace') {
-			return t('task.subscription.subscribedTaskThroughParentNamespace')
-		}
 		if (props.entity === 'task' && subscriptionEntity.value === 'project') {
 			return t('task.subscription.subscribedTaskThroughParentProject')
 		}
@@ -87,10 +81,6 @@ const tooltipText = computed(() => {
 	}
 
 	switch (props.entity) {
-		case 'namespace':
-			return props.modelValue !== null ?
-				t('task.subscription.subscribedNamespace') :
-				t('task.subscription.notSubscribedNamespace')
 		case 'project':
 			return props.modelValue !== null ?
 				t('task.subscription.subscribedProject') :
@@ -130,9 +120,6 @@ async function subscribe() {
 
 	let message = ''
 	switch (props.entity) {
-		case 'namespace':
-			message = t('task.subscription.subscribeSuccessNamespace')
-			break
 		case 'project':
 			message = t('task.subscription.subscribeSuccessProject')
 			break
@@ -153,9 +140,6 @@ async function unsubscribe() {
 
 	let message = ''
 	switch (props.entity) {
-		case 'namespace':
-			message = t('task.subscription.unsubscribeSuccessNamespace')
-			break
 		case 'project':
 			message = t('task.subscription.unsubscribeSuccessProject')
 			break

@@ -94,7 +94,6 @@ watch(() => route.name as string, (routeName) => {
 		(
 			[
 				'home',
-				'namespace.edit',
 				'teams.index',
 				'teams.edit',
 				'tasks.range',

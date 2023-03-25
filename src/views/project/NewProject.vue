@@ -63,7 +63,6 @@ async function createNewProject() {
 	}
 	showError.value = false
 
-	project.namespaceId = Number(route.params.namespaceId as string)
 	const newProject = await projectStore.createProject(project)
 	await router.push({
 		name: 'project.index',
