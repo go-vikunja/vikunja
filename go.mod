@@ -34,7 +34,7 @@ require (
 	github.com/getsentry/sentry-go v0.19.0
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/go-testfixtures/testfixtures/v3 v3.8.1
-	github.com/gocarina/gocsv v0.0.0-20230226133904-70c27cb2918a
+	github.com/gocarina/gocsv v0.0.0-20230325173030-9a18a846a479
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/google/uuid v1.3.0

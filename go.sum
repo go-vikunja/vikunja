@@ -219,6 +219,8 @@ github.com/go-testfixtures/testfixtures/v3 v3.8.1 h1:uonwvepqRvSgddcrReZQhojTlWl
 github.com/go-testfixtures/testfixtures/v3 v3.8.1/go.mod h1:Kdu7YeMC0KRXVHdaQ91Vmx3pcjoTF63h4f1qTJDdXLA=
 github.com/gocarina/gocsv v0.0.0-20230226133904-70c27cb2918a h1:/5o1ejt5M0fNAN2lU1NBLtPzUSZru689EWJq01ptr+E=
 github.com/gocarina/gocsv v0.0.0-20230226133904-70c27cb2918a/go.mod h1:5YoVOkjYAQumqlV356Hj3xeYh4BdZuLE0/nRkf2NKkI=
+github.com/gocarina/gocsv v0.0.0-20230325173030-9a18a846a479 h1:KaCpc4e48emF9hYmMB9INyfpGJHAZxEAS9EqWFkpTig=
+github.com/gocarina/gocsv v0.0.0-20230325173030-9a18a846a479/go.mod h1:5YoVOkjYAQumqlV356Hj3xeYh4BdZuLE0/nRkf2NKkI=
 github.com/goccy/go-json v0.8.1/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
 github.com/goccy/go-json v0.9.11 h1:/pAaQDLHEoCq/5FFmSKBswWmK6H0e8g4159Kc/X/nqk=
 github.com/goccy/go-json v0.9.11/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
