@@ -178,7 +178,6 @@ const dragOptions = {
 }
 
 const baseStore = useBaseStore()
-const namespaceStore = useNamespaceStore()
 const currentProject = computed(() => baseStore.currentProject)
 const menuActive = computed(() => baseStore.menuActive)
 const loading = computed(() => namespaceStore.isLoading)
