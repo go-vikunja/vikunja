@@ -714,11 +714,22 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth) (err error)
 
 // CreateNewProjectForUser creates a new inbox project for a user. To prevent import cycles, we can't do that
 // directly in the user.Create function.
-func CreateNewProjectForUser(s *xorm.Session, user *user.User) (err error) {
+func CreateNewProjectForUser(s *xorm.Session, u *user.User) (err error) {
 	p := &Project{
 		Title: "Inbox",
 	}
-	return p.Create(s, user)
+	err = p.Create(s, u)
+	if err != nil {
+		return err
+	}
+
+	if u.DefaultProjectID != 0 {
+		return err
+	}
+
+	u.DefaultProjectID = p.ID
+	_, err = user.UpdateUser(s, u, false)
+	return err
 }
 
 func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProjectBackground bool) (err error) {
