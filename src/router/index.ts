@@ -48,12 +48,6 @@ const ProjectSettingShare = () => import('@/views/project/settings/share.vue')
 const ProjectSettingDelete = () => import('@/views/project/settings/delete.vue')
 const ProjectSettingArchive = () => import('@/views/project/settings/archive.vue')
 
-// Namespace Settings
-const NamespaceSettingEdit = () => import('@/views/namespaces/settings/edit.vue')
-const NamespaceSettingShare = () => import('@/views/namespaces/settings/share.vue')
-const NamespaceSettingArchive = () => import('@/views/namespaces/settings/archive.vue')
-const NamespaceSettingDelete = () => import('@/views/namespaces/settings/delete.vue')
-
 // Saved Filters
 const FilterNew = () => import('@/views/filters/FilterNew.vue')
 const FilterEdit = () => import('@/views/filters/FilterEdit.vue')
@@ -73,9 +67,6 @@ const UserSettingsTOTPComponent = () => import('@/views/user/settings/TOTP.vue')
 
 // Project Handling
 const NewProjectComponent = () => import('@/views/project/NewProject.vue')
-
-// Namespace Handling
-const NewNamespaceComponent = () => import('@/views/namespaces/NewNamespace.vue')
 
 const EditTeamComponent = () => import('@/views/teams/EditTeam.vue')
 const NewTeamComponent = () =>  import('@/views/teams/NewTeam.vue')
@@ -202,49 +193,6 @@ const router = createRouter({
 			path: '/share/:share/auth',
 			name: 'link-share.auth',
 			component: LinkShareAuthComponent,
-		},
-		{
-			path: '/namespaces/new',
-			name: 'namespace.create',
-			component: NewNamespaceComponent,
-			meta: {
-				showAsModal: true,
-			},
-		},
-		{
-			path: '/namespaces/:id/settings/edit',
-			name: 'namespace.settings.edit',
-			component: NamespaceSettingEdit,
-			meta: {
-				showAsModal: true,
-			},
-			props: route => ({ namespaceId: Number(route.params.id as string) }),
-		},
-		{
-			path: '/namespaces/:namespaceId/settings/share',
-			name: 'namespace.settings.share',
-			component: NamespaceSettingShare,
-			meta: {
-				showAsModal: true,
-			},
-		},
-		{
-			path: '/namespaces/:id/settings/archive',
-			name: 'namespace.settings.archive',
-			component: NamespaceSettingArchive,
-			meta: {
-				showAsModal: true,
-			},
-			props: route => ({ namespaceId: parseInt(route.params.id as string) }),
-		},
-		{
-			path: '/namespaces/:id/settings/delete',
-			name: 'namespace.settings.delete',
-			component: NamespaceSettingDelete,
-			meta: {
-				showAsModal: true,
-			},
-			props: route => ({ namespaceId: Number(route.params.id as string) }),
 		},
 		{
 			path: '/tasks/:id',
