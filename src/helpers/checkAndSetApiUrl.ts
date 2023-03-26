@@ -6,16 +6,16 @@ export const ERROR_NO_API_URL = 'noApiUrlProvided'
 
 
 export const checkAndSetApiUrl = (url: string): Promise<string> => {
-	if(url.startsWith('/')) {
+	if (url.startsWith('/')) {
 		url = window.location.host + url
 	}
-	
-	// Check if the url has an http prefix
+
+	// Check if the url has a http prefix
 	if (
 		!url.startsWith('http://') &&
 		!url.startsWith('https://')
 	) {
-		url = `http://${url}`
+		url = `${window.location.protocol}//${url}`
 	}
 
 	const urlToCheck: URL = new URL(url)
@@ -42,15 +42,6 @@ export const checkAndSetApiUrl = (url: string): Promise<string> => {
 			throw e
 		})
 		.catch(e => {
-			// Check if it has a port and if not check if it is reachable at https
-			if (urlToCheck.protocol === 'http:') {
-				urlToCheck.protocol = 'https:'
-				window.API_URL = urlToCheck.toString()
-				return updateConfig()
-			}
-			throw e
-		})
-		.catch(e => {
 			// Check if it is reachable at /api/v1 and https
 			urlToCheck.pathname = origUrlToCheck.pathname
 			if (
@@ -66,7 +57,6 @@ export const checkAndSetApiUrl = (url: string): Promise<string> => {
 		.catch(e => {
 			// Check if it is reachable at port API_DEFAULT_PORT and https
 			if (urlToCheck.port !== API_DEFAULT_PORT) {
-				urlToCheck.protocol = 'https:'
 				urlToCheck.port = API_DEFAULT_PORT
 				window.API_URL = urlToCheck.toString()
 				return updateConfig()
@@ -74,30 +64,7 @@ export const checkAndSetApiUrl = (url: string): Promise<string> => {
 			throw e
 		})
 		.catch(e => {
-			// Check if it is reachable at :API_DEFAULT_PORT and /api/v1 and https
-			urlToCheck.pathname = origUrlToCheck.pathname
-			if (
-				!urlToCheck.pathname.endsWith('/api/v1') &&
-				!urlToCheck.pathname.endsWith('/api/v1/')
-			) {
-				urlToCheck.pathname = `${urlToCheck.pathname}api/v1`
-				window.API_URL = urlToCheck.toString()
-				return updateConfig()
-			}
-			throw e
-		})
-		.catch(e => {
-			// Check if it is reachable at port API_DEFAULT_PORT and http
-			if (urlToCheck.port !== API_DEFAULT_PORT) {
-				urlToCheck.protocol = 'http:'
-				urlToCheck.port = API_DEFAULT_PORT
-				window.API_URL = urlToCheck.toString()
-				return updateConfig()
-			}
-			throw e
-		})
-		.catch(e => {
-			// Check if it is reachable at :API_DEFAULT_PORT and /api/v1 and http
+			// Check if it is reachable at :API_DEFAULT_PORT and /api/v1
 			urlToCheck.pathname = origUrlToCheck.pathname
 			if (
 				!urlToCheck.pathname.endsWith('/api/v1') &&
@@ -118,7 +85,7 @@ export const checkAndSetApiUrl = (url: string): Promise<string> => {
 				localStorage.setItem('API_URL', window.API_URL)
 				return window.API_URL
 			}
-			
+
 			throw new Error(ERROR_NO_API_URL)
 		})
 }
