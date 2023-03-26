@@ -141,7 +141,12 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 					comment.ID = 0
 				}
 				for _, attachment := range t.Attachments {
-					af, err := storedFiles[attachment.File.ID].Open()
+					attachmentFile, exists := storedFiles[attachment.File.ID]
+					if !exists {
+						log.Debugf(logPrefix+"Could not find attachment file %d for attachment %d", attachment.File.ID, attachment.ID)
+						continue
+					}
+					af, err := attachmentFile.Open()
 					if err != nil {
 						return fmt.Errorf("could not open attachment %d for reading: %w", attachment.ID, err)
 					}
