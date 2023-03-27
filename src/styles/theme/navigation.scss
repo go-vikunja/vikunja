@@ -70,45 +70,53 @@
     }
 
     .list-menu-link,
-    li > section > a {
-      color: $vikunja-nav-color;
-      padding: 0.75rem .5rem 0.75rem ($navbar-padding * 1.5 - 1.75rem);
-      transition: all 0.2s ease;
-
-      border-radius: 0;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
-      width: 100%;
-      border-left: $vikunja-nav-selected-width solid transparent;
-
-      &:hover {
-        border-left: $vikunja-nav-selected-width solid var(--primary);
+    li > section {
+      .collapse-project-button {
+        padding: .5rem .25rem .5rem .5rem;
+        
+        svg {
+          transition: all $transition;
+          color: var(--grey-400);
+        }
       }
-
-      &.router-link-exact-active {
-        color: var(--primary);
-        border-left: $vikunja-nav-selected-width solid var(--primary);
+      
+      .collapse-project-button-placeholder {
+        width: 2.25rem;
       }
+      
+      > a {
+        color: $vikunja-nav-color;
+        padding: .75rem .5rem .75rem .25rem;
+        transition: all 0.2s ease;
 
-      .icon {
-        height: 1rem;
-        vertical-align: middle;
-        padding-right: 0.5rem;
-      }
+        border-radius: 0;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        width: 100%;
 
-      &.router-link-exact-active .icon:not(.handle) {
-        color: var(--primary);
-      }
+        &.router-link-exact-active {
+          color: var(--primary);
+        }
 
-      .handle {
-        opacity: 0;
-        transition: opacity $transition;
-        margin-right: .25rem;
-      }
+        .icon {
+          height: 1rem;
+          vertical-align: middle;
+          padding-right: 0.5rem;
+        }
 
-      &:hover .handle {
-        opacity: 1;
+        &.router-link-exact-active .icon:not(.handle) {
+          color: var(--primary);
+        }
+
+        .handle {
+          opacity: 0;
+          transition: opacity $transition;
+        }
+
+        &:hover .handle {
+          opacity: 1;
+        }
       }
     }
 

@@ -32,6 +32,14 @@
 			>
 				<section>
 					<BaseButton
+						v-if="p.childProjects.length > 0"
+						@click="collapsedProjects[p.id] = !collapsedProjects[p.id]"
+						class="collapse-project-button"
+					>
+						<icon icon="chevron-down" :class="{ 'project-is-collapsed': collapsedProjects[p.id] }"/>
+					</BaseButton>
+					<span class="collapse-project-button-placeholder" v-else></span>
+					<BaseButton
 						:to="{ name: 'project.index', params: { projectId: p.id} }"
 						class="list-menu-link"
 						:class="{'router-link-exact-active': currentProject.id === p.id}"
@@ -64,7 +72,7 @@
 					<span class="list-setting-spacer" v-else></span>
 				</section>
 				<ProjectsNavigation
-					v-if="p.childProjects.length > 0"
+					v-if="p.childProjects.length > 0 && !collapsedProjects[p.id]"
 					:projects="p.childProjects"
 				/>
 			</li>
@@ -106,11 +114,13 @@ const currentProject = computed(() => baseStore.currentProject)
 // Hence, we'll clone the prop and work on the clone.
 // FIXME: cloning does not work when loading the page initially
 // TODO: child projects
+const collapsedProjects = ref<{ [id: IProject['id']]: boolean }>({})
 const availableProjects = ref<IProject[]>([])
 watch(
 	() => props.projects,
 	projects => {
 		availableProjects.value = projects
+		projects.forEach(p => collapsedProjects.value[p.id] = false)
 	},
 	{immediate: true},
 )
@@ -160,5 +170,9 @@ async function saveProjectPosition(e: SortableEvent) {
 .list-setting-spacer {
 	width: 2.5rem;
 	flex-shrink: 0;
+}
+
+.project-is-collapsed {
+	transform: rotate(-90deg);
 }
 </style>
