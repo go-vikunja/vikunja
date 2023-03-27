@@ -151,13 +151,11 @@ async function saveProjectPosition(e: SortableEvent) {
 		projectAfter !== null ? projectAfter.position : null,
 	)
 
-	console.log({
-		position,
-		newIndex,
-		project: project.id,
-		projectBefore: projectBefore?.id,
-		projectAfter: projectAfter?.id,
-	})
+	if (project.parentProjectId !== parentProjectId) {
+		const parentProject = projectStore.getProjectById(project.parentProjectId)
+		const childProjectIndex = parentProject.childProjects.findIndex(p => p.id === project.id)
+		parentProject.childProjects.splice(childProjectIndex, 1)
+	}
 
 	try {
 		// create a copy of the project in order to not violate pinia manipulation
