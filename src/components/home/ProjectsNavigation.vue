@@ -31,37 +31,37 @@
 				:class="{'is-loading': projectUpdating[p.id]}"
 			>
 				<section>
-				<BaseButton
-					:to="{ name: 'project.index', params: { projectId: p.id} }"
-					class="list-menu-link"
-					:class="{'router-link-exact-active': currentProject.id === p.id}"
-				>
+					<BaseButton
+						:to="{ name: 'project.index', params: { projectId: p.id} }"
+						class="list-menu-link"
+						:class="{'router-link-exact-active': currentProject.id === p.id}"
+					>
 					<span class="icon menu-item-icon handle">
 						<icon icon="grip-lines"/>
 					</span>
-					<ColorBubble
-						v-if="p.hexColor !== ''"
-						:color="p.hexColor"
-						class="mr-1"
-					/>
-					<span class="list-menu-title">{{ getProjectTitle(p) }}</span>
-				</BaseButton>
-				<BaseButton
-					v-if="p.id > 0"
-					class="favorite"
-					:class="{'is-favorite': p.isFavorite}"
-					@click="projectStore.toggleProjectFavorite(l)"
-				>
-					<icon :icon="p.isFavorite ? 'star' : ['far', 'star']"/>
-				</BaseButton>
-				<ProjectSettingsDropdown class="menu-list-dropdown" :project="p" v-if="p.id > 0">
-					<template #trigger="{toggleOpen}">
-						<BaseButton class="menu-list-dropdown-trigger" @click="toggleOpen">
-							<icon icon="ellipsis-h" class="icon"/>
-						</BaseButton>
-					</template>
-				</ProjectSettingsDropdown>
-				<span class="list-setting-spacer" v-else></span>
+						<ColorBubble
+							v-if="p.hexColor !== ''"
+							:color="p.hexColor"
+							class="mr-1"
+						/>
+						<span class="list-menu-title">{{ getProjectTitle(p) }}</span>
+					</BaseButton>
+					<BaseButton
+						v-if="p.id > 0"
+						class="favorite"
+						:class="{'is-favorite': p.isFavorite}"
+						@click="projectStore.toggleProjectFavorite(l)"
+					>
+						<icon :icon="p.isFavorite ? 'star' : ['far', 'star']"/>
+					</BaseButton>
+					<ProjectSettingsDropdown class="menu-list-dropdown" :project="p" v-if="p.id > 0">
+						<template #trigger="{toggleOpen}">
+							<BaseButton class="menu-list-dropdown-trigger" @click="toggleOpen">
+								<icon icon="ellipsis-h" class="icon"/>
+							</BaseButton>
+						</template>
+					</ProjectSettingsDropdown>
+					<span class="list-setting-spacer" v-else></span>
 				</section>
 				<ProjectsNavigation
 					v-if="p.childProjects.length > 0"
