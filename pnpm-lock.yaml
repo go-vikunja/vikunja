@@ -48,7 +48,7 @@ specifiers:
   browserslist: 4.21.5
   bulma-css-variables: 0.9.33
   camel-case: 4.1.2
-  caniuse-lite: 1.0.30001468
+  caniuse-lite: 1.0.30001470
   codemirror: 5.65.12
   csstype: 3.1.1
   cypress: 12.8.1
@@ -174,7 +174,7 @@ devDependencies:
   '@vue/tsconfig': 0.1.3_@types+node@18.15.10
   autoprefixer: 10.4.14_postcss@8.4.21
   browserslist: 4.21.5
-  caniuse-lite: 1.0.30001468
+  caniuse-lite: 1.0.30001470
   csstype: 3.1.1
   cypress: 12.8.1
   esbuild: 0.17.14
@@ -5058,7 +5058,7 @@ packages:
       postcss: ^8.1.0
     dependencies:
       browserslist: 4.21.5
-      caniuse-lite: 1.0.30001468
+      caniuse-lite: 1.0.30001470
       fraction.js: 4.2.0
       normalize-range: 0.1.2
       picocolors: 1.0.0
@@ -5372,7 +5372,7 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001468
+      caniuse-lite: 1.0.30001470
       electron-to-chromium: 1.4.286
       node-releases: 2.0.9
       update-browserslist-db: 1.0.10_browserslist@4.21.5
@@ -5581,8 +5581,8 @@ packages:
     engines: {node: '>=14.16'}
     dev: true
 
-  /caniuse-lite/1.0.30001468:
-    resolution: {integrity: sha512-zgAo8D5kbOyUcRAgSmgyuvBkjrGk5CGYG5TYgFdpQv+ywcyEpo1LOWoG8YmoflGnh+V+UsNuKYedsoYs0hzV5A==}
+  /caniuse-lite/1.0.30001470:
+    resolution: {integrity: sha512-065uNwY6QtHCBOExzbV6m236DDhYCCtPmQUCoQtwkVqzud8v5QPidoMr6CoMkC2nfp6nksjttqWQRRh75LqUmA==}
     dev: true
 
   /capital-case/1.0.4:
