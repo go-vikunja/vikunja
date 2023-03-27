@@ -49,7 +49,7 @@
 		</nav>
 
 		<nav class="menu namespaces-lists">
-			<ProjectsNavigation :projects="projects"/>
+			<ProjectsNavigation v-model="projects"/>
 		</nav>
 
 		<!--		<nav class="menu namespaces-lists loader-container is-loading-small" :class="{'is-loading': loading}">-->
@@ -146,7 +146,9 @@ onBeforeMount(async () => {
 	await projectStore.loadProjects()
 })
 
-const projects = computed(() => Object.values(projectStore.projects).sort((a, b) => a.position < b.position ? -1 : 1))
+const projects = computed(() => Object.values(projectStore.projects)
+	.filter(p => p.parentProjectId === 0)
+	.sort((a, b) => a.position < b.position ? -1 : 1))
 
 function updateActiveProjects(namespace: INamespace, activeProjects: IProject[]) {
 	// This is a bit hacky: since we do have to filter out the archived items from the list

@@ -23,6 +23,7 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 	position = 0
 	backgroundBlurHash = ''
 	childProjects = []
+	parentProjectId = 0
 	
 	created: Date = null
 	updated: Date = null

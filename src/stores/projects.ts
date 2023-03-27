@@ -62,6 +62,8 @@ export const useProjectStore = defineStore('project', () => {
 	function setProject(project: IProject) {
 		projects.value[project.id] = project
 		update(project)
+		
+		project.childProjects?.forEach(setProject)
 
 		if (baseStore.currentProject?.id === project.id) {
 			baseStore.setCurrentProject(project)
@@ -69,10 +71,7 @@ export const useProjectStore = defineStore('project', () => {
 	}
 
 	function setProjects(newProjects: IProject[]) {
-		newProjects.forEach(l => {
-			projects.value[l.id] = l
-			add(l)
-		})
+		newProjects.forEach(setProject)
 	}
 
 	function removeProjectById(project: IProject) {

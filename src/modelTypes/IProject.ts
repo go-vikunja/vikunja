@@ -19,6 +19,7 @@ export interface IProject extends IAbstract {
 	position: number
 	backgroundBlurHash: string
 	childProjects: IProject[] | null
+	parentProjectId: number
 	
 	created: Date
 	updated: Date

@@ -5,7 +5,6 @@
 	<!--		@update:modelValue="(projects) => updateActiveProjects(n, projects)"-->
 	<!--		v-for="(p, pk) in projects"-->
 	<!--		:key="p.id"-->
-	<!--		:data-project-id="p.id"-->
 	<!--		:data-project-index="pk"-->
 	<draggable
 		v-model="availableProjects"
@@ -29,6 +28,7 @@
 			<li
 				class="list-menu loader-container is-loading-small"
 				:class="{'is-loading': projectUpdating[p.id]}"
+				:data-project-id="p.id"
 			>
 				<section>
 					<BaseButton
@@ -73,7 +73,7 @@
 				</section>
 				<ProjectsNavigation
 					v-if="p.childProjects.length > 0 && !collapsedProjects[p.id]"
-					:projects="p.childProjects"
+					v-model="p.childProjects"
 				/>
 			</li>
 		</template>
@@ -98,8 +98,10 @@ import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
 
 const props = defineProps<{
-	projects: IProject[],
+	modelValue: IProject[],
 }>()
+const emit = defineEmits(['update:modelValue'])
+
 const drag = ref(false)
 const dragOptions = {
 	animation: 100,
@@ -117,7 +119,7 @@ const currentProject = computed(() => baseStore.currentProject)
 const collapsedProjects = ref<{ [id: IProject['id']]: boolean }>({})
 const availableProjects = ref<IProject[]>([])
 watch(
-	() => props.projects,
+	() => props.modelValue,
 	projects => {
 		availableProjects.value = projects
 		projects.forEach(p => collapsedProjects.value[p.id] = false)
@@ -136,7 +138,10 @@ async function saveProjectPosition(e: SortableEvent) {
 	// To work around that we're explicitly checking that case here and decrease the index.
 	const newIndex = e.newIndex === projectsActive.length ? e.newIndex - 1 : e.newIndex
 
-	const project = projectsActive[newIndex]
+	const projectId = parseInt(e.item.dataset.projectId)
+	const project = projectStore.getProjectById(projectId)
+
+	const parentProjectId = e.to.parentNode.dataset.projectId ? parseInt(e.to.parentNode.dataset.projectId) : 0
 	const projectBefore = projectsActive[newIndex - 1] ?? null
 	const projectAfter = projectsActive[newIndex + 1] ?? null
 	projectUpdating.value[project.id] = true
@@ -159,7 +164,9 @@ async function saveProjectPosition(e: SortableEvent) {
 		await projectStore.updateProject({
 			...project,
 			position,
+			parentProjectId,
 		})
+		emit('update:modelValue', availableProjects.value)
 	} finally {
 		projectUpdating.value[project.id] = false
 	}
