@@ -63,6 +63,7 @@ This document describes the different errors Vikunja can return.
 | 3007      | 400 | A project with this identifier already exists.                                                                                   |
 | 3008      | 412 | The project is archived and can therefore only be accessed read only. This is also true for all tasks associated with this project. |
 | 3009      | 412 | The project cannot belong to a dynamically generated namespace like "Favorites".                                                 |
+| 3010      | 412 | This project cannot be a child of itself.|
 
 ## Task
 

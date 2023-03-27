@@ -283,8 +283,35 @@ func (err *ErrProjectCannotBelongToAPseudoParentProject) HTTPError() web.HTTPErr
 	}
 }
 
+// ErrProjectCannotBeChildOfItself represents an error where a project cannot become a child of its own
+type ErrProjectCannotBeChildOfItself struct {
+	ProjectID int64
+}
+
+// IsErrProjectCannotBeChildOfItsOwn checks if an error is a project is archived error.
+func IsErrProjectCannotBeChildOfItsOwn(err error) bool {
+	_, ok := err.(*ErrProjectCannotBeChildOfItself)
+	return ok
+}
+
+func (err *ErrProjectCannotBeChildOfItself) Error() string {
+	return fmt.Sprintf("Project cannot be made a child of itself [ProjectID: %d]", err.ProjectID)
+}
+
+// ErrCodeProjectCannotBeChildOfItself holds the unique world-error code of this error
+const ErrCodeProjectCannotBeChildOfItself = 3010
+
+// HTTPError holds the http error description
+func (err *ErrProjectCannotBeChildOfItself) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeProjectCannotBeChildOfItself,
+		Message:  "This project cannot be a child of itself.",
+	}
+}
+
 // ==============
-// Project errors
+// Task errors
 // ==============
 
 // ErrTaskCannotBeEmpty represents a "ErrProjectDoesNotExist" kind of error. Used if the project does not exist.

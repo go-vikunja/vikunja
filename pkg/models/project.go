@@ -641,6 +641,12 @@ func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) error {
 
 	// Check if the parent project exists
 	if project.ParentProjectID > 0 {
+		if project.ParentProjectID == project.ID {
+			return &ErrProjectCannotBeChildOfItself{
+				ProjectID: project.ID,
+			}
+		}
+
 		_, err := GetProjectSimpleByID(s, project.ParentProjectID)
 		if err != nil {
 			return err
