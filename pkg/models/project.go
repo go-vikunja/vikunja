@@ -220,6 +220,7 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 	//////////////////////////
 	// Putting it all together
 
+	projectsResult := []*Project{}
 	for _, p := range allProjects {
 		if p.ParentProjectID != 0 {
 			if allProjects[p.ParentProjectID].ChildProjects == nil {
@@ -229,11 +230,13 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 			continue
 		}
 
+		projectsResult = append(projectsResult, p)
+
 		// The projects variable will contain all projects which have no parents
 		// And because we're using the same pointers for everything, those will contain child projects
 	}
 
-	return prs, resultCount, totalItems, err
+	return projectsResult, resultCount, totalItems, err
 }
 
 // ReadOne gets one project by its ID
