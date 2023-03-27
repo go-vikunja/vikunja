@@ -1,0 +1,116 @@
+// these are general menu styles
+// should be in own components
+.menu {
+  .menu-label,
+  .menu-list .list-menu-link,
+  .menu-list a {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+
+    .color-bubble {
+      height: 12px;
+      flex: 0 0 12px;
+    }
+  }
+
+  .menu-list {
+    li {
+      height: 44px;
+      display: flex;
+      align-items: center;
+
+      &:hover {
+        background: var(--white);
+      }
+
+      .menu-list-dropdown {
+        opacity: 1;
+        transition: $transition;
+      }
+
+      @media(hover: hover) and (pointer: fine) {
+        .menu-list-dropdown {
+          opacity: 0;
+        }
+
+        &:hover .menu-list-dropdown {
+          opacity: 1;
+        }
+      }
+
+    }
+
+    .menu-item-icon {
+      color: var(--grey-400);
+    }
+
+    .menu-list-dropdown-trigger {
+      display: flex;
+      padding: 0.5rem;
+    }
+
+    .flip-list-move {
+      transition: transform $transition-duration;
+    }
+
+    .ghost {
+      background: var(--grey-200);
+
+      * {
+        opacity: 0;
+      }
+    }
+
+    a:hover {
+      background: transparent;
+    }
+
+    .list-menu-link,
+    li > a {
+      color: $vikunja-nav-color;
+      padding: 0.75rem .5rem 0.75rem ($navbar-padding * 1.5 - 1.75rem);
+      transition: all 0.2s ease;
+
+      border-radius: 0;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      width: 100%;
+      border-left: $vikunja-nav-selected-width solid transparent;
+
+      &:hover {
+        border-left: $vikunja-nav-selected-width solid var(--primary);
+      }
+
+      &.router-link-exact-active {
+        color: var(--primary);
+        border-left: $vikunja-nav-selected-width solid var(--primary);
+      }
+
+      .icon {
+        height: 1rem;
+        vertical-align: middle;
+        padding-right: 0.5rem;
+      }
+
+      &.router-link-exact-active .icon:not(.handle) {
+        color: var(--primary);
+      }
+
+      .handle {
+        opacity: 0;
+        transition: opacity $transition;
+        margin-right: .25rem;
+      }
+
+      &:hover .handle {
+        opacity: 1;
+      }
+    }
+
+    &:not(.dragging-disabled) .handle {
+      cursor: grab;
+    }
+  }
+}

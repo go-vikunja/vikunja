@@ -153,3 +153,10 @@ async function saveProjectPosition(e: SortableEvent) {
 	}
 }
 </script>
+
+<style lang="scss" scoped>
+.list-setting-spacer {
+	width: 2.5rem;
+	flex-shrink: 0;
+}
+</style>
