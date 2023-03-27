@@ -175,6 +175,7 @@
     "searchSelect": "Click or press enter to select this project",
     "shared": "Shared Projects",
     "noDescriptionAvailable": "No project description is available.",
+    "inboxTitle": "Inbox",
     "create": {
       "header": "New project",
       "titlePlaceholder": "The project's title goes here…",

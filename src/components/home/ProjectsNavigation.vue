@@ -36,9 +36,9 @@
 						class="list-menu-link"
 						:class="{'router-link-exact-active': currentProject.id === p.id}"
 					>
-					<span class="icon menu-item-icon handle">
-						<icon icon="grip-lines"/>
-					</span>
+						<span class="icon menu-item-icon handle">
+							<icon icon="grip-lines"/>
+						</span>
 						<ColorBubble
 							v-if="p.hexColor !== ''"
 							:color="p.hexColor"
