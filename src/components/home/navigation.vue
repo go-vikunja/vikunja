@@ -76,7 +76,7 @@ onBeforeMount(async () => {
 })
 
 const projects = computed(() => Object.values(projectStore.projects)
-	.filter(p => p.parentProjectId === 0)
+	.filter(p => p.parentProjectId === 0 && !p.isArchived)
 	.sort((a, b) => a.position < b.position ? -1 : 1))
 </script>
 

@@ -8,37 +8,30 @@ describe('Project History', () => {
 	prepareProjects()
 	
 	it('should show a project history on the home page', () => {
-		cy.intercept(Cypress.env('API_URL') + '/namespaces*').as('loadNamespaces')
+		cy.intercept(Cypress.env('API_URL') + '/projects*').as('loadProjects')
 		cy.intercept(Cypress.env('API_URL') + '/projects/*').as('loadProject')
 		
 		const projects = ProjectFactory.create(6)
 
 		cy.visit('/')
-		cy.wait('@loadNamespaces')
+		cy.wait('@loadProjects')
 		cy.get('body')
 			.should('not.contain', 'Last viewed')
 
 		cy.visit(`/projects/${projects[0].id}`)
-		cy.wait('@loadNamespaces')
 		cy.wait('@loadProject')
 		cy.visit(`/projects/${projects[1].id}`)
-		cy.wait('@loadNamespaces')
 		cy.wait('@loadProject')
 		cy.visit(`/projects/${projects[2].id}`)
-		cy.wait('@loadNamespaces')
 		cy.wait('@loadProject')
 		cy.visit(`/projects/${projects[3].id}`)
-		cy.wait('@loadNamespaces')
 		cy.wait('@loadProject')
 		cy.visit(`/projects/${projects[4].id}`)
-		cy.wait('@loadNamespaces')
 		cy.wait('@loadProject')
 		cy.visit(`/projects/${projects[5].id}`)
-		cy.wait('@loadNamespaces')
 		cy.wait('@loadProject')
 
 		// cy.visit('/')
-		// cy.wait('@loadNamespaces')
 		// Not using cy.visit here to work around the redirect issue fixed in #1337
 		cy.get('nav.menu.top-menu a')
 			.contains('Overview')

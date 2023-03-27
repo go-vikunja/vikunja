@@ -2,7 +2,6 @@ import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
 import {TaskFactory} from '../../factories/task'
 import {ProjectFactory} from '../../factories/project'
-import {NamespaceFactory} from '../../factories/namespace'
 import {UserProjectFactory} from '../../factories/users_project'
 import {BucketFactory} from '../../factories/bucket'
 
@@ -10,7 +9,6 @@ describe('Editor', () => {
 	createFakeUserAndLogin()
 	
 	beforeEach(() => {
-		NamespaceFactory.create(1)
 		ProjectFactory.create(1)
 		BucketFactory.create(1)
 		TaskFactory.truncate()

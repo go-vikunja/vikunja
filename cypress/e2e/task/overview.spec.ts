@@ -3,12 +3,10 @@ import {createFakeUserAndLogin} from '../../support/authenticateUser'
 import {ProjectFactory} from '../../factories/project'
 import {seed} from '../../support/seed'
 import {TaskFactory} from '../../factories/task'
-import {NamespaceFactory} from '../../factories/namespace'
 import {BucketFactory} from '../../factories/bucket'
 import {updateUserSettings} from '../../support/updateUserSettings'
 
 function seedTasks(numberOfTasks = 50, startDueDate = new Date()) {
-	NamespaceFactory.create(1)
 	const project = ProjectFactory.create()[0]
 	BucketFactory.create(1, {
 		project_id: project.id,
@@ -137,8 +135,7 @@ describe('Home Page Task Overview', () => {
 		cy.visit('/')
 		
 		cy.get('.home.app-content .content')
-			.should('contain.text', 'You can create a new project for your new tasks:')
-			.should('contain.text', 'Or import your projects and tasks from other services into Vikunja:')
+			.should('contain.text', 'Import your projects and tasks from other services into Vikunja:')
 	})
 	
 	it('Should not show the cta buttons for new project when there are tasks', () => {
