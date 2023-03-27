@@ -72,7 +72,7 @@
 					<span class="list-setting-spacer" v-else></span>
 				</section>
 				<ProjectsNavigation
-					v-if="p.childProjects.length > 0 && !collapsedProjects[p.id]"
+					v-if="!collapsedProjects[p.id]"
 					v-model="p.childProjects"
 				/>
 			</li>
@@ -151,7 +151,7 @@ async function saveProjectPosition(e: SortableEvent) {
 		projectAfter !== null ? projectAfter.position : null,
 	)
 
-	if (project.parentProjectId !== parentProjectId) {
+	if (project.parentProjectId !== parentProjectId && project.parentProjectId > 0) {
 		const parentProject = projectStore.getProjectById(project.parentProjectId)
 		const childProjectIndex = parentProject.childProjects.findIndex(p => p.id === project.id)
 		parentProject.childProjects.splice(childProjectIndex, 1)
