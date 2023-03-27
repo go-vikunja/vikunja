@@ -62,7 +62,11 @@ type Task struct {
 	// The time when the task is due.
 	DueDate time.Time `xorm:"DATETIME INDEX null 'due_date'" json:"due_date"`
 	// An array of datetimes when the user wants to be reminded of the task.
-	Reminders []time.Time `xorm:"-" json:"reminder_dates"`
+	//
+	// Deprecated: Use Reminders
+	ReminderDates []time.Time `xorm:"-" json:"reminder_dates"`
+	// An array of reminders that are associated with this task.
+	Reminders []*TaskReminder `xorm:"-" json:"reminders"`
 	// The project this task belongs to.
 	ProjectID int64 `xorm:"bigint INDEX not null" json:"project_id" param:"project"`
 	// An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as "undone" and then increase all remindes and the due date by its amount.
@@ -641,8 +645,8 @@ func addAttachmentsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*
 	return
 }
 
-func getTaskReminderMap(s *xorm.Session, taskIDs []int64) (taskReminders map[int64][]time.Time, err error) {
-	taskReminders = make(map[int64][]time.Time)
+func getTaskReminderMap(s *xorm.Session, taskIDs []int64) (taskReminders map[int64][]*TaskReminder, err error) {
+	taskReminders = make(map[int64][]*TaskReminder)
 
 	// Get all reminders and put them in a map to have it easier later
 	reminders, err := getRemindersForTasks(s, taskIDs)
@@ -651,7 +655,7 @@ func getTaskReminderMap(s *xorm.Session, taskIDs []int64) (taskReminders map[int
 	}
 
 	for _, r := range reminders {
-		taskReminders[r.TaskID] = append(taskReminders[r.TaskID], r.Reminder)
+		taskReminders[r.TaskID] = append(taskReminders[r.TaskID], r)
 	}
 
 	return
@@ -771,6 +775,11 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth) (e
 
 		// Make created by user objects
 		task.CreatedBy = users[task.CreatedByID]
+
+		// Add the reminder dates (Remove, when ReminderDates is removed)
+		for _, r := range taskReminders[task.ID] {
+			task.ReminderDates = append(task.ReminderDates, r.Reminder)
+		}
 
 		// Add the reminders
 		task.Reminders = taskReminders[task.ID]
@@ -965,7 +974,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 	}
 
 	// Update the reminders
-	if err := t.updateReminders(s, t.Reminders); err != nil {
+	if err := t.updateReminders(s, t); err != nil {
 		return err
 	}
 
@@ -1017,15 +1026,19 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		t.ProjectID = ot.ProjectID
 	}
 
-	// Get the reminders
+	// Get the stored reminders
 	reminders, err := getRemindersForTasks(s, []int64{t.ID})
 	if err != nil {
 		return
 	}
 
-	ot.Reminders = make([]time.Time, len(reminders))
+	// Old task has the stored reminders
+	ot.Reminders = reminders
+
+	// Deprecated: remove when ReminderDates is removed
+	ot.ReminderDates = make([]time.Time, len(reminders))
 	for i, r := range reminders {
-		ot.Reminders[i] = r.Reminder
+		ot.ReminderDates[i] = r.Reminder
 	}
 
 	targetBucket, err := setTaskBucket(s, t, &ot, t.BucketID != 0 && t.BucketID != ot.BucketID)
@@ -1049,7 +1062,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Update the reminders
-	if err := ot.updateReminders(s, t.Reminders); err != nil {
+	if err := ot.updateReminders(s, t); err != nil {
 		return err
 	}
 
@@ -1331,9 +1344,9 @@ func setTaskDatesDefault(oldTask, newTask *Task) {
 	// To make this easier, we sort them first because we can then rely on the fact the first is the smallest
 	if len(oldTask.Reminders) > 0 {
 		for in, r := range oldTask.Reminders {
-			newTask.Reminders[in] = r.Add(repeatDuration)
-			for !newTask.Reminders[in].After(now) {
-				newTask.Reminders[in] = newTask.Reminders[in].Add(repeatDuration)
+			newTask.Reminders[in].Reminder = r.Reminder.Add(repeatDuration)
+			for !newTask.Reminders[in].Reminder.After(now) {
+				newTask.Reminders[in].Reminder = newTask.Reminders[in].Reminder.Add(repeatDuration)
 			}
 		}
 	}
@@ -1364,7 +1377,7 @@ func setTaskDatesMonthRepeat(oldTask, newTask *Task) {
 	newTask.Reminders = oldTask.Reminders
 	if len(oldTask.Reminders) > 0 {
 		for in, r := range oldTask.Reminders {
-			newTask.Reminders[in] = addOneMonthToDate(r)
+			newTask.Reminders[in].Reminder = addOneMonthToDate(r.Reminder)
 		}
 	}
 
@@ -1405,12 +1418,12 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 	// To make this easier, we sort them first because we can then rely on the fact the first is the smallest
 	if len(oldTask.Reminders) > 0 {
 		sort.Slice(oldTask.Reminders, func(i, j int) bool {
-			return oldTask.Reminders[i].Unix() < oldTask.Reminders[j].Unix()
+			return oldTask.Reminders[i].Reminder.Unix() < oldTask.Reminders[j].Reminder.Unix()
 		})
-		first := oldTask.Reminders[0]
+		first := oldTask.Reminders[0].Reminder
 		for in, r := range oldTask.Reminders {
-			diff := r.Sub(first)
-			newTask.Reminders[in] = now.Add(repeatDuration + diff)
+			diff := r.Reminder.Sub(first)
+			newTask.Reminders[in].Reminder = now.Add(repeatDuration + diff)
 		}
 	}
 
@@ -1478,11 +1491,66 @@ func updateDone(oldTask *Task, newTask *Task) {
 	}
 }
 
+// Deprecated: will be removed when ReminderDates are removed from Task.
+// For now the method just creates TaskReminder objects from the ReminderDates and overwrites Reminder.
+func (t *Task) overwriteRemindersWithReminderDates(reminderDates []time.Time) {
+	// If the client still sends old reminder_dates, then these will overwrite
+	// the Reminders, if the were sent by the client, too.
+	// We assume that clients still using the old API with reminder_dates do not understand the new reminders.
+	// Clients who want to use the new Reminder structure must explicitey unset reminder_dates.
+
+	// start with empty Reminders
+	reminders := make([]*TaskReminder, 0)
+
+	// append absolute triggers from ReminderDates
+	for _, reminderDate := range reminderDates {
+		reminders = append(reminders, &TaskReminder{TaskID: t.ID, Reminder: reminderDate})
+	}
+	t.Reminders = reminders
+}
+
+// Set the absolute trigger dates for Reminders with relative period
+func updateRelativeReminderDates(task *Task) (err error) {
+	for _, reminder := range task.Reminders {
+		relativeDuration := time.Duration(reminder.RelativePeriod) * time.Second
+		if reminder.RelativeTo != "" {
+			reminder.Reminder = time.Time{}
+		}
+		switch reminder.RelativeTo {
+		case ReminderRelationDueDate:
+			if !task.DueDate.IsZero() {
+				reminder.Reminder = task.DueDate.Add(relativeDuration)
+			}
+		case ReminderRelationStartDate:
+			if !task.StartDate.IsZero() {
+				reminder.Reminder = task.StartDate.Add(relativeDuration)
+			}
+		case ReminderRelationEndDate:
+			if !task.EndDate.IsZero() {
+				reminder.Reminder = task.EndDate.Add(relativeDuration)
+			}
+		default:
+			if reminder.RelativePeriod != 0 {
+				err = ErrReminderRelativeToMissing{
+					TaskID: task.ID,
+				}
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // Removes all old reminders and adds the new ones. This is a lot easier and less buggy than
 // trying to figure out which reminders changed and then only re-add those needed. And since it does
 // not make a performance difference we'll just do that.
-// The parameter is a slice with unix dates which holds the new reminders.
-func (t *Task) updateReminders(s *xorm.Session, reminders []time.Time) (err error) {
+// The parameter is a slice which holds the new reminders.
+func (t *Task) updateReminders(s *xorm.Session, task *Task) (err error) {
+
+	// Deprecated: This statement must be removed when ReminderDates will be removed
+	if task.ReminderDates != nil {
+		task.overwriteRemindersWithReminderDates(task.ReminderDates)
+	}
 
 	_, err = s.
 		Where("task_id = ?", t.ID).
@@ -1491,23 +1559,43 @@ func (t *Task) updateReminders(s *xorm.Session, reminders []time.Time) (err erro
 		return
 	}
 
-	// Resolve duplicates and sort them
-	reminderMap := make(map[int64]time.Time, len(reminders))
-	for _, reminder := range reminders {
-		reminderMap[reminder.UTC().Unix()] = reminder
+	err = updateRelativeReminderDates(task)
+	if err != nil {
+		return
 	}
+
+	// Resolve duplicates and sort them
+	reminderMap := make(map[int64]*TaskReminder, len(task.Reminders))
+	for _, reminder := range task.Reminders {
+		reminderMap[reminder.Reminder.UTC().Unix()] = reminder
+	}
+
+	t.Reminders = make([]*TaskReminder, 0, len(reminderMap))
+	t.ReminderDates = make([]time.Time, 0, len(reminderMap))
 
 	// Loop through all reminders and add them
 	for _, r := range reminderMap {
-		_, err = s.Insert(&TaskReminder{TaskID: t.ID, Reminder: r})
+		taskReminder := &TaskReminder{
+			TaskID:         t.ID,
+			Reminder:       r.Reminder,
+			RelativePeriod: r.RelativePeriod,
+			RelativeTo:     r.RelativeTo}
+		_, err = s.Insert(taskReminder)
 		if err != nil {
 			return err
 		}
+		t.Reminders = append(t.Reminders, taskReminder)
+		t.ReminderDates = append(t.ReminderDates, taskReminder.Reminder)
 	}
 
-	t.Reminders = reminders
-	if len(reminders) == 0 {
+	// sort reminders
+	sort.Slice(t.Reminders, func(i, j int) bool {
+		return t.Reminders[i].Reminder.Before(t.Reminders[j].Reminder)
+	})
+
+	if len(t.Reminders) == 0 {
 		t.Reminders = nil
+		t.ReminderDates = nil
 	}
 
 	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})

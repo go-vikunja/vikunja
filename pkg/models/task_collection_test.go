@@ -169,8 +169,16 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			label4,
 		},
 		RelatedTasks: map[RelationKind][]*Task{},
-		Reminders: []time.Time{
+		ReminderDates: []time.Time{
 			time.Unix(1543626824, 0).In(loc),
+		},
+		Reminders: []*TaskReminder{
+			{
+				ID:       3,
+				TaskID:   2,
+				Reminder: time.Unix(1543626824, 0).In(loc),
+				Created:  time.Unix(1543626724, 0).In(loc),
+			},
 		},
 		Created: time.Unix(1543626724, 0).In(loc),
 		Updated: time.Unix(1543626724, 0).In(loc),
@@ -472,15 +480,32 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	}
 	task27 := &Task{
 		ID:          27,
-		Title:       "task #27 with reminders",
+		Title:       "task #27 with reminders and start_date",
 		Identifier:  "test1-12",
 		Index:       12,
 		CreatedByID: 1,
 		CreatedBy:   user1,
-		Reminders: []time.Time{
+		ReminderDates: []time.Time{
 			time.Unix(1543626724, 0).In(loc),
 			time.Unix(1543626824, 0).In(loc),
 		},
+		Reminders: []*TaskReminder{
+			{
+				ID:       1,
+				TaskID:   27,
+				Reminder: time.Unix(1543626724, 0).In(loc),
+				Created:  time.Unix(1543626724, 0).In(loc),
+			},
+			{
+				ID:             2,
+				TaskID:         27,
+				Reminder:       time.Unix(1543626824, 0).In(loc),
+				Created:        time.Unix(1543626724, 0).In(loc),
+				RelativePeriod: -3600,
+				RelativeTo:     "start_date",
+			},
+		},
+		StartDate:    time.Unix(1543616724, 0).In(loc),
 		ProjectID:    1,
 		BucketID:     1,
 		RelatedTasks: map[RelationKind][]*Task{},
@@ -906,7 +931,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "filtered reminders",
+			name: "filtered reminder dates",
 			fields: fields{
 				FilterBy:         []string{"reminders", "reminders"},
 				FilterValue:      []string{"2018-10-01T00:00:00+00:00", "2018-12-10T00:00:00+00:00"},
@@ -1246,7 +1271,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					return
 				}
 
-				t.Errorf("Test %s, Task.ReadAll() = %v, want %v, \ndiff: %v", tt.name, got, tt.want, diff)
+				t.Errorf("Test %s, Task.ReadAll() = %v, \nwant %v, \ndiff: %v", tt.name, got, tt.want, diff)
 			}
 		})
 	}

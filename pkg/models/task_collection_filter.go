@@ -266,6 +266,13 @@ func getNativeValueForTaskField(fieldName string, comparator taskFilterComparato
 		return nil, nil, ErrInvalidTaskField{TaskField: fieldName}
 	}
 
+	if realFieldName == "Reminders" {
+		field, ok = reflect.TypeOf(&TaskReminder{}).Elem().FieldByName("Reminder")
+		if !ok {
+			return nil, nil, ErrInvalidTaskField{TaskField: fieldName}
+		}
+	}
+
 	if comparator == taskFilterComparatorIn {
 		vals := strings.Split(value, ",")
 		valueSlice := []interface{}{}

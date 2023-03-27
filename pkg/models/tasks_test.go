@@ -70,6 +70,48 @@ func TestTask_Create(t *testing.T) {
 
 		events.AssertDispatched(t, &TaskCreatedEvent{})
 	})
+	t.Run("with reminders", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			Title:       "Lorem",
+			Description: "Lorem Ipsum Dolor",
+			ProjectID:   1,
+			DueDate:     time.Date(2023, time.March, 7, 22, 5, 0, 0, time.Local),
+			StartDate:   time.Date(2023, time.March, 7, 22, 5, 10, 0, time.Local),
+			EndDate:     time.Date(2023, time.March, 7, 22, 5, 20, 0, time.Local),
+			Reminders: []*TaskReminder{
+				{
+					RelativeTo:     "due_date",
+					RelativePeriod: 1,
+				},
+				{
+					RelativeTo:     "start_date",
+					RelativePeriod: -2,
+				},
+				{
+					RelativeTo:     "end_date",
+					RelativePeriod: -1,
+				},
+				{
+					Reminder: time.Date(2023, time.March, 7, 23, 0, 0, 0, time.Local),
+				},
+			}}
+		err := task.Create(s, usr)
+		assert.NoError(t, err)
+		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 1, 0, time.Local), task.Reminders[0].Reminder)
+		assert.Equal(t, int64(1), task.Reminders[0].RelativePeriod)
+		assert.Equal(t, ReminderRelationDueDate, task.Reminders[0].RelativeTo)
+		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 8, 0, time.Local), task.Reminders[1].Reminder)
+		assert.Equal(t, ReminderRelationStartDate, task.Reminders[1].RelativeTo)
+		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 19, 0, time.Local), task.Reminders[2].Reminder)
+		assert.Equal(t, ReminderRelationEndDate, task.Reminders[2].RelativeTo)
+		assert.Equal(t, time.Date(2023, time.March, 7, 23, 0, 0, 0, time.Local), task.Reminders[3].Reminder)
+		err = s.Commit()
+		assert.NoError(t, err)
+	})
 	t.Run("empty title", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -98,7 +140,7 @@ func TestTask_Create(t *testing.T) {
 		assert.Error(t, err)
 		assert.True(t, IsErrProjectDoesNotExist(err))
 	})
-	t.Run("noneixtant user", func(t *testing.T) {
+	t.Run("nonexistant user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -368,7 +410,51 @@ func TestTask_Update(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, int64(3), task.Index)
 	})
-	t.Run("the same date multiple times should be saved once", func(t *testing.T) {
+
+	t.Run("reminders will be updated", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:        1,
+			ProjectID: 1,
+			Title:     "test",
+			DueDate:   time.Date(2023, time.March, 7, 22, 5, 0, 0, time.Local),
+			StartDate: time.Date(2023, time.March, 7, 22, 5, 10, 0, time.Local),
+			EndDate:   time.Date(2023, time.March, 7, 22, 5, 20, 0, time.Local),
+			Reminders: []*TaskReminder{
+				{
+					RelativeTo:     "due_date",
+					RelativePeriod: 1,
+				},
+				{
+					RelativeTo:     "start_date",
+					RelativePeriod: -2,
+				},
+				{
+					RelativeTo:     "end_date",
+					RelativePeriod: -1,
+				},
+				{
+					Reminder: time.Date(2023, time.March, 7, 23, 0, 0, 0, time.Local),
+				},
+			}}
+		err := task.Update(s, u)
+		assert.NoError(t, err)
+		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 1, 0, time.Local), task.Reminders[0].Reminder)
+		assert.Equal(t, int64(1), task.Reminders[0].RelativePeriod)
+		assert.Equal(t, ReminderRelationDueDate, task.Reminders[0].RelativeTo)
+		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 8, 0, time.Local), task.Reminders[1].Reminder)
+		assert.Equal(t, ReminderRelationStartDate, task.Reminders[1].RelativeTo)
+		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 19, 0, time.Local), task.Reminders[2].Reminder)
+		assert.Equal(t, ReminderRelationEndDate, task.Reminders[2].RelativeTo)
+		assert.Equal(t, time.Date(2023, time.March, 7, 23, 0, 0, 0, time.Local), task.Reminders[3].Reminder)
+		err = s.Commit()
+		assert.NoError(t, err)
+		db.AssertCount(t, "task_reminders", builder.Eq{"task_id": 1}, 4)
+	})
+	t.Run("the same reminder multiple times should be saved once", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -376,9 +462,13 @@ func TestTask_Update(t *testing.T) {
 		task := &Task{
 			ID:    1,
 			Title: "test",
-			Reminders: []time.Time{
-				time.Unix(1674745156, 0),
-				time.Unix(1674745156, 223),
+			Reminders: []*TaskReminder{
+				{
+					Reminder: time.Unix(1674745156, 0),
+				},
+				{
+					Reminder: time.Unix(1674745156, 223),
+				},
 			},
 			ProjectID: 1,
 		}
@@ -386,8 +476,41 @@ func TestTask_Update(t *testing.T) {
 		assert.NoError(t, err)
 		err = s.Commit()
 		assert.NoError(t, err)
-
 		db.AssertCount(t, "task_reminders", builder.Eq{"task_id": 1}, 1)
+	})
+	t.Run("update relative reminder when start_date changes", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// given task with start_date and relative reminder for start_date
+		taskBefore := &Task{
+			Title:     "test",
+			ProjectID: 1,
+			StartDate: time.Date(2022, time.March, 8, 8, 5, 20, 0, time.Local),
+			Reminders: []*TaskReminder{
+				{
+					RelativeTo:     "start_date",
+					RelativePeriod: -60,
+				},
+			}}
+		err := taskBefore.Create(s, u)
+		assert.NoError(t, err)
+		err = s.Commit()
+		assert.NoError(t, err)
+		assert.Equal(t, time.Date(2022, time.March, 8, 8, 4, 20, 0, time.Local), taskBefore.Reminders[0].Reminder)
+
+		// when start_date is modified
+		task := taskBefore
+		task.StartDate = time.Date(2023, time.March, 8, 8, 5, 0, 0, time.Local)
+		task.ReminderDates = nil
+		err = task.Update(s, u)
+		assert.NoError(t, err)
+
+		// then reminder time is updated
+		assert.Equal(t, time.Date(2023, time.March, 8, 8, 4, 0, 0, time.Local), task.Reminders[0].Reminder)
+		err = s.Commit()
+		assert.NoError(t, err)
 	})
 }
 
@@ -487,9 +610,13 @@ func TestUpdateDone(t *testing.T) {
 			oldTask := &Task{
 				Done:        false,
 				RepeatAfter: 8600,
-				Reminders: []time.Time{
-					time.Unix(1550000000, 0),
-					time.Unix(1555000000, 0),
+				Reminders: []*TaskReminder{
+					{
+						Reminder: time.Unix(1550000000, 0),
+					},
+					{
+						Reminder: time.Unix(1555000000, 0),
+					},
 				},
 			}
 			newTask := &Task{
@@ -507,8 +634,8 @@ func TestUpdateDone(t *testing.T) {
 			}
 
 			assert.Len(t, newTask.Reminders, 2)
-			assert.Equal(t, expected1, newTask.Reminders[0])
-			assert.Equal(t, expected2, newTask.Reminders[1])
+			assert.Equal(t, expected1, newTask.Reminders[0].Reminder)
+			assert.Equal(t, expected2, newTask.Reminders[1].Reminder)
 			assert.False(t, newTask.Done)
 		})
 		t.Run("update start date", func(t *testing.T) {
@@ -585,22 +712,25 @@ func TestUpdateDone(t *testing.T) {
 					Done:        false,
 					RepeatAfter: 8600,
 					RepeatMode:  TaskRepeatModeFromCurrentDate,
-					Reminders: []time.Time{
-						time.Unix(1550000000, 0),
-						time.Unix(1555000000, 0),
-					},
-				}
+					Reminders: []*TaskReminder{
+						{
+							Reminder: time.Unix(1550000000, 0),
+						},
+						{
+							Reminder: time.Unix(1555000000, 0),
+						},
+					}}
 				newTask := &Task{
 					Done: true,
 				}
 				updateDone(oldTask, newTask)
 
-				diff := oldTask.Reminders[1].Sub(oldTask.Reminders[0])
+				diff := oldTask.Reminders[1].Reminder.Sub(oldTask.Reminders[0].Reminder)
 
 				assert.Len(t, newTask.Reminders, 2)
 				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
-				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.Reminders[0].Unix())
-				assert.Equal(t, time.Now().Add(diff+time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.Reminders[1].Unix())
+				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.Reminders[0].Reminder.Unix())
+				assert.Equal(t, time.Now().Add(diff+time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.Reminders[1].Reminder.Unix())
 				assert.False(t, newTask.Done)
 			})
 			t.Run("start date", func(t *testing.T) {
@@ -678,23 +808,28 @@ func TestUpdateDone(t *testing.T) {
 				oldTask := &Task{
 					Done:       false,
 					RepeatMode: TaskRepeatModeMonth,
-					Reminders: []time.Time{
-						time.Unix(1550000000, 0),
-						time.Unix(1555000000, 0),
-					},
-				}
+					Reminders: []*TaskReminder{
+						{
+							Reminder: time.Unix(1550000000, 0),
+						},
+						{
+							Reminder: time.Unix(1555000000, 0),
+						},
+					}}
 				newTask := &Task{
 					Done: true,
 				}
 				oldReminders := make([]time.Time, len(oldTask.Reminders))
-				copy(oldReminders, oldTask.Reminders)
+				for i, r := range newTask.Reminders {
+					oldReminders[i] = r.Reminder
+				}
 
 				updateDone(oldTask, newTask)
 
 				assert.Len(t, newTask.Reminders, len(oldReminders))
 				for i, r := range newTask.Reminders {
-					assert.True(t, r.After(oldReminders[i]))
-					assert.NotEqual(t, oldReminders[i].Month(), r.Month())
+					assert.True(t, r.Reminder.After(oldReminders[i]))
+					assert.NotEqual(t, oldReminders[i].Month(), r.Reminder.Month())
 				}
 				assert.False(t, newTask.Done)
 			})

@@ -7782,10 +7782,17 @@
                     ]
                 },
                 "reminder_dates": {
-                    "description": "An array of datetimes when the user wants to be reminded of the task.",
+                    "description": "An array of datetimes when the user wants to be reminded of the task.\n\nDeprecated: Use Reminders",
                     "type": "array",
                     "items": {
                         "type": "string"
+                    }
+                },
+                "reminders": {
+                    "description": "An array of reminders that are associated with this task.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TaskReminder"
                     }
                 },
                 "repeat_after": {
@@ -8294,6 +8301,19 @@
                 "RelationKindCopiedTo"
             ]
         },
+        "models.ReminderRelation": {
+            "type": "string",
+            "enum": [
+                "due_date",
+                "start_date",
+                "end_date"
+            ],
+            "x-enum-varnames": [
+                "ReminderRelationDueDate",
+                "ReminderRelationStartDate",
+                "ReminderRelationEndDate"
+            ]
+        },
         "models.Right": {
             "type": "integer",
             "enum": [
@@ -8509,10 +8529,17 @@
                     ]
                 },
                 "reminder_dates": {
-                    "description": "An array of datetimes when the user wants to be reminded of the task.",
+                    "description": "An array of datetimes when the user wants to be reminded of the task.\n\nDeprecated: Use Reminders",
                     "type": "array",
                     "items": {
                         "type": "string"
+                    }
+                },
+                "reminders": {
+                    "description": "An array of reminders that are associated with this task.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TaskReminder"
                     }
                 },
                 "repeat_after": {
@@ -8679,6 +8706,27 @@
                 "task_id": {
                     "description": "The ID of the \"base\" task, the task which has a relation to another.",
                     "type": "integer"
+                }
+            }
+        },
+        "models.TaskReminder": {
+            "type": "object",
+            "properties": {
+                "relative_period": {
+                    "description": "A period in seconds relative to another date argument. Negative values mean the reminder triggers before the date. Default: 0, tiggers when RelativeTo is due.",
+                    "type": "integer"
+                },
+                "relative_to": {
+                    "description": "The name of the date field to which the relative period refers to.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.ReminderRelation"
+                        }
+                    ]
+                },
+                "reminder": {
+                    "description": "The absolute time when the user wants to be reminded of the task.",
+                    "type": "string"
                 }
             }
         },

@@ -244,7 +244,7 @@
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
 - id: 27
-  title: 'task #27 with reminders'
+  title: 'task #27 with reminders and start_date'
   done: false
   created_by_id: 1
   project_id: 1
@@ -252,6 +252,7 @@
   bucket_id: 1
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
+  start_date: 2018-11-30 22:25:24
 - id: 28
   title: 'task #28 with repeat after'
   done: false

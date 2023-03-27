@@ -471,7 +471,10 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 			return nil, err
 		}
 
-		tasks[r.ItemID].Reminders = append(tasks[r.ItemID].Reminders, date.In(config.GetTimeZone()))
+		tasks[r.ItemID].Reminders = append(tasks[r.ItemID].Reminders, &models.TaskReminder{
+			Reminder: date.In(config.GetTimeZone()),
+		},
+		)
 	}
 
 	return []*models.NamespaceWithProjectsAndTasks{

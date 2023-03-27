@@ -141,8 +141,10 @@ func TestConverting(t *testing.T) {
 						{
 							Task: models.Task{
 								Title: "Task 5",
-								Reminders: []time.Time{
-									testtimeTime,
+								Reminders: []*models.TaskReminder{
+									{
+										Reminder: testtimeTime,
+									},
 								},
 							},
 						},

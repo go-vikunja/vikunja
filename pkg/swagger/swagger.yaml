@@ -196,10 +196,17 @@ definitions:
         - $ref: '#/definitions/models.RelatedTaskMap'
         description: All related tasks, grouped by their relation kind
       reminder_dates:
-        description: An array of datetimes when the user wants to be reminded of the
-          task.
+        description: |-
+          An array of datetimes when the user wants to be reminded of the task.
+
+          Deprecated: Use Reminders
         items:
           type: string
+        type: array
+      reminders:
+        description: An array of reminders that are associated with this task.
+        items:
+          $ref: '#/definitions/models.TaskReminder'
         type: array
       repeat_after:
         description: An amount in seconds this task repeats itself. If this is set,
@@ -596,6 +603,16 @@ definitions:
     - RelationKindFollows
     - RelationKindCopiedFrom
     - RelationKindCopiedTo
+  models.ReminderRelation:
+    enum:
+    - due_date
+    - start_date
+    - end_date
+    type: string
+    x-enum-varnames:
+    - ReminderRelationDueDate
+    - ReminderRelationStartDate
+    - ReminderRelationEndDate
   models.Right:
     enum:
     - 0
@@ -763,10 +780,17 @@ definitions:
         - $ref: '#/definitions/models.RelatedTaskMap'
         description: All related tasks, grouped by their relation kind
       reminder_dates:
-        description: An array of datetimes when the user wants to be reminded of the
-          task.
+        description: |-
+          An array of datetimes when the user wants to be reminded of the task.
+
+          Deprecated: Use Reminders
         items:
           type: string
+        type: array
+      reminders:
+        description: An array of reminders that are associated with this task.
+        items:
+          $ref: '#/definitions/models.TaskReminder'
         type: array
       repeat_after:
         description: An amount in seconds this task repeats itself. If this is set,
@@ -888,6 +912,22 @@ definitions:
       task_id:
         description: The ID of the "base" task, the task which has a relation to another.
         type: integer
+    type: object
+  models.TaskReminder:
+    properties:
+      relative_period:
+        description: 'A period in seconds relative to another date argument. Negative
+          values mean the reminder triggers before the date. Default: 0, tiggers when
+          RelativeTo is due.'
+        type: integer
+      relative_to:
+        allOf:
+        - $ref: '#/definitions/models.ReminderRelation'
+        description: The name of the date field to which the relative period refers
+          to.
+      reminder:
+        description: The absolute time when the user wants to be reminded of the task.
+        type: string
     type: object
   models.TaskRepeatMode:
     enum:

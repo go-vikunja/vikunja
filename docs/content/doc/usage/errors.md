@@ -90,6 +90,7 @@ This document describes the different errors Vikunja can return.
 | 4019 | 400 | Invalid task filter value. |
 | 4020 | 400 | The provided attachment does not belong to that task. |
 | 4021 | 400 | This user is already assigned to that task. |
+| 4022 | 400 | The task has a relative reminder which does not specify relative to what. |
 
 ## Namespace
 

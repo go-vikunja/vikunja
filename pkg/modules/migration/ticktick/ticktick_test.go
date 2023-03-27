@@ -101,7 +101,8 @@ func TestConvertTicktickTasksToVikunja(t *testing.T) {
 		{Title: "label1"},
 		{Title: "label2"},
 	})
-	//assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[0].Reminders, tickTickTasks[0].) // TODO
+	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[0].Reminders[0].RelativeTo, models.ReminderRelation("due_date"))
+	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[0].Reminders[0].RelativePeriod, int64(-24*3600))
 	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[0].Position, tickTickTasks[0].Order)
 	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[0].Done, false)
 
@@ -127,7 +128,8 @@ func TestConvertTicktickTasksToVikunja(t *testing.T) {
 		{Title: "label2"},
 		{Title: "other label"},
 	})
-	//assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[0].Reminders, tickTickTasks[0].) // TODO
+	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[2].Reminders[0].RelativeTo, models.ReminderRelation("due_date"))
+	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[2].Reminders[0].RelativePeriod, int64(-24*3600))
 	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[2].Position, tickTickTasks[2].Order)
 	assert.Equal(t, vikunjaTasks[0].Projects[0].Tasks[2].Done, false)
 

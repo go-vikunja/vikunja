@@ -33,12 +33,29 @@ import (
 	"code.vikunja.io/api/pkg/user"
 )
 
-// TaskReminder holds a reminder on a task
+// ReminderRelation represents the date attribute of the task which a period based reminder relates to
+type ReminderRelation string
+
+// All valid ReminderRelations
+const (
+	ReminderRelationDueDate   ReminderRelation = `due_date`
+	ReminderRelationStartDate ReminderRelation = `start_date`
+	ReminderRelationEndDate   ReminderRelation = `end_date`
+)
+
+// TaskReminder holds a reminder on a task.
+// If RelativeTo and the assciated date field are defined, then the attribute Reminder will be computed.
+// If RelativeTo is missing, than Reminder must be given.
 type TaskReminder struct {
-	ID       int64     `xorm:"bigint autoincr not null unique pk"`
-	TaskID   int64     `xorm:"bigint not null INDEX"`
-	Reminder time.Time `xorm:"DATETIME not null INDEX 'reminder'"`
-	Created  time.Time `xorm:"created not null"`
+	ID     int64 `xorm:"bigint autoincr not null unique pk" json:"-"`
+	TaskID int64 `xorm:"bigint not null INDEX" json:"-"`
+	// The absolute time when the user wants to be reminded of the task.
+	Reminder time.Time `xorm:"DATETIME not null INDEX 'reminder'" json:"reminder"`
+	Created  time.Time `xorm:"created not null" json:"-"`
+	// A period in seconds relative to another date argument. Negative values mean the reminder triggers before the date. Default: 0, tiggers when RelativeTo is due.
+	RelativePeriod int64 `xorm:"bigint null" json:"relative_period"`
+	// The name of the date field to which the relative period refers to.
+	RelativeTo ReminderRelation `xorm:"varchar(50) null" json:"relative_to"`
 }
 
 // TableName returns a pretty table name

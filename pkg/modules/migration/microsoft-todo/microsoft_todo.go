@@ -329,7 +329,9 @@ func convertMicrosoftTodoData(todoData []*project) (vikunjsStructure []*models.N
 					return nil, err
 				}
 
-				task.Reminders = []time.Time{reminder}
+				task.Reminders = []*models.TaskReminder{
+					{Reminder: reminder},
+				}
 			}
 
 			// Due Date
