@@ -117,15 +117,6 @@ var SharedProjectsPseudoProject = &Project{
 	Updated:     time.Now(),
 }
 
-// FavoriteProjectsPseudoProject is a pseudo parent project used to hold favorite projects and tasks
-var FavoriteProjectsPseudoProject = &Project{
-	ID:          -2,
-	Title:       "Favorites",
-	Description: "Favorite projects and tasks.",
-	Created:     time.Now(),
-	Updated:     time.Now(),
-}
-
 // SavedFiltersPseudoProject is a pseudo parent project used to hold saved filters
 var SavedFiltersPseudoProject = &Project{
 	ID:          -3,
@@ -137,13 +128,13 @@ var SavedFiltersPseudoProject = &Project{
 
 // FavoritesPseudoProject holds all tasks marked as favorites
 var FavoritesPseudoProject = Project{
-	ID:              -1,
-	Title:           "Favorites",
-	Description:     "This project has all tasks marked as favorites.",
-	ParentProjectID: FavoriteProjectsPseudoProject.ID,
-	IsFavorite:      true,
-	Created:         time.Now(),
-	Updated:         time.Now(),
+	ID:          -1,
+	Title:       "Favorites",
+	Description: "This project has all tasks marked as favorites.",
+	IsFavorite:  true,
+	Position:    -1,
+	Created:     time.Now(),
+	Updated:     time.Now(),
 }
 
 // ReadAll gets all projects a user has access to
@@ -484,6 +475,22 @@ func getRawProjectsForUser(s *xorm.Session, opts *projectOptions) (projects []*P
 	resultCount, totalItems, err = getAllProjectsForUser(s, fullUser.ID, nil, opts, &allProjects, 0)
 	if err != nil {
 		return
+	}
+
+	favoriteCount, err := s.
+		Where(builder.And(
+			builder.Eq{"user_id": opts.user.ID},
+			builder.Eq{"kind": FavoriteKindTask},
+		)).
+		Count(&Favorite{})
+	if err != nil {
+		return
+	}
+
+	if favoriteCount > 0 {
+		favoritesProject := &Project{}
+		*favoritesProject = FavoritesPseudoProject
+		allProjects = append(allProjects, favoritesProject)
 	}
 
 	if len(allProjects) == 0 {
