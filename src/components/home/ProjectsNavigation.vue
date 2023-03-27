@@ -1,15 +1,8 @@
 <template>
-	<!--								v-if="projectsVisible[n.id] ?? true"-->
-	<!--		:disabled="n.id < 0 || undefined"-->
-	<!--		:modelValue="p"-->
-	<!--		@update:modelValue="(projects) => updateActiveProjects(n, projects)"-->
-	<!--		v-for="(p, pk) in projects"-->
-	<!--		:key="p.id"-->
-	<!--		:data-project-index="pk"-->
 	<draggable
 		v-model="availableProjects"
 		v-bind="dragOptions"
-		group="namespace-lists"
+		group="projects"
 		@start="() => drag = true"
 		@end="saveProjectPosition"
 		handle=".handle"

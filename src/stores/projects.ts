@@ -17,8 +17,6 @@ import {useBaseStore} from '@/stores/base'
 
 const {add, remove, search, update} = createNewIndexer('projects', ['title', 'description'])
 
-const FavoriteProjectsNamespace = -2
-
 export interface ProjectState {
 	[id: IProject['id']]: IProject
 }
