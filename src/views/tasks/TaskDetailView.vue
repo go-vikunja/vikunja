@@ -13,9 +13,9 @@
 				:can-write="canWrite"
 				ref="heading"
 			/>
-			<h6 class="subtitle" v-if="parent && parent.project">
-				<router-link :to="{ name: 'project.index', params: { projectId: parent.project.id } }">
-					{{ getProjectTitle(parent.project) }}
+			<h6 class="subtitle" v-if="project?.id">
+				<router-link :to="{ name: 'project.index', params: { projectId: project.id } }">
+					{{ getProjectTitle(project) }}
 				</router-link>
 			</h6>
 
@@ -536,26 +536,17 @@ const visible = ref(false)
 
 const taskId = toRef(props, 'taskId')
 
-const parent = computed(() => {
+const project = computed(() => {
 	if (!task.projectId) {
 		return {
 			project: null,
 		}
 	}
-	
-	return projectStore.getProjectById(task.projectId)
-})
 
-watch(
-	parent,
-	(parent) => {
-		const parentProject = parent !== null ? parent.project : null
-		if (parentProject !== null) {
-			baseStore.handleSetCurrentProject({project: parentProject})
-		}
-	},
-	{immediate: true},
-)
+	const project = projectStore.getProjectById(task.projectId)
+	baseStore.handleSetCurrentProject({project})
+	return project
+})
 
 const canWrite = computed(() => (
 	task.maxRight !== null &&
