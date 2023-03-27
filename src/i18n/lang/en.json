@@ -6,9 +6,7 @@
     "welcomeEvening": "Good Evening {username}!",
     "lastViewed": "Last viewed",
     "project": {
-      "newText": "You can create a new project for your new tasks:",
-      "new": "New project",
-      "importText": "Or import your projects and tasks from other services into Vikunja:",
+      "importText": "Import your projects and tasks from other services into Vikunja:",
       "import": "Import your data into Vikunja"
     }
   },
