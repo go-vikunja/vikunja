@@ -4,7 +4,7 @@
 			<router-link :to="{name: 'home'}" class="logo">
 				<Logo width="164" height="48"/>
 			</router-link>
-			<ul class="menu-list">
+			<ul class="menu-list other-menu-items">
 				<li>
 					<router-link :to="{ name: 'home'}" v-shortcut="'g o'">
 						<span class="menu-item-icon icon">

@@ -15,6 +15,7 @@
   }
 
   .menu-list {
+    &.other-menu-items li,
     li > section {
       height: 44px;
       display: flex;
@@ -23,7 +24,9 @@
       &:hover {
         background: var(--white);
       }
+    }
 
+    li > section {
       .menu-list-dropdown {
         opacity: 1;
         transition: $transition;
@@ -39,7 +42,7 @@
         }
       }
     }
-    
+
     li > ul {
       margin: 0 0 0 var(--menu-nested-list-margin);
     }
@@ -70,20 +73,20 @@
     }
 
     .list-menu-link,
-    li > section {
+    li, li > section {
       .collapse-project-button {
         padding: .5rem .25rem .5rem .5rem;
-        
+
         svg {
           transition: all $transition;
           color: var(--grey-400);
         }
       }
-      
+
       .collapse-project-button-placeholder {
         width: 2.25rem;
       }
-      
+
       > a {
         color: $vikunja-nav-color;
         padding: .75rem .5rem .75rem .25rem;
