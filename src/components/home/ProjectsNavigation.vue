@@ -30,6 +30,7 @@
 				class="list-menu loader-container is-loading-small"
 				:class="{'is-loading': projectUpdating[p.id]}"
 			>
+				<section>
 				<BaseButton
 					:to="{ name: 'project.index', params: { projectId: p.id} }"
 					class="list-menu-link"
@@ -61,14 +62,15 @@
 					</template>
 				</ProjectSettingsDropdown>
 				<span class="list-setting-spacer" v-else></span>
+				</section>
+				<ProjectsNavigation
+					v-if="p.childProjects.length > 0"
+					:projects="p.childProjects"
+				/>
 			</li>
 		</template>
 	</draggable>
 
-	<!--		<ProjectsNavigation-->
-	<!--			v-if="projects.childProjects.length > 0"-->
-	<!--			:projects="projects.childProjects"-->
-	<!--		/>-->
 </template>
 
 <script lang="ts" setup>

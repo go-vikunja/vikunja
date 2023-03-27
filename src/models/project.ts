@@ -22,6 +22,7 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 	subscription: ISubscription = null
 	position = 0
 	backgroundBlurHash = ''
+	childProjects = []
 	
 	created: Date = null
 	updated: Date = null
@@ -44,6 +45,8 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 		if (typeof this.subscription !== 'undefined' && this.subscription !== null) {
 			this.subscription = new SubscriptionModel(this.subscription)
 		}
+		
+		this.childProjects = this.childProjects.map(p => new ProjectModel(p))
 
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)

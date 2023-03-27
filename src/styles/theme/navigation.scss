@@ -15,7 +15,7 @@
   }
 
   .menu-list {
-    li {
+    li > section {
       height: 44px;
       display: flex;
       align-items: center;
@@ -38,7 +38,10 @@
           opacity: 1;
         }
       }
-
+    }
+    
+    li > ul {
+      margin: 0 0 0 var(--menu-nested-list-margin);
     }
 
     .menu-item-icon {
@@ -67,7 +70,7 @@
     }
 
     .list-menu-link,
-    li > a {
+    li > section > a {
       color: $vikunja-nav-color;
       padding: 0.75rem .5rem 0.75rem ($navbar-padding * 1.5 - 1.75rem);
       transition: all 0.2s ease;
