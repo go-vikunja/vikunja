@@ -72,7 +72,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, computed, watch, onActivated} from 'vue'
+import {ref, computed, watch} from 'vue'
 import draggable from 'zhyswan-vuedraggable'
 import type {SortableEvent} from 'sortablejs'
 
@@ -106,13 +106,12 @@ const currentProject = computed(() => baseStore.currentProject)
 // TODO: child projects
 const availableProjects = ref<IProject[]>([])
 watch(
-	props.projects,
+	() => props.projects,
 	projects => {
 		availableProjects.value = projects
 	},
 	{immediate: true},
 )
-onActivated(() => availableProjects.value = props.projects)
 
 const projectUpdating = ref<{ [id: IProject['id']]: boolean }>({})
 
