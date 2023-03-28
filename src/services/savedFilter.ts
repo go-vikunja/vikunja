@@ -12,6 +12,7 @@ import AbstractService from '@/services/abstractService'
 import SavedFilterModel from '@/models/savedFilter'
 
 import {useBaseStore} from '@/stores/base'
+import {useProjectStore} from '@/stores/projects'
 
 import {objectToSnakeCase, objectToCamelCase} from '@/helpers/case'
 import {success} from '@/message'
@@ -80,6 +81,7 @@ export default class SavedFilterService extends AbstractService<ISavedFilter> {
 export function useSavedFilter(projectId?: MaybeRef<IProject['id']>) {
 	const router = useRouter()
 	const {t} = useI18n({useScope:'global'})
+	const projectStore = useProjectStore()
 
 	const filterService = shallowReactive(new SavedFilterService())
 
@@ -108,6 +110,7 @@ export function useSavedFilter(projectId?: MaybeRef<IProject['id']>) {
 
 	async function createFilter() {
 		filter.value = await filterService.create(filter.value)
+		await projectStore.loadProjects()
 		router.push({name: 'project.index', params: {projectId: getProjectId(filter.value)}})
 	}
 
