@@ -128,6 +128,7 @@ export function useSavedFilter(projectId?: MaybeRef<IProject['id']>) {
 
 	async function deleteFilter() {	
 		await filterService.delete(filter.value)
+		await projectStore.loadProjects()
 		success({message: t('filters.delete.success')})
 		router.push({name: 'projects.index'})
 	}
