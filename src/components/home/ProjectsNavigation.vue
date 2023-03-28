@@ -51,7 +51,7 @@
 						v-if="p.id > 0"
 						class="favorite"
 						:class="{'is-favorite': p.isFavorite}"
-						@click="projectStore.toggleProjectFavorite(l)"
+						@click="projectStore.toggleProjectFavorite(p)"
 					>
 						<icon :icon="p.isFavorite ? 'star' : ['far', 'star']"/>
 					</BaseButton>
@@ -172,5 +172,20 @@ async function saveProjectPosition(e: SortableEvent) {
 
 .project-is-collapsed {
 	transform: rotate(-90deg);
+}
+
+.favorite {
+	transition: opacity $transition, color $transition;
+	opacity: 0;
+
+	&:hover,
+	&.is-favorite {
+		opacity: 1;
+		color: var(--warning);
+	}
+}
+
+.list-menu:hover .favorite {
+	opacity: 1;
 }
 </style>
