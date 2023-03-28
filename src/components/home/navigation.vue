@@ -22,7 +22,7 @@
 					</router-link>
 				</li>
 				<li>
-					<router-link :to="{ name: 'projects.index'}" v-shortcut="'g n'">
+					<router-link :to="{ name: 'projects.index'}" v-shortcut="'g p'">
 						<span class="menu-item-icon icon">
 							<icon icon="layer-group"/>
 						</span>
