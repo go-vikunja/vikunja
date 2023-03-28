@@ -16,7 +16,12 @@
 				:class="{'is-visible': background}"
 				class="app-container-background background-fade-in d-print-none"
 				:style="{'background-image': background && `url(${background})`}"></div>
-			<navigation class="d-print-none"/>
+			<Suspense>
+				<navigation class="d-print-none"/>
+				<template #fallback>
+					Loading...
+				</template>
+			</Suspense>
 			<main
 				class="app-content"
 				:class="[

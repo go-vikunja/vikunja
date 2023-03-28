@@ -48,47 +48,30 @@
 			</ul>
 		</nav>
 
-		<nav class="menu" v-if="favoriteProjects">
-			<ProjectsNavigation v-model="favoriteProjects" :can-edit-order="false"/>
-		</nav>
+		<Suspense>
+			<ProjectsNavigationWrapper/>
 
-		<nav class="menu">
-			<ProjectsNavigation v-model="projects" :can-edit-order="true"/>
-		</nav>
+			<template #fallback>
+				<Loading/>
+			</template>
+		</Suspense>
 
 		<PoweredByLink/>
 	</aside>
 </template>
 
 <script setup lang="ts">
-import {computed, onBeforeMount} from 'vue'
+import {computed} from 'vue'
 
 import PoweredByLink from '@/components/home/PoweredByLink.vue'
 import Logo from '@/components/home/Logo.vue'
+import Loading from '@/components/misc/loading.vue'
 
 import {useBaseStore} from '@/stores/base'
-import {useProjectStore} from '@/stores/projects'
-import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
+import ProjectsNavigationWrapper from '@/components/home/ProjectsNavigationWrapper.vue'
 
 const baseStore = useBaseStore()
-const projectStore = useProjectStore()
 const menuActive = computed(() => baseStore.menuActive)
-
-// FIXME: async action will be unfinished when component mounts
-onBeforeMount(async () => {
-	await projectStore.loadProjects()
-})
-
-const projects = computed(() => projectStore.projectsArray
-	.filter(p => p.parentProjectId === 0 && !p.isArchived)
-	.sort((a, b) => a.position - b.position))
-const favoriteProjects = computed(() => projectStore.projectsArray
-	.filter(p => !p.isArchived && p.isFavorite)
-	.map(p => ({
-		...p,
-		childProjects: [],
-	}))
-	.sort((a, b) => a.position - b.position))
 </script>
 
 <style lang="scss" scoped>
@@ -150,7 +133,16 @@ const favoriteProjects = computed(() => projectStore.projectsArray
 	}
 }
 
-.menu {
-	padding-top: math.div($navbar-padding, 2);
+.loader-container {
+	min-width: 100%;
+	height: 150px;
+
+	&.is-loading::after {
+		width: 3rem;
+		height: 3rem;
+		top: calc(50% - 1.5rem);
+		left: calc(50% - 1.5rem);
+		border-width: 3px;
+	}
 }
 </style>
