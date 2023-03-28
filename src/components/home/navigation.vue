@@ -48,8 +48,12 @@
 			</ul>
 		</nav>
 
+		<nav class="menu" v-if="favoriteProjects">
+			<ProjectsNavigation v-model="favoriteProjects" :allow-drag="false"/>
+		</nav>
+
 		<nav class="menu">
-			<ProjectsNavigation v-model="projects"/>
+			<ProjectsNavigation v-model="projects" :allow-drag="true"/>
 		</nav>
 
 		<PoweredByLink/>
@@ -77,6 +81,13 @@ onBeforeMount(async () => {
 
 const projects = computed(() => Object.values(projectStore.projects)
 	.filter(p => p.parentProjectId === 0 && !p.isArchived)
+	.sort((a, b) => a.position < b.position ? -1 : 1))
+const favoriteProjects = computed(() => Object.values(projectStore.projects)
+	.filter(p => !p.isArchived && p.isFavorite)
+	.map(p => ({
+		...p,
+		childProjects: [],
+	}))
 	.sort((a, b) => a.position < b.position ? -1 : 1))
 </script>
 

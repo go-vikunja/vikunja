@@ -8,12 +8,13 @@
 		handle=".handle"
 		tag="ul"
 		item-key="id"
+		:disabled="!allowDrag"
 		:component-data="{
 			type: 'transition-group',
 			name: !drag ? 'flip-list' : null,
 			class: [
 				'menu-list can-be-hidden',
-				{ 'dragging-disabled': false }
+				{ 'dragging-disabled': !allowDrag }
 			]
 		}"
 	>
@@ -67,6 +68,7 @@
 				<ProjectsNavigation
 					v-if="!collapsedProjects[p.id]"
 					v-model="p.childProjects"
+					:allow-drag="true"
 				/>
 			</li>
 		</template>
@@ -92,6 +94,7 @@ import {useProjectStore} from '@/stores/projects'
 
 const props = defineProps<{
 	modelValue: IProject[],
+	allowDrag: boolean,
 }>()
 const emit = defineEmits(['update:modelValue'])
 
