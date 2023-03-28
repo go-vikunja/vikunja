@@ -49,11 +49,11 @@
 		</nav>
 
 		<nav class="menu" v-if="favoriteProjects">
-			<ProjectsNavigation v-model="favoriteProjects" :allow-drag="false"/>
+			<ProjectsNavigation v-model="favoriteProjects" :can-edit-order="false"/>
 		</nav>
 
 		<nav class="menu">
-			<ProjectsNavigation v-model="projects" :allow-drag="true"/>
+			<ProjectsNavigation v-model="projects" :can-edit-order="true"/>
 		</nav>
 
 		<PoweredByLink/>
