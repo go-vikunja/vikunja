@@ -14,9 +14,12 @@
 				ref="heading"
 			/>
 			<h6 class="subtitle" v-if="project?.id">
-				<router-link :to="{ name: 'project.index', params: { projectId: project.id } }">
-					{{ getProjectTitle(project) }}
-				</router-link>
+				<template v-for="p in getAllParentProjects(project)">
+					<router-link :to="{ name: 'project.index', params: { projectId: p.id } }">
+						{{ getProjectTitle(p) }}
+					</router-link>
+					<span class="has-text-grey-light" v-if="p.id !== project.id"> &gt; </span>
+				</template>
 			</h6>
 
 			<checklist-summary :task="task"/>
@@ -780,6 +783,19 @@ async function setPercentDone(percentDone: number) {
 	return saveTask({
 		task: newTask,
 	})
+}
+
+function getAllParentProjects(project: IProject): IProject[] {
+	let parents = []
+	if (project.parentProjectId) {
+		const parentProject = projectStore.getProjectById(project.parentProjectId)
+		parents = getAllParentProjects(parentProject)
+	}
+	
+	return [
+		...parents,
+		project,
+	]
 }
 </script>
 
