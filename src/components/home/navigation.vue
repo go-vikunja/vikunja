@@ -81,14 +81,14 @@ onBeforeMount(async () => {
 
 const projects = computed(() => projectStore.projectsArray
 	.filter(p => p.parentProjectId === 0 && !p.isArchived)
-	.sort((a, b) => a.position < b.position ? -1 : 1))
+	.sort((a, b) => a.position - b.position))
 const favoriteProjects = computed(() => projectStore.projectsArray
 	.filter(p => !p.isArchived && p.isFavorite)
 	.map(p => ({
 		...p,
 		childProjects: [],
 	}))
-	.sort((a, b) => a.position < b.position ? -1 : 1))
+	.sort((a, b) => a.position - b.position))
 </script>
 
 <style lang="scss" scoped>
