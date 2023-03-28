@@ -46,7 +46,7 @@
 		</div>
 		<CustomTransition name="fade">
 			<Message variant="warning" v-if="currentProject.isArchived" class="mb-4">
-				{{ $t('project.archivedText') }}
+				{{ $t('project.archivedMessage') }}
 			</Message>
 		</CustomTransition>
 
