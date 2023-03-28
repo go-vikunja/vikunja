@@ -427,7 +427,7 @@ async function updateTaskPosition(e) {
 		taskAfter !== null ? taskAfter.kanbanPosition : null,
 	)
 	if (
-		oldBucket != undefined && // This shouldn't actually be `undefined`, but let's play it safe.
+		oldBucket !== undefined && // This shouldn't actually be `undefined`, but let's play it safe.
 		newBucket.id !== oldBucket.id &&
 		newBucket.isDoneBucket !== oldBucket.isDoneBucket
 	) {
