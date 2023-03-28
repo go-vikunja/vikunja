@@ -11,7 +11,10 @@
 		@search="findProjects"
 	>
 		<template #searchResult="{option}">
-			{{ (option as IProject).title }}
+			<span class="has-text-grey">
+				{{ getParentProjects(option, projectStore).filter(p => p.id !== option.id).map(p => getProjectTitle(p) ).join(' &gt; ') }} &gt;
+			</span>
+			{{ getProjectTitle(option) }}
 		</template>
 	</Multiselect>
 </template>
@@ -24,6 +27,7 @@ import {useI18n} from 'vue-i18n'
 import type {IProject} from '@/modelTypes/IProject'
 
 import {useProjectStore} from '@/stores/projects'
+import {getProjectTitle, getParentProjects} from '@/helpers/getProjectTitle'
 
 import ProjectModel from '@/models/project'
 

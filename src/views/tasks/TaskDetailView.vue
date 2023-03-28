@@ -14,7 +14,7 @@
 				ref="heading"
 			/>
 			<h6 class="subtitle" v-if="project?.id">
-				<template v-for="p in getAllParentProjects(project)">
+				<template v-for="p in getParentProjects(project, projectStore)">
 					<router-link :to="{ name: 'project.index', params: { projectId: p.id } }">
 						{{ getProjectTitle(p) }}
 					</router-link>
@@ -488,7 +488,7 @@ import TaskSubscription from '@/components/misc/subscription.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 import {uploadFile} from '@/helpers/attachments'
-import {getProjectTitle} from '@/helpers/getProjectTitle'
+import {getProjectTitle, getParentProjects} from '@/helpers/getProjectTitle'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 
 import {useBaseStore} from '@/stores/base'
@@ -783,19 +783,6 @@ async function setPercentDone(percentDone: number) {
 	return saveTask({
 		task: newTask,
 	})
-}
-
-function getAllParentProjects(project: IProject): IProject[] {
-	let parents = []
-	if (project.parentProjectId) {
-		const parentProject = projectStore.getProjectById(project.parentProjectId)
-		parents = getAllParentProjects(parentProject)
-	}
-	
-	return [
-		...parents,
-		project,
-	]
 }
 </script>
 
