@@ -146,10 +146,11 @@ export const useProjectStore = defineStore('project', () => {
 
 		const projectService = new ProjectService()
 		try {
-			const projects = await projectService.getAll({}, {is_archived: true}) as IProject[]
-			setProjects(projects)
+			const loadedProjects = await projectService.getAll({}, {is_archived: true}) as IProject[]
+			projects.value = {}
+			setProjects(loadedProjects)
 
-			return projects
+			return loadedProjects
 		} finally {
 			cancel()
 		}

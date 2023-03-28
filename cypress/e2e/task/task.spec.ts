@@ -100,14 +100,14 @@ describe('Task', () => {
 			.should('contain', 'Success')
 	})
 
-	it.only('Can add a task to favorites', () => {
+	it('Can add a task to favorites', () => {
 		TaskFactory.create(1)
 
 		cy.visit('/projects/1/list')
 		cy.get('.tasks .task .favorite')
 			.first()
 			.click()
-		cy.get('.menu.namespaces-lists')
+		cy.get('.menu-container')
 			.should('contain', 'Favorites')
 	})
 
