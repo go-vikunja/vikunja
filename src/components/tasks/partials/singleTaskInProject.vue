@@ -255,9 +255,7 @@ function undoDone(checked: boolean) {
 }
 
 async function toggleFavorite() {
-	task.value.isFavorite = !task.value.isFavorite
-	task.value = await taskService.update(task.value)
-	await projectStore.loadProjects() // reloading the projects list so that the Favorites project shows up or is hidden when there are (or are not) favorite tasks
+	task.value = taskStore.toggleFavorite(task.value)
 	emit('task-updated', task.value)
 }
 

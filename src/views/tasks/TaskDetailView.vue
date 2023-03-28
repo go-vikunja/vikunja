@@ -756,8 +756,7 @@ async function changeProject(project: IProject) {
 }
 
 async function toggleFavorite() {
-	task.isFavorite = !task.isFavorite
-	const newTask = await taskService.update(task)
+	const newTask = taskStore.toggleFavorite(task.value)
 	Object.assign(task, newTask)
 }
 
