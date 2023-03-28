@@ -166,7 +166,7 @@ async function saveProjectPosition(e: SortableEvent) {
 
 <style lang="scss" scoped>
 .list-setting-spacer {
-	width: 2.5rem;
+	width: 5rem;
 	flex-shrink: 0;
 }
 
