@@ -450,7 +450,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, toRef, shallowReactive, computed, watch, nextTick, type PropType} from 'vue'
+import {ref, reactive, toRef, shallowReactive, computed, watch, watchEffect, nextTick, type PropType} from 'vue'
 import {useRouter, type RouteLocation} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {unrefElement} from '@vueuse/core'
@@ -539,16 +539,11 @@ const visible = ref(false)
 
 const taskId = toRef(props, 'taskId')
 
-const project = computed(() => {
-	if (!task.projectId) {
-		return {
-			project: null,
-		}
-	}
-
-	const project = projectStore.getProjectById(task.projectId)
-	baseStore.handleSetCurrentProject({project})
-	return project
+const project = computed(() => task.projectId ? projectStore.getProjectById(task.projectId) : null)
+watchEffect(() => {
+	baseStore.handleSetCurrentProject({
+		project: project.value,
+	})
 })
 
 const canWrite = computed(() => (
