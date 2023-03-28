@@ -415,6 +415,7 @@ async function updateTaskPosition(e) {
 		: e.newIndex
 
 	const task = newBucket.tasks[newTaskIndex]
+	const oldBucket = buckets.value.find(b => b.id === task.bucketId)
 	const taskBefore = newBucket.tasks[newTaskIndex - 1] ?? null
 	const taskAfter = newBucket.tasks[newTaskIndex + 1] ?? null
 	taskUpdating.value[task.id] = true
@@ -425,6 +426,13 @@ async function updateTaskPosition(e) {
 		taskBefore !== null ? taskBefore.kanbanPosition : null,
 		taskAfter !== null ? taskAfter.kanbanPosition : null,
 	)
+	if (
+		oldBucket != undefined && // This shouldn't actually be `undefined`, but let's play it safe.
+		newBucket.id !== oldBucket.id &&
+		newBucket.isDoneBucket !== oldBucket.isDoneBucket
+	) {
+		newTask.done = newBucket.isDoneBucket
+	}
 
 	try {
 		await taskStore.update(newTask)
