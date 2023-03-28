@@ -1,6 +1,7 @@
 import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
 import {TaskFactory} from '../../factories/task'
+import {ProjectFactory} from '../../factories/project'
 import {prepareProjects} from './prepareProjects'
 
 describe('Projects', () => {
@@ -23,7 +24,7 @@ describe('Projects', () => {
 			.contains('Create')
 			.click()
 
-		cy.get('.global-notification', { timeout: 1000 }) // Waiting until the request to create the new project is done
+		cy.get('.global-notification', {timeout: 1000}) // Waiting until the request to create the new project is done
 			.should('contain', 'Success')
 		cy.url()
 			.should('contain', '/projects/')
@@ -78,7 +79,7 @@ describe('Projects', () => {
 			.should('not.contain', projects[0].title)
 	})
 
-	it('Should remove a project', () => {
+	it('Should remove a project when deleting it', () => {
 		cy.visit(`/projects/${projects[0].id}`)
 
 		cy.get('.menu-container .menu-list li:first-child .dropdown .menu-list-dropdown-trigger')
@@ -99,10 +100,10 @@ describe('Projects', () => {
 		cy.location('pathname')
 			.should('equal', '/')
 	})
-	
+
 	it('Should archive a project', () => {
 		cy.visit(`/projects/${projects[0].id}`)
-		
+
 		cy.get('.project-title-dropdown')
 			.click()
 		cy.get('.project-title-dropdown .dropdown-menu .dropdown-item')
@@ -112,10 +113,59 @@ describe('Projects', () => {
 			.should('contain.text', 'Archive this project')
 		cy.get('.modal-content [data-cy=modalPrimary]')
 			.click()
-		
+
 		cy.get('.menu-container .menu-list')
 			.should('not.contain', projects[0].title)
 		cy.get('main.app-content')
 			.should('contain.text', 'This project is archived. It is not possible to create new or edit tasks for it.')
+	})
+
+	it('Should show all projects on the projects page', () => {
+		const projects = ProjectFactory.create(10)
+
+		cy.visit('/projects')
+
+		projects.forEach(p => {
+			cy.get('[data-cy="projects-list"]')
+				.should('contain', p.title)
+		})
+	})
+
+	it('Should not show archived projects if the filter is not checked', () => {
+		ProjectFactory.create(1, {
+			id: 2,
+		}, false)
+		ProjectFactory.create(1, {
+			id: 3,
+			is_archived: true,
+		}, false)
+
+		// Initial
+		cy.visit('/projects')
+		cy.get('.project-grid')
+			.should('not.contain', 'Archived')
+
+		// Show archived
+		cy.get('[data-cy="show-archived-check"] label.check span')
+			.should('be.visible')
+			.click()
+		cy.get('[data-cy="show-archived-check"] input')
+			.should('be.checked')
+		cy.get('.project-grid')
+			.should('contain', 'Archived')
+
+		// Don't show archived
+		cy.get('[data-cy="show-archived-check"] label.check span')
+			.should('be.visible')
+			.click()
+		cy.get('[data-cy="show-archived-check"] input')
+			.should('not.be.checked')
+
+		// Second time visiting after unchecking
+		cy.visit('/projects')
+		cy.get('[data-cy="show-archived-check"] input')
+			.should('not.be.checked')
+		cy.get('.project-grid')
+			.should('not.contain', 'Archived')
 	})
 })
