@@ -44,6 +44,7 @@ const checkboxId = ref(`fancycheckbox_${createRandomID()}`)
 	cursor: pointer;
 	user-select: none;
 	-webkit-tap-highlight-color: transparent;
+	display: inline-flex;
 }
 
 .base-checkbox:has(input:disabled) .base-checkbox__label {
