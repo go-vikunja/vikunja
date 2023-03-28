@@ -72,7 +72,19 @@ export const useProjectStore = defineStore('project', () => {
 		// if the project is a child project, we need to also set it in the parent
 		if (project.parentProjectId) {
 			const parent = projects.value[project.parentProjectId]
-			parent.childProjects = parent.childProjects?.map(p => p.id === project.id ? project : p)
+			let foundProject = false
+			parent.childProjects = parent.childProjects?.map(p => {
+				if(p.id === project.id) {
+					foundProject = true
+					return project
+				}
+				
+				return p
+			})
+			// If we hit this, the project now has a new parent project which it did not have before
+			if (!foundProject) {
+				parent.childProjects.push(project)
+			}
 			setProject(parent, false)
 		}
 	}
