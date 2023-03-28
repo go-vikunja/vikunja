@@ -14,7 +14,7 @@
 				ref="heading"
 			/>
 			<h6 class="subtitle" v-if="project?.id">
-				<template v-for="p in getParentProjects(project, projectStore)">
+				<template v-for="p in projectStore.getParentProjects(project)">
 					<router-link :to="{ name: 'project.index', params: { projectId: p.id } }">
 						{{ getProjectTitle(p) }}
 					</router-link>
@@ -488,7 +488,7 @@ import TaskSubscription from '@/components/misc/subscription.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 import {uploadFile} from '@/helpers/attachments'
-import {getProjectTitle, getParentProjects} from '@/helpers/getProjectTitle'
+import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 
 import {useBaseStore} from '@/stores/base'

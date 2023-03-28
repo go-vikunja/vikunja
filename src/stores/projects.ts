@@ -47,9 +47,9 @@ export const useProjectStore = defineStore('project', () => {
 	const searchProject = computed(() => {
 		return (query: string, includeArchived = false) => {
 			return search(query)
-				?.filter(value => value > 0)
-				.map(id => projects.value[id])
-				.filter(project => project.isArchived === includeArchived)
+					?.filter(value => value > 0)
+					.map(id => projects.value[id])
+					.filter(project => project.isArchived === includeArchived)
 				|| []
 		}
 	})
@@ -65,21 +65,21 @@ export const useProjectStore = defineStore('project', () => {
 		if (baseStore.currentProject?.id === project.id) {
 			baseStore.setCurrentProject(project)
 		}
-		
+
 		if (updateChildren) {
 			project.childProjects?.forEach(p => setProject(p))
 		}
-		
+
 		// if the project is a child project, we need to also set it in the parent
 		if (project.parentProjectId) {
 			const parent = projects.value[project.parentProjectId]
 			let foundProject = false
 			parent.childProjects = parent.childProjects?.map(p => {
-				if(p.id === project.id) {
+				if (p.id === project.id) {
 					foundProject = true
 					return project
 				}
-				
+
 				return p
 			})
 			// If we hit this, the project now has a new parent project which it did not have before
@@ -162,7 +162,7 @@ export const useProjectStore = defineStore('project', () => {
 			cancel()
 		}
 	}
-	
+
 	async function loadProjects() {
 		const cancel = setModuleLoading(setIsLoading)
 
@@ -176,6 +176,18 @@ export const useProjectStore = defineStore('project', () => {
 		} finally {
 			cancel()
 		}
+	}
+
+	function getParentProjects(project: IProject): IProject[] {
+		if (!project?.parentProjectId) {
+			return [project]
+		}
+
+		const parentProject = projects.value[project.parentProjectId]
+		return [
+			...getParentProjects(parentProject),
+			project,
+		]
 	}
 
 	return {
@@ -196,6 +208,7 @@ export const useProjectStore = defineStore('project', () => {
 		createProject,
 		updateProject,
 		deleteProject,
+		getParentProjects,
 	}
 })
 
@@ -215,6 +228,7 @@ export function useProject(projectId: MaybeRef<IProject['id']>) {
 	)
 
 	const projectStore = useProjectStore()
+
 	async function save() {
 		await projectStore.updateProject(project)
 		success({message: t('project.edit.success')})
@@ -229,5 +243,5 @@ export function useProject(projectId: MaybeRef<IProject['id']>) {
 
 // support hot reloading
 if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useProjectStore, import.meta.hot))
+	import.meta.hot.accept(acceptHMRUpdate(useProjectStore, import.meta.hot))
 }

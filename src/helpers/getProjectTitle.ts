@@ -13,16 +13,3 @@ export function getProjectTitle(project: IProject) {
 
 	return project.title
 }
-
-export function getParentProjects(project: IProject, projectStore): IProject[] {
-	let parents = []
-	if (project.parentProjectId) {
-		const parentProject = projectStore.getProjectById(project.parentProjectId)
-		parents = getParentProjects(parentProject, projectStore)
-	}
-
-	return [
-		...parents,
-		project,
-	]
-}
