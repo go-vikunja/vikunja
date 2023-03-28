@@ -57,19 +57,28 @@ export const useProjectStore = defineStore('project', () => {
 		isLoading.value = newIsLoading
 	}
 
-	function setProject(project: IProject) {
+	function setProject(project: IProject, updateChildren: boolean = true) {
 		projects.value[project.id] = project
 		update(project)
-		
-		project.childProjects?.forEach(setProject)
 
 		if (baseStore.currentProject?.id === project.id) {
 			baseStore.setCurrentProject(project)
 		}
+		
+		if (updateChildren) {
+			project.childProjects?.forEach(p => setProject(p))
+		}
+		
+		// if the project is a child project, we need to also set it in the parent
+		if (project.parentProjectId) {
+			const parent = projects.value[project.parentProjectId]
+			parent.childProjects = parent.childProjects?.map(p => p.id === project.id ? project : p)
+			setProject(parent, false)
+		}
 	}
 
 	function setProjects(newProjects: IProject[]) {
-		newProjects.forEach(setProject)
+		newProjects.forEach(p => setProject(p))
 	}
 
 	function removeProjectById(project: IProject) {
