@@ -91,7 +91,7 @@ const showArchived = useStorage('showArchived', false)
 
 const loading = computed(() => projectStore.isLoading)
 const projects = computed(() => {
-	return Object.values(projectStore.projects).filter(project => showArchived.value
+	return projectStore.projectsArray.filter(project => showArchived.value
 		? true
 		: !project.isArchived,
 	)

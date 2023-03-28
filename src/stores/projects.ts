@@ -28,7 +28,7 @@ export const useProjectStore = defineStore('project', () => {
 
 	// The projects are stored as an object which has the project ids as keys.
 	const projects = ref<ProjectState>({})
-
+	const projectsArray = computed(() => Object.values(projects.value))
 
 	const getProjectById = computed(() => {
 		return (id: IProject['id']) => typeof projects.value[id] !== 'undefined' ? projects.value[id] : null
@@ -180,6 +180,7 @@ export const useProjectStore = defineStore('project', () => {
 	return {
 		isLoading: readonly(isLoading),
 		projects: readonly(projects),
+		projectsArray: readonly(projectsArray),
 
 		getProjectById,
 		findProjectByExactname,
