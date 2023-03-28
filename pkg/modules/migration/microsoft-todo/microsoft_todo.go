@@ -218,7 +218,7 @@ func getMicrosoftTodoData(token string) (microsoftTodoData []*project, err error
 	microsoftTodoData = []*project{}
 
 	projects := &projectsResponse{}
-	err = makeAuthenticatedGetRequest(token, "projects", projects)
+	err = makeAuthenticatedGetRequest(token, "lists", projects)
 	if err != nil {
 		log.Errorf("[Microsoft Todo Migration] Could not get projects: %s", err)
 		return
@@ -227,7 +227,7 @@ func getMicrosoftTodoData(token string) (microsoftTodoData []*project, err error
 	log.Debugf("[Microsoft Todo Migration] Got %d projects", len(projects.Value))
 
 	for _, project := range projects.Value {
-		link := "projects/" + project.ID + "/tasks"
+		link := "lists/" + project.ID + "/tasks"
 		project.Tasks = []*task{}
 
 		// Microsoft's Graph API has pagination, so we're going through all pages to get all tasks
