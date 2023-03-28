@@ -42,23 +42,6 @@ h6 {
   font-weight: 400 !important;
 }
 
-// FIXME: create <ProgressBar> component. used in
-// - attachments.vue
-// - kanban-card.vue
-// - singleTaskInProject.vue
-.progress {
-  border-radius: $radius-large;
-	width: 50px;
-	margin: 0 0.5rem 0 0;
-	flex: 3 1 auto;
-
-	@media screen and (max-width: $tablet) {
-		margin: 0.5rem 0 0 0;
-		order: 1;
-		width: 100%;
-	}
-}
-
 // FIXME: these helpers should be mixins
 .has-no-border {
   border: none !important;
@@ -107,7 +90,6 @@ button.table {
 .color-bubble {
   display: inline-block;
   border-radius: 100%;
-  margin-right: 4px;
 }
 
 .is-strikethrough {

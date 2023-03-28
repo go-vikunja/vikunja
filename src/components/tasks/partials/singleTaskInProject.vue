@@ -104,13 +104,11 @@
 				<checklist-summary :task="task"/>
 			</div>
 
-			<progress
-				class="progress is-small"
+			<ProgressBar
 				v-if="task.percentDone > 0"
-				:value="task.percentDone * 100" max="100"
-			>
-				{{ task.percentDone * 100 }}%
-			</progress>
+				:value="task.percentDone * 100"
+				is-small
+			/>
 
 			<ColorBubble
 				v-if="showProjectSeparately && projectColor !== '' && currentProject?.id !== task.projectId"
@@ -166,6 +164,7 @@ import Labels from '@/components/tasks/partials//labels.vue'
 import DeferTask from '@/components/tasks/partials//defer-task.vue'
 import ChecklistSummary from '@/components/tasks/partials/checklist-summary.vue'
 
+import ProgressBar from '@/components/misc/ProgressBar.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import ColorBubble from '@/components/misc/colorBubble.vue'
@@ -494,10 +493,6 @@ function focusTaskLink() {
 		height: 2rem;
 		border-left-color: var(--grey-300);
 		border-bottom-color: var(--grey-300);
-	}
-
-	.progress {
-		margin-bottom: 0;
 	}
 }
 

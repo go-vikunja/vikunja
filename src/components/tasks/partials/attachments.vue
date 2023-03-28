@@ -16,14 +16,12 @@
 			ref="filesRef"
 			type="file"
 		/>
-		<progress
+
+		<ProgressBar
 			v-if="attachmentService.uploadProgress > 0"
-			:value="attachmentService.uploadProgress"
-			class="progress is-primary"
-			max="100"
-		>
-			{{ attachmentService.uploadProgress }}%
-		</progress>
+			:value="attachmentService.uploadProgress * 100"
+			is-primary
+		/>
 
 		<div class="files" v-if="attachments.length > 0">
 			<!-- FIXME: don't use a for element that wraps other links / buttons
@@ -163,6 +161,7 @@ import {ref, shallowReactive, computed} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/user.vue'
+import ProgressBar from '@/components/misc/ProgressBar.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import AttachmentService from '@/services/attachment'

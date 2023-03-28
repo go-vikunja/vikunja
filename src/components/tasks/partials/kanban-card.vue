@@ -41,12 +41,13 @@
 				</time>
 			</span>
 			<h3>{{ task.title }}</h3>
-			<progress
-				class="progress is-small"
+
+			<ProgressBar
 				v-if="task.percentDone > 0"
-				:value="task.percentDone * 100" max="100">
-				{{ task.percentDone * 100 }}%
-			</progress>
+				:value="task.percentDone * 100"
+				is-small
+			/>
+
 			<div class="footer">
 				<labels :labels="task.labels"/>
 				<priority-label
@@ -79,6 +80,7 @@ import {ref, computed, watch} from 'vue'
 import {useRouter} from 'vue-router'
 
 import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'
+import ProgressBar from '@/components/misc/ProgressBar.vue'
 import Done from '@/components/misc/Done.vue'
 import Labels from '@/components/tasks/partials/labels.vue'
 import ChecklistSummary from './checklist-summary.vue'
