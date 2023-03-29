@@ -235,8 +235,20 @@ export function useProject(projectId: MaybeRef<IProject['id']>) {
 	)
 
 	const projectStore = useProjectStore()
+	
+	const parentProject = ref<IProject | null>(null)
+	watch(
+		() => project.parentProjectId,
+		projectId => {
+			if (project.parentProjectId) {
+				parentProject.value = projectStore.getProjectById(project.parentProjectId)
+			}
+		},
+		{immediate: true},
+	)
 
 	async function save() {
+		project.parentProjectId = parentProject.value.id
 		await projectStore.updateProject(project)
 		success({message: t('project.edit.success')})
 	}
@@ -244,6 +256,7 @@ export function useProject(projectId: MaybeRef<IProject['id']>) {
 	return {
 		isLoading: readonly(isLoading),
 		project,
+		parentProject,
 		save,
 	}
 }

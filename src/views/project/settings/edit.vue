@@ -43,6 +43,12 @@
 			</div>
 		</div>
 		<div class="field">
+			<label class="label">{{ $t('project.parent') }}</label>
+			<div class="control">
+				<project-search v-model="parentProject"/>
+			</div>
+		</div>
+		<div class="field">
 			<label class="label" for="projectdescription">{{ $t('project.edit.description') }}</label>
 			<div class="control">
 				<Editor
@@ -70,13 +76,14 @@ export default { name: 'project-setting-edit' }
 </script>
 
 <script setup lang="ts">
-import type {PropType} from 'vue'
+import {type PropType} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import Editor from '@/components/input/AsyncEditor'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 import CreateEdit from '@/components/misc/create-edit.vue'
+import ProjectSearch from '@/components/tasks/partials/projectSearch.vue'
 
 import type {IProject} from '@/modelTypes/IProject'
 
@@ -96,7 +103,7 @@ const router = useRouter()
 
 const {t} = useI18n({useScope: 'global'})
 
-const {project, save: saveProject, isLoading} = useProject(props.projectId)
+const {project, parentProject, save: saveProject, isLoading} = useProject(props.projectId)
 
 useTitle(() => project?.title ? t('project.edit.title', {project: project.title}) : '')
 
