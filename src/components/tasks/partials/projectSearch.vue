@@ -11,7 +11,7 @@
 		@search="findProjects"
 	>
 		<template #searchResult="{option}">
-			<span class="has-text-grey">
+			<span class="has-text-grey" v-if="projectStore.getParentProjects(option).length > 1">
 				{{ projectStore.getParentProjects(option).filter(p => p.id !== option.id).map(p => getProjectTitle(p)).join(' &gt; ') }} &gt;
 			</span>
 			{{ getProjectTitle(option) }}
