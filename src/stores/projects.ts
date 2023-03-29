@@ -34,6 +34,9 @@ export const useProjectStore = defineStore('project', () => {
 	const getProjectById = computed(() => {
 		return (id: IProject['id']) => typeof projects.value[id] !== 'undefined' ? projects.value[id] : null
 	})
+	const getChildProjects = computed(() => {
+		return (id: IProject['id']) => projectsArray.value.filter(p => p.parentProjectId === id) || []
+	})
 
 	const findProjectByExactname = computed(() => {
 		return (name: string) => {
@@ -67,24 +70,27 @@ export const useProjectStore = defineStore('project', () => {
 		}
 
 		if (updateChildren) {
-			project.childProjects?.forEach(p => setProject(p))
+			// When projects are loaded from the api, they will include child projects
+			// in the `childProjects` property. We flatten them out into the project store here.
+			project.childProjects?.forEach(p => setProject(new ProjectModel(p)))
+			delete project.childProjects
 		}
 
 		// if the project is a child project, we need to also set it in the parent
 		if (project.parentProjectId) {
 			const parent = projects.value[project.parentProjectId]
 			let foundProject = false
-			parent.childProjects = parent.childProjects?.map(p => {
+			parent.childProjectIds = parent.childProjectIds?.forEach(p => {
 				if (p.id === project.id) {
 					foundProject = true
-					return project
 				}
-
-				return p
 			})
 			// If we hit this, the project now has a new parent project which it did not have before
 			if (!foundProject) {
-				parent.childProjects.push(project)
+				if (!parent.childProjectIds) {
+					parent.childProjectIds = []
+				}
+				parent.childProjectIds.push(project.id)
 			}
 			setProject(parent, false)
 		}
@@ -197,6 +203,7 @@ export const useProjectStore = defineStore('project', () => {
 		hasProjects: readonly(hasProjects),
 
 		getProjectById,
+		getChildProjects,
 		findProjectByExactname,
 		searchProject,
 

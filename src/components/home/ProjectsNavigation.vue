@@ -26,7 +26,7 @@
 			>
 				<section>
 					<BaseButton
-						v-if="p.childProjects.length > 0"
+						v-if="childProjects[p.id]?.length > 0"
 						@click="collapsedProjects[p.id] = !collapsedProjects[p.id]"
 						class="collapse-project-button"
 					>
@@ -67,7 +67,7 @@
 				</section>
 				<ProjectsNavigation
 					v-if="!collapsedProjects[p.id]"
-					v-model="p.childProjects"
+					v-model="childProjects[p.id]"
 					:can-edit-order="true"
 				/>
 			</li>
@@ -93,7 +93,7 @@ import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
 
 const props = defineProps<{
-	modelValue: IProject[],
+	modelValue?: IProject[],
 	canEditOrder: boolean,
 }>()
 const emit = defineEmits(['update:modelValue'])
@@ -114,11 +114,16 @@ const currentProject = computed(() => baseStore.currentProject)
 // TODO: child projects
 const collapsedProjects = ref<{ [id: IProject['id']]: boolean }>({})
 const availableProjects = ref<IProject[]>([])
+const childProjects = ref<{ [id: IProject['id']]: boolean }>({})
 watch(
 	() => props.modelValue,
 	projects => {
-		availableProjects.value = projects
-		projects.forEach(p => collapsedProjects.value[p.id] = false)
+		availableProjects.value = projects || []
+		projects?.forEach(p => {
+			collapsedProjects.value[p.id] = false
+			childProjects.value[p.id] = projectStore.getChildProjects(p.id)
+				.sort((a, b) => a.position - b.position)
+		})
 	},
 	{immediate: true},
 )
@@ -149,8 +154,8 @@ async function saveProjectPosition(e: SortableEvent) {
 
 	if (project.parentProjectId !== parentProjectId && project.parentProjectId > 0) {
 		const parentProject = projectStore.getProjectById(project.parentProjectId)
-		const childProjectIndex = parentProject.childProjects.findIndex(p => p.id === project.id)
-		parentProject.childProjects.splice(childProjectIndex, 1)
+		const childProjectIndex = parentProject.childProjectIds.findIndex(pId => pId === project.id)
+		parentProject.childProjectIds.splice(childProjectIndex, 1)
 	}
 
 	try {

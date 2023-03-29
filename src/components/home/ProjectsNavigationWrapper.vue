@@ -17,14 +17,18 @@ const projectStore = useProjectStore()
 
 await projectStore.loadProjects()
 
-const projects = computed(() => projectStore.projectsArray
-	.filter(p => p.parentProjectId === 0 && !p.isArchived)
-	.sort((a, b) => a.position - b.position))
+const projects = computed({
+	get() {
+		return projectStore.projectsArray
+			.filter(p => p.parentProjectId === 0 && !p.isArchived)
+			.sort((a, b) => a.position - b.position)
+	},
+	set() {	}, // Vue will complain about the component not being writable - but we never need to write here. The setter is only here to silence the warning.
+})
 const favoriteProjects = computed(() => projectStore.projectsArray
 	.filter(p => !p.isArchived && p.isFavorite)
 	.map(p => ({
 		...p,
-		childProjects: [],
 	}))
 	.sort((a, b) => a.position - b.position))
 </script>
