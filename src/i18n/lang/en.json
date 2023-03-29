@@ -211,6 +211,7 @@
     "duplicate": {
       "title": "Duplicate this project",
       "label": "Duplicate",
+      "text": "Select a parent project which should hold the duplicated project:",
       "success": "The project was successfully duplicated."
     },
     "edit": {
