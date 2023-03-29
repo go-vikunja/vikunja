@@ -1,4 +1,6 @@
 // in order to use postcss-preset-env correctly we need some client side plugins
-import focusWithin from 'focus-within'
+import focusWithinInit from 'postcss-focus-within/browser'
+import cssHasPseudo from 'css-has-pseudo/browser'
 
-focusWithin(document)
+focusWithinInit()
+cssHasPseudo(document)

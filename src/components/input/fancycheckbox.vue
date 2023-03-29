@@ -10,7 +10,7 @@
 		@update:model-value="value => emit('update:modelValue', value)"
 	>
 		<CheckboxIcon class="fancycheckbox__icon" />
-		<span class="fancycheckbox__content">
+		<span v-if="$slots.default" class="fancycheckbox__content">
 			<slot/>
 		</span>
 	</BaseCheckbox>
@@ -58,33 +58,36 @@ const emit = defineEmits<{
 	padding-left: .5rem;
 }
 
-.fancycheckbox__icon {
-	--stroke-color: #c8ccd4;
+.fancycheckbox__icon:deep() {
 	position: relative;
 	z-index: 1;
-	stroke: var(--stroke-color);
+	stroke: var(--stroke-color, #c8ccd4);
 	transform: translate3d(0, 0, 0);
 	transition: all 0.2s ease;
 
-	:deep(path) {
-		// stroke-dasharray: 60;
-		transition: all 0.2s linear, color 0.2s ease;
-	}
-
-	:deep(polyline) {
-		// stroke-dasharray: 22;
-		// stroke-dashoffset: 66;
+	path,
+	polyline {
 		transition: all 0.2s linear, color 0.2s ease;
 	}
 }
 
-.fancycheckbox:not(:has(input:disabled)):hover .fancycheckbox__icon {
+.fancycheckbox:not(:has(input:disabled)):hover .fancycheckbox__icon,
+.fancycheckbox:has(input:checked) .fancycheckbox__icon {
 	--stroke-color: var(--primary);
 }
+</style>
 
-.fancycheckbox:has(input:checked) .fancycheckbox__icon:deep() {
-	--stroke-color: var(--primary);
+<style lang="scss">
+// Since css-has-pseudo doesn't work with deep classes,
+// the following rules can't be scoped
 
+.fancycheckbox:has(:not(input:checked)) .fancycheckbox__icon {
+	path {
+		transition-delay: 0.05s;
+	}
+}
+
+.fancycheckbox:has(input:checked) .fancycheckbox__icon {
 	path {
 		stroke-dashoffset: 60;
 	}

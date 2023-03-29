@@ -81,6 +81,7 @@ export default defineConfig(({mode}) => {
 						// See also './src/polyfills.ts'
 						features: {
 							'focus-within-pseudo-class': true,
+							'has-pseudo-class': true,
 						},
 					}),
 				],
