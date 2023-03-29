@@ -169,6 +169,7 @@
     "title": "Project Title",
     "color": "Color",
     "projects": "Projects",
+    "parent": "Parent Project",
     "search": "Type to search for a project…",
     "searchSelect": "Click or press enter to select this project",
     "shared": "Shared Projects",

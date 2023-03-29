@@ -12,7 +12,7 @@
 	>
 		<template #searchResult="{option}">
 			<span class="has-text-grey">
-				{{ projectStore.getParentProjects(option).filter(p => p.id !== option.id).map(p => getProjectTitle(p) ).join(' &gt; ') }} &gt;
+				{{ projectStore.getParentProjects(option).filter(p => p.id !== option.id).map(p => getProjectTitle(p)).join(' &gt; ') }} &gt;
 			</span>
 			{{ getProjectTitle(option) }}
 		</template>

@@ -23,6 +23,12 @@
 			{{ $t('project.create.addTitleRequired') }}
 		</p>
 		<div class="field">
+			<label class="label">{{ $t('project.parent') }}</label>
+			<div class="control">
+				<project-search v-model="parentProject"/>
+			</div>
+		</div>
+		<div class="field">
 			<label class="label">{{ $t('project.color') }}</label>
 			<div class="control">
 				<color-picker v-model="project.hexColor" />
@@ -44,6 +50,8 @@ import ColorPicker from '@/components/input/ColorPicker.vue'
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
 import {useProjectStore} from '@/stores/projects'
+import ProjectSearch from '@/components/tasks/partials/projectSearch.vue'
+import type {IProject} from '@/modelTypes/IProject'
 
 const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
@@ -55,6 +63,7 @@ const showError = ref(false)
 const project = reactive(new ProjectModel())
 const projectService = shallowReactive(new ProjectService())
 const projectStore = useProjectStore()
+const parentProject = ref<IProject | null>(null)
 
 async function createNewProject() {
 	if (project.title === '') {
@@ -62,6 +71,10 @@ async function createNewProject() {
 		return
 	}
 	showError.value = false
+	
+	if (parentProject.value) {
+		project.parentProjectId = parentProject.value.id
+	}
 
 	const newProject = await projectStore.createProject(project)
 	await router.push({
