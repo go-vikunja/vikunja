@@ -17,6 +17,7 @@
 package models
 
 import (
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -771,6 +772,13 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		colsToUpdate = append(colsToUpdate, "background_file_id", "background_blur_hash")
 	}
 
+	if project.Position < 0.1 {
+		err = recalculateProjectPositions(s, project.ParentProjectID)
+		if err != nil {
+			return err
+		}
+	}
+
 	wasFavorite, err := isFavorite(s, project.ID, auth, FavoriteKindProject)
 	if err != nil {
 		return err
@@ -810,6 +818,34 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 
 	*project = *l
 	err = project.ReadOne(s, auth)
+	return
+}
+
+func recalculateProjectPositions(s *xorm.Session, parentProjectID int64) (err error) {
+
+	allProjects := []*Project{}
+	err = s.
+		Where("parent_project_id = ?", parentProjectID).
+		OrderBy("position asc").
+		Find(&allProjects)
+	if err != nil {
+		return
+	}
+
+	maxPosition := math.Pow(2, 32)
+
+	for i, project := range allProjects {
+
+		currentPosition := maxPosition / float64(len(allProjects)) * (float64(i + 1))
+
+		_, err = s.Cols("position").
+			Where("id = ?", project.ID).
+			Update(&Project{Position: currentPosition})
+		if err != nil {
+			return
+		}
+	}
+
 	return
 }
 
