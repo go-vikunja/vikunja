@@ -6,6 +6,7 @@ import {saveProjectView, getProjectView} from '@/helpers/projectView'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 import {setTitle} from '@/helpers/setTitle'
+import {getToken} from '@/helpers/auth'
 
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
@@ -71,6 +72,8 @@ const NewProjectComponent = () => import('@/views/project/NewProject.vue')
 const EditTeamComponent = () => import('@/views/teams/EditTeam.vue')
 const NewTeamComponent = () =>  import('@/views/teams/NewTeam.vue')
 
+const linkShareHashPrefix = '#linkshare='
+
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
 	scrollBehavior(to, from, savedPosition) {
@@ -80,7 +83,7 @@ const router = createRouter({
 		}
 
 		// Scroll to anchor should still work
-		if (to.hash) {
+		if (to.hash && !to.hash.startsWith(linkShareHashPrefix)) {
 			return {el: to.hash}
 		}
 
@@ -482,8 +485,36 @@ export async function getAuthForRoute(route: RouteLocation) {
 	}
 }
 
-router.beforeEach(async (to) => {
-	return getAuthForRoute(to)
+router.beforeEach(async (to, from) => {
+	
+	if(from.hash && from.hash.startsWith(linkShareHashPrefix)) {
+		to.hash = from.hash
+	}
+	
+	if (to.hash.startsWith(linkShareHashPrefix)) {
+		const currentAuthToken = getToken()
+		if (currentAuthToken === null) {
+			saveLastVisited(to.name as string, to.params, to.query)
+			return {
+				name: 'link-share.auth',
+				params: {
+					share: to.hash.replace(linkShareHashPrefix, ''),
+				},
+			}
+		}
+	}
+	
+	const newRoute = await getAuthForRoute(to)
+	if(newRoute) {
+		return {
+			...newRoute,
+			hash: to.hash,
+		}
+	}
+	
+	if(!to.fullPath.endsWith(to.hash)) {
+		return to.fullPath + to.hash
+	}
 })
 
 export default router
