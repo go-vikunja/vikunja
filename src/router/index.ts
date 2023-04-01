@@ -489,17 +489,14 @@ router.beforeEach(async (to, from) => {
 	if(from.hash && from.hash.startsWith(LINK_SHARE_HASH_PREFIX)) {
 		to.hash = from.hash
 	}
-	
-	if (to.hash.startsWith(LINK_SHARE_HASH_PREFIX)) {
-		const currentAuthToken = getToken()
-		if (currentAuthToken === null) {
-			saveLastVisited(to.name as string, to.params, to.query)
-			return {
-				name: 'link-share.auth',
-				params: {
-					share: to.hash.replace(LINK_SHARE_HASH_PREFIX, ''),
-				},
-			}
+
+	if (to.hash.startsWith(linkShareHashPrefix) && getToken() === null) {
+		saveLastVisited(to.name as string, to.params, to.query)
+		return {
+			name: 'link-share.auth',
+			params: {
+				share: to.hash.replace(LINK_SHARE_HASH_PREFIX, ''),
+			},
 		}
 	}
 	
