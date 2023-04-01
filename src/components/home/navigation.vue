@@ -52,7 +52,7 @@
 			<ProjectsNavigationWrapper/>
 
 			<template #fallback>
-				<Loading/>
+				<Loading class="navigation-loader"/>
 			</template>
 		</Suspense>
 
@@ -133,7 +133,7 @@ const menuActive = computed(() => baseStore.menuActive)
 	}
 }
 
-.loader-container {
+.navigation-loader {
 	min-width: 100%;
 	height: 150px;
 

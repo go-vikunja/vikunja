@@ -4,7 +4,7 @@
 
 <script lang="ts">
 export default {
-	inheritAttrs: false,
+	inheritAttrs: true,
 }
 </script>
 
