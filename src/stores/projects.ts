@@ -1,6 +1,7 @@
 import {watch, reactive, shallowReactive, unref, toRefs, readonly, ref, computed} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 import {useI18n} from 'vue-i18n'
+import {klona} from 'klona/lite'
 
 import ProjectService from '@/services/project'
 import {setModuleLoading} from '@/stores/helper'
@@ -144,9 +145,7 @@ export const useProjectStore = defineStore('project', () => {
 
 			// the returned project from projectService.update is the same!
 			// in order to not create a manipulation in pinia store we have to create a new copy
-			return {
-				...project,
-			}
+			return klona(project)
 		} catch (e) {
 			// Reset the project state to the initial one to avoid confusion for the user
 			setProject({
