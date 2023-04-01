@@ -112,23 +112,19 @@ const menuActive = computed(() => baseStore.menuActive)
 	}
 }
 
-.top-menu {
-	margin-top: math.div($navbar-padding, 2);
+.top-menu .menu-list {
+	li {
+		font-weight: 600;
+		font-family: $vikunja-font;
+	}
 
-	.menu-list {
-		li {
-			font-weight: 600;
-			font-family: $vikunja-font;
-		}
+	.list-menu-link,
+	li > a {
+		padding-left: 2rem;
+		display: inline-block;
 
-		.list-menu-link,
-		li > a {
-			padding-left: 2rem;
-			display: inline-block;
-
-			.icon {
-				padding-bottom: .25rem;
-			}
+		.icon {
+			padding-bottom: .25rem;
 		}
 	}
 }

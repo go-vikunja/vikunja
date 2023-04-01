@@ -24,7 +24,7 @@ const favoriteProjects = computed(() => projectStore.favoriteProjects
 </script>
 
 <style lang="scss" scoped>
-.menu {
+.menu + .menu{
 	padding-top: math.div($navbar-padding, 2);
 }
 </style>
