@@ -6,7 +6,7 @@
 		@start="() => drag = true"
 		@end="saveProjectPosition"
 		handle=".handle"
-		tag="ul"
+		tag="menu"
 		item-key="id"
 		:disabled="!canEditOrder"
 		:component-data="{

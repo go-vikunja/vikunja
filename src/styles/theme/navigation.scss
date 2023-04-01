@@ -14,6 +14,10 @@
   }
 
   .menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    
     &.other-menu-items li,
     li > section {
       height: 44px;
@@ -42,7 +46,7 @@
       }
     }
 
-    li > ul {
+    li > menu {
       margin: 0 0 0 var(--menu-nested-list-margin);
     }
 
@@ -126,7 +130,7 @@
       cursor: grab;
     }
     
-    ul {
+    menu {
       border-left: 0;
     }
   }
