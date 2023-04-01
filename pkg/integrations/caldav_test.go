@@ -37,6 +37,10 @@ SUMMARY:Caldav Task 1
 CATEGORIES:tag1,tag2,tag3
 CREATED:20230301T073337Z
 LAST-MODIFIED:20230301T073337Z
+BEGIN:VALARM
+TRIGGER;VALUE=DATE-TIME:20230304T150000Z
+ACTION:DISPLAY
+END:VALARM
 END:VTODO
 END:VCALENDAR`
 
@@ -65,5 +69,9 @@ func TestCaldav(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), "DUE:20230301T150000Z")
 		assert.Contains(t, rec.Body.String(), "PRIORITY:3")
 		assert.Contains(t, rec.Body.String(), "CATEGORIES:Label #4")
+		assert.Contains(t, rec.Body.String(), "BEGIN:VALARM")
+		assert.Contains(t, rec.Body.String(), "TRIGGER;VALUE=DATE-TIME:20230304T150000Z")
+		assert.Contains(t, rec.Body.String(), "ACTION:DISPLAY")
+		assert.Contains(t, rec.Body.String(), "END:VALARM")
 	})
 }

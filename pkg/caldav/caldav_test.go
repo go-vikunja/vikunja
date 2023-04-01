@@ -26,275 +26,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseEvents(t *testing.T) {
-	type args struct {
-		config *Config
-		events []*Event
-	}
-	tests := []struct {
-		name             string
-		args             args
-		wantCaldavevents string
-	}{
-		{
-			name: "Test caldavparsing without reminders",
-			args: args{
-				config: &Config{
-					Name:   "test",
-					ProdID: "RandomProdID which is not random",
-					Color:  "ffffff",
-				},
-				events: []*Event{
-					{
-						Summary:     "Event #1",
-						Description: "Lorem Ipsum",
-						UID:         "randommduid",
-						Timestamp:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
-						Start:       time.Unix(1543626724, 0).In(config.GetTimeZone()),
-						End:         time.Unix(1543627824, 0).In(config.GetTimeZone()),
-						Color:       "affffe",
-					},
-					{
-						Summary:   "Event #2",
-						UID:       "randommduidd",
-						Timestamp: time.Unix(1543726724, 0).In(config.GetTimeZone()),
-						Start:     time.Unix(1543726724, 0).In(config.GetTimeZone()),
-						End:       time.Unix(1543738724, 0).In(config.GetTimeZone()),
-					},
-					{
-						Summary:   "Event #3 with empty uid",
-						UID:       "20181202T0600242aaef4a81d770c1e775e26bc5abebc87f1d3d7bffaa83",
-						Timestamp: time.Unix(1543726824, 0).In(config.GetTimeZone()),
-						Start:     time.Unix(1543726824, 0).In(config.GetTimeZone()),
-						End:       time.Unix(1543727000, 0).In(config.GetTimeZone()),
-					},
-				},
-			},
-			wantCaldavevents: `BEGIN:VCALENDAR
-VERSION:2.0
-METHOD:PUBLISH
-X-PUBLISHED-TTL:PT4H
-X-WR-CALNAME:test
-PRODID:-//RandomProdID which is not random//EN
-X-APPLE-CALENDAR-COLOR:#ffffffFF
-X-OUTLOOK-COLOR:#ffffffFF
-X-FUNAMBOL-COLOR:#ffffffFF
-BEGIN:VEVENT
-UID:randommduid
-SUMMARY:Event #1
-X-APPLE-CALENDAR-COLOR:#affffeFF
-X-OUTLOOK-COLOR:#affffeFF
-X-FUNAMBOL-COLOR:#affffeFF
-DESCRIPTION:Lorem Ipsum
-DTSTAMP:20181201T011204Z
-DTSTART:20181201T011204Z
-DTEND:20181201T013024Z
-END:VEVENT
-BEGIN:VEVENT
-UID:randommduidd
-SUMMARY:Event #2
-DESCRIPTION:
-DTSTAMP:20181202T045844Z
-DTSTART:20181202T045844Z
-DTEND:20181202T081844Z
-END:VEVENT
-BEGIN:VEVENT
-UID:20181202T0600242aaef4a81d770c1e775e26bc5abebc87f1d3d7bffaa83
-SUMMARY:Event #3 with empty uid
-DESCRIPTION:
-DTSTAMP:20181202T050024Z
-DTSTART:20181202T050024Z
-DTEND:20181202T050320Z
-END:VEVENT
-END:VCALENDAR`,
-		},
-		{
-			name: "Test caldavparsing with reminders",
-			args: args{
-				config: &Config{
-					Name:   "test2",
-					ProdID: "RandomProdID which is not random",
-				},
-				events: []*Event{
-					{
-						Summary:     "Event #1",
-						Description: "Lorem Ipsum",
-						UID:         "randommduid",
-						Timestamp:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
-						Start:       time.Unix(1543626724, 0).In(config.GetTimeZone()),
-						End:         time.Unix(1543627824, 0).In(config.GetTimeZone()),
-						Alarms: []Alarm{
-							{Time: time.Unix(1543626524, 0).In(config.GetTimeZone())},
-							{Time: time.Unix(1543626224, 0).In(config.GetTimeZone())},
-							{Time: time.Unix(1543626024, 0)},
-						},
-					},
-					{
-						Summary:   "Event #2",
-						UID:       "randommduidd",
-						Timestamp: time.Unix(1543726724, 0).In(config.GetTimeZone()),
-						Start:     time.Unix(1543726724, 0).In(config.GetTimeZone()),
-						End:       time.Unix(1543738724, 0).In(config.GetTimeZone()),
-						Alarms: []Alarm{
-							{Time: time.Unix(1543626524, 0).In(config.GetTimeZone())},
-							{Time: time.Unix(1543626224, 0).In(config.GetTimeZone())},
-							{Time: time.Unix(1543626024, 0).In(config.GetTimeZone())},
-						},
-					},
-					{
-						Summary:   "Event #3 with empty uid",
-						Timestamp: time.Unix(1543726824, 0).In(config.GetTimeZone()),
-						Start:     time.Unix(1543726824, 0).In(config.GetTimeZone()),
-						End:       time.Unix(1543727000, 0).In(config.GetTimeZone()),
-						Alarms: []Alarm{
-							{Time: time.Unix(1543626524, 0).In(config.GetTimeZone())},
-							{Time: time.Unix(1543626224, 0).In(config.GetTimeZone())},
-							{Time: time.Unix(1543626024, 0).In(config.GetTimeZone())},
-							{Time: time.Unix(1543826824, 0).In(config.GetTimeZone())},
-						},
-					},
-					{
-						Summary:   "Event #4 without any",
-						Timestamp: time.Unix(1543726824, 0),
-						Start:     time.Unix(1543726824, 0),
-						End:       time.Unix(1543727000, 0),
-					},
-				},
-			},
-			wantCaldavevents: `BEGIN:VCALENDAR
-VERSION:2.0
-METHOD:PUBLISH
-X-PUBLISHED-TTL:PT4H
-X-WR-CALNAME:test2
-PRODID:-//RandomProdID which is not random//EN
-BEGIN:VEVENT
-UID:randommduid
-SUMMARY:Event #1
-DESCRIPTION:Lorem Ipsum
-DTSTAMP:20181201T011204Z
-DTSTART:20181201T011204Z
-DTEND:20181201T013024Z
-BEGIN:VALARM
-TRIGGER:-PT3M20S
-ACTION:DISPLAY
-DESCRIPTION:Event #1
-END:VALARM
-BEGIN:VALARM
-TRIGGER:-PT8M20S
-ACTION:DISPLAY
-DESCRIPTION:Event #1
-END:VALARM
-BEGIN:VALARM
-TRIGGER:-PT11M40S
-ACTION:DISPLAY
-DESCRIPTION:Event #1
-END:VALARM
-END:VEVENT
-BEGIN:VEVENT
-UID:randommduidd
-SUMMARY:Event #2
-DESCRIPTION:
-DTSTAMP:20181202T045844Z
-DTSTART:20181202T045844Z
-DTEND:20181202T081844Z
-BEGIN:VALARM
-TRIGGER:-PT27H50M0S
-ACTION:DISPLAY
-DESCRIPTION:Event #2
-END:VALARM
-BEGIN:VALARM
-TRIGGER:-PT27H55M0S
-ACTION:DISPLAY
-DESCRIPTION:Event #2
-END:VALARM
-BEGIN:VALARM
-TRIGGER:-PT27H58M20S
-ACTION:DISPLAY
-DESCRIPTION:Event #2
-END:VALARM
-END:VEVENT
-BEGIN:VEVENT
-UID:20181202T050024Z2aaef4a81d770c1e775e26bc5abebc87f1d3d7bffaa83
-SUMMARY:Event #3 with empty uid
-DESCRIPTION:
-DTSTAMP:20181202T050024Z
-DTSTART:20181202T050024Z
-DTEND:20181202T050320Z
-BEGIN:VALARM
-TRIGGER:-PT27H51M40S
-ACTION:DISPLAY
-DESCRIPTION:Event #3 with empty uid
-END:VALARM
-BEGIN:VALARM
-TRIGGER:-PT27H56M40S
-ACTION:DISPLAY
-DESCRIPTION:Event #3 with empty uid
-END:VALARM
-BEGIN:VALARM
-TRIGGER:-PT28H0M0S
-ACTION:DISPLAY
-DESCRIPTION:Event #3 with empty uid
-END:VALARM
-BEGIN:VALARM
-TRIGGER:PT27H46M40S
-ACTION:DISPLAY
-DESCRIPTION:Event #3 with empty uid
-END:VALARM
-END:VEVENT
-BEGIN:VEVENT
-UID:20181202T050024Zae7548ce9556df85038abe90dc674d4741a61ce74d1cf
-SUMMARY:Event #4 without any
-DESCRIPTION:
-DTSTAMP:20181202T050024Z
-DTSTART:20181202T050024Z
-DTEND:20181202T050320Z
-END:VEVENT
-END:VCALENDAR`,
-		},
-		{
-			name: "Test caldavparsing with multiline description",
-			args: args{
-				config: &Config{
-					Name:   "test",
-					ProdID: "RandomProdID which is not random",
-				},
-				events: []*Event{
-					{
-						Summary: "Event #1",
-						Description: `Lorem Ipsum
-Dolor sit amet`,
-						UID:       "randommduid",
-						Timestamp: time.Unix(1543626724, 0).In(config.GetTimeZone()),
-						Start:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
-						End:       time.Unix(1543627824, 0).In(config.GetTimeZone()),
-					},
-				},
-			},
-			wantCaldavevents: `BEGIN:VCALENDAR
-VERSION:2.0
-METHOD:PUBLISH
-X-PUBLISHED-TTL:PT4H
-X-WR-CALNAME:test
-PRODID:-//RandomProdID which is not random//EN
-BEGIN:VEVENT
-UID:randommduid
-SUMMARY:Event #1
-DESCRIPTION:Lorem Ipsum\nDolor sit amet
-DTSTAMP:20181201T011204Z
-DTSTART:20181201T011204Z
-DTEND:20181201T013024Z
-END:VEVENT
-END:VCALENDAR`,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotCaldavevents := ParseEvents(tt.args.config, tt.args.events)
-			assert.Equal(t, gotCaldavevents, tt.wantCaldavevents)
-		})
-	}
-}
-
 func TestParseTodos(t *testing.T) {
 	type args struct {
 		config *Config
@@ -522,11 +253,86 @@ LAST-MODIFIED:00010101T000000Z
 END:VTODO
 END:VCALENDAR`,
 		},
+		{
+			name: "with alarm",
+			args: args{
+				config: &Config{
+					Name:   "test",
+					ProdID: "RandomProdID which is not random",
+				},
+				todos: []*Todo{
+					{
+						Summary:   "Todo #1",
+						UID:       "randommduid",
+						Timestamp: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						Alarms: []Alarm{
+							{
+								Time: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+							},
+							{
+								Time:        time.Unix(1543626724, 0).In(config.GetTimeZone()),
+								Description: "alarm description",
+							},
+							{
+								Duration:   -2 * time.Hour,
+								RelativeTo: "due_date",
+							},
+							{
+								Duration:   1 * time.Hour,
+								RelativeTo: "start_date",
+							},
+							{
+								Duration:   time.Duration(0),
+								RelativeTo: "end_date",
+							},
+						},
+					},
+				},
+			},
+			wantCaldavtasks: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randommduid
+DTSTAMP:20181201T011204Z
+SUMMARY:Todo #1
+LAST-MODIFIED:00010101T000000Z
+BEGIN:VALARM
+TRIGGER;VALUE=DATE-TIME:20181201T011204Z
+ACTION:DISPLAY
+DESCRIPTION:Todo #1
+END:VALARM
+BEGIN:VALARM
+TRIGGER;VALUE=DATE-TIME:20181201T011204Z
+ACTION:DISPLAY
+DESCRIPTION:alarm description
+END:VALARM
+BEGIN:VALARM
+TRIGGER;RELATED=END:-PT2H0M0S
+ACTION:DISPLAY
+DESCRIPTION:Todo #1
+END:VALARM
+BEGIN:VALARM
+TRIGGER;RELATED=START:PT1H0M0S
+ACTION:DISPLAY
+DESCRIPTION:Todo #1
+END:VALARM
+BEGIN:VALARM
+TRIGGER;RELATED=END:PT0S
+ACTION:DISPLAY
+DESCRIPTION:Todo #1
+END:VALARM
+END:VTODO
+END:VCALENDAR`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotCaldavtasks := ParseTodos(tt.args.config, tt.args.todos)
-			assert.Equal(t, gotCaldavtasks, tt.wantCaldavtasks)
+			assert.Equal(t, tt.wantCaldavtasks, gotCaldavtasks)
 		})
 	}
 }

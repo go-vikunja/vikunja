@@ -39,30 +39,31 @@ Vikunja currently supports the following properties:
 * `PRIORITY`
 * `CATEGORIES`
 * `COMPLETED`
+* `CREATED` (only Vikunja -> Client)
 * `DUE`
-* `DTSTART`
 * `DURATION`
-* `ORGANIZER`
-* `RELATED-TO`
-* `CREATED`
 * `DTSTAMP`
-* `LAST-MODIFIED`
-* Recurrence
+* `DTSTART`
+* `LAST-MODIFIED` (only Vikunja -> Client)
+* `RRULE` (Recurrence) (only Vikunja -> Client)
+* `VALARM` (Reminders)
 
 Vikunja **currently does not** support these properties:
 
 * `ATTACH`
 * `CLASS`
 * `COMMENT`
+* `CONTACT`
 * `GEO`
 * `LOCATION`
+* `ORGANIZER` (disabled)
 * `PERCENT-COMPLETE`
-* `RESOURCES`
-* `STATUS`
-* `CONTACT`
 * `RECURRENCE-ID`
-* `URL`
+* `RELATED-TO`
+* `RESOURCES`
 * `SEQUENCE`
+* `STATUS`
+* `URL`
 
 ## Tested Clients
 

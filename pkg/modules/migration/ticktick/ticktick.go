@@ -20,9 +20,7 @@ import (
 	"encoding/csv"
 	"errors"
 	"io"
-	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -30,6 +28,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 
 	"github.com/gocarina/gocsv"
 )
@@ -73,36 +72,6 @@ func (date *tickTickTime) UnmarshalCSV(csv string) (err error) {
 	}
 	date.Time, err = time.Parse(timeISO, csv)
 	return err
-}
-
-// Copied from https://stackoverflow.com/a/57617885
-var durationRegex = regexp.MustCompile(`P([\d\.]+Y)?([\d\.]+M)?([\d\.]+D)?T?([\d\.]+H)?([\d\.]+M)?([\d\.]+?S)?`)
-
-// ParseDuration converts a ISO8601 duration into a time.Duration
-func parseDuration(str string) time.Duration {
-	matches := durationRegex.FindStringSubmatch(str)
-
-	if len(matches) == 0 {
-		return 0
-	}
-
-	years := parseDurationPart(matches[1], time.Hour*24*365)
-	months := parseDurationPart(matches[2], time.Hour*24*30)
-	days := parseDurationPart(matches[3], time.Hour*24)
-	hours := parseDurationPart(matches[4], time.Hour)
-	minutes := parseDurationPart(matches[5], time.Second*60)
-	seconds := parseDurationPart(matches[6], time.Second)
-
-	return years + months + days + hours + minutes + seconds
-}
-
-func parseDurationPart(value string, unit time.Duration) time.Duration {
-	if len(value) != 0 {
-		if parsed, err := strconv.ParseFloat(value[:len(value)-1], 64); err == nil {
-			return time.Duration(float64(unit) * parsed)
-		}
-	}
-	return 0
 }
 
 func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.NamespaceWithProjectsAndTasks) {
@@ -231,7 +200,7 @@ func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error 
 			task.IsChecklist = true
 		}
 
-		reminder := parseDuration(task.ReminderDuration)
+		reminder := utils.ParseISO8601Duration(task.ReminderDuration)
 		if reminder > 0 {
 			task.Reminder = reminder
 		}

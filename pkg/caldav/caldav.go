@@ -31,19 +31,6 @@ import (
 // DateFormat is the caldav date format
 const DateFormat = `20060102T150405`
 
-// Event holds a single caldav event
-type Event struct {
-	Summary     string
-	Description string
-	UID         string
-	Alarms      []Alarm
-	Color       string
-
-	Timestamp time.Time
-	Start     time.Time
-	End       time.Time
-}
-
 // Todo holds a single VTODO
 type Todo struct {
 	// Required
@@ -65,6 +52,7 @@ type Todo struct {
 	Duration     time.Duration
 	RepeatAfter  int64
 	RepeatMode   models.TaskRepeatMode
+	Alarms       []Alarm
 
 	Created time.Time
 	Updated time.Time // last-mod
@@ -73,6 +61,8 @@ type Todo struct {
 // Alarm holds infos about an alarm from a caldav event
 type Alarm struct {
 	Time        time.Time
+	Duration    time.Duration
+	RelativeTo  models.ReminderRelation
 	Description string
 }
 
@@ -98,58 +88,6 @@ func getCaldavColor(color string) (caldavcolor string) {
 X-APPLE-CALENDAR-COLOR:` + color + `
 X-OUTLOOK-COLOR:` + color + `
 X-FUNAMBOL-COLOR:` + color
-}
-
-// ParseEvents parses an array of caldav events and gives them back as string
-func ParseEvents(config *Config, events []*Event) (caldavevents string) {
-	caldavevents += `BEGIN:VCALENDAR
-VERSION:2.0
-METHOD:PUBLISH
-X-PUBLISHED-TTL:PT4H
-X-WR-CALNAME:` + config.Name + `
-PRODID:-//` + config.ProdID + `//EN` + getCaldavColor(config.Color)
-
-	for _, e := range events {
-
-		if e.UID == "" {
-			e.UID = makeCalDavTimeFromTimeStamp(e.Timestamp) + utils.Sha256(e.Summary)
-		}
-
-		formattedDescription := ""
-		if e.Description != "" {
-			re := regexp.MustCompile(`\r?\n`)
-			formattedDescription = re.ReplaceAllString(e.Description, "\\n")
-		}
-
-		caldavevents += `
-BEGIN:VEVENT
-UID:` + e.UID + `
-SUMMARY:` + e.Summary + getCaldavColor(e.Color) + `
-DESCRIPTION:` + formattedDescription + `
-DTSTAMP:` + makeCalDavTimeFromTimeStamp(e.Timestamp) + `
-DTSTART:` + makeCalDavTimeFromTimeStamp(e.Start) + `
-DTEND:` + makeCalDavTimeFromTimeStamp(e.End)
-
-		for _, a := range e.Alarms {
-			if a.Description == "" {
-				a.Description = e.Summary
-			}
-
-			caldavevents += `
-BEGIN:VALARM
-TRIGGER:` + calcAlarmDateFromReminder(e.Start, a.Time) + `
-ACTION:DISPLAY
-DESCRIPTION:` + a.Description + `
-END:VALARM`
-		}
-		caldavevents += `
-END:VEVENT`
-	}
-
-	caldavevents += `
-END:VCALENDAR` // Need a line break
-
-	return
 }
 
 func formatDuration(duration time.Duration) string {
@@ -246,7 +184,7 @@ CATEGORIES:` + strings.Join(t.Categories, ",")
 
 		caldavtodos += `
 LAST-MODIFIED:` + makeCalDavTimeFromTimeStamp(t.Updated)
-
+		caldavtodos += ParseAlarms(t.Alarms, t.Summary)
 		caldavtodos += `
 END:VTODO`
 	}
@@ -257,19 +195,42 @@ END:VCALENDAR` // Need a line break
 	return
 }
 
+func ParseAlarms(alarms []Alarm, taskDescription string) (caldavalarms string) {
+	for _, a := range alarms {
+		if a.Description == "" {
+			a.Description = taskDescription
+		}
+
+		caldavalarms += `
+BEGIN:VALARM`
+		switch a.RelativeTo {
+		case models.ReminderRelationStartDate:
+			caldavalarms += `
+TRIGGER;RELATED=START:` + makeCalDavDuration(a.Duration)
+		case models.ReminderRelationEndDate, models.ReminderRelationDueDate:
+			caldavalarms += `
+TRIGGER;RELATED=END:` + makeCalDavDuration(a.Duration)
+		default:
+			caldavalarms += `
+TRIGGER;VALUE=DATE-TIME:` + makeCalDavTimeFromTimeStamp(a.Time)
+		}
+		caldavalarms += `
+ACTION:DISPLAY
+DESCRIPTION:` + a.Description + `
+END:VALARM`
+	}
+	return caldavalarms
+}
+
 func makeCalDavTimeFromTimeStamp(ts time.Time) (caldavtime string) {
 	return ts.In(time.UTC).Format(DateFormat) + "Z"
 }
 
-func calcAlarmDateFromReminder(eventStart, reminder time.Time) (alarmTime string) {
-	diff := reminder.Sub(eventStart)
-	diffStr := strings.ToUpper(diff.String())
-	if diff < 0 {
-		alarmTime += `-`
-		// We append the - at the beginning of the caldav flag, that would get in the way if the minutes
-		// themselves are also containing it
-		diffStr = diffStr[1:]
+func makeCalDavDuration(duration time.Duration) (caldavtime string) {
+	if duration < 0 {
+		duration = duration.Abs()
+		caldavtime = "-"
 	}
-	alarmTime += `PT` + diffStr
+	caldavtime += "PT" + strings.ToUpper(duration.Truncate(time.Millisecond).String())
 	return
 }

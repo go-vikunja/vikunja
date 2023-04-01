@@ -17,12 +17,14 @@
 package caldav
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/utils"
 
 	ics "github.com/arran4/golang-ical"
 )
@@ -37,6 +39,14 @@ func GetCaldavTodosForTasks(project *models.ProjectWithTasksAndBuckets, projectT
 		var categories []string
 		for _, label := range t.Labels {
 			categories = append(categories, label.Title)
+		}
+		var alarms []Alarm
+		for _, reminder := range t.Reminders {
+			alarms = append(alarms, Alarm{
+				Time:       reminder.Reminder,
+				Duration:   time.Duration(reminder.RelativePeriod) * time.Second,
+				RelativeTo: reminder.RelativeTo,
+			})
 		}
 
 		caldavtodos = append(caldavtodos, &Todo{
@@ -56,6 +66,7 @@ func GetCaldavTodosForTasks(project *models.ProjectWithTasksAndBuckets, projectT
 			Duration:    duration,
 			RepeatAfter: t.RepeatAfter,
 			RepeatMode:  t.RepeatMode,
+			Alarms:      alarms,
 		})
 	}
 
@@ -72,10 +83,13 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// We put the task details in a map to be able to handle them more easily
+	vTodo, ok := parsed.Components[0].(*ics.VTodo)
+	if !ok {
+		return nil, errors.New("VTODO element not found")
+	}
+	// We put the vTodo details in a map to be able to handle them more easily
 	task := make(map[string]string)
-	for _, c := range parsed.Components[0].UnknownPropertiesIANAProperties() {
+	for _, c := range vTodo.UnknownPropertiesIANAProperties() {
 		task[c.IANAToken] = c.Value
 	}
 
@@ -127,7 +141,61 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 		vTask.EndDate = vTask.StartDate.Add(duration)
 	}
 
+	for _, vAlarm := range vTodo.SubComponents() {
+		if vAlarm, ok := vAlarm.(*ics.VAlarm); ok {
+			vTask = parseVAlarm(vAlarm, vTask)
+		}
+	}
+
 	return
+}
+
+func parseVAlarm(vAlarm *ics.VAlarm, vTask *models.Task) *models.Task {
+	for _, property := range vAlarm.UnknownPropertiesIANAProperties() {
+		if property.IANAToken != "TRIGGER" {
+			continue
+		}
+
+		if contains(property.ICalParameters["VALUE"], "DATE-TIME") {
+			// Example: TRIGGER;VALUE=DATE-TIME:20181201T011210Z
+			vTask.Reminders = append(vTask.Reminders, &models.TaskReminder{
+				Reminder: caldavTimeToTimestamp(property.Value),
+			})
+			continue
+		}
+
+		duration := utils.ParseISO8601Duration(property.Value)
+
+		if contains(property.ICalParameters["RELATED"], "END") {
+			// Example: TRIGGER;RELATED=END:-P2D
+			if vTask.EndDate.IsZero() {
+				vTask.Reminders = append(vTask.Reminders, &models.TaskReminder{
+					RelativePeriod: int64(duration.Seconds()),
+					RelativeTo:     models.ReminderRelationDueDate})
+			} else {
+				vTask.Reminders = append(vTask.Reminders, &models.TaskReminder{
+					RelativePeriod: int64(duration.Seconds()),
+					RelativeTo:     models.ReminderRelationEndDate})
+			}
+			continue
+		}
+
+		// Example: TRIGGER;RELATED=START:-P2D
+		// Example: TRIGGER:-PT60M
+		vTask.Reminders = append(vTask.Reminders, &models.TaskReminder{
+			RelativePeriod: int64(duration.Seconds()),
+			RelativeTo:     models.ReminderRelationStartDate})
+	}
+	return vTask
+}
+
+func contains(array []string, str string) bool {
+	for _, value := range array {
+		if value == str {
+			return true
+		}
+	}
+	return false
 }
 
 // https://tools.ietf.org/html/rfc5545#section-3.3.5

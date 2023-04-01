@@ -118,6 +118,107 @@ END:VCALENDAR`,
 				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
 			},
 		},
+		{
+			name: "With alarm (time trigger)",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+DESCRIPTION:Lorem Ipsum
+BEGIN:VALARM
+TRIGGER;VALUE=DATE-TIME:20181201T011210Z
+ACTION:DISPLAY
+END:VALARM
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:       "Todo #1",
+				UID:         "randomuid",
+				Description: "Lorem Ipsum",
+				Reminders: []*models.TaskReminder{
+					{
+						Reminder: time.Date(2018, 12, 1, 1, 12, 10, 0, config.GetTimeZone()),
+					},
+				},
+				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+		},
+		{
+			name: "With alarm (relative trigger)",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+DESCRIPTION:Lorem Ipsum
+DTSTART:20230228T170000Z
+DUE:20230304T150000Z
+BEGIN:VALARM
+TRIGGER:PT0S
+ACTION:DISPLAY
+END:VALARM
+BEGIN:VALARM
+TRIGGER;VALUE=DURATION:-PT60M
+ACTION:DISPLAY
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-PT61M
+ACTION:DISPLAY
+END:VALARM
+BEGIN:VALARM
+TRIGGER;RELATED=START:-P1D
+ACTION:DISPLAY
+END:VALARM
+BEGIN:VALARM
+TRIGGER;RELATED=END:-PT30M
+ACTION:DISPLAY
+END:VALARM
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:       "Todo #1",
+				UID:         "randomuid",
+				Description: "Lorem Ipsum",
+				StartDate:   time.Date(2023, 2, 28, 17, 0, 0, 0, config.GetTimeZone()),
+				DueDate:     time.Date(2023, 3, 4, 15, 0, 0, 0, config.GetTimeZone()),
+				Reminders: []*models.TaskReminder{
+					{
+						RelativeTo:     models.ReminderRelationStartDate,
+						RelativePeriod: 0,
+					},
+					{
+						RelativeTo:     models.ReminderRelationStartDate,
+						RelativePeriod: -3600,
+					},
+					{
+						RelativeTo:     models.ReminderRelationStartDate,
+						RelativePeriod: -3660,
+					},
+					{
+						RelativeTo:     models.ReminderRelationStartDate,
+						RelativePeriod: -86400,
+					},
+					{
+						RelativeTo:     models.ReminderRelationDueDate,
+						RelativePeriod: -1800,
+					},
+				},
+				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -127,7 +228,7 @@ END:VCALENDAR`,
 				return
 			}
 			if diff, equal := messagediff.PrettyDiff(got, tt.wantVTask); !equal {
-				t.Errorf("ParseTaskFromVTODO() gotVTask = %v, want %v, diff = %s", got, tt.wantVTask, diff)
+				t.Errorf("ParseTaskFromVTODO()\n gotVTask = %v\n want %v\n diff = %s", got, tt.wantVTask, diff)
 			}
 		})
 	}
@@ -175,6 +276,16 @@ func TestGetCaldavTodosForTasks(t *testing.T) {
 									Title: "label2",
 								},
 							},
+							Reminders: []*models.TaskReminder{
+								{
+									Reminder: time.Unix(1543626730, 0).In(config.GetTimeZone()),
+								},
+								{
+									Reminder:       time.Unix(1543626731, 0).In(config.GetTimeZone()),
+									RelativePeriod: -3600,
+									RelativeTo:     models.ReminderRelationDueDate,
+								},
+							},
 						},
 					},
 				},
@@ -200,6 +311,16 @@ PRIORITY:3
 RRULE:FREQ=SECONDLY;INTERVAL=86400
 CATEGORIES:label1,label2
 LAST-MODIFIED:20181201T011205Z
+BEGIN:VALARM
+TRIGGER;VALUE=DATE-TIME:20181201T011210Z
+ACTION:DISPLAY
+DESCRIPTION:Task 1
+END:VALARM
+BEGIN:VALARM
+TRIGGER;RELATED=END:-PT1H0M0S
+ACTION:DISPLAY
+DESCRIPTION:Task 1
+END:VALARM
 END:VTODO
 END:VCALENDAR`,
 		},
