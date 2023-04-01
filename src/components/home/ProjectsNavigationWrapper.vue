@@ -24,8 +24,7 @@ const projects = computed({
 	},
 	set() {	}, // Vue will complain about the component not being writable - but we never need to write here. The setter is only here to silence the warning.
 })
-const favoriteProjects = computed(() => projectStore.projectsArray
-	.filter(p => !p.isArchived && p.isFavorite)
+const favoriteProjects = computed(() => projectStore.favoriteProjects
 	.sort((a, b) => a.position - b.position))
 </script>
 
