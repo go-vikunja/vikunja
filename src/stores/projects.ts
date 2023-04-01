@@ -29,6 +29,8 @@ export const useProjectStore = defineStore('project', () => {
 	// The projects are stored as an object which has the project ids as keys.
 	const projects = ref<ProjectState>({})
 	const projectsArray = computed(() => Object.values(projects.value))
+	const notArchivedRootProjects = computed(() => projectsArray.value
+		.filter(p => p.parentProjectId === 0 && !p.isArchived))
 	const hasProjects = computed(() => projects.value ? true : false)
 
 	const getProjectById = computed(() => {
@@ -200,6 +202,7 @@ export const useProjectStore = defineStore('project', () => {
 		isLoading: readonly(isLoading),
 		projects: readonly(projects),
 		projectsArray: readonly(projectsArray),
+		notArchivedRootProjects: readonly(notArchivedRootProjects),
 		hasProjects: readonly(hasProjects),
 
 		getProjectById,
@@ -235,7 +238,7 @@ export function useProject(projectId: MaybeRef<IProject['id']>) {
 	)
 
 	const projectStore = useProjectStore()
-	
+
 	const parentProject = ref<IProject | null>(null)
 	watch(
 		() => project.parentProjectId,

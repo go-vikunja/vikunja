@@ -19,8 +19,7 @@ await projectStore.loadProjects()
 
 const projects = computed({
 	get() {
-		return projectStore.projectsArray
-			.filter(p => p.parentProjectId === 0 && !p.isArchived)
+		return projectStore.notArchivedRootProjects
 			.sort((a, b) => a.position - b.position)
 	},
 	set() {	}, // Vue will complain about the component not being writable - but we never need to write here. The setter is only here to silence the warning.
