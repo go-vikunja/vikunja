@@ -73,7 +73,6 @@
 			</li>
 		</template>
 	</draggable>
-
 </template>
 
 <script lang="ts" setup>

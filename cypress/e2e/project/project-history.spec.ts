@@ -8,13 +8,13 @@ describe('Project History', () => {
 	prepareProjects()
 	
 	it('should show a project history on the home page', () => {
-		cy.intercept(Cypress.env('API_URL') + '/projects*').as('loadProjects')
+		cy.intercept(Cypress.env('API_URL') + '/projects*').as('loadProjectArray')
 		cy.intercept(Cypress.env('API_URL') + '/projects/*').as('loadProject')
 		
 		const projects = ProjectFactory.create(6)
 
 		cy.visit('/')
-		cy.wait('@loadProjects')
+		cy.wait('@loadProjectArray')
 		cy.get('body')
 			.should('not.contain', 'Last viewed')
 
