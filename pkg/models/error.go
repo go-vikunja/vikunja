@@ -874,6 +874,33 @@ func (err ErrUserAlreadyAssigned) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrReminderRelativeToMissing represents an error where a task has a relative reminder without reference date
+type ErrReminderRelativeToMissing struct {
+	TaskID int64
+}
+
+// IsErrReminderRelativeToMissing checks if an error is ErrReminderRelativeToMissing.
+func IsErrReminderRelativeToMissing(err error) bool {
+	_, ok := err.(ErrReminderRelativeToMissing)
+	return ok
+}
+
+func (err ErrReminderRelativeToMissing) Error() string {
+	return fmt.Sprintf("Task [TaskID: %v] has a relative reminder without relative_to", err.TaskID)
+}
+
+// ErrCodeRelationDoesNotExist holds the unique world-error code of this error
+const ErrCodeReminderRelativeToMissing = 4022
+
+// HTTPError holds the http error description
+func (err ErrReminderRelativeToMissing) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeReminderRelativeToMissing,
+		Message:  "Please provide what the reminder date is relative to",
+	}
+}
+
 // ============
 // Team errors
 // ============
