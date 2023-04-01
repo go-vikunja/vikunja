@@ -5,7 +5,7 @@ export function useRedirectToLastVisited() {
 
 	const router = useRouter()
 
-	function getRedirectRoute() {
+	function getLastVisitedRoute() {
 		const last = getLastVisited()
 		if (last !== null) {
 			clearLastVisited()
@@ -20,7 +20,7 @@ export function useRedirectToLastVisited() {
 	}
 
 	function redirectIfSaved() {
-		const lastRoute = getRedirectRoute()
+		const lastRoute = getLastVisitedRoute()
 		if (lastRoute) {
 			router.push(lastRoute)
 		}
@@ -30,6 +30,6 @@ export function useRedirectToLastVisited() {
 
 	return {
 		redirectIfSaved,
-		getRedirectRoute,
+		getLastVisitedRoute,
 	}
 }

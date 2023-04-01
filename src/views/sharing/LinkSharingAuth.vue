@@ -47,7 +47,7 @@ import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(t('sharing.authenticating'))
-const {getRedirectRoute} = useRedirectToLastVisited()
+const {getLastVisitedRoute} = useRedirectToLastVisited()
 
 function useAuth() {
 	const baseStore = useBaseStore()
@@ -92,7 +92,7 @@ function useAuth() {
 
 			const hash = linkShareHashPrefix + route.params.share
 
-			const last = getRedirectRoute()
+			const last = getLastVisitedRoute()
 			if (last) {
 				router.push({
 					...last,
