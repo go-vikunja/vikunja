@@ -193,7 +193,7 @@ async function saveProjectPosition(e: SortableEvent) {
 	}
 }
 
-.list-menu:hover .favorite {
+.list-menu:hover > section > .favorite {
 	opacity: 1;
 }
 </style>
