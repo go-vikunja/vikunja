@@ -56,11 +56,13 @@ import {useOnline} from '@/composables/useOnline'
 import {getAuthForRoute} from '@/router'
 
 import {useBaseStore} from '@/stores/base'
+import {useAuthStore} from '@/stores/auth'
 
 const router = useRouter()
 const route = useRoute()
 
 const baseStore = useBaseStore()
+const authStore = useAuthStore()
 
 const ready = computed(() => baseStore.ready)
 const online = useOnline()
@@ -72,7 +74,7 @@ async function load() {
 	try {
 		await baseStore.loadApp()
 		baseStore.setReady(true)
-		const redirectTo = await getAuthForRoute(route)
+		const redirectTo = await getAuthForRoute(route, authStore)
 		if (typeof redirectTo !== 'undefined') {
 			await router.push(redirectTo)
 		}
