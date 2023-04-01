@@ -7,7 +7,7 @@ import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 import {setTitle} from '@/helpers/setTitle'
 import {getToken} from '@/helpers/auth'
-import {LINK_SHARE_HASH_PREFIX} from '@/helpers/linkShareHash'
+import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'

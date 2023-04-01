@@ -40,7 +40,7 @@ import {useTitle} from '@vueuse/core'
 
 import Message from '@/components/misc/message.vue'
 import {PROJECT_VIEWS, type ProjectView} from '@/types/ProjectView'
-import {LINK_SHARE_HASH_PREFIX} from '@/helpers/linkShareHash'
+import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 
 import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
