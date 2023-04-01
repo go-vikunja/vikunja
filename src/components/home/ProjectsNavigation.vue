@@ -24,47 +24,12 @@
 				:class="{'is-loading': projectUpdating[project.id]}"
 				:data-project-id="project.id"
 			>
-				<section>
-					<BaseButton
-						v-if="childProjects[project.id]?.length > 0"
-						@click="collapsedProjects[project.id] = !collapsedProjects[project.id]"
-						class="collapse-project-button"
-					>
-						<icon icon="chevron-down" :class="{ 'project-is-collapsed': collapsedProjects[project.id] }"/>
-					</BaseButton>
-					<span class="collapse-project-button-placeholder" v-else></span>
-					<BaseButton
-						:to="{ name: 'project.index', params: { projectId: project.id} }"
-						class="list-menu-link"
-						:class="{'router-link-exact-active': currentProject.id === project.id}"
-					>
-						<span class="icon menu-item-icon handle">
-							<icon icon="grip-lines"/>
-						</span>
-						<ColorBubble
-							v-if="project.hexColor !== ''"
-							:color="project.hexColor"
-							class="mr-1"
-						/>
-						<span class="list-menu-title">{{ getProjectTitle(project) }}</span>
-					</BaseButton>
-					<BaseButton
-						v-if="project.id > 0"
-						class="favorite"
-						:class="{'is-favorite': project.isFavorite}"
-						@click="projectStore.toggleProjectFavorite(project)"
-					>
-						<icon :icon="project.isFavorite ? 'star' : ['far', 'star']"/>
-					</BaseButton>
-					<ProjectSettingsDropdown class="menu-list-dropdown" :project="project" v-if="project.id > 0">
-						<template #trigger="{toggleOpen}">
-							<BaseButton class="menu-list-dropdown-trigger" @click="toggleOpen">
-								<icon icon="ellipsis-h" class="icon"/>
-							</BaseButton>
-						</template>
-					</ProjectSettingsDropdown>
-					<span class="list-setting-spacer" v-else></span>
-				</section>
+				<ProjectsNavigationItem
+					:project="project"
+					:can-collapse="childProjects[project.id]?.length > 0"
+					:is-collapsed="collapsedProjects[project.id] || false"
+					@collapse="collapsedProjects[project.id] = !collapsedProjects[project.id]"
+				/>
 				<ProjectsNavigation
 					v-if="!collapsedProjects[project.id]"
 					v-model="childProjects[project.id]"
@@ -76,19 +41,15 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, computed, watch} from 'vue'
+import {ref, watch} from 'vue'
 import draggable from 'zhyswan-vuedraggable'
 import type {SortableEvent} from 'sortablejs'
 
-import BaseButton from '@/components/base/BaseButton.vue'
-import ProjectSettingsDropdown from '@/components/project/project-settings-dropdown.vue'
+import ProjectsNavigationItem from '@/components/home/ProjectsNavigationItem.vue'
 
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
-import {getProjectTitle} from '@/helpers/getProjectTitle'
 import type {IProject} from '@/modelTypes/IProject'
-import ColorBubble from '@/components/misc/colorBubble.vue'
 
-import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
 
 const props = defineProps<{
@@ -103,9 +64,7 @@ const dragOptions = {
 	ghostClass: 'ghost',
 }
 
-const baseStore = useBaseStore()
 const projectStore = useProjectStore()
-const currentProject = computed(() => baseStore.currentProject)
 
 // Vue draggable will modify the projects list as it changes their position which will not work on a prop.
 // Hence, we'll clone the prop and work on the clone.
@@ -170,29 +129,3 @@ async function saveProjectPosition(e: SortableEvent) {
 	}
 }
 </script>
-
-<style lang="scss" scoped>
-.list-setting-spacer {
-	width: 5rem;
-	flex-shrink: 0;
-}
-
-.project-is-collapsed {
-	transform: rotate(-90deg);
-}
-
-.favorite {
-	transition: opacity $transition, color $transition;
-	opacity: 0;
-
-	&:hover,
-	&.is-favorite {
-		opacity: 1;
-		color: var(--warning);
-	}
-}
-
-.list-menu:hover > section > .favorite {
-	opacity: 1;
-}
-</style>
