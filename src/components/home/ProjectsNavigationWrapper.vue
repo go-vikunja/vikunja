@@ -1,10 +1,10 @@
 <template>
 	<nav class="menu" v-if="favoriteProjects">
-		<ProjectsNavigation v-model="favoriteProjects" :can-edit-order="false"/>
+		<ProjectsNavigation :model-value="favoriteProjects" :can-edit-order="false"/>
 	</nav>
 
 	<nav class="menu">
-		<ProjectsNavigation v-model="projects" :can-edit-order="true"/>
+		<ProjectsNavigation :model-value="projects" :can-edit-order="true"/>
 	</nav>
 </template>
 
@@ -17,13 +17,8 @@ const projectStore = useProjectStore()
 
 await projectStore.loadProjects()
 
-const projects = computed({
-	get() {
-		return projectStore.notArchivedRootProjects
-			.sort((a, b) => a.position - b.position)
-	},
-	set() {	}, // Vue will complain about the component not being writable - but we never need to write here. The setter is only here to silence the warning.
-})
+const projects = computed(() => projectStore.notArchivedRootProjects
+	.sort((a, b) => a.position - b.position))
 const favoriteProjects = computed(() => projectStore.favoriteProjects
 	.sort((a, b) => a.position - b.position))
 </script>
