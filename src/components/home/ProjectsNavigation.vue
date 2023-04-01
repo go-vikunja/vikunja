@@ -69,7 +69,6 @@ const projectStore = useProjectStore()
 // Vue draggable will modify the projects list as it changes their position which will not work on a prop.
 // Hence, we'll clone the prop and work on the clone.
 // FIXME: cloning does not work when loading the page initially
-// TODO: child projects
 const collapsedProjects = ref<{ [id: IProject['id']]: boolean }>({})
 const availableProjects = ref<IProject[]>([])
 const childProjects = ref<{ [id: IProject['id']]: boolean }>({})
