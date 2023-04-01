@@ -115,7 +115,7 @@
     "browserslist": "4.21.5",
     "caniuse-lite": "1.0.30001470",
     "css-has-pseudo": "5.0.2",
-    "csstype": "3.1.1",
+    "csstype": "3.1.2",
     "cypress": "12.9.0",
     "esbuild": "0.17.14",
     "eslint": "8.37.0",
