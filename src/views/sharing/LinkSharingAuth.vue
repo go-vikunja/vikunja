@@ -94,14 +94,13 @@ function useAuth() {
 
 			const last = getLastVisitedRoute()
 			if (last) {
-				router.push({
+				return router.push({
 					...last,
 					hash,
 				})
-				return
 			}
 
-			router.push({
+			return router.push({
 				name: `project.${view}`,
 				params: {projectId},
 				hash,
