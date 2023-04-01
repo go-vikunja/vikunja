@@ -47,7 +47,7 @@ import {success} from '@/message'
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 
 const props = defineProps({
-	entity: String,
+	entity: String as ISubscription['entity'],
 	entityId: Number,
 	isButton: {
 		type: Boolean,
