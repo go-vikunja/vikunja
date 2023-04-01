@@ -18,45 +18,45 @@
 			]
 		}"
 	>
-		<template #item="{element: p}">
+		<template #item="{element: project}">
 			<li
 				class="list-menu loader-container is-loading-small"
-				:class="{'is-loading': projectUpdating[p.id]}"
-				:data-project-id="p.id"
+				:class="{'is-loading': projectUpdating[project.id]}"
+				:data-project-id="project.id"
 			>
 				<section>
 					<BaseButton
-						v-if="childProjects[p.id]?.length > 0"
-						@click="collapsedProjects[p.id] = !collapsedProjects[p.id]"
+						v-if="childProjects[project.id]?.length > 0"
+						@click="collapsedProjects[project.id] = !collapsedProjects[project.id]"
 						class="collapse-project-button"
 					>
-						<icon icon="chevron-down" :class="{ 'project-is-collapsed': collapsedProjects[p.id] }"/>
+						<icon icon="chevron-down" :class="{ 'project-is-collapsed': collapsedProjects[project.id] }"/>
 					</BaseButton>
 					<span class="collapse-project-button-placeholder" v-else></span>
 					<BaseButton
-						:to="{ name: 'project.index', params: { projectId: p.id} }"
+						:to="{ name: 'project.index', params: { projectId: project.id} }"
 						class="list-menu-link"
-						:class="{'router-link-exact-active': currentProject.id === p.id}"
+						:class="{'router-link-exact-active': currentProject.id === project.id}"
 					>
 						<span class="icon menu-item-icon handle">
 							<icon icon="grip-lines"/>
 						</span>
 						<ColorBubble
-							v-if="p.hexColor !== ''"
-							:color="p.hexColor"
+							v-if="project.hexColor !== ''"
+							:color="project.hexColor"
 							class="mr-1"
 						/>
-						<span class="list-menu-title">{{ getProjectTitle(p) }}</span>
+						<span class="list-menu-title">{{ getProjectTitle(project) }}</span>
 					</BaseButton>
 					<BaseButton
-						v-if="p.id > 0"
+						v-if="project.id > 0"
 						class="favorite"
-						:class="{'is-favorite': p.isFavorite}"
-						@click="projectStore.toggleProjectFavorite(p)"
+						:class="{'is-favorite': project.isFavorite}"
+						@click="projectStore.toggleProjectFavorite(project)"
 					>
-						<icon :icon="p.isFavorite ? 'star' : ['far', 'star']"/>
+						<icon :icon="project.isFavorite ? 'star' : ['far', 'star']"/>
 					</BaseButton>
-					<ProjectSettingsDropdown class="menu-list-dropdown" :project="p" v-if="p.id > 0">
+					<ProjectSettingsDropdown class="menu-list-dropdown" :project="project" v-if="project.id > 0">
 						<template #trigger="{toggleOpen}">
 							<BaseButton class="menu-list-dropdown-trigger" @click="toggleOpen">
 								<icon icon="ellipsis-h" class="icon"/>
@@ -66,8 +66,8 @@
 					<span class="list-setting-spacer" v-else></span>
 				</section>
 				<ProjectsNavigation
-					v-if="!collapsedProjects[p.id]"
-					v-model="childProjects[p.id]"
+					v-if="!collapsedProjects[project.id]"
+					v-model="childProjects[project.id]"
 					:can-edit-order="true"
 				/>
 			</li>
