@@ -55,10 +55,10 @@ export const useProjectStore = defineStore('project', () => {
 	const searchProject = computed(() => {
 		return (query: string, includeArchived = false) => {
 			return search(query)
-					?.filter(value => value > 0)
-					.map(id => projects.value[id])
-					.filter(project => project.isArchived === includeArchived)
-				|| []
+				?.filter(value => value > 0)
+				.map(id => projects.value[id])
+				.filter(project => project.isArchived === includeArchived)
+			|| []
 		}
 	})
 
