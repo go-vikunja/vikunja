@@ -691,6 +691,12 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 
 	// NOTE: while it certainly be possible to run this function on	fullRelatedTasks again, we don't do this for performance reasons.
 
+	type permissionCheck struct {
+		allowed bool
+	}
+
+	canViewTask := make(map[int64]*permissionCheck)
+
 	// Go through all task relations and put them into the task objects
 	for _, rt := range relatedTasks {
 		_, has := fullRelatedTasks[rt.OtherTaskID]
@@ -699,6 +705,21 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 			continue
 		}
 		fullRelatedTasks[rt.OtherTaskID].IsFavorite = taskFavorites[rt.OtherTaskID]
+
+		_, has = canViewTask[rt.OtherTaskID]
+		if !has {
+			p := Project{ID: fullRelatedTasks[rt.OtherTaskID].ProjectID}
+			can, _, err := p.CanRead(s, a)
+			if err != nil {
+				return err
+			}
+
+			canViewTask[rt.OtherTaskID] = &permissionCheck{allowed: can}
+		}
+		check := canViewTask[rt.OtherTaskID]
+		if !check.allowed {
+			continue
+		}
 
 		// We're duplicating the other task to avoid cycles as these can't be represented properly in json
 		// and would thus fail with an error.
