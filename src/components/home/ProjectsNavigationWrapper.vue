@@ -26,9 +26,6 @@ const projects = computed({
 })
 const favoriteProjects = computed(() => projectStore.projectsArray
 	.filter(p => !p.isArchived && p.isFavorite)
-	.map(p => ({
-		...p,
-	}))
 	.sort((a, b) => a.position - b.position))
 </script>
 
