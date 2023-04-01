@@ -40,6 +40,7 @@ import {useTitle} from '@vueuse/core'
 
 import Message from '@/components/misc/message.vue'
 import {PROJECT_VIEWS, type ProjectView} from '@/types/ProjectView'
+import {LINK_SHARE_HASH_PREFIX} from '@/helpers/linkShareHash'
 
 import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
@@ -61,7 +62,6 @@ function useAuth() {
 	const password = ref('')
 
 	const authLinkShare = computed(() => authStore.authLinkShare)
-	const linkShareHashPrefix = '#linkshare='
 
 	async function authenticate() {
 		authenticateWithPassword.value = false
@@ -90,7 +90,7 @@ function useAuth() {
 				? route.query.view
 				: 'list'
 
-			const hash = linkShareHashPrefix + route.params.share
+			const hash = LINK_SHARE_HASH_PREFIX + route.params.share
 
 			const last = getLastVisitedRoute()
 			if (last) {

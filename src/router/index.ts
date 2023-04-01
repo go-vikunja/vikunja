@@ -7,6 +7,7 @@ import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 import {setTitle} from '@/helpers/setTitle'
 import {getToken} from '@/helpers/auth'
+import {LINK_SHARE_HASH_PREFIX} from '@/helpers/linkShareHash'
 
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
@@ -72,8 +73,6 @@ const NewProjectComponent = () => import('@/views/project/NewProject.vue')
 const EditTeamComponent = () => import('@/views/teams/EditTeam.vue')
 const NewTeamComponent = () =>  import('@/views/teams/NewTeam.vue')
 
-const linkShareHashPrefix = '#linkshare='
-
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
 	scrollBehavior(to, from, savedPosition) {
@@ -83,7 +82,7 @@ const router = createRouter({
 		}
 
 		// Scroll to anchor should still work
-		if (to.hash && !to.hash.startsWith(linkShareHashPrefix)) {
+		if (to.hash && !to.hash.startsWith(LINK_SHARE_HASH_PREFIX)) {
 			return {el: to.hash}
 		}
 
@@ -487,18 +486,18 @@ export async function getAuthForRoute(route: RouteLocation) {
 
 router.beforeEach(async (to, from) => {
 	
-	if(from.hash && from.hash.startsWith(linkShareHashPrefix)) {
+	if(from.hash && from.hash.startsWith(LINK_SHARE_HASH_PREFIX)) {
 		to.hash = from.hash
 	}
 	
-	if (to.hash.startsWith(linkShareHashPrefix)) {
+	if (to.hash.startsWith(LINK_SHARE_HASH_PREFIX)) {
 		const currentAuthToken = getToken()
 		if (currentAuthToken === null) {
 			saveLastVisited(to.name as string, to.params, to.query)
 			return {
 				name: 'link-share.auth',
 				params: {
-					share: to.hash.replace(linkShareHashPrefix, ''),
+					share: to.hash.replace(LINK_SHARE_HASH_PREFIX, ''),
 				},
 			}
 		}
