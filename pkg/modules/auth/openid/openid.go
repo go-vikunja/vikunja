@@ -75,6 +75,7 @@ func (p *Provider) setOicdProvider() (err error) {
 // HandleCallback handles the auth request callback after redirecting from the provider with an auth code
 // @Summary Authenticate a user with OpenID Connect
 // @Description After a redirect from the OpenID Connect provider to the frontend has been made with the authentication `code`, this endpoint can be used to obtain a jwt token for that user and thus log them in.
+// @ID get-token-openid
 // @tags auth
 // @Accept json
 // @Produce json
