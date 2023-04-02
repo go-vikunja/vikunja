@@ -1154,7 +1154,7 @@ Prometheus metrics endpoint
 
 ### enabled
 
-If set to true, enables a /metrics endpoint for prometheus to collect metrics about Vikunja.
+If set to true, enables a /metrics endpoint for prometheus to collect metrics about Vikunja. You can query it from `/api/v1/metrics`.
 
 Default: `false`
 

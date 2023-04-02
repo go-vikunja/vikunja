@@ -310,7 +310,7 @@ auth:
 
 # Prometheus metrics endpoint
 metrics:
-  # If set to true, enables a /metrics endpoint for prometheus to collect metrics about Vikunja.
+  # If set to true, enables a /metrics endpoint for prometheus to collect metrics about Vikunja. You can query it from `/api/v1/metrics`.
   enabled: false
   # If set to a non-empty value the /metrics endpoint will require this as a username via basic auth in combination with the password below.
   username:
