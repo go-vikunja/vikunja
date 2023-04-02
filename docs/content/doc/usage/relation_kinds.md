@@ -10,16 +10,16 @@ menu:
 
 # Available task relation kinds
 
-| Code | Description |
-|------|-------------|
-| subtask | Task is a subtask of the other task. This is the opposite of `parenttask`. |
-| parenttask | Task is a parent task of the other task. This is the opposite of `subtask`. |
-| related | Both tasks are related to each other. How is not more specified. |
-| duplicateof | Task is a duplicate of the other task. This is the opposite of `duplicates`. |
-| duplicates | Task duplicates the other task. This is the opposite of `duplicateof`. |
-| blocking | Task is blocking the other task. This is the opposite of `blocked`. |
-| blocked | Task is blocked by the other task. This is the opposite of `blocking`. |
-| precedes | Task precedes the other task. This is the opposite of `follows`. |
-| follows | Task follows the other task. This is the opposite of `precedes`. |
-| copiedfrom | Task is copied from the other task. This is the opposite of `copiedto`. |
-| copiedto | Task is copied to the other task. This is the opposite of `copiedfrom`. |
+| Code | Description | Opposite of |
+|------|-------------|-------------|
+| `subtask` | Task is a subtask of the other task.       | `parenttask` |
+| `parenttask` | Task is a parent task of the other task. | `subtask` |
+| `related` | Both tasks are related to each other.<br  /> How is not more specified. | ⸺ |
+| `duplicateof` | Task is a duplicate of the other task. | `duplicates` |
+| `duplicates` | Task duplicates the other task. | `duplicateof` |
+| `blocking` | Task is blocking the other task. | `blocked` |
+| `blocked` | Task is blocked by the other task. | `blocking` |
+| `precedes` | Task precedes the other task. | `follows` |
+| `follows` | Task follows the other task. | `precedes` |
+| `copiedfrom` | Task is copied from the other task. | `copiedto` |
+| `copiedto` | Task is copied to the other task. | `copiedfrom` |
