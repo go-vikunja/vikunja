@@ -48,13 +48,8 @@
 			</ul>
 		</nav>
 
-		<Suspense>
-			<ProjectsNavigationWrapper/>
-
-			<template #fallback>
-				<Loading variant="small"/>
-			</template>
-		</Suspense>
+		<Loading variant="small" v-if="projectsLoading"/>
+		<ProjectsNavigationWrapper v-else/>
 
 		<PoweredByLink/>
 	</aside>
@@ -68,10 +63,13 @@ import Logo from '@/components/home/Logo.vue'
 import Loading from '@/components/misc/loading.vue'
 
 import {useBaseStore} from '@/stores/base'
+import {useProjectStore} from '@/stores/projects'
 import ProjectsNavigationWrapper from '@/components/home/ProjectsNavigationWrapper.vue'
 
 const baseStore = useBaseStore()
+const projectStore = useProjectStore()
 const menuActive = computed(() => baseStore.menuActive)
+const projectsLoading = computed(() => projectStore.isLoading)
 </script>
 
 <style lang="scss" scoped>

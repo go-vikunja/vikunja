@@ -69,6 +69,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useLabelStore} from '@/stores/labels'
+import {useProjectStore} from '@/stores/projects'
 
 import {useRouteWithModal} from '@/composables/useRouteWithModal'
 import {useRenewTokenOnFocus} from '@/composables/useRenewTokenOnFocus'
@@ -115,6 +116,9 @@ useRenewTokenOnFocus()
 
 const labelStore = useLabelStore()
 labelStore.loadAllLabels()
+
+const projectStore = useProjectStore()
+projectStore.loadProjects()
 </script>
 
 <style lang="scss" scoped>

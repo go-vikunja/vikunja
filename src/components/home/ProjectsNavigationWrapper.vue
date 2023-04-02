@@ -15,8 +15,6 @@ import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 
 const projectStore = useProjectStore()
 
-await projectStore.loadProjects()
-
 const projects = computed(() => projectStore.notArchivedRootProjects
 	.sort((a, b) => a.position - b.position))
 const favoriteProjects = computed(() => projectStore.favoriteProjects
