@@ -121,12 +121,23 @@ steps:
     when:
       event: [ push, tag, pull_request ]
 
-  - name: build
+  - name: prepare-build
     image: vikunja/golang-build:latest
     pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
     depends_on: [ mage ]
+    commands:
+      - ./mage-static do-the-swag
+    when:
+      event: [ push, tag, pull_request ]
+
+  - name: build
+    image: vikunja/golang-build:latest
+    pull: always
+    environment:
+      GOPROXY: 'https://goproxy.kolaente.de'
+    depends_on: [ prepare-build ]
     commands:
       - ./mage-static build:build
     when:
@@ -219,7 +230,7 @@ steps:
       GOPROXY: 'https://goproxy.kolaente.de'
     commands:
       - ./mage-static test:unit
-    depends_on: [ fetch-tags, mage ]
+    depends_on: [ fetch-tags, prepare-build ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -236,7 +247,7 @@ steps:
         path: /db
     commands:
       - ./mage-static test:unit
-    depends_on: [ fetch-tags, mage ]
+    depends_on: [ fetch-tags, prepare-build ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -253,7 +264,7 @@ steps:
       VIKUNJA_DATABASE_DATABASE: vikunjatest
     commands:
       - ./mage-static test:unit
-    depends_on: [ fetch-tags, mage ]
+    depends_on: [ fetch-tags, prepare-build ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -271,7 +282,7 @@ steps:
       VIKUNJA_DATABASE_SSLMODE: disable
     commands:
       - ./mage-static test:unit
-    depends_on: [ fetch-tags, mage ]
+    depends_on: [ fetch-tags, prepare-build ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -282,7 +293,7 @@ steps:
       GOPROXY: 'https://goproxy.kolaente.de'
     commands:
       - ./mage-static test:integration
-    depends_on: [ fetch-tags, mage ]
+    depends_on: [ fetch-tags, prepare-build ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -299,7 +310,7 @@ steps:
         path: /db
     commands:
       - ./mage-static test:integration
-    depends_on: [ fetch-tags, mage ]
+    depends_on: [ fetch-tags, prepare-build ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -316,7 +327,7 @@ steps:
       VIKUNJA_DATABASE_DATABASE: vikunjatest
     commands:
       - ./mage-static test:integration
-    depends_on: [ fetch-tags, mage ]
+    depends_on: [ fetch-tags, prepare-build ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -334,7 +345,7 @@ steps:
       VIKUNJA_DATABASE_SSLMODE: disable
     commands:
       - ./mage-static test:integration
-    depends_on: [ fetch-tags, mage ]
+    depends_on: [ fetch-tags, prepare-build ]
     when:
       event: [ push, tag, pull_request ]
 
@@ -732,6 +743,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 20ae6020b7e0ac4a01e087e3ef5c17c56ead6a42205b10e5d9a28bf66ae2d8a2
+hmac: 1fae38b149582b7b164b40a0c5e491bd36bf42302f0d14ca558de521f9569767
 
 ...
