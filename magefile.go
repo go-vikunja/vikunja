@@ -340,6 +340,11 @@ func Fmt() {
 // Generates the swagger docs from the code annotations
 func DoTheSwag() {
 	mg.Deps(initVars)
+	if _, err := os.Stat("./pkg/swagger/swagger.json"); err == nil {
+		fmt.Println("Swagger docs already generated, not generating. Remove the files in pkg/swagger and run this command again to regenerate them.")
+		return
+	}
+
 	checkAndInstallGoTool("swag", "github.com/swaggo/swag/cmd/swag")
 	runAndStreamOutput("swag", "init", "-g", "./pkg/routes/routes.go", "--parseDependency", "-d", RootPath, "-o", RootPath+"/pkg/swagger")
 }
@@ -452,6 +457,7 @@ func (Build) Clean() error {
 // Builds a vikunja binary, ready to run
 func (Build) Build() {
 	mg.Deps(initVars)
+	mg.Deps(DoTheSwag)
 	runAndStreamOutput("go", "build", Goflags[0], "-tags", Tags, "-ldflags", "-s -w "+Ldflags, "-o", Executable)
 }
 
@@ -461,6 +467,7 @@ type Release mg.Namespace
 func (Release) Release(ctx context.Context) error {
 	mg.Deps(initVars)
 	mg.Deps(Release.Dirs)
+	mg.Deps(DoTheSwag)
 
 	// Run compiling in parallel to speed it up
 	errs, _ := errgroup.WithContext(ctx)
@@ -502,6 +509,7 @@ func (Release) Dirs() error {
 
 func runXgo(targets string) error {
 	mg.Deps(initVars)
+	mg.Deps(DoTheSwag)
 	checkAndInstallGoTool("xgo", "src.techknowlogick.com/xgo")
 
 	extraLdflags := `-linkmode external -extldflags "-static" `

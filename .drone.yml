@@ -142,7 +142,7 @@ steps:
       - export "GOROOT=$(go env GOROOT)"
       - apk --no-cache add build-base git
       - wget -O - -q https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.52.1
-      - ./mage-static check:all
+      - ./mage-static check:golangci
     when:
       event: [ push, tag, pull_request ]
 
@@ -385,6 +385,7 @@ steps:
       - export PATH=$PATH:$GOPATH/bin
       - go install github.com/magefile/mage
       - ./mage-static release:dirs
+      - ./mage-static do-the-swag
     depends_on: [ fetch-tags, mage ]
 
   - name: static-build-windows
@@ -731,6 +732,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 166caa5ba66cd55bc0f1c5cb42be0a0a647fbadf66716778cf795fc084fc80fd
+hmac: 20ae6020b7e0ac4a01e087e3ef5c17c56ead6a42205b10e5d9a28bf66ae2d8a2
 
 ...
