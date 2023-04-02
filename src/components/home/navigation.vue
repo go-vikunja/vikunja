@@ -49,7 +49,15 @@
 		</nav>
 
 		<Loading variant="small" v-if="projectsLoading"/>
-		<ProjectsNavigationWrapper v-else/>
+		<template v-else>
+			<nav class="menu" v-if="favoriteProjects">
+				<ProjectsNavigation :model-value="favoriteProjects" :can-edit-order="false"/>
+			</nav>
+
+			<nav class="menu">
+				<ProjectsNavigation :model-value="projects" :can-edit-order="true"/>
+			</nav>
+		</template>
 
 		<PoweredByLink/>
 	</aside>
@@ -64,12 +72,17 @@ import Loading from '@/components/misc/loading.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
-import ProjectsNavigationWrapper from '@/components/home/ProjectsNavigationWrapper.vue'
+import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
 const menuActive = computed(() => baseStore.menuActive)
 const projectsLoading = computed(() => projectStore.isLoading)
+
+const projects = computed(() => projectStore.notArchivedRootProjects
+	.sort((a, b) => a.position - b.position))
+const favoriteProjects = computed(() => projectStore.favoriteProjects
+	.sort((a, b) => a.position - b.position))
 </script>
 
 <style lang="scss" scoped>
@@ -125,5 +138,9 @@ const projectsLoading = computed(() => projectStore.isLoading)
 			padding-bottom: .25rem;
 		}
 	}
+}
+
+.menu + .menu{
+	padding-top: math.div($navbar-padding, 2);
 }
 </style>
