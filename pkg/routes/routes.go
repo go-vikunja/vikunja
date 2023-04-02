@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // @title Vikunja API
-// @description This is the documentation for the [Vikunja](http://vikunja.io) API. Vikunja is a cross-plattform To-do-application with a lot of features, such as sharing projects with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
+// @description This is the documentation for the [Vikunja](https://vikunja.io) API. Vikunja is a cross-plattform To-do-application with a lot of features, such as sharing projects with users or teams. <!-- ReDoc-Inject: <security-definitions> -->
 
 // @description # Pagination
 // @description Every endpoint capable of pagination will return two headers:
@@ -31,10 +31,10 @@
 // @description <!-- ReDoc-Inject: <security-definitions> -->
 // @BasePath /api/v1
 
-// @license.url http://code.vikunja.io/api/src/branch/master/LICENSE
-// @license.name GPLv3
+// @license.url https://code.vikunja.io/api/src/branch/main/LICENSE
+// @license.name AGPL-3.0-or-later
 
-// @contact.url http://vikunja.io/en/contact/
+// @contact.url https://vikunja.io/contact/
 // @contact.name General Vikunja contact
 // @contact.email hello@vikunja.io
 
