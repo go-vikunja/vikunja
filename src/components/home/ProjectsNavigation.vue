@@ -19,23 +19,10 @@
 		}"
 	>
 		<template #item="{element: project}">
-			<li
-				class="list-menu loader-container is-loading-small"
-				:class="{'is-loading': projectUpdating[project.id]}"
-				:data-project-id="project.id"
-			>
-				<ProjectsNavigationItem
-					:project="project"
-					:can-collapse="childProjects[project.id]?.length > 0"
-					:is-collapsed="collapsedProjects[project.id] || false"
-					@collapse="collapsedProjects[project.id] = !collapsedProjects[project.id]"
-				/>
-				<ProjectsNavigation
-					v-if="!collapsedProjects[project.id]"
-					v-model="childProjects[project.id]"
-					:can-edit-order="true"
-				/>
-			</li>
+			<ProjectsNavigationItem
+				:project="project"
+				:is-loading="projectUpdating[project.id]"
+			/>
 		</template>
 	</draggable>
 </template>
@@ -68,18 +55,11 @@ const projectStore = useProjectStore()
 
 // Vue draggable will modify the projects list as it changes their position which will not work on a prop.
 // Hence, we'll clone the prop and work on the clone.
-const collapsedProjects = ref<{ [id: IProject['id']]: boolean }>({})
 const availableProjects = ref<IProject[]>([])
-const childProjects = ref<{ [id: IProject['id']]: boolean }>({})
 watch(
 	() => props.modelValue,
 	projects => {
 		availableProjects.value = projects || []
-		projects?.forEach(p => {
-			collapsedProjects.value[p.id] = false
-			childProjects.value[p.id] = projectStore.getChildProjects(p.id)
-				.sort((a, b) => a.position - b.position)
-		})
 	},
 	{immediate: true},
 )
