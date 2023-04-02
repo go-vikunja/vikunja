@@ -13,7 +13,8 @@ COPY . ./
 
 ARG TARGETOS TARGETARCH TARGETVARIANT
 
-RUN mage build:clean && \
+RUN export PATH=$PATH:$GOPATH/bin && \
+	mage build:clean && \
     mage release:xgo "${TARGETOS}/${TARGETARCH}/${TARGETVARIANT}"
 
 #  ┬─┐┬ ┐┌┐┐┌┐┐┬─┐┬─┐

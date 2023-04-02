@@ -195,7 +195,11 @@ func runAndStreamOutput(cmd string, args ...string) {
 	stdout, _ := c.StdoutPipe()
 	errbuf := bytes.Buffer{}
 	c.Stderr = &errbuf
-	c.Start()
+	err := c.Start()
+	if err != nil {
+		fmt.Printf("Could not start: %s\n", err)
+		os.Exit(1)
+	}
 
 	reader := bufio.NewReader(stdout)
 	line, err := reader.ReadString('\n')
@@ -337,11 +341,13 @@ func Fmt() {
 	runAndStreamOutput("gofmt", args...)
 }
 
+const swaggerDocsFolderLocation = `./pkg/swagger/`
+
 // Generates the swagger docs from the code annotations
 func DoTheSwag() {
 	mg.Deps(initVars)
-	if _, err := os.Stat("./pkg/swagger/swagger.json"); err == nil {
-		fmt.Println("Swagger docs already generated, not generating. Remove the files in pkg/swagger and run this command again to regenerate them.")
+	if _, err := os.Stat(swaggerDocsFolderLocation + "swagger.json"); err == nil {
+		fmt.Println("Swagger docs already generated, not generating. Remove the files in " + swaggerDocsFolderLocation + " and run this command again to regenerate them.")
 		return
 	}
 
@@ -449,6 +455,9 @@ func (Build) Clean() error {
 		return err
 	}
 	if err := os.RemoveAll(BinLocation); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	if err := os.RemoveAll(swaggerDocsFolderLocation); err != nil && !os.IsNotExist(err) {
 		return err
 	}
 	return nil
