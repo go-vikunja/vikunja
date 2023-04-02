@@ -52,7 +52,7 @@
 			<ProjectsNavigationWrapper/>
 
 			<template #fallback>
-				<Loading class="navigation-loader"/>
+				<Loading variant="small"/>
 			</template>
 		</Suspense>
 
@@ -126,19 +126,6 @@ const menuActive = computed(() => baseStore.menuActive)
 		.icon {
 			padding-bottom: .25rem;
 		}
-	}
-}
-
-.navigation-loader {
-	min-width: 100%;
-	height: 150px;
-
-	&.is-loading::after {
-		width: 3rem;
-		height: 3rem;
-		top: calc(50% - 1.5rem);
-		left: calc(50% - 1.5rem);
-		border-width: 3px;
 	}
 }
 </style>
