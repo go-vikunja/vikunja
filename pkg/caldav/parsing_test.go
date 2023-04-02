@@ -219,6 +219,76 @@ END:VCALENDAR`,
 				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
 			},
 		},
+		{
+			name: "example task from tasks.org app",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:+//IDN tasks.org//android-130102//EN
+BEGIN:VTODO
+DTSTAMP:20230402T074158Z
+UID:4290517349243274514
+CREATED:20230402T060451Z
+LAST-MODIFIED:20230402T074154Z
+SUMMARY:Test with tasks.org
+PRIORITY:9
+CATEGORIES:Vikunja
+X-APPLE-SORT-ORDER:697384109
+DUE;TZID=Europe/Berlin:20230402T170001
+DTSTART;TZID=Europe/Berlin:20230401T090000
+BEGIN:VALARM
+TRIGGER;RELATED=END:PT0S
+ACTION:DISPLAY
+DESCRIPTION:Default Tasks.org description
+END:VALARM
+BEGIN:VALARM
+TRIGGER;VALUE=DATE-TIME:20230402T100000Z
+ACTION:DISPLAY
+DESCRIPTION:Default Tasks.org description
+END:VALARM
+END:VTODO
+BEGIN:VTIMEZONE
+TZID:Europe/Berlin
+LAST-MODIFIED:20220816T024022Z
+BEGIN:DAYLIGHT
+TZNAME:CEST
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+DTSTART:19810329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZNAME:CET
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+DTSTART:19961027T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Updated:  time.Date(2023, 4, 2, 7, 41, 58, 0, config.GetTimeZone()),
+				UID:      "4290517349243274514",
+				Title:    "Test with tasks.org",
+				Priority: 1,
+				Labels: []*models.Label{
+					{
+						Title: "Vikunja",
+					},
+				},
+				DueDate:   time.Date(2023, 4, 2, 15, 0, 1, 0, config.GetTimeZone()),
+				StartDate: time.Date(2023, 4, 1, 7, 0, 0, 0, config.GetTimeZone()),
+				Reminders: []*models.TaskReminder{
+					{
+						RelativeTo:     models.ReminderRelationDueDate,
+						RelativePeriod: 0,
+					},
+					{
+						Reminder: time.Date(2023, 4, 2, 10, 0, 0, 0, config.GetTimeZone()),
+					},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/utils"
@@ -88,15 +89,15 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 		return nil, errors.New("VTODO element not found")
 	}
 	// We put the vTodo details in a map to be able to handle them more easily
-	task := make(map[string]string)
+	task := make(map[string]ics.IANAProperty)
 	for _, c := range vTodo.UnknownPropertiesIANAProperties() {
-		task[c.IANAToken] = c.Value
+		task[c.IANAToken] = c
 	}
 
 	// Parse the priority
 	var priority int64
 	if _, ok := task["PRIORITY"]; ok {
-		priorityParsed, err := strconv.ParseInt(task["PRIORITY"], 10, 64)
+		priorityParsed, err := strconv.ParseInt(task["PRIORITY"].Value, 10, 64)
 		if err != nil {
 			return nil, err
 		}
@@ -105,14 +106,14 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 	}
 
 	// Parse the enddate
-	duration, _ := time.ParseDuration(task["DURATION"])
+	duration, _ := time.ParseDuration(task["DURATION"].Value)
 
-	description := strings.ReplaceAll(task["DESCRIPTION"], "\\,", ",")
+	description := strings.ReplaceAll(task["DESCRIPTION"].Value, "\\,", ",")
 	description = strings.ReplaceAll(description, "\\n", "\n")
 
 	var labels []*models.Label
 	if val, ok := task["CATEGORIES"]; ok {
-		categories := strings.Split(val, ",")
+		categories := strings.Split(val.Value, ",")
 		labels = make([]*models.Label, 0, len(categories))
 		for _, category := range categories {
 			labels = append(labels, &models.Label{
@@ -122,8 +123,8 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 	}
 
 	vTask = &models.Task{
-		UID:         task["UID"],
-		Title:       task["SUMMARY"],
+		UID:         task["UID"].Value,
+		Title:       task["SUMMARY"].Value,
 		Description: description,
 		Priority:    priority,
 		Labels:      labels,
@@ -133,7 +134,7 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 		DoneAt:      caldavTimeToTimestamp(task["COMPLETED"]),
 	}
 
-	if task["STATUS"] == "COMPLETED" {
+	if task["STATUS"].Value == "COMPLETED" {
 		vTask.Done = true
 	}
 
@@ -159,7 +160,7 @@ func parseVAlarm(vAlarm *ics.VAlarm, vTask *models.Task) *models.Task {
 		if contains(property.ICalParameters["VALUE"], "DATE-TIME") {
 			// Example: TRIGGER;VALUE=DATE-TIME:20181201T011210Z
 			vTask.Reminders = append(vTask.Reminders, &models.TaskReminder{
-				Reminder: caldavTimeToTimestamp(property.Value),
+				Reminder: caldavTimeToTimestamp(property),
 			})
 			continue
 		}
@@ -199,7 +200,8 @@ func contains(array []string, str string) bool {
 }
 
 // https://tools.ietf.org/html/rfc5545#section-3.3.5
-func caldavTimeToTimestamp(tstring string) time.Time {
+func caldavTimeToTimestamp(ianaProperty ics.IANAProperty) time.Time {
+	tstring := ianaProperty.Value
 	if tstring == "" {
 		return time.Time{}
 	}
@@ -214,7 +216,24 @@ func caldavTimeToTimestamp(tstring string) time.Time {
 		format = `20060102`
 	}
 
-	t, err := time.Parse(format, tstring)
+	var t time.Time
+	var err error
+	tzParameter := ianaProperty.ICalParameters["TZID"]
+	if len(tzParameter) > 0 {
+		loc, err := time.LoadLocation(tzParameter[0])
+		if err != nil {
+			log.Warningf("Error while parsing caldav timezone %s: %s", tzParameter[0], err)
+		} else {
+			t, err = time.ParseInLocation(format, tstring, loc)
+			if err != nil {
+				log.Warningf("Error while parsing caldav time %s to TimeStamp: %s at location %s", tstring, loc, err)
+			} else {
+				t = t.In(config.GetTimeZone())
+				return t
+			}
+		}
+	}
+	t, err = time.Parse(format, tstring)
 	if err != nil {
 		log.Warningf("Error while parsing caldav time %s to TimeStamp: %s", tstring, err)
 		return time.Time{}
