@@ -109,7 +109,9 @@ const getItemsFromPrefix = (text: string, prefix: string): string[] => {
 			return
 		}
 
-		p = p.replace(prefix, '')
+		if (p.substring(0, 1) === prefix) {
+			p = p.substring(1)
+		}
 
 		let itemText
 		if (p.charAt(0) === '\'') {
@@ -120,8 +122,8 @@ const getItemsFromPrefix = (text: string, prefix: string): string[] => {
 			// Only until the next space
 			itemText = p.split(' ')[0]
 		}
-		
-		if(itemText !== '')  {
+
+		if (itemText !== '') {
 			items.push(itemText)
 		}
 	})
