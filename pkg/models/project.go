@@ -627,7 +627,7 @@ func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
 	return nil
 }
 
-func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) error {
+func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err error) {
 	if project.ParentProjectID < 0 {
 		return &ErrProjectCannotBelongToAPseudoParentProject{ProjectID: project.ID, ParentProjectID: project.ParentProjectID}
 	}
@@ -640,9 +640,33 @@ func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) error {
 			}
 		}
 
-		_, err := GetProjectSimpleByID(s, project.ParentProjectID)
+		var parent *Project
+		parent, err = GetProjectSimpleByID(s, project.ParentProjectID)
 		if err != nil {
 			return err
+		}
+
+		// Check if there's a cycle in the parent relation
+		parentsVisited := make(map[int64]bool)
+		parentsVisited[project.ID] = true
+		for {
+			if parent.ParentProjectID == 0 {
+				break
+			}
+
+			// FIXME: Can we do this with better performance?
+			parent, err = GetProjectSimpleByID(s, parent.ParentProjectID)
+			if err != nil {
+				return err
+			}
+
+			if parentsVisited[parent.ID] {
+				return &ErrProjectCannotHaveACyclicRelationship{
+					ProjectID: project.ID,
+				}
+			}
+
+			parentsVisited[parent.ID] = true
 		}
 	}
 

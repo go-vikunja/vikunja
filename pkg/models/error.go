@@ -19,6 +19,7 @@ package models
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/web"
@@ -307,6 +308,42 @@ func (err *ErrProjectCannotBeChildOfItself) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusPreconditionFailed,
 		Code:     ErrCodeProjectCannotBeChildOfItself,
 		Message:  "This project cannot be a child of itself.",
+	}
+}
+
+// ErrProjectCannotHaveACyclicRelationship represents an error where a project cannot have a cyclic parent relationship
+type ErrProjectCannotHaveACyclicRelationship struct {
+	ProjectID int64
+	CycleIDs  []int64
+}
+
+// IsErrProjectCannotHaveACyclicRelationship checks if an error is a project is archived error.
+func IsErrProjectCannotHaveACyclicRelationship(err error) bool {
+	_, ok := err.(*ErrProjectCannotHaveACyclicRelationship)
+	return ok
+}
+
+func (err *ErrProjectCannotHaveACyclicRelationship) CycleString() string {
+	var cycle string
+	for _, projectID := range err.CycleIDs {
+		cycle += fmt.Sprintf("%d -> ", projectID)
+	}
+	return strings.TrimSuffix(cycle, " -> ")
+}
+
+func (err *ErrProjectCannotHaveACyclicRelationship) Error() string {
+	return fmt.Sprintf("Project cannot have a cyclic relationship [ProjectID: %d]", err.ProjectID)
+}
+
+// ErrCodeProjectCannotHaveACyclicRelationship holds the unique world-error code of this error
+const ErrCodeProjectCannotHaveACyclicRelationship = 3011
+
+// HTTPError holds the http error description
+func (err *ErrProjectCannotHaveACyclicRelationship) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeProjectCannotHaveACyclicRelationship,
+		Message:  "This project cannot have a cyclic relationship to a parent project",
 	}
 }
 
