@@ -22,6 +22,7 @@
 			<ProjectsNavigationItem
 				:project="project"
 				:is-loading="projectUpdating[project.id]"
+				:can-collapse="canCollapse"
 			/>
 		</template>
 	</draggable>
@@ -42,6 +43,7 @@ import {useProjectStore} from '@/stores/projects'
 const props = defineProps<{
 	modelValue?: IProject[],
 	canEditOrder: boolean,
+	canCollapse?: boolean,
 }>()
 const emit = defineEmits(['update:modelValue'])
 

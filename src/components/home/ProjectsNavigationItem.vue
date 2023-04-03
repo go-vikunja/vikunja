@@ -6,7 +6,7 @@
 	>
 		<section>
 			<BaseButton
-				v-if="childProjects?.length > 0"
+				v-if="canCollapse && childProjects?.length > 0"
 				@click="childProjectsOpen = !childProjectsOpen"
 				class="collapse-project-button"
 			>
@@ -46,7 +46,7 @@
 			<span class="list-setting-spacer" v-else></span>
 		</section>
 		<ProjectsNavigation
-			v-if="childProjectsOpen"
+			v-if="childProjectsOpen && canCollapse"
 			v-model="childProjects"
 			:can-edit-order="true"
 		/>
@@ -69,6 +69,7 @@ import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 const props = defineProps<{
 	project: IProject,
 	isLoading?: boolean,
+	canCollapse?: boolean,
 }>()
 
 const projectStore = useProjectStore()
