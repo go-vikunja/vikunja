@@ -32,7 +32,7 @@ import {computed, ref} from 'vue'
 import {getInheritedBackgroundColor} from '@/helpers/getInheritedBackgroundColor'
 
 const props = defineProps({
-  /** Wheather the Expandable is open or not */
+  /** Whether the Expandable is open or not */
   open: {
     type: Boolean,
     default: false,
