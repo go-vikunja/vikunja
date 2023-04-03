@@ -5,7 +5,6 @@ import router from '@/router'
 import TaskService from '@/services/task'
 import TaskAssigneeService from '@/services/taskAssignee'
 import LabelTaskService from '@/services/labelTask'
-import UserService from '@/services/user'
 
 import {playPop} from '@/helpers/playPop'
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
