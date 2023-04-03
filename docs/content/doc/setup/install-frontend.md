@@ -24,8 +24,7 @@ You also need to configure a rewrite condition to internally redirect all reques
 By default, the frontend assumes it can reach the api at `/api/v1` relative to the frontend url.
 This means that if you make the frontend available at, say `https://vikunja.example.com`, it tries to reach the api
 at `https://vikunja.example.com/api/v1`.
-In this scenario it is not possible for the frontend and the api to live on seperate servers or even just seperate 
-ports on the same server with [the use of a reverse proxy]({{< ref "reverse-proxies.md">}}).
+In this scenario it is not possible for the frontend and the api to live on separate servers or even just separate ports on the same server with [the use of a reverse proxy]({{< ref "reverse-proxies.md">}}).
 
 To make configurations like this possible, the api url can be set in the `index.html` file of the frontend releases.
 Just open the file with a text editor - there are comments which will explain how to set the url.
@@ -45,7 +44,7 @@ docker run -p 80:80 vikunja/frontend
 
 which will run the docker image and expose port 80 on the host.
 
-See [full docker example]({{< ref "full-docker-example.md">}}) for more varations of this config.
+See [full docker example]({{< ref "full-docker-example.md">}}) for more variations of this config.
 
 The docker container runs as an unprivileged user and does not mount anything.
 

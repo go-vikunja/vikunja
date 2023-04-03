@@ -29,7 +29,7 @@ Then run `mage generate-docs` to generate the configuration docs from the sample
 
 ## Getting Configuration Values
 
-To retreive a configured value call the key with a getter for the type you need.
+To retrieve a configured value call the key with a getter for the type you need.
 For example:
 
 {{< highlight golang >}}

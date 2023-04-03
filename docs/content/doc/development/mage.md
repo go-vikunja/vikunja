@@ -31,7 +31,7 @@ go install github.com/magefile/mage
 There are multiple categories of subcommands in the magefile:
 
 * `build`: Contains commands to build a single binary
-* `check`: Contains commands to statically check the source code 
+* `check`: Contains commands to statically check the source code
 * `release`: Contains commands to release Vikunja with everything that's required
 * `test`: Contains commands to run all kinds of tests
 * `dev`: Contains commands to run development tasks
@@ -114,7 +114,7 @@ binary to be able to use it.
 * `mage release:check` creates sha256 checksums for each binary which will be included in the zip file
 * `mage release:os-package` bundles a binary with the `sha256` checksum file, a sample `config.yml` and a copy of the license in a folder for each architecture
 * `mage release:compress` compresses all build binaries with `upx` to save space
-* `mage release:zip` paclages a zip file for the files created by `release:os-package`
+* `mage release:zip` packages a zip file for the files created by `release:os-package`
 
 ### Build os packages
 
@@ -168,7 +168,7 @@ Runs all integration tests.
 mage dev:create-migration
 {{< /highlight >}}
 
-Creates a new migration with the current date. 
+Creates a new migration with the current date.
 Will ask for the name of the struct you want to create a migration for.
 
 See also [migration docs]({{< ref "mage.md" >}}).

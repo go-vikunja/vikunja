@@ -21,7 +21,7 @@ Currently, only the frontend (and by extension, the desktop app) is translatable
 
 ## Translation Instructions
 
-> These are the instructions for translating Vikunja in another language. 
+> These are the instructions for translating Vikunja in another language.
 > For information about how to add new translation strings, see below.
 
 For all languages these translation guidelines should be applied when translating:

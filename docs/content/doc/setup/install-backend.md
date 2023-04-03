@@ -102,7 +102,7 @@ It will automatically run all necessary database migrations.
 
 ## Docker
 
-(Note: this assumes some familarity with docker)
+(Note: this assumes some familiarity with docker)
 
 Usage with docker is pretty straightforward:
 
@@ -119,7 +119,7 @@ You can mount a local configuration like so:
 docker run -p 3456:3456 -v /path/to/config/on/host.yml:/app/vikunja/config.yml:ro vikunja/api
 {{< /highlight >}}
 
-Though it is recommended to use eviroment variables or `.env` files to configure Vikunja in docker.
+Though it is recommended to use environment variables or `.env` files to configure Vikunja in docker.
 See [config]({{< ref "config.md">}}) for a list of available configuration options.
 
 ### Files volume
@@ -129,7 +129,7 @@ You should mount the volume somewhere to the host to permanently store the files
 
 ### Setting user and group id of the user running vikunja
 
-You can set the user and group id of the user running vikunja with the `PUID` and `PGID` evironment variables.
+You can set the user and group id of the user running vikunja with the `PUID` and `PGID` environment variables.
 This follows the pattern used by [the linuxserver.io](https://docs.linuxserver.io/general/understanding-puid-and-pgid) docker images.
 
 This is useful to solve general permission problems when host-mounting volumes such as the volume used for task attachments.
@@ -164,7 +164,7 @@ services:
       - ./db:/var/lib/mysql
 {{< /highlight >}}
 
-See [full docker example]({{< ref "full-docker-example.md">}}) for more varations of this config.
+See [full docker example]({{< ref "full-docker-example.md">}}) for more variations of this config.
 
 ## Debian packages
 

@@ -10,8 +10,7 @@ menu:
 
 # Configuration options
 
-You can either use a `config.yml` file in the root directory of vikunja or set almost all config option with 
-environment variables. If you have both, the value set in the config file is used.
+You can either use a `config.yml` file in the root directory of vikunja or set almost all config option with environment variables. If you have both, the value set in the config file is used.
 Right now it is not possible to configure openid authentication via environment variables.
 
 Variables are nested in the `config.yml`, these nested variables become `VIKUNJA_FIRST_CHILD` when configuring via
@@ -31,7 +30,7 @@ first:
 # Formats
 
 Vikunja supports using `toml`, `yaml`, `hcl`, `ini`, `json`, envfile, env variables and Java Properties files.
-We reccomend yaml or toml, but you're free to use whatever you want.
+We recommend yaml or toml, but you're free to use whatever you want.
 
 Vikunja provides a default [`config.yml`](https://kolaente.dev/vikunja/api/src/branch/main/config.yml.sample) file which you can use as a starting point.
 
@@ -56,7 +55,7 @@ If you don't provide a value in your config file, their default will be used.
 Most config variables are nested under some "higher-level" key.
 For example, the `interface` config variable is a child of the `service` key.
 
-The docs below aim to reflect that leveling, but please also have a lookt at [the default config](https://code.vikunja.io/api/src/branch/main/config.yml.sample) file
+The docs below aim to reflect that leveling, but please also have a look at [the default config](https://code.vikunja.io/api/src/branch/main/config.yml.sample) file
 to better grasp how the nesting looks like.
 
 <!-- Generated config will be injected here -->

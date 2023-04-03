@@ -11,11 +11,9 @@ menu:
 # UTF-8 Settings
 
 Vikunja itself is always fully capable of handling utf-8 characters.
-However, your database might be not. 
-Vikunja itself will work just fine until you want to use non-latin characters in your tasks/projects/etc.
+However, your database might be not. Vikunja itself will work just fine until you want to use non-latin characters in your tasks/projects/etc.
 
-On this page, you will find information about how to fully ensure non-latin characters like aüäß or emojis work 
-with your installation.
+On this page, you will find information about how to fully ensure non-latin characters like *aüäß* or emojis work with your installation.
 
 {{< table_of_contents >}}
 
@@ -57,8 +55,7 @@ Before attempting any conversion, please [back up your database]({{< ref "backup
 
 ### 1. Create a pre-conversion script
 
-Copy the following sql statements in a file called `preAlterTables.sql` and replace all occurences of `vikunja` with 
-the name of your database:
+Copy the following sql statements in a file called `preAlterTables.sql` and replace all occurrences of `vikunja` with the name of your database:
 
 {{< highlight sql >}}
 use information_schema;

@@ -16,7 +16,7 @@ It uses an nginx container or traefik on the host to proxy backend and frontend 
 For all available configuration options, see [configuration]({{< ref "config.md">}}).
 
 <div class="notification is-warning">
-<b>NOTE:</b> If you intend to run Vikunja with mysql and/or to use non-latin characters 
+<b>NOTE:</b> If you intend to run Vikunja with mysql and/or to use non-latin characters
 <a href="{{< ref "utf-8.md">}}">make sure your db is utf-8 compatible</a>.<br/>
 All examples on this page already reflect this and do not require additional work.
 </div>
@@ -25,8 +25,7 @@ All examples on this page already reflect this and do not require additional wor
 
 ## Redis
 
-While Vikunja has support to use redis as a caching backend, you'll probably not need it unless you're using Vikunja 
-with more than a handful of users.
+While Vikunja has support to use redis as a caching backend, you'll probably not need it unless you're using Vikunja with more than a handful of users.
 
 To use redis, you'll need to add this to the config examples below:
 
@@ -66,19 +65,14 @@ db:
 You'll also need to change the `VIKUNJA_DATABASE_TYPE` to `postgres` on the api container declaration.
 
 <div class="notification is-warning">
-<b>NOTE:</b> The mariadb container can sometimes take a while to initialize, especially on the first run. 
-During this time, the api container will fail to start at all. It will automatically restart every few seconds.
+<b>NOTE:</b> The mariadb container can sometimes take a while to initialize, especially on the first run. During this time, the api container will fail to start at all. It will automatically restart every few seconds.
 </div>
 
 ## Example without any proxy
 
-This example lets you host Vikunja without any reverse proxy in front of it. This is the absolute minimum configuration 
-you need to get something up and running. If you want to host Vikunja on one single port instead of two different ones 
-or need tls termination, check out one of the other examples.
+This example lets you host Vikunja without any reverse proxy in front of it. This is the absolute minimum configuration you need to get something up and running. If you want to host Vikunja on one single port instead of two different ones or need tls termination, check out one of the other examples.
 
-Note that you need to change the `VIKUNJA_API_URL` environment variable to the ip (the docker host you're running this on) 
-is reachable at. Because the browser you'll use to access the Vikunja frontend uses that url to make the requests, it 
-has to be able to reach that ip + port from the outside. Putting everything in a private network won't work.
+Note that you need to change the `VIKUNJA_API_URL` environment variable to the ip (the docker host you're running this on) is reachable at. Because the browser you'll use to access the Vikunja frontend uses that url to make the requests, it has to be able to reach that ip + port from the outside. Putting everything in a private network won't work.
 
 {{< highlight yaml >}}
 version: '3'
@@ -235,7 +229,7 @@ services:
     image: mariadb:10
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
-      MYSQL_ROOT_PASSWORD: supersupersecret 
+      MYSQL_ROOT_PASSWORD: supersupersecret
       MYSQL_USER: vikunja
       MYSQL_PASSWORD: supersecret
       MYSQL_DATABASE: vikunja
@@ -343,7 +337,7 @@ services:
     image: mariadb:10
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
-      MYSQL_ROOT_PASSWORD: supersecret 
+      MYSQL_ROOT_PASSWORD: supersecret
       MYSQL_USER: vikunja
       MYSQL_PASSWORD: secret
       MYSQL_DATABASE: vikunja
@@ -360,7 +354,7 @@ services:
       VIKUNJA_DATABASE_DATABASE: vikunja
       VIKUNJA_SERVICE_JWTSECRET: <a super secure random secret>
       VIKUNJA_SERVICE_FRONTENDURL: https://<your public frontend url with slash>/
-    volumes: 
+    volumes:
       - ./files:/app/vikunja/files
     depends_on:
       - db
@@ -406,8 +400,8 @@ To do that, you can
 * without activating SSH as a "custom script" (go to Control Panel / Task Scheduler / Create / Scheduled Task / User-defined script)
 * without activating SSH, by using Portainer (you have to install first, check out [this tutorial](https://www.portainer.io/blog/how-to-install-portainer-on-a-synology-nas) for exmple):
   1. Go to **Dashboard / Stacks** click the button **"Add Stack"**
-  2. Give it the name Vikunja and paste the adapted docker compose file 
-  3. Deploy the Stack with the "Deploy Stack" button: 
+  2. Give it the name Vikunja and paste the adapted docker compose file
+  3. Deploy the Stack with the "Deploy Stack" button:
 
 ![Portainer Stack deploy](/docs/synology-proxy-2.png)
 
@@ -459,4 +453,3 @@ You may want to change the volumes to match the rest of your setup.
 Once deployed, you might want to change the [`PUID` and `GUID` settings]({{< ref "install-backend.md">}}#setting-user-and-group-id-of-the-user-running-vikunja) or [set the time zone]({{< ref "config.md">}}#timezone).
 
 After registering all your users, you might also want to [disable the user registration]({{<ref "config.md">}}#enableregistration).
-

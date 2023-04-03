@@ -34,14 +34,13 @@ promauto.NewGaugeFunc(prometheus.GaugeOpts{
 })
 {{< /highlight >}}
 
-Then you'll need to set the metrics initial value on every startup of vikunja.
+Then you'll need to set the metrics initial value on every startup of Vikunja.
 This is done in `pkg/routes/routes.go` to avoid cyclic imports.
 If metrics are enabled, it checks if a redis connection is available and then sets the initial values.
 A convenience function is available if the metric is based on a database struct.
 
 Because metrics are stored in redis, you are responsible to increase or decrease these based on criteria you define.
-To do this, use `metrics.UpdateCount(value, key)` where `value` is the amount you want to cange it (you can pass
-negative values to decrease it) and `key` it the redis key used to define the metric.
+To do this, use `metrics.UpdateCount(value, key)` where `value` is the amount you want to change it (you can pass negative values to decrease it) and `key` it the redis key used to define the metric.
 
 ## Using it
 

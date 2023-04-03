@@ -25,7 +25,7 @@ All migrations are stored in `pkg/migrations` and files should have the same nam
 Each migration should have a function to apply and roll it back, as well as a numeric id (the datetime)
 and a more in-depth description of what the migration actually does.
 
-To easily get a new id, run the following on any unix system: 
+To easily get a new id, run the following on any unix system:
 
 {{< highlight bash >}}
 date +%Y%m%d%H%M%S
@@ -75,4 +75,4 @@ func init() {
 }
 {{< /highlight >}}
 
-You should always copy the changed parts of the struct you're changing when adding migraitons.
+You should always copy the changed parts of the struct you're changing when adding migrations.

@@ -54,7 +54,7 @@ type Project struct {
 	IsFavorite bool `xorm:"-" json:"is_favorite"`
 
 	// The subscription status for the user reading this project. You can only read this property, use the subscription endpoints to modify it.
-	// Will only returned when retreiving one project.
+	// Will only returned when retrieving one project.
 	Subscription *Subscription `xorm:"-" json:"subscription,omitempty"`
 
 	// The position this project has when querying all projects. See the tasks.position property on how to use this.

@@ -26,8 +26,7 @@ To add a new table to the database, create the struct and [add a migration for i
 
 To learn more about how to configure your struct to create "good" tables, refer to [the xorm documentaion](https://xorm.io/docs/).
 
-In most cases you will also need to implement the `TableName() string` method on the new struct to make sure the table 
-name matches the rest of the tables - plural.
+In most cases you will also need to implement the `TableName() string` method on the new struct to make sure the table name matches the rest of the tables - plural.
 
 ## Adding data to test fixtures
 
@@ -36,5 +35,4 @@ Adding data for test fixtures can be done via `yaml` files in `pkg/models/fixtur
 The name of the yaml file should match the table name in the database.
 Adding values to it is done via array definition inside it.
 
-**Note**: Table and column names need to be in snake_case as that's what is used internally in the database 
-and for mapping values from the database to xorm so your structs can use it.
+**Note**: Table and column names need to be in snake_case as that's what is used internally in the database and for mapping values from the database to xorm so your structs can use it.

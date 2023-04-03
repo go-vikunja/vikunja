@@ -42,7 +42,7 @@ You then get the event with all its data back in the listener, see below.
 #### Naming Convention
 
 Event names should roughly have the entity they're dealing with on the left and the action on the right of the name, separated by `.`.
-There's no limit to how "deep" or specifig an event name can be.
+There's no limit to how "deep" or specific an event name can be.
 
 The name should have the most general concept it's describing at the left, getting more specific on the right of it.
 
@@ -104,7 +104,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 }
 {{< /highlight >}}
 
-As you can see, the curent task and doer are injected into it.
+As you can see, the current task and doer are injected into it.
 
 ### Special Events
 
@@ -133,7 +133,7 @@ type Listener interface {
 The `Handle` method is executed when the event this listener listens on is dispatched. 
 * As the single parameter, it gets the payload of the event, which is the event struct when it was dispatched decoded as json object and passed as a slice of bytes.
 To use it you'll need to unmarshal it. Unfortunately there's no way to pass an already populated event object to the function because we would not know what type it has when parsing it.
-* If the handler returns an error, the listener is retried 5 times, with an exponentional back-off period in between retries.
+* If the handler returns an error, the listener is retried 5 times, with an exponential back-off period in between retries.
 If it still fails after the fifth retry, the event is nack'd and it's up to the event dispatcher to resend it.
 You can learn more about this mechanism in the [watermill documentation](https://watermill.io/docs/middlewares/#retry).
 
@@ -148,7 +148,7 @@ The easiest way to create a new listener for an event is with mage:
 mage dev:make-listener <listener-name> <event-name> <package>
 ```
 
-This will create a new listener type in the `pkg/<package>/listners.go` file and implement the `Handle` and `Name` methods.
+This will create a new listener type in the `pkg/<package>/listeners.go` file and implement the `Handle` and `Name` methods.
 It will also pre-generate some boilerplate code to unmarshal the event from the payload.
 
 Furthermore, it will register the listener for its event in the `RegisterListeners()` method of the same file.
@@ -157,7 +157,7 @@ This function is called at startup and has to contain all events you want to lis
 ### Listening for Events
 
 To listen for an event, you need to register the listener for the event it should be called for.
-This usually happens in the `RegisterListeners()` method in `pkg/<package>/listners.go` which is called at start up.
+This usually happens in the `RegisterListeners()` method in `pkg/<package>/listeners.go` which is called at start up.
 
 The listener will never be executed if it hasn't been registered.
 
@@ -179,7 +179,7 @@ func (s *IncreaseTaskCounter) Name() string {
     return "task.counter.increase"
 }
 
-// Hanlde is executed when the event IncreaseTaskCounter listens on is fired
+// Handle is executed when the event IncreaseTaskCounter listens on is fired
 func (s *IncreaseTaskCounter) Handle(payload message.Payload) (err error) {
     return keyvalue.IncrBy(metrics.TaskCountKey, 1)
 }

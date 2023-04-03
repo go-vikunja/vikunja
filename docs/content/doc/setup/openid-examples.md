@@ -61,8 +61,8 @@ openid:
 
 Google config:
 
-  - Navigate to https://console.cloud.google.com/apis/credentials in the target project
-  - Create a new OAuth client ID
-  - Configure an authorized redirect URI of https://vikunja.mydomain.com/auth/openid/google
+- Navigate to `https://console.cloud.google.com/apis/credentials` in the target project
+- Create a new OAuth client ID
+- Configure an authorized redirect URI of `https://vikunja.mydomain.com/auth/openid/google`
 
-Note that there currently seems to be no way to stop creation of new users, even when enableregistration is false in the configuration. This means that this approach works well only with an "Internal Organization" app for Google Workspace, which limits the allowed users to organizational accounts only. External / public applications will potentially allow every Google user to register.
+Note that there currently seems to be no way to stop creation of new users, even when `enableregistration` is `false` in the configuration. This means that this approach works well only with an "Internal Organization" app for Google Workspace, which limits the allowed users to organizational accounts only. External / public applications will potentially allow every Google user to register.

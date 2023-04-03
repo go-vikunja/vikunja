@@ -10,7 +10,7 @@ menu:
 
 # CalDAV
 
-> **Warning:** The caldav integration is in an early alpha stage and has bugs.
+> **Warning:** The CalDAV integration is in an early alpha stage and has bugs.
 > It works well with some clients while having issues with others.
 > If you encounter issues, please [report them](https://code.vikunja.io/api/issues/new?body=[caldav])
 
@@ -39,13 +39,13 @@ Vikunja currently supports the following properties:
 * `PRIORITY`
 * `CATEGORIES`
 * `COMPLETED`
-* `CREATED` (only Vikunja -> Client)
+* `CREATED` (only Vikunja → Client)
 * `DUE`
 * `DURATION`
 * `DTSTAMP`
 * `DTSTART`
-* `LAST-MODIFIED` (only Vikunja -> Client)
-* `RRULE` (Recurrence) (only Vikunja -> Client)
+* `LAST-MODIFIED` (only Vikunja → Client)
+* `RRULE` (Recurrence) (only Vikunja → Client)
 * `VALARM` (Reminders)
 
 Vikunja **currently does not** support these properties:
@@ -70,17 +70,17 @@ Vikunja **currently does not** support these properties:
 ### Working
 
 * [Evolution](https://wiki.gnome.org/Apps/Evolution/)
-* [OpenTasks](https://opentasks.app/) + [DAVx⁵](https://www.davx5.com/)
+* [OpenTasks](https://opentasks.app/) & [DAVx⁵](https://www.davx5.com/)
 * [Tasks (Android)](https://tasks.org/)
 
 ### Not working
 
 * [Thunderbird (68)](https://www.thunderbird.net/)
-* iOS calDAV Sync (See [#753](https://kolaente.dev/vikunja/api/issues/753))
+* iOS CalDAV Sync (See [#753](https://kolaente.dev/vikunja/api/issues/753))
 
 ## Dev logs
 
-The whole thing is not optimized at all and probably pretty inefficent.
+The whole thing is not optimized at all and probably pretty inefficient.
 
 Request body and headers are logged if the debug output is enabled.
 
@@ -141,6 +141,4 @@ Requests from the app:::
 And then it just stops.
 ... and complains about not being able to find the home set
 ... without even requesting it...
-
-
 ```

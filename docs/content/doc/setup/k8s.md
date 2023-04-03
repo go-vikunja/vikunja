@@ -20,4 +20,3 @@ There are two third-party Helm-Charts which can be used to host Vikunja with k8s
 
 * [Truecharts](https://truecharts.org/charts/stable/vikunja/)
 * [k8s at Home](https://github.com/k8s-at-home/charts)
-

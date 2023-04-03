@@ -10,7 +10,7 @@ menu:
 
 # Command line interface
 
-You can interact with Vikunja using its `cli` interface. 
+You can interact with Vikunja using its `cli` interface.<br />
 The following commands are available:
 
 * [dump](#dump)
@@ -31,7 +31,7 @@ All commands use the same standard [config file]({{< ref "../setup/config.md">}}
 When running Vikunja in docker, you'll need to execute all commands in the `api` container.
 Instead of running the `vikunja` binary directly, run it like this:
 
-```
+```sh
 docker exec <name of the vikunja api container> /app/vikunja/vikunja <subcommand>
 ```
 
@@ -80,12 +80,12 @@ Roll migrations back until a certain point.
 
 Usage:
 {{< highlight bash >}}
-$ vikunja migrate rollback [flags]    
+$ vikunja migrate rollback [flags]
 {{< /highlight >}}
 
 Flags:
 * `-n`, `--name` string: The id of the migration you want to roll back until.
- 
+
 ### `restore`
 
 Restores a previously created dump from a zip file, see `dump`.
@@ -138,9 +138,9 @@ Flags:
 
 #### `user delete`
 
-Start the user deletion process. 
+Start the user deletion process.
 If called without the `--now` flag, this command will only trigger an email to the user in order for them to confirm and start the deletion process (this is the same behavoir as if the user requested their deletion via the web interface).
-With the flag the user is deleted **immediately**. 
+With the flag the user is deleted **immediately**.
 
 **USE WITH CAUTION.**
 
@@ -194,7 +194,7 @@ This is either the semantic version (something like `0.7`) or version + git comm
 
 Usage:
 {{< highlight bash >}}
-$ vikunja version    
+$ vikunja version
 {{< /highlight >}}
 
 ### `web`
@@ -203,5 +203,5 @@ Starts Vikunja's REST api server.
 
 Usage:
 {{< highlight bash >}}
-$ vikunja web    
+$ vikunja web
 {{< /highlight >}}

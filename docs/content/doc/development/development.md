@@ -48,7 +48,7 @@ A release gets tagged from the main branch with the version name as tag name.
 
 Backports and point-releases should go to a `release/version` branch, based on the tag they are building on top of.
 
-## Conventional commits
+## Conventional Commits
 
 We're using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) because they greatly simplify generating release notes.
 

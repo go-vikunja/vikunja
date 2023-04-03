@@ -46,10 +46,10 @@ To run integration tests, use `mage test:integration`.
 
 ### Running tests with config
 
-You can run tests with all available config variables if you want, enabeling you to run tests for a lot of scenarios.
+You can run tests with all available config variables if you want, enabling you to run tests for a lot of scenarios.
 We use this in CI to run all tests with different databases.
 
-To use the normal config set the enviroment variable `VIKUNJA_TESTS_USE_CONFIG=1`.
+To use the normal config set the environment variable `VIKUNJA_TESTS_USE_CONFIG=1`.
 
 ### Showing sql queries
 

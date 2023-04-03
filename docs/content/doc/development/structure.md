@@ -64,7 +64,7 @@ See [integration tests]({{< ref "test.md" >}}#integration-tests) for more detail
 
 ### log
 
-Similar to `config`, this will set up the logging, based on differen logging backends.
+Similar to `config`, this will set up the logging, based on different logging backends.
 This init is called in `main.go` after the config init is done.
 
 ### mail
@@ -126,7 +126,7 @@ See [writing a migrator]({{< ref "migration.md" >}}).
 ### red (redis)
 
 This package initializes a connection to a redis server.
-This inizialization is automatically done at the startup of vikunja.
+This initialization is automatically done at the startup of Vikunja.
 
 It also has a function (`GetRedis()`) which returns a redis client object you can then use in your package 
 to talk to redis.
@@ -138,7 +138,7 @@ In most cases, using the `keyvalue` package is a better fit.
 
 ### routes
 
-This package defines all routes which are available for vikunja clients to use.
+This package defines all routes which are available for Vikunja clients to use.
 To add a new route, see [adding a new route]({{< ref "feature.md">}}).
 
 #### api/v1
@@ -162,10 +162,9 @@ A small package, containing some helper functions:
 * `MakeRandomString`: Generates a random string of a given length.
 * `Sha256`: Calculates a sha256 hash from a given string.
 
-See their function definitions for instructions on how to use them. 
+See their function definitions for instructions on how to use them.
 
 ### version
 
-The single purpouse of this package is to hold the current vikunja version which gets overridden through build flags 
-each time `mage release` or `mage build` is run.
-It is a seperate package to avoid import cycles with other packages.
+The single purpose of this package is to hold the current Vikunja version which gets overridden through build flags each time `mage release` or `mage build` is run.
+It is a separate package to avoid import cycles with other packages.

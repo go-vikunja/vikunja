@@ -56,4 +56,4 @@ For more information, please visit the [relevant PostgreSQL documentation](https
 
 ### SQLite
 
-To back up sqllite databases, it is enough to copy the [database file]({{< ref "config.md" >}}#path) to somwhere else.
+To back up sqllite databases, it is enough to copy the [database file]({{< ref "config.md" >}}#path) to somewhere else.

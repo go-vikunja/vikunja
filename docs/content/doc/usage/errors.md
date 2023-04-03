@@ -77,7 +77,7 @@ This document describes the different errors Vikunja can return.
 | 4006 | 403 | The user tried to set a parent task as the task itself. |
 | 4007 | 400 | The user tried to create a task relation with an invalid kind of relation. |
 | 4008 | 409 | The user tried to create a task relation which already exists. |
-| 4009 | 404 | The task relation does not exist. | 
+| 4009 | 404 | The task relation does not exist. |
 | 4010 | 400 | Cannot relate a task with itself. |
 | 4011 | 404 | The task attachment does not exist. |
 | 4012 | 400 | The task attachment is too large. |
@@ -96,7 +96,7 @@ This document describes the different errors Vikunja can return.
 
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
-| 5001 | 404 | The namspace does not exist. | 
+| 5001 | 404 | The namespace does not exist. |
 | 5003 | 403 | The user does not have access to the specified namespace. |
 | 5006 | 400 | The namespace name cannot be empty. |
 | 5009 | 403 | The user needs to have namespace read access to perform that action. |
@@ -108,7 +108,7 @@ This document describes the different errors Vikunja can return.
 
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
-| 6001 | 400 | The team name cannot be emtpy. |
+| 6001 | 400 | The team name cannot be empty. |
 | 6002 | 404 | The team does not exist. |
 | 6004 | 409 | The team already has access to that namespace or project. |
 | 6005 | 409 | The user is already a member of that team. |
@@ -134,7 +134,7 @@ This document describes the different errors Vikunja can return.
 
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
-| 9001 | 403 | The right is invalid. | 
+| 9001 | 403 | The right is invalid. |
 
 ## Kanban
 
@@ -151,7 +151,7 @@ This document describes the different errors Vikunja can return.
 | ErrorCode | HTTP Status Code | Description |
 |-----------|------------------|-------------|
 | 11001 | 404 | The saved filter does not exist. |
-| 11002 | 412 | Saved filters are not available for link shares. | 
+| 11002 | 412 | Saved filters are not available for link shares. |
 
 ## Subscriptions
 

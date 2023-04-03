@@ -17,12 +17,9 @@ In general, each migrator implements a migrator interface which is then called f
 The interface makes it possible to use helper methods which handle http and focus only on the implementation of the migrator itself.
 
 There are two ways of migrating data from another service:
-1. Through the auth-based flow where the user gives you access to their data at the third-party service through an 
-   oauth flow. You can then call the service's api on behalf of your user to get all the data.
-   The Todoist, Trello and Microsoft To-Do Migrators use this pattern.
-2. A file migration where the user uploads a file obtained from some third-party service. In your migrator, you need
-   to parse the file and create the projects, tasks etc.
-   The Vikunja File Import uses this pattern.
+
+1. Through the auth-based flow where the user gives you access to their data at the third-party service through an oauth flow. You can then call the service's api on behalf of your user to get all the data. The Todoist, Trello and Microsoft To-Do Migrators use this pattern.
+2. A file migration where the user uploads a file obtained from some third-party service. In your migrator, you need to parse the file and create the projects, tasks etc. The Vikunja File Import uses this pattern.
 
 To differentiate the two, there are two different interfaces you must implement.
 
@@ -43,7 +40,7 @@ type Migrator interface {
 	// Name holds the name of the migration.
 	// This is used to show the name to users and to keep track of users who already migrated.
 	Name() string
-	// Migrate is the interface used to migrate a user's tasks from another platform to vikunja.
+	// Migrate is the interface used to migrate a user's tasks from another platform to Vikunja.
 	// The user object is the user who's tasks will be migrated.
 	Migrate(user *models.User) error
 	// AuthURL returns a url for clients to authenticate against.
@@ -61,7 +58,7 @@ type FileMigrator interface {
 	// Name holds the name of the migration.
 	// This is used to show the name to users and to keep track of users who already migrated.
 	Name() string
-	// Migrate is the interface used to migrate a user's tasks, projects and other things from a file to vikunja.
+	// Migrate is the interface used to migrate a user's tasks, projects and other things from a file to Vikunja.
 	// The user object is the user who's tasks will be migrated.
 	Migrate(user *user.User, file io.ReaderAt, size int64) error
 }
@@ -102,35 +99,32 @@ You should also document the routes with [swagger annotations]({{< ref "swagger-
 
 ## Insertion helper method
 
-There is a method available in the `migration` package which takes a fully nested Vikunja structure and creates it with all relations. 
+There is a method available in the `migration` package which takes a fully nested Vikunja structure and creates it with all relations.
 This means you start by adding a namespace, then add projects inside that namespace, then tasks in the lists and so on.
 
-The root structure must be present as `[]*models.NamespaceWithProjectsAndTasks`. It allows to represent all of Vikunja's 
-hierachie as a single data structure.
+The root structure must be present as `[]*models.NamespaceWithProjectsAndTasks`. It allows to represent all of Vikunja's hierarchy as a single data structure.
 
 Then call the method like so:
 
 ```go
-fullVikunjaHierachie, err := convertWunderlistToVikunja(wContent)
+fullVikunjaHierarchy, err := convertWunderlistToVikunja(wContent)
 if err != nil {
     return
 }
 
-err = migration.InsertFromStructure(fullVikunjaHierachie, user)
+err = migration.InsertFromStructure(fullVikunjaHierarchy, user)
 ```
 
 ## Configuration
 
 If your migrator is an oauth-based one, you should add at least an option to enable or disable it.
-Chances are, you'll need some more options for things like client ID and secret 
-(if the other service uses oAuth as an authentication flow).
+Chances are, you'll need some more options for things like client ID and secret (if the other service uses oAuth as an authentication flow).
 
-The easiest way to implement an on/off switch is to check whether your migration service is enabled or not when 
-registering the routes, and then simply don't registering the routes in case it is disabled.
+The easiest way to implement an on/off switch is to check whether your migration service is enabled or not when registering the routes, and then simply don't registering the routes in case it is disabled.
 
 File based migrators can always be enabled.
 
-### Making the migrator public in `/info` 
+### Making the migrator public in `/info`
 
 You should make your migrator available in the `/info` endpoint so that frontends can display options to enable them or not.
 To do this, add an entry to the `AvailableMigrators` field in `pkg/routes/api/v1/info.go`.

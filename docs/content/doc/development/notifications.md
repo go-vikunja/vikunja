@@ -10,7 +10,7 @@ menu:
 
 # Notifications
 
-Vikunjs provides a simple abstraction to send notifications per mail and in the database.
+Vikunja provides a simple abstraction to send notifications per mail and in the database.
 
 {{< table_of_contents >}}
 
@@ -39,7 +39,7 @@ A list of chainable functions is available to compose a mail:
 mail := NewMail(). 
     // The optional sender of the mail message.
     From("test@example.com").
-	// The optional receipient of the mail message. Uses the mail address of the notifiable if omitted.
+	// The optional recipient of the mail message. Uses the mail address of the notifiable if omitted.
     To("test@otherdomain.com").
 	// The subject of the mail to send.
     Subject("Testmail").
@@ -49,7 +49,7 @@ mail := NewMail().
     Line("This is a line of text").
 	// An action can contain a title and a url. It gets rendered as a big button in the mail.
 	// Note that you can have only one action per mail.
-	// All lines added before an action will appearr in the mail before the button, all lines 
+	// All lines added before an action will appear in the mail before the button, all lines
 	// added afterwards will appear after it.
     Action("The Action", "https://example.com").
 	// Another line of text.
@@ -60,8 +60,7 @@ If not provided, the `from` field of the mail contains the value configured in [
 
 ### Database notifications
 
-All data returned from the `ToDB()` method is serialized to json and saved into the database, along with the id of the 
-notifiable, the name of the notification and a time stamp.
+All data returned from the `ToDB()` method is serialized to json and saved into the database, along with the id of the notifiable, the name of the notification and a time stamp.
 If you don't use the database notification, the `Name()` function can return an empty string.
 
 ## Creating a new notification
