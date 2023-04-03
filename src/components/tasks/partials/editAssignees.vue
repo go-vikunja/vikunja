@@ -104,11 +104,6 @@ async function removeAssignee(user: IUser) {
 }
 
 async function findUser(query: string) {
-	if (query === '') {
-		foundUsers.value = []
-		return
-	}
-
 	const response = await projectUserService.getAll({projectId: props.projectId}, {s: query}) as IUser[]
 
 	// Filter the results to not include users who are already assigned
