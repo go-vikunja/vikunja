@@ -148,7 +148,7 @@ Every handler function which does not use the standard web handler should live h
 
 ### swagger
 
-This is where the [generated]({{< ref "mage.md#generate-swagger-definitions-from-code-comments">}} [api docs]({{< ref "../usage/api.md">}}) live. 
+This is where the [generated]({{< ref "mage.md#generate-swagger-definitions-from-code-comments">}}) [api docs]({{< ref "../usage/api.md">}}) live. 
 You usually don't need to touch this package.
 
 ### user
