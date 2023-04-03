@@ -48,12 +48,18 @@
 				<input type="checkbox" v-model="settings.discoverableByName"/>
 				{{ $t('user.settings.general.discoverableByName') }}
 			</label>
+			<p class="is-size-7" v-if="!settings.discoverableByName">
+				{{ $t('user.settings.general.stillDiscoverableByName') }}
+			</p>
 		</div>
 		<div class="field">
 			<label class="checkbox">
 				<input type="checkbox" v-model="settings.discoverableByEmail"/>
 				{{ $t('user.settings.general.discoverableByEmail') }}
 			</label>
+			<p class="is-size-7" v-if="!settings.discoverableByEmail">
+				{{ $t('user.settings.general.stillDiscoverableByEmail') }}
+			</p>
 		</div>
 		<div class="field">
 			<label class="checkbox">
