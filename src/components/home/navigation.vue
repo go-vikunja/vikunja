@@ -4,7 +4,7 @@
 			<router-link :to="{name: 'home'}" class="logo">
 				<Logo width="164" height="48"/>
 			</router-link>
-			<ul class="menu-list other-menu-items">
+			<menu class="menu-list other-menu-items">
 				<li>
 					<router-link :to="{ name: 'home'}" v-shortcut="'g o'">
 						<span class="menu-item-icon icon">
@@ -45,7 +45,7 @@
 						{{ $t('team.title') }}
 					</router-link>
 				</li>
-			</ul>
+			</menu>
 		</nav>
 
 		<Loading variant="small" v-if="projectsLoading"/>
