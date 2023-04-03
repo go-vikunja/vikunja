@@ -94,7 +94,13 @@ func ListUsers(s *xorm.Session, search string, opts *ProjectUserOpts) (users []*
 		Where(cond).
 		Find(&users)
 
+outer:
 	for _, u := range users {
+		for _, part := range strings.Split(search, ",") {
+			if u.Email == part {
+				continue outer
+			}
+		}
 		u.Email = ""
 	}
 	return
