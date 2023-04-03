@@ -22,13 +22,17 @@ import (
 )
 
 // ILIKE returns an ILIKE query on postgres and a LIKE query on all other platforms.
-// Postgres' is case sensitive by default.
+// Postgres' is case-sensitive by default.
 // To work around this, we're using ILIKE as opposed to normal LIKE statements.
 // ILIKE is preferred over LOWER(text) LIKE for performance reasons.
 // See https://stackoverflow.com/q/7005302/10924593
 func ILIKE(column, search string) builder.Cond {
 	if Type() == schemas.POSTGRES {
 		return builder.Expr(column+" ILIKE ?", "%"+search+"%")
+	}
+
+	if Type() == schemas.SQLITE {
+		return builder.Expr("username = ? COLLATE NOCASE", "%"+search+"%")
 	}
 
 	return &builder.Like{column, "%" + search + "%"}

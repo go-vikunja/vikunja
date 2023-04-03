@@ -29,6 +29,7 @@ import (
 type ProjectUserOpts struct {
 	AdditionalCond              builder.Cond
 	ReturnAllIfNoSearchProvided bool
+	MatchFuzzily                bool
 }
 
 // ListUsers returns a project with all users, filtered by an optional search string
@@ -48,6 +49,16 @@ func ListUsers(s *xorm.Session, search string, opts *ProjectUserOpts) (users []*
 
 	if search != "" {
 		for _, queryPart := range strings.Split(search, ",") {
+
+			if opts.MatchFuzzily {
+				conds = append(conds,
+					db.ILIKE("name", queryPart),
+					db.ILIKE("username", queryPart),
+					db.ILIKE("email", queryPart),
+				)
+				continue
+			}
+
 			var usernameCond builder.Cond = builder.Eq{"username": queryPart}
 			if db.Type() == schemas.POSTGRES {
 				usernameCond = builder.Expr("username ILIKE ?", queryPart)

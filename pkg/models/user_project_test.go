@@ -24,7 +24,7 @@ import (
 	"gopkg.in/d4l3k/messagediff.v1"
 )
 
-func TestProjectUsersFromProject(t *testing.T) {
+func TestListUsersFromProject(t *testing.T) {
 	testuser1 := &user.User{
 		ID:                           1,
 		Username:                     "user1",
@@ -219,6 +219,11 @@ func TestProjectUsersFromProject(t *testing.T) {
 			args: args{l: &Project{ID: 19, OwnerID: 7}, search: "user1"},
 			wantUsers: []*user.User{
 				testuser1, // Shared Via Team readonly
+
+				testuser10, // Matches Partially, Shared Via NamespaceTeam admin
+				testuser11, // Matches Partially, Shared Via NamespaceUser readonly
+				testuser12, // Matches Partially, Shared Via NamespaceUser write
+				testuser13, // Matches Partially, Shared Via NamespaceUser admin
 			},
 		},
 	}

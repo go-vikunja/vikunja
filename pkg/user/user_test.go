@@ -503,6 +503,17 @@ func TestProjectUsers(t *testing.T) {
 			"username": "user7",
 		}, false)
 	})
+	t.Run("discoverable by partial username, email and name when matching fuzzily", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		all, err := ListUsers(s, "user", &ProjectUserOpts{
+			MatchFuzzily: true,
+		})
+		assert.NoError(t, err)
+		assert.Len(t, all, 15)
+	})
 }
 
 func TestUserPasswordReset(t *testing.T) {

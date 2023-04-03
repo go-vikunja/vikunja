@@ -105,6 +105,7 @@ func ListUsersFromProject(s *xorm.Session, l *Project, search string) (users []*
 	users, err = user.ListUsers(s, search, &user.ProjectUserOpts{
 		AdditionalCond:              cond,
 		ReturnAllIfNoSearchProvided: true,
+		MatchFuzzily:                true,
 	})
 	return
 }
