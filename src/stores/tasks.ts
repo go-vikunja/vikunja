@@ -397,7 +397,9 @@ export const useTaskStore = defineStore('task', () => {
 		if (assignees.length > 0) {
 			const assigneePrefix = PREFIXES[quickAddMagicMode]?.assignee
 			if (assigneePrefix) {
+				cleanedTitle = cleanupItemText(cleanedTitle, assignees.map(a  => a.email), assigneePrefix)
 				cleanedTitle = cleanupItemText(cleanedTitle, assignees.map(a  => a.username), assigneePrefix)
+				cleanedTitle = cleanupItemText(cleanedTitle, assignees.map(a  => a.name), assigneePrefix)
 			}
 		}
 
