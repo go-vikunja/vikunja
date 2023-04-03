@@ -49,6 +49,7 @@
 			v-if="childProjectsOpen && canCollapse"
 			v-model="childProjects"
 			:can-edit-order="true"
+			:can-collapse="canCollapse"
 		/>
 	</li>
 </template>
