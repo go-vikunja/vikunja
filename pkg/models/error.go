@@ -343,7 +343,7 @@ func (err *ErrProjectCannotHaveACyclicRelationship) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusPreconditionFailed,
 		Code:     ErrCodeProjectCannotHaveACyclicRelationship,
-		Message:  "This project cannot have a cyclic relationship to a parent project",
+		Message:  "This project cannot have a cyclic relationship to a parent project.",
 	}
 }
 

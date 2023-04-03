@@ -26,13 +26,7 @@ If you find any security-related issues you don't want to disclose publicly, ple
 
 ## Features
 
-* Create TODO lists with tasks
-  * Reminder for tasks
-* Namespaces: A "group" which bundles multiple lists
-* Share lists and namespaces with teams and users with granular permissions
-* Plenty of details for tasks
-
-See [the features page](https://vikunja.io/en/features/) on our website for a more exaustive list or 
+See [the features page](https://vikunja.io/features/) on our website for a more exaustive list or 
 try it on [try.vikunja.io](https://try.vikunja.io)!
 
 ## Docs

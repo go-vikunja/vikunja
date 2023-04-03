@@ -67,7 +67,6 @@ Beispiel: „Benutzer:in“
 | Englisches Original | Verwendung in deutscher Übersetzung |
 | ------------------- | -------------------- |
 | Bucket | Spalte |
-| Namespace | Namespace |
 | Link Share | Linkfreigabe |
 | Username | Anmeldename |
 
