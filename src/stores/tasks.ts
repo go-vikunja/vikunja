@@ -29,6 +29,7 @@ import {useProjectStore} from '@/stores/projects'
 import {useAttachmentStore} from '@/stores/attachments'
 import {useKanbanStore} from '@/stores/kanban'
 import {useBaseStore} from '@/stores/base'
+import ProjectUserService from '@/services/projectUsers'
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
 function findPropertyByValue(object, key, value) {
@@ -63,14 +64,14 @@ async function addLabelToTask(task: ITask, label: ILabel) {
 	return response
 }
 
-async function findAssignees(parsedTaskAssignees: string[]): Promise<IUser[]> {
+async function findAssignees(parsedTaskAssignees: string[], projectId: number): Promise<IUser[]> {
 	if (parsedTaskAssignees.length <= 0) {
 		return []
 	}
 
-	const userService = new UserService()
+	const userService = new ProjectUserService()
 	const assignees = parsedTaskAssignees.map(async a => {
-		const users = await userService.getAll({}, {s: a})
+		const users = await userService.getAll({projectId}, {s: a})
 		return validateUser(users, a)
 	})
 
@@ -389,7 +390,7 @@ export const useTaskStore = defineStore('task', () => {
 			throw new Error('NO_PROJECT')
 		}
 	
-		const assignees = await findAssignees(parsedTask.assignees)
+		const assignees = await findAssignees(parsedTask.assignees, foundProjectId)
 		
 		// Only clean up those assignees from the task title which actually exist
 		let cleanedTitle = parsedTask.text
