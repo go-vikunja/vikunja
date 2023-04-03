@@ -18,6 +18,9 @@
 				</BaseButton>
 			</span>
 		</template>
+		<template #searchResult="{option: user}">
+			<user :avatar-size="24" :show-username="true" :user="user" class="user-search-result"/>
+		</template>
 	</Multiselect>
 </template>
 
@@ -145,5 +148,9 @@ async function findUser(query: string) {
 	width: 18px;
 	height: 18px;
 	z-index: 100;
+}
+
+.user-search-result {
+	margin: 0;
 }
 </style>
