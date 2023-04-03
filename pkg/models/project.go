@@ -51,8 +51,6 @@ type Project struct {
 	ParentProjectID int64    `xorm:"bigint INDEX null" json:"parent_project_id"`
 	ParentProject   *Project `xorm:"-" json:"-"`
 
-	ChildProjects []*Project `xorm:"-" json:"child_projects"`
-
 	// The user who created this project.
 	Owner *user.User `xorm:"-" json:"owner" valid:"-"`
 
@@ -214,18 +212,7 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 
 	projectsResult := []*Project{}
 	for _, p := range allProjects {
-		if p.ParentProjectID != 0 {
-			if allProjects[p.ParentProjectID].ChildProjects == nil {
-				allProjects[p.ParentProjectID].ChildProjects = []*Project{}
-			}
-			allProjects[p.ParentProjectID].ChildProjects = append(allProjects[p.ParentProjectID].ChildProjects, p)
-			continue
-		}
-
 		projectsResult = append(projectsResult, p)
-
-		// The projects variable will contain all projects which have no parents
-		// And because we're using the same pointers for everything, those will contain child projects
 	}
 
 	return projectsResult, resultCount, totalItems, err
@@ -515,13 +502,11 @@ func getSavedFilterProjects(s *xorm.Session, doer *user.User) (savedFiltersProje
 	savedFiltersPseudoParentProject.OwnerID = doer.ID
 	savedFiltersProject = &Project{}
 	*savedFiltersProject = *savedFiltersPseudoParentProject
-	savedFiltersProject.ChildProjects = make([]*Project, 0, len(savedFilters))
 
 	for _, filter := range savedFilters {
 		filterProject := filter.toProject()
 		filterProject.ParentProjectID = savedFiltersProject.ID
 		filterProject.Owner = doer
-		savedFiltersProject.ChildProjects = append(savedFiltersProject.ChildProjects, filterProject)
 	}
 
 	return
