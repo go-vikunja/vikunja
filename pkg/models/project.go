@@ -182,12 +182,6 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 		return nil, 0, 0, err
 	}
 
-	// FIXME: I wonder if we could get rid of this extra loop?
-	allProjects := make(map[int64]*Project, len(prs))
-	for _, p := range prs {
-		allProjects[p.ID] = p
-	}
-
 	/////////////////
 	// Saved Filters
 
@@ -197,7 +191,7 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 	}
 
 	if savedFiltersProject != nil {
-		allProjects[savedFiltersProject.ID] = savedFiltersProject
+		prs = append(prs, savedFiltersProject)
 	}
 
 	/////////////////
@@ -210,12 +204,7 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 	//////////////////////////
 	// Putting it all together
 
-	projectsResult := []*Project{}
-	for _, p := range allProjects {
-		projectsResult = append(projectsResult, p)
-	}
-
-	return projectsResult, resultCount, totalItems, err
+	return prs, resultCount, totalItems, err
 }
 
 // ReadOne gets one project by its ID
