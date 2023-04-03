@@ -120,7 +120,7 @@
     "esbuild": "0.17.15",
     "eslint": "8.37.0",
     "eslint-plugin-vue": "9.10.0",
-    "happy-dom": "8.9.0",
+    "happy-dom": "9.1.0",
     "histoire": "0.15.9",
     "netlify-cli": "13.2.2",
     "postcss": "8.4.21",
