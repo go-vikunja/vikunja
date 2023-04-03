@@ -10,9 +10,6 @@
 - entity_id: 34
   user_id: 13 # owner
   kind: 1
-- entity_id: 34
-  user_id: 1
-  kind: 1
 - entity_id: 23
   user_id: 12 # owner
   kind: 2

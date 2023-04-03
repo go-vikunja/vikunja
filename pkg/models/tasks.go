@@ -401,10 +401,9 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 	}
 
 	var projectIDCond builder.Cond
-	var projectCond builder.Cond
+	var favoritesCond builder.Cond
 	if len(projectIDs) > 0 {
 		projectIDCond = builder.In("project_id", projectIDs)
-		projectCond = projectIDCond
 	}
 
 	if hasFavoritesProject {
@@ -435,7 +434,7 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 					builder.Eq{"kind": FavoriteKindTask},
 				))
 
-		projectCond = builder.And(projectCond, builder.And(builder.In("id", favCond), builder.In("project_id", userProjectIDs)))
+		favoritesCond = builder.In("id", favCond)
 	}
 
 	if len(reminderFilters) > 0 {
@@ -486,7 +485,7 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 	}
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
-	cond := builder.And(projectCond, where, filterCond)
+	cond := builder.And(builder.Or(projectIDCond, favoritesCond), where, filterCond)
 
 	query := s.Where(cond)
 	if limit > 0 {
