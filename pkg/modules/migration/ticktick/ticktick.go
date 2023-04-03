@@ -177,7 +177,7 @@ func newLineSkipDecoder(r io.Reader, linesToSkip int) gocsv.SimpleDecoder {
 // @Summary Import all projects, tasks etc. from a TickTick backup export
 // @Description Imports all projects, tasks, notes, reminders, subtasks and files from a TickTick backup export into Vikunja.
 // @tags migration
-// @Accept json
+// @Accept x-www-form-urlencoded
 // @Produce json
 // @Security JWTKeyAuth
 // @Param import formData string true "The TickTick backup csv file."

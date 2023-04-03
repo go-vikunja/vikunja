@@ -54,7 +54,7 @@ func (v *FileMigrator) Name() string {
 // @Summary Import all projects, tasks etc. from a Vikunja data export
 // @Description Imports all projects, tasks, notes, reminders, subtasks and files from a Vikunjda data export into Vikunja.
 // @tags migration
-// @Accept json
+// @Accept x-www-form-urlencoded
 // @Produce json
 // @Security JWTKeyAuth
 // @Param import formData string true "The Vikunja export zip file."
