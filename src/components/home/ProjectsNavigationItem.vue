@@ -46,10 +46,11 @@
 			<span class="list-setting-spacer" v-else></span>
 		</section>
 		<ProjectsNavigation
-			v-if="childProjectsOpen && canCollapse"
+			v-if="canNestDeeper && childProjectsOpen && canCollapse"
 			v-model="childProjects"
 			:can-edit-order="true"
 			:can-collapse="canCollapse"
+			:level="level + 1"
 		/>
 	</li>
 </template>
@@ -71,6 +72,7 @@ const props = defineProps<{
 	project: IProject,
 	isLoading?: boolean,
 	canCollapse?: boolean,
+	level?: number,
 }>()
 
 const projectStore = useProjectStore()
@@ -80,10 +82,21 @@ const currentProject = computed(() => baseStore.currentProject)
 const childProjectsOpen = ref(true)
 
 const childProjects = computed(() => {
+	if (!canNestDeeper.value) {
+		return []
+	}
+
 	return projectStore.getChildProjects(props.project.id)
 		.sort((a, b) => a.position - b.position)
 })
 
+const canNestDeeper = computed(() => {
+	if (props.level < 2) {
+		return true
+	}
+
+	return props.level >= 2 && window.INFINITE_PROJECT_NESTING_ENABLED
+})
 </script>
 
 <style lang="scss" scoped>

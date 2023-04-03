@@ -54,6 +54,7 @@ ENV VIKUNJA_LOG_FORMAT main
 ENV VIKUNJA_API_URL /api/v1
 ENV VIKUNJA_SENTRY_ENABLED false
 ENV VIKUNJA_SENTRY_DSN https://85694a2d757547cbbc90cd4b55c5a18d@o1047380.ingest.sentry.io/6024480
+ENV VIKUNJA_INFINITE_PROJECT_NESTING_ENABLED false
 
 COPY docker/injector.sh /docker-entrypoint.d/50-injector.sh
 COPY docker/ipv6-disable.sh /docker-entrypoint.d/60-ipv6-disable.sh

@@ -55,7 +55,12 @@
 			</nav>
 
 			<nav class="menu">
-				<ProjectsNavigation :model-value="projects" :can-edit-order="true" :can-collapse="true"/>
+				<ProjectsNavigation
+					:model-value="projects"
+					:can-edit-order="true"
+					:can-collapse="true"
+					:level="1"
+				/>
 			</nav>
 		</template>
 
@@ -140,7 +145,7 @@ const favoriteProjects = computed(() => projectStore.favoriteProjects
 	}
 }
 
-.menu + .menu{
+.menu + .menu {
 	padding-top: math.div($navbar-padding, 2);
 }
 </style>
