@@ -407,23 +407,6 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 	}
 
 	if hasFavoritesProject {
-		// Make sure users can only see their favorites
-		userProjects, _, _, err := getRawProjectsForUser(
-			s,
-			&projectOptions{
-				user: &user.User{ID: a.GetID()},
-				page: -1,
-			},
-		)
-		if err != nil {
-			return nil, 0, 0, err
-		}
-
-		userProjectIDs := make([]int64, 0, len(userProjects))
-		for _, l := range userProjects {
-			userProjectIDs = append(userProjectIDs, l.ID)
-		}
-
 		// All favorite tasks for that user
 		favCond := builder.
 			Select("entity_id").
