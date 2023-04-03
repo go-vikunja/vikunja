@@ -31,9 +31,5 @@ func ILIKE(column, search string) builder.Cond {
 		return builder.Expr(column+" ILIKE ?", "%"+search+"%")
 	}
 
-	if Type() == schemas.SQLITE {
-		return builder.Expr("username = ? COLLATE NOCASE", "%"+search+"%")
-	}
-
 	return &builder.Like{column, "%" + search + "%"}
 }
