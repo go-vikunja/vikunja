@@ -66,38 +66,12 @@ export const useProjectStore = defineStore('project', () => {
 		isLoading.value = newIsLoading
 	}
 
-	function setProject(project: IProject, updateChildren: boolean = true) {
+	function setProject(project: IProject) {
 		projects.value[project.id] = project
 		update(project)
 
 		if (baseStore.currentProject?.id === project.id) {
 			baseStore.setCurrentProject(project)
-		}
-
-		if (updateChildren) {
-			// When projects are loaded from the api, they will include child projects
-			// in the `childProjects` property. We flatten them out into the project store here.
-			project.childProjects?.forEach(p => setProject(new ProjectModel(p)))
-			delete project.childProjects
-		}
-
-		// if the project is a child project, we need to also set it in the parent
-		if (project.parentProjectId) {
-			const parent = projects.value[project.parentProjectId]
-			let foundProject = false
-			parent.childProjectIds = parent.childProjectIds?.forEach(p => {
-				if (p.id === project.id) {
-					foundProject = true
-				}
-			})
-			// If we hit this, the project now has a new parent project which it did not have before
-			if (!foundProject) {
-				if (!parent.childProjectIds) {
-					parent.childProjectIds = []
-				}
-				parent.childProjectIds.push(project.id)
-			}
-			setProject(parent, false)
 		}
 	}
 
