@@ -280,13 +280,16 @@ const getRepeats = (text: string): repeatParsedResult => {
 
 export const cleanupItemText = (text: string, items: string[], prefix: string): string => {
 	items.forEach(l => {
+		if (l === '') {
+			return
+		}
 		text = text
-			.replace(`${prefix}'${l}' `, '')
-			.replace(`${prefix}'${l}'`, '')
-			.replace(`${prefix}"${l}" `, '')
-			.replace(`${prefix}"${l}"`, '')
-			.replace(`${prefix}${l} `, '')
-			.replace(`${prefix}${l}`, '')
+			.replace(new RegExp(`\\${prefix}'${l}' `, 'ig'), '')
+			.replace(new RegExp(`\\${prefix}'${l}'`, 'ig'), '')
+			.replace(new RegExp(`\\${prefix}"${l}" `, 'ig'), '')
+			.replace(new RegExp(`\\${prefix}"${l}"`, 'ig'), '')
+			.replace(new RegExp(`\\${prefix}${l} `, 'ig'), '')
+			.replace(new RegExp(`\\${prefix}${l}`, 'ig'), '')
 	})
 	return text
 }
