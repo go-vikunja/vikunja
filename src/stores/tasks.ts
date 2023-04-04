@@ -30,10 +30,20 @@ import {useKanbanStore} from '@/stores/kanban'
 import {useBaseStore} from '@/stores/base'
 import ProjectUserService from '@/services/projectUsers'
 
+interface MatchedAssignees extends IUser {
+	match: string,
+}
+
 // IDEA: maybe use a small fuzzy search here to prevent errors
 function findPropertyByValue(object, key, value) {
 	return Object.values(object).find(
 		(l) => l[key]?.toLowerCase() === value.toLowerCase(),
+	)
+}
+
+function findPropertyByValueFuzzy(object, key, value) {
+	return Object.values(object).find(
+		(l) => l[key]?.toLowerCase().includes(value.toLowerCase()),
 	)
 }
 
@@ -42,6 +52,12 @@ function validateUser(
 	users: IUser[],
 	query: IUser['username'] | IUser['name'] | IUser['email'],
 ) {
+	if (users.length === 1) {
+		return findPropertyByValueFuzzy(users, 'username', query) ||
+			findPropertyByValueFuzzy(users, 'name', query) ||
+			findPropertyByValueFuzzy(users, 'email', query)
+	}
+	
 	return findPropertyByValue(users, 'username', query) ||
 		findPropertyByValue(users, 'name', query) ||
 		findPropertyByValue(users, 'email', query)
@@ -63,14 +79,18 @@ async function addLabelToTask(task: ITask, label: ILabel) {
 	return response
 }
 
-async function findAssignees(parsedTaskAssignees: string[], projectId: number): Promise<IUser[]> {
+async function findAssignees(parsedTaskAssignees: string[], projectId: number): Promise<MatchedAssignees[]> {
 	if (parsedTaskAssignees.length <= 0) {
 		return []
 	}
 
 	const userService = new ProjectUserService()
 	const assignees = parsedTaskAssignees.map(async a => {
-		const users = await userService.getAll({projectId}, {s: a})
+		const users = (await userService.getAll({projectId}, {s: a}))
+			.map(u => ({
+				...u,
+				match: a,
+			}))
 		return validateUser(users, a)
 	})
 
@@ -388,17 +408,15 @@ export const useTaskStore = defineStore('task', () => {
 			cancel()
 			throw new Error('NO_PROJECT')
 		}
-	
+
 		const assignees = await findAssignees(parsedTask.assignees, foundProjectId)
-		
+
 		// Only clean up those assignees from the task title which actually exist
 		let cleanedTitle = parsedTask.text
 		if (assignees.length > 0) {
 			const assigneePrefix = PREFIXES[quickAddMagicMode]?.assignee
 			if (assigneePrefix) {
-				cleanedTitle = cleanupItemText(cleanedTitle, assignees.map(a  => a.email), assigneePrefix)
-				cleanedTitle = cleanupItemText(cleanedTitle, assignees.map(a  => a.username), assigneePrefix)
-				cleanedTitle = cleanupItemText(cleanedTitle, assignees.map(a  => a.name), assigneePrefix)
+				cleanedTitle = cleanupItemText(cleanedTitle, assignees.map(a  => a.match), assigneePrefix)
 			}
 		}
 
