@@ -804,10 +804,10 @@ electron-publish@23.6.0:
     lazy-val "^1.0.5"
     mime "^2.5.2"
 
-electron@23.2.1:
-  version "23.2.1"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-23.2.1.tgz#c1dcf080dcec1d39a3881aa0bbaeb6593abaa52b"
-  integrity sha512-rPxETyl0u1zxgPzVTtmJZ+en3NjbrqTF7iO4olvmwUnK98Dsp/HFvvzRPb79DrRu+pyFg0A197WiMqPWH2WvvQ==
+electron@23.2.2:
+  version "23.2.2"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-23.2.2.tgz#b15c5e8f7e067f6412f47b86caf8fb1444402838"
+  integrity sha512-8UfC2NCaqLJvdWoAfzAi56DaF+8cD3QPbnabKMdYNxMhYJ54gAje4ChVRo3sUMD5uSMk6MbPYCdnoMusCrfzrQ==
   dependencies:
     "@electron/get" "^2.0.0"
     "@types/node" "^16.11.26"
