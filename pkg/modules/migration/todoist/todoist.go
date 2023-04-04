@@ -581,6 +581,14 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 		})
 
 		for _, i := range completedSyncResponse.Items {
+
+			// Don't try to fetch task details from deleted projects (that will fail anyway)
+			_, hasProject := completedSyncResponse.Projects[i.ProjectID]
+			if hasProject && completedSyncResponse.Projects[i.ProjectID].IsDeleted {
+				log.Debugf("[Todoist Migration] Not fetching task details from task %s because its project (%s) is deleted already.", i.TaskID, i.ProjectID)
+				continue
+			}
+
 			if _, has := doneItems[i.TaskID]; has {
 				// Only set the newest completion date
 				continue
@@ -599,6 +607,9 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 			if resp.StatusCode == http.StatusNotFound {
 				// Done items of deleted projects may show up here but since the project is already deleted
 				// we can't show them individually and the api returns a 404.
+				buf := bytes.Buffer{}
+				_, _ = buf.ReadFrom(resp.Body)
+				log.Debugf("[Todoist Migration] Could not retrieve task details for task %d: %s", i.TaskID, buf.String())
 				continue
 			}
 
@@ -607,11 +618,11 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 			if err != nil {
 				return
 			}
-			log.Debugf("[Todoist Migration] Retrieved full task data for done task %s", i.ID)
+			log.Debugf("[Todoist Migration] Retrieved full task data for done task %s", i.TaskID)
 			syncResponse.Items = append(syncResponse.Items, doneI.Item)
 		}
 
-		if len(completedSyncResponse.Items) < 200 {
+		if len(completedSyncResponse.Items) < paginationLimit {
 			break
 		}
 		offset++
