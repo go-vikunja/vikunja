@@ -70,6 +70,37 @@ You'll also need to change the `VIKUNJA_DATABASE_TYPE` to `postgres` on the api 
 During this time, the api container will fail to start at all. It will automatically restart every few seconds.
 </div>
 
+## Sqlite
+
+Vikunja supports postgres, mysql and sqlite as a database backend. The examples on this page use mysql with a mariadb container.
+To use sqlite as a database backend, change the `api` section of the examples to this:
+
+{{< highlight yaml >}}
+api:
+  image: vikunja/api
+  environment:
+    VIKUNJA_SERVICE_JWTSECRET: <a super secure random secret>
+    VIKUNJA_SERVICE_FRONTENDURL: http://<your public frontend url with slash>/
+    # Note the default path is /app/vikunja/vikunja.db This moves to a different folder so you can use a volume and store this outside of the container so state is persisted even if container destroyed.
+    VIKUNJA_DATABASE_PATH: /db/vikunja.db
+  ports:
+    - 3456:3456
+  volumes:
+    - ./files:/app/vikunja/files
+    - ./db:/db
+  restart: unless-stopped
+{{< /highlight >}}
+
+The default path Vikunja uses for sqlite is relative to the binary.  Which in the docker container would be /app/vikunja/vikunja.db This moves to a different folder using VIKUNJA_DATABASE_PATH so you can use a volume at /db and store this outside of the container so state is persisted even if container destroyed.
+
+You'll also need to remove or change the `VIKUNJA_DATABASE_TYPE` to `sqlite` on the api container declaration.
+
+You can also remove the db section.
+
+<div class="notification is-warning">
+<b>NOTE:</b> If you intend to use for a larger install, we recommend using mysql or postgres.
+</div>
+
 ## Example without any proxy
 
 This example lets you host Vikunja without any reverse proxy in front of it. This is the absolute minimum configuration 
