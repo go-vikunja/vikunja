@@ -1011,7 +1011,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 // @Failure 400 {object} web.HTTPError "Invalid task object provided."
 // @Failure 403 {object} web.HTTPError "The user does not have access to the task (aka its project)"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /tasks/{id} [post]
+// @Router /tasks/{ID} [post]
 //
 //nolint:gocyclo
 func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
@@ -1618,7 +1618,7 @@ func updateTaskLastUpdated(s *xorm.Session, task *Task) error {
 // @Failure 400 {object} web.HTTPError "Invalid task ID provided."
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /tasks/{id} [delete]
+// @Router /tasks/{ID} [delete]
 func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	if _, err = s.ID(t.ID).Delete(Task{}); err != nil {
