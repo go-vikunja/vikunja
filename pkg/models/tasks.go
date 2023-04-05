@@ -1005,7 +1005,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param id path int true "Task ID"
+// @Param ID path int true "The Task ID"
 // @Param task body models.Task true "The task object"
 // @Success 200 {object} models.Task "The updated task object."
 // @Failure 400 {object} web.HTTPError "Invalid task object provided."
@@ -1613,7 +1613,7 @@ func updateTaskLastUpdated(s *xorm.Session, task *Task) error {
 // @tags task
 // @Produce json
 // @Security JWTKeyAuth
-// @Param id path int true "Task ID"
+// @Param ID path int true "Task ID"
 // @Success 200 {object} models.Message "The created task object."
 // @Failure 400 {object} web.HTTPError "Invalid task ID provided."
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
