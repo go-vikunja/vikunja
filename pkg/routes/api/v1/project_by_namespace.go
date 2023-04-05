@@ -36,13 +36,13 @@ import (
 // @tags namespace
 // @Accept json
 // @Produce json
-// @Param id path int true "Namespace ID"
+// @Param namespaceID path int true "Namespace ID"
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Project "The projects."
 // @Failure 403 {object} models.Message "No access to that namespace."
 // @Failure 404 {object} models.Message "The namespace does not exist."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /namespaces/{id}/projects [get]
+// @Router /namespaces/{namespaceID}/projects [get]
 func GetProjectsByNamespaceID(c echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
