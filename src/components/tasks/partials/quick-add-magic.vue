@@ -3,6 +3,7 @@
 		<p class="help has-text-grey">
 			{{ $t('task.quickAddMagic.hint') }}.
 			<ButtonLink @click="() => visible = true">{{ $t('task.quickAddMagic.what') }}</ButtonLink>
+			<ButtonLink @click="() => emit('hide')" class="ml-1">{{ $t('task.quickAddMagic.hide') }}</ButtonLink>
 		</p>
 		<modal
 			:enabled="visible"
@@ -96,6 +97,8 @@ import ButtonLink from '@/components/misc/ButtonLink.vue'
 
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {PREFIXES} from '@/modules/parseTaskText'
+
+const emit = defineEmits(['hide'])
 
 const visible = ref(false)
 const mode = ref(getQuickAddMagicMode())

@@ -1,5 +1,5 @@
 <template>
-	<div class="task-add" ref="taskAdd">
+	<div class="task-add">
 		<div class="add-task__field field is-grouped">
 			<p class="control has-icons-left is-expanded">
 				<textarea
@@ -32,11 +32,11 @@
 				</x-button>
 			</p>
 		</div>
-		<Expandable :open="errorMessage !== '' || taskAddFocused || taskAddHovered && debouncedTaskAddHovered">
+		<Expandable :open="errorMessage !== '' || showQuickAddMagicHelp">
 			<p class="pt-3 mt-0 help is-danger" v-if="errorMessage !== ''">
 				{{ errorMessage }}
 			</p>
-			<quick-add-magic v-else class="quick-add-magic" />
+			<quick-add-magic v-else class="quick-add-magic" @hide="() => showQuickAddMagicHelp = false"/>
 		</Expandable>
 	</div>
 </template>
@@ -44,7 +44,7 @@
 <script setup lang="ts">
 import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {refDebounced, useElementHover, useFocusWithin} from '@vueuse/core'
+import {useLocalStorage} from '@vueuse/core'
 
 import {RELATION_KIND} from '@/types/IRelationKind'
 import type {ITask} from '@/modelTypes/ITask'
@@ -77,8 +77,6 @@ const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
 const taskStore = useTaskStore()
 
-const taskAdd = ref<HTMLTextAreaElement | null>(null)
-
 // enable only if we don't have a modal
 // onStartTyping(() => {
 // 	if (newTaskInput.value === null || document.activeElement === newTaskInput.value) {
@@ -87,10 +85,7 @@ const taskAdd = ref<HTMLTextAreaElement | null>(null)
 // 	newTaskInput.value.focus()
 // })
 
-const { focused: taskAddFocused } = useFocusWithin(taskAdd)
-
-const taskAddHovered = useElementHover(taskAdd)
-const debouncedTaskAddHovered = refDebounced(taskAddHovered, 500)
+const showQuickAddMagicHelp = useLocalStorage('show-quick-add-magic', true)
 
 const errorMessage = ref('')
 
