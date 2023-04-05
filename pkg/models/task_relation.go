@@ -213,12 +213,12 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 // @Param relation body models.TaskRelation true "The relation object"
 // @Param taskID path int true "Task ID"
 // @Param relationKind path string true "The kind of the relation. See the TaskRelation type for more info."
-// @Param otherTaskId path int true "The id of the other task."
+// @Param otherTaskID path int true "The id of the other task."
 // @Success 200 {object} models.Message "The task relation was successfully deleted."
 // @Failure 400 {object} web.HTTPError "Invalid task relation object provided."
 // @Failure 404 {object} web.HTTPError "The task relation was not found."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /tasks/{taskID}/relations/{relationKind}/{otherTaskId} [delete]
+// @Router /tasks/{taskID}/relations/{relationKind}/{otherTaskID} [delete]
 func (rel *TaskRelation) Delete(s *xorm.Session, a web.Auth) error {
 
 	cond := builder.Or(
