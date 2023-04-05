@@ -93,7 +93,7 @@ type Task struct {
 	// The task index, calculated per project
 	Index int64 `xorm:"bigint not null default 0" json:"index"`
 
-	// The UID is currently not used for anything other than caldav, which is why we don't expose it over json
+	// The UID is currently not used for anything other than CalDAV, which is why we don't expose it over json
 	UID string `xorm:"varchar(250) null" json:"-"`
 
 	// All related tasks, grouped by their relation kind
@@ -109,7 +109,7 @@ type Task struct {
 	IsFavorite bool `xorm:"-" json:"is_favorite"`
 
 	// The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
-	// Will only returned when retreiving one task.
+	// Will only returned when retrieving one task.
 	Subscription *Subscription `xorm:"-" json:"subscription,omitempty"`
 
 	// A timestamp when this task was created. You cannot change this value.
@@ -187,7 +187,7 @@ type taskOptions struct {
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
-// @Param sort_by query string false "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`."
+// @Param sort_by query string false "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parameters, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`."
 // @Param order_by query string false "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`."
 // @Param filter_by query string false "The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match."
 // @Param filter_value query string false "The value to filter for."
@@ -290,7 +290,7 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 		projectIDs = append(projectIDs, l.ID)
 	}
 
-	// Add the id parameter as the last parameter to sorty by default, but only if it is not already passed as the last parameter.
+	// Add the id parameter as the last parameter to sortby by default, but only if it is not already passed as the last parameter.
 	if len(opts.sortby) == 0 ||
 		len(opts.sortby) > 0 && opts.sortby[len(opts.sortby)-1].sortBy != taskPropertyID {
 		opts.sortby = append(opts.sortby, &sortParam{
