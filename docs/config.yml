@@ -54,3 +54,10 @@ menu:
     - name: Get it Hosted
       url: https://vikunja.cloud/?utm_source=io&utm_medium=io&utm_campaign=menu
       weight: 70
+  sidebar:
+    - name: setup
+      weight: 10
+    - name: usage
+      weight: 20
+    - name: development
+      weight: 30
