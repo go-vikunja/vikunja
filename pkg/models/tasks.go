@@ -1692,12 +1692,12 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @tags task
 // @Accept json
 // @Produce json
-// @Param ID path int true "The task ID"
+// @Param id path int true "The task ID"
 // @Security JWTKeyAuth
 // @Success 200 {object} models.Task "The task"
 // @Failure 404 {object} models.Message "Task not found"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /tasks/{ID} [get]
+// @Router /tasks/{id} [get]
 func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
 	*t, err = GetTaskByIDSimple(s, t.ID)

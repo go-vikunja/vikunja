@@ -49,7 +49,7 @@ func unsplashImage(url string, c echo.Context) error {
 // @Produce octet-stream
 // @Param image path int true "Unsplash Image ID"
 // @Security JWTKeyAuth
-// @Success 200 {} string "The image"
+// @Success 200 {file} blob "The image"
 // @Failure 404 {object} models.Message "The image does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /backgrounds/unsplash/image/{image} [get]
@@ -69,7 +69,7 @@ func ProxyUnsplashImage(c echo.Context) error {
 // @Produce octet-stream
 // @Param image path int true "Unsplash Image ID"
 // @Security JWTKeyAuth
-// @Success 200 {} string "The thumbnail"
+// @Success 200 {file} blob "The thumbnail"
 // @Failure 404 {object} models.Message "The image does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /backgrounds/unsplash/image/{image}/thumb [get]

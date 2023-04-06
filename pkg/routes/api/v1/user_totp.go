@@ -181,7 +181,7 @@ func UserTOTPDisable(c echo.Context) error {
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Success 200 {} string "The qr code as jpeg image"
+// @Success 200 {file} blob "The qr code as jpeg image"
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp/qrcode [get]
 func UserTOTPQrCode(c echo.Context) error {

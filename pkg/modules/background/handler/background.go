@@ -267,7 +267,7 @@ func checkProjectBackgroundRights(s *xorm.Session, c echo.Context) (project *mod
 // @Produce octet-stream
 // @Param id path int true "Project ID"
 // @Security JWTKeyAuth
-// @Success 200 {} string "The project background file."
+// @Success 200 {file} blob "The project background file."
 // @Failure 403 {object} models.Message "No access to this project."
 // @Failure 404 {object} models.Message "The project does not exist."
 // @Failure 500 {object} models.Message "Internal error"

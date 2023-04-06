@@ -116,7 +116,7 @@ func UploadTaskAttachment(c echo.Context) error {
 // @Param id path int true "Task ID"
 // @Param attachmentID path int true "Attachment ID"
 // @Security JWTKeyAuth
-// @Success 200 {} string "The attachment file."
+// @Success 200 {file} blob "The attachment file."
 // @Failure 403 {object} models.Message "No access to this task."
 // @Failure 404 {object} models.Message "The task does not exist."
 // @Failure 500 {object} models.Message "Internal error"
