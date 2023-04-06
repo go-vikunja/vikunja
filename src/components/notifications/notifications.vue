@@ -145,12 +145,13 @@ function to(n, index) {
 
 	.trigger-button {
 		width: 100%;
+		position: relative;
 	}
 
 	.unread-indicator {
 		position: absolute;
-		top: .75rem;
-		right: 1.15rem;
+		top: 1rem;
+		right: .5rem;
 		width: .75rem;
 		height: .75rem;
 
