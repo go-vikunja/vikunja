@@ -971,6 +971,8 @@ golang.org/x/sys v0.3.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.5.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.6.0 h1:MVltZSvRTcU2ljQOhs94SXPftV6DCNnZViHeQps87pQ=
 golang.org/x/sys v0.6.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.7.0 h1:3jlCCIQZPdOYu1h8BkNvLz8Kgwtae2cagcG/VamtZRU=
+golang.org/x/sys v0.7.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/term v0.0.0-20201117132131-f5c789dd3221/go.mod h1:Nr5EML6q2oocZ2LXRh80K7BxOlk5/8JxuGnuhpl+muw=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/term v0.0.0-20210927222741-03fcf44c2211/go.mod h1:jbD1KX2456YbFQfuXm/mYQcufACuNUgVhRMnK/tPxf8=
@@ -1332,6 +1334,7 @@ src.techknowlogick.com/xgo v1.7.1-0.20230214195350-44f7e66f9b20 h1:Wye8Ljlv2AZvY
 src.techknowlogick.com/xgo v1.7.1-0.20230214195350-44f7e66f9b20/go.mod h1:31CE1YKtDOrKTk9PSnjTpe6YbO6W/0LTYZ1VskL09oU=
 src.techknowlogick.com/xgo v1.7.1-0.20230307171022-b60708668fc7 h1:nPPnMdR4wih62PSsnHK/SlYM1lOZk/St0k7DkJadMV4=
 src.techknowlogick.com/xgo v1.7.1-0.20230307171022-b60708668fc7/go.mod h1:31CE1YKtDOrKTk9PSnjTpe6YbO6W/0LTYZ1VskL09oU=
+src.techknowlogick.com/xgo v1.7.1-0.20230404174715-bff48e481f81 h1:GNyJiosmWbazA1OYNZ1yF+GWOjIW0ZfJmkwEJDiU18g=
 src.techknowlogick.com/xgo v1.7.1-0.20230404174715-bff48e481f81/go.mod h1:31CE1YKtDOrKTk9PSnjTpe6YbO6W/0LTYZ1VskL09oU=
 src.techknowlogick.com/xormigrate v1.5.0 h1:6mWTh8d0sWjMTLUgJqiLe0e0Teu+1j+RgI7ErAeOEV0=
 src.techknowlogick.com/xormigrate v1.5.0/go.mod h1:QOCnBeWralVncPn9eZlM4w/rglFK8o1vYpemzPenkBM=
