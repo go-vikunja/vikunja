@@ -23,15 +23,14 @@ import (
 	"os/signal"
 	"time"
 
-	"code.vikunja.io/api/pkg/cron"
-
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/routes"
-	"code.vikunja.io/api/pkg/swagger"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/version"
+
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/cobra"
 )
@@ -75,9 +74,6 @@ var webCmd = &cobra.Command{
 
 		// Version notification
 		log.Infof("Vikunja version %s", version.Version)
-
-		// Additional swagger information
-		swagger.SwaggerInfo.Version = version.Version
 
 		// Start the webserver
 		e := routes.NewEcho()

@@ -177,6 +177,9 @@ func init() {
 // Some variables have external dependencies (like git) which may not always be available.
 func initVars() {
 	Tags = os.Getenv("TAGS")
+	if !strings.Contains(Tags, "swagger") {
+		Tags += " swagger"
+	}
 	setVersion()
 	setBinLocation()
 	setPkgVersion()
