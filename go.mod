@@ -64,7 +64,7 @@ require (
 	github.com/vectordotdev/go-datemath v0.1.1-0.20220323213446-f3954d0b18ae
 	github.com/wneessen/go-mail v0.3.9
 	github.com/yuin/goldmark v1.5.4
-	golang.org/x/crypto v0.7.0
+	golang.org/x/crypto v0.8.0
 	golang.org/x/image v0.7.0
 	golang.org/x/oauth2 v0.7.0
 	golang.org/x/sync v0.1.0
