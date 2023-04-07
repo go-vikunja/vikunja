@@ -94,8 +94,8 @@ dependencies:
     specifier: 4.3.0
     version: 4.3.0
   pinia:
-    specifier: 2.0.33
-    version: 2.0.33(typescript@5.0.4)(vue@3.2.47)
+    specifier: 2.0.34
+    version: 2.0.34(typescript@5.0.4)(vue@3.2.47)
   register-service-worker:
     specifier: 1.7.2
     version: 1.7.2
@@ -11583,8 +11583,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /pinia@2.0.33(typescript@5.0.4)(vue@3.2.47):
-    resolution: {integrity: sha512-HOj1yVV2itw6rNIrR2f7+MirGNxhORjrULL8GWgRwXsGSvEqIQ+SE0MYt6cwtpegzCda3i+rVTZM+AM7CG+kRg==}
+  /pinia@2.0.34(typescript@5.0.4)(vue@3.2.47):
+    resolution: {integrity: sha512-cgOoGUiyqX0SSgX8XelK9+Ri4XA2/YyNtgjogwfzIx1g7iZTaZPxm7/bZYMCLU2qHRiHhxG7SuQO0eBacFNc2Q==}
     peerDependencies:
       '@vue/composition-api': ^1.4.0
       typescript: '>=4.4.4'
