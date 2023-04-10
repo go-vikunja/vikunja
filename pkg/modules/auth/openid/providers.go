@@ -161,3 +161,7 @@ func getProviderFromMap(pi map[string]interface{}) (provider *Provider, err erro
 
 	return
 }
+
+func CleanupSavedOpenIDProviders() {
+	_ = keyvalue.Del("openid_providers")
+}

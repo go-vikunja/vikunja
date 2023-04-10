@@ -27,6 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/migration"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	migrator "code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/notifications"
@@ -98,6 +99,7 @@ func FullInit() {
 	user.RegisterDeletionNotificationCron()
 	models.RegisterUserDeletionCron()
 	models.RegisterOldExportCleanupCron()
+	openid.CleanupSavedOpenIDProviders()
 
 	// Start processing events
 	go func() {
