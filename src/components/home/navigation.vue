@@ -1,5 +1,5 @@
 <template>
-	<aside :class="{'is-active': menuActive}" class="menu-container">
+	<aside :class="{'is-active': baseStore.menuActive}" class="menu-container">
 		<nav class="menu top-menu">
 			<router-link :to="{name: 'home'}" class="logo">
 				<Logo width="164" height="48"/>
@@ -49,7 +49,7 @@
 		</nav>
 
 		<Loading
-			v-if="projectsLoading"
+			v-if="projectStore.isLoading"
 			variant="small"
 		/>
 		<template v-else>
@@ -84,8 +84,6 @@ import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
-const menuActive = computed(() => baseStore.menuActive)
-const projectsLoading = computed(() => projectStore.isLoading)
 
 const projects = computed(() => projectStore.notArchivedRootProjects
 	.sort((a, b) => a.position - b.position))
