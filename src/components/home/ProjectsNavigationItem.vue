@@ -2,7 +2,6 @@
 	<li
 		class="list-menu loader-container is-loading-small"
 		:class="{'is-loading': isLoading}"
-		:data-project-id="project.id"
 	>
 		<div>
 			<BaseButton

@@ -25,6 +25,7 @@
 				:is-loading="projectUpdating[project.id]"
 				:can-collapse="canCollapse"
 				:level="level"
+				:data-project-id="project.id"
 			/>
 		</template>
 	</draggable>
