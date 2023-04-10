@@ -4,7 +4,7 @@
 		:class="{'is-loading': isLoading}"
 		:data-project-id="project.id"
 	>
-		<section>
+		<div>
 			<BaseButton
 				v-if="canCollapse && childProjects?.length > 0"
 				@click="childProjectsOpen = !childProjectsOpen"
@@ -44,7 +44,7 @@
 				</template>
 			</ProjectSettingsDropdown>
 			<span class="list-setting-spacer" v-else></span>
-		</section>
+		</div>
 		<ProjectsNavigation
 			v-if="canNestDeeper && childProjectsOpen && canCollapse"
 			v-model="childProjects"
@@ -120,7 +120,7 @@ const canNestDeeper = computed(() => {
 	}
 }
 
-.list-menu:hover > section > .favorite {
+.list-menu:hover > div > .favorite {
 	opacity: 1;
 }
 </style>
