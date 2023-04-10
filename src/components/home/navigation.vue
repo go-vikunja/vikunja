@@ -48,7 +48,10 @@
 			</menu>
 		</nav>
 
-		<Loading variant="small" v-if="projectsLoading"/>
+		<Loading
+			v-if="projectsLoading"
+			variant="small"
+		/>
 		<template v-else>
 			<nav class="menu" v-if="favoriteProjects">
 				<ProjectsNavigation :model-value="favoriteProjects" :can-edit-order="false" :can-collapse="false"/>
