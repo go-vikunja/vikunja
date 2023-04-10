@@ -47,7 +47,9 @@ const props = defineProps<{
 	canCollapse?: boolean,
 	level?: number,
 }>()
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{
+	(e: 'update:modelValue', projects: IProject[]): void
+}>()
 
 const drag = ref(false)
 const dragOptions = {
