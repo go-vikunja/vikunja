@@ -117,7 +117,7 @@
     "css-has-pseudo": "5.0.2",
     "csstype": "3.1.2",
     "cypress": "12.9.0",
-    "esbuild": "0.17.15",
+    "esbuild": "0.17.16",
     "eslint": "8.38.0",
     "eslint-plugin-vue": "9.10.0",
     "happy-dom": "9.1.0",
