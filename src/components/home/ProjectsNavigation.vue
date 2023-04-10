@@ -1,7 +1,8 @@
 <template>
 	<draggable
 		v-model="availableProjects"
-		v-bind="dragOptions"
+		animation="100"
+		ghostClass="ghost"
 		group="projects"
 		@start="() => drag = true"
 		@end="saveProjectPosition"
@@ -52,10 +53,6 @@ const emit = defineEmits<{
 }>()
 
 const drag = ref(false)
-const dragOptions = {
-	animation: 100,
-	ghostClass: 'ghost',
-}
 
 const projectStore = useProjectStore()
 
