@@ -19,7 +19,7 @@ The Vikunja api and frontend are available in two different release flavors.
 Stable releases have a fixed version number like `0.18.2` and are published at irregular intervals whenever a new version is ready.
 They receive few bugfixes and security patches.
 
-We use [Semantic Versioning](#) for these releases.
+We use [Semantic Versioning](https://semver.org) for these releases.
 
 ## Unstable
 
