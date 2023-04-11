@@ -232,7 +232,7 @@ devDependencies:
     version: 9.1.9
   histoire:
     specifier: 0.16.0
-    version: 0.16.0(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0)(vite@4.2.1)
+    version: 0.16.0(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0)(vite@4.2.1)
   netlify-cli:
     specifier: 13.2.2
     version: 13.2.2(@types/node@18.15.11)
@@ -258,8 +258,8 @@ devDependencies:
     specifier: 5.9.0
     version: 5.9.0(rollup@3.20.2)
   sass:
-    specifier: 1.61.0
-    version: 1.61.0
+    specifier: 1.62.0
+    version: 1.62.0
   start-server-and-test:
     specifier: 2.0.0
     version: 2.0.0
@@ -268,7 +268,7 @@ devDependencies:
     version: 5.0.4
   vite:
     specifier: 4.2.1
-    version: 4.2.1(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0)
+    version: 4.2.1(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0)
   vite-plugin-inject-preload:
     specifier: 1.3.1
     version: 1.3.1(vite@4.2.1)
@@ -280,7 +280,7 @@ devDependencies:
     version: 4.0.0
   vitest:
     specifier: 0.30.1
-    version: 0.30.1(happy-dom@9.1.9)(sass@1.61.0)(terser@5.10.0)
+    version: 0.30.1(happy-dom@9.1.9)(sass@1.62.0)(terser@5.10.0)
   vue-tsc:
     specifier: 1.2.0
     version: 1.2.0(typescript@5.0.4)
@@ -2415,7 +2415,7 @@ packages:
       capture-website: 2.4.1
       defu: 6.1.1
       fs-extra: 10.1.0
-      histoire: 0.16.0(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0)(vite@4.2.1)
+      histoire: 0.16.0(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0)(vite@4.2.1)
       pathe: 0.2.0
     transitivePeerDependencies:
       - bufferutil
@@ -2435,7 +2435,7 @@ packages:
       '@histoire/vendors': 0.15.8
       change-case: 4.1.2
       globby: 13.1.2
-      histoire: 0.16.0(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0)(vite@4.2.1)
+      histoire: 0.16.0(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0)(vite@4.2.1)
       launch-editor: 2.6.0
       pathe: 0.2.0
       vue: 3.2.47
@@ -2454,7 +2454,7 @@ packages:
       chokidar: 3.5.3
       pathe: 0.2.0
       picocolors: 1.0.0
-      vite: 4.2.1(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0)
+      vite: 4.2.1(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0)
     dev: true
 
   /@histoire/vendors@0.15.8:
@@ -4210,7 +4210,7 @@ packages:
       regenerator-runtime: 0.13.11
       systemjs: 6.14.0
       terser: 5.10.0(acorn@7.4.1)
-      vite: 4.2.1(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0)
+      vite: 4.2.1(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -4222,7 +4222,7 @@ packages:
       vite: ^4.0.0
       vue: ^3.2.25
     dependencies:
-      vite: 4.2.1(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0)
+      vite: 4.2.1(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0)
       vue: 3.2.47
     dev: true
 
@@ -8592,7 +8592,7 @@ packages:
     engines: {node: '>=12.0.0'}
     dev: false
 
-  /histoire@0.16.0(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0)(vite@4.2.1):
+  /histoire@0.16.0(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0)(vite@4.2.1):
     resolution: {integrity: sha512-gL2aZ4Mcx08iyuhHAeURHBH9QtMiIthW+7b7Mb4o+a5rrGQAFB1AY2RLHBdAEjhgnOEL0ocKXEV84Yczq9Dcig==}
     hasBin: true
     peerDependencies:
@@ -8628,8 +8628,8 @@ packages:
       sade: 1.8.1
       shiki-es: 0.2.0
       sirv: 2.0.2
-      vite: 4.2.1(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0)
-      vite-node: 0.28.4(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0)
+      vite: 4.2.1(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0)
+      vite-node: 0.28.4(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0)
     transitivePeerDependencies:
       - '@types/node'
       - bufferutil
@@ -12798,8 +12798,8 @@ packages:
     resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
     dev: true
 
-  /sass@1.61.0:
-    resolution: {integrity: sha512-PDsN7BrVkNZK2+dj/dpKQAWZavbAQ87IXqVvw2+oEYI+GwlTWkvbQtL7F2cCNbMqJEYKPh1EcjSxsnqIb/kyaQ==}
+  /sass@1.62.0:
+    resolution: {integrity: sha512-Q4USplo4pLYgCi+XlipZCWUQz5pkg/ruSSgJ0WRDSb/+3z9tXUOkQ7QPYn4XrhZKYAK4HlpaQecRwKLJX6+DBg==}
     engines: {node: '>=14.0.0'}
     hasBin: true
     dependencies:
@@ -14353,7 +14353,7 @@ packages:
       extsprintf: 1.3.0
     dev: true
 
-  /vite-node@0.28.4(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0):
+  /vite-node@0.28.4(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0):
     resolution: {integrity: sha512-KM0Q0uSG/xHHKOJvVHc5xDBabgt0l70y7/lWTR7Q0pR5/MrYxadT+y32cJOE65FfjGmJgxpVEEY+69btJgcXOQ==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
@@ -14365,7 +14365,7 @@ packages:
       picocolors: 1.0.0
       source-map: 0.6.1
       source-map-support: 0.5.21
-      vite: 4.2.1(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0)
+      vite: 4.2.1(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -14376,7 +14376,7 @@ packages:
       - terser
     dev: true
 
-  /vite-node@0.30.1(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0):
+  /vite-node@0.30.1(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0):
     resolution: {integrity: sha512-vTikpU/J7e6LU/8iM3dzBo8ZhEiKZEKRznEMm+mJh95XhWaPrJQraT/QsT2NWmuEf+zgAoMe64PKT7hfZ1Njmg==}
     engines: {node: '>=v14.18.0'}
     hasBin: true
@@ -14386,7 +14386,7 @@ packages:
       mlly: 1.2.0
       pathe: 1.1.0
       picocolors: 1.0.0
-      vite: 4.2.1(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0)
+      vite: 4.2.1(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -14404,7 +14404,7 @@ packages:
       vite: ^3.0.0 || ^4.0.0
     dependencies:
       mime-types: 2.1.35
-      vite: 4.2.1(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0)
+      vite: 4.2.1(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0)
     dev: true
 
   /vite-plugin-pwa@0.14.7(vite@4.2.1)(workbox-build@6.5.4)(workbox-window@6.5.4):
@@ -14419,7 +14419,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.20.2
-      vite: 4.2.1(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0)
+      vite: 4.2.1(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0)
       workbox-build: 6.5.4(acorn@7.4.1)
       workbox-window: 6.5.4
     transitivePeerDependencies:
@@ -14433,7 +14433,7 @@ packages:
       svgo: 3.0.2
     dev: true
 
-  /vite@4.2.1(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0):
+  /vite@4.2.1(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0):
     resolution: {integrity: sha512-7MKhqdy0ISo4wnvwtqZkjke6XN4taqQ2TBaTccLIpOKv7Vp2h4Y+NpmWCnGDeSvvn45KxvWgGyb0MkHvY1vgbg==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
@@ -14463,13 +14463,13 @@ packages:
       postcss: 8.4.21
       resolve: 1.22.1
       rollup: 3.20.2
-      sass: 1.61.0
+      sass: 1.62.0
       terser: 5.10.0(acorn@7.4.1)
     optionalDependencies:
       fsevents: 2.3.2
     dev: true
 
-  /vitest@0.30.1(happy-dom@9.1.9)(sass@1.61.0)(terser@5.10.0):
+  /vitest@0.30.1(happy-dom@9.1.9)(sass@1.62.0)(terser@5.10.0):
     resolution: {integrity: sha512-y35WTrSTlTxfMLttgQk4rHcaDkbHQwDP++SNwPb+7H8yb13Q3cu2EixrtHzF27iZ8v0XCciSsLg00RkPAzB/aA==}
     engines: {node: '>=v14.18.0'}
     hasBin: true
@@ -14524,8 +14524,8 @@ packages:
       strip-literal: 1.0.1
       tinybench: 2.4.0
       tinypool: 0.4.0
-      vite: 4.2.1(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0)
-      vite-node: 0.30.1(@types/node@18.15.11)(sass@1.61.0)(terser@5.10.0)
+      vite: 4.2.1(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0)
+      vite-node: 0.30.1(@types/node@18.15.11)(sass@1.62.0)(terser@5.10.0)
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
       - less
