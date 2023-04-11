@@ -1427,7 +1427,7 @@ All releases can be found on https://code.vikunja.io/api/releases.
 * Add option to disable totp for everyone
 * Add plausible to docs
 * Add restarting commands to all example docker compose files
-* Add seperate docker pipeline for amd64 and arm
+* Add separate docker pipeline for amd64 and arm
 * Add test mail command (#571)
 * Add todoist migrator to available migrators in info endpoint if it is enabled
 * Add unsplash image proxy for images and thumbnails
@@ -1620,7 +1620,7 @@ All releases can be found on https://code.vikunja.io/api/releases.
 * Update Renovate Configuration (#161)
 * Update src.techknowlogick.com/xgo commit hash to bb0faa3 (#279)
 * Update src.techknowlogick.com/xgo commit hash to c43d4c4 (#224)
-* Update xorm redis cacher to use the xorm logger instead of a special seperate one
+* Update xorm redis cacher to use the xorm logger instead of a special separate one
 * Update xorm to v1 (#323)
 
 ## [0.12] - 2020-04-04
