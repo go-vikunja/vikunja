@@ -129,7 +129,7 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 }
 
 export const getDateFromText = (text: string, now: Date = new Date()) => {
-	const fullDateRegex = / ([0-9][0-9]?\/[0-9][0-9]?\/[0-9][0-9]([0-9][0-9])?|[0-9][0-9][0-9][0-9]\/[0-9][0-9]?\/[0-9][0-9]?|[0-9][0-9][0-9][0-9]-[0-9][0-9]?-[0-9][0-9]?)/ig
+	const fullDateRegex = /(^| )([0-9][0-9]?\/[0-9][0-9]?\/[0-9][0-9]([0-9][0-9])?|[0-9][0-9][0-9][0-9]\/[0-9][0-9]?\/[0-9][0-9]?|[0-9][0-9][0-9][0-9]-[0-9][0-9]?-[0-9][0-9]?)/ig
 
 	// 1. Try parsing the text as a "usual" date, like 2021-06-24 or 06/24/2021
 	let results: string[] | null = fullDateRegex.exec(text)
@@ -138,7 +138,7 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 	let containsYear = true
 	if (result === null) {
 		// 2. Try parsing the date as something like "jan 21" or "21 jan"
-		const monthRegex = new RegExp(` (${monthsRegexGroup} [0-9][0-9]?|[0-9][0-9]? ${monthsRegexGroup})`, 'ig')
+		const monthRegex = new RegExp(`(^| )(${monthsRegexGroup} [0-9][0-9]?|[0-9][0-9]? ${monthsRegexGroup})`, 'ig')
 		results = monthRegex.exec(text)
 		result = results === null ? null : `${results[0]} ${now.getFullYear()}`.trim()
 		foundText = results === null ? '' : results[0].trim()
@@ -146,7 +146,7 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 
 		if (result === null) {
 			// 3. Try parsing the date as "27/01" or "01/27"
-			const monthNumericRegex = / ([0-9][0-9]?\/[0-9][0-9]?)/ig
+			const monthNumericRegex = /(^| )([0-9][0-9]?\/[0-9][0-9]?)/ig
 			results = monthNumericRegex.exec(text)
 
 			// Put the year before or after the date, depending on what works
@@ -299,7 +299,7 @@ const getDateFromWeekday = (text: string): dateFoundResult => {
 }
 
 const getDayFromText = (text: string) => {
-	const matcher = /($| )(([1-2][0-9])|(3[01])|(0?[1-9]))(st|nd|rd|th|\.)($| )/ig
+	const matcher = /(^| )(([1-2][0-9])|(3[01])|(0?[1-9]))(st|nd|rd|th|\.)($| )/ig
 	const results = matcher.exec(text)
 	if (results === null) {
 		return {
