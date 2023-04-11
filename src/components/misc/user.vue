@@ -48,7 +48,6 @@ const displayName = computed(() => getDisplayName(props.user))
 
 <style lang="scss" scoped>
 .user {
-	margin: .5rem;
 	display: flex;
 	justify-items: center;
 
