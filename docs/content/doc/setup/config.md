@@ -82,7 +82,7 @@ Environment path: `VIKUNJA_SERVICE_JWTSECRET`
 
 ### jwtttl
 
-The duration of the issed JWT tokens in seconds.
+The duration of the issued JWT tokens in seconds.
 The default is 259200 seconds (3 Days).
 
 Default: `259200`
@@ -287,7 +287,7 @@ Environment path: `VIKUNJA_SERVICE_SENTRYDSN`
 
 If not empty, this will enable `/test/{table}` endpoints which allow to put any content in the database.
 Used to reset the db before frontend tests. Because this is quite a dangerous feature allowing for lots of harm,
-each request made to this endpoint neefs to provide an `Authorization: <token>` header with the token from below. <br/>
+each request made to this endpoint needs to provide an `Authorization: <token>` header with the token from below. <br/>
 **You should never use this unless you know exactly what you're doing**
 
 Default: `<empty>`
@@ -430,7 +430,7 @@ Environment path: `VIKUNJA_DATABASE_MAXIDLECONNECTIONS`
 
 ### maxconnectionlifetime
 
-The maximum lifetime of a single db connection in miliseconds.
+The maximum lifetime of a single db connection in milliseconds.
 
 Default: `10000`
 
@@ -516,7 +516,7 @@ Environment path: `VIKUNJA_CACHE_ENABLED`
 
 Cache type. Possible values are "keyvalue", "memory" or "redis".
 When choosing "keyvalue" this setting follows the one configured in the "keyvalue" section.
-When choosing "redis" you will need to configure the redis connection seperately.
+When choosing "redis" you will need to configure the redis connection separately.
 
 Default: `keyvalue`
 
@@ -566,7 +566,7 @@ Environment path: `VIKUNJA_REDIS_HOST`
 
 ### password
 
-The password used to authenicate against the redis server
+The password used to authenticate against the redis server
 
 Default: `<empty>`
 
@@ -595,7 +595,7 @@ Environment path: `VIKUNJA_REDIS_DB`
 ### enable
 
 Whether to enable or disable cors headers.
-Note: If you want to put the frontend and the api on seperate domains or ports, you will need to enable this.
+Note: If you want to put the frontend and the api on separate domains or ports, you will need to enable this.
       Otherwise the frontend won't be able to make requests to the api through the browser.
 
 Default: `true`
@@ -1099,7 +1099,7 @@ The Key Value Storage is used for different kinds of things like metrics and a f
 
 ### type
 
-The type of the storage backend. Can be either "memory" or "redis". If "redis" is chosen it needs to be configured seperately.
+The type of the storage backend. Can be either "memory" or "redis". If "redis" is chosen it needs to be configured separately.
 
 Default: `memory`
 
@@ -1134,7 +1134,7 @@ The provider needs to support the `openid`, `profile` and `email` scopes.<br/>
 If the email is not public in those cases, authenticating will fail.
 **Note 2:** The frontend expects to be redirected after authentication by the third party
 to <frontend-url>/auth/openid/<auth key>. Please make sure to configure the redirect url with your third party
-auth service accordingy if you're using the default vikunja frontend.
+auth service accordingly if you're using the default vikunja frontend.
 Take a look at the [default config file](https://kolaente.dev/vikunja/api/src/branch/main/config.yml.sample) for more information about how to configure openid authentication.
 
 Default: `<empty>`
