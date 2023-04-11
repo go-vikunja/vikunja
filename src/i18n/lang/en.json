@@ -737,9 +737,7 @@
       "invalidAmount": "Please enter more than 0."
     },
     "quickAddMagic": {
-      "hint": "You can use Quick Add Magic",
-      "hide": "Hide",
-      "what": "What?",
+      "hint": "You can use Quick Add Magic. Click to learn more.",
       "title": "Quick Add Magic",
       "intro": "When creating a task, you can use special keywords to directly add attributes to the newly created task. This allows to add commonly used attributes to tasks much faster.",
       "multiple": "You can use this multiple times.",

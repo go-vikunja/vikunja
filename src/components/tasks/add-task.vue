@@ -16,6 +16,7 @@
 				<span class="icon is-small is-left">
 					<icon icon="tasks"/>
 				</span>
+				<quick-add-magic/>
 			</p>
 			<p class="control">
 				<x-button
@@ -32,11 +33,10 @@
 				</x-button>
 			</p>
 		</div>
-		<Expandable :open="errorMessage !== '' || showQuickAddMagicHelp">
+		<Expandable :open="errorMessage !== ''">
 			<p class="pt-3 mt-0 help is-danger" v-if="errorMessage !== ''">
 				{{ errorMessage }}
 			</p>
-			<quick-add-magic v-else class="quick-add-magic" @hide="() => showQuickAddMagicHelp = false"/>
 		</Expandable>
 	</div>
 </template>
@@ -44,7 +44,6 @@
 <script setup lang="ts">
 import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useLocalStorage} from '@vueuse/core'
 
 import {RELATION_KIND} from '@/types/IRelationKind'
 import type {ITask} from '@/modelTypes/ITask'
@@ -84,8 +83,6 @@ const taskStore = useTaskStore()
 // 	}
 // 	newTaskInput.value.focus()
 // })
-
-const showQuickAddMagicHelp = useLocalStorage('show-quick-add-magic', true)
 
 const errorMessage = ref('')
 
@@ -237,9 +234,5 @@ defineExpose({
 .textarea-empty {
 	white-space: nowrap;
 	text-overflow: ellipsis;
-}
-
-.quick-add-magic {
-	padding-top: 0.75rem;
 }
 </style>

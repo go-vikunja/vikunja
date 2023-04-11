@@ -1,10 +1,13 @@
 <template>
 	<div v-if="mode !== 'disabled' && prefixes !== undefined">
-		<p class="help has-text-grey">
-			{{ $t('task.quickAddMagic.hint') }}.
-			<ButtonLink @click="() => visible = true">{{ $t('task.quickAddMagic.what') }}</ButtonLink>
-			<ButtonLink @click="() => emit('hide')" class="ml-1">{{ $t('task.quickAddMagic.hide') }}</ButtonLink>
-		</p>
+		<BaseButton
+			@click="() => visible = true"
+			class="icon is-small show-helper-text"
+			v-tooltip="$t('task.quickAddMagic.hint')"
+			:aria-label="$t('task.quickAddMagic.hint')"
+		>
+			<icon :icon="['far', 'circle-question']"/>
+		</BaseButton>
 		<modal
 			:enabled="visible"
 			@close="() => visible = false"
@@ -70,7 +73,7 @@
 					<li>17th ({{ $t('task.quickAddMagic.dateNth', {day: '17'}) }})</li>
 				</ul>
 				<p>{{ $t('task.quickAddMagic.dateTime', {time: 'at 17:00', timePM: '5pm'}) }}</p>
-				
+
 				<h3>{{ $t('task.quickAddMagic.repeats') }}</h3>
 				<p>{{ $t('task.quickAddMagic.repeatsDescription', {suffix: 'every {amount} {type}'}) }}</p>
 				<p>{{ $t('misc.forExample') }}</p>
@@ -93,15 +96,20 @@
 <script setup lang="ts">
 import {ref, computed} from 'vue'
 
-import ButtonLink from '@/components/misc/ButtonLink.vue'
+import BaseButton from '@/components/base/BaseButton.vue'
 
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {PREFIXES} from '@/modules/parseTaskText'
-
-const emit = defineEmits(['hide'])
 
 const visible = ref(false)
 const mode = ref(getQuickAddMagicMode())
 
 const prefixes = computed(() => PREFIXES[mode.value])
 </script>
+
+<style scoped>
+.show-helper-text {
+	right: 0;
+	pointer-events: auto !important;
+}
+</style>
