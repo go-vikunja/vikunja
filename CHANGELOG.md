@@ -165,7 +165,7 @@ All releases can be found on https://code.vikunja.io/api/releases.
 
 * *(background)* Add Last-Modified header (#1376)
 * *(caldav)* Add support for repeating tasks
-* *(caldav)* Export Labels to Caldav (#1409)
+* *(caldav)* Export Labels to CalDAV (#1409)
 * *(caldav)* Import caldav categories as Labels (#1413)
 * *(migrators)* Remove wunderlist (#1346)
 * *(release)* Use compressed binaries for package releases
@@ -1761,7 +1761,7 @@ All releases can be found on https://code.vikunja.io/api/releases.
 
 ### Added
 
-* Better Caldav support (#73)
+* Better CalDAV support (#73)
 * Added settings for max open/idle connections and max connection lifetime (#74)
 * /info endpoint (#85)
 * Added http endpoint to list all users on a list (#87)

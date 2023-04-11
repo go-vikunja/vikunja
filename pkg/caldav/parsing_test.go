@@ -315,7 +315,7 @@ func TestGetCaldavTodosForTasks(t *testing.T) {
 		wantCaldav string
 	}{
 		{
-			name: "Format single Task as Caldav",
+			name: "Format single Task as CalDAV",
 			args: args{
 				list: &models.ProjectWithTasksAndBuckets{
 					Project: models.Project{
