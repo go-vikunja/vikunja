@@ -21,11 +21,11 @@ export function useRedirectToLastVisited() {
 
 	function redirectIfSaved() {
 		const lastRoute = getLastVisitedRoute()
-		if (lastRoute) {
-			return router.push(lastRoute)
+		if (!lastRoute) {
+			return router.push({name: 'home'})
 		}
 
-		return router.push({name: 'home'})
+		return router.push(lastRoute)
 	}
 
 	return {
