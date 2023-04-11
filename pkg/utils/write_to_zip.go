@@ -24,7 +24,7 @@ import (
 )
 
 // Change to deflate to gain better compression
-// see http://golang.org/pkg/archive/zip/#pkg-constants
+// see https://pkg.go.dev/archive/zip#pkg-constants
 const CompressionUsed = zip.Deflate
 
 func WriteBytesToZip(filename string, data []byte, writer *zip.Writer) (err error) {
