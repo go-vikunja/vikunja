@@ -12,14 +12,14 @@
 	>
 		<template #tag="{item: user}">
 			<span class="assignee">
-				<user :avatar-size="32" :show-username="false" :user="user"/>
+				<user :avatar-size="32" :show-username="false" :user="user" class="m-2"/>
 				<BaseButton @click="removeAssignee(user)" class="remove-assignee" v-if="!disabled">
 					<icon icon="times"/>
 				</BaseButton>
 			</span>
 		</template>
 		<template #searchResult="{option: user}">
-			<user :avatar-size="24" :show-username="true" :user="user" class="user-search-result"/>
+			<user :avatar-size="24" :show-username="true" :user="user"/>
 		</template>
 	</Multiselect>
 </template>
@@ -148,9 +148,5 @@ async function findUser(query: string) {
 	width: 18px;
 	height: 18px;
 	z-index: 100;
-}
-
-.user-search-result {
-	margin: 0;
 }
 </style>

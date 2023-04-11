@@ -20,7 +20,8 @@
 						:user="n.notification.doer"
 						:show-username="false"
 						:avatar-size="16"
-						v-if="n.notification.doer"/>
+						v-if="n.notification.doer"
+					/>
 					<div class="detail">
 						<div>
 							<span class="has-text-weight-bold mr-1" v-if="n.notification.doer">
