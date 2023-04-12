@@ -46,7 +46,7 @@
 		</div>
 		<ProjectsNavigation
 			v-if="canNestDeeper && childProjectsOpen && canCollapse"
-			v-model="childProjects"
+			:model-value="childProjects"
 			:can-edit-order="true"
 			:can-collapse="canCollapse"
 			:level="level + 1"
