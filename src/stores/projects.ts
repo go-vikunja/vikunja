@@ -4,6 +4,8 @@ import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
 
 import ProjectService from '@/services/project'
+import ProjectDuplicateService from '@/services/projectDuplicateService'
+import ProjectDuplicateModel from '@/models/projectDuplicateModel'
 import {setModuleLoading} from '@/stores/helper'
 import {removeProjectFromHistory} from '@/modules/projectHistory'
 import {createNewIndexer} from '@/indexes'
@@ -201,9 +203,14 @@ export const useProjectStore = defineStore('project', () => {
 
 export function useProject(projectId: MaybeRef<IProject['id']>) {
 	const projectService = shallowReactive(new ProjectService())
-	const {loading: isLoading} = toRefs(projectService)
+	const projectDuplicateService = shallowReactive(new ProjectDuplicateService())
+	
+	const isLoading = computed(() => projectService.loading || projectDuplicateService.loading)
 	const project: IProject = reactive(new ProjectModel())
+	
 	const {t} = useI18n({useScope: 'global'})
+	const router = useRouter()
+	const projectStore = useProjectStore()
 
 	watch(
 		() => unref(projectId),
@@ -214,18 +221,30 @@ export function useProject(projectId: MaybeRef<IProject['id']>) {
 		{immediate: true},
 	)
 
-	const projectStore = useProjectStore()
-
 	async function save() {
 		const updatedProject = await projectStore.updateProject(project)
 		Object.assign(project, updatedProject)
 		success({message: t('project.edit.success')})
+	}
+	
+	async function duplicateProject(parentProjectId: IProject['id']) {
+		const projectDuplicate = new ProjectDuplicateModel({
+			projectId: unref(projectId),
+			parentProjectId,
+		})
+
+		const duplicate = await projectDuplicateService.create(projectDuplicate)
+
+		projectStore.setProject(duplicate.project)
+		success({message: t('project.duplicate.success')})
+		router.push({name: 'project.index', params: {projectId: duplicate.project.id}})
 	}
 
 	return {
 		isLoading: readonly(isLoading),
 		project,
 		save,
+		duplicateProject,
 	}
 }
 
