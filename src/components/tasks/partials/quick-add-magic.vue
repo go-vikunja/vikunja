@@ -5,6 +5,7 @@
 			class="icon is-small show-helper-text"
 			v-tooltip="$t('task.quickAddMagic.hint')"
 			:aria-label="$t('task.quickAddMagic.hint')"
+			:class="{'is-highlighted': highlightHintIcon}"
 		>
 			<icon :icon="['far', 'circle-question']"/>
 		</BaseButton>
@@ -104,6 +105,10 @@ import {PREFIXES} from '@/modules/parseTaskText'
 const visible = ref(false)
 const mode = ref(getQuickAddMagicMode())
 
+const props = defineProps<{
+	highlightHintIcon: boolean,
+}>()
+
 const prefixes = computed(() => PREFIXES[mode.value])
 </script>
 
@@ -111,5 +116,9 @@ const prefixes = computed(() => PREFIXES[mode.value])
 .show-helper-text {
 	right: 0;
 	pointer-events: auto !important;
+	
+	&.is-highlighted {
+		color: inherit !important;
+	}
 }
 </style>

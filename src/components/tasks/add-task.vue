@@ -1,5 +1,5 @@
 <template>
-	<div class="task-add">
+	<div class="task-add" ref="taskAdd">
 		<div class="add-task__field field is-grouped">
 			<p class="control has-icons-left is-expanded">
 				<textarea
@@ -16,7 +16,7 @@
 				<span class="icon is-small is-left">
 					<icon icon="tasks"/>
 				</span>
-				<quick-add-magic/>
+				<quick-add-magic :highlight-hint-icon="taskAddHovered"/>
 			</p>
 			<p class="control">
 				<x-button
@@ -44,6 +44,7 @@
 <script setup lang="ts">
 import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {useElementHover} from '@vueuse/core'
 
 import {RELATION_KIND} from '@/types/IRelationKind'
 import type {ITask} from '@/modelTypes/ITask'
@@ -83,6 +84,9 @@ const taskStore = useTaskStore()
 // 	}
 // 	newTaskInput.value.focus()
 // })
+
+const taskAdd = ref<HTMLTextAreaElement | null>(null)
+const taskAddHovered = useElementHover(taskAdd)
 
 const errorMessage = ref('')
 
