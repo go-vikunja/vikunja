@@ -158,14 +158,14 @@ export const useProjectStore = defineStore('project', () => {
 		}
 	}
 
-	function getParentProjects(project: IProject): IProject[] {
+	function getAncestors(project: IProject): IProject[] {
 		if (!project?.parentProjectId) {
 			return [project]
 		}
 
 		const parentProject = projects.value[project.parentProjectId]
 		return [
-			...getParentProjects(parentProject),
+			...getAncestors(parentProject),
 			project,
 		]
 	}
@@ -190,7 +190,7 @@ export const useProjectStore = defineStore('project', () => {
 		createProject,
 		updateProject,
 		deleteProject,
-		getParentProjects,
+		getAncestors,
 	}
 })
 
