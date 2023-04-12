@@ -22,7 +22,6 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 	subscription: ISubscription = null
 	position = 0
 	backgroundBlurHash = ''
-	childProjectIds = []
 	parentProjectId = 0
 	
 	created: Date = null
@@ -47,8 +46,6 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 			this.subscription = new SubscriptionModel(this.subscription)
 		}
 		
-		this.childProjectIds = this.childProjects?.map(p => p.id) || []
-
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
 	}

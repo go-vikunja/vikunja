@@ -18,7 +18,6 @@ export interface IProject extends IAbstract {
 	subscription: ISubscription
 	position: number
 	backgroundBlurHash: string
-	childProjectIds: number[]
 	parentProjectId: number
 	
 	created: Date
