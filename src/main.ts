@@ -23,7 +23,7 @@ declare global {
 		API_URL: string;
 		SENTRY_ENABLED: boolean;
 		SENTRY_DSN: string;
-		INFINITE_PROJECT_NESTING_ENABLED: boolean;
+		PROJECT_INFINITE_NESTING_ENABLED: boolean;
 	}
 }
 

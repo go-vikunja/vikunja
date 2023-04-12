@@ -94,7 +94,7 @@ const canNestDeeper = computed(() => {
 		return true
 	}
 
-	return props.level >= 2 && window.INFINITE_PROJECT_NESTING_ENABLED
+	return props.level >= 2 && window.PROJECT_INFINITE_NESTING_ENABLED
 })
 </script>
 
