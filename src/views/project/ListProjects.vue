@@ -104,6 +104,7 @@ const projects = computed(() => {
 	justify-content: space-between;
 	align-items: center;
 	gap: 1rem;
+	margin-bottom: 1rem;
 
 	@media screen and (max-width: $tablet) {
 		flex-direction: column;
