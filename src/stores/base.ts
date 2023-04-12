@@ -81,7 +81,7 @@ export const useBaseStore = defineStore('base', () => {
 	async function handleSetCurrentProject(
 		{project, forceUpdate = false}: {project: IProject | null, forceUpdate?: boolean},
 	) {
-		if (project === null) {
+		if (project === null || typeof project === 'undefined') {
 			setCurrentProject({})
 			setBackground('')
 			setBlurHash('')

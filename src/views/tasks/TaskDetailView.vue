@@ -18,7 +18,7 @@
 					<router-link :to="{ name: 'project.index', params: { projectId: p.id } }">
 						{{ getProjectTitle(p) }}
 					</router-link>
-					<span class="has-text-grey-light" v-if="p.id !== project.id"> &gt; </span>
+					<span class="has-text-grey-light" v-if="p.id !== project?.id"> &gt; </span>
 				</template>
 			</h6>
 
@@ -539,7 +539,7 @@ const visible = ref(false)
 
 const taskId = toRef(props, 'taskId')
 
-const project = computed(() => task.projectId ? projectStore.projects[task.projectId] : null)
+const project = computed(() => projectStore.projects[task.projectId])
 watchEffect(() => {
 	baseStore.handleSetCurrentProject({
 		project: project.value,
