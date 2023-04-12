@@ -1,7 +1,7 @@
 import {watch, reactive, shallowReactive, unref, toRefs, readonly, ref, computed} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 import {useI18n} from 'vue-i18n'
-import {klona} from 'klona/lite'
+import {useRouter} from 'vue-router'
 
 import ProjectService from '@/services/project'
 import {setModuleLoading} from '@/stores/helper'
@@ -24,6 +24,7 @@ export interface ProjectState {
 
 export const useProjectStore = defineStore('project', () => {
 	const baseStore = useBaseStore()
+	const router = useRouter()
 
 	const isLoading = ref(false)
 
@@ -100,6 +101,10 @@ export const useProjectStore = defineStore('project', () => {
 		try {
 			const createdProject = await projectService.create(project)
 			setProject(createdProject)
+			router.push({
+				name: 'project.index',
+				params: { projectId: createdProject.id },
+			})
 			return createdProject
 		} finally {
 			cancel()

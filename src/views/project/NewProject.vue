@@ -76,11 +76,7 @@ async function createNewProject() {
 		project.parentProjectId = parentProject.value.id
 	}
 
-	const newProject = await projectStore.createProject(project)
-	await router.push({
-		name: 'project.index',
-		params: { projectId: newProject.id },
-	})
+	await projectStore.createProject(project)
 	success({message: t('project.create.createdSuccess') })
 }
 </script>

@@ -477,14 +477,10 @@ async function newProject() {
 	if (currentProject.value === null) {
 		return
 	}
-	const newProject = await projectStore.createProject(new ProjectModel({
+	await projectStore.createProject(new ProjectModel({
 		title: query.value,
 	}))
 	success({ message: t('project.create.createdSuccess')})
-	await router.push({
-		name: 'project.index',
-		params: { projectId: newProject.id },
-	})
 }
 
 async function newTeam() {
