@@ -34,7 +34,7 @@ export const useProjectStore = defineStore('project', () => {
 		.filter(p => p.parentProjectId === 0 && !p.isArchived))
 	const favoriteProjects = computed(() => projectsArray.value
 		.filter(p => !p.isArchived && p.isFavorite))
-	const hasProjects = computed(() => projects.value ? true : false)
+	const hasProjects = computed(() => projectsArray.value.length > 0)
 
 	const getChildProjects = computed<IProject[]>(() => {
 		return (id: IProject['id']) => projectsArray.value.filter(p => p.parentProjectId === id)
