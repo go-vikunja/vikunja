@@ -11,12 +11,12 @@
 			>
 				<icon icon="chevron-down" :class="{ 'project-is-collapsed': !childProjectsOpen }"/>
 			</BaseButton>
-			<span class="collapse-project-button-placeholder" v-else></span>
 			<BaseButton
 				:to="{ name: 'project.index', params: { projectId: project.id} }"
 				class="list-menu-link"
 				:class="{'router-link-exact-active': currentProject.id === project.id}"
 			>
+				<span class="collapse-project-button-placeholder" v-if="!canCollapse || childProjects?.length === 0"></span>
 				<ColorBubble
 					v-if="project.hexColor !== ''"
 					:color="project.hexColor"
