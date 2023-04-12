@@ -57,7 +57,7 @@
 }
 
 .field.has-addons .control .select select {
-    height: 100%;
+  height: 100%;
 }
 
 .control.has-icons-left .icon,
@@ -102,4 +102,10 @@ h1, h2, h3 {
   .input.title {
     height: auto;
   }
+}
+
+// Global style, because the rest of this styling is imported from bulma
+.control.has-icons-left .icon,
+.control.has-icons-right .icon {
+  transition: all $transition;
 }

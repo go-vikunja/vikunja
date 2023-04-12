@@ -107,10 +107,9 @@ const mode = ref(getQuickAddMagicMode())
 const prefixes = computed(() => PREFIXES[mode.value])
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .show-helper-text {
 	right: 0;
 	pointer-events: auto !important;
-	color: inherit !important;
 }
 </style>
