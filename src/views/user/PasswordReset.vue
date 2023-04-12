@@ -11,17 +11,17 @@
 				{{ $t('user.auth.login') }}
 			</x-button>
 		</div>
-		<form @submit.prevent="submit" id="form" v-if="!successMessage">
+		<form @submit.prevent="resetPassword" id="form" v-if="!successMessage">
 			<div class="field">
 				<label class="label" for="password">{{ $t('user.auth.password') }}</label>
-				<Password @submit="submit" @update:modelValue="v => credentials.password = v"/>
+				<Password @submit="resetPassword" @update:modelValue="v => credentials.password = v"/>
 			</div>
 
 			<div class="field is-grouped">
 				<div class="control">
 					<x-button
 						:loading="passwordResetService.loading"
-						@click="submit"
+						@click="resetPassword"
 					>
 						{{ $t('user.auth.resetPassword') }}
 					</x-button>
@@ -47,7 +47,7 @@ const passwordResetService = reactive(new PasswordResetService())
 const errorMsg = ref('')
 const successMessage = ref('')
 
-async function submit() {
+async function resetPassword() {
 	errorMsg.value = ''
 	
 	if(credentials.password === '') {

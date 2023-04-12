@@ -11,7 +11,7 @@
 				{{ $t('user.auth.login') }}
 			</x-button>
 		</div>
-		<form @submit.prevent="submit" v-if="!isSuccess">
+		<form @submit.prevent="requestPasswordReset" v-if="!isSuccess">
 			<div class="field">
 				<label class="label" for="email">{{ $t('user.auth.email') }}</label>
 				<div class="control">
@@ -30,7 +30,7 @@
 			<div class="field is-grouped">
 				<div class="control">
 					<x-button
-						@click="submit"
+						type="submit"
 						:loading="passwordResetService.loading"
 					>
 						{{ $t('user.auth.resetPasswordAction') }}
@@ -45,19 +45,18 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive} from 'vue'
+import {ref, shallowReactive} from 'vue'
 
 import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
 import Message from '@/components/misc/message.vue'
 
-// Not sure if this instance needs a shalloRef at all
-const passwordResetService = reactive(new PasswordResetService())
+const passwordResetService = shallowReactive(new PasswordResetService())
 const passwordReset = ref(new PasswordResetModel())
 const errorMsg = ref('')
 const isSuccess = ref(false)
 
-async function submit() {
+async function requestPasswordReset() {
 	errorMsg.value = ''
 	try {
 		await passwordResetService.requestResetPassword(passwordReset.value)
