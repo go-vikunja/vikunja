@@ -109,7 +109,7 @@ const getItemsFromPrefix = (text: string, prefix: string): string[] => {
 			return
 		}
 
-		if (p.substring(0, 1) === prefix) {
+		if (p.startsWith(prefix)) {
 			p = p.substring(1)
 		}
 
