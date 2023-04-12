@@ -32,7 +32,7 @@
 			<ProjectCardGrid :projects="projectHistory" v-cy="'projectCardGrid'" />
 		</div>
 		<ShowTasks
-			v-if="hasProjects"
+			v-if="projectStore.hasProjects"
 			class="show-tasks"
 			:key="showTasksKey"
 		/>
@@ -80,7 +80,6 @@ const projectHistory = computed(() => {
 
 const migratorsEnabled = computed(() => configStore.availableMigrators?.length > 0)
 const hasTasks = computed(() => baseStore.hasTasks)
-const hasProjects = computed(() => projectStore.hasProjects)
 const loading = computed(() => taskStore.isLoading)
 const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt))
 
