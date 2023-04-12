@@ -112,6 +112,15 @@ export const useProjectStore = defineStore('project', () => {
 	async function updateProject(project: IProject) {
 		const cancel = setModuleLoading(setIsLoading)
 		const projectService = new ProjectService()
+		
+		const oldProject = projects.value[project.id]
+		if (oldProject && oldProject.parentProjectId !== project.parentProjectId && oldProject.parentProjectId > 0) {
+			const parentProject = projects.value[oldProject.parentProjectId]
+			if (parentProject) {
+				const childProjectIndex = parentProject.childProjectIds.findIndex(pId => pId === project.id)
+				parentProject.childProjectIds.splice(childProjectIndex, 1)
+			}
+		}
 
 		try {
 			await projectService.update(project)
