@@ -72,11 +72,11 @@
 </template>
 
 <script lang="ts">
-export default { name: 'project-setting-edit' }
+export default {name: 'project-setting-edit'}
 </script>
 
 <script setup lang="ts">
-import {type PropType} from 'vue'
+import {watch, ref, type PropType} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
@@ -88,6 +88,7 @@ import ProjectSearch from '@/components/tasks/partials/projectSearch.vue'
 import type {IProject} from '@/modelTypes/IProject'
 
 import {useBaseStore} from '@/stores/base'
+import {useProjectStore} from '@/stores/projects'
 import {useProject} from '@/stores/projects'
 
 import {useTitle} from '@/composables/useTitle'
@@ -100,14 +101,27 @@ const props = defineProps({
 })
 
 const router = useRouter()
+const projectStore = useProjectStore()
 
 const {t} = useI18n({useScope: 'global'})
 
-const {project, parentProject, save: saveProject, isLoading} = useProject(props.projectId)
+const {project, save: saveProject, isLoading} = useProject(props.projectId)
+
+const parentProject = ref<IProject | null>(null)
+watch(
+	() => project.parentProjectId,
+	projectId => {
+		if (project.parentProjectId) {
+			parentProject.value = projectStore.projects[project.parentProjectId]
+		}
+	},
+	{immediate: true},
+)
 
 useTitle(() => project?.title ? t('project.edit.title', {project: project.title}) : '')
 
 async function save() {
+	project.parentProjectId = parentProject.value.id ?? project.parentProjectId
 	await saveProject()
 	await useBaseStore().handleSetCurrentProject({project})
 	router.back()

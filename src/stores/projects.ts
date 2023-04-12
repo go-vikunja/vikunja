@@ -211,22 +211,8 @@ export function useProject(projectId: MaybeRef<IProject['id']>) {
 
 	const projectStore = useProjectStore()
 
-	const parentProject = ref<IProject | null>(null)
-	watch(
-		() => project.parentProjectId,
-		projectId => {
-			if (project.parentProjectId) {
-				parentProject.value = projectStore.projects[project.parentProjectId]
-			}
-		},
-		{immediate: true},
-	)
-
 	async function save() {
-		const updatedProject = await projectStore.updateProject({
-			...project,
-			parentProjectId: parentProject.value.id ?? project.parentProjectId,
-		})
+		const updatedProject = await projectStore.updateProject(project)
 		Object.assign(project, updatedProject)
 		success({message: t('project.edit.success')})
 	}
@@ -234,7 +220,6 @@ export function useProject(projectId: MaybeRef<IProject['id']>) {
 	return {
 		isLoading: readonly(isLoading),
 		project,
-		parentProject,
 		save,
 	}
 }
