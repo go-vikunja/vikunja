@@ -67,12 +67,14 @@ import {getProjectTitle} from '@/helpers/getProjectTitle'
 import ColorBubble from '@/components/misc/colorBubble.vue'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	project: IProject,
 	isLoading?: boolean,
 	canCollapse?: boolean,
 	level?: number,
-}>()
+}>(), {
+	level: 0,
+})
 
 const projectStore = useProjectStore()
 const baseStore = useBaseStore()
