@@ -8,6 +8,7 @@
     "lokalise.i18n-ally",
     "mgmcdermott.vscode-language-babel",
     "mikestead.dotenv",
-    "Syler.sass-indented"
+    "Syler.sass-indented",
+    "zixuanchen.vitest-explorer"
   ]
 }

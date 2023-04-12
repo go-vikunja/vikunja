@@ -60,6 +60,7 @@ export default defineConfig(({mode}) => {
 		// https://vitest.dev/config/
 		test: {
 			environment: 'happy-dom',
+			'vitest.commandLine': 'pnpm test:unit',
 		},
 		css: {
 			preprocessorOptions: {
