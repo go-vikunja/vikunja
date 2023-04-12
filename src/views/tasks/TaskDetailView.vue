@@ -539,7 +539,7 @@ const visible = ref(false)
 
 const taskId = toRef(props, 'taskId')
 
-const project = computed(() => task.projectId ? projectStore.getProjectById(task.projectId) : null)
+const project = computed(() => task.projectId ? projectStore.projects[task.projectId] : null)
 watchEffect(() => {
 	baseStore.handleSetCurrentProject({
 		project: project.value,

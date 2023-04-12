@@ -222,12 +222,12 @@ async function findTasks(newQuery: string) {
 function mapRelatedTasks(tasks: ITask[]) {
 	return tasks.map(task => {
 		// by doing this here once we can save a lot of duplicate calls in the template
-		const project = projectStore.getProjectById(task.ProjectId)
+		const project = projectStore.projects[task.ProjectId]
 
 		return {
 			...task,
 			differentProject:
-				(project !== null &&
+				(project &&
 					task.projectId !== props.projectId &&
 					project?.title) || null,
 		}

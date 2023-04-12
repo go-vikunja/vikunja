@@ -74,8 +74,8 @@ const projectHistory = computed(() => {
 	}
 	
 	return getHistory()
-		.map(l => projectStore.getProjectById(l.id))
-		.filter((l): l is IProject => l !== null)
+		.map(l => projectStore.projects[l.id])
+		.filter(l => Boolean(l))
 })
 
 const migratorsEnabled = computed(() => configStore.availableMigrators?.length > 0)

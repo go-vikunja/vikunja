@@ -145,12 +145,12 @@ const foundProjects = computed(() => {
 	const history = getHistory()
 	const allProjects = [
 		...new Set([
-			...history.map((l) => projectStore.getProjectById(l.id)),
+			...history.map((l) => projectStore.projects[l.id]),
 			...projectStore.searchProject(project),
 		]),
 	]
 
-	return allProjects.filter((l) => typeof l !== 'undefined' && l !== null)
+	return allProjects.filter(l => Boolean(l))
 })
 
 // FIXME: use fuzzysearch
@@ -369,7 +369,7 @@ function searchTasks() {
 		const r = await taskService.getAll({}, params) as  DoAction<ITask>[]
 		foundTasks.value = r.map((t) => {
 			t.type = ACTION_TYPE.TASK
-			const project = projectStore.getProjectById(t.projectId)
+			const project = projectStore.projects[t.projectId]
 			if (project !== null) {
 				t.title = `${t.title} (${project.title})`
 			}

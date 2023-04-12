@@ -39,9 +39,9 @@ const parentProject = ref<IProject | null>(null)
 watch(
 	() => route.params.projectId,
 	projectId => {
-		const project = projectStore.getProjectById(route.params.projectId)
+		const project = projectStore.projects[route.params.projectId]
 		if (project.parentProjectId) {
-			parentProject.value = projectStore.getProjectById(project.parentProjectId)
+			parentProject.value = projectStore.projects[project.parentProjectId]
 		}
 	},
 	{immediate: true},

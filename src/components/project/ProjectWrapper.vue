@@ -130,8 +130,8 @@ watch(
 
 		// Set the current project to the one we're about to load so that the title is already shown at the top
 		loadedProjectId.value = 0
-		const projectFromStore = projectStore.getProjectById(projectData.id)
-		if (projectFromStore !== null) {
+		const projectFromStore = projectStore.projects[projectData.id]
+		if (projectFromStore) {
 			baseStore.setBackground(null)
 			baseStore.setBlurHash(null)
 			baseStore.handleSetCurrentProject({project: projectFromStore})

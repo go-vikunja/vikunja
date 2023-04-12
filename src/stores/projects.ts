@@ -36,9 +36,6 @@ export const useProjectStore = defineStore('project', () => {
 		.filter(p => !p.isArchived && p.isFavorite))
 	const hasProjects = computed(() => projects.value ? true : false)
 
-	const getProjectById = computed(() => {
-		return (id: IProject['id']) => typeof projects.value[id] !== 'undefined' ? projects.value[id] : null
-	})
 	const getChildProjects = computed(() => {
 		return (id: IProject['id']) => projectsArray.value.filter(p => p.parentProjectId === id) || []
 	})
@@ -190,7 +187,6 @@ export const useProjectStore = defineStore('project', () => {
 		favoriteProjects: readonly(favoriteProjects),
 		hasProjects: readonly(hasProjects),
 
-		getProjectById,
 		getChildProjects,
 		findProjectByExactname,
 		searchProject,
@@ -229,7 +225,7 @@ export function useProject(projectId: MaybeRef<IProject['id']>) {
 		() => project.parentProjectId,
 		projectId => {
 			if (project.parentProjectId) {
-				parentProject.value = projectStore.getProjectById(project.parentProjectId)
+				parentProject.value = projectStore.projects[project.parentProjectId]
 			}
 		},
 		{immediate: true},

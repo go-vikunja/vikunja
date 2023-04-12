@@ -360,7 +360,7 @@ const router = createRouter({
 				saveProjectView(to.params.projectId, to.name)
 				// Properly set the page title when a task popup is closed
 				const projectStore = useProjectStore()
-				const projectFromStore = projectStore.getProjectById(Number(to.params.projectId))
+				const projectFromStore = projectStore.projects[Number(to.params.projectId)]
 				if(projectFromStore) {
 					setTitle(projectFromStore.title)
 				}

@@ -43,7 +43,7 @@ const router = useRouter()
 
 const totalTasks = ref<number | null>(null)
 
-const project = computed(() => projectStore.getProjectById(route.params.projectId))
+const project = computed(() => projectStore.projects[route.params.projectId])
 
 watchEffect(
 	() => {

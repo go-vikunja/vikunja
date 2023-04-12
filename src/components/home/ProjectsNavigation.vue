@@ -80,7 +80,7 @@ async function saveProjectPosition(e: SortableEvent) {
 	const newIndex = e.newIndex === projectsActive.length ? e.newIndex - 1 : e.newIndex
 
 	const projectId = parseInt(e.item.dataset.projectId)
-	const project = projectStore.getProjectById(projectId)
+	const project = projectStore.projects[projectId]
 
 	const parentProjectId = e.to.parentNode.dataset.projectId ? parseInt(e.to.parentNode.dataset.projectId) : 0
 	const projectBefore = projectsActive[newIndex - 1] ?? null

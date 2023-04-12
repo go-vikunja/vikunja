@@ -245,7 +245,7 @@ watch(
 
 const projectStore = useProjectStore()
 const defaultProject = computed({
-	get: () => projectStore.getProjectById(settings.value.defaultProjectId) || undefined,
+	get: () => projectStore.projects[settings.value.defaultProjectId],
 	set(l) {
 		settings.value.defaultProjectId = l ? l.id : DEFAULT_PROJECT_ID
 	},

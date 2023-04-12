@@ -14,12 +14,12 @@
 
 		<router-link
 			:to="taskDetailRoute"
-			:class="{ 'done': task.done, 'show-project': showProject && project !== null}"
+			:class="{ 'done': task.done, 'show-project': showProject && project}"
 			class="tasktext"
 		>
 			<span>
 				<router-link
-					v-if="showProject && project !== null"
+					v-if="showProject && typeof project !== 'undefined'"
 					:to="{ name: 'project.list', params: { projectId: task.projectId } }"
 					class="task-project"
 					:class="{'mr-2': task.hexColor !== ''}"
@@ -104,7 +104,7 @@
 		</progress>
 
 		<router-link
-			v-if="!showProject && currentProject.id !== task.projectId && project !== null"
+			v-if="!showProject && currentProject.id !== task.projectId && project"
 			:to="{ name: 'project.list', params: { projectId: task.projectId } }"
 			class="task-project"
 			v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
@@ -209,8 +209,8 @@ const baseStore = useBaseStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 
-const project = computed(() => projectStore.getProjectById(task.value.projectId))
-const projectColor = computed(() => project.value !== null ? project.value.hexColor : '')
+const project = computed(() => projectStore.projects[task.value.projectId])
+const projectColor = computed(() => project.value ? project.value?.hexColor : '')
 
 const currentProject = computed(() => {
 	return typeof baseStore.currentProject === 'undefined' ? {
