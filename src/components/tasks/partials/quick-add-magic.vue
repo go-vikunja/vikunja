@@ -1,5 +1,5 @@
 <template>
-	<div v-if="mode !== 'disabled' && prefixes !== undefined">
+	<template v-if="mode !== 'disabled' && prefixes !== undefined">
 		<BaseButton
 			@click="() => visible = true"
 			class="icon is-small show-helper-text"
@@ -90,7 +90,7 @@
 				</ul>
 			</card>
 		</modal>
-	</div>
+	</template>
 </template>
 
 <script setup lang="ts">
