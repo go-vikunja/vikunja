@@ -232,8 +232,11 @@ export function useProject(projectId: MaybeRef<IProject['id']>) {
 	)
 
 	async function save() {
-		project.parentProjectId = parentProject.value.id
-		await projectStore.updateProject(project)
+		const updatedProject = await projectStore.updateProject({
+			...project,
+			parentProjectId: parentProject.value.id ?? project.parentProjectId,
+		})
+		Object.assign(project, updatedProject)
 		success({message: t('project.edit.success')})
 	}
 
