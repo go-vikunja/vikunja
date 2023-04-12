@@ -19,53 +19,6 @@
 			:projects="projects"
 			:show-archived="showArchived"
 		/>
-
-		<!--		<p v-if="projects.length === 0" class="has-text-centered has-text-grey mt-4 is-italic">-->
-		<!--			{{ $t('project.noneAvailable') }}-->
-		<!--			<BaseButton :to="{name: 'project.create'}">-->
-		<!--				{{ $t('project.create.title') }}.-->
-		<!--			</BaseButton>-->
-		<!--		</p>-->
-
-<!--		<section :key="`n${n.id}`" class="project" v-for="n in projects">-->
-<!--			<x-button-->
-<!--				v-if="n.id > 0 && n.projects.length > 0"-->
-<!--				:to="{name: 'project.create', params: {projectId:  n.id}}"-->
-<!--				class="is-pulled-right"-->
-<!--				variant="secondary"-->
-<!--				icon="plus"-->
-<!--			>-->
-<!--				{{ $t('project.create.header') }}-->
-<!--			</x-button>-->
-<!--			<x-button-->
-<!--				v-if="n.isArchived"-->
-<!--				:to="{name: 'project.settings.archive', params: {id:  n.id}}"-->
-<!--				class="is-pulled-right mr-4"-->
-<!--				variant="secondary"-->
-<!--				icon="archive"-->
-<!--			>-->
-<!--				{{ $t('project.unarchive') }}-->
-<!--			</x-button>-->
-
-<!--			<h2 class="project-title">-->
-<!--				<span v-cy="'project-title'">{{ getProjectTitle(n) }}</span>-->
-<!--				<span v-if="n.isArchived" class="is-archived">-->
-<!--					{{ $t('project.archived') }}-->
-<!--				</span>-->
-<!--			</h2>-->
-
-<!--			&lt;!&ndash;			<p v-if="n.projects.length === 0" class="has-text-centered has-text-grey mt-4 is-italic">&ndash;&gt;-->
-<!--			&lt;!&ndash;				{{ $t('project.noProjects') }}&ndash;&gt;-->
-<!--			&lt;!&ndash;				<BaseButton :to="{name: 'project.create', params: {projectId:  n.id}}">&ndash;&gt;-->
-<!--			&lt;!&ndash;					{{ $t('project.createProject') }}&ndash;&gt;-->
-<!--			&lt;!&ndash;				</BaseButton>&ndash;&gt;-->
-<!--			&lt;!&ndash;			</p>&ndash;&gt;-->
-
-<!--			<ProjectCardGrid v-else-->
-<!--							 :projects="n.projects"-->
-<!--							 :show-archived="showArchived"-->
-<!--			/>-->
-<!--		</section>-->
 	</div>
 </template>
 
