@@ -44,7 +44,7 @@ Instead, translate it to reflect the original meaning in the translated string b
 
 All translation strings are stored in `src/i18n/lang/`.
 New strings should be added only in the `en.json` file.
-Strings in other languages will be synced through weblate and should not be added directly as a PR/commit in the frontend repo.
+Strings in other languages will be synced through [crowdin](https://crowdin.com/project/vikunja) and should not be added directly as a PR/commit in the frontend repo.
 
 ## Requesting a new language
 
