@@ -91,14 +91,14 @@ api:
   restart: unless-stopped
 {{< /highlight >}}
 
-The default path Vikunja uses for sqlite is relative to the binary.  Which in the docker container would be /app/vikunja/vikunja.db This moves to a different folder using VIKUNJA_DATABASE_PATH so you can use a volume at /db and store this outside of the container so state is persisted even if container destroyed.
+The default path Vikunja uses for sqlite is relative to the binary, which in the docker container would be `/app/vikunja/vikunja.db`. This config moves to a different folder using `VIKUNJA_DATABASE_PATH` so you can use a volume at `/db` and store this outside of the container so state is persisted even if container destroyed.
 
 You'll also need to remove or change the `VIKUNJA_DATABASE_TYPE` to `sqlite` on the api container declaration.
 
 You can also remove the db section.
 
 <div class="notification is-warning">
-<b>NOTE:</b> If you intend to use for a larger install, we recommend using mysql or postgres.
+<b>NOTE:</b> If you'll use your instance with more than a handful of users, we recommend using mysql or postgres.
 </div>
 
 ## Example without any proxy
