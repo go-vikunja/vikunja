@@ -30,7 +30,7 @@ import {useKanbanStore} from '@/stores/kanban'
 import {useBaseStore} from '@/stores/base'
 import ProjectUserService from '@/services/projectUsers'
 
-interface MatchedAssignees extends IUser {
+interface MatchedAssignee extends IUser {
 	match: string,
 }
 
@@ -79,7 +79,7 @@ async function addLabelToTask(task: ITask, label: ILabel) {
 	return response
 }
 
-async function findAssignees(parsedTaskAssignees: string[], projectId: number): Promise<MatchedAssignees[]> {
+async function findAssignees(parsedTaskAssignees: string[], projectId: number): Promise<MatchedAssignee[]> {
 	if (parsedTaskAssignees.length <= 0) {
 		return []
 	}
