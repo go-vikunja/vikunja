@@ -16,15 +16,22 @@
 				class="list-menu-link"
 				:class="{'router-link-exact-active': currentProject.id === project.id}"
 			>
-				<span class="collapse-project-button-placeholder" v-if="!canCollapse || childProjects?.length === 0"></span>
-				<ColorBubble
-					v-if="project.hexColor !== ''"
-					:color="project.hexColor"
-					class="handle"
-				/>
-				<span class="icon menu-item-icon handle" v-else>
-					<icon icon="grip-lines"/>
-				</span>
+				<span
+					v-if="!canCollapse || childProjects?.length === 0"
+					class="collapse-project-button-placeholder"
+				></span>
+				<div class="color-bubble-handle-wrapper">
+					<ColorBubble
+						v-if="project.hexColor !== ''"
+						:color="project.hexColor"
+					/>
+					<span
+						class="icon menu-item-icon handle lines-handle"
+						:class="{'has-color-bubble': project.hexColor !== ''}"
+					>
+						<icon icon="grip-lines"/>
+					</span>
+				</div>
 				<span class="list-menu-title">{{ getProjectTitle(project) }}</span>
 			</BaseButton>
 			<BaseButton
@@ -123,5 +130,27 @@ const canNestDeeper = computed(() => {
 
 .list-menu:hover > div > .favorite {
 	opacity: 1;
+}
+
+.list-menu:hover > div > a > .color-bubble-handle-wrapper > .color-bubble {
+	opacity: 0;
+}
+
+.color-bubble-handle-wrapper {
+	position: relative;
+	width: 1rem;
+	height: 1rem;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	margin-right: .25rem;
+
+	.color-bubble, .icon {
+		transition: all $transition;
+		position: absolute;
+		width: 12px;
+		margin: 0 !important;
+		padding: 0 !important;
+	}
 }
 </style>
