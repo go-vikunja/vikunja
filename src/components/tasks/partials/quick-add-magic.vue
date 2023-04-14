@@ -105,7 +105,7 @@ import {PREFIXES} from '@/modules/parseTaskText'
 const visible = ref(false)
 const mode = ref(getQuickAddMagicMode())
 
-const props = defineProps<{
+defineProps<{
 	highlightHintIcon: boolean,
 }>()
 
