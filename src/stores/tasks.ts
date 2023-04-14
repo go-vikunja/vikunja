@@ -35,16 +35,14 @@ interface MatchedAssignee extends IUser {
 }
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
-function findPropertyByValue(object, key, value) {
-	return Object.values(object).find(
-		(l) => l[key]?.toLowerCase() === value.toLowerCase(),
-	)
-}
-
-function findPropertyByValueFuzzy(object, key, value) {
-	return Object.values(object).find(
-		(l) => l[key]?.toLowerCase().includes(value.toLowerCase()),
-	)
+function findPropertyByValue(object, key, value, fuzzy: boolean = false) {
+	return Object.values(object).find(l => {
+		if (fuzzy) {
+			return l[key]?.toLowerCase().includes(value.toLowerCase())
+		}
+	
+		return l[key]?.toLowerCase() === value.toLowerCase()
+	})
 }
 
 // Check if the user exists in the search results
@@ -53,9 +51,9 @@ function validateUser(
 	query: IUser['username'] | IUser['name'] | IUser['email'],
 ) {
 	if (users.length === 1) {
-		return findPropertyByValueFuzzy(users, 'username', query) ||
-			findPropertyByValueFuzzy(users, 'name', query) ||
-			findPropertyByValueFuzzy(users, 'email', query)
+		return findPropertyByValue(users, 'username', query, true) ||
+			findPropertyByValue(users, 'name', query, true) ||
+			findPropertyByValue(users, 'email', query, true)
 	}
 	
 	return findPropertyByValue(users, 'username', query) ||
