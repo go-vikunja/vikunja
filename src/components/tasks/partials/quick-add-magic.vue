@@ -114,6 +114,7 @@ const prefixes = computed(() => PREFIXES[mode.value])
 
 <style lang="scss" scoped>
 .show-helper-text {
+	// Bulma adds pointer-events: none to the icon so we need to override it back here.
 	pointer-events: auto !important;
 }
 
