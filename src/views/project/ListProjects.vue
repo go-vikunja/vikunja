@@ -15,7 +15,7 @@
 			</div>
 		</header>
 
-		<ProjectCardGrid 
+		<ProjectCardGrid
 			:projects="projects"
 			:show-archived="showArchived"
 		/>
@@ -44,10 +44,9 @@ const showArchived = useStorage('showArchived', false)
 
 const loading = computed(() => projectStore.isLoading)
 const projects = computed(() => {
-	return projectStore.projectsArray.filter(project => showArchived.value
-		? true
-		: !project.isArchived,
-	)
+	return showArchived.value
+		? projectStore.projectsArray
+		: projectStore.projectsArray.filter(({isArchived}) => !isArchived)
 })
 </script>
 
