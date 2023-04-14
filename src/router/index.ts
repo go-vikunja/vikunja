@@ -238,6 +238,15 @@ const router = createRouter({
 			},
 		},
 		{
+			path: '/projects/:parentProjectId/new',
+			name: 'project.createFromParent',
+			component: NewProjectComponent,
+			props: route => ({ parentProjectId: Number(route.params.parentProjectId as string) }),
+			meta: {
+				showAsModal: true,
+			},
+		},
+		{
 			path: '/projects/:projectId/settings/edit',
 			name: 'project.settings.edit',
 			component: ProjectSettingEdit,

@@ -42,7 +42,12 @@
 			>
 				<icon :icon="project.isFavorite ? 'star' : ['far', 'star']"/>
 			</BaseButton>
-			<ProjectSettingsDropdown class="menu-list-dropdown" :project="project" v-if="project.id > 0">
+			<ProjectSettingsDropdown
+				v-if="project.id > 0"
+				class="menu-list-dropdown"
+				:project="project"
+				:level="level"
+			>
 				<template #trigger="{toggleOpen}">
 					<BaseButton class="menu-list-dropdown-trigger" @click="toggleOpen">
 						<icon icon="ellipsis-h" class="icon"/>
@@ -73,6 +78,7 @@ import ProjectSettingsDropdown from '@/components/project/project-settings-dropd
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import ColorBubble from '@/components/misc/colorBubble.vue'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
+import {canNestProjectDeeper} from '@/helpers/canNestProjectDeeper'
 
 const props = withDefaults(defineProps<{
 	project: IProject,
@@ -98,13 +104,7 @@ const childProjects = computed(() => {
 		.sort((a, b) => a.position - b.position)
 })
 
-const canNestDeeper = computed(() => {
-	if (props.level < 2) {
-		return true
-	}
-
-	return props.level >= 2 && window.PROJECT_INFINITE_NESTING_ENABLED
-})
+const canNestDeeper = computed(() => canNestProjectDeeper(props.level))
 </script>
 
 <style lang="scss" scoped>

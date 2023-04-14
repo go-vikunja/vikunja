@@ -73,6 +73,13 @@
 				type="dropdown"
 			/>
 			<dropdown-item
+				v-if="level < 2"
+				:to="{ name: 'project.createFromParent', params: { parentProjectId: project.id } }"
+				icon="layer-group"
+			>
+				{{ $t('menu.createProject') }}
+			</dropdown-item>
+			<dropdown-item
 				:to="{ name: 'project.settings.delete', params: { projectId: project.id } }"
 				icon="trash-alt"
 				class="has-text-danger"
@@ -101,6 +108,9 @@ const props = defineProps({
 	project: {
 		type: Object as PropType<IProject>,
 		required: true,
+	},
+	level: {
+		type: Number,
 	},
 })
 

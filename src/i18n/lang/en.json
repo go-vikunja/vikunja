@@ -864,7 +864,8 @@
     "unarchive": "Un-Archive",
     "setBackground": "Set background",
     "share": "Share",
-    "newProject": "New project"
+    "newProject": "New project",
+    "createProject": "Create project"
   },
   "apiConfig": {
     "url": "Vikunja URL",

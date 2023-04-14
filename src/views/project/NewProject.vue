@@ -1,5 +1,9 @@
 <template>
-	<create-edit :title="$t('project.create.header')" @create="createNewProject()" :primary-disabled="project.title === ''">
+	<create-edit
+		:title="$t('project.create.header')"
+		@create="createNewProject()"
+		:primary-disabled="project.title === ''"
+	>
 		<div class="field">
 			<label class="label" for="projectTitle">{{ $t('project.title') }}</label>
 			<div
@@ -31,14 +35,14 @@
 		<div class="field">
 			<label class="label">{{ $t('project.color') }}</label>
 			<div class="control">
-				<color-picker v-model="project.hexColor" />
+				<color-picker v-model="project.hexColor"/>
 			</div>
 		</div>
 	</create-edit>
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, shallowReactive} from 'vue'
+import {ref, reactive, shallowReactive, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRouter, useRoute} from 'vue-router'
 
@@ -65,18 +69,28 @@ const projectService = shallowReactive(new ProjectService())
 const projectStore = useProjectStore()
 const parentProject = ref<IProject | null>(null)
 
+const props = defineProps<{
+	parentProjectId?: number,
+}>()
+
+watch(
+	() => props.parentProjectId,
+	() => parentProject.value = projectStore.projects[props.parentProjectId],
+	{immediate: true},
+)
+
 async function createNewProject() {
 	if (project.title === '') {
 		showError.value = true
 		return
 	}
 	showError.value = false
-	
+
 	if (parentProject.value) {
 		project.parentProjectId = parentProject.value.id
 	}
 
 	await projectStore.createProject(project)
-	success({message: t('project.create.createdSuccess') })
+	success({message: t('project.create.createdSuccess')})
 }
 </script>
