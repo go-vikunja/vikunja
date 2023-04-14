@@ -103,9 +103,3 @@ h1, h2, h3 {
     height: auto;
   }
 }
-
-// Global style, because the rest of this styling is imported from bulma
-.control.has-icons-left .icon,
-.control.has-icons-right .icon {
-  transition: all $transition;
-}

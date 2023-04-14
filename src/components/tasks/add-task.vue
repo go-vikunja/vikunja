@@ -239,6 +239,11 @@ defineExpose({
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }
+
+.control.has-icons-left .icon,
+.control.has-icons-right .icon {
+	transition: all $transition;
+}
 </style>
 
 <style>
