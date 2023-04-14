@@ -32,7 +32,8 @@ export const useProjectStore = defineStore('project', () => {
 
 	// The projects are stored as an object which has the project ids as keys.
 	const projects = ref<ProjectState>({})
-	const projectsArray = computed(() => Object.values(projects.value))
+	const projectsArray = computed(() => Object.values(projects.value)
+		.sort((a, b) => a.position - b.position))
 	const notArchivedRootProjects = computed(() => projectsArray.value
 		.filter(p => p.parentProjectId === 0 && !p.isArchived))
 	const favoriteProjects = computed(() => projectsArray.value
