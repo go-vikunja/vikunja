@@ -22,7 +22,7 @@
 		<p class="help is-danger" v-if="showError && project.title === ''">
 			{{ $t('project.create.addTitleRequired') }}
 		</p>
-		<div class="field">
+		<div class="field" v-if="projectStore.hasProjects">
 			<label class="label">{{ $t('project.parent') }}</label>
 			<div class="control">
 				<project-search v-model="parentProject"/>
