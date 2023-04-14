@@ -51,14 +51,18 @@ function validateUser(
 	query: IUser['username'] | IUser['name'] | IUser['email'],
 ) {
 	if (users.length === 1) {
-		return findPropertyByValue(users, 'username', query, true) ||
+		return (
+			findPropertyByValue(users, 'username', query, true) ||
 			findPropertyByValue(users, 'name', query, true) ||
 			findPropertyByValue(users, 'email', query, true)
+		)
 	}
 	
-	return findPropertyByValue(users, 'username', query) ||
+	return (
+		findPropertyByValue(users, 'username', query) ||
 		findPropertyByValue(users, 'name', query) ||
 		findPropertyByValue(users, 'email', query)
+	)
 }
 
 // Check if the label exists
