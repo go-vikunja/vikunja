@@ -150,10 +150,13 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			return nil, 0, 0, err
 		}
 
-		sf.Filters.SortByArr = tf.SortByArr
-		sf.Filters.SortBy = tf.SortBy
+		sf.Filters.SortByArr = append(sf.Filters.SortByArr, tf.SortByArr...)
+		sf.Filters.SortBy = append(sf.Filters.SortBy, tf.SortBy...)
+		if len(sf.Filters.OrderBy) > len(sf.Filters.SortBy) {
+			sf.Filters.OrderBy = sf.Filters.OrderBy[:len(sf.Filters.SortBy)]
+		}
+		sf.Filters.OrderBy = append(sf.Filters.OrderBy, tf.OrderBy...)
 		sf.Filters.OrderByArr = tf.OrderByArr
-		sf.Filters.OrderBy = tf.OrderBy
 
 		return sf.getTaskCollection().ReadAll(s, a, search, page, perPage)
 	}
