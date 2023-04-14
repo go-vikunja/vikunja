@@ -75,7 +75,7 @@ const mailTemplateHTML = `
 
 {{ if .ActionURL }}
 	<p style="color: #9CA3AF;font-size:12px;border-top: 1px solid #dbdbdb;margin-top:20px;padding-top:20px;">
-		If the button above doesn't work, copy the url below and paste it in your browsers address bar:<br/>
+		If the button above doesn't work, copy the url below and paste it in your browser's address bar:<br/>
 		{{ .ActionURL }}
 	</p>
 {{ end }}
