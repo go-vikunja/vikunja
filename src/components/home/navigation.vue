@@ -114,6 +114,7 @@ const favoriteProjects = computed(() => projectStore.favoriteProjects)
 	transform: translateX(-100%);
 	overflow-x: auto;
 	width: $navbar-width;
+	margin-top: 1rem;
 
 	@media screen and (max-width: $tablet) {
 		top: 0;
