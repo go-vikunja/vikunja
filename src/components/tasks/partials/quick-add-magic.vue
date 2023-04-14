@@ -114,9 +114,7 @@ const prefixes = computed(() => PREFIXES[mode.value])
 
 <style lang="scss" scoped>
 .show-helper-text {
-	right: 0;
 	pointer-events: auto !important;
-
 }
 
 .is-highlighted {

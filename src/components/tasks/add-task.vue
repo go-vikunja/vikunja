@@ -240,3 +240,9 @@ defineExpose({
 	text-overflow: ellipsis;
 }
 </style>
+
+<style>
+button.show-helper-text {
+	right: 0;
+}
+</style>
