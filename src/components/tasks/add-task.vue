@@ -1,7 +1,7 @@
 <template>
 	<div class="task-add" ref="taskAdd">
 		<div class="add-task__field field is-grouped">
-			<p class="control has-icons-left is-expanded">
+			<p class="control has-icons-left has-icons-right is-expanded">
 				<textarea
 					class="add-task-textarea input"
 					:class="{'textarea-empty': newTaskTitle === ''}"
