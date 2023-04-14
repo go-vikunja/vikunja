@@ -7,7 +7,7 @@
 		/>
 
 		<ColorBubble
-			v-if="showProjectColor && projectColor !== '' && currentProject.id !== task.projectId"
+			v-if="showProjectColor && projectColor !== '' && currentProject?.id !== task.projectId"
 			:color="projectColor"
 			class="mr-1"
 		/>
@@ -104,7 +104,7 @@
 		</progress>
 
 		<router-link
-			v-if="!showProject && currentProject.id !== task.projectId && project"
+			v-if="!showProject && currentProject?.id !== task.projectId && project"
 			:to="{ name: 'project.list', params: { projectId: task.projectId } }"
 			class="task-project"
 			v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"

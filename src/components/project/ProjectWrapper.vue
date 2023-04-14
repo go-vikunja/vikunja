@@ -1,6 +1,6 @@
 <template>
 	<div
-		:class="{ 'is-loading': projectService.loading, 'is-archived': currentProject.isArchived}"
+		:class="{ 'is-loading': projectService.loading, 'is-archived': currentProject?.isArchived}"
 		class="loader-container"
 	>
 		<div class="switch-view-container">
@@ -45,7 +45,7 @@
 			<slot name="header" />
 		</div>
 		<CustomTransition name="fade">
-			<Message variant="warning" v-if="currentProject.isArchived" class="mb-4">
+			<Message variant="warning" v-if="currentProject?.isArchived" class="mb-4">
 				{{ $t('project.archivedMessage') }}
 			</Message>
 		</CustomTransition>
@@ -98,7 +98,7 @@ const currentProject = computed(() => {
 		maxRight: null,
 	} : baseStore.currentProject
 })
-useTitle(() => currentProject.value.id ? getProjectTitle(currentProject.value) : '')
+useTitle(() => currentProject.value?.id ? getProjectTitle(currentProject.value) : '')
 
 // watchEffect would be called every time the prop would get a value assigned, even if that value was the same as before.
 // This resulted in loading and setting the project multiple times, even when navigating away from it.
@@ -118,7 +118,7 @@ watch(
 			(
 				projectIdToLoad === loadedProjectId.value ||
 				typeof projectIdToLoad === 'undefined' ||
-				projectIdToLoad === currentProject.value.id
+				projectIdToLoad === currentProject.value?.id
 			)
 			&& typeof currentProject.value !== 'undefined' && currentProject.value.maxRight !== null
 		) {

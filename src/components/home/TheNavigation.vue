@@ -7,7 +7,7 @@
 
 		<MenuButton class="menu-button" />
 
-		<div v-if="currentProject.id" class="project-title-wrapper">
+		<div v-if="currentProject?.id" class="project-title-wrapper">
 			<h1 class="project-title">{{ currentProject.title === '' ? $t('misc.loading') : getProjectTitle(currentProject) }}
 			</h1>
 
@@ -89,7 +89,7 @@ import { useAuthStore } from '@/stores/auth'
 const baseStore = useBaseStore()
 const currentProject = computed(() => baseStore.currentProject)
 const background = computed(() => baseStore.background)
-const canWriteCurrentProject = computed(() => baseStore.currentProject.maxRight > Rights.READ)
+const canWriteCurrentProject = computed(() => baseStore.currentProject?.maxRight > Rights.READ)
 const menuActive = computed(() => baseStore.menuActive)
 
 const authStore = useAuthStore()

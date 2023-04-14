@@ -14,7 +14,7 @@
 			<BaseButton
 				:to="{ name: 'project.index', params: { projectId: project.id} }"
 				class="list-menu-link"
-				:class="{'router-link-exact-active': currentProject.id === project.id}"
+				:class="{'router-link-exact-active': currentProject?.id === project.id}"
 			>
 				<span
 					v-if="!canCollapse || childProjects?.length === 0"

@@ -40,7 +40,7 @@ export function getSavedFilterIdFromProjectId(projectId: IProject['id']) {
 }
 
 export function isSavedFilter(project: IProject) {
-	return getSavedFilterIdFromProjectId(project.id) > 0
+	return getSavedFilterIdFromProjectId(project?.id) > 0
 }
 
 export default class SavedFilterService extends AbstractService<ISavedFilter> {

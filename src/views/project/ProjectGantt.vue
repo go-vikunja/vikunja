@@ -75,7 +75,7 @@ const GanttChart = createAsyncComponent(() => import('@/components/tasks/GanttCh
 const props = defineProps<{route: RouteLocationNormalized}>()
 
 const baseStore = useBaseStore()
-const canWrite = computed(() => baseStore.currentProject.maxRight > RIGHTS.READ)
+const canWrite = computed(() => baseStore.currentProject?.maxRight > RIGHTS.READ)
 
 const {route} = toRefs(props)
 const {

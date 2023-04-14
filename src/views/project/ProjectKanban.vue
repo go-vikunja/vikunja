@@ -330,7 +330,7 @@ const bucketDraggableComponentData = computed(() => ({
 	],
 }))
 
-const canWrite = computed(() => baseStore.currentProject.maxRight > Rights.READ)
+const canWrite = computed(() => baseStore.currentProject?.maxRight > Rights.READ)
 const project = computed(() => baseStore.currentProject)
 
 const buckets = computed(() => kanbanStore.buckets)

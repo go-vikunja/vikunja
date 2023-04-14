@@ -1,4 +1,4 @@
-import {watch, reactive, shallowReactive, unref, toRefs, readonly, ref, computed} from 'vue'
+import {watch, reactive, shallowReactive, unref, toRefs, readonly, ref, computed, watchEffect} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
@@ -44,6 +44,8 @@ export const useProjectStore = defineStore('project', () => {
 		return (id: IProject['id']) => projectsArray.value.filter(p => p.parentProjectId === id)
 	})
 
+	watchEffect(() => baseStore.setCurrentProject(projects.value[baseStore.currentProject?.id] || null))
+
 	const findProjectByExactname = computed(() => {
 		return (name: string) => {
 			const project = Object.values(projects.value).find(l => {
@@ -70,10 +72,6 @@ export const useProjectStore = defineStore('project', () => {
 	function setProject(project: IProject) {
 		projects.value[project.id] = project
 		update(project)
-
-		if (baseStore.currentProject?.id === project.id) {
-			baseStore.setCurrentProject(project)
-		}
 	}
 
 	function setProjects(newProjects: IProject[]) {
