@@ -116,9 +116,10 @@ const prefixes = computed(() => PREFIXES[mode.value])
 .show-helper-text {
 	right: 0;
 	pointer-events: auto !important;
-	
-	&.is-highlighted {
-		color: inherit !important;
-	}
+
+}
+
+.is-highlighted {
+	color: inherit !important;
 }
 </style>
