@@ -133,13 +133,13 @@ dependencies:
 devDependencies:
   '@4tw/cypress-drag-drop':
     specifier: 2.2.3
-    version: 2.2.3(cypress@12.9.0)
+    version: 2.2.3(cypress@12.10.0)
   '@cypress/vite-dev-server':
     specifier: 5.0.5
     version: 5.0.5
   '@cypress/vue':
     specifier: 5.0.5
-    version: 5.0.5(cypress@12.9.0)(vue@3.2.47)
+    version: 5.0.5(cypress@12.10.0)(vue@3.2.47)
   '@faker-js/faker':
     specifier: 7.6.0
     version: 7.6.0
@@ -216,8 +216,8 @@ devDependencies:
     specifier: 3.1.2
     version: 3.1.2
   cypress:
-    specifier: 12.9.0
-    version: 12.9.0
+    specifier: 12.10.0
+    version: 12.10.0
   esbuild:
     specifier: 0.17.17
     version: 0.17.17
@@ -293,12 +293,12 @@ devDependencies:
 
 packages:
 
-  /@4tw/cypress-drag-drop@2.2.3(cypress@12.9.0):
+  /@4tw/cypress-drag-drop@2.2.3(cypress@12.10.0):
     resolution: {integrity: sha512-ADMNoELeQdcGLPjfTJ5jWupBKU3rmQAnTqaRhuEa3hQGZ6suR49Ya5SReUrwvJnfAR4pgMcnSkqLqi1F4EPuwA==}
     peerDependencies:
       cypress: ^2.1.0 || ^3.1.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0 || ^12.0.0
     dependencies:
-      cypress: 12.9.0
+      cypress: 12.10.0
     dev: true
 
   /@akryum/tinypool@0.3.1:
@@ -1980,7 +1980,7 @@ packages:
       - supports-color
     dev: true
 
-  /@cypress/vue@5.0.5(cypress@12.9.0)(vue@3.2.47):
+  /@cypress/vue@5.0.5(cypress@12.10.0)(vue@3.2.47):
     resolution: {integrity: sha512-gjE0LKixK6XT4lPDFaEc8G6qNzm8YELgmbOiMVDxbVMuTtjYjorWQcIgzQ62uBX90/s7JrldXJ0W23gskoH4Ng==}
     engines: {node: '>=8'}
     peerDependencies:
@@ -1991,7 +1991,7 @@ packages:
       '@cypress/webpack-dev-server':
         optional: true
     dependencies:
-      cypress: 12.9.0
+      cypress: 12.10.0
       vue: 3.2.47
     dev: true
 
@@ -5895,8 +5895,8 @@ packages:
     resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
     dev: true
 
-  /commander@5.1.0:
-    resolution: {integrity: sha512-P0CysNDQ7rtVw4QIQtm+MRxV66vKFSvlsQvGYXZWR3qFU0jlMKHZZZgw8e+8DSah4UDKMqnknRDQz+xuQXQ/Zg==}
+  /commander@6.2.1:
+    resolution: {integrity: sha512-U7VdrJFnJgo4xjrHpTzu0yrHPGImdsmD95ZlgYSEajAn2JKzDhDTPG9kBTefmObL2w/ngeZnilk+OV9CG3d7UA==}
     engines: {node: '>= 6'}
     dev: true
 
@@ -6309,8 +6309,8 @@ packages:
     resolution: {integrity: sha512-NJGVKPS81XejHcLhaLJS7plab0fK3slPh11mESeeDq2W4ZI5kUKK/LRRdVDvjJseojbPB7ZwjnyOybg3Igea/A==}
     dev: true
 
-  /cypress@12.9.0:
-    resolution: {integrity: sha512-Ofe09LbHKgSqX89Iy1xen2WvpgbvNxDzsWx3mgU1mfILouELeXYGwIib3ItCwoRrRifoQwcBFmY54Vs0zw7QCg==}
+  /cypress@12.10.0:
+    resolution: {integrity: sha512-Y0wPc221xKKW1/4iAFCphkrG2jNR4MjOne3iGn4mcuCaE7Y5EtXL83N8BzRsAht7GYfWVjJ/UeTqEdDKHz39HQ==}
     engines: {node: ^14.0.0 || ^16.0.0 || >=18.0.0}
     hasBin: true
     requiresBuild: true
@@ -6329,7 +6329,7 @@ packages:
       check-more-types: 2.24.0
       cli-cursor: 3.1.0
       cli-table3: 0.6.1
-      commander: 5.1.0
+      commander: 6.2.1
       common-tags: 1.8.2
       dayjs: 1.11.7
       debug: 4.3.4(supports-color@8.1.1)
@@ -6347,7 +6347,7 @@ packages:
       listr2: 3.14.0(enquirer@2.3.6)
       lodash: 4.17.21
       log-symbols: 4.1.0
-      minimist: 1.2.7
+      minimist: 1.2.8
       ospath: 1.2.2
       pretty-bytes: 5.6.0
       proxy-from-env: 1.0.0
@@ -8358,7 +8358,7 @@ packages:
     engines: {node: '>=0.6.0'}
     hasBin: true
     dependencies:
-      minimist: 1.2.7
+      minimist: 1.2.8
     dev: true
 
   /got@11.8.6:
@@ -10461,6 +10461,10 @@ packages:
     resolution: {integrity: sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g==}
     dev: true
 
+  /minimist@1.2.8:
+    resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
+    dev: true
+
   /minipass@3.1.6:
     resolution: {integrity: sha512-rty5kpw9/z8SX9dmxblFA6edItUmwJgMeYDZRrwlIVN27i8gysGbznJwUggw2V/FVqFSDdWy040ZPS811DYAqQ==}
     engines: {node: '>=8'}
@@ -10492,7 +10496,7 @@ packages:
     resolution: {integrity: sha512-NKmAlESf6jMGym1++R0Ra7wvhV+wFW63FaSOFPwRahvea0gMUcGUhVeAg/0BC0wiv9ih5NYPB1Wn1UEI1/L+xQ==}
     hasBin: true
     dependencies:
-      minimist: 1.2.7
+      minimist: 1.2.8
     dev: true
 
   /mkdirp@1.0.4:
@@ -12135,7 +12139,7 @@ packages:
     hasBin: true
     dependencies:
       colors: 1.4.0
-      minimist: 1.2.7
+      minimist: 1.2.8
     dev: true
 
   /printj@1.3.1:
@@ -12348,7 +12352,7 @@ packages:
     dependencies:
       deep-extend: 0.6.0
       ini: 1.3.8
-      minimist: 1.2.7
+      minimist: 1.2.8
       strip-json-comments: 2.0.1
     dev: true
 
@@ -13580,7 +13584,7 @@ packages:
       debug: 4.3.4(supports-color@9.2.1)
       es6-promisify: 6.1.1
       inquirer: 6.5.2
-      minimist: 1.2.7
+      minimist: 1.2.8
       mkdirp: 0.5.5
       untildify: 3.0.3
     transitivePeerDependencies:
