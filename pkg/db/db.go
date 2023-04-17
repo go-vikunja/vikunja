@@ -114,7 +114,7 @@ func initMysqlEngine() (engine *xorm.Engine, err error) {
 	// See https://stackoverflow.com/a/30074553/10924593 for more info.
 	host := fmt.Sprintf("tcp(%s)", config.DatabaseHost.GetString())
 	if config.DatabaseHost.GetString()[0] == '/' { // looks like a unix socket
-		host = config.DatabaseHost.GetString()
+		host = fmt.Sprintf("unix(%s)", config.DatabaseHost.GetString())
 	}
 
 	connStr := fmt.Sprintf(
