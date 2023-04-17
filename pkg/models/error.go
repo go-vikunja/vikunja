@@ -1709,3 +1709,29 @@ func (err ErrLinkSharePasswordInvalid) HTTPError() web.HTTPError {
 		Message:  "The provided link share password is invalid.",
 	}
 }
+
+// ErrLinkShareTokenInvalid represents an error where a link share token is invalid
+type ErrLinkShareTokenInvalid struct {
+}
+
+// IsErrLinkShareTokenInvalid checks if an error is ErrLinkShareTokenInvalid.
+func IsErrLinkShareTokenInvalid(err error) bool {
+	_, ok := err.(*ErrLinkShareTokenInvalid)
+	return ok
+}
+
+func (err *ErrLinkShareTokenInvalid) Error() string {
+	return "Provided Link Share Token is invalid"
+}
+
+// ErrCodeLinkShareTokenInvalid holds the unique world-error code of this error
+const ErrCodeLinkShareTokenInvalid = 13003
+
+// HTTPError holds the http error description
+func (err ErrLinkShareTokenInvalid) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeLinkShareTokenInvalid,
+		Message:  "The provided link share token is invalid.",
+	}
+}

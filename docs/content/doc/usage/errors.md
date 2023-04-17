@@ -162,7 +162,8 @@ This document describes the different errors Vikunja can return.
 
 ## Link Shares
 
-| ErrorCode | HTTP Status Code | Description |
-|-----------|------------------|-------------|
+| ErrorCode | HTTP Status Code | Description                                                                    |
+|-----------|------------------|--------------------------------------------------------------------------------|
 | 13001 | 412 | This link share requires a password for authentication, but none was provided. |
-| 13002 | 403 | The provided link share password was invalid. |
+| 13002 | 403 | The provided link share password is invalid.                                   |
+| 13003 | 400 | The provided link share token is invalid.                                      |

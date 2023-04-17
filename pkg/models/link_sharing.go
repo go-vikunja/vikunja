@@ -86,10 +86,15 @@ func (share *LinkSharing) GetID() int64 {
 
 // GetLinkShareFromClaims builds a link sharing object from jwt claims
 func GetLinkShareFromClaims(claims jwt.MapClaims) (share *LinkSharing, err error) {
+	projectID, is := claims["project_id"].(float64)
+	if !is {
+		return nil, &ErrLinkShareTokenInvalid{}
+	}
+
 	share = &LinkSharing{}
 	share.ID = int64(claims["id"].(float64))
 	share.Hash = claims["hash"].(string)
-	share.ProjectID = int64(claims["project_id"].(float64))
+	share.ProjectID = int64(projectID)
 	share.Right = Right(claims["right"].(float64))
 	share.SharedByID = int64(claims["sharedByID"].(float64))
 	return
