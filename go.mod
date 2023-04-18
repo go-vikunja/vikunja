@@ -35,7 +35,6 @@ require (
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/go-testfixtures/testfixtures/v3 v3.8.1
 	github.com/gocarina/gocsv v0.0.0-20230406101422-6445c2b15027
-	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/google/uuid v1.3.0
@@ -102,6 +101,7 @@ require (
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/goccy/go-json v0.9.11 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
+	github.com/golang-jwt/jwt/v4 v4.4.3 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
@@ -139,6 +139,7 @@ require (
 	github.com/urfave/cli/v2 v2.3.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
+	github.com/yosssi/gohtml v0.0.0-20201013000340-ee4748c638f4 // indirect
 	golang.org/x/mod v0.9.0 // indirect
 	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/text v0.9.0 // indirect

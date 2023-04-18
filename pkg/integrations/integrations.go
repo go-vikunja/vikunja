@@ -37,7 +37,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"code.vikunja.io/web/handler"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )

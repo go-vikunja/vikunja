@@ -19,15 +19,14 @@ package v1
 import (
 	"net/http"
 
-	"code.vikunja.io/api/pkg/modules/keyvalue"
-
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
