@@ -26,11 +26,9 @@
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import BaseButton from '@/components/base/BaseButton.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import ProjectCardGrid from '@/components/project/partials/ProjectCardGrid.vue'
 
-import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {useTitle} from '@/composables/useTitle'
 import {useStorage} from '@vueuse/core'
 

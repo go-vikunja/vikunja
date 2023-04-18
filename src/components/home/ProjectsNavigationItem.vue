@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, watch, ref} from 'vue'
+import {computed, ref} from 'vue'
 import {useProjectStore} from '@/stores/projects'
 import {useBaseStore} from '@/stores/base'
 

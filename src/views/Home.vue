@@ -57,7 +57,6 @@ import {useProjectStore} from '@/stores/projects'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
-import type {IProject} from '@/modelTypes/IProject'
 
 const salutation = useDaytimeSalutation()
 

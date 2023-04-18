@@ -44,7 +44,6 @@
 <script setup lang="ts">
 import {ref, reactive, shallowReactive, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useRouter, useRoute} from 'vue-router'
 
 import ProjectService from '@/services/project'
 import ProjectModel from '@/models/project'
@@ -58,8 +57,6 @@ import ProjectSearch from '@/components/tasks/partials/projectSearch.vue'
 import type {IProject} from '@/modelTypes/IProject'
 
 const {t} = useI18n({useScope: 'global'})
-const router = useRouter()
-const route = useRoute()
 
 useTitle(() => t('project.create.header'))
 

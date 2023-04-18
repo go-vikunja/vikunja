@@ -1,4 +1,4 @@
-import {watch, reactive, shallowReactive, unref, toRefs, readonly, ref, computed, watchEffect} from 'vue'
+import {watch, reactive, shallowReactive, unref, readonly, ref, computed, watchEffect} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
@@ -18,7 +18,7 @@ import ProjectModel from '@/models/project'
 import {success} from '@/message'
 import {useBaseStore} from '@/stores/base'
 
-const {add, remove, search, update} = createNewIndexer('projects', ['title', 'description'])
+const {remove, search, update} = createNewIndexer('projects', ['title', 'description'])
 
 export interface ProjectState {
 	[id: IProject['id']]: IProject

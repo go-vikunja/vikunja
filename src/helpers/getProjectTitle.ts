@@ -1,6 +1,5 @@
 import {i18n} from '@/i18n'
 import type {IProject} from '@/modelTypes/IProject'
-import {useProjectStore} from '@/stores/projects'
 
 export function getProjectTitle(project: IProject) {
 	if (project.id === -1) {

@@ -14,7 +14,7 @@
 				ref="heading"
 			/>
 			<h6 class="subtitle" v-if="project?.id">
-				<template v-for="p in projectStore.getAncestors(project)">
+				<template v-for="p in projectStore.getAncestors(project)" :key="p.id">
 					<router-link :to="{ name: 'project.index', params: { projectId: p.id } }">
 						{{ getProjectTitle(p) }}
 					</router-link>

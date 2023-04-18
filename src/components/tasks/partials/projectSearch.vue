@@ -22,7 +22,6 @@
 <script lang="ts" setup>
 import {reactive, ref, watch} from 'vue'
 import type {PropType} from 'vue'
-import {useI18n} from 'vue-i18n'
 
 import type {IProject} from '@/modelTypes/IProject'
 
@@ -40,8 +39,6 @@ const props = defineProps({
 	},
 })
 const emit = defineEmits(['update:modelValue'])
-
-const {t} = useI18n({useScope: 'global'})
 
 const project: IProject = reactive(new ProjectModel())
 

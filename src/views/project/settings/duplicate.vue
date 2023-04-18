@@ -13,7 +13,7 @@
 
 <script setup lang="ts">
 import {ref, watch} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
+import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import CreateEdit from '@/components/misc/create-edit.vue'
@@ -28,7 +28,6 @@ const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('project.duplicate.title'))
 
 const route = useRoute()
-const router = useRouter()
 const projectStore = useProjectStore()
 
 const {project, isLoading, duplicateProject} = useProject(route.params.projectId)

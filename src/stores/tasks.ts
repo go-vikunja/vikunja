@@ -464,6 +464,7 @@ export const useTaskStore = defineStore('task', () => {
 		setCoverImage,
 		findProjectId,
 		ensureLabelsExist,
+		toggleFavorite,
 	}
 })
 
