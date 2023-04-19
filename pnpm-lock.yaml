@@ -40,8 +40,8 @@ dependencies:
     specifier: 10.0.2
     version: 10.0.2(vue@3.2.47)
   axios:
-    specifier: 1.3.5
-    version: 1.3.5
+    specifier: 1.3.6
+    version: 1.3.6
   blurhash:
     specifier: 2.0.5
     version: 2.0.5
@@ -5037,8 +5037,8 @@ packages:
       - debug
     dev: true
 
-  /axios@1.3.5:
-    resolution: {integrity: sha512-glL/PvG/E+xCWwV8S6nCHcrfg1exGx7vxyUIivIA1iL7BIh6bePylCfVHwp6k13ao7SATxB6imau2kqY+I67kw==}
+  /axios@1.3.6:
+    resolution: {integrity: sha512-PEcdkk7JcdPiMDkvM4K6ZBRYq9keuVJsToxm2zQIM70Qqo2WHTdJZMXcG9X+RmRp2VPNUQC8W1RAGbgt6b1yMg==}
     dependencies:
       follow-redirects: 1.15.1(debug@4.3.4)
       form-data: 4.0.0
