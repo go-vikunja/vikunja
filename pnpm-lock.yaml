@@ -26,7 +26,7 @@ dependencies:
     version: 2.1.4(dayjs@1.11.7)(vue@3.2.47)
   '@intlify/unplugin-vue-i18n':
     specifier: 0.10.0
-    version: 0.10.0(rollup@3.20.6)(vue-i18n@9.2.2)
+    version: 0.10.0(rollup@3.20.7)(vue-i18n@9.2.2)
   '@kyvg/vue3-notification':
     specifier: 2.9.0
     version: 2.9.0(vue@3.2.47)
@@ -252,11 +252,11 @@ devDependencies:
     specifier: 8.3.2
     version: 8.3.2(postcss@8.4.23)
   rollup:
-    specifier: 3.20.6
-    version: 3.20.6
+    specifier: 3.20.7
+    version: 3.20.7
   rollup-plugin-visualizer:
     specifier: 5.9.0
-    version: 5.9.0(rollup@3.20.6)
+    version: 5.9.0(rollup@3.20.7)
   sass:
     specifier: 1.62.0
     version: 1.62.0
@@ -2570,7 +2570,7 @@ packages:
     engines: {node: '>= 14'}
     dev: false
 
-  /@intlify/unplugin-vue-i18n@0.10.0(rollup@3.20.6)(vue-i18n@9.2.2):
+  /@intlify/unplugin-vue-i18n@0.10.0(rollup@3.20.7)(vue-i18n@9.2.2):
     resolution: {integrity: sha512-Sf8fe26/d8rBNcg+zBSb7RA1uyhrG9zhIM+CRX6lqcznMDjLRr/1tuVaJ9E6xqJkzjfPgRzNcCqwMt6rpNkL7Q==}
     engines: {node: '>= 14.16'}
     peerDependencies:
@@ -2587,7 +2587,7 @@ packages:
     dependencies:
       '@intlify/bundle-utils': 5.4.0(vue-i18n@9.2.2)
       '@intlify/shared': 9.3.0-beta.17
-      '@rollup/pluginutils': 5.0.2(rollup@3.20.6)
+      '@rollup/pluginutils': 5.0.2(rollup@3.20.7)
       '@vue/compiler-sfc': 3.2.47
       debug: 4.3.4(supports-color@9.2.1)
       fast-glob: 3.2.12
@@ -3526,7 +3526,7 @@ packages:
       rollup: 2.79.1
     dev: true
 
-  /@rollup/plugin-replace@5.0.1(rollup@3.20.6):
+  /@rollup/plugin-replace@5.0.1(rollup@3.20.7):
     resolution: {integrity: sha512-Z3MfsJ4CK17BfGrZgvrcp/l6WXoKb0kokULO+zt/7bmcyayokDaQ2K3eDJcRLCTAlp5FPI4/gz9MHAsosz4Rag==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -3535,9 +3535,9 @@ packages:
       rollup:
         optional: true
     dependencies:
-      '@rollup/pluginutils': 5.0.2(rollup@3.20.6)
+      '@rollup/pluginutils': 5.0.2(rollup@3.20.7)
       magic-string: 0.26.7
-      rollup: 3.20.6
+      rollup: 3.20.7
     dev: true
 
   /@rollup/pluginutils@3.1.0(rollup@2.79.1):
@@ -3552,7 +3552,7 @@ packages:
       rollup: 2.79.1
     dev: true
 
-  /@rollup/pluginutils@5.0.2(rollup@3.20.6):
+  /@rollup/pluginutils@5.0.2(rollup@3.20.7):
     resolution: {integrity: sha512-pTd9rIsP92h+B6wWwFbW8RkZv4hiR/xKsqre4SIuAOaOEQRxi0lqLke9k2/7WegC85GgUs9pjmOjCUi3In4vwA==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -3564,7 +3564,7 @@ packages:
       '@types/estree': 1.0.0
       estree-walker: 2.0.2
       picomatch: 2.3.1
-      rollup: 3.20.6
+      rollup: 3.20.7
 
   /@rushstack/eslint-patch@1.2.0:
     resolution: {integrity: sha512-sXo/qW2/pAcmT43VoRKOJbDOfV3cYpq3szSVfIThQXNt+E4DfKj361vaAt3c88U5tPUxzEswam7GW48PJqtKAg==}
@@ -12714,7 +12714,7 @@ packages:
       - acorn
     dev: true
 
-  /rollup-plugin-visualizer@5.9.0(rollup@3.20.6):
+  /rollup-plugin-visualizer@5.9.0(rollup@3.20.7):
     resolution: {integrity: sha512-bbDOv47+Bw4C/cgs0czZqfm8L82xOZssk4ayZjG40y9zbXclNk7YikrZTDao6p7+HDiGxrN0b65SgZiVm9k1Cg==}
     engines: {node: '>=14'}
     hasBin: true
@@ -12726,7 +12726,7 @@ packages:
     dependencies:
       open: 8.4.0
       picomatch: 2.3.1
-      rollup: 3.20.6
+      rollup: 3.20.7
       source-map: 0.7.4
       yargs: 17.6.0
     dev: true
@@ -12745,8 +12745,8 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /rollup@3.20.6:
-    resolution: {integrity: sha512-2yEB3nQXp/tBQDN0hJScJQheXdvU2wFhh6ld7K/aiZ1vYcak6N/BKjY1QrU6BvO2JWYS8bEs14FRaxXosxy2zw==}
+  /rollup@3.20.7:
+    resolution: {integrity: sha512-P7E2zezKSLhWnTz46XxjSmInrbOCiul1yf+kJccMxT56vxjHwCbDfoLbiqFgu+WQoo9ij2PkraYaBstgB2prBA==}
     engines: {node: '>=14.18.0', npm: '>=8.0.0'}
     hasBin: true
     optionalDependencies:
@@ -14435,11 +14435,11 @@ packages:
       workbox-build: ^6.5.4
       workbox-window: ^6.5.4
     dependencies:
-      '@rollup/plugin-replace': 5.0.1(rollup@3.20.6)
+      '@rollup/plugin-replace': 5.0.1(rollup@3.20.7)
       debug: 4.3.4(supports-color@9.2.1)
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
-      rollup: 3.20.6
+      rollup: 3.20.7
       vite: 4.3.1(@types/node@18.15.12)(sass@1.62.0)(terser@5.10.0)
       workbox-build: 6.5.4(acorn@7.4.1)
       workbox-window: 6.5.4
@@ -14482,7 +14482,7 @@ packages:
       '@types/node': 18.15.12
       esbuild: 0.17.17
       postcss: 8.4.23
-      rollup: 3.20.6
+      rollup: 3.20.7
       sass: 1.62.0
       terser: 5.10.0(acorn@7.4.1)
     optionalDependencies:
