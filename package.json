@@ -55,7 +55,7 @@
     "@kyvg/vue3-notification": "2.9.0",
     "@sentry/tracing": "7.49.0",
     "@sentry/vue": "7.49.0",
-    "@vueuse/core": "10.0.2",
+    "@vueuse/core": "10.1.0",
     "axios": "1.3.6",
     "blurhash": "2.0.5",
     "bulma-css-variables": "0.9.33",
