@@ -192,8 +192,8 @@ devDependencies:
     specifier: 4.2.0
     version: 4.2.0(vite@4.3.1)(vue@3.2.47)
   '@vue/eslint-config-typescript':
-    specifier: 11.0.2
-    version: 11.0.2(eslint-plugin-vue@9.11.0)(eslint@8.39.0)(typescript@5.0.4)
+    specifier: 11.0.3
+    version: 11.0.3(eslint-plugin-vue@9.11.0)(eslint@8.39.0)(typescript@5.0.4)
   '@vue/test-utils':
     specifier: 2.3.2
     version: 2.3.2(vue@3.2.47)
@@ -4375,8 +4375,8 @@ packages:
     resolution: {integrity: sha512-o9KfBeaBmCKl10usN4crU53fYtC1r7jJwdGKjPT24t348rHxgfpZ0xL3Xm/gLUYnc0oTp8LAmrxOeLyu6tbk2Q==}
     dev: false
 
-  /@vue/eslint-config-typescript@11.0.2(eslint-plugin-vue@9.11.0)(eslint@8.39.0)(typescript@5.0.4):
-    resolution: {integrity: sha512-EiKud1NqlWmSapBFkeSrE994qpKx7/27uCGnhdqzllYDpQZroyX/O6bwjEpeuyKamvLbsGdO6PMR2faIf+zFnw==}
+  /@vue/eslint-config-typescript@11.0.3(eslint-plugin-vue@9.11.0)(eslint@8.39.0)(typescript@5.0.4):
+    resolution: {integrity: sha512-dkt6W0PX6H/4Xuxg/BlFj5xHvksjpSlVjtkQCpaYJBIEuKj2hOVU7r+TIe+ysCwRYFz/lGqvklntRkCAibsbPw==}
     engines: {node: ^14.17.0 || >=16.0.0}
     peerDependencies:
       eslint: ^6.2.0 || ^7.0.0 || ^8.0.0
@@ -4391,7 +4391,7 @@ packages:
       eslint: 8.39.0
       eslint-plugin-vue: 9.11.0(eslint@8.39.0)
       typescript: 5.0.4
-      vue-eslint-parser: 9.0.3(eslint@8.39.0)
+      vue-eslint-parser: 9.1.1(eslint@8.39.0)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -14566,6 +14566,24 @@ packages:
       debug: 4.3.4(supports-color@9.2.1)
       eslint: 8.39.0
       eslint-scope: 7.1.1
+      eslint-visitor-keys: 3.4.0
+      espree: 9.5.1
+      esquery: 1.4.2
+      lodash: 4.17.21
+      semver: 7.3.8
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
+  /vue-eslint-parser@9.1.1(eslint@8.39.0):
+    resolution: {integrity: sha512-C2aI/r85Q6tYcz4dpgvrs4wH/MqVrRAVIdpYedrxnATDHHkb+TroeRcDpKWGZCx/OcECMWfz7tVwQ8e+Opy6rA==}
+    engines: {node: ^14.17.0 || >=16.0.0}
+    peerDependencies:
+      eslint: '>=6.0.0'
+    dependencies:
+      debug: 4.3.4(supports-color@9.2.1)
+      eslint: 8.39.0
+      eslint-scope: 7.2.0
       eslint-visitor-keys: 3.4.0
       espree: 9.5.1
       esquery: 1.4.2
