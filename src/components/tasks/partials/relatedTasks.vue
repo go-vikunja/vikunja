@@ -442,5 +442,6 @@ async function toggleTaskDone(task: ITask) {
 .task-done-checkbox {
 	padding: 0;
 	height: 18px; // The exact height of the checkbox in the container
+	margin-right: .75rem;
 }
 </style>
