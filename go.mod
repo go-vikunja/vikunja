@@ -32,7 +32,7 @@ require (
 	github.com/dustinkirkland/golang-petname v0.0.0-20191129215211-8e5a1ed0cff0
 	github.com/gabriel-vasile/mimetype v1.4.2
 	github.com/getsentry/sentry-go v0.20.0
-	github.com/go-sql-driver/mysql v1.7.0
+	github.com/go-sql-driver/mysql v1.7.1
 	github.com/go-testfixtures/testfixtures/v3 v3.8.1
 	github.com/gocarina/gocsv v0.0.0-20230406101422-6445c2b15027
 	github.com/golang-jwt/jwt/v4 v4.5.0
