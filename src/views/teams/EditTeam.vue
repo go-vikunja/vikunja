@@ -73,7 +73,11 @@
 							:search-results="foundUsers"
 							label="username"
 							v-model="newMember"
-						/>
+						>
+							<template #searchResult="{option: user}">
+								<User :avatar-size="24" :user="user" class="m-0"/>
+							</template>
+						</multiselect>
 					</div>
 					<div class="control">
 						<x-button @click="addUser" icon="plus">
@@ -88,7 +92,9 @@
 			<table class="table has-actions is-striped is-hoverable is-fullwidth">
 				<tbody>
 				<tr :key="m.id" v-for="m in team?.members">
-					<td>{{ getDisplayName(m) }}</td>
+					<td>
+						<User :avatar-size="24" :user="m" class="m-0"/>
+					</td>
 					<td>
 						<template v-if="m.id === userInfo.id">
 							<b class="is-success">You</b>
@@ -185,6 +191,7 @@ import {useRoute, useRouter} from 'vue-router'
 
 import Editor from '@/components/input/AsyncEditor'
 import Multiselect from '@/components/input/multiselect.vue'
+import User from '@/components/misc/user.vue'
 
 import TeamService from '@/services/team'
 import TeamMemberService from '@/services/teamMember'
