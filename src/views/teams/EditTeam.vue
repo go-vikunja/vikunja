@@ -201,7 +201,6 @@ import {RIGHTS as Rights} from '@/constants/rights'
 
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
-import {getDisplayName} from '@/models/user'
 import {useAuthStore} from '@/stores/auth'
 
 import type {ITeam} from '@/modelTypes/ITeam'
