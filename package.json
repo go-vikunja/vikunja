@@ -130,7 +130,7 @@
     "postcss-preset-env": "8.3.2",
     "rollup": "3.21.0",
     "rollup-plugin-visualizer": "5.9.0",
-    "sass": "1.62.0",
+    "sass": "1.62.1",
     "start-server-and-test": "2.0.0",
     "typescript": "5.0.4",
     "vite": "4.3.2",
