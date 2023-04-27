@@ -52,8 +52,8 @@ dependencies:
     specifier: 4.1.2
     version: 4.1.2
   codemirror:
-    specifier: 5.65.12
-    version: 5.65.12
+    specifier: 5.65.13
+    version: 5.65.13
   date-fns:
     specifier: 2.29.3
     version: 2.29.3
@@ -5761,8 +5761,8 @@ packages:
       typo-js: 1.2.1
     dev: false
 
-  /codemirror@5.65.12:
-    resolution: {integrity: sha512-z2jlHBocElRnPYysN2HAuhXbO3DNB0bcSKmNz3hcWR2Js2Dkhc1bEOxG93Z3DeUrnm+qx56XOY5wQmbP5KY0sw==}
+  /codemirror@5.65.13:
+    resolution: {integrity: sha512-SVWEzKXmbHmTQQWaz03Shrh4nybG0wXx2MEu3FO4ezbPW8IbnZEd5iGHGEffSUaitKYa3i+pHpBsSvw8sPHtzg==}
     dev: false
 
   /collection-visit@1.0.0:
@@ -6905,7 +6905,7 @@ packages:
     dependencies:
       '@types/codemirror': 5.60.7
       '@types/marked': 4.0.8
-      codemirror: 5.65.12
+      codemirror: 5.65.13
       codemirror-spell-checker: 1.1.2
       marked: 4.3.0
     dev: false
