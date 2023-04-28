@@ -1,5 +1,5 @@
 {
-  "extends": "@vue/tsconfig/tsconfig.web.json",
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
   "include": ["./**/*", "../support/**/*", "../factories/**/*"],
   "compilerOptions": {
     "baseUrl": ".",
