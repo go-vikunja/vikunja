@@ -95,7 +95,7 @@
     "@histoire/plugin-screenshot": "0.16.1",
     "@histoire/plugin-vue": "0.16.1",
     "@rushstack/eslint-patch": "1.2.0",
-    "@tsconfig/node18": "^2.0.0",
+    "@tsconfig/node18": "2.0.0",
     "@types/codemirror": "5.60.7",
     "@types/dompurify": "3.0.2",
     "@types/flexsearch": "0.7.3",
