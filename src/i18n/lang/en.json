@@ -240,7 +240,7 @@
         "namePlaceholder": "e.g. Lorem Ipsum",
         "nameExplanation": "All actions done by this link share will show up with the name.",
         "password": "Password (optional)",
-        "passwordExplanation": "When authenticating, the user will be required to enter this password.",
+        "passwordExplanation": "When signing in, the user will be required to enter this password.",
         "noName": "No name set",
         "remove": "Remove a link share",
         "removeText": "Are you sure you want to remove this link share? It will no longer be possible to access this project with this link share. This cannot be undone!",
