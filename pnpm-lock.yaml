@@ -148,7 +148,7 @@ devDependencies:
     version: 0.16.1(histoire@0.16.1)
   '@histoire/plugin-vue':
     specifier: 0.16.1
-    version: 0.16.1(histoire@0.16.1)(vite@4.3.3)(vue@3.2.47)
+    version: 0.16.1(histoire@0.16.1)(vite@4.3.4)(vue@3.2.47)
   '@rushstack/eslint-patch':
     specifier: 1.2.0
     version: 1.2.0
@@ -190,10 +190,10 @@ devDependencies:
     version: 5.59.2(eslint@8.39.0)(typescript@5.0.4)
   '@vitejs/plugin-legacy':
     specifier: 4.0.3
-    version: 4.0.3(terser@5.10.0)(vite@4.3.3)
+    version: 4.0.3(terser@5.10.0)(vite@4.3.4)
   '@vitejs/plugin-vue':
     specifier: 4.2.1
-    version: 4.2.1(vite@4.3.3)(vue@3.2.47)
+    version: 4.2.1(vite@4.3.4)(vue@3.2.47)
   '@vue/eslint-config-typescript':
     specifier: 11.0.3
     version: 11.0.3(eslint-plugin-vue@9.11.0)(eslint@8.39.0)(typescript@5.0.4)
@@ -235,7 +235,7 @@ devDependencies:
     version: 9.10.1
   histoire:
     specifier: 0.16.1
-    version: 0.16.1(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)(vite@4.3.3)
+    version: 0.16.1(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)(vite@4.3.4)
   netlify-cli:
     specifier: 14.3.1
     version: 14.3.1(@types/node@18.16.3)
@@ -270,14 +270,14 @@ devDependencies:
     specifier: 5.0.4
     version: 5.0.4
   vite:
-    specifier: 4.3.3
-    version: 4.3.3(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
+    specifier: 4.3.4
+    version: 4.3.4(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
   vite-plugin-inject-preload:
     specifier: 1.3.1
-    version: 1.3.1(vite@4.3.3)
+    version: 1.3.1(vite@4.3.4)
   vite-plugin-pwa:
     specifier: 0.14.7
-    version: 0.14.7(vite@4.3.3)(workbox-build@6.5.4)(workbox-window@6.5.4)
+    version: 0.14.7(vite@4.3.4)(workbox-build@6.5.4)(workbox-window@6.5.4)
   vite-svg-loader:
     specifier: 4.0.0
     version: 4.0.0
@@ -2402,11 +2402,11 @@ packages:
       '@hapi/hoek': 9.2.1
     dev: true
 
-  /@histoire/app@0.16.1(vite@4.3.3):
+  /@histoire/app@0.16.1(vite@4.3.4):
     resolution: {integrity: sha512-13komnhVk1Pk0wMmkJKDPWT8RKpA5HfAbeeXSHAq29pvFP9Faq+dAa62g1wqOpoyJD5C7SkI0OPI3eJwJHgTiQ==}
     dependencies:
-      '@histoire/controls': 0.16.1(vite@4.3.3)
-      '@histoire/shared': 0.16.1(vite@4.3.3)
+      '@histoire/controls': 0.16.1(vite@4.3.4)
+      '@histoire/shared': 0.16.1(vite@4.3.4)
       '@histoire/vendors': 0.16.0
       '@types/flexsearch': 0.7.3
       flexsearch: 0.7.21
@@ -2415,7 +2415,7 @@ packages:
       - vite
     dev: true
 
-  /@histoire/controls@0.16.1(vite@4.3.3):
+  /@histoire/controls@0.16.1(vite@4.3.4):
     resolution: {integrity: sha512-Ot/J/LPzUexn+fLrJrWu3jUakx9aVSJWKnriiJSmEodAxJq+4mrprX3xS0bnzieud19pJc3mzC/MSD94urTbHA==}
     dependencies:
       '@codemirror/commands': 6.1.3
@@ -2425,7 +2425,7 @@ packages:
       '@codemirror/state': 6.2.0
       '@codemirror/theme-one-dark': 6.1.0
       '@codemirror/view': 6.7.2
-      '@histoire/shared': 0.16.1(vite@4.3.3)
+      '@histoire/shared': 0.16.1(vite@4.3.4)
       '@histoire/vendors': 0.16.0
     transitivePeerDependencies:
       - vite
@@ -2439,7 +2439,7 @@ packages:
       capture-website: 2.4.1
       defu: 6.1.1
       fs-extra: 10.1.0
-      histoire: 0.16.1(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)(vite@4.3.3)
+      histoire: 0.16.1(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)(vite@4.3.4)
       pathe: 0.2.0
     transitivePeerDependencies:
       - bufferutil
@@ -2448,18 +2448,18 @@ packages:
       - utf-8-validate
     dev: true
 
-  /@histoire/plugin-vue@0.16.1(histoire@0.16.1)(vite@4.3.3)(vue@3.2.47):
+  /@histoire/plugin-vue@0.16.1(histoire@0.16.1)(vite@4.3.4)(vue@3.2.47):
     resolution: {integrity: sha512-K7ZZl5tA8PWHjQsWFmFX3xa4HlRs+S8+nxym1Smh4dudQ6XSVwdF+gsPQ+RE4zwf6YQ8HDPsvOobI31dz6F4Tg==}
     peerDependencies:
       histoire: ^0.16.1
       vue: ^3.2.47
     dependencies:
-      '@histoire/controls': 0.16.1(vite@4.3.3)
-      '@histoire/shared': 0.16.1(vite@4.3.3)
+      '@histoire/controls': 0.16.1(vite@4.3.4)
+      '@histoire/shared': 0.16.1(vite@4.3.4)
       '@histoire/vendors': 0.16.0
       change-case: 4.1.2
       globby: 13.1.2
-      histoire: 0.16.1(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)(vite@4.3.3)
+      histoire: 0.16.1(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)(vite@4.3.4)
       launch-editor: 2.6.0
       pathe: 0.2.0
       vue: 3.2.47
@@ -2467,7 +2467,7 @@ packages:
       - vite
     dev: true
 
-  /@histoire/shared@0.16.1(vite@4.3.3):
+  /@histoire/shared@0.16.1(vite@4.3.4):
     resolution: {integrity: sha512-bcySHGC6kcZ1U9OZUcBQCROTBygTZ9T9MlqfeGtBtJWXGdmHPZ/64elZOY36O8gUAMF89Q08EIVe5cIQ0SJ3Uw==}
     peerDependencies:
       vite: ^2.9.0 || ^3.0.0 || ^4.0.0
@@ -2478,7 +2478,7 @@ packages:
       chokidar: 3.5.3
       pathe: 0.2.0
       picocolors: 1.0.0
-      vite: 4.3.3(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
+      vite: 4.3.4(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
     dev: true
 
   /@histoire/vendors@0.16.0:
@@ -4214,7 +4214,7 @@ packages:
       - supports-color
     dev: true
 
-  /@vitejs/plugin-legacy@4.0.3(terser@5.10.0)(vite@4.3.3):
+  /@vitejs/plugin-legacy@4.0.3(terser@5.10.0)(vite@4.3.4):
     resolution: {integrity: sha512-RqDQOSEmFSNL42vITkNp8HE8Ak1yjGgaav4B6BGcZ8/URK0wikzwSyhNRirHDkp+snflEEk7iPZXTXUYA9exbg==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
@@ -4229,19 +4229,19 @@ packages:
       regenerator-runtime: 0.13.11
       systemjs: 6.14.0
       terser: 5.10.0(acorn@7.4.1)
-      vite: 4.3.3(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
+      vite: 4.3.4(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /@vitejs/plugin-vue@4.2.1(vite@4.3.3)(vue@3.2.47):
+  /@vitejs/plugin-vue@4.2.1(vite@4.3.4)(vue@3.2.47):
     resolution: {integrity: sha512-ZTZjzo7bmxTRTkb8GSTwkPOYDIP7pwuyV+RV53c9PYUouwcbkIZIvWvNWlX2b1dYZqtOv7D6iUAnJLVNGcLrSw==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^4.0.0
       vue: ^3.2.25
     dependencies:
-      vite: 4.3.3(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
+      vite: 4.3.4(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
       vue: 3.2.47
     dev: true
 
@@ -8654,16 +8654,16 @@ packages:
     engines: {node: '>=12.0.0'}
     dev: false
 
-  /histoire@0.16.1(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)(vite@4.3.3):
+  /histoire@0.16.1(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)(vite@4.3.4):
     resolution: {integrity: sha512-TIzJ0Wqe8epfTYMd7yuS0Zcuy86ysJ5t4p6qt0zjHAinoNgEH2M9biHtuKQzd96/QuUy3oc2dcXiFLFSZGdSyw==}
     hasBin: true
     peerDependencies:
       vite: ^2.9.0 || ^3.0.0 || ^4.0.0
     dependencies:
       '@akryum/tinypool': 0.3.1
-      '@histoire/app': 0.16.1(vite@4.3.3)
-      '@histoire/controls': 0.16.1(vite@4.3.3)
-      '@histoire/shared': 0.16.1(vite@4.3.3)
+      '@histoire/app': 0.16.1(vite@4.3.4)
+      '@histoire/controls': 0.16.1(vite@4.3.4)
+      '@histoire/shared': 0.16.1(vite@4.3.4)
       '@histoire/vendors': 0.16.0
       '@types/flexsearch': 0.7.3
       '@types/markdown-it': 12.2.3
@@ -8690,7 +8690,7 @@ packages:
       sade: 1.8.1
       shiki-es: 0.2.0
       sirv: 2.0.2
-      vite: 4.3.3(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
+      vite: 4.3.4(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
       vite-node: 0.28.4(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
     transitivePeerDependencies:
       - '@types/node'
@@ -14387,7 +14387,7 @@ packages:
       picocolors: 1.0.0
       source-map: 0.6.1
       source-map-support: 0.5.21
-      vite: 4.3.3(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
+      vite: 4.3.4(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -14408,7 +14408,7 @@ packages:
       mlly: 1.2.0
       pathe: 1.1.0
       picocolors: 1.0.0
-      vite: 4.3.3(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
+      vite: 4.3.4(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -14419,17 +14419,17 @@ packages:
       - terser
     dev: true
 
-  /vite-plugin-inject-preload@1.3.1(vite@4.3.3):
+  /vite-plugin-inject-preload@1.3.1(vite@4.3.4):
     resolution: {integrity: sha512-ESLexLaTl7hThHXaabGz902A+Xgu9tTONZKUT0LRCdqtRlcXbuB3gFjIsmVmZvozr+eS9ntutZfrakCFb9ocCA==}
     engines: {node: '>=14.18.0'}
     peerDependencies:
       vite: ^3.0.0 || ^4.0.0
     dependencies:
       mime-types: 2.1.35
-      vite: 4.3.3(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
+      vite: 4.3.4(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
     dev: true
 
-  /vite-plugin-pwa@0.14.7(vite@4.3.3)(workbox-build@6.5.4)(workbox-window@6.5.4):
+  /vite-plugin-pwa@0.14.7(vite@4.3.4)(workbox-build@6.5.4)(workbox-window@6.5.4):
     resolution: {integrity: sha512-dNJaf0fYOWncmjxv9HiSa2xrSjipjff7IkYE5oIUJ2x5HKu3cXgA8LRgzOwTc5MhwyFYRSU0xyN0Phbx3NsQYw==}
     peerDependencies:
       vite: ^3.1.0 || ^4.0.0
@@ -14441,7 +14441,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.21.3
-      vite: 4.3.3(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
+      vite: 4.3.4(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
       workbox-build: 6.5.4(acorn@7.4.1)
       workbox-window: 6.5.4
     transitivePeerDependencies:
@@ -14455,8 +14455,8 @@ packages:
       svgo: 3.0.2
     dev: true
 
-  /vite@4.3.3(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0):
-    resolution: {integrity: sha512-MwFlLBO4udZXd+VBcezo3u8mC77YQk+ik+fbc0GZWGgzfbPP+8Kf0fldhARqvSYmtIWoAJ5BXPClUbMTlqFxrA==}
+  /vite@4.3.4(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0):
+    resolution: {integrity: sha512-f90aqGBoxSFxWph2b39ae2uHAxm5jFBBdnfueNxZAT1FTpM13ccFQExCaKbR2xFW5atowjleRniQ7onjJ22QEg==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
@@ -14545,7 +14545,7 @@ packages:
       strip-literal: 1.0.1
       tinybench: 2.4.0
       tinypool: 0.4.0
-      vite: 4.3.3(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
+      vite: 4.3.4(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
       vite-node: 0.30.1(@types/node@18.16.3)(sass@1.62.1)(terser@5.10.0)
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
