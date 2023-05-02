@@ -136,8 +136,9 @@ steps:
 #      - dependencies
 
   - name: deploy-preview
-    image: node:18-alpine
+    image: williamjackson/netlify-cli
     pull: always
+    user: root # The rest runs as root and thus the permissions wouldn't work
     environment:
       NETLIFY_AUTH_TOKEN:
         from_secret: netlify_auth_token
@@ -522,6 +523,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: 303afeb09b75a57ba88720b45dc06c8bf2c7320e19d738d8299f325438246f75
+hmac: 3e0a5820a611a0c8baf7076ccae2db9846ad2f04d57d05c232b9574ade588dfe
 
 ...

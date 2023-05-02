@@ -33,9 +33,9 @@ const promiseExec = cmd => {
 }
 
 (async function () {
-	let stdout = await promiseExec(`./node_modules/.bin/netlify link --id ${siteId}`)
+	let stdout = await promiseExec(`/home/node/docker-netlify-cli/node_modules/.bin/netlify link --id ${siteId}`)
 	console.log(stdout)
-	stdout = await promiseExec(`./node_modules/.bin/netlify deploy --alias ${alias}`)
+	stdout = await promiseExec(`/home/node/docker-netlify-cli/node_modules/.bin/netlify deploy --alias ${alias}`)
 	console.log(stdout)
 
 	const data = await fetch(prIssueCommentsUrl).then(response => response.json())
