@@ -73,7 +73,7 @@
     "is-touch-device": "1.0.1",
     "klona": "2.0.6",
     "lodash.debounce": "4.0.8",
-    "marked": "4.3.0",
+    "marked": "5.0.0",
     "pinia": "2.0.35",
     "register-service-worker": "1.7.2",
     "snake-case": "3.0.4",
