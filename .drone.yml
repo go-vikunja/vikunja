@@ -42,7 +42,7 @@ steps:
 #        - .cache
 
   - name: dependencies
-    image: node:18-alpine
+    image: node:20-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -54,7 +54,7 @@ steps:
 #      - restore-cache
 
   - name: lint
-    image: node:18-alpine
+    image: node:20-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -65,7 +65,7 @@ steps:
       - dependencies
 
   - name: build-prod
-    image: node:18-alpine
+    image: node:20-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -76,7 +76,7 @@ steps:
       - dependencies
 
   - name: test-unit
-    image: node:18-alpine
+    image: node:20-alpine
     pull: always
     commands:
       - corepack enable && pnpm config set store-dir .cache/pnpm
@@ -86,7 +86,7 @@ steps:
 
   - name: typecheck
     failure: ignore
-    image: node:18-alpine
+    image: node:20-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -201,7 +201,7 @@ steps:
 #        - .cache
 
   - name: build
-    image: node:18-alpine
+    image: node:20-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -278,7 +278,7 @@ steps:
 #        - .cache
 
   - name: build
-    image: node:18-alpine
+    image: node:20-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -523,6 +523,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: 3e0a5820a611a0c8baf7076ccae2db9846ad2f04d57d05c232b9574ade588dfe
+hmac: dd079665e2294411aebac57837243255cd8fcc34fe5625abab21c55bb5c9763a
 
 ...
