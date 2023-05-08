@@ -52,7 +52,6 @@ type label struct {
 	Name       string `json:"name"`
 	Color      string `json:"color"`
 	ItemOrder  int64  `json:"item_order"`
-	IsDeleted  bool   `json:"is_deleted"`
 	IsFavorite bool   `json:"is_favorite"`
 }
 
@@ -93,7 +92,6 @@ type item struct {
 	AssignedByUID  string      `json:"assigned_by_uid"`
 	ResponsibleUID string      `json:"responsible_uid"`
 	Checked        bool        `json:"checked"`
-	IsDeleted      bool        `json:"is_deleted"`
 	DateAdded      time.Time   `json:"added_at"`
 	HasMoreNotes   bool        `json:"has_more_notes"`
 	DateCompleted  time.Time   `json:"completed_at"`
@@ -130,7 +128,6 @@ type note struct {
 	ItemID         string          `json:"item_id"`
 	Content        string          `json:"content"`
 	FileAttachment *fileAttachment `json:"file_attachment"`
-	IsDeleted      bool            `json:"is_deleted"`
 	Posted         time.Time       `json:"posted_at"`
 }
 
@@ -138,19 +135,17 @@ type projectNote struct {
 	Content        string          `json:"content"`
 	FileAttachment *fileAttachment `json:"file_attachment"`
 	ID             int64           `json:"id"`
-	IsDeleted      int64           `json:"is_deleted"`
 	Posted         time.Time       `json:"posted"`
 	ProjectID      string          `json:"project_id"`
 	UidsToNotify   []int64         `json:"uids_to_notify"`
 }
 
 type reminder struct {
-	ID        string   `json:"id"`
-	ItemID    string   `json:"item_id"`
-	Type      string   `json:"type"`
-	Due       *dueDate `json:"due"`
-	MmOffset  int64    `json:"mm_offset"`
-	IsDeleted int64    `json:"is_deleted"`
+	ID       string   `json:"id"`
+	ItemID   string   `json:"item_id"`
+	Type     string   `json:"type"`
+	Due      *dueDate `json:"due"`
+	MmOffset int64    `json:"mm_offset"`
 }
 
 type section struct {
