@@ -24,7 +24,7 @@ RUN export PATH=$PATH:$GOPATH/bin && \
 # The actual image
 # Note: I wanted to use the scratch image here, but unfortunatly the go-sqlite bindings require cgo and
 # because of this, the container would not start when I compiled the image without cgo.
-FROM alpine:3.16 AS runner
+FROM alpine:3.18 AS runner
 LABEL maintainer="maintainers@vikunja.io"
 WORKDIR /app/vikunja
 ENTRYPOINT [ "/sbin/tini", "-g", "--", "/entrypoint.sh" ]
