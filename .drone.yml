@@ -47,6 +47,7 @@ steps:
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
       CYPRESS_CACHE_FOLDER: .cache/cypress
+      PUPPETEER_SKIP_DOWNLOAD: true
     commands:
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000
@@ -523,6 +524,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: dd079665e2294411aebac57837243255cd8fcc34fe5625abab21c55bb5c9763a
+hmac: 511c2a090e9efd4c942980d971204adb6321540bb01c92409dd9bf8463b7f6f4
 
 ...
