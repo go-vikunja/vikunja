@@ -397,7 +397,7 @@ func TestProjectUsers(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		all, err := ProjectAllUsers(s)
+		all, err := ListAllUsers(s)
 		assert.NoError(t, err)
 		assert.Len(t, all, 15)
 	})

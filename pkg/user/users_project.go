@@ -106,8 +106,8 @@ outer:
 	return
 }
 
-// ProjectAllUsers returns all users
-func ProjectAllUsers(s *xorm.Session) (users []*User, err error) {
+// ListAllUsers returns all users
+func ListAllUsers(s *xorm.Session) (users []*User, err error) {
 	err = s.Find(&users)
 	return
 }
