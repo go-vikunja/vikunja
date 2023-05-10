@@ -243,6 +243,8 @@ github.com/gocarina/gocsv v0.0.0-20230325173030-9a18a846a479 h1:KaCpc4e48emF9hYm
 github.com/gocarina/gocsv v0.0.0-20230325173030-9a18a846a479/go.mod h1:5YoVOkjYAQumqlV356Hj3xeYh4BdZuLE0/nRkf2NKkI=
 github.com/gocarina/gocsv v0.0.0-20230406101422-6445c2b15027 h1:LCGzZb4kMUUjMUzLxxqSJBwo9szUO0tK8cOxnEOT4Jc=
 github.com/gocarina/gocsv v0.0.0-20230406101422-6445c2b15027/go.mod h1:5YoVOkjYAQumqlV356Hj3xeYh4BdZuLE0/nRkf2NKkI=
+github.com/gocarina/gocsv v0.0.0-20230510095315-7f30c79fd20c h1:ZaB8yqPWgWQ3HelTDCiJREs8yh1LutQaAhE/e1PqDLc=
+github.com/gocarina/gocsv v0.0.0-20230510095315-7f30c79fd20c/go.mod h1:5YoVOkjYAQumqlV356Hj3xeYh4BdZuLE0/nRkf2NKkI=
 github.com/goccy/go-json v0.8.1/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
 github.com/goccy/go-json v0.9.11 h1:/pAaQDLHEoCq/5FFmSKBswWmK6H0e8g4159Kc/X/nqk=
 github.com/goccy/go-json v0.9.11/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
