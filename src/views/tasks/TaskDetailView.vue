@@ -322,6 +322,7 @@
 							@click="setFieldActive('priority')"
 							variant="secondary"
 							icon="exclamation"
+							v-shortcut="'p'"
 						>
 							{{ $t('task.detail.actions.priority') }}
 						</x-button>
@@ -406,6 +407,7 @@
 							@click="toggleFavorite"
 							variant="secondary"
 							:icon="task.isFavorite ? 'star' : ['far', 'star']"
+							v-shortcut="'s'"
 						>
 							{{
 								task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
@@ -416,6 +418,7 @@
 							icon="trash-alt"
 							:shadow="false"
 							class="is-danger is-outlined has-no-border"
+							v-shortcut="'Shift+Delete'"
 						>
 							{{ $t('task.detail.actions.delete') }}
 						</x-button>

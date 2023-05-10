@@ -140,6 +140,18 @@ export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
 				title: 'keyboardShortcuts.task.description',
 				keys: ['e'],
 			},
+			{
+				title: 'keyboardShortcuts.task.priority',
+				keys: ['p'],
+			},
+			{
+				title: 'keyboardShortcuts.task.delete',
+				keys: ['shift', 'delete'],
+			},
+			{
+				title: 'keyboardShortcuts.task.favorite',
+				keys: ['s'],
+			},
 		],
 	},
 ]
