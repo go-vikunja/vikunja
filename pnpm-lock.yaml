@@ -121,8 +121,8 @@ dependencies:
     specifier: 9.2.2
     version: 9.2.2(vue@3.2.47)
   vue-router:
-    specifier: 4.1.6
-    version: 4.1.6(vue@3.2.47)
+    specifier: 4.2.0
+    version: 4.2.0(vue@3.2.47)
   workbox-precaching:
     specifier: 6.5.4
     version: 6.5.4
@@ -3349,10 +3349,6 @@ packages:
 
   /@vue/devtools-api@6.2.1:
     resolution: {integrity: sha512-OEgAMeQXvCoJ+1x8WyQuVZzFo0wcyCmUR3baRVLmKBo1LmYZWMlRiXlux5jd0fqVJu6PfDbOrZItVqUEzLobeQ==}
-    dev: false
-
-  /@vue/devtools-api@6.4.5:
-    resolution: {integrity: sha512-JD5fcdIuFxU4fQyXUu3w2KpAJHzTVdN+p4iOX2lMWSHMOoQdMAcpFLZzm9Z/2nmsoZ1a96QEhZ26e50xLBsgOQ==}
     dev: false
 
   /@vue/devtools-api@6.5.0:
@@ -9092,12 +9088,12 @@ packages:
       vue: 3.2.47
     dev: false
 
-  /vue-router@4.1.6(vue@3.2.47):
-    resolution: {integrity: sha512-DYWYwsG6xNPmLq/FmZn8Ip+qrhFEzA14EI12MsMgVxvHFDYvlr4NXpVF5hrRH1wVcDP8fGi5F4rxuJSl8/r+EQ==}
+  /vue-router@4.2.0(vue@3.2.47):
+    resolution: {integrity: sha512-c+usESa6ZoWsm4PPdzRSyenp5A4dsUtnDJnrI03fY1IpIihA9TK3x5ffgkFDpjhLJZewsXoKURapNLFdZjuqTg==}
     peerDependencies:
       vue: ^3.2.0
     dependencies:
-      '@vue/devtools-api': 6.4.5
+      '@vue/devtools-api': 6.5.0
       vue: 3.2.47
     dev: false
 
