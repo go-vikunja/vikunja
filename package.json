@@ -91,7 +91,7 @@
     "@4tw/cypress-drag-drop": "2.2.3",
     "@cypress/vite-dev-server": "5.0.5",
     "@cypress/vue": "5.0.5",
-    "@faker-js/faker": "7.6.0",
+    "@faker-js/faker": "8.0.0",
     "@histoire/plugin-screenshot": "0.16.1",
     "@histoire/plugin-vue": "0.16.1",
     "@rushstack/eslint-patch": "1.2.0",
