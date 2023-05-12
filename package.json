@@ -102,7 +102,7 @@
     "@types/is-touch-device": "1.0.0",
     "@types/lodash.debounce": "4.0.7",
     "@types/marked": "4.3.0",
-    "@types/node": "18.16.7",
+    "@types/node": "18.16.8",
     "@types/postcss-preset-env": "7.7.0",
     "@types/sortablejs": "1.15.1",
     "@typescript-eslint/eslint-plugin": "5.59.5",
