@@ -894,7 +894,10 @@
       "color": "更改此任务的颜色",
       "move": "Move this task to another project",
       "reminder": "管理此任务的提醒",
-      "description": "切换编辑时的任务描述"
+      "description": "切换编辑时的任务描述",
+      "delete": "Delete this task",
+      "priority": "Change the priority of this task",
+      "favorite": "Mark this task as favorite / unfavorite"
     },
     "project": {
       "title": "Project Views",

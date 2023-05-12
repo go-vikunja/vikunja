@@ -894,7 +894,10 @@
       "color": "Die Farbe dieser Aufgabe ändern",
       "move": "Move this task to another project",
       "reminder": "Erinnerungen für diese Aufgabe verwalten",
-      "description": "Aufgabenbeschreibung bearbeiten"
+      "description": "Aufgabenbeschreibung bearbeiten",
+      "delete": "Delete this task",
+      "priority": "Change the priority of this task",
+      "favorite": "Mark this task as favorite / unfavorite"
     },
     "project": {
       "title": "Project Views",

@@ -894,7 +894,10 @@
       "color": "Endre fargen på denne oppgaven",
       "move": "Flytt denne oppgaven til et annet prosjekt",
       "reminder": "Behandle påminnelser om denne oppgaven",
-      "description": "Veksle redigering av oppgavebeskrivelsen"
+      "description": "Veksle redigering av oppgavebeskrivelsen",
+      "delete": "Delete this task",
+      "priority": "Change the priority of this task",
+      "favorite": "Mark this task as favorite / unfavorite"
     },
     "project": {
       "title": "Prosjektvisning",

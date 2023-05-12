@@ -894,7 +894,10 @@
       "color": "Thay đổi màu công việc này",
       "move": "Move this task to another project",
       "reminder": "Manage reminders of this task",
-      "description": "Toggle editing of the task description"
+      "description": "Toggle editing of the task description",
+      "delete": "Delete this task",
+      "priority": "Change the priority of this task",
+      "favorite": "Mark this task as favorite / unfavorite"
     },
     "project": {
       "title": "Project Views",

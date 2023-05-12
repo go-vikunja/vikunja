@@ -894,7 +894,10 @@
       "color": "Změnit barvu tohoto úkolu",
       "move": "Move this task to another project",
       "reminder": "Spravovat připomenutí této úlohy",
-      "description": "Přepnout úpravy popisu úkolu"
+      "description": "Přepnout úpravy popisu úkolu",
+      "delete": "Delete this task",
+      "priority": "Change the priority of this task",
+      "favorite": "Mark this task as favorite / unfavorite"
     },
     "project": {
       "title": "Project Views",

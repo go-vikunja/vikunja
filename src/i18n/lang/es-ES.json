@@ -894,7 +894,10 @@
       "color": "Cambia el color de esta tarea",
       "move": "Move this task to another project",
       "reminder": "Administrar recordatorios de esta tarea",
-      "description": "Editar la descripción de la tarea"
+      "description": "Editar la descripción de la tarea",
+      "delete": "Delete this task",
+      "priority": "Change the priority of this task",
+      "favorite": "Mark this task as favorite / unfavorite"
     },
     "project": {
       "title": "Project Views",

@@ -894,7 +894,10 @@
       "color": "Cambia il colore di questa attività",
       "move": "Move this task to another project",
       "reminder": "Gestisci i promemoria di questa attività",
-      "description": "Attiva/Disattiva modifica della descrizione dell'attività"
+      "description": "Attiva/Disattiva modifica della descrizione dell'attività",
+      "delete": "Delete this task",
+      "priority": "Change the priority of this task",
+      "favorite": "Mark this task as favorite / unfavorite"
     },
     "project": {
       "title": "Project Views",

@@ -894,7 +894,10 @@
       "color": "Skift farven på denne opgave",
       "move": "Move this task to another project",
       "reminder": "Administrer påmindelser om denne opgave",
-      "description": "Slå redigering af opgavebeskrivelse til/fra"
+      "description": "Slå redigering af opgavebeskrivelse til/fra",
+      "delete": "Delete this task",
+      "priority": "Change the priority of this task",
+      "favorite": "Mark this task as favorite / unfavorite"
     },
     "project": {
       "title": "Project Views",
