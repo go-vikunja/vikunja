@@ -141,8 +141,8 @@ devDependencies:
     specifier: 5.0.5
     version: 5.0.5(cypress@12.12.0)(vue@3.2.47)
   '@faker-js/faker':
-    specifier: 8.0.0
-    version: 8.0.0
+    specifier: 8.0.1
+    version: 8.0.1
   '@histoire/plugin-screenshot':
     specifier: 0.16.1
     version: 0.16.1(histoire@0.16.1)
@@ -2191,8 +2191,8 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
-  /@faker-js/faker@8.0.0:
-    resolution: {integrity: sha512-XDR8sApuf78GHx8mLXl3KL/q7eB52A963UGejVbdbj3OZtfGlNwp0J78b7apVzqRi0GF8l9g3eSkkaL2UmU9Aw==}
+  /@faker-js/faker@8.0.1:
+    resolution: {integrity: sha512-kbh5MenpTN9U0B4QcOI1NoTPlZHniSYQ3BHbhAnPjJGAmmFqxoxTE4sGdpy7ZOO9038DPGCuhXyMkjOr05uVwA==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0, npm: '>=6.14.13'}
     dev: true
 
