@@ -25,7 +25,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/bbrks/go-blurhash v1.1.1
 	github.com/c2h5oh/datasize v0.0.0-20220606134207-859f65c6625b
-	github.com/coreos/go-oidc/v3 v3.5.0
+	github.com/coreos/go-oidc/v3 v3.6.0
 	github.com/cweill/gotests v1.6.0
 	github.com/d4l3k/messagediff v1.2.1
 	github.com/disintegration/imaging v1.6.2
