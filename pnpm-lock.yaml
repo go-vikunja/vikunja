@@ -121,8 +121,8 @@ dependencies:
     specifier: 9.2.2
     version: 9.2.2(vue@3.2.47)
   vue-router:
-    specifier: 4.2.0
-    version: 4.2.0(vue@3.2.47)
+    specifier: 4.2.1
+    version: 4.2.1(vue@3.2.47)
   workbox-precaching:
     specifier: 6.5.4
     version: 6.5.4
@@ -9107,8 +9107,8 @@ packages:
       vue: 3.2.47
     dev: false
 
-  /vue-router@4.2.0(vue@3.2.47):
-    resolution: {integrity: sha512-c+usESa6ZoWsm4PPdzRSyenp5A4dsUtnDJnrI03fY1IpIihA9TK3x5ffgkFDpjhLJZewsXoKURapNLFdZjuqTg==}
+  /vue-router@4.2.1(vue@3.2.47):
+    resolution: {integrity: sha512-nW28EeifEp8Abc5AfmAShy5ZKGsGzjcnZ3L1yc2DYUo+MqbBClrRP9yda3dIekM4I50/KnEwo1wkBLf7kHH5Cw==}
     peerDependencies:
       vue: ^3.2.0
     dependencies:
