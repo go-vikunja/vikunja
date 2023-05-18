@@ -101,7 +101,7 @@
     "@types/flexsearch": "0.7.3",
     "@types/is-touch-device": "1.0.0",
     "@types/lodash.debounce": "4.0.7",
-    "@types/marked": "4.3.0",
+    "@types/marked": "4.3.1",
     "@types/node": "18.16.11",
     "@types/postcss-preset-env": "7.7.0",
     "@types/sortablejs": "1.15.1",

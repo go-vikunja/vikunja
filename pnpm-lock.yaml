@@ -171,8 +171,8 @@ devDependencies:
     specifier: 4.0.7
     version: 4.0.7
   '@types/marked':
-    specifier: 4.3.0
-    version: 4.3.0
+    specifier: 4.3.1
+    version: 4.3.1
   '@types/node':
     specifier: 18.16.11
     version: 18.16.11
@@ -2910,8 +2910,8 @@ packages:
       '@types/mdurl': 1.0.2
     dev: true
 
-  /@types/marked@4.3.0:
-    resolution: {integrity: sha512-zK4gSFMjgslsv5Lyvr3O1yCjgmnE4pr8jbG8qVn4QglMwtpvPCf4YT2Wma7Nk95OxUUJI8Z+kzdXohbM7mVpGw==}
+  /@types/marked@4.3.1:
+    resolution: {integrity: sha512-vSSbKZFbNktrQ15v7o1EaH78EbWV+sPQbPjHG+Cp8CaNcPFUEfjZ0Iml/V0bFDwsTlYe8o6XC5Hfdp91cqPV2g==}
 
   /@types/mdurl@1.0.2:
     resolution: {integrity: sha512-eC4U9MlIcu2q0KQmXszyn5Akca/0jrQmwDRgpAMJai7qBWq4amIQhZyNau4VYGtCeALvW1/NtjzJJ567aZxfKA==}
@@ -4772,7 +4772,7 @@ packages:
     resolution: {integrity: sha512-IxVVUxNWIoXLeqtBU4BLc+eS/ScYhT1Dcb6yF5Wchoj1iXAV+TIIDWx+NCaZhY7RcSHqDPKllbYq7nwGKILnoA==}
     dependencies:
       '@types/codemirror': 5.60.7
-      '@types/marked': 4.3.0
+      '@types/marked': 4.3.1
       codemirror: 5.65.13
       codemirror-spell-checker: 1.1.2
       marked: 4.3.0
