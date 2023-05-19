@@ -57,7 +57,7 @@ require (
 	github.com/spf13/afero v1.9.5
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.3
 	github.com/swaggo/swag v1.8.12
 	github.com/tkuchiki/go-timezone v0.2.2
 	github.com/ulule/limiter/v3 v3.11.1
