@@ -150,8 +150,8 @@ devDependencies:
     specifier: 0.16.1
     version: 0.16.1(histoire@0.16.1)(vite@4.3.8)(vue@3.2.47)
   '@rushstack/eslint-patch':
-    specifier: 1.2.0
-    version: 1.2.0
+    specifier: 1.3.0
+    version: 1.3.0
   '@tsconfig/node18':
     specifier: 2.0.1
     version: 2.0.1
@@ -2672,8 +2672,8 @@ packages:
       rollup: 3.22.0
     dev: false
 
-  /@rushstack/eslint-patch@1.2.0:
-    resolution: {integrity: sha512-sXo/qW2/pAcmT43VoRKOJbDOfV3cYpq3szSVfIThQXNt+E4DfKj361vaAt3c88U5tPUxzEswam7GW48PJqtKAg==}
+  /@rushstack/eslint-patch@1.3.0:
+    resolution: {integrity: sha512-IthPJsJR85GhOkp3Hvp8zFOPK5ynKn6STyHa/WZpioK7E1aYDiBzpqQPrngc14DszIUkIrdd3k9Iu0XSzlP/1w==}
     dev: true
 
   /@sentry-internal/tracing@7.52.1:
