@@ -895,9 +895,9 @@
       "move": "Mover esta tarefa para outro projeto",
       "reminder": "Gerir lembretes desta tarefa",
       "description": "Alternar edição da descrição da tarefa",
-      "delete": "Delete this task",
-      "priority": "Change the priority of this task",
-      "favorite": "Mark this task as favorite / unfavorite"
+      "delete": "Eliminar esta tarefa",
+      "priority": "Alterar a prioridade desta tarefa",
+      "favorite": "Marcar / Desmarcar esta tarefa como favorita"
     },
     "project": {
       "title": "Vista do Projeto",
