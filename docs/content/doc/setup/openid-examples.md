@@ -66,3 +66,25 @@ Google config:
 - Configure an authorized redirect URI of `https://vikunja.mydomain.com/auth/openid/google`
 
 Note that there currently seems to be no way to stop creation of new users, even when `enableregistration` is `false` in the configuration. This means that this approach works well only with an "Internal Organization" app for Google Workspace, which limits the allowed users to organizational accounts only. External / public applications will potentially allow every Google user to register.
+
+## Keycloak 
+
+Vikunja Config:
+```yaml
+openid:
+    enabled: true
+    redirecturl: https://vikunja.mydomain.com/auth/openid/  <---- slash at the end is important
+    providers:
+      - name: Keycloak
+        authurl: https://keycloak.mydomain.com/realms/<relam-name>
+        logouturl: https://keycloak.mydomain.com/realms/<relam-name>/protocol/openid-connect/logout
+        clientid: <vikunja-id>
+        clientsecret: <vikunja secret>
+```
+Keycloak Config:
+- Navigate to the keycloak instance
+- Create a new client with the type `OpenID Connect` and a unique ID.
+- Set `Client authentication` to On
+- Set `Root Url` to `https://vikunja.mydomain.com`
+- Set `Valid redirect URIs` to `/auth/openid/keycloak`
+- Create the client the navigate to the credentials tab and copy the `Client secret`
