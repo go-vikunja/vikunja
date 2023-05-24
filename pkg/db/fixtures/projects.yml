@@ -4,7 +4,6 @@
   description: Lorem Ipsum
   identifier: test1
   owner_id: 1
-  namespace_id: 1
   position: 3
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -14,7 +13,6 @@
   description: Lorem Ipsum
   identifier: test2
   owner_id: 3
-  namespace_id: 1
   position: 2
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -24,7 +22,6 @@
   description: Lorem Ipsum
   identifier: test3
   owner_id: 3
-  namespace_id: 2
   position: 1
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -34,7 +31,6 @@
   description: Lorem Ipsum
   identifier: test4
   owner_id: 3
-  namespace_id: 3
   position: 4
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -44,7 +40,6 @@
   description: Lorem Ipsum
   identifier: test5
   owner_id: 5
-  namespace_id: 5
   position: 5
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -54,7 +49,6 @@
   description: Lorem Ipsum
   identifier: test6
   owner_id: 6
-  namespace_id: 6
   position: 6
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -64,7 +58,6 @@
   description: Lorem Ipsum
   identifier: test7
   owner_id: 6
-  namespace_id: 6
   position: 7
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -74,7 +67,6 @@
   description: Lorem Ipsum
   identifier: test8
   owner_id: 6
-  namespace_id: 6
   position: 8
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -84,7 +76,6 @@
   description: Lorem Ipsum
   identifier: test9
   owner_id: 6
-  namespace_id: 6
   position: 9
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -94,7 +85,6 @@
   description: Lorem Ipsum
   identifier: test10
   owner_id: 6
-  namespace_id: 6
   position: 10
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -104,7 +94,6 @@
   description: Lorem Ipsum
   identifier: test11
   owner_id: 6
-  namespace_id: 6
   position: 11
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -114,8 +103,8 @@
   description: Lorem Ipsum
   identifier: test12
   owner_id: 6
-  namespace_id: 7
   position: 12
+  parent_project_id: 27
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -124,8 +113,8 @@
   description: Lorem Ipsum
   identifier: test13
   owner_id: 6
-  namespace_id: 8
   position: 13
+  parent_project_id: 28
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -134,8 +123,8 @@
   description: Lorem Ipsum
   identifier: test14
   owner_id: 6
-  namespace_id: 9
   position: 14
+  parent_project_id: 29
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -144,8 +133,8 @@
   description: Lorem Ipsum
   identifier: test15
   owner_id: 6
-  namespace_id: 10
   position: 15
+  parent_project_id: 32
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -154,8 +143,8 @@
   description: Lorem Ipsum
   identifier: test16
   owner_id: 6
-  namespace_id: 11
   position: 16
+  parent_project_id: 33
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -164,8 +153,8 @@
   description: Lorem Ipsum
   identifier: test17
   owner_id: 6
-  namespace_id: 12
   position: 17
+  parent_project_id: 34
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 # This project is owned by user 7, and several other users have access to it via different methods.
@@ -176,7 +165,6 @@
   description: Lorem Ipsum
   identifier: test18
   owner_id: 7
-  namespace_id: 13
   position: 18
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -186,8 +174,8 @@
   description: Lorem Ipsum
   identifier: test19
   owner_id: 7
-  namespace_id: 14
   position: 19
+  parent_project_id: 29
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 # User 1 does not have access to this project
@@ -197,18 +185,17 @@
   description: Lorem Ipsum
   identifier: test20
   owner_id: 13
-  namespace_id: 15
   position: 20
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
   id: 21
-  title: Test21 archived through namespace
+  title: Test21 archived through parent list
   description: Lorem Ipsum
   identifier: test21
   owner_id: 1
-  namespace_id: 16
   position: 21
+  parent_project_id: 22
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -217,7 +204,6 @@
   description: Lorem Ipsum
   identifier: test22
   owner_id: 1
-  namespace_id: 1
   is_archived: 1
   position: 22
   updated: 2018-12-02 15:13:12
@@ -228,7 +214,6 @@
   description: Lorem Ipsum
   identifier: test23
   owner_id: 12
-  namespace_id: 17
   position: 23
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
@@ -238,28 +223,95 @@
   description: Lorem Ipsum
   identifier: test6
   owner_id: 6
-  namespace_id: 6
   position: 7
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
   id: 25
-  title: Test25 with background
+  title: Test25
+  owner_id: 6
+  parent_project_id: 12
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+-
+  id: 26
+  title: Test26
+  owner_id: 6
+  parent_project_id: 25
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+-
+  id: 27
+  title: Test27
+  owner_id: 6
+  position: 2700
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+-
+  id: 28
+  title: Test28
+  owner_id: 6
+  position: 2800
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+-
+  id: 29
+  title: Test29
+  owner_id: 6
+  position: 2900
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+-
+  id: 30
+  title: Test30
+  owner_id: 6
+  position: 3000
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+-
+  id: 31
+  title: Test31
+  owner_id: 6
+  position: 3100
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+-
+  id: 32
+  title: Test32
+  owner_id: 6
+  position: 3200
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+-
+  id: 33
+  title: Test33
+  owner_id: 6
+  position: 3300
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+-
+  id: 34
+  title: Test34
+  owner_id: 6
+  position: 3400
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+-
+  id: 35
+  title: Test35 with background
   description: Lorem Ipsum
   identifier: test6
   owner_id: 6
-  namespace_id: 6
   background_file_id: 1
   position: 8
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
-  id: 26
-  title: List 26 for Caldav tests
+  id: 36
+  title: Project 36 for Caldav tests
   description: Lorem Ipsum
-  identifier: test26
+  identifier: test36
   owner_id: 15
-  namespace_id: 18
   position: 1
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12

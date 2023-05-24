@@ -30,6 +30,8 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
+
+	"github.com/hashicorp/go-version"
 )
 
 const logPrefix = "[Vikunja File Import] "
@@ -71,6 +73,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 
 	var dataFile *zip.File
 	var filterFile *zip.File
+	var versionFile *zip.File
 	storedFiles := make(map[int64]*zip.File)
 	for _, f := range r.File {
 		if strings.HasPrefix(f.Name, "files/") {
@@ -92,6 +95,10 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 			filterFile = f
 			log.Debugf(logPrefix + "Found a filter file")
 		}
+		if f.Name == "VERSION" {
+			versionFile = f
+			log.Debugf(logPrefix + "Found a version file")
+		}
 	}
 
 	if dataFile == nil {
@@ -99,6 +106,31 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	}
 
 	log.Debugf(logPrefix + "")
+
+	//////
+	// Check if we're able to import this dump
+	vf, err := versionFile.Open()
+	if err != nil {
+		return fmt.Errorf("could not open version file: %w", err)
+	}
+
+	var bufVersion bytes.Buffer
+	if _, err := bufVersion.ReadFrom(vf); err != nil {
+		return fmt.Errorf("could not read version file: %w", err)
+	}
+
+	dumpedVersion, err := version.NewVersion(bufVersion.String())
+	if err != nil {
+		return err
+	}
+	minVersion, err := version.NewVersion("0.20.1+61")
+	if err != nil {
+		return err
+	}
+
+	if dumpedVersion.LessThan(minVersion) {
+		return fmt.Errorf("export was created with an older version, need at least %s but the export needs at least %s", dumpedVersion, minVersion)
+	}
 
 	//////
 	// Import the bulk of Vikunja data
@@ -113,57 +145,19 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 		return fmt.Errorf("could not read data file: %w", err)
 	}
 
-	namespaces := []*models.NamespaceWithProjectsAndTasks{}
-	if err := json.Unmarshal(bufData.Bytes(), &namespaces); err != nil {
+	projects := []*models.ProjectWithTasksAndBuckets{}
+	if err := json.Unmarshal(bufData.Bytes(), &projects); err != nil {
 		return fmt.Errorf("could not read data: %w", err)
 	}
 
-	for _, n := range namespaces {
-		for _, l := range n.Projects {
-			if b, exists := storedFiles[l.BackgroundFileID]; exists {
-				bf, err := b.Open()
-				if err != nil {
-					return fmt.Errorf("could not open project background file %d for reading: %w", l.BackgroundFileID, err)
-				}
-				var buf bytes.Buffer
-				if _, err := buf.ReadFrom(bf); err != nil {
-					return fmt.Errorf("could not read project background file %d: %w", l.BackgroundFileID, err)
-				}
-
-				l.BackgroundInformation = &buf
-			}
-
-			for _, t := range l.Tasks {
-				for _, label := range t.Labels {
-					label.ID = 0
-				}
-				for _, comment := range t.Comments {
-					comment.ID = 0
-				}
-				for _, attachment := range t.Attachments {
-					attachmentFile, exists := storedFiles[attachment.File.ID]
-					if !exists {
-						log.Debugf(logPrefix+"Could not find attachment file %d for attachment %d", attachment.File.ID, attachment.ID)
-						continue
-					}
-					af, err := attachmentFile.Open()
-					if err != nil {
-						return fmt.Errorf("could not open attachment %d for reading: %w", attachment.ID, err)
-					}
-					var buf bytes.Buffer
-					if _, err := buf.ReadFrom(af); err != nil {
-						return fmt.Errorf("could not read attachment %d: %w", attachment.ID, err)
-					}
-
-					attachment.ID = 0
-					attachment.File.ID = 0
-					attachment.File.FileContent = buf.Bytes()
-				}
-			}
+	for _, p := range projects {
+		err = addDetailsToProjectAndChildren(p, storedFiles)
+		if err != nil {
+			return err
 		}
 	}
 
-	err = migration.InsertFromStructure(namespaces, user)
+	err = migration.InsertFromStructure(projects, user)
 	if err != nil {
 		return fmt.Errorf("could not insert data: %w", err)
 	}
@@ -206,4 +200,65 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	}
 
 	return s.Commit()
+}
+
+func addDetailsToProjectAndChildren(p *models.ProjectWithTasksAndBuckets, storedFiles map[int64]*zip.File) (err error) {
+	err = addDetailsToProject(p, storedFiles)
+	if err != nil {
+		return err
+	}
+
+	for _, cp := range p.ChildProjects {
+		err = addDetailsToProjectAndChildren(cp, storedFiles)
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}
+
+func addDetailsToProject(l *models.ProjectWithTasksAndBuckets, storedFiles map[int64]*zip.File) (err error) {
+	if b, exists := storedFiles[l.BackgroundFileID]; exists {
+		bf, err := b.Open()
+		if err != nil {
+			return fmt.Errorf("could not open project background file %d for reading: %w", l.BackgroundFileID, err)
+		}
+		var buf bytes.Buffer
+		if _, err := buf.ReadFrom(bf); err != nil {
+			return fmt.Errorf("could not read project background file %d: %w", l.BackgroundFileID, err)
+		}
+
+		l.BackgroundInformation = &buf
+	}
+
+	for _, t := range l.Tasks {
+		for _, label := range t.Labels {
+			label.ID = 0
+		}
+		for _, comment := range t.Comments {
+			comment.ID = 0
+		}
+		for _, attachment := range t.Attachments {
+			attachmentFile, exists := storedFiles[attachment.File.ID]
+			if !exists {
+				log.Debugf(logPrefix+"Could not find attachment file %d for attachment %d", attachment.File.ID, attachment.ID)
+				continue
+			}
+			af, err := attachmentFile.Open()
+			if err != nil {
+				return fmt.Errorf("could not open attachment %d for reading: %w", attachment.ID, err)
+			}
+			var buf bytes.Buffer
+			if _, err := buf.ReadFrom(af); err != nil {
+				return fmt.Errorf("could not read attachment %d: %w", attachment.ID, err)
+			}
+
+			attachment.ID = 0
+			attachment.File.ID = 0
+			attachment.File.FileContent = buf.Bytes()
+		}
+	}
+
+	return
 }

@@ -59,16 +59,6 @@ func TestTeam_CanDoSomething(t *testing.T) {
 			want: map[string]bool{"CanCreate": true, "IsAdmin": true, "CanRead": true, "CanDelete": true, "CanUpdate": true},
 		},
 		{
-			name: "CanDoSomething for a nonexistant namespace",
-			fields: fields{
-				ID: 300,
-			},
-			args: args{
-				a: &user.User{ID: 1},
-			},
-			want: map[string]bool{"CanCreate": true, "IsAdmin": false, "CanRead": false, "CanDelete": false, "CanUpdate": false},
-		},
-		{
 			name: "CanDoSomething where the user does not have the rights",
 			fields: fields{
 				ID: 1,

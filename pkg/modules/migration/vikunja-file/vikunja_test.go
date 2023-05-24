@@ -27,53 +27,71 @@ import (
 )
 
 func TestVikunjaFileMigrator_Migrate(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
+	t.Run("migrate successfully", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
 
-	m := &FileMigrator{}
-	u := &user.User{ID: 1}
+		m := &FileMigrator{}
+		u := &user.User{ID: 1}
 
-	f, err := os.Open(config.ServiceRootpath.GetString() + "/pkg/modules/migration/vikunja-file/export.zip")
-	if err != nil {
-		t.Fatalf("Could not open file: %s", err)
-	}
-	defer f.Close()
-	s, err := f.Stat()
-	if err != nil {
-		t.Fatalf("Could not stat file: %s", err)
-	}
+		f, err := os.Open(config.ServiceRootpath.GetString() + "/pkg/modules/migration/vikunja-file/export.zip")
+		if err != nil {
+			t.Fatalf("Could not open file: %s", err)
+		}
+		defer f.Close()
+		s, err := f.Stat()
+		if err != nil {
+			t.Fatalf("Could not stat file: %s", err)
+		}
 
-	err = m.Migrate(u, f, s.Size())
-	assert.NoError(t, err)
-	db.AssertExists(t, "namespaces", map[string]interface{}{
-		"title":    "test",
-		"owner_id": u.ID,
-	}, false)
-	db.AssertExists(t, "projects", map[string]interface{}{
-		"title":    "Test project",
-		"owner_id": u.ID,
-	}, false)
-	db.AssertExists(t, "projects", map[string]interface{}{
-		"title":    "A project with a background",
-		"owner_id": u.ID,
-	}, false)
-	db.AssertExists(t, "tasks", map[string]interface{}{
-		"title":         "Some other task",
-		"created_by_id": u.ID,
-	}, false)
-	db.AssertExists(t, "task_comments", map[string]interface{}{
-		"comment":   "This is a comment",
-		"author_id": u.ID,
-	}, false)
-	db.AssertExists(t, "files", map[string]interface{}{
-		"name":          "cristiano-mozzillo-v3d5uBB26yA-unsplash.jpg",
-		"created_by_id": u.ID,
-	}, false)
-	db.AssertExists(t, "labels", map[string]interface{}{
-		"title":         "test",
-		"created_by_id": u.ID,
-	}, false)
-	db.AssertExists(t, "buckets", map[string]interface{}{
-		"title":         "Test Bucket",
-		"created_by_id": u.ID,
-	}, false)
+		err = m.Migrate(u, f, s.Size())
+		assert.NoError(t, err)
+		db.AssertExists(t, "projects", map[string]interface{}{
+			"title":    "test project",
+			"owner_id": u.ID,
+		}, false)
+		db.AssertExists(t, "projects", map[string]interface{}{
+			"title":    "Inbox",
+			"owner_id": u.ID,
+		}, false)
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"title":         "some other task",
+			"created_by_id": u.ID,
+		}, false)
+		db.AssertExists(t, "task_comments", map[string]interface{}{
+			"comment":   "This is a comment",
+			"author_id": u.ID,
+		}, false)
+		db.AssertExists(t, "files", map[string]interface{}{
+			"name":          "grant-whitty-546453-unsplash.jpg",
+			"created_by_id": u.ID,
+		}, false)
+		db.AssertExists(t, "labels", map[string]interface{}{
+			"title":         "test",
+			"created_by_id": u.ID,
+		}, false)
+		db.AssertExists(t, "buckets", map[string]interface{}{
+			"title":         "Test Bucket",
+			"created_by_id": u.ID,
+		}, false)
+	})
+	t.Run("should not accept an old import", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		m := &FileMigrator{}
+		u := &user.User{ID: 1}
+
+		f, err := os.Open(config.ServiceRootpath.GetString() + "/pkg/modules/migration/vikunja-file/export_pre_0.21.0.zip")
+		if err != nil {
+			t.Fatalf("Could not open file: %s", err)
+		}
+		defer f.Close()
+		s, err := f.Stat()
+		if err != nil {
+			t.Fatalf("Could not stat file: %s", err)
+		}
+
+		err = m.Migrate(u, f, s.Size())
+		assert.Error(t, err)
+		assert.ErrorContainsf(t, err, "export was created with an older version", "Invalid error message")
+	})
 }

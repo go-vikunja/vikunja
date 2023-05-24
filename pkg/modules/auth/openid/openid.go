@@ -243,8 +243,8 @@ func getOrCreateUser(s *xorm.Session, cl *claims, issuer, subject string) (u *us
 			}
 		}
 
-		// And create its namespace
-		err = models.CreateNewNamespaceForUser(s, u)
+		// And create their project
+		err = models.CreateNewProjectForUser(s, u)
 		if err != nil {
 			return nil, err
 		}

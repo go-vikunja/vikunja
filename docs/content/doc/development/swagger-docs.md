@@ -25,7 +25,7 @@ As an example, this is the definition of a project with all comments:
 type Project struct {
 	// The unique, numeric id of this project.
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"project"`
-	// The title of the project. You'll see this in the namespace overview.
+	// The title of the project. You'll see this in the overview.
 	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(1|250)" minLength:"1" maxLength:"250"`
 	// The description of the project.
 	Description string `xorm:"longtext null" json:"description"`
@@ -34,13 +34,14 @@ type Project struct {
 	// The hex color of this project
 	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
 
-	OwnerID     int64 `xorm:"bigint INDEX not null" json:"-"`
-	NamespaceID int64 `xorm:"bigint INDEX not null" json:"namespace_id" param:"namespace"`
+	OwnerID         int64    `xorm:"bigint INDEX not null" json:"-"`
+	ParentProjectID int64    `xorm:"bigint INDEX null" json:"parent_project_id"`
+	ParentProject   *Project `xorm:"-" json:"-"`
 
 	// The user who created this project.
 	Owner *user.User `xorm:"-" json:"owner" valid:"-"`
 
-	// Whether or not a project is archived.
+	// Whether a project is archived.
 	IsArchived bool `xorm:"not null default false" json:"is_archived" query:"is_archived"`
 
 	// The id of the file this project has set as background
@@ -50,7 +51,7 @@ type Project struct {
 	// Contains a very small version of the project background to use as a blurry preview until the actual background is loaded. Check out https://blurha.sh/ to learn how it works.
 	BackgroundBlurHash string `xorm:"varchar(50) null" json:"background_blur_hash"`
 
-	// True if a project is a favorite. Favorite projects show up in a separate namespace. This value depends on the user making the call to the api.
+	// True if a project is a favorite. Favorite projects show up in a separate parent project. This value depends on the user making the call to the api.
 	IsFavorite bool `xorm:"-" json:"is_favorite"`
 
 	// The subscription status for the user reading this project. You can only read this property, use the subscription endpoints to modify it.

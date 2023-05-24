@@ -143,7 +143,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 				return
 			}
 			if (err != nil) && tt.wantErr && !tt.errType(err) {
-				t.Errorf("LabelTask.ReadAll() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
+				t.Errorf("LabelTask.ReadAll() Wrong error type! Error = %v, want = %v, got = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name(), err)
 			}
 			if diff, equal := messagediff.PrettyDiff(gotLabels, tt.wantLabels); !equal {
 				t.Errorf("LabelTask.ReadAll() = %v, want %v, diff: %v", l, tt.wantLabels, diff)

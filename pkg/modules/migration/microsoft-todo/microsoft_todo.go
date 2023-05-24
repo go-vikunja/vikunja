@@ -218,7 +218,7 @@ func getMicrosoftTodoData(token string) (microsoftTodoData []*project, err error
 	microsoftTodoData = []*project{}
 
 	projects := &projectsResponse{}
-	err = makeAuthenticatedGetRequest(token, "projects", projects)
+	err = makeAuthenticatedGetRequest(token, "lists", projects)
 	if err != nil {
 		log.Errorf("[Microsoft Todo Migration] Could not get projects: %s", err)
 		return
@@ -227,7 +227,7 @@ func getMicrosoftTodoData(token string) (microsoftTodoData []*project, err error
 	log.Debugf("[Microsoft Todo Migration] Got %d projects", len(projects.Value))
 
 	for _, project := range projects.Value {
-		link := "projects/" + project.ID + "/tasks"
+		link := "lists/" + project.ID + "/tasks"
 		project.Tasks = []*task{}
 
 		// Microsoft's Graph API has pagination, so we're going through all pages to get all tasks
@@ -259,15 +259,15 @@ func getMicrosoftTodoData(token string) (microsoftTodoData []*project, err error
 	return
 }
 
-func convertMicrosoftTodoData(todoData []*project) (vikunjsStructure []*models.NamespaceWithProjectsAndTasks, err error) {
+func convertMicrosoftTodoData(todoData []*project) (vikunjsStructure []*models.ProjectWithTasksAndBuckets, err error) {
 
-	// One namespace with all projects
-	vikunjsStructure = []*models.NamespaceWithProjectsAndTasks{
+	// One project with all child projects
+	vikunjsStructure = []*models.ProjectWithTasksAndBuckets{
 		{
-			Namespace: models.Namespace{
+			Project: models.Project{
 				Title: "Migrated from Microsoft Todo",
 			},
-			Projects: []*models.ProjectWithTasksAndBuckets{},
+			ChildProjects: []*models.ProjectWithTasksAndBuckets{},
 		},
 	}
 
@@ -364,7 +364,7 @@ func convertMicrosoftTodoData(todoData []*project) (vikunjsStructure []*models.N
 			log.Debugf("[Microsoft Todo Migration] Done converted %d tasks", len(l.Tasks))
 		}
 
-		vikunjsStructure[0].Projects = append(vikunjsStructure[0].Projects, project)
+		vikunjsStructure[0].ChildProjects = append(vikunjsStructure[0].ChildProjects, project)
 		log.Debugf("[Microsoft Todo Migration] Done converting project %s", l.ID)
 	}
 

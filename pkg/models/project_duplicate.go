@@ -28,8 +28,8 @@ import (
 type ProjectDuplicate struct {
 	// The project id of the project to duplicate
 	ProjectID int64 `json:"-" param:"projectid"`
-	// The target namespace ID
-	NamespaceID int64 `json:"namespace_id,omitempty"`
+	// The target parent project
+	ParentProjectID int64 `json:"parent_project_id,omitempty"`
 
 	// The copied project
 	Project *Project `json:",omitempty"`
@@ -47,23 +47,27 @@ func (ld *ProjectDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bo
 		return canRead, err
 	}
 
-	// Namespace exists + user has write access to is (-> can create new projects)
-	ld.Project.NamespaceID = ld.NamespaceID
-	return ld.Project.CanCreate(s, a)
+	if ld.ParentProjectID == 0 { // no parent project
+		return canRead, err
+	}
+
+	// Parent project exists + user has write access to is (-> can create new projects)
+	parent := &Project{ID: ld.ParentProjectID}
+	return parent.CanCreate(s, a)
 }
 
 // Create duplicates a project
 // @Summary Duplicate an existing project
-// @Description Copies the project, tasks, files, kanban data, assignees, comments, attachments, lables, relations, backgrounds, user/team rights and link shares from one project to a new namespace. The user needs read access in the project and write access in the namespace of the new project.
+// @Description Copies the project, tasks, files, kanban data, assignees, comments, attachments, lables, relations, backgrounds, user/team rights and link shares from one project to a new one. The user needs read access in the project and write access in the parent of the new project.
 // @tags project
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
 // @Param projectID path int true "The project ID to duplicate"
-// @Param project body models.ProjectDuplicate true "The target namespace which should hold the copied project."
+// @Param project body models.ProjectDuplicate true "The target parent project which should hold the copied project."
 // @Success 201 {object} models.ProjectDuplicate "The created project."
 // @Failure 400 {object} web.HTTPError "Invalid project duplicate object provided."
-// @Failure 403 {object} web.HTTPError "The user does not have access to the project or namespace"
+// @Failure 403 {object} web.HTTPError "The user does not have access to the project or its parent."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/duplicate [put]
 //
@@ -153,7 +157,7 @@ func (ld *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 	}
 
 	// Rights / Shares
-	// To keep it simple(r) we will only copy rights which are directly used with the project, no namespace changes.
+	// To keep it simple(r) we will only copy rights which are directly used with the project, not the parent
 	users := []*ProjectUser{}
 	err = s.Where("project_id = ?", ld.ProjectID).Find(&users)
 	if err != nil {

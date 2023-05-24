@@ -87,7 +87,7 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 		return nil, err
 	}
 
-	// Dont send a mail if no mailer is configured
+	// Don't send a mail if no mailer is configured
 	if !config.MailerEnabled.GetBool() || user.Issuer != IssuerLocal {
 		return newUserOut, err
 	}

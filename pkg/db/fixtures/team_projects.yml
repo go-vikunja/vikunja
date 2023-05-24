@@ -52,3 +52,45 @@
   right: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+- id: 9
+  team_id: 1
+  project_id: 28
+  right: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+- id: 10
+  team_id: 11
+  project_id: 29
+  right: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+- id: 11
+  team_id: 12
+  project_id: 29
+  right: 1
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+- id: 12
+  team_id: 13
+  project_id: 29
+  right: 2
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+- id: 13
+  team_id: 1
+  project_id: 32
+  right: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+- id: 14
+  team_id: 1
+  project_id: 33
+  right: 1
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+- id: 15
+  team_id: 1
+  project_id: 34
+  right: 2
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

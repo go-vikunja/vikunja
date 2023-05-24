@@ -40,7 +40,7 @@ type Migrator struct {
 
 type tickTickTask struct {
 	FolderName        string        `csv:"Folder Name"`
-	ListName          string        `csv:"List Name"`
+	ProjectName       string        `csv:"List Name"`
 	Title             string        `csv:"Title"`
 	TagsList          string        `csv:"Tags"`
 	Tags              []string      `csv:"-"`
@@ -74,21 +74,21 @@ func (date *tickTickTime) UnmarshalCSV(csv string) (err error) {
 	return err
 }
 
-func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.NamespaceWithProjectsAndTasks) {
-	namespace := &models.NamespaceWithProjectsAndTasks{
-		Namespace: models.Namespace{
+func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWithTasksAndBuckets) {
+	parent := &models.ProjectWithTasksAndBuckets{
+		Project: models.Project{
 			Title: "Migrated from TickTick",
 		},
-		Projects: []*models.ProjectWithTasksAndBuckets{},
+		ChildProjects: []*models.ProjectWithTasksAndBuckets{},
 	}
 
 	projects := make(map[string]*models.ProjectWithTasksAndBuckets)
 	for _, t := range tasks {
-		_, has := projects[t.ListName]
+		_, has := projects[t.ProjectName]
 		if !has {
-			projects[t.ListName] = &models.ProjectWithTasksAndBuckets{
+			projects[t.ProjectName] = &models.ProjectWithTasksAndBuckets{
 				Project: models.Project{
-					Title: t.ListName,
+					Title: t.ProjectName,
 				},
 			}
 		}
@@ -130,18 +130,18 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.Namespace
 			}
 		}
 
-		projects[t.ListName].Tasks = append(projects[t.ListName].Tasks, task)
+		projects[t.ProjectName].Tasks = append(projects[t.ProjectName].Tasks, task)
 	}
 
 	for _, l := range projects {
-		namespace.Projects = append(namespace.Projects, l)
+		parent.ChildProjects = append(parent.ChildProjects, l)
 	}
 
-	sort.Slice(namespace.Projects, func(i, j int) bool {
-		return namespace.Projects[i].Title < namespace.Projects[j].Title
+	sort.Slice(parent.ChildProjects, func(i, j int) bool {
+		return parent.ChildProjects[i].Title < parent.ChildProjects[j].Title
 	})
 
-	return []*models.NamespaceWithProjectsAndTasks{namespace}
+	return []*models.ProjectWithTasksAndBuckets{parent}
 }
 
 // Name is used to get the name of the ticktick migration - we're using the docs here to annotate the status route.

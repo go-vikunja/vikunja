@@ -89,6 +89,8 @@ issues:
     - path: pkg/models/favorites\.go
       linters:
         - nilerr
+    - path: pkg/models/project\.go
+      text: "string `parent_project_id` has 3 occurrences, make it a constant"
     - path: pkg/models/events\.go
       linters:
         - musttag

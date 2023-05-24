@@ -30,16 +30,15 @@ import (
 type SubscriptionEntityType int
 
 const (
-	SubscriptionEntityUnknown = iota
-	SubscriptionEntityNamespace
+	SubscriptionEntityUnknown   = iota
+	SubscriptionEntityNamespace // Kept even though not used anymore since we don't want to manually change all ids
 	SubscriptionEntityProject
 	SubscriptionEntityTask
 )
 
 const (
-	entityNamespace = `namespace`
-	entityProject   = `project`
-	entityTask      = `task`
+	entityProject = `project`
+	entityTask    = `task`
 )
 
 // Subscription represents a subscription for an entity
@@ -70,8 +69,6 @@ func (sb *Subscription) TableName() string {
 
 func getEntityTypeFromString(entityType string) SubscriptionEntityType {
 	switch entityType {
-	case entityNamespace:
-		return SubscriptionEntityNamespace
 	case entityProject:
 		return SubscriptionEntityProject
 	case entityTask:
@@ -84,8 +81,6 @@ func getEntityTypeFromString(entityType string) SubscriptionEntityType {
 // String returns a human-readable string of an entity
 func (et SubscriptionEntityType) String() string {
 	switch et {
-	case SubscriptionEntityNamespace:
-		return entityNamespace
 	case SubscriptionEntityProject:
 		return entityProject
 	case SubscriptionEntityTask:
@@ -96,8 +91,7 @@ func (et SubscriptionEntityType) String() string {
 }
 
 func (et SubscriptionEntityType) validate() error {
-	if et == SubscriptionEntityNamespace ||
-		et == SubscriptionEntityProject ||
+	if et == SubscriptionEntityProject ||
 		et == SubscriptionEntityTask {
 		return nil
 	}
@@ -112,7 +106,7 @@ func (et SubscriptionEntityType) validate() error {
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param entity path string true "The entity the user subscribes to. Can be either `namespace`, `project` or `task`."
+// @Param entity path string true "The entity the user subscribes to. Can be either `project` or `task`."
 // @Param entityID path string true "The numeric id of the entity to subscribe to."
 // @Success 201 {object} models.Subscription "The subscription"
 // @Failure 403 {object} web.HTTPError "The user does not have access to subscribe to this entity."
@@ -153,7 +147,7 @@ func (sb *Subscription) Create(s *xorm.Session, auth web.Auth) (err error) {
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param entity path string true "The entity the user subscribed to. Can be either `namespace`, `project` or `task`."
+// @Param entity path string true "The entity the user subscribed to. Can be either `project` or `task`."
 // @Param entityID path string true "The numeric id of the subscribed entity to."
 // @Success 200 {object} models.Subscription "The subscription"
 // @Failure 403 {object} web.HTTPError "The user does not have access to subscribe to this entity."
@@ -169,51 +163,26 @@ func (sb *Subscription) Delete(s *xorm.Session, auth web.Auth) (err error) {
 	return
 }
 
-func getSubscriberCondForEntity(entityType SubscriptionEntityType, entityID int64) (cond builder.Cond) {
-	if entityType == SubscriptionEntityNamespace {
-		cond = builder.And(
-			builder.Eq{"entity_id": entityID},
-			builder.Eq{"entity_type": SubscriptionEntityNamespace},
-		)
-	}
-
+func getSubscriberCondForEntities(entityType SubscriptionEntityType, entityIDs []int64) (cond builder.Cond) {
 	if entityType == SubscriptionEntityProject {
-		cond = builder.Or(
-			builder.And(
-				builder.Eq{"entity_id": entityID},
-				builder.Eq{"entity_type": SubscriptionEntityProject},
-			),
-			builder.And(
-				builder.Eq{"entity_id": builder.
-					Select("namespace_id").
-					From("projects").
-					Where(builder.Eq{"id": entityID}),
-				},
-				builder.Eq{"entity_type": SubscriptionEntityNamespace},
-			),
+		return builder.And(
+			builder.In("entity_id", entityIDs),
+			builder.Eq{"entity_type": SubscriptionEntityProject},
 		)
 	}
 
 	if entityType == SubscriptionEntityTask {
-		cond = builder.Or(
+		return builder.Or(
 			builder.And(
-				builder.Eq{"entity_id": entityID},
+				builder.In("entity_id", entityIDs),
 				builder.Eq{"entity_type": SubscriptionEntityTask},
-			),
-			builder.And(
-				builder.Eq{"entity_id": builder.
-					Select("namespace_id").
-					From("projects").
-					Join("INNER", "tasks", "projects.id = tasks.project_id").
-					Where(builder.Eq{"tasks.id": entityID}),
-				},
-				builder.Eq{"entity_type": SubscriptionEntityNamespace},
 			),
 			builder.And(
 				builder.Eq{"entity_id": builder.
 					Select("project_id").
 					From("tasks").
-					Where(builder.Eq{"id": entityID}),
+					Where(builder.In("id", entityIDs)),
+				// TODO parent project
 				},
 				builder.Eq{"entity_type": SubscriptionEntityProject},
 			),
@@ -225,56 +194,160 @@ func getSubscriberCondForEntity(entityType SubscriptionEntityType, entityID int6
 
 // GetSubscription returns a matching subscription for an entity and user.
 // It will return the next parent of a subscription. That means for tasks, it will first look for a subscription for
-// that task, if there is none it will look for a subscription on the project the task belongs to and if that also
-// doesn't exist it will check for a subscription for the namespace the project is belonging to.
+// that task, if there is none it will look for a subscription on the project the task belongs to.
 func GetSubscription(s *xorm.Session, entityType SubscriptionEntityType, entityID int64, a web.Auth) (subscription *Subscription, err error) {
 	subs, err := GetSubscriptions(s, entityType, []int64{entityID}, a)
 	if err != nil || len(subs) == 0 {
 		return nil, err
 	}
-	if sub, exists := subs[entityID]; exists {
-		return sub, nil // Take exact match first, if available
+	if sub, exists := subs[entityID]; exists && len(sub) > 0 {
+		return sub[0], nil // Take exact match first, if available
 	}
 	for _, sub := range subs {
-		return sub, nil // For parents, take next available
+		if len(sub) > 0 {
+			return sub[0], nil // For parents, take next available
+		}
 	}
 	return nil, nil
 }
 
 // GetSubscriptions returns a map of subscriptions to a set of given entity IDs
-func GetSubscriptions(s *xorm.Session, entityType SubscriptionEntityType, entityIDs []int64, a web.Auth) (projectsToSubscriptions map[int64]*Subscription, err error) {
+func GetSubscriptions(s *xorm.Session, entityType SubscriptionEntityType, entityIDs []int64, a web.Auth) (projectsToSubscriptions map[int64][]*Subscription, err error) {
 	u, is := a.(*user.User)
-	if !is {
+	if u != nil && !is {
 		return
 	}
 	if err := entityType.validate(); err != nil {
 		return nil, err
 	}
 
-	var entitiesFilter builder.Cond
-	for _, eID := range entityIDs {
-		if entitiesFilter == nil {
-			entitiesFilter = getSubscriberCondForEntity(entityType, eID)
-			continue
+	switch entityType {
+	case SubscriptionEntityProject:
+		return getSubscriptionsForProjects(s, entityIDs, u)
+	case SubscriptionEntityTask:
+		subs, err := getSubscriptionsForTasks(s, entityIDs, u)
+		if err != nil {
+			return nil, err
 		}
-		entitiesFilter = entitiesFilter.Or(getSubscriberCondForEntity(entityType, eID))
+
+		// If the task does not have a subscription directly or from its project, get the one
+		// from the parent and return it instead.
+		for _, eID := range entityIDs {
+			if _, has := subs[eID]; has {
+				continue
+			}
+
+			task, err := GetTaskByIDSimple(s, eID)
+			if err != nil {
+				return nil, err
+			}
+			projectSubscriptions, err := getSubscriptionsForProjects(s, []int64{task.ProjectID}, u)
+			if err != nil {
+				return nil, err
+			}
+			for _, subscription := range projectSubscriptions {
+				subs[eID] = subscription // The first project subscription is the subscription we're looking for
+				break
+			}
+		}
+
+		return subs, nil
+	}
+
+	return
+}
+
+func getSubscriptionsForProjects(s *xorm.Session, projectIDs []int64, u *user.User) (projectsToSubscriptions map[int64][]*Subscription, err error) {
+	origEntityIDs := projectIDs
+	var ps = make(map[int64]*Project)
+
+	for _, eID := range projectIDs {
+		ps[eID], err = GetProjectSimpleByID(s, eID)
+		if err != nil {
+			return nil, err
+		}
+		err = ps[eID].GetAllParentProjects(s)
+		if err != nil {
+			return nil, err
+		}
+
+		parentIDs := []int64{}
+		var parent = ps[eID].ParentProject
+		for parent != nil {
+			parentIDs = append(parentIDs, parent.ID)
+			parent = parent.ParentProject
+		}
+
+		// Now we have all parent ids
+		projectIDs = append(projectIDs, parentIDs...) // the child project id is already in there
 	}
 
 	var subscriptions []*Subscription
-	err = s.
-		Where("user_id = ?", u.ID).
-		And(entitiesFilter).
-		Find(&subscriptions)
+	if u != nil {
+		err = s.
+			Where("user_id = ?", u.ID).
+			And(getSubscriberCondForEntities(SubscriptionEntityProject, projectIDs)).
+			Find(&subscriptions)
+	} else {
+		err = s.
+			And(getSubscriberCondForEntities(SubscriptionEntityProject, projectIDs)).
+			Find(&subscriptions)
+	}
 	if err != nil {
 		return nil, err
 	}
 
-	projectsToSubscriptions = make(map[int64]*Subscription)
+	projectsToSubscriptions = make(map[int64][]*Subscription)
 	for _, sub := range subscriptions {
 		sub.Entity = sub.EntityType.String()
-		projectsToSubscriptions[sub.EntityID] = sub
+		projectsToSubscriptions[sub.EntityID] = append(projectsToSubscriptions[sub.EntityID], sub)
 	}
+
+	// Rearrange so that subscriptions trickle down
+
+	for _, eID := range origEntityIDs {
+		// If the current project does not have a subscription, climb up the tree until a project has one,
+		// then use that subscription for all child projects
+		_, has := projectsToSubscriptions[eID]
+		if !has {
+			var parent = ps[eID].ParentProject
+			for parent != nil {
+				sub, has := projectsToSubscriptions[parent.ID]
+				projectsToSubscriptions[eID] = sub
+				parent = parent.ParentProject
+				if has { // reached the top of the tree
+					break
+				}
+			}
+		}
+	}
+
 	return projectsToSubscriptions, nil
+}
+
+func getSubscriptionsForTasks(s *xorm.Session, taskIDs []int64, u *user.User) (projectsToSubscriptions map[int64][]*Subscription, err error) {
+	var subscriptions []*Subscription
+	if u != nil {
+		err = s.
+			Where("user_id = ?", u.ID).
+			And(getSubscriberCondForEntities(SubscriptionEntityTask, taskIDs)).
+			Find(&subscriptions)
+	} else {
+		err = s.
+			And(getSubscriberCondForEntities(SubscriptionEntityTask, taskIDs)).
+			Find(&subscriptions)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	projectsToSubscriptions = make(map[int64][]*Subscription)
+	for _, sub := range subscriptions {
+		sub.Entity = sub.EntityType.String()
+		projectsToSubscriptions[sub.EntityID] = append(projectsToSubscriptions[sub.EntityID], sub)
+	}
+
+	return
 }
 
 func getSubscribersForEntity(s *xorm.Session, entityType SubscriptionEntityType, entityID int64) (subscriptions []*Subscription, err error) {
@@ -282,17 +355,18 @@ func getSubscribersForEntity(s *xorm.Session, entityType SubscriptionEntityType,
 		return nil, err
 	}
 
-	cond := getSubscriberCondForEntity(entityType, entityID)
-	err = s.
-		Where(cond).
-		Find(&subscriptions)
+	subs, err := GetSubscriptions(s, entityType, []int64{entityID}, nil)
 	if err != nil {
 		return
 	}
 
 	userIDs := []int64{}
-	for _, subscription := range subscriptions {
-		userIDs = append(userIDs, subscription.UserID)
+	subscriptions = make([]*Subscription, 0, len(subs))
+	for _, subss := range subs {
+		for _, subscription := range subss {
+			userIDs = append(userIDs, subscription.UserID)
+			subscriptions = append(subscriptions, subscription)
+		}
 	}
 
 	users, err := user.GetUsersByIDs(s, userIDs)

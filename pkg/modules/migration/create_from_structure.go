@@ -30,8 +30,8 @@ import (
 )
 
 // InsertFromStructure takes a fully nested Vikunja data structure and a user and then creates everything for this user
-// (Namespaces, tasks, etc. Even attachments and relations.)
-func InsertFromStructure(str []*models.NamespaceWithProjectsAndTasks, user *user.User) (err error) {
+// (Projects, tasks, etc. Even attachments and relations.)
+func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, user *user.User) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -45,238 +45,19 @@ func InsertFromStructure(str []*models.NamespaceWithProjectsAndTasks, user *user
 	return s.Commit()
 }
 
-func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithProjectsAndTasks, user *user.User) (err error) {
+func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBuckets, user *user.User) (err error) {
 
-	log.Debugf("[creating structure] Creating %d namespaces", len(str))
+	log.Debugf("[creating structure] Creating %d projects", len(str))
 
 	labels := make(map[string]*models.Label)
-
 	archivedProjects := []int64{}
-	archivedNamespaces := []int64{}
 
-	// Create all namespaces
-	for _, n := range str {
-		n.ID = 0
-
-		// Saving the archived status to archive the namespace again after creating it
-		var wasArchived bool
-		if n.IsArchived {
-			n.IsArchived = false
-			wasArchived = true
-		}
-
-		err = n.Create(s, user)
+	// Create all projects
+	for _, p := range str {
+		p.ID = 0
+		err = createProjectWithChildren(s, p, 0, &archivedProjects, labels, user)
 		if err != nil {
-			return
-		}
-
-		if wasArchived {
-			archivedNamespaces = append(archivedNamespaces, n.ID)
-		}
-
-		log.Debugf("[creating structure] Created namespace %d", n.ID)
-		log.Debugf("[creating structure] Creating %d projects", len(n.Projects))
-
-		// Create all projects
-		for _, l := range n.Projects {
-			// The tasks and bucket slices are going to be reset during the creation of the project so we rescue it here
-			// to be able to still loop over them aftere the project was created.
-			tasks := l.Tasks
-			originalBuckets := l.Buckets
-			originalBackgroundInformation := l.BackgroundInformation
-			needsDefaultBucket := false
-
-			// Saving the archived status to archive the project again after creating it
-			var wasArchived bool
-			if l.IsArchived {
-				wasArchived = true
-				l.IsArchived = false
-			}
-
-			l.NamespaceID = n.ID
-			l.ID = 0
-			err = l.Create(s, user)
-			if err != nil {
-				return
-			}
-
-			if wasArchived {
-				archivedProjects = append(archivedProjects, l.ID)
-			}
-
-			log.Debugf("[creating structure] Created project %d", l.ID)
-
-			bf, is := originalBackgroundInformation.(*bytes.Buffer)
-			if is {
-
-				backgroundFile := bytes.NewReader(bf.Bytes())
-
-				log.Debugf("[creating structure] Creating a background file for project %d", l.ID)
-
-				err = handler.SaveBackgroundFile(s, user, &l.Project, backgroundFile, "", uint64(backgroundFile.Len()))
-				if err != nil {
-					return err
-				}
-
-				log.Debugf("[creating structure] Created a background file for project %d", l.ID)
-			}
-
-			// Create all buckets
-			buckets := make(map[int64]*models.Bucket) // old bucket id is the key
-			if len(l.Buckets) > 0 {
-				log.Debugf("[creating structure] Creating %d buckets", len(l.Buckets))
-			}
-			for _, bucket := range originalBuckets {
-				oldID := bucket.ID
-				bucket.ID = 0 // We want a new id
-				bucket.ProjectID = l.ID
-				err = bucket.Create(s, user)
-				if err != nil {
-					return
-				}
-				buckets[oldID] = bucket
-				log.Debugf("[creating structure] Created bucket %d, old ID was %d", bucket.ID, oldID)
-			}
-
-			log.Debugf("[creating structure] Creating %d tasks", len(tasks))
-
-			setBucketOrDefault := func(task *models.Task) {
-				bucket, exists := buckets[task.BucketID]
-				if exists {
-					task.BucketID = bucket.ID
-				} else if task.BucketID > 0 {
-					log.Debugf("[creating structure] No bucket created for original bucket id %d", task.BucketID)
-					task.BucketID = 0
-				}
-				if !exists || task.BucketID == 0 {
-					needsDefaultBucket = true
-				}
-			}
-
-			// Create all tasks
-			for _, t := range tasks {
-				setBucketOrDefault(&t.Task)
-
-				t.ProjectID = l.ID
-				err = t.Create(s, user)
-				if err != nil {
-					return
-				}
-
-				log.Debugf("[creating structure] Created task %d", t.ID)
-				if len(t.RelatedTasks) > 0 {
-					log.Debugf("[creating structure] Creating %d related task kinds", len(t.RelatedTasks))
-				}
-
-				// Create all relation for each task
-				for kind, tasks := range t.RelatedTasks {
-
-					if len(tasks) > 0 {
-						log.Debugf("[creating structure] Creating %d related tasks for kind %v", len(tasks), kind)
-					}
-
-					for _, rt := range tasks {
-						// First create the related tasks if they do not exist
-						if rt.ID == 0 {
-							setBucketOrDefault(rt)
-							rt.ProjectID = t.ProjectID
-							err = rt.Create(s, user)
-							if err != nil {
-								return
-							}
-							log.Debugf("[creating structure] Created related task %d", rt.ID)
-						}
-
-						// Then create the relation
-						taskRel := &models.TaskRelation{
-							TaskID:       t.ID,
-							OtherTaskID:  rt.ID,
-							RelationKind: kind,
-						}
-						err = taskRel.Create(s, user)
-						if err != nil {
-							return
-						}
-
-						log.Debugf("[creating structure] Created task relation between task %d and %d", t.ID, rt.ID)
-
-					}
-				}
-
-				// Create all attachments for each task
-				if len(t.Attachments) > 0 {
-					log.Debugf("[creating structure] Creating %d attachments", len(t.Attachments))
-				}
-				for _, a := range t.Attachments {
-					// Check if we have a file to create
-					if len(a.File.FileContent) > 0 {
-						a.TaskID = t.ID
-						fr := io.NopCloser(bytes.NewReader(a.File.FileContent))
-						err = a.NewAttachment(s, fr, a.File.Name, a.File.Size, user)
-						if err != nil {
-							return
-						}
-						log.Debugf("[creating structure] Created new attachment %d", a.ID)
-					}
-				}
-
-				// Create all labels
-				for _, label := range t.Labels {
-					// Check if we already have a label with that name + color combination and use it
-					// If not, create one and save it for later
-					var lb *models.Label
-					var exists bool
-					if label == nil {
-						continue
-					}
-					lb, exists = labels[label.Title+label.HexColor]
-					if !exists {
-						err = label.Create(s, user)
-						if err != nil {
-							return err
-						}
-						log.Debugf("[creating structure] Created new label %d", label.ID)
-						labels[label.Title+label.HexColor] = label
-						lb = label
-					}
-
-					lt := &models.LabelTask{
-						LabelID: lb.ID,
-						TaskID:  t.ID,
-					}
-					err = lt.Create(s, user)
-					if err != nil && !models.IsErrLabelIsAlreadyOnTask(err) {
-						return err
-					}
-					log.Debugf("[creating structure] Associated task %d with label %d", t.ID, lb.ID)
-				}
-
-				for _, comment := range t.Comments {
-					comment.TaskID = t.ID
-					err = comment.Create(s, user)
-					if err != nil {
-						return
-					}
-					log.Debugf("[creating structure] Created new comment %d", comment.ID)
-				}
-			}
-
-			// All tasks brought their own bucket with them, therefore the newly created default bucket is just extra space
-			if !needsDefaultBucket {
-				b := &models.Bucket{ProjectID: l.ID}
-				bucketsIn, _, _, err := b.ReadAll(s, user, "", 1, 1)
-				if err != nil {
-					return err
-				}
-				buckets := bucketsIn.([]*models.Bucket)
-				err = buckets[0].Delete(s, user)
-				if err != nil && !models.IsErrCannotRemoveLastBucket(err) {
-					return err
-				}
-			}
-
-			l.Tasks = tasks
-			l.Buckets = originalBuckets
+			return err
 		}
 	}
 
@@ -290,17 +71,241 @@ func insertFromStructure(s *xorm.Session, str []*models.NamespaceWithProjectsAnd
 		}
 	}
 
-	if len(archivedNamespaces) > 0 {
-		_, err = s.
-			Cols("is_archived").
-			In("id", archivedNamespaces).
-			Update(&models.Namespace{IsArchived: true})
+	log.Debugf("[creating structure] Done inserting new task structure")
+
+	return nil
+}
+
+func createProjectWithChildren(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, parentProjectID int64, archivedProjectIDs *[]int64, labels map[string]*models.Label, user *user.User) (err error) {
+	err = createProjectWithEverything(s, project, parentProjectID, archivedProjectIDs, labels, user)
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("[creating structure] Created project %d", project.ID)
+
+	if len(project.ChildProjects) > 0 {
+		log.Debugf("[creating structure] Creating %d projects", len(project.ChildProjects))
+
+		// Create all projects
+		for _, cp := range project.ChildProjects {
+			err = createProjectWithChildren(s, cp, project.ID, archivedProjectIDs, labels, user)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return
+}
+
+func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, parentProjectID int64, archivedProjects *[]int64, labels map[string]*models.Label, user *user.User) (err error) {
+	// The tasks and bucket slices are going to be reset during the creation of the project, so we rescue it here
+	// to be able to still loop over them aftere the project was created.
+	tasks := project.Tasks
+	originalBuckets := project.Buckets
+	originalBackgroundInformation := project.BackgroundInformation
+	needsDefaultBucket := false
+
+	// Saving the archived status to archive the project again after creating it
+	var wasArchived bool
+	if project.IsArchived {
+		wasArchived = true
+		project.IsArchived = false
+	}
+
+	project.ParentProjectID = parentProjectID
+	project.ID = 0
+	err = project.Create(s, user)
+	if err != nil {
+		return
+	}
+
+	if wasArchived {
+		*archivedProjects = append(*archivedProjects, project.ID)
+	}
+
+	log.Debugf("[creating structure] Created project %d", project.ID)
+
+	bf, is := originalBackgroundInformation.(*bytes.Buffer)
+	if is {
+
+		backgroundFile := bytes.NewReader(bf.Bytes())
+
+		log.Debugf("[creating structure] Creating a background file for project %d", project.ID)
+
+		err = handler.SaveBackgroundFile(s, user, &project.Project, backgroundFile, "", uint64(backgroundFile.Len()))
 		if err != nil {
+			return err
+		}
+
+		log.Debugf("[creating structure] Created a background file for project %d", project.ID)
+	}
+
+	// Create all buckets
+	buckets := make(map[int64]*models.Bucket) // old bucket id is the key
+	if len(project.Buckets) > 0 {
+		log.Debugf("[creating structure] Creating %d buckets", len(project.Buckets))
+	}
+	for _, bucket := range originalBuckets {
+		oldID := bucket.ID
+		bucket.ID = 0 // We want a new id
+		bucket.ProjectID = project.ID
+		err = bucket.Create(s, user)
+		if err != nil {
+			return
+		}
+		buckets[oldID] = bucket
+		log.Debugf("[creating structure] Created bucket %d, old ID was %d", bucket.ID, oldID)
+	}
+
+	log.Debugf("[creating structure] Creating %d tasks", len(tasks))
+
+	setBucketOrDefault := func(task *models.Task) {
+		bucket, exists := buckets[task.BucketID]
+		if exists {
+			task.BucketID = bucket.ID
+		} else if task.BucketID > 0 {
+			log.Debugf("[creating structure] No bucket created for original bucket id %d", task.BucketID)
+			task.BucketID = 0
+		}
+		if !exists || task.BucketID == 0 {
+			needsDefaultBucket = true
+		}
+	}
+
+	// Create all tasks
+	for _, t := range tasks {
+		setBucketOrDefault(&t.Task)
+
+		t.ProjectID = project.ID
+		err = t.Create(s, user)
+		if err != nil {
+			return
+		}
+
+		log.Debugf("[creating structure] Created task %d", t.ID)
+		if len(t.RelatedTasks) > 0 {
+			log.Debugf("[creating structure] Creating %d related task kinds", len(t.RelatedTasks))
+		}
+
+		// Create all relation for each task
+		for kind, tasks := range t.RelatedTasks {
+
+			if len(tasks) > 0 {
+				log.Debugf("[creating structure] Creating %d related tasks for kind %v", len(tasks), kind)
+			}
+
+			for _, rt := range tasks {
+				// First create the related tasks if they do not exist
+				if rt.ID == 0 {
+					setBucketOrDefault(rt)
+					rt.ProjectID = t.ProjectID
+					err = rt.Create(s, user)
+					if err != nil {
+						return
+					}
+					log.Debugf("[creating structure] Created related task %d", rt.ID)
+				}
+
+				// Then create the relation
+				taskRel := &models.TaskRelation{
+					TaskID:       t.ID,
+					OtherTaskID:  rt.ID,
+					RelationKind: kind,
+				}
+				err = taskRel.Create(s, user)
+				if err != nil {
+					return
+				}
+
+				log.Debugf("[creating structure] Created task relation between task %d and %d", t.ID, rt.ID)
+
+			}
+		}
+
+		// Create all attachments for each task
+		if len(t.Attachments) > 0 {
+			log.Debugf("[creating structure] Creating %d attachments", len(t.Attachments))
+		}
+		for _, a := range t.Attachments {
+			// Check if we have a file to create
+			if len(a.File.FileContent) > 0 {
+				a.TaskID = t.ID
+				fr := io.NopCloser(bytes.NewReader(a.File.FileContent))
+				err = a.NewAttachment(s, fr, a.File.Name, a.File.Size, user)
+				if err != nil {
+					return
+				}
+				log.Debugf("[creating structure] Created new attachment %d", a.ID)
+			}
+		}
+
+		// Create all labels
+		for _, label := range t.Labels {
+			// Check if we already have a label with that name + color combination and use it
+			// If not, create one and save it for later
+			var lb *models.Label
+			var exists bool
+			if label == nil {
+				continue
+			}
+			lb, exists = labels[label.Title+label.HexColor]
+			if !exists {
+				err = label.Create(s, user)
+				if err != nil {
+					return err
+				}
+				log.Debugf("[creating structure] Created new label %d", label.ID)
+				labels[label.Title+label.HexColor] = label
+				lb = label
+			}
+
+			lt := &models.LabelTask{
+				LabelID: lb.ID,
+				TaskID:  t.ID,
+			}
+			err = lt.Create(s, user)
+			if err != nil && !models.IsErrLabelIsAlreadyOnTask(err) {
+				return err
+			}
+			log.Debugf("[creating structure] Associated task %d with label %d", t.ID, lb.ID)
+		}
+
+		for _, comment := range t.Comments {
+			comment.TaskID = t.ID
+			comment.ID = 0
+			err = comment.Create(s, user)
+			if err != nil {
+				return
+			}
+			log.Debugf("[creating structure] Created new comment %d", comment.ID)
+		}
+	}
+
+	// All tasks brought their own bucket with them, therefore the newly created default bucket is just extra space
+	if !needsDefaultBucket {
+		b := &models.Bucket{ProjectID: project.ID}
+		bucketsIn, _, _, err := b.ReadAll(s, user, "", 1, 1)
+		if err != nil {
+			return err
+		}
+		buckets := bucketsIn.([]*models.Bucket)
+		var newBacklogBucket *models.Bucket
+		for _, b := range buckets {
+			if b.Title == "Backlog" {
+				newBacklogBucket = b
+				break
+			}
+		}
+		err = newBacklogBucket.Delete(s, user)
+		if err != nil && !models.IsErrCannotRemoveLastBucket(err) {
 			return err
 		}
 	}
 
-	log.Debugf("[creating structure] Done inserting new task structure")
+	project.Tasks = tasks
+	project.Buckets = originalBuckets
 
 	return nil
 }

@@ -371,7 +371,7 @@ func TestUpdateUserPassword(t *testing.T) {
 	})
 }
 
-func TestProjectUsers(t *testing.T) {
+func TestListUsers(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

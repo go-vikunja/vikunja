@@ -52,10 +52,6 @@ func setupMetrics(a *echo.Group) {
 			user.User{},
 		},
 		{
-			metrics.NamespaceCountKey,
-			models.Namespace{},
-		},
-		{
 			metrics.TaskCountKey,
 			models.Task{},
 		},

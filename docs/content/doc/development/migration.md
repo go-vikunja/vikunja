@@ -100,9 +100,10 @@ You should also document the routes with [swagger annotations]({{< ref "swagger-
 ## Insertion helper method
 
 There is a method available in the `migration` package which takes a fully nested Vikunja structure and creates it with all relations.
-This means you start by adding a namespace, then add projects inside that namespace, then tasks in the lists and so on.
+This means you start by adding a project, then add projects inside that project, then tasks in the lists and so on.
+In general, it is reccommended to have one root project with all projects of the other service as child projects.
 
-The root structure must be present as `[]*models.NamespaceWithProjectsAndTasks`. It allows to represent all of Vikunja's hierarchy as a single data structure.
+The root structure must be present as `[]*models.ProjectWithTasksAndBuckets`. It allows to represent all of Vikunja's hierarchy as a single data structure.
 
 Then call the method like so:
 

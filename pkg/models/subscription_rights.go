@@ -30,9 +30,6 @@ func (sb *Subscription) CanCreate(s *xorm.Session, a web.Auth) (can bool, err er
 	sb.EntityType = getEntityTypeFromString(sb.Entity)
 
 	switch sb.EntityType {
-	case SubscriptionEntityNamespace:
-		n := &Namespace{ID: sb.EntityID}
-		can, _, err = n.CanRead(s, a)
 	case SubscriptionEntityProject:
 		l := &Project{ID: sb.EntityID}
 		can, _, err = l.CanRead(s, a)

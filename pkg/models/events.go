@@ -21,16 +21,6 @@ import (
 	"code.vikunja.io/web"
 )
 
-// DataExportRequestEvent represents a DataExportRequestEvent event
-type DataExportRequestEvent struct {
-	User *user.User
-}
-
-// Name defines the name for DataExportRequestEvent
-func (t *DataExportRequestEvent) Name() string {
-	return "user.export.request"
-}
-
 /////////////////
 // Task Events //
 /////////////////
@@ -176,46 +166,9 @@ func (t *TaskRelationDeletedEvent) Name() string {
 	return "task.relation.deleted"
 }
 
-//////////////////////
-// Namespace Events //
-//////////////////////
-
-// NamespaceCreatedEvent represents an event where a namespace has been created
-type NamespaceCreatedEvent struct {
-	Namespace *Namespace
-	Doer      web.Auth
-}
-
-// Name defines the name for NamespaceCreatedEvent
-func (n *NamespaceCreatedEvent) Name() string {
-	return "namespace.created"
-}
-
-// NamespaceUpdatedEvent represents an event where a namespace has been updated
-type NamespaceUpdatedEvent struct {
-	Namespace *Namespace
-	Doer      web.Auth
-}
-
-// Name defines the name for NamespaceUpdatedEvent
-func (n *NamespaceUpdatedEvent) Name() string {
-	return "namespace.updated"
-}
-
-// NamespaceDeletedEvent represents a NamespaceDeletedEvent event
-type NamespaceDeletedEvent struct {
-	Namespace *Namespace
-	Doer      web.Auth
-}
-
-// TopicName defines the name for NamespaceDeletedEvent
-func (t *NamespaceDeletedEvent) Name() string {
-	return "namespace.deleted"
-}
-
-/////////////////
+////////////////////
 // Project Events //
-/////////////////
+////////////////////
 
 // ProjectCreatedEvent represents an event where a project has been created
 type ProjectCreatedEvent struct {
@@ -276,30 +229,6 @@ type ProjectSharedWithTeamEvent struct {
 // Name defines the name for ProjectSharedWithTeamEvent
 func (l *ProjectSharedWithTeamEvent) Name() string {
 	return "project.shared.team"
-}
-
-// NamespaceSharedWithUserEvent represents an event where a namespace has been shared with a user
-type NamespaceSharedWithUserEvent struct {
-	Namespace *Namespace
-	User      *user.User
-	Doer      web.Auth
-}
-
-// Name defines the name for NamespaceSharedWithUserEvent
-func (n *NamespaceSharedWithUserEvent) Name() string {
-	return "namespace.shared.user"
-}
-
-// NamespaceSharedWithTeamEvent represents an event where a namespace has been shared with a team
-type NamespaceSharedWithTeamEvent struct {
-	Namespace *Namespace
-	Team      *Team
-	Doer      web.Auth
-}
-
-// Name defines the name for NamespaceSharedWithTeamEvent
-func (n *NamespaceSharedWithTeamEvent) Name() string {
-	return "namespace.shared.team"
 }
 
 /////////////////

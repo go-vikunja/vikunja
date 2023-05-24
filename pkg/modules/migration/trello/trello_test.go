@@ -187,12 +187,12 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 	}
 	trelloData[0].Prefs.BackgroundImage = "https://vikunja.io/testimage.jpg" // Using an image which we are hosting, so it'll still be up
 
-	expectedHierachie := []*models.NamespaceWithProjectsAndTasks{
+	expectedHierachie := []*models.ProjectWithTasksAndBuckets{
 		{
-			Namespace: models.Namespace{
+			Project: models.Project{
 				Title: "Imported from Trello",
 			},
-			Projects: []*models.ProjectWithTasksAndBuckets{
+			ChildProjects: []*models.ProjectWithTasksAndBuckets{
 				{
 					Project: models.Project{
 						Title:                 "TestBoard",

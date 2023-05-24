@@ -241,7 +241,7 @@ func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 
 // Create is the handler to create a team
 // @Summary Creates a new team
-// @Description Creates a new team in a given namespace. The user needs write-access to the namespace.
+// @Description Creates a new team.
 // @tags team
 // @Accept json
 // @Produce json
@@ -303,12 +303,6 @@ func (t *Team) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// Delete team members
 	_, err = s.Where("team_id = ?", t.ID).Delete(&TeamMember{})
-	if err != nil {
-		return
-	}
-
-	// Delete team <-> namespace relations
-	_, err = s.Where("team_id = ?", t.ID).Delete(&TeamNamespace{})
 	if err != nil {
 		return
 	}

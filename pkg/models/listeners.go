@@ -35,8 +35,6 @@ import (
 func RegisterListeners() {
 	events.RegisterListener((&ProjectCreatedEvent{}).Name(), &IncreaseProjectCounter{})
 	events.RegisterListener((&ProjectDeletedEvent{}).Name(), &DecreaseProjectCounter{})
-	events.RegisterListener((&NamespaceCreatedEvent{}).Name(), &IncreaseNamespaceCounter{})
-	events.RegisterListener((&NamespaceDeletedEvent{}).Name(), &DecreaseNamespaceCounter{})
 	events.RegisterListener((&TaskCreatedEvent{}).Name(), &IncreaseTaskCounter{})
 	events.RegisterListener((&TaskDeletedEvent{}).Name(), &DecreaseTaskCounter{})
 	events.RegisterListener((&TeamDeletedEvent{}).Name(), &DecreaseTeamCounter{})
@@ -538,37 +536,6 @@ func (s *SendProjectCreatedNotification) Handle(msg *message.Message) (err error
 	}
 
 	return nil
-}
-
-//////
-// Namespace events
-
-// IncreaseNamespaceCounter  represents a listener
-type IncreaseNamespaceCounter struct {
-}
-
-// Name defines the name for the IncreaseNamespaceCounter listener
-func (s *IncreaseNamespaceCounter) Name() string {
-	return "namespace.counter.increase"
-}
-
-// Hanlde is executed when the event IncreaseNamespaceCounter listens on is fired
-func (s *IncreaseNamespaceCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.IncrBy(metrics.NamespaceCountKey, 1)
-}
-
-// DecreaseNamespaceCounter  represents a listener
-type DecreaseNamespaceCounter struct {
-}
-
-// Name defines the name for the DecreaseNamespaceCounter listener
-func (s *DecreaseNamespaceCounter) Name() string {
-	return "namespace.counter.decrease"
-}
-
-// Handle is executed when the event DecreaseNamespaceCounter listens on is fired
-func (s *DecreaseNamespaceCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.DecrBy(metrics.NamespaceCountKey, 1)
 }
 
 ///////

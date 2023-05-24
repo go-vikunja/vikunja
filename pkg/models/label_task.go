@@ -180,7 +180,7 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*Lab
 			builder.
 				Select("id").
 				From("tasks").
-				Where(builder.In("project_id", getUserProjectsStatement(opts.GetForUser).Select("l.id"))),
+				Where(builder.In("project_id", getUserProjectsStatement(nil, opts.GetForUser, "", false).Select("l.id"))),
 		), cond)
 	}
 	if opts.GetUnusedLabels {

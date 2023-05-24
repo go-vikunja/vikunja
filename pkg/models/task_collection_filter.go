@@ -237,24 +237,6 @@ func getNativeValueForTaskField(fieldName string, comparator taskFilterComparato
 
 	realFieldName := strings.ReplaceAll(strcase.ToCamel(fieldName), "Id", "ID")
 
-	if realFieldName == "Namespace" {
-		if comparator == taskFilterComparatorIn {
-			vals := strings.Split(value, ",")
-			valueSlice := []interface{}{}
-			for _, val := range vals {
-				v, err := strconv.ParseInt(val, 10, 64)
-				if err != nil {
-					return nil, nil, err
-				}
-				valueSlice = append(valueSlice, v)
-			}
-			return nil, valueSlice, nil
-		}
-
-		nativeValue, err = strconv.ParseInt(value, 10, 64)
-		return
-	}
-
 	if realFieldName == "Assignees" {
 		vals := strings.Split(value, ",")
 		valueSlice := append([]string{}, vals...)

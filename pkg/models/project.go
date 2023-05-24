@@ -17,6 +17,7 @@
 package models
 
 import (
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -37,7 +38,7 @@ import (
 type Project struct {
 	// The unique, numeric id of this project.
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"project"`
-	// The title of the project. You'll see this in the namespace overview.
+	// The title of the project. You'll see this in the overview.
 	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(1|250)" minLength:"1" maxLength:"250"`
 	// The description of the project.
 	Description string `xorm:"longtext null" json:"description"`
@@ -46,13 +47,14 @@ type Project struct {
 	// The hex color of this project
 	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
 
-	OwnerID     int64 `xorm:"bigint INDEX not null" json:"-"`
-	NamespaceID int64 `xorm:"bigint INDEX not null" json:"namespace_id" param:"namespace"`
+	OwnerID         int64    `xorm:"bigint INDEX not null" json:"-"`
+	ParentProjectID int64    `xorm:"bigint INDEX null" json:"parent_project_id"`
+	ParentProject   *Project `xorm:"-" json:"-"`
 
 	// The user who created this project.
 	Owner *user.User `xorm:"-" json:"owner" valid:"-"`
 
-	// Whether or not a project is archived.
+	// Whether a project is archived.
 	IsArchived bool `xorm:"not null default false" json:"is_archived" query:"is_archived"`
 
 	// The id of the file this project has set as background
@@ -62,7 +64,7 @@ type Project struct {
 	// Contains a very small version of the project background to use as a blurry preview until the actual background is loaded. Check out https://blurha.sh/ to learn how it works.
 	BackgroundBlurHash string `xorm:"varchar(50) null" json:"background_blur_hash"`
 
-	// True if a project is a favorite. Favorite projects show up in a separate namespace. This value depends on the user making the call to the api.
+	// True if a project is a favorite. Favorite projects show up in a separate parent project. This value depends on the user making the call to the api.
 	IsFavorite bool `xorm:"-" json:"is_favorite"`
 
 	// The subscription status for the user reading this project. You can only read this property, use the subscription endpoints to modify it.
@@ -83,6 +85,8 @@ type Project struct {
 
 type ProjectWithTasksAndBuckets struct {
 	Project
+	ChildProjects []*ProjectWithTasksAndBuckets `xorm:"-" json:"child_projects"`
+
 	// An array of tasks which belong to the project.
 	Tasks []*TaskWithComments `xorm:"-" json:"tasks"`
 	// Only used for migration.
@@ -91,7 +95,7 @@ type ProjectWithTasksAndBuckets struct {
 }
 
 // TableName returns a better name for the projects table
-func (l *Project) TableName() string {
+func (p *Project) TableName() string {
 	return "projects"
 }
 
@@ -103,70 +107,33 @@ type ProjectBackgroundType struct {
 // ProjectBackgroundUpload represents the project upload background type
 const ProjectBackgroundUpload string = "upload"
 
+// SharedProjectsPseudoProject is a pseudo project used to hold shared projects
+var SharedProjectsPseudoProject = &Project{
+	ID:          -1,
+	Title:       "Shared Projects",
+	Description: "Projects of other users shared with you via teams or directly.",
+	Created:     time.Now(),
+	Updated:     time.Now(),
+}
+
+// SavedFiltersPseudoProject is a pseudo parent project used to hold saved filters
+var SavedFiltersPseudoProject = &Project{
+	ID:          -3,
+	Title:       "Filters",
+	Description: "Saved filters.",
+	Created:     time.Now(),
+	Updated:     time.Now(),
+}
+
 // FavoritesPseudoProject holds all tasks marked as favorites
 var FavoritesPseudoProject = Project{
 	ID:          -1,
 	Title:       "Favorites",
 	Description: "This project has all tasks marked as favorites.",
-	NamespaceID: FavoritesPseudoNamespace.ID,
 	IsFavorite:  true,
+	Position:    -1,
 	Created:     time.Now(),
 	Updated:     time.Now(),
-}
-
-// GetProjectsByNamespaceID gets all projects in a namespace
-func GetProjectsByNamespaceID(s *xorm.Session, nID int64, doer *user.User) (projects []*Project, err error) {
-	switch nID {
-	case SharedProjectsPseudoNamespace.ID:
-		nnn, err := getSharedProjectsInNamespace(s, false, doer)
-		if err != nil {
-			return nil, err
-		}
-		if nnn != nil && nnn.Projects != nil {
-			projects = nnn.Projects
-		}
-	case FavoritesPseudoNamespace.ID:
-		namespaces := make(map[int64]*NamespaceWithProjects)
-		_, err := getNamespacesWithProjects(s, &namespaces, "", false, 0, -1, doer.ID)
-		if err != nil {
-			return nil, err
-		}
-		namespaceIDs, _ := getNamespaceOwnerIDs(namespaces)
-		ls, err := getProjectsForNamespaces(s, namespaceIDs, false)
-		if err != nil {
-			return nil, err
-		}
-		nnn, err := getFavoriteProjects(s, ls, namespaceIDs, doer)
-		if err != nil {
-			return nil, err
-		}
-		if nnn != nil && nnn.Projects != nil {
-			projects = nnn.Projects
-		}
-	case SavedFiltersPseudoNamespace.ID:
-		nnn, err := getSavedFilters(s, doer)
-		if err != nil {
-			return nil, err
-		}
-		if nnn != nil && nnn.Projects != nil {
-			projects = nnn.Projects
-		}
-	default:
-		err = s.Select("l.*").
-			Alias("l").
-			Join("LEFT", []string{"namespaces", "n"}, "l.namespace_id = n.id").
-			Where("l.is_archived = false").
-			Where("n.is_archived = false OR n.is_archived IS NULL").
-			Where("namespace_id = ?", nID).
-			Find(&projects)
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	// get more project details
-	err = addProjectDetails(s, projects, doer)
-	return projects, err
 }
 
 // ReadAll gets all projects a user has access to
@@ -184,7 +151,7 @@ func GetProjectsByNamespaceID(s *xorm.Session, nID int64, doer *user.User) (proj
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects [get]
-func (l *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 	// Check if we're dealing with a share auth
 	shareAuth, ok := a.(*LinkSharing)
 	if ok {
@@ -197,22 +164,47 @@ func (l *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 		return projects, 0, 0, err
 	}
 
-	projects, resultCount, totalItems, err := getRawProjectsForUser(
+	doer, err := user.GetFromAuth(a)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	prs, resultCount, totalItems, err := getRawProjectsForUser(
 		s,
 		&projectOptions{
-			search:     search,
-			user:       &user.User{ID: a.GetID()},
-			page:       page,
-			perPage:    perPage,
-			isArchived: l.IsArchived,
+			search:      search,
+			user:        doer,
+			page:        page,
+			perPage:     perPage,
+			getArchived: p.IsArchived,
 		})
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	// Add more project details
-	err = addProjectDetails(s, projects, a)
-	return projects, resultCount, totalItems, err
+	/////////////////
+	// Saved Filters
+
+	savedFiltersProject, err := getSavedFilterProjects(s, doer)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	if savedFiltersProject != nil {
+		prs = append(prs, savedFiltersProject)
+	}
+
+	/////////////////
+	// Add project details (favorite state, among other things)
+	err = addProjectDetails(s, prs, a)
+	if err != nil {
+		return
+	}
+
+	//////////////////////////
+	// Putting it all together
+
+	return prs, resultCount, totalItems, err
 }
 
 // ReadOne gets one project by its ID
@@ -227,61 +219,59 @@ func (l *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id} [get]
-func (l *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
+func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
-	if l.ID == FavoritesPseudoProject.ID {
+	if p.ID == FavoritesPseudoProject.ID {
 		// Already "built" the project in CanRead
 		return nil
 	}
 
 	// Check for saved filters
-	if getSavedFilterIDFromProjectID(l.ID) > 0 {
-		sf, err := getSavedFilterSimpleByID(s, getSavedFilterIDFromProjectID(l.ID))
+	if getSavedFilterIDFromProjectID(p.ID) > 0 {
+		sf, err := getSavedFilterSimpleByID(s, getSavedFilterIDFromProjectID(p.ID))
 		if err != nil {
 			return err
 		}
-		l.Title = sf.Title
-		l.Description = sf.Description
-		l.Created = sf.Created
-		l.Updated = sf.Updated
-		l.OwnerID = sf.OwnerID
+		p.Title = sf.Title
+		p.Description = sf.Description
+		p.Created = sf.Created
+		p.Updated = sf.Updated
+		p.OwnerID = sf.OwnerID
 	}
 
 	// Get project owner
-	l.Owner, err = user.GetUserByID(s, l.OwnerID)
+	p.Owner, err = user.GetUserByID(s, p.OwnerID)
 	if err != nil {
 		return err
 	}
-	// Check if the namespace is archived and set the namespace to archived if it is not already archived individually.
-	if !l.IsArchived {
-		err = l.CheckIsArchived(s)
+
+	// Check if the project is archived and set it to archived if it is not already archived individually.
+	if !p.IsArchived {
+		err = p.CheckIsArchived(s)
 		if err != nil {
-			if !IsErrNamespaceIsArchived(err) && !IsErrProjectIsArchived(err) {
-				return
-			}
-			l.IsArchived = true
+			p.IsArchived = true
 		}
 	}
 
 	// Get any background information if there is one set
-	if l.BackgroundFileID != 0 {
+	if p.BackgroundFileID != 0 {
 		// Unsplash image
-		l.BackgroundInformation, err = GetUnsplashPhotoByFileID(s, l.BackgroundFileID)
+		p.BackgroundInformation, err = GetUnsplashPhotoByFileID(s, p.BackgroundFileID)
 		if err != nil && !files.IsErrFileIsNotUnsplashFile(err) {
 			return
 		}
 
 		if err != nil && files.IsErrFileIsNotUnsplashFile(err) {
-			l.BackgroundInformation = &ProjectBackgroundType{Type: ProjectBackgroundUpload}
+			p.BackgroundInformation = &ProjectBackgroundType{Type: ProjectBackgroundUpload}
 		}
 	}
 
-	l.IsFavorite, err = isFavorite(s, l.ID, a, FavoriteKindProject)
+	p.IsFavorite, err = isFavorite(s, p.ID, a, FavoriteKindProject)
 	if err != nil {
 		return
 	}
 
-	l.Subscription, err = GetSubscription(s, SubscriptionEntityProject, l.ID, a)
+	p.Subscription, err = GetSubscription(s, SubscriptionEntityProject, p.ID, a)
 	return
 }
 
@@ -344,62 +334,31 @@ func GetProjectsByIDs(s *xorm.Session, projectIDs []int64) (projects map[int64]*
 }
 
 type projectOptions struct {
-	search     string
-	user       *user.User
-	page       int
-	perPage    int
-	isArchived bool
+	search      string
+	user        *user.User
+	page        int
+	perPage     int
+	getArchived bool
 }
 
-func getUserProjectsStatement(userID int64) *builder.Builder {
+func getUserProjectsStatement(parentProjectIDs []int64, userID int64, search string, getArchived bool) *builder.Builder {
 	dialect := config.DatabaseType.GetString()
 	if dialect == "sqlite" {
 		dialect = builder.SQLITE
 	}
 
-	return builder.Dialect(dialect).
-		Select("l.*").
-		From("projects", "l").
-		Join("INNER", "namespaces n", "l.namespace_id = n.id").
-		Join("LEFT", "team_namespaces tn", "tn.namespace_id = n.id").
-		Join("LEFT", "team_members tm", "tm.team_id = tn.team_id").
-		Join("LEFT", "team_projects tl", "l.id = tl.project_id").
-		Join("LEFT", "team_members tm2", "tm2.team_id = tl.team_id").
-		Join("LEFT", "users_projects ul", "ul.project_id = l.id").
-		Join("LEFT", "users_namespaces un", "un.namespace_id = l.namespace_id").
-		Where(builder.Or(
-			builder.Eq{"tm.user_id": userID},
-			builder.Eq{"tm2.user_id": userID},
-			builder.Eq{"ul.user_id": userID},
-			builder.Eq{"un.user_id": userID},
-			builder.Eq{"l.owner_id": userID},
-		)).
-		OrderBy("position").
-		GroupBy("l.id")
-}
-
-// Gets the projects only, without any tasks or so
-func getRawProjectsForUser(s *xorm.Session, opts *projectOptions) (projects []*Project, resultCount int, totalItems int64, err error) {
-	fullUser, err := user.GetUserByID(s, opts.user.ID)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
 	// Adding a 1=1 condition by default here because xorm always needs a condition and cannot handle nil conditions
-	var isArchivedCond builder.Cond = builder.Eq{"1": 1}
-	if !opts.isArchived {
-		isArchivedCond = builder.And(
+	var getArchivedCond builder.Cond = builder.Eq{"1": 1}
+	if !getArchived {
+		getArchivedCond = builder.And(
 			builder.Eq{"l.is_archived": false},
-			builder.Eq{"n.is_archived": false},
 		)
 	}
 
-	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
-
 	var filterCond builder.Cond
 	ids := []int64{}
-	if opts.search != "" {
-		vals := strings.Split(opts.search, ",")
+	if search != "" {
+		vals := strings.Split(search, ",")
 		for _, val := range vals {
 			v, err := strconv.ParseInt(val, 10, 64)
 			if err != nil {
@@ -410,32 +369,152 @@ func getRawProjectsForUser(s *xorm.Session, opts *projectOptions) (projects []*P
 		}
 	}
 
-	filterCond = db.ILIKE("l.title", opts.search)
+	filterCond = db.ILIKE("l.title", search)
 	if len(ids) > 0 {
 		filterCond = builder.In("l.id", ids)
 	}
 
-	// Gets all Projects where the user is either owner or in a team which has access to the project
-	// Or in a team which has namespace read access
+	var parentCondition builder.Cond
+	parentCondition = builder.Or(
+		builder.IsNull{"l.parent_project_id"},
+		builder.Eq{"l.parent_project_id": 0},
+	)
+	projectCol := "id"
+	if len(parentProjectIDs) > 0 {
+		parentCondition = builder.In("l.parent_project_id", parentProjectIDs)
+		projectCol = "parent_project_id"
+	}
 
-	query := getUserProjectsStatement(fullUser.ID).
-		Where(filterCond).
-		Where(isArchivedCond)
+	return builder.Dialect(dialect).
+		Select("l.*").
+		From("projects", "l").
+		Join("LEFT", "team_projects tl", "tl.project_id = l."+projectCol).
+		Join("LEFT", "team_members tm2", "tm2.team_id = tl.team_id").
+		Join("LEFT", "users_projects ul", "ul.project_id = l."+projectCol).
+		Where(builder.And(
+			builder.Or(
+				builder.Eq{"tm2.user_id": userID},
+				builder.Eq{"ul.user_id": userID},
+				builder.Eq{"l.owner_id": userID},
+			),
+			filterCond,
+			getArchivedCond,
+			parentCondition,
+		)).
+		OrderBy("position").
+		GroupBy("l.id")
+}
+
+func getAllProjectsForUser(s *xorm.Session, userID int64, parentProjectIDs []int64, opts *projectOptions, projects *[]*Project, oldTotalCount int64) (resultCount int, totalCount int64, err error) {
+
+	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
+	query := getUserProjectsStatement(parentProjectIDs, userID, opts.search, opts.getArchived)
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
-	err = s.SQL(query).Find(&projects)
+
+	currentProjects := []*Project{}
+	err = s.SQL(query).Find(&currentProjects)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	if len(currentProjects) == 0 {
+		return 0, oldTotalCount, err
+	}
+
+	query = getUserProjectsStatement(parentProjectIDs, userID, opts.search, opts.getArchived)
+	totalCount, err = s.
+		SQL(query.Select("count(*)")).
+		Count(&Project{})
+	if err != nil {
+		return 0, 0, err
+	}
+
+	newParentIDs := []int64{}
+	for _, project := range currentProjects {
+		newParentIDs = append(newParentIDs, project.ID)
+	}
+
+	*projects = append(*projects, currentProjects...)
+
+	return getAllProjectsForUser(s, userID, newParentIDs, opts, projects, oldTotalCount+totalCount)
+}
+
+// Gets the projects with their children without any tasks
+func getRawProjectsForUser(s *xorm.Session, opts *projectOptions) (projects []*Project, resultCount int, totalItems int64, err error) {
+	fullUser, err := user.GetUserByID(s, opts.user.ID)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	query = getUserProjectsStatement(fullUser.ID).
-		Where(filterCond).
-		Where(isArchivedCond)
-	totalItems, err = s.
-		SQL(query.Select("count(*)")).
-		Count(&Project{})
-	return projects, len(projects), totalItems, err
+	allProjects := []*Project{}
+	resultCount, totalItems, err = getAllProjectsForUser(s, fullUser.ID, nil, opts, &allProjects, 0)
+	if err != nil {
+		return
+	}
+
+	favoriteCount, err := s.
+		Where(builder.And(
+			builder.Eq{"user_id": opts.user.ID},
+			builder.Eq{"kind": FavoriteKindTask},
+		)).
+		Count(&Favorite{})
+	if err != nil {
+		return
+	}
+
+	if favoriteCount > 0 {
+		favoritesProject := &Project{}
+		*favoritesProject = FavoritesPseudoProject
+		allProjects = append(allProjects, favoritesProject)
+	}
+
+	if len(allProjects) == 0 {
+		return nil, 0, totalItems, nil
+	}
+
+	return allProjects, len(allProjects), totalItems, err
+}
+
+func getSavedFilterProjects(s *xorm.Session, doer *user.User) (savedFiltersProject *Project, err error) {
+	savedFilters, err := getSavedFiltersForUser(s, doer)
+	if err != nil {
+		return
+	}
+
+	if len(savedFilters) == 0 {
+		return nil, nil
+	}
+
+	savedFiltersPseudoParentProject := SavedFiltersPseudoProject
+	savedFiltersPseudoParentProject.OwnerID = doer.ID
+	savedFiltersProject = &Project{}
+	*savedFiltersProject = *savedFiltersPseudoParentProject
+
+	for _, filter := range savedFilters {
+		filterProject := filter.toProject()
+		filterProject.ParentProjectID = savedFiltersProject.ID
+		filterProject.Owner = doer
+	}
+
+	return
+}
+
+// GetAllParentProjects returns all parents of a given project
+func (p *Project) GetAllParentProjects(s *xorm.Session) (err error) {
+	if p.ParentProjectID == 0 {
+		return
+	}
+
+	parent, err := GetProjectSimpleByID(s, p.ParentProjectID)
+	if err != nil {
+		return err
+	}
+
+	p.ParentProject = parent
+
+	return parent.GetAllParentProjects(s)
 }
 
 // addProjectDetails adds owner user objects and project tasks to all projects in the slice
@@ -445,30 +524,17 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 	}
 
 	var ownerIDs []int64
-	for _, l := range projects {
-		ownerIDs = append(ownerIDs, l.OwnerID)
-	}
-
-	// Get all project owners
-	owners := map[int64]*user.User{}
-	if len(ownerIDs) > 0 {
-		err = s.In("id", ownerIDs).Find(&owners)
-		if err != nil {
-			return
-		}
-	}
-
-	var fileIDs []int64
 	var projectIDs []int64
-	for _, l := range projects {
-		projectIDs = append(projectIDs, l.ID)
-		if o, exists := owners[l.OwnerID]; exists {
-			l.Owner = o
-		}
-		if l.BackgroundFileID != 0 {
-			l.BackgroundInformation = &ProjectBackgroundType{Type: ProjectBackgroundUpload}
-		}
-		fileIDs = append(fileIDs, l.BackgroundFileID)
+	var fileIDs []int64
+	for _, p := range projects {
+		ownerIDs = append(ownerIDs, p.OwnerID)
+		projectIDs = append(projectIDs, p.ID)
+		fileIDs = append(fileIDs, p.BackgroundFileID)
+	}
+
+	owners, err := user.GetUsersByIDs(s, ownerIDs)
+	if err != nil {
+		return err
 	}
 
 	favs, err := getFavorites(s, projectIDs, a, FavoriteKindProject)
@@ -478,19 +544,26 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 
 	subscriptions, err := GetSubscriptions(s, SubscriptionEntityProject, projectIDs, a)
 	if err != nil {
-		log.Errorf("An error occurred while getting project subscriptions for a namespace item: %s", err.Error())
-		subscriptions = make(map[int64]*Subscription)
+		log.Errorf("An error occurred while getting project subscriptions for a project: %s", err.Error())
+		subscriptions = make(map[int64][]*Subscription)
 	}
 
-	for _, project := range projects {
+	for _, p := range projects {
+		if o, exists := owners[p.OwnerID]; exists {
+			p.Owner = o
+		}
+		if p.BackgroundFileID != 0 {
+			p.BackgroundInformation = &ProjectBackgroundType{Type: ProjectBackgroundUpload}
+		}
+
 		// Don't override the favorite state if it was already set from before (favorite saved filters do this)
-		if project.IsFavorite {
+		if p.IsFavorite {
 			continue
 		}
-		project.IsFavorite = favs[project.ID]
+		p.IsFavorite = favs[p.ID]
 
-		if subscription, exists := subscriptions[project.ID]; exists {
-			project.Subscription = subscription
+		if subscription, exists := subscriptions[p.ID]; exists && len(subscription) > 0 {
+			p.Subscription = subscription[0]
 		}
 	}
 
@@ -520,48 +593,69 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 	return
 }
 
-// NamespaceProject is a meta type to be able  to join a project with its namespace
-type NamespaceProject struct {
-	Project   Project   `xorm:"extends"`
-	Namespace Namespace `xorm:"extends"`
-}
-
-// CheckIsArchived returns an ErrProjectIsArchived or ErrNamespaceIsArchived if the project or its namespace is archived.
-func (l *Project) CheckIsArchived(s *xorm.Session) (err error) {
-	// When creating a new project, we check if the namespace is archived
-	if l.ID == 0 {
-		n := &Namespace{ID: l.NamespaceID}
-		return n.CheckIsArchived(s)
+// CheckIsArchived returns an ErrProjectIsArchived if the project or any of its parent projects is archived.
+func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
+	if p.ParentProjectID > 0 {
+		p := &Project{ID: p.ParentProjectID}
+		return p.CheckIsArchived(s)
 	}
 
-	nl := &NamespaceProject{}
-	exists, err := s.
-		Table("projects").
-		Join("LEFT", "namespaces", "projects.namespace_id = namespaces.id").
-		Where("projects.id = ? AND (projects.is_archived = true OR namespaces.is_archived = true)", l.ID).
-		Get(nl)
+	if p.ID == 0 { // don't check new projects
+		return nil
+	}
+
+	project, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
-		return
+		return err
 	}
-	if exists && nl.Project.ID != 0 && nl.Project.IsArchived {
-		return ErrProjectIsArchived{ProjectID: l.ID}
+
+	if project.IsArchived {
+		return ErrProjectIsArchived{ProjectID: p.ID}
 	}
-	if exists && nl.Namespace.ID != 0 && nl.Namespace.IsArchived {
-		return ErrNamespaceIsArchived{NamespaceID: nl.Namespace.ID}
-	}
+
 	return nil
 }
 
-func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) error {
-	if project.NamespaceID < 0 {
-		return &ErrProjectCannotBelongToAPseudoNamespace{ProjectID: project.ID, NamespaceID: project.NamespaceID}
+func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err error) {
+	if project.ParentProjectID < 0 {
+		return &ErrProjectCannotBelongToAPseudoParentProject{ProjectID: project.ID, ParentProjectID: project.ParentProjectID}
 	}
 
-	// Check if the namespace exists
-	if project.NamespaceID > 0 {
-		_, err := GetNamespaceByID(s, project.NamespaceID)
+	// Check if the parent project exists
+	if project.ParentProjectID > 0 {
+		if project.ParentProjectID == project.ID {
+			return &ErrProjectCannotBeChildOfItself{
+				ProjectID: project.ID,
+			}
+		}
+
+		var parent *Project
+		parent, err = GetProjectSimpleByID(s, project.ParentProjectID)
 		if err != nil {
 			return err
+		}
+
+		// Check if there's a cycle in the parent relation
+		parentsVisited := make(map[int64]bool)
+		parentsVisited[project.ID] = true
+		for {
+			if parent.ParentProjectID == 0 {
+				break
+			}
+
+			// FIXME: Can we do this with better performance?
+			parent, err = GetProjectSimpleByID(s, parent.ParentProjectID)
+			if err != nil {
+				return err
+			}
+
+			if parentsVisited[parent.ID] {
+				return &ErrProjectCannotHaveACyclicRelationship{
+					ProjectID: project.ID,
+				}
+			}
+
+			parentsVisited[parent.ID] = true
 		}
 	}
 
@@ -595,7 +689,6 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth) (err error)
 
 	project.OwnerID = doer.ID
 	project.Owner = doer
-	project.ID = 0 // Otherwise only the first time a new project would be created
 
 	err = checkProjectBeforeUpdateOrDelete(s, project)
 	if err != nil {
@@ -634,17 +727,30 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth) (err error)
 	})
 }
 
+// CreateNewProjectForUser creates a new inbox project for a user. To prevent import cycles, we can't do that
+// directly in the user.Create function.
+func CreateNewProjectForUser(s *xorm.Session, u *user.User) (err error) {
+	p := &Project{
+		Title: "Inbox",
+	}
+	err = p.Create(s, u)
+	if err != nil {
+		return err
+	}
+
+	if u.DefaultProjectID != 0 {
+		return err
+	}
+
+	u.DefaultProjectID = p.ID
+	_, err = user.UpdateUser(s, u, false)
+	return err
+}
+
 func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProjectBackground bool) (err error) {
 	err = checkProjectBeforeUpdateOrDelete(s, project)
 	if err != nil {
 		return
-	}
-
-	if project.NamespaceID == 0 {
-		return &ErrProjectMustBelongToANamespace{
-			ProjectID:   project.ID,
-			NamespaceID: project.NamespaceID,
-		}
 	}
 
 	// We need to specify the cols we want to update here to be able to un-archive projects
@@ -653,7 +759,7 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		"is_archived",
 		"identifier",
 		"hex_color",
-		"namespace_id",
+		"parent_project_id",
 		"position",
 	}
 	if project.Description != "" {
@@ -662,6 +768,13 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 
 	if updateProjectBackground {
 		colsToUpdate = append(colsToUpdate, "background_file_id", "background_blur_hash")
+	}
+
+	if project.Position < 0.1 {
+		err = recalculateProjectPositions(s, project.ParentProjectID)
+		if err != nil {
+			return err
+		}
 	}
 
 	wasFavorite, err := isFavorite(s, project.ID, auth, FavoriteKindProject)
@@ -706,6 +819,34 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 	return
 }
 
+func recalculateProjectPositions(s *xorm.Session, parentProjectID int64) (err error) {
+
+	allProjects := []*Project{}
+	err = s.
+		Where("parent_project_id = ?", parentProjectID).
+		OrderBy("position asc").
+		Find(&allProjects)
+	if err != nil {
+		return
+	}
+
+	maxPosition := math.Pow(2, 32)
+
+	for i, project := range allProjects {
+
+		currentPosition := maxPosition / float64(len(allProjects)) * (float64(i + 1))
+
+		_, err = s.Cols("position").
+			Where("id = ?", project.ID).
+			Update(&Project{Position: currentPosition})
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}
+
 // Update implements the update method of CRUDable
 // @Summary Updates a project
 // @Description Updates a project. This does not include adding a task (see below).
@@ -720,27 +861,27 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id} [post]
-func (l *Project) Update(s *xorm.Session, a web.Auth) (err error) {
-	fid := getSavedFilterIDFromProjectID(l.ID)
+func (p *Project) Update(s *xorm.Session, a web.Auth) (err error) {
+	fid := getSavedFilterIDFromProjectID(p.ID)
 	if fid > 0 {
 		f, err := getSavedFilterSimpleByID(s, fid)
 		if err != nil {
 			return err
 		}
 
-		f.Title = l.Title
-		f.Description = l.Description
-		f.IsFavorite = l.IsFavorite
+		f.Title = p.Title
+		f.Description = p.Description
+		f.IsFavorite = p.IsFavorite
 		err = f.Update(s, a)
 		if err != nil {
 			return err
 		}
 
-		*l = *f.toProject()
+		*p = *f.toProject()
 		return nil
 	}
 
-	return UpdateProject(s, l, a, false)
+	return UpdateProject(s, p, a, false)
 }
 
 func updateProjectLastUpdated(s *xorm.Session, project *Project) error {
@@ -760,25 +901,24 @@ func updateProjectByTaskID(s *xorm.Session, taskID int64) (err error) {
 
 // Create implements the create method of CRUDable
 // @Summary Creates a new project
-// @Description Creates a new project in a given namespace. The user needs write-access to the namespace.
+// @Description Creates a new project. If a parent project is provided the user needs to have write access to that project.
 // @tags project
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param namespaceID path int true "Namespace ID"
 // @Param project body models.Project true "The project you want to create."
 // @Success 201 {object} models.Project "The created project."
 // @Failure 400 {object} web.HTTPError "Invalid project object provided."
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /namespaces/{namespaceID}/projects [put]
-func (l *Project) Create(s *xorm.Session, a web.Auth) (err error) {
-	err = CreateProject(s, l, a)
+// @Router /projects [put]
+func (p *Project) Create(s *xorm.Session, a web.Auth) (err error) {
+	err = CreateProject(s, p, a)
 	if err != nil {
 		return
 	}
 
-	return l.ReadOne(s, a)
+	return p.ReadOne(s, a)
 }
 
 // Delete implements the delete method of CRUDable
@@ -793,22 +933,22 @@ func (l *Project) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id} [delete]
-func (l *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
+func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 
-	fullList, err := GetProjectSimpleByID(s, l.ID)
+	fullList, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
 		return
 	}
 
 	// Delete the project
-	_, err = s.ID(l.ID).Delete(&Project{})
+	_, err = s.ID(p.ID).Delete(&Project{})
 	if err != nil {
 		return
 	}
 
 	// Delete all tasks on that project
 	// Using the loop to make sure all related entities to all tasks are properly deleted as well.
-	tasks, _, _, err := getRawTasksForProjects(s, []*Project{l}, a, &taskOptions{})
+	tasks, _, _, err := getRawTasksForProjects(s, []*Project{p}, a, &taskOptions{})
 	if err != nil {
 		return
 	}
@@ -826,19 +966,19 @@ func (l *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	return events.Dispatch(&ProjectDeletedEvent{
-		Project: l,
+		Project: p,
 		Doer:    a,
 	})
 }
 
 // DeleteBackgroundFileIfExists deletes the list's background file from the db and the filesystem,
 // if one exists
-func (l *Project) DeleteBackgroundFileIfExists() (err error) {
-	if l.BackgroundFileID == 0 {
+func (p *Project) DeleteBackgroundFileIfExists() (err error) {
+	if p.BackgroundFileID == 0 {
 		return
 	}
 
-	file := files.File{ID: l.BackgroundFileID}
+	file := files.File{ID: p.BackgroundFileID}
 	return file.Delete()
 }
 

@@ -17,7 +17,6 @@
 package integrations
 
 import (
-	"net/url"
 	"testing"
 
 	"code.vikunja.io/api/pkg/models"
@@ -26,32 +25,27 @@ import (
 )
 
 // This tests the following behaviour:
-// 1. A namespace should not be editable if it is archived.
-//   1. With the exception being to un-archive it.
-// 2. A project which belongs to an archived namespace cannot be edited.
+// 2. A project which belongs to an archived project cannot be edited.
 // 3. An archived project should not be editable.
 //   1. Except for un-archiving it.
-// 4. It is not possible to un-archive a project individually if its namespace is archived.
-// 5. Creating new projects on an archived namespace should not work.
+// 4. It is not possible to un-archive a project individually if its parent project is archived.
+// 5. Creating new child projects in an archived project should not work.
 // 6. Creating new tasks on an archived project should not work.
-// 7. Creating new tasks on a project who's namespace is archived should not work.
+// 7. Creating new tasks on a project whose parent project is archived should not work.
 // 8. Editing tasks on an archived project should not work.
-// 9. Editing tasks on a project who's namespace is archived should not work.
-// 10. Archived namespaces should not appear in the project with all namespaces.
-// 11. Archived projects should not appear in the project with all projects.
-// 12. Projects who's namespace is archived should not appear in the project with all projects.
+// 9. Editing tasks on a project whose parent project is archived should not work.
+// 11. Archived projects should not appear in the list with all projects.
+// 12. Projects whose parent project is archived should not appear in the project with all projects.
 //
 // All of this is tested through integration tests because it's not yet clear if this will be implemented directly
 // or with some kind of middleware.
 //
-// Maybe the inheritance of projects from namespaces could be solved with some kind of is_archived_inherited flag -
+// Maybe the inheritance of projects from parents could be solved with some kind of is_archived_inherited flag -
 // that way I'd only need to implement the checking on a project level and update the flag for all projects once the
-// namespace is archived. The archived flag would then be used to not accedentially unarchive projects which were
-// already individually archived when the namespace was archived.
-// Should still test it all though.
+// project is archived. The archived flag would then be used to not accedentially unarchive projects which were
+// already individually archived when the parent project was archived.
 //
-// Namespace 16 is archived
-// Project 21 belongs to namespace 16
+// Project 21 belongs to project 16
 // Project 22 is archived individually
 
 func TestArchived(t *testing.T) {
@@ -59,13 +53,6 @@ func TestArchived(t *testing.T) {
 		user: &testuser1,
 		strFunc: func() handler.CObject {
 			return &models.Project{}
-		},
-		t: t,
-	}
-	testNamespaceHandler := webHandlerTest{
-		user: &testuser1,
-		strFunc: func() handler.CObject {
-			return &models.Namespace{}
 		},
 		t: t,
 	}
@@ -105,134 +92,103 @@ func TestArchived(t *testing.T) {
 		t: t,
 	}
 
-	t.Run("namespace", func(t *testing.T) {
+	taskTests := func(taskID string, errCode int, t *testing.T) {
+		t.Run("task", func(t *testing.T) {
+			t.Run("edit task", func(t *testing.T) {
+				_, err := testTaskHandler.testUpdateWithUser(nil, map[string]string{"projecttask": taskID}, `{"title":"TestIpsum"}`)
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, errCode)
+			})
+			t.Run("delete", func(t *testing.T) {
+				_, err := testTaskHandler.testDeleteWithUser(nil, map[string]string{"projecttask": taskID})
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, errCode)
+			})
+			t.Run("add new labels", func(t *testing.T) {
+				_, err := testLabelHandler.testCreateWithUser(nil, map[string]string{"projecttask": taskID}, `{"label_id":1}`)
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, errCode)
+			})
+			t.Run("remove lables", func(t *testing.T) {
+				_, err := testLabelHandler.testDeleteWithUser(nil, map[string]string{"projecttask": taskID, "label": "4"})
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, errCode)
+			})
+			t.Run("add assignees", func(t *testing.T) {
+				_, err := testAssigneeHandler.testCreateWithUser(nil, map[string]string{"projecttask": taskID}, `{"user_id":3}`)
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, errCode)
+			})
+			t.Run("remove assignees", func(t *testing.T) {
+				_, err := testAssigneeHandler.testDeleteWithUser(nil, map[string]string{"projecttask": taskID, "user": "2"})
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, errCode)
+			})
+			t.Run("add relation", func(t *testing.T) {
+				_, err := testRelationHandler.testCreateWithUser(nil, map[string]string{"task": taskID}, `{"other_task_id":1,"relation_kind":"related"}`)
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, errCode)
+			})
+			t.Run("remove relation", func(t *testing.T) {
+				_, err := testRelationHandler.testDeleteWithUser(nil, map[string]string{"task": taskID}, `{"other_task_id":2,"relation_kind":"related"}`)
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, errCode)
+			})
+			t.Run("add comment", func(t *testing.T) {
+				_, err := testCommentHandler.testCreateWithUser(nil, map[string]string{"task": taskID}, `{"comment":"Lorem"}`)
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, errCode)
+			})
+			t.Run("remove comment", func(t *testing.T) {
+				var commentID = "15"
+				if taskID == "36" {
+					commentID = "16"
+				}
+				_, err := testCommentHandler.testDeleteWithUser(nil, map[string]string{"task": taskID, "commentid": commentID})
+				assert.Error(t, err)
+				assertHandlerErrorCode(t, err, errCode)
+			})
+		})
+	}
+
+	// The project belongs to an archived parent project
+	t.Run("archived parent project", func(t *testing.T) {
 		t.Run("not editable", func(t *testing.T) {
-			_, err := testNamespaceHandler.testUpdateWithUser(nil, map[string]string{"namespace": "16"}, `{"title":"TestIpsum","is_archived":true}`)
+			_, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "21"}, `{"title":"TestIpsum","is_archived":true}`)
 			assert.Error(t, err)
-			assertHandlerErrorCode(t, err, models.ErrCodeNamespaceIsArchived)
+			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+		})
+		t.Run("no new tasks", func(t *testing.T) {
+			_, err := testTaskHandler.testCreateWithUser(nil, map[string]string{"project": "21"}, `{"title":"Lorem"}`)
+			assert.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+		})
+		t.Run("not unarchivable", func(t *testing.T) {
+			_, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "21"}, `{"title":"LoremIpsum","is_archived":false}`)
+			assert.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+		})
+
+		taskTests("35", models.ErrCodeProjectIsArchived, t)
+	})
+	// The project itself is archived
+	t.Run("archived individually", func(t *testing.T) {
+		t.Run("not editable", func(t *testing.T) {
+			_, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "22"}, `{"title":"TestIpsum","is_archived":true}`)
+			assert.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
+		})
+		t.Run("no new tasks", func(t *testing.T) {
+			_, err := testTaskHandler.testCreateWithUser(nil, map[string]string{"project": "22"}, `{"title":"Lorem"}`)
+			assert.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
 		})
 		t.Run("unarchivable", func(t *testing.T) {
-			rec, err := testNamespaceHandler.testUpdateWithUser(nil, map[string]string{"namespace": "16"}, `{"title":"TestIpsum","is_archived":false}`)
+			rec, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "22"}, `{"title":"LoremIpsum","is_archived":false}`)
 			assert.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"is_archived":false`)
 		})
-		t.Run("no new projects", func(t *testing.T) {
-			_, err := testProjectHandler.testCreateWithUser(nil, map[string]string{"namespace": "16"}, `{"title":"Lorem"}`)
-			assert.Error(t, err)
-			assertHandlerErrorCode(t, err, models.ErrCodeNamespaceIsArchived)
-		})
-		t.Run("should not appear in the project", func(t *testing.T) {
-			rec, err := testNamespaceHandler.testReadAllWithUser(nil, nil)
-			assert.NoError(t, err)
-			assert.NotContains(t, rec.Body.String(), `"title":"Archived testnamespace16"`)
-		})
-		t.Run("should appear in the project if explicitly requested", func(t *testing.T) {
-			rec, err := testNamespaceHandler.testReadAllWithUser(url.Values{"is_archived": []string{"true"}}, nil)
-			assert.NoError(t, err)
-			assert.Contains(t, rec.Body.String(), `"title":"Archived testnamespace16"`)
-		})
-	})
 
-	t.Run("project", func(t *testing.T) {
-
-		taskTests := func(taskID string, errCode int, t *testing.T) {
-			t.Run("task", func(t *testing.T) {
-				t.Run("edit task", func(t *testing.T) {
-					_, err := testTaskHandler.testUpdateWithUser(nil, map[string]string{"projecttask": taskID}, `{"title":"TestIpsum"}`)
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-				t.Run("delete", func(t *testing.T) {
-					_, err := testTaskHandler.testDeleteWithUser(nil, map[string]string{"projecttask": taskID})
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-				t.Run("add new labels", func(t *testing.T) {
-					_, err := testLabelHandler.testCreateWithUser(nil, map[string]string{"projecttask": taskID}, `{"label_id":1}`)
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-				t.Run("remove lables", func(t *testing.T) {
-					_, err := testLabelHandler.testDeleteWithUser(nil, map[string]string{"projecttask": taskID, "label": "4"})
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-				t.Run("add assignees", func(t *testing.T) {
-					_, err := testAssigneeHandler.testCreateWithUser(nil, map[string]string{"projecttask": taskID}, `{"user_id":3}`)
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-				t.Run("remove assignees", func(t *testing.T) {
-					_, err := testAssigneeHandler.testDeleteWithUser(nil, map[string]string{"projecttask": taskID, "user": "2"})
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-				t.Run("add relation", func(t *testing.T) {
-					_, err := testRelationHandler.testCreateWithUser(nil, map[string]string{"task": taskID}, `{"other_task_id":1,"relation_kind":"related"}`)
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-				t.Run("remove relation", func(t *testing.T) {
-					_, err := testRelationHandler.testDeleteWithUser(nil, map[string]string{"task": taskID}, `{"other_task_id":2,"relation_kind":"related"}`)
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-				t.Run("add comment", func(t *testing.T) {
-					_, err := testCommentHandler.testCreateWithUser(nil, map[string]string{"task": taskID}, `{"comment":"Lorem"}`)
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-				t.Run("remove comment", func(t *testing.T) {
-					var commentID = "15"
-					if taskID == "36" {
-						commentID = "16"
-					}
-					_, err := testCommentHandler.testDeleteWithUser(nil, map[string]string{"task": taskID, "commentid": commentID})
-					assert.Error(t, err)
-					assertHandlerErrorCode(t, err, errCode)
-				})
-			})
-		}
-
-		// The project belongs to an archived namespace
-		t.Run("archived namespace", func(t *testing.T) {
-			t.Run("not editable", func(t *testing.T) {
-				_, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "21"}, `{"title":"TestIpsum","is_archived":true}`)
-				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeNamespaceIsArchived)
-			})
-			t.Run("no new tasks", func(t *testing.T) {
-				_, err := testTaskHandler.testCreateWithUser(nil, map[string]string{"project": "21"}, `{"title":"Lorem"}`)
-				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeNamespaceIsArchived)
-			})
-			t.Run("not unarchivable", func(t *testing.T) {
-				_, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "21"}, `{"title":"LoremIpsum","is_archived":false}`)
-				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeNamespaceIsArchived)
-			})
-
-			taskTests("35", models.ErrCodeNamespaceIsArchived, t)
-		})
-		// The project itself is archived
-		t.Run("archived individually", func(t *testing.T) {
-			t.Run("not editable", func(t *testing.T) {
-				_, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "22"}, `{"title":"TestIpsum","is_archived":true}`)
-				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
-			})
-			t.Run("no new tasks", func(t *testing.T) {
-				_, err := testTaskHandler.testCreateWithUser(nil, map[string]string{"project": "22"}, `{"title":"Lorem"}`)
-				assert.Error(t, err)
-				assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
-			})
-			t.Run("unarchivable", func(t *testing.T) {
-				rec, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "22"}, `{"title":"LoremIpsum","is_archived":false,"namespace_id":1}`)
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"is_archived":false`)
-			})
-
-			taskTests("36", models.ErrCodeProjectIsArchived, t)
-		})
+		taskTests("36", models.ErrCodeProjectIsArchived, t)
 	})
 }

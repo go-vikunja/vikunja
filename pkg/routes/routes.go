@@ -22,7 +22,7 @@
 // @description * `x-pagination-total-pages`: The total number of available pages for this request
 // @description * `x-pagination-result-count`: The number of items returned for this request.
 // @description # Rights
-// @description All endpoints which return a single item (project, task, namespace, etc.) - no array - will also return a `x-max-right` header with the max right the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.
+// @description All endpoints which return a single item (project, task, etc.) - no array - will also return a `x-max-right` header with the max right the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.
 // @description This can be used to show or hide ui elements based on the rights the user has.
 // @description # Authorization
 // @description **JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer <jwt-token>`-header to authenticate successfully.
@@ -324,7 +324,7 @@ func registerAPIRoutes(a *echo.Group) {
 	a.GET("/projects/:project", projectHandler.ReadOneWeb)
 	a.POST("/projects/:project", projectHandler.UpdateWeb)
 	a.DELETE("/projects/:project", projectHandler.DeleteWeb)
-	a.PUT("/namespaces/:namespace/projects", projectHandler.CreateWeb)
+	a.PUT("/projects", projectHandler.CreateWeb)
 	a.GET("/projects/:project/projectusers", apiv1.ListUsersForProject)
 
 	if config.ServiceEnableLinkSharing.GetBool() {
@@ -486,38 +486,6 @@ func registerAPIRoutes(a *echo.Group) {
 	a.PUT("/filters", savedFiltersHandler.CreateWeb)
 	a.DELETE("/filters/:filter", savedFiltersHandler.DeleteWeb)
 	a.POST("/filters/:filter", savedFiltersHandler.UpdateWeb)
-
-	namespaceHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.Namespace{}
-		},
-	}
-	a.GET("/namespaces", namespaceHandler.ReadAllWeb)
-	a.PUT("/namespaces", namespaceHandler.CreateWeb)
-	a.GET("/namespaces/:namespace", namespaceHandler.ReadOneWeb)
-	a.POST("/namespaces/:namespace", namespaceHandler.UpdateWeb)
-	a.DELETE("/namespaces/:namespace", namespaceHandler.DeleteWeb)
-	a.GET("/namespaces/:namespace/projects", apiv1.GetProjectsByNamespaceID)
-
-	namespaceTeamHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.TeamNamespace{}
-		},
-	}
-	a.GET("/namespaces/:namespace/teams", namespaceTeamHandler.ReadAllWeb)
-	a.PUT("/namespaces/:namespace/teams", namespaceTeamHandler.CreateWeb)
-	a.DELETE("/namespaces/:namespace/teams/:team", namespaceTeamHandler.DeleteWeb)
-	a.POST("/namespaces/:namespace/teams/:team", namespaceTeamHandler.UpdateWeb)
-
-	namespaceUserHandler := &handler.WebHandler{
-		EmptyStruct: func() handler.CObject {
-			return &models.NamespaceUser{}
-		},
-	}
-	a.GET("/namespaces/:namespace/users", namespaceUserHandler.ReadAllWeb)
-	a.PUT("/namespaces/:namespace/users", namespaceUserHandler.CreateWeb)
-	a.DELETE("/namespaces/:namespace/users/:user", namespaceUserHandler.DeleteWeb)
-	a.POST("/namespaces/:namespace/users/:user", namespaceUserHandler.UpdateWeb)
 
 	teamHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {

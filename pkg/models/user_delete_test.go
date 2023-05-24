@@ -46,7 +46,7 @@ func TestDeleteUser(t *testing.T) {
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 10}, false)
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 11}, false)
 	})
-	t.Run("user with no namespaces", func(t *testing.T) {
+	t.Run("user with no projects", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -56,6 +56,6 @@ func TestDeleteUser(t *testing.T) {
 		err := DeleteUser(s, u)
 
 		assert.NoError(t, err)
-		// No assertions for deleted projects and namespaces since that user doesn't have any
+		// No assertions for deleted projects since that user doesn't have any
 	})
 }

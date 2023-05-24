@@ -56,18 +56,6 @@ func TestTeamProject_ReadAll(t *testing.T) {
 		assert.True(t, IsErrProjectDoesNotExist(err))
 		_ = s.Close()
 	})
-	t.Run("namespace owner", func(t *testing.T) {
-		tl := TeamProject{
-			TeamID:    1,
-			ProjectID: 2,
-			Right:     RightAdmin,
-		}
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		_, _, _, err := tl.ReadAll(s, u, "", 1, 50)
-		assert.NoError(t, err)
-		_ = s.Close()
-	})
 	t.Run("no access", func(t *testing.T) {
 		tl := TeamProject{
 			TeamID:    1,

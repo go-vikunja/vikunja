@@ -19,6 +19,7 @@ package models
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/web"
@@ -255,65 +256,100 @@ func (err ErrProjectIsArchived) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeProjectIsArchived, Message: "This project is archived. Editing or creating new tasks is not possible."}
 }
 
-// ErrProjectCannotBelongToAPseudoNamespace represents an error where a project cannot belong to a pseudo namespace
-type ErrProjectCannotBelongToAPseudoNamespace struct {
-	ProjectID   int64
-	NamespaceID int64
+// ErrProjectCannotBelongToAPseudoParentProject represents an error where a project cannot belong to a pseudo project
+type ErrProjectCannotBelongToAPseudoParentProject struct {
+	ProjectID       int64
+	ParentProjectID int64
 }
 
-// IsErrProjectCannotBelongToAPseudoNamespace checks if an error is a project is archived error.
-func IsErrProjectCannotBelongToAPseudoNamespace(err error) bool {
-	_, ok := err.(*ErrProjectCannotBelongToAPseudoNamespace)
+// IsErrProjectCannotBelongToAPseudoParentProject checks if an error is a project is archived error.
+func IsErrProjectCannotBelongToAPseudoParentProject(err error) bool {
+	_, ok := err.(*ErrProjectCannotBelongToAPseudoParentProject)
 	return ok
 }
 
-func (err *ErrProjectCannotBelongToAPseudoNamespace) Error() string {
-	return fmt.Sprintf("Project cannot belong to a pseudo namespace [ProjectID: %d, NamespaceID: %d]", err.ProjectID, err.NamespaceID)
+func (err *ErrProjectCannotBelongToAPseudoParentProject) Error() string {
+	return fmt.Sprintf("Project cannot belong to a pseudo parent project [ProjectID: %d, ParentProjectID: %d]", err.ProjectID, err.ParentProjectID)
 }
 
-// ErrCodeProjectCannotBelongToAPseudoNamespace holds the unique world-error code of this error
-const ErrCodeProjectCannotBelongToAPseudoNamespace = 3009
+// ErrCodeProjectCannotBelongToAPseudoParentProject holds the unique world-error code of this error
+const ErrCodeProjectCannotBelongToAPseudoParentProject = 3009
 
 // HTTPError holds the http error description
-func (err *ErrProjectCannotBelongToAPseudoNamespace) HTTPError() web.HTTPError {
+func (err *ErrProjectCannotBelongToAPseudoParentProject) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusPreconditionFailed,
-		Code:     ErrCodeProjectCannotBelongToAPseudoNamespace,
-		Message:  "This project cannot belong a dynamically generated namespace.",
+		Code:     ErrCodeProjectCannotBelongToAPseudoParentProject,
+		Message:  "This project cannot belong a dynamically generated project.",
 	}
 }
 
-// ErrProjectMustBelongToANamespace represents an error where a project must belong to a namespace
-type ErrProjectMustBelongToANamespace struct {
-	ProjectID   int64
-	NamespaceID int64
+// ErrProjectCannotBeChildOfItself represents an error where a project cannot become a child of its own
+type ErrProjectCannotBeChildOfItself struct {
+	ProjectID int64
 }
 
-// IsErrProjectMustBelongToANamespace checks if an error is a project must belong to a namespace error.
-func IsErrProjectMustBelongToANamespace(err error) bool {
-	_, ok := err.(*ErrProjectMustBelongToANamespace)
+// IsErrProjectCannotBeChildOfItsOwn checks if an error is a project is archived error.
+func IsErrProjectCannotBeChildOfItsOwn(err error) bool {
+	_, ok := err.(*ErrProjectCannotBeChildOfItself)
 	return ok
 }
 
-func (err *ErrProjectMustBelongToANamespace) Error() string {
-	return fmt.Sprintf("Project must belong to a namespace [ProjectID: %d, NamespaceID: %d]", err.ProjectID, err.NamespaceID)
+func (err *ErrProjectCannotBeChildOfItself) Error() string {
+	return fmt.Sprintf("Project cannot be made a child of itself [ProjectID: %d]", err.ProjectID)
 }
 
-// ErrCodeProjectMustBelongToANamespace holds the unique world-error code of this error
-const ErrCodeProjectMustBelongToANamespace = 3010
+// ErrCodeProjectCannotBeChildOfItself holds the unique world-error code of this error
+const ErrCodeProjectCannotBeChildOfItself = 3010
 
 // HTTPError holds the http error description
-func (err *ErrProjectMustBelongToANamespace) HTTPError() web.HTTPError {
+func (err *ErrProjectCannotBeChildOfItself) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusPreconditionFailed,
-		Code:     ErrCodeProjectMustBelongToANamespace,
-		Message:  "This project must belong to a namespace.",
+		Code:     ErrCodeProjectCannotBeChildOfItself,
+		Message:  "This project cannot be a child of itself.",
 	}
 }
 
-// ================
-// Project task errors
-// ================
+// ErrProjectCannotHaveACyclicRelationship represents an error where a project cannot have a cyclic parent relationship
+type ErrProjectCannotHaveACyclicRelationship struct {
+	ProjectID int64
+	CycleIDs  []int64
+}
+
+// IsErrProjectCannotHaveACyclicRelationship checks if an error is a project is archived error.
+func IsErrProjectCannotHaveACyclicRelationship(err error) bool {
+	_, ok := err.(*ErrProjectCannotHaveACyclicRelationship)
+	return ok
+}
+
+func (err *ErrProjectCannotHaveACyclicRelationship) CycleString() string {
+	var cycle string
+	for _, projectID := range err.CycleIDs {
+		cycle += fmt.Sprintf("%d -> ", projectID)
+	}
+	return strings.TrimSuffix(cycle, " -> ")
+}
+
+func (err *ErrProjectCannotHaveACyclicRelationship) Error() string {
+	return fmt.Sprintf("Project cannot have a cyclic relationship [ProjectID: %d]", err.ProjectID)
+}
+
+// ErrCodeProjectCannotHaveACyclicRelationship holds the unique world-error code of this error
+const ErrCodeProjectCannotHaveACyclicRelationship = 3011
+
+// HTTPError holds the http error description
+func (err *ErrProjectCannotHaveACyclicRelationship) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeProjectCannotHaveACyclicRelationship,
+		Message:  "This project cannot have a cyclic relationship to a parent project.",
+	}
+}
+
+// ==============
+// Task errors
+// ==============
 
 // ErrTaskCannotBeEmpty represents a "ErrProjectDoesNotExist" kind of error. Used if the project does not exist.
 type ErrTaskCannotBeEmpty struct{}
@@ -902,176 +938,6 @@ func (err ErrReminderRelativeToMissing) HTTPError() web.HTTPError {
 	}
 }
 
-// =================
-// Namespace errors
-// =================
-
-// ErrNamespaceDoesNotExist represents a "ErrNamespaceDoesNotExist" kind of error. Used if the namespace does not exist.
-type ErrNamespaceDoesNotExist struct {
-	ID int64
-}
-
-// IsErrNamespaceDoesNotExist checks if an error is a ErrNamespaceDoesNotExist.
-func IsErrNamespaceDoesNotExist(err error) bool {
-	_, ok := err.(ErrNamespaceDoesNotExist)
-	return ok
-}
-
-func (err ErrNamespaceDoesNotExist) Error() string {
-	return fmt.Sprintf("Namespace does not exist [ID: %d]", err.ID)
-}
-
-// ErrCodeNamespaceDoesNotExist holds the unique world-error code of this error
-const ErrCodeNamespaceDoesNotExist = 5001
-
-// HTTPError holds the http error description
-func (err ErrNamespaceDoesNotExist) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeNamespaceDoesNotExist, Message: "Namespace not found."}
-}
-
-// ErrUserDoesNotHaveAccessToNamespace represents an error, where the user is not the owner of that namespace (used i.e. when deleting a namespace)
-type ErrUserDoesNotHaveAccessToNamespace struct {
-	NamespaceID int64
-	UserID      int64
-}
-
-// IsErrUserDoesNotHaveAccessToNamespace checks if an error is a ErrNamespaceDoesNotExist.
-func IsErrUserDoesNotHaveAccessToNamespace(err error) bool {
-	_, ok := err.(ErrUserDoesNotHaveAccessToNamespace)
-	return ok
-}
-
-func (err ErrUserDoesNotHaveAccessToNamespace) Error() string {
-	return fmt.Sprintf("User does not have access to the namespace [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
-}
-
-// ErrCodeUserDoesNotHaveAccessToNamespace holds the unique world-error code of this error
-const ErrCodeUserDoesNotHaveAccessToNamespace = 5003
-
-// HTTPError holds the http error description
-func (err ErrUserDoesNotHaveAccessToNamespace) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeUserDoesNotHaveAccessToNamespace, Message: "This user does not have access to the namespace."}
-}
-
-// ErrNamespaceNameCannotBeEmpty represents an error, where a namespace name is empty.
-type ErrNamespaceNameCannotBeEmpty struct {
-	NamespaceID int64
-	UserID      int64
-}
-
-// IsErrNamespaceNameCannotBeEmpty checks if an error is a ErrNamespaceDoesNotExist.
-func IsErrNamespaceNameCannotBeEmpty(err error) bool {
-	_, ok := err.(ErrNamespaceNameCannotBeEmpty)
-	return ok
-}
-
-func (err ErrNamespaceNameCannotBeEmpty) Error() string {
-	return fmt.Sprintf("Namespace name cannot be empty [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
-}
-
-// ErrCodeNamespaceNameCannotBeEmpty holds the unique world-error code of this error
-const ErrCodeNamespaceNameCannotBeEmpty = 5006
-
-// HTTPError holds the http error description
-func (err ErrNamespaceNameCannotBeEmpty) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeNamespaceNameCannotBeEmpty, Message: "The namespace name cannot be empty."}
-}
-
-// ErrNeedToHaveNamespaceReadAccess represents an error, where the user is not the owner of that namespace (used i.e. when deleting a namespace)
-type ErrNeedToHaveNamespaceReadAccess struct {
-	NamespaceID int64
-	UserID      int64
-}
-
-// IsErrNeedToHaveNamespaceReadAccess checks if an error is a ErrNamespaceDoesNotExist.
-func IsErrNeedToHaveNamespaceReadAccess(err error) bool {
-	_, ok := err.(ErrNeedToHaveNamespaceReadAccess)
-	return ok
-}
-
-func (err ErrNeedToHaveNamespaceReadAccess) Error() string {
-	return fmt.Sprintf("User does not have access to that namespace [NamespaceID: %d, UserID: %d]", err.NamespaceID, err.UserID)
-}
-
-// ErrCodeNeedToHaveNamespaceReadAccess holds the unique world-error code of this error
-const ErrCodeNeedToHaveNamespaceReadAccess = 5009
-
-// HTTPError holds the http error description
-func (err ErrNeedToHaveNamespaceReadAccess) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeNeedToHaveNamespaceReadAccess, Message: "You need to have namespace read access to do this."}
-}
-
-// ErrTeamDoesNotHaveAccessToNamespace represents an error, where the Team is not the owner of that namespace (used i.e. when deleting a namespace)
-type ErrTeamDoesNotHaveAccessToNamespace struct {
-	NamespaceID int64
-	TeamID      int64
-}
-
-// IsErrTeamDoesNotHaveAccessToNamespace checks if an error is a ErrNamespaceDoesNotExist.
-func IsErrTeamDoesNotHaveAccessToNamespace(err error) bool {
-	_, ok := err.(ErrTeamDoesNotHaveAccessToNamespace)
-	return ok
-}
-
-func (err ErrTeamDoesNotHaveAccessToNamespace) Error() string {
-	return fmt.Sprintf("Team does not have access to that namespace [NamespaceID: %d, TeamID: %d]", err.NamespaceID, err.TeamID)
-}
-
-// ErrCodeTeamDoesNotHaveAccessToNamespace holds the unique world-error code of this error
-const ErrCodeTeamDoesNotHaveAccessToNamespace = 5010
-
-// HTTPError holds the http error description
-func (err ErrTeamDoesNotHaveAccessToNamespace) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeTeamDoesNotHaveAccessToNamespace, Message: "You need to have access to this namespace to do this."}
-}
-
-// ErrUserAlreadyHasNamespaceAccess represents an error where a user already has access to a namespace
-type ErrUserAlreadyHasNamespaceAccess struct {
-	UserID      int64
-	NamespaceID int64
-}
-
-// IsErrUserAlreadyHasNamespaceAccess checks if an error is ErrUserAlreadyHasNamespaceAccess.
-func IsErrUserAlreadyHasNamespaceAccess(err error) bool {
-	_, ok := err.(ErrUserAlreadyHasNamespaceAccess)
-	return ok
-}
-
-func (err ErrUserAlreadyHasNamespaceAccess) Error() string {
-	return fmt.Sprintf("User already has access to that namespace. [User ID: %d, Namespace ID: %d]", err.UserID, err.NamespaceID)
-}
-
-// ErrCodeUserAlreadyHasNamespaceAccess holds the unique world-error code of this error
-const ErrCodeUserAlreadyHasNamespaceAccess = 5011
-
-// HTTPError holds the http error description
-func (err ErrUserAlreadyHasNamespaceAccess) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusConflict, Code: ErrCodeUserAlreadyHasNamespaceAccess, Message: "This user already has access to this namespace."}
-}
-
-// ErrNamespaceIsArchived represents an error where a namespace is archived
-type ErrNamespaceIsArchived struct {
-	NamespaceID int64
-}
-
-// IsErrNamespaceIsArchived checks if an error is a .
-func IsErrNamespaceIsArchived(err error) bool {
-	_, ok := err.(ErrNamespaceIsArchived)
-	return ok
-}
-
-func (err ErrNamespaceIsArchived) Error() string {
-	return fmt.Sprintf("Namespace is archived [NamespaceID: %d]", err.NamespaceID)
-}
-
-// ErrCodeNamespaceIsArchived holds the unique world-error code of this error
-const ErrCodeNamespaceIsArchived = 5012
-
-// HTTPError holds the http error description
-func (err ErrNamespaceIsArchived) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeNamespaceIsArchived, Message: "This namespaces is archived. Editing or creating new projects is not possible."}
-}
-
 // ============
 // Team errors
 // ============
@@ -1081,7 +947,7 @@ type ErrTeamNameCannotBeEmpty struct {
 	TeamID int64
 }
 
-// IsErrTeamNameCannotBeEmpty checks if an error is a ErrNamespaceDoesNotExist.
+// IsErrTeamNameCannotBeEmpty checks if an error is a ErrTeamNameCannotBeEmpty.
 func IsErrTeamNameCannotBeEmpty(err error) bool {
 	_, ok := err.(ErrTeamNameCannotBeEmpty)
 	return ok
@@ -1122,7 +988,7 @@ func (err ErrTeamDoesNotExist) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeTeamDoesNotExist, Message: "This team does not exist."}
 }
 
-// ErrTeamAlreadyHasAccess represents an error where a team already has access to a project/namespace
+// ErrTeamAlreadyHasAccess represents an error where a team already has access to a project
 type ErrTeamAlreadyHasAccess struct {
 	TeamID int64
 	ID     int64
@@ -1222,7 +1088,7 @@ func (err ErrTeamDoesNotHaveAccessToProject) HTTPError() web.HTTPError {
 // User <-> Project errors
 // ====================
 
-// ErrUserAlreadyHasAccess represents an error where a user already has access to a project/namespace
+// ErrUserAlreadyHasAccess represents an error where a user already has access to a project
 type ErrUserAlreadyHasAccess struct {
 	UserID    int64
 	ProjectID int64

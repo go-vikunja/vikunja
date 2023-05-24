@@ -37,8 +37,7 @@ func TestProjectDuplicate(t *testing.T) {
 	}
 
 	l := &ProjectDuplicate{
-		ProjectID:   1,
-		NamespaceID: 1,
+		ProjectID: 1,
 	}
 	can, err := l.CanCreate(s, u)
 	assert.NoError(t, err)

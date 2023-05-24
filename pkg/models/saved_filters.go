@@ -39,7 +39,7 @@ type SavedFilter struct {
 	// The user who owns this filter
 	Owner *user.User `xorm:"-" json:"owner" valid:"-"`
 
-	// True if the filter is a favorite. Favorite filters show up in a separate namespace together with favorite projects.
+	// True if the filter is a favorite. Favorite filters show up in a separate parent project together with favorite projects.
 	IsFavorite bool `xorm:"default false" json:"is_favorite"`
 
 	// A timestamp when this filter was created. You cannot change this value.
@@ -95,14 +95,14 @@ func getSavedFiltersForUser(s *xorm.Session, auth web.Auth) (filters []*SavedFil
 
 func (sf *SavedFilter) toProject() *Project {
 	return &Project{
-		ID:          getProjectIDFromSavedFilterID(sf.ID),
-		Title:       sf.Title,
-		Description: sf.Description,
-		IsFavorite:  sf.IsFavorite,
-		Created:     sf.Created,
-		Updated:     sf.Updated,
-		Owner:       sf.Owner,
-		NamespaceID: SavedFiltersPseudoNamespace.ID,
+		ID:              getProjectIDFromSavedFilterID(sf.ID),
+		Title:           sf.Title,
+		Description:     sf.Description,
+		IsFavorite:      sf.IsFavorite,
+		Created:         sf.Created,
+		Updated:         sf.Updated,
+		Owner:           sf.Owner,
+		ParentProjectID: SavedFiltersPseudoProject.ID,
 	}
 }
 

@@ -34,9 +34,6 @@ const (
 	// UserCountKey is the name of the key we use to store total users in redis
 	UserCountKey = `usercount`
 
-	// NamespaceCountKey is the name of the key we use to store the amount of total namespaces in redis
-	NamespaceCountKey = `namespacecount`
-
 	// TaskCountKey is the name of the key we use to store the amount of total tasks in redis
 	TaskCountKey = `taskcount`
 
@@ -87,18 +84,6 @@ func InitMetrics() {
 	}))
 	if err != nil {
 		log.Criticalf("Could not register metrics for %s: %s", UserCountKey, err)
-	}
-
-	// Register total Namespaces count metric
-	err = registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
-		Name: "vikunja_namespace_count",
-		Help: "The total number of namespaces on this instance",
-	}, func() float64 {
-		count, _ := GetCount(NamespaceCountKey)
-		return float64(count)
-	}))
-	if err != nil {
-		log.Criticalf("Could not register metrics for %s: %s", NamespaceCountKey, err)
 	}
 
 	// Register total Tasks count metric

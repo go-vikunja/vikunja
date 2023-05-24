@@ -17,6 +17,8 @@
 package models
 
 import (
+	"errors"
+
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"xorm.io/builder"
@@ -24,15 +26,15 @@ import (
 )
 
 // CanWrite return whether the user can write on that project or not
-func (l *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
+func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 
 	// The favorite project can't be edited
-	if l.ID == FavoritesPseudoProject.ID {
+	if p.ID == FavoritesPseudoProject.ID {
 		return false, nil
 	}
 
 	// Get the project and check the right
-	originalProject, err := GetProjectSimpleByID(s, l.ID)
+	originalProject, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
 		return false, err
 	}
@@ -67,66 +69,66 @@ func (l *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 // CanRead checks if a user has read access to a project
-func (l *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 
 	// The favorite project needs a special treatment
-	if l.ID == FavoritesPseudoProject.ID {
+	if p.ID == FavoritesPseudoProject.ID {
 		owner, err := user.GetFromAuth(a)
 		if err != nil {
 			return false, 0, err
 		}
 
-		*l = FavoritesPseudoProject
-		l.Owner = owner
+		*p = FavoritesPseudoProject
+		p.Owner = owner
 		return true, int(RightRead), nil
 	}
 
 	// Saved Filter Projects need a special case
-	if getSavedFilterIDFromProjectID(l.ID) > 0 {
-		sf := &SavedFilter{ID: getSavedFilterIDFromProjectID(l.ID)}
+	if getSavedFilterIDFromProjectID(p.ID) > 0 {
+		sf := &SavedFilter{ID: getSavedFilterIDFromProjectID(p.ID)}
 		return sf.CanRead(s, a)
 	}
 
 	// Check if the user is either owner or can read
 	var err error
-	originalProject, err := GetProjectSimpleByID(s, l.ID)
+	originalProject, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
 		return false, 0, err
 	}
 
-	*l = *originalProject
+	*p = *originalProject
 
 	// Check if we're dealing with a share auth
 	shareAuth, ok := a.(*LinkSharing)
 	if ok {
-		return l.ID == shareAuth.ProjectID &&
+		return p.ID == shareAuth.ProjectID &&
 			(shareAuth.Right == RightRead || shareAuth.Right == RightWrite || shareAuth.Right == RightAdmin), int(shareAuth.Right), nil
 	}
 
-	if l.isOwner(&user.User{ID: a.GetID()}) {
+	if p.isOwner(&user.User{ID: a.GetID()}) {
 		return true, int(RightAdmin), nil
 	}
-	return l.checkRight(s, a, RightRead, RightWrite, RightAdmin)
+	return p.checkRight(s, a, RightRead, RightWrite, RightAdmin)
 }
 
 // CanUpdate checks if the user can update a project
-func (l *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err error) {
+func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err error) {
 	// The favorite project can't be edited
-	if l.ID == FavoritesPseudoProject.ID {
+	if p.ID == FavoritesPseudoProject.ID {
 		return false, nil
 	}
 
 	// Get the project
-	ol, err := GetProjectSimpleByID(s, l.ID)
+	ol, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
 		return false, err
 	}
 
-	// Check if we're moving the project into a different namespace.
+	// Check if we're moving the project to a different parent project.
 	// If that is the case, we need to verify permissions to do so.
-	if l.NamespaceID != 0 && l.NamespaceID != ol.NamespaceID {
-		newNamespace := &Namespace{ID: l.NamespaceID}
-		can, err := newNamespace.CanWrite(s, a)
+	if p.ParentProjectID != 0 && p.ParentProjectID != ol.ParentProjectID {
+		newProject := &Project{ID: p.ParentProjectID}
+		can, err := newProject.CanWrite(s, a)
 		if err != nil {
 			return false, err
 		}
@@ -135,7 +137,7 @@ func (l *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 		}
 	}
 
-	fid := getSavedFilterIDFromProjectID(l.ID)
+	fid := getSavedFilterIDFromProjectID(p.ID)
 	if fid > 0 {
 		sf, err := getSavedFilterSimpleByID(s, fid)
 		if err != nil {
@@ -145,34 +147,43 @@ func (l *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 		return sf.CanUpdate(s, a)
 	}
 
-	canUpdate, err = l.CanWrite(s, a)
+	canUpdate, err = p.CanWrite(s, a)
 	// If the project is archived and the user tries to un-archive it, let the request through
-	if IsErrProjectIsArchived(err) && !l.IsArchived {
+	archivedErr := ErrProjectIsArchived{}
+	is := errors.As(err, &archivedErr)
+	if is && !p.IsArchived && archivedErr.ProjectID == p.ID {
 		err = nil
 	}
 	return canUpdate, err
 }
 
 // CanDelete checks if the user can delete a project
-func (l *Project) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	return l.IsAdmin(s, a)
+func (p *Project) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	return p.IsAdmin(s, a)
 }
 
 // CanCreate checks if the user can create a project
-func (l *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	// A user can create a project if they have write access to the namespace
-	n := &Namespace{ID: l.NamespaceID}
-	return n.CanWrite(s, a)
+func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if p.ParentProjectID != 0 {
+		parent := &Project{ID: p.ParentProjectID}
+		return parent.CanWrite(s, a)
+	}
+	// Check if we're dealing with a share auth
+	_, is := a.(*LinkSharing)
+	if is {
+		return false, nil
+	}
+	return true, nil
 }
 
 // IsAdmin returns whether the user has admin rights on the project or not
-func (l *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
+func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 	// The favorite project can't be edited
-	if l.ID == FavoritesPseudoProject.ID {
+	if p.ID == FavoritesPseudoProject.ID {
 		return false, nil
 	}
 
-	originalProject, err := GetProjectSimpleByID(s, l.ID)
+	originalProject, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
 		return false, err
 	}
@@ -194,22 +205,12 @@ func (l *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 // Little helper function to check if a user is project owner
-func (l *Project) isOwner(u *user.User) bool {
-	return l.OwnerID == u.ID
+func (p *Project) isOwner(u *user.User) bool {
+	return p.OwnerID == u.ID
 }
 
 // Checks n different rights for any given user
-func (l *Project) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bool, int, error) {
-
-	/*
-			The following loop creates a sql condition like this one:
-
-		    (ul.user_id = 1 AND ul.right = 1) OR (un.user_id = 1 AND un.right = 1) OR
-			(tm.user_id = 1 AND tn.right = 1) OR (tm2.user_id = 1 AND tl.right = 1) OR
-
-			for each passed right. That way, we can check with a single sql query (instead if 8)
-			if the user has the right to see the project or not.
-	*/
+func (p *Project) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bool, int, error) {
 
 	var conds []builder.Cond
 	for _, r := range rights {
@@ -219,11 +220,6 @@ func (l *Project) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bool
 			builder.Eq{"ul.user_id": a.GetID()},
 			builder.Eq{"ul.right": r},
 		))
-		// If the namespace this project belongs to was shared directly with the user and the user has the right
-		conds = append(conds, builder.And(
-			builder.Eq{"un.user_id": a.GetID()},
-			builder.Eq{"un.right": r},
-		))
 
 		// Team rights
 		// If the project was shared directly with the team and the team has the right
@@ -231,65 +227,49 @@ func (l *Project) checkRight(s *xorm.Session, a web.Auth, rights ...Right) (bool
 			builder.Eq{"tm2.user_id": a.GetID()},
 			builder.Eq{"tl.right": r},
 		))
-		// If the namespace this project belongs to was shared directly with the team and the team has the right
-		conds = append(conds, builder.And(
-			builder.Eq{"tm.user_id": a.GetID()},
-			builder.Eq{"tn.right": r},
-		))
 	}
 
-	// If the user is the owner of a namespace, it has any right, all the time
-	conds = append(conds, builder.Eq{"n.owner_id": a.GetID()})
-
 	type allProjectRights struct {
-		UserNamespace *NamespaceUser `xorm:"extends"`
-		UserProject   *ProjectUser   `xorm:"extends"`
-
-		TeamNamespace *TeamNamespace `xorm:"extends"`
-		TeamProject   *TeamProject   `xorm:"extends"`
-
-		NamespaceOwnerID int64 `xorm:"namespaces_owner_id"`
+		UserProject *ProjectUser `xorm:"extends"`
+		TeamProject *TeamProject `xorm:"extends"`
 	}
 
 	r := &allProjectRights{}
 	var maxRight = 0
 	exists, err := s.
-		Select("l.*, un.right, ul.right, tn.right, tl.right, n.owner_id as namespaces_owner_id").
+		Select("p.*, ul.right, tl.right").
 		Table("projects").
-		Alias("l").
+		Alias("p").
 		// User stuff
-		Join("LEFT", []string{"users_namespaces", "un"}, "un.namespace_id = l.namespace_id").
-		Join("LEFT", []string{"users_projects", "ul"}, "ul.project_id = l.id").
-		Join("LEFT", []string{"namespaces", "n"}, "n.id = l.namespace_id").
+		Join("LEFT", []string{"users_projects", "ul"}, "ul.project_id = p.id").
 		// Team stuff
-		Join("LEFT", []string{"team_namespaces", "tn"}, " l.namespace_id = tn.namespace_id").
-		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tn.team_id").
-		Join("LEFT", []string{"team_projects", "tl"}, "l.id = tl.project_id").
+		Join("LEFT", []string{"team_projects", "tl"}, "p.id = tl.project_id").
 		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
 		// The actual condition
 		Where(builder.And(
 			builder.Or(
 				conds...,
 			),
-			builder.Eq{"l.id": l.ID},
+			builder.Eq{"p.id": p.ID},
 		)).
 		Get(r)
 
-	// Figure out the max right and return it
-	if int(r.UserNamespace.Right) > maxRight {
-		maxRight = int(r.UserNamespace.Right)
+	// If there's noting shared for this project, and it has a parent, go up the tree
+	if !exists && p.ParentProjectID > 0 {
+		parent, err := GetProjectSimpleByID(s, p.ParentProjectID)
+		if err != nil {
+			return false, 0, err
+		}
+
+		return parent.checkRight(s, a, rights...)
 	}
+
+	// Figure out the max right and return it
 	if int(r.UserProject.Right) > maxRight {
 		maxRight = int(r.UserProject.Right)
 	}
-	if int(r.TeamNamespace.Right) > maxRight {
-		maxRight = int(r.TeamNamespace.Right)
-	}
 	if int(r.TeamProject.Right) > maxRight {
 		maxRight = int(r.TeamProject.Right)
-	}
-	if r.NamespaceOwnerID == a.GetID() {
-		maxRight = int(RightAdmin)
 	}
 
 	return exists, maxRight, err

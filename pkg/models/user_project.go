@@ -22,14 +22,11 @@ import (
 	"xorm.io/xorm"
 )
 
-// ProjectUIDs hold all kinds of user IDs from accounts who have somehow access to a project
+// ProjectUIDs hold all kinds of user IDs from accounts who have access to a project
 type ProjectUIDs struct {
-	ProjectOwnerID       int64 `xorm:"projectOwner"`
-	NamespaceUserID      int64 `xorm:"unID"`
-	ProjectUserID        int64 `xorm:"ulID"`
-	NamespaceOwnerUserID int64 `xorm:"nOwner"`
-	TeamNamespaceUserID  int64 `xorm:"tnUID"`
-	TeamProjectUserID    int64 `xorm:"tlUID"`
+	ProjectOwnerID    int64 `xorm:"projectOwner"`
+	ProjectUserID     int64 `xorm:"ulID"`
+	TeamProjectUserID int64 `xorm:"tlUID"`
 }
 
 // ListUsersFromProject returns a list with all users who have access to a project, regardless of the method which gave them access
@@ -37,47 +34,58 @@ func ListUsersFromProject(s *xorm.Session, l *Project, search string) (users []*
 
 	userids := []*ProjectUIDs{}
 
-	err = s.
-		Select(`l.owner_id as projectOwner,
-			un.user_id as unID,
-			ul.user_id as ulID,
-			n.owner_id as nOwner,
-			tm.user_id as tnUID,
-			tm2.user_id as tlUID`).
-		Table("projects").
-		Alias("l").
-		// User stuff
-		Join("LEFT", []string{"users_namespaces", "un"}, "un.namespace_id = l.namespace_id").
-		Join("LEFT", []string{"users_projects", "ul"}, "ul.project_id = l.id").
-		Join("LEFT", []string{"namespaces", "n"}, "n.id = l.namespace_id").
-		// Team stuff
-		Join("LEFT", []string{"team_namespaces", "tn"}, " l.namespace_id = tn.namespace_id").
-		Join("LEFT", []string{"team_members", "tm"}, "tm.team_id = tn.team_id").
-		Join("LEFT", []string{"team_projects", "tl"}, "l.id = tl.project_id").
-		Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
-		// The actual condition
-		Where(
-			builder.Or(
-				builder.Or(builder.Eq{"ul.right": RightRead}),
-				builder.Or(builder.Eq{"un.right": RightRead}),
-				builder.Or(builder.Eq{"tl.right": RightRead}),
-				builder.Or(builder.Eq{"tn.right": RightRead}),
-
-				builder.Or(builder.Eq{"ul.right": RightWrite}),
-				builder.Or(builder.Eq{"un.right": RightWrite}),
-				builder.Or(builder.Eq{"tl.right": RightWrite}),
-				builder.Or(builder.Eq{"tn.right": RightWrite}),
-
-				builder.Or(builder.Eq{"ul.right": RightAdmin}),
-				builder.Or(builder.Eq{"un.right": RightAdmin}),
-				builder.Or(builder.Eq{"tl.right": RightAdmin}),
-				builder.Or(builder.Eq{"tn.right": RightAdmin}),
-			),
-			builder.Eq{"l.id": l.ID},
-		).
-		Find(&userids)
+	var currentProject *Project
+	currentProject, err = GetProjectSimpleByID(s, l.ID)
 	if err != nil {
-		return
+		return nil, err
+	}
+
+	for {
+		currentUserIDs := []*ProjectUIDs{}
+		err = s.
+			Select(`l.owner_id as projectOwner,
+			ul.user_id as ulID,
+			tm2.user_id as tlUID`).
+			Table("projects").
+			Alias("l").
+			// User stuff
+			Join("LEFT", []string{"users_projects", "ul"}, "ul.project_id = l.id").
+			// Team stuff
+			Join("LEFT", []string{"team_projects", "tl"}, "l.id = tl.project_id").
+			Join("LEFT", []string{"team_members", "tm2"}, "tm2.team_id = tl.team_id").
+			// The actual condition
+			Where(
+				builder.Or(
+					builder.Or(builder.Eq{"ul.right": RightRead}),
+					builder.Or(builder.Eq{"tl.right": RightRead}),
+
+					builder.Or(builder.Eq{"ul.right": RightWrite}),
+					builder.Or(builder.Eq{"tl.right": RightWrite}),
+
+					builder.Or(builder.Eq{"ul.right": RightAdmin}),
+					builder.Or(builder.Eq{"tl.right": RightAdmin}),
+				),
+				builder.Eq{"l.id": currentProject.ID},
+			).
+			Find(&currentUserIDs)
+		if err != nil {
+			return
+		}
+		userids = append(userids, currentUserIDs...)
+
+		if currentProject.ParentProjectID == 0 {
+			break
+		}
+
+		parent, err := GetProjectSimpleByID(s, currentProject.ParentProjectID)
+		if err != nil && !IsErrProjectDoesNotExist(err) {
+			return nil, err
+		}
+		if err != nil && IsErrProjectDoesNotExist(err) {
+			break
+		}
+
+		currentProject = parent
 	}
 
 	// Remove duplicates from the project of ids and make it a slice
@@ -85,10 +93,7 @@ func ListUsersFromProject(s *xorm.Session, l *Project, search string) (users []*
 	uidmap[l.OwnerID] = true
 	for _, u := range userids {
 		uidmap[u.ProjectUserID] = true
-		uidmap[u.NamespaceOwnerUserID] = true
-		uidmap[u.NamespaceUserID] = true
 		uidmap[u.TeamProjectUserID] = true
-		uidmap[u.TeamNamespaceUserID] = true
 	}
 
 	uids := make([]int64, 0, len(uidmap))

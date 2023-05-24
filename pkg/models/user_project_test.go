@@ -205,13 +205,13 @@ func TestListUsersFromProject(t *testing.T) {
 
 				testuser7, // Owner
 
-				testuser8,  // Shared Via NamespaceTeam readonly
-				testuser9,  // Shared Via NamespaceTeam write
-				testuser10, // Shared Via NamespaceTeam admin
+				testuser8,  // Shared Via Parent Project Team readonly
+				testuser9,  // Shared Via Parent Project Team write
+				testuser10, // Shared Via Parent Project Team admin
 
-				testuser11, // Shared Via NamespaceUser readonly
-				testuser12, // Shared Via NamespaceUser write
-				testuser13, // Shared Via NamespaceUser admin
+				testuser11, // Shared Via Parent Project User readonly
+				testuser12, // Shared Via Parent Project User write
+				testuser13, // Shared Via Parent Project User admin
 			},
 		},
 		{

@@ -17,6 +17,7 @@
 package models
 
 import (
+	"sort"
 	"testing"
 	"time"
 
@@ -403,11 +404,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task21 := &Task{
 		ID:           21,
 		Title:        "task #21",
-		Identifier:   "test12-1",
+		Identifier:   "-1",
 		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
-		ProjectID:    12,
+		ProjectID:    32, // parent project is shared to user 1 via direct share
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     12,
 		Created:      time.Unix(1543626724, 0).In(loc),
@@ -416,26 +417,26 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task22 := &Task{
 		ID:           22,
 		Title:        "task #22",
-		Identifier:   "test13-1",
+		Identifier:   "-1",
 		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
-		ProjectID:    13,
+		ProjectID:    33,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     13,
+		BucketID:     36,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task23 := &Task{
 		ID:           23,
 		Title:        "task #23",
-		Identifier:   "test14-1",
+		Identifier:   "-1",
 		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
-		ProjectID:    14,
+		ProjectID:    34,
 		RelatedTasks: map[RelationKind][]*Task{},
-		BucketID:     14,
+		BucketID:     37,
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
@@ -446,7 +447,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
-		ProjectID:    15,
+		ProjectID:    15, // parent project is shared to user 1 via team
 		RelatedTasks: map[RelationKind][]*Task{},
 		BucketID:     15,
 		Created:      time.Unix(1543626724, 0).In(loc),
@@ -637,7 +638,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    interface{}
+		want    []*Task
 		wantErr bool
 	}
 
@@ -689,7 +690,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		},
 		{
 			// For more sorting tests see task_collection_sort_test.go
-			name: "ReadAll Tasks sorted by done asc and id desc",
+			name: "sorted by done asc and id desc",
 			fields: fields{
 				SortBy:  []string{"done", "id"},
 				OrderBy: []string{"asc", "desc"},
@@ -812,11 +813,13 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task19,
 				task20,
 				task21,
+
 				task22,
 				task23,
 				task24,
 				task25,
 				task26,
+
 				task27,
 				task28,
 				task29,
@@ -1079,33 +1082,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "filter namespace",
-			fields: fields{
-				FilterBy:         []string{"namespace"},
-				FilterValue:      []string{"7"},
-				FilterComparator: []string{"equals"},
-			},
-			args: defaultArgs,
-			want: []*Task{
-				task21,
-			},
-			wantErr: false,
-		},
-		{
-			name: "filter namespace in",
-			fields: fields{
-				FilterBy:         []string{"namespace"},
-				FilterValue:      []string{"7,8"},
-				FilterComparator: []string{"in"},
-			},
-			args: defaultArgs,
-			want: []*Task{
-				task21,
-				task22,
-			},
-			wantErr: false,
-		},
+		// TODO filter parent project?
 		{
 			name: "filter by index",
 			fields: fields{
@@ -1267,11 +1244,35 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				return
 			}
 			if diff, equal := messagediff.PrettyDiff(got, tt.want); !equal {
-				if len(got.([]*Task)) == 0 && len(tt.want.([]*Task)) == 0 {
+				var is bool
+				var gotTasks []*Task
+				gotTasks, is = got.([]*Task)
+				if !is {
+					gotTasks = []*Task{}
+				}
+				if len(gotTasks) == 0 && len(tt.want) == 0 {
 					return
 				}
 
-				t.Errorf("Test %s, Task.ReadAll() = %v, \nwant %v, \ndiff: %v", tt.name, got, tt.want, diff)
+				gotIDs := []int64{}
+				for _, t := range got.([]*Task) {
+					gotIDs = append(gotIDs, t.ID)
+				}
+
+				wantIDs := []int64{}
+				for _, t := range tt.want {
+					wantIDs = append(wantIDs, t.ID)
+				}
+				sort.Slice(wantIDs, func(i, j int) bool {
+					return wantIDs[i] < wantIDs[j]
+				})
+				sort.Slice(gotIDs, func(i, j int) bool {
+					return gotIDs[i] < gotIDs[j]
+				})
+
+				diffIDs, _ := messagediff.PrettyDiff(gotIDs, wantIDs)
+
+				t.Errorf("Test %s, Task.ReadAll() = %v, \nwant %v, \ndiff: %v \n\n diffIDs: %v", tt.name, got, tt.want, diff, diffIDs)
 			}
 		})
 	}
