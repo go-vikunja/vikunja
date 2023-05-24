@@ -518,7 +518,7 @@ steps:
 
   # Build os packages and push it to our bucket
   - name: build-os-packages-unstable
-    image: goreleaser/nfpm:v2.28.0
+    image: goreleaser/nfpm:v2.29.0
     pull: always
     commands:
       - apk add git go
@@ -534,7 +534,7 @@ steps:
     depends_on: [ after-build-compress ]
 
   - name: build-os-packages-version
-    image: goreleaser/nfpm:v2.28.0
+    image: goreleaser/nfpm:v2.29.0
     pull: always
     commands:
       - apk add git go
@@ -743,6 +743,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 7bade2fc44072cf5730f7f15b5be18058ce47d216853c8c39c692f967c640e20
+hmac: eb647c46cdea1a6b17149925dd43a9c180fe941ceaec9d2c6ede557b68a4dd37
 
 ...
