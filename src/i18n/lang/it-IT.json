@@ -7,7 +7,7 @@
     "lastViewed": "Ultima visualizzazione",
     "project": {
       "newText": "You can create a new project for your new tasks:",
-      "new": "New project",
+      "new": "Nuovo progetto",
       "importText": "Or import your projects and tasks from other services into Vikunja:",
       "import": "Import your data into Vikunja"
     }
@@ -85,7 +85,7 @@
         "weekStartSunday": "Domenica",
         "weekStartMonday": "Lunedì",
         "language": "Lingua",
-        "defaultProject": "Default Project",
+        "defaultProject": "Progetto Predefinito",
         "timezone": "Fuso Orario",
         "overdueTasksRemindersTime": "Orario email attività in scadute"
       },
@@ -166,35 +166,35 @@
   },
   "project": {
     "archived": "This project is archived. It is not possible to create new or edit tasks for it.",
-    "title": "Project Title",
-    "color": "Color",
-    "projects": "Projects",
+    "title": "Titolo Progetto",
+    "color": "Colore",
+    "projects": "Progetti",
     "search": "Type to search for a project…",
     "searchSelect": "Click or press enter to select this project",
-    "shared": "Shared Projects",
+    "shared": "Progetti Condivisi",
     "noDescriptionAvailable": "No project description is available.",
     "create": {
-      "header": "New project",
-      "titlePlaceholder": "The project's title goes here…",
+      "header": "Nuovo progetto",
+      "titlePlaceholder": "Titolo del progetto…",
       "addTitleRequired": "Please specify a title.",
-      "createdSuccess": "The project was successfully created.",
+      "createdSuccess": "Progetto creato.",
       "addProjectRequired": "Please specify a project or set a default project in the settings."
     },
     "archive": {
-      "title": "Archive \"{project}\"",
-      "archive": "Archive this project",
-      "unarchive": "Un-Archive this project",
+      "title": "Archivia \"{project}\"",
+      "archive": "Archivia questo progetto",
+      "unarchive": "Estrai questo progetto dall'archivio",
       "unarchiveText": "You will be able to create new tasks or edit it.",
       "archiveText": "You won't be able to edit this project or create new tasks until you un-archive it.",
-      "success": "The project was successfully archived."
+      "success": "Progetto archiviato."
     },
     "background": {
-      "title": "Set project background",
-      "remove": "Remove Background",
-      "upload": "Choose a background from your pc",
-      "searchPlaceholder": "Search for a background…",
-      "poweredByUnsplash": "Powered by Unsplash",
-      "loadMore": "Load more photos",
+      "title": "Imposta lo sfondo del progetto",
+      "remove": "Rimuovi lo sfondo",
+      "upload": "Scegli uno sfondo dal tuo PC",
+      "searchPlaceholder": "Cerca uno sfondo…",
+      "poweredByUnsplash": "Alimentato da Unsplash",
+      "loadMore": "Carica altre foto",
       "success": "The background has been set successfully!",
       "removeSuccess": "The background has been removed successfully!"
     },
@@ -895,9 +895,9 @@
       "move": "Move this task to another project",
       "reminder": "Gestisci i promemoria di questa attività",
       "description": "Attiva/Disattiva modifica della descrizione dell'attività",
-      "delete": "Delete this task",
-      "priority": "Change the priority of this task",
-      "favorite": "Mark this task as favorite / unfavorite"
+      "delete": "Elimina questa attività",
+      "priority": "Modifica la priorità di questa attività",
+      "favorite": "Segna questa attività come preferita o non preferita"
     },
     "project": {
       "title": "Project Views",
