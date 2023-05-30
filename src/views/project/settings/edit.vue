@@ -121,7 +121,7 @@ watch(
 useTitle(() => project?.title ? t('project.edit.title', {project: project.title}) : '')
 
 async function save() {
-	project.parentProjectId = parentProject.value.id ?? project.parentProjectId
+	project.parentProjectId = parentProject.value?.id ?? project.parentProjectId
 	await saveProject()
 	await useBaseStore().handleSetCurrentProject({project})
 	router.back()
