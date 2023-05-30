@@ -83,7 +83,7 @@
     "vue-advanced-cropper": "2.8.8",
     "vue-flatpickr-component": "11.0.3",
     "vue-i18n": "9.2.2",
-    "vue-router": "4.2.1",
+    "vue-router": "4.2.2",
     "workbox-precaching": "6.6.1",
     "zhyswan-vuedraggable": "4.1.3"
   },
