@@ -438,6 +438,8 @@ github.com/json-iterator/go v1.1.12 h1:PV8peI4a0ysnczrg+LtxykD8LfKY9ML6u2jnxaEnr
 github.com/json-iterator/go v1.1.12/go.mod h1:e30LSqwooZae/UwlEbR2852Gd8hjQvJoHmT4TnhNGBo=
 github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1:6v2b51hI/fHJwM22ozAgKL4VKDeJcHhJFhtBdhmNjmU=
 github.com/jstemmer/go-junit-report v0.9.1/go.mod h1:Brl9GWCQeLvo8nXZwPNNblvFj/XSXhF0NWZEnDohbsk=
+github.com/jszwedko/go-datemath v0.1.1-0.20230526204004-640a500621d6 h1:SwcnSwBR7X/5EHJQlXBockkJVIMRVt5yKaesBPMtyZQ=
+github.com/jszwedko/go-datemath v0.1.1-0.20230526204004-640a500621d6/go.mod h1:WrYiIuiXUMIvTDAQw97C+9l0CnBmCcvosPjN3XDqS/o=
 github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=
 github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7VTCxuUUipMqKk8s4w=
 github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 h1:Z9n2FFNUXsshfwJMBgNA0RU6/i7WVaAegv3PtuIHPMs=
@@ -735,8 +737,6 @@ github.com/valyala/fasttemplate v1.2.0/go.mod h1:UQGH1tvbgY+Nz5t2n7tXsz52dQxojPU
 github.com/valyala/fasttemplate v1.2.1/go.mod h1:KHLXt3tVN2HBp8eijSv/kGJopbvo7S+qRAEEKiv+SiQ=
 github.com/valyala/fasttemplate v1.2.2 h1:lxLXG0uE3Qnshl9QyaK6XJxMXlQZELvChBOCmQD0Loo=
 github.com/valyala/fasttemplate v1.2.2/go.mod h1:KHLXt3tVN2HBp8eijSv/kGJopbvo7S+qRAEEKiv+SiQ=
-github.com/vectordotdev/go-datemath v0.1.1-0.20220323213446-f3954d0b18ae h1:oyiy3uBj1F4O3AaFh7hUGBrJjAssJhKyAbwxtkslxqo=
-github.com/vectordotdev/go-datemath v0.1.1-0.20220323213446-f3954d0b18ae/go.mod h1:PnwzbSst7KD3vpBzzlntZU5gjVa455Uqa5QPiKSYJzQ=
 github.com/wneessen/go-mail v0.3.9 h1:Q4DbCk3htT5DtDWKeMgNXCiHc4bBY/vv/XQPT6XDXzc=
 github.com/wneessen/go-mail v0.3.9/go.mod h1:zxOlafWCP/r6FEhAaRgH4IC1vg2YXxO0Nar9u0IScZ8=
 github.com/xdg-go/pbkdf2 v1.0.0/go.mod h1:jrpuAogTd400dnrH08LKmI/xc1MbPOebTwRqcT5RDeI=

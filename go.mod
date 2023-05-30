@@ -42,6 +42,7 @@ require (
 	github.com/iancoleman/strcase v0.2.0
 	github.com/imdario/mergo v0.3.16
 	github.com/jinzhu/copier v0.3.5
+	github.com/jszwedko/go-datemath v0.1.1-0.20230526204004-640a500621d6
 	github.com/labstack/echo-jwt/v4 v4.2.0
 	github.com/labstack/echo/v4 v4.10.2
 	github.com/labstack/gommon v0.4.0
@@ -62,7 +63,6 @@ require (
 	github.com/swaggo/swag v1.8.12
 	github.com/tkuchiki/go-timezone v0.2.2
 	github.com/ulule/limiter/v3 v3.11.2
-	github.com/vectordotdev/go-datemath v0.1.1-0.20220323213446-f3954d0b18ae
 	github.com/wneessen/go-mail v0.3.9
 	github.com/yuin/goldmark v1.5.4
 	golang.org/x/crypto v0.9.0

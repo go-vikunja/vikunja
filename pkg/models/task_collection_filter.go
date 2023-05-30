@@ -26,7 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 
 	"github.com/iancoleman/strcase"
-	"github.com/vectordotdev/go-datemath"
+	"github.com/jszwedko/go-datemath"
 	"xorm.io/xorm/schemas"
 )
 
