@@ -7,7 +7,7 @@
 		:search-results="foundLabels"
 		@select="addLabel"
 		label="title"
-		:creatable="true"
+		:creatable="creatable"
 		@create="createAndAddLabel"
 		:create-placeholder="$t('task.label.createPlaceholder')"
 		v-model="labels"
@@ -64,6 +64,10 @@ const props = defineProps({
 	},
 	disabled: {
 		default: false,
+	},
+	creatable: {
+		type: Boolean,
+		default: true,
 	},
 })
 

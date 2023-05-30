@@ -147,6 +147,7 @@
 			<label class="label">{{ $t('task.attributes.labels') }}</label>
 			<div class="control labels-list">
 				<edit-labels
+					:creatable="false"
 					v-model="entities.labels"
 					@update:model-value="changeLabelFilter"
 				/>
