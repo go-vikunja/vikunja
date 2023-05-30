@@ -34,7 +34,7 @@
 				/>
 
 				<!-- Show any parent tasks to make it clear this task is a sub task of something -->
-				<span class="parent-tasks" v-if="typeof task.relatedTasks.parenttask !== 'undefined'">
+				<span class="parent-tasks" v-if="typeof task.relatedTasks?.parenttask !== 'undefined'">
 					<template v-for="(pt, i) in task.relatedTasks.parenttask">
 						{{ pt.title }}<template v-if="(i + 1) < task.relatedTasks.parenttask.length">,&nbsp;</template>
 					</template>
@@ -255,7 +255,7 @@ function undoDone(checked: boolean) {
 }
 
 async function toggleFavorite() {
-	task.value = taskStore.toggleFavorite(task.value)
+	task.value = await taskStore.toggleFavorite(task.value)
 	emit('task-updated', task.value)
 }
 
