@@ -211,7 +211,7 @@ function handleInput(val: string) {
 	bubble(1000)
 }
 
-function bubble(timeout = 500) {
+function bubble(timeout = 5000) {
 	if (changeTimeout.value !== null) {
 		clearTimeout(changeTimeout.value)
 	}
