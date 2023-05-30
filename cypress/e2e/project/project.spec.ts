@@ -146,7 +146,7 @@ describe('Projects', () => {
 			.should('not.contain', 'Archived')
 
 		// Show archived
-		cy.get('[data-cy="show-archived-check"] label.check span')
+		cy.get('[data-cy="show-archived-check"] label span')
 			.should('be.visible')
 			.click()
 		cy.get('[data-cy="show-archived-check"] input')
@@ -155,7 +155,7 @@ describe('Projects', () => {
 			.should('contain', 'Archived')
 
 		// Don't show archived
-		cy.get('[data-cy="show-archived-check"] label.check span')
+		cy.get('[data-cy="show-archived-check"] label span')
 			.should('be.visible')
 			.click()
 		cy.get('[data-cy="show-archived-check"] input')
