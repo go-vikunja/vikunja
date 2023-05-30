@@ -277,8 +277,8 @@ devDependencies:
     specifier: 1.3.1
     version: 1.3.1(vite@4.3.9)
   vite-plugin-pwa:
-    specifier: 0.15.1
-    version: 0.15.1(vite@4.3.9)(workbox-build@6.6.1)(workbox-window@6.6.1)
+    specifier: 0.15.2
+    version: 0.15.2(vite@4.3.9)(workbox-build@6.6.1)(workbox-window@6.6.1)
   vite-svg-loader:
     specifier: 4.0.0
     version: 4.0.0
@@ -8972,8 +8972,8 @@ packages:
       vite: 4.3.9(@types/node@18.16.16)(sass@1.62.1)(terser@5.10.0)
     dev: true
 
-  /vite-plugin-pwa@0.15.1(vite@4.3.9)(workbox-build@6.6.1)(workbox-window@6.6.1):
-    resolution: {integrity: sha512-lJVzEYda/Y9AfwxFzX0rV+QCQ2+WdBoEGtR1RBZKWxvrJ4NWEH1VZaHOMyzvRiYhWQsi7aFhewsp1CDvN/R1Og==}
+  /vite-plugin-pwa@0.15.2(vite@4.3.9)(workbox-build@6.6.1)(workbox-window@6.6.1):
+    resolution: {integrity: sha512-l1srtaad5NMNrAtAuub6ArTYG5Ci9AwofXXQ6IsbpCMYQ/0HUndwI7RB2x95+1UBFm7VGttQtT7woBlVnNhBRw==}
     peerDependencies:
       vite: ^3.1.0 || ^4.0.0
       workbox-build: ^6.5.4
