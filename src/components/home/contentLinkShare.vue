@@ -9,9 +9,9 @@
 				<Logo class="logo" v-if="logoVisible"/>
 				<h1
 					:class="{'m-0': !logoVisible}"
-					:style="{ 'opacity': currentProject.title === '' ? '0': '1' }"
+					:style="{ 'opacity': currentProject?.title === '' ? '0': '1' }"
 					class="title">
-					{{ currentProject.title === '' ? $t('misc.loading') : currentProject.title }}
+					{{ currentProject?.title === '' ? $t('misc.loading') : currentProject?.title }}
 				</h1>
 				<div class="box has-text-left view">
 					<router-view/>

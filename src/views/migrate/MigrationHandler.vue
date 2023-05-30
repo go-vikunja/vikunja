@@ -89,8 +89,8 @@ import {formatDateLong} from '@/helpers/time/formatDate'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
 import {MIGRATORS} from './migrators'
-import {useNamespaceStore} from '@/stores/namespaces'
 import {useTitle} from '@/composables/useTitle'
+import {useProjectStore} from '@/stores/projects'
 
 const PROGRESS_DOTS_COUNT = 8
 
@@ -163,8 +163,8 @@ async function migrate() {
 			? await migrationFileService.migrate(migrationConfig as File)
 			: await migrationService.migrate(migrationConfig as MigrationConfig)
 		message.value = result.message
-		const namespaceStore = useNamespaceStore()
-		return namespaceStore.loadNamespaces()
+		const projectStore = useProjectStore()
+		return projectStore.loadProjects()
 	} finally {
 		isMigrating.value = false
 	}

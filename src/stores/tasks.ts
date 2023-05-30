@@ -432,6 +432,17 @@ export const useTaskStore = defineStore('task', () => {
 			coverImageAttachmentId: attachment ? attachment.id : 0,
 		})
 	}
+	
+	async function toggleFavorite(task: ITask) {
+		const taskService = new TaskService()
+		task.isFavorite = !task.isFavorite
+		task = await taskService.update(task)
+		
+		// reloading the projects list so that the Favorites project shows up or is hidden when there are (or are not) favorite tasks
+		await projectStore.loadProjects() 
+		
+		return task
+	}
 
 	return {
 		tasks,
@@ -453,6 +464,7 @@ export const useTaskStore = defineStore('task', () => {
 		setCoverImage,
 		findProjectId,
 		ensureLabelsExist,
+		toggleFavorite,
 	}
 })
 

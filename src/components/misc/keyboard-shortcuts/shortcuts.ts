@@ -44,8 +44,8 @@ export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
 				combination: 'then',
 			},
 			{
-				title: 'keyboardShortcuts.navigation.namespaces',
-				keys: ['g', 'n'],
+				title: 'keyboardShortcuts.navigation.projects',
+				keys: ['g', 'p'],
 				combination: 'then',
 			},
 			{

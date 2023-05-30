@@ -13,11 +13,13 @@
 				:can-write="canWrite"
 				ref="heading"
 			/>
-			<h6 class="subtitle" v-if="parent && parent.namespace && parent.project">
-				{{ getNamespaceTitle(parent.namespace) }} &rsaquo;
-				<router-link :to="{ name: 'project.index', params: { projectId: parent.project.id } }">
-					{{ getProjectTitle(parent.project) }}
-				</router-link>
+			<h6 class="subtitle" v-if="project?.id">
+				<template v-for="p in projectStore.getAncestors(project)" :key="p.id">
+					<router-link :to="{ name: 'project.index', params: { projectId: p.id } }">
+						{{ getProjectTitle(p) }}
+					</router-link>
+					<span class="has-text-grey-light" v-if="p.id !== project?.id"> &gt; </span>
+				</template>
 			</h6>
 
 			<checklist-summary :task="task"/>
@@ -448,7 +450,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, toRef, shallowReactive, computed, watch, nextTick, type PropType} from 'vue'
+import {ref, reactive, toRef, shallowReactive, computed, watch, watchEffect, nextTick, type PropType} from 'vue'
 import {useRouter, type RouteLocation} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {unrefElement} from '@vueuse/core'
@@ -486,12 +488,10 @@ import TaskSubscription from '@/components/misc/subscription.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 import {uploadFile} from '@/helpers/attachments'
-import {getNamespaceTitle} from '@/helpers/getNamespaceTitle'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 
 import {useBaseStore} from '@/stores/base'
-import {useNamespaceStore} from '@/stores/namespaces'
 import {useAttachmentStore} from '@/stores/attachments'
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
@@ -500,6 +500,7 @@ import {useTitle} from '@/composables/useTitle'
 
 import {success} from '@/message'
 import type {Action as MessageAction} from '@/message'
+import {useProjectStore} from '@/stores/projects'
 
 const props = defineProps({
 	taskId: {
@@ -517,7 +518,7 @@ const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
 
 const baseStore = useBaseStore()
-const namespaceStore = useNamespaceStore()
+const projectStore = useProjectStore()
 const attachmentStore = useAttachmentStore()
 const taskStore = useTaskStore()
 const kanbanStore = useKanbanStore()
@@ -538,31 +539,12 @@ const visible = ref(false)
 
 const taskId = toRef(props, 'taskId')
 
-const parent = computed(() => {
-	if (!task.projectId) {
-		return {
-			namespace: null,
-			project: null,
-		}
-	}
-
-	if (!namespaceStore.getProjectAndNamespaceById) {
-		return null
-	}
-
-	return namespaceStore.getProjectAndNamespaceById(task.projectId)
+const project = computed(() => projectStore.projects[task.projectId])
+watchEffect(() => {
+	baseStore.handleSetCurrentProject({
+		project: project.value,
+	})
 })
-
-watch(
-	parent,
-	(parent) => {
-		const parentProject = parent !== null ? parent.project : null
-		if (parentProject !== null) {
-			baseStore.handleSetCurrentProject({project: parentProject})
-		}
-	},
-	{immediate: true},
-)
 
 const canWrite = computed(() => (
 	task.maxRight !== null &&
@@ -772,10 +754,8 @@ async function changeProject(project: IProject) {
 }
 
 async function toggleFavorite() {
-	task.isFavorite = !task.isFavorite
-	const newTask = await taskService.update(task)
+	const newTask = await taskStore.toggleFavorite(task.value)
 	Object.assign(task, newTask)
-	await namespaceStore.loadNamespacesIfFavoritesDontExist()
 }
 
 async function setPriority(priority: Priority) {

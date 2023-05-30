@@ -16,7 +16,7 @@
 						totalTasks > 0 ? $t('project.delete.tasksToDelete', {count: totalTasks}) : $t('project.delete.noTasksToDelete')
 					}}
 				</strong>
-				<Loading v-else class="is-loading-small"/>
+				<Loading v-else class="is-loading-small" variant="default"/>
 			</p>
 
 			<p>
@@ -43,7 +43,7 @@ const router = useRouter()
 
 const totalTasks = ref<number | null>(null)
 
-const project = computed(() => projectStore.getProjectById(route.params.projectId))
+const project = computed(() => projectStore.projects[route.params.projectId])
 
 watchEffect(
 	() => {

@@ -12,7 +12,7 @@ import AbstractService from '@/services/abstractService'
 import SavedFilterModel from '@/models/savedFilter'
 
 import {useBaseStore} from '@/stores/base'
-import {useNamespaceStore} from '@/stores/namespaces'
+import {useProjectStore} from '@/stores/projects'
 
 import {objectToSnakeCase, objectToCamelCase} from '@/helpers/case'
 import {success} from '@/message'
@@ -40,7 +40,7 @@ export function getSavedFilterIdFromProjectId(projectId: IProject['id']) {
 }
 
 export function isSavedFilter(project: IProject) {
-	return getSavedFilterIdFromProjectId(project.id) > 0
+	return getSavedFilterIdFromProjectId(project?.id) > 0
 }
 
 export default class SavedFilterService extends AbstractService<ISavedFilter> {
@@ -81,7 +81,7 @@ export default class SavedFilterService extends AbstractService<ISavedFilter> {
 export function useSavedFilter(projectId?: MaybeRef<IProject['id']>) {
 	const router = useRouter()
 	const {t} = useI18n({useScope:'global'})
-	const namespaceStore = useNamespaceStore()
+	const projectStore = useProjectStore()
 
 	const filterService = shallowReactive(new SavedFilterService())
 
@@ -110,13 +110,13 @@ export function useSavedFilter(projectId?: MaybeRef<IProject['id']>) {
 
 	async function createFilter() {
 		filter.value = await filterService.create(filter.value)
-		await namespaceStore.loadNamespaces()
+		await projectStore.loadProjects()
 		router.push({name: 'project.index', params: {projectId: getProjectId(filter.value)}})
 	}
 
 	async function saveFilter() {
 		const response = await filterService.update(filter.value)
-		await namespaceStore.loadNamespaces()
+		await projectStore.loadProjects()
 		success({message: t('filters.edit.success')})
 		response.filters = objectToSnakeCase(response.filters)
 		filter.value = response
@@ -129,9 +129,9 @@ export function useSavedFilter(projectId?: MaybeRef<IProject['id']>) {
 
 	async function deleteFilter() {	
 		await filterService.delete(filter.value)
-		await namespaceStore.loadNamespaces()
+		await projectStore.loadProjects()
 		success({message: t('filters.delete.success')})
-		router.push({name: 'namespaces.index'})
+		router.push({name: 'projects.index'})
 	}
 
 	const titleValid = ref(true)

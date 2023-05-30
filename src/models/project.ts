@@ -6,7 +6,6 @@ import SubscriptionModel from '@/models/subscription'
 import type {IProject} from '@/modelTypes/IProject'
 import type {IUser} from '@/modelTypes/IUser'
 import type {ITask} from '@/modelTypes/ITask'
-import type {INamespace} from '@/modelTypes/INamespace'
 import type {ISubscription} from '@/modelTypes/ISubscription'
 
 export default class ProjectModel extends AbstractModel<IProject> implements IProject {
@@ -15,7 +14,6 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 	description = ''
 	owner: IUser = UserModel
 	tasks: ITask[] = []
-	namespaceId: INamespace['id'] = 0
 	isArchived = false
 	hexColor = ''
 	identifier = ''
@@ -24,6 +22,7 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 	subscription: ISubscription = null
 	position = 0
 	backgroundBlurHash = ''
+	parentProjectId = 0
 	
 	created: Date = null
 	updated: Date = null
@@ -46,7 +45,7 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 		if (typeof this.subscription !== 'undefined' && this.subscription !== null) {
 			this.subscription = new SubscriptionModel(this.subscription)
 		}
-
+		
 		this.created = new Date(this.created)
 		this.updated = new Date(this.updated)
 	}

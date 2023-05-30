@@ -22,7 +22,6 @@ const DataExportDownload = () => import('@/views/user/DataExportDownload.vue')
 // Tasks
 import UpcomingTasksComponent from '@/views/tasks/ShowTasks.vue'
 import LinkShareAuthComponent from '@/views/sharing/LinkSharingAuth.vue'
-const ListNamespaces = () => import('@/views/namespaces/ListNamespaces.vue')
 const TaskDetailView = () => import('@/views/tasks/TaskDetailView.vue')
 
 // Team Handling
@@ -41,18 +40,13 @@ const ProjectKanban = () => import('@/views/project/ProjectKanban.vue')
 const ProjectInfo = () => import('@/views/project/ProjectInfo.vue')
 
 // Project Settings
+const ListProjects = () => import('@/views/project/ListProjects.vue')
 const ProjectSettingEdit = () => import('@/views/project/settings/edit.vue')
 const ProjectSettingBackground = () => import('@/views/project/settings/background.vue')
 const ProjectSettingDuplicate = () => import('@/views/project/settings/duplicate.vue')
 const ProjectSettingShare = () => import('@/views/project/settings/share.vue')
 const ProjectSettingDelete = () => import('@/views/project/settings/delete.vue')
 const ProjectSettingArchive = () => import('@/views/project/settings/archive.vue')
-
-// Namespace Settings
-const NamespaceSettingEdit = () => import('@/views/namespaces/settings/edit.vue')
-const NamespaceSettingShare = () => import('@/views/namespaces/settings/share.vue')
-const NamespaceSettingArchive = () => import('@/views/namespaces/settings/archive.vue')
-const NamespaceSettingDelete = () => import('@/views/namespaces/settings/delete.vue')
 
 // Saved Filters
 const FilterNew = () => import('@/views/filters/FilterNew.vue')
@@ -73,9 +67,6 @@ const UserSettingsTOTPComponent = () => import('@/views/user/settings/TOTP.vue')
 
 // Project Handling
 const NewProjectComponent = () => import('@/views/project/NewProject.vue')
-
-// Namespace Handling
-const NewNamespaceComponent = () => import('@/views/namespaces/NewNamespace.vue')
 
 const EditTeamComponent = () => import('@/views/teams/EditTeam.vue')
 const NewTeamComponent = () =>  import('@/views/teams/NewTeam.vue')
@@ -204,54 +195,6 @@ const router = createRouter({
 			component: LinkShareAuthComponent,
 		},
 		{
-			path: '/namespaces',
-			name: 'namespaces.index',
-			component: ListNamespaces,
-		},
-		{
-			path: '/namespaces/new',
-			name: 'namespace.create',
-			component: NewNamespaceComponent,
-			meta: {
-				showAsModal: true,
-			},
-		},
-		{
-			path: '/namespaces/:id/settings/edit',
-			name: 'namespace.settings.edit',
-			component: NamespaceSettingEdit,
-			meta: {
-				showAsModal: true,
-			},
-			props: route => ({ namespaceId: Number(route.params.id as string) }),
-		},
-		{
-			path: '/namespaces/:namespaceId/settings/share',
-			name: 'namespace.settings.share',
-			component: NamespaceSettingShare,
-			meta: {
-				showAsModal: true,
-			},
-		},
-		{
-			path: '/namespaces/:id/settings/archive',
-			name: 'namespace.settings.archive',
-			component: NamespaceSettingArchive,
-			meta: {
-				showAsModal: true,
-			},
-			props: route => ({ namespaceId: parseInt(route.params.id as string) }),
-		},
-		{
-			path: '/namespaces/:id/settings/delete',
-			name: 'namespace.settings.delete',
-			component: NamespaceSettingDelete,
-			meta: {
-				showAsModal: true,
-			},
-			props: route => ({ namespaceId: Number(route.params.id as string) }),
-		},
-		{
 			path: '/tasks/:id',
 			name: 'task.detail',
 			component: TaskDetailView,
@@ -282,9 +225,23 @@ const router = createRouter({
 			},
 		},
 		{
-			path: '/projects/new/:namespaceId/',
+			path: '/projects',
+			name: 'projects.index',
+			component: ListProjects,
+		},
+		{
+			path: '/projects/new',
 			name: 'project.create',
 			component: NewProjectComponent,
+			meta: {
+				showAsModal: true,
+			},
+		},
+		{
+			path: '/projects/:parentProjectId/new',
+			name: 'project.createFromParent',
+			component: NewProjectComponent,
+			props: route => ({ parentProjectId: Number(route.params.parentProjectId as string) }),
 			meta: {
 				showAsModal: true,
 			},
@@ -412,7 +369,7 @@ const router = createRouter({
 				saveProjectView(to.params.projectId, to.name)
 				// Properly set the page title when a task popup is closed
 				const projectStore = useProjectStore()
-				const projectFromStore = projectStore.getProjectById(Number(to.params.projectId))
+				const projectFromStore = projectStore.projects[Number(to.params.projectId)]
 				if(projectFromStore) {
 					setTitle(projectFromStore.title)
 				}

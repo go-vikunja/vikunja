@@ -1,5 +1,9 @@
 <template>
-	<create-edit :title="$t('project.create.header')" @create="createNewProject()" :primary-disabled="project.title === ''">
+	<create-edit
+		:title="$t('project.create.header')"
+		@create="createNewProject()"
+		:primary-disabled="project.title === ''"
+	>
 		<div class="field">
 			<label class="label" for="projectTitle">{{ $t('project.title') }}</label>
 			<div
@@ -22,19 +26,24 @@
 		<p class="help is-danger" v-if="showError && project.title === ''">
 			{{ $t('project.create.addTitleRequired') }}
 		</p>
+		<div class="field" v-if="projectStore.hasProjects">
+			<label class="label">{{ $t('project.parent') }}</label>
+			<div class="control">
+				<project-search v-model="parentProject"/>
+			</div>
+		</div>
 		<div class="field">
 			<label class="label">{{ $t('project.color') }}</label>
 			<div class="control">
-				<color-picker v-model="project.hexColor" />
+				<color-picker v-model="project.hexColor"/>
 			</div>
 		</div>
 	</create-edit>
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, shallowReactive} from 'vue'
+import {ref, reactive, shallowReactive, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useRouter, useRoute} from 'vue-router'
 
 import ProjectService from '@/services/project'
 import ProjectModel from '@/models/project'
@@ -44,10 +53,10 @@ import ColorPicker from '@/components/input/ColorPicker.vue'
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
 import {useProjectStore} from '@/stores/projects'
+import ProjectSearch from '@/components/tasks/partials/projectSearch.vue'
+import type {IProject} from '@/modelTypes/IProject'
 
 const {t} = useI18n({useScope: 'global'})
-const router = useRouter()
-const route = useRoute()
 
 useTitle(() => t('project.create.header'))
 
@@ -55,6 +64,17 @@ const showError = ref(false)
 const project = reactive(new ProjectModel())
 const projectService = shallowReactive(new ProjectService())
 const projectStore = useProjectStore()
+const parentProject = ref<IProject | null>(null)
+
+const props = defineProps<{
+	parentProjectId?: number,
+}>()
+
+watch(
+	() => props.parentProjectId,
+	() => parentProject.value = projectStore.projects[props.parentProjectId],
+	{immediate: true},
+)
 
 async function createNewProject() {
 	if (project.title === '') {
@@ -63,12 +83,11 @@ async function createNewProject() {
 	}
 	showError.value = false
 
-	project.namespaceId = Number(route.params.namespaceId as string)
-	const newProject = await projectStore.createProject(project)
-	await router.push({
-		name: 'project.index',
-		params: { projectId: newProject.id },
-	})
-	success({message: t('project.create.createdSuccess') })
+	if (parentProject.value) {
+		project.parentProjectId = parentProject.value.id
+	}
+
+	await projectStore.createProject(project)
+	success({message: t('project.create.createdSuccess')})
 }
 </script>

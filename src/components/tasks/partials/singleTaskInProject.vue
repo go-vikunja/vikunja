@@ -7,19 +7,19 @@
 		/>
 
 		<ColorBubble
-			v-if="showProjectColor && projectColor !== '' && currentProject.id !== task.projectId"
+			v-if="showProjectColor && projectColor !== '' && currentProject?.id !== task.projectId"
 			:color="projectColor"
 			class="mr-1"
 		/>
 
 		<router-link
 			:to="taskDetailRoute"
-			:class="{ 'done': task.done, 'show-project': showProject && project !== null}"
+			:class="{ 'done': task.done, 'show-project': showProject && project}"
 			class="tasktext"
 		>
 			<span>
 				<router-link
-					v-if="showProject && project !== null"
+					v-if="showProject && typeof project !== 'undefined'"
 					:to="{ name: 'project.list', params: { projectId: task.projectId } }"
 					class="task-project"
 					:class="{'mr-2': task.hexColor !== ''}"
@@ -34,7 +34,7 @@
 				/>
 
 				<!-- Show any parent tasks to make it clear this task is a sub task of something -->
-				<span class="parent-tasks" v-if="typeof task.relatedTasks.parenttask !== 'undefined'">
+				<span class="parent-tasks" v-if="typeof task.relatedTasks?.parenttask !== 'undefined'">
 					<template v-for="(pt, i) in task.relatedTasks.parenttask">
 						{{ pt.title }}<template v-if="(i + 1) < task.relatedTasks.parenttask.length">,&nbsp;</template>
 					</template>
@@ -104,7 +104,7 @@
 		</progress>
 
 		<router-link
-			v-if="!showProject && currentProject.id !== task.projectId && project !== null"
+			v-if="!showProject && currentProject?.id !== task.projectId && project"
 			:to="{ name: 'project.list', params: { projectId: task.projectId } }"
 			class="task-project"
 			v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
@@ -149,7 +149,6 @@ import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatD
 import {success} from '@/message'
 
 import {useProjectStore} from '@/stores/projects'
-import {useNamespaceStore} from '@/stores/namespaces'
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
 
@@ -209,10 +208,9 @@ onBeforeUnmount(() => {
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
-const namespaceStore = useNamespaceStore()
 
-const project = computed(() => projectStore.getProjectById(task.value.projectId))
-const projectColor = computed(() => project.value !== null ? project.value.hexColor : '')
+const project = computed(() => projectStore.projects[task.value.projectId])
+const projectColor = computed(() => project.value ? project.value?.hexColor : '')
 
 const currentProject = computed(() => {
 	return typeof baseStore.currentProject === 'undefined' ? {
@@ -257,10 +255,8 @@ function undoDone(checked: boolean) {
 }
 
 async function toggleFavorite() {
-	task.value.isFavorite = !task.value.isFavorite
-	task.value = await taskService.update(task.value)
+	task.value = await taskStore.toggleFavorite(task.value)
 	emit('task-updated', task.value)
-	namespaceStore.loadNamespacesIfFavoritesDontExist()
 }
 
 const deferDueDate = ref<typeof DeferTask | null>(null)

@@ -29,7 +29,7 @@ const props = defineProps({
 })
 
 const projectStore = useProjectStore()
-const project = computed(() => projectStore.getProjectById(props.projectId))
+const project = computed(() => projectStore.projects[props.projectId])
 const htmlDescription = computed(() => {
 	const description = project.value?.description || ''
 	if (description === '') {

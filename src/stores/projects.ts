@@ -1,12 +1,14 @@
-import {watch, reactive, shallowReactive, unref, toRefs, readonly, ref, computed} from 'vue'
+import {watch, reactive, shallowReactive, unref, readonly, ref, computed} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 import {useI18n} from 'vue-i18n'
+import {useRouter} from 'vue-router'
 
 import ProjectService from '@/services/project'
+import ProjectDuplicateService from '@/services/projectDuplicateService'
+import ProjectDuplicateModel from '@/models/projectDuplicateModel'
 import {setModuleLoading} from '@/stores/helper'
 import {removeProjectFromHistory} from '@/modules/projectHistory'
 import {createNewIndexer} from '@/indexes'
-import {useNamespaceStore} from './namespaces'
 
 import type {IProject} from '@/modelTypes/IProject'
 
@@ -16,9 +18,7 @@ import ProjectModel from '@/models/project'
 import {success} from '@/message'
 import {useBaseStore} from '@/stores/base'
 
-const {add, remove, search, update} = createNewIndexer('projects', ['title', 'description'])
-
-const FavoriteProjectsNamespace = -2
+const {remove, search, update} = createNewIndexer('projects', ['title', 'description'])
 
 export interface ProjectState {
 	[id: IProject['id']]: IProject
@@ -26,16 +26,22 @@ export interface ProjectState {
 
 export const useProjectStore = defineStore('project', () => {
 	const baseStore = useBaseStore()
-	const namespaceStore = useNamespaceStore()
+	const router = useRouter()
 
 	const isLoading = ref(false)
 
 	// The projects are stored as an object which has the project ids as keys.
 	const projects = ref<ProjectState>({})
+	const projectsArray = computed(() => Object.values(projects.value)
+		.sort((a, b) => a.position - b.position))
+	const notArchivedRootProjects = computed(() => projectsArray.value
+		.filter(p => p.parentProjectId === 0 && !p.isArchived))
+	const favoriteProjects = computed(() => projectsArray.value
+		.filter(p => !p.isArchived && p.isFavorite))
+	const hasProjects = computed(() => projectsArray.value.length > 0)
 
-
-	const getProjectById = computed(() => {
-		return (id: IProject['id']) => typeof projects.value[id] !== 'undefined' ? projects.value[id] : null
+	const getChildProjects = computed(() => {
+		return (id: IProject['id']) => projectsArray.value.filter(p => p.parentProjectId === id)
 	})
 
 	const findProjectByExactname = computed(() => {
@@ -53,7 +59,7 @@ export const useProjectStore = defineStore('project', () => {
 				?.filter(value => value > 0)
 				.map(id => projects.value[id])
 				.filter(project => project.isArchived === includeArchived)
-				|| []
+			|| []
 		}
 	})
 
@@ -65,16 +71,15 @@ export const useProjectStore = defineStore('project', () => {
 		projects.value[project.id] = project
 		update(project)
 
+		// FIXME: This should be a watcher, but using a watcher instead will sometimes crash browser processes.
+		// Reverted from 31b7c1f217532bf388ba95a03f469508bee46f6a
 		if (baseStore.currentProject?.id === project.id) {
 			baseStore.setCurrentProject(project)
 		}
 	}
 
 	function setProjects(newProjects: IProject[]) {
-		newProjects.forEach(l => {
-			projects.value[l.id] = l
-			add(l)
-		})
+		newProjects.forEach(p => setProject(p))
 	}
 
 	function removeProjectById(project: IProject) {
@@ -100,9 +105,11 @@ export const useProjectStore = defineStore('project', () => {
 
 		try {
 			const createdProject = await projectService.create(project)
-			createdProject.namespaceId = project.namespaceId
-			namespaceStore.addProjectToNamespace(createdProject)
 			setProject(createdProject)
+			router.push({
+				name: 'project.index',
+				params: { projectId: createdProject.id },
+			})
 			return createdProject
 		} finally {
 			cancel()
@@ -112,26 +119,14 @@ export const useProjectStore = defineStore('project', () => {
 	async function updateProject(project: IProject) {
 		const cancel = setModuleLoading(setIsLoading)
 		const projectService = new ProjectService()
-
+		
 		try {
-			await projectService.update(project)
+			const updatedProject = await projectService.update(project)
 			setProject(project)
-			namespaceStore.setProjectInNamespaceById(project)
 
 			// the returned project from projectService.update is the same!
 			// in order to not create a manipulation in pinia store we have to create a new copy
-			const newProject = {
-				...project,
-				namespaceId: FavoriteProjectsNamespace,
-			}
-			
-			namespaceStore.removeProjectFromNamespaceById(newProject)
-			if (project.isFavorite) {
-				namespaceStore.addProjectToNamespace(newProject)
-			}
-			namespaceStore.loadNamespacesIfFavoritesDontExist()
-			namespaceStore.removeFavoritesNamespaceIfEmpty()
-			return newProject
+			return updatedProject
 		} catch (e) {
 			// Reset the project state to the initial one to avoid confusion for the user
 			setProject({
@@ -151,7 +146,6 @@ export const useProjectStore = defineStore('project', () => {
 		try {
 			const response = await projectService.delete(project)
 			removeProjectById(project)
-			namespaceStore.removeProjectFromNamespaceById(project)
 			removeProjectFromHistory({id: project.id})
 			return response
 		} finally {
@@ -159,11 +153,42 @@ export const useProjectStore = defineStore('project', () => {
 		}
 	}
 
+	async function loadProjects() {
+		const cancel = setModuleLoading(setIsLoading)
+
+		const projectService = new ProjectService()
+		try {
+			const loadedProjects = await projectService.getAll({}, {is_archived: true}) as IProject[]
+			projects.value = {}
+			setProjects(loadedProjects)
+
+			return loadedProjects
+		} finally {
+			cancel()
+		}
+	}
+
+	function getAncestors(project: IProject): IProject[] {
+		if (!project?.parentProjectId) {
+			return [project]
+		}
+
+		const parentProject = projects.value[project.parentProjectId]
+		return [
+			...getAncestors(parentProject),
+			project,
+		]
+	}
+
 	return {
 		isLoading: readonly(isLoading),
 		projects: readonly(projects),
+		projectsArray: readonly(projectsArray),
+		notArchivedRootProjects: readonly(notArchivedRootProjects),
+		favoriteProjects: readonly(favoriteProjects),
+		hasProjects: readonly(hasProjects),
 
-		getProjectById,
+		getChildProjects,
 		findProjectByExactname,
 		searchProject,
 
@@ -171,17 +196,24 @@ export const useProjectStore = defineStore('project', () => {
 		setProjects,
 		removeProjectById,
 		toggleProjectFavorite,
+		loadProjects,
 		createProject,
 		updateProject,
 		deleteProject,
+		getAncestors,
 	}
 })
 
 export function useProject(projectId: MaybeRef<IProject['id']>) {
 	const projectService = shallowReactive(new ProjectService())
-	const {loading: isLoading} = toRefs(projectService)
+	const projectDuplicateService = shallowReactive(new ProjectDuplicateService())
+	
+	const isLoading = computed(() => projectService.loading || projectDuplicateService.loading)
 	const project: IProject = reactive(new ProjectModel())
+	
 	const {t} = useI18n({useScope: 'global'})
+	const router = useRouter()
+	const projectStore = useProjectStore()
 
 	watch(
 		() => unref(projectId),
@@ -192,20 +224,34 @@ export function useProject(projectId: MaybeRef<IProject['id']>) {
 		{immediate: true},
 	)
 
-	const projectStore = useProjectStore()
 	async function save() {
-		await projectStore.updateProject(project)
+		const updatedProject = await projectStore.updateProject(project)
+		Object.assign(project, updatedProject)
 		success({message: t('project.edit.success')})
+	}
+	
+	async function duplicateProject(parentProjectId: IProject['id']) {
+		const projectDuplicate = new ProjectDuplicateModel({
+			projectId: unref(projectId),
+			parentProjectId,
+		})
+
+		const duplicate = await projectDuplicateService.create(projectDuplicate)
+
+		projectStore.setProject(duplicate.project)
+		success({message: t('project.duplicate.success')})
+		router.push({name: 'project.index', params: {projectId: duplicate.project.id}})
 	}
 
 	return {
 		isLoading: readonly(isLoading),
 		project,
 		save,
+		duplicateProject,
 	}
 }
 
 // support hot reloading
 if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useProjectStore, import.meta.hot))
+	import.meta.hot.accept(acceptHMRUpdate(useProjectStore, import.meta.hot))
 }

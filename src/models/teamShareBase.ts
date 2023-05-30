@@ -6,7 +6,7 @@ import type {ITeam} from '@/modelTypes/ITeam'
 
 /**
  * This class is a base class for common team sharing model.
- * It is extended in a way so it can be used for namespaces as well for projects.
+ * It is extended in a way, so it can be used for projects.
  */
 export default class TeamShareBaseModel extends AbstractModel<ITeamShareBase> implements ITeamShareBase {
 	teamId: ITeam['id'] = 0

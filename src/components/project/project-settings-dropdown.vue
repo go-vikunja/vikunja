@@ -73,6 +73,13 @@
 				type="dropdown"
 			/>
 			<dropdown-item
+				v-if="level < 2"
+				:to="{ name: 'project.createFromParent', params: { parentProjectId: project.id } }"
+				icon="layer-group"
+			>
+				{{ $t('menu.createProject') }}
+			</dropdown-item>
+			<dropdown-item
 				:to="{ name: 'project.settings.delete', params: { projectId: project.id } }"
 				icon="trash-alt"
 				class="has-text-danger"
@@ -96,17 +103,18 @@ import type {ISubscription} from '@/modelTypes/ISubscription'
 import {isSavedFilter} from '@/services/savedFilter'
 import {useConfigStore} from '@/stores/config'
 import {useProjectStore} from '@/stores/projects'
-import {useNamespaceStore} from '@/stores/namespaces'
 
 const props = defineProps({
 	project: {
 		type: Object as PropType<IProject>,
 		required: true,
 	},
+	level: {
+		type: Number,
+	},
 })
 
 const projectStore = useProjectStore()
-const namespaceStore = useNamespaceStore()
 const subscription = ref<ISubscription | null>(null)
 watchEffect(() => {
 	subscription.value = props.project.subscription ?? null
@@ -122,6 +130,5 @@ function setSubscriptionInStore(sub: ISubscription) {
 		subscription: sub,
 	}
 	projectStore.setProject(updatedProject)
-	namespaceStore.setProjectInNamespaceById(updatedProject)
 }
 </script>

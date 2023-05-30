@@ -139,10 +139,6 @@ import {ref, reactive, computed, shallowReactive, type Ref} from 'vue'
 import type {PropType} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import UserNamespaceService from '@/services/userNamespace'
-import UserNamespaceModel from '@/models/userNamespace'
-import type {IUserNamespace} from '@/modelTypes/IUserNamespace'
-
 import UserProjectService from '@/services/userProject'
 import UserProjectModel from '@/models/userProject'
 import type {IUserProject} from '@/modelTypes/IUserProject'
@@ -150,10 +146,6 @@ import type {IUserProject} from '@/modelTypes/IUserProject'
 import UserService from '@/services/user'
 import UserModel, { getDisplayName } from '@/models/user'
 import type {IUser} from '@/modelTypes/IUser'
-
-import TeamNamespaceService from '@/services/teamNamespace'
-import TeamNamespaceModel from '@/models/teamNamespace'
-import type { ITeamNamespace } from '@/modelTypes/ITeamNamespace'
 
 import TeamProjectService from '@/services/teamProject'
 import TeamProjectModel from '@/models/teamProject'
@@ -170,13 +162,15 @@ import Nothing from '@/components/misc/nothing.vue'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 
+// FIXME: I think this whole thing can now only manage user/team sharing for projects? Maybe remove a little generalization?
+
 const props = defineProps({
 	type: {
-		type: String as PropType<'project' | 'namespace'>,
+		type: String as PropType<'project'>,
 		default: '',
 	},
 	shareType: {
-		type: String as PropType<'user' | 'team' | 'namespace'>,
+		type: String as PropType<'user' | 'team'>,
 		default: '',
 	},
 	id: {
@@ -191,9 +185,9 @@ const props = defineProps({
 
 const {t} = useI18n({useScope: 'global'})
 
-// This user service is either a userNamespaceService or a userProjectService, depending on the type we are using
-let stuffService: UserNamespaceService | UserProjectService | TeamProjectService | TeamNamespaceService
-let stuffModel: IUserNamespace | IUserProject | ITeamProject | ITeamNamespace
+// This user service is a userProjectService, depending on the type we are using
+let stuffService: UserProjectService | TeamProjectService
+let stuffModel: IUserProject | ITeamProject
 let searchService: UserService | TeamService
 let sharable: Ref<IUser | ITeam>
 
@@ -231,10 +225,6 @@ const sharableName = computed(() => {
 		return t('project.list.title')
 	}
 
-	if (props.shareType === 'namespace') {
-		return t('namespace.namespace')
-	}
-
 	return ''
 })
 
@@ -247,11 +237,6 @@ if (props.shareType === 'user') {
 	if (props.type === 'project') {
 		stuffService = shallowReactive(new UserProjectService())
 		stuffModel = reactive(new UserProjectModel({projectId: props.id}))
-	} else if (props.type === 'namespace') {
-		stuffService = shallowReactive(new UserNamespaceService())
-		stuffModel = reactive(new UserNamespaceModel({
-			namespaceId: props.id,
-		}))
 	} else {
 		throw new Error('Unknown type: ' + props.type)
 	}
@@ -264,11 +249,6 @@ if (props.shareType === 'user') {
 	if (props.type === 'project') {
 		stuffService = shallowReactive(new TeamProjectService())
 		stuffModel = reactive(new TeamProjectModel({projectId: props.id}))
-	} else if (props.type === 'namespace') {
-		stuffService = shallowReactive(new TeamNamespaceService())
-		stuffModel = reactive(new TeamNamespaceModel({
-			namespaceId: props.id,
-		}))
 	} else {
 		throw new Error('Unknown type: ' + props.type)
 	}

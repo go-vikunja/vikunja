@@ -11,7 +11,6 @@ export class ProjectFactory extends Factory {
 			id: '{increment}',
 			title: faker.lorem.words(3),
 			owner_id: 1,
-			namespace_id: 1,
 			created: now.toISOString(),
 			updated: now.toISOString(),
 		}

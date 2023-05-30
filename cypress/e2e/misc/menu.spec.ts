@@ -8,20 +8,20 @@ describe('The Menu', () => {
 	})
 
 	it('Is visible by default on desktop', () => {
-		cy.get('.namespace-container')
+		cy.get('.menu-container')
 			.should('have.class', 'is-active')
 	})
 
 	it('Can be hidden on desktop', () => {
 		cy.get('button.menu-show-button:visible')
 			.click()
-		cy.get('.namespace-container')
+		cy.get('.menu-container')
 			.should('not.have.class', 'is-active')
 	})
 
 	it('Is hidden by default on mobile', () => {
 		cy.viewport('iphone-8')
-		cy.get('.namespace-container')
+		cy.get('.menu-container')
 			.should('not.have.class', 'is-active')
 	})
 
@@ -29,7 +29,7 @@ describe('The Menu', () => {
 		cy.viewport('iphone-8')
 		cy.get('button.menu-show-button:visible')
 			.click()
-		cy.get('.namespace-container')
+		cy.get('.menu-container')
 			.should('have.class', 'is-active')
 	})
 })

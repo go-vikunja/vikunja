@@ -58,7 +58,6 @@ describe('Project View Project', () => {
 		})
 		const projects = ProjectFactory.create(2, {
 			owner_id: '{increment}',
-			namespace_id: '{increment}',
 		})
 		cy.visit(`/projects/${projects[1].id}/`)
 

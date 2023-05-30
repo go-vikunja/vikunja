@@ -4,7 +4,6 @@ import {TaskFactory} from '../../factories/task'
 import {ProjectFactory} from '../../factories/project'
 import {TaskCommentFactory} from '../../factories/task_comment'
 import {UserFactory} from '../../factories/user'
-import {NamespaceFactory} from '../../factories/namespace'
 import {UserProjectFactory} from '../../factories/users_project'
 import {TaskAssigneeFactory} from '../../factories/task_assignee'
 import {LabelFactory} from '../../factories/labels'
@@ -47,13 +46,11 @@ function uploadAttachmentAndVerify(taskId: number) {
 describe('Task', () => {
 	createFakeUserAndLogin()
 
-	let namespaces
 	let projects
 	let buckets
 
 	beforeEach(() => {
 		// UserFactory.create(1)
-		namespaces = NamespaceFactory.create(1)
 		projects = ProjectFactory.create(1)
 		buckets = BucketFactory.create(1, {
 			project_id: projects[0].id,
@@ -110,7 +107,7 @@ describe('Task', () => {
 		cy.get('.tasks .task .favorite')
 			.first()
 			.click()
-		cy.get('.menu.namespaces-lists')
+		cy.get('.menu-container')
 			.should('contain', 'Favorites')
 	})
 
@@ -133,7 +130,6 @@ describe('Task', () => {
 			cy.get('.task-view h1.title.task-id')
 				.should('contain', '#1')
 			cy.get('.task-view h6.subtitle')
-				.should('contain', namespaces[0].title)
 				.should('contain', projects[0].title)
 			cy.get('.task-view .details.content.description')
 				.should('contain', tasks[0].description)
@@ -260,7 +256,6 @@ describe('Task', () => {
 				.click()
 
 			cy.get('.task-view h6.subtitle')
-				.should('contain', namespaces[0].title)
 				.should('contain', projects[1].title)
 			cy.get('.global-notification')
 				.should('contain', 'Success')
