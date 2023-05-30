@@ -3,7 +3,11 @@
 		:class="{ 'is-loading': projectService.loading, 'is-archived': currentProject?.isArchived}"
 		class="loader-container"
 	>
-		<div class="switch-view-container">
+		<h1 class="project-title-print">
+			{{ getProjectTitle(currentProject) }}
+		</h1>
+		
+		<div class="switch-view-container d-print-none">
 			<div class="switch-view">
 				<BaseButton
 					v-shortcut="'g l'"
@@ -196,5 +200,16 @@ watch(
 // FIXME: this should be in notification and set via a prop
 .is-archived .notification.is-warning {
   margin-bottom: 1rem;
+}
+
+.project-title-print {
+	display: none;
+	font-size: 1.75rem;
+	text-align: center;
+	margin-bottom: .5rem;
+	
+	@media print {
+		display: block;
+	}
 }
 </style>

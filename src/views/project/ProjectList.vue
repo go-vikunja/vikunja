@@ -55,7 +55,7 @@
 		<card :padding="false" :has-content="false" class="has-overflow">
 			<add-task
 				v-if="!project.isArchived && canWrite"
-				class="list-view__add-task"
+				class="list-view__add-task d-print-none"
 				ref="addTaskRef"
 				:default-position="firstNewPosition"
 				@taskAdded="updateTaskList"

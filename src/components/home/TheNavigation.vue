@@ -8,7 +8,8 @@
 		<MenuButton class="menu-button" />
 
 		<div v-if="currentProject?.id" class="project-title-wrapper">
-			<h1 class="project-title">{{ currentProject.title === '' ? $t('misc.loading') : getProjectTitle(currentProject) }}
+			<h1 class="project-title">
+				{{ currentProject.title === '' ? $t('misc.loading') : getProjectTitle(currentProject) }}
 			</h1>
 
 			<BaseButton :to="{ name: 'project.info', params: { projectId: currentProject.id } }" class="project-title-button">
