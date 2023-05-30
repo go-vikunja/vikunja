@@ -12,7 +12,7 @@ export default {
 const {
 	variant = 'default',
 } = defineProps<{
-	variant: 'default' | 'small'
+	variant?: 'default' | 'small'
 }>()
 </script>
 
