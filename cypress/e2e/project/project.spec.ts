@@ -18,7 +18,7 @@ describe('Projects', () => {
 			.should('contain', '/projects/new')
 		cy.get('.card-header-title')
 			.contains('New project')
-		cy.get('input.input')
+		cy.get('input[name=projectTitle]')
 			.type('New Project')
 		cy.get('.button')
 			.contains('Create')
