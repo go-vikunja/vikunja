@@ -176,7 +176,10 @@ func RegisterRoutes(e *echo.Echo) {
 
 	// static files
 	if static := config.ServiceStaticpath.GetString(); static != "" {
-		e.Use(middleware.Static(static))
+		e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+			Root:  static,
+			HTML5: true,
+		}))
 	}
 
 	// CORS_SHIT
