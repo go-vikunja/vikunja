@@ -16,7 +16,7 @@
 						totalTasks > 0 ? $t('project.delete.tasksToDelete', {count: totalTasks}) : $t('project.delete.noTasksToDelete')
 					}}
 				</strong>
-				<Loading v-else class="is-loading-small"/>
+				<Loading v-else class="is-loading-small" variant="default"/>
 			</p>
 
 			<p>
