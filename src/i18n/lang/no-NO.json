@@ -6,9 +6,7 @@
     "welcomeEvening": "God Morgen {username}!",
     "lastViewed": "Sist sett",
     "project": {
-      "newText": "Du kan opprette en ny liste for dine nye oppgaver:",
-      "new": "Nytt prosjekt",
-      "importText": "Eller importer lister og oppgaver fra andre tjenester til Vikunja:",
+      "importText": "Import your projects and tasks from other services into Vikunja:",
       "import": "Importer dine data til Vikunja"
     }
   },
@@ -143,7 +141,7 @@
     },
     "deletion": {
       "title": "Slett kontoen din",
-      "text1": "Sletting av din konto er permanent og kan ikke angres. Vi vil slette alle dine navneområder og prosjekter, oppgaver og alt forbundet med den.",
+      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "For å fortsette, skriv inn passordet ditt. Du vil motta en e-post med ytterligere instruksjoner.",
       "confirm": "Slett min konto",
       "requestSuccess": "Forespørselen var vellykket. Du vil motta en e-post med ytterligere instruksjoner.",
@@ -157,7 +155,7 @@
     },
     "export": {
       "title": "Eksporter dine kontodata",
-      "description": "Du kan be om en kopi av alle Vikunja dataene dine. Dette inkluderer navneområder, lister, oppgaver og alt tilknyttet dem.",
+      "description": "You can request a copy of all your Vikunja data. This includes Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
       "descriptionPasswordRequired": "Skriv inn passordet for å fortsette:",
       "request": "Be om kopi av mine Vikunja Data",
       "success": "Du har spurt om dine Vikunja data! Vi sender deg en e-post når den er klar til å laste ned.",
@@ -165,14 +163,18 @@
     }
   },
   "project": {
-    "archived": "Dette prosjektet er arkivert. Det er ikke mulig å opprette nye eller redigere oppgaver for det.",
+    "archivedMessage": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "archived": "Archived",
+    "showArchived": "Show Archived",
     "title": "Prosjekt tittel",
     "color": "Farger",
     "projects": "Prosjekter",
+    "parent": "Parent Project",
     "search": "Tast for å søke etter et prosjekt…",
     "searchSelect": "Klikk eller trykk enter for å velge dette prosjektet",
     "shared": "Delte prosjekter",
     "noDescriptionAvailable": "Ingen prosjektbeskrivelse er tilgjengelig.",
+    "inboxTitle": "Inbox",
     "create": {
       "header": "Nytt prosjekt",
       "titlePlaceholder": "Prosjektets tittel er her…",
@@ -210,7 +212,7 @@
     "duplicate": {
       "title": "Dupliser dette prosjektet",
       "label": "Dupliser",
-      "text": "Velg et navneområde som skal holde det dupliserte prosjektet:",
+      "text": "Select a parent project which should hold the duplicated project:",
       "success": "Prosjektet ble duplisert."
     },
     "edit": {
@@ -321,67 +323,6 @@
       }
     }
   },
-  "namespace": {
-    "title": "Navneområder & lister",
-    "namespace": "Navneområde",
-    "showArchived": "Vis arkiverte",
-    "noneAvailable": "Du har ingen navneområder akkurat nå.",
-    "unarchive": "Av-arkiver",
-    "archived": "Arkivert",
-    "noProjects": "Dette navneområdet inneholder ikke noen prosjekter.",
-    "createProject": "Opprett et nytt prosjekt i dette navneområdet.",
-    "namespaces": "Navnerom",
-    "search": "Skriv for å søke etter en etikett…",
-    "create": {
-      "title": "Nytt navneområde",
-      "titleRequired": "Angi den nye tittelen.",
-      "explanation": "Et navneområde er en samling av lister du kan dele og bruke til å organisere listene dine med. I realiteten hører hver liste til et navneområde.",
-      "tooltip": "Hva er et navneområde?",
-      "success": "Navneområdet ble opprettet."
-    },
-    "archive": {
-      "titleArchive": "Arkiv \"{namespace}\"",
-      "titleUnarchive": "Av-Arkiv \"{namespace}\"",
-      "archiveText": "Du vil ikke kunne redigere dette navneområdet eller opprette nye lister før du avlaster arkivet. Dette vil også arkivere alle lister i dette navneområdet.",
-      "unarchiveText": "Du vil kunne opprette nye oppgaver eller redigere den.",
-      "success": "Navnerommet ble arkivert.",
-      "unarchiveSuccess": "Navnerommet ble vellykket fjernet fra arkivet.",
-      "description": "Hvis navneområdet er arkivert, kan du ikke opprette nye lister eller redigere det."
-    },
-    "delete": {
-      "title": "Slett \"{namespace}",
-      "text1": "Er du sikker på at du vil slette dette navneområdet og alt innholdet?",
-      "text2": "Dette inkluderer alle oppgaver og KAN IKKE ANGRES!",
-      "success": "Navnområdet ble slettet."
-    },
-    "edit": {
-      "title": "Rediger \"{namespace}",
-      "success": "Navnerommet ble oppdatert."
-    },
-    "share": {
-      "title": "Del \"{namespace}"
-    },
-    "attributes": {
-      "title": "Navneområdes Tittel",
-      "titlePlaceholder": "Navneområdets tittel går her…",
-      "description": "Beskrivelse",
-      "descriptionPlaceholder": "Beskrivelsen av navneområdene gis her…",
-      "color": "Farger",
-      "archived": "Arkivert",
-      "isArchived": "Dette navneområdet er arkivert"
-    },
-    "pseudo": {
-      "sharedProjects": {
-        "title": "Delte prosjekter"
-      },
-      "favorites": {
-        "title": "Favoritter"
-      },
-      "savedFilters": {
-        "title": "Filtre"
-      }
-    }
-  },
   "filters": {
     "title": "Filtre",
     "clear": "Fjern filtre",
@@ -403,7 +344,7 @@
     },
     "create": {
       "title": "Nytt lagret filter",
-      "description": "Et lagret filter er en virtuell liste som beregnes fra et sett med filtre hver gang det åpnes. Når du er opprettet, vil det vises i et eget navneområde.",
+      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed.",
       "action": "Opprett nytt filter",
       "titleRequired": "Skriv inn en tittel for filteret."
     },
@@ -674,19 +615,13 @@
       "updated": "Oppdatert"
     },
     "subscription": {
-      "subscribedProjectThroughParentNamespace": "Du kan ikke slutte å abonnere her fordi du abonnerer på denne listen gjennom dens navneområde.",
-      "subscribedTaskThroughParentNamespace": "Du kan ikke slutte å abonnere her fordi du abonnerer på denne oppgaven gjennom navneområdet.",
       "subscribedTaskThroughParentProject": "Du kan ikke melde deg ut her fordi du abonnerer på denne oppgaven gjennom prosjektet.",
-      "subscribedNamespace": "Du abonnerer for øyeblikket på dette navneområdet og vil motta varsler for endringer.",
-      "notSubscribedNamespace": "Du abonnerer ikke på dette navneområdet og vil ikke motta varsler for endringer.",
       "subscribedProject": "Du abonnerer for øyeblikket på dette prosjektet og vil motta varsler for endringer.",
       "notSubscribedProject": "Du abonnerer ikke på dette prosjektet og vil ikke motta varsler for endringer.",
       "subscribedTask": "Du abonnerer for øyeblikket på denne oppgaven og vil motta varsler for endringer.",
       "notSubscribedTask": "Du abonnerer ikke på denne oppgaven og vil ikke motta varsler for endringer.",
       "subscribe": "Abonnerer",
       "unsubscribe": "Avslutt abonnement",
-      "subscribeSuccessNamespace": "Du abonnerer nå på dette navneområdet",
-      "unsubscribeSuccessNamespace": "Du blir nå avmeldt dette navneområdet",
       "subscribeSuccessProject": "Du abonnerer nå på dette prosjektet",
       "unsubscribeSuccessProject": "Du har nå avsluttet abonnementet for dette prosjektet",
       "subscribeSuccessTask": "Du abonnerer nå på denne oppgaven",
@@ -763,7 +698,6 @@
       "searchPlaceholder": "Skriv søk etter en ny oppgave å legge til som relatert…",
       "createPlaceholder": "Legg til denne som ny relatert oppgave",
       "differentProject": "Denne oppgaven tilhører et annet prosjekt.",
-      "differentNamespace": "Denne oppgaven tilhører en annen navneområde.",
       "noneYet": "Ingen arbeidsrelasjoner ennå.",
       "delete": "Slett relasjon",
       "deleteText1": "Er du sikker på at du vil slette denne relasjonen?",
@@ -848,19 +782,19 @@
       "delete": {
         "header": "Slett gruppen",
         "text1": "Er du sikker på at du vil slette denne gruppen og alle dets medlemmer?",
-        "text2": "Alle teammedlemmer vil miste tilgang til prosjekter og navneområder som deles med dette teamet. KAN IKKE ANGRES!",
+        "text2": "All team members will lose access to projects shared with this team. This CANNOT BE UNDONE!",
         "success": "Gruppen ble slettet."
       },
       "deleteUser": {
         "header": "Fjerne en bruker fra gruppen",
         "text1": "Er du sikker på at du vil fjerne bruker fra denne gruppen?",
-        "text2": "De vil miste tilgang til alle prosjekter og namespaces dette teamet har tilgang til. Dette KAN IKKE ANGRES!",
+        "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
         "success": "Brukeren ble slettet fra gruppen."
       },
       "leave": {
         "title": "Forlat gruppen",
         "text1": "Er du sikker på at du vil forlate denne gruppen?",
-        "text2": "Du vil miste tilgang til alle prosjekter og namespaces dette teamet har tilgang til. Hvis du ombestemmer deg, må du ha en lagadministrator for å legge deg til igjen.",
+        "text2": "You will lose access to all projects this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "Du har forlatt gruppen."
       }
     },
@@ -910,9 +844,9 @@
       "title": "Navigasjon",
       "overview": "Naviger til oversikt",
       "upcoming": "Gå til kommende oppgaver",
-      "namespaces": "Gå til navneområder & prosjekter",
       "labels": "Naviger til etiketter",
-      "teams": "Naviger til gruppe"
+      "teams": "Naviger til gruppe",
+      "projects": "Navigate to projects"
     }
   },
   "update": {
@@ -927,7 +861,8 @@
     "unarchive": "Av-arkiver",
     "setBackground": "Bruk som bakgrunn",
     "share": "Del",
-    "newProject": "Nytt prosjekt"
+    "newProject": "Nytt prosjekt",
+    "createProject": "Create project"
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -946,7 +881,7 @@
   "notification": {
     "title": "Varsler",
     "none": "Du har ingen varsler på dette tidspunktet!",
-    "explainer": "Varsler vil vises her når handlinger på navneområder, prosjekter, lister eller oppgaver du abonnerer på."
+    "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen."
   },
   "quickActions": {
     "commands": "Kommandoer",
@@ -957,14 +892,12 @@
     "teams": "Grupper",
     "newProject": "Skriv tittelen på det nye prosjektet…",
     "newTask": "Skriv tittelen på den nye oppgaven…",
-    "newNamespace": "Skriv inn tittelen på det nye navneområdet…",
     "newTeam": "Skriv inn navnet på den nye gruppen…",
     "createTask": "Opprett en oppgave i det gjeldende prosjektet ({title})",
-    "createProject": "Opprett et prosjekt i gjeldende navneområde ({title})",
+    "createProject": "Create a project",
     "cmds": {
       "newTask": "Ny oppgave",
       "newProject": "Nytt prosjekt",
-      "newNamespace": "Nytt navneområde",
       "newTeam": "Ny gruppe"
     }
   },
@@ -1020,16 +953,9 @@
     "4017": "Ugyldig oppgave filter.",
     "4018": "Ugyldig oppgave filter.",
     "4019": "Ugyldig oppgave filterverdi.",
-    "5001": "Navneområdet finnes ikke.",
-    "5003": "Du har ikke tilgang til det angitte navneområdet.",
-    "5006": "Navneområde-navnet kan ikke være tomt.",
-    "5009": "Du må ha lesetilgang til navneområdet for å utføre den handlingen.",
-    "5010": "Denne gruppen har ikke tilgang til det navneområdet.",
-    "5011": "Denne brukeren har allerede tilgang til det navneområdet.",
-    "5012": "Navneområdet er arkivert og kan derfor kun leses på.",
     "6001": "Gruppe nanvet kan ikke være tomt.",
     "6002": "Gruppen finnes ikke.",
-    "6004": "Teamet har allerede tilgang til det navneområdet eller prosjektet.",
+    "6004": "The team already has access to that project.",
     "6005": "Brukeren er allerede medlem av gruppen.",
     "6006": "Kan ikke slette siste gruppemedlem.",
     "6007": "Gruppen har ikke tilgang til prosjektet for å utføre den handlingen.",

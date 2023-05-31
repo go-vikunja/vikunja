@@ -6,9 +6,7 @@
     "welcomeEvening": "Good Evening {username}!",
     "lastViewed": "Xem gần đây",
     "project": {
-      "newText": "You can create a new project for your new tasks:",
-      "new": "New project",
-      "importText": "Or import your projects and tasks from other services into Vikunja:",
+      "importText": "Import your projects and tasks from other services into Vikunja:",
       "import": "Import your data into Vikunja"
     }
   },
@@ -143,7 +141,7 @@
     },
     "deletion": {
       "title": "Xóa tài khoản của bạn",
-      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your namespaces, projects, tasks and everything associated with it.",
+      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "Để tiếp tục, vui lòng nhập mật khẩu của bạn. Bạn sẽ nhận được một email hướng dẫn thêm.",
       "confirm": "Xóa tài khoản của tôi",
       "requestSuccess": "Yêu cầu đã thành công. Bạn sẽ nhận được một email hướng dẫn thêm.",
@@ -157,7 +155,7 @@
     },
     "export": {
       "title": "Xuất dữ liệu Vikunja của bạn",
-      "description": "You can request a copy of all your Vikunja data. This include Namespaces, Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
+      "description": "You can request a copy of all your Vikunja data. This includes Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
       "descriptionPasswordRequired": "Vui lòng nhập mật khẩu của bạn để tiếp tục:",
       "request": "Yêu cầu một bản sao Dữ liệu Vikunja của tôi",
       "success": "Bạn đã yêu cầu dữ liệu Vikunja của mình thành công! Chúng tôi sẽ gửi cho bạn một email sau khi nó sẵn sàng để tải xuống.",
@@ -165,14 +163,18 @@
     }
   },
   "project": {
-    "archived": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "archivedMessage": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "archived": "Archived",
+    "showArchived": "Show Archived",
     "title": "Project Title",
     "color": "Color",
     "projects": "Projects",
+    "parent": "Parent Project",
     "search": "Type to search for a project…",
     "searchSelect": "Click or press enter to select this project",
     "shared": "Shared Projects",
     "noDescriptionAvailable": "No project description is available.",
+    "inboxTitle": "Inbox",
     "create": {
       "header": "New project",
       "titlePlaceholder": "The project's title goes here…",
@@ -210,7 +212,7 @@
     "duplicate": {
       "title": "Duplicate this project",
       "label": "Duplicate",
-      "text": "Select a namespace which should hold the duplicated project:",
+      "text": "Select a parent project which should hold the duplicated project:",
       "success": "The project was successfully duplicated."
     },
     "edit": {
@@ -321,67 +323,6 @@
       }
     }
   },
-  "namespace": {
-    "title": "Namespaces & Projects",
-    "namespace": "Góc làm việc",
-    "showArchived": "Hiển thị đã lưu trữ",
-    "noneAvailable": "Bạn không có bất kỳ góc làm việc nào.",
-    "unarchive": "Bỏ lưu trữ",
-    "archived": "Đã lưu trữ",
-    "noProjects": "This namespace does not contain any projects.",
-    "createProject": "Create a new project in this namespace.",
-    "namespaces": "Góc làm việc",
-    "search": "Gõ để tìm kiếm một góc làm việc…",
-    "create": {
-      "title": "Góc làm việc mới",
-      "titleRequired": "Hãy đặt một tiêu đề.",
-      "explanation": "A namespace is a collection of projects you can share and use to organize your projects with. In fact, every project belongs to a namespace.",
-      "tooltip": "Góc làm việc là gì?",
-      "success": "Góc làm việc đã được tạo."
-    },
-    "archive": {
-      "titleArchive": "Lưu trữ \"{namespace}\"",
-      "titleUnarchive": "Bỏ lưu trữ \"{namespace}\"",
-      "archiveText": "You won't be able to edit this namespace or create new projects until you un-archive it. This will also archive all projects in this namespace.",
-      "unarchiveText": "You will be able to create new projects or edit it.",
-      "success": "Góc làm việc đã lưu trữ thành công.",
-      "unarchiveSuccess": "Góc làm việc đã được bỏ lưu trữ thành công.",
-      "description": "If a namespace is archived, you cannot create new projects or edit it."
-    },
-    "delete": {
-      "title": "Xóa \"{namespace}\"",
-      "text1": "Bạn có chắc muốn loại bỏ góc làm việc này và tất cả nội dung của nó không?",
-      "text2": "This includes all projects and tasks and CANNOT BE UNDONE!",
-      "success": "Góc làm việc đã được loại bỏ."
-    },
-    "edit": {
-      "title": "Chỉnh sửa \"{namespace}\"",
-      "success": "Góc làm việc đã được làm mới."
-    },
-    "share": {
-      "title": "Chia sẻ \"{namespace}\""
-    },
-    "attributes": {
-      "title": "Tên Góc làm việc",
-      "titlePlaceholder": "Tên góc làm việc ở đây…",
-      "description": "Mô tả",
-      "descriptionPlaceholder": "Mô tả góc làm việc ở đây…",
-      "color": "Màu sắc",
-      "archived": "Được lưu trữ",
-      "isArchived": "Góc làm việc này đã được lưu trữ"
-    },
-    "pseudo": {
-      "sharedProjects": {
-        "title": "Shared Projects"
-      },
-      "favorites": {
-        "title": "Ưa thích"
-      },
-      "savedFilters": {
-        "title": "Bộ lọc"
-      }
-    }
-  },
   "filters": {
     "title": "Bộ lọc",
     "clear": "Xoá các bộ lọc",
@@ -403,7 +344,7 @@
     },
     "create": {
       "title": "Bộ lọc đã lưu mới",
-      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed. Once created, it will appear in a special namespace.",
+      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed.",
       "action": "Tạo thêm bộ lọc sẵn",
       "titleRequired": "Please provide a title for the filter."
     },
@@ -674,19 +615,13 @@
       "updated": "Đã cập nhật"
     },
     "subscription": {
-      "subscribedProjectThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this project through its namespace.",
-      "subscribedTaskThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this task through its namespace.",
       "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",
-      "subscribedNamespace": "You are currently subscribed to this namespace and will receive notifications for changes.",
-      "notSubscribedNamespace": "You are not subscribed to this namespace and won't receive notifications for changes.",
       "subscribedProject": "You are currently subscribed to this project and will receive notifications for changes.",
       "notSubscribedProject": "You are not subscribed to this project and won't receive notifications for changes.",
       "subscribedTask": "You are currently subscribed to this task and will receive notifications for changes.",
       "notSubscribedTask": "You are not subscribed to this task and won't receive notifications for changes.",
       "subscribe": "Theo dõi",
       "unsubscribe": "Bỏ theo dõi",
-      "subscribeSuccessNamespace": "You are now subscribed to this namespace",
-      "unsubscribeSuccessNamespace": "You are now unsubscribed to this namespace",
       "subscribeSuccessProject": "You are now subscribed to this project",
       "unsubscribeSuccessProject": "You are now unsubscribed to this project",
       "subscribeSuccessTask": "You are now subscribed to this task",
@@ -763,7 +698,6 @@
       "searchPlaceholder": "Gõ tìm kiếm một công việc để thêm dưới dạng liên quan…",
       "createPlaceholder": "Thêm điều này làm công việc liên quan mới",
       "differentProject": "This task belongs to a different project.",
-      "differentNamespace": "Công việc này thuộc về một Góc làm việc khác.",
       "noneYet": "Không có công việc liên quan nào.",
       "delete": "Xóa công việc liên quan",
       "deleteText1": "Bạn có chắc muốn xóa công việc liên quan này không?",
@@ -848,19 +782,19 @@
       "delete": {
         "header": "Giải tán Team",
         "text1": "Bạn có chắc giải tán Team này không?",
-        "text2": "All team members will lose access to projects and namespaces shared with this team. This CANNOT BE UNDONE!",
+        "text2": "All team members will lose access to projects shared with this team. This CANNOT BE UNDONE!",
         "success": "Team đã giải tán."
       },
       "deleteUser": {
         "header": "Đưa thành viên ra khỏi Team",
         "text1": "Bạn có chắc muốn đưa thành viên này ra khỏi Team không?",
-        "text2": "They will lose access to all projects and namespaces this team has access to. This CANNOT BE UNDONE!",
+        "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
         "success": "Thành viên đã rời khỏi Team."
       },
       "leave": {
         "title": "Leave team",
         "text1": "Are you sure you want to leave this team?",
-        "text2": "You will lose access to all projects and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "text2": "You will lose access to all projects this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "You have successfully left the team."
       }
     },
@@ -910,9 +844,9 @@
       "title": "Điều hướng",
       "overview": "Navigate to overview",
       "upcoming": "Navigate to upcoming tasks",
-      "namespaces": "Navigate to namespaces & projects",
       "labels": "Điều hướng đến nhãn",
-      "teams": "Điều hướng đến Team"
+      "teams": "Điều hướng đến Team",
+      "projects": "Navigate to projects"
     }
   },
   "update": {
@@ -927,7 +861,8 @@
     "unarchive": "Bỏ lưu trữ",
     "setBackground": "Cài hình nền",
     "share": "Chia sẻ",
-    "newProject": "New project"
+    "newProject": "New project",
+    "createProject": "Create project"
   },
   "apiConfig": {
     "url": "URL Vikunja",
@@ -946,7 +881,7 @@
   "notification": {
     "title": "Thông báo",
     "none": "Bạn không có thông báo nào. Chúc một ngày tốt lành!",
-    "explainer": "Notifications will appear here when actions on namespaces, projects or tasks you subscribed to happen."
+    "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen."
   },
   "quickActions": {
     "commands": "Các lệnh",
@@ -957,14 +892,12 @@
     "teams": "Team",
     "newProject": "Enter the title of the new project…",
     "newTask": "Đặt tên cho tác vụ mới…",
-    "newNamespace": "Nhập tên của Góc làm việc mới…",
     "newTeam": "Đặt tên cho đội nhóm mới…",
     "createTask": "Create a task in the current project ({title})",
-    "createProject": "Create a project in the current namespace ({title})",
+    "createProject": "Create a project",
     "cmds": {
       "newTask": "Tác vụ mới",
       "newProject": "New project",
-      "newNamespace": "Góc làm việc mới",
       "newTeam": "Team mới"
     }
   },
@@ -1020,16 +953,9 @@
     "4017": "Bộ so sánh bộ lọc công việc không hợp lệ.",
     "4018": "Bộ lọc kết hợp không hợp lệ.",
     "4019": "Giá trị bộ lọc công việc không hợp lệ.",
-    "5001": "Góc làm việc không có nữa.",
-    "5003": "Bạn chưa được phép bước vào vào góc làm việc được chỉ định.",
-    "5006": "Góc làm việc cần có một cái tên.",
-    "5009": "Bạn cần có quyền đọc với góc làm việc để thực hiện hành động đó.",
-    "5010": "Team này không có quyền bước vào góc làm việc đó.",
-    "5011": "Người này đã có quyền bước vào góc làm việc đó.",
-    "5012": "Góc làm việc đã được lưu trữ nên chỉ có thể vào đó để đọc.",
     "6001": "Tên của Team không được để trống.",
     "6002": "Team không tồn tại.",
-    "6004": "The team already has access to that namespace or project.",
+    "6004": "The team already has access to that project.",
     "6005": "Người này đã là thành viên của Team đó rồi.",
     "6006": "Không thể loại bỏ thành viên cuối cùng của Team.",
     "6007": "The team does not have access to the project to perform that action.",

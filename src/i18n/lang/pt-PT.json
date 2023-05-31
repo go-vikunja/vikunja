@@ -6,9 +6,7 @@
     "welcomeEvening": "Boa Tarde {username}!",
     "lastViewed": "Visto recentemente",
     "project": {
-      "newText": "Podes criar um novo projeto para as tuas novas tarefas:",
-      "new": "Novo projeto",
-      "importText": "Ou importar os teus projetos e tarefas de outros serviços para o Vikunja:",
+      "importText": "Import your projects and tasks from other services into Vikunja:",
       "import": "Importar os teus dados para o Vikunja"
     }
   },
@@ -143,7 +141,7 @@
     },
     "deletion": {
       "title": "Eliminar a tua conta Vikunja",
-      "text1": "A eliminação da tua conta é permanente e não pode ser revertida. Vão ser eliminados todos os teus espaços, projetos, tarefas e tudo o que lhes está associado.",
+      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "Para prosseguires, introduz por favor a tua palavra-passe. Receberás um e-mail com mais instruções.",
       "confirm": "Eliminar a minha conta",
       "requestSuccess": "A solicitação foi bem sucedida. Receberás um e-mail com mais instruções.",
@@ -157,7 +155,7 @@
     },
     "export": {
       "title": "Exportar os teus dados do Vikunja",
-      "description": "Podes solicitar uma cópia de todos os teus dados do Vikunja. Isso inclui Espaços, Projetos, Tarefas e tudo o que lhes está associado. Podes importar esses dados em qualquer instância do Vikunja através da função de migração.",
+      "description": "You can request a copy of all your Vikunja data. This includes Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
       "descriptionPasswordRequired": "Por favor, introduz a tua palavra-passe para continuar:",
       "request": "Solicitar uma cópia dos meus dados do Vikunja",
       "success": "Solicitaste com sucesso os teus dados do Vikunja! Enviaremos um e-mail assim que estiverem prontos para download.",
@@ -165,14 +163,18 @@
     }
   },
   "project": {
-    "archived": "Este projeto está arquivado. Não é possível editar ou criar novas tarefas para ele.",
+    "archivedMessage": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "archived": "Archived",
+    "showArchived": "Show Archived",
     "title": "Título do Projeto",
     "color": "Cor",
     "projects": "Projetos",
+    "parent": "Parent Project",
     "search": "Escreve para pesquisar por um projeto…",
     "searchSelect": "Clica ou pressiona Enter para selecionar este projeto",
     "shared": "Projetos Partilhados",
     "noDescriptionAvailable": "Não está disponível nenhuma descrição do projeto.",
+    "inboxTitle": "Inbox",
     "create": {
       "header": "Novo projeto",
       "titlePlaceholder": "O título do projeto será aqui…",
@@ -210,7 +212,7 @@
     "duplicate": {
       "title": "Duplicar este projeto",
       "label": "Duplicar",
-      "text": "Selecione um espaço para colocar o projeto duplicado:",
+      "text": "Select a parent project which should hold the duplicated project:",
       "success": "O projeto foi duplicado com sucesso."
     },
     "edit": {
@@ -321,67 +323,6 @@
       }
     }
   },
-  "namespace": {
-    "title": "Espaços e Projetos",
-    "namespace": "Espaço",
-    "showArchived": "Mostrar Arquivados",
-    "noneAvailable": "Por enquanto não tens nenhum espaço.",
-    "unarchive": "Desarquivar",
-    "archived": "Arquivado",
-    "noProjects": "Este espaço não contém qualquer projeto.",
-    "createProject": "Criar uma novo projeto neste espaço.",
-    "namespaces": "Espaços",
-    "search": "Escreva para pesquisar por um espaço…",
-    "create": {
-      "title": "Novo espaço",
-      "titleRequired": "Por favor, especifica um título.",
-      "explanation": "Um espaço é uma coleção de projetos que podes partilhar e utilizar para organizar as tuas listas. De facto, cada projeto pertence a um espaço.",
-      "tooltip": "O que é um espaço?",
-      "success": "O espaço foi criado com sucesso."
-    },
-    "archive": {
-      "titleArchive": "Arquivar \"{namespace}\"",
-      "titleUnarchive": "Desarquivar \"{namespace}\"",
-      "archiveText": "Não será possível editar este espaço nem criar novos projetos enquanto não o desarquivares. Isto também irá arquivar todas os projetos existentes neste espaço.",
-      "unarchiveText": "Poderás criar novos projetos ou editá-los.",
-      "success": "O espaço foi arquivado com sucesso.",
-      "unarchiveSuccess": "O espaço foi desarquivado com sucesso.",
-      "description": "Se um espaço estiver arquivado, não poderás criar novos projetos ou editá-los."
-    },
-    "delete": {
-      "title": "Eliminar \"{namespace}\"",
-      "text1": "Tens a certeza que pretendes eliminar este espaço e todo o seu conteúdo?",
-      "text2": "Isto inclui todas os projetos e tarefas, e NÃO PODE SER REVERTIDO!",
-      "success": "O espaço foi eliminado com sucesso."
-    },
-    "edit": {
-      "title": "Editar \"{namespace}\"",
-      "success": "O espaço foi atualizado com sucesso."
-    },
-    "share": {
-      "title": "Partilhar \"{namespace}\""
-    },
-    "attributes": {
-      "title": "Título do Espaço",
-      "titlePlaceholder": "O título do espaço será aqui…",
-      "description": "Descrição",
-      "descriptionPlaceholder": "A descrição do espaço será aqui…",
-      "color": "Cor",
-      "archived": "Arquivado",
-      "isArchived": "O espaço está arquivado"
-    },
-    "pseudo": {
-      "sharedProjects": {
-        "title": "Projetos Partilhados"
-      },
-      "favorites": {
-        "title": "Favoritos"
-      },
-      "savedFilters": {
-        "title": "Filtros"
-      }
-    }
-  },
   "filters": {
     "title": "Filtros",
     "clear": "Limpar Filtros",
@@ -403,7 +344,7 @@
     },
     "create": {
       "title": "Novo Filtro Memorizado",
-      "description": "Um filtro memorizado é uma lista virtual que é compilada a partir de um conjunto de filtros de cada vez que é acedido. Uma vez criado, irá aparecer num espaço especial.",
+      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed.",
       "action": "Criar novo filtro memorizado",
       "titleRequired": "Por favor, insere um título para o filtro."
     },
@@ -674,19 +615,13 @@
       "updated": "Atualizado"
     },
     "subscription": {
-      "subscribedProjectThroughParentNamespace": "Não podes cancelar a tua subscrição aqui porque estás subscrito neste projeto através do seu espaço.",
-      "subscribedTaskThroughParentNamespace": "Não podes cancelar a tua subscrição aqui porque estás subscrito nesta tarefa através do seu espaço.",
       "subscribedTaskThroughParentProject": "Não podes cancelar a tua subscrição aqui porque estás subscrito nesta tarefa através do seu projeto.",
-      "subscribedNamespace": "Estás atualmente subscrito a este espaço e serás notificado de alterações.",
-      "notSubscribedNamespace": "Não estás subscrito a este espaço e não serás notificado de alterações.",
       "subscribedProject": "Estás atualmente subscrito a este projeto e serás notificado de alterações.",
       "notSubscribedProject": "Não estás subscrito a este projeto e não serás notificado de alterações.",
       "subscribedTask": "Estás atualmente subscrito a esta tarefa e serás notificado de alterações.",
       "notSubscribedTask": "Não estás subscrito a esta tarefa e não serás notificado de alterações.",
       "subscribe": "Subscrever",
       "unsubscribe": "Remover Subscrição",
-      "subscribeSuccessNamespace": "Estás agora subscrito a este espaço",
-      "unsubscribeSuccessNamespace": "Não estás mais subcrito a este espaço",
       "subscribeSuccessProject": "Estás agora subscrito a este projeto",
       "unsubscribeSuccessProject": "Não estás mais subcrito a este projeto",
       "subscribeSuccessTask": "Estás agora subscrito a esta tarefa",
@@ -763,7 +698,6 @@
       "searchPlaceholder": "Escreve para pesquisar uma tarefa a adicionar como relacionada…",
       "createPlaceholder": "Adicionar como nova tarefa relacionada",
       "differentProject": "Esta tarefa pertence a um projeto diferente.",
-      "differentNamespace": "Esta tarefa pertence a um espaço diferente.",
       "noneYet": "Ainda sem tarefas relacionadas.",
       "delete": "Eliminar Relação Entre Tarefas",
       "deleteText1": "Tens a certeza que pretendes eliminar esta relação entre tarefas?",
@@ -848,19 +782,19 @@
       "delete": {
         "header": "Eliminar equipa",
         "text1": "Tens a certeza que pretendes eliminar esta equipa e todos os seus membros?",
-        "text2": "Todos os membros da equipa perderão acesso aos projetos e espaços partilhados com esta equipa. Isto NÃO PODE SER REVERTIDO!",
+        "text2": "All team members will lose access to projects shared with this team. This CANNOT BE UNDONE!",
         "success": "A equipa foi eliminada com sucesso."
       },
       "deleteUser": {
         "header": "Remover utilizador da equipa",
         "text1": "Tens a certeza que pretendes remover este utilizador da equipa?",
-        "text2": "Eles perderão o acesso a todos os projetos e espaços a que esta equipa tem acesso. Isto NÃO PODER SER REVERTIDO!",
+        "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
         "success": "O utilizador foi removido da equipa com sucesso."
       },
       "leave": {
         "title": "Sair da equipa",
         "text1": "Tens a certeza de que queres sair desta equipa?",
-        "text2": "Vais perder o acesso a todos os projetos e espaços a que esta equipa tem acesso. Se mudares de ideias, vais necessitar que um administrador da equipa te adicione novamente.",
+        "text2": "You will lose access to all projects this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "Saíste da equipa com sucesso."
       }
     },
@@ -910,9 +844,9 @@
       "title": "Navegação",
       "overview": "Ir para a vista geral",
       "upcoming": "Ir para próximas tarefas",
-      "namespaces": "Ir para espaços e projetos",
       "labels": "Navegar para etiquetas",
-      "teams": "Navegar para equipas"
+      "teams": "Navegar para equipas",
+      "projects": "Navigate to projects"
     }
   },
   "update": {
@@ -927,7 +861,8 @@
     "unarchive": "Desarquivar",
     "setBackground": "Definir Fundo",
     "share": "Partilhar",
-    "newProject": "Novo projeto"
+    "newProject": "Novo projeto",
+    "createProject": "Create project"
   },
   "apiConfig": {
     "url": "URL do Vikunja",
@@ -946,7 +881,7 @@
   "notification": {
     "title": "Notificações",
     "none": "Não tens nenhuma notificação. Tem um bom dia!",
-    "explainer": "As notificações aparecerão aqui quando ocorrem ações em espaços, projetos ou tarefas às quais estejas subscrito."
+    "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen."
   },
   "quickActions": {
     "commands": "Comandos",
@@ -957,14 +892,12 @@
     "teams": "Equipas",
     "newProject": "Insere o título do novo espaço…",
     "newTask": "Insere o título da nova tarefa…",
-    "newNamespace": "Insere o título do novo espaço…",
     "newTeam": "Insere o nome da nova equipa…",
     "createTask": "Cria uma tarefa no projeto atual ({title})",
-    "createProject": "Cria um projeto no espaço atual ({title})",
+    "createProject": "Create a project",
     "cmds": {
       "newTask": "Nova tarefa",
       "newProject": "Novo projeto",
-      "newNamespace": "Novo espaço",
       "newTeam": "Nova equipa"
     }
   },
@@ -1020,16 +953,9 @@
     "4017": "Filtro de comparação de tarefas inválido.",
     "4018": "Filtro de encademanto de tarefas inválido.",
     "4019": "Valor de filtro de tarefas inválido.",
-    "5001": "O espaço não existe.",
-    "5003": "Não tens acesso ao espaço especificado.",
-    "5006": "O nome do espaço não pode estar vazio.",
-    "5009": "Precisas ter permissão de leitura deste espaço para executar essa ação.",
-    "5010": "Esta equipa não tem acesso a esse espaço.",
-    "5011": "Este utilizador já tem acesso a esse espaço.",
-    "5012": "O espaço está arquivado, portanto, só pode ser acedido para leitura.",
     "6001": "O nome da equipa não pode estar vazio.",
     "6002": "A equipa não existe.",
-    "6004": "A equipa tem já acesso a esse espaço ou projeto.",
+    "6004": "The team already has access to that project.",
     "6005": "O utilizador é já membro dessa equipa.",
     "6006": "Não podes eliminar o último membro da equipa.",
     "6007": "A equipa não tem acesso ao projeto para executar essa ação.",

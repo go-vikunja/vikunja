@@ -6,9 +6,7 @@
     "welcomeEvening": "Good Evening {username}!",
     "lastViewed": "Ostatnio oglądane",
     "project": {
-      "newText": "You can create a new project for your new tasks:",
-      "new": "New project",
-      "importText": "Or import your projects and tasks from other services into Vikunja:",
+      "importText": "Import your projects and tasks from other services into Vikunja:",
       "import": "Import your data into Vikunja"
     }
   },
@@ -143,7 +141,7 @@
     },
     "deletion": {
       "title": "Usuń swoje konto Vikunja",
-      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your namespaces, projects, tasks and everything associated with it.",
+      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "Aby kontynuować, wprowadź swoje hasło. Otrzymasz wiadomość e-mail z dalszymi instrukcjami.",
       "confirm": "Usuń moje konto",
       "requestSuccess": "Żądanie powiodło się. Otrzymasz wiadomość e-mail z dalszymi instrukcjami.",
@@ -157,7 +155,7 @@
     },
     "export": {
       "title": "Eksportuj swoje dane Vikunja",
-      "description": "You can request a copy of all your Vikunja data. This include Namespaces, Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
+      "description": "You can request a copy of all your Vikunja data. This includes Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
       "descriptionPasswordRequired": "Wprowadź hasło, aby kontynuować:",
       "request": "Generuj kopię moich danych Vikunja",
       "success": "Pomyślnie zażądałeś danych Vikunja! Wyślemy Ci e-mail, gdy będą gotowe do pobrania.",
@@ -165,14 +163,18 @@
     }
   },
   "project": {
-    "archived": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "archivedMessage": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "archived": "Archived",
+    "showArchived": "Show Archived",
     "title": "Project Title",
     "color": "Color",
     "projects": "Projects",
+    "parent": "Parent Project",
     "search": "Type to search for a project…",
     "searchSelect": "Click or press enter to select this project",
     "shared": "Shared Projects",
     "noDescriptionAvailable": "No project description is available.",
+    "inboxTitle": "Inbox",
     "create": {
       "header": "New project",
       "titlePlaceholder": "The project's title goes here…",
@@ -210,7 +212,7 @@
     "duplicate": {
       "title": "Duplicate this project",
       "label": "Duplicate",
-      "text": "Select a namespace which should hold the duplicated project:",
+      "text": "Select a parent project which should hold the duplicated project:",
       "success": "The project was successfully duplicated."
     },
     "edit": {
@@ -321,67 +323,6 @@
       }
     }
   },
-  "namespace": {
-    "title": "Namespaces & Projects",
-    "namespace": "Sekcja",
-    "showArchived": "Pokaż zarchiwizowane",
-    "noneAvailable": "W tej chwili nie masz żadnych sekcji.",
-    "unarchive": "Cofnij archiwizację",
-    "archived": "Zarchiwizowane",
-    "noProjects": "This namespace does not contain any projects.",
-    "createProject": "Create a new project in this namespace.",
-    "namespaces": "Sekcje",
-    "search": "Wpisz, aby wyszukać sekcję…",
-    "create": {
-      "title": "Nowa sekcja",
-      "titleRequired": "Proszę, podaj tytuł.",
-      "explanation": "A namespace is a collection of projects you can share and use to organize your projects with. In fact, every project belongs to a namespace.",
-      "tooltip": "Co to jest sekcja?",
-      "success": "Sekcja została pomyślnie utworzona."
-    },
-    "archive": {
-      "titleArchive": "Archiwizuj \"{namespace}\"",
-      "titleUnarchive": "Cofnij archiwizację \"{namespace}\"",
-      "archiveText": "You won't be able to edit this namespace or create new projects until you un-archive it. This will also archive all projects in this namespace.",
-      "unarchiveText": "You will be able to create new projects or edit it.",
-      "success": "Sekcja została pomyślnie zarchiwizowana.",
-      "unarchiveSuccess": "Archiwizacja sekcji została pomyślnie cofnięta.",
-      "description": "If a namespace is archived, you cannot create new projects or edit it."
-    },
-    "delete": {
-      "title": "Usuń \"{namespace}\"",
-      "text1": "Czy na pewno chcesz usunąć tę sekcję i całą jej zawartość?",
-      "text2": "This includes all projects and tasks and CANNOT BE UNDONE!",
-      "success": "Sekcja została pomyślnie usunięta."
-    },
-    "edit": {
-      "title": "Edytuj \"{namespace}\"",
-      "success": "Sekcja została pomyślnie zaktualizowana."
-    },
-    "share": {
-      "title": "Udostępnij \"{namespace}\""
-    },
-    "attributes": {
-      "title": "Tytuł sekcji",
-      "titlePlaceholder": "Tu wpisz tytuł sekcji…",
-      "description": "Opis",
-      "descriptionPlaceholder": "Tu wpisz opis sekcji…",
-      "color": "Kolor",
-      "archived": "Archiwizacja",
-      "isArchived": "Ta sekcja jest zarchiwizowana"
-    },
-    "pseudo": {
-      "sharedProjects": {
-        "title": "Shared Projects"
-      },
-      "favorites": {
-        "title": "Ulubione"
-      },
-      "savedFilters": {
-        "title": "Filtry"
-      }
-    }
-  },
   "filters": {
     "title": "Filtry",
     "clear": "Wyczyść filtry",
@@ -403,7 +344,7 @@
     },
     "create": {
       "title": "Nowy filtr stały",
-      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed. Once created, it will appear in a special namespace.",
+      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed.",
       "action": "Utwórz nowy filtr stały",
       "titleRequired": "Please provide a title for the filter."
     },
@@ -674,19 +615,13 @@
       "updated": "Zaktualizowano"
     },
     "subscription": {
-      "subscribedProjectThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this project through its namespace.",
-      "subscribedTaskThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this task through its namespace.",
       "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",
-      "subscribedNamespace": "You are currently subscribed to this namespace and will receive notifications for changes.",
-      "notSubscribedNamespace": "You are not subscribed to this namespace and won't receive notifications for changes.",
       "subscribedProject": "You are currently subscribed to this project and will receive notifications for changes.",
       "notSubscribedProject": "You are not subscribed to this project and won't receive notifications for changes.",
       "subscribedTask": "You are currently subscribed to this task and will receive notifications for changes.",
       "notSubscribedTask": "You are not subscribed to this task and won't receive notifications for changes.",
       "subscribe": "Subskrybuj",
       "unsubscribe": "Anuluj subskrypcję",
-      "subscribeSuccessNamespace": "You are now subscribed to this namespace",
-      "unsubscribeSuccessNamespace": "You are now unsubscribed to this namespace",
       "subscribeSuccessProject": "You are now subscribed to this project",
       "unsubscribeSuccessProject": "You are now unsubscribed to this project",
       "subscribeSuccessTask": "You are now subscribed to this task",
@@ -763,7 +698,6 @@
       "searchPlaceholder": "Wpisz, aby wyszukać zadanie, które chcesz dodać jako powiązane…",
       "createPlaceholder": "Dodaj jako nowe powiązane zadanie",
       "differentProject": "This task belongs to a different project.",
-      "differentNamespace": "To zadanie należy do innej sekcji.",
       "noneYet": "Nie ma jeszcze powiązanych zadań.",
       "delete": "Usuń powiązane zadanie",
       "deleteText1": "Czy na pewno chcesz usunąć to powiązane zadanie?",
@@ -848,19 +782,19 @@
       "delete": {
         "header": "Usuń zespół",
         "text1": "Czy na pewno chcesz usunąć ten zespół i wszystkich jego członków?",
-        "text2": "All team members will lose access to projects and namespaces shared with this team. This CANNOT BE UNDONE!",
+        "text2": "All team members will lose access to projects shared with this team. This CANNOT BE UNDONE!",
         "success": "Zespół został pomyślnie usunięty."
       },
       "deleteUser": {
         "header": "Usuń użytkownika z zespołu",
         "text1": "Czy na pewno chcesz usunąć tego użytkownika z zespołu?",
-        "text2": "They will lose access to all projects and namespaces this team has access to. This CANNOT BE UNDONE!",
+        "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
         "success": "Użytkownik został pomyślnie usunięty z zespołu."
       },
       "leave": {
         "title": "Leave team",
         "text1": "Are you sure you want to leave this team?",
-        "text2": "You will lose access to all projects and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "text2": "You will lose access to all projects this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "You have successfully left the team."
       }
     },
@@ -910,9 +844,9 @@
       "title": "Nawigacja",
       "overview": "Przejdź do przeglądu",
       "upcoming": "Przejdź do nadchodzących zadań",
-      "namespaces": "Navigate to namespaces & projects",
       "labels": "Przejdź do etykiet",
-      "teams": "Przejdź do zespołów"
+      "teams": "Przejdź do zespołów",
+      "projects": "Navigate to projects"
     }
   },
   "update": {
@@ -927,7 +861,8 @@
     "unarchive": "Cofnij archiwizację",
     "setBackground": "Ustaw tło",
     "share": "Udostępnij",
-    "newProject": "New project"
+    "newProject": "New project",
+    "createProject": "Create project"
   },
   "apiConfig": {
     "url": "URL Vikunji",
@@ -946,7 +881,7 @@
   "notification": {
     "title": "Powiadomienia",
     "none": "Nie masz żadnych powiadomień. Miłego dnia!",
-    "explainer": "Notifications will appear here when actions on namespaces, projects or tasks you subscribed to happen."
+    "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen."
   },
   "quickActions": {
     "commands": "Polecenia",
@@ -957,14 +892,12 @@
     "teams": "Zespoły",
     "newProject": "Enter the title of the new project…",
     "newTask": "Wpisz tytuł nowego zadania…",
-    "newNamespace": "Wpisz tytuł nowej sekcji…",
     "newTeam": "Wpisz nazwę nowego zespołu…",
     "createTask": "Create a task in the current project ({title})",
-    "createProject": "Create a project in the current namespace ({title})",
+    "createProject": "Create a project",
     "cmds": {
       "newTask": "Nowe zadanie",
       "newProject": "New project",
-      "newNamespace": "Nowa sekcja",
       "newTeam": "Nowy zespół"
     }
   },
@@ -1020,16 +953,9 @@
     "4017": "Nieprawidłowe porównanie filtra zadań.",
     "4018": "Nieprawidłowe połączenie filtra zadań.",
     "4019": "Nieprawidłowa wartość filtra zadań.",
-    "5001": "Sekcja nie istnieje.",
-    "5003": "Nie masz dostępu do określonej sekcji.",
-    "5006": "Nazwa sekcji nie może być pusta.",
-    "5009": "Aby wykonać tę akcję, musisz mieć uprawnienia do odczytu sekcji.",
-    "5010": "Ten zespół nie ma dostępu do tej sekcji.",
-    "5011": "Ten użytkownik ma już dostęp do tej sekcji.",
-    "5012": "Sekcja jest zarchiwizowana, dlatego może być dostępna tylko do odczytu.",
     "6001": "Nazwa zespołu nie może być pusta.",
     "6002": "Zespół nie istnieje.",
-    "6004": "The team already has access to that namespace or project.",
+    "6004": "The team already has access to that project.",
     "6005": "Użytkownik jest już członkiem tego zespołu.",
     "6006": "Nie można usunąć ostatniego członka zespołu.",
     "6007": "The team does not have access to the project to perform that action.",

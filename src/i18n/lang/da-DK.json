@@ -6,9 +6,7 @@
     "welcomeEvening": "Godaften {username}!",
     "lastViewed": "Sidst vist",
     "project": {
-      "newText": "You can create a new project for your new tasks:",
-      "new": "New project",
-      "importText": "Or import your projects and tasks from other services into Vikunja:",
+      "importText": "Import your projects and tasks from other services into Vikunja:",
       "import": "Import your data into Vikunja"
     }
   },
@@ -143,7 +141,7 @@
     },
     "deletion": {
       "title": "Slet din Vikunja konto",
-      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your namespaces, projects, tasks and everything associated with it.",
+      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "For at fortsætte, skal du indtaste din adgangskode. Du vil modtage en e-mail med yderligere instruktioner.",
       "confirm": "Slet min konto",
       "requestSuccess": "Anmodningen blev gennemført. Du vil modtage en e-mail med yderligere instruktioner.",
@@ -157,7 +155,7 @@
     },
     "export": {
       "title": "Eksporter dine Vikunja-data",
-      "description": "You can request a copy of all your Vikunja data. This include Namespaces, Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
+      "description": "You can request a copy of all your Vikunja data. This includes Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
       "descriptionPasswordRequired": "Indtast venligst din adgangskode for at fortsætte:",
       "request": "Anmod om en kopi af mine Vikunja-data",
       "success": "Du har anmodet om dine Vikunja-data! Vi sender dig en e-mail, når den er klar til hentning.",
@@ -165,14 +163,18 @@
     }
   },
   "project": {
-    "archived": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "archivedMessage": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "archived": "Archived",
+    "showArchived": "Show Archived",
     "title": "Project Title",
     "color": "Color",
     "projects": "Projects",
+    "parent": "Parent Project",
     "search": "Type to search for a project…",
     "searchSelect": "Click or press enter to select this project",
     "shared": "Shared Projects",
     "noDescriptionAvailable": "No project description is available.",
+    "inboxTitle": "Inbox",
     "create": {
       "header": "New project",
       "titlePlaceholder": "The project's title goes here…",
@@ -210,7 +212,7 @@
     "duplicate": {
       "title": "Duplicate this project",
       "label": "Duplicate",
-      "text": "Select a namespace which should hold the duplicated project:",
+      "text": "Select a parent project which should hold the duplicated project:",
       "success": "The project was successfully duplicated."
     },
     "edit": {
@@ -321,67 +323,6 @@
       }
     }
   },
-  "namespace": {
-    "title": "Namespaces & Projects",
-    "namespace": "Navneområde",
-    "showArchived": "Vis arkiverede",
-    "noneAvailable": "Du har ingen navneområder lige nu.",
-    "unarchive": "Tilbagekald",
-    "archived": "Arkiveret",
-    "noProjects": "This namespace does not contain any projects.",
-    "createProject": "Create a new project in this namespace.",
-    "namespaces": "Navneområder",
-    "search": "Skriv for at søge efter et navneområde…",
-    "create": {
-      "title": "Nyt navneområde",
-      "titleRequired": "Angiv venligst en titel.",
-      "explanation": "A namespace is a collection of projects you can share and use to organize your projects with. In fact, every project belongs to a namespace.",
-      "tooltip": "Hvad er et navneområde?",
-      "success": "Navneområdet blev oprettet."
-    },
-    "archive": {
-      "titleArchive": "Arkiver \"{namespace}\"",
-      "titleUnarchive": "Fjern arkivering \"{namespace}\"",
-      "archiveText": "You won't be able to edit this namespace or create new projects until you un-archive it. This will also archive all projects in this namespace.",
-      "unarchiveText": "You will be able to create new projects or edit it.",
-      "success": "Navneområdet blev arkiveret.",
-      "unarchiveSuccess": "Navneområdet blev tilbagekaldt.",
-      "description": "If a namespace is archived, you cannot create new projects or edit it."
-    },
-    "delete": {
-      "title": "Slet \"{namespace}\"",
-      "text1": "Er du sikker på, at du vil slette dette navneområde og alt dets indhold?",
-      "text2": "This includes all projects and tasks and CANNOT BE UNDONE!",
-      "success": "Navneområdet blev slettet."
-    },
-    "edit": {
-      "title": "Rediger \"{namespace}\"",
-      "success": "Navneområdet blev opdateret."
-    },
-    "share": {
-      "title": "Del \"{namespace}\""
-    },
-    "attributes": {
-      "title": "Navneområde Titel",
-      "titlePlaceholder": "Navneområdets titel skrives her…",
-      "description": "Beskrivelse",
-      "descriptionPlaceholder": "Navneområdets beskrivelse skrives her…",
-      "color": "Farve",
-      "archived": "Er Arkiveret",
-      "isArchived": "Dette navneområde er arkiveret"
-    },
-    "pseudo": {
-      "sharedProjects": {
-        "title": "Shared Projects"
-      },
-      "favorites": {
-        "title": "Favoritter"
-      },
-      "savedFilters": {
-        "title": "Filtre"
-      }
-    }
-  },
   "filters": {
     "title": "Filtre",
     "clear": "Ryd Filtre",
@@ -403,7 +344,7 @@
     },
     "create": {
       "title": "Nyt Gemt Filter",
-      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed. Once created, it will appear in a special namespace.",
+      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed.",
       "action": "Opret nyt gemt filter",
       "titleRequired": "Please provide a title for the filter."
     },
@@ -674,19 +615,13 @@
       "updated": "Opdateret"
     },
     "subscription": {
-      "subscribedProjectThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this project through its namespace.",
-      "subscribedTaskThroughParentNamespace": "Du kan ikke afmelde dig her, fordi du abonnerer på denne opgave gennem dens navneområde.",
       "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",
-      "subscribedNamespace": "Du abonnerer i øjeblikket på dette navneområde og vil modtage notifikationer om ændringer.",
-      "notSubscribedNamespace": "Du abonnerer ikke på dette navneområde og modtager ikke notifikationer om ændringer.",
       "subscribedProject": "You are currently subscribed to this project and will receive notifications for changes.",
       "notSubscribedProject": "You are not subscribed to this project and won't receive notifications for changes.",
       "subscribedTask": "Du abonnerer på denne opgave og vil modtage notifikationer om ændringer.",
       "notSubscribedTask": "Du abonnerer ikke på denne opgave og modtager ikke notifikationer om ændringer.",
       "subscribe": "Abonner",
       "unsubscribe": "Afmeld",
-      "subscribeSuccessNamespace": "Du abonnerer nu på dette navneområde",
-      "unsubscribeSuccessNamespace": "Du er nu afmeldt dette navneområde",
       "subscribeSuccessProject": "You are now subscribed to this project",
       "unsubscribeSuccessProject": "You are now unsubscribed to this project",
       "subscribeSuccessTask": "Du abonnerer nu på denne opgave",
@@ -763,7 +698,6 @@
       "searchPlaceholder": "Indtast søgning efter en ny opgave der tilføjes som relateret…",
       "createPlaceholder": "Tilføj dette som en ny relateret opgave",
       "differentProject": "This task belongs to a different project.",
-      "differentNamespace": "Denne opgave hører til et andet navneområde.",
       "noneYet": "Ingen opgaverelationer endnu.",
       "delete": "Slet Opgaverelation",
       "deleteText1": "Er du sikker på, at du vil slette denne opgaverelation?",
@@ -848,19 +782,19 @@
       "delete": {
         "header": "Slet holdet",
         "text1": "Er du sikker på du vil slette dette hold og alle dets medlemmer?",
-        "text2": "All team members will lose access to projects and namespaces shared with this team. This CANNOT BE UNDONE!",
+        "text2": "All team members will lose access to projects shared with this team. This CANNOT BE UNDONE!",
         "success": "Holdet blev slettet."
       },
       "deleteUser": {
         "header": "Fjern en bruger fra holdet",
         "text1": "Er du sikker på du vil fjerne denne bruger fra holdet?",
-        "text2": "They will lose access to all projects and namespaces this team has access to. This CANNOT BE UNDONE!",
+        "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
         "success": "Brugeren blev fjernet fra holdet."
       },
       "leave": {
         "title": "Forlad hold",
         "text1": "Er du sikker på du vil forlade dette hold?",
-        "text2": "You will lose access to all projects and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "text2": "You will lose access to all projects this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "Du har forladt holdet."
       }
     },
@@ -910,9 +844,9 @@
       "title": "Navigation",
       "overview": "Gå til oversigt",
       "upcoming": "Gå til kommende opgaver",
-      "namespaces": "Navigate to namespaces & projects",
       "labels": "Naviger til etiketter",
-      "teams": "Naviger til hold"
+      "teams": "Naviger til hold",
+      "projects": "Navigate to projects"
     }
   },
   "update": {
@@ -927,7 +861,8 @@
     "unarchive": "Tilbagekald",
     "setBackground": "Indstil baggrund",
     "share": "Del",
-    "newProject": "New project"
+    "newProject": "New project",
+    "createProject": "Create project"
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -946,7 +881,7 @@
   "notification": {
     "title": "Notifikationer",
     "none": "Du har ingen notifikationer. Hav en dejlig dag!",
-    "explainer": "Notifications will appear here when actions on namespaces, projects or tasks you subscribed to happen."
+    "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen."
   },
   "quickActions": {
     "commands": "Kommandoer",
@@ -957,14 +892,12 @@
     "teams": "Hold",
     "newProject": "Enter the title of the new project…",
     "newTask": "Indtast titlen på den nye opgave…",
-    "newNamespace": "Indtast titlen på det nye navneområde…",
     "newTeam": "Indtast navnet på det nye hold…",
     "createTask": "Create a task in the current project ({title})",
     "createProject": "Create a project in the current namespace ({title})",
     "cmds": {
       "newTask": "Ny Opgave",
       "newProject": "New project",
-      "newNamespace": "Nyt navneområde",
       "newTeam": "Nyt hold"
     }
   },
@@ -1020,13 +953,6 @@
     "4017": "Ugyldig komparator til opgavefilter.",
     "4018": "Ugyldig sammenkædning til opgavefilter.",
     "4019": "Ugyldig værdi til opgavefilter.",
-    "5001": "Navneområdet findes ikke.",
-    "5003": "Du har ikke adgang til det angivne navneområde.",
-    "5006": "Navneområdets navn må ikke være tomt.",
-    "5009": "Du skal have navneområde læseadgang for at udføre denne handling.",
-    "5010": "Dette hold har ikke adgang til dette navneområde.",
-    "5011": "Denne bruger har allerede adgang til dette navneområde.",
-    "5012": "Navneområdet er arkiveret og kan derfor kun læses.",
     "6001": "Holdnavnet må ikke være tomt.",
     "6002": "Holdet findes ikke.",
     "6004": "The team already has access to that namespace or project.",

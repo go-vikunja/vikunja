@@ -6,9 +6,7 @@
     "welcomeEvening": "こんばんは、{username}さん",
     "lastViewed": "最近の表示",
     "project": {
-      "newText": "新しいプロジェクトを作成できます:",
-      "new": "新しいプロジェクトの作成",
-      "importText": "あるいは他のサービスからVikunjaにプロジェクトやタスクをインポートできます:",
+      "importText": "Import your projects and tasks from other services into Vikunja:",
       "import": "Vikunjaへのデータのインポート"
     }
   },
@@ -143,7 +141,7 @@
     },
     "deletion": {
       "title": "Vikunjaアカウントの削除",
-      "text1": "アカウントの削除は永久的なものであり、元に戻すことはできません。あなたのプロジェクト、タスク、それに関連するすべてのものを削除します。",
+      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "続行するには、パスワードを入力してください。詳しい案内の記載したメールを送信します。",
       "confirm": "アカウントの削除",
       "requestSuccess": "リクエストは成功しました。詳しい案内はメールでお知らせします。",
@@ -157,7 +155,7 @@
     },
     "export": {
       "title": "Vikunjaデータのエクスポート",
-      "description": "利用しているVikunjaの全データのダウンロードをリクエストできます。これにはプロジェクト、タスク、およびそれらに関連するすべてを含みます。このデータはどのVikunjaインスタンスでもインポートすることができます。",
+      "description": "You can request a copy of all your Vikunja data. This includes Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
       "descriptionPasswordRequired": "続行するには、パスワードを入力してください:",
       "request": "Vikunjaデータのリクエスト",
       "success": "Vikunjaデータのリクエストに成功しました！ダウンロードの準備が整い次第、メールでお知らせします。",
@@ -165,14 +163,18 @@
     }
   },
   "project": {
-    "archived": "アーカイブ済みプロジェクトです。タスクの作成や編集を行うことはできません。",
+    "archivedMessage": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "archived": "Archived",
+    "showArchived": "Show Archived",
     "title": "プロジェクト名",
     "color": "色",
     "projects": "プロジェクト",
+    "parent": "Parent Project",
     "search": "プロジェクトのキーワードを入力…",
     "searchSelect": "クリックするかEnterキーを押してプロジェクトを選択",
     "shared": "共有プロジェクト",
     "noDescriptionAvailable": "プロジェクトの説明はありません。",
+    "inboxTitle": "Inbox",
     "create": {
       "header": "新しいプロジェクトの作成",
       "titlePlaceholder": "プロジェクト名を入力…",
@@ -210,7 +212,7 @@
     "duplicate": {
       "title": "プロジェクトの複製",
       "label": "複製",
-      "text": "Select a namespace which should hold the duplicated project:",
+      "text": "Select a parent project which should hold the duplicated project:",
       "success": "プロジェクトは正常に複製されました。"
     },
     "edit": {
@@ -321,67 +323,6 @@
       }
     }
   },
-  "namespace": {
-    "title": "Namespaces & Projects",
-    "namespace": "Namespace",
-    "showArchived": "Show Archived",
-    "noneAvailable": "You don't have any namespaces right now.",
-    "unarchive": "Un-Archive",
-    "archived": "アーカイブ済み",
-    "noProjects": "This namespace does not contain any projects.",
-    "createProject": "Create a new project in this namespace.",
-    "namespaces": "Namespaces",
-    "search": "Type to search for a namespace…",
-    "create": {
-      "title": "New namespace",
-      "titleRequired": "Please specify a title.",
-      "explanation": "A namespace is a collection of projects you can share and use to organize your projects with. In fact, every project belongs to a namespace.",
-      "tooltip": "What's a namespace?",
-      "success": "The namespace was successfully created."
-    },
-    "archive": {
-      "titleArchive": "Archive \"{namespace}\"",
-      "titleUnarchive": "Un-Archive \"{namespace}\"",
-      "archiveText": "You won't be able to edit this namespace or create new projects until you un-archive it. This will also archive all projects in this namespace.",
-      "unarchiveText": "You will be able to create new projects or edit it.",
-      "success": "The namespace was successfully archived.",
-      "unarchiveSuccess": "The namespace was successfully un-archived.",
-      "description": "If a namespace is archived, you cannot create new projects or edit it."
-    },
-    "delete": {
-      "title": "Delete \"{namespace}\"",
-      "text1": "Are you sure you want to delete this namespace and all of its contents?",
-      "text2": "This includes all projects and tasks and CANNOT BE UNDONE!",
-      "success": "The namespace was successfully deleted."
-    },
-    "edit": {
-      "title": "Edit \"{namespace}\"",
-      "success": "The namespace was successfully updated."
-    },
-    "share": {
-      "title": "Share \"{namespace}\""
-    },
-    "attributes": {
-      "title": "Namespace Title",
-      "titlePlaceholder": "The namespace title goes here…",
-      "description": "説明",
-      "descriptionPlaceholder": "The namespaces description goes here…",
-      "color": "色",
-      "archived": "Is Archived",
-      "isArchived": "This namespace is archived"
-    },
-    "pseudo": {
-      "sharedProjects": {
-        "title": "共有プロジェクト"
-      },
-      "favorites": {
-        "title": "お気に入り"
-      },
-      "savedFilters": {
-        "title": "絞り込み"
-      }
-    }
-  },
   "filters": {
     "title": "絞り込み",
     "clear": "絞り込みの解除",
@@ -403,7 +344,7 @@
     },
     "create": {
       "title": "New Saved Filter",
-      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed. Once created, it will appear in a special namespace.",
+      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed.",
       "action": "Create new saved filter",
       "titleRequired": "Please provide a title for the filter."
     },
@@ -674,19 +615,13 @@
       "updated": "Updated"
     },
     "subscription": {
-      "subscribedProjectThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this project through its namespace.",
-      "subscribedTaskThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this task through its namespace.",
       "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",
-      "subscribedNamespace": "You are currently subscribed to this namespace and will receive notifications for changes.",
-      "notSubscribedNamespace": "You are not subscribed to this namespace and won't receive notifications for changes.",
       "subscribedProject": "You are currently subscribed to this project and will receive notifications for changes.",
       "notSubscribedProject": "You are not subscribed to this project and won't receive notifications for changes.",
       "subscribedTask": "You are currently subscribed to this task and will receive notifications for changes.",
       "notSubscribedTask": "You are not subscribed to this task and won't receive notifications for changes.",
       "subscribe": "購読",
       "unsubscribe": "購読解除",
-      "subscribeSuccessNamespace": "You are now subscribed to this namespace",
-      "unsubscribeSuccessNamespace": "You are now unsubscribed to this namespace",
       "subscribeSuccessProject": "You are now subscribed to this project",
       "unsubscribeSuccessProject": "You are now unsubscribed to this project",
       "subscribeSuccessTask": "You are now subscribed to this task",
@@ -763,7 +698,6 @@
       "searchPlaceholder": "追加する関連タスクのキーワードを入力…",
       "createPlaceholder": "Add this as new related task",
       "differentProject": "This task belongs to a different project.",
-      "differentNamespace": "This task belongs to a different namespace.",
       "noneYet": "関連タスクはまだありません。",
       "delete": "関連タスクの削除",
       "deleteText1": "Are you sure you want to delete this task relation?",
@@ -848,19 +782,19 @@
       "delete": {
         "header": "チームの削除",
         "text1": "このチームと所属するチームメンバー全員を削除して本当によろしいですか？",
-        "text2": "All team members will lose access to projects and namespaces shared with this team. This CANNOT BE UNDONE!",
+        "text2": "All team members will lose access to projects shared with this team. This CANNOT BE UNDONE!",
         "success": "チームは正常に削除されました。"
       },
       "deleteUser": {
         "header": "Remove a user from the team",
         "text1": "Are you sure you want to remove this user from the team?",
-        "text2": "They will lose access to all projects and namespaces this team has access to. This CANNOT BE UNDONE!",
+        "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
         "success": "The user was successfully deleted from the team."
       },
       "leave": {
         "title": "Leave team",
         "text1": "Are you sure you want to leave this team?",
-        "text2": "You will lose access to all projects and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "text2": "You will lose access to all projects this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "You have successfully left the team."
       }
     },
@@ -910,9 +844,9 @@
       "title": "Navigation",
       "overview": "Navigate to overview",
       "upcoming": "Navigate to upcoming tasks",
-      "namespaces": "Navigate to namespaces & projects",
       "labels": "Navigate to labels",
-      "teams": "Navigate to teams"
+      "teams": "Navigate to teams",
+      "projects": "Navigate to projects"
     }
   },
   "update": {
@@ -927,7 +861,8 @@
     "unarchive": "アーカイブの取り消し",
     "setBackground": "Set background",
     "share": "共有",
-    "newProject": "新しいプロジェクトの作成"
+    "newProject": "新しいプロジェクトの作成",
+    "createProject": "Create project"
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -946,7 +881,7 @@
   "notification": {
     "title": "Notifications",
     "none": "You don't have any notifications. Have a nice day!",
-    "explainer": "Notifications will appear here when actions on namespaces, projects or tasks you subscribed to happen."
+    "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen."
   },
   "quickActions": {
     "commands": "コマンド",
@@ -957,14 +892,12 @@
     "teams": "チーム",
     "newProject": "新しいプロジェクト名を入力…",
     "newTask": "新しいタスク名を入力…",
-    "newNamespace": "Enter the title of the new namespace…",
     "newTeam": "新しいチーム名を入力…",
     "createTask": "現在のプロジェクト ({title}) にタスクを作成",
-    "createProject": "Create a project in the current namespace ({title})",
+    "createProject": "Create a project",
     "cmds": {
       "newTask": "新しいタスクの作成",
       "newProject": "新しいプロジェクトの作成",
-      "newNamespace": "New namespace",
       "newTeam": "新しいチームの作成"
     }
   },
@@ -1020,16 +953,9 @@
     "4017": "Invalid task filter comparator.",
     "4018": "Invalid task filter concatenator.",
     "4019": "Invalid task filter value.",
-    "5001": "The namespace does not exist.",
-    "5003": "You do not have access to the specified namespace.",
-    "5006": "The namespace name cannot be empty.",
-    "5009": "You need to have namespace read access to perform that action.",
-    "5010": "This team does not have access to that namespace.",
-    "5011": "This user has already access to that namespace.",
-    "5012": "The namespace is archived and can therefore only be accessed read only.",
     "6001": "The team name cannot be empty.",
     "6002": "そのチームは存在しません。",
-    "6004": "The team already has access to that namespace or project.",
+    "6004": "The team already has access to that project.",
     "6005": "The user is already a member of that team.",
     "6006": "Cannot delete the last team member.",
     "6007": "The team does not have access to the project to perform that action.",

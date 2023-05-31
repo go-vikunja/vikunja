@@ -6,9 +6,7 @@
     "welcomeEvening": "Guten Abend, {username}!",
     "lastViewed": "Zuletzt angesehen",
     "project": {
-      "newText": "Du kannst ein neues Projekt für deine neuen Aufgaben erstellen:",
-      "new": "New project",
-      "importText": "Or import your projects and tasks from other services into Vikunja:",
+      "importText": "Import your projects and tasks from other services into Vikunja:",
       "import": "Import your data into Vikunja"
     }
   },
@@ -143,7 +141,7 @@
     },
     "deletion": {
       "title": "Lösche deinen Vikunja-Account",
-      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your namespaces, projects, tasks and everything associated with it.",
+      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "Zum Fortfahren gib bitte dein Passwort ein. Du erhältst eine E-Mail mit weiteren Anweisungen.",
       "confirm": "Meinen Account löschen",
       "requestSuccess": "Die Anfrage war erfolgreich. Du erhältst eine E-Mail mit weiteren Anweisungen.",
@@ -157,7 +155,7 @@
     },
     "export": {
       "title": "Exportiere deine Vikunja-Daten",
-      "description": "You can request a copy of all your Vikunja data. This include Namespaces, Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
+      "description": "You can request a copy of all your Vikunja data. This includes Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
       "descriptionPasswordRequired": "Bitte gib dein Passwort ein, um fortzufahren:",
       "request": "Eine Kopie meiner Vikunja Daten anfordern",
       "success": "Du hast deine Daten bei Vikunja erfolgreich angefordert! Wir schicken dir eine E-Mail, sobald sie zum Download bereitstehen.",
@@ -165,14 +163,18 @@
     }
   },
   "project": {
-    "archived": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "archivedMessage": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "archived": "Archived",
+    "showArchived": "Show Archived",
     "title": "Project Title",
     "color": "Color",
     "projects": "Projects",
+    "parent": "Parent Project",
     "search": "Type to search for a project…",
     "searchSelect": "Click or press enter to select this project",
     "shared": "Shared Projects",
     "noDescriptionAvailable": "No project description is available.",
+    "inboxTitle": "Inbox",
     "create": {
       "header": "New project",
       "titlePlaceholder": "The project's title goes here…",
@@ -210,7 +212,7 @@
     "duplicate": {
       "title": "Duplicate this project",
       "label": "Duplicate",
-      "text": "Select a namespace which should hold the duplicated project:",
+      "text": "Select a parent project which should hold the duplicated project:",
       "success": "The project was successfully duplicated."
     },
     "edit": {
@@ -321,67 +323,6 @@
       }
     }
   },
-  "namespace": {
-    "title": "Namespaces & Projects",
-    "namespace": "Namespace",
-    "showArchived": "Archivierte anzeigen",
-    "noneAvailable": "Du hast momentan keine Namespaces.",
-    "unarchive": "Archivierung aufheben",
-    "archived": "Archiviert",
-    "noProjects": "This namespace does not contain any projects.",
-    "createProject": "Create a new project in this namespace.",
-    "namespaces": "Namespaces",
-    "search": "Beginne zu schreiben, um einen Namespace zu suchen…",
-    "create": {
-      "title": "Neuer Namespace",
-      "titleRequired": "Bitte gebe einen Titel an.",
-      "explanation": "A namespace is a collection of projects you can share and use to organize your projects with. In fact, every project belongs to a namespace.",
-      "tooltip": "Was ist ein Namespace?",
-      "success": "Der Namespace wurde erfolgreich erstellt."
-    },
-    "archive": {
-      "titleArchive": "„{namespace}“ archivieren",
-      "titleUnarchive": "Archivierung von \"{namespace}\" aufheben",
-      "archiveText": "You won't be able to edit this namespace or create new projects until you un-archive it. This will also archive all projects in this namespace.",
-      "unarchiveText": "You will be able to create new projects or edit it.",
-      "success": "Der Namespace wurde erfolgreich archiviert.",
-      "unarchiveSuccess": "Der Namespace wurde erfolgreich wiederhergestellt.",
-      "description": "If a namespace is archived, you cannot create new projects or edit it."
-    },
-    "delete": {
-      "title": "„{namespace}“ löschen",
-      "text1": "Diesen Namespace mit sämtlichem Inhalt löschen?",
-      "text2": "This includes all projects and tasks and CANNOT BE UNDONE!",
-      "success": "Der Namespace wurde erfolgreich gelöscht."
-    },
-    "edit": {
-      "title": "„{namespace}“ bearbeiten",
-      "success": "Der Namespace wurde erfolgreich aktualisiert."
-    },
-    "share": {
-      "title": "„{namespace}“ teilen"
-    },
-    "attributes": {
-      "title": "Namespace Titel",
-      "titlePlaceholder": "Titel des Namespace angeben…",
-      "description": "Beschreibung",
-      "descriptionPlaceholder": "Beschreibung für den Namespace eingeben…",
-      "color": "Farbe",
-      "archived": "Ist archiviert",
-      "isArchived": "Dieser Namespace ist archiviert"
-    },
-    "pseudo": {
-      "sharedProjects": {
-        "title": "Shared Projects"
-      },
-      "favorites": {
-        "title": "Favoriten"
-      },
-      "savedFilters": {
-        "title": "Filter"
-      }
-    }
-  },
   "filters": {
     "title": "Filter",
     "clear": "Filter zurücksetzen",
@@ -403,7 +344,7 @@
     },
     "create": {
       "title": "Neuer gespeicherter Filter",
-      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed. Once created, it will appear in a special namespace.",
+      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed.",
       "action": "Neuen gespeicherten Filter erstellen",
       "titleRequired": "Bitte gib den Titel für den Filter an."
     },
@@ -674,19 +615,13 @@
       "updated": "Aktualisiert"
     },
     "subscription": {
-      "subscribedProjectThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this project through its namespace.",
-      "subscribedTaskThroughParentNamespace": "Du kannst hier nicht de-abonnieren, da du diese Aufgabe über ihren Namespace abonniert hast.",
       "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",
-      "subscribedNamespace": "Du hast diesen Namespace abonniert und erhältst Benachrichtigungen über Änderungen.",
-      "notSubscribedNamespace": "Du hast diesen Namespace nicht abonniert und erhältst keine Benachrichtigungen über Änderungen.",
       "subscribedProject": "You are currently subscribed to this project and will receive notifications for changes.",
       "notSubscribedProject": "You are not subscribed to this project and won't receive notifications for changes.",
       "subscribedTask": "Du hast diese Aufgabe abonniert und erhältst Benachrichtigungen über Änderungen.",
       "notSubscribedTask": "Du hast diese Aufgabe nicht abonniert und erhältst keine Benachrichtigungen über Änderungen.",
       "subscribe": "Abonnieren",
       "unsubscribe": "Abbestellen",
-      "subscribeSuccessNamespace": "Du hast diesen Namespace jetzt abonniert",
-      "unsubscribeSuccessNamespace": "Du hast diesen Namespace jetzt nicht mehr abonniert",
       "subscribeSuccessProject": "You are now subscribed to this project",
       "unsubscribeSuccessProject": "You are now unsubscribed to this project",
       "subscribeSuccessTask": "Du hast diese Aufgabe jetzt abonniert",
@@ -763,7 +698,6 @@
       "searchPlaceholder": "Beginne zu schreiben, um eine Aufgabe zu suchen, die als Beziehung hinzugefügt werden soll…",
       "createPlaceholder": "Füge diese Aufgabe als neue Aufgabenbeziehung hinzu",
       "differentProject": "This task belongs to a different project.",
-      "differentNamespace": "Diese Aufgabe gehört zu einem anderen Namespace.",
       "noneYet": "Keine Aufgabenbeziehung vorhanden.",
       "delete": "Aufgabenbeziehung entfernen",
       "deleteText1": "Willst du diese Aufgabenbeziehung wirklich entfernen?",
@@ -848,19 +782,19 @@
       "delete": {
         "header": "Team löschen",
         "text1": "Bist du sicher, dass du dieses Team und alle seine Mitglieder löschen willst?",
-        "text2": "All team members will lose access to projects and namespaces shared with this team. This CANNOT BE UNDONE!",
+        "text2": "All team members will lose access to projects shared with this team. This CANNOT BE UNDONE!",
         "success": "Das Team wurde erfolgreich gelöscht."
       },
       "deleteUser": {
         "header": "Benutzer:innen aus dem Team entfernen",
         "text1": "Bist du sicher, dass du diese:n Benutzer:in aus dem Team entfernen willst?",
-        "text2": "They will lose access to all projects and namespaces this team has access to. This CANNOT BE UNDONE!",
+        "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
         "success": "Der:die Benutzer:in wurde erfolgreich aus dem Team gelöscht."
       },
       "leave": {
         "title": "Team verlassen",
         "text1": "Bist du sicher, dass du dieses Team verlassen willst?",
-        "text2": "You will lose access to all projects and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "text2": "You will lose access to all projects this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "Du hast das Team erfolgreich verlassen."
       }
     },
@@ -910,9 +844,9 @@
       "title": "Navigation",
       "overview": "Die Startseite aufrufen",
       "upcoming": "Anstehende Aufgaben aufrufen",
-      "namespaces": "Navigate to namespaces & projects",
       "labels": "Labels aufrufen",
-      "teams": "Teams aufrufen"
+      "teams": "Teams aufrufen",
+      "projects": "Navigate to projects"
     }
   },
   "update": {
@@ -927,7 +861,8 @@
     "unarchive": "Archivierung aufheben",
     "setBackground": "Hintergrund einstellen",
     "share": "Teilen",
-    "newProject": "New project"
+    "newProject": "New project",
+    "createProject": "Create project"
   },
   "apiConfig": {
     "url": "Vikunja-URL",
@@ -946,7 +881,7 @@
   "notification": {
     "title": "Benachrichtigungen",
     "none": "Du hast keine Benachrichtigungen. Einen schönen Tag noch!",
-    "explainer": "Notifications will appear here when actions on namespaces, projects or tasks you subscribed to happen."
+    "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen."
   },
   "quickActions": {
     "commands": "Befehle",
@@ -957,14 +892,12 @@
     "teams": "Teams",
     "newProject": "Enter the title of the new project…",
     "newTask": "Gib den Titel der neuen Aufgabe ein …",
-    "newNamespace": "Gib den Titel des neuen Namespaces ein…",
     "newTeam": "Gib den Namen des neuen Teams ein …",
     "createTask": "Create a task in the current project ({title})",
-    "createProject": "Create a project in the current namespace ({title})",
+    "createProject": "Create a project",
     "cmds": {
       "newTask": "Neue Aufgabe",
       "newProject": "New project",
-      "newNamespace": "Neuer Namespace",
       "newTeam": "Neues Team"
     }
   },
@@ -1020,16 +953,9 @@
     "4017": "Ungültiger Aufgabenfilter (Vergleichskriterium).",
     "4018": "Ungültige Verkettung von Aufgabenfiltern.",
     "4019": "Ungültiger Aufgabenfilter (Wert).",
-    "5001": "Dieser Namespace existiert nicht.",
-    "5003": "Du hast keinen Zugriff auf den Namespace.",
-    "5006": "Der Namespace Titel kann nicht leer sein.",
-    "5009": "Du benötigst Leserechte in diesem Namespace, um diese Aktion durchzuführen.",
-    "5010": "Dieses Team hat keinen Zugriff auf diesen Namespace.",
-    "5011": "Diese:r Benutzer:in hat bereits Zugriff auf diesen Namespace.",
-    "5012": "Dieser Namespace ist archiviert und kann deshalb nur gelesen werden.",
     "6001": "Der Teamname kann nicht leer sein.",
     "6002": "Das Team existiert nicht.",
-    "6004": "The team already has access to that namespace or project.",
+    "6004": "The team already has access to that project.",
     "6005": "Diese:r Benutzer:in ist bereits dem Team beigetreten.",
     "6006": "Du kannst den:die letzten Benutzer:in dieses Teams nicht löschen.",
     "6007": "The team does not have access to the project to perform that action.",
