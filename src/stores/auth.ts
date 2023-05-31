@@ -2,7 +2,7 @@ import {computed, readonly, ref} from 'vue'
 import {defineStore, acceptHMRUpdate} from 'pinia'
 
 import {HTTPFactory, AuthenticatedHTTPFactory} from '@/helpers/fetcher'
-import {i18n, getCurrentLanguage, saveLanguage} from '@/i18n'
+import {i18n, getCurrentLanguage, saveLanguage, setLanguage} from '@/i18n'
 import {objectToSnakeCase} from '@/helpers/case'
 import UserModel, { getAvatarUrl, getDisplayName } from '@/models/user'
 import UserSettingsService from '@/services/userSettings'
@@ -250,6 +250,7 @@ export const useAuthStore = defineStore('auth', () => {
 				...(info.value?.exp && {exp: info.value?.exp}),
 			})
 
+			await setLanguage(newUser.settings.language)
 			setUser(newUser)
 			updateLastUserRefresh()
 
