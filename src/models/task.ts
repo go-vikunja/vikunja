@@ -23,11 +23,6 @@ import SubscriptionModel from './subscription'
 
 export const TASK_DEFAULT_COLOR = '#1973ff'
 
-const SUPPORTS_TRIGGERED_NOTIFICATION = 'Notification' in window && 'showTrigger' in Notification.prototype
-if (!SUPPORTS_TRIGGERED_NOTIFICATION) {
-	console.debug('This browser does not support triggered notifications')
-}
-
 export function	getHexColor(hexColor: string): string {
 	if (hexColor === '' || hexColor === '#') {
 		return TASK_DEFAULT_COLOR
@@ -122,12 +117,6 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 
 		this.reminderDates = this.reminderDates.map(d => new Date(d))
 
-		// Cancel all scheduled notifications for this task to be sure to only have available notifications
-		this.cancelScheduledNotifications().then(() => {
-			// Every time we see a reminder, we schedule a notification for it
-			this.reminderDates.forEach(d => this.scheduleNotification(d))
-		})
-
 		if (this.hexColor !== '' && this.hexColor.substring(0, 1) !== '#') {
 			this.hexColor = '#' + this.hexColor
 		}
@@ -168,84 +157,6 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 
 	getHexColor() {
 		return getHexColor(this.hexColor)
-	}
-
-	/////////////////
-	// Helper functions
-	///////////////
-
-	async cancelScheduledNotifications() {
-		if (!SUPPORTS_TRIGGERED_NOTIFICATION) {
-			return
-		}
-
-		if (typeof navigator.serviceWorker === 'undefined') {
-			console.debug('Service Worker not available')
-			return
-		}
-
-		const registration = await navigator.serviceWorker.getRegistration()
-		if (typeof registration === 'undefined') {
-			return
-		}
-
-		// Get all scheduled notifications for this task and cancel them
-		const scheduledNotifications = await registration.getNotifications({
-			tag: `vikunja-task-${this.id}`,
-			includeTriggered: true,
-		})
-		console.debug('Already scheduled notifications:', scheduledNotifications)
-		scheduledNotifications.forEach(n => n.close())
-	}
-
-	async scheduleNotification(date) {
-		if (typeof navigator.serviceWorker === 'undefined') {
-			console.debug('Service Worker not available')
-			return
-		}
-
-		if (date < new Date()) {
-			console.debug('Date is in the past, not scheduling a notification. Date is ', date)
-			return
-		}
-
-		if (!SUPPORTS_TRIGGERED_NOTIFICATION) {
-			return
-		}
-
-		const {state} = await navigator.permissions.request({name: 'notifications'})
-		if (state !== 'granted') {
-			console.debug('Notification permission not granted, not showing notifications')
-			return
-		}
-
-		const registration = await navigator.serviceWorker.getRegistration()
-		if (typeof registration === 'undefined') {
-			console.error('No service worker registration available')
-			return
-		}
-
-		// Register the actual notification
-		try {
-			registration.showNotification('Vikunja Reminder', {
-				tag: `vikunja-task-${this.id}`, // Group notifications by task id so we're only showing one notification per task
-				body: this.title,
-				// eslint-disable-next-line no-undef
-				showTrigger: new TimestampTrigger(date),
-				badge: '/images/icons/badge-monochrome.png',
-				icon: '/images/icons/android-chrome-512x512.png',
-				data: {taskId: this.id},
-				actions: [
-					{
-						action: 'show-task',
-						title: 'Show task',
-					},
-				],
-			})
-			console.debug('Notification scheduled for ' + date)
-		} catch (e) {
-			throw new Error('Error scheduling notification', e)
-		}
 	}
 }
 
