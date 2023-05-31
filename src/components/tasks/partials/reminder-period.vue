@@ -179,9 +179,7 @@ const relativeToOptions = {
 	[REMINDER_PERIOD_RELATIVE_TO_TYPES.ENDDATE]: t('task.attributes.endDate'),
 } as const
 
-const relativeTo = computed(() => relativeToOptions[periodInput.relativeTo]))
-
-
+const relativeTo = computed(() => relativeToOptions[periodInput.relativeTo])
 
 function formatRelativeTo(relativeTo: IReminderPeriodRelativeTo | null): string | null {
 	switch (relativeTo) {
