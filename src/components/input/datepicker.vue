@@ -158,7 +158,12 @@ const flatPickerConfig = computed(() => ({
 // Since flatpickr dates are strings, we need to convert them to native date objects.
 // To make that work, we need a separate variable since flatpickr does not have a change event.
 const flatPickrDate = computed({
-	set(newValue: string | Date) {
+	set(newValue: string | Date | null) {
+		if (newValue === null) {
+			date.value = null
+			return
+		}
+
 		date.value = createDateFromString(newValue)
 		updateData()
 	},
