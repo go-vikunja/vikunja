@@ -35,7 +35,7 @@ interface MatchedAssignee extends IUser {
 }
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
-function findPropertyByValue(object, key, value, fuzzy: boolean = false) {
+function findPropertyByValue(object, key, value, fuzzy = false) {
 	return Object.values(object).find(l => {
 		if (fuzzy) {
 			return l[key]?.toLowerCase().includes(value.toLowerCase())
