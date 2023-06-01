@@ -894,7 +894,7 @@
     "newTask": "Indtast titlen på den nye opgave…",
     "newTeam": "Indtast navnet på det nye hold…",
     "createTask": "Create a task in the current project ({title})",
-    "createProject": "Create a project in the current namespace ({title})",
+    "createProject": "Create a project",
     "cmds": {
       "newTask": "Ny Opgave",
       "newProject": "New project",
@@ -955,7 +955,7 @@
     "4019": "Ugyldig værdi til opgavefilter.",
     "6001": "Holdnavnet må ikke være tomt.",
     "6002": "Holdet findes ikke.",
-    "6004": "The team already has access to that namespace or project.",
+    "6004": "The team already has access to that project.",
     "6005": "Brugeren er allerede medlem af holdet.",
     "6006": "Kan ikke slette det sidste holdmedlem.",
     "6007": "The team does not have access to the project to perform that action.",

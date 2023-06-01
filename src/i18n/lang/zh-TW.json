@@ -782,19 +782,19 @@
       "delete": {
         "header": "Delete the team",
         "text1": "Are you sure you want to delete this team and all of its members?",
-        "text2": "All team members will lose access to projects and namespaces shared with this team. This CANNOT BE UNDONE!",
+        "text2": "All team members will lose access to projects shared with this team. This CANNOT BE UNDONE!",
         "success": "The team was successfully deleted."
       },
       "deleteUser": {
         "header": "Remove a user from the team",
         "text1": "Are you sure you want to remove this user from the team?",
-        "text2": "They will lose access to all projects and namespaces this team has access to. This CANNOT BE UNDONE!",
+        "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
         "success": "The user was successfully deleted from the team."
       },
       "leave": {
         "title": "Leave team",
         "text1": "Are you sure you want to leave this team?",
-        "text2": "You will lose access to all projects and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "text2": "You will lose access to all projects this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "You have successfully left the team."
       }
     },
@@ -846,7 +846,7 @@
       "upcoming": "Navigate to upcoming tasks",
       "labels": "Navigate to labels",
       "teams": "Navigate to teams",
-      "projects": ""
+      "projects": "Navigate to projects"
     }
   },
   "update": {
@@ -862,7 +862,7 @@
     "setBackground": "Set background",
     "share": "Share",
     "newProject": "New project",
-    "createProject": ""
+    "createProject": "Create project"
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -881,7 +881,7 @@
   "notification": {
     "title": "Notifications",
     "none": "You don't have any notifications. Have a nice day!",
-    "explainer": "Notifications will appear here when actions on namespaces, projects or tasks you subscribed to happen."
+    "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen."
   },
   "quickActions": {
     "commands": "Commands",
@@ -894,7 +894,7 @@
     "newTask": "Enter the title of the new task…",
     "newTeam": "Enter the name of the new team…",
     "createTask": "Create a task in the current project ({title})",
-    "createProject": "Create a project in the current namespace ({title})",
+    "createProject": "Create a project",
     "cmds": {
       "newTask": "New task",
       "newProject": "New project",
@@ -955,7 +955,7 @@
     "4019": "Invalid task filter value.",
     "6001": "The team name cannot be empty.",
     "6002": "The team does not exist.",
-    "6004": "The team already has access to that namespace or project.",
+    "6004": "The team already has access to that project.",
     "6005": "The user is already a member of that team.",
     "6006": "Cannot delete the last team member.",
     "6007": "The team does not have access to the project to perform that action.",

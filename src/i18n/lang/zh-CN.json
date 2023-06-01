@@ -6,9 +6,7 @@
     "welcomeEvening": "中午好，{username}！",
     "lastViewed": "最近查看",
     "project": {
-      "newText": "You can create a new project for your new tasks:",
-      "new": "New project",
-      "importText": "Or import your projects and tasks from other services into Vikunja:",
+      "importText": "Import your projects and tasks from other services into Vikunja:",
       "import": "Import your data into Vikunja"
     }
   },
@@ -143,7 +141,7 @@
     },
     "deletion": {
       "title": "删除您的 Vikunja 帐户",
-      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your namespaces, projects, tasks and everything associated with it.",
+      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "若要继续，请输入您的密码。您将收到一封包含更多说明的电子邮件。",
       "confirm": "删除我的帐户",
       "requestSuccess": "请求成功。您将收到一封包含更多说明的电子邮件。",
@@ -157,7 +155,7 @@
     },
     "export": {
       "title": "导出 Vikunja 数据",
-      "description": "You can request a copy of all your Vikunja data. This include Namespaces, Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
+      "description": "You can request a copy of all your Vikunja data. This includes Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
       "descriptionPasswordRequired": "请输入您的密码以继续。",
       "request": "请求我的 Vikunja 数据副本",
       "success": "已成功请求您的 Vikunja 数据！一旦准备好下载，我们将向您发送一封电子邮件。",
@@ -165,14 +163,18 @@
     }
   },
   "project": {
-    "archived": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "archivedMessage": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "archived": "Archived",
+    "showArchived": "Show Archived",
     "title": "Project Title",
     "color": "Color",
     "projects": "Projects",
+    "parent": "Parent Project",
     "search": "Type to search for a project…",
     "searchSelect": "Click or press enter to select this project",
     "shared": "Shared Projects",
     "noDescriptionAvailable": "No project description is available.",
+    "inboxTitle": "Inbox",
     "create": {
       "header": "New project",
       "titlePlaceholder": "The project's title goes here…",
@@ -210,7 +212,7 @@
     "duplicate": {
       "title": "Duplicate this project",
       "label": "Duplicate",
-      "text": "Select a namespace which should hold the duplicated project:",
+      "text": "Select a parent project which should hold the duplicated project:",
       "success": "The project was successfully duplicated."
     },
     "edit": {
@@ -321,67 +323,6 @@
       }
     }
   },
-  "namespace": {
-    "title": "Namespaces & Projects",
-    "namespace": "命名空间",
-    "showArchived": "显示已归档",
-    "noneAvailable": "你还没有创建任何空间。",
-    "unarchive": "取消存档",
-    "archived": "已归档",
-    "noProjects": "This namespace does not contain any projects.",
-    "createProject": "Create a new project in this namespace.",
-    "namespaces": "命名空间",
-    "search": "输入以搜索命名空间…",
-    "create": {
-      "title": "新建命名空间",
-      "titleRequired": "请指定一个标题。",
-      "explanation": "A namespace is a collection of projects you can share and use to organize your projects with. In fact, every project belongs to a namespace.",
-      "tooltip": "什么是命名空间？",
-      "success": "成功创建命名空间"
-    },
-    "archive": {
-      "titleArchive": "存档 \"{namespace}\"",
-      "titleUnarchive": "取消存档 \"{namespace}\"",
-      "archiveText": "You won't be able to edit this namespace or create new projects until you un-archive it. This will also archive all projects in this namespace.",
-      "unarchiveText": "You will be able to create new projects or edit it.",
-      "success": "已成功存档该命名空间",
-      "unarchiveSuccess": "已取消存档该命名空间",
-      "description": "If a namespace is archived, you cannot create new projects or edit it."
-    },
-    "delete": {
-      "title": "删除命名空间 \"{namespace}\"",
-      "text1": "确定删除此命名空间及其包含的所有内容吗？",
-      "text2": "This includes all projects and tasks and CANNOT BE UNDONE!",
-      "success": "命名空间已删除"
-    },
-    "edit": {
-      "title": "编辑 \"{namespace}\"",
-      "success": "命名空间更改成功"
-    },
-    "share": {
-      "title": "共享 \"{namespace}\""
-    },
-    "attributes": {
-      "title": "命名空间 · 标题",
-      "titlePlaceholder": "命名空间标题",
-      "description": "描述信息",
-      "descriptionPlaceholder": "填写描述详情（markdown 语法格式）",
-      "color": "颜色",
-      "archived": "已存档",
-      "isArchived": "已存档此命名空间"
-    },
-    "pseudo": {
-      "sharedProjects": {
-        "title": "Shared Projects"
-      },
-      "favorites": {
-        "title": "收藏"
-      },
-      "savedFilters": {
-        "title": "筛选器"
-      }
-    }
-  },
   "filters": {
     "title": "筛选器",
     "clear": "清除筛选条件",
@@ -403,7 +344,7 @@
     },
     "create": {
       "title": "新保存的过滤器",
-      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed. Once created, it will appear in a special namespace.",
+      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed.",
       "action": "创建新保存的过滤器",
       "titleRequired": "Please provide a title for the filter."
     },
@@ -674,19 +615,13 @@
       "updated": "已更新"
     },
     "subscription": {
-      "subscribedProjectThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this project through its namespace.",
-      "subscribedTaskThroughParentNamespace": "你无法在此处取消订阅，因为你通过其命名空间订阅了此任务。",
       "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",
-      "subscribedNamespace": "你当前订阅了此命名空间，并将收到更改通知。",
-      "notSubscribedNamespace": "你没有订阅此命名空间，也不会收到更改通知。",
       "subscribedProject": "You are currently subscribed to this project and will receive notifications for changes.",
       "notSubscribedProject": "You are not subscribed to this project and won't receive notifications for changes.",
       "subscribedTask": "你当前已订阅此任务并将收到更改通知。",
       "notSubscribedTask": "你没有订阅此任务，也不会收到更改通知。",
       "subscribe": "订阅",
       "unsubscribe": "取消订阅",
-      "subscribeSuccessNamespace": "你现在订阅了此命名空间",
-      "unsubscribeSuccessNamespace": "你现在已取消订阅此命名空间",
       "subscribeSuccessProject": "You are now subscribed to this project",
       "unsubscribeSuccessProject": "You are now unsubscribed to this project",
       "subscribeSuccessTask": "你现在订阅了此任务",
@@ -763,7 +698,6 @@
       "searchPlaceholder": "输入以搜索要添加关联的新任务...",
       "createPlaceholder": "添加为新的关联任务",
       "differentProject": "This task belongs to a different project.",
-      "differentNamespace": "此任务属于不同的空间。",
       "noneYet": "还没有任务关联。",
       "delete": "删除关联",
       "deleteText1": "确定要删除此任务关联吗？",
@@ -848,19 +782,19 @@
       "delete": {
         "header": "删除此团队",
         "text1": "确定要删除此团队及其所有成员吗？",
-        "text2": "All team members will lose access to projects and namespaces shared with this team. This CANNOT BE UNDONE!",
+        "text2": "All team members will lose access to projects shared with this team. This CANNOT BE UNDONE!",
         "success": "团队已删除。"
       },
       "deleteUser": {
         "header": "从团队中删除用户",
         "text1": "确定要将此成员移出团队吗？",
-        "text2": "They will lose access to all projects and namespaces this team has access to. This CANNOT BE UNDONE!",
+        "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
         "success": "此用户已成功从团队中删除。"
       },
       "leave": {
         "title": "离开团队",
         "text1": "您确定要离开这个团队吗？",
-        "text2": "You will lose access to all projects and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "text2": "You will lose access to all projects this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "您已经成功离开了团队。"
       }
     },
@@ -910,9 +844,9 @@
       "title": "导航栏",
       "overview": "导航到概览",
       "upcoming": "导航到即将到来的任务",
-      "namespaces": "Navigate to namespaces & projects",
       "labels": "导航到标签",
-      "teams": "导航到小组"
+      "teams": "导航到小组",
+      "projects": "Navigate to projects"
     }
   },
   "update": {
@@ -927,7 +861,8 @@
     "unarchive": "取消存档",
     "setBackground": "设置背景",
     "share": "共享",
-    "newProject": "New project"
+    "newProject": "New project",
+    "createProject": "Create project"
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -946,7 +881,7 @@
   "notification": {
     "title": "通知",
     "none": "没有任何通知。 祝你今天过得愉快！",
-    "explainer": "Notifications will appear here when actions on namespaces, projects or tasks you subscribed to happen."
+    "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen."
   },
   "quickActions": {
     "commands": "命令",
@@ -957,14 +892,12 @@
     "teams": "团队",
     "newProject": "Enter the title of the new project…",
     "newTask": "输入新任务的标题...",
-    "newNamespace": "输入新空间的标题...",
     "newTeam": "输入新团队的名称...",
     "createTask": "Create a task in the current project ({title})",
-    "createProject": "Create a project in the current namespace ({title})",
+    "createProject": "Create a project",
     "cmds": {
       "newTask": "新建任务",
       "newProject": "New project",
-      "newNamespace": "新建命名空间",
       "newTeam": "新建团队"
     }
   },
@@ -1020,16 +953,9 @@
     "4017": "任务筛选比较器无效。",
     "4018": "任务筛选连接器无效。",
     "4019": "任务筛选值无效。",
-    "5001": "空间不存在。",
-    "5003": "你没有权限访问指定的空间。",
-    "5006": "空间名称不能为空。",
-    "5009": "需要具有空间读取权限才能执行此操作。",
-    "5010": "该团队没有权限访问此空间。",
-    "5011": "该用户已经有权限访问此空间。",
-    "5012": "空间已归档，因此只能只读访问。",
     "6001": "团队名称不能为空。",
     "6002": "团队不存在。",
-    "6004": "The team already has access to that namespace or project.",
+    "6004": "The team already has access to that project.",
     "6005": "该用户已经是此团队的成员。",
     "6006": "无法删除最后一个团队成员。",
     "6007": "The team does not have access to the project to perform that action.",

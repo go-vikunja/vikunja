@@ -6,7 +6,7 @@
     "welcomeEvening": "こんばんは、{username}さん",
     "lastViewed": "最近の表示",
     "project": {
-      "importText": "Import your projects and tasks from other services into Vikunja:",
+      "importText": "他のサービスからVikunjaにプロジェクトやタスクをインポートします:",
       "import": "Vikunjaへのデータのインポート"
     }
   },
@@ -141,8 +141,8 @@
     },
     "deletion": {
       "title": "Vikunjaアカウントの削除",
-      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
-      "text2": "続行するには、パスワードを入力してください。詳しい案内の記載したメールを送信します。",
+      "text1": "アカウントの削除は永久的なものであり、元に戻すことはできません。あなたのプロジェクト、タスク、それらに関連するすべてのものを削除します。",
+      "text2": "続行するにはパスワードを入力してください。詳しい案内の記載したメールを送信します。",
       "confirm": "アカウントの削除",
       "requestSuccess": "リクエストは成功しました。詳しい案内はメールでお知らせします。",
       "passwordRequired": "パスワードを入力してください。",
@@ -155,17 +155,17 @@
     },
     "export": {
       "title": "Vikunjaデータのエクスポート",
-      "description": "You can request a copy of all your Vikunja data. This includes Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
-      "descriptionPasswordRequired": "続行するには、パスワードを入力してください:",
+      "description": "利用しているVikunjaの全データのダウンロードをリクエストできます。これにはプロジェクト、タスク、およびそれらに関連するすべてを含みます。このデータはどのVikunjaインスタンスでもインポートすることができます。",
+      "descriptionPasswordRequired": "続行するにはパスワードを入力してください:",
       "request": "Vikunjaデータのリクエスト",
       "success": "Vikunjaデータのリクエストに成功しました！ダウンロードの準備が整い次第、メールでお知らせします。",
       "downloadTitle": "エクスポートされたVikunjaデータのダウンロード"
     }
   },
   "project": {
-    "archivedMessage": "This project is archived. It is not possible to create new or edit tasks for it.",
-    "archived": "Archived",
-    "showArchived": "Show Archived",
+    "archivedMessage": "アーカイブ済みプロジェクトです。タスクの作成や編集を行うことはできません。",
+    "archived": "アーカイブ済み",
+    "showArchived": "アーカイブ済みプロジェクトを表示",
     "title": "プロジェクト名",
     "color": "色",
     "projects": "プロジェクト",
@@ -376,7 +376,7 @@
   "label": {
     "title": "ラベル",
     "manage": "ラベルの管理",
-    "description": "ラベルをクリックすると編集できます。作成したすべてのラベルを編集できます。また、これらのラベルはアクセス可能なプロジェクトのタスクに関連付けることができます。",
+    "description": "ラベルをクリックして編集します。ラベルはアクセス可能なプロジェクトのタスクで使用できます。",
     "newCTA": "利用可能なラベルは存在しません。",
     "search": "ラベルのキーワードを入力…",
     "create": {
@@ -557,15 +557,15 @@
       "noTasks": "タスクはありません — それではよい一日を！"
     },
     "detail": {
-      "chooseDueDate": "期日を設定する場合はこちら",
-      "chooseStartDate": "開始日を設定する場合はこちら",
-      "chooseEndDate": "終了日を設定する場合はこちら",
+      "chooseDueDate": "期日を設定…",
+      "chooseStartDate": "開始日を設定…",
+      "chooseEndDate": "終了日を設定…",
       "move": "別のプロジェクトにタスクを移動",
-      "done": "タスク完了",
+      "done": "タスクを完了",
       "undone": "未完了に戻す",
       "created": "Created {0} by {1}",
       "updated": "Updated {0}",
-      "doneAt": "Done {0}",
+      "doneAt": "完了 {0}",
       "updateSuccess": "タスクは正常に保存されました。",
       "deleteSuccess": "タスクは正常に削除されました。",
       "belongsToProject": "このタスクはプロジェクト「{project}」に含まれています。",
@@ -638,10 +638,10 @@
       "deleteText1": "添付ファイル「{filename}」を削除して本当によろしいですか？",
       "copyUrl": "URLのコピー",
       "copyUrlTooltip": "添付ファイルのURLをコピー",
-      "setAsCover": "Make cover",
-      "unsetAsCover": "Remove cover",
-      "successfullyChangedCoverImage": "The cover image was successfully changed.",
-      "usedAsCover": "Cover image"
+      "setAsCover": "カバー画像にする",
+      "unsetAsCover": "カバー画像から取り外す",
+      "successfullyChangedCoverImage": "カバー画像は正常に変更されました。",
+      "usedAsCover": "カバー画像"
     },
     "comment": {
       "title": "コメント",
@@ -723,7 +723,7 @@
       "everyMonth": "毎月",
       "mode": "繰り返しモード",
       "monthly": "毎月",
-      "fromCurrentDate": "現在日時からの相対的間隔",
+      "fromCurrentDate": "現在時刻からの間隔",
       "each": "隔",
       "specifyAmount": "数字を入力…",
       "hours": "時間ごと",

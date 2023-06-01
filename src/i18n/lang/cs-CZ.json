@@ -6,9 +6,7 @@
     "welcomeEvening": "Dobrý večer {username}!",
     "lastViewed": "Naposledy zobrazeno",
     "project": {
-      "newText": "You can create a new project for your new tasks:",
-      "new": "New project",
-      "importText": "Or import your projects and tasks from other services into Vikunja:",
+      "importText": "Import your projects and tasks from other services into Vikunja:",
       "import": "Import your data into Vikunja"
     }
   },
@@ -143,7 +141,7 @@
     },
     "deletion": {
       "title": "Smazat svůj účet",
-      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your namespaces, projects, tasks and everything associated with it.",
+      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "Chcete-li pokračovat, zadejte své heslo. Obdržíte e-mail s dalšími pokyny.",
       "confirm": "Smazat můj účet",
       "requestSuccess": "Požadavek byl úspěšný. Obdržíte e-mail s dalšími pokyny.",
@@ -157,7 +155,7 @@
     },
     "export": {
       "title": "Exportovat data účtu",
-      "description": "You can request a copy of all your Vikunja data. This include Namespaces, Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
+      "description": "You can request a copy of all your Vikunja data. This includes Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
       "descriptionPasswordRequired": "Pokračujte zadáním vašeho hesla:",
       "request": "Požádat o kopii mých dat",
       "success": "Úspěšně jste požádali o svá data! Jakmile budou připravena ke stažení, pošleme Vám e-mail.",
@@ -165,14 +163,18 @@
     }
   },
   "project": {
-    "archived": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "archivedMessage": "This project is archived. It is not possible to create new or edit tasks for it.",
+    "archived": "Archived",
+    "showArchived": "Show Archived",
     "title": "Project Title",
     "color": "Color",
     "projects": "Projects",
+    "parent": "Parent Project",
     "search": "Type to search for a project…",
     "searchSelect": "Click or press enter to select this project",
     "shared": "Shared Projects",
     "noDescriptionAvailable": "No project description is available.",
+    "inboxTitle": "Inbox",
     "create": {
       "header": "New project",
       "titlePlaceholder": "The project's title goes here…",
@@ -210,7 +212,7 @@
     "duplicate": {
       "title": "Duplicate this project",
       "label": "Duplicate",
-      "text": "Select a namespace which should hold the duplicated project:",
+      "text": "Select a parent project which should hold the duplicated project:",
       "success": "The project was successfully duplicated."
     },
     "edit": {
@@ -321,67 +323,6 @@
       }
     }
   },
-  "namespace": {
-    "title": "Namespaces & Projects",
-    "namespace": "Prostor",
-    "showArchived": "Zobrazit archivované",
-    "noneAvailable": "Momentálně nemáte žádné prostory.",
-    "unarchive": "Obnovit archiv",
-    "archived": "Archivováno",
-    "noProjects": "This namespace does not contain any projects.",
-    "createProject": "Create a new project in this namespace.",
-    "namespaces": "Prostory",
-    "search": "Začni psát pro vyhledání prostoru…",
-    "create": {
-      "title": "Nový prostor",
-      "titleRequired": "Uveďte prosím název.",
-      "explanation": "A namespace is a collection of projects you can share and use to organize your projects with. In fact, every project belongs to a namespace.",
-      "tooltip": "Co je prostor?",
-      "success": "Prostor byl úspěšně vytvořen."
-    },
-    "archive": {
-      "titleArchive": "Archivovat \"{namespace}\"",
-      "titleUnarchive": "Odarchivovat \"{namespace}\"",
-      "archiveText": "You won't be able to edit this namespace or create new projects until you un-archive it. This will also archive all projects in this namespace.",
-      "unarchiveText": "You will be able to create new projects or edit it.",
-      "success": "Prostor byl úspěšně archivován.",
-      "unarchiveSuccess": "Jmenný prostor byl úspěšně obnoven.",
-      "description": "If a namespace is archived, you cannot create new projects or edit it."
-    },
-    "delete": {
-      "title": "Smazat \"{namespace}\"",
-      "text1": "Opravdu chcete odstranit tento prostor a všechen jeho obsah?",
-      "text2": "This includes all projects and tasks and CANNOT BE UNDONE!",
-      "success": "Prostor byl úspěšně smazán."
-    },
-    "edit": {
-      "title": "Upravit \"{namespace}\"",
-      "success": "Prostor byl úspěšně aktualizován."
-    },
-    "share": {
-      "title": "Sdílet \"{namespace}\""
-    },
-    "attributes": {
-      "title": "Název prostoru",
-      "titlePlaceholder": "Název seznamu přijde sem…",
-      "description": "Popis",
-      "descriptionPlaceholder": "Popis seznamu přijde sem…",
-      "color": "Barva",
-      "archived": "Archivováno",
-      "isArchived": "Tento prostor je archivován"
-    },
-    "pseudo": {
-      "sharedProjects": {
-        "title": "Shared Projects"
-      },
-      "favorites": {
-        "title": "Oblíbené"
-      },
-      "savedFilters": {
-        "title": "Filtry"
-      }
-    }
-  },
   "filters": {
     "title": "Filtry",
     "clear": "Vymazat filtry",
@@ -403,7 +344,7 @@
     },
     "create": {
       "title": "Nový uložený filtr",
-      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed. Once created, it will appear in a special namespace.",
+      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed.",
       "action": "Vytvořit uložený filtr",
       "titleRequired": "Please provide a title for the filter."
     },
@@ -674,19 +615,13 @@
       "updated": "Aktualizováno"
     },
     "subscription": {
-      "subscribedProjectThroughParentNamespace": "You can't unsubscribe here because you are subscribed to this project through its namespace.",
-      "subscribedTaskThroughParentNamespace": "Zde se nemůžete odhlásit, protože jste přihlášeni k odběru tohoto úkolu prostřednictvím jeho prostoru.",
       "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",
-      "subscribedNamespace": "Nyní jste přihlášeni k odběru tohoto prostoru a budete dostávat oznámení o změnách.",
-      "notSubscribedNamespace": "Nejste přihlášeni k odběru tohoto prostoru, takže nebudete dostávat upozornění na změny.",
       "subscribedProject": "You are currently subscribed to this project and will receive notifications for changes.",
       "notSubscribedProject": "You are not subscribed to this project and won't receive notifications for changes.",
       "subscribedTask": "Nyní jste přihlášeni k odběru tohoto úkolu a budete dostávat oznámení o změnách.",
       "notSubscribedTask": "Nejste přihlášeni k odběru tohoto úkolu, takže nebudete dostávat upozornění na změny.",
       "subscribe": "Odebírat",
       "unsubscribe": "Odhlásit odběr",
-      "subscribeSuccessNamespace": "Nyní jste přihlášeni k tomuto prostoru",
-      "unsubscribeSuccessNamespace": "Nyní jste odhlášeni od tohoto prostoru",
       "subscribeSuccessProject": "You are now subscribed to this project",
       "unsubscribeSuccessProject": "You are now unsubscribed to this project",
       "subscribeSuccessTask": "Nyní jste přihlášeni k tomuto úkolu",
@@ -763,7 +698,6 @@
       "searchPlaceholder": "Hledejte nový úkol, který chcete přidat jako související…",
       "createPlaceholder": "Přidat toto jako nový související úkol",
       "differentProject": "This task belongs to a different project.",
-      "differentNamespace": "Tento úkol patří do jiného prostoru.",
       "noneYet": "Zatím žádné vztahy mezi úkoly.",
       "delete": "Odstranit vztah k úloze",
       "deleteText1": "Jste si jisti, že chcete odstranit tento vztah úkolu?",
@@ -848,19 +782,19 @@
       "delete": {
         "header": "Smazat tým",
         "text1": "Jste si jisti, že chcete smazat tento tým a všechny jeho členy?",
-        "text2": "All team members will lose access to projects and namespaces shared with this team. This CANNOT BE UNDONE!",
+        "text2": "All team members will lose access to projects shared with this team. This CANNOT BE UNDONE!",
         "success": "Tým byl úspěšně smazán."
       },
       "deleteUser": {
         "header": "Odebrat uživatele z týmu",
         "text1": "Opravdu chcete odebrat tohoto uživatele z týmu?",
-        "text2": "They will lose access to all projects and namespaces this team has access to. This CANNOT BE UNDONE!",
+        "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
         "success": "Uživatel byl úspěšně odstraněn z týmu."
       },
       "leave": {
         "title": "Opustit tým",
         "text1": "Opravdu chcete opustit tento tým?",
-        "text2": "You will lose access to all projects and namespaces this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "text2": "You will lose access to all projects this team has access to. If you change your mind you'll need a team admin to add you again.",
         "success": "Úspěšně jste opustili tým."
       }
     },
@@ -910,9 +844,9 @@
       "title": "Navigace",
       "overview": "Přejít na přehled",
       "upcoming": "Přejít na nadcházející úkoly",
-      "namespaces": "Navigate to namespaces & projects",
       "labels": "Přejít na štítky",
-      "teams": "Přejít na týmy"
+      "teams": "Přejít na týmy",
+      "projects": "Navigate to projects"
     }
   },
   "update": {
@@ -927,7 +861,8 @@
     "unarchive": "Zrušit archivaci",
     "setBackground": "Nastavit pozadí",
     "share": "Sdílet",
-    "newProject": "New project"
+    "newProject": "New project",
+    "createProject": "Create project"
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -946,7 +881,7 @@
   "notification": {
     "title": "Oznámení",
     "none": "Nemáte žádná oznámení. Mějte příjemný den!",
-    "explainer": "Notifications will appear here when actions on namespaces, projects or tasks you subscribed to happen."
+    "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen."
   },
   "quickActions": {
     "commands": "Příkazy",
@@ -957,14 +892,12 @@
     "teams": "Týmy",
     "newProject": "Enter the title of the new project…",
     "newTask": "Zadejte název nového úkolu…",
-    "newNamespace": "Zadejte název nového prostoru…",
     "newTeam": "Zadejte název nového týmu…",
     "createTask": "Create a task in the current project ({title})",
-    "createProject": "Create a project in the current namespace ({title})",
+    "createProject": "Create a project",
     "cmds": {
       "newTask": "Nový úkol",
       "newProject": "New project",
-      "newNamespace": "Nový prostor",
       "newTeam": "Nový tým"
     }
   },
@@ -1020,16 +953,9 @@
     "4017": "Neplatný komparátor filtru úkolů.",
     "4018": "Neplatné zřetězení filtru úkolů.",
     "4019": "Neplatná hodnota filtru úkolů.",
-    "5001": "Prostor neexistuje.",
-    "5003": "Nemáte přístup ke zvolenému prostoru.",
-    "5006": "Název prostoru nemůže být prázdný.",
-    "5009": "Pro provedení této akce musíte mít k prostoru přístup ke čtení.",
-    "5010": "Tento tým nemá k tomuto prostoru přístup.",
-    "5011": "Tento uživatel již má přístup k tomuto prostoru.",
-    "5012": "Prostor je archivován, a proto je přístupný pouze pro čtení.",
     "6001": "Název týmu nemůže být prázdný.",
     "6002": "Tým neexistuje.",
-    "6004": "The team already has access to that namespace or project.",
+    "6004": "The team already has access to that project.",
     "6005": "Uživatel je již členem tohoto týmu.",
     "6006": "Nelze odstranit posledního člena týmu.",
     "6007": "The team does not have access to the project to perform that action.",

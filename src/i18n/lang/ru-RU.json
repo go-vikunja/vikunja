@@ -6,7 +6,7 @@
     "welcomeEvening": "Добрый вечер, {username}!",
     "lastViewed": "Последние просмотренные",
     "project": {
-      "importText": "Import your projects and tasks from other services into Vikunja:",
+      "importText": "Импортировать проекты и задачи из других сервисов в Vikunja:",
       "import": "Импорт данных в Vikunja"
     }
   },
@@ -141,7 +141,7 @@
     },
     "deletion": {
       "title": "Удалить свой аккаунт VIkunja",
-      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
+      "text1": "Удаление аккаунта необратимо. Мы удалим все ваши проекты, задачи и всё связанное с ними.",
       "text2": "Для продолжения введите свой пароль. На почту будет отправлено письмо с дальнейшими инструкциями.",
       "confirm": "Удалить мой аккаунт",
       "requestSuccess": "Запрос успешно выполнен. На почту будет отправлено письмо с дальнейшими инструкциями.",
@@ -155,7 +155,7 @@
     },
     "export": {
       "title": "Экспорт данных Vikunja",
-      "description": "You can request a copy of all your Vikunja data. This includes Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
+      "description": "Вы можете запросить копию всех своих данных Vikunja. Это включает в себя проекты, задачи и всё связанное с ними. Эти данные можно будет импортировать на любом экземпляре Vikunja через функцию миграции.",
       "descriptionPasswordRequired": "Для продолжения введите свой пароль:",
       "request": "Запросить копию моих данных Vikunja",
       "success": "Данные Vikunja успешно запрошены! На почту придёт письмо, когда они будут готовы для скачивания.",
@@ -163,13 +163,13 @@
     }
   },
   "project": {
-    "archivedMessage": "This project is archived. It is not possible to create new or edit tasks for it.",
-    "archived": "Archived",
-    "showArchived": "Show Archived",
+    "archivedMessage": "Этот проект архивирован. В нём нельзя создавать или изменять задачи.",
+    "archived": "Архивировано",
+    "showArchived": "Показать архив",
     "title": "Название проекта",
     "color": "Цвет",
     "projects": "Проекты",
-    "parent": "Parent Project",
+    "parent": "Родительский проект",
     "search": "Введите запрос для поиска проекта…",
     "searchSelect": "Кликните или нажмите Enter для выбора этого проекта",
     "shared": "Shared Projects",
@@ -212,7 +212,7 @@
     "duplicate": {
       "title": "Создание копии проекта",
       "label": "Создать копию",
-      "text": "Select a parent project which should hold the duplicated project:",
+      "text": "Выберите родительский проект, в который поместить копию проекта:",
       "success": "Копия проекта создана."
     },
     "edit": {
@@ -782,19 +782,19 @@
       "delete": {
         "header": "Удалить команду",
         "text1": "Удалить эту команду вместе с участниками?",
-        "text2": "All team members will lose access to projects shared with this team. This CANNOT BE UNDONE!",
+        "text2": "Все участники команды потеряют доступ к проектам, которыми поделились с этой командой. Это действие отменить НЕЛЬЗЯ!",
         "success": "Команда удалена."
       },
       "deleteUser": {
         "header": "Удалить пользователя из команды",
         "text1": "Удалить этого пользователя из команды?",
-        "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
+        "text2": "Пользователь потеряет доступ ко всем проектам, к которым есть доступ у команды. Это действие отменить нельзя!",
         "success": "Пользователь удалён из команды."
       },
       "leave": {
         "title": "Покинуть команду",
         "text1": "Покинуть эту команду?",
-        "text2": "You will lose access to all projects this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "text2": "Вы потеряете доступ ко всем проектам, к которым есть доступ у команды. Если вы передумаете, придётся просить администратора команды добавить вас снова.",
         "success": "Вы покинули команду."
       }
     },
@@ -846,7 +846,7 @@
       "upcoming": "Перейти к предстоящим задачам",
       "labels": "Перейти к меткам",
       "teams": "Перейти к командам",
-      "projects": "Navigate to projects"
+      "projects": "Перейти к проектам"
     }
   },
   "update": {
@@ -862,7 +862,7 @@
     "setBackground": "Задать фон",
     "share": "Поделиться",
     "newProject": "Создать проект",
-    "createProject": "Create project"
+    "createProject": "Создать проект"
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -881,7 +881,7 @@
   "notification": {
     "title": "Уведомления",
     "none": "Уведомлений нет. Хорошего дня!",
-    "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen."
+    "explainer": "Здесь появятся уведомления, когда что-нибудь произойдёт с проектами или задачами, на которые вы подписаны."
   },
   "quickActions": {
     "commands": "Команды",
@@ -894,7 +894,7 @@
     "newTask": "Введите название задачи…",
     "newTeam": "Введите название новой команды…",
     "createTask": "Создать задачу в текущем проекте ({title})",
-    "createProject": "Create a project",
+    "createProject": "Создать проект",
     "cmds": {
       "newTask": "Новая задача",
       "newProject": "Создать проект",
@@ -955,7 +955,7 @@
     "4019": "Неверное значение фильтра задач.",
     "6001": "Имя команды не может быть пустым.",
     "6002": "Команда не существует.",
-    "6004": "The team already has access to that project.",
+    "6004": "У команды уже есть доступ к этому проекту.",
     "6005": "Пользователь уже является участником этой команды.",
     "6006": "Нельзя удалить последнего участника команды.",
     "6007": "У команды нет доступа к проекту, чтобы выполнить это действие.",
