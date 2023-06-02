@@ -250,7 +250,10 @@ export const useAuthStore = defineStore('auth', () => {
 				...(info.value?.exp && {exp: info.value?.exp}),
 			})
 
-			await setLanguage(newUser.settings.language)
+			if (newUser.settings.language) {
+				await setLanguage(newUser.settings.language)
+			}
+
 			setUser(newUser)
 			updateLastUserRefresh()
 
