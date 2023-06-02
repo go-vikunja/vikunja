@@ -25,7 +25,8 @@
 			:show-save="true"
 			edit-shortcut="e"
 			v-model="task.description"
-			@update:model-value="save"
+			@update:model-value="saveWithDelay"
+			@save="save"
 		/>
 	</div>
 </template>
@@ -39,7 +40,6 @@ import Editor from '@/components/input/AsyncEditor'
 import type {ITask} from '@/modelTypes/ITask'
 import {useTaskStore} from '@/stores/tasks'
 import TaskModel from '@/models/task'
-
 
 const props = defineProps({
 	modelValue: {
@@ -74,7 +74,23 @@ watch(
 	{immediate: true},
 )
 
+const changeTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
+
+async function saveWithDelay() {
+	if (changeTimeout.value !== null) {
+		clearTimeout(changeTimeout.value)
+	}
+
+	changeTimeout.value = setTimeout(async () => {
+		await save()
+	}, 5000)
+}
+
 async function save() {
+	if (changeTimeout.value !== null) {
+		clearTimeout(changeTimeout.value)
+	}
+
 	saving.value = true
 
 	try {

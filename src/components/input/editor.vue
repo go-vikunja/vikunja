@@ -4,7 +4,7 @@
 
 		<vue-easymde
 			:configs="config"
-			@change="() => bubble()"
+			@change="() => bubbleNow()"
 			@update:modelValue="handleInput"
 			class="content"
 			v-if="isEditActive"
@@ -35,7 +35,7 @@
 				</BaseButton>
 				<BaseButton
 					v-else-if="isEditActive"
-					@click="toggleEdit"
+					@click="bubbleSaveClick"
 					class="done-edit">
 					{{ $t('misc.save') }}
 				</BaseButton>
@@ -56,7 +56,7 @@
 			</ul>
 			<x-button
 				v-else-if="isEditActive"
-				@click="toggleEdit"
+				@click="bubbleSaveClick"
 				variant="secondary"
 				:shadow="false"
 				v-cy="'saveEditor'">
@@ -84,8 +84,8 @@ import {createRandomID} from '@/helpers/randomId'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import ButtonLink from '@/components/misc/ButtonLink.vue'
-import type { IAttachment } from '@/modelTypes/IAttachment'
-import type { ITask } from '@/modelTypes/ITask'
+import type {IAttachment} from '@/modelTypes/IAttachment'
+import type {ITask} from '@/modelTypes/ITask'
 
 const props = defineProps({
 	modelValue: {
@@ -115,7 +115,7 @@ const props = defineProps({
 		default: true,
 	},
 	bottomActions: {
-		type: Array, 
+		type: Array,
 		default: () => [],
 	},
 	emptyText: {
@@ -134,10 +134,9 @@ const props = defineProps({
 	},
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'save'])
 
 const text = ref('')
-const changeTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 const isEditActive = ref(false)
 const isPreviewActive = ref(true)
 
@@ -148,7 +147,7 @@ const preview = ref('')
 const attachmentService = new AttachmentService()
 
 type CacheKey = `${ITask['id']}-${IAttachment['id']}`
-const loadedAttachments = ref<{[key: CacheKey]: string}>({})
+const loadedAttachments = ref<{ [key: CacheKey]: string }>({})
 const config = ref(createEasyMDEConfig({
 	placeholder: props.placeholder,
 	uploadImage: props.uploadEnabled,
@@ -175,7 +174,7 @@ watch(
 		if (oldVal === '' && text.value === modelValue.value) {
 			return
 		}
-		bubble()
+		bubbleNow()
 	},
 )
 
@@ -208,17 +207,11 @@ function handleInput(val: string) {
 	}
 
 	text.value = val
-	bubble(1000)
+	bubbleNow()
 }
 
-function bubble(timeout = 5000) {
-	if (changeTimeout.value !== null) {
-		clearTimeout(changeTimeout.value)
-	}
-
-	changeTimeout.value = setTimeout(() => {
-		emit('update:modelValue', text.value)
-	}, timeout)
+function bubbleNow() {
+	emit('update:modelValue', text.value)
 }
 
 function replaceAt(str: string, index: number, replacement: string) {
@@ -287,24 +280,26 @@ function handleCheckboxClick(e: Event) {
 		return
 	}
 	const projectPrefix = text.value.substring(index, index + 1)
-	
+
 	console.debug({index, projectPrefix, checked, text: text.value})
 
 	text.value = replaceAt(text.value, index, `${projectPrefix} ${checked ? '[x]' : '[ ]'} `)
-	bubble()
+	bubbleNow()
+	emit('save', text.value)
 	renderPreview()
 }
 
 function toggleEdit() {
-	if (isEditActive.value) {
-		isPreviewActive.value = true
-		isEditActive.value = false
-		renderPreview()
-		bubble(0) // save instantly
-	} else {
-		isPreviewActive.value = false
-		isEditActive.value = true
-	}
+	isPreviewActive.value = false
+	isEditActive.value = true
+}
+
+function bubbleSaveClick() {
+	isPreviewActive.value = true
+	isEditActive.value = false
+	renderPreview()
+	bubbleNow()
+	emit('save', text.value)
 }
 </script>
 

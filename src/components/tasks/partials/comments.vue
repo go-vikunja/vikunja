@@ -74,9 +74,13 @@
 						@update:model-value="
 							() => {
 								toggleEdit(c)
-								editComment()
+								editCommentWithDelay()
 							}
 						"
+						@save="() => {
+							toggleEdit(c)
+							editComment()
+						}"
 						:bottom-actions="actions[c.id]"
 						:show-save="true"
 					/>
@@ -279,9 +283,25 @@ function toggleDelete(commentId: ITaskComment['id']) {
 	commentToDelete.id = commentId
 }
 
+const changeTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
+
+async function editCommentWithDelay() {
+	if (changeTimeout.value !== null) {
+		clearTimeout(changeTimeout.value)
+	}
+
+	changeTimeout.value = setTimeout(async () => {
+		await editComment()
+	}, 5000)
+}
+
 async function editComment() {
 	if (commentEdit.comment === '') {
 		return
+	}
+	
+	if (changeTimeout.value !== null) {
+		clearTimeout(changeTimeout.value)
 	}
 
 	saving.value = commentEdit.id
