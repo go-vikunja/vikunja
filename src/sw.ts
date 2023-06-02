@@ -6,7 +6,7 @@ import {getFullBaseUrl} from './helpers/getFullBaseUrl'
 declare let self: ServiceWorkerGlobalScope
 
 const fullBaseUrl = getFullBaseUrl()
-const workboxVersion = 'v6.6.1'
+const workboxVersion = 'v7.0.0'
 
 importScripts(`${fullBaseUrl}workbox-${workboxVersion}/workbox-sw.js`)
 workbox.setConfig({
