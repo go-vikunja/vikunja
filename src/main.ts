@@ -24,6 +24,7 @@ declare global {
 		SENTRY_ENABLED: boolean;
 		SENTRY_DSN: string;
 		PROJECT_INFINITE_NESTING_ENABLED: boolean;
+		ALLOW_ICON_CHANGES: boolean;
 	}
 }
 

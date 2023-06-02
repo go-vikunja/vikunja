@@ -9,7 +9,7 @@ import {MILLISECONDS_A_HOUR} from '@/constants/date'
 const now = useNow({
 	interval: MILLISECONDS_A_HOUR,
 })
-const Logo = computed(() => now.value.getMonth() === 5 ? LogoFullPride : LogoFull)
+const Logo = computed(() => window.ALLOW_ICON_CHANGES && now.value.getMonth() === 5 ? LogoFullPride : LogoFull)
 </script>
 
 <template>
