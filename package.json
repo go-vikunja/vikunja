@@ -88,7 +88,7 @@
     "zhyswan-vuedraggable": "4.1.3"
   },
   "devDependencies": {
-    "@4tw/cypress-drag-drop": "2.2.3",
+    "@4tw/cypress-drag-drop": "2.2.4",
     "@cypress/vite-dev-server": "5.0.5",
     "@cypress/vue": "5.0.5",
     "@faker-js/faker": "8.0.2",

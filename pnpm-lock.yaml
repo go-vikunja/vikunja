@@ -136,8 +136,8 @@ dependencies:
 
 devDependencies:
   '@4tw/cypress-drag-drop':
-    specifier: 2.2.3
-    version: 2.2.3(cypress@12.13.0)
+    specifier: 2.2.4
+    version: 2.2.4(cypress@12.13.0)
   '@cypress/vite-dev-server':
     specifier: 5.0.5
     version: 5.0.5
@@ -297,8 +297,8 @@ devDependencies:
 
 packages:
 
-  /@4tw/cypress-drag-drop@2.2.3(cypress@12.13.0):
-    resolution: {integrity: sha512-ADMNoELeQdcGLPjfTJ5jWupBKU3rmQAnTqaRhuEa3hQGZ6suR49Ya5SReUrwvJnfAR4pgMcnSkqLqi1F4EPuwA==}
+  /@4tw/cypress-drag-drop@2.2.4(cypress@12.13.0):
+    resolution: {integrity: sha512-6mmjJ0SHjciI0JNofdVcN1LYLbvUcUT3oY2O+1HaTlQlpKPlX9kBc040Sik6RYFK7cgWvUNwoDoDoGSKA4IS/g==}
     peerDependencies:
       cypress: ^2.1.0 || ^3.1.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0 || ^12.0.0
     dependencies:
