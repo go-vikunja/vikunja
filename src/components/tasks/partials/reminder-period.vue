@@ -81,6 +81,7 @@
 <script setup lang="ts">
 import {reactive, ref, watch, type PropType, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {toRef} from '@vueuse/core'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Popup from '@/components/misc/popup.vue'
@@ -109,6 +110,8 @@ const emit = defineEmits(['update:modelValue'])
 
 const reminder = ref<ITaskReminder>()
 
+const showForm = ref(false)
+
 const periodInput = reactive({
 	duration: {
 		days: 0,
@@ -120,8 +123,9 @@ const periodInput = reactive({
 	sign: -1,
 })
 
+const modelValue = toRef(props, 'modelValue')
 watch(
-		props.modelValue,
+		modelValue,
 		(value) => {
 			reminder.value = value
 			if (value && value.relativeTo != null) {
@@ -130,12 +134,11 @@ watch(
 				periodInput.sign = value.relativePeriod <= 0 ? -1 : 1
 			} else {
 				reminder.value = new TaskReminderModel()
-				isShowForm.value = true
+				showForm.value = true
 			}
 		},
 		{immediate: true},
 )
-
 
 function updateData() {
 	changed.value = true
@@ -156,7 +159,7 @@ const changed = ref(false)
 
 function close() {
 	setTimeout(() => {
-		isShowForm.value = false
+		showForm.value = false
 		if (changed.value) {
 			changed.value = false
 		}
