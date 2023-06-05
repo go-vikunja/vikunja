@@ -17,6 +17,7 @@
 package migration
 
 import (
+	"code.vikunja.io/api/pkg/log"
 	"time"
 
 	"src.techknowlogick.com/xormigrate"
@@ -245,6 +246,11 @@ func setTeamNamespacesShare(tx *xorm.Engine, namespacesToProjects map[int64]*pro
 	}
 
 	for _, tn := range teamNamespaces {
+		if _, exists := namespacesToProjects[tn.NamespaceID]; !exists {
+			log.Warningf("Namespace %d does not exist but is shared with team %d - this is probably caused by an old share which was not properly deleted.", tn.NamespaceID, tn.TeamID)
+			continue
+		}
+
 		_, err = tx.Insert(&teamProject20221228112131{
 			TeamID:    tn.TeamID,
 			Right:     tn.Right,
@@ -268,6 +274,11 @@ func setUserNamespacesShare(tx *xorm.Engine, namespacesToProjects map[int64]*pro
 	}
 
 	for _, un := range userNamespace {
+		if _, exists := namespacesToProjects[un.NamespaceID]; !exists {
+			log.Warningf("Namespace %d does not exist but is shared with user %d - this is probably caused by an old share which was not properly deleted.", un.NamespaceID, un.UserID)
+			continue
+		}
+
 		_, err = tx.Insert(&projectUser20221228112131{
 			UserID:    un.UserID,
 			Right:     un.Right,
