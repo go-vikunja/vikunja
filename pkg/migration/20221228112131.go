@@ -17,8 +17,9 @@
 package migration
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"time"
+
+	"code.vikunja.io/api/pkg/log"
 
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
