@@ -80,6 +80,7 @@ issues:
       linters:
         - goheader
         - misspell
+        - gosmopolitan
     - text: "Missed string"
       linters:
         - goheader
