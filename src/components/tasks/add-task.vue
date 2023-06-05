@@ -1,7 +1,7 @@
 <template>
 	<div class="task-add" ref="taskAdd">
 		<div class="add-task__field field is-grouped">
-			<p class="control has-icons-left is-expanded">
+			<p class="control has-icons-left has-icons-right is-expanded">
 				<textarea
 					class="add-task-textarea input"
 					:class="{'textarea-empty': newTaskTitle === ''}"
@@ -16,6 +16,7 @@
 				<span class="icon is-small is-left">
 					<icon icon="tasks"/>
 				</span>
+				<quick-add-magic :highlight-hint-icon="taskAddHovered"/>
 			</p>
 			<p class="control">
 				<x-button
@@ -32,11 +33,10 @@
 				</x-button>
 			</p>
 		</div>
-		<Expandable :open="errorMessage !== '' || taskAddFocused || taskAddHovered && debouncedTaskAddHovered">
+		<Expandable :open="errorMessage !== ''">
 			<p class="pt-3 mt-0 help is-danger" v-if="errorMessage !== ''">
 				{{ errorMessage }}
 			</p>
-			<quick-add-magic v-else class="quick-add-magic" />
 		</Expandable>
 	</div>
 </template>
@@ -44,7 +44,7 @@
 <script setup lang="ts">
 import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {refDebounced, useElementHover, useFocusWithin} from '@vueuse/core'
+import {useElementHover} from '@vueuse/core'
 
 import {RELATION_KIND} from '@/types/IRelationKind'
 import type {ITask} from '@/modelTypes/ITask'
@@ -77,8 +77,6 @@ const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
 const taskStore = useTaskStore()
 
-const taskAdd = ref<HTMLTextAreaElement | null>(null)
-
 // enable only if we don't have a modal
 // onStartTyping(() => {
 // 	if (newTaskInput.value === null || document.activeElement === newTaskInput.value) {
@@ -87,10 +85,8 @@ const taskAdd = ref<HTMLTextAreaElement | null>(null)
 // 	newTaskInput.value.focus()
 // })
 
-const { focused: taskAddFocused } = useFocusWithin(taskAdd)
-
+const taskAdd = ref<HTMLTextAreaElement | null>(null)
 const taskAddHovered = useElementHover(taskAdd)
-const debouncedTaskAddHovered = refDebounced(taskAddHovered, 500)
 
 const errorMessage = ref('')
 
@@ -244,7 +240,14 @@ defineExpose({
 	text-overflow: ellipsis;
 }
 
-.quick-add-magic {
-	padding-top: 0.75rem;
+.control.has-icons-left .icon,
+.control.has-icons-right .icon {
+	transition: all $transition;
+}
+</style>
+
+<style>
+button.show-helper-text {
+	right: 0;
 }
 </style>

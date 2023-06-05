@@ -67,6 +67,7 @@ import {
 	faStar,
 	faSun,
 	faTimesCircle,
+	faCircleQuestion,
 } from '@fortawesome/free-regular-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 
@@ -86,6 +87,7 @@ library.add(faCheckDouble)
 library.add(faChessKnight)
 library.add(faChevronDown)
 library.add(faCircleInfo)
+library.add(faCircleQuestion)
 library.add(faClock)
 library.add(faCloudDownloadAlt)
 library.add(faCloudUploadAlt)

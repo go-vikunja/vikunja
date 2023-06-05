@@ -301,4 +301,9 @@ function prepareFiltersAndLoadTasks() {
   border: none;
   box-shadow: none;
 }
+
+.control.has-icons-left .icon,
+.control.has-icons-right .icon {
+	transition: all $transition;
+}
 </style>
