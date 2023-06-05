@@ -35,8 +35,8 @@ ENV PUID 1000
 ENV PGID 1000
 
 RUN apk --update --no-cache add tzdata tini shadow && \
-    addgroup vikunja && \
-    adduser -s /bin/sh -D -G vikunja vikunja -h /app/vikunja -H
+    addgroup vikunja --gid "$PGID" && \
+    adduser -s /bin/sh -D -G vikunja vikunja --uid "$PUID" -h /app/vikunja -H
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod 0755 /entrypoint.sh && mkdir files
 

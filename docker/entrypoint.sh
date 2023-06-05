@@ -2,7 +2,8 @@
 set -e
 
 if [ -n "$PUID" ] && [ "$PUID" -ne 0 ] && \
-   [ -n "$PGID" ] && [ "$PGID" -ne 0 ] ; then
+   [ -n "$PGID" ] && [ "$PGID" -ne 0 ] && \
+   ([ "$PUID" -ne "$(id -u vikunja)" ] || [ "$PGID" -ne "$(id -g vikunja)" ]) ; then
   echo "info: creating the new user vikunja with $PUID:$PGID"
   groupmod -g "$PGID" -o vikunja
   usermod -u "$PUID" -o vikunja
