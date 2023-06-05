@@ -691,6 +691,14 @@ describe('Parse Task Text', () => {
 			expect(result.assignees).toHaveLength(1)
 			expect(result.assignees[0]).toBe('today')
 		})
+		it('should recognize an email address', () => {
+			const text = 'Lorem Ipsum @email@example.com'
+			const result = parseTaskText(text)
+
+			expect(result.text).toBe('Lorem Ipsum @email@example.com')
+			expect(result.assignees).toHaveLength(1)
+			expect(result.assignees[0]).toBe('email@example.com')
+		})
 	})
 
 	describe('Recurring Dates', () => {

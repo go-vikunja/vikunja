@@ -5,7 +5,6 @@ import router from '@/router'
 import TaskService from '@/services/task'
 import TaskAssigneeService from '@/services/taskAssignee'
 import LabelTaskService from '@/services/labelTask'
-import UserService from '@/services/user'
 
 import {playPop} from '@/helpers/playPop'
 import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
@@ -29,12 +28,21 @@ import {useProjectStore} from '@/stores/projects'
 import {useAttachmentStore} from '@/stores/attachments'
 import {useKanbanStore} from '@/stores/kanban'
 import {useBaseStore} from '@/stores/base'
+import ProjectUserService from '@/services/projectUsers'
+
+interface MatchedAssignee extends IUser {
+	match: string,
+}
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
-function findPropertyByValue(object, key, value) {
-	return Object.values(object).find(
-		(l) => l[key]?.toLowerCase() === value.toLowerCase(),
-	)
+function findPropertyByValue(object, key, value, fuzzy = false) {
+	return Object.values(object).find(l => {
+		if (fuzzy) {
+			return l[key]?.toLowerCase().includes(value.toLowerCase())
+		}
+	
+		return l[key]?.toLowerCase() === value.toLowerCase()
+	})
 }
 
 // Check if the user exists in the search results
@@ -42,9 +50,19 @@ function validateUser(
 	users: IUser[],
 	query: IUser['username'] | IUser['name'] | IUser['email'],
 ) {
-	return findPropertyByValue(users, 'username', query) ||
+	if (users.length === 1) {
+		return (
+			findPropertyByValue(users, 'username', query, true) ||
+			findPropertyByValue(users, 'name', query, true) ||
+			findPropertyByValue(users, 'email', query, true)
+		)
+	}
+	
+	return (
+		findPropertyByValue(users, 'username', query) ||
 		findPropertyByValue(users, 'name', query) ||
 		findPropertyByValue(users, 'email', query)
+	)
 }
 
 // Check if the label exists
@@ -63,14 +81,18 @@ async function addLabelToTask(task: ITask, label: ILabel) {
 	return response
 }
 
-async function findAssignees(parsedTaskAssignees: string[]): Promise<IUser[]> {
+async function findAssignees(parsedTaskAssignees: string[], projectId: number): Promise<MatchedAssignee[]> {
 	if (parsedTaskAssignees.length <= 0) {
 		return []
 	}
 
-	const userService = new UserService()
+	const userService = new ProjectUserService()
 	const assignees = parsedTaskAssignees.map(async a => {
-		const users = await userService.getAll({}, {s: a})
+		const users = (await userService.getAll({projectId}, {s: a}))
+			.map(u => ({
+				...u,
+				match: a,
+			}))
 		return validateUser(users, a)
 	})
 
@@ -388,15 +410,15 @@ export const useTaskStore = defineStore('task', () => {
 			cancel()
 			throw new Error('NO_PROJECT')
 		}
-	
-		const assignees = await findAssignees(parsedTask.assignees)
-		
+
+		const assignees = await findAssignees(parsedTask.assignees, foundProjectId)
+
 		// Only clean up those assignees from the task title which actually exist
 		let cleanedTitle = parsedTask.text
 		if (assignees.length > 0) {
 			const assigneePrefix = PREFIXES[quickAddMagicMode]?.assignee
 			if (assigneePrefix) {
-				cleanedTitle = cleanupItemText(cleanedTitle, assignees.map(a  => a.username), assigneePrefix)
+				cleanedTitle = cleanupItemText(cleanedTitle, assignees.map(a  => a.match), assigneePrefix)
 			}
 		}
 

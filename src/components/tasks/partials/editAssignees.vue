@@ -12,11 +12,14 @@
 	>
 		<template #tag="{item: user}">
 			<span class="assignee">
-				<user :avatar-size="32" :show-username="false" :user="user"/>
+				<user :avatar-size="32" :show-username="false" :user="user" class="m-2"/>
 				<BaseButton @click="removeAssignee(user)" class="remove-assignee" v-if="!disabled">
 					<icon icon="times"/>
 				</BaseButton>
 			</span>
+		</template>
+		<template #searchResult="{option: user}">
+			<user :avatar-size="24" :show-username="true" :user="user"/>
 		</template>
 	</Multiselect>
 </template>
@@ -104,11 +107,6 @@ async function removeAssignee(user: IUser) {
 }
 
 async function findUser(query: string) {
-	if (query === '') {
-		foundUsers.value = []
-		return
-	}
-
 	const response = await projectUserService.getAll({projectId: props.projectId}, {s: query}) as IUser[]
 
 	// Filter the results to not include users who are already assigned

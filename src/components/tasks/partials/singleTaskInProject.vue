@@ -56,6 +56,7 @@
 				:key="task.id + 'assignee' + a.id + i"
 				:show-username="false"
 				:user="a"
+				class="m-2"
 			/>
 
 			<!-- FIXME: use popup -->

@@ -109,7 +109,9 @@ const getItemsFromPrefix = (text: string, prefix: string): string[] => {
 			return
 		}
 
-		p = p.replace(prefix, '')
+		if (p.startsWith(prefix)) {
+			p = p.substring(1)
+		}
 
 		let itemText
 		if (p.charAt(0) === '\'') {
@@ -120,8 +122,8 @@ const getItemsFromPrefix = (text: string, prefix: string): string[] => {
 			// Only until the next space
 			itemText = p.split(' ')[0]
 		}
-		
-		if(itemText !== '')  {
+
+		if (itemText !== '') {
 			items.push(itemText)
 		}
 	})
@@ -278,13 +280,16 @@ const getRepeats = (text: string): repeatParsedResult => {
 
 export const cleanupItemText = (text: string, items: string[], prefix: string): string => {
 	items.forEach(l => {
+		if (l === '') {
+			return
+		}
 		text = text
-			.replace(`${prefix}'${l}' `, '')
-			.replace(`${prefix}'${l}'`, '')
-			.replace(`${prefix}"${l}" `, '')
-			.replace(`${prefix}"${l}"`, '')
-			.replace(`${prefix}${l} `, '')
-			.replace(`${prefix}${l}`, '')
+			.replace(new RegExp(`\\${prefix}'${l}' `, 'ig'), '')
+			.replace(new RegExp(`\\${prefix}'${l}'`, 'ig'), '')
+			.replace(new RegExp(`\\${prefix}"${l}" `, 'ig'), '')
+			.replace(new RegExp(`\\${prefix}"${l}"`, 'ig'), '')
+			.replace(new RegExp(`\\${prefix}${l} `, 'ig'), '')
+			.replace(new RegExp(`\\${prefix}${l}`, 'ig'), '')
 	})
 	return text
 }
