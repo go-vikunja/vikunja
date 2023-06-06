@@ -619,7 +619,7 @@ steps:
       - tar -xzf vikunja-theme.tar.gz
 
   - name: build
-    image: klakegg/hugo:0.111.0
+    image: klakegg/hugo:0.111.3
     pull: always
     commands:
       - cd docs
@@ -743,6 +743,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 3718aeea48ffcb4b7e696b152dfabfeec48cb11e80231260eb089d4b5f4dc54a
+hmac: c4ad4289fab459ac54863a76cc07bdae46d2641726d160c557279711181e99d0
 
 ...
