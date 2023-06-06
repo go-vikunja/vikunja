@@ -32,7 +32,7 @@
 						<icon icon="grip-lines"/>
 					</span>
 				</div>
-				<span class="list-menu-title">{{ getProjectTitle(project) }}</span>
+				<span class="project-menu-title">{{ getProjectTitle(project) }}</span>
 			</BaseButton>
 			<BaseButton
 				v-if="project.id > 0"
@@ -154,5 +154,10 @@ const canNestDeeper = computed(() => canNestProjectDeeper(props.level))
 		margin: 0 !important;
 		padding: 0 !important;
 	}
+}
+
+.project-menu-title {
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 </style>
