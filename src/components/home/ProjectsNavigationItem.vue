@@ -101,6 +101,7 @@ const childProjects = computed(() => {
 	}
 
 	return projectStore.getChildProjects(props.project.id)
+		.filter(p => !p.isArchived)
 		.sort((a, b) => a.position - b.position)
 })
 
