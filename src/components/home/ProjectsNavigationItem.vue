@@ -145,6 +145,7 @@ const canNestDeeper = computed(() => canNestProjectDeeper(props.level))
 	align-items: center;
 	justify-content: flex-start;
 	margin-right: .25rem;
+	flex-shrink: 0;
 
 	.color-bubble, .icon {
 		transition: all $transition;
