@@ -160,8 +160,8 @@ devDependencies:
     specifier: 2.0.1
     version: 2.0.1
   '@types/codemirror':
-    specifier: 5.60.7
-    version: 5.60.7
+    specifier: 5.60.8
+    version: 5.60.8
   '@types/dompurify':
     specifier: 3.0.2
     version: 3.0.2
@@ -2928,8 +2928,8 @@ packages:
       '@types/har-format': 1.2.10
     dev: true
 
-  /@types/codemirror@5.60.7:
-    resolution: {integrity: sha512-QXIC+RPzt/1BGSuD6iFn6UMC9TDp+9hkOANYNPVsjjrDdzKphfRkwQDKGp2YaC54Yhz0g6P5uYTCCibZZEiMAA==}
+  /@types/codemirror@5.60.8:
+    resolution: {integrity: sha512-VjFgDF/eB+Aklcy15TtOTLQeMjTo07k7KAjql8OK5Dirr7a6sJY4T1uVBDuTVG9VEmn1uUsohOpYnVfgC6/jyw==}
     dependencies:
       '@types/tern': 0.23.4
 
@@ -4869,7 +4869,7 @@ packages:
   /easymde@2.18.0:
     resolution: {integrity: sha512-IxVVUxNWIoXLeqtBU4BLc+eS/ScYhT1Dcb6yF5Wchoj1iXAV+TIIDWx+NCaZhY7RcSHqDPKllbYq7nwGKILnoA==}
     dependencies:
-      '@types/codemirror': 5.60.7
+      '@types/codemirror': 5.60.8
       '@types/marked': 4.3.1
       codemirror: 5.65.13
       codemirror-spell-checker: 1.1.2
