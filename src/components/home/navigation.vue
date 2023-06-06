@@ -105,7 +105,7 @@ const favoriteProjects = computed(() => projectStore.favoriteProjects)
 .menu-container {
 	background: var(--site-background);
 	color: $vikunja-nav-color;
-	padding: 0 0 1rem;
+	padding: 1rem 0;
 	transition: transform $transition-duration ease-in;
 	position: fixed;
 	top: $navbar-height;
@@ -114,7 +114,6 @@ const favoriteProjects = computed(() => projectStore.favoriteProjects)
 	transform: translateX(-100%);
 	overflow-x: auto;
 	width: $navbar-width;
-	margin-top: 1rem;
 
 	@media screen and (max-width: $tablet) {
 		top: 0;
