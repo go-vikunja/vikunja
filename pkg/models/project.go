@@ -438,6 +438,9 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, parentProjectIDs []int
 
 	*projects = append(*projects, currentProjects...)
 
+	// If we don't reset the limit for subprojects, it will be impossible to fetch all subprojects.
+	opts.page = -1
+
 	return getAllProjectsForUser(s, userID, newParentIDs, opts, projects, oldTotalCount+totalCount)
 }
 
