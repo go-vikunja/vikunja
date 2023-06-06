@@ -17,7 +17,7 @@
   "ready": {
     "loading": "Chargement de Vikunja en cours…",
     "errorOccured": "An error occurred:",
-    "checkApiUrl": "Veuillez vérifier que l'URL de l'API est valide.",
+    "checkApiUrl": "Veuillez vérifier que l’adresse de l’API est valide.",
     "noApiUrlConfigured": "Aucune URL API n'a été configurée. Veuillez en définir une ci-dessous :"
   },
   "offline": {
@@ -471,7 +471,7 @@
       "quote": "Citation",
       "unorderedList": "Liste non ordonnée",
       "orderedList": "Ordered List",
-      "cleanBlock": "Bloc propre",
+      "cleanBlock": "Nettoyer le code",
       "link": "Lien",
       "image": "Image",
       "table": "Tableau",
@@ -923,7 +923,7 @@
     "1013": "Le nouveau mot de passe est vide.",
     "1014": "L’ancien mot de passe est vide.",
     "1015": "Cette personne utilise déjà un MDP à usage unique.",
-    "1016": "Cette personne utilise un MDP à usage unique.",
+    "1016": "Le mot de passe à usage unique n’est pas activé pour cet utilisateur ou cette utilisatrice.",
     "1017": "Code à usage unique invalide.",
     "1018": "Le paramètre du type d’avatar de l’utilisateur·rice est invalide.",
     "2001": "L’identifiant ne peut pas être vide ou égal à 0.",
