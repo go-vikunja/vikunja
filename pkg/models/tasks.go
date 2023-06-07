@@ -579,7 +579,7 @@ func getRemindersForTasks(s *xorm.Session, taskIDs []int64) (reminders []*TaskRe
 }
 
 func (t *Task) setIdentifier(project *Project) {
-	if project == nil {
+	if project == nil || (project != nil && project.Identifier == "") {
 		t.Identifier = "#" + strconv.FormatInt(t.Index, 10)
 		return
 	}

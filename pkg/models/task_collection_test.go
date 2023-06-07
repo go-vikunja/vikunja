@@ -404,7 +404,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task21 := &Task{
 		ID:           21,
 		Title:        "task #21",
-		Identifier:   "-1",
+		Identifier:   "#1",
 		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
@@ -417,7 +417,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task22 := &Task{
 		ID:           22,
 		Title:        "task #22",
-		Identifier:   "-1",
+		Identifier:   "#1",
 		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
@@ -430,7 +430,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task23 := &Task{
 		ID:           23,
 		Title:        "task #23",
-		Identifier:   "-1",
+		Identifier:   "#1",
 		Index:        1,
 		CreatedByID:  6,
 		CreatedBy:    user6,
