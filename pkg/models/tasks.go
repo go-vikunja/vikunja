@@ -1716,5 +1716,9 @@ func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	*t = *taskMap[t.ID]
 
 	t.Subscription, err = GetSubscription(s, SubscriptionEntityTask, t.ID, a)
+	if err != nil && IsErrProjectDoesNotExist(err) {
+		return nil
+	}
+
 	return
 }
