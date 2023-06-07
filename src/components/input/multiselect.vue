@@ -204,7 +204,7 @@ const props = defineProps({
 	autocompleteEnabled: {
 		type: Boolean,
 		default: true,
-	}
+	},
 })
 
 const emit = defineEmits<{
