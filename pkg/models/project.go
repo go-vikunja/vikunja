@@ -915,17 +915,6 @@ func (p *Project) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Router /projects/{id} [delete]
 func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 
-	fullList, err := GetProjectSimpleByID(s, p.ID)
-	if err != nil {
-		return
-	}
-
-	// Delete the project
-	_, err = s.ID(p.ID).Delete(&Project{})
-	if err != nil {
-		return
-	}
-
 	// Delete all tasks on that project
 	// Using the loop to make sure all related entities to all tasks are properly deleted as well.
 	tasks, _, _, err := getRawTasksForProjects(s, []*Project{p}, a, &taskOptions{})
@@ -940,13 +929,24 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		}
 	}
 
-	err = fullList.DeleteBackgroundFileIfExists()
+	fullProject, err := GetProjectSimpleByID(s, p.ID)
+	if err != nil {
+		return
+	}
+
+	err = fullProject.DeleteBackgroundFileIfExists()
+	if err != nil {
+		return
+	}
+
+	// Delete the project
+	_, err = s.ID(p.ID).Delete(&Project{})
 	if err != nil {
 		return
 	}
 
 	return events.Dispatch(&ProjectDeletedEvent{
-		Project: p,
+		Project: fullProject,
 		Doer:    a,
 	})
 }

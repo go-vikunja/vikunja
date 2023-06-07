@@ -136,8 +136,8 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		return err
 	}
 
-	for _, l := range projectsToDelete {
-		err = l.Delete(s, u)
+	for _, p := range projectsToDelete {
+		err = p.Delete(s, u)
 		if err != nil {
 			return err
 		}
