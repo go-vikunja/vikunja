@@ -136,7 +136,7 @@ type TaskDeletedNotification struct {
 // ToMail returns the mail notification for TaskDeletedNotification
 func (n *TaskDeletedNotification) ToMail() *notifications.Mail {
 	return notifications.NewMail().
-		Subject(n.Task.Title + "(" + n.Task.GetFullIdentifier() + ")" + " has been delete").
+		Subject(n.Task.Title + "(" + n.Task.GetFullIdentifier() + ")" + " has been deleted").
 		Line(n.Doer.GetName() + " has deleted the task " + n.Task.Title + "(" + n.Task.GetFullIdentifier() + ")")
 }
 

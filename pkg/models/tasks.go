@@ -1603,6 +1603,13 @@ func updateTaskLastUpdated(s *xorm.Session, task *Task) error {
 // @Router /tasks/{ID} [delete]
 func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 
+	// duplicate the task for the event
+	fullTask := &Task{ID: t.ID}
+	err = fullTask.ReadOne(s, a)
+	if err != nil {
+		return err
+	}
+
 	if _, err = s.ID(t.ID).Delete(Task{}); err != nil {
 		return err
 	}
@@ -1657,7 +1664,7 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	doer, _ := user.GetFromAuth(a)
 	err = events.Dispatch(&TaskDeletedEvent{
-		Task: t,
+		Task: fullTask,
 		Doer: doer,
 	})
 	if err != nil {
