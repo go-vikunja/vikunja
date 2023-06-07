@@ -107,24 +107,6 @@ type ProjectBackgroundType struct {
 // ProjectBackgroundUpload represents the project upload background type
 const ProjectBackgroundUpload string = "upload"
 
-// SharedProjectsPseudoProject is a pseudo project used to hold shared projects
-var SharedProjectsPseudoProject = &Project{
-	ID:          -1,
-	Title:       "Shared Projects",
-	Description: "Projects of other users shared with you via teams or directly.",
-	Created:     time.Now(),
-	Updated:     time.Now(),
-}
-
-// SavedFiltersPseudoProject is a pseudo parent project used to hold saved filters
-var SavedFiltersPseudoProject = &Project{
-	ID:          -3,
-	Title:       "Filters",
-	Description: "Saved filters.",
-	Created:     time.Now(),
-	Updated:     time.Now(),
-}
-
 // FavoritesPseudoProject holds all tasks marked as favorites
 var FavoritesPseudoProject = Project{
 	ID:          -1,
@@ -190,8 +172,8 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 		return nil, 0, 0, err
 	}
 
-	if savedFiltersProject != nil {
-		prs = append(prs, savedFiltersProject)
+	if len(savedFiltersProject) > 0 {
+		prs = append(prs, savedFiltersProject...)
 	}
 
 	/////////////////
@@ -480,7 +462,7 @@ func getRawProjectsForUser(s *xorm.Session, opts *projectOptions) (projects []*P
 	return allProjects, len(allProjects), totalItems, err
 }
 
-func getSavedFilterProjects(s *xorm.Session, doer *user.User) (savedFiltersProject *Project, err error) {
+func getSavedFilterProjects(s *xorm.Session, doer *user.User) (savedFiltersProjects []*Project, err error) {
 	savedFilters, err := getSavedFiltersForUser(s, doer)
 	if err != nil {
 		return
@@ -490,15 +472,10 @@ func getSavedFilterProjects(s *xorm.Session, doer *user.User) (savedFiltersProje
 		return nil, nil
 	}
 
-	savedFiltersPseudoParentProject := SavedFiltersPseudoProject
-	savedFiltersPseudoParentProject.OwnerID = doer.ID
-	savedFiltersProject = &Project{}
-	*savedFiltersProject = *savedFiltersPseudoParentProject
-
 	for _, filter := range savedFilters {
 		filterProject := filter.toProject()
-		filterProject.ParentProjectID = savedFiltersProject.ID
 		filterProject.Owner = doer
+		savedFiltersProjects = append(savedFiltersProjects, filterProject)
 	}
 
 	return
