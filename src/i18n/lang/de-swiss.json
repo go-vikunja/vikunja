@@ -76,8 +76,8 @@
         "savedSuccess": "Die Iihstellige sind erfolgriich aktualisiert wordä.",
         "emailReminders": "Schick mir e Errinnerig für Uufgabe per E-Mail",
         "overdueReminders": "Sende mir jeden Tag eine Zusammenfassung meiner überfälligen Aufgaben",
-        "discoverableByName": "Anderi Lüüt chend mi findä, wenn si nach miim Name sueched",
-        "discoverableByEmail": "Anderi Benutzer chend mich finde, wenns mini voll E-Mail Adressä sueched",
+        "discoverableByName": "Erlaube anderen Benutzer:innen, mich als Mitglied zu Teams oder Projekten hinzuzufügen, wenn sie nach meinem Namen suchen",
+        "discoverableByEmail": "Erlaube anderen Benutzer:innen, mich als Mitglied zu Teams oder Projekten hinzuzufügen, wenn sie nach meiner vollständigen E-Mail Adresse suchen",
         "playSoundWhenDone": "Spil es Tönli ab, wenn en Task als fertig markiert wird",
         "weekStart": "D'Wuche fangt ah am",
         "weekStartSunday": "Sunntig",
@@ -734,8 +734,7 @@
       "invalidAmount": "Bitte mehr als 0 eingeben."
     },
     "quickAddMagic": {
-      "hint": "Du chasch Quick Add Magic verwendä",
-      "what": "Was?",
+      "hint": "Verwende magische Präfixe, um Fälligkeitsdaten, Zuweisungen und andere Aufgabeneigenschaften zu definieren.",
       "title": "Quick Add Magic",
       "intro": "Bim erstelle vonere Uufgab, chasch du spezielli Schlüsselwörter verwende, umm Attribute direkt zu dere Uufgab hinzuezfüege. Das Erlaubts, um pblichi Attribute schneller zu Uufgabe hinzuezfüege.",
       "multiple": "Du chasch da mehrmals mache.",

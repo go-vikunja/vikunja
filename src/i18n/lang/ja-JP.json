@@ -76,8 +76,8 @@
         "savedSuccess": "設定の更新に成功しました。",
         "emailReminders": "タスクのリマインダーをメールで送信する",
         "overdueReminders": "期限切れタスクのリマインダーを毎日メールで送信する",
-        "discoverableByName": "名前で検索したとき他のユーザーから見つけられるようにする",
-        "discoverableByEmail": "メールアドレスで検索したとき他のユーザーから見つけられるようにする",
+        "discoverableByName": "他のユーザーが名前で検索したときチームやプロジェクトのメンバーとして追加できるようにする",
+        "discoverableByEmail": "他のユーザーがメールアドレスで検索したときチームやプロジェクトのメンバーとして追加できるようにする",
         "playSoundWhenDone": "タスクを完了したとき音を鳴らす",
         "weekStart": "週の始まり",
         "weekStartSunday": "日曜日",
@@ -666,22 +666,22 @@
       "empty": "説明文はありません。"
     },
     "assignee": {
-      "placeholder": "Type to assign a user…",
-      "selectPlaceholder": "Assign this user",
-      "assignSuccess": "The user has been assigned successfully.",
-      "unassignSuccess": "The user has been unassigned successfully."
+      "placeholder": "担当者を入力…",
+      "selectPlaceholder": "担当者に割り当てる",
+      "assignSuccess": "担当者が正常に割り当てられました。",
+      "unassignSuccess": "担当者から正常に解除されました。"
     },
     "label": {
-      "placeholder": "Type to add a new label…",
-      "createPlaceholder": "Add this as new label",
-      "addSuccess": "The label has been added successfully.",
-      "createSuccess": "The label has been created successfully.",
-      "removeSuccess": "The label has been removed successfully.",
-      "addCreateSuccess": "The label has been created and added successfully.",
+      "placeholder": "追加するラベルを入力…",
+      "createPlaceholder": "新しいラベルを追加",
+      "addSuccess": "ラベルは正常に追加されました。",
+      "createSuccess": "ラベルは正常に作成されました。",
+      "removeSuccess": "ラベルは正常に削除されました。",
+      "addCreateSuccess": "ラベルは正常に追加・作成されました。",
       "delete": {
-        "header": "Delete this label",
-        "text1": "Are you sure you want to delete this label?",
-        "text2": "This will remove it from all tasks and cannot be restored."
+        "header": "ラベルの削除",
+        "text1": "このラベルを削除して本当によろしいですか？",
+        "text2": "すべてのタスクから削除されます。この操作は元に戻せません。"
       }
     },
     "priority": {
@@ -696,11 +696,11 @@
       "add": "新しい関連タスクの追加",
       "new": "新しい関連タスクの作成",
       "searchPlaceholder": "追加する関連タスクのキーワードを入力…",
-      "createPlaceholder": "Add this as new related task",
+      "createPlaceholder": "新しい関連タスクを追加",
       "differentProject": "This task belongs to a different project.",
       "noneYet": "関連タスクはまだありません。",
       "delete": "関連タスクの削除",
-      "deleteText1": "Are you sure you want to delete this task relation?",
+      "deleteText1": "この関連タスクを削除して本当によろしいですか？",
       "select": "Select a relation kind",
       "taskRequired": "Please select a task or enter a new task title.",
       "kinds": {
@@ -734,8 +734,7 @@
       "invalidAmount": "0以上を入力してください。"
     },
     "quickAddMagic": {
-      "hint": "You can use Quick Add Magic",
-      "what": "What?",
+      "hint": "Use magic prefixes to define due dates, assignees and other task properties.",
       "title": "Quick Add Magic",
       "intro": "When creating a task, you can use special keywords to directly add attributes to the newly created task. This allows to add commonly used attributes to tasks much faster.",
       "multiple": "You can use this multiple times.",

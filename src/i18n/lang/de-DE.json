@@ -76,8 +76,8 @@
         "savedSuccess": "Die Einstellungen wurden erfolgreich aktualisiert.",
         "emailReminders": "Erinnerungen an Aufgaben per E-Mail senden",
         "overdueReminders": "Sende mir jeden Tag eine Zusammenfassung meiner überfälligen Aufgaben",
-        "discoverableByName": "Andere können mich finden, wenn sie nach meinem Namen suchen",
-        "discoverableByEmail": "Andere können mich finden, wenn sie nach meiner kompletten E-Mail-Adresse suchen",
+        "discoverableByName": "Erlaube anderen Benutzer:innen, mich als Mitglied zu Teams oder Projekten hinzuzufügen, wenn sie nach meinem Namen suchen",
+        "discoverableByEmail": "Erlaube anderen Benutzer:innen, mich als Mitglied zu Teams oder Projekten hinzuzufügen, wenn sie nach meiner vollständigen E-Mail Adresse suchen",
         "playSoundWhenDone": "Einen Ton abspielen, wenn Aufgaben als erledigt markiert werden",
         "weekStart": "Woche beginnt am",
         "weekStartSunday": "Sonntag",
@@ -734,8 +734,7 @@
       "invalidAmount": "Bitte mehr als 0 eingeben."
     },
     "quickAddMagic": {
-      "hint": "Du kannst Quick Add Magic verwenden",
-      "what": "Was?",
+      "hint": "Verwende magische Präfixe, um Fälligkeitsdaten, Zuweisungen und andere Aufgabeneigenschaften zu definieren.",
       "title": "Quick Add Magic",
       "intro": "Beim Erstellen einer Aufgabe kannst du spezielle Schlüsselwörter verwenden, um Attribute direkt zu der neu erstellten Aufgabe hinzuzufügen. Dadurch können häufig verwendete Attribute schneller zu Aufgaben hinzugefügt werden.",
       "multiple": "Du kannst das mehrmals benutzen.",
