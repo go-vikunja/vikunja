@@ -9,6 +9,7 @@
 		label="name"
 		:select-placeholder="$t('task.assignee.selectPlaceholder')"
 		v-model="assignees"
+		:autocomplete-enabled="false"
 	>
 		<template #tag="{item: user}">
 			<span class="assignee">

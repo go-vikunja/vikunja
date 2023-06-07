@@ -32,6 +32,8 @@
 					@keydown.down.exact.prevent="() => preSelect(0)"
 					ref="searchInput"
 					@focus="handleFocus"
+					:autocomplete="autocompleteEnabled ? undefined : 'off'"
+					:spellcheck="autocompleteEnabled ? undefined : 'false'"
 				/>
 			</div>
 		</div>
@@ -196,6 +198,13 @@ const props = defineProps({
 		type: Boolean,
 		default: true,
 	},
+	/**
+	 * If false, the search input will get the autocomplete="off" attributes attached to it.
+	 */
+	autocompleteEnabled: {
+		type: Boolean,
+		default: true,
+	}
 })
 
 const emit = defineEmits<{
