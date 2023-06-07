@@ -151,6 +151,9 @@ func (*Task) TableName() string {
 // GetFullIdentifier returns the task identifier if the task has one and the index prefixed with # otherwise.
 func (t *Task) GetFullIdentifier() string {
 	if t.Identifier != "" {
+		if strings.HasPrefix(t.Identifier, "-") {
+			return "#" + strings.TrimPrefix(t.Identifier, "-")
+		}
 		return t.Identifier
 	}
 
