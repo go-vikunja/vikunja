@@ -324,7 +324,7 @@ func TestProject_ReadAll(t *testing.T) {
 		assert.Equal(t, int64(1), ls[1].ID)
 		assert.Equal(t, int64(6), ls[2].ID)
 		assert.Equal(t, int64(-1), ls[23].ID)
-		assert.Equal(t, int64(-3), ls[24].ID)
+		assert.Equal(t, int64(-2), ls[24].ID)
 		_ = s.Close()
 	})
 	t.Run("projects for nonexistant user", func(t *testing.T) {
@@ -349,7 +349,7 @@ func TestProject_ReadAll(t *testing.T) {
 		assert.Equal(t, 3, len(ls))
 		assert.Equal(t, int64(10), ls[0].ID)
 		assert.Equal(t, int64(-1), ls[1].ID)
-		assert.Equal(t, int64(-3), ls[2].ID)
+		assert.Equal(t, int64(-2), ls[2].ID)
 		_ = s.Close()
 	})
 }
