@@ -20,12 +20,16 @@
 					v-if="!canCollapse || childProjects?.length === 0"
 					class="collapse-project-button-placeholder"
 				></span>
-				<div class="color-bubble-handle-wrapper">
+				<div class="color-bubble-handle-wrapper" :class="{'is-draggable': project.id > 0}">
 					<ColorBubble
 						v-if="project.hexColor !== ''"
 						:color="project.hexColor"
 					/>
+					<span v-else-if="project.id < -1" class="saved-filter-icon icon menu-item-icon">
+						<icon icon="filter"/>
+					</span>
 					<span
+						v-if="project.id > 0"
 						class="icon menu-item-icon handle lines-handle"
 						:class="{'has-color-bubble': project.hexColor !== ''}"
 					>
@@ -133,8 +137,11 @@ const canNestDeeper = computed(() => canNestProjectDeeper(props.level))
 	opacity: 1;
 }
 
-.list-menu:hover > div > a > .color-bubble-handle-wrapper > .color-bubble {
-	opacity: 0;
+.list-menu:hover > div > a > .color-bubble-handle-wrapper.is-draggable > {
+	.saved-filter-icon,
+	.color-bubble {
+		opacity: 0;
+	}
 }
 
 .color-bubble-handle-wrapper {
@@ -159,5 +166,10 @@ const canNestDeeper = computed(() => canNestProjectDeeper(props.level))
 .project-menu-title {
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.saved-filter-icon {
+	color: var(--grey-300) !important;
+	font-size: .75rem;
 }
 </style>

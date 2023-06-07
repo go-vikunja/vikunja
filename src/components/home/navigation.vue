@@ -54,7 +54,11 @@
 		/>
 		<template v-else>
 			<nav class="menu" v-if="favoriteProjects">
-				<ProjectsNavigation :model-value="favoriteProjects" :can-edit-order="false" :can-collapse="false"/>
+				<ProjectsNavigation
+					:model-value="favoriteProjects" 
+					:can-edit-order="false"
+					:can-collapse="false"
+				/>
 			</nav>
 
 			<nav class="menu">

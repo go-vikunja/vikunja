@@ -10,17 +10,19 @@
 		tag="menu"
 		item-key="id"
 		:disabled="!canEditOrder"
+		filter=".drag-disabled"
 		:component-data="{
 			type: 'transition-group',
 			name: !drag ? 'flip-list' : null,
 			class: [
 				'menu-list can-be-hidden',
 				{ 'dragging-disabled': !canEditOrder }
-			]
+			],
 		}"
 	>
 		<template #item="{element: project}">
 			<ProjectsNavigationItem
+				:class="{'drag-disabled': project.id < 0}"
 				:project="project"
 				:is-loading="projectUpdating[project.id]"
 				:can-collapse="canCollapse"

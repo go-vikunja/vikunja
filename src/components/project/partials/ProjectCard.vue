@@ -17,7 +17,12 @@
 		/>
 		<span v-if="project.isArchived" class="is-archived" >{{ $t('project.archived') }}</span>
 
-		<div class="project-title" aria-hidden="true">{{ project.title }}</div>
+		<div class="project-title" aria-hidden="true">
+			<span v-if="project.id < -1" class="saved-filter-icon icon">
+				<icon icon="filter"/>
+			</span>
+			{{ project.title }}
+		</div>
 		<BaseButton
 			class="project-button"
 			:aria-label="project.title"
@@ -178,5 +183,10 @@ const projectStore = useProjectStore()
   &.is-visible {
     opacity: 1;
   }
+}
+
+.saved-filter-icon {
+	color: var(--grey-300);
+	font-size: .75em;
 }
 </style>
