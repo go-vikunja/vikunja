@@ -50,6 +50,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
 		OverdueTasksRemindersTime:    "09:00",
+		DefaultProjectID:             4,
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}

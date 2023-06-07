@@ -739,6 +739,17 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		return
 	}
 
+	if project.IsArchived {
+		isDefaultProject, err := project.isDefaultProject(s)
+		if err != nil {
+			return err
+		}
+
+		if isDefaultProject {
+			return &ErrCannotArchiveDefaultProject{ProjectID: project.ID}
+		}
+	}
+
 	// We need to specify the cols we want to update here to be able to un-archive projects
 	colsToUpdate := []string{
 		"title",
@@ -907,6 +918,12 @@ func (p *Project) Create(s *xorm.Session, a web.Auth) (err error) {
 	return p.ReadOne(s, a)
 }
 
+func (p *Project) isDefaultProject(s *xorm.Session) (is bool, err error) {
+	return s.
+		Where("default_project_id = ?", p.ID).
+		Exist(&user.User{})
+}
+
 // Delete implements the delete method of CRUDable
 // @Summary Deletes a project
 // @Description Delets a project
@@ -920,6 +937,14 @@ func (p *Project) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id} [delete]
 func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
+
+	isDefaultProject, err := p.isDefaultProject(s)
+	if err != nil {
+		return err
+	}
+	if isDefaultProject {
+		return &ErrCannotDeleteDefaultProject{ProjectID: p.ID}
+	}
 
 	// Delete all tasks on that project
 	// Using the loop to make sure all related entities to all tasks are properly deleted as well.

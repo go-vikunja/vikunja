@@ -219,6 +219,28 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				assert.True(t, IsErrProjectCannotBelongToAPseudoParentProject(err))
 			})
 		})
+		t.Run("archive default project of the same user", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			project := Project{
+				ID:         4,
+				IsArchived: true,
+			}
+			err := project.Update(s, &user.User{ID: 3})
+			assert.Error(t, err)
+			assert.True(t, IsErrCannotArchiveDefaultProject(err))
+		})
+		t.Run("archive default project of another user", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			project := Project{
+				ID:         4,
+				IsArchived: true,
+			}
+			err := project.Update(s, &user.User{ID: 2})
+			assert.Error(t, err)
+			assert.True(t, IsErrCannotArchiveDefaultProject(err))
+		})
 	})
 }
 
@@ -254,6 +276,26 @@ func TestProject_Delete(t *testing.T) {
 		db.AssertMissing(t, "files", map[string]interface{}{
 			"id": 1,
 		})
+	})
+	t.Run("default project of the same user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		project := Project{
+			ID: 4,
+		}
+		err := project.Delete(s, &user.User{ID: 3})
+		assert.Error(t, err)
+		assert.True(t, IsErrCannotDeleteDefaultProject(err))
+	})
+	t.Run("default project of a different user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		project := Project{
+			ID: 4,
+		}
+		err := project.Delete(s, &user.User{ID: 2})
+		assert.Error(t, err)
+		assert.True(t, IsErrCannotDeleteDefaultProject(err))
 	})
 }
 

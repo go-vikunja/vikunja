@@ -347,6 +347,60 @@ func (err *ErrProjectCannotHaveACyclicRelationship) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrCannotDeleteDefaultProject represents an error where the default project is being deleted
+type ErrCannotDeleteDefaultProject struct {
+	ProjectID int64
+}
+
+// IsErrCannotDeleteDefaultProject checks if an error is a project is archived error.
+func IsErrCannotDeleteDefaultProject(err error) bool {
+	_, ok := err.(*ErrCannotDeleteDefaultProject)
+	return ok
+}
+
+func (err *ErrCannotDeleteDefaultProject) Error() string {
+	return fmt.Sprintf("Default project cannot be deleted [ProjectID: %d]", err.ProjectID)
+}
+
+// ErrCodeCannotDeleteDefaultProject holds the unique world-error code of this error
+const ErrCodeCannotDeleteDefaultProject = 3012
+
+// HTTPError holds the http error description
+func (err *ErrCannotDeleteDefaultProject) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeCannotDeleteDefaultProject,
+		Message:  "This project cannot be deleted because it is the default project of a user.",
+	}
+}
+
+// ErrCannotArchiveDefaultProject represents an error where the default project is being deleted
+type ErrCannotArchiveDefaultProject struct {
+	ProjectID int64
+}
+
+// IsErrCannotArchiveDefaultProject checks if an error is a project is archived error.
+func IsErrCannotArchiveDefaultProject(err error) bool {
+	_, ok := err.(*ErrCannotArchiveDefaultProject)
+	return ok
+}
+
+func (err *ErrCannotArchiveDefaultProject) Error() string {
+	return fmt.Sprintf("Default project cannot be archived [ProjectID: %d]", err.ProjectID)
+}
+
+// ErrCodeCannotArchiveDefaultProject holds the unique world-error code of this error
+const ErrCodeCannotArchiveDefaultProject = 3013
+
+// HTTPError holds the http error description
+func (err *ErrCannotArchiveDefaultProject) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeCannotArchiveDefaultProject,
+		Message:  "This project cannot be archived because it is the default project of a user.",
+	}
+}
+
 // ==============
 // Task errors
 // ==============
