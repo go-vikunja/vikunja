@@ -209,8 +209,10 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Check for saved filters
-	if getSavedFilterIDFromProjectID(p.ID) > 0 {
-		sf, err := getSavedFilterSimpleByID(s, getSavedFilterIDFromProjectID(p.ID))
+	filterID := getSavedFilterIDFromProjectID(p.ID)
+	isFilter := filterID > 0
+	if isFilter {
+		sf, err := getSavedFilterSimpleByID(s, filterID)
 		if err != nil {
 			return err
 		}
@@ -228,7 +230,7 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Check if the project is archived and set it to archived if it is not already archived individually.
-	if !p.IsArchived {
+	if !p.IsArchived && !isFilter {
 		err = p.CheckIsArchived(s)
 		if err != nil {
 			p.IsArchived = true
@@ -254,6 +256,10 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	p.Subscription, err = GetSubscription(s, SubscriptionEntityProject, p.ID, a)
+	if err != nil && IsErrProjectDoesNotExist(err) && isFilter {
+		return nil
+	}
+
 	return
 }
 
