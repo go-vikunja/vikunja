@@ -370,7 +370,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 	}
 	
 	return {
-		buckets: readonly(buckets),
+		buckets,
 		isLoading: readonly(isLoading),
 	
 		getBucketById,
