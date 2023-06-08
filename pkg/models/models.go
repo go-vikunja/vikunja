@@ -69,11 +69,6 @@ func SetEngine() (err error) {
 		return
 	}
 
-	// Cache
-	if config.CacheEnabled.GetBool() && config.CacheType.GetString() == "redis" {
-		db.RegisterTableStructsForCache(GetTables())
-	}
-
 	return nil
 }
 

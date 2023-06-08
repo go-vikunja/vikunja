@@ -87,10 +87,6 @@ const (
 	DatabaseSslRootCert           Key = `database.sslrootcert`
 	DatabaseTLS                   Key = `database.tls`
 
-	CacheEnabled        Key = `cache.enabled`
-	CacheType           Key = `cache.type`
-	CacheMaxElementSize Key = `cache.maxelementsize`
-
 	MailerEnabled       Key = `mailer.enabled`
 	MailerHost          Key = `mailer.host`
 	MailerPort          Key = `mailer.port`
@@ -321,10 +317,6 @@ func InitDefaultConfig() {
 	DatabaseSslRootCert.setDefault("")
 	DatabaseTLS.setDefault("false")
 
-	// Cacher
-	CacheEnabled.setDefault(false)
-	CacheType.setDefault("memory")
-	CacheMaxElementSize.setDefault(1000)
 	// Mailer
 	MailerEnabled.setDefault(false)
 	MailerHost.setDefault("")
@@ -423,10 +415,6 @@ func InitConfig() {
 		}
 	} else {
 		log.Println("No config file found, using default or config from environment variables.")
-	}
-
-	if CacheType.GetString() == "keyvalue" {
-		CacheType.Set(KeyvalueType.GetString())
 	}
 
 	if RateLimitStore.GetString() == "keyvalue" {

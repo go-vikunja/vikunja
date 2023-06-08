@@ -496,47 +496,6 @@ Environment path: `VIKUNJA_DATABASE_TLS`
 
 ---
 
-## cache
-
-
-
-### enabled
-
-If cache is enabled or not
-
-Default: `false`
-
-Full path: `cache.enabled`
-
-Environment path: `VIKUNJA_CACHE_ENABLED`
-
-
-### type
-
-Cache type. Possible values are "keyvalue", "memory" or "redis".
-When choosing "keyvalue" this setting follows the one configured in the "keyvalue" section.
-When choosing "redis" you will need to configure the redis connection separately.
-
-Default: `keyvalue`
-
-Full path: `cache.type`
-
-Environment path: `VIKUNJA_CACHE_TYPE`
-
-
-### maxelementsize
-
-When using memory this defines the maximum size an element can take
-
-Default: `1000`
-
-Full path: `cache.maxelementsize`
-
-Environment path: `VIKUNJA_CACHE_MAXELEMENTSIZE`
-
-
----
-
 ## redis
 
 

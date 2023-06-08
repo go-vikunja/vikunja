@@ -16,21 +16,6 @@
 
 package user
 
-import (
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
-)
-
-// InitDB sets up the database connection to use in this module
-func InitDB() (err error) {
-	// Cache
-	if config.CacheEnabled.GetBool() && config.CacheType.GetString() == "redis" {
-		db.RegisterTableStructsForCache(GetTables())
-	}
-
-	return nil
-}
-
 // GetTables returns all structs which are also a table.
 func GetTables() []interface{} {
 	return []interface{}{

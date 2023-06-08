@@ -17,7 +17,6 @@
 package db
 
 import (
-	"encoding/gob"
 	"fmt"
 	"net/url"
 	"os"
@@ -27,9 +26,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
-	xrc "gitea.com/xorm/xorm-redis-cache"
 	"xorm.io/xorm"
-	"xorm.io/xorm/caches"
 	"xorm.io/xorm/names"
 	"xorm.io/xorm/schemas"
 
@@ -85,28 +82,8 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 	logger := log.NewXormLogger("")
 	engine.SetLogger(logger)
 
-	// Cache
-	// We have to initialize the cache here to avoid import cycles
-	if config.CacheEnabled.GetBool() {
-		switch config.CacheType.GetString() {
-		case "memory":
-			cacher := caches.NewLRUCacher(caches.NewMemoryStore(), config.CacheMaxElementSize.GetInt())
-			engine.SetDefaultCacher(cacher)
-		case "redis":
-			cacher := xrc.NewRedisCacher(config.RedisHost.GetString(), config.RedisPassword.GetString(), xrc.DEFAULT_EXPIRATION, engine.Logger())
-			engine.SetDefaultCacher(cacher)
-		default:
-			log.Info("Did not find a valid cache type. Caching disabled. Please refer to the docs for poosible cache types.")
-		}
-	}
-
 	x = engine
 	return
-}
-
-// RegisterTableStructsForCache registers tables in gob encoding for redis cache
-func RegisterTableStructsForCache(val interface{}) {
-	gob.Register(val)
 }
 
 func initMysqlEngine() (engine *xorm.Engine, err error) {

@@ -29,8 +29,6 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
-	migrator "code.vikunja.io/api/pkg/modules/migration"
-	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/red"
 	"code.vikunja.io/api/pkg/user"
 )
@@ -56,19 +54,7 @@ func InitEngines() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	err = user.InitDB()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
 	err = files.SetEngine()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	err = migrator.InitDB()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	err = notifications.InitDB()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
