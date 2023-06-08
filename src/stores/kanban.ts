@@ -210,6 +210,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		}
 		
 		buckets.value[bucketIndex].tasks.splice(taskIndex, 1)
+		buckets.value[bucketIndex].count--
 	}
 
 	function setBucketLoading({bucketId, loading}: {bucketId: IBucket['id'], loading: boolean}) {
