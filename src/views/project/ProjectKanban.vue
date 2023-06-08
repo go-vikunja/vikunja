@@ -52,10 +52,10 @@
 								:contenteditable="(bucketTitleEditable && canWrite && !collapsedBuckets[bucket.id]) ? true : undefined"
 								:spellcheck="false">{{ bucket.title }}</h2>
 							<span
-								:class="{'is-max': bucket.tasks.length >= bucket.limit}"
+								:class="{'is-max': bucket.count >= bucket.limit}"
 								class="limit"
 								v-if="bucket.limit > 0">
-								{{ bucket.tasks.length }}/{{ bucket.limit }}
+								{{ bucket.count }}/{{ bucket.limit }}
 							</span>
 							<dropdown
 								class="is-right options"
@@ -433,6 +433,19 @@ async function updateTaskPosition(e) {
 	) {
 		newTask.done = newBucket.isDoneBucket
 	}
+	if (
+		oldBucket !== undefined && // This shouldn't actually be `undefined`, but let's play it safe.
+		newBucket.id !== oldBucket.id
+	) {
+		kanbanStore.setBucketById({
+			...oldBucket,
+			count: oldBucket.count - 1,
+		})
+		kanbanStore.setBucketById({
+			...newBucket,
+			count: newBucket.count + 1,
+		})
+	}
 
 	try {
 		await taskStore.update(newTask)
@@ -580,7 +593,7 @@ function shouldAcceptDrop(bucket: IBucket) {
 		// If there is no limit set, dragging & dropping should always work
 		bucket.limit === 0 ||
 		// Disallow dropping to buckets which have their limit reached
-		bucket.tasks.length < bucket.limit
+		bucket.count < bucket.limit
 	)
 }
 

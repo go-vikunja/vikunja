@@ -14,6 +14,7 @@ export default class BucketModel extends AbstractModel<IBucket> implements IBuck
 	tasks: ITask[] = []
 	isDoneBucket = false
 	position = 0
+	count = 0
 	
 	createdBy: IUser = null
 	created: Date = null

@@ -167,6 +167,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		const oldBucket = buckets.value[bucketIndex]
 		const newBucket = {
 			...oldBucket,
+			count: oldBucket.count + 1,
 			tasks: [
 				...oldBucket.tasks,
 				task,

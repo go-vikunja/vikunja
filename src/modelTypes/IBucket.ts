@@ -10,6 +10,7 @@ export interface IBucket extends IAbstract {
 	tasks: ITask[]
 	isDoneBucket: boolean
 	position: number
+	count: number
 	
 	createdBy: IUser
 	created: Date
