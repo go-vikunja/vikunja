@@ -41,6 +41,9 @@ type Bucket struct {
 	// If this bucket is the "done bucket". All tasks moved into this bucket will automatically marked as done. All tasks marked as done from elsewhere will be moved into this bucket.
 	IsDoneBucket bool `xorm:"BOOL" json:"is_done_bucket"`
 
+	// The number of tasks currently in this bucket
+	Count int64 `xorm:"-" json:"count"`
+
 	// The position this bucket has when querying all buckets. See the tasks.position property on how to use this.
 	Position float64 `xorm:"double null" json:"position"`
 
@@ -202,10 +205,12 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 
 		opts.filters[bucketFilterIndex].value = id
 
-		ts, _, _, err := getRawTasksForProjects(s, []*Project{{ID: bucket.ProjectID}}, auth, opts)
+		ts, _, total, err := getRawTasksForProjects(s, []*Project{{ID: bucket.ProjectID}}, auth, opts)
 		if err != nil {
 			return nil, 0, 0, err
 		}
+
+		bucket.Count = total
 
 		tasks = append(tasks, ts...)
 	}
