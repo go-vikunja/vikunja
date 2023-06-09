@@ -36,8 +36,9 @@ import {computed, ref, watch, type PropType} from 'vue'
 import {toRef} from '@vueuse/core'
 import {SECONDS_A_DAY} from '@/constants/date'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
+import {useI18n} from 'vue-i18n'
 
-import {secondsToPeriod} from '@/helpers/time/period'
+import {PeriodUnit, secondsToPeriod} from '@/helpers/time/period'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import {formatDateShort} from '@/helpers/time/formatDate'
 
@@ -46,6 +47,8 @@ import DatepickerInline from '@/components/input/datepickerInline.vue'
 import ReminderPeriod from '@/components/tasks/partials/reminder-period.vue'
 
 import TaskReminderModel from '@/models/taskReminder'
+
+const {t} = useI18n({useScope: 'global'})
 
 const props = defineProps({
 	modelValue: {
@@ -72,16 +75,16 @@ const reminderDate = ref(null)
 const showFormSwitch = ref<null | 'relative' | 'absolute'>(null)
 
 const reminderText = computed(() => {
+	
+	if (reminder.value.relativeTo !== null) {
+		return formatReminder(reminder.value)
+	}
 
 	if (reminder.value.reminder !== null) {
 		return formatDateShort(reminder.value.reminder)
 	}
 
-	if (reminder.value.relativeTo !== null) {
-		return formatReminder(reminder.value)
-	}
-
-	return 'Add a reminder…'
+	return t('task.addReminder')
 })
 
 const modelValue = toRef(props, 'modelValue')
@@ -103,17 +106,65 @@ function setReminderDate() {
 function formatReminder(reminder: TaskReminderModel) {
 
 	const period = secondsToPeriod(reminder.relativePeriod)
-	let periodHuman = ''
-
-	if (period.days > 0) {
-		periodHuman = period.days + ' days'
+	
+	if (period.amount === 0) {
+		switch (reminder.relativeTo) {
+			case REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE:
+				return t('task.reminder.onDueDate')
+			case REMINDER_PERIOD_RELATIVE_TO_TYPES.STARTDATE:
+				return t('task.reminder.onStartDate')
+			case REMINDER_PERIOD_RELATIVE_TO_TYPES.ENDDATE:
+				return t('task.reminder.onEndDate')
+		}
 	}
-
-	if (period.days === 1) {
-		periodHuman = period.days + ' day'
+	
+	const amountAbs = Math.abs(period.amount)
+	
+	let relativeTo = ''
+	switch (reminder.relativeTo) {
+		case REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE:
+			relativeTo = t('task.attributes.dueDate')
+			break
+		case REMINDER_PERIOD_RELATIVE_TO_TYPES.STARTDATE:
+			relativeTo = t('task.attributes.startDate')
+			break
+		case REMINDER_PERIOD_RELATIVE_TO_TYPES.ENDDATE:
+			relativeTo = t('task.attributes.endDate')
+			break
 	}
+	
+	if (reminder.relativePeriod <= 0) {
+		return t('task.reminder.before', {
+			amount: amountAbs,
+			unit: translateUnit(amountAbs, period.unit),
+			type: relativeTo,
+		})
+	}
+	
+	return t('task.reminder.after', {
+		amount: amountAbs,
+		unit: translateUnit(amountAbs, period.unit),
+		type: relativeTo,
+	})
+}
 
-	return periodHuman + ' ' + (reminder.relativePeriod <= 0 ? 'before' : 'after') + ' ' + reminder.relativeTo
+function translateUnit(amount: number, unit: PeriodUnit): string {
+	switch (unit) {
+		case 'seconds':
+			return t('time.units.seconds', amount)
+		case 'minutes':
+			return t('time.units.minutes', amount)
+		case 'hours':
+			return t('time.units.hours', amount)
+		case 'days':
+			return t('time.units.days', amount)
+		case 'weeks':
+			return t('time.units.weeks', amount)
+		case 'months':
+			return t('time.units.months', amount)
+		case 'years':
+			return t('time.units.years', amount)
+	}
 }
 </script>
 

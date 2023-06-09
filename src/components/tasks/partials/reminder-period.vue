@@ -12,20 +12,20 @@
 
 		<div class="select">
 			<select v-model="period.durationUnit" @change="updateData">
-				<option value="minutes">{{ $t('task.reminder.minutes') }}</option>
-				<option value="hours">{{ $t('task.reminder.hours') }}</option>
-				<option value="days">{{ $t('task.reminder.days') }}</option>
-				<option value="weeks">{{ $t('task.reminder.weeks') }}</option>
+				<option value="minutes">{{ $t('time.units.minutes', period.duration) }}</option>
+				<option value="hours">{{ $t('time.units.hours', period.duration) }}</option>
+				<option value="days">{{ $t('time.units.days', period.duration) }}</option>
+				<option value="weeks">{{ $t('time.units.weeks', period.duration) }}</option>
 			</select>
 		</div>
 
 		<div class="select">
 			<select v-model.number="period.sign" @change="updateData">
 				<option value="-1">
-					before
+					{{ $t('task.reminder.beforeShort') }}
 				</option>
 				<option value="1">
-					after
+					{{ $t('task.reminder.afterShort') }}
 				</option>
 			</select>
 		</div>
