@@ -1,33 +1,44 @@
 <template>
 	<div>
+		<Popup @close="showFormSwitch = null">
+			<template #trigger="{toggle}">
+				<SimpleButton
+					@click.prevent.stop="toggle()"
+				>
+					{{ reminderText }}
+				</SimpleButton>
+			</template>
+			<template #content="{isOpen}">
+				<Card class="reminder-options-popup" :class="{'is-open': isOpen}" :padding="false">
+					<div class="options" v-if="showFormSwitch === null">
+						<SimpleButton
+							class="option-button"
+							v-for="p in presets"
+						>
+							{{ formatReminder(p) }}
+						</SimpleButton>
+						<SimpleButton @click="showFormSwitch = 'relative'" class="option-button">
+							Custom
+						</SimpleButton>
+						<SimpleButton @click="showFormSwitch = 'absolute'" class="option-button">
+							Date
+						</SimpleButton>
+					</div>
 
-		{{ reminderText }}
+					<ReminderPeriod
+						v-if="showFormSwitch === 'relative'"
+						v-model="reminder"
+						@update:modelValue="emit('update:modelValue', reminder)"
+					/>
 
-		<div class="options" v-if="showFormSwitch === null">
-			<BaseButton
-				v-for="p in presets"
-			>
-				{{ formatReminder(p) }}
-			</BaseButton>
-			<BaseButton @click="showFormSwitch = 'relative'">
-				Custom
-			</BaseButton>
-			<BaseButton @click="showFormSwitch = 'absolute'">
-				Date
-			</BaseButton>
-		</div>
-
-		<ReminderPeriod
-			v-if="showFormSwitch === 'relative'"
-			v-model="reminder"
-			@update:modelValue="emit('update:modelValue', reminder)"
-		/>
-
-		<DatepickerInline
-			v-if="showFormSwitch === 'absolute'"
-			v-model="reminderDate"
-			@update:modelValue="setReminderDate"
-		/>
+					<DatepickerInline
+						v-if="showFormSwitch === 'absolute'"
+						v-model="reminderDate"
+						@update:modelValue="setReminderDate"
+					/>
+				</Card>
+			</template>
+		</Popup>
 	</div>
 </template>
 
@@ -45,8 +56,11 @@ import {formatDateShort} from '@/helpers/time/formatDate'
 import BaseButton from '@/components/base/BaseButton.vue'
 import DatepickerInline from '@/components/input/datepickerInline.vue'
 import ReminderPeriod from '@/components/tasks/partials/reminder-period.vue'
+import Popup from '@/components/misc/popup.vue'
 
 import TaskReminderModel from '@/models/taskReminder'
+import Card from '@/components/misc/card.vue'
+import SimpleButton from '@/components/input/SimpleButton.vue'
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -75,7 +89,7 @@ const reminderDate = ref(null)
 const showFormSwitch = ref<null | 'relative' | 'absolute'>(null)
 
 const reminderText = computed(() => {
-	
+
 	if (reminder.value.relativeTo !== null) {
 		return formatReminder(reminder.value)
 	}
@@ -106,7 +120,7 @@ function setReminderDate() {
 function formatReminder(reminder: TaskReminderModel) {
 
 	const period = secondsToPeriod(reminder.relativePeriod)
-	
+
 	if (period.amount === 0) {
 		switch (reminder.relativeTo) {
 			case REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE:
@@ -117,9 +131,9 @@ function formatReminder(reminder: TaskReminderModel) {
 				return t('task.reminder.onEndDate')
 		}
 	}
-	
+
 	const amountAbs = Math.abs(period.amount)
-	
+
 	let relativeTo = ''
 	switch (reminder.relativeTo) {
 		case REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE:
@@ -132,7 +146,7 @@ function formatReminder(reminder: TaskReminderModel) {
 			relativeTo = t('task.attributes.endDate')
 			break
 	}
-	
+
 	if (reminder.relativePeriod <= 0) {
 		return t('task.reminder.before', {
 			amount: amountAbs,
@@ -140,7 +154,7 @@ function formatReminder(reminder: TaskReminderModel) {
 			type: relativeTo,
 		})
 	}
-	
+
 	return t('task.reminder.after', {
 		amount: amountAbs,
 		unit: translateUnit(amountAbs, period.unit),
@@ -173,5 +187,29 @@ function translateUnit(amount: number, unit: PeriodUnit): string {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
+}
+
+:deep(.popup) {
+	top: unset;
+}
+
+.reminder-options-popup {
+	width: 300px;
+	z-index: 99;
+
+	@media screen and (max-width: ($tablet)) {
+		width: calc(100vw - 5rem);
+	}
+
+	.option-button {
+		font-size: .85rem;
+		border-radius: 0;
+		padding: .5rem;
+		margin: 0;
+
+		&:hover {
+			background: var(--grey-100);
+		}
+	}
 }
 </style>

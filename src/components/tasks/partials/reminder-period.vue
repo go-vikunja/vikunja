@@ -95,7 +95,6 @@ const modelValue = toRef(props, 'modelValue')
 watch(
 	modelValue,
 	(value) => {
-		console.log({value})
 		const p = secondsToPeriod(value?.relativePeriod)
 		period.value.durationUnit = p.unit
 		period.value.duration = p.amount

@@ -1,8 +1,8 @@
 <template>
 	<div class="datepicker">
-		<BaseButton @click.stop="toggleDatePopup" class="show" :disabled="disabled || undefined">
+		<SimpleButton @click.stop="toggleDatePopup" class="show" :disabled="disabled || undefined">
 			{{ date === null ? chooseDateLabel : formatDateShort(date) }}
-		</BaseButton>
+		</SimpleButton>
 
 		<CustomTransition name="fade">
 			<div v-if="show" class="datepicker-popup" ref="datepickerPopup">
@@ -28,14 +28,14 @@
 <script setup lang="ts">
 import {ref, onMounted, onBeforeUnmount, toRef, watch, type PropType} from 'vue'
 
-import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
+import DatepickerInline from '@/components/input/datepickerInline.vue'
+import SimpleButton from '@/components/input/SimpleButton.vue'
 
 import {formatDateShort} from '@/helpers/time/formatDate'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
 import {useI18n} from 'vue-i18n'
-import DatepickerInline from '@/components/input/datepickerInline.vue'
 
 const props = defineProps({
 	modelValue: {

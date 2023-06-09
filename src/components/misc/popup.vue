@@ -23,11 +23,14 @@ const props = defineProps({
 	},
 })
 
+const emit = defineEmits(['close'])
+
 const open = ref(false)
 const popup = ref<HTMLElement | null>(null)
 
 function close() {
 	open.value = false
+	emit('close')
 }
 
 function toggle() {
