@@ -98,7 +98,7 @@ watch(
 		const p = secondsToPeriod(value?.relativePeriod)
 		period.value.durationUnit = p.unit
 		period.value.duration = p.amount
-		period.value.relativeTo = value?.relativeTo
+		period.value.relativeTo = value?.relativeTo || REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE
 	},
 	{immediate: true},
 )
@@ -117,6 +117,7 @@ function updateData() {
 	display: flex;
 	flex-direction: column;
 	gap: .25rem;
+	padding: .5rem .5rem 0;
 
 	.input, .select select {
 		width: 100% !important;
