@@ -135,6 +135,8 @@ function setReminderDate() {
 	reminder.value.reminder = reminderDate.value === null
 		? null
 		: new Date(reminderDate.value)
+	reminder.value.relativeTo = null
+	reminder.value.relativePeriod = 0
 	updateData()
 }
 
