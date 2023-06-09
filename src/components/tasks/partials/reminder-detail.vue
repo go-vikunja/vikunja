@@ -3,29 +3,30 @@
 
 		{{ reminderText }}
 
-		<div class="presets">
+		<div class="options" v-if="showFormSwitch === null">
 			<BaseButton
 				v-for="p in presets"
 			>
 				{{ formatReminder(p) }}
 			</BaseButton>
-			<BaseButton>
+			<BaseButton @click="showFormSwitch = 'relative'">
 				Custom
+			</BaseButton>
+			<BaseButton @click="showFormSwitch = 'absolute'">
+				Date
 			</BaseButton>
 		</div>
 
 		<ReminderPeriod
-			v-if="showRelativeReminder"
+			v-if="showFormSwitch === 'relative'"
 			v-model="reminder"
-			:disabled="disabled"
-			@update:modelValue="emit('update:modelValue', reminder.value)"
+			@update:modelValue="emit('update:modelValue', reminder)"
 		/>
 
-		<Datepicker
-			v-if="showAbsoluteReminder"
+		<DatepickerInline
+			v-if="showFormSwitch === 'absolute'"
 			v-model="reminderDate"
-			:disabled="disabled"
-			@close-on-change="setReminderDate"
+			@update:modelValue="setReminderDate"
 		/>
 	</div>
 </template>
@@ -34,16 +35,17 @@
 import {computed, ref, watch, type PropType} from 'vue'
 import {toRef} from '@vueuse/core'
 import {SECONDS_A_DAY} from '@/constants/date'
-import {secondsToPeriod} from '@/helpers/time/period'
+import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
+import {secondsToPeriod} from '@/helpers/time/period'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import {formatDateShort} from '@/helpers/time/formatDate'
 
-import Datepicker from '@/components/input/datepicker.vue'
-import ReminderPeriod from '@/components/tasks/partials/reminder-period.vue'
-import TaskReminderModel from '@/models/taskReminder'
 import BaseButton from '@/components/base/BaseButton.vue'
-import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
+import DatepickerInline from '@/components/input/datepickerInline.vue'
+import ReminderPeriod from '@/components/tasks/partials/reminder-period.vue'
+
+import TaskReminderModel from '@/models/taskReminder'
 
 const props = defineProps({
 	modelValue: {
@@ -65,20 +67,9 @@ const presets: TaskReminderModel[] = [
 	{relativePeriod: SECONDS_A_DAY * 7, relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE},
 	{relativePeriod: SECONDS_A_DAY * 30, relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE},
 ]
-const reminderDate = computed({
-	get() {
-		return reminder.value?.reminder
-	},
-	set(newReminderDate) {
-		if (!reminderDate.value) {
-			return
-		}
-		reminder.value.reminder = new Date(reminderDate.value)
-	},
-})
+const reminderDate = ref(null)
 
-const showAbsoluteReminder = computed(() => !reminder.value || !reminder.value?.relativeTo)
-const showRelativeReminder = computed(() => !reminder.value || reminder.value?.relativeTo)
+const showFormSwitch = ref<null | 'relative' | 'absolute'>(null)
 
 const reminderText = computed(() => {
 
@@ -103,10 +94,9 @@ watch(
 )
 
 function setReminderDate() {
-	if (!reminderDate.value) {
-		return
-	}
-	reminder.value.reminder = new Date(reminderDate.value)
+	reminder.value.reminder = reminderDate.value === null
+		? null
+		: new Date(reminderDate.value)
 	emit('update:modelValue', reminder.value)
 }
 
@@ -123,12 +113,12 @@ function formatReminder(reminder: TaskReminderModel) {
 		periodHuman = period.days + ' day'
 	}
 
-	return periodHuman + ' ' + (reminder.relativePeriod > 0 ? 'before' : 'after') + ' ' + reminder.relativeTo
+	return periodHuman + ' ' + (reminder.relativePeriod <= 0 ? 'before' : 'after') + ' ' + reminder.relativeTo
 }
 </script>
 
 <style lang="scss" scoped>
-.presets {
+.options {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;

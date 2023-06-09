@@ -7,11 +7,14 @@
 			class="reminder-input"
 		>
 			<div class="reminder-detail">
-				<ReminderDetail :disabled="disabled" v-model="reminders[index]" />
+				<ReminderDetail
+					:disabled="disabled"
+					v-model="reminders[index]"
+					@update:model-value="updateData"/>
 			</div>
 			<div>
-				<BaseButton v-if="!disabled"  @click="removeReminderByIndex(index)" class="remove">
-					<icon icon="times" />
+				<BaseButton v-if="!disabled" @click="removeReminderByIndex(index)" class="remove">
+					<icon icon="times"/>
 				</BaseButton>
 			</div>
 		</div>
@@ -31,7 +34,7 @@
 <script setup lang="ts">
 import {reactive, ref, watch, type PropType} from 'vue'
 
-import type { ITaskReminder } from '@/modelTypes/ITaskReminder'
+import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import ReminderDetail from '@/components/tasks/partials/reminder-detail.vue'
@@ -60,6 +63,7 @@ watch(
 )
 
 const isAddReminder = ref(false)
+
 function toggleAddReminder() {
 	isAddReminder.value = !isAddReminder.value
 }
@@ -76,8 +80,9 @@ function editReminder(index: number) {
 	updateData()
 }
 
-function addNewReminder(newReminder : ITaskReminder) {
-	if (newReminder == null) {
+function addNewReminder(newReminder: ITaskReminder) {
+	console.log('add new reminder', newReminder)
+	if (newReminder === null) {
 		return
 	}
 	reminders.value.push(newReminder)
@@ -104,9 +109,11 @@ function removeReminderByIndex(index: number) {
 		margin-bottom: 0.75rem;
 	}
 }
+
 .reminder-detail {
 	width: 100%;
 }
+
 .remove {
 	color: var(--danger);
 	vertical-align: top;

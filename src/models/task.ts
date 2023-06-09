@@ -22,6 +22,7 @@ import AttachmentModel from './attachment'
 import SubscriptionModel from './subscription'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import TaskReminderModel from '@/models/taskReminder'
+import {periodToSeconds, secondsToPeriod} from '@/helpers/time/period'
 
 export const TASK_DEFAULT_COLOR = '#1973ff'
 
@@ -37,21 +38,13 @@ export function	getHexColor(hexColor: string): string {
  * Parses `repeatAfterSeconds` into a usable js object.
  */
 export function parseRepeatAfter(repeatAfterSeconds: number): IRepeatAfter {
-	let repeatAfter: IRepeatAfter = {type: 'hours', amount: repeatAfterSeconds / SECONDS_A_HOUR}
-
-	// if its dividable by 24, its something with days, otherwise hours
-	if (repeatAfterSeconds % SECONDS_A_DAY === 0) {
-		if (repeatAfterSeconds % SECONDS_A_WEEK === 0) {
-			repeatAfter = {type: 'weeks', amount: repeatAfterSeconds / SECONDS_A_WEEK}
-		} else if (repeatAfterSeconds % SECONDS_A_MONTH === 0) {
-			repeatAfter = {type:'months', amount: repeatAfterSeconds / SECONDS_A_MONTH}
-		} else if (repeatAfterSeconds % SECONDS_A_YEAR === 0) {
-			repeatAfter = {type: 'years', amount: repeatAfterSeconds / SECONDS_A_YEAR}
-		} else {
-			repeatAfter = {type: 'days', amount: repeatAfterSeconds / SECONDS_A_DAY}
-		}
+	
+	const period = secondsToPeriod(repeatAfterSeconds)
+	
+	return {
+		type: period.unit,
+		amount: period.amount,
 	}
-	return repeatAfter
 }
 
 export default class TaskModel extends AbstractModel<ITask> implements ITask {

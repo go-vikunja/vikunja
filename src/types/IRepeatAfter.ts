@@ -1,4 +1,6 @@
 export const REPEAT_TYPES = {
+	Seconds: 'seconds',
+	Minutes: 'minutes',
 	Hours: 'hours',
 	Days: 'days',
 	Weeks: 'weeks',
