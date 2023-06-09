@@ -8,7 +8,7 @@
 					{{ reminderText }}
 				</SimpleButton>
 			</template>
-			<template #content="{isOpen}">
+			<template #content="{isOpen, toggle}">
 				<Card class="reminder-options-popup" :class="{'is-open': isOpen}" :padding="false">
 					<div class="options" v-if="showFormSwitch === null">
 						<SimpleButton
@@ -36,6 +36,15 @@
 						v-model="reminderDate"
 						@update:modelValue="setReminderDate"
 					/>
+
+					<x-button
+						v-if="showFormSwitch !== null"
+						class="reminder__close-button"
+						:shadow="false"
+						@click="toggle"
+					>
+						{{ $t('misc.confirm') }}
+					</x-button>
 				</Card>
 			</template>
 		</Popup>
@@ -211,5 +220,10 @@ function translateUnit(amount: number, unit: PeriodUnit): string {
 			background: var(--grey-100);
 		}
 	}
+}
+
+.reminder__close-button {
+	margin: .5rem;
+	width: calc(100% - 1rem);
 }
 </style>

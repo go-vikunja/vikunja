@@ -8,7 +8,7 @@
 		}"
 		ref="popup"
 	>
-		<slot name="content" :isOpen="open"/>
+		<slot name="content" :isOpen="open" :toggle="toggle"/>
 	</div>
 </template>
 
