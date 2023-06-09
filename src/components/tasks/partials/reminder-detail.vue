@@ -29,7 +29,7 @@
 					<ReminderPeriod
 						v-if="showFormSwitch === 'relative'"
 						v-model="reminder"
-						@update:modelValue="emit('update:modelValue', reminder)"
+						@update:modelValue="updateDataAndMaybeClose(toggle)"
 					/>
 
 					<DatepickerInline
@@ -144,6 +144,13 @@ function setReminderFromPreset(preset, toggle) {
 	reminder.value = preset
 	updateData()
 	toggle()
+}
+
+function updateDataAndMaybeClose(toggle) {
+	updateData()
+	if (props.clearAfterUpdate) {
+		toggle()
+	}
 }
 
 function formatReminder(reminder: TaskReminderModel) {
