@@ -14,7 +14,7 @@
 						<SimpleButton
 							v-for="p in presets"
 							class="option-button"
-							@click="setReminderFromPreset(p)"
+							@click="setReminderFromPreset(p, toggle)"
 						>
 							{{ formatReminder(p) }}
 						</SimpleButton>
@@ -81,6 +81,10 @@ const props = defineProps({
 	disabled: {
 		default: false,
 	},
+	clearAfterUpdate: {
+		type: Boolean,
+		default: false,
+	},
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -119,16 +123,25 @@ watch(
 	{immediate: true},
 )
 
+function updateData() {
+	emit('update:modelValue', reminder.value)
+
+	if (props.clearAfterUpdate) {
+		reminder.value = new TaskReminderModel()
+	}
+}
+
 function setReminderDate() {
 	reminder.value.reminder = reminderDate.value === null
 		? null
 		: new Date(reminderDate.value)
-	emit('update:modelValue', reminder.value)
+	updateData()
 }
 
-function setReminderFromPreset(preset) {
+function setReminderFromPreset(preset, toggle) {
 	reminder.value = preset
-	emit('update:modelValue', reminder.value)
+	updateData()
+	toggle()
 }
 
 function formatReminder(reminder: TaskReminderModel) {

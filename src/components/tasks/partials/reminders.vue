@@ -19,15 +19,11 @@
 			</div>
 		</div>
 
-		<div v-if="!disabled" class="reminder-input">
-			<BaseButton @click="toggleAddReminder">
-				{{ $t('task.addReminder') }}
-			</BaseButton>
-		</div>
-
-		<div v-if="isAddReminder" class="reminder-input">
-			<ReminderDetail :disabled="disabled" @update:modelValue="addNewReminder"/>
-		</div>
+		<ReminderDetail
+			:disabled="disabled"
+			@update:modelValue="addNewReminder"
+			:clear-after-update="true"
+		/>
 	</div>
 </template>
 
@@ -62,14 +58,7 @@ watch(
 	{immediate: true},
 )
 
-const isAddReminder = ref(false)
-
-function toggleAddReminder() {
-	isAddReminder.value = !isAddReminder.value
-}
-
 function updateData() {
-	isAddReminder.value = false
 	emit('update:modelValue', reminders.value)
 }
 
@@ -81,12 +70,10 @@ function editReminder(index: number) {
 }
 
 function addNewReminder(newReminder: ITaskReminder) {
-	console.log('add new reminder', newReminder)
 	if (newReminder === null) {
 		return
 	}
 	reminders.value.push(newReminder)
-	newReminder = reactive(new TaskReminderModel())
 	updateData()
 }
 
