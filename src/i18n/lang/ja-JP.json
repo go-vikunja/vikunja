@@ -648,7 +648,7 @@
       "loading": "コメントを読み込み中…",
       "edited": "edited {date}",
       "creating": "コメントを作成中…",
-      "placeholder": "Add your comment…",
+      "placeholder": "コメントを追加…",
       "comment": "コメント",
       "delete": "コメントの削除",
       "deleteText1": "このコメントを削除して本当によろしいですか？",
@@ -798,7 +798,7 @@
       }
     },
     "attributes": {
-      "name": "Team Name",
+      "name": "チーム名",
       "namePlaceholder": "The team's name goes here…",
       "nameRequired": "Please specify a name.",
       "description": "説明",
