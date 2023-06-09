@@ -12,16 +12,17 @@
 				<Card class="reminder-options-popup" :class="{'is-open': isOpen}" :padding="false">
 					<div class="options" v-if="showFormSwitch === null">
 						<SimpleButton
-							class="option-button"
 							v-for="p in presets"
+							class="option-button"
+							@click="setReminderFromPreset(p)"
 						>
 							{{ formatReminder(p) }}
 						</SimpleButton>
 						<SimpleButton @click="showFormSwitch = 'relative'" class="option-button">
-							Custom
+							{{ $t('task.reminder.custom') }}
 						</SimpleButton>
 						<SimpleButton @click="showFormSwitch = 'absolute'" class="option-button">
-							Date
+							{{ $t('task.reminder.dateAndTime') }}
 						</SimpleButton>
 					</div>
 
@@ -62,7 +63,6 @@ import {PeriodUnit, secondsToPeriod} from '@/helpers/time/period'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import {formatDateShort} from '@/helpers/time/formatDate'
 
-import BaseButton from '@/components/base/BaseButton.vue'
 import DatepickerInline from '@/components/input/datepickerInline.vue'
 import ReminderPeriod from '@/components/tasks/partials/reminder-period.vue'
 import Popup from '@/components/misc/popup.vue'
@@ -88,10 +88,10 @@ const emit = defineEmits(['update:modelValue'])
 const reminder = ref<ITaskReminder>(new TaskReminderModel())
 
 const presets: TaskReminderModel[] = [
-	{relativePeriod: SECONDS_A_DAY, relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE},
-	{relativePeriod: SECONDS_A_DAY * 3, relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE},
-	{relativePeriod: SECONDS_A_DAY * 7, relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE},
-	{relativePeriod: SECONDS_A_DAY * 30, relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE},
+	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY, relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE},
+	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 3, relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE},
+	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 7, relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE},
+	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 30, relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE},
 ]
 const reminderDate = ref(null)
 
@@ -123,6 +123,11 @@ function setReminderDate() {
 	reminder.value.reminder = reminderDate.value === null
 		? null
 		: new Date(reminderDate.value)
+	emit('update:modelValue', reminder.value)
+}
+
+function setReminderFromPreset(preset) {
+	reminder.value = preset
 	emit('update:modelValue', reminder.value)
 }
 

@@ -727,7 +727,9 @@
       "afterShort": "after",
       "onDueDate": "On the due date",
       "onStartDate": "On the start date",
-      "onEndDate": "On the end date"
+      "onEndDate": "On the end date",
+      "custom": "Custom",
+      "dateAndTime": "Date and time"
     },
     "repeat": {
       "everyDay": "Every Day",
