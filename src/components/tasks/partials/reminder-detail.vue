@@ -166,6 +166,8 @@ function updateDataAndMaybeClose(toggle) {
 function formatReminder(reminder: TaskReminderModel) {
 
 	const period = secondsToPeriod(reminder.relativePeriod)
+	
+	// TODO: 0 does not work
 
 	if (period.amount === 0) {
 		switch (reminder.relativeTo) {
@@ -266,10 +268,5 @@ function translateUnit(amount: number, unit: PeriodUnit): string {
 
 .currently-active {
 	color: var(--primary);
-}
-
-:deep(.flatpickr-calendar) {
-	margin: 0 auto;
-	box-shadow: none;
 }
 </style>

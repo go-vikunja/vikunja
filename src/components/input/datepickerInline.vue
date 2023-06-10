@@ -61,11 +61,12 @@
 		</span>
 	</BaseButton>
 
-	<flat-pickr
-		:config="flatPickerConfig"
-		class="input"
-		v-model="flatPickrDate"
-	/>
+	<div class="flatpickr-container">
+		<flat-pickr
+			:config="flatPickerConfig"
+			v-model="flatPickrDate"
+		/>
+	</div>
 </template>
 
 <script lang="ts" setup>
@@ -214,8 +215,14 @@ function getWeekdayFromStringInterval(dateString: string) {
 	}
 }
 
-:deep(.flatpickr-calendar) {
-	margin: 0 auto 8px;
-	box-shadow: none;
+.flatpickr-container {
+	:deep(.flatpickr-calendar) {
+		margin: 0 auto 8px;
+		box-shadow: none;
+	}
+
+	:deep(.input) {
+		border: none;
+	}
 }
 </style>
