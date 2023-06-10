@@ -13,6 +13,7 @@ import type {IRepeatAfter} from '@/types/IRepeatAfter'
 import type {IRepeatMode} from '@/types/IRepeatMode'
 
 import type {PartialWithId} from '@/types/PartialWithId'
+import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 
 export interface ITask extends IAbstract {
 	id: number
@@ -30,7 +31,7 @@ export interface ITask extends IAbstract {
 	repeatAfter: number | IRepeatAfter
 	repeatFromCurrentDate: boolean
 	repeatMode: IRepeatMode
-	reminderDates: Date[]
+	reminders: ITaskReminder[]
 	parentTaskId: ITask['id']
 	hexColor: string
 	percentDone: number

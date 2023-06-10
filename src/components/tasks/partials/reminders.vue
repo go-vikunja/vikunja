@@ -3,104 +3,70 @@
 		<div
 			v-for="(r, index) in reminders"
 			:key="index"
-			:class="{ 'overdue': r < new Date()}"
+			:class="{ 'overdue': r.reminder < new Date() }"
 			class="reminder-input"
 		>
-			<Datepicker
-				v-model="reminders[index]"
+			<ReminderDetail
+				class="reminder-detail"
 				:disabled="disabled"
-				@close-on-change="() => addReminderDate(index)"
-			/>
-			<BaseButton @click="removeReminderByIndex(index)" v-if="!disabled" class="remove">
-				<icon icon="times"></icon>
+				v-model="reminders[index]"
+				@update:model-value="updateData"/>
+			<BaseButton
+				v-if="!disabled"
+				@click="removeReminderByIndex(index)"
+				class="remove"
+			>
+				<icon icon="times"/>
 			</BaseButton>
 		</div>
-		<div class="reminder-input" v-if="!disabled">
-			<Datepicker
-				v-model="newReminder"
-				@close-on-change="() => addReminderDate()"
-				:choose-date-label="$t('task.addReminder')"
-			/>
-		</div>
+
+		<ReminderDetail
+			:disabled="disabled"
+			@update:modelValue="addNewReminder"
+			:clear-after-update="true"
+		/>
 	</div>
 </template>
 
 <script setup lang="ts">
-import {type PropType, ref, onMounted, watch} from 'vue'
+import {ref, watch, type PropType} from 'vue'
+
+import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 
 import BaseButton from '@/components/base/BaseButton.vue'
-import Datepicker from '@/components/input/datepicker.vue'
-
-type Reminder = Date | string
-
-
+import ReminderDetail from '@/components/tasks/partials/reminder-detail.vue'
 
 const props = defineProps({
 	modelValue: {
-		type: Array as PropType<Reminder[]>,
+		type: Array as PropType<ITaskReminder[]>,
 		default: () => [],
-		validator(prop) {
-			// This allows arrays of Dates and strings
-			if (!(prop instanceof Array)) {
-				return false
-			}
-
-			const isDate = (e: unknown) => e instanceof Date
-			const isString = (e: unknown) => typeof e === 'string'
-
-			for (const e of prop) {
-				if (!isDate(e) && !isString(e)) {
-					return false
-				}
-			}
-
-			return true
-		},
 	},
 	disabled: {
-		type: Boolean,
 		default: false,
 	},
 })
 
 const emit = defineEmits(['update:modelValue'])
 
-const reminders = ref<Reminder[]>([])
-
-onMounted(() => {
-	reminders.value = [...props.modelValue]
-})
+const reminders = ref<ITaskReminder[]>([])
 
 watch(
-	() => props.modelValue,
+	props.modelValue,
 	(newVal) => {
-		for (const i in newVal) {
-			if (typeof newVal[i] === 'string') {
-				newVal[i] = new Date(newVal[i])
-			}
-		}
 		reminders.value = newVal
 	},
+	{immediate: true},
 )
-
 
 function updateData() {
 	emit('update:modelValue', reminders.value)
 }
 
-const newReminder = ref(null)
-function addReminderDate(index : number | null = null) {
-	// New Date
-	if (index === null) {
-		if (newReminder.value === null) {
-			return
-		}
-		reminders.value.push(new Date(newReminder.value))
-		newReminder.value = null
-	} else if(reminders.value[index] === null) {
+function addNewReminder(newReminder: ITaskReminder) {
+	if (newReminder === null) {
 		return
 	}
-
+	reminders.value.push(newReminder)
 	updateData()
 }
 
@@ -111,23 +77,27 @@ function removeReminderByIndex(index: number) {
 </script>
 
 <style lang="scss" scoped>
-.reminders {
-  .reminder-input {
-    display: flex;
-    align-items: center;
+.reminder-input {
+	display: flex;
+	align-items: center;
 
-    &.overdue :deep(.datepicker .show) {
-      color: var(--danger);
-    }
+	&.overdue :deep(.datepicker .show) {
+		color: var(--danger);
+	}
 
-    &:last-child {
-      margin-bottom: 0.75rem;
-    }
+	&::last-child {
+		margin-bottom: 0.75rem;
+	}
+}
 
-    .remove {
-      color: var(--danger);
-      padding-left: .5rem;
-    }
-  }
+.reminder-detail {
+	width: 100%;
+}
+
+.remove {
+	color: var(--danger);
+	vertical-align: top;
+	padding-left: .5rem;
+	line-height: 1;
 }
 </style>

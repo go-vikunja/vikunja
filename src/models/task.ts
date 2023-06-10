@@ -1,5 +1,4 @@
 import {PRIORITIES, type Priority} from '@/constants/priorities'
-import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_MONTH, SECONDS_A_WEEK, SECONDS_A_YEAR} from '@/constants/date'
 
 import type {ITask} from '@/modelTypes/ITask'
 import type {ILabel} from '@/modelTypes/ILabel'
@@ -20,6 +19,9 @@ import LabelModel from './label'
 import UserModel from './user'
 import AttachmentModel from './attachment'
 import SubscriptionModel from './subscription'
+import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
+import TaskReminderModel from '@/models/taskReminder'
+import {secondsToPeriod} from '@/helpers/time/period'
 
 export const TASK_DEFAULT_COLOR = '#1973ff'
 
@@ -35,21 +37,13 @@ export function	getHexColor(hexColor: string): string {
  * Parses `repeatAfterSeconds` into a usable js object.
  */
 export function parseRepeatAfter(repeatAfterSeconds: number): IRepeatAfter {
-	let repeatAfter: IRepeatAfter = {type: 'hours', amount: repeatAfterSeconds / SECONDS_A_HOUR}
-
-	// if its dividable by 24, its something with days, otherwise hours
-	if (repeatAfterSeconds % SECONDS_A_DAY === 0) {
-		if (repeatAfterSeconds % SECONDS_A_WEEK === 0) {
-			repeatAfter = {type: 'weeks', amount: repeatAfterSeconds / SECONDS_A_WEEK}
-		} else if (repeatAfterSeconds % SECONDS_A_MONTH === 0) {
-			repeatAfter = {type:'months', amount: repeatAfterSeconds / SECONDS_A_MONTH}
-		} else if (repeatAfterSeconds % SECONDS_A_YEAR === 0) {
-			repeatAfter = {type: 'years', amount: repeatAfterSeconds / SECONDS_A_YEAR}
-		} else {
-			repeatAfter = {type: 'days', amount: repeatAfterSeconds / SECONDS_A_DAY}
-		}
+	
+	const period = secondsToPeriod(repeatAfterSeconds)
+	
+	return {
+		type: period.unit,
+		amount: period.amount,
 	}
-	return repeatAfter
 }
 
 export default class TaskModel extends AbstractModel<ITask> implements ITask {
@@ -68,7 +62,13 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	repeatAfter: number | IRepeatAfter = 0
 	repeatFromCurrentDate = false
 	repeatMode: IRepeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
-	reminderDates: Date[] = []
+	/* Make sure to not return reminderDates to the server.
+	The server currently supports both reminderDates (old API) and reminder (new API) and assumes the old logic
+	if it still receives reminderDates.
+	This line and reminderDates attributes will be removed after https://kolaente.dev/vikunja/api/pulls/1448 was merged.
+	*/
+	reminderDates = null
+	reminders: ITaskReminder[] = []
 	parentTaskId: ITask['id'] = 0
 	hexColor = ''
 	percentDone = 0
@@ -115,7 +115,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		// Parse the repeat after into something usable
 		this.repeatAfter = parseRepeatAfter(this.repeatAfter as number)
 
-		this.reminderDates = this.reminderDates.map(d => new Date(d))
+		this.reminders = this.reminders.map(r => new TaskReminderModel(r))
 
 		if (this.hexColor !== '' && this.hexColor.substring(0, 1) !== '#') {
 			this.hexColor = '#' + this.hexColor

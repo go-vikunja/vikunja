@@ -54,17 +54,17 @@ export default class TaskService extends AbstractService<ITask> {
 		model.created = new Date(model.created).toISOString()
 		model.updated = new Date(model.updated).toISOString()
 
+		model.reminderDates = null
 		// remove all nulls, these would create empty reminders
-		for (const index in model.reminderDates) {
-			if (model.reminderDates[index] === null) {
-				model.reminderDates.splice(index, 1)
+		for (const index in model.reminders) {
+			if (model.reminders[index] === null) {
+				model.reminders.splice(index, 1)
 			}
 		}
-
 		// Make normal timestamps from js dates
-		if (model.reminderDates.length > 0) {
-			model.reminderDates = model.reminderDates.map(r => {
-				return new Date(r).toISOString()
+		if (model.reminders.length > 0) {
+			model.reminders.forEach(r => {
+				r.reminder = new Date(r.reminder).toISOString()
 			})
 		}
 
