@@ -259,8 +259,8 @@ devDependencies:
     specifier: 3.24.1
     version: 3.24.1
   rollup-plugin-visualizer:
-    specifier: 5.9.0
-    version: 5.9.0(rollup@3.24.1)
+    specifier: 5.9.2
+    version: 5.9.2(rollup@3.24.1)
   sass:
     specifier: 1.63.3
     version: 1.63.3
@@ -8219,8 +8219,8 @@ packages:
       - acorn
     dev: true
 
-  /rollup-plugin-visualizer@5.9.0(rollup@3.24.1):
-    resolution: {integrity: sha512-bbDOv47+Bw4C/cgs0czZqfm8L82xOZssk4ayZjG40y9zbXclNk7YikrZTDao6p7+HDiGxrN0b65SgZiVm9k1Cg==}
+  /rollup-plugin-visualizer@5.9.2(rollup@3.24.1):
+    resolution: {integrity: sha512-waHktD5mlWrYFrhOLbti4YgQCn1uR24nYsNuXxg7LkPH8KdTXVWR9DNY1WU0QqokyMixVXJS4J04HNrVTMP01A==}
     engines: {node: '>=14'}
     hasBin: true
     peerDependencies:

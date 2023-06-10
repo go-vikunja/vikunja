@@ -129,7 +129,7 @@
     "postcss-focus-within": "7.0.2",
     "postcss-preset-env": "8.4.2",
     "rollup": "3.24.1",
-    "rollup-plugin-visualizer": "5.9.0",
+    "rollup-plugin-visualizer": "5.9.2",
     "sass": "1.63.3",
     "start-server-and-test": "2.0.0",
     "typescript": "5.1.3",
