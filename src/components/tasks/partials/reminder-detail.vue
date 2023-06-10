@@ -23,7 +23,7 @@
 						<SimpleButton 
 							@click="showFormSwitch = 'relative'" 
 							class="option-button"
-							:class="{'currently-active': modelValue?.relativeTo !== null && presets.find(p => p.relativePeriod === modelValue?.relativePeriod && modelValue?.relativeTo === p.relativeTo) === undefined}"
+							:class="{'currently-active': typeof modelValue !== 'undefined' && modelValue?.relativeTo !== null && presets.find(p => p.relativePeriod === modelValue?.relativePeriod && modelValue?.relativeTo === p.relativeTo) === undefined}"
 						>
 							{{ $t('task.reminder.custom') }}
 						</SimpleButton>
