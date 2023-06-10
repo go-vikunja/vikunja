@@ -15,14 +15,23 @@
 							v-for="(p, k) in presets"
 							:key="k"
 							class="option-button"
+							:class="{'currently-active': p.relativePeriod === modelValue?.relativePeriod && modelValue?.relativeTo === p.relativeTo}"
 							@click="setReminderFromPreset(p, toggle)"
 						>
 							{{ formatReminder(p) }}
 						</SimpleButton>
-						<SimpleButton @click="showFormSwitch = 'relative'" class="option-button">
+						<SimpleButton 
+							@click="showFormSwitch = 'relative'" 
+							class="option-button"
+							:class="{'currently-active': modelValue?.relativeTo !== null && presets.find(p => p.relativePeriod === modelValue?.relativePeriod && modelValue?.relativeTo === p.relativeTo) === undefined}"
+						>
 							{{ $t('task.reminder.custom') }}
 						</SimpleButton>
-						<SimpleButton @click="showFormSwitch = 'absolute'" class="option-button">
+						<SimpleButton 
+							@click="showFormSwitch = 'absolute'" 
+							class="option-button"
+							:class="{'currently-active': modelValue?.relativeTo === null}"
+						>
 							{{ $t('task.reminder.dateAndTime') }}
 						</SimpleButton>
 					</div>
@@ -253,5 +262,9 @@ function translateUnit(amount: number, unit: PeriodUnit): string {
 .reminder__close-button {
 	margin: .5rem;
 	width: calc(100% - 1rem);
+}
+
+.currently-active {
+	color: var(--primary);
 }
 </style>
