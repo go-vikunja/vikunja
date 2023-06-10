@@ -20,15 +20,15 @@
 						>
 							{{ formatReminder(p) }}
 						</SimpleButton>
-						<SimpleButton 
-							@click="showFormSwitch = 'relative'" 
+						<SimpleButton
+							@click="showFormSwitch = 'relative'"
 							class="option-button"
 							:class="{'currently-active': typeof modelValue !== 'undefined' && modelValue?.relativeTo !== null && presets.find(p => p.relativePeriod === modelValue?.relativePeriod && modelValue?.relativeTo === p.relativeTo) === undefined}"
 						>
 							{{ $t('task.reminder.custom') }}
 						</SimpleButton>
-						<SimpleButton 
-							@click="showFormSwitch = 'absolute'" 
+						<SimpleButton
+							@click="showFormSwitch = 'absolute'"
 							class="option-button"
 							:class="{'currently-active': modelValue?.relativeTo === null}"
 						>
@@ -164,10 +164,7 @@ function updateDataAndMaybeClose(toggle) {
 }
 
 function formatReminder(reminder: TaskReminderModel) {
-
 	const period = secondsToPeriod(reminder.relativePeriod)
-	
-	// TODO: 0 does not work
 
 	if (period.amount === 0) {
 		switch (reminder.relativeTo) {

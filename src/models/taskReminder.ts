@@ -12,6 +12,9 @@ export default class TaskReminderModel extends AbstractModel<ITaskReminder> impl
 		super()
 		this.assignData(data)
 		this.reminder = parseDateOrNull(data.reminder)
+		if (this.relativeTo === '') {
+			this.relativeTo = null
+		}
 	}
 
 }
