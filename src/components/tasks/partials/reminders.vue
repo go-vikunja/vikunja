@@ -6,17 +6,18 @@
 			:class="{ 'overdue': r.reminder < new Date() }"
 			class="reminder-input"
 		>
-			<div class="reminder-detail">
-				<ReminderDetail
-					:disabled="disabled"
-					v-model="reminders[index]"
-					@update:model-value="updateData"/>
-			</div>
-			<div>
-				<BaseButton v-if="!disabled" @click="removeReminderByIndex(index)" class="remove">
-					<icon icon="times"/>
-				</BaseButton>
-			</div>
+			<ReminderDetail
+				class="reminder-detail"
+				:disabled="disabled"
+				v-model="reminders[index]"
+				@update:model-value="updateData"/>
+			<BaseButton
+				v-if="!disabled"
+				@click="removeReminderByIndex(index)"
+				class="remove"
+			>
+				<icon icon="times"/>
+			</BaseButton>
 		</div>
 
 		<ReminderDetail
