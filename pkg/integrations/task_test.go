@@ -95,27 +95,6 @@ func TestTask(t *testing.T) {
 				assert.Contains(t, rec.Body.String(), `"due_date":"0001-01-01T00:00:00Z"`)
 				assert.NotContains(t, rec.Body.String(), `"due_date":"2020-02-10T10:00:00Z"`)
 			})
-			// Deprecated: Remove if ReminderDates is removed
-			t.Run("ReminderDates", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"reminder_dates": ["2020-02-10T10:00:00Z","2020-02-11T10:00:00Z"]}`)
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"reminder_dates":["2020-02-10T10:00:00Z","2020-02-11T10:00:00Z"]`)
-				assert.NotContains(t, rec.Body.String(), `"reminder_dates": null`)
-			})
-			// Deprecated: Remove if ReminderDates is removed
-			t.Run("ReminderDates unset to empty array", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "27"}, `{"reminder_dates": []}`)
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"reminder_dates":null`)
-				assert.NotContains(t, rec.Body.String(), `"reminder_dates":[1543626724,1543626824]`)
-			})
-			// Deprecated: Remove if ReminderDates is removed
-			t.Run("ReminderDates unset to null", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "27"}, `{"reminder_dates": null}`)
-				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"reminder_dates":null`)
-				assert.NotContains(t, rec.Body.String(), `"reminder_dates":[1543626724,1543626824]`)
-			})
 			t.Run("Reminders", func(t *testing.T) {
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"reminders": [{"reminder": "2020-02-10T10:00:00Z"},{"reminder": "2020-02-11T10:00:00Z"}]}`)
 				assert.NoError(t, err)
@@ -133,7 +112,7 @@ func TestTask(t *testing.T) {
 			t.Run("Reminders unset to null", func(t *testing.T) {
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "27"}, `{"reminders": null}`)
 				assert.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"reminder_dates":null`)
+				assert.Contains(t, rec.Body.String(), `"reminders":null`)
 				assert.NotContains(t, rec.Body.String(), `{"Reminder":"2020-02-10T10:00:00Z"`)
 			})
 			t.Run("Repeat after", func(t *testing.T) {

@@ -171,9 +171,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			label4,
 		},
 		RelatedTasks: map[RelationKind][]*Task{},
-		ReminderDates: []time.Time{
-			time.Unix(1543626824, 0).In(loc),
-		},
 		Reminders: []*TaskReminder{
 			{
 				ID:       3,
@@ -487,10 +484,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Index:       12,
 		CreatedByID: 1,
 		CreatedBy:   user1,
-		ReminderDates: []time.Time{
-			time.Unix(1543626724, 0).In(loc),
-			time.Unix(1543626824, 0).In(loc),
-		},
 		Reminders: []*TaskReminder{
 			{
 				ID:       1,

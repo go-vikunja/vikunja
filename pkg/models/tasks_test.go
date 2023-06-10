@@ -503,7 +503,6 @@ func TestTask_Update(t *testing.T) {
 		// when start_date is modified
 		task := taskBefore
 		task.StartDate = time.Date(2023, time.March, 8, 8, 5, 0, 0, time.Local)
-		task.ReminderDates = nil
 		err = task.Update(s, u)
 		assert.NoError(t, err)
 
