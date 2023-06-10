@@ -240,7 +240,7 @@ function translateUnit(amount: number, unit: PeriodUnit): string {
 }
 
 .reminder-options-popup {
-	width: 300px;
+	width: 310px;
 	z-index: 99;
 
 	@media screen and (max-width: ($tablet)) {
@@ -266,5 +266,10 @@ function translateUnit(amount: number, unit: PeriodUnit): string {
 
 .currently-active {
 	color: var(--primary);
+}
+
+:deep(.flatpickr-calendar) {
+	margin: 0 auto;
+	box-shadow: none;
 }
 </style>
