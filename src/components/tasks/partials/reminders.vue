@@ -28,13 +28,12 @@
 </template>
 
 <script setup lang="ts">
-import {reactive, ref, watch, type PropType} from 'vue'
+import {ref, watch, type PropType} from 'vue'
 
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import ReminderDetail from '@/components/tasks/partials/reminder-detail.vue'
-import TaskReminderModel from '@/models/taskReminder'
 
 const props = defineProps({
 	modelValue: {
@@ -60,13 +59,6 @@ watch(
 
 function updateData() {
 	emit('update:modelValue', reminders.value)
-}
-
-function editReminder(index: number) {
-	if (reminders.value[index] === null) {
-		return
-	}
-	updateData()
 }
 
 function addNewReminder(newReminder: ITaskReminder) {

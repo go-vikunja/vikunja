@@ -1,5 +1,4 @@
 import {PRIORITIES, type Priority} from '@/constants/priorities'
-import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_MONTH, SECONDS_A_WEEK, SECONDS_A_YEAR} from '@/constants/date'
 
 import type {ITask} from '@/modelTypes/ITask'
 import type {ILabel} from '@/modelTypes/ILabel'
@@ -22,7 +21,7 @@ import AttachmentModel from './attachment'
 import SubscriptionModel from './subscription'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import TaskReminderModel from '@/models/taskReminder'
-import {periodToSeconds, secondsToPeriod} from '@/helpers/time/period'
+import {secondsToPeriod} from '@/helpers/time/period'
 
 export const TASK_DEFAULT_COLOR = '#1973ff'
 

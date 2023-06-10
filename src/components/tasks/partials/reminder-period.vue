@@ -48,7 +48,6 @@
 
 <script setup lang="ts">
 import {ref, watch, type PropType} from 'vue'
-import {useI18n} from 'vue-i18n'
 import {toRef} from '@vueuse/core'
 
 import {periodToSeconds, PeriodUnit, secondsToPeriod} from '@/helpers/time/period'
@@ -57,8 +56,6 @@ import TaskReminderModel from '@/models/taskReminder'
 
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES, type IReminderPeriodRelativeTo} from '@/types/IReminderPeriodRelativeTo'
-
-const {t} = useI18n({useScope: 'global'})
 
 const props = defineProps({
 	modelValue: {
@@ -74,8 +71,6 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const reminder = ref<ITaskReminder>(new TaskReminderModel())
-
-const showForm = ref(false)
 
 interface PeriodInput {
 	duration: number,

@@ -12,7 +12,8 @@
 				<Card class="reminder-options-popup" :class="{'is-open': isOpen}" :padding="false">
 					<div class="options" v-if="showFormSwitch === null">
 						<SimpleButton
-							v-for="p in presets"
+							v-for="(p, k) in presets"
+							:key="k"
 							class="option-button"
 							@click="setReminderFromPreset(p, toggle)"
 						>

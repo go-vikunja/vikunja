@@ -58,8 +58,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'close', 'close-on-change'])
 
-const {t} = useI18n({useScope: 'global'})
-
 const date = ref<Date | null>()
 const show = ref(false)
 const changed = ref(false)
