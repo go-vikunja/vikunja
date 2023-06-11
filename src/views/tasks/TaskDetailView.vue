@@ -174,7 +174,7 @@
 										{{ $t('task.attributes.repeat') }}
 									</div>
 									<BaseButton
-										@click="() => {task.repeatAfter.amount = 0;saveTask()}"
+										@click="removeRepeatAfter"
 										v-if="canWrite"
 										class="remove">
 										<span class="icon is-small">
@@ -501,6 +501,7 @@ import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 import type {Action as MessageAction} from '@/message'
 import {useProjectStore} from '@/stores/projects'
+import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
 const props = defineProps({
 	taskId: {
@@ -640,7 +641,7 @@ function setActiveFields() {
 	activeFields.priority = task.priority !== PRIORITIES.UNSET
 	activeFields.relatedTasks = Object.keys(task.relatedTasks).length > 0
 	activeFields.reminders = task.reminders.length > 0
-	activeFields.repeatAfter = task.repeatAfter.amount > 0
+	activeFields.repeatAfter = task.repeatAfter?.amount > 0 || task.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
 	activeFields.startDate = task.startDate !== null
 }
 
@@ -778,6 +779,12 @@ async function setPercentDone(percentDone: number) {
 	return saveTask({
 		task: newTask,
 	})
+}
+
+async function removeRepeatAfter() {
+	task.repeatAfter.amount = 0
+	task.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	await saveTask()
 }
 </script>
 

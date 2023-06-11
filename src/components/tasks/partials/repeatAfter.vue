@@ -70,6 +70,7 @@ import {error} from '@/message'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import type {IRepeatAfter} from '@/types/IRepeatAfter'
 import type {ITask} from '@/modelTypes/ITask'
+import TaskModel from '@/models/task'
 
 const props = defineProps({
 	modelValue: {
@@ -87,7 +88,7 @@ const {t} = useI18n({useScope: 'global'})
 
 const emit = defineEmits(['update:modelValue'])
 
-const task = ref<ITask>()
+const task = ref<ITask>(new TaskModel())
 const repeatAfter = reactive({
 	amount: 0,
 	type: '',
@@ -95,7 +96,7 @@ const repeatAfter = reactive({
 
 watch(
 	() => props.modelValue,
-	(value) => {
+	(value: ITask) => {
 		task.value = value
 		if (typeof value.repeatAfter !== 'undefined') {
 			Object.assign(repeatAfter, value.repeatAfter)
@@ -105,11 +106,14 @@ watch(
 )
 
 function updateData() {
-	if (!task.value || task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT && repeatAfter.amount === 0) {
+	if (!task.value || 
+		(task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT && repeatAfter.amount === 0) ||
+		(task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_FROM_CURRENT_DATE && repeatAfter.amount === 0)
+	) {
 		return
 	}
 
-	if (repeatAfter.amount < 0) {
+	if (task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT && repeatAfter.amount < 0) {
 		error({message: t('task.repeat.invalidAmount')})
 		return
 	}
