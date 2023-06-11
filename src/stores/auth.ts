@@ -1,10 +1,10 @@
 import {computed, readonly, ref} from 'vue'
-import {defineStore, acceptHMRUpdate} from 'pinia'
+import {acceptHMRUpdate, defineStore} from 'pinia'
 
-import {HTTPFactory, AuthenticatedHTTPFactory} from '@/helpers/fetcher'
-import {i18n, getCurrentLanguage, saveLanguage, setLanguage} from '@/i18n'
+import {AuthenticatedHTTPFactory, HTTPFactory} from '@/helpers/fetcher'
+import {getCurrentLanguage, i18n, saveLanguage, setLanguage} from '@/i18n'
 import {objectToSnakeCase} from '@/helpers/case'
-import UserModel, { getAvatarUrl, getDisplayName } from '@/models/user'
+import UserModel, {getAvatarUrl, getDisplayName} from '@/models/user'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 import {setModuleLoading} from '@/stores/helper'
@@ -16,6 +16,7 @@ import router from '@/router'
 import {useConfigStore} from '@/stores/config'
 import UserSettingsModel from '@/models/userSettings'
 import {MILLISECONDS_A_SECOND} from '@/constants/date'
+import {PrefixMode} from '@/modules/parseTaskText'
 
 function redirectToProviderIfNothingElseIsEnabled() {
 	const {auth} = useConfigStore()
@@ -74,7 +75,7 @@ export const useAuthStore = defineStore('auth', () => {
 			reloadAvatar()
 
 			if (newUser.settings) {
-				settings.value = new UserSettingsModel(newUser.settings)
+				loadSettings(newUser.settings)
 			}
 
 			isLinkShareAuth.value = newUser.id < 0
@@ -82,11 +83,23 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	function setUserSettings(newSettings: IUserSettings) {
-		settings.value = new UserSettingsModel(newSettings)
+		loadSettings(newSettings)
 		info.value = new UserModel({
 			...info.value !== null ? info.value : {},
 			name: newSettings.name,
 		})
+	}
+	
+	function loadSettings(newSettings: IUserSettings) {
+		settings.value = new UserSettingsModel({
+			...newSettings,
+			frontendSettings: {
+				...newSettings.frontendSettings,
+				// Need to set default settings here in case the user does not have any saved in the api already
+				quickAddMagicMode: PrefixMode.Default,
+			}
+		})
+		console.log(settings.value.frontendSettings)
 	}
 
 	function setAuthenticated(newAuthenticated: boolean) {
