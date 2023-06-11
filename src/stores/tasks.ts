@@ -6,8 +6,7 @@ import TaskService from '@/services/task'
 import TaskAssigneeService from '@/services/taskAssignee'
 import LabelTaskService from '@/services/labelTask'
 
-import {playPop} from '@/helpers/playPop'
-import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
+import {playPopSound} from '@/helpers/playPop'
 import {cleanupItemText, parseTaskText, PREFIXES} from '@/modules/parseTaskText'
 
 import TaskAssigneeModel from '@/models/taskAssignee'
@@ -29,6 +28,7 @@ import {useAttachmentStore} from '@/stores/attachments'
 import {useKanbanStore} from '@/stores/kanban'
 import {useBaseStore} from '@/stores/base'
 import ProjectUserService from '@/services/projectUsers'
+import {useAuthStore} from '@/stores/auth'
 
 interface MatchedAssignee extends IUser {
 	match: string,
@@ -106,6 +106,7 @@ export const useTaskStore = defineStore('task', () => {
 	const attachmentStore = useAttachmentStore()
 	const labelStore = useLabelStore()
 	const projectStore = useProjectStore()
+	const authStore = useAuthStore()
 
 	const tasks = ref<{ [id: ITask['id']]: ITask }>({}) // TODO: or is this ITask[]
 	const isLoading = ref(false)
@@ -142,8 +143,8 @@ export const useTaskStore = defineStore('task', () => {
 		try {
 			const updatedTask = await taskService.update(task)
 			kanbanStore.setTaskInBucket(updatedTask)
-			if (task.done) {
-				playPop()
+			if (task.done && useAuthStore().settings.frontendSettings.playSoundWhenDone) {
+				playPopSound()
 			}
 			return updatedTask
 		} finally {
@@ -398,7 +399,7 @@ export const useTaskStore = defineStore('task', () => {
 		Partial<ITask>,
 	) {
 		const cancel = setModuleLoading(setIsLoading)
-		const quickAddMagicMode = getQuickAddMagicMode()
+		const quickAddMagicMode = authStore.settings.frontendSettings.quickAddMagicMode
 		const parsedTask = parseTaskText(title, quickAddMagicMode)
 	
 		const foundProjectId = await findProjectId({

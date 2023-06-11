@@ -1,4 +1,4 @@
-import {getProjectFromPrefix} from '@/modules/parseTaskText'
+import {getProjectFromPrefix, PrefixMode} from '@/modules/parseTaskText'
 
 export interface TaskWithParent {
 	title: string,
@@ -16,7 +16,7 @@ const spaceRegex = /^ */
  * @param taskTitles should be multiple lines of task tiles with indention to declare their parent/subtask
  * relation between each other.
  */
-export function parseSubtasksViaIndention(taskTitles: string): TaskWithParent[] {
+export function parseSubtasksViaIndention(taskTitles: string, prefixMode: PrefixMode): TaskWithParent[] {
 	const titles = taskTitles.split(/[\r\n]+/)
 
 	return titles.map((title, index) => {
@@ -26,7 +26,7 @@ export function parseSubtasksViaIndention(taskTitles: string): TaskWithParent[] 
 			project: null,
 		}
 
-		task.project = getProjectFromPrefix(task.title)
+		task.project = getProjectFromPrefix(task.title, prefixMode)
 
 		if (index === 0) {
 			return task
@@ -49,7 +49,7 @@ export function parseSubtasksViaIndention(taskTitles: string): TaskWithParent[] 
 			task.parent = task.parent.replace(spaceRegex, '')
 			if (task.project === null) {
 				// This allows to specify a project once for the parent task and inherit it to all subtasks
-				task.project = getProjectFromPrefix(task.parent)
+				task.project = getProjectFromPrefix(task.parent, prefixMode)
 			}
 		}
 

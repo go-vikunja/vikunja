@@ -1,7 +1,6 @@
 import {parseDate} from '../helpers/time/parseDate'
 import {PRIORITIES} from '@/constants/priorities'
 import {REPEAT_TYPES, type IRepeatAfter, type IRepeatType} from '@/types/IRepeatAfter'
-import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 
 const VIKUNJA_PREFIXES: Prefixes = {
 	label: '*',
@@ -72,10 +71,10 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 		return result
 	}
 
-	result.labels = getLabelsFromPrefix(text, prefixes.label) ?? []
+	result.labels = getLabelsFromPrefix(text, prefixesMode) ?? []
 	result.text = cleanupItemText(result.text, result.labels, prefixes.label)
 
-	result.project = getProjectFromPrefix(result.text, prefixes.project)
+	result.project = getProjectFromPrefix(result.text, prefixesMode)
 	result.text = result.project !== null ? cleanupItemText(result.text, [result.project], prefixes.project) : result.text
 
 	result.priority = getPriority(result.text, prefixes.priority)
@@ -131,25 +130,19 @@ const getItemsFromPrefix = (text: string, prefix: string): string[] => {
 	return Array.from(new Set(items))
 }
 
-export const getProjectFromPrefix = (text: string, projectPrefix: string | null = null): string | null => {
-	if (projectPrefix === null) {
-		const prefixes = PREFIXES[getQuickAddMagicMode()]
-		if (prefixes === undefined) {
-			return null
-		}
-		projectPrefix = prefixes.project
+export const getProjectFromPrefix = (text: string, prefixMode: PrefixMode): string | null => {
+	const projectPrefix = PREFIXES[prefixMode]?.project
+	if(typeof projectPrefix === 'undefined') {
+		return null
 	}
 	const projects: string[] = getItemsFromPrefix(text, projectPrefix)
 	return projects.length > 0 ? projects[0] : null
 }
 
-export const getLabelsFromPrefix = (text: string, projectPrefix: string | null = null): string[] | null => {
-	if (projectPrefix === null) {
-		const prefixes = PREFIXES[getQuickAddMagicMode()]
-		if (prefixes === undefined) {
-			return null
-		}
-		projectPrefix = prefixes.label
+export const getLabelsFromPrefix = (text: string, prefixMode: PrefixMode): string[] | null => {
+	const projectPrefix = PREFIXES[prefixMode]?.project
+	if(typeof projectPrefix === 'undefined') {
+		return null
 	}
 	return getItemsFromPrefix(text, projectPrefix)
 }

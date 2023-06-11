@@ -97,7 +97,7 @@
 						{{ $t('user.settings.quickAddMagic.title') }}
 					</span>
 				<div class="select ml-2">
-					<select v-model="quickAddMagicMode">
+					<select v-model="settings.frontendSettings.quickAddMagicMode">
 						<option v-for="set in PrefixMode" :key="set" :value="set">
 							{{ $t(`user.settings.quickAddMagic.${set}`) }}
 						</option>
@@ -160,7 +160,6 @@ import ProjectSearch from '@/components/tasks/partials/projectSearch.vue'
 
 import {SUPPORTED_LOCALES} from '@/i18n'
 import {playSoundWhenDoneKey, playPopSound} from '@/helpers/playPop'
-import {getQuickAddMagicMode, setQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {createRandomID} from '@/helpers/randomId'
 import {success} from '@/message'
 import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
@@ -259,9 +258,6 @@ const loading = computed(() => authStore.isLoadingGeneralSettings)
 // )
 
 async function updateSettings() {
-	localStorage.setItem(playSoundWhenDoneKey, playSoundWhenDone.value ? 'true' : 'false')
-	setQuickAddMagicMode(quickAddMagicMode.value)
-
 	await authStore.saveUserSettings({
 		settings: {...settings.value},
 	})

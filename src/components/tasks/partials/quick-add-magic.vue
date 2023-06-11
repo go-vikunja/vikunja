@@ -99,11 +99,13 @@ import {ref, computed} from 'vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
-import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {PREFIXES} from '@/modules/parseTaskText'
+import {useAuthStore} from '@/stores/auth'
+
+const authStore = useAuthStore()
 
 const visible = ref(false)
-const mode = ref(getQuickAddMagicMode())
+const mode = computed(() => authStore.settings.frontendSettings.quickAddMagicMode)
 
 defineProps<{
 	highlightHintIcon: boolean,
