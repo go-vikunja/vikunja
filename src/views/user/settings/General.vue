@@ -57,7 +57,7 @@
 		</div>
 		<div class="field">
 			<label class="checkbox">
-				<input type="checkbox" v-model="playSoundWhenDone"/>
+				<input type="checkbox" v-model="settings.frontendSettings.playSoundWhenDone"/>
 				{{ $t('user.settings.general.playSoundWhenDone') }}
 			</label>
 		</div>
@@ -170,6 +170,7 @@ import {useTitle} from '@/composables/useTitle'
 
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
+import type {IUserSettings} from '@/modelTypes/IUserSettings'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.general.title')} - ${t('user.settings.title')}`)
@@ -215,15 +216,15 @@ function useAvailableTimezones() {
 
 const availableTimezones = useAvailableTimezones()
 
-function getPlaySoundWhenDoneSetting() {
-	return localStorage.getItem(playSoundWhenDoneKey) === 'true' || localStorage.getItem(playSoundWhenDoneKey) === null
-}
-
-const playSoundWhenDone = ref(getPlaySoundWhenDoneSetting())
-const quickAddMagicMode = ref(getQuickAddMagicMode())
-
 const authStore = useAuthStore()
-const settings = ref({...authStore.settings})
+const settings = ref<IUserSettings>({
+	...authStore.settings,
+	frontendSettings: {
+		// Sub objects get exported as read only as well, so we need to 
+		// explicitly spread the object here to allow modification
+		...authStore.settings.frontendSettings,
+	}
+})
 const id = ref(createRandomID())
 const availableLanguageOptions = ref(
 	Object.entries(SUPPORTED_LOCALES)
@@ -252,10 +253,10 @@ const defaultProject = computed({
 })
 const loading = computed(() => authStore.isLoadingGeneralSettings)
 
-watch(
-	playSoundWhenDone,
-	(play) => play && playPopSound(),
-)
+// watch(
+// 	settings.value.frontendSettings.playSoundWhenDone,
+// 	(play) => play && playPopSound(),
+// )
 
 async function updateSettings() {
 	localStorage.setItem(playSoundWhenDoneKey, playSoundWhenDone.value ? 'true' : 'false')

@@ -1,6 +1,12 @@
 
 import type {IAbstract} from './IAbstract'
 import type {IProject} from './IProject'
+import type {PrefixMode} from '@/modules/parseTaskText'
+
+export interface IFrontendSettings {
+	playSoundWhenDone: boolean
+	quickAddMagicMode: PrefixMode
+}
 
 export interface IUserSettings extends IAbstract {
 	name: string
@@ -13,4 +19,5 @@ export interface IUserSettings extends IAbstract {
 	weekStart: 0 | 1 | 2 | 3 | 4 | 5 | 6
 	timezone: string
 	language: string
+	frontendSettings: IFrontendSettings
 }
