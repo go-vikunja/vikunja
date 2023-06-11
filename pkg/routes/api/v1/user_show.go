@@ -76,6 +76,7 @@ func UserShow(c echo.Context) error {
 			Language:                     u.Language,
 			Timezone:                     u.Timezone,
 			OverdueTasksRemindersTime:    u.OverdueTasksRemindersTime,
+			FrontendSettings:             u.FrontendSettings,
 		},
 		DeletionScheduledAt: u.DeletionScheduledAt,
 		IsLocalUser:         u.Issuer == user.IssuerLocal,

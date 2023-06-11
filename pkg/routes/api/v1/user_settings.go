@@ -59,6 +59,8 @@ type UserSettings struct {
 	Language string `json:"language"`
 	// The user's time zone. Used to send task reminders in the time zone of the user.
 	Timezone string `json:"timezone"`
+	// Additional settings only used by the frontend
+	FrontendSettings interface{} `json:"frontend_settings"`
 }
 
 // GetUserAvatarProvider returns the currently set user avatar
@@ -198,6 +200,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	user.Language = us.Language
 	user.Timezone = us.Timezone
 	user.OverdueTasksRemindersTime = us.OverdueTasksRemindersTime
+	user.FrontendSettings = us.FrontendSettings
 
 	_, err = user2.UpdateUser(s, user, true)
 	if err != nil {

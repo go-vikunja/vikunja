@@ -17,6 +17,7 @@
 package user
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -102,6 +103,8 @@ type User struct {
 
 	DeletionScheduledAt      time.Time `xorm:"datetime null" json:"-"`
 	DeletionLastReminderSent time.Time `xorm:"datetime null" json:"-"`
+
+	FrontendSettings interface{} `xorm:"json null" json:"-"`
 
 	ExportFileID int64 `xorm:"bigint null" json:"-"`
 
@@ -484,6 +487,12 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 		return
 	}
 
+	frontendSettingsJSON, err := json.Marshal(user.FrontendSettings)
+	if err != nil {
+		return nil, err
+	}
+	user.FrontendSettings = frontendSettingsJSON
+
 	// Update it
 	_, err = s.
 		ID(user.ID).
@@ -503,6 +512,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 			"language",
 			"timezone",
 			"overdue_tasks_reminders_time",
+			"frontend_settings",
 		).
 		Update(user)
 	if err != nil {
