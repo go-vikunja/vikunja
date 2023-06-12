@@ -3,8 +3,6 @@ import {createSharedComposable, usePreferredColorScheme, tryOnMounted} from '@vu
 import type {BasicColorSchema} from '@vueuse/core'
 import {useAuthStore} from '@/stores/auth'
 
-const STORAGE_KEY = 'color-scheme'
-
 const DEFAULT_COLOR_SCHEME_SETTING: BasicColorSchema = 'light'
 
 const CLASS_DARK = 'dark'

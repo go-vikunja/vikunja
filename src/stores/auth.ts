@@ -69,7 +69,7 @@ export const useAuthStore = defineStore('auth', () => {
 		isLoadingGeneralSettings.value = isLoading 
 	}
 
-	function setUser(newUser: IUser | null, saveSettings: boolean = true) {
+	function setUser(newUser: IUser | null, saveSettings = true) {
 		info.value = newUser
 		if (newUser !== null) {
 			reloadAvatar()
@@ -99,7 +99,7 @@ export const useAuthStore = defineStore('auth', () => {
 				quickAddMagicMode: PrefixMode.Default,
 				colorSchema: 'auto',
 				...newSettings.frontendSettings,
-			}
+			},
 		})
 		// console.log('settings from auth store', {...settings.value.frontendSettings})
 	}
