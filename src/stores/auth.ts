@@ -332,9 +332,9 @@ export const useAuthStore = defineStore('auth', () => {
 		const cancel = setModuleLoading(setIsLoadingGeneralSettings)
 		try {
 			const updateSettingsPromise = userSettingsService.update(settings)
+			setUserSettings({...settings})
 			await setLanguage()
 			await updateSettingsPromise
-			setUserSettings({...settings})
 			if (showMessage) {
 				success({message: i18n.global.t('user.settings.general.savedSuccess')})
 			}
