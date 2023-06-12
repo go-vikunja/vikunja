@@ -69,12 +69,12 @@ export const useAuthStore = defineStore('auth', () => {
 		isLoadingGeneralSettings.value = isLoading 
 	}
 
-	function setUser(newUser: IUser | null) {
+	function setUser(newUser: IUser | null, saveSettings: boolean = true) {
 		info.value = newUser
 		if (newUser !== null) {
 			reloadAvatar()
 
-			if (newUser.settings) {
+			if (saveSettings && newUser.settings) {
 				loadSettings(newUser.settings)
 			}
 
@@ -101,7 +101,7 @@ export const useAuthStore = defineStore('auth', () => {
 				...newSettings.frontendSettings,
 			}
 		})
-		console.log('settings from auth store', {...settings.value.frontendSettings})
+		// console.log('settings from auth store', {...settings.value.frontendSettings})
 	}
 
 	function setAuthenticated(newAuthenticated: boolean) {
@@ -233,7 +233,8 @@ export const useAuthStore = defineStore('auth', () => {
 			const info = new UserModel(JSON.parse(atob(base64)))
 			const ts = Math.round((new Date()).getTime() / MILLISECONDS_A_SECOND)
 			isAuthenticated = info.exp >= ts
-			setUser(info)
+			// Settings should only be loaded from the api request, not via the jwt
+			setUser(info, false)
 
 			if (isAuthenticated) {
 				await refreshUserInfo()
