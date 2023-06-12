@@ -28,6 +28,7 @@ export const useBaseStore = defineStore('base', () => {
 	const keyboardShortcutsActive = ref(false)
 	const quickActionsActive = ref(false)
 	const logoVisible = ref(true)
+	const updateAvailable = ref(false)
 
 	function setLoading(newLoading: boolean) {
 		loading.value = newLoading
@@ -76,6 +77,10 @@ export const useBaseStore = defineStore('base', () => {
 	
 	function setReady(value: boolean) {
 		ready.value = value
+	}
+	
+	function setUpdateAvailable(value: boolean) {
+		updateAvailable.value = value
 	}
 
 	async function handleSetCurrentProject(
@@ -135,6 +140,7 @@ export const useBaseStore = defineStore('base', () => {
 		keyboardShortcutsActive: readonly(keyboardShortcutsActive),
 		quickActionsActive: readonly(quickActionsActive),
 		logoVisible: readonly(logoVisible),
+		updateAvailable: readonly(updateAvailable),
 
 		setLoading,
 		setReady,
@@ -145,6 +151,7 @@ export const useBaseStore = defineStore('base', () => {
 		setBackground,
 		setBlurHash,
 		setLogoVisible,
+		setUpdateAvailable,
 
 		handleSetCurrentProject,
 		loadApp,

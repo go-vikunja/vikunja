@@ -12,6 +12,7 @@
 		<keyboard-shortcuts v-if="keyboardShortcutsActive"/>
 		
 		<Teleport to="body">
+			<AddToHomeScreen/>
 			<UpdateNotification/>
 			<Notification/>
 		</Teleport>
@@ -43,6 +44,7 @@ import {useBaseStore} from '@/stores/base'
 
 import {useColorScheme} from '@/composables/useColorScheme'
 import {useBodyClass} from '@/composables/useBodyClass'
+import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
 
 const baseStore = useBaseStore()
 const authStore = useAuthStore()

@@ -4,6 +4,7 @@ import {
 	faAngleRight,
 	faArchive,
 	faArrowLeft,
+	faArrowUpFromBracket,
 	faBars,
 	faBell,
 	faCalendar,
@@ -56,7 +57,7 @@ import {
 	faTimes,
 	faTrashAlt,
 	faUser,
-	faUsers,
+	faUsers, faX,
 } from '@fortawesome/free-solid-svg-icons'
 import {
 	faBellSlash,
@@ -71,7 +72,7 @@ import {
 } from '@fortawesome/free-regular-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 
-import type { FontAwesomeIcon as FontAwesomeIconFixedTypes } from '@/types/vue-fontawesome'
+import type {FontAwesomeIcon as FontAwesomeIconFixedTypes} from '@/types/vue-fontawesome'
 
 library.add(faAlignLeft)
 library.add(faAngleRight)
@@ -139,6 +140,8 @@ library.add(faTimesCircle)
 library.add(faTrashAlt)
 library.add(faUser)
 library.add(faUsers)
+library.add(faArrowUpFromBracket)
+library.add(faX)
 
 // overwriting the wrong types
 export default FontAwesomeIcon as unknown as FontAwesomeIconFixedTypes

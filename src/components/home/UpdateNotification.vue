@@ -12,9 +12,12 @@
 </template>
 
 <script lang="ts" setup>
-import {ref} from 'vue'
+import {computed, ref} from 'vue'
+import {useBaseStore} from '@/stores/base'
 
-const updateAvailable = ref(false)
+const baseStore = useBaseStore()
+
+const updateAvailable = computed(() => baseStore.updateAvailable)
 const registration = ref(null)
 const refreshing = ref(false)
 
@@ -31,11 +34,11 @@ navigator?.serviceWorker?.addEventListener(
 function showRefreshUI(e: Event) {
 	console.log('recieved refresh event', e)
 	registration.value = e.detail
-	updateAvailable.value = true
+	baseStore.setUpdateAvailable(true)
 }
 
 function refreshApp() {
-	updateAvailable.value = false
+	baseStore.setUpdateAvailable(false)
 	if (!registration.value || !registration.value.waiting) {
 		return
 	}
@@ -65,7 +68,6 @@ function refreshApp() {
 	border-radius: $radius;
 	font-size: .9rem;
 	color: var(--grey-900);
-
 }
 
 .update-notification__message {
