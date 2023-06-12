@@ -1,5 +1,6 @@
 import {createI18n} from 'vue-i18n'
 import langEN from './lang/en.json'
+import {useAuthStore} from '@/stores/auth'
 
 export const SUPPORTED_LOCALES = {
 	'en': 'English',
@@ -54,9 +55,14 @@ export async function setLanguage(lang: SupportedLocale = getCurrentLanguage()):
 }
 
 export function getCurrentLanguage(): SupportedLocale {
-	const savedLanguage = localStorage.getItem('language') as SupportedLocale | null
-	if (savedLanguage !== null) {
-		return savedLanguage
+	try {
+		const authStore = useAuthStore()
+		if (authStore.settings.language !== null) {
+			return authStore.settings.language
+		}
+	} catch (e) {
+		// This may happen on the very first load of Vikunja because setting the language is attempted very early in the lifecycle
+		console.debug('could not load language from store:', e)
 	}
 
 	const browserLanguage = navigator.language
@@ -66,9 +72,4 @@ export function getCurrentLanguage(): SupportedLocale {
 	}) as SupportedLocale | undefined
 
 	return language || DEFAULT_LANGUAGE
-}
-
-export async function saveLanguage(lang: SupportedLocale) {
-	localStorage.setItem('language', lang)
-	await setLanguage()
 }
