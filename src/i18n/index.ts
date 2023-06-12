@@ -1,6 +1,5 @@
 import {createI18n} from 'vue-i18n'
 import langEN from './lang/en.json'
-import {useAuthStore} from '@/stores/auth'
 
 export const SUPPORTED_LOCALES = {
 	'en': 'English',
