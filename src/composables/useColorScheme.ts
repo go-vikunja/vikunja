@@ -1,6 +1,7 @@
 import {computed, watch, readonly} from 'vue'
-import {useStorage, createSharedComposable, usePreferredColorScheme, tryOnMounted} from '@vueuse/core'
+import {createSharedComposable, usePreferredColorScheme, tryOnMounted} from '@vueuse/core'
 import type {BasicColorSchema} from '@vueuse/core'
+import {useAuthStore} from '@/stores/auth'
 
 const STORAGE_KEY = 'color-scheme'
 
@@ -17,7 +18,8 @@ const CLASS_LIGHT = 'light'
 // - value is synced via `createSharedComposable`
 // https://github.com/vueuse/vueuse/blob/main/packages/core/useDark/index.ts 
 export const useColorScheme = createSharedComposable(() => {
-	const store = useStorage<BasicColorSchema>(STORAGE_KEY, DEFAULT_COLOR_SCHEME_SETTING)
+	const authStore = useAuthStore()
+	const store = computed(() => authStore.settings.frontendSettings.colorSchema)
 
 	const preferredColorScheme = usePreferredColorScheme()
 

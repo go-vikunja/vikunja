@@ -2,10 +2,12 @@
 import type {IAbstract} from './IAbstract'
 import type {IProject} from './IProject'
 import type {PrefixMode} from '@/modules/parseTaskText'
+import type {BasicColorSchema} from '@vueuse/core'
 
 export interface IFrontendSettings {
 	playSoundWhenDone: boolean
 	quickAddMagicMode: PrefixMode
+	colorSchema: BasicColorSchema
 }
 
 export interface IUserSettings extends IAbstract {

@@ -94,12 +94,14 @@ export const useAuthStore = defineStore('auth', () => {
 		settings.value = new UserSettingsModel({
 			...newSettings,
 			frontendSettings: {
-				...newSettings.frontendSettings,
 				// Need to set default settings here in case the user does not have any saved in the api already
+				playSoundWhenDone: true,
 				quickAddMagicMode: PrefixMode.Default,
+				colorSchema: 'auto',
+				...newSettings.frontendSettings,
 			}
 		})
-		console.log(settings.value.frontendSettings)
+		console.log('settings from auth store', {...settings.value.frontendSettings})
 	}
 
 	function setAuthenticated(newAuthenticated: boolean) {
