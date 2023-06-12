@@ -1,5 +1,6 @@
-import {describe, it, expect} from 'vitest'
+import {describe, expect, it} from 'vitest'
 import {parseSubtasksViaIndention} from '@/helpers/parseSubtasksViaIndention'
+import {PrefixMode} from '@/modules/parseTaskText'
 
 describe('Parse Subtasks via Relation', () => {
 	it('Should not return a parent for a single task', () => {
@@ -10,7 +11,7 @@ describe('Parse Subtasks via Relation', () => {
 	})
 	it('Should not return a parent for multiple tasks without indention', () => {
 		const tasks = parseSubtasksViaIndention(`task one
-task two`)
+task two`, PrefixMode.Default)
 
 		expect(tasks).to.have.length(2)
 		expect(tasks[0].parent).toBeNull()
@@ -18,7 +19,7 @@ task two`)
 	})
 	it('Should return a parent for two tasks with indention', () => {
 		const tasks = parseSubtasksViaIndention(`parent task
-  sub task`)
+  sub task`, PrefixMode.Default)
 
 		expect(tasks).to.have.length(2)
 		expect(tasks[0].parent).toBeNull()
@@ -29,7 +30,7 @@ task two`)
 	it('Should return a parent for multiple subtasks', () => {
 		const tasks = parseSubtasksViaIndention(`parent task
   sub task one
-  sub task two`)
+  sub task two`, PrefixMode.Default)
 
 		expect(tasks).to.have.length(3)
 		expect(tasks[0].parent).toBeNull()
@@ -42,7 +43,7 @@ task two`)
 	it('Should work with multiple indention levels', () => {
 		const tasks = parseSubtasksViaIndention(`parent task
   sub task
-    sub sub task`)
+    sub sub task`, PrefixMode.Default)
 
 		expect(tasks).to.have.length(3)
 		expect(tasks[0].parent).toBeNull()
@@ -56,7 +57,7 @@ task two`)
 		const tasks = parseSubtasksViaIndention(`parent task
   sub task
     sub sub task one
-    sub sub task two`)
+    sub sub task two`, PrefixMode.Default)
 
 		expect(tasks).to.have.length(4)
 		expect(tasks[0].parent).toBeNull()
@@ -73,7 +74,7 @@ task two`)
   sub task
     sub sub task one
       sub sub sub task
-    sub sub task two`)
+    sub sub task two`, PrefixMode.Default)
 
 		expect(tasks).to.have.length(5)
 		expect(tasks[0].parent).toBeNull()
@@ -90,7 +91,7 @@ task two`)
 	it('Should return a parent for multiple subtasks with special stuff', () => {
 		const tasks = parseSubtasksViaIndention(`* parent task
   * sub task one
-  sub task two`)
+  sub task two`, PrefixMode.Default)
 
 		expect(tasks).to.have.length(3)
 		expect(tasks[0].parent).toBeNull()
@@ -101,7 +102,7 @@ task two`)
 		expect(tasks[2].parent).to.eq('parent task')
 	})
 	it('Should not break when the first line is indented', () => {
-		const tasks = parseSubtasksViaIndention('  single task')
+		const tasks = parseSubtasksViaIndention('  single task', PrefixMode.Default)
 
 		expect(tasks).to.have.length(1)
 		expect(tasks[0].parent).toBeNull()
@@ -110,7 +111,7 @@ task two`)
 		const tasks = parseSubtasksViaIndention(
 `parent task +list
   sub task 1
-  sub task 2`)
+  sub task 2`, PrefixMode.Default)
 		
 		expect(tasks).to.have.length(3)
 		expect(tasks[0].project).to.eq('list')

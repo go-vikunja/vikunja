@@ -140,11 +140,11 @@ export const getProjectFromPrefix = (text: string, prefixMode: PrefixMode): stri
 }
 
 export const getLabelsFromPrefix = (text: string, prefixMode: PrefixMode): string[] | null => {
-	const projectPrefix = PREFIXES[prefixMode]?.project
-	if(typeof projectPrefix === 'undefined') {
+	const labelsPrefix = PREFIXES[prefixMode]?.label
+	if(typeof labelsPrefix === 'undefined') {
 		return null
 	}
-	return getItemsFromPrefix(text, projectPrefix)
+	return getItemsFromPrefix(text, labelsPrefix)
 }
 
 const getPriority = (text: string, prefix: string): number | null => {
