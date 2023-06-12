@@ -2,7 +2,7 @@ import {computed, readonly, ref} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 
 import {AuthenticatedHTTPFactory, HTTPFactory} from '@/helpers/fetcher'
-import {getCurrentLanguage, i18n, setLanguage} from '@/i18n'
+import {getBrowserLanguage, i18n, setLanguage} from '@/i18n'
 import {objectToSnakeCase} from '@/helpers/case'
 import UserModel, {getAvatarUrl, getDisplayName} from '@/models/user'
 import UserSettingsService from '@/services/userSettings'
@@ -284,7 +284,7 @@ export const useAuthStore = defineStore('auth', () => {
 				await saveUserSettings({
 					settings: {
 						...settings.value,
-						language: getCurrentLanguage(),
+						language: settings.value.language ? settings.value.language : getBrowserLanguage(),
 					},
 					showMessage: false,
 				})
@@ -333,7 +333,7 @@ export const useAuthStore = defineStore('auth', () => {
 		try {
 			const updateSettingsPromise = userSettingsService.update(settings)
 			setUserSettings({...settings})
-			await setLanguage()
+			await setLanguage(settings.language)
 			await updateSettingsPromise
 			if (showMessage) {
 				success({message: i18n.global.t('user.settings.general.savedSuccess')})

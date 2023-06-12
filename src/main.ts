@@ -16,7 +16,7 @@ import Notifications from '@kyvg/vue3-notification'
 import './registerServiceWorker'
 
 // i18n
-import {i18n, setLanguage} from './i18n'
+import {getBrowserLanguage, i18n, setLanguage} from './i18n'
 
 declare global {
 	interface Window {
@@ -56,7 +56,8 @@ import Card from '@/components/misc/card.vue'
 
 // We're loading the language before creating the app so that it won't fail to load when the user's 
 // language file is not yet loaded.
-setLanguage().then(() => {
+const browserLanguage = getBrowserLanguage()
+setLanguage(browserLanguage).then(() => {
 	const app = createApp(App)
 
 	app.use(Notifications)

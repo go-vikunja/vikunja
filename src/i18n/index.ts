@@ -33,7 +33,7 @@ export const i18n = createI18n({
 	} as Record<SupportedLocale, any>,
 })
 
-export async function setLanguage(lang: SupportedLocale = getCurrentLanguage()): Promise<SupportedLocale | undefined> {
+export async function setLanguage(lang: SupportedLocale): Promise<SupportedLocale | undefined> {
 	if (!lang) {
 		throw new Error()
 	}
@@ -54,17 +54,7 @@ export async function setLanguage(lang: SupportedLocale = getCurrentLanguage()):
 	return lang
 }
 
-export function getCurrentLanguage(): SupportedLocale {
-	try {
-		const authStore = useAuthStore()
-		if (authStore.settings.language !== null) {
-			return authStore.settings.language
-		}
-	} catch (e) {
-		// This may happen on the very first load of Vikunja because setting the language is attempted very early in the lifecycle
-		console.debug('could not load language from store:', e)
-	}
-
+export function getBrowserLanguage(): SupportedLocale {
 	const browserLanguage = navigator.language
 
 	const language = Object.keys(SUPPORTED_LOCALES).find(langKey => {
