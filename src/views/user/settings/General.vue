@@ -159,7 +159,6 @@ import {PrefixMode} from '@/modules/parseTaskText'
 import ProjectSearch from '@/components/tasks/partials/projectSearch.vue'
 
 import {SUPPORTED_LOCALES} from '@/i18n'
-import {playSoundWhenDoneKey, playPopSound} from '@/helpers/playPop'
 import {createRandomID} from '@/helpers/randomId'
 import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 
@@ -230,11 +229,6 @@ const defaultProject = computed({
 	},
 })
 const loading = computed(() => authStore.isLoadingGeneralSettings)
-
-// watch(
-// 	settings.value.frontendSettings.playSoundWhenDone,
-// 	(play) => play && playPopSound(),
-// )
 
 async function updateSettings() {
 	await authStore.saveUserSettings({
