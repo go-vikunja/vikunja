@@ -1,4 +1,4 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -214,8 +214,8 @@ devDependencies:
     specifier: 4.21.7
     version: 4.21.7
   caniuse-lite:
-    specifier: 1.0.30001494
-    version: 1.0.30001494
+    specifier: 1.0.30001500
+    version: 1.0.30001500
   css-has-pseudo:
     specifier: 5.0.2
     version: 5.0.2(postcss@8.4.24)
@@ -4013,7 +4013,7 @@ packages:
       postcss: ^8.1.0
     dependencies:
       browserslist: 4.21.7
-      caniuse-lite: 1.0.30001494
+      caniuse-lite: 1.0.30001500
       fraction.js: 4.2.0
       normalize-range: 0.1.2
       picocolors: 1.0.0
@@ -4172,7 +4172,7 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001494
+      caniuse-lite: 1.0.30001500
       electron-to-chromium: 1.4.419
       node-releases: 2.0.12
       update-browserslist-db: 1.0.11(browserslist@4.21.7)
@@ -4258,8 +4258,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /caniuse-lite@1.0.30001494:
-    resolution: {integrity: sha512-sY2B5Qyl46ZzfYDegrl8GBCzdawSLT4ThM9b9F+aDYUrAG2zCOyMbd2Tq34mS1g4ZKBfjRlzOohQMxx28x6wJg==}
+  /caniuse-lite@1.0.30001500:
+    resolution: {integrity: sha512-wSpY0RQnEwFwVZ063ggl3M4ALRP9OSknL0enldDEydIGzuShbtuWwaedB/RfkxsGF3P0kf1Tnv/nTtJEbjzc4Q==}
     dev: true
 
   /capital-case@1.0.4:

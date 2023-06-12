@@ -114,7 +114,7 @@
     "@vue/tsconfig": "0.4.0",
     "autoprefixer": "10.4.14",
     "browserslist": "4.21.7",
-    "caniuse-lite": "1.0.30001494",
+    "caniuse-lite": "1.0.30001500",
     "css-has-pseudo": "5.0.2",
     "csstype": "3.1.2",
     "cypress": "12.14.0",
