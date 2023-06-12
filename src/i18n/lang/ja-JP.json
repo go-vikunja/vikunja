@@ -717,6 +717,17 @@
         "copiedto": "Copied To | Copied To"
       }
     },
+    "reminder": {
+      "before": "{amount} {unit} before {type}",
+      "after": "{amount} {unit} after {type}",
+      "beforeShort": "before",
+      "afterShort": "after",
+      "onDueDate": "On the due date",
+      "onStartDate": "On the start date",
+      "onEndDate": "On the end date",
+      "custom": "カスタム",
+      "dateAndTime": "日付と時刻"
+    },
     "repeat": {
       "everyDay": "毎日",
       "everyWeek": "毎週",
@@ -980,5 +991,16 @@
     "title": "Vikunjaについて",
     "frontendVersion": "フロントエンドのバージョン: {version}",
     "apiVersion": "APIのバージョン: {version}"
+  },
+  "time": {
+    "units": {
+      "seconds": "秒",
+      "minutes": "分",
+      "hours": "時間",
+      "days": "日",
+      "weeks": "週間",
+      "months": "月",
+      "years": "年"
+    }
   }
 }

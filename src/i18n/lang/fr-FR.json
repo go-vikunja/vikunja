@@ -717,6 +717,17 @@
         "copiedto": "Copié vers | Copiés vers"
       }
     },
+    "reminder": {
+      "before": "{amount} {unit} before {type}",
+      "after": "{amount} {unit} after {type}",
+      "beforeShort": "before",
+      "afterShort": "after",
+      "onDueDate": "On the due date",
+      "onStartDate": "On the start date",
+      "onEndDate": "On the end date",
+      "custom": "Custom",
+      "dateAndTime": "Date and time"
+    },
     "repeat": {
       "everyDay": "Chaque jour",
       "everyWeek": "Chaque semaine",
@@ -980,5 +991,16 @@
     "title": "À propos",
     "frontendVersion": "Version : {version}",
     "apiVersion": "Version de l’API : {version}"
+  },
+  "time": {
+    "units": {
+      "seconds": "second|seconds",
+      "minutes": "minute|minutes",
+      "hours": "hour|hours",
+      "days": "day|days",
+      "weeks": "week|weeks",
+      "months": "month|months",
+      "years": "year|years"
+    }
   }
 }
