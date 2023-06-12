@@ -116,12 +116,12 @@ async function addTask() {
 	// This allows us to find the tasks with the title they had before being parsed
 	// by quick add magic.
 	const createdTasks: { [key: ITask['title']]: ITask } = {}
-	const tasksToCreate = parseSubtasksViaIndention(newTaskTitle.value)
+	const tasksToCreate = parseSubtasksViaIndention(newTaskTitle.value, authStore.settings.frontendSettings.quickAddMagicMode)
 
 	// We ensure all labels exist prior to passing them down to the create task method
 	// In the store it will only ever see one task at a time so there's no way to reliably 
 	// check if a new label was created before (because everything happens async).
-	const allLabels = tasksToCreate.map(({title}) => getLabelsFromPrefix(title) ?? [])
+	const allLabels = tasksToCreate.map(({title}) => getLabelsFromPrefix(title, authStore.settings.frontendSettings.quickAddMagicMode) ?? [])
 	await taskStore.ensureLabelsExist(allLabels.flat())
 
 	const newTasks = tasksToCreate.map(async ({title, project}) => {

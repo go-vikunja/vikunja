@@ -57,7 +57,7 @@
 		</div>
 		<div class="field">
 			<label class="checkbox">
-				<input type="checkbox" v-model="playSoundWhenDone"/>
+				<input type="checkbox" v-model="settings.frontendSettings.playSoundWhenDone"/>
 				{{ $t('user.settings.general.playSoundWhenDone') }}
 			</label>
 		</div>
@@ -97,7 +97,7 @@
 						{{ $t('user.settings.quickAddMagic.title') }}
 					</span>
 				<div class="select ml-2">
-					<select v-model="quickAddMagicMode">
+					<select v-model="settings.frontendSettings.quickAddMagicMode">
 						<option v-for="set in PrefixMode" :key="set" :value="set">
 							{{ $t(`user.settings.quickAddMagic.${set}`) }}
 						</option>
@@ -111,7 +111,7 @@
 					{{ $t('user.settings.appearance.title') }}
 				</span>
 				<div class="select ml-2">
-					<select v-model="activeColorSchemeSetting">
+					<select v-model="settings.frontendSettings.colorSchema">
 						<!-- TODO: use the Vikunja logo in color scheme as option buttons -->
 						<option v-for="(title, schemeId) in colorSchemeSettings" :key="schemeId" :value="schemeId">
 							{{ title }}
@@ -159,47 +159,25 @@ import {PrefixMode} from '@/modules/parseTaskText'
 import ProjectSearch from '@/components/tasks/partials/projectSearch.vue'
 
 import {SUPPORTED_LOCALES} from '@/i18n'
-import {playSoundWhenDoneKey, playPopSound} from '@/helpers/playPop'
-import {getQuickAddMagicMode, setQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {createRandomID} from '@/helpers/randomId'
-import {success} from '@/message'
 import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 
-import {useColorScheme} from '@/composables/useColorScheme'
 import {useTitle} from '@/composables/useTitle'
 
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
+import type {IUserSettings} from '@/modelTypes/IUserSettings'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.general.title')} - ${t('user.settings.title')}`)
 
 const DEFAULT_PROJECT_ID = 0
 
-function useColorSchemeSetting() {
-	const {t} = useI18n({useScope: 'global'})
-	const colorSchemeSettings = computed(() => ({
-		light: t('user.settings.appearance.colorScheme.light'),
-		auto: t('user.settings.appearance.colorScheme.system'),
-		dark: t('user.settings.appearance.colorScheme.dark'),
-	}))
-
-	const {store} = useColorScheme()
-	watch(store, (schemeId) => {
-		success({
-			message: t('user.settings.appearance.setSuccess', {
-				colorScheme: colorSchemeSettings.value[schemeId],
-			}),
-		})
-	})
-
-	return {
-		colorSchemeSettings,
-		activeColorSchemeSetting: store,
-	}
-}
-
-const {colorSchemeSettings, activeColorSchemeSetting} = useColorSchemeSetting()
+const colorSchemeSettings = computed(() => ({
+	light: t('user.settings.appearance.colorScheme.light'),
+	auto: t('user.settings.appearance.colorScheme.system'),
+	dark: t('user.settings.appearance.colorScheme.dark'),
+}))
 
 function useAvailableTimezones() {
 	const availableTimezones = ref([])
@@ -215,15 +193,15 @@ function useAvailableTimezones() {
 
 const availableTimezones = useAvailableTimezones()
 
-function getPlaySoundWhenDoneSetting() {
-	return localStorage.getItem(playSoundWhenDoneKey) === 'true' || localStorage.getItem(playSoundWhenDoneKey) === null
-}
-
-const playSoundWhenDone = ref(getPlaySoundWhenDoneSetting())
-const quickAddMagicMode = ref(getQuickAddMagicMode())
-
 const authStore = useAuthStore()
-const settings = ref({...authStore.settings})
+const settings = ref<IUserSettings>({
+	...authStore.settings,
+	frontendSettings: {
+		// Sub objects get exported as read only as well, so we need to 
+		// explicitly spread the object here to allow modification
+		...authStore.settings.frontendSettings,
+	},
+})
 const id = ref(createRandomID())
 const availableLanguageOptions = ref(
 	Object.entries(SUPPORTED_LOCALES)
@@ -252,15 +230,7 @@ const defaultProject = computed({
 })
 const loading = computed(() => authStore.isLoadingGeneralSettings)
 
-watch(
-	playSoundWhenDone,
-	(play) => play && playPopSound(),
-)
-
 async function updateSettings() {
-	localStorage.setItem(playSoundWhenDoneKey, playSoundWhenDone.value ? 'true' : 'false')
-	setQuickAddMagicMode(quickAddMagicMode.value)
-
 	await authStore.saveUserSettings({
 		settings: {...settings.value},
 	})

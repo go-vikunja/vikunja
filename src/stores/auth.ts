@@ -1,10 +1,10 @@
 import {computed, readonly, ref} from 'vue'
-import {defineStore, acceptHMRUpdate} from 'pinia'
+import {acceptHMRUpdate, defineStore} from 'pinia'
 
-import {HTTPFactory, AuthenticatedHTTPFactory} from '@/helpers/fetcher'
-import {i18n, getCurrentLanguage, saveLanguage, setLanguage} from '@/i18n'
+import {AuthenticatedHTTPFactory, HTTPFactory} from '@/helpers/fetcher'
+import {getBrowserLanguage, i18n, setLanguage} from '@/i18n'
 import {objectToSnakeCase} from '@/helpers/case'
-import UserModel, { getAvatarUrl, getDisplayName } from '@/models/user'
+import UserModel, {getAvatarUrl, getDisplayName} from '@/models/user'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 import {setModuleLoading} from '@/stores/helper'
@@ -16,6 +16,7 @@ import router from '@/router'
 import {useConfigStore} from '@/stores/config'
 import UserSettingsModel from '@/models/userSettings'
 import {MILLISECONDS_A_SECOND} from '@/constants/date'
+import {PrefixMode} from '@/modules/parseTaskText'
 
 function redirectToProviderIfNothingElseIsEnabled() {
 	const {auth} = useConfigStore()
@@ -68,13 +69,13 @@ export const useAuthStore = defineStore('auth', () => {
 		isLoadingGeneralSettings.value = isLoading 
 	}
 
-	function setUser(newUser: IUser | null) {
+	function setUser(newUser: IUser | null, saveSettings = true) {
 		info.value = newUser
 		if (newUser !== null) {
 			reloadAvatar()
 
-			if (newUser.settings) {
-				settings.value = new UserSettingsModel(newUser.settings)
+			if (saveSettings && newUser.settings) {
+				loadSettings(newUser.settings)
 			}
 
 			isLinkShareAuth.value = newUser.id < 0
@@ -82,11 +83,25 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	function setUserSettings(newSettings: IUserSettings) {
-		settings.value = new UserSettingsModel(newSettings)
+		loadSettings(newSettings)
 		info.value = new UserModel({
 			...info.value !== null ? info.value : {},
 			name: newSettings.name,
 		})
+	}
+	
+	function loadSettings(newSettings: IUserSettings) {
+		settings.value = new UserSettingsModel({
+			...newSettings,
+			frontendSettings: {
+				// Need to set default settings here in case the user does not have any saved in the api already
+				playSoundWhenDone: true,
+				quickAddMagicMode: PrefixMode.Default,
+				colorSchema: 'auto',
+				...newSettings.frontendSettings,
+			},
+		})
+		// console.log('settings from auth store', {...settings.value.frontendSettings})
 	}
 
 	function setAuthenticated(newAuthenticated: boolean) {
@@ -218,7 +233,8 @@ export const useAuthStore = defineStore('auth', () => {
 			const info = new UserModel(JSON.parse(atob(base64)))
 			const ts = Math.round((new Date()).getTime() / MILLISECONDS_A_SECOND)
 			isAuthenticated = info.exp >= ts
-			setUser(info)
+			// Settings should only be loaded from the api request, not via the jwt
+			setUser(info, false)
 
 			if (isAuthenticated) {
 				await refreshUserInfo()
@@ -268,7 +284,7 @@ export const useAuthStore = defineStore('auth', () => {
 				await saveUserSettings({
 					settings: {
 						...settings.value,
-						language: getCurrentLanguage(),
+						language: settings.value.language ? settings.value.language : getBrowserLanguage(),
 					},
 					showMessage: false,
 				})
@@ -316,10 +332,9 @@ export const useAuthStore = defineStore('auth', () => {
 		const cancel = setModuleLoading(setIsLoadingGeneralSettings)
 		try {
 			const updateSettingsPromise = userSettingsService.update(settings)
-			const saveLanguagePromise = saveLanguage(settings.language)
-			await updateSettingsPromise
 			setUserSettings({...settings})
-			await saveLanguagePromise
+			await setLanguage(settings.language)
+			await updateSettingsPromise
 			if (showMessage) {
 				success({message: i18n.global.t('user.settings.general.savedSuccess')})
 			}

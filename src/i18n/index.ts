@@ -32,7 +32,7 @@ export const i18n = createI18n({
 	} as Record<SupportedLocale, any>,
 })
 
-export async function setLanguage(lang: SupportedLocale = getCurrentLanguage()): Promise<SupportedLocale | undefined> {
+export async function setLanguage(lang: SupportedLocale): Promise<SupportedLocale | undefined> {
 	if (!lang) {
 		throw new Error()
 	}
@@ -53,12 +53,7 @@ export async function setLanguage(lang: SupportedLocale = getCurrentLanguage()):
 	return lang
 }
 
-export function getCurrentLanguage(): SupportedLocale {
-	const savedLanguage = localStorage.getItem('language') as SupportedLocale | null
-	if (savedLanguage !== null) {
-		return savedLanguage
-	}
-
+export function getBrowserLanguage(): SupportedLocale {
 	const browserLanguage = navigator.language
 
 	const language = Object.keys(SUPPORTED_LOCALES).find(langKey => {
@@ -66,9 +61,4 @@ export function getCurrentLanguage(): SupportedLocale {
 	}) as SupportedLocale | undefined
 
 	return language || DEFAULT_LANGUAGE
-}
-
-export async function saveLanguage(lang: SupportedLocale) {
-	localStorage.setItem('language', lang)
-	await setLanguage()
 }

@@ -71,10 +71,10 @@ import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
 import {useLabelStore} from '@/stores/labels'
 import {useTaskStore} from '@/stores/tasks'
+import {useAuthStore} from '@/stores/auth'
 
 import {getHistory} from '@/modules/projectHistory'
 import {parseTaskText, PrefixMode, PREFIXES} from '@/modules/parseTaskText'
-import {getQuickAddMagicMode} from '@/helpers/quickAddMagicMode'
 import {success} from '@/message'
 
 import type {ITeam} from '@/modelTypes/ITeam'
@@ -88,6 +88,7 @@ const baseStore = useBaseStore()
 const projectStore = useProjectStore()
 const labelStore = useLabelStore()
 const taskStore = useTaskStore()
+const authStore = useAuthStore()
 
 type DoAction<Type = any> = { type: ACTION_TYPE } & Type
 
@@ -242,7 +243,7 @@ const hintText = computed(() => {
 		}
 	}
 	const prefixes =
-		PREFIXES[getQuickAddMagicMode()] ?? PREFIXES[PrefixMode.Default]
+		PREFIXES[authStore.settings.frontendSettings.quickAddMagicMode] ?? PREFIXES[PrefixMode.Default]
 	return t('quickActions.hint', prefixes)
 })
 
@@ -255,7 +256,7 @@ const availableCmds = computed(() => {
 	return cmds
 })
 
-const parsedQuery = computed(() => parseTaskText(query.value, getQuickAddMagicMode()))
+const parsedQuery = computed(() => parseTaskText(query.value, authStore.settings.frontendSettings.quickAddMagicMode))
 
 const searchMode = computed(() => {
 	if (query.value === '') {

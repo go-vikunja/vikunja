@@ -1,7 +1,8 @@
 import AbstractModel from './abstractModel'
 
-import type {IUserSettings} from '@/modelTypes/IUserSettings'
-import {getCurrentLanguage} from '@/i18n'
+import type {IFrontendSettings, IUserSettings} from '@/modelTypes/IUserSettings'
+import {getBrowserLanguage} from '@/i18n'
+import {PrefixMode} from '@/modules/parseTaskText'
 
 export default class UserSettingsModel extends AbstractModel<IUserSettings> implements IUserSettings {
 	name = ''
@@ -13,7 +14,12 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 	defaultProjectId = undefined
 	weekStart = 0 as IUserSettings['weekStart']
 	timezone = ''
-	language = getCurrentLanguage()
+	language = getBrowserLanguage() 
+	frontendSettings: IFrontendSettings = {
+		playSoundWhenDone: true,
+		quickAddMagicMode: PrefixMode.Default,
+		colorSchema: 'auto',
+	}
 
 	constructor(data: Partial<IUserSettings> = {}) {
 		super()
