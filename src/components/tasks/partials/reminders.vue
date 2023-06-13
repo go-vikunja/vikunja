@@ -10,7 +10,9 @@
 				class="reminder-detail"
 				:disabled="disabled"
 				v-model="reminders[index]"
-				@update:model-value="updateData"/>
+				@update:model-value="updateData"
+				:default-relative-to="defaultRelativeTo"
+			/>
 			<BaseButton
 				v-if="!disabled"
 				@click="removeReminderByIndex(index)"
@@ -24,17 +26,20 @@
 			:disabled="disabled"
 			@update:modelValue="addNewReminder"
 			:clear-after-update="true"
+			:default-relative-to="defaultRelativeTo"
 		/>
 	</div>
 </template>
 
 <script setup lang="ts">
-import {ref, watch, type PropType} from 'vue'
+import {ref, watch, type PropType, computed} from 'vue'
 
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import ReminderDetail from '@/components/tasks/partials/reminder-detail.vue'
+import type {ITask} from '@/modelTypes/ITask'
+import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
 const props = defineProps({
 	modelValue: {
@@ -43,6 +48,10 @@ const props = defineProps({
 	},
 	disabled: {
 		default: false,
+	},
+	task: {
+		type: Object as PropType<ITask>,
+		required: false,
 	},
 })
 
@@ -57,6 +66,26 @@ watch(
 	},
 	{immediate: true},
 )
+
+const defaultRelativeTo = computed(() => {
+	if (typeof props.task === 'undefined') {
+		return null
+	}
+	
+	if (props.task?.dueDate) {
+		return REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE
+	}
+	
+	if (props.task.dueDate === null && props.task.startDate !== null) {
+		return REMINDER_PERIOD_RELATIVE_TO_TYPES.STARTDATE
+	}
+	
+	if (props.task.dueDate === null && props.task.startDate === null && props.task.endDate !== null) {
+		return REMINDER_PERIOD_RELATIVE_TO_TYPES.ENDDATE
+	}
+	
+	return null
+})
 
 function updateData() {
 	emit('update:modelValue', reminders.value)

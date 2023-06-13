@@ -10,7 +10,7 @@
 			</template>
 			<template #content="{isOpen, toggle}">
 				<Card class="reminder-options-popup" :class="{'is-open': isOpen}" :padding="false">
-					<div class="options" v-if="showFormSwitch === null">
+					<div class="options" v-if="activeForm === null">
 						<SimpleButton
 							v-for="(p, k) in presets"
 							:key="k"
@@ -37,13 +37,13 @@
 					</div>
 
 					<ReminderPeriod
-						v-if="showFormSwitch === 'relative'"
+						v-if="activeForm === 'relative'"
 						v-model="reminder"
 						@update:modelValue="updateDataAndMaybeClose(toggle)"
 					/>
 
 					<DatepickerInline
-						v-if="showFormSwitch === 'absolute'"
+						v-if="activeForm === 'absolute'"
 						v-model="reminderDate"
 						@update:modelValue="setReminderDate"
 					/>
@@ -63,10 +63,10 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch, type PropType} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {toRef} from '@vueuse/core'
 import {SECONDS_A_DAY} from '@/constants/date'
-import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
+import {IReminderPeriodRelativeTo, REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {useI18n} from 'vue-i18n'
 
 import {PeriodUnit, secondsToPeriod} from '@/helpers/time/period'
@@ -83,33 +83,40 @@ import SimpleButton from '@/components/input/SimpleButton.vue'
 
 const {t} = useI18n({useScope: 'global'})
 
-const props = defineProps({
-	modelValue: {
-		type: Object as PropType<ITaskReminder>,
-		required: false,
-	},
-	disabled: {
-		default: false,
-	},
-	clearAfterUpdate: {
-		type: Boolean,
-		default: false,
-	},
+const props = withDefaults(defineProps<{
+	modelValue?: ITaskReminder,
+	disabled?: boolean,
+	clearAfterUpdate?: boolean,
+	defaultRelativeTo?: null | IReminderPeriodRelativeTo,
+}>(), {
+	disabled: false,
+	clearAfterUpdate: false,
+	defaultRelativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
 })
 
 const emit = defineEmits(['update:modelValue'])
 
 const reminder = ref<ITaskReminder>(new TaskReminderModel())
 
-const presets: TaskReminderModel[] = [
-	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY, relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE},
-	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 3, relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE},
-	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 7, relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE},
-	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 30, relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE},
-]
+const presets = computed<TaskReminderModel[]>(() => [
+	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY, relativeTo: props.defaultRelativeTo},
+	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 3, relativeTo: props.defaultRelativeTo},
+	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 7, relativeTo: props.defaultRelativeTo},
+	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 30, relativeTo: props.defaultRelativeTo},
+])
 const reminderDate = ref(null)
 
-const showFormSwitch = ref<null | 'relative' | 'absolute'>(null)
+type availableForms = null | 'relative' | 'absolute'
+
+const showFormSwitch = ref<availableForms>(null)
+
+const activeForm = computed<availableForms>(() => {
+	if (props.defaultRelativeTo === null) {
+		return 'absolute'
+	}
+
+	return showFormSwitch.value
+})
 
 const reminderText = computed(() => {
 

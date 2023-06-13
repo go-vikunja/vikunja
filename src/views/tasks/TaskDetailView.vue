@@ -162,6 +162,7 @@
 									:ref="e => setFieldRef('reminders', e)"
 									v-model="task.reminders"
 									@update:model-value="saveTask"
+									:task="task"
 								/>
 							</div>
 						</CustomTransition>
