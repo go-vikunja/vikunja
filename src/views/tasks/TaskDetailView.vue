@@ -160,9 +160,8 @@
 								<reminders
 									:disabled="!canWrite"
 									:ref="e => setFieldRef('reminders', e)"
-									v-model="task.reminders"
+									v-model="task"
 									@update:model-value="saveTask"
-									:task="task"
 								/>
 							</div>
 						</CustomTransition>

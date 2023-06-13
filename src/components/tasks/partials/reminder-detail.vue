@@ -3,6 +3,7 @@
 		<Popup @close="showFormSwitch = null">
 			<template #trigger="{toggle}">
 				<SimpleButton
+					v-tooltip="reminder.reminder && reminder.relativeTo !== null ? formatDateShort(reminder.reminder) : null"
 					@click.prevent.stop="toggle()"
 				>
 					{{ reminderText }}

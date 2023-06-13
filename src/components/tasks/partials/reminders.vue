@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, type PropType, computed} from 'vue'
+import {ref, watch, computed} from 'vue'
 
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 
@@ -41,18 +41,12 @@ import ReminderDetail from '@/components/tasks/partials/reminder-detail.vue'
 import type {ITask} from '@/modelTypes/ITask'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
-const props = defineProps({
-	modelValue: {
-		type: Array as PropType<ITaskReminder[]>,
-		default: () => [],
-	},
-	disabled: {
-		default: false,
-	},
-	task: {
-		type: Object as PropType<ITask>,
-		required: false,
-	},
+const props = withDefaults(defineProps<{
+	modelValue: ITask,
+	disabled?: boolean,
+}>(), {
+	modelValue: [],
+	disabled: false,
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -60,27 +54,28 @@ const emit = defineEmits(['update:modelValue'])
 const reminders = ref<ITaskReminder[]>([])
 
 watch(
-	props.modelValue,
+	() => props.modelValue.reminders,
 	(newVal) => {
+		console.log('change', newVal)
 		reminders.value = newVal
 	},
-	{immediate: true},
+	{immediate: true, deep: true}, // deep watcher so that we get the resolved date after updating the task
 )
 
 const defaultRelativeTo = computed(() => {
-	if (typeof props.task === 'undefined') {
+	if (typeof props.modelValue === 'undefined') {
 		return null
 	}
 	
-	if (props.task?.dueDate) {
+	if (props.modelValue?.dueDate) {
 		return REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE
 	}
 	
-	if (props.task.dueDate === null && props.task.startDate !== null) {
+	if (props.modelValue.dueDate === null && props.modelValue.startDate !== null) {
 		return REMINDER_PERIOD_RELATIVE_TO_TYPES.STARTDATE
 	}
 	
-	if (props.task.dueDate === null && props.task.startDate === null && props.task.endDate !== null) {
+	if (props.modelValue.dueDate === null && props.modelValue.startDate === null && props.modelValue.endDate !== null) {
 		return REMINDER_PERIOD_RELATIVE_TO_TYPES.ENDDATE
 	}
 	
@@ -88,7 +83,10 @@ const defaultRelativeTo = computed(() => {
 })
 
 function updateData() {
-	emit('update:modelValue', reminders.value)
+	emit('update:modelValue', {
+		...props.modelValue,
+		reminders: reminders.value,
+	})
 }
 
 function addNewReminder(newReminder: ITaskReminder) {
