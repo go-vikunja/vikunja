@@ -201,7 +201,9 @@
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().setHorizontalRule().run()"
 			>
-				horizontal rule
+				<span class="editor-toolbar__pseudo-icon">
+					-
+				</span>
 			</BaseButton>
 			<BaseButton
 				class="editor-toolbar__button"
@@ -491,5 +493,11 @@ function setLink() {
 		background: var(--grey-200);
 		border-color: var(--grey-300);
 	}
+}
+
+.editor-toolbar__pseudo-icon {
+	padding: 0 .5rem;
+	font-weight: bold;
+	vertical-align: top;
 }
 </style>
