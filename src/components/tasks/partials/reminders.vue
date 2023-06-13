@@ -56,7 +56,6 @@ const reminders = ref<ITaskReminder[]>([])
 watch(
 	() => props.modelValue.reminders,
 	(newVal) => {
-		console.log('change', newVal)
 		reminders.value = newVal
 	},
 	{immediate: true, deep: true}, // deep watcher so that we get the resolved date after updating the task

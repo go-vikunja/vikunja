@@ -185,11 +185,8 @@
 								<repeat-after
 									:disabled="!canWrite"
 									:ref="e => setFieldRef('repeatAfter', e)"
-									:model-value="task"
-									@update:model-value="(newTask) => {
-										Object.assign(task, newTask)
-										saveTask()
-									}"
+									v-model="task"
+									@update:model-value="saveTask()"
 								/>
 							</div>
 						</CustomTransition>
