@@ -72,11 +72,10 @@ const CustomTableCell = TableCell.extend({
 	},
 })
 
-const props = defineProps({
-	modelValue: {
-		type: String as PropType<string>,
-		default: '',
-	},
+const props = withDefaults(defineProps<{
+	modelValue?: string,
+}>(), {
+	modelValue: '',
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])
