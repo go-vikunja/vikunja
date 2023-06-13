@@ -226,8 +226,6 @@ function translateUnit(amount: number, unit: PeriodUnit): string {
 			return t('time.units.days', amount)
 		case 'weeks':
 			return t('time.units.weeks', amount)
-		case 'months':
-			return t('time.units.months', amount)
 		case 'years':
 			return t('time.units.years', amount)
 	}

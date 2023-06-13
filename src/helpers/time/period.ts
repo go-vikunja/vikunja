@@ -17,7 +17,7 @@ export function secondsToPeriod(seconds: number): { unit: PeriodUnit, amount: nu
 		if (seconds % SECONDS_A_WEEK === 0) {
 			return {unit: 'weeks', amount: seconds / SECONDS_A_WEEK}
 		} else if (seconds % SECONDS_A_MONTH === 0) {
-			return {unit: 'months', amount: seconds / SECONDS_A_MONTH}
+			return {unit: 'days', amount: seconds / SECONDS_A_MONTH * 30}
 		} else if (seconds % SECONDS_A_YEAR === 0) {
 			return {unit: 'years', amount: seconds / SECONDS_A_YEAR}
 		} else {
