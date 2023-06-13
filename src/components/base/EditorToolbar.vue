@@ -394,7 +394,7 @@
 		<div class="editor-toolbar__segment">
 			<BaseButton class="editor-toolbar__button" @click="addImage" title="Add image from URL">
 				<span class="icon">
-					<icon :icon="['fa', 'fa-file-image']" />
+					<icon icon="fa-image" />
 				</span>
 			</BaseButton>
 		</div>
