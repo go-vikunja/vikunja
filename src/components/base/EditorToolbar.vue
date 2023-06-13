@@ -264,91 +264,91 @@
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().addColumnBefore().run()"
-					:disabled="!editor.can().addColumnBefore()"
+					:disabled="!editor.can().addColumnBefore"
 				>
 					addColumnBefore
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().addColumnAfter().run()"
-					:disabled="!editor.can().addColumnAfter()"
+					:disabled="!editor.can().addColumnAfter"
 				>
 					addColumnAfter
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().deleteColumn().run()"
-					:disabled="!editor.can().deleteColumn()"
+					:disabled="!editor.can().deleteColumn"
 				>
 					deleteColumn
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().addRowBefore().run()"
-					:disabled="!editor.can().addRowBefore()"
+					:disabled="!editor.can().addRowBefore"
 				>
 					addRowBefore
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().addRowAfter().run()"
-					:disabled="!editor.can().addRowAfter()"
+					:disabled="!editor.can().addRowAfter"
 				>
 					addRowAfter
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().deleteRow().run()"
-					:disabled="!editor.can().deleteRow()"
+					:disabled="!editor.can().deleteRow"
 				>
 					deleteRow
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().deleteTable().run()"
-					:disabled="!editor.can().deleteTable()"
+					:disabled="!editor.can().deleteTable"
 				>
 					deleteTable
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().mergeCells().run()"
-					:disabled="!editor.can().mergeCells()"
+					:disabled="!editor.can().mergeCells"
 				>
 					mergeCells
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().splitCell().run()"
-					:disabled="!editor.can().splitCell()"
+					:disabled="!editor.can().splitCell"
 				>
 					splitCell
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().toggleHeaderColumn().run()"
-					:disabled="!editor.can().toggleHeaderColumn()"
+					:disabled="!editor.can().toggleHeaderColumn"
 				>
 					toggleHeaderColumn
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().toggleHeaderRow().run()"
-					:disabled="!editor.can().toggleHeaderRow()"
+					:disabled="!editor.can().toggleHeaderRow"
 				>
 					toggleHeaderRow
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().toggleHeaderCell().run()"
-					:disabled="!editor.can().toggleHeaderCell()"
+					:disabled="!editor.can().toggleHeaderCell"
 				>
 					toggleHeaderCell
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().mergeOrSplit().run()"
-					:disabled="!editor.can().mergeOrSplit()"
+					:disabled="!editor.can().mergeOrSplit"
 				>
 					mergeOrSplit
 				</BaseButton>
@@ -370,21 +370,21 @@
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().fixTables().run()"
-					:disabled="!editor.can().fixTables()"
+					:disabled="!editor.can().fixTables"
 				>
 					fixTables
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().goToNextCell().run()"
-					:disabled="!editor.can().goToNextCell()"
+					:disabled="!editor.can().goToNextCell"
 				>
 					goToNextCell
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().goToPreviousCell().run()"
-					:disabled="!editor.can().goToPreviousCell()"
+					:disabled="!editor.can().goToPreviousCell"
 				>
 					goToPreviousCell
 				</BaseButton>
