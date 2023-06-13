@@ -209,7 +209,9 @@
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().setHardBreak().run()"
 			>
-				hard break
+				<span class="icon">
+					<icon :icon="['fa', 'fa-arrow-turn-down']" />
+				</span>
 			</BaseButton>
 		</div>
 
