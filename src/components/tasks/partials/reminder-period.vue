@@ -92,14 +92,23 @@ watch(
 	(value) => {
 		const p = secondsToPeriod(value?.relativePeriod)
 		period.value.durationUnit = p.unit
-		period.value.duration = p.amount
+		period.value.duration = Math.abs(p.amount)
 		period.value.relativeTo = value?.relativeTo || REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE
 	},
 	{immediate: true},
 )
 
+watch(
+	() => period.value.duration,
+	value => {
+		if (value < 0) {
+			period.value.duration = value * -1
+		}
+	},
+)
+
 function updateData() {
-	reminder.value.relativePeriod = period.value.sign * periodToSeconds(period.value.duration, period.value.durationUnit)
+	reminder.value.relativePeriod = period.value.sign * periodToSeconds(Math.abs(period.value.duration), period.value.durationUnit)
 	reminder.value.relativeTo = period.value.relativeTo
 	reminder.value.reminder = null
 
