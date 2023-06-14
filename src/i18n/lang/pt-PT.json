@@ -5,6 +5,7 @@
     "welcomeDay": "Olá {username}!",
     "welcomeEvening": "Boa Tarde {username}!",
     "lastViewed": "Visto recentemente",
+    "addToHomeScreen": "Add this app to your home screen for faster access and improved experience.",
     "project": {
       "importText": "Import your projects and tasks from other services into Vikunja:",
       "import": "Importar os teus dados para o Vikunja"

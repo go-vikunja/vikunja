@@ -5,6 +5,7 @@
     "welcomeDay": "こんにちは、{username}さん",
     "welcomeEvening": "こんばんは、{username}さん",
     "lastViewed": "最近の表示",
+    "addToHomeScreen": "Add this app to your home screen for faster access and improved experience.",
     "project": {
       "importText": "他のサービスからVikunjaにプロジェクトやタスクをインポートします:",
       "import": "Vikunjaへのデータのインポート"

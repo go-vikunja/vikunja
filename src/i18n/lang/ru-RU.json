@@ -5,6 +5,7 @@
     "welcomeDay": "Привет, {username}!",
     "welcomeEvening": "Добрый вечер, {username}!",
     "lastViewed": "Последние просмотренные",
+    "addToHomeScreen": "Add this app to your home screen for faster access and improved experience.",
     "project": {
       "importText": "Импортировать проекты и задачи из других сервисов в Vikunja:",
       "import": "Импорт данных в Vikunja"
