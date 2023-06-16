@@ -13,6 +13,7 @@ ENV PNPM_CACHE_FOLDER .cache/pnpm/
 
 COPY package.json ./
 COPY pnpm-lock.yaml ./
+COPY patches ./patches/
 
 RUN if [ "$USE_RELEASE" != true ]; then \
       # https://pnpm.io/installation#using-corepack
