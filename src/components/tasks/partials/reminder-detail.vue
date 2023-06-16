@@ -100,6 +100,7 @@ const emit = defineEmits(['update:modelValue'])
 const reminder = ref<ITaskReminder>(new TaskReminderModel())
 
 const presets = computed<TaskReminderModel[]>(() => [
+	{reminder: null, relativePeriod: 0, relativeTo: props.defaultRelativeTo},
 	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY, relativeTo: props.defaultRelativeTo},
 	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 3, relativeTo: props.defaultRelativeTo},
 	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 7, relativeTo: props.defaultRelativeTo},
