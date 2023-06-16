@@ -66,7 +66,7 @@
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
 import {toRef} from '@vueuse/core'
-import {SECONDS_A_DAY} from '@/constants/date'
+import {SECONDS_A_DAY, SECONDS_A_HOUR} from '@/constants/date'
 import {IReminderPeriodRelativeTo, REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {useI18n} from 'vue-i18n'
 
@@ -101,6 +101,7 @@ const reminder = ref<ITaskReminder>(new TaskReminderModel())
 
 const presets = computed<TaskReminderModel[]>(() => [
 	{reminder: null, relativePeriod: 0, relativeTo: props.defaultRelativeTo},
+	{reminder: null, relativePeriod: -2 * SECONDS_A_HOUR, relativeTo: props.defaultRelativeTo},
 	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY, relativeTo: props.defaultRelativeTo},
 	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 3, relativeTo: props.defaultRelativeTo},
 	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 7, relativeTo: props.defaultRelativeTo},
