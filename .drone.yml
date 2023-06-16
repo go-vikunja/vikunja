@@ -349,8 +349,7 @@ type: docker
 name: docker-release
 
 depends_on:
-  - release-latest
-  - release-version
+  - build
 
 trigger:
   ref:
@@ -378,8 +377,7 @@ steps:
       repo: vikunja/frontend
       tags: unstable
       build_args:
-        - USE_RELEASE=true
-        - RELEASE_VERSION=unstable
+        - USE_RELEASE=false
       platforms:
         - linux/386
         - linux/amd64
@@ -413,8 +411,7 @@ steps:
         from_secret: docker_password
       repo: vikunja/frontend
       build_args:
-        - USE_RELEASE=true
-        - RELEASE_VERSION=${DRONE_TAG##v}
+        - USE_RELEASE=false
       platforms:
         - linux/386
         - linux/amd64
@@ -524,6 +521,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: 511c2a090e9efd4c942980d971204adb6321540bb01c92409dd9bf8463b7f6f4
+hmac: a41964ffb64789df5553d7f51e05ac60d8243a4d8b7dfdd5be8de851aea5f9d7
 
 ...

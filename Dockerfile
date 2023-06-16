@@ -8,7 +8,7 @@ FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
 WORKDIR /build
 
 ARG USE_RELEASE=false
-ARG RELEASE_VERSION=main
+ARG RELEASE_VERSION=unstable
 ENV PNPM_CACHE_FOLDER .cache/pnpm/
 
 COPY package.json ./
