@@ -80,8 +80,8 @@ dependencies:
     specifier: 0.7.31
     version: 0.7.31(patch_hash=bfn3sngfuhktmdj7jgl3ejl35y)
   floating-vue:
-    specifier: 2.0.0-beta.20
-    version: 2.0.0-beta.20(vue@3.2.47)
+    specifier: 2.0.0-beta.21
+    version: 2.0.0-beta.21(vue@3.2.47)
   highlight.js:
     specifier: 11.8.0
     version: 11.8.0
@@ -2505,14 +2505,14 @@ packages:
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0, npm: '>=6.14.13'}
     dev: true
 
-  /@floating-ui/core@0.3.1:
-    resolution: {integrity: sha512-ensKY7Ub59u16qsVIFEo2hwTCqZ/r9oZZFh51ivcLGHfUwTn8l1Xzng8RJUe91H/UP8PeqeBronAGx0qmzwk2g==}
+  /@floating-ui/core@1.3.0:
+    resolution: {integrity: sha512-vX1WVAdPjZg9DkDkC+zEx/tKtnST6/qcNpwcjeBgco3XRNHz5PUA+ivi/yr6G3o0kMR60uKBJcfOdfzOFI7PMQ==}
     dev: false
 
-  /@floating-ui/dom@0.1.10:
-    resolution: {integrity: sha512-4kAVoogvQm2N0XE0G6APQJuCNuErjOfPW8Ux7DFxh8+AfugWflwVJ5LDlHOwrwut7z/30NUvdtHzQ3zSip4EzQ==}
+  /@floating-ui/dom@1.1.1:
+    resolution: {integrity: sha512-TpIO93+DIujg3g7SykEAGZMDtbJRrmnYRCNYSjJlvIbGhBjRSNTLVbNeDQBrzy9qDgUbiWdc7KA0uZHZ2tJmiw==}
     dependencies:
-      '@floating-ui/core': 0.3.1
+      '@floating-ui/core': 1.3.0
     dev: false
 
   /@fortawesome/fontawesome-common-types@6.4.0:
@@ -5665,12 +5665,12 @@ packages:
     dev: false
     patched: true
 
-  /floating-vue@2.0.0-beta.20(vue@3.2.47):
-    resolution: {integrity: sha512-N68otcpp6WwcYC7zP8GeJqNZVdfvS7tEY88lwmuAHeqRgnfWx1Un8enzLxROyVnBDZ3TwUoUdj5IFg+bUT7JeA==}
+  /floating-vue@2.0.0-beta.21(vue@3.2.47):
+    resolution: {integrity: sha512-wOXATZZkjX5sENcPnv891GzFcbaMYdPRdfhtfm7SHpYqfUDN1EIhfFU5lO1LMTIWaFlqhPFO0rmVM7Omal/XOQ==}
     peerDependencies:
       vue: ^3.2.0
     dependencies:
-      '@floating-ui/dom': 0.1.10
+      '@floating-ui/dom': 1.1.1
       vue: 3.2.47
       vue-resize: 2.0.0-alpha.1(vue@3.2.47)
     dev: false
