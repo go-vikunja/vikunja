@@ -328,7 +328,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 			this.resultCount = Number(response.headers['x-pagination-result-count'])
 			this.totalPages = Number(response.headers['x-pagination-total-pages'])
 
-			if (response.data === null) {
+			if (response.data === null || (Array.isArray(response.data) && response.data.length === 0)) {
 				return []
 			}
 
