@@ -40,8 +40,6 @@ console.log(isModernBuild
 */
 function getSentryConfig(env: ImportMetaEnv): ViteSentryPluginOptions {
 	return {
-		// dryRun: true, // FIXME: remove when ready with configuring
-		debug: true, // FIXME: remove when ready with configuring
 		skipEnvironmentCheck: true,
 
 		url: 'https://sentry.io',
