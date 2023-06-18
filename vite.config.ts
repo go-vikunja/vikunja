@@ -218,15 +218,17 @@ export default defineConfig(({mode}) => {
 			port: 4173,
 			strictPort: true,
 		},
+		output: {
+			manualChunks: {
+				// by putting tracking related stuff in a separated file we try to prevent unwanted blocking from ad-blockers
+				sentry: ['./src/sentry.ts', '@sentry/vue', '@sentry/tracing'],
+			},
+		},
 		build: {
 			target: 'esnext',
 			// required for sentry debugging: tells vite to create source maps
 			sourcemap: true,
 			rollupOptions: {
-				manualChunks: {
-					// by putting tracking related stuff in a separated file we try to prevent unwanted blocking from ad-blockers
-					sentry: ['./src/sentry.ts', '@sentry/vue', '@sentry/tracing']
-				},
 				plugins: [
 					visualizer({
 						filename: 'stats.html',
