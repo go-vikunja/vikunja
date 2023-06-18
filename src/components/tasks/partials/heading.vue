@@ -51,7 +51,7 @@ import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {useTaskStore} from '@/stores/tasks'
 
 import type {ITask} from '@/modelTypes/ITask'
-import {getHexColor} from '@/models/task'
+import {getHexColor, getTaskIdentifier} from '@/models/task'
 
 const props = defineProps({
 	task: {
@@ -79,7 +79,7 @@ async function copyUrl() {
 const taskStore = useTaskStore()
 const loading = computed(() => taskStore.isLoading)
 
-const textIdentifier = computed(() => props.task?.getTextIdentifier() || '')
+const textIdentifier = computed(() => getTaskIdentifier(props.task))
 
 // Since loading is global state, this variable ensures we're only showing the saving icon when saving the description.
 const saving = ref(false)

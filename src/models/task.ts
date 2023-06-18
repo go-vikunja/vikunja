@@ -46,6 +46,18 @@ export function parseRepeatAfter(repeatAfterSeconds: number): IRepeatAfter {
 	}
 }
 
+export function getTaskIdentifier(task: ITask | null | undefined): string {
+	if (task === null || typeof task === 'undefined') {
+		return ''
+	}
+	
+	if (task.identifier === '') {
+		return `#${task.identifier}`
+	}
+
+	return task.identifier
+}
+
 export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	id = 0
 	title = ''
@@ -142,11 +154,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	}
 
 	getTextIdentifier() {
-		if (this.identifier === '') {
-			return `#${this.index}`
-		}
-
-		return this.identifier
+		return getTaskIdentifier(this)
 	}
 
 	getHexColor() {
