@@ -1,4 +1,4 @@
-lockfileVersion: '6.0'
+lockfileVersion: '6.1'
 
 settings:
   autoInstallPeers: true
@@ -255,6 +255,9 @@ devDependencies:
   postcss-preset-env:
     specifier: 8.5.0
     version: 8.5.0(postcss@8.4.24)
+  rimraf:
+    specifier: 3.0.2
+    version: 3.0.2
   rollup:
     specifier: 3.25.1
     version: 3.25.1
@@ -279,6 +282,9 @@ devDependencies:
   vite-plugin-pwa:
     specifier: 0.16.4
     version: 0.16.4(vite@4.3.9)(workbox-build@7.0.0)(workbox-window@7.0.0)
+  vite-plugin-sentry:
+    specifier: 1.1.6
+    version: 1.1.6(vite@4.3.9)
   vite-svg-loader:
     specifier: 4.0.0
     version: 4.0.0
@@ -3007,6 +3013,22 @@ packages:
       '@sentry/utils': 7.55.2
       tslib: 1.14.1
     dev: false
+
+  /@sentry/cli@2.19.1:
+    resolution: {integrity: sha512-7RVwOUwVoOplsG1Jqo8YCke2BEQpGU+AvXAhl1HP6S4qB4mFat6Asr9EhvapPZvufpC85RvLt22h3q0yakRgaA==}
+    engines: {node: '>= 10'}
+    hasBin: true
+    requiresBuild: true
+    dependencies:
+      https-proxy-agent: 5.0.1
+      node-fetch: 2.6.7
+      progress: 2.0.3
+      proxy-from-env: 1.1.0
+      which: 2.0.2
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+    dev: true
 
   /@sentry/core@7.55.2:
     resolution: {integrity: sha512-clzQirownxqADv9+fopyMJTHzaoWedkN2+mi4ro1LxjLgROdXBFurMCC1nT+7cH/xvQ5gMIRkM/y/4gRtKy2Ew==}
@@ -9225,6 +9247,19 @@ packages:
       workbox-build: 7.0.0(acorn@7.4.1)
       workbox-window: 7.0.0
     transitivePeerDependencies:
+      - supports-color
+    dev: true
+
+  /vite-plugin-sentry@1.1.6(vite@4.3.9):
+    resolution: {integrity: sha512-IgrIIl+VKwfLEoJ5O/8rplWmnkjdzqlBwmncWJH19mitr/v7SP7YnXlzv+vdAvxBo5eA8QPYx0J2i58NnaQ3fg==}
+    engines: {node: '>= 12'}
+    peerDependencies:
+      vite: ^2.6.0 || ^3.0.0
+    dependencies:
+      '@sentry/cli': 2.19.1
+      vite: 4.3.9(@types/node@18.16.18)(sass@1.63.4)(terser@5.10.0)
+    transitivePeerDependencies:
+      - encoding
       - supports-color
     dev: true
 
