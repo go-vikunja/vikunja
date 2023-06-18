@@ -161,7 +161,7 @@
 									:disabled="!canWrite"
 									:ref="e => setFieldRef('reminders', e)"
 									v-model="task"
-									@update:model-value="() => saveTask()"
+									@update:model-value="saveTask()"
 								/>
 							</div>
 						</CustomTransition>
@@ -201,7 +201,7 @@
 									menu-position="bottom"
 									:ref="e => setFieldRef('color', e)"
 									v-model="taskColor"
-									@update:model-value="saveTask"
+									@update:model-value="saveTask()"
 								/>
 							</div>
 						</CustomTransition>
@@ -521,8 +521,8 @@ const attachmentStore = useAttachmentStore()
 const taskStore = useTaskStore()
 const kanbanStore = useKanbanStore()
 
-const task = reactive<ITask>(new TaskModel())
-useTitle(toRef(task, 'title'))
+const task = ref<ITask>(new TaskModel())
+useTitle(toRef(task.value, 'title'))
 
 // We doubled the task color property here because verte does not have a real change property, leading
 // to the color property change being triggered when the # is removed from it, leading to an update,
@@ -537,7 +537,7 @@ const visible = ref(false)
 
 const taskId = toRef(props, 'taskId')
 
-const project = computed(() => projectStore.projects[task.projectId])
+const project = computed(() => projectStore.projects[task.value.projectId])
 watchEffect(() => {
 	baseStore.handleSetCurrentProject({
 		project: project.value,
@@ -545,13 +545,13 @@ watchEffect(() => {
 })
 
 const canWrite = computed(() => (
-	task.maxRight !== null &&
-	task.maxRight > RIGHTS.READ
+	task.value.maxRight !== null &&
+	task.value.maxRight > RIGHTS.READ
 ))
 
 const color = computed(() => {
-	const color = task.getHexColor
-		? task.getHexColor()
+	const color = task.value.getHexColor
+		? task.value.getHexColor()
 		: undefined
 	
 	return color === TASK_DEFAULT_COLOR
@@ -581,9 +581,9 @@ watch(taskId, async (id) => {
 	}
 
 	try {
-		Object.assign(task, await taskService.get({id}))
-		attachmentStore.set(task.attachments)
-		taskColor.value = task.hexColor
+		Object.assign(task.value, await taskService.get({id}))
+		attachmentStore.set(task.value.attachments)
+		taskColor.value = task.value.hexColor
 		setActiveFields()
 	} finally {
 		await nextTick()
@@ -629,17 +629,17 @@ function setActiveFields() {
 	// task.endDate = task.endDate || null
 
 	// Set all active fields based on values in the model
-	activeFields.assignees = task.assignees.length > 0
-	activeFields.attachments = task.attachments.length > 0
-	activeFields.dueDate = task.dueDate !== null
-	activeFields.endDate = task.endDate !== null
-	activeFields.labels = task.labels.length > 0
-	activeFields.percentDone = task.percentDone > 0
-	activeFields.priority = task.priority !== PRIORITIES.UNSET
-	activeFields.relatedTasks = Object.keys(task.relatedTasks).length > 0
-	activeFields.reminders = task.reminders.length > 0
-	activeFields.repeatAfter = task.repeatAfter?.amount > 0 || task.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
-	activeFields.startDate = task.startDate !== null
+	activeFields.assignees = task.value.assignees.length > 0
+	activeFields.attachments = task.value.attachments.length > 0
+	activeFields.dueDate = task.value.dueDate !== null
+	activeFields.endDate = task.value.endDate !== null
+	activeFields.labels = task.value.labels.length > 0
+	activeFields.percentDone = task.value.percentDone > 0
+	activeFields.priority = task.value.priority !== PRIORITIES.UNSET
+	activeFields.relatedTasks = Object.keys(task.value.relatedTasks).length > 0
+	activeFields.reminders = task.value.reminders.length > 0
+	activeFields.repeatAfter = task.value.repeatAfter?.amount > 0 || task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	activeFields.startDate = task.value.startDate !== null
 }
 
 const activeFieldElements : {[id in FieldType]: HTMLElement | null} = reactive({
@@ -678,18 +678,12 @@ function setFieldActive(fieldName: keyof typeof activeFields) {
 	})
 }
 
-async function saveTask(args?: {
-	task: ITask,
+async function saveTask(
+	currentTask: ITask | null = null,
 	undoCallback?: () => void,
-}) {
-	const {
-		task: currentTask,
-		undoCallback,
-	} = {
-		...{
-			task: klona(task),
-		},
-		...args,
+) {
+	if (currentTask === null) {
+		currentTask = klona(task.value)
 	}
 			
 	if (!canWrite.value) {
@@ -708,12 +702,12 @@ async function saveTask(args?: {
 		currentTask.endDate = currentTask.dueDate
 	}
 
-	const newTask = await taskStore.update(currentTask) // TODO: markraw ?
-	Object.assign(task, newTask)
+	const updatedTask = await taskStore.update(currentTask) // TODO: markraw ?
+	Object.assign(task.value, updatedTask)
 	setActiveFields()
 
 	let actions: MessageAction[] = []
-	if (undoCallback !== null) {
+	if (undoCallback) {
 		actions = [{
 			title: t('task.undo'),
 			callback: undoCallback,
@@ -724,63 +718,57 @@ async function saveTask(args?: {
 
 const showDeleteModal = ref(false)
 async function deleteTask() {
-	await taskStore.delete(task)
+	await taskStore.delete(task.value)
 	success({message: t('task.detail.deleteSuccess')})
-	router.push({name: 'project.index', params: {projectId: task.projectId}})
+	router.push({name: 'project.index', params: {projectId: task.value.projectId}})
 }
 
 function toggleTaskDone() {
 	const newTask = {
-		...task,
-		done: !task.done,
+		...task.value,
+		done: !task.value.done,
 	}
 
-	saveTask({
-		task: newTask,
-		undoCallback: toggleTaskDone,
-	})
+	saveTask(
+		newTask,
+		toggleTaskDone,
+	)
 }
 
 async function changeProject(project: IProject) {
-	kanbanStore.removeTaskInBucket(task)
+	kanbanStore.removeTaskInBucket(task.value)
 	await saveTask({
-		task: {
-			...task,
-			projectId: project.id,
-		},
+		...task.value,
+		projectId: project.id,
 	})
 }
 
 async function toggleFavorite() {
 	const newTask = await taskStore.toggleFavorite(task.value)
-	Object.assign(task, newTask)
+	Object.assign(task.value, newTask)
 }
 
 async function setPriority(priority: Priority) {
 	const newTask: ITask = {
-		...task,
+		...task.value,
 		priority,
 	}
 
-	return saveTask({
-		task: newTask,
-	})
+	return saveTask(newTask)
 }
 
 async function setPercentDone(percentDone: number) {
 	const newTask: ITask = {
-		...task,
+		...task.value,
 		percentDone,
 	}
 
-	return saveTask({
-		task: newTask,
-	})
+	return saveTask(newTask)
 }
 
 async function removeRepeatAfter() {
-	task.repeatAfter.amount = 0
-	task.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	task.value.repeatAfter.amount = 0
+	task.value.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
 	await saveTask()
 }
 </script>
