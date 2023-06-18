@@ -70,10 +70,6 @@ steps:
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
-      SENTRY_AUTH_TOKEN:
-        from_secret: sentry_auth_token
-      SENTRY_ORG: vikunja
-      SENTRY_PROJECT: frontend-oss
     commands:
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run build
@@ -210,6 +206,10 @@ steps:
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
+      SENTRY_AUTH_TOKEN:
+        from_secret: sentry_auth_token
+      SENTRY_ORG: vikunja
+      SENTRY_PROJECT: frontend-oss
     commands:
       - apk add git
       - corepack enable && pnpm config set store-dir .cache/pnpm
@@ -287,6 +287,10 @@ steps:
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
+      SENTRY_AUTH_TOKEN:
+        from_secret: sentry_auth_token
+      SENTRY_ORG: vikunja
+      SENTRY_PROJECT: frontend-oss
     commands:
       - apk add git
       - corepack enable && pnpm config set store-dir .cache/pnpm
@@ -525,6 +529,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: f2524d77d2d7d284319e20650627cc68b81631d166a0dab808d272e7a132054f
+hmac: 6a566550cac03e9f3f9bbccab95fda4b342233bd63a1409cb5f634b1c744c326
 
 ...
