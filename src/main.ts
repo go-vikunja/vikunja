@@ -105,8 +105,7 @@ setLanguage(browserLanguage).then(() => {
 
 	if (window.SENTRY_ENABLED) {
 		try {
-			import {setupSentry} from './sentry'
-			setupSentry(app, router).then(sentry => sentry.default(app, router))
+			import('./sentry').then(sentry => sentry.default(app, router))
 		} catch (e) {
 			console.error('Could not enable Sentry tracking', e)
 		}

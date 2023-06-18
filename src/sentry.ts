@@ -2,7 +2,7 @@ import 'virtual:vite-plugin-sentry/sentry-config'
 import type {App} from 'vue'
 import type {Router} from 'vue-router'
 
-export async function setupSentry(app: App, router: Router) {
+export default async function setupSentry(app: App, router: Router) {
 	const Sentry = await import('@sentry/vue')
 	const {Integrations} = await import('@sentry/tracing')
 
