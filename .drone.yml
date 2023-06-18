@@ -74,8 +74,6 @@ steps:
         from_secret: sentry_auth_token
       SENTRY_ORG: vikunja
       SENTRY_PROJECT: frontend-oss
-      SENTRY_RELEASE:
-        from_secret: sentry_release
     commands:
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run build

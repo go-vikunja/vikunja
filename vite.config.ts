@@ -48,7 +48,7 @@ function getSentryConfig(env: ImportMetaEnv): ViteSentryPluginOptions {
 		authToken: env.SENTRY_AUTH_TOKEN,
 		org: env.SENTRY_ORG,
 		project: env.SENTRY_PROJECT,
-		release: env.SENTRY_VERSION || VERSION,
+		release: VERSION,
 		deploy: {
 			env: env.mode === 'production'
 				? 'production'
