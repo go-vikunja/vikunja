@@ -49,6 +49,7 @@ function getSentryConfig(env: ImportMetaEnv): ViteSentryPluginOptions {
 		org: env.SENTRY_ORG,
 		project: env.SENTRY_PROJECT,
 		release: VERSION,
+		cleanSourcemapsAfterUpload: true,
 		deploy: {
 			env: env.mode === 'production'
 				? 'production'

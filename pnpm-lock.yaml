@@ -255,9 +255,6 @@ devDependencies:
   postcss-preset-env:
     specifier: 8.5.0
     version: 8.5.0(postcss@8.4.24)
-  rimraf:
-    specifier: 3.0.2
-    version: 3.0.2
   rollup:
     specifier: 3.25.1
     version: 3.25.1
