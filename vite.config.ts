@@ -50,9 +50,7 @@ function getSentryConfig(env: ImportMetaEnv): ViteSentryPluginOptions {
 		cleanSourcemapsAfterUpload: true,
 		legacyErrorHandlingMode: true,
 		deploy: {
-			env: env.mode === 'production'
-				? 'production'
-				: 'development',
+			env: env.MODE,
 		},
 		setCommits: {
 			auto: true,
