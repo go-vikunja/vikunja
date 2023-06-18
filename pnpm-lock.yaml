@@ -1,4 +1,4 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -280,8 +280,8 @@ devDependencies:
     specifier: 0.16.4
     version: 0.16.4(vite@4.3.9)(workbox-build@7.0.0)(workbox-window@7.0.0)
   vite-plugin-sentry:
-    specifier: 1.1.6
-    version: 1.1.6(vite@4.3.9)
+    specifier: 1.3.0
+    version: 1.3.0(vite@4.3.9)
   vite-svg-loader:
     specifier: 4.0.0
     version: 4.0.0
@@ -9247,11 +9247,11 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-sentry@1.1.6(vite@4.3.9):
-    resolution: {integrity: sha512-IgrIIl+VKwfLEoJ5O/8rplWmnkjdzqlBwmncWJH19mitr/v7SP7YnXlzv+vdAvxBo5eA8QPYx0J2i58NnaQ3fg==}
-    engines: {node: '>= 12'}
+  /vite-plugin-sentry@1.3.0(vite@4.3.9):
+    resolution: {integrity: sha512-cei2ocb0l9hOuij8//DPMFl2Fcl0gVOBWGbqZ7F3aNLHUFkZvGm+B+aTWPX9CDpwW0uLcqqoo8O9rckFF0PGLA==}
+    engines: {node: '>= 14'}
     peerDependencies:
-      vite: ^2.6.0 || ^3.0.0
+      vite: ^2.6.0 || ^3.0.0 || ^4.0.0
     dependencies:
       '@sentry/cli': 2.19.1
       vite: 4.3.9(@types/node@18.16.18)(sass@1.63.4)(terser@5.10.0)
