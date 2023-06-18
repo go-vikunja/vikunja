@@ -185,7 +185,12 @@ function useAvailableTimezones() {
 	const HTTP = AuthenticatedHTTPFactory()
 	HTTP.get('user/timezones')
 		.then(r => {
-			availableTimezones.value = r.data.sort()
+			if (r.data) {
+				availableTimezones.value = r.data.sort()
+				return
+			}
+			
+			availableTimezones.value = []
 		})
 
 	return availableTimezones
