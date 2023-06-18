@@ -4,9 +4,7 @@ import {createApp} from 'vue'
 import pinia from './pinia'
 import router from './router'
 import App from './App.vue'
-
 import {error, success} from './message'
-
 import {VERSION} from './version.json'
 
 // Notifications
@@ -106,7 +104,11 @@ setLanguage(browserLanguage).then(() => {
 	}
 
 	if (window.SENTRY_ENABLED) {
-		import('./sentry').then(sentry => sentry.default(app, router))
+		try {
+			import('./sentry').then(sentry => sentry.default(app, router))
+		} catch (e) {
+			console.error('Could not enable Sentry tracking', e)
+		}
 	}
 
 	app.use(pinia)

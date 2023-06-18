@@ -9,6 +9,8 @@ import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import {VitePWA} from 'vite-plugin-pwa'
 import VitePluginInjectPreload from 'vite-plugin-inject-preload'
 import {visualizer} from 'rollup-plugin-visualizer'
+
+import viteSentry, {type ViteSentryPluginOptions} from 'vite-plugin-sentry'
 import svgLoader from 'vite-svg-loader'
 import postcssPresetEnv from 'postcss-preset-env'
 import postcssEasings from 'postcss-easings'
@@ -17,6 +19,8 @@ import postcssEasingGradients from 'postcss-easing-gradients'
 
 const pathSrc = fileURLToPath(new URL('./src', import.meta.url))
 
+import {VERSION} from './src/version.json'
+
 // the @use rules have to be the first in the compiled stylesheets
 const PREFIXED_SCSS_STYLES = `@use "sass:math";
 @import "${pathSrc}/styles/common-imports";`
@@ -24,15 +28,43 @@ const PREFIXED_SCSS_STYLES = `@use "sass:math";
 const isModernBuild = Boolean(process.env.BUILD_MODERN_ONLY)
 const legacy = isModernBuild
 	? undefined
-	: legacyFn({
-		// recommended by browserslist => https://github.com/vitejs/vite/tree/main/packages/plugin-legacy#targets
-		targets: ['defaults', 'not IE 11'],
-	})
+	: legacyFn()
 
 console.log(isModernBuild
 	? 'Building "modern-only" build'
 	: 'Building "legacy" build with "@vitejs/plugin-legacy"',
 )
+
+/*
+** Configure sentry plugin
+*/
+function getSentryConfig(env: ImportMetaEnv): ViteSentryPluginOptions {
+	return {
+		// dryRun: true, // FIXME: remove when ready with configuring
+		debug: true, // FIXME: remove when ready with configuring
+		skipEnvironmentCheck: true,
+
+		url: 'https://sentry.io',
+		authToken: env.SENTRY_AUTH_TOKEN,
+		org: env.SENTRY_ORG,
+		project: env.SENTRY_PROJECT,
+		release: VERSION,
+		cleanSourcemapsAfterUpload: true,
+		deploy: {
+			env: env.mode === 'production'
+				? 'production'
+				: 'development',
+		},
+		setCommits: {
+			auto: true,
+		},
+		sourceMaps: {
+			include: ['./dist/assets'],
+			ignore: ['node_modules'],
+			urlPrefix: '~/assets',
+		},
+	}
+}
 
 /**
  * @param fontNames Array of the file names of the fonts without axis and hash suffixes
@@ -171,6 +203,7 @@ export default defineConfig(({mode}) => {
 					],
 				},
 			}),
+			viteSentry(getSentryConfig(env)),
 		],
 		resolve: {
 			alias: [
@@ -186,8 +219,16 @@ export default defineConfig(({mode}) => {
 			port: 4173,
 			strictPort: true,
 		},
+		output: {
+			manualChunks: {
+				// by putting tracking related stuff in a separated file we try to prevent unwanted blocking from ad-blockers
+				sentry: ['./src/sentry.ts', '@sentry/vue', '@sentry/tracing'],
+			},
+		},
 		build: {
 			target: 'esnext',
+			// required for sentry debugging: tells vite to create source maps
+			sourcemap: true,
 			rollupOptions: {
 				plugins: [
 					visualizer({
