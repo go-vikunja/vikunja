@@ -6,6 +6,7 @@ import {saveProjectView, getProjectView} from '@/helpers/projectView'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 import {setTitle} from '@/helpers/setTitle'
+import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
@@ -80,7 +81,7 @@ const router = createRouter({
 		}
 
 		// Scroll to anchor should still work
-		if (to.hash) {
+		if (to.hash && !to.hash.startsWith(LINK_SHARE_HASH_PREFIX)) {
 			return {el: to.hash}
 		}
 
@@ -442,8 +443,7 @@ const router = createRouter({
 	],
 })
 
-export async function getAuthForRoute(route: RouteLocation) {
-	const authStore = useAuthStore()
+export async function getAuthForRoute(to: RouteLocation, authStore) {
 	if (authStore.authUser || authStore.authLinkShare) {
 		return
 	}
@@ -464,26 +464,52 @@ export async function getAuthForRoute(route: RouteLocation) {
 			'user.register',
 			'link-share.auth',
 			'openid.auth',
-		].includes(route.name as string) &&
+		].includes(to.name as string) &&
 		localStorage.getItem('passwordResetToken') === null &&
 		localStorage.getItem('emailConfirmToken') === null &&
-		!(route.name === 'home' && (typeof route.query.userPasswordReset !== 'undefined' || typeof route.query.userEmailConfirm !== 'undefined'))
+		!(to.name === 'home' && (typeof to.query.userPasswordReset !== 'undefined' || typeof to.query.userEmailConfirm !== 'undefined'))
 	) {
-		saveLastVisited(route.name as string, route.params, route.query)
+		saveLastVisited(to.name as string, to.params, to.query)
 		return {name: 'user.login'}
 	}
 	
-	if(localStorage.getItem('passwordResetToken') !== null && route.name !== 'user.password-reset.reset') {
+	if(localStorage.getItem('passwordResetToken') !== null && to.name !== 'user.password-reset.reset') {
 		return {name: 'user.password-reset.reset'}
 	}
 	
-	if(localStorage.getItem('emailConfirmToken') !== null && route.name !== 'user.login') {
+	if(localStorage.getItem('emailConfirmToken') !== null && to.name !== 'user.login') {
 		return {name: 'user.login'}
 	}
 }
 
-router.beforeEach(async (to) => {
-	return getAuthForRoute(to)
+router.beforeEach(async (to, from) => {
+	const authStore = useAuthStore()
+
+	if(from.hash && from.hash.startsWith(LINK_SHARE_HASH_PREFIX)) {
+		to.hash = from.hash
+	}
+
+	if (to.hash.startsWith(LINK_SHARE_HASH_PREFIX) && !authStore.authLinkShare) {
+		saveLastVisited(to.name as string, to.params, to.query)
+		return {
+			name: 'link-share.auth',
+			params: {
+				share: to.hash.replace(LINK_SHARE_HASH_PREFIX, ''),
+			},
+		}
+	}
+
+	const newRoute = await getAuthForRoute(to, authStore)
+	if(newRoute) {
+		return {
+			...newRoute,
+			hash: to.hash,
+		}
+	}
+	
+	if(!to.fullPath.endsWith(to.hash)) {
+		return to.fullPath + to.hash
+	}
 })
 
 export default router

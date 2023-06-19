@@ -40,12 +40,15 @@ import {useTitle} from '@vueuse/core'
 
 import Message from '@/components/misc/message.vue'
 import {PROJECT_VIEWS, type ProjectView} from '@/types/ProjectView'
+import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 
 import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
+import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(t('sharing.authenticating'))
+const {getLastVisitedRoute} = useRedirectToLastVisited()
 
 function useAuth() {
 	const baseStore = useBaseStore()
@@ -87,7 +90,21 @@ function useAuth() {
 				? route.query.view
 				: 'list'
 
-			router.push({name: `project.${view}`, params: {projectId}})
+			const hash = LINK_SHARE_HASH_PREFIX + route.params.share
+
+			const last = getLastVisitedRoute()
+			if (last) {
+				return router.push({
+					...last,
+					hash,
+				})
+			}
+
+			return router.push({
+				name: `project.${view}`,
+				params: {projectId},
+				hash,
+			})
 		} catch (e: any) {
 			if (e.response?.data?.code === 13001) {
 				authenticateWithPassword.value = true
