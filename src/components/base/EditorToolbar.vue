@@ -183,7 +183,7 @@
 				title="task list"
 			>
 				<span class="icon">
-					<icon :icon="['fa', ' fa-list-check']" />
+					<icon icon="fa-list-check" />
 				</span>
 			</BaseButton>
 			<BaseButton
