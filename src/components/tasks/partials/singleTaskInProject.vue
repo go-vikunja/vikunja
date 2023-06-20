@@ -185,7 +185,7 @@ watch(
 )
 
 onMounted(() => {
-	task.value = theTask.value
+	task.value = theTask
 	document.addEventListener('click', hideDeferDueDatePopup)
 })
 

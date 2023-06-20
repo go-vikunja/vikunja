@@ -1,9 +1,10 @@
-import {ref, shallowReactive, watch, computed} from 'vue'
+import {ref, shallowReactive, watch, computed, type ShallowReactive} from 'vue'
 import {useRoute} from 'vue-router'
 
 import TaskCollectionService from '@/services/taskCollection'
 import type {ITask} from '@/modelTypes/ITask'
 import {error} from '@/message'
+import type {IProject} from '@/modelTypes/IProject'
 
 export type Order = 'asc' | 'desc' | 'none'
 
@@ -60,7 +61,7 @@ const SORT_BY_DEFAULT: SortBy = {
 /**
  * This mixin provides a base set of methods and properties to get tasks.
  */
-export function useTaskList(projectId, sortByDefault: SortBy = SORT_BY_DEFAULT) {
+export function useTaskList(projectId: ShallowReactive<IProject['id']>, sortByDefault: SortBy = SORT_BY_DEFAULT) {
 	const params = ref({...getDefaultParams()})
 	
 	const search = ref('')
@@ -80,7 +81,7 @@ export function useTaskList(projectId, sortByDefault: SortBy = SORT_BY_DEFAULT) 
 		loadParams = formatSortOrder(sortBy.value, loadParams)
 
 		return [
-			{projectId: projectId.value},
+			{projectId: projectId},
 			loadParams,
 			page.value || 1,
 		]
