@@ -175,7 +175,7 @@ onBeforeUnmount(() => editor.value?.destroy())
 	border: 1px solid #ddd;
 	border-bottom-left-radius: 4px;
 	border-bottom-right-radius: 4px;
-	padding: 10px;
+	//padding: 10px;
 	// font: inherit;
 	// z-index: 0;
 	// word-wrap: break-word;
@@ -186,6 +186,8 @@ onBeforeUnmount(() => editor.value?.destroy())
 
 /* Basic editor styles */
 .ProseMirror {
+	padding: .5rem;
+	
 	> * + * {
 		margin-top: 0.75em;
 	}
