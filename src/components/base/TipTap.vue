@@ -316,8 +316,8 @@ onBeforeUnmount(() => editor.value?.destroy())
 	}
 }
 
-/* Table-specific styling */
 .ProseMirror {
+	/* Table-specific styling */
 	table {
 		border-collapse: collapse;
 		table-layout: fixed;
@@ -371,6 +371,20 @@ onBeforeUnmount(() => editor.value?.destroy())
 			margin: 0;
 		}
 	}
+	
+	// Lists
+	ul {
+		margin-left: .5rem;
+		margin-top: 0 !important;
+		
+		li {
+			margin-top: 0;
+		}
+		
+		p {
+			margin-bottom: 0 !important;
+		}
+	}
 }
 
 .tableWrapper {
@@ -387,11 +401,6 @@ ul[data-type="taskList"] {
 	list-style: none;
 	padding: 0;
 	margin-left: 0;
-	margin-top: 0;
-	
-	p {
-		margin-bottom: 0 !important;
-	}
 
 	li {
 		display: flex;
