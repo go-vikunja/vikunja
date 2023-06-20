@@ -151,17 +151,25 @@
 		</div>
 
 		<div class="editor-toolbar__segment">
+			<BaseButton class="editor-toolbar__button" @click="addImage" title="Add image from URL">
+				<span class="icon">
+					<icon icon="fa-image" />
+				</span>
+			</BaseButton>
+		</div>
+
+		<div class="editor-toolbar__segment">
 			<BaseButton
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().unsetAllMarks().run()"
 			>
-				clear marks
+				<icon icon="xmark"/>
 			</BaseButton>
 			<BaseButton
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().clearNodes().run()"
 			>
-				clear nodes
+				<icon icon="xmarks-lines"/>
 			</BaseButton>
 		</div>
 
@@ -361,14 +369,6 @@
 				</BaseButton>
 			</div>
 		</div>
-
-		<div class="editor-toolbar__segment">
-			<BaseButton class="editor-toolbar__button" @click="addImage" title="Add image from URL">
-				<span class="icon">
-					<icon icon="fa-image" />
-				</span>
-			</BaseButton>
-		</div>
 	</div>
 </template>
 
@@ -457,7 +457,7 @@ function setLink() {
 
 .editor-toolbar__button {
 	color: var(--grey-700);
-	// width: 30px;
+	min-width: 30px;
 	height: 30px;
 	border-radius: 3px;
 	border: 1px solid transparent;
