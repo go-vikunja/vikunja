@@ -136,8 +136,6 @@ watch(
 		loadedProjectId.value = 0
 		const projectFromStore = projectStore.projects[projectData.id]
 		if (projectFromStore) {
-			baseStore.setBackground(null)
-			baseStore.setBlurHash(null)
 			baseStore.handleSetCurrentProject({project: projectFromStore})
 		}
 
