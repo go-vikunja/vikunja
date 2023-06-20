@@ -352,41 +352,12 @@
 				>
 					mergeOrSplit
 				</BaseButton>
-				<!-- <BaseButton
-					class="editor-toolbar__button"
-					@click="
-						editor
-							.chain()
-							.focus()
-							.setCellAttribute('backgroundColor', '#FAF594')
-							.run()
-					"
-					:disabled="
-						!editor.can().setCellAttribute('backgroundColor', '#FAF594')
-					"
-				>
-					setCellAttribute
-				</BaseButton> -->
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().fixTables().run()"
 					:disabled="!editor.can().fixTables"
 				>
 					fixTables
-				</BaseButton>
-				<BaseButton
-					class="editor-toolbar__button"
-					@click="editor.chain().focus().goToNextCell().run()"
-					:disabled="!editor.can().goToNextCell"
-				>
-					goToNextCell
-				</BaseButton>
-				<BaseButton
-					class="editor-toolbar__button"
-					@click="editor.chain().focus().goToPreviousCell().run()"
-					:disabled="!editor.can().goToPreviousCell"
-				>
-					goToPreviousCell
 				</BaseButton>
 			</div>
 		</div>

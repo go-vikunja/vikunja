@@ -111,15 +111,13 @@ const editor = useEditor({
 			openOnClick: false,
 			validate: (href: string) => /^https?:\/\//.test(href),
 		}),
-		// Table.configure({
-		// 	resizable: true,
-		// }),
-		// TableRow,
-		// TableHeader,
-		// // Default TableCell
-		// // TableCell,
-		// // Custom TableCell with backgroundColor attribute
-		// CustomTableCell,
+		Table.configure({
+			resizable: true,
+		}),
+		TableRow,
+		TableHeader,
+		// Custom TableCell with backgroundColor attribute
+		CustomTableCell,
 
 		// // start
 		// Document,
