@@ -138,6 +138,16 @@
 					<icon :icon="['fa', 'fa-list-ul']" />
 				</span>
 			</BaseButton>
+			<BaseButton
+				class="editor-toolbar__button"
+				@click="editor.chain().focus().toggleTaskList().run()"
+				:class="{ 'is-active': editor.isActive('taskList') }"
+				title="task list"
+			>
+				<span class="icon">
+					<icon icon="fa-list-check" />
+				</span>
+			</BaseButton>
 		</div>
 
 		<div class="editor-toolbar__segment">
@@ -174,16 +184,6 @@
 			>
 				<span class="icon">
 					<icon :icon="['fa', 'fa-unlink']" />
-				</span>
-			</BaseButton>
-			<BaseButton
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().toggleTaskList().run()"
-				:class="{ 'is-active': editor.isActive('taskList') }"
-				title="task list"
-			>
-				<span class="icon">
-					<icon icon="fa-list-check" />
 				</span>
 			</BaseButton>
 			<BaseButton
