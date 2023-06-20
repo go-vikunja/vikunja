@@ -5,9 +5,9 @@
     "welcomeDay": "Olá {username}!",
     "welcomeEvening": "Boa Tarde {username}!",
     "lastViewed": "Visto recentemente",
-    "addToHomeScreen": "Add this app to your home screen for faster access and improved experience.",
+    "addToHomeScreen": "Adiciona esta aplicação ao ecrã inicial para um acesso mais rápido e uma melhor experiência.",
     "project": {
-      "importText": "Import your projects and tasks from other services into Vikunja:",
+      "importText": "Importa os teus projetos e tarefas de outros serviços para o Vikunja:",
       "import": "Importar os teus dados para o Vikunja"
     }
   },
@@ -77,8 +77,8 @@
         "savedSuccess": "As definições foram atualizadas com sucesso.",
         "emailReminders": "Enviar-me notificações por e-mail",
         "overdueReminders": "Envie-me diariamente um resumo das minhas tarefas pendentes",
-        "discoverableByName": "Allow other users to add me as a member to teams or projects when they search for my name",
-        "discoverableByEmail": "Allow other users to add me as a member to teams or projects when they search for my full email",
+        "discoverableByName": "Permitir que outros utilizadores me adicionem como membro a equipas ou projetos quando pesquisem pelo meu nome",
+        "discoverableByEmail": "Permitir que outros utilizadores me adicionem como membro a equipas ou projetos quando pesquisem pelos meu endereço de e-mail completo",
         "playSoundWhenDone": "Tocar um som quando marcar tarefas como concluídas",
         "weekStart": "A semana começa com",
         "weekStartSunday": "Domingo",
@@ -142,7 +142,7 @@
     },
     "deletion": {
       "title": "Eliminar a tua conta Vikunja",
-      "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
+      "text1": "A eliminação da tua conta é permanente e não pode ser revertida. Vão ser eliminados todos os teus projetos, tarefas e tudo o que lhes está associado.",
       "text2": "Para prosseguires, introduz por favor a tua palavra-passe. Receberás um e-mail com mais instruções.",
       "confirm": "Eliminar a minha conta",
       "requestSuccess": "A solicitação foi bem sucedida. Receberás um e-mail com mais instruções.",
@@ -156,7 +156,7 @@
     },
     "export": {
       "title": "Exportar os teus dados do Vikunja",
-      "description": "You can request a copy of all your Vikunja data. This includes Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
+      "description": "Podes solicitar uma cópia de todos os teus dados do Vikunja. Isso inclui Projetos, Tarefas e tudo o que lhes está associado. Podes importar esses dados em qualquer instância do Vikunja através da função de migração.",
       "descriptionPasswordRequired": "Por favor, introduz a tua palavra-passe para continuar:",
       "request": "Solicitar uma cópia dos meus dados do Vikunja",
       "success": "Solicitaste com sucesso os teus dados do Vikunja! Enviaremos um e-mail assim que estiverem prontos para download.",
@@ -164,18 +164,18 @@
     }
   },
   "project": {
-    "archivedMessage": "This project is archived. It is not possible to create new or edit tasks for it.",
-    "archived": "Archived",
-    "showArchived": "Show Archived",
+    "archivedMessage": "Este projeto está arquivado. Não é possível editar ou criar novas tarefas para ele.",
+    "archived": "Arquivado",
+    "showArchived": "Mostrar Arquivados",
     "title": "Título do Projeto",
     "color": "Cor",
     "projects": "Projetos",
-    "parent": "Parent Project",
+    "parent": "Projeto Principal",
     "search": "Escreve para pesquisar por um projeto…",
     "searchSelect": "Clica ou pressiona Enter para selecionar este projeto",
     "shared": "Projetos Partilhados",
     "noDescriptionAvailable": "Não está disponível nenhuma descrição do projeto.",
-    "inboxTitle": "Inbox",
+    "inboxTitle": "Caixa de Entrada",
     "create": {
       "header": "Novo projeto",
       "titlePlaceholder": "O título do projeto será aqui…",
@@ -213,7 +213,7 @@
     "duplicate": {
       "title": "Duplicar este projeto",
       "label": "Duplicar",
-      "text": "Select a parent project which should hold the duplicated project:",
+      "text": "Seleciona o projeto principal que deve conter o projeto duplicado:",
       "success": "O projeto foi duplicado com sucesso."
     },
     "edit": {
@@ -241,7 +241,7 @@
         "namePlaceholder": "ex.: Lorem Ipsum",
         "nameExplanation": "Todas as ações realizadas através deste link partilhado vão aparecer com este nome.",
         "password": "Palavra-passe (opcional)",
-        "passwordExplanation": "When signing in, the user will be required to enter this password.",
+        "passwordExplanation": "Ao autenticar-se, ao utilizador vai ser requerido introduzir esta palavra-passe.",
         "noName": "Nenhum nome definido",
         "remove": "Remover um link partilhado",
         "removeText": "Tens a certeza que queres remover este link partilhado? Não será mais possível aceder a este projeto utilizando este link partilhado. Isto não pode ser revertido!",
@@ -345,7 +345,7 @@
     },
     "create": {
       "title": "Novo Filtro Memorizado",
-      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed.",
+      "description": "Um filtro memorizado é um projeto virtual que é compilado a partir de um conjunto de filtros de cada vez que é acedido.",
       "action": "Criar novo filtro memorizado",
       "titleRequired": "Por favor, insere um título para o filtro."
     },
@@ -719,15 +719,15 @@
       }
     },
     "reminder": {
-      "before": "{amount} {unit} before {type}",
-      "after": "{amount} {unit} after {type}",
-      "beforeShort": "before",
-      "afterShort": "after",
-      "onDueDate": "On the due date",
-      "onStartDate": "On the start date",
-      "onEndDate": "On the end date",
-      "custom": "Custom",
-      "dateAndTime": "Date and time"
+      "before": "{amount} {unit} antes de {type}",
+      "after": "{amount} {unit} depois de {type}",
+      "beforeShort": "antes",
+      "afterShort": "depois",
+      "onDueDate": "Na data de vencimento",
+      "onStartDate": "Na data de início",
+      "onEndDate": "Na data final",
+      "custom": "Personalizado",
+      "dateAndTime": "Data e hora"
     },
     "repeat": {
       "everyDay": "Todos os Dias",
@@ -746,7 +746,7 @@
       "invalidAmount": "Por favor, insere mais do que 0."
     },
     "quickAddMagic": {
-      "hint": "Use magic prefixes to define due dates, assignees and other task properties.",
+      "hint": "Utiliza prefixos mágicos para definir datas de vencimento, atribuições e outras propriedades da tarefa.",
       "title": "Introdução Mágica Rápida",
       "intro": "Ao criar uma tarefa, podes usar palavras-chave especiais para adicionar diretamente atributos à tarefa recém-criada. Isto permite adicionar atributos comummente utilizados às tarefas muito mais rapidamente.",
       "multiple": "Podes usar isto várias vezes.",
@@ -793,19 +793,19 @@
       "delete": {
         "header": "Eliminar equipa",
         "text1": "Tens a certeza que pretendes eliminar esta equipa e todos os seus membros?",
-        "text2": "All team members will lose access to projects shared with this team. This CANNOT BE UNDONE!",
+        "text2": "Todos os membros da equipa perderão acesso aos projetos partilhados com esta equipa. Isto NÃO PODE SER REVERTIDO!",
         "success": "A equipa foi eliminada com sucesso."
       },
       "deleteUser": {
         "header": "Remover utilizador da equipa",
         "text1": "Tens a certeza que pretendes remover este utilizador da equipa?",
-        "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
+        "text2": "Eles perderão o acesso a todos os projetos a que esta equipa tem acesso. Isto NÃO PODER SER REVERTIDO!",
         "success": "O utilizador foi removido da equipa com sucesso."
       },
       "leave": {
         "title": "Sair da equipa",
         "text1": "Tens a certeza de que queres sair desta equipa?",
-        "text2": "You will lose access to all projects this team has access to. If you change your mind you'll need a team admin to add you again.",
+        "text2": "Vais perder o acesso a todos os projetos a que esta equipa tem acesso. Se mudares de ideias, vais necessitar que um administrador da equipa te adicione novamente.",
         "success": "Saíste da equipa com sucesso."
       }
     },
@@ -857,7 +857,7 @@
       "upcoming": "Ir para próximas tarefas",
       "labels": "Navegar para etiquetas",
       "teams": "Navegar para equipas",
-      "projects": "Navigate to projects"
+      "projects": "Navegar para projetos"
     }
   },
   "update": {
@@ -873,7 +873,7 @@
     "setBackground": "Definir Fundo",
     "share": "Partilhar",
     "newProject": "Novo projeto",
-    "createProject": "Create project"
+    "createProject": "Criar projeto"
   },
   "apiConfig": {
     "url": "URL do Vikunja",
@@ -892,7 +892,7 @@
   "notification": {
     "title": "Notificações",
     "none": "Não tens nenhuma notificação. Tem um bom dia!",
-    "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen."
+    "explainer": "As notificações aparecerão aqui quando ocorrem ações em projetos ou tarefas às quais estejas subscrito."
   },
   "quickActions": {
     "commands": "Comandos",
@@ -905,7 +905,7 @@
     "newTask": "Insere o título da nova tarefa…",
     "newTeam": "Insere o nome da nova equipa…",
     "createTask": "Cria uma tarefa no projeto atual ({title})",
-    "createProject": "Create a project",
+    "createProject": "Criar um projecto",
     "cmds": {
       "newTask": "Nova tarefa",
       "newProject": "Novo projeto",
@@ -966,7 +966,7 @@
     "4019": "Valor de filtro de tarefas inválido.",
     "6001": "O nome da equipa não pode estar vazio.",
     "6002": "A equipa não existe.",
-    "6004": "The team already has access to that project.",
+    "6004": "A equipa tem já acesso a esse projeto.",
     "6005": "O utilizador é já membro dessa equipa.",
     "6006": "Não podes eliminar o último membro da equipa.",
     "6007": "A equipa não tem acesso ao projeto para executar essa ação.",
@@ -995,13 +995,13 @@
   },
   "time": {
     "units": {
-      "seconds": "second|seconds",
-      "minutes": "minute|minutes",
-      "hours": "hour|hours",
-      "days": "day|days",
-      "weeks": "week|weeks",
-      "months": "month|months",
-      "years": "year|years"
+      "seconds": "segundo|segundos",
+      "minutes": "minuto|minutos",
+      "hours": "hora|horas",
+      "days": "dia|dias",
+      "weeks": "semana|semanas",
+      "months": "mês|meses",
+      "years": "ano|anos"
     }
   }
 }
