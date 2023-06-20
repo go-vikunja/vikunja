@@ -18,7 +18,7 @@ module code.vikunja.io/api
 
 require (
 	code.vikunja.io/web v0.0.0-20210706160506-d85def955bd3
-	gitea.com/xorm/xorm-redis-cache v0.2.0
+	dario.cat/mergo v1.0.0
 	github.com/ThreeDotsLabs/watermill v1.2.0
 	github.com/adlio/trello v1.10.0
 	github.com/arran4/golang-ical v0.0.0-20230425234049-f69e132f2b0c
@@ -40,7 +40,6 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-version v1.6.0
 	github.com/iancoleman/strcase v0.2.0
-	github.com/imdario/mergo v0.3.16
 	github.com/jinzhu/copier v0.3.5
 	github.com/jszwedko/go-datemath v0.1.1-0.20230526204004-640a500621d6
 	github.com/labstack/echo-jwt/v4 v4.2.0
@@ -95,7 +94,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
-	github.com/garyburd/redigo v1.6.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-chi/chi/v5 v5.0.8 // indirect
 	github.com/go-faster/city v1.0.1 // indirect

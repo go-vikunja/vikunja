@@ -31,8 +31,8 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 
+	"dario.cat/mergo"
 	"github.com/google/uuid"
-	"github.com/imdario/mergo"
 	"github.com/jinzhu/copier"
 	"xorm.io/builder"
 	"xorm.io/xorm"

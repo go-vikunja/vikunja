@@ -18,7 +18,8 @@ package models
 
 import (
 	"code.vikunja.io/web"
-	"github.com/imdario/mergo"
+
+	"dario.cat/mergo"
 	"xorm.io/xorm"
 )
 
