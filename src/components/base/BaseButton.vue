@@ -63,7 +63,7 @@ import {unrefElement} from '@vueuse/core'
 import {ref, type HTMLAttributes} from 'vue'
 import type {RouteLocationRaw} from 'vue-router'
 
-export interface BaseButtonProps extends HTMLAttributes {
+export interface BaseButtonProps extends /* @vue-ignore */ HTMLAttributes {
 	type?: BaseButtonTypes
 	disabled?: boolean
 	to?: RouteLocationRaw
