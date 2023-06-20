@@ -47,7 +47,7 @@ import BaseButton, {type BaseButtonProps} from '@/components/base/BaseButton.vue
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 
 // extending the props of the BaseButton
-export interface ButtonProps extends BaseButtonProps {
+export interface ButtonProps extends /* @vue-ignore */ BaseButtonProps {
 	variant?: ButtonTypes
 	icon?: IconProp
 	iconColor?: string

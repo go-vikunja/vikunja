@@ -14,7 +14,7 @@ import BaseButton, { type BaseButtonProps } from '@/components/base//BaseButton.
 import Icon from '@/components/misc/Icon'
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 
-export interface DropDownItemProps extends BaseButtonProps {
+export interface DropDownItemProps extends /* @vue-ignore */ BaseButtonProps {
 	icon?: IconProp,
 }
 
