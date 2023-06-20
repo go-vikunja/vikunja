@@ -74,7 +74,7 @@
     "klona": "2.0.6",
     "lodash.debounce": "4.0.8",
     "marked": "5.1.0",
-    "pinia": "2.0.36",
+    "pinia": "2.1.4",
     "register-service-worker": "1.7.2",
     "snake-case": "3.0.4",
     "sortablejs": "1.15.0",
