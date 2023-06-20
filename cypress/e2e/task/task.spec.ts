@@ -11,6 +11,7 @@ import {LabelTaskFactory} from '../../factories/label_task'
 import {BucketFactory} from '../../factories/bucket'
 
 import {TaskAttachmentFactory} from '../../factories/task_attachments'
+import {TaskReminderFactory} from '../../factories/task_reminders'
 
 function addLabelToTaskAndVerify(labelTitle: string) {
 	cy.get('.task-view .action-buttons .button')
@@ -457,6 +458,154 @@ describe('Task', () => {
 				.contains('Due Date')
 				.get('.date-input .datepicker-popup')
 				.should('not.exist')
+			cy.get('.global-notification')
+				.should('contain', 'Success')
+		})
+		
+		it('Can set a reminder', () => {
+			TaskReminderFactory.truncate()
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				done: false,
+			})
+			cy.visit(`/tasks/${tasks[0].id}`)
+
+			cy.get('.task-view .action-buttons .button')
+				.contains('Set Reminders')
+				.click()
+			cy.get('.task-view .columns.details .column button')
+				.contains('Add a new reminder')
+				.click()
+			cy.get('.datepicker__quick-select-date')
+				.contains('Tomorrow')
+				.click()
+
+			cy.get('.reminder-options-popup')
+				.should('not.be.visible')
+			cy.get('.global-notification')
+				.should('contain', 'Success')
+		})
+
+		it('Allows to set a relative reminder when the task already has a due date', () => {
+			TaskReminderFactory.truncate()
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				done: false,
+				due_date: (new Date()).toISOString(),
+			})
+			cy.visit(`/tasks/${tasks[0].id}`)
+
+			cy.get('.task-view .action-buttons .button')
+				.contains('Set Reminders')
+				.click()
+			cy.get('.task-view .columns.details .column button')
+				.contains('Add a new reminder')
+				.click()
+			cy.get('.datepicker__quick-select-date')
+				.should('not.exist')
+			cy.get('.reminder-options-popup .card-content')
+				.should('contain', '1 day before Due Date')
+			cy.get('.reminder-options-popup .card-content')
+				.contains('1 day before Due Date')
+				.click()
+
+			cy.get('.reminder-options-popup')
+				.should('not.be.visible')
+			cy.get('.global-notification')
+				.should('contain', 'Success')
+		})
+
+		it('Allows to set a relative reminder when the task already has a start date', () => {
+			TaskReminderFactory.truncate()
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				done: false,
+				start_date: (new Date()).toISOString(),
+			})
+			cy.visit(`/tasks/${tasks[0].id}`)
+
+			cy.get('.task-view .action-buttons .button')
+				.contains('Set Reminders')
+				.click()
+			cy.get('.task-view .columns.details .column button')
+				.contains('Add a new reminder')
+				.click()
+			cy.get('.datepicker__quick-select-date')
+				.should('not.exist')
+			cy.get('.reminder-options-popup .card-content')
+				.should('contain', '1 day before Start Date')
+			cy.get('.reminder-options-popup .card-content')
+				.contains('1 day before Start Date')
+				.click()
+
+			cy.get('.reminder-options-popup')
+				.should('not.be.visible')
+			cy.get('.global-notification')
+				.should('contain', 'Success')
+		})
+		
+		it('Allows to set a custom relative reminder when the task already has a due date', () => {
+			TaskReminderFactory.truncate()
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				done: false,
+				due_date: (new Date()).toISOString(),
+			})
+			cy.visit(`/tasks/${tasks[0].id}`)
+
+			cy.get('.task-view .action-buttons .button')
+				.contains('Set Reminders')
+				.click()
+			cy.get('.task-view .columns.details .column button')
+				.contains('Add a new reminder')
+				.click()
+			cy.get('.datepicker__quick-select-date')
+				.should('not.exist')
+			cy.get('.reminder-options-popup .card-content')
+				.contains('Custom')
+				.click()
+			cy.get('.reminder-options-popup .card-content .reminder-period input')
+				.first()
+				.type('10')
+			cy.get('.reminder-options-popup .card-content .reminder-period select')
+				.first()
+				.select('days')
+			cy.get('.reminder-options-popup .card-content button')
+				.contains('Confirm')
+				.click()
+
+			cy.get('.reminder-options-popup')
+				.should('not.be.visible')
+			cy.get('.global-notification')
+				.should('contain', 'Success')
+		})
+		
+		it('Allows to set a fixed reminder when the task already has a due date', () => {
+			TaskReminderFactory.truncate()
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				done: false,
+				due_date: (new Date()).toISOString(),
+			})
+			cy.visit(`/tasks/${tasks[0].id}`)
+
+			cy.get('.task-view .action-buttons .button')
+				.contains('Set Reminders')
+				.click()
+			cy.get('.task-view .columns.details .column button')
+				.contains('Add a new reminder')
+				.click()
+			cy.get('.datepicker__quick-select-date')
+				.should('not.exist')
+			cy.get('.reminder-options-popup .card-content')
+				.contains('Date and time')
+				.click()
+			cy.get('.datepicker__quick-select-date')
+				.contains('Tomorrow')
+				.click()
+
+			cy.get('.reminder-options-popup')
+				.should('not.be.visible')
 			cy.get('.global-notification')
 				.should('contain', 'Success')
 		})

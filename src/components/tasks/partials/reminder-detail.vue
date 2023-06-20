@@ -46,7 +46,7 @@
 					<DatepickerInline
 						v-if="activeForm === 'absolute'"
 						v-model="reminderDate"
-						@update:modelValue="setReminderDate"
+						@update:modelValue="setReminderDate(toggle)"
 					/>
 
 					<x-button
@@ -148,13 +148,13 @@ function updateData() {
 	}
 }
 
-function setReminderDate() {
+function setReminderDate(toggle) {
 	reminder.value.reminder = reminderDate.value === null
 		? null
 		: new Date(reminderDate.value)
 	reminder.value.relativeTo = null
 	reminder.value.relativePeriod = 0
-	updateData()
+	updateDataAndMaybeClose(toggle)
 }
 
 function setReminderFromPreset(preset, toggle) {

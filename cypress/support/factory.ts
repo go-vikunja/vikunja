@@ -4,7 +4,7 @@ import {seed} from './seed'
  * A factory makes it easy to seed the database with data.
  */
 export class Factory {
-	static table = null
+	static table: string | null = null
 
 	static factory() {
 		return {}
