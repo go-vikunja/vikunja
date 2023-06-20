@@ -180,7 +180,7 @@
 </template>
 
 <script setup lang="ts">
-import {toRef, computed, type Ref} from 'vue'
+import {computed, type Ref} from 'vue'
 
 import {useStorage} from '@vueuse/core'
 
@@ -200,6 +200,7 @@ import {useTaskList} from '@/composables/useTaskList'
 
 import type {SortBy} from '@/composables/useTaskList'
 import type {ITask} from '@/modelTypes/ITask'
+import type {IProject} from '@/modelTypes/IProject'
 
 const ACTIVE_COLUMNS_DEFAULT = {
 	index: true,
@@ -217,12 +218,11 @@ const ACTIVE_COLUMNS_DEFAULT = {
 	createdBy: false,
 }
 
-const props = defineProps({
-	projectId: {
-		type: Number,
-		required: true,
-	},
-})
+const {
+	projectId,
+} = defineProps<{
+	projectId: IProject['id'],
+}>()
 
 const SORT_BY_DEFAULT: SortBy = {
 	index: 'desc',
@@ -231,7 +231,7 @@ const SORT_BY_DEFAULT: SortBy = {
 const activeColumns = useStorage('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT})
 const sortBy = useStorage<SortBy>('tableViewSortBy', {...SORT_BY_DEFAULT})
 
-const taskList = useTaskList(toRef(props, 'projectId'), sortBy.value)
+const taskList = useTaskList(projectId, sortBy.value)
 
 const {
 	loading,

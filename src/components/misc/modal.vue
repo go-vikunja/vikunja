@@ -75,17 +75,19 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import {ref, useAttrs, watchEffect} from 'vue'
 import {useScrollLock} from '@vueuse/core'
 
-const props = withDefaults(defineProps<{
+const {
+	enabled = true,
+	overflow,
+	wide,
+	transitionName = 'modal',
+	variant = 'default',
+} = defineProps<{
 	enabled?: boolean,
 	overflow?: boolean,
 	wide?: boolean,
 	transitionName?: 'modal' | 'fade',
 	variant?: 'default' | 'hint-modal' | 'scrolling',
-}>(), {
-	enabled: true,
-	transitionName: 'modal',
-	variant: 'default',
-})
+}>()
 
 defineEmits(['close', 'submit'])
 
@@ -95,7 +97,7 @@ const modal = ref<HTMLElement | null>(null)
 const scrollLock = useScrollLock(modal)
 
 watchEffect(() => {
-	scrollLock.value = props.enabled
+	scrollLock.value = enabled
 })
 </script>
 
@@ -200,10 +202,10 @@ $modal-width: 1024px;
 	right: $close-button-padding;
 	color: var(--grey-900);
 	font-size: 2rem;
-	
+
 	@media screen and (min-width: $desktop) and (max-width: calc(#{$desktop	} + #{$close-button-min-space})) {
 		top: calc(5px + $modal-margin);
-    right: 50%;
+		right: 50%;
 		// we align the close button to the modal until there is enough space outside for it
 		transform: translateX(calc((#{$modal-width} / 2) - #{$close-button-padding}));
 	}

@@ -121,6 +121,9 @@ export default defineConfig(({mode}) => {
 		plugins: [
 			vue({
 				reactivityTransform: true,
+				script: {
+					propsDestructure: true,
+				},
 			}),
 			legacy,
 			svgLoader({

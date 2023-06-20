@@ -44,8 +44,6 @@
 </template>
 
 <script lang="ts" setup>
-import {toRef, type PropType} from 'vue'
-
 import type {IProject} from '@/modelTypes/IProject'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -53,14 +51,13 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import {useProjectBackground} from './useProjectBackground'
 import {useProjectStore} from '@/stores/projects'
 
-const props = defineProps({
-	project: {
-		type: Object as PropType<IProject>,
-		required: true,
-	},
-})
+const {
+	project,
+} = defineProps<{
+	project: IProject,
+}>()
 
-const {background, blurHashUrl} = useProjectBackground(toRef(props, 'project'))
+const {background, blurHashUrl} = useProjectBackground(project)
 
 const projectStore = useProjectStore()
 </script>

@@ -120,7 +120,7 @@ export default { name: 'List' }
 </script>
 
 <script setup lang="ts">
-import {ref, computed, toRef, nextTick, onMounted, type PropType} from 'vue'
+import {ref, computed, nextTick, onMounted} from 'vue'
 import draggable from 'zhyswan-vuedraggable'
 import {useRoute, useRouter} from 'vue-router'
 
@@ -144,12 +144,11 @@ import {useTaskStore} from '@/stores/tasks'
 
 import type {IProject} from '@/modelTypes/IProject'
 
-const props = defineProps({
-	projectId: {
-		type: Number as PropType<IProject['id']>,
-		required: true,
-	},
-})
+const {
+	projectId,
+} = defineProps<{
+	projectId: IProject['id'],
+}>()
 
 const ctaVisible = ref(false)
 const showTaskSearch = ref(false)
@@ -169,7 +168,7 @@ const {
 	searchTerm,
 	params,
 	sortByParam,
-} = useTaskList(toRef(props, 'projectId'), {position: 'asc' })
+} = useTaskList(projectId, {position: 'asc' })
 
 
 const isAlphabeticalSorting = computed(() => {

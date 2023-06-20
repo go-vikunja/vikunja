@@ -126,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, shallowReactive, toRef, type PropType, onMounted, onBeforeUnmount, computed} from 'vue'
+import {ref, watch, shallowReactive, onMounted, onBeforeUnmount, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import TaskModel, { getHexColor } from '@/models/task'
@@ -153,32 +153,21 @@ import {useProjectStore} from '@/stores/projects'
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
 
-const props = defineProps({
-	theTask: {
-		type: Object as PropType<ITask>,
-		required: true,
-	},
-	isArchived: {
-		type: Boolean,
-		default: false,
-	},
-	showProject: {
-		type: Boolean,
-		default: false,
-	},
-	disabled: {
-		type: Boolean,
-		default: false,
-	},
-	showProjectColor: {
-		type: Boolean,
-		default: true,
-	},
-	canMarkAsDone: {
-		type: Boolean,
-		default: true,
-	},
-})
+const {
+	theTask,
+	isArchived = false,
+	showProject = false,
+	disabled = false,
+	showProjectColor = false,
+	canMarkAsDone = true,
+} = defineProps<{
+	theTask: ITask,
+	isArchived?: boolean,
+	showProject?: boolean,
+	disabled?: boolean,
+	showProjectColor?: boolean,
+	canMarkAsDone?: boolean,
+}>()
 
 const emit = defineEmits(['task-updated'])
 
@@ -188,10 +177,8 @@ const taskService = shallowReactive(new TaskService())
 const task = ref<ITask>(new TaskModel())
 const showDefer = ref(false)
 
-const theTask = toRef(props, 'theTask')
-
 watch(
-	theTask,
+	() => theTask,
 	newVal => {
 		task.value = newVal
 	},

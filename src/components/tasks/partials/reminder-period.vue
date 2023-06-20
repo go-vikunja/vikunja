@@ -47,8 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, type PropType} from 'vue'
-import {toRef} from '@vueuse/core'
+import {ref, watch} from 'vue'
 
 import {periodToSeconds, PeriodUnit, secondsToPeriod} from '@/helpers/time/period'
 
@@ -57,16 +56,11 @@ import TaskReminderModel from '@/models/taskReminder'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES, type IReminderPeriodRelativeTo} from '@/types/IReminderPeriodRelativeTo'
 
-const props = defineProps({
-	modelValue: {
-		type: Object as PropType<ITaskReminder>,
-		required: false,
-	},
-	disabled: {
-		type: Boolean,
-		default: false,
-	},
-})
+const {
+	modelValue,
+} = defineProps<{
+	modelValue?: ITaskReminder,
+}>()
 
 const emit = defineEmits(['update:modelValue'])
 
@@ -86,9 +80,8 @@ const period = ref<PeriodInput>({
 	sign: -1,
 })
 
-const modelValue = toRef(props, 'modelValue')
 watch(
-	modelValue,
+	() => modelValue,
 	(value) => {
 		const p = secondsToPeriod(value?.relativePeriod)
 		period.value.durationUnit = p.unit

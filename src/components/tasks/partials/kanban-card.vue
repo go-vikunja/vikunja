@@ -96,14 +96,15 @@ const router = useRouter()
 
 const loadingInternal = ref(false)
 
-const props = withDefaults(defineProps<{
+const {
+	task,
+	loading = false,
+} = defineProps<{
 	task: ITask,
 	loading: boolean,
-}>(), {
-	loading: false,
-})
+}>()
 
-const color = computed(() => getHexColor(props.task.hexColor))
+const color = computed(() => getHexColor(task.hexColor))
 
 async function toggleTaskDone(task: ITask) {
 	loadingInternal.value = true
@@ -120,7 +121,7 @@ async function toggleTaskDone(task: ITask) {
 function openTaskDetail() {
 	router.push({
 		name: 'task.detail',
-		params: {id: props.task.id},
+		params: {id: task.id},
 		state: {backdropView: router.currentRoute.value.fullPath},
 	})
 }
@@ -128,12 +129,12 @@ function openTaskDetail() {
 const coverImageBlobUrl = ref<string | null>(null)
 
 async function maybeDownloadCoverImage() {
-	if (!props.task.coverImageAttachmentId) {
+	if (!task.coverImageAttachmentId) {
 		coverImageBlobUrl.value = null
 		return
 	}
 
-	const attachment = props.task.attachments.find(a => a.id === props.task.coverImageAttachmentId)
+	const attachment = task.attachments.find(a => a.id === task.coverImageAttachmentId)
 	if (!attachment || !SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.endsWith(suffix))) {
 		return
 	}
@@ -143,7 +144,7 @@ async function maybeDownloadCoverImage() {
 }
 
 watch(
-	() => props.task.coverImageAttachmentId,
+	() => task.coverImageAttachmentId,
 	maybeDownloadCoverImage,
 	{immediate: true},
 )

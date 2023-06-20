@@ -84,14 +84,17 @@ import ColorBubble from '@/components/misc/colorBubble.vue'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 import {canNestProjectDeeper} from '@/helpers/canNestProjectDeeper'
 
-const props = withDefaults(defineProps<{
+const {
+	project,
+	isLoading,
+	canCollapse,
+	level = 0,
+} = defineProps<{
 	project: IProject,
 	isLoading?: boolean,
 	canCollapse?: boolean,
 	level?: number,
-}>(), {
-	level: 0,
-})
+}>()
 
 const projectStore = useProjectStore()
 const baseStore = useBaseStore()
@@ -104,12 +107,12 @@ const childProjects = computed(() => {
 		return []
 	}
 
-	return projectStore.getChildProjects(props.project.id)
+	return projectStore.getChildProjects(project.id)
 		.filter(p => !p.isArchived)
 		.sort((a, b) => a.position - b.position)
 })
 
-const canNestDeeper = computed(() => canNestProjectDeeper(props.level))
+const canNestDeeper = computed(() => canNestProjectDeeper(level))
 </script>
 
 <style lang="scss" scoped>

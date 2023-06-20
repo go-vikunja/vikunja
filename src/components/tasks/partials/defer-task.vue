@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount, toRef, type PropType} from 'vue'
+import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount} from 'vue'
 import {useI18n} from 'vue-i18n'
 import flatPickr from 'vue-flatpickr-component'
 
@@ -46,12 +46,12 @@ import TaskService from '@/services/task'
 import type {ITask} from '@/modelTypes/ITask'
 import {useAuthStore} from '@/stores/auth'
 
-const props = defineProps({
-	modelValue: {
-		type: Object as PropType<ITask>,
-		required: true,
-	},
-})
+const {
+	modelValue,
+} = defineProps<{
+	modelValue: ITask,
+}>()
+
 const emit = defineEmits(['update:modelValue'])
 
 const {t} = useI18n({useScope: 'global'})
@@ -66,7 +66,7 @@ const lastValue = ref<Date | null>()
 const changeInterval = ref<ReturnType<typeof setInterval>>()
 
 watch(
-	toRef(props, 'modelValue'),
+	() => modelValue,
 	(value) => {
 		task.value = { ...value }
 		dueDate.value = value.dueDate

@@ -65,7 +65,6 @@
 
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
-import {toRef} from '@vueuse/core'
 import {SECONDS_A_DAY, SECONDS_A_HOUR} from '@/constants/date'
 import {IReminderPeriodRelativeTo, REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {useI18n} from 'vue-i18n'
@@ -84,28 +83,27 @@ import SimpleButton from '@/components/input/SimpleButton.vue'
 
 const {t} = useI18n({useScope: 'global'})
 
-const props = withDefaults(defineProps<{
+const {
+	modelValue,
+	clearAfterUpdate = false,
+	defaultRelativeTo = REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
+} = defineProps<{
 	modelValue?: ITaskReminder,
-	disabled?: boolean,
 	clearAfterUpdate?: boolean,
 	defaultRelativeTo?: null | IReminderPeriodRelativeTo,
-}>(), {
-	disabled: false,
-	clearAfterUpdate: false,
-	defaultRelativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
-})
+}>()
 
 const emit = defineEmits(['update:modelValue'])
 
 const reminder = ref<ITaskReminder>(new TaskReminderModel())
 
 const presets = computed<TaskReminderModel[]>(() => [
-	{reminder: null, relativePeriod: 0, relativeTo: props.defaultRelativeTo},
-	{reminder: null, relativePeriod: -2 * SECONDS_A_HOUR, relativeTo: props.defaultRelativeTo},
-	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY, relativeTo: props.defaultRelativeTo},
-	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 3, relativeTo: props.defaultRelativeTo},
-	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 7, relativeTo: props.defaultRelativeTo},
-	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 30, relativeTo: props.defaultRelativeTo},
+	{reminder: null, relativePeriod: 0, relativeTo: defaultRelativeTo},
+	{reminder: null, relativePeriod: -2 * SECONDS_A_HOUR, relativeTo: defaultRelativeTo},
+	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY, relativeTo: defaultRelativeTo},
+	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 3, relativeTo: defaultRelativeTo},
+	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 7, relativeTo: defaultRelativeTo},
+	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 30, relativeTo: defaultRelativeTo},
 ])
 const reminderDate = ref(null)
 
@@ -114,7 +112,7 @@ type availableForms = null | 'relative' | 'absolute'
 const showFormSwitch = ref<availableForms>(null)
 
 const activeForm = computed<availableForms>(() => {
-	if (props.defaultRelativeTo === null) {
+	if (defaultRelativeTo === null) {
 		return 'absolute'
 	}
 
@@ -134,9 +132,8 @@ const reminderText = computed(() => {
 	return t('task.addReminder')
 })
 
-const modelValue = toRef(props, 'modelValue')
 watch(
-	modelValue,
+	() => modelValue,
 	(newReminder) => {
 		reminder.value = newReminder || new TaskReminderModel()
 	},
@@ -146,7 +143,7 @@ watch(
 function updateData() {
 	emit('update:modelValue', reminder.value)
 
-	if (props.clearAfterUpdate) {
+	if (clearAfterUpdate) {
 		reminder.value = new TaskReminderModel()
 	}
 }
@@ -168,7 +165,7 @@ function setReminderFromPreset(preset, toggle) {
 
 function updateDataAndMaybeClose(toggle) {
 	updateData()
-	if (props.clearAfterUpdate) {
+	if (clearAfterUpdate) {
 		toggle()
 	}
 }

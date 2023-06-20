@@ -41,20 +41,20 @@ import ReminderDetail from '@/components/tasks/partials/reminder-detail.vue'
 import type {ITask} from '@/modelTypes/ITask'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
-const props = withDefaults(defineProps<{
+const {
+	modelValue,
+	disabled = false,
+} = defineProps<{
 	modelValue: ITask,
 	disabled?: boolean,
-}>(), {
-	modelValue: [],
-	disabled: false,
-})
+}>()
 
 const emit = defineEmits(['update:modelValue'])
 
 const reminders = ref<ITaskReminder[]>([])
 
 watch(
-	() => props.modelValue.reminders,
+	() => modelValue.reminders,
 	(newVal) => {
 		reminders.value = newVal
 	},
@@ -62,19 +62,19 @@ watch(
 )
 
 const defaultRelativeTo = computed(() => {
-	if (typeof props.modelValue === 'undefined') {
+	if (typeof modelValue === 'undefined') {
 		return null
 	}
 	
-	if (props.modelValue?.dueDate) {
+	if (modelValue?.dueDate) {
 		return REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE
 	}
 	
-	if (props.modelValue.dueDate === null && props.modelValue.startDate !== null) {
+	if (modelValue.dueDate === null && modelValue.startDate !== null) {
 		return REMINDER_PERIOD_RELATIVE_TO_TYPES.STARTDATE
 	}
 	
-	if (props.modelValue.dueDate === null && props.modelValue.startDate === null && props.modelValue.endDate !== null) {
+	if (modelValue.dueDate === null && modelValue.startDate === null && modelValue.endDate !== null) {
 		return REMINDER_PERIOD_RELATIVE_TO_TYPES.ENDDATE
 	}
 	
@@ -83,7 +83,7 @@ const defaultRelativeTo = computed(() => {
 
 function updateData() {
 	emit('update:modelValue', {
-		...props.modelValue,
+		...modelValue,
 		reminders: reminders.value,
 	})
 }

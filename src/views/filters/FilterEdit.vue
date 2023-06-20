@@ -54,8 +54,6 @@
 </template>
 
 <script setup lang="ts">
-import {toRef} from 'vue'
-
 import Editor from '@/components/input/AsyncEditor'
 import CreateEdit from '@/components/misc/create-edit.vue'
 import Filters from '@/components/project/partials/filters.vue'
@@ -64,7 +62,11 @@ import {useSavedFilter} from '@/services/savedFilter'
 
 import type {IProject} from '@/modelTypes/IProject'
 
-const props = defineProps<{ projectId: IProject['id'] }>()
+const {
+	projectId,
+} = defineProps<{
+	projectId: IProject['id'],
+}>()
 
 const {
 	saveFilterWithValidation,
@@ -73,5 +75,5 @@ const {
 	filterService,
 	titleValid,
 	validateTitleField,
-} = useSavedFilter(toRef(props, 'projectId'))
+} = useSavedFilter(projectId)
 </script>

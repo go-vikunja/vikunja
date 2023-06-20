@@ -216,7 +216,7 @@
 							{{ $t('task.attributes.labels') }}
 						</div>
 						<edit-labels
-							:disabled="!canWrite" 
+							:disabled="!canWrite"
 							:task-id="taskId"
 							:ref="e => setFieldRef('labels', e)"
 							v-model="task.labels"/>
@@ -270,7 +270,7 @@
 						</h3>
 						<div class="field has-addons">
 							<div class="control is-expanded">
-								<project-search 
+								<project-search
 									@update:modelValue="changeProject"
 									:ref="e => setFieldRef('moveProject', e)"
 								/>
@@ -447,7 +447,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, toRef, shallowReactive, computed, watch, watchEffect, nextTick, type PropType} from 'vue'
+import {ref, reactive, toRef, shallowReactive, computed, watch, watchEffect, nextTick} from 'vue'
 import {useRouter, type RouteLocation} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {unrefElement} from '@vueuse/core'
@@ -500,15 +500,13 @@ import type {Action as MessageAction} from '@/message'
 import {useProjectStore} from '@/stores/projects'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
-const props = defineProps({
-	taskId: {
-		type: Number as PropType<ITask['id']>,
-		required: true,
-	},
-	backdropView: {
-		type: String as PropType<RouteLocation['fullPath']>,
-	},
-})
+const {
+	taskId,
+	backdropView,
+} = defineProps<{
+	taskId: ITask['id'],
+	backdropView?: RouteLocation['fullPath'],
+}>()
 
 defineEmits(['close'])
 
@@ -535,8 +533,6 @@ const taskColor = ref<ITask['hexColor']>('')
 // Used to avoid flashing of empty elements if the task content is not yet loaded.
 const visible = ref(false)
 
-const taskId = toRef(props, 'taskId')
-
 const project = computed(() => projectStore.projects[task.value.projectId])
 watchEffect(() => {
 	if (typeof project.value === 'undefined') {
@@ -559,7 +555,7 @@ const color = computed(() => {
 	const color = task.value.getHexColor
 		? task.value.getHexColor()
 		: undefined
-	
+
 	return color === TASK_DEFAULT_COLOR
 		? ''
 		: color
@@ -567,13 +563,14 @@ const color = computed(() => {
 
 const hasAttachments = computed(() => attachmentStore.attachments.length > 0)
 
-const isModal = computed(() => Boolean(props.backdropView))
+const isModal = computed(() => Boolean(backdropView))
 
 function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
-	return uploadFile(taskId.value, file, onSuccess)
+	return uploadFile(taskId, file, onSuccess)
 }
 
 const heading = ref<HTMLElement | null>(null)
+
 async function scrollToHeading() {
 	scrollIntoView(unrefElement(heading))
 }
@@ -581,22 +578,24 @@ async function scrollToHeading() {
 const taskService = shallowReactive(new TaskService())
 
 // load task
-watch(taskId, async (id) => {
-	if (id === undefined) {
-		return
-	}
+watch(
+	() => taskId,
+	async (id) => {
+		if (id === undefined) {
+			return
+		}
 
-	try {
-		Object.assign(task.value, await taskService.get({id}))
-		attachmentStore.set(task.value.attachments)
-		taskColor.value = task.value.hexColor
-		setActiveFields()
-	} finally {
-		await nextTick()
-		scrollToHeading()
-		visible.value = true
-	}
-}, {immediate: true})
+		try {
+			Object.assign(task.value, await taskService.get({id}))
+			attachmentStore.set(task.value.attachments)
+			taskColor.value = task.value.hexColor
+			setActiveFields()
+		} finally {
+			await nextTick()
+			scrollToHeading()
+			visible.value = true
+		}
+	}, {immediate: true})
 
 type FieldType =
 	| 'assignees'
@@ -613,7 +612,7 @@ type FieldType =
 	| 'repeatAfter'
 	| 'startDate'
 
-const activeFields : {[type in FieldType]: boolean} = reactive({
+const activeFields: { [type in FieldType]: boolean } = reactive({
 	assignees: false,
 	attachments: false,
 	color: false,
@@ -648,7 +647,7 @@ function setActiveFields() {
 	activeFields.startDate = task.value.startDate !== null
 }
 
-const activeFieldElements : {[id in FieldType]: HTMLElement | null} = reactive({
+const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive({
 	assignees: null,
 	attachments: null,
 	color: null,
@@ -676,7 +675,7 @@ function setFieldActive(fieldName: keyof typeof activeFields) {
 		if (!el) {
 			return
 		}
-		
+
 		el.focus()
 
 		// scroll the field to the center of the screen if not in viewport already
@@ -691,7 +690,7 @@ async function saveTask(
 	if (currentTask === null) {
 		currentTask = klona(task.value)
 	}
-			
+
 	if (!canWrite.value) {
 		return
 	}
@@ -723,6 +722,7 @@ async function saveTask(
 }
 
 const showDeleteModal = ref(false)
+
 async function deleteTask() {
 	await taskStore.delete(task.value)
 	success({message: t('task.detail.deleteSuccess')})
@@ -784,32 +784,32 @@ async function removeRepeatAfter() {
 	// simulate sass lighten($primary, 30) by increasing lightness 30% to 73%
 	--primary-light: hsla(var(--primary-h), var(--primary-s), 73%, var(--primary-a));
 	padding-bottom: 0;
-	
-  @media screen and (min-width: $desktop) {
+
+	@media screen and (min-width: $desktop) {
 		padding-bottom: 1rem;
-  }
+	}
 }
 
 .task-view {
 	padding-top: 1rem;
 	padding-inline: .5rem;
-  background-color: var(--site-background);
-	
-  @media screen and (min-width: $desktop) {
+	background-color: var(--site-background);
+
+	@media screen and (min-width: $desktop) {
 		padding: 1rem;
-  }
+	}
 }
 
 .is-modal .task-view {
-  border-radius: $radius;
-  padding: 1rem;
-  color: var(--text);
-  background-color: var(--site-background) !important;
+	border-radius: $radius;
+	padding: 1rem;
+	color: var(--text);
+	background-color: var(--site-background) !important;
 
-  @media screen and (max-width: 800px) {
-    border-radius: 0;
-    padding-top: 2rem;
-  }
+	@media screen and (max-width: 800px) {
+		border-radius: 0;
+		padding-top: 2rem;
+	}
 }
 
 .task-view * {
@@ -837,6 +837,7 @@ h3 .button {
 .icon.is-grey {
 	color: var(--grey-400);
 }
+
 .date-input {
 	display: flex;
 	align-items: center;
@@ -960,11 +961,11 @@ h3 .button {
 		top: $navbar-height + 1.5rem;
 		align-self: flex-start;
 	}
-	
+
 	.button {
 		width: 100%;
 		margin-bottom: .5rem;
-		justify-content: left; 
+		justify-content: left;
 
 		&.has-light-text {
 			color: var(--white);
@@ -989,8 +990,8 @@ h3 .button {
 }
 
 .detail-content {
-  @media print {
+	@media print {
 		width: 100% !important;
-  }
+	}
 }
 </style>

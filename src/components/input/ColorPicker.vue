@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, toRef, watch} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {createRandomID} from '@/helpers/randomId'
 import XButton from '@/components/input/button.vue'
 
@@ -53,22 +53,16 @@ const lastChangeTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 const defaultColors = ref(DEFAULT_COLORS)
 const colorListID = ref(createRandomID())
 
-const props = defineProps({
-	modelValue: {
-		type: String,
-		required: true,
-	},
-	menuPosition: {
-		type: String,
-		default: 'top',
-	},
-})
+const {
+	modelValue,
+} = defineProps<{
+	modelValue: string,
+}>()
 
 const emit = defineEmits(['update:modelValue'])
 
-const modelValue = toRef(props, 'modelValue')
 watch(
-	modelValue,
+	() => modelValue,
 	(newValue) => {
 		color.value = newValue
 	},

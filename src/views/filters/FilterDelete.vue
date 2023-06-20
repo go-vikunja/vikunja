@@ -6,7 +6,7 @@
 		<template #header>
 			<span>{{ $t('filters.delete.header') }}</span>
 		</template>
-		
+
 		<template #text>
 			<p>{{ $t('filters.delete.text') }}</p>
 		</template>
@@ -14,11 +14,14 @@
 </template>
 
 <script setup lang="ts">
-import {toRef} from 'vue'
 import type {IProject} from '@/modelTypes/IProject'
 import {useSavedFilter} from '@/services/savedFilter'
 
-const props = defineProps<{ projectId: IProject['id'] }>()
+const {
+	projectId,
+} = defineProps<{
+	projectId: IProject['id'],
+}>()
 
-const {deleteFilter} = useSavedFilter(toRef(props, 'projectId'))
+const {deleteFilter} = useSavedFilter(projectId)
 </script>
