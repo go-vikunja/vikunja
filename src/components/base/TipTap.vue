@@ -47,8 +47,8 @@ import CodeBlock from './CodeBlock.vue'
 // 	content: 'taskList',
 // })
 
-const CustomTaskItem = TaskItem.extend({
-	content: 'inline*',
+const CustomTaskItem = TaskItem.configure({
+	nested: true,
 })
 
 const CustomTableCell = TableCell.extend({
@@ -386,10 +386,15 @@ onBeforeUnmount(() => editor.value?.destroy())
 ul[data-type="taskList"] {
 	list-style: none;
 	padding: 0;
+	margin-left: 0;
+	margin-top: 0;
+	
+	p {
+		margin-bottom: 0 !important;
+	}
 
 	li {
 		display: flex;
-		align-items: center;
 
 		> label {
 			flex: 0 0 auto;
