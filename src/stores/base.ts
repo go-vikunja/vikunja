@@ -11,6 +11,7 @@ import {useMenuActive} from '@/composables/useMenuActive'
 
 import {useAuthStore} from '@/stores/auth'
 import type {IProject} from '@/modelTypes/IProject'
+import type {Right} from '@/constants/rights'
 
 export const useBaseStore = defineStore('base', () => {
 	const loading = ref(false)
@@ -38,6 +39,7 @@ export const useBaseStore = defineStore('base', () => {
 		// Server updates don't return the right. Therefore, the right is reset after updating the project which is
 		// confusing because all the buttons will disappear in that case. To prevent this, we're keeping the right
 		// when updating the project in global state.
+		let maxRight: Right | null = newCurrentProject?.maxRight || null
 		if (
 			typeof currentProject.value?.maxRight !== 'undefined' &&
 			newCurrentProject !== null &&
@@ -46,9 +48,16 @@ export const useBaseStore = defineStore('base', () => {
 				newCurrentProject.maxRight === null
 			)
 		) {
-			newCurrentProject.maxRight = currentProject.value.maxRight
+			maxRight = currentProject.value.maxRight
 		}
-		currentProject.value = newCurrentProject
+		if (newCurrentProject === null) {
+			currentProject.value = null
+			return
+		}
+		currentProject.value = {
+			...newCurrentProject,
+			maxRight,
+		}
 	}
 
 	function setHasTasks(newHasTasks: boolean) {
