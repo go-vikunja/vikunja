@@ -15,6 +15,7 @@ export const SUPPORTED_LOCALES = {
 	'pt-PT': 'Português',
 	'zh-CN': 'Chinese',
 	'no-NO': 'Norsk Bokmål',
+	'es-ES': 'Español',
 } as const
 
 export type SupportedLocale = keyof typeof SUPPORTED_LOCALES
