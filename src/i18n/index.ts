@@ -13,7 +13,7 @@ export const SUPPORTED_LOCALES = {
 	'pl-PL': 'Polski',
 	'nl-NL': 'Nederlands',
 	'pt-PT': 'Português',
-	'zh-CN': 'Chinese',
+	'zh-CN': '中文',
 	'no-NO': 'Norsk Bokmål',
 	'es-ES': 'Español',
 	'da-DK': 'Dansk',
