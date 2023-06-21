@@ -226,7 +226,10 @@ function findNthIndex(str: string, n: number) {
 function renderPreview() {
 	setupMarkdownRenderer(checkboxId.value)
 
-	preview.value = DOMPurify.sanitize(marked(text.value), {ADD_ATTR: ['target']})
+	preview.value = DOMPurify.sanitize(marked(text.value, {
+		mangle: false,
+		headerIds: false,
+	}), {ADD_ATTR: ['target']})
 
 	// Since the render function is synchronous, we can't do async http requests in it.
 	// Therefore, we can't resolve the blob url at (markdown) compile time.
