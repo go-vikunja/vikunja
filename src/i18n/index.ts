@@ -17,6 +17,7 @@ export const SUPPORTED_LOCALES = {
 	'no-NO': 'Norsk Bokmål',
 	'es-ES': 'Español',
 	'da-DK': 'Dansk',
+	'ja-JP': '日本語',
 } as const
 
 export type SupportedLocale = keyof typeof SUPPORTED_LOCALES
