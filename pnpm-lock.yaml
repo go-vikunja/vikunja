@@ -202,8 +202,8 @@ devDependencies:
     specifier: 11.0.3
     version: 11.0.3(eslint-plugin-vue@9.13.0)(eslint@8.43.0)(typescript@5.1.3)
   '@vue/test-utils':
-    specifier: 2.3.2
-    version: 2.3.2(vue@3.3.4)
+    specifier: 2.4.0
+    version: 2.4.0(vue@3.3.4)
   '@vue/tsconfig':
     specifier: 0.4.0
     version: 0.4.0
@@ -3768,16 +3768,21 @@ packages:
   /@vue/shared@3.3.4:
     resolution: {integrity: sha512-7OjdcV8vQ74eiz1TZLzZP4JwqM5fA94K6yntPS5Z25r9HDuGNzaGdgvwKYq6S+MxwF0TFRwe50fIR/MYnakdkQ==}
 
-  /@vue/test-utils@2.3.2(vue@3.3.4):
-    resolution: {integrity: sha512-hJnVaYhbrIm0yBS0+e1Y0Sj85cMyAi+PAbK4JHqMRUZ6S622Goa+G7QzkRSyvCteG8wop7tipuEbHoZo26wsSA==}
+  /@vue/test-utils@2.4.0(vue@3.3.4):
+    resolution: {integrity: sha512-BKB9aj1yky63/I3IwSr1FjUeHYsKXI7D6S9F378AHt7a5vC0dLkOBtSsFXoRGC/7BfHmiB9HRhT+i9xrUHoAKw==}
     peerDependencies:
+      '@vue/compiler-dom': ^3.0.1
+      '@vue/server-renderer': ^3.0.1
       vue: ^3.0.1
+    peerDependenciesMeta:
+      '@vue/compiler-dom':
+        optional: true
+      '@vue/server-renderer':
+        optional: true
     dependencies:
       js-beautify: 1.14.6
       vue: 3.3.4
-    optionalDependencies:
-      '@vue/compiler-dom': 3.3.4
-      '@vue/server-renderer': 3.3.4(vue@3.3.4)
+      vue-component-type-helpers: 1.6.5
     dev: true
 
   /@vue/tsconfig@0.4.0:
@@ -9369,6 +9374,10 @@ packages:
       easy-bem: 1.1.1
       vue: 3.3.4
     dev: false
+
+  /vue-component-type-helpers@1.6.5:
+    resolution: {integrity: sha512-iGdlqtajmiqed8ptURKPJ/Olz0/mwripVZszg6tygfZSIL9kYFPJTNY6+Q6OjWGznl2L06vxG5HvNvAnWrnzbg==}
+    dev: true
 
   /vue-demi@0.12.1(vue@3.3.4):
     resolution: {integrity: sha512-QL3ny+wX8c6Xm1/EZylbgzdoDolye+VpCXRhI2hug9dJTP3OUJ3lmiKN3CsVV3mOJKwFi0nsstbgob0vG7aoIw==}

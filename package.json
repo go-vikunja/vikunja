@@ -110,7 +110,7 @@
     "@vitejs/plugin-legacy": "4.0.5",
     "@vitejs/plugin-vue": "4.2.3",
     "@vue/eslint-config-typescript": "11.0.3",
-    "@vue/test-utils": "2.3.2",
+    "@vue/test-utils": "2.4.0",
     "@vue/tsconfig": "0.4.0",
     "autoprefixer": "10.4.14",
     "browserslist": "4.21.9",
