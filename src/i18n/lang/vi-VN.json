@@ -388,7 +388,7 @@
     },
     "edit": {
       "header": "Chỉnh sửa nhãn",
-      "forbidden": "Bạn không có quyền được sửa nhãn này do bạn không sở hữu nó.",
+      "forbidden": "You are not allowed to edit this label because you don't own it.",
       "success": "Nhãn được cập nhật thành công."
     },
     "deleteSuccess": "Nhãn đã được xóa thành công.",

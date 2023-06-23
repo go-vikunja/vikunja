@@ -388,7 +388,7 @@
     },
     "edit": {
       "header": "Bewerk label",
-      "forbidden": "You are not allowed to edit this label because you dont own it.",
+      "forbidden": "You are not allowed to edit this label because you don't own it.",
       "success": "Het label is succesvol bijgewerkt."
     },
     "deleteSuccess": "Het label is succesvol verwijderd.",

@@ -388,7 +388,7 @@
     },
     "edit": {
       "header": "Label bearbeiten",
-      "forbidden": "Du kannst dieses Label nicht bearbeiten, da es nicht dir gehört.",
+      "forbidden": "You are not allowed to edit this label because you don't own it.",
       "success": "Das Label wurde erfolgreich aktualisiert."
     },
     "deleteSuccess": "Das Label wurde erfolgreich gelöscht.",
