@@ -275,10 +275,15 @@ function hideDeferDueDatePopup(e) {
 
 	.tasktext,
 	&.tasktext {
-		white-space: nowrap;
 		text-overflow: ellipsis;
+		word-wrap: break-word;
+		word-break: break-word;
+		display: -webkit-box;
+		hyphens: auto;
+		-webkit-line-clamp: 4;
+		-webkit-box-orient: vertical;
 		overflow: hidden;
-		display: inline-block;
+		
 		flex: 1 0 50%;
 
 		.dueDate {
