@@ -251,7 +251,7 @@ async function load(projectId: IProject['id']) {
 
 	const links = await linkShareService.getAll({projectId})
 	links.forEach((l: ILinkShare) => {
-		selectedView.value[l.id] = 'project'
+		selectedView.value[l.id] = 'list'
 	})
 	linkShares.value = links
 }
