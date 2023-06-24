@@ -388,7 +388,7 @@
     },
     "edit": {
       "header": "编辑标签",
-      "forbidden": "您无法编辑此标签，权限不够。",
+      "forbidden": "You are not allowed to edit this label because you don't own it.",
       "success": "标签已更新"
     },
     "deleteSuccess": "标签已删除",

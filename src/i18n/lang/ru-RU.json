@@ -388,7 +388,7 @@
     },
     "edit": {
       "header": "Изменить метку",
-      "forbidden": "You are not allowed to edit this label because you don't own it.",
+      "forbidden": "Вы не можете изменять эту метку, потому что не являетесь её владельцем.",
       "success": "Метка изменена."
     },
     "deleteSuccess": "Метка удалена.",

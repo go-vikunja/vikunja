@@ -388,7 +388,7 @@
     },
     "edit": {
       "header": "Editar Etiqueta",
-      "forbidden": "You are not allowed to edit this label because you don't own it.",
+      "forbidden": "Não estás autorizado a editar esta etiqueta porque não és o seu proprietário.",
       "success": "A etiqueta foi atualizada com sucesso."
     },
     "deleteSuccess": "A etiqueta foi eliminada com sucesso.",
