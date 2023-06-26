@@ -55,7 +55,7 @@
     "electron-builder": "24.4.0"
   },
   "dependencies": {
-    "connect-history-api-fallback": "^1.6.0",
+    "connect-history-api-fallback": "^2.0.0",
     "express": "^4.17.1"
   }
 }
