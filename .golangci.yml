@@ -95,3 +95,5 @@ issues:
     - path: pkg/models/events\.go
       linters:
         - musttag
+    - path: pkg/models/task_collection.go
+      text: 'append result not assigned to the same slice'
