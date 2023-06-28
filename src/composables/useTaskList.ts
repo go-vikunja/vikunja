@@ -1,4 +1,4 @@
-import {ref, shallowReactive, watch, computed, type ShallowReactive} from 'vue'
+import {ref, shallowReactive, watch, computed, type ComputedGetter} from 'vue'
 import {useRoute} from 'vue-router'
 
 import TaskCollectionService from '@/services/taskCollection'
@@ -61,15 +61,16 @@ const SORT_BY_DEFAULT: SortBy = {
 /**
  * This mixin provides a base set of methods and properties to get tasks.
  */
-export function useTaskList(projectId: ShallowReactive<IProject['id']>, sortByDefault: SortBy = SORT_BY_DEFAULT) {
+export function useTaskList(projectIdGetter: ComputedGetter<IProject['id']>, sortByDefault: SortBy = SORT_BY_DEFAULT) {
+	
+	const projectId = computed(() => projectIdGetter())
+	
 	const params = ref({...getDefaultParams()})
 	
 	const search = ref('')
 	const page = ref(1)
 
 	const sortBy = ref({ ...sortByDefault })
-
-
 
 	const getAllTasksParams = computed(() => {
 		let loadParams = {...params.value}
@@ -81,7 +82,7 @@ export function useTaskList(projectId: ShallowReactive<IProject['id']>, sortByDe
 		loadParams = formatSortOrder(sortBy.value, loadParams)
 
 		return [
-			{projectId: projectId},
+			{projectId: projectId.value},
 			loadParams,
 			page.value || 1,
 		]

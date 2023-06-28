@@ -168,7 +168,7 @@ const {
 	searchTerm,
 	params,
 	sortByParam,
-} = useTaskList(projectId, {position: 'asc' })
+} = useTaskList(() => projectId, {position: 'asc' })
 
 
 const isAlphabeticalSorting = computed(() => {
