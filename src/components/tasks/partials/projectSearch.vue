@@ -37,6 +37,10 @@ const props = defineProps({
 		type: Object as PropType<IProject>,
 		required: false,
 	},
+	savedFiltersOnly: {
+		type: Boolean,
+		default: false,
+	},
 })
 const emit = defineEmits(['update:modelValue'])
 
@@ -57,6 +61,12 @@ function findProjects(query: string) {
 	if (query === '') {
 		select(null)
 	}
+	
+	if (props.savedFiltersOnly) {
+		foundProjects.value = projectStore.searchSavedFilter(query)
+		return
+	}
+	
 	foundProjects.value = projectStore.searchProject(query)
 }
 

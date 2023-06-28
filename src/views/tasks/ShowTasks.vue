@@ -59,6 +59,7 @@ import LlamaCool from '@/assets/llama-cool.svg?component'
 import type {ITask} from '@/modelTypes/ITask'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
+import {useProjectStore} from '@/stores/projects'
 
 const authStore = useAuthStore()
 const taskStore = useTaskStore()
@@ -68,6 +69,8 @@ const {t} = useI18n({useScope: 'global'})
 
 const tasks = ref<ITask[]>([])
 const showNothingToDo = ref<boolean>(false)
+
+const projectStore = useProjectStore()
 
 setTimeout(() => showNothingToDo.value = true, 100)
 
@@ -177,6 +180,11 @@ async function loadPendingTasks(from: string, to: string) {
 			params.filterValue.push(from)
 			params.filterComparator.push('greater')
 		}
+	}
+	
+	if (authStore.settings.frontendSettings.filterIdUsedOnOverview && typeof projectStore.projects[authStore.settings.frontendSettings.filterIdUsedOnOverview] !== 'undefined') {
+		tasks.value = await taskStore.loadTasks(params, authStore.settings.frontendSettings.filterIdUsedOnOverview)
+		return
 	}
 
 	tasks.value = await taskStore.loadTasks(params)

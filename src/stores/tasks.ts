@@ -29,6 +29,7 @@ import {useKanbanStore} from '@/stores/kanban'
 import {useBaseStore} from '@/stores/base'
 import ProjectUserService from '@/services/projectUsers'
 import {useAuthStore} from '@/stores/auth'
+import TaskCollectionService from '@/services/taskCollection'
 
 interface MatchedAssignee extends IUser {
 	match: string,
@@ -123,12 +124,17 @@ export const useTaskStore = defineStore('task', () => {
 		})
 	}
 
-	async function loadTasks(params) {
-		const taskService = new TaskService()
+	async function loadTasks(params, projectId: IProject['id'] | null = null) {
 
 		const cancel = setModuleLoading(setIsLoading)
 		try {
-			tasks.value = await taskService.getAll({}, params)
+			if (projectId === null) {
+				const taskService = new TaskService()
+				tasks.value = await taskService.getAll({}, params)
+			} else {
+				const taskCollectionService = new TaskCollectionService()
+				tasks.value = await taskCollectionService.getAll({projectId}, params)
+			}
 			baseStore.setHasTasks(tasks.value.length > 0)
 			return tasks.value
 		} finally {

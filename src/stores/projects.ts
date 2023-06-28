@@ -17,6 +17,7 @@ import type {MaybeRef} from '@vueuse/core'
 import ProjectModel from '@/models/project'
 import {success} from '@/message'
 import {useBaseStore} from '@/stores/base'
+import {getSavedFilterIdFromProjectId} from '@/services/savedFilter'
 
 const {remove, search, update} = createNewIndexer('projects', ['title', 'description'])
 
@@ -60,6 +61,16 @@ export const useProjectStore = defineStore('project', () => {
 				.map(id => projects.value[id])
 				.filter(project => project.isArchived === includeArchived)
 			|| []
+		}
+	})
+	
+	const searchSavedFilter = computed(() => {
+		return (query: string, includeArchived = false) => {
+			return search(query)
+					?.filter(value => getSavedFilterIdFromProjectId(value) > 0)
+					.map(id => projects.value[id])
+					.filter(project => project.isArchived === includeArchived)
+				|| []
 		}
 	})
 
@@ -191,6 +202,7 @@ export const useProjectStore = defineStore('project', () => {
 		getChildProjects,
 		findProjectByExactname,
 		searchProject,
+		searchSavedFilter,
 
 		setProject,
 		setProjects,

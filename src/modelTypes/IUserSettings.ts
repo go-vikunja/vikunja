@@ -9,6 +9,7 @@ export interface IFrontendSettings {
 	playSoundWhenDone: boolean
 	quickAddMagicMode: PrefixMode
 	colorSchema: BasicColorSchema
+	filterIdUsedOnOverview: IProject['id'] | null
 }
 
 export interface IUserSettings extends IAbstract {

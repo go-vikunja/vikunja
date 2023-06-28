@@ -18,6 +18,12 @@
 			</label>
 			<project-search v-model="defaultProject"/>
 		</div>
+		<div class="field" v-if="hasFilters">
+			<label class="label">
+				{{ $t('user.settings.general.filterUsedOnOverview') }}
+			</label>
+			<project-search v-model="filterUsedInOverview" :saved-filters-only="true"/>
+		</div>
 		<div class="field">
 			<label class="checkbox">
 				<input type="checkbox" v-model="settings.overdueTasksRemindersEnabled"/>
@@ -167,6 +173,7 @@ import {useTitle} from '@/composables/useTitle'
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
+import {isSavedFilter} from '@/services/savedFilter'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.general.title')} - ${t('user.settings.title')}`)
@@ -233,6 +240,13 @@ const defaultProject = computed({
 		settings.value.defaultProjectId = l ? l.id : DEFAULT_PROJECT_ID
 	},
 })
+const filterUsedInOverview = computed({
+	get: () => projectStore.projects[settings.value.frontendSettings.filterIdUsedOnOverview],
+	set(l) {
+		settings.value.frontendSettings.filterIdUsedOnOverview = l ? l.id : null
+	},
+})
+const hasFilters = computed(() => typeof projectStore.projectsArray.find(p => isSavedFilter(p)) !== 'undefined')
 const loading = computed(() => authStore.isLoadingGeneralSettings)
 
 async function updateSettings() {
