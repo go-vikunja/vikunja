@@ -80,8 +80,8 @@ dependencies:
     specifier: 0.7.31
     version: 0.7.31(patch_hash=bfn3sngfuhktmdj7jgl3ejl35y)
   floating-vue:
-    specifier: 2.0.0-beta.22
-    version: 2.0.0-beta.22(vue@3.3.4)
+    specifier: 2.0.0-beta.24
+    version: 2.0.0-beta.24(vue@3.3.4)
   highlight.js:
     specifier: 11.8.0
     version: 11.8.0
@@ -5702,10 +5702,14 @@ packages:
     dev: false
     patched: true
 
-  /floating-vue@2.0.0-beta.22(vue@3.3.4):
-    resolution: {integrity: sha512-1iqpX3Rc3KpghLgBZ7zXfn6EceezujBUDKXYcTKPxv9P8CZxhS+3oouayd1fv3o+x/xeVSryWhF0Q7+4HEM7rA==}
+  /floating-vue@2.0.0-beta.24(vue@3.3.4):
+    resolution: {integrity: sha512-URSzP6YXaF4u1oZ9XGL8Sn8puuM7ivp5jkOUrpy5Q1mfo9BfGppJOn+ierTmsSUfJEeHBae8KT7r5DeI3vQIEw==}
     peerDependencies:
+      '@nuxt/kit': ^3.2.0
       vue: ^3.2.0
+    peerDependenciesMeta:
+      '@nuxt/kit':
+        optional: true
     dependencies:
       '@floating-ui/dom': 1.1.1
       vue: 3.3.4
