@@ -65,8 +65,8 @@ dependencies:
     specifier: 1.11.8
     version: 1.11.8
   dompurify:
-    specifier: 3.0.3
-    version: 3.0.3
+    specifier: 3.0.4
+    version: 3.0.4
   easymde:
     specifier: 2.18.0
     version: 2.18.0
@@ -5052,8 +5052,8 @@ packages:
       domelementtype: 2.3.0
     dev: true
 
-  /dompurify@3.0.3:
-    resolution: {integrity: sha512-axQ9zieHLnAnHh0sfAamKYiqXMJAVwu+LM/alQ7WDagoWessyWvMSFyW65CqF3owufNu8HBcE4cM2Vflu7YWcQ==}
+  /dompurify@3.0.4:
+    resolution: {integrity: sha512-ae0mA+Qiqp6C29pqZX3fQgK+F91+F7wobM/v8DRzDqJdZJELXiFUx4PP4pK/mzUS0xkiSEx3Ncd9gr69jg3YsQ==}
     dev: false
 
   /domutils@2.8.0:
