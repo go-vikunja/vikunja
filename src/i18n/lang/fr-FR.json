@@ -86,7 +86,8 @@
         "language": "Langue",
         "defaultProject": "Projet par défaut",
         "timezone": "Fuseau horaire",
-        "overdueTasksRemindersTime": "Heure du courriel de rappel des tâches en retard"
+        "overdueTasksRemindersTime": "Heure du courriel de rappel des tâches en retard",
+        "filterUsedOnOverview": "Saved filter used on the overview page"
       },
       "totp": {
         "title": "Authentification à deux facteurs",
@@ -388,7 +389,7 @@
     },
     "edit": {
       "header": "Modifier l’étiquette",
-      "forbidden": "You are not allowed to edit this label because you don't own it.",
+      "forbidden": "Vous ne pouvez pas modifier cette étiquette, car elle ne vous appartient pas.",
       "success": "Étiquette mise à jour."
     },
     "deleteSuccess": "Étiquette supprimée.",

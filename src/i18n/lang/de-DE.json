@@ -86,7 +86,8 @@
         "language": "Sprache",
         "defaultProject": "Standard-Projekt",
         "timezone": "Zeitzone",
-        "overdueTasksRemindersTime": "Zeit der E-Mail-Zusammenfassung der überfälligen Aufgaben"
+        "overdueTasksRemindersTime": "Zeit der E-Mail-Zusammenfassung der überfälligen Aufgaben",
+        "filterUsedOnOverview": "Saved filter used on the overview page"
       },
       "totp": {
         "title": "Zwei-Faktor-Authentifizierung",

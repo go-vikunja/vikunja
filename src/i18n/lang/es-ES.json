@@ -86,7 +86,8 @@
         "language": "Idioma",
         "defaultProject": "Proyecto por defecto",
         "timezone": "Zona Horaria",
-        "overdueTasksRemindersTime": "Hora de envío del correo electrónico de tareas pendientes"
+        "overdueTasksRemindersTime": "Hora de envío del correo electrónico de tareas pendientes",
+        "filterUsedOnOverview": "Saved filter used on the overview page"
       },
       "totp": {
         "title": "Autenticación de dos factores",

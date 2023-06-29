@@ -86,7 +86,8 @@
         "language": "Språk",
         "defaultProject": "Standard prosjekt",
         "timezone": "Tidssone",
-        "overdueTasksRemindersTime": "Utløpte påminnelses-tid for oppgaver"
+        "overdueTasksRemindersTime": "Utløpte påminnelses-tid for oppgaver",
+        "filterUsedOnOverview": "Saved filter used on the overview page"
       },
       "totp": {
         "title": "To-faktor-autentisering",

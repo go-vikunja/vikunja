@@ -86,7 +86,8 @@
         "language": "Idioma",
         "defaultProject": "Projeto Padrão",
         "timezone": "Fuso Horário",
-        "overdueTasksRemindersTime": "Horário do e-mail de lembrete de tarefas pendentes"
+        "overdueTasksRemindersTime": "Horário do e-mail de lembrete de tarefas pendentes",
+        "filterUsedOnOverview": "Saved filter used on the overview page"
       },
       "totp": {
         "title": "Autenticação de Dois Fatores",

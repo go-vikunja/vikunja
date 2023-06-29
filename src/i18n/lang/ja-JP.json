@@ -86,7 +86,8 @@
         "language": "言語",
         "defaultProject": "デフォルトのプロジェクト",
         "timezone": "タイムゾーン",
-        "overdueTasksRemindersTime": "期限切れタスクのリマインダー送信時間"
+        "overdueTasksRemindersTime": "期限切れタスクのリマインダー送信時間",
+        "filterUsedOnOverview": "Saved filter used on the overview page"
       },
       "totp": {
         "title": "2要素認証",

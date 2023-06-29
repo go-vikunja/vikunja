@@ -86,7 +86,8 @@
         "language": "Sprog",
         "defaultProject": "Default Project",
         "timezone": "Tidszone",
-        "overdueTasksRemindersTime": "Forfaldne opgaver påmindelse e-mail tidspunkt"
+        "overdueTasksRemindersTime": "Forfaldne opgaver påmindelse e-mail tidspunkt",
+        "filterUsedOnOverview": "Saved filter used on the overview page"
       },
       "totp": {
         "title": "To-faktor godkendelse",

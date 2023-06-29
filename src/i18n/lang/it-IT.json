@@ -86,7 +86,8 @@
         "language": "Lingua",
         "defaultProject": "Progetto Predefinito",
         "timezone": "Fuso Orario",
-        "overdueTasksRemindersTime": "Orario email attività in scadute"
+        "overdueTasksRemindersTime": "Orario email attività in scadute",
+        "filterUsedOnOverview": "Saved filter used on the overview page"
       },
       "totp": {
         "title": "Autenticazione a due fattori",
