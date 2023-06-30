@@ -86,7 +86,8 @@
         "language": "语言设置",
         "defaultProject": "Default Project",
         "timezone": "时区",
-        "overdueTasksRemindersTime": "逾期任务提醒邮件时间"
+        "overdueTasksRemindersTime": "逾期任务提醒邮件时间",
+        "filterUsedOnOverview": "Saved filter used on the overview page"
       },
       "totp": {
         "title": "两步验证",

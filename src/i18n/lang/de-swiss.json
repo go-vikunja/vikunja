@@ -87,7 +87,7 @@
         "defaultProject": "Standard-Projekt",
         "timezone": "Zeitzone",
         "overdueTasksRemindersTime": "Zeit der E-Mail-Zusammenfassung der überfälligen Aufgaben",
-        "filterUsedOnOverview": "Saved filter used on the overview page"
+        "filterUsedOnOverview": "Gespeicherter Filter, der für die Startseite verwendet wird"
       },
       "totp": {
         "title": "Zweifaktor Authentifizierig",
@@ -720,15 +720,15 @@
       }
     },
     "reminder": {
-      "before": "{amount} {unit} before {type}",
-      "after": "{amount} {unit} after {type}",
-      "beforeShort": "before",
-      "afterShort": "after",
-      "onDueDate": "On the due date",
-      "onStartDate": "On the start date",
-      "onEndDate": "On the end date",
-      "custom": "Custom",
-      "dateAndTime": "Date and time"
+      "before": "{amount} {unit} vor {type}",
+      "after": "{amount} {unit} nach {type}",
+      "beforeShort": "vor",
+      "afterShort": "nach",
+      "onDueDate": "Zum Fälligkeitsdatum",
+      "onStartDate": "Zum Startdatum",
+      "onEndDate": "Zum Enddatum",
+      "custom": "Eigenes",
+      "dateAndTime": "Datum und Uhrzeit"
     },
     "repeat": {
       "everyDay": "Jedä Tag",
@@ -996,13 +996,13 @@
   },
   "time": {
     "units": {
-      "seconds": "second|seconds",
-      "minutes": "minute|minutes",
-      "hours": "hour|hours",
-      "days": "day|days",
-      "weeks": "week|weeks",
-      "months": "month|months",
-      "years": "year|years"
+      "seconds": "Sekunde|Sekunden",
+      "minutes": "Minute|Minuten",
+      "hours": "Stunde|Stunden",
+      "days": "Tag|Tage",
+      "weeks": "Woche|Wochen",
+      "months": "Monat|Monate",
+      "years": "Jahr|Jahre"
     }
   }
 }
