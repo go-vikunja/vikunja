@@ -128,7 +128,7 @@
     "postcss-easings": "3.0.1",
     "postcss-focus-within": "7.0.2",
     "postcss-preset-env": "8.5.1",
-    "rollup": "3.25.3",
+    "rollup": "3.26.0",
     "rollup-plugin-visualizer": "5.9.2",
     "sass": "1.63.6",
     "start-server-and-test": "2.0.0",
