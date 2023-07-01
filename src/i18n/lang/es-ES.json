@@ -87,7 +87,7 @@
         "defaultProject": "Proyecto por defecto",
         "timezone": "Zona Horaria",
         "overdueTasksRemindersTime": "Hora de envío del correo electrónico de tareas pendientes",
-        "filterUsedOnOverview": "Saved filter used on the overview page"
+        "filterUsedOnOverview": "Filtro guardado utilizado en la página de resumen"
       },
       "totp": {
         "title": "Autenticación de dos factores",

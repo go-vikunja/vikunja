@@ -336,13 +336,13 @@
       "includeNulls": "Include Tasks which don't have a value set",
       "requireAll": "Require all filters to be true for a task to show up",
       "showDoneTasks": "完了したタスクを表示",
-      "sortAlphabetically": "Sort Alphabetically",
-      "enablePriority": "Enable Filter By Priority",
-      "enablePercentDone": "Enable Filter By Progress",
-      "dueDateRange": "Due Date Range",
-      "startDateRange": "Start Date Range",
-      "endDateRange": "End Date Range",
-      "reminderRange": "Reminder Date Range"
+      "sortAlphabetically": "アルファベット順に並べ替える",
+      "enablePriority": "優先度によるフィルターの有効化",
+      "enablePercentDone": "進捗状況によるフィルターの有効化",
+      "dueDateRange": "期日の範囲",
+      "startDateRange": "開始日の範囲",
+      "endDateRange": "開始日の範囲",
+      "reminderRange": "リマインダーの範囲"
     },
     "create": {
       "title": "New Saved Filter",
