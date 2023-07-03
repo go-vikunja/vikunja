@@ -366,6 +366,14 @@ func getUserProjectsStatement(parentProjectIDs []int64, userID int64, search str
 	parentCondition = builder.Or(
 		builder.IsNull{"l.parent_project_id"},
 		builder.Eq{"l.parent_project_id": 0},
+		// else check for shared sub projects with a parent
+		builder.And(
+			builder.Or(
+				builder.NotNull{"tm2.user_id"},
+				builder.NotNull{"ul.user_id"},
+			),
+			builder.NotNull{"l.parent_project_id"},
+		),
 	)
 	projectCol := "id"
 	if len(parentProjectIDs) > 0 {
@@ -419,8 +427,18 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, parentProjectIDs []int
 		return 0, 0, err
 	}
 
+	parentIDsMap := make(map[int64]bool, len(parentProjectIDs))
+	for _, id := range parentProjectIDs {
+		parentIDsMap[id] = true
+	}
+
 	newParentIDs := []int64{}
 	for _, project := range currentProjects {
+		// Filter out parent project ids which we're not looking for to avoid leaking
+		// information about parent projects
+		if !parentIDsMap[project.ParentProjectID] {
+			project.ParentProjectID = 0
+		}
 		newParentIDs = append(newParentIDs, project.ID)
 	}
 

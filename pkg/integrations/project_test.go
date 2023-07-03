@@ -43,7 +43,6 @@ func TestProject(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `Test3`)  // Shared directly via users_project
 			assert.Contains(t, rec.Body.String(), `Test12`) // Shared via parent project
 			assert.NotContains(t, rec.Body.String(), `Test5`)
-			assert.NotContains(t, rec.Body.String(), `Test21`) // Archived through parent project
 			assert.NotContains(t, rec.Body.String(), `Test22`) // Archived directly
 		})
 		t.Run("Search", func(t *testing.T) {

@@ -608,6 +608,54 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
+	task35 := &Task{
+		ID:          35,
+		Title:       "task #35",
+		Identifier:  "test21-1",
+		Index:       1,
+		CreatedByID: 1,
+		CreatedBy:   user1,
+		ProjectID:   21,
+		Assignees: []*user.User{
+			user2,
+		},
+		Labels: []*Label{
+			label4,
+		},
+		RelatedTasks: map[RelationKind][]*Task{
+			RelationKindRelated: {
+				{
+					ID:          1,
+					Title:       "task #1",
+					Description: "Lorem Ipsum",
+					Index:       1,
+					CreatedByID: 1,
+					ProjectID:   1,
+					IsFavorite:  true,
+					Created:     time.Unix(1543626724, 0).In(loc),
+					Updated:     time.Unix(1543626724, 0).In(loc),
+					BucketID:    1,
+					Position:    2,
+				},
+				{
+					ID:          1,
+					Title:       "task #1",
+					Description: "Lorem Ipsum",
+					Index:       1,
+					CreatedByID: 1,
+					ProjectID:   1,
+					IsFavorite:  true,
+					Created:     time.Unix(1543626724, 0).In(loc),
+					Updated:     time.Unix(1543626724, 0).In(loc),
+					BucketID:    1,
+					Position:    2,
+				},
+			},
+		},
+		BucketID: 19,
+		Created:  time.Unix(1543626724, 0).In(loc),
+		Updated:  time.Unix(1543626724, 0).In(loc),
+	}
 
 	type fields struct {
 		ProjectID int64
@@ -679,6 +727,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task31,
 				task32,
 				task33,
+				task35,
 			},
 			wantErr: false,
 		},
@@ -691,6 +740,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			args: defaultArgs,
 			want: []*Task{
+				task35,
 				task33,
 				task32,
 				task31,
@@ -821,6 +871,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task31,
 				task32,
 				task33,
+				task35,
 			},
 			wantErr: false,
 		},
@@ -891,6 +942,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task31, // has nil dates
 				task32, // has nil dates
 				task33, // has nil dates
+				task35, // has nil dates
 			},
 			wantErr: false,
 		},
@@ -1000,6 +1052,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			args: defaultArgs,
 			want: []*Task{
 				task30,
+				task35,
 			},
 			wantErr: false,
 		},
@@ -1046,6 +1099,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			args: defaultArgs,
 			want: []*Task{
 				task30,
+				task35,
 			},
 			wantErr: false,
 		},
@@ -1060,6 +1114,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			want: []*Task{
 				task1,
 				task2,
+				task35,
 			},
 			wantErr: false,
 		},
@@ -1146,6 +1201,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task31,
 				task32,
 				task33,
+				task35,
 			},
 		},
 		{
@@ -1162,6 +1218,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task6,
 				task5,
 				// The other ones don't have a due date
+				task35,
 				task33,
 				task32,
 				task31,
