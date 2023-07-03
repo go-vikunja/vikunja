@@ -115,7 +115,7 @@
     "autoprefixer": "10.4.14",
     "browserslist": "4.21.9",
     "caniuse-lite": "1.0.30001511",
-    "css-has-pseudo": "5.0.2",
+    "css-has-pseudo": "6.0.0",
     "csstype": "3.1.2",
     "cypress": "12.16.0",
     "esbuild": "0.18.11",
