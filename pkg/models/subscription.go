@@ -262,6 +262,9 @@ func getSubscriptionsForProjects(s *xorm.Session, projectIDs []int64, u *user.Us
 	var ps = make(map[int64]*Project)
 
 	for _, eID := range projectIDs {
+		if eID < 1 {
+			continue
+		}
 		ps[eID], err = GetProjectSimpleByID(s, eID)
 		if err != nil {
 			return nil, err
@@ -309,7 +312,8 @@ func getSubscriptionsForProjects(s *xorm.Session, projectIDs []int64, u *user.Us
 		// If the current project does not have a subscription, climb up the tree until a project has one,
 		// then use that subscription for all child projects
 		_, has := projectsToSubscriptions[eID]
-		if !has {
+		_, hasProject := ps[eID]
+		if !has && hasProject {
 			var parent = ps[eID].ParentProject
 			for parent != nil {
 				sub, has := projectsToSubscriptions[parent.ID]
