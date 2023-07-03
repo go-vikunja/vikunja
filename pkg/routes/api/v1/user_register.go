@@ -31,7 +31,7 @@ import (
 // RegisterUser is the register handler
 // @Summary Register
 // @Description Creates a new user account.
-// @tags user
+// @tags auth
 // @Accept json
 // @Produce json
 // @Param credentials body user.APIUserPassword true "The user credentials"

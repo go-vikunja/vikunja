@@ -34,7 +34,7 @@ import (
 // Login is the login handler
 // @Summary Login
 // @Description Logs a user in. Returns a JWT-Token to authenticate further requests.
-// @tags user
+// @tags auth
 // @Accept json
 // @Produce json
 // @Param credentials body user.Login true "The login credentials"
