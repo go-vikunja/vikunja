@@ -29,9 +29,8 @@
     },
     {
       "matchDepTypes": ["devDependencies"],
-      "automerge": true,
-      "automergeStrategy": "squash",
-      "automergeType": "pr"
+      "groupName": "dev-dependencies",
+      "extends": ["schedule:daily"]
     }
   ]
 }
