@@ -664,7 +664,7 @@
       "1week": "1週間後"
     },
     "description": {
-      "placeholder": "クリックして説明を入力…",
+      "placeholder": "説明を入力…",
       "empty": "説明文はありません。"
     },
     "assignee": {
@@ -822,10 +822,10 @@
   },
   "keyboardShortcuts": {
     "title": "キーボードショートカット",
-    "general": "General",
-    "allPages": "These shortcuts work on all pages.",
-    "currentPageOnly": "These shortcuts work only on the current page.",
-    "somePagesOnly": "These shortcuts work only on some pages.",
+    "general": "一般",
+    "allPages": "これらのショートカットはすべてのページで機能します。",
+    "currentPageOnly": "これらのショートカットはこのページで機能します。",
+    "somePagesOnly": "これらのショートカットは一部のページでのみ機能します。",
     "toggleMenu": "Toggle The Menu",
     "quickSearch": "Open the search/quick action bar",
     "then": "then",
@@ -854,11 +854,11 @@
     },
     "navigation": {
       "title": "Navigation",
-      "overview": "Navigate to overview",
-      "upcoming": "Navigate to upcoming tasks",
-      "labels": "Navigate to labels",
-      "teams": "Navigate to teams",
-      "projects": "Navigate to projects"
+      "overview": "概要に移動",
+      "upcoming": "今後の予定に移動",
+      "labels": "ラベルに移動",
+      "teams": "チームに移動",
+      "projects": "プロジェクトに移動"
     }
   },
   "update": {
