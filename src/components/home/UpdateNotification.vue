@@ -63,11 +63,11 @@ function refreshApp() {
 	align-items: center;
 	justify-content: space-between;
 	gap: 1rem;
-	padding: .5rem;
+	padding: .5rem .5rem .5rem 1rem;
 	background: $warning;
 	border-radius: $radius;
 	font-size: .9rem;
-	color: var(--grey-900);
+	color: hsl(220.9, 39.3%, 11%); // color copied to avoid it changing in dark mode
 }
 
 .update-notification__message {
