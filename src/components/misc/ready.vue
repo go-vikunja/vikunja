@@ -11,22 +11,20 @@
 		<slot/>
 	</template>
 	<section v-else-if="error !== ''">
-		<no-auth-wrapper>
-			<card>
-				<p v-if="error === ERROR_NO_API_URL">
-					{{ $t('ready.noApiUrlConfigured') }}
+		<no-auth-wrapper :show-api-config="false">
+			<p v-if="error === ERROR_NO_API_URL">
+				{{ $t('ready.noApiUrlConfigured') }}
+			</p>
+			<message variant="danger" v-else class="mb-4">
+				<p>
+					{{ $t('ready.errorOccured') }}<br/>
+					{{ error }}
 				</p>
-				<message variant="danger" v-else>
-					<p>
-						{{ $t('ready.errorOccured') }}<br/>
-						{{ error }}
-					</p>
-					<p>
-						{{ $t('ready.checkApiUrl') }}
-					</p>
-				</message>
-				<api-config :configure-open="true" @found-api="load"/>
-			</card>
+				<p>
+					{{ $t('ready.checkApiUrl') }}
+				</p>
+			</message>
+			<api-config :configure-open="true" @found-api="load"/>
 		</no-auth-wrapper>
 	</section>
 	<CustomTransition name="fade">

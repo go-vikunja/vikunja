@@ -13,7 +13,7 @@
 			<section class="content">
 				<div>
 					<h2 class="title" v-if="title">{{ title }}</h2>
-					<api-config/>
+					<api-config v-if="showApiConfig"/>
 					<Message v-if="motd !== ''" class="is-hidden-tablet mb-4">
 						{{ motd }}
 					</Message>
@@ -45,6 +45,12 @@ const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
 const title = computed(() => t(route.meta?.title as string || ''))
 useTitle(() => title.value)
+
+const {
+	showApiConfig = true,
+} = defineProps<{
+	showApiConfig?: boolean
+}>()
 </script>
 
 <style lang="scss" scoped>
