@@ -26,8 +26,8 @@ Urls are:
 
 * `/principals/<username>/`: Returns urls for project discovery. *Use this url to initially make connections to new clients.*
 * `/projects/`: Used to manage projects
-* `/projects/<List ID>/`: Used to manage a single project
-* `/projects/<List ID>/<Task UID>`: Used to manage a task on a project
+* `/projects/<Project ID>/`: Used to manage a single project
+* `/projects/<Project ID>/<Task UID>`: Used to manage a task on a project
 
 ## Supported properties
 
