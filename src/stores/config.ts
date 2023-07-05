@@ -82,6 +82,9 @@ export const useConfigStore = defineStore('config', () => {
 	async function update(): Promise<boolean> {
 		const HTTP = HTTPFactory()
 		const {data: config} = await HTTP.get('info')
+		if (typeof config.version === 'undefined') {
+			return false
+		}
 		setConfig(objectToCamelCase(config))
 		const success = !!config
 		return success
