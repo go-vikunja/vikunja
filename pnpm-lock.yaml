@@ -235,8 +235,8 @@ devDependencies:
     specifier: 9.15.1
     version: 9.15.1(eslint@8.44.0)
   happy-dom:
-    specifier: 9.20.3
-    version: 9.20.3
+    specifier: 10.0.3
+    version: 10.0.3
   histoire:
     specifier: 0.16.2
     version: 0.16.2(@types/node@18.16.19)(sass@1.63.6)(terser@5.10.0)(vite@4.3.9)
@@ -247,8 +247,8 @@ devDependencies:
     specifier: 3.0.1
     version: 3.0.1
   postcss-easings:
-    specifier: 3.0.1
-    version: 3.0.1(postcss@8.4.24)
+    specifier: 4.0.0
+    version: 4.0.0(postcss@8.4.24)
   postcss-focus-within:
     specifier: 8.0.0
     version: 8.0.0(postcss@8.4.24)
@@ -287,7 +287,7 @@ devDependencies:
     version: 4.0.0
   vitest:
     specifier: 0.32.4
-    version: 0.32.4(happy-dom@9.20.3)(sass@1.63.6)(terser@5.10.0)
+    version: 0.32.4(happy-dom@10.0.3)(sass@1.63.6)(terser@5.10.0)
   vue-tsc:
     specifier: 1.8.3
     version: 1.8.3(typescript@5.1.6)
@@ -5932,8 +5932,8 @@ packages:
       strip-bom-string: 1.0.0
     dev: true
 
-  /happy-dom@9.20.3:
-    resolution: {integrity: sha512-eBsgauT435fXFvQDNcmm5QbGtYzxEzOaX35Ia+h6yP/wwa4xSWZh1CfP+mGby8Hk6Xu59mTkpyf72rUXHNxY7A==}
+  /happy-dom@10.0.3:
+    resolution: {integrity: sha512-WkCP+Z5fX6U5PY+yHP3ElV5D9PoxRAHRWPFq3pG9rg/6Hjf5ak7dozAgSCywsTRUq2qfa8vV8OQvUy5pRXy8EQ==}
     dependencies:
       css.escape: 1.5.1
       entities: 4.5.0
@@ -7586,9 +7586,9 @@ packages:
       postcss-value-parser: 3.3.1
     dev: true
 
-  /postcss-easings@3.0.1(postcss@8.4.24):
-    resolution: {integrity: sha512-n3bG/X3iB0m8d845vhFg/62/ECeT8jY8gE8F2A41z8Mty41spYA4vzMLezha7icVjtGjqlxgO3QE+uOzpDqeww==}
-    engines: {node: '>=10.0'}
+  /postcss-easings@4.0.0(postcss@8.4.24):
+    resolution: {integrity: sha512-KNpwHA3mTnf0UWcdwahQDaz7DDJ6QteVwdlLff98se854p6pyQW9iofwrD05vtlp33AAAxuUGCOhYwERRJGy6Q==}
+    engines: {node: '>=16.0'}
     peerDependencies:
       postcss: ^8.1.0
     dependencies:
@@ -9229,7 +9229,7 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vitest@0.32.4(happy-dom@9.20.3)(sass@1.63.6)(terser@5.10.0):
+  /vitest@0.32.4(happy-dom@10.0.3)(sass@1.63.6)(terser@5.10.0):
     resolution: {integrity: sha512-3czFm8RnrsWwIzVDu/Ca48Y/M+qh3vOnF16czJm98Q/AN1y3B6PBsyV8Re91Ty5s7txKNjEhpgtGPcfdbh2MZg==}
     engines: {node: '>=v14.18.0'}
     hasBin: true
@@ -9273,7 +9273,7 @@ packages:
       cac: 6.7.14
       chai: 4.3.7
       debug: 4.3.4(supports-color@8.1.1)
-      happy-dom: 9.20.3
+      happy-dom: 10.0.3
       local-pkg: 0.4.3
       magic-string: 0.30.0
       pathe: 1.1.1
