@@ -244,7 +244,7 @@ export function useProject(projectId: MaybeRef<IProject['id']>) {
 	
 	async function duplicateProject(parentProjectId: IProject['id']) {
 		const projectDuplicate = new ProjectDuplicateModel({
-			projectId: unref(projectId),
+			projectId: Number(unref(projectId)),
 			parentProjectId,
 		})
 

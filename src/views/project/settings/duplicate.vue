@@ -42,7 +42,7 @@ watch(
 )
 
 async function duplicate() {
-	await duplicateProject(parentProject.value.id)
+	await duplicateProject(parentProject.value?.id ?? 0)
 	success({message: t('project.duplicate.success')})
 }
 </script>
