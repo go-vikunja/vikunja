@@ -32,27 +32,27 @@ type ProjectDuplicate struct {
 	ParentProjectID int64 `json:"parent_project_id,omitempty"`
 
 	// The copied project
-	Project *Project `json:",omitempty"`
+	Project *Project `json:"duplicated_project,omitempty"`
 
 	web.Rights   `json:"-"`
 	web.CRUDable `json:"-"`
 }
 
 // CanCreate checks if a user has the right to duplicate a project
-func (ld *ProjectDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bool, err error) {
+func (pd *ProjectDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bool, err error) {
 	// Project Exists + user has read access to project
-	ld.Project = &Project{ID: ld.ProjectID}
-	canRead, _, err := ld.Project.CanRead(s, a)
+	pd.Project = &Project{ID: pd.ProjectID}
+	canRead, _, err := pd.Project.CanRead(s, a)
 	if err != nil || !canRead {
 		return canRead, err
 	}
 
-	if ld.ParentProjectID == 0 { // no parent project
+	if pd.ParentProjectID == 0 { // no parent project
 		return canRead, err
 	}
 
 	// Parent project exists + user has write access to is (-> can create new projects)
-	parent := &Project{ID: ld.ParentProjectID}
+	parent := &Project{ID: pd.ParentProjectID}
 	return parent.CanCreate(s, a)
 }
 
@@ -72,57 +72,58 @@ func (ld *ProjectDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bo
 // @Router /projects/{projectID}/duplicate [put]
 //
 //nolint:gocyclo
-func (ld *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
+func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
-	log.Debugf("Duplicating project %d", ld.ProjectID)
+	log.Debugf("Duplicating project %d", pd.ProjectID)
 
-	ld.Project.ID = 0
-	ld.Project.Identifier = "" // Reset the identifier to trigger regenerating a new one
+	pd.Project.ID = 0
+	pd.Project.Identifier = "" // Reset the identifier to trigger regenerating a new one
+	pd.Project.ParentProjectID = pd.ParentProjectID
 	// Set the owner to the current user
-	ld.Project.OwnerID = doer.GetID()
-	if err := CreateProject(s, ld.Project, doer); err != nil {
+	pd.Project.OwnerID = doer.GetID()
+	if err := CreateProject(s, pd.Project, doer); err != nil {
 		// If there is no available unique project identifier, just reset it.
 		if IsErrProjectIdentifierIsNotUnique(err) {
-			ld.Project.Identifier = ""
+			pd.Project.Identifier = ""
 		} else {
 			return err
 		}
 	}
 
-	log.Debugf("Duplicated project %d into new project %d", ld.ProjectID, ld.Project.ID)
+	log.Debugf("Duplicated project %d into new project %d", pd.ProjectID, pd.Project.ID)
 
 	// Duplicate kanban buckets
 	// Old bucket ID as key, new id as value
 	// Used to map the newly created tasks to their new buckets
 	bucketMap := make(map[int64]int64)
 	buckets := []*Bucket{}
-	err = s.Where("project_id = ?", ld.ProjectID).Find(&buckets)
+	err = s.Where("project_id = ?", pd.ProjectID).Find(&buckets)
 	if err != nil {
 		return
 	}
 	for _, b := range buckets {
 		oldID := b.ID
 		b.ID = 0
-		b.ProjectID = ld.Project.ID
+		b.ProjectID = pd.Project.ID
 		if err := b.Create(s, doer); err != nil {
 			return err
 		}
 		bucketMap[oldID] = b.ID
 	}
 
-	log.Debugf("Duplicated all buckets from project %d into %d", ld.ProjectID, ld.Project.ID)
+	log.Debugf("Duplicated all buckets from project %d into %d", pd.ProjectID, pd.Project.ID)
 
-	err = duplicateTasks(s, doer, ld, bucketMap)
+	err = duplicateTasks(s, doer, pd, bucketMap)
 	if err != nil {
 		return
 	}
 
 	// Background files + unsplash info
-	if ld.Project.BackgroundFileID != 0 {
+	if pd.Project.BackgroundFileID != 0 {
 
-		log.Debugf("Duplicating background %d from project %d into %d", ld.Project.BackgroundFileID, ld.ProjectID, ld.Project.ID)
+		log.Debugf("Duplicating background %d from project %d into %d", pd.Project.BackgroundFileID, pd.ProjectID, pd.Project.ID)
 
-		f := &files.File{ID: ld.Project.BackgroundFileID}
+		f := &files.File{ID: pd.Project.BackgroundFileID}
 		if err := f.LoadFileMetaByID(); err != nil {
 			return err
 		}
@@ -137,7 +138,7 @@ func (ld *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		}
 
 		// Get unsplash info if applicable
-		up, err := GetUnsplashPhotoByFileID(s, ld.Project.BackgroundFileID)
+		up, err := GetUnsplashPhotoByFileID(s, pd.Project.BackgroundFileID)
 		if err != nil && files.IsErrFileIsNotUnsplashFile(err) {
 			return err
 		}
@@ -149,38 +150,38 @@ func (ld *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 			}
 		}
 
-		if err := SetProjectBackground(s, ld.Project.ID, file, ld.Project.BackgroundBlurHash); err != nil {
+		if err := SetProjectBackground(s, pd.Project.ID, file, pd.Project.BackgroundBlurHash); err != nil {
 			return err
 		}
 
-		log.Debugf("Duplicated project background from project %d into %d", ld.ProjectID, ld.Project.ID)
+		log.Debugf("Duplicated project background from project %d into %d", pd.ProjectID, pd.Project.ID)
 	}
 
 	// Rights / Shares
 	// To keep it simple(r) we will only copy rights which are directly used with the project, not the parent
 	users := []*ProjectUser{}
-	err = s.Where("project_id = ?", ld.ProjectID).Find(&users)
+	err = s.Where("project_id = ?", pd.ProjectID).Find(&users)
 	if err != nil {
 		return
 	}
 	for _, u := range users {
 		u.ID = 0
-		u.ProjectID = ld.Project.ID
+		u.ProjectID = pd.Project.ID
 		if _, err := s.Insert(u); err != nil {
 			return err
 		}
 	}
 
-	log.Debugf("Duplicated user shares from project %d into %d", ld.ProjectID, ld.Project.ID)
+	log.Debugf("Duplicated user shares from project %d into %d", pd.ProjectID, pd.Project.ID)
 
 	teams := []*TeamProject{}
-	err = s.Where("project_id = ?", ld.ProjectID).Find(&teams)
+	err = s.Where("project_id = ?", pd.ProjectID).Find(&teams)
 	if err != nil {
 		return
 	}
 	for _, t := range teams {
 		t.ID = 0
-		t.ProjectID = ld.Project.ID
+		t.ProjectID = pd.Project.ID
 		if _, err := s.Insert(t); err != nil {
 			return err
 		}
@@ -188,20 +189,20 @@ func (ld *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 	// Generate new link shares if any are available
 	linkShares := []*LinkSharing{}
-	err = s.Where("project_id = ?", ld.ProjectID).Find(&linkShares)
+	err = s.Where("project_id = ?", pd.ProjectID).Find(&linkShares)
 	if err != nil {
 		return
 	}
 	for _, share := range linkShares {
 		share.ID = 0
-		share.ProjectID = ld.Project.ID
+		share.ProjectID = pd.Project.ID
 		share.Hash = utils.MakeRandomString(40)
 		if _, err := s.Insert(share); err != nil {
 			return err
 		}
 	}
 
-	log.Debugf("Duplicated all link shares from project %d into %d", ld.ProjectID, ld.Project.ID)
+	log.Debugf("Duplicated all link shares from project %d into %d", pd.ProjectID, pd.Project.ID)
 
 	return
 }
