@@ -250,9 +250,9 @@ export function useProject(projectId: MaybeRef<IProject['id']>) {
 
 		const duplicate = await projectDuplicateService.create(projectDuplicate)
 
-		projectStore.setProject(duplicate.project)
+		projectStore.setProject(duplicate.duplicatedProject)
 		success({message: t('project.duplicate.success')})
-		router.push({name: 'project.index', params: {projectId: duplicate.project.id}})
+		router.push({name: 'project.index', params: {projectId: duplicate.duplicatedProject.id}})
 	}
 
 	return {

@@ -3,6 +3,6 @@ import type {IProject} from './IProject'
 
 export interface IProjectDuplicate extends IAbstract {
 	projectId: number
-	project: IProject
+	duplicatedProject: IProject | null
 	parentProjectId: IProject['id']
 }
