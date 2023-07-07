@@ -9,6 +9,743 @@ All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
 
+## [0.21.0] - 2023-07-07
+
+### Bug Fixes
+
+* *(Expandable)* Spelling
+* *(building)* Let the compiler ignore props interface
+* *(ci)* Always pull latest unstable api image for testing
+* *(ci)* Directly build docker images and not use releases to avoid caching issues
+* *(ci)* Disable puppeteer chrome download
+* *(docker)* Copy patches prior to installing dependencies so that the installation actually works
+* *(docker)* Don't set nginx worker rlimit
+* *(filters)* Load projects after creating a filter
+* *(filters)* Load projects after deleting a filter
+* *(filters)* Load projects after updating a filter
+* *(gantt)* Only update today value when changing to the gantt chart view
+* *(i18n)* OrderedList translationid
+* *(i18n)* Typo
+* *(kanban)* Decrease task count per bucket when deleting a task
+* *(kanban)* Don't export buckets as readonly because that makes it impossible to update them, even from within the store
+* *(link share)* Default share view should be list, not project
+* *(link share)* Redirect to list view after authenticating
+* *(navigation)* Favorites project
+* *(navigation)* Hide archived subprojects
+* *(navigation)* Hide left ul border
+* *(navigation)* Highlight saved filters in project view and prevent them from being dragged around
+* *(navigation)* Hover state of other menu items
+* *(navigation)* Make marking a project as favorite work
+* *(navigation)* Make sure the Favorites project shows up when marking or unmarking a task as favorite
+* *(navigation)* Make sure updating a project's state works for sub projects as well.
+* *(navigation)* Make the styles work again
+* *(navigation)* Menu item overflow
+* *(navigation)* Nav item width for items without sub projects
+* *(navigation)* Show text ellipsis for very long project titles
+* *(navigation)* Sidebar top spacing
+* *(navigation)* Watcher
+* *(project)* Correctly load background when switching from or to a project view
+* *(project)* Don't try to read title of undefined project
+* *(project)* Duplicate a project without new parent
+* *(project)* Make sure the correct tasks are loaded when switching between projects
+* *(project)* Set maxRight on projects after opening a task
+* *(projects)* Make sure the project hierarchy is properly updated when moving projects between parents
+* *(projects)* Update project duplicate api definitions
+* *(quick add magic)* Cleanup all assignee properties
+* *(quick add magic)* Date parsing with a date at the beginning
+* *(quick add magic)* Don't replace the prefix in every occurrence when it is present in the matched part
+* *(quick add magic)* Use the project user service to find assignees for quick add magic
+* *(reminders)* Align remove icon with the rest
+* *(reminders)* Assignment to const when changing a reminder
+* *(reminders)* Custom relative highlight now only when a custom relative reminder was actually selected
+* *(reminders)* Don't assigne the task
+* *(reminders)* Don't assume 30 days are always a month
+* *(reminders)* Don't sync negative relative reminder amounts in ui
+* *(reminders)* Duplicate reminder for each change
+* *(reminders)* Flatpickr styling improvements
+* *(reminders)* Properly parse relative reminders which don't have an amount
+* *(reminders)* Set date over relative reminder
+* *(reminders)* Style flatpickr so that it blends in more
+* *(repeat)* Prevent disappearing repeat mode settings when modes other than default repeat mode were selected
+* *(sentry)* Don't fail the build when sentry upload fails
+* *(sentry)* Use correct environment from vite env mode
+* *(settings)* Don't try to sort timezones if there are none
+* *(task detail view)* Make project display show the task's project
+* *(task)* Break long task titles after 4 lines only
+* *(task)* Call getting task identifier directly instead of using model function
+* *(task)* Make an attachment cover image
+* *(task)* Repeat mode now saves correctly
+* *(tests)* Make sure the task is created with a bucket
+* *(tests)* New project input field
+* *(tests)* Project archived filter checkbox selector
+* *(tests)* Wait for request instead of fixed time
+* *(user)* Fix flickering of default settings
+* *(user)* Lint* Fix comment
+* *(user)* Set the language when saving
+* Add await ([9d9fb95](9d9fb959d8f1c4a12110f1a988115116085b6aaf))
+* Add default for level ([9402344](9402344b7ea70359c592412b6c341897e45c6069))
+* Add interval to uses of useNow so that it uses less resources ([b77c7c2](b77c7c2f45495a0fe6d132b5f569e807074c6d12))
+* Add more padding to the textarea ([dfa6cd7](dfa6cd777bc5d03cf88d62db9008aa0b366aa806))
+* Add spacing between checkbox and title of related task ([62825d2](62825d2e6409e08ab3229bf693ed068198e18085))
+* Allow icon changes configuration via env (#3567) ([57218d1](57218d14548bf1d4cd59f6976e84cf178023305d))
+* Avoid crashing browser processes during tests ([7b05ed9](7b05ed9d3d24e07a6535f2462d215c47b6650be1))
+* Bottom margin of project header ([1a94496](1a9449680114212eeb93be2aba3f10c416f67e78))
+* Bubble changes from the editor immediately and move the delay to callers ([f4a7943](f4a79436809d13e1d2c5337f79358c15310d08d2))
+* Checkbox label size based on icon ([fd699ad](fd699ad777c47764b35345b7ec18a854957ff5d1))
+* Clarify user search setting ([ae025e3](ae025e30c659d43cce1e3f8361bd1c4c7cb860da))
+* Cleanup unused translation strings ([aaa9d55](aaa9d553d080a83a9fd1bcdece366fb5832831f1))
+* Collapsing child projects ([2250918](225091864f9088a07120cd3d36918f3060d57d30))
+* Correctly sync filters on upcoming tasks page ([faa6298](faa62985dff877afc54c3510be8d27d493717780))
+* Disable autocomplete in assignee search ([64f9f4f](64f9f4fd88a513cbc401aacbeab87695bb9f55bf))
+* Don't allow creating a new label from filter view ([4c969f0](4c969f0a427e98b491c49646aaf19e19cf9ec924))
+* Don't require variant prop on loading component as it already has a default one set ([01ac84c](01ac84ce1eda1de79fd752792115a71cb5c15698))
+* Don't set the current project when setting a project ([31b7c1f](31b7c1f217532bf388ba95a03f469508bee46f6a))
+* Don't show > for top-level projects ([03f4d0b](03f4d0b8bcba90b19302d6c6d2fbb92460b59957))
+* Don't show child projects when the project is only a favorite ([0a17df8](0a17df87e950b8043578dbb7e9f12d5937802169))
+* Don't try to convert a null date ([4ba02eb](4ba02ebbb6be4b96a42688b3ec8f29fe923aee0b))
+* Don't try to map data from empty responses ([a118580](a11858070496614c492da321fe461b72c31afe5a))
+* Don't try to map non-array data ([813d2b5](813d2b56a06cbd28a1bf0d01b64685a1b49188d0))
+* Don't try to set a user language if none is saved ([68fd469](68fd4698ac443345dc7dbbf8cfebf76ec467b6ec))
+* Don't try to set config from non-json responses ([7c1934a](7c1934aad0e5fcd0f785896d57efc34c6df935cd))
+* Ensure all matched quick add magic parts are correctly removed from the task ([7b6a13d](7b6a13dd52dfa06e6093ae30adad1b86b66610e1))
+* Ensure same protocol for configured api url (#3303) ([6c999ad](6c999ad14844b4f9ec74dc225895db6a12e4a781))
+* Follow the happy path ([34182b8](34182b8bbb7a7e8eeb0ce698dc6da79785d05fc9))
+* Force usage of @types for flexsearch instead of integrated types ([f60cebf](f60cebf42cb73d9fd2d9fea8de5bbeb96a724d47))
+* Has-pseudo-class polyfill ([4703f9c](4703f9c4d5e3902d0fc389d447aa9a7da2e2dd4a))
+* Ignore ts deprecations for now ([96e2c81](96e2c81b7ef2b7a0ff515dd01d9aeb28429cc0d5))
+* Improve projectView storing and add migration ([842f204](842f204123afc3b9b4633b68de58cffb3af4f912))
+* Improve the "pop" sound a bit ([3643ffe](3643ffe0d0357c89cb3517fafbb0c438188ac88d))
+* Improve tooltip icon contrast ([a6cdf6c](a6cdf6c4bdceb1168f20e9d049c2e66f40c98aa1))
+* Improve tooltip text ([2174608](21746088012f4fe0f750ed5e5cac916d506fb17b))
+* Increase default auto-save timeout to 5 seconds ([f7ba3bd](f7ba3bd08fa9181180f99f4e5ebd5ec916fbcf19))
+* Indention ([e25273d](e25273df4899867ee146159d3d18125d387f8524))
+* Lint ([292c904](292c90425ef96b99671702a0b28d87d660fa53dc))
+* Lint ([4ff0c81](4ff0c81e373696b0505c2c080d558a20071562f3))
+* Lint ([5d59392](5d593925666a09cbfda2f62577deb670033f93fb))
+* Lint ([9ec29ca](9ec29cad300fe1c25cb355fb86e165ca920df511))
+* Lint ([c294f9d](c294f9d28d3e793f8151265d5a16ed2fc53aea92))
+* Lint ([c74612f](c74612f24adeb4aceafe9fc9b3264b1dfe84d128))
+* Lint ([cd2b7fe](cd2b7fe185632253290838e405b8a2666b15ce24))
+* Lint ([ed8de7e](ed8de7e3eb78f6723d5f675cca18c014b252ed64))
+* List view: don't sort tasks after marking one "done" (#3285) ([6870db4](6870db4a72568f183134a6dd2d4af687dd7c839d))
+* Load the correct language ([6593380](6593380013ff6043b846126ac67e6f96442a1c5b))
+* Make check if projects are available work again ([5e65814](5e65814b8c5b37f3962856f2809f7cc85756da1e))
+* Make computed side-effect free ([26bec05](26bec0517417afc52db93f0fdc4c48d47ed5c131))
+* Make sure redirects to a saved view work as intended ([a64c0c1](a64c0c19e5a7da36ae4993fce443e4f37e3a4572))
+* Make sure the unread notifications indicator is correctly positioned ([8b90b45](8b90b45739418f447b885fc9b37438e325f61b32))
+* Make tests work again ([5685890](56858904938126dbfa8ade2e88e3ec6c4fff3a6f))
+* Make type singular ([bc416f2](bc416f282f13d2b81782aba4b0d68b71f26c83e8))
+* Make update available button use the correct text color all the time ([ae2b0f9](ae2b0f97c4bb50d4ff493af2af132f9740d16d49))
+* Missing await ([391992e](391992effbb424a107ff060e7175884740a28c62))
+* Missing variant prop for loading component ([2e9ade1](2e9ade11c3a3b6cb531d053f82a598a5ab851a93))
+* Move parent project child id mutation to store ([26e3d42](26e3d42ed527afd6bf695ba3ad291e1c2b545bba))
+* Move parent project handling out of useProject ([ba452ab](ba452ab88339b9ace987f1a18584a7950e00a776))
+* Move the collapsable placeholder to the button ([1344026](1344026494fe47ac5604bff07b537a2765e840f6))
+* Move types to dev dependencies ([739fe0c](739fe0caa13dc946e1801f290d8ab5f18cdc5faf))
+* Only bind child projects data down ([3eca9f6](3eca9f6180e64f892e94d27eaa192cea780563a0))
+* Only update daytime salutation when switching to home view ([c577626](c5776264c069000efbb62c64dfc2143d5fc4e0df))
+* Passing readonly projects data to navigation ([d85be26](d85be26761240164b6bdcbe0601b46585b74fafa))
+* Properly determine if there are projects ([a2cc9dd](a2cc9ddc8821a4b9b1ee1dd6109d1b3958a06ba6))
+* Rebase readd CustomTransition ([b93639e](b93639e14ecab06496086c3d2cc14f51d8f9f672))
+* Recreate project instead of editing before ([175e31c](175e31ca629660d8d683b35b8e7c8052a62cd17d))
+* Redundant ) ([6c2dc48](6c2dc483a20213f1f238e6224b9ecfb87faa2461))
+* Remove getProjectById and replace all usages of it ([78158bc](78158bcba52d152a2ebf465242e25a55e6764470))
+* Remove leftover suspense ([9d73ac6](9d73ac661fbf9315995c8a1f633708021591d2db))
+* Remove leftovers of childIds ([bbaddb9](bbaddb9406910106b7d476a6550acff025e72655))
+* Remove namespace routes ([10311b7](10311b79df36db44a8e96a446234c3c6d6aa6ec7))
+* Remove namespace store reference ([ad2690b](ad2690b21cfc9ccc658737a726cc6b110089b635))
+* Remove unnecessary fallback ([d414b65](d414b65e7d591f567067ce8085b9934207dc938a))
+* Rename getParentProjects method to make it clear what it does ([39f699a](39f699a61ae91eb93c364137f76b595e7cad7561))
+* Rename list to project for parsing subtasks via indention ([fc8711d](fc8711d6d841d11847cd8567999373145ce3398d))
+* Rename resolveRef ([f14e721](f14e721caf9434ac119f32c5e7f107bfbdd6746c))
+* Return redirect ([7c964c2](7c964c29d487b5bcd2c125f81731e3b37374641a))
+* Return updated project instead of the old one ([4ab5478](4ab547810c77e747e701ea865c13157d51aba461))
+* Review findings ([5fb45af](5fb45afb12479eb135323299409bd91d8be24e39))
+* Review findings ([85ffed4](85ffed4d9a26fc054fee51608bb83ccf2e3032f9))
+* Review findings ([fb14eca](fb14eca6340ac4c761b8f61027662328bf55ade4))
+* Route to create new project ([a5e710b](a5e710bfe594e06262b9ef46fa6b56ad637b8156))
+* Set and use correct type for destructured props ([dbe1ad9](dbe1ad9353e165fd1e314cc72c7a4dece1c47d38))
+* Set vue-ignore ([b6cd424](b6cd424aa30be3bd715c0b7555032fc80149ae7b))
+* Show favorite on hover ([0be83db](0be83db40fa96478bfdb4a69e8a995d6debb6f52))
+* Simplify sort ([85e882c](85e882cc5940067414004dabd01916f559fbd0ff))
+* Sort in store ([46e8258](46e825820c465ebb9f8087e3afe6d74fad8d5159))
+* SortBy type import ([d73b71a](d73b71a097755cdb075955a824c26bbaba222aaf))
+* Spacing ([9162002](9162002e55d9ebfd0a6c8dbe28aab0c15f95b7e2))
+* Style: "favorite" button being shown on projects without hovering ([ee4974a](ee4974a4948012b03adcedd956c0d907c57431c9))
+* Switching to view type now ([060a573](060a573fe9006441131fd98c4618c5d294cf39b7))
+* Tests ([69e94e5](69e94e58c451a5115c713696798f8fcbf8f787b3))
+* Translation string ([f13db92](f13db9268a8862204522a8d68ad7b51edb9d91e1))
+* Tsconfig as per https://github.com/vuejs/tsconfig#configuration-for-node-environments ([05b7063](05b70632c55ce34ee6471cc372334fc6e14c99a0))
+* Tsconfig as per https://github.com/vuejs/tsconfig#configuration-for-node-environments ([ca9fe6f](ca9fe6ff215351c3f4c8de65a333f5cfd5876488))
+* Undefined parent project when none was selected ([6cc11e6](6cc11e64ab392f8e8e69070000a748c04746e550))
+* Undo further nesting of interactive items ([0acf447](0acf44778d0ab2a317bcfb3e89aa0292e2d5c2ed))
+* Update logo change only every hour ([7126576](71265769cefb91be9a51fceff0a04095a9dd7e72))
+* Use correct shortcut to open projects overview ([326b6ed](326b6eda6fce6554ea6e215c681466374657902a))
+* Use menu tag everywhere ([0dd6f82](0dd6f82a0e198056724821c2bb56c6b9807ea451))
+* Use onActivated ([a33fb72](a33fb72ef86112c6f29017bb951ff4e1ee611ed6))
+* Use props destructuring everywhere ([3aa502e](3aa502e07d89314e885c252e1e3d4668fa64059b))
+* Use strict comparison ([91e9eef](91e9eef5829d2a5ae27099fbd54029ed0ca46818))
+* Use the color bubble as handle if the project has a color ([4857080](48570808e55e51751734ddaf4532ad651920d622))
+* Use time constant ([a13c16c](a13c16ca03698a24860f8453cdb231c420d0077b))
+* Wording ([985f998](985f998a821229d03c7d40d1a81f7fbe5121d585))
+
+
+### Dependencies
+
+* *(deps)* Install dependencies after rebase
+* *(deps)* Pin dependency @tsconfig/node18 to 2.0.0
+* *(deps)* Update all dev dependencies at once per day
+* *(deps)* Update caniuse-and-related
+* *(deps)* Update caniuse-and-related
+* *(deps)* Update dependency @4tw/cypress-drag-drop to v2.2.4
+* *(deps)* Update dependency @cypress/vite-dev-server to v5.0.5
+* *(deps)* Update dependency @cypress/vue to v5.0.5
+* *(deps)* Update dependency @faker-js/faker to v8
+* *(deps)* Update dependency @faker-js/faker to v8.0.1
+* *(deps)* Update dependency @faker-js/faker to v8.0.2
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v0.10.0
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v0.11.0
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v0.12.0
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v0.12.1
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v0.9.2
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v0.9.3
+* *(deps)* Update dependency @kyvg/vue3-notification to v2.9.1
+* *(deps)* Update dependency @rushstack/eslint-patch to v1.3.0
+* *(deps)* Update dependency @rushstack/eslint-patch to v1.3.1
+* *(deps)* Update dependency @rushstack/eslint-patch to v1.3.2
+* *(deps)* Update dependency @tsconfig/node18 to v18
+* *(deps)* Update dependency @tsconfig/node18 to v2.0.1
+* *(deps)* Update dependency @types/codemirror to v5.60.8
+* *(deps)* Update dependency @types/dompurify to v3
+* *(deps)* Update dependency @types/dompurify to v3.0.1
+* *(deps)* Update dependency @types/dompurify to v3.0.2
+* *(deps)* Update dependency @types/marked to v4.3.0
+* *(deps)* Update dependency @types/marked to v4.3.1
+* *(deps)* Update dependency @types/marked to v5
+* *(deps)* Update dependency @types/node to v18.15.1
+* *(deps)* Update dependency @types/node to v18.15.10
+* *(deps)* Update dependency @types/node to v18.15.11
+* *(deps)* Update dependency @types/node to v18.15.12
+* *(deps)* Update dependency @types/node to v18.15.13
+* *(deps)* Update dependency @types/node to v18.15.2
+* *(deps)* Update dependency @types/node to v18.15.3
+* *(deps)* Update dependency @types/node to v18.15.5
+* *(deps)* Update dependency @types/node to v18.15.6
+* *(deps)* Update dependency @types/node to v18.15.7
+* *(deps)* Update dependency @types/node to v18.15.8
+* *(deps)* Update dependency @types/node to v18.15.9
+* *(deps)* Update dependency @types/node to v18.16.0
+* *(deps)* Update dependency @types/node to v18.16.1
+* *(deps)* Update dependency @types/node to v18.16.10
+* *(deps)* Update dependency @types/node to v18.16.11
+* *(deps)* Update dependency @types/node to v18.16.14
+* *(deps)* Update dependency @types/node to v18.16.16
+* *(deps)* Update dependency @types/node to v18.16.17
+* *(deps)* Update dependency @types/node to v18.16.18
+* *(deps)* Update dependency @types/node to v18.16.19
+* *(deps)* Update dependency @types/node to v18.16.2
+* *(deps)* Update dependency @types/node to v18.16.3
+* *(deps)* Update dependency @types/node to v18.16.4
+* *(deps)* Update dependency @types/node to v18.16.5
+* *(deps)* Update dependency @types/node to v18.16.6
+* *(deps)* Update dependency @types/node to v18.16.7
+* *(deps)* Update dependency @types/node to v18.16.8
+* *(deps)* Update dependency @types/node to v18.16.9
+* *(deps)* Update dependency @types/sortablejs to v1.15.1
+* *(deps)* Update dependency @vitejs/plugin-legacy to v4.0.2
+* *(deps)* Update dependency @vitejs/plugin-legacy to v4.0.3
+* *(deps)* Update dependency @vitejs/plugin-legacy to v4.0.4
+* *(deps)* Update dependency @vitejs/plugin-legacy to v4.0.5
+* *(deps)* Update dependency @vitejs/plugin-vue to v4.1.0
+* *(deps)* Update dependency @vitejs/plugin-vue to v4.2.0
+* *(deps)* Update dependency @vitejs/plugin-vue to v4.2.1
+* *(deps)* Update dependency @vitejs/plugin-vue to v4.2.2
+* *(deps)* Update dependency @vitejs/plugin-vue to v4.2.3
+* *(deps)* Update dependency @vue/eslint-config-typescript to v11.0.3
+* *(deps)* Update dependency @vue/test-utils to v2.3.2
+* *(deps)* Update dependency @vue/test-utils to v2.4.0
+* *(deps)* Update dependency @vue/tsconfig to v0.3.2
+* *(deps)* Update dependency @vue/tsconfig to v0.4.0
+* *(deps)* Update dependency @vueuse/core to v10
+* *(deps)* Update dependency @vueuse/core to v10.0.2
+* *(deps)* Update dependency @vueuse/core to v10.1.0
+* *(deps)* Update dependency @vueuse/core to v10.1.2
+* *(deps)* Update dependency @vueuse/core to v10.2.0
+* *(deps)* Update dependency @vueuse/core to v10.2.1
+* *(deps)* Update dependency axios to v1.3.5
+* *(deps)* Update dependency axios to v1.3.6
+* *(deps)* Update dependency axios to v1.4.0
+* *(deps)* Update dependency caniuse-lite to v1.0.30001465
+* *(deps)* Update dependency caniuse-lite to v1.0.30001468
+* *(deps)* Update dependency caniuse-lite to v1.0.30001470
+* *(deps)* Update dependency caniuse-lite to v1.0.30001473
+* *(deps)* Update dependency caniuse-lite to v1.0.30001477
+* *(deps)* Update dependency caniuse-lite to v1.0.30001479
+* *(deps)* Update dependency caniuse-lite to v1.0.30001481
+* *(deps)* Update dependency caniuse-lite to v1.0.30001486
+* *(deps)* Update dependency caniuse-lite to v1.0.30001487
+* *(deps)* Update dependency caniuse-lite to v1.0.30001489
+* *(deps)* Update dependency caniuse-lite to v1.0.30001500
+* *(deps)* Update dependency caniuse-lite to v1.0.30001508
+* *(deps)* Update dependency caniuse-lite to v1.0.30001511
+* *(deps)* Update dependency codemirror to v5.65.13
+* *(deps)* Update dependency css-has-pseudo to v6
+* *(deps)* Update dependency csstype to v3.1.2
+* *(deps)* Update dependency cypress to v12.10.0
+* *(deps)* Update dependency cypress to v12.11.0
+* *(deps)* Update dependency cypress to v12.12.0
+* *(deps)* Update dependency cypress to v12.13.0
+* *(deps)* Update dependency cypress to v12.14.0
+* *(deps)* Update dependency cypress to v12.15.0
+* *(deps)* Update dependency cypress to v12.16.0
+* *(deps)* Update dependency cypress to v12.8.0
+* *(deps)* Update dependency cypress to v12.8.1
+* *(deps)* Update dependency cypress to v12.9.0
+* *(deps)* Update dependency date-fns to v2.30.0
+* *(deps)* Update dependency dayjs to v1.11.8
+* *(deps)* Update dependency dayjs to v1.11.9
+* *(deps)* Update dependency dompurify to v3.0.2
+* *(deps)* Update dependency dompurify to v3.0.3
+* *(deps)* Update dependency dompurify to v3.0.4
+* *(deps)* Update dependency esbuild to v0.17.12
+* *(deps)* Update dependency esbuild to v0.17.13
+* *(deps)* Update dependency esbuild to v0.17.14
+* *(deps)* Update dependency esbuild to v0.17.15
+* *(deps)* Update dependency esbuild to v0.17.16
+* *(deps)* Update dependency esbuild to v0.17.17
+* *(deps)* Update dependency esbuild to v0.17.18
+* *(deps)* Update dependency esbuild to v0.17.19
+* *(deps)* Update dependency esbuild to v0.18.0
+* *(deps)* Update dependency esbuild to v0.18.1
+* *(deps)* Update dependency esbuild to v0.18.10
+* *(deps)* Update dependency esbuild to v0.18.11
+* *(deps)* Update dependency esbuild to v0.18.2
+* *(deps)* Update dependency esbuild to v0.18.3
+* *(deps)* Update dependency esbuild to v0.18.4
+* *(deps)* Update dependency esbuild to v0.18.5
+* *(deps)* Update dependency esbuild to v0.18.6
+* *(deps)* Update dependency esbuild to v0.18.9
+* *(deps)* Update dependency eslint to v8.37.0
+* *(deps)* Update dependency eslint to v8.38.0
+* *(deps)* Update dependency eslint to v8.39.0
+* *(deps)* Update dependency eslint to v8.40.0
+* *(deps)* Update dependency eslint to v8.41.0
+* *(deps)* Update dependency eslint to v8.42.0
+* *(deps)* Update dependency eslint to v8.43.0
+* *(deps)* Update dependency eslint to v8.44.0
+* *(deps)* Update dependency eslint-plugin-vue to v9.10.0
+* *(deps)* Update dependency eslint-plugin-vue to v9.11.0
+* *(deps)* Update dependency eslint-plugin-vue to v9.11.1
+* *(deps)* Update dependency eslint-plugin-vue to v9.12.0
+* *(deps)* Update dependency eslint-plugin-vue to v9.13.0
+* *(deps)* Update dependency flexsearch to v0.7.31
+* *(deps)* Update dependency floating-vue to v2.0.0-beta.21
+* *(deps)* Update dependency floating-vue to v2.0.0-beta.22
+* *(deps)* Update dependency floating-vue to v2.0.0-beta.24
+* *(deps)* Update dependency happy-dom to v9
+* *(deps)* Update dependency happy-dom to v9.1.9
+* *(deps)* Update dependency happy-dom to v9.10.1
+* *(deps)* Update dependency happy-dom to v9.10.9
+* *(deps)* Update dependency happy-dom to v9.18.3
+* *(deps)* Update dependency happy-dom to v9.20.1
+* *(deps)* Update dependency happy-dom to v9.20.3
+* *(deps)* Update dependency happy-dom to v9.7.1
+* *(deps)* Update dependency happy-dom to v9.9.2
+* *(deps)* Update dependency highlight.js to v11.8.0
+* *(deps)* Update dependency histoire to v0.16.2
+* *(deps)* Update dependency marked to v4.3.0
+* *(deps)* Update dependency marked to v5
+* *(deps)* Update dependency marked to v5.0.1
+* *(deps)* Update dependency marked to v5.0.2
+* *(deps)* Update dependency marked to v5.0.3
+* *(deps)* Update dependency marked to v5.0.4
+* *(deps)* Update dependency marked to v5.0.5
+* *(deps)* Update dependency marked to v5.1.0
+* *(deps)* Update dependency netlify-cli to v13.1.2
+* *(deps)* Update dependency netlify-cli to v13.1.6
+* *(deps)* Update dependency netlify-cli to v13.2.1
+* *(deps)* Update dependency netlify-cli to v13.2.2
+* *(deps)* Update dependency netlify-cli to v14
+* *(deps)* Update dependency netlify-cli to v14.3.1
+* *(deps)* Update dependency pinia to v2.0.34
+* *(deps)* Update dependency pinia to v2.0.35
+* *(deps)* Update dependency pinia to v2.0.36
+* *(deps)* Update dependency pinia to v2.1.4
+* *(deps)* Update dependency postcss to v8.4.22
+* *(deps)* Update dependency postcss to v8.4.23
+* *(deps)* Update dependency postcss to v8.4.24
+* *(deps)* Update dependency postcss-preset-env to v8.1.0
+* *(deps)* Update dependency postcss-preset-env to v8.2.0
+* *(deps)* Update dependency postcss-preset-env to v8.3.0
+* *(deps)* Update dependency postcss-preset-env to v8.3.1
+* *(deps)* Update dependency postcss-preset-env to v8.3.2
+* *(deps)* Update dependency postcss-preset-env to v8.4.1
+* *(deps)* Update dependency postcss-preset-env to v8.4.2
+* *(deps)* Update dependency postcss-preset-env to v8.5.0
+* *(deps)* Update dependency postcss-preset-env to v8.5.1
+* *(deps)* Update dependency rollup to v3.20.0
+* *(deps)* Update dependency rollup to v3.20.1
+* *(deps)* Update dependency rollup to v3.20.2
+* *(deps)* Update dependency rollup to v3.20.3
+* *(deps)* Update dependency rollup to v3.20.4
+* *(deps)* Update dependency rollup to v3.20.5
+* *(deps)* Update dependency rollup to v3.20.6
+* *(deps)* Update dependency rollup to v3.20.7
+* *(deps)* Update dependency rollup to v3.21.0
+* *(deps)* Update dependency rollup to v3.21.1
+* *(deps)* Update dependency rollup to v3.21.2
+* *(deps)* Update dependency rollup to v3.21.3
+* *(deps)* Update dependency rollup to v3.21.4
+* *(deps)* Update dependency rollup to v3.21.5
+* *(deps)* Update dependency rollup to v3.21.6
+* *(deps)* Update dependency rollup to v3.21.7
+* *(deps)* Update dependency rollup to v3.21.8
+* *(deps)* Update dependency rollup to v3.22.0
+* *(deps)* Update dependency rollup to v3.23.0
+* *(deps)* Update dependency rollup to v3.23.1
+* *(deps)* Update dependency rollup to v3.24.0
+* *(deps)* Update dependency rollup to v3.24.1
+* *(deps)* Update dependency rollup to v3.25.0
+* *(deps)* Update dependency rollup to v3.25.1
+* *(deps)* Update dependency rollup to v3.25.2
+* *(deps)* Update dependency rollup to v3.25.3
+* *(deps)* Update dependency rollup to v3.26.0
+* *(deps)* Update dependency rollup-plugin-visualizer to v5.9.2
+* *(deps)* Update dependency sass to v1.59.3
+* *(deps)* Update dependency sass to v1.60.0
+* *(deps)* Update dependency sass to v1.61.0
+* *(deps)* Update dependency sass to v1.62.0
+* *(deps)* Update dependency sass to v1.62.1
+* *(deps)* Update dependency sass to v1.63.0
+* *(deps)* Update dependency sass to v1.63.2
+* *(deps)* Update dependency sass to v1.63.3
+* *(deps)* Update dependency sass to v1.63.4
+* *(deps)* Update dependency sass to v1.63.5
+* *(deps)* Update dependency sass to v1.63.6
+* *(deps)* Update dependency typescript to v5
+* *(deps)* Update dependency typescript to v5.0.3
+* *(deps)* Update dependency typescript to v5.0.4
+* *(deps)* Update dependency typescript to v5.1.3
+* *(deps)* Update dependency typescript to v5.1.5
+* *(deps)* Update dependency typescript to v5.1.6
+* *(deps)* Update dependency ufo to v1.1.2
+* *(deps)* Update dependency vite to v4.2.0
+* *(deps)* Update dependency vite to v4.2.1
+* *(deps)* Update dependency vite to v4.2.2
+* *(deps)* Update dependency vite to v4.3.0
+* *(deps)* Update dependency vite to v4.3.1
+* *(deps)* Update dependency vite to v4.3.2
+* *(deps)* Update dependency vite to v4.3.3
+* *(deps)* Update dependency vite to v4.3.4
+* *(deps)* Update dependency vite to v4.3.5
+* *(deps)* Update dependency vite to v4.3.6
+* *(deps)* Update dependency vite to v4.3.7
+* *(deps)* Update dependency vite to v4.3.8
+* *(deps)* Update dependency vite to v4.3.9
+* *(deps)* Update dependency vite-plugin-pwa to v0.14.5
+* *(deps)* Update dependency vite-plugin-pwa to v0.14.6
+* *(deps)* Update dependency vite-plugin-pwa to v0.14.7
+* *(deps)* Update dependency vite-plugin-pwa to v0.15.0
+* *(deps)* Update dependency vite-plugin-pwa to v0.15.1
+* *(deps)* Update dependency vite-plugin-pwa to v0.15.2
+* *(deps)* Update dependency vite-plugin-pwa to v0.16.1
+* *(deps)* Update dependency vite-plugin-pwa to v0.16.3
+* *(deps)* Update dependency vite-plugin-pwa to v0.16.4
+* *(deps)* Update dependency vite-plugin-sentry to v1.3.0
+* *(deps)* Update dependency vitest to v0.29.3
+* *(deps)* Update dependency vitest to v0.29.4
+* *(deps)* Update dependency vitest to v0.29.5
+* *(deps)* Update dependency vitest to v0.29.7
+* *(deps)* Update dependency vitest to v0.29.8
+* *(deps)* Update dependency vitest to v0.30.0
+* *(deps)* Update dependency vitest to v0.30.1
+* *(deps)* Update dependency vitest to v0.31.0
+* *(deps)* Update dependency vitest to v0.31.1
+* *(deps)* Update dependency vitest to v0.31.2
+* *(deps)* Update dependency vitest to v0.31.4
+* *(deps)* Update dependency vitest to v0.32.0
+* *(deps)* Update dependency vitest to v0.32.1
+* *(deps)* Update dependency vitest to v0.32.2
+* *(deps)* Update dependency vitest to v0.32.3
+* *(deps)* Update dependency vue to v3.3.4
+* *(deps)* Update dependency vue to v3.3.4
+* *(deps)* Update dependency vue-flatpickr-component to v11.0.3
+* *(deps)* Update dependency vue-router to v4.2.0
+* *(deps)* Update dependency vue-router to v4.2.1
+* *(deps)* Update dependency vue-router to v4.2.2
+* *(deps)* Update dependency vue-router to v4.2.3
+* *(deps)* Update dependency vue-router to v4.2.4
+* *(deps)* Update dependency vue-tsc to v1.4.0
+* *(deps)* Update dependency vue-tsc to v1.4.1
+* *(deps)* Update dependency vue-tsc to v1.4.2
+* *(deps)* Update dependency vue-tsc to v1.4.3
+* *(deps)* Update dependency vue-tsc to v1.4.4
+* *(deps)* Update dependency vue-tsc to v1.6.0
+* *(deps)* Update dependency vue-tsc to v1.6.1
+* *(deps)* Update dependency vue-tsc to v1.6.2
+* *(deps)* Update dependency vue-tsc to v1.6.3
+* *(deps)* Update dependency vue-tsc to v1.6.4
+* *(deps)* Update dependency vue-tsc to v1.6.5
+* *(deps)* Update dependency vue-tsc to v1.8.0
+* *(deps)* Update dependency vue-tsc to v1.8.1
+* *(deps)* Update dependency vue-tsc to v1.8.2
+* *(deps)* Update dependency vue-tsc to v1.8.3
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update flake
+* *(deps)* Update font awesome to v6.4.0
+* *(deps)* Update histoire to v0.15.9
+* *(deps)* Update histoire to v0.16.0
+* *(deps)* Update histoire to v0.16.1
+* *(deps)* Update lockfile
+* *(deps)* Update node.js to v18.16.0
+* *(deps)* Update node.js to v18.16.1
+* *(deps)* Update node.js to v20 (#3411)
+* *(deps)* Update pnpm to v7.29.3
+* *(deps)* Update pnpm to v7.30.0
+* *(deps)* Update pnpm to v7.30.1
+* *(deps)* Update pnpm to v7.30.2
+* *(deps)* Update pnpm to v7.30.3
+* *(deps)* Update pnpm to v7.30.5
+* *(deps)* Update pnpm to v7.31.0
+* *(deps)* Update pnpm to v7.32.0
+* *(deps)* Update pnpm to v8
+* *(deps)* Update pnpm to v8.3.0
+* *(deps)* Update pnpm to v8.3.1
+* *(deps)* Update pnpm to v8.4.0
+* *(deps)* Update pnpm to v8.5.0
+* *(deps)* Update pnpm to v8.5.1
+* *(deps)* Update pnpm to v8.6.0
+* *(deps)* Update pnpm to v8.6.1
+* *(deps)* Update pnpm to v8.6.2
+* *(deps)* Update pnpm to v8.6.3
+* *(deps)* Update pnpm to v8.6.4
+* *(deps)* Update pnpm to v8.6.5
+* *(deps)* Update pnpm to v8.6.6
+* *(deps)* Update sentry-javascript monorepo to v7.43.0
+* *(deps)* Update sentry-javascript monorepo to v7.44.0
+* *(deps)* Update sentry-javascript monorepo to v7.44.1
+* *(deps)* Update sentry-javascript monorepo to v7.44.2
+* *(deps)* Update sentry-javascript monorepo to v7.45.0
+* *(deps)* Update sentry-javascript monorepo to v7.46.0
+* *(deps)* Update sentry-javascript monorepo to v7.47.0
+* *(deps)* Update sentry-javascript monorepo to v7.48.0
+* *(deps)* Update sentry-javascript monorepo to v7.49.0
+* *(deps)* Update sentry-javascript monorepo to v7.50.0
+* *(deps)* Update sentry-javascript monorepo to v7.51.0
+* *(deps)* Update sentry-javascript monorepo to v7.51.2
+* *(deps)* Update sentry-javascript monorepo to v7.52.0
+* *(deps)* Update sentry-javascript monorepo to v7.52.1
+* *(deps)* Update sentry-javascript monorepo to v7.53.0
+* *(deps)* Update sentry-javascript monorepo to v7.53.1
+* *(deps)* Update sentry-javascript monorepo to v7.54.0
+* *(deps)* Update sentry-javascript monorepo to v7.55.0
+* *(deps)* Update sentry-javascript monorepo to v7.55.2
+* *(deps)* Update sentry-javascript monorepo to v7.56.0
+* *(deps)* Update sentry-javascript monorepo to v7.57.0
+* *(deps)* Update typescript-eslint monorepo to v5.55.0
+* *(deps)* Update typescript-eslint monorepo to v5.56.0
+* *(deps)* Update typescript-eslint monorepo to v5.57.0
+* *(deps)* Update typescript-eslint monorepo to v5.57.1
+* *(deps)* Update typescript-eslint monorepo to v5.58.0
+* *(deps)* Update typescript-eslint monorepo to v5.59.0
+* *(deps)* Update typescript-eslint monorepo to v5.59.1
+* *(deps)* Update typescript-eslint monorepo to v5.59.11
+* *(deps)* Update typescript-eslint monorepo to v5.59.2
+* *(deps)* Update typescript-eslint monorepo to v5.59.5
+* *(deps)* Update typescript-eslint monorepo to v5.59.6
+* *(deps)* Update typescript-eslint monorepo to v5.59.7
+* *(deps)* Update typescript-eslint monorepo to v5.59.8
+* *(deps)* Update typescript-eslint monorepo to v5.59.9
+* *(deps)* Update typescript-eslint monorepo to v5.60.0
+* *(deps)* Update typescript-eslint monorepo to v5.60.1
+* *(deps)* Update workbox monorepo to v6.6.0 (#3548)
+* *(deps)* Update workbox monorepo to v6.6.1 (#3553)
+* *(deps)* Update workbox monorepo to v7 (major) (#3556)
+
+### Features
+
+* *(assignees)* Show user avatar in search results
+* *(datepicker)* Separate datepicker popup and datepicker logic in different components
+* *(i18n)* Enable Danish translation
+* *(i18n)* Enable Japanese translation
+* *(i18n)* Enable Spanish translation
+* *(i18n)* Use chinese name for chinese translation
+* *(kanban)* Use total task count from the api instead of manually calculating it per bucket
+* *(link share)* Add e2e tests for link share hash
+* *(navigation)* Add hiding child projects
+* *(navigation)* Allow dragging a project out from its parent project
+* *(navigation)* Correctly show child projects
+* *(navigation)* Make dragging a project to a parent work
+* *(navigation)* Make dragging a project under another project work
+* *(navigation)* Show favorite projects on top
+* *(projects)* Allow setting a saved filter for tasks shown on the overview page
+* *(projects)* Move hasProjects check to store
+* *(quick add magic)* Allow fuzzy matching of assignees when the api results are unambigous
+* *(reminders)* Add confirm button
+* *(reminders)* Add e2e tests for task reminders
+* *(reminders)* Add more spacing
+* *(reminders)* Add on the due / start / end date as a reminder preset
+* *(reminders)* Add preset two hours before due / start / end date
+* *(reminders)* Add proper time picker for relative dates
+* *(reminders)* Highlight which preset or custom date is selected
+* *(reminders)* Make adding new reminders less confusing
+* *(reminders)* Make relative presets actually work
+* *(reminders)* Move reminder settings to a popup
+* *(reminders)* Only show relative reminders when there's a date to relate them to
+* *(reminders)* Show resolved reminder time in a tooltip and properly bubble updated task down to the reminder component
+* *(reminders)* Translate all reminder form strings
+* *(sentry)* Only load sentry when it's enabled
+* *(tests)* Add project tests derived from old namespace tests
+* *(user)* Migrate color scheme settings to persistance in db
+* *(user)* Migrate pop sound setting to store in api
+* *(user)* Persist frontend settings in the api (#3594)* Rename files with list to project ([b9d3b5c](b9d3b5c75635577321acc1791219aed40c6c14a4))
+* *(user)* Save quick add magic mode in api
+* *(user)* Set default settings when loading persisted
+* *(user)* Use user language from store after logging in
+* Abstract BaseCheckbox ([8fc254d](8fc254d2db5738e5d370c9f346c8d0d1e31bb9d0))
+* Add hotkeys for priority, delete and favorite on the `TaskDetailView` (#3400) ([e00c9bb](e00c9bb1afc8491039b5ffb50d4d8d9b38e6e086))
+* Add message to add to home screen on mobile ([3c9083b](3c9083b90dd3e5f97109ba2a23d2f2f8cc7d6c7c))
+* Add redirect for old list routes ([af523cf](af523cfcd71528c7e8d0b50874f4766f40f958d2))
+* Add setting for infinite nesting ([cb218ec](cb218ec0c31a41ba41a713a3757f71ad550dd71c))
+* Add transition to input icons ([abb5128](abb51284269d84de14d0a156c386c63dc596b9ab))
+* Add vite-plugin sentry (#1991) ([5ca31d0](5ca31d00eeff28f4728a4d07b96d761a6f174207))
+* Add vite-plugin sentry ([73947f0](73947f0ba4031cb0f9aff78f8a7e3316a36d59b4))
+* Allow creating a new project directly as a child project from another one ([b341184](b34118485cc056146682cd4592c90e4662b307eb))
+* Allow disabling icon changes ([efb3407](efb3407b8769a23f4352161d6db6267ce4b30eee))
+* Allow hiding the quick add magic help tooltip with a button ([7fb85da](7fb85dacecdae597180553036243ab845d50ede5))
+* Allow selecting a parent project when creating a project ([ce887c3](ce887c38f3a9e84c832bfbf62efa455df37a1a4f))
+* Allow selecting a parent project when duplicating a project ([799c0be](799c0be8306cfc5150611153c59701e96d56893a))
+* Allow selecting a parent project when editing a project ([ee8f80c](ee8f80cc70109a496959da167d14ffda4e2a6175))
+* Allow to edit existing relative reminders ([5d38b83](5d38b8327fc323c571fced33442bdb923d6d3baa))
+* Better vscode vitest integration ([314cbf4](314cbf471f8e9cff2a3fca6bbd969807401b5cda))
+* Change the link share hash name ([2066056](20660564c16283c77029bc3c3125c6c3febde47e))
+* Check link share auth from store instead ([c2ffe3a](c2ffe3a9dcfd1e067b8d92e1d69183c2a8acfa8f))
+* Don't handle child projects and instead only save the ids ([760efa8](760efa854dcc83e74f96782339b79b8d27b853b2))
+* Don't use child_projects property from api ([ebd9c47](ebd9c4702ed1c6920d47e5e42294e6d4fa3c73c0))
+* Edit relative reminders (#3248) ([3f8e457](3f8e457d5250df0b3af34d8f3bb0c053b15a97be))
+* Edit relative reminders ([14e2698](14e26988331ca72afae01b8264969458cdb4a509))
+* Hide quick add magic help behind a tooltip (#3353) ([a988565](a988565227f57dfc728319d433532f71e61d6424))
+* Highlight hint icon when hovering the input ([422d7fc](422d7fc693caf886a49d03ff48b56ae6ce825356))
+* Improve datemathHelp.vue ([795b26e](795b26e1dde781e152ab03fc31fd95f9f106a452))
+* Improve handling of an invalid api url ([24ad2f8](24ad2f892db0fce3458624c9dad8735130253fa0))
+* Improve user assignments via quick add magic (#3348) ([d9f608e](d9f608e8b4be4da380a535edcce1782c6d21926d))
+* Improve variable naming for ProjectCardGrid ([a4be973](a4be973e29e81db4e244427fc46a11b4c8c95f4c))
+* Load all projects earlier than in the navigation and use the loading state of the store ([1d93661](1d936618faecb0ddcb10f7c900096a3705614dbd))
+* Mark undone if task moved from isDoneBucket (#3291) ([30adad5](30adad5ae6568b5ef1125f206989d447fb999eee))
+* Move namespaces list to projects list ([e1bdabc](e1bdabc8d670f7342f4f0777a30a961e3fd4601d))
+* Move navigation item to component ([3db4e01](3db4e011d4b625cee940c58ee32d065b8c43f1bb))
+* Move quick add magic to a popup behind an icon ([6989558](69895589636ee6369c9778f529bf1df953acb7b1))
+* New image for the unauthenticated views ([bef25c4](bef25c49d535ff3940a0112a715f5b351e816468))
+* Optimize print view for project views ([8e2c76a](8e2c76a33eec573afab0b754d0707f84e2cca962))
+* Persist link share auth rule in url hash (#3336) ([da3eaf0](da3eaf0d357c24775ba8a4cf8f089e5042f73c00))
+* Persist link share auth rule in url hash ([f68bb26](f68bb2625e5f619f365fdd421aeda2b8af879aab))
+* Prepare for pnpm 8 (#3331) ([7d3b97d](7d3b97d422896e17ab9231c66e49da6c07967d7e))
+* Rebuild main navigation so that it works recursively with projects ([06e8cdb](06e8cdb9d2907c846ca7c555b31571b5c1798433))
+* Remove all namespace leftovers ([1bd17d6](1bd17d6e50034c159150095f1c51a966293a6726))
+* Remove namespaces, make projects infinitely nestable (#3323) ([ac1d374](ac1d374191fca764a70d9851d9828a78ae27c075))
+* Rename link share hash prefix ([b9f0635](b9f0635d9fcc764c7ee188c95ce59ac358f735cf))
+* Rename list to project everywhere ([befa6f2](befa6f27bb607a57eb8ed49d0152b85cdab4cb95))
+* Replace color dot with handle icon on hover ([a3e2cbe](a3e2cbeb27ad8b0d052df62c9f24f8dd3808ddda))
+* Set the current language to the one saved by the user on login ([acb212a](acb212ab241e1ed873c943e9c5fa3bcfb2c83a91))
+* Show all parent projects in project search ([6a8c656](6a8c656dbb0a4729035468aedc60fd06e80c17ed))
+* Show all parent projects in task detail view ([63ba298](63ba2982c92d495de6c7e3526c3693dcfe0e3fba))
+* Show avatar and full name in team overview ([b80f070](b80f07043104868d134761b34582b234d12274e1))
+* Show initial list of users when opening the assignees view ([59c942a](59c942af735a40f68cfd01caadb22694113da8ae))
+* Start adding relative reminder picker with more options ([9df6950](9df6950d1a4a361c075020319ce3037e19e0912d))
+* Translate inbox project title ([f2ca2d8](f2ca2d850de5b4b3b3d90e3a5c41adebca2dc1a5))
+* Type i18n improvements ([dea1789](dea1789a00981fb496f0c1f4c19a6f0749e4de70))
+* Use new Reminders API instead of reminder_dates ([f747d5b](f747d5b2fcadb7459c389372dca4507b75cdd4fa))
+* Wrap projects navigation in a <Suspense> so that we can use top level await ([2579c33](2579c33ee1d07234c3ad42d75f2c7a1f7bfdb149))
+
+
+### Miscellaneous Tasks
+
+* *(ci)* Remove netlify dependency (#3459)
+* *(ci)* Sign drone config
+* *(editor)* Disable deprecated marked options
+* *(i18n)* Clarify translation string
+* *(parseSubtasksViaIndention)* Fix comment (#3259)
+* *(reminders)* Remove reminderDates property
+* *(sentry)* Alwys use the same version
+* *(sentry)* Ignore missing commits
+* *(sentry)* Only load sentry when enabled
+* *(sentry)* Remove debug options
+* *(sentry)* Remove sourcemaps after upload via plugin
+* *(sentry)* Use correct chunks option
+* *(task)* Move toggleFavorite to store
+* *(task)* Use ref for task instead of reactive
+* *(tests)* Enable experimental memory managment for cypress tests
+* *(user)* Cleanup* Update JSDoc example ([bfbfd6a](bfbfd6a4212d493912406c1c505b6c0a24f0f014))
+* Add comment on overriding ([21ad830](21ad8301f28ba838c577acb72cb66ea00e176876))
+* Add types for emit ([c567874](c56787443f6f9f6be0f8d8501dd4e6e7a768648a))
+* Better function naming in password components ([a416d26](a416d26f7cfd163cadb0b6ded107b217ecad5d7c))
+* Catch error when trying to play pop sound ([929d4f4](929d4f402342de309dd8e453252d22fcb9f362a6))
+* Chore; extract code to reminder-period.vue ([0d6c0c8](0d6c0c8399c9fc73843bdbeb84ff19467edcaa90))
+* Clarify users when can still be found even if they disabled it ([302ba2b](302ba2bec7f592f6b0b1fba84a5a1a9fd5f994de))
+* Cleanup namespace leftovers ([2e33615](2e336150e086354b1623569aa98ab9c5be48c59a))
+* Don't recalculate everything ([9c3259c](9c3259c660e8436f41b5494c9567319090c03bd6))
+* Don't set the current project to null if it's undefined already ([e4d97e0](e4d97e05205e2c36143319ccf07ccac03f5de408))
+* Don't show selection for parent project when no projects are available ([c30dcff](c30dcff45157e5b89b7bb6c2442271c15da33fc4))
+* Don't wrap a computed in another computed ([afaf184](afaf1846ece65b8b2bbee971fafb31a535a4381b))
+* Export favorite projects from store ([131022d](131022da427616765f8109ca8ac8f6bad1bdcbbb))
+* Export not archived root projects ([b5d9afd](b5d9afd0f72aaf28b89f4877ce3ad2eabe6c3d7b))
+* Export projects as array directly from projects store ([e4379f0](e4379f0a229b7b8572fddb029658713a0bbfca1d))
+* Follow the happy path ([a33e2f6](a33e2f6c00f35f36aabb6b4d6e823396d29cdf3d))
+* Format ([4ad9773](4ad9773022b5873fff09b7afade02c026ac5332f))
+* Format ([638d187](638d187a24020d698327b0a0d04a5897672d3b79))
+* Formatting ([b92d780](b92d780cda3ab7222c4a6ab7323d1dd3f679b514))
+* Group return parameter ([5298706](52987060b11ac0418b6a88f1beabaee59165117d))
+* Import const instead of redeclaring it ([61baf02](61baf02e26b292e3f02816a483eb7d92fb49d8ab))
+* Improve prop type definition ([638f6be](638f6bea24980658d0f5fb3432d7b64c2ae06f75))
+* Make fuzzy matching a paramater ([aeb73a3](aeb73a374f84f6b01d4be4cc784336a214a4cdfa))
+* Move ProjectsNavigationWrapper back to navigation.vue ([65522a5](65522a57f1ceddfabeba235e17f8f81ee6bae47b))
+* Move all options to component props ([db1c6d6](db1c6d6a41591c8ee5df2d2ee400aaaeda0d02bb))
+* Move const ([0ce150a](0ce150af237985dda0cf44f24179ebae332e7585))
+* Move duplicate project logic to composable ([b69a056](b69a05689be6e2c833c838cde052702600d245c7))
+* Move loader class ([ac78e85](ac78e85e1726b6d7047db72ccbbaf29ac11d1696))
+* Move loading styles to variant into the component ([76814a2](76814a2d3f68876934c5791bb4901fca5f95c00f))
+* Move more logic to ProjectsNavigationItem.vue ([b567146](b567146d69f1c6a1eba6e37061bde7f627ff8654))
+* Move positioning css ([7110c9a](7110c9a5ceb58e6e9675c0f91ddb34c9ab8f2cbc))
+* Move styles to components ([25c3b7b](25c3b7bcbfb4ddc2163092ed7c1d5e4758967f1b))
+* Move v-if ([12ebefd](12ebefd86a61ca5c82b104b4155a4989c8622713))
+* Only apply padding where needed ([ddcd6a1](ddcd6a17dc659611910c2d4ed84fcff575e0ca3a))
+* Re-add top menu spacing ([086f50d](086f50d4feed90aac0c458d3f53cbe59ae7402c8))
+* Redirect to new project after creating from store ([6b824a4](6b824a49abe8854045c7670fcd6da50539c9fce5))
+* Reduce nesting ([06a1ff6](06a1ff6f4bea4cc7447d528423de54f14583dca4))
+* Refactor get parents project and move to projects store ([c32a198](c32a198a34edd3db7d6967010ce9dde401d1c864))
+* Remove nesting ([a4c8fcc](a4c8fccb115f019840025659c7a8a4bac31eee04))
+* Remove old comment ([4134fcb](4134fcbd752ab4cc7691907264b04cf64e11d012))
+* Remove old todo ([4e21b46](4e21b463df9af5aec9a5b45c8331f5a9f9e8aeb9))
+* Remove triggered notifications as it's not supported anywhere ([8a75790](8a75790453427287dc5a57ff3b59cd2b9cabd3f4))
+* Remove type annotation for computed ([a3e289c](a3e289c06c992b24dcff21b1c4f8871676101d98))
+* Remove unnecessary map ([336db56](336db56316dec7aeacf2174f5945764dc350769c))
+* Remove unused class ([d4e4525](d4e452545afe94ed2e860cd14982462e080a4d49))
+* Remove unused code ([652db56](652db56d42b39c05385ff7484fa43b0baa769759))
+* Remove user margin from the component ([57c64bb](57c64bbf71342b4e9e2e9e3808412b5e0cf01006))
+* Remove user margin from the component ([a1dd1d6](a1dd1d6664479e125e2f8ae87a9d2a57bf94fc9e))
+* Remove wrapper div ([2c9693a](2c9693a83eeca832d49d519c5676ae30569628ca))
+* Rename alias ([a803bc6](a803bc637e44893aa6921b70215a3206acdc5a91))
+* Rename archived message key ([4dee3a9](4dee3a90e9a76cdd190eb28b3327bef1bcc34787))
+* Rename flag ([6e09543](6e095436e9bfb6856c6aa469fc4cad93f239bad4))
+* Rename getRedirectRoute ([59b05e9](59b05e9836946ed8b9dbb3926fc694641d8508a1))
+* Rename prop ([2bb7ff1](2bb7ff1803d5a35bdd61a94e7a4d6fd03d5d1492))
+* Replace section with a div ([9b10693](9b1069317283fc20c834eac981e0b2a500e32dba))
+* Set project id from the outside ([6c9cbaa](6c9cbaadc821ab92e85b1f8e3fcb3fa85ea99670))
+* Update nix flake ([f40035d](f40035dc7943e8199c553acfec838f21ea212c3e))
+* Use <menu> instead of <ul> ([49fac7d](49fac7db1cbefce49712797869b956f31e8f541c))
+* Use klona to clone project objet ([55e9122](55e912221be4b4765cdb3a7bd0e3dc693478ac81))
+* Use long variable name ([6f1baa3](6f1baa3219093147842efe10f92482364516c84c))
+* Use long variable name ([a0d39e6](a0d39e6081f35e4ba6589b7840168b0c69b3210f))
+* Use project id type ([a342ae6](a342ae67de1c884895ce3304cf6eb1757a38573a))
+* Use startsWith for prefix matching ([10ac1ff](10ac1ff66a2bcd797f54c83dda13745fdf359f33))
+* Use stores directly ([a7440ed](a7440ed296ec0e99c9dc81e43617b3b54fc518a7))
+* [skip ci] Updated translations via Crowdin
+
+
 ## [0.20.5] - 2023-03-12
 
 ### Bug Fixes
@@ -4790,4 +5527,3 @@ Co-committed-by: renovate <renovatebot@kolaente.de>
 * Fixed loading tasks when the user was not authenticated
 
 ## [0.1] - 2018-09-20
-
