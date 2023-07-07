@@ -264,8 +264,8 @@ function copyUrl(attachment: IAttachment) {
 }
 
 async function setCoverImage(attachment: IAttachment | null) {
-	const task = await taskStore.setCoverImage(task, attachment)
-	emit('task-changed', task)
+	const updatedTask = await taskStore.setCoverImage(task, attachment)
+	emit('task-changed', updatedTask)
 	success({message: t('task.attachment.successfullyChangedCoverImage')})
 }
 </script>
