@@ -29,8 +29,8 @@ dependencies:
     specifier: 2.1.4
     version: 2.1.4(dayjs@1.11.9)(vue@3.3.4)
   '@intlify/unplugin-vue-i18n':
-    specifier: 0.12.0
-    version: 0.12.0(rollup@3.26.2)(vue-i18n@9.2.2)
+    specifier: 0.12.1
+    version: 0.12.1(rollup@3.26.2)(vue-i18n@9.2.2)
   '@kyvg/vue3-notification':
     specifier: 2.9.1
     version: 2.9.1(vue@3.3.4)
@@ -3568,7 +3568,7 @@ packages:
       escodegen: 2.0.0
       estree-walker: 2.0.2
       jsonc-eslint-parser: 1.4.1
-      magic-string: 0.30.0
+      magic-string: 0.30.1
       mlly: 1.4.0
       source-map: 0.6.1
       vue-i18n: 9.2.2(vue@3.3.4)
@@ -3618,8 +3618,8 @@ packages:
     engines: {node: '>= 16'}
     dev: false
 
-  /@intlify/unplugin-vue-i18n@0.12.0(rollup@3.26.2)(vue-i18n@9.2.2):
-    resolution: {integrity: sha512-L155p03eZpzYUIU1YKbb38xq++GcaW6bsqo800GdonmkQXY8nc4/HsKQRQY5lRoAOkbhO0Vyt7yrsU11vVrqnw==}
+  /@intlify/unplugin-vue-i18n@0.12.1(rollup@3.26.2)(vue-i18n@9.2.2):
+    resolution: {integrity: sha512-gdWRdlOWC8x/OyvVk5qnGnvScMj+PRZaTB4LBf24l7X1dhGYVrQVt2dAZt97tSpEwRRxy4vBaL/qBqKN4kkaRw==}
     engines: {node: '>= 14.16'}
     peerDependencies:
       petite-vue-i18n: '*'
@@ -3641,7 +3641,7 @@ packages:
       fast-glob: 3.2.12
       js-yaml: 4.1.0
       json5: 2.2.3
-      pathe: 1.1.0
+      pathe: 1.1.1
       picocolors: 1.0.0
       source-map-js: 1.0.2
       unplugin: 1.1.0
@@ -3698,7 +3698,6 @@ packages:
 
   /@jridgewell/sourcemap-codec@1.4.15:
     resolution: {integrity: sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg==}
-    dev: true
 
   /@jridgewell/trace-mapping@0.3.17:
     resolution: {integrity: sha512-MCNzAp77qzKca9+W/+I0+sEpaUnZoeasnghNeVc41VZCEKaCH73Vq3BZZ/SzWIgrqE4H4ceI+p+b6C0mHf9T4g==}
@@ -7701,7 +7700,6 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       '@jridgewell/sourcemap-codec': 1.4.15
-    dev: true
 
   /make-dir@3.1.0:
     resolution: {integrity: sha512-g3FeP20LNwhALb/6Cz6Dd4F2ngze0jz7tbzrD2wAV+o9FeNHe4rL+yK2md0J/fiSf1sa1ADhXqi5+oVwOM/eGw==}
@@ -8265,10 +8263,6 @@ packages:
   /pathe@0.2.0:
     resolution: {integrity: sha512-sTitTPYnn23esFR3RlqYBWn4c45WGeLcsKzQiUpXJAyfcWkolvlYpV8FLo7JishK946oQwMFUCHXQ9AjGPKExw==}
     dev: true
-
-  /pathe@1.1.0:
-    resolution: {integrity: sha512-ODbEPR0KKHqECXW1GoxdDb+AZvULmXjVPy4rt+pGo2+TnjJTIPJQSVS6N63n8T2Ip+syHhbn52OewKicV0373w==}
-    dev: false
 
   /pathe@1.1.1:
     resolution: {integrity: sha512-d+RQGp0MAYTIaDBIMmOfMwz3E+LOZnxx1HZd5R18mmCZY0QBlK0LDZfPc8FW8Ed2DlvsuE6PRjroDY+wg4+j/Q==}
