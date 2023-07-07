@@ -9,6 +9,40 @@ All releases can be found on https://code.vikunja.io/desktop/releases.
 
 The releases aim at the api and frontend versions which is why there are missing versions.
 
+## [0.21.0] - 2023-07-07
+
+### Dependencies
+
+* *(deps)* Update dependency electron to v22.1.0 (#134)
+* *(deps)* Update dependency electron to v22.2.0 (#135)
+* *(deps)* Update dependency electron to v23 (#136)
+* *(deps)* Update dependency electron to v23.1.0 (#138)
+* *(deps)* Update dependency electron to v23.1.1 (#139)
+* *(deps)* Update dependency electron to v23.1.2 (#140)
+* *(deps)* Update dependency electron to v23.1.3 (#141)
+* *(deps)* Update dependency electron to v23.1.4 (#142)
+* *(deps)* Update dependency electron to v23.2.0 (#143)
+* *(deps)* Update dependency express to v4.18.2 (#144)
+* *(deps)* Update dependency electron to v23.2.1 (#145)
+* *(deps)* Update dependency electron to v23.2.2 (#146)
+* *(deps)* Update dependency electron to v24 (#147)
+* *(deps)* Update dependency electron to v24.1.1 (#148)
+* *(deps)* Update dependency electron to v24.1.2 (#149)
+* *(deps)* Update dependency electron to v24.1.3 (#150)
+* *(deps)* Update dependency electron to v24.3.1 (#151)
+* *(deps)* Update dependency electron to v24.4.0 (#152)
+* *(deps)* Update dependency electron to v25 (#153)
+* *(deps)* Update dependency electron to v25.0.1 (#155)
+* *(deps)* Update dependency electron to v25.1.0 (#156)
+* *(deps)* Update dependency electron to v25.1.1 (#158)
+* *(deps)* Update dependency electron to v25.2.0 (#159)
+* *(deps)* Update dependency electron-builder to v24 (#157)
+* *(deps)* Update dependency connect-history-api-fallback to v2 (#103)
+
+### Miscellaneous Tasks
+
+* Remove sponsor ([c02c5d0](c02c5d009ffcef7984c2feebf7df4f25444b24e1))
+
 ## [0.20.3] - 2023-01-24
 
 ### Bug Fixes
