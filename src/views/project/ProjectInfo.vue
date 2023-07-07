@@ -3,7 +3,7 @@
 		@close="$router.back()"
 	>
 		<card
-			:title="project.title"
+			:title="project?.title"
 		>
 			<div class="has-text-left" v-html="htmlDescription" v-if="htmlDescription !== ''"></div>
 			<p v-else class="is-italic">
