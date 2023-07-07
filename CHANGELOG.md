@@ -7,6 +7,275 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.21.0] - 2023-07-07
+
+### Bug Fixes
+
+* *(CalDAV)* Naming
+* *(api)* License (#1457)
+* *(build)* Make sure the docker image can access go tools
+* *(caldav)* Do not create label if it exists by title (#1444)
+* *(caldav)* Incoming tasks do not get correct time zone (#1455)
+* *(ci)* Pipeline dependency
+* *(cli)* Rename user project command
+* *(docker)* Don't chown everything in Vikunja's default root folder
+* *(docs)* Added Keycloak OpenID example (#1521)
+* *(docs)* Clarify error codes in swagger docs
+* *(docs)* Link to usage/api
+* *(docs)* Semver link (#1470)
+* *(filter)* Don't try to get the real subscription for a saved filter project
+* *(filters)* Return all filters with all projects, not grouped under a pseudo project
+* *(filters)* Sorting tasks from filters
+* *(image)* Json type of struct property (#1469)
+* *(import)* Don't try to load a nonexistant attachment file
+* *(lint)* Disable misspell linter on redoc
+* *(migration)* Don't try to fetch task details of tasks whose projects are deleted
+* *(migration)* Enable insert from structure work recursively
+* *(migration)* Make file migration work with new structure
+* *(migration)* Remove unused is_deleted flag from Todoist api response
+* *(migration)* Remove wunderlist leftovers
+* *(migration)* Remove wunderlist leftovers
+* *(migration)* Remove wunderlist leftovers
+* *(migration)* Rename TickTick migration
+* *(migration)* Revert wrongly changed url
+* *(migration)* Use correct struct
+* *(project)* Don't allow un-archiving a project when its parent project is archived
+* *(project)* Don't check for namespaces in overdue reminders
+* *(project)* Duplicate project into parent project
+* *(project)* Recursively get all users from all parent projects
+* *(project)* Remove comments, clarifications, notifications about namespaces
+* *(project)* Remove namespaces checks
+* *(project)* Remove namespaces from creating projects
+* *(project)* Remove namespaces from getting projects
+* *(projects)* Delete project in the correct order
+* *(projects)* Don't allow making a project child of itself
+* *(projects)* Don't check if new projects are archived
+* *(projects)* Don't fail to fetch a task if there's a broken subscription record associated to it
+* *(projects)* Don't return child projects twice
+* *(projects)* Don't try to share for nonexisting namespace
+* *(projects)* Permission check now works
+* *(projects)* Properly check if a user or link share is allowed to create a new project
+* *(projects)* Recalculate project's position after dragging when position would be 0
+* *(projects)* Reset pagination limit when fetching subprojects
+* *(projects)* Return subprojects which were shared from another user
+* *(saved filters)* Don't let query parameters override saved sorting parameters
+* *(spelling)* In config sample (#1489)
+* *(task)* Don't build partial task identifier
+* *(task)* Don't try to return a project identifier if there is no project
+* *(tasks)* Don't check for namespaces in filters
+* *(tasks)* Get all tasks from parent projects
+* *(tasks)* Make sure task deleted notification actually has information about the deleted task
+* *(tasks)* Read all tests
+* *(tasks)* Return a correct task identifier if the list does not have a good one set
+* *(tasks)* Sql for overdue reminders
+* *(tasks)* Task relation test
+* *(test)* Adjust fixture bucket and list ids
+* *(test)* Adjust fixture id
+* *(test)* Fixtures
+* *(test)* Use correct filter id
+* *(tests)* Adjust parent projects
+* *(tests)* Make the tests compile again
+* *(tests)* Permission tests for parent projects
+* *(tests)* Subscription test fixtures
+* *(tests)* Task collection fixtures
+* *(tests)* Task permissions from parents
+* Accept for migrations ([8edbca3](8edbca39cf9d771645d6feb05ee94eebc6403cbf))
+* Add missing error code ([f2d943f](f2d943f5c4f1b13ef565692b893da05c6669c6d0))
+* Add missing license header ([f4e12da](f4e12dab273474c0eb27f59c00faa828bb86522c))
+* Align "ID" param for Delete and Update method of Task model ([b6d5605](b6d5605ef6b2799f939d016b1572b3d43e857d4d))
+* Align "otherTaskID" param for Delete method of TaskRelation model ([ac377a7](ac377a7a5d708ef7543d99f716ceaa1ee8502649))
+* Align namespaceID param ([7ada82e](7ada82ea926556ae39d106dc85d5a05f3c1c8cd3))
+* Align task ID param ([f76bb2b](f76bb2b4a9c8a3b53bc73d0913ba94bba350f5da))
+* Check if usernames contain spaces when creating a new user ([672fb35](672fb35bcbb47e4c0331813aa837fee28f372471))
+* Compile errors ([a21bff3](a21bff3ffb8497d6e1b6c3bb50d9a9b2469f4eb0))
+* Correctly pass unix socket to xorm ([7ad256f](7ad256f6cd3e15aeafce2bc29c28c458c3abdc0a))
+* Docs auth openID method ([4f7d69a](4f7d69a108a2836e90b3c7ffe7f05247d80bfb85))
+* Don't get favorite task projects filter multiple times ([a51bbd1](a51bbd1159fb1ada5980a5b27972ccf1404641af))
+* Don't send bad request errors to sentry ([c0c523f](c0c523f0a8c83eb164febbc508ac98142d572d7a))
+* Don't try to load subscriptions for nonexistent projects ([b519462](b5194624e021360ccdec20cb58bba57c23028c3f))
+* Fetch all tasks for all projects ([353279c](353279cbff8fd6fa6b1bb81a8726a7a5a1b6b623))
+* ILIKE helper ([dff4e01](dff4e01327907d42bf0b20a20912e5e9c69dd23e))
+* Lint ([50c922b](50c922b7d1135b8f75478b89502fe0bb4c39547f))
+* Lint ([ad06903](ad0690369f39dab3683ac5ef7664bd765fa1cb18))
+* Lint ([e17b63b](e17b63b9201889946e91e7e295f31a80055c6ae4))
+* Lint ([ef779e8](ef779e8730af169101bf1ebffb8d2522e5c6b7bc))
+* Lint ([f0dcce7](f0dcce702f03f237ecde107a7ba62f61e2c3e313))
+* Lint config ([9111db2](9111db2a16df6a4eec9e3cc2021bc6fdcace9ead))
+* Lint errors ([ebc3dd2](ebc3dd2b3e72f56880320480829aead1bf554f67))
+* Make it compile again ([d79c393](d79c393e5b4e880b8b09ce5944e8247ae07c4d58))
+* Make sure Vikunja is buildable without swagger docs present ([47e4223](47e42238ef47ad6e4e90284593aae278e77c8631))
+* Make sure projects are correctly sorted ([db3c7aa](db3c7aa8b04e828fafdf10bcfd5bde8cf19e6f10))
+* Provide a proper error message when viewing a link share with an invalid token ([aa43127](aa43127e52aeb7412b13b4aaab091442dad534db))
+* Reminder fixture ([4b00f22](4b00f224d92f0c6933f6cba14433538d64545eca))
+* Remove old saved openid provider settings from cache when starting Vikunja ([9bf535d](9bf535d06f5b9bb455979b0bf3b6f0942daa1c9e))
+* Rename after rebase ([e93a5ff](e93a5ff11fee7adac2897b3251db7abbbad4bcc5))
+* Rename incorrectly named ProjectUsers method ([7e53a21](7e53a214070ee9b48fdffffcc42de9250c323e96))
+* Rename project receiver variable ([f1cbe50](f1cbe50605b46e506c3233cc8da4b325f5727c87))
+* Spelling ([fc2cc4a](fc2cc4a1555ca7e63ff902cde62380035a60ebb8))
+* Test fixtures ([06f1d2e](06f1d2e91237195f8e720d4dd55b491b91e6547d))
+* Test import ([fb818ea](fb818ea1867f8db813ff52622695fd206c21452e))
+* Trello import tests ([61a3380](61a3380a9482312eac56f4cfd436517205f601aa))
+* Typo ([4c698dc](4c698dc7c71418239e24b1756604371dcb6a2f74))
+* Typo in email template ([2dad404](2dad4042170677af3db7be85cbe978ce6be721aa))
+* Update redoc ([8916de0](8916de03666482c2319689e950d30a6fb737f239))
+* Update xgo in dockerfile to 1.20.2 ([33f0d0f](33f0d0f85a7fdfd509bc8a4aad26df95c064468c))
+* Upgrade jwt v5 ([359d051](359d0512cc7e73cdde9d4dd145332591c6743d11))
+* Use rewrite when hosting frontend files via the api ([b56e45d](b56e45d74389d38c747887d3cb2a2b295bb549c7))
+* Users_lists name in migration ([0a3fdc0](0a3fdc0344790f059140d8e482b028ffecdb3e4b))
+* Using mysql via a socket ([0a6bbc2](0a6bbc2efd6bb4468c72cff2a70cd29350a50b75))
+
+
+### Dependencies
+
+* *(deps)* Update module github.com/imdario/mergo to v0.3.14
+* *(deps)* Update github.com/arran4/golang-ical digest to 19abf92
+* *(deps)* Update goreleaser/nfpm docker tag to v2.27.1 (#1438)
+* *(deps)* Update module github.com/swaggo/swag to v1.8.11
+* *(deps)* Update module github.com/imdario/mergo to v0.3.15 (#1443)
+* *(deps)* Update golangci-lint to 1.52.1
+* *(deps)* Update module github.com/wneessen/go-mail to v0.3.9
+* *(deps)* Update github.com/gocarina/gocsv digest to 9a18a84
+* *(deps)* Update module github.com/swaggo/swag to v1.8.12
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.20.0
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.0.3
+* *(deps)* Update goreleaser/nfpm docker tag to v2.28.0 (#1475)
+* *(deps)* Update src.techknowlogick.com/xgo digest to bff48e4 (#1474)
+* *(deps)* Update module golang.org/x/sys to v0.7.0
+* *(deps)* Update github.com/gocarina/gocsv digest to 6445c2b
+* *(deps)* Update module golang.org/x/term to v0.7.0
+* *(deps)* Update module github.com/spf13/cobra to v1.7.0
+* *(deps)* Update module golang.org/x/image to v0.7.0
+* *(deps)* Update module golang.org/x/oauth2 to v0.7.0
+* *(deps)* Update module golang.org/x/crypto to v0.8.0
+* *(deps)* Update module github.com/prometheus/client_golang to v1.15.0
+* *(deps)* Update module github.com/lib/pq to v1.10.8
+* *(deps)* Update module github.com/go-sql-driver/mysql to v1.7.1
+* *(deps)* Update module github.com/lib/pq to v1.10.9
+* *(deps)* Update src.techknowlogick.com/xgo digest to e65295a
+* *(deps)* Update github.com/arran4/golang-ical digest to f69e132
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.0.4
+* *(deps)* Update module github.com/go-testfixtures/testfixtures/v3 to v3.9.0
+* *(deps)* Update module github.com/prometheus/client_golang to v1.15.1
+* *(deps)* Update module golang.org/x/term to v0.8.0
+* *(deps)* Update src.techknowlogick.com/xgo digest to 52d704d
+* *(deps)* Update module github.com/swaggo/swag to v1.16.1
+* *(deps)* Update module golang.org/x/sync to v0.2.0
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.21.0
+* *(deps)* Update module golang.org/x/oauth2 to v0.8.0
+* *(deps)* Update module golang.org/x/crypto to v0.9.0
+* *(deps)* Update alpine docker tag to v3.18
+* *(deps)* Update github.com/gocarina/gocsv digest to 7f30c79
+* *(deps)* Update module github.com/magefile/mage to v1.15.0
+* *(deps)* Update github.com/gocarina/gocsv digest to 9ddd7fd
+* *(deps)* Update module github.com/coreos/go-oidc/v3 to v3.6.0
+* *(deps)* Update module github.com/stretchr/testify to v1.8.3
+* *(deps)* Update module github.com/labstack/echo-jwt/v4 to v4.2.0
+* *(deps)* Update goreleaser/nfpm docker tag to v2.29.0 (#1528)
+* *(deps)* Update module github.com/ulule/limiter/v3 to v3.11.2
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.0.5
+* *(deps)* Update module github.com/imdario/mergo to v0.3.16
+* *(deps)* Update module github.com/stretchr/testify to v1.8.4
+* *(deps)* Update module github.com/spf13/viper to v1.16.0
+* *(deps)* Update github.com/vectordotdev/go-datemath digest to 640a500 (#1532)
+* *(deps)* Update module github.com/mattn/go-sqlite3 to v1.14.17
+* *(deps)* Update klakegg/hugo docker tag to v0.110.0 (#1538)
+* *(deps)* Update golangci
+* *(deps)* Update klakegg/hugo docker tag to v0.111.0 (#1539)
+* *(deps)* Update klakegg/hugo docker tag to v0.111.3 (#1542)
+* *(deps)* Update src.techknowlogick.com/xgo digest to 494bc06
+* *(deps)* Update goreleaser/nfpm docker tag to v2.30.1 (#1540)
+* *(deps)* Update module golang.org/x/sys to v0.9.0
+* *(deps)* Update module golang.org/x/term to v0.9.0
+* *(deps)* Update module golang.org/x/image to v0.8.0
+* *(deps)* Update module golang.org/x/crypto to v0.10.0
+* *(deps)* Update module golang.org/x/oauth2 to v0.9.0
+* *(deps)* Update module golang.org/x/sync to v0.3.0
+* *(deps)* Update github.com/gocarina/gocsv digest to 2696de6
+* *(deps)* Update module github.com/prometheus/client_golang to v1.16.0
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.22.0
+* *(deps)* Update github.com/gocarina/gocsv digest to 99d496c
+* *(deps)* Update module github.com/imdario/mergo to v1 (#1559)
+* *(deps)* Update github.com/dustinkirkland/golang-petname digest to e794b93
+* *(deps)* Update module golang.org/x/sys to v0.10.0
+* *(deps)* Update module golang.org/x/image to v0.9.0
+* *(deps)* Update module golang.org/x/term to v0.10.0
+* *(deps)* Update module golang.org/x/crypto to v0.11.0
+* *(deps)* Update module golang.org/x/oauth2 to v0.10.0
+
+
+### Documentation
+
+* Add docs for installing with sqlite in docker (#70) ([a16fd67](a16fd67b51c02e09ef6709bee9ad2b341d80cd73))
+* Add information about our Helm Chart ([22f89c1](22f89c1ccc3a281a75db9e42702604f88eb0568b))
+* Fix menu links ([1f13b5d](1f13b5d7b4041042ea3b26ac2a850784b11ac377))
+* Remove all traces of namespaces ([3b0935d](3b0935d033c6b5060f18e955acf4a647eb10721b))
+* Remove outdated information ([327bb3b](327bb3bed99e0a4c5664251e3af15accf1a13062))
+* Update error references to list ([259cf7d](259cf7d25bbb7a289fe9569c81c6f7d3855543bf))
+* Update prometheus docs for clarity (#1458)
+* Update references to list ([8dc6c95](8dc6c95333b38eb83c8053c628d05599e79dd27e))
+
+
+### Features
+
+* *(caldav)* Sync Reminders / VALARM (#1415)
+* *(docs)* Change order of sections in nav (#1471)
+* *(docs)* Various improvements
+* *(kanban)* Return the total task count per bucket
+* *(migration)* Ignore namespace changes
+* *(migration)* Use new structure for migration
+* *(projects)* Add parent project, migrate namespaces
+* *(projects)* Check all parent projects for permissions
+* *(projects)* Check parent project when checking archived status
+* *(projects)* Cleanup namespace leftovers
+* *(projects)* Don't allow deleting or archiving the default project
+* *(projects)* Get all projects recursively
+* *(projects)* Remove namespaces
+* *(projects)* Return a favorites pseudo project when the user has favorite tasks
+* *(subscriptions)* Make sure all subscriptions are inherited properly
+* *(users)* Don't hide user email if it was the search request* Rename lists to projects ([349e6a5](349e6a59050a0beba82a7f626c2f72f6b8c88dde))
+* Add logging options to mailer settings ([9590b82](9590b82c11852666524eeab562988226574a1b1c))
+* Add relative Reminders (#1427) ([3f5252d](3f5252dc24a3dea89b2e049ccb1f9d0a59a89a88))
+* Add token example ([4417223](441722372af3349b677dc013b1863e678b0e7158))
+* Allow saving frontend settings via api ([04e2c51](04e2c51fac24a045abe1a85c8b661b6bc628686c))
+* Allow to find users with access to a project more freely ([a7231e1](a7231e197e3d86d3ef27fad89ae60863d25b5df0))
+* Check for cycles when creating or updating a project's parent ([9011894](9011894a2975d9d112dc3db453739e13261c0716))
+* Generate swagger docs at build time ([efa24ce](efa24cec44865c5a8ab42a106deeb331ad1bed91))
+* Improve relation kinds docs ([b826c13](b826c13f385b24ed1b33b8890cc5cdd5fe8b8f22))
+* Make the new inbox project the default ([0110f93](0110f933134af0460d9fed9d652148c98e94b6cd))
+* Migrate lists to projects in db identifiers ([2fba7bd](2fba7bdf02983e5cf7def09803def4cbf830f53b))
+* Remove ChildProjects project property ([edcb806](edcb806421c2181a8b85aed5b53e8da6350b9630))
+* Remove namespaces, make projects infinitely nestable (#1362) ([82beb3b](82beb3bf671ca0670b714160f0b4d9c186dfe120))
+* Rename all list files ([8f4abd2](8f4abd2fe86e7a23d80bc5ebc4fc1ae75e1b78fb))
+* Rename lists to projects ([47c2da7](47c2da7f1856e95956cdb968fa95295d3441a9f6))
+* Rename lists to projects ([96a0f5e](96a0f5e169c9e8f8d20e3fe1d9de5eecead53ac9))
+* Rename lists to projects ([fc73c84](fc73c84bf2b9a7cbd2f6cbd2a83ea9ccc3fd58fd))
+* Rename lists to projects everywhere (#1318) ([869d4a3](869d4a336cb122df894acf040e02b6b2ba786fdb))
+
+
+### Miscellaneous Tasks
+
+* *(changelog)* Fix spelling
+* *(docs)* Add info about `/buckets` sorting
+* *(docs)* Move login and register routes to auth category in api docs
+* *(docs)* Update error docs
+* *(docs)* Update list -> project
+* *(docs/translation)* Remove mention of weblate
+* *(export)* Remove unused events
+* *(project)* Fmt
+* *(projects)* use a slice again ([3e8d1b3](3e8d1b3667ccfb2960650a4506771ec3c9b3a970))
+* *(test)* Show table content when db assertion failed
+* Cleanup ([7a9611c](7a9611c2daa41ec2da135a2a4e804551e4ab8ff2))
+* Disable false-positive linter for generated docs ([076e857](076e857507a4cf59e0b0399a2e51a8d8baa03065))
+* Fix comment url ([5856f21](5856f21f31fe7b81e7ffd203f70460785955411c))
+* Fix spelling ([cd90db3](cd90db3117a7fa40175ecebd3ca37cc94a46e1ee))
+* Generate swagger docs ([55410ea](55410ea73d50f5bc124eaf411c77125024b6fefa))
+* Go mod tidy ([93056da](93056da792dafa70f91f7d114669997b3f93f7f1))
+* Go mod tidy ([e5dde31](e5dde315fb6a7163546b9f88ebafacc886744db3))
+* Remove cache options ([d83e3a0](d83e3a0a037b9a4d40ce22c8c51932eb23963ac2))
+* Remove reminderDates after frontend is migrated to reminders (#1448) ([4a4ba04](4a4ba041e0f3e9c71dd4844d5191c9cbe4e4e3b7))
+* Rename files (fix typo) ([6aadaaa](6aadaaaffc1fff4a94e35e8fa3f6eab397cbc3ce))
+
+
 ## [0.20.4] - 2023-03-12
 
 ### Bug Fixes
@@ -1906,4 +2175,3 @@ Misc bugfixes and improvements to the build process
 ## [0.2] - 2018-10-17
 
 ## [0.1] - 2018-09-20
-
