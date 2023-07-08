@@ -62,7 +62,7 @@ require (
 	github.com/swaggo/swag v1.8.12
 	github.com/tkuchiki/go-timezone v0.2.2
 	github.com/ulule/limiter/v3 v3.11.2
-	github.com/wneessen/go-mail v0.3.9
+	github.com/wneessen/go-mail v0.4.0
 	github.com/yuin/goldmark v1.5.4
 	golang.org/x/crypto v0.11.0
 	golang.org/x/image v0.9.0
