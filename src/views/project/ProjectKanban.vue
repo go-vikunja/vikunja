@@ -1,7 +1,7 @@
 <template>
 	<ProjectWrapper
 		class="project-kanban"
-		:project-id="projectId"
+		:project-id="project.id"
 		viewName="kanban"
 	>
 		<template #header>
@@ -224,7 +224,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, ref, watch, type PropType} from 'vue'
+import {computed, nextTick, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import draggable from 'zhyswan-vuedraggable'
 import {klona} from 'klona/lite'
@@ -262,13 +262,6 @@ const DRAG_OPTIONS = {
 } as const
 
 const MIN_SCROLL_HEIGHT_PERCENT = 0.25
-
-const props = defineProps({
-	projectId: {
-		type: Number as PropType<IProject['id']>,
-		required: true,
-	},
-})
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -340,10 +333,11 @@ const taskLoading = computed(() => taskStore.isLoading)
 
 watch(
 	() => ({
-		projectId: props.projectId,
 		params: params.value,
+		project: project.value,
 	}),
-	({projectId, params}) => {
+	({params, project}) => {
+		const projectId = project.id
 		if (projectId === undefined) {
 			return
 		}
@@ -483,7 +477,7 @@ async function addTaskToBucket(bucketId: IBucket['id']) {
 	const task = await taskStore.createNewTask({
 		title: newTaskText.value,
 		bucketId,
-		projectId: props.projectId,
+		projectId: project.value.id,
 	})
 	newTaskText.value = ''
 	kanbanStore.addTaskToBucket(task)
@@ -505,7 +499,7 @@ async function createNewBucket() {
 
 	await kanbanStore.createBucket(new BucketModel({
 		title: newBucketTitle.value,
-		projectId: props.projectId,
+		projectId: project.value.id,
 	}))
 	newBucketTitle.value = ''
 	showNewBucketInput.value = false
@@ -525,7 +519,7 @@ async function deleteBucket() {
 		await kanbanStore.deleteBucket({
 			bucket: new BucketModel({
 				id: bucketToDelete.value,
-				projectId: props.projectId,
+				projectId: project.value.id,
 			}),
 			params: params.value,
 		})
@@ -612,7 +606,7 @@ async function toggleDoneBucket(bucket: IBucket) {
 
 function collapseBucket(bucket: IBucket) {
 	collapsedBuckets.value[bucket.id] = true
-	saveCollapsedBucketState(props.projectId, collapsedBuckets.value)
+	saveCollapsedBucketState(project.value.id, collapsedBuckets.value)
 }
 
 function unCollapseBucket(bucket: IBucket) {
@@ -621,7 +615,7 @@ function unCollapseBucket(bucket: IBucket) {
 	}
 
 	collapsedBuckets.value[bucket.id] = false
-	saveCollapsedBucketState(props.projectId, collapsedBuckets.value)
+	saveCollapsedBucketState(project.value.id, collapsedBuckets.value)
 }
 </script>
 

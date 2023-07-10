@@ -1,10 +1,12 @@
-import { computed, shallowRef, watchEffect, h, type VNode } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import {computed, shallowRef, watchEffect, h, type VNode} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import {useBaseStore} from '@/stores/base'
 
 export function useRouteWithModal() {
 	const router = useRouter()
 	const route = useRoute()
 	const backdropView = computed(() => route.fullPath && window.history.state.backdropView)
+	const baseStore = useBaseStore()
 
 	const routeWithModal = computed(() => {
 		return backdropView.value
@@ -43,6 +45,18 @@ export function useRouteWithModal() {
 
 	function closeModal() {
 		const historyState = computed(() => route.fullPath && window.history.state)
+
+		// If the current project was changed because the user moved the currently opened task while coming from kanban,
+		// we need to reflect that change in the route when they close the task modal.
+		// The last route is only available as resolved string, therefore we need to use a regex for matching here
+		const kanbanRouteMatch = new RegExp('\\/projects\\/\\d+\\/kanban', 'g')
+		const kanbanRouter = {name: 'project.kanban', params: {projectId: baseStore.currentProject?.id}}
+		if (kanbanRouteMatch.test(historyState.value.back)
+			&& baseStore.currentProject
+			&& historyState.value.back !== router.resolve(kanbanRouter).fullPath) {
+			router.push(kanbanRouter)
+			return
+		}
 
 		if (historyState.value) {
 			router.back()
