@@ -296,7 +296,16 @@ export const useAuthStore = defineStore('auth', () => {
 				logout()
 				return
 			}
-			throw new Error('Error while refreshing user info:', {cause: e})
+			
+			const cause = {e}
+			
+			if (typeof e?.response?.data?.message !== 'undefined') {
+				cause.message = e.response.data.message
+			}
+			
+			console.error('Error refreshing user info:', e)
+			
+			throw new Error('Error while refreshing user info:', {cause})
 		}
 	}
 

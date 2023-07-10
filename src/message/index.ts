@@ -13,8 +13,14 @@ export function getErrorText(r): string {
 			return message
 		}
 	}
+	
+	let message = data?.message || r.message
+	
+	if (typeof r.cause?.message !== 'undefined') {
+		message += ' ' + r.cause.message
+	}
 
-	return data?.message || r.message
+	return message
 }
 
 export interface Action {
