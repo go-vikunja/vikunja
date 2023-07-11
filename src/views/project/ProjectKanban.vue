@@ -338,7 +338,7 @@ watch(
 	}),
 	({params, project}) => {
 		const projectId = project.id
-		if (projectId === undefined) {
+		if (projectId === undefined || Number(projectId) === 0) {
 			return
 		}
 		collapsedBuckets.value = getCollapsedBucketState(projectId)
