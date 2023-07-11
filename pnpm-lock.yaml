@@ -137,13 +137,13 @@ dependencies:
 devDependencies:
   '@4tw/cypress-drag-drop':
     specifier: 2.2.4
-    version: 2.2.4(cypress@12.17.0)
+    version: 2.2.4(cypress@12.17.1)
   '@cypress/vite-dev-server':
     specifier: 5.0.5
     version: 5.0.5
   '@cypress/vue':
     specifier: 5.0.5
-    version: 5.0.5(cypress@12.17.0)(vue@3.3.4)
+    version: 5.0.5(cypress@12.17.1)(vue@3.3.4)
   '@faker-js/faker':
     specifier: 8.0.2
     version: 8.0.2
@@ -214,8 +214,8 @@ devDependencies:
     specifier: 4.21.9
     version: 4.21.9
   caniuse-lite:
-    specifier: 1.0.30001514
-    version: 1.0.30001514
+    specifier: 1.0.30001515
+    version: 1.0.30001515
   css-has-pseudo:
     specifier: 6.0.0
     version: 6.0.0(postcss@8.4.25)
@@ -223,8 +223,8 @@ devDependencies:
     specifier: 3.1.2
     version: 3.1.2
   cypress:
-    specifier: 12.17.0
-    version: 12.17.0
+    specifier: 12.17.1
+    version: 12.17.1
   esbuild:
     specifier: 0.18.11
     version: 0.18.11
@@ -235,8 +235,8 @@ devDependencies:
     specifier: 9.15.1
     version: 9.15.1(eslint@8.44.0)
   happy-dom:
-    specifier: 10.0.3
-    version: 10.0.3
+    specifier: 10.1.1
+    version: 10.1.1
   histoire:
     specifier: 0.16.2
     version: 0.16.2(@types/node@18.16.19)(sass@1.63.6)(terser@5.10.0)(vite@4.4.2)
@@ -287,7 +287,7 @@ devDependencies:
     version: 4.0.0
   vitest:
     specifier: 0.33.0
-    version: 0.33.0(happy-dom@10.0.3)(sass@1.63.6)(terser@5.10.0)
+    version: 0.33.0(happy-dom@10.1.1)(sass@1.63.6)(terser@5.10.0)
   vue-tsc:
     specifier: 1.8.4
     version: 1.8.4(typescript@5.1.6)
@@ -300,12 +300,12 @@ devDependencies:
 
 packages:
 
-  /@4tw/cypress-drag-drop@2.2.4(cypress@12.17.0):
+  /@4tw/cypress-drag-drop@2.2.4(cypress@12.17.1):
     resolution: {integrity: sha512-6mmjJ0SHjciI0JNofdVcN1LYLbvUcUT3oY2O+1HaTlQlpKPlX9kBc040Sik6RYFK7cgWvUNwoDoDoGSKA4IS/g==}
     peerDependencies:
       cypress: ^2.1.0 || ^3.1.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0 || ^12.0.0
     dependencies:
-      cypress: 12.17.0
+      cypress: 12.17.1
     dev: true
 
   /@aashutoshrathi/word-wrap@1.2.6:
@@ -3071,8 +3071,8 @@ packages:
       postcss-selector-parser: 6.0.13
     dev: true
 
-  /@cypress/request@2.88.10:
-    resolution: {integrity: sha512-Zp7F+R93N0yZyG34GutyTNr+okam7s/Fzc1+i3kcqOP8vk6OuajuE9qZJ6Rs+10/1JFtXFYMdyarnU1rZuJesg==}
+  /@cypress/request@2.88.11:
+    resolution: {integrity: sha512-M83/wfQ1EkspjkE2lNWNV5ui2Cv7UCv1swW1DqljahbzLVWltcsexQh8jYtuS/vzFXP+HySntGM83ZXA9fn17w==}
     engines: {node: '>= 6'}
     dependencies:
       aws-sign2: 0.7.0
@@ -3088,7 +3088,7 @@ packages:
       json-stringify-safe: 5.0.1
       mime-types: 2.1.35
       performance-now: 2.1.0
-      qs: 6.5.3
+      qs: 6.10.4
       safe-buffer: 5.2.1
       tough-cookie: 2.5.0
       tunnel-agent: 0.6.0
@@ -3106,7 +3106,7 @@ packages:
       - supports-color
     dev: true
 
-  /@cypress/vue@5.0.5(cypress@12.17.0)(vue@3.3.4):
+  /@cypress/vue@5.0.5(cypress@12.17.1)(vue@3.3.4):
     resolution: {integrity: sha512-gjE0LKixK6XT4lPDFaEc8G6qNzm8YELgmbOiMVDxbVMuTtjYjorWQcIgzQ62uBX90/s7JrldXJ0W23gskoH4Ng==}
     engines: {node: '>=8'}
     peerDependencies:
@@ -3117,7 +3117,7 @@ packages:
       '@cypress/webpack-dev-server':
         optional: true
     dependencies:
-      cypress: 12.17.0
+      cypress: 12.17.1
       vue: 3.3.4
     dev: true
 
@@ -5010,7 +5010,7 @@ packages:
       postcss: ^8.1.0
     dependencies:
       browserslist: 4.21.9
-      caniuse-lite: 1.0.30001514
+      caniuse-lite: 1.0.30001515
       fraction.js: 4.2.0
       normalize-range: 0.1.2
       picocolors: 1.0.0
@@ -5201,7 +5201,7 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001514
+      caniuse-lite: 1.0.30001515
       electron-to-chromium: 1.4.433
       node-releases: 2.0.12
       update-browserslist-db: 1.0.11(browserslist@4.21.9)
@@ -5287,8 +5287,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /caniuse-lite@1.0.30001514:
-    resolution: {integrity: sha512-ENcIpYBmwAAOm/V2cXgM7rZUrKKaqisZl4ZAI520FIkqGXUxJjmaIssbRW5HVVR5tyV6ygTLIm15aU8LUmQSaQ==}
+  /caniuse-lite@1.0.30001515:
+    resolution: {integrity: sha512-eEFDwUOZbE24sb+Ecsx3+OvNETqjWIdabMy52oOkIgcUtAsQifjUG9q4U9dgTHJM2mfk4uEPxc0+xuFdJ629QA==}
     dev: true
 
   /capital-case@1.0.4:
@@ -5764,13 +5764,13 @@ packages:
   /csstype@3.1.2:
     resolution: {integrity: sha512-I7K1Uu0MBPzaFKg4nI5Q7Vs2t+3gWWW648spaF+Rg7pI9ds18Ugn+lvg4SHczUdKlHI5LWBXyqfS8+DufyBsgQ==}
 
-  /cypress@12.17.0:
-    resolution: {integrity: sha512-nq0ug8Zrjq/2khHU1PTNxg+3/n1oqtmAFCxwQhS6QzkQ4mR6RLitX+cGIOuIMfnEbDAtVub0hZh661FOA16JxA==}
+  /cypress@12.17.1:
+    resolution: {integrity: sha512-eKfBgO6t8waEyhegL4gxD7tcI6uTCGttu+ZU7y9Hq8BlpMztd7iLeIF4AJFAnbZH1xjX+wwgg4cRKFNSvv3VWQ==}
     engines: {node: ^14.0.0 || ^16.0.0 || >=18.0.0}
     hasBin: true
     requiresBuild: true
     dependencies:
-      '@cypress/request': 2.88.10
+      '@cypress/request': 2.88.11
       '@cypress/xvfb': 1.2.4(supports-color@8.1.1)
       '@types/node': 14.18.11
       '@types/sinonjs__fake-timers': 8.1.1
@@ -6944,8 +6944,8 @@ packages:
       strip-bom-string: 1.0.0
     dev: true
 
-  /happy-dom@10.0.3:
-    resolution: {integrity: sha512-WkCP+Z5fX6U5PY+yHP3ElV5D9PoxRAHRWPFq3pG9rg/6Hjf5ak7dozAgSCywsTRUq2qfa8vV8OQvUy5pRXy8EQ==}
+  /happy-dom@10.1.1:
+    resolution: {integrity: sha512-/9AMl/rwMCAz/lAs55W0B2p9I/RfnMWmR2iBI1/twz0+XZYrVgHyJzrBTpHDZlbf00NRk/pFoaktKPtdAP5Tlg==}
     dependencies:
       css.escape: 1.5.1
       entities: 4.5.0
@@ -8976,9 +8976,11 @@ packages:
       - utf-8-validate
     dev: true
 
-  /qs@6.5.3:
-    resolution: {integrity: sha512-qxXIEh4pCGfHICj1mAJQ2/2XVZkjCDTcEgfoSQxc/fYivUZxTkk7L3bDBJSoNrEzXI17oUO5Dp07ktqE5KzczA==}
+  /qs@6.10.4:
+    resolution: {integrity: sha512-OQiU+C+Ds5qiH91qh/mg0w+8nwQuLjM4F4M/PbmhDOoYehPh+Fb0bDjtR1sOvy7YKxvj28Y/M0PhP5uVX0kB+g==}
     engines: {node: '>=0.6'}
+    dependencies:
+      side-channel: 1.0.4
     dev: true
 
   /querystringify@2.2.0:
@@ -10271,7 +10273,7 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vitest@0.33.0(happy-dom@10.0.3)(sass@1.63.6)(terser@5.10.0):
+  /vitest@0.33.0(happy-dom@10.1.1)(sass@1.63.6)(terser@5.10.0):
     resolution: {integrity: sha512-1CxaugJ50xskkQ0e969R/hW47za4YXDUfWJDxip1hwbnhUjYolpfUn2AMOulqG/Dtd9WYAtkHmM/m3yKVrEejQ==}
     engines: {node: '>=v14.18.0'}
     hasBin: true
@@ -10315,7 +10317,7 @@ packages:
       cac: 6.7.14
       chai: 4.3.7
       debug: 4.3.4(supports-color@8.1.1)
-      happy-dom: 10.0.3
+      happy-dom: 10.1.1
       local-pkg: 0.4.3
       magic-string: 0.30.1
       pathe: 1.1.1
