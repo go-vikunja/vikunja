@@ -165,7 +165,7 @@ const getPriority = (text: string, prefix: string): number | null => {
 }
 
 const getRepeats = (text: string): repeatParsedResult => {
-	const regex = /((every|each) (([0-9]+|one|two|three|four|five|six|seven|eight|nine|ten) )?(hours?|days?|weeks?|months?|years?))|anually|bianually|semiannually|biennially|daily|hourly|monthly|weekly|yearly/ig
+	const regex = /((every|each) (([0-9]+|one|two|three|four|five|six|seven|eight|nine|ten) )?(hours?|days?|weeks?|months?|years?))|annually|biannually|semiannually|biennially|daily|hourly|monthly|weekly|yearly/ig
 	const results = regex.exec(text)
 	if (results === null) {
 		return {
@@ -216,13 +216,13 @@ const getRepeats = (text: string): repeatParsedResult => {
 			type = REPEAT_TYPES.Years
 			amount = 2
 			break
-		case 'bianually':
+		case 'biannually':
 		case 'semiannually':
 			type = REPEAT_TYPES.Months
 			amount = 6
 			break
 		case 'yearly':
-		case 'anually':
+		case 'annually':
 			type = REPEAT_TYPES.Years
 			break
 		case 'daily':
