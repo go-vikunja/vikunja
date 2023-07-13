@@ -87,7 +87,7 @@
         "defaultProject": "デフォルトのプロジェクト",
         "timezone": "タイムゾーン",
         "overdueTasksRemindersTime": "期限切れタスクのリマインダー送信時間",
-        "filterUsedOnOverview": "Saved filter used on the overview page"
+        "filterUsedOnOverview": "概要ページに使用されるフィルターを保存しました"
       },
       "totp": {
         "title": "2要素認証",
@@ -171,7 +171,7 @@
     "title": "プロジェクト名",
     "color": "色",
     "projects": "プロジェクト",
-    "parent": "Parent Project",
+    "parent": "親プロジェクト",
     "search": "プロジェクトのキーワードを入力…",
     "searchSelect": "クリックするかEnterキーを押してプロジェクトを選択",
     "shared": "共有プロジェクト",
@@ -194,8 +194,8 @@
     },
     "background": {
       "title": "プロジェクトの背景画像を設定",
-      "remove": "背景画像の削除",
-      "upload": "画像の選択",
+      "remove": "背景画像を削除",
+      "upload": "画像を選択…",
       "searchPlaceholder": "背景画像を検索…",
       "poweredByUnsplash": "Powered by Unsplash",
       "loadMore": "写真をもっと読み込む",
@@ -254,9 +254,9 @@
       "userTeam": {
         "typeUser": "ユーザー",
         "typeTeam": "チーム",
-        "shared": "Shared with these {type}",
-        "you": "You",
-        "notShared": "Not shared with any {type} yet.",
+        "shared": "アクセスできる{type}",
+        "you": "あなた",
+        "notShared": "まだどの{type}とも共有していません。",
         "removeHeader": "Remove a {type} from the {sharable}",
         "removeText": "Are you sure you want to remove this {sharable} from the {type}? This cannot be undone!",
         "removeSuccess": "The {sharable} was successfully removed from the {type}.",
@@ -492,17 +492,17 @@
       "ranges": {
         "today": "今日",
         "thisWeek": "今週",
-        "restOfThisWeek": "現在日時から週末まで",
+        "restOfThisWeek": "今から週末まで",
         "nextWeek": "来週",
         "next7Days": "7日間",
         "lastWeek": "先週",
         "thisMonth": "今月",
-        "restOfThisMonth": "現在日時から月末まで",
+        "restOfThisMonth": "今から月末まで",
         "nextMonth": "来月",
         "next30Days": "30日間",
         "lastMonth": "先月",
         "thisYear": "今年",
-        "restOfThisYear": "現在日時から年末まで"
+        "restOfThisYear": "今から年末まで"
       }
     },
     "datemathHelp": {
@@ -826,34 +826,34 @@
     "allPages": "これらのショートカットはすべてのページで機能します。",
     "currentPageOnly": "これらのショートカットはこのページで機能します。",
     "somePagesOnly": "これらのショートカットは一部のページでのみ機能します。",
-    "toggleMenu": "Toggle The Menu",
+    "toggleMenu": "メニューの表示/非表示",
     "quickSearch": "Open the search/quick action bar",
-    "then": "then",
+    "then": " ",
     "task": {
-      "title": "Task Page",
+      "title": "タスク",
       "done": "タスクの完了/取り消し",
-      "assign": "Assign this task to a user",
-      "labels": "Add labels to this task",
-      "dueDate": "Change the due date of this task",
-      "attachment": "このタスクに添付ファイルを追加",
-      "related": "Modify related tasks of this task",
-      "color": "タスクの色の変更",
-      "move": "Move this task to another project",
-      "reminder": "Manage reminders of this task",
-      "description": "Toggle editing of the task description",
-      "delete": "タスクの削除",
-      "priority": "Change the priority of this task",
-      "favorite": "Mark this task as favorite / unfavorite"
+      "assign": "タスクに担当者を割り当てる",
+      "labels": "タスクにラベルを追加",
+      "dueDate": "タスクの期日を設定",
+      "attachment": "タスクに添付ファイルを追加",
+      "related": "関連タスクを追加",
+      "color": "タスクの色を変更",
+      "move": "タスクを別のプロジェクトに移動",
+      "reminder": "タスクのリマインダーを設定",
+      "description": "タスクの説明を編集",
+      "delete": "タスクを削除",
+      "priority": "タスクの優先度を設定",
+      "favorite": "タスクをお気に入りに追加/削除"
     },
     "project": {
-      "title": "Project Views",
+      "title": "プロジェクト",
       "switchToListView": "リストで表示",
       "switchToGanttView": "ガントチャートで表示",
       "switchToKanbanView": "カンバンボードで表示",
       "switchToTableView": "テーブルで表示"
     },
     "navigation": {
-      "title": "Navigation",
+      "title": "ナビゲーション",
       "overview": "概要に移動",
       "upcoming": "今後の予定に移動",
       "labels": "ラベルに移動",
@@ -868,10 +868,10 @@
   "menu": {
     "edit": "編集",
     "archive": "アーカイブ",
-    "duplicate": "Duplicate",
+    "duplicate": "複製",
     "delete": "削除",
     "unarchive": "アーカイブの取り消し",
-    "setBackground": "Set background",
+    "setBackground": "背景画像の設定",
     "share": "共有",
     "newProject": "新しいプロジェクトの作成",
     "createProject": "Create project"
