@@ -165,7 +165,7 @@ const getPriority = (text: string, prefix: string): number | null => {
 }
 
 const getRepeats = (text: string): repeatParsedResult => {
-	const regex = /((every|each) (([0-9]+|one|two|three|four|five|six|seven|eight|nine|ten) )?(hours?|days?|weeks?|months?|years?))|annually|biannually|semiannually|biennially|daily|hourly|monthly|weekly|yearly/ig
+	const regex = /(^| )(((every|each) (([0-9]+|one|two|three|four|five|six|seven|eight|nine|ten) )?(hours?|days?|weeks?|months?|years?))|(annually|biannually|semiannually|biennially|daily|hourly|monthly|weekly|yearly))($| )/ig
 	const results = regex.exec(text)
 	if (results === null) {
 		return {
@@ -175,7 +175,7 @@ const getRepeats = (text: string): repeatParsedResult => {
 	}
 
 	let amount = 1
-	switch (results[3] ? results[3].trim() : undefined) {
+	switch (results[5] ? results[5].trim() : undefined) {
 		case 'one':
 			amount = 1
 			break
@@ -207,11 +207,11 @@ const getRepeats = (text: string): repeatParsedResult => {
 			amount = 10
 			break
 		default:
-			amount = results[3] ? parseInt(results[3]) : 1
+			amount = results[5] ? parseInt(results[5]) : 1
 	}
 	let type: IRepeatType = REPEAT_TYPES.Hours
 
-	switch (results[0]) {
+	switch (results[2]) {
 		case 'biennially':
 			type = REPEAT_TYPES.Years
 			amount = 2
@@ -238,7 +238,7 @@ const getRepeats = (text: string): repeatParsedResult => {
 			type = REPEAT_TYPES.Weeks
 			break
 		default:
-			switch (results[5]) {
+			switch (results[7]) {
 				case 'hour':
 				case 'hours':
 					type = REPEAT_TYPES.Hours

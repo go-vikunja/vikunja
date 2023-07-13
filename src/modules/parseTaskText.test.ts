@@ -719,15 +719,6 @@ describe('Parse Task Text', () => {
 			'every year': {type: 'years', amount: 1},
 			'every 1 year': {type: 'years', amount: 1},
 			'every 4 years': {type: 'years', amount: 4},
-			'annually': {type: 'years', amount: 1},
-			'biannually': {type: 'months', amount: 6},
-			'semiannually': {type: 'months', amount: 6},
-			'biennially': {type: 'years', amount: 2},
-			'daily': {type: 'days', amount: 1},
-			'hourly': {type: 'hours', amount: 1},
-			'monthly': {type: 'months', amount: 1},
-			'weekly': {type: 'weeks', amount: 1},
-			'yearly': {type: 'years', amount: 1},
 			'every one hour': {type: 'hours', amount: 1}, // maybe unnesecary but better to include it for completeness sake
 			'every two hours': {type: 'hours', amount: 2},
 			'every three hours': {type: 'hours', amount: 3},
@@ -738,6 +729,15 @@ describe('Parse Task Text', () => {
 			'every eight hours': {type: 'hours', amount: 8},
 			'every nine hours': {type: 'hours', amount: 9},
 			'every ten hours': {type: 'hours', amount: 10},
+			'annually': {type: 'years', amount: 1},
+			'biannually': {type: 'months', amount: 6},
+			'semiannually': {type: 'months', amount: 6},
+			'biennially': {type: 'years', amount: 2},
+			'daily': {type: 'days', amount: 1},
+			'hourly': {type: 'hours', amount: 1},
+			'monthly': {type: 'months', amount: 1},
+			'weekly': {type: 'weeks', amount: 1},
+			'yearly': {type: 'years', amount: 1},
 		} as Record<string, IRepeatAfter>
 
 		for (const c in cases) {
@@ -749,5 +749,26 @@ describe('Parse Task Text', () => {
 				expect(result?.repeats?.amount).toBe(cases[c].amount)
 			})
 		}
+
+		const wordCases = [
+			'annually',
+			'biannually',
+			'semiannually',
+			'biennially',
+			'daily',
+			'hourly',
+			'monthly',
+			'weekly',
+			'yearly',
+		]
+
+		wordCases.forEach(c => {
+			it(`should ignore recurring periods if they are part of a word ${c}`, () => {
+				const result = parseTaskText(`Lorem Ipsum word${c}notword`)
+
+				expect(result.text).toBe(`Lorem Ipsum word${c}notword`)
+				expect(result?.repeats).toBeNull()
+			})
+		})
 	})
 })
