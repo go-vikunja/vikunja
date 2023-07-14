@@ -209,7 +209,7 @@ devDependencies:
     version: 0.4.0
   autoprefixer:
     specifier: 10.4.14
-    version: 10.4.14(postcss@8.4.25)
+    version: 10.4.14(postcss@8.4.26)
   browserslist:
     specifier: 4.21.9
     version: 4.21.9
@@ -218,7 +218,7 @@ devDependencies:
     version: 1.0.30001515
   css-has-pseudo:
     specifier: 6.0.0
-    version: 6.0.0(postcss@8.4.25)
+    version: 6.0.0(postcss@8.4.26)
   csstype:
     specifier: 3.1.2
     version: 3.1.2
@@ -235,26 +235,26 @@ devDependencies:
     specifier: 9.15.1
     version: 9.15.1(eslint@8.44.0)
   happy-dom:
-    specifier: 10.2.0
-    version: 10.2.0
+    specifier: 10.3.2
+    version: 10.3.2
   histoire:
     specifier: 0.16.2
     version: 0.16.2(@types/node@18.16.19)(sass@1.63.6)(terser@5.10.0)(vite@4.4.3)
   postcss:
-    specifier: 8.4.25
-    version: 8.4.25
+    specifier: 8.4.26
+    version: 8.4.26
   postcss-easing-gradients:
     specifier: 3.0.1
     version: 3.0.1
   postcss-easings:
     specifier: 4.0.0
-    version: 4.0.0(postcss@8.4.25)
+    version: 4.0.0(postcss@8.4.26)
   postcss-focus-within:
     specifier: 8.0.0
-    version: 8.0.0(postcss@8.4.25)
+    version: 8.0.0(postcss@8.4.26)
   postcss-preset-env:
     specifier: 9.0.0
-    version: 9.0.0(postcss@8.4.25)
+    version: 9.0.0(postcss@8.4.26)
   rollup:
     specifier: 3.26.2
     version: 3.26.2
@@ -287,7 +287,7 @@ devDependencies:
     version: 4.0.0
   vitest:
     specifier: 0.33.0
-    version: 0.33.0(happy-dom@10.2.0)(sass@1.63.6)(terser@5.10.0)
+    version: 0.33.0(happy-dom@10.3.2)(sass@1.63.6)(terser@5.10.0)
   vue-tsc:
     specifier: 1.8.4
     version: 1.8.4(typescript@5.1.6)
@@ -2794,18 +2794,18 @@ packages:
       '@csstools/css-tokenizer': 2.1.1
     dev: true
 
-  /@csstools/postcss-cascade-layers@4.0.0(postcss@8.4.25):
+  /@csstools/postcss-cascade-layers@4.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-dVPVVqQG0FixjM9CG/+8eHTsCAxRKqmNh6H69IpruolPlnEF1611f2AoLK8TijTSAsqBSclKd4WHs1KUb/LdJw==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
       '@csstools/selector-specificity': 3.0.0(postcss-selector-parser@6.0.13)
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-selector-parser: 6.0.13
     dev: true
 
-  /@csstools/postcss-color-function@2.2.3(postcss@8.4.25):
+  /@csstools/postcss-color-function@2.2.3(postcss@8.4.26):
     resolution: {integrity: sha512-b1ptNkr1UWP96EEHqKBWWaV5m/0hgYGctgA/RVZhONeP1L3T/8hwoqDm9bB23yVCfOgE9U93KI9j06+pEkJTvw==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
@@ -2814,11 +2814,11 @@ packages:
       '@csstools/css-color-parser': 1.2.0(@csstools/css-parser-algorithms@2.2.0)(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-parser-algorithms': 2.2.0(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-tokenizer': 2.1.1
-      '@csstools/postcss-progressive-custom-properties': 2.3.0(postcss@8.4.25)
-      postcss: 8.4.25
+      '@csstools/postcss-progressive-custom-properties': 2.3.0(postcss@8.4.26)
+      postcss: 8.4.26
     dev: true
 
-  /@csstools/postcss-color-mix-function@1.0.3(postcss@8.4.25):
+  /@csstools/postcss-color-mix-function@1.0.3(postcss@8.4.26):
     resolution: {integrity: sha512-QGXjGugTluqFZWzVf+S3wCiRiI0ukXlYqCi7OnpDotP/zaVTyl/aqZujLFzTOXy24BoWnu89frGMc79ohY5eog==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
@@ -2827,21 +2827,21 @@ packages:
       '@csstools/css-color-parser': 1.2.0(@csstools/css-parser-algorithms@2.2.0)(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-parser-algorithms': 2.2.0(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-tokenizer': 2.1.1
-      '@csstools/postcss-progressive-custom-properties': 2.3.0(postcss@8.4.25)
-      postcss: 8.4.25
+      '@csstools/postcss-progressive-custom-properties': 2.3.0(postcss@8.4.26)
+      postcss: 8.4.26
     dev: true
 
-  /@csstools/postcss-font-format-keywords@3.0.0(postcss@8.4.25):
+  /@csstools/postcss-font-format-keywords@3.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-ntkGj+1uDa/u6lpjPxnkPcjJn7ChO/Kcy08YxctOZI7vwtrdYvFhmE476dq8bj1yna306+jQ9gzXIG/SWfOaRg==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
-  /@csstools/postcss-gradients-interpolation-method@4.0.0(postcss@8.4.25):
+  /@csstools/postcss-gradients-interpolation-method@4.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-jGSRoZmw+5ZQ8Y39YN4zc3LIfRYdoiz5vMQzgADOdn7Bc4VBueUMsmMn1gX4ED76Pp7/f+Xvi0WrCFiOM2hkyw==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
@@ -2850,11 +2850,11 @@ packages:
       '@csstools/css-color-parser': 1.2.2(@csstools/css-parser-algorithms@2.3.0)(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-parser-algorithms': 2.3.0(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-tokenizer': 2.1.1
-      '@csstools/postcss-progressive-custom-properties': 3.0.0(postcss@8.4.25)
-      postcss: 8.4.25
+      '@csstools/postcss-progressive-custom-properties': 3.0.0(postcss@8.4.26)
+      postcss: 8.4.26
     dev: true
 
-  /@csstools/postcss-hwb-function@3.0.0(postcss@8.4.25):
+  /@csstools/postcss-hwb-function@3.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-a4gbFxgF6yJVGdXSAaDCZE4WMi7yu3PgPaBKpvqefyG1+R2zCwOboXYLzn2GVUyTAHij+ZRFDQUYUVODAQnf6g==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
@@ -2863,61 +2863,61 @@ packages:
       '@csstools/css-color-parser': 1.2.2(@csstools/css-parser-algorithms@2.3.0)(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-parser-algorithms': 2.3.0(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-tokenizer': 2.1.1
-      postcss: 8.4.25
+      postcss: 8.4.26
     dev: true
 
-  /@csstools/postcss-ic-unit@3.0.0(postcss@8.4.25):
+  /@csstools/postcss-ic-unit@3.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-FH3+zfOfsgtX332IIkRDxiYLmgwyNk49tfltpC6dsZaO4RV2zWY6x9VMIC5cjvmjlDO7DIThpzqaqw2icT8RbQ==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      '@csstools/postcss-progressive-custom-properties': 3.0.0(postcss@8.4.25)
-      postcss: 8.4.25
+      '@csstools/postcss-progressive-custom-properties': 3.0.0(postcss@8.4.26)
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
-  /@csstools/postcss-is-pseudo-class@4.0.0(postcss@8.4.25):
+  /@csstools/postcss-is-pseudo-class@4.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-0I6siRcDymG3RrkNTSvHDMxTQ6mDyYE8awkcaHNgtYacd43msl+4ZWDfQ1yZQ/viczVWjqJkLmPiRHSgxn5nZA==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
       '@csstools/selector-specificity': 3.0.0(postcss-selector-parser@6.0.13)
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-selector-parser: 6.0.13
     dev: true
 
-  /@csstools/postcss-logical-float-and-clear@2.0.0(postcss@8.4.25):
+  /@csstools/postcss-logical-float-and-clear@2.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-Wki4vxsF6icRvRz8eF9bPpAvwaAt0RHwhVOyzfoFg52XiIMjb6jcbHkGxwpJXP4DVrnFEwpwmrz5aTRqOW82kg==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
     dev: true
 
-  /@csstools/postcss-logical-resize@2.0.0(postcss@8.4.25):
+  /@csstools/postcss-logical-resize@2.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-lCQ1aX8c5+WI4t5EoYf3alTzJNNocMqTb+u1J9CINdDhFh1fjovqK+0aHalUHsNstZmzFPNzIkU4Mb3eM9U8SA==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
-  /@csstools/postcss-logical-viewport-units@2.0.0(postcss@8.4.25):
+  /@csstools/postcss-logical-viewport-units@2.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-KZIJXAvXqePyk2QHOYYy5YUVyjiqRTC5lgOjJJsjKIwNnGvOBqD4ypWUB94WlWO0yzNwIMs+JYnTP4jGEbKzhA==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
       '@csstools/css-tokenizer': 2.1.1
-      postcss: 8.4.25
+      postcss: 8.4.26
     dev: true
 
-  /@csstools/postcss-media-minmax@1.0.5(postcss@8.4.25):
+  /@csstools/postcss-media-minmax@1.0.5(postcss@8.4.26):
     resolution: {integrity: sha512-gKwnAgX8wM3cNJ+nn2st8Cu25H/ZT43Z3CQE54rJPn4aD2gi4/ibXga+IZNwRUSGR7/zJtsoWrq9aHf4qXgYRg==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
@@ -2927,10 +2927,10 @@ packages:
       '@csstools/css-parser-algorithms': 2.3.0(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-tokenizer': 2.1.1
       '@csstools/media-query-list-parser': 2.1.2(@csstools/css-parser-algorithms@2.3.0)(@csstools/css-tokenizer@2.1.1)
-      postcss: 8.4.25
+      postcss: 8.4.26
     dev: true
 
-  /@csstools/postcss-media-queries-aspect-ratio-number-values@2.0.0(postcss@8.4.25):
+  /@csstools/postcss-media-queries-aspect-ratio-number-values@2.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-7gxwEFeKlzql44msYZp7hqxpyxRqE1rt/TcUnDgnqqeOZI5GVHUULIrrzVnMq0YiaQROw/ugy8hov4e8V46GHw==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
@@ -2939,30 +2939,30 @@ packages:
       '@csstools/css-parser-algorithms': 2.3.0(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-tokenizer': 2.1.1
       '@csstools/media-query-list-parser': 2.1.2(@csstools/css-parser-algorithms@2.3.0)(@csstools/css-tokenizer@2.1.1)
-      postcss: 8.4.25
+      postcss: 8.4.26
     dev: true
 
-  /@csstools/postcss-nested-calc@3.0.0(postcss@8.4.25):
+  /@csstools/postcss-nested-calc@3.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-HsB66aDWAouOwD/GcfDTS0a7wCuVWaTpXcjl5VKP0XvFxDiU+r0T8FG7xgb6ovZNZ+qzvGIwRM+CLHhDgXrYgQ==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
-  /@csstools/postcss-normalize-display-values@3.0.0(postcss@8.4.25):
+  /@csstools/postcss-normalize-display-values@3.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-6Nw55PRXEKEVqn3bzA8gRRPYxr5tf5PssvcE5DRA/nAxKgKtgNZMCHCSd1uxTCWeyLnkf6h5tYRSB0P1Vh/K/A==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
-  /@csstools/postcss-oklab-function@3.0.0(postcss@8.4.25):
+  /@csstools/postcss-oklab-function@3.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-SQgh//VauJwat3qEwOw6t+Y9l8/dKooDnY3tD/o6qpcSjOvGqSsPeY+0QWWeAXYTtaddXSz4YmPohRRTsNlZGg==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
@@ -2971,31 +2971,31 @@ packages:
       '@csstools/css-color-parser': 1.2.2(@csstools/css-parser-algorithms@2.3.0)(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-parser-algorithms': 2.3.0(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-tokenizer': 2.1.1
-      '@csstools/postcss-progressive-custom-properties': 3.0.0(postcss@8.4.25)
-      postcss: 8.4.25
+      '@csstools/postcss-progressive-custom-properties': 3.0.0(postcss@8.4.26)
+      postcss: 8.4.26
     dev: true
 
-  /@csstools/postcss-progressive-custom-properties@2.3.0(postcss@8.4.25):
+  /@csstools/postcss-progressive-custom-properties@2.3.0(postcss@8.4.26):
     resolution: {integrity: sha512-Zd8ojyMlsL919TBExQ1I0CTpBDdyCpH/yOdqatZpuC3sd22K4SwC7+Yez3Q/vmXMWSAl+shjNeFZ7JMyxMjK+Q==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
-  /@csstools/postcss-progressive-custom-properties@3.0.0(postcss@8.4.25):
+  /@csstools/postcss-progressive-custom-properties@3.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-2/D3CCL9DN2xhuUTP8OKvKnaqJ1j4yZUxuGLsCUOQ16wnDAuMLKLkflOmZF5tsPh/02VPeXRmqIN+U595WAulw==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
-  /@csstools/postcss-relative-color-syntax@2.0.0(postcss@8.4.25):
+  /@csstools/postcss-relative-color-syntax@2.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-2hz6pwJYgr/Uuj6657Ucphv8SIXLfH2IaBqg10g8+nrNrRYPA1Lfw9p4bDUhE+6M2cujhXy4Sx5NB77FcHUwuA==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
@@ -3004,21 +3004,21 @@ packages:
       '@csstools/css-color-parser': 1.2.2(@csstools/css-parser-algorithms@2.3.0)(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-parser-algorithms': 2.3.0(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-tokenizer': 2.1.1
-      '@csstools/postcss-progressive-custom-properties': 3.0.0(postcss@8.4.25)
-      postcss: 8.4.25
+      '@csstools/postcss-progressive-custom-properties': 3.0.0(postcss@8.4.26)
+      postcss: 8.4.26
     dev: true
 
-  /@csstools/postcss-scope-pseudo-class@3.0.0(postcss@8.4.25):
+  /@csstools/postcss-scope-pseudo-class@3.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-GFNVsD97OuEcfHmcT0/DAZWAvTM/FFBDQndIOLawNc1Wq8YqpZwBdHa063Lq+Irk7azygTT+Iinyg3Lt76p7rg==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-selector-parser: 6.0.13
     dev: true
 
-  /@csstools/postcss-stepped-value-functions@3.0.0(postcss@8.4.25):
+  /@csstools/postcss-stepped-value-functions@3.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-1+itpigiUemtdG2+pU3a36aQdpoFZbiKNZz0iW/s9H2mq0wCfqeRbXQmEQEStaqejEvlX+hLhbvWhb0WEuMKHQ==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
@@ -3027,21 +3027,21 @@ packages:
       '@csstools/css-calc': 1.1.2(@csstools/css-parser-algorithms@2.3.0)(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-parser-algorithms': 2.3.0(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-tokenizer': 2.1.1
-      postcss: 8.4.25
+      postcss: 8.4.26
     dev: true
 
-  /@csstools/postcss-text-decoration-shorthand@3.0.0(postcss@8.4.25):
+  /@csstools/postcss-text-decoration-shorthand@3.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-BAa1MIMJmEZlJ+UkPrkyoz3DC7kLlIl2oDya5yXgvUrelpwxddgz8iMp69qBStdXwuMyfPx46oZcSNx8Z0T2eA==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
       '@csstools/color-helpers': 3.0.0
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
-  /@csstools/postcss-trigonometric-functions@3.0.0(postcss@8.4.25):
+  /@csstools/postcss-trigonometric-functions@3.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-w00RYRPzvaCbpflgeDGBacZ8dJQwMi5driR+6JasOHh85MiF1e+muYZdjFYi6VWOIzM5XaqxwNiQlgQwdQvxgA==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
@@ -3050,16 +3050,16 @@ packages:
       '@csstools/css-calc': 1.1.2(@csstools/css-parser-algorithms@2.3.0)(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-parser-algorithms': 2.3.0(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-tokenizer': 2.1.1
-      postcss: 8.4.25
+      postcss: 8.4.26
     dev: true
 
-  /@csstools/postcss-unset-value@3.0.0(postcss@8.4.25):
+  /@csstools/postcss-unset-value@3.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-P0JD1WHh3avVyKKRKjd0dZIjCEeaBer8t1BbwGMUDtSZaLhXlLNBqZ8KkqHzYWXOJgHleXAny2/sx8LYl6qhEA==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
     dev: true
 
   /@csstools/selector-specificity@3.0.0(postcss-selector-parser@6.0.13):
@@ -4147,8 +4147,8 @@ packages:
   /@types/postcss-preset-env@7.7.0:
     resolution: {integrity: sha512-biD8MwSiZo1Nztn1cIBPMcKNKzgFyU05AB96HIF9y3G4f9vdx2O60DHCSpWXChTp6mOEGu15fqIw2DetVVjghw==}
     dependencies:
-      autoprefixer: 10.4.14(postcss@8.4.25)
-      postcss: 8.4.25
+      autoprefixer: 10.4.14(postcss@8.4.26)
+      postcss: 8.4.26
     dev: true
 
   /@types/resolve@1.17.1:
@@ -4596,7 +4596,7 @@ packages:
       '@vue/shared': 3.2.45
       estree-walker: 2.0.2
       magic-string: 0.25.7
-      postcss: 8.4.25
+      postcss: 8.4.26
       source-map: 0.6.1
     dev: true
 
@@ -4611,7 +4611,7 @@ packages:
       '@vue/shared': 3.3.4
       estree-walker: 2.0.2
       magic-string: 0.30.0
-      postcss: 8.4.25
+      postcss: 8.4.26
       source-map-js: 1.0.2
 
   /@vue/compiler-ssr@3.2.45:
@@ -5002,7 +5002,7 @@ packages:
     engines: {node: '>= 4.0.0'}
     dev: true
 
-  /autoprefixer@10.4.14(postcss@8.4.25):
+  /autoprefixer@10.4.14(postcss@8.4.26):
     resolution: {integrity: sha512-FQzyfOsTlwVzjHxKEqRIAdJx9niO6VCBCoEwax/VLSoQF29ggECcPuBqUMZ+u8jCZOPSy8b8/8KnuFbp0SaFZQ==}
     engines: {node: ^10 || ^12 || >=14}
     hasBin: true
@@ -5014,7 +5014,7 @@ packages:
       fraction.js: 4.2.0
       normalize-range: 0.1.2
       picocolors: 1.0.0
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
@@ -5648,35 +5648,35 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /css-blank-pseudo@6.0.0(postcss@8.4.25):
+  /css-blank-pseudo@6.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-VbfLlOWO7sBHBTn6pwDQzc07Z0SDydgDBfNfCE0nvrehdBNv9RKsuupIRa/qal0+fBZhAALyQDPMKz5lnvcchw==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-selector-parser: 6.0.13
     dev: true
 
-  /css-has-pseudo@6.0.0(postcss@8.4.25):
+  /css-has-pseudo@6.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-X+r+JBuoO37FBOWVNhVJhxtSBUFHgHbrcc0CjFT28JEdOw1qaDwABv/uunyodUuSy2hMPe9j/HjssxSlvUmKjg==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
       '@csstools/selector-specificity': 3.0.0(postcss-selector-parser@6.0.13)
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-selector-parser: 6.0.13
       postcss-value-parser: 4.2.0
     dev: true
 
-  /css-prefers-color-scheme@9.0.0(postcss@8.4.25):
+  /css-prefers-color-scheme@9.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-03QGAk/FXIRseDdLb7XAiu6gidQ0Nd8945xuM7VFVPpc6goJsG9uIO8xQjTxwbPdPIIV4o4AJoOJyt8gwDl67g==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
     dev: true
 
   /css-select@4.2.1:
@@ -6944,8 +6944,8 @@ packages:
       strip-bom-string: 1.0.0
     dev: true
 
-  /happy-dom@10.2.0:
-    resolution: {integrity: sha512-qhxEr49zqw2D10lIRMva/Ca647CMrdcFIT5fk9cnqXOq3LXufQnDnszto/MQBldWYwlWWAipFZAB+A0W0/MMdA==}
+  /happy-dom@10.3.2:
+    resolution: {integrity: sha512-SmV12YEaaAlEfhfq+4unIHkyvqY08as7x9dM+Q6TxjNpHX0k3ihJ4mukjxxstEpx463XhVQJsAKGlNoVdKWsVA==}
     dependencies:
       css.escape: 1.5.1
       entities: 4.5.0
@@ -8485,58 +8485,58 @@ packages:
       mlly: 1.4.0
       pathe: 1.1.1
 
-  /postcss-attribute-case-insensitive@6.0.2(postcss@8.4.25):
+  /postcss-attribute-case-insensitive@6.0.2(postcss@8.4.26):
     resolution: {integrity: sha512-IRuCwwAAQbgaLhxQdQcIIK0dCVXg3XDUnzgKD8iwdiYdwU4rMWRWyl/W9/0nA4ihVpq5pyALiHB2veBJ0292pw==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-selector-parser: 6.0.13
     dev: true
 
-  /postcss-clamp@4.1.0(postcss@8.4.25):
+  /postcss-clamp@4.1.0(postcss@8.4.26):
     resolution: {integrity: sha512-ry4b1Llo/9zz+PKC+030KUnPITTJAHeOwjfAyyB60eT0AorGLdzp52s31OsPRHRf8NchkgFoG2y6fCfn1IV1Ow==}
     engines: {node: '>=7.6.0'}
     peerDependencies:
       postcss: ^8.4.6
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
-  /postcss-color-functional-notation@6.0.0(postcss@8.4.25):
+  /postcss-color-functional-notation@6.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-kaWTgnhRKFtfMF8H0+NQBFxgr5CGg05WGe07Mc1ld6XHwwRWlqSbHOW0zwf+BtkBQpsdVUu7+gl9dtdvhWMedw==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      '@csstools/postcss-progressive-custom-properties': 3.0.0(postcss@8.4.25)
-      postcss: 8.4.25
+      '@csstools/postcss-progressive-custom-properties': 3.0.0(postcss@8.4.26)
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
-  /postcss-color-hex-alpha@9.0.2(postcss@8.4.25):
+  /postcss-color-hex-alpha@9.0.2(postcss@8.4.26):
     resolution: {integrity: sha512-SfPjgr//VQ/DOCf80STIAsdAs7sbIbxATvVmd+Ec7JvR8onz9pjawhq3BJM3Pie40EE3TyB0P6hft16D33Nlyg==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
-  /postcss-color-rebeccapurple@9.0.0(postcss@8.4.25):
+  /postcss-color-rebeccapurple@9.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-RmUFL+foS05AKglkEoqfx+KFdKRVmqUAxlHNz4jLqIi7046drIPyerdl4B6j/RA2BSP8FI8gJcHmLRrwJOMnHw==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
-  /postcss-custom-media@10.0.0(postcss@8.4.25):
+  /postcss-custom-media@10.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-NxDn7C6GJ7X8TsWOa8MbCdq9rLERRLcPfQSp856k1jzMreL8X9M6iWk35JjPRIb9IfRnVohmxAylDRx7n4Rv4g==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
@@ -8546,10 +8546,10 @@ packages:
       '@csstools/css-parser-algorithms': 2.3.0(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-tokenizer': 2.1.1
       '@csstools/media-query-list-parser': 2.1.2(@csstools/css-parser-algorithms@2.3.0)(@csstools/css-tokenizer@2.1.1)
-      postcss: 8.4.25
+      postcss: 8.4.26
     dev: true
 
-  /postcss-custom-properties@13.2.1(postcss@8.4.25):
+  /postcss-custom-properties@13.2.1(postcss@8.4.26):
     resolution: {integrity: sha512-Z8UmzwVkRh8aITyeZoZnT4McSSPmS2EFl+OyPspfvx7v+N36V2UseMAODp3oBriZvcf/tQpzag9165x/VcC3kg==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
@@ -8558,11 +8558,11 @@ packages:
       '@csstools/cascade-layer-name-parser': 1.0.3(@csstools/css-parser-algorithms@2.3.0)(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-parser-algorithms': 2.3.0(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-tokenizer': 2.1.1
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
-  /postcss-custom-selectors@7.1.4(postcss@8.4.25):
+  /postcss-custom-selectors@7.1.4(postcss@8.4.26):
     resolution: {integrity: sha512-TU2xyUUBTlpiLnwyE2ZYMUIYB41MKMkBZ8X8ntkqRDQ8sdBLhFFsPgNcOliBd5+/zcK51C9hRnSE7hKUJMxQSw==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
@@ -8571,28 +8571,28 @@ packages:
       '@csstools/cascade-layer-name-parser': 1.0.3(@csstools/css-parser-algorithms@2.3.0)(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-parser-algorithms': 2.3.0(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-tokenizer': 2.1.1
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-selector-parser: 6.0.13
     dev: true
 
-  /postcss-dir-pseudo-class@8.0.0(postcss@8.4.25):
+  /postcss-dir-pseudo-class@8.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-Oy5BBi0dWPwij/IA+yDYj+/OBMQ9EPqAzTHeSNUYrUWdll/PRJmcbiUj0MNcsBi681I1gcSTLvMERPaXzdbvJg==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-selector-parser: 6.0.13
     dev: true
 
-  /postcss-double-position-gradients@5.0.0(postcss@8.4.25):
+  /postcss-double-position-gradients@5.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-wR8npIkrIVUTicUpCWSSo1f/g7gAEIH70FMqCugY4m4j6TX4E0T2Q5rhfO0gqv00biBZdLyb+HkW8x6as+iJNQ==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      '@csstools/postcss-progressive-custom-properties': 3.0.0(postcss@8.4.25)
-      postcss: 8.4.25
+      '@csstools/postcss-progressive-custom-properties': 3.0.0(postcss@8.4.26)
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
@@ -8606,72 +8606,72 @@ packages:
       postcss-value-parser: 3.3.1
     dev: true
 
-  /postcss-easings@4.0.0(postcss@8.4.25):
+  /postcss-easings@4.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-KNpwHA3mTnf0UWcdwahQDaz7DDJ6QteVwdlLff98se854p6pyQW9iofwrD05vtlp33AAAxuUGCOhYwERRJGy6Q==}
     engines: {node: '>=16.0'}
     peerDependencies:
       postcss: ^8.1.0
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
-  /postcss-focus-visible@9.0.0(postcss@8.4.25):
+  /postcss-focus-visible@9.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-zA4TbVaIaT8npZBEROhZmlc+GBKE8AELPHXE7i4TmIUEQhw/P/mSJfY9t6tBzpQ1rABeGtEOHYrW4SboQeONMQ==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-selector-parser: 6.0.13
     dev: true
 
-  /postcss-focus-within@8.0.0(postcss@8.4.25):
+  /postcss-focus-within@8.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-E7+J9nuQzZaA37D/MUZMX1K817RZGDab8qw6pFwzAkDd/QtlWJ9/WTKmzewNiuxzeq6WWY7ATiRePVoDKp+DnA==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-selector-parser: 6.0.13
     dev: true
 
-  /postcss-font-variant@5.0.0(postcss@8.4.25):
+  /postcss-font-variant@5.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-1fmkBaCALD72CK2a9i468mA/+tr9/1cBxRRMXOUaZqO43oWPR5imcyPjXwuv7PXbCid4ndlP5zWhidQVVa3hmA==}
     peerDependencies:
       postcss: ^8.1.0
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
     dev: true
 
-  /postcss-gap-properties@5.0.0(postcss@8.4.25):
+  /postcss-gap-properties@5.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-YjsEEL6890P7MCv6fch6Am1yq0EhQCJMXyT4LBohiu87+4/WqR7y5W3RIv53WdA901hhytgRvjlrAhibhW4qsA==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
     dev: true
 
-  /postcss-image-set-function@6.0.0(postcss@8.4.25):
+  /postcss-image-set-function@6.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-bg58QnJexFpPBU4IGPAugAPKV0FuFtX5rHYNSKVaV91TpHN7iwyEzz1bkIPCiSU5+BUN00e+3fV5KFrwIgRocw==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
-  /postcss-initial@4.0.1(postcss@8.4.25):
+  /postcss-initial@4.0.1(postcss@8.4.26):
     resolution: {integrity: sha512-0ueD7rPqX8Pn1xJIjay0AZeIuDoF+V+VvMt/uOnn+4ezUKhZM/NokDeP6DwMNyIoYByuN/94IQnt5FEkaN59xQ==}
     peerDependencies:
       postcss: ^8.0.0
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
     dev: true
 
-  /postcss-lab-function@6.0.0(postcss@8.4.25):
+  /postcss-lab-function@6.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-bEKvKeoA0PPeqXdYfnIjU38NdkjrlqT4iENtIVMAcx9YAJz+9OrUvE2IRRK2jMZPcBM5RhyHj5zJqpzvR7KGtw==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
@@ -8680,158 +8680,158 @@ packages:
       '@csstools/css-color-parser': 1.2.2(@csstools/css-parser-algorithms@2.3.0)(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-parser-algorithms': 2.3.0(@csstools/css-tokenizer@2.1.1)
       '@csstools/css-tokenizer': 2.1.1
-      '@csstools/postcss-progressive-custom-properties': 3.0.0(postcss@8.4.25)
-      postcss: 8.4.25
+      '@csstools/postcss-progressive-custom-properties': 3.0.0(postcss@8.4.26)
+      postcss: 8.4.26
     dev: true
 
-  /postcss-logical@7.0.0(postcss@8.4.25):
+  /postcss-logical@7.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-zYf3vHkoW82f5UZTEXChTJvH49Yl9X37axTZsJGxrCG2kOUwtaAoz9E7tqYg0lsIoJLybaL8fk/2mOi81zVIUw==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
-  /postcss-nesting@12.0.0(postcss@8.4.25):
+  /postcss-nesting@12.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-knqwW65kxssmyIFadRSimaiRyLVRd0MdwfabesKw6XvGLwSOCJ+4zfvNQQCOOYij5obwpZzDpODuGRv2PCyiUw==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
       '@csstools/selector-specificity': 3.0.0(postcss-selector-parser@6.0.13)
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-selector-parser: 6.0.13
     dev: true
 
-  /postcss-opacity-percentage@2.0.0(postcss@8.4.25):
+  /postcss-opacity-percentage@2.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-lyDrCOtntq5Y1JZpBFzIWm2wG9kbEdujpNt4NLannF+J9c8CgFIzPa80YQfdza+Y+yFfzbYj/rfoOsYsooUWTQ==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.2
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
     dev: true
 
-  /postcss-overflow-shorthand@5.0.0(postcss@8.4.25):
+  /postcss-overflow-shorthand@5.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-2rlxDyeSics/hC2FuMdPnWiP9WUPZ5x7FTuArXLFVpaSQ2woPSfZS4RD59HuEokbZhs/wPUQJ1E3MT6zVv94MQ==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
-  /postcss-page-break@3.0.4(postcss@8.4.25):
+  /postcss-page-break@3.0.4(postcss@8.4.26):
     resolution: {integrity: sha512-1JGu8oCjVXLa9q9rFTo4MbeeA5FMe00/9C7lN4va606Rdb+HkxXtXsmEDrIraQ11fGz/WvKWa8gMuCKkrXpTsQ==}
     peerDependencies:
       postcss: ^8
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
     dev: true
 
-  /postcss-place@9.0.0(postcss@8.4.25):
+  /postcss-place@9.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-qLEPD9VPH5opDVemwmRaujODF9nExn24VOC3ghgVLEvfYN7VZLwJHes0q/C9YR5hI2UC3VgBE8Wkdp1TxCXhtg==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-value-parser: 4.2.0
     dev: true
 
-  /postcss-preset-env@9.0.0(postcss@8.4.25):
+  /postcss-preset-env@9.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-L0x/Nluq+/FkidIYjU7JtkmRL2/QmXuYkxuM3C5y9VG3iGLljF9PuBHQ7kzKRoVfwnca0VNN0Zb3a/bxVJ12vA==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      '@csstools/postcss-cascade-layers': 4.0.0(postcss@8.4.25)
-      '@csstools/postcss-color-function': 2.2.3(postcss@8.4.25)
-      '@csstools/postcss-color-mix-function': 1.0.3(postcss@8.4.25)
-      '@csstools/postcss-font-format-keywords': 3.0.0(postcss@8.4.25)
-      '@csstools/postcss-gradients-interpolation-method': 4.0.0(postcss@8.4.25)
-      '@csstools/postcss-hwb-function': 3.0.0(postcss@8.4.25)
-      '@csstools/postcss-ic-unit': 3.0.0(postcss@8.4.25)
-      '@csstools/postcss-is-pseudo-class': 4.0.0(postcss@8.4.25)
-      '@csstools/postcss-logical-float-and-clear': 2.0.0(postcss@8.4.25)
-      '@csstools/postcss-logical-resize': 2.0.0(postcss@8.4.25)
-      '@csstools/postcss-logical-viewport-units': 2.0.0(postcss@8.4.25)
-      '@csstools/postcss-media-minmax': 1.0.5(postcss@8.4.25)
-      '@csstools/postcss-media-queries-aspect-ratio-number-values': 2.0.0(postcss@8.4.25)
-      '@csstools/postcss-nested-calc': 3.0.0(postcss@8.4.25)
-      '@csstools/postcss-normalize-display-values': 3.0.0(postcss@8.4.25)
-      '@csstools/postcss-oklab-function': 3.0.0(postcss@8.4.25)
-      '@csstools/postcss-progressive-custom-properties': 3.0.0(postcss@8.4.25)
-      '@csstools/postcss-relative-color-syntax': 2.0.0(postcss@8.4.25)
-      '@csstools/postcss-scope-pseudo-class': 3.0.0(postcss@8.4.25)
-      '@csstools/postcss-stepped-value-functions': 3.0.0(postcss@8.4.25)
-      '@csstools/postcss-text-decoration-shorthand': 3.0.0(postcss@8.4.25)
-      '@csstools/postcss-trigonometric-functions': 3.0.0(postcss@8.4.25)
-      '@csstools/postcss-unset-value': 3.0.0(postcss@8.4.25)
-      autoprefixer: 10.4.14(postcss@8.4.25)
+      '@csstools/postcss-cascade-layers': 4.0.0(postcss@8.4.26)
+      '@csstools/postcss-color-function': 2.2.3(postcss@8.4.26)
+      '@csstools/postcss-color-mix-function': 1.0.3(postcss@8.4.26)
+      '@csstools/postcss-font-format-keywords': 3.0.0(postcss@8.4.26)
+      '@csstools/postcss-gradients-interpolation-method': 4.0.0(postcss@8.4.26)
+      '@csstools/postcss-hwb-function': 3.0.0(postcss@8.4.26)
+      '@csstools/postcss-ic-unit': 3.0.0(postcss@8.4.26)
+      '@csstools/postcss-is-pseudo-class': 4.0.0(postcss@8.4.26)
+      '@csstools/postcss-logical-float-and-clear': 2.0.0(postcss@8.4.26)
+      '@csstools/postcss-logical-resize': 2.0.0(postcss@8.4.26)
+      '@csstools/postcss-logical-viewport-units': 2.0.0(postcss@8.4.26)
+      '@csstools/postcss-media-minmax': 1.0.5(postcss@8.4.26)
+      '@csstools/postcss-media-queries-aspect-ratio-number-values': 2.0.0(postcss@8.4.26)
+      '@csstools/postcss-nested-calc': 3.0.0(postcss@8.4.26)
+      '@csstools/postcss-normalize-display-values': 3.0.0(postcss@8.4.26)
+      '@csstools/postcss-oklab-function': 3.0.0(postcss@8.4.26)
+      '@csstools/postcss-progressive-custom-properties': 3.0.0(postcss@8.4.26)
+      '@csstools/postcss-relative-color-syntax': 2.0.0(postcss@8.4.26)
+      '@csstools/postcss-scope-pseudo-class': 3.0.0(postcss@8.4.26)
+      '@csstools/postcss-stepped-value-functions': 3.0.0(postcss@8.4.26)
+      '@csstools/postcss-text-decoration-shorthand': 3.0.0(postcss@8.4.26)
+      '@csstools/postcss-trigonometric-functions': 3.0.0(postcss@8.4.26)
+      '@csstools/postcss-unset-value': 3.0.0(postcss@8.4.26)
+      autoprefixer: 10.4.14(postcss@8.4.26)
       browserslist: 4.21.9
-      css-blank-pseudo: 6.0.0(postcss@8.4.25)
-      css-has-pseudo: 6.0.0(postcss@8.4.25)
-      css-prefers-color-scheme: 9.0.0(postcss@8.4.25)
+      css-blank-pseudo: 6.0.0(postcss@8.4.26)
+      css-has-pseudo: 6.0.0(postcss@8.4.26)
+      css-prefers-color-scheme: 9.0.0(postcss@8.4.26)
       cssdb: 7.6.0
-      postcss: 8.4.25
-      postcss-attribute-case-insensitive: 6.0.2(postcss@8.4.25)
-      postcss-clamp: 4.1.0(postcss@8.4.25)
-      postcss-color-functional-notation: 6.0.0(postcss@8.4.25)
-      postcss-color-hex-alpha: 9.0.2(postcss@8.4.25)
-      postcss-color-rebeccapurple: 9.0.0(postcss@8.4.25)
-      postcss-custom-media: 10.0.0(postcss@8.4.25)
-      postcss-custom-properties: 13.2.1(postcss@8.4.25)
-      postcss-custom-selectors: 7.1.4(postcss@8.4.25)
-      postcss-dir-pseudo-class: 8.0.0(postcss@8.4.25)
-      postcss-double-position-gradients: 5.0.0(postcss@8.4.25)
-      postcss-focus-visible: 9.0.0(postcss@8.4.25)
-      postcss-focus-within: 8.0.0(postcss@8.4.25)
-      postcss-font-variant: 5.0.0(postcss@8.4.25)
-      postcss-gap-properties: 5.0.0(postcss@8.4.25)
-      postcss-image-set-function: 6.0.0(postcss@8.4.25)
-      postcss-initial: 4.0.1(postcss@8.4.25)
-      postcss-lab-function: 6.0.0(postcss@8.4.25)
-      postcss-logical: 7.0.0(postcss@8.4.25)
-      postcss-nesting: 12.0.0(postcss@8.4.25)
-      postcss-opacity-percentage: 2.0.0(postcss@8.4.25)
-      postcss-overflow-shorthand: 5.0.0(postcss@8.4.25)
-      postcss-page-break: 3.0.4(postcss@8.4.25)
-      postcss-place: 9.0.0(postcss@8.4.25)
-      postcss-pseudo-class-any-link: 9.0.0(postcss@8.4.25)
-      postcss-replace-overflow-wrap: 4.0.0(postcss@8.4.25)
-      postcss-selector-not: 7.0.1(postcss@8.4.25)
+      postcss: 8.4.26
+      postcss-attribute-case-insensitive: 6.0.2(postcss@8.4.26)
+      postcss-clamp: 4.1.0(postcss@8.4.26)
+      postcss-color-functional-notation: 6.0.0(postcss@8.4.26)
+      postcss-color-hex-alpha: 9.0.2(postcss@8.4.26)
+      postcss-color-rebeccapurple: 9.0.0(postcss@8.4.26)
+      postcss-custom-media: 10.0.0(postcss@8.4.26)
+      postcss-custom-properties: 13.2.1(postcss@8.4.26)
+      postcss-custom-selectors: 7.1.4(postcss@8.4.26)
+      postcss-dir-pseudo-class: 8.0.0(postcss@8.4.26)
+      postcss-double-position-gradients: 5.0.0(postcss@8.4.26)
+      postcss-focus-visible: 9.0.0(postcss@8.4.26)
+      postcss-focus-within: 8.0.0(postcss@8.4.26)
+      postcss-font-variant: 5.0.0(postcss@8.4.26)
+      postcss-gap-properties: 5.0.0(postcss@8.4.26)
+      postcss-image-set-function: 6.0.0(postcss@8.4.26)
+      postcss-initial: 4.0.1(postcss@8.4.26)
+      postcss-lab-function: 6.0.0(postcss@8.4.26)
+      postcss-logical: 7.0.0(postcss@8.4.26)
+      postcss-nesting: 12.0.0(postcss@8.4.26)
+      postcss-opacity-percentage: 2.0.0(postcss@8.4.26)
+      postcss-overflow-shorthand: 5.0.0(postcss@8.4.26)
+      postcss-page-break: 3.0.4(postcss@8.4.26)
+      postcss-place: 9.0.0(postcss@8.4.26)
+      postcss-pseudo-class-any-link: 9.0.0(postcss@8.4.26)
+      postcss-replace-overflow-wrap: 4.0.0(postcss@8.4.26)
+      postcss-selector-not: 7.0.1(postcss@8.4.26)
       postcss-value-parser: 4.2.0
     dev: true
 
-  /postcss-pseudo-class-any-link@9.0.0(postcss@8.4.25):
+  /postcss-pseudo-class-any-link@9.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-QNCYIL98VKFKY6HGDEJpF6+K/sg9bxcUYnOmNHJxZS5wsFDFaVoPeG68WAuhsqwbIBSo/b9fjEnTwY2mTSD+uA==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-selector-parser: 6.0.13
     dev: true
 
-  /postcss-replace-overflow-wrap@4.0.0(postcss@8.4.25):
+  /postcss-replace-overflow-wrap@4.0.0(postcss@8.4.26):
     resolution: {integrity: sha512-KmF7SBPphT4gPPcKZc7aDkweHiKEEO8cla/GjcBK+ckKxiZslIu3C4GCRW3DNfL0o7yW7kMQu9xlZ1kXRXLXtw==}
     peerDependencies:
       postcss: ^8.0.3
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
     dev: true
 
-  /postcss-selector-not@7.0.1(postcss@8.4.25):
+  /postcss-selector-not@7.0.1(postcss@8.4.26):
     resolution: {integrity: sha512-1zT5C27b/zeJhchN7fP0kBr16Cc61mu7Si9uWWLoA3Px/D9tIJPKchJCkUH3tPO5D0pCFmGeApAv8XpXBQJ8SQ==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       postcss: ^8.4
     dependencies:
-      postcss: 8.4.25
+      postcss: 8.4.26
       postcss-selector-parser: 6.0.13
     dev: true
 
@@ -8859,8 +8859,8 @@ packages:
       source-map: 0.6.1
     dev: true
 
-  /postcss@8.4.25:
-    resolution: {integrity: sha512-7taJ/8t2av0Z+sQEvNzCkpDynl0tX3uJMCODi6nT3PfASC7dYCWV9aQ+uiCf+KBD4SEFcu+GvJdGdwzQ6OSjCw==}
+  /postcss@8.4.26:
+    resolution: {integrity: sha512-jrXHFF8iTloAenySjM/ob3gSj7pCu0Ji49hnjqzsgSRa50hkWCKD0HQ+gMNJkW38jBI68MpAAg7ZWwHwX8NMMw==}
     engines: {node: ^10 || ^12 || >=14}
     dependencies:
       nanoid: 3.3.6
@@ -10265,7 +10265,7 @@ packages:
     dependencies:
       '@types/node': 18.16.19
       esbuild: 0.18.12
-      postcss: 8.4.25
+      postcss: 8.4.26
       rollup: 3.26.2
       sass: 1.63.6
       terser: 5.10.0(acorn@7.4.1)
@@ -10273,7 +10273,7 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vitest@0.33.0(happy-dom@10.2.0)(sass@1.63.6)(terser@5.10.0):
+  /vitest@0.33.0(happy-dom@10.3.2)(sass@1.63.6)(terser@5.10.0):
     resolution: {integrity: sha512-1CxaugJ50xskkQ0e969R/hW47za4YXDUfWJDxip1hwbnhUjYolpfUn2AMOulqG/Dtd9WYAtkHmM/m3yKVrEejQ==}
     engines: {node: '>=v14.18.0'}
     hasBin: true
@@ -10317,7 +10317,7 @@ packages:
       cac: 6.7.14
       chai: 4.3.7
       debug: 4.3.4(supports-color@8.1.1)
-      happy-dom: 10.2.0
+      happy-dom: 10.3.2
       local-pkg: 0.4.3
       magic-string: 0.30.1
       pathe: 1.1.1
