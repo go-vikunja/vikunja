@@ -87,7 +87,7 @@
         "defaultProject": "デフォルトのプロジェクト",
         "timezone": "タイムゾーン",
         "overdueTasksRemindersTime": "期限切れタスクのリマインダー送信時間",
-        "filterUsedOnOverview": "概要ページに使用されるフィルターを保存しました"
+        "filterUsedOnOverview": "概要ページに使用される絞り込み条件を保存しました"
       },
       "totp": {
         "title": "2要素認証",
@@ -329,25 +329,25 @@
     "title": "絞り込み",
     "clear": "絞り込みの解除",
     "attributes": {
-      "title": "Title",
-      "titlePlaceholder": "The saved filter title goes here…",
+      "title": "条件名",
+      "titlePlaceholder": "条件名を入力…",
       "description": "説明",
-      "descriptionPlaceholder": "The description goes here…",
-      "includeNulls": "Include Tasks which don't have a value set",
+      "descriptionPlaceholder": "説明を入力…",
+      "includeNulls": "値を設定していないタスクを含める",
       "requireAll": "Require all filters to be true for a task to show up",
       "showDoneTasks": "完了したタスクを表示",
       "sortAlphabetically": "アルファベット順に並べ替える",
-      "enablePriority": "優先度によるフィルターの有効化",
-      "enablePercentDone": "進捗状況によるフィルターの有効化",
+      "enablePriority": "優先度による絞り込みを有効化",
+      "enablePercentDone": "進捗状況による絞り込みを有効化",
       "dueDateRange": "期日の範囲",
       "startDateRange": "開始日の範囲",
       "endDateRange": "開始日の範囲",
       "reminderRange": "リマインダーの範囲"
     },
     "create": {
-      "title": "New Saved Filter",
+      "title": "新しい絞り込み条件の作成",
       "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed.",
-      "action": "Create new saved filter",
+      "action": "新しい絞り込み条件を作成",
       "titleRequired": "Please provide a title for the filter."
     },
     "delete": {
@@ -618,10 +618,10 @@
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",
-      "subscribedProject": "You are currently subscribed to this project and will receive notifications for changes.",
-      "notSubscribedProject": "You are not subscribed to this project and won't receive notifications for changes.",
-      "subscribedTask": "You are currently subscribed to this task and will receive notifications for changes.",
-      "notSubscribedTask": "You are not subscribed to this task and won't receive notifications for changes.",
+      "subscribedProject": "現在このプロジェクトを購読しており、変更通知が届きます。",
+      "notSubscribedProject": "このプロジェクトを購読していないため、変更通知は届きません。",
+      "subscribedTask": "現在このタスクを購読しており、変更通知が届きます。",
+      "notSubscribedTask": "このタスクを購読していないため、変更通知は届きません。",
       "subscribe": "購読",
       "unsubscribe": "購読解除",
       "subscribeSuccessProject": "You are now subscribed to this project",
@@ -874,7 +874,7 @@
     "setBackground": "背景画像の設定",
     "share": "共有",
     "newProject": "新しいプロジェクトの作成",
-    "createProject": "Create project"
+    "createProject": "プロジェクトの作成"
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -891,9 +891,9 @@
     "contact": "contact us"
   },
   "notification": {
-    "title": "Notifications",
-    "none": "You don't have any notifications. Have a nice day!",
-    "explainer": "Notifications will appear here when actions projects or tasks you subscribed to happen."
+    "title": "通知",
+    "none": "通知はありません。それではよい一日を！",
+    "explainer": "購読しているプロジェクトやタスクが変更されると通知されます。"
   },
   "quickActions": {
     "commands": "コマンド",
@@ -906,7 +906,7 @@
     "newTask": "新しいタスク名を入力…",
     "newTeam": "新しいチーム名を入力…",
     "createTask": "現在のプロジェクト ({title}) にタスクを作成",
-    "createProject": "Create a project",
+    "createProject": "プロジェクトを作成",
     "cmds": {
       "newTask": "新しいタスクの作成",
       "newProject": "新しいプロジェクトの作成",
