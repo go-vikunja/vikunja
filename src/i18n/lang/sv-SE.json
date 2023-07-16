@@ -186,7 +186,7 @@
     },
     "archive": {
       "title": "Arkivera \"{project}\"",
-      "archive": "Archive this project",
+      "archive": "Arkivera detta projekt",
       "unarchive": "Un-Archive this project",
       "unarchiveText": "You will be able to create new tasks or edit it.",
       "archiveText": "You won't be able to edit this project or create new tasks until you un-archive it.",
@@ -361,9 +361,9 @@
     }
   },
   "migrate": {
-    "title": "Import from other services",
+    "title": "Importera från andra tjänster",
     "titleService": "Importera din data från {name} till Vikunja",
-    "import": "Import your data into Vikunja",
+    "import": "Importera din data till Vikunja",
     "description": "Click on the logo of one of the third-party services below to get started.",
     "descriptionDo": "Vikunja will import all lists, tasks, notes, reminders and files you have access to.",
     "authorize": "To authorize Vikunja to access your {name} Account, click the button below.",
@@ -409,7 +409,7 @@
   },
   "navigation": {
     "overview": "Översikt",
-    "upcoming": "Upcoming",
+    "upcoming": "Kommande",
     "settings": "Inställningar",
     "imprint": "Imprint",
     "privacy": "Integritetspolicy"
@@ -887,7 +887,7 @@
   },
   "loadingError": {
     "failed": "Loading failed, please {0}. If the error persists, please {1}.",
-    "tryAgain": "try again",
+    "tryAgain": "försök igen",
     "contact": "contact us"
   },
   "notification": {
@@ -899,7 +899,7 @@
     "commands": "Kommandon",
     "placeholder": "Type a command or search…",
     "hint": "You can use {project} to limit the search to a project. Combine {project} or {label} (labels) with a search query to search for a task with these labels or on that project. Use {assignee} to only search for teams.",
-    "tasks": "Tasks",
+    "tasks": "Uppgifter",
     "projects": "Projekt",
     "teams": "Teams",
     "newProject": "Enter the title of the new project…",
@@ -910,7 +910,7 @@
     "cmds": {
       "newTask": "New task",
       "newProject": "Nytt projekt",
-      "newTeam": "New team"
+      "newTeam": "Nytt team"
     }
   },
   "date": {
