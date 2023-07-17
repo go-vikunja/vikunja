@@ -56,8 +56,8 @@ dependencies:
     specifier: 4.1.2
     version: 4.1.2
   codemirror:
-    specifier: 5.65.13
-    version: 5.65.13
+    specifier: 5.65.14
+    version: 5.65.14
   date-fns:
     specifier: 2.30.0
     version: 2.30.0
@@ -5491,8 +5491,8 @@ packages:
       typo-js: 1.2.1
     dev: false
 
-  /codemirror@5.65.13:
-    resolution: {integrity: sha512-SVWEzKXmbHmTQQWaz03Shrh4nybG0wXx2MEu3FO4ezbPW8IbnZEd5iGHGEffSUaitKYa3i+pHpBsSvw8sPHtzg==}
+  /codemirror@5.65.14:
+    resolution: {integrity: sha512-VSNugIBDGt0OU9gDjeVr6fNkoFQznrWEUdAApMlXQNbfE8gGO19776D6MwSqF/V/w/sDwonsQ0z7KmmI9guScg==}
     dev: false
 
   /color-convert@1.9.3:
@@ -6084,7 +6084,7 @@ packages:
     dependencies:
       '@types/codemirror': 5.60.8
       '@types/marked': 4.3.1
-      codemirror: 5.65.13
+      codemirror: 5.65.14
       codemirror-spell-checker: 1.1.2
       marked: 4.3.0
     dev: false
