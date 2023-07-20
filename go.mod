@@ -74,7 +74,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	src.techknowlogick.com/xgo v1.7.1-0.20230711181658-617d3b65dd40
 	src.techknowlogick.com/xormigrate v1.5.0
-	xorm.io/builder v0.3.12
+	xorm.io/builder v0.3.13
 	xorm.io/xorm v1.3.2
 )
 
