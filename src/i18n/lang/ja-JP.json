@@ -617,17 +617,17 @@
       "updated": "Updated"
     },
     "subscription": {
-      "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",
+      "subscribedTaskThroughParentProject": "現在プロジェクトを通して購読しているため、ここでこのタスクの購読を解除することはできません。",
       "subscribedProject": "現在このプロジェクトを購読しており、変更通知が届きます。",
       "notSubscribedProject": "このプロジェクトを購読していないため、変更通知は届きません。",
       "subscribedTask": "現在このタスクを購読しており、変更通知が届きます。",
       "notSubscribedTask": "このタスクを購読していないため、変更通知は届きません。",
       "subscribe": "購読",
       "unsubscribe": "購読解除",
-      "subscribeSuccessProject": "You are now subscribed to this project",
-      "unsubscribeSuccessProject": "You are now unsubscribed to this project",
-      "subscribeSuccessTask": "You are now subscribed to this task",
-      "unsubscribeSuccessTask": "You are now unsubscribed to this task"
+      "subscribeSuccessProject": "プロジェクトを購読しています",
+      "unsubscribeSuccessProject": "プロジェクトの購読を解除しました",
+      "subscribeSuccessTask": "このタスクを購読しています",
+      "unsubscribeSuccessTask": "このタスクの購読を解除しました"
     },
     "attachment": {
       "title": "添付ファイル",
