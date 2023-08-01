@@ -31,7 +31,7 @@ require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/dustinkirkland/golang-petname v0.0.0-20230626224747-e794b9370d49
 	github.com/gabriel-vasile/mimetype v1.4.2
-	github.com/getsentry/sentry-go v0.22.0
+	github.com/getsentry/sentry-go v0.23.0
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/go-testfixtures/testfixtures/v3 v3.9.0
 	github.com/gocarina/gocsv v0.0.0-20230616125104-99d496ca653d
