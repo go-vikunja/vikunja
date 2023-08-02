@@ -45,9 +45,9 @@
     "story:preview": "histoire preview"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "6.4.0",
-    "@fortawesome/free-regular-svg-icons": "6.4.0",
-    "@fortawesome/free-solid-svg-icons": "6.4.0",
+    "@fortawesome/fontawesome-svg-core": "6.4.2",
+    "@fortawesome/free-regular-svg-icons": "6.4.2",
+    "@fortawesome/free-solid-svg-icons": "6.4.2",
     "@fortawesome/vue-fontawesome": "3.0.3",
     "@github/hotkey": "2.0.1",
     "@infectoone/vue-ganttastic": "2.1.4",
