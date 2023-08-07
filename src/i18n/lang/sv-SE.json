@@ -54,7 +54,7 @@
       "passwordRequired": "Vänligen ange ett lösenord.",
       "showPassword": "Show the password",
       "hidePassword": "Hide the password",
-      "noAccountYet": "Don't have an account yet?",
+      "noAccountYet": "Har du inget konto än?",
       "alreadyHaveAnAccount": "Har du redan ett konto?",
       "remember": "Stay logged in"
     },
@@ -64,7 +64,7 @@
       "newPassword": "Nytt lösenord",
       "newPasswordConfirm": "New Password Confirmation",
       "currentPassword": "Nuvarande lösenord",
-      "currentPasswordPlaceholder": "Your current password",
+      "currentPasswordPlaceholder": "Ditt nuvarande lösenord",
       "passwordsDontMatch": "The new password and its confirmation don't match.",
       "passwordUpdateSuccess": "The password was successfully updated.",
       "updateEmailTitle": "Uppdatera din e-postadress",
@@ -196,7 +196,7 @@
       "title": "Set project background",
       "remove": "Remove Background",
       "upload": "Choose a background from your pc",
-      "searchPlaceholder": "Search for a background…",
+      "searchPlaceholder": "Sök efter en bakgrund…",
       "poweredByUnsplash": "Powered by Unsplash",
       "loadMore": "Load more photos",
       "success": "The background has been set successfully!",
@@ -661,7 +661,7 @@
       "title": "Defer due date",
       "1day": "1 dag",
       "3days": "3 dagar",
-      "1week": "1 week"
+      "1week": "1 vecka"
     },
     "description": {
       "placeholder": "Click here to enter a description…",
@@ -732,8 +732,8 @@
     },
     "repeat": {
       "everyDay": "Varje dag",
-      "everyWeek": "Every Week",
-      "everyMonth": "Every Month",
+      "everyWeek": "Varje vecka",
+      "everyMonth": "Varje månad",
       "mode": "Repeat mode",
       "monthly": "Monthly",
       "fromCurrentDate": "From Current Date",
@@ -762,7 +762,7 @@
       "project2": "This will return an error if the project does not exist.",
       "project3": "To use spaces, simply add a \" or ' around the project name.",
       "project4": "For example: {prefix}\"Project with spaces\".",
-      "dateAndTime": "Date and time",
+      "dateAndTime": "Datum och tid",
       "date": "Any date will be used as the due date of the new task. You can use dates in any of these formats:",
       "dateWeekday": "any weekday, will use the next date with that date",
       "dateCurrentYear": "will use the current year",
@@ -790,7 +790,7 @@
       "userAddedSuccess": "The team member was successfully added.",
       "madeMember": "The team member was successfully made member.",
       "madeAdmin": "The team member was successfully made admin.",
-      "mustSelectUser": "Please select a user.",
+      "mustSelectUser": "Vänligen välj en användare.",
       "delete": {
         "header": "Delete the team",
         "text1": "Are you sure you want to delete this team and all of its members?",
@@ -888,7 +888,7 @@
   "loadingError": {
     "failed": "Loading failed, please {0}. If the error persists, please {1}.",
     "tryAgain": "försök igen",
-    "contact": "contact us"
+    "contact": "kontakta oss"
   },
   "notification": {
     "title": "Notifications",
