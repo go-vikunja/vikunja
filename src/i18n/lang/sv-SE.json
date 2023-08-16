@@ -78,7 +78,7 @@
         "emailReminders": "Send me reminders for tasks via Email",
         "overdueReminders": "Send me a summary of my undone overdue tasks every day",
         "discoverableByName": "Allow other users to add me as a member to teams or projects when they search for my name",
-        "discoverableByEmail": "Allow other users to add me as a member to teams or projects when they search for my full email",
+        "discoverableByEmail": "Tillåt andra användare att lägga till mig som medlem i team eller projekt när de söker efter min fullständiga e-postadress",
         "playSoundWhenDone": "Play a sound when marking tasks as done",
         "weekStart": "Week starts on",
         "weekStartSunday": "Söndag",
@@ -242,7 +242,7 @@
         "namePlaceholder": "t. ex. Lorem Ipsum",
         "nameExplanation": "All actions done by this link share will show up with the name.",
         "password": "Lösenord (valfritt)",
-        "passwordExplanation": "When signing in, the user will be required to enter this password.",
+        "passwordExplanation": "Vid inloggning kommer användaren att bli ombedd att ange detta lösenord.",
         "noName": "No name set",
         "remove": "Remove a link share",
         "removeText": "Are you sure you want to remove this link share? It will no longer be possible to access this project with this link share. This cannot be undone!",
@@ -255,7 +255,7 @@
         "typeUser": "användare | användare",
         "typeTeam": "team | teams",
         "shared": "Shared with these {type}",
-        "you": "You",
+        "you": "Du",
         "notShared": "Not shared with any {type} yet.",
         "removeHeader": "Remove a {type} from the {sharable}",
         "removeText": "Are you sure you want to remove this {sharable} from the {type}? This cannot be undone!",
@@ -380,7 +380,7 @@
     "manage": "Hantera etiketter",
     "description": "Click on a label to edit it. You can edit all labels you created, you can use all labels which are associated with a task to whose project you have access.",
     "newCTA": "Du har för närvarande inga etiketter.",
-    "search": "Type to search for a label…",
+    "search": "Skriv för att söka efter en etikett…",
     "create": {
       "header": "Ny etikett",
       "title": "Skapa ny etikett",
@@ -450,8 +450,8 @@
   "input": {
     "resetColor": "Återställ färg",
     "datepicker": {
-      "today": "Idag",
-      "tomorrow": "Imorgon",
+      "today": "I dag",
+      "tomorrow": "I morgon",
       "nextMonday": "Nästa måndag",
       "thisWeekend": "This Weekend",
       "laterThisWeek": "Later This Week",
@@ -490,13 +490,13 @@
       "from": "Från",
       "fromto": "{from} till {to}",
       "ranges": {
-        "today": "Idag",
+        "today": "I dag",
         "thisWeek": "Denna vecka",
         "restOfThisWeek": "The Rest of This Week",
         "nextWeek": "Nästa vecka",
         "next7Days": "Next 7 Days",
-        "lastWeek": "Last Week",
-        "thisMonth": "This Month",
+        "lastWeek": "Förra veckan",
+        "thisMonth": "Denna månad",
         "restOfThisMonth": "The Rest of This Month",
         "nextMonth": "Nästa månad",
         "next30Days": "Next 30 Days",
@@ -529,7 +529,7 @@
       "examples": {
         "now": "Just nu",
         "in24h": "In 24h",
-        "today": "Idag kl. 00:00",
+        "today": "I dag kl. 00:00",
         "beginningOfThisWeek": "The beginning of this week at 00:00",
         "endOfThisWeek": "The end of this week",
         "in30Days": "Om 30 dagar",
@@ -638,7 +638,7 @@
       "delete": "Radera bilaga",
       "deleteTooltip": "Delete this attachment",
       "deleteText1": "Are you sure you want to delete the attachment {filename}?",
-      "copyUrl": "Copy URL",
+      "copyUrl": "Kopiera URL",
       "copyUrlTooltip": "Copy the url of this attachment for usage in text",
       "setAsCover": "Make cover",
       "unsetAsCover": "Remove cover",
@@ -650,10 +650,10 @@
       "loading": "Laddar kommentarer…",
       "edited": "edited {date}",
       "creating": "Creating comment…",
-      "placeholder": "Add your comment…",
+      "placeholder": "Skriv din kommentar…",
       "comment": "Comment",
       "delete": "Delete this comment",
-      "deleteText1": "Are you sure you want to delete this comment?",
+      "deleteText1": "Är du säker på att du vill radera denna kommentar?",
       "deleteSuccess": "The comment was deleted successfully.",
       "addedSuccess": "The comment was added successfully."
     },
@@ -664,7 +664,7 @@
       "1week": "1 vecka"
     },
     "description": {
-      "placeholder": "Click here to enter a description…",
+      "placeholder": "Klicka här för att ange en beskrivning…",
       "empty": "No description available yet."
     },
     "assignee": {
@@ -674,8 +674,8 @@
       "unassignSuccess": "The user has been unassigned successfully."
     },
     "label": {
-      "placeholder": "Type to add a new label…",
-      "createPlaceholder": "Add this as new label",
+      "placeholder": "Skriv för att lägga till en ny etikett…",
+      "createPlaceholder": "Lägg till som ny etikett",
       "addSuccess": "The label has been added successfully.",
       "createSuccess": "The label has been created successfully.",
       "removeSuccess": "The label has been removed successfully.",
@@ -722,13 +722,13 @@
     "reminder": {
       "before": "{amount} {unit} before {type}",
       "after": "{amount} {unit} after {type}",
-      "beforeShort": "before",
-      "afterShort": "after",
+      "beforeShort": "före",
+      "afterShort": "efter",
       "onDueDate": "On the due date",
       "onStartDate": "On the start date",
       "onEndDate": "On the end date",
       "custom": "Custom",
-      "dateAndTime": "Date and time"
+      "dateAndTime": "Datum och tid"
     },
     "repeat": {
       "everyDay": "Varje dag",
@@ -782,7 +782,7 @@
     "edit": {
       "title": "Edit Team \"{team}\"",
       "members": "Team Members",
-      "search": "Type to search a user…",
+      "search": "Skriv för att söka efter en användare…",
       "addUser": "Add to team",
       "makeMember": "Make Member",
       "makeAdmin": "Make Admin",
@@ -841,7 +841,7 @@
       "move": "Move this task to another project",
       "reminder": "Manage reminders of this task",
       "description": "Toggle editing of the task description",
-      "delete": "Delete this task",
+      "delete": "Radera denna uppgift",
       "priority": "Change the priority of this task",
       "favorite": "Mark this task as favorite / unfavorite"
     },
@@ -996,13 +996,13 @@
   },
   "time": {
     "units": {
-      "seconds": "second|seconds",
-      "minutes": "minute|minutes",
-      "hours": "hour|hours",
-      "days": "day|days",
-      "weeks": "week|weeks",
-      "months": "month|months",
-      "years": "year|years"
+      "seconds": "sekund|sekunder",
+      "minutes": "minut|minuter",
+      "hours": "timme|timmar",
+      "days": "dag|dagar",
+      "weeks": "vecka|veckor",
+      "months": "månad|månader",
+      "years": "år|år"
     }
   }
 }
