@@ -125,3 +125,23 @@ Put the following config in `cat /etc/apache2/sites-available/vikunja.conf`:
 **Note:** The apache modules `proxy`, `proxy_http` and `rewrite` must be enabled for this.
 
 For more details see the [frontend apache configuration]({{< ref "install-frontend.md#apache">}}).
+
+## Caddy
+
+{{< highlight conf >}}
+vikunja.domainname.tld {
+	@paths {
+		path /api/* /.well-known/* /dav/*
+	}
+	handle @paths {
+		reverse_proxy 127.0.0.1:3456
+	}
+
+	handle {
+		encode zstd gzip
+		root * /var/www/html/vikunja
+		try_files {path} index.html
+		file_server
+	}
+}
+{{< /highlight >}}
