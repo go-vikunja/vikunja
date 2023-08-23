@@ -58,4 +58,17 @@ func TestDeleteUser(t *testing.T) {
 		assert.NoError(t, err)
 		// No assertions for deleted projects since that user doesn't have any
 	})
+	t.Run("user with a default project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+
+		u := &user.User{ID: 16}
+		err := DeleteUser(s, u)
+
+		assert.NoError(t, err)
+		db.AssertMissing(t, "users", map[string]interface{}{"id": u.ID})
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 37}) // only user16 had access to this project, and it was their default
+	})
 }

@@ -399,7 +399,7 @@ func TestListUsers(t *testing.T) {
 
 		all, err := ListAllUsers(s)
 		assert.NoError(t, err)
-		assert.Len(t, all, 15)
+		assert.Len(t, all, 16)
 	})
 	t.Run("no search term", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -512,7 +512,7 @@ func TestListUsers(t *testing.T) {
 			MatchFuzzily: true,
 		})
 		assert.NoError(t, err)
-		assert.Len(t, all, 15)
+		assert.Len(t, all, 16)
 	})
 }
 

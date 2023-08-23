@@ -960,7 +960,8 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
-	if isDefaultProject {
+	// Owners should be allowed to delete the default project
+	if isDefaultProject && p.OwnerID != a.GetID() {
 		return &ErrCannotDeleteDefaultProject{ProjectID: p.ID}
 	}
 
@@ -986,6 +987,16 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 	err = fullProject.DeleteBackgroundFileIfExists()
 	if err != nil {
 		return
+	}
+
+	// If we're deleting a default project, remove it as default
+	if isDefaultProject {
+		_, err = s.Where("default_project_id = ?", p.ID).
+			Cols("default_project_id").
+			Update(&user.User{DefaultProjectID: 0})
+		if err != nil {
+			return
+		}
 	}
 
 	// Delete the project
