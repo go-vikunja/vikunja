@@ -549,7 +549,9 @@ func UpdateUserPassword(s *xorm.Session, user *User, newPassword string) (err er
 	theUser.Password = hashed
 
 	// Update it
-	_, err = s.ID(user.ID).Update(theUser)
+	_, err = s.
+		Where("id = ?", user.ID).
+		Update(&User{Password: hashed})
 	if err != nil {
 		return err
 	}
