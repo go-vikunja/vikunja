@@ -36,8 +36,8 @@ if (apiUrlFromStorage !== null) {
 }
 
 // Make sure the api url does not contain a / at the end
-if (window.API_URL.slice(window.API_URL.length - 1, window.API_URL.length) === '/') {
-	window.API_URL = window.API_URL.slice(0, window.API_URL.length - 1)
+if (window.API_URL.endsWith('/')) {
+	window.API_URL = window.API_URL.slice(0, -1);
 }
 
 // directives
