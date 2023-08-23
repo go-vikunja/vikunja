@@ -680,7 +680,7 @@ func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err er
 	return nil
 }
 
-func CreateProject(s *xorm.Session, project *Project, auth web.Auth) (err error) {
+func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBacklogBucket bool) (err error) {
 	err = project.CheckIsArchived(s)
 	if err != nil {
 		return err
@@ -715,14 +715,16 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth) (err error)
 		}
 	}
 
-	// Create a new first bucket for this project
-	b := &Bucket{
-		ProjectID: project.ID,
-		Title:     "Backlog",
-	}
-	err = b.Create(s, auth)
-	if err != nil {
-		return
+	if createBacklogBucket {
+		// Create a new first bucket for this project
+		b := &Bucket{
+			ProjectID: project.ID,
+			Title:     "Backlog",
+		}
+		err = b.Create(s, auth)
+		if err != nil {
+			return
+		}
 	}
 
 	return events.Dispatch(&ProjectCreatedEvent{
@@ -928,7 +930,7 @@ func updateProjectByTaskID(s *xorm.Session, taskID int64) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects [put]
 func (p *Project) Create(s *xorm.Session, a web.Auth) (err error) {
-	err = CreateProject(s, p, a)
+	err = CreateProject(s, p, a, true)
 	if err != nil {
 		return
 	}

@@ -51,6 +51,9 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				"description":       project.Description,
 				"parent_project_id": 0,
 			}, false)
+			db.AssertExists(t, "buckets", map[string]interface{}{
+				"project_id": project.ID,
+			}, false)
 		})
 		t.Run("nonexistant parent project", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)

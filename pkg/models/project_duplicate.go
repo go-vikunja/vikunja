@@ -81,7 +81,7 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 	pd.Project.ParentProjectID = pd.ParentProjectID
 	// Set the owner to the current user
 	pd.Project.OwnerID = doer.GetID()
-	if err := CreateProject(s, pd.Project, doer); err != nil {
+	if err := CreateProject(s, pd.Project, doer, false); err != nil {
 		// If there is no available unique project identifier, just reset it.
 		if IsErrProjectIdentifierIsNotUnique(err) {
 			pd.Project.Identifier = ""
