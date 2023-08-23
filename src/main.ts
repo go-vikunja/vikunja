@@ -23,6 +23,7 @@ declare global {
 		SENTRY_DSN: string;
 		PROJECT_INFINITE_NESTING_ENABLED: boolean;
 		ALLOW_ICON_CHANGES: boolean;
+		CUSTOM_LOGO_URL?: string;
 	}
 }
 
