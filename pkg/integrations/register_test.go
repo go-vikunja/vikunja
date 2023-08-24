@@ -29,7 +29,7 @@ func TestRegister(t *testing.T) {
 	t.Run("normal register", func(t *testing.T) {
 		rec, err := newTestRequest(t, http.MethodPost, apiv1.RegisterUser, `{
   "username": "newUser",
-  "password": "1234",
+  "password": "12345678",
   "email": "email@example.com"
 }`, nil, nil)
 		assert.NoError(t, err)
@@ -43,7 +43,7 @@ func TestRegister(t *testing.T) {
 	t.Run("Empty username", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.RegisterUser, `{
   "username": "",
-  "password": "1234",
+  "password": "12345678",
   "email": "email@example.com"
 }`, nil, nil)
 		assert.Error(t, err)
@@ -61,7 +61,7 @@ func TestRegister(t *testing.T) {
 	t.Run("Empty email", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.RegisterUser, `{
   "username": "newUser",
-  "password": "1234",
+  "password": "12345678",
   "email": ""
 }`, nil, nil)
 		assert.Error(t, err)
@@ -70,7 +70,7 @@ func TestRegister(t *testing.T) {
 	t.Run("Already existing username", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.RegisterUser, `{
   "username": "user1",
-  "password": "1234",
+  "password": "12345678",
   "email": "email@example.com"
 }`, nil, nil)
 		assert.Error(t, err)
@@ -79,7 +79,7 @@ func TestRegister(t *testing.T) {
 	t.Run("Already existing email", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.RegisterUser, `{
   "username": "newUser",
-  "password": "1234",
+  "password": "12345678",
   "email": "user1@example.com"
 }`, nil, nil)
 		assert.Error(t, err)

@@ -183,8 +183,8 @@ func GetFromAuth(a web.Auth) (*User, error) {
 type APIUserPassword struct {
 	// The unique, numeric id of this user.
 	ID int64 `json:"id"`
-	// The username of the username. Is always unique.
-	Username string `json:"username" valid:"length(3|250)" minLength:"3" maxLength:"250"`
+	// The user's username. Cannot contain anything that looks like an url or whitespaces.
+	Username string `json:"username" valid:"length(3|250),username" minLength:"3" maxLength:"250"`
 	// The user's password in clear text. Only used when registering the user.
 	Password string `json:"password" valid:"length(8|250)" minLength:"8" maxLength:"250"`
 	// The user's email address

@@ -17,6 +17,7 @@
 package v1
 
 import (
+	"errors"
 	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
@@ -44,11 +45,19 @@ func RegisterUser(c echo.Context) error {
 		return echo.ErrNotFound
 	}
 	// Check for Request Content
-	var datUser *user.APIUserPassword
-	if err := c.Bind(&datUser); err != nil {
+	var userIn *user.APIUserPassword
+	if err := c.Bind(&userIn); err != nil {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "No or invalid user model provided."})
 	}
-	if datUser == nil {
+	if err := c.Validate(userIn); err != nil {
+		e := models.ValidationHTTPError{}
+		if is := errors.As(err, &e); is {
+			return c.JSON(e.HTTPCode, e)
+		}
+
+		return handler.HandleHTTPError(err, c)
+	}
+	if userIn == nil {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "No or invalid user model provided."})
 	}
 
@@ -56,7 +65,7 @@ func RegisterUser(c echo.Context) error {
 	defer s.Close()
 
 	// Insert the user
-	newUser, err := user.CreateUser(s, datUser.APIFormat())
+	newUser, err := user.CreateUser(s, userIn.APIFormat())
 	if err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err, c)

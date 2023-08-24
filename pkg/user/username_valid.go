@@ -14,43 +14,23 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package routes
+package user
 
-import (
-	"net/http"
-
-	"code.vikunja.io/api/pkg/models"
-
-	"code.vikunja.io/web"
-	"github.com/asaskevich/govalidator"
-)
-
-// CustomValidator is a dummy struct to use govalidator with echo
-type CustomValidator struct{}
+import "github.com/asaskevich/govalidator"
 
 func init() {
-	govalidator.TagMap["time"] = govalidator.Validator(func(str string) bool {
-		return govalidator.IsTime(str, "15:04")
-	})
-}
-
-// Validate validates stuff
-func (cv *CustomValidator) Validate(i interface{}) error {
-	if _, err := govalidator.ValidateStruct(i); err != nil {
-
-		var errs []string
-		for field, e := range govalidator.ErrorsByField(err) {
-			errs = append(errs, field+": "+e)
+	govalidator.TagMap["username"] = func(i string) bool {
+		// To avoid making this overly complicated, we only two things:
+		// 1. No Spaces
+		// 2. Should not look like an url
+		if govalidator.IsURL(i) {
+			return false
 		}
 
-		return models.ValidationHTTPError{
-			HTTPError: web.HTTPError{
-				HTTPCode: http.StatusPreconditionFailed,
-				Code:     models.ErrCodeInvalidData,
-				Message:  "Invalid Data",
-			},
-			InvalidFields: errs,
+		if govalidator.HasWhitespace(i) {
+			return false
 		}
+
+		return true
 	}
-	return nil
 }
