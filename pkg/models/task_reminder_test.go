@@ -30,7 +30,7 @@ func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T01:13:00Z")
+		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T01:12:00Z")
 		assert.NoError(t, err)
 		notifications, err := getTasksWithRemindersDueAndTheirUsers(s, now)
 		assert.NoError(t, err)

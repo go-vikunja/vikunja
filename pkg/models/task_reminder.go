@@ -171,12 +171,25 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) (remi
 		usersPerTask[ur.Task.ID] = append(usersPerTask[ur.Task.ID], ur)
 	}
 
+	seen := make(map[int64]map[int64]bool)
+
 	// Time zone cache per time zone string to avoid parsing the same time zone over and over again
 	tzs := make(map[string]*time.Location)
 	// Figure out which reminders are actually due in the time zone of the users
 	for _, r := range reminders {
 
 		for _, u := range usersPerTask[r.TaskID] {
+
+			// This ensures we send each reminder only once to each user
+			if seen[r.TaskID] == nil {
+				seen[r.Ta2skID] = make(map[int64]bool)
+			}
+
+			if _, exists := seen[r.TaskID][u.User.ID]; exists {
+				continue
+			}
+
+			seen[r.TaskID][u.User.ID] = true
 
 			if u.User.Timezone == "" {
 				u.User.Timezone = config.GetTimeZone().String()
