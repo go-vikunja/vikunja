@@ -157,7 +157,7 @@
 		<template
 			v-if="['filters.create', 'project.edit', 'filter.settings.edit'].includes($route.name as string)">
 			<div class="field">
-				<label class="label">{{ $t('project.lists') }}</label>
+				<label class="label">{{ $t('project.projects') }}</label>
 				<div class="control">
 					<SelectProject
 						v-model="entities.projects"
