@@ -63,7 +63,7 @@
 
 			<nothing v-if="ctaVisible && tasks.length === 0 && !loading">
 				{{ $t('project.list.empty') }}
-				<ButtonLink @click="focusNewTaskInput()">
+				<ButtonLink @click="focusNewTaskInput()" v-if="project.id > 0">
 					{{ $t('project.list.newTaskCta') }}
 				</ButtonLink>
 			</nothing>
