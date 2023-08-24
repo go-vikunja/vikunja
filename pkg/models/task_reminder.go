@@ -182,7 +182,7 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) (remi
 
 			// This ensures we send each reminder only once to each user
 			if seen[r.TaskID] == nil {
-				seen[r.Ta2skID] = make(map[int64]bool)
+				seen[r.TaskID] = make(map[int64]bool)
 			}
 
 			if _, exists := seen[r.TaskID][u.User.ID]; exists {
