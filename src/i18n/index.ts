@@ -47,8 +47,13 @@ export async function setLanguage(lang: SupportedLocale): Promise<SupportedLocal
 
 	// If the language hasn't been loaded yet
 	if (!i18n.global.availableLocales.includes(lang)) {
-		const messages = await import(`./lang/${lang}.json`)
-		i18n.global.setLocaleMessage(lang, messages.default)
+		try {
+			const messages = await import(`./lang/${lang}.json`)
+			i18n.global.setLocaleMessage(lang, messages.default)
+		} catch (e) {
+			console.error(`Failed to load language ${lang}:`, e)
+			return setLanguage(getBrowserLanguage())
+		}
 	}
 
 	i18n.global.locale.value = lang
