@@ -36,9 +36,11 @@ export const useProjectStore = defineStore('project', () => {
 	const projectsArray = computed(() => Object.values(projects.value)
 		.sort((a, b) => a.position - b.position))
 	const notArchivedRootProjects = computed(() => projectsArray.value
-		.filter(p => p.parentProjectId === 0 && !p.isArchived))
+		.filter(p => p.parentProjectId === 0 && !p.isArchived && p.id > 0))
 	const favoriteProjects = computed(() => projectsArray.value
 		.filter(p => !p.isArchived && p.isFavorite))
+	const savedFilterProjects = computed(() => projectsArray.value
+		.filter(p => !p.isArchived && p.id < -1))
 	const hasProjects = computed(() => projectsArray.value.length > 0)
 
 	const getChildProjects = computed(() => {
@@ -198,6 +200,7 @@ export const useProjectStore = defineStore('project', () => {
 		notArchivedRootProjects: readonly(notArchivedRootProjects),
 		favoriteProjects: readonly(favoriteProjects),
 		hasProjects: readonly(hasProjects),
+		savedFilterProjects: readonly(savedFilterProjects),
 
 		getChildProjects,
 		findProjectByExactname,

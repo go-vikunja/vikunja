@@ -60,6 +60,14 @@
 					:can-collapse="false"
 				/>
 			</nav>
+			
+			<nav class="menu" v-if="savedFilterProjects">
+				<ProjectsNavigation
+					:model-value="savedFilterProjects"
+					:can-edit-order="false"
+					:can-collapse="false"
+				/>
+			</nav>
 
 			<nav class="menu">
 				<ProjectsNavigation
@@ -91,6 +99,7 @@ const projectStore = useProjectStore()
 
 const projects = computed(() => projectStore.notArchivedRootProjects)
 const favoriteProjects = computed(() => projectStore.favoriteProjects)
+const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 </script>
 
 <style lang="scss" scoped>
