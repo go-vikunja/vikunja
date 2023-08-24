@@ -448,16 +448,9 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 		return
 	}
 	
-	const baseStore = useBaseStore()
-	// When trying this before the current user was fully loaded we might get a flash of the login screen 
-	// in the user shell. To make shure this does not happen we check if everything is ready before trying.
-	if (!baseStore.ready) {
-		return
-	}
-
-	// Check if the user is already logged in and redirect them to the home page if not
-	if (
-		![
+	// Check if the route the user wants to go to is a route which needs authentication. We use this to 
+	// redirect the user after successful login.
+	const isValidUserAppRoute = ![
 			'user.login',
 			'user.password-reset.request',
 			'user.password-reset.reset',
@@ -468,8 +461,19 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 		localStorage.getItem('passwordResetToken') === null &&
 		localStorage.getItem('emailConfirmToken') === null &&
 		!(to.name === 'home' && (typeof to.query.userPasswordReset !== 'undefined' || typeof to.query.userEmailConfirm !== 'undefined'))
-	) {
+	
+	if (isValidUserAppRoute) {
 		saveLastVisited(to.name as string, to.params, to.query)
+	}
+	
+	const baseStore = useBaseStore()
+	// When trying this before the current user was fully loaded we might get a flash of the login screen 
+	// in the user shell. To make sure this does not happen we check if everything is ready before trying.
+	if (!baseStore.ready) {
+		return
+	}
+
+	if (isValidUserAppRoute) {
 		return {name: 'user.login'}
 	}
 	
