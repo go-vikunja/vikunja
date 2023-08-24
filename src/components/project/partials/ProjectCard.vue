@@ -33,7 +33,7 @@
 			}"
 		/>
 		<BaseButton
-			v-if="!project.isArchived"
+			v-if="!project.isArchived && project.id > -1"
 			class="favorite"
 			:class="{'is-favorite': project.isFavorite}"
 			@click.prevent.stop="projectStore.toggleProjectFavorite(project)"
