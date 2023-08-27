@@ -329,12 +329,12 @@
     "title": "絞り込み",
     "clear": "絞り込みの解除",
     "attributes": {
-      "title": "条件名",
-      "titlePlaceholder": "条件名を入力…",
+      "title": "絞り込み条件名",
+      "titlePlaceholder": "絞り込み条件名を入力…",
       "description": "説明",
-      "descriptionPlaceholder": "説明を入力…",
-      "includeNulls": "値を設定していないタスクを含める",
-      "requireAll": "Require all filters to be true for a task to show up",
+      "descriptionPlaceholder": "絞り込み条件の説明を入力…",
+      "includeNulls": "値が設定されていないタスクを含める",
+      "requireAll": "すべての条件に一致するタスクのみ表示",
       "showDoneTasks": "完了したタスクを表示",
       "sortAlphabetically": "アルファベット順に並べ替える",
       "enablePriority": "優先度による絞り込みを有効化",
@@ -346,18 +346,18 @@
     },
     "create": {
       "title": "新しい絞り込み条件の作成",
-      "description": "A saved filter is a virtual project which is computed from a set of filters each time it is accessed.",
+      "description": "絞り込み条件は、複数の条件を組み合わせて保存できる仮想のプロジェクトです。",
       "action": "新しい絞り込み条件を作成",
-      "titleRequired": "Please provide a title for the filter."
+      "titleRequired": "絞り込み条件名を入力してください。"
     },
     "delete": {
-      "header": "Delete this saved filter",
-      "text": "Are you sure you want to delete this saved filter?",
-      "success": "The filter was deleted successfully."
+      "header": "絞り込み条件の削除",
+      "text": "絞り込み条件を削除して本当によろしいですか？",
+      "success": "絞り込み条件は正常に削除されました。"
     },
     "edit": {
-      "title": "Edit This Saved Filter",
-      "success": "The filter was saved successfully."
+      "title": "絞り込み条件の編集",
+      "success": "絞り込み条件は正常に保存されました。"
     }
   },
   "migrate": {
@@ -815,7 +815,7 @@
       "namePlaceholder": "The team's name goes here…",
       "nameRequired": "Please specify a name.",
       "description": "説明",
-      "descriptionPlaceholder": "The teams description goes here…",
+      "descriptionPlaceholder": "チームの説明を入力…",
       "admin": "管理者",
       "member": "メンバー"
     }
@@ -983,7 +983,7 @@
     "10004": "You cannot add the task to this bucket as it already exceeded the limit of tasks it can hold.",
     "10005": "There can be only one done bucket per project.",
     "11001": "The saved filter does not exist.",
-    "11002": "Saved filters are not available for link shares.",
+    "11002": "絞り込み条件はリンクの共有には使用できません。",
     "12001": "The subscription entity type is invalid.",
     "12002": "You are already subscribed to the entity itself or a parent entity.",
     "13001": "This link share requires a password for authentication, but none was provided.",
