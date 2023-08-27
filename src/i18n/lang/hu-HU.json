@@ -31,7 +31,7 @@
       "usernameEmail": "Felhasználónév vagy E-mail cím",
       "usernamePlaceholder": "Például: Frigyes",
       "email": "E-mail cím",
-      "emailPlaceholder": "Például: frigyes@vikunja.io",
+      "emailPlaceholder": "Például: frigyes{'@'}vikunja.io",
       "password": "Jelszó",
       "passwordPlaceholder": "Például: •••••••••••",
       "forgotPassword": "Elfelejtette a jelszavát?",
