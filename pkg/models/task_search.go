@@ -18,6 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/web"
 	"github.com/typesense/typesense-go/typesense/api"
 	"github.com/typesense/typesense-go/typesense/api/pointer"
@@ -39,15 +40,14 @@ type dbTaskSearcher struct {
 	hasFavoritesProject bool
 }
 
-func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
+func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) {
 	// Since xorm does not use placeholders for order by, it is possible to expose this with sql injection if we're directly
 	// passing user input to the db.
 	// As a workaround to prevent this, we check for valid column names here prior to passing it to the db.
-	var orderby string
 	for i, param := range opts.sortby {
 		// Validate the params
 		if err := param.validate(); err != nil {
-			return nil, totalCount, err
+			return "", err
 		}
 
 		// Mysql sorts columns with null values before ones without null value.
@@ -68,6 +68,16 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		if (i + 1) < len(opts.sortby) {
 			orderby += ", "
 		}
+	}
+
+	return
+}
+
+func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
+
+	orderby, err := getOrderByDBStatement(opts)
+	if err != nil {
+		return nil, 0, err
 	}
 
 	// Some filters need a special treatment since they are in a separate table
@@ -242,9 +252,90 @@ type typesenseTaskSearcher struct {
 }
 
 func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
+
+	var sortbyFields []string
+	for i, param := range opts.sortby {
+		// Validate the params
+		if err := param.validate(); err != nil {
+			return nil, totalCount, err
+		}
+
+		// Typesense does not allow sorting by ID, so we sort by created timestamp instead
+		if param.sortBy == "id" {
+			param.sortBy = "created"
+		}
+
+		sortbyFields = append(sortbyFields, param.sortBy+"(missing_values:last):"+param.orderBy.String())
+
+		if i == 2 {
+			// Typesense supports up to 3 sorting parameters
+			// https://typesense.org/docs/0.25.0/api/search.html#ranking-and-sorting-parameters
+			break
+		}
+	}
+
+	sortby := strings.Join(sortbyFields, ",")
+
 	projectIDStrings := []string{}
 	for _, id := range opts.projectIDs {
 		projectIDStrings = append(projectIDStrings, strconv.FormatInt(id, 10))
+	}
+	filterBy := []string{
+		"project_id: [" + strings.Join(projectIDStrings, ", ") + "]",
+	}
+
+	for _, f := range opts.filters {
+
+		filter := f.field
+
+		switch f.comparator {
+		case taskFilterComparatorEquals:
+			filter += ":="
+		case taskFilterComparatorNotEquals:
+			filter += ":!="
+		case taskFilterComparatorGreater:
+			filter += ":>"
+		case taskFilterComparatorGreateEquals:
+			filter += ":>="
+		case taskFilterComparatorLess:
+			filter += ":<"
+		case taskFilterComparatorLessEquals:
+			filter += ":<="
+		case taskFilterComparatorLike:
+			filter += ":"
+		//case taskFilterComparatorIn:
+		//filter += "["
+		case taskFilterComparatorInvalid:
+		// Nothing to do
+		default:
+			filter += ":="
+		}
+
+		switch f.value.(type) {
+		case string:
+			filter += f.value.(string)
+		case int:
+			filter += strconv.Itoa(f.value.(int))
+		case int64:
+			filter += strconv.FormatInt(f.value.(int64), 10)
+		case bool:
+			if f.value.(bool) {
+				filter += "true"
+			} else {
+				filter += "false"
+			}
+		default:
+			log.Errorf("Unknown search type %s=%v", f.field, f.value)
+		}
+
+		filterBy = append(filterBy, filter)
+	}
+
+	////////////////
+	// Actual search
+
+	if opts.search == "" {
+		opts.search = "*"
 	}
 
 	params := &api.SearchCollectionParams{
@@ -253,7 +344,11 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 		Page:             pointer.Int(opts.page),
 		PerPage:          pointer.Int(opts.perPage),
 		ExhaustiveSearch: pointer.True(),
-		FilterBy:         pointer.String("project_id: [" + strings.Join(projectIDStrings, ", ") + "]"),
+		FilterBy:         pointer.String(strings.Join(filterBy, " && ")),
+	}
+
+	if sortby != "" {
+		params.SortBy = pointer.String(sortby)
 	}
 
 	result, err := typesenseClient.Collection("tasks").
@@ -275,6 +370,14 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 
 	tasks = []*Task{}
 
-	err = t.s.In("id", taskIDs).Find(&tasks)
+	orderby, err := getOrderByDBStatement(opts)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	err = t.s.
+		In("id", taskIDs).
+		OrderBy(orderby).
+		Find(&tasks)
 	return tasks, int64(*result.Found), err
 }

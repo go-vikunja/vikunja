@@ -309,7 +309,7 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 	}
 
 	tasks, totalItems, err = searcher.Search(opts)
-	return tasks, len(tasks), totalItems, nil
+	return tasks, len(tasks), totalItems, err
 }
 
 func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {

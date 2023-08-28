@@ -58,14 +58,17 @@ func CreateTypesenseCollections() error {
 			{
 				Name: "id",
 				Type: "string",
+				Sort: pointer.True(),
 			},
 			{
 				Name: "title",
 				Type: "string",
+				Sort: pointer.True(),
 			},
 			{
 				Name: "description",
 				Type: "string",
+				Sort: pointer.True(),
 			},
 			{
 				Name: "done",
@@ -110,6 +113,7 @@ func CreateTypesenseCollections() error {
 			{
 				Name: "hex_color",
 				Type: "string",
+				Sort: pointer.True(),
 			},
 			{
 				Name: "percent_done",
@@ -118,6 +122,7 @@ func CreateTypesenseCollections() error {
 			{
 				Name: "identifier",
 				Type: "string",
+				Sort: pointer.True(),
 			},
 			{
 				Name: "index",
@@ -126,6 +131,7 @@ func CreateTypesenseCollections() error {
 			{
 				Name: "uid",
 				Type: "string",
+				Sort: pointer.True(),
 			},
 			{
 				Name: "cover_image_attachment_id",
@@ -244,7 +250,6 @@ func reindexTasks(s *xorm.Session, tasks map[int64]*Task) (err error) {
 		}
 
 		typesenseTasks = append(typesenseTasks, searchTask)
-
 	}
 
 	_, err = typesenseClient.Collection("tasks").
@@ -265,14 +270,14 @@ type typesenseTask struct {
 	Title                  string      `json:"title"`
 	Description            string      `json:"description"`
 	Done                   bool        `json:"done"`
-	DoneAt                 int64       `json:"done_at"`
-	DueDate                int64       `json:"due_date"`
+	DoneAt                 *int64      `json:"done_at"`
+	DueDate                *int64      `json:"due_date"`
 	ProjectID              int64       `json:"project_id"`
 	RepeatAfter            int64       `json:"repeat_after"`
 	RepeatMode             int         `json:"repeat_mode"`
 	Priority               int64       `json:"priority"`
-	StartDate              int64       `json:"start_date"`
-	EndDate                int64       `json:"end_date"`
+	StartDate              *int64      `json:"start_date"`
+	EndDate                *int64      `json:"end_date"`
 	HexColor               string      `json:"hex_color"`
 	PercentDone            float64     `json:"percent_done"`
 	Identifier             string      `json:"identifier"`
@@ -299,14 +304,14 @@ func convertTaskToTypesenseTask(task *Task) *typesenseTask {
 		Title:                  task.Title,
 		Description:            task.Description,
 		Done:                   task.Done,
-		DoneAt:                 task.DoneAt.UTC().Unix(),
-		DueDate:                task.DueDate.UTC().Unix(),
+		DoneAt:                 pointer.Int64(task.DoneAt.UTC().Unix()),
+		DueDate:                pointer.Int64(task.DueDate.UTC().Unix()),
 		ProjectID:              task.ProjectID,
 		RepeatAfter:            task.RepeatAfter,
 		RepeatMode:             int(task.RepeatMode),
 		Priority:               task.Priority,
-		StartDate:              task.StartDate.UTC().Unix(),
-		EndDate:                task.EndDate.UTC().Unix(),
+		StartDate:              pointer.Int64(task.StartDate.UTC().Unix()),
+		EndDate:                pointer.Int64(task.EndDate.UTC().Unix()),
 		HexColor:               task.HexColor,
 		PercentDone:            task.PercentDone,
 		Identifier:             task.Identifier,
@@ -327,16 +332,16 @@ func convertTaskToTypesenseTask(task *Task) *typesenseTask {
 	}
 
 	if task.DoneAt.IsZero() {
-		tt.DoneAt = 0
+		tt.DoneAt = nil
 	}
 	if task.DueDate.IsZero() {
-		tt.DueDate = 0
+		tt.DueDate = nil
 	}
 	if task.StartDate.IsZero() {
-		tt.StartDate = 0
+		tt.StartDate = nil
 	}
 	if task.EndDate.IsZero() {
-		tt.EndDate = 0
+		tt.EndDate = nil
 	}
 
 	return tt
