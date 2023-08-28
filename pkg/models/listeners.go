@@ -17,7 +17,9 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"encoding/json"
+	"strconv"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
@@ -58,6 +60,9 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskAttachmentDeletedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
 	events.RegisterListener((&TaskRelationCreatedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
 	events.RegisterListener((&TaskRelationDeletedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
+	if config.TypesenseEnabled.GetBool() {
+		events.RegisterListener((&TaskDeletedEvent{}).Name(), &RemoveTaskFromTypesense{})
+	}
 }
 
 //////
@@ -472,6 +477,32 @@ func (s *HandleTaskUpdateLastUpdated) Handle(msg *message.Message) (err error) {
 	defer sess.Close()
 
 	return updateTaskLastUpdated(sess, &Task{ID: taskIDInt})
+}
+
+// RemoveTaskFromTypesense represents a listener
+type RemoveTaskFromTypesense struct {
+}
+
+// Name defines the name for the RemoveTaskFromTypesense listener
+func (s *RemoveTaskFromTypesense) Name() string {
+	return "remove.task.from.typesense"
+}
+
+// Handle is executed when the event RemoveTaskFromTypesense listens on is fired
+func (s *RemoveTaskFromTypesense) Handle(msg *message.Message) (err error) {
+	event := &TaskDeletedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("[Typesense Sync] Removing task %d from Typesense", event.Task.ID)
+
+	_, err = typesenseClient.
+		Collection("tasks").
+		Document(strconv.FormatInt(event.Task.ID, 10)).
+		Delete()
+	return err
 }
 
 ///////
