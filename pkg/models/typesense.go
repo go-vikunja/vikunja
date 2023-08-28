@@ -17,15 +17,26 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/cron"
+	"code.vikunja.io/api/pkg/log"
+	"fmt"
+	"time"
+	"xorm.io/xorm"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
-	"fmt"
 
 	"github.com/typesense/typesense-go/typesense"
 	"github.com/typesense/typesense-go/typesense/api"
 	"github.com/typesense/typesense-go/typesense/api/pointer"
 )
+
+type TypesenseSync struct {
+	Collection     string    `xorm:"not null"`
+	SyncStartedAt  time.Time `xorm:"not null"`
+	SyncFinishedAt time.Time `xorm:"null"`
+}
 
 var typesenseClient *typesense.Client
 
@@ -190,16 +201,39 @@ func ReindexAllTasks() (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
+	currentSync := &TypesenseSync{
+		Collection:    "tasks",
+		SyncStartedAt: time.Now(),
+	}
+	_, err = s.Insert(currentSync)
+	if err != nil {
+		return err
+	}
+
 	err = s.Find(tasks)
 	if err != nil {
 		return err
 	}
 
+	err = reindexTasks(s, tasks)
+	if err != nil {
+		return err
+	}
+
+	currentSync.SyncFinishedAt = time.Now()
+	_, err = s.Where("collection = ?", "tasks").
+		Cols("sync_finished_at").
+		Update(currentSync)
+	return
+}
+
+func reindexTasks(s *xorm.Session, tasks map[int64]*Task) (err error) {
 	err = addMoreInfoToTasks(s, tasks, &user.User{ID: 1})
 	if err != nil {
 		return err
 	}
 
+	typesenseTasks := []interface{}{}
 	for _, task := range tasks {
 		searchTask := convertTaskToTypesenseTask(task)
 
@@ -209,12 +243,18 @@ func ReindexAllTasks() (err error) {
 			return err
 		}
 
-		_, err = typesenseClient.Collection("tasks").
-			Documents().
-			Create(searchTask)
-		if err != nil {
-			return err
-		}
+		typesenseTasks = append(typesenseTasks, searchTask)
+
+	}
+
+	_, err = typesenseClient.Collection("tasks").
+		Documents().
+		Import(typesenseTasks, &api.ImportDocumentsParams{
+			Action:    pointer.String("upsert"),
+			BatchSize: pointer.Int(100),
+		})
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -300,4 +340,85 @@ func convertTaskToTypesenseTask(task *Task) *typesenseTask {
 	}
 
 	return tt
+}
+
+func SyncUpdatedTasksIntoTypesense() (err error) {
+	tasks := make(map[int64]*Task)
+
+	s := db.NewSession()
+	_ = s.Begin()
+	defer s.Close()
+
+	lastSync := &TypesenseSync{}
+	has, err := s.Where("collection = ?", "tasks").
+		Get(lastSync)
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
+	if !has {
+		log.Errorf("[Typesense Sync] No typesense sync stats yet, please run a full index via the CLI first")
+		_ = s.Rollback()
+		return
+	}
+
+	currentSync := &TypesenseSync{SyncStartedAt: time.Now()}
+	_, err = s.Where("collection = ?", "tasks").
+		Cols("sync_started_at", "sync_finished_at").
+		Update(currentSync)
+	if err != nil {
+		_ = s.Rollback()
+		return
+	}
+
+	err = s.
+		Where("updated >= ?", lastSync.SyncStartedAt).
+		Find(tasks)
+	if err != nil {
+		_ = s.Rollback()
+		return
+	}
+
+	if len(tasks) > 0 {
+		log.Debugf("[Typesense Sync] Updating %d tasks", len(tasks))
+
+		err = reindexTasks(s, tasks)
+		if err != nil {
+			_ = s.Rollback()
+			return
+		}
+	}
+
+	if len(tasks) == 0 {
+		log.Debugf("[Typesense Sync] No tasks changed since the last sync, not syncing")
+	}
+
+	currentSync.SyncFinishedAt = time.Now()
+	_, err = s.Where("collection = ?", "tasks").
+		Cols("sync_finished_at").
+		Update(currentSync)
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
+	return s.Commit()
+}
+
+func RegisterPeriodicTypesenseResyncCron() {
+	if !config.TypesenseEnabled.GetBool() {
+		log.Debugf("[Typesense Sync] Typesense is disabled, not setting up sync cron")
+		return
+	}
+
+	err := cron.Schedule("* * * * *", func() {
+		err := SyncUpdatedTasksIntoTypesense()
+		if err != nil {
+			log.Fatalf("[Typesense Sync] Could not sync updated tasks into typesense: %s", err)
+		}
+	})
+	if err != nil {
+		log.Fatalf("[Typesense Sync] Could not register typesense resync cron: %s", err)
+	}
 }
