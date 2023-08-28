@@ -969,7 +969,7 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// Delete all tasks on that project
 	// Using the loop to make sure all related entities to all tasks are properly deleted as well.
-	tasks, _, _, err := getRawTasksForProjects(s, []*Project{p}, a, &taskOptions{})
+	tasks, _, _, err := getRawTasksForProjects(s, []*Project{p}, a, &taskSearchOptions{})
 	if err != nil {
 		return
 	}

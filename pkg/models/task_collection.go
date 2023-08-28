@@ -80,7 +80,7 @@ func validateTaskField(fieldName string) error {
 	return ErrInvalidTaskField{TaskField: fieldName}
 }
 
-func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskOptions, err error) {
+func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskSearchOptions, err error) {
 	if len(tf.SortByArr) > 0 {
 		tf.SortBy = append(tf.SortBy, tf.SortByArr...)
 	}
@@ -108,7 +108,7 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskOptions, err
 		sort = append(sort, param)
 	}
 
-	opts = &taskOptions{
+	opts = &taskSearchOptions{
 		sortby:             sort,
 		filterConcat:       taskFilterConcatinator(tf.FilterConcat),
 		filterIncludeNulls: tf.FilterIncludeNulls,

@@ -248,7 +248,7 @@ type typesenseTask struct {
 	Reminders              interface{} `json:"reminders"`
 	Assignees              interface{} `json:"assignees"`
 	Labels                 interface{} `json:"labels"`
-	//RelatedTasks           interface{} `json:"related_tasks"`
+	//RelatedTasks           interface{} `json:"related_tasks"` // TODO
 	Attachments interface{} `json:"attachments"`
 	Comments    interface{} `json:"comments"`
 }

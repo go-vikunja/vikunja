@@ -40,6 +40,8 @@ var indexCmd = &cobra.Command{
 			return
 		}
 
+		log.Infof("Indexing… This may take a while.")
+
 		err := models.CreateTypesenseCollections()
 		if err != nil {
 			log.Critical(err.Error())
@@ -48,6 +50,9 @@ var indexCmd = &cobra.Command{
 		err = models.ReindexAllTasks()
 		if err != nil {
 			log.Critical(err.Error())
+			return
 		}
+
+		log.Infof("Done!")
 	},
 }
