@@ -44,10 +44,18 @@
 							@keyup.prevent.enter="doAction(r.type, i)"
 							@keyup.prevent.esc="searchInput?.focus()"
 						>
-							<span v-if="i.identifier" class="has-text-grey-light">
-								{{ i.identifier }}
-							</span>
-							{{ i.title }}
+							<template v-if="r.type === ACTION_TYPE.LABELS">
+								<x-label :label="i"/>
+							</template>
+							<template v-else-if="r.type === ACTION_TYPE.TASK">
+								<single-task-inline-readonly 
+									:task="i"
+									:show-project="true"
+								/>
+							</template>
+							<template v-else>
+								{{ i.title }}
+							</template>
 						</BaseButton>
 					</div>
 				</div>
@@ -69,6 +77,8 @@ import ProjectModel from '@/models/project'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
+import XLabel from '@/components/tasks/partials/label.vue'
+import SingleTaskInlineReadonly from '@/components/tasks/partials/singleTaskInlineReadonly.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
@@ -83,7 +93,6 @@ import {success} from '@/message'
 import type {ITeam} from '@/modelTypes/ITeam'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
-import type {ILabel} from '@/modelTypes/ILabel'
 
 const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
@@ -159,11 +168,11 @@ const foundLabels = computed(() => {
 	if (text === '' && labels.length === 0) {
 		return []
 	}
-	
+
 	if (labels.length > 0) {
 		return labelStore.filterLabelsByQuery([], labels[0])
 	}
-	
+
 	return labelStore.filterLabelsByQuery([], text)
 })
 
@@ -393,10 +402,6 @@ function searchTasks() {
 		const r = await taskService.getAll({}, params) as DoAction<ITask>[]
 		foundTasks.value = r.map((t) => {
 			t.type = ACTION_TYPE.TASK
-			const project = projectStore.projects[t.projectId]
-			if (project !== null) {
-				t.title = `${t.title} (${project.title})`
-			}
 			return t
 		})
 	}, 150)
@@ -468,7 +473,7 @@ async function doAction(type: ACTION_TYPE, item: DoAction) {
 			searchInput.value?.focus()
 			break
 		case ACTION_TYPE.LABELS:
-			query.value = '*'+item.title
+			query.value = '*' + item.title
 			searchInput.value?.focus()
 			searchTasks()
 			break
