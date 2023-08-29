@@ -340,7 +340,7 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 
 	params := &api.SearchCollectionParams{
 		Q:                opts.search,
-		QueryBy:          "title, description, comments.comment",
+		QueryBy:          "title, identifier, description, comments.comment",
 		Page:             pointer.Int(opts.page),
 		PerPage:          pointer.Int(opts.perPage),
 		ExhaustiveSearch: pointer.True(),
