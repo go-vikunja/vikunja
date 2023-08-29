@@ -74,6 +74,9 @@ func FullInit() {
 	// Set Engine
 	InitEngines()
 
+	// Init Typesense
+	models.InitTypesense()
+
 	// Start the mail daemon
 	mail.StartMailDaemon()
 
@@ -86,6 +89,7 @@ func FullInit() {
 	models.RegisterUserDeletionCron()
 	models.RegisterOldExportCleanupCron()
 	openid.CleanupSavedOpenIDProviders()
+	models.RegisterPeriodicTypesenseResyncCron()
 
 	// Start processing events
 	go func() {

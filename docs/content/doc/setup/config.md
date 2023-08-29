@@ -496,6 +496,49 @@ Environment path: `VIKUNJA_DATABASE_TLS`
 
 ---
 
+## typesense
+
+
+
+### enabled
+
+Whether to enable the Typesense integration. If true, all tasks will be synced to the configured Typesense
+instance and all search and filtering will run through Typesense instead of only through the database.
+Typesense allows fast fulltext search including fuzzy matching support. It may return different results than 
+what you'd get with a database-only search.
+
+Default: `false`
+
+Full path: `typesense.enabled`
+
+Environment path: `VIKUNJA_TYPESENSE_ENABLED`
+
+
+### url
+
+The url to the Typesense instance you want to use. Can be hosted locally or in Typesense Cloud as long
+as Vikunja is able to reach it.
+
+Default: `<empty>`
+
+Full path: `typesense.url`
+
+Environment path: `VIKUNJA_TYPESENSE_URL`
+
+
+### apikey
+
+The Typesense API key you want to use.
+
+Default: `<empty>`
+
+Full path: `typesense.apikey`
+
+Environment path: `VIKUNJA_TYPESENSE_APIKEY`
+
+
+---
+
 ## redis
 
 

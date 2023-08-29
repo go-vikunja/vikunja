@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
@@ -36,7 +35,6 @@ import (
 	"github.com/jinzhu/copier"
 	"xorm.io/builder"
 	"xorm.io/xorm"
-	"xorm.io/xorm/schemas"
 )
 
 type TaskRepeatMode int
@@ -167,7 +165,7 @@ const (
 	filterConcatOr  = "or"
 )
 
-type taskOptions struct {
+type taskSearchOptions struct {
 	search             string
 	page               int
 	perPage            int
@@ -175,6 +173,7 @@ type taskOptions struct {
 	filters            []*taskFilter
 	filterConcat       taskFilterConcatinator
 	filterIncludeNulls bool
+	projectIDs         []int64
 }
 
 // ReadAll is a dummy function to still have that endpoint documented
@@ -266,7 +265,7 @@ func getTaskIndexFromSearchString(s string) (index int64) {
 }
 
 //nolint:gocyclo
-func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
+func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
 	// If the user does not have any projects, don't try to get any tasks
 	if len(projects) == 0 {
@@ -279,14 +278,14 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 	}
 
 	// Get all project IDs and get the tasks
-	var projectIDs []int64
+	opts.projectIDs = []int64{}
 	var hasFavoritesProject bool
-	for _, l := range projects {
-		if l.ID == FavoritesPseudoProject.ID {
+	for _, p := range projects {
+		if p.ID == FavoritesPseudoProject.ID {
 			hasFavoritesProject = true
 			continue
 		}
-		projectIDs = append(projectIDs, l.ID)
+		opts.projectIDs = append(opts.projectIDs, p.ID)
 	}
 
 	// Add the id parameter as the last parameter to sortby by default, but only if it is not already passed as the last parameter.
@@ -298,199 +297,22 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 		})
 	}
 
-	// Since xorm does not use placeholders for order by, it is possible to expose this with sql injection if we're directly
-	// passing user input to the db.
-	// As a workaround to prevent this, we check for valid column names here prior to passing it to the db.
-	var orderby string
-	for i, param := range opts.sortby {
-		// Validate the params
-		if err := param.validate(); err != nil {
-			return nil, 0, 0, err
-		}
-
-		// Mysql sorts columns with null values before ones without null value.
-		// Because it does not have support for NULLS FIRST or NULLS LAST we work around this by
-		// first sorting for null (or not null) values and then the order we actually want to.
-		if db.Type() == schemas.MYSQL {
-			orderby += "`" + param.sortBy + "` IS NULL, "
-		}
-
-		orderby += "`" + param.sortBy + "` " + param.orderBy.String()
-
-		// Postgres and sqlite allow us to control how columns with null values are sorted.
-		// To make that consistent with the sort order we have and other dbms, we're adding a separate clause here.
-		if db.Type() == schemas.POSTGRES || db.Type() == schemas.SQLITE {
-			orderby += " NULLS LAST"
-		}
-
-		if (i + 1) < len(opts.sortby) {
-			orderby += ", "
+	var searcher taskSearcher = &dbTaskSearcher{
+		s:                   s,
+		a:                   a,
+		hasFavoritesProject: hasFavoritesProject,
+	}
+	if config.TypesenseEnabled.GetBool() {
+		searcher = &typesenseTaskSearcher{
+			s: s,
 		}
 	}
 
-	// Some filters need a special treatment since they are in a separate table
-	reminderFilters := []builder.Cond{}
-	assigneeFilters := []builder.Cond{}
-	labelFilters := []builder.Cond{}
-	projectFilters := []builder.Cond{}
-
-	var filters = make([]builder.Cond, 0, len(opts.filters))
-	// To still find tasks with nil values, we exclude 0s when comparing with >/< values.
-	for _, f := range opts.filters {
-		if f.field == "reminders" {
-			f.field = "reminder" // This is the name in the db
-			filter, err := getFilterCond(f, opts.filterIncludeNulls)
-			if err != nil {
-				return nil, 0, 0, err
-			}
-			reminderFilters = append(reminderFilters, filter)
-			continue
-		}
-
-		if f.field == "assignees" {
-			if f.comparator == taskFilterComparatorLike {
-				return nil, 0, 0, ErrInvalidTaskFilterValue{Field: f.field, Value: f.value}
-			}
-			f.field = "username"
-			filter, err := getFilterCond(f, opts.filterIncludeNulls)
-			if err != nil {
-				return nil, 0, 0, err
-			}
-			assigneeFilters = append(assigneeFilters, filter)
-			continue
-		}
-
-		if f.field == "labels" || f.field == "label_id" {
-			f.field = "label_id"
-			filter, err := getFilterCond(f, opts.filterIncludeNulls)
-			if err != nil {
-				return nil, 0, 0, err
-			}
-			labelFilters = append(labelFilters, filter)
-			continue
-		}
-
-		if f.field == "parent_project" || f.field == "parent_project_id" {
-			f.field = "parent_project_id"
-			filter, err := getFilterCond(f, opts.filterIncludeNulls)
-			if err != nil {
-				return nil, 0, 0, err
-			}
-			projectFilters = append(projectFilters, filter)
-			continue
-		}
-
-		filter, err := getFilterCond(f, opts.filterIncludeNulls)
-		if err != nil {
-			return nil, 0, 0, err
-		}
-		filters = append(filters, filter)
-	}
-
-	// Then return all tasks for that projects
-	var where builder.Cond
-
-	if opts.search != "" {
-		where = db.ILIKE("title", opts.search)
-
-		searchIndex := getTaskIndexFromSearchString(opts.search)
-		if searchIndex > 0 {
-			where = builder.Or(where, builder.Eq{"`index`": searchIndex})
-		}
-	}
-
-	var projectIDCond builder.Cond
-	var favoritesCond builder.Cond
-	if len(projectIDs) > 0 {
-		projectIDCond = builder.In("project_id", projectIDs)
-	}
-
-	if hasFavoritesProject {
-		// All favorite tasks for that user
-		favCond := builder.
-			Select("entity_id").
-			From("favorites").
-			Where(
-				builder.And(
-					builder.Eq{"user_id": a.GetID()},
-					builder.Eq{"kind": FavoriteKindTask},
-				))
-
-		favoritesCond = builder.In("id", favCond)
-	}
-
-	if len(reminderFilters) > 0 {
-		filters = append(filters, getFilterCondForSeparateTable("task_reminders", opts.filterConcat, reminderFilters))
-	}
-
-	if len(assigneeFilters) > 0 {
-		assigneeFilter := []builder.Cond{
-			builder.In("user_id",
-				builder.Select("id").
-					From("users").
-					Where(builder.Or(assigneeFilters...)),
-			)}
-		filters = append(filters, getFilterCondForSeparateTable("task_assignees", opts.filterConcat, assigneeFilter))
-	}
-
-	if len(labelFilters) > 0 {
-		filters = append(filters, getFilterCondForSeparateTable("label_tasks", opts.filterConcat, labelFilters))
-	}
-
-	if len(projectFilters) > 0 {
-		var filtercond builder.Cond
-		if opts.filterConcat == filterConcatOr {
-			filtercond = builder.Or(projectFilters...)
-		}
-		if opts.filterConcat == filterConcatAnd {
-			filtercond = builder.And(projectFilters...)
-		}
-
-		cond := builder.In(
-			"project_id",
-			builder.
-				Select("id").
-				From("projects").
-				Where(filtercond),
-		)
-		filters = append(filters, cond)
-	}
-
-	var filterCond builder.Cond
-	if len(filters) > 0 {
-		if opts.filterConcat == filterConcatOr {
-			filterCond = builder.Or(filters...)
-		}
-		if opts.filterConcat == filterConcatAnd {
-			filterCond = builder.And(filters...)
-		}
-	}
-
-	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
-	cond := builder.And(builder.Or(projectIDCond, favoritesCond), where, filterCond)
-
-	query := s.Where(cond)
-	if limit > 0 {
-		query = query.Limit(limit, start)
-	}
-
-	tasks = []*Task{}
-	err = query.OrderBy(orderby).Find(&tasks)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
-	queryCount := s.Where(cond)
-	totalItems, err = queryCount.
-		Count(&Task{})
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
-	return tasks, len(tasks), totalItems, nil
+	tasks, totalItems, err = searcher.Search(opts)
+	return tasks, len(tasks), totalItems, err
 }
 
-func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
+func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
 	tasks, resultCount, totalItems, err = getRawTasksForProjects(s, projects, a, opts)
 	if err != nil {

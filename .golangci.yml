@@ -97,3 +97,9 @@ issues:
         - musttag
     - path: pkg/models/task_collection.go
       text: 'append result not assigned to the same slice'
+    - text: 'string `label_id` has 3 occurrences, make it a constant'
+      linters:
+        - goconst
+    - text: 'string `labels` has 3 occurrences, make it a constant'
+      linters:
+        - goconst

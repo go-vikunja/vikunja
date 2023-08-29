@@ -209,7 +209,7 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate, bucketMap map[int64]int64) (err error) {
 	// Get all tasks + all task details
-	tasks, _, _, err := getTasksForProjects(s, []*Project{{ID: ld.ProjectID}}, doer, &taskOptions{})
+	tasks, _, _, err := getTasksForProjects(s, []*Project{{ID: ld.ProjectID}}, doer, &taskSearchOptions{})
 	if err != nil {
 		return err
 	}

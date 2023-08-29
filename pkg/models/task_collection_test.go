@@ -1076,7 +1076,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			args:    defaultArgs,
 			want:    []*Task{},
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "filter assignees in by id",
