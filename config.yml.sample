@@ -91,6 +91,18 @@ database:
   # Enable SSL/TLS for mysql connections. Options: false, true, skip-verify, preferred
   tls: false
 
+typesense:
+  # Whether to enable the Typesense integration. If true, all tasks will be synced to the configured Typesense
+  # instance and all search and filtering will run through Typesense instead of only through the database.
+  # Typesense allows fast fulltext search including fuzzy matching support. It may return different results than 
+  # what you'd get with a database-only search.
+  enabled: false
+  # The url to the Typesense instance you want to use. Can be hosted locally or in Typesense Cloud as long
+  # as Vikunja is able to reach it.
+  url: ''
+  # The Typesense API key you want to use.
+  apikey: ''
+
 redis:
   # Whether to enable redis or not
   enabled: false
