@@ -243,7 +243,8 @@ func (tc *TaskComment) ReadAll(s *xorm.Session, auth web.Auth, search string, pa
 			builder.Eq{"task_id": tc.TaskID},
 			db.ILIKE("comment", search),
 		)).
-		Join("LEFT", "users", "users.id = task_comments.author_id")
+		Join("LEFT", "users", "users.id = task_comments.author_id").
+		OrderBy("id", "asc")
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
