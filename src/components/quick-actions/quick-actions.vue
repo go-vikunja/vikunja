@@ -265,10 +265,12 @@ const searchMode = computed(() => {
 	if (query.value === '') {
 		return SEARCH_MODE.ALL
 	}
+
 	const {text, project, labels, assignees} = parsedQuery.value
 	if (assignees.length === 0 && text !== '') {
 		return SEARCH_MODE.TASKS
 	}
+
 	if (
 		assignees.length === 0 &&
 		project !== null &&
@@ -277,6 +279,7 @@ const searchMode = computed(() => {
 	) {
 		return SEARCH_MODE.PROJECTS
 	}
+
 	if (
 		assignees.length > 0 &&
 		project === null &&
@@ -285,6 +288,7 @@ const searchMode = computed(() => {
 	) {
 		return SEARCH_MODE.TEAMS
 	}
+
 	return SEARCH_MODE.ALL
 })
 
