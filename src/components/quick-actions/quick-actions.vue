@@ -357,7 +357,7 @@ function searchTasks() {
 	if (projectName !== null) {
 		const project = projectStore.findProjectByExactname(projectName)
 		if (project !== null) {
-			addFilter('projectId', project.id, 'equals')
+			addFilter('project_id', project.id, 'equals')
 		}
 	}
 
