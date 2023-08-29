@@ -83,6 +83,7 @@ import {success} from '@/message'
 import type {ITeam} from '@/modelTypes/ITeam'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
+import type {ILabel} from '@/modelTypes/ILabel'
 
 const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
@@ -100,6 +101,7 @@ enum ACTION_TYPE {
 	TASK = 'task',
 	PROJECT = 'project',
 	TEAM = 'team',
+	LABELS = 'labels',
 }
 
 enum COMMAND_TYPE {
@@ -152,6 +154,19 @@ const foundProjects = computed(() => {
 		.filter(p => Boolean(p))
 })
 
+const foundLabels = computed(() => {
+	const {labels, text} = parsedQuery.value
+	if (text === '' && labels.length === 0) {
+		return []
+	}
+	
+	if (labels.length > 0) {
+		return labelStore.filterLabelsByQuery([], labels[0])
+	}
+	
+	return labelStore.filterLabelsByQuery([], text)
+})
+
 // FIXME: use fuzzysearch
 const foundCommands = computed(() => availableCmds.value.filter((a) =>
 	a.title.toLowerCase().includes(query.value.toLowerCase()),
@@ -179,6 +194,11 @@ const results = computed<Result[]>(() => {
 			type: ACTION_TYPE.TASK,
 			title: t('quickActions.tasks'),
 			items: foundTasks.value,
+		},
+		{
+			type: ACTION_TYPE.LABELS,
+			title: t('quickActions.labels'),
+			items: foundLabels.value,
 		},
 		{
 			type: ACTION_TYPE.TEAM,
@@ -446,6 +466,11 @@ async function doAction(type: ACTION_TYPE, item: DoAction) {
 			query.value = ''
 			selectedCmd.value = item as DoAction<Command>
 			searchInput.value?.focus()
+			break
+		case ACTION_TYPE.LABELS:
+			query.value = '*'+item.title
+			searchInput.value?.focus()
+			searchTasks()
 			break
 	}
 }
