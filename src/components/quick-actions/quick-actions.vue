@@ -149,12 +149,12 @@ function closeQuickActions() {
 
 const foundProjects = computed(() => {
 	const {project, text, labels, assignees} = parsedQuery.value
-	
+
 	if (project !== null) {
 		return projectStore.searchProject(project ?? text)
 			.filter(p => Boolean(p))
 	}
-	
+
 	if (labels.length > 0 || assignees.length > 0) {
 		return []
 	}
@@ -352,7 +352,8 @@ function filtersToParams(filters: Filter[]) {
 function searchTasks() {
 	if (
 		searchMode.value !== SEARCH_MODE.ALL &&
-		searchMode.value !== SEARCH_MODE.TASKS
+		searchMode.value !== SEARCH_MODE.TASKS &&
+		searchMode.value !== SEARCH_MODE.PROJECTS
 	) {
 		foundTasks.value = []
 		return
@@ -386,6 +387,7 @@ function searchTasks() {
 
 	if (projectName !== null) {
 		const project = projectStore.findProjectByExactname(projectName)
+		console.log({project})
 		if (project !== null) {
 			addFilter('project_id', project.id, 'equals')
 		}
