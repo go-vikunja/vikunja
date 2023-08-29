@@ -378,7 +378,7 @@
 							{{ $t('task.detail.actions.attachments') }}
 						</x-button>
 						<x-button
-							@click="setFieldActive('relatedTasks')"
+							@click="setRelatedTasksActive()"
 							variant="secondary"
 							icon="sitemap"
 							v-shortcut="'r'"
@@ -776,6 +776,19 @@ async function removeRepeatAfter() {
 	task.value.repeatAfter.amount = 0
 	task.value.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
 	await saveTask()
+}
+
+function setRelatedTasksActive() {
+	setFieldActive('relatedTasks')
+
+	// If the related tasks are already available, show the form again
+	const el = activeFieldElements['relatedTasks']
+	for (const child in el?.children) {
+		if (el?.children[child]?.id === 'showRelatedTasksFormButton') {
+			el?.children[child]?.click()
+			break
+		}
+	}
 }
 </script>
 

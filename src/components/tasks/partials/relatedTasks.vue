@@ -9,6 +9,7 @@
 			variant="secondary"
 			icon="plus"
 			:shadow="false"
+			id="showRelatedTasksFormButton"
 		/>
 		<transition-group name="fade">
 			<template v-if="editEnabled && showCreate">
