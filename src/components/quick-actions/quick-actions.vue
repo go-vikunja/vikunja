@@ -22,6 +22,8 @@
 
 			<div class="help has-text-grey-light p-2" v-if="hintText !== '' && !isNewTaskCommand">
 				{{ hintText }}
+
+				{{ searchMode }}
 			</div>
 
 			<quick-add-magic class="p-2 modal-container-smaller" v-if="isNewTaskCommand"/>
@@ -137,11 +139,11 @@ function closeQuickActions() {
 }
 
 const foundProjects = computed(() => {
-	const {project} = parsedQuery.value
+	const {project, text} = parsedQuery.value
 	if (
 		searchMode.value === SEARCH_MODE.ALL ||
 		searchMode.value === SEARCH_MODE.PROJECTS ||
-		project === null
+		text === ''
 	) {
 		return []
 	}
@@ -176,14 +178,14 @@ const results = computed<Result[]>(() => {
 			items: foundCommands.value,
 		},
 		{
-			type: ACTION_TYPE.TASK,
-			title: t('quickActions.tasks'),
-			items: foundTasks.value,
-		},
-		{
 			type: ACTION_TYPE.PROJECT,
 			title: t('quickActions.projects'),
 			items: foundProjects.value,
+		},
+		{
+			type: ACTION_TYPE.TASK,
+			title: t('quickActions.tasks'),
+			items: foundTasks.value,
 		},
 		{
 			type: ACTION_TYPE.TEAM,
