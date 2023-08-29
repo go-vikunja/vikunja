@@ -48,7 +48,7 @@
 								<x-label :label="i"/>
 							</template>
 							<template v-else-if="r.type === ACTION_TYPE.TASK">
-								<single-task-inline-readonly 
+								<single-task-inline-readonly
 									:task="i"
 									:show-project="true"
 								/>
@@ -148,12 +148,18 @@ function closeQuickActions() {
 }
 
 const foundProjects = computed(() => {
-	const {project, text} = parsedQuery.value
-	if (
-		searchMode.value === SEARCH_MODE.ALL ||
-		searchMode.value === SEARCH_MODE.PROJECTS ||
-		text === ''
-	) {
+	const {project, text, labels, assignees} = parsedQuery.value
+	
+	if (project !== null) {
+		return projectStore.searchProject(project ?? text)
+			.filter(p => Boolean(p))
+	}
+	
+	if (labels.length > 0 || assignees.length > 0) {
+		return []
+	}
+
+	if (text === '') {
 		const history = getHistory()
 		return history.map((p) => projectStore.projects[p.id])
 			.filter(p => Boolean(p))
