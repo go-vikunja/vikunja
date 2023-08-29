@@ -363,6 +363,7 @@ function searchTasks() {
 
 	const params = {
 		s: text,
+		sort_by: 'done',
 		...filtersToParams(filters),
 	}
 
