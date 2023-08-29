@@ -143,18 +143,13 @@ const foundProjects = computed(() => {
 		searchMode.value === SEARCH_MODE.PROJECTS ||
 		text === ''
 	) {
-		return []
+		const history = getHistory()
+		return history.map((p) => projectStore.projects[p.id])
+			.filter(p => Boolean(p))
 	}
 
-	const history = getHistory()
-	const allProjects = [
-		...new Set([
-			...history.map((p) => projectStore.projects[p.id]),
-			...projectStore.searchProject(project),
-		]),
-	]
-
-	return allProjects.filter(p => Boolean(p))
+	return projectStore.searchProject(project ?? text)
+		.filter(p => Boolean(p))
 })
 
 // FIXME: use fuzzysearch

@@ -19,7 +19,7 @@ import {success} from '@/message'
 import {useBaseStore} from '@/stores/base'
 import {getSavedFilterIdFromProjectId} from '@/services/savedFilter'
 
-const {remove, search, update} = createNewIndexer('projects', ['title', 'description'])
+const {add, remove, search, update} = createNewIndexer('projects', ['title', 'description'])
 
 export interface ProjectState {
 	[id: IProject['id']]: IProject
@@ -174,6 +174,7 @@ export const useProjectStore = defineStore('project', () => {
 			const loadedProjects = await projectService.getAll({}, {is_archived: true}) as IProject[]
 			projects.value = {}
 			setProjects(loadedProjects)
+			loadedProjects.forEach(p => add(p))
 
 			return loadedProjects
 		} finally {
