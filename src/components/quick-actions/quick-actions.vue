@@ -22,11 +22,9 @@
 
 			<div class="help has-text-grey-light p-2" v-if="hintText !== '' && !isNewTaskCommand">
 				{{ hintText }}
-
-				{{ searchMode }}
 			</div>
 
-			<quick-add-magic class="p-2 modal-container-smaller" v-if="isNewTaskCommand"/>
+			<quick-add-magic v-if="isNewTaskCommand"/>
 
 			<div class="results" v-if="selectedCmd === null">
 				<div v-for="(r, k) in results" :key="k" class="result">
@@ -151,12 +149,12 @@ const foundProjects = computed(() => {
 	const history = getHistory()
 	const allProjects = [
 		...new Set([
-			...history.map((l) => projectStore.projects[l.id]),
+			...history.map((p) => projectStore.projects[p.id]),
 			...projectStore.searchProject(project),
 		]),
 	]
 
-	return allProjects.filter(l => Boolean(l))
+	return allProjects.filter(p => Boolean(p))
 })
 
 // FIXME: use fuzzysearch
@@ -624,11 +622,5 @@ function reset() {
 	&:active {
 		background: var(--grey-100);
 	}
-}
-
-// HACK:
-// FIXME:
-.modal-container-smaller :deep(.hint-modal .modal-container) {
-	height: calc(100vh - 5rem);
 }
 </style>
