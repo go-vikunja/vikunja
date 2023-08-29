@@ -251,6 +251,35 @@ type typesenseTaskSearcher struct {
 	s *xorm.Session
 }
 
+func convertFilterValues(value interface{}) string {
+	if _, is := value.([]interface{}); is {
+		filter := []string{}
+		for _, v := range value.([]interface{}) {
+			filter = append(filter, convertFilterValues(v))
+		}
+
+		return strings.Join(filter, ",")
+	}
+
+	switch value.(type) {
+	case string:
+		return value.(string)
+	case int:
+		return strconv.Itoa(value.(int))
+	case int64:
+		return strconv.FormatInt(value.(int64), 10)
+	case bool:
+		if value.(bool) {
+			return "true"
+		}
+
+		return "false"
+	}
+
+	log.Errorf("Unknown search type for value %v", value)
+	return ""
+}
+
 func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
 
 	var sortbyFields []string
@@ -288,17 +317,14 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 
 		if f.field == "reminders" {
 			f.field = "reminders.reminder"
-			continue
 		}
 
 		if f.field == "assignees" {
 			f.field = "assignees.username"
-			continue
 		}
 
 		if f.field == "labels" || f.field == "label_id" {
 			f.field = "labels.id"
-			continue
 		}
 
 		filter := f.field
@@ -318,29 +344,18 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 			filter += ":<="
 		case taskFilterComparatorLike:
 			filter += ":"
-		//case taskFilterComparatorIn:
-		//filter += "["
+		case taskFilterComparatorIn:
+			filter += ":["
 		case taskFilterComparatorInvalid:
 		// Nothing to do
 		default:
 			filter += ":="
 		}
 
-		switch f.value.(type) {
-		case string:
-			filter += f.value.(string)
-		case int:
-			filter += strconv.Itoa(f.value.(int))
-		case int64:
-			filter += strconv.FormatInt(f.value.(int64), 10)
-		case bool:
-			if f.value.(bool) {
-				filter += "true"
-			} else {
-				filter += "false"
-			}
-		default:
-			log.Errorf("Unknown search type %s=%v", f.field, f.value)
+		filter += convertFilterValues(f.value)
+
+		if f.comparator == taskFilterComparatorIn {
+			filter += "]"
 		}
 
 		filterBy = append(filterBy, filter)
