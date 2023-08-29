@@ -1,5 +1,5 @@
 // Vikunja is a to-do list application to facilitate your life.
-// Copyright 2018-2023 Vikunja and contributors. All rights reserved.
+// Copyright 2018-2021 Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public Licensee as published by
@@ -17,10 +17,11 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/cron"
-	"code.vikunja.io/api/pkg/log"
 	"fmt"
 	"time"
+
+	"code.vikunja.io/api/pkg/cron"
+	"code.vikunja.io/api/pkg/log"
 	"xorm.io/xorm"
 
 	"code.vikunja.io/api/pkg/config"

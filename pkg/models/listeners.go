@@ -17,9 +17,10 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/config"
 	"encoding/json"
 	"strconv"
+
+	"code.vikunja.io/api/pkg/config"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"

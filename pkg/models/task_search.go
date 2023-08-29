@@ -1,5 +1,5 @@
 // Vikunja is a to-do list application to facilitate your life.
-// Copyright 2018-2023 Vikunja and contributors. All rights reserved.
+// Copyright 2018-2021 Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public Licensee as published by
@@ -17,13 +17,14 @@
 package models
 
 import (
+	"strconv"
+	"strings"
+
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/web"
 	"github.com/typesense/typesense-go/typesense/api"
 	"github.com/typesense/typesense-go/typesense/api/pointer"
-	"strconv"
-	"strings"
 
 	"xorm.io/builder"
 	"xorm.io/xorm"
@@ -73,6 +74,7 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 	return
 }
 
+//nolint:gocyclo
 func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
 
 	orderby, err := getOrderByDBStatement(opts)
@@ -261,15 +263,15 @@ func convertFilterValues(value interface{}) string {
 		return strings.Join(filter, ",")
 	}
 
-	switch value.(type) {
+	switch v := value.(type) {
 	case string:
-		return value.(string)
+		return v
 	case int:
-		return strconv.Itoa(value.(int))
+		return strconv.Itoa(v)
 	case int64:
-		return strconv.FormatInt(value.(int64), 10)
+		return strconv.FormatInt(v, 10)
 	case bool:
-		if value.(bool) {
+		if v {
 			return "true"
 		}
 
