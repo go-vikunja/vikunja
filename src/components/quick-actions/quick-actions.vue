@@ -24,7 +24,7 @@
 				{{ hintText }}
 			</div>
 
-			<quick-add-magic class="p-2 modal-container-smaller" v-if="isNewTaskCommand"/>
+			<quick-add-magic v-if="isNewTaskCommand"/>
 
 			<div class="results" v-if="selectedCmd === null">
 				<div v-for="(r, k) in results" :key="k" class="result">
@@ -44,7 +44,18 @@
 							@keyup.prevent.enter="doAction(r.type, i)"
 							@keyup.prevent.esc="searchInput?.focus()"
 						>
-							{{ i.title }}
+							<template v-if="r.type === ACTION_TYPE.LABELS">
+								<x-label :label="i"/>
+							</template>
+							<template v-else-if="r.type === ACTION_TYPE.TASK">
+								<single-task-inline-readonly
+									:task="i"
+									:show-project="true"
+								/>
+							</template>
+							<template v-else>
+								{{ i.title }}
+							</template>
 						</BaseButton>
 					</div>
 				</div>
@@ -66,6 +77,8 @@ import ProjectModel from '@/models/project'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import QuickAddMagic from '@/components/tasks/partials/quick-add-magic.vue'
+import XLabel from '@/components/tasks/partials/label.vue'
+import SingleTaskInlineReadonly from '@/components/tasks/partials/singleTaskInlineReadonly.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
@@ -97,6 +110,7 @@ enum ACTION_TYPE {
 	TASK = 'task',
 	PROJECT = 'project',
 	TEAM = 'team',
+	LABELS = 'labels',
 }
 
 enum COMMAND_TYPE {
@@ -134,24 +148,38 @@ function closeQuickActions() {
 }
 
 const foundProjects = computed(() => {
-	const { project } = parsedQuery.value
-	if (
-		searchMode.value === SEARCH_MODE.ALL ||
-		searchMode.value === SEARCH_MODE.PROJECTS ||
-		project === null
-	) {
+	const {project, text, labels, assignees} = parsedQuery.value
+
+	if (project !== null) {
+		return projectStore.searchProject(project ?? text)
+			.filter(p => Boolean(p))
+	}
+
+	if (labels.length > 0 || assignees.length > 0) {
 		return []
 	}
 
-	const history = getHistory()
-	const allProjects = [
-		...new Set([
-			...history.map((l) => projectStore.projects[l.id]),
-			...projectStore.searchProject(project),
-		]),
-	]
+	if (text === '') {
+		const history = getHistory()
+		return history.map((p) => projectStore.projects[p.id])
+			.filter(p => Boolean(p))
+	}
 
-	return allProjects.filter(l => Boolean(l))
+	return projectStore.searchProject(project ?? text)
+		.filter(p => Boolean(p))
+})
+
+const foundLabels = computed(() => {
+	const {labels, text} = parsedQuery.value
+	if (text === '' && labels.length === 0) {
+		return []
+	}
+
+	if (labels.length > 0) {
+		return labelStore.filterLabelsByQuery([], labels[0])
+	}
+
+	return labelStore.filterLabelsByQuery([], text)
 })
 
 // FIXME: use fuzzysearch
@@ -173,14 +201,19 @@ const results = computed<Result[]>(() => {
 			items: foundCommands.value,
 		},
 		{
+			type: ACTION_TYPE.PROJECT,
+			title: t('quickActions.projects'),
+			items: foundProjects.value,
+		},
+		{
 			type: ACTION_TYPE.TASK,
 			title: t('quickActions.tasks'),
 			items: foundTasks.value,
 		},
 		{
-			type: ACTION_TYPE.PROJECT,
-			title: t('quickActions.projects'),
-			items: foundProjects.value,
+			type: ACTION_TYPE.LABELS,
+			title: t('quickActions.labels'),
+			items: foundLabels.value,
 		},
 		{
 			type: ACTION_TYPE.TEAM,
@@ -190,7 +223,7 @@ const results = computed<Result[]>(() => {
 	].filter((i) => i.items.length > 0)
 })
 
-const loading = computed(() => 
+const loading = computed(() =>
 	taskService.loading ||
 	projectStore.isLoading ||
 	teamService.loading,
@@ -262,10 +295,12 @@ const searchMode = computed(() => {
 	if (query.value === '') {
 		return SEARCH_MODE.ALL
 	}
-	const { text, project, labels, assignees } = parsedQuery.value
+
+	const {text, project, labels, assignees} = parsedQuery.value
 	if (assignees.length === 0 && text !== '') {
 		return SEARCH_MODE.TASKS
 	}
+
 	if (
 		assignees.length === 0 &&
 		project !== null &&
@@ -274,6 +309,7 @@ const searchMode = computed(() => {
 	) {
 		return SEARCH_MODE.PROJECTS
 	}
+
 	if (
 		assignees.length > 0 &&
 		project === null &&
@@ -282,6 +318,7 @@ const searchMode = computed(() => {
 	) {
 		return SEARCH_MODE.TEAMS
 	}
+
 	return SEARCH_MODE.ALL
 })
 
@@ -292,12 +329,12 @@ const isNewTaskCommand = computed(() => (
 
 const taskSearchTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 
-type Filter = {by: string, value: string | number, comparator: string}
+type Filter = { by: string, value: string | number, comparator: string }
 
 function filtersToParams(filters: Filter[]) {
-	const filter_by : Filter['by'][] = []
-	const filter_value : Filter['value'][] = []
-	const filter_comparator : Filter['comparator'][] = []
+	const filter_by: Filter['by'][] = []
+	const filter_value: Filter['value'][] = []
+	const filter_comparator: Filter['comparator'][] = []
 
 	filters.forEach(({by, value, comparator}) => {
 		filter_by.push(by)
@@ -315,7 +352,8 @@ function filtersToParams(filters: Filter[]) {
 function searchTasks() {
 	if (
 		searchMode.value !== SEARCH_MODE.ALL &&
-		searchMode.value !== SEARCH_MODE.TASKS
+		searchMode.value !== SEARCH_MODE.TASKS &&
+		searchMode.value !== SEARCH_MODE.PROJECTS
 	) {
 		foundTasks.value = []
 		return
@@ -330,7 +368,7 @@ function searchTasks() {
 		taskSearchTimeout.value = null
 	}
 
-	const { text, project: projectName, labels } = parsedQuery.value
+	const {text, project: projectName, labels} = parsedQuery.value
 
 	const filters: Filter[] = []
 
@@ -349,8 +387,9 @@ function searchTasks() {
 
 	if (projectName !== null) {
 		const project = projectStore.findProjectByExactname(projectName)
+		console.log({project})
 		if (project !== null) {
-			addFilter('projectId', project.id, 'equals')
+			addFilter('project_id', project.id, 'equals')
 		}
 	}
 
@@ -361,19 +400,16 @@ function searchTasks() {
 		}
 	}
 
-		const params = {
-			s: text,
-			...filtersToParams(filters),
-		}
+	const params = {
+		s: text,
+		sort_by: 'done',
+		...filtersToParams(filters),
+	}
 
 	taskSearchTimeout.value = setTimeout(async () => {
-		const r = await taskService.getAll({}, params) as  DoAction<ITask>[]
+		const r = await taskService.getAll({}, params) as DoAction<ITask>[]
 		foundTasks.value = r.map((t) => {
 			t.type = ACTION_TYPE.TASK
-			const project = projectStore.projects[t.projectId]
-			if (project !== null) {
-				t.title = `${t.title} (${project.title})`
-			}
 			return t
 		})
 	}, 150)
@@ -396,10 +432,10 @@ function searchTeams() {
 		clearTimeout(teamSearchTimeout.value)
 		teamSearchTimeout.value = null
 	}
-	const { assignees } = parsedQuery.value
+	const {assignees} = parsedQuery.value
 	teamSearchTimeout.value = setTimeout(async () => {
 		const teamSearchPromises = assignees.map((t) =>
-			teamService.getAll({}, { s: t }),
+			teamService.getAll({}, {s: t}),
 		)
 		const teamsResult = await Promise.all(teamSearchPromises)
 		foundTeams.value = teamsResult.flat().map((team) => {
@@ -422,27 +458,32 @@ async function doAction(type: ACTION_TYPE, item: DoAction) {
 			closeQuickActions()
 			await router.push({
 				name: 'project.index',
-				params: { projectId: (item as DoAction<IProject>).id },
+				params: {projectId: (item as DoAction<IProject>).id},
 			})
 			break
 		case ACTION_TYPE.TASK:
 			closeQuickActions()
 			await router.push({
 				name: 'task.detail',
-				params: { id: (item as DoAction<ITask>).id },
+				params: {id: (item as DoAction<ITask>).id},
 			})
 			break
 		case ACTION_TYPE.TEAM:
 			closeQuickActions()
 			await router.push({
 				name: 'teams.edit',
-				params: { id: (item as DoAction<ITeam>).id },
+				params: {id: (item as DoAction<ITeam>).id},
 			})
 			break
 		case ACTION_TYPE.CMD:
 			query.value = ''
 			selectedCmd.value = item as DoAction<Command>
 			searchInput.value?.focus()
+			break
+		case ACTION_TYPE.LABELS:
+			query.value = '*' + item.title
+			searchInput.value?.focus()
+			searchTasks()
 			break
 	}
 }
@@ -470,8 +511,8 @@ async function newTask() {
 		title: query.value,
 		projectId: currentProject.value.id,
 	})
-	success({ message: t('task.createSuccess') })
-	await router.push({ name: 'task.detail', params: { id: task.id } })
+	success({message: t('task.createSuccess')})
+	await router.push({name: 'task.detail', params: {id: task.id}})
 }
 
 async function newProject() {
@@ -481,17 +522,17 @@ async function newProject() {
 	await projectStore.createProject(new ProjectModel({
 		title: query.value,
 	}))
-	success({ message: t('project.create.createdSuccess')})
+	success({message: t('project.create.createdSuccess')})
 }
 
 async function newTeam() {
-	const newTeam = new TeamModel({ name: query.value })
+	const newTeam = new TeamModel({name: query.value})
 	const team = await teamService.create(newTeam)
 	await router.push({
 		name: 'teams.edit',
-		params: { id: team.id },
+		params: {id: team.id},
 	})
-	success({ message: t('team.create.success') })
+	success({message: t('team.create.success')})
 }
 
 type BaseButtonInstance = InstanceType<typeof BaseButton>
@@ -502,7 +543,7 @@ function setResultRefs(el: Element | ComponentPublicInstance | null, index: numb
 		resultRefs.value[index] = []
 	}
 
-	resultRefs.value[index][key] =  el as (BaseButtonInstance | null)
+	resultRefs.value[index][key] = el as (BaseButtonInstance | null)
 }
 
 function select(parentIndex: number, index: number) {
@@ -547,7 +588,7 @@ function reset() {
 <style lang="scss" scoped>
 .quick-actions {
 	overflow: hidden;
-	
+
 	// FIXME: changed position should be an option of the modal
 	:deep(.modal-content) {
 		top: 3rem;
@@ -569,6 +610,7 @@ function reset() {
 	}
 
 }
+
 .active-cmd {
 	font-size: 1.25rem;
 	margin-left: .5rem;
@@ -613,11 +655,5 @@ function reset() {
 	&:active {
 		background: var(--grey-100);
 	}
-}
-
-// HACK:
-// FIXME:
-.modal-container-smaller :deep(.hint-modal .modal-container) {
-	height: calc(100vh - 5rem);
 }
 </style>

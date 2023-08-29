@@ -108,7 +108,7 @@ const visible = ref(false)
 const mode = computed(() => authStore.settings.frontendSettings.quickAddMagicMode)
 
 defineProps<{
-	highlightHintIcon: boolean,
+	highlightHintIcon?: boolean,
 }>()
 
 const prefixes = computed(() => PREFIXES[mode.value])

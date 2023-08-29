@@ -1,18 +1,18 @@
 <template>
 	<div class="label-wrapper">
-		<span
+		<XLabel
+			v-for="label in labels"
+			:label="label"
 			:key="label.id"
-			:style="{'background': label.hexColor, 'color': label.textColor}"
-			class="tag"
-			v-for="label in labels">
-			<span>{{ label.title }}</span>
-		</span>
+		/>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type {PropType} from 'vue'
 import type {ILabel} from '@/modelTypes/ILabel'
+
+import XLabel from '@/components/tasks/partials/label.vue'
 
 defineProps({
 	labels: {
@@ -25,11 +25,5 @@ defineProps({
 <style lang="scss" scoped>
 .label-wrapper {
 	display: inline;
-}
-
-.tag {
-	& + & {
-		margin-left: 0.5rem;
-	}
 }
 </style>
