@@ -134,7 +134,7 @@ function closeQuickActions() {
 }
 
 const foundProjects = computed(() => {
-	const { project } = parsedQuery.value
+	const {project} = parsedQuery.value
 	if (
 		searchMode.value === SEARCH_MODE.ALL ||
 		searchMode.value === SEARCH_MODE.PROJECTS ||
@@ -190,7 +190,7 @@ const results = computed<Result[]>(() => {
 	].filter((i) => i.items.length > 0)
 })
 
-const loading = computed(() => 
+const loading = computed(() =>
 	taskService.loading ||
 	projectStore.isLoading ||
 	teamService.loading,
@@ -262,7 +262,7 @@ const searchMode = computed(() => {
 	if (query.value === '') {
 		return SEARCH_MODE.ALL
 	}
-	const { text, project, labels, assignees } = parsedQuery.value
+	const {text, project, labels, assignees} = parsedQuery.value
 	if (assignees.length === 0 && text !== '') {
 		return SEARCH_MODE.TASKS
 	}
@@ -292,12 +292,12 @@ const isNewTaskCommand = computed(() => (
 
 const taskSearchTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 
-type Filter = {by: string, value: string | number, comparator: string}
+type Filter = { by: string, value: string | number, comparator: string }
 
 function filtersToParams(filters: Filter[]) {
-	const filter_by : Filter['by'][] = []
-	const filter_value : Filter['value'][] = []
-	const filter_comparator : Filter['comparator'][] = []
+	const filter_by: Filter['by'][] = []
+	const filter_value: Filter['value'][] = []
+	const filter_comparator: Filter['comparator'][] = []
 
 	filters.forEach(({by, value, comparator}) => {
 		filter_by.push(by)
@@ -330,7 +330,7 @@ function searchTasks() {
 		taskSearchTimeout.value = null
 	}
 
-	const { text, project: projectName, labels } = parsedQuery.value
+	const {text, project: projectName, labels} = parsedQuery.value
 
 	const filters: Filter[] = []
 
@@ -361,13 +361,13 @@ function searchTasks() {
 		}
 	}
 
-		const params = {
-			s: text,
-			...filtersToParams(filters),
-		}
+	const params = {
+		s: text,
+		...filtersToParams(filters),
+	}
 
 	taskSearchTimeout.value = setTimeout(async () => {
-		const r = await taskService.getAll({}, params) as  DoAction<ITask>[]
+		const r = await taskService.getAll({}, params) as DoAction<ITask>[]
 		foundTasks.value = r.map((t) => {
 			t.type = ACTION_TYPE.TASK
 			const project = projectStore.projects[t.projectId]
@@ -396,10 +396,10 @@ function searchTeams() {
 		clearTimeout(teamSearchTimeout.value)
 		teamSearchTimeout.value = null
 	}
-	const { assignees } = parsedQuery.value
+	const {assignees} = parsedQuery.value
 	teamSearchTimeout.value = setTimeout(async () => {
 		const teamSearchPromises = assignees.map((t) =>
-			teamService.getAll({}, { s: t }),
+			teamService.getAll({}, {s: t}),
 		)
 		const teamsResult = await Promise.all(teamSearchPromises)
 		foundTeams.value = teamsResult.flat().map((team) => {
@@ -422,21 +422,21 @@ async function doAction(type: ACTION_TYPE, item: DoAction) {
 			closeQuickActions()
 			await router.push({
 				name: 'project.index',
-				params: { projectId: (item as DoAction<IProject>).id },
+				params: {projectId: (item as DoAction<IProject>).id},
 			})
 			break
 		case ACTION_TYPE.TASK:
 			closeQuickActions()
 			await router.push({
 				name: 'task.detail',
-				params: { id: (item as DoAction<ITask>).id },
+				params: {id: (item as DoAction<ITask>).id},
 			})
 			break
 		case ACTION_TYPE.TEAM:
 			closeQuickActions()
 			await router.push({
 				name: 'teams.edit',
-				params: { id: (item as DoAction<ITeam>).id },
+				params: {id: (item as DoAction<ITeam>).id},
 			})
 			break
 		case ACTION_TYPE.CMD:
@@ -470,8 +470,8 @@ async function newTask() {
 		title: query.value,
 		projectId: currentProject.value.id,
 	})
-	success({ message: t('task.createSuccess') })
-	await router.push({ name: 'task.detail', params: { id: task.id } })
+	success({message: t('task.createSuccess')})
+	await router.push({name: 'task.detail', params: {id: task.id}})
 }
 
 async function newProject() {
@@ -481,17 +481,17 @@ async function newProject() {
 	await projectStore.createProject(new ProjectModel({
 		title: query.value,
 	}))
-	success({ message: t('project.create.createdSuccess')})
+	success({message: t('project.create.createdSuccess')})
 }
 
 async function newTeam() {
-	const newTeam = new TeamModel({ name: query.value })
+	const newTeam = new TeamModel({name: query.value})
 	const team = await teamService.create(newTeam)
 	await router.push({
 		name: 'teams.edit',
-		params: { id: team.id },
+		params: {id: team.id},
 	})
-	success({ message: t('team.create.success') })
+	success({message: t('team.create.success')})
 }
 
 type BaseButtonInstance = InstanceType<typeof BaseButton>
@@ -502,7 +502,7 @@ function setResultRefs(el: Element | ComponentPublicInstance | null, index: numb
 		resultRefs.value[index] = []
 	}
 
-	resultRefs.value[index][key] =  el as (BaseButtonInstance | null)
+	resultRefs.value[index][key] = el as (BaseButtonInstance | null)
 }
 
 function select(parentIndex: number, index: number) {
@@ -547,7 +547,7 @@ function reset() {
 <style lang="scss" scoped>
 .quick-actions {
 	overflow: hidden;
-	
+
 	// FIXME: changed position should be an option of the modal
 	:deep(.modal-content) {
 		top: 3rem;
@@ -569,6 +569,7 @@ function reset() {
 	}
 
 }
+
 .active-cmd {
 	font-size: 1.25rem;
 	margin-left: .5rem;
