@@ -286,6 +286,21 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 
 	for _, f := range opts.filters {
 
+		if f.field == "reminders" {
+			f.field = "reminders.reminder"
+			continue
+		}
+
+		if f.field == "assignees" {
+			f.field = "assignees.username"
+			continue
+		}
+
+		if f.field == "labels" || f.field == "label_id" {
+			f.field = "labels.id"
+			continue
+		}
+
 		filter := f.field
 
 		switch f.comparator {
