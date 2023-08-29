@@ -84,7 +84,6 @@
 
 <script setup lang="ts">
 import {computed} from 'vue'
-import {useI18n} from 'vue-i18n'
 
 import {getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
@@ -108,12 +107,9 @@ const {
 	showProject?: boolean,
 }>()
 
-const {t} = useI18n({useScope: 'global'})
-
 const projectStore = useProjectStore()
 
 const project = computed(() => projectStore.projects[task.projectId])
-const projectColor = computed(() => project.value ? project.value?.hexColor : '')
 </script>
 
 <style lang="scss" scoped>
