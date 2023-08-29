@@ -44,6 +44,9 @@
 							@keyup.prevent.enter="doAction(r.type, i)"
 							@keyup.prevent.esc="searchInput?.focus()"
 						>
+							<span v-if="i.identifier" class="has-text-grey-light">
+								{{ i.identifier }}
+							</span>
 							{{ i.title }}
 						</BaseButton>
 					</div>
