@@ -902,6 +902,7 @@
     "tasks": "Opgaver",
     "projects": "Projects",
     "teams": "Hold",
+    "labels": "Labels",
     "newProject": "Enter the title of the new project…",
     "newTask": "Indtast titlen på den nye opgave…",
     "newTeam": "Indtast navnet på det nye hold…",

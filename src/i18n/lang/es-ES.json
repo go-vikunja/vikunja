@@ -902,6 +902,7 @@
     "tasks": "Tareas",
     "projects": "Proyectos",
     "teams": "Equipos",
+    "labels": "Labels",
     "newProject": "Introduzca el título del nuevo proyecto…",
     "newTask": "Introduzca el título de la nueva tarea…",
     "newTeam": "Introduzca el nombre del nuevo equipo…",

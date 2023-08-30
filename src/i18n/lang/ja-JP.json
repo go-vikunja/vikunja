@@ -902,6 +902,7 @@
     "tasks": "タスク",
     "projects": "プロジェクト",
     "teams": "チーム",
+    "labels": "Labels",
     "newProject": "新しいプロジェクト名を入力…",
     "newTask": "新しいタスク名を入力…",
     "newTeam": "新しいチーム名を入力…",

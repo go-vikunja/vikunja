@@ -902,6 +902,7 @@
     "tasks": "Tarefas",
     "projects": "Projects",
     "teams": "Equipes",
+    "labels": "Labels",
     "newProject": "Enter the title of the new project…",
     "newTask": "Enter the title of the new task…",
     "newTeam": "Enter the name of the new team…",
