@@ -238,13 +238,17 @@ func (tc *TaskComment) ReadAll(s *xorm.Session, auth web.Auth, search string, pa
 
 	limit, start := getLimitFromPageIndex(page, perPage)
 	comments := []*TaskComment{}
+	where := []builder.Cond{
+		builder.Eq{"task_id": tc.TaskID},
+	}
+
+	if search != "" {
+		where = append(where, db.ILIKE("comment", search))
+	}
 	query := s.
-		Where(builder.And(
-			builder.Eq{"task_id": tc.TaskID},
-			db.ILIKE("comment", search),
-		)).
+		Where(builder.And(where...)).
 		Join("LEFT", "users", "users.id = task_comments.author_id").
-		OrderBy("id", "asc")
+		OrderBy("task_comments.id asc")
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}

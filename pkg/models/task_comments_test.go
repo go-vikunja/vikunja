@@ -214,8 +214,8 @@ func TestTaskComment_ReadAll(t *testing.T) {
 		tc := &TaskComment{TaskID: 1}
 		u := &user.User{ID: 1}
 		result, resultCount, total, err := tc.ReadAll(s, u, "", 0, -1)
-		resultComment := result.([]*TaskComment)
 		assert.NoError(t, err)
+		resultComment := result.([]*TaskComment)
 		assert.Equal(t, 1, resultCount)
 		assert.Equal(t, int64(1), total)
 		assert.Equal(t, int64(1), resultComment[0].ID)
@@ -241,8 +241,8 @@ func TestTaskComment_ReadAll(t *testing.T) {
 		tc := &TaskComment{TaskID: 35}
 		u := &user.User{ID: 1}
 		result, _, _, err := tc.ReadAll(s, u, "", 0, -1)
-		comments := result.([]*TaskComment)
 		assert.NoError(t, err)
+		comments := result.([]*TaskComment)
 		assert.Len(t, comments, 2)
 		var foundComment bool
 		for _, comment := range comments {
@@ -261,8 +261,8 @@ func TestTaskComment_ReadAll(t *testing.T) {
 		tc := &TaskComment{TaskID: 35}
 		u := &user.User{ID: 1}
 		result, _, _, err := tc.ReadAll(s, u, "COMMENT 15", 0, -1)
-		resultComment := result.([]*TaskComment)
 		assert.NoError(t, err)
+		resultComment := result.([]*TaskComment)
 		assert.Equal(t, int64(15), resultComment[0].ID)
 	})
 }
