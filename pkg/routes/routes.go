@@ -312,7 +312,11 @@ func registerAPIRoutes(a *echo.Group) {
 				return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 			}
 
-			if token.ExpiresAt.After(time.Now()) {
+			if time.Now().After(token.ExpiresAt) {
+				return echo.NewHTTPError(http.StatusUnauthorized)
+			}
+
+			if !CanDoAPIRoute(c, token) {
 				return echo.NewHTTPError(http.StatusUnauthorized)
 			}
 

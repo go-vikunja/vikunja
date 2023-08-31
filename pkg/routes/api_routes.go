@@ -17,6 +17,7 @@
 package routes
 
 import (
+	"code.vikunja.io/api/pkg/models"
 	"net/http"
 	"strings"
 
@@ -30,15 +31,20 @@ func init() {
 }
 
 type APITokenRoute struct {
-	Create  string `json:"create,omitempty"`
-	ReadOne string `json:"read_one,omitempty"`
-	ReadAll string `json:"read_all,omitempty"`
-	Update  string `json:"update,omitempty"`
-	Delete  string `json:"delete,omitempty"`
+	Create  *RouteDetail `json:"create,omitempty"`
+	ReadOne *RouteDetail `json:"read_one,omitempty"`
+	ReadAll *RouteDetail `json:"read_all,omitempty"`
+	Update  *RouteDetail `json:"update,omitempty"`
+	Delete  *RouteDetail `json:"delete,omitempty"`
 }
 
-func getRouteGroupName(route echo.Route) string {
-	parts := strings.Split(strings.TrimPrefix(route.Path, "/api/v1/"), "/")
+type RouteDetail struct {
+	Path   string `json:"path"`
+	Method string `json:"method"`
+}
+
+func getRouteGroupName(path string) string {
+	parts := strings.Split(strings.TrimPrefix(path, "/api/v1/"), "/")
 	filteredParts := []string{}
 	for _, part := range parts {
 		if strings.HasPrefix(part, ":") {
@@ -64,7 +70,7 @@ func collectRoutesForAPITokenUsage(route echo.Route) {
 		return
 	}
 
-	routeGroupName := getRouteGroupName(route)
+	routeGroupName := getRouteGroupName(route.Path)
 
 	if routeGroupName == "subscriptions" ||
 		routeGroupName == "notifications" ||
@@ -79,19 +85,34 @@ func collectRoutesForAPITokenUsage(route echo.Route) {
 	}
 
 	if strings.Contains(route.Name, "CreateWeb") {
-		apiTokenRoutes[routeGroupName].Create = route.Path
+		apiTokenRoutes[routeGroupName].Create = &RouteDetail{
+			Path:   route.Path,
+			Method: route.Method,
+		}
 	}
 	if strings.Contains(route.Name, "ReadWeb") {
-		apiTokenRoutes[routeGroupName].ReadOne = route.Path
+		apiTokenRoutes[routeGroupName].ReadOne = &RouteDetail{
+			Path:   route.Path,
+			Method: route.Method,
+		}
 	}
 	if strings.Contains(route.Name, "ReadAllWeb") {
-		apiTokenRoutes[routeGroupName].ReadAll = route.Path
+		apiTokenRoutes[routeGroupName].ReadAll = &RouteDetail{
+			Path:   route.Path,
+			Method: route.Method,
+		}
 	}
 	if strings.Contains(route.Name, "UpdateWeb") {
-		apiTokenRoutes[routeGroupName].Update = route.Path
+		apiTokenRoutes[routeGroupName].Update = &RouteDetail{
+			Path:   route.Path,
+			Method: route.Method,
+		}
 	}
 	if strings.Contains(route.Name, "DeleteWeb") {
-		apiTokenRoutes[routeGroupName].Delete = route.Path
+		apiTokenRoutes[routeGroupName].Delete = &RouteDetail{
+			Path:   route.Path,
+			Method: route.Method,
+		}
 	}
 }
 
@@ -105,4 +126,44 @@ func collectRoutesForAPITokenUsage(route echo.Route) {
 // @Router /routes [get]
 func GetAvailableAPIRoutesForToken(c echo.Context) error {
 	return c.JSON(http.StatusOK, apiTokenRoutes)
+}
+
+// CanDoAPIRoute checks if a token is allowed to use the current api route
+func CanDoAPIRoute(c echo.Context, token *models.APIToken) (can bool) {
+	routeGroupName := getRouteGroupName(c.Path())
+
+	group, hasGroup := token.Permissions[routeGroupName]
+	if !hasGroup {
+		return false
+	}
+
+	var route string
+	routes, has := apiTokenRoutes[routeGroupName]
+	if !has {
+		return false
+	}
+
+	if routes.Create != nil && routes.Create.Path == c.Path() && routes.Create.Method == c.Request().Method {
+		route = "create"
+	}
+	if routes.ReadOne != nil && routes.ReadOne.Path == c.Path() && routes.ReadOne.Method == c.Request().Method {
+		route = "read_one"
+	}
+	if routes.ReadAll != nil && routes.ReadAll.Path == c.Path() && routes.ReadAll.Method == c.Request().Method {
+		route = "read_all"
+	}
+	if routes.Update != nil && routes.Update.Path == c.Path() && routes.Update.Method == c.Request().Method {
+		route = "update"
+	}
+	if routes.Delete != nil && routes.Delete.Path == c.Path() && routes.Delete.Method == c.Request().Method {
+		route = "delete"
+	}
+
+	for _, p := range group {
+		if p == route {
+			return true
+		}
+	}
+
+	return false
 }
