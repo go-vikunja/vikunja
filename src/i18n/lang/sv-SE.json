@@ -172,8 +172,8 @@
     "color": "Färg",
     "projects": "Projekt",
     "parent": "Parent Project",
-    "search": "Type to search for a project…",
-    "searchSelect": "Click or press enter to select this project",
+    "search": "Skriv för att söka efter ett projekt…",
+    "searchSelect": "Klicka eller tryck på enter för att välja detta projekt",
     "shared": "Delade projekt",
     "noDescriptionAvailable": "No project description is available.",
     "inboxTitle": "Inkorg",
@@ -294,7 +294,7 @@
       "noDates": "This task has no dates set."
     },
     "table": {
-      "title": "Table",
+      "title": "Tabell",
       "columns": "Kolumner"
     },
     "kanban": {
@@ -902,7 +902,7 @@
     "tasks": "Uppgifter",
     "projects": "Projekt",
     "teams": "Teams",
-    "labels": "Labels",
+    "labels": "Etiketter",
     "newProject": "Enter the title of the new project…",
     "newTask": "Enter the title of the new task…",
     "newTeam": "Enter the name of the new team…",

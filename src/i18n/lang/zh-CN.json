@@ -902,6 +902,7 @@
     "tasks": "任务",
     "projects": "Projects",
     "teams": "团队",
+    "labels": "Labels",
     "newProject": "Enter the title of the new project…",
     "newTask": "输入新任务的标题...",
     "newTeam": "输入新团队的名称...",

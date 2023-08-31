@@ -5,7 +5,7 @@
     "welcomeDay": "Ciao {username}!",
     "welcomeEvening": "Buonasera {username}!",
     "lastViewed": "Ultima visualizzazione",
-    "addToHomeScreen": "Add this app to your home screen for faster access and improved experience.",
+    "addToHomeScreen": "Aggiungi questa app alla tua schermata iniziale per un accesso più veloce e un'esperienza migliore.",
     "project": {
       "importText": "Import your projects and tasks from other services into Vikunja:",
       "import": "Importa i tuoi dati in Vikunja"
@@ -166,8 +166,8 @@
   },
   "project": {
     "archivedMessage": "This project is archived. It is not possible to create new or edit tasks for it.",
-    "archived": "Archived",
-    "showArchived": "Show Archived",
+    "archived": "Archiviati",
+    "showArchived": "Mostra Archiviati",
     "title": "Titolo Progetto",
     "color": "Colore",
     "projects": "Progetti",
