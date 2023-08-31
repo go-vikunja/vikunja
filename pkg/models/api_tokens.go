@@ -39,7 +39,7 @@ type APIToken struct {
 	// A human-readable name for this token
 	Title string `xorm:"not null" json:"title" valid:"required"`
 	// The actual api key. Only visible after creation.
-	Token          string `xorm:"-" json:"key,omitempty"`
+	Token          string `xorm:"-" json:"token,omitempty"`
 	TokenSalt      string `xorm:"not null" json:"-"`
 	TokenHash      string `xorm:"not null unique" json:"-"`
 	TokenLastEight string `xorm:"not null index varchar(8)" json:"-"`
@@ -58,6 +58,8 @@ type APIToken struct {
 	web.Rights   `xorm:"-" json:"-"`
 	web.CRUDable `xorm:"-" json:"-"`
 }
+
+const APITokenPrefix = `tk_`
 
 func (*APIToken) TableName() string {
 	return "api_tokens"
@@ -94,7 +96,7 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 	t.TokenSalt = salt
-	t.Token = "tk_" + hex.EncodeToString(token)
+	t.Token = APITokenPrefix + hex.EncodeToString(token)
 	t.TokenHash = HashToken(t.Token, t.TokenSalt)
 	t.TokenLastEight = t.Token[len(t.Token)-8:]
 

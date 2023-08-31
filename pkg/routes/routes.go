@@ -51,6 +51,7 @@ package routes
 
 import (
 	"errors"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -280,7 +281,42 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 
 	// ===== Routes with Authentication =====
-	a.Use(echojwt.JWT([]byte(config.ServiceJWTSecret.GetString())))
+	a.Use(echojwt.WithConfig(echojwt.Config{
+		SigningKey: []byte(config.ServiceJWTSecret.GetString()),
+		Skipper: func(c echo.Context) bool {
+			authHeader := c.Request().Header.Values("Authorization")
+			if len(authHeader) == 0 {
+				return false // let the jwt middleware handle invalid headers
+			}
+
+			for _, s := range authHeader {
+				if strings.HasPrefix(s, "Bearer "+models.APITokenPrefix) {
+					c.Set("api_token", s)
+					return true
+				}
+			}
+
+			return false
+		},
+	}))
+
+	a.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			// If this is empty we assume we're dealing with a "real" user who has provided a jwt
+			tokenString, is := c.Get("api_token").(string)
+			if !is || tokenString == "" {
+				return next(c)
+			}
+			token, err := models.GetTokenFromTokenString(db.NewSession(), strings.TrimPrefix(tokenString, "Bearer "))
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
+			}
+
+			c.Set("api_token", token)
+
+			return next(c)
+		}
+	})
 
 	// Rate limit
 	setupRateLimit(a, config.RateLimitKind.GetString())
