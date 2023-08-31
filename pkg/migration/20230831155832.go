@@ -23,14 +23,16 @@ import (
 )
 
 type api_tokens20230831155832 struct {
-	ID          int64               `xorm:"bigint autoincr not null unique pk" json:"id" param:"token"`
-	Title       string              `xorm:"not null" json:"title"`
-	Key         string              `xorm:"not null varchar(50)" json:"key"`
-	Permissions map[string][]string `xorm:"json not null" json:"permissions"`
-	ExpiresAt   time.Time           `xorm:"not null" json:"expires_at"`
-	Created     time.Time           `xorm:"created not null" json:"created"`
-	Updated     time.Time           `xorm:"updated not null" json:"updated"`
-	OwnerID     int64               `xorm:"bigint not null" json:"-"`
+	ID             int64               `xorm:"bigint autoincr not null unique pk" json:"id" param:"token"`
+	Title          string              `xorm:"not null" json:"title"`
+	TokenSalt      string              `xorm:"not null" json:"-"`
+	TokenHash      string              `xorm:"not null unique" json:"-"`
+	TokenLastEight string              `xorm:"not null index varchar(8)" json:"-"`
+	Permissions    map[string][]string `xorm:"json not null" json:"permissions"`
+	ExpiresAt      time.Time           `xorm:"not null" json:"expires_at"`
+	Created        time.Time           `xorm:"created not null" json:"created"`
+	Updated        time.Time           `xorm:"updated not null" json:"updated"`
+	OwnerID        int64               `xorm:"bigint not null" json:"-"`
 }
 
 func (api_tokens20230831155832) TableName() string {

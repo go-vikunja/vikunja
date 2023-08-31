@@ -17,6 +17,10 @@
 package models
 
 import (
+	"crypto/sha256"
+	"crypto/subtle"
+	"encoding/hex"
+	"golang.org/x/crypto/pbkdf2"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
@@ -35,7 +39,10 @@ type APIToken struct {
 	// A human-readable name for this token
 	Title string `xorm:"not null" json:"title" valid:"required"`
 	// The actual api key. Only visible after creation.
-	Key string `xorm:"not null varchar(50)" json:"key,omitempty"`
+	Token          string `xorm:"-" json:"key,omitempty"`
+	TokenSalt      string `xorm:"not null" json:"-"`
+	TokenHash      string `xorm:"not null unique" json:"-"`
+	TokenLastEight string `xorm:"not null index varchar(8)" json:"-"`
 	// The permissions this token has. Possible values are available via the /routes endpoint and consist of the keys of the list from that endpoint. For example, if the token should be able to read all tasks as well as update existing tasks, you should add `{"tasks":["read_all","update"]}`.
 	Permissions APIPermissions `xorm:"json not null" json:"permissions" valid:"required"`
 	// The date when this key expires.
@@ -77,13 +84,31 @@ func GetAPITokenByID(s *xorm.Session, id int64) (token *APIToken, err error) {
 // @Router /tokens [put]
 func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 	t.ID = 0
-	t.Key = "tk_" + utils.MakeRandomString(32)
+
+	salt, err := utils.CryptoRandomString(10)
+	if err != nil {
+		return err
+	}
+	token, err := utils.CryptoRandomBytes(20)
+	if err != nil {
+		return err
+	}
+	t.TokenSalt = salt
+	t.Token = "tk_" + hex.EncodeToString(token)
+	t.TokenHash = HashToken(t.Token, t.TokenSalt)
+	t.TokenLastEight = t.Token[len(t.Token)-8:]
+
 	t.OwnerID = a.GetID()
 
 	// TODO: validate permissions
 
 	_, err = s.Insert(t)
 	return err
+}
+
+func HashToken(token, salt string) string {
+	tempHash := pbkdf2.Key([]byte(token), []byte(salt), 10000, 50, sha256.New)
+	return hex.EncodeToString(tempHash)
 }
 
 // ReadAll returns all api tokens the current user has created
@@ -115,10 +140,6 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 		return nil, 0, 0, err
 	}
 
-	for _, token := range tokens {
-		token.Key = ""
-	}
-
 	totalCount, err := query.Count(&APIToken{})
 	return tokens, len(tokens), totalCount, err
 }
@@ -138,4 +159,24 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
 	_, err = s.Where("id = ? AND owner_id = ?", t.ID, a.GetID()).Delete(&APIToken{})
 	return err
+}
+
+// GetTokenFromTokenString returns the full token object from the original token string.
+func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken, err error) {
+	lastEight := token[len(token)-8:]
+
+	tokens := []*APIToken{}
+	err = s.Where("token_last_eight = ?", lastEight).Find(&tokens)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, t := range tokens {
+		tempHash := HashToken(token, t.TokenSalt)
+		if subtle.ConstantTimeCompare([]byte(t.TokenHash), []byte(tempHash)) == 1 {
+			return t, nil
+		}
+	}
+
+	return nil, &ErrAPITokenInvalid{}
 }
