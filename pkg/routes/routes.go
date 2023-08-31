@@ -563,6 +563,16 @@ func registerAPIRoutes(a *echo.Group) {
 			a.GET("/backgrounds/unsplash/images/:image", unsplash.ProxyUnsplashImage)
 		}
 	}
+
+	// API Tokens
+	apiTokenProvider := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.APIToken{}
+		},
+	}
+	a.GET("/tokens", apiTokenProvider.ReadAllWeb)
+	a.PUT("/tokens", apiTokenProvider.CreateWeb)
+	a.DELETE("/tokens/:token", apiTokenProvider.DeleteWeb)
 }
 
 func registerMigrations(m *echo.Group) {

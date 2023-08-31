@@ -17,9 +17,10 @@
 package routes
 
 import (
-	"github.com/labstack/echo/v4"
 	"net/http"
 	"strings"
+
+	"github.com/labstack/echo/v4"
 )
 
 var apiTokenRoutes = map[string]*APITokenRoute{}
@@ -56,7 +57,7 @@ func getRouteGroupName(route echo.Route) string {
 	}
 }
 
-// gets called for every added APITokenRoute and builds a list of all routes we can use for the api tokens.
+// collectRoutesForAPITokenUsage gets called for every added APITokenRoute and builds a list of all routes we can use for the api tokens.
 func collectRoutesForAPITokenUsage(route echo.Route) {
 
 	if !strings.Contains(route.Name, "(*WebHandler)") {
@@ -65,7 +66,10 @@ func collectRoutesForAPITokenUsage(route echo.Route) {
 
 	routeGroupName := getRouteGroupName(route)
 
-	if routeGroupName == "subscriptions" || routeGroupName == "notifications" || strings.HasSuffix(routeGroupName, "_bulk") {
+	if routeGroupName == "subscriptions" ||
+		routeGroupName == "notifications" ||
+		routeGroupName == "tokens" ||
+		strings.HasSuffix(routeGroupName, "_bulk") {
 		return
 	}
 
@@ -94,7 +98,7 @@ func collectRoutesForAPITokenUsage(route echo.Route) {
 // GetAvailableAPIRoutesForToken returns a list of all API routes which are available for token usage.
 // @Summary Get a list of all token api routes
 // @Description Returns a list of all API routes which are available to use with an api token, not a user login.
-// @tags opi
+// @tags api
 // @Produce json
 // @Security JWTKeyAuth
 // @Success 200 {array} routes.APITokenRoute "The list of all routes."

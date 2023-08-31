@@ -22,6 +22,8 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/log"
+	_ "code.vikunja.io/api/pkg/swagger" // To make sure the swag files are properly registered
+
 	"github.com/labstack/echo/v4"
 	"github.com/swaggo/swag"
 )
