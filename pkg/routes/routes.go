@@ -202,6 +202,9 @@ func RegisterRoutes(e *echo.Echo) {
 
 	// API Routes
 	a := e.Group("/api/v1")
+	e.OnAddRouteHandler = func(host string, route echo.Route, handler echo.HandlerFunc, middleware []echo.MiddlewareFunc) {
+		collectRoutesForAPITokenUsage(route)
+	}
 	registerAPIRoutes(a)
 }
 
@@ -286,6 +289,7 @@ func registerAPIRoutes(a *echo.Group) {
 	setupMetricsMiddleware(a)
 
 	a.POST("/tokenTest", apiv1.CheckToken)
+	a.GET("/routes", GetAvailableAPIRoutesForToken)
 
 	// User stuff
 	u := a.Group("/user")
