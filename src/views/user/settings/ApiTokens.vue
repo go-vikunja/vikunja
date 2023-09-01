@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ApiTokenService from '@/services/apiToken'
 import {computed, onMounted, ref} from 'vue'
-import {formatDateShort} from '@/helpers/time/formatDate'
+import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
 import XButton from '@/components/input/button.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import ApiTokenModel from '@/models/apiTokenModel'
@@ -138,7 +138,12 @@ function formatPermissionTitle(title: string): string {
 						<br/>
 					</template>
 				</td>
-				<td>{{ formatDateShort(tk.expiresAt) }}</td>
+				<td>
+					{{ formatDateShort(tk.expiresAt) }}
+					<p v-if="tk.expiresAt < new Date()" class="has-text-danger">
+						{{ $t('user.settings.apiTokens.expired', {ago: formatDateSince(tk.expiresAt)}) }}
+					</p>
+				</td>
 				<td>{{ formatDateShort(tk.created) }}</td>
 				<td class="has-text-right">
 					<x-button variant="secondary" @click="() => {tokenToDelete = tk; showDeleteModal = true}">
