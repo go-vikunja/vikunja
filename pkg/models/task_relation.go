@@ -108,6 +108,36 @@ func (*TaskRelation) TableName() string {
 // This avoids the need for an extra type TaskWithRelation (or similar).
 type RelatedTaskMap map[RelationKind][]*Task
 
+func getInverseRelation(kind RelationKind) RelationKind {
+	switch kind {
+	case RelationKindSubtask:
+		return RelationKindParenttask
+	case RelationKindParenttask:
+		return RelationKindSubtask
+	case RelationKindRelated:
+		return RelationKindRelated
+	case RelationKindDuplicateOf:
+		return RelationKindDuplicates
+	case RelationKindDuplicates:
+		return RelationKindDuplicateOf
+	case RelationKindBlocking:
+		return RelationKindBlocked
+	case RelationKindBlocked:
+		return RelationKindBlocking
+	case RelationKindPreceeds:
+		return RelationKindFollows
+	case RelationKindFollows:
+		return RelationKindPreceeds
+	case RelationKindCopiedFrom:
+		return RelationKindCopiedTo
+	case RelationKindCopiedTo:
+		return RelationKindCopiedFrom
+	case RelationKindUnknown:
+		// Nothing to do
+	}
+	return RelationKindUnknown
+}
+
 // Create creates a new task relation
 // @Summary Create a new relation between two tasks
 // @Description Creates a new relation between two tasks. The user needs to have update rights on the base task and at least read rights on the other task. Both tasks do not need to be on the same project. Take a look at the docs for available task relation kinds.
@@ -155,36 +185,10 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 
 	// Build up the other relation (see the comment above for explanation)
 	otherRelation := &TaskRelation{
-		TaskID:      rel.OtherTaskID,
-		OtherTaskID: rel.TaskID,
-		CreatedByID: rel.CreatedByID,
-	}
-
-	switch rel.RelationKind {
-	case RelationKindSubtask:
-		otherRelation.RelationKind = RelationKindParenttask
-	case RelationKindParenttask:
-		otherRelation.RelationKind = RelationKindSubtask
-	case RelationKindRelated:
-		otherRelation.RelationKind = RelationKindRelated
-	case RelationKindDuplicateOf:
-		otherRelation.RelationKind = RelationKindDuplicates
-	case RelationKindDuplicates:
-		otherRelation.RelationKind = RelationKindDuplicateOf
-	case RelationKindBlocking:
-		otherRelation.RelationKind = RelationKindBlocked
-	case RelationKindBlocked:
-		otherRelation.RelationKind = RelationKindBlocking
-	case RelationKindPreceeds:
-		otherRelation.RelationKind = RelationKindFollows
-	case RelationKindFollows:
-		otherRelation.RelationKind = RelationKindPreceeds
-	case RelationKindCopiedFrom:
-		otherRelation.RelationKind = RelationKindCopiedTo
-	case RelationKindCopiedTo:
-		otherRelation.RelationKind = RelationKindCopiedFrom
-	case RelationKindUnknown:
-		// Nothing to do
+		TaskID:       rel.OtherTaskID,
+		OtherTaskID:  rel.TaskID,
+		CreatedByID:  rel.CreatedByID,
+		RelationKind: getInverseRelation(rel.RelationKind),
 	}
 
 	// Finally insert everything
@@ -230,7 +234,7 @@ func (rel *TaskRelation) Delete(s *xorm.Session, a web.Auth) error {
 		builder.And(
 			builder.Eq{"task_id": rel.OtherTaskID},
 			builder.Eq{"other_task_id": rel.TaskID},
-			builder.Eq{"relation_kind": rel.RelationKind},
+			builder.Eq{"relation_kind": getInverseRelation(rel.RelationKind)},
 		),
 	)
 

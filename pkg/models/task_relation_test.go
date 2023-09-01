@@ -118,6 +118,11 @@ func TestTaskRelation_Delete(t *testing.T) {
 			"other_task_id": 29,
 			"relation_kind": RelationKindSubtask,
 		})
+		db.AssertMissing(t, "task_relations", map[string]interface{}{
+			"task_id":       29,
+			"other_task_id": 1,
+			"relation_kind": RelationKindParenttask,
+		})
 	})
 	t.Run("Not existing", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
