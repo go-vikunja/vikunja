@@ -8,7 +8,7 @@ export default class ApiTokenModel extends AbstractModel<IApiToken> {
 	expiresAt: Date = null
 	created: Date = null
 	
-	constructor(data: Partial<IApiToken>) {
+	constructor(data: Partial<IApiToken> = {}) {
 		super()
 		
 		this.assignData(data)

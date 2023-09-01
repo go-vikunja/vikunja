@@ -22,4 +22,15 @@ export default class ApiTokenService extends AbstractService<IApiToken> {
 	modelFactory(data: Partial<IApiToken>) {
 		return new ApiTokenModel(data)
 	}
+	
+	async getAvailableRoutes() {
+		const cancel = this.setLoading()
+
+		try {
+			const response = await this.http.get('/routes')
+			return response.data
+		} finally {
+			cancel()
+		}
+	}
 }
