@@ -14,13 +14,11 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package routes
+package models
 
 import (
 	"net/http"
 	"strings"
-
-	"code.vikunja.io/api/pkg/models"
 
 	"github.com/labstack/echo/v4"
 )
@@ -64,8 +62,8 @@ func getRouteGroupName(path string) string {
 	}
 }
 
-// collectRoutesForAPITokenUsage gets called for every added APITokenRoute and builds a list of all routes we can use for the api tokens.
-func collectRoutesForAPITokenUsage(route echo.Route) {
+// CollectRoutesForAPITokenUsage gets called for every added APITokenRoute and builds a list of all routes we can use for the api tokens.
+func CollectRoutesForAPITokenUsage(route echo.Route) {
 
 	if !strings.Contains(route.Name, "(*WebHandler)") {
 		return
@@ -130,7 +128,7 @@ func GetAvailableAPIRoutesForToken(c echo.Context) error {
 }
 
 // CanDoAPIRoute checks if a token is allowed to use the current api route
-func CanDoAPIRoute(c echo.Context, token *models.APIToken) (can bool) {
+func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 	routeGroupName := getRouteGroupName(c.Path())
 
 	group, hasGroup := token.Permissions[routeGroupName]
@@ -167,4 +165,51 @@ func CanDoAPIRoute(c echo.Context, token *models.APIToken) (can bool) {
 	}
 
 	return false
+}
+
+func PermissionsAreValid(permissions APIPermissions) (err error) {
+
+	for key, methods := range permissions {
+		routes, has := apiTokenRoutes[key]
+		if !has {
+			return &ErrInvalidAPITokenPermission{
+				Group: key,
+			}
+		}
+
+		for _, method := range methods {
+			if method == "create" && routes.Create == nil {
+				return &ErrInvalidAPITokenPermission{
+					Group:      key,
+					Permission: method,
+				}
+			}
+			if method == "read_one" && routes.ReadOne == nil {
+				return &ErrInvalidAPITokenPermission{
+					Group:      key,
+					Permission: method,
+				}
+			}
+			if method == "read_all" && routes.ReadAll == nil {
+				return &ErrInvalidAPITokenPermission{
+					Group:      key,
+					Permission: method,
+				}
+			}
+			if method == "update" && routes.Update == nil {
+				return &ErrInvalidAPITokenPermission{
+					Group:      key,
+					Permission: method,
+				}
+			}
+			if method == "delete" && routes.Delete == nil {
+				return &ErrInvalidAPITokenPermission{
+					Group:      key,
+					Permission: method,
+				}
+			}
+		}
+	}
+
+	return nil
 }

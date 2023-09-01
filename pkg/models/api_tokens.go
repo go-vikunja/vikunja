@@ -102,7 +102,9 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	t.OwnerID = a.GetID()
 
-	// TODO: validate permissions
+	if err := PermissionsAreValid(t.Permissions); err != nil {
+		return err
+	}
 
 	_, err = s.Insert(t)
 	return err

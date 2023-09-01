@@ -1685,3 +1685,31 @@ func (err ErrAPITokenInvalid) HTTPError() web.HTTPError {
 		Message:  "The provided api token is invalid.",
 	}
 }
+
+// ErrInvalidAPITokenPermission represents an error where an api token is invalid
+type ErrInvalidAPITokenPermission struct {
+	Group      string
+	Permission string
+}
+
+// IsErrInvalidAPITokenPermission checks if an error is ErrInvalidAPITokenPermission.
+func IsErrInvalidAPITokenPermission(err error) bool {
+	_, ok := err.(*ErrInvalidAPITokenPermission)
+	return ok
+}
+
+func (err *ErrInvalidAPITokenPermission) Error() string {
+	return fmt.Sprintf("API token permission %s of group %s is invalid", err.Permission, err.Group)
+}
+
+// ErrCodeInvalidAPITokenPermission holds the unique world-error code of this error
+const ErrCodeInvalidAPITokenPermission = 14002
+
+// HTTPError holds the http error description
+func (err ErrInvalidAPITokenPermission) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidAPITokenPermission,
+		Message:  fmt.Sprintf("The permission %s of group %s is invalid.", err.Permission, err.Group),
+	}
+}
