@@ -23,7 +23,6 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 
 	echojwt "github.com/labstack/echo-jwt/v4"
@@ -43,7 +42,6 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 				if strings.HasPrefix(s, "Bearer "+models.APITokenPrefix) {
 					err := checkAPITokenAndPutItInContext(s, c)
 					if err != nil {
-						log.Errorf("Could not check api token: %v", err)
 						return false
 					}
 					return true
@@ -51,6 +49,13 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 			}
 
 			return false
+		},
+		ErrorHandler: func(c echo.Context, err error) error {
+			if err != nil {
+				return echo.NewHTTPError(http.StatusUnauthorized, "missing, malformed, expired or otherwise invalid token provided").SetInternal(err)
+			}
+
+			return nil
 		},
 	})
 }
