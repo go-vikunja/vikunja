@@ -59,6 +59,9 @@ service:
   # The maximum size clients will be able to request for user avatars.
   # If clients request a size bigger than this, it will be changed on the fly.
   maxavatarsize: 1024
+  # If set to true, the frontend will show a big red warning not to use this instance for real data as it will be cleared out.
+  # You probably don't need to set this value, it was created specifically for usage on [try](https://try.vikunja.io).
+  demomode: false
 
 database:
   # Database type to use. Supported types are mysql, postgres and sqlite.

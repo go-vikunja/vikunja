@@ -333,6 +333,18 @@ Full path: `service.maxavatarsize`
 Environment path: `VIKUNJA_SERVICE_MAXAVATARSIZE`
 
 
+### demomode
+
+If set to true, the frontend will show a big red warning not to use this instance for real data as it will be cleared out.
+You probably don't need to set this value, it was created specifically for usage on [try](https://try.vikunja.io).
+
+Default: `false`
+
+Full path: `service.demomode`
+
+Environment path: `VIKUNJA_SERVICE_DEMOMODE`
+
+
 ---
 
 ## database

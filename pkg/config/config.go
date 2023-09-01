@@ -49,6 +49,7 @@ const (
 	ServiceRootpath        Key = `service.rootpath`
 	ServiceStaticpath      Key = `service.staticpath`
 	ServiceMaxItemsPerPage Key = `service.maxitemsperpage`
+	ServiceDemoMode        Key = `service.demomode`
 	// Deprecated: Use metrics.enabled
 	ServiceEnableMetrics         Key = `service.enablemetrics`
 	ServiceMotd                  Key = `service.motd`
@@ -300,6 +301,7 @@ func InitDefaultConfig() {
 	ServiceEnableEmailReminders.setDefault(true)
 	ServiceEnableUserDeletion.setDefault(true)
 	ServiceMaxAvatarSize.setDefault(1024)
+	ServiceDemoMode.setDefault(false)
 
 	// Auth
 	AuthLocalEnabled.setDefault(true)
