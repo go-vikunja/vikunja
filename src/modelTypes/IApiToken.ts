@@ -6,6 +6,7 @@ export interface IApiPermission {
 
 export interface IApiToken extends IAbstract {
 	id: number
+	title: string
 	token: string
 	permissions: IApiPermission
 	expiresAt: Date

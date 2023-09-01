@@ -3,6 +3,7 @@ import type {IApiToken} from '@/modelTypes/IApiToken'
 
 export default class ApiTokenModel extends AbstractModel<IApiToken> {
 	id = 0
+	title = ''
 	token = ''
 	permissions = null
 	expiresAt: Date = null

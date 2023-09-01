@@ -16,6 +16,8 @@ const availableRoutes = ref(null)
 const newToken = ref(new ApiTokenModel())
 const newTokenExpiry = ref<string | number>(30)
 const newTokenPermissions = ref({})
+const newTokenTitleValid = ref(true)
+const apiTokenTitle = ref()
 
 onMounted(async () => {
 	tokens.value = await service.getAll()
@@ -38,12 +40,17 @@ function deleteToken() {
 }
 
 async function createToken() {
+	if (!newTokenTitleValid.value) {
+		apiTokenTitle.value.focus()
+		return
+	}
+	
 	const expiry = Number(newTokenExpiry.value)
-	if(!isNaN(expiry)) {
+	if (!isNaN(expiry)) {
 		// if it's a number, we assume it's the number of days in the future
 		newToken.value.expiresAt = new Date((new Date()) + expiry * MILLISECONDS_A_DAY)
 	}
-	
+
 	newToken.value.permissions = {}
 	Object.entries(newTokenPermissions.value).forEach(([key, ps]) => {
 		const all = Object.entries(ps)
@@ -54,7 +61,7 @@ async function createToken() {
 			newToken.value.permissions[key] = all
 		}
 	})
-	
+
 	const token = await service.create(newToken.value)
 	newToken.value = new ApiTokenModel()
 	newTokenExpiry.value = 30
@@ -113,19 +120,27 @@ async function createToken() {
 					<input
 						class="input"
 						id="apiTokenTitle"
+						ref="apiTokenTitle"
 						type="text"
 						v-focus
-						v-model="newToken.title"/>
+						:placeholder="$t('user.settings.apiTokens.attributes.titlePlaceholder')"
+						v-model="newToken.title"
+						@keyup="() => newTokenTitleValid = newToken.title !== ''"
+						@focusout="() => newTokenTitleValid = newToken.title !== ''"
+					/>
 				</div>
+				<p class="help is-danger" v-if="!newTokenTitleValid">
+					{{ $t('user.settings.apiTokens.titleRequired') }}
+				</p>
 			</div>
 
 			<!-- Expiry -->
 			<div class="field">
-				<label class="label" for="apiTokenTitle">{{
-						$t('user.settings.apiTokens.attributes.expiresAt')
-					}}</label>
+				<label class="label" for="apiTokenExpiry">
+					{{ $t('user.settings.apiTokens.attributes.expiresAt') }}
+				</label>
 				<div class="control select">
-					<select class="select" v-model="newTokenExpiry">
+					<select class="select" v-model="newTokenExpiry" id="apiTokenExpiry">
 						<option value="30">{{ $t('user.settings.apiTokens.30d') }}</option>
 						<option value="60">{{ $t('user.settings.apiTokens.60d') }}</option>
 						<option value="90">{{ $t('user.settings.apiTokens.90d') }}</option>
@@ -140,9 +155,9 @@ async function createToken() {
 				<p>{{ $t('user.settings.apiTokens.permissionExplanation') }}</p>
 				<div v-for="(routes, group) in availableRoutes" class="mb-2" :key="group">
 					<strong>{{ group }}</strong><br/>
-					<fancycheckbox 
+					<fancycheckbox
 						v-for="(paths, route) in routes"
-						:key="group+'-'+route" 
+						:key="group+'-'+route"
 						class="mr-2"
 						v-model="newTokenPermissions[group][route]"
 					>
