@@ -21,6 +21,7 @@ import (
 	"crypto/subtle"
 	"encoding/hex"
 	"time"
+	"xorm.io/builder"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/utils"
@@ -132,19 +133,24 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 
 	tokens := []*APIToken{}
 
-	query := s.Where("owner_id = ?", a.GetID()).
-		Limit(getLimitFromPageIndex(page, perPage))
+	var where builder.Cond = builder.Eq{"owner_id": a.GetID()}
 
 	if search != "" {
-		query = query.Where(db.ILIKE("title", search))
+		where = builder.And(
+			where,
+			db.ILIKE("title", search),
+		)
 	}
 
-	err = query.Find(&tokens)
+	err = s.
+		Where(where).
+		Limit(getLimitFromPageIndex(page, perPage)).
+		Find(&tokens)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	totalCount, err := query.Count(&APIToken{})
+	totalCount, err := s.Where(where).Count(&APIToken{})
 	return tokens, len(tokens), totalCount, err
 }
 

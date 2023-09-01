@@ -129,7 +129,8 @@ func GetAvailableAPIRoutesForToken(c echo.Context) error {
 
 // CanDoAPIRoute checks if a token is allowed to use the current api route
 func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
-	routeGroupName := getRouteGroupName(c.Path())
+	path := c.Request().URL.Path
+	routeGroupName := getRouteGroupName(path)
 
 	group, hasGroup := token.Permissions[routeGroupName]
 	if !hasGroup {
@@ -142,19 +143,19 @@ func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 		return false
 	}
 
-	if routes.Create != nil && routes.Create.Path == c.Path() && routes.Create.Method == c.Request().Method {
+	if routes.Create != nil && routes.Create.Path == path && routes.Create.Method == c.Request().Method {
 		route = "create"
 	}
-	if routes.ReadOne != nil && routes.ReadOne.Path == c.Path() && routes.ReadOne.Method == c.Request().Method {
+	if routes.ReadOne != nil && routes.ReadOne.Path == path && routes.ReadOne.Method == c.Request().Method {
 		route = "read_one"
 	}
-	if routes.ReadAll != nil && routes.ReadAll.Path == c.Path() && routes.ReadAll.Method == c.Request().Method {
+	if routes.ReadAll != nil && routes.ReadAll.Path == path && routes.ReadAll.Method == c.Request().Method {
 		route = "read_all"
 	}
-	if routes.Update != nil && routes.Update.Path == c.Path() && routes.Update.Method == c.Request().Method {
+	if routes.Update != nil && routes.Update.Path == path && routes.Update.Method == c.Request().Method {
 		route = "update"
 	}
-	if routes.Delete != nil && routes.Delete.Path == c.Path() && routes.Delete.Method == c.Request().Method {
+	if routes.Delete != nil && routes.Delete.Path == path && routes.Delete.Method == c.Request().Method {
 		route = "delete"
 	}
 

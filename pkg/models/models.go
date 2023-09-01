@@ -58,6 +58,7 @@ func GetTables() []interface{} {
 		&SavedFilter{},
 		&Subscription{},
 		&Favorite{},
+		&APIToken{},
 	}
 }
 
