@@ -6,7 +6,7 @@ import XButton from '@/components/input/button.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import ApiTokenModel from '@/models/apiTokenModel'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
-import {MILLISECONDS_A_DAY} from '@/constants/date'
+import {MILLISECONDS_A_DAY, SECONDS_A_DAY} from '@/constants/date'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import {useI18n} from 'vue-i18n'
@@ -81,7 +81,7 @@ async function createToken() {
 	const expiry = Number(newTokenExpiry.value)
 	if (!isNaN(expiry)) {
 		// if it's a number, we assume it's the number of days in the future
-		newToken.value.expiresAt = new Date((new Date()) + expiry * MILLISECONDS_A_DAY)
+		newToken.value.expiresAt = new Date((+new Date()) + expiry * MILLISECONDS_A_DAY)
 	} else {
 		newToken.value.expiresAt = new Date(newTokenExpiryCustom.value)
 	}
@@ -91,7 +91,6 @@ async function createToken() {
 		const all = Object.entries(ps)
 			.filter(([_, v]) => v)
 			.map(p => p[0])
-		console.log({all})
 		if (all.length > 0) {
 			newToken.value.permissions[key] = all
 		}
