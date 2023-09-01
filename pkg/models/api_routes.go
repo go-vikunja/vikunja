@@ -89,7 +89,7 @@ func CollectRoutesForAPITokenUsage(route echo.Route) {
 			Method: route.Method,
 		}
 	}
-	if strings.Contains(route.Name, "ReadWeb") {
+	if strings.Contains(route.Name, "ReadOneWeb") {
 		apiTokenRoutes[routeGroupName].ReadOne = &RouteDetail{
 			Path:   route.Path,
 			Method: route.Method,
