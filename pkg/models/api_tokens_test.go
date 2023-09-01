@@ -90,6 +90,7 @@ func TestAPIToken_Create(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		err := token.Create(s, u)
+		assert.NoError(t, err)
 	})
 }
 
