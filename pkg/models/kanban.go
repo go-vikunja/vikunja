@@ -293,10 +293,14 @@ func (b *Bucket) Update(s *xorm.Session, _ web.Auth) (err error) {
 	}
 
 	if doneBucket != nil && doneBucket.IsDoneBucket && b.IsDoneBucket && doneBucket.ID != b.ID {
-		return &ErrOnlyOneDoneBucketPerProject{
-			BucketID:     b.ID,
-			ProjectID:    b.ProjectID,
-			DoneBucketID: doneBucket.ID,
+		// When the current bucket will be the new done bucket, the old one should not be the done bucket anymore
+		doneBucket.IsDoneBucket = false
+		_, err = s.
+			Where("id = ?", doneBucket.ID).
+			Cols("is_done_bucket").
+			Update(doneBucket)
+		if err != nil {
+			return
 		}
 	}
 
