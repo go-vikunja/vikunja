@@ -11,6 +11,7 @@ import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import {useI18n} from 'vue-i18n'
 import {useAuthStore} from '@/stores/auth'
+import {camelCase} from 'camel-case'
 
 const service = new ApiTokenService()
 const tokens = ref([])
@@ -104,6 +105,10 @@ async function createToken() {
 	tokens.value.push(token)
 	showCreateForm.value = false
 }
+
+function formatPermissionTitle(title: string): string {
+	return title.replaceAll('_', ' ')
+}
 </script>
 
 <template>
@@ -127,10 +132,10 @@ async function createToken() {
 			<tr v-for="tk in tokens" :key="tk.id">
 				<td>{{ tk.id }}</td>
 				<td>{{ tk.title }}</td>
-				<td>
+				<td class="is-capitalized">
 					<template v-for="(v, p) in tk.permissions" :key="'permission-' + p">
-						<strong>{{ p }}:</strong>
-						{{ v.join(', ') }}
+						<strong>{{ formatPermissionTitle(p) }}:</strong>
+						{{ v.map(formatPermissionTitle).join(', ') }}
 						<br/>
 					</template>
 				</td>
@@ -197,14 +202,14 @@ async function createToken() {
 				<label class="label">{{ $t('user.settings.apiTokens.attributes.permissions') }}</label>
 				<p>{{ $t('user.settings.apiTokens.permissionExplanation') }}</p>
 				<div v-for="(routes, group) in availableRoutes" class="mb-2" :key="group">
-					<strong>{{ group }}</strong><br/>
+					<strong class="is-capitalized">{{ formatPermissionTitle(group) }}</strong><br/>
 					<fancycheckbox
 						v-for="(paths, route) in routes"
 						:key="group+'-'+route"
-						class="mr-2"
+						class="mr-2 is-capitalized"
 						v-model="newTokenPermissions[group][route]"
 					>
-						{{ route }}
+						{{ formatPermissionTitle(route) }}
 					</fancycheckbox>
 					<br/>
 				</div>
