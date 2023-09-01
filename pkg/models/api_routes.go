@@ -121,7 +121,7 @@ func CollectRoutesForAPITokenUsage(route echo.Route) {
 // @tags api
 // @Produce json
 // @Security JWTKeyAuth
-// @Success 200 {array} routes.APITokenRoute "The list of all routes."
+// @Success 200 {array} models.APITokenRoute "The list of all routes."
 // @Router /routes [get]
 func GetAvailableAPIRoutesForToken(c echo.Context) error {
 	return c.JSON(http.StatusOK, apiTokenRoutes)

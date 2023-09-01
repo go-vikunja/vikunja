@@ -7,7 +7,6 @@
   expires_at: 2099-01-01 00:00:00
   owner_id: 1
   created: 2023-09-01 07:00:00
-  updated: 2023-09-01 07:00:00
   # token in plaintext is tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e
 - id: 2
   title: 'test token 2'
@@ -18,7 +17,6 @@
   expires_at: 2023-01-01 00:00:00
   owner_id: 1
   created: 2023-09-01 07:00:00
-  updated: 2023-09-01 07:00:00
   # token in plaintext is tk_a5e6f92ddbad68f49ee2c63e52174db0235008c8
 - id: 3
   title: 'test token 3'
@@ -29,5 +27,4 @@
   expires_at: 2099-01-01 00:00:00
   owner_id: 2
   created: 2023-09-01 07:00:00
-  updated: 2023-09-01 07:00:00
   # token in plaintext is tk_5e29ae2ae079781ff73b0a3e0fe4d75a0b8dcb7c

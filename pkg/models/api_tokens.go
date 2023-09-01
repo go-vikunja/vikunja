@@ -51,8 +51,6 @@ type APIToken struct {
 
 	// A timestamp when this api key was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
-	// A timestamp when this api key was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
 
 	OwnerID int64 `xorm:"bigint not null" json:"-"`
 

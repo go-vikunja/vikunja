@@ -31,9 +31,8 @@ type apiTokens20230831155832 struct {
 	TokenLastEight string              `xorm:"not null index varchar(8)" json:"-"`
 	Permissions    map[string][]string `xorm:"json not null" json:"permissions"`
 	ExpiresAt      time.Time           `xorm:"not null" json:"expires_at"`
-	Created        time.Time           `xorm:"created not null" json:"created"`
-	Updated        time.Time           `xorm:"updated not null" json:"updated"`
 	OwnerID        int64               `xorm:"bigint not null" json:"-"`
+	Created        time.Time           `xorm:"created not null" json:"created"`
 }
 
 func (apiTokens20230831155832) TableName() string {
