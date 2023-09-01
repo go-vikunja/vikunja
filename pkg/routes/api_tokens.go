@@ -41,10 +41,7 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 			for _, s := range authHeader {
 				if strings.HasPrefix(s, "Bearer "+models.APITokenPrefix) {
 					err := checkAPITokenAndPutItInContext(s, c)
-					if err != nil {
-						return false
-					}
-					return true
+					return err == nil
 				}
 			}
 
