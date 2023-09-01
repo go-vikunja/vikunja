@@ -17,8 +17,11 @@
 package auth
 
 import (
+	"fmt"
 	"net/http"
 	"time"
+
+	"code.vikunja.io/api/pkg/db"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
@@ -101,7 +104,20 @@ func NewLinkShareJWTAuthtoken(share *models.LinkSharing) (token string, err erro
 
 // GetAuthFromClaims returns a web.Auth object from jwt claims
 func GetAuthFromClaims(c echo.Context) (a web.Auth, err error) {
-	jwtinf := c.Get("user").(*jwt.Token)
+	// check if we have a token in context and use it if that's the case
+	if c.Get("api_token") != nil {
+		apiToken := c.Get("api_token").(*models.APIToken)
+		u, err := user.GetUserByID(db.NewSession(), apiToken.OwnerID)
+		if err != nil {
+			return nil, err
+		}
+		return u, nil
+	}
+
+	jwtinf, is := c.Get("user").(*jwt.Token)
+	if !is {
+		return nil, fmt.Errorf("user in context is not jwt token")
+	}
 	claims := jwtinf.Claims.(jwt.MapClaims)
 	typ := int(claims["type"].(float64))
 	if typ == AuthTypeLinkShare && config.ServiceEnableLinkSharing.GetBool() {

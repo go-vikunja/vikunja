@@ -1,0 +1,30 @@
+- id: 1
+  title: 'test token 1'
+  token_salt: iC1Qbpf7H1
+  token_hash: a1813a558185d99f5197d2d549e4dd91292376aa00210229d70f77b57e165f6613fd12c1f790aa6493548cb9bceff33b45b4
+  token_last_eight: 75f29d2e
+  permissions: '{"tasks":["read_all","update"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 1
+  created: 2023-09-01 07:00:00
+  # token in plaintext is tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e
+- id: 2
+  title: 'test token 2'
+  token_salt: EtwMsqDfOA
+  token_hash: 5c4d80c58947f21295064d473937709f1159ab09085eb59e38783da6032181069ec2e1d236486533b66999f9f4ac375b45f5
+  token_last_eight: 235008c8
+  permissions: '{"tasks":["read_all","update"]}'
+  expires_at: 2023-01-01 00:00:00
+  owner_id: 1
+  created: 2023-09-01 07:00:00
+  # token in plaintext is tk_a5e6f92ddbad68f49ee2c63e52174db0235008c8
+- id: 3
+  title: 'test token 3'
+  token_salt: AHeetyp1aB
+  token_hash: da4b9c3aa72633274c37ab3419fbfbe4c5b79310b76027ac36f85e4c5ad0c2342a1d9e1c9b72ca07ec0a66ad2ee3505539af
+  token_last_eight: 0b8dcb7c
+  permissions: '{"tasks":["read_all","update"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 2
+  created: 2023-09-01 07:00:00
+  # token in plaintext is tk_5e29ae2ae079781ff73b0a3e0fe4d75a0b8dcb7c

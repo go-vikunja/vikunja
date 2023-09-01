@@ -30,6 +30,8 @@
 // @description # Authorization
 // @description **JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer <jwt-token>`-header to authenticate successfully.
 // @description
+// @description **API Token:** You can create scoped API tokens for your user and use the token to make authenticated requests in the context of that user. The token must be provided via an `Authorization: Bearer <token>` header, similar to jwt auth. See the documentation for the `api` group to manage token creation and revocation.
+// @description
 // @description **BasicAuth:** Only used when requesting tasks via CalDAV.
 // @description <!-- ReDoc-Inject: <security-definitions> -->
 // @BasePath /api/v1
@@ -80,7 +82,6 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	sentryecho "github.com/getsentry/sentry-go/echo"
-	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	elog "github.com/labstack/gommon/log"
@@ -202,6 +203,9 @@ func RegisterRoutes(e *echo.Echo) {
 
 	// API Routes
 	a := e.Group("/api/v1")
+	e.OnAddRouteHandler = func(host string, route echo.Route, handler echo.HandlerFunc, middleware []echo.MiddlewareFunc) {
+		models.CollectRoutesForAPITokenUsage(route)
+	}
 	registerAPIRoutes(a)
 }
 
@@ -277,7 +281,7 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 
 	// ===== Routes with Authentication =====
-	a.Use(echojwt.JWT([]byte(config.ServiceJWTSecret.GetString())))
+	a.Use(SetupTokenMiddleware())
 
 	// Rate limit
 	setupRateLimit(a, config.RateLimitKind.GetString())
@@ -286,6 +290,7 @@ func registerAPIRoutes(a *echo.Group) {
 	setupMetricsMiddleware(a)
 
 	a.POST("/tokenTest", apiv1.CheckToken)
+	a.GET("/routes", models.GetAvailableAPIRoutesForToken)
 
 	// User stuff
 	u := a.Group("/user")
@@ -559,6 +564,16 @@ func registerAPIRoutes(a *echo.Group) {
 			a.GET("/backgrounds/unsplash/images/:image", unsplash.ProxyUnsplashImage)
 		}
 	}
+
+	// API Tokens
+	apiTokenProvider := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.APIToken{}
+		},
+	}
+	a.GET("/tokens", apiTokenProvider.ReadAllWeb)
+	a.PUT("/tokens", apiTokenProvider.CreateWeb)
+	a.DELETE("/tokens/:token", apiTokenProvider.DeleteWeb)
 }
 
 func registerMigrations(m *echo.Group) {
