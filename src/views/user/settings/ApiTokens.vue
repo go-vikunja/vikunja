@@ -6,12 +6,11 @@ import XButton from '@/components/input/button.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import ApiTokenModel from '@/models/apiTokenModel'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
-import {MILLISECONDS_A_DAY, SECONDS_A_DAY} from '@/constants/date'
+import {MILLISECONDS_A_DAY} from '@/constants/date'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import {useI18n} from 'vue-i18n'
 import {useAuthStore} from '@/stores/auth'
-import {camelCase} from 'camel-case'
 
 const service = new ApiTokenService()
 const tokens = ref([])
@@ -89,6 +88,7 @@ async function createToken() {
 	newToken.value.permissions = {}
 	Object.entries(newTokenPermissions.value).forEach(([key, ps]) => {
 		const all = Object.entries(ps)
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			.filter(([_, v]) => v)
 			.map(p => p[0])
 		if (all.length > 0) {
