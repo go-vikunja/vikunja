@@ -24,6 +24,9 @@ const newTokenPermissions = ref({})
 const newTokenTitleValid = ref(true)
 const apiTokenTitle = ref()
 
+const showDeleteModal = ref(false)
+const tokenToDelete = ref(null)
+
 const {t} = useI18n()
 const authStore = useAuthStore()
 
@@ -57,7 +60,15 @@ function resetPermissions() {
 	})
 }
 
-function deleteToken() {
+async function deleteToken() {
+	await service.delete(tokenToDelete.value)
+	showDeleteModal.value = false
+	tokenToDelete.value = null
+	const index = tokens.value.findIndex(el => el.id === tokenToDelete.value.id)
+	if (index === -1) {
+		return
+	}
+	tokens.value.splice(index, 1)
 }
 
 async function createToken() {
@@ -117,7 +128,7 @@ async function createToken() {
 				<td>{{ tk.id }}</td>
 				<td>{{ tk.title }}</td>
 				<td>
-					<template v-for="(v, p) in tk.permissions">
+					<template v-for="(v, p) in tk.permissions" :key="'permission-' + p">
 						<strong>{{ p }}:</strong>
 						{{ v.join(', ') }}
 						<br/>
@@ -126,7 +137,7 @@ async function createToken() {
 				<td>{{ formatDateShort(tk.expiresAt) }}</td>
 				<td>{{ formatDateShort(tk.created) }}</td>
 				<td class="has-text-right">
-					<x-button variant="secondary" @click="deleteToken(tk)">
+					<x-button variant="secondary" @click="() => {tokenToDelete = tk; showDeleteModal = true}">
 						{{ $t('misc.delete') }}
 					</x-button>
 				</td>
@@ -213,5 +224,22 @@ async function createToken() {
 		>
 			{{ $t('user.settings.apiTokens.createAToken') }}
 		</x-button>
+
+		<modal
+			:enabled="showDeleteModal"
+			@close="showDeleteModal = false"
+			@submit="deleteToken()"
+		>
+			<template #header>
+				{{ $t('user.settings.apiTokens.delete.header') }}
+			</template>
+
+			<template #text>
+				<p>
+					{{ $t('user.settings.apiTokens.delete.text1', {token: tokenToDelete.title}) }}<br/>
+					{{ $t('user.settings.apiTokens.delete.text2') }}
+				</p>
+			</template>
+		</modal>
 	</card>
 </template>
