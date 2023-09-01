@@ -139,6 +139,17 @@
           "system": "System",
           "dark": "Dark"
         }
+      },
+      "apiTokens": {
+        "title": "API Tokens",
+        "general": "API tokens allow you to use Vikunja's api without user credentials.",
+        "apiDocs": "Check out the api docs",
+        "createToken": "Create a token",
+        "attributes": {
+          "title": "Title",
+          "expiresAt": "Expires at",
+          "permissions": "Permissions"
+        }
       }
     },
     "deletion": {
