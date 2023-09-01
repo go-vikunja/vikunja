@@ -15,6 +15,7 @@
 			<AddToHomeScreen/>
 			<UpdateNotification/>
 			<Notification/>
+			<DemoMode/>
 		</Teleport>
 	</ready>
 </template>
@@ -45,6 +46,7 @@ import {useBaseStore} from '@/stores/base'
 import {useColorScheme} from '@/composables/useColorScheme'
 import {useBodyClass} from '@/composables/useBodyClass'
 import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
+import DemoMode from '@/components/home/DemoMode.vue'
 
 const baseStore = useBaseStore()
 const authStore = useAuthStore()

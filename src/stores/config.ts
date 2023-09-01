@@ -26,6 +26,7 @@ export interface ConfigState {
 	caldavEnabled: boolean,
 	userDeletionEnabled: boolean,
 	taskCommentsEnabled: boolean,
+	demoModeEnabled: boolean,
 	auth: {
 		local: {
 			enabled: boolean,
@@ -58,6 +59,7 @@ export const useConfigStore = defineStore('config', () => {
 		caldavEnabled: false,
 		userDeletionEnabled: true,
 		taskCommentsEnabled: true,
+		demoModeEnabled: false,
 		auth: {
 			local: {
 				enabled: true,

@@ -11,6 +11,11 @@
       "import": "Import your data into Vikunja"
     }
   },
+  "demo": {
+    "title": "This instance is in demo mode. Do not use this for real data!",
+    "everythingWillBeDeleted": "Everything will be deleted in regular intervals!",
+    "accountWillBeDeleted": "Your account will be deleted, including all projects, tasks and attachments you might create."
+  },
   "404": {
     "title": "Not found",
     "text": "The page you requested does not exist."

@@ -58,6 +58,17 @@
 			>
 				{{ $t('user.auth.createAccount') }}
 			</x-button>
+			
+			<message
+				v-if="configStore.demoModeEnabled"
+				variant="warning"
+				class="mt-4"
+			>
+				{{ $t('demo.title') }}
+				{{ $t('demo.accountWillBeDeleted') }}<br/>
+				<strong class="is-uppercase">{{ $t('demo.everythingWillBeDeleted') }}</strong>
+			</message>
+			
 			<p class="mt-2">
 				{{ $t('user.auth.alreadyHaveAnAccount') }}
 				<router-link :to="{ name: 'user.login' }">
@@ -78,8 +89,10 @@ import {isEmail} from '@/helpers/isEmail'
 import Password from '@/components/input/password.vue'
 
 import {useAuthStore} from '@/stores/auth'
+import {useConfigStore} from '@/stores/config'
 
 const authStore = useAuthStore()
+const configStore = useConfigStore()
 
 // FIXME: use the `beforeEnter` hook of vue-router
 // Check if the user is already logged in, if so, redirect them to the homepage
