@@ -30,6 +30,8 @@
 // @description # Authorization
 // @description **JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer <jwt-token>`-header to authenticate successfully.
 // @description
+// @description **API Token:** You can create scoped API tokens for your user and use the token to make authenticated requests in the context of that user. The token must be provided via an `Authorization: Bearer <token>` header, similar to jwt auth. See the documentation for the `api` group to manage token creation and revocation.
+// @description
 // @description **BasicAuth:** Only used when requesting tasks via CalDAV.
 // @description <!-- ReDoc-Inject: <security-definitions> -->
 // @BasePath /api/v1
