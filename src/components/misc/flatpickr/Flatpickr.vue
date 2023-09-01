@@ -1,10 +1,10 @@
 <template>
 	<input
 		type="text"
-    data-input
-    :disabled="disabled"
+		data-input
+		:disabled="disabled"
 		v-bind="attrs"
-    ref="root"
+		ref="root"
 	/>
 </template>
 
@@ -20,39 +20,39 @@ type Options = flatpickr.Options.Options
 type DateOption = flatpickr.Options.DateOption
 
 function camelToKebab(string: string) {
-  return string.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+	return string.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
 }
 
 function arrayify<T = unknown>(obj: T) {
-  return obj instanceof Array
+	return obj instanceof Array
 		? obj
 		: [obj]
 }
 
 function nullify<T = unknown>(value: T) {
-  return (value && (value as unknown[]).length)
+	return (value && (value as unknown[]).length)
 		? value
 		: null
 }
 
 // Events to emit, copied from flatpickr source
 const includedEvents = [
-  'onChange',
-  'onClose',
-  'onDestroy',
-  'onMonthChange',
-  'onOpen',
-  'onYearChange',
+	'onChange',
+	'onClose',
+	'onDestroy',
+	'onMonthChange',
+	'onOpen',
+	'onYearChange',
 ] as HookKey[]
 
 // Let's not emit these events by default
 const excludedEvents = [
-  'onValueUpdate',
-  'onDayCreate',
-  'onParseConfig',
-  'onReady',
-  'onPreCalendarPosition',
-  'onKeyDown',
+	'onValueUpdate',
+	'onDayCreate',
+	'onParseConfig',
+	'onReady',
+	'onPreCalendarPosition',
+	'onKeyDown',
 ] as HookKey[]
 
 // Keep a copy of all events for later use
@@ -100,19 +100,19 @@ const attrs = useAttrs()
 
 const root = ref<HTMLInputElement | null>(null)
 const fp = ref<flatpickr.Instance | null>(null)
-const safeConfig = ref<Options>({ ...props.config })
+const safeConfig = ref<Options>({...props.config})
 
 function prepareConfig() {
 	// Don't mutate original object on parent component
-	const newConfig: Options = { ...props.config }
+	const newConfig: Options = {...props.config}
 
 	props.events.forEach((hook) => {
 		// Respect global callbacks registered via setDefault() method
 		const globalCallbacks = flatpickr.defaultConfig[hook] || []
-	
+
 		// Inject our own method along with user callback
 		const localCallback: Hook = (...args) => emit(camelToKebab(hook), ...args)
-	
+
 		// Overwrite with merged array
 		newConfig[hook] = arrayify(newConfig[hook] || []).concat(
 			globalCallbacks,
@@ -147,9 +147,9 @@ onMounted(() => {
 	prepareConfig()
 
 	/**
-	* Get the HTML node where flatpickr to be attached
-	* Bind on parent element if wrap is true
-	*/
+	 * Get the HTML node where flatpickr to be attached
+	 * Bind on parent element if wrap is true
+	 */
 	const element = props.config.wrap
 		? root.value.parentNode
 		: root.value
@@ -179,7 +179,7 @@ watch(config, () => {
 			fp.value.set(name, safeConfig.value[name])
 		}
 	})
-}, {deep:true})
+}, {deep: true})
 
 const fpInput = computed(() => {
 	if (!fp.value) return
@@ -198,8 +198,8 @@ watchEffect(() => fpInput.value?.addEventListener('blur', onBlur))
 onBeforeUnmount(() => fpInput.value?.removeEventListener('blur', onBlur))
 
 /**
-* Watch for the disabled property and sets the value to the real input.
-*/
+ * Watch for the disabled property and sets the value to the real input.
+ */
 watchEffect(() => {
 	if (disabled.value) {
 		fpInput.value?.setAttribute('disabled', '')
