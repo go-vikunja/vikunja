@@ -1,5 +1,5 @@
 // Vikunja is a to-do list application to facilitate your life.
-// Copyright 2018-2021 Vikunja and contributors. All rights reserved.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public Licensee as published by
@@ -17,12 +17,13 @@
 package migration
 
 import (
-	"src.techknowlogick.com/xormigrate"
 	"time"
+
+	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
 
-type api_tokens20230831155832 struct {
+type apiTokens20230831155832 struct {
 	ID             int64               `xorm:"bigint autoincr not null unique pk" json:"id" param:"token"`
 	Title          string              `xorm:"not null" json:"title"`
 	TokenSalt      string              `xorm:"not null" json:"-"`
@@ -35,7 +36,7 @@ type api_tokens20230831155832 struct {
 	OwnerID        int64               `xorm:"bigint not null" json:"-"`
 }
 
-func (api_tokens20230831155832) TableName() string {
+func (apiTokens20230831155832) TableName() string {
 	return "api_tokens"
 }
 
@@ -44,7 +45,7 @@ func init() {
 		ID:          "20230831155832",
 		Description: "",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(api_tokens20230831155832{})
+			return tx.Sync2(apiTokens20230831155832{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

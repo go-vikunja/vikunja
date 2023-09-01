@@ -17,10 +17,11 @@
 package auth
 
 import (
-	"code.vikunja.io/api/pkg/db"
 	"fmt"
 	"net/http"
 	"time"
+
+	"code.vikunja.io/api/pkg/db"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
