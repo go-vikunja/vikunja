@@ -5,6 +5,7 @@
   identifier: test1
   owner_id: 1
   position: 3
+  done_bucket_id: 3
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -
@@ -14,6 +15,7 @@
   identifier: test2
   owner_id: 3
   position: 2
+  done_bucket_id: 4
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 -

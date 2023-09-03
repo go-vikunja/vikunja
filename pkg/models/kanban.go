@@ -38,8 +38,6 @@ type Bucket struct {
 
 	// How many tasks can be at the same time on this board max
 	Limit int64 `xorm:"default 0" json:"limit" minimum:"0" valid:"range(0|9223372036854775807)"`
-	// If this bucket is the "done bucket". All tasks moved into this bucket will automatically marked as done. All tasks marked as done from elsewhere will be moved into this bucket.
-	IsDoneBucket bool `xorm:"BOOL" json:"is_done_bucket"`
 
 	// The number of tasks currently in this bucket
 	Count int64 `xorm:"-" json:"count"`
@@ -92,7 +90,7 @@ func getDefaultBucket(s *xorm.Session, projectID int64) (bucket *Bucket, err err
 func getDoneBucketForProject(s *xorm.Session, projectID int64) (bucket *Bucket, err error) {
 	bucket = &Bucket{}
 	exists, err := s.
-		Where("project_id = ? and is_done_bucket = ?", projectID, true).
+		Where("id = (select done_bucket_id from projects where id = ?)", projectID).
 		Get(bucket)
 	if err != nil {
 		return nil, err
@@ -287,29 +285,11 @@ func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/buckets/{bucketID} [post]
 func (b *Bucket) Update(s *xorm.Session, _ web.Auth) (err error) {
-	doneBucket, err := getDoneBucketForProject(s, b.ProjectID)
-	if err != nil {
-		return err
-	}
-
-	if doneBucket != nil && doneBucket.IsDoneBucket && b.IsDoneBucket && doneBucket.ID != b.ID {
-		// When the current bucket will be the new done bucket, the old one should not be the done bucket anymore
-		doneBucket.IsDoneBucket = false
-		_, err = s.
-			Where("id = ?", doneBucket.ID).
-			Cols("is_done_bucket").
-			Update(doneBucket)
-		if err != nil {
-			return
-		}
-	}
-
 	_, err = s.
 		Where("id = ?", b.ID).
 		Cols(
 			"title",
 			"limit",
-			"is_done_bucket",
 			"position",
 		).
 		Update(b)

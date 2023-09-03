@@ -217,28 +217,4 @@ func TestBucket_Update(t *testing.T) {
 
 		testAndAssertBucketUpdate(t, b, s)
 	})
-	t.Run("old done bucket should be unset", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		b := &Bucket{
-			ID:           1,
-			ProjectID:    1,
-			IsDoneBucket: true,
-		}
-
-		err := b.Update(s, &user.User{ID: 1})
-		assert.NoError(t, err)
-		db.AssertExists(t, "buckets", map[string]interface{}{
-			"id":             1,
-			"project_id":     1,
-			"is_done_bucket": true,
-		}, false)
-		db.AssertExists(t, "buckets", map[string]interface{}{
-			"id":             3,
-			"project_id":     1,
-			"is_done_bucket": false,
-		}, false)
-	})
 }

@@ -18,7 +18,6 @@
   title: testbucket3
   project_id: 1
   created_by_id: 1
-  is_done_bucket: 1
   position: 3
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
@@ -26,7 +25,6 @@
   title: testbucket4 - other project
   project_id: 2
   created_by_id: 1
-  is_done_bucket: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 # The following are not or only partly owned by user 1

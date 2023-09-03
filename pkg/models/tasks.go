@@ -676,7 +676,12 @@ func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, doCheckBucke
 		}
 	}
 
-	if bucket.IsDoneBucket && originalTask != nil && !originalTask.Done {
+	project, err := GetProjectSimpleByID(s, task.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	if bucket.ID == project.DoneBucketID && originalTask != nil && !originalTask.Done {
 		task.Done = true
 	}
 
@@ -845,7 +850,11 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	// If the task was moved into the done bucket and the task has a repeating cycle we should not update
 	// the bucket.
-	if targetBucket.IsDoneBucket && t.RepeatAfter > 0 {
+	project, err := GetProjectSimpleByID(s, t.ProjectID)
+	if err != nil {
+		return err
+	}
+	if targetBucket.ID == project.DoneBucketID && t.RepeatAfter > 0 {
 		t.Done = true // This will trigger the correct re-scheduling of the task (happening in updateDone later)
 		t.BucketID = ot.BucketID
 	}
