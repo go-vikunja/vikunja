@@ -20,17 +20,16 @@ import (
 	"fmt"
 	"time"
 
-	"code.vikunja.io/api/pkg/cron"
-	"code.vikunja.io/api/pkg/log"
-	"xorm.io/xorm"
-
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/typesense/typesense-go/typesense"
 	"github.com/typesense/typesense-go/typesense/api"
 	"github.com/typesense/typesense-go/typesense/api/pointer"
+	"xorm.io/xorm"
 )
 
 type TypesenseSync struct {
@@ -253,6 +252,7 @@ func reindexTasks(s *xorm.Session, tasks map[int64]*Task) (err error) {
 			Documents().
 			Upsert(searchTask)
 		if err != nil {
+			log.Errorf("Could not upsert task into Typesense", err)
 			return err
 		}
 	}
