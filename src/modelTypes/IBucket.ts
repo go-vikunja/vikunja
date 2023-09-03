@@ -8,7 +8,6 @@ export interface IBucket extends IAbstract {
 	projectId: number
 	limit: number
 	tasks: ITask[]
-	isDoneBucket: boolean
 	position: number
 	count: number
 	

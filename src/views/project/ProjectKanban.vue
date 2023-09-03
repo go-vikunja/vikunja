@@ -37,7 +37,7 @@
 					>
 						<div class="bucket-header" @click="() => unCollapseBucket(bucket)">
 							<span
-								v-if="bucket.isDoneBucket"
+								v-if="project.doneBucketId === bucket.id"
 								class="icon is-small has-text-success mr-2"
 								v-tooltip="$t('project.kanban.doneBucketHint')"
 							>
@@ -98,7 +98,7 @@
 									@click.stop="toggleDoneBucket(bucket)"
 									v-tooltip="$t('project.kanban.doneBucketHintExtended')"
 								>
-									<span class="icon is-small" :class="{'has-text-success': bucket.isDoneBucket}">
+									<span class="icon is-small" :class="{'has-text-success': bucket.id === project.doneBucketId}">
 										<icon icon="check-double"/>
 									</span>
 									{{ $t('project.kanban.doneBucket') }}
@@ -251,6 +251,7 @@ import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 
 import {isSavedFilter} from '@/services/savedFilter'
 import {success} from '@/message'
+import {useProjectStore} from '@/stores/projects'
 
 const DRAG_OPTIONS = {
 	// sortable options
@@ -268,6 +269,7 @@ const {t} = useI18n({useScope: 'global'})
 const baseStore = useBaseStore()
 const kanbanStore = useKanbanStore()
 const taskStore = useTaskStore()
+const projectStore = useProjectStore()
 
 const taskContainerRefs = ref<{[id: IBucket['id']]: HTMLElement}>({})
 
@@ -422,10 +424,9 @@ async function updateTaskPosition(e) {
 	)
 	if (
 		oldBucket !== undefined && // This shouldn't actually be `undefined`, but let's play it safe.
-		newBucket.id !== oldBucket.id &&
-		newBucket.isDoneBucket !== oldBucket.isDoneBucket
+		newBucket.id !== oldBucket.id
 	) {
-		newTask.done = newBucket.isDoneBucket
+		newTask.done = project.value.doneBucketId === newBucket.id
 	}
 	if (
 		oldBucket !== undefined && // This shouldn't actually be `undefined`, but let's play it safe.
@@ -597,9 +598,13 @@ function dragstart(bucket: IBucket) {
 }
 
 async function toggleDoneBucket(bucket: IBucket) {
-	await kanbanStore.updateBucket({
-		...bucket,
-		isDoneBucket: !bucket.isDoneBucket,
+	const doneBucketId = project.value.doneBucketId === bucket.id
+		? 0
+		: bucket.id
+	
+	await projectStore.updateProject({
+		...project.value,
+		doneBucketId,
 	})
 	success({message: t('project.kanban.doneBucketSavedSuccess')})
 }
