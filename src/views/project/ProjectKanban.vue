@@ -37,7 +37,7 @@
 					>
 						<div class="bucket-header" @click="() => unCollapseBucket(bucket)">
 							<span
-								v-if="bucket.isDoneBucket"
+								v-if="project.doneBucketId === bucket.id"
 								class="icon is-small has-text-success mr-2"
 								v-tooltip="$t('project.kanban.doneBucketHint')"
 							>
@@ -97,26 +97,32 @@
 								<dropdown-item
 									@click.stop="toggleDoneBucket(bucket)"
 									v-tooltip="$t('project.kanban.doneBucketHintExtended')"
+									:icon-class="{'has-text-success': bucket.id === project.doneBucketId}"
+									icon="check-double"
 								>
-									<span class="icon is-small" :class="{'has-text-success': bucket.isDoneBucket}">
-										<icon icon="check-double"/>
-									</span>
 									{{ $t('project.kanban.doneBucket') }}
 								</dropdown-item>
 								<dropdown-item
+									@click.stop="toggleDefaultBucket(bucket)"
+									v-tooltip="$t('project.kanban.defaultBucketHint')"
+									:icon-class="{'has-text-primary': bucket.id === project.defaultBucketId}"
+									icon="th"
+								>
+									{{ $t('project.kanban.defaultBucket') }}
+								</dropdown-item>
+								<dropdown-item
 									@click.stop="() => collapseBucket(bucket)"
+									icon="angles-up"
 								>
 									{{ $t('project.kanban.collapse') }}
 								</dropdown-item>
 								<dropdown-item
 									:class="{'is-disabled': buckets.length <= 1}"
 									@click.stop="() => deleteBucketModal(bucket.id)"
-									class="has-text-danger"
 									v-tooltip="buckets.length <= 1 ? $t('project.kanban.deleteLast') : ''"
+									icon-class="has-text-danger"
+									icon="trash-alt"
 								>
-									<span class="icon is-small">
-										<icon icon="trash-alt"/>
-									</span>
 									{{ $t('misc.delete') }}
 								</dropdown-item>
 							</dropdown>
@@ -251,6 +257,7 @@ import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 
 import {isSavedFilter} from '@/services/savedFilter'
 import {success} from '@/message'
+import {useProjectStore} from '@/stores/projects'
 
 const DRAG_OPTIONS = {
 	// sortable options
@@ -268,6 +275,7 @@ const {t} = useI18n({useScope: 'global'})
 const baseStore = useBaseStore()
 const kanbanStore = useKanbanStore()
 const taskStore = useTaskStore()
+const projectStore = useProjectStore()
 
 const taskContainerRefs = ref<{[id: IBucket['id']]: HTMLElement}>({})
 
@@ -422,10 +430,9 @@ async function updateTaskPosition(e) {
 	)
 	if (
 		oldBucket !== undefined && // This shouldn't actually be `undefined`, but let's play it safe.
-		newBucket.id !== oldBucket.id &&
-		newBucket.isDoneBucket !== oldBucket.isDoneBucket
+		newBucket.id !== oldBucket.id
 	) {
-		newTask.done = newBucket.isDoneBucket
+		newTask.done = project.value.doneBucketId === newBucket.id
 	}
 	if (
 		oldBucket !== undefined && // This shouldn't actually be `undefined`, but let's play it safe.
@@ -596,10 +603,26 @@ function dragstart(bucket: IBucket) {
 	sourceBucket.value = bucket.id
 }
 
+async function toggleDefaultBucket(bucket: IBucket) {
+	const defaultBucketId = project.value.defaultBucketId === bucket.id
+		? 0
+		: bucket.id
+
+	await projectStore.updateProject({
+		...project.value,
+		defaultBucketId,
+	})
+	success({message: t('project.kanban.defaultBucketSavedSuccess')})
+}
+
 async function toggleDoneBucket(bucket: IBucket) {
-	await kanbanStore.updateBucket({
-		...bucket,
-		isDoneBucket: !bucket.isDoneBucket,
+	const doneBucketId = project.value.doneBucketId === bucket.id
+		? 0
+		: bucket.id
+	
+	await projectStore.updateProject({
+		...project.value,
+		doneBucketId,
 	})
 	success({message: t('project.kanban.doneBucketSavedSuccess')})
 }

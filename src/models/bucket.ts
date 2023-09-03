@@ -12,7 +12,6 @@ export default class BucketModel extends AbstractModel<IBucket> implements IBuck
 	projectId = ''
 	limit = 0
 	tasks: ITask[] = []
-	isDoneBucket = false
 	position = 0
 	count = 0
 	

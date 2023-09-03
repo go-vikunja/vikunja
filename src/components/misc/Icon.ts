@@ -2,6 +2,7 @@ import {library} from '@fortawesome/fontawesome-svg-core'
 import {
 	faAlignLeft,
 	faAngleRight,
+	faAnglesUp,
 	faArchive,
 	faArrowLeft,
 	faArrowUpFromBracket,
@@ -142,6 +143,7 @@ library.add(faUser)
 library.add(faUsers)
 library.add(faArrowUpFromBracket)
 library.add(faX)
+library.add(faAnglesUp)
 
 // overwriting the wrong types
 export default FontAwesomeIcon as unknown as FontAwesomeIconFixedTypes

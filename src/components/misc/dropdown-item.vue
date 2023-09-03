@@ -1,21 +1,26 @@
 <template>
 	<BaseButton class="dropdown-item">
-		<span class="icon" v-if="icon">
+		<span
+			v-if="icon"
+			class="icon is-small"
+			:class="iconClass"
+		>
 			<Icon :icon="icon"/>
 		</span>
 		<span>
-			<slot  />
+			<slot/>
 		</span>
 	</BaseButton>
 </template>
 
 <script lang="ts" setup>
-import BaseButton, { type BaseButtonProps } from '@/components/base//BaseButton.vue'
+import BaseButton, {type BaseButtonProps} from '@/components/base//BaseButton.vue'
 import Icon from '@/components/misc/Icon'
-import type { IconProp } from '@fortawesome/fontawesome-svg-core'
+import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
 export interface DropDownItemProps extends /* @vue-ignore */ BaseButtonProps {
 	icon?: IconProp,
+	iconClass?: object | string,
 }
 
 defineProps<DropDownItemProps>()
@@ -24,7 +29,6 @@ defineProps<DropDownItemProps>()
 <style scoped lang="scss">
 .dropdown-item {
 	color: var(--text);
-	display: block;
 	font-size: 0.875rem;
 	line-height: 1.5;
 	padding: $item-padding;
@@ -52,10 +56,7 @@ defineProps<DropDownItemProps>()
 
 .icon {
 	padding-right: .5rem;
-	
-	&:not(.has-text-success) {
-		color: var(--grey-300) !important;
-	}
+	color: var(--grey-300);
 }
 
 .has-text-danger .icon {
