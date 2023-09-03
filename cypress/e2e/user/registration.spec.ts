@@ -17,7 +17,7 @@ context('Registration', () => {
 	it('Should work without issues', () => {
 		const fixture = {
 			username: 'testuser',
-			password: '123456',
+			password: '12345678',
 			email: 'testuser@example.com',
 		}
 
@@ -31,10 +31,10 @@ context('Registration', () => {
 		cy.get('h2').should('contain', `Hi ${fixture.username}!`)
 	})
 
-	it.only('Should fail', () => {
+	it('Should fail', () => {
 		const fixture = {
 			username: 'test',
-			password: '123456',
+			password: '12345678',
 			email: 'testuser@example.com',
 		}
 
