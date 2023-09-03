@@ -112,6 +112,7 @@
 								</dropdown-item>
 								<dropdown-item
 									@click.stop="() => collapseBucket(bucket)"
+									icon="angles-up"
 								>
 									{{ $t('project.kanban.collapse') }}
 								</dropdown-item>
