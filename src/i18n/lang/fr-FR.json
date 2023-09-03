@@ -11,6 +11,11 @@
       "import": "Importer vos données dans Vikunja"
     }
   },
+  "demo": {
+    "title": "This instance is in demo mode. Do not use this for real data!",
+    "everythingWillBeDeleted": "Everything will be deleted in regular intervals!",
+    "accountWillBeDeleted": "Your account will be deleted, including all projects, tasks and attachments you might create."
+  },
   "404": {
     "title": "Non trouvé",
     "text": "La page que vous avez demandée n’existe pas."
@@ -138,6 +143,30 @@
           "light": "Clair",
           "system": "Système",
           "dark": "Sombre"
+        }
+      },
+      "apiTokens": {
+        "title": "API Tokens",
+        "general": "API tokens allow you to use Vikunja's API without user credentials.",
+        "apiDocs": "Check out the api docs",
+        "createAToken": "Create a token",
+        "createToken": "Create token",
+        "30d": "30 Days",
+        "60d": "60 Days",
+        "90d": "90 Days",
+        "permissionExplanation": "Permissions allow you to scope what an api token is allowed to do.",
+        "titleRequired": "The title is required",
+        "expired": "This token has expired {ago}.",
+        "delete": {
+          "header": "Delete this token",
+          "text1": "Are you sure you want to delete the token \"{token}\"?",
+          "text2": "This will revoke access to all applications or integrations using it. You cannot undo this."
+        },
+        "attributes": {
+          "title": "Title",
+          "titlePlaceholder": "Enter a title you will recognize later",
+          "expiresAt": "Expires at",
+          "permissions": "Permissions"
         }
       }
     },
