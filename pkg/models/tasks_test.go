@@ -170,6 +170,23 @@ func TestTask_Create(t *testing.T) {
 		assert.Error(t, err)
 		assert.True(t, IsErrBucketLimitExceeded(err))
 	})
+	t.Run("default bucket different", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			Title:       "Lorem",
+			Description: "Lorem Ipsum Dolor",
+			ProjectID:   6,
+		}
+		err := task.Create(s, usr)
+		assert.NoError(t, err)
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":        task.ID,
+			"bucket_id": 22, // default bucket of project 6 but with a position of 2
+		}, false)
+	})
 }
 
 func TestTask_Update(t *testing.T) {

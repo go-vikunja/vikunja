@@ -629,17 +629,18 @@ func checkBucketLimit(s *xorm.Session, t *Task, bucket *Bucket) (err error) {
 }
 
 // Contains all the task logic to figure out what bucket to use for this task.
-func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, doCheckBucketLimit bool) (targetBucket *Bucket, err error) {
-	// Make sure we have a bucket
-	var bucket *Bucket
-	if task.Done && originalTask != nil && !originalTask.Done {
-		bucket, err := getDoneBucketForProject(s, task.ProjectID)
+func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, doCheckBucketLimit bool, project *Project) (targetBucket *Bucket, err error) {
+
+	if project == nil {
+		project, err = GetProjectSimpleByID(s, task.ProjectID)
 		if err != nil {
 			return nil, err
 		}
-		if bucket != nil {
-			task.BucketID = bucket.ID
-		}
+	}
+
+	var bucket *Bucket
+	if task.Done && originalTask != nil && !originalTask.Done {
+		task.BucketID = project.DoneBucketID
 	}
 
 	if task.BucketID == 0 && originalTask != nil && originalTask.BucketID != 0 {
@@ -648,11 +649,10 @@ func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, doCheckBucke
 
 	// Either no bucket was provided or the task was moved between projects
 	if task.BucketID == 0 || (originalTask != nil && task.ProjectID != 0 && originalTask.ProjectID != task.ProjectID) {
-		bucket, err = getDefaultBucket(s, task.ProjectID)
+		task.BucketID, err = getDefaultBucketID(s, project)
 		if err != nil {
 			return
 		}
-		task.BucketID = bucket.ID
 	}
 
 	if bucket == nil {
@@ -676,7 +676,7 @@ func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, doCheckBucke
 		}
 	}
 
-	if bucket.IsDoneBucket && originalTask != nil && !originalTask.Done {
+	if bucket.ID == project.DoneBucketID && originalTask != nil && !originalTask.Done {
 		task.Done = true
 	}
 
@@ -732,7 +732,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 	}
 
 	// Check if the project exists
-	l, err := GetProjectSimpleByID(s, t.ProjectID)
+	p, err := GetProjectSimpleByID(s, t.ProjectID)
 	if err != nil {
 		return err
 	}
@@ -749,7 +749,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 	}
 
 	// Get the default bucket and move the task there
-	_, err = setTaskBucket(s, t, nil, true)
+	_, err = setTaskBucket(s, t, nil, true, nil)
 	if err != nil {
 		return
 	}
@@ -781,7 +781,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 		return err
 	}
 
-	t.setIdentifier(l)
+	t.setIdentifier(p)
 
 	if t.IsFavorite {
 		if err := addToFavorites(s, t.ID, createdBy, FavoriteKindTask); err != nil {
@@ -838,14 +838,18 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	// Old task has the stored reminders
 	ot.Reminders = reminders
 
-	targetBucket, err := setTaskBucket(s, t, &ot, t.BucketID != 0 && t.BucketID != ot.BucketID)
+	targetBucket, err := setTaskBucket(s, t, &ot, t.BucketID != 0 && t.BucketID != ot.BucketID, nil)
 	if err != nil {
 		return err
 	}
 
 	// If the task was moved into the done bucket and the task has a repeating cycle we should not update
 	// the bucket.
-	if targetBucket.IsDoneBucket && t.RepeatAfter > 0 {
+	project, err := GetProjectSimpleByID(s, t.ProjectID)
+	if err != nil {
+		return err
+	}
+	if targetBucket.ID == project.DoneBucketID && t.RepeatAfter > 0 {
 		t.Done = true // This will trigger the correct re-scheduling of the task (happening in updateDone later)
 		t.BucketID = ot.BucketID
 	}

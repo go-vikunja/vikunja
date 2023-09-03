@@ -51,6 +51,11 @@ type Project struct {
 	ParentProjectID int64    `xorm:"bigint INDEX null" json:"parent_project_id"`
 	ParentProject   *Project `xorm:"-" json:"-"`
 
+	// The ID of the bucket where new tasks without a bucket are added to. By default, this is the leftmost bucket in a project.
+	DefaultBucketID int64 `xorm:"bigint INDEX null" json:"default_bucket_id"`
+	// If tasks are moved to the done bucket, they are marked as done. If they are marked as done individually, they are moved into the done bucket.
+	DoneBucketID int64 `xorm:"bigint INDEX null" json:"done_bucket_id"`
+
 	// The user who created this project.
 	Owner *user.User `xorm:"-" json:"owner" valid:"-"`
 
@@ -778,6 +783,8 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		"hex_color",
 		"parent_project_id",
 		"position",
+		"done_bucket_id",
+		"default_bucket_id",
 	}
 	if project.Description != "" {
 		colsToUpdate = append(colsToUpdate, "description")
