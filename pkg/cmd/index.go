@@ -44,12 +44,12 @@ var indexCmd = &cobra.Command{
 
 		err := models.CreateTypesenseCollections()
 		if err != nil {
-			log.Critical(err.Error())
+			log.Criticalf("Could not create Typesense collections: %s", err.Error())
 			return
 		}
 		err = models.ReindexAllTasks()
 		if err != nil {
-			log.Critical(err.Error())
+			log.Criticalf("Could not reindex all tasks into Typesense: %s", err.Error())
 			return
 		}
 
