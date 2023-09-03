@@ -38,6 +38,7 @@
   title: testbucket6
   project_id: 6
   created_by_id: 1
+  position: 1
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 7
@@ -135,6 +136,7 @@
   title: testbucket22
   project_id: 6
   created_by_id: 1
+  position: 2
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
 - id: 23

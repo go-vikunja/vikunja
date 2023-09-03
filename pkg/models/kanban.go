@@ -78,28 +78,21 @@ func getBucketByID(s *xorm.Session, id int64) (b *Bucket, err error) {
 	return
 }
 
-func getDefaultBucket(s *xorm.Session, projectID int64) (bucket *Bucket, err error) {
-	bucket = &Bucket{}
+func getDefaultBucketID(s *xorm.Session, project *Project) (bucketID int64, err error) {
+	if project.DefaultBucketID != 0 {
+		return project.DefaultBucketID, nil
+	}
+
+	bucket := &Bucket{}
 	_, err = s.
-		Where("project_id = ?", projectID).
+		Where("project_id = ?", project.ID).
 		OrderBy("position asc").
 		Get(bucket)
-	return
-}
-
-func getDoneBucketForProject(s *xorm.Session, projectID int64) (bucket *Bucket, err error) {
-	bucket = &Bucket{}
-	exists, err := s.
-		Where("id = (select done_bucket_id from projects where id = ?)", projectID).
-		Get(bucket)
 	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		bucket = nil
+		return 0, err
 	}
 
-	return
+	return bucket.ID, nil
 }
 
 // ReadAll returns all buckets with their tasks for a certain project
@@ -330,15 +323,19 @@ func (b *Bucket) Delete(s *xorm.Session, _ web.Auth) (err error) {
 	}
 
 	// Get the default bucket
-	defaultBucket, err := getDefaultBucket(s, b.ProjectID)
+	p, err := GetProjectSimpleByID(s, b.ProjectID)
 	if err != nil {
 		return
+	}
+	defaultBucketID, err := getDefaultBucketID(s, p)
+	if err != nil {
+		return err
 	}
 
 	// Remove all associations of tasks to that bucket
 	_, err = s.
 		Where("bucket_id = ?", b.ID).
 		Cols("bucket_id").
-		Update(&Task{BucketID: defaultBucket.ID})
+		Update(&Task{BucketID: defaultBucketID})
 	return
 }
