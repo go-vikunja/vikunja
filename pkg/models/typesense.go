@@ -240,7 +240,6 @@ func reindexTasks(s *xorm.Session, tasks map[int64]*Task) (err error) {
 		return err
 	}
 
-	typesenseTasks := []interface{}{}
 	for _, task := range tasks {
 		searchTask := convertTaskToTypesenseTask(task)
 
@@ -250,17 +249,12 @@ func reindexTasks(s *xorm.Session, tasks map[int64]*Task) (err error) {
 			return err
 		}
 
-		typesenseTasks = append(typesenseTasks, searchTask)
-	}
-
-	_, err = typesenseClient.Collection("tasks").
-		Documents().
-		Import(typesenseTasks, &api.ImportDocumentsParams{
-			Action:    pointer.String("upsert"),
-			BatchSize: pointer.Int(100),
-		})
-	if err != nil {
-		return err
+		_, err = typesenseClient.Collection("tasks").
+			Documents().
+			Upsert(searchTask)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
