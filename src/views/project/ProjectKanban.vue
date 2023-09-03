@@ -97,11 +97,18 @@
 								<dropdown-item
 									@click.stop="toggleDoneBucket(bucket)"
 									v-tooltip="$t('project.kanban.doneBucketHintExtended')"
+									:icon-class="{'has-text-success': bucket.id === project.doneBucketId}"
+									icon="check-double"
 								>
-									<span class="icon is-small" :class="{'has-text-success': bucket.id === project.doneBucketId}">
-										<icon icon="check-double"/>
-									</span>
 									{{ $t('project.kanban.doneBucket') }}
+								</dropdown-item>
+								<dropdown-item
+									@click.stop="toggleDefaultBucket(bucket)"
+									v-tooltip="$t('project.kanban.defaultBucketHint')"
+									:icon-class="{'has-text-primary': bucket.id === project.defaultBucketId}"
+									icon="th"
+								>
+									{{ $t('project.kanban.defaultBucket') }}
 								</dropdown-item>
 								<dropdown-item
 									@click.stop="() => collapseBucket(bucket)"
@@ -111,12 +118,10 @@
 								<dropdown-item
 									:class="{'is-disabled': buckets.length <= 1}"
 									@click.stop="() => deleteBucketModal(bucket.id)"
-									class="has-text-danger"
 									v-tooltip="buckets.length <= 1 ? $t('project.kanban.deleteLast') : ''"
+									icon-class="has-text-danger"
+									icon="trash-alt"
 								>
-									<span class="icon is-small">
-										<icon icon="trash-alt"/>
-									</span>
 									{{ $t('misc.delete') }}
 								</dropdown-item>
 							</dropdown>
@@ -595,6 +600,18 @@ function shouldAcceptDrop(bucket: IBucket) {
 function dragstart(bucket: IBucket) {
 	drag.value = true
 	sourceBucket.value = bucket.id
+}
+
+async function toggleDefaultBucket(bucket: IBucket) {
+	const defaultBucketId = project.value.defaultBucketId === bucket.id
+		? 0
+		: bucket.id
+
+	await projectStore.updateProject({
+		...project.value,
+		defaultBucketId,
+	})
+	success({message: t('project.kanban.defaultBucketSavedSuccess')})
 }
 
 async function toggleDoneBucket(bucket: IBucket) {
