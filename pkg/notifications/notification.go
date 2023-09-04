@@ -17,10 +17,10 @@
 package notifications
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"encoding/json"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/log"
 )
 
 // Notification is a notification which can be sent via mail or db.

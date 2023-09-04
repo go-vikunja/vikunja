@@ -17,8 +17,6 @@
 package initialize
 
 import (
-	"code.vikunja.io/api/pkg/mail"
-	"code.vikunja.io/api/pkg/migration"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -26,6 +24,8 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/mail"
+	"code.vikunja.io/api/pkg/migration"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
