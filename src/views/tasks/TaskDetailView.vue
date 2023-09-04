@@ -499,6 +499,8 @@ import {success} from '@/message'
 import type {Action as MessageAction} from '@/message'
 import {useProjectStore} from '@/stores/projects'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {useAuthStore} from '@/stores/auth'
+import {playPopSound} from '@/helpers/playPop'
 
 const {
 	taskId,
@@ -733,6 +735,10 @@ function toggleTaskDone() {
 	const newTask = {
 		...task.value,
 		done: !task.value.done,
+	}
+
+	if (newTask.done && useAuthStore().settings.frontendSettings.playSoundWhenDone) {
+		playPopSound()
 	}
 
 	saveTask(

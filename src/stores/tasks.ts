@@ -6,7 +6,6 @@ import TaskService from '@/services/task'
 import TaskAssigneeService from '@/services/taskAssignee'
 import LabelTaskService from '@/services/labelTask'
 
-import {playPopSound} from '@/helpers/playPop'
 import {cleanupItemText, parseTaskText, PREFIXES} from '@/modules/parseTaskText'
 
 import TaskAssigneeModel from '@/models/taskAssignee'
@@ -149,9 +148,6 @@ export const useTaskStore = defineStore('task', () => {
 		try {
 			const updatedTask = await taskService.update(task)
 			kanbanStore.setTaskInBucket(updatedTask)
-			if (task.done && useAuthStore().settings.frontendSettings.playSoundWhenDone) {
-				playPopSound()
-			}
 			return updatedTask
 		} finally {
 			cancel()

@@ -89,6 +89,8 @@ import {formatDateLong, formatISO, formatDateSince} from '@/helpers/time/formatD
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import {useTaskStore} from '@/stores/tasks'
 import AssigneeList from '@/components/tasks/partials/assigneeList.vue'
+import {useAuthStore} from '@/stores/auth'
+import {playPopSound} from '@/helpers/playPop'
 
 const router = useRouter()
 
@@ -107,10 +109,14 @@ const color = computed(() => getHexColor(task.hexColor))
 async function toggleTaskDone(task: ITask) {
 	loadingInternal.value = true
 	try {
-		await useTaskStore().update({
+		const updatedTask = await useTaskStore().update({
 			...task,
 			done: !task.done,
 		})
+		
+		if (updatedTask.done && useAuthStore().settings.frontendSettings.playSoundWhenDone) {
+			playPopSound()
+		}
 	} finally {
 		loadingInternal.value = false
 	}

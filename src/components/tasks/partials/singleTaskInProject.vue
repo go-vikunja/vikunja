@@ -151,6 +151,8 @@ import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
 import AssigneeList from '@/components/tasks/partials/assigneeList.vue'
 import {useIntervalFn} from '@vueuse/core'
+import {playPopSound} from '@/helpers/playPop'
+import {useAuthStore} from '@/stores/auth'
 
 const {
 	theTask,
@@ -232,6 +234,9 @@ async function markAsDone(checked: boolean) {
 	const updateFunc = async () => {
 		const newTask = await taskStore.update(task.value)
 		task.value = newTask
+		if (checked && useAuthStore().settings.frontendSettings.playSoundWhenDone) {
+			playPopSound()
+		}
 		emit('task-updated', newTask)
 		success({
 			message: task.value.done ?

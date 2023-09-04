@@ -162,6 +162,8 @@ import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import {error, success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
 import {useProjectStore} from '@/stores/projects'
+import {useAuthStore} from '@/stores/auth'
+import {playPopSound} from '@/helpers/playPop'
 
 const props = defineProps({
 	taskId: {
@@ -329,6 +331,10 @@ async function createAndRelateTask(title: string) {
 
 async function toggleTaskDone(task: ITask) {
 	await taskStore.update(task)
+	
+	if (task.done && useAuthStore().settings.frontendSettings.playSoundWhenDone) {
+		playPopSound()
+	}
 	
 	// Find the task in the project and update it so that it is correctly strike through
 	Object.entries(relatedTasks.value).some(([kind, tasks]) => {
