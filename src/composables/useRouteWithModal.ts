@@ -32,6 +32,11 @@ export function useRouteWithModal() {
 					: routePropsOption
 			: {}
 
+		if (typeof routeProps === 'undefined') {
+			currentModal.value = undefined
+			return
+		}
+
 		routeProps.backdropView = backdropView.value
 
 		const component = route.matched[0]?.components?.default
