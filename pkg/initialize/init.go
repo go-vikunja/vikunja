@@ -17,6 +17,8 @@
 package initialize
 
 import (
+	"code.vikunja.io/api/pkg/mail"
+	"code.vikunja.io/api/pkg/migration"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -24,8 +26,6 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/mail"
-	"code.vikunja.io/api/pkg/migration"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
@@ -60,9 +60,8 @@ func InitEngines() {
 	}
 }
 
-// FullInit initializes all kinds of things in the right order
-func FullInit() {
-
+// FullInitWithoutAsync does a full init without any async handlers (cron or events)
+func FullInitWithoutAsync() {
 	LightInit()
 
 	// Initialize the files handler
@@ -79,6 +78,12 @@ func FullInit() {
 
 	// Start the mail daemon
 	mail.StartMailDaemon()
+}
+
+// FullInit initializes all kinds of things in the right order
+func FullInit() {
+
+	FullInitWithoutAsync()
 
 	// Start the cron
 	cron.Init()

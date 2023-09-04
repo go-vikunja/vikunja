@@ -32,7 +32,7 @@ var restoreCmd = &cobra.Command{
 	Short: "Restores all vikunja data from a vikunja dump.",
 	Args:  cobra.ExactArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {
-		initialize.FullInit()
+		initialize.FullInitWithoutAsync()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := dump.Restore(args[0]); err != nil {

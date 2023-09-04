@@ -32,7 +32,7 @@ var indexCmd = &cobra.Command{
 	Use:   "index",
 	Short: "Reindex all of Vikunja's data into Typesense. This will remove any existing index.",
 	PreRun: func(cmd *cobra.Command, args []string) {
-		initialize.FullInit()
+		initialize.FullInitWithoutAsync()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if !config.TypesenseEnabled.GetBool() {
