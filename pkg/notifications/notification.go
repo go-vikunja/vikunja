@@ -17,6 +17,7 @@
 package notifications
 
 import (
+	"code.vikunja.io/api/pkg/log"
 	"encoding/json"
 
 	"code.vikunja.io/api/pkg/db"
@@ -40,10 +41,13 @@ type NotificationWithSubject interface {
 
 // Notifiable is an entity which can be notified. Usually a user.
 type Notifiable interface {
-	// Should return the email address this notifiable has.
+	// RouteForMail should return the email address this notifiable has.
 	RouteForMail() (string, error)
-	// Should return the id of the notifiable entity
+	// RouteForDB should return the id of the notifiable entity to save it in the database.
 	RouteForDB() int64
+	// ShouldNotify provides a last-minute way to cancel a notification. It will be called immediately before
+	// sending a notification.
+	ShouldNotify() (should bool, err error)
 }
 
 // Notify notifies a notifiable of a notification
@@ -51,6 +55,12 @@ func Notify(notifiable Notifiable, notification Notification) (err error) {
 	if isUnderTest {
 		sentTestNotifications = append(sentTestNotifications, notification)
 		return nil
+	}
+
+	should, err := notifiable.ShouldNotify()
+	if err != nil || !should {
+		log.Debugf("Not notifying user %d because they are disabled", notifiable.RouteForDB())
+		return err
 	}
 
 	err = notifyMail(notifiable, notification)

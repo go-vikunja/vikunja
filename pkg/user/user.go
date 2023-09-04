@@ -137,6 +137,17 @@ func (u *User) RouteForDB() int64 {
 	return u.ID
 }
 
+func (u *User) ShouldNotify() (bool, error) {
+	s := db.NewSession()
+	defer s.Close()
+	user, err := getUser(s, &User{ID: u.ID}, true)
+	if err != nil {
+		return false, err
+	}
+
+	return user.Status != StatusDisabled, err
+}
+
 // GetID implements the Auth interface
 func (u *User) GetID() int64 {
 	return u.ID

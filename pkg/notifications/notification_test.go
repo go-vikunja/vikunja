@@ -50,6 +50,7 @@ func (n *testNotification) Name() string {
 }
 
 type testNotifiable struct {
+	ShouldSendNotification bool
 }
 
 // RouteForMail routes a test notification for mail
@@ -62,30 +63,64 @@ func (t *testNotifiable) RouteForDB() int64 {
 	return 42
 }
 
+func (t *testNotifiable) ShouldNotify() (should bool, err error) {
+	return t.ShouldSendNotification, nil
+}
+
 func TestNotify(t *testing.T) {
-	tn := &testNotification{
-		Test:       "somethingsomething",
-		OtherValue: 42,
-	}
-	tnf := &testNotifiable{}
+	t.Run("normal", func(t *testing.T) {
 
-	err := Notify(tnf, tn)
+		s := db.NewSession()
+		defer s.Close()
+		_, err := s.Exec("delete from notifications")
+		assert.NoError(t, err)
 
-	assert.NoError(t, err)
-	vals := map[string]interface{}{
-		"notifiable_id": 42,
-		"notification":  "'{\"other_value\":42,\"test\":\"somethingsomething\"}'",
-	}
+		tn := &testNotification{
+			Test:       "somethingsomething",
+			OtherValue: 42,
+		}
+		tnf := &testNotifiable{
+			ShouldSendNotification: true,
+		}
 
-	if db.Type() == schemas.POSTGRES {
-		vals["notification::jsonb"] = vals["notification"].(string) + "::jsonb"
-		delete(vals, "notification")
-	}
+		err = Notify(tnf, tn)
+		assert.NoError(t, err)
+		vals := map[string]interface{}{
+			"notifiable_id": 42,
+			"notification":  "'{\"other_value\":42,\"test\":\"somethingsomething\"}'",
+		}
 
-	if db.Type() == schemas.SQLITE {
-		vals["CAST(notification AS BLOB)"] = "CAST(" + vals["notification"].(string) + " AS BLOB)"
-		delete(vals, "notification")
-	}
+		if db.Type() == schemas.POSTGRES {
+			vals["notification::jsonb"] = vals["notification"].(string) + "::jsonb"
+			delete(vals, "notification")
+		}
 
-	db.AssertExists(t, "notifications", vals, true)
+		if db.Type() == schemas.SQLITE {
+			vals["CAST(notification AS BLOB)"] = "CAST(" + vals["notification"].(string) + " AS BLOB)"
+			delete(vals, "notification")
+		}
+
+		db.AssertExists(t, "notifications", vals, true)
+	})
+	t.Run("disabled notifiable", func(t *testing.T) {
+
+		s := db.NewSession()
+		defer s.Close()
+		_, err := s.Exec("delete from notifications")
+		assert.NoError(t, err)
+
+		tn := &testNotification{
+			Test:       "somethingsomething",
+			OtherValue: 42,
+		}
+		tnf := &testNotifiable{
+			ShouldSendNotification: false,
+		}
+
+		err = Notify(tnf, tn)
+		assert.NoError(t, err)
+		db.AssertMissing(t, "notifications", map[string]interface{}{
+			"notifiable_id": 42,
+		})
+	})
 }
