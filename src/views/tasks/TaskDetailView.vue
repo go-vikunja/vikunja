@@ -536,17 +536,19 @@ const taskColor = ref<ITask['hexColor']>('')
 const visible = ref(false)
 
 const project = computed(() => projectStore.projects[task.value.projectId])
-watchEffect(() => {
-	if (typeof project.value === 'undefined') {
-		// assuming the task has not been loaded completely and thus the project id is 0.
-		// This avoids flickering between a project background and none when opening the task detail view from 
-		// any the project views.
-		return
-	}
-	baseStore.handleSetCurrentProject({
-		project: project.value,
+watch(
+	() => task.value?.projectId,
+	() => {
+		if (typeof project.value === 'undefined') {
+			// assuming the task has not been loaded completely and thus the project id is 0.
+			// This avoids flickering between a project background and none when opening the 
+			// task detail view from any of the project views.
+			return
+		}
+		baseStore.handleSetCurrentProject({
+			project: project.value,
+		})
 	})
-})
 
 const canWrite = computed(() => (
 	task.value.maxRight !== null &&
