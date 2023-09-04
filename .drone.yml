@@ -126,6 +126,7 @@ steps:
       - sed -i 's/\\/api\\/v1//g' frontend/index.html
       - ./bumpp.sh
       - yarn install
+      - cat package.json
       - yarn dist --linux --windows
 
   - name: rebuild-cache
@@ -229,6 +230,6 @@ steps:
 
 ---
 kind: signature
-hmac: 5867c1afb44d79d73076ca7d4185e2e05be1c2d0cfc04152440547baaf6b3013
+hmac: 83cd065e5a1e4450318b3d730e38adbbaaebf18e3e62351e5b5579cbaf76b7ba
 
 ...
