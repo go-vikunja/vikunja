@@ -11,7 +11,12 @@
 				class="input-wrapper input"
 				:class="{'has-multiple': hasMultiple}"
 			>
-				<template v-if="Array.isArray(internalValue)">
+				<slot 
+					v-if="Array.isArray(internalValue)"
+					name="items"
+					:items="internalValue"
+					:remove="remove"
+				>
 					<template v-for="(item, key) in internalValue">
 						<slot name="tag" :item="item">
 						<span :key="`item${key}`" class="tag ml-2 mt-2">
@@ -20,7 +25,7 @@
 						</span>
 						</slot>
 					</template>
-				</template>
+				</slot>
 
 				<input
 					type="text"
@@ -85,7 +90,10 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onBeforeUnmount, onMounted, ref, toRefs, watch, type ComponentPublicInstance, type PropType} from 'vue'
+import {
+	computed, onBeforeUnmount, onMounted, ref, toRefs, watch, type ComponentPublicInstance, type PropType,
+	watchEffect,
+} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'

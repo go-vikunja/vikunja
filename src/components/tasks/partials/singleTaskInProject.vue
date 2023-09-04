@@ -49,14 +49,12 @@
 				:labels="task.labels"
 			/>
 
-			<User
-				v-for="(a, i) in task.assignees"
-				:avatar-size="27"
-				:is-inline="true"
-				:key="task.id + 'assignee' + a.id + i"
-				:show-username="false"
-				:user="a"
-				class="m-2"
+			<assignee-list 
+				v-if="task.assignees.length > 0"
+				:assignees="task.assignees"
+				:avatar-size="25"
+				class="ml-1"
+				:inline="true"
 			/>
 
 			<!-- FIXME: use popup -->
@@ -152,6 +150,7 @@ import {success} from '@/message'
 import {useProjectStore} from '@/stores/projects'
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
+import AssigneeList from '@/components/tasks/partials/assigneeList.vue'
 
 const {
 	theTask,

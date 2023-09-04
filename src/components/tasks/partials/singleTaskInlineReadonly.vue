@@ -33,13 +33,12 @@
 			:labels="task.labels"
 		/>
 
-		<User
-			v-for="(a, i) in task.assignees"
+		<assignee-list
+			v-if="task.assignees.length > 0"
+			:assignees="task.assignees"
 			:avatar-size="20"
-			:key="task.id + 'assignee' + a.id + i"
-			:show-username="false"
-			:user="a"
-			class="avatar"
+			class="ml-1"
+			:inline="true"
 		/>
 
 		<span
@@ -98,6 +97,7 @@ import ColorBubble from '@/components/misc/colorBubble.vue'
 import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 
 import {useProjectStore} from '@/stores/projects'
+import AssigneeList from '@/components/tasks/partials/assigneeList.vue'
 
 const {
 	task,

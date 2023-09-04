@@ -11,13 +11,8 @@
 		v-model="assignees"
 		:autocomplete-enabled="false"
 	>
-		<template #tag="{item: user}">
-			<span class="assignee">
-				<user :avatar-size="32" :show-username="false" :user="user" class="m-2"/>
-				<BaseButton @click="removeAssignee(user)" class="remove-assignee" v-if="!disabled">
-					<icon icon="times"/>
-				</BaseButton>
-			</span>
+		<template #items="{items, remove}">
+			<assignee-list :assignees="items" :remove="removeAssignee"/>
 		</template>
 		<template #searchResult="{option: user}">
 			<user :avatar-size="24" :show-username="true" :user="user"/>
@@ -40,6 +35,7 @@ import {useTaskStore} from '@/stores/tasks'
 
 import type {IUser} from '@/modelTypes/IUser'
 import {getDisplayName} from '@/models/user'
+import AssigneeList from '@/components/tasks/partials/assigneeList.vue'
 
 const props = defineProps({
 	taskId: {
@@ -120,34 +116,3 @@ async function findUser(query: string) {
 		})
 }
 </script>
-
-<style lang="scss" scoped>
-.assignee {
-	position: relative;
-
-	&:not(:first-child) {
-		margin-left: -1.5rem;
-	}
-
-	:deep(.user img) {
-		border: 2px solid var(--white);
-		margin-right: 0;
-	}
-
-}
-
-.remove-assignee {
-	position: absolute;
-	top: 4px;
-	left: 2px;
-	color: var(--danger);
-	background: var(--white);
-	padding: 0 4px;
-	display: block;
-	border-radius: 100%;
-	font-size: .75rem;
-	width: 18px;
-	height: 18px;
-	z-index: 100;
-}
-</style>

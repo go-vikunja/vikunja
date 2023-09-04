@@ -49,15 +49,13 @@
 			<div class="footer">
 				<labels :labels="task.labels"/>
 				<priority-label :priority="task.priority" :done="task.done"/>
-				<div class="assignees" v-if="task.assignees.length > 0">
-					<user
-						v-for="u in task.assignees"
-						:avatar-size="24"
-						:key="task.id + 'assignee' + u.id"
-						:show-username="false"
-						:user="u"
-					/>
-				</div>
+				<assignee-list
+					v-if="task.assignees.length > 0"
+					:assignees="task.assignees"
+					:avatar-size="24"
+					class="ml-1"
+					:inline="true"
+				/>
 				<checklist-summary :task="task"/>
 				<span class="icon" v-if="task.attachments.length > 0">
 					<icon icon="paperclip"/>	
@@ -91,6 +89,7 @@ import AttachmentService from '@/services/attachment'
 import {formatDateLong, formatISO, formatDateSince} from '@/helpers/time/formatDate'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import {useTaskStore} from '@/stores/tasks'
+import AssigneeList from '@/components/tasks/partials/assigneeList.vue'
 
 const router = useRouter()
 

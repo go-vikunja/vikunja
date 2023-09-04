@@ -143,13 +143,12 @@
 									<labels :labels="t.labels"/>
 								</td>
 								<td v-if="activeColumns.assignees">
-									<user
-										:avatar-size="27"
-										:is-inline="true"
-										:key="t.id + 'assignee' + a.id + i"
-										:show-username="false"
-										:user="a"
-										v-for="(a, i) in t.assignees"
+									<assignee-list
+										v-if="t.assignees.length > 0"
+										:assignees="t.assignees"
+										:avatar-size="28"
+										class="ml-1"
+										:inline="true"
 									/>
 								</td>
 								<date-table-cell :date="t.dueDate" v-if="activeColumns.dueDate"/>
@@ -201,6 +200,7 @@ import {useTaskList} from '@/composables/useTaskList'
 import type {SortBy} from '@/composables/useTaskList'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
+import AssigneeList from '@/components/tasks/partials/assigneeList.vue'
 
 const ACTIVE_COLUMNS_DEFAULT = {
 	index: true,
