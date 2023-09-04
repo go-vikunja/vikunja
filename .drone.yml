@@ -51,8 +51,7 @@ steps:
       - wget https://dl.vikunja.io/frontend/vikunja-frontend-$$VERSION.zip
       - unzip vikunja-frontend-$$VERSION.zip -d frontend
       - sed -i 's/\\/api\\/v1//g' frontend/index.html
-      # Make sure that the -unstable suffix is added to release files
-      - sed -i "s/\$${version}/$$VERSION/g" package.json
+      - ./bumpp.sh
       - yarn install
       - yarn dist --linux --windows
 
@@ -125,8 +124,7 @@ steps:
       - wget https://dl.vikunja.io/frontend/vikunja-frontend-$$VERSION.zip
       - unzip vikunja-frontend-$$VERSION.zip -d frontend
       - sed -i 's/\\/api\\/v1//g' frontend/index.html
-      # Make sure that the -unstable suffix is added to release files
-      - sed -i "s/\$${version}/$$VERSION/g" package.json
+      - ./bumpp.sh
       - yarn install
       - yarn dist --linux --windows
 
@@ -231,6 +229,6 @@ steps:
 
 ---
 kind: signature
-hmac: f5aa08e285044e34b02b197a309bb8682b8cc9adf630dabaa18cc09cc6b50cf6
+hmac: 5867c1afb44d79d73076ca7d4185e2e05be1c2d0cfc04152440547baaf6b3013
 
 ...
