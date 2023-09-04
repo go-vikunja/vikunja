@@ -2,6 +2,7 @@
 
 set -e
 
-cat package.json | sed "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" > tmp.json
-mv tmp.json package.json
+sed -i "s/\${version}/$VERSION/g" package.json
+
+sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" package.json
 
