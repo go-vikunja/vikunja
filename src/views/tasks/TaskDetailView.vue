@@ -447,7 +447,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, toRef, shallowReactive, computed, watch, watchEffect, nextTick} from 'vue'
+import {ref, reactive, toRef, shallowReactive, computed, watch, nextTick} from 'vue'
 import {useRouter, type RouteLocation} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {unrefElement} from '@vueuse/core'
@@ -488,7 +488,6 @@ import {uploadFile} from '@/helpers/attachments'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 
-import {useBaseStore} from '@/stores/base'
 import {useAttachmentStore} from '@/stores/attachments'
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
@@ -515,7 +514,6 @@ defineEmits(['close'])
 const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
 
-const baseStore = useBaseStore()
 const projectStore = useProjectStore()
 const attachmentStore = useAttachmentStore()
 const taskStore = useTaskStore()
@@ -536,19 +534,6 @@ const taskColor = ref<ITask['hexColor']>('')
 const visible = ref(false)
 
 const project = computed(() => projectStore.projects[task.value.projectId])
-watch(
-	() => task.value?.projectId,
-	() => {
-		if (typeof project.value === 'undefined') {
-			// assuming the task has not been loaded completely and thus the project id is 0.
-			// This avoids flickering between a project background and none when opening the 
-			// task detail view from any of the project views.
-			return
-		}
-		baseStore.handleSetCurrentProject({
-			project: project.value,
-		})
-	})
 
 const canWrite = computed(() => (
 	task.value.maxRight !== null &&
