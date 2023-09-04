@@ -17,7 +17,29 @@ const spaceRegex = /^ */
  * relation between each other.
  */
 export function parseSubtasksViaIndention(taskTitles: string, prefixMode: PrefixMode): TaskWithParent[] {
-	const titles = taskTitles.split(/[\r\n]+/)
+	let titles = taskTitles.split(/[\r\n]+/)
+	
+	if (titles.length == 0) {
+		return []
+	}
+	
+	const spaceOnFirstLine = /^(\t| )+/
+	const spaces = spaceOnFirstLine.exec(titles[0])
+	if (spaces !== null) {
+		let spacesToCut = spaces[0].length
+		titles = titles.map(title => {
+			const spacesOnThisLine = spaceOnFirstLine.exec(title)
+			if (spacesOnThisLine === null) {
+				// This means the current task title does not start with indention, but the very first one did
+				// To prevent cutting actual task data we now need to update the number of spaces to cut
+				spacesToCut = 0
+			}
+			if (spacesOnThisLine !== null && spacesOnThisLine[0].length < spacesToCut) {
+				spacesToCut = spacesOnThisLine[0].length
+			}
+			return title.substring(spacesToCut)
+		})
+	}
 
 	return titles.map((title, index) => {
 		const task: TaskWithParent = {
@@ -32,7 +54,7 @@ export function parseSubtasksViaIndention(taskTitles: string, prefixMode: Prefix
 			return task
 		}
 
-		const matched = spaceRegex.exec(title)
+		const matched = spaceRegex.exec(task.title)
 		const matchedSpaces = matched ? matched[0].length : 0
 
 		if (matchedSpaces > 0) {
@@ -45,7 +67,7 @@ export function parseSubtasksViaIndention(taskTitles: string, prefixMode: Prefix
 				const parentMatched = spaceRegex.exec(task.parent)
 				parentSpaces = parentMatched ? parentMatched[0].length : 0
 			} while (parentSpaces >= matchedSpaces)
-			task.title = cleanupTitle(title.replace(spaceRegex, ''))
+			task.title = cleanupTitle(task.title.replace(spaceRegex, ''))
 			task.parent = task.parent.replace(spaceRegex, '')
 			if (task.project === null) {
 				// This allows to specify a project once for the parent task and inherit it to all subtasks

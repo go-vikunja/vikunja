@@ -4,7 +4,7 @@ import {PrefixMode} from '@/modules/parseTaskText'
 
 describe('Parse Subtasks via Relation', () => {
 	it('Should not return a parent for a single task', () => {
-		const tasks = parseSubtasksViaIndention('single task')
+		const tasks = parseSubtasksViaIndention('single task', PrefixMode.Default)
 		
 		expect(tasks).to.have.length(1)
 		expect(tasks[0].parent).toBeNull()
@@ -117,5 +117,53 @@ task two`, PrefixMode.Default)
 		expect(tasks[0].project).to.eq('list')
 		expect(tasks[1].project).to.eq('list')
 		expect(tasks[2].project).to.eq('list')
+	})
+	it('Should clean the indention if there is indention on the first line', () => {
+		const tasks = parseSubtasksViaIndention(
+`  parent task
+  sub task one
+    sub task two`, PrefixMode.Default)
+
+		expect(tasks).to.have.length(3)
+		expect(tasks[0].parent).toBeNull()
+		expect(tasks[0].title).to.eq('parent task')
+		expect(tasks[1].title).to.eq('sub task one')
+		expect(tasks[1].parent).toBeNull()
+		expect(tasks[2].title).to.eq('sub task two')
+		expect(tasks[2].parent).to.eq('sub task one')
+	})
+	it('Should clean the indention if there is indention on the first line but not for subsequent tasks', () => {
+		const tasks = parseSubtasksViaIndention(
+			`  parent task
+  sub task one
+first level task one
+  sub task two`, PrefixMode.Default)
+
+		expect(tasks).to.have.length(4)
+		expect(tasks[0].parent).toBeNull()
+		expect(tasks[0].title).to.eq('parent task')
+		expect(tasks[1].title).to.eq('sub task one')
+		expect(tasks[1].parent).toBeNull()
+		expect(tasks[2].title).to.eq('first level task one')
+		expect(tasks[2].parent).toBeNull()
+		expect(tasks[3].title).to.eq('sub task two')
+		expect(tasks[3].parent).to.eq('first level task one')
+	})
+	it('Should clean the indention if there is indention on the first line for subsequent tasks with less indention', () => {
+		const tasks = parseSubtasksViaIndention(
+			`  parent task
+  sub task one
+ first level task one
+   sub task two`, PrefixMode.Default)
+
+		expect(tasks).to.have.length(4)
+		expect(tasks[0].parent).toBeNull()
+		expect(tasks[0].title).to.eq('parent task')
+		expect(tasks[1].title).to.eq('sub task one')
+		expect(tasks[1].parent).toBeNull()
+		expect(tasks[2].title).to.eq('first level task one')
+		expect(tasks[2].parent).toBeNull()
+		expect(tasks[3].title).to.eq('sub task two')
+		expect(tasks[3].parent).to.eq('first level task one')
 	})
 })
