@@ -248,11 +248,22 @@ func reindexTasks(s *xorm.Session, tasks map[int64]*Task) (err error) {
 		return fmt.Errorf("could not fetch more task info: %s", err.Error())
 	}
 
+	projects := make(map[int64]*Project)
+
 	for _, task := range tasks {
 		searchTask := convertTaskToTypesenseTask(task)
 
+		p, has := projects[task.ProjectID]
+		if !has {
+			p, err = GetProjectSimpleByID(s, task.ProjectID)
+			if err != nil {
+				return fmt.Errorf("could not fetch project %d: %s", task.ProjectID, err.Error())
+			}
+			projects[task.ProjectID] = p
+		}
+
 		comment := &TaskComment{TaskID: task.ID}
-		searchTask.Comments, _, _, err = comment.ReadAll(s, task.CreatedBy, "", -1, -1)
+		searchTask.Comments, _, _, err = comment.ReadAll(s, &user.User{ID: p.OwnerID}, "", -1, -1)
 		if err != nil {
 			return fmt.Errorf("could not fetch comments for task %d: %s", task.ID, err.Error())
 		}
