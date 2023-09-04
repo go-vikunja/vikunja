@@ -250,6 +250,7 @@ func reindexTasks(s *xorm.Session, tasks map[int64]*Task) (err error) {
 
 	projects := make(map[int64]*Project)
 
+	typesenseTasks := []interface{}{}
 	for _, task := range tasks {
 		searchTask := convertTaskToTypesenseTask(task)
 
@@ -268,13 +269,18 @@ func reindexTasks(s *xorm.Session, tasks map[int64]*Task) (err error) {
 			return fmt.Errorf("could not fetch comments for task %d: %s", task.ID, err.Error())
 		}
 
-		_, err = typesenseClient.Collection("tasks").
-			Documents().
-			Upsert(searchTask)
-		if err != nil {
-			log.Errorf("Could not upsert task into Typesense", err)
-			return err
-		}
+		typesenseTasks = append(typesenseTasks, searchTask)
+	}
+
+	_, err = typesenseClient.Collection("tasks").
+		Documents().
+		Import(typesenseTasks, &api.ImportDocumentsParams{
+			Action:    pointer.String("upsert"),
+			BatchSize: pointer.Int(100),
+		})
+	if err != nil {
+		log.Errorf("Could not upsert task into Typesense", err)
+		return err
 	}
 
 	return nil
