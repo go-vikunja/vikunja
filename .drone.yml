@@ -210,6 +210,7 @@ steps:
         from_secret: sentry_auth_token
       SENTRY_ORG: vikunja
       SENTRY_PROJECT: frontend-oss
+      PUPPETEER_SKIP_DOWNLOAD: true
     commands:
       - apk add git
       - corepack enable && pnpm config set store-dir .cache/pnpm
