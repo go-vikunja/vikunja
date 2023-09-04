@@ -207,36 +207,45 @@ func ReindexAllTasks() (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
+	_, err = s.Where("collection = ?", "tasks").Delete(&TypesenseSync{})
+	if err != nil {
+		return fmt.Errorf("could not delete old sync status: %s", err.Error())
+	}
+
 	currentSync := &TypesenseSync{
 		Collection:    "tasks",
 		SyncStartedAt: time.Now(),
 	}
 	_, err = s.Insert(currentSync)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not update last sync: %s", err.Error())
 	}
 
 	err = s.Find(tasks)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not get all tasks: %s", err.Error())
 	}
 
 	err = reindexTasks(s, tasks)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not reindex all tasks: %s", err.Error())
 	}
 
 	currentSync.SyncFinishedAt = time.Now()
 	_, err = s.Where("collection = ?", "tasks").
 		Cols("sync_finished_at").
 		Update(currentSync)
+	if err != nil {
+		return fmt.Errorf("could update last sync state: %s", err.Error())
+	}
+
 	return
 }
 
 func reindexTasks(s *xorm.Session, tasks map[int64]*Task) (err error) {
 	err = addMoreInfoToTasks(s, tasks, &user.User{ID: 1})
 	if err != nil {
-		return err
+		return fmt.Errorf("could not fetch more task info: %s", err.Error())
 	}
 
 	for _, task := range tasks {
@@ -245,7 +254,7 @@ func reindexTasks(s *xorm.Session, tasks map[int64]*Task) (err error) {
 		comment := &TaskComment{TaskID: task.ID}
 		searchTask.Comments, _, _, err = comment.ReadAll(s, task.CreatedBy, "", -1, -1)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not fetch comments for task %d: %s", task.ID, err.Error())
 		}
 
 		_, err = typesenseClient.Collection("tasks").
