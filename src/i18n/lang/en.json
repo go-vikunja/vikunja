@@ -916,7 +916,7 @@
     "urlPlaceholder": "eg. https://localhost:3456",
     "change": "change",
     "use": "Using Vikunja installation at {0}",
-    "error": "Could not find or use Vikunja installation at \"{domain}\". Please try a different url.",
+    "error": "Could not find or use Vikunja installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
     "success": "Using Vikunja installation at \"{domain}\".",
     "urlRequired": "A url is required."
   },

@@ -48,13 +48,14 @@ import Message from '@/components/misc/message.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import NoAuthWrapper from '@/components/misc/no-auth-wrapper.vue'
 
-import {ERROR_NO_API_URL} from '@/helpers/checkAndSetApiUrl'
+import {ERROR_NO_API_URL, InvalidApiUrlProvidedError, NoApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
 import {useOnline} from '@/composables/useOnline'
 
 import {getAuthForRoute} from '@/router'
 
 import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
+import {useI18n} from 'vue-i18n'
 
 const router = useRouter()
 const route = useRoute()
@@ -68,6 +69,8 @@ const online = useOnline()
 const error = ref('')
 const showLoading = computed(() => !ready.value && error.value === '')
 
+const {t} = useI18n()
+
 async function load() {
 	try {
 		await baseStore.loadApp()
@@ -77,7 +80,15 @@ async function load() {
 			await router.push(redirectTo)
 		}
 	} catch (e: unknown) {
-		error.value = String(e)
+		if (e instanceof NoApiUrlProvidedError) {
+			error.value = ERROR_NO_API_URL
+			return
+		}
+		if (e instanceof InvalidApiUrlProvidedError) {
+			error.value = t('apiConfig.error')
+			return
+		}
+		error.value = String(e.message)
 	}
 }
 

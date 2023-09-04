@@ -4,8 +4,27 @@ const API_DEFAULT_PORT = '3456'
 
 export const ERROR_NO_API_URL = 'noApiUrlProvided'
 
+export class NoApiUrlProvidedError extends Error {
+	constructor() {
+		super()
+		this.message = 'No API URL provided'
+		this.name = 'NoApiUrlProvidedError'
+	}
+}
 
-export const checkAndSetApiUrl = (url: string): Promise<string> => {
+export class InvalidApiUrlProvidedError extends Error {
+	constructor() {
+		super()
+		this.message = 'The provided API URL is invalid.'
+		this.name = 'InvalidApiUrlProvidedError'
+	}
+}
+
+export const checkAndSetApiUrl = (url: string | undefined | null): Promise<string> => {
+	if (url === '' || url === null || typeof url === 'undefined') {
+		throw new NoApiUrlProvidedError()
+	}
+
 	if (url.startsWith('/')) {
 		url = window.location.host + url
 	}
@@ -17,8 +36,14 @@ export const checkAndSetApiUrl = (url: string): Promise<string> => {
 	) {
 		url = `${window.location.protocol}//${url}`
 	}
+	
+	let urlToCheck: URL
+	try {
+		urlToCheck = new URL(url)
+	} catch (e) {
+		throw new InvalidApiUrlProvidedError()
+	}
 
-	const urlToCheck: URL = new URL(url)
 	const origUrlToCheck = urlToCheck
 
 	const oldUrl = window.API_URL
@@ -86,6 +111,6 @@ export const checkAndSetApiUrl = (url: string): Promise<string> => {
 				return window.API_URL
 			}
 
-			throw new Error(ERROR_NO_API_URL)
+			throw new InvalidApiUrlProvidedError()
 		})
 }
