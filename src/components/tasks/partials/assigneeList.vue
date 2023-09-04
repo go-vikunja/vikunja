@@ -4,7 +4,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import User from '@/components/misc/user.vue'
 import {computed} from 'vue'
 
-type removeFunction = (item: any) => {}
+type removeFunction = (item: any) => void
 
 const {
 	assignees,
@@ -25,14 +25,20 @@ const hasDelete = computed(() => typeof remove !== 'undefined' && !disabled)
 
 <template>
 	<div class="assignees-list" :class="{'is-inline': inline}">
-		<span class="assignee" v-for="user in assignees">
+		<span
+			v-for="user in assignees"
+			class="assignee"
+			:key="user.id"
+		>
 			<User
+				:key="'user'+user.id"
 				:avatar-size="avatarSize"
 				:show-username="false"
 				:user="user"
 				:class="{'m-2': hasDelete, 'mr-3': !hasDelete}"
 			/>
 			<BaseButton
+				:key="'delete'+user.id"
 				v-if="hasDelete"
 				@click="remove(user)"
 				class="remove-assignee"

@@ -91,7 +91,6 @@ import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'
 import Labels from '@/components/tasks/partials//labels.vue'
 import ChecklistSummary from '@/components/tasks/partials/checklist-summary.vue'
 
-import User from '@/components/misc/user.vue'
 import ColorBubble from '@/components/misc/colorBubble.vue'
 
 import {formatDateSince, formatISO, formatDateLong} from '@/helpers/time/formatDate'

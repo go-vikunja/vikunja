@@ -11,7 +11,7 @@
 		v-model="assignees"
 		:autocomplete-enabled="false"
 	>
-		<template #items="{items, remove}">
+		<template #items="{items}">
 			<assignee-list :assignees="items" :remove="removeAssignee"/>
 		</template>
 		<template #searchResult="{option: user}">
@@ -26,7 +26,6 @@ import {useI18n} from 'vue-i18n'
 
 import User from '@/components/misc/user.vue'
 import Multiselect from '@/components/input/multiselect.vue'
-import BaseButton from '@/components/base/BaseButton.vue'
 
 import {includesById} from '@/helpers/utils'
 import ProjectUserService from '@/services/projectUsers'

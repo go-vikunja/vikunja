@@ -92,7 +92,6 @@
 <script setup lang="ts">
 import {
 	computed, onBeforeUnmount, onMounted, ref, toRefs, watch, type ComponentPublicInstance, type PropType,
-	watchEffect,
 } from 'vue'
 import {useI18n} from 'vue-i18n'
 

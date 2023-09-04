@@ -135,7 +135,6 @@ import Labels from '@/components/tasks/partials//labels.vue'
 import DeferTask from '@/components/tasks/partials//defer-task.vue'
 import ChecklistSummary from '@/components/tasks/partials/checklist-summary.vue'
 
-import User from '@/components/misc/user.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import ColorBubble from '@/components/misc/colorBubble.vue'

@@ -76,7 +76,6 @@ import {ref, computed, watch} from 'vue'
 import {useRouter} from 'vue-router'
 
 import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'
-import User from '@/components/misc/user.vue'
 import Done from '@/components/misc/Done.vue'
 import Labels from '@/components/tasks/partials/labels.vue'
 import ChecklistSummary from './checklist-summary.vue'
