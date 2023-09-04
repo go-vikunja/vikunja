@@ -226,6 +226,7 @@ steps:
     image: kolaente/zip
     pull: always
     commands:
+      - cp src/version.json dist
       - cd dist
       - zip -r ../vikunja-frontend-unstable.zip *
       - cd ..
@@ -307,6 +308,7 @@ steps:
     image: kolaente/zip
     pull: always
     commands:
+      - cp src/version.json dist
       - cd dist
       - zip -r ../vikunja-frontend-${DRONE_TAG##v}.zip *
       - cd ..
@@ -530,6 +532,6 @@ steps:
         from_secret: crowdin_key
 ---
 kind: signature
-hmac: 3d8720367a6b3c4b3bf945a39980e5a44d611eee39891d64eb727192a20ddc84
+hmac: 21ecc05b02fbd35b411494e046479c3ff23bc8b221ffae91ccf4a8f31dafa3d3
 
 ...
