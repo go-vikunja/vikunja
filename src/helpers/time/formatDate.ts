@@ -5,8 +5,8 @@ import {format, formatDistanceToNow} from 'date-fns'
 import {enGB, de, fr, ru} from 'date-fns/locale'
 
 import {i18n} from '@/i18n'
-import { createSharedComposable, type MaybeRef } from '@vueuse/core'
-import { computed, unref } from 'vue'
+import {createSharedComposable, type MaybeRef} from '@vueuse/core'
+import {computed, unref} from 'vue'
 
 const locales = {en: enGB, de, ch: de, fr, ru}
 
@@ -62,7 +62,7 @@ export const useDateTimeFormatter = createSharedComposable((options?: MaybeRef<I
 })
 
 export function useWeekDayFromDate() {
-	const dateTimeFormatter = useDateTimeFormatter({ weekday: 'short' })
+	const dateTimeFormatter = useDateTimeFormatter({weekday: 'short'})
 
 	return computed(() => (date: Date) => dateTimeFormatter.value.format(date))
 }

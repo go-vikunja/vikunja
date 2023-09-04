@@ -49,7 +49,7 @@
 				:labels="task.labels"
 			/>
 
-			<assignee-list 
+			<assignee-list
 				v-if="task.assignees.length > 0"
 				:assignees="task.assignees"
 				:avatar-size="25"
@@ -70,7 +70,7 @@
 					class="is-italic"
 					:aria-expanded="showDefer ? 'true' : 'false'"
 				>
-					– {{ $t('task.detail.due', {at: formatDateSince(task.dueDate)}) }}
+					– {{ $t('task.detail.due', {at: dueDateFormatted}) }}
 				</time>
 			</BaseButton>
 			<CustomTransition name="fade">
@@ -119,7 +119,7 @@
 			<icon icon="star" v-if="task.isFavorite"/>
 			<icon :icon="['far', 'star']" v-else/>
 		</BaseButton>
-		<slot />
+		<slot/>
 	</div>
 </template>
 
@@ -127,7 +127,7 @@
 import {ref, watch, shallowReactive, onMounted, onBeforeUnmount, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import TaskModel, { getHexColor } from '@/models/task'
+import TaskModel, {getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 
 import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'
@@ -150,6 +150,7 @@ import {useProjectStore} from '@/stores/projects'
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
 import AssigneeList from '@/components/tasks/partials/assigneeList.vue'
+import {useIntervalFn} from '@vueuse/core'
 
 const {
 	theTask,
@@ -212,6 +213,20 @@ const taskDetailRoute = computed(() => ({
 	// state: { backdropView: router.currentRoute.value.fullPath },
 }))
 
+function updateDueDate() {
+	if (!task.value.dueDate) {
+		return
+	}
+
+	dueDateFormatted.value = formatDateSince(task.value.dueDate)
+}
+
+const dueDateFormatted = ref('')
+useIntervalFn(updateDueDate, 60_000, {
+	immediateCallback: true,
+})
+onMounted(updateDueDate)
+
 
 async function markAsDone(checked: boolean) {
 	const updateFunc = async () => {
@@ -246,6 +261,7 @@ async function toggleFavorite() {
 }
 
 const deferDueDate = ref<typeof DeferTask | null>(null)
+
 function hideDeferDueDatePopup(e) {
 	if (!showDefer.value) {
 		return
@@ -281,7 +297,7 @@ function hideDeferDueDatePopup(e) {
 		-webkit-line-clamp: 4;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
-		
+
 		flex: 1 0 50%;
 
 		.dueDate {
@@ -391,7 +407,7 @@ function hideDeferDueDatePopup(e) {
 		color: var(--danger);
 	}
 
-	input[type="checkbox"] {
+	input[type='checkbox'] {
 		vertical-align: middle;
 	}
 
