@@ -913,7 +913,7 @@
     "urlPlaceholder": "例如： http://localhost:3456",
     "change": "换一换",
     "use": "在 {0} 使用 Vikunja 安装程序",
-    "error": "无法在 “{domain}” 上找到或使用 Vikunja 安装程序。 请尝试其他网址。",
+    "error": "Could not find or use Vikunja installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
     "success": "在 “{domain}” 上使用 Vikunja 安装程序。",
     "urlRequired": "Url 是必需的。"
   },

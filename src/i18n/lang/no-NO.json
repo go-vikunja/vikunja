@@ -913,7 +913,7 @@
     "urlPlaceholder": "f.eks. http://localhost:3456",
     "change": "endre",
     "use": "Bruker Vikunja installasjonen på {0}",
-    "error": "Kunne ikke finne eller bruke Vikunja installasjon på{domain}\". Prøv en annen Url.",
+    "error": "Could not find or use Vikunja installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
     "success": "Bruker Vikunja installasjonen på \"{domain}.",
     "urlRequired": "Url'en er tom, vennligst legg til."
   },

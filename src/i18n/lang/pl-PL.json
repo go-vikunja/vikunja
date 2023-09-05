@@ -913,7 +913,7 @@
     "urlPlaceholder": "np. https://localhost:3456",
     "change": "zmień",
     "use": "Użyj instalacji Vikunji z {0}",
-    "error": "Nie można znaleźć lub użyć instalacji Vikunji z \"{domain}\". Wypróbuj inny adres URL.",
+    "error": "Could not find or use Vikunja installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
     "success": "Używasz instalacji Vikunji z \"{domain}\".",
     "urlRequired": "URL jest wymagany."
   },

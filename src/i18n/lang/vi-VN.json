@@ -913,7 +913,7 @@
     "urlPlaceholder": "ví dụ: https://localhost:3456",
     "change": "thay đổi",
     "use": "Sử dụng cài đặt Vikunja tại {0}",
-    "error": "Không thể tìm thấy hoặc sử dụng cài đặt Vikunja tại \"{domain}\". Vui lòng thử một url khác.",
+    "error": "Could not find or use Vikunja installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
     "success": "Sử dụng cài đặt Vikunja tại \"{domain}\".",
     "urlRequired": "Cần có một url."
   },

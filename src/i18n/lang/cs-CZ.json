@@ -913,7 +913,7 @@
     "urlPlaceholder": "např. https://localhost:3456",
     "change": "změnit",
     "use": "Používá se instalace Vikunja v {0}",
-    "error": "Nelze najít nebo použít instalaci Vikunja na \"{domain}\". Zkuste prosím jinou url.",
+    "error": "Could not find or use Vikunja installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
     "success": "Pomocí instalace Vikunja na \"{domain}\".",
     "urlRequired": "Je vyžadována adresa URL."
   },

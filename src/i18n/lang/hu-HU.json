@@ -913,7 +913,7 @@
     "urlPlaceholder": "Például: https://localhost:3456",
     "change": "csere",
     "use": "A Vikunja telepítés használata itt: {0}",
-    "error": "Nem található, vagy nem használható a Vikunja telepítése a(z) \"{domain}\" címen. Kérjük, próbálkozzon másik URL-lel.",
+    "error": "Could not find or use Vikunja installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
     "success": "A Vikunja telepítés használata itt: {domain}",
     "urlRequired": "Az URL megadása kötelező."
   },

@@ -913,7 +913,7 @@
     "urlPlaceholder": "напр. https://localhost:3456",
     "change": "изменить",
     "use": "Используется Vikunja на {0}",
-    "error": "Не удалось подключиться к Vikunja по адресу \"{domain}\". Попробуйте указать другой url.",
+    "error": "Could not find or use Vikunja installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
     "success": "Используется Vikunja на \"{domain}\".",
     "urlRequired": "Требуется url."
   },
