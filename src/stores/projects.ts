@@ -55,6 +55,15 @@ export const useProjectStore = defineStore('project', () => {
 			return typeof project === 'undefined' ? null : project
 		}
 	})
+	
+	const findProjectByIdentifier = computed(() => {
+		return (identifier: string) => {
+			const project = Object.values(projects.value).find(p => {
+				return p.identifier.toLowerCase() === identifier.toLowerCase()
+			})
+			return typeof project === 'undefined' ? null : project
+		}
+	})
 
 	const searchProject = computed(() => {
 		return (query: string, includeArchived = false) => {
@@ -205,6 +214,7 @@ export const useProjectStore = defineStore('project', () => {
 
 		getChildProjects,
 		findProjectByExactname,
+		findProjectByIdentifier,
 		searchProject,
 		searchSavedFilter,
 

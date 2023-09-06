@@ -370,7 +370,12 @@ export const useTaskStore = defineStore('task', () => {
 		// Uses the following ways to get the project id of the new task:
 		//  1. If specified in quick add magic, look in store if it exists and use it if it does
 		if (typeof projectName !== 'undefined' && projectName !== null) {
-			const project = projectStore.findProjectByExactname(projectName)
+			let project = projectStore.findProjectByExactname(projectName)
+			
+			if (project === null) {
+				project = projectStore.findProjectByIdentifier(projectName)
+			}
+			
 			foundProjectId = project === null ? null : project.id
 		}
 		
