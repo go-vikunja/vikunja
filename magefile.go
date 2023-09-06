@@ -465,7 +465,6 @@ func (Build) Clean() error {
 // Builds a vikunja binary, ready to run
 func (Build) Build() {
 	mg.Deps(initVars)
-	mg.Deps(DoTheSwag)
 	runAndStreamOutput("go", "build", Goflags[0], "-tags", Tags, "-ldflags", "-s -w "+Ldflags, "-o", Executable)
 }
 
@@ -475,7 +474,6 @@ type Release mg.Namespace
 func (Release) Release(ctx context.Context) error {
 	mg.Deps(initVars)
 	mg.Deps(Release.Dirs)
-	mg.Deps(DoTheSwag)
 
 	// Run compiling in parallel to speed it up
 	errs, _ := errgroup.WithContext(ctx)
@@ -517,7 +515,6 @@ func (Release) Dirs() error {
 
 func runXgo(targets string) error {
 	mg.Deps(initVars)
-	mg.Deps(DoTheSwag)
 	checkAndInstallGoTool("xgo", "src.techknowlogick.com/xgo")
 
 	extraLdflags := `-linkmode external -extldflags "-static" `
