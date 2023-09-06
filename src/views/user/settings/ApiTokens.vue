@@ -11,6 +11,7 @@ import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import {useI18n} from 'vue-i18n'
 import {useAuthStore} from '@/stores/auth'
+import Message from '@/components/misc/message.vue'
 
 const service = new ApiTokenService()
 const tokens = ref([])
@@ -23,6 +24,7 @@ const newTokenExpiryCustom = ref(new Date())
 const newTokenPermissions = ref({})
 const newTokenTitleValid = ref(true)
 const apiTokenTitle = ref()
+const tokenCreatedSuccessMessage = ref('')
 
 const showDeleteModal = ref(false)
 const tokenToDelete = ref(null)
@@ -97,6 +99,7 @@ async function createToken() {
 	})
 
 	const token = await service.create(newToken.value)
+	tokenCreatedSuccessMessage.value = t('user.settings.apiTokens.tokenCreatedSuccess', {token: token.token})
 	newToken.value = new ApiTokenModel()
 	newTokenExpiry.value = 30
 	newTokenExpiryCustom.value = new Date()
@@ -112,6 +115,11 @@ function formatPermissionTitle(title: string): string {
 
 <template>
 	<card :title="$t('user.settings.apiTokens.title')">
+
+		<message v-if="tokenCreatedSuccessMessage !== ''" class="has-text-centered mb-4">
+			{{ tokenCreatedSuccessMessage }}<br/>
+			{{ $t('user.settings.apiTokens.tokenCreatedNotSeeAgain') }}
+		</message>
 
 		<p>
 			{{ $t('user.settings.apiTokens.general') }}
