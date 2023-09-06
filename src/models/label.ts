@@ -5,15 +5,14 @@ import type {ILabel} from '@/modelTypes/ILabel'
 import type {IUser} from '@/modelTypes/IUser'
 
 import {colorIsDark} from '@/helpers/color/colorIsDark'
-
-const DEFAULT_LABEL_BACKGROUND_COLOR = 'e8e8e8'
+import {getRandomColorHex} from '@/helpers/color/randomColor'
 
 export default class LabelModel extends AbstractModel<ILabel> implements ILabel {
 	id = 0
 	title = ''
 	// FIXME: this should be empty and be definied in the client.
 	// that way it get's never send to the server db and is easier to change in future versions.
-	hexColor = DEFAULT_LABEL_BACKGROUND_COLOR
+	hexColor = ''
 	description = ''
 	createdBy: IUser
 	projectId = 0
@@ -25,6 +24,10 @@ export default class LabelModel extends AbstractModel<ILabel> implements ILabel 
 	constructor(data: Partial<ILabel> = {}) {
 		super()
 		this.assignData(data)
+		
+		if (this.hexColor === '') {
+			this.hexColor = getRandomColorHex()
+		}
 
 		if (this.hexColor.substring(0, 1) !== '#') {
 			this.hexColor = '#' + this.hexColor
