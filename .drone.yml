@@ -479,10 +479,9 @@ trigger:
       - main
   event:
     include:
-      - push
-#      - cron
-#  cron:
-#    - update_translations
+      - cron
+  cron:
+    - update_translations
 
 steps:
   - name: download
@@ -533,6 +532,6 @@ steps:
         src/i18n/lang/en.json: en.json
 ---
 kind: signature
-hmac: e45c3ae55404862200757740f3bb1f52439de9b5d2150786ea446599d5b0dd0a
+hmac: dbb880ba69a4121361a32dca9b7252be30a6929529745e1ba937a0045da7b76f
 
 ...
