@@ -529,10 +529,10 @@ steps:
         from_secret: crowdin_key  
       project_id: 462614
       target: upload
-      files:
+      upload_files:
         src/i18n/lang/en.json: en.json
 ---
 kind: signature
-hmac: 85f3c3eee06b4296cc7af9fa3d39555f716b23750a44afe61416940972308931
+hmac: e45c3ae55404862200757740f3bb1f52439de9b5d2150786ea446599d5b0dd0a
 
 ...
