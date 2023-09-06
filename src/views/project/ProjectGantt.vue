@@ -40,7 +40,7 @@
 						:default-task-end-date="defaultTaskEndDate"
 						@update:task="updateTask"
 					/>
-					<TaskForm v-if="canWrite" @create-task="addGanttTask" />
+					<TaskForm v-if="canWrite" @create-task="addGanttTask"/>
 				</card>
 			</div>
 		</template>
@@ -115,7 +115,7 @@ const flatPickerDateRange = computed<Date[]>({
 	]),
 	set(newVal) {
 		const [dateFrom, dateTo] = newVal.map((date) => date?.toISOString())
-		
+
 		// only set after whole range has been selected
 		if (!dateTo) return
 
