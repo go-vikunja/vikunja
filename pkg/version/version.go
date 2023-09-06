@@ -16,8 +16,15 @@
 
 package version
 
+import "code.vikunja.io/api/pkg/swagger"
+
 // This package holds the version info
 // It is an own package to avoid import cycles
 
 // Version sets the version to be printed to the user. Gets overwritten by "make release" or "make build" with last git commit or tag.
 var Version = "dev"
+
+func init() {
+	// Additional swagger information
+	swagger.SwaggerInfo.Version = Version
+}
