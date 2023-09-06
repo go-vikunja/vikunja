@@ -17,7 +17,6 @@
 			:class="{ 'done': task.done, 'show-project': showProject && project}"
 			class="tasktext"
 		>
-			<priority-label :priority="task.priority" :done="task.done"/>
 			<span>
 				<router-link
 					v-if="showProject && typeof project !== 'undefined'"
@@ -33,6 +32,8 @@
 					:color="getHexColor(task.hexColor)"
 					class="mr-1"
 				/>
+			
+				<priority-label :priority="task.priority" :done="task.done"/>
 
 				<!-- Show any parent tasks to make it clear this task is a sub task of something -->
 				<span class="parent-tasks" v-if="typeof task.relatedTasks?.parenttask !== 'undefined'">

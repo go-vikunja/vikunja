@@ -1,7 +1,5 @@
 <template>
 	<div class="task">
-		<priority-label :priority="task.priority" :done="task.done"/>
-
 		<span>
 			<span
 				v-if="showProject && typeof project !== 'undefined'"
@@ -17,6 +15,8 @@
 				:color="getHexColor(task.hexColor)"
 				class="mr-1"
 			/>
+
+			<priority-label :priority="task.priority" :done="task.done"/>
 
 			<!-- Show any parent tasks to make it clear this task is a sub task of something -->
 			<span class="parent-tasks" v-if="typeof task.relatedTasks?.parenttask !== 'undefined'">
@@ -55,7 +55,6 @@
 				– {{ $t('task.detail.due', {at: formatDateSince(task.dueDate)}) }}
 			</time>
 		</span>
-
 
 		<span>
 			<span class="project-task-icon" v-if="task.attachments.length > 0">

@@ -48,7 +48,7 @@
 			</progress>
 			<div class="footer">
 				<labels :labels="task.labels"/>
-				<priority-label :priority="task.priority" :done="task.done"/>
+				<priority-label :priority="task.priority" :done="task.done" class="is-inline-flex is-align-items-center"/>
 				<assignee-list
 					v-if="task.assignees.length > 0"
 					:assignees="task.assignees"
@@ -242,7 +242,7 @@ $task-background: var(--white);
 
 		.priority-label {
 			font-size: .75rem;
-			height: 2rem;
+			padding: 0 .5rem 0 .25rem;
 
 			.icon {
 				height: 1rem;
