@@ -56,7 +56,7 @@ func getRouteGroupName(path string) string {
 	finalName := strings.Join(filteredParts, "_")
 	switch finalName {
 	case "projects_tasks":
-		return "tasks"
+		fallthrough
 	case "tasks_all":
 		return "tasks"
 	default:
