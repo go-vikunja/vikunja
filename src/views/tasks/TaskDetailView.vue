@@ -281,6 +281,8 @@
 					<!-- Comments -->
 					<comments :can-write="canWrite" :task-id="taskId"/>
 				</div>
+				
+				<!-- Task Actions -->
 				<div class="column is-one-third action-buttons d-print-none" v-if="canWrite || isModal">
 					<template v-if="canWrite">
 						<x-button
@@ -301,14 +303,18 @@
 							@update:model-value="sub => task.subscription = sub"
 						/>
 						<x-button
-							@click="setFieldActive('assignees')"
+							@click="toggleFavorite"
 							variant="secondary"
-							v-shortcut="'a'"
-							v-cy="'taskDetail.assign'"
+							:icon="task.isFavorite ? 'star' : ['far', 'star']"
+							v-shortcut="'s'"
 						>
-							<span class="icon is-small"><icon icon="users"/></span>
-							{{ $t('task.detail.actions.assign') }}
+							{{
+								task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
+							}}
 						</x-button>
+						
+						<span class="action-heading">{{ $t('task.detail.organization') }}</span>
+						
 						<x-button
 							@click="setFieldActive('labels')"
 							variant="secondary"
@@ -325,6 +331,61 @@
 						>
 							{{ $t('task.detail.actions.priority') }}
 						</x-button>
+						<x-button
+							@click="setFieldActive('percentDone')"
+							variant="secondary"
+							icon="percent"
+						>
+							{{ $t('task.detail.actions.percentDone') }}
+						</x-button>
+						<x-button
+							@click="setFieldActive('color')"
+							variant="secondary"
+							icon="fill-drip"
+							:icon-color="color"
+							v-shortcut="'c'"
+						>
+							{{ $t('task.detail.actions.color') }}
+						</x-button>
+						
+						<span class="action-heading">{{ $t('task.detail.management') }}</span>
+
+						<x-button
+							@click="setFieldActive('assignees')"
+							variant="secondary"
+							v-shortcut="'a'"
+							v-cy="'taskDetail.assign'"
+						>
+							<span class="icon is-small"><icon icon="users"/></span>
+							{{ $t('task.detail.actions.assign') }}
+						</x-button>
+						<x-button
+							@click="setFieldActive('attachments')"
+							variant="secondary"
+							icon="paperclip"
+							v-shortcut="'f'"
+						>
+							{{ $t('task.detail.actions.attachments') }}
+						</x-button>
+						<x-button
+							@click="setRelatedTasksActive()"
+							variant="secondary"
+							icon="sitemap"
+							v-shortcut="'r'"
+						>
+							{{ $t('task.detail.actions.relatedTasks') }}
+						</x-button>
+						<x-button
+							@click="setFieldActive('moveProject')"
+							variant="secondary"
+							icon="list"
+							v-shortcut="'m'"
+						>
+							{{ $t('task.detail.actions.moveProject') }}
+						</x-button>
+						
+						<span class="action-heading">{{ $t('task.detail.dateAndTime') }}</span>
+						
 						<x-button
 							@click="setFieldActive('dueDate')"
 							variant="secondary"
@@ -361,56 +422,6 @@
 							icon="history"
 						>
 							{{ $t('task.detail.actions.repeatAfter') }}
-						</x-button>
-						<x-button
-							@click="setFieldActive('percentDone')"
-							variant="secondary"
-							icon="percent"
-						>
-							{{ $t('task.detail.actions.percentDone') }}
-						</x-button>
-						<x-button
-							@click="setFieldActive('attachments')"
-							variant="secondary"
-							icon="paperclip"
-							v-shortcut="'f'"
-						>
-							{{ $t('task.detail.actions.attachments') }}
-						</x-button>
-						<x-button
-							@click="setRelatedTasksActive()"
-							variant="secondary"
-							icon="sitemap"
-							v-shortcut="'r'"
-						>
-							{{ $t('task.detail.actions.relatedTasks') }}
-						</x-button>
-						<x-button
-							@click="setFieldActive('moveProject')"
-							variant="secondary"
-							icon="list"
-							v-shortcut="'m'"
-						>
-							{{ $t('task.detail.actions.moveProject') }}
-						</x-button>
-						<x-button
-							@click="setFieldActive('color')"
-							variant="secondary"
-							icon="fill-drip"
-							:icon-color="color"
-							v-shortcut="'c'"
-						>
-							{{ $t('task.detail.actions.color') }}
-						</x-button>
-						<x-button
-							@click="toggleFavorite"
-							variant="secondary"
-							:icon="task.isFavorite ? 'star' : ['far', 'star']"
-							v-shortcut="'s'"
-						>
-							{{
-								task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
-							}}
 						</x-button>
 						<x-button
 							@click="showDeleteModal = true"
@@ -999,5 +1010,14 @@ h3 .button {
 	@media print {
 		width: 100% !important;
 	}
+}
+
+.action-heading {
+	text-transform: uppercase;
+	color: var(--grey-700);
+	font-size: .75rem;
+	font-weight: 700;
+	margin: .5rem 0;
+	display: inline-block;
 }
 </style>

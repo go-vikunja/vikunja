@@ -610,6 +610,9 @@
       "belongsToProject": "This task belongs to project '{project}'",
       "due": "Due {at}",
       "closePopup": "Close popup",
+      "organization": "Organization",
+      "management": "Management",
+      "dateAndTime": "Date and time",
       "delete": {
         "header": "Delete this task",
         "text1": "Are you sure you want to remove this task?",
