@@ -475,24 +475,26 @@ name: update-translations
 
 trigger:
   branch:
-    - main
+    include:
+      - main
   event:
-    - cron
+    include:
+      - push
+      - cron
   cron:
     - update_translations
 
 steps:
   - name: download
     pull: always
-    image: jonasfranz/crowdin
+    image: git.lcomrade.su/root/drone-crowdin-v2
     settings:
-      download: true
-      export_dir: src/i18n/lang/
-      ignore_branch: true
-      project_identifier: vikunja
-    environment:
-      CROWDIN_KEY:
+      crowdin_key:
         from_secret: crowdin_key
+      project_id: 462614
+      target: download
+      download_to: src/i18n/lang/
+      download_export_approved_only: true
 
   - name: move-files
     pull: always
@@ -519,19 +521,18 @@ steps:
 
   - name: upload
     pull: always
-    image: jonasfranz/crowdin
+    image: git.lcomrade.su/root/drone-crowdin-v2
     depends_on:
       - clone
     settings:
+      crowdin_key:
+        from_secret: crowdin_key  
+      project_id: 462614
+      target: upload
       files:
-        en.json: src/i18n/lang/en.json
-      ignore_branch: true
-      project_identifier: vikunja
-    environment:
-      CROWDIN_KEY:
-        from_secret: crowdin_key
+        src/i18n/lang/en.json: en.json
 ---
 kind: signature
-hmac: 21ecc05b02fbd35b411494e046479c3ff23bc8b221ffae91ccf4a8f31dafa3d3
+hmac: 59a4520a78c2609ccf92175da2f000a17cc3eb06f5c573d8b45366d49c4c9794
 
 ...
