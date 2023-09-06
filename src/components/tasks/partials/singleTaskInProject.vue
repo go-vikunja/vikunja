@@ -1,5 +1,9 @@
 <template>
-	<div :class="{'is-loading': taskService.loading}" class="task loader-container">
+	<div 
+		:class="{'is-loading': taskService.loading}" 
+		class="task loader-container"
+		@click.stop.self="openTaskDetail"
+	>
 		<fancycheckbox
 			:disabled="(isArchived || disabled) && !canMarkAsDone"
 			@update:model-value="markAsDone"
@@ -12,8 +16,7 @@
 			class="mr-1"
 		/>
 
-		<router-link
-			:to="taskDetailRoute"
+		<div
 			:class="{ 'done': task.done, 'show-project': showProject && project}"
 			class="tasktext"
 		>
@@ -23,7 +26,8 @@
 					:to="{ name: 'project.list', params: { projectId: task.projectId } }"
 					class="task-project"
 					:class="{'mr-2': task.hexColor !== ''}"
-					v-tooltip="$t('task.detail.belongsToProject', {project: project.title})">
+					v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
+				>
 					{{ project.title }}
 				</router-link>
 
@@ -42,7 +46,15 @@
 					</template>
 					&rsaquo;
 				</span>
-				{{ task.title }}
+				
+				<router-link
+					:to="taskDetailRoute"
+					class="task-link"
+					ref="taskLink"
+					tabindex="-1"
+				>
+						{{ task.title }}
+				</router-link>
 			</span>
 
 			<labels
@@ -92,7 +104,7 @@
 			</span>
 
 			<checklist-summary :task="task"/>
-		</router-link>
+		</div>
 
 		<progress
 			class="progress is-small"
@@ -275,6 +287,14 @@ function hideDeferDueDatePopup(e) {
 		showDefer.value = false
 	})
 }
+
+const taskLink = ref<HTMLElement | null>(null)
+function openTaskDetail() {
+	const isTextSelected = window.getSelection().toString()
+	if (!isTextSelected) {
+		taskLink.value.$el.click()
+	}
+}
 </script>
 
 <style lang="scss" scoped>
@@ -290,6 +310,14 @@ function hideDeferDueDatePopup(e) {
 
 	&:hover {
 		background-color: var(--grey-100);
+	}
+
+	&:focus-within, &:focus {
+		box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+
+		a.task-link {
+			box-shadow: none;
+		}
 	}
 
 	.tasktext,
@@ -382,8 +410,11 @@ function hideDeferDueDatePopup(e) {
 			opacity: 1;
 		}
 	}
-
-
+	
+	.favorite:focus {
+		opacity: 1;
+	}
+	
 	:deep(.fancycheckbox) {
 		height: 18px;
 		padding-top: 0;
