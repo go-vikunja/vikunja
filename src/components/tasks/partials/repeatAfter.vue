@@ -7,8 +7,8 @@
 			<x-button variant="secondary" class="is-small" @click="() => setRepeatAfter(1, 'weeks')">
 				{{ $t('task.repeat.everyWeek') }}
 			</x-button>
-			<x-button variant="secondary" class="is-small" @click="() => setRepeatAfter(1, 'months')">
-				{{ $t('task.repeat.everyMonth') }}
+			<x-button variant="secondary" class="is-small" @click="() => setRepeatAfter(30, 'days')">
+				{{ $t('task.repeat.every30d') }}
 			</x-button>
 		</div>
 		<div class="is-flex is-align-items-center mb-2">
@@ -51,8 +51,6 @@
 							<option value="hours">{{ $t('task.repeat.hours') }}</option>
 							<option value="days">{{ $t('task.repeat.days') }}</option>
 							<option value="weeks">{{ $t('task.repeat.weeks') }}</option>
-							<option value="months">{{ $t('task.repeat.months') }}</option>
-							<option value="years">{{ $t('task.repeat.years') }}</option>
 						</select>
 					</div>
 				</div>

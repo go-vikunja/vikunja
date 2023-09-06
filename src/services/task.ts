@@ -81,12 +81,6 @@ export default class TaskService extends AbstractService<ITask> {
 				case 'weeks':
 					repeatAfterSeconds = model.repeatAfter.amount * SECONDS_A_WEEK
 					break
-				case 'months':
-					repeatAfterSeconds = model.repeatAfter.amount * SECONDS_A_MONTH
-					break
-				case 'years':
-					repeatAfterSeconds = model.repeatAfter.amount * SECONDS_A_YEAR
-					break
 			}
 		}
 		model.repeatAfter = repeatAfterSeconds

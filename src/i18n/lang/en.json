@@ -770,7 +770,7 @@
     "repeat": {
       "everyDay": "Every Day",
       "everyWeek": "Every Week",
-      "everyMonth": "Every Month",
+      "every30d": "Every 30 Days",
       "mode": "Repeat mode",
       "monthly": "Monthly",
       "fromCurrentDate": "From Current Date",
