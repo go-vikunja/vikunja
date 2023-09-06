@@ -42,7 +42,7 @@
 					{{ $t('task.quickAddMagic.multiple') }}
 				</p>
 
-				<h3>{{ $t('project.list.title') }}</h3>
+				<h3>{{ $t('quickActions.projects') }}</h3>
 				<p>
 					{{ $t('task.quickAddMagic.project1', {prefix: prefixes.project}) }}
 					{{ $t('task.quickAddMagic.project2') }}
