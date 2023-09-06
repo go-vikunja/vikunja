@@ -18,7 +18,7 @@ const parseDate = date => {
 export default class TaskService extends AbstractService<ITask> {
 	constructor() {
 		super({
-			create: '/projects/{projectId}',
+			create: '/projects/{projectId}/tasks',
 			getAll: '/tasks/all',
 			get: '/tasks/{id}',
 			update: '/tasks/{id}',
