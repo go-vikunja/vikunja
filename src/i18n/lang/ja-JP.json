@@ -913,7 +913,7 @@
     "urlPlaceholder": "例: https://localhost:3456",
     "change": "変更",
     "use": "{0} に設置されたVikunjaを使用します。",
-    "error": "Could not find or use Vikunja installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
+    "error": "\"{domain}\" にはVikunjaは存在しないか使用できない状態です。URLの形式が正しいかどうか、そして直接アクセスして到達できるかどうかを確認し、もう一度お試しください。",
     "success": "\"{domain}\" に設置されたVikunjaを使用します。",
     "urlRequired": "URLは必須です。"
   },
