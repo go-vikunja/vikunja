@@ -5,7 +5,7 @@ import AttachmentService from './attachment'
 import LabelService from './label'
 
 import {colorFromHex} from '@/helpers/color/colorFromHex'
-import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK, SECONDS_A_MONTH, SECONDS_A_YEAR} from '@/constants/date'
+import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK} from '@/constants/date'
 
 const parseDate = date => {
 	if (date) {

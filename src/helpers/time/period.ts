@@ -2,9 +2,7 @@ import {
 	SECONDS_A_DAY,
 	SECONDS_A_HOUR,
 	SECONDS_A_MINUTE,
-	SECONDS_A_MONTH,
 	SECONDS_A_WEEK,
-	SECONDS_A_YEAR,
 } from '@/constants/date'
 
 export type PeriodUnit = 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'months' | 'years'
