@@ -1,0 +1,5911 @@
+basePath: /api/v1
+definitions:
+  auth.Token:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        type: string
+    type: object
+  background.Image:
+    properties:
+      blur_hash:
+        type: string
+      id:
+        type: string
+      info:
+        description: This can be used to supply extra information from an image provider
+          to clients
+      thumb:
+        type: string
+      url:
+        type: string
+    type: object
+  files.File:
+    properties:
+      created:
+        type: string
+      id:
+        type: integer
+      mime:
+        type: string
+      name:
+        type: string
+      size:
+        type: integer
+    type: object
+  handler.AuthURL:
+    properties:
+      url:
+        type: string
+    type: object
+  microsofttodo.Migration:
+    properties:
+      code:
+        type: string
+    type: object
+  migration.Status:
+    properties:
+      id:
+        type: integer
+      migrator_name:
+        type: string
+      time:
+        type: string
+    type: object
+  models.APIPermissions:
+    additionalProperties:
+      items:
+        type: string
+      type: array
+    type: object
+  models.APIToken:
+    properties:
+      created:
+        description: A timestamp when this api key was created. You cannot change
+          this value.
+        type: string
+      expires_at:
+        description: The date when this key expires.
+        type: string
+      id:
+        description: The unique, numeric id of this api key.
+        type: integer
+      permissions:
+        allOf:
+        - $ref: '#/definitions/models.APIPermissions'
+        description: The permissions this token has. Possible values are available
+          via the /routes endpoint and consist of the keys of the list from that endpoint.
+          For example, if the token should be able to read all tasks as well as update
+          existing tasks, you should add `{"tasks":["read_all","update"]}`.
+      title:
+        description: A human-readable name for this token
+        type: string
+      token:
+        description: The actual api key. Only visible after creation.
+        type: string
+    type: object
+  models.APITokenRoute:
+    properties:
+      create:
+        $ref: '#/definitions/models.RouteDetail'
+      delete:
+        $ref: '#/definitions/models.RouteDetail'
+      read_all:
+        $ref: '#/definitions/models.RouteDetail'
+      read_one:
+        $ref: '#/definitions/models.RouteDetail'
+      update:
+        $ref: '#/definitions/models.RouteDetail'
+    type: object
+  models.Bucket:
+    properties:
+      count:
+        description: The number of tasks currently in this bucket
+        type: integer
+      created:
+        description: A timestamp when this bucket was created. You cannot change this
+          value.
+        type: string
+      created_by:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who initially created the bucket.
+      id:
+        description: The unique, numeric id of this bucket.
+        type: integer
+      limit:
+        description: How many tasks can be at the same time on this board max
+        minimum: 0
+        type: integer
+      position:
+        description: The position this bucket has when querying all buckets. See the
+          tasks.position property on how to use this.
+        type: number
+      project_id:
+        description: The project this bucket belongs to.
+        type: integer
+      tasks:
+        description: All tasks which belong to this bucket.
+        items:
+          $ref: '#/definitions/models.Task'
+        type: array
+      title:
+        description: The title of this bucket.
+        minLength: 1
+        type: string
+      updated:
+        description: A timestamp when this bucket was last updated. You cannot change
+          this value.
+        type: string
+    type: object
+  models.BulkAssignees:
+    properties:
+      assignees:
+        description: A project with all assignees
+        items:
+          $ref: '#/definitions/user.User'
+        type: array
+    type: object
+  models.BulkTask:
+    properties:
+      assignees:
+        description: An array of users who are assigned to this task
+        items:
+          $ref: '#/definitions/user.User'
+        type: array
+      attachments:
+        description: All attachments this task has
+        items:
+          $ref: '#/definitions/models.TaskAttachment'
+        type: array
+      bucket_id:
+        description: BucketID is the ID of the kanban bucket this task belongs to.
+        type: integer
+      cover_image_attachment_id:
+        description: If this task has a cover image, the field will return the id
+          of the attachment that is the cover image.
+        type: integer
+      created:
+        description: A timestamp when this task was created. You cannot change this
+          value.
+        type: string
+      created_by:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who initially created the task.
+      description:
+        description: The task description.
+        type: string
+      done:
+        description: Whether a task is done or not.
+        type: boolean
+      done_at:
+        description: The time when a task was marked as done.
+        type: string
+      due_date:
+        description: The time when the task is due.
+        type: string
+      end_date:
+        description: When this task ends.
+        type: string
+      hex_color:
+        description: The task color in hex
+        maxLength: 6
+        type: string
+      id:
+        description: The unique, numeric id of this task.
+        type: integer
+      identifier:
+        description: The task identifier, based on the project identifier and the
+          task's index
+        type: string
+      index:
+        description: The task index, calculated per project
+        type: integer
+      is_favorite:
+        description: True if a task is a favorite task. Favorite tasks show up in
+          a separate "Important" project. This value depends on the user making the
+          call to the api.
+        type: boolean
+      kanban_position:
+        description: The position of tasks in the kanban board. See the docs for the
+          `position` property on how to use this.
+        type: number
+      labels:
+        description: An array of labels which are associated with this task.
+        items:
+          $ref: '#/definitions/models.Label'
+        type: array
+      percent_done:
+        description: Determines how far a task is left from being done
+        type: number
+      position:
+        description: |-
+          The position of the task - any task project can be sorted as usual by this parameter.
+          When accessing tasks via kanban buckets, this is primarily used to sort them based on a range
+          We're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).
+          You would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.
+          A 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task
+          which also leaves a lot of room for rearranging and sorting later.
+        type: number
+      priority:
+        description: The task priority. Can be anything you want, it is possible to
+          sort by this later.
+        type: integer
+      project_id:
+        description: The project this task belongs to.
+        type: integer
+      related_tasks:
+        allOf:
+        - $ref: '#/definitions/models.RelatedTaskMap'
+        description: All related tasks, grouped by their relation kind
+      reminders:
+        description: An array of reminders that are associated with this task.
+        items:
+          $ref: '#/definitions/models.TaskReminder'
+        type: array
+      repeat_after:
+        description: An amount in seconds this task repeats itself. If this is set,
+          when marking the task as done, it will mark itself as "undone" and then
+          increase all remindes and the due date by its amount.
+        type: integer
+      repeat_mode:
+        allOf:
+        - $ref: '#/definitions/models.TaskRepeatMode'
+        description: 'Can have three possible values which will trigger when the task
+          is marked as done: 0 = repeats after the amount specified in repeat_after,
+          1 = repeats all dates each months (ignoring repeat_after), 3 = repeats from
+          the current date rather than the last set date.'
+      start_date:
+        description: When this task starts.
+        type: string
+      subscription:
+        allOf:
+        - $ref: '#/definitions/models.Subscription'
+        description: |-
+          The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
+          Will only returned when retrieving one task.
+      task_ids:
+        description: A project of task ids to update
+        items:
+          type: integer
+        type: array
+      title:
+        description: The task text. This is what you'll see in the project.
+        minLength: 1
+        type: string
+      updated:
+        description: A timestamp when this task was last updated. You cannot change
+          this value.
+        type: string
+    type: object
+  models.DatabaseNotifications:
+    properties:
+      created:
+        description: A timestamp when this notification was created. You cannot change
+          this value.
+        type: string
+      id:
+        description: The unique, numeric id of this notification.
+        type: integer
+      name:
+        description: The name of the notification
+        type: string
+      notification:
+        description: The actual content of the notification.
+      read:
+        description: |-
+          Whether or not to mark this notification as read or unread.
+          True is read, false is unread.
+        type: boolean
+      read_at:
+        description: When this notification is marked as read, this will be updated
+          with the current timestamp.
+        type: string
+    type: object
+  models.Label:
+    properties:
+      created:
+        description: A timestamp when this label was created. You cannot change this
+          value.
+        type: string
+      created_by:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who created this label
+      description:
+        description: The label description.
+        type: string
+      hex_color:
+        description: The color this label has
+        maxLength: 6
+        type: string
+      id:
+        description: The unique, numeric id of this label.
+        type: integer
+      title:
+        description: The title of the lable. You'll see this one on tasks associated
+          with it.
+        maxLength: 250
+        minLength: 1
+        type: string
+      updated:
+        description: A timestamp when this label was last updated. You cannot change
+          this value.
+        type: string
+    type: object
+  models.LabelTask:
+    properties:
+      created:
+        description: A timestamp when this task was created. You cannot change this
+          value.
+        type: string
+      label_id:
+        description: The label id you want to associate with a task.
+        type: integer
+    type: object
+  models.LabelTaskBulk:
+    properties:
+      labels:
+        description: All labels you want to update at once.
+        items:
+          $ref: '#/definitions/models.Label'
+        type: array
+    type: object
+  models.LinkSharing:
+    properties:
+      created:
+        description: A timestamp when this project was shared. You cannot change this
+          value.
+        type: string
+      hash:
+        description: The public id to get this shared project
+        type: string
+      id:
+        description: The ID of the shared thing
+        type: integer
+      name:
+        description: The name of this link share. All actions someone takes while
+          being authenticated with that link will appear with that name.
+        type: string
+      password:
+        description: The password of this link share. You can only set it, not retrieve
+          it after the link share has been created.
+        type: string
+      right:
+        allOf:
+        - $ref: '#/definitions/models.Right'
+        default: 0
+        description: The right this project is shared with. 0 = Read only, 1 = Read
+          & Write, 2 = Admin. See the docs for more details.
+        maximum: 2
+      shared_by:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who shared this project
+      sharing_type:
+        allOf:
+        - $ref: '#/definitions/models.SharingType'
+        default: 0
+        description: The kind of this link. 0 = undefined, 1 = without password, 2
+          = with password.
+        maximum: 2
+      updated:
+        description: A timestamp when this share was last updated. You cannot change
+          this value.
+        type: string
+    type: object
+  models.Message:
+    properties:
+      message:
+        description: A standard message.
+        type: string
+    type: object
+  models.Project:
+    properties:
+      background_blur_hash:
+        description: Contains a very small version of the project background to use
+          as a blurry preview until the actual background is loaded. Check out https://blurha.sh/
+          to learn how it works.
+        type: string
+      background_information:
+        description: Holds extra information about the background set since some background
+          providers require attribution or similar. If not null, the background can
+          be accessed at /projects/{projectID}/background
+      created:
+        description: A timestamp when this project was created. You cannot change
+          this value.
+        type: string
+      default_bucket_id:
+        description: The ID of the bucket where new tasks without a bucket are added
+          to. By default, this is the leftmost bucket in a project.
+        type: integer
+      description:
+        description: The description of the project.
+        type: string
+      done_bucket_id:
+        description: If tasks are moved to the done bucket, they are marked as done.
+          If they are marked as done individually, they are moved into the done bucket.
+        type: integer
+      hex_color:
+        description: The hex color of this project
+        maxLength: 6
+        type: string
+      id:
+        description: The unique, numeric id of this project.
+        type: integer
+      identifier:
+        description: The unique project short identifier. Used to build task identifiers.
+        maxLength: 10
+        minLength: 0
+        type: string
+      is_archived:
+        description: Whether a project is archived.
+        type: boolean
+      is_favorite:
+        description: True if a project is a favorite. Favorite projects show up in
+          a separate parent project. This value depends on the user making the call
+          to the api.
+        type: boolean
+      owner:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who created this project.
+      parent_project_id:
+        type: integer
+      position:
+        description: The position this project has when querying all projects. See
+          the tasks.position property on how to use this.
+        type: number
+      subscription:
+        allOf:
+        - $ref: '#/definitions/models.Subscription'
+        description: |-
+          The subscription status for the user reading this project. You can only read this property, use the subscription endpoints to modify it.
+          Will only returned when retreiving one project.
+      title:
+        description: The title of the project. You'll see this in the overview.
+        maxLength: 250
+        minLength: 1
+        type: string
+      updated:
+        description: A timestamp when this project was last updated. You cannot change
+          this value.
+        type: string
+    type: object
+  models.ProjectDuplicate:
+    properties:
+      duplicated_project:
+        allOf:
+        - $ref: '#/definitions/models.Project'
+        description: The copied project
+      parent_project_id:
+        description: The target parent project
+        type: integer
+    type: object
+  models.ProjectUser:
+    properties:
+      created:
+        description: A timestamp when this relation was created. You cannot change
+          this value.
+        type: string
+      id:
+        description: The unique, numeric id of this project <-> user relation.
+        type: integer
+      right:
+        allOf:
+        - $ref: '#/definitions/models.Right'
+        default: 0
+        description: The right this user has. 0 = Read only, 1 = Read & Write, 2 =
+          Admin. See the docs for more details.
+        maximum: 2
+      updated:
+        description: A timestamp when this relation was last updated. You cannot change
+          this value.
+        type: string
+      user_id:
+        description: The username.
+        type: string
+    type: object
+  models.RelatedTaskMap:
+    additionalProperties:
+      items:
+        $ref: '#/definitions/models.Task'
+      type: array
+    type: object
+  models.RelationKind:
+    enum:
+    - unknown
+    - subtask
+    - parenttask
+    - related
+    - duplicateof
+    - duplicates
+    - blocking
+    - blocked
+    - precedes
+    - follows
+    - copiedfrom
+    - copiedto
+    type: string
+    x-enum-varnames:
+    - RelationKindUnknown
+    - RelationKindSubtask
+    - RelationKindParenttask
+    - RelationKindRelated
+    - RelationKindDuplicateOf
+    - RelationKindDuplicates
+    - RelationKindBlocking
+    - RelationKindBlocked
+    - RelationKindPreceeds
+    - RelationKindFollows
+    - RelationKindCopiedFrom
+    - RelationKindCopiedTo
+  models.ReminderRelation:
+    enum:
+    - due_date
+    - start_date
+    - end_date
+    type: string
+    x-enum-varnames:
+    - ReminderRelationDueDate
+    - ReminderRelationStartDate
+    - ReminderRelationEndDate
+  models.Right:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-varnames:
+    - RightRead
+    - RightWrite
+    - RightAdmin
+  models.RouteDetail:
+    properties:
+      method:
+        type: string
+      path:
+        type: string
+    type: object
+  models.SavedFilter:
+    properties:
+      created:
+        description: A timestamp when this filter was created. You cannot change this
+          value.
+        type: string
+      description:
+        description: The description of the filter
+        type: string
+      filters:
+        allOf:
+        - $ref: '#/definitions/models.TaskCollection'
+        description: The actual filters this filter contains
+      id:
+        description: The unique numeric id of this saved filter
+        type: integer
+      is_favorite:
+        description: True if the filter is a favorite. Favorite filters show up in
+          a separate parent project together with favorite projects.
+        type: boolean
+      owner:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who owns this filter
+      title:
+        description: The title of the filter.
+        maxLength: 250
+        minLength: 1
+        type: string
+      updated:
+        description: A timestamp when this filter was last updated. You cannot change
+          this value.
+        type: string
+    type: object
+  models.SharingType:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-varnames:
+    - SharingTypeUnknown
+    - SharingTypeWithoutPassword
+    - SharingTypeWithPassword
+  models.Subscription:
+    properties:
+      created:
+        description: A timestamp when this subscription was created. You cannot change
+          this value.
+        type: string
+      entity:
+        type: string
+      entity_id:
+        description: The id of the entity to subscribe to.
+        type: integer
+      id:
+        description: The numeric ID of the subscription
+        type: integer
+      user:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who made this subscription
+    type: object
+  models.Task:
+    properties:
+      assignees:
+        description: An array of users who are assigned to this task
+        items:
+          $ref: '#/definitions/user.User'
+        type: array
+      attachments:
+        description: All attachments this task has
+        items:
+          $ref: '#/definitions/models.TaskAttachment'
+        type: array
+      bucket_id:
+        description: BucketID is the ID of the kanban bucket this task belongs to.
+        type: integer
+      cover_image_attachment_id:
+        description: If this task has a cover image, the field will return the id
+          of the attachment that is the cover image.
+        type: integer
+      created:
+        description: A timestamp when this task was created. You cannot change this
+          value.
+        type: string
+      created_by:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who initially created the task.
+      description:
+        description: The task description.
+        type: string
+      done:
+        description: Whether a task is done or not.
+        type: boolean
+      done_at:
+        description: The time when a task was marked as done.
+        type: string
+      due_date:
+        description: The time when the task is due.
+        type: string
+      end_date:
+        description: When this task ends.
+        type: string
+      hex_color:
+        description: The task color in hex
+        maxLength: 6
+        type: string
+      id:
+        description: The unique, numeric id of this task.
+        type: integer
+      identifier:
+        description: The task identifier, based on the project identifier and the
+          task's index
+        type: string
+      index:
+        description: The task index, calculated per project
+        type: integer
+      is_favorite:
+        description: True if a task is a favorite task. Favorite tasks show up in
+          a separate "Important" project. This value depends on the user making the
+          call to the api.
+        type: boolean
+      kanban_position:
+        description: The position of tasks in the kanban board. See the docs for the
+          `position` property on how to use this.
+        type: number
+      labels:
+        description: An array of labels which are associated with this task.
+        items:
+          $ref: '#/definitions/models.Label'
+        type: array
+      percent_done:
+        description: Determines how far a task is left from being done
+        type: number
+      position:
+        description: |-
+          The position of the task - any task project can be sorted as usual by this parameter.
+          When accessing tasks via kanban buckets, this is primarily used to sort them based on a range
+          We're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).
+          You would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.
+          A 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task
+          which also leaves a lot of room for rearranging and sorting later.
+        type: number
+      priority:
+        description: The task priority. Can be anything you want, it is possible to
+          sort by this later.
+        type: integer
+      project_id:
+        description: The project this task belongs to.
+        type: integer
+      related_tasks:
+        allOf:
+        - $ref: '#/definitions/models.RelatedTaskMap'
+        description: All related tasks, grouped by their relation kind
+      reminders:
+        description: An array of reminders that are associated with this task.
+        items:
+          $ref: '#/definitions/models.TaskReminder'
+        type: array
+      repeat_after:
+        description: An amount in seconds this task repeats itself. If this is set,
+          when marking the task as done, it will mark itself as "undone" and then
+          increase all remindes and the due date by its amount.
+        type: integer
+      repeat_mode:
+        allOf:
+        - $ref: '#/definitions/models.TaskRepeatMode'
+        description: 'Can have three possible values which will trigger when the task
+          is marked as done: 0 = repeats after the amount specified in repeat_after,
+          1 = repeats all dates each months (ignoring repeat_after), 3 = repeats from
+          the current date rather than the last set date.'
+      start_date:
+        description: When this task starts.
+        type: string
+      subscription:
+        allOf:
+        - $ref: '#/definitions/models.Subscription'
+        description: |-
+          The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
+          Will only returned when retrieving one task.
+      title:
+        description: The task text. This is what you'll see in the project.
+        minLength: 1
+        type: string
+      updated:
+        description: A timestamp when this task was last updated. You cannot change
+          this value.
+        type: string
+    type: object
+  models.TaskAssginee:
+    properties:
+      created:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  models.TaskAttachment:
+    properties:
+      created:
+        type: string
+      created_by:
+        $ref: '#/definitions/user.User'
+      file:
+        $ref: '#/definitions/files.File'
+      id:
+        type: integer
+      task_id:
+        type: integer
+    type: object
+  models.TaskCollection:
+    properties:
+      filter_by:
+        description: The field name of the field to filter by
+        items:
+          type: string
+        type: array
+      filter_comparator:
+        description: The comparator for field and value
+        items:
+          type: string
+        type: array
+      filter_concat:
+        description: The way all filter conditions are concatenated together, can
+          be either "and" or "or".,
+        type: string
+      filter_include_nulls:
+        description: If set to true, the result will also include null values
+        type: boolean
+      filter_value:
+        description: The value of the field name to filter by
+        items:
+          type: string
+        type: array
+      order_by:
+        description: The query parameter to order the items by. This can be either
+          asc or desc, with asc being the default.
+        items:
+          type: string
+        type: array
+      sort_by:
+        description: The query parameter to sort by. This is for ex. done, priority,
+          etc.
+        items:
+          type: string
+        type: array
+    type: object
+  models.TaskComment:
+    properties:
+      author:
+        $ref: '#/definitions/user.User'
+      comment:
+        type: string
+      created:
+        type: string
+      id:
+        type: integer
+      updated:
+        type: string
+    type: object
+  models.TaskRelation:
+    properties:
+      created:
+        description: A timestamp when this label was created. You cannot change this
+          value.
+        type: string
+      created_by:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who created this relation
+      other_task_id:
+        description: The ID of the other task, the task which is being related.
+        type: integer
+      relation_kind:
+        allOf:
+        - $ref: '#/definitions/models.RelationKind'
+        description: The kind of the relation.
+      task_id:
+        description: The ID of the "base" task, the task which has a relation to another.
+        type: integer
+    type: object
+  models.TaskReminder:
+    properties:
+      relative_period:
+        description: 'A period in seconds relative to another date argument. Negative
+          values mean the reminder triggers before the date. Default: 0, tiggers when
+          RelativeTo is due.'
+        type: integer
+      relative_to:
+        allOf:
+        - $ref: '#/definitions/models.ReminderRelation'
+        description: The name of the date field to which the relative period refers
+          to.
+      reminder:
+        description: The absolute time when the user wants to be reminded of the task.
+        type: string
+    type: object
+  models.TaskRepeatMode:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-varnames:
+    - TaskRepeatModeDefault
+    - TaskRepeatModeMonth
+    - TaskRepeatModeFromCurrentDate
+  models.Team:
+    properties:
+      created:
+        description: A timestamp when this relation was created. You cannot change
+          this value.
+        type: string
+      created_by:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who created this team.
+      description:
+        description: The team's description.
+        type: string
+      id:
+        description: The unique, numeric id of this team.
+        type: integer
+      members:
+        description: An array of all members in this team.
+        items:
+          $ref: '#/definitions/models.TeamUser'
+        type: array
+      name:
+        description: The name of this team.
+        maxLength: 250
+        minLength: 1
+        type: string
+      updated:
+        description: A timestamp when this relation was last updated. You cannot change
+          this value.
+        type: string
+    type: object
+  models.TeamMember:
+    properties:
+      admin:
+        description: Whether or not the member is an admin of the team. See the docs
+          for more about what a team admin can do
+        type: boolean
+      created:
+        description: A timestamp when this relation was created. You cannot change
+          this value.
+        type: string
+      id:
+        description: The unique, numeric id of this team member relation.
+        type: integer
+      username:
+        description: The username of the member. We use this to prevent automated
+          user id entering.
+        type: string
+    type: object
+  models.TeamProject:
+    properties:
+      created:
+        description: A timestamp when this relation was created. You cannot change
+          this value.
+        type: string
+      id:
+        description: The unique, numeric id of this project <-> team relation.
+        type: integer
+      right:
+        allOf:
+        - $ref: '#/definitions/models.Right'
+        default: 0
+        description: The right this team has. 0 = Read only, 1 = Read & Write, 2 =
+          Admin. See the docs for more details.
+        maximum: 2
+      team_id:
+        description: The team id.
+        type: integer
+      updated:
+        description: A timestamp when this relation was last updated. You cannot change
+          this value.
+        type: string
+    type: object
+  models.TeamUser:
+    properties:
+      admin:
+        description: Whether or not the member is an admin of the team. See the docs
+          for more about what a team admin can do
+        type: boolean
+      created:
+        description: A timestamp when this task was created. You cannot change this
+          value.
+        type: string
+      email:
+        description: The user's email address.
+        maxLength: 250
+        type: string
+      id:
+        description: The unique, numeric id of this user.
+        type: integer
+      name:
+        description: The full name of the user.
+        type: string
+      updated:
+        description: A timestamp when this task was last updated. You cannot change
+          this value.
+        type: string
+      username:
+        description: The username of the user. Is always unique.
+        maxLength: 250
+        minLength: 1
+        type: string
+    type: object
+  models.TeamWithRight:
+    properties:
+      created:
+        description: A timestamp when this relation was created. You cannot change
+          this value.
+        type: string
+      created_by:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who created this team.
+      description:
+        description: The team's description.
+        type: string
+      id:
+        description: The unique, numeric id of this team.
+        type: integer
+      members:
+        description: An array of all members in this team.
+        items:
+          $ref: '#/definitions/models.TeamUser'
+        type: array
+      name:
+        description: The name of this team.
+        maxLength: 250
+        minLength: 1
+        type: string
+      right:
+        $ref: '#/definitions/models.Right'
+      updated:
+        description: A timestamp when this relation was last updated. You cannot change
+          this value.
+        type: string
+    type: object
+  models.UserWithRight:
+    properties:
+      created:
+        description: A timestamp when this task was created. You cannot change this
+          value.
+        type: string
+      email:
+        description: The user's email address.
+        maxLength: 250
+        type: string
+      id:
+        description: The unique, numeric id of this user.
+        type: integer
+      name:
+        description: The full name of the user.
+        type: string
+      right:
+        $ref: '#/definitions/models.Right'
+      updated:
+        description: A timestamp when this task was last updated. You cannot change
+          this value.
+        type: string
+      username:
+        description: The username of the user. Is always unique.
+        maxLength: 250
+        minLength: 1
+        type: string
+    type: object
+  notifications.DatabaseNotification:
+    properties:
+      created:
+        description: A timestamp when this notification was created. You cannot change
+          this value.
+        type: string
+      id:
+        description: The unique, numeric id of this notification.
+        type: integer
+      name:
+        description: The name of the notification
+        type: string
+      notification:
+        description: The actual content of the notification.
+      read_at:
+        description: When this notification is marked as read, this will be updated
+          with the current timestamp.
+        type: string
+    type: object
+  openid.Callback:
+    properties:
+      code:
+        type: string
+      scope:
+        type: string
+    type: object
+  openid.Provider:
+    properties:
+      auth_url:
+        type: string
+      client_id:
+        type: string
+      key:
+        type: string
+      logout_url:
+        type: string
+      name:
+        type: string
+    type: object
+  todoist.Migration:
+    properties:
+      code:
+        type: string
+    type: object
+  trello.Migration:
+    properties:
+      code:
+        type: string
+    type: object
+  user.APIUserPassword:
+    properties:
+      email:
+        description: The user's email address
+        maxLength: 250
+        type: string
+      id:
+        description: The unique, numeric id of this user.
+        type: integer
+      password:
+        description: The user's password in clear text. Only used when registering
+          the user.
+        maxLength: 250
+        minLength: 8
+        type: string
+      username:
+        description: The user's username. Cannot contain anything that looks like
+          an url or whitespaces.
+        maxLength: 250
+        minLength: 3
+        type: string
+    type: object
+  user.EmailConfirm:
+    properties:
+      token:
+        description: The email confirm token sent via email.
+        type: string
+    type: object
+  user.EmailUpdate:
+    properties:
+      new_email:
+        description: The new email address. Needs to be a valid email address.
+        type: string
+      password:
+        description: The password of the user for confirmation.
+        type: string
+    type: object
+  user.Login:
+    properties:
+      long_token:
+        description: If true, the token returned will be valid a lot longer than default.
+          Useful for "remember me" style logins.
+        type: boolean
+      password:
+        description: The password for the user.
+        type: string
+      totp_passcode:
+        description: The totp passcode of a user. Only needs to be provided when enabled.
+        type: string
+      username:
+        description: The username used to log in.
+        type: string
+    type: object
+  user.PasswordReset:
+    properties:
+      new_password:
+        description: The new password for this user.
+        type: string
+      token:
+        description: The previously issued reset token.
+        type: string
+    type: object
+  user.PasswordTokenRequest:
+    properties:
+      email:
+        maxLength: 250
+        type: string
+    type: object
+  user.TOTP:
+    properties:
+      enabled:
+        description: The totp entry will only be enabled after the user verified they
+          have a working totp setup.
+        type: boolean
+      secret:
+        type: string
+      url:
+        description: The totp url used to be able to enroll the user later
+        type: string
+    type: object
+  user.TOTPPasscode:
+    properties:
+      passcode:
+        type: string
+    type: object
+  user.Token:
+    properties:
+      created:
+        type: string
+      id:
+        type: integer
+      token:
+        type: string
+    type: object
+  user.User:
+    properties:
+      created:
+        description: A timestamp when this task was created. You cannot change this
+          value.
+        type: string
+      email:
+        description: The user's email address.
+        maxLength: 250
+        type: string
+      id:
+        description: The unique, numeric id of this user.
+        type: integer
+      name:
+        description: The full name of the user.
+        type: string
+      updated:
+        description: A timestamp when this task was last updated. You cannot change
+          this value.
+        type: string
+      username:
+        description: The username of the user. Is always unique.
+        maxLength: 250
+        minLength: 1
+        type: string
+    type: object
+  v1.LinkShareAuth:
+    properties:
+      password:
+        type: string
+    type: object
+  v1.UserAvatarProvider:
+    properties:
+      avatar_provider:
+        description: The avatar provider. Valid types are `gravatar` (uses the user
+          email), `upload`, `initials`, `marble` (generates a random avatar for each
+          user), `default`.
+        type: string
+    type: object
+  v1.UserDeletionRequestConfirm:
+    properties:
+      token:
+        type: string
+    type: object
+  v1.UserPassword:
+    properties:
+      new_password:
+        type: string
+      old_password:
+        type: string
+    type: object
+  v1.UserPasswordConfirmation:
+    properties:
+      password:
+        type: string
+    type: object
+  v1.UserSettings:
+    properties:
+      default_project_id:
+        description: |-
+          If a task is created without a specified project this value should be used. Applies
+          to tasks made directly in API and from clients.
+        type: integer
+      discoverable_by_email:
+        description: If true, the user can be found when searching for their exact
+          email.
+        type: boolean
+      discoverable_by_name:
+        description: If true, this user can be found by their name or parts of it
+          when searching for it.
+        type: boolean
+      email_reminders_enabled:
+        description: If enabled, sends email reminders of tasks to the user.
+        type: boolean
+      frontend_settings:
+        description: Additional settings only used by the frontend
+      language:
+        description: The user's language
+        type: string
+      name:
+        description: The new name of the current user.
+        type: string
+      overdue_tasks_reminders_enabled:
+        description: If enabled, the user will get an email for their overdue tasks
+          each morning.
+        type: boolean
+      overdue_tasks_reminders_time:
+        description: The time when the daily summary of overdue tasks will be sent
+          via email.
+        type: string
+      timezone:
+        description: The user's time zone. Used to send task reminders in the time
+          zone of the user.
+        type: string
+      week_start:
+        description: The day when the week starts for this user. 0 = sunday, 1 = monday,
+          etc.
+        type: integer
+    type: object
+  v1.authInfo:
+    properties:
+      local:
+        $ref: '#/definitions/v1.localAuthInfo'
+      openid_connect:
+        $ref: '#/definitions/v1.openIDAuthInfo'
+    type: object
+  v1.legalInfo:
+    properties:
+      imprint_url:
+        type: string
+      privacy_policy_url:
+        type: string
+    type: object
+  v1.localAuthInfo:
+    properties:
+      enabled:
+        type: boolean
+    type: object
+  v1.openIDAuthInfo:
+    properties:
+      enabled:
+        type: boolean
+      providers:
+        items:
+          $ref: '#/definitions/openid.Provider'
+        type: array
+      redirect_url:
+        type: string
+    type: object
+  v1.vikunjaInfos:
+    properties:
+      auth:
+        $ref: '#/definitions/v1.authInfo'
+      available_migrators:
+        items:
+          type: string
+        type: array
+      caldav_enabled:
+        type: boolean
+      demo_mode_enabled:
+        type: boolean
+      email_reminders_enabled:
+        type: boolean
+      enabled_background_providers:
+        items:
+          type: string
+        type: array
+      frontend_url:
+        type: string
+      legal:
+        $ref: '#/definitions/v1.legalInfo'
+      link_sharing_enabled:
+        type: boolean
+      max_file_size:
+        type: string
+      motd:
+        type: string
+      registration_enabled:
+        type: boolean
+      task_attachments_enabled:
+        type: boolean
+      task_comments_enabled:
+        type: boolean
+      totp_enabled:
+        type: boolean
+      user_deletion_enabled:
+        type: boolean
+      version:
+        type: string
+    type: object
+  web.HTTPError:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+info:
+  contact:
+    email: hello@vikunja.io
+    name: General Vikunja contact
+    url: https://vikunja.io/contact/
+  description: |-
+    # Pagination
+    Every endpoint capable of pagination will return two headers:
+    * `x-pagination-total-pages`: The total number of available pages for this request
+    * `x-pagination-result-count`: The number of items returned for this request.
+    # Rights
+    All endpoints which return a single item (project, task, etc.) - no array - will also return a `x-max-right` header with the max right the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.
+    This can be used to show or hide ui elements based on the rights the user has.
+    # Errors
+    All errors have an error code and a human-readable error message in addition to the http status code. You should always check for the status code in the response, not only the http status code.
+    Due to limitations in the swagger library we're using for this document, only one error per http status code is documented here. Make sure to check the [error docs](https://vikunja.io/docs/errors/) in Vikunja's documentation for a full list of available error codes.
+    # Authorization
+    **JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer <jwt-token>`-header to authenticate successfully.
+
+    **API Token:** You can create scoped API tokens for your user and use the token to make authenticated requests in the context of that user. The token must be provided via an `Authorization: Bearer <token>` header, similar to jwt auth. See the documentation for the `api` group to manage token creation and revocation.
+
+    **BasicAuth:** Only used when requesting tasks via CalDAV.
+    <!-- ReDoc-Inject: <security-definitions> -->
+  license:
+    name: AGPL-3.0-or-later
+    url: https://code.vikunja.io/api/src/branch/main/LICENSE
+  title: Vikunja API
+paths:
+  /{username}/avatar:
+    get:
+      description: Returns the user avatar as image.
+      parameters:
+      - description: The username of the user who's avatar you want to get
+        in: path
+        name: username
+        required: true
+        type: string
+      - description: The size of the avatar you want to get. If bigger than the max
+          configured size this will be adjusted to the maximum size.
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: The avatar
+          schema:
+            type: file
+        "404":
+          description: The user does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: User Avatar
+      tags:
+      - user
+  /auth/openid/{provider}/callback:
+    post:
+      consumes:
+      - application/json
+      description: After a redirect from the OpenID Connect provider to the frontend
+        has been made with the authentication `code`, this endpoint can be used to
+        obtain a jwt token for that user and thus log them in.
+      operationId: get-token-openid
+      parameters:
+      - description: The openid callback
+        in: body
+        name: callback
+        required: true
+        schema:
+          $ref: '#/definitions/openid.Callback'
+      - description: The OpenID Connect provider key as returned by the /info endpoint
+        in: path
+        name: provider
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.Token'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Authenticate a user with OpenID Connect
+      tags:
+      - auth
+  /backgrounds/unsplash/image/{image}:
+    get:
+      description: Get an unsplash image. **Returns json on error.**
+      parameters:
+      - description: Unsplash Image ID
+        in: path
+        name: image
+        required: true
+        type: integer
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: The image
+          schema:
+            type: file
+        "404":
+          description: The image does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get an unsplash image
+      tags:
+      - project
+  /backgrounds/unsplash/image/{image}/thumb:
+    get:
+      description: Get an unsplash thumbnail image. The thumbnail is cropped to a
+        max width of 200px. **Returns json on error.**
+      parameters:
+      - description: Unsplash Image ID
+        in: path
+        name: image
+        required: true
+        type: integer
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: The thumbnail
+          schema:
+            type: file
+        "404":
+          description: The image does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get an unsplash thumbnail image
+      tags:
+      - project
+  /backgrounds/unsplash/search:
+    get:
+      description: Search for a project background from unsplash
+      parameters:
+      - description: Search backgrounds from unsplash with this search term.
+        in: query
+        name: s
+        type: string
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: p
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: An array with photos
+          schema:
+            items:
+              $ref: '#/definitions/background.Image'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Search for a background from unsplash
+      tags:
+      - project
+  /filters:
+    put:
+      consumes:
+      - application/json
+      description: Creates a new saved filter
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The Saved Filter
+          schema:
+            $ref: '#/definitions/models.SavedFilter'
+        "403":
+          description: The user does not have access to that saved filter.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Creates a new saved filter
+      tags:
+      - filter
+  /filters/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes a saved filter by its ID.
+      parameters:
+      - description: Filter ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The Saved Filter
+          schema:
+            $ref: '#/definitions/models.SavedFilter'
+        "403":
+          description: The user does not have access to that saved filter.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The saved filter does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Removes a saved filter
+      tags:
+      - filter
+    get:
+      consumes:
+      - application/json
+      description: Returns a saved filter by its ID.
+      parameters:
+      - description: Filter ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The Saved Filter
+          schema:
+            $ref: '#/definitions/models.SavedFilter'
+        "403":
+          description: The user does not have access to that saved filter.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Gets one saved filter
+      tags:
+      - filter
+    post:
+      consumes:
+      - application/json
+      description: Updates a saved filter by its ID.
+      parameters:
+      - description: Filter ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The Saved Filter
+          schema:
+            $ref: '#/definitions/models.SavedFilter'
+        "403":
+          description: The user does not have access to that saved filter.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The saved filter does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Updates a saved filter
+      tags:
+      - filter
+  /info:
+    get:
+      description: Returns the version, frontendurl, motd and various settings of
+        Vikunja
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.vikunjaInfos'
+      summary: Info
+      tags:
+      - service
+  /labels:
+    get:
+      consumes:
+      - application/json
+      description: Returns all labels which are either created by the user or associated
+        with a task the user has at least read-access to.
+      parameters:
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search labels by label text.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The labels
+          schema:
+            items:
+              $ref: '#/definitions/models.Label'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all labels a user has access to
+      tags:
+      - labels
+    put:
+      consumes:
+      - application/json
+      description: Creates a new label.
+      parameters:
+      - description: The label object
+        in: body
+        name: label
+        required: true
+        schema:
+          $ref: '#/definitions/models.Label'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created label object.
+          schema:
+            $ref: '#/definitions/models.Label'
+        "400":
+          description: Invalid label object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Create a label
+      tags:
+      - labels
+  /labels/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an existing label. The user needs to be the creator of the
+        label to be able to do this.
+      parameters:
+      - description: Label ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The label was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Label'
+        "403":
+          description: Not allowed to delete the label.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Label not found.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Delete a label
+      tags:
+      - labels
+    get:
+      consumes:
+      - application/json
+      description: Returns one label by its ID.
+      parameters:
+      - description: Label ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The label
+          schema:
+            $ref: '#/definitions/models.Label'
+        "403":
+          description: The user does not have access to the label
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Label not found
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Gets one label
+      tags:
+      - labels
+    put:
+      consumes:
+      - application/json
+      description: Update an existing label. The user needs to be the creator of the
+        label to be able to do this.
+      parameters:
+      - description: Label ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The label object
+        in: body
+        name: label
+        required: true
+        schema:
+          $ref: '#/definitions/models.Label'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created label object.
+          schema:
+            $ref: '#/definitions/models.Label'
+        "400":
+          description: Invalid label object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: Not allowed to update the label.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Label not found.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Update a label
+      tags:
+      - labels
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Logs a user in. Returns a JWT-Token to authenticate further requests.
+      parameters:
+      - description: The login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/user.Login'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.Token'
+        "400":
+          description: Invalid user password model.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: Invalid username or password.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "412":
+          description: Invalid totp passcode.
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Login
+      tags:
+      - auth
+  /migration/microsoft-todo/auth:
+    get:
+      description: Returns the auth url where the user needs to get its auth code.
+        This code can then be used to migrate everything from Microsoft Todo to Vikunja.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The auth url.
+          schema:
+            $ref: '#/definitions/handler.AuthURL'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get the auth url from Microsoft Todo
+      tags:
+      - migration
+  /migration/microsoft-todo/migrate:
+    post:
+      consumes:
+      - application/json
+      description: Migrates all tasklinsts, tasks, notes and reminders from Microsoft
+        Todo to Vikunja.
+      parameters:
+      - description: The auth token previously obtained from the auth url. See the
+          docs for /migration/microsoft-todo/auth.
+        in: body
+        name: migrationCode
+        required: true
+        schema:
+          $ref: '#/definitions/microsofttodo.Migration'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A message telling you everything was migrated successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Migrate all projects, tasks etc. from Microsoft Todo
+      tags:
+      - migration
+  /migration/microsoft-todo/status:
+    get:
+      description: Returns if the current user already did the migation or not. This
+        is useful to show a confirmation message in the frontend if the user is trying
+        to do the same migration again.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The migration status
+          schema:
+            $ref: '#/definitions/migration.Status'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get migration status
+      tags:
+      - migration
+  /migration/ticktick/migrate:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Imports all projects, tasks, notes, reminders, subtasks and files
+        from a TickTick backup export into Vikunja.
+      parameters:
+      - description: The TickTick backup csv file.
+        in: formData
+        name: import
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A message telling you everything was migrated successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Import all projects, tasks etc. from a TickTick backup export
+      tags:
+      - migration
+  /migration/ticktick/status:
+    get:
+      description: Returns if the current user already did the migation or not. This
+        is useful to show a confirmation message in the frontend if the user is trying
+        to do the same migration again.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The migration status
+          schema:
+            $ref: '#/definitions/migration.Status'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get migration status
+      tags:
+      - migration
+  /migration/todoist/auth:
+    get:
+      description: Returns the auth url where the user needs to get its auth code.
+        This code can then be used to migrate everything from todoist to Vikunja.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The auth url.
+          schema:
+            $ref: '#/definitions/handler.AuthURL'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get the auth url from todoist
+      tags:
+      - migration
+  /migration/todoist/migrate:
+    post:
+      consumes:
+      - application/json
+      description: Migrates all projects, tasks, notes, reminders, subtasks and files
+        from todoist to vikunja.
+      parameters:
+      - description: The auth code previously obtained from the auth url. See the
+          docs for /migration/todoist/auth.
+        in: body
+        name: migrationCode
+        required: true
+        schema:
+          $ref: '#/definitions/todoist.Migration'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A message telling you everything was migrated successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Migrate all lists, tasks etc. from todoist
+      tags:
+      - migration
+  /migration/todoist/status:
+    get:
+      description: Returns if the current user already did the migation or not. This
+        is useful to show a confirmation message in the frontend if the user is trying
+        to do the same migration again.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The migration status
+          schema:
+            $ref: '#/definitions/migration.Status'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get migration status
+      tags:
+      - migration
+  /migration/trello/auth:
+    get:
+      description: Returns the auth url where the user needs to get its auth code.
+        This code can then be used to migrate everything from trello to Vikunja.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The auth url.
+          schema:
+            $ref: '#/definitions/handler.AuthURL'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get the auth url from trello
+      tags:
+      - migration
+  /migration/trello/migrate:
+    post:
+      consumes:
+      - application/json
+      description: Migrates all projects, tasks, notes, reminders, subtasks and files
+        from trello to vikunja.
+      parameters:
+      - description: The auth token previously obtained from the auth url. See the
+          docs for /migration/trello/auth.
+        in: body
+        name: migrationCode
+        required: true
+        schema:
+          $ref: '#/definitions/trello.Migration'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A message telling you everything was migrated successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Migrate all projects, tasks etc. from trello
+      tags:
+      - migration
+  /migration/trello/status:
+    get:
+      description: Returns if the current user already did the migation or not. This
+        is useful to show a confirmation message in the frontend if the user is trying
+        to do the same migration again.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The migration status
+          schema:
+            $ref: '#/definitions/migration.Status'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get migration status
+      tags:
+      - migration
+  /migration/vikunja-file/migrate:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Imports all projects, tasks, notes, reminders, subtasks and files
+        from a Vikunjda data export into Vikunja.
+      parameters:
+      - description: The Vikunja export zip file.
+        in: formData
+        name: import
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A message telling you everything was migrated successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Import all projects, tasks etc. from a Vikunja data export
+      tags:
+      - migration
+  /migration/vikunja-file/status:
+    get:
+      description: Returns if the current user already did the migation or not. This
+        is useful to show a confirmation message in the frontend if the user is trying
+        to do the same migration again.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The migration status
+          schema:
+            $ref: '#/definitions/migration.Status'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get migration status
+      tags:
+      - migration
+  /notifications:
+    get:
+      consumes:
+      - application/json
+      description: Returns an array with all notifications for the current user.
+      parameters:
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The notifications
+          schema:
+            items:
+              $ref: '#/definitions/notifications.DatabaseNotification'
+            type: array
+        "403":
+          description: Link shares cannot have notifications.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all notifications for the current user
+      tags:
+      - subscriptions
+  /notifications/{id}:
+    post:
+      consumes:
+      - application/json
+      description: Marks a notification as either read or unread. A user can only
+        mark their own notifications as read.
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The notification to mark as read.
+          schema:
+            $ref: '#/definitions/models.DatabaseNotifications'
+        "403":
+          description: Link shares cannot have notifications.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The notification does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Mark a notification as (un-)read
+      tags:
+      - subscriptions
+  /projects:
+    get:
+      consumes:
+      - application/json
+      description: Returns all projects a user has access to.
+      parameters:
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search projects by title.
+        in: query
+        name: s
+        type: string
+      - description: If true, also returns all archived projects.
+        in: query
+        name: is_archived
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The projects
+          schema:
+            items:
+              $ref: '#/definitions/models.Project'
+            type: array
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all projects a user has access to
+      tags:
+      - project
+    put:
+      consumes:
+      - application/json
+      description: Creates a new project. If a parent project is provided the user
+        needs to have write access to that project.
+      parameters:
+      - description: The project you want to create.
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.Project'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created project.
+          schema:
+            $ref: '#/definitions/models.Project'
+        "400":
+          description: Invalid project object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Creates a new project
+      tags:
+      - project
+  /projects/{id}:
+    delete:
+      description: Delets a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The project was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Invalid project object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Deletes a project
+      tags:
+      - project
+    get:
+      consumes:
+      - application/json
+      description: Returns a project by its ID.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The project
+          schema:
+            $ref: '#/definitions/models.Project'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Gets one project
+      tags:
+      - project
+    post:
+      consumes:
+      - application/json
+      description: Updates a project. This does not include adding a task (see below).
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The project with updated values you want to update.
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.Project'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated project.
+          schema:
+            $ref: '#/definitions/models.Project'
+        "400":
+          description: Invalid project object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Updates a project
+      tags:
+      - project
+  /projects/{id}/background:
+    delete:
+      description: Removes a previously set project background, regardless of the
+        project provider used to set the background. It does not throw an error if
+        the project does not have a background.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The project
+          schema:
+            $ref: '#/definitions/models.Project'
+        "403":
+          description: No access to this project.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The project does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Remove a project background
+      tags:
+      - project
+    get:
+      description: Get the project background of a specific project. **Returns json
+        on error.**
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: The project background file.
+          schema:
+            type: file
+        "403":
+          description: No access to this project.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The project does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get the project background
+      tags:
+      - project
+  /projects/{id}/backgrounds/unsplash:
+    post:
+      consumes:
+      - application/json
+      description: Sets a photo from unsplash as project background.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The image you want to set as background
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/background.Image'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The background has been successfully set.
+          schema:
+            $ref: '#/definitions/models.Project'
+        "400":
+          description: Invalid image object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Set an unsplash photo as project background
+      tags:
+      - project
+  /projects/{id}/backgrounds/upload:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload a project background.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The file as single file.
+        in: formData
+        name: background
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The background was set successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: File is no image.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: File too large.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The project does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Upload a project background
+      tags:
+      - project
+  /projects/{id}/buckets:
+    get:
+      consumes:
+      - application/json
+      description: Returns all kanban buckets with belong to a project including their
+        tasks. Buckets are always sorted by their `position` in ascending order. Tasks
+        are sorted by their `kanban_position` in ascending order.
+      parameters:
+      - description: Project Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The page number for tasks. Used for pagination. If not provided,
+          the first page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of tasks per bucket per page. This parameter
+          is limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search tasks by task text.
+        in: query
+        name: s
+        type: string
+      - description: The name of the field to filter by. Allowed values are all task
+          properties. Task properties which are their own object require passing in
+          the id of that entity. Accepts an array for multiple filters which will
+          be chanied together, all supplied filter must match.
+        in: query
+        name: filter_by
+        type: string
+      - description: The value to filter for.
+        in: query
+        name: filter_value
+        type: string
+      - description: The comparator to use for a filter. Available values are `equals`,
+          `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in`
+          expects comma-separated values in `filter_value`. Defaults to `equals`
+        in: query
+        name: filter_comparator
+        type: string
+      - description: The concatinator to use for filters. Available values are `and`
+          or `or`. Defaults to `or`.
+        in: query
+        name: filter_concat
+        type: string
+      - description: If set to true the result will include filtered fields whose
+          value is set to `null`. Available values are `true` or `false`. Defaults
+          to `false`.
+        in: query
+        name: filter_include_nulls
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The buckets with their tasks
+          schema:
+            items:
+              $ref: '#/definitions/models.Bucket'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all kanban buckets of a project
+      tags:
+      - task
+    put:
+      consumes:
+      - application/json
+      description: Creates a new kanban bucket on a project.
+      parameters:
+      - description: Project Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The bucket object
+        in: body
+        name: bucket
+        required: true
+        schema:
+          $ref: '#/definitions/models.Bucket'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created bucket object.
+          schema:
+            $ref: '#/definitions/models.Bucket'
+        "400":
+          description: Invalid bucket object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The project does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Create a new bucket
+      tags:
+      - task
+  /projects/{id}/projectusers:
+    get:
+      consumes:
+      - application/json
+      description: Lists all users (without emailadresses). Also possible to search
+        for a specific user.
+      parameters:
+      - description: Search for a user by its name.
+        in: query
+        name: s
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All (found) users.
+          schema:
+            items:
+              $ref: '#/definitions/user.User'
+            type: array
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "401":
+          description: The user does not have the right to see the project.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get users
+      tags:
+      - project
+  /projects/{id}/tasks:
+    put:
+      consumes:
+      - application/json
+      description: Inserts a task into a project.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The task object
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/models.Task'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created task object.
+          schema:
+            $ref: '#/definitions/models.Task'
+        "400":
+          description: Invalid task object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Create a task
+      tags:
+      - task
+  /projects/{id}/teams:
+    get:
+      consumes:
+      - application/json
+      description: Returns a project with all teams which have access on a given project.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search teams by its name.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The teams with their right.
+          schema:
+            items:
+              $ref: '#/definitions/models.TeamWithRight'
+            type: array
+        "403":
+          description: No right to see the project.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get teams on a project
+      tags:
+      - sharing
+    put:
+      consumes:
+      - application/json
+      description: Gives a team access to a project.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The team you want to add to the project.
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.TeamProject'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created team<->project relation.
+          schema:
+            $ref: '#/definitions/models.TeamProject'
+        "400":
+          description: Invalid team project object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The team does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Add a team to a project
+      tags:
+      - sharing
+  /projects/{id}/users:
+    get:
+      consumes:
+      - application/json
+      description: Returns a project with all users which have access on a given project.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search users by its name.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The users with the right they have.
+          schema:
+            items:
+              $ref: '#/definitions/models.UserWithRight'
+            type: array
+        "403":
+          description: No right to see the project.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get users on a project
+      tags:
+      - sharing
+    put:
+      consumes:
+      - application/json
+      description: Gives a user access to a project.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The user you want to add to the project.
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProjectUser'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created user<->project relation.
+          schema:
+            $ref: '#/definitions/models.ProjectUser'
+        "400":
+          description: Invalid user project object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The user does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Add a user to a project
+      tags:
+      - sharing
+  /projects/{project}/shares:
+    get:
+      consumes:
+      - application/json
+      description: Returns all link shares which exist for a given project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search shares by hash.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The share links
+          schema:
+            items:
+              $ref: '#/definitions/models.LinkSharing'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all link shares for a project
+      tags:
+      - sharing
+    put:
+      consumes:
+      - application/json
+      description: Share a project via link. The user needs to have write-access to
+        the project to be able do this.
+      parameters:
+      - description: Project ID
+        in: path
+        name: project
+        required: true
+        type: integer
+      - description: The new link share object
+        in: body
+        name: label
+        required: true
+        schema:
+          $ref: '#/definitions/models.LinkSharing'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created link share object.
+          schema:
+            $ref: '#/definitions/models.LinkSharing'
+        "400":
+          description: Invalid link share object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: Not allowed to add the project share.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The project does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Share a project via link
+      tags:
+      - sharing
+  /projects/{project}/shares/{share}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a link share. The user needs to have write-access to the
+        project to be able do this.
+      parameters:
+      - description: Project ID
+        in: path
+        name: project
+        required: true
+        type: integer
+      - description: Share Link ID
+        in: path
+        name: share
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The link was successfully removed.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: Not allowed to remove the link.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Share Link not found.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Remove a link share
+      tags:
+      - sharing
+    get:
+      consumes:
+      - application/json
+      description: Returns one link share by its ID.
+      parameters:
+      - description: Project ID
+        in: path
+        name: project
+        required: true
+        type: integer
+      - description: Share ID
+        in: path
+        name: share
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The share links
+          schema:
+            $ref: '#/definitions/models.LinkSharing'
+        "403":
+          description: No access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Share Link not found.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get one link shares for a project
+      tags:
+      - sharing
+  /projects/{projectID}/buckets/{bucketID}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes an existing kanban bucket and dissociates all of its task.
+        It does not delete any tasks. You cannot delete the last bucket on a project.
+      parameters:
+      - description: Project Id
+        in: path
+        name: projectID
+        required: true
+        type: integer
+      - description: Bucket Id
+        in: path
+        name: bucketID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The bucket does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Deletes an existing bucket
+      tags:
+      - task
+    post:
+      consumes:
+      - application/json
+      description: Updates an existing kanban bucket.
+      parameters:
+      - description: Project Id
+        in: path
+        name: projectID
+        required: true
+        type: integer
+      - description: Bucket Id
+        in: path
+        name: bucketID
+        required: true
+        type: integer
+      - description: The bucket object
+        in: body
+        name: bucket
+        required: true
+        schema:
+          $ref: '#/definitions/models.Bucket'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created bucket object.
+          schema:
+            $ref: '#/definitions/models.Bucket'
+        "400":
+          description: Invalid bucket object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The bucket does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Update an existing bucket
+      tags:
+      - task
+  /projects/{projectID}/duplicate:
+    put:
+      consumes:
+      - application/json
+      description: Copies the project, tasks, files, kanban data, assignees, comments,
+        attachments, lables, relations, backgrounds, user/team rights and link shares
+        from one project to a new one. The user needs read access in the project and
+        write access in the parent of the new project.
+      parameters:
+      - description: The project ID to duplicate
+        in: path
+        name: projectID
+        required: true
+        type: integer
+      - description: The target parent project which should hold the copied project.
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProjectDuplicate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created project.
+          schema:
+            $ref: '#/definitions/models.ProjectDuplicate'
+        "400":
+          description: Invalid project duplicate object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the project or its parent.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Duplicate an existing project
+      tags:
+      - project
+  /projects/{projectID}/tasks:
+    get:
+      consumes:
+      - application/json
+      description: Returns all tasks for the current project.
+      parameters:
+      - description: The project ID.
+        in: path
+        name: projectID
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search tasks by task text.
+        in: query
+        name: s
+        type: string
+      - description: The sorting parameter. You can pass this multiple times to get
+          the tasks ordered by multiple different parametes, along with `order_by`.
+          Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`,
+          `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`,
+          `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default
+          is `id`.
+        in: query
+        name: sort_by
+        type: string
+      - description: The ordering parameter. Possible values to order by are `asc`
+          or `desc`. Default is `asc`.
+        in: query
+        name: order_by
+        type: string
+      - description: The name of the field to filter by. Allowed values are all task
+          properties. Task properties which are their own object require passing in
+          the id of that entity. Accepts an array for multiple filters which will
+          be chanied together, all supplied filter must match.
+        in: query
+        name: filter_by
+        type: string
+      - description: The value to filter for. You can use [grafana](https://grafana.com/docs/grafana/latest/dashboards/time-range-controls)-
+          or [elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#date-math)-style
+          relative dates for all date fields like `due_date`, `start_date`, `end_date`,
+          etc.
+        in: query
+        name: filter_value
+        type: string
+      - description: The comparator to use for a filter. Available values are `equals`,
+          `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in`
+          expects comma-separated values in `filter_value`. Defaults to `equals`
+        in: query
+        name: filter_comparator
+        type: string
+      - description: The concatinator to use for filters. Available values are `and`
+          or `or`. Defaults to `or`.
+        in: query
+        name: filter_concat
+        type: string
+      - description: If set to true the result will include filtered fields whose
+          value is set to `null`. Available values are `true` or `false`. Defaults
+          to `false`.
+        in: query
+        name: filter_include_nulls
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The tasks
+          schema:
+            items:
+              $ref: '#/definitions/models.Task'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get tasks in a project
+      tags:
+      - task
+  /projects/{projectID}/teams/{teamID}:
+    delete:
+      description: Delets a team from a project. The team won't have access to the
+        project anymore.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: integer
+      - description: Team ID
+        in: path
+        name: teamID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The team was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Team or project does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Delete a team from a project
+      tags:
+      - sharing
+    post:
+      consumes:
+      - application/json
+      description: Update a team <-> project relation. Mostly used to update the right
+        that team has.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: integer
+      - description: Team ID
+        in: path
+        name: teamID
+        required: true
+        type: integer
+      - description: The team you want to update.
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.TeamProject'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated team <-> project relation.
+          schema:
+            $ref: '#/definitions/models.TeamProject'
+        "403":
+          description: The user does not have admin-access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Team or project does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Update a team <-> project relation
+      tags:
+      - sharing
+  /projects/{projectID}/users/{userID}:
+    delete:
+      description: Delets a user from a project. The user won't have access to the
+        project anymore.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The user was successfully removed from the project.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: user or project does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Delete a user from a project
+      tags:
+      - sharing
+    post:
+      consumes:
+      - application/json
+      description: Update a user <-> project relation. Mostly used to update the right
+        that user has.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      - description: The user you want to update.
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProjectUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated user <-> project relation.
+          schema:
+            $ref: '#/definitions/models.ProjectUser'
+        "403":
+          description: The user does not have admin-access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: User or project does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Update a user <-> project relation
+      tags:
+      - sharing
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account.
+      parameters:
+      - description: The user credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/user.APIUserPassword'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.User'
+        "400":
+          description: No or invalid user register object provided / User already
+            exists.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Register
+      tags:
+      - auth
+  /routes:
+    get:
+      description: Returns a list of all API routes which are available to use with
+        an api token, not a user login.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The list of all routes.
+          schema:
+            items:
+              $ref: '#/definitions/models.APITokenRoute'
+            type: array
+      security:
+      - JWTKeyAuth: []
+      summary: Get a list of all token api routes
+      tags:
+      - api
+  /shares/{share}/auth:
+    post:
+      consumes:
+      - application/json
+      description: Get a jwt auth token for a shared project from a share hash.
+      parameters:
+      - description: The password for link shares which require one.
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/v1.LinkShareAuth'
+      - description: The share hash
+        in: path
+        name: share
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The valid jwt auth token.
+          schema:
+            $ref: '#/definitions/auth.Token'
+        "400":
+          description: Invalid link share object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Get an auth token for a share
+      tags:
+      - sharing
+  /subscriptions/{entity}/{entityID}:
+    delete:
+      consumes:
+      - application/json
+      description: Unsubscribes the current user to an entity.
+      parameters:
+      - description: The entity the user subscribed to. Can be either `project` or
+          `task`.
+        in: path
+        name: entity
+        required: true
+        type: string
+      - description: The numeric id of the subscribed entity to.
+        in: path
+        name: entityID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The subscription
+          schema:
+            $ref: '#/definitions/models.Subscription'
+        "403":
+          description: The user does not have access to subscribe to this entity.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The subscription does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Unsubscribe the current user from an entity.
+      tags:
+      - subscriptions
+    put:
+      consumes:
+      - application/json
+      description: Subscribes the current user to an entity.
+      parameters:
+      - description: The entity the user subscribes to. Can be either `project` or
+          `task`.
+        in: path
+        name: entity
+        required: true
+        type: string
+      - description: The numeric id of the entity to subscribe to.
+        in: path
+        name: entityID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The subscription
+          schema:
+            $ref: '#/definitions/models.Subscription'
+        "403":
+          description: The user does not have access to subscribe to this entity.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "412":
+          description: The subscription entity is invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Subscribes the current user to an entity.
+      tags:
+      - subscriptions
+  /tasks/{ID}:
+    delete:
+      description: Deletes a task from a project. This does not mean "mark it done".
+      parameters:
+      - description: Task ID
+        in: path
+        name: ID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created task object.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Invalid task ID provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the project
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Delete a task
+      tags:
+      - task
+    post:
+      consumes:
+      - application/json
+      description: Updates a task. This includes marking it as done. Assignees you
+        pass will be updated, see their individual endpoints for more details on how
+        this is done. To update labels, see the description of the endpoint.
+      parameters:
+      - description: The Task ID
+        in: path
+        name: ID
+        required: true
+        type: integer
+      - description: The task object
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/models.Task'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated task object.
+          schema:
+            $ref: '#/definitions/models.Task'
+        "400":
+          description: Invalid task object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the task (aka its project)
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Update a task
+      tags:
+      - task
+  /tasks/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Returns one task by its ID
+      parameters:
+      - description: The task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The task
+          schema:
+            $ref: '#/definitions/models.Task'
+        "404":
+          description: Task not found
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get one task
+      tags:
+      - task
+  /tasks/{id}/attachments:
+    get:
+      consumes:
+      - application/json
+      description: Get all task attachments for one task.
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All attachments for this task
+          schema:
+            items:
+              $ref: '#/definitions/models.TaskAttachment'
+            type: array
+        "403":
+          description: No access to this task.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The task does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get  all attachments for one task.
+      tags:
+      - task
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload a task attachment. You can pass multiple files with the
+        files form param.
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The file, as multipart form file. You can pass multiple.
+        in: formData
+        name: files
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Attachments were uploaded successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: No access to the task.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The task does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Upload a task attachment
+      tags:
+      - task
+  /tasks/{id}/attachments/{attachmentID}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an attachment.
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Attachment ID
+        in: path
+        name: attachmentID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The attachment was deleted successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: No access to this task.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The task does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Delete an attachment
+      tags:
+      - task
+    get:
+      description: Get one attachment for download. **Returns json on error.**
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Attachment ID
+        in: path
+        name: attachmentID
+        required: true
+        type: integer
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: The attachment file.
+          schema:
+            type: file
+        "403":
+          description: No access to this task.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The task does not exist.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get one attachment.
+      tags:
+      - task
+  /tasks/{task}/labels:
+    get:
+      consumes:
+      - application/json
+      description: Returns all labels which are assicociated with a given task.
+      parameters:
+      - description: Task ID
+        in: path
+        name: task
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search labels by label text.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The labels
+          schema:
+            items:
+              $ref: '#/definitions/models.Label'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all labels on a task
+      tags:
+      - labels
+    put:
+      consumes:
+      - application/json
+      description: Add a label to a task. The user needs to have write-access to the
+        project to be able do this.
+      parameters:
+      - description: Task ID
+        in: path
+        name: task
+        required: true
+        type: integer
+      - description: The label object
+        in: body
+        name: label
+        required: true
+        schema:
+          $ref: '#/definitions/models.LabelTask'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created label relation object.
+          schema:
+            $ref: '#/definitions/models.LabelTask'
+        "400":
+          description: Invalid label object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: Not allowed to add the label.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The label does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Add a label to a task
+      tags:
+      - labels
+  /tasks/{task}/labels/{label}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a label from a task. The user needs to have write-access
+        to the project to be able do this.
+      parameters:
+      - description: Task ID
+        in: path
+        name: task
+        required: true
+        type: integer
+      - description: Label ID
+        in: path
+        name: label
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The label was successfully removed.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: Not allowed to remove the label.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Label not found.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Remove a label from a task
+      tags:
+      - labels
+  /tasks/{taskID}/assignees:
+    get:
+      consumes:
+      - application/json
+      description: Returns an array with all assignees for this task.
+      parameters:
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search assignees by their username.
+        in: query
+        name: s
+        type: string
+      - description: Task ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The assignees
+          schema:
+            items:
+              $ref: '#/definitions/user.User'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all assignees for a task
+      tags:
+      - assignees
+    put:
+      consumes:
+      - application/json
+      description: Adds a new assignee to a task. The assignee needs to have access
+        to the project, the doer must be able to edit this task.
+      parameters:
+      - description: The assingee object
+        in: body
+        name: assignee
+        required: true
+        schema:
+          $ref: '#/definitions/models.TaskAssginee'
+      - description: Task ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created assingee object.
+          schema:
+            $ref: '#/definitions/models.TaskAssginee'
+        "400":
+          description: Invalid assignee object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Add a new assignee to a task
+      tags:
+      - assignees
+  /tasks/{taskID}/assignees/{userID}:
+    delete:
+      consumes:
+      - application/json
+      description: Un-assign a user from a task.
+      parameters:
+      - description: Task ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      - description: Assignee user ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The assignee was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: Not allowed to delete the assignee.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Delete an assignee
+      tags:
+      - assignees
+  /tasks/{taskID}/assignees/bulk:
+    post:
+      consumes:
+      - application/json
+      description: Adds multiple new assignees to a task. The assignee needs to have
+        access to the project, the doer must be able to edit this task. Every user
+        not in the project will be unassigned from the task, pass an empty array to
+        unassign everyone.
+      parameters:
+      - description: The array of assignees
+        in: body
+        name: assignee
+        required: true
+        schema:
+          $ref: '#/definitions/models.BulkAssignees'
+      - description: Task ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created assingees object.
+          schema:
+            $ref: '#/definitions/models.TaskAssginee'
+        "400":
+          description: Invalid assignee object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Add multiple new assignees to a task
+      tags:
+      - assignees
+  /tasks/{taskID}/comments:
+    get:
+      consumes:
+      - application/json
+      description: Get all task comments. The user doing this need to have at least
+        read access to the task.
+      parameters:
+      - description: Task ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The array with all task comments
+          schema:
+            items:
+              $ref: '#/definitions/models.TaskComment'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all task comments
+      tags:
+      - task
+    put:
+      consumes:
+      - application/json
+      description: Create a new task comment. The user doing this need to have at
+        least write access to the task this comment should belong to.
+      parameters:
+      - description: The task comment object
+        in: body
+        name: relation
+        required: true
+        schema:
+          $ref: '#/definitions/models.TaskComment'
+      - description: Task ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created task comment object.
+          schema:
+            $ref: '#/definitions/models.TaskComment'
+        "400":
+          description: Invalid task comment object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Create a new task comment
+      tags:
+      - task
+  /tasks/{taskID}/comments/{commentID}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a task comment. The user doing this need to have at least
+        write access to the task this comment belongs to.
+      parameters:
+      - description: Task ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      - description: Comment ID
+        in: path
+        name: commentID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The task comment was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Invalid task comment object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The task comment was not found.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Remove a task comment
+      tags:
+      - task
+    get:
+      consumes:
+      - application/json
+      description: Remove a task comment. The user doing this need to have at least
+        read access to the task this comment belongs to.
+      parameters:
+      - description: Task ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      - description: Comment ID
+        in: path
+        name: commentID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The task comment object.
+          schema:
+            $ref: '#/definitions/models.TaskComment'
+        "400":
+          description: Invalid task comment object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The task comment was not found.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Remove a task comment
+      tags:
+      - task
+    post:
+      consumes:
+      - application/json
+      description: Update an existing task comment. The user doing this need to have
+        at least write access to the task this comment belongs to.
+      parameters:
+      - description: Task ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      - description: Comment ID
+        in: path
+        name: commentID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated task comment object.
+          schema:
+            $ref: '#/definitions/models.TaskComment'
+        "400":
+          description: Invalid task comment object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The task comment was not found.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Update an existing task comment
+      tags:
+      - task
+  /tasks/{taskID}/labels/bulk:
+    post:
+      consumes:
+      - application/json
+      description: Updates all labels on a task. Every label which is not passed but
+        exists on the task will be deleted. Every label which does not exist on the
+        task will be added. All labels which are passed and already exist on the task
+        won't be touched.
+      parameters:
+      - description: The array of labels
+        in: body
+        name: label
+        required: true
+        schema:
+          $ref: '#/definitions/models.LabelTaskBulk'
+      - description: Task ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The updated labels object.
+          schema:
+            $ref: '#/definitions/models.LabelTaskBulk'
+        "400":
+          description: Invalid label object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Update all labels on a task.
+      tags:
+      - labels
+  /tasks/{taskID}/relations:
+    put:
+      consumes:
+      - application/json
+      description: Creates a new relation between two tasks. The user needs to have
+        update rights on the base task and at least read rights on the other task.
+        Both tasks do not need to be on the same project. Take a look at the docs
+        for available task relation kinds.
+      parameters:
+      - description: The relation object
+        in: body
+        name: relation
+        required: true
+        schema:
+          $ref: '#/definitions/models.TaskRelation'
+      - description: Task ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created task relation object.
+          schema:
+            $ref: '#/definitions/models.TaskRelation'
+        "400":
+          description: Invalid task relation object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Create a new relation between two tasks
+      tags:
+      - task
+  /tasks/{taskID}/relations/{relationKind}/{otherTaskID}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: The relation object
+        in: body
+        name: relation
+        required: true
+        schema:
+          $ref: '#/definitions/models.TaskRelation'
+      - description: Task ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      - description: The kind of the relation. See the TaskRelation type for more
+          info.
+        in: path
+        name: relationKind
+        required: true
+        type: string
+      - description: The id of the other task.
+        in: path
+        name: otherTaskID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The task relation was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Invalid task relation object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: The task relation was not found.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Remove a task relation
+      tags:
+      - task
+  /tasks/all:
+    get:
+      consumes:
+      - application/json
+      description: Returns all tasks on any project the user has access to.
+      parameters:
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search tasks by task text.
+        in: query
+        name: s
+        type: string
+      - description: The sorting parameter. You can pass this multiple times to get
+          the tasks ordered by multiple different parameters, along with `order_by`.
+          Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`,
+          `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`,
+          `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default
+          is `id`.
+        in: query
+        name: sort_by
+        type: string
+      - description: The ordering parameter. Possible values to order by are `asc`
+          or `desc`. Default is `asc`.
+        in: query
+        name: order_by
+        type: string
+      - description: The name of the field to filter by. Allowed values are all task
+          properties. Task properties which are their own object require passing in
+          the id of that entity. Accepts an array for multiple filters which will
+          be chanied together, all supplied filter must match.
+        in: query
+        name: filter_by
+        type: string
+      - description: The value to filter for.
+        in: query
+        name: filter_value
+        type: string
+      - description: The comparator to use for a filter. Available values are `equals`,
+          `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in`
+          expects comma-separated values in `filter_value`. Defaults to `equals`
+        in: query
+        name: filter_comparator
+        type: string
+      - description: The concatinator to use for filters. Available values are `and`
+          or `or`. Defaults to `or`.
+        in: query
+        name: filter_concat
+        type: string
+      - description: If set to true the result will include filtered fields whose
+          value is set to `null`. Available values are `true` or `false`. Defaults
+          to `false`.
+        in: query
+        name: filter_include_nulls
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The tasks
+          schema:
+            items:
+              $ref: '#/definitions/models.Task'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get tasks
+      tags:
+      - task
+  /tasks/bulk:
+    post:
+      consumes:
+      - application/json
+      description: 'Updates a bunch of tasks at once. This includes marking them as
+        done. Note: although you could supply another ID, it will be ignored. Use
+        task_ids instead.'
+      parameters:
+      - description: The task object. Looks like a normal task, the only difference
+          is it uses an array of project_ids to update.
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/models.BulkTask'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated task object.
+          schema:
+            $ref: '#/definitions/models.Task'
+        "400":
+          description: Invalid task object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the task (aka its project)
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Update a bunch of tasks at once
+      tags:
+      - task
+  /teams:
+    get:
+      consumes:
+      - application/json
+      description: Returns all teams the current user is part of.
+      parameters:
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search teams by its name.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The teams.
+          schema:
+            items:
+              $ref: '#/definitions/models.Team'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get teams
+      tags:
+      - team
+    put:
+      consumes:
+      - application/json
+      description: Creates a new team.
+      parameters:
+      - description: The team you want to create.
+        in: body
+        name: team
+        required: true
+        schema:
+          $ref: '#/definitions/models.Team'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created team.
+          schema:
+            $ref: '#/definitions/models.Team'
+        "400":
+          description: Invalid team object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Creates a new team
+      tags:
+      - team
+  /teams/{id}:
+    delete:
+      description: Delets a team. This will also remove the access for all users in
+        that team.
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The team was successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Invalid team object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Deletes a team
+      tags:
+      - team
+    get:
+      consumes:
+      - application/json
+      description: Returns a team by its ID.
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The team
+          schema:
+            $ref: '#/definitions/models.Team'
+        "403":
+          description: The user does not have access to the team
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Gets one team
+      tags:
+      - team
+    post:
+      consumes:
+      - application/json
+      description: Updates a team.
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The team with updated values you want to update.
+        in: body
+        name: team
+        required: true
+        schema:
+          $ref: '#/definitions/models.Team'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated team.
+          schema:
+            $ref: '#/definitions/models.Team'
+        "400":
+          description: Invalid team object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Updates a team
+      tags:
+      - team
+  /teams/{id}/members:
+    put:
+      consumes:
+      - application/json
+      description: Add a user to a team.
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The user to be added to a team.
+        in: body
+        name: team
+        required: true
+        schema:
+          $ref: '#/definitions/models.TeamMember'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The newly created member object
+          schema:
+            $ref: '#/definitions/models.TeamMember'
+        "400":
+          description: Invalid member object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the team
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Add a user to a team
+      tags:
+      - team
+  /teams/{id}/members/{userID}:
+    delete:
+      description: Remove a user from a team. This will also revoke any access this
+        user might have via that team. A user can remove themselves from the team
+        if they are not the last user in the team.
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The user was successfully removed from the team.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Remove a user from a team
+      tags:
+      - team
+  /teams/{id}/members/{userID}/admin:
+    post:
+      description: If a user is team admin, this will make them member and vise-versa.
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The member right was successfully changed.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Toggle a team member's admin status
+      tags:
+      - team
+  /test/{table}:
+    patch:
+      consumes:
+      - application/json
+      description: 'Fills the specified table with the content provided in the payload.
+        You need to enable the testing endpoint before doing this and provide the
+        `Authorization: <token>` secret when making requests to this endpoint. See
+        docs for more details.'
+      parameters:
+      - description: The table to reset
+        in: path
+        name: table
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Everything has been imported successfully.
+          schema:
+            items:
+              $ref: '#/definitions/user.User'
+            type: array
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Reset the db to a defined state
+      tags:
+      - testing
+  /tokens:
+    get:
+      consumes:
+      - application/json
+      description: Returns all api tokens the current user has created.
+      parameters:
+      - description: The page number for tasks. Used for pagination. If not provided,
+          the first page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of tasks per bucket per page. This parameter
+          is limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search tasks by task text.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The list of all tokens
+          schema:
+            items:
+              $ref: '#/definitions/models.APIToken'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all api tokens of the current user
+      tags:
+      - api
+    put:
+      consumes:
+      - application/json
+      description: Create a new api token to use on behalf of the user creating it.
+      parameters:
+      - description: The token object with required fields
+        in: body
+        name: token
+        required: true
+        schema:
+          $ref: '#/definitions/models.APIToken'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created token.
+          schema:
+            $ref: '#/definitions/models.APIToken'
+        "400":
+          description: Invalid token object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Create a new api token
+      tags:
+      - api
+  /tokens/{tokenID}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete any of the user's api tokens.
+      parameters:
+      - description: Token ID
+        in: path
+        name: tokenID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The token does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Deletes an existing api token
+      tags:
+      - api
+  /user:
+    get:
+      consumes:
+      - application/json
+      description: Returns the current user object.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.User'
+        "404":
+          description: User does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get user information
+      tags:
+      - user
+  /user/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Confirms the email of a newly registered user.
+      parameters:
+      - description: The token.
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/user.EmailConfirm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "412":
+          description: Bad token provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Confirm the email of a new user
+      tags:
+      - user
+  /user/deletion/cancel:
+    post:
+      consumes:
+      - application/json
+      description: Aborts an in-progress user deletion.
+      parameters:
+      - description: The user password to confirm.
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/v1.UserPasswordConfirmation'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "412":
+          description: Bad password provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Abort a user deletion request
+      tags:
+      - user
+  /user/deletion/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Confirms the deletion request of a user sent via email.
+      parameters:
+      - description: The token.
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/v1.UserDeletionRequestConfirm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "412":
+          description: Bad token provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Confirm a user deletion request
+      tags:
+      - user
+  /user/deletion/request:
+    post:
+      consumes:
+      - application/json
+      description: Requests the deletion of the current user. It will trigger an email
+        which has to be confirmed to start the deletion.
+      parameters:
+      - description: The user password.
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/v1.UserPasswordConfirmation'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "412":
+          description: Bad password provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Request the deletion of the user
+      tags:
+      - user
+  /user/export/download:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User password to confirm the download.
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/v1.UserPasswordConfirmation'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Download a user data export.
+      tags:
+      - user
+  /user/export/request:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User password to confirm the data export request.
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/v1.UserPasswordConfirmation'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Request a user data export.
+      tags:
+      - user
+  /user/password:
+    post:
+      consumes:
+      - application/json
+      description: Lets the current user change its password.
+      parameters:
+      - description: The current and new password.
+        in: body
+        name: userPassword
+        required: true
+        schema:
+          $ref: '#/definitions/v1.UserPassword'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: User does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Change password
+      tags:
+      - user
+  /user/password/reset:
+    post:
+      consumes:
+      - application/json
+      description: Resets a user email with a previously reset token.
+      parameters:
+      - description: The token with the new password.
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/user.PasswordReset'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Bad token provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Resets a password
+      tags:
+      - user
+  /user/password/token:
+    post:
+      consumes:
+      - application/json
+      description: Requests a token to reset a users password. The token is sent via
+        email.
+      parameters:
+      - description: The username of the user to request a token for.
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/user.PasswordTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The user does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Request password reset token
+      tags:
+      - user
+  /user/settings/avatar:
+    get:
+      consumes:
+      - application/json
+      description: Returns the current user's avatar setting.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.UserAvatarProvider'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Return user avatar setting
+      tags:
+      - user
+    post:
+      consumes:
+      - application/json
+      description: Changes the user avatar. Valid types are gravatar (uses the user
+        email), upload, initials, default.
+      parameters:
+      - description: The user's avatar setting
+        in: body
+        name: avatar
+        required: true
+        schema:
+          $ref: '#/definitions/v1.UserAvatarProvider'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Set the user's avatar
+      tags:
+      - user
+  /user/settings/avatar/upload:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload a user avatar. This will also set the user's avatar provider
+        to "upload"
+      parameters:
+      - description: The avatar as single file.
+        in: formData
+        name: avatar
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The avatar was set successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: File is no image.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: File too large.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Upload a user avatar
+      tags:
+      - user
+  /user/settings/email:
+    post:
+      consumes:
+      - application/json
+      description: Lets the current user change their email address.
+      parameters:
+      - description: The new email address and current password.
+        in: body
+        name: userEmailUpdate
+        required: true
+        schema:
+          $ref: '#/definitions/user.EmailUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: User does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Update email address
+      tags:
+      - user
+  /user/settings/general:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: The updated user settings
+        in: body
+        name: avatar
+        required: true
+        schema:
+          $ref: '#/definitions/v1.UserSettings'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Change general user settings of the current user.
+      tags:
+      - user
+  /user/settings/token/caldav:
+    get:
+      consumes:
+      - application/json
+      description: Return the IDs and created dates of all caldav tokens for the current
+        user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/user.Token'
+            type: array
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: User does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Returns the caldav tokens for the current user
+      tags:
+      - user
+    put:
+      consumes:
+      - application/json
+      description: Generates a caldav token which can be used for the caldav api.
+        It is not possible to see the token again after it was generated.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.Token'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: User does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Generate a caldav token
+      tags:
+      - user
+  /user/settings/token/caldav/{id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Token ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: User does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Delete a caldav token by id
+      tags:
+      - user
+  /user/settings/totp:
+    get:
+      consumes:
+      - application/json
+      description: Returns the current user totp setting or an error if it is not
+        enabled.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The totp settings.
+          schema:
+            $ref: '#/definitions/user.TOTP'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Totp setting for the current user
+      tags:
+      - user
+  /user/settings/totp/disable:
+    post:
+      consumes:
+      - application/json
+      description: Disables any totp settings for the current user.
+      parameters:
+      - description: The current user's password (only password is enough).
+        in: body
+        name: totp
+        required: true
+        schema:
+          $ref: '#/definitions/user.Login'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully disabled
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: User does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Disable totp settings
+      tags:
+      - user
+  /user/settings/totp/enable:
+    post:
+      consumes:
+      - application/json
+      description: Enables a previously enrolled totp setting by providing a totp
+        passcode.
+      parameters:
+      - description: The totp passcode.
+        in: body
+        name: totp
+        required: true
+        schema:
+          $ref: '#/definitions/user.TOTPPasscode'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully enabled
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: User does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "412":
+          description: TOTP is not enrolled.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Enable a previously enrolled totp setting.
+      tags:
+      - user
+  /user/settings/totp/enroll:
+    post:
+      consumes:
+      - application/json
+      description: Creates an initial setup for the user in the db. After this step,
+        the user needs to verify they have a working totp setup with the "enable totp"
+        endpoint.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.TOTP'
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: User does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Enroll a user into totp
+      tags:
+      - user
+  /user/settings/totp/qrcode:
+    get:
+      consumes:
+      - application/json
+      description: Returns a qr code for easier setup at end user's devices.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The qr code as jpeg image
+          schema:
+            type: file
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Totp QR Code
+      tags:
+      - user
+  /user/timezones:
+    get:
+      consumes:
+      - application/json
+      description: Because available time zones depend on the system Vikunja is running
+        on, this endpoint returns a project of all valid time zones this particular
+        Vikunja instance can handle. The project of time zones is not sorted, you
+        should sort it on the client.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All available time zones.
+          schema:
+            items:
+              type: string
+            type: array
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all available time zones on this vikunja instance
+      tags:
+      - user
+  /user/token:
+    post:
+      consumes:
+      - application/json
+      description: Returns a new valid jwt user token with an extended length.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.Token'
+        "400":
+          description: Only user token are available for renew.
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Renew user token
+      tags:
+      - user
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Search for a user by its username, name or full email. Name (not
+        username) or email require that the user has enabled this in their settings.
+      parameters:
+      - description: The search criteria.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All (found) users.
+          schema:
+            items:
+              $ref: '#/definitions/user.User'
+            type: array
+        "400":
+          description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get users
+      tags:
+      - user
+securityDefinitions:
+  BasicAuth:
+    type: basic
+  JWTKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

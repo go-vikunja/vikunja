@@ -350,6 +350,50 @@ steps:
       event: [ push, tag, pull_request ]
 
 ---
+kind: pipeline
+type: docker
+name: generate-swagger-docs
+
+depends_on:
+  - testing
+
+workspace:
+  base: /go
+  path: src/code.vikunja.io/api
+
+trigger:
+  branch:
+    include:
+      - main
+  event:
+    include:
+      - push
+
+steps:
+  - name: generate-swagger-docs
+    image: vikunja/golang-build:latest
+    pull: always
+    environment:
+      GOPROXY: 'https://goproxy.kolaente.de'
+    commands:
+      - mage do-the-swag
+
+  - name: push
+    pull: always
+    image: appleboy/drone-git-push
+    depends_on:
+      - generate-swagger-docs
+    settings:
+      author_email: "frederik@vikunja.io"
+      author_name: Frederick [Bot]
+      branch: main
+      commit: true
+      commit_message: "[skip ci] Updated swagger docs"
+      remote: "ssh://git@kolaente.dev:9022/vikunja/api.git"
+      ssh_key:
+        from_secret: git_push_ssh_key
+
+---
 ########
 # Build a release when tagging
 ########
@@ -743,6 +787,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: d47bd1cf6f3e9be2ff3eed2039e65c8b6de2b16c1e636699f66382f941277411
+hmac: 4b256850b13566216d4486598554f137a18d64d4bfc5727b09056639a9fafd3e
 
 ...

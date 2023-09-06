@@ -27,4 +27,3 @@ vikunja-dump*
 vendor/
 os-packages/
 mage_output_file.go
-pkg/swagger/*

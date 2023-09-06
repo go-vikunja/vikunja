@@ -349,13 +349,7 @@ const swaggerDocsFolderLocation = `./pkg/swagger/`
 // Generates the swagger docs from the code annotations
 func DoTheSwag() {
 	mg.Deps(initVars)
-	if _, err := os.Stat(swaggerDocsFolderLocation + "swagger.json"); err == nil {
-		fmt.Println("Swagger docs already generated, not generating. Remove the files in " + swaggerDocsFolderLocation + " and run this command again to regenerate them.")
-		return
-	}
 
-	//runAndStreamOutput("go", "mod", "tidy")
-	//runAndStreamOutput("go", "mod", "download")
 	checkAndInstallGoTool("swag", "github.com/swaggo/swag/cmd/swag")
 	runAndStreamOutput("swag", "init", "-g", "./pkg/routes/routes.go", "--parseDependency", "-d", RootPath, "-o", RootPath+"/pkg/swagger")
 }
