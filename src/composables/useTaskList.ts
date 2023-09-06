@@ -1,5 +1,6 @@
 import {ref, shallowReactive, watch, computed, type ComputedGetter} from 'vue'
 import {useRoute} from 'vue-router'
+import {useRouteQuery} from '@vueuse/router'
 
 import TaskCollectionService from '@/services/taskCollection'
 import type {ITask} from '@/modelTypes/ITask'
@@ -68,23 +69,33 @@ export function useTaskList(projectIdGetter: ComputedGetter<IProject['id']>, sor
 	const params = ref({...getDefaultParams()})
 	
 	const search = ref('')
-	const page = ref(1)
+	const page = useRouteQuery('page', '1', { transform: Number })
 
 	const sortBy = ref({ ...sortByDefault })
-
-	const getAllTasksParams = computed(() => {
-		let loadParams = {...params.value}
+	
+	const allParams = computed(() => {
+		const loadParams = {...params.value}
 
 		if (search.value !== '') {
 			loadParams.s = search.value
 		}
 
-		loadParams = formatSortOrder(sortBy.value, loadParams)
+		return formatSortOrder(sortBy.value, loadParams)
+	})
+	
+	watch(
+		() => allParams.value,
+		() => {
+			// When parameters change, the page should always be the first
+			page.value = 1
+		},
+	)
 
+	const getAllTasksParams = computed(() => {
 		return [
 			{projectId: projectId.value},
-			loadParams,
-			page.value || 1,
+			allParams.value,
+			page.value,
 		]
 	})
 

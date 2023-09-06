@@ -56,6 +56,7 @@
     "@sentry/tracing": "7.60.0",
     "@sentry/vue": "7.60.0",
     "@vueuse/core": "10.4.0",
+    "@vueuse/router": "^10.4.1",
     "axios": "1.4.0",
     "blurhash": "2.0.5",
     "bulma-css-variables": "0.9.33",

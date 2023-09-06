@@ -43,6 +43,9 @@ dependencies:
   '@vueuse/core':
     specifier: 10.4.0
     version: 10.4.0(vue@3.3.4)
+  '@vueuse/router':
+    specifier: ^10.4.1
+    version: 10.4.1(vue-router@4.2.4)(vue@3.3.4)
   axios:
     specifier: 1.4.0
     version: 1.4.0
@@ -4901,8 +4904,30 @@ packages:
     resolution: {integrity: sha512-gdU7TKNAUVlXXLbaF+ZCfte8BjRJQWPCa2J55+7/h+yDtzw3vOoGQDRXzI6pyKyo6bXFT5/QoPE4hAknExjRLQ==}
     dev: false
 
+  /@vueuse/router@10.4.1(vue-router@4.2.4)(vue@3.3.4):
+    resolution: {integrity: sha512-gsMuSIDTUj7Gt91pnFbrhUCDaGObceQAs3+XGguRNj/WgzqLpywe37mE4645McDspEbig/n9nvn8SSmo6XRvPw==}
+    peerDependencies:
+      vue-router: '>=4.0.0-rc.1'
+    dependencies:
+      '@vueuse/shared': 10.4.1(vue@3.3.4)
+      vue-demi: 0.14.5(vue@3.3.4)
+      vue-router: 4.2.4(vue@3.3.4)
+    transitivePeerDependencies:
+      - '@vue/composition-api'
+      - vue
+    dev: false
+
   /@vueuse/shared@10.4.0(vue@3.3.4):
     resolution: {integrity: sha512-52asvLf5cbAS/h6xWjqoY4MgjxmFjnVNf/nA8BP7RbeIrIGcf+BZbeOcVo+92byqArXEJiBxptXpufQvbwJL/w==}
+    dependencies:
+      vue-demi: 0.14.5(vue@3.3.4)
+    transitivePeerDependencies:
+      - '@vue/composition-api'
+      - vue
+    dev: false
+
+  /@vueuse/shared@10.4.1(vue@3.3.4):
+    resolution: {integrity: sha512-vz5hbAM4qA0lDKmcr2y3pPdU+2EVw/yzfRsBdu+6+USGa4PxqSQRYIUC9/NcT06y+ZgaTsyURw2I9qOFaaXHAg==}
     dependencies:
       vue-demi: 0.14.5(vue@3.3.4)
     transitivePeerDependencies:
