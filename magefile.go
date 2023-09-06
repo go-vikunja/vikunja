@@ -354,6 +354,8 @@ func DoTheSwag() {
 		return
 	}
 
+	runAndStreamOutput("go", "mod", "tidy")
+	runAndStreamOutput("go", "mod", "download")
 	checkAndInstallGoTool("swag", "github.com/swaggo/swag/cmd/swag")
 	runAndStreamOutput("swag", "init", "-g", "./pkg/routes/routes.go", "--parseDependency", "-d", RootPath, "-o", RootPath+"/pkg/swagger")
 }
