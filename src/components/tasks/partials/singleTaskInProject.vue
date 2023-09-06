@@ -17,6 +17,7 @@
 			:class="{ 'done': task.done, 'show-project': showProject && project}"
 			class="tasktext"
 		>
+			<priority-label :priority="task.priority" :done="task.done"/>
 			<span>
 				<router-link
 					v-if="showProject && typeof project !== 'undefined'"
@@ -76,8 +77,6 @@
 			<CustomTransition name="fade">
 				<defer-task v-if="+new Date(task.dueDate) > 0 && showDefer" v-model="task" ref="deferDueDate"/>
 			</CustomTransition>
-
-			<priority-label :priority="task.priority" :done="task.done"/>
 
 			<span>
 				<span class="project-task-icon" v-if="task.attachments.length > 0">

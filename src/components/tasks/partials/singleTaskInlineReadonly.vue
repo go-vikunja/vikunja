@@ -1,31 +1,32 @@
 <template>
 	<div class="task">
-		
-	<span>
-		<span
-			v-if="showProject && typeof project !== 'undefined'"
-			class="task-project"
-			:class="{'mr-2': task.hexColor !== ''}"
-			v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
-		>
-			{{ project.title }}
-		</span>
+		<priority-label :priority="task.priority" :done="task.done"/>
 
-		<ColorBubble
-			v-if="task.hexColor !== ''"
-			:color="getHexColor(task.hexColor)"
-			class="mr-1"
-		/>
+		<span>
+			<span
+				v-if="showProject && typeof project !== 'undefined'"
+				class="task-project"
+				:class="{'mr-2': task.hexColor !== ''}"
+				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
+			>
+				{{ project.title }}
+			</span>
 
-		<!-- Show any parent tasks to make it clear this task is a sub task of something -->
-		<span class="parent-tasks" v-if="typeof task.relatedTasks?.parenttask !== 'undefined'">
-			<template v-for="(pt, i) in task.relatedTasks.parenttask">
-				{{ pt.title }}<template v-if="(i + 1) < task.relatedTasks.parenttask.length">,&nbsp;</template>
-			</template>
-			&rsaquo;
+			<ColorBubble
+				v-if="task.hexColor !== ''"
+				:color="getHexColor(task.hexColor)"
+				class="mr-1"
+			/>
+
+			<!-- Show any parent tasks to make it clear this task is a sub task of something -->
+			<span class="parent-tasks" v-if="typeof task.relatedTasks?.parenttask !== 'undefined'">
+				<template v-for="(pt, i) in task.relatedTasks.parenttask">
+					{{ pt.title }}<template v-if="(i + 1) < task.relatedTasks.parenttask.length">,&nbsp;</template>
+				</template>
+				&rsaquo;
+			</span>
+			{{ task.title }}
 		</span>
-		{{ task.title }}
-	</span>
 
 		<labels
 			v-if="task.labels.length > 0"
@@ -46,28 +47,27 @@
 			class="dueDate"
 			v-tooltip="formatDateLong(task.dueDate)"
 		>
-		<time
-			:datetime="formatISO(task.dueDate)"
-			:class="{'overdue': task.dueDate <= new Date() && !task.done}"
-			class="is-italic"
-		>
-			– {{ $t('task.detail.due', {at: formatDateSince(task.dueDate)}) }}
-		</time>
-	</span>
+			<time
+				:datetime="formatISO(task.dueDate)"
+				:class="{'overdue': task.dueDate <= new Date() && !task.done}"
+				class="is-italic"
+			>
+				– {{ $t('task.detail.due', {at: formatDateSince(task.dueDate)}) }}
+			</time>
+		</span>
 
-		<priority-label :priority="task.priority" :done="task.done"/>
 
 		<span>
-		<span class="project-task-icon" v-if="task.attachments.length > 0">
-			<icon icon="paperclip"/>
+			<span class="project-task-icon" v-if="task.attachments.length > 0">
+				<icon icon="paperclip"/>
+			</span>
+			<span class="project-task-icon" v-if="task.description">
+				<icon icon="align-left"/>
+			</span>
+			<span class="project-task-icon" v-if="task.repeatAfter.amount > 0">
+				<icon icon="history"/>
+			</span>
 		</span>
-		<span class="project-task-icon" v-if="task.description">
-			<icon icon="align-left"/>
-		</span>
-		<span class="project-task-icon" v-if="task.repeatAfter.amount > 0">
-			<icon icon="history"/>
-		</span>
-	</span>
 
 		<checklist-summary :task="task"/>
 

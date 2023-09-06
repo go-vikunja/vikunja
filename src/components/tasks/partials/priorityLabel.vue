@@ -40,17 +40,12 @@ defineProps({
 </script>
 
 <style lang="scss" scoped>
-.priority-label {
-	display: inline-flex;
-	align-items: center;
-}
-
 span.high-priority {
 	color: var(--danger);
 	width: auto !important; // To override the width set in tasks
 
 	.icon {
-		vertical-align: middle;
+		vertical-align: top;
 		width: auto !important;
 		padding: 0 .5rem;
 	}
