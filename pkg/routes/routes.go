@@ -379,7 +379,7 @@ func registerAPIRoutes(a *echo.Group) {
 			return &models.Task{}
 		},
 	}
-	a.PUT("/projects/:project", taskHandler.CreateWeb)
+	a.PUT("/projects/:project/tasks", taskHandler.CreateWeb)
 	a.GET("/tasks/:projecttask", taskHandler.ReadOneWeb)
 	a.GET("/tasks/all", taskCollectionHandler.ReadAllWeb)
 	a.DELETE("/tasks/:projecttask", taskHandler.DeleteWeb)

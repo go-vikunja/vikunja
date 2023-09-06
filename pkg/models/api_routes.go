@@ -55,6 +55,8 @@ func getRouteGroupName(path string) string {
 
 	finalName := strings.Join(filteredParts, "_")
 	switch finalName {
+	case "projects_tasks":
+		return "tasks"
 	case "tasks_all":
 		return "tasks"
 	default:
@@ -129,7 +131,13 @@ func GetAvailableAPIRoutesForToken(c echo.Context) error {
 
 // CanDoAPIRoute checks if a token is allowed to use the current api route
 func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
-	path := c.Request().URL.Path
+	path := c.Path()
+	if path == "" {
+		// c.Path() is empty during testing, but returns the path which the route used during registration
+		// which is what we need.
+		path = c.Request().URL.Path
+	}
+
 	routeGroupName := getRouteGroupName(path)
 
 	group, hasGroup := token.Permissions[routeGroupName]

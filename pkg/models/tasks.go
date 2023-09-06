@@ -717,7 +717,7 @@ func getNextTaskIndex(s *xorm.Session, projectID int64) (nextIndex int64, err er
 // @Failure 400 {object} web.HTTPError "Invalid task object provided."
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /projects/{id} [put]
+// @Router /projects/{id}/tasks [put]
 func (t *Task) Create(s *xorm.Session, a web.Auth) (err error) {
 	return createTask(s, t, a, true)
 }
