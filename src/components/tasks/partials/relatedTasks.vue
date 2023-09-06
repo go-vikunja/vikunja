@@ -36,6 +36,7 @@
 						:creatable="true"
 						:create-placeholder="$t('task.relation.createPlaceholder')"
 						@create="createAndRelateTask"
+						v-focus
 					>
 						<template #searchResult="{option: task}">
 							<span 
