@@ -516,7 +516,7 @@ steps:
       commit_message: "[skip ci] Updated translations via Crowdin"
       remote: "ssh://git@kolaente.dev:9022/vikunja/frontend.git"
       ssh_key:
-        from_secret: translation_git_push_ssh_key
+        from_secret: git_push_ssh_key
 
   - name: upload
     pull: always
@@ -532,6 +532,6 @@ steps:
         src/i18n/lang/en.json: en.json
 ---
 kind: signature
-hmac: c5517d5fc49e327984177144aa195d4418a5769c25deb40f1c211e05735bc863
+hmac: 8df53c07dc07c8a22c4aca9effd0ef8335cbed6ed55c00caeb335e6bc15458a6
 
 ...
