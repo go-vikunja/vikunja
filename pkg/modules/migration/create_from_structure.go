@@ -52,12 +52,43 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 	labels := make(map[string]*models.Label)
 	archivedProjects := []int64{}
 
+	childRelations := make(map[int64][]int64)          // old id is the key, slice of old children ids
+	projectsByOldID := make(map[int64]*models.Project) // old id is the key
 	// Create all projects
 	for _, p := range str {
+		oldID := p.ID
+
+		if p.ParentProjectID != 0 {
+			childRelations[p.ParentProjectID] = append(childRelations[p.ParentProjectID], oldID)
+		}
+
 		p.ID = 0
-		err = createProjectWithChildren(s, p, 0, &archivedProjects, labels, user)
+		err = createProject(s, p, &archivedProjects, labels, user)
 		if err != nil {
 			return err
+		}
+		projectsByOldID[oldID] = &p.Project
+	}
+
+	// parent / child relations
+	for parentID, children := range childRelations {
+		parent, has := projectsByOldID[parentID]
+		if !has {
+			log.Debugf("[creating structure] could not find parentID project with old id %d", parentID)
+			continue
+		}
+		for _, childID := range children {
+			child, has := projectsByOldID[childID]
+			if !has {
+				log.Debugf("[creating structure] could not find child project with old id %d for parent project with old id %d", childID, parentID)
+				continue
+			}
+
+			child.ParentProjectID = parent.ID
+			err = child.Update(s, user)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -76,30 +107,18 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 	return nil
 }
 
-func createProjectWithChildren(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, parentProjectID int64, archivedProjectIDs *[]int64, labels map[string]*models.Label, user *user.User) (err error) {
-	err = createProjectWithEverything(s, project, parentProjectID, archivedProjectIDs, labels, user)
+func createProject(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjectIDs *[]int64, labels map[string]*models.Label, user *user.User) (err error) {
+	err = createProjectWithEverything(s, project, archivedProjectIDs, labels, user)
 	if err != nil {
 		return err
 	}
 
 	log.Debugf("[creating structure] Created project %d", project.ID)
 
-	if len(project.ChildProjects) > 0 {
-		log.Debugf("[creating structure] Creating %d projects", len(project.ChildProjects))
-
-		// Create all projects
-		for _, cp := range project.ChildProjects {
-			err = createProjectWithChildren(s, cp, project.ID, archivedProjectIDs, labels, user)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
 	return
 }
 
-func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, parentProjectID int64, archivedProjects *[]int64, labels map[string]*models.Label, user *user.User) (err error) {
+func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjects *[]int64, labels map[string]*models.Label, user *user.User) (err error) {
 	// The tasks and bucket slices are going to be reset during the creation of the project, so we rescue it here
 	// to be able to still loop over them aftere the project was created.
 	tasks := project.Tasks
@@ -114,7 +133,6 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		project.IsArchived = false
 	}
 
-	project.ParentProjectID = parentProjectID
 	project.ID = 0
 	err = project.Create(s, user)
 	if err != nil && models.IsErrProjectIdentifierIsNotUnique(err) {
@@ -230,7 +248,6 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				if err != nil && !models.IsErrRelationAlreadyExists(err) {
 					return
 				}
-				err = nil
 
 				log.Debugf("[creating structure] Created task relation between task %d and %d", t.ID, rt.ID)
 

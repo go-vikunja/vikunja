@@ -121,7 +121,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	}
 
 	versionString := bufVersion.String()
-	if versionString == "dev" && versionString == vversion.Version {
+	if versionString == "dev" && vversion.Version == "dev" {
 		log.Debugf(logPrefix + "Importing from dev version")
 	} else {
 		dumpedVersion, err := version.NewVersion(bufVersion.String())
