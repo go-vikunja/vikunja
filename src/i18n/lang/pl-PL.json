@@ -157,6 +157,8 @@
         "permissionExplanation": "Permissions allow you to scope what an api token is allowed to do.",
         "titleRequired": "The title is required",
         "expired": "This token has expired {ago}.",
+        "tokenCreatedSuccess": "Here is your new api token: {token}",
+        "tokenCreatedNotSeeAgain": "Store it in a secure location, you won't see it again!",
         "delete": {
           "header": "Delete this token",
           "text1": "Are you sure you want to delete the token \"{token}\"?",
@@ -605,6 +607,9 @@
       "belongsToProject": "This task belongs to project '{project}'",
       "due": "Termin {at}",
       "closePopup": "Zamknij okno",
+      "organization": "Organization",
+      "management": "Management",
+      "dateAndTime": "Date and time",
       "delete": {
         "header": "Usuń to zadanie",
         "text1": "Czy na pewno chcesz usunąć to zadanie?",
@@ -765,7 +770,7 @@
     "repeat": {
       "everyDay": "Codziennie",
       "everyWeek": "Co tydzień",
-      "everyMonth": "Co miesiąc",
+      "every30d": "Every 30 Days",
       "mode": "Tryb powtarzania",
       "monthly": "Miesięczny",
       "fromCurrentDate": "Od bieżącej daty",

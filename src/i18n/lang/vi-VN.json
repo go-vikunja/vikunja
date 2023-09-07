@@ -157,6 +157,8 @@
         "permissionExplanation": "Permissions allow you to scope what an api token is allowed to do.",
         "titleRequired": "The title is required",
         "expired": "This token has expired {ago}.",
+        "tokenCreatedSuccess": "Here is your new api token: {token}",
+        "tokenCreatedNotSeeAgain": "Store it in a secure location, you won't see it again!",
         "delete": {
           "header": "Delete this token",
           "text1": "Are you sure you want to delete the token \"{token}\"?",
@@ -605,6 +607,9 @@
       "belongsToProject": "This task belongs to project '{project}'",
       "due": "Đến hạn {at}",
       "closePopup": "Đóng cửa sổ",
+      "organization": "Organization",
+      "management": "Management",
+      "dateAndTime": "Date and time",
       "delete": {
         "header": "Xóa công công việc này",
         "text1": "Bạn có chắc muốn xóa công việc này không?",
@@ -765,7 +770,7 @@
     "repeat": {
       "everyDay": "Mỗi ngày",
       "everyWeek": "Mỗi tuần",
-      "everyMonth": "Mỗi tháng",
+      "every30d": "Every 30 Days",
       "mode": "Chế độ lặp lại",
       "monthly": "Hàng tháng",
       "fromCurrentDate": "Từ ngày hiện tại",

@@ -157,6 +157,8 @@
         "permissionExplanation": "Mit Berechtigungen kannst du einschränken, was ein API-Token tun darf.",
         "titleRequired": "Titel ist erforderlich",
         "expired": "Dieses Token ist {ago} abgelaufen.",
+        "tokenCreatedSuccess": "Hier ist dein neues API Token: {token}",
+        "tokenCreatedNotSeeAgain": "Speichere es an einem sicheren Ort, du wirst es nicht mehr sehen!",
         "delete": {
           "header": "Dieses Token löschen",
           "text1": "Bist Du sicher, dass Du das Token \"{token}\" löschen möchtest?",
@@ -605,6 +607,9 @@
       "belongsToProject": "Diese Aufgabe gehört zum Projekt „{project}“",
       "due": "Fällig {at}",
       "closePopup": "Popup schließen",
+      "organization": "Organization",
+      "management": "Management",
+      "dateAndTime": "Date and time",
       "delete": {
         "header": "Diese Aufgabe löschen",
         "text1": "Willst du diese Aufgabe wirklich löschen?",
@@ -765,7 +770,7 @@
     "repeat": {
       "everyDay": "Jeden Tag",
       "everyWeek": "Jede Woche",
-      "everyMonth": "Jeden Monat",
+      "every30d": "Every 30 Days",
       "mode": "Wiederholungsmodus",
       "monthly": "Monatlich",
       "fromCurrentDate": "Ab dem aktuellen Datum",
