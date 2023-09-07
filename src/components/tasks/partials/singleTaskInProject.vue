@@ -136,7 +136,7 @@
 						:disabled="disabled"
 						:can-mark-as-done="canMarkAsDone"
 						:all-tasks="allTasks"
-						class="ml-5"
+						class="subtask-nested"
 					/>
 				</template>
 			</template>
@@ -485,5 +485,9 @@ function openTaskDetail() {
 	.progress {
 		margin-bottom: 0;
 	}
+}
+
+.subtask-nested {
+	margin-left: 1.75rem;
 }
 </style>
