@@ -117,6 +117,10 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 	project.ParentProjectID = parentProjectID
 	project.ID = 0
 	err = project.Create(s, user)
+	if err != nil && models.IsErrProjectIdentifierIsNotUnique(err) {
+		project.Identifier = ""
+		err = project.Create(s, user)
+	}
 	if err != nil {
 		return
 	}
