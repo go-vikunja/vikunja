@@ -133,9 +133,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) ([]
 	var uids []string
 	for _, path := range rpaths {
 		parts := strings.Split(path, "/")
-		uid := []rune(parts[4])          // The 4th part is the id with ".ics" suffix
-		endlen := len(uid) - len(".ics") // ".ics" are 4 bytes
-		uids = append(uids, string(uid[:endlen]))
+		uids = append(uids, strings.TrimSuffix(parts[4], ".ics"))
 	}
 
 	s := db.NewSession()
