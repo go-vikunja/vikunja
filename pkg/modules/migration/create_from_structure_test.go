@@ -35,6 +35,7 @@ func TestInsertFromStructure(t *testing.T) {
 		testStructure := []*models.ProjectWithTasksAndBuckets{
 			{
 				Project: models.Project{
+					ID:          1,
 					Title:       "Test1",
 					Description: "Lorem Ipsum",
 				},
@@ -45,90 +46,89 @@ func TestInsertFromStructure(t *testing.T) {
 						},
 					},
 				},
-				ChildProjects: []*models.ProjectWithTasksAndBuckets{
+			},
+			{
+				Project: models.Project{
+					Title:           "Testproject1",
+					Description:     "Something",
+					ParentProjectID: 1,
+				},
+				Buckets: []*models.Bucket{
 					{
-						Project: models.Project{
-							Title:       "Testproject1",
-							Description: "Something",
+						ID:    1234,
+						Title: "Test Bucket",
+					},
+				},
+				Tasks: []*models.TaskWithComments{
+					{
+						Task: models.Task{
+							Title:       "Task1",
+							Description: "Lorem",
 						},
-						Buckets: []*models.Bucket{
-							{
-								ID:    1234,
-								Title: "Test Bucket",
+					},
+					{
+						Task: models.Task{
+							Title: "Task with related tasks",
+							RelatedTasks: map[models.RelationKind][]*models.Task{
+								models.RelationKindSubtask: {
+									{
+										Title:       "Related to task with related task",
+										Description: "As subtask",
+									},
+								},
 							},
 						},
-						Tasks: []*models.TaskWithComments{
-							{
-								Task: models.Task{
-									Title:       "Task1",
-									Description: "Lorem",
-								},
-							},
-							{
-								Task: models.Task{
-									Title: "Task with related tasks",
-									RelatedTasks: map[models.RelationKind][]*models.Task{
-										models.RelationKindSubtask: {
-											{
-												Title:       "Related to task with related task",
-												Description: "As subtask",
-											},
-										},
+					},
+					{
+						Task: models.Task{
+							Title: "Task with attachments",
+							Attachments: []*models.TaskAttachment{
+								{
+									File: &files.File{
+										Name:        "testfile",
+										Size:        4,
+										FileContent: []byte{1, 2, 3, 4},
 									},
 								},
 							},
-							{
-								Task: models.Task{
-									Title: "Task with attachments",
-									Attachments: []*models.TaskAttachment{
-										{
-											File: &files.File{
-												Name:        "testfile",
-												Size:        4,
-												FileContent: []byte{1, 2, 3, 4},
-											},
-										},
-									},
+						},
+					},
+					{
+						Task: models.Task{
+							Title: "Task with labels",
+							Labels: []*models.Label{
+								{
+									Title:    "Label1",
+									HexColor: "ff00ff",
+								},
+								{
+									Title:    "Label2",
+									HexColor: "ff00ff",
 								},
 							},
-							{
-								Task: models.Task{
-									Title: "Task with labels",
-									Labels: []*models.Label{
-										{
-											Title:    "Label1",
-											HexColor: "ff00ff",
-										},
-										{
-											Title:    "Label2",
-											HexColor: "ff00ff",
-										},
-									},
+						},
+					},
+					{
+						Task: models.Task{
+							Title: "Task with same label",
+							Labels: []*models.Label{
+								{
+									Title:    "Label1",
+									HexColor: "ff00ff",
 								},
 							},
-							{
-								Task: models.Task{
-									Title: "Task with same label",
-									Labels: []*models.Label{
-										{
-											Title:    "Label1",
-											HexColor: "ff00ff",
-										},
-									},
-								},
-							},
-							{
-								Task: models.Task{
-									Title:    "Task in a bucket",
-									BucketID: 1234,
-								},
-							},
-							{
-								Task: models.Task{
-									Title:    "Task in a nonexisting bucket",
-									BucketID: 1111,
-								},
-							},
+						},
+					},
+					{
+						Task: models.Task{
+							Title:    "Task in a bucket",
+							BucketID: 1234,
+						},
+					},
+					{
+						Task: models.Task{
+							Title:    "Task in a nonexisting bucket",
+							BucketID: 1111,
 						},
 					},
 				},
@@ -137,21 +137,21 @@ func TestInsertFromStructure(t *testing.T) {
 		err := InsertFromStructure(testStructure, u)
 		assert.NoError(t, err)
 		db.AssertExists(t, "projects", map[string]interface{}{
-			"title":       testStructure[0].ChildProjects[0].Title,
-			"description": testStructure[0].ChildProjects[0].Description,
+			"title":       testStructure[1].Title,
+			"description": testStructure[1].Description,
 		}, false)
 		db.AssertExists(t, "tasks", map[string]interface{}{
-			"title":     testStructure[0].ChildProjects[0].Tasks[5].Title,
-			"bucket_id": testStructure[0].ChildProjects[0].Buckets[0].ID,
+			"title":     testStructure[1].Tasks[5].Title,
+			"bucket_id": testStructure[1].Buckets[0].ID,
 		}, false)
 		db.AssertMissing(t, "tasks", map[string]interface{}{
-			"title":     testStructure[0].ChildProjects[0].Tasks[6].Title,
+			"title":     testStructure[1].Tasks[6].Title,
 			"bucket_id": 1111, // No task with that bucket should exist
 		})
 		db.AssertExists(t, "tasks", map[string]interface{}{
 			"title": testStructure[0].Tasks[0].Title,
 		}, false)
-		assert.NotEqual(t, 0, testStructure[0].ChildProjects[0].Tasks[0].BucketID) // Should get the default bucket
-		assert.NotEqual(t, 0, testStructure[0].ChildProjects[0].Tasks[6].BucketID) // Should get the default bucket
+		assert.NotEqual(t, 0, testStructure[1].Tasks[0].BucketID) // Should get the default bucket
+		assert.NotEqual(t, 0, testStructure[1].Tasks[6].BucketID) // Should get the default bucket
 	})
 }

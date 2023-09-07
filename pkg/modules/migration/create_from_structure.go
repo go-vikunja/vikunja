@@ -223,7 +223,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 			for _, rt := range tasks {
 				// First create the related tasks if they do not exist
-				if _, exists := tasksByOldID[rt.ID]; !exists {
+				if _, exists := tasksByOldID[rt.ID]; !exists || rt.ID == 0 {
 					oldid := rt.ID
 					setBucketOrDefault(rt)
 					rt.ProjectID = t.ProjectID
