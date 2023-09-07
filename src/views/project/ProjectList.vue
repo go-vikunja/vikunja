@@ -95,6 +95,7 @@
 						:can-mark-as-done="canWrite || isSavedFilter(project)"
 						:the-task="t"
 						@taskUpdated="updateTasks"
+						:all-tasks="allTasks"
 					>
 						<template v-if="canWrite">
 							<span class="icon handle">
@@ -120,7 +121,7 @@ export default { name: 'List' }
 </script>
 
 <script setup lang="ts">
-import {ref, computed, nextTick, onMounted} from 'vue'
+import {ref, computed, nextTick, onMounted, watch} from 'vue'
 import draggable from 'zhyswan-vuedraggable'
 import {useRoute, useRouter} from 'vue-router'
 
@@ -160,7 +161,7 @@ const DRAG_OPTIONS = {
 } as const
 
 const {
-	tasks,
+	tasks: allTasks,
 	loading,
 	totalPages,
 	currentPage,
@@ -170,6 +171,13 @@ const {
 	sortByParam,
 } = useTaskList(() => projectId, {position: 'asc' })
 
+const tasks = ref<ITask[]>([])
+watch(
+	allTasks,
+	() => {
+		tasks.value = [...allTasks.value].filter(t => typeof t.relatedTasks?.parenttask === 'undefined')
+	},
+)
 
 const isAlphabeticalSorting = computed(() => {
 	return params.value.sort_by.find(sortBy => sortBy === ALPHABETICAL_SORT) !== undefined

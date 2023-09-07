@@ -1,25 +1,26 @@
 <template>
-	<div 
-		:class="{'is-loading': taskService.loading}" 
-		class="task loader-container"
-		@click.stop.self="openTaskDetail"
-	>
-		<fancycheckbox
-			:disabled="(isArchived || disabled) && !canMarkAsDone"
-			@update:model-value="markAsDone"
-			v-model="task.done"
-		/>
-
-		<ColorBubble
-			v-if="showProjectColor && projectColor !== '' && currentProject?.id !== task.projectId"
-			:color="projectColor"
-			class="mr-1"
-		/>
-
+	<div>
 		<div
-			:class="{ 'done': task.done, 'show-project': showProject && project}"
-			class="tasktext"
+			:class="{'is-loading': taskService.loading}"
+			class="task loader-container"
+			@click.stop.self="openTaskDetail"
 		>
+			<fancycheckbox
+				:disabled="(isArchived || disabled) && !canMarkAsDone"
+				@update:model-value="markAsDone"
+				v-model="task.done"
+			/>
+
+			<ColorBubble
+				v-if="showProjectColor && projectColor !== '' && currentProject?.id !== task.projectId"
+				:color="projectColor"
+				class="mr-1"
+			/>
+
+			<div
+				:class="{ 'done': task.done, 'show-project': showProject && project}"
+				class="tasktext"
+			>
 			<span>
 				<router-link
 					v-if="showProject && typeof project !== 'undefined'"
@@ -38,14 +39,6 @@
 				/>
 			
 				<priority-label :priority="task.priority" :done="task.done"/>
-
-				<!-- Show any parent tasks to make it clear this task is a sub task of something -->
-				<span class="parent-tasks" v-if="typeof task.relatedTasks?.parenttask !== 'undefined'">
-					<template v-for="(pt, i) in task.relatedTasks.parenttask">
-						{{ pt.title }}<template v-if="(i + 1) < task.relatedTasks.parenttask.length">,&nbsp;</template>
-					</template>
-					&rsaquo;
-				</span>
 				
 				<router-link
 					:to="taskDetailRoute"
@@ -57,41 +50,41 @@
 				</router-link>
 			</span>
 
-			<labels
-				v-if="task.labels.length > 0"
-				class="labels ml-2 mr-1"
-				:labels="task.labels"
-			/>
+				<labels
+					v-if="task.labels.length > 0"
+					class="labels ml-2 mr-1"
+					:labels="task.labels"
+				/>
 
-			<assignee-list
-				v-if="task.assignees.length > 0"
-				:assignees="task.assignees"
-				:avatar-size="25"
-				class="ml-1"
-				:inline="true"
-			/>
+				<assignee-list
+					v-if="task.assignees.length > 0"
+					:assignees="task.assignees"
+					:avatar-size="25"
+					class="ml-1"
+					:inline="true"
+				/>
 
-			<!-- FIXME: use popup -->
-			<BaseButton
-				v-if="+new Date(task.dueDate) > 0"
-				class="dueDate"
-				@click.prevent.stop="showDefer = !showDefer"
-				v-tooltip="formatDateLong(task.dueDate)"
-			>
-				<time
-					:datetime="formatISO(task.dueDate)"
-					:class="{'overdue': task.dueDate <= new Date() && !task.done}"
-					class="is-italic"
-					:aria-expanded="showDefer ? 'true' : 'false'"
+				<!-- FIXME: use popup -->
+				<BaseButton
+					v-if="+new Date(task.dueDate) > 0"
+					class="dueDate"
+					@click.prevent.stop="showDefer = !showDefer"
+					v-tooltip="formatDateLong(task.dueDate)"
 				>
-					– {{ $t('task.detail.due', {at: dueDateFormatted}) }}
-				</time>
-			</BaseButton>
-			<CustomTransition name="fade">
-				<defer-task v-if="+new Date(task.dueDate) > 0 && showDefer" v-model="task" ref="deferDueDate"/>
-			</CustomTransition>
+					<time
+						:datetime="formatISO(task.dueDate)"
+						:class="{'overdue': task.dueDate <= new Date() && !task.done}"
+						class="is-italic"
+						:aria-expanded="showDefer ? 'true' : 'false'"
+					>
+						– {{ $t('task.detail.due', {at: dueDateFormatted}) }}
+					</time>
+				</BaseButton>
+				<CustomTransition name="fade">
+					<defer-task v-if="+new Date(task.dueDate) > 0 && showDefer" v-model="task" ref="deferDueDate"/>
+				</CustomTransition>
 
-			<span>
+				<span>
 				<span class="project-task-icon" v-if="task.attachments.length > 0">
 					<icon icon="paperclip"/>
 				</span>
@@ -103,35 +96,51 @@
 				</span>
 			</span>
 
-			<checklist-summary :task="task"/>
+				<checklist-summary :task="task"/>
+			</div>
+
+			<progress
+				class="progress is-small"
+				v-if="task.percentDone > 0"
+				:value="task.percentDone * 100" max="100"
+			>
+				{{ task.percentDone * 100 }}%
+			</progress>
+
+			<router-link
+				v-if="!showProject && currentProject?.id !== task.projectId && project"
+				:to="{ name: 'project.list', params: { projectId: task.projectId } }"
+				class="task-project"
+				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
+			>
+				{{ project.title }}
+			</router-link>
+
+			<BaseButton
+				:class="{'is-favorite': task.isFavorite}"
+				@click="toggleFavorite"
+				class="favorite"
+			>
+				<icon icon="star" v-if="task.isFavorite"/>
+				<icon :icon="['far', 'star']" v-else/>
+			</BaseButton>
+			<slot/>
 		</div>
-
-		<progress
-			class="progress is-small"
-			v-if="task.percentDone > 0"
-			:value="task.percentDone * 100" max="100"
-		>
-			{{ task.percentDone * 100 }}%
-		</progress>
-
-		<router-link
-			v-if="!showProject && currentProject?.id !== task.projectId && project"
-			:to="{ name: 'project.list', params: { projectId: task.projectId } }"
-			class="task-project"
-			v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
-		>
-			{{ project.title }}
-		</router-link>
-
-		<BaseButton
-			:class="{'is-favorite': task.isFavorite}"
-			@click="toggleFavorite"
-			class="favorite"
-		>
-			<icon icon="star" v-if="task.isFavorite"/>
-			<icon :icon="['far', 'star']" v-else/>
-		</BaseButton>
-		<slot/>
+		<template v-if="typeof task.relatedTasks?.subtask !== 'undefined'">
+			<template v-for="subtask in task.relatedTasks.subtask">
+				<template v-if="getTaskById(subtask.id)">
+					<single-task-in-project
+						:key="subtask.id"
+						:the-task="getTaskById(subtask.id)"
+						:show-project-color="showProjectColor"
+						:disabled="disabled"
+						:can-mark-as-done="canMarkAsDone"
+						:all-tasks="allTasks"
+						class="ml-5"
+					/>
+				</template>
+			</template>
+		</template>
 	</div>
 </template>
 
@@ -173,6 +182,7 @@ const {
 	disabled = false,
 	showProjectColor = false,
 	canMarkAsDone = true,
+	allTasks = [],
 } = defineProps<{
 	theTask: ITask,
 	isArchived?: boolean,
@@ -180,7 +190,16 @@ const {
 	disabled?: boolean,
 	showProjectColor?: boolean,
 	canMarkAsDone?: boolean,
+	allTasks?: ITask[],
 }>()
+
+function getTaskById(taskId: number): ITask | undefined {
+	if (typeof allTasks === 'undefined' || allTasks.length === 0) {
+		return null
+	}
+
+	return allTasks.find(t => t.id === taskId)
+}
 
 const emit = defineEmits(['task-updated'])
 
@@ -289,6 +308,7 @@ function hideDeferDueDatePopup(e) {
 }
 
 const taskLink = ref<HTMLElement | null>(null)
+
 function openTaskDetail() {
 	const isTextSelected = window.getSelection().toString()
 	if (!isTextSelected) {
@@ -410,11 +430,11 @@ function openTaskDetail() {
 			opacity: 1;
 		}
 	}
-	
+
 	.favorite:focus {
 		opacity: 1;
 	}
-	
+
 	:deep(.fancycheckbox) {
 		height: 18px;
 		padding-top: 0;
