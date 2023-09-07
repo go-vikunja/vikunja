@@ -17,6 +17,7 @@
 package caldav
 
 import (
+	"code.vikunja.io/api/pkg/db"
 	"errors"
 	"strconv"
 	"strings"
@@ -90,8 +91,12 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 	}
 	// We put the vTodo details in a map to be able to handle them more easily
 	task := make(map[string]ics.IANAProperty)
+	var relation *ics.IANAProperty
 	for _, c := range vTodo.UnknownPropertiesIANAProperties() {
 		task[c.IANAToken] = c
+		if strings.HasPrefix(c.IANAToken, "RELATED-TO") {
+			relation = &c
+		}
 	}
 
 	// Parse the priority
@@ -132,6 +137,19 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 		Updated:     caldavTimeToTimestamp(task["DTSTAMP"]),
 		StartDate:   caldavTimeToTimestamp(task["DTSTART"]),
 		DoneAt:      caldavTimeToTimestamp(task["COMPLETED"]),
+	}
+
+	if relation != nil {
+		s := db.NewSession()
+		defer s.Close()
+
+		subtask, err := models.GetTaskSimpleByUUID(s, relation.Value)
+		if err != nil {
+			return nil, err
+		}
+
+		vTask.RelatedTasks = make(map[models.RelationKind][]*models.Task)
+		vTask.RelatedTasks[models.RelationKindSubtask] = []*models.Task{subtask}
 	}
 
 	if task["STATUS"].Value == "COMPLETED" {

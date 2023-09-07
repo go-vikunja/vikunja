@@ -371,6 +371,11 @@ func (bt *BulkTask) GetTasksByIDs(s *xorm.Session) (err error) {
 	return
 }
 
+func GetTaskSimpleByUUID(s *xorm.Session, uid string) (task *Task, err error) {
+	_, err = s.In("uid", uid).Get(task)
+	return
+}
+
 // GetTasksByUIDs gets all tasks from a bunch of uids
 func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, err error) {
 	tasks = []*Task{}
