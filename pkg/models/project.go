@@ -368,18 +368,20 @@ func getUserProjectsStatement(parentProjectIDs []int64, userID int64, search str
 	}
 
 	var parentCondition builder.Cond
-	parentCondition = builder.Or(
-		builder.IsNull{"l.parent_project_id"},
-		builder.Eq{"l.parent_project_id": 0},
-		// else check for shared sub projects with a parent
-		builder.And(
-			builder.Or(
-				builder.NotNull{"tm2.user_id"},
-				builder.NotNull{"ul.user_id"},
+	if search == "" {
+		parentCondition = builder.Or(
+			builder.IsNull{"l.parent_project_id"},
+			builder.Eq{"l.parent_project_id": 0},
+			// else check for shared sub projects with a parent
+			builder.And(
+				builder.Or(
+					builder.NotNull{"tm2.user_id"},
+					builder.NotNull{"ul.user_id"},
+				),
+				builder.NotNull{"l.parent_project_id"},
 			),
-			builder.NotNull{"l.parent_project_id"},
-		),
-	)
+		)
+	}
 	projectCol := "id"
 	if len(parentProjectIDs) > 0 {
 		parentCondition = builder.In("l.parent_project_id", parentProjectIDs)
