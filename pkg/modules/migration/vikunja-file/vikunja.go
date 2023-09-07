@@ -30,6 +30,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
+	vversion "code.vikunja.io/api/pkg/version"
 
 	"github.com/hashicorp/go-version"
 )
@@ -119,17 +120,22 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 		return fmt.Errorf("could not read version file: %w", err)
 	}
 
-	dumpedVersion, err := version.NewVersion(bufVersion.String())
-	if err != nil {
-		return err
-	}
-	minVersion, err := version.NewVersion("0.20.1+61")
-	if err != nil {
-		return err
-	}
+	versionString := bufVersion.String()
+	if versionString == "dev" && versionString == vversion.Version {
+		log.Debugf(logPrefix + "Importing from dev version")
+	} else {
+		dumpedVersion, err := version.NewVersion(bufVersion.String())
+		if err != nil {
+			return err
+		}
+		minVersion, err := version.NewVersion("0.20.1+61")
+		if err != nil {
+			return err
+		}
 
-	if dumpedVersion.LessThan(minVersion) {
-		return fmt.Errorf("export was created with an older version, need at least %s but the export needs at least %s", dumpedVersion, minVersion)
+		if dumpedVersion.LessThan(minVersion) {
+			return fmt.Errorf("export was created with an older version, need at least %s but the export needs at least %s", dumpedVersion, minVersion)
+		}
 	}
 
 	//////
