@@ -17,13 +17,13 @@
 package caldav
 
 import (
-	"code.vikunja.io/api/pkg/db"
 	"errors"
 	"strconv"
 	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/utils"
@@ -91,11 +91,11 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 	}
 	// We put the vTodo details in a map to be able to handle them more easily
 	task := make(map[string]ics.IANAProperty)
-	var relation *ics.IANAProperty
+	var relation ics.IANAProperty
 	for _, c := range vTodo.UnknownPropertiesIANAProperties() {
 		task[c.IANAToken] = c
 		if strings.HasPrefix(c.IANAToken, "RELATED-TO") {
-			relation = &c
+			relation = c
 		}
 	}
 
@@ -139,7 +139,7 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 		DoneAt:      caldavTimeToTimestamp(task["COMPLETED"]),
 	}
 
-	if relation != nil {
+	if relation.Value != "" {
 		s := db.NewSession()
 		defer s.Close()
 
