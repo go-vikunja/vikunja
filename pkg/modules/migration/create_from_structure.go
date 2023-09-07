@@ -178,15 +178,18 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		}
 	}
 
+	tasksByOldID := make(map[int64]*models.TaskWithComments, len(tasks))
 	// Create all tasks
 	for _, t := range tasks {
 		setBucketOrDefault(&t.Task)
 
+		oldid := t.ID
 		t.ProjectID = project.ID
 		err = t.Create(s, user)
 		if err != nil {
 			return
 		}
+		tasksByOldID[oldid] = t
 
 		log.Debugf("[creating structure] Created task %d", t.ID)
 		if len(t.RelatedTasks) > 0 {
@@ -202,13 +205,15 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 			for _, rt := range tasks {
 				// First create the related tasks if they do not exist
-				if rt.ID == 0 {
+				if _, exists := tasksByOldID[rt.ID]; !exists {
+					oldid := rt.ID
 					setBucketOrDefault(rt)
 					rt.ProjectID = t.ProjectID
 					err = rt.Create(s, user)
 					if err != nil {
 						return
 					}
+					tasksByOldID[oldid] = &models.TaskWithComments{Task: *rt}
 					log.Debugf("[creating structure] Created related task %d", rt.ID)
 				}
 
@@ -218,10 +223,14 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 					OtherTaskID:  rt.ID,
 					RelationKind: kind,
 				}
+				if ttt, exists := tasksByOldID[rt.ID]; exists {
+					taskRel.OtherTaskID = ttt.ID
+				}
 				err = taskRel.Create(s, user)
-				if err != nil {
+				if err != nil && !models.IsErrRelationAlreadyExists(err) {
 					return
 				}
+				err = nil
 
 				log.Debugf("[creating structure] Created task relation between task %d and %d", t.ID, rt.ID)
 
