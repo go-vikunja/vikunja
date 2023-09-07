@@ -147,6 +147,10 @@ const canNestDeeper = computed(() => canNestProjectDeeper(level))
 	}
 }
 
+.is-touch .color-bubble {
+	opacity: 1 !important;
+}
+
 .color-bubble-handle-wrapper {
 	position: relative;
 	width: 1rem;
@@ -174,5 +178,9 @@ const canNestDeeper = computed(() => canNestProjectDeeper(level))
 .saved-filter-icon {
 	color: var(--grey-300) !important;
 	font-size: .75rem;
+}
+
+.is-touch .handle.has-color-bubble {
+	display: none !important;
 }
 </style>
