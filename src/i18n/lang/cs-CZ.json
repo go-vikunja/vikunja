@@ -607,6 +607,9 @@
       "belongsToProject": "This task belongs to project '{project}'",
       "due": "Termín {at}",
       "closePopup": "Zavřít vyskakovací okno",
+      "organization": "Organization",
+      "management": "Management",
+      "dateAndTime": "Date and time",
       "delete": {
         "header": "Smazat tento úkol",
         "text1": "Opravdu chcete odstranit tento úkol?",
@@ -767,7 +770,7 @@
     "repeat": {
       "everyDay": "Každý den",
       "everyWeek": "Každý týden",
-      "everyMonth": "Každý měsíc",
+      "every30d": "Every 30 Days",
       "mode": "Režim opakování",
       "monthly": "Měsíčně",
       "fromCurrentDate": "Od aktuálního data",

@@ -607,6 +607,9 @@
       "belongsToProject": "This task belongs to project '{project}'",
       "due": "Forfalder {at}",
       "closePopup": "Luk pop-up",
+      "organization": "Organization",
+      "management": "Management",
+      "dateAndTime": "Date and time",
       "delete": {
         "header": "Slet denne opgave",
         "text1": "Er du sikker på, at du vil slette denne opgave?",
@@ -767,7 +770,7 @@
     "repeat": {
       "everyDay": "Hver Dag",
       "everyWeek": "Hver Uge",
-      "everyMonth": "Hver Måned",
+      "every30d": "Every 30 Days",
       "mode": "Gentagelsestilstand",
       "monthly": "Månedligt",
       "fromCurrentDate": "Fra Nuværende Dato",

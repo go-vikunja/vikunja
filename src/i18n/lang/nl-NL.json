@@ -607,6 +607,9 @@
       "belongsToProject": "This task belongs to project '{project}'",
       "due": "Vervalt {at}",
       "closePopup": "Close popup",
+      "organization": "Organization",
+      "management": "Management",
+      "dateAndTime": "Date and time",
       "delete": {
         "header": "Verwijder deze taak",
         "text1": "Weet je zeker dat je deze taak wilt verwijderen?",
@@ -767,7 +770,7 @@
     "repeat": {
       "everyDay": "Elke dag",
       "everyWeek": "Elke week",
-      "everyMonth": "Elke maand",
+      "every30d": "Every 30 Days",
       "mode": "Herhaalmodus",
       "monthly": "Maandelijks",
       "fromCurrentDate": "Vanaf huidige datum",

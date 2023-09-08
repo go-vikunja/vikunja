@@ -607,9 +607,9 @@
       "belongsToProject": "Diese Aufgabe gehört zum Projekt „{project}“",
       "due": "Fällig {at}",
       "closePopup": "Popup schließen",
-      "organization": "Organization",
-      "management": "Management",
-      "dateAndTime": "Date and time",
+      "organization": "Organisation",
+      "management": "Verwaltung",
+      "dateAndTime": "Datum und Uhrzeit",
       "delete": {
         "header": "Diese Aufgabe löschen",
         "text1": "Willst du diese Aufgabe wirklich löschen?",
@@ -770,7 +770,7 @@
     "repeat": {
       "everyDay": "Jeden Tag",
       "everyWeek": "Jede Woche",
-      "every30d": "Every 30 Days",
+      "every30d": "Alle 30 Tage",
       "mode": "Wiederholungsmodus",
       "monthly": "Monatlich",
       "fromCurrentDate": "Ab dem aktuellen Datum",

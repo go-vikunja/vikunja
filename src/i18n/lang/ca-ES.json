@@ -607,6 +607,9 @@
       "belongsToProject": "This task belongs to project '{project}'",
       "due": "Due {at}",
       "closePopup": "Close popup",
+      "organization": "Organization",
+      "management": "Management",
+      "dateAndTime": "Date and time",
       "delete": {
         "header": "Delete this task",
         "text1": "Are you sure you want to remove this task?",
@@ -767,7 +770,7 @@
     "repeat": {
       "everyDay": "Every Day",
       "everyWeek": "Every Week",
-      "everyMonth": "Every Month",
+      "every30d": "Every 30 Days",
       "mode": "Repeat mode",
       "monthly": "Monthly",
       "fromCurrentDate": "From Current Date",

@@ -607,9 +607,9 @@
       "belongsToProject": "Diese Aufgabe gehört zum Projekt „{project}“",
       "due": "Fällig bis {at}",
       "closePopup": "Popup schließen",
-      "organization": "Organization",
-      "management": "Management",
-      "dateAndTime": "Date and time",
+      "organization": "Organisation",
+      "management": "Verwaltung",
+      "dateAndTime": "Datum und Uhrzeit",
       "delete": {
         "header": "Die Uufgab chüble",
         "text1": "Bisch du dir sicher, dass du die Uufgab chüblä wetsch?",
@@ -770,7 +770,7 @@
     "repeat": {
       "everyDay": "Jedä Tag",
       "everyWeek": "Jedi Wuche",
-      "every30d": "Every 30 Days",
+      "every30d": "Alle 30 Tage",
       "mode": "Widerholigs Modus",
       "monthly": "Monatlich",
       "fromCurrentDate": "Vom Hüttige Datum",

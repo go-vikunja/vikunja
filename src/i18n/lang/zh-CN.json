@@ -607,6 +607,9 @@
       "belongsToProject": "This task belongs to project '{project}'",
       "due": "截止至 {at}",
       "closePopup": "关闭弹窗",
+      "organization": "Organization",
+      "management": "Management",
+      "dateAndTime": "Date and time",
       "delete": {
         "header": "删除此任务",
         "text1": "确定要移除任务吗？",
@@ -767,7 +770,7 @@
     "repeat": {
       "everyDay": "每天",
       "everyWeek": "每周",
-      "everyMonth": "每月",
+      "every30d": "Every 30 Days",
       "mode": "重复模式",
       "monthly": "每月",
       "fromCurrentDate": "从当前日期",

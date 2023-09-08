@@ -14,7 +14,7 @@
   "demo": {
     "title": "This instance is in demo mode. Do not use this for real data!",
     "everythingWillBeDeleted": "Everything will be deleted in regular intervals!",
-    "accountWillBeDeleted": "Your account will be deleted, including all projects, tasks and attachments you might create."
+    "accountWillBeDeleted": "Ditt konto raderas, inklusive alla projekt, uppgifter och bilagor som du kan ha skapat."
   },
   "404": {
     "title": "Hittades inte",
@@ -158,7 +158,7 @@
         "titleRequired": "The title is required",
         "expired": "This token has expired {ago}.",
         "tokenCreatedSuccess": "Here is your new api token: {token}",
-        "tokenCreatedNotSeeAgain": "Store it in a secure location, you won't see it again!",
+        "tokenCreatedNotSeeAgain": "Förvara den på en säker plats, du kommer aldrig att se den igen!",
         "delete": {
           "header": "Delete this token",
           "text1": "Are you sure you want to delete the token \"{token}\"?",
@@ -423,7 +423,7 @@
     },
     "edit": {
       "header": "Redigera etikett",
-      "forbidden": "You are not allowed to edit this label because you don't own it.",
+      "forbidden": "Du får inte redigera denna etikett eftersom du inte äger den.",
       "success": "The label was successfully updated."
     },
     "deleteSuccess": "The label was successfully deleted.",
@@ -607,9 +607,9 @@
       "belongsToProject": "This task belongs to project '{project}'",
       "due": "Due {at}",
       "closePopup": "Close popup",
-      "organization": "Organization",
+      "organization": "Organisation",
       "management": "Management",
-      "dateAndTime": "Date and time",
+      "dateAndTime": "Datum och tid",
       "delete": {
         "header": "Radera denna uppgift",
         "text1": "Are you sure you want to remove this task?",
