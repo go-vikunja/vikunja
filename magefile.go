@@ -453,9 +453,6 @@ func (Build) Clean() error {
 	if err := os.RemoveAll(BinLocation); err != nil && !os.IsNotExist(err) {
 		return err
 	}
-	if err := os.RemoveAll(swaggerDocsFolderLocation); err != nil && !os.IsNotExist(err) {
-		return err
-	}
 	return nil
 }
 
