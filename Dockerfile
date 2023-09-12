@@ -13,6 +13,7 @@ COPY . ./
 
 ARG TARGETOS TARGETARCH TARGETVARIANT
 
+ENV GOPROXY https://goproxy.kolaente.de
 RUN export PATH=$PATH:$GOPATH/bin && \
 	mage build:clean && \
     mage release:xgo "${TARGETOS}/${TARGETARCH}/${TARGETVARIANT}"
