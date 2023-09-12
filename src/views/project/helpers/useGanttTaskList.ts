@@ -59,7 +59,7 @@ export function useGanttTaskList<F extends Filters>(
 	async function addTask(task: Partial<ITask>) {
 		const newTask = await taskService.create(new TaskModel({...task}))
 		tasks.value.set(newTask.id, newTask)
-	
+
 		return newTask
 	}
 
@@ -77,12 +77,12 @@ export function useGanttTaskList<F extends Filters>(
 		// set in expectation that server update works
 		tasks.value.set(newTask.id, newTask)
 
-		try {	
+		try {
 			const updatedTask = await taskService.update(newTask)
 			// update the task with possible changes from server
 			tasks.value.set(updatedTask.id, updatedTask)
 			success('Saved')
-		} catch(e: any) {
+		} catch (e: any) {
 			error('Something went wrong saving the task')
 			// roll back changes
 			tasks.value.set(task.id, oldTask)

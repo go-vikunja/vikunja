@@ -1,5 +1,5 @@
 import {computed, ref, watch, type Ref} from 'vue'
-import {useRouter, type RouteLocationNormalized, type RouteLocationRaw} from 'vue-router'
+import {useRouter, type RouteLocationNormalized, type RouteLocationRaw, type RouteRecordName} from 'vue-router'
 import equal from 'fast-deep-equal/es6'
 
 export type Filters = Record<string, any>
@@ -9,6 +9,7 @@ export function useRouteFilters<CurrentFilters extends Filters>(
 	getDefaultFilters: (route: RouteLocationNormalized) => CurrentFilters,
 	routeToFilters: (route: RouteLocationNormalized) => CurrentFilters,
 	filtersToRoute: (filters: CurrentFilters) => RouteLocationRaw,
+	routeAllowList: RouteRecordName[] = [],
 ) {
 	const router = useRouter()
 
@@ -21,7 +22,8 @@ export function useRouteFilters<CurrentFilters extends Filters>(
 		(route, oldRoute) => {
 			if (
 				route?.name !== oldRoute?.name ||
-				routeFromFiltersFullPath.value === route.fullPath
+				routeFromFiltersFullPath.value === route.fullPath ||
+				!routeAllowList.includes(route.name ?? '')
 			) {
 				return
 			}
