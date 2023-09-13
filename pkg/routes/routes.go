@@ -574,6 +574,17 @@ func registerAPIRoutes(a *echo.Group) {
 	a.GET("/tokens", apiTokenProvider.ReadAllWeb)
 	a.PUT("/tokens", apiTokenProvider.CreateWeb)
 	a.DELETE("/tokens/:token", apiTokenProvider.DeleteWeb)
+
+	// Webhooks
+	webhookProvider := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.Webhook{}
+		},
+	}
+	a.GET("/project/:project/webhooks", webhookProvider.ReadAllWeb)
+	a.PUT("/project/:project/webhooks", webhookProvider.CreateWeb)
+	a.DELETE("/project/:project/webhooks/:webhook", webhookProvider.DeleteWeb)
+	a.POST("/project/:project/webhooks/:webhook", webhookProvider.UpdateWeb)
 }
 
 func registerMigrations(m *echo.Group) {
