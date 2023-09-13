@@ -36,6 +36,10 @@ func (t *TaskCreatedEvent) Name() string {
 	return "task.created"
 }
 
+func (t *TaskCreatedEvent) ProjectID() int64 {
+	return t.Task.ProjectID
+}
+
 // TaskUpdatedEvent represents an event where a task has been updated
 type TaskUpdatedEvent struct {
 	Task *Task
@@ -47,6 +51,10 @@ func (t *TaskUpdatedEvent) Name() string {
 	return "task.updated"
 }
 
+func (t *TaskUpdatedEvent) ProjectID() int64 {
+	return t.Task.ProjectID
+}
+
 // TaskDeletedEvent represents a TaskDeletedEvent event
 type TaskDeletedEvent struct {
 	Task *Task
@@ -56,6 +64,10 @@ type TaskDeletedEvent struct {
 // Name defines the name for TaskDeletedEvent
 func (t *TaskDeletedEvent) Name() string {
 	return "task.deleted"
+}
+
+func (t *TaskDeletedEvent) ProjectID() int64 {
+	return t.Task.ProjectID
 }
 
 // TaskAssigneeCreatedEvent represents an event where a task has been assigned to a user
@@ -70,6 +82,10 @@ func (t *TaskAssigneeCreatedEvent) Name() string {
 	return "task.assignee.created"
 }
 
+func (t *TaskAssigneeCreatedEvent) ProjectID() int64 {
+	return t.Task.ProjectID
+}
+
 // TaskAssigneeDeletedEvent represents a TaskAssigneeDeletedEvent event
 type TaskAssigneeDeletedEvent struct {
 	Task     *Task
@@ -80,6 +96,10 @@ type TaskAssigneeDeletedEvent struct {
 // Name defines the name for TaskAssigneeDeletedEvent
 func (t *TaskAssigneeDeletedEvent) Name() string {
 	return "task.assignee.deleted"
+}
+
+func (t *TaskAssigneeDeletedEvent) ProjectID() int64 {
+	return t.Task.ProjectID
 }
 
 // TaskCommentCreatedEvent represents an event where a task comment has been created
@@ -94,6 +114,10 @@ func (t *TaskCommentCreatedEvent) Name() string {
 	return "task.comment.created"
 }
 
+func (t *TaskCommentCreatedEvent) ProjectID() int64 {
+	return t.Task.ProjectID
+}
+
 // TaskCommentUpdatedEvent represents a TaskCommentUpdatedEvent event
 type TaskCommentUpdatedEvent struct {
 	Task    *Task
@@ -104,6 +128,10 @@ type TaskCommentUpdatedEvent struct {
 // Name defines the name for TaskCommentUpdatedEvent
 func (t *TaskCommentUpdatedEvent) Name() string {
 	return "task.comment.edited"
+}
+
+func (t *TaskCommentUpdatedEvent) ProjectID() int64 {
+	return t.Task.ProjectID
 }
 
 // TaskCommentDeletedEvent represents a TaskCommentDeletedEvent event
@@ -118,6 +146,10 @@ func (t *TaskCommentDeletedEvent) Name() string {
 	return "task.comment.deleted"
 }
 
+func (t *TaskCommentDeletedEvent) ProjectID() int64 {
+	return t.Task.ProjectID
+}
+
 // TaskAttachmentCreatedEvent represents a TaskAttachmentCreatedEvent event
 type TaskAttachmentCreatedEvent struct {
 	Task       *Task
@@ -128,6 +160,10 @@ type TaskAttachmentCreatedEvent struct {
 // Name defines the name for TaskAttachmentCreatedEvent
 func (t *TaskAttachmentCreatedEvent) Name() string {
 	return "task.attachment.created"
+}
+
+func (t *TaskAttachmentCreatedEvent) ProjectID() int64 {
+	return t.Task.ProjectID
 }
 
 // TaskAttachmentDeletedEvent represents a TaskAttachmentDeletedEvent event
@@ -142,6 +178,10 @@ func (t *TaskAttachmentDeletedEvent) Name() string {
 	return "task.attachment.deleted"
 }
 
+func (t *TaskAttachmentDeletedEvent) ProjectID() int64 {
+	return t.Task.ProjectID
+}
+
 // TaskRelationCreatedEvent represents a TaskRelationCreatedEvent event
 type TaskRelationCreatedEvent struct {
 	Task     *Task
@@ -154,6 +194,10 @@ func (t *TaskRelationCreatedEvent) Name() string {
 	return "task.relation.created"
 }
 
+func (t *TaskRelationCreatedEvent) ProjectID() int64 {
+	return t.Task.ProjectID
+}
+
 // TaskRelationDeletedEvent represents a TaskRelationDeletedEvent event
 type TaskRelationDeletedEvent struct {
 	Task     *Task
@@ -164,6 +208,10 @@ type TaskRelationDeletedEvent struct {
 // Name defines the name for TaskRelationDeletedEvent
 func (t *TaskRelationDeletedEvent) Name() string {
 	return "task.relation.deleted"
+}
+
+func (t *TaskRelationDeletedEvent) ProjectID() int64 {
+	return t.Task.ProjectID
 }
 
 ////////////////////
@@ -188,8 +236,12 @@ type ProjectUpdatedEvent struct {
 }
 
 // Name defines the name for ProjectUpdatedEvent
-func (l *ProjectUpdatedEvent) Name() string {
+func (p *ProjectUpdatedEvent) Name() string {
 	return "project.updated"
+}
+
+func (p *ProjectUpdatedEvent) ProjectID() int64 {
+	return p.Project.ID
 }
 
 // ProjectDeletedEvent represents an event where a project has been deleted
@@ -199,8 +251,12 @@ type ProjectDeletedEvent struct {
 }
 
 // Name defines the name for ProjectDeletedEvent
-func (t *ProjectDeletedEvent) Name() string {
+func (p *ProjectDeletedEvent) Name() string {
 	return "project.deleted"
+}
+
+func (p *ProjectDeletedEvent) ProjectID() int64 {
+	return p.Project.ID
 }
 
 ////////////////////
@@ -215,8 +271,12 @@ type ProjectSharedWithUserEvent struct {
 }
 
 // Name defines the name for ProjectSharedWithUserEvent
-func (l *ProjectSharedWithUserEvent) Name() string {
+func (p *ProjectSharedWithUserEvent) Name() string {
 	return "project.shared.user"
+}
+
+func (p *ProjectSharedWithUserEvent) ProjectID() int64 {
+	return p.Project.ID
 }
 
 // ProjectSharedWithTeamEvent represents an event where a project has been shared with a team
@@ -227,8 +287,12 @@ type ProjectSharedWithTeamEvent struct {
 }
 
 // Name defines the name for ProjectSharedWithTeamEvent
-func (l *ProjectSharedWithTeamEvent) Name() string {
+func (p *ProjectSharedWithTeamEvent) Name() string {
 	return "project.shared.team"
+}
+
+func (p *ProjectSharedWithTeamEvent) ProjectID() int64 {
+	return p.Project.ID
 }
 
 /////////////////

@@ -65,6 +65,22 @@ func RegisterListeners() {
 		events.RegisterListener((&TaskDeletedEvent{}).Name(), &RemoveTaskFromTypesense{})
 		events.RegisterListener((&TaskCreatedEvent{}).Name(), &AddTaskToTypesense{})
 	}
+	RegisterEventForWebhook(&TaskCreatedEvent{})
+	RegisterEventForWebhook(&TaskUpdatedEvent{})
+	RegisterEventForWebhook(&TaskDeletedEvent{})
+	RegisterEventForWebhook(&TaskAssigneeCreatedEvent{})
+	RegisterEventForWebhook(&TaskAssigneeDeletedEvent{})
+	RegisterEventForWebhook(&TaskCommentCreatedEvent{})
+	RegisterEventForWebhook(&TaskCommentUpdatedEvent{})
+	RegisterEventForWebhook(&TaskCommentDeletedEvent{})
+	RegisterEventForWebhook(&TaskAttachmentCreatedEvent{})
+	RegisterEventForWebhook(&TaskAttachmentDeletedEvent{})
+	RegisterEventForWebhook(&TaskRelationCreatedEvent{})
+	RegisterEventForWebhook(&TaskRelationDeletedEvent{})
+	RegisterEventForWebhook(&ProjectUpdatedEvent{})
+	RegisterEventForWebhook(&ProjectDeletedEvent{})
+	RegisterEventForWebhook(&ProjectSharedWithUserEvent{})
+	RegisterEventForWebhook(&ProjectSharedWithTeamEvent{})
 }
 
 //////
@@ -604,6 +620,26 @@ func (s *SendProjectCreatedNotification) Handle(msg *message.Message) (err error
 		if err != nil {
 			return
 		}
+	}
+
+	return nil
+}
+
+// WebhookListener represents a listener
+type WebhookListener struct {
+}
+
+// Name defines the name for the WebhookListener listener
+func (s *WebhookListener) Name() string {
+	return "webhook.listener"
+}
+
+// Handle is executed when the event WebhookListener listens on is fired
+func (s *WebhookListener) Handle(msg *message.Message) (err error) {
+	event := &ProjectUpdatedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
 	}
 
 	return nil

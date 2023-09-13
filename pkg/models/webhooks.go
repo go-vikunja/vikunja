@@ -17,8 +17,10 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+	"sync"
 	"time"
 	"xorm.io/xorm"
 )
@@ -44,6 +46,26 @@ type Webhook struct {
 
 func (w *Webhook) TableName() string {
 	return "webhooks"
+}
+
+type WebhookEvent interface {
+	events.Event
+	ProjectID() int64
+}
+
+var availableWebhookEvents map[string]bool
+var availableWebhookEventsLock *sync.Mutex
+
+func init() {
+	availableWebhookEvents = make(map[string]bool)
+	availableWebhookEventsLock = &sync.Mutex{}
+}
+
+func RegisterEventForWebhook(event WebhookEvent) {
+	availableWebhookEventsLock.Lock()
+	defer availableWebhookEventsLock.Unlock()
+
+	availableWebhookEvents[event.Name()] = true
 }
 
 func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
