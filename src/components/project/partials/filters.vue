@@ -155,7 +155,8 @@
 		</div>
 
 		<template
-			v-if="['filters.create', 'project.edit', 'filter.settings.edit'].includes($route.name as string)">
+			v-if="['filters.create', 'project.edit', 'filter.settings.edit'].includes($route.name as string)"
+		>
 			<div class="field">
 				<label class="label">{{ $t('project.projects') }}</label>
 				<div class="control">
@@ -311,7 +312,7 @@ function prepareFilters() {
 	prepareSingleValue('percent_done', 'percentDone', 'usePercentDone', true)
 	prepareDate('reminders')
 	prepareRelatedObjectFilter('users', 'assignees')
-	prepareRelatedObjectFilter('projects', 'project_id')
+	prepareProjectsFilter()
 
 	prepareSingleValue('labels')
 
@@ -512,6 +513,11 @@ async function prepareRelatedObjectFilter(kind: EntityType, filterName = null, s
 	}
 
 	entities[kind] = await services[servicePrefix].getAll({}, {s: filters.value[filterName]})
+}
+
+async function prepareProjectsFilter() {
+	await prepareRelatedObjectFilter('projects', 'project_id')
+	entities.projects = entities.projects.filter(p => p.id > 0)
 }
 
 function setDoneFilter() {
