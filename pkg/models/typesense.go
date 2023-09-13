@@ -243,6 +243,12 @@ func ReindexAllTasks() (err error) {
 }
 
 func reindexTasks(s *xorm.Session, tasks map[int64]*Task) (err error) {
+
+	if len(tasks) == 0 {
+		log.Infof("No tasks to index")
+		return
+	}
+
 	err = addMoreInfoToTasks(s, tasks, &user.User{ID: 1})
 	if err != nil {
 		return fmt.Errorf("could not fetch more task info: %s", err.Error())
