@@ -329,8 +329,7 @@ func TestProject_DeleteBackgroundFileIfExists(t *testing.T) {
 		err := SetProjectBackground(s, project.ID, file, "")
 		assert.NoError(t, err)
 		err = project.DeleteBackgroundFileIfExists()
-		assert.Error(t, err)
-		assert.True(t, files.IsErrFileDoesNotExist(err))
+		assert.NoError(t, err)
 	})
 	t.Run("project without background", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
