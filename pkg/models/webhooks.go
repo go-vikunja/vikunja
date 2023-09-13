@@ -66,6 +66,9 @@ func RegisterEventForWebhook(event WebhookEvent) {
 	defer availableWebhookEventsLock.Unlock()
 
 	availableWebhookEvents[event.Name()] = true
+	events.RegisterListener(event.Name(), &WebhookListener{
+		EventName: event.Name(),
+	})
 }
 
 func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {

@@ -17,8 +17,11 @@
 package models
 
 import (
+	"bytes"
 	"encoding/json"
+	"net/http"
 	"strconv"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 
@@ -627,22 +630,63 @@ func (s *SendProjectCreatedNotification) Handle(msg *message.Message) (err error
 
 // WebhookListener represents a listener
 type WebhookListener struct {
+	EventName string
 }
 
 // Name defines the name for the WebhookListener listener
-func (s *WebhookListener) Name() string {
+func (wl *WebhookListener) Name() string {
 	return "webhook.listener"
 }
 
+type WebhookPayload struct {
+	EventName string       `json:"event_name"`
+	Time      time.Time    `json:"time"`
+	Data      WebhookEvent `json:"data"`
+}
+
 // Handle is executed when the event WebhookListener listens on is fired
-func (s *WebhookListener) Handle(msg *message.Message) (err error) {
-	event := &ProjectUpdatedEvent{}
+func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
+	var event WebhookEvent
 	err = json.Unmarshal(msg.Payload, event)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	s := db.NewSession()
+	defer s.Close()
+
+	ws := []*Webhook{}
+	err = s.Where("project_id = ?", event.ProjectID()).
+		Find(&ws)
+	if err != nil {
+		return err
+	}
+
+	var webhook *Webhook
+	for _, w := range ws {
+		for _, e := range w.Events {
+			if e == wl.EventName {
+				webhook = w
+				break
+			}
+		}
+
+	}
+
+	if webhook == nil {
+		return nil
+	}
+
+	payload, err := json.Marshal(WebhookPayload{
+		EventName: wl.EventName,
+		Time:      time.Now(),
+		Data:      event,
+	})
+	if err != nil {
+		return err
+	}
+	_, err = http.NewRequest(http.MethodPost, webhook.TargetURL, bytes.NewReader(payload))
+	return
 }
 
 ///////
