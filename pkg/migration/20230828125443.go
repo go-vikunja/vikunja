@@ -38,7 +38,7 @@ func init() {
 		ID:          "20230828125443",
 		Description: "",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(typesenseSync20230828125443{})
+			return tx.CreateTables(typesenseSync20230828125443{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil
