@@ -56,7 +56,8 @@ func (p *Provider) Set(s *xorm.Session, img *background.Image, project *models.P
 	// Remove the old background if one exists
 	if project.BackgroundFileID != 0 {
 		file := files.File{ID: project.BackgroundFileID}
-		if err := file.Delete(); err != nil {
+		err := file.Delete()
+		if err != nil && !files.IsErrFileDoesNotExist(err) {
 			return err
 		}
 	}

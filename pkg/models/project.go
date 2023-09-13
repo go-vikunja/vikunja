@@ -1030,7 +1030,12 @@ func (p *Project) DeleteBackgroundFileIfExists() (err error) {
 	}
 
 	file := files.File{ID: p.BackgroundFileID}
-	return file.Delete()
+	err = file.Delete()
+	if err != nil && files.IsErrFileDoesNotExist(err) {
+		return nil
+	}
+
+	return err
 }
 
 // SetProjectBackground sets a background file as project background in the db

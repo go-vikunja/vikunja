@@ -118,43 +118,9 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		return
 	}
 
-	// Background files + unsplash info
-	if pd.Project.BackgroundFileID != 0 {
-
-		log.Debugf("Duplicating background %d from project %d into %d", pd.Project.BackgroundFileID, pd.ProjectID, pd.Project.ID)
-
-		f := &files.File{ID: pd.Project.BackgroundFileID}
-		if err := f.LoadFileMetaByID(); err != nil {
-			return err
-		}
-		if err := f.LoadFileByID(); err != nil {
-			return err
-		}
-		defer f.File.Close()
-
-		file, err := files.Create(f.File, f.Name, f.Size, doer)
-		if err != nil {
-			return err
-		}
-
-		// Get unsplash info if applicable
-		up, err := GetUnsplashPhotoByFileID(s, pd.Project.BackgroundFileID)
-		if err != nil && files.IsErrFileIsNotUnsplashFile(err) {
-			return err
-		}
-		if up != nil {
-			up.ID = 0
-			up.FileID = file.ID
-			if err := up.Save(s); err != nil {
-				return err
-			}
-		}
-
-		if err := SetProjectBackground(s, pd.Project.ID, file, pd.Project.BackgroundBlurHash); err != nil {
-			return err
-		}
-
-		log.Debugf("Duplicated project background from project %d into %d", pd.ProjectID, pd.Project.ID)
+	err = duplicateProjectBackground(s, pd, doer)
+	if err != nil {
+		return
 	}
 
 	// Rights / Shares
@@ -203,6 +169,54 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 	}
 
 	log.Debugf("Duplicated all link shares from project %d into %d", pd.ProjectID, pd.Project.ID)
+
+	return
+}
+
+func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth) (err error) {
+	if pd.Project.BackgroundFileID == 0 {
+		return
+	}
+
+	log.Debugf("Duplicating background %d from project %d into %d", pd.Project.BackgroundFileID, pd.ProjectID, pd.Project.ID)
+
+	f := &files.File{ID: pd.Project.BackgroundFileID}
+	err = f.LoadFileMetaByID()
+	if err != nil && files.IsErrFileDoesNotExist(err) {
+		pd.Project.BackgroundFileID = 0
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if err := f.LoadFileByID(); err != nil {
+		return err
+	}
+	defer f.File.Close()
+
+	file, err := files.Create(f.File, f.Name, f.Size, doer)
+	if err != nil {
+		return err
+	}
+
+	// Get unsplash info if applicable
+	up, err := GetUnsplashPhotoByFileID(s, pd.Project.BackgroundFileID)
+	if err != nil && !files.IsErrFileIsNotUnsplashFile(err) {
+		return err
+	}
+	if up != nil {
+		up.ID = 0
+		up.FileID = file.ID
+		if err := up.Save(s); err != nil {
+			return err
+		}
+	}
+
+	if err := SetProjectBackground(s, pd.Project.ID, file, pd.Project.BackgroundBlurHash); err != nil {
+		return err
+	}
+
+	log.Debugf("Duplicated project background from project %d into %d", pd.ProjectID, pd.Project.ID)
 
 	return
 }
