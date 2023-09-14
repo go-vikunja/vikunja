@@ -27,16 +27,23 @@ func (w *Webhook) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 }
 
 func (w *Webhook) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	p := &Project{ID: w.ProjectID}
-	return p.CanUpdate(s, a)
+	return w.canDoWebhook(s, a)
 }
 
 func (w *Webhook) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	p := &Project{ID: w.ProjectID}
-	return p.CanUpdate(s, a)
+	return w.canDoWebhook(s, a)
 }
 
 func (w *Webhook) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	return w.canDoWebhook(s, a)
+}
+
+func (w *Webhook) canDoWebhook(s *xorm.Session, a web.Auth) (bool, error) {
+	_, isShareAuth := a.(*LinkSharing)
+	if isShareAuth {
+		return false, nil
+	}
+
 	p := &Project{ID: w.ProjectID}
 	return p.CanUpdate(s, a)
 }
