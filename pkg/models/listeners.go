@@ -658,6 +658,19 @@ func getProjectIDFromAnyEvent(eventPayload map[string]interface{}) int64 {
 		}
 	}
 
+	if project, has := eventPayload["project"]; has {
+		t := project.(map[string]interface{})
+		if projectID, has := t["id"]; has {
+			switch projectID.(type) {
+			case int64:
+				return projectID.(int64)
+			case float64:
+				return int64(projectID.(float64))
+			}
+			return projectID.(int64)
+		}
+	}
+
 	return 0
 }
 
@@ -670,6 +683,10 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 	}
 
 	projectID := getProjectIDFromAnyEvent(event)
+	if projectID == 0 {
+		log.Debugf("event %s does not contain a project id, not handling webhook", wl.EventName)
+		return nil
+	}
 
 	s := db.NewSession()
 	defer s.Close()
@@ -693,6 +710,7 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 	}
 
 	if webhook == nil {
+		log.Debugf("Did not find any webhook for the %s event for project %d, not sending", wl.EventName, projectID)
 		return nil
 	}
 
