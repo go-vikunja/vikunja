@@ -27,8 +27,8 @@ import (
 
 // TaskCreatedEvent represents an event where a task has been created
 type TaskCreatedEvent struct {
-	Task *Task
-	Doer *user.User
+	Task *Task      `json:"task"`
+	Doer *user.User `json:"doer"`
 }
 
 // Name defines the name for TaskCreatedEvent
@@ -42,8 +42,8 @@ func (t *TaskCreatedEvent) ProjectID() int64 {
 
 // TaskUpdatedEvent represents an event where a task has been updated
 type TaskUpdatedEvent struct {
-	Task *Task
-	Doer *user.User
+	Task *Task      `json:"task"`
+	Doer *user.User `json:"doer"`
 }
 
 // Name defines the name for TaskUpdatedEvent
@@ -57,8 +57,8 @@ func (t *TaskUpdatedEvent) ProjectID() int64 {
 
 // TaskDeletedEvent represents a TaskDeletedEvent event
 type TaskDeletedEvent struct {
-	Task *Task
-	Doer *user.User
+	Task *Task      `json:"task"`
+	Doer *user.User `json:"doer"`
 }
 
 // Name defines the name for TaskDeletedEvent
@@ -72,9 +72,9 @@ func (t *TaskDeletedEvent) ProjectID() int64 {
 
 // TaskAssigneeCreatedEvent represents an event where a task has been assigned to a user
 type TaskAssigneeCreatedEvent struct {
-	Task     *Task
-	Assignee *user.User
-	Doer     *user.User
+	Task     *Task      `json:"task"`
+	Assignee *user.User `json:"assignee"`
+	Doer     *user.User `json:"doer"`
 }
 
 // Name defines the name for TaskAssigneeCreatedEvent
@@ -88,9 +88,9 @@ func (t *TaskAssigneeCreatedEvent) ProjectID() int64 {
 
 // TaskAssigneeDeletedEvent represents a TaskAssigneeDeletedEvent event
 type TaskAssigneeDeletedEvent struct {
-	Task     *Task
-	Assignee *user.User
-	Doer     *user.User
+	Task     *Task      `json:"task"`
+	Assignee *user.User `json:"assignee"`
+	Doer     *user.User `json:"doer"`
 }
 
 // Name defines the name for TaskAssigneeDeletedEvent
@@ -104,9 +104,9 @@ func (t *TaskAssigneeDeletedEvent) ProjectID() int64 {
 
 // TaskCommentCreatedEvent represents an event where a task comment has been created
 type TaskCommentCreatedEvent struct {
-	Task    *Task
-	Comment *TaskComment
-	Doer    *user.User
+	Task    *Task        `json:"task"`
+	Comment *TaskComment `json:"comment"`
+	Doer    *user.User   `json:"doer"`
 }
 
 // Name defines the name for TaskCommentCreatedEvent
@@ -120,9 +120,9 @@ func (t *TaskCommentCreatedEvent) ProjectID() int64 {
 
 // TaskCommentUpdatedEvent represents a TaskCommentUpdatedEvent event
 type TaskCommentUpdatedEvent struct {
-	Task    *Task
-	Comment *TaskComment
-	Doer    *user.User
+	Task    *Task        `json:"task"`
+	Comment *TaskComment `json:"comment"`
+	Doer    *user.User   `json:"doer"`
 }
 
 // Name defines the name for TaskCommentUpdatedEvent
@@ -136,9 +136,9 @@ func (t *TaskCommentUpdatedEvent) ProjectID() int64 {
 
 // TaskCommentDeletedEvent represents a TaskCommentDeletedEvent event
 type TaskCommentDeletedEvent struct {
-	Task    *Task
-	Comment *TaskComment
-	Doer    *user.User
+	Task    *Task        `json:"task"`
+	Comment *TaskComment `json:"comment"`
+	Doer    *user.User   `json:"doer"`
 }
 
 // Name defines the name for TaskCommentDeletedEvent
@@ -152,9 +152,9 @@ func (t *TaskCommentDeletedEvent) ProjectID() int64 {
 
 // TaskAttachmentCreatedEvent represents a TaskAttachmentCreatedEvent event
 type TaskAttachmentCreatedEvent struct {
-	Task       *Task
-	Attachment *TaskAttachment
-	Doer       *user.User
+	Task       *Task           `json:"task"`
+	Attachment *TaskAttachment `json:"attachment"`
+	Doer       *user.User      `json:"doer"`
 }
 
 // Name defines the name for TaskAttachmentCreatedEvent
@@ -168,9 +168,9 @@ func (t *TaskAttachmentCreatedEvent) ProjectID() int64 {
 
 // TaskAttachmentDeletedEvent represents a TaskAttachmentDeletedEvent event
 type TaskAttachmentDeletedEvent struct {
-	Task       *Task
-	Attachment *TaskAttachment
-	Doer       *user.User
+	Task       *Task           `json:"task"`
+	Attachment *TaskAttachment `json:"attachment"`
+	Doer       *user.User      `json:"doer"`
 }
 
 // Name defines the name for TaskAttachmentDeletedEvent
@@ -184,9 +184,9 @@ func (t *TaskAttachmentDeletedEvent) ProjectID() int64 {
 
 // TaskRelationCreatedEvent represents a TaskRelationCreatedEvent event
 type TaskRelationCreatedEvent struct {
-	Task     *Task
-	Relation *TaskRelation
-	Doer     *user.User
+	Task     *Task         `json:"task"`
+	Relation *TaskRelation `json:"relation"`
+	Doer     *user.User    `json:"doer"`
 }
 
 // Name defines the name for TaskRelationCreatedEvent
@@ -200,9 +200,9 @@ func (t *TaskRelationCreatedEvent) ProjectID() int64 {
 
 // TaskRelationDeletedEvent represents a TaskRelationDeletedEvent event
 type TaskRelationDeletedEvent struct {
-	Task     *Task
-	Relation *TaskRelation
-	Doer     *user.User
+	Task     *Task         `json:"task"`
+	Relation *TaskRelation `json:"relation"`
+	Doer     *user.User    `json:"doer"`
 }
 
 // Name defines the name for TaskRelationDeletedEvent
@@ -220,8 +220,8 @@ func (t *TaskRelationDeletedEvent) ProjectID() int64 {
 
 // ProjectCreatedEvent represents an event where a project has been created
 type ProjectCreatedEvent struct {
-	Project *Project
-	Doer    *user.User
+	Project *Project   `json:"project"`
+	Doer    *user.User `json:"doer"`
 }
 
 // Name defines the name for ProjectCreatedEvent
@@ -231,8 +231,8 @@ func (l *ProjectCreatedEvent) Name() string {
 
 // ProjectUpdatedEvent represents an event where a project has been updated
 type ProjectUpdatedEvent struct {
-	Project *Project
-	Doer    web.Auth
+	Project *Project `json:"project"`
+	Doer    web.Auth `json:"doer"`
 }
 
 // Name defines the name for ProjectUpdatedEvent
@@ -246,8 +246,8 @@ func (p *ProjectUpdatedEvent) ProjectID() int64 {
 
 // ProjectDeletedEvent represents an event where a project has been deleted
 type ProjectDeletedEvent struct {
-	Project *Project
-	Doer    web.Auth
+	Project *Project `json:"project"`
+	Doer    web.Auth `json:"doer"`
 }
 
 // Name defines the name for ProjectDeletedEvent
@@ -265,9 +265,9 @@ func (p *ProjectDeletedEvent) ProjectID() int64 {
 
 // ProjectSharedWithUserEvent represents an event where a project has been shared with a user
 type ProjectSharedWithUserEvent struct {
-	Project *Project
-	User    *user.User
-	Doer    web.Auth
+	Project *Project   `json:"project"`
+	User    *user.User `json:"user"`
+	Doer    web.Auth   `json:"doer"`
 }
 
 // Name defines the name for ProjectSharedWithUserEvent
@@ -281,9 +281,9 @@ func (p *ProjectSharedWithUserEvent) ProjectID() int64 {
 
 // ProjectSharedWithTeamEvent represents an event where a project has been shared with a team
 type ProjectSharedWithTeamEvent struct {
-	Project *Project
-	Team    *Team
-	Doer    web.Auth
+	Project *Project `json:"project"`
+	Team    *Team    `json:"team"`
+	Doer    web.Auth `json:"doer"`
 }
 
 // Name defines the name for ProjectSharedWithTeamEvent
@@ -301,9 +301,9 @@ func (p *ProjectSharedWithTeamEvent) ProjectID() int64 {
 
 // TeamMemberAddedEvent defines an event where a user is added to a team
 type TeamMemberAddedEvent struct {
-	Team   *Team
-	Member *user.User
-	Doer   *user.User
+	Team   *Team      `json:"team"`
+	Member *user.User `json:"member"`
+	Doer   *user.User `json:"doer"`
 }
 
 // Name defines the name for TeamMemberAddedEvent
@@ -313,8 +313,8 @@ func (t *TeamMemberAddedEvent) Name() string {
 
 // TeamCreatedEvent represents a TeamCreatedEvent event
 type TeamCreatedEvent struct {
-	Team *Team
-	Doer web.Auth
+	Team *Team    `json:"team"`
+	Doer web.Auth `json:"doer"`
 }
 
 // Name defines the name for TeamCreatedEvent
@@ -324,8 +324,8 @@ func (t *TeamCreatedEvent) Name() string {
 
 // TeamDeletedEvent represents a TeamDeletedEvent event
 type TeamDeletedEvent struct {
-	Team *Team
-	Doer web.Auth
+	Team *Team    `json:"team"`
+	Doer web.Auth `json:"doer"`
 }
 
 // Name defines the name for TeamDeletedEvent
@@ -335,7 +335,7 @@ func (t *TeamDeletedEvent) Name() string {
 
 // UserDataExportRequestedEvent represents a UserDataExportRequestedEvent event
 type UserDataExportRequestedEvent struct {
-	User *user.User
+	User *user.User `json:"user"`
 }
 
 // Name defines the name for UserDataExportRequestedEvent

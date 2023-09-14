@@ -639,24 +639,43 @@ func (wl *WebhookListener) Name() string {
 }
 
 type WebhookPayload struct {
-	EventName string       `json:"event_name"`
-	Time      time.Time    `json:"time"`
-	Data      WebhookEvent `json:"data"`
+	EventName string      `json:"event_name"`
+	Time      time.Time   `json:"time"`
+	Data      interface{} `json:"data"`
+}
+
+func getProjectIDFromAnyEvent(eventPayload map[string]interface{}) int64 {
+	if task, has := eventPayload["task"]; has {
+		t := task.(map[string]interface{})
+		if projectID, has := t["project_id"]; has {
+			switch projectID.(type) {
+			case int64:
+				return projectID.(int64)
+			case float64:
+				return int64(projectID.(float64))
+			}
+			return projectID.(int64)
+		}
+	}
+
+	return 0
 }
 
 // Handle is executed when the event WebhookListener listens on is fired
 func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
-	var event WebhookEvent
-	err = json.Unmarshal(msg.Payload, event)
+	var event map[string]interface{}
+	err = json.Unmarshal(msg.Payload, &event)
 	if err != nil {
 		return err
 	}
+
+	projectID := getProjectIDFromAnyEvent(event)
 
 	s := db.NewSession()
 	defer s.Close()
 
 	ws := []*Webhook{}
-	err = s.Where("project_id = ?", event.ProjectID()).
+	err = s.Where("project_id = ?", projectID).
 		Find(&ws)
 	if err != nil {
 		return err
@@ -685,7 +704,14 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 	if err != nil {
 		return err
 	}
-	_, err = http.NewRequest(http.MethodPost, webhook.TargetURL, bytes.NewReader(payload))
+	req, err := http.NewRequest(http.MethodPost, webhook.TargetURL, bytes.NewReader(payload))
+	if err != nil {
+		return err
+	}
+	_, err = http.DefaultClient.Do(req)
+	if err == nil {
+		log.Debugf("Sent webhook payload for webhook %d for event %s", webhook.ID, wl.EventName)
+	}
 	return
 }
 
