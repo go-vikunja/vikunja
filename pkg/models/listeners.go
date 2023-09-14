@@ -18,6 +18,7 @@ package models
 
 import (
 	"bytes"
+	"code.vikunja.io/api/pkg/version"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -726,6 +727,7 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 	if err != nil {
 		return err
 	}
+	req.Header.Add("User-Agent", "Vikunja/"+version.Version)
 	_, err = http.DefaultClient.Do(req)
 	if err == nil {
 		log.Debugf("Sent webhook payload for webhook %d for event %s", webhook.ID, wl.EventName)
