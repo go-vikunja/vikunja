@@ -49,11 +49,6 @@ func (w *Webhook) TableName() string {
 	return "webhooks"
 }
 
-type WebhookEvent interface {
-	events.Event
-	ProjectID() int64
-}
-
 var availableWebhookEvents map[string]bool
 var availableWebhookEventsLock *sync.Mutex
 
@@ -62,7 +57,7 @@ func init() {
 	availableWebhookEventsLock = &sync.Mutex{}
 }
 
-func RegisterEventForWebhook(event WebhookEvent) {
+func RegisterEventForWebhook(event events.Event) {
 	availableWebhookEventsLock.Lock()
 	defer availableWebhookEventsLock.Unlock()
 
