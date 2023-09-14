@@ -20,6 +20,7 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+	"sort"
 	"sync"
 	"time"
 	"xorm.io/xorm"
@@ -69,6 +70,17 @@ func RegisterEventForWebhook(event WebhookEvent) {
 	events.RegisterListener(event.Name(), &WebhookListener{
 		EventName: event.Name(),
 	})
+}
+
+func GetAvailableWebhookEvents() []string {
+	evts := []string{}
+	for e := range availableWebhookEvents {
+		evts = append(evts, e)
+	}
+
+	sort.Strings(evts)
+
+	return evts
 }
 
 func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {

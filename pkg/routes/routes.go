@@ -585,6 +585,7 @@ func registerAPIRoutes(a *echo.Group) {
 	a.PUT("/project/:project/webhooks", webhookProvider.CreateWeb)
 	a.DELETE("/project/:project/webhooks/:webhook", webhookProvider.DeleteWeb)
 	a.POST("/project/:project/webhooks/:webhook", webhookProvider.UpdateWeb)
+	a.GET("/webhooks/events", apiv1.GetAvailableWebhookEvents)
 }
 
 func registerMigrations(m *echo.Group) {
