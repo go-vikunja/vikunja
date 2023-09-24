@@ -12,9 +12,9 @@
     }
   },
   "demo": {
-    "title": "This instance is in demo mode. Do not use this for real data!",
-    "everythingWillBeDeleted": "Everything will be deleted in regular intervals!",
-    "accountWillBeDeleted": "Your account will be deleted, including all projects, tasks and attachments you might create."
+    "title": "Ez a példány demo módban van. Ne használja ezt valós adatokhoz!",
+    "everythingWillBeDeleted": "Minden törlésre kerül rendszeres időközönként!",
+    "accountWillBeDeleted": "Fiókja törlésre kerül, beleértve az esetlegesen létrehozott projekteket, feladatokat és mellékleteket."
   },
   "404": {
     "title": "Nem található",
@@ -146,29 +146,29 @@
         }
       },
       "apiTokens": {
-        "title": "API Tokens",
-        "general": "API tokens allow you to use Vikunja's API without user credentials.",
-        "apiDocs": "Check out the api docs",
-        "createAToken": "Create a token",
-        "createToken": "Create token",
-        "30d": "30 Days",
-        "60d": "60 Days",
-        "90d": "90 Days",
-        "permissionExplanation": "Permissions allow you to scope what an api token is allowed to do.",
-        "titleRequired": "The title is required",
-        "expired": "This token has expired {ago}.",
-        "tokenCreatedSuccess": "Here is your new api token: {token}",
-        "tokenCreatedNotSeeAgain": "Store it in a secure location, you won't see it again!",
+        "title": "API Tokenek",
+        "general": "Az API tokenek lehetővé teszik a Vikunja API használatát felhasználói hitelesítő adatok nélkül.",
+        "apiDocs": "Nézze meg az API dokumentációt",
+        "createAToken": "Token létrehozása",
+        "createToken": "Token létrehozása",
+        "30d": "30 nap",
+        "60d": "60 nap",
+        "90d": "90 nap",
+        "permissionExplanation": "Az engedélyek lehetővé teszik annak hatókörét, hogy egy API Token mire jogosult.",
+        "titleRequired": "A cím kötelező",
+        "expired": "Ez a token lejárt {ago}.",
+        "tokenCreatedSuccess": "Íme az új API tokenje: {token}",
+        "tokenCreatedNotSeeAgain": "Tárolja el biztonságos helyen, többé nem fogja látni!",
         "delete": {
-          "header": "Delete this token",
-          "text1": "Are you sure you want to delete the token \"{token}\"?",
-          "text2": "This will revoke access to all applications or integrations using it. You cannot undo this."
+          "header": "Token törlése",
+          "text1": "Biztos benne, hogy törölni akarja ezt a tokent \"{token}\"?",
+          "text2": "Ezzel megvonja a hozzáférést az összes ezt használó alkalmazáshoz vagy integrációhoz. Ezt nem tudod visszavonni."
         },
         "attributes": {
-          "title": "Title",
-          "titlePlaceholder": "Enter a title you will recognize later",
-          "expiresAt": "Expires at",
-          "permissions": "Permissions"
+          "title": "Cím",
+          "titlePlaceholder": "Adjon meg egy címet, amelyet később felismer",
+          "expiresAt": "Lejárat ekkor",
+          "permissions": "Jogosultságok"
         }
       }
     },
@@ -336,9 +336,9 @@
       "doneBucketHint": "Az ebbe a csoportba helyezett összes feladat automatikusan készként lesz megjelölve.",
       "doneBucketHintExtended": "A kész csoportba áthelyezett összes feladat automatikusan készként lesz megjelölve. A máshonnan elvégzettként megjelölt összes feladat is átkerül.",
       "doneBucketSavedSuccess": "Az elkészült vödör sikeresen elmentve.",
-      "defaultBucket": "Default bucket",
-      "defaultBucketHint": "When creating tasks without specifying a bucket, they will be added to this bucket.",
-      "defaultBucketSavedSuccess": "The default bucket has been saved successfully.",
+      "defaultBucket": "Alapértelmezett vödör",
+      "defaultBucketHint": "Mikor feladatokat hoz létre a vödör kiválasztása nélkül, a rendszer hozzáadja őket ehhez a vödörhöz.",
+      "defaultBucketSavedSuccess": "Az alapértelmezett vödör sikeresen elmentve.",
       "deleteLast": "Az utolsó vödröt nem lehet eltávolítani.",
       "addTaskPlaceholder": "Adja meg az új feladatcímet…",
       "addTask": "Feladat hozzáadása",
@@ -607,9 +607,9 @@
       "belongsToProject": "Ez a feladat a(z) „{project}” projekthez tartozik",
       "due": "Határidő {at}",
       "closePopup": "Felugró ablak bezárása",
-      "organization": "Organization",
-      "management": "Management",
-      "dateAndTime": "Date and time",
+      "organization": "Szervezet",
+      "management": "Menedzsment",
+      "dateAndTime": "Dátum és idő",
       "delete": {
         "header": "Feladat törlése",
         "text1": "Biztos törölni akarod ezt a feladatot?",
@@ -770,7 +770,7 @@
     "repeat": {
       "everyDay": "Minden nap",
       "everyWeek": "Minden héten",
-      "every30d": "Every 30 Days",
+      "every30d": "30 naponta",
       "mode": "Ismétlés típusa",
       "monthly": "Havi",
       "fromCurrentDate": "Aktuális dátumtól",
@@ -918,7 +918,7 @@
     "urlPlaceholder": "Például: https://localhost:3456",
     "change": "csere",
     "use": "A Vikunja telepítés használata itt: {0}",
-    "error": "Could not find or use Vikunja installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
+    "error": "Nem található, vagy nem használható a Vikunja telepítése a(z) \"{domain}\" címen. Kérjük, ellenőrizze, hogy az url formátuma megfelelő-e, és közvetlenül elérheti-e, majd próbálja újra.",
     "success": "A Vikunja telepítés használata itt: {domain}",
     "urlRequired": "Az URL megadása kötelező."
   },
