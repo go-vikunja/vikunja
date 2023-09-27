@@ -42,7 +42,7 @@ steps:
 #        - .cache
 
   - name: dependencies
-    image: node:20.5-alpine
+    image: node:20.7-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -55,7 +55,7 @@ steps:
 #      - restore-cache
 
   - name: lint
-    image: node:20.5-alpine
+    image: node:20.7-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -66,7 +66,7 @@ steps:
       - dependencies
 
   - name: build-prod
-    image: node:20.5-alpine
+    image: node:20.7-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -77,7 +77,7 @@ steps:
       - dependencies
 
   - name: test-unit
-    image: node:20.5-alpine
+    image: node:20.7-alpine
     pull: always
     commands:
       - corepack enable && pnpm config set store-dir .cache/pnpm
@@ -87,7 +87,7 @@ steps:
 
   - name: typecheck
     failure: ignore
-    image: node:20.5-alpine
+    image: node:20.7-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -202,7 +202,7 @@ steps:
 #        - .cache
 
   - name: build
-    image: node:20.5-alpine
+    image: node:20.7-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -285,7 +285,7 @@ steps:
 #        - .cache
 
   - name: build
-    image: node:20.5-alpine
+    image: node:20.7-alpine
     pull: always
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
@@ -532,6 +532,6 @@ steps:
         src/i18n/lang/en.json: en.json
 ---
 kind: signature
-hmac: 8df53c07dc07c8a22c4aca9effd0ef8335cbed6ed55c00caeb335e6bc15458a6
+hmac: 53db9cca5f819e82969d6161c5e921d9988193f60bceacdf1a677dfea71ce6f3
 
 ...

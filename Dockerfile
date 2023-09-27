@@ -3,7 +3,7 @@
 #  │─││ │││  │ │
 #  ┘─┘┘─┘┘┘─┘┘─┘
 
-FROM --platform=$BUILDPLATFORM node:20.5-alpine AS builder
+FROM --platform=$BUILDPLATFORM node:20.7-alpine AS builder
 
 WORKDIR /build
 
