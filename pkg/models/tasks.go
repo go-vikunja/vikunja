@@ -1081,8 +1081,13 @@ func recalculateTaskKanbanPositions(s *xorm.Session, bucketID int64) (err error)
 
 		currentPosition := maxPosition / float64(len(allTasks)) * (float64(i + 1))
 
+		// Here we use "NoAutoTime() to prevent the ORM from updating column "updated" automatically.
+		// Otherwise, this signals to CalDAV clients that the task has changed, which is not the case.
+		// Consequence: when synchronizing a list of tasks, the first one immediately changes the date of all the
+		// following ones from the same batch, which are then unable to be updated.
 		_, err = s.Cols("kanban_position").
 			Where("id = ?", task.ID).
+			NoAutoTime().
 			Update(&Task{KanbanPosition: currentPosition})
 		if err != nil {
 			return
@@ -1109,8 +1114,13 @@ func recalculateTaskPositions(s *xorm.Session, projectID int64) (err error) {
 
 		currentPosition := maxPosition / float64(len(allTasks)) * (float64(i + 1))
 
+		// Here we use "NoAutoTime() to prevent the ORM from updating column "updated" automatically.
+		// Otherwise, this signals to CalDAV clients that the task has changed, which is not the case.
+		// Consequence: when synchronizing a list of tasks, the first one immediately changes the date of all the
+		// following ones from the same batch, which are then unable to be updated.
 		_, err = s.Cols("position").
 			Where("id = ?", task.ID).
+			NoAutoTime().
 			Update(&Task{Position: currentPosition})
 		if err != nil {
 			return
