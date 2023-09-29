@@ -17,7 +17,9 @@ const spaceRegex = /^ */
  * relation between each other.
  */
 export function parseSubtasksViaIndention(taskTitles: string, prefixMode: PrefixMode): TaskWithParent[] {
-	let titles = taskTitles.split(/[\r\n]+/)
+	let titles = taskTitles
+		.split(/[\r\n]+/)
+		.filter(t => t.replace(/\s/g, '').length > 0) // Remove titles which are empty or only contain spaces / tabs
 	
 	if (titles.length == 0) {
 		return []
