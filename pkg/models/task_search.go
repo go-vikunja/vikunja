@@ -374,9 +374,12 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 		Q:                opts.search,
 		QueryBy:          "title, identifier, description, comments.comment",
 		Page:             pointer.Int(opts.page),
-		PerPage:          pointer.Int(opts.perPage),
 		ExhaustiveSearch: pointer.True(),
 		FilterBy:         pointer.String(strings.Join(filterBy, " && ")),
+	}
+
+	if opts.perPage > 0 {
+		params.PerPage = pointer.Int(opts.perPage)
 	}
 
 	if sortby != "" {
