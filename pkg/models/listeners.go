@@ -63,6 +63,7 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskRelationDeletedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
 	if config.TypesenseEnabled.GetBool() {
 		events.RegisterListener((&TaskDeletedEvent{}).Name(), &RemoveTaskFromTypesense{})
+		events.RegisterListener((&TaskCreatedEvent{}).Name(), &AddTaskToTypesense{})
 	}
 }
 
@@ -504,6 +505,38 @@ func (s *RemoveTaskFromTypesense) Handle(msg *message.Message) (err error) {
 		Document(strconv.FormatInt(event.Task.ID, 10)).
 		Delete()
 	return err
+}
+
+// AddTaskToTypesense  represents a listener
+type AddTaskToTypesense struct {
+}
+
+// Name defines the name for the AddTaskToTypesense listener
+func (l *AddTaskToTypesense) Name() string {
+	return "add.task.to.typesense"
+}
+
+// Handle is executed when the event AddTaskToTypesense listens on is fired
+func (l *AddTaskToTypesense) Handle(msg *message.Message) (err error) {
+	event := &TaskCreatedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("New task %d created, adding to typesense…", event.Task.ID)
+
+	s := db.NewSession()
+	defer s.Close()
+	ttask, err := getTypesenseTaskForTask(s, event.Task, nil)
+	if err != nil {
+		return err
+	}
+
+	_, err = typesenseClient.Collection("tasks").
+		Documents().
+		Create(ttask)
+	return
 }
 
 ///////

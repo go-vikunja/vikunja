@@ -247,6 +247,36 @@ func ReindexAllTasks() (err error) {
 	return
 }
 
+func getTypesenseTaskForTask(s *xorm.Session, task *Task, projectsCache map[int64]*Project) (ttask *typesenseTask, err error) {
+	ttask = convertTaskToTypesenseTask(task)
+
+	var p *Project
+	if projectsCache == nil {
+		p, err = GetProjectSimpleByID(s, task.ProjectID)
+		if err != nil {
+			return nil, fmt.Errorf("could not fetch project %d: %s", task.ProjectID, err.Error())
+		}
+	} else {
+		var has bool
+		p, has = projectsCache[task.ProjectID]
+		if !has {
+			p, err = GetProjectSimpleByID(s, task.ProjectID)
+			if err != nil {
+				return nil, fmt.Errorf("could not fetch project %d: %s", task.ProjectID, err.Error())
+			}
+			projectsCache[task.ProjectID] = p
+		}
+	}
+
+	comment := &TaskComment{TaskID: task.ID}
+	ttask.Comments, _, _, err = comment.ReadAll(s, &user.User{ID: p.OwnerID}, "", -1, -1)
+	if err != nil {
+		return nil, fmt.Errorf("could not fetch comments for task %d: %s", task.ID, err.Error())
+	}
+
+	return
+}
+
 func reindexTasks(s *xorm.Session, tasks map[int64]*Task) (err error) {
 
 	if len(tasks) == 0 {
@@ -263,24 +293,13 @@ func reindexTasks(s *xorm.Session, tasks map[int64]*Task) (err error) {
 
 	typesenseTasks := []interface{}{}
 	for _, task := range tasks {
-		searchTask := convertTaskToTypesenseTask(task)
 
-		p, has := projects[task.ProjectID]
-		if !has {
-			p, err = GetProjectSimpleByID(s, task.ProjectID)
-			if err != nil {
-				return fmt.Errorf("could not fetch project %d: %s", task.ProjectID, err.Error())
-			}
-			projects[task.ProjectID] = p
-		}
-
-		comment := &TaskComment{TaskID: task.ID}
-		searchTask.Comments, _, _, err = comment.ReadAll(s, &user.User{ID: p.OwnerID}, "", -1, -1)
+		ttask, err := getTypesenseTaskForTask(s, task, projects)
 		if err != nil {
-			return fmt.Errorf("could not fetch comments for task %d: %s", task.ID, err.Error())
+			return err
 		}
 
-		typesenseTasks = append(typesenseTasks, searchTask)
+		typesenseTasks = append(typesenseTasks, ttask)
 	}
 
 	_, err = typesenseClient.Collection("tasks").
@@ -487,6 +506,7 @@ func SyncUpdatedTasksIntoTypesense() (err error) {
 
 	err = s.
 		Where("updated >= ?", lastSync.SyncStartedAt).
+		And("updated != created"). // new tasks are already indexed via the event handler
 		Find(tasks)
 	if err != nil {
 		_ = s.Rollback()
