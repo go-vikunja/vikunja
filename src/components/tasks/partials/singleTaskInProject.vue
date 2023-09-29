@@ -25,7 +25,7 @@
 				<router-link
 					v-if="showProject && typeof project !== 'undefined'"
 					:to="{ name: 'project.list', params: { projectId: task.projectId } }"
-					class="task-project"
+					class="task-project mr-1"
 					:class="{'mr-2': task.hexColor !== ''}"
 					v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
 				>
