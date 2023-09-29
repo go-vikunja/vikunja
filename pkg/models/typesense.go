@@ -226,6 +226,11 @@ func ReindexAllTasks() (err error) {
 		return fmt.Errorf("could not get all tasks: %s", err.Error())
 	}
 
+	err = indexDummyTask()
+	if err != nil {
+		return fmt.Errorf("could not index dummy task: %w", err)
+	}
+
 	err = reindexTasks(s, tasks)
 	if err != nil {
 		return fmt.Errorf("could not reindex all tasks: %s", err.Error())
@@ -290,6 +295,82 @@ func reindexTasks(s *xorm.Session, tasks map[int64]*Task) (err error) {
 	}
 
 	return nil
+}
+
+func indexDummyTask() (err error) {
+	// The initial sync should contain one dummy task with all related fields populated so that typesense
+	// creates the indexes properly. A little hacky, but gets the job done.
+	dummyTask := &typesenseTask{
+		ID:      "-100",
+		Title:   "Dummytask",
+		Created: time.Now().Unix(),
+		Updated: time.Now().Unix(),
+		Reminders: []*TaskReminder{
+			{
+				ID:             -10,
+				TaskID:         -100,
+				Reminder:       time.Now(),
+				RelativePeriod: 10,
+				RelativeTo:     ReminderRelationDueDate,
+				Created:        time.Now(),
+			},
+		},
+		Assignees: []*user.User{
+			{
+				ID:       -100,
+				Username: "dummy",
+				Name:     "dummy",
+				Email:    "dummy@vikunja",
+				Created:  time.Now(),
+				Updated:  time.Now(),
+			},
+		},
+		Labels: []*Label{
+			{
+				ID:          -110,
+				Title:       "dummylabel",
+				Description: "Lorem Ipsum Dummy",
+				HexColor:    "000000",
+				Created:     time.Now(),
+				Updated:     time.Now(),
+			},
+		},
+		Attachments: []*TaskAttachment{
+			{
+				ID:      -120,
+				TaskID:  -100,
+				Created: time.Now(),
+			},
+		},
+		Comments: []*TaskComment{
+			{
+				ID:      -220,
+				Comment: "Lorem Ipsum Dummy",
+				Created: time.Now(),
+				Updated: time.Now(),
+				Author: &user.User{
+					ID:       -100,
+					Username: "dummy",
+					Name:     "dummy",
+					Email:    "dummy@vikunja",
+					Created:  time.Now(),
+					Updated:  time.Now(),
+				},
+			},
+		},
+	}
+
+	_, err = typesenseClient.Collection("tasks").
+		Documents().
+		Create(dummyTask)
+	if err != nil {
+		return
+	}
+
+	_, err = typesenseClient.Collection("tasks").
+		Document(dummyTask.ID).
+		Delete()
+	return
 }
 
 type typesenseTask struct {
