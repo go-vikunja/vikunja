@@ -226,15 +226,20 @@ export const useAuthStore = defineStore('auth', () => {
 		const jwt = getToken()
 		let isAuthenticated = false
 		if (jwt) {
-			const base64 = jwt
-				.split('.')[1]
-				.replace('-', '+')
-				.replace('_', '/')
-			const info = new UserModel(JSON.parse(atob(base64)))
-			const ts = Math.round((new Date()).getTime() / MILLISECONDS_A_SECOND)
-			isAuthenticated = info.exp >= ts
-			// Settings should only be loaded from the api request, not via the jwt
-			setUser(info, false)
+			try {
+				const base64 = jwt
+					.split('.')[1]
+					.replace('-', '+')
+					.replace('_', '/')
+				const info = new UserModel(JSON.parse(atob(base64)))
+				const ts = Math.round((new Date()).getTime() / MILLISECONDS_A_SECOND)
+
+				isAuthenticated = info.exp >= ts
+				// Settings should only be loaded from the api request, not via the jwt
+				setUser(info, false)
+			} catch (e) {
+				logout()
+			}
 
 			if (isAuthenticated) {
 				await refreshUserInfo()
@@ -292,10 +297,13 @@ export const useAuthStore = defineStore('auth', () => {
 
 			return newUser
 		} catch (e) {
-			if(e?.response?.data?.message === 'invalid or expired jwt') {
-				logout()
+			if(e?.response?.status === 401 ||
+				e?.response?.data?.message === 'missing, malformed, expired or otherwise invalid token provided') {
+				await logout()
 				return
 			}
+			
+			console.log('continuerd')
 			
 			const cause = {e}
 			
