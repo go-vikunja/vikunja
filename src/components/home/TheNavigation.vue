@@ -27,10 +27,7 @@
 		</div>
 
 		<div class="navbar-end">
-			<BaseButton @click="openQuickActions" class="trigger-button" v-shortcut="'Control+k'"
-				:title="$t('keyboardShortcuts.quickSearch')">
-				<icon icon="search" />
-			</BaseButton>
+			<OpenQuickActions/>
 			<Notifications />
 			<dropdown>
 				<template #trigger="{ toggleOpen, open }">
@@ -80,6 +77,7 @@ import Notifications from '@/components/notifications/notifications.vue'
 import Logo from '@/components/home/Logo.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import MenuButton from '@/components/home/MenuButton.vue'
+import OpenQuickActions from '@/components/misc/OpenQuickActions.vue'
 
 import { getProjectTitle } from '@/helpers/getProjectTitle'
 
@@ -98,10 +96,6 @@ const authStore = useAuthStore()
 const configStore = useConfigStore()
 const imprintUrl = computed(() => configStore.legal.imprintUrl)
 const privacyPolicyUrl = computed(() => configStore.legal.privacyPolicyUrl)
-
-function openQuickActions() {
-	baseStore.setQuickActionsActive(true)
-}
 </script>
 
 <style lang="scss" scoped>
