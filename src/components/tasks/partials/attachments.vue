@@ -37,8 +37,8 @@
 			>
 				<div class="filename">
 					{{ a.file.name }}
-					<span 
-						v-if="task.coverImageAttachmentId === a.id" 
+					<span
+						v-if="task.coverImageAttachmentId === a.id"
 						class="is-task-cover"
 					>
 						{{ $t('task.attachment.usedAsCover') }}
@@ -115,18 +115,20 @@
 		</x-button>
 
 		<!-- Dropzone -->
-		<div
-			:class="{ hidden: !isOverDropZone }"
-			class="dropzone"
-			v-if="editEnabled"
-		>
-			<div class="drop-hint">
-				<div class="icon">
-					<icon icon="cloud-upload-alt"/>
+		<Teleport to="body">
+			<div
+				:class="{ hidden: !isOverDropZone }"
+				class="dropzone"
+				v-if="editEnabled"
+			>
+				<div class="drop-hint">
+					<div class="icon">
+						<icon icon="cloud-upload-alt"/>
+					</div>
+					<div class="hint">{{ $t('task.attachment.drop') }}</div>
 				</div>
-				<div class="hint">{{ $t('task.attachment.drop') }}</div>
 			</div>
-		</div>
+		</Teleport>
 
 		<!-- Delete modal -->
 		<modal
@@ -323,7 +325,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 
 .dropzone {
 	position: fixed;
-	background: rgba(250, 250, 250, 0.8);
+	background: hsla(var(--grey-100-hsl), 0.8);
 	top: 0;
 	left: 0;
 	bottom: 0;
@@ -356,11 +358,11 @@ async function setCoverImage(attachment: IAttachment | null) {
 
 	.hint {
 		margin: .5rem auto 2rem;
-		border-radius: 2px;
+		border-radius: $radius;
 		box-shadow: var(--shadow-md);
 		background: var(--primary);
 		padding: 1rem;
-		color: var(--white);
+		color: $white; // Should always be white because of the background, regardless of the theme
 		width: 100%;
 		max-width: 300px;
 	}
