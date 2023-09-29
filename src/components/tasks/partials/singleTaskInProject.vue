@@ -12,7 +12,7 @@
 			/>
 
 			<ColorBubble
-				v-if="showProjectColor && projectColor !== '' && currentProject?.id !== task.projectId"
+				v-if="!showProjectSeparately && projectColor !== '' && currentProject?.id !== task.projectId"
 				:color="projectColor"
 				class="mr-1"
 			/>
@@ -107,8 +107,14 @@
 				{{ task.percentDone * 100 }}%
 			</progress>
 
+			<ColorBubble
+				v-if="showProjectSeparately && projectColor !== '' && currentProject?.id !== task.projectId"
+				:color="projectColor"
+				class="mr-1"
+			/>
+			
 			<router-link
-				v-if="!showProject && currentProject?.id !== task.projectId && project"
+				v-if="showProjectSeparately"
 				:to="{ name: 'project.list', params: { projectId: task.projectId } }"
 				class="task-project"
 				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
@@ -132,7 +138,6 @@
 					<single-task-in-project
 						:key="subtask.id"
 						:the-task="getTaskById(subtask.id)"
-						:show-project-color="showProjectColor"
 						:disabled="disabled"
 						:can-mark-as-done="canMarkAsDone"
 						:all-tasks="allTasks"
@@ -180,7 +185,6 @@ const {
 	isArchived = false,
 	showProject = false,
 	disabled = false,
-	showProjectColor = false,
 	canMarkAsDone = true,
 	allTasks = [],
 } = defineProps<{
@@ -188,7 +192,6 @@ const {
 	isArchived?: boolean,
 	showProject?: boolean,
 	disabled?: boolean,
-	showProjectColor?: boolean,
 	canMarkAsDone?: boolean,
 	allTasks?: ITask[],
 }>()
@@ -231,6 +234,8 @@ const taskStore = useTaskStore()
 
 const project = computed(() => projectStore.projects[task.value.projectId])
 const projectColor = computed(() => project.value ? project.value?.hexColor : '')
+
+const showProjectSeparately = computed(() => !showProject && currentProject.value?.id !== task.value.projectId && project.value)
 
 const currentProject = computed(() => {
 	return typeof baseStore.currentProject === 'undefined' ? {
