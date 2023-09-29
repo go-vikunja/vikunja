@@ -278,7 +278,7 @@ async function removeBackground() {
 	background: rgba(0, 0, 0, 0.5);
 	font-size: .75rem;
 	font-weight: bold;
-	color: var(--white);
+	color: $white;
 	transition: opacity $transition;
 }
 .image-search__result-item:hover .image-search__info {
