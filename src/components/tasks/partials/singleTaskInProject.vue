@@ -38,7 +38,7 @@
 					class="mr-1"
 				/>
 			
-				<priority-label :priority="task.priority" :done="task.done"/>
+				<priority-label :priority="task.priority" :done="task.done" class="pr-2"/>
 				
 				<router-link
 					:to="taskDetailRoute"

@@ -14,7 +14,7 @@
 			<template v-if="priority === priorities.URGENT">{{ $t('task.priority.urgent') }}</template>
 			<template v-if="priority === priorities.DO_NOW">{{ $t('task.priority.doNow') }}</template>
 		</span>
-		<span class="icon" v-if="priority === priorities.DO_NOW">
+		<span class="icon pr-0" v-if="priority === priorities.DO_NOW">
 			<icon icon="exclamation"/>
 		</span>
 	</span>
