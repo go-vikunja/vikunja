@@ -103,3 +103,6 @@ issues:
     - text: 'string `labels` has 3 occurrences, make it a constant'
       linters:
         - goconst
+    - text: 'string `off` has 6 occurrences, make it a constant'
+      linters:
+        - goconst

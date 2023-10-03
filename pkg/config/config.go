@@ -19,7 +19,6 @@ package config
 import (
 	"crypto/rand"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -29,6 +28,7 @@ import (
 	"time"
 	_ "time/tzdata" // Imports time zone data instead of relying on the os
 
+	"code.vikunja.io/api/pkg/log"
 	"github.com/spf13/viper"
 )
 
@@ -400,13 +400,17 @@ func InitConfig() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
+	// Just load environment variables
+	_ = viper.ReadInConfig()
+	log.ConfigLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString())
+
 	// Load the config file
 	viper.AddConfigPath(ServiceRootpath.GetString())
 	viper.AddConfigPath("/etc/vikunja/")
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Printf("No home directory found, not using config from ~/.config/vikunja/. Error was: %s\n", err.Error())
+		log.Debugf("No home directory found, not using config from ~/.config/vikunja/. Error was: %s\n", err.Error())
 	} else {
 		viper.AddConfigPath(path.Join(homeDir, ".config", "vikunja"))
 	}
@@ -415,15 +419,18 @@ func InitConfig() {
 	viper.SetConfigName("config")
 
 	err = viper.ReadInConfig()
+
 	if viper.ConfigFileUsed() != "" {
-		log.Printf("Using config file: %s", viper.ConfigFileUsed())
+		log.Infof("Using config file: %s", viper.ConfigFileUsed())
 
 		if err != nil {
-			log.Println(err.Error())
-			log.Println("Using default config.")
+			log.Warning(err.Error())
+			log.Warning("Using default config.")
+		} else {
+			log.ConfigLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString())
 		}
 	} else {
-		log.Println("No config file found, using default or config from environment variables.")
+		log.Info("No config file found, using default or config from environment variables.")
 	}
 
 	if RateLimitStore.GetString() == "keyvalue" {
@@ -455,7 +462,7 @@ func InitConfig() {
 	}
 
 	if ServiceEnableMetrics.GetBool() {
-		log.Println("WARNING: service.enablemetrics is deprecated and will be removed in a future release. Please use metrics.enable.")
+		log.Warning("service.enablemetrics is deprecated and will be removed in a future release. Please use metrics.enable.")
 		MetricsEnabled.Set(true)
 	}
 }

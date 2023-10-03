@@ -21,7 +21,6 @@ import (
 	"strings"
 	"time"
 
-	"code.vikunja.io/api/pkg/config"
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/op/go-logging"
 )
@@ -34,8 +33,9 @@ type WatermillLogger struct {
 	logger *logging.Logger
 }
 
-func NewWatermillLogger() *WatermillLogger {
-	lvl := strings.ToUpper(config.LogEventsLevel.GetString())
+// NewXormLogger creates and initializes a new watermill logger
+func NewWatermillLogger(configLogEnabled bool, configLogEvents string, configLogEventsLevel string) *WatermillLogger {
+	lvl := strings.ToUpper(configLogEventsLevel)
 	level, err := logging.LogLevel(lvl)
 	if err != nil {
 		Criticalf("Error setting events log level %s: %s", lvl, err.Error())
@@ -45,11 +45,14 @@ func NewWatermillLogger() *WatermillLogger {
 		logger: logging.MustGetLogger(watermillLogModule),
 	}
 
-	cf := config.LogEvents.GetString()
 	var backend logging.Backend
 	backend = &NoopBackend{}
-	if cf != "off" && cf != "false" {
-		logBackend := logging.NewLogBackend(GetLogWriter("events"), "", 0)
+	if configLogEvents == "false" {
+		configLogEvents = "off"
+		Warning("log.events value 'false' is deprecated and will be removed in a future release. Please use the value 'off'.")
+	}
+	if configLogEnabled && configLogEvents != "off" {
+		logBackend := logging.NewLogBackend(GetLogWriter(configLogEvents, "events"), "", 0)
 		backend = logging.NewBackendFormatter(logBackend, logging.MustStringFormatter(watermillFmt+"\n"))
 	}
 

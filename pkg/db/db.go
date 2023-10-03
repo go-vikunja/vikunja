@@ -79,7 +79,7 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 	}
 	engine.SetTZDatabase(loc)
 	engine.SetMapper(names.GonicMapper{})
-	logger := log.NewXormLogger("")
+	logger := log.NewXormLogger(config.LogEnabled.GetBool(), config.LogDatabase.GetString(), config.LogDatabaseLevel.GetString())
 	engine.SetLogger(logger)
 
 	x = engine

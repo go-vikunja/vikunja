@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	vmetrics "code.vikunja.io/api/pkg/metrics"
 	"github.com/ThreeDotsLabs/watermill"
@@ -39,7 +40,7 @@ type Event interface {
 
 // InitEvents sets up everything needed to work with events
 func InitEvents() (err error) {
-	logger := log.NewWatermillLogger()
+	logger := log.NewWatermillLogger(config.LogEnabled.GetBool(), config.LogEvents.GetString(), config.LogEventsLevel.GetString())
 
 	router, err := message.NewRouter(
 		message.RouterConfig{},

@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	"code.vikunja.io/api/pkg/config"
 	"github.com/op/go-logging"
 	"xorm.io/xorm/log"
 )
@@ -33,19 +32,24 @@ type MailLogger struct {
 const mailFormat = `%{color}%{time:` + time.RFC3339Nano + `}: %{level}` + "\t" + `▶ [MAIL] %{id:03x}%{color:reset} %{message}`
 const mailLogModule = `vikunja_mail`
 
-func NewMailLogger() *MailLogger {
-	lvl := strings.ToUpper(config.LogMailLevel.GetString())
+// NewMailLogger creates and initializes a new mail logger
+func NewMailLogger(configLogEnabled bool, configLogMail string, configLogMailLevel string) *MailLogger {
+	lvl := strings.ToUpper(configLogMailLevel)
 	level, err := logging.LogLevel(lvl)
 	if err != nil {
-		Criticalf("Error setting database log level: %s", err.Error())
+		Criticalf("Error setting mail log level %s: %s", lvl, err.Error())
 	}
 
 	mailLogger := &MailLogger{
 		logger: logging.MustGetLogger(mailLogModule),
 	}
 
-	logBackend := logging.NewLogBackend(GetLogWriter("mail"), "", 0)
-	backend := logging.NewBackendFormatter(logBackend, logging.MustStringFormatter(mailFormat+"\n"))
+	var backend logging.Backend
+	backend = &NoopBackend{}
+	if configLogEnabled && configLogMail != "off" {
+		logBackend := logging.NewLogBackend(GetLogWriter(configLogMail, "mail"), "", 0)
+		backend = logging.NewBackendFormatter(logBackend, logging.MustStringFormatter(mailFormat+"\n"))
+	}
 
 	backendLeveled := logging.AddModuleLevel(backend)
 	backendLeveled.SetLevel(level, mailLogModule)

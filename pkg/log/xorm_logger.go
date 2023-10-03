@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	"code.vikunja.io/api/pkg/config"
 	"github.com/op/go-logging"
 	"xorm.io/xorm/log"
 )
@@ -38,21 +37,23 @@ type XormLogger struct {
 }
 
 // NewXormLogger creates and initializes a new xorm logger
-func NewXormLogger(lvl string) *XormLogger {
-	if lvl == "" {
-		lvl = strings.ToUpper(config.LogDatabaseLevel.GetString())
-	}
+func NewXormLogger(configLogEnabled bool, configLogDatabase string, configLogDatabaseLevel string) *XormLogger {
+	lvl := strings.ToUpper(configLogDatabaseLevel)
 	level, err := logging.LogLevel(lvl)
 	if err != nil {
-		Criticalf("Error setting database log level: %s", err.Error())
+		Criticalf("Error setting database log level %s: %s", lvl, err.Error())
 	}
 
 	xormLogger := &XormLogger{
 		logger: logging.MustGetLogger(xormLogModule),
 	}
 
-	logBackend := logging.NewLogBackend(GetLogWriter("database"), "", 0)
-	backend := logging.NewBackendFormatter(logBackend, logging.MustStringFormatter(XormFmt+"\n"))
+	var backend logging.Backend
+	backend = &NoopBackend{}
+	if configLogEnabled && configLogDatabase != "off" {
+		logBackend := logging.NewLogBackend(GetLogWriter(configLogDatabase, "database"), "", 0)
+		backend = logging.NewBackendFormatter(logBackend, logging.MustStringFormatter(XormFmt+"\n"))
+	}
 
 	backendLeveled := logging.AddModuleLevel(backend)
 	backendLeveled.SetLevel(level, xormLogModule)
@@ -64,8 +65,8 @@ func NewXormLogger(lvl string) *XormLogger {
 	case logging.ERROR:
 		xormLogger.level = log.LOG_ERR
 	case logging.WARNING:
-	case logging.NOTICE:
 		xormLogger.level = log.LOG_WARNING
+	case logging.NOTICE:
 	case logging.INFO:
 		xormLogger.level = log.LOG_INFO
 	case logging.DEBUG:

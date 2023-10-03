@@ -35,6 +35,9 @@ import (
 
 // LightInit will only fullInit config, redis, logger but no db connection.
 func LightInit() {
+	// Set logger
+	log.InitLogger()
+
 	// Init the config
 	config.InitConfig()
 
@@ -43,9 +46,6 @@ func LightInit() {
 
 	// Init keyvalue store
 	keyvalue.InitStorage()
-
-	// Set logger
-	log.InitLogger()
 }
 
 // InitEngines intializes all db connections

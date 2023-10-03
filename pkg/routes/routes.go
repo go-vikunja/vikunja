@@ -95,19 +95,19 @@ func NewEcho() *echo.Echo {
 	e.HideBanner = true
 
 	if l, ok := e.Logger.(*elog.Logger); ok {
-		if config.LogEcho.GetString() == "off" {
+		if !config.LogEnabled.GetBool() || config.LogEcho.GetString() == "off" {
 			l.SetLevel(elog.OFF)
 		}
 		l.EnableColor()
 		l.SetHeader(log.ErrFmt)
-		l.SetOutput(log.GetLogWriter("echo"))
+		l.SetOutput(log.GetLogWriter(config.LogEcho.GetString(), "echo"))
 	}
 
 	// Logger
-	if config.LogHTTP.GetString() != "off" {
+	if !config.LogEnabled.GetBool() || config.LogHTTP.GetString() != "off" {
 		e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 			Format: log.WebFmt + "\n",
-			Output: log.GetLogWriter("http"),
+			Output: log.GetLogWriter(config.LogHTTP.GetString(), "http"),
 		}))
 	}
 

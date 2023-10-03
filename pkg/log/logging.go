@@ -22,9 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"code.vikunja.io/api/pkg/config"
 	"github.com/op/go-logging"
-	"github.com/spf13/viper"
 )
 
 // ErrFmt holds the format for all the console logging
@@ -41,42 +39,45 @@ const logModule = `vikunja`
 // loginstance is the instance of the logger which is used under the hood to log
 var logInstance = logging.MustGetLogger(logModule)
 
+// logpath is the path in which log files will be written.
+// This value is a mere fallback for other modules that could but shouldn't be used before calling ConfigLogger
+var logPath = "."
+
 // InitLogger initializes the global log handler
 func InitLogger() {
-	if !config.LogEnabled.GetBool() {
-		// Disable all logging when loggin in general is disabled, overwriting everything a user might have set.
-		config.LogStandard.Set("off")
-		config.LogDatabase.Set("off")
-		config.LogHTTP.Set("off")
-		config.LogEcho.Set("off")
-		config.LogEvents.Set("off")
-		return
-	}
-
 	// This show correct caller functions
 	logInstance.ExtraCalldepth = 1
 
-	if config.LogStandard.GetString() == "file" {
-		err := os.Mkdir(config.LogPath.GetString(), 0744)
-		if err != nil && !os.IsExist(err) {
-			Fatalf("Could not create log folder: %s", err.Error())
-		}
+	// Init with stdout and INFO as default format and level
+	logBackend := logging.NewLogBackend(os.Stdout, "", 0)
+	backend := logging.NewBackendFormatter(logBackend, logging.MustStringFormatter(Fmt+"\n"))
+
+	backendLeveled := logging.AddModuleLevel(backend)
+	backendLeveled.SetLevel(logging.INFO, logModule)
+
+	logInstance.SetBackend(backendLeveled)
+}
+
+// ConfigLogger configures the global log handler
+func ConfigLogger(configLogEnabled bool, configLogStandard string, configLogPath string, configLogLevel string) {
+	lvl := strings.ToUpper(configLogLevel)
+	level, err := logging.LogLevel(lvl)
+	if err != nil {
+		Fatalf("Error setting standard log level %s: %s", lvl, err.Error())
 	}
+
+	logPath = configLogPath
 
 	// The backend is the part which actually handles logging the log entries somewhere.
-	cf := config.LogStandard.GetString()
 	var backend logging.Backend
 	backend = &NoopBackend{}
-	if cf != "off" && cf != "false" {
-		stdWriter := GetLogWriter("standard")
-
-		logBackend := logging.NewLogBackend(stdWriter, "", 0)
-		backend = logging.NewBackendFormatter(logBackend, logging.MustStringFormatter(Fmt+"\n"))
+	if configLogStandard == "false" {
+		configLogStandard = "off"
+		Warning("log.standard value 'false' is deprecated and will be removed in a future release. Please use the value 'off'.")
 	}
-
-	level, err := logging.LogLevel(strings.ToUpper(config.LogLevel.GetString()))
-	if err != nil {
-		Fatalf("Error setting database log level: %s", err.Error())
+	if configLogEnabled && configLogStandard != "off" {
+		logBackend := logging.NewLogBackend(GetLogWriter(configLogStandard, "standard"), "", 0)
+		backend = logging.NewBackendFormatter(logBackend, logging.MustStringFormatter(Fmt+"\n"))
 	}
 
 	backendLeveled := logging.AddModuleLevel(backend)
@@ -86,11 +87,14 @@ func InitLogger() {
 }
 
 // GetLogWriter returns the writer to where the normal log goes, depending on the config
-func GetLogWriter(logfile string) (writer io.Writer) {
+func GetLogWriter(logfmt string, logfile string) (writer io.Writer) {
 	writer = os.Stdout // Set the default case to prevent nil pointer panics
-	switch viper.GetString("log." + logfile) {
+	switch logfmt {
 	case "file":
-		fullLogFilePath := config.LogPath.GetString() + "/" + logfile + ".log"
+		if err := os.MkdirAll(logPath, 0744); err != nil {
+			Fatalf("Could not create log path: %s", err.Error())
+		}
+		fullLogFilePath := logPath + "/" + logfile + ".log"
 		f, err := os.OpenFile(fullLogFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 		if err != nil {
 			Fatalf("Could not create logfile %s: %s", fullLogFilePath, err.Error())
