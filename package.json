@@ -63,7 +63,7 @@
     "camel-case": "4.1.2",
     "codemirror": "5.65.15",
     "date-fns": "2.30.0",
-    "dayjs": "1.11.9",
+    "dayjs": "1.11.10",
     "dompurify": "3.0.5",
     "easymde": "2.18.0",
     "fast-deep-equal": "3.1.3",
