@@ -261,6 +261,9 @@ func TestProject_Delete(t *testing.T) {
 		db.AssertMissing(t, "projects", map[string]interface{}{
 			"id": 1,
 		})
+		db.AssertMissing(t, "tasks", map[string]interface{}{
+			"id": 1,
+		})
 	})
 	t.Run("with background", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
