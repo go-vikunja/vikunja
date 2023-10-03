@@ -3,7 +3,7 @@
 		v-if="props.isLoading && !ganttBars.length || dayjsLanguageLoading"
 		class="gantt-container"
 	/>
-	<div class="gantt-container" v-else>
+	<div ref="ganttContainer" class="gantt-container" v-else>
 		<GGanttChart
 			:date-format="DAYJS_ISO_DATE_FORMAT"
 			:chart-start="isoToKebabDate(filters.dateFrom)"
@@ -14,7 +14,7 @@
 			:grid="true"
 			@dragend-bar="updateGanttTask"
 			@dblclick-bar="openTask"
-			:width="ganttChartWidth + 'px'"
+			:width="ganttChartWidth"
 		>
 			<template #timeunit="{value, date}">
 				<div
@@ -85,6 +85,8 @@ const dayjsLanguageLoading = ref(false)
 // const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
 extendDayjs()
 
+const ganttContainer = ref(null)
+
 const router = useRouter()
 
 const dateFromDate = computed(() => new Date(new Date(filters.value.dateFrom).setHours(0,0,0,0)))
@@ -92,9 +94,15 @@ const dateToDate = computed(() => new Date(new Date(filters.value.dateTo).setHou
 
 const DAY_WIDTH_PIXELS = 30
 const ganttChartWidth = computed(() => {
-	const dateDiff = Math.floor((dateToDate.value.valueOf() - dateFromDate.value.valueOf()) / MILLISECONDS_A_DAY)
 
-	return dateDiff * DAY_WIDTH_PIXELS
+	const ganttContainerReference = ganttContainer?.value
+	const ganttContainerWidth = ganttContainerReference ? (ganttContainerReference['clientWidth'] ?? 0) : 0
+
+	const dateDiff = Math.floor((dateToDate.value.valueOf() - dateFromDate.value.valueOf()) / MILLISECONDS_A_DAY)
+	const calculatedWidth = dateDiff * DAY_WIDTH_PIXELS
+
+	return (calculatedWidth > ganttContainerWidth) ? calculatedWidth + 'px' : '100%'
+
 })
 
 const ganttBars = ref<GanttBarObject[][]>([])
