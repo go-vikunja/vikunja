@@ -51,7 +51,7 @@
     "@fortawesome/vue-fontawesome": "3.0.3",
     "@github/hotkey": "2.0.1",
     "@infectoone/vue-ganttastic": "2.1.4",
-    "@intlify/unplugin-vue-i18n": "0.13.0",
+    "@intlify/unplugin-vue-i18n": "1.4.0",
     "@kyvg/vue3-notification": "2.9.1",
     "@sentry/tracing": "7.73.0",
     "@sentry/vue": "7.73.0",
