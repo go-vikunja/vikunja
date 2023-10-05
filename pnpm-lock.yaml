@@ -98,8 +98,8 @@ dependencies:
     specifier: 4.0.8
     version: 4.0.8
   marked:
-    specifier: 9.0.3
-    version: 9.0.3
+    specifier: 9.1.0
+    version: 9.1.0
   pinia:
     specifier: 2.1.6
     version: 2.1.6(typescript@5.2.2)(vue@3.3.4)
@@ -8017,8 +8017,8 @@ packages:
     hasBin: true
     dev: false
 
-  /marked@9.0.3:
-    resolution: {integrity: sha512-pI/k4nzBG1PEq1J3XFEHxVvjicfjl8rgaMaqclouGSMPhk7Q3Ejb2ZRxx/ZQOcQ1909HzVoWCFYq6oLgtL4BpQ==}
+  /marked@9.1.0:
+    resolution: {integrity: sha512-VZjm0PM5DMv7WodqOUps3g6Q7dmxs9YGiFUZ7a2majzQTTCgX+6S6NAJHPvOhgFBzYz8s4QZKWWMfZKFmsfOgA==}
     engines: {node: '>= 16'}
     hasBin: true
     dev: false
