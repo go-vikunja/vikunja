@@ -46,6 +46,7 @@ var (
 	userFlagEnableUser            bool
 	userFlagDisableUser           bool
 	userFlagDeleteNow             bool
+	userFlagDeleteConfirm		  bool
 )
 
 func init() {
@@ -72,6 +73,9 @@ func init() {
 
 	// User deletion flags
 	userDeleteCmd.Flags().BoolVarP(&userFlagDeleteNow, "now", "n", false, "If provided, deletes the user immediately instead of sending them an email first.")
+
+	// Bypass confirm prompt
+	userDeleteCmd.Flags().BoolVarP(&userFlagDeleteConfirm, "confirm", "c", false, "Bypasses any prompts confirming the deletion request, use with caution!")
 
 	userCmd.AddCommand(userListCmd, userCreateCmd, userUpdateCmd, userResetPasswordCmd, userChangeEnabledCmd, userDeleteCmd)
 	rootCmd.AddCommand(userCmd)
@@ -326,7 +330,7 @@ var userDeleteCmd = &cobra.Command{
 		initialize.FullInit()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		if userFlagDeleteNow {
+		if userFlagDeleteNow && !userFlagDeleteConfirm {
 			fmt.Println("You requested to delete the user immediately. Are you sure?")
 			fmt.Println(`To confirm, please type "yes, I confirm" in all uppercase:`)
 
