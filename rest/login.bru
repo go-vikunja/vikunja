@@ -1,0 +1,26 @@
+meta {
+  name: login
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{host}}/api/v1/login
+  body: json
+}
+
+body:json {
+  {
+    "username": "{{username}}",
+    "password": "{{password}}"
+  }
+}
+
+vars:pre-request {
+  username: test
+  password: 12345678
+}
+
+vars:post-response {
+  token: res.body.token
+}

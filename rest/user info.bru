@@ -1,0 +1,14 @@
+meta {
+  name: user info
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{host}}/api/v1/user
+  body: none
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
