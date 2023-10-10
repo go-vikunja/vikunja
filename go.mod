@@ -64,7 +64,7 @@ require (
 	github.com/typesense/typesense-go v0.8.0
 	github.com/ulule/limiter/v3 v3.11.2
 	github.com/wneessen/go-mail v0.4.0
-	github.com/yuin/goldmark v1.5.4
+	github.com/yuin/goldmark v1.5.6
 	golang.org/x/crypto v0.12.0
 	golang.org/x/image v0.11.0
 	golang.org/x/oauth2 v0.10.0
