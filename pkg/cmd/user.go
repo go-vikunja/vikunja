@@ -103,7 +103,7 @@ func getUserFromArg(s *xorm.Session, arg string) *user.User {
 	filter := user.User{}
 	id, err := strconv.ParseInt(arg, 10, 64)
 	if err != nil {
-		log.Info(fmt.Sprintf("Invalid userId [ %s ], assuming userName", arg))
+		log.Infof("Invalid user ID [%s], assuming username instead", arg)
 		filter.Username = arg
 	} else {
 		filter.ID = id
