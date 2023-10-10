@@ -217,7 +217,7 @@ func (lu *ProjectUser) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 
 	// Obfuscate all user emails
 	for _, u := range all {
-		u.Email = ""
+		u.User.Email = ""
 	}
 
 	numberOfTotalItems, err = s.

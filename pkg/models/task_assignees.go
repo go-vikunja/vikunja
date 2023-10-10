@@ -72,8 +72,8 @@ func (t *Task) updateTaskAssignees(s *xorm.Session, assignees []*user.User, doer
 	}
 
 	t.Assignees = make([]*user.User, 0, len(currentAssignees))
-	for _, assignee := range currentAssignees {
-		t.Assignees = append(t.Assignees, &assignee.User)
+	for i := range currentAssignees {
+		t.Assignees = append(t.Assignees, &currentAssignees[i].User)
 	}
 
 	// If we don't have any new assignees, delete everything right away. Saves us some hassle.
@@ -349,8 +349,8 @@ func (ba *BulkAssignees) Create(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
-	for _, a := range assignees {
-		task.Assignees = append(task.Assignees, &a.User)
+	for i := range assignees {
+		task.Assignees = append(task.Assignees, &assignees[i].User)
 	}
 
 	err = task.updateTaskAssignees(s, ba.Assignees, a)

@@ -117,10 +117,10 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 		return
 	}
 
-	for _, assignee := range assignees {
+	for i := range assignees {
 		taskUsers = append(taskUsers, &taskUser{
-			Task: taskMap[assignee.TaskID],
-			User: &assignee.User,
+			Task: taskMap[assignees[i].TaskID],
+			User: &assignees[i].User,
 		})
 	}
 

@@ -417,10 +417,10 @@ func addAssigneesToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Ta
 		return
 	}
 	// Put the assignees in the task map
-	for _, a := range taskAssignees {
+	for i, a := range taskAssignees {
 		if a != nil {
-			a.Email = "" // Obfuscate the email
-			taskMap[a.TaskID].Assignees = append(taskMap[a.TaskID].Assignees, &a.User)
+			a.User.Email = "" // Obfuscate the email
+			taskMap[a.TaskID].Assignees = append(taskMap[a.TaskID].Assignees, &taskAssignees[i].User)
 		}
 	}
 
@@ -436,9 +436,9 @@ func addLabelsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task)
 	if err != nil {
 		return
 	}
-	for _, l := range labels {
+	for i, l := range labels {
 		if l != nil {
-			taskMap[l.TaskID].Labels = append(taskMap[l.TaskID].Labels, &l.Label)
+			taskMap[l.TaskID].Labels = append(taskMap[l.TaskID].Labels, &labels[i].Label)
 		}
 	}
 

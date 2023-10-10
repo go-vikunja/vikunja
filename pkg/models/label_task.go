@@ -403,8 +403,8 @@ func (ltb *LabelTaskBulk) Create(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
-	for _, l := range labels {
-		task.Labels = append(task.Labels, &l.Label)
+	for i := range labels {
+		task.Labels = append(task.Labels, &labels[i].Label)
 	}
 	return task.UpdateTaskLabels(s, a, ltb.Labels)
 }

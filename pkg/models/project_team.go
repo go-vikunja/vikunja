@@ -210,8 +210,8 @@ func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 	}
 
 	teams := []*Team{}
-	for _, t := range all {
-		teams = append(teams, &t.Team)
+	for i := range all {
+		teams = append(teams, &all[i].Team)
 	}
 
 	err = addMoreInfoToTeams(s, teams)

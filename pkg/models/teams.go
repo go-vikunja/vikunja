@@ -159,7 +159,7 @@ func addMoreInfoToTeams(s *xorm.Session, teams []*Team) (err error) {
 		if _, exists := teamMap[u.TeamID]; !exists {
 			continue
 		}
-		u.Email = ""
+		u.User.Email = ""
 		teamMap[u.TeamID].Members = append(teamMap[u.TeamID].Members, u)
 	}
 

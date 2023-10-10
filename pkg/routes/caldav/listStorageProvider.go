@@ -171,14 +171,14 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, _ *
 	// That project is coming from a previous "getProjectRessource" in L177
 	if vcls.project.Tasks != nil {
 		var resources []data.Resource
-		for _, t := range vcls.project.Tasks {
+		for i := range vcls.project.Tasks {
 			rr := VikunjaProjectResourceAdapter{
 				project:      vcls.project,
-				task:         &t.Task,
+				task:         &vcls.project.Tasks[i].Task,
 				isCollection: false,
 			}
-			r := data.NewResource(getTaskURL(&t.Task), &rr)
-			r.Name = t.Title
+			r := data.NewResource(getTaskURL(&vcls.project.Tasks[i].Task), &rr)
+			r.Name = vcls.project.Tasks[i].Title
 			resources = append(resources, r)
 		}
 		return resources, nil
@@ -410,8 +410,8 @@ func persistLabels(s *xorm.Session, a web.Auth, task *models.Task, labels []*mod
 	}
 
 	labelMap := make(map[string]*models.Label)
-	for _, l := range existingLabels {
-		labelMap[l.Title] = &l.Label
+	for i := range existingLabels {
+		labelMap[existingLabels[i].Title] = &existingLabels[i].Label
 	}
 
 	for _, label := range labels {

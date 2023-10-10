@@ -141,7 +141,7 @@ steps:
     commands:
       - export "GOROOT=$(go env GOROOT)"
       - apk --no-cache add build-base git
-      - wget -O - -q https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.53.2
+      - wget -O - -q https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
       - ./mage-static check:golangci
     when:
       event: [ push, tag, pull_request ]
@@ -778,6 +778,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 3730982b2093ed0d6cc0ad7e98ef3234a0d8cf178d96c70d33690a0bf6d22444
+hmac: a7c33fa559ad88a556ce903cd6df3d8ffe0d6fc2e3cdefe0da0d22049f9bb7f8
 
 ...

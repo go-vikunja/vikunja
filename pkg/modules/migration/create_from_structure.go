@@ -55,7 +55,7 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 	childRelations := make(map[int64][]int64)          // old id is the key, slice of old children ids
 	projectsByOldID := make(map[int64]*models.Project) // old id is the key
 	// Create all projects
-	for _, p := range str {
+	for i, p := range str {
 		oldID := p.ID
 
 		if p.ParentProjectID != 0 {
@@ -67,7 +67,7 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 		if err != nil {
 			return err
 		}
-		projectsByOldID[oldID] = &p.Project
+		projectsByOldID[oldID] = &str[i].Project
 	}
 
 	// parent / child relations
@@ -198,8 +198,8 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 	tasksByOldID := make(map[int64]*models.TaskWithComments, len(tasks))
 	// Create all tasks
-	for _, t := range tasks {
-		setBucketOrDefault(&t.Task)
+	for i, t := range tasks {
+		setBucketOrDefault(&tasks[i].Task)
 
 		oldid := t.ID
 		t.ProjectID = project.ID
