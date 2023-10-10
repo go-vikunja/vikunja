@@ -57,7 +57,7 @@ require (
 	github.com/samedi/caldav-go v3.0.0+incompatible
 	github.com/spf13/afero v1.9.5
 	github.com/spf13/cobra v1.7.0
-	github.com/spf13/viper v1.16.0
+	github.com/spf13/viper v1.17.0
 	github.com/stretchr/testify v1.8.4
 	github.com/swaggo/swag v1.8.12
 	github.com/tkuchiki/go-timezone v0.2.2
