@@ -100,12 +100,16 @@ func getPasswordFromFlagOrInput() (pw string) {
 }
 
 func getUserFromArg(s *xorm.Session, arg string) *user.User {
+	filter := user.User{}
 	id, err := strconv.ParseInt(arg, 10, 64)
 	if err != nil {
-		log.Fatalf("Invalid user id: %s", err)
+		log.Infof("Invalid user ID [%s], assuming username instead", arg)
+		filter.Username = arg
+	} else {
+		filter.ID = id
 	}
 
-	u, err := user.GetUserWithEmail(s, &user.User{ID: id})
+	u, err := user.GetUserWithEmail(s, &filter)
 	if err != nil {
 		log.Fatalf("Could not get user: %s", err)
 	}
