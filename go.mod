@@ -51,7 +51,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pquerna/otp v1.4.0
-	github.com/prometheus/client_golang v1.16.0
+	github.com/prometheus/client_golang v1.17.0
 	github.com/redis/go-redis/v9 v9.2.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/samedi/caldav-go v3.0.0+incompatible
