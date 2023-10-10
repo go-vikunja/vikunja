@@ -10,7 +10,7 @@
 # Vikunja API
 
 > The Todo-app to organize your life.
-
+c
 # Table of contents
 
 * [Security Reports](#security-reports)
