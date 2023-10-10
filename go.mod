@@ -29,7 +29,7 @@ require (
 	github.com/cweill/gotests v1.6.0
 	github.com/d4l3k/messagediff v1.2.1
 	github.com/disintegration/imaging v1.6.2
-	github.com/dustinkirkland/golang-petname 6a283f1aaaf2
+	github.com/dustinkirkland/golang-petname v0.0.0-20231002161417-6a283f1aaaf2
 	github.com/gabriel-vasile/mimetype v1.4.2
 	github.com/getsentry/sentry-go v0.25.0
 	github.com/go-sql-driver/mysql v1.7.1
@@ -73,7 +73,7 @@ require (
 	golang.org/x/term v0.13.0
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/yaml.v3 v3.0.1
-	src.techknowlogick.com/xgo 6fc6b161274f
+	src.techknowlogick.com/xgo v1.7.1-0.20231010172651-6fc6b161274f
 	src.techknowlogick.com/xormigrate v1.5.0
 	xorm.io/builder v0.3.13
 	xorm.io/xorm v1.3.3
@@ -146,9 +146,9 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_model v0.3.0 // indirect
-	github.com/prometheus/common v0.42.0 // indirect
-	github.com/prometheus/procfs v0.10.1 // indirect
+	github.com/prometheus/client_model v0.4.1-0.20230718164431-9a2bf3000d16 // indirect
+	github.com/prometheus/common v0.44.0 // indirect
+	github.com/prometheus/procfs v0.11.1 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
