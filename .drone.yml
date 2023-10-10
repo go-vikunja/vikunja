@@ -133,7 +133,7 @@ steps:
       event: [ push, tag, pull_request ]
 
   - name: lint
-    image: golang:1.19-alpine
+    image: vikunja/golang-build:latest
     pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
@@ -778,6 +778,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 6bc74f5b7e9c51e725100e05f07cdac656d6c3d49d19c2b112aed812c86e7a9a
+hmac: 3730982b2093ed0d6cc0ad7e98ef3234a0d8cf178d96c70d33690a0bf6d22444
 
 ...
