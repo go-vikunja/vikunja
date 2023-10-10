@@ -46,7 +46,7 @@ var (
 	userFlagEnableUser            bool
 	userFlagDisableUser           bool
 	userFlagDeleteNow             bool
-	userFlagDeleteConfirm		  bool
+	userFlagDeleteConfirm         bool
 )
 
 func init() {
