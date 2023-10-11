@@ -176,6 +176,7 @@
       "title": "Delete your Vikunja Account",
       "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "To proceed, please enter your password. You will receive an email with further instructions.",
+      "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
       "confirm": "Delete my account",
       "requestSuccess": "The request was successful. You'll receive an email with further instructions.",
       "passwordRequired": "Please enter your password.",
@@ -183,6 +184,7 @@
       "scheduled": "We will delete your Vikunja account at {date} ({dateSince}).",
       "scheduledCancel": "To cancel the deletion of your account, click here.",
       "scheduledCancelText": "To cancel the deletion of your account, please enter your password below:",
+      "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
       "scheduledCancelConfirm": "Cancel the deletion of my account",
       "scheduledCancelSuccess": "We will not delete your account."
     },

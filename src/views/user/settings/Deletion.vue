@@ -10,29 +10,34 @@
 						})
 					}}
 				</p>
-				<p>
-					{{ $t('user.deletion.scheduledCancelText') }}
-				</p>
-				<div class="field">
-					<label class="label" for="currentPasswordAccountDelete">
-						{{ $t('user.settings.currentPassword') }}
-					</label>
-					<div class="control">
-						<input
-							class="input"
-							:class="{'is-danger': errPasswordRequired}"
-							id="currentPasswordAccountDelete"
-							:placeholder="$t('user.settings.currentPasswordPlaceholder')"
-							type="password"
-							v-model="password"
-							@keyup="() => errPasswordRequired = password === ''"
-							ref="passwordInput"
-						/>
-					</div>
-					<p class="help is-danger" v-if="errPasswordRequired">
-						{{ $t('user.deletion.passwordRequired') }}
+				<template v-if="isLocalUser">
+					<p>
+						{{ $t('user.deletion.scheduledCancelText') }}
 					</p>
-				</div>
+					<div class="field">
+						<label class="label" for="currentPasswordAccountDelete">
+							{{ $t('user.settings.currentPassword') }}
+						</label>
+						<div class="control">
+							<input
+								class="input"
+								:class="{'is-danger': errPasswordRequired}"
+								id="currentPasswordAccountDelete"
+								:placeholder="$t('user.settings.currentPasswordPlaceholder')"
+								type="password"
+								v-model="password"
+								@keyup="() => errPasswordRequired = password === ''"
+								ref="passwordInput"
+							/>
+						</div>
+						<p class="help is-danger" v-if="errPasswordRequired">
+							{{ $t('user.deletion.passwordRequired') }}
+						</p>
+					</div>
+				</template>
+				<p v-else>
+					{{ $t('user.deletion.scheduledCancelButton') }}
+				</p>
 			</form>
 
 			<x-button
@@ -43,10 +48,10 @@
 			</x-button>
 		</template>
 		<template v-else>
-			<form @submit.prevent="deleteAccount()">
-				<p>
-					{{ $t('user.deletion.text1') }}
-				</p>
+			<p>
+				{{ $t('user.deletion.text1') }}
+			</p>
+			<form @submit.prevent="deleteAccount()" v-if="isLocalUser">
 				<p>
 					{{ $t('user.deletion.text2') }}
 				</p>
@@ -71,6 +76,9 @@
 					</p>
 				</div>
 			</form>
+			<p v-else>
+				{{ $t('user.deletion.text3') }}
+			</p>
 
 			<x-button
 				:loading="accountDeleteService.loading"
@@ -83,7 +91,7 @@
 </template>
 
 <script lang="ts">
-export default { name: 'user-settings-deletion' }
+export default {name: 'user-settings-deletion'}
 </script>
 
 <script setup lang="ts">
@@ -111,9 +119,12 @@ const configStore = useConfigStore()
 const userDeletionEnabled = computed(() => configStore.userDeletionEnabled)
 const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt))
 
+const isLocalUser = computed(() => authStore.info?.isLocalUser)
+
 const passwordInput = ref()
+
 async function deleteAccount() {
-	if (password.value === '') {
+	if (isLocalUser.value && password.value === '') {
 		errPasswordRequired.value = true
 		passwordInput.value.focus()
 		return
@@ -125,7 +136,7 @@ async function deleteAccount() {
 }
 
 async function cancelDeletion() {
-	if (password.value === '') {
+	if (isLocalUser.value && password.value === '') {
 		errPasswordRequired.value = true
 		passwordInput.value.focus()
 		return
