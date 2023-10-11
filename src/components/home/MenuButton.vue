@@ -3,7 +3,7 @@
 		class="menu-show-button"
 		@click="baseStore.toggleMenu()"
 		@shortkey="() => baseStore.toggleMenu()"
-		v-shortcut="'Control+e'"
+		v-shortcut="'Mod+e'"
 		:title="$t('keyboardShortcuts.toggleMenu')"
 		:aria-label="menuActive ? $t('misc.hideMenu') : $t('misc.showMenu')"
 	/>
