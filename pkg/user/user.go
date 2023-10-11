@@ -154,7 +154,7 @@ func (u *User) GetID() int64 {
 }
 
 // TableName returns the table name for users
-func (User) TableName() string {
+func (*User) TableName() string {
 	return "users"
 }
 
@@ -351,6 +351,10 @@ func CheckUserCredentials(s *xorm.Session, u *Login) (*User, error) {
 	}
 
 	return user, nil
+}
+
+func (u *User) IsLocalUser() bool {
+	return u.Issuer == IssuerLocal
 }
 
 func handleFailedPassword(user *User) {

@@ -47,20 +47,11 @@ type UserDeletionRequestConfirm struct {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/deletion/request [post]
 func UserRequestDeletion(c echo.Context) error {
-	var deletionRequest UserPasswordConfirmation
-	if err := c.Bind(&deletionRequest); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
-	}
-
-	err := c.Validate(deletionRequest)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
-	}
 
 	s := db.NewSession()
 	defer s.Close()
 
-	err = s.Begin()
+	err := s.Begin()
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
@@ -71,10 +62,22 @@ func UserRequestDeletion(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	err = user.CheckUserPassword(u, deletionRequest.Password)
-	if err != nil {
-		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+	if u.IsLocalUser() {
+		var deletionRequest UserPasswordConfirmation
+		if err := c.Bind(&deletionRequest); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
+		}
+
+		err = c.Validate(deletionRequest)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err)
+		}
+
+		err = user.CheckUserPassword(u, deletionRequest.Password)
+		if err != nil {
+			_ = s.Rollback()
+			return handler.HandleHTTPError(err, c)
+		}
 	}
 
 	err = user.RequestDeletion(s, u)
@@ -155,20 +158,11 @@ func UserConfirmDeletion(c echo.Context) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/deletion/cancel [post]
 func UserCancelDeletion(c echo.Context) error {
-	var deletionRequest UserPasswordConfirmation
-	if err := c.Bind(&deletionRequest); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
-	}
-
-	err := c.Validate(deletionRequest)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
-	}
 
 	s := db.NewSession()
 	defer s.Close()
 
-	err = s.Begin()
+	err := s.Begin()
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
@@ -179,10 +173,22 @@ func UserCancelDeletion(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	err = user.CheckUserPassword(u, deletionRequest.Password)
-	if err != nil {
-		_ = s.Rollback()
-		return handler.HandleHTTPError(err, c)
+	if u.IsLocalUser() {
+		var deletionRequest UserPasswordConfirmation
+		if err := c.Bind(&deletionRequest); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
+		}
+
+		err = c.Validate(deletionRequest)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err)
+		}
+
+		err = user.CheckUserPassword(u, deletionRequest.Password)
+		if err != nil {
+			_ = s.Rollback()
+			return handler.HandleHTTPError(err, c)
+		}
 	}
 
 	err = user.CancelDeletion(s, u)
