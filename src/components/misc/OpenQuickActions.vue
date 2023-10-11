@@ -5,13 +5,12 @@ import {onBeforeUnmount, onMounted} from 'vue'
 import {eventToHotkeyString} from '@github/hotkey'
 
 const baseStore = useBaseStore()
-const GLOBAL_HOTKEY = 'Control+k'
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
 function openQuickActionsViaHotkey(event) {
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
-	if (hotkeyString !== GLOBAL_HOTKEY) return
+	if (hotkeyString !== 'Control+k' && hotkeyString !== 'Meta+k') return
 	event.preventDefault()
 
 	openQuickActions()

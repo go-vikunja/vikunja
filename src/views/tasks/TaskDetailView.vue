@@ -458,11 +458,12 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, toRef, shallowReactive, computed, watch, nextTick} from 'vue'
+import {ref, reactive, toRef, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
 import {useRouter, type RouteLocation} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {unrefElement} from '@vueuse/core'
 import {klona} from 'klona/lite'
+import {eventToHotkeyString} from '@github/hotkey'
 
 import TaskService from '@/services/task'
 import TaskModel, {TASK_DEFAULT_COLOR} from '@/models/task'
@@ -532,6 +533,24 @@ const kanbanStore = useKanbanStore()
 
 const task = ref<ITask>(new TaskModel())
 useTitle(toRef(task.value, 'title'))
+
+// See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
+function saveTaskViaHotkey(event) {
+	const hotkeyString = eventToHotkeyString(event)
+	if (!hotkeyString) return
+	if (hotkeyString !== 'Control+s' && hotkeyString !== 'Meta+s') return
+	event.preventDefault()
+
+	saveTask()
+}
+
+onMounted(() => {
+	document.addEventListener('keydown', saveTaskViaHotkey)
+})
+
+onBeforeUnmount(() => {
+	document.removeEventListener('keydown', saveTaskViaHotkey)
+})
 
 // We doubled the task color property here because verte does not have a real change property, leading
 // to the color property change being triggered when the # is removed from it, leading to an update,

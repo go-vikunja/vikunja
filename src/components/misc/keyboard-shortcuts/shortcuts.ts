@@ -152,6 +152,10 @@ export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
 				title: 'keyboardShortcuts.task.favorite',
 				keys: ['s'],
 			},
+			{
+				title: 'keyboardShortcuts.task.save',
+				keys: [ctrl, 's'],
+			},
 		],
 	},
 ]

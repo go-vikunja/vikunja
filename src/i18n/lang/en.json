@@ -883,7 +883,8 @@
       "description": "Toggle editing of the task description",
       "delete": "Delete this task",
       "priority": "Change the priority of this task",
-      "favorite": "Mark this task as favorite / unfavorite"
+      "favorite": "Mark this task as favorite / unfavorite",
+      "save": "Save the current task"
     },
     "project": {
       "title": "Project Views",
