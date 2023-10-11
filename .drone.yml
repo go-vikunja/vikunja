@@ -39,7 +39,7 @@ volumes:
 
 services:
   - name: test-mysql-unit
-    image: mariadb:10
+    image: mariadb:11
     environment:
       MYSQL_ROOT_PASSWORD: vikunjatest
       MYSQL_DATABASE: vikunjatest
@@ -47,7 +47,7 @@ services:
       - name: tmp-mysql-unit
         path: /var/lib/mysql
   - name: test-mysql-integration
-    image: mariadb:10
+    image: mariadb:11
     environment:
       MYSQL_ROOT_PASSWORD: vikunjatest
       MYSQL_DATABASE: vikunjatest
@@ -55,7 +55,7 @@ services:
       - name: tmp-mysql-integration
         path: /var/lib/mysql
   - name: test-mysql-migration
-    image: mariadb:10
+    image: mariadb:11
     environment:
       MYSQL_ROOT_PASSWORD: vikunjatest
       MYSQL_DATABASE: vikunjatest
@@ -778,6 +778,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 9c5b641f58ee78f5e69ec7489ccf2acc63c1681d037ae4edfc8135a6263e8521
+hmac: d70103ade7cbade073843f8567e666ece3c0c259a604ce632c409a52e6f80556
 
 ...
