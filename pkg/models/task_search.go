@@ -92,8 +92,13 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	// To still find tasks with nil values, we exclude 0s when comparing with >/< values.
 	for _, f := range opts.filters {
 		if f.field == "reminders" {
-			f.field = "reminder" // This is the name in the db
-			filter, err := getFilterCond(f, opts.filterIncludeNulls)
+			filter, err := getFilterCond(&taskFilter{
+				// recreating the struct here to avoid modifying it when reusing the opts struct
+				field:      "reminder",
+				value:      f.value,
+				comparator: f.comparator,
+				isNumeric:  f.isNumeric,
+			}, opts.filterIncludeNulls)
 			if err != nil {
 				return nil, totalCount, err
 			}
@@ -105,8 +110,13 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 			if f.comparator == taskFilterComparatorLike {
 				return nil, totalCount, err
 			}
-			f.field = "username"
-			filter, err := getFilterCond(f, opts.filterIncludeNulls)
+			filter, err := getFilterCond(&taskFilter{
+				// recreating the struct here to avoid modifying it when reusing the opts struct
+				field:      "username",
+				value:      f.value,
+				comparator: f.comparator,
+				isNumeric:  f.isNumeric,
+			}, opts.filterIncludeNulls)
 			if err != nil {
 				return nil, totalCount, err
 			}
@@ -115,8 +125,13 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		}
 
 		if f.field == "labels" || f.field == "label_id" {
-			f.field = "label_id"
-			filter, err := getFilterCond(f, opts.filterIncludeNulls)
+			filter, err := getFilterCond(&taskFilter{
+				// recreating the struct here to avoid modifying it when reusing the opts struct
+				field:      "label_id",
+				value:      f.value,
+				comparator: f.comparator,
+				isNumeric:  f.isNumeric,
+			}, opts.filterIncludeNulls)
 			if err != nil {
 				return nil, totalCount, err
 			}
@@ -125,8 +140,13 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		}
 
 		if f.field == "parent_project" || f.field == "parent_project_id" {
-			f.field = "parent_project_id"
-			filter, err := getFilterCond(f, opts.filterIncludeNulls)
+			filter, err := getFilterCond(&taskFilter{
+				// recreating the struct here to avoid modifying it when reusing the opts struct
+				field:      "parent_project_id",
+				value:      f.value,
+				comparator: f.comparator,
+				isNumeric:  f.isNumeric,
+			}, opts.filterIncludeNulls)
 			if err != nil {
 				return nil, totalCount, err
 			}
