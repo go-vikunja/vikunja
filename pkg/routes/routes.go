@@ -581,10 +581,10 @@ func registerAPIRoutes(a *echo.Group) {
 			return &models.Webhook{}
 		},
 	}
-	a.GET("/project/:project/webhooks", webhookProvider.ReadAllWeb)
-	a.PUT("/project/:project/webhooks", webhookProvider.CreateWeb)
-	a.DELETE("/project/:project/webhooks/:webhook", webhookProvider.DeleteWeb)
-	a.POST("/project/:project/webhooks/:webhook", webhookProvider.UpdateWeb)
+	a.GET("/projects/:project/webhooks", webhookProvider.ReadAllWeb)
+	a.PUT("/projects/:project/webhooks", webhookProvider.CreateWeb)
+	a.DELETE("/projects/:project/webhooks/:webhook", webhookProvider.DeleteWeb)
+	a.POST("/projects/:project/webhooks/:webhook", webhookProvider.UpdateWeb)
 	a.GET("/webhooks/events", apiv1.GetAvailableWebhookEvents)
 }
 
