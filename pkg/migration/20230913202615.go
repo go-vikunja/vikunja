@@ -27,6 +27,7 @@ type webhooks20230913202615 struct {
 	TargetURL   string    `xorm:"not null" valid:"minstringlength(1)" minLength:"1" json:"target_url"`
 	Events      []string  `xorm:"JSON not null" valid:"minstringlength(1)" minLength:"1" json:"event"`
 	ProjectID   int64     `xorm:"bigint not null index" json:"project_id" param:"project"`
+	Secret      string    `xorm:"null" json:"secret"`
 	CreatedByID int64     `xorm:"bigint not null" json:"-"`
 	Created     time.Time `xorm:"created not null" json:"created"`
 	Updated     time.Time `xorm:"updated not null" json:"updated"`

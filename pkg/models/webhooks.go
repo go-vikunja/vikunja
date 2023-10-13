@@ -17,9 +17,17 @@
 package models
 
 import (
+	"bytes"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/web"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"net/http"
 	"sort"
 	"sync"
 	"time"
@@ -29,8 +37,9 @@ import (
 type Webhook struct {
 	ID        int64    `xorm:"bigint autoincr not null unique pk" json:"id" param:"webhook"`
 	TargetURL string   `xorm:"not null" valid:"minstringlength(1)" minLength:"1" json:"target_url"`
-	Events    []string `xorm:"JSON not null" valid:"minstringlength(1)" minLength:"1" json:"event"`
+	Events    []string `xorm:"JSON not null" valid:"minstringlength(1)" minLength:"1" json:"events"`
 	ProjectID int64    `xorm:"bigint not null index" json:"project_id" param:"project"`
+	Secret    string   `xorm:"null" json:"secret"`
 
 	// The user who initially created the webhook target.
 	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-"`
@@ -122,5 +131,35 @@ func (w *Webhook) Update(s *xorm.Session, a web.Auth) (err error) {
 
 func (w *Webhook) Delete(s *xorm.Session, a web.Auth) (err error) {
 	_, err = s.Where("id = ?", w.ID).Delete(&Webhook{})
+	return
+}
+
+func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
+	payload, err := json.Marshal(p)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, w.TargetURL, bytes.NewReader(payload))
+	if err != nil {
+		return err
+	}
+
+	if len(w.Secret) > 0 {
+		sig256 := hmac.New(sha256.New, []byte(w.Secret))
+		_, err = sig256.Write(payload)
+		if err != nil {
+			log.Errorf("Could not generate webhook signature for Webhook %d: %s", w.ID, err)
+		}
+		signature := hex.EncodeToString(sig256.Sum(nil))
+		req.Header.Add("X-Vikunja-Signature", signature)
+	}
+
+	req.Header.Add("User-Agent", "Vikunja/"+version.Version)
+
+	_, err = http.DefaultClient.Do(req)
+	if err == nil {
+		log.Debugf("Sent webhook payload for webhook %d for event %s", w.ID, p.EventName)
+	}
 	return
 }
