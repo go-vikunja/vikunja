@@ -176,6 +176,7 @@
       "title": "Supprimer votre compte Vikunja",
       "text1": "La suppression de votre compte est définitive et ne peut pas être annulée. Nous supprimerons tous vos projets, tâches et tout ce qui y est associé.",
       "text2": "Pour continuer, saisissez votre mot de passe. Vous recevrez un courriel contenant les instructions à suivre.",
+      "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
       "confirm": "Supprimer mon compte",
       "requestSuccess": "La requête a abouti. Vous recevrez un courriel avec des instructions à suivre.",
       "passwordRequired": "Saisissez votre mot de passe.",
@@ -183,6 +184,7 @@
       "scheduled": "Nous allons supprimer votre compte Vikunja le {date} ({dateSince}).",
       "scheduledCancel": "Pour annuler la suppression de votre compte, cliquez ici.",
       "scheduledCancelText": "Pour annuler la suppression de votre compte, saisissez votre mot de passe ci-dessous :",
+      "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
       "scheduledCancelConfirm": "Annuler la suppression de mon compte",
       "scheduledCancelSuccess": "Nous ne supprimerons pas votre compte."
     },
@@ -880,7 +882,8 @@
       "description": "Activer ou désactiver la modification de la description de tâche",
       "delete": "Supprimer cette tâche",
       "priority": "Changer la priorité de cette tâche",
-      "favorite": "Marquer cette tâche comme favorite ou non"
+      "favorite": "Marquer cette tâche comme favorite ou non",
+      "save": "Save the current task"
     },
     "project": {
       "title": "Vues du projet",

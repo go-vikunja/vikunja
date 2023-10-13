@@ -176,6 +176,7 @@
       "title": "Vikunjaアカウントの削除",
       "text1": "アカウントの削除は永久的なものであり、元に戻すことはできません。あなたのプロジェクト、タスク、それらに関連するすべてのものを削除します。",
       "text2": "続行するにはパスワードを入力してください。詳しい案内の記載したメールを送信します。",
+      "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
       "confirm": "アカウントの削除",
       "requestSuccess": "リクエストは成功しました。詳しい案内はメールでお知らせします。",
       "passwordRequired": "パスワードを入力してください。",
@@ -183,6 +184,7 @@
       "scheduled": "{date} ({dateSince}) にVikunjaアカウントは削除されます。",
       "scheduledCancel": "アカウントの削除を取り消す場合はこちらをご覧ください。",
       "scheduledCancelText": "アカウントの削除を取り消すにはパスワードを入力してください:",
+      "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
       "scheduledCancelConfirm": "アカウント削除の取り消し",
       "scheduledCancelSuccess": "アカウント削除は行われません。"
     },
@@ -880,7 +882,8 @@
       "description": "タスクの説明を編集",
       "delete": "タスクを削除",
       "priority": "タスクの優先度を設定",
-      "favorite": "タスクをお気に入りに追加/削除"
+      "favorite": "タスクをお気に入りに追加/削除",
+      "save": "Save the current task"
     },
     "project": {
       "title": "プロジェクト",

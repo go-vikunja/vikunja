@@ -176,6 +176,7 @@
       "title": "Xóa tài khoản của bạn",
       "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "Để tiếp tục, vui lòng nhập mật khẩu của bạn. Bạn sẽ nhận được một email hướng dẫn thêm.",
+      "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
       "confirm": "Xóa tài khoản của tôi",
       "requestSuccess": "Yêu cầu đã thành công. Bạn sẽ nhận được một email hướng dẫn thêm.",
       "passwordRequired": "Vui lòng nhập mật khẩu.",
@@ -183,6 +184,7 @@
       "scheduled": "Chúng tôi sẽ xóa tài khoản của bạn vào {date} ({dateSince}).",
       "scheduledCancel": "Để hủy việc xóa tài khoản của bạn, hãy nhấp vào đây.",
       "scheduledCancelText": "Để hủy việc xóa tài khoản, vui lòng nhập mật khẩu của bạn vào ô bên dưới:",
+      "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
       "scheduledCancelConfirm": "Hủy lệnh xóa tài khoản",
       "scheduledCancelSuccess": "Chúng tôi sẽ không xóa tài khoản của bạn nữa."
     },
@@ -880,7 +882,8 @@
       "description": "Toggle editing of the task description",
       "delete": "Delete this task",
       "priority": "Change the priority of this task",
-      "favorite": "Mark this task as favorite / unfavorite"
+      "favorite": "Mark this task as favorite / unfavorite",
+      "save": "Save the current task"
     },
     "project": {
       "title": "Project Views",

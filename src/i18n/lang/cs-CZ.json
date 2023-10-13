@@ -176,6 +176,7 @@
       "title": "Smazat svůj účet",
       "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "Chcete-li pokračovat, zadejte své heslo. Obdržíte e-mail s dalšími pokyny.",
+      "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
       "confirm": "Smazat můj účet",
       "requestSuccess": "Požadavek byl úspěšný. Obdržíte e-mail s dalšími pokyny.",
       "passwordRequired": "Prosím zadejte Vaše heslo.",
@@ -183,6 +184,7 @@
       "scheduled": "Váš Vikunja účet odstraníme do {date} ({dateSince}).",
       "scheduledCancel": "Chcete-li zrušit smazání vašeho účtu, klikněte zde.",
       "scheduledCancelText": "Chcete-li zrušit smazání vašeho účtu, zadejte prosím své heslo níže:",
+      "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
       "scheduledCancelConfirm": "Zrušit smazání mého účtu",
       "scheduledCancelSuccess": "Váš účet nebude smazán."
     },
@@ -880,7 +882,8 @@
       "description": "Přepnout úpravy popisu úkolu",
       "delete": "Delete this task",
       "priority": "Change the priority of this task",
-      "favorite": "Mark this task as favorite / unfavorite"
+      "favorite": "Mark this task as favorite / unfavorite",
+      "save": "Save the current task"
     },
     "project": {
       "title": "Project Views",

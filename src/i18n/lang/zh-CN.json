@@ -176,6 +176,7 @@
       "title": "删除您的 Vikunja 帐户",
       "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "若要继续，请输入您的密码。您将收到一封包含更多说明的电子邮件。",
+      "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
       "confirm": "删除我的帐户",
       "requestSuccess": "请求成功。您将收到一封包含更多说明的电子邮件。",
       "passwordRequired": "请输入密码",
@@ -183,6 +184,7 @@
       "scheduled": "您的 Vikunja帐户将于 {date} ({dateSince}) 完成注销删除。",
       "scheduledCancel": "要取消您的帐户删除操作，请单击此处。",
       "scheduledCancelText": "若要取消您的帐户删除操作，请在下面输入您的密码：",
+      "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
       "scheduledCancelConfirm": "取消删除我的帐户",
       "scheduledCancelSuccess": "账户删除操作已撤销"
     },
@@ -880,7 +882,8 @@
       "description": "切换编辑时的任务描述",
       "delete": "Delete this task",
       "priority": "Change the priority of this task",
-      "favorite": "Mark this task as favorite / unfavorite"
+      "favorite": "Mark this task as favorite / unfavorite",
+      "save": "Save the current task"
     },
     "project": {
       "title": "Project Views",

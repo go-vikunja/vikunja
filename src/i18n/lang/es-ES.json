@@ -176,6 +176,7 @@
       "title": "Eliminar tu Cuenta de Vikunja",
       "text1": "El borrado de tu cuenta es permanente y no puede deshacerse. Borraremos todos tus proyectos, tareas y todo lo que esté asociado con ellos.",
       "text2": "Para continuar, por favor, introduce tu contraseña. Recibirás un correo electrónico con más instrucciones.",
+      "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
       "confirm": "Eliminar mi cuenta",
       "requestSuccess": "La solicitud ha sido exitosa. Recibirás un correo electrónico con más instrucciones.",
       "passwordRequired": "Por favor, introduce tu contraseña.",
@@ -183,6 +184,7 @@
       "scheduled": "Eliminaremos tu cuenta de Vikunja en {date} ({dateSince}).",
       "scheduledCancel": "Para cancelar la eliminación de tu cuenta, haz clic aquí.",
       "scheduledCancelText": "Para cancelar la eliminación de tu cuenta, por favor, introduce tu contraseña a continuación:",
+      "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
       "scheduledCancelConfirm": "Cancelar la eliminación de mi cuenta",
       "scheduledCancelSuccess": "No eliminaremos tu cuenta."
     },
@@ -880,7 +882,8 @@
       "description": "Editar la descripción de la tarea",
       "delete": "Eliminar esta tarea",
       "priority": "Cambiar la prioridad de esta tarea",
-      "favorite": "Marcar esta tarea como favorita / no favorita"
+      "favorite": "Marcar esta tarea como favorita / no favorita",
+      "save": "Save the current task"
     },
     "project": {
       "title": "Vistas de proyecto",

@@ -176,6 +176,7 @@
       "title": "Удалить свой аккаунт VIkunja",
       "text1": "Удаление аккаунта необратимо. Мы удалим все ваши проекты, задачи и всё связанное с ними.",
       "text2": "Для продолжения введите свой пароль. На почту будет отправлено письмо с дальнейшими инструкциями.",
+      "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
       "confirm": "Удалить мой аккаунт",
       "requestSuccess": "Запрос успешно выполнен. На почту будет отправлено письмо с дальнейшими инструкциями.",
       "passwordRequired": "Введите свой пароль.",
@@ -183,6 +184,7 @@
       "scheduled": "Мы удалим ваш аккаунт Vikunja {date} ({dateSince}).",
       "scheduledCancel": "Что отменить удаление аккаунта, нажмите сюда.",
       "scheduledCancelText": "Чтобы отменить удаление аккаунта, введите свой пароль ниже:",
+      "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
       "scheduledCancelConfirm": "Отменить удаление моего аккаунта",
       "scheduledCancelSuccess": "Мы не будем удалять ваш аккаунт."
     },
@@ -880,7 +882,8 @@
       "description": "Включить изменение описания задачи",
       "delete": "Удалить задачу",
       "priority": "Изменить приоритет задачи",
-      "favorite": "Mark this task as favorite / unfavorite"
+      "favorite": "Mark this task as favorite / unfavorite",
+      "save": "Save the current task"
     },
     "project": {
       "title": "Просмотр проекта",

@@ -176,6 +176,7 @@
       "title": "Usuń swoje konto Vikunja",
       "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "Aby kontynuować, wprowadź swoje hasło. Otrzymasz wiadomość e-mail z dalszymi instrukcjami.",
+      "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
       "confirm": "Usuń moje konto",
       "requestSuccess": "Żądanie powiodło się. Otrzymasz wiadomość e-mail z dalszymi instrukcjami.",
       "passwordRequired": "Wprowadź hasło.",
@@ -183,6 +184,7 @@
       "scheduled": "Twoje konto Vikunja zostanie usunięte w dniu {date} ({dateSince}).",
       "scheduledCancel": "Aby anulować usunięcie konta, kliknij tutaj.",
       "scheduledCancelText": "Aby anulować usunięcie konta, wprowadź poniżej swoje hasło:",
+      "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
       "scheduledCancelConfirm": "Anuluj usunięcie mojego konta",
       "scheduledCancelSuccess": "Nie usuniemy Twojego konta."
     },
@@ -880,7 +882,8 @@
       "description": "Toggle editing of the task description",
       "delete": "Delete this task",
       "priority": "Change the priority of this task",
-      "favorite": "Mark this task as favorite / unfavorite"
+      "favorite": "Mark this task as favorite / unfavorite",
+      "save": "Save the current task"
     },
     "project": {
       "title": "Project Views",

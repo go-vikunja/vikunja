@@ -176,6 +176,7 @@
       "title": "Törölje Vikunja fiókját",
       "text1": "Fiókjának törlése végleges, és nem vonható vissza. Töröljük az összes projektjét, feladatát és minden, ami ehhez kapcsolódik.",
       "text2": "A folytatáshoz adja meg jelszavát. Kapni fog egy e-mailt a további utasításokkal.",
+      "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
       "confirm": "Fiókom törlése",
       "requestSuccess": "A kérés sikeres volt. Kapni fog egy e-mailt a további utasításokkal.",
       "passwordRequired": "Kérjük, írja be jelszavát.",
@@ -183,6 +184,7 @@
       "scheduled": "Vikunja fiókját a következő időpontban töröljük: {date} ({dateSince}).",
       "scheduledCancel": "A fiók törlésének megszakításához kattintson ide.",
       "scheduledCancelText": "Fiókja törlésének megszakításához adja meg jelszavát alább:",
+      "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
       "scheduledCancelConfirm": "Fiókom törlésének megszakítása",
       "scheduledCancelSuccess": "Fiókját nem töröljük."
     },
@@ -880,7 +882,8 @@
       "description": "A feladatleírás szerkesztésének váltása",
       "delete": "Feladat törlése",
       "priority": "Módosítsa ennek a feladatnak a prioritását",
-      "favorite": "Jelölje meg ezt a feladatot kedvencként / nem kedvencként"
+      "favorite": "Jelölje meg ezt a feladatot kedvencként / nem kedvencként",
+      "save": "Save the current task"
     },
     "project": {
       "title": "Projektnézetek",

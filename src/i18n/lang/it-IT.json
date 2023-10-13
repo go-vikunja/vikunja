@@ -176,6 +176,7 @@
       "title": "Elimina il tuo Account Vikunja",
       "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "Per continuare, inserisci la tua password. Riceverai un'e-mail con ulteriori istruzioni.",
+      "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
       "confirm": "Elimina il mio profilo",
       "requestSuccess": "Richiesta riuscita. Riceverai un'e-mail con ulteriori istruzioni.",
       "passwordRequired": "Inserisci la tua password.",
@@ -183,6 +184,7 @@
       "scheduled": "Elimineremo il tuo account Vikunja il {date} ({dateSince}).",
       "scheduledCancel": "Per annullare l'eliminazione del tuo account, clicca qui.",
       "scheduledCancelText": "Per annullare l'eliminazione del tuo account, inserisci la password qui sotto:",
+      "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
       "scheduledCancelConfirm": "Annulla l'eliminazione del mio account",
       "scheduledCancelSuccess": "Non elimineremo il tuo account."
     },
@@ -880,7 +882,8 @@
       "description": "Attiva/Disattiva modifica della descrizione dell'attività",
       "delete": "Elimina questa attività",
       "priority": "Modifica la priorità di questa attività",
-      "favorite": "Segna questa attività come preferita o non preferita"
+      "favorite": "Segna questa attività come preferita o non preferita",
+      "save": "Save the current task"
     },
     "project": {
       "title": "Project Views",

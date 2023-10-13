@@ -176,6 +176,7 @@
       "title": "Slet din Vikunja konto",
       "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "For at fortsætte, skal du indtaste din adgangskode. Du vil modtage en e-mail med yderligere instruktioner.",
+      "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
       "confirm": "Slet min konto",
       "requestSuccess": "Anmodningen blev gennemført. Du vil modtage en e-mail med yderligere instruktioner.",
       "passwordRequired": "Indtast venligst din adgangskode.",
@@ -183,6 +184,7 @@
       "scheduled": "Vi sletter din Vikunja-konto {date} ({dateSince}).",
       "scheduledCancel": "Klik her for at annullere sletningen af din konto.",
       "scheduledCancelText": "For at annullere sletningen af din konto, skal du indtaste din adgangskode nedenfor:",
+      "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
       "scheduledCancelConfirm": "Annuller sletningen af min konto",
       "scheduledCancelSuccess": "Vi sletter ikke din konto."
     },
@@ -880,7 +882,8 @@
       "description": "Slå redigering af opgavebeskrivelse til/fra",
       "delete": "Delete this task",
       "priority": "Change the priority of this task",
-      "favorite": "Mark this task as favorite / unfavorite"
+      "favorite": "Mark this task as favorite / unfavorite",
+      "save": "Save the current task"
     },
     "project": {
       "title": "Project Views",

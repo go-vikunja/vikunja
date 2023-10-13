@@ -176,6 +176,7 @@
       "title": "Slett kontoen din",
       "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "For å fortsette, skriv inn passordet ditt. Du vil motta en e-post med ytterligere instruksjoner.",
+      "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
       "confirm": "Slett min konto",
       "requestSuccess": "Forespørselen var vellykket. Du vil motta en e-post med ytterligere instruksjoner.",
       "passwordRequired": "Skriv inn ditt passord.",
@@ -183,6 +184,7 @@
       "scheduled": "Vi vil slette din Vikunja konto den {date} ({dateSince}).",
       "scheduledCancel": "For å avbryte slettingen av kontoen din, klikk her.",
       "scheduledCancelText": "For å avbryte slettingen av kontoen din, skriv inn passordet under:",
+      "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
       "scheduledCancelConfirm": "Avbryt slettingen av kontoen min",
       "scheduledCancelSuccess": "Vi vil ikke slette din konto."
     },
@@ -880,7 +882,8 @@
       "description": "Veksle redigering av oppgavebeskrivelsen",
       "delete": "Delete this task",
       "priority": "Change the priority of this task",
-      "favorite": "Mark this task as favorite / unfavorite"
+      "favorite": "Mark this task as favorite / unfavorite",
+      "save": "Save the current task"
     },
     "project": {
       "title": "Prosjektvisning",
