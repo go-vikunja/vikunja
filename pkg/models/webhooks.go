@@ -18,12 +18,6 @@ package models
 
 import (
 	"bytes"
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/version"
-	"code.vikunja.io/web"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
@@ -34,6 +28,13 @@ import (
 	"sort"
 	"sync"
 	"time"
+
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/version"
+	"code.vikunja.io/web"
 	"xorm.io/xorm"
 )
 
@@ -99,7 +100,7 @@ func GetAvailableWebhookEvents() []string {
 
 // Create creates a webhook target
 // @Summary Create a webhook target
-// @Description Create a webhook target which recieves POST requests about specified events from a project.
+// @Description Create a webhook target which receives POST requests about specified events from a project.
 // @tags webhooks
 // @Accept json
 // @Produce json

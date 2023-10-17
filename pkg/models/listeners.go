@@ -648,11 +648,11 @@ func getProjectIDFromAnyEvent(eventPayload map[string]interface{}) int64 {
 	if task, has := eventPayload["task"]; has {
 		t := task.(map[string]interface{})
 		if projectID, has := t["project_id"]; has {
-			switch projectID.(type) {
+			switch v := projectID.(type) {
 			case int64:
-				return projectID.(int64)
+				return v
 			case float64:
-				return int64(projectID.(float64))
+				return int64(v)
 			}
 			return projectID.(int64)
 		}
@@ -661,11 +661,11 @@ func getProjectIDFromAnyEvent(eventPayload map[string]interface{}) int64 {
 	if project, has := eventPayload["project"]; has {
 		t := project.(map[string]interface{})
 		if projectID, has := t["id"]; has {
-			switch projectID.(type) {
+			switch v := projectID.(type) {
 			case int64:
-				return projectID.(int64)
+				return v
 			case float64:
-				return int64(projectID.(float64))
+				return int64(v)
 			}
 			return projectID.(int64)
 		}

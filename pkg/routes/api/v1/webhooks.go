@@ -17,9 +17,10 @@
 package v1
 
 import (
+	"net/http"
+
 	"code.vikunja.io/api/pkg/models"
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 // GetAvailableWebhookEvents returns a list of all possible webhook target events
