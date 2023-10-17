@@ -22,6 +22,16 @@ import (
 	"net/http"
 )
 
+// GetAvailableWebhookEvents returns a list of all possible webhook target events
+// @Summary Get all possible webhook events
+// @Description Get all possible webhook events to use when creating or updating a webhook target.
+// @tags webhooks
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Success 200 {array} string "The list of all possible webhook events"
+// @Failure 500 {object} models.Message "Internal server error"
+// @Router /webhooks/events [get]
 func GetAvailableWebhookEvents(c echo.Context) error {
 	return c.JSON(http.StatusOK, models.GetAvailableWebhookEvents())
 }

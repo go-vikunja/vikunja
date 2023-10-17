@@ -2425,6 +2425,230 @@ const docTemplate = `{
                 }
             }
         },
+        "/projects/{id}/webhooks": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Get all api webhook targets for the specified project.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhooks"
+                ],
+                "summary": "Get all api webhook targets for the specified project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per bucket per page. This parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The list of all webhook targets",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Webhook"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Create a webhook target which recieves POST requests about specified events from a project.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhooks"
+                ],
+                "summary": "Create a webhook target",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The webhook target object with required fields",
+                        "name": "webhook",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Webhook"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created webhook target.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Webhook"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid webhook object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{id}/webhooks/{webhookID}": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Change a webhook target's events. You cannot change other values of a webhook.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhooks"
+                ],
+                "summary": "Change a webhook target's events.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Webhook ID",
+                        "name": "webhookID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated webhook target",
+                        "schema": {
+                            "$ref": "#/definitions/models.Webhook"
+                        }
+                    },
+                    "404": {
+                        "description": "The webhok target does not exist",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Delete any of the project's webhook targets.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhooks"
+                ],
+                "summary": "Deletes an existing webhook target",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Webhook ID",
+                        "name": "webhookID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully deleted.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "404": {
+                        "description": "The webhok target does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/projects/{projectID}/buckets/{bucketID}": {
             "post": {
                 "security": [
@@ -5427,19 +5651,19 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "The page number for tasks. Used for pagination. If not provided, the first page of results is returned.",
+                        "description": "The page number, used for pagination. If not provided, the first page of results is returned.",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "The maximum number of tasks per bucket per page. This parameter is limited by the configured maximum of items per page.",
+                        "description": "The maximum number of tokens per page. This parameter is limited by the configured maximum of items per page.",
                         "name": "per_page",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Search tasks by task text.",
+                        "description": "Search tokens by their title.",
                         "name": "s",
                         "in": "query"
                     }
@@ -6776,6 +7000,43 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal server error.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/webhooks/events": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Get all possible webhook events to use when creating or updating a webhook target.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhooks"
+                ],
+                "summary": "Get all possible webhook events",
+                "responses": {
+                    "200": {
+                        "description": "The list of all possible webhook events",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/models.Message"
                         }
@@ -8188,6 +8449,52 @@ const docTemplate = `{
                 }
             }
         },
+        "models.Webhook": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "description": "A timestamp when this webhook target was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "created_by": {
+                    "description": "The user who initially created the webhook target.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/user.User"
+                        }
+                    ]
+                },
+                "events": {
+                    "description": "The webhook events which should fire this webhook target",
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "id": {
+                    "description": "The generated ID of this webhook target",
+                    "type": "integer"
+                },
+                "project_id": {
+                    "description": "The project ID of the project this webhook target belongs to",
+                    "type": "integer"
+                },
+                "secret": {
+                    "description": "If provided, webhook requests will be signed using HMAC. Check out the docs about how to use this: https://vikunja.io/docs/webhooks/#signing",
+                    "type": "string"
+                },
+                "target_url": {
+                    "description": "The target URL where the POST request with the webhook payload will be made",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "updated": {
+                    "description": "A timestamp when this webhook target was last updated. You cannot change this value.",
+                    "type": "string"
+                }
+            }
+        },
         "notifications.DatabaseNotification": {
             "type": "object",
             "properties": {
@@ -8618,6 +8925,9 @@ const docTemplate = `{
                 },
                 "version": {
                     "type": "string"
+                },
+                "webhooks_enabled": {
+                    "type": "boolean"
                 }
             }
         },

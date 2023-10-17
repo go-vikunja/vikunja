@@ -122,9 +122,9 @@ func HashToken(token, salt string) string {
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param page query int false "The page number for tasks. Used for pagination. If not provided, the first page of results is returned."
-// @Param per_page query int false "The maximum number of tasks per bucket per page. This parameter is limited by the configured maximum of items per page."
-// @Param s query string false "Search tasks by task text."
+// @Param page query int false "The page number, used for pagination. If not provided, the first page of results is returned."
+// @Param per_page query int false "The maximum number of tokens per page. This parameter is limited by the configured maximum of items per page."
+// @Param s query string false "Search tokens by their title."
 // @Success 200 {array} models.APIToken "The list of all tokens"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /tokens [get]

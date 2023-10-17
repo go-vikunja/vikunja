@@ -1040,6 +1040,42 @@ definitions:
         minLength: 1
         type: string
     type: object
+  models.Webhook:
+    properties:
+      created:
+        description: A timestamp when this webhook target was created. You cannot
+          change this value.
+        type: string
+      created_by:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who initially created the webhook target.
+      events:
+        description: The webhook events which should fire this webhook target
+        items:
+          minLength: 1
+          type: string
+        type: array
+      id:
+        description: The generated ID of this webhook target
+        type: integer
+      project_id:
+        description: The project ID of the project this webhook target belongs to
+        type: integer
+      secret:
+        description: 'If provided, webhook requests will be signed using HMAC. Check
+          out the docs about how to use this: https://vikunja.io/docs/webhooks/#signing'
+        type: string
+      target_url:
+        description: The target URL where the POST request with the webhook payload
+          will be made
+        minLength: 1
+        type: string
+      updated:
+        description: A timestamp when this webhook target was last updated. You cannot
+          change this value.
+        type: string
+    type: object
   notifications.DatabaseNotification:
     properties:
       created:
@@ -1352,6 +1388,8 @@ definitions:
         type: boolean
       version:
         type: string
+      webhooks_enabled:
+        type: boolean
     type: object
   web.HTTPError:
     properties:
@@ -3004,6 +3042,154 @@ paths:
       summary: Add a user to a project
       tags:
       - sharing
+  /projects/{id}/webhooks:
+    get:
+      consumes:
+      - application/json
+      description: Get all api webhook targets for the specified project.
+      parameters:
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per bucket per page. This parameter
+          is limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The list of all webhook targets
+          schema:
+            items:
+              $ref: '#/definitions/models.Webhook'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all api webhook targets for the specified project
+      tags:
+      - webhooks
+    put:
+      consumes:
+      - application/json
+      description: Create a webhook target which recieves POST requests about specified
+        events from a project.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The webhook target object with required fields
+        in: body
+        name: webhook
+        required: true
+        schema:
+          $ref: '#/definitions/models.Webhook'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created webhook target.
+          schema:
+            $ref: '#/definitions/models.Webhook'
+        "400":
+          description: Invalid webhook object provided.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Create a webhook target
+      tags:
+      - webhooks
+  /projects/{id}/webhooks/{webhookID}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete any of the project's webhook targets.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Webhook ID
+        in: path
+        name: webhookID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: The webhok target does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Deletes an existing webhook target
+      tags:
+      - webhooks
+    post:
+      consumes:
+      - application/json
+      description: Change a webhook target's events. You cannot change other values
+        of a webhook.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Webhook ID
+        in: path
+        name: webhookID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated webhook target
+          schema:
+            $ref: '#/definitions/models.Webhook'
+        "404":
+          description: The webhok target does not exist
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Change a webhook target's events.
+      tags:
+      - webhooks
   /projects/{project}/shares:
     get:
       consumes:
@@ -5018,17 +5204,17 @@ paths:
       - application/json
       description: Returns all api tokens the current user has created.
       parameters:
-      - description: The page number for tasks. Used for pagination. If not provided,
-          the first page of results is returned.
+      - description: The page number, used for pagination. If not provided, the first
+          page of results is returned.
         in: query
         name: page
         type: integer
-      - description: The maximum number of tasks per bucket per page. This parameter
-          is limited by the configured maximum of items per page.
+      - description: The maximum number of tokens per page. This parameter is limited
+          by the configured maximum of items per page.
         in: query
         name: per_page
         type: integer
-      - description: Search tasks by task text.
+      - description: Search tokens by their title.
         in: query
         name: s
         type: string
@@ -5901,6 +6087,30 @@ paths:
       summary: Get users
       tags:
       - user
+  /webhooks/events:
+    get:
+      consumes:
+      - application/json
+      description: Get all possible webhook events to use when creating or updating
+        a webhook target.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The list of all possible webhook events
+          schema:
+            items:
+              type: string
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all possible webhook events
+      tags:
+      - webhooks
 securityDefinitions:
   BasicAuth:
     type: basic

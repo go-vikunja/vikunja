@@ -40,11 +40,16 @@ import (
 var webhookClient *http.Client
 
 type Webhook struct {
-	ID        int64    `xorm:"bigint autoincr not null unique pk" json:"id" param:"webhook"`
-	TargetURL string   `xorm:"not null" valid:"minstringlength(1)" minLength:"1" json:"target_url"`
-	Events    []string `xorm:"JSON not null" valid:"minstringlength(1)" minLength:"1" json:"events"`
-	ProjectID int64    `xorm:"bigint not null index" json:"project_id" param:"project"`
-	Secret    string   `xorm:"null" json:"secret"`
+	// The generated ID of this webhook target
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"webhook"`
+	// The target URL where the POST request with the webhook payload will be made
+	TargetURL string `xorm:"not null" valid:"minstringlength(1)" minLength:"1" json:"target_url"`
+	// The webhook events which should fire this webhook target
+	Events []string `xorm:"JSON not null" valid:"minstringlength(1)" minLength:"1" json:"events"`
+	// The project ID of the project this webhook target belongs to
+	ProjectID int64 `xorm:"bigint not null index" json:"project_id" param:"project"`
+	// If provided, webhook requests will be signed using HMAC. Check out the docs about how to use this: https://vikunja.io/docs/webhooks/#signing
+	Secret string `xorm:"null" json:"secret"`
 
 	// The user who initially created the webhook target.
 	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-"`
@@ -92,6 +97,19 @@ func GetAvailableWebhookEvents() []string {
 	return evts
 }
 
+// Create creates a webhook target
+// @Summary Create a webhook target
+// @Description Create a webhook target which recieves POST requests about specified events from a project.
+// @tags webhooks
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "Project ID"
+// @Param webhook body models.Webhook true "The webhook target object with required fields"
+// @Success 200 {object} models.Webhook "The created webhook target."
+// @Failure 400 {object} web.HTTPError "Invalid webhook object provided."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /projects/{id}/webhooks [put]
 func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
 	// TODO: check valid webhook events
 	w.CreatedByID = a.GetID()
@@ -99,6 +117,19 @@ func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
 	return
 }
 
+// ReadAll returns all webhook targets for a project
+// @Summary Get all api webhook targets for the specified project
+// @Description Get all api webhook targets for the specified project.
+// @tags webhooks
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
+// @Param per_page query int false "The maximum number of items per bucket per page. This parameter is limited by the configured maximum of items per page."
+// @Param id path int true "Project ID"
+// @Success 200 {array} models.Webhook "The list of all webhook targets"
+// @Failure 500 {object} models.Message "Internal server error"
+// @Router /projects/{id}/webhooks [get]
 func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	p := &Project{ID: w.ProjectID}
 	can, _, err := p.CanRead(s, a)
@@ -126,6 +157,19 @@ func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 	return ws, len(ws), total, err
 }
 
+// Update updates a webhook target
+// @Summary Change a webhook target's events.
+// @Description Change a webhook target's events. You cannot change other values of a webhook.
+// @tags webhooks
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "Project ID"
+// @Param webhookID path int true "Webhook ID"
+// @Success 200 {object} models.Webhook "Updated webhook target"
+// @Failure 404 {object} web.HTTPError "The webhok target does not exist"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /projects/{id}/webhooks/{webhookID} [post]
 func (w *Webhook) Update(s *xorm.Session, a web.Auth) (err error) {
 	// TODO validate webhook events
 	_, err = s.Where("id = ?", w.ID).
@@ -134,6 +178,19 @@ func (w *Webhook) Update(s *xorm.Session, a web.Auth) (err error) {
 	return
 }
 
+// Delete deletes a webhook target
+// @Summary Deletes an existing webhook target
+// @Description Delete any of the project's webhook targets.
+// @tags webhooks
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "Project ID"
+// @Param webhookID path int true "Webhook ID"
+// @Success 200 {object} models.Message "Successfully deleted."
+// @Failure 404 {object} web.HTTPError "The webhok target does not exist."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /projects/{id}/webhooks/{webhookID} [delete]
 func (w *Webhook) Delete(s *xorm.Session, a web.Auth) (err error) {
 	_, err = s.Where("id = ?", w.ID).Delete(&Webhook{})
 	return
