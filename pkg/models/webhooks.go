@@ -72,10 +72,6 @@ func init() {
 }
 
 func RegisterEventForWebhook(event events.Event) {
-	if !config.WebhooksEnabled.GetBool() {
-		return
-	}
-
 	availableWebhookEventsLock.Lock()
 	defer availableWebhookEventsLock.Unlock()
 
