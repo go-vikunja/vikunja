@@ -1307,7 +1307,7 @@ Environment path: `VIKUNJA_DEFAULTSETTINGS_WEEK_START`
 
 ### language
 
-The language of the user interface. Must be an ISO 639-1 language code. Will default to the browser language the user uses when signing up.
+The language of the user interface. Must be an ISO 639-1 language code followed by an ISO 3166-1 alpha-2 country code. Check https://kolaente.dev/vikunja/frontend/src/branch/main/src/i18n/lang for a list of possible languages. Will default to the browser language the user uses when signing up.
 
 Default: `<unset>`
 
