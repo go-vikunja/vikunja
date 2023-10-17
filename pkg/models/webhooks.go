@@ -162,7 +162,10 @@ func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
 
 	req.Header.Add("User-Agent", "Vikunja/"+version.Version)
 
-	_, err = http.DefaultClient.Do(req)
+	client := http.DefaultClient
+	client.Timeout = time.Duration(config.WebhooksTimeoutSeconds.GetInt()) * time.Second
+
+	_, err = client.Do(req)
 	if err == nil {
 		log.Debugf("Sent webhook payload for webhook %d for event %s", w.ID, p.EventName)
 	}

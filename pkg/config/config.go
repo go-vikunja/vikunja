@@ -392,6 +392,7 @@ func InitDefaultConfig() {
 	DefaultSettingsOverdueTaskRemindersTime.setDefault("9:00")
 	// Webhook
 	WebhooksEnabled.setDefault(true)
+	WebhooksTimeoutSeconds.setDefault(30)
 }
 
 // InitConfig initializes the config, sets defaults etc.
