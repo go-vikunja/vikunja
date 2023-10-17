@@ -19,6 +19,7 @@ export const SUPPORTED_LOCALES = {
 	'da-DK': 'Dansk',
 	'ja-JP': '日本語',
 	'hu-HU': 'Magyar',
+	'ar-SA': 'اَلْعَرَبِيَّةُ',
 } as const
 
 export type SupportedLocale = keyof typeof SUPPORTED_LOCALES
