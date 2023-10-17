@@ -1327,3 +1327,53 @@ Full path: `defaultsettings.timezone`
 Environment path: `VIKUNJA_DEFAULTSETTINGS_TIMEZONE`
 
 
+---
+
+## webhooks
+
+
+
+### enabled
+
+Whether to enable support for webhooks
+
+Default: `true`
+
+Full path: `webhooks.enabled`
+
+Environment path: `VIKUNJA_WEBHOOKS_ENABLED`
+
+
+### timoutseconds
+
+The timout in seconds until a webhook request fails when no response has been received.
+
+Default: `30`
+
+Full path: `webhooks.timoutseconds`
+
+Environment path: `VIKUNJA_WEBHOOKS_TIMOUTSECONDS`
+
+
+### proxyurl
+
+The URL of [a mole instance](https://github.com/frain-dev/mole) to use to proxy outgoing webhook requests. You should use this and configure appropriately if you're not the only one using your Vikunja instance. More info about why: https://webhooks.fyi/best-practices/webhook-providers#implement-security-on-egress-communication. Must be used in combination with `webhooks.password` (see below).
+
+Default: `<empty>`
+
+Full path: `webhooks.proxyurl`
+
+Environment path: `VIKUNJA_WEBHOOKS_PROXYURL`
+
+
+### proxypassword
+
+The proxy password to use when authenticating against the proxy.
+
+Default: `<empty>`
+
+Full path: `webhooks.proxypassword`
+
+Environment path: `VIKUNJA_WEBHOOKS_PROXYPASSWORD`
+
+
