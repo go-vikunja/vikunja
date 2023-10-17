@@ -191,10 +191,6 @@ func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
 
 	req.Header.Add("User-Agent", "Vikunja/"+version.Version)
 
-	if config.WebhooksProxyURL.GetString() != "" && config.WebhooksProxyPassword.GetString() != "" {
-		req.Header.Add("Proxy-Authorization", base64.StdEncoding.EncodeToString([]byte(config.WebhooksProxyPassword.GetString())))
-	}
-
 	client := getWebhookHTTPClient()
 	_, err = client.Do(req)
 	if err == nil {
