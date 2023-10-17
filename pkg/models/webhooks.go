@@ -37,6 +37,8 @@ import (
 	"xorm.io/xorm"
 )
 
+var webhookClient *http.Client
+
 type Webhook struct {
 	ID        int64    `xorm:"bigint autoincr not null unique pk" json:"id" param:"webhook"`
 	TargetURL string   `xorm:"not null" valid:"minstringlength(1)" minLength:"1" json:"target_url"`
@@ -142,10 +144,16 @@ func (w *Webhook) Delete(s *xorm.Session, a web.Auth) (err error) {
 }
 
 func getWebhookHTTPClient() (client *http.Client) {
+
+	if webhookClient != nil {
+		return webhookClient
+	}
+
 	client = http.DefaultClient
 	client.Timeout = time.Duration(config.WebhooksTimeoutSeconds.GetInt()) * time.Second
 
 	if config.WebhooksProxyURL.GetString() == "" || config.WebhooksProxyPassword.GetString() == "" {
+		webhookClient = client
 		return
 	}
 
@@ -158,6 +166,8 @@ func getWebhookHTTPClient() (client *http.Client) {
 			"User-Agent":          []string{"Vikunja/" + version.Version},
 		},
 	}
+
+	webhookClient = client
 
 	return
 }
