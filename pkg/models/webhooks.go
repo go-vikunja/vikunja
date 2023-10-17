@@ -18,6 +18,7 @@ package models
 
 import (
 	"bytes"
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
@@ -67,6 +68,10 @@ func init() {
 }
 
 func RegisterEventForWebhook(event events.Event) {
+	if !config.WebhooksEnabled.GetBool() {
+		return
+	}
+
 	availableWebhookEventsLock.Lock()
 	defer availableWebhookEventsLock.Unlock()
 
