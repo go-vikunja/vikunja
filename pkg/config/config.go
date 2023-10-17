@@ -175,6 +175,8 @@ const (
 
 	WebhooksEnabled        Key = `webhooks.enabled`
 	WebhooksTimeoutSeconds Key = `webhooks.timeoutseconds`
+	WebhooksProxyURL       Key = `webhooks.proxyurl`
+	WebhooksProxyPassword  Key = `webhooks.proxypassword`
 )
 
 // GetString returns a string config value

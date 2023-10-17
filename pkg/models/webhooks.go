@@ -26,9 +26,11 @@ import (
 	"code.vikunja.io/web"
 	"crypto/hmac"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"sort"
 	"sync"
 	"time"
@@ -139,6 +141,27 @@ func (w *Webhook) Delete(s *xorm.Session, a web.Auth) (err error) {
 	return
 }
 
+func getWebhookHTTPClient() (client *http.Client) {
+	client = http.DefaultClient
+	client.Timeout = time.Duration(config.WebhooksTimeoutSeconds.GetInt()) * time.Second
+
+	if config.WebhooksProxyURL.GetString() == "" || config.WebhooksProxyPassword.GetString() == "" {
+		return
+	}
+
+	proxyURL, _ := url.Parse(config.WebhooksProxyURL.GetString())
+
+	client.Transport = &http.Transport{
+		Proxy: http.ProxyURL(proxyURL),
+		ProxyConnectHeader: http.Header{
+			"Proxy-Authorization": []string{"Basic " + base64.StdEncoding.EncodeToString([]byte("vikunja:"+config.WebhooksProxyPassword.GetString()))},
+			"User-Agent":          []string{"Vikunja/" + version.Version},
+		},
+	}
+
+	return
+}
+
 func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
 	payload, err := json.Marshal(p)
 	if err != nil {
@@ -162,9 +185,11 @@ func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
 
 	req.Header.Add("User-Agent", "Vikunja/"+version.Version)
 
-	client := http.DefaultClient
-	client.Timeout = time.Duration(config.WebhooksTimeoutSeconds.GetInt()) * time.Second
+	if config.WebhooksProxyURL.GetString() != "" && config.WebhooksProxyPassword.GetString() != "" {
+		req.Header.Add("Proxy-Authorization", base64.StdEncoding.EncodeToString([]byte(config.WebhooksProxyPassword.GetString())))
+	}
 
+	client := getWebhookHTTPClient()
 	_, err = client.Do(req)
 	if err == nil {
 		log.Debugf("Sent webhook payload for webhook %d for event %s", w.ID, p.EventName)
