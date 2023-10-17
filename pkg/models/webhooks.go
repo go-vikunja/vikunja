@@ -18,6 +18,7 @@ package models
 
 import (
 	"bytes"
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
@@ -131,7 +132,7 @@ func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Success 200 {array} models.Webhook "The list of all webhook targets"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /projects/{id}/webhooks [get]
-func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	p := &Project{ID: w.ProjectID}
 	can, _, err := p.CanRead(s, a)
 	if err != nil {
@@ -171,7 +172,7 @@ func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 // @Failure 404 {object} web.HTTPError "The webhok target does not exist"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/webhooks/{webhookID} [post]
-func (w *Webhook) Update(s *xorm.Session, a web.Auth) (err error) {
+func (w *Webhook) Update(s *xorm.Session, _ web.Auth) (err error) {
 	// TODO validate webhook events
 	_, err = s.Where("id = ?", w.ID).
 		Cols("events").
@@ -192,7 +193,7 @@ func (w *Webhook) Update(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "The webhok target does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/webhooks/{webhookID} [delete]
-func (w *Webhook) Delete(s *xorm.Session, a web.Auth) (err error) {
+func (w *Webhook) Delete(s *xorm.Session, _ web.Auth) (err error) {
 	_, err = s.Where("id = ?", w.ID).Delete(&Webhook{})
 	return
 }
@@ -232,7 +233,7 @@ func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, w.TargetURL, bytes.NewReader(payload))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, w.TargetURL, bytes.NewReader(payload))
 	if err != nil {
 		return err
 	}
@@ -250,9 +251,12 @@ func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
 	req.Header.Add("User-Agent", "Vikunja/"+version.Version)
 
 	client := getWebhookHTTPClient()
-	_, err = client.Do(req)
-	if err == nil {
-		log.Debugf("Sent webhook payload for webhook %d for event %s", w.ID, p.EventName)
+	res, err := client.Do(req)
+	if err != nil {
+		return err
 	}
+
+	defer res.Body.Close()
+	log.Debugf("Sent webhook payload for webhook %d for event %s", w.ID, p.EventName)
 	return
 }
