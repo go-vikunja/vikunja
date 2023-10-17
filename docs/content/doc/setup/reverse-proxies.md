@@ -82,6 +82,175 @@ server {
 
 ## NGINX Proxy Manager (NPM)
 
+### Method 1
+
+Following the [Docker Walkthrough]({{< ref "docker-start-to-finish.md" >}}) guide, you should be able to get Vikunja to work via HTTP connection to your server IP.
+
+From there, all you have to do is adjust the following things:
+
+#### In `docker-compose.yml`
+
+Under `api:`, 
+
+1. Change `VIKUNJA_SERVICE_FRONTENDURL:` to your desired domain with `https://` and `/`.
+
+2. Expose your desired port on host under `ports:`.
+
+example:
+
+```yaml
+  api:
+    image: vikunja/api
+    environment:
+      VIKUNJA_DATABASE_HOST: db
+      VIKUNJA_DATABASE_PASSWORD: secret
+      VIKUNJA_DATABASE_TYPE: mysql
+      VIKUNJA_DATABASE_USER: vikunja
+      VIKUNJA_DATABASE_DATABASE: vikunja
+      VIKUNJA_SERVICE_JWTSECRET: <your-random-secret>
+      VIKUNJA_SERVICE_FRONTENDURL: https://vikunja.your-domain.com/ # change vikunja.your-domain.com to your desired domain/subdomain.
+    ports:
+      - 3456:3456 # Change 3456 on the left to the port of your choice.
+    volumes: 
+      - ./files:/app/vikunja/files
+    depends_on:
+      - db
+    restart: unless-stopped
+```
+
+Under `frontend:`,
+
+1. Add `VIKUNJA_API_URL:` under `environment:` and input your desired `API` domain with `https://` and `/api/v1/`. The `API` domain should be different from the one in `VIKUNJA_SERVICE_FRONTENDURL:`.
+
+example:
+
+```yaml
+frontend:
+    image: vikunja/frontend
+    environment:
+      VIKUNJA_API_URL: https://api.your-domain.com/api/v1/ # change api.your-domain.com to your desired domain/subdomain, it should be different from your frontend domain
+    restart: unless-stopped
+```
+
+Under `proxy:`,
+
+1. Since we'll be using Nginx Proxy Manager, it should by default uses the port `80` and thus you should change `ports:` to expose another port not occupied by any service.
+
+example:
+
+```yaml
+  proxy:
+      image: nginx
+      ports: 
+        - 1078:80 # change the number infront (host port) to whatever you desire, but make sure it's not 80 which will be used by Nginx Proxy Manager
+      volumes:
+        - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      depends_on:
+        - api
+        - frontend
+      restart: unless-stopped
+```
+
+#### In your DNS provider
+
+Add two `A` records that points to your server IP. 
+
+1. `vikunja` for accessing the frontend
+
+2. `api` for accessing the api
+
+You are of course free to change them to whatever domain/subdomain you desire and modify the `docker-compose.yml` accordingly but the two should be different.
+
+(Tested on Cloudflare DNS. Settings are different for different DNS provider, in this case the end result should bei `vikunja.your-domain.com` and `api.your-domain.com` respectively.)
+
+#### In Nginx Proxy Manager
+
+Add two Proxy Host as you normally would, and you don't have to add anything extra in Advanced.
+
+##### Frontend
+
+Under `Details`:
+
+```
+Domain Names:
+    vikunja.your-domain.com
+Scheme:
+    http
+Forward Hostname/IP:
+    your-server-ip
+Forward Port:
+    1078
+Cached Assets:
+    Optional.
+Block Common Exploits:
+    Toggled.
+Websockets Support:
+    Toggled.
+```
+
+Under `SSL`:
+
+```
+SSL Certificate:
+    However you prefer.
+Force SSL:
+    Toggled.
+HTTP/2 Support:
+    Toggled.
+HSTS Enabled:
+    Toggled.
+HSTS Subdomains:
+    Toggled.
+Use a DNS Challenge:
+    Not toggled.
+Email Address for Let's Encrypt:
+    your-email@email.com
+```
+
+##### API
+
+Under `Details`:
+
+```
+Domain Names:
+    api.your-domain.com
+Scheme:
+    http
+Forward Hostname/IP:
+    your-server-ip
+Forward Port:
+    3456
+Cached Assets:
+    Optional.
+Block Common Exploits:
+    Toggled.
+Websockets Support:
+    Toggled.
+```
+
+Under `SSL`:
+
+```
+SSL Certificate:
+    However you prefer.
+Force SSL:
+    Toggled.
+HTTP/2 Support:
+    Toggled.
+HSTS Enabled:
+    Toggled.
+HSTS Subdomains:
+    Toggled.
+Use a DNS Challenge:
+    Not toggled.
+Email Address for Let's Encrypt:
+    your-email@email.com
+```
+
+Your Vikunja service should now work and your HTTPS frontend should be able to reach the API after `docker-compose`.
+
+### Method 2
+
 1. Create a standard Proxy Host for the Vikunja Frontend within NPM and point it to the URL you plan to use. The next several steps will enable the Proxy Host to successfully navigate to the API (on port 3456).
 2. Verify that the page will pull up in your browser. (Do not bother trying to log in. It won't work. Trust me.)
 3. Now, we'll work with the NPM container, so you need to identify the container name for your NPM installation. e.g. NGINX-PM
