@@ -156,6 +156,21 @@ func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPa
 		return
 	}
 
+	userIDs := []int64{}
+	for _, webhook := range ws {
+		userIDs = append(userIDs, webhook.CreatedByID)
+	}
+
+	users, err := user.GetUsersByIDs(s, userIDs)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	for _, webhook := range ws {
+		webhook.Secret = ""
+		webhook.CreatedBy = users[webhook.CreatedByID]
+	}
+
 	return ws, len(ws), total, err
 }
 
