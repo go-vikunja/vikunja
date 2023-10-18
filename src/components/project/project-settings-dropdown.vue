@@ -73,6 +73,12 @@
 				type="dropdown"
 			/>
 			<dropdown-item
+				:to="{ name: 'project.settings.webhooks', params: { projectId: project.id } }"
+				icon="bolt"
+			>
+				{{ $t('project.webhooks.title') }}
+			</dropdown-item>
+			<dropdown-item
 				v-if="level < 2"
 				:to="{ name: 'project.createFromParent', params: { parentProjectId: project.id } }"
 				icon="layer-group"
