@@ -116,6 +116,11 @@ func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
 	// TODO: check valid webhook events
 	w.CreatedByID = a.GetID()
 	_, err = s.Insert(w)
+	if err != nil {
+		return err
+	}
+
+	w.CreatedBy, err = user.GetUserByID(s, a.GetID())
 	return
 }
 
