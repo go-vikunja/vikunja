@@ -163,8 +163,8 @@ devDependencies:
     specifier: 18.2.2
     version: 18.2.2
   '@types/codemirror':
-    specifier: 5.60.11
-    version: 5.60.11
+    specifier: 5.60.12
+    version: 5.60.12
   '@types/dompurify':
     specifier: 3.0.4
     version: 3.0.4
@@ -187,8 +187,8 @@ devDependencies:
     specifier: 7.7.0
     version: 7.7.0
   '@types/sortablejs':
-    specifier: 1.15.3
-    version: 1.15.3
+    specifier: 1.15.4
+    version: 1.15.4
   '@typescript-eslint/eslint-plugin':
     specifier: 6.8.0
     version: 6.8.0(@typescript-eslint/parser@6.8.0)(eslint@8.51.0)(typescript@5.2.2)
@@ -217,8 +217,8 @@ devDependencies:
     specifier: 4.22.1
     version: 4.22.1
   caniuse-lite:
-    specifier: 1.0.30001550
-    version: 1.0.30001550
+    specifier: 1.0.30001551
+    version: 1.0.30001551
   css-has-pseudo:
     specifier: 6.0.0
     version: 6.0.0(postcss@8.4.31)
@@ -4137,8 +4137,8 @@ packages:
       '@types/har-format': 1.2.10
     dev: true
 
-  /@types/codemirror@5.60.11:
-    resolution: {integrity: sha512-EaT5pbQH8uFIyoMx3wn1Ii5IogQUz9nff10Yg6hOOoFcr5/TDiNyhNxhV5VhrE48/R79NgS2pu6RbOT78zKoIA==}
+  /@types/codemirror@5.60.12:
+    resolution: {integrity: sha512-SFSj5Tb/mtQoVgaltsipdRGG1PkcFu/L0OXPNBGCXYUQtwsNoAGRNNHOTl1jYcQUcEI77EiUfk94bgETTbSo/A==}
     dependencies:
       '@types/tern': 0.23.4
 
@@ -4277,8 +4277,8 @@ packages:
     resolution: {integrity: sha512-JYM8x9EGF163bEyhdJBpR2QX1R5naCJHC8ucJylJ3w9/CVBaskdQ8WqBf8MmQrd1kRvp/a4TS8HJ+bxzR7ZJYQ==}
     dev: true
 
-  /@types/sortablejs@1.15.3:
-    resolution: {integrity: sha512-v+zh6TZP/cLeMUK0MDx1onp8e7Jk2/4iTQ7sb/n80rTAvBm14yJkpOEfJdrTCkHiF7IZbPjxGX2NRJfogRoYIg==}
+  /@types/sortablejs@1.15.4:
+    resolution: {integrity: sha512-7oL7CcPSfoyoNx3Ba1+79ykJzpEKVhHUyfAiN5eT/FoeDXOR3eBDLXf9ndDNuxaExmjpI+zVi2dMMuaoXUOzNA==}
     dev: true
 
   /@types/tern@0.23.4:
@@ -5101,7 +5101,7 @@ packages:
       postcss: ^8.1.0
     dependencies:
       browserslist: 4.22.1
-      caniuse-lite: 1.0.30001550
+      caniuse-lite: 1.0.30001551
       fraction.js: 4.3.6
       normalize-range: 0.1.2
       picocolors: 1.0.0
@@ -5292,7 +5292,7 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001550
+      caniuse-lite: 1.0.30001551
       electron-to-chromium: 1.4.540
       node-releases: 2.0.13
       update-browserslist-db: 1.0.13(browserslist@4.22.1)
@@ -5378,8 +5378,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /caniuse-lite@1.0.30001550:
-    resolution: {integrity: sha512-p82WjBYIypO0ukTsd/FG3Xxs+4tFeaY9pfT4amQL8KWtYH7H9nYwReGAbMTJ0hsmRO8IfDtsS6p3ZWj8+1c2RQ==}
+  /caniuse-lite@1.0.30001551:
+    resolution: {integrity: sha512-vtBAez47BoGMMzlbYhfXrMV1kvRF2WP/lqiMuDu1Sb4EE4LKEgjopFDSRtZfdVnslNRpOqV/woE+Xgrwj6VQlg==}
     dev: true
 
   /capital-case@1.0.4:
@@ -6175,7 +6175,7 @@ packages:
   /easymde@2.18.0:
     resolution: {integrity: sha512-IxVVUxNWIoXLeqtBU4BLc+eS/ScYhT1Dcb6yF5Wchoj1iXAV+TIIDWx+NCaZhY7RcSHqDPKllbYq7nwGKILnoA==}
     dependencies:
-      '@types/codemirror': 5.60.11
+      '@types/codemirror': 5.60.12
       '@types/marked': 4.3.1
       codemirror: 5.65.15
       codemirror-spell-checker: 1.1.2
