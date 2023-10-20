@@ -121,6 +121,7 @@ function validateSelectedEvents() {
 	<create-edit
 		:title="$t('project.webhooks.title')"
 		:has-primary-action="false"
+		:wide="true"
 	>
 		<x-button
 			v-if="!(webhooks?.length === 0 || showNewForm)"
@@ -178,7 +179,7 @@ function validateSelectedEvents() {
 					<fancycheckbox
 						v-for="event in availableEvents"
 						:key="event"
-						class="mr-2"
+						class="available-events-check"
 						v-model="newWebhookEvents[event]"
 						@update:model-value="validateSelectedEvents"
 					>
@@ -245,3 +246,10 @@ function validateSelectedEvents() {
 		</modal>
 	</create-edit>
 </template>
+
+<style lang="scss" scoped>
+.available-events-check {
+	margin-right: .5rem;
+	width: 12.5rem;
+}
+</style>
