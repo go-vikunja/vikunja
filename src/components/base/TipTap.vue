@@ -4,7 +4,7 @@
 			v-if="editor"
 			:editor="editor"
 			:upload-callback="uploadCallback"
-			@image-added="bubbleChanges"
+			@image-added="onImageAdded"
 		/>
 		<editor-content 
 			class="tiptap__editor" 
@@ -19,7 +19,7 @@ const tiptapRegex = new RegExp(`${TIPTAP_TEXT_VALUE_PREFIX}`, 's')
 </script>
 
 <script setup lang="ts">
-import {ref, watch, computed, onBeforeUnmount, type PropType} from 'vue'
+import {ref, watch, computed, onBeforeUnmount, type PropType, nextTick} from 'vue'
 import {marked} from 'marked'
 import {refDebounced} from '@vueuse/core'
 
@@ -51,6 +51,10 @@ import {lowlight} from 'lowlight'
 
 import CodeBlock from './CodeBlock.vue'
 import type {UploadCallback} from '@/components/base/EditorToolbar.vue'
+import type {ITask} from '@/modelTypes/ITask'
+import type {IAttachment} from '@/modelTypes/IAttachment'
+import AttachmentModel from '@/models/attachment'
+import AttachmentService from '@/services/attachment'
 
 // const CustomDocument = Document.extend({
 // 	content: 'taskList',
@@ -102,13 +106,52 @@ watch(
 		if (!modelValue.startsWith(TIPTAP_TEXT_VALUE_PREFIX)) {
 			// convert Markdown to HTML
 			inputHTML.value = TIPTAP_TEXT_VALUE_PREFIX + marked.parse(modelValue)
+			nextTick(() => loadImages())
 			return
 		}
 
 		inputHTML.value = modelValue.replace(tiptapRegex, '')
+		nextTick(() => loadImages())
 	},
 	{ immediate: true },
 )
+
+function onImageAdded() {
+	bubbleChanges()
+	loadImages()
+}
+
+type CacheKey = `${ITask['id']}-${IAttachment['id']}`
+const loadedAttachments = ref<{ [key: CacheKey]: string }>({})
+function loadImages() {
+	const attachmentImage = document.querySelectorAll<HTMLImageElement>('.tiptap__editor img')
+	const attachmentService = new AttachmentService()
+	console.log('load images', attachmentImage)
+	if (attachmentImage) {
+		Array.from(attachmentImage).forEach(async (img) => {
+			if (!img.src.startsWith(window.API_URL)) {
+				return
+			}
+			// The url is something like /tasks/<id>/attachments/<id>
+			const parts = img.src.slice(window.API_URL.length + 1).split('/')
+			const taskId = Number(parts[1])
+			const attachmentId = Number(parts[3])
+			const cacheKey: CacheKey = `${taskId}-${attachmentId}`
+
+			if (typeof loadedAttachments.value[cacheKey] !== 'undefined') {
+				img.src = loadedAttachments.value[cacheKey]
+				return
+			}
+
+			const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
+
+			const url = await attachmentService.getBlobUrl(attachment)
+			img.src = url
+			loadedAttachments.value[cacheKey] = url
+		})
+	}
+
+}
 
 const debouncedInputHTML = refDebounced(inputHTML, 1000)
 
