@@ -73,7 +73,7 @@ require (
 	golang.org/x/term v0.13.0
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/yaml.v3 v3.0.1
-	src.techknowlogick.com/xgo ecfba3dfed5d
+	src.techknowlogick.com/xgo v1.7.1-0.20231019133136-ecfba3dfed5d
 	src.techknowlogick.com/xormigrate v1.5.0
 	xorm.io/builder v0.3.13
 	xorm.io/xorm v1.3.3
@@ -176,7 +176,7 @@ require (
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
