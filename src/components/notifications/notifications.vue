@@ -36,6 +36,14 @@
 						</span>
 					</div>
 				</div>
+				<x-button
+					v-if="notifications.length > 0 && unreadNotifications > 0"
+					@click="markAllRead"
+					variant="tertiary" 
+					class="mt-2 is-fullwidth"
+				>
+					{{ $t('notification.markAllRead') }}
+				</x-button>
 				<p class="nothing" v-if="notifications.length === 0">
 					{{ $t('notification.none') }}<br/>
 					<span class="explainer">
@@ -60,11 +68,15 @@ import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 import {getDisplayName} from '@/models/user'
 import {useAuthStore} from '@/stores/auth'
+import XButton from '@/components/input/button.vue'
+import {success} from '@/message'
+import {useI18n} from 'vue-i18n'
 
 const LOAD_NOTIFICATIONS_INTERVAL = 10000
 
 const authStore = useAuthStore()
 const router = useRouter()
+const {t} = useI18n()
 
 const allNotifications = ref<INotification[]>([])
 const showNotifications = ref(false)
@@ -137,6 +149,12 @@ function to(n, index) {
 		const notificationService = new NotificationService()
 		allNotifications.value[index] = await notificationService.update(n)
 	}
+}
+
+async function markAllRead() {
+	const notificationService = new NotificationService()
+	await notificationService.markAllRead()
+	success({message: t('notification.markAllReadSuccess')})
 }
 </script>
 
