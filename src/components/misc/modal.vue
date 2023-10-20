@@ -14,7 +14,7 @@
 			>
 				<div
 					class="modal-container"
-					@click.self.prevent.stop="$emit('close')"
+					@mousedown.self.prevent.stop="$emit('close')"
 					v-shortcut="'Escape'"
 				>
 					<div
