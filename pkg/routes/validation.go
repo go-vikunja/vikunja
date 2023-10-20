@@ -17,11 +17,8 @@
 package routes
 
 import (
-	"net/http"
-
 	"code.vikunja.io/api/pkg/models"
 
-	"code.vikunja.io/web"
 	"github.com/asaskevich/govalidator"
 )
 
@@ -43,14 +40,7 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 			errs = append(errs, field+": "+e)
 		}
 
-		return models.ValidationHTTPError{
-			HTTPError: web.HTTPError{
-				HTTPCode: http.StatusPreconditionFailed,
-				Code:     models.ErrCodeInvalidData,
-				Message:  "Invalid Data",
-			},
-			InvalidFields: errs,
-		}
+		return models.InvalidFieldError(errs)
 	}
 	return nil
 }

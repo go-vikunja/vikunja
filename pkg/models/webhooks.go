@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -45,9 +46,9 @@ type Webhook struct {
 	// The generated ID of this webhook target
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"webhook"`
 	// The target URL where the POST request with the webhook payload will be made
-	TargetURL string `xorm:"not null" valid:"minstringlength(1)" minLength:"1" json:"target_url"`
+	TargetURL string `xorm:"not null" valid:"required,url" json:"target_url"`
 	// The webhook events which should fire this webhook target
-	Events []string `xorm:"JSON not null" valid:"minstringlength(1)" minLength:"1" json:"events"`
+	Events []string `xorm:"JSON not null" valid:"required" json:"events"`
 	// The project ID of the project this webhook target belongs to
 	ProjectID int64 `xorm:"bigint not null index" json:"project_id" param:"project"`
 	// If provided, webhook requests will be signed using HMAC. Check out the docs about how to use this: https://vikunja.io/docs/webhooks/#signing
@@ -113,7 +114,17 @@ func GetAvailableWebhookEvents() []string {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/webhooks [put]
 func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
-	// TODO: check valid webhook events
+
+	if !strings.HasPrefix(w.TargetURL, "http") {
+		return InvalidFieldError([]string{"target_url"})
+	}
+
+	for _, event := range w.Events {
+		if _, has := availableWebhookEvents[event]; !has {
+			return InvalidFieldError([]string{"events"})
+		}
+	}
+
 	w.CreatedByID = a.GetID()
 	_, err = s.Insert(w)
 	if err != nil {
@@ -193,7 +204,12 @@ func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPa
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/webhooks/{webhookID} [post]
 func (w *Webhook) Update(s *xorm.Session, _ web.Auth) (err error) {
-	// TODO validate webhook events
+	for _, event := range w.Events {
+		if _, has := availableWebhookEvents[event]; !has {
+			return InvalidFieldError([]string{"events"})
+		}
+	}
+
 	_, err = s.Where("id = ?", w.ID).
 		Cols("events").
 		Update(w)
