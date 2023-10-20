@@ -2488,7 +2488,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Create a webhook target which recieves POST requests about specified events from a project.",
+                "description": "Create a webhook target which receives POST requests about specified events from a project.",
                 "consumes": [
                     "application/json"
                 ],
@@ -8468,8 +8468,7 @@ const docTemplate = `{
                     "description": "The webhook events which should fire this webhook target",
                     "type": "array",
                     "items": {
-                        "type": "string",
-                        "minLength": 1
+                        "type": "string"
                     }
                 },
                 "id": {
@@ -8486,8 +8485,7 @@ const docTemplate = `{
                 },
                 "target_url": {
                     "description": "The target URL where the POST request with the webhook payload will be made",
-                    "type": "string",
-                    "minLength": 1
+                    "type": "string"
                 },
                 "updated": {
                     "description": "A timestamp when this webhook target was last updated. You cannot change this value.",

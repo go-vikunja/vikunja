@@ -1053,7 +1053,6 @@ definitions:
       events:
         description: The webhook events which should fire this webhook target
         items:
-          minLength: 1
           type: string
         type: array
       id:
@@ -1069,7 +1068,6 @@ definitions:
       target_url:
         description: The target URL where the POST request with the webhook payload
           will be made
-        minLength: 1
         type: string
       updated:
         description: A timestamp when this webhook target was last updated. You cannot
@@ -3084,7 +3082,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: Create a webhook target which recieves POST requests about specified
+      description: Create a webhook target which receives POST requests about specified
         events from a project.
       parameters:
       - description: Project ID
