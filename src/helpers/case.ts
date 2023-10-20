@@ -4,6 +4,7 @@ import {snakeCase} from 'snake-case'
 /**
  * Transforms field names to camel case.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function objectToCamelCase(object: Record<string, any>) {
 
 	// When calling recursively, this can be called without being and object or array in which case we just return the value
@@ -11,6 +12,7 @@ export function objectToCamelCase(object: Record<string, any>) {
 		return object
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const parsedObject: Record<string, any> = {}
 	for (const m in object) {
 		parsedObject[camelCase(m)] = object[m]
@@ -23,6 +25,7 @@ export function objectToCamelCase(object: Record<string, any>) {
 
 		// Call it again for arrays
 		if (Array.isArray(object[m])) {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			parsedObject[camelCase(m)] = object[m].map((o: Record<string, any>) => objectToCamelCase(o))
 			// Because typeof [] === 'object' is true for arrays, we leave the loop here to prevent converting arrays to objects.
 			continue
@@ -39,6 +42,7 @@ export function objectToCamelCase(object: Record<string, any>) {
 /**
  * Transforms field names to snake case - used before making an api request.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function objectToSnakeCase(object: Record<string, any>) {
 
 	// When calling recursively, this can be called without being and object or array in which case we just return the value
@@ -46,6 +50,7 @@ export function objectToSnakeCase(object: Record<string, any>) {
 		return object
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const parsedObject: Record<string, any> = {}
 	for (const m in object) {
 		parsedObject[snakeCase(m)] = object[m]
@@ -61,6 +66,7 @@ export function objectToSnakeCase(object: Record<string, any>) {
 
 		// Call it again for arrays
 		if (Array.isArray(object[m])) {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			parsedObject[snakeCase(m)] = object[m].map((o: Record<string, any>) => objectToSnakeCase(o))
 			// Because typeof [] === 'object' is true for arrays, we leave the loop here to prevent converting arrays to objects.
 			continue

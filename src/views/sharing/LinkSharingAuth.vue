@@ -105,18 +105,18 @@ function useAuth() {
 				params: {projectId},
 				hash,
 			})
-		} catch (e: any) {
-			if (e.response?.data?.code === 13001) {
+		} catch (e) {
+			if (e?.response?.data?.code === 13001) {
 				authenticateWithPassword.value = true
 				return
 			}
 
 			// TODO: Put this logic in a global errorMessage handler method which checks all auth codes
 			let err = t('sharing.error')
-			if (e.response?.data?.message) {
+			if (e?.response?.data?.message) {
 				err = e.response.data.message
 			}
-			if (e.response?.data?.code === 13002) {
+			if (e?.response?.data?.code === 13002) {
 				err = t('sharing.invalidPassword')
 			}
 			errorMessage.value = err

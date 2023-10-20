@@ -4,8 +4,6 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import User from '@/components/misc/user.vue'
 import {computed} from 'vue'
 
-type removeFunction = (item: any) => void
-
 const {
 	assignees,
 	remove,
@@ -14,7 +12,7 @@ const {
 	inline = false,
 } = defineProps<{
 	assignees: IUser[],
-	remove?: removeFunction,
+	remove?: (user: IUser) => void,
 	disabled?: boolean,
 	avatarSize?: number,
 	inline?: boolean,

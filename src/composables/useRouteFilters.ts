@@ -2,6 +2,7 @@ import {computed, ref, watch, type Ref} from 'vue'
 import {useRouter, type RouteLocationNormalized, type RouteLocationRaw, type RouteRecordName} from 'vue-router'
 import equal from 'fast-deep-equal/es6'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Filters = Record<string, any>
 
 export function useRouteFilters<CurrentFilters extends Filters>(

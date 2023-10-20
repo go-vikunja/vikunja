@@ -107,6 +107,7 @@ import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function elementInResults(elem: string | any, label: string, query: string): boolean {
 	// Don't make create available if we have an exact match in our search results.
 	if (label !== '') {
@@ -135,7 +136,8 @@ const props = defineProps({
 	 * The search results where the @search listener needs to put the results into
 	 */
 	searchResults: {
-		type: Array as PropType<{[id: string]: any}>,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		type: Array as PropType<{ [id: string]: any }>,
 		default: () => [],
 	},
 	/**
@@ -150,7 +152,8 @@ const props = defineProps({
 	 * The object with the value, updated every time an entry is selected.
 	 */
 	modelValue: {
-		type: [Object] as PropType<{[key: string]: any}>,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		type: [Object] as PropType<{ [key: string]: any }>,
 		default: null,
 	},
 	/**
@@ -230,7 +233,8 @@ const emit = defineEmits<{
 	/**
 	 * Triggered every time an option from the search results is selected. Also triggers a change in v-model.
 	 */
-	(e: 'select', value: {[key: string]: any}): void
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	(e: 'select', value: { [key: string]: any }): void
 	/**
 	 * If nothing or no exact match was found and `creatable` is true, this event is triggered with the current value of the search query.
 	 */
@@ -241,11 +245,13 @@ const emit = defineEmits<{
 	(e: 'remove', value: null): void
 }>()
 
-const query = ref<string | {[key: string]: any}>('')
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const query = ref<string | { [key: string]: any }>('')
 const searchTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 const localLoading = ref(false)
 const showSearchResults = ref(false)
-const internalValue = ref<string | {[key: string]: any} | any[] | null>(null)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const internalValue = ref<string | { [key: string]: any } | any[] | null>(null)
 
 onMounted(() => document.addEventListener('click', hideSearchResultsHandler))
 onBeforeUnmount(() => document.removeEventListener('click', hideSearchResultsHandler))
@@ -273,6 +279,7 @@ const searchResultsVisible = computed(() => {
 })
 
 const creatableAvailable = computed(() => {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const hasResult = filteredSearchResults.value.some((elem: any) => elementInResults(elem, props.label, query.value))
 	const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some(elem => elementInResults(elem, props.label, query.value))
 
@@ -284,6 +291,7 @@ const creatableAvailable = computed(() => {
 const filteredSearchResults = computed(() => {
 	const currentInternal = internalValue.value
 	if (props.multiple && currentInternal !== null && Array.isArray(currentInternal)) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		return searchResults.value.filter((item: any) => !currentInternal.some(e => e === item))
 	}
 
@@ -342,12 +350,14 @@ function handleFocus() {
 	}, 10)
 }
 
-function select(object: {[key: string]: any} | null) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function select(object: { [key: string]: any } | null) {
 	if (props.multiple) {
 		if (internalValue.value === null) {
 			internalValue.value = []
 		}
 
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		(internalValue.value as any[]).push(object)
 	} else {
 		internalValue.value = object
@@ -361,7 +371,8 @@ function select(object: {[key: string]: any} | null) {
 	}
 }
 
-function setSelectedObject(object: string | {[id: string]: any} | null, resetOnly = false) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function setSelectedObject(object: string | { [id: string]: any } | null, resetOnly = false) {
 	internalValue.value = object
 
 	// We assume we're getting an array when multiple is enabled and can therefore leave the query
@@ -430,6 +441,7 @@ function createOrSelectOnEnter() {
 
 	if (!creatableAvailable.value) {
 		// Check if there's an exact match for our search term
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const exactMatch = filteredSearchResults.value.find((elem: any) => elementInResults(elem, props.label, query.value))
 		if (exactMatch) {
 			select(exactMatch)
@@ -441,6 +453,7 @@ function createOrSelectOnEnter() {
 	create()
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function remove(item: any) {
 	for (const ind in internalValue.value) {
 		if (internalValue.value[ind] === item) {

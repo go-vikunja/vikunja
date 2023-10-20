@@ -178,7 +178,7 @@ async function addTask() {
 			return rel
 		})
 		await Promise.all(relations)
-	} catch (e: any) {
+	} catch (e) {
 		newTaskTitle.value = taskTitleBackup
 		if (e?.message === 'NO_PROJECT') {
 			errorMessage.value = t('project.create.addProjectRequired')

@@ -93,6 +93,7 @@ import {success} from '@/message'
 import type {ITeam} from '@/modelTypes/ITeam'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
+import type {IAbstract} from '@/modelTypes/IAbstract'
 
 const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
@@ -103,7 +104,7 @@ const labelStore = useLabelStore()
 const taskStore = useTaskStore()
 const authStore = useAuthStore()
 
-type DoAction<Type = any> = { type: ACTION_TYPE } & Type
+type DoAction<Type> = { type: ACTION_TYPE } & Type
 
 enum ACTION_TYPE {
 	CMD = 'cmd',
@@ -190,7 +191,7 @@ const foundCommands = computed(() => availableCmds.value.filter((a) =>
 interface Result {
 	type: ACTION_TYPE
 	title: string
-	items: DoAction<any>
+	items: DoAction<IAbstract>
 }
 
 const results = computed<Result[]>(() => {
