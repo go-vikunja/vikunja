@@ -14,33 +14,36 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package routes
+package models
 
 import (
-	"code.vikunja.io/api/pkg/models"
-
-	"github.com/asaskevich/govalidator"
+	"code.vikunja.io/web"
+	"xorm.io/xorm"
 )
 
-// CustomValidator is a dummy struct to use govalidator with echo
-type CustomValidator struct{}
-
-func init() {
-	govalidator.TagMap["time"] = govalidator.Validator(func(str string) bool {
-		return govalidator.IsTime(str, "15:04")
-	})
+func (w *Webhook) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+	p := &Project{ID: w.ProjectID}
+	return p.CanRead(s, a)
 }
 
-// Validate validates stuff
-func (cv *CustomValidator) Validate(i interface{}) error {
-	if _, err := govalidator.ValidateStruct(i); err != nil {
+func (w *Webhook) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	return w.canDoWebhook(s, a)
+}
 
-		var errs []string
-		for field, e := range govalidator.ErrorsByField(err) {
-			errs = append(errs, field+": "+e)
-		}
+func (w *Webhook) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	return w.canDoWebhook(s, a)
+}
 
-		return models.InvalidFieldError(errs)
+func (w *Webhook) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	return w.canDoWebhook(s, a)
+}
+
+func (w *Webhook) canDoWebhook(s *xorm.Session, a web.Auth) (bool, error) {
+	_, isShareAuth := a.(*LinkSharing)
+	if isShareAuth {
+		return false, nil
 	}
-	return nil
+
+	p := &Project{ID: w.ProjectID}
+	return p.CanUpdate(s, a)
 }

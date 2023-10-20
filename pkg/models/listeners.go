@@ -19,6 +19,7 @@ package models
 import (
 	"encoding/json"
 	"strconv"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 
@@ -64,6 +65,24 @@ func RegisterListeners() {
 	if config.TypesenseEnabled.GetBool() {
 		events.RegisterListener((&TaskDeletedEvent{}).Name(), &RemoveTaskFromTypesense{})
 		events.RegisterListener((&TaskCreatedEvent{}).Name(), &AddTaskToTypesense{})
+	}
+	if config.WebhooksEnabled.GetBool() {
+		RegisterEventForWebhook(&TaskCreatedEvent{})
+		RegisterEventForWebhook(&TaskUpdatedEvent{})
+		RegisterEventForWebhook(&TaskDeletedEvent{})
+		RegisterEventForWebhook(&TaskAssigneeCreatedEvent{})
+		RegisterEventForWebhook(&TaskAssigneeDeletedEvent{})
+		RegisterEventForWebhook(&TaskCommentCreatedEvent{})
+		RegisterEventForWebhook(&TaskCommentUpdatedEvent{})
+		RegisterEventForWebhook(&TaskCommentDeletedEvent{})
+		RegisterEventForWebhook(&TaskAttachmentCreatedEvent{})
+		RegisterEventForWebhook(&TaskAttachmentDeletedEvent{})
+		RegisterEventForWebhook(&TaskRelationCreatedEvent{})
+		RegisterEventForWebhook(&TaskRelationDeletedEvent{})
+		RegisterEventForWebhook(&ProjectUpdatedEvent{})
+		RegisterEventForWebhook(&ProjectDeletedEvent{})
+		RegisterEventForWebhook(&ProjectSharedWithUserEvent{})
+		RegisterEventForWebhook(&ProjectSharedWithTeamEvent{})
 	}
 }
 
@@ -607,6 +626,100 @@ func (s *SendProjectCreatedNotification) Handle(msg *message.Message) (err error
 	}
 
 	return nil
+}
+
+// WebhookListener represents a listener
+type WebhookListener struct {
+	EventName string
+}
+
+// Name defines the name for the WebhookListener listener
+func (wl *WebhookListener) Name() string {
+	return "webhook.listener"
+}
+
+type WebhookPayload struct {
+	EventName string      `json:"event_name"`
+	Time      time.Time   `json:"time"`
+	Data      interface{} `json:"data"`
+}
+
+func getProjectIDFromAnyEvent(eventPayload map[string]interface{}) int64 {
+	if task, has := eventPayload["task"]; has {
+		t := task.(map[string]interface{})
+		if projectID, has := t["project_id"]; has {
+			switch v := projectID.(type) {
+			case int64:
+				return v
+			case float64:
+				return int64(v)
+			}
+			return projectID.(int64)
+		}
+	}
+
+	if project, has := eventPayload["project"]; has {
+		t := project.(map[string]interface{})
+		if projectID, has := t["id"]; has {
+			switch v := projectID.(type) {
+			case int64:
+				return v
+			case float64:
+				return int64(v)
+			}
+			return projectID.(int64)
+		}
+	}
+
+	return 0
+}
+
+// Handle is executed when the event WebhookListener listens on is fired
+func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
+	var event map[string]interface{}
+	err = json.Unmarshal(msg.Payload, &event)
+	if err != nil {
+		return err
+	}
+
+	projectID := getProjectIDFromAnyEvent(event)
+	if projectID == 0 {
+		log.Debugf("event %s does not contain a project id, not handling webhook", wl.EventName)
+		return nil
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	ws := []*Webhook{}
+	err = s.Where("project_id = ?", projectID).
+		Find(&ws)
+	if err != nil {
+		return err
+	}
+
+	var webhook *Webhook
+	for _, w := range ws {
+		for _, e := range w.Events {
+			if e == wl.EventName {
+				webhook = w
+				break
+			}
+		}
+
+	}
+
+	if webhook == nil {
+		log.Debugf("Did not find any webhook for the %s event for project %d, not sending", wl.EventName, projectID)
+		return nil
+	}
+
+	err = webhook.sendWebhookPayload(&WebhookPayload{
+		EventName: wl.EventName,
+		Time:      time.Now(),
+		Data:      event,
+	})
+	return
 }
 
 ///////

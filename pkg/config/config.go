@@ -172,6 +172,11 @@ const (
 	DefaultSettingsLanguage                    Key = `defaultsettings.language`
 	DefaultSettingsTimezone                    Key = `defaultsettings.timezone`
 	DefaultSettingsOverdueTaskRemindersTime    Key = `defaultsettings.overdue_tasks_reminders_time`
+
+	WebhooksEnabled        Key = `webhooks.enabled`
+	WebhooksTimeoutSeconds Key = `webhooks.timeoutseconds`
+	WebhooksProxyURL       Key = `webhooks.proxyurl`
+	WebhooksProxyPassword  Key = `webhooks.proxypassword`
 )
 
 // GetString returns a string config value
@@ -387,6 +392,9 @@ func InitDefaultConfig() {
 	DefaultSettingsAvatarProvider.setDefault("initials")
 	DefaultSettingsOverdueTaskRemindersEnabled.setDefault(true)
 	DefaultSettingsOverdueTaskRemindersTime.setDefault("9:00")
+	// Webhook
+	WebhooksEnabled.setDefault(true)
+	WebhooksTimeoutSeconds.setDefault(30)
 }
 
 // InitConfig initializes the config, sets defaults etc.

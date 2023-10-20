@@ -27,8 +27,8 @@ import (
 
 // TaskCreatedEvent represents an event where a task has been created
 type TaskCreatedEvent struct {
-	Task *Task
-	Doer *user.User
+	Task *Task      `json:"task"`
+	Doer *user.User `json:"doer"`
 }
 
 // Name defines the name for TaskCreatedEvent
@@ -38,8 +38,8 @@ func (t *TaskCreatedEvent) Name() string {
 
 // TaskUpdatedEvent represents an event where a task has been updated
 type TaskUpdatedEvent struct {
-	Task *Task
-	Doer *user.User
+	Task *Task      `json:"task"`
+	Doer *user.User `json:"doer"`
 }
 
 // Name defines the name for TaskUpdatedEvent
@@ -49,8 +49,8 @@ func (t *TaskUpdatedEvent) Name() string {
 
 // TaskDeletedEvent represents a TaskDeletedEvent event
 type TaskDeletedEvent struct {
-	Task *Task
-	Doer *user.User
+	Task *Task      `json:"task"`
+	Doer *user.User `json:"doer"`
 }
 
 // Name defines the name for TaskDeletedEvent
@@ -60,9 +60,9 @@ func (t *TaskDeletedEvent) Name() string {
 
 // TaskAssigneeCreatedEvent represents an event where a task has been assigned to a user
 type TaskAssigneeCreatedEvent struct {
-	Task     *Task
-	Assignee *user.User
-	Doer     *user.User
+	Task     *Task      `json:"task"`
+	Assignee *user.User `json:"assignee"`
+	Doer     *user.User `json:"doer"`
 }
 
 // Name defines the name for TaskAssigneeCreatedEvent
@@ -72,9 +72,9 @@ func (t *TaskAssigneeCreatedEvent) Name() string {
 
 // TaskAssigneeDeletedEvent represents a TaskAssigneeDeletedEvent event
 type TaskAssigneeDeletedEvent struct {
-	Task     *Task
-	Assignee *user.User
-	Doer     *user.User
+	Task     *Task      `json:"task"`
+	Assignee *user.User `json:"assignee"`
+	Doer     *user.User `json:"doer"`
 }
 
 // Name defines the name for TaskAssigneeDeletedEvent
@@ -84,9 +84,9 @@ func (t *TaskAssigneeDeletedEvent) Name() string {
 
 // TaskCommentCreatedEvent represents an event where a task comment has been created
 type TaskCommentCreatedEvent struct {
-	Task    *Task
-	Comment *TaskComment
-	Doer    *user.User
+	Task    *Task        `json:"task"`
+	Comment *TaskComment `json:"comment"`
+	Doer    *user.User   `json:"doer"`
 }
 
 // Name defines the name for TaskCommentCreatedEvent
@@ -96,9 +96,9 @@ func (t *TaskCommentCreatedEvent) Name() string {
 
 // TaskCommentUpdatedEvent represents a TaskCommentUpdatedEvent event
 type TaskCommentUpdatedEvent struct {
-	Task    *Task
-	Comment *TaskComment
-	Doer    *user.User
+	Task    *Task        `json:"task"`
+	Comment *TaskComment `json:"comment"`
+	Doer    *user.User   `json:"doer"`
 }
 
 // Name defines the name for TaskCommentUpdatedEvent
@@ -108,9 +108,9 @@ func (t *TaskCommentUpdatedEvent) Name() string {
 
 // TaskCommentDeletedEvent represents a TaskCommentDeletedEvent event
 type TaskCommentDeletedEvent struct {
-	Task    *Task
-	Comment *TaskComment
-	Doer    *user.User
+	Task    *Task        `json:"task"`
+	Comment *TaskComment `json:"comment"`
+	Doer    *user.User   `json:"doer"`
 }
 
 // Name defines the name for TaskCommentDeletedEvent
@@ -120,9 +120,9 @@ func (t *TaskCommentDeletedEvent) Name() string {
 
 // TaskAttachmentCreatedEvent represents a TaskAttachmentCreatedEvent event
 type TaskAttachmentCreatedEvent struct {
-	Task       *Task
-	Attachment *TaskAttachment
-	Doer       *user.User
+	Task       *Task           `json:"task"`
+	Attachment *TaskAttachment `json:"attachment"`
+	Doer       *user.User      `json:"doer"`
 }
 
 // Name defines the name for TaskAttachmentCreatedEvent
@@ -132,9 +132,9 @@ func (t *TaskAttachmentCreatedEvent) Name() string {
 
 // TaskAttachmentDeletedEvent represents a TaskAttachmentDeletedEvent event
 type TaskAttachmentDeletedEvent struct {
-	Task       *Task
-	Attachment *TaskAttachment
-	Doer       *user.User
+	Task       *Task           `json:"task"`
+	Attachment *TaskAttachment `json:"attachment"`
+	Doer       *user.User      `json:"doer"`
 }
 
 // Name defines the name for TaskAttachmentDeletedEvent
@@ -144,9 +144,9 @@ func (t *TaskAttachmentDeletedEvent) Name() string {
 
 // TaskRelationCreatedEvent represents a TaskRelationCreatedEvent event
 type TaskRelationCreatedEvent struct {
-	Task     *Task
-	Relation *TaskRelation
-	Doer     *user.User
+	Task     *Task         `json:"task"`
+	Relation *TaskRelation `json:"relation"`
+	Doer     *user.User    `json:"doer"`
 }
 
 // Name defines the name for TaskRelationCreatedEvent
@@ -156,9 +156,9 @@ func (t *TaskRelationCreatedEvent) Name() string {
 
 // TaskRelationDeletedEvent represents a TaskRelationDeletedEvent event
 type TaskRelationDeletedEvent struct {
-	Task     *Task
-	Relation *TaskRelation
-	Doer     *user.User
+	Task     *Task         `json:"task"`
+	Relation *TaskRelation `json:"relation"`
+	Doer     *user.User    `json:"doer"`
 }
 
 // Name defines the name for TaskRelationDeletedEvent
@@ -172,8 +172,8 @@ func (t *TaskRelationDeletedEvent) Name() string {
 
 // ProjectCreatedEvent represents an event where a project has been created
 type ProjectCreatedEvent struct {
-	Project *Project
-	Doer    *user.User
+	Project *Project   `json:"project"`
+	Doer    *user.User `json:"doer"`
 }
 
 // Name defines the name for ProjectCreatedEvent
@@ -183,23 +183,23 @@ func (l *ProjectCreatedEvent) Name() string {
 
 // ProjectUpdatedEvent represents an event where a project has been updated
 type ProjectUpdatedEvent struct {
-	Project *Project
-	Doer    web.Auth
+	Project *Project `json:"project"`
+	Doer    web.Auth `json:"doer"`
 }
 
 // Name defines the name for ProjectUpdatedEvent
-func (l *ProjectUpdatedEvent) Name() string {
+func (p *ProjectUpdatedEvent) Name() string {
 	return "project.updated"
 }
 
 // ProjectDeletedEvent represents an event where a project has been deleted
 type ProjectDeletedEvent struct {
-	Project *Project
-	Doer    web.Auth
+	Project *Project `json:"project"`
+	Doer    web.Auth `json:"doer"`
 }
 
 // Name defines the name for ProjectDeletedEvent
-func (t *ProjectDeletedEvent) Name() string {
+func (p *ProjectDeletedEvent) Name() string {
 	return "project.deleted"
 }
 
@@ -209,25 +209,25 @@ func (t *ProjectDeletedEvent) Name() string {
 
 // ProjectSharedWithUserEvent represents an event where a project has been shared with a user
 type ProjectSharedWithUserEvent struct {
-	Project *Project
-	User    *user.User
-	Doer    web.Auth
+	Project *Project   `json:"project"`
+	User    *user.User `json:"user"`
+	Doer    web.Auth   `json:"doer"`
 }
 
 // Name defines the name for ProjectSharedWithUserEvent
-func (l *ProjectSharedWithUserEvent) Name() string {
+func (p *ProjectSharedWithUserEvent) Name() string {
 	return "project.shared.user"
 }
 
 // ProjectSharedWithTeamEvent represents an event where a project has been shared with a team
 type ProjectSharedWithTeamEvent struct {
-	Project *Project
-	Team    *Team
-	Doer    web.Auth
+	Project *Project `json:"project"`
+	Team    *Team    `json:"team"`
+	Doer    web.Auth `json:"doer"`
 }
 
 // Name defines the name for ProjectSharedWithTeamEvent
-func (l *ProjectSharedWithTeamEvent) Name() string {
+func (p *ProjectSharedWithTeamEvent) Name() string {
 	return "project.shared.team"
 }
 
@@ -237,9 +237,9 @@ func (l *ProjectSharedWithTeamEvent) Name() string {
 
 // TeamMemberAddedEvent defines an event where a user is added to a team
 type TeamMemberAddedEvent struct {
-	Team   *Team
-	Member *user.User
-	Doer   *user.User
+	Team   *Team      `json:"team"`
+	Member *user.User `json:"member"`
+	Doer   *user.User `json:"doer"`
 }
 
 // Name defines the name for TeamMemberAddedEvent
@@ -249,8 +249,8 @@ func (t *TeamMemberAddedEvent) Name() string {
 
 // TeamCreatedEvent represents a TeamCreatedEvent event
 type TeamCreatedEvent struct {
-	Team *Team
-	Doer web.Auth
+	Team *Team    `json:"team"`
+	Doer web.Auth `json:"doer"`
 }
 
 // Name defines the name for TeamCreatedEvent
@@ -260,8 +260,8 @@ func (t *TeamCreatedEvent) Name() string {
 
 // TeamDeletedEvent represents a TeamDeletedEvent event
 type TeamDeletedEvent struct {
-	Team *Team
-	Doer web.Auth
+	Team *Team    `json:"team"`
+	Doer web.Auth `json:"doer"`
 }
 
 // Name defines the name for TeamDeletedEvent
@@ -271,7 +271,7 @@ func (t *TeamDeletedEvent) Name() string {
 
 // UserDataExportRequestedEvent represents a UserDataExportRequestedEvent event
 type UserDataExportRequestedEvent struct {
-	User *user.User
+	User *user.User `json:"user"`
 }
 
 // Name defines the name for UserDataExportRequestedEvent

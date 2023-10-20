@@ -14,33 +14,25 @@
 // You should have received a copy of the GNU Affero General Public Licensee
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package routes
+package v1
 
 import (
-	"code.vikunja.io/api/pkg/models"
+	"net/http"
 
-	"github.com/asaskevich/govalidator"
+	"code.vikunja.io/api/pkg/models"
+	"github.com/labstack/echo/v4"
 )
 
-// CustomValidator is a dummy struct to use govalidator with echo
-type CustomValidator struct{}
-
-func init() {
-	govalidator.TagMap["time"] = govalidator.Validator(func(str string) bool {
-		return govalidator.IsTime(str, "15:04")
-	})
-}
-
-// Validate validates stuff
-func (cv *CustomValidator) Validate(i interface{}) error {
-	if _, err := govalidator.ValidateStruct(i); err != nil {
-
-		var errs []string
-		for field, e := range govalidator.ErrorsByField(err) {
-			errs = append(errs, field+": "+e)
-		}
-
-		return models.InvalidFieldError(errs)
-	}
-	return nil
+// GetAvailableWebhookEvents returns a list of all possible webhook target events
+// @Summary Get all possible webhook events
+// @Description Get all possible webhook events to use when creating or updating a webhook target.
+// @tags webhooks
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Success 200 {array} string "The list of all possible webhook events"
+// @Failure 500 {object} models.Message "Internal server error"
+// @Router /webhooks/events [get]
+func GetAvailableWebhookEvents(c echo.Context) error {
+	return c.JSON(http.StatusOK, models.GetAvailableWebhookEvents())
 }
