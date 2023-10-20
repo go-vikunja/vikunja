@@ -6,7 +6,10 @@
 			:upload-callback="uploadCallback"
 			@image-added="bubbleChanges"
 		/>
-		<editor-content class="tiptap__editor" :editor="editor" />
+		<editor-content 
+			class="tiptap__editor" 
+			:editor="editor" 
+		/>
 	</div>
 </template>
 
@@ -79,10 +82,10 @@ const CustomTableCell = TableCell.extend({
 })
 
 const {
-	modelValue = '',
+	modelValue,
 	uploadCallback,
 } = defineProps<{
-	modelValue?: string,
+	modelValue: string,
 	uploadCallback?: UploadCallback,
 }>()
 
@@ -92,12 +95,17 @@ const inputHTML = ref('')
 watch(
 	() => modelValue,
 	() => {
+		if (modelValue === '') {
+			return
+		}
+		
 		if (!modelValue.startsWith(TIPTAP_TEXT_VALUE_PREFIX)) {
 			// convert Markdown to HTML
-			return TIPTAP_TEXT_VALUE_PREFIX + marked.parse(modelValue)
+			inputHTML.value = TIPTAP_TEXT_VALUE_PREFIX + marked.parse(modelValue)
+			return
 		}
 
-		return modelValue.replace(tiptapRegex, '')
+		inputHTML.value = modelValue.replace(tiptapRegex, '')
 	},
 	{ immediate: true },
 )
