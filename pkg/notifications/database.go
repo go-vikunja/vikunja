@@ -97,3 +97,11 @@ func MarkNotificationAsRead(s *xorm.Session, notification *DatabaseNotification,
 		Update(notification)
 	return
 }
+
+func MarkAllNotificationsAsRead(s *xorm.Session, userID int64) (err error) {
+	_, err = s.
+		Where("notifiable_id = ?", userID).
+		Cols("read_at").
+		Update(&DatabaseNotification{ReadAt: time.Now()})
+	return
+}
