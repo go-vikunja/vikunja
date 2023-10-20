@@ -23,6 +23,7 @@ import WebhookModel from '@/models/webhook'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import {success} from '@/message'
+import {isValidHttpUrl} from '@/helpers/isValidHttpUrl'
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -73,10 +74,20 @@ const newWebhook = ref(new WebhookModel())
 const newWebhookEvents = ref({})
 
 async function create() {
-	const selectedEvents = Object.entries(newWebhookEvents.value)
-		.filter(([event, use]) => use)
-		.map(([event]) => event)
+
+	validateTargetUrl()
+	if (!webhookTargetUrlValid.value) {
+		return
+	}
+
+	const selectedEvents = getSelectedEventsArray()
 	newWebhook.value.events = selectedEvents
+
+	validateSelectedEvents()
+	if (!selectedEventsValid.value) {
+		return
+	}
+
 	newWebhook.value.projectId = project.value.id
 	const created = await webhookService.create(newWebhook.value)
 	webhooks.value.push(created)
@@ -85,8 +96,24 @@ async function create() {
 }
 
 const webhookTargetUrlValid = ref(true)
+
 function validateTargetUrl() {
-	
+	webhookTargetUrlValid.value = isValidHttpUrl(newWebhook.value.targetUrl)
+}
+
+const selectedEventsValid = ref(true)
+
+function getSelectedEventsArray() {
+	return Object.entries(newWebhookEvents.value)
+		.filter(([_, use]) => use)
+		.map(([event]) => event)
+}
+
+function validateSelectedEvents() {
+	const events = getSelectedEventsArray()
+	if (events.length === 0) {
+		selectedEventsValid.value = false
+	}
 }
 </script>
 
@@ -115,6 +142,7 @@ function validateTargetUrl() {
 						class="input"
 						:placeholder="$t('project.webhooks.targetUrl')"
 						v-model="newWebhook.targetUrl"
+						@focusout="validateTargetUrl"
 					/>
 				</div>
 				<p class="help is-danger" v-if="!webhookTargetUrlValid">
@@ -152,10 +180,14 @@ function validateTargetUrl() {
 						:key="event"
 						class="mr-2"
 						v-model="newWebhookEvents[event]"
+						@update:model-value="validateSelectedEvents"
 					>
 						{{ event }}
 					</fancycheckbox>
 				</div>
+				<p class="help is-danger" v-if="!selectedEventsValid">
+					{{ $t('project.webhooks.mustSelectEvents') }}
+				</p>
 			</div>
 			<x-button @click="create" icon="plus">
 				{{ $t('project.webhooks.create') }}
