@@ -8,6 +8,7 @@ import {
 	faArrowUpFromBracket,
 	faBars,
 	faBell,
+	faBolt,
 	faCalendar,
 	faCheck,
 	faCheckDouble,
@@ -144,6 +145,7 @@ library.add(faUsers)
 library.add(faArrowUpFromBracket)
 library.add(faX)
 library.add(faAnglesUp)
+library.add(faBolt)
 
 // overwriting the wrong types
 export default FontAwesomeIcon as unknown as FontAwesomeIconFixedTypes

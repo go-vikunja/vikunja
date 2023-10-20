@@ -46,6 +46,7 @@ const ProjectSettingEdit = () => import('@/views/project/settings/edit.vue')
 const ProjectSettingBackground = () => import('@/views/project/settings/background.vue')
 const ProjectSettingDuplicate = () => import('@/views/project/settings/duplicate.vue')
 const ProjectSettingShare = () => import('@/views/project/settings/share.vue')
+const ProjectSettingWebhooks = () => import('@/views/project/settings/webhooks.vue')
 const ProjectSettingDelete = () => import('@/views/project/settings/delete.vue')
 const ProjectSettingArchive = () => import('@/views/project/settings/archive.vue')
 
@@ -282,6 +283,14 @@ const router = createRouter({
 			path: '/projects/:projectId/settings/share',
 			name: 'project.settings.share',
 			component: ProjectSettingShare,
+			meta: {
+				showAsModal: true,
+			},
+		},
+		{
+			path: '/projects/:projectId/settings/webhooks',
+			name: 'project.settings.webhooks',
+			component: ProjectSettingWebhooks,
 			meta: {
 				showAsModal: true,
 			},
