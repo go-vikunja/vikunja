@@ -52,7 +52,7 @@ export function getTaskIdentifier(task: ITask | null | undefined): string {
 	}
 	
 	if (task.identifier === '') {
-		return `#${task.identifier}`
+		return `#${task.index}`
 	}
 
 	return task.identifier
