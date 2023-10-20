@@ -151,7 +151,7 @@
 		</div>
 
 		<div class="editor-toolbar__segment">
-			<BaseButton class="editor-toolbar__button" @click="addImage" title="Add image from URL">
+			<BaseButton class="editor-toolbar__button" @click="uploadInputRef?.click()" title="Add image">
 				<span class="icon">
 					<icon icon="fa-image" />
 				</span>
@@ -369,38 +369,64 @@
 				</BaseButton>
 			</div>
 		</div>
+		<input type="file" ref="uploadInputRef" class="is-hidden" @change="addImage"/>
 	</div>
 </template>
 
 <script setup lang="ts">
-import {ref, type PropType} from 'vue'
+import {ref} from 'vue'
 import {Editor} from '@tiptap/vue-3'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
-const props = defineProps({
-	editor: {
-		default: null,
-		type: Editor as PropType<Editor>,
-	},
-})
+export type UploadCallback = (files: File[] | FileList) => Promise<string[]>
+
+const {
+	editor = null,
+	uploadCallback,
+} = defineProps<{
+	editor: Editor,
+	uploadCallback?: UploadCallback,
+}>()
+
+const emit = defineEmits(['imageAdded'])
 
 const tableMode = ref(false)
+const uploadInputRef = ref<HTMLInputElement | null>(null)
 
 function toggleTableMode() {
 	tableMode.value = !tableMode.value
 }
 
 function addImage() {
+	
+	if (typeof uploadCallback !== 'undefined') {
+		const files = uploadInputRef.value?.files
+
+		if (!files || files.length === 0) {
+			return
+		}
+		
+		uploadCallback(files).then(urls => {
+			urls.forEach(url => {
+				editor?.chain().focus().setImage({ src: url }).run()
+			})
+			emit('imageAdded')
+		})
+
+		return
+	}
+	
 	const url = window.prompt('URL')
 
 	if (url) {
-		props.editor?.chain().focus().setImage({ src: url }).run()
+		editor?.chain().focus().setImage({ src: url }).run()
+		emit('imageAdded')
 	}
 }
 
 function setLink() {
-	const previousUrl = props.editor.getAttributes('link').href
+	const previousUrl = editor.getAttributes('link').href
 	const url = window.prompt('URL', previousUrl)
 
 	// cancelled
@@ -410,13 +436,13 @@ function setLink() {
 
 	// empty
 	if (url === '') {
-		props.editor.chain().focus().extendMarkRange('link').unsetLink().run()
+		editor.chain().focus().extendMarkRange('link').unsetLink().run()
 
 		return
 	}
 
 	// update link
-	props.editor
+	editor
 		.chain()
 		.focus()
 		.extendMarkRange('link')

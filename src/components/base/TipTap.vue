@@ -1,6 +1,11 @@
 <template>
 	<div class="tiptap">
-		<EditorToolbar v-if="editor" :editor="editor" />
+		<EditorToolbar 
+			v-if="editor"
+			:editor="editor"
+			:upload-callback="uploadCallback"
+			@image-added="bubbleChanges"
+		/>
 		<editor-content class="tiptap__editor" :editor="editor" />
 	</div>
 </template>
@@ -42,6 +47,7 @@ import {EditorContent, useEditor, VueNodeViewRenderer} from '@tiptap/vue-3'
 import {lowlight} from 'lowlight'
 
 import CodeBlock from './CodeBlock.vue'
+import type {UploadCallback} from '@/components/base/EditorToolbar.vue'
 
 // const CustomDocument = Document.extend({
 // 	content: 'taskList',
@@ -72,34 +78,38 @@ const CustomTableCell = TableCell.extend({
 	},
 })
 
-const props = withDefaults(defineProps<{
+const {
+	modelValue = '',
+	uploadCallback,
+} = defineProps<{
 	modelValue?: string,
-}>(), {
-	modelValue: '',
-})
+	uploadCallback?: UploadCallback,
+}>()
 
 const emit = defineEmits(['update:modelValue', 'change'])
 
 const inputHTML = ref('')
 watch(
-	() => props.modelValue,
+	() => modelValue,
 	() => {
-		if (!props.modelValue.startsWith(TIPTAP_TEXT_VALUE_PREFIX)) {
+		if (!modelValue.startsWith(TIPTAP_TEXT_VALUE_PREFIX)) {
 			// convert Markdown to HTML
-			return TIPTAP_TEXT_VALUE_PREFIX + marked.parse(props.modelValue)
+			return TIPTAP_TEXT_VALUE_PREFIX + marked.parse(modelValue)
 		}
 
-		return props.modelValue.replace(tiptapRegex, '')
+		return modelValue.replace(tiptapRegex, '')
 	},
 	{ immediate: true },
 )
 
 const debouncedInputHTML = refDebounced(inputHTML, 1000)
 
-watch(debouncedInputHTML, (value) => {
-	emit('update:modelValue', TIPTAP_TEXT_VALUE_PREFIX + value)
-	emit('change', TIPTAP_TEXT_VALUE_PREFIX + value) // FIXME: remove this
-})
+watch(debouncedInputHTML, () => bubbleChanges())
+
+function bubbleChanges() {
+	emit('update:modelValue', TIPTAP_TEXT_VALUE_PREFIX + inputHTML.value)
+	emit('change', TIPTAP_TEXT_VALUE_PREFIX + inputHTML.value) // FIXME: remove this
+}
 
 const editor = useEditor({
 	content: inputHTML.value,
@@ -122,7 +132,7 @@ const editor = useEditor({
 		// // start
 		// Document,
 		// // Text,
-		// Image,
+		Image,
 
 		// // Tasks
 		// CustomDocument,

@@ -18,8 +18,7 @@
 		</h3>
 		<editor
 			:is-edit-enabled="canWrite"
-			:upload-callback="attachmentUpload"
-			:upload-enabled="true"
+			:upload-callback="uploadCallback"
 			:placeholder="$t('task.description.placeholder')"
 			:empty-text="$t('task.description.empty')"
 			:show-save="true"
@@ -41,19 +40,17 @@ import type {ITask} from '@/modelTypes/ITask'
 import {useTaskStore} from '@/stores/tasks'
 import TaskModel from '@/models/task'
 
-const props = defineProps({
-	modelValue: {
-		type: Object as PropType<ITask>,
-		required: true,
-	},
-	attachmentUpload: {
-		required: true,
-	},
-	canWrite: {
-		type: Boolean,
-		required: true,
-	},
-})
+type AttachmentUploadFunction = (file: File, onSuccess: (attachmentUrl: string) => void) => Promise<string>
+
+const {
+	modelValue,
+	attachmentUpload,
+	canWrite,
+} = defineProps<{
+	modelValue: ITask,
+	attachmentUpload: AttachmentUploadFunction,
+	canWrite: boolean,
+}>()
 
 const emit = defineEmits(['update:modelValue'])
 
@@ -67,7 +64,7 @@ const taskStore = useTaskStore()
 const loading = computed(() => taskStore.isLoading)
 
 watch(
-	props.modelValue,
+	() => modelValue,
 	(value) => {
 		task.value = value
 	},
@@ -105,6 +102,21 @@ async function save() {
 	} finally {
 		saving.value = false
 	}
+}
+
+async function uploadCallback(files: File[] | FileList): (Promise<string[]>) {
+
+	const uploadPromises: Promise<string>[] = []
+
+	files.forEach((file: File) => {
+		const promise = new Promise<string>((resolve) => {
+			attachmentUpload(file, (uploadedFileUrl: string) => resolve(uploadedFileUrl))
+		})
+
+		uploadPromises.push(promise)
+	})
+
+	return await Promise.all(uploadPromises)
 }
 </script>
 
