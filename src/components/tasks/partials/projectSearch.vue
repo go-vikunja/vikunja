@@ -70,11 +70,11 @@ function findProjects(query: string) {
 	foundProjects.value = projectStore.searchProject(query)
 }
 
-function select(l: IProject | null) {
-	if (l === null) {
-		return
+function select(p: IProject | null) {
+	if (p === null) {
+		Object.assign(project, {id: 0})
 	}
-	Object.assign(project, l)
+	Object.assign(project, p)
 	emit('update:modelValue', project)
 }
 </script>

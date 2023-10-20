@@ -9,9 +9,9 @@
 		<div class="control" :class="{'is-loading': loading || localLoading}">
 			<div
 				class="input-wrapper input"
-				:class="{'has-multiple': hasMultiple}"
+				:class="{'has-multiple': hasMultiple, 'has-removal-button': removalAvailable}"
 			>
-				<slot 
+				<slot
 					v-if="Array.isArray(internalValue)"
 					name="items"
 					:items="internalValue"
@@ -19,14 +19,14 @@
 				>
 					<template v-for="(item, key) in internalValue">
 						<slot name="tag" :item="item">
-						<span :key="`item${key}`" class="tag ml-2 mt-2">
-							{{ label !== '' ? item[label] : item }}
-							<BaseButton @click="() => remove(item)" class="delete is-small"></BaseButton>
-						</span>
+							<span :key="`item${key}`" class="tag ml-2 mt-2">
+								{{ label !== '' ? item[label] : item }}
+								<BaseButton @click="() => remove(item)" class="delete is-small"></BaseButton>
+							</span>
 						</slot>
 					</template>
 				</slot>
-
+				
 				<input
 					type="text"
 					class="input"
@@ -40,6 +40,13 @@
 					:autocomplete="autocompleteEnabled ? undefined : 'off'"
 					:spellcheck="autocompleteEnabled ? undefined : 'false'"
 				/>
+				<BaseButton 
+					v-if="removalAvailable"
+					class="removal-button"
+					@click="resetSelectedValue"
+				>
+					<icon icon="times"/>
+				</BaseButton>
 			</div>
 		</div>
 
@@ -159,7 +166,7 @@ const props = defineProps({
 	createPlaceholder: {
 		type: String,
 		default() {
-			const {t} = useI18n({useScope: 'global'}) 
+			const {t} = useI18n({useScope: 'global'})
 			return t('input.multiselect.createPlaceholder')
 		},
 	},
@@ -169,7 +176,7 @@ const props = defineProps({
 	selectPlaceholder: {
 		type: String,
 		default() {
-			const {t} = useI18n({useScope: 'global'}) 
+			const {t} = useI18n({useScope: 'global'})
 			return t('input.multiselect.selectPlaceholder')
 		},
 	},
@@ -215,23 +222,23 @@ const props = defineProps({
 })
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: null): void
+	(e: 'update:modelValue', value: null): void
 	/**
 	 * Triggered every time the search query input changes
 	 */
-  (e: 'search', query: string): void
+	(e: 'search', query: string): void
 	/**
 	 * Triggered every time an option from the search results is selected. Also triggers a change in v-model.
 	 */
-  (e: 'select', value: {[key: string]: any}): void
+	(e: 'select', value: {[key: string]: any}): void
 	/**
 	 * If nothing or no exact match was found and `creatable` is true, this event is triggered with the current value of the search query.
 	 */
-  (e: 'create', query: string): void
+	(e: 'create', query: string): void
 	/**
 	 * If `multiple` is enabled, this will be fired every time an item is removed from the array of selected items.
 	 */
-  (e: 'remove', value: null): void
+	(e: 'remove', value: null): void
 }>()
 
 const query = ref<string | {[key: string]: any}>('')
@@ -269,8 +276,8 @@ const creatableAvailable = computed(() => {
 	const hasResult = filteredSearchResults.value.some((elem: any) => elementInResults(elem, props.label, query.value))
 	const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some(elem => elementInResults(elem, props.label, query.value))
 
-	return props.creatable 
-		&& query.value !== '' 
+	return props.creatable
+		&& query.value !== ''
 		&& !(hasResult || hasQueryAlreadyAdded)
 })
 
@@ -287,7 +294,13 @@ const hasMultiple = computed(() => {
 	return props.multiple && Array.isArray(internalValue.value) && internalValue.value.length > 0
 })
 
+const removalAvailable = computed(() => !props.multiple && internalValue.value !== null && query.value !== '')
+function resetSelectedValue() {
+	select(null)
+}
+
 const searchInput = ref<HTMLInputElement | null>(null)
+
 // Searching will be triggered with a 200ms delay to avoid searching on every keyup event.
 function search() {
 
@@ -312,6 +325,7 @@ function search() {
 }
 
 const multiselectRoot = ref<HTMLElement | null>(null)
+
 function hideSearchResultsHandler(e: MouseEvent) {
 	closeWhenClickedOutside(e, multiselectRoot.value, closeSearchResults)
 }
@@ -328,7 +342,7 @@ function handleFocus() {
 	}, 10)
 }
 
-function select(object: {[key: string]: any}) {
+function select(object: {[key: string]: any} | null) {
 	if (props.multiple) {
 		if (internalValue.value === null) {
 			internalValue.value = []
@@ -370,6 +384,7 @@ function setSelectedObject(object: string | {[id: string]: any} | null, resetOnl
 }
 
 const results = ref<(Element | ComponentPublicInstance)[]>([])
+
 function setResult(el: Element | ComponentPublicInstance | null, index: number) {
 	if (el === null) {
 		delete results.value[index]
@@ -416,7 +431,7 @@ function createOrSelectOnEnter() {
 	if (!creatableAvailable.value) {
 		// Check if there's an exact match for our search term
 		const exactMatch = filteredSearchResults.value.find((elem: any) => elementInResults(elem, props.label, query.value))
-		if(exactMatch) {
+		if (exactMatch) {
 			select(exactMatch)
 		}
 
@@ -571,5 +586,15 @@ function focus() {
 	color: transparent;
 	transition: color $transition;
 	padding-left: .5rem;
+}
+
+.has-removal-button {
+	position: relative;
+}
+
+.removal-button {
+	position: absolute;
+	right: .5rem;
+	color: var(--danger);
 }
 </style>
