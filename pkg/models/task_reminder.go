@@ -173,6 +173,11 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) (remi
 
 	seen := make(map[int64]map[int64]bool)
 
+	projects, err := GetProjectsSimplByTaskIDs(s, taskIDs)
+	if err != nil {
+		return
+	}
+
 	// Time zone cache per time zone string to avoid parsing the same time zone over and over again
 	tzs := make(map[string]*time.Location)
 	// Figure out which reminders are actually due in the time zone of the users
@@ -208,8 +213,9 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) (remi
 			actualReminder := r.Reminder.In(tz)
 			if (actualReminder.After(now) && actualReminder.Before(now.Add(time.Minute))) || actualReminder.Equal(now) {
 				reminderNotifications = append(reminderNotifications, &ReminderDueNotification{
-					User: u.User,
-					Task: u.Task,
+					User:    u.User,
+					Task:    u.Task,
+					Project: projects[u.Task.ProjectID],
 				})
 			}
 		}

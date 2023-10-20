@@ -314,6 +314,18 @@ func GetProjectSimplByTaskID(s *xorm.Session, taskID int64) (l *Project, err err
 	return &project, nil
 }
 
+// GetProjectsSimplByTaskIDs gets a list of projects by a task ids
+func GetProjectsSimplByTaskIDs(s *xorm.Session, taskIDs []int64) (ps map[int64]*Project, err error) {
+	ps = make(map[int64]*Project)
+	err = s.
+		Select("projects.*").
+		Table(Project{}).
+		Join("INNER", "tasks", "projects.id = tasks.project_id").
+		In("tasks.id", taskIDs).
+		Find(&ps)
+	return
+}
+
 // GetProjectsByIDs returns a map of projects from a slice with project ids
 func GetProjectsByIDs(s *xorm.Session, projectIDs []int64) (projects map[int64]*Project, err error) {
 	projects = make(map[int64]*Project, len(projectIDs))

@@ -132,10 +132,24 @@ func RegisterOverdueReminderCron() {
 
 		log.Debugf("[Undone Overdue Tasks Reminder] Sending reminders to %d users", len(uts))
 
+		taskIDs := []int64{}
+		for _, ut := range uts {
+			for _, t := range ut.tasks {
+				taskIDs = append(taskIDs, t.ID)
+			}
+		}
+
+		projects, err := GetProjectsSimplByTaskIDs(s, taskIDs)
+		if err != nil {
+			log.Errorf("[Undone Overdue Tasks Reminder] Could not get projects for tasks: %s", err)
+			return
+		}
+
 		for _, ut := range uts {
 			var n notifications.Notification = &UndoneTasksOverdueNotification{
-				User:  ut.user,
-				Tasks: ut.tasks,
+				User:     ut.user,
+				Tasks:    ut.tasks,
+				Projects: projects,
 			}
 
 			if len(ut.tasks) == 1 {
@@ -143,8 +157,9 @@ func RegisterOverdueReminderCron() {
 				// first entry without knowing the key of it.
 				for _, t := range ut.tasks {
 					n = &UndoneTaskOverdueNotification{
-						User: ut.user,
-						Task: t,
+						User:    ut.user,
+						Task:    t,
+						Project: projects[t.ProjectID],
 					}
 				}
 			}
