@@ -25,44 +25,6 @@
 			</template>
 		</p>
 
-		<ul class="actions d-print-none" v-if="bottomActions.length > 0">
-			<li v-if="isEditEnabled && !showPreviewText && showSave">
-				<BaseButton
-					v-if="showEditButton"
-					@click="toggleEdit"
-					v-shortcut="editShortcut">
-					{{ $t('input.editor.edit') }}
-				</BaseButton>
-				<BaseButton
-					v-else-if="isEditActive"
-					@click="bubbleSaveClick"
-					class="done-edit">
-					{{ $t('misc.save') }}
-				</BaseButton>
-			</li>
-			<li v-for="(action, k) in bottomActions" :key="k">
-				<BaseButton @click="action.action">{{ action.title }}</BaseButton>
-			</li>
-		</ul>
-		<template v-else-if="isEditEnabled && showSave">
-			<ul v-if="showEditButton" class="actions d-print-none">
-				<li>
-					<BaseButton
-						@click="toggleEdit"
-						v-shortcut="editShortcut">
-						{{ $t('input.editor.edit') }}
-					</BaseButton>
-				</li>
-			</ul>
-			<x-button
-				v-else-if="isEditActive"
-				@click="bubbleSaveClick"
-				variant="secondary"
-				:shadow="false"
-				v-cy="'saveEditor'">
-				{{ $t('misc.save') }}
-			</x-button>
-		</template>
 	</div>
 </template>
 

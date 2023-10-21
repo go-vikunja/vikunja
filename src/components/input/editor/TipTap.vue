@@ -70,6 +70,29 @@
 			ref="uploadInputRef"
 			@change="addImage"
 		/>
+
+		<ul class="actions d-print-none" v-if="bottomActions.length > 0">
+			<li v-if="isEditEnabled && showSave">
+				<BaseButton
+					@click="bubbleSave"
+					class="done-edit">
+					{{ $t('misc.save') }}
+				</BaseButton>
+			</li>
+			<li v-for="(action, k) in bottomActions" :key="k">
+				<BaseButton @click="action.action">{{ action.title }}</BaseButton>
+			</li>
+		</ul>
+		<x-button
+			v-else-if="isEditEnabled && showSave"
+			class="mt-4"
+			@click="bubbleSave"
+			variant="secondary"
+			:shadow="false"
+			v-cy="'saveEditor'"
+		>
+			{{ $t('misc.save') }}
+		</x-button>
 	</div>
 </template>
 
@@ -109,13 +132,14 @@ import suggestionSetup from './suggestion'
 // load all highlight.js languages
 import {lowlight} from 'lowlight'
 
-import type {UploadCallback} from './types'
+import type {BottomAction, UploadCallback} from './types'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import AttachmentModel from '@/models/attachment'
 import AttachmentService from '@/services/attachment'
 import {useI18n} from 'vue-i18n'
 import BaseButton from '@/components/base/BaseButton.vue'
+import XButton from '@/components/input/button.vue'
 
 const {t} = useI18n()
 
@@ -140,15 +164,22 @@ const CustomTableCell = TableCell.extend({
 	},
 })
 
+
 const {
 	modelValue,
 	uploadCallback,
+	isEditEnabled = true,
+	bottomActions = [],
+	showSave = false,
 } = defineProps<{
 	modelValue: string,
 	uploadCallback?: UploadCallback,
+	isEditEnabled?: boolean,
+	bottomActions?: BottomAction[],
+	showSave?: boolean,
 }>()
 
-const emit = defineEmits(['update:modelValue', 'change'])
+const emit = defineEmits(['update:modelValue', 'save'])
 
 const inputHTML = ref('')
 watch(
@@ -172,7 +203,7 @@ watch(
 )
 
 function onImageAdded() {
-	bubbleChanges()
+	bubbleSave()
 	loadImages()
 }
 
@@ -211,11 +242,15 @@ function loadImages() {
 
 const debouncedInputHTML = refDebounced(inputHTML, 1000)
 
-watch(debouncedInputHTML, () => bubbleChanges())
+watch(debouncedInputHTML, () => bubbleNow())
 
-function bubbleChanges() {
+function bubbleNow() {
 	emit('update:modelValue', TIPTAP_TEXT_VALUE_PREFIX + inputHTML.value)
-	emit('change', TIPTAP_TEXT_VALUE_PREFIX + inputHTML.value) // FIXME: remove this
+}
+
+function bubbleSave() {
+	bubbleNow()
+	emit('save', TIPTAP_TEXT_VALUE_PREFIX + inputHTML.value)
 }
 
 const editor = useEditor({
@@ -302,9 +337,9 @@ function addImage() {
 		if (!files || files.length === 0) {
 			return
 		}
-		
+
 		uploadAndInsertFiles(files)
-		
+
 		return
 	}
 
