@@ -59,10 +59,13 @@
 				<icon :icon="['fa', 'fa-link']"/>
 			</BaseButton>
 		</BubbleMenu>
+		
 		<editor-content
 			class="tiptap__editor"
+			:class="{'tiptap__editor-is-empty': isEmpty}"
 			:editor="editor"
 		/>
+		
 		<input
 			type="file"
 			id="tiptap__image-upload"
@@ -102,7 +105,7 @@ const tiptapRegex = new RegExp(`${TIPTAP_TEXT_VALUE_PREFIX}`, 's')
 </script>
 
 <script setup lang="ts">
-import {ref, watch, onBeforeUnmount, nextTick, onMounted} from 'vue'
+import {ref, watch, onBeforeUnmount, nextTick, onMounted, computed} from 'vue'
 import {marked} from 'marked'
 import {refDebounced} from '@vueuse/core'
 
@@ -201,6 +204,8 @@ watch(
 	},
 	{immediate: true},
 )
+
+const isEmpty = computed(() => inputHTML.value === '')
 
 function onImageAdded() {
 	bubbleSave()
@@ -409,15 +414,22 @@ function handleImagePaste(event) {
 	
 	&:focus-within, &:focus {
 		box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
-		
+	}
+	
+	&:focus-within, &:focus, &.tiptap__editor-is-empty {
 		.tiptap p.is-empty::before {
-			content: attr(data-placeholder);
-			color: var(--grey-400);
-			pointer-events: none;
-			height: 0;
-			float: left;
+			display: block;
 		}
 	}
+}
+
+.tiptap p.is-empty::before {
+	display: none;
+	content: attr(data-placeholder);
+	color: var(--grey-400);
+	pointer-events: none;
+	height: 0;
+	float: left;
 }
 
 // Basic editor styles
