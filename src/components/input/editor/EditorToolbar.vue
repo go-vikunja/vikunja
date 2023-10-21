@@ -7,7 +7,10 @@
 				:class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
 				v-tooltip="$t('input.editor.heading1')"
 			>
-				<span class="icon"> <icon :icon="['fa', 'fa-header']"/> </span>1
+				<span class="icon">
+					<icon :icon="['fa', 'fa-header']"/>
+					<span class="icon__lower-text">1</span>
+				</span>
 			</BaseButton>
 			<BaseButton
 				class="editor-toolbar__button"
@@ -15,7 +18,10 @@
 				:class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
 				v-tooltip="$t('input.editor.heading2')"
 			>
-				<span class="icon"> <icon :icon="['fa', 'fa-header']"/> </span>2
+				<span class="icon">
+					<icon :icon="['fa', 'fa-header']"/>
+					<span class="icon__lower-text">2</span>
+				</span>
 			</BaseButton>
 			<BaseButton
 				class="editor-toolbar__button"
@@ -23,7 +29,10 @@
 				:class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
 				v-tooltip="$t('input.editor.heading3')"
 			>
-				<span class="icon"> <icon :icon="['fa', 'fa-header']"/> </span>3
+				<span class="icon">
+					<icon :icon="['fa', 'fa-header']"/>
+					<span class="icon__lower-text">3</span>
+				</span>
 			</BaseButton>
 		</div>
 
@@ -375,51 +384,47 @@ function setLink() {
 
 <style lang="scss" scoped>
 .editor-toolbar {
-	background: var(--grey-50);
+	background: var(--white);
 	border: 1px solid var(--grey-200);
-	border-bottom: none;
-	// position: relative;
 	user-select: none;
-	padding: 9px 10px;
-	border-top-left-radius: 4px;
-	border-top-right-radius: 4px;
+	padding: .5rem;
+	border-radius: $radius;
 	display: flex;
 	flex-wrap: wrap;
 
 	> * + * {
-		// .editor-toolbar i.separator {
-		border--left-color: var(--grey-200) !important;
-		// }
-		// .editor-toolbar i.separator {
-		// display: inline-block;
-		// width: 0;
 		border-left: 1px solid var(--grey-200);
-		// border-right: 1px solid #fff;
-		// color: transparent;
-		// text-indent: -10px;
 		margin-left: 6px;
 		padding-left: 6px;
-		// }
 	}
 }
 
 .editor-toolbar__button {
-	color: var(--grey-700);
-	min-width: 30px;
-	height: 30px;
-	border-radius: 3px;
+	min-width: 2rem;
+	height: 2rem;
+	border-radius: $radius;
 	border: 1px solid transparent;
+	color: var(--grey-700);
+	transition: all $transition;
+	background: transparent;
+	margin-right: .25rem;
 
 	&:hover {
-		background: var(--grey-200);
-		border-color: var(--grey-300);
+		background: var(--grey-100);
+		border-color: var(--grey-200);
 	}
-}
-
-.editor-toolbar__pseudo-icon {
-	padding: 0 .5rem;
-	font-weight: bold;
-	vertical-align: top;
+	
+	.icon {
+		position: relative;
+		
+		.icon__lower-text {
+			font-size: .75rem;
+			position: absolute;
+			bottom: -3px;
+			right: -2px;
+			font-weight: bold;
+		}
+	}
 }
 
 .editor-toolbar__table-buttons {

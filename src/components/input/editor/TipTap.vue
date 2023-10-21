@@ -404,19 +404,29 @@ function handleImagePaste(event) {
 <style lang="scss">
 .tiptap__editor {
 	min-height: 10rem;
-}
-
-.tiptap p.is-empty::before {
-	content: attr(data-placeholder);
-	color: var(--grey-400);
-	pointer-events: none;
-	height: 0;
-	float: left;
+	transition: box-shadow $transition;
+	border-radius: $radius;
+	
+	&:focus-within, &:focus {
+		box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+		
+		.tiptap p.is-empty::before {
+			content: attr(data-placeholder);
+			color: var(--grey-400);
+			pointer-events: none;
+			height: 0;
+			float: left;
+		}
+	}
 }
 
 // Basic editor styles
 .ProseMirror {
 	padding: .5rem;
+
+	&:focus-within, &:focus {
+		box-shadow: none;
+	}
 
 	> * + * {
 		margin-top: 0.75em;
