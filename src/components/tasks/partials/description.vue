@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watch, type PropType} from 'vue'
+import {ref, computed, watch} from 'vue'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import Editor from '@/components/input/AsyncEditor'

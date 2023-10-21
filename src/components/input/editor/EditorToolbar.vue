@@ -334,16 +334,13 @@
 <script setup lang="ts">
 import {ref} from 'vue'
 import {Editor} from '@tiptap/vue-3'
-import type {UploadCallback} from './types'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
 const {
 	editor = null,
-	uploadCallback,
 } = defineProps<{
 	editor: Editor,
-	uploadCallback?: UploadCallback,
 }>()
 
 const tableMode = ref(false)
