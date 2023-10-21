@@ -1,12 +1,12 @@
 <template>
 	<div class="tiptap">
 		<EditorToolbar
-			v-if="editor"
+			v-if="editor && isEditEnabled"
 			:editor="editor"
 			:upload-callback="uploadCallback"
 		/>
 		<BubbleMenu
-			v-if="editor"
+			v-if="editor && isEditEnabled"
 			:editor="editor"
 			class="editor-bubble__wrapper"
 		>
@@ -59,14 +59,15 @@
 				<icon :icon="['fa', 'fa-link']"/>
 			</BaseButton>
 		</BubbleMenu>
-		
+
 		<editor-content
 			class="tiptap__editor"
-			:class="{'tiptap__editor-is-empty': isEmpty}"
+			:class="{'tiptap__editor-is-empty': isEmpty, 'tiptap__editor-is-edit-enabled': isEditEnabled}"
 			:editor="editor"
 		/>
-		
+
 		<input
+			v-if="isEditEnabled"
 			type="file"
 			id="tiptap__image-upload"
 			class="is-hidden"
@@ -74,7 +75,7 @@
 			@change="addImage"
 		/>
 
-		<ul class="actions d-print-none" v-if="bottomActions.length > 0">
+		<ul class="tiptap__editor-actions d-print-none" v-if="bottomActions.length > 0">
 			<li v-if="isEditEnabled && showSave">
 				<BaseButton
 					@click="bubbleSave"
@@ -260,10 +261,17 @@ function bubbleSave() {
 
 const editor = useEditor({
 	content: inputHTML.value,
+	editable: isEditEnabled,
 	extensions: [
 		StarterKit,
 		Placeholder.configure({
-			placeholder: t('input.editor.placeholder'),
+			placeholder: () => {
+				if (!isEditEnabled) {
+					return ''
+				}
+
+				return t('input.editor.placeholder')
+			},
 		}),
 		Typography,
 		Underline,
@@ -411,11 +419,11 @@ function handleImagePaste(event) {
 	min-height: 10rem;
 	transition: box-shadow $transition;
 	border-radius: $radius;
-	
+
 	&:focus-within, &:focus {
 		box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
 	}
-	
+
 	&:focus-within, &:focus, &.tiptap__editor-is-empty {
 		.tiptap p.is-empty::before {
 			display: block;
