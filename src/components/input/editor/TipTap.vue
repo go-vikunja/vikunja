@@ -263,11 +263,9 @@ const editor = useEditor({
 		// // character count
 		// CharacterCount,
 
-		// CodeBlockLowlight.extend({
-		// 	addNodeView() {
-		// 		return VueNodeViewRenderer(CodeBlock)
-		// 	},
-		// }).configure({ lowlight }),
+		CodeBlockLowlight.configure({
+			lowlight,
+		}),
 
 		Commands.configure({
 			suggestion: suggestionSetup(t),
