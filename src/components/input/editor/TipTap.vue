@@ -175,12 +175,14 @@ const {
 	isEditEnabled = true,
 	bottomActions = [],
 	showSave = false,
+	placeholder = '',
 } = defineProps<{
 	modelValue: string,
 	uploadCallback?: UploadCallback,
 	isEditEnabled?: boolean,
 	bottomActions?: BottomAction[],
 	showSave?: boolean,
+	placeholder?: string,
 }>()
 
 const emit = defineEmits(['update:modelValue', 'save'])
@@ -268,6 +270,10 @@ const editor = useEditor({
 			placeholder: () => {
 				if (!isEditEnabled) {
 					return ''
+				}
+				
+				if (placeholder !== '') {
+					return placeholder
 				}
 
 				return t('input.editor.placeholder')

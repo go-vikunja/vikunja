@@ -258,7 +258,7 @@
       "identifier": "Project Identifier",
       "identifierPlaceholder": "The project identifier goes here…",
       "description": "Description",
-      "descriptionPlaceholder": "The projects description goes here…",
+      "descriptionPlaceholder": "Enter a description for this project, hit '/' for more options…",
       "color": "Color",
       "success": "The project was successfully updated."
     },
@@ -383,7 +383,7 @@
       "title": "Title",
       "titlePlaceholder": "The saved filter title goes here…",
       "description": "Description",
-      "descriptionPlaceholder": "The description goes here…",
+      "descriptionPlaceholder": "Add a description for this filter here, hit '/' for more options…",
       "includeNulls": "Include Tasks which don't have a value set",
       "requireAll": "Require all filters to be true for a task to show up",
       "showDoneTasks": "Show Done Tasks",
@@ -744,7 +744,7 @@
       "loading": "Loading comments…",
       "edited": "edited {date}",
       "creating": "Creating comment…",
-      "placeholder": "Add your comment…",
+      "placeholder": "Add your comment, hit '/' for more options…",
       "comment": "Comment",
       "delete": "Delete this comment",
       "deleteText1": "Are you sure you want to delete this comment?",
@@ -758,7 +758,7 @@
       "1week": "1 week"
     },
     "description": {
-      "placeholder": "Click here to enter a description…",
+      "placeholder": "Enter a description, hit '/' for more options…",
       "empty": "No description available yet."
     },
     "assignee": {
@@ -909,7 +909,7 @@
       "namePlaceholder": "The team's name goes here…",
       "nameRequired": "Please specify a name.",
       "description": "Description",
-      "descriptionPlaceholder": "The teams description goes here…",
+      "descriptionPlaceholder": "Describe the team here, hit '/' for more options…",
       "admin": "Admin",
       "member": "Member"
     }
