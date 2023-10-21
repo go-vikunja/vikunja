@@ -79,7 +79,7 @@ const tiptapRegex = new RegExp(`${TIPTAP_TEXT_VALUE_PREFIX}`, 's')
 </script>
 
 <script setup lang="ts">
-import {ref, watch, onBeforeUnmount, nextTick} from 'vue'
+import {ref, watch, onBeforeUnmount, nextTick, onMounted} from 'vue'
 import {marked} from 'marked'
 import {refDebounced} from '@vueuse/core'
 
@@ -281,6 +281,19 @@ onBeforeUnmount(() => editor.value?.destroy())
 
 const uploadInputRef = ref<HTMLInputElement | null>(null)
 
+function uploadAndInsertFiles(files: File[] | FileList) {
+	uploadCallback(files).then(urls => {
+		urls?.forEach(url => {
+			editor.value
+				?.chain()
+				.focus()
+				.setImage({src: url})
+				.run()
+		})
+		onImageAdded()
+	})
+}
+
 function addImage() {
 
 	if (typeof uploadCallback !== 'undefined') {
@@ -289,18 +302,9 @@ function addImage() {
 		if (!files || files.length === 0) {
 			return
 		}
-
-		uploadCallback(files).then(urls => {
-			urls.forEach(url => {
-				editor.value
-					?.chain()
-					.focus()
-					.setImage({src: url})
-					.run()
-			})
-			onImageAdded()
-		})
-
+		
+		uploadAndInsertFiles(files)
+		
 		return
 	}
 
@@ -340,6 +344,23 @@ function setLink() {
 		.extendMarkRange('link')
 		.setLink({href: url, target: '_blank'})
 		.run()
+}
+
+onMounted(() => {
+	document.addEventListener('paste', handleImagePaste)
+})
+
+onBeforeUnmount(() => {
+	document.removeEventListener('paste', handleImagePaste)
+})
+
+function handleImagePaste(event) {
+	event.preventDefault()
+	event?.clipboardData?.items?.forEach(i => {
+		if (i.kind === 'file' && i.type.startsWith('image/')) {
+			uploadAndInsertFiles([i.getAsFile()])
+		}
+	})
 }
 </script>
 
