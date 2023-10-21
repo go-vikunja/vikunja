@@ -10,48 +10,56 @@ describe('Find checklists in text', () => {
 		expect(checkboxes).toHaveLength(0)
 	})
 	it('should find multiple checkboxes', () => {
-		const text: string = `* [ ] Lorem Ipsum
-* [ ] Dolor sit amet
-
-Here's some text in between
-
-* [x] Dolor sit amet
-- [ ] Dolor sit amet`
+		const text: string = `
+<ul data-type="taskList">
+	<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>Task</p></div>
+	</li>
+	<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>Another task</p>
+			<ul data-type="taskList">
+				<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+					<div><p>subtask</p></div>
+				</li>
+				<li data-checked="true" data-type="taskItem"><label><input type="checkbox"
+																		   checked="checked"><span></span></label>
+					<div><p>done</p></div>
+				</li>
+			</ul>
+		</div>
+	</li>
+</ul>`
 		const checkboxes = findCheckboxesInText(text)
 
 		expect(checkboxes).toHaveLength(4)
-		expect(checkboxes[0]).toBe(0)
-		expect(checkboxes[1]).toBe(18)
-		expect(checkboxes[2]).toBe(69)
-		expect(checkboxes[3]).toBe(90)
+		expect(checkboxes[0]).toBe(32)
+		expect(checkboxes[1]).toBe(163)
+		expect(checkboxes[2]).toBe(321)
+		expect(checkboxes[3]).toBe(464)
 	})
-	it('should find one checkbox with *', () => {
-		const text: string = '* [ ] Lorem Ipsum'
+	it('should find one unchecked checkbox', () => {
+		const text: string = `
+<ul data-type="taskList">
+	<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>Task</p></div>
+	</li>
+</ul>`
 		const checkboxes = findCheckboxesInText(text)
 
 		expect(checkboxes).toHaveLength(1)
-		expect(checkboxes[0]).toBe(0)
+		expect(checkboxes[0]).toBe(32)
 	})
-	it('should find one checkbox with -', () => {
-		const text: string = '- [ ] Lorem Ipsum'
+	it('should find one checked checkbox', () => {
+		const text: string = `
+<ul data-type="taskList">
+	<li data-checked="true" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>Task</p></div>
+	</li>
+</ul>`
 		const checkboxes = findCheckboxesInText(text)
 
 		expect(checkboxes).toHaveLength(1)
-		expect(checkboxes[0]).toBe(0)
-	})
-	it('should find one checked checkbox with *', () => {
-		const text: string = '* [x] Lorem Ipsum'
-		const checkboxes = findCheckboxesInText(text)
-
-		expect(checkboxes).toHaveLength(1)
-		expect(checkboxes[0]).toBe(0)
-	})
-	it('should find one checked checkbox with -', () => {
-		const text: string = '- [x] Lorem Ipsum'
-		const checkboxes = findCheckboxesInText(text)
-
-		expect(checkboxes).toHaveLength(1)
-		expect(checkboxes[0]).toBe(0)
+		expect(checkboxes[0]).toBe(32)
 	})
 })
 
@@ -63,32 +71,60 @@ describe('Get Checklist Statistics in a Text', () => {
 		expect(stats.total).toBe(0)
 	})
 	it('should find one checkbox', () => {
-		const text: string = '* [ ] Lorem Ipsum'
+		const text: string = `
+<ul data-type="taskList">
+	<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>Task</p></div>
+	</li>
+</ul>`
 		const stats = getChecklistStatistics(text)
 
 		expect(stats.total).toBe(1)
 		expect(stats.checked).toBe(0)
 	})
 	it('should find one checked checkbox', () => {
-		const text: string = '* [x] Lorem Ipsum'
+		const text: string = `
+<ul data-type="taskList">
+	<li data-checked="true" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>Task</p></div>
+	</li>
+</ul>`
 		const stats = getChecklistStatistics(text)
 
 		expect(stats.total).toBe(1)
 		expect(stats.checked).toBe(1)
 	})
 	it('should find multiple mixed and matched', () => {
-		const text: string = `* [ ] Lorem Ipsum
-* [ ] Dolor sit amet
-* [x] Dolor sit amet
-- [x] Dolor sit amet
+		const text: string = `
+<ul data-type="taskList">
+	<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>Task</p></div>
+	</li>
+	<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>Another task</p>
+			<ul data-type="taskList">
+				<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+					<div><p>subtask</p></div>
+				</li>
+				<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+					<div><p>subtask 2</p></div>
+				</li>
+				<li data-checked="true" data-type="taskItem"><label><input type="checkbox"
+																		   checked="checked"><span></span></label>
+					<div><p>done</p></div>
+				</li>
+				<li data-checked="true" data-type="taskItem"><label><input type="checkbox"
+																		   checked="checked"><span></span></label>
+					<div><p>also done</p></div>
+				</li>
+			</ul>
+		</div>
+	</li>
+</ul>`
 
-Here's some text in between
-
-* [x] Dolor sit amet
-- [ ] Dolor sit amet`
 		const stats = getChecklistStatistics(text)
 
 		expect(stats.total).toBe(6)
-		expect(stats.checked).toBe(3)
+		expect(stats.checked).toBe(2)
 	})
 })

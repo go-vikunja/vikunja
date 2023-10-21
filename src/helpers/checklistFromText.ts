@@ -1,5 +1,3 @@
-const checked = '[x]'
-
 interface CheckboxStatistics {
 	total: number
 	checked: number
@@ -11,7 +9,7 @@ interface MatchedCheckboxes {
 }
 
 const getCheckboxesInText = (text: string): MatchedCheckboxes => {
-	const regex = /[*-] \[[ x]]/g
+	const regex = /data-checked="(true|false)"/g
 	let match
 	const checkboxes: MatchedCheckboxes = {
 		checked: [],
@@ -19,7 +17,7 @@ const getCheckboxesInText = (text: string): MatchedCheckboxes => {
 	}
 
 	while ((match = regex.exec(text)) !== null) {
-		if (match[0].endsWith(checked)) {
+		if (match[1] === 'true') {
 			checkboxes.checked.push(match.index)
 		} else {
 			checkboxes.unchecked.push(match.index)
