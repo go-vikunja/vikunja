@@ -61,6 +61,9 @@ dependencies:
   '@tiptap/extension-link':
     specifier: 2.0.3
     version: 2.0.3(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
+  '@tiptap/extension-placeholder':
+    specifier: 2.1.12
+    version: 2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
   '@tiptap/extension-table':
     specifier: 2.0.3
     version: 2.0.3(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
@@ -83,13 +86,13 @@ dependencies:
     specifier: 2.0.3
     version: 2.0.3(@tiptap/core@2.1.12)
   '@tiptap/extension-underline':
-    specifier: ^2.1.12
+    specifier: 2.1.12
     version: 2.1.12(@tiptap/core@2.1.12)
   '@tiptap/starter-kit':
     specifier: 2.0.3
     version: 2.0.3(@tiptap/pm@2.1.12)
   '@tiptap/suggestion':
-    specifier: ^2.1.12
+    specifier: 2.1.12
     version: 2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
   '@tiptap/vue-3':
     specifier: 2.0.3
@@ -4423,6 +4426,16 @@ packages:
       '@tiptap/core': ^2.0.0
     dependencies:
       '@tiptap/core': 2.1.12(@tiptap/pm@2.1.12)
+    dev: false
+
+  /@tiptap/extension-placeholder@2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12):
+    resolution: {integrity: sha512-K52o7B1zkP4vaVy3z4ZwHn+tQy6KlXtedj1skLg+796ImwH2GYS5z6MFOTfKzBO2hLncUzLco/s0C5PLCD6SDw==}
+    peerDependencies:
+      '@tiptap/core': ^2.0.0
+      '@tiptap/pm': ^2.0.0
+    dependencies:
+      '@tiptap/core': 2.1.12(@tiptap/pm@2.1.12)
+      '@tiptap/pm': 2.1.12
     dev: false
 
   /@tiptap/extension-strike@2.1.12(@tiptap/core@2.1.12):

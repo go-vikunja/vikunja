@@ -549,6 +549,7 @@
       "taskListTooltip": "Track tasks with a to-do list.",
       "undo": "Undo",
       "redo": "Redo",
+      "placeholder": "Type some text or hit '/' to see more options…",
       "table": {
         "title": "Table",
         "insert": "Insert table",

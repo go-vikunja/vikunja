@@ -139,6 +139,7 @@ import AttachmentService from '@/services/attachment'
 import {useI18n} from 'vue-i18n'
 import BaseButton from '@/components/base/BaseButton.vue'
 import XButton from '@/components/input/button.vue'
+import {Placeholder} from '@tiptap/extension-placeholder'
 
 const {t} = useI18n()
 
@@ -256,6 +257,9 @@ const editor = useEditor({
 	content: inputHTML.value,
 	extensions: [
 		StarterKit,
+		Placeholder.configure({
+			placeholder: t('input.editor.placeholder'),
+		}),
 		Typography,
 		Underline,
 		Link.configure({
@@ -399,22 +403,18 @@ function handleImagePaste(event) {
 
 <style lang="scss">
 .tiptap__editor {
-	// box-sizing: border-box;
-	// height: auto;
-	min-height: 150px;
-	border: 1px solid #ddd;
-	border-bottom-left-radius: 4px;
-	border-bottom-right-radius: 4px;
-	//padding: 10px;
-	// font: inherit;
-	// z-index: 0;
-	// word-wrap: break-word;
-
-	border: 1px solid var(--grey-200) !important;
-	background: var(--white);
+	min-height: 10rem;
 }
 
-/* Basic editor styles */
+.tiptap p.is-empty::before {
+	content: attr(data-placeholder);
+	color: var(--grey-400);
+	pointer-events: none;
+	height: 0;
+	float: left;
+}
+
+// Basic editor styles
 .ProseMirror {
 	padding: .5rem;
 
