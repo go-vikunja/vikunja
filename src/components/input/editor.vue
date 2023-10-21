@@ -370,35 +370,7 @@ pre.CodeMirror-line {
 	font-weight: 400;
 }
 
-ul.actions {
-	font-size: .8rem;
-	margin: 0;
 
-	li {
-		display: inline-block;
-
-		&::after {
-			content: '·';
-			padding: 0 .25rem;
-		}
-
-		&:last-child:after {
-			content: '';
-		}
-	}
-
-	&, a {
-		color: var(--grey-500);
-
-		&.done-edit {
-			color: var(--primary);
-		}
-	}
-
-	a:hover {
-		text-decoration: underline;
-	}
-}
 
 .vue-easymde.content {
 	margin-bottom: 0 !important;
