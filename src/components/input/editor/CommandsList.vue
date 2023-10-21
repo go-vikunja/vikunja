@@ -44,7 +44,7 @@ export default {
 	},
 
 	methods: {
-		onKeyDown({ event }) {
+		onKeyDown({event}) {
 			if (event.key === 'ArrowUp') {
 				this.upHandler()
 				return true
@@ -86,19 +86,16 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .items {
 	padding: 0.2rem;
 	position: relative;
 	border-radius: 0.5rem;
-	background: #FFF;
+	background: #fff;
 	color: rgba(0, 0, 0, 0.8);
 	overflow: hidden;
 	font-size: 0.9rem;
-	box-shadow:
-		0 0 0 1px rgba(0, 0, 0, 0.05),
-		0px 10px 20px rgba(0, 0, 0, 0.1),
-;
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0px 10px 20px rgba(0, 0, 0, 0.1);
 }
 
 .item {
