@@ -46,6 +46,9 @@ import CharacterCount from '@tiptap/extension-character-count'
 import StarterKit from '@tiptap/starter-kit'
 import {EditorContent, useEditor, VueNodeViewRenderer} from '@tiptap/vue-3'
 
+import Commands from './commands'
+import suggestion from './suggestion'
+
 // load all highlight.js languages
 import {lowlight} from 'lowlight'
 
@@ -199,6 +202,10 @@ const editor = useEditor({
 		// 		return VueNodeViewRenderer(CodeBlock)
 		// 	},
 		// }).configure({ lowlight }),
+		
+		Commands.configure({
+			suggestion,
+		}),
 	],
 	onUpdate: () => {
 		// HTML
