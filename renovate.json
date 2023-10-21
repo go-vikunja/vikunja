@@ -28,6 +28,13 @@
       ]
     },
     {
+      "groupName": "tiptap",
+      "matchPackagePrefixes": [
+        "@tiptap/",
+        "tiptap"
+      ]
+    },
+    {
       "matchDepTypes": ["devDependencies"],
       "groupName": "dev-dependencies",
       "extends": ["schedule:daily"]
