@@ -256,7 +256,7 @@
 					<icon :icon="['fa', 'fa-table']"/>
 				</span>
 			</BaseButton>
-			<div v-if="tableMode">
+			<div v-if="tableMode" class="editor-toolbar__table-buttons">
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="
@@ -267,105 +267,105 @@
 							.run()
 					"
 				>
-					insertTable
+					{{ $t('input.editor.table.insert') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().addColumnBefore().run()"
 					:disabled="!editor.can().addColumnBefore"
 				>
-					addColumnBefore
+					{{ $t('input.editor.table.addColumnBefore') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().addColumnAfter().run()"
 					:disabled="!editor.can().addColumnAfter"
 				>
-					addColumnAfter
+					{{ $t('input.editor.table.addColumnAfter') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().deleteColumn().run()"
 					:disabled="!editor.can().deleteColumn"
 				>
-					deleteColumn
+					{{ $t('input.editor.table.deleteColumn') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().addRowBefore().run()"
 					:disabled="!editor.can().addRowBefore"
 				>
-					addRowBefore
+					{{ $t('input.editor.table.addRowBefore') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().addRowAfter().run()"
 					:disabled="!editor.can().addRowAfter"
 				>
-					addRowAfter
+					{{ $t('input.editor.table.addRowAfter') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().deleteRow().run()"
 					:disabled="!editor.can().deleteRow"
 				>
-					deleteRow
+					{{ $t('input.editor.table.deleteRow') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().deleteTable().run()"
 					:disabled="!editor.can().deleteTable"
 				>
-					deleteTable
+					{{ $t('input.editor.table.deleteTable') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().mergeCells().run()"
 					:disabled="!editor.can().mergeCells"
 				>
-					mergeCells
+					{{ $t('input.editor.table.mergeCells') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().splitCell().run()"
 					:disabled="!editor.can().splitCell"
 				>
-					splitCell
+					{{ $t('input.editor.table.splitCell') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().toggleHeaderColumn().run()"
 					:disabled="!editor.can().toggleHeaderColumn"
 				>
-					toggleHeaderColumn
+					{{ $t('input.editor.table.toggleHeaderColumn') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().toggleHeaderRow().run()"
 					:disabled="!editor.can().toggleHeaderRow"
 				>
-					toggleHeaderRow
+					{{ $t('input.editor.table.toggleHeaderRow') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().toggleHeaderCell().run()"
 					:disabled="!editor.can().toggleHeaderCell"
 				>
-					toggleHeaderCell
+					{{ $t('input.editor.table.toggleHeaderCell') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().mergeOrSplit().run()"
 					:disabled="!editor.can().mergeOrSplit"
 				>
-					mergeOrSplit
+					{{ $t('input.editor.table.mergeOrSplit') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="editor.chain().focus().fixTables().run()"
 					:disabled="!editor.can().fixTables"
 				>
-					fixTables
+					{{ $t('input.editor.table.fixTables') }}
 				</BaseButton>
 			</div>
 		</div>
@@ -498,5 +498,18 @@ function setLink() {
 	padding: 0 .5rem;
 	font-weight: bold;
 	vertical-align: top;
+}
+
+.editor-toolbar__table-buttons {
+	margin-top: .5rem;
+	
+	> .editor-toolbar__button {
+		margin-right: .5rem;
+		margin-bottom: .5rem;
+		padding: 0 .25rem;
+		border: 1px solid var(--grey-400);
+		font-size: .75rem;
+		height: 1.5rem;
+	}
 }
 </style>

@@ -531,7 +531,24 @@
       "table": "Table",
       "horizontalRule": "Horizontal Rule",
       "sideBySide": "Side By Side",
-      "guide": "Guide"
+      "guide": "Guide",
+      "table": {
+        "insert": "Insert table",
+        "addColumnBefore": "Add column before",
+        "addColumnAfter": "Add column after",
+        "deleteColumn": "Delete column",
+        "addRowBefore": "Add row before",
+        "addRowAfter": "Add row after",
+        "deleteRow": "Delete row",
+        "deleteTable": "Delete table",
+        "mergeCells": "Merge cells",
+        "splitCell": "Split cell",
+        "toggleHeaderColumn": "Toggle header column",
+        "toggleHeaderRow": "Toggle header row",
+        "toggleHeaderCell": "Toggle header cell",
+        "mergeOrSplit": "Merge or split",
+        "fixTables": "Fix tables"
+      }
     },
     "multiselect": {
       "createPlaceholder": "Create new",
