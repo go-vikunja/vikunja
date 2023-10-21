@@ -5,7 +5,7 @@
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
 				:class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
-				title="h1"
+				v-tooltip="$t('input.editor.heading1')"
 			>
 				<span class="icon"> <icon :icon="['fa', 'fa-header']"/> </span>1
 			</BaseButton>
@@ -13,7 +13,7 @@
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
 				:class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
-				title="h2"
+				v-tooltip="$t('input.editor.heading2')"
 			>
 				<span class="icon"> <icon :icon="['fa', 'fa-header']"/> </span>2
 			</BaseButton>
@@ -21,33 +21,9 @@
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
 				:class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
-				title="h3"
+				v-tooltip="$t('input.editor.heading3')"
 			>
 				<span class="icon"> <icon :icon="['fa', 'fa-header']"/> </span>3
-			</BaseButton>
-			<BaseButton
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().toggleHeading({ level: 4 }).run()"
-				:class="{ 'is-active': editor.isActive('heading', { level: 4 }) }"
-				title="h4"
-			>
-				<span class="icon"> <icon :icon="['fa', 'fa-header']"/> </span>4
-			</BaseButton>
-			<BaseButton
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().toggleHeading({ level: 5 }).run()"
-				:class="{ 'is-active': editor.isActive('heading', { level: 5 }) }"
-				title="h5"
-			>
-				<span class="icon"> <icon :icon="['fa', 'fa-header']"/> </span>5
-			</BaseButton>
-			<BaseButton
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().toggleHeading({ level: 6 }).run()"
-				:class="{ 'is-active': editor.isActive('heading', { level: 6 }) }"
-				title="h6"
-			>
-				<span class="icon"> <icon :icon="['fa', 'fa-header']"/> </span>6
 			</BaseButton>
 		</div>
 
@@ -56,7 +32,7 @@
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().toggleBold().run()"
 				:class="{ 'is-active': editor.isActive('bold') }"
-				title="bold"
+				v-tooltip="$t('input.editor.bold')"
 			>
 				<span class="icon">
 					<icon :icon="['fa', 'fa-bold']"/>
@@ -66,7 +42,7 @@
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().toggleItalic().run()"
 				:class="{ 'is-active': editor.isActive('italic') }"
-				title="italic"
+				v-tooltip="$t('input.editor.italic')"
 			>
 				<span class="icon">
 					<icon :icon="['fa', 'fa-italic']"/>
@@ -74,9 +50,19 @@
 			</BaseButton>
 			<BaseButton
 				class="editor-toolbar__button"
+				@click="editor.chain().focus().toggleUnderline().run()"
+				:class="{ 'is-active': editor.isActive('underline') }"
+				v-tooltip="$t('input.editor.underline')"
+			>
+				<span class="icon">
+					<icon :icon="['fa', 'fa-underline']"/>
+				</span>
+			</BaseButton>
+			<BaseButton
+				class="editor-toolbar__button"
 				@click="editor.chain().focus().toggleStrike().run()"
 				:class="{ 'is-active': editor.isActive('strike') }"
-				title="strike"
+				v-tooltip="$t('input.editor.strikethrough')"
 			>
 				<span class="icon">
 					<icon :icon="['fa', 'fa-strikethrough']"/>
@@ -87,19 +73,9 @@
 		<div class="editor-toolbar__segment">
 			<BaseButton
 				class="editor-toolbar__button"
-				@click="editor.chain().focus().toggleCode().run()"
-				:class="{ 'is-active': editor.isActive('code') }"
-				title="code"
-			>
-				<span class="icon">
-					<icon :icon="['fa', 'fa-code']"/>
-				</span>
-			</BaseButton>
-			<BaseButton
-				class="editor-toolbar__button"
 				@click="editor.chain().focus().toggleCodeBlock().run()"
 				:class="{ 'is-active': editor.isActive('codeBlock') }"
-				title="code block"
+				v-tooltip="$t('input.editor.code')"
 			>
 				<span class="icon">
 					<icon :icon="['fa', 'fa-code']"/>
@@ -109,7 +85,7 @@
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().toggleBlockquote().run()"
 				:class="{ 'is-active': editor.isActive('blockquote') }"
-				title="quote"
+				v-tooltip="$t('input.editor.quote')"
 			>
 				<span class="icon">
 					<icon :icon="['fa', 'fa-quote-right']"/>
@@ -122,7 +98,7 @@
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().toggleBulletList().run()"
 				:class="{ 'is-active': editor.isActive('bulletList') }"
-				title="bullet list"
+				v-tooltip="$t('input.editor.bulletList')"
 			>
 				<span class="icon">
 					<icon :icon="['fa', 'fa-list-ol']"/>
@@ -132,7 +108,7 @@
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().toggleOrderedList().run()"
 				:class="{ 'is-active': editor.isActive('orderedList') }"
-				title="ordered list"
+				v-tooltip="$t('input.editor.orderedList')"
 			>
 				<span class="icon">
 					<icon :icon="['fa', 'fa-list-ul']"/>
@@ -142,7 +118,7 @@
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().toggleTaskList().run()"
 				:class="{ 'is-active': editor.isActive('taskList') }"
-				title="task list"
+				v-tooltip="$t('input.editor.taskList')"
 			>
 				<span class="icon">
 					<icon icon="fa-list-check"/>
@@ -151,7 +127,11 @@
 		</div>
 
 		<div class="editor-toolbar__segment">
-			<BaseButton class="editor-toolbar__button" @click="openImagePicker" title="Add image">
+			<BaseButton
+				class="editor-toolbar__button" 
+				@click="openImagePicker" 
+				v-tooltip="$t('input.editor.image')"
+			>
 				<span class="icon">
 					<icon icon="fa-image"/>
 				</span>
@@ -161,24 +141,10 @@
 		<div class="editor-toolbar__segment">
 			<BaseButton
 				class="editor-toolbar__button"
-				@click="editor.chain().focus().unsetAllMarks().run()"
-			>
-				<icon icon="xmark"/>
-			</BaseButton>
-			<BaseButton
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().clearNodes().run()"
-			>
-				<icon icon="xmarks-lines"/>
-			</BaseButton>
-		</div>
-
-		<div class="editor-toolbar__segment">
-			<BaseButton
-				class="editor-toolbar__button"
 				@click="setLink"
 				:class="{ 'is-active': editor.isActive('link') }"
 				title="set link"
+				v-tooltip="$t('input.editor.link')"
 			>
 				<span class="icon">
 					<icon :icon="['fa', 'fa-link']"/>
@@ -186,19 +152,10 @@
 			</BaseButton>
 			<BaseButton
 				class="editor-toolbar__button"
-				@click="editor.chain().focus().unsetLink().run()"
-				:disabled="!editor.isActive('link')"
-				title="unset link"
-			>
-				<span class="icon">
-					<icon :icon="['fa', 'fa-unlink']"/>
-				</span>
-			</BaseButton>
-			<BaseButton
-				class="editor-toolbar__button"
 				@click="editor.chain().focus().setParagraph().run()"
 				:class="{ 'is-active': editor.isActive('paragraph') }"
 				title="paragraph"
+				v-tooltip="$t('input.editor.text')"
 			>
 				<span class="icon">
 					<icon :icon="['fa', 'fa-paragraph']"/>
@@ -208,17 +165,10 @@
 			<BaseButton
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().setHorizontalRule().run()"
-			>
-				<span class="editor-toolbar__pseudo-icon">
-					-
-				</span>
-			</BaseButton>
-			<BaseButton
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().setHardBreak().run()"
+				v-tooltip="$t('input.editor.horizontalRule')"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-arrow-turn-down']"/>
+					<icon :icon="['fa', 'fa-ruler-horizontal']"/>
 				</span>
 			</BaseButton>
 		</div>
@@ -227,7 +177,7 @@
 			<BaseButton
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().undo().run()"
-				title="undo"
+				v-tooltip="$t('input.editor.undo')"
 			>
 				<span class="icon">
 					<icon :icon="['fa', 'fa-undo']"/>
@@ -236,7 +186,7 @@
 			<BaseButton
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().redo().run()"
-				title="redo"
+				v-tooltip="$t('input.editor.redo')"
 			>
 				<span class="icon">
 					<icon :icon="['fa', 'fa-redo']"/>
@@ -250,7 +200,7 @@
 				class="editor-toolbar__button"
 				@click="toggleTableMode"
 				:class="{ 'is-active': editor.isActive('table') }"
-				title="table"
+				v-tooltip="$t('input.editor.table.title')"
 			>
 				<span class="icon">
 					<icon :icon="['fa', 'fa-table']"/>
