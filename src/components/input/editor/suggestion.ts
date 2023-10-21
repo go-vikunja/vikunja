@@ -124,19 +124,19 @@ export default function suggestionSetup(t) {
                             .run()
                     },
                 },
-                // {
-                //     title: t('input.editor.')'Image',
-                //     description: t('input.editor.')'Upload an image from your computer',
-                //     icon: 'fa-image',
-                //     command: ({editor, range}) => {
-                //         editor
-                //             .chain()
-                //             .focus()
-                //             .deleteRange(range)
-                //             .toggle()
-                //             .run()
-                //     },
-                // },
+                {
+                    title: t('input.editor.image'),
+                    description: t('input.editor.imageTooltip'),
+                    icon: 'fa-image',
+                    command: ({editor, range}) => {
+                        editor
+                            .chain()
+                            .focus()
+                            .deleteRange(range)
+                            .run()
+                        document.getElementById('tiptap__image-upload').click()
+                    },
+                },
                 {
                     title: t('input.editor.horizontalRule'),
                     description: t('input.editor.horizontalRuleTooltip'),

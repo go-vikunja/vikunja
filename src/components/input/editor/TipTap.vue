@@ -4,11 +4,17 @@
 			v-if="editor"
 			:editor="editor"
 			:upload-callback="uploadCallback"
-			@image-added="onImageAdded"
 		/>
 		<editor-content
 			class="tiptap__editor"
 			:editor="editor"
+		/>
+		<input
+			type="file"
+			id="tiptap__image-upload"
+			class="is-hidden"
+			ref="uploadInputRef"
+			@change="addImage"
 		/>
 	</div>
 </template>
@@ -205,7 +211,7 @@ const editor = useEditor({
 		// 		return VueNodeViewRenderer(CodeBlock)
 		// 	},
 		// }).configure({ lowlight }),
-		
+
 		Commands.configure({
 			suggestion: suggestionSetup(t),
 		}),
@@ -235,6 +241,39 @@ watch(inputHTML, (value) => {
 })
 
 onBeforeUnmount(() => editor.value?.destroy())
+
+const uploadInputRef = ref<HTMLInputElement | null>(null)
+
+function addImage() {
+
+	if (typeof uploadCallback !== 'undefined') {
+		const files = uploadInputRef.value?.files
+
+		if (!files || files.length === 0) {
+			return
+		}
+
+		uploadCallback(files).then(urls => {
+			urls.forEach(url => {
+				editor.value
+					.chain()
+					.focus()
+					.setImage({src: url})
+					.run()
+			})
+			onImageAdded()
+		})
+
+		return
+	}
+
+	const url = window.prompt('URL')
+
+	if (url) {
+		editor.value.chain().focus().setImage({src: url}).run()
+		onImageAdded()
+	}
+}
 </script>
 
 <style lang="scss">

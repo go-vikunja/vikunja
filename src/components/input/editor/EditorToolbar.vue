@@ -151,7 +151,7 @@
 		</div>
 
 		<div class="editor-toolbar__segment">
-			<BaseButton class="editor-toolbar__button" @click="uploadInputRef?.click()" title="Add image">
+			<BaseButton class="editor-toolbar__button" @click="openImagePicker" title="Add image">
 				<span class="icon">
 					<icon icon="fa-image"/>
 				</span>
@@ -369,7 +369,6 @@
 				</BaseButton>
 			</div>
 		</div>
-		<input type="file" ref="uploadInputRef" class="is-hidden" @change="addImage"/>
 	</div>
 </template>
 
@@ -388,40 +387,14 @@ const {
 	uploadCallback?: UploadCallback,
 }>()
 
-const emit = defineEmits(['imageAdded'])
-
 const tableMode = ref(false)
-const uploadInputRef = ref<HTMLInputElement | null>(null)
 
 function toggleTableMode() {
 	tableMode.value = !tableMode.value
 }
 
-function addImage() {
-
-	if (typeof uploadCallback !== 'undefined') {
-		const files = uploadInputRef.value?.files
-
-		if (!files || files.length === 0) {
-			return
-		}
-
-		uploadCallback(files).then(urls => {
-			urls.forEach(url => {
-				editor?.chain().focus().setImage({src: url}).run()
-			})
-			emit('imageAdded')
-		})
-
-		return
-	}
-
-	const url = window.prompt('URL')
-
-	if (url) {
-		editor?.chain().focus().setImage({src: url}).run()
-		emit('imageAdded')
-	}
+function openImagePicker() {
+	document.getElementById('tiptap__image-upload').click()
 }
 
 function setLink() {
