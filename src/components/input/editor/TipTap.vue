@@ -702,4 +702,34 @@ ul[data-type='taskList'] {
 		background: var(--grey-200);
 	}
 }
+
+ul.tiptap__editor-actions {
+	font-size: .8rem;
+	margin: 0;
+
+	li {
+		display: inline-block;
+
+		&::after {
+			content: '·';
+			padding: 0 .25rem;
+		}
+
+		&:last-child:after {
+			content: '';
+		}
+	}
+
+	&, a {
+		color: var(--grey-500);
+
+		&.done-edit {
+			color: var(--primary);
+		}
+	}
+
+	a:hover {
+		text-decoration: underline;
+	}
+}
 </style>
