@@ -144,6 +144,7 @@ import {useI18n} from 'vue-i18n'
 import BaseButton from '@/components/base/BaseButton.vue'
 import XButton from '@/components/input/button.vue'
 import {Placeholder} from '@tiptap/extension-placeholder'
+import {eventToHotkeyString} from '@github/hotkey'
 
 const {t} = useI18n()
 
@@ -176,6 +177,7 @@ const {
 	bottomActions = [],
 	showSave = false,
 	placeholder = '',
+	editShortcut = '',
 } = defineProps<{
 	modelValue: string,
 	uploadCallback?: UploadCallback,
@@ -183,6 +185,7 @@ const {
 	bottomActions?: BottomAction[],
 	showSave?: boolean,
 	placeholder?: string,
+	editShortcut?: string,
 }>()
 
 const emit = defineEmits(['update:modelValue', 'save'])
@@ -404,10 +407,16 @@ function setLink() {
 
 onMounted(() => {
 	document.addEventListener('paste', handleImagePaste)
+	if(editShortcut !== '') {
+		document.addEventListener('keydown', setFocusToEditor)
+	}
 })
 
 onBeforeUnmount(() => {
 	document.removeEventListener('paste', handleImagePaste)
+	if(editShortcut !== '') {
+		document.removeEventListener('keydown', setFocusToEditor)
+	}
 })
 
 function handleImagePaste(event) {
@@ -417,6 +426,15 @@ function handleImagePaste(event) {
 			uploadAndInsertFiles([i.getAsFile()])
 		}
 	})
+}
+// See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
+function setFocusToEditor(event) {
+	const hotkeyString = eventToHotkeyString(event)
+	if (!hotkeyString) return
+	if (hotkeyString !== editShortcut || editor.value?.isFocused) return
+	event.preventDefault()
+	
+	editor.value?.commands.focus()
 }
 </script>
 
