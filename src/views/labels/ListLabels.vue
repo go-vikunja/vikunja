@@ -58,7 +58,6 @@
 							<label class="label">{{ $t('label.attributes.description') }}</label>
 							<div class="control">
 								<editor
-									:preview-is-default="false"
 									:placeholder="$t('label.attributes.description')"
 									v-if="editorActive"
 									v-model="labelEditLabel.description"

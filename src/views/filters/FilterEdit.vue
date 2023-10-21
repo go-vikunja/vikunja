@@ -31,7 +31,6 @@
 					<editor
 						:class="{ 'disabled': filterService.loading}"
 						:disabled="filterService.loading"
-						:preview-is-default="false"
 						id="description"
 						:placeholder="$t('filters.attributes.descriptionPlaceholder')"
 						v-model="filter.description"

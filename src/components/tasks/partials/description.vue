@@ -20,7 +20,6 @@
 			:is-edit-enabled="canWrite"
 			:upload-callback="uploadCallback"
 			:placeholder="$t('task.description.placeholder')"
-			:empty-text="$t('task.description.empty')"
 			:show-save="true"
 			edit-shortcut="e"
 			v-model="task.description"

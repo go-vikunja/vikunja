@@ -32,7 +32,6 @@
 						<editor
 							:class="{ disabled: teamService.loading }"
 							:disabled="teamService.loading"
-							:preview-is-default="false"
 							id="teamdescription"
 							:placeholder="$t('team.attributes.descriptionPlaceholder')"
 							v-model="team.description"
