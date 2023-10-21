@@ -1,14 +1,14 @@
 <template>
 	<div class="tiptap">
-		<EditorToolbar 
+		<EditorToolbar
 			v-if="editor"
 			:editor="editor"
 			:upload-callback="uploadCallback"
 			@image-added="onImageAdded"
 		/>
-		<editor-content 
-			class="tiptap__editor" 
-			:editor="editor" 
+		<editor-content
+			class="tiptap__editor"
+			:editor="editor"
 		/>
 	</div>
 </template>
@@ -102,7 +102,7 @@ watch(
 		if (modelValue === '') {
 			return
 		}
-		
+
 		if (!modelValue.startsWith(TIPTAP_TEXT_VALUE_PREFIX)) {
 			// convert Markdown to HTML
 			inputHTML.value = TIPTAP_TEXT_VALUE_PREFIX + marked.parse(modelValue)
@@ -113,7 +113,7 @@ watch(
 		inputHTML.value = modelValue.replace(tiptapRegex, '')
 		nextTick(() => loadImages())
 	},
-	{ immediate: true },
+	{immediate: true},
 )
 
 function onImageAdded() {
@@ -123,6 +123,7 @@ function onImageAdded() {
 
 type CacheKey = `${ITask['id']}-${IAttachment['id']}`
 const loadedAttachments = ref<{ [key: CacheKey]: string }>({})
+
 function loadImages() {
 	const attachmentImage = document.querySelectorAll<HTMLImageElement>('.tiptap__editor img')
 	const attachmentService = new AttachmentService()
@@ -246,7 +247,7 @@ onBeforeUnmount(() => editor.value?.destroy())
 /* Basic editor styles */
 .ProseMirror {
 	padding: .5rem;
-	
+
 	> * + * {
 		margin-top: 0.75em;
 	}
@@ -277,7 +278,7 @@ onBeforeUnmount(() => editor.value?.destroy())
 	pre {
 		background: #0d0d0d;
 		color: #fff;
-		font-family: "JetBrainsMono", monospace;
+		font-family: 'JetBrainsMono', monospace;
 		padding: 0.75rem 1rem;
 		border-radius: 0.5rem;
 
@@ -292,7 +293,7 @@ onBeforeUnmount(() => editor.value?.destroy())
 	pre {
 		background: #0d0d0d;
 		color: #fff;
-		font-family: "JetBrainsMono", monospace;
+		font-family: 'JetBrainsMono', monospace;
 		padding: 0.75rem 1rem;
 		border-radius: 0.5rem;
 
@@ -409,7 +410,7 @@ onBeforeUnmount(() => editor.value?.destroy())
 		.selectedCell:after {
 			z-index: 2;
 			position: absolute;
-			content: "";
+			content: '';
 			left: 0;
 			right: 0;
 			top: 0;
@@ -432,16 +433,16 @@ onBeforeUnmount(() => editor.value?.destroy())
 			margin: 0;
 		}
 	}
-	
+
 	// Lists
 	ul {
 		margin-left: .5rem;
 		margin-top: 0 !important;
-		
+
 		li {
 			margin-top: 0;
 		}
-		
+
 		p {
 			margin-bottom: 0 !important;
 		}
@@ -458,7 +459,7 @@ onBeforeUnmount(() => editor.value?.destroy())
 }
 
 // tasklist
-ul[data-type="taskList"] {
+ul[data-type='taskList'] {
 	list-style: none;
 	padding: 0;
 	margin-left: 0;
@@ -477,7 +478,7 @@ ul[data-type="taskList"] {
 		}
 	}
 
-	input[type="checkbox"] {
+	input[type='checkbox'] {
 		cursor: pointer;
 	}
 }

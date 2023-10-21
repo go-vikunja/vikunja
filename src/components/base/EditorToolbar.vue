@@ -7,7 +7,7 @@
 				:class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
 				title="h1"
 			>
-				<span class="icon"> <icon :icon="['fa', 'fa-header']" /> </span>1
+				<span class="icon"> <icon :icon="['fa', 'fa-header']"/> </span>1
 			</BaseButton>
 			<BaseButton
 				class="editor-toolbar__button"
@@ -15,7 +15,7 @@
 				:class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
 				title="h2"
 			>
-				<span class="icon"> <icon :icon="['fa', 'fa-header']" /> </span>2
+				<span class="icon"> <icon :icon="['fa', 'fa-header']"/> </span>2
 			</BaseButton>
 			<BaseButton
 				class="editor-toolbar__button"
@@ -23,7 +23,7 @@
 				:class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
 				title="h3"
 			>
-				<span class="icon"> <icon :icon="['fa', 'fa-header']" /> </span>3
+				<span class="icon"> <icon :icon="['fa', 'fa-header']"/> </span>3
 			</BaseButton>
 			<BaseButton
 				class="editor-toolbar__button"
@@ -31,7 +31,7 @@
 				:class="{ 'is-active': editor.isActive('heading', { level: 4 }) }"
 				title="h4"
 			>
-				<span class="icon"> <icon :icon="['fa', 'fa-header']" /> </span>4
+				<span class="icon"> <icon :icon="['fa', 'fa-header']"/> </span>4
 			</BaseButton>
 			<BaseButton
 				class="editor-toolbar__button"
@@ -39,7 +39,7 @@
 				:class="{ 'is-active': editor.isActive('heading', { level: 5 }) }"
 				title="h5"
 			>
-				<span class="icon"> <icon :icon="['fa', 'fa-header']" /> </span>5
+				<span class="icon"> <icon :icon="['fa', 'fa-header']"/> </span>5
 			</BaseButton>
 			<BaseButton
 				class="editor-toolbar__button"
@@ -47,7 +47,7 @@
 				:class="{ 'is-active': editor.isActive('heading', { level: 6 }) }"
 				title="h6"
 			>
-				<span class="icon"> <icon :icon="['fa', 'fa-header']" /> </span>6
+				<span class="icon"> <icon :icon="['fa', 'fa-header']"/> </span>6
 			</BaseButton>
 		</div>
 
@@ -59,7 +59,7 @@
 				title="bold"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-bold']" />
+					<icon :icon="['fa', 'fa-bold']"/>
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -69,7 +69,7 @@
 				title="italic"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-italic']" />
+					<icon :icon="['fa', 'fa-italic']"/>
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -79,7 +79,7 @@
 				title="strike"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-strikethrough']" />
+					<icon :icon="['fa', 'fa-strikethrough']"/>
 				</span>
 			</BaseButton>
 		</div>
@@ -92,7 +92,7 @@
 				title="code"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-code']" />
+					<icon :icon="['fa', 'fa-code']"/>
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -102,7 +102,7 @@
 				title="code block"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-code']" />
+					<icon :icon="['fa', 'fa-code']"/>
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -112,7 +112,7 @@
 				title="quote"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-quote-right']" />
+					<icon :icon="['fa', 'fa-quote-right']"/>
 				</span>
 			</BaseButton>
 		</div>
@@ -125,7 +125,7 @@
 				title="bullet list"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-list-ol']" />
+					<icon :icon="['fa', 'fa-list-ol']"/>
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -135,7 +135,7 @@
 				title="ordered list"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-list-ul']" />
+					<icon :icon="['fa', 'fa-list-ul']"/>
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -145,7 +145,7 @@
 				title="task list"
 			>
 				<span class="icon">
-					<icon icon="fa-list-check" />
+					<icon icon="fa-list-check"/>
 				</span>
 			</BaseButton>
 		</div>
@@ -153,7 +153,7 @@
 		<div class="editor-toolbar__segment">
 			<BaseButton class="editor-toolbar__button" @click="uploadInputRef?.click()" title="Add image">
 				<span class="icon">
-					<icon icon="fa-image" />
+					<icon icon="fa-image"/>
 				</span>
 			</BaseButton>
 		</div>
@@ -181,7 +181,7 @@
 				title="set link"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-link']" />
+					<icon :icon="['fa', 'fa-link']"/>
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -191,7 +191,7 @@
 				title="unset link"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-unlink']" />
+					<icon :icon="['fa', 'fa-unlink']"/>
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -201,7 +201,7 @@
 				title="paragraph"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-paragraph']" />
+					<icon :icon="['fa', 'fa-paragraph']"/>
 				</span>
 			</BaseButton>
 
@@ -218,7 +218,7 @@
 				@click="editor.chain().focus().setHardBreak().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-arrow-turn-down']" />
+					<icon :icon="['fa', 'fa-arrow-turn-down']"/>
 				</span>
 			</BaseButton>
 		</div>
@@ -230,7 +230,7 @@
 				title="undo"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-undo']" />
+					<icon :icon="['fa', 'fa-undo']"/>
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -239,7 +239,7 @@
 				title="redo"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-redo']" />
+					<icon :icon="['fa', 'fa-redo']"/>
 				</span>
 			</BaseButton>
 		</div>
@@ -253,7 +253,7 @@
 				title="table"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-table']" />
+					<icon :icon="['fa', 'fa-table']"/>
 				</span>
 			</BaseButton>
 			<div v-if="tableMode">
@@ -399,28 +399,28 @@ function toggleTableMode() {
 }
 
 function addImage() {
-	
+
 	if (typeof uploadCallback !== 'undefined') {
 		const files = uploadInputRef.value?.files
 
 		if (!files || files.length === 0) {
 			return
 		}
-		
+
 		uploadCallback(files).then(urls => {
 			urls.forEach(url => {
-				editor?.chain().focus().setImage({ src: url }).run()
+				editor?.chain().focus().setImage({src: url}).run()
 			})
 			emit('imageAdded')
 		})
 
 		return
 	}
-	
+
 	const url = window.prompt('URL')
 
 	if (url) {
-		editor?.chain().focus().setImage({ src: url }).run()
+		editor?.chain().focus().setImage({src: url}).run()
 		emit('imageAdded')
 	}
 }
@@ -446,7 +446,7 @@ function setLink() {
 		.chain()
 		.focus()
 		.extendMarkRange('link')
-		.setLink({ href: url, target: '_blank' })
+		.setLink({href: url, target: '_blank'})
 		.run()
 }
 </script>
