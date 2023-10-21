@@ -73,7 +73,7 @@ import {
 	faUnlink,
 	faParagraph,
 	faTable,
-	faX, faArrowTurnDown, faListCheck, faXmark, faXmarksLines,
+	faX, faArrowTurnDown, faListCheck, faXmark, faXmarksLines, faFont, faRulerHorizontal,
 } from '@fortawesome/free-solid-svg-icons'
 import {
 	faBellSlash,
@@ -183,6 +183,8 @@ library.add(faArrowTurnDown)
 library.add(faListCheck)
 library.add(faXmark)
 library.add(faXmarksLines)
+library.add(faFont)
+library.add(faRulerHorizontal)
 
 // overwriting the wrong types
 export default FontAwesomeIcon as unknown as FontAwesomeIconFixedTypes

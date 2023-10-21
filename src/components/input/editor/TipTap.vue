@@ -47,7 +47,7 @@ import StarterKit from '@tiptap/starter-kit'
 import {EditorContent, useEditor, VueNodeViewRenderer} from '@tiptap/vue-3'
 
 import Commands from './commands'
-import suggestion from './suggestion'
+import suggestionSetup from './suggestion'
 
 // load all highlight.js languages
 import {lowlight} from 'lowlight'
@@ -58,6 +58,9 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import AttachmentModel from '@/models/attachment'
 import AttachmentService from '@/services/attachment'
+import {useI18n} from 'vue-i18n'
+
+const {t} = useI18n()
 
 // const CustomDocument = Document.extend({
 // 	content: 'taskList',
@@ -204,7 +207,7 @@ const editor = useEditor({
 		// }).configure({ lowlight }),
 		
 		Commands.configure({
-			suggestion,
+			suggestion: suggestionSetup(t),
 		}),
 	],
 	onUpdate: () => {

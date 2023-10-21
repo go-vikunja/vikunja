@@ -8,7 +8,11 @@
 				:key="index"
 				@click="selectItem(index)"
 			>
-				{{ item }}
+				<icon :icon="item.icon"/>
+				<div class="description">
+					<p>{{ item.title }}</p>
+					<p>{{ item.description }}</p>
+				</div>
 			</button>
 		</template>
 		<div class="item" v-else>
@@ -99,17 +103,42 @@ export default {
 }
 
 .item {
-	display: block;
+	display: flex;
+	align-items: center;
 	margin: 0;
 	width: 100%;
 	text-align: left;
 	background: transparent;
-	border-radius: 0.4rem;
-	border: 1px solid transparent;
+	border-radius: $radius;
+	border: 0;
 	padding: 0.2rem 0.4rem;
+	transition: background-color $transition;
 
-	&.is-selected {
-		border-color: #000;
+	&.is-selected, &:hover {
+		background: var(--grey-100);
+		cursor: pointer;
+	}
+	
+	> svg {
+		box-sizing: border-box;
+		width: 2rem;
+		height: 2rem;
+		border: 1px solid var(--grey-300);
+		padding: .5rem;
+		margin-right: .5rem;
+		border-radius: $radius;
+		color: var(--grey-700);
+	}
+}
+
+.description {
+	display: flex;
+	flex-direction: column;
+	font-size: .9rem;
+	
+	p:last-child {
+		font-size: .75rem;
+		color: var(--grey-500);
 	}
 }
 </style>
