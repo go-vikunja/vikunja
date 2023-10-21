@@ -50,7 +50,7 @@ import {EditorContent, useEditor, VueNodeViewRenderer} from '@tiptap/vue-3'
 import {lowlight} from 'lowlight'
 
 import CodeBlock from './CodeBlock.vue'
-import type {UploadCallback} from '@/components/base/EditorToolbar.vue'
+import type {UploadCallback} from './types'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import AttachmentModel from '@/models/attachment'

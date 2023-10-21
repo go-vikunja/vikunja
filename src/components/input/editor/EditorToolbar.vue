@@ -376,10 +376,9 @@
 <script setup lang="ts">
 import {ref} from 'vue'
 import {Editor} from '@tiptap/vue-3'
+import type {UploadCallback} from './types'
 
 import BaseButton from '@/components/base/BaseButton.vue'
-
-export type UploadCallback = (files: File[] | FileList) => Promise<string[]>
 
 const {
 	editor = null,
