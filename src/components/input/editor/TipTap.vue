@@ -79,7 +79,7 @@ const tiptapRegex = new RegExp(`${TIPTAP_TEXT_VALUE_PREFIX}`, 's')
 </script>
 
 <script setup lang="ts">
-import {ref, watch, computed, onBeforeUnmount, type PropType, nextTick} from 'vue'
+import {ref, watch, onBeforeUnmount, nextTick} from 'vue'
 import {marked} from 'marked'
 import {refDebounced} from '@vueuse/core'
 
@@ -94,15 +94,11 @@ import TableHeader from '@tiptap/extension-table-header'
 import TableRow from '@tiptap/extension-table-row'
 import Highlight from '@tiptap/extension-highlight'
 import Typography from '@tiptap/extension-typography'
-import Document from '@tiptap/extension-document'
 import Image from '@tiptap/extension-image'
 import Underline from '@tiptap/extension-underline'
-// import Text from '@tiptap/extension-text'
 
 import TaskItem from '@tiptap/extension-task-item'
 import TaskList from '@tiptap/extension-task-list'
-
-import CharacterCount from '@tiptap/extension-character-count'
 
 import StarterKit from '@tiptap/starter-kit'
 import {BubbleMenu, EditorContent, useEditor} from '@tiptap/vue-3'
@@ -113,7 +109,6 @@ import suggestionSetup from './suggestion'
 // load all highlight.js languages
 import {lowlight} from 'lowlight'
 
-import CodeBlock from './CodeBlock.vue'
 import type {UploadCallback} from './types'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IAttachment} from '@/modelTypes/IAttachment'
@@ -123,14 +118,6 @@ import {useI18n} from 'vue-i18n'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 const {t} = useI18n()
-
-// const CustomDocument = Document.extend({
-// 	content: 'taskList',
-// })
-
-const CustomTaskItem = TaskItem.configure({
-	nested: true,
-})
 
 const CustomTableCell = TableCell.extend({
 	addAttributes() {
@@ -250,18 +237,12 @@ const editor = useEditor({
 		// Custom TableCell with backgroundColor attribute
 		CustomTableCell,
 
-		// // start
-		// Document,
-		// // Text,
 		Image,
 
-		// // Tasks
-		// CustomDocument,
 		TaskList,
-		CustomTaskItem,
-
-		// // character count
-		// CharacterCount,
+		TaskItem.configure({
+			nested: true,
+		}),
 
 		CodeBlockLowlight.configure({
 			lowlight,
@@ -615,26 +596,6 @@ ul[data-type='taskList'] {
 
 	input[type='checkbox'] {
 		cursor: pointer;
-	}
-}
-
-// character count
-.character-count {
-	margin-top: 1rem;
-	display: flex;
-	align-items: center;
-	color: #68cef8;
-
-	&--warning {
-		color: #fb5151;
-	}
-
-	&__graph {
-		margin-right: 0.5rem;
-	}
-
-	&__text {
-		color: #868e96;
 	}
 }
 
