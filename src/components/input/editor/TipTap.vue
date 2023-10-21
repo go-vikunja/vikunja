@@ -5,6 +5,60 @@
 			:editor="editor"
 			:upload-callback="uploadCallback"
 		/>
+		<BubbleMenu
+			v-if="editor"
+			:editor="editor"
+			class="editor-bubble__wrapper"
+		>
+			<BaseButton
+				class="editor-bubble__button"
+				@click="editor.chain().focus().toggleBold().run()"
+				:class="{ 'is-active': editor.isActive('bold') }"
+				title="bold"
+			>
+				<icon :icon="['fa', 'fa-bold']"/>
+			</BaseButton>
+			<BaseButton
+				class="editor-bubble__button"
+				@click="editor.chain().focus().toggleItalic().run()"
+				:class="{ 'is-active': editor.isActive('italic') }"
+				title="italic"
+			>
+				<icon :icon="['fa', 'fa-italic']"/>
+			</BaseButton>
+			<BaseButton
+				class="editor-bubble__button"
+				@click="editor.chain().focus().toggleUnderline().run()"
+				:class="{ 'is-active': editor.isActive('underline') }"
+				title="italic"
+			>
+				<icon :icon="['fa', 'fa-underline']"/>
+			</BaseButton>
+			<BaseButton
+				class="editor-bubble__button"
+				@click="editor.chain().focus().toggleStrike().run()"
+				:class="{ 'is-active': editor.isActive('strike') }"
+				title="strike"
+			>
+				<icon :icon="['fa', 'fa-strikethrough']"/>
+			</BaseButton>
+			<BaseButton
+				class="editor-bubble__button"
+				@click="editor.chain().focus().toggleCode().run()"
+				:class="{ 'is-active': editor.isActive('code') }"
+				title="code"
+			>
+				<icon :icon="['fa', 'fa-code']"/>
+			</BaseButton>
+			<BaseButton
+				class="editor-bubble__button"
+				@click="setLink"
+				:class="{ 'is-active': editor.isActive('link') }"
+				title="set link"
+			>
+				<icon :icon="['fa', 'fa-link']"/>
+			</BaseButton>
+		</BubbleMenu>
 		<editor-content
 			class="tiptap__editor"
 			:editor="editor"
@@ -42,6 +96,7 @@ import Highlight from '@tiptap/extension-highlight'
 import Typography from '@tiptap/extension-typography'
 import Document from '@tiptap/extension-document'
 import Image from '@tiptap/extension-image'
+import Underline from '@tiptap/extension-underline'
 // import Text from '@tiptap/extension-text'
 
 import TaskItem from '@tiptap/extension-task-item'
@@ -50,7 +105,7 @@ import TaskList from '@tiptap/extension-task-list'
 import CharacterCount from '@tiptap/extension-character-count'
 
 import StarterKit from '@tiptap/starter-kit'
-import {EditorContent, useEditor, VueNodeViewRenderer} from '@tiptap/vue-3'
+import {BubbleMenu, EditorContent, useEditor} from '@tiptap/vue-3'
 
 import Commands from './commands'
 import suggestionSetup from './suggestion'
@@ -65,6 +120,7 @@ import type {IAttachment} from '@/modelTypes/IAttachment'
 import AttachmentModel from '@/models/attachment'
 import AttachmentService from '@/services/attachment'
 import {useI18n} from 'vue-i18n'
+import BaseButton from '@/components/base/BaseButton.vue'
 
 const {t} = useI18n()
 
@@ -181,6 +237,7 @@ const editor = useEditor({
 		StarterKit,
 		Highlight,
 		Typography,
+		Underline,
 		Link.configure({
 			openOnClick: false,
 			validate: (href: string) => /^https?:\/\//.test(href),
@@ -215,6 +272,7 @@ const editor = useEditor({
 		Commands.configure({
 			suggestion: suggestionSetup(t),
 		}),
+		BubbleMenu,
 	],
 	onUpdate: () => {
 		// HTML
@@ -256,7 +314,7 @@ function addImage() {
 		uploadCallback(files).then(urls => {
 			urls.forEach(url => {
 				editor.value
-					.chain()
+					?.chain()
 					.focus()
 					.setImage({src: url})
 					.run()
@@ -270,9 +328,39 @@ function addImage() {
 	const url = window.prompt('URL')
 
 	if (url) {
-		editor.value.chain().focus().setImage({src: url}).run()
+		editor.value?.chain().focus().setImage({src: url}).run()
 		onImageAdded()
 	}
+}
+
+function setLink() {
+	const previousUrl = editor.value?.getAttributes('link').href
+	const url = window.prompt('URL', previousUrl)
+
+	// cancelled
+	if (url === null) {
+		return
+	}
+
+	// empty
+	if (url === '') {
+		editor.value
+			?.chain()
+			.focus()
+			.extendMarkRange('link')
+			.unsetLink()
+			.run()
+
+		return
+	}
+
+	// update link
+	editor.value
+		?.chain()
+		.focus()
+		.extendMarkRange('link')
+		.setLink({href: url, target: '_blank'})
+		.run()
 }
 </script>
 
@@ -549,6 +637,34 @@ ul[data-type='taskList'] {
 
 	&__text {
 		color: #868e96;
+	}
+}
+
+.editor-bubble__wrapper {
+	background: var(--white);
+	border-radius: $radius;
+	border: 1px solid var(--grey-200);
+	box-shadow: var(--shadow-md);
+	display: flex;
+	overflow: hidden;
+}
+
+.editor-bubble__button {
+	color: var(--grey-700);
+	transition: all $transition;
+	background: transparent;
+
+	svg {
+		box-sizing: border-box;
+		display: block;
+		width: 1rem;
+		height: 1rem;
+		padding: .5rem;
+		margin: 0;
+	}
+
+	&:hover {
+		background: var(--grey-200);
 	}
 }
 </style>
