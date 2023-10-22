@@ -159,7 +159,6 @@ import {Node} from '@tiptap/pm/model'
 import Commands from './commands'
 import suggestionSetup from './suggestion'
 
-// load all highlight.js languages
 import {lowlight} from 'lowlight'
 
 import type {BottomAction, UploadCallback} from './types'
