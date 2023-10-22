@@ -146,8 +146,8 @@ dependencies:
     specifier: 4.5.8
     version: 4.5.8
   '@types/sortablejs':
-    specifier: 1.15.0
-    version: 1.15.0
+    specifier: 1.15.4
+    version: 1.15.4
   '@vueuse/core':
     specifier: 10.5.0
     version: 10.5.0(vue@3.3.6)
@@ -4848,8 +4848,8 @@ packages:
     resolution: {integrity: sha512-JYM8x9EGF163bEyhdJBpR2QX1R5naCJHC8ucJylJ3w9/CVBaskdQ8WqBf8MmQrd1kRvp/a4TS8HJ+bxzR7ZJYQ==}
     dev: true
 
-  /@types/sortablejs@1.15.0:
-    resolution: {integrity: sha512-qrhtM7M41EhH4tZQTNw2/RJkxllBx3reiJpTbgWCM2Dx0U1sZ6LwKp9lfNln9uqE26ZMKUaPEYaD4rzvOWYtZw==}
+  /@types/sortablejs@1.15.4:
+    resolution: {integrity: sha512-7oL7CcPSfoyoNx3Ba1+79ykJzpEKVhHUyfAiN5eT/FoeDXOR3eBDLXf9ndDNuxaExmjpI+zVi2dMMuaoXUOzNA==}
     dev: false
 
   /@types/tern@0.23.4:
