@@ -2288,6 +2288,23 @@ paths:
       summary: Get all notifications for the current user
       tags:
       - subscriptions
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All notifications marked as read.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Mark all notifications of a user as read
+      tags:
+      - sharing
   /notifications/{id}:
     post:
       consumes:
