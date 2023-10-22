@@ -319,16 +319,18 @@ const editor = useEditor({
 		Text,
 
 		Placeholder.configure({
-			placeholder: () => {
+			placeholder: ({editor}) => {
 				if (!isEditEnabled) {
 					return ''
 				}
 
-				if (placeholder !== '') {
-					return placeholder
+				if (editor.getText() !== '' && !editor.isFocused) {
+					return ''
 				}
 
-				return t('input.editor.placeholder')
+				return placeholder !== ''
+					? placeholder
+					: t('input.editor.placeholder')
 			},
 		}),
 		Typography,
@@ -499,16 +501,9 @@ function setFocusToEditor(event) {
 	&:focus-within, &:focus {
 		box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
 	}
-
-	&:focus-within, &:focus, &.tiptap__editor-is-empty {
-		.tiptap p.is-empty::before {
-			display: block;
-		}
-	}
 }
 
 .tiptap p.is-empty::before {
-	display: none;
 	content: attr(data-placeholder);
 	color: var(--grey-400);
 	pointer-events: none;
