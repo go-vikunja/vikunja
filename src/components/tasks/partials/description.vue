@@ -25,6 +25,7 @@
 			v-model="task.description"
 			@update:model-value="saveWithDelay"
 			@save="save"
+			:initial-mode="task.description === '' ? 'edit' : 'preview'"
 		/>
 	</div>
 </template>

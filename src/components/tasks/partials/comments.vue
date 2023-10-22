@@ -82,6 +82,7 @@
 						}"
 						:bottom-actions="actions[c.id]"
 						:show-save="true"
+						initial-mode="preview"
 					/>
 				</div>
 			</div>

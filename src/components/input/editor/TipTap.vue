@@ -1,12 +1,12 @@
 <template>
 	<div class="tiptap">
 		<EditorToolbar
-			v-if="editor && isEditEnabled"
+			v-if="editor && isEditing"
 			:editor="editor"
 			:upload-callback="uploadCallback"
 		/>
 		<BubbleMenu
-			v-if="editor && isEditEnabled"
+			v-if="editor && isEditing"
 			:editor="editor"
 			class="editor-bubble__wrapper"
 		>
@@ -62,12 +62,12 @@
 
 		<editor-content
 			class="tiptap__editor"
-			:class="{'tiptap__editor-is-empty': isEmpty, 'tiptap__editor-is-edit-enabled': isEditEnabled}"
+			:class="{'tiptap__editor-is-empty': isEmpty, 'tiptap__editor-is-edit-enabled': isEditing}"
 			:editor="editor"
 		/>
 
 		<input
-			v-if="isEditEnabled"
+			v-if="isEditing"
 			type="file"
 			id="tiptap__image-upload"
 			class="is-hidden"
@@ -75,12 +75,28 @@
 			@change="addImage"
 		/>
 
+		<ul class="tiptap__editor-actions d-print-none" v-if="bottomActions.length === 0 && !isEditing">
+			<li>
+				<BaseButton
+					@click="setEdit"
+					class="done-edit">
+					{{ $t('input.editor.edit') }}
+				</BaseButton>
+			</li>
+		</ul>
 		<ul class="tiptap__editor-actions d-print-none" v-if="bottomActions.length > 0">
-			<li v-if="isEditEnabled && showSave">
+			<li v-if="isEditing && showSave">
 				<BaseButton
 					@click="bubbleSave"
 					class="done-edit">
 					{{ $t('misc.save') }}
+				</BaseButton>
+			</li>
+			<li v-if="!isEditing">
+				<BaseButton
+					@click="setEdit"
+					class="done-edit">
+					{{ $t('input.editor.edit') }}
 				</BaseButton>
 			</li>
 			<li v-for="(action, k) in bottomActions" :key="k">
@@ -88,7 +104,7 @@
 			</li>
 		</ul>
 		<x-button
-			v-else-if="isEditEnabled && showSave"
+			v-else-if="isEditing && showSave"
 			class="mt-4"
 			@click="bubbleSave"
 			variant="secondary"
@@ -130,7 +146,6 @@ import {Blockquote} from '@tiptap/extension-blockquote'
 import {Bold} from '@tiptap/extension-bold'
 import {BulletList} from '@tiptap/extension-bullet-list'
 import {Code} from '@tiptap/extension-code'
-import {CodeBlock} from '@tiptap/extension-code-block'
 import {Document} from '@tiptap/extension-document'
 import {Dropcursor} from '@tiptap/extension-dropcursor'
 import {Gapcursor} from '@tiptap/extension-gapcursor'
@@ -187,6 +202,7 @@ const CustomTableCell = TableCell.extend({
 	},
 })
 
+type Mode = 'edit' | 'preview'
 
 const {
 	modelValue,
@@ -196,6 +212,7 @@ const {
 	showSave = false,
 	placeholder = '',
 	editShortcut = '',
+	initialMode = 'edit',
 } = defineProps<{
 	modelValue: string,
 	uploadCallback?: UploadCallback,
@@ -204,6 +221,7 @@ const {
 	showSave?: boolean,
 	placeholder?: string,
 	editShortcut?: string,
+	initialMode?: Mode,
 }>()
 
 const baseStore = useBaseStore()
@@ -233,6 +251,13 @@ watch(
 )
 
 const isEmpty = computed(() => inputHTML.value === '')
+const internalMode = ref<Mode>(initialMode)
+const isEditing = computed(() => internalMode.value === 'edit' && isEditEnabled)
+
+function setEdit() {
+	internalMode.value = 'edit'
+	editor.value?.commands.focus()
+}
 
 function onImageAdded() {
 	bubbleSave()
@@ -282,11 +307,14 @@ function bubbleNow() {
 function bubbleSave() {
 	bubbleNow()
 	emit('save', TIPTAP_TEXT_VALUE_PREFIX + inputHTML.value)
+	if (initialMode === 'preview' && isEditing.value) {
+		internalMode.value = 'preview'
+	}
 }
 
 const editor = useEditor({
 	content: inputHTML.value,
-	editable: isEditEnabled,
+	editable: isEditing.value,
 	extensions: [
 		// Starterkit:
 		Blockquote,
@@ -320,7 +348,7 @@ const editor = useEditor({
 
 		Placeholder.configure({
 			placeholder: ({editor}) => {
-				if (!isEditEnabled) {
+				if (!isEditing) {
 					return ''
 				}
 
@@ -373,6 +401,13 @@ const editor = useEditor({
 		baseStore.setEditorFocused(false)
 	},
 })
+
+watch(
+	() => isEditing.value,
+	() => {
+		editor.value?.setEditable(isEditing.value)
+	}
+)
 
 watch(inputHTML, (value) => {
 	if (!editor.value) return
@@ -459,6 +494,7 @@ function setLink() {
 }
 
 onMounted(() => {
+	internalMode.value = initialMode
 	document.addEventListener('paste', handleImagePaste)
 	if (editShortcut !== '') {
 		document.addEventListener('keydown', setFocusToEditor)
@@ -488,13 +524,20 @@ function setFocusToEditor(event) {
 	if (hotkeyString !== editShortcut || baseStore.editorFocused) return
 	event.preventDefault()
 
+	if (initialMode === 'preview' && isEditEnabled && !isEditing.value) {
+		internalMode.value = 'edit'
+	}
+
 	editor.value?.commands.focus()
 }
 </script>
 
 <style lang="scss">
 .tiptap__editor {
-	min-height: 10rem;
+	&.tiptap__editor-is-edit-enabled {
+		min-height: 10rem;
+	}
+
 	transition: box-shadow $transition;
 	border-radius: $radius;
 
