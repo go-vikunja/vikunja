@@ -66,7 +66,6 @@
 						</CustomTransition>
 					</div>
 					<editor
-						:hasPreview="true"
 						:is-edit-enabled="canWrite && c.author.id === currentUserId"
 						:upload-callback="attachmentUpload"
 						:upload-enabled="true"
@@ -83,6 +82,7 @@
 						}"
 						:bottom-actions="actions[c.id]"
 						:show-save="true"
+						initial-mode="preview"
 					/>
 				</div>
 			</div>
@@ -114,12 +114,12 @@
 										taskCommentService.loading &&
 										!isCommentEdit,
 								}"
-								:hasPreview="false"
 								:upload-callback="attachmentUpload"
 								:upload-enabled="true"
 								:placeholder="$t('task.comment.placeholder')"
 								v-if="editorActive"
 								v-model="newComment.comment"
+								@save="addComment()"
 							/>
 						</div>
 						<div class="field">

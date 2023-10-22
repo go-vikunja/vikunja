@@ -54,7 +54,6 @@
 				<Editor
 					:class="{ 'disabled': isLoading}"
 					:disabled="isLoading"
-					:previewIsDefault="false"
 					id="projectdescription"
 					:placeholder="$t('project.edit.descriptionPlaceholder')"
 					v-model="project.description"
