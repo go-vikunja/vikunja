@@ -140,7 +140,6 @@ steps:
     depends_on: [ build ]
     commands:
       - export "GOROOT=$(go env GOROOT)"
-      - apk --no-cache add build-base git
       - ./mage-static check:golangci
     when:
       event: [ push, tag, pull_request ]
@@ -777,6 +776,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 29c42e4bd66ba831b30e56f6643b1a51a04414c0947abfa1ca1f92d2163fbc47
+hmac: 3ad78b828f36d4473527b8c6ee0985a5bf6f290fe73b3f7381a41d8c4937ffaa
 
 ...
