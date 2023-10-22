@@ -178,6 +178,8 @@ import XButton from '@/components/input/button.vue'
 import {Placeholder} from '@tiptap/extension-placeholder'
 import {eventToHotkeyString} from '@github/hotkey'
 import {useBaseStore} from '@/stores/base'
+import {mergeAttributes} from '@tiptap/core'
+import {createRandomID} from '@/helpers/randomId'
 
 const {t} = useI18n()
 
@@ -199,6 +201,51 @@ const CustomTableCell = TableCell.extend({
 				},
 			},
 		}
+	},
+})
+
+type CacheKey = `${ITask['id']}-${IAttachment['id']}`
+const loadedAttachments = ref<{ [key: CacheKey]: string }>({})
+
+const CustomImage = Image.extend({
+	renderHTML({HTMLAttributes}) {
+		if (HTMLAttributes.src?.startsWith(window.API_URL)) {
+
+			const id = 'tiptap-image-' + createRandomID()
+			nextTick(async () => {
+
+				const img = document.getElementById(id)
+
+				if (!img) return
+
+				// The url is something like /tasks/<id>/attachments/<id>
+				const parts = img.dataset?.src.slice(window.API_URL.length + 1).split('/')
+				const taskId = Number(parts[1])
+				const attachmentId = Number(parts[3])
+				const cacheKey: CacheKey = `${taskId}-${attachmentId}`
+
+				if (typeof loadedAttachments.value[cacheKey] === 'undefined') {
+
+					const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
+
+					const attachmentService = new AttachmentService()
+					const url = await attachmentService.getBlobUrl(attachment)
+					loadedAttachments.value[cacheKey] = url
+				}
+
+				img.src = loadedAttachments.value[cacheKey]
+			})
+
+			return ['img', mergeAttributes(this.options.HTMLAttributes, {
+				'data-src': HTMLAttributes.src,
+				src: '#',
+				alt: HTMLAttributes.alt,
+				title: HTMLAttributes.title,
+				id,
+			})]
+		}
+
+		return ['img', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)]
 	},
 })
 
@@ -240,12 +287,10 @@ watch(
 		if (!modelValue.startsWith(TIPTAP_TEXT_VALUE_PREFIX)) {
 			// convert Markdown to HTML
 			inputHTML.value = TIPTAP_TEXT_VALUE_PREFIX + marked.parse(modelValue)
-			nextTick(() => loadImages())
 			return
 		}
 
 		inputHTML.value = modelValue.replace(tiptapRegex, '')
-		nextTick(() => loadImages())
 	},
 	{immediate: true},
 )
@@ -257,43 +302,6 @@ const isEditing = computed(() => internalMode.value === 'edit' && isEditEnabled)
 function setEdit() {
 	internalMode.value = 'edit'
 	editor.value?.commands.focus()
-}
-
-function onImageAdded() {
-	bubbleSave()
-	loadImages()
-}
-
-type CacheKey = `${ITask['id']}-${IAttachment['id']}`
-const loadedAttachments = ref<{ [key: CacheKey]: string }>({})
-
-function loadImages() {
-	const attachmentImage = document.querySelectorAll<HTMLImageElement>('.tiptap__editor img')
-	const attachmentService = new AttachmentService()
-	if (attachmentImage) {
-		Array.from(attachmentImage).forEach(async (img) => {
-			if (!img.src.startsWith(window.API_URL)) {
-				return
-			}
-			// The url is something like /tasks/<id>/attachments/<id>
-			const parts = img.src.slice(window.API_URL.length + 1).split('/')
-			const taskId = Number(parts[1])
-			const attachmentId = Number(parts[3])
-			const cacheKey: CacheKey = `${taskId}-${attachmentId}`
-
-			if (typeof loadedAttachments.value[cacheKey] !== 'undefined') {
-				img.src = loadedAttachments.value[cacheKey]
-				return
-			}
-
-			const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
-
-			const url = await attachmentService.getBlobUrl(attachment)
-			img.src = url
-			loadedAttachments.value[cacheKey] = url
-		})
-	}
-
 }
 
 const debouncedInputHTML = refDebounced(inputHTML, 1000)
@@ -375,7 +383,7 @@ const editor = useEditor({
 		// Custom TableCell with backgroundColor attribute
 		CustomTableCell,
 
-		Image,
+		CustomImage,
 
 		TaskList,
 		TaskItem.configure({
@@ -406,7 +414,7 @@ watch(
 	() => isEditing.value,
 	() => {
 		editor.value?.setEditable(isEditing.value)
-	}
+	},
 )
 
 watch(inputHTML, (value) => {
@@ -437,7 +445,7 @@ function uploadAndInsertFiles(files: File[] | FileList) {
 				.setImage({src: url})
 				.run()
 		})
-		onImageAdded()
+		bubbleSave()
 	})
 }
 
@@ -459,7 +467,7 @@ function addImage() {
 
 	if (url) {
 		editor.value?.chain().focus().setImage({src: url}).run()
-		onImageAdded()
+		bubbleSave()
 	}
 }
 
