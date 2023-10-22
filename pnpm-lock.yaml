@@ -140,8 +140,8 @@ dependencies:
     specifier: 2.1.12
     version: 2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)(vue@3.3.6)
   '@types/is-touch-device':
-    specifier: 1.0.0
-    version: 1.0.0
+    specifier: 1.0.1
+    version: 1.0.1
   '@types/lodash.clonedeep':
     specifier: 4.5.8
     version: 4.5.8
@@ -4749,8 +4749,8 @@ packages:
       '@types/unist': 2.0.9
     dev: false
 
-  /@types/is-touch-device@1.0.0:
-    resolution: {integrity: sha512-/rErV0NuroAR9EZF1xK0TrihQ/7BbVckGfSr/suq/E4tJQLr4TrADR0qAUpDs/hxtl1NiP0V/ho+fSA/5EIO9Q==}
+  /@types/is-touch-device@1.0.1:
+    resolution: {integrity: sha512-Hvjx/zLnZF9AVHNcFZEluntFA59OWUYbmrkS7oDWoHnibO86n0nTrCI7wBGR0u8Y/E8XIj3nuUrK8hNQmqiZ7Q==}
     dev: false
 
   /@types/json-schema@7.0.12:
