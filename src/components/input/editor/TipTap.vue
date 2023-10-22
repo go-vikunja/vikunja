@@ -116,14 +116,8 @@
 	</div>
 </template>
 
-<script lang="ts">
-export const TIPTAP_TEXT_VALUE_PREFIX = '<!-- VIKUNJA TIPTAP -->\n'
-const tiptapRegex = new RegExp(`${TIPTAP_TEXT_VALUE_PREFIX}`, 's')
-</script>
-
 <script setup lang="ts">
 import {ref, watch, onBeforeUnmount, nextTick, onMounted, computed} from 'vue'
-import {marked} from 'marked'
 import {refDebounced} from '@vueuse/core'
 
 import EditorToolbar from './EditorToolbar.vue'
@@ -277,18 +271,7 @@ const inputHTML = ref('')
 watch(
 	() => modelValue,
 	() => {
-		if (modelValue === '') {
-			inputHTML.value = TIPTAP_TEXT_VALUE_PREFIX
-			return
-		}
-
-		if (!modelValue.startsWith(TIPTAP_TEXT_VALUE_PREFIX)) {
-			// convert Markdown to HTML
-			inputHTML.value = TIPTAP_TEXT_VALUE_PREFIX + marked.parse(modelValue)
-			return
-		}
-
-		inputHTML.value = modelValue.replace(tiptapRegex, '')
+		inputHTML.value = modelValue
 	},
 	{immediate: true},
 )
@@ -307,12 +290,12 @@ const debouncedInputHTML = refDebounced(inputHTML, 1000)
 watch(debouncedInputHTML, () => bubbleNow())
 
 function bubbleNow() {
-	emit('update:modelValue', TIPTAP_TEXT_VALUE_PREFIX + inputHTML.value)
+	emit('update:modelValue', inputHTML.value)
 }
 
 function bubbleSave() {
 	bubbleNow()
-	emit('save', TIPTAP_TEXT_VALUE_PREFIX + inputHTML.value)
+	emit('save', inputHTML.value)
 	if (initialMode === 'preview' && isEditing.value) {
 		internalMode.value = 'preview'
 	}

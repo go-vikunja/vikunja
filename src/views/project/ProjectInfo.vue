@@ -16,7 +16,6 @@
 <script lang="ts" setup>
 import {computed} from 'vue'
 import {setupMarkdownRenderer} from '@/helpers/markdownRenderer'
-import {marked} from 'marked'
 import DOMPurify from 'dompurify'
 import {createRandomID} from '@/helpers/randomId'
 import {useProjectStore} from '@/stores/projects'
@@ -37,6 +36,6 @@ const htmlDescription = computed(() => {
 	}
 
 	setupMarkdownRenderer(createRandomID())
-	return DOMPurify.sanitize(marked(description), {ADD_ATTR: ['target']})
+	return DOMPurify.sanitize(description, {ADD_ATTR: ['target']})
 })
 </script>
