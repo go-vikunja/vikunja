@@ -17,12 +17,13 @@
 package v1
 
 import (
+	"net/http"
+
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/notifications"
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 // MarkAllNotificationsAsRead marks all notifications of a user as read
