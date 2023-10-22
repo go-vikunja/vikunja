@@ -160,6 +160,7 @@ import {Paragraph} from '@tiptap/extension-paragraph'
 import {Strike} from '@tiptap/extension-strike'
 import {Text} from '@tiptap/extension-text'
 import {BubbleMenu, EditorContent, useEditor} from '@tiptap/vue-3'
+import {Node} from '@tiptap/pm/model'
 
 import Commands from './commands'
 import suggestionSetup from './suggestion'
@@ -385,6 +386,16 @@ const editor = useEditor({
 		TaskList,
 		TaskItem.configure({
 			nested: true,
+			onReadOnlyChecked: (node: Node, checked: boolean): boolean => {
+				if (isEditEnabled) {
+					node.attrs.checked = checked
+					inputHTML.value = editor.value?.getHTML()
+					bubbleSave()
+					return true
+				}
+
+				return false
+			},
 		}),
 
 		Commands.configure({
