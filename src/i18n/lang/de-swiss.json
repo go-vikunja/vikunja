@@ -359,6 +359,21 @@
       "favorites": {
         "title": "Favoriten"
       }
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "targetUrl": "Ziel-URL",
+      "targetUrlInvalid": "Bitte gib eine gültige URL an.",
+      "events": "Ereignisse",
+      "eventsHint": "Wähle alle Ereignisse aus, für die dieser Webhook Updates erhalten soll (innerhalb des aktuellen Projekts).",
+      "mustSelectEvents": "Du musst mindestens ein Ereignis auswählen.",
+      "delete": "Diesen Webhook löschen",
+      "deleteText": "Bist du sicher, dass du diesen Webhook löschen möchtest? Externe Ziele werden nicht mehr über Ereignisse benachrichtigt.",
+      "deleteSuccess": "Der Webhook wurde erfolgreich gelöscht.",
+      "create": "Webhook erstellen",
+      "secret": "Schlüssel",
+      "secretHint": "Wenn angegeben, werden alle Anfragen an die Webhook Ziel-URL mit HMAC signiert.",
+      "secretDocs": "In der Dokumentation findest du weitere Informationen zum Umgang mit Schlüsseln."
     }
   },
   "filters": {
@@ -480,6 +495,7 @@
     "custom": "Benutzerdefiniert",
     "id": "ID",
     "created": "Erstellt am",
+    "createdBy": "Erstellt von {0}",
     "actions": "Aktionen",
     "cannotBeUndone": "Dies kann nicht rückgängig gemacht werden!"
   },
@@ -933,7 +949,9 @@
   "notification": {
     "title": "Benachrichtigunge",
     "none": "Du hesch kei neui Benachrichtunge. Heb e schös Tägli!",
-    "explainer": "Benachrichtigungen werden hier angezeigt, wenn Aktionen für Projekte oder Aufgaben, die du abonniert hast, ausgeführt werden."
+    "explainer": "Benachrichtigungen werden hier angezeigt, wenn Aktionen für Projekte oder Aufgaben, die du abonniert hast, ausgeführt werden.",
+    "markAllRead": "Alle Benachrichtigungen als gelesen markieren",
+    "markAllReadSuccess": "Alle Benachrichtigungen erfolgreich als gelesen markiert."
   },
   "quickActions": {
     "commands": "Befehl",

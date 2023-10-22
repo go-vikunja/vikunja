@@ -359,6 +359,21 @@
       "favorites": {
         "title": "Kedvencek"
       }
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "targetUrl": "Target URL",
+      "targetUrlInvalid": "Please provide a valid URL.",
+      "events": "Events",
+      "eventsHint": "Select all events this webhook should recieve updates for (within the current project).",
+      "mustSelectEvents": "You must select at least one event.",
+      "delete": "Delete this webhook",
+      "deleteText": "Are you sure you want to delete this webhook? External targets will not be notified of its events anymore.",
+      "deleteSuccess": "The webhook was successfully deleted.",
+      "create": "Create webhook",
+      "secret": "Secret",
+      "secretHint": "If provided, all requests to the webhook target URL will be signed using HMAC.",
+      "secretDocs": "Check out the docs for more details about how to use secrets."
     }
   },
   "filters": {
@@ -480,6 +495,7 @@
     "custom": "Egyéni",
     "id": "Azonosító",
     "created": "Létrehozva ekkor:",
+    "createdBy": "Created by {0}",
     "actions": "Műveletek",
     "cannotBeUndone": "Ezt nem lehet visszavonni!"
   },
@@ -933,7 +949,9 @@
   "notification": {
     "title": "Értesítések",
     "none": "Nincsenek értesítései. Legyen szép napja!",
-    "explainer": "Az értesítések itt jelennek meg, amikor olyan projektek vagy feladatok történnek, amelyekre feliratkozott."
+    "explainer": "Az értesítések itt jelennek meg, amikor olyan projektek vagy feladatok történnek, amelyekre feliratkozott.",
+    "markAllRead": "Mark all notifications as read",
+    "markAllReadSuccess": "Successfully marked all notifications as read."
   },
   "quickActions": {
     "commands": "Parancsok",
