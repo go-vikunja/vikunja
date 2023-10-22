@@ -24,7 +24,7 @@ function addLabelToTaskAndVerify(labelTitle: string) {
 		.first()
 		.click()
 
-	cy.get('.global-notification', { timeout: 4000 })
+	cy.get('.global-notification', {timeout: 4000})
 		.should('contain', 'Success')
 	cy.get('.task-view .details.labels-list .multiselect .input-wrapper span.tag')
 		.should('exist')
@@ -122,7 +122,7 @@ describe('Task', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				index: 1,
-				description: 'Lorem ipsum dolor sit amet.'
+				description: 'Lorem ipsum dolor sit amet.',
 			})
 			cy.visit(`/tasks/${tasks[0].id}`)
 
@@ -143,7 +143,7 @@ describe('Task', () => {
 				id: 1,
 				index: 1,
 				done: true,
-				done_at: new Date().toISOString()
+				done_at: new Date().toISOString(),
 			})
 			cy.visit(`/tasks/${tasks[0].id}`)
 
@@ -196,13 +196,13 @@ describe('Task', () => {
 		it('Can edit the description', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
-				description: 'Lorem ipsum dolor sit amet.'
+				description: 'Lorem ipsum dolor sit amet.',
 			})
 			cy.visit(`/tasks/${tasks[0].id}`)
 
-			cy.get('.task-view .details.content.description .editor button')
+			cy.get('.task-view .details.content.description .tiptap button.done-edit')
 				.click()
-			cy.get('.task-view .details.content.description .editor .vue-easymde .EasyMDEContainer .CodeMirror-scroll')
+			cy.get('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror')
 				.type('{selectall}New Description')
 			cy.get('[data-cy="saveEditor"]')
 				.contains('Save')
@@ -219,7 +219,7 @@ describe('Task', () => {
 			})
 			cy.visit(`/tasks/${tasks[0].id}`)
 
-			cy.get('.task-view .comments .media.comment .editor .vue-easymde .EasyMDEContainer .CodeMirror-scroll')
+			cy.get('.task-view .comments .media.comment .tiptap__editor .tiptap.ProseMirror')
 				.should('be.visible')
 				.type('{selectall}New Comment')
 			cy.get('.task-view .comments .media.comment .button:not([disabled])')
@@ -227,7 +227,7 @@ describe('Task', () => {
 				.should('be.visible')
 				.click()
 
-			cy.get('.task-view .comments .media.comment .editor')
+			cy.get('.task-view .comments .media.comment .tiptap__editor')
 				.should('contain', 'New Comment')
 			cy.get('.global-notification')
 				.should('contain', 'Success')
@@ -236,7 +236,7 @@ describe('Task', () => {
 		it('Can move a task to another project', () => {
 			const projects = ProjectFactory.create(2)
 			BucketFactory.create(2, {
-				project_id: '{increment}'
+				project_id: '{increment}',
 			})
 			const tasks = TaskFactory.create(1, {
 				id: 1,
@@ -380,7 +380,7 @@ describe('Task', () => {
 
 			addLabelToTaskAndVerify(labels[0].title)
 		})
-		
+
 		it('Can add a label to a task and it shows up on the kanban board afterwards', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
@@ -389,18 +389,18 @@ describe('Task', () => {
 			})
 			const labels = LabelFactory.create(1)
 			LabelTaskFactory.truncate()
-			
+
 			cy.visit(`/projects/${projects[0].id}/kanban`)
-			
+
 			cy.get('.bucket .task')
 				.contains(tasks[0].title)
 				.click()
-			
+
 			addLabelToTaskAndVerify(labels[0].title)
-			
+
 			cy.get('.modal-content .close')
 				.click()
-			
+
 			cy.get('.bucket .task')
 				.should('contain.text', labels[0].title)
 		})
@@ -461,7 +461,7 @@ describe('Task', () => {
 			cy.get('.global-notification')
 				.should('contain', 'Success')
 		})
-		
+
 		it('Can set a reminder', () => {
 			TaskReminderFactory.truncate()
 			const tasks = TaskFactory.create(1, {
@@ -543,7 +543,7 @@ describe('Task', () => {
 			cy.get('.global-notification')
 				.should('contain', 'Success')
 		})
-		
+
 		it('Allows to set a custom relative reminder when the task already has a due date', () => {
 			TaskReminderFactory.truncate()
 			const tasks = TaskFactory.create(1, {
@@ -579,7 +579,7 @@ describe('Task', () => {
 			cy.get('.global-notification')
 				.should('contain', 'Success')
 		})
-		
+
 		it('Allows to set a fixed reminder when the task already has a due date', () => {
 			TaskReminderFactory.truncate()
 			const tasks = TaskFactory.create(1, {
@@ -609,7 +609,7 @@ describe('Task', () => {
 			cy.get('.global-notification')
 				.should('contain', 'Success')
 		})
-		
+
 		it('Can set a priority for a task', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
@@ -647,7 +647,7 @@ describe('Task', () => {
 				.select('50%')
 			cy.get('.global-notification')
 				.should('contain', 'Success')
-			
+
 			cy.wait(200)
 
 			cy.get('.task-view .columns.details .column')
@@ -656,7 +656,7 @@ describe('Task', () => {
 				.should('be.visible')
 				.should('have.value', '0.5')
 		})
-		
+
 		it('Can add an attachment to a task', () => {
 			TaskAttachmentFactory.truncate()
 			const tasks = TaskFactory.create(1, {
@@ -691,32 +691,44 @@ describe('Task', () => {
 			cy.get('.bucket .task .footer .icon svg.fa-paperclip')
 				.should('exist')
 		})
-		
+
 		it('Can check items off a checklist', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				description: `
-This is a checklist:
-
-* [ ] one item
-* [ ] another item
-* [ ] third item
-* [ ] fourth item
-* [x] and this one is already done
-`,
+<ul data-type="taskList">
+	<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>First Item</p></div>
+	</li>
+	<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>Second Item</p></div>
+	</li>
+	<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>Third Item</p></div>
+	</li>
+	<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>Fourth Item</p></div>
+	</li>
+	<li data-checked="true" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>Fifth Item</p></div>
+	</li>
+</ul>`,
 			})
 			cy.visit(`/tasks/${tasks[0].id}`)
-			
+
 			cy.get('.task-view .checklist-summary')
 				.should('contain.text', '1 of 5 tasks')
-			cy.get('.editor .content ul > li input[type=checkbox]')
+			cy.get('.tiptap__editor ul > li input[type=checkbox]')
 				.eq(2)
 				.click()
-			
-			cy.get('.editor .content ul > li input[type=checkbox]')
+
+			cy.get('.task-view .details.content.description h3 span.is-small.has-text-success')
+				.contains('Saved!')
+				.should('exist')
+			cy.get('.tiptap__editor ul > li input[type=checkbox]')
 				.eq(2)
 				.should('be.checked')
-			cy.get('.editor .content input[type=checkbox]')
+			cy.get('.tiptap__editor input[type=checkbox]')
 				.should('have.length', 5)
 			cy.get('.task-view .checklist-summary')
 				.should('contain.text', '2 of 5 tasks')
