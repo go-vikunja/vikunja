@@ -162,6 +162,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import XButton from '@/components/input/button.vue'
 import {Placeholder} from '@tiptap/extension-placeholder'
 import {eventToHotkeyString} from '@github/hotkey'
+import {useBaseStore} from '@/stores/base'
 
 const {t} = useI18n()
 
@@ -204,6 +205,8 @@ const {
 	placeholder?: string,
 	editShortcut?: string,
 }>()
+
+const baseStore = useBaseStore()
 
 const emit = defineEmits(['update:modelValue', 'save'])
 
@@ -363,6 +366,12 @@ const editor = useEditor({
 		// JSON
 		// this.$emit('update:modelValue', this.editor.getJSON())
 	},
+	onFocus() {
+		baseStore.setEditorFocused(true)
+	},
+	onBlur() {
+		baseStore.setEditorFocused(false)
+	},
 })
 
 watch(inputHTML, (value) => {
@@ -475,7 +484,7 @@ function handleImagePaste(event) {
 function setFocusToEditor(event) {
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
-	if (hotkeyString !== editShortcut || editor.value?.isFocused) return
+	if (hotkeyString !== editShortcut || baseStore.editorFocused) return
 	event.preventDefault()
 
 	editor.value?.commands.focus()
