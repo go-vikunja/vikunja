@@ -95,11 +95,11 @@ export default {
 	padding: 0.2rem;
 	position: relative;
 	border-radius: 0.5rem;
-	background: #fff;
-	color: rgba(0, 0, 0, 0.8);
+	background: var(--white);
+	color: var(--grey-900);
 	overflow: hidden;
 	font-size: 0.9rem;
-	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0px 10px 20px rgba(0, 0, 0, 0.1);
+	box-shadow: var(--shadow-md);
 }
 
 .item {
@@ -135,6 +135,7 @@ export default {
 	display: flex;
 	flex-direction: column;
 	font-size: .9rem;
+	color: var(--grey-800);
 	
 	p:last-child {
 		font-size: .75rem;
