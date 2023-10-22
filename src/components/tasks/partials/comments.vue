@@ -118,6 +118,7 @@
 								:placeholder="$t('task.comment.placeholder')"
 								v-if="editorActive"
 								v-model="newComment.comment"
+								@save="addComment()"
 							/>
 						</div>
 						<div class="field">
