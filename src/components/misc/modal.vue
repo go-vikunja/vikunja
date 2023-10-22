@@ -195,10 +195,9 @@ $modal-width: 1024px;
 }
 
 .close {
-	$close-button-min-space: 84px;
 	$close-button-padding: 26px;
 	position: fixed;
-	top: 5px;
+	top: .5rem;
 	right: $close-button-padding;
 	color: var(--grey-900);
 	font-size: 2rem;
@@ -212,6 +211,10 @@ $modal-width: 1024px;
 	// we can only use light color when there is enough space for the close button next to the modal
 	@media screen and (min-width: calc(#{$desktop	} + #{$close-button-min-space})) {
 		color: var(--white);
+	}
+
+	@media screen and (min-width: $tablet) and (max-width: #{$desktop + $close-button-min-space}) {
+		top: .75rem;
 	}
 }
 </style>

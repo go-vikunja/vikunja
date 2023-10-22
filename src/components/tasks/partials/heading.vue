@@ -113,7 +113,7 @@ async function save(title: string) {
 <style lang="scss" scoped>
 .heading {
 	display: flex;
-	justify-content: space-between;
+	justify-content: flex-start;
 	text-transform: none;
 	align-items: center;
 
@@ -133,6 +133,10 @@ async function save(title: string) {
 
 	@media screen and (max-width: $tablet) {
 		margin: 0 -.3rem .5rem -.3rem; // the title has 0.3rem padding - this make the text inside of it align with the rest
+	}
+
+	@media screen and (min-width: $tablet) and (max-width: #{$desktop + $close-button-min-space}) {
+		width: calc(100% - 6.5rem);
 	}
 }
 
