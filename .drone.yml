@@ -133,7 +133,7 @@ steps:
       event: [ push, tag, pull_request ]
 
   - name: lint
-    image: vikunja/golang-build:latest
+    image: golangci/golangci-lint:v1.54.2
     pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
@@ -141,7 +141,6 @@ steps:
     commands:
       - export "GOROOT=$(go env GOROOT)"
       - apk --no-cache add build-base git
-      - wget -O - -q https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
       - ./mage-static check:golangci
     when:
       event: [ push, tag, pull_request ]
@@ -778,6 +777,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: d70103ade7cbade073843f8567e666ece3c0c259a604ce632c409a52e6f80556
+hmac: 29c42e4bd66ba831b30e56f6643b1a51a04414c0947abfa1ca1f92d2163fbc47
 
 ...
