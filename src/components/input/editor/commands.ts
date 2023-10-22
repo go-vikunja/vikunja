@@ -4,7 +4,7 @@ import Suggestion from '@tiptap/suggestion'
 // Copied and adjusted from https://github.com/ueberdosis/tiptap/tree/252acb32d27a0f9af14813eeed83d8a50059a43a/demos/src/Experiments/Commands/Vue
 
 export default Extension.create({
-    name: 'commands',
+    name: 'slash-menu-commands',
 
     addOptions() {
         return {

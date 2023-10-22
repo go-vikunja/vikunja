@@ -354,9 +354,9 @@ const editor = useEditor({
 			nested: true,
 		}),
 
-		Commands
-			.configure({suggestion: suggestionSetup(t)})
-			.extend({name: 'slashMenuCommands'}),
+		Commands.configure({
+			suggestion: suggestionSetup(t),
+		}),
 		BubbleMenu,
 	],
 	onUpdate: () => {
