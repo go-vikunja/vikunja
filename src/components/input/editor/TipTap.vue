@@ -354,7 +354,7 @@ const editor = useEditor({
 
 		Placeholder.configure({
 			placeholder: ({editor}) => {
-				if (!isEditing) {
+				if (!isEditing.value) {
 					return ''
 				}
 
