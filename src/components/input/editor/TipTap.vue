@@ -212,6 +212,7 @@ watch(
 	() => modelValue,
 	() => {
 		if (modelValue === '') {
+			inputHTML.value = TIPTAP_TEXT_VALUE_PREFIX
 			return
 		}
 
