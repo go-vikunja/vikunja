@@ -177,7 +177,6 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import XButton from '@/components/input/button.vue'
 import {Placeholder} from '@tiptap/extension-placeholder'
 import {eventToHotkeyString} from '@github/hotkey'
-import {useBaseStore} from '@/stores/base'
 import {mergeAttributes} from '@tiptap/core'
 import {createRandomID} from '@/helpers/randomId'
 
@@ -270,8 +269,6 @@ const {
 	editShortcut?: string,
 	initialMode?: Mode,
 }>()
-
-const baseStore = useBaseStore()
 
 const emit = defineEmits(['update:modelValue', 'save'])
 
@@ -402,12 +399,6 @@ const editor = useEditor({
 		// JSON
 		// this.$emit('update:modelValue', this.editor.getJSON())
 	},
-	onFocus() {
-		baseStore.setEditorFocused(true)
-	},
-	onBlur() {
-		baseStore.setEditorFocused(false)
-	},
 })
 
 watch(
@@ -529,7 +520,12 @@ function handleImagePaste(event) {
 function setFocusToEditor(event) {
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
-	if (hotkeyString !== editShortcut || baseStore.editorFocused) return
+	if (hotkeyString !== editShortcut ||
+		event.target.tagName.toLowerCase() === 'input' ||
+		event.target.tagName.toLowerCase() === 'textarea' ||
+		event.target.contentEditable === 'true') {
+		return
+	}
 	event.preventDefault()
 
 	if (initialMode === 'preview' && isEditEnabled && !isEditing.value) {

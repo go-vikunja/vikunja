@@ -30,7 +30,6 @@ export const useBaseStore = defineStore('base', () => {
 	const quickActionsActive = ref(false)
 	const logoVisible = ref(true)
 	const updateAvailable = ref(false)
-	const editorFocused = ref(false) // To allow tracking over multiple instances of the editor
 
 	function setLoading(newLoading: boolean) {
 		loading.value = newLoading
@@ -93,10 +92,6 @@ export const useBaseStore = defineStore('base', () => {
 		updateAvailable.value = value
 	}
 
-	function setEditorFocused(value: boolean) {
-		editorFocused.value = value
-	}
-
 	async function handleSetCurrentProject(
 		{project, forceUpdate = false}: {project: IProject | null, forceUpdate?: boolean},
 	) {
@@ -155,7 +150,6 @@ export const useBaseStore = defineStore('base', () => {
 		quickActionsActive: readonly(quickActionsActive),
 		logoVisible: readonly(logoVisible),
 		updateAvailable: readonly(updateAvailable),
-		editorFocused: readonly(editorFocused),
 
 		setLoading,
 		setReady,
@@ -167,7 +161,6 @@ export const useBaseStore = defineStore('base', () => {
 		setBlurHash,
 		setLogoVisible,
 		setUpdateAvailable,
-		setEditorFocused,
 
 		handleSetCurrentProject,
 		loadApp,
