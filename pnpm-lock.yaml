@@ -52,15 +52,9 @@ dependencies:
   '@tiptap/extension-bullet-list':
     specifier: 2.1.12
     version: 2.1.12(@tiptap/core@2.1.12)
-  '@tiptap/extension-character-count':
-    specifier: 2.0.3
-    version: 2.0.3(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
   '@tiptap/extension-code':
     specifier: 2.1.12
     version: 2.1.12(@tiptap/core@2.1.12)
-  '@tiptap/extension-code-block':
-    specifier: 2.1.12
-    version: 2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
   '@tiptap/extension-code-block-lowlight':
     specifier: 2.0.3
     version: 2.0.3(@tiptap/core@2.1.12)(@tiptap/extension-code-block@2.1.12)(@tiptap/pm@2.1.12)
@@ -79,9 +73,6 @@ dependencies:
   '@tiptap/extension-heading':
     specifier: 2.1.12
     version: 2.1.12(@tiptap/core@2.1.12)
-  '@tiptap/extension-highlight':
-    specifier: 2.0.3
-    version: 2.0.3(@tiptap/core@2.1.12)
   '@tiptap/extension-history':
     specifier: 2.1.12
     version: 2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
@@ -4305,16 +4296,6 @@ packages:
       '@tiptap/core': 2.1.12(@tiptap/pm@2.1.12)
     dev: false
 
-  /@tiptap/extension-character-count@2.0.3(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12):
-    resolution: {integrity: sha512-Ge4aUmgYOmQR/HLPkbQSFKEywyRu6IalHAQmH3laY6LB9qrmT90AoaiFnaVCDpphYFQ7RygnBXJMgjtJ3WpZmw==}
-    peerDependencies:
-      '@tiptap/core': ^2.0.0
-      '@tiptap/pm': ^2.0.0
-    dependencies:
-      '@tiptap/core': 2.1.12(@tiptap/pm@2.1.12)
-      '@tiptap/pm': 2.1.12
-    dev: false
-
   /@tiptap/extension-code-block-lowlight@2.0.3(@tiptap/core@2.1.12)(@tiptap/extension-code-block@2.1.12)(@tiptap/pm@2.1.12):
     resolution: {integrity: sha512-thFXcFdFyHF0/dr9sqBedjj0Vt14k3m52YVc4l65+d65wRuHp4f8suu8T2ZGRJwqLCE3NIrvwQTSHhzjIqJVxQ==}
     peerDependencies:
@@ -4394,14 +4375,6 @@ packages:
 
   /@tiptap/extension-heading@2.1.12(@tiptap/core@2.1.12):
     resolution: {integrity: sha512-MoANP3POAP68Ko9YXarfDKLM/kXtscgp6m+xRagPAghRNujVY88nK1qBMZ3JdvTVN6b/ATJhp8UdrZX96TLV2w==}
-    peerDependencies:
-      '@tiptap/core': ^2.0.0
-    dependencies:
-      '@tiptap/core': 2.1.12(@tiptap/pm@2.1.12)
-    dev: false
-
-  /@tiptap/extension-highlight@2.0.3(@tiptap/core@2.1.12):
-    resolution: {integrity: sha512-NrtibY8cZkIjZMQuHRrKd4php+plOvAoSo8g3uVFu275I/Ixt5HqJ53R4voCXs8W8BOBRs2HS2QX8Cjh79XhtA==}
     peerDependencies:
       '@tiptap/core': ^2.0.0
     dependencies:
