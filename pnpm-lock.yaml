@@ -139,6 +139,9 @@ dependencies:
   '@tiptap/extension-underline':
     specifier: 2.1.12
     version: 2.1.12(@tiptap/core@2.1.12)
+  '@tiptap/pm':
+    specifier: 2.1.12
+    version: 2.1.12
   '@tiptap/suggestion':
     specifier: 2.1.12
     version: 2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)

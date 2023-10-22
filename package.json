@@ -88,6 +88,7 @@
     "@tiptap/extension-text": "2.1.12",
     "@tiptap/extension-typography": "2.0.3",
     "@tiptap/extension-underline": "2.1.12",
+    "@tiptap/pm": "2.1.12",
     "@tiptap/suggestion": "2.1.12",
     "@tiptap/vue-3": "2.0.3",
     "@types/is-touch-device": "1.0.0",
