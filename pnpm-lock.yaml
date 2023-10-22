@@ -41,29 +41,77 @@ dependencies:
     specifier: 7.74.0
     version: 7.74.0(vue@3.3.6)
   '@tiptap/core':
-    specifier: ^2.1.12
+    specifier: 2.1.12
     version: 2.1.12(@tiptap/pm@2.1.12)
+  '@tiptap/extension-blockquote':
+    specifier: 2.1.12
+    version: 2.1.12(@tiptap/core@2.1.12)
+  '@tiptap/extension-bold':
+    specifier: 2.1.12
+    version: 2.1.12(@tiptap/core@2.1.12)
+  '@tiptap/extension-bullet-list':
+    specifier: 2.1.12
+    version: 2.1.12(@tiptap/core@2.1.12)
   '@tiptap/extension-character-count':
     specifier: 2.0.3
     version: 2.0.3(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
+  '@tiptap/extension-code':
+    specifier: 2.1.12
+    version: 2.1.12(@tiptap/core@2.1.12)
+  '@tiptap/extension-code-block':
+    specifier: 2.1.12
+    version: 2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
   '@tiptap/extension-code-block-lowlight':
     specifier: 2.0.3
     version: 2.0.3(@tiptap/core@2.1.12)(@tiptap/extension-code-block@2.1.12)(@tiptap/pm@2.1.12)
   '@tiptap/extension-document':
     specifier: 2.0.3
     version: 2.0.3(@tiptap/core@2.1.12)
+  '@tiptap/extension-dropcursor':
+    specifier: 2.1.12
+    version: 2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
+  '@tiptap/extension-gapcursor':
+    specifier: 2.1.12
+    version: 2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
+  '@tiptap/extension-hard-break':
+    specifier: 2.1.12
+    version: 2.1.12(@tiptap/core@2.1.12)
+  '@tiptap/extension-heading':
+    specifier: 2.1.12
+    version: 2.1.12(@tiptap/core@2.1.12)
   '@tiptap/extension-highlight':
     specifier: 2.0.3
     version: 2.0.3(@tiptap/core@2.1.12)
+  '@tiptap/extension-history':
+    specifier: 2.1.12
+    version: 2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
+  '@tiptap/extension-horizontal-rule':
+    specifier: 2.1.12
+    version: 2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
   '@tiptap/extension-image':
     specifier: 2.0.3
     version: 2.0.3(@tiptap/core@2.1.12)
+  '@tiptap/extension-italic':
+    specifier: 2.1.12
+    version: 2.1.12(@tiptap/core@2.1.12)
   '@tiptap/extension-link':
     specifier: 2.0.3
     version: 2.0.3(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
+  '@tiptap/extension-list-item':
+    specifier: 2.1.12
+    version: 2.1.12(@tiptap/core@2.1.12)
+  '@tiptap/extension-ordered-list':
+    specifier: 2.1.12
+    version: 2.1.12(@tiptap/core@2.1.12)
+  '@tiptap/extension-paragraph':
+    specifier: 2.1.12
+    version: 2.1.12(@tiptap/core@2.1.12)
   '@tiptap/extension-placeholder':
     specifier: 2.1.12
     version: 2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
+  '@tiptap/extension-strike':
+    specifier: 2.1.12
+    version: 2.1.12(@tiptap/core@2.1.12)
   '@tiptap/extension-table':
     specifier: 2.0.3
     version: 2.0.3(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
@@ -82,15 +130,15 @@ dependencies:
   '@tiptap/extension-task-list':
     specifier: 2.0.3
     version: 2.0.3(@tiptap/core@2.1.12)
+  '@tiptap/extension-text':
+    specifier: 2.1.12
+    version: 2.1.12(@tiptap/core@2.1.12)
   '@tiptap/extension-typography':
     specifier: 2.0.3
     version: 2.0.3(@tiptap/core@2.1.12)
   '@tiptap/extension-underline':
     specifier: 2.1.12
     version: 2.1.12(@tiptap/core@2.1.12)
-  '@tiptap/starter-kit':
-    specifier: 2.0.3
-    version: 2.0.3(@tiptap/pm@2.1.12)
   '@tiptap/suggestion':
     specifier: 2.1.12
     version: 2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
@@ -182,7 +230,7 @@ dependencies:
     specifier: 1.15.0
     version: 1.15.0
   tippy.js:
-    specifier: ^6.3.7
+    specifier: 6.3.7
     version: 6.3.7
   ufo:
     specifier: 1.3.1
@@ -4543,32 +4591,6 @@ packages:
       prosemirror-trailing-node: 2.0.7(prosemirror-model@1.19.3)(prosemirror-state@1.4.3)(prosemirror-view@1.32.1)
       prosemirror-transform: 1.8.0
       prosemirror-view: 1.32.1
-    dev: false
-
-  /@tiptap/starter-kit@2.0.3(@tiptap/pm@2.1.12):
-    resolution: {integrity: sha512-t4WG4w93zTpL2VxhVyJJvl3kdLF001ZrhpOuEiZqEMBMUMbM56Uiigv1CnUQpTFrjDAh3IM8hkqzAh20TYw2iQ==}
-    dependencies:
-      '@tiptap/core': 2.1.12(@tiptap/pm@2.1.12)
-      '@tiptap/extension-blockquote': 2.1.12(@tiptap/core@2.1.12)
-      '@tiptap/extension-bold': 2.1.12(@tiptap/core@2.1.12)
-      '@tiptap/extension-bullet-list': 2.1.12(@tiptap/core@2.1.12)
-      '@tiptap/extension-code': 2.1.12(@tiptap/core@2.1.12)
-      '@tiptap/extension-code-block': 2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
-      '@tiptap/extension-document': 2.0.3(@tiptap/core@2.1.12)
-      '@tiptap/extension-dropcursor': 2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
-      '@tiptap/extension-gapcursor': 2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
-      '@tiptap/extension-hard-break': 2.1.12(@tiptap/core@2.1.12)
-      '@tiptap/extension-heading': 2.1.12(@tiptap/core@2.1.12)
-      '@tiptap/extension-history': 2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
-      '@tiptap/extension-horizontal-rule': 2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12)
-      '@tiptap/extension-italic': 2.1.12(@tiptap/core@2.1.12)
-      '@tiptap/extension-list-item': 2.1.12(@tiptap/core@2.1.12)
-      '@tiptap/extension-ordered-list': 2.1.12(@tiptap/core@2.1.12)
-      '@tiptap/extension-paragraph': 2.1.12(@tiptap/core@2.1.12)
-      '@tiptap/extension-strike': 2.1.12(@tiptap/core@2.1.12)
-      '@tiptap/extension-text': 2.1.12(@tiptap/core@2.1.12)
-    transitivePeerDependencies:
-      - '@tiptap/pm'
     dev: false
 
   /@tiptap/suggestion@2.1.12(@tiptap/core@2.1.12)(@tiptap/pm@2.1.12):
