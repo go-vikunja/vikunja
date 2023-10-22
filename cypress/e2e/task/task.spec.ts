@@ -721,5 +721,77 @@ This is a checklist:
 			cy.get('.task-view .checklist-summary')
 				.should('contain.text', '2 of 5 tasks')
 		})
+
+		it('Should use the editor to render description', () => {
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				description: `
+<h1>Lorem Ipsum</h1>
+<p>Dolor sit amet</p>
+<ul data-type="taskList">
+	<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>First Item</p></div>
+	</li>
+	<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>Second Item</p></div>
+	</li>
+</ul>`,
+			})
+			cy.visit(`/tasks/${tasks[0].id}`)
+
+			cy.get('.tiptap__editor ul > li input[type=checkbox]')
+				.should('exist')
+			cy.get('.tiptap__editor h1')
+				.contains('Lorem Ipsum')
+				.should('exist')
+			cy.get('.tiptap__editor p')
+				.contains('Dolor sit amet')
+				.should('exist')
+		})
+
+		it.only('Should render an image from attachment', async () => {
+
+			TaskAttachmentFactory.truncate()
+
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				description: '',
+			})
+
+			cy.readFile('cypress/fixtures/image.jpg', null).then(file => {
+
+				const formData = new FormData()
+				formData.append('files', new Blob([file]), 'image.jpg')
+
+				cy.request({
+					method: 'PUT',
+					url: `${Cypress.env('API_URL')}/tasks/${tasks[0].id}/attachments`,
+					headers: {
+						'Authorization':  `Bearer ${window.localStorage.getItem('token')}`,
+						'Content-Type': 'multipart/form-data',
+					},
+					body: formData,
+				})
+					.then(({body}) => {
+						const dec = new TextDecoder('utf-8')
+						const {success} = JSON.parse(dec.decode(body))
+
+						TaskFactory.create(1, {
+							id: 1,
+							description: `<img src="${Cypress.env('API_URL')}/tasks/${tasks[0].id}/attachments/${success[0].id}" alt="test image">`,
+						})
+
+						cy.visit(`/tasks/${tasks[0].id}`)
+
+						cy.get('.tiptap__editor img')
+							.should('be.visible')
+							.and(($img) => {
+								// "naturalWidth" and "naturalHeight" are set when the image loads
+								expect($img[0].naturalWidth).to.be.greaterThan(0)
+							})
+
+					})
+			})
+		})
 	})
 })
