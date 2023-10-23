@@ -258,7 +258,7 @@
       "identifier": "Project Identifier",
       "identifierPlaceholder": "The project identifier goes here…",
       "description": "Beskrivning",
-      "descriptionPlaceholder": "The projects description goes here…",
+      "descriptionPlaceholder": "Enter a description for this project, hit '/' for more options…",
       "color": "Färg",
       "success": "The project was successfully updated."
     },
