@@ -98,7 +98,7 @@ func getDefaultBucketID(s *xorm.Session, project *Project) (bucketID int64, err 
 // ReadAll returns all buckets with their tasks for a certain project
 // @Summary Get all kanban buckets of a project
 // @Description Returns all kanban buckets with belong to a project including their tasks. Buckets are always sorted by their `position` in ascending order. Tasks are sorted by their `kanban_position` in ascending order.
-// @tags task
+// @tags project
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
@@ -234,7 +234,7 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 // Create creates a new bucket
 // @Summary Create a new bucket
 // @Description Creates a new kanban bucket on a project.
-// @tags task
+// @tags project
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
@@ -265,7 +265,7 @@ func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
 // Update Updates an existing bucket
 // @Summary Update an existing bucket
 // @Description Updates an existing kanban bucket.
-// @tags task
+// @tags project
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
@@ -292,7 +292,7 @@ func (b *Bucket) Update(s *xorm.Session, _ web.Auth) (err error) {
 // Delete removes a bucket, but no tasks
 // @Summary Deletes an existing bucket
 // @Description Deletes an existing kanban bucket and dissociates all of its task. It does not delete any tasks. You cannot delete the last bucket on a project.
-// @tags task
+// @tags project
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
