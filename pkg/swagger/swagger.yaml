@@ -190,7 +190,7 @@ definitions:
         type: string
       hex_color:
         description: The task color in hex
-        maxLength: 6
+        maxLength: 7
         type: string
       id:
         description: The unique, numeric id of this task.
@@ -317,8 +317,8 @@ definitions:
         description: The label description.
         type: string
       hex_color:
-        description: The color this label has
-        maxLength: 6
+        description: The color this label has in hex format.
+        maxLength: 7
         type: string
       id:
         description: The unique, numeric id of this label.
@@ -429,7 +429,7 @@ definitions:
         type: integer
       hex_color:
         description: The hex color of this project
-        maxLength: 6
+        maxLength: 7
         type: string
       id:
         description: The unique, numeric id of this project.
@@ -675,7 +675,7 @@ definitions:
         type: string
       hex_color:
         description: The task color in hex
-        maxLength: 6
+        maxLength: 7
         type: string
       id:
         description: The unique, numeric id of this task.
@@ -2751,7 +2751,7 @@ paths:
       - JWTKeyAuth: []
       summary: Get all kanban buckets of a project
       tags:
-      - task
+      - project
     put:
       consumes:
       - application/json
@@ -2791,7 +2791,7 @@ paths:
       - JWTKeyAuth: []
       summary: Create a new bucket
       tags:
-      - task
+      - project
   /projects/{id}/projectusers:
     get:
       consumes:
@@ -3409,7 +3409,7 @@ paths:
       - JWTKeyAuth: []
       summary: Deletes an existing bucket
       tags:
-      - task
+      - project
     post:
       consumes:
       - application/json
@@ -3454,7 +3454,7 @@ paths:
       - JWTKeyAuth: []
       summary: Update an existing bucket
       tags:
-      - task
+      - project
   /projects/{projectID}/duplicate:
     put:
       consumes:

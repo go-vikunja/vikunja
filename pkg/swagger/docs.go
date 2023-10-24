@@ -1906,7 +1906,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "task"
+                    "project"
                 ],
                 "summary": "Get all kanban buckets of a project",
                 "parameters": [
@@ -1998,7 +1998,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "task"
+                    "project"
                 ],
                 "summary": "Create a new bucket",
                 "parameters": [
@@ -2690,7 +2690,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "task"
+                    "project"
                 ],
                 "summary": "Update an existing bucket",
                 "parameters": [
@@ -2759,7 +2759,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "task"
+                    "project"
                 ],
                 "summary": "Deletes an existing bucket",
                 "parameters": [
@@ -7386,7 +7386,7 @@ const docTemplate = `{
                 "hex_color": {
                     "description": "The task color in hex",
                     "type": "string",
-                    "maxLength": 6
+                    "maxLength": 7
                 },
                 "id": {
                     "description": "The unique, numeric id of this task.",
@@ -7536,9 +7536,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "hex_color": {
-                    "description": "The color this label has",
+                    "description": "The color this label has in hex format.",
                     "type": "string",
-                    "maxLength": 6
+                    "maxLength": 7
                 },
                 "id": {
                     "description": "The unique, numeric id of this label.",
@@ -7676,7 +7676,7 @@ const docTemplate = `{
                 "hex_color": {
                     "description": "The hex color of this project",
                     "type": "string",
-                    "maxLength": 6
+                    "maxLength": 7
                 },
                 "id": {
                     "description": "The unique, numeric id of this project.",
@@ -8004,7 +8004,7 @@ const docTemplate = `{
                 "hex_color": {
                     "description": "The task color in hex",
                     "type": "string",
-                    "maxLength": 6
+                    "maxLength": 7
                 },
                 "id": {
                     "description": "The unique, numeric id of this task.",
