@@ -9,7 +9,7 @@ menu:
 
 # Using Vikunja with n8n
 
-Vikunja maintains a [Community node](https://github.com/go-vikunja/n8n-vikunja-nodes) for [n8n](https://n8n.io),
+Vikunja maintains a [community node](https://github.com/go-vikunja/n8n-vikunja-nodes) for [n8n](https://n8n.io),
 allowing you to easily integrate Vikunja with all kinds of other tools and services.
 
 {{< table_of_contents >}}
