@@ -20,6 +20,8 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
+
 	"code.vikunja.io/web"
 	"xorm.io/xorm"
 )
@@ -32,8 +34,8 @@ type Label struct {
 	Title string `xorm:"varchar(250) not null" json:"title" valid:"runelength(1|250)" minLength:"1" maxLength:"250"`
 	// The label description.
 	Description string `xorm:"longtext null" json:"description"`
-	// The color this label has
-	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
+	// The color this label has in hex format.
+	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7"`
 
 	CreatedByID int64 `xorm:"bigint not null" json:"-"`
 	// The user who created this label
@@ -71,6 +73,7 @@ func (l *Label) Create(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
+	l.HexColor = utils.NormalizeHex(l.HexColor)
 	l.CreatedBy = u
 	l.CreatedByID = u.ID
 
@@ -94,6 +97,9 @@ func (l *Label) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /labels/{id} [put]
 func (l *Label) Update(s *xorm.Session, a web.Auth) (err error) {
+
+	l.HexColor = utils.NormalizeHex(l.HexColor)
+
 	_, err = s.
 		ID(l.ID).
 		Cols(

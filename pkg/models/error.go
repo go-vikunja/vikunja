@@ -416,7 +416,7 @@ func (err *ErrCannotArchiveDefaultProject) HTTPError() web.HTTPError {
 // Task errors
 // ==============
 
-// ErrTaskCannotBeEmpty represents a "ErrProjectDoesNotExist" kind of error. Used if the project does not exist.
+// ErrTaskCannotBeEmpty represents a "ErrTaskCannotBeEmpty" kind of error.
 type ErrTaskCannotBeEmpty struct{}
 
 // IsErrTaskCannotBeEmpty checks if an error is a ErrProjectDoesNotExist.
@@ -426,7 +426,7 @@ func IsErrTaskCannotBeEmpty(err error) bool {
 }
 
 func (err ErrTaskCannotBeEmpty) Error() string {
-	return "Project task title cannot be empty."
+	return "Task title cannot be empty."
 }
 
 // ErrCodeTaskCannotBeEmpty holds the unique world-error code of this error
@@ -434,7 +434,7 @@ const ErrCodeTaskCannotBeEmpty = 4001
 
 // HTTPError holds the http error description
 func (err ErrTaskCannotBeEmpty) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeTaskCannotBeEmpty, Message: "You must provide at least a project task title."}
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeTaskCannotBeEmpty, Message: "You must provide at least a task title."}
 }
 
 // ErrTaskDoesNotExist represents a "ErrProjectDoesNotExist" kind of error. Used if the project does not exist.

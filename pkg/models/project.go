@@ -22,13 +22,14 @@ import (
 	"strings"
 	"time"
 
-	"code.vikunja.io/api/pkg/db"
-
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
+
 	"code.vikunja.io/web"
 	"xorm.io/builder"
 	"xorm.io/xorm"
@@ -45,7 +46,7 @@ type Project struct {
 	// The unique project short identifier. Used to build task identifiers.
 	Identifier string `xorm:"varchar(10) null" json:"identifier" valid:"runelength(0|10)" minLength:"0" maxLength:"10"`
 	// The hex color of this project
-	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
+	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7"`
 
 	OwnerID         int64    `xorm:"bigint INDEX not null" json:"-"`
 	ParentProjectID int64    `xorm:"bigint INDEX null" json:"parent_project_id"`
@@ -718,6 +719,8 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 		return
 	}
 
+	project.HexColor = utils.NormalizeHex(project.HexColor)
+
 	_, err = s.Insert(project)
 	if err != nil {
 		return
@@ -830,6 +833,8 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 			return err
 		}
 	}
+
+	project.HexColor = utils.NormalizeHex(project.HexColor)
 
 	_, err = s.
 		ID(project.ID).

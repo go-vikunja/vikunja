@@ -28,6 +28,7 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/web"
 
 	"dario.cat/mergo"
@@ -78,7 +79,7 @@ type Task struct {
 	// An array of labels which are associated with this task.
 	Labels []*Label `xorm:"-" json:"labels"`
 	// The task color in hex
-	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|6)" maxLength:"6"`
+	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7"`
 	// Determines how far a task is left from being done
 	PercentDone float64 `xorm:"DOUBLE null" json:"percent_done"`
 
@@ -731,7 +732,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 
 	t.ID = 0
 
-	// Check if we have at least a text
+	// Check if we have at least a title
 	if t.Title == "" {
 		return ErrTaskCannotBeEmpty{}
 	}
@@ -768,7 +769,11 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 	// If no position was supplied, set a default one
 	t.Position = calculateDefaultPosition(t.Index, t.Position)
 	t.KanbanPosition = calculateDefaultPosition(t.Index, t.KanbanPosition)
-	if _, err = s.Insert(t); err != nil {
+
+	t.HexColor = utils.NormalizeHex(t.HexColor)
+
+	_, err = s.Insert(t)
+	if err != nil {
 		return err
 	}
 
@@ -958,6 +963,8 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	if err := mergo.Merge(&ot, t, mergo.WithOverride); err != nil {
 		return err
 	}
+
+	t.HexColor = utils.NormalizeHex(t.HexColor)
 
 	//////
 	// Mergo does ignore nil values. Because of that, we need to check all parameters and set the updated to
