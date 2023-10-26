@@ -1,6 +1,7 @@
 <template>
 	<transition :name="name">
-		<slot  />
+		<!-- eslint-disable-next-line -->
+		<slot/>
 	</transition>
 </template>
 
