@@ -30,7 +30,7 @@ dependencies:
     version: 2.2.0(dayjs@1.11.10)(vue@3.3.7)
   '@intlify/unplugin-vue-i18n':
     specifier: 1.4.0
-    version: 1.4.0(rollup@4.1.4)(vue-i18n@9.5.0)
+    version: 1.4.0(rollup@4.1.4)(vue-i18n@9.6.0)
   '@kyvg/vue3-notification':
     specifier: 3.0.2
     version: 3.0.2(vue@3.3.7)
@@ -227,8 +227,8 @@ dependencies:
     specifier: 11.0.3
     version: 11.0.3(vue@3.3.7)
   vue-i18n:
-    specifier: 9.5.0
-    version: 9.5.0(vue@3.3.7)
+    specifier: 9.6.0
+    version: 9.6.0(vue@3.3.7)
   vue-router:
     specifier: 4.2.5
     version: 4.2.5(vue@3.3.7)
@@ -3789,7 +3789,7 @@ packages:
       - '@vue/composition-api'
     dev: false
 
-  /@intlify/bundle-utils@7.4.0(vue-i18n@9.5.0):
+  /@intlify/bundle-utils@7.4.0(vue-i18n@9.6.0):
     resolution: {integrity: sha512-AQfjBe2HUxzyN8ignIk3WhhSuVcSuirgzOzkd17nb337rCbI4Gv/t1R60UUyIqFoFdviLb/wLcDUzTD/xXjv9w==}
     engines: {node: '>= 14.16'}
     peerDependencies:
@@ -3810,16 +3810,16 @@ packages:
       magic-string: 0.30.1
       mlly: 1.4.0
       source-map-js: 1.0.2
-      vue-i18n: 9.5.0(vue@3.3.7)
+      vue-i18n: 9.6.0(vue@3.3.7)
       yaml-eslint-parser: 1.2.2
     dev: false
 
-  /@intlify/core-base@9.5.0:
-    resolution: {integrity: sha512-y3ufM1RJbI/DSmJf3lYs9ACq3S/iRvaSsE3rPIk0MGH7fp+JxU6rdryv/EYcwfcr3Y1aHFlCBir6S391hRZ57w==}
+  /@intlify/core-base@9.6.0:
+    resolution: {integrity: sha512-9xWsUFrQq4iP1amH3cEIlUHsCXO541RGRDfrKqaDhlYvMbf2qTzpSjqeL3kWw1b+rC8XWHw+cgZXa4VPdOzqfg==}
     engines: {node: '>= 16'}
     dependencies:
-      '@intlify/message-compiler': 9.5.0
-      '@intlify/shared': 9.5.0
+      '@intlify/message-compiler': 9.6.0
+      '@intlify/shared': 9.6.0
     dev: false
 
   /@intlify/message-compiler@9.5.0:
@@ -3830,12 +3830,25 @@ packages:
       source-map-js: 1.0.2
     dev: false
 
+  /@intlify/message-compiler@9.6.0:
+    resolution: {integrity: sha512-GucIIYA2H86gdf/lKHAahfLpyYm9Q1IUc/yUEMk8wwwfrzBwuYmTDg90ooed7eRVx2N/omyDyuhKV4cRp3b+DQ==}
+    engines: {node: '>= 16'}
+    dependencies:
+      '@intlify/shared': 9.6.0
+      source-map-js: 1.0.2
+    dev: false
+
   /@intlify/shared@9.5.0:
     resolution: {integrity: sha512-tAxV14LMXZDZbu32XzLMTsowNlgJNmLwWHYzvMUl6L8gvQeoYiZONjY7AUsqZW8TOZDX9lfvF6adPkk9FSRdDA==}
     engines: {node: '>= 16'}
     dev: false
 
-  /@intlify/unplugin-vue-i18n@1.4.0(rollup@4.1.4)(vue-i18n@9.5.0):
+  /@intlify/shared@9.6.0:
+    resolution: {integrity: sha512-vZeID7kn10rhgRYZQvjULTOYXDGnC0j49HI0AD9CK08aj4nWmlPai/8awTsMg0qrfHVMTna8ZMNmBZNyFAUCfA==}
+    engines: {node: '>= 16'}
+    dev: false
+
+  /@intlify/unplugin-vue-i18n@1.4.0(rollup@4.1.4)(vue-i18n@9.6.0):
     resolution: {integrity: sha512-RGDchCRBlDTyVVFgPA1C1XC1uD4xYN81Ma+3EnU6GQ8pBEreraX/PWdPXXzOB6k9GWCQHuqii3atYXhcH3rpSg==}
     engines: {node: '>= 14.16'}
     peerDependencies:
@@ -3850,7 +3863,7 @@ packages:
       vue-i18n-bridge:
         optional: true
     dependencies:
-      '@intlify/bundle-utils': 7.4.0(vue-i18n@9.5.0)
+      '@intlify/bundle-utils': 7.4.0(vue-i18n@9.6.0)
       '@intlify/shared': 9.5.0
       '@rollup/pluginutils': 5.0.2(rollup@4.1.4)
       '@vue/compiler-sfc': 3.3.4
@@ -3862,7 +3875,7 @@ packages:
       picocolors: 1.0.0
       source-map-js: 1.0.2
       unplugin: 1.1.0
-      vue-i18n: 9.5.0(vue@3.3.7)
+      vue-i18n: 9.6.0(vue@3.3.7)
     transitivePeerDependencies:
       - rollup
       - supports-color
@@ -11168,14 +11181,14 @@ packages:
       vue: 3.3.7(typescript@5.2.2)
     dev: false
 
-  /vue-i18n@9.5.0(vue@3.3.7):
-    resolution: {integrity: sha512-NiI3Ph1qMstNf7uhYh8trQBOBFLxeJgcOxBq51pCcZ28Vs18Y7BDS58r8HGDKCYgXdLUYqPDXdKatIF4bvBVZg==}
+  /vue-i18n@9.6.0(vue@3.3.7):
+    resolution: {integrity: sha512-DSUaHmc2qpXpB0oeHXrW4JtOXnzpmAeaPopDIlubRyXkxIdbzGTsQekZYrCoI3rCEouYKwD1tIw01/YYSYqWAw==}
     engines: {node: '>= 16'}
     peerDependencies:
       vue: ^3.0.0
     dependencies:
-      '@intlify/core-base': 9.5.0
-      '@intlify/shared': 9.5.0
+      '@intlify/core-base': 9.6.0
+      '@intlify/shared': 9.6.0
       '@vue/devtools-api': 6.5.0
       vue: 3.3.7(typescript@5.2.2)
     dev: false
