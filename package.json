@@ -117,7 +117,7 @@
     "vue": "3.3.7",
     "vue-advanced-cropper": "2.8.8",
     "vue-flatpickr-component": "11.0.3",
-    "vue-i18n": "9.6.0",
+    "vue-i18n": "9.6.1",
     "vue-router": "4.2.5",
     "workbox-precaching": "7.0.0",
     "zhyswan-vuedraggable": "4.1.3"
