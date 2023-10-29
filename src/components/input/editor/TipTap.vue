@@ -267,7 +267,7 @@ const {
 const emit = defineEmits(['update:modelValue', 'save'])
 
 const inputHTML = ref('')
-const isEmpty = computed(() => inputHTML.value === '')
+const isEmpty = computed(() => inputHTML.value === '' || inputHTML.value === '<p></p>')
 const internalMode = ref<Mode>(initialMode)
 const isEditing = computed(() => internalMode.value === 'edit' && isEditEnabled)
 
