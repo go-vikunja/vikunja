@@ -267,41 +267,12 @@ const {
 const emit = defineEmits(['update:modelValue', 'save'])
 
 const inputHTML = ref('')
-watch(
-	() => modelValue,
-	() => {
-		inputHTML.value = modelValue
-	},
-	{immediate: true},
-)
-
 const isEmpty = computed(() => inputHTML.value === '')
 const internalMode = ref<Mode>(initialMode)
 const isEditing = computed(() => internalMode.value === 'edit' && isEditEnabled)
 
-function setEdit() {
-	internalMode.value = 'edit'
-	editor.value?.commands.focus()
-}
-
-const debouncedInputHTML = refDebounced(inputHTML, 1000)
-
-watch(debouncedInputHTML, () => bubbleNow())
-
-function bubbleNow() {
-	emit('update:modelValue', inputHTML.value)
-}
-
-function bubbleSave() {
-	bubbleNow()
-	emit('save', inputHTML.value)
-	if (initialMode === 'preview' && isEditing.value) {
-		internalMode.value = 'preview'
-	}
-}
-
 const editor = useEditor({
-	content: inputHTML.value,
+	content: modelValue,
 	editable: isEditing.value,
 	extensions: [
 		// Starterkit:
@@ -386,13 +357,44 @@ const editor = useEditor({
 		BubbleMenu,
 	],
 	onUpdate: () => {
-		// HTML
 		inputHTML.value = editor.value!.getHTML()
-
-		// JSON
-		// this.$emit('update:modelValue', this.editor.getJSON())
 	},
 })
+
+watch(
+	() => modelValue,
+	value => {
+		inputHTML.value = modelValue
+
+		if (!editor?.value) return
+
+		if (editor.value.getHTML() === value) {
+			return
+		}
+		
+		editor.value.commands.setContent(value, false)
+	},
+)
+
+const debouncedInputHTML = refDebounced(inputHTML, 1000)
+watch(debouncedInputHTML, () => bubbleNow())
+
+function bubbleNow() {
+	emit('update:modelValue', inputHTML.value)
+}
+
+function bubbleSave() {
+	bubbleNow()
+	emit('save', inputHTML.value)
+	if (initialMode === 'preview' && isEditing.value) {
+		internalMode.value = 'preview'
+	}
+}
+
+function setEdit() {
+	internalMode.value = 'edit'
+	editor.value?.commands.focus()
+}
 
 watch(
 	() => isEditing.value,
@@ -400,21 +402,6 @@ watch(
 		editor.value?.setEditable(isEditing.value)
 	},
 )
-
-watch(inputHTML, (value) => {
-	if (!editor.value) return
-	// HTML
-	const isSame = editor.value.getHTML() === value
-
-	// JSON
-	// const isSame = JSON.stringify(editor.value.getJSON()) === JSON.stringify(value)
-
-	if (isSame) {
-		return
-	}
-
-	editor.value.commands.setContent(value, false)
-})
 
 onBeforeUnmount(() => editor.value?.destroy())
 
