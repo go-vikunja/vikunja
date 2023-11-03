@@ -162,7 +162,7 @@
     "postcss-easing-gradients": "3.0.1",
     "postcss-easings": "4.0.0",
     "postcss-focus-within": "8.0.0",
-    "postcss-preset-env": "9.2.0",
+    "postcss-preset-env": "9.3.0",
     "rollup": "4.2.0",
     "rollup-plugin-visualizer": "5.9.2",
     "sass": "1.69.5",
@@ -175,7 +175,7 @@
     "vite-svg-loader": "4.0.0",
     "vitest": "0.34.6",
     "vue-tsc": "1.8.22",
-    "wait-on": "7.0.1",
+    "wait-on": "7.1.0",
     "workbox-cli": "7.0.0"
   },
   "pnpm": {
