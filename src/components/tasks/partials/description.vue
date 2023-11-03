@@ -25,7 +25,7 @@
 			v-model="task.description"
 			@update:model-value="saveWithDelay"
 			@save="save"
-			:initial-mode="task.description !== '' ? 'preview' : 'edit'"
+			:initial-mode="isEditorContentEmpty(task.description) ? 'preview' : 'edit'"
 		/>
 	</div>
 </template>
@@ -39,6 +39,7 @@ import Editor from '@/components/input/AsyncEditor'
 import type {ITask} from '@/modelTypes/ITask'
 import {useTaskStore} from '@/stores/tasks'
 import TaskModel from '@/models/task'
+import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 
 type AttachmentUploadFunction = (file: File, onSuccess: (attachmentUrl: string) => void) => Promise<string>
 

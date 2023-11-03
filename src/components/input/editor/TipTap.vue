@@ -173,6 +173,7 @@ import {Placeholder} from '@tiptap/extension-placeholder'
 import {eventToHotkeyString} from '@github/hotkey'
 import {mergeAttributes} from '@tiptap/core'
 import {createRandomID} from '@/helpers/randomId'
+import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 
 const {t} = useI18n()
 
@@ -267,7 +268,7 @@ const {
 const emit = defineEmits(['update:modelValue', 'save'])
 
 const inputHTML = ref('')
-const isEmpty = computed(() => inputHTML.value === '' || inputHTML.value === '<p></p>')
+const isEmpty = computed(() => isEditorContentEmpty(inputHTML.value))
 const internalMode = ref<Mode>(initialMode)
 const isEditing = computed(() => internalMode.value === 'edit' && isEditEnabled)
 
