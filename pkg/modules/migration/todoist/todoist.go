@@ -134,10 +134,9 @@ type note struct {
 type projectNote struct {
 	Content        string          `json:"content"`
 	FileAttachment *fileAttachment `json:"file_attachment"`
-	ID             int64           `json:"id"`
+	ID             string          `json:"id"`
 	Posted         time.Time       `json:"posted"`
 	ProjectID      string          `json:"project_id"`
-	UidsToNotify   []int64         `json:"uids_to_notify"`
 }
 
 type reminder struct {
