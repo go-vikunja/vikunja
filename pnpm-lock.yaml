@@ -23,8 +23,8 @@ dependencies:
     specifier: 3.0.3
     version: 3.0.3(@fortawesome/fontawesome-svg-core@6.4.2)(vue@3.3.7)
   '@github/hotkey':
-    specifier: 2.2.0
-    version: 2.2.0
+    specifier: 2.3.0
+    version: 2.3.0
   '@infectoone/vue-ganttastic':
     specifier: 2.2.0
     version: 2.2.0(dayjs@1.11.10)(vue@3.3.7)
@@ -3659,8 +3659,8 @@ packages:
       vue: 3.3.7(typescript@5.2.2)
     dev: false
 
-  /@github/hotkey@2.2.0:
-    resolution: {integrity: sha512-PPDv5LG1xWaq9q8Cu+SX6PdR9943wnKdyCmxsQHhgh2FeCUeEWm542CibzYSaoHqgvZeM3+VSpdH5icvqCi+NQ==}
+  /@github/hotkey@2.3.0:
+    resolution: {integrity: sha512-XVvFrubecf1VPofEiVJMZ60fye+EegbB/+ZSuieFihZ3xMTD0NYNrd3n+RHAA9W1gUNl2Yuyj1alrAp+2tmISw==}
     dev: false
 
   /@hapi/hoek@9.2.1:
