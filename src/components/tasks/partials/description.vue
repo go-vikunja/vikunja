@@ -38,7 +38,6 @@ import Editor from '@/components/input/AsyncEditor'
 
 import type {ITask} from '@/modelTypes/ITask'
 import {useTaskStore} from '@/stores/tasks'
-import TaskModel from '@/models/task'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 
 type AttachmentUploadFunction = (file: File, onSuccess: (attachmentUrl: string) => void) => Promise<string>
