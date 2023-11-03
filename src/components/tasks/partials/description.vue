@@ -22,10 +22,10 @@
 			:placeholder="$t('task.description.placeholder')"
 			:show-save="true"
 			edit-shortcut="e"
-			v-model="task.description"
+			v-model="description"
 			@update:model-value="saveWithDelay"
 			@save="save"
-			:initial-mode="isEditorContentEmpty(task.description) ? 'preview' : 'edit'"
+			:initial-mode="isEditorContentEmpty(description) ? 'preview' : 'edit'"
 		/>
 	</div>
 </template>
@@ -55,7 +55,7 @@ const {
 
 const emit = defineEmits(['update:modelValue'])
 
-const task = ref<ITask>(new TaskModel())
+const description = ref<string>('')
 const saved = ref(false)
 
 // Since loading is global state, this variable ensures we're only showing the saving icon when saving the description.
@@ -65,9 +65,9 @@ const taskStore = useTaskStore()
 const loading = computed(() => taskStore.isLoading)
 
 watch(
-	() => modelValue,
-	(value) => {
-		task.value = value
+	() => modelValue.description,
+	value => {
+		description.value = value
 	},
 	{immediate: true},
 )
@@ -93,8 +93,11 @@ async function save() {
 
 	try {
 		// FIXME: don't update state from internal.
-		task.value = await taskStore.update(task.value)
-		emit('update:modelValue', task.value)
+		const updated = await taskStore.update({
+			...modelValue,
+			description: description.value,
+		})
+		emit('update:modelValue', updated)
 
 		saved.value = true
 		setTimeout(() => {

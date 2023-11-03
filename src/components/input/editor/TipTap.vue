@@ -365,14 +365,14 @@ const editor = useEditor({
 watch(
 	() => modelValue,
 	value => {
-		inputHTML.value = modelValue
+		inputHTML.value = value
 
 		if (!editor?.value) return
 
 		if (editor.value.getHTML() === value) {
 			return
 		}
-		
+
 		editor.value.commands.setContent(value, false)
 	},
 )
