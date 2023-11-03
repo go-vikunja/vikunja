@@ -387,7 +387,7 @@ function bubbleNow() {
 function bubbleSave() {
 	bubbleNow()
 	emit('save', inputHTML.value)
-	if (initialMode === 'preview' && isEditing.value) {
+	if (isEditing.value) {
 		internalMode.value = 'preview'
 	}
 }
