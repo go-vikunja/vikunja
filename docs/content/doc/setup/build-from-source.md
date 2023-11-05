@@ -19,7 +19,7 @@ To completely build Vikunja from source, you need to build the api and frontend.
 The Vikunja API has no other dependencies than go itself.
 That means compiling it boils down to these steps:
 
-1. Make sure [Go](https://golang.org/doc/install) is properly installed on your system. You'll need at least Go `1.19`.
+1. Make sure [Go](https://golang.org/doc/install) is properly installed on your system. You'll need at least Go `1.21`.
 2. Make sure [Mage](https://magefile.org) is properly installed on your system.
 3. Clone the repo with `git clone https://code.vikunja.io/api` and switch into the directory.
 4. Run `mage build` in the source of this repo. This will build a binary in the root of the repo which will be able to run on your system.
