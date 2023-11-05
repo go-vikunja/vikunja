@@ -152,6 +152,9 @@ services:
       VIKUNJA_SERVICE_FRONTENDURL: https://<your public frontend url with slash>/
     volumes:
       - ./files:/app/vikunja/files
+		depends_on:
+      db:
+          condition: service_healthy
   db:
     image: mariadb:10
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
@@ -162,6 +165,11 @@ services:
       MYSQL_DATABASE: vikunja
     volumes:
       - ./db:/var/lib/mysql
+		healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 30s
+      retries: 10
+
 {{< /highlight >}}
 
 See [full docker example]({{< ref "full-docker-example.md">}}) for more variations of this config.
