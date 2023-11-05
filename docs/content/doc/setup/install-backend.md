@@ -153,7 +153,7 @@ services:
     volumes:
       - ./files:/app/vikunja/files
 		depends_on:
-      db:
+    db:
           condition: service_healthy
   db:
     image: mariadb:10
@@ -165,7 +165,7 @@ services:
       MYSQL_DATABASE: vikunja
     volumes:
       - ./db:/var/lib/mysql
-		healthcheck:
+    healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 30s
       retries: 10
