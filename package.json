@@ -48,7 +48,7 @@
     "@fortawesome/fontawesome-svg-core": "6.4.2",
     "@fortawesome/free-regular-svg-icons": "6.4.2",
     "@fortawesome/free-solid-svg-icons": "6.4.2",
-    "@fortawesome/vue-fontawesome": "3.0.3",
+    "@fortawesome/vue-fontawesome": "3.0.5",
     "@github/hotkey": "2.3.0",
     "@infectoone/vue-ganttastic": "2.2.0",
     "@intlify/unplugin-vue-i18n": "1.4.0",
