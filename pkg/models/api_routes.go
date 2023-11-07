@@ -74,7 +74,6 @@ func CollectRoutesForAPITokenUsage(route echo.Route) {
 	routeGroupName := getRouteGroupName(route.Path)
 
 	if routeGroupName == "subscriptions" ||
-		routeGroupName == "notifications" ||
 		routeGroupName == "tokens" ||
 		strings.HasSuffix(routeGroupName, "_bulk") {
 		return
