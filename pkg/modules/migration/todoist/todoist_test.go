@@ -254,31 +254,31 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 		},
 		ProjectNotes: []*projectNote{
 			{
-				ID:        102000,
+				ID:        "102000",
 				Content:   "Lorem Ipsum dolor sit amet",
 				ProjectID: "396936926",
 				Posted:    time3,
 			},
 			{
-				ID:        102001,
+				ID:        "102001",
 				Content:   "Lorem Ipsum dolor sit amet 2",
 				ProjectID: "396936926",
 				Posted:    time3,
 			},
 			{
-				ID:        102002,
+				ID:        "102002",
 				Content:   "Lorem Ipsum dolor sit amet 3",
 				ProjectID: "396936926",
 				Posted:    time3,
 			},
 			{
-				ID:        102003,
+				ID:        "102003",
 				Content:   "Lorem Ipsum dolor sit amet 4",
 				ProjectID: "396936927",
 				Posted:    time3,
 			},
 			{
-				ID:        102004,
+				ID:        "102004",
 				Content:   "Lorem Ipsum dolor sit amet 5",
 				ProjectID: "396936927",
 				Posted:    time3,
