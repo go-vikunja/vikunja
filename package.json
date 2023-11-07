@@ -88,7 +88,7 @@
     "@tiptap/pm": "2.1.12",
     "@tiptap/suggestion": "2.1.12",
     "@tiptap/vue-3": "2.1.12",
-    "@types/is-touch-device": "1.0.1",
+    "@types/is-touch-device": "1.0.2",
     "@types/lodash.clonedeep": "4.5.8",
     "@types/sortablejs": "1.15.4",
     "@vueuse/core": "10.5.0",
