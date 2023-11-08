@@ -166,12 +166,13 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullV
 
 	log.Debugf("[Trello Migration] ")
 
+	var pseudoParentID int64 = 1
 	fullVikunjaHierachie = []*models.ProjectWithTasksAndBuckets{
 		{
 			Project: models.Project{
+				ID:    pseudoParentID,
 				Title: "Imported from Trello",
 			},
-			ChildProjects: []*models.ProjectWithTasksAndBuckets{},
 		},
 	}
 
@@ -179,12 +180,14 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullV
 
 	log.Debugf("[Trello Migration] Converting %d boards to vikunja projects", len(trelloData))
 
-	for _, board := range trelloData {
+	for index, board := range trelloData {
 		project := &models.ProjectWithTasksAndBuckets{
 			Project: models.Project{
-				Title:       board.Name,
-				Description: board.Desc,
-				IsArchived:  board.Closed,
+				ID:              int64(index+1) + pseudoParentID,
+				ParentProjectID: pseudoParentID,
+				Title:           board.Name,
+				Description:     board.Desc,
+				IsArchived:      board.Closed,
 			},
 		}
 
@@ -300,7 +303,7 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullV
 
 		log.Debugf("[Trello Migration] Converted all cards to tasks for board %s", board.ID)
 
-		fullVikunjaHierachie[0].ChildProjects = append(fullVikunjaHierachie[0].ChildProjects, project)
+		fullVikunjaHierachie = append(fullVikunjaHierachie, project)
 	}
 
 	return

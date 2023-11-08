@@ -247,11 +247,15 @@ func parseDate(dateString string) (date time.Time, err error) {
 
 func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVikunjaHierachie []*models.ProjectWithTasksAndBuckets, err error) {
 
+	var pseudoParentID int64 = 1
+
 	parent := &models.ProjectWithTasksAndBuckets{
 		Project: models.Project{
+			ID:    pseudoParentID,
 			Title: "Migrated from todoist",
 		},
 	}
+	fullVikunjaHierachie = append(fullVikunjaHierachie, parent)
 
 	// A map for all vikunja lists with the project id they're coming from as key
 	lists := make(map[string]*models.ProjectWithTasksAndBuckets, len(sync.Projects))
@@ -264,18 +268,20 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 
 	sections := make(map[string]int64)
 
-	for _, p := range sync.Projects {
+	for index, p := range sync.Projects {
 		project := &models.ProjectWithTasksAndBuckets{
 			Project: models.Project{
-				Title:      p.Name,
-				HexColor:   todoistColors[p.Color],
-				IsArchived: p.IsArchived,
+				ID:              int64(index+1) + pseudoParentID,
+				ParentProjectID: pseudoParentID,
+				Title:           p.Name,
+				HexColor:        todoistColors[p.Color],
+				IsArchived:      p.IsArchived,
 			},
 		}
 
 		lists[p.ID] = project
 
-		parent.ChildProjects = append(parent.ChildProjects, project)
+		fullVikunjaHierachie = append(fullVikunjaHierachie, project)
 	}
 
 	sort.Slice(sync.Sections, func(i, j int) bool {
@@ -471,7 +477,7 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 		)
 	}
 
-	return []*models.ProjectWithTasksAndBuckets{parent}, err
+	return
 }
 
 func getAccessTokenFromAuthToken(authToken string) (accessToken string, err error) {

@@ -75,20 +75,25 @@ func (date *tickTickTime) UnmarshalCSV(csv string) (err error) {
 }
 
 func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWithTasksAndBuckets) {
-	parent := &models.ProjectWithTasksAndBuckets{
-		Project: models.Project{
-			Title: "Migrated from TickTick",
+	var pseudoParentID int64 = 1
+	result = []*models.ProjectWithTasksAndBuckets{
+		{
+			Project: models.Project{
+				ID:    pseudoParentID,
+				Title: "Migrated from TickTick",
+			},
 		},
-		ChildProjects: []*models.ProjectWithTasksAndBuckets{},
 	}
 
 	projects := make(map[string]*models.ProjectWithTasksAndBuckets)
-	for _, t := range tasks {
+	for index, t := range tasks {
 		_, has := projects[t.ProjectName]
 		if !has {
 			projects[t.ProjectName] = &models.ProjectWithTasksAndBuckets{
 				Project: models.Project{
-					Title: t.ProjectName,
+					ID:              int64(index+1) + pseudoParentID,
+					ParentProjectID: pseudoParentID,
+					Title:           t.ProjectName,
 				},
 			}
 		}
@@ -134,14 +139,14 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWi
 	}
 
 	for _, l := range projects {
-		parent.ChildProjects = append(parent.ChildProjects, l)
+		result = append(result, l)
 	}
 
-	sort.Slice(parent.ChildProjects, func(i, j int) bool {
-		return parent.ChildProjects[i].Title < parent.ChildProjects[j].Title
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Title < result[j].Title
 	})
 
-	return []*models.ProjectWithTasksAndBuckets{parent}
+	return
 }
 
 // Name is used to get the name of the ticktick migration - we're using the docs here to annotate the status route.

@@ -190,59 +190,62 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 	expectedHierachie := []*models.ProjectWithTasksAndBuckets{
 		{
 			Project: models.Project{
+				ID:    1,
 				Title: "Imported from Trello",
 			},
-			ChildProjects: []*models.ProjectWithTasksAndBuckets{
+		},
+		{
+			Project: models.Project{
+				ID:                    2,
+				ParentProjectID:       1,
+				Title:                 "TestBoard",
+				Description:           "This is a description",
+				BackgroundInformation: bytes.NewBuffer(exampleFile),
+			},
+			Buckets: []*models.Bucket{
 				{
-					Project: models.Project{
-						Title:                 "TestBoard",
-						Description:           "This is a description",
-						BackgroundInformation: bytes.NewBuffer(exampleFile),
-					},
-					Buckets: []*models.Bucket{
-						{
-							ID:    1,
-							Title: "Test Project 1",
+					ID:    1,
+					Title: "Test Project 1",
+				},
+				{
+					ID:    2,
+					Title: "Test Project 2",
+				},
+			},
+			Tasks: []*models.TaskWithComments{
+				{
+					Task: models.Task{
+						Title:          "Test Card 1",
+						Description:    "Card Description",
+						BucketID:       1,
+						KanbanPosition: 123,
+						DueDate:        time1,
+						Labels: []*models.Label{
+							{
+								Title:    "Label 1",
+								HexColor: trelloColorMap["green"],
+							},
+							{
+								Title:    "Label 2",
+								HexColor: trelloColorMap["orange"],
+							},
 						},
-						{
-							ID:    2,
-							Title: "Test Project 2",
-						},
-					},
-					Tasks: []*models.TaskWithComments{
-						{
-							Task: models.Task{
-								Title:          "Test Card 1",
-								Description:    "Card Description",
-								BucketID:       1,
-								KanbanPosition: 123,
-								DueDate:        time1,
-								Labels: []*models.Label{
-									{
-										Title:    "Label 1",
-										HexColor: trelloColorMap["green"],
-									},
-									{
-										Title:    "Label 2",
-										HexColor: trelloColorMap["orange"],
-									},
-								},
-								Attachments: []*models.TaskAttachment{
-									{
-										File: &files.File{
-											Name:        "Testimage.jpg",
-											Mime:        "image/jpg",
-											Size:        uint64(len(exampleFile)),
-											FileContent: exampleFile,
-										},
-									},
+						Attachments: []*models.TaskAttachment{
+							{
+								File: &files.File{
+									Name:        "Testimage.jpg",
+									Mime:        "image/jpg",
+									Size:        uint64(len(exampleFile)),
+									FileContent: exampleFile,
 								},
 							},
 						},
-						{
-							Task: models.Task{
-								Title: "Test Card 2",
-								Description: `
+					},
+				},
+				{
+					Task: models.Task{
+						Title: "Test Card 2",
+						Description: `
 
 ## Checkproject 1
 
@@ -253,106 +256,108 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 
 * [ ] Pending Task
 * [ ] Another Pending Task`,
-								BucketID:       1,
-								KanbanPosition: 124,
-							},
-						},
-						{
-							Task: models.Task{
-								Title:          "Test Card 3",
-								BucketID:       1,
-								KanbanPosition: 126,
-							},
-						},
-						{
-							Task: models.Task{
-								Title:          "Test Card 4",
-								BucketID:       1,
-								KanbanPosition: 127,
-								Labels: []*models.Label{
-									{
-										Title:    "Label 2",
-										HexColor: trelloColorMap["orange"],
-									},
-								},
-							},
-						},
-						{
-							Task: models.Task{
-								Title:          "Test Card 5",
-								BucketID:       2,
-								KanbanPosition: 111,
-								Labels: []*models.Label{
-									{
-										Title:    "Label 3",
-										HexColor: trelloColorMap["blue"],
-									},
-								},
-							},
-						},
-						{
-							Task: models.Task{
-								Title:          "Test Card 6",
-								BucketID:       2,
-								KanbanPosition: 222,
-								DueDate:        time1,
-							},
-						},
-						{
-							Task: models.Task{
-								Title:          "Test Card 7",
-								BucketID:       2,
-								KanbanPosition: 333,
-							},
-						},
-						{
-							Task: models.Task{
-								Title:          "Test Card 8",
-								BucketID:       2,
-								KanbanPosition: 444,
+						BucketID:       1,
+						KanbanPosition: 124,
+					},
+				},
+				{
+					Task: models.Task{
+						Title:          "Test Card 3",
+						BucketID:       1,
+						KanbanPosition: 126,
+					},
+				},
+				{
+					Task: models.Task{
+						Title:          "Test Card 4",
+						BucketID:       1,
+						KanbanPosition: 127,
+						Labels: []*models.Label{
+							{
+								Title:    "Label 2",
+								HexColor: trelloColorMap["orange"],
 							},
 						},
 					},
 				},
 				{
-					Project: models.Project{
-						Title: "TestBoard 2",
-					},
-					Buckets: []*models.Bucket{
-						{
-							ID:    3,
-							Title: "Test Project 4",
-						},
-					},
-					Tasks: []*models.TaskWithComments{
-						{
-							Task: models.Task{
-								Title:          "Test Card 634",
-								BucketID:       3,
-								KanbanPosition: 123,
+					Task: models.Task{
+						Title:          "Test Card 5",
+						BucketID:       2,
+						KanbanPosition: 111,
+						Labels: []*models.Label{
+							{
+								Title:    "Label 3",
+								HexColor: trelloColorMap["blue"],
 							},
 						},
 					},
 				},
 				{
-					Project: models.Project{
-						Title:      "TestBoard Archived",
-						IsArchived: true,
+					Task: models.Task{
+						Title:          "Test Card 6",
+						BucketID:       2,
+						KanbanPosition: 222,
+						DueDate:        time1,
 					},
-					Buckets: []*models.Bucket{
-						{
-							ID:    4,
-							Title: "Test Project 5",
-						},
+				},
+				{
+					Task: models.Task{
+						Title:          "Test Card 7",
+						BucketID:       2,
+						KanbanPosition: 333,
 					},
-					Tasks: []*models.TaskWithComments{
-						{
-							Task: models.Task{
-								Title:          "Test Card 63423",
-								BucketID:       4,
-								KanbanPosition: 123,
-							},
-						},
+				},
+				{
+					Task: models.Task{
+						Title:          "Test Card 8",
+						BucketID:       2,
+						KanbanPosition: 444,
+					},
+				},
+			},
+		},
+		{
+			Project: models.Project{
+				ID:              3,
+				ParentProjectID: 1,
+				Title:           "TestBoard 2",
+			},
+			Buckets: []*models.Bucket{
+				{
+					ID:    3,
+					Title: "Test Project 4",
+				},
+			},
+			Tasks: []*models.TaskWithComments{
+				{
+					Task: models.Task{
+						Title:          "Test Card 634",
+						BucketID:       3,
+						KanbanPosition: 123,
+					},
+				},
+			},
+		},
+		{
+			Project: models.Project{
+				ID:              4,
+				ParentProjectID: 1,
+				Title:           "TestBoard Archived",
+				IsArchived:      true,
+			},
+			Buckets: []*models.Bucket{
+				{
+					ID:    4,
+					Title: "Test Project 5",
+				},
+			},
+			Tasks: []*models.TaskWithComments{
+				{
+					Task: models.Task{
+						Title:          "Test Card 63423",
+						BucketID:       4,
+						KanbanPosition: 123,
 					},
 				},
 			},

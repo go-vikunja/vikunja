@@ -261,26 +261,30 @@ func getMicrosoftTodoData(token string) (microsoftTodoData []*project, err error
 
 func convertMicrosoftTodoData(todoData []*project) (vikunjsStructure []*models.ProjectWithTasksAndBuckets, err error) {
 
+	var pseudoParentID int64 = 1
+
 	// One project with all child projects
 	vikunjsStructure = []*models.ProjectWithTasksAndBuckets{
 		{
 			Project: models.Project{
+				ID:    pseudoParentID,
 				Title: "Migrated from Microsoft Todo",
 			},
-			ChildProjects: []*models.ProjectWithTasksAndBuckets{},
 		},
 	}
 
 	log.Debugf("[Microsoft Todo Migration] Converting %d projects", len(todoData))
 
-	for _, l := range todoData {
+	for index, l := range todoData {
 
 		log.Debugf("[Microsoft Todo Migration] Converting project %s", l.ID)
 
 		// Projects only with title
 		project := &models.ProjectWithTasksAndBuckets{
 			Project: models.Project{
-				Title: l.DisplayName,
+				Title:           l.DisplayName,
+				ID:              int64(index+1) + pseudoParentID,
+				ParentProjectID: pseudoParentID,
 			},
 		}
 
@@ -364,7 +368,7 @@ func convertMicrosoftTodoData(todoData []*project) (vikunjsStructure []*models.P
 			log.Debugf("[Microsoft Todo Migration] Done converted %d tasks", len(l.Tasks))
 		}
 
-		vikunjsStructure[0].ChildProjects = append(vikunjsStructure[0].ChildProjects, project)
+		vikunjsStructure = append(vikunjsStructure, project)
 		log.Debugf("[Microsoft Todo Migration] Done converting project %s", l.ID)
 	}
 

@@ -106,78 +106,81 @@ func TestConverting(t *testing.T) {
 		{
 			Project: models.Project{
 				Title: "Migrated from Microsoft Todo",
+				ID:    1,
 			},
-			ChildProjects: []*models.ProjectWithTasksAndBuckets{
+		},
+		{
+			Project: models.Project{
+				ID:              2,
+				ParentProjectID: 1,
+				Title:           "Project 1",
+			},
+			Tasks: []*models.TaskWithComments{
 				{
-					Project: models.Project{
-						Title: "Project 1",
+					Task: models.Task{
+						Title:       "Task 1",
+						Description: "This is a description",
 					},
-					Tasks: []*models.TaskWithComments{
-						{
-							Task: models.Task{
-								Title:       "Task 1",
-								Description: "This is a description",
-							},
-						},
-						{
-							Task: models.Task{
-								Title:  "Task 2",
-								Done:   true,
-								DoneAt: testtimeTime,
-							},
-						},
-						{
-							Task: models.Task{
-								Title:    "Task 3",
-								Priority: 1,
-							},
-						},
-						{
-							Task: models.Task{
-								Title:    "Task 4",
-								Priority: 3,
-							},
-						},
-						{
-							Task: models.Task{
-								Title: "Task 5",
-								Reminders: []*models.TaskReminder{
-									{
-										Reminder: testtimeTime,
-									},
-								},
-							},
-						},
-						{
-							Task: models.Task{
-								Title:   "Task 6",
-								DueDate: testtimeTime,
-							},
-						},
-						{
-							Task: models.Task{
-								Title:       "Task 7",
-								DueDate:     testtimeTime,
-								RepeatAfter: 60 * 60 * 24 * 7, // The amount of seconds in a week
+				},
+				{
+					Task: models.Task{
+						Title:  "Task 2",
+						Done:   true,
+						DoneAt: testtimeTime,
+					},
+				},
+				{
+					Task: models.Task{
+						Title:    "Task 3",
+						Priority: 1,
+					},
+				},
+				{
+					Task: models.Task{
+						Title:    "Task 4",
+						Priority: 3,
+					},
+				},
+				{
+					Task: models.Task{
+						Title: "Task 5",
+						Reminders: []*models.TaskReminder{
+							{
+								Reminder: testtimeTime,
 							},
 						},
 					},
 				},
 				{
-					Project: models.Project{
-						Title: "Project 2",
+					Task: models.Task{
+						Title:   "Task 6",
+						DueDate: testtimeTime,
 					},
-					Tasks: []*models.TaskWithComments{
-						{
-							Task: models.Task{
-								Title: "Task 1",
-							},
-						},
-						{
-							Task: models.Task{
-								Title: "Task 2",
-							},
-						},
+				},
+				{
+					Task: models.Task{
+						Title:       "Task 7",
+						DueDate:     testtimeTime,
+						RepeatAfter: 60 * 60 * 24 * 7, // The amount of seconds in a week
+					},
+				},
+			},
+		},
+		{
+			Project: models.Project{
+				Title:           "Project 2",
+				ID:              3,
+				ParentProjectID: 1,
+			},
+			Tasks: []*models.TaskWithComments{
+				{
+					Task: models.Task{
+						Title: "Task 1",
+					},
+				},
+				{
+					Task: models.Task{
+						Title: "Task 2",
 					},
 				},
 			},
