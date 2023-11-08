@@ -599,7 +599,7 @@ func registerMigrations(m *echo.Group) {
 				return &todoist.Migration{}
 			},
 		}
-		todoistMigrationHandler.RegisterRoutes(m)
+		todoistMigrationHandler.RegisterMigrator(m)
 	}
 
 	// Trello
@@ -609,7 +609,7 @@ func registerMigrations(m *echo.Group) {
 				return &trello.Migration{}
 			},
 		}
-		trelloMigrationHandler.RegisterRoutes(m)
+		trelloMigrationHandler.RegisterMigrator(m)
 	}
 
 	// Microsoft Todo
@@ -619,7 +619,7 @@ func registerMigrations(m *echo.Group) {
 				return &microsofttodo.Migration{}
 			},
 		}
-		microsoftTodoMigrationHandler.RegisterRoutes(m)
+		microsoftTodoMigrationHandler.RegisterMigrator(m)
 	}
 
 	// Vikunja File Migrator

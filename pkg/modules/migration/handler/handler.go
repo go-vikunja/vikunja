@@ -19,12 +19,19 @@ package handler
 import (
 	"net/http"
 
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web/handler"
 	"github.com/labstack/echo/v4"
 )
+
+var registeredMigrators map[string]*MigrationWeb
+
+func init() {
+	registeredMigrators = make(map[string]*MigrationWeb)
+}
 
 // MigrationWeb holds the web migration handler
 type MigrationWeb struct {
@@ -36,12 +43,13 @@ type AuthURL struct {
 	URL string `json:"url"`
 }
 
-// RegisterRoutes registers all routes for migration
-func (mw *MigrationWeb) RegisterRoutes(g *echo.Group) {
+// RegisterMigrator registers all routes for migration
+func (mw *MigrationWeb) RegisterMigrator(g *echo.Group) {
 	ms := mw.MigrationStruct()
 	g.GET("/"+ms.Name()+"/auth", mw.AuthURL)
 	g.GET("/"+ms.Name()+"/status", mw.Status)
 	g.POST("/"+ms.Name()+"/migrate", mw.Migrate)
+	registeredMigrators[ms.Name()] = mw
 }
 
 // AuthURL is the web handler to get the auth url
@@ -60,19 +68,29 @@ func (mw *MigrationWeb) Migrate(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
+	stats, err := migration.GetMigrationStatus(ms, user)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
+	if stats.FinishedAt.IsZero() {
+		return c.JSON(http.StatusOK, map[string]string{
+			"message":       "Migration already running",
+			"running_since": stats.StartedAt.String(),
+		})
+	}
+
 	// Bind user request stuff
 	err = c.Bind(ms)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error())
 	}
 
-	// Do the migration
-	err = ms.Migrate(user)
-	if err != nil {
-		return handler.HandleHTTPError(err, c)
-	}
-
-	err = migration.SetMigrationStatus(ms, user)
+	err = events.Dispatch(&MigrationRequestedEvent{
+		Migrator:     ms,
+		MigratorKind: ms.Name(),
+		User:         user,
+	})
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}

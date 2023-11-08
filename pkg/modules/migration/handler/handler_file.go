@@ -57,13 +57,18 @@ func (fw *FileMigratorWeb) Migrate(c echo.Context) error {
 	}
 	defer src.Close()
 
+	m, err := migration.StartMigration(ms, user)
+	if err != nil {
+		return handler.HandleHTTPError(err, c)
+	}
+
 	// Do the migration
 	err = ms.Migrate(user, src, file.Size)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	err = migration.SetMigrationStatus(ms, user)
+	err = migration.FinishMigration(m)
 	if err != nil {
 		return handler.HandleHTTPError(err, c)
 	}

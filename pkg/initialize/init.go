@@ -29,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
+	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
 	"code.vikunja.io/api/pkg/red"
 	"code.vikunja.io/api/pkg/user"
 )
@@ -100,6 +101,7 @@ func FullInit() {
 	go func() {
 		models.RegisterListeners()
 		user.RegisterListeners()
+		migrationHandler.RegisterListeners()
 		err := events.InitEvents()
 		if err != nil {
 			log.Fatal(err.Error())

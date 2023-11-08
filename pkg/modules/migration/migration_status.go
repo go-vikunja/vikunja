@@ -28,7 +28,8 @@ type Status struct {
 	ID           int64     `xorm:"bigint autoincr not null unique pk" json:"id"`
 	UserID       int64     `xorm:"bigint not null" json:"-"`
 	MigratorName string    `xorm:"varchar(255)" json:"migrator_name"`
-	Created      time.Time `xorm:"created not null 'created'" json:"time"`
+	StartedAt    time.Time `xorm:"not null" json:"started_at"`
+	FinishedAt   time.Time `xorm:"null" json:"finished_at"`
 }
 
 // TableName holds the table name for the migration status table
@@ -36,16 +37,28 @@ func (s *Status) TableName() string {
 	return "migration_status"
 }
 
-// SetMigrationStatus sets the migration status for a user
-func SetMigrationStatus(m MigratorName, u *user.User) (err error) {
+// StartMigration sets the migration status for a user
+func StartMigration(m MigratorName, u *user.User) (status *Status, err error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	status := &Status{
+	status = &Status{
 		UserID:       u.ID,
 		MigratorName: m.Name(),
+		StartedAt:    time.Now(),
 	}
 	_, err = s.Insert(status)
+	return
+}
+
+// FinishMigration sets the finished at time and calls it a day
+func FinishMigration(status *Status) (err error) {
+	s := db.NewSession()
+	defer s.Close()
+
+	status.FinishedAt = time.Now()
+
+	_, err = s.Where("id = ?", status.ID).Update(status)
 	return
 }
 
