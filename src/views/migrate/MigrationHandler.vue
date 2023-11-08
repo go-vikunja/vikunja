@@ -3,7 +3,7 @@
 		<h1>{{ $t('migrate.titleService', {name: migrator.name}) }}</h1>
 		<p>{{ $t('migrate.descriptionDo') }}</p>
 
-		<template v-if="message === '' && lastMigrationDate === null">
+		<template v-if="message === '' && lastMigrationFinishedAt === null">
 			<template v-if="isMigrating === false">
 				<template v-if="migrator.isFileMigrator">
 					<p>{{ $t('migrate.importUpload', {name: migrator.name}) }}</p>
@@ -46,21 +46,35 @@
 				<p>{{ $t('migrate.inProgress') }}</p>
 			</div>
 		</template>
-		<div v-else-if="lastMigrationDate">
+		<div v-else-if="lastMigrationStartedAt && lastMigrationFinishedAt === null">
 			<p>
-				{{ $t('migrate.alreadyMigrated1', {name: migrator.name, date: formatDateLong(lastMigrationDate)}) }}<br/>
+				{{ $t('migrate.migrationInProgress') }}
+			</p>
+			<x-button :to="{name: 'home'}">{{ $t('home.goToOverview') }}</x-button>
+		</div>
+		<div v-else-if="lastMigrationFinishedAt">
+			<p>
+				{{
+					$t('migrate.alreadyMigrated1', {name: migrator.name, date: formatDateLong(lastMigrationFinishedAt)})
+				}}<br/>
 				{{ $t('migrate.alreadyMigrated2') }}
 			</p>
 			<div class="buttons">
 				<x-button @click="migrate">{{ $t('migrate.confirm') }}</x-button>
-				<x-button :to="{name: 'home'}" variant="tertiary" class="has-text-danger">{{ $t('misc.cancel') }}</x-button>
+				<x-button :to="{name: 'home'}" variant="tertiary" class="has-text-danger">
+					{{ $t('misc.cancel') }}
+				</x-button>
 			</div>
 		</div>
 		<div v-else>
-			<Message class="mb-4">
+			<Message class="mb-4" v-if="migrator.isFileMigrator">
 				{{ message }}
 			</Message>
-			<x-button :to="{name: 'home'}">{{ $t('misc.refresh') }}</x-button>
+			<Message class="mb-4" v-else>
+				{{ $t('migrate.migrationStartedWillReciveEmail', {service: migrator.name}) }}
+			</Message>
+
+			<x-button :to="{name: 'home'}">{{ $t('home.goToOverview') }}</x-button>
 		</div>
 	</div>
 </template>
@@ -82,13 +96,13 @@ import {useI18n} from 'vue-i18n'
 import Logo from '@/assets/logo.svg?component'
 import Message from '@/components/misc/message.vue'
 
-import AbstractMigrationService, { type MigrationConfig } from '@/services/migrator/abstractMigration'
+import AbstractMigrationService, {type MigrationConfig} from '@/services/migrator/abstractMigration'
 import AbstractMigrationFileService from '@/services/migrator/abstractMigrationFile'
 
 import {formatDateLong} from '@/helpers/time/formatDate'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
-import {MIGRATORS} from './migrators'
+import {MIGRATORS, Migrator} from './migrators'
 import {useTitle} from '@/composables/useTitle'
 import {useProjectStore} from '@/stores/projects'
 
@@ -104,11 +118,12 @@ const {t} = useI18n({useScope: 'global'})
 const progressDotsCount = ref(PROGRESS_DOTS_COUNT)
 const authUrl = ref('')
 const isMigrating = ref(false)
-const lastMigrationDate = ref<Date | null>(null)
+const lastMigrationFinishedAt = ref<Date | null>(null)
+const lastMigrationStartedAt = ref<Date | null>(null)
 const message = ref('')
 const migratorAuthCode = ref('')
 
-const migrator = computed(() => MIGRATORS[props.service])
+const migrator = computed<Migrator>(() => MIGRATORS[props.service])
 
 const migrationService = shallowReactive(new AbstractMigrationService(migrator.value.id))
 const migrationFileService = shallowReactive(new AbstractMigrationFileService(migrator.value.id))
@@ -130,23 +145,32 @@ async function initMigration() {
 	if (!migratorAuthCode.value) {
 		return
 	}
-	const {time} = await migrationService.getStatus()
-	if (time) {
-		lastMigrationDate.value = parseDateOrNull(time)
-
-		if (lastMigrationDate.value) {
+	const {startedAt, finishedAt} = await migrationService.getStatus()
+	if (startedAt) {
+		lastMigrationStartedAt.value = parseDateOrNull(startedAt)
+	}
+	if (finishedAt) {
+		lastMigrationFinishedAt.value = parseDateOrNull(finishedAt)
+		if (lastMigrationFinishedAt.value) {
 			return
 		}
 	}
+
+	if (lastMigrationStartedAt.value && lastMigrationFinishedAt.value === null) {
+		// Migration already in progress
+		return
+	}
+
 	await migrate()
 }
 
 initMigration()
 
 const uploadInput = ref<HTMLInputElement | null>(null)
+
 async function migrate() {
 	isMigrating.value = true
-	lastMigrationDate.value = null
+	lastMigrationFinishedAt.value = null
 	message.value = ''
 
 	let migrationConfig: MigrationConfig | File = {code: migratorAuthCode.value}
