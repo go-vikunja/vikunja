@@ -45,11 +45,13 @@ definitions:
     type: object
   migration.Status:
     properties:
+      finished_at:
+        type: string
       id:
         type: integer
       migrator_name:
         type: string
-      time:
+      started_at:
         type: string
     type: object
   models.APIPermissions:

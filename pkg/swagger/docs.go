@@ -7187,13 +7187,16 @@ const docTemplate = `{
         "migration.Status": {
             "type": "object",
             "properties": {
+                "finished_at": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
                 "migrator_name": {
                     "type": "string"
                 },
-                "time": {
+                "started_at": {
                     "type": "string"
                 }
             }
