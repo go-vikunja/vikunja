@@ -174,6 +174,7 @@ type taskSearchOptions struct {
 	filters            []*taskFilter
 	filterConcat       taskFilterConcatinator
 	filterIncludeNulls bool
+	filter             string
 	projectIDs         []int64
 }
 

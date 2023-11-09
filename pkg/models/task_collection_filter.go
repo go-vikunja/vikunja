@@ -18,6 +18,7 @@ package models
 
 import (
 	"fmt"
+	"github.com/ganigeorgiev/fexpr"
 	"reflect"
 	"strconv"
 	"strings"
@@ -108,11 +109,20 @@ func getTaskFiltersByCollections(c *TaskCollection) (filters []*taskFilter, err 
 		}
 	}
 
-	filters = make([]*taskFilter, 0, len(c.FilterBy))
-	for i, f := range c.FilterBy {
-		filter := &taskFilter{
-			field:      f,
-			comparator: taskFilterComparatorEquals,
+	parsedFilter, err := fexpr.Parse(c.Filter)
+	if err != nil {
+		return nil, err
+	}
+
+	filters = make([]*taskFilter, 0, len(parsedFilter))
+	for i, f := range parsedFilter {
+
+		filter := &taskFilter{}
+		switch v := f.Item.(type) {
+		case fexpr.Expr:
+			filter.field = v.Left.Literal
+			filter.comparator = v.Op
+			filter.value = v.Right.Literal // TODO: nesting
 		}
 
 		if len(c.FilterComparator) > i {

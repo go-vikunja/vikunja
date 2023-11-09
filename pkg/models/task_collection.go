@@ -33,17 +33,20 @@ type TaskCollection struct {
 	OrderBy    []string `query:"order_by" json:"order_by"`
 	OrderByArr []string `query:"order_by[]" json:"-"`
 
-	// The field name of the field to filter by
+	// Deprecated: The field name of the field to filter by
 	FilterBy    []string `query:"filter_by" json:"filter_by"`
 	FilterByArr []string `query:"filter_by[]" json:"-"`
-	// The value of the field name to filter by
+	// Deprecated: The value of the field name to filter by
 	FilterValue    []string `query:"filter_value" json:"filter_value"`
 	FilterValueArr []string `query:"filter_value[]" json:"-"`
-	// The comparator for field and value
+	// Deprecated: The comparator for field and value
 	FilterComparator    []string `query:"filter_comparator" json:"filter_comparator"`
 	FilterComparatorArr []string `query:"filter_comparator[]" json:"-"`
-	// The way all filter conditions are concatenated together, can be either "and" or "or".,
+	// Deprecated: The way all filter conditions are concatenated together, can be either "and" or "or".,
 	FilterConcat string `query:"filter_concat" json:"filter_concat"`
+
+	Filter string `query:"filter" json:"filter"`
+
 	// If set to true, the result will also include null values
 	FilterIncludeNulls bool `query:"filter_include_nulls" json:"filter_include_nulls"`
 
@@ -110,8 +113,8 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskSearchOption
 
 	opts = &taskSearchOptions{
 		sortby:             sort,
-		filterConcat:       taskFilterConcatinator(tf.FilterConcat),
 		filterIncludeNulls: tf.FilterIncludeNulls,
+		filter:             tf.Filter,
 	}
 
 	opts.filters, err = getTaskFiltersByCollections(tf)
