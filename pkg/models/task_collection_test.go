@@ -680,6 +680,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		FilterComparator   []string
 		FilterIncludeNulls bool
 
+		Filter string
+
 		CRUDable web.CRUDable
 		Rights   web.Rights
 	}
@@ -795,6 +797,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				FilterBy:         []string{"start_date", "end_date"},
 				FilterValue:      []string{"2018-12-11T03:46:40+00:00", "2018-12-13T11:20:01+00:00"},
 				FilterComparator: []string{"greater", "less"},
+				Filter:           "start_date>'2018-12-11T03:46:40+00:00' || end_date<'2018-12-13T11:20:01+00:00'",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -1338,6 +1341,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				FilterValue:        tt.fields.FilterValue,
 				FilterComparator:   tt.fields.FilterComparator,
 				FilterIncludeNulls: tt.fields.FilterIncludeNulls,
+
+				Filter: tt.fields.Filter,
 
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,
