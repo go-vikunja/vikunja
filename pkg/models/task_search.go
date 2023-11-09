@@ -84,12 +84,6 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		return nil, 0, err
 	}
 
-	// Some filters need a special treatment since they are in a separate table
-	reminderFilters := []builder.Cond{}
-	assigneeFilters := []builder.Cond{}
-	labelFilters := []builder.Cond{}
-	projectFilters := []builder.Cond{}
-
 	var filters = make([]builder.Cond, 0, len(opts.filters))
 	// To still find tasks with nil values, we exclude 0s when comparing with >/< values.
 	for _, f := range opts.filters {
@@ -104,7 +98,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 			if err != nil {
 				return nil, totalCount, err
 			}
-			reminderFilters = append(reminderFilters, filter)
+			filters = append(filters, getFilterCondForSeparateTable("task_reminders", filter))
 			continue
 		}
 
@@ -122,7 +116,13 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 			if err != nil {
 				return nil, totalCount, err
 			}
-			assigneeFilters = append(assigneeFilters, filter)
+
+			assigneeFilter := builder.In("user_id",
+				builder.Select("id").
+					From("users").
+					Where(filter),
+			)
+			filters = append(filters, getFilterCondForSeparateTable("task_assignees", assigneeFilter))
 			continue
 		}
 
@@ -137,7 +137,8 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 			if err != nil {
 				return nil, totalCount, err
 			}
-			labelFilters = append(labelFilters, filter)
+
+			filters = append(filters, getFilterCondForSeparateTable("label_tasks", filter))
 			continue
 		}
 
@@ -152,7 +153,15 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 			if err != nil {
 				return nil, totalCount, err
 			}
-			projectFilters = append(projectFilters, filter)
+
+			cond := builder.In(
+				"project_id",
+				builder.
+					Select("id").
+					From("projects").
+					Where(filter),
+			)
+			filters = append(filters, cond)
 			continue
 		}
 
@@ -199,50 +208,17 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		favoritesCond = builder.In("id", favCond)
 	}
 
-	if len(reminderFilters) > 0 {
-		filters = append(filters, getFilterCondForSeparateTable("task_reminders", opts.filterConcat, reminderFilters))
-	}
-
-	if len(assigneeFilters) > 0 {
-		assigneeFilter := []builder.Cond{
-			builder.In("user_id",
-				builder.Select("id").
-					From("users").
-					Where(builder.Or(assigneeFilters...)),
-			)}
-		filters = append(filters, getFilterCondForSeparateTable("task_assignees", opts.filterConcat, assigneeFilter))
-	}
-
-	if len(labelFilters) > 0 {
-		filters = append(filters, getFilterCondForSeparateTable("label_tasks", opts.filterConcat, labelFilters))
-	}
-
-	if len(projectFilters) > 0 {
-		var filtercond builder.Cond
-		if opts.filterConcat == filterConcatOr {
-			filtercond = builder.Or(projectFilters...)
-		}
-		if opts.filterConcat == filterConcatAnd {
-			filtercond = builder.And(projectFilters...)
-		}
-
-		cond := builder.In(
-			"project_id",
-			builder.
-				Select("id").
-				From("projects").
-				Where(filtercond),
-		)
-		filters = append(filters, cond)
-	}
-
 	var filterCond builder.Cond
 	if len(filters) > 0 {
-		if opts.filterConcat == filterConcatOr {
-			filterCond = builder.Or(filters...)
-		}
-		if opts.filterConcat == filterConcatAnd {
-			filterCond = builder.And(filters...)
+		for i, f := range filters {
+			if len(filters) > i+1 {
+				switch opts.filters[i].join {
+				case filterConcatOr:
+					filterCond = builder.Or(filterCond, f, filters[i+1])
+				case filterConcatAnd:
+					filterCond = builder.And(filterCond, f, filters[i+1])
+				}
+			}
 		}
 	}
 

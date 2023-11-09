@@ -794,10 +794,10 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "ReadAll Tasks with range",
 			fields: fields{
-				FilterBy:         []string{"start_date", "end_date"},
-				FilterValue:      []string{"2018-12-11T03:46:40+00:00", "2018-12-13T11:20:01+00:00"},
-				FilterComparator: []string{"greater", "less"},
-				Filter:           "start_date>'2018-12-11T03:46:40+00:00' || end_date<'2018-12-13T11:20:01+00:00'",
+				//FilterBy:         []string{"start_date", "end_date"},
+				//FilterValue:      []string{"2018-12-11T03:46:40+00:00", "2018-12-13T11:20:01+00:00"},
+				//FilterComparator: []string{"greater", "less"},
+				Filter: "start_date > '2018-12-11T03:46:40+00:00' || end_date < '2018-12-13T11:20:01+00:00'",
 			},
 			args: defaultArgs,
 			want: []*Task{

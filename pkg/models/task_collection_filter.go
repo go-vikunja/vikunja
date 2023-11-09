@@ -55,6 +55,7 @@ type taskFilter struct {
 	value      interface{} // Needs to be an interface to be able to hold the field's native value
 	comparator taskFilterComparator
 	isNumeric  bool
+	join       taskFilterConcatinator
 }
 
 func parseTimeFromUserInput(timeString string) (value time.Time, err error) {
@@ -103,11 +104,11 @@ func getTaskFiltersByCollections(c *TaskCollection) (filters []*taskFilter, err 
 		c.FilterComparator = append(c.FilterComparator, c.FilterComparatorArr...)
 	}
 
-	if c.FilterConcat != "" && c.FilterConcat != filterConcatAnd && c.FilterConcat != filterConcatOr {
-		return nil, ErrInvalidTaskFilterConcatinator{
-			Concatinator: taskFilterConcatinator(c.FilterConcat),
-		}
-	}
+	//if c.FilterConcat != "" && c.FilterConcat != filterConcatAnd && c.FilterConcat != filterConcatOr {
+	//	return nil, ErrInvalidTaskFilterConcatinator{
+	//		Concatinator: taskFilterConcatinator(c.FilterConcat),
+	//	}
+	//}
 
 	parsedFilter, err := fexpr.Parse(c.Filter)
 	if err != nil {
@@ -115,18 +116,21 @@ func getTaskFiltersByCollections(c *TaskCollection) (filters []*taskFilter, err 
 	}
 
 	filters = make([]*taskFilter, 0, len(parsedFilter))
-	for i, f := range parsedFilter {
+	for _, f := range parsedFilter {
 
-		filter := &taskFilter{}
+		filter := &taskFilter{
+			join: filterConcatAnd,
+		}
+		if f.Join == fexpr.JoinOr {
+			filter.join = filterConcatOr
+		}
+
+		var value string
 		switch v := f.Item.(type) {
 		case fexpr.Expr:
 			filter.field = v.Left.Literal
-			filter.comparator = v.Op
-			filter.value = v.Right.Literal // TODO: nesting
-		}
-
-		if len(c.FilterComparator) > i {
-			filter.comparator, err = getFilterComparatorFromString(c.FilterComparator[i])
+			value = v.Right.Literal // TODO: nesting
+			filter.comparator, err = getFilterComparatorFromOp(v.Op)
 			if err != nil {
 				return
 			}
@@ -139,13 +143,11 @@ func getTaskFiltersByCollections(c *TaskCollection) (filters []*taskFilter, err 
 
 		// Cast the field value to its native type
 		var reflectValue *reflect.StructField
-		if len(c.FilterValue) > i {
-			reflectValue, filter.value, err = getNativeValueForTaskField(filter.field, filter.comparator, c.FilterValue[i])
-			if err != nil {
-				return nil, ErrInvalidTaskFilterValue{
-					Value: filter.field,
-					Field: c.FilterValue[i],
-				}
+		reflectValue, filter.value, err = getNativeValueForTaskField(filter.field, filter.comparator, value)
+		if err != nil {
+			return nil, ErrInvalidTaskFilterValue{
+				Value: filter.field,
+				Field: value,
 			}
 		}
 		if reflectValue != nil {
@@ -197,6 +199,29 @@ func getFilterComparatorFromString(comparator string) (taskFilterComparator, err
 		return taskFilterComparatorIn, nil
 	default:
 		return taskFilterComparatorInvalid, ErrInvalidTaskFilterComparator{Comparator: taskFilterComparator(comparator)}
+	}
+}
+
+func getFilterComparatorFromOp(op fexpr.SignOp) (taskFilterComparator, error) {
+	switch op {
+	case fexpr.SignEq:
+		return taskFilterComparatorEquals, nil
+	case fexpr.SignGt:
+		return taskFilterComparatorGreater, nil
+	case fexpr.SignGte:
+		return taskFilterComparatorGreateEquals, nil
+	case fexpr.SignLt:
+		return taskFilterComparatorLess, nil
+	case fexpr.SignLte:
+		return taskFilterComparatorLessEquals, nil
+	case fexpr.SignNeq:
+		return taskFilterComparatorNotEquals, nil
+	case fexpr.SignLike:
+		return taskFilterComparatorLike, nil
+	case "in":
+		return taskFilterComparatorIn, nil
+	default:
+		return taskFilterComparatorInvalid, ErrInvalidTaskFilterComparator{Comparator: taskFilterComparator(op)}
 	}
 }
 

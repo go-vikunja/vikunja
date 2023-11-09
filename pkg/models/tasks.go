@@ -162,16 +162,17 @@ func (t *Task) GetFrontendURL() string {
 type taskFilterConcatinator string
 
 const (
-	filterConcatAnd = "and"
-	filterConcatOr  = "or"
+	filterConcatAnd taskFilterConcatinator = "and"
+	filterConcatOr  taskFilterConcatinator = "or"
 )
 
 type taskSearchOptions struct {
-	search             string
-	page               int
-	perPage            int
-	sortby             []*sortParam
-	filters            []*taskFilter
+	search  string
+	page    int
+	perPage int
+	sortby  []*sortParam
+	filters []*taskFilter
+	// deprecated: concat should live in filters directly
 	filterConcat       taskFilterConcatinator
 	filterIncludeNulls bool
 	filter             string
@@ -239,21 +240,13 @@ func getFilterCond(f *taskFilter, includeNulls bool) (cond builder.Cond, err err
 	return
 }
 
-func getFilterCondForSeparateTable(table string, concat taskFilterConcatinator, conds []builder.Cond) builder.Cond {
-	var filtercond builder.Cond
-	if concat == filterConcatOr {
-		filtercond = builder.Or(conds...)
-	}
-	if concat == filterConcatAnd {
-		filtercond = builder.And(conds...)
-	}
-
+func getFilterCondForSeparateTable(table string, cond builder.Cond) builder.Cond {
 	return builder.In(
 		"id",
 		builder.
 			Select("task_id").
 			From(table).
-			Where(filtercond),
+			Where(cond),
 	)
 }
 
