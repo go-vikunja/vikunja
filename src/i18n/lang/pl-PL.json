@@ -1,9 +1,9 @@
 {
   "home": {
-    "welcomeNight": "Good Night {username}!",
-    "welcomeMorning": "Good Morning {username}!",
-    "welcomeDay": "Hi {username}!",
-    "welcomeEvening": "Good Evening {username}!",
+    "welcomeNight": "Dobry wieczór {username}!",
+    "welcomeMorning": "Dzień dobry {username}!",
+    "welcomeDay": "Hej {username}!",
+    "welcomeEvening": "Dobry wieczór {username}!",
     "lastViewed": "Ostatnio oglądane",
     "addToHomeScreen": "Add this app to your home screen for faster access and improved experience.",
     "project": {
