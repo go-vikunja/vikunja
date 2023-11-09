@@ -19,6 +19,7 @@ package models
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
@@ -296,6 +297,8 @@ func convertFilterValues(value interface{}) string {
 		}
 
 		return "false"
+	case time.Time:
+		return strconv.FormatInt(v.Unix(), 10)
 	}
 
 	log.Errorf("Unknown search type for value %v", value)
