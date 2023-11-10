@@ -373,7 +373,14 @@ func (bt *BulkTask) GetTasksByIDs(s *xorm.Session) (err error) {
 }
 
 func GetTaskSimpleByUUID(s *xorm.Session, uid string) (task *Task, err error) {
-	_, err = s.In("uid", uid).Get(task)
+	var has bool
+	task = &Task{}
+
+	has, err = s.In("uid", uid).Get(task)
+	if !has || err != nil {
+		return &Task{}, ErrTaskDoesNotExist{}
+	}
+
 	return
 }
 

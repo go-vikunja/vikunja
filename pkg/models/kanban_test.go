@@ -147,7 +147,7 @@ func TestBucket_Delete(t *testing.T) {
 		tasks := []*Task{}
 		err = s.Where("bucket_id = ?", 1).Find(&tasks)
 		assert.NoError(t, err)
-		assert.Len(t, tasks, 16)
+		assert.Len(t, tasks, 15)
 		db.AssertMissing(t, "buckets", map[string]interface{}{
 			"id":         2,
 			"project_id": 1,

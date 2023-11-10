@@ -38,21 +38,21 @@ type Todo struct {
 	UID       string
 
 	// Optional
-	Summary      string
-	Description  string
-	Completed    time.Time
-	Organizer    *user.User
-	Priority     int64 // 0-9, 1 is highest
-	RelatedToUID string
-	Color        string
-	Categories   []string
-	Start        time.Time
-	End          time.Time
-	DueDate      time.Time
-	Duration     time.Duration
-	RepeatAfter  int64
-	RepeatMode   models.TaskRepeatMode
-	Alarms       []Alarm
+	Summary     string
+	Description string
+	Completed   time.Time
+	Organizer   *user.User
+	Priority    int64 // 0-9, 1 is highest
+	Relations   []Relation
+	Color       string
+	Categories  []string
+	Start       time.Time
+	End         time.Time
+	DueDate     time.Time
+	Duration    time.Duration
+	RepeatAfter int64
+	RepeatMode  models.TaskRepeatMode
+	Alarms      []Alarm
 
 	Created time.Time
 	Updated time.Time // last-mod
@@ -64,6 +64,11 @@ type Alarm struct {
 	Duration    time.Duration
 	RelativeTo  models.ReminderRelation
 	Description string
+}
+
+type Relation struct {
+	Type models.RelationKind
+	UID  string
 }
 
 // Config is the caldav calendar config
@@ -147,11 +152,6 @@ STATUS:COMPLETED`
 ORGANIZER;CN=:` + t.Organizer.Username
 		}
 
-		if t.RelatedToUID != "" {
-			caldavtodos += `
-RELATED-TO:` + t.RelatedToUID
-		}
-
 		if t.DueDate.Unix() > 0 {
 			caldavtodos += `
 DUE:` + makeCalDavTimeFromTimeStamp(t.DueDate)
@@ -185,6 +185,7 @@ CATEGORIES:` + strings.Join(t.Categories, ",")
 		caldavtodos += `
 LAST-MODIFIED:` + makeCalDavTimeFromTimeStamp(t.Updated)
 		caldavtodos += ParseAlarms(t.Alarms, t.Summary)
+		caldavtodos += ParseRelations(t.Relations)
 		caldavtodos += `
 END:VTODO`
 	}
@@ -220,6 +221,47 @@ DESCRIPTION:` + a.Description + `
 END:VALARM`
 	}
 	return caldavalarms
+}
+
+func ParseRelations(relations []Relation) (caldavrelatedtos string) {
+
+	for _, r := range relations {
+		switch r.Type {
+		case models.RelationKindParenttask:
+			caldavrelatedtos += `
+RELATED-TO;RELTYPE=PARENT:`
+		case models.RelationKindSubtask:
+			caldavrelatedtos += `
+RELATED-TO;RELTYPE=CHILD:`
+		case models.RelationKindUnknown:
+			continue
+		case models.RelationKindRelated:
+			continue
+		case models.RelationKindDuplicateOf:
+			continue
+		case models.RelationKindDuplicates:
+			continue
+		case models.RelationKindBlocking:
+			continue
+		case models.RelationKindBlocked:
+			continue
+		case models.RelationKindPreceeds:
+			continue
+		case models.RelationKindFollows:
+			continue
+		case models.RelationKindCopiedFrom:
+			continue
+		case models.RelationKindCopiedTo:
+			continue
+		default:
+			caldavrelatedtos += `
+RELATED-TO:`
+		}
+
+		caldavrelatedtos += r.UID
+	}
+
+	return caldavrelatedtos
 }
 
 func makeCalDavTimeFromTimeStamp(ts time.Time) (caldavtime string) {

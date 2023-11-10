@@ -79,23 +79,36 @@ func setupTestEnv() (e *echo.Echo, err error) {
 	return
 }
 
-func bootstrapTestRequest(t *testing.T, method string, payload string, queryParam url.Values) (c echo.Context, rec *httptest.ResponseRecorder) {
-	// Setup
-	e, err := setupTestEnv()
-	assert.NoError(t, err)
-
-	// Do the actual request
+func createRequest(e *echo.Echo, method string, payload string, queryParam url.Values, urlParams map[string]string) (c echo.Context, rec *httptest.ResponseRecorder) {
 	req := httptest.NewRequest(method, "/", strings.NewReader(payload))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.URL.RawQuery = queryParam.Encode()
 	rec = httptest.NewRecorder()
 
 	c = e.NewContext(req, rec)
+	var paramNames []string
+	var paramValues []string
+	for name, value := range urlParams {
+		paramNames = append(paramNames, name)
+		paramValues = append(paramValues, value)
+	}
+	c.SetParamNames(paramNames...)
+	c.SetParamValues(paramValues...)
+	return
+}
+
+func bootstrapTestRequest(t *testing.T, method string, payload string, queryParam url.Values, urlParams map[string]string) (c echo.Context, rec *httptest.ResponseRecorder) {
+	// Setup
+	e, err := setupTestEnv()
+	assert.NoError(t, err)
+
+	c, rec = createRequest(e, method, payload, queryParam, urlParams)
 	return
 }
 
 func newTestRequest(t *testing.T, method string, handler func(ctx echo.Context) error, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
-	rec, c := testRequestSetup(t, method, payload, queryParams, urlParams)
+	var c echo.Context
+	c, rec = bootstrapTestRequest(t, method, payload, queryParams, urlParams)
 	err = handler(c)
 	return
 }
@@ -124,36 +137,25 @@ func addLinkShareTokenToContext(t *testing.T, share *models.LinkSharing, c echo.
 	c.Set("user", tken)
 }
 
-func testRequestSetup(t *testing.T, method string, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, c echo.Context) {
-	c, rec = bootstrapTestRequest(t, method, payload, queryParams)
-
-	var paramNames []string
-	var paramValues []string
-	for name, value := range urlParams {
-		paramNames = append(paramNames, name)
-		paramValues = append(paramValues, value)
-	}
-	c.SetParamNames(paramNames...)
-	c.SetParamValues(paramValues...)
-	return
-}
-
 func newTestRequestWithUser(t *testing.T, method string, handler echo.HandlerFunc, user *user.User, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
-	rec, c := testRequestSetup(t, method, payload, queryParams, urlParams)
+	var c echo.Context
+	c, rec = bootstrapTestRequest(t, method, payload, queryParams, urlParams)
 	addUserTokenToContext(t, user, c)
 	err = handler(c)
 	return
 }
 
 func newTestRequestWithLinkShare(t *testing.T, method string, handler echo.HandlerFunc, share *models.LinkSharing, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
-	rec, c := testRequestSetup(t, method, payload, queryParams, urlParams)
+	var c echo.Context
+	c, rec = bootstrapTestRequest(t, method, payload, queryParams, urlParams)
 	addLinkShareTokenToContext(t, share, c)
 	err = handler(c)
 	return
 }
 
-func newCaldavTestRequestWithUser(t *testing.T, method string, handler echo.HandlerFunc, user *user.User, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
-	rec, c := testRequestSetup(t, method, payload, queryParams, urlParams)
+func newCaldavTestRequestWithUser(t *testing.T, e *echo.Echo, method string, handler echo.HandlerFunc, user *user.User, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
+	var c echo.Context
+	c, rec = createRequest(e, method, payload, queryParams, urlParams)
 	c.Request().Header.Set(echo.HeaderContentType, echo.MIMETextPlain)
 
 	result, _ := caldav.BasicAuth(user.Username, "1234", c)

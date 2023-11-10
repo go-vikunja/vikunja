@@ -34,3 +34,39 @@
   relation_kind: 'related'
   created_by_id: 1
   created: 2018-12-01 15:13:12
+- id: 7
+  task_id: 41
+  other_task_id: 43
+  relation_kind: 'subtask'
+  created_by_id: 15
+  created: 2018-12-01 15:13:12
+- id: 8
+  task_id: 43
+  other_task_id: 41
+  relation_kind: 'parenttask'
+  created_by_id: 15
+  created: 2018-12-01 15:13:12
+- id: 9
+  task_id: 41
+  other_task_id: 44
+  relation_kind: 'subtask'
+  created_by_id: 15
+  created: 2018-12-01 15:13:12
+- id: 10
+  task_id: 44
+  other_task_id: 41
+  relation_kind: 'parenttask'
+  created_by_id: 15
+  created: 2018-12-01 15:13:12
+- id: 11
+  task_id: 45
+  other_task_id: 46
+  relation_kind: 'subtask'
+  created_by_id: 15
+  created: 2018-12-01 15:13:12
+- id: 12
+  task_id: 46
+  other_task_id: 45
+  relation_kind: 'parenttask'
+  created_by_id: 15
+  created: 2018-12-01 15:13:12

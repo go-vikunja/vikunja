@@ -374,5 +374,89 @@
   due_date: 2023-03-01 15:00:00
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
-  bucket_id: 1
+  bucket_id: 38
   position: 39
+- id: 41
+  uid: 'uid-caldav-test-parent-task'
+  title: 'Parent task for Caldav Test'
+  description: 'Description Caldav Test'
+  priority: 3
+  done: false
+  created_by_id: 15
+  project_id: 36
+  index: 40
+  due_date: 2023-03-01 15:00:00
+  created: 2018-12-01 01:12:04
+  updated: 2018-12-01 01:12:04
+  bucket_id: 38
+  position: 40
+- id: 42
+  uid: 'uid-caldav-test-parent-task-2'
+  title: 'Parent task for Caldav Test 2'
+  description: 'Description Caldav Test 2'
+  priority: 3
+  done: false
+  created_by_id: 15
+  project_id: 36
+  index: 41
+  due_date: 2023-03-01 15:00:00
+  created: 2018-12-01 01:12:04
+  updated: 2018-12-01 01:12:04
+  bucket_id: 38
+  position: 41
+- id: 43
+  uid: 'uid-caldav-test-child-task'
+  title: 'Child task for Caldav Test'
+  description: 'Description Caldav Test'
+  priority: 3
+  done: false
+  created_by_id: 15
+  project_id: 36
+  index: 42
+  due_date: 2023-03-01 15:00:00
+  created: 2018-12-01 01:12:04
+  updated: 2018-12-01 01:12:04
+  bucket_id: 38
+  position: 42
+- id: 44
+  uid: 'uid-caldav-test-child-task-2'
+  title: 'Child task for Caldav Test '
+  description: 'Description Caldav Test'
+  priority: 3
+  done: false
+  created_by_id: 15
+  project_id: 38
+  index: 43
+  due_date: 2023-03-01 15:00:00
+  created: 2018-12-01 01:12:04
+  updated: 2018-12-01 01:12:04
+  bucket_id: 38
+  position: 43
+- id: 45
+  uid: 'uid-caldav-test-parent-task-another-list'
+  title: 'Parent task for Caldav Test'
+  description: 'Description Caldav Test'
+  priority: 3
+  done: false
+  created_by_id: 15
+  project_id: 36
+  index: 44
+  due_date: 2023-03-01 15:00:00
+  created: 2018-12-01 01:12:04
+  updated: 2018-12-01 01:12:04
+  bucket_id: 38
+  position: 44
+- id: 46
+  uid: 'uid-caldav-test-child-task-another-list'
+  title: 'Child task for Caldav Test '
+  description: 'Description Caldav Test'
+  priority: 3
+  done: false
+  created_by_id: 15
+  project_id: 38
+  index: 45
+  due_date: 2023-03-01 15:00:00
+  created: 2018-12-01 01:12:04
+  updated: 2018-12-01 01:12:04
+  bucket_id: 38
+  position: 45

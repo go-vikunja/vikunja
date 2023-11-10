@@ -220,6 +220,70 @@ END:VCALENDAR`,
 			},
 		},
 		{
+			name: "With parent",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:SubTask #1
+DESCRIPTION:Lorem Ipsum
+LAST-MODIFIED:00010101T000000
+RELATED-TO;RELTYPE=PARENT:randomuid_parent
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:       "SubTask #1",
+				UID:         "randomuid",
+				Description: "Lorem Ipsum",
+				Updated:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+				RelatedTasks: map[models.RelationKind][]*models.Task{
+					models.RelationKindParenttask: {
+						{
+							UID: "randomuid_parent",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "With subtask",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Parent
+DESCRIPTION:Lorem Ipsum
+LAST-MODIFIED:00010101T000000
+RELATED-TO;RELTYPE=CHILD:randomuid_child
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:       "Parent",
+				UID:         "randomuid",
+				Description: "Lorem Ipsum",
+				Updated:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+				RelatedTasks: map[models.RelationKind][]*models.Task{
+					models.RelationKindSubtask: {
+						{
+							UID: "randomuid_child",
+						},
+					},
+				},
+			},
+		},
+		{
 			name: "example task from tasks.org app",
 			args: args{content: `BEGIN:VCALENDAR
 VERSION:2.0
@@ -391,6 +455,124 @@ TRIGGER;RELATED=END:-PT1H0M0S
 ACTION:DISPLAY
 DESCRIPTION:Task 1
 END:VALARM
+END:VTODO
+END:VCALENDAR`,
+		},
+		{
+			name: "Format Task with Related Tasks as CalDAV",
+			args: args{
+				list: &models.ProjectWithTasksAndBuckets{
+					Project: models.Project{
+						Title: "List title",
+					},
+				},
+				tasks: []*models.TaskWithComments{
+					{
+						Task: models.Task{
+							Title:       "Parent Task",
+							UID:         "randomuid_parent",
+							Description: "A parent task",
+							Priority:    3,
+							Created:     time.Unix(1543626721, 0).In(config.GetTimeZone()),
+							Updated:     time.Unix(1543626725, 0).In(config.GetTimeZone()),
+							RelatedTasks: map[models.RelationKind][]*models.Task{
+								models.RelationKindSubtask: {
+									{
+										Title:       "Subtask 1",
+										UID:         "randomuid_child_1",
+										Description: "The first child task",
+										Created:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+										Updated:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+									},
+									{
+										Title:       "Subtask 2",
+										UID:         "randomuid_child_2",
+										Description: "The second child task",
+										Created:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+										Updated:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+									},
+								},
+							},
+						},
+					},
+					{
+						Task: models.Task{
+							Title:       "Subtask 1",
+							UID:         "randomuid_child_1",
+							Description: "The first child task",
+							Created:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+							Updated:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+							RelatedTasks: map[models.RelationKind][]*models.Task{
+								models.RelationKindParenttask: {
+									{
+										Title:       "Parent task",
+										UID:         "randomuid_parent",
+										Description: "A parent task",
+										Priority:    3,
+										Created:     time.Unix(1543626721, 0).In(config.GetTimeZone()),
+										Updated:     time.Unix(1543626725, 0).In(config.GetTimeZone()),
+									},
+								},
+							},
+						},
+					},
+					{
+						Task: models.Task{
+							Title:       "Subtask 2",
+							UID:         "randomuid_child_2",
+							Description: "The second child task",
+							Created:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+							Updated:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
+							RelatedTasks: map[models.RelationKind][]*models.Task{
+								models.RelationKindParenttask: {
+									{
+										Title:       "Parent task",
+										UID:         "randomuid_parent",
+										Description: "A parent task",
+										Priority:    3,
+										Created:     time.Unix(1543626721, 0).In(config.GetTimeZone()),
+										Updated:     time.Unix(1543626725, 0).In(config.GetTimeZone()),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			wantCaldav: `BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:List title
+PRODID:-//Vikunja Todo App//EN
+BEGIN:VTODO
+UID:randomuid_parent
+DTSTAMP:20181201T011205Z
+SUMMARY:Parent Task
+DESCRIPTION:A parent task
+CREATED:20181201T011201Z
+PRIORITY:3
+LAST-MODIFIED:20181201T011205Z
+RELATED-TO;RELTYPE=CHILD:randomuid_child_1
+RELATED-TO;RELTYPE=CHILD:randomuid_child_2
+END:VTODO
+BEGIN:VTODO
+UID:randomuid_child_1
+DTSTAMP:20181201T011204Z
+SUMMARY:Subtask 1
+DESCRIPTION:The first child task
+CREATED:20181201T011204Z
+LAST-MODIFIED:20181201T011204Z
+RELATED-TO;RELTYPE=PARENT:randomuid_parent
+END:VTODO
+BEGIN:VTODO
+UID:randomuid_child_2
+DTSTAMP:20181201T011204Z
+SUMMARY:Subtask 2
+DESCRIPTION:The second child task
+CREATED:20181201T011204Z
+LAST-MODIFIED:20181201T011204Z
+RELATED-TO;RELTYPE=PARENT:randomuid_parent
 END:VTODO
 END:VCALENDAR`,
 		},

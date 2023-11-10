@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/utils"
@@ -51,6 +50,16 @@ func GetCaldavTodosForTasks(project *models.ProjectWithTasksAndBuckets, projectT
 			})
 		}
 
+		var relations []Relation
+		for reltype, tasks := range t.RelatedTasks {
+			for _, r := range tasks {
+				relations = append(relations, Relation{
+					Type: reltype,
+					UID:  r.UID,
+				})
+			}
+		}
+
 		caldavtodos = append(caldavtodos, &Todo{
 			Timestamp:   t.Updated,
 			UID:         t.UID,
@@ -69,6 +78,7 @@ func GetCaldavTodosForTasks(project *models.ProjectWithTasksAndBuckets, projectT
 			RepeatAfter: t.RepeatAfter,
 			RepeatMode:  t.RepeatMode,
 			Alarms:      alarms,
+			Relations:   relations,
 		})
 	}
 
@@ -91,11 +101,11 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 	}
 	// We put the vTodo details in a map to be able to handle them more easily
 	task := make(map[string]ics.IANAProperty)
-	var relation ics.IANAProperty
+	var relations []ics.IANAProperty
 	for _, c := range vTodo.UnknownPropertiesIANAProperties() {
 		task[c.IANAToken] = c
 		if strings.HasPrefix(c.IANAToken, "RELATED-TO") {
-			relation = c
+			relations = append(relations, c)
 		}
 	}
 
@@ -139,17 +149,33 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 		DoneAt:      caldavTimeToTimestamp(task["COMPLETED"]),
 	}
 
-	if relation.Value != "" {
-		s := db.NewSession()
-		defer s.Close()
+	for _, c := range relations {
+		var relTypeStr string
+		if _, ok := c.ICalParameters["RELTYPE"]; ok {
+			if len(c.ICalParameters["RELTYPE"]) != 1 {
+				continue
+			}
 
-		subtask, err := models.GetTaskSimpleByUUID(s, relation.Value)
-		if err != nil {
-			return nil, err
+			relTypeStr = c.ICalParameters["RELTYPE"][0]
 		}
 
-		vTask.RelatedTasks = make(map[models.RelationKind][]*models.Task)
-		vTask.RelatedTasks[models.RelationKindSubtask] = []*models.Task{subtask}
+		var relationKind models.RelationKind
+		switch relTypeStr {
+		case "PARENT":
+			relationKind = models.RelationKindParenttask
+		case "CHILD":
+			relationKind = models.RelationKindSubtask
+		default:
+			relationKind = models.RelationKindParenttask
+		}
+
+		if vTask.RelatedTasks == nil {
+			vTask.RelatedTasks = make(map[models.RelationKind][]*models.Task)
+		}
+
+		vTask.RelatedTasks[relationKind] = append(vTask.RelatedTasks[relationKind], &models.Task{
+			UID: c.Value,
+		})
 	}
 
 	if task["STATUS"].Value == "COMPLETED" {

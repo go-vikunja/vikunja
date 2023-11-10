@@ -17,6 +17,7 @@
 package caldav
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -292,6 +293,13 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 		return nil, err
 	}
 
+	vcls.task.ProjectID = vcls.project.ID
+	err = persistRelations(s, vcls.user, vcls.task, vTask.RelatedTasks)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+
 	if err := s.Commit(); err != nil {
 		return nil, err
 	}
@@ -316,6 +324,10 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 	// At this point, we already have the right task in vcls.task, so we can use that ID directly
 	vTask.ID = vcls.task.ID
 
+	// Explicitly set the ProjectID in case the task now belongs to a different project:
+	vTask.ProjectID = vcls.project.ID
+	vcls.task.ProjectID = vcls.project.ID
+
 	s := db.NewSession()
 	defer s.Close()
 
@@ -338,6 +350,12 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 	}
 
 	err = persistLabels(s, vcls.user, vcls.task, vTask.Labels)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+
+	err = persistRelations(s, vcls.user, vcls.task, vTask.RelatedTasks)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, err
@@ -428,6 +446,91 @@ func persistLabels(s *xorm.Session, a web.Auth, task *models.Task, labels []*mod
 
 	// Create the label <-> task relation
 	return task.UpdateTaskLabels(s, a, labels)
+}
+
+func removeStaleRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelations map[models.RelationKind][]*models.Task) (err error) {
+
+	// Get the existing task with details:
+	existingTask := &models.Task{ID: task.ID}
+	// FIXME: Optimize to get only required attributes (ie. RelatedTasks).
+	err = existingTask.ReadOne(s, a)
+	if err != nil {
+		return
+	}
+
+	for relationKind, relatedTasks := range existingTask.RelatedTasks {
+
+		for _, relatedTask := range relatedTasks {
+			relationInNewList := slices.ContainsFunc(newRelations[relationKind], func(newRelation *models.Task) bool { return newRelation.UID == relatedTask.UID })
+
+			if !relationInNewList {
+				rel := models.TaskRelation{
+					TaskID:       task.ID,
+					OtherTaskID:  relatedTask.ID,
+					RelationKind: relationKind,
+				}
+				err = rel.Delete(s, a)
+				if err != nil {
+					return
+				}
+			}
+		}
+	}
+
+	return
+}
+
+// Persist new relations provided by the VTODO entry:
+func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelations map[models.RelationKind][]*models.Task) (err error) {
+
+	err = removeStaleRelations(s, a, task, newRelations)
+	if err != nil {
+		return err
+	}
+
+	// Ensure the current relations exist:
+	for relationType, relatedTasksInVTODO := range newRelations {
+		// Persist each relation independently:
+		for _, relatedTaskInVTODO := range relatedTasksInVTODO {
+
+			var relatedTask *models.Task
+			createDummy := false
+
+			// Get the task from the DB:
+			relatedTaskInDB, err := models.GetTaskSimpleByUUID(s, relatedTaskInVTODO.UID)
+			if err != nil {
+				relatedTask = relatedTaskInVTODO
+				createDummy = true
+			} else {
+				relatedTask = relatedTaskInDB
+			}
+
+			// If the related task doesn't exist, create a dummy one now in the same list.
+			// It'll probably be populated right after in a following request.
+			// In the worst case, this was an error by the client and we are left with
+			// this dummy task to clean up.
+			if createDummy {
+				relatedTask.ProjectID = task.ProjectID
+				relatedTask.Title = "DUMMY-UID-" + relatedTask.UID
+				err = relatedTask.Create(s, a)
+				if err != nil {
+					return err
+				}
+			}
+
+			// Create the relation:
+			rel := models.TaskRelation{
+				TaskID:       task.ID,
+				OtherTaskID:  relatedTask.ID,
+				RelationKind: relationType,
+			}
+			err = rel.Create(s, a)
+			if err != nil && !models.IsErrRelationAlreadyExists(err) {
+				return err
+			}
+		}
+	}
+	return err
 }
 
 // VikunjaProjectResourceAdapter holds the actual resource
