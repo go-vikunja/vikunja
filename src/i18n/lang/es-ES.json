@@ -6,6 +6,7 @@
     "welcomeEvening": "¡Buenas Tardes {username}!",
     "lastViewed": "Visto por última vez",
     "addToHomeScreen": "Añade esta aplicación a tu pantalla de inicio para un acceso más rápido y una experiencia mejorada.",
+    "goToOverview": "Go to overview",
     "project": {
       "importText": "Importa tus proyectos y tareas de otros servicios a Vikunja:",
       "import": "Importa tus datos a Vikunja"
@@ -424,7 +425,9 @@
     "alreadyMigrated2": "Importar de nuevo es posible, pero puede crear duplicados. ¿Estás seguro?",
     "confirm": "Estoy seguro, ¡por favor empieza a migrar ahora!",
     "importUpload": "Para importar datos de {name} a Vikunja, haz clic en el botón de abajo para seleccionar un archivo.",
-    "upload": "Subir archivo"
+    "upload": "Subir archivo",
+    "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
+    "migrationInProgress": "A migration is currently in progress. Please wait until it is done."
   },
   "label": {
     "title": "Etiquetas",

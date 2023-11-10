@@ -6,6 +6,7 @@
     "welcomeEvening": "Guten Abend, {username}!",
     "lastViewed": "Zletscht ahglueget",
     "addToHomeScreen": "Füge diese App deinem Startbildschirm hinzu, um schneller darauf zuzugreifen und das Erlebnis zu verbessern.",
+    "goToOverview": "Zur Übersicht",
     "project": {
       "importText": "Importiere deine Projekte und Aufgaben aus anderen Diensten in Vikunja:",
       "import": "Importiere deine Daten in Vikunja"
@@ -424,7 +425,9 @@
     "alreadyMigrated2": "Es erneuts Importiere isch scho mögli, aber chenti Duplikaat erstelle. Bisch der sicher?",
     "confirm": "Ich bin sicher, fang mit de Migration ah!",
     "importUpload": "Um Daten von {name} in Vikunja zu importieren, klicke auf die Schaltfläche unten, um eine Datei auszuwählen.",
-    "upload": "Datei hochladen"
+    "upload": "Datei hochladen",
+    "migrationStartedWillReciveEmail": "Vikunja wird nun deine Listen/Projekte, Aufgaben, Notizen, Erinnerungen und Dateien von {service} importieren. Da dies eine Weile dauern wird, senden wir dir eine E-Mail, sobald der Import abgeschlossen ist. Du kannst dieses Fenster jetzt schließen.",
+    "migrationInProgress": "Ein Import wird gerade durchgeführt. Bitte warte, bis dieser abgeschlossen ist."
   },
   "label": {
     "title": "Labels",

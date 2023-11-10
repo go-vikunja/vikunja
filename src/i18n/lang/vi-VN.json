@@ -6,6 +6,7 @@
     "welcomeEvening": "Good Evening {username}!",
     "lastViewed": "Xem gần đây",
     "addToHomeScreen": "Add this app to your home screen for faster access and improved experience.",
+    "goToOverview": "Go to overview",
     "project": {
       "importText": "Import your projects and tasks from other services into Vikunja:",
       "import": "Import your data into Vikunja"
@@ -424,7 +425,9 @@
     "alreadyMigrated2": "Nhập lại được luôn, nhưng có thể tạo ra các trùng lặp đấy. Bạn chắc chưa?",
     "confirm": "Tôi chắc như đinh, hãy bắt đầu di chuyển thôi!",
     "importUpload": "Để nhập dữ liệu từ {name} vào Vikunja, hãy nhấp vào nút bên dưới để chọn tệp.",
-    "upload": "Tải tệp lên"
+    "upload": "Tải tệp lên",
+    "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
+    "migrationInProgress": "A migration is currently in progress. Please wait until it is done."
   },
   "label": {
     "title": "Nhãn",

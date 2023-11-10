@@ -6,6 +6,7 @@
     "welcomeEvening": "中午好，{username}！",
     "lastViewed": "最近查看",
     "addToHomeScreen": "Add this app to your home screen for faster access and improved experience.",
+    "goToOverview": "Go to overview",
     "project": {
       "importText": "Import your projects and tasks from other services into Vikunja:",
       "import": "Import your data into Vikunja"
@@ -424,7 +425,9 @@
     "alreadyMigrated2": "可以再次导入，但这可能会造成数据重复。您确定吗？",
     "confirm": "我确定, 请立即开始迁移!",
     "importUpload": "请点击下面的按钮选择一个文件，将 {name} 的数据导入到 Vikunja",
-    "upload": "点击上传文件"
+    "upload": "点击上传文件",
+    "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
+    "migrationInProgress": "A migration is currently in progress. Please wait until it is done."
   },
   "label": {
     "title": "标签",

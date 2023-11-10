@@ -6,6 +6,7 @@
     "welcomeEvening": " 오늘 하루는 어땠나요? {username} 님!",
     "lastViewed": "최근에 본 것",
     "addToHomeScreen": "더 빠른 액세스와 향상된 경험을 위해 이 앱을 홈 화면에 추가하세요.",
+    "goToOverview": "Go to overview",
     "project": {
       "importText": "다른 서비스의 프로젝트 및 작업을 Vikunja로 가져옵니다.",
       "import": "데이터를 Vikunja로 가져오기"
@@ -424,7 +425,9 @@
     "alreadyMigrated2": "Importing again is possible, but might create duplicates. Are you sure?",
     "confirm": "I am sure, please start migrating now!",
     "importUpload": "To import data from {name} into Vikunja, click the button below to select a file.",
-    "upload": "Upload file"
+    "upload": "Upload file",
+    "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
+    "migrationInProgress": "A migration is currently in progress. Please wait until it is done."
   },
   "label": {
     "title": "Labels",

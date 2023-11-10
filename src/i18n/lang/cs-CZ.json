@@ -6,6 +6,7 @@
     "welcomeEvening": "Dobrý večer {username}!",
     "lastViewed": "Naposledy zobrazeno",
     "addToHomeScreen": "Přidejte tuto aplikaci na domovskou obrazovku pro rychlejší přístup a lepší zážitek.",
+    "goToOverview": "Přejít na přehled",
     "project": {
       "importText": "Importujte své projekty a úkoly z jiných služeb do Vikunja:",
       "import": "Importujte svá data do Vikunja"
@@ -424,7 +425,9 @@
     "alreadyMigrated2": "Import je možný, ale mohl by vytvářet duplicity. Jste si jisti?",
     "confirm": "Jsem si jistý, začněte migrovat!",
     "importUpload": "Chcete-li importovat data z {name} do Vikunja, klikněte na tlačítko níže pro výběr souboru.",
-    "upload": "Nahrát soubor"
+    "upload": "Nahrát soubor",
+    "migrationStartedWillReciveEmail": "Vikunja nyní importuje vaše seznamy/projekty, úkoly, poznámky, připomenutí a soubory z {service}. Protože to bude chvíli trvat, pošleme vám e-mail až bude hotovo. Toto okno můžete nyní zavřít.",
+    "migrationInProgress": "Probíhá migrace. Počkejte prosím na její dokončení."
   },
   "label": {
     "title": "Štítky",

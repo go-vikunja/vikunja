@@ -6,6 +6,7 @@
     "welcomeEvening": "Good Evening {username}!",
     "lastViewed": "Laatst bekeken",
     "addToHomeScreen": "Add this app to your home screen for faster access and improved experience.",
+    "goToOverview": "Go to overview",
     "project": {
       "importText": "Import your projects and tasks from other services into Vikunja:",
       "import": "Import your data into Vikunja"
@@ -424,7 +425,9 @@
     "alreadyMigrated2": "Importing again is possible, but might create duplicates. Are you sure?",
     "confirm": "Ik weet het zeker, begin nu met migreren!",
     "importUpload": "To import data from {name} into Vikunja, click the button below to select a file.",
-    "upload": "Bestand uploaden"
+    "upload": "Bestand uploaden",
+    "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
+    "migrationInProgress": "A migration is currently in progress. Please wait until it is done."
   },
   "label": {
     "title": "Labels",

@@ -6,6 +6,7 @@
     "welcomeEvening": "こんばんは、{username}さん",
     "lastViewed": "最近の表示",
     "addToHomeScreen": "Add this app to your home screen for faster access and improved experience.",
+    "goToOverview": "Go to overview",
     "project": {
       "importText": "他のサービスからVikunjaにプロジェクトやタスクをインポートします:",
       "import": "Vikunjaへのデータのインポート"
@@ -424,7 +425,9 @@
     "alreadyMigrated2": "再びインポートすることも可能ですが、重複する可能性があります。インポートして本当によろしいですか？",
     "confirm": "了解！インポート開始なのだ！",
     "importUpload": "{name}からVikunjaにデータをインポートするには、以下のボタンをクリックしてファイルを選択してください。",
-    "upload": "ファイルのアップロード"
+    "upload": "ファイルのアップロード",
+    "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
+    "migrationInProgress": "A migration is currently in progress. Please wait until it is done."
   },
   "label": {
     "title": "ラベル",
