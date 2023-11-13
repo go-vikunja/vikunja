@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 
 	"code.vikunja.io/web/handler"
 
@@ -216,7 +217,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, issuer, subject string) (u *us
 	// If no user exists, create one with the preferred username if it is not already taken
 	if user.IsErrUserDoesNotExist(err) {
 		uu := &user.User{
-			Username: cl.PreferredUsername,
+			Username: strings.ReplaceAll(cl.PreferredUsername, " ", "-"),
 			Email:    cl.Email,
 			Name:     cl.Name,
 			Status:   user.StatusActive,
@@ -234,7 +235,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, issuer, subject string) (u *us
 			return nil, err
 		}
 
-		// If their preferred username is already taken, create some random one from the email and subject
+		// If their preferred username is already taken, generate a random one
 		if user.IsErrUsernameExists(err) {
 			uu.Username = petname.Generate(3, "-")
 			u, err = user.CreateUser(s, uu)
