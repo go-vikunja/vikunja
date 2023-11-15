@@ -412,10 +412,10 @@ function prepareDate(filterName, variableName) {
 		const endDate = new Date(params.value.filter_value[foundDateEnd])
 		filters.value[variableName] = {
 			dateFrom: !isNaN(startDate)
-				? `${startDate.getFullYear()}-${startDate.getMonth() + 1}-${startDate.getDate()}`
+				? `${startDate.getUTCFullYear()}-${startDate.getUTCMonth() + 1}-${startDate.getUTCDate()}`
 				: params.value.filter_value[foundDateStart],
 			dateTo: !isNaN(endDate)
-				? `${endDate.getFullYear()}-${endDate.getMonth() + 1}-${endDate.getDate()}`
+				? `${endDate.getUTCFullYear()}-${endDate.getUTCMonth() + 1}-${endDate.getUTCDate()}`
 				: params.value.filter_value[foundDateEnd],
 		}
 	}
