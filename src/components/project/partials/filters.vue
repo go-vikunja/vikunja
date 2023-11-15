@@ -164,6 +164,7 @@
 						v-model="entities.projects"
 						@select="changeMultiselectFilter('projects', 'project_id')"
 						@remove="changeMultiselectFilter('projects', 'project_id')"
+						:project-filter="p => p.id > 0"
 					/>
 				</div>
 			</div>

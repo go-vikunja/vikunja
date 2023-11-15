@@ -20,10 +20,19 @@ import type {IProject} from '@/modelTypes/IProject'
 import ProjectService from '@/services/project'
 import {includesById} from '@/helpers/utils'
 
+type ProjectFilterFunc = (p: IProject) => boolean
+
 const props = defineProps({
 	modelValue: {
 		type: Array as PropType<IProject[]>,
 		default: () => [],
+	},
+	projectFilter: {
+		type: Function as PropType<ProjectFilterFunc>,
+		default: () => {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			return (_: IProject) => true
+		},
 	},
 })
 const emit = defineEmits<{
@@ -58,6 +67,8 @@ async function findProjects(query: string) {
 	const response = await projectService.getAll({}, {s: query}) as IProject[]
 
 	// Filter selected items from the results
-	foundProjects.value = response.filter(({id}) => !includesById(projects.value, id))
+	foundProjects.value = response
+		.filter(({id}) => !includesById(projects.value, id))
+		.filter(props.projectFilter)
 }
 </script>
