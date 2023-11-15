@@ -24,13 +24,18 @@ export function useRouteWithModal() {
 		// this is adapted from vue-router
 		// https://github.com/vuejs/vue-router-next/blob/798cab0d1e21f9b4d45a2bd12b840d2c7415f38a/src/RouterView.ts#L125
 		const routePropsOption = route.matched[0]?.props.default
-		const routeProps = routePropsOption
-			? routePropsOption === true
-				? route.params
-				: typeof routePropsOption === 'function'
-					? routePropsOption(route)
-					: routePropsOption
-			: {}
+		let routeProps = undefined
+		if (routePropsOption) {
+			if (routePropsOption === true) {
+				routeProps = route.params
+			} else {
+				if(typeof routePropsOption === 'function') {
+					routeProps = routePropsOption(route)
+				} else {
+					routeProps = routePropsOption
+				}
+			}
+		}
 
 		if (typeof routeProps === 'undefined') {
 			currentModal.value = undefined

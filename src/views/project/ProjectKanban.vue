@@ -1,7 +1,7 @@
 <template>
 	<ProjectWrapper
 		class="project-kanban"
-		:project-id="project.id"
+		:project-id="projectId"
 		viewName="kanban"
 	>
 		<template #header>
@@ -330,9 +330,14 @@ const bucketDraggableComponentData = computed(() => ({
 		{'dragging-disabled': !canWrite.value},
 	],
 }))
+const {
+	projectId = undefined,
+} = defineProps<{
+	projectId: number,
+}>()
 
 const canWrite = computed(() => baseStore.currentProject?.maxRight > Rights.READ)
-const project = computed(() => baseStore.currentProject)
+const project = computed(() => projectId ? projectStore.projects[projectId]: null)
 
 const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)
@@ -342,10 +347,9 @@ const taskLoading = computed(() => taskStore.isLoading)
 watch(
 	() => ({
 		params: params.value,
-		project: project.value,
+		projectId,
 	}),
-	({params, project}) => {
-		const projectId = project.id
+	({params}) => {
 		if (projectId === undefined || Number(projectId) === 0) {
 			return
 		}
@@ -396,7 +400,7 @@ function updateTasks(bucketId: IBucket['id'], tasks: IBucket['tasks']) {
 async function updateTaskPosition(e) {
 	drag.value = false
 
-	// While we could just pass the bucket index in through the function call, this would not give us the 
+	// While we could just pass the bucket index in through the function call, this would not give us the
 	// new bucket id when a task has been moved between buckets, only the new bucket. Using the data-bucket-id
 	// of the drop target works all the time.
 	const bucketIndex = parseInt(e.to.dataset.bucketIndex)
@@ -450,7 +454,7 @@ async function updateTaskPosition(e) {
 
 	try {
 		await taskStore.update(newTask)
-		
+
 		// Make sure the first and second task don't both get position 0 assigned
 		if(newTaskIndex === 0 && taskAfter !== null && taskAfter.kanbanPosition === 0) {
 			const taskAfterAfter = newBucket.tasks[newTaskIndex + 2] ?? null
@@ -480,7 +484,7 @@ async function addTaskToBucket(bucketId: IBucket['id']) {
 		return
 	}
 	newTaskError.value[bucketId] = false
-	
+
 	const task = await taskStore.createNewTask({
 		title: newTaskText.value,
 		bucketId,
@@ -619,7 +623,7 @@ async function toggleDoneBucket(bucket: IBucket) {
 	const doneBucketId = project.value.doneBucketId === bucket.id
 		? 0
 		: bucket.id
-	
+
 	await projectStore.updateProject({
 		...project.value,
 		doneBucketId,
@@ -722,7 +726,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			}
 			&:last-of-type {
 				padding-bottom: .5rem;
-			}	
+			}
 		}
 
 		.no-move {

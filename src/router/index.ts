@@ -37,7 +37,11 @@ const MigrationHandlerComponent = () => import('@/views/migrate/MigrationHandler
 const ProjectList = () => import('@/views/project/ProjectList.vue')
 const ProjectGantt = () => import('@/views/project/ProjectGantt.vue')
 const ProjectTable = () => import('@/views/project/ProjectTable.vue')
-const ProjectKanban = () => import('@/views/project/ProjectKanban.vue')
+// If we load the component async, using it as a backdrop view will not work. Instead, everything explodes
+// with an error from the core saying "Cannot read properties of undefined (reading 'parentNode')"
+// Of course, with no clear indicator of where the problem comes from.
+// const ProjectKanban = () => import('@/views/project/ProjectKanban.vue')
+import ProjectKanban from '@/views/project/ProjectKanban.vue'
 const ProjectInfo = () => import('@/views/project/ProjectInfo.vue')
 
 // Project Settings

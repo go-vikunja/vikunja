@@ -39,7 +39,7 @@
 				</router-view>
 
 				<modal
-					:enabled="Boolean(currentModal)"
+					:enabled="typeof currentModal !== 'undefined'"
 					@close="closeModal()"
 					variant="scrolling"
 					class="task-detail-view-modal"
