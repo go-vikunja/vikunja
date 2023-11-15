@@ -416,6 +416,7 @@ func getUserProjectsStatement(parentProjectIDs []int64, userID int64, search str
 			filterCond,
 			getArchivedCond,
 			parentCondition,
+			builder.NotIn("l.id", parentProjectIDs),
 		)).
 		OrderBy("position").
 		GroupBy("l.id")
