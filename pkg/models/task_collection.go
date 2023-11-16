@@ -124,7 +124,7 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskSearchOption
 // @tags task
 // @Accept json
 // @Produce json
-// @Param projectID path int true "The project ID."
+// @Param id path int true "The project ID."
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
@@ -138,7 +138,7 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskSearchOption
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /projects/{projectID}/tasks [get]
+// @Router /projects/{id}/tasks [get]
 func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 
 	// If the project id is < -1 this means we're dealing with a saved filter - in that case we get and populate the filter

@@ -825,13 +825,13 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param ID path int true "The Task ID"
+// @Param id path int true "The Task ID"
 // @Param task body models.Task true "The task object"
 // @Success 200 {object} models.Task "The updated task object."
 // @Failure 400 {object} web.HTTPError "Invalid task object provided."
 // @Failure 403 {object} web.HTTPError "The user does not have access to the task (aka its project)"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /tasks/{ID} [post]
+// @Router /tasks/{id} [post]
 //
 //nolint:gocyclo
 func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
@@ -1417,12 +1417,12 @@ func updateTaskLastUpdated(s *xorm.Session, task *Task) error {
 // @tags task
 // @Produce json
 // @Security JWTKeyAuth
-// @Param ID path int true "Task ID"
+// @Param id path int true "Task ID"
 // @Success 200 {object} models.Message "The created task object."
 // @Failure 400 {object} web.HTTPError "Invalid task ID provided."
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /tasks/{ID} [delete]
+// @Router /tasks/{id} [delete]
 func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// duplicate the task for the event
