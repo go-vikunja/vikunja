@@ -2837,6 +2837,93 @@ paths:
       tags:
       - project
   /projects/{id}/tasks:
+    get:
+      consumes:
+      - application/json
+      description: Returns all tasks for the current project.
+      parameters:
+      - description: The project ID.
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search tasks by task text.
+        in: query
+        name: s
+        type: string
+      - description: The sorting parameter. You can pass this multiple times to get
+          the tasks ordered by multiple different parametes, along with `order_by`.
+          Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`,
+          `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`,
+          `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default
+          is `id`.
+        in: query
+        name: sort_by
+        type: string
+      - description: The ordering parameter. Possible values to order by are `asc`
+          or `desc`. Default is `asc`.
+        in: query
+        name: order_by
+        type: string
+      - description: The name of the field to filter by. Allowed values are all task
+          properties. Task properties which are their own object require passing in
+          the id of that entity. Accepts an array for multiple filters which will
+          be chanied together, all supplied filter must match.
+        in: query
+        name: filter_by
+        type: string
+      - description: The value to filter for. You can use [grafana](https://grafana.com/docs/grafana/latest/dashboards/time-range-controls)-
+          or [elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#date-math)-style
+          relative dates for all date fields like `due_date`, `start_date`, `end_date`,
+          etc.
+        in: query
+        name: filter_value
+        type: string
+      - description: The comparator to use for a filter. Available values are `equals`,
+          `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in`
+          expects comma-separated values in `filter_value`. Defaults to `equals`
+        in: query
+        name: filter_comparator
+        type: string
+      - description: The concatinator to use for filters. Available values are `and`
+          or `or`. Defaults to `or`.
+        in: query
+        name: filter_concat
+        type: string
+      - description: If set to true the result will include filtered fields whose
+          value is set to `null`. Available values are `true` or `false`. Defaults
+          to `false`.
+        in: query
+        name: filter_include_nulls
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The tasks
+          schema:
+            items:
+              $ref: '#/definitions/models.Task'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get tasks in a project
+      tags:
+      - task
     put:
       consumes:
       - application/json
@@ -3501,94 +3588,6 @@ paths:
       summary: Duplicate an existing project
       tags:
       - project
-  /projects/{projectID}/tasks:
-    get:
-      consumes:
-      - application/json
-      description: Returns all tasks for the current project.
-      parameters:
-      - description: The project ID.
-        in: path
-        name: projectID
-        required: true
-        type: integer
-      - description: The page number. Used for pagination. If not provided, the first
-          page of results is returned.
-        in: query
-        name: page
-        type: integer
-      - description: The maximum number of items per page. Note this parameter is
-          limited by the configured maximum of items per page.
-        in: query
-        name: per_page
-        type: integer
-      - description: Search tasks by task text.
-        in: query
-        name: s
-        type: string
-      - description: The sorting parameter. You can pass this multiple times to get
-          the tasks ordered by multiple different parametes, along with `order_by`.
-          Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`,
-          `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`,
-          `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default
-          is `id`.
-        in: query
-        name: sort_by
-        type: string
-      - description: The ordering parameter. Possible values to order by are `asc`
-          or `desc`. Default is `asc`.
-        in: query
-        name: order_by
-        type: string
-      - description: The name of the field to filter by. Allowed values are all task
-          properties. Task properties which are their own object require passing in
-          the id of that entity. Accepts an array for multiple filters which will
-          be chanied together, all supplied filter must match.
-        in: query
-        name: filter_by
-        type: string
-      - description: The value to filter for. You can use [grafana](https://grafana.com/docs/grafana/latest/dashboards/time-range-controls)-
-          or [elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#date-math)-style
-          relative dates for all date fields like `due_date`, `start_date`, `end_date`,
-          etc.
-        in: query
-        name: filter_value
-        type: string
-      - description: The comparator to use for a filter. Available values are `equals`,
-          `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in`
-          expects comma-separated values in `filter_value`. Defaults to `equals`
-        in: query
-        name: filter_comparator
-        type: string
-      - description: The concatinator to use for filters. Available values are `and`
-          or `or`. Defaults to `or`.
-        in: query
-        name: filter_concat
-        type: string
-      - description: If set to true the result will include filtered fields whose
-          value is set to `null`. Available values are `true` or `false`. Defaults
-          to `false`.
-        in: query
-        name: filter_include_nulls
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The tasks
-          schema:
-            items:
-              $ref: '#/definitions/models.Task'
-            type: array
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Get tasks in a project
-      tags:
-      - task
   /projects/{projectID}/teams/{teamID}:
     delete:
       description: Delets a team from a project. The team won't have access to the
@@ -3924,13 +3923,13 @@ paths:
       summary: Subscribes the current user to an entity.
       tags:
       - subscriptions
-  /tasks/{ID}:
+  /tasks/{id}:
     delete:
       description: Deletes a task from a project. This does not mean "mark it done".
       parameters:
       - description: Task ID
         in: path
-        name: ID
+        name: id
         required: true
         type: integer
       produces:
@@ -3957,6 +3956,36 @@ paths:
       summary: Delete a task
       tags:
       - task
+    get:
+      consumes:
+      - application/json
+      description: Returns one task by its ID
+      parameters:
+      - description: The task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The task
+          schema:
+            $ref: '#/definitions/models.Task'
+        "404":
+          description: Task not found
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get one task
+      tags:
+      - task
     post:
       consumes:
       - application/json
@@ -3966,7 +3995,7 @@ paths:
       parameters:
       - description: The Task ID
         in: path
-        name: ID
+        name: id
         required: true
         type: integer
       - description: The task object
@@ -3997,37 +4026,6 @@ paths:
       security:
       - JWTKeyAuth: []
       summary: Update a task
-      tags:
-      - task
-  /tasks/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Returns one task by its ID
-      parameters:
-      - description: The task ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The task
-          schema:
-            $ref: '#/definitions/models.Task'
-        "404":
-          description: Task not found
-          schema:
-            $ref: '#/definitions/models.Message'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Get one task
       tags:
       - task
   /tasks/{id}/attachments:

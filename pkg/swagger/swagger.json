@@ -2104,6 +2104,110 @@
             }
         },
         "/projects/{id}/tasks": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns all tasks for the current project.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Get tasks in a project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The project ID.",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search tasks by task text.",
+                        "name": "s",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`.",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`.",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.",
+                        "name": "filter_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The value to filter for. You can use [grafana](https://grafana.com/docs/grafana/latest/dashboards/time-range-controls)- or [elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#date-math)-style relative dates for all date fields like `due_date`, `start_date`, `end_date`, etc.",
+                        "name": "filter_value",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in` expects comma-separated values in `filter_value`. Defaults to `equals`",
+                        "name": "filter_comparator",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`.",
+                        "name": "filter_concat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`.",
+                        "name": "filter_include_nulls",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The tasks",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Task"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
             "put": {
                 "security": [
                     {
@@ -2845,112 +2949,6 @@
                         "description": "The user does not have access to the project or its parent.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/projects/{projectID}/tasks": {
-            "get": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Returns all tasks for the current project.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "task"
-                ],
-                "summary": "Get tasks in a project",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "The project ID.",
-                        "name": "projectID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
-                        "name": "per_page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Search tasks by task text.",
-                        "name": "s",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`.",
-                        "name": "sort_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`.",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match.",
-                        "name": "filter_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The value to filter for. You can use [grafana](https://grafana.com/docs/grafana/latest/dashboards/time-range-controls)- or [elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#date-math)-style relative dates for all date fields like `due_date`, `start_date`, `end_date`, etc.",
-                        "name": "filter_value",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in` expects comma-separated values in `filter_value`. Defaults to `equals`",
-                        "name": "filter_comparator",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`.",
-                        "name": "filter_concat",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`.",
-                        "name": "filter_include_nulls",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The tasks",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Task"
-                            }
                         }
                     },
                     "500": {
@@ -3877,7 +3875,54 @@
                 }
             }
         },
-        "/tasks/{ID}": {
+        "/tasks/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns one task by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Get one task",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The task ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The task",
+                        "schema": {
+                            "$ref": "#/definitions/models.Task"
+                        }
+                    },
+                    "404": {
+                        "description": "Task not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -3899,7 +3944,7 @@
                     {
                         "type": "integer",
                         "description": "The Task ID",
-                        "name": "ID",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     },
@@ -3958,7 +4003,7 @@
                     {
                         "type": "integer",
                         "description": "Task ID",
-                        "name": "ID",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -3980,55 +4025,6 @@
                         "description": "The user does not have access to the project",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/tasks/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Returns one task by its ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "task"
-                ],
-                "summary": "Get one task",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "The task ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The task",
-                        "schema": {
-                            "$ref": "#/definitions/models.Task"
-                        }
-                    },
-                    "404": {
-                        "description": "Task not found",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
                         }
                     },
                     "500": {
