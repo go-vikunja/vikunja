@@ -26,25 +26,6 @@
 		</div>
 		<div class="field">
 			<label class="checkbox">
-				<input type="checkbox" v-model="settings.overdueTasksRemindersEnabled"/>
-				{{ $t('user.settings.general.overdueReminders') }}
-			</label>
-		</div>
-		<div class="field" v-if="settings.overdueTasksRemindersEnabled">
-			<label class="label" for="overdueTasksReminderTime">
-				{{ $t('user.settings.general.overdueTasksRemindersTime') }}
-			</label>
-			<div class="control">
-				<input
-					@keyup.enter="updateSettings"
-					class="input"
-					id="overdueTasksReminderTime"
-					type="time"
-					v-model="settings.overdueTasksRemindersTime"/>
-			</div>
-		</div>
-		<div class="field">
-			<label class="checkbox">
 				<input type="checkbox" v-model="settings.emailRemindersEnabled"/>
 				{{ $t('user.settings.general.emailReminders') }}
 			</label>
@@ -66,6 +47,25 @@
 				<input type="checkbox" v-model="settings.frontendSettings.playSoundWhenDone"/>
 				{{ $t('user.settings.general.playSoundWhenDone') }}
 			</label>
+		</div>
+		<div class="field">
+			<label class="checkbox">
+				<input type="checkbox" v-model="settings.overdueTasksRemindersEnabled"/>
+				{{ $t('user.settings.general.overdueReminders') }}
+			</label>
+		</div>
+		<div class="field" v-if="settings.overdueTasksRemindersEnabled">
+			<label class="label" for="overdueTasksReminderTime">
+				{{ $t('user.settings.general.overdueTasksRemindersTime') }}
+			</label>
+			<div class="control">
+				<input
+					@keyup.enter="updateSettings"
+					class="input"
+					id="overdueTasksReminderTime"
+					type="time"
+					v-model="settings.overdueTasksRemindersTime"/>
+			</div>
 		</div>
 		<div class="field">
 			<label class="is-flex is-align-items-center">
