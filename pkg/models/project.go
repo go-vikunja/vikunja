@@ -422,7 +422,7 @@ func getUserProjectsStatement(parentProjectIDs []int64, userID int64, search str
 		GroupBy("l.id")
 }
 
-func getAllProjectsForUser(s *xorm.Session, userID int64, parentProjectIDs []int64, opts *projectOptions, projects *[]*Project, oldTotalCount int64) (resultCount int, totalCount int64, err error) {
+func getAllProjectsForUser(s *xorm.Session, userID int64, parentProjectIDs []int64, opts *projectOptions, projects *[]*Project, oldTotalCount int64, archivedProjects map[int64]bool) (resultCount int, totalCount int64, err error) {
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
 	query := getUserProjectsStatement(parentProjectIDs, userID, opts.search, opts.getArchived)
@@ -455,6 +455,12 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, parentProjectIDs []int
 
 	newParentIDs := []int64{}
 	for _, project := range currentProjects {
+		if project.IsArchived {
+			archivedProjects[project.ID] = true
+		}
+		if archivedProjects[project.ParentProjectID] {
+			project.IsArchived = true
+		}
 		// Filter out parent project ids which we're not looking for to avoid leaking
 		// information about parent projects
 		if !parentIDsMap[project.ParentProjectID] {
@@ -468,7 +474,7 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, parentProjectIDs []int
 	// If we don't reset the limit for subprojects, it will be impossible to fetch all subprojects.
 	opts.page = -1
 
-	return getAllProjectsForUser(s, userID, newParentIDs, opts, projects, oldTotalCount+totalCount)
+	return getAllProjectsForUser(s, userID, newParentIDs, opts, projects, oldTotalCount+totalCount, archivedProjects)
 }
 
 // Gets the projects with their children without any tasks
@@ -479,7 +485,8 @@ func getRawProjectsForUser(s *xorm.Session, opts *projectOptions) (projects []*P
 	}
 
 	allProjects := []*Project{}
-	resultCount, totalItems, err = getAllProjectsForUser(s, fullUser.ID, nil, opts, &allProjects, 0)
+	archivedProjects := make(map[int64]bool)
+	resultCount, totalItems, err = getAllProjectsForUser(s, fullUser.ID, nil, opts, &allProjects, 0, archivedProjects)
 	if err != nil {
 		return
 	}
