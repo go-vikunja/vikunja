@@ -182,7 +182,7 @@ async function loadPendingTasks(from: string, to: string) {
 		}
 	}
 	
-	if (authStore.settings.frontendSettings.filterIdUsedOnOverview && typeof projectStore.projects[authStore.settings.frontendSettings.filterIdUsedOnOverview] !== 'undefined') {
+	if (showAll.value && authStore.settings.frontendSettings.filterIdUsedOnOverview && typeof projectStore.projects[authStore.settings.frontendSettings.filterIdUsedOnOverview] !== 'undefined') {
 		tasks.value = await taskStore.loadTasks(params, authStore.settings.frontendSettings.filterIdUsedOnOverview)
 		return
 	}
