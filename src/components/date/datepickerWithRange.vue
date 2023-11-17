@@ -75,6 +75,7 @@ import {useI18n} from 'vue-i18n'
 
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
+import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 
 import Popup from '@/components/misc/popup.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
@@ -120,9 +121,9 @@ watch(
 		to.value = newValue.dateTo
 		// Only set the date back to flatpickr when it's an actual date.
 		// Otherwise flatpickr runs in an endless loop and slows down the browser.
-		const dateFrom = new Date(from.value)
-		const dateTo = new Date(to.value)
-		if (dateTo.getTime() === dateTo.getTime() && dateFrom.getTime() === dateFrom.getTime()) {
+		const dateFrom = parseDateOrString(from.value, false)
+		const dateTo = parseDateOrString(to.value, false)
+		if (dateFrom instanceof Date && dateTo instanceof Date) {
 			flatpickrRange.value = `${from.value} to ${to.value}`
 		}
 	},
