@@ -520,14 +520,18 @@ function setFocusToEditor(event) {
 .tiptap__editor {
 	&.tiptap__editor-is-edit-enabled {
 		min-height: 10rem;
+		
+		.ProseMirror {
+			padding: .5rem;
+		}
+		
+		&:focus-within, &:focus {
+			box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+		}
 	}
 
 	transition: box-shadow $transition;
 	border-radius: $radius;
-
-	&:focus-within, &:focus {
-		box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
-	}
 }
 
 .tiptap p::before {
@@ -540,7 +544,7 @@ function setFocusToEditor(event) {
 
 // Basic editor styles
 .ProseMirror {
-	padding: .5rem;
+	padding: .5rem .5rem .5rem 0;
 
 	&:focus-within, &:focus {
 		box-shadow: none;

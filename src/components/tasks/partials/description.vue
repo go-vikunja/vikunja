@@ -17,6 +17,7 @@
 			</CustomTransition>
 		</h3>
 		<editor
+			class="tiptap__task-description"
 			:is-edit-enabled="canWrite"
 			:upload-callback="uploadCallback"
 			:placeholder="$t('task.description.placeholder')"
@@ -123,3 +124,10 @@ async function uploadCallback(files: File[] | FileList): (Promise<string[]>) {
 }
 </script>
 
+<style lang="scss" scoped>
+.tiptap__task-description {
+	// The exact amount of pixels we need to make the description icon align with the buttons and the form inside the editor.
+	// The icon is not exactly the same length on all sides so we need to hack our way around it.
+	margin-left: 4px;
+}
+</style>
