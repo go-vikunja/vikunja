@@ -117,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, onBeforeUnmount, nextTick, onMounted, computed} from 'vue'
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue'
 import {refDebounced} from '@vueuse/core'
 
 import EditorToolbar from './EditorToolbar.vue'
@@ -173,7 +173,6 @@ import {Placeholder} from '@tiptap/extension-placeholder'
 import {eventToHotkeyString} from '@github/hotkey'
 import {mergeAttributes} from '@tiptap/core'
 import {createRandomID} from '@/helpers/randomId'
-import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 
 const {t} = useI18n()
 
@@ -202,9 +201,28 @@ type CacheKey = `${ITask['id']}-${IAttachment['id']}`
 const loadedAttachments = ref<{ [key: CacheKey]: string }>({})
 
 const CustomImage = Image.extend({
+	addAttributes() {
+		return {
+			src: {
+				default: null,
+			},
+			alt: {
+				default: null,
+			},
+			title: {
+				default: null,
+			},
+			id: {
+				default: null,
+			},
+			'data-src': {
+				default: null,
+			},
+		}
+	},
 	renderHTML({HTMLAttributes}) {
-		if (HTMLAttributes.src?.startsWith(window.API_URL)) {
-
+		if (HTMLAttributes.src?.startsWith(window.API_URL) || HTMLAttributes['data-src']?.startsWith(window.API_URL)) {
+			const imageUrl = HTMLAttributes['data-src'] ?? HTMLAttributes.src
 			const id = 'tiptap-image-' + createRandomID()
 			nextTick(async () => {
 
@@ -213,7 +231,7 @@ const CustomImage = Image.extend({
 				if (!img) return
 
 				// The url is something like /tasks/<id>/attachments/<id>
-				const parts = img.dataset?.src.slice(window.API_URL.length + 1).split('/')
+				const parts = imageUrl.slice(window.API_URL.length + 1).split('/')
 				const taskId = Number(parts[1])
 				const attachmentId = Number(parts[3])
 				const cacheKey: CacheKey = `${taskId}-${attachmentId}`
@@ -223,15 +241,14 @@ const CustomImage = Image.extend({
 					const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
 
 					const attachmentService = new AttachmentService()
-					const url = await attachmentService.getBlobUrl(attachment)
-					loadedAttachments.value[cacheKey] = url
+					loadedAttachments.value[cacheKey] = await attachmentService.getBlobUrl(attachment)
 				}
 
 				img.src = loadedAttachments.value[cacheKey]
 			})
 
 			return ['img', mergeAttributes(this.options.HTMLAttributes, {
-				'data-src': HTMLAttributes.src,
+				'data-src': imageUrl,
 				src: '#',
 				alt: HTMLAttributes.alt,
 				title: HTMLAttributes.title,
