@@ -1,5 +1,5 @@
 <template>
-	<div class="tiptap">
+	<div class="tiptap" ref="tiptapInstanceRef">
 		<EditorToolbar
 			v-if="editor && isEditing"
 			:editor="editor"
@@ -173,6 +173,8 @@ import {Placeholder} from '@tiptap/extension-placeholder'
 import {eventToHotkeyString} from '@github/hotkey'
 import {mergeAttributes} from '@tiptap/core'
 import {createRandomID} from '@/helpers/randomId'
+
+const tiptapInstanceRef = ref<HTMLInputElement | null>(null)
 
 const {t} = useI18n()
 
@@ -531,19 +533,60 @@ function setFocusToEditor(event) {
 
 	editor.value?.commands.focus()
 }
+
+function clickTasklistCheckbox(event) {
+	// Needs to be a separate function to be able to remove the event listener
+	event.target.parentNode.parentNode.firstChild.click()
+}
+
+watch(
+	() => isEditing.value,
+	editing => {
+		nextTick(() => {
+			const checkboxes = tiptapInstanceRef.value.querySelectorAll('[data-checked]')
+			if (editing) {
+				checkboxes.forEach(check => {
+					if (check.children.length < 2) {
+						return
+					}
+
+					// We assume the first child contains the label element with the checkbox and the second child the actual label
+					// When the actual label is clicked, we forward that click to the checkbox.
+					check.children[1].removeEventListener('click', clickTasklistCheckbox)
+				})
+
+				return
+			}
+			checkboxes.forEach(check => {
+				if (check.children.length < 2) {
+					return
+				}
+
+				// We assume the first child contains the label element with the checkbox and the second child the actual label
+				// When the actual label is clicked, we forward that click to the checkbox.
+				check.children[1].addEventListener('click', clickTasklistCheckbox)
+			})
+		})
+	},
+	{immediate: true},
+)
 </script>
 
 <style lang="scss">
 .tiptap__editor {
 	&.tiptap__editor-is-edit-enabled {
 		min-height: 10rem;
-		
+
 		.ProseMirror {
 			padding: .5rem;
 		}
-		
+
 		&:focus-within, &:focus {
 			box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+		}
+
+		ul[data-type='taskList'] li > div {
+			cursor: text;
 		}
 	}
 
@@ -794,6 +837,7 @@ ul[data-type='taskList'] {
 
 		> div {
 			flex: 1 1 auto;
+			cursor: pointer;
 		}
 	}
 

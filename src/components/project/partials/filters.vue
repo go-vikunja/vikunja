@@ -177,7 +177,7 @@ export const ALPHABETICAL_SORT = 'title'
 </script>
 
 <script setup lang="ts">
-import {computed, nextTick, onMounted, reactive, ref, shallowReactive, toRefs, watch} from 'vue'
+import {computed, nextTick, onMounted, reactive, ref, shallowReactive, toRefs} from 'vue'
 import {camelCase} from 'camel-case'
 import {watchDebounced} from '@vueuse/core'
 
