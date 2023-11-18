@@ -62,7 +62,7 @@
 
 		<editor-content
 			class="tiptap__editor"
-			:class="{'tiptap__editor-is-empty': isEmpty, 'tiptap__editor-is-edit-enabled': isEditing}"
+			:class="{'tiptap__editor-is-edit-enabled': isEditing}"
 			:editor="editor"
 		/>
 
@@ -268,7 +268,6 @@ const {
 const emit = defineEmits(['update:modelValue', 'save'])
 
 const inputHTML = ref('')
-const isEmpty = computed(() => isEditorContentEmpty(inputHTML.value))
 const internalMode = ref<Mode>(initialMode)
 const isEditing = computed(() => internalMode.value === 'edit' && isEditEnabled)
 
@@ -531,7 +530,7 @@ function setFocusToEditor(event) {
 	}
 }
 
-.tiptap p.is-empty::before {
+.tiptap p::before {
 	content: attr(data-placeholder);
 	color: var(--grey-400);
 	pointer-events: none;

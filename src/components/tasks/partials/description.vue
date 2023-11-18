@@ -25,7 +25,7 @@
 			v-model="description"
 			@update:model-value="saveWithDelay"
 			@save="save"
-			:initial-mode="isEditorContentEmpty(description) ? 'preview' : 'edit'"
+			:initial-mode="isEditorContentEmpty(description) ? 'edit' : 'preview'"
 		/>
 	</div>
 </template>
