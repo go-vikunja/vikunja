@@ -179,6 +179,7 @@ export const ALPHABETICAL_SORT = 'title'
 <script setup lang="ts">
 import {computed, nextTick, onMounted, reactive, ref, shallowReactive, toRefs, watch} from 'vue'
 import {camelCase} from 'camel-case'
+import {watchDebounced} from '@vueuse/core'
 
 import type {ILabel} from '@/modelTypes/ILabel'
 import type {IUser} from '@/modelTypes/IUser'
@@ -274,15 +275,16 @@ onMounted(() => {
 	filters.value.requireAllFilters = params.value.filter_concat === 'and'
 })
 
-watch(
+// Using watchDebounced to prevent the filter re-triggering itself.
+// FIXME: Only here until this whole component changes a lot with the new filter syntax.
+watchDebounced(
 	modelValue,
 	(value) => {
-		// FIXME: filters should only be converted to snake case in
-		// the last moment
+		// FIXME: filters should only be converted to snake case in the last moment
 		params.value = objectToSnakeCase(value)
 		prepareFilters()
 	},
-	{immediate: true},
+	{immediate: true, debounce: 500, maxWait: 1000},
 )
 
 const sortAlphabetically = computed({
@@ -311,7 +313,7 @@ function prepareFilters() {
 	prepareDate('end_date', 'endDate')
 	prepareSingleValue('priority', 'priority', 'usePriority', true)
 	prepareSingleValue('percent_done', 'percentDone', 'usePercentDone', true)
-	prepareDate('reminders')
+	prepareDate('reminders', 'reminders')
 	prepareRelatedObjectFilter('users', 'assignees')
 	prepareProjectsFilter()
 
@@ -387,13 +389,13 @@ function setDateFilter(filterName, {dateFrom, dateTo}) {
 	change()
 }
 
-function prepareDate(filterName, variableName) {
+function prepareDate(filterName: string, variableName: 'dueDate' | 'startDate' | 'endDate' | 'reminders') {
 	if (typeof params.value.filter_by === 'undefined') {
 		return
 	}
 
-	let foundDateStart = false
-	let foundDateEnd = false
+	let foundDateStart: boolean | string = false
+	let foundDateEnd: boolean | string = false
 	for (const i in params.value.filter_by) {
 		if (params.value.filter_by[i] === filterName && params.value.filter_comparator[i] === 'greater_equals') {
 			foundDateStart = i

@@ -117,6 +117,7 @@ const to = ref('')
 watch(
 	() => props.modelValue,
 	newValue => {
+		console.log('got new values via model', {...newValue})
 		from.value = newValue.dateFrom
 		to.value = newValue.dateTo
 		// Only set the date back to flatpickr when it's an actual date.
