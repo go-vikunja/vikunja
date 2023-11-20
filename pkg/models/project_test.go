@@ -348,7 +348,8 @@ func TestProject_ReadAll(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		projects := []*Project{}
-		_, _, err := getAllProjectsForUser(s, 1, nil, &projectOptions{}, &projects, 0)
+		archivedProjects := make(map[int64]bool)
+		_, _, err := getAllProjectsForUser(s, 1, nil, &projectOptions{}, &projects, 0, archivedProjects)
 		assert.NoError(t, err)
 		assert.Equal(t, 24, len(projects))
 		_ = s.Close()
