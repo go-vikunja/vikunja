@@ -507,12 +507,16 @@ onBeforeUnmount(() => {
 })
 
 function handleImagePaste(event) {
+	if (event?.clipboardData?.items?.length === 0) {
+		return
+	}
+	
 	event.preventDefault()
-	event?.clipboardData?.items?.forEach(i => {
-		if (i.kind === 'file' && i.type.startsWith('image/')) {
-			uploadAndInsertFiles([i.getAsFile()])
-		}
-	})
+
+	const image = event.clipboardData.items[0]
+	if (image.kind === 'file' && image.type.startsWith('image/')) {
+		uploadAndInsertFiles([image.getAsFile()])
+	}
 }
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
