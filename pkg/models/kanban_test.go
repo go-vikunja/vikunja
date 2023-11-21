@@ -81,9 +81,7 @@ func TestBucket_ReadAll(t *testing.T) {
 		b := &Bucket{
 			ProjectID: 1,
 			TaskCollection: TaskCollection{
-				FilterBy:         []string{"title"},
-				FilterComparator: []string{"like"},
-				FilterValue:      []string{"done"},
+				Filter: "title ~ 'done'",
 			},
 		}
 		bucketsInterface, _, _, err := b.ReadAll(s, testuser, "", -1, 0)
