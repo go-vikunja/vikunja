@@ -20,6 +20,7 @@ export const SUPPORTED_LOCALES = {
 	'ja-JP': '日本語',
 	'hu-HU': 'Magyar',
 	'ar-SA': 'اَلْعَرَبِيَّةُ',
+	'sl-SI': 'Slovenščina',
 } as const
 
 export type SupportedLocale = keyof typeof SUPPORTED_LOCALES
