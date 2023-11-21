@@ -677,12 +677,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		SortBy    []string // Is a string, since this is the place where a query string comes from the user
 		OrderBy   []string
 
-		FilterBy           []string
-		FilterValue        []string
-		FilterComparator   []string
 		FilterIncludeNulls bool
-
-		Filter string
+		Filter             string
 
 		CRUDable web.CRUDable
 		Rights   web.Rights
@@ -1392,9 +1388,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				SortBy:    tt.fields.SortBy,
 				OrderBy:   tt.fields.OrderBy,
 
-				FilterBy:           tt.fields.FilterBy,
-				FilterValue:        tt.fields.FilterValue,
-				FilterComparator:   tt.fields.FilterComparator,
 				FilterIncludeNulls: tt.fields.FilterIncludeNulls,
 
 				Filter: tt.fields.Filter,

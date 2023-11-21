@@ -150,24 +150,6 @@ func getTaskFiltersByCollections(c *TaskCollection) (filters []*taskFilter, err 
 		return
 	}
 
-	if len(c.FilterByArr) > 0 {
-		c.FilterBy = append(c.FilterBy, c.FilterByArr...)
-	}
-
-	if len(c.FilterValueArr) > 0 {
-		c.FilterValue = append(c.FilterValue, c.FilterValueArr...)
-	}
-
-	if len(c.FilterComparatorArr) > 0 {
-		c.FilterComparator = append(c.FilterComparator, c.FilterComparatorArr...)
-	}
-
-	//if c.FilterConcat != "" && c.FilterConcat != filterConcatAnd && c.FilterConcat != filterConcatOr {
-	//	return nil, ErrInvalidTaskFilterConcatinator{
-	//		Concatinator: taskFilterConcatinator(c.FilterConcat),
-	//	}
-	//}
-
 	parsedFilter, err := fexpr.Parse(c.Filter)
 	if err != nil {
 		return nil, err

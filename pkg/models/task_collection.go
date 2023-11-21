@@ -33,18 +33,6 @@ type TaskCollection struct {
 	OrderBy    []string `query:"order_by" json:"order_by"`
 	OrderByArr []string `query:"order_by[]" json:"-"`
 
-	// Deprecated: The field name of the field to filter by
-	FilterBy    []string `query:"filter_by" json:"filter_by"`
-	FilterByArr []string `query:"filter_by[]" json:"-"`
-	// Deprecated: The value of the field name to filter by
-	FilterValue    []string `query:"filter_value" json:"filter_value"`
-	FilterValueArr []string `query:"filter_value[]" json:"-"`
-	// Deprecated: The comparator for field and value
-	FilterComparator    []string `query:"filter_comparator" json:"filter_comparator"`
-	FilterComparatorArr []string `query:"filter_comparator[]" json:"-"`
-	// Deprecated: The way all filter conditions are concatenated together, can be either "and" or "or".,
-	FilterConcat string `query:"filter_concat" json:"filter_concat"`
-
 	Filter string `query:"filter" json:"filter"`
 
 	// If set to true, the result will also include null values
