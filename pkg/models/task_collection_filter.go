@@ -92,6 +92,10 @@ func parseTimeFromUserInput(timeString string) (value time.Time, err error) {
 
 func getTaskFiltersByCollections(c *TaskCollection) (filters []*taskFilter, err error) {
 
+	if c.Filter == "" {
+		return
+	}
+
 	if len(c.FilterByArr) > 0 {
 		c.FilterBy = append(c.FilterBy, c.FilterByArr...)
 	}
