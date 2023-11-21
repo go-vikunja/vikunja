@@ -76,17 +76,21 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 	return
 }
 
-//nolint:gocyclo
-func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
+func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (filterCond builder.Cond, err error) {
 
-	orderby, err := getOrderByDBStatement(opts)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	var filters = make([]builder.Cond, 0, len(opts.filters))
+	var dbFilters = make([]builder.Cond, 0, len(rawFilters))
 	// To still find tasks with nil values, we exclude 0s when comparing with >/< values.
-	for _, f := range opts.filters {
+	for _, f := range rawFilters {
+
+		if nested, is := f.value.([]*taskFilter); is {
+			nestedDBFilters, err := convertFiltersToDBFilterCond(nested, includeNulls)
+			if err != nil {
+				return nil, err
+			}
+			dbFilters = append(dbFilters, nestedDBFilters)
+			continue
+		}
+
 		if f.field == "reminders" {
 			filter, err := getFilterCond(&taskFilter{
 				// recreating the struct here to avoid modifying it when reusing the opts struct
@@ -94,17 +98,17 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 				value:      f.value,
 				comparator: f.comparator,
 				isNumeric:  f.isNumeric,
-			}, opts.filterIncludeNulls)
+			}, includeNulls)
 			if err != nil {
-				return nil, totalCount, err
+				return nil, err
 			}
-			filters = append(filters, getFilterCondForSeparateTable("task_reminders", filter))
+			dbFilters = append(dbFilters, getFilterCondForSeparateTable("task_reminders", filter))
 			continue
 		}
 
 		if f.field == "assignees" {
 			if f.comparator == taskFilterComparatorLike {
-				return nil, totalCount, err
+				return
 			}
 			filter, err := getFilterCond(&taskFilter{
 				// recreating the struct here to avoid modifying it when reusing the opts struct
@@ -112,9 +116,9 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 				value:      f.value,
 				comparator: f.comparator,
 				isNumeric:  f.isNumeric,
-			}, opts.filterIncludeNulls)
+			}, includeNulls)
 			if err != nil {
-				return nil, totalCount, err
+				return nil, err
 			}
 
 			assigneeFilter := builder.In("user_id",
@@ -122,7 +126,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 					From("users").
 					Where(filter),
 			)
-			filters = append(filters, getFilterCondForSeparateTable("task_assignees", assigneeFilter))
+			dbFilters = append(dbFilters, getFilterCondForSeparateTable("task_assignees", assigneeFilter))
 			continue
 		}
 
@@ -133,12 +137,12 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 				value:      f.value,
 				comparator: f.comparator,
 				isNumeric:  f.isNumeric,
-			}, opts.filterIncludeNulls)
+			}, includeNulls)
 			if err != nil {
-				return nil, totalCount, err
+				return nil, err
 			}
 
-			filters = append(filters, getFilterCondForSeparateTable("label_tasks", filter))
+			dbFilters = append(dbFilters, getFilterCondForSeparateTable("label_tasks", filter))
 			continue
 		}
 
@@ -149,9 +153,9 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 				value:      f.value,
 				comparator: f.comparator,
 				isNumeric:  f.isNumeric,
-			}, opts.filterIncludeNulls)
+			}, includeNulls)
 			if err != nil {
-				return nil, totalCount, err
+				return nil, err
 			}
 
 			cond := builder.In(
@@ -161,15 +165,48 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 					From("projects").
 					Where(filter),
 			)
-			filters = append(filters, cond)
+			dbFilters = append(dbFilters, cond)
 			continue
 		}
 
-		filter, err := getFilterCond(f, opts.filterIncludeNulls)
+		filter, err := getFilterCond(f, includeNulls)
 		if err != nil {
-			return nil, totalCount, err
+			return nil, err
 		}
-		filters = append(filters, filter)
+		dbFilters = append(dbFilters, filter)
+	}
+
+	if len(dbFilters) > 0 {
+		if len(dbFilters) == 1 {
+			filterCond = dbFilters[0]
+		} else {
+			for i, f := range dbFilters {
+				if len(dbFilters) > i+1 {
+					switch rawFilters[i+1].join {
+					case filterConcatOr:
+						filterCond = builder.Or(filterCond, f, dbFilters[i+1])
+					case filterConcatAnd:
+						filterCond = builder.And(filterCond, f, dbFilters[i+1])
+					}
+				}
+			}
+		}
+	}
+
+	return filterCond, nil
+}
+
+//nolint:gocyclo
+func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
+
+	orderby, err := getOrderByDBStatement(opts)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	filterCond, err := convertFiltersToDBFilterCond(opts.filters, opts.filterIncludeNulls)
+	if err != nil {
+		return nil, 0, err
 	}
 
 	// Then return all tasks for that projects
@@ -206,24 +243,6 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 				))
 
 		favoritesCond = builder.In("id", favCond)
-	}
-
-	var filterCond builder.Cond
-	if len(filters) > 0 {
-		if len(filters) == 1 {
-			filterCond = filters[0]
-		} else {
-			for i, f := range filters {
-				if len(filters) > i+1 {
-					switch opts.filters[i+1].join {
-					case filterConcatOr:
-						filterCond = builder.Or(filterCond, f, filters[i+1])
-					case filterConcatAnd:
-						filterCond = builder.And(filterCond, f, filters[i+1])
-					}
-				}
-			}
-		}
 	}
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
