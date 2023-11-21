@@ -222,6 +222,8 @@ func getFilterComparatorFromOp(op fexpr.SignOp) (taskFilterComparator, error) {
 		return taskFilterComparatorNotEquals, nil
 	case fexpr.SignLike:
 		return taskFilterComparatorLike, nil
+	case fexpr.SignAnyEq:
+		fallthrough
 	case "in":
 		return taskFilterComparatorIn, nil
 	default:
