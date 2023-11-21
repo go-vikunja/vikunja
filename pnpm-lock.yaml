@@ -145,9 +145,6 @@ dependencies:
   '@types/lodash.clonedeep':
     specifier: 4.5.9
     version: 4.5.9
-  '@types/sortablejs':
-    specifier: 1.15.5
-    version: 1.15.5
   '@vueuse/core':
     specifier: 10.6.1
     version: 10.6.1(vue@3.3.8)
@@ -285,6 +282,9 @@ devDependencies:
   '@types/postcss-preset-env':
     specifier: 7.7.0
     version: 7.7.0
+  '@types/sortablejs':
+    specifier: 1.15.5
+    version: 1.15.5
   '@typescript-eslint/eslint-plugin':
     specifier: 6.11.0
     version: 6.11.0(@typescript-eslint/parser@6.11.0)(eslint@8.54.0)(typescript@5.2.2)
@@ -4886,7 +4886,7 @@ packages:
 
   /@types/sortablejs@1.15.5:
     resolution: {integrity: sha512-qqqbEFbB1EZt08I1Ok2BA3Sx0zlI8oizdIguMsajk4Yo/iHgXhCb3GM6N09JOJqT9xIMYM9LTFy8vit3RNY71Q==}
-    dev: false
+    dev: true
 
   /@types/tern@0.23.4:
     resolution: {integrity: sha512-JAUw1iXGO1qaWwEOzxTKJZ/5JxVeON9kvGZ/osgZaJImBnyjyn0cjovPsf6FNLmyGY8Vw9DoXZCMlfMkMwHRWg==}

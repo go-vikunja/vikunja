@@ -90,7 +90,6 @@
     "@tiptap/vue-3": "2.1.12",
     "@types/is-touch-device": "1.0.2",
     "@types/lodash.clonedeep": "4.5.9",
-    "@types/sortablejs": "1.15.5",
     "@vueuse/core": "10.6.1",
     "@vueuse/router": "10.6.1",
     "axios": "1.6.2",
