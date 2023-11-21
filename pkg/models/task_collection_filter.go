@@ -147,6 +147,9 @@ func getTaskFiltersByCollections(c *TaskCollection) (filters []*taskFilter, err 
 
 		// Cast the field value to its native type
 		var reflectValue *reflect.StructField
+		if filter.field == "project" {
+			filter.field = "project_id"
+		}
 		reflectValue, filter.value, err = getNativeValueForTaskField(filter.field, filter.comparator, value)
 		if err != nil {
 			return nil, ErrInvalidTaskFilterValue{
