@@ -152,7 +152,10 @@ func getTaskFiltersByCollections(c *TaskCollection) (filters []*taskFilter, err 
 
 	parsedFilter, err := fexpr.Parse(c.Filter)
 	if err != nil {
-		return nil, err
+		return nil, &ErrInvalidFilterExpression{
+			Expression:      c.Filter,
+			ExpressionError: err,
+		}
 	}
 
 	filters = make([]*taskFilter, 0, len(parsedFilter))

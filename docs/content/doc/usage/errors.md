@@ -73,29 +73,30 @@ This document describes the different errors Vikunja can return.
 
 | ErrorCode | HTTP Status Code | Description                                                                |
 |-----------|------------------|----------------------------------------------------------------------------|
-| 4001 | 400 | The project task text cannot be empty.                                     |
-| 4002 | 404 | The project task does not exist.                                           |
-| 4003 | 403 | All bulk editing tasks must belong to the same project.                    |
-| 4004 | 403 | Need at least one task when bulk editing tasks.                            |
-| 4005 | 403 | The user does not have the right to see the task.                          |
-| 4006 | 403 | The user tried to set a parent task as the task itself.                    |
-| 4007 | 400 | The user tried to create a task relation with an invalid kind of relation. |
-| 4008 | 409 | The user tried to create a task relation which already exists.             |
-| 4009 | 404 | The task relation does not exist.                                          |
-| 4010 | 400 | Cannot relate a task with itself.                                          |
-| 4011 | 404 | The task attachment does not exist.                                        |
-| 4012 | 400 | The task attachment is too large.                                          |
-| 4013 | 400 | The task sort param is invalid.                                            |
-| 4014 | 400 | The task sort order is invalid.                                            |
-| 4015 | 404 | The task comment does not exist.                                           |
-| 4016 | 400 | Invalid task field.                                                        |
-| 4017 | 400 | Invalid task filter comparator.                                            |
-| 4018 | 400 | Invalid task filter concatinator.                                          |
-| 4019 | 400 | Invalid task filter value.                                                 |
-| 4020 | 400 | The provided attachment does not belong to that task.                      |
-| 4021 | 400 | This user is already assigned to that task.                                |
-| 4022 | 400 | The task has a relative reminder which does not specify relative to what.  |
-| 4023 | 409 | Tried to create a task relation which would create a cycle.                |
+| 4001      | 400 | The project task text cannot be empty.                                     |
+| 4002      | 404 | The project task does not exist.                                           |
+| 4003      | 403 | All bulk editing tasks must belong to the same project.                    |
+| 4004      | 403 | Need at least one task when bulk editing tasks.                            |
+| 4005      | 403 | The user does not have the right to see the task.                          |
+| 4006      | 403 | The user tried to set a parent task as the task itself.                    |
+| 4007      | 400 | The user tried to create a task relation with an invalid kind of relation. |
+| 4008      | 409 | The user tried to create a task relation which already exists.             |
+| 4009      | 404 | The task relation does not exist.                                          |
+| 4010      | 400 | Cannot relate a task with itself.                                          |
+| 4011      | 404 | The task attachment does not exist.                                        |
+| 4012      | 400 | The task attachment is too large.                                          |
+| 4013      | 400 | The task sort param is invalid.                                            |
+| 4014      | 400 | The task sort order is invalid.                                            |
+| 4015      | 404 | The task comment does not exist.                                           |
+| 4016      | 400 | Invalid task field.                                                        |
+| 4017      | 400 | Invalid task filter comparator.                                            |
+| 4018      | 400 | Invalid task filter concatinator.                                          |
+| 4019      | 400 | Invalid task filter value.                                                 |
+| 4020      | 400 | The provided attachment does not belong to that task.                      |
+| 4021      | 400 | This user is already assigned to that task.                                |
+| 4022      | 400 | The task has a relative reminder which does not specify relative to what.  |
+| 4023      | 409 | Tried to create a task relation which would create a cycle.                |
+| 4024      | 400 | The provided filter expression is invalid.                                 |
 
 ## Team
 
