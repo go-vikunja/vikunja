@@ -494,8 +494,8 @@ function setLink() {
 onMounted(() => {
 	internalMode.value = initialMode
 	nextTick(() => {
-		const input = tiptapInstanceRef.value.querySelectorAll('.tiptap__editor')[0].children[0]
-		input.addEventListener('paste', handleImagePaste)
+		const input = tiptapInstanceRef.value?.querySelectorAll('.tiptap__editor')[0]?.children[0]
+		input?.addEventListener('paste', handleImagePaste)
 	})
 	if (editShortcut !== '') {
 		document.addEventListener('keydown', setFocusToEditor)
@@ -504,8 +504,8 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
 	nextTick(() => {
-		const input = tiptapInstanceRef.value.querySelectorAll('.tiptap__editor')[0].children[0]
-		input.removeEventListener('paste', handleImagePaste)
+		const input = tiptapInstanceRef.value?.querySelectorAll('.tiptap__editor')[0]?.children[0]
+		input?.removeEventListener('paste', handleImagePaste)
 	})
 	if (editShortcut !== '') {
 		document.removeEventListener('keydown', setFocusToEditor)
@@ -554,7 +554,10 @@ watch(
 	() => isEditing.value,
 	editing => {
 		nextTick(() => {
-			const checkboxes = tiptapInstanceRef.value.querySelectorAll('[data-checked]')
+			const checkboxes = tiptapInstanceRef.value?.querySelectorAll('[data-checked]')
+			if (typeof checkboxes === 'undefined' || checkboxes.length === 0) {
+				return
+			}
 			if (editing) {
 				checkboxes.forEach(check => {
 					if (check.children.length < 2) {
