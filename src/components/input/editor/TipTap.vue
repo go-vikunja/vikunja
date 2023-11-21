@@ -493,14 +493,20 @@ function setLink() {
 
 onMounted(() => {
 	internalMode.value = initialMode
-	document.addEventListener('paste', handleImagePaste)
+	nextTick(() => {
+		const input = tiptapInstanceRef.value.querySelectorAll('.tiptap__editor')[0].children[0]
+		input.addEventListener('paste', handleImagePaste)
+	})
 	if (editShortcut !== '') {
 		document.addEventListener('keydown', setFocusToEditor)
 	}
 })
 
 onBeforeUnmount(() => {
-	document.removeEventListener('paste', handleImagePaste)
+	nextTick(() => {
+		const input = tiptapInstanceRef.value.querySelectorAll('.tiptap__editor')[0].children[0]
+		input.removeEventListener('paste', handleImagePaste)
+	})
 	if (editShortcut !== '') {
 		document.removeEventListener('keydown', setFocusToEditor)
 	}
@@ -510,11 +516,12 @@ function handleImagePaste(event) {
 	if (event?.clipboardData?.items?.length === 0) {
 		return
 	}
-	
+
 	event.preventDefault()
 
 	const image = event.clipboardData.items[0]
 	if (image.kind === 'file' && image.type.startsWith('image/')) {
+		console.log('img', image.getAsFile())
 		uploadAndInsertFiles([image.getAsFile()])
 	}
 }

@@ -218,13 +218,19 @@ const actions = computed(() => {
 	])))
 })
 
-function attachmentUpload(
-	file: File,
-	onSuccess: (url: string) => void,
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	onError: (error: string) => void,
-) {
-	return uploadFile(props.taskId, file, onSuccess)
+async function attachmentUpload(files: File[] | FileList): (Promise<string[]>) {
+
+	const uploadPromises: Promise<string>[] = []
+
+	files.forEach((file: File) => {
+		const promise = new Promise<string>((resolve) => {
+			uploadFile(props.taskId, file, (uploadedFileUrl: string) => resolve(uploadedFileUrl))
+		})
+
+		uploadPromises.push(promise)
+	})
+
+	return await Promise.all(uploadPromises)
 }
 
 const taskCommentService = shallowReactive(new TaskCommentService())
@@ -299,7 +305,7 @@ async function editComment() {
 	if (commentEdit.comment === '') {
 		return
 	}
-	
+
 	if (changeTimeout.value !== null) {
 		clearTimeout(changeTimeout.value)
 	}
@@ -368,7 +374,7 @@ async function deleteComment(commentToDelete: ITaskComment) {
 }
 
 .image.is-avatar {
-  border-radius: 100%;
+	border-radius: 100%;
 }
 
 .media-content {
