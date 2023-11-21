@@ -828,6 +828,18 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "ReadAll Tasks with range with start date only between",
+			fields: fields{
+				Filter: "start_date > '2018-12-12T00:00:00+00:00' && start_date < '2018-12-13T00:00:00+00:00'",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task7,
+				task9,
+			},
+			wantErr: false,
+		},
+		{
 			name: "ReadAll Tasks with range with start date only and greater equals",
 			fields: fields{
 				Filter: "start_date >= '2018-12-12T07:33:20+00:00'",
