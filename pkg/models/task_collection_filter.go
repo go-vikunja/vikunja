@@ -90,6 +90,60 @@ func parseTimeFromUserInput(timeString string) (value time.Time, err error) {
 	return value.In(config.GetTimeZone()), err
 }
 
+func parseFilterFromExpression(f fexpr.ExprGroup) (filter *taskFilter, err error) {
+	filter = &taskFilter{
+		join: filterConcatAnd,
+	}
+	if f.Join == fexpr.JoinOr {
+		filter.join = filterConcatOr
+	}
+
+	var value string
+	switch v := f.Item.(type) {
+	case fexpr.Expr:
+		filter.field = v.Left.Literal
+		value = v.Right.Literal
+		filter.comparator, err = getFilterComparatorFromOp(v.Op)
+		if err != nil {
+			return
+		}
+	case []fexpr.ExprGroup:
+		values := make([]*taskFilter, 0, len(v))
+		for _, expression := range v {
+			subfilter, err := parseFilterFromExpression(expression)
+			if err != nil {
+				return nil, err
+			}
+			values = append(values, subfilter)
+		}
+		filter.value = values
+		return
+	}
+
+	err = validateTaskFieldComparator(filter.comparator)
+	if err != nil {
+		return
+	}
+
+	// Cast the field value to its native type
+	var reflectValue *reflect.StructField
+	if filter.field == "project" {
+		filter.field = "project_id"
+	}
+	reflectValue, filter.value, err = getNativeValueForTaskField(filter.field, filter.comparator, value)
+	if err != nil {
+		return nil, ErrInvalidTaskFilterValue{
+			Value: filter.field,
+			Field: value,
+		}
+	}
+	if reflectValue != nil {
+		filter.isNumeric = reflectValue.Type.Kind() == reflect.Int64
+	}
+
+	return filter, nil
+}
+
 func getTaskFiltersByCollections(c *TaskCollection) (filters []*taskFilter, err error) {
 
 	if c.Filter == "" {
@@ -121,46 +175,10 @@ func getTaskFiltersByCollections(c *TaskCollection) (filters []*taskFilter, err 
 
 	filters = make([]*taskFilter, 0, len(parsedFilter))
 	for _, f := range parsedFilter {
-
-		filter := &taskFilter{
-			join: filterConcatAnd,
-		}
-		if f.Join == fexpr.JoinOr {
-			filter.join = filterConcatOr
-		}
-
-		var value string
-		switch v := f.Item.(type) {
-		case fexpr.Expr:
-			filter.field = v.Left.Literal
-			value = v.Right.Literal // TODO: nesting
-			filter.comparator, err = getFilterComparatorFromOp(v.Op)
-			if err != nil {
-				return
-			}
-		}
-
-		err = validateTaskFieldComparator(filter.comparator)
+		filter, err := parseFilterFromExpression(f)
 		if err != nil {
-			return
+			return nil, err
 		}
-
-		// Cast the field value to its native type
-		var reflectValue *reflect.StructField
-		if filter.field == "project" {
-			filter.field = "project_id"
-		}
-		reflectValue, filter.value, err = getNativeValueForTaskField(filter.field, filter.comparator, value)
-		if err != nil {
-			return nil, ErrInvalidTaskFilterValue{
-				Value: filter.field,
-				Field: value,
-			}
-		}
-		if reflectValue != nil {
-			filter.isNumeric = reflectValue.Type.Kind() == reflect.Int64
-		}
-
 		filters = append(filters, filter)
 	}
 
