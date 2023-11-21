@@ -210,13 +210,17 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 
 	var filterCond builder.Cond
 	if len(filters) > 0 {
-		for i, f := range filters {
-			if len(filters) > i+1 {
-				switch opts.filters[i].join {
-				case filterConcatOr:
-					filterCond = builder.Or(filterCond, f, filters[i+1])
-				case filterConcatAnd:
-					filterCond = builder.And(filterCond, f, filters[i+1])
+		if len(filters) == 1 {
+			filterCond = filters[0]
+		} else {
+			for i, f := range filters {
+				if len(filters) > i+1 {
+					switch opts.filters[i+1].join {
+					case filterConcatOr:
+						filterCond = builder.Or(filterCond, f, filters[i+1])
+					case filterConcatAnd:
+						filterCond = builder.And(filterCond, f, filters[i+1])
+					}
 				}
 			}
 		}
