@@ -105,7 +105,7 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskSearchOption
 		filter:             tf.Filter,
 	}
 
-	opts.filters, err = getTaskFiltersByCollections(tf)
+	opts.filters, err = getTaskFiltersFromFilterString(tf.Filter)
 	return opts, err
 }
 

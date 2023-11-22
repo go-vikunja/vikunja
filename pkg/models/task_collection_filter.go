@@ -144,29 +144,29 @@ func parseFilterFromExpression(f fexpr.ExprGroup) (filter *taskFilter, err error
 	return filter, nil
 }
 
-func getTaskFiltersByCollections(c *TaskCollection) (filters []*taskFilter, err error) {
+func getTaskFiltersFromFilterString(filter string) (filters []*taskFilter, err error) {
 
-	if c.Filter == "" {
+	if filter == "" {
 		return
 	}
 
-	c.Filter = strings.ReplaceAll(c.Filter, " in ", " ?= ")
+	filter = strings.ReplaceAll(filter, " in ", " ?= ")
 
-	parsedFilter, err := fexpr.Parse(c.Filter)
+	parsedFilter, err := fexpr.Parse(filter)
 	if err != nil {
 		return nil, &ErrInvalidFilterExpression{
-			Expression:      c.Filter,
+			Expression:      filter,
 			ExpressionError: err,
 		}
 	}
 
 	filters = make([]*taskFilter, 0, len(parsedFilter))
 	for _, f := range parsedFilter {
-		filter, err := parseFilterFromExpression(f)
+		parsedFilter, err := parseFilterFromExpression(f)
 		if err != nil {
 			return nil, err
 		}
-		filters = append(filters, filter)
+		filters = append(filters, parsedFilter)
 	}
 
 	return

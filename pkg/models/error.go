@@ -1045,7 +1045,7 @@ func IsErrInvalidFilterExpression(err error) bool {
 }
 
 func (err ErrInvalidFilterExpression) Error() string {
-	return fmt.Sprintf("Task filter expression is invalid [ExpressionError: %v]", err.ExpressionError)
+	return fmt.Sprintf("Task filter expression '%s' is invalid [ExpressionError: %v]", err.Expression, err.ExpressionError)
 }
 
 // ErrCodeInvalidFilterExpression holds the unique world-error code of this error
