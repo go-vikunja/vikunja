@@ -150,6 +150,8 @@ func getTaskFiltersByCollections(c *TaskCollection) (filters []*taskFilter, err 
 		return
 	}
 
+	c.Filter = strings.ReplaceAll(c.Filter, " in ", " ?= ")
+
 	parsedFilter, err := fexpr.Parse(c.Filter)
 	if err != nil {
 		return nil, &ErrInvalidFilterExpression{

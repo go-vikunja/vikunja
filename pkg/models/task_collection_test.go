@@ -1033,9 +1033,21 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "filter in keyword",
+			fields: fields{
+				Filter: "id in '1,2,34'", // user does not have permission to access task 34
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task1,
+				task2,
+			},
+			wantErr: false,
+		},
+		{
 			name: "filter in",
 			fields: fields{
-				Filter: "id ?= '1,2,34'",
+				Filter: "id ?= '1,2,34'", // user does not have permission to access task 34
 			},
 			args: defaultArgs,
 			want: []*Task{
