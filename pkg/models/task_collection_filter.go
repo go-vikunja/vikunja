@@ -18,11 +18,12 @@ package models
 
 import (
 	"fmt"
-	"github.com/ganigeorgiev/fexpr"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ganigeorgiev/fexpr"
 
 	"code.vikunja.io/api/pkg/config"
 
@@ -188,29 +189,6 @@ func validateTaskFieldComparator(comparator taskFilterComparator) error {
 		fallthrough
 	default:
 		return ErrInvalidTaskFilterComparator{Comparator: comparator}
-	}
-}
-
-func getFilterComparatorFromString(comparator string) (taskFilterComparator, error) {
-	switch comparator {
-	case "equals":
-		return taskFilterComparatorEquals, nil
-	case "greater":
-		return taskFilterComparatorGreater, nil
-	case "greater_equals":
-		return taskFilterComparatorGreateEquals, nil
-	case "less":
-		return taskFilterComparatorLess, nil
-	case "less_equals":
-		return taskFilterComparatorLessEquals, nil
-	case "not_equals":
-		return taskFilterComparatorNotEquals, nil
-	case "like":
-		return taskFilterComparatorLike, nil
-	case "in":
-		return taskFilterComparatorIn, nil
-	default:
-		return taskFilterComparatorInvalid, ErrInvalidTaskFilterComparator{Comparator: taskFilterComparator(comparator)}
 	}
 }
 
