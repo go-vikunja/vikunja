@@ -175,9 +175,8 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 	opts.page = page
 	opts.perPage = perPage
 	opts.search = search
-	opts.filterConcat = filterConcatAnd
 
-	for _, filter := range opts.filters {
+	for _, filter := range opts.parsedFilters {
 		if filter.field == taskPropertyBucketID {
 
 			// Limiting the map to the one filter we're looking for is the easiest way to ensure we only
@@ -201,7 +200,7 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 			} else {
 				filterString = "(" + originalFilter + ") && bucket_id = " + strconv.FormatInt(id, 10)
 			}
-			opts.filters, err = getTaskFiltersFromFilterString(filterString)
+			opts.parsedFilters, err = getTaskFiltersFromFilterString(filterString)
 			if err != nil {
 				return
 			}

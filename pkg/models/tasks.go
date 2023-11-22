@@ -167,13 +167,11 @@ const (
 )
 
 type taskSearchOptions struct {
-	search  string
-	page    int
-	perPage int
-	sortby  []*sortParam
-	filters []*taskFilter
-	// deprecated: concat should live in filters directly
-	filterConcat       taskFilterConcatinator
+	search             string
+	page               int
+	perPage            int
+	sortby             []*sortParam
+	parsedFilters      []*taskFilter
 	filterIncludeNulls bool
 	filter             string
 	projectIDs         []int64
@@ -265,11 +263,6 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 	// If the user does not have any projects, don't try to get any tasks
 	if len(projects) == 0 {
 		return nil, 0, 0, nil
-	}
-
-	// Set the default concatinator of filter variables to or if none was provided
-	if opts.filterConcat == "" {
-		opts.filterConcat = filterConcatOr
 	}
 
 	// Get all project IDs and get the tasks
