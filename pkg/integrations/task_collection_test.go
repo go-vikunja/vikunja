@@ -184,9 +184,7 @@ func TestTaskCollection(t *testing.T) {
 				t.Run("start and end date", func(t *testing.T) {
 					rec, err := testHandler.testReadAllWithUser(
 						url.Values{
-							"filter_by":         []string{"start_date", "end_date", "due_date"},
-							"filter_value":      []string{"2018-12-11T03:46:40+00:00", "2018-12-13T11:20:01+00:00", "2018-11-29T14:00:00+00:00"},
-							"filter_comparator": []string{"greater", "less", "greater"},
+							"filter": []string{"start_date > '2018-12-11T03:46:40+00:00' || end_date < '2018-12-13T11:20:01+00:00' || due_date > '2018-11-29T14:00:00+00:00'"},
 						},
 						urlParams,
 					)
@@ -209,9 +207,7 @@ func TestTaskCollection(t *testing.T) {
 				t.Run("start date only", func(t *testing.T) {
 					rec, err := testHandler.testReadAllWithUser(
 						url.Values{
-							"filter_by":         []string{"start_date"},
-							"filter_value":      []string{"2018-10-20T01:46:40+00:00"},
-							"filter_comparator": []string{"greater"},
+							"filter": []string{"start_date > '2018-10-20T01:46:40+00:00'"},
 						},
 						urlParams,
 					)
@@ -234,9 +230,7 @@ func TestTaskCollection(t *testing.T) {
 				t.Run("end date only", func(t *testing.T) {
 					rec, err := testHandler.testReadAllWithUser(
 						url.Values{
-							"filter_by":         []string{"end_date"},
-							"filter_value":      []string{"2018-12-13T11:20:01+00:00"},
-							"filter_comparator": []string{"greater"},
+							"filter": []string{"end_date > '2018-12-13T11:20:01+00:00'"},
 						},
 						urlParams,
 					)
@@ -249,9 +243,7 @@ func TestTaskCollection(t *testing.T) {
 				t.Run("unix timestamps", func(t *testing.T) {
 					rec, err := testHandler.testReadAllWithUser(
 						url.Values{
-							"filter_by":         []string{"start_date", "end_date", "due_date"},
-							"filter_value":      []string{"1544500000", "1513164001", "1543500000"},
-							"filter_comparator": []string{"greater", "less", "greater"},
+							"filter": []string{"start_date > 1544500000 || end_date < 1513164001 || due_date > 1543500000"},
 						},
 						urlParams,
 					)
@@ -275,9 +267,7 @@ func TestTaskCollection(t *testing.T) {
 			t.Run("invalid date", func(t *testing.T) {
 				_, err := testHandler.testReadAllWithUser(
 					url.Values{
-						"filter_by":         []string{"due_date"},
-						"filter_value":      []string{"invalid"},
-						"filter_comparator": []string{"greater"},
+						"filter": []string{"due_date > invalid"},
 					},
 					nil,
 				)
@@ -411,9 +401,7 @@ func TestTaskCollection(t *testing.T) {
 				t.Run("start and end date", func(t *testing.T) {
 					rec, err := testHandler.testReadAllWithUser(
 						url.Values{
-							"filter_by":         []string{"start_date", "end_date", "due_date"},
-							"filter_value":      []string{"2018-12-11T03:46:40+00:00", "2018-12-13T11:20:01+00:00", "2018-11-29T14:00:00+00:00"},
-							"filter_comparator": []string{"greater", "less", "greater"},
+							"filter": []string{"start_date > '2018-12-11T03:46:40+00:00' || end_date < '2018-12-13T11:20:01+00:00' || due_date > '2018-11-29T14:00:00+00:00'"},
 						},
 						nil,
 					)
@@ -436,9 +424,7 @@ func TestTaskCollection(t *testing.T) {
 				t.Run("start date only", func(t *testing.T) {
 					rec, err := testHandler.testReadAllWithUser(
 						url.Values{
-							"filter_by":         []string{"start_date"},
-							"filter_value":      []string{"2018-10-20T01:46:40+00:00"},
-							"filter_comparator": []string{"greater"},
+							"filter": []string{"start_date > '2018-10-20T01:46:40+00:00'"},
 						},
 						nil,
 					)
@@ -461,9 +447,7 @@ func TestTaskCollection(t *testing.T) {
 				t.Run("end date only", func(t *testing.T) {
 					rec, err := testHandler.testReadAllWithUser(
 						url.Values{
-							"filter_by":         []string{"end_date"},
-							"filter_value":      []string{"2018-12-13T11:20:01+00:00"},
-							"filter_comparator": []string{"greater"},
+							"filter": []string{"end_date > '2018-12-13T11:20:01+00:00'"},
 						},
 						nil,
 					)
@@ -477,9 +461,7 @@ func TestTaskCollection(t *testing.T) {
 			t.Run("invalid date", func(t *testing.T) {
 				_, err := testHandler.testReadAllWithUser(
 					url.Values{
-						"filter_by":         []string{"due_date"},
-						"filter_value":      []string{"invalid"},
-						"filter_comparator": []string{"greater"},
+						"filter": []string{"due_date > invalid"},
 					},
 					nil,
 				)
