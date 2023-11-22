@@ -92,6 +92,30 @@ func TestBucket_ReadAll(t *testing.T) {
 		assert.Equal(t, int64(2), buckets[0].Tasks[0].ID)
 		assert.Equal(t, int64(33), buckets[0].Tasks[1].ID)
 	})
+	t.Run("filtered by bucket", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		testuser := &user.User{ID: 1}
+		b := &Bucket{
+			ProjectID: 1,
+			TaskCollection: TaskCollection{
+				Filter: "title ~ 'task' && bucket_id = 2",
+			},
+		}
+		bucketsInterface, _, _, err := b.ReadAll(s, testuser, "", -1, 0)
+		assert.NoError(t, err)
+
+		buckets := bucketsInterface.([]*Bucket)
+		assert.Len(t, buckets, 3)
+		assert.Len(t, buckets[0].Tasks, 0)
+		assert.Len(t, buckets[1].Tasks, 3)
+		assert.Len(t, buckets[2].Tasks, 0)
+		assert.Equal(t, int64(3), buckets[1].Tasks[0].ID)
+		assert.Equal(t, int64(4), buckets[1].Tasks[1].ID)
+		assert.Equal(t, int64(5), buckets[1].Tasks[2].ID)
+	})
 	t.Run("accessed by link share", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

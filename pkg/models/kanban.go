@@ -17,6 +17,8 @@
 package models
 
 import (
+	"strconv"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/log"
@@ -175,26 +177,35 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 	opts.search = search
 	opts.filterConcat = filterConcatAnd
 
-	var bucketFilterIndex int
-	for i, filter := range opts.filters {
+	for _, filter := range opts.filters {
 		if filter.field == taskPropertyBucketID {
-			bucketFilterIndex = i
+
+			// Limiting the map to the one filter we're looking for is the easiest way to ensure we only
+			// get tasks in this bucket
+			bucketID := filter.value.(int64)
+			bucket := bucketMap[bucketID]
+
+			bucketMap = make(map[int64]*Bucket, 1)
+			bucketMap[bucketID] = bucket
 			break
 		}
 	}
 
-	if bucketFilterIndex == 0 {
-		opts.filters = append(opts.filters, &taskFilter{
-			field:      taskPropertyBucketID,
-			value:      0,
-			comparator: taskFilterComparatorEquals,
-		})
-		bucketFilterIndex = len(opts.filters) - 1
-	}
-
+	originalFilter := opts.filter
 	for id, bucket := range bucketMap {
 
-		opts.filters[bucketFilterIndex].value = id
+		if !strings.Contains(originalFilter, "bucket_id") {
+			var filterString string
+			if originalFilter == "" {
+				filterString = "bucket_id = " + strconv.FormatInt(id, 10)
+			} else {
+				filterString = "(" + originalFilter + ") && bucket_id = " + strconv.FormatInt(id, 10)
+			}
+			opts.filters, err = getTaskFiltersFromFilterString(filterString)
+			if err != nil {
+				return
+			}
+		}
 
 		ts, _, total, err := getRawTasksForProjects(s, []*Project{{ID: bucket.ProjectID}}, auth, opts)
 		if err != nil {
