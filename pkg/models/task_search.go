@@ -204,7 +204,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		return nil, 0, err
 	}
 
-	filterCond, err := convertFiltersToDBFilterCond(opts.filters, opts.filterIncludeNulls)
+	filterCond, err := convertFiltersToDBFilterCond(opts.parsedFilters, opts.filterIncludeNulls)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -348,7 +348,7 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 		"project_id: [" + strings.Join(projectIDStrings, ", ") + "]",
 	}
 
-	for _, f := range opts.filters {
+	for _, f := range opts.parsedFilters {
 
 		if f.field == "reminders" {
 			f.field = "reminders.reminder"
