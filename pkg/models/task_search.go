@@ -315,40 +315,22 @@ func convertFilterValues(value interface{}) string {
 	return ""
 }
 
-func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
+// Parsing and rebuilding the filter for Typesense has the advantage that we have more control over
+// what Typesense finally gets to see.
+func convertParsedFilterToTypesense(rawFilters []*taskFilter) (filterBy string, err error) {
 
-	var sortbyFields []string
-	for i, param := range opts.sortby {
-		// Validate the params
-		if err := param.validate(); err != nil {
-			return nil, totalCount, err
+	filters := []string{}
+
+	for _, f := range rawFilters {
+
+		if nested, is := f.value.([]*taskFilter); is {
+			nestedDBFilters, err := convertParsedFilterToTypesense(nested)
+			if err != nil {
+				return "", err
+			}
+			filters = append(filters, "("+nestedDBFilters+")")
+			continue
 		}
-
-		// Typesense does not allow sorting by ID, so we sort by created timestamp instead
-		if param.sortBy == "id" {
-			param.sortBy = "created"
-		}
-
-		sortbyFields = append(sortbyFields, param.sortBy+"(missing_values:last):"+param.orderBy.String())
-
-		if i == 2 {
-			// Typesense supports up to 3 sorting parameters
-			// https://typesense.org/docs/0.25.0/api/search.html#ranking-and-sorting-parameters
-			break
-		}
-	}
-
-	sortby := strings.Join(sortbyFields, ",")
-
-	projectIDStrings := []string{}
-	for _, id := range opts.projectIDs {
-		projectIDStrings = append(projectIDStrings, strconv.FormatInt(id, 10))
-	}
-	filterBy := []string{
-		"project_id: [" + strings.Join(projectIDStrings, ", ") + "]",
-	}
-
-	for _, f := range opts.parsedFilters {
 
 		if f.field == "reminders" {
 			f.field = "reminders.reminder"
@@ -360,6 +342,10 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 
 		if f.field == "labels" || f.field == "label_id" {
 			f.field = "labels.id"
+		}
+
+		if f.field == "project" {
+			f.field = "project_id"
 		}
 
 		filter := f.field
@@ -393,7 +379,67 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 			filter += "]"
 		}
 
-		filterBy = append(filterBy, filter)
+		filters = append(filters, filter)
+	}
+
+	if len(filters) > 0 {
+		if len(filters) == 1 {
+			filterBy = filters[0]
+		} else {
+			for i, f := range filters {
+				if len(filters) > i+1 {
+					switch rawFilters[i+1].join {
+					case filterConcatOr:
+						filterBy = f + " || " + filters[i+1]
+					case filterConcatAnd:
+						filterBy = f + " && " + filters[i+1]
+					}
+				}
+			}
+		}
+	}
+
+	return
+}
+
+func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
+
+	var sortbyFields []string
+	for i, param := range opts.sortby {
+		// Validate the params
+		if err := param.validate(); err != nil {
+			return nil, totalCount, err
+		}
+
+		// Typesense does not allow sorting by ID, so we sort by created timestamp instead
+		if param.sortBy == "id" {
+			param.sortBy = "created"
+		}
+
+		sortbyFields = append(sortbyFields, param.sortBy+"(missing_values:last):"+param.orderBy.String())
+
+		if i == 2 {
+			// Typesense supports up to 3 sorting parameters
+			// https://typesense.org/docs/0.25.0/api/search.html#ranking-and-sorting-parameters
+			break
+		}
+	}
+
+	sortby := strings.Join(sortbyFields, ",")
+
+	projectIDStrings := []string{}
+	for _, id := range opts.projectIDs {
+		projectIDStrings = append(projectIDStrings, strconv.FormatInt(id, 10))
+	}
+
+	filter, err := convertParsedFilterToTypesense(opts.parsedFilters)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	filterBy := []string{
+		"project_id: [" + strings.Join(projectIDStrings, ", ") + "]",
+		"(" + filter + ")",
 	}
 
 	////////////////
