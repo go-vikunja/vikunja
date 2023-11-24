@@ -259,7 +259,7 @@
       "identifier": "Identifikator projekta",
       "identifierPlaceholder": "Tu je identifikator projekta…",
       "description": "Opis",
-      "descriptionPlaceholder": "Vnesite opis za ta projekt, pritisnite '/' za več možnosti…",
+      "descriptionPlaceholder": "Vnesi opis za ta projekt, pritisni '/' za več možnosti…",
       "color": "Barva",
       "success": "Projekt je bil uspešno posodobljen."
     },
@@ -358,7 +358,7 @@
     },
     "pseudo": {
       "favorites": {
-        "title": "Priljubljene"
+        "title": "Priljubljeni"
       }
     },
     "webhooks": {
@@ -384,7 +384,7 @@
       "title": "Naslov",
       "titlePlaceholder": "Tu je naslov shranjenega filtra…",
       "description": "Opis",
-      "descriptionPlaceholder": "Dodajte opis za ta filter, pritisnite '/' za več možnosti…",
+      "descriptionPlaceholder": "Dodaj opis za ta filter, pritisni '/' za več možnosti…",
       "includeNulls": "Vključi naloge, ki nimajo nastavljene vrednosti",
       "requireAll": "Zahtevajte, da se naloga prikaže, če so uporabljeni vsi filtri",
       "showDoneTasks": "Pokaži že končane naloge",
@@ -559,7 +559,7 @@
         "mergeOrSplit": "Spoji ali razdeli",
         "fixTables": "Popravi tabele"
       },
-      "horizontalRule": "Horizontalno pravilo",
+      "horizontalRule": "Horizontalno ravnilo",
       "horizontalRuleTooltip": "Razdeli sekcijo.",
       "sideBySide": "Drug ob drugem",
       "guide": "Vodič",
@@ -569,7 +569,7 @@
       "taskListTooltip": "Seznam nalog s to-do seznamom.",
       "undo": "Razveljavi",
       "redo": "Obnovi",
-      "placeholder": "Začnite tipkati besedilo ali pritisnite '/', da vidite več možnosti…"
+      "placeholder": "Začni tipkati besedilo ali pritisni '/', da vidiš več možnosti…"
     },
     "multiselect": {
       "createPlaceholder": "Ustvari novo",
@@ -674,12 +674,12 @@
       "actions": {
         "assign": "Dodeli uporabniku",
         "label": "Dodaj oznako",
-        "priority": "Nastavi prednost",
-        "dueDate": "Nastavite datum zapadlosti",
+        "priority": "Nastavi prioriteto",
+        "dueDate": "Nastavi datum zapadlosti",
         "startDate": "Nastavi začetni datum",
         "endDate": "Nastavi končni datum",
         "reminders": "Nastavi opomnike",
-        "repeatAfter": "Nastavit interval ponavljanja",
+        "repeatAfter": "Nastavi interval ponavljanja",
         "percentDone": "Nastavi napredek",
         "attachments": "Dodaj priloge",
         "relatedTasks": "Dodaj relacijo",
@@ -781,11 +781,11 @@
     },
     "priority": {
       "unset": "Ponastavi",
-      "low": "Nizko",
-      "medium": "Srednje",
-      "high": "Visoko",
-      "urgent": "Nujno",
-      "doNow": "NAREDI ZDAJ"
+      "low": "Nizka",
+      "medium": "Srednja",
+      "high": "Visoka",
+      "urgent": "Nujna",
+      "doNow": "NAREDI TAKOJ"
     },
     "relation": {
       "add": "Dodajte novo povezavo naloge",
@@ -803,13 +803,13 @@
         "parenttask": "Nadrejena naloga | Nadrejene naloge",
         "related": "Povezana naloga | Povezane naloge",
         "duplicateof": "Dvojnik od | Dvojniki od",
-        "duplicates": "Dvojniki | Dvojniki",
-        "blocking": "Blokiranje | Blokiranje",
-        "blocked": "Blokiran od | Blokiran od",
-        "precedes": "Predhodnik | Predhodnik",
-        "follows": "Sledi | Sledi",
-        "copiedfrom": "Kopirano iz | Kopirano iz",
-        "copiedto": "Kopirano v | Kopirano v"
+        "duplicates": "Dvojnik | Dvojniki",
+        "blocking": "Blokiran | Blokirani",
+        "blocked": "Blokiran od | Blokirani od",
+        "precedes": "Predhodnik | Predhodniki",
+        "follows": "Sledi | Sledijo",
+        "copiedfrom": "Kopiran iz | Kopirani iz",
+        "copiedto": "Kopiran v | Kopirani v"
       }
     },
     "reminder": {
@@ -848,8 +848,8 @@
       "label2": "Vikunja bo najprej preverila, ali oznaka že obstaja in jo ustvarila, če ne.",
       "label3": "Če želite uporabiti presledke, okrog imena oznake preprosto dodajte \" ali '.",
       "label4": "Na primer: {prefix}\"Oznaka s presledki\".",
-      "priority1": "Če želite nalogi nastaviti prednost, dodajte številko 1-5 s predpono {prefix}.",
-      "priority2": "Višje kot je število, višja je prednost.",
+      "priority1": "Če želite nalogi nastaviti prioriteto, dodajte številko 1-5 s predpono {prefix}.",
+      "priority2": "Višje kot je število, višja je prioriteta.",
       "assignees": "Če želite nalogo neposredno dodeliti uporabniku, nalogi dodajte njegovo uporabniško ime s predpono {prefix}.",
       "project1": "Če želite nastaviti projekt, v katerem bo prikazana naloga, vnesite njegovo ime s predpono {prefix}.",
       "project2": "Če projekt ne obstaja, bo ti vrnilo napako.",
@@ -935,7 +935,7 @@
       "reminder": "Upravljaj opomnike za to nalogo",
       "description": "Preklopi urejanje opisa naloge",
       "delete": "Izbriši nalogo",
-      "priority": "Spremeni prednost te naloge",
+      "priority": "Spremeni prioriteto te naloge",
       "favorite": "Označi to nalogo kot priljubljeno/nepriljubljeno",
       "save": "Shrani trenutno nalogo"
     },
