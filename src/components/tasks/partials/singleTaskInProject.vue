@@ -3,7 +3,10 @@
 		<div
 			:class="{'is-loading': taskService.loading}"
 			class="task loader-container"
-			@click.stop.self="openTaskDetail"
+			@mouseup.stop.self="openTaskDetail"
+			@mousedown.stop.self="focusTaskLink"
+			ref="taskContainerRef"
+			tabindex="-1"
 		>
 			<fancycheckbox
 				:disabled="(isArchived || disabled) && !canMarkAsDone"
@@ -20,6 +23,8 @@
 			<div
 				:class="{ 'done': task.done, 'show-project': showProject && project}"
 				class="tasktext"
+				@mouseup.stop.self="openTaskDetail"
+				@mousedown.stop.self="focusTaskLink"
 			>
 			<span>
 				<router-link
@@ -313,11 +318,22 @@ function hideDeferDueDatePopup(e) {
 }
 
 const taskLink = ref<HTMLElement | null>(null)
+const taskContainerRef = ref<HTMLElement | null>(null)
+
+function hasTextSelected() {
+	const isTextSelected = window.getSelection().toString()
+	return !(typeof isTextSelected === 'undefined' || isTextSelected === '' || isTextSelected === '\n')
+}
 
 function openTaskDetail() {
-	const isTextSelected = window.getSelection().toString()
-	if (!isTextSelected) {
+	if (!hasTextSelected()) {
 		taskLink.value.$el.click()
+	}
+}
+
+function focusTaskLink() {
+	if (!hasTextSelected()) {
+		taskContainerRef.value.focus()
 	}
 }
 </script>
