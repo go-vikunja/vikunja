@@ -546,7 +546,12 @@ function setFocusToEditor(event) {
 }
 
 function clickTasklistCheckbox(event) {
-	// Needs to be a separate function to be able to remove the event listener
+	event.stopImmediatePropagation()
+
+	if (event.target.localName !== 'p') {
+		return
+	}
+
 	event.target.parentNode.parentNode.firstChild.click()
 }
 
@@ -558,6 +563,7 @@ watch(
 			if (typeof checkboxes === 'undefined' || checkboxes.length === 0) {
 				return
 			}
+
 			if (editing) {
 				checkboxes.forEach(check => {
 					if (check.children.length < 2) {
@@ -571,6 +577,7 @@ watch(
 
 				return
 			}
+
 			checkboxes.forEach(check => {
 				if (check.children.length < 2) {
 					return
