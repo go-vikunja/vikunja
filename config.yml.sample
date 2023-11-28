@@ -191,6 +191,10 @@ ratelimit:
   # Possible values are "keyvalue", "memory" or "redis".
   # When choosing "keyvalue" this setting follows the one configured in the "keyvalue" section.
   store: keyvalue
+  # The number of requests a user can make from the same IP to all unauthenticated routes (login, register, 
+  # password confirmation, email verification, password reset request) per minute. This limit cannot be disabled.
+  # You should only change this if you know what you're doing.
+  noauthlimit: 10
 
 files:
   # The path where files are stored

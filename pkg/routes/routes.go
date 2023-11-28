@@ -246,7 +246,7 @@ func registerAPIRoutes(a *echo.Group) {
 	ur := a.Group("")
 	rate := limiter.Rate{
 		Period: 60 * time.Second,
-		Limit:  10,
+		Limit:  config.RateLimitNoAuthRoutesLimit.GetInt64(),
 	}
 	rateLimiter := createRateLimiter(rate)
 	ur.Use(RateLimit(rateLimiter, "ip"))

@@ -969,6 +969,19 @@ Full path: `ratelimit.store`
 Environment path: `VIKUNJA_RATELIMIT_STORE`
 
 
+### noauthlimit
+
+The number of requests a user can make from the same IP to all unauthenticated routes (login, register, 
+password confirmation, email verification, password reset request) per minute. This limit cannot be disabled.
+You should only change this if you know what you're doing.
+
+Default: `10`
+
+Full path: `ratelimit.noauthlimit`
+
+Environment path: `VIKUNJA_RATELIMIT_NOAUTHLIMIT`
+
+
 ---
 
 ## files

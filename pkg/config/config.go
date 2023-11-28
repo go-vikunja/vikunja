@@ -122,11 +122,12 @@ const (
 	LogMail          Key = `log.mail`
 	LogMailLevel     Key = `log.maillevel`
 
-	RateLimitEnabled Key = `ratelimit.enabled`
-	RateLimitKind    Key = `ratelimit.kind`
-	RateLimitPeriod  Key = `ratelimit.period`
-	RateLimitLimit   Key = `ratelimit.limit`
-	RateLimitStore   Key = `ratelimit.store`
+	RateLimitEnabled           Key = `ratelimit.enabled`
+	RateLimitKind              Key = `ratelimit.kind`
+	RateLimitPeriod            Key = `ratelimit.period`
+	RateLimitLimit             Key = `ratelimit.limit`
+	RateLimitStore             Key = `ratelimit.store`
+	RateLimitNoAuthRoutesLimit Key = `ratelimit.noauthlimit`
 
 	FilesBasePath Key = `files.basepath`
 	FilesMaxSize  Key = `files.maxsize`
@@ -367,6 +368,7 @@ func InitDefaultConfig() {
 	RateLimitLimit.setDefault(100)
 	RateLimitPeriod.setDefault(60)
 	RateLimitStore.setDefault("memory")
+	RateLimitNoAuthRoutesLimit.setDefault(10)
 	// Files
 	FilesBasePath.setDefault("files")
 	FilesMaxSize.setDefault("20MB")
