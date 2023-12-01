@@ -26,13 +26,12 @@
 			v-model="description"
 			@update:model-value="saveWithDelay"
 			@save="save"
-			:initial-mode="isEditorContentEmpty(description) ? 'edit' : 'preview'"
 		/>
 	</div>
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watch} from 'vue'
+import {ref, computed, watch, nextTick} from 'vue'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import Editor from '@/components/input/AsyncEditor'
@@ -64,10 +63,15 @@ const saving = ref(false)
 const taskStore = useTaskStore()
 const loading = computed(() => taskStore.isLoading)
 
+const editorMode = ref('preview')
+
 watch(
 	() => modelValue.description,
 	value => {
 		description.value = value
+		nextTick(() => {
+			editorMode.value = isEditorContentEmpty(value) ? 'edit' : 'preview'
+		})
 	},
 	{immediate: true},
 )

@@ -272,7 +272,7 @@ const {
 	showSave = false,
 	placeholder = '',
 	editShortcut = '',
-	initialMode = 'edit',
+	// initialMode = 'edit',
 } = defineProps<{
 	modelValue: string,
 	uploadCallback?: UploadCallback,
@@ -281,14 +281,29 @@ const {
 	showSave?: boolean,
 	placeholder?: string,
 	editShortcut?: string,
-	initialMode?: Mode,
+	// initialMode?: Mode,
 }>()
 
 const emit = defineEmits(['update:modelValue', 'save'])
 
 const inputHTML = ref('')
-const internalMode = ref<Mode>(initialMode)
-const isEditing = computed(() => internalMode.value === 'edit' && isEditEnabled)
+const internalMode = ref<Mode>('edit')
+const isEditing = computed(() => {
+	console.log('isEditing', {
+		// initialMode,
+		internal: internalMode.value,
+		result: internalMode.value === 'edit' && isEditEnabled,
+	})
+	return internalMode.value === 'edit' && isEditEnabled
+})
+
+// watch(
+// 	() => initialMode,
+// 	() => {
+// 		console.log('watch', initialMode)
+// 		internalMode.value === initialMode
+// 	},
+// )
 
 const editor = useEditor({
 	content: modelValue,
@@ -361,7 +376,7 @@ const editor = useEditor({
 			onReadOnlyChecked: (node: Node, checked: boolean): boolean => {
 				if (isEditEnabled) {
 					node.attrs.checked = checked
-					inputHTML.value = editor.value?.getHTML()
+					// inputHTML.value = editor.value?.getHTML()
 					bubbleSave()
 					return true
 				}
@@ -376,50 +391,66 @@ const editor = useEditor({
 		BubbleMenu,
 	],
 	onUpdate: () => {
-		inputHTML.value = editor.value!.getHTML()
+		// inputHTML.value = editor.value!.getHTML()
+		console.log('onUpdate')
+		bubbleNow()
 	},
 })
+
+// Grundidee: Den Edit Mode intern entscheiden ohne Möglichkeit von außen
+// Problem: Der editor setzt den content irgendwie aus Gründen immer wieder auf leer, so dass der edit mode dann wieder enabled wird obwohl content da ist
+// --> Heißt eigentlich, dass der Content im Editor und der content in der Komponente nicht der gleiche ist, das ist schonmal ein grundsätzliches Problem
 
 watch(
 	() => modelValue,
 	value => {
-		inputHTML.value = value
-
 		if (!editor?.value) return
 
 		if (editor.value.getHTML() === value) {
 			return
 		}
 
+		console.log('content', value)
+
 		editor.value.commands.setContent(value, false)
+		// inputHTML.value = value
 	},
+	{immediate: true}
 )
 
-const debouncedInputHTML = refDebounced(inputHTML, 1000)
-watch(debouncedInputHTML, () => bubbleNow())
+// const debouncedInputHTML = refDebounced(inputHTML, 1000)
+// watch(debouncedInputHTML, () => bubbleNow())
 
 function bubbleNow() {
-	emit('update:modelValue', inputHTML.value)
+	console.log('bubbleNow')
+	emit('update:modelValue', editor.value?.getHTML())
 }
 
 function bubbleSave() {
 	bubbleNow()
-	emit('save', inputHTML.value)
+	emit('save', editor.value?.getHTML())
 	if (isEditing.value) {
 		internalMode.value = 'preview'
 	}
 }
 
-function setEdit() {
+function setEdit(focus: boolean = true) {
 	internalMode.value = 'edit'
-	editor.value?.commands.focus()
+	editor.value?.setEditable(isEditing.value)
+	if (focus) {
+		editor.value?.commands.focus()
+	}
 }
 
 watch(
 	() => isEditing.value,
 	() => {
-		editor.value?.setEditable(isEditing.value)
+		nextTick(() => {
+			// console.log('wathcer is edit', isEditing.value)
+			setEdit(false)
+		})
 	},
+	{immediate: true},
 )
 
 onBeforeUnmount(() => editor.value?.destroy())
@@ -492,7 +523,7 @@ function setLink() {
 }
 
 onMounted(() => {
-	internalMode.value = initialMode
+	// internalMode.value = initialMode
 	nextTick(() => {
 		const input = tiptapInstanceRef.value?.querySelectorAll('.tiptap__editor')[0]?.children[0]
 		input?.addEventListener('paste', handleImagePaste)
@@ -521,7 +552,6 @@ function handleImagePaste(event) {
 
 	const image = event.clipboardData.items[0]
 	if (image.kind === 'file' && image.type.startsWith('image/')) {
-		console.log('img', image.getAsFile())
 		uploadAndInsertFiles([image.getAsFile()])
 	}
 }
@@ -538,9 +568,9 @@ function setFocusToEditor(event) {
 	}
 	event.preventDefault()
 
-	if (initialMode === 'preview' && isEditEnabled && !isEditing.value) {
-		internalMode.value = 'edit'
-	}
+	// if (initialMode === 'preview' && isEditEnabled && !isEditing.value) {
+	// 	internalMode.value = 'edit'
+	// }
 
 	editor.value?.commands.focus()
 }
