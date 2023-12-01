@@ -37,7 +37,7 @@
 					>
 						<div class="bucket-header" @click="() => unCollapseBucket(bucket)">
 							<span
-								v-if="project.doneBucketId === bucket.id"
+								v-if="project?.doneBucketId === bucket.id"
 								class="icon is-small has-text-success mr-2"
 								v-tooltip="$t('project.kanban.doneBucketHint')"
 							>
@@ -97,7 +97,7 @@
 								<dropdown-item
 									@click.stop="toggleDoneBucket(bucket)"
 									v-tooltip="$t('project.kanban.doneBucketHintExtended')"
-									:icon-class="{'has-text-success': bucket.id === project.doneBucketId}"
+									:icon-class="{'has-text-success': bucket.id === project?.doneBucketId}"
 									icon="check-double"
 								>
 									{{ $t('project.kanban.doneBucket') }}
@@ -436,7 +436,7 @@ async function updateTaskPosition(e) {
 		oldBucket !== undefined && // This shouldn't actually be `undefined`, but let's play it safe.
 		newBucket.id !== oldBucket.id
 	) {
-		newTask.done = project.value.doneBucketId === newBucket.id
+		newTask.done = project.value?.doneBucketId === newBucket.id
 	}
 	if (
 		oldBucket !== undefined && // This shouldn't actually be `undefined`, but let's play it safe.
@@ -620,7 +620,7 @@ async function toggleDefaultBucket(bucket: IBucket) {
 }
 
 async function toggleDoneBucket(bucket: IBucket) {
-	const doneBucketId = project.value.doneBucketId === bucket.id
+	const doneBucketId = project.value?.doneBucketId === bucket.id
 		? 0
 		: bucket.id
 
