@@ -88,3 +88,27 @@ Keycloak Config:
 - Set `Root Url` to `https://vikunja.mydomain.com`
 - Set `Valid redirect URIs` to `/auth/openid/keycloak`
 - Create the client the navigate to the credentials tab and copy the `Client secret`
+
+## Authentik
+
+Authentik Config:
+- Create a new Provider called "Vikunja" in Authentik
+- Set the `Redirect URIs/Origins (RegEx)` to `https://vikunja.mydomain.com/auth/openid/authentik`
+- Copy the Client ID and Client Secret
+
+Vikunja Config:
+
+```yaml
+auth:
+  openid:
+    enabled: true
+    redirecturl: "https://vikunja.mydomain.com/auth/openid/"
+    providers:
+      - name: authentik
+        authurl: "https://authentik.mydomain.com/application/o/vikunja"
+        logouturl: "https://authentik.mydomain.com/application/o/vikunja/end-session/"
+        clientid: "" # copy from Authetik
+        clientsecret: "" # copy from Authentik
+```
+
+**Note:** The `authurl` that Vikunja requires is not the `Authorize URL` that you can see in the Provider. Vikunja uses Open ID Discovery to find the correct endpoint to use. Vikunja does this by automatically accessing the `OpenID Configuration URL` (usually `https://authentik.mydomain.com/application/o/vikunja/.well-known/openid-configuration`). Use this URL without the `.well-known/openid-configuration` as the `authurl`.
