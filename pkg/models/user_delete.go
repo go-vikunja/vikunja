@@ -137,6 +137,10 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 	}
 
 	for _, p := range projectsToDelete {
+		if p.ParentProjectID != 0 {
+			// Child projects are deleted by p.Delete
+			continue
+		}
 		err = p.Delete(s, u)
 		// If the user is the owner of the default project it will be deleted, if they are not the owner
 		// we can ignore the error as the project was shared in that case.

@@ -1041,10 +1041,28 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	return events.Dispatch(&ProjectDeletedEvent{
+	err = events.Dispatch(&ProjectDeletedEvent{
 		Project: fullProject,
 		Doer:    a,
 	})
+	if err != nil {
+		return
+	}
+
+	childProjects := []*Project{}
+	err = s.Where("parent_project_id = ?", fullProject.ID).Find(&childProjects)
+	if err != nil {
+		return
+	}
+
+	for _, child := range childProjects {
+		err = child.Delete(s, a)
+		if err != nil {
+			return
+		}
+	}
+
+	return
 }
 
 // DeleteBackgroundFileIfExists deletes the list's background file from the db and the filesystem,
