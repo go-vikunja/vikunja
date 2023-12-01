@@ -415,6 +415,9 @@
     "edit": {
       "title": "Edit This Saved Filter",
       "success": "The filter was saved successfully."
+    },
+    "query": {
+      "title": "Query"
     }
   },
   "migrate": {

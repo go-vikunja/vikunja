@@ -30,6 +30,9 @@
 				{{ $t('filters.attributes.sortAlphabetically') }}
 			</Fancycheckbox>
 		</div>
+		
+		<FilterInput v-model="filterQuery"/>
+		
 		<div class="field">
 			<label class="label">{{ $t('misc.search') }}</label>
 			<div class="control">
@@ -227,6 +230,7 @@ import ProjectService from '@/services/project'
 
 // FIXME: do not use this here for now. instead create new version from DEFAULT_PARAMS
 import {getDefaultParams} from '@/composables/useTaskList'
+import FilterInput from '@/components/project/partials/FilterInput.vue'
 
 const props = defineProps({
 	modelValue: {
@@ -251,6 +255,9 @@ const DEFAULT_PARAMS = {
 	filter_concat: 'or',
 	s: '',
 } as const
+
+// FIXME: use params
+const filterQuery = ref('')
 
 const DEFAULT_FILTERS = {
 	done: false,
