@@ -60,6 +60,7 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 
 		if p.ParentProjectID != 0 {
 			childRelations[p.ParentProjectID] = append(childRelations[p.ParentProjectID], oldID)
+			p.ParentProjectID = 0
 		}
 
 		p.ID = 0
