@@ -176,11 +176,23 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*Lab
 		cond = builder.And(builder.In("label_tasks.task_id", opts.TaskIDs), cond)
 	}
 	if opts.GetForUser != 0 {
+
+		projects, _, _, err := getRawProjectsForUser(s, &projectOptions{
+			user: &user.User{ID: opts.GetForUser},
+		})
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		projectIDs := make([]int64, 0, len(projects))
+		for _, project := range projects {
+			projectIDs = append(projectIDs, project.ID)
+		}
+
 		cond = builder.And(builder.In("label_tasks.task_id",
 			builder.
 				Select("id").
 				From("tasks").
-				Where(builder.In("project_id", getUserProjectsStatement(nil, opts.GetForUser, "", false).Select("l.id"))),
+				Where(builder.In("project_id", projectIDs)),
 		), cond)
 	}
 	if opts.GetUnusedLabels {
