@@ -110,5 +110,9 @@ func updateActiveUsersFromContext(c echo.Context) (err error) {
 		return
 	}
 
+	if _, is := auth.(*models.LinkSharing); is {
+		return metrics.SetLinkShareActive(auth)
+	}
+
 	return metrics.SetUserActive(auth)
 }

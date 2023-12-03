@@ -146,7 +146,7 @@ type ErrNoPasswordResetToken struct {
 }
 
 func (err ErrNoPasswordResetToken) Error() string {
-	return fmt.Sprintf("No token to reset a password [UserID: %d]", err.UserID)
+	return fmt.Sprintf("No token to reset a password [ID: %d]", err.UserID)
 }
 
 // ErrCodeNoPasswordResetToken holds the unique world-error code of this error
@@ -237,7 +237,7 @@ type ErrEmailNotConfirmed struct {
 }
 
 func (err ErrEmailNotConfirmed) Error() string {
-	return fmt.Sprintf("Email is not confirmed [UserID: %d]", err.UserID)
+	return fmt.Sprintf("Email is not confirmed [ID: %d]", err.UserID)
 }
 
 // ErrCodeEmailNotConfirmed holds the unique world-error code of this error

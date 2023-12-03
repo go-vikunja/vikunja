@@ -161,7 +161,7 @@ func IsErrNeedToHaveProjectReadAccess(err error) bool {
 }
 
 func (err ErrNeedToHaveProjectReadAccess) Error() string {
-	return fmt.Sprintf("User needs to have read access to that project [ProjectID: %d, UserID: %d]", err.ProjectID, err.UserID)
+	return fmt.Sprintf("User needs to have read access to that project [ProjectID: %d, ID: %d]", err.ProjectID, err.UserID)
 }
 
 // ErrCodeNeedToHaveProjectReadAccess holds the unique world-error code of this error
@@ -518,7 +518,7 @@ func IsErrNoRightToSeeTask(err error) bool {
 }
 
 func (err ErrNoRightToSeeTask) Error() string {
-	return fmt.Sprintf("User does not have the right to see the task [TaskID: %v, UserID: %v]", err.TaskID, err.UserID)
+	return fmt.Sprintf("User does not have the right to see the task [TaskID: %v, ID: %v]", err.TaskID, err.UserID)
 }
 
 // ErrCodeNoRightToSeeTask holds the unique world-error code of this error
@@ -961,7 +961,7 @@ func IsErrUserAlreadyAssigned(err error) bool {
 }
 
 func (err ErrUserAlreadyAssigned) Error() string {
-	return fmt.Sprintf("User is already assigned to task [TaskID: %d, UserID: %d]", err.TaskID, err.UserID)
+	return fmt.Sprintf("User is already assigned to task [TaskID: %d, ID: %d]", err.TaskID, err.UserID)
 }
 
 // ErrCodeUserAlreadyAssigned holds the unique world-error code of this error
@@ -1190,7 +1190,7 @@ func IsErrUserDoesNotHaveAccessToProject(err error) bool {
 }
 
 func (err ErrUserDoesNotHaveAccessToProject) Error() string {
-	return fmt.Sprintf("User does not have access to the project [ProjectID: %d, UserID: %d]", err.ProjectID, err.UserID)
+	return fmt.Sprintf("User does not have access to the project [ProjectID: %d, ID: %d]", err.ProjectID, err.UserID)
 }
 
 // ErrCodeUserDoesNotHaveAccessToProject holds the unique world-error code of this error
@@ -1273,7 +1273,7 @@ func IsErrUserHasNoAccessToLabel(err error) bool {
 }
 
 func (err ErrUserHasNoAccessToLabel) Error() string {
-	return fmt.Sprintf("The user does not have access to this label [LabelID: %v, UserID: %v]", err.LabelID, err.UserID)
+	return fmt.Sprintf("The user does not have access to this label [LabelID: %v, ID: %v]", err.LabelID, err.UserID)
 }
 
 // ErrCodeUserHasNoAccessToLabel holds the unique world-error code of this error
@@ -1568,7 +1568,7 @@ func IsErrSubscriptionAlreadyExists(err error) bool {
 }
 
 func (err *ErrSubscriptionAlreadyExists) Error() string {
-	return fmt.Sprintf("Subscription for this (entity_id, entity_type, user_id) already exists [EntityType: %d, EntityID: %d, UserID: %d]", err.EntityType, err.EntityID, err.UserID)
+	return fmt.Sprintf("Subscription for this (entity_id, entity_type, user_id) already exists [EntityType: %d, EntityID: %d, ID: %d]", err.EntityType, err.EntityID, err.UserID)
 }
 
 // ErrCodeSubscriptionAlreadyExists holds the unique world-error code of this error

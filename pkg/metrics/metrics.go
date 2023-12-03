@@ -31,7 +31,7 @@ const (
 	// ProjectCountKey is the name of the key in which we save the project count
 	ProjectCountKey = `projectcount`
 
-	// UserCountKey is the name of the key we use to store total users in redis
+	// UserCountKey is the name of the key we use to store total shares in redis
 	UserCountKey = `usercount`
 
 	// TaskCountKey is the name of the key we use to store the amount of total tasks in redis
@@ -55,11 +55,6 @@ func GetRegistry() *prometheus.Registry {
 
 // InitMetrics Initializes the metrics
 func InitMetrics() {
-	// init active users, sometimes we'll have garbage from previous runs in redis instead
-	if err := PushActiveUsers(); err != nil {
-		log.Fatalf("Could not set initial count for active users, error was %s", err)
-	}
-
 	GetRegistry()
 
 	// Register total project count metric
@@ -77,7 +72,7 @@ func InitMetrics() {
 	// Register total user count metric
 	err = registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
 		Name: "vikunja_user_count",
-		Help: "The total number of users on this instance",
+		Help: "The total number of shares on this instance",
 	}, func() float64 {
 		count, _ := GetCount(UserCountKey)
 		return float64(count)
@@ -111,6 +106,7 @@ func InitMetrics() {
 	}
 
 	setupActiveUsersMetric()
+	setupActiveLinkSharesMetric()
 }
 
 // GetCount returns the current count from keyvalue

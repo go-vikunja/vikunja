@@ -27,83 +27,119 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
-// SecondsUntilInactive defines the seconds until a user is considered inactive
-const SecondsUntilInactive = 30
+const secondsUntilInactive = 30
+const activeUsersKey = `active_users`
+const activeLinkSharesKey = `active_link_shares`
 
-// ActiveUsersKey is the key used to store active users in redis
-const ActiveUsersKey = `activeusers`
-
-// ActiveUser defines an active user
-type ActiveUser struct {
-	UserID   int64
+// ActiveAuthenticable defines an active user or link share
+type ActiveAuthenticable struct {
+	ID       int64
 	LastSeen time.Time
 }
 
-type activeUsersMap map[int64]*ActiveUser
+type activeUsersMap map[int64]*ActiveAuthenticable
 
-// ActiveUsers is the type used to save active users
 type ActiveUsers struct {
 	users activeUsersMap
 	mutex *sync.Mutex
 }
 
-// activeUsers holds a map with all active users
 var activeUsers *ActiveUsers
+
+type activeLinkSharesMap map[int64]*ActiveAuthenticable
+
+type ActiveLinkShares struct {
+	shares activeLinkSharesMap
+	mutex  *sync.Mutex
+}
+
+var activeLinkShares *ActiveLinkShares
 
 func init() {
 	activeUsers = &ActiveUsers{
-		users: make(map[int64]*ActiveUser),
+		users: make(map[int64]*ActiveAuthenticable),
 		mutex: &sync.Mutex{},
+	}
+	activeLinkShares = &ActiveLinkShares{
+		shares: make(map[int64]*ActiveAuthenticable),
+		mutex:  &sync.Mutex{},
 	}
 }
 
 func setupActiveUsersMetric() {
 	err := registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
 		Name: "vikunja_active_users",
-		Help: "The number of users active within the last 30 seconds on this node",
+		Help: "The number of shares active within the last 30 seconds",
 	}, func() float64 {
-		allActiveUsers, err := getActiveUsers()
+		allActiveUsers := activeUsersMap{}
+		_, err := keyvalue.GetWithValue(activeUsersKey, &allActiveUsers)
 		if err != nil {
 			log.Error(err.Error())
+			return 0
 		}
 		if allActiveUsers == nil {
 			return 0
 		}
-		activeUsersCount := 0
+		count := 0
 		for _, u := range allActiveUsers {
-			if time.Since(u.LastSeen) < SecondsUntilInactive*time.Second {
-				activeUsersCount++
+			if time.Since(u.LastSeen) < secondsUntilInactive*time.Second {
+				count++
 			}
 		}
-		return float64(activeUsersCount)
+		return float64(count)
 	}))
 	if err != nil {
-		log.Criticalf("Could not register metrics for currently active users: %s", err)
+		log.Criticalf("Could not register metrics for currently active shares: %s", err)
 	}
 }
 
-// SetUserActive sets a user as active and pushes it to redis
+func setupActiveLinkSharesMetric() {
+	err := registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
+		Name: "vikunja_active_link_shares",
+		Help: "The number of link shares active within the last 30 seconds. Similar to vikunja_active_users.",
+	}, func() float64 {
+		allActiveLinkShares := activeLinkSharesMap{}
+		_, err := keyvalue.GetWithValue(activeLinkSharesKey, &allActiveLinkShares)
+		if err != nil {
+			log.Error(err.Error())
+			return 0
+		}
+		if allActiveLinkShares == nil {
+			return 0
+		}
+		count := 0
+		for _, u := range allActiveLinkShares {
+			if time.Since(u.LastSeen) < secondsUntilInactive*time.Second {
+				count++
+			}
+		}
+		return float64(count)
+	}))
+	if err != nil {
+		log.Criticalf("Could not register metrics for currently active link shares: %s", err)
+	}
+}
+
+// SetUserActive sets a user as active and pushes it to keyvalue
 func SetUserActive(a web.Auth) (err error) {
 	activeUsers.mutex.Lock()
-	activeUsers.users[a.GetID()] = &ActiveUser{
-		UserID:   a.GetID(),
+	defer activeUsers.mutex.Unlock()
+	activeUsers.users[a.GetID()] = &ActiveAuthenticable{
+		ID:       a.GetID(),
 		LastSeen: time.Now(),
 	}
-	activeUsers.mutex.Unlock()
-	return PushActiveUsers()
+
+	return keyvalue.Put(activeUsersKey, activeUsers.users)
 }
 
-// getActiveUsers returns the active users from redis
-func getActiveUsers() (users activeUsersMap, err error) {
-	users = activeUsersMap{}
-	_, err = keyvalue.GetWithValue(ActiveUsersKey, &users)
-	return
-}
+// SetLinkShareActive sets a user as active and pushes it to keyvalue
+func SetLinkShareActive(a web.Auth) (err error) {
+	activeLinkShares.mutex.Lock()
+	defer activeLinkShares.mutex.Unlock()
+	activeLinkShares.shares[a.GetID()] = &ActiveAuthenticable{
+		ID:       a.GetID(),
+		LastSeen: time.Now(),
+	}
 
-// PushActiveUsers pushed the content of the activeUsers map to redis
-func PushActiveUsers() (err error) {
-	activeUsers.mutex.Lock()
-	defer activeUsers.mutex.Unlock()
-
-	return keyvalue.Put(ActiveUsersKey, activeUsers.users)
+	return keyvalue.Put(activeLinkSharesKey, activeLinkShares.shares)
 }
