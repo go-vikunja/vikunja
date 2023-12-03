@@ -28,17 +28,11 @@ import (
 )
 
 const (
-	// ProjectCountKey is the name of the key in which we save the project count
-	ProjectCountKey = `projectcount`
-
-	// UserCountKey is the name of the key we use to store total shares in redis
-	UserCountKey = `usercount`
-
-	// TaskCountKey is the name of the key we use to store the amount of total tasks in redis
-	TaskCountKey = `taskcount`
-
-	// TeamCountKey is the name of the key we use to store the amount of total teams in redis
-	TeamCountKey = `teamcount`
+	ProjectCountKey = `project_count`
+	UserCountKey    = `user_count`
+	TaskCountKey    = `task_count`
+	TeamCountKey    = `team_count`
+	FilesCountKey   = `files_count`
 )
 
 var registry *prometheus.Registry
@@ -53,57 +47,28 @@ func GetRegistry() *prometheus.Registry {
 	return registry
 }
 
+func registerPromMetric(key, description string) {
+	err := registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
+		Name: "vikunja_" + key,
+		Help: description,
+	}, func() float64 {
+		count, _ := GetCount(key)
+		return float64(count)
+	}))
+	if err != nil {
+		log.Criticalf("Could not register metrics for %s: %s", key, err)
+	}
+}
+
 // InitMetrics Initializes the metrics
 func InitMetrics() {
 	GetRegistry()
 
-	// Register total project count metric
-	err := registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
-		Name: "vikunja_project_count",
-		Help: "The number of projects on this instance",
-	}, func() float64 {
-		count, _ := GetCount(ProjectCountKey)
-		return float64(count)
-	}))
-	if err != nil {
-		log.Criticalf("Could not register metrics for %s: %s", ProjectCountKey, err)
-	}
-
-	// Register total user count metric
-	err = registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
-		Name: "vikunja_user_count",
-		Help: "The total number of shares on this instance",
-	}, func() float64 {
-		count, _ := GetCount(UserCountKey)
-		return float64(count)
-	}))
-	if err != nil {
-		log.Criticalf("Could not register metrics for %s: %s", UserCountKey, err)
-	}
-
-	// Register total Tasks count metric
-	err = registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
-		Name: "vikunja_task_count",
-		Help: "The total number of tasks on this instance",
-	}, func() float64 {
-		count, _ := GetCount(TaskCountKey)
-		return float64(count)
-	}))
-	if err != nil {
-		log.Criticalf("Could not register metrics for %s: %s", TaskCountKey, err)
-	}
-
-	// Register total teams count metric
-	err = registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
-		Name: "vikunja_team_count",
-		Help: "The total number of teams on this instance",
-	}, func() float64 {
-		count, _ := GetCount(TeamCountKey)
-		return float64(count)
-	}))
-	if err != nil {
-		log.Criticalf("Could not register metrics for %s: %s", TeamCountKey, err)
-	}
+	registerPromMetric(ProjectCountKey, "The number of projects on this instance")
+	registerPromMetric(UserCountKey, "The total number of shares on this instance")
+	registerPromMetric(TaskCountKey, "The total number of tasks on this instance")
+	registerPromMetric(TeamCountKey, "The total number of teams on this instance")
+	registerPromMetric(FilesCountKey, "The total number of files on this instance")
 
 	setupActiveUsersMetric()
 	setupActiveLinkSharesMetric()

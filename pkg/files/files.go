@@ -17,6 +17,8 @@
 package files
 
 import (
+	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"errors"
 	"io"
 	"os"
@@ -148,10 +150,15 @@ func (f *File) Delete() (err error) {
 		return err
 	}
 
-	return
+	return keyvalue.DecrBy(metrics.FilesCountKey, 1)
 }
 
 // Save saves a file to storage
-func (f *File) Save(fcontent io.Reader) error {
-	return afs.WriteReader(f.getFileName(), fcontent)
+func (f *File) Save(fcontent io.Reader) (err error) {
+	err = afs.WriteReader(f.getFileName(), fcontent)
+	if err != nil {
+		return
+	}
+
+	return keyvalue.IncrBy(metrics.FilesCountKey, 1)
 }

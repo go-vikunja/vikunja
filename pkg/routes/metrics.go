@@ -17,6 +17,7 @@
 package routes
 
 import (
+	"code.vikunja.io/api/pkg/files"
 	"crypto/subtle"
 
 	"code.vikunja.io/api/pkg/config"
@@ -38,8 +39,8 @@ func setupMetrics(a *echo.Group) {
 	metrics.InitMetrics()
 
 	type countable struct {
-		Rediskey string
-		Type     interface{}
+		Key  string
+		Type interface{}
 	}
 
 	for _, c := range []countable{
@@ -59,13 +60,17 @@ func setupMetrics(a *echo.Group) {
 			metrics.TeamCountKey,
 			models.Team{},
 		},
+		{
+			metrics.FilesCountKey,
+			files.File{},
+		},
 	} {
 		// Set initial totals
 		total, err := models.GetTotalCount(c.Type)
 		if err != nil {
 			log.Fatalf("Could not get initial count for %v, error was %s", c.Type, err)
 		}
-		if err := metrics.SetCount(total, c.Rediskey); err != nil {
+		if err := metrics.SetCount(total, c.Key); err != nil {
 			log.Fatalf("Could not set initial count for %v, error was %s", c.Type, err)
 		}
 	}
