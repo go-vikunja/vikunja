@@ -64,6 +64,10 @@ func setupMetrics(a *echo.Group) {
 			metrics.FilesCountKey,
 			files.File{},
 		},
+		{
+			metrics.AttachmentsCountKey,
+			models.TaskAttachment{},
+		},
 	} {
 		// Set initial totals
 		total, err := models.GetTotalCount(c.Type)

@@ -37,12 +37,16 @@ import (
 
 // RegisterListeners registers all event listeners
 func RegisterListeners() {
-	events.RegisterListener((&ProjectCreatedEvent{}).Name(), &IncreaseProjectCounter{})
-	events.RegisterListener((&ProjectDeletedEvent{}).Name(), &DecreaseProjectCounter{})
-	events.RegisterListener((&TaskCreatedEvent{}).Name(), &IncreaseTaskCounter{})
-	events.RegisterListener((&TaskDeletedEvent{}).Name(), &DecreaseTaskCounter{})
-	events.RegisterListener((&TeamDeletedEvent{}).Name(), &DecreaseTeamCounter{})
-	events.RegisterListener((&TeamCreatedEvent{}).Name(), &IncreaseTeamCounter{})
+	if config.MetricsEnabled.GetBool() {
+		events.RegisterListener((&ProjectCreatedEvent{}).Name(), &IncreaseProjectCounter{})
+		events.RegisterListener((&ProjectDeletedEvent{}).Name(), &DecreaseProjectCounter{})
+		events.RegisterListener((&TaskCreatedEvent{}).Name(), &IncreaseTaskCounter{})
+		events.RegisterListener((&TaskDeletedEvent{}).Name(), &DecreaseTaskCounter{})
+		events.RegisterListener((&TeamDeletedEvent{}).Name(), &DecreaseTeamCounter{})
+		events.RegisterListener((&TeamCreatedEvent{}).Name(), &IncreaseTeamCounter{})
+		events.RegisterListener((&TaskAttachmentCreatedEvent{}).Name(), &IncreaseAttachmentCounter{})
+		events.RegisterListener((&TaskAttachmentDeletedEvent{}).Name(), &DecreaseAttachmentCounter{})
+	}
 	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &SendTaskCommentNotification{})
 	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &SendTaskAssignedNotification{})
 	events.RegisterListener((&TaskDeletedEvent{}).Name(), &SendTaskDeletedNotification{})
@@ -556,6 +560,34 @@ func (l *AddTaskToTypesense) Handle(msg *message.Message) (err error) {
 		Documents().
 		Create(ttask)
 	return
+}
+
+// IncreaseAttachmentCounter  represents a listener
+type IncreaseAttachmentCounter struct {
+}
+
+// Name defines the name for the IncreaseAttachmentCounter listener
+func (s *IncreaseAttachmentCounter) Name() string {
+	return "increase.attachment.counter"
+}
+
+// Handle is executed when the event IncreaseAttachmentCounter listens on is fired
+func (s *IncreaseAttachmentCounter) Handle(msg *message.Message) (err error) {
+	return keyvalue.IncrBy(metrics.AttachmentsCountKey, 1)
+}
+
+// DecreaseAttachmentCounter  represents a listener
+type DecreaseAttachmentCounter struct {
+}
+
+// Name defines the name for the DecreaseAttachmentCounter listener
+func (s *DecreaseAttachmentCounter) Name() string {
+	return "decrease.attachment.counter"
+}
+
+// Handle is executed when the event DecreaseAttachmentCounter listens on is fired
+func (s *DecreaseAttachmentCounter) Handle(msg *message.Message) (err error) {
+	return keyvalue.DecrBy(metrics.AttachmentsCountKey, 1)
 }
 
 ///////

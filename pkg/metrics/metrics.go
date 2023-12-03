@@ -28,11 +28,12 @@ import (
 )
 
 const (
-	ProjectCountKey = `project_count`
-	UserCountKey    = `user_count`
-	TaskCountKey    = `task_count`
-	TeamCountKey    = `team_count`
-	FilesCountKey   = `files_count`
+	ProjectCountKey     = `project_count`
+	UserCountKey        = `user_count`
+	TaskCountKey        = `task_count`
+	TeamCountKey        = `team_count`
+	FilesCountKey       = `files_count`
+	AttachmentsCountKey = `attachments_count`
 )
 
 var registry *prometheus.Registry
@@ -69,6 +70,7 @@ func InitMetrics() {
 	registerPromMetric(TaskCountKey, "The total number of tasks on this instance")
 	registerPromMetric(TeamCountKey, "The total number of teams on this instance")
 	registerPromMetric(FilesCountKey, "The total number of files on this instance")
+	registerPromMetric(AttachmentsCountKey, "The total number of attachments on this instance")
 
 	setupActiveUsersMetric()
 	setupActiveLinkSharesMetric()
