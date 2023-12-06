@@ -23,6 +23,8 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
+
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
@@ -77,6 +79,8 @@ func InitTests() {
 	}
 
 	InitTestFileHandler()
+
+	keyvalue.InitStorage()
 }
 
 // FileStat stats a file. This is an exported function to be able to test this from outide of the package
