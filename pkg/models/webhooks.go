@@ -285,6 +285,7 @@ func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
 	}
 
 	req.Header.Add("User-Agent", "Vikunja/"+version.Version)
+	req.Header.Add("Content-Type", "application/json")
 
 	client := getWebhookHTTPClient()
 	res, err := client.Do(req)
