@@ -572,7 +572,7 @@ func (s *IncreaseAttachmentCounter) Name() string {
 }
 
 // Handle is executed when the event IncreaseAttachmentCounter listens on is fired
-func (s *IncreaseAttachmentCounter) Handle(msg *message.Message) (err error) {
+func (s *IncreaseAttachmentCounter) Handle(_ *message.Message) (err error) {
 	return keyvalue.IncrBy(metrics.AttachmentsCountKey, 1)
 }
 
@@ -586,7 +586,7 @@ func (s *DecreaseAttachmentCounter) Name() string {
 }
 
 // Handle is executed when the event DecreaseAttachmentCounter listens on is fired
-func (s *DecreaseAttachmentCounter) Handle(msg *message.Message) (err error) {
+func (s *DecreaseAttachmentCounter) Handle(_ *message.Message) (err error) {
 	return keyvalue.DecrBy(metrics.AttachmentsCountKey, 1)
 }
 
