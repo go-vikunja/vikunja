@@ -26,7 +26,6 @@
 			v-model="description"
 			@update:model-value="saveWithDelay"
 			@save="save"
-			:initial-mode="isEditorContentEmpty(description) ? 'edit' : 'preview'"
 		/>
 	</div>
 </template>
@@ -39,7 +38,6 @@ import Editor from '@/components/input/AsyncEditor'
 
 import type {ITask} from '@/modelTypes/ITask'
 import {useTaskStore} from '@/stores/tasks'
-import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 
 type AttachmentUploadFunction = (file: File, onSuccess: (attachmentUrl: string) => void) => Promise<string>
 

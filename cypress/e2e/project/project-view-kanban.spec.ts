@@ -5,6 +5,19 @@ import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
 import {prepareProjects} from './prepareProjects'
 
+function createSingleTaskInBucket(count = 1, attrs = {}) {
+	const projects = ProjectFactory.create(1)
+	const buckets = BucketFactory.create(2, {
+		project_id: projects[0].id,
+	})
+	const tasks = TaskFactory.create(count, {
+		project_id: projects[0].id,
+		bucket_id: buckets[0].id,
+		...attrs,
+	})
+	return tasks[0]
+}
+
 describe('Project View Kanban', () => {
 	createFakeUserAndLogin()
 	prepareProjects()
@@ -207,15 +220,7 @@ describe('Project View Kanban', () => {
 	})
 	
 	it('Should remove a task from the board when deleting it', () => {
-		const projects = ProjectFactory.create(1)
-		const buckets = BucketFactory.create(2, {
-			project_id: projects[0].id,
-		})
-		const tasks = TaskFactory.create(5, {
-			project_id: 1,
-			bucket_id: buckets[0].id,
-		})
-		const task = tasks[0]
+		const task = createSingleTaskInBucket(5)
 		cy.visit('/projects/1/kanban')
 
 		cy.get('.kanban .bucket .tasks .task')
@@ -237,5 +242,44 @@ describe('Project View Kanban', () => {
 		
 		cy.get('.kanban .bucket .tasks')
 			.should('not.contain', task.title)
+	})
+
+	it('Should show a task description icon if the task has a description', () => {
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/buckets**').as('loadTasks')
+		const task = createSingleTaskInBucket(1, {
+			description: 'Lorem Ipsum',
+		})
+
+		cy.visit(`/projects/${task.project_id}/kanban`)
+		cy.wait('@loadTasks')
+
+		cy.get('.bucket .tasks .task .footer .icon svg')
+			.should('exist')
+	})
+
+	it('Should not show a task description icon if the task has an empty description', () => {
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/buckets**').as('loadTasks')
+		const task = createSingleTaskInBucket(1, {
+			description: '',
+		})
+
+		cy.visit(`/projects/${task.project_id}/kanban`)
+		cy.wait('@loadTasks')
+
+		cy.get('.bucket .tasks .task .footer .icon svg')
+			.should('not.exist')
+	})
+
+	it('Should not show a task description icon if the task has a description containing only an empty p tag', () => {
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/buckets**').as('loadTasks')
+		const task = createSingleTaskInBucket(1, {
+			description: '<p></p>',
+		})
+
+		cy.visit(`/projects/${task.project_id}/kanban`)
+		cy.wait('@loadTasks')
+
+		cy.get('.bucket .tasks .task .footer .icon svg')
+			.should('not.exist')
 	})
 })

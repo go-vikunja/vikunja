@@ -118,7 +118,6 @@
 
 <script setup lang="ts">
 import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue'
-import {refDebounced} from '@vueuse/core'
 
 import EditorToolbar from './EditorToolbar.vue'
 
@@ -173,6 +172,7 @@ import {Placeholder} from '@tiptap/extension-placeholder'
 import {eventToHotkeyString} from '@github/hotkey'
 import {mergeAttributes} from '@tiptap/core'
 import {createRandomID} from '@/helpers/randomId'
+import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 
 const tiptapInstanceRef = ref<HTMLInputElement | null>(null)
 
@@ -200,7 +200,9 @@ const CustomTableCell = TableCell.extend({
 })
 
 type CacheKey = `${ITask['id']}-${IAttachment['id']}`
-const loadedAttachments = ref<{ [key: CacheKey]: string }>({})
+const loadedAttachments = ref<{
+	[key: CacheKey]: string
+}>({})
 
 const CustomImage = Image.extend({
 	addAttributes() {
@@ -272,7 +274,6 @@ const {
 	showSave = false,
 	placeholder = '',
 	editShortcut = '',
-	initialMode = 'edit',
 } = defineProps<{
 	modelValue: string,
 	uploadCallback?: UploadCallback,
@@ -281,13 +282,11 @@ const {
 	showSave?: boolean,
 	placeholder?: string,
 	editShortcut?: string,
-	initialMode?: Mode,
 }>()
 
 const emit = defineEmits(['update:modelValue', 'save'])
 
-const inputHTML = ref('')
-const internalMode = ref<Mode>(initialMode)
+const internalMode = ref<Mode>('edit')
 const isEditing = computed(() => internalMode.value === 'edit' && isEditEnabled)
 
 const editor = useEditor({
@@ -359,14 +358,28 @@ const editor = useEditor({
 		TaskItem.configure({
 			nested: true,
 			onReadOnlyChecked: (node: Node, checked: boolean): boolean => {
-				if (isEditEnabled) {
-					node.attrs.checked = checked
-					inputHTML.value = editor.value?.getHTML()
-					bubbleSave()
-					return true
+				if (!isEditEnabled) {
+					return false
 				}
 
-				return false
+				// The following is a workaround for this bug:
+				// https://github.com/ueberdosis/tiptap/issues/4521
+				// https://github.com/ueberdosis/tiptap/issues/3676
+
+				editor.value!.state.doc.descendants((subnode, pos) => {
+					if (node.eq(subnode)) {
+						const {tr} = editor.value!.state
+						tr.setNodeMarkup(pos, undefined, {
+							...node.attrs,
+							checked,
+						})
+						editor.value!.view.dispatch(tr)
+						bubbleSave()
+					}
+				})
+
+
+				return true
 			},
 		}),
 
@@ -376,51 +389,54 @@ const editor = useEditor({
 		BubbleMenu,
 	],
 	onUpdate: () => {
-		inputHTML.value = editor.value!.getHTML()
+		bubbleNow()
 	},
 })
-
-watch(
-	() => modelValue,
-	value => {
-		inputHTML.value = value
-
-		if (!editor?.value) return
-
-		if (editor.value.getHTML() === value) {
-			return
-		}
-
-		editor.value.commands.setContent(value, false)
-	},
-)
-
-const debouncedInputHTML = refDebounced(inputHTML, 1000)
-watch(debouncedInputHTML, () => bubbleNow())
-
-function bubbleNow() {
-	emit('update:modelValue', inputHTML.value)
-}
-
-function bubbleSave() {
-	bubbleNow()
-	emit('save', inputHTML.value)
-	if (isEditing.value) {
-		internalMode.value = 'preview'
-	}
-}
-
-function setEdit() {
-	internalMode.value = 'edit'
-	editor.value?.commands.focus()
-}
 
 watch(
 	() => isEditing.value,
 	() => {
 		editor.value?.setEditable(isEditing.value)
 	},
+	{immediate: true},
 )
+
+watch(
+	() => modelValue,
+	value => {
+		if (!editor?.value) return
+
+		if (editor.value.getHTML() === value) {
+			return
+		}
+
+		setModeAndValue(value)
+	},
+	{immediate: true},
+)
+
+function bubbleNow() {
+	if (editor.value?.getHTML() === modelValue) {
+		return
+	}
+
+	emit('update:modelValue', editor.value?.getHTML())
+}
+
+function bubbleSave() {
+	bubbleNow()
+	emit('save', editor.value?.getHTML())
+	if (isEditing.value) {
+		internalMode.value = 'preview'
+	}
+}
+
+function setEdit(focus: boolean = true) {
+	internalMode.value = 'edit'
+	if (focus) {
+		editor.value?.commands.focus()
+	}
+}
 
 onBeforeUnmount(() => editor.value?.destroy())
 
@@ -491,15 +507,17 @@ function setLink() {
 		.run()
 }
 
-onMounted(() => {
-	internalMode.value = initialMode
-	nextTick(() => {
-		const input = tiptapInstanceRef.value?.querySelectorAll('.tiptap__editor')[0]?.children[0]
-		input?.addEventListener('paste', handleImagePaste)
-	})
+onMounted(async () => {
 	if (editShortcut !== '') {
 		document.addEventListener('keydown', setFocusToEditor)
 	}
+
+	await nextTick()
+
+	const input = tiptapInstanceRef.value?.querySelectorAll('.tiptap__editor')[0]?.children[0]
+	input?.addEventListener('paste', handleImagePaste)
+
+	setModeAndValue(modelValue)
 })
 
 onBeforeUnmount(() => {
@@ -512,6 +530,11 @@ onBeforeUnmount(() => {
 	}
 })
 
+function setModeAndValue(value: string) {
+	internalMode.value = isEditorContentEmpty(value) ? 'edit' : 'preview'
+	editor.value?.commands.setContent(value, false)
+}
+
 function handleImagePaste(event) {
 	if (event?.clipboardData?.items?.length === 0) {
 		return
@@ -521,7 +544,6 @@ function handleImagePaste(event) {
 
 	const image = event.clipboardData.items[0]
 	if (image.kind === 'file' && image.type.startsWith('image/')) {
-		console.log('img', image.getAsFile())
 		uploadAndInsertFiles([image.getAsFile()])
 	}
 }
@@ -538,7 +560,7 @@ function setFocusToEditor(event) {
 	}
 	event.preventDefault()
 
-	if (initialMode === 'preview' && isEditEnabled && !isEditing.value) {
+	if (!isEditing.value && isEditEnabled) {
 		internalMode.value = 'edit'
 	}
 

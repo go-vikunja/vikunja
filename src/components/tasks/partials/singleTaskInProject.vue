@@ -93,7 +93,7 @@
 				<span class="project-task-icon" v-if="task.attachments.length > 0">
 					<icon icon="paperclip"/>
 				</span>
-				<span class="project-task-icon" v-if="task.description">
+				<span class="project-task-icon" v-if="!isEditorContentEmpty(task.description)">
 					<icon icon="align-left"/>
 				</span>
 				<span class="project-task-icon" v-if="task.repeatAfter.amount > 0">
@@ -184,6 +184,7 @@ import AssigneeList from '@/components/tasks/partials/assigneeList.vue'
 import {useIntervalFn} from '@vueuse/core'
 import {playPopSound} from '@/helpers/playPop'
 import {useAuthStore} from '@/stores/auth'
+import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 
 const {
 	theTask,

@@ -36,7 +36,7 @@ function uploadAttachmentAndVerify(taskId: number) {
 	cy.get('.task-view .action-buttons .button')
 		.contains('Add Attachments')
 		.click()
-	cy.get('input[type=file]', {timeout: 1000})
+	cy.get('input[type=file]#files', {timeout: 1000})
 		.selectFile('cypress/fixtures/image.jpg', {force: true}) // The input is not visible, but on purpose
 	cy.wait('@uploadAttachment')
 
@@ -112,10 +112,50 @@ describe('Task', () => {
 			.should('contain', 'Favorites')
 	})
 
+	it('Should show a task description icon if the task has a description', () => {
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/tasks**').as('loadTasks')
+		TaskFactory.create(1, {
+			description: 'Lorem Ipsum',
+		})
+
+		cy.visit('/projects/1/list')
+		cy.wait('@loadTasks')
+
+		cy.get('.tasks .task .project-task-icon')
+			.should('exist')
+	})
+
+	it('Should not show a task description icon if the task has an empty description', () => {
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/tasks**').as('loadTasks')
+		TaskFactory.create(1, {
+			description: '',
+		})
+
+		cy.visit('/projects/1/list')
+		cy.wait('@loadTasks')
+
+		cy.get('.tasks .task .project-task-icon')
+			.should('not.exist')
+	})
+
+	it('Should not show a task description icon if the task has a description containing only an empty p tag', () => {
+		cy.intercept(Cypress.env('API_URL') + '/projects/1/tasks**').as('loadTasks')
+		TaskFactory.create(1, {
+			description: '<p></p>',
+		})
+
+		cy.visit('/projects/1/list')
+		cy.wait('@loadTasks')
+
+		cy.get('.tasks .task .project-task-icon')
+			.should('not.exist')
+	})
+
 	describe('Task Detail View', () => {
 		beforeEach(() => {
 			TaskCommentFactory.truncate()
 			LabelTaskFactory.truncate()
+			TaskAttachmentFactory.truncate()
 		})
 
 		it('Shows all task details', () => {
@@ -210,6 +250,45 @@ describe('Task', () => {
 
 			cy.get('.task-view .details.content.description h3 span.is-small.has-text-success')
 				.contains('Saved!')
+				.should('exist')
+		})
+
+		it('Shows an empty editor when the description of a task is empty', () => {
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				description: '',
+			})
+			cy.visit(`/tasks/${tasks[0].id}`)
+
+			cy.get('.task-view .details.content.description .tiptap.ProseMirror p')
+				.should('have.attr', 'data-placeholder')
+			cy.get('.task-view .details.content.description .tiptap button.done-edit')
+				.should('not.exist')
+		})
+
+		it('Shows a preview editor when the description of a task is not empty', () => {
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				description: 'Lorem Ipsum dolor sit amet',
+			})
+			cy.visit(`/tasks/${tasks[0].id}`)
+
+			cy.get('.task-view .details.content.description .tiptap.ProseMirror p')
+				.should('not.have.attr', 'data-placeholder')
+			cy.get('.task-view .details.content.description .tiptap button.done-edit')
+				.should('exist')
+		})
+
+		it('Shows a preview editor when the description of a task contains html', () => {
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				description: '<p>Lorem Ipsum dolor sit amet</p>',
+			})
+			cy.visit(`/tasks/${tasks[0].id}`)
+
+			cy.get('.task-view .details.content.description .tiptap.ProseMirror p')
+				.should('not.have.attr', 'data-placeholder')
+			cy.get('.task-view .details.content.description .tiptap button.done-edit')
 				.should('exist')
 		})
 
@@ -692,7 +771,7 @@ describe('Task', () => {
 				.should('exist')
 		})
 
-		it('Can check items off a checklist', () => {
+		it.only('Can check items off a checklist', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				description: `
@@ -761,7 +840,7 @@ describe('Task', () => {
 				.should('exist')
 		})
 
-		it.only('Should render an image from attachment', async () => {
+		it('Should render an image from attachment', async () => {
 
 			TaskAttachmentFactory.truncate()
 

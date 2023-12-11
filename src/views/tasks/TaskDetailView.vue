@@ -6,7 +6,8 @@
 			'is-modal': isModal,
 		}"
 	>
-		<div class="task-view">
+		<!-- Removing everything until the task is loaded to prevent empty initialization of other components -->
+		<div class="task-view" v-if="visible">
 			<Heading
 				:task="task"
 				@update:task="Object.assign(task, $event)"
@@ -605,7 +606,8 @@ watch(
 		}
 
 		try {
-			Object.assign(task.value, await taskService.get({id}))
+			const loaded = await taskService.get({id})
+			Object.assign(task.value, loaded)
 			attachmentStore.set(task.value.attachments)
 			taskColor.value = task.value.hexColor
 			setActiveFields()
