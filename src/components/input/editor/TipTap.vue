@@ -358,7 +358,6 @@ const editor = useEditor({
 			onReadOnlyChecked: (node: Node, checked: boolean): boolean => {
 				if (isEditEnabled) {
 					node.attrs.checked = checked
-					// inputHTML.value = editor.value?.getHTML()
 					bubbleSave()
 					return true
 				}
