@@ -200,7 +200,9 @@ const CustomTableCell = TableCell.extend({
 })
 
 type CacheKey = `${ITask['id']}-${IAttachment['id']}`
-const loadedAttachments = ref<{ [key: CacheKey]: string }>({})
+const loadedAttachments = ref<{
+	[key: CacheKey]: string
+}>({})
 
 const CustomImage = Image.extend({
 	addAttributes() {
@@ -356,13 +358,28 @@ const editor = useEditor({
 		TaskItem.configure({
 			nested: true,
 			onReadOnlyChecked: (node: Node, checked: boolean): boolean => {
-				if (isEditEnabled) {
-					node.attrs.checked = checked
-					bubbleSave()
-					return true
+				if (!isEditEnabled) {
+					return false
 				}
 
-				return false
+				// The following is a workaround for this bug:
+				// https://github.com/ueberdosis/tiptap/issues/4521
+				// https://github.com/ueberdosis/tiptap/issues/3676
+
+				editor.value!.state.doc.descendants((subnode, pos) => {
+					if (node.eq(subnode)) {
+						const {tr} = editor.value!.state
+						tr.setNodeMarkup(pos, undefined, {
+							...node.attrs,
+							checked,
+						})
+						editor.value!.view.dispatch(tr)
+						bubbleSave()
+					}
+				})
+
+
+				return true
 			},
 		}),
 
