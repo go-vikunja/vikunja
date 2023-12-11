@@ -31,14 +31,13 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watch, nextTick} from 'vue'
+import {ref, computed, watch} from 'vue'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import Editor from '@/components/input/AsyncEditor'
 
 import type {ITask} from '@/modelTypes/ITask'
 import {useTaskStore} from '@/stores/tasks'
-import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 
 type AttachmentUploadFunction = (file: File, onSuccess: (attachmentUrl: string) => void) => Promise<string>
 
@@ -63,15 +62,10 @@ const saving = ref(false)
 const taskStore = useTaskStore()
 const loading = computed(() => taskStore.isLoading)
 
-const editorMode = ref('preview')
-
 watch(
 	() => modelValue.description,
 	value => {
 		description.value = value
-		nextTick(() => {
-			editorMode.value = isEditorContentEmpty(value) ? 'edit' : 'preview'
-		})
 	},
 	{immediate: true},
 )

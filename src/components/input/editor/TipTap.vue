@@ -118,7 +118,6 @@
 
 <script setup lang="ts">
 import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue'
-import {refDebounced} from '@vueuse/core'
 
 import EditorToolbar from './EditorToolbar.vue'
 
@@ -173,6 +172,7 @@ import {Placeholder} from '@tiptap/extension-placeholder'
 import {eventToHotkeyString} from '@github/hotkey'
 import {mergeAttributes} from '@tiptap/core'
 import {createRandomID} from '@/helpers/randomId'
+import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 
 const tiptapInstanceRef = ref<HTMLInputElement | null>(null)
 
@@ -272,7 +272,6 @@ const {
 	showSave = false,
 	placeholder = '',
 	editShortcut = '',
-	// initialMode = 'edit',
 } = defineProps<{
 	modelValue: string,
 	uploadCallback?: UploadCallback,
@@ -281,29 +280,12 @@ const {
 	showSave?: boolean,
 	placeholder?: string,
 	editShortcut?: string,
-	// initialMode?: Mode,
 }>()
 
 const emit = defineEmits(['update:modelValue', 'save'])
 
-const inputHTML = ref('')
 const internalMode = ref<Mode>('edit')
-const isEditing = computed(() => {
-	console.log('isEditing', {
-		// initialMode,
-		internal: internalMode.value,
-		result: internalMode.value === 'edit' && isEditEnabled,
-	})
-	return internalMode.value === 'edit' && isEditEnabled
-})
-
-// watch(
-// 	() => initialMode,
-// 	() => {
-// 		console.log('watch', initialMode)
-// 		internalMode.value === initialMode
-// 	},
-// )
+const isEditing = computed(() => internalMode.value === 'edit' && isEditEnabled)
 
 const editor = useEditor({
 	content: modelValue,
@@ -391,15 +373,17 @@ const editor = useEditor({
 		BubbleMenu,
 	],
 	onUpdate: () => {
-		// inputHTML.value = editor.value!.getHTML()
-		console.log('onUpdate')
 		bubbleNow()
 	},
 })
 
-// Grundidee: Den Edit Mode intern entscheiden ohne Möglichkeit von außen
-// Problem: Der editor setzt den content irgendwie aus Gründen immer wieder auf leer, so dass der edit mode dann wieder enabled wird obwohl content da ist
-// --> Heißt eigentlich, dass der Content im Editor und der content in der Komponente nicht der gleiche ist, das ist schonmal ein grundsätzliches Problem
+watch(
+	() => isEditing.value,
+	() => {
+		editor.value?.setEditable(isEditing.value)
+	},
+	{immediate: true},
+)
 
 watch(
 	() => modelValue,
@@ -410,19 +394,16 @@ watch(
 			return
 		}
 
-		console.log('content', value)
-
 		editor.value.commands.setContent(value, false)
-		// inputHTML.value = value
 	},
-	{immediate: true}
+	{immediate: true},
 )
 
-// const debouncedInputHTML = refDebounced(inputHTML, 1000)
-// watch(debouncedInputHTML, () => bubbleNow())
-
 function bubbleNow() {
-	console.log('bubbleNow')
+	if (editor.value?.getHTML() === modelValue) {
+		return
+	}
+
 	emit('update:modelValue', editor.value?.getHTML())
 }
 
@@ -436,22 +417,10 @@ function bubbleSave() {
 
 function setEdit(focus: boolean = true) {
 	internalMode.value = 'edit'
-	editor.value?.setEditable(isEditing.value)
 	if (focus) {
 		editor.value?.commands.focus()
 	}
 }
-
-watch(
-	() => isEditing.value,
-	() => {
-		nextTick(() => {
-			// console.log('wathcer is edit', isEditing.value)
-			setEdit(false)
-		})
-	},
-	{immediate: true},
-)
 
 onBeforeUnmount(() => editor.value?.destroy())
 
@@ -522,15 +491,18 @@ function setLink() {
 		.run()
 }
 
-onMounted(() => {
-	// internalMode.value = initialMode
-	nextTick(() => {
-		const input = tiptapInstanceRef.value?.querySelectorAll('.tiptap__editor')[0]?.children[0]
-		input?.addEventListener('paste', handleImagePaste)
-	})
+onMounted(async () => {
 	if (editShortcut !== '') {
 		document.addEventListener('keydown', setFocusToEditor)
 	}
+
+	await nextTick()
+
+	const input = tiptapInstanceRef.value?.querySelectorAll('.tiptap__editor')[0]?.children[0]
+	input?.addEventListener('paste', handleImagePaste)
+
+	internalMode.value = isEditorContentEmpty(modelValue) ? 'edit' : 'preview'
+	editor.value?.commands.setContent(modelValue, false)
 })
 
 onBeforeUnmount(() => {
@@ -568,9 +540,9 @@ function setFocusToEditor(event) {
 	}
 	event.preventDefault()
 
-	// if (initialMode === 'preview' && isEditEnabled && !isEditing.value) {
-	// 	internalMode.value = 'edit'
-	// }
+	if (!isEditing.value && isEditEnabled) {
+		internalMode.value = 'edit'
+	}
 
 	editor.value?.commands.focus()
 }
