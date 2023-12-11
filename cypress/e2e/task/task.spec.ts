@@ -36,7 +36,7 @@ function uploadAttachmentAndVerify(taskId: number) {
 	cy.get('.task-view .action-buttons .button')
 		.contains('Add Attachments')
 		.click()
-	cy.get('input[type=file]', {timeout: 1000})
+	cy.get('input[type=file]#files', {timeout: 1000})
 		.selectFile('cypress/fixtures/image.jpg', {force: true}) // The input is not visible, but on purpose
 	cy.wait('@uploadAttachment')
 
@@ -771,7 +771,7 @@ describe('Task', () => {
 				.should('exist')
 		})
 
-		it('Can check items off a checklist', () => {
+		it.only('Can check items off a checklist', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				description: `
