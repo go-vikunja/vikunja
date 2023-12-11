@@ -60,7 +60,7 @@
 				<span class="icon" v-if="task.attachments.length > 0">
 					<icon icon="paperclip"/>	
 				</span>
-				<span v-if="task.description" class="icon">
+				<span v-if="!isEditorContentEmpty(task.description)" class="icon">
 					<icon icon="align-left"/>
 				</span>
 				<span class="icon" v-if="task.repeatAfter.amount > 0">
@@ -91,6 +91,7 @@ import {useTaskStore} from '@/stores/tasks'
 import AssigneeList from '@/components/tasks/partials/assigneeList.vue'
 import {useAuthStore} from '@/stores/auth'
 import {playPopSound} from '@/helpers/playPop'
+import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 
 const router = useRouter()
 
