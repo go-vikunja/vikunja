@@ -394,7 +394,7 @@ watch(
 			return
 		}
 
-		editor.value.commands.setContent(value, false)
+		setModeAndValue(value)
 	},
 	{immediate: true},
 )
@@ -501,8 +501,7 @@ onMounted(async () => {
 	const input = tiptapInstanceRef.value?.querySelectorAll('.tiptap__editor')[0]?.children[0]
 	input?.addEventListener('paste', handleImagePaste)
 
-	internalMode.value = isEditorContentEmpty(modelValue) ? 'edit' : 'preview'
-	editor.value?.commands.setContent(modelValue, false)
+	setModeAndValue(modelValue)
 })
 
 onBeforeUnmount(() => {
@@ -514,6 +513,11 @@ onBeforeUnmount(() => {
 		document.removeEventListener('keydown', setFocusToEditor)
 	}
 })
+
+function setModeAndValue(value: string) {
+	internalMode.value = isEditorContentEmpty(value) ? 'edit' : 'preview'
+	editor.value?.commands.setContent(value, false)
+}
 
 function handleImagePaste(event) {
 	if (event?.clipboardData?.items?.length === 0) {
