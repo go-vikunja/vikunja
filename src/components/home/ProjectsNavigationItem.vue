@@ -47,7 +47,6 @@
 				<icon :icon="project.isFavorite ? 'star' : ['far', 'star']"/>
 			</BaseButton>
 			<ProjectSettingsDropdown
-				v-if="project.id > 0"
 				class="menu-list-dropdown"
 				:project="project"
 				:level="level"
@@ -58,7 +57,6 @@
 					</BaseButton>
 				</template>
 			</ProjectSettingsDropdown>
-			<span class="list-setting-spacer" v-else></span>
 		</div>
 		<ProjectsNavigation
 			v-if="canNestDeeper && childProjectsOpen && canCollapse"
