@@ -175,7 +175,11 @@ const tasks = ref<ITask[]>([])
 watch(
 	allTasks,
 	() => {
-		tasks.value = [...allTasks.value].filter(t => typeof t.relatedTasks?.parenttask === 'undefined')
+		tasks.value = [...allTasks.value]
+		if (projectId < 0) {
+			return
+		}
+		tasks.value = tasks.value.filter(t => typeof t.relatedTasks?.parenttask === 'undefined')
 	},
 )
 
