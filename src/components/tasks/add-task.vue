@@ -173,11 +173,17 @@ async function addTask() {
 				relationKind: RELATION_KIND.PARENTTASK,
 			}))
 
-			createdTask.relatedTasks[RELATION_KIND.PARENTTASK] = [createdParentTask]
+			createdTask.relatedTasks[RELATION_KIND.PARENTTASK] = [{
+				...createdParentTask,
+				relatedTasks: {}, // To avoid endless references
+			}]
 			// we're only emitting here so that the relation shows up in the project
 			emit('taskAdded', createdTask)
 
-			createdParentTask.relatedTasks[RELATION_KIND.SUBTASK] = [createdTask]
+			createdParentTask.relatedTasks[RELATION_KIND.SUBTASK] = [{
+				...createdTask,
+				relatedTasks: {}, // To avoid endless references
+			}]
 			emit('taskAdded', createdParentTask)
 
 			return rel
