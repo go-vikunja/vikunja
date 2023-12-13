@@ -5,6 +5,7 @@
 			'is-loading': loadingInternal || loading,
 			'draggable': !(loadingInternal || loading),
 			'has-light-text': color !== TASK_DEFAULT_COLOR && !colorIsDark(color),
+			'has-custom-background-color': color !== TASK_DEFAULT_COLOR ? color : undefined,
 		}"
 		:style="{'background-color': color !== TASK_DEFAULT_COLOR ? color : undefined}"
 		@click.exact="openTaskDetail()"
@@ -48,7 +49,10 @@
 			</progress>
 			<div class="footer">
 				<labels :labels="task.labels"/>
-				<priority-label :priority="task.priority" :done="task.done" class="is-inline-flex is-align-items-center"/>
+				<priority-label
+					:priority="task.priority"
+					:done="task.done"
+					class="is-inline-flex is-align-items-center"/>
 				<assignee-list
 					v-if="task.assignees.length > 0"
 					:assignees="task.assignees"
@@ -114,7 +118,7 @@ async function toggleTaskDone(task: ITask) {
 			...task,
 			done: !task.done,
 		})
-		
+
 		if (updatedTask.done && useAuthStore().settings.frontendSettings.playSoundWhenDone) {
 			playPopSound()
 		}
@@ -278,6 +282,16 @@ $task-background: var(--white);
 
 	span {
 		width: auto;
+	}
+
+	&.has-custom-background-color {
+		color: hsl(215, 27.9%, 16.9%); // copied from grey-800 to avoid different values in dark mode
+
+		.footer .icon,
+		.due-date,
+		.priority-label {
+			background: hsl(220, 13%, 91%);
+		}
 	}
 
 	&.has-light-text {
