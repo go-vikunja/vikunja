@@ -241,9 +241,9 @@ function updateTaskList(task: ITask) {
 		loadTasks()
 	}
 	else {
-		tasks.value = [
+		allTasks.value = [
 			task,
-			...tasks.value,
+			...allTasks.value,
 		]
 	}
 

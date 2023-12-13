@@ -149,13 +149,15 @@ async function addTask() {
 		await Promise.all(newTasks)
 
 		const taskRelationService = new TaskRelationService()
+		const allParentTasks = tasksToCreate.filter(t => t.parent !== null).map(t => t.parent)
 		const relations = tasksToCreate.map(async t => {
 			const createdTask = createdTasks[t.title]
 			if (typeof createdTask === 'undefined') {
 				return
 			}
 
-			if (t.parent === null) {
+			const isParent = allParentTasks.includes(t.title)
+			if (t.parent === null && !isParent) {
 				emit('taskAdded', createdTask)
 				return
 			}
@@ -174,6 +176,9 @@ async function addTask() {
 			createdTask.relatedTasks[RELATION_KIND.PARENTTASK] = [createdParentTask]
 			// we're only emitting here so that the relation shows up in the project
 			emit('taskAdded', createdTask)
+
+			createdParentTask.relatedTasks[RELATION_KIND.SUBTASK] = [createdTask]
+			emit('taskAdded', createdParentTask)
 
 			return rel
 		})
