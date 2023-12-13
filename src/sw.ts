@@ -11,7 +11,6 @@ const workboxVersion = 'v7.0.0'
 importScripts(`${fullBaseUrl}workbox-${workboxVersion}/workbox-sw.js`)
 workbox.setConfig({
 	modulePathPrefix: `${fullBaseUrl}workbox-${workboxVersion}`,
-	debug: Boolean(import.meta.env.VITE_WORKBOX_DEBUG),
 })
 
 import { precacheAndRoute } from 'workbox-precaching'

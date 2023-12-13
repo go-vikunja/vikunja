@@ -25,7 +25,6 @@ interface ImportMetaEnv {
 	readonly SENTRY_ORG?: string
 	readonly SENTRY_PROJECT?: string
 
-	readonly VITE_WORKBOX_DEBUG?: boolean
 	readonly VITE_IS_ONLINE: boolean
 }
 
