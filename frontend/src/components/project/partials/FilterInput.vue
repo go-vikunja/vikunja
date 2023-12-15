@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
+import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
 
 const {
 	modelValue,
@@ -8,6 +9,10 @@ const {
 }>()
 
 const filterQuery = ref('')
+const {
+	textarea: filterInput,
+	height,
+} = useAutoHeightTextarea(filterQuery)
 
 watch(
 	() => modelValue,
@@ -88,14 +93,19 @@ function escapeHtml(unsafe: string): string {
 				spellcheck="false"
 				v-model="filterQuery"
 				class="input"
+				ref="filterInput"
 			></textarea>
-			<div class="filter-input-highlight" v-html="highlightedFilterQuery"></div>
+			<div 
+				class="filter-input-highlight" 
+				:style="{'height': height}"
+				v-html="highlightedFilterQuery"
+			></div>
 		</div>
 	</div>
 </template>
 
 <style lang="scss">
-.filter-input-highlight span {	
+.filter-input-highlight span {
 	&.filter-query__field {
 		color: #faf594;
 	}
@@ -113,18 +123,20 @@ function escapeHtml(unsafe: string): string {
 <style lang="scss" scoped>
 .filter-input {
 	position: relative;
-	
+
 	textarea {
 		position: absolute;
 		text-fill-color: transparent;
 		-webkit-text-fill-color: transparent;
 		background: transparent !important;
+		resize: none;
 	}
-	
+
 	.filter-input-highlight {
 		height: 2.5em;
 		line-height: 1.5;
 		padding: .5em .75em;
+		word-break: break-word;
 	}
 }
 </style>

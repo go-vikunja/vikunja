@@ -77,7 +77,7 @@ const props = defineProps({
 const emit = defineEmits(['taskAdded'])
 
 const newTaskTitle = ref('')
-const newTaskInput = useAutoHeightTextarea(newTaskTitle)
+const {textarea: newTaskInput} = useAutoHeightTextarea(newTaskTitle)
 
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
