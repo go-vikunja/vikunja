@@ -6,6 +6,7 @@ import {debouncedWatch, tryOnMounted, useWindowSize, type MaybeRef} from '@vueus
 export function useAutoHeightTextarea(value: MaybeRef<string>) {
 	const textarea = ref<HTMLTextAreaElement | null>(null)
 	const minHeight = ref(0)
+	const height = ref('')
 
 	// adapted from https://github.com/LeaVerou/stretchy/blob/47f5f065c733029acccb755cae793009645809e2/src/stretchy.js#L34
 	function resize(textareaEl: HTMLTextAreaElement | null) {
@@ -23,14 +24,13 @@ export function useAutoHeightTextarea(value: MaybeRef<string>) {
 
 		textareaEl.style.minHeight = ''
 		textareaEl.style.height = '0'
-		const offset = textareaEl.offsetHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
-		const height = textareaEl.scrollHeight + offset + 'px'
+		height.value = textareaEl.scrollHeight + 'px'
 
-		textareaEl.style.height = height
+		textareaEl.style.height = height.value
 
 		// calculate min-height for the first time
 		if (!minHeight.value) {
-			minHeight.value = parseFloat(height)
+			minHeight.value = parseFloat(height.value)
 		}
 
 		textareaEl.style.minHeight = minHeight.value.toString()
@@ -68,5 +68,8 @@ export function useAutoHeightTextarea(value: MaybeRef<string>) {
 		},
 	)
 
-	return textarea
+	return {
+		textarea,
+		height,
+	}
 }
