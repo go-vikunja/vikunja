@@ -23,6 +23,7 @@ const newToken = ref<IApiToken>(new ApiTokenModel())
 const newTokenExpiry = ref<string | number>(30)
 const newTokenExpiryCustom = ref(new Date())
 const newTokenPermissions = ref({})
+const newTokenPermissionsGroup = ref({})
 const newTokenTitleValid = ref(true)
 const apiTokenTitle = ref()
 const tokenCreatedSuccessMessage = ref('')
@@ -111,6 +112,32 @@ async function createToken() {
 
 function formatPermissionTitle(title: string): string {
 	return title.replaceAll('_', ' ')
+}
+
+function selectPermissionGroup(group: string, checked: boolean) {
+	Object.entries(availableRoutes.value[group]).forEach(entry => {
+		const [key] = entry
+		newTokenPermissions.value[group][key] = checked
+	})
+}
+
+function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
+	if (checked) {
+		// Check if all permissions of that group are checked and check the "select all" checkbox in that case
+		let allChecked = true
+		Object.entries(availableRoutes.value[group]).forEach(entry => {
+			const [key] = entry
+			if (!newTokenPermissions.value[group][key]) {
+				allChecked = false
+			}
+		})
+
+		if (allChecked) {
+			newTokenPermissionsGroup.value[group] = true
+		}
+	} else {
+		newTokenPermissionsGroup.value[group] = false
+	}
 }
 </script>
 
@@ -216,15 +243,31 @@ function formatPermissionTitle(title: string): string {
 				<p>{{ $t('user.settings.apiTokens.permissionExplanation') }}</p>
 				<div v-for="(routes, group) in availableRoutes" class="mb-2" :key="group">
 					<strong class="is-capitalized">{{ formatPermissionTitle(group) }}</strong><br/>
-					<fancycheckbox
+					<template
+						v-if="Object.keys(routes).length > 1"
+					>
+						<fancycheckbox
+							class="mr-2 is-italic"
+							v-model="newTokenPermissionsGroup[group]"
+							@update:model-value="checked => selectPermissionGroup(group, checked)"
+						>
+							{{ $t('user.settings.apiTokens.selectAll') }}
+						</fancycheckbox>
+						<br/>
+					</template>
+					<template
 						v-for="(paths, route) in routes"
 						:key="group+'-'+route"
-						class="mr-2 is-capitalized"
-						v-model="newTokenPermissions[group][route]"
 					>
-						{{ formatPermissionTitle(route) }}
-					</fancycheckbox>
-					<br/>
+						<fancycheckbox
+							class="mr-2 is-capitalized"
+							v-model="newTokenPermissions[group][route]"
+							@update:model-value="checked => toggleGroupPermissionsFromChild(group, checked)"
+						>
+							{{ formatPermissionTitle(route) }}
+						</fancycheckbox>
+						<br/>
+					</template>
 				</div>
 			</div>
 
