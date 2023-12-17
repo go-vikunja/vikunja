@@ -12,13 +12,14 @@ import 'flatpickr/dist/flatpickr.css'
 import {useI18n} from 'vue-i18n'
 import {useAuthStore} from '@/stores/auth'
 import Message from '@/components/misc/message.vue'
+import type {IApiToken} from '@/modelTypes/IApiToken'
 
 const service = new ApiTokenService()
-const tokens = ref([])
+const tokens = ref<IApiToken[]>([])
 const apiDocsUrl = window.API_URL + '/docs'
 const showCreateForm = ref(false)
 const availableRoutes = ref(null)
-const newToken = ref(new ApiTokenModel())
+const newToken = ref<IApiToken>(new ApiTokenModel())
 const newTokenExpiry = ref<string | number>(30)
 const newTokenExpiryCustom = ref(new Date())
 const newTokenPermissions = ref({})
@@ -26,8 +27,8 @@ const newTokenTitleValid = ref(true)
 const apiTokenTitle = ref()
 const tokenCreatedSuccessMessage = ref('')
 
-const showDeleteModal = ref(false)
-const tokenToDelete = ref(null)
+const showDeleteModal = ref<boolean>(false)
+const tokenToDelete = ref<IApiToken>()
 
 const {t} = useI18n()
 const authStore = useAuthStore()
@@ -65,8 +66,8 @@ function resetPermissions() {
 async function deleteToken() {
 	await service.delete(tokenToDelete.value)
 	showDeleteModal.value = false
-	tokenToDelete.value = null
 	const index = tokens.value.findIndex(el => el.id === tokenToDelete.value.id)
+	tokenToDelete.value = null
 	if (index === -1) {
 		return
 	}
