@@ -9,6 +9,35 @@ All releases can be found on https://code.vikunja.io/desktop/releases.
 
 The releases aim at the api and frontend versions which is why there are missing versions.
 
+## [0.22.0] - 2023-12-19
+
+### Bug Fixes
+* Version in release files ([63519c1](63519c15d2d077a7dc5b95a964c77d0019cb555e))
+* Add script ([e5b4cc2](e5b4cc23e48010d6d6b414f6ca8c9e170ec8021c))
+* Properly replace version ([5977a93](5977a931d0be88d26073121e94053010b7ee93c6))
+* Read frontend version from release zip ([51376d0](51376d05dee332f1717fc01c3e7d8b1a61ee7773))
+
+
+### Dependencies
+
+* *(deps)* Update dependency electron to v25.3.0 (#163)
+* *(deps)* Update dependency electron to v25.3.1 (#165)
+* *(deps)* Update dependency electron to v25.6.0 (#167)
+* *(deps)* Update dependency electron to v25.7.0 (#169)
+* *(deps)* Update dependency electron-builder to v24.6.3 (#166)
+* *(deps)* Update dependency electron to v25.8.0 (#170)
+* *(deps)* Update dependency electron to v26 (#168)
+* *(deps)* Update lockfile
+* *(deps)* Update dependency electron to v26.2.2 (#174)
+* *(deps)* Update dependency electron-builder to v24.6.4 (#171)
+* *(deps)* Update dependency electron to v26.2.3 (#175)
+* *(deps)* Update dependency electron to v26.3.0 (#176)
+* *(deps)* Update dependency electron to v27 (#177)
+
+### Miscellaneous Tasks
+
+* *(ci)* Debug
+
 ## [0.21.0] - 2023-07-07
 
 ### Dependencies
