@@ -7,6 +7,263 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.22.0] - 2023-12-19
+
+### Bug Fixes
+
+* *(api tokens)* Make sure read one routes show up in routes endpoint
+* *(api tokens)* Test
+* *(api tokens)* Lint
+* *(api tokens)* Make sure task create routes are available to use with the api
+  - **BREAKING**: The api route to create a new task is now /projects/:project/tasks instead of /projects/:project
+* *(build)* Don't run go mod commands when generating swagger docs
+* *(build)* Don't generate swagger files when building
+* *(build)* Don't require swagger to build
+* *(build)* Don't remove swagger files when running build:clean step
+* *(caldav)* Check for related tasks synced back from a caldav client
+* *(caldav)* Do not update dates of tasks when repositioning them (#1605)
+* *(ci)* Don't generate swagger docs in ci
+* *(ci)* Use the same go image for everything
+* *(ci)* Don't try to install when linting
+* *(cmd)* Do not initialize asnyc operations when running certain cli commands
+* *(comments)* Make sure comment sort order is stable
+* *(docs)* Add empty swagger file so that the package exists
+* *(docs)* Remove duplicate paths (params) in swagger docs
+* *(files)* Keyvalue init in tests
+* *(filter)* Assignee search by partial username test
+* *(filters)* Make "in" filter comparator work with Typesense
+* *(import)* Don't fail when importing from dev exports
+* *(import)* Ignore duplicate project identifier
+* *(import)* Resolve task relations by old task ids
+* *(import)* Correctly set child project relations
+* *(import)* Create related tasks without an id
+* *(import)* Make sure importing works if parent / child projects are created in a different order
+* *(kanban)* Don't prevent setting a different bucket as done bucket
+* *(kanban)* Create missing kanban buckets (#1601)
+* *(kanban)* Filter for tasks in buckets by assignee should not modify the filter directly
+* *(labels)* Make sure labels of shared sub projects are usable
+* *(migration)* Use string for todoist project note id
+* *(migration)* Make sub project hierarchy work when importing from other services
+* *(openid)* Make sure usernames with spaces work
+* *(project)* Duplicating a project should not create two backlog buckets
+* *(project background)* Add more checks for whether a background file exists when duplicating or deleting a project
+* *(projects)* Save done and default bucket when updating project
+* *(projects)* Don't limit results to top-level projects when searching
+* *(projects)* Don't return child projects multiple times
+* *(projects)* Correctly set project's archived state if their parent was archived
+* *(projects)* Delete child projects when deleting a project
+* *(reminders)* Make sure reminders are only sent once per user
+* *(swagger)* Add generated swagger docs to repo
+* *(task)* Remove task relation in the other direction as well
+* *(test)* Don't check for error
+* *(tests)* Use string IDs in Todoist test
+* *(tests)* Remove duplicate projects from assertions
+* *(tests)* Pass the map
+* *(typesense)* Upsert one document at a time
+* *(typesense)* Add more error logging
+* *(typesense)* Add more error logging
+* *(typesense)* Pass the correct user when fetching task comments
+* *(typesense)* Upsert all documents at once
+* *(typesense)* Explicitely create typesense sync table
+* *(typesense)* Don't try to index tasks if there are none
+* *(typesense)* Add typesense sync to initial structs
+* *(typesense)* Make sure searching works when no task has a comment at index time
+* *(typesense)* Getting all data from typesense
+* *(typesense)* Correctly convert date values for typesense
+* *(user)* Don't crash when attempting to change a user's password
+* *(user)* Allow deleting a user if they have a default project
+* *(user)* Don't prevent deleting a user if their default project was shared
+* *(user)* Allow openid users to request their deletion
+* *(webhooks)* Routes should use the common schema used for other routes already
+* *(webhooks)* Don't send the proxy auth header to the webhook target
+* *(webhooks)* Lint
+* *(webhooks)* Lint
+* *(webhooks)* Add created by user object when creating a webhook
+* *(webhooks)* Send application/json header* Typo ([49d8713](49d87133885b4fa660c300fc38768bd91f56340e))
+* Lint ([29317b9](29317b980e68b7e10b127e7e93afff1dd56ace3e))
+* Order by clause in task comments ([5811d2a](5811d2a13b5a1017cdd0b393599ffe01db95e836))
+* Lint ([e4c7112](e4c71123ef91480d41284288bee38939cd17ae39))
+* Validate usernames on registration ([11810c9](11810c9b3e1a4bb4c5fc1f4a3ac44e8552f6a937))
+* Lint ([d6db498](d6db49885383ed3e4f98acf649dc302ed1411ccd))
+* Lint ([b8e73f4](b8e73f4fa5821ce07b42667cf84c1ff9b87e0888))
+* Lint ([424bf76](424bf7647baa34e0fa594c2c36eec542ebea531b))
+* Lint ([e34f503](e34f503674c2aab06c7215cba9e2133037e96b6a))
+* Lint ([56625b0](56625b0b90d659bd49fc95749691d0100e964dcd))
+* Properly tag bucket-related operations ([a375223](a3752238729d50b38a5cf0b811e050c3d9f8985f))
+* Lint ([6ef1bc3](6ef1bc3944980588238fb44295b520695a4ed19a))
+
+
+### Dependencies
+
+* *(deps)* Update module github.com/wneessen/go-mail to v0.4.0
+* *(deps)* Update src.techknowlogick.com/xgo digest to 617d3b6
+* *(deps)* Update module github.com/iancoleman/strcase to v0.3.0
+* *(deps)* Update module github.com/labstack/echo/v4 to v4.11.0
+* *(deps)* Update module github.com/labstack/echo/v4 to v4.11.1
+* *(deps)* Update module xorm.io/builder to v0.3.13
+* *(deps)* Update module golang.org/x/image to v0.11.0
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.23.0
+* *(deps)* Update module github.com/arran4/golang-ical to v0.1.0
+* *(deps)* Update src.techknowlogick.com/xgo digest to 1510ee0
+* *(deps)* Update module github.com/yuin/goldmark to v1.5.6
+* *(deps)* Update module xorm.io/xorm to v1.3.3
+* *(deps)* Update module github.com/jinzhu/copier to v0.4.0
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.2.1
+* *(deps)* Update module github.com/threedotslabs/watermill to v1.3.5
+* *(deps)* Update module golang.org/x/oauth2 to v0.13.0
+* *(deps)* Update lockfile
+* *(deps)* Update lockfile
+* *(deps)* Update github.com/dustinkirkland/golang-petname digest to 6a283f1
+* *(deps)* Update module github.com/prometheus/client_golang to v1.17.0
+* *(deps)* Update src.techknowlogick.com/xgo digest to 6fc6b16
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.25.0
+* *(deps)* Update lockfile
+* *(deps)* Update module github.com/spf13/viper to v1.17.0
+* *(deps)* Update module github.com/spf13/afero to v1.10.0
+* *(deps)* Update lockfile
+* *(deps)* Update module github.com/swaggo/swag to v1.16.2
+* *(deps)* Update module golang.org/x/image to v0.13.0
+* *(deps)* Update module golang.org/x/sync to v0.4.0
+* *(deps)* Update module github.com/labstack/echo/v4 to v4.11.2
+* *(deps)* Update lockfile
+* *(deps)* Update postgres docker tag to v16 (#1618)
+* *(deps)* Update goreleaser/nfpm docker tag to v2.33.1 (#1560)
+* *(deps)* Update mariadb docker tag to v11 (#1544)
+* *(deps)* Update xgo to go 1.21
+* *(deps)* Update module github.com/gabriel-vasile/mimetype to v1.4.3
+* *(deps)* Update lockfile
+* *(deps)* Update module github.com/coreos/go-oidc/v3 to v3.7.0
+* *(deps)* Update src.techknowlogick.com/xgo digest to ecfba3d
+* *(deps)* Update lockfile
+* *(deps)* Update module src.techknowlogick.com/xormigrate to v1.6.0 (#1627)
+* *(deps)* Update module github.com/google/uuid to v1.4.0
+* *(deps)* Update module src.techknowlogick.com/xormigrate to v1.7.0
+* *(deps)* Update lockfile
+* *(deps)* Update module xorm.io/xorm to v1.3.4 (#1630)
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.3.0
+* *(deps)* Update module github.com/mattn/go-sqlite3 to v1.14.18
+* *(deps)* Update module golang.org/x/sync to v0.5.0
+* *(deps)* Update module golang.org/x/sys to v0.14.0
+* *(deps)* Update module github.com/spf13/cobra to v1.8.0
+* *(deps)* Update module src.techknowlogick.com/xormigrate to v1.7.1
+* *(deps)* Update module github.com/yuin/goldmark to v1.6.0
+* *(deps)* Update lockfile
+* *(deps)* Update github.com/go-jose/go-jose/v3
+* *(deps)* Update module golang.org/x/text to v0.14.0
+* *(deps)* Update module golang.org/x/oauth2 to v0.15.0
+* *(deps)* Update module golang.org/x/crypto to v0.17.0
+* *(deps)* Update module golang.org/x/term to v0.15.0
+* *(deps)* Update module golang.org/x/image to v0.14.0
+* *(deps)* Update module github.com/golang-jwt/jwt/v5 to v5.2.0
+* *(deps)* Update src.techknowlogick.com/xgo digest to c7ed783
+* *(deps)* Update module github.com/labstack/echo/v4 to v4.11.3
+* *(deps)* Update golangci/golangci-lint docker tag to v1.55.2
+* *(deps)* Update goreleaser/nfpm docker tag to v2.34.0
+* *(deps)* Update lockfile
+* *(deps)* Update golangci-lint rules
+* *(deps)* Update sqlite bindings
+* *(deps)* Update deps
+
+### Documentation
+
+* *(webhooks)* Add general docs about webhooks
+* *(webhooks)* Add swagger docs for all webhook endpoints* Add Caddyfile to reverse proxies setup (#1580) ([665c046](665c04671739fd08e5b24e59749707ce5de83daa))
+* *(webhooks)* Add webhook config to sample config
+* Add Authentik example config (#1660) ([4615b4d](4615b4dbfbbf8514d9c41176e6e68a8ba3a453ce))
+* Add config guide for NGINX Proxy Manager ([a1d0541](a1d0541a7a6926127ba0bac4df03ce62b74f0c84))
+* Add n8n docs ([6a7aec2](6a7aec2e9ded619b074ef27f360c96c313e4449c))
+* Add typesense setup ([70d1903](70d1903dcac67e33bdfdf54d0ba561af76dbf927))
+* Clarify minimum required go version ([a2925cf](a2925cf55bee4c71ac5be1bad66cb3ec2230056d))
+* Clarify required language code ([e1525fc](e1525fca6eb5af17afa332d2c76a37b288673c5b))
+* Fix typo ([db0153a](db0153a7213a9b0bbafb43bc2762e2060f1ec9d1))
+
+
+### Features
+
+* *(api tokens)* Add api token struct and migration
+* *(api tokens)* Add crud routes to manage api tokens
+* *(api tokens)* Add tests
+* *(api tokens)* Better error message for invalid tokens
+* *(api tokens)* Check for expiry date
+* *(api tokens)* Check for scopes
+* *(api tokens)* Check if a provided token matched a hashed on in the database
+* *(api tokens)* Check permissions when saving
+* *(api tokens)* Move token validation middleware to new function
+* *(api tokens)* Properly hash tokens
+* *(api)* Enable notifications for api token routes
+* *(caldav)* Add support for subtasks (i.e. `RELATED-TO` property) in CalDAV (#1634)
+* *(cli)* Added --confirm/-c argument when deleting users to bypass prompt (#86)
+* *(docs)* Update sample config and docs about Typesense config
+* *(metrics)* Add active link share logins
+* *(metrics)* Add total number of attachments metric
+* *(metrics)* Add total number of files metric
+* *(migration)* Migration from other services now happens in the background
+* *(notifications)* Add endpoint to mark all notifications as read
+* *(notify)* Don't notify disabled users
+* *(reminders)* Include project in reminder notification
+* *(tasks)* Add periodic resync of updated tasks to Typesense
+* *(tasks)* Add searching via typesense
+* *(tasks)* Add typesense indexing
+* *(tasks)* Allow filtering for reminders, assignees and labels with Typesense
+* *(tasks)* Find tasks by their identifier when searching with Typesense
+* *(tasks)* Make sorting and filtering work with Typesense
+* *(tasks)* Remove deleted tasks from Typesense
+* *(typesense)* Add new tasks to typesense directly when they are created
+* *(webhooks)* Add basic crud actions for webhooks
+* *(webhooks)* Add basic sending of webhooks
+* *(webhooks)* Add created by user object when returning all webhooks
+* *(webhooks)* Add event listener to send webhook payload
+* *(webhooks)* Add filter based on project id
+* *(webhooks)* Add hmac signing
+* *(webhooks)* Add index on project id
+* *(webhooks)* Add route to get all available webhook events
+* *(webhooks)* Add routes
+* *(webhooks)* Add setting to enable webhooks
+* *(webhooks)* Add support for webhook proxy
+* *(webhooks)* Add timeout config option
+* *(webhooks)* Expose whether webhooks are enabled
+* *(webhooks)* Prevent link shares from managing webhooks
+* *(webhooks)* Register task and project events as webhook
+* *(webhooks)* Set user agent header to Vikunja
+* *(webhooks)* Validate events and target url* Search improvemens (#1598) ([6f825fa](6f825fa4133a3200dab8a46faa2932cf5633263c))
+* Accept hex values which start with a # ([a1ea77f](a1ea77f7519efe7696bce018814071cbabaaa62c))
+* Add demo mode flag ([97b5cd3](97b5cd306f44a23d5f8923b1cf750533c1ca3e10))
+* Add setting for default bucket ([b99b323](b99b323c4c5a003c5b34e0196da566816469c608))
+* Add very basic bruno collection ([7eb59f5](7eb59f577c32791af77770e5c4ca2e1d7c01ee04))
+* Api tokens ([60cd125](60cd1250a0431f33748f83da3256f19ee8144dde))
+* Convert all markdown content to html (#1625) ([8a4856a](8a4856ad8747dd590f61e80212f77fb6e41cfb4b))
+* Endpoint to get all token routes ([1ca93a6](1ca93a678e6d931aa3afb3aaa654763ee8304d3b))
+* Make default bucket configurable ([60bd5c8](60bd5c8a79af18b09cb87c650436d0eff771d670))
+* Make unauthenticated user routes rate limit configurable ([c6c465c](c6c465c273037fd2c1f02360e647366834ab0cde))
+* Move done bucket setting to project ([bbbb45d](bbbb45d22461ed88d744cc1d66f74a743a51b843))
+* Webhooks (#1624) ([4d9baa3](4d9baa38d0861c082aa21713744927d520750fd6))
+
+
+### Miscellaneous Tasks
+
+* *(api tokens)* Add swagger docs about api token auth
+* *(api tokens)* Remove updated date from tokens as it can't be updated anyway
+* *(build)* Use our own goproxy to prevent issues with packages not found
+* *(caldav)* Improve trimming .ics file ending
+* *(ci)* Sign drone config
+* *(ci)* Use golangci-lint docker image for lint step
+* *(tasks)* Better error messages when indexing tasks into Typesense
+* *(test)* Add task deleted assertion to project deletion test
+* *(webhooks)* Remove WebhookEvent interface
+* *(webhooks)* Reuse webhook client
+* *(webhooks)* Simplify registering webhook events* Remove year from copyright headers ([e518fb1](e518fb1191c0a21180f91bf2defcef80e26f02a7))
+* Add pr lockdown ([0abf686](0abf686f6630e052c43537cfcaf7b90eebcaa910))
+* Assume username instead of id when parsing fails for user commands (#87) ([137f3bc](137f3bc151d6417ba3cc8362afec1e7457915ef5))
+* Go mod tidy ([7c4b2c9](7c4b2c9b3911214d42ab9ab9a01605828013da55))
+* Reverse the coupling of module log and config (#1606) ([ad04d30](ad04d302af94fe3cf8e5a70ebb87af9002da5610))
+* Update contributing guidelines ([83f02b1](83f02b1ebc4ceda8226fb6d9c004241c0c47ae8d))
+
+
+### Other
+
+* *(other)* [skip ci] Updated swagger docs
+
+
 ## [0.21.0] - 2023-07-07
 
 ### Bug Fixes
