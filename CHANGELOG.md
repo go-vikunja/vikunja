@@ -9,6 +9,390 @@ All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
 
+## [0.22.0] - 2023-12-19
+
+### Bug Fixes
+
+* *(api tokens)* Expiry of tokens in a number of days
+* *(api tokens)* Lint
+* *(api tokens)* Make deletion of old tokens work
+* *(api tokens)* Show a token after it was created
+* *(attachments)* Layout and coloring in dark mode
+* *(auth)* Correctly redirect the user to the last visited page after login
+* *(auth)* Silently discard invalid auth tokens and log the user out
+* *(background)* Unsplash author credit in dark mode
+* *(build)* Don't download Puppeteer when building for prod
+* *(ci)* Pin used node version to 20.5 to avoid build issues
+* *(ci)* Use correct secret key to push
+* *(docker)* Set correct default value for custom logo url
+* *(editor)* Actions styling
+* *(editor)* Actually populate loaded data into the editor
+* *(editor)* Add icons for clearing marks and nodes
+* *(editor)* Add missing dependencies for commands
+* *(editor)* Add missing dependency
+* *(editor)* Add workaround for checklist tiptap bug
+* *(editor)* Alignment and focus states
+* *(editor)* Allow checking a checkbox even when the editor is set to read only
+* *(editor)* Always set mode to preview after save
+* *(editor)* Always show placeholder when empty
+* *(editor)* Change description when switching between tasks
+* *(editor)* Check for almost empty editor value
+* *(editor)* Check for empty content
+* *(editor)* Checklist button icon
+* *(editor)* Commands list in dark mode
+* *(editor)* Correctly resolve images in descriptions
+* *(editor)* Don't check parent checkbox when child label was clicked
+* *(editor)* Don't crash when the component isn't completely mounted
+* *(editor)* Don't create empty "blob" files when pasting images
+* *(editor)* Don't prevent typing editor focus shortcut when other instance of an editor is focused already
+* *(editor)* Don't use global shortcut when anything is focused
+* *(editor)* Duplicate name
+* *(editor)* Duplicate name for extension
+* *(editor)* Focus state
+* *(editor)* Image button icon
+* *(editor)* Image paste handling
+* *(editor)* Keep editor open when emptying content from the outside
+* *(editor)* Keep editor open when emptying content from the outside (#3852)
+* *(editor)* Lint
+* *(editor)* Lint
+* *(editor)* List styling
+* *(editor)* Make checklist indicator work again
+* *(editor)* Make initial editor mode (preview/edit) work
+* *(editor)* Make tests work with changed structure
+* *(editor)* Permission check for table editing
+* *(editor)* Placeholder showing or not showing
+* *(editor)* Reset on empty
+* *(editor)* Show editor if there is no content initially
+* *(editor)* Use edit enable
+* *(editor)* Use modelValue directly to update values in the editor
+* *(filter)* Don't immediately re-trigger prepareFilter
+* *(filter)* Don't prevent entering date math strings
+* *(filter)* Don't show other filters in project selection in saved filter
+* *(filter)* Make other filters are not available for project selection
+* *(filters)* Don't allow marking a filter as favorite
+* *(filters)* Incorrect translation string
+* *(filters)* Infinite loop when creating filters with dates (#3061)
+* *(gantt)* Open task with double click from the gantt chart
+* *(gantt)* Update the gantt view when switching between projects
+* *(i18n)* Add upload files config
+* *(i18n)* Fall back to browser language if the configured user language is invalid
+* *(i18n)* Hungarian translation
+* *(kanban)* Check if doneBucketId is set
+* *(kanban)* Make sure kanban cards always have text color matching their background
+* *(kanban)* Opening a task from the kanban board and then reloading the page should not crash everything when then navigating back
+* *(list view)* Align nested subtasks with the parent text
+* *(menu)* Separate favorite and saved filter projects from other projects
+* *(navigation)* Don't hide color bubble in navigation on touch devices
+* *(navigation)* Show filter settings dropdown
+* *(project)* Correctly show project color next to project title in list view
+* *(projects)* Don't suggest to create a new task in an empty filter
+* *(quick actions)* Always open quick actions with hotkey, even if other inputs are focused
+* *(quick actions)* Always search for projects
+* *(quick actions)* Don't show projects when searching for labels or tasks
+* *(quick actions)* Invalid class prop
+* *(quick actions)* Project filter
+* *(quick actions)* Project search
+* *(quick actions)* Search for tasks within a project when specifying a project with quick add magic
+* *(quick add magic)* Annually and variants spelling
+* *(quick add magic)* Headline
+* *(quick add magic)* Ignore common task indention when adding multiple tasks at once
+* *(quick add magic)* Repeating intervals in words
+* *(settings)* Allow removing the default project via settings
+* *(settings)* Move overdue remindeer time below
+* *(sw)* Remove debug option via env as it would not be replaced correctly in prod builds
+* *(task)* Correct spacing to task and project title
+* *(task)* Correctly build task identifier
+* *(task)* Don't reload the kanban board when opening a task
+* *(task)* Don't reload the kanban board when opening a task
+* *(task)* Duplicate attribute
+* *(task)* Make sure the modal close button is not overlapped with the title field (#3256)
+* *(task)* Priority label sizing and positioning in different environments
+* *(task)* Priority label spacing
+* *(task)* Remove wrong repeat types
+* *(task)* Show related tasks form with shortcut even when there are already other related tasks
+* *(task)* Use editor as preview first, then check for edit
+* *(task)* Use empty description helper everywhere
+* *(tasks)* Don't use the filter for upcoming when one is set for the home page
+* *(tasks)* Favorited sub tasks are not shown in favorites pseudo list
+* *(tasks)* Ignore empty lines when adding multiple tasks at once
+* *(tasks)* Make sure tasks are fully clickable
+* *(tasks)* Play pop sound directly and not from store
+* *(tasks)* Prevent endless references
+* *(tasks)* Reset page number when applying filters
+* *(tasks)* Update api route
+* *(tasks)* Update sub task relations in list view after they were created
+* *(tasks)* Use mousedown event instead of click to close the task popup
+* *(test)* Use correct file input
+* *(user)* Allow openid users to request their deletion
+* *(webhooks)* Styling* Correctly resolve kanban board in the background when moving a task ([8902c15](8902c15f7e9590da075e860f3d35939169ee246a))
+* Don't render route modal when no properties are defined ([b1fe3fe](b1fe3fe29b3f7c8e3f1fa279b74f674bc63db232))
+* Don't try to load buckets for project id 0 ([15ecafd](15ecafdf04391139da27f38dac9ed915d6220a9a))
+* Lint ([218d724](218d72494a088b612e720ca2e9b566c0d3446579))
+* Lint ([337c3e5](337c3e5e3e06a9e4928bebffda2e2f223fef398b))
+* Lint ([7f2d921](7f2d92138e302188d6000632b4bc9bf053194dee))
+* Lint ([99e2161](99e2161c09b1e2b08f3a907bd2e3ad2c71da87d3))
+* Lint ([c01957a](c01957aae24696812c80b18c77137b5030fc757a))
+* Tests ([f6d1db3](f6d1db35957c4c2fda7a58539a0a39db1b683ccb))
+
+
+### Dependencies
+
+* *(deps)* Remove unused dependencies
+* *(deps)* Update dependencies
+* *(deps)* Update dependencies
+* *(deps)* Update dependency @fortawesome/vue-fontawesome to v3.0.5 (#3815)
+* *(deps)* Update dependency @github/hotkey to v2.1.0 (#3766)
+* *(deps)* Update dependency @github/hotkey to v2.1.1 (#3770)
+* *(deps)* Update dependency @github/hotkey to v2.2.0 (#3809)
+* *(deps)* Update dependency @github/hotkey to v2.3.0 (#3810)
+* *(deps)* Update dependency @github/hotkey to v2.3.1 (#3845)
+* *(deps)* Update dependency @github/hotkey to v3
+* *(deps)* Update dependency @infectoone/vue-ganttastic to v2.2.0
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v0.12.2
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v1
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v1.5.0 (#3812)
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v1.6.0
+* *(deps)* Update dependency @kyvg/vue3-notification to v3
+* *(deps)* Update dependency @kyvg/vue3-notification to v3.1.2
+* *(deps)* Update dependency @types/is-touch-device to v1.0.1 (#3786)
+* *(deps)* Update dependency @types/is-touch-device to v1.0.2 (#3816)
+* *(deps)* Update dependency @types/lodash.clonedeep to v4.5.8 (#3787)
+* *(deps)* Update dependency @types/lodash.clonedeep to v4.5.9 (#3817)
+* *(deps)* Update dependency @types/node to v18.17.0
+* *(deps)* Update dependency @types/node to v20 (#3796)
+* *(deps)* Update dependency @types/sortablejs to v1.15.4 (#3788)
+* *(deps)* Update dependency @types/sortablejs to v1.15.5 (#3818)
+* *(deps)* Update dependency @vueuse/core to v10.3.0
+* *(deps)* Update dependency @vueuse/core to v10.4.0 (#3723)
+* *(deps)* Update dependency axios to v1.5.1
+* *(deps)* Update dependency axios to v1.6.0 (#3801)
+* *(deps)* Update dependency axios to v1.6.2 (#3820)
+* *(deps)* Update dependency caniuse-lite to v1.0.30001514
+* *(deps)* Update dependency codemirror to v5.65.14
+* *(deps)* Update dependency dayjs to v1.11.10 (#3753)
+* *(deps)* Update dependency dompurify to v3.0.5
+* *(deps)* Update dependency dompurify to v3.0.6 (#3754)
+* *(deps)* Update dependency eslint to v8.52.0 (#3785)
+* *(deps)* Update dependency highlight.js to v11.9.0 (#3763)
+* *(deps)* Update dependency lowlight to v2.9.0 (#3789)
+* *(deps)* Update dependency marked to v5.1.1
+* *(deps)* Update dependency marked to v9
+* *(deps)* Update dependency marked to v9.1.0 (#3760)
+* *(deps)* Update dependency marked to v9.1.1 (#3768)
+* *(deps)* Update dependency marked to v9.1.2 (#3774)
+* *(deps)* Update dependency node (#3797)
+* *(deps)* Update dependency node (#3834)
+* *(deps)* Update dependency node to v18.18.0
+* *(deps)* Update dependency node to v18.18.1
+* *(deps)* Update dependency node to v18.18.2
+* *(deps)* Update dependency pinia to v2.1.6
+* *(deps)* Update dependency pinia to v2.1.7 (#3771)
+* *(deps)* Update dependency sass to v1.69.2 (#3767)
+* *(deps)* Update dependency sortablejs to v1.15.1 (#3841)
+* *(deps)* Update dependency ufo to v1.2.0
+* *(deps)* Update dependency ufo to v1.3.1
+* *(deps)* Update dependency ufo to v1.3.2 (#3824)
+* *(deps)* Update dependency vite to v4.4.2
+* *(deps)* Update dependency vite to v4.4.3
+* *(deps)* Update dependency vue to v3.3.10 (#3843)
+* *(deps)* Update dependency vue to v3.3.13
+* *(deps)* Update dependency vue to v3.3.5 (#3782)
+* *(deps)* Update dependency vue to v3.3.6 (#3784)
+* *(deps)* Update dependency vue to v3.3.7 (#3799)
+* *(deps)* Update dependency vue to v3.3.8 (#3814)
+* *(deps)* Update dependency vue to v3.3.9 (#3837)
+* *(deps)* Update dependency vue-i18n to v9.5.0
+* *(deps)* Update dependency vue-i18n to v9.6.0 (#3800)
+* *(deps)* Update dependency vue-i18n to v9.6.1 (#3803)
+* *(deps)* Update dependency vue-i18n to v9.6.5 (#3807)
+* *(deps)* Update dependency vue-i18n to v9.7.0 (#3825)
+* *(deps)* Update dependency vue-i18n to v9.8.0 (#3833)
+* *(deps)* Update dependency vue-router to v4.2.5 (#3755)
+* *(deps)* Update dessant/repo-lockdown action to v4
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies (#3721)
+* *(deps)* Update dev-dependencies (#3726)
+* *(deps)* Update dev-dependencies (#3740)
+* *(deps)* Update dev-dependencies (#3746)
+* *(deps)* Update dev-dependencies (#3747)
+* *(deps)* Update dev-dependencies (#3757)
+* *(deps)* Update dev-dependencies (#3761)
+* *(deps)* Update dev-dependencies (#3769)
+* *(deps)* Update dev-dependencies (#3776)
+* *(deps)* Update dev-dependencies (#3780)
+* *(deps)* Update dev-dependencies (#3793)
+* *(deps)* Update dev-dependencies (#3802)
+* *(deps)* Update dev-dependencies (#3806)
+* *(deps)* Update dev-dependencies (#3811)
+* *(deps)* Update dev-dependencies (#3813)
+* *(deps)* Update dev-dependencies (#3821)
+* *(deps)* Update dev-dependencies (#3826)
+* *(deps)* Update dev-dependencies (#3828)
+* *(deps)* Update dev-dependencies (#3829)
+* *(deps)* Update dev-dependencies (#3835)
+* *(deps)* Update dev-dependencies (#3842)
+* *(deps)* Update dev-dependencies (#3846)
+* *(deps)* Update dev-dependencies (#3856)
+* *(deps)* Update dev-dependencies (major) (#3741)
+* *(deps)* Update dev-dependencies (major) (#3827)
+* *(deps)* Update dev-dependencies to v6
+* *(deps)* Update flake
+* *(deps)* Update font awesome to v6.4.2
+* *(deps)* Update font awesome to v6.5.1 (#3839)
+* *(deps)* Update lockfile
+* *(deps)* Update lockfile
+* *(deps)* Update lockfile
+* *(deps)* Update lockfile
+* *(deps)* Update lockfile
+* *(deps)* Update lockfile
+* *(deps)* Update node.js to v18.17.0
+* *(deps)* Update node.js to v18.17.1
+* *(deps)* Update node.js to v20.7 (#3736)
+* *(deps)* Update node.js to v20.8 (#3756)
+* *(deps)* Update pnpm to v8.10.2
+* *(deps)* Update pnpm to v8.10.5
+* *(deps)* Update pnpm to v8.11.0
+* *(deps)* Update pnpm to v8.12.1
+* *(deps)* Update pnpm to v8.6.12
+* *(deps)* Update pnpm to v8.6.7
+* *(deps)* Update pnpm to v8.6.8
+* *(deps)* Update pnpm to v8.6.9
+* *(deps)* Update pnpm to v8.7.0
+* *(deps)* Update pnpm to v8.8.0
+* *(deps)* Update pnpm to v8.9.0
+* *(deps)* Update pnpm to v8.9.2
+* *(deps)* Update sentry-javascript monorepo to v7.58.0
+* *(deps)* Update sentry-javascript monorepo to v7.58.1
+* *(deps)* Update sentry-javascript monorepo to v7.59.1
+* *(deps)* Update sentry-javascript monorepo to v7.59.2
+* *(deps)* Update sentry-javascript monorepo to v7.59.3
+* *(deps)* Update sentry-javascript monorepo to v7.60.0
+* *(deps)* Update sentry-javascript monorepo to v7.73.0
+* *(deps)* Update sentry-javascript monorepo to v7.74.0 (#3772)
+* *(deps)* Update sentry-javascript monorepo to v7.74.1 (#3778)
+* *(deps)* Update sentry-javascript monorepo to v7.75.1 (#3798)
+* *(deps)* Update sentry-javascript monorepo to v7.77.0 (#3805)
+* *(deps)* Update sentry-javascript monorepo to v7.80.1 (#3819)
+* *(deps)* Update sentry-javascript monorepo to v7.85.0 (#3831)
+* *(deps)* Update sentry-javascript monorepo to v7.88.0
+* *(deps)* Update sub-dependencies
+* *(deps)* Update tiptap to v2.1.12 (#3790)
+* *(deps)* Update tiptap to v2.1.13 (#3840)
+* *(deps)* Update vueuse to v10.5.0 (#3762)
+* *(deps)* Update vueuse to v10.6.1 (#3822)
+* *(deps)* Update vueuse to v10.7.0 (#3844)
+
+### Features
+
+* *(api tokens)* Add basic api token overview
+* *(api tokens)* Add deleting api tokens
+* *(api tokens)* Add token creation form
+* *(api tokens)* Allow custom selection of expiry dates
+* *(api tokens)* Allow selecting all permissions
+* *(api tokens)* Format permissions and groups human-readable
+* *(api tokens)* Show warning if token has expired
+* *(api tokens)* Validate title field when creating a new token
+* *(assignees)* Improve avatar list consistency
+* *(editor)* Add all slash commands
+* *(editor)* Add bubble menu
+* *(editor)* Add code highlighting
+* *(editor)* Add command list example
+* *(editor)* Add comment when pressing ctrl enter
+* *(editor)* Add placeholder
+* *(editor)* Add proper description for all buttons
+* *(editor)* Add tests to check rendering of task description
+* *(editor)* Add tooltips for everything
+* *(editor)* Add uploading an image on save
+* *(editor)* Allow passing placeholder down
+* *(editor)* Edit mode
+* *(editor)* Edit shortcut to set focus into the editor
+* *(editor)* Enable table
+* *(editor)* Image upload
+* *(editor)* Improve overall styling
+* *(editor)* Make image upload work via slash command
+* *(editor)* Make task list work
+* *(editor)* Mark a checkbox item as done when clicking on its text
+* *(editor)* Move all editor related components into one folder
+* *(editor)* Only load attachment images when rendering is done
+* *(editor)* Open links when clicking on them
+* *(editor)* Properly bubble changes when they are made
+* *(editor)* Resolve and load attachment images from content
+* *(editor)* Save when pressing ctrl enter
+* *(gantt)* Implement dynamic sizing on small date ranges (#3750)
+* *(i18n)* Add Slovene language for selection in the ui
+* *(i18n)* Add arabic to list of selectable languages
+* *(i18n)* Add hungarian translation for selection
+* *(i18n)* Run translation update directly
+* *(i18n)* Update crowdin sync to use v2 api
+* *(i18n)* Update translations only once a day
+* *(kanban)* Add icon for bucket collapse
+* *(kanban)* Add setting for default bucket
+* *(kanban)* Save done bucket with project instead of bucket
+* *(labels)* Assign random color when creating labels
+* *(list view)* Show subtasks nested
+* *(migration)* Proper wording for async migration
+* *(notifications)* Add option to mark all as read
+* *(quick actions)* Show done tasks last
+* *(quick actions)* Show labels as labels and tasks with all of their details
+* *(quick actions)* Show task identifier
+* *(quick actions)* Show tasks for a label when selecting it
+* *(quick add magic)* Allow using the project identifier via quick add magic
+* *(task)* Add more tests
+* *(task)* Group related task action buttons
+* *(task)* Immediately set focus on the task search input when opening the related tasks menu
+* *(task)* Move task priority to the front when showing tasks inline
+* *(task)* Save currently opened task with control/meta + s
+* *(tasks)* Make the whole task in list view clickable
+* *(tasks)* Update due date text every minute
+* *(webhooks)* Add form validation* Allow custom logo via environment variable (#3685) ([cade3df](cade3df3e9a7eca8e0aa9d1553dd5597f0f5a8a2))
+* *(webhooks)* Add webhook management form
+* Add demo mode warning message ([ed8fb71](ed8fb71ff0b05860f320e2a1fe6c3cb29ed2889a))
+* Add setting for default bucket ([04ba101](04ba1011cc3042f657ddb40ee727caf455db8b64))
+* Api tokens ([28f2551](28f2551d87b99c59055a4909195e435dbd9794b6))
+* Improve error message for invalid API url ([725fd1a](725fd1ad467fb988810cb23f12d372af236bd21d))
+* Move from easymde to tiptap editor (#2222) ([26fc9b4](26fc9b4e4f8b96616385f4ca0a77a0ff7ee5eee5))
+* Quick actions improvments ([47d5890](47d589002ccef5047a25ea3ad8ebe582c3b0bbc6))
+* Webhooks (#3783) ([5d991e5](5d991e539bb3a249447847c13c92ee35d356b902))
+
+### Miscellaneous Tasks
+
+* *(ci)* Sign drone config
+* *(editor)* Add break icon
+* *(editor)* Add horizontal line icon
+* *(editor)* Cleanup
+* *(editor)* Cleanup unused options
+* *(editor)* Format
+* *(editor)* Make sure all tiptap dependencies are updated as one
+* *(editor)* Move checklist to the other lists
+* *(editor)* Remove converting markdown
+* *(editor)* Remove marked usages
+* *(editor)* Remove old editor component
+* *(editor)* Remove unused components
+* *(editor)* Use typed props definition
+* *(filter)* Remove debug log
+* *(quick actions)* Format* Provide better error messages when refreshing user info fails ([d535879](d5358793de7fc53795329382222e5f3bafc7fba1))
+* Add pr lockdown ([07b1e9a](07b1e9a6b76eb7d92640e00a1dec4294efd2947b))
+* Cleanup ([a4a2b95](a4a2b95dc7eaad5fe313884eec0d22d7ae5f85c1))
+* Debug ([3cb1e7d](3cb1e7dede659acd19410e0611346e0f582f2ff3))
+* Format ([c3f85fc](c3f85fcb1988603a58104552b35101b13e93b06e))
+* Improve checking for API url '/' suffix  (#121) ([311b1d7](311b1d7594cfd03be4d998f4aead041a8ca63f8c))
+* Include version json string in release zip ([c4adcf4](c4adcf4655550214ae795d941eb51878f34cedeb))
+* Update flake ([64c90c7](64c90c7fe8a77ded21778a798f18862fe966bd1a))
+* Update lockfile ([9f82ec4](9f82ec4162151ba32f329cb8e335eff6b21cebd4))
+
+### Other
+
+* *(other)* [skip ci] Updated translations via Crowdin
+
 ## [0.21.0] - 2023-07-07
 
 ### Bug Fixes
