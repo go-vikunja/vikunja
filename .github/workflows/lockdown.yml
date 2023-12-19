@@ -12,7 +12,7 @@ jobs:
   action:
     runs-on: ubuntu-latest
     steps:
-      - uses: dessant/repo-lockdown@v3
+      - uses: dessant/repo-lockdown@v4
         with:
           pr-comment: 'Hi! Thank you for your contribution.
 
