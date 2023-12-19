@@ -22,7 +22,9 @@ import (
 
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRegister(t *testing.T) {
@@ -32,12 +34,12 @@ func TestRegister(t *testing.T) {
   "password": "12345678",
   "email": "email@example.com"
 }`, nil, nil)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), `"username":"newUser"`)
 	})
 	t.Run("Empty payload", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.RegisterUser, `{}`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeNoUsernamePassword)
 	})
 	t.Run("Empty username", func(t *testing.T) {
@@ -46,7 +48,7 @@ func TestRegister(t *testing.T) {
   "password": "12345678",
   "email": "email@example.com"
 }`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeNoUsernamePassword)
 	})
 	t.Run("Empty password", func(t *testing.T) {
@@ -55,7 +57,7 @@ func TestRegister(t *testing.T) {
   "password": "",
   "email": "email@example.com"
 }`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeNoUsernamePassword)
 	})
 	t.Run("Empty email", func(t *testing.T) {
@@ -64,7 +66,7 @@ func TestRegister(t *testing.T) {
   "password": "12345678",
   "email": ""
 }`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeNoUsernamePassword)
 	})
 	t.Run("Already existing username", func(t *testing.T) {
@@ -73,7 +75,7 @@ func TestRegister(t *testing.T) {
   "password": "12345678",
   "email": "email@example.com"
 }`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrorCodeUsernameExists)
 	})
 	t.Run("Already existing email", func(t *testing.T) {
@@ -82,7 +84,7 @@ func TestRegister(t *testing.T) {
   "password": "12345678",
   "email": "user1@example.com"
 }`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrorCodeUserEmailExists)
 	})
 }

@@ -22,8 +22,10 @@ import (
 
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUserPasswordReset(t *testing.T) {
@@ -32,12 +34,12 @@ func TestUserPasswordReset(t *testing.T) {
 	"new_password": "1234",
 	"token": "passwordresettesttoken"
 }`, nil, nil)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), `The password was updated successfully.`)
 	})
 	t.Run("Empty payload", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.UserResetPassword, `{}`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t, http.StatusBadRequest, err.(*echo.HTTPError).Code)
 	})
 	t.Run("No new password", func(t *testing.T) {
@@ -45,7 +47,7 @@ func TestUserPasswordReset(t *testing.T) {
 	"new_password": "",
 	"token": "passwordresettesttoken"
 }`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeNoUsernamePassword)
 	})
 	t.Run("Invalid password reset token", func(t *testing.T) {
@@ -53,7 +55,7 @@ func TestUserPasswordReset(t *testing.T) {
 	"new_password": "1234",
 	"token": "invalidtoken"
 }`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeInvalidPasswordResetToken)
 	})
 }

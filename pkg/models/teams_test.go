@@ -22,7 +22,9 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTeam_Create(t *testing.T) {
@@ -40,9 +42,9 @@ func TestTeam_Create(t *testing.T) {
 			Description: "Lorem Ispum",
 		}
 		err := team.Create(s, doer)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		db.AssertExists(t, "teams", map[string]interface{}{
 			"id":          team.ID,
 			"name":        "Testteam293",
@@ -56,7 +58,7 @@ func TestTeam_Create(t *testing.T) {
 
 		team := &Team{}
 		err := team.Create(s, doer)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTeamNameCannotBeEmpty(err))
 	})
 }
@@ -71,7 +73,7 @@ func TestTeam_ReadOne(t *testing.T) {
 
 		team := &Team{ID: 1}
 		err := team.ReadOne(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "testteam1", team.Name)
 		assert.Equal(t, "Lorem Ipsum", team.Description)
 		assert.Equal(t, int64(1), team.CreatedBy.ID)
@@ -84,7 +86,7 @@ func TestTeam_ReadOne(t *testing.T) {
 
 		team := &Team{ID: -1}
 		err := team.ReadOne(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
 	})
 	t.Run("nonexisting", func(t *testing.T) {
@@ -94,7 +96,7 @@ func TestTeam_ReadOne(t *testing.T) {
 
 		team := &Team{ID: 99999}
 		err := team.ReadOne(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
 	})
 }
@@ -107,8 +109,8 @@ func TestTeam_ReadAll(t *testing.T) {
 
 		team := &Team{}
 		teams, _, _, err := team.ReadAll(s, doer, "", 1, 50)
-		assert.NoError(t, err)
-		assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
+		require.NoError(t, err)
+		assert.Equal(t, reflect.Slice, reflect.TypeOf(teams).Kind())
 		ts := reflect.ValueOf(teams)
 		assert.Equal(t, 5, ts.Len())
 	})
@@ -118,8 +120,8 @@ func TestTeam_ReadAll(t *testing.T) {
 
 		team := &Team{}
 		teams, _, _, err := team.ReadAll(s, doer, "READ_only_on_project6", 1, 50)
-		assert.NoError(t, err)
-		assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
+		require.NoError(t, err)
+		assert.Equal(t, reflect.Slice, reflect.TypeOf(teams).Kind())
 		ts := teams.([]*Team)
 		assert.Len(t, ts, 1)
 		assert.Equal(t, int64(2), ts[0].ID)
@@ -139,9 +141,9 @@ func TestTeam_Update(t *testing.T) {
 			Name: "SomethingNew",
 		}
 		err := team.Update(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		db.AssertExists(t, "teams", map[string]interface{}{
 			"id":   team.ID,
 			"name": "SomethingNew",
@@ -157,7 +159,7 @@ func TestTeam_Update(t *testing.T) {
 			Name: "",
 		}
 		err := team.Update(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTeamNameCannotBeEmpty(err))
 	})
 	t.Run("nonexisting", func(t *testing.T) {
@@ -170,7 +172,7 @@ func TestTeam_Update(t *testing.T) {
 			Name: "SomethingNew",
 		}
 		err := team.Update(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
 	})
 }
@@ -187,9 +189,9 @@ func TestTeam_Delete(t *testing.T) {
 			ID: 1,
 		}
 		err := team.Delete(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		db.AssertMissing(t, "teams", map[string]interface{}{
 			"id": 1,
 		})
@@ -197,13 +199,13 @@ func TestTeam_Delete(t *testing.T) {
 }
 
 func TestIsErrInvalidRight(t *testing.T) {
-	assert.NoError(t, RightAdmin.isValid())
-	assert.NoError(t, RightRead.isValid())
-	assert.NoError(t, RightWrite.isValid())
+	require.NoError(t, RightAdmin.isValid())
+	require.NoError(t, RightRead.isValid())
+	require.NoError(t, RightWrite.isValid())
 
 	// Check invalid
 	var tr Right = 938
 	err := tr.isValid()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.True(t, IsErrInvalidRight(err))
 }

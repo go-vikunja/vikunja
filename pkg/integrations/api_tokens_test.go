@@ -28,12 +28,13 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAPIToken(t *testing.T) {
 	t.Run("valid token", func(t *testing.T) {
 		e, err := setupTestEnv()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
 		res := httptest.NewRecorder()
 		c := e.NewContext(req, res)
@@ -47,13 +48,13 @@ func TestAPIToken(t *testing.T) {
 		})
 
 		req.Header.Set(echo.HeaderAuthorization, "Bearer tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e") // Token 1
-		assert.NoError(t, h(c))
+		require.NoError(t, h(c))
 		// check if the request handlers "see" the request as if it came directly from that user
 		assert.Contains(t, res.Body.String(), `"username":"user1"`)
 	})
 	t.Run("invalid token", func(t *testing.T) {
 		e, err := setupTestEnv()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
 		res := httptest.NewRecorder()
 		c := e.NewContext(req, res)
@@ -62,11 +63,11 @@ func TestAPIToken(t *testing.T) {
 		})
 
 		req.Header.Set(echo.HeaderAuthorization, "Bearer tk_loremipsumdolorsitamet")
-		assert.Error(t, h(c))
+		require.Error(t, h(c))
 	})
 	t.Run("expired token", func(t *testing.T) {
 		e, err := setupTestEnv()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
 		res := httptest.NewRecorder()
 		c := e.NewContext(req, res)
@@ -75,11 +76,11 @@ func TestAPIToken(t *testing.T) {
 		})
 
 		req.Header.Set(echo.HeaderAuthorization, "Bearer tk_a5e6f92ddbad68f49ee2c63e52174db0235008c8") // Token 2
-		assert.Error(t, h(c))
+		require.Error(t, h(c))
 	})
 	t.Run("valid token, invalid scope", func(t *testing.T) {
 		e, err := setupTestEnv()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/projects", nil)
 		res := httptest.NewRecorder()
 		c := e.NewContext(req, res)
@@ -88,11 +89,11 @@ func TestAPIToken(t *testing.T) {
 		})
 
 		req.Header.Set(echo.HeaderAuthorization, "Bearer tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e")
-		assert.Error(t, h(c))
+		require.Error(t, h(c))
 	})
 	t.Run("jwt", func(t *testing.T) {
 		e, err := setupTestEnv()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
 		res := httptest.NewRecorder()
 		c := e.NewContext(req, res)
@@ -103,11 +104,11 @@ func TestAPIToken(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 		u, err := user.GetUserByID(s, 1)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		jwt, err := auth.NewUserJWTAuthtoken(u, false)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		req.Header.Set(echo.HeaderAuthorization, "Bearer "+jwt)
-		assert.NoError(t, h(c))
+		require.NoError(t, h(c))
 	})
 }

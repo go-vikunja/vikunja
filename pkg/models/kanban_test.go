@@ -23,7 +23,9 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestBucket_ReadAll(t *testing.T) {
@@ -35,7 +37,7 @@ func TestBucket_ReadAll(t *testing.T) {
 		testuser := &user.User{ID: 1}
 		b := &Bucket{ProjectID: 1}
 		bucketsInterface, _, _, err := b.ReadAll(s, testuser, "", 0, 0)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		buckets, is := bucketsInterface.([]*Bucket)
 		assert.True(t, is)
@@ -85,7 +87,7 @@ func TestBucket_ReadAll(t *testing.T) {
 			},
 		}
 		bucketsInterface, _, _, err := b.ReadAll(s, testuser, "", -1, 0)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		buckets := bucketsInterface.([]*Bucket)
 		assert.Len(t, buckets, 3)
@@ -104,7 +106,7 @@ func TestBucket_ReadAll(t *testing.T) {
 		}
 		b := &Bucket{ProjectID: 1}
 		result, _, _, err := b.ReadAll(s, linkShare, "", 0, 0)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		buckets, _ := result.([]*Bucket)
 		assert.Len(t, buckets, 3)
 		assert.NotNil(t, buckets[0].CreatedBy)
@@ -118,7 +120,7 @@ func TestBucket_ReadAll(t *testing.T) {
 		testuser := &user.User{ID: 12}
 		b := &Bucket{ProjectID: 23}
 		result, _, _, err := b.ReadAll(s, testuser, "", 0, 0)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		buckets, _ := result.([]*Bucket)
 		assert.Len(t, buckets, 1)
 		assert.NotNil(t, buckets[0].CreatedBy)
@@ -139,14 +141,14 @@ func TestBucket_Delete(t *testing.T) {
 			ProjectID: 1,
 		}
 		err := b.Delete(s, user)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Assert all tasks have been moved to bucket 1 as that one is the first
 		tasks := []*Task{}
 		err = s.Where("bucket_id = ?", 1).Find(&tasks)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, tasks, 15)
 		db.AssertMissing(t, "buckets", map[string]interface{}{
 			"id":         2,
@@ -163,10 +165,10 @@ func TestBucket_Delete(t *testing.T) {
 			ProjectID: 18,
 		}
 		err := b.Delete(s, user)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrCannotRemoveLastBucket(err))
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		db.AssertExists(t, "buckets", map[string]interface{}{
 			"id":         34,
@@ -179,10 +181,10 @@ func TestBucket_Update(t *testing.T) {
 
 	testAndAssertBucketUpdate := func(t *testing.T, b *Bucket, s *xorm.Session) {
 		err := b.Update(s, &user.User{ID: 1})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		db.AssertExists(t, "buckets", map[string]interface{}{
 			"id":    1,

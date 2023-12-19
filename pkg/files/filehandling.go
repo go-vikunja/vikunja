@@ -26,7 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 
 	"github.com/spf13/afero"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // This file handles storing and retrieving a file for different backends
@@ -57,7 +57,7 @@ func InitTestFileFixtures(t *testing.T) {
 	// Init fixture files
 	filename := config.FilesBasePath.GetString() + "/1"
 	err := afero.WriteFile(afs, filename, []byte("testfile1"), 0644)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 // InitTests handles the actual bootstrapping of the test env

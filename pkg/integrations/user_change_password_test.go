@@ -22,7 +22,9 @@ import (
 
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUserChangePassword(t *testing.T) {
@@ -31,7 +33,7 @@ func TestUserChangePassword(t *testing.T) {
   "new_password": "12345",
   "old_password": "1234"
 }`, nil, nil)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), `The password was updated successfully.`)
 	})
 	t.Run("Wrong old password", func(t *testing.T) {
@@ -39,7 +41,7 @@ func TestUserChangePassword(t *testing.T) {
   "new_password": "12345",
   "old_password": "invalid"
 }`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeWrongUsernameOrPassword)
 	})
 	t.Run("Empty old password", func(t *testing.T) {
@@ -47,7 +49,7 @@ func TestUserChangePassword(t *testing.T) {
   "new_password": "12345",
   "old_password": ""
 }`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeEmptyOldPassword)
 	})
 	t.Run("Empty new password", func(t *testing.T) {
@@ -55,7 +57,7 @@ func TestUserChangePassword(t *testing.T) {
   "new_password": "",
   "old_password": "1234"
 }`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeEmptyNewPassword)
 	})
 }

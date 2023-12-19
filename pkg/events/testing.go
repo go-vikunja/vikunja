@@ -22,8 +22,8 @@ import (
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
-
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -55,9 +55,9 @@ func AssertDispatched(t *testing.T, event Event) {
 // TestListener takes an event and a listener and calls the listener's Handle method.
 func TestListener(t *testing.T, event Event, listener Listener) {
 	content, err := json.Marshal(event)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	msg := message.NewMessage(watermill.NewUUID(), content)
 	err = listener.Handle(msg)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }

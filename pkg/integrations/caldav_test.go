@@ -21,14 +21,16 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/routes/caldav"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCaldav(t *testing.T) {
 	t.Run("Delivers VTODO for project", func(t *testing.T) {
 		e, _ := setupTestEnv()
 		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "36"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), "BEGIN:VCALENDAR")
 		assert.Contains(t, rec.Body.String(), "PRODID:-//Vikunja Todo App//EN")
 		assert.Contains(t, rec.Body.String(), "X-WR-CALNAME:Project 36 for Caldav tests")
@@ -59,13 +61,13 @@ END:VCALENDAR`
 
 		e, _ := setupTestEnv()
 		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 201, rec.Result().StatusCode)
 	})
 	t.Run("Export VTODO", func(t *testing.T) {
 		e, _ := setupTestEnv()
 		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), "BEGIN:VCALENDAR")
 		assert.Contains(t, rec.Body.String(), "SUMMARY:Title Caldav Test")
 		assert.Contains(t, rec.Body.String(), "DESCRIPTION:Description Caldav Test")
@@ -123,21 +125,21 @@ END:VTODO`
 
 		const parentVTODO = vtodoHeader + vtodoParentTaskStub + vtodoFooter
 		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, parentVTODO, nil, map[string]string{"project": "36", "task": "uid_parent_import"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 201, rec.Result().StatusCode)
 
 		const childVTODO = vtodoHeader + vtodoChildTaskStub + vtodoFooter
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, childVTODO, nil, map[string]string{"project": "36", "task": "uid_child_import"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 201, rec.Result().StatusCode)
 
 		const grandChildVTODO = vtodoHeader + vtodoGrandChildTaskStub + vtodoFooter
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, grandChildVTODO, nil, map[string]string{"project": "36", "task": "uid_grand_child_import"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 201, rec.Result().StatusCode)
 
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "36"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 200, rec.Result().StatusCode)
 
 		assert.Contains(t, rec.Body.String(), "UID:uid_parent_import")
@@ -164,7 +166,7 @@ END:VTODO`
 
 		const grandChildVTODO = vtodoHeader + vtodoGrandChildTaskStub + vtodoFooter
 		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, grandChildVTODO, nil, map[string]string{"project": "36", "task": "uid_grand_child_import"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 201, rec.Result().StatusCode)
 
 		const vtodoChildTaskStub = `BEGIN:VTODO
@@ -179,7 +181,7 @@ END:VTODO`
 
 		const childVTODO = vtodoHeader + vtodoChildTaskStub + vtodoFooter
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, childVTODO, nil, map[string]string{"project": "36", "task": "uid_child_import"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 201, rec.Result().StatusCode)
 
 		const vtodoParentTaskStub = `BEGIN:VTODO
@@ -193,11 +195,11 @@ END:VTODO`
 
 		const parentVTODO = vtodoHeader + vtodoParentTaskStub + vtodoFooter
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, parentVTODO, nil, map[string]string{"project": "36", "task": "uid_parent_import"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 201, rec.Result().StatusCode)
 
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "36"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 200, rec.Result().StatusCode)
 
 		assert.Contains(t, rec.Body.String(), "UID:uid_parent_import")
@@ -213,15 +215,15 @@ END:VTODO`
 		e, _ := setupTestEnv()
 
 		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodDelete, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-child-task"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 204, rec.Result().StatusCode)
 
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodDelete, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-child-task-2"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 204, rec.Result().StatusCode)
 
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-parent-task"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 200, rec.Result().StatusCode)
 
 		assert.NotContains(t, rec.Body.String(), "RELATED-TO;RELTYPE=CHILD:uid-caldav-test-child-task")
@@ -232,11 +234,11 @@ END:VTODO`
 		e, _ := setupTestEnv()
 
 		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodDelete, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-parent-task"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 204, rec.Result().StatusCode)
 
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-child-task"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 200, rec.Result().StatusCode)
 
 		assert.NotContains(t, rec.Body.String(), "RELATED-TO;RELTYPE=PARENT:uid-caldav-test-parent-task")
@@ -280,22 +282,22 @@ END:VCALENDAR`
 		e, _ := setupTestEnv()
 
 		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodoParentTask, nil, map[string]string{"project": "36", "task": "uid_parent_import"})
-		assert.NoError(t, err)
-		assert.Equal(t, rec.Result().StatusCode, 201)
+		require.NoError(t, err)
+		assert.Equal(t, 201, rec.Result().StatusCode)
 
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodoChildTask, nil, map[string]string{"project": "38", "task": "uid_child_import"})
-		assert.NoError(t, err)
-		assert.Equal(t, rec.Result().StatusCode, 201)
+		require.NoError(t, err)
+		assert.Equal(t, 201, rec.Result().StatusCode)
 
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid_parent_import"})
-		assert.NoError(t, err)
-		assert.Equal(t, rec.Result().StatusCode, 200)
+		require.NoError(t, err)
+		assert.Equal(t, 200, rec.Result().StatusCode)
 		assert.Contains(t, rec.Body.String(), "UID:uid_parent_import")
 		assert.Contains(t, rec.Body.String(), "RELATED-TO;RELTYPE=CHILD:uid_child_import")
 
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "38", "task": "uid_child_import"})
-		assert.NoError(t, err)
-		assert.Equal(t, rec.Result().StatusCode, 200)
+		require.NoError(t, err)
+		assert.Equal(t, 200, rec.Result().StatusCode)
 		assert.Contains(t, rec.Body.String(), "UID:uid_child_import")
 		assert.Contains(t, rec.Body.String(), "RELATED-TO;RELTYPE=PARENT:uid_parent_import")
 	})
@@ -304,14 +306,14 @@ END:VCALENDAR`
 		e, _ := setupTestEnv()
 
 		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-parent-task-another-list"})
-		assert.NoError(t, err)
-		assert.Equal(t, rec.Result().StatusCode, 200)
+		require.NoError(t, err)
+		assert.Equal(t, 200, rec.Result().StatusCode)
 		assert.Contains(t, rec.Body.String(), "UID:uid-caldav-test-parent-task-another-list")
 		assert.Contains(t, rec.Body.String(), "RELATED-TO;RELTYPE=CHILD:uid-caldav-test-child-task-another-list")
 
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "38", "task": "uid-caldav-test-child-task-another-list"})
-		assert.NoError(t, err)
-		assert.Equal(t, rec.Result().StatusCode, 200)
+		require.NoError(t, err)
+		assert.Equal(t, 200, rec.Result().StatusCode)
 		assert.Contains(t, rec.Body.String(), "UID:uid-caldav-test-child-task-another-list")
 		assert.Contains(t, rec.Body.String(), "RELATED-TO;RELTYPE=PARENT:uid-caldav-test-parent-task-another-list")
 	})

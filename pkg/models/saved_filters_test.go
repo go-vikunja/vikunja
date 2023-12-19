@@ -21,7 +21,9 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"xorm.io/xorm/schemas"
 )
 
@@ -56,10 +58,10 @@ func TestSavedFilter_Create(t *testing.T) {
 
 	u := &user.User{ID: 1}
 	err := sf.Create(s, u)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, u.ID, sf.OwnerID)
 	err = s.Commit()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	vals := map[string]interface{}{
 		"title":       "'test'",
 		"description": "'Lorem Ipsum dolor sit amet'",
@@ -85,9 +87,9 @@ func TestSavedFilter_ReadOne(t *testing.T) {
 	}
 	// canRead pre-populates the struct
 	_, _, err := sf.CanRead(s, user1)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = sf.ReadOne(s, user1)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, sf.Owner)
 }
 
@@ -104,9 +106,9 @@ func TestSavedFilter_Update(t *testing.T) {
 			Filters:     &TaskCollection{},
 		}
 		err := sf.Update(s, &user.User{ID: 1})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		db.AssertExists(t, "saved_filters", map[string]interface{}{
 			"id":          1,
 			"title":       "NewTitle",
@@ -124,9 +126,9 @@ func TestSavedFilter_Update(t *testing.T) {
 			Filters:    &TaskCollection{},
 		}
 		err := sf.Update(s, &user.User{ID: 1})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		db.AssertExists(t, "saved_filters", map[string]interface{}{
 			"id":          1,
 			"is_favorite": true,
@@ -143,9 +145,9 @@ func TestSavedFilter_Delete(t *testing.T) {
 		ID: 1,
 	}
 	err := sf.Delete(s, &user.User{ID: 1})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = s.Commit()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	db.AssertMissing(t, "saved_filters", map[string]interface{}{
 		"id": 1,
 	})
@@ -163,7 +165,7 @@ func TestSavedFilter_Rights(t *testing.T) {
 		defer s.Close()
 
 		can, err := (&SavedFilter{}).CanCreate(s, user1)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.True(t, can)
 	})
 	t.Run("read", func(t *testing.T) {
@@ -177,7 +179,7 @@ func TestSavedFilter_Rights(t *testing.T) {
 				Title: "Lorem",
 			}
 			can, max, err := sf.CanRead(s, user1)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, int(RightAdmin), max)
 			assert.True(t, can)
 		})
@@ -191,7 +193,7 @@ func TestSavedFilter_Rights(t *testing.T) {
 				Title: "Lorem",
 			}
 			can, _, err := sf.CanRead(s, user2)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.False(t, can)
 		})
 		t.Run("nonexisting", func(t *testing.T) {
@@ -204,7 +206,7 @@ func TestSavedFilter_Rights(t *testing.T) {
 				Title: "Lorem",
 			}
 			can, _, err := sf.CanRead(s, user1)
-			assert.Error(t, err)
+			require.Error(t, err)
 			assert.True(t, IsErrSavedFilterDoesNotExist(err))
 			assert.False(t, can)
 		})
@@ -218,7 +220,7 @@ func TestSavedFilter_Rights(t *testing.T) {
 				Title: "Lorem",
 			}
 			can, _, err := sf.CanRead(s, ls)
-			assert.Error(t, err)
+			require.Error(t, err)
 			assert.True(t, IsErrSavedFilterNotAvailableForLinkShare(err))
 			assert.False(t, can)
 		})
@@ -234,7 +236,7 @@ func TestSavedFilter_Rights(t *testing.T) {
 				Title: "Lorem",
 			}
 			can, err := sf.CanUpdate(s, user1)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, can)
 		})
 		t.Run("not owner", func(t *testing.T) {
@@ -247,7 +249,7 @@ func TestSavedFilter_Rights(t *testing.T) {
 				Title: "Lorem",
 			}
 			can, err := sf.CanUpdate(s, user2)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.False(t, can)
 		})
 		t.Run("nonexisting", func(t *testing.T) {
@@ -260,7 +262,7 @@ func TestSavedFilter_Rights(t *testing.T) {
 				Title: "Lorem",
 			}
 			can, err := sf.CanUpdate(s, user1)
-			assert.Error(t, err)
+			require.Error(t, err)
 			assert.True(t, IsErrSavedFilterDoesNotExist(err))
 			assert.False(t, can)
 		})
@@ -274,7 +276,7 @@ func TestSavedFilter_Rights(t *testing.T) {
 				Title: "Lorem",
 			}
 			can, err := sf.CanUpdate(s, ls)
-			assert.Error(t, err)
+			require.Error(t, err)
 			assert.True(t, IsErrSavedFilterNotAvailableForLinkShare(err))
 			assert.False(t, can)
 		})
@@ -289,7 +291,7 @@ func TestSavedFilter_Rights(t *testing.T) {
 				ID: 1,
 			}
 			can, err := sf.CanDelete(s, user1)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, can)
 		})
 		t.Run("not owner", func(t *testing.T) {
@@ -301,7 +303,7 @@ func TestSavedFilter_Rights(t *testing.T) {
 				ID: 1,
 			}
 			can, err := sf.CanDelete(s, user2)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.False(t, can)
 		})
 		t.Run("nonexisting", func(t *testing.T) {
@@ -314,7 +316,7 @@ func TestSavedFilter_Rights(t *testing.T) {
 				Title: "Lorem",
 			}
 			can, err := sf.CanDelete(s, user1)
-			assert.Error(t, err)
+			require.Error(t, err)
 			assert.True(t, IsErrSavedFilterDoesNotExist(err))
 			assert.False(t, can)
 		})
@@ -328,7 +330,7 @@ func TestSavedFilter_Rights(t *testing.T) {
 				Title: "Lorem",
 			}
 			can, err := sf.CanDelete(s, ls)
-			assert.Error(t, err)
+			require.Error(t, err)
 			assert.True(t, IsErrSavedFilterNotAvailableForLinkShare(err))
 			assert.False(t, can)
 		})

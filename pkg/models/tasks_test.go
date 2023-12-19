@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"xorm.io/builder"
 )
 
@@ -48,7 +49,7 @@ func TestTask_Create(t *testing.T) {
 			ProjectID:   1,
 		}
 		err := task.Create(s, usr)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		// Assert getting a uid
 		assert.NotEmpty(t, task.UID)
 		// Assert getting a new index
@@ -57,7 +58,7 @@ func TestTask_Create(t *testing.T) {
 		// Assert moving it into the default bucket
 		assert.Equal(t, int64(1), task.BucketID)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		db.AssertExists(t, "tasks", map[string]interface{}{
 			"id":            task.ID,
@@ -100,7 +101,7 @@ func TestTask_Create(t *testing.T) {
 				},
 			}}
 		err := task.Create(s, usr)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 1, 0, time.Local), task.Reminders[0].Reminder)
 		assert.Equal(t, int64(1), task.Reminders[0].RelativePeriod)
 		assert.Equal(t, ReminderRelationDueDate, task.Reminders[0].RelativeTo)
@@ -110,7 +111,7 @@ func TestTask_Create(t *testing.T) {
 		assert.Equal(t, ReminderRelationEndDate, task.Reminders[2].RelativeTo)
 		assert.Equal(t, time.Date(2023, time.March, 7, 23, 0, 0, 0, time.Local), task.Reminders[3].Reminder)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 	t.Run("empty title", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -123,7 +124,7 @@ func TestTask_Create(t *testing.T) {
 			ProjectID:   1,
 		}
 		err := task.Create(s, usr)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTaskCannotBeEmpty(err))
 	})
 	t.Run("nonexistant project", func(t *testing.T) {
@@ -137,7 +138,7 @@ func TestTask_Create(t *testing.T) {
 			ProjectID:   9999999,
 		}
 		err := task.Create(s, usr)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrProjectDoesNotExist(err))
 	})
 	t.Run("nonexistant user", func(t *testing.T) {
@@ -152,7 +153,7 @@ func TestTask_Create(t *testing.T) {
 			ProjectID:   1,
 		}
 		err := task.Create(s, nUser)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, user.IsErrUserDoesNotExist(err))
 	})
 	t.Run("full bucket", func(t *testing.T) {
@@ -167,7 +168,7 @@ func TestTask_Create(t *testing.T) {
 			BucketID:    2, // Bucket 2 already has 3 tasks and a limit of 3
 		}
 		err := task.Create(s, usr)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrBucketLimitExceeded(err))
 	})
 	t.Run("default bucket different", func(t *testing.T) {
@@ -181,7 +182,7 @@ func TestTask_Create(t *testing.T) {
 			ProjectID:   6,
 		}
 		err := task.Create(s, usr)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		db.AssertExists(t, "tasks", map[string]interface{}{
 			"id":        task.ID,
 			"bucket_id": 22, // default bucket of project 6 but with a position of 2
@@ -204,9 +205,9 @@ func TestTask_Update(t *testing.T) {
 			ProjectID:   1,
 		}
 		err := task.Update(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		db.AssertExists(t, "tasks", map[string]interface{}{
 			"id":          1,
@@ -227,7 +228,7 @@ func TestTask_Update(t *testing.T) {
 			ProjectID:   1,
 		}
 		err := task.Update(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTaskDoesNotExist(err))
 	})
 	t.Run("full bucket", func(t *testing.T) {
@@ -243,7 +244,7 @@ func TestTask_Update(t *testing.T) {
 			BucketID:    2, // Bucket 2 already has 3 tasks and a limit of 3
 		}
 		err := task.Update(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrBucketLimitExceeded(err))
 	})
 	t.Run("full bucket but not changing the bucket", func(t *testing.T) {
@@ -260,7 +261,7 @@ func TestTask_Update(t *testing.T) {
 			BucketID:       2, // Bucket 2 already has 3 tasks and a limit of 3
 		}
 		err := task.Update(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 	t.Run("bucket on other project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -275,7 +276,7 @@ func TestTask_Update(t *testing.T) {
 			BucketID:    4, // Bucket 4 belongs to project 2
 		}
 		err := task.Update(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrBucketDoesNotBelongToProject(err))
 	})
 	t.Run("moving a task to the done bucket", func(t *testing.T) {
@@ -290,9 +291,9 @@ func TestTask_Update(t *testing.T) {
 			BucketID:  3, // Bucket 3 is the done bucket
 		}
 		err := task.Update(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.True(t, task.Done)
 
 		db.AssertExists(t, "tasks", map[string]interface{}{
@@ -316,9 +317,9 @@ func TestTask_Update(t *testing.T) {
 			RepeatAfter: 3600,
 		}
 		err := task.Update(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.False(t, task.Done)
 		assert.Equal(t, int64(1), task.BucketID) // Bucket should not be updated
 
@@ -340,9 +341,9 @@ func TestTask_Update(t *testing.T) {
 			ProjectID: 2,
 		}
 		err := task.Update(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		assert.Equal(t, int64(4), task.BucketID) // bucket 4 is the default bucket on project 2
 		assert.True(t, task.Done)                // bucket 4 is the done bucket, so the task should be marked as done as well
@@ -357,9 +358,9 @@ func TestTask_Update(t *testing.T) {
 			Done: true,
 		}
 		err := task.Update(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.True(t, task.Done)
 		assert.Equal(t, int64(3), task.BucketID)
 
@@ -379,9 +380,9 @@ func TestTask_Update(t *testing.T) {
 			ProjectID: 2,
 		}
 		err := task.Update(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		db.AssertExists(t, "tasks", map[string]interface{}{
 			"id":         1,
@@ -400,9 +401,9 @@ func TestTask_Update(t *testing.T) {
 			RepeatAfter: 3600,
 		}
 		err := task.Update(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.False(t, task.Done)
 		assert.Equal(t, int64(1), task.BucketID)
 
@@ -422,9 +423,9 @@ func TestTask_Update(t *testing.T) {
 			ProjectID: 2, // From project 1
 		}
 		err := task.Update(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, int64(3), task.Index)
 	})
 
@@ -458,7 +459,7 @@ func TestTask_Update(t *testing.T) {
 				},
 			}}
 		err := task.Update(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, time.Date(2023, time.March, 7, 22, 5, 1, 0, time.Local), task.Reminders[0].Reminder)
 		assert.Equal(t, int64(1), task.Reminders[0].RelativePeriod)
 		assert.Equal(t, ReminderRelationDueDate, task.Reminders[0].RelativeTo)
@@ -468,7 +469,7 @@ func TestTask_Update(t *testing.T) {
 		assert.Equal(t, ReminderRelationEndDate, task.Reminders[2].RelativeTo)
 		assert.Equal(t, time.Date(2023, time.March, 7, 23, 0, 0, 0, time.Local), task.Reminders[3].Reminder)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		db.AssertCount(t, "task_reminders", builder.Eq{"task_id": 1}, 4)
 	})
 	t.Run("the same reminder multiple times should be saved once", func(t *testing.T) {
@@ -490,9 +491,9 @@ func TestTask_Update(t *testing.T) {
 			ProjectID: 1,
 		}
 		err := task.Update(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		db.AssertCount(t, "task_reminders", builder.Eq{"task_id": 1}, 1)
 	})
 	t.Run("update relative reminder when start_date changes", func(t *testing.T) {
@@ -512,21 +513,21 @@ func TestTask_Update(t *testing.T) {
 				},
 			}}
 		err := taskBefore.Create(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, time.Date(2022, time.March, 8, 8, 4, 20, 0, time.Local), taskBefore.Reminders[0].Reminder)
 
 		// when start_date is modified
 		task := taskBefore
 		task.StartDate = time.Date(2023, time.March, 8, 8, 5, 0, 0, time.Local)
 		err = task.Update(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// then reminder time is updated
 		assert.Equal(t, time.Date(2023, time.March, 8, 8, 4, 0, 0, time.Local), task.Reminders[0].Reminder)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 }
 
@@ -540,9 +541,9 @@ func TestTask_Delete(t *testing.T) {
 			ID: 1,
 		}
 		err := task.Delete(s, &user.User{ID: 1})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		db.AssertMissing(t, "tasks", map[string]interface{}{
 			"id": 1,
@@ -920,7 +921,7 @@ func TestTask_ReadOne(t *testing.T) {
 
 		task := &Task{ID: 1}
 		err := task.ReadOne(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "task #1", task.Title)
 	})
 	t.Run("nonexisting", func(t *testing.T) {
@@ -930,7 +931,7 @@ func TestTask_ReadOne(t *testing.T) {
 
 		task := &Task{ID: 99999}
 		err := task.ReadOne(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTaskDoesNotExist(err))
 	})
 	t.Run("with subscription", func(t *testing.T) {
@@ -940,7 +941,7 @@ func TestTask_ReadOne(t *testing.T) {
 
 		task := &Task{ID: 22}
 		err := task.ReadOne(s, &user.User{ID: 6})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, task.Subscription)
 	})
 	t.Run("created by link share", func(t *testing.T) {
@@ -950,7 +951,7 @@ func TestTask_ReadOne(t *testing.T) {
 
 		task := &Task{ID: 37}
 		err := task.ReadOne(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "task #37", task.Title)
 		assert.Equal(t, int64(-2), task.CreatedByID)
 		assert.NotNil(t, task.CreatedBy)
@@ -963,7 +964,7 @@ func TestTask_ReadOne(t *testing.T) {
 
 		task := &Task{ID: 1}
 		err := task.ReadOne(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.True(t, task.IsFavorite)
 	})
 	t.Run("favorite for a different user", func(t *testing.T) {
@@ -973,7 +974,7 @@ func TestTask_ReadOne(t *testing.T) {
 
 		task := &Task{ID: 1}
 		err := task.ReadOne(s, &user.User{ID: 2})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.False(t, task.IsFavorite)
 	})
 }

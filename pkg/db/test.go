@@ -26,6 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 	"xorm.io/xorm/names"
@@ -93,14 +94,14 @@ func AssertExists(t *testing.T, table string, values map[string]interface{}, cus
 	} else {
 		exists, err = x.Table(table).Where(values).Get(&v)
 	}
-	assert.NoError(t, err, fmt.Sprintf("Failed to assert entries exist in db, error was: %s", err))
+	require.NoError(t, err, fmt.Sprintf("Failed to assert entries exist in db, error was: %s", err))
 	if !exists {
 
 		all := []map[string]interface{}{}
 		err = x.Table(table).Find(&all)
-		assert.NoError(t, err, fmt.Sprintf("Failed to assert entries exist in db, error was: %s", err))
+		require.NoError(t, err, fmt.Sprintf("Failed to assert entries exist in db, error was: %s", err))
 		pretty, err := json.MarshalIndent(all, "", "    ")
-		assert.NoError(t, err, fmt.Sprintf("Failed to assert entries exist in db, error was: %s", err))
+		require.NoError(t, err, fmt.Sprintf("Failed to assert entries exist in db, error was: %s", err))
 
 		t.Errorf(fmt.Sprintf("Entries %v do not exist in table %s\n\nFound entries instead: %v", values, table, string(pretty)))
 	}
@@ -110,13 +111,13 @@ func AssertExists(t *testing.T, table string, values map[string]interface{}, cus
 func AssertMissing(t *testing.T, table string, values map[string]interface{}) {
 	v := make(map[string]interface{})
 	exists, err := x.Table(table).Where(values).Exist(&v)
-	assert.NoError(t, err, fmt.Sprintf("Failed to assert entries don't exist in db, error was: %s", err))
+	require.NoError(t, err, fmt.Sprintf("Failed to assert entries don't exist in db, error was: %s", err))
 	assert.False(t, exists, fmt.Sprintf("Entries %v exist in table %s", values, table))
 }
 
 // AssertCount checks if a number of entries exists in the database
 func AssertCount(t *testing.T, table string, where builder.Cond, count int64) {
 	dbCount, err := x.Table(table).Where(where).Count()
-	assert.NoError(t, err, fmt.Sprintf("Failed to assert count in db, error was: %s", err))
+	require.NoError(t, err, fmt.Sprintf("Failed to assert count in db, error was: %s", err))
 	assert.Equal(t, count, dbCount, fmt.Sprintf("Found %d entries instead of expected %d in table %s", dbCount, count, table))
 }

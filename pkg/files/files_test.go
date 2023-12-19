@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type testfile struct {
@@ -58,12 +59,12 @@ func TestCreate(t *testing.T) {
 		}
 		ta := &testauth{id: 1}
 		createdFile, err := Create(tf, "testfile", 100, ta)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check the file was created correctly
 		file := &File{ID: createdFile.ID}
 		err = file.LoadFileMetaByID()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, int64(1), file.CreatedByID)
 		assert.Equal(t, "testfile", file.Name)
 		assert.Equal(t, uint64(100), file.Size)
@@ -76,7 +77,7 @@ func TestCreate(t *testing.T) {
 		}
 		ta := &testauth{id: 1}
 		_, err := Create(tf, "testfile", 99999999999, ta)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrFileIsTooLarge(err))
 	})
 }
@@ -86,13 +87,13 @@ func TestFile_Delete(t *testing.T) {
 		initFixtures(t)
 		f := &File{ID: 1}
 		err := f.Delete()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 	t.Run("Nonexisting", func(t *testing.T) {
 		initFixtures(t)
 		f := &File{ID: 9999}
 		err := f.Delete()
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrFileDoesNotExist(err))
 	})
 }
@@ -102,13 +103,13 @@ func TestFile_LoadFileByID(t *testing.T) {
 		initFixtures(t)
 		f := &File{ID: 1}
 		err := f.LoadFileByID()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 	t.Run("Nonexisting", func(t *testing.T) {
 		initFixtures(t)
 		f := &File{ID: 9999}
 		err := f.LoadFileByID()
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, os.IsNotExist(err))
 	})
 }
@@ -118,14 +119,14 @@ func TestFile_LoadFileMetaByID(t *testing.T) {
 		initFixtures(t)
 		f := &File{ID: 1}
 		err := f.LoadFileMetaByID()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "test", f.Name)
 	})
 	t.Run("Nonexisting", func(t *testing.T) {
 		initFixtures(t)
 		f := &File{ID: 9999}
 		err := f.LoadFileMetaByID()
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrFileDoesNotExist(err))
 	})
 }

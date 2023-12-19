@@ -22,6 +22,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetUndoneOverDueTasks(t *testing.T) {
@@ -31,10 +32,10 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 		defer s.Close()
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-01-01T01:13:00Z")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		tasks, err := getUndoneOverdueTasks(s, now)
-		assert.NoError(t, err)
-		assert.Len(t, tasks, 0)
+		require.NoError(t, err)
+		assert.Empty(t, tasks)
 	})
 	t.Run("undone overdue", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -42,9 +43,9 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 		defer s.Close()
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T09:00:00Z")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		uts, err := getUndoneOverdueTasks(s, now)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, uts, 1)
 		assert.Len(t, uts[1].tasks, 2)
 		// The tasks don't always have the same order, so we only check their presence, not their position.
@@ -67,9 +68,9 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 		defer s.Close()
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-11-01T01:13:00Z")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		tasks, err := getUndoneOverdueTasks(s, now)
-		assert.NoError(t, err)
-		assert.Len(t, tasks, 0)
+		require.NoError(t, err)
+		assert.Empty(t, tasks)
 	})
 }

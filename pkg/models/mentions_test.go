@@ -19,11 +19,12 @@ package models
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFindMentionedUsersInText(t *testing.T) {
@@ -100,13 +101,13 @@ func TestSendingMentionNotification(t *testing.T) {
 		defer s.Close()
 
 		task, err := GetTaskByIDSimple(s, 32)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		tc := &TaskComment{
 			Comment: "Lorem Ipsum @user1 @user2 @user3 @user4 @user5 @user6",
 			TaskID:  32, // user2 has access to the project that task belongs to
 		}
 		err = tc.Create(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		n := &TaskCommentNotification{
 			Doer:    u,
 			Task:    &task,
@@ -114,7 +115,7 @@ func TestSendingMentionNotification(t *testing.T) {
 		}
 
 		_, err = notifyMentionedUsers(s, &task, tc.Comment, n)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		db.AssertExists(t, "notifications", map[string]interface{}{
 			"subject_id":    tc.ID,
@@ -153,13 +154,13 @@ func TestSendingMentionNotification(t *testing.T) {
 		defer s.Close()
 
 		task, err := GetTaskByIDSimple(s, 32)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		tc := &TaskComment{
 			Comment: "Lorem Ipsum @user2",
 			TaskID:  32, // user2 has access to the project that task belongs to
 		}
 		err = tc.Create(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		n := &TaskCommentNotification{
 			Doer:    u,
 			Task:    &task,
@@ -167,14 +168,14 @@ func TestSendingMentionNotification(t *testing.T) {
 		}
 
 		_, err = notifyMentionedUsers(s, &task, tc.Comment, n)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		_, err = notifyMentionedUsers(s, &task, "Lorem Ipsum @user2 @user3", n)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// The second time mentioning the user in the same task should not create another notification
 		dbNotifications, err := notifications.GetNotificationsForNameAndUser(s, 2, n.Name(), tc.ID)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, dbNotifications, 1)
 	})
 }

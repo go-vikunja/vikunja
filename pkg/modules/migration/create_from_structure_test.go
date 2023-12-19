@@ -23,7 +23,9 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestInsertFromStructure(t *testing.T) {
@@ -135,7 +137,7 @@ func TestInsertFromStructure(t *testing.T) {
 			},
 		}
 		err := InsertFromStructure(testStructure, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		db.AssertExists(t, "projects", map[string]interface{}{
 			"title":       testStructure[1].Title,
 			"description": testStructure[1].Description,

@@ -25,9 +25,11 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
+
 	"github.com/adlio/trello"
 	"github.com/d4l3k/messagediff"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestConvertTrelloToVikunja(t *testing.T) {
@@ -35,9 +37,9 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 	config.InitConfig()
 
 	time1, err := time.Parse(time.RFC3339Nano, "2014-09-26T08:25:05Z")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	exampleFile, err := os.ReadFile(config.ServiceRootpath.GetString() + "/pkg/modules/migration/testimage.jpg")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	trelloData := []*trello.Board{
 		{
@@ -365,7 +367,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 	}
 
 	hierachie, err := convertTrelloDataToVikunja(trelloData, "")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, hierachie)
 	if diff, equal := messagediff.PrettyDiff(hierachie, expectedHierachie); !equal {
 		t.Errorf("converted trello data = %v, want %v, diff: %v", hierachie, expectedHierachie, diff)

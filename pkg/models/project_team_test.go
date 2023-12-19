@@ -25,7 +25,9 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTeamProject_ReadAll(t *testing.T) {
@@ -39,10 +41,10 @@ func TestTeamProject_ReadAll(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		teams, _, _, err := tl.ReadAll(s, u, "", 1, 50)
-		assert.NoError(t, err)
-		assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
+		require.NoError(t, err)
+		assert.Equal(t, reflect.Slice, reflect.TypeOf(teams).Kind())
 		ts := reflect.ValueOf(teams)
-		assert.Equal(t, ts.Len(), 1)
+		assert.Equal(t, 1, ts.Len())
 		_ = s.Close()
 	})
 	t.Run("nonexistant project", func(t *testing.T) {
@@ -52,7 +54,7 @@ func TestTeamProject_ReadAll(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		_, _, _, err := tl.ReadAll(s, u, "", 1, 50)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrProjectDoesNotExist(err))
 		_ = s.Close()
 	})
@@ -65,7 +67,7 @@ func TestTeamProject_ReadAll(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		_, _, _, err := tl.ReadAll(s, u, "", 1, 50)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrNeedToHaveProjectReadAccess(err))
 		_ = s.Close()
 	})
@@ -76,8 +78,8 @@ func TestTeamProject_ReadAll(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		teams, _, _, err := tl.ReadAll(s, u, "TEAM9", 1, 50)
-		assert.NoError(t, err)
-		assert.Equal(t, reflect.TypeOf(teams).Kind(), reflect.Slice)
+		require.NoError(t, err)
+		assert.Equal(t, reflect.Slice, reflect.TypeOf(teams).Kind())
 		ts := teams.([]*TeamWithRight)
 		assert.Len(t, ts, 1)
 		assert.Equal(t, int64(9), ts[0].ID)
@@ -98,9 +100,9 @@ func TestTeamProject_Create(t *testing.T) {
 		allowed, _ := tl.CanCreate(s, u)
 		assert.True(t, allowed)
 		err := tl.Create(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		db.AssertExists(t, "team_projects", map[string]interface{}{
 			"team_id":    1,
 			"project_id": 1,
@@ -116,7 +118,7 @@ func TestTeamProject_Create(t *testing.T) {
 			Right:     RightAdmin,
 		}
 		err := tl.Create(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTeamAlreadyHasAccess(err))
 		_ = s.Close()
 	})
@@ -129,7 +131,7 @@ func TestTeamProject_Create(t *testing.T) {
 			Right:     RightUnknown,
 		}
 		err := tl.Create(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrInvalidRight(err))
 		_ = s.Close()
 	})
@@ -141,7 +143,7 @@ func TestTeamProject_Create(t *testing.T) {
 			ProjectID: 1,
 		}
 		err := tl.Create(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
 		_ = s.Close()
 	})
@@ -153,7 +155,7 @@ func TestTeamProject_Create(t *testing.T) {
 			ProjectID: 9999,
 		}
 		err := tl.Create(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrProjectDoesNotExist(err))
 		_ = s.Close()
 	})
@@ -170,9 +172,9 @@ func TestTeamProject_Delete(t *testing.T) {
 			ProjectID: 3,
 		}
 		err := tl.Delete(s, user)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		db.AssertMissing(t, "team_projects", map[string]interface{}{
 			"team_id":    1,
 			"project_id": 3,
@@ -186,7 +188,7 @@ func TestTeamProject_Delete(t *testing.T) {
 			ProjectID: 1,
 		}
 		err := tl.Delete(s, user)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
 		_ = s.Close()
 	})
@@ -198,7 +200,7 @@ func TestTeamProject_Delete(t *testing.T) {
 			ProjectID: 9999,
 		}
 		err := tl.Delete(s, user)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotHaveAccessToProject(err))
 		_ = s.Close()
 	})
@@ -279,7 +281,7 @@ func TestTeamProject_Update(t *testing.T) {
 				t.Errorf("TeamProject.Update() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
 			err = s.Commit()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			if !tt.wantErr {
 				db.AssertExists(t, "team_projects", map[string]interface{}{
 					"project_id": tt.fields.ProjectID,

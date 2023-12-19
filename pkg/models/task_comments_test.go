@@ -19,11 +19,12 @@ package models
 import (
 	"testing"
 
-	"code.vikunja.io/api/pkg/events"
-
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTaskComment_Create(t *testing.T) {
@@ -38,11 +39,11 @@ func TestTaskComment_Create(t *testing.T) {
 			TaskID:  1,
 		}
 		err := tc.Create(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "test", tc.Comment)
 		assert.Equal(t, int64(1), tc.Author.ID)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		events.AssertDispatched(t, &TaskCommentCreatedEvent{})
 
 		db.AssertExists(t, "task_comments", map[string]interface{}{
@@ -62,7 +63,7 @@ func TestTaskComment_Create(t *testing.T) {
 			TaskID:  99999,
 		}
 		err := tc.Create(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTaskDoesNotExist(err))
 	})
 	t.Run("should send notifications for comment mentions", func(t *testing.T) {
@@ -71,13 +72,13 @@ func TestTaskComment_Create(t *testing.T) {
 		defer s.Close()
 
 		task, err := GetTaskByIDSimple(s, 32)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		tc := &TaskComment{
 			Comment: "Lorem Ipsum @user2",
 			TaskID:  32, // user2 has access to the project that task belongs to
 		}
 		err = tc.Create(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		ev := &TaskCommentCreatedEvent{
 			Task:    &task,
 			Doer:    u,
@@ -103,9 +104,9 @@ func TestTaskComment_Delete(t *testing.T) {
 
 		tc := &TaskComment{ID: 1}
 		err := tc.Delete(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		db.AssertMissing(t, "task_comments", map[string]interface{}{
 			"id": 1,
@@ -118,7 +119,7 @@ func TestTaskComment_Delete(t *testing.T) {
 
 		tc := &TaskComment{ID: 9999}
 		err := tc.Delete(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTaskCommentDoesNotExist(err))
 	})
 	t.Run("not the own comment", func(t *testing.T) {
@@ -128,7 +129,7 @@ func TestTaskComment_Delete(t *testing.T) {
 
 		tc := &TaskComment{ID: 1, TaskID: 1}
 		can, err := tc.CanDelete(s, &user.User{ID: 2})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.False(t, can)
 	})
 }
@@ -146,9 +147,9 @@ func TestTaskComment_Update(t *testing.T) {
 			Comment: "testing",
 		}
 		err := tc.Update(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		db.AssertExists(t, "task_comments", map[string]interface{}{
 			"id":      1,
@@ -164,7 +165,7 @@ func TestTaskComment_Update(t *testing.T) {
 			ID: 9999,
 		}
 		err := tc.Update(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTaskCommentDoesNotExist(err))
 	})
 	t.Run("not the own comment", func(t *testing.T) {
@@ -174,7 +175,7 @@ func TestTaskComment_Update(t *testing.T) {
 
 		tc := &TaskComment{ID: 1, TaskID: 1}
 		can, err := tc.CanUpdate(s, &user.User{ID: 2})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.False(t, can)
 	})
 }
@@ -189,7 +190,7 @@ func TestTaskComment_ReadOne(t *testing.T) {
 
 		tc := &TaskComment{ID: 1, TaskID: 1}
 		err := tc.ReadOne(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "Lorem Ipsum Dolor Sit Amet", tc.Comment)
 		assert.NotEmpty(t, tc.Author.ID)
 	})
@@ -200,7 +201,7 @@ func TestTaskComment_ReadOne(t *testing.T) {
 
 		tc := &TaskComment{ID: 9999}
 		err := tc.ReadOne(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTaskCommentDoesNotExist(err))
 	})
 }
@@ -214,7 +215,7 @@ func TestTaskComment_ReadAll(t *testing.T) {
 		tc := &TaskComment{TaskID: 1}
 		u := &user.User{ID: 1}
 		result, resultCount, total, err := tc.ReadAll(s, u, "", 0, -1)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		resultComment := result.([]*TaskComment)
 		assert.Equal(t, 1, resultCount)
 		assert.Equal(t, int64(1), total)
@@ -230,7 +231,7 @@ func TestTaskComment_ReadAll(t *testing.T) {
 		tc := &TaskComment{TaskID: 14}
 		u := &user.User{ID: 1}
 		_, _, _, err := tc.ReadAll(s, u, "", 0, -1)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrGenericForbidden(err))
 	})
 	t.Run("comment from link share", func(t *testing.T) {
@@ -241,7 +242,7 @@ func TestTaskComment_ReadAll(t *testing.T) {
 		tc := &TaskComment{TaskID: 35}
 		u := &user.User{ID: 1}
 		result, _, _, err := tc.ReadAll(s, u, "", 0, -1)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		comments := result.([]*TaskComment)
 		assert.Len(t, comments, 2)
 		var foundComment bool
@@ -261,7 +262,7 @@ func TestTaskComment_ReadAll(t *testing.T) {
 		tc := &TaskComment{TaskID: 35}
 		u := &user.User{ID: 1}
 		result, _, _, err := tc.ReadAll(s, u, "COMMENT 15", 0, -1)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		resultComment := result.([]*TaskComment)
 		assert.Equal(t, int64(15), resultComment[0].ID)
 	})

@@ -21,8 +21,10 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/models"
+
 	"github.com/d4l3k/messagediff"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestConverting(t *testing.T) {
@@ -33,7 +35,7 @@ func TestConverting(t *testing.T) {
 	}
 
 	testtimeTime, err := time.Parse(time.RFC3339Nano, "2020-12-18T03:00:00.4770000Z")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	microsoftTodoData := []*project{
 		{
@@ -188,7 +190,7 @@ func TestConverting(t *testing.T) {
 	}
 
 	hierachie, err := convertMicrosoftTodoData(microsoftTodoData)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, hierachie)
 	if diff, equal := messagediff.PrettyDiff(hierachie, expectedHierachie); !equal {
 		t.Errorf("converted microsoft todo data = %v, want %v, diff: %v", hierachie, expectedHierachie, diff)

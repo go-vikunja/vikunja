@@ -23,7 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDeleteUser(t *testing.T) {
@@ -36,7 +36,7 @@ func TestDeleteUser(t *testing.T) {
 		u := &user.User{ID: 6}
 		err := DeleteUser(s, u)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		db.AssertMissing(t, "users", map[string]interface{}{"id": u.ID})
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 24}) // only user6 had access to this project
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 6}, false)
@@ -55,7 +55,7 @@ func TestDeleteUser(t *testing.T) {
 		u := &user.User{ID: 4}
 		err := DeleteUser(s, u)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		// No assertions for deleted projects since that user doesn't have any
 	})
 	t.Run("user with a default project", func(t *testing.T) {
@@ -67,7 +67,7 @@ func TestDeleteUser(t *testing.T) {
 		u := &user.User{ID: 16}
 		err := DeleteUser(s, u)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		db.AssertMissing(t, "users", map[string]interface{}{"id": u.ID})
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 37}) // only user16 had access to this project, and it was their default
 	})

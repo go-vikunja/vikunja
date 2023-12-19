@@ -20,7 +20,8 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
-	"github.com/stretchr/testify/assert"
+
+	"github.com/stretchr/testify/require"
 	"xorm.io/xorm/schemas"
 )
 
@@ -73,7 +74,7 @@ func TestNotify(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 		_, err := s.Exec("delete from notifications")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		tn := &testNotification{
 			Test:       "somethingsomething",
@@ -84,7 +85,7 @@ func TestNotify(t *testing.T) {
 		}
 
 		err = Notify(tnf, tn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		vals := map[string]interface{}{
 			"notifiable_id": 42,
 			"notification":  "'{\"other_value\":42,\"test\":\"somethingsomething\"}'",
@@ -107,7 +108,7 @@ func TestNotify(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 		_, err := s.Exec("delete from notifications")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		tn := &testNotification{
 			Test:       "somethingsomething",
@@ -118,7 +119,7 @@ func TestNotify(t *testing.T) {
 		}
 
 		err = Notify(tnf, tn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		db.AssertMissing(t, "notifications", map[string]interface{}{
 			"notifiable_id": 42,
 		})

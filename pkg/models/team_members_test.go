@@ -21,7 +21,9 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTeamMember_Create(t *testing.T) {
@@ -40,9 +42,9 @@ func TestTeamMember_Create(t *testing.T) {
 			Username: "user3",
 		}
 		err := tm.Create(s, doer)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		db.AssertExists(t, "team_members", map[string]interface{}{
 			"id":      tm.ID,
@@ -60,7 +62,7 @@ func TestTeamMember_Create(t *testing.T) {
 			Username: "user1",
 		}
 		err := tm.Create(s, doer)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrUserIsMemberOfTeam(err))
 	})
 	t.Run("nonexisting user", func(t *testing.T) {
@@ -73,7 +75,7 @@ func TestTeamMember_Create(t *testing.T) {
 			Username: "nonexistinguser",
 		}
 		err := tm.Create(s, doer)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, user.IsErrUserDoesNotExist(err))
 	})
 	t.Run("nonexisting team", func(t *testing.T) {
@@ -86,7 +88,7 @@ func TestTeamMember_Create(t *testing.T) {
 			Username: "user1",
 		}
 		err := tm.Create(s, doer)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
 	})
 }
@@ -102,9 +104,9 @@ func TestTeamMember_Delete(t *testing.T) {
 			Username: "user1",
 		}
 		err := tm.Delete(s, &user.User{ID: 1})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		db.AssertMissing(t, "team_members", map[string]interface{}{
 			"team_id": 1,
@@ -127,10 +129,10 @@ func TestTeamMember_Update(t *testing.T) {
 			Admin:    true,
 		}
 		err := tm.Update(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.False(t, tm.Admin) // Since this endpoint toggles the right, we should get a false for admin back.
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		db.AssertExists(t, "team_members", map[string]interface{}{
 			"team_id": 1,
@@ -151,10 +153,10 @@ func TestTeamMember_Update(t *testing.T) {
 			Admin:    true,
 		}
 		err := tm.Update(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.False(t, tm.Admin)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		db.AssertExists(t, "team_members", map[string]interface{}{
 			"team_id": 1,

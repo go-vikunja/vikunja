@@ -22,39 +22,41 @@ import (
 
 	"code.vikunja.io/api/pkg/models"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLinkSharingAuth(t *testing.T) {
 	t.Run("Without Password", func(t *testing.T) {
 		rec, err := newTestRequest(t, http.MethodPost, apiv1.AuthenticateLinkShare, ``, nil, map[string]string{"share": "test"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Contains(t, rec.Body.String(), `"token":"`)
 		assert.Contains(t, rec.Body.String(), `"project_id":1`)
 	})
 	t.Run("Without Password, Password Provided", func(t *testing.T) {
 		rec, err := newTestRequest(t, http.MethodPost, apiv1.AuthenticateLinkShare, `{"password":"somethingsomething"}`, nil, map[string]string{"share": "test"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Contains(t, rec.Body.String(), `"token":"`)
 		assert.Contains(t, rec.Body.String(), `"project_id":1`)
 	})
 	t.Run("With Password, No Password Provided", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.AuthenticateLinkShare, ``, nil, map[string]string{"share": "testWithPassword"})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, models.ErrCodeLinkSharePasswordRequired)
 	})
 	t.Run("With Password, Password Provided", func(t *testing.T) {
 		rec, err := newTestRequest(t, http.MethodPost, apiv1.AuthenticateLinkShare, `{"password":"1234"}`, nil, map[string]string{"share": "testWithPassword"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Contains(t, rec.Body.String(), `"token":"`)
 		assert.Contains(t, rec.Body.String(), `"project_id":1`)
 	})
 	t.Run("With Wrong Password", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.AuthenticateLinkShare, `{"password":"someWrongPassword"}`, nil, map[string]string{"share": "testWithPassword"})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, models.ErrCodeLinkSharePasswordInvalid)
 	})
 }

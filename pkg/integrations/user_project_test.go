@@ -21,18 +21,20 @@ import (
 	"testing"
 
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUserProject(t *testing.T) {
 	t.Run("Normal test", func(t *testing.T) {
 		rec, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserList, &testuser1, "", nil, nil)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "null\n", rec.Body.String())
 	})
 	t.Run("Search for user3", func(t *testing.T) {
 		rec, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserList, &testuser1, "", map[string][]string{"s": {"user3"}}, nil)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), `user3`)
 		assert.NotContains(t, rec.Body.String(), `user1`)
 		assert.NotContains(t, rec.Body.String(), `user2`)

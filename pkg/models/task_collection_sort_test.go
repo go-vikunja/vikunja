@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSortParamValidation(t *testing.T) {
@@ -30,7 +31,7 @@ func TestSortParamValidation(t *testing.T) {
 				sortBy:  "id",
 			}
 			err := s.validate()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 		})
 		t.Run(orderDescending.String(), func(t *testing.T) {
 			s := &sortParam{
@@ -38,7 +39,7 @@ func TestSortParamValidation(t *testing.T) {
 				sortBy:  "id",
 			}
 			err := s.validate()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 		})
 	})
 	t.Run("Test valid sort by", func(t *testing.T) {
@@ -68,7 +69,7 @@ func TestSortParamValidation(t *testing.T) {
 					sortBy:  test,
 				}
 				err := s.validate()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			})
 		}
 	})
@@ -78,7 +79,7 @@ func TestSortParamValidation(t *testing.T) {
 			sortBy:  "id",
 		}
 		err := s.validate()
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrInvalidSortOrder(err))
 	})
 	t.Run("Test invalid sort by", func(t *testing.T) {
@@ -87,7 +88,7 @@ func TestSortParamValidation(t *testing.T) {
 			sortBy:  "somethingInvalid",
 		}
 		err := s.validate()
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrInvalidTaskField(err))
 	})
 }

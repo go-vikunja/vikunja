@@ -26,7 +26,9 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTaskAttachment_ReadOne(t *testing.T) {
@@ -42,17 +44,17 @@ func TestTaskAttachment_ReadOne(t *testing.T) {
 			ID: 1,
 		}
 		err := ta.ReadOne(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, ta.File)
 		assert.True(t, ta.File.ID == ta.FileID && ta.FileID != 0)
 
 		// Load the actual attachment file and check its content
 		err = ta.File.LoadFileByID()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, config.FilesBasePath.GetString()+"/1", ta.File.File.Name())
 		content := make([]byte, 9)
 		read, err := ta.File.File.Read(content)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 9, read)
 		assert.Equal(t, []byte("testfile1"), content)
 	})
@@ -66,7 +68,7 @@ func TestTaskAttachment_ReadOne(t *testing.T) {
 			ID: 9999,
 		}
 		err := ta.ReadOne(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTaskAttachmentDoesNotExist(err))
 	})
 	t.Run("Existing Attachment, Nonexisting File", func(t *testing.T) {
@@ -79,8 +81,8 @@ func TestTaskAttachment_ReadOne(t *testing.T) {
 			ID: 2,
 		}
 		err := ta.ReadOne(s, u)
-		assert.Error(t, err)
-		assert.EqualError(t, err, "file 9999 does not exist")
+		require.Error(t, err)
+		require.EqualError(t, err, "file 9999 does not exist")
 	})
 }
 
@@ -118,17 +120,17 @@ func TestTaskAttachment_NewAttachment(t *testing.T) {
 	testuser := &user.User{ID: 1}
 
 	err := ta.NewAttachment(s, tf, "testfile", 100, testuser)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotEqual(t, 0, ta.FileID)
 	_, err = files.FileStat("files/" + strconv.FormatInt(ta.FileID, 10))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.False(t, os.IsNotExist(err))
 	assert.Equal(t, testuser.ID, ta.CreatedByID)
 
 	// Check the file was inserted correctly
 	ta.File = &files.File{ID: ta.FileID}
 	err = ta.File.LoadFileMetaByID()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, testuser.ID, ta.File.CreatedByID)
 	assert.Equal(t, "testfile", ta.File.Name)
 	assert.Equal(t, uint64(100), ta.File.Size)
@@ -145,7 +147,7 @@ func TestTaskAttachment_ReadAll(t *testing.T) {
 	ta := &TaskAttachment{TaskID: 1}
 	as, _, _, err := ta.ReadAll(s, &user.User{ID: 1}, "", 0, 50)
 	attachments, _ := as.([]*TaskAttachment)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, attachments, 3)
 	assert.Equal(t, "test", attachments[0].File.Name)
 	for _, a := range attachments {
@@ -166,7 +168,7 @@ func TestTaskAttachment_Delete(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		ta := &TaskAttachment{ID: 1}
 		err := ta.Delete(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		// Check if the file itself was deleted
 		_, err = files.FileStat("/1") // The new file has the id 2 since it's the second attachment
 		assert.True(t, os.IsNotExist(err))
@@ -175,14 +177,14 @@ func TestTaskAttachment_Delete(t *testing.T) {
 		files.InitTestFileFixtures(t)
 		ta := &TaskAttachment{ID: 9999}
 		err := ta.Delete(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTaskAttachmentDoesNotExist(err))
 	})
 	t.Run("Existing attachment, nonexisting file", func(t *testing.T) {
 		files.InitTestFileFixtures(t)
 		ta := &TaskAttachment{ID: 2}
 		err := ta.Delete(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 }
 
@@ -196,7 +198,7 @@ func TestTaskAttachment_Rights(t *testing.T) {
 
 			ta := &TaskAttachment{TaskID: 1}
 			can, _, err := ta.CanRead(s, u)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, can)
 		})
 		t.Run("Forbidden", func(t *testing.T) {
@@ -206,7 +208,7 @@ func TestTaskAttachment_Rights(t *testing.T) {
 
 			ta := &TaskAttachment{TaskID: 14}
 			can, _, err := ta.CanRead(s, u)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.False(t, can)
 		})
 	})
@@ -218,7 +220,7 @@ func TestTaskAttachment_Rights(t *testing.T) {
 
 			ta := &TaskAttachment{TaskID: 1}
 			can, err := ta.CanDelete(s, u)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, can)
 		})
 		t.Run("Forbidden, no access", func(t *testing.T) {
@@ -228,7 +230,7 @@ func TestTaskAttachment_Rights(t *testing.T) {
 
 			ta := &TaskAttachment{TaskID: 14}
 			can, err := ta.CanDelete(s, u)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.False(t, can)
 		})
 		t.Run("Forbidden, shared read only", func(t *testing.T) {
@@ -238,7 +240,7 @@ func TestTaskAttachment_Rights(t *testing.T) {
 
 			ta := &TaskAttachment{TaskID: 15}
 			can, err := ta.CanDelete(s, u)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.False(t, can)
 		})
 	})
@@ -250,7 +252,7 @@ func TestTaskAttachment_Rights(t *testing.T) {
 
 			ta := &TaskAttachment{TaskID: 1}
 			can, err := ta.CanCreate(s, u)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, can)
 		})
 		t.Run("Forbidden, no access", func(t *testing.T) {
@@ -260,7 +262,7 @@ func TestTaskAttachment_Rights(t *testing.T) {
 
 			ta := &TaskAttachment{TaskID: 14}
 			can, err := ta.CanCreate(s, u)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.False(t, can)
 		})
 		t.Run("Forbidden, shared read only", func(t *testing.T) {
@@ -270,7 +272,7 @@ func TestTaskAttachment_Rights(t *testing.T) {
 
 			ta := &TaskAttachment{TaskID: 15}
 			can, err := ta.CanCreate(s, u)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.False(t, can)
 		})
 	})

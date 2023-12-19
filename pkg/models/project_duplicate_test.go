@@ -22,7 +22,9 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestProjectDuplicate(t *testing.T) {
@@ -40,16 +42,16 @@ func TestProjectDuplicate(t *testing.T) {
 		ProjectID: 1,
 	}
 	can, err := l.CanCreate(s, u)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.True(t, can)
 	err = l.Create(s, u)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// assert the new project has the same number of buckets as the old one
 	numberOfOriginalBuckets, err := s.Where("project_id = ?", l.ProjectID).Count(&Bucket{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	numberOfDuplicatedBuckets, err := s.Where("project_id = ?", l.Project.ID).Count(&Bucket{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, numberOfOriginalBuckets, numberOfDuplicatedBuckets, "duplicated project does not have the same amount of buckets as the original one")
 
 	// To make this test 100% useful, it would need to assert a lot more stuff, but it is good enough for now.

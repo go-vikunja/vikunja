@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAPIToken_ReadAll(t *testing.T) {
@@ -35,11 +36,11 @@ func TestAPIToken_ReadAll(t *testing.T) {
 	// Checking if the user only sees their own tokens
 
 	result, count, total, err := token.ReadAll(s, u, "", 1, 50)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	tokens, is := result.([]*APIToken)
 	assert.Truef(t, is, "tokens are not of type []*APIToken")
 	assert.Len(t, tokens, 2)
-	assert.Equal(t, count, len(tokens))
+	assert.Len(t, tokens, count)
 	assert.Equal(t, int64(2), total)
 	assert.Equal(t, int64(1), tokens[0].ID)
 	assert.Equal(t, int64(2), tokens[1].ID)
@@ -54,7 +55,7 @@ func TestAPIToken_CanDelete(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		can, err := token.CanDelete(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.True(t, can)
 	})
 	t.Run("noneixsting token", func(t *testing.T) {
@@ -65,7 +66,7 @@ func TestAPIToken_CanDelete(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		can, err := token.CanDelete(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.False(t, can)
 	})
 	t.Run("token of another user", func(t *testing.T) {
@@ -76,7 +77,7 @@ func TestAPIToken_CanDelete(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		can, err := token.CanDelete(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.False(t, can)
 	})
 }
@@ -90,7 +91,7 @@ func TestAPIToken_Create(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		err := token.Create(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 }
 
@@ -102,7 +103,7 @@ func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 
 		token, err := GetTokenFromTokenString(s, "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e") // Token 1
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, int64(1), token.ID)
 	})
 	t.Run("invalid token", func(t *testing.T) {
@@ -112,7 +113,7 @@ func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 
 		_, err := GetTokenFromTokenString(s, "tk_loremipsum")
 
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrAPITokenInvalid(err))
 	})
 }

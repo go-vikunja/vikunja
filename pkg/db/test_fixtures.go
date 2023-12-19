@@ -22,8 +22,9 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
+
 	"github.com/go-testfixtures/testfixtures/v3"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"xorm.io/xorm/schemas"
 )
 
@@ -108,5 +109,5 @@ func LoadFixtures() error {
 // LoadAndAssertFixtures loads all fixtures defined before and asserts they are correctly loaded
 func LoadAndAssertFixtures(t *testing.T) {
 	err := LoadFixtures()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }

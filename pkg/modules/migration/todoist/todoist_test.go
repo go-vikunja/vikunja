@@ -24,7 +24,9 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/d4l3k/messagediff.v1"
 )
 
@@ -33,21 +35,21 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 	config.InitConfig()
 
 	time1, err := time.Parse(time.RFC3339Nano, "2014-09-26T08:25:05Z")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	time1 = time1.In(config.GetTimeZone())
 	time3, err := time.Parse(time.RFC3339Nano, "2014-10-21T08:25:05Z")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	time3 = time3.In(config.GetTimeZone())
 	dueTime, err := time.Parse(time.RFC3339Nano, "2020-05-31T23:59:00Z")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	dueTime = dueTime.In(config.GetTimeZone())
 	dueTimeWithTime, err := time.Parse(time.RFC3339Nano, "2021-01-31T19:00:00Z")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	dueTimeWithTime = dueTimeWithTime.In(config.GetTimeZone())
 	nilTime, err := time.Parse(time.RFC3339Nano, "0001-01-01T00:00:00Z")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	exampleFile, err := os.ReadFile(config.ServiceRootpath.GetString() + "/pkg/modules/migration/testimage.jpg")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	makeTestItem := func(id, projectId string, hasDueDate, hasLabels, done bool) *item {
 		item := &item{
@@ -629,7 +631,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 
 	doneItems := make(map[string]*doneItem)
 	hierachie, err := convertTodoistToVikunja(testSync, doneItems)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, hierachie)
 	if diff, equal := messagediff.PrettyDiff(hierachie, expectedHierachie); !equal {
 		t.Errorf("converted todoist data = %v, want %v, diff: %v", hierachie, expectedHierachie, diff)

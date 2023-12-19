@@ -22,7 +22,9 @@ import (
 
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLogin(t *testing.T) {
@@ -31,12 +33,12 @@ func TestLogin(t *testing.T) {
   "username": "user1",
   "password": "1234"
 }`, nil, nil)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), "token")
 	})
 	t.Run("Empty payload", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.Login, `{}`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeNoUsernamePassword)
 	})
 	t.Run("Not existing user", func(t *testing.T) {
@@ -44,7 +46,7 @@ func TestLogin(t *testing.T) {
   "username": "userWichDoesNotExist",
   "password": "1234"
 }`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeWrongUsernameOrPassword)
 	})
 	t.Run("Wrong password", func(t *testing.T) {
@@ -52,7 +54,7 @@ func TestLogin(t *testing.T) {
   "username": "user1",
   "password": "wrong"
 }`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeWrongUsernameOrPassword)
 	})
 	t.Run("user with unconfirmed email", func(t *testing.T) {
@@ -60,7 +62,7 @@ func TestLogin(t *testing.T) {
   "username": "user5",
   "password": "1234"
 }`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeEmailNotConfirmed)
 	})
 }

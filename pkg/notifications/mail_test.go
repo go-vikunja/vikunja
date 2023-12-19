@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewMail(t *testing.T) {
@@ -97,7 +98,7 @@ func TestRenderMail(t *testing.T) {
 		Line("And one more, because why not?")
 
 	mailopts, err := RenderMail(mail)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, mail.from, mailopts.From)
 	assert.Equal(t, mail.to, mailopts.To)
 

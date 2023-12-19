@@ -20,7 +20,9 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetOrCreateUser(t *testing.T) {
@@ -34,9 +36,9 @@ func TestGetOrCreateUser(t *testing.T) {
 			PreferredUsername: "someUserWhoDoesNotExistYet",
 		}
 		u, err := getOrCreateUser(s, cl, "https://some.issuer", "12345")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		db.AssertExists(t, "users", map[string]interface{}{
 			"id":       u.ID,
@@ -54,10 +56,10 @@ func TestGetOrCreateUser(t *testing.T) {
 			PreferredUsername: "",
 		}
 		u, err := getOrCreateUser(s, cl, "https://some.issuer", "12345")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotEmpty(t, u.Username)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		db.AssertExists(t, "users", map[string]interface{}{
 			"id":    u.ID,
@@ -73,7 +75,7 @@ func TestGetOrCreateUser(t *testing.T) {
 			Email: "",
 		}
 		_, err := getOrCreateUser(s, cl, "https://some.issuer", "12345")
-		assert.Error(t, err)
+		require.Error(t, err)
 	})
 	t.Run("existing user, different email address", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -84,9 +86,9 @@ func TestGetOrCreateUser(t *testing.T) {
 			Email: "other-email-address@some.service.com",
 		}
 		u, err := getOrCreateUser(s, cl, "https://some.service.com", "12345")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		db.AssertExists(t, "users", map[string]interface{}{
 			"id":    u.ID,

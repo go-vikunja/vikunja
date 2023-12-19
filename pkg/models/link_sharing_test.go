@@ -21,7 +21,9 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLinkSharing_Create(t *testing.T) {
@@ -38,7 +40,7 @@ func TestLinkSharing_Create(t *testing.T) {
 		}
 		err := share.Create(s, doer)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotEmpty(t, share.Hash)
 		assert.NotEmpty(t, share.ID)
 		assert.Equal(t, SharingTypeWithoutPassword, share.SharingType)
@@ -57,7 +59,7 @@ func TestLinkSharing_Create(t *testing.T) {
 		}
 		err := share.Create(s, doer)
 
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrInvalidRight(err))
 	})
 	t.Run("password should be hashed", func(t *testing.T) {
@@ -72,7 +74,7 @@ func TestLinkSharing_Create(t *testing.T) {
 		}
 		err := share.Create(s, doer)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotEmpty(t, share.Hash)
 		assert.NotEmpty(t, share.ID)
 		assert.Empty(t, share.Password)
@@ -97,7 +99,7 @@ func TestLinkSharing_ReadAll(t *testing.T) {
 		all, _, _, err := share.ReadAll(s, doer, "", 1, -1)
 		shares := all.([]*LinkSharing)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, shares, 2)
 		for _, sharing := range shares {
 			assert.Empty(t, sharing.Password)
@@ -114,7 +116,7 @@ func TestLinkSharing_ReadAll(t *testing.T) {
 		all, _, _, err := share.ReadAll(s, doer, "wITHPASS", 1, -1)
 		shares := all.([]*LinkSharing)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, shares, 1)
 		assert.Equal(t, int64(4), shares[0].ID)
 	})
@@ -133,7 +135,7 @@ func TestLinkSharing_ReadOne(t *testing.T) {
 		}
 		err := share.ReadOne(s, doer)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotEmpty(t, share.Hash)
 		assert.Equal(t, SharingTypeWithoutPassword, share.SharingType)
 	})
@@ -147,7 +149,7 @@ func TestLinkSharing_ReadOne(t *testing.T) {
 		}
 		err := share.ReadOne(s, doer)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotEmpty(t, share.Hash)
 		assert.Equal(t, SharingTypeWithPassword, share.SharingType)
 		assert.Empty(t, share.Password)

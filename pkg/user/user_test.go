@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"xorm.io/builder"
 )
 
@@ -39,7 +40,7 @@ func TestCreateUser(t *testing.T) {
 		defer s.Close()
 
 		createdUser, err := CreateUser(s, dummyuser)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotZero(t, createdUser.Created)
 	})
 	t.Run("already existing", func(t *testing.T) {
@@ -52,7 +53,7 @@ func TestCreateUser(t *testing.T) {
 			Password: "12345",
 			Email:    "email@example.com",
 		})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrUsernameExists(err))
 	})
 	t.Run("same email", func(t *testing.T) {
@@ -65,7 +66,7 @@ func TestCreateUser(t *testing.T) {
 			Password: "12345",
 			Email:    "user1@example.com",
 		})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrUserEmailExists(err))
 	})
 	t.Run("no username", func(t *testing.T) {
@@ -78,7 +79,7 @@ func TestCreateUser(t *testing.T) {
 			Password: "12345",
 			Email:    "user1@example.com",
 		})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})
 	t.Run("no password", func(t *testing.T) {
@@ -91,7 +92,7 @@ func TestCreateUser(t *testing.T) {
 			Password: "",
 			Email:    "user1@example.com",
 		})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})
 	t.Run("no email", func(t *testing.T) {
@@ -104,7 +105,7 @@ func TestCreateUser(t *testing.T) {
 			Password: "12345",
 			Email:    "",
 		})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})
 	t.Run("same email but different issuer", func(t *testing.T) {
@@ -118,7 +119,7 @@ func TestCreateUser(t *testing.T) {
 			Issuer:   "https://some.site",
 			Subject:  "12345",
 		})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 	t.Run("same subject but different issuer", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -131,7 +132,7 @@ func TestCreateUser(t *testing.T) {
 			Issuer:   "https://some.site",
 			Subject:  "12345",
 		})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 	t.Run("space in username", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -143,7 +144,7 @@ func TestCreateUser(t *testing.T) {
 			Password: "12345",
 			Email:    "user1@example.com",
 		})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrUsernameMustNotContainSpaces(err))
 	})
 }
@@ -161,8 +162,8 @@ func TestGetUser(t *testing.T) {
 			},
 			false,
 		)
-		assert.NoError(t, err)
-		assert.Equal(t, theuser.ID, int64(1))
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), theuser.ID)
 		assert.Empty(t, theuser.Email)
 	})
 	t.Run("by email", func(t *testing.T) {
@@ -176,8 +177,8 @@ func TestGetUser(t *testing.T) {
 				Email: "user1@example.com",
 			},
 			false)
-		assert.NoError(t, err)
-		assert.Equal(t, theuser.ID, int64(1))
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), theuser.ID)
 		assert.Empty(t, theuser.Email)
 	})
 	t.Run("by id", func(t *testing.T) {
@@ -186,9 +187,9 @@ func TestGetUser(t *testing.T) {
 		defer s.Close()
 
 		theuser, err := GetUserByID(s, 1)
-		assert.NoError(t, err)
-		assert.Equal(t, theuser.ID, int64(1))
-		assert.Equal(t, theuser.Username, "user1")
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), theuser.ID)
+		assert.Equal(t, "user1", theuser.Username)
 		assert.Empty(t, theuser.Email)
 	})
 	t.Run("invalid id", func(t *testing.T) {
@@ -197,7 +198,7 @@ func TestGetUser(t *testing.T) {
 		defer s.Close()
 
 		_, err := GetUserByID(s, 99999)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrUserDoesNotExist(err))
 	})
 	t.Run("nonexistant", func(t *testing.T) {
@@ -206,7 +207,7 @@ func TestGetUser(t *testing.T) {
 		defer s.Close()
 
 		_, err := GetUserByID(s, 0)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrUserDoesNotExist(err))
 	})
 	t.Run("empty name", func(t *testing.T) {
@@ -215,7 +216,7 @@ func TestGetUser(t *testing.T) {
 		defer s.Close()
 
 		_, err := GetUserByUsername(s, "")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrUserDoesNotExist(err))
 	})
 	t.Run("with email", func(t *testing.T) {
@@ -224,9 +225,9 @@ func TestGetUser(t *testing.T) {
 		defer s.Close()
 
 		theuser, err := GetUserWithEmail(s, &User{ID: 1})
-		assert.NoError(t, err)
-		assert.Equal(t, theuser.ID, int64(1))
-		assert.Equal(t, theuser.Username, "user1")
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), theuser.ID)
+		assert.Equal(t, "user1", theuser.Username)
 		assert.NotEmpty(t, theuser.Email)
 	})
 }
@@ -238,7 +239,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		defer s.Close()
 
 		_, err := CheckUserCredentials(s, &Login{Username: "user1", Password: "1234"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 	t.Run("unverified email", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -246,7 +247,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		defer s.Close()
 
 		_, err := CheckUserCredentials(s, &Login{Username: "user5", Password: "1234"})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrEmailNotConfirmed(err))
 	})
 	t.Run("wrong password", func(t *testing.T) {
@@ -255,7 +256,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		defer s.Close()
 
 		_, err := CheckUserCredentials(s, &Login{Username: "user1", Password: "12345"})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrWrongUsernameOrPassword(err))
 	})
 	t.Run("nonexistant user", func(t *testing.T) {
@@ -264,7 +265,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		defer s.Close()
 
 		_, err := CheckUserCredentials(s, &Login{Username: "dfstestuu", Password: "1234"})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrWrongUsernameOrPassword(err))
 	})
 	t.Run("empty password", func(t *testing.T) {
@@ -273,7 +274,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		defer s.Close()
 
 		_, err := CheckUserCredentials(s, &Login{Username: "user1"})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})
 	t.Run("empty username", func(t *testing.T) {
@@ -282,7 +283,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		defer s.Close()
 
 		_, err := CheckUserCredentials(s, &Login{Password: "1234"})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})
 	t.Run("email", func(t *testing.T) {
@@ -291,7 +292,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		defer s.Close()
 
 		_, err := CheckUserCredentials(s, &Login{Username: "user1@example.com", Password: "1234"})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 }
 
@@ -306,7 +307,7 @@ func TestUpdateUser(t *testing.T) {
 			Password: "LoremIpsum",
 			Email:    "testing@example.com",
 		}, false)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.", uuser.Password) // Password should not change
 		assert.Equal(t, "user1", uuser.Username)                                                        // Username should not change either
 	})
@@ -319,7 +320,7 @@ func TestUpdateUser(t *testing.T) {
 			ID:       1,
 			Username: "changedname",
 		}, false)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.", uuser.Password) // Password should not change
 		assert.Equal(t, "changedname", uuser.Username)
 	})
@@ -331,7 +332,7 @@ func TestUpdateUser(t *testing.T) {
 		_, err := UpdateUser(s, &User{
 			ID: 99999,
 		}, false)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrUserDoesNotExist(err))
 	})
 }
@@ -345,7 +346,7 @@ func TestUpdateUserPassword(t *testing.T) {
 		err := UpdateUserPassword(s, &User{
 			ID: 1,
 		}, "12345")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 	t.Run("nonexistant user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -355,7 +356,7 @@ func TestUpdateUserPassword(t *testing.T) {
 		err := UpdateUserPassword(s, &User{
 			ID: 9999,
 		}, "12345")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrUserDoesNotExist(err))
 	})
 	t.Run("empty password", func(t *testing.T) {
@@ -366,7 +367,7 @@ func TestUpdateUserPassword(t *testing.T) {
 		err := UpdateUserPassword(s, &User{
 			ID: 1,
 		}, "")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrEmptyNewPassword(err))
 	})
 }
@@ -378,9 +379,9 @@ func TestListUsers(t *testing.T) {
 		defer s.Close()
 
 		all, err := ListUsers(s, "user1", nil)
-		assert.NoError(t, err)
-		assert.True(t, len(all) > 0)
-		assert.Equal(t, all[0].Username, "user1")
+		require.NoError(t, err)
+		assert.NotEmpty(t, all)
+		assert.Equal(t, "user1", all[0].Username)
 	})
 	t.Run("case insensitive", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -388,9 +389,9 @@ func TestListUsers(t *testing.T) {
 		defer s.Close()
 
 		all, err := ListUsers(s, "uSEr1", nil)
-		assert.NoError(t, err)
-		assert.True(t, len(all) > 0)
-		assert.Equal(t, all[0].Username, "user1")
+		require.NoError(t, err)
+		assert.NotEmpty(t, len(all))
+		assert.Equal(t, "user1", all[0].Username)
 	})
 	t.Run("all users", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -398,7 +399,7 @@ func TestListUsers(t *testing.T) {
 		defer s.Close()
 
 		all, err := ListAllUsers(s)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, all, 16)
 	})
 	t.Run("no search term", func(t *testing.T) {
@@ -407,8 +408,8 @@ func TestListUsers(t *testing.T) {
 		defer s.Close()
 
 		all, err := ListUsers(s, "", nil)
-		assert.NoError(t, err)
-		assert.Len(t, all, 0)
+		require.NoError(t, err)
+		assert.Empty(t, all)
 	})
 	t.Run("not discoverable by email", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -416,8 +417,8 @@ func TestListUsers(t *testing.T) {
 		defer s.Close()
 
 		all, err := ListUsers(s, "user1@example.com", nil)
-		assert.NoError(t, err)
-		assert.Len(t, all, 0)
+		require.NoError(t, err)
+		assert.Empty(t, all)
 		db.AssertExists(t, "users", map[string]interface{}{
 			"email":                 "user1@example.com",
 			"discoverable_by_email": false,
@@ -429,8 +430,8 @@ func TestListUsers(t *testing.T) {
 		defer s.Close()
 
 		all, err := ListUsers(s, "one else", nil)
-		assert.NoError(t, err)
-		assert.Len(t, all, 0)
+		require.NoError(t, err)
+		assert.Empty(t, all)
 		db.AssertExists(t, "users", map[string]interface{}{
 			"name":                 "Some one else",
 			"discoverable_by_name": false,
@@ -442,7 +443,7 @@ func TestListUsers(t *testing.T) {
 		defer s.Close()
 
 		all, err := ListUsers(s, "user7@example.com", nil)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, all, 1)
 		assert.Equal(t, int64(7), all[0].ID)
 		db.AssertExists(t, "users", map[string]interface{}{
@@ -456,7 +457,7 @@ func TestListUsers(t *testing.T) {
 		defer s.Close()
 
 		all, err := ListUsers(s, "with space", nil)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, all, 1)
 		assert.Equal(t, int64(12), all[0].ID)
 		db.AssertExists(t, "users", map[string]interface{}{
@@ -470,7 +471,7 @@ func TestListUsers(t *testing.T) {
 		defer s.Close()
 
 		all, err := ListUsers(s, "user7@example.com", &ProjectUserOpts{AdditionalCond: builder.In("id", 7)})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, all, 1)
 		assert.Equal(t, int64(7), all[0].ID)
 		db.AssertExists(t, "users", map[string]interface{}{
@@ -484,7 +485,7 @@ func TestListUsers(t *testing.T) {
 		defer s.Close()
 
 		all, err := ListUsers(s, "user7", nil)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, all, 1)
 		assert.Equal(t, int64(7), all[0].ID)
 		db.AssertExists(t, "users", map[string]interface{}{
@@ -497,8 +498,8 @@ func TestListUsers(t *testing.T) {
 		defer s.Close()
 
 		all, err := ListUsers(s, "user", nil)
-		assert.NoError(t, err)
-		assert.Len(t, all, 0)
+		require.NoError(t, err)
+		assert.Empty(t, all)
 		db.AssertExists(t, "users", map[string]interface{}{
 			"username": "user7",
 		}, false)
@@ -511,7 +512,7 @@ func TestListUsers(t *testing.T) {
 		all, err := ListUsers(s, "user", &ProjectUserOpts{
 			MatchFuzzily: true,
 		})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, all, 16)
 	})
 }
@@ -527,7 +528,7 @@ func TestUserPasswordReset(t *testing.T) {
 			NewPassword: "12345",
 		}
 		err := ResetPassword(s, reset)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 	t.Run("without password", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -538,7 +539,7 @@ func TestUserPasswordReset(t *testing.T) {
 			Token: "passwordresettesttoken",
 		}
 		err := ResetPassword(s, reset)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})
 	t.Run("empty token", func(t *testing.T) {
@@ -551,7 +552,7 @@ func TestUserPasswordReset(t *testing.T) {
 			NewPassword: "12345",
 		}
 		err := ResetPassword(s, reset)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrNoPasswordResetToken(err))
 	})
 	t.Run("wrong token", func(t *testing.T) {
@@ -564,7 +565,7 @@ func TestUserPasswordReset(t *testing.T) {
 			NewPassword: "12345",
 		}
 		err := ResetPassword(s, reset)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrInvalidPasswordResetToken(err))
 	})
 }

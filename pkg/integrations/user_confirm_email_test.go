@@ -22,30 +22,32 @@ import (
 
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUserConfirmEmail(t *testing.T) {
 	t.Run("Normal test", func(t *testing.T) {
 		rec, err := newTestRequest(t, http.MethodPost, apiv1.UserConfirmEmail, `{"token": "tiepiQueed8ahc7zeeFe1eveiy4Ein8osooxegiephauph2Ael"}`, nil, nil)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), `The email was confirmed successfully.`)
 	})
 	t.Run("Empty payload", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.UserConfirmEmail, `{}`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t, http.StatusPreconditionFailed, err.(*echo.HTTPError).Code)
 		assertHandlerErrorCode(t, err, user.ErrCodeInvalidEmailConfirmToken)
 	})
 	t.Run("Empty token", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.UserConfirmEmail, `{"token": ""}`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeInvalidEmailConfirmToken)
 	})
 	t.Run("Invalid token", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.UserConfirmEmail, `{"token": "invalidToken"}`, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeInvalidEmailConfirmToken)
 	})
 }

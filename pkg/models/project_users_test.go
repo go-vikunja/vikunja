@@ -25,7 +25,8 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
-	"github.com/stretchr/testify/assert"
+
+	"github.com/stretchr/testify/require"
 	"gopkg.in/d4l3k/messagediff.v1"
 )
 
@@ -130,7 +131,7 @@ func TestProjectUser_Create(t *testing.T) {
 			}
 
 			err = s.Commit()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			if !tt.wantErr {
 				db.AssertExists(t, "users_projects", map[string]interface{}{
@@ -340,7 +341,7 @@ func TestProjectUser_Update(t *testing.T) {
 			}
 
 			err = s.Commit()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			if !tt.wantErr {
 				db.AssertExists(t, "users_projects", map[string]interface{}{
@@ -422,7 +423,7 @@ func TestProjectUser_Delete(t *testing.T) {
 			}
 
 			err = s.Commit()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			if !tt.wantErr {
 				db.AssertMissing(t, "users_projects", map[string]interface{}{

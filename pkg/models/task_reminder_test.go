@@ -21,7 +21,9 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestReminderGetTasksInTheNextMinute(t *testing.T) {
@@ -31,9 +33,9 @@ func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 		defer s.Close()
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T01:12:00Z")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		notifications, err := getTasksWithRemindersDueAndTheirUsers(s, now)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, notifications, 1)
 		assert.Equal(t, int64(27), notifications[0].Task.ID)
 	})
@@ -43,9 +45,9 @@ func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 		defer s.Close()
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-12-02T01:13:00Z")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		taskIDs, err := getTasksWithRemindersDueAndTheirUsers(s, now)
-		assert.NoError(t, err)
-		assert.Len(t, taskIDs, 0)
+		require.NoError(t, err)
+		assert.Empty(t, taskIDs)
 	})
 }

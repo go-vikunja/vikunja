@@ -21,13 +21,15 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/routes"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHealthcheck(t *testing.T) {
 	t.Run("healthcheck", func(t *testing.T) {
 		rec, err := newTestRequest(t, http.MethodGet, routes.HealthcheckHandler, ``, nil, nil)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), "OK")
 	})
 }

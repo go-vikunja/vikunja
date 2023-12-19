@@ -23,7 +23,8 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
-	"github.com/stretchr/testify/assert"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestVikunjaFileMigrator_Migrate(t *testing.T) {
@@ -44,7 +45,7 @@ func TestVikunjaFileMigrator_Migrate(t *testing.T) {
 		}
 
 		err = m.Migrate(u, f, s.Size())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		db.AssertExists(t, "projects", map[string]interface{}{
 			"title":    "test project",
 			"owner_id": u.ID,
@@ -91,7 +92,7 @@ func TestVikunjaFileMigrator_Migrate(t *testing.T) {
 		}
 
 		err = m.Migrate(u, f, s.Size())
-		assert.Error(t, err)
-		assert.ErrorContainsf(t, err, "export was created with an older version", "Invalid error message")
+		require.Error(t, err)
+		require.ErrorContainsf(t, err, "export was created with an older version", "Invalid error message")
 	})
 }

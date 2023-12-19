@@ -21,7 +21,9 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTaskRelation_Create(t *testing.T) {
@@ -36,9 +38,9 @@ func TestTaskRelation_Create(t *testing.T) {
 			RelationKind: RelationKindSubtask,
 		}
 		err := rel.Create(s, &user.User{ID: 1})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		db.AssertExists(t, "task_relations", map[string]interface{}{
 			"task_id":       1,
 			"other_task_id": 2,
@@ -57,9 +59,9 @@ func TestTaskRelation_Create(t *testing.T) {
 			RelationKind: RelationKindSubtask,
 		}
 		err := rel.Create(s, &user.User{ID: 1})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		db.AssertExists(t, "task_relations", map[string]interface{}{
 			"task_id":       1,
 			"other_task_id": 13,
@@ -78,7 +80,7 @@ func TestTaskRelation_Create(t *testing.T) {
 			RelationKind: RelationKindSubtask,
 		}
 		err := rel.Create(s, &user.User{ID: 1})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrRelationAlreadyExists(err))
 	})
 	t.Run("Same Task", func(t *testing.T) {
@@ -91,7 +93,7 @@ func TestTaskRelation_Create(t *testing.T) {
 			OtherTaskID: 1,
 		}
 		err := rel.Create(s, &user.User{ID: 1})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrRelationTasksCannotBeTheSame(err))
 	})
 }
@@ -110,9 +112,9 @@ func TestTaskRelation_Delete(t *testing.T) {
 			RelationKind: RelationKindSubtask,
 		}
 		err := rel.Delete(s, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = s.Commit()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		db.AssertMissing(t, "task_relations", map[string]interface{}{
 			"task_id":       1,
 			"other_task_id": 29,
@@ -135,7 +137,7 @@ func TestTaskRelation_Delete(t *testing.T) {
 			RelationKind: RelationKindSubtask,
 		}
 		err := rel.Delete(s, u)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrRelationDoesNotExist(err))
 	})
 }
@@ -152,7 +154,7 @@ func TestTaskRelation_CanCreate(t *testing.T) {
 			RelationKind: RelationKindSubtask,
 		}
 		can, err := rel.CanCreate(s, &user.User{ID: 1})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.True(t, can)
 	})
 	t.Run("Two tasks on different projects", func(t *testing.T) {
@@ -166,7 +168,7 @@ func TestTaskRelation_CanCreate(t *testing.T) {
 			RelationKind: RelationKindSubtask,
 		}
 		can, err := rel.CanCreate(s, &user.User{ID: 1})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.True(t, can)
 	})
 	t.Run("No update rights on base task", func(t *testing.T) {
@@ -180,7 +182,7 @@ func TestTaskRelation_CanCreate(t *testing.T) {
 			RelationKind: RelationKindSubtask,
 		}
 		can, err := rel.CanCreate(s, &user.User{ID: 1})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.False(t, can)
 	})
 	t.Run("No update rights on base task, but read rights", func(t *testing.T) {
@@ -194,7 +196,7 @@ func TestTaskRelation_CanCreate(t *testing.T) {
 			RelationKind: RelationKindSubtask,
 		}
 		can, err := rel.CanCreate(s, &user.User{ID: 1})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.False(t, can)
 	})
 	t.Run("No read rights on other task", func(t *testing.T) {
@@ -208,7 +210,7 @@ func TestTaskRelation_CanCreate(t *testing.T) {
 			RelationKind: RelationKindSubtask,
 		}
 		can, err := rel.CanCreate(s, &user.User{ID: 1})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.False(t, can)
 	})
 	t.Run("Nonexisting base task", func(t *testing.T) {
@@ -222,7 +224,7 @@ func TestTaskRelation_CanCreate(t *testing.T) {
 			RelationKind: RelationKindSubtask,
 		}
 		can, err := rel.CanCreate(s, &user.User{ID: 1})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTaskDoesNotExist(err))
 		assert.False(t, can)
 	})
@@ -237,7 +239,7 @@ func TestTaskRelation_CanCreate(t *testing.T) {
 			RelationKind: RelationKindSubtask,
 		}
 		can, err := rel.CanCreate(s, &user.User{ID: 1})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrTaskDoesNotExist(err))
 		assert.False(t, can)
 	})

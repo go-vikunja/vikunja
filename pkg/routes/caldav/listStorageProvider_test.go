@@ -29,6 +29,7 @@ import (
 
 	"github.com/samedi/caldav-go/data"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Check logic related to creating sub-tasks
@@ -78,7 +79,7 @@ END:VCALENDAR`
 
 		// Create the subtask:
 		taskResource, err := storage.CreateResource(taskUID, taskContent)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the result CALDAV contains the relation:
 		content, _ := taskResource.GetContentData()
@@ -87,7 +88,7 @@ END:VCALENDAR`
 
 		// Get the task from the DB:
 		tasks, err := models.GetTasksByUIDs(s, []string{taskUID}, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		task := tasks[0]
 
 		// Check that the parent-child relationship is present:
@@ -129,7 +130,7 @@ END:VCALENDAR`
 
 		// Create the subtask:
 		_, err := storage.CreateResource(taskUIDChild, taskContentChild)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		const taskUID = "uid_grand_child1"
 		const taskContent = `BEGIN:VCALENDAR
@@ -157,7 +158,7 @@ END:VCALENDAR`
 		// Create the task:
 		var taskResource *data.Resource
 		taskResource, err = storage.CreateResource(taskUID, taskContent)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the result CALDAV contains the relation:
 		content, _ := taskResource.GetContentData()
@@ -166,7 +167,7 @@ END:VCALENDAR`
 
 		// Get the task from the DB:
 		tasks, err := models.GetTasksByUIDs(s, []string{taskUID}, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		task := tasks[0]
 
 		// Check that the parent-child relationship of the grandchildren is present:
@@ -176,7 +177,7 @@ END:VCALENDAR`
 
 		// Get the child task and check that it now has a parent and a child:
 		tasks, err = models.GetTasksByUIDs(s, []string{"uid_child1"}, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		task = tasks[0]
 		assert.Len(t, task.RelatedTasks[models.RelationKindParenttask], 1)
 		parentTask = task.RelatedTasks[models.RelationKindParenttask][0]
@@ -220,7 +221,7 @@ END:VCALENDAR`
 
 		// Create the task:
 		taskResource, err := storage.CreateResource(taskUID, taskContent)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the result CALDAV contains the relation:
 		content, _ := taskResource.GetContentData()
@@ -229,7 +230,7 @@ END:VCALENDAR`
 
 		// Get the task from the DB:
 		tasks, err := models.GetTasksByUIDs(s, []string{taskUID}, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		task := tasks[0]
 
 		// Check that the parent-child relationship is present:
@@ -239,7 +240,7 @@ END:VCALENDAR`
 
 		// Check that the non-existent parent task was created in the process:
 		tasks, err = models.GetTasksByUIDs(s, []string{"uid-caldav-test-parent-doesnt-exist-yet"}, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		task = tasks[0]
 		assert.Equal(t, "uid-caldav-test-parent-doesnt-exist-yet", task.UID)
 	})
@@ -279,7 +280,7 @@ RELATED-TO;RELTYPE=PARENT:uid-caldav-test-parent-task
 END:VTODO
 END:VCALENDAR`
 		tasks, err := models.GetTasksByUIDs(s, []string{taskUID}, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		task := tasks[0]
 		storage := &VikunjaCaldavProjectStorage{
 			project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 36}},
@@ -289,7 +290,7 @@ END:VCALENDAR`
 
 		// Edit the task:
 		taskResource, err := storage.UpdateResource(taskUID, taskContent)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the result CALDAV still contains the relation:
 		content, _ := taskResource.GetContentData()
@@ -298,7 +299,7 @@ END:VCALENDAR`
 
 		// Get the task from the DB:
 		tasks, err = models.GetTasksByUIDs(s, []string{taskUID}, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		task = tasks[0]
 
 		// Check that the parent-child relationship is still present:
@@ -334,7 +335,7 @@ RELATED-TO;RELTYPE=CHILD:uid-caldav-test-child-task-2
 END:VTODO
 END:VCALENDAR`
 		tasks, err := models.GetTasksByUIDs(s, []string{taskUID}, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		task := tasks[0]
 		storage := &VikunjaCaldavProjectStorage{
 			project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 36}},
@@ -344,11 +345,11 @@ END:VCALENDAR`
 
 		// Edit the task:
 		_, err = storage.UpdateResource(taskUID, taskContent)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Get the task from the DB:
 		tasks, err = models.GetTasksByUIDs(s, []string{taskUID}, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		task = tasks[0]
 
 		// Check that the subtasks are still linked:
@@ -385,7 +386,7 @@ RELATED-TO;RELTYPE=PARENT:uid-caldav-test-parent-task-2
 END:VTODO
 END:VCALENDAR`
 		tasks, err := models.GetTasksByUIDs(s, []string{taskUID}, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		task := tasks[0]
 		storage := &VikunjaCaldavProjectStorage{
 			project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 36}},
@@ -395,7 +396,7 @@ END:VCALENDAR`
 
 		// Edit the task:
 		taskResource, err := storage.UpdateResource(taskUID, taskContent)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the result CALDAV contains the new relation:
 		content, _ := taskResource.GetContentData()
@@ -404,7 +405,7 @@ END:VCALENDAR`
 
 		// Get the task from the DB:
 		tasks, err = models.GetTasksByUIDs(s, []string{taskUID}, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		task = tasks[0]
 
 		// Check that the parent-child relationship has changed to the new parent:
@@ -414,7 +415,7 @@ END:VCALENDAR`
 
 		// Get the previous parent from the DB and check that its previous child is gone:
 		tasks, err = models.GetTasksByUIDs(s, []string{"uid-caldav-test-parent-task"}, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		task = tasks[0]
 		assert.Len(t, task.RelatedTasks[models.RelationKindSubtask], 1)
 		// We're gone, but our former sibling is still there:
@@ -447,7 +448,7 @@ LAST-MODIFIED:20230301T073337Z
 END:VTODO
 END:VCALENDAR`
 		tasks, err := models.GetTasksByUIDs(s, []string{taskUID}, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		task := tasks[0]
 		storage := &VikunjaCaldavProjectStorage{
 			project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 36}},
@@ -457,7 +458,7 @@ END:VCALENDAR`
 
 		// Edit the task:
 		taskResource, err := storage.UpdateResource(taskUID, taskContent)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the result CALDAV contains the new relation:
 		content, _ := taskResource.GetContentData()
@@ -466,15 +467,15 @@ END:VCALENDAR`
 
 		// Get the task from the DB:
 		tasks, err = models.GetTasksByUIDs(s, []string{taskUID}, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		task = tasks[0]
 
 		// Check that the parent-child relationship is gone:
-		assert.Len(t, task.RelatedTasks[models.RelationKindParenttask], 0)
+		assert.Empty(t, task.RelatedTasks[models.RelationKindParenttask])
 
 		// Get the previous parent from the DB and check that its child is gone:
 		tasks, err = models.GetTasksByUIDs(s, []string{"uid-caldav-test-parent-task"}, u)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		task = tasks[0]
 		// We're gone, but our former sibling is still there:
 		assert.Len(t, task.RelatedTasks[models.RelationKindSubtask], 1)

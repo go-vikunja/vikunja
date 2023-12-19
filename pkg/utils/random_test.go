@@ -24,6 +24,6 @@ import (
 
 func TestMakeRandomString(t *testing.T) {
 	rand := MakeRandomString(32)
-	assert.NotEqual(t, rand, "loremipsuim")
-	assert.Equal(t, len(rand), 32)
+	assert.NotEqual(t, "loremipsuim", rand)
+	assert.Len(t, rand, 32)
 }

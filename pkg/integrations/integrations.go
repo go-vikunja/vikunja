@@ -37,9 +37,11 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/web"
 	"code.vikunja.io/web/handler"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // These are the test users, the same way they are in the test database
@@ -100,7 +102,7 @@ func createRequest(e *echo.Echo, method string, payload string, queryParam url.V
 func bootstrapTestRequest(t *testing.T, method string, payload string, queryParam url.Values, urlParams map[string]string) (c echo.Context, rec *httptest.ResponseRecorder) {
 	// Setup
 	e, err := setupTestEnv()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	c, rec = createRequest(e, method, payload, queryParam, urlParams)
 	return
@@ -116,24 +118,24 @@ func newTestRequest(t *testing.T, method string, handler func(ctx echo.Context) 
 func addUserTokenToContext(t *testing.T, user *user.User, c echo.Context) {
 	// Get the token as a string
 	token, err := auth.NewUserJWTAuthtoken(user, false)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	// We send the string token through the parsing function to get a valid jwt.Token
 	tken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		return []byte(config.ServiceJWTSecret.GetString()), nil
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	c.Set("user", tken)
 }
 
 func addLinkShareTokenToContext(t *testing.T, share *models.LinkSharing, c echo.Context) {
 	// Get the token as a string
 	token, err := auth.NewLinkShareJWTAuthtoken(share)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	// We send the string token through the parsing function to get a valid jwt.Token
 	tken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		return []byte(config.ServiceJWTSecret.GetString()), nil
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	c.Set("user", tken)
 }
 
