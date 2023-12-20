@@ -27,7 +27,7 @@ function redirectToProviderIfNothingElseIsEnabled() {
 		(window.location.pathname.startsWith('/login') || window.location.pathname === '/') && // Kinda hacky, but prevents an endless loop.
 		window.location.search.includes('redirectToProvider=true')
 	) {
-		redirectToProvider(auth.openidConnect.providers[0], auth.openidConnect.redirectUrl)
+		redirectToProvider(auth.openidConnect.providers[0])
 	}
 }
 
