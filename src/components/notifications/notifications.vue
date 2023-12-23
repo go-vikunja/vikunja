@@ -124,6 +124,7 @@ function to(n, index) {
 	switch (n.name) {
 		case names.TASK_COMMENT:
 		case names.TASK_ASSIGNED:
+		case names.TASK_REMINDER:
 			to.name = 'task.detail'
 			to.params.id = n.notification.task.id
 			break
