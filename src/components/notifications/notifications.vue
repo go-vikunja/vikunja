@@ -222,7 +222,7 @@ async function markAllRead() {
 				height: .35rem;
 				background: var(--primary);
 				border-radius: 100%;
-				margin-left: .5rem;
+				margin: 0 .5rem;
 
 				&.read {
 					background: transparent;
