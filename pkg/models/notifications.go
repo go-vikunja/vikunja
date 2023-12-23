@@ -32,7 +32,7 @@ import (
 
 // ReminderDueNotification represents a ReminderDueNotification notification
 type ReminderDueNotification struct {
-	User    *user.User `json:"user"`
+	User    *user.User `json:"user,omitempty"`
 	Task    *Task      `json:"task"`
 	Project *Project   `json:"project"`
 }
@@ -50,12 +50,15 @@ func (n *ReminderDueNotification) ToMail() *notifications.Mail {
 
 // ToDB returns the ReminderDueNotification notification in a format which can be saved in the db
 func (n *ReminderDueNotification) ToDB() interface{} {
-	return nil
+	return &ReminderDueNotification{
+		Task:    n.Task,
+		Project: n.Project,
+	}
 }
 
 // Name returns the name of the notification
 func (n *ReminderDueNotification) Name() string {
-	return ""
+	return "task.reminder"
 }
 
 // TaskCommentNotification represents a TaskCommentNotification notification
