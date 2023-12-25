@@ -261,13 +261,8 @@ func getOrCreateUser(s *xorm.Session, cl *claims, issuer, subject string) (u *us
 		if cl.Name != u.Name {
 			u.Name = cl.Name
 		}
-		u, err = user.UpdateUser(s, &user.User{
-			ID:      u.ID,
-			Email:   u.Email,
-			Name:    u.Name,
-			Issuer:  issuer,
-			Subject: subject,
-		}, false)
+
+		u, err = user.UpdateUser(s, u, false)
 		if err != nil {
 			return nil, err
 		}
