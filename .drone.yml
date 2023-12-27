@@ -486,7 +486,7 @@ trigger:
 steps:
   - name: download
     pull: always
-    image: git.lcomrade.su/root/drone-crowdin-v2
+    image: ghcr.io/lcomrade/drone-crowdin-v2
     settings:
       crowdin_key:
         from_secret: crowdin_key
@@ -520,7 +520,7 @@ steps:
 
   - name: upload
     pull: always
-    image: git.lcomrade.su/root/drone-crowdin-v2
+    image: ghcr.io/lcomrade/drone-crowdin-v2
     depends_on:
       - clone
     settings:
@@ -532,6 +532,6 @@ steps:
         src/i18n/lang/en.json: en.json
 ---
 kind: signature
-hmac: 3380c4283256eea047e6228817161991d23457d09abe9d99f06e018b1eb047f4
+hmac: 2d39d1c93e83aae7101a3f8c2607542c1ed0a33fa723a91d12c17dcca4cefafc
 
 ...
