@@ -60,6 +60,7 @@ func GetTables() []interface{} {
 		&Favorite{},
 		&APIToken{},
 		&TypesenseSync{},
+		&Webhook{},
 	}
 }
 
