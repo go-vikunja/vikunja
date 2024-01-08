@@ -160,6 +160,7 @@
         "expired": "Ten token wygasł {ago}.",
         "tokenCreatedSuccess": "Oto twój nowy token: {token}",
         "tokenCreatedNotSeeAgain": "Przechowuj go w bezpiecznym miejscu, nie zobaczysz go ponownie!",
+        "selectAll": "Wybierz wszystkie",
         "delete": {
           "header": "Usuń ten token",
           "text1": "Czy na pewno chcesz usunąć token \"{token}\"?",

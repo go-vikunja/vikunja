@@ -160,6 +160,7 @@
         "expired": "Ez a token lejárt {ago}.",
         "tokenCreatedSuccess": "Íme az új API tokenje: {token}",
         "tokenCreatedNotSeeAgain": "Tárolja el biztonságos helyen, többé nem fogja látni!",
+        "selectAll": "Select all",
         "delete": {
           "header": "Token törlése",
           "text1": "Biztos benne, hogy törölni akarja ezt a tokent \"{token}\"?",

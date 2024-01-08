@@ -160,6 +160,7 @@
         "expired": "This token has expired {ago}.",
         "tokenCreatedSuccess": "Here is your new api token: {token}",
         "tokenCreatedNotSeeAgain": "このトークンは二度と表示されません。安全な場所に保管してください。",
+        "selectAll": "Select all",
         "delete": {
           "header": "トークンの削除",
           "text1": "Are you sure you want to delete the token \"{token}\"?",

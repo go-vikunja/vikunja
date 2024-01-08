@@ -160,6 +160,7 @@
         "expired": "Žeton je potekel pred {ago}.",
         "tokenCreatedSuccess": "Tu je vaš novi API žeton: {token}",
         "tokenCreatedNotSeeAgain": "Shranite ga na varno mesto, ker ga ne boste več videli!",
+        "selectAll": "Select all",
         "delete": {
           "header": "Izbriši ta žeton",
           "text1": "Ali ste prepričani, da želite izbrisati žeton \"{token}\"?",

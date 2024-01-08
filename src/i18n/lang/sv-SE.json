@@ -160,6 +160,7 @@
         "expired": "This token has expired {ago}.",
         "tokenCreatedSuccess": "Here is your new api token: {token}",
         "tokenCreatedNotSeeAgain": "Förvara den på en säker plats, du kommer aldrig att se den igen!",
+        "selectAll": "Select all",
         "delete": {
           "header": "Delete this token",
           "text1": "Are you sure you want to delete the token \"{token}\"?",

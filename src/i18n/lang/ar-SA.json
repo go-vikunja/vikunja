@@ -160,6 +160,7 @@
         "expired": "انتهت صلاحية هذا الرمز {ago}.",
         "tokenCreatedSuccess": "إليك رمز Api الجديد: {token}",
         "tokenCreatedNotSeeAgain": "قم بتخزينه في مكان آمن، لن تتمكن من عرضه مرة أخرى!",
+        "selectAll": "Select all",
         "delete": {
           "header": "احذف هذا الرمز",
           "text1": "هل أنت متأكد من رغبتك في حذف الرمز \"{token}؟",

@@ -160,6 +160,7 @@
         "expired": "Dieses Token ist {ago} abgelaufen.",
         "tokenCreatedSuccess": "Hier ist dein neues API Token: {token}",
         "tokenCreatedNotSeeAgain": "Speichere es an einem sicheren Ort, du wirst es nicht mehr sehen!",
+        "selectAll": "Alle auswählen",
         "delete": {
           "header": "Dieses Token löschen",
           "text1": "Bist Du sicher, dass Du das Token \"{token}\" löschen möchtest?",
@@ -177,7 +178,7 @@
       "title": "Lösche deinen Vikunja-Account",
       "text1": "Das Löschen deines Accounts ist dauerhaft und unwiderruflich. Alle Projekte, Aufgaben und zugehörige Daten werden gelöscht.",
       "text2": "Zum Fortfahren gib bitte dein Passwort ein. Du erhältst eine E-Mail mit weiteren Anweisungen.",
-      "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
+      "text3": "Klicks zum Fortfahren auf den Button unten. Du erhältst eine E-Mail mit weiteren Anweisungen.",
       "confirm": "Meinen Account löschen",
       "requestSuccess": "Die Anfrage war erfolgreich. Du erhältst eine E-Mail mit weiteren Anweisungen.",
       "passwordRequired": "Bitte gib dein Passwort ein.",
@@ -185,7 +186,7 @@
       "scheduled": "Wir werden deinen Vikunja-Account am {date} ({dateSince}) löschen.",
       "scheduledCancel": "Um die Löschung deines Accounts abzubrechen, klicke hier.",
       "scheduledCancelText": "Um die Löschung deines Accounts abzubrechen, gib bitte dein Passwort unten ein:",
-      "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
+      "scheduledCancelButton": "Um die Löschung deines Accounts abzubrechen, klicke unten auf den Button:",
       "scheduledCancelConfirm": "Löschung meines Accounts abbrechen",
       "scheduledCancelSuccess": "Wir werden deinen Account nicht löschen."
     },
@@ -937,7 +938,7 @@
       "delete": "Diese Aufgabe löschen",
       "priority": "Die Priorität dieser Aufgabe ändern",
       "favorite": "Diese Aufgabe zum Favoriten machen / von Favoriten entfernen",
-      "save": "Save the current task"
+      "save": "Aktuelle Aufgabe speichern"
     },
     "project": {
       "title": "Projektansichten",

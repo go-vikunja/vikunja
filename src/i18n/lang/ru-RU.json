@@ -160,6 +160,7 @@
         "expired": "Срок действия этого токена истёк {ago}.",
         "tokenCreatedSuccess": "Ваш новый токен: {token}",
         "tokenCreatedNotSeeAgain": "Сохраните его в безопасном месте, вы не увидите его снова!",
+        "selectAll": "Select all",
         "delete": {
           "header": "Удалить этот токен",
           "text1": "Удалить токен «{token}»?",
