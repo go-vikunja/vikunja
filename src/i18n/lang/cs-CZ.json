@@ -160,7 +160,7 @@
         "expired": "Platnost tohoto tokenu vypršela {ago}.",
         "tokenCreatedSuccess": "Zde je tvůj nový api token: {token}",
         "tokenCreatedNotSeeAgain": "Ulož jej na zabezpečeném místě, už ho znovu neuvidíš!",
-        "selectAll": "Select all",
+        "selectAll": "Označit vše",
         "delete": {
           "header": "Smazat tento token",
           "text1": "Opravdu chcete smazat token \"{token}\"?",

@@ -160,7 +160,7 @@
         "expired": "Token {ago} 前到期",
         "tokenCreatedSuccess": "这是您的令牌: {token}",
         "tokenCreatedNotSeeAgain": "将其存储在一个安全的位置，你不会再看到它了！",
-        "selectAll": "Select all",
+        "selectAll": "全选",
         "delete": {
           "header": "删除该令牌",
           "text1": "你确定要删除令牌 {token} 吗？",
