@@ -182,8 +182,8 @@ dependencies:
     specifier: 0.7.31
     version: 0.7.31(patch_hash=bfn3sngfuhktmdj7jgl3ejl35y)
   floating-vue:
-    specifier: 2.0.0
-    version: 2.0.0(vue@3.4.7)
+    specifier: 5.0.3
+    version: 5.0.3(vue@3.4.7)
   is-touch-device:
     specifier: 1.0.1
     version: 1.0.1
@@ -7220,8 +7220,8 @@ packages:
     dev: false
     patched: true
 
-  /floating-vue@2.0.0(vue@3.4.7):
-    resolution: {integrity: sha512-YSffLYOjoaaPPBZc7VQR2qMCQ7xeXuh7i8a2u8WOdSmkjTtKtZpj2aaJnLtZRHmehrMHyCgtSxLu8jFNNX2sVw==}
+  /floating-vue@5.0.3(vue@3.4.7):
+    resolution: {integrity: sha512-AM7yczIuFACI6T2l8z0ozpTSqHDagcxiQCCanUqvm7Zxtk4CUJNyF6nSuBkkeEYX6hDyTAcmNHe2NJ5x54qnnw==}
     peerDependencies:
       '@nuxt/kit': ^3.2.0
       vue: ^3.2.0
