@@ -128,6 +128,10 @@ const flatPickrDate = computed({
 			return
 		}
 
+		const oldDate = formatDate(date.value, 'yyy-LL-dd H:mm')
+		if (oldDate !== newValue) {
+			return
+		}
 		date.value = createDateFromString(newValue)
 		updateData()
 	},
@@ -155,10 +159,6 @@ function updateData() {
 }
 
 function setDate(dateString: string) {
-	if (date.value === null) {
-		date.value = new Date()
-	}
-
 	const interval = calculateDayInterval(dateString)
 	const newDate = new Date()
 	newDate.setDate(newDate.getDate() + interval)
@@ -166,7 +166,6 @@ function setDate(dateString: string) {
 	newDate.setMinutes(0)
 	newDate.setSeconds(0)
 	date.value = newDate
-	flatPickrDate.value = newDate
 	updateData()
 }
 
