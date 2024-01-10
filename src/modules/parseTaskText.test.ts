@@ -112,6 +112,16 @@ describe('Parse Task Text', () => {
 			expect(result?.date?.getMonth()).toBe(tomorrow.getMonth())
 			expect(result?.date?.getDate()).toBe(tomorrow.getDate())
 		})
+		it('should recognize Tomorrow', () => {
+			const result = parseTaskText('Lorem Ipsum Tomorrow')
+
+			expect(result.text).toBe('Lorem Ipsum')
+			const tomorrow = new Date()
+			tomorrow.setDate(tomorrow.getDate() + 1)
+			expect(result?.date?.getFullYear()).toBe(tomorrow.getFullYear())
+			expect(result?.date?.getMonth()).toBe(tomorrow.getMonth())
+			expect(result?.date?.getDate()).toBe(tomorrow.getDate())
+		})
 		it('should recognize next monday', () => {
 			const result = parseTaskText('Lorem Ipsum next monday')
 
@@ -441,7 +451,7 @@ describe('Parse Task Text', () => {
 				'06/08/2021': '2021-6-8',
 				'6/7/21': '2021-6-7',
 				'27/07/2021,': null,
-				'2021/07/06,': '2021-7-6',
+				'2021/07/06': '2021-7-6',
 				'2021-07-06': '2021-7-6',
 				'27 jan': '2022-1-27',
 				'27/1': '2022-1-27',
@@ -449,39 +459,52 @@ describe('Parse Task Text', () => {
 				'16/12': '2021-12-16',
 				'01/27': '2022-1-27',
 				'1/27': '2022-1-27',
-				'Jan 27': '2022-1-27',
 				'jan 27': '2022-1-27',
+				'Jan 27': '2022-1-27',
 				'feb 21': '2022-2-21',
+				'Feb 21': '2022-2-21',
 				'mar 21': '2022-3-21',
+				'Mar 21': '2022-3-21',
 				'apr 21': '2022-4-21',
+				'Apr 21': '2022-4-21',
 				'may 21': '2022-5-21',
+				'May 21': '2022-5-21',
 				'jun 21': '2022-6-21',
+				'Jun 21': '2022-6-21',
 				'jul 21': '2021-7-21',
+				'Jul 21': '2021-7-21',
 				'aug 21': '2021-8-21',
+				'Aug 21': '2021-8-21',
 				'sep 21': '2021-9-21',
+				'Sep 21': '2021-9-21',
 				'oct 21': '2021-10-21',
+				'Oct 21': '2021-10-21',
 				'nov 21': '2021-11-21',
+				'Nov 21': '2021-11-21',
 				'dec 21': '2021-12-21',
+				'Dec 21': '2021-12-21',
 			} as Record<string, string | null>
 
 			for (const c in cases) {
 				it(`should parse '${c}' as '${cases[c]}' with the date at the end`, () => {
-					const {date} = getDateFromText(`Lorem Ipsum ${c}`, now)
+					const {date, foundText} = getDateFromText(`Lorem Ipsum ${c}`, now)
 					if (date === null && cases[c] === null) {
 						expect(date).toBeNull()
 						return
 					}
 
 					expect(`${date?.getFullYear()}-${date?.getMonth() + 1}-${date?.getDate()}`).toBe(cases[c])
+					expect(foundText.trim()).toBe(c)
 				})
 				it(`should parse '${c}' as '${cases[c]}' with the date at the beginning`, () => {
-					const {date} = getDateFromText(`${c} Lorem Ipsum`, now)
+					const {date, foundText} = getDateFromText(`${c} Lorem Ipsum`, now)
 					if (date === null && cases[c] === null) {
 						expect(date).toBeNull()
 						return
 					}
 
 					expect(`${date?.getFullYear()}-${date?.getMonth() + 1}-${date?.getDate()}`).toBe(cases[c])
+					expect(foundText.trim()).toBe(c)
 				})
 			}
 		})
@@ -532,6 +555,20 @@ describe('Parse Task Text', () => {
 					expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe(cases[c])
 				})
 			}
+
+			it('should replace the text in title case', () => {
+				const {date, newText} = parseDate('Some task Mar 8th', now)
+
+				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe('2021-3-8 12:0')
+				expect(newText).toBe('Some task')
+			})
+
+			it('should replace the text in lowercase', () => {
+				const {date, newText} = parseDate('Some task mar 8th', now)
+
+				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe('2021-3-8 12:0')
+				expect(newText).toBe('Some task')
+			})
 		})
 	})
 

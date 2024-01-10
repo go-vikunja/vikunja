@@ -15,34 +15,32 @@ interface dateFoundResult {
 const monthsRegexGroup = '(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)'
 
 function matchesDateExpr(text: string, dateExpr: string): boolean {
-	return text.match(new RegExp('(^| )' + dateExpr, 'g')) !== null
+	return text.match(new RegExp('(^| )' + dateExpr, 'gi')) !== null
 }
 
 export const parseDate = (text: string, now: Date = new Date()): dateParseResult => {
-	const lowerText: string = text.toLowerCase()
-
-	if (matchesDateExpr(lowerText, 'today')) {
+	if (matchesDateExpr(text, 'today')) {
 		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('today')), 'today')
 	}
-	if (matchesDateExpr(lowerText, 'tomorrow')) {
+	if (matchesDateExpr(text, 'tomorrow')) {
 		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('tomorrow')), 'tomorrow')
 	}
-	if (matchesDateExpr(lowerText, 'next monday')) {
+	if (matchesDateExpr(text, 'next monday')) {
 		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('nextMonday')), 'next monday')
 	}
-	if (matchesDateExpr(lowerText, 'this weekend')) {
+	if (matchesDateExpr(text, 'this weekend')) {
 		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('thisWeekend')), 'this weekend')
 	}
-	if (matchesDateExpr(lowerText, 'later this week')) {
+	if (matchesDateExpr(text, 'later this week')) {
 		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('laterThisWeek')), 'later this week')
 	}
-	if (matchesDateExpr(lowerText, 'later next week')) {
+	if (matchesDateExpr(text, 'later next week')) {
 		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('laterNextWeek')), 'later next week')
 	}
-	if (matchesDateExpr(lowerText, 'next week')) {
+	if (matchesDateExpr(text, 'next week')) {
 		return addTimeToDate(text, getDateFromInterval(calculateDayInterval('nextWeek')), 'next week')
 	}
-	if (matchesDateExpr(lowerText, 'next month')) {
+	if (matchesDateExpr(text, 'next month')) {
 		const date: Date = new Date()
 		date.setDate(1)
 		date.setMonth(date.getMonth() + 1)
@@ -52,7 +50,7 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 
 		return addTimeToDate(text, date, 'next month')
 	}
-	if (matchesDateExpr(lowerText, 'end of month')) {
+	if (matchesDateExpr(text, 'end of month')) {
 		const curDate: Date = new Date()
 		const date: Date = new Date(curDate.getFullYear(), curDate.getMonth() + 1, 0)
 		date.setHours(calculateNearestHours(date))
@@ -70,7 +68,7 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 	parsed = getDayFromText(text)
 	if (parsed.date !== null) {
 		const month = getMonthFromText(text, parsed.date)
-		return addTimeToDate(text, month.date, parsed.foundText)
+		return addTimeToDate(month.newText, month.date, parsed.foundText)
 	}
 
 	parsed = getDateFromTextIn(text, now)
@@ -123,7 +121,7 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 
 	const replace = results !== null ? results[0] : previousMatch
 	return {
-		newText: replaceAll(text, replace, ''),
+		newText: replaceAll(text, replace, '').trim(),
 		date: date,
 	}
 }
