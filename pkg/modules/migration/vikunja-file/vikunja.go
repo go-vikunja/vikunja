@@ -110,6 +110,9 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 
 	//////
 	// Check if we're able to import this dump
+	if versionFile == nil {
+		return fmt.Errorf("dump does not seem to contain a version file")
+	}
 	vf, err := versionFile.Open()
 	if err != nil {
 		return fmt.Errorf("could not open version file: %w", err)
