@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/log"
 	"net/http"
 	"strings"
 
@@ -166,11 +167,18 @@ func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 		route = "delete"
 	}
 
+	// The tasks read_all route is available as /:project/tasks and /tasks/all - therefore we need this workaround here.
+	if routeGroupName == "tasks" && path == "/api/v1/projects/:project/tasks" && c.Request().Method == http.MethodGet {
+		route = "read_all"
+	}
+
 	for _, p := range group {
 		if p == route {
 			return true
 		}
 	}
+
+	log.Debugf("[auth] Token %d tried to use route %s which requires permission %s but has only %v", token.ID, path, route, token.Permissions)
 
 	return false
 }
