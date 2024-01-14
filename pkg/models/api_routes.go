@@ -17,9 +17,10 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/log"
 	"net/http"
 	"strings"
+
+	"code.vikunja.io/api/pkg/log"
 
 	"github.com/labstack/echo/v4"
 )
