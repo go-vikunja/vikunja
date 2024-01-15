@@ -128,9 +128,11 @@ const flatPickrDate = computed({
 			return
 		}
 
-		const oldDate = formatDate(date.value, 'yyy-LL-dd H:mm')
-		if (oldDate !== newValue) {
-			return
+		if (date.value !== null) {
+			const oldDate = formatDate(date.value, 'yyy-LL-dd H:mm')
+			if (oldDate === newValue) {
+				return
+			}
 		}
 		date.value = createDateFromString(newValue)
 		updateData()

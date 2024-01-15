@@ -9,7 +9,7 @@
 					{{ reminderText }}
 				</SimpleButton>
 			</template>
-			<template #content="{isOpen, toggle}">
+			<template #content="{isOpen, close}">
 				<Card class="reminder-options-popup" :class="{'is-open': isOpen}" :padding="false">
 					<div class="options" v-if="activeForm === null">
 						<SimpleButton
@@ -17,7 +17,7 @@
 							:key="k"
 							class="option-button"
 							:class="{'currently-active': p.relativePeriod === modelValue?.relativePeriod && modelValue?.relativeTo === p.relativeTo}"
-							@click="setReminderFromPreset(p, toggle)"
+							@click="setReminderFromPreset(p, close)"
 						>
 							{{ formatReminder(p) }}
 						</SimpleButton>
@@ -40,20 +40,20 @@
 					<ReminderPeriod
 						v-if="activeForm === 'relative'"
 						v-model="reminder"
-						@update:modelValue="updateDataAndMaybeClose(toggle)"
+						@update:modelValue="updateDataAndMaybeClose(close)"
 					/>
 
 					<DatepickerInline
 						v-if="activeForm === 'absolute'"
 						v-model="reminderDate"
-						@update:modelValue="setReminderDate(toggle)"
+						@update:modelValue="setReminderDate(close)"
 					/>
 
 					<x-button
 						v-if="showFormSwitch !== null"
 						class="reminder__close-button"
 						:shadow="false"
-						@click="toggle"
+						@click="updateDataAndMaybeClose(close)"
 					>
 						{{ $t('misc.confirm') }}
 					</x-button>
@@ -148,25 +148,26 @@ function updateData() {
 	}
 }
 
-function setReminderDate(toggle) {
+function setReminderDate(close) {
 	reminder.value.reminder = reminderDate.value === null
 		? null
 		: new Date(reminderDate.value)
 	reminder.value.relativeTo = null
 	reminder.value.relativePeriod = 0
-	updateDataAndMaybeClose(toggle)
+	updateDataAndMaybeClose(close)
 }
 
-function setReminderFromPreset(preset, toggle) {
+
+function setReminderFromPreset(preset, close) {
 	reminder.value = preset
 	updateData()
-	toggle()
+	close()
 }
 
-function updateDataAndMaybeClose(toggle) {
+function updateDataAndMaybeClose(close) {
 	updateData()
 	if (clearAfterUpdate) {
-		toggle()
+		close()
 	}
 }
 

@@ -1,5 +1,5 @@
 <template>
-	<slot name="trigger" :isOpen="open" :toggle="toggle"></slot>
+	<slot name="trigger" :isOpen="open" :toggle="toggle" :close="close"></slot>
 	<div
 		class="popup"
 		:class="{
@@ -8,7 +8,7 @@
 		}"
 		ref="popup"
 	>
-		<slot name="content" :isOpen="open" :toggle="toggle"/>
+		<slot name="content" :isOpen="open" :toggle="toggle" :close="close"/>
 	</div>
 </template>
 

@@ -541,6 +541,86 @@ describe('Task', () => {
 				.should('contain', 'Success')
 		})
 
+		it('Can set a due date to a specific date for a task', () => {
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				done: false,
+			})
+			cy.visit(`/tasks/${tasks[0].id}`)
+
+			cy.get('.task-view .action-buttons .button')
+				.contains('Set Due Date')
+				.click()
+			cy.get('.task-view .columns.details .column')
+				.contains('Due Date')
+				.get('.date-input .datepicker .show')
+				.click()
+			cy.get('.datepicker-popup .flatpickr-innerContainer .flatpickr-days .flatpickr-day.today')
+				.click()
+			cy.get('[data-cy="closeDatepicker"]')
+				.contains('Confirm')
+				.click()
+
+			const date = (new Date()).toLocaleString('default', {
+				day: '2-digit',
+				month: 'short',
+				year: 'numeric',
+			}) + ', 12:00'
+			cy.get('.task-view .columns.details .column')
+				.contains('Due Date')
+				.get('.date-input .datepicker-popup')
+				.should('not.exist')
+			cy.get('.task-view .columns.details .column')
+				.contains('Due Date')
+				.get('.date-input')
+				.should('contain.text', date)
+			cy.get('.global-notification')
+				.should('contain', 'Success')
+		})
+
+		it('Can change a due date to a specific date for a task', () => {
+			const dueDate = new Date()
+			dueDate.setHours(12)
+			dueDate.setMinutes(0)
+			dueDate.setSeconds(0)
+			dueDate.setDate(1)
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				done: false,
+				due_date: dueDate.toISOString(),
+			})
+			cy.visit(`/tasks/${tasks[0].id}`)
+
+			cy.get('.task-view .action-buttons .button')
+				.contains('Set Due Date')
+				.click()
+			cy.get('.task-view .columns.details .column')
+				.contains('Due Date')
+				.get('.date-input .datepicker .show')
+				.click()
+			cy.get('.datepicker-popup .flatpickr-innerContainer .flatpickr-days .flatpickr-day.today')
+				.click()
+			cy.get('[data-cy="closeDatepicker"]')
+				.contains('Confirm')
+				.click()
+
+			const date = (new Date()).toLocaleString('default', {
+				day: '2-digit',
+				month: 'short',
+				year: 'numeric',
+			}) + ', 12:00'
+			cy.get('.task-view .columns.details .column')
+				.contains('Due Date')
+				.get('.date-input .datepicker-popup')
+				.should('not.exist')
+			cy.get('.task-view .columns.details .column')
+				.contains('Due Date')
+				.get('.date-input')
+				.should('contain.text', date)
+			cy.get('.global-notification')
+				.should('contain', 'Success')
+		})
+
 		it('Can set a reminder', () => {
 			TaskReminderFactory.truncate()
 			const tasks = TaskFactory.create(1, {
@@ -645,7 +725,7 @@ describe('Task', () => {
 				.click()
 			cy.get('.reminder-options-popup .card-content .reminder-period input')
 				.first()
-				.type('10')
+				.type('{selectall}10')
 			cy.get('.reminder-options-popup .card-content .reminder-period select')
 				.first()
 				.select('days')
@@ -771,7 +851,7 @@ describe('Task', () => {
 				.should('exist')
 		})
 
-		it.only('Can check items off a checklist', () => {
+		it('Can check items off a checklist', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				description: `
@@ -858,7 +938,7 @@ describe('Task', () => {
 					method: 'PUT',
 					url: `${Cypress.env('API_URL')}/tasks/${tasks[0].id}/attachments`,
 					headers: {
-						'Authorization':  `Bearer ${window.localStorage.getItem('token')}`,
+						'Authorization': `Bearer ${window.localStorage.getItem('token')}`,
 						'Content-Type': 'multipart/form-data',
 					},
 					body: formData,
