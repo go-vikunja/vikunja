@@ -256,6 +256,13 @@
   --card-border-color: var(--grey-200);
   --logo-text-color: hsl(180, 1%, 15%);
 
+  // Code colors
+  --code-variable: #da2222;
+  --code-literal: #fd8a09;
+  --code-symbol: #0ead69;
+  --code-section: #3a86ff;
+  --code-keyword: #8338ec;
+
   &.dark {
     @media screen {
       // Light mode colours reversed for dark mode
@@ -311,6 +318,13 @@
       --scheme-invert: var(--grey-900);
       --scheme-invert-bis: var(--grey-900);
       --scheme-invert-ter: var(--grey-800);
+
+      // Code colors
+      --code-variable: #f98181;
+      --code-literal: #fbbc88;
+      --code-symbol: #b9f18d;
+      --code-section: #faf594;
+      --code-keyword: #70cff8;
     }
   }
 }
