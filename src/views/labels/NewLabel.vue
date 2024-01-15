@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from 'vue'
+import {computed, onBeforeMount, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
 
@@ -46,6 +46,7 @@ import LabelModel from '@/models/label'
 import {useLabelStore} from '@/stores/labels'
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
+import {getRandomColorHex} from '@/helpers/color/randomColor'
 
 const router = useRouter()
 
@@ -54,6 +55,8 @@ useTitle(() => t('label.create.title'))
 
 const labelStore = useLabelStore()
 const label = ref(new LabelModel())
+
+onBeforeMount(() => label.value.hexColor = getRandomColorHex())
 
 const showError = ref(false)
 const loading = computed(() => labelStore.isLoading)

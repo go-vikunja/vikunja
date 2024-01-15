@@ -150,8 +150,8 @@ function deleteLabel(label: ILabel) {
 }
 
 function editLabelSubmit() {
-		return labelStore.updateLabel(labelEditLabel.value)
-	}
+	return labelStore.updateLabel(labelEditLabel.value)
+}
 
 function editLabel(label: ILabel) {
 	if (label.createdBy.id !== userInfo.value.id) {

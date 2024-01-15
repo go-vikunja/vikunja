@@ -4,8 +4,8 @@
  * @param color
  * @returns {string}
  */
-export function colorFromHex(color: string) {
-	if (color.substring(0, 1) === '#') {
+export function colorFromHex(color: string): string {
+	if (color !== '' && color.substring(0, 1) === '#') {
 		color = color.substring(1, 7)
 	}
 

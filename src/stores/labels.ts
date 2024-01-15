@@ -67,7 +67,7 @@ export const useLabelStore = defineStore('label', () => {
 	}
 
 	function setLabel(label: ILabel) {
-		labels.value[label.id] = label
+		labels.value[label.id] = {...label}
 		update(label)
 	}
 

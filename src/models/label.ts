@@ -24,12 +24,8 @@ export default class LabelModel extends AbstractModel<ILabel> implements ILabel 
 	constructor(data: Partial<ILabel> = {}) {
 		super()
 		this.assignData(data)
-		
-		if (this.hexColor === '') {
-			this.hexColor = getRandomColorHex()
-		}
 
-		if (this.hexColor.substring(0, 1) !== '#') {
+		if (this.hexColor !== '' && this.hexColor.substring(0, 1) !== '#') {
 			this.hexColor = '#' + this.hexColor
 		}
 		this.textColor = colorIsDark(this.hexColor) ? '#4a4a4a' : '#fff'

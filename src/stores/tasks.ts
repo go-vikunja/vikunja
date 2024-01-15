@@ -29,6 +29,7 @@ import {useBaseStore} from '@/stores/base'
 import ProjectUserService from '@/services/projectUsers'
 import {useAuthStore} from '@/stores/auth'
 import TaskCollectionService from '@/services/taskCollection'
+import {getRandomColorHex} from '@/helpers/color/randomColor'
 
 interface MatchedAssignee extends IUser {
 	match: string,
@@ -337,7 +338,10 @@ export const useTaskStore = defineStore('task', () => {
 			let label = validateLabel(Object.values(labelStore.labels), labelTitle)
 			if (typeof label === 'undefined') {
 				// label not found, create it
-				const labelModel = new LabelModel({title: labelTitle})
+				const labelModel = new LabelModel({
+					title: labelTitle,
+					hexColor: getRandomColorHex(),
+				})
 				label = await labelStore.createLabel(labelModel)
 			}
 			return label

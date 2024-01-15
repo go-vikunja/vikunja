@@ -51,6 +51,7 @@ import Multiselect from '@/components/input/multiselect.vue'
 import type {ILabel} from '@/modelTypes/ILabel'
 import {useLabelStore} from '@/stores/labels'
 import {useTaskStore} from '@/stores/tasks'
+import {getRandomColorHex} from '@/helpers/color/randomColor'
 
 const props = defineProps({
 	modelValue: {
@@ -132,7 +133,10 @@ async function createAndAddLabel(title: string) {
 		return
 	}
 
-	const newLabel = await labelStore.createLabel(new LabelModel({title}))
+	const newLabel = await labelStore.createLabel(new LabelModel({
+		title,
+		hexColor: getRandomColorHex(),
+	}))
 	addLabel(newLabel, false)
 	labels.value.push(newLabel)
 	success({message: t('task.label.addCreateSuccess')})
