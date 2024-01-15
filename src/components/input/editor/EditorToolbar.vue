@@ -110,7 +110,7 @@
 				v-tooltip="$t('input.editor.bulletList')"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-list-ol']"/>
+					<icon :icon="['fa', 'fa-list-ul']"/>
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -120,7 +120,7 @@
 				v-tooltip="$t('input.editor.orderedList')"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-list-ul']"/>
+					<icon :icon="['fa', 'fa-list-ol']"/>
 				</span>
 			</BaseButton>
 			<BaseButton
