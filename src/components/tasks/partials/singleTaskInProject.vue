@@ -288,6 +288,7 @@ async function markAsDone(checked: boolean) {
 			title: t('task.undo'),
 			callback: () => undoDone(checked),
 		}])
+		updateDueDate()
 	}
 
 	if (checked) {
