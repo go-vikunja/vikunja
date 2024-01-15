@@ -5,7 +5,6 @@ import type {ILabel} from '@/modelTypes/ILabel'
 import type {IUser} from '@/modelTypes/IUser'
 
 import {colorIsDark} from '@/helpers/color/colorIsDark'
-import {getRandomColorHex} from '@/helpers/color/randomColor'
 
 export default class LabelModel extends AbstractModel<ILabel> implements ILabel {
 	id = 0
