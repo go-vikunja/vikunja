@@ -561,11 +561,11 @@ describe('Task', () => {
 				.contains('Confirm')
 				.click()
 
-			const date = (new Date()).toLocaleString('default', {
-				day: '2-digit',
-				month: 'short',
-				year: 'numeric',
-			}) + ', 12:00'
+			const today = new Date()
+			const day = today.toLocaleString('default', {day: '2-digit'})
+			const month = today.toLocaleString('default', {month: 'short'})
+			const year = today.toLocaleString('default', {year: 'numeric'})
+			const date = `${day} ${month} ${year}, 12:00:00`
 			cy.get('.task-view .columns.details .column')
 				.contains('Due Date')
 				.get('.date-input .datepicker-popup')
@@ -604,11 +604,11 @@ describe('Task', () => {
 				.contains('Confirm')
 				.click()
 
-			const date = (new Date()).toLocaleString('default', {
-				day: '2-digit',
-				month: 'short',
-				year: 'numeric',
-			}) + ', 12:00'
+			const today = new Date()
+			const day = today.toLocaleString('default', {day: '2-digit'})
+			const month = today.toLocaleString('default', {month: 'short'})
+			const year = today.toLocaleString('default', {year: 'numeric'})
+			const date = `${day} ${month} ${year}, 12:00:00`
 			cy.get('.task-view .columns.details .column')
 				.contains('Due Date')
 				.get('.date-input .datepicker-popup')
