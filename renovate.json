@@ -4,6 +4,11 @@
   "extends": [
     "config:js-app"
   ],
+  "hostRules": [
+    {
+      "timeout": 600000
+    }
+  ],
   "packageRules": [
     {
       "matchPackageNames": ["happy-dom"],
