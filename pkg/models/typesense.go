@@ -17,6 +17,7 @@
 package models
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -195,9 +196,9 @@ func CreateTypesenseCollections() error {
 	}
 
 	// delete any collection which might exist
-	_, _ = typesenseClient.Collection("tasks").Delete()
+	_, _ = typesenseClient.Collection("tasks").Delete(context.Background())
 
-	_, err := typesenseClient.Collections().Create(taskSchema)
+	_, err := typesenseClient.Collections().Create(context.Background(), taskSchema)
 	return err
 }
 
@@ -304,7 +305,7 @@ func reindexTasks(s *xorm.Session, tasks map[int64]*Task) (err error) {
 
 	_, err = typesenseClient.Collection("tasks").
 		Documents().
-		Import(typesenseTasks, &api.ImportDocumentsParams{
+		Import(context.Background(), typesenseTasks, &api.ImportDocumentsParams{
 			Action:    pointer.String("upsert"),
 			BatchSize: pointer.Int(100),
 		})
@@ -381,14 +382,14 @@ func indexDummyTask() (err error) {
 
 	_, err = typesenseClient.Collection("tasks").
 		Documents().
-		Create(dummyTask)
+		Create(context.Background(), dummyTask)
 	if err != nil {
 		return
 	}
 
 	_, err = typesenseClient.Collection("tasks").
 		Document(dummyTask.ID).
-		Delete()
+		Delete(context.Background())
 	return
 }
 

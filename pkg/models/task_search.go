@@ -17,6 +17,7 @@
 package models
 
 import (
+	"context"
 	"strconv"
 	"strings"
 	"time"
@@ -411,7 +412,7 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 
 	result, err := typesenseClient.Collection("tasks").
 		Documents().
-		Search(params)
+		Search(context.Background(), params)
 	if err != nil {
 		return
 	}

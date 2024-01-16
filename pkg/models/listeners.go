@@ -17,6 +17,7 @@
 package models
 
 import (
+	"context"
 	"encoding/json"
 	"strconv"
 	"time"
@@ -526,7 +527,7 @@ func (s *RemoveTaskFromTypesense) Handle(msg *message.Message) (err error) {
 	_, err = typesenseClient.
 		Collection("tasks").
 		Document(strconv.FormatInt(event.Task.ID, 10)).
-		Delete()
+		Delete(context.Background())
 	return err
 }
 
@@ -558,7 +559,7 @@ func (l *AddTaskToTypesense) Handle(msg *message.Message) (err error) {
 
 	_, err = typesenseClient.Collection("tasks").
 		Documents().
-		Create(ttask)
+		Create(context.Background(), ttask)
 	return
 }
 
