@@ -206,8 +206,8 @@ dependencies:
     specifier: 3.0.4
     version: 3.0.4
   sortablejs:
-    specifier: 1.15.1
-    version: 1.15.1
+    specifier: 1.15.2
+    version: 1.15.2
   tippy.js:
     specifier: 6.3.7
     version: 6.3.7
@@ -10259,8 +10259,8 @@ packages:
     resolution: {integrity: sha512-pBXvQCs5/33fdN1/39pPL0NZF20LeRbLQ5jtnheIPN9JQAaufGjKdWduZn4U7wCtVuzKhmRkI0DFYHYRbB2H1w==}
     dev: false
 
-  /sortablejs@1.15.1:
-    resolution: {integrity: sha512-P5Cjvb0UG1ZVNiDPj/n4V+DinttXG6K8n7vM/HQf0C25K3YKQTQY6fsr/sEGsJGpQ9exmPxluHxKBc0mLKU1lQ==}
+  /sortablejs@1.15.2:
+    resolution: {integrity: sha512-FJF5jgdfvoKn1MAKSdGs33bIqLi3LmsgVTliuX6iITj834F+JRQZN90Z93yql8h0K2t0RwDPBmxwlbZfDcxNZA==}
     dev: false
 
   /source-map-js@1.0.2:
