@@ -44,7 +44,7 @@ require (
 	github.com/jszwedko/go-datemath v0.1.1-0.20230526204004-640a500621d6
 	github.com/labstack/echo-jwt/v4 v4.2.0
 	github.com/labstack/echo/v4 v4.11.3
-	github.com/labstack/gommon v0.4.1
+	github.com/labstack/gommon v0.4.2
 	github.com/lib/pq v1.10.9
 	github.com/magefile/mage v1.15.0
 	github.com/mattn/go-sqlite3 v1.14.19
@@ -74,6 +74,7 @@ require (
 	golang.org/x/text v0.14.0
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/yaml.v3 v3.0.1
+	mvdan.cc/xurls/v2 v2.5.0
 	src.techknowlogick.com/xgo v1.7.1-0.20231205202227-c7ed78300ce9
 	src.techknowlogick.com/xormigrate v1.7.1
 	xorm.io/builder v0.3.13
@@ -178,7 +179,6 @@ require (
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	mvdan.cc/xurls/v2 v2.5.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
