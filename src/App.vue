@@ -37,8 +37,6 @@ import NoAuthWrapper from '@/components/misc/no-auth-wrapper.vue'
 import Ready from '@/components/misc/ready.vue'
 
 import {setLanguage} from '@/i18n'
-import AccountDeleteService from '@/services/accountDelete'
-import {success} from '@/message'
 
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
@@ -47,6 +45,9 @@ import {useColorScheme} from '@/composables/useColorScheme'
 import {useBodyClass} from '@/composables/useBodyClass'
 import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
 import DemoMode from '@/components/home/DemoMode.vue'
+
+const importAccountDeleteService = () => import('@/services/accountDelete')
+const importMessage = () => import('@/message')
 
 const baseStore = useBaseStore()
 const authStore = useAuthStore()
@@ -68,8 +69,11 @@ watch(accountDeletionConfirm, async (accountDeletionConfirm) => {
 		return
 	}
 
+	const messageP = importMessage()
+	const AccountDeleteService = (await importAccountDeleteService()).default
 	const accountDeletionService = new AccountDeleteService()
 	await accountDeletionService.confirm(accountDeletionConfirm)
+	const {success} = await messageP
 	success({message: t('user.deletion.confirmSuccess')})
 	authStore.refreshUserInfo()
 }, { immediate: true })
