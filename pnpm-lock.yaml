@@ -334,8 +334,8 @@ devDependencies:
     specifier: 9.20.1
     version: 9.20.1(eslint@8.56.0)
   happy-dom:
-    specifier: 13.1.4
-    version: 13.1.4
+    specifier: 13.2.0
+    version: 13.2.0
   histoire:
     specifier: 0.17.8
     version: 0.17.8(@types/node@20.11.5)(sass@1.70.0)(terser@5.24.0)(vite@5.0.11)
@@ -386,7 +386,7 @@ devDependencies:
     version: 5.1.0(vue@3.4.15)
   vitest:
     specifier: 1.2.1
-    version: 1.2.1(@types/node@20.11.5)(happy-dom@13.1.4)(sass@1.70.0)(terser@5.24.0)
+    version: 1.2.1(@types/node@20.11.5)(happy-dom@13.2.0)(sass@1.70.0)(terser@5.24.0)
   vue-tsc:
     specifier: 1.8.27
     version: 1.8.27(typescript@5.3.3)
@@ -6265,10 +6265,6 @@ packages:
     engines: {node: '>= 6'}
     dev: true
 
-  /css.escape@1.5.1:
-    resolution: {integrity: sha512-YUifsXXuknHlUsmlgyY0PKzgPOr7/FjCePfHNt0jxm83wHZi44VDMQ7/fGNkjY3/jV1MC+1CmZbaHzugyeRtpg==}
-    dev: true
-
   /cssdb@7.9.0:
     resolution: {integrity: sha512-WPMT9seTQq6fPAa1yN4zjgZZeoTriSN2LqW9C+otjar12DQIWA4LuSfFrvFJiKp4oD0xIk1vumDLw8K9ur4NBw==}
     dev: true
@@ -7473,14 +7469,12 @@ packages:
       strip-bom-string: 1.0.0
     dev: true
 
-  /happy-dom@13.1.4:
-    resolution: {integrity: sha512-f8STa4iuJcpXn7YjgqBEemzinyPAdjlHMxlCNbIERdRIjJO9Z9Cj3XW5LuiEhsURFfl0AOWqj0hQitme4gq+Gg==}
+  /happy-dom@13.2.0:
+    resolution: {integrity: sha512-aeFD9M5d1sN618nOpWy/76IiU5/UJxdYydPdzpXxEn4r7MQByrmtoH1iU9v8v9bJJ0fMte6OAMy6rDD/mGawfg==}
+    engines: {node: '>=16.0.0'}
     dependencies:
-      css.escape: 1.5.1
       entities: 4.5.0
-      iconv-lite: 0.6.3
       webidl-conversions: 7.0.0
-      whatwg-encoding: 2.0.0
       whatwg-mimetype: 3.0.0
     dev: true
 
@@ -11060,7 +11054,7 @@ packages:
       fsevents: 2.3.3
     dev: true
 
-  /vitest@1.2.1(@types/node@20.11.5)(happy-dom@13.1.4)(sass@1.70.0)(terser@5.24.0):
+  /vitest@1.2.1(@types/node@20.11.5)(happy-dom@13.2.0)(sass@1.70.0)(terser@5.24.0):
     resolution: {integrity: sha512-TRph8N8rnSDa5M2wKWJCMnztCZS9cDcgVTQ6tsTFTG/odHJ4l5yNVqvbeDJYJRZ6is3uxaEpFs8LL6QM+YFSdA==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
@@ -11096,7 +11090,7 @@ packages:
       chai: 4.3.10
       debug: 4.3.4(supports-color@8.1.1)
       execa: 8.0.1
-      happy-dom: 13.1.4
+      happy-dom: 13.2.0
       local-pkg: 0.5.0
       magic-string: 0.30.5
       pathe: 1.1.1
