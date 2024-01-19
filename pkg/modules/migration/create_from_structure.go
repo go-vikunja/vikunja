@@ -205,6 +205,11 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		oldid := t.ID
 		t.ProjectID = project.ID
 		err = t.Create(s, user)
+
+		if err != nil && models.IsErrTaskCannotBeEmpty(err) {
+			continue
+		}
+
 		if err != nil {
 			return
 		}
