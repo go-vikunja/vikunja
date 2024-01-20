@@ -10,14 +10,12 @@
 				{{ $t('project.delete.text1') }}
 			</p>
 
-			<p>
-				<strong v-if="totalTasks !== null" class="has-text-white">
-					{{
-						totalTasks > 0 ? $t('project.delete.tasksToDelete', {count: totalTasks}) : $t('project.delete.noTasksToDelete')
-					}}
-				</strong>
-				<Loading v-else class="is-loading-small" variant="default"/>
+			<p class="has-text-weight-bold" v-if="totalTasks !== null">
+				{{
+					totalTasks > 0 ? $t('project.delete.tasksToDelete', {count: totalTasks}) : $t('project.delete.noTasksToDelete')
+				}}
 			</p>
+			<Loading v-else class="is-loading-small" variant="default"/>
 
 			<p>
 				{{ $t('misc.cannotBeUndone') }}
