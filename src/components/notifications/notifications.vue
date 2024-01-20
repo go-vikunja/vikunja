@@ -223,6 +223,7 @@ async function markAllRead() {
 				background: var(--primary);
 				border-radius: 100%;
 				margin: 0 .5rem;
+				flex-shrink: 0;
 
 				&.read {
 					background: transparent;
