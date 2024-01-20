@@ -61,6 +61,8 @@ import {
 import Loading from '@/components/misc/loading.vue'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import {useWeekDayFromDate} from '@/helpers/time/formatDate'
+import dayjs from 'dayjs'
+import {useDayjsLanguageSync} from '@/i18n/useDayjsLanguageSync'
 
 export interface GanttChartProps {
 	isLoading: boolean,
@@ -81,8 +83,8 @@ const emit = defineEmits<{
 const {tasks, filters} = toRefs(props)
 
 // setup dayjs for vue-ganttastic
-const dayjsLanguageLoading = ref(false)
-// const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
+// const dayjsLanguageLoading = ref(false)
+const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
 extendDayjs()
 
 const ganttContainer = ref(null)

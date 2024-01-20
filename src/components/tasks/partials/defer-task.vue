@@ -44,7 +44,7 @@ import flatPickr from 'vue-flatpickr-component'
 
 import TaskService from '@/services/task'
 import type {ITask} from '@/modelTypes/ITask'
-import {useAuthStore} from '@/stores/auth'
+import { getFlatpickrLanguage } from '@/helpers/flatpickrLanguage'
 
 const {
 	modelValue,
@@ -55,7 +55,6 @@ const {
 const emit = defineEmits(['update:modelValue'])
 
 const {t} = useI18n({useScope: 'global'})
-const authStore = useAuthStore()
 
 const taskService = shallowReactive(new TaskService())
 const task = ref<ITask>()
@@ -102,9 +101,7 @@ const flatPickerConfig = computed(() => ({
 	enableTime: true,
 	time_24hr: true,
 	inline: true,
-	locale: {
-		firstDayOfWeek: authStore.settings.weekStart,
-	},
+	locale: getFlatpickrLanguage(),
 }))
 
 function deferDays(days: number) {

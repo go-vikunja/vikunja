@@ -10,9 +10,9 @@ import {MILLISECONDS_A_DAY} from '@/constants/date'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import {useI18n} from 'vue-i18n'
-import {useAuthStore} from '@/stores/auth'
 import Message from '@/components/misc/message.vue'
 import type {IApiToken} from '@/modelTypes/IApiToken'
+import { getFlatpickrLanguage } from '@/helpers/flatpickrLanguage'
 
 const service = new ApiTokenService()
 const tokens = ref<IApiToken[]>([])
@@ -32,18 +32,16 @@ const showDeleteModal = ref<boolean>(false)
 const tokenToDelete = ref<IApiToken>()
 
 const {t} = useI18n()
-const authStore = useAuthStore()
 
 const now = new Date()
+
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,
 	dateFormat: 'Y-m-d H:i',
 	enableTime: true,
 	time_24hr: true,
-	locale: {
-		firstDayOfWeek: authStore.settings.weekStart,
-	},
+	locale: getFlatpickrLanguage(),
 	minDate: now,
 }))
 

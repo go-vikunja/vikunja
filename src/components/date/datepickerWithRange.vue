@@ -81,9 +81,8 @@ import Popup from '@/components/misc/popup.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import BaseButton from '@/components/base/BaseButton.vue'
 import DatemathHelp from '@/components/date/datemathHelp.vue'
-import {useAuthStore} from '@/stores/auth'
+import { getFlatpickrLanguage } from '@/helpers/flatpickrLanguage'
 
-const authStore = useAuthStore()
 const {t} = useI18n({useScope: 'global'})
 
 const emit = defineEmits(['update:modelValue'])
@@ -93,8 +92,6 @@ const props = defineProps({
 	},
 })
 
-// FIXME: This seems to always contain the default value - that breaks the picker
-const weekStart = computed(() => authStore.settings.weekStart ?? 0)
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,
@@ -102,9 +99,7 @@ const flatPickerConfig = computed(() => ({
 	enableTime: false,
 	wrap: true,
 	mode: 'range',
-	locale: {
-		firstDayOf7Days: weekStart.value,
-	},
+	locale: getFlatpickrLanguage(),
 }))
 
 const showHowItWorks = ref(false)

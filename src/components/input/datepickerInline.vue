@@ -80,8 +80,8 @@ import {formatDate} from '@/helpers/time/formatDate'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
-import {useAuthStore} from '@/stores/auth'
 import {useI18n} from 'vue-i18n'
+import { getFlatpickrLanguage } from '@/helpers/flatpickrLanguage'
 
 const props = defineProps({
 	modelValue: {
@@ -105,8 +105,6 @@ watch(
 	{immediate: true},
 )
 
-const authStore = useAuthStore()
-const weekStart = computed(() => authStore.settings.weekStart)
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,
@@ -114,9 +112,7 @@ const flatPickerConfig = computed(() => ({
 	enableTime: true,
 	time_24hr: true,
 	inline: true,
-	locale: {
-		firstDayOfWeek: weekStart.value,
-	},
+	locale: getFlatpickrLanguage(),
 }))
 
 // Since flatpickr dates are strings, we need to convert them to native date objects.
