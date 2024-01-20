@@ -27,7 +27,7 @@
 							<span class="has-text-weight-bold mr-1" v-if="n.notification.doer">
 								{{ getDisplayName(n.notification.doer) }}
 							</span>
-							<BaseButton @click="() => to(n, index)()">
+							<BaseButton @click="() => to(n, index)()" class="has-text-left">
 								{{ n.toText(userInfo) }}
 							</BaseButton>
 						</div>
