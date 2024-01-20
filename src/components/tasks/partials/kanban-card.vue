@@ -220,11 +220,16 @@ $task-background: var(--white);
 		align-items: center;
 
 		:deep(.tag),
+		:deep(.checklist-summary),
 		.assignees,
 		.icon,
 		.priority-label {
 			margin-top: .25rem;
 			margin-right: .25rem;
+		}
+
+		:deep(.checklist-summary) {
+			padding-left: 0;
 		}
 
 		.assignees {
@@ -295,21 +300,26 @@ $task-background: var(--white);
 	}
 
 	&.has-light-text {
+		--white: hsla(var(--white-h), var(--white-s), var(--white-l), var(--white-a)) !important;
 		color: var(--white);
 
 		.task-id {
-			color: var(--grey-200);
+			color: hsl(220, 13%, 91%); // grey-200;
 		}
 
 		.footer .icon,
 		.due-date,
 		.priority-label {
-			background: var(--grey-800);
+			background: hsl(215, 27.9%, 16.9%); // grey-800
 		}
 
 		.footer {
 			.icon svg {
 				fill: var(--white);
+			}
+
+			:deep(.checklist-summary) {
+				color: hsl(217.9, 10.6%, 64.9%); // grey-400
 			}
 		}
 	}
