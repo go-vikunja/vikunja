@@ -167,7 +167,7 @@
     "sass": "1.70.0",
     "start-server-and-test": "2.0.3",
     "typescript": "5.3.3",
-    "vite": "5.0.11",
+    "vite": "5.0.12",
     "vite-plugin-inject-preload": "1.3.3",
     "vite-plugin-pwa": "0.17.4",
     "vite-plugin-sentry": "1.3.0",
