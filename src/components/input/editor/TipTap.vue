@@ -64,6 +64,7 @@
 			class="tiptap__editor"
 			:class="{'tiptap__editor-is-edit-enabled': isEditing}"
 			:editor="editor"
+			@click="focusIfEditing()"
 		/>
 
 		<input
@@ -579,6 +580,12 @@ function setFocusToEditor(event) {
 	}
 
 	editor.value?.commands.focus()
+}
+
+function focusIfEditing() {
+	if (isEditing.value) {
+		editor.value?.commands.focus()
+	}
 }
 
 function clickTasklistCheckbox(event) {
