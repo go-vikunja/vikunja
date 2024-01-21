@@ -288,7 +288,7 @@ const {
 
 const emit = defineEmits(['update:modelValue', 'save'])
 
-const internalMode = ref<Mode>('edit')
+const internalMode = ref<Mode>('preview')
 const isEditing = computed(() => internalMode.value === 'edit' && isEditEnabled)
 const contentHasChanged = ref<boolean>(false)
 
