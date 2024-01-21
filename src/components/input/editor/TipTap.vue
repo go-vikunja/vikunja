@@ -174,6 +174,8 @@ import {Placeholder} from '@tiptap/extension-placeholder'
 import {eventToHotkeyString} from '@github/hotkey'
 import {mergeAttributes} from '@tiptap/core'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
+import inputPrompt from '@/helpers/inputPrompt'
+import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
 
 const tiptapInstanceRef = ref<HTMLInputElement | null>(null)
 
@@ -320,7 +322,7 @@ const editor = useEditor({
 			addKeyboardShortcuts() {
 				return {
 					'Mod-Enter': () => {
-						if(contentHasChanged.value) {
+						if (contentHasChanged.value) {
 							bubbleSave()
 						}
 					},
@@ -470,7 +472,7 @@ function uploadAndInsertFiles(files: File[] | FileList) {
 	})
 }
 
-function addImage() {
+async function addImage(event) {
 
 	if (typeof uploadCallback !== 'undefined') {
 		const files = uploadInputRef.value?.files
@@ -484,7 +486,7 @@ function addImage() {
 		return
 	}
 
-	const url = window.prompt('URL')
+	const url = await inputPrompt(event.target.getBoundingClientRect())
 
 	if (url) {
 		editor.value?.chain().focus().setImage({src: url}).run()
@@ -492,34 +494,8 @@ function addImage() {
 	}
 }
 
-function setLink() {
-	const previousUrl = editor.value?.getAttributes('link').href
-	const url = window.prompt('URL', previousUrl)
-
-	// cancelled
-	if (url === null) {
-		return
-	}
-
-	// empty
-	if (url === '') {
-		editor.value
-			?.chain()
-			.focus()
-			.extendMarkRange('link')
-			.unsetLink()
-			.run()
-
-		return
-	}
-
-	// update link
-	editor.value
-		?.chain()
-		.focus()
-		.extendMarkRange('link')
-		.setLink({href: url, target: '_blank'})
-		.run()
+function setLink(event) {
+	setLinkInEditor(event.target.getBoundingClientRect(), editor.value)
 }
 
 onMounted(async () => {
@@ -573,6 +549,7 @@ function setFocusToEditor(event) {
 		event.target.contentEditable === 'true') {
 		return
 	}
+
 	event.preventDefault()
 
 	if (!isEditing.value && isEditEnabled) {

@@ -336,6 +336,7 @@ import {ref} from 'vue'
 import {Editor} from '@tiptap/vue-3'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
 
 const {
 	editor = null,
@@ -353,29 +354,8 @@ function openImagePicker() {
 	document.getElementById('tiptap__image-upload').click()
 }
 
-function setLink() {
-	const previousUrl = editor.getAttributes('link').href
-	const url = window.prompt('URL', previousUrl)
-
-	// cancelled
-	if (url === null) {
-		return
-	}
-
-	// empty
-	if (url === '') {
-		editor.chain().focus().extendMarkRange('link').unsetLink().run()
-
-		return
-	}
-
-	// update link
-	editor
-		.chain()
-		.focus()
-		.extendMarkRange('link')
-		.setLink({href: url, target: '_blank'})
-		.run()
+function setLink(event) {
+	setLinkInEditor(event.target.getBoundingClientRect(), editor)
 }
 </script>
 
