@@ -173,7 +173,6 @@ import XButton from '@/components/input/button.vue'
 import {Placeholder} from '@tiptap/extension-placeholder'
 import {eventToHotkeyString} from '@github/hotkey'
 import {mergeAttributes} from '@tiptap/core'
-import {createRandomID} from '@/helpers/randomId'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 
 const tiptapInstanceRef = ref<HTMLInputElement | null>(null)
@@ -229,18 +228,19 @@ const CustomImage = Image.extend({
 	renderHTML({HTMLAttributes}) {
 		if (HTMLAttributes.src?.startsWith(window.API_URL) || HTMLAttributes['data-src']?.startsWith(window.API_URL)) {
 			const imageUrl = HTMLAttributes['data-src'] ?? HTMLAttributes.src
-			const id = 'tiptap-image-' + createRandomID()
+
+			// The url is something like /tasks/<id>/attachments/<id>
+			const parts = imageUrl.slice(window.API_URL.length + 1).split('/')
+			const taskId = Number(parts[1])
+			const attachmentId = Number(parts[3])
+			const cacheKey: CacheKey = `${taskId}-${attachmentId}`
+			const id = 'tiptap-image-' + cacheKey
+
 			nextTick(async () => {
 
 				const img = document.getElementById(id)
 
 				if (!img) return
-
-				// The url is something like /tasks/<id>/attachments/<id>
-				const parts = imageUrl.slice(window.API_URL.length + 1).split('/')
-				const taskId = Number(parts[1])
-				const attachmentId = Number(parts[3])
-				const cacheKey: CacheKey = `${taskId}-${attachmentId}`
 
 				if (typeof loadedAttachments.value[cacheKey] === 'undefined') {
 
