@@ -110,6 +110,7 @@
 			variant="secondary"
 			:shadow="false"
 			v-cy="'saveEditor'"
+			:disabled="!contentHasChanged"
 		>
 			{{ $t('misc.save') }}
 		</x-button>
@@ -288,6 +289,16 @@ const emit = defineEmits(['update:modelValue', 'save'])
 
 const internalMode = ref<Mode>('edit')
 const isEditing = computed(() => internalMode.value === 'edit' && isEditEnabled)
+const contentHasChanged = ref<boolean>(false)
+
+watch(
+	() => internalMode.value,
+	mode => {
+		if (mode === 'preview') {
+			contentHasChanged.value = false
+		}
+	},
+)
 
 const editor = useEditor({
 	content: modelValue,
@@ -308,7 +319,9 @@ const editor = useEditor({
 			addKeyboardShortcuts() {
 				return {
 					'Mod-Enter': () => {
-						bubbleSave()
+						if(contentHasChanged.value) {
+							bubbleSave()
+						}
 					},
 				}
 			},
@@ -420,6 +433,7 @@ function bubbleNow() {
 		return
 	}
 
+	contentHasChanged.value = true
 	emit('update:modelValue', editor.value?.getHTML())
 }
 
