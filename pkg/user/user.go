@@ -65,7 +65,7 @@ func (s Status) String() string {
 }
 
 const (
-	StatusActive = iota
+	StatusActive Status = iota
 	StatusEmailConfirmationRequired
 	StatusDisabled
 )
@@ -541,6 +541,13 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 	}
 
 	return updatedUser, err
+}
+
+func SetUserStatus(s *xorm.Session, user *User, status Status) (err error) {
+	_, err = s.Where("id = ?", user.ID).
+		Cols("status").
+		Update(&User{Status: status})
+	return
 }
 
 // UpdateUserPassword updates the password of a user

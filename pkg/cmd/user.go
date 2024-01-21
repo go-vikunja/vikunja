@@ -68,8 +68,8 @@ func init() {
 	userResetPasswordCmd.Flags().StringVarP(&userFlagPassword, "password", "p", "", "The new password of the user. Only used in combination with --direct. You will be asked to enter it if not provided through the flag.")
 
 	// Change status flags
-	userChangeEnabledCmd.Flags().BoolVarP(&userFlagDisableUser, "disable", "d", false, "Disable the user.")
-	userChangeEnabledCmd.Flags().BoolVarP(&userFlagEnableUser, "enable", "e", false, "Enable the user.")
+	userChangeStatusCmd.Flags().BoolVarP(&userFlagDisableUser, "disable", "d", false, "Disable the user.")
+	userChangeStatusCmd.Flags().BoolVarP(&userFlagEnableUser, "enable", "e", false, "Enable the user.")
 
 	// User deletion flags
 	userDeleteCmd.Flags().BoolVarP(&userFlagDeleteNow, "now", "n", false, "If provided, deletes the user immediately instead of sending them an email first.")
@@ -77,7 +77,7 @@ func init() {
 	// Bypass confirm prompt
 	userDeleteCmd.Flags().BoolVarP(&userFlagDeleteConfirm, "confirm", "c", false, "Bypasses any prompts confirming the deletion request, use with caution!")
 
-	userCmd.AddCommand(userListCmd, userCreateCmd, userUpdateCmd, userResetPasswordCmd, userChangeEnabledCmd, userDeleteCmd)
+	userCmd.AddCommand(userListCmd, userCreateCmd, userUpdateCmd, userResetPasswordCmd, userChangeStatusCmd, userDeleteCmd)
 	rootCmd.AddCommand(userCmd)
 }
 
@@ -283,7 +283,7 @@ var userResetPasswordCmd = &cobra.Command{
 	},
 }
 
-var userChangeEnabledCmd = &cobra.Command{
+var userChangeStatusCmd = &cobra.Command{
 	Use:   "change-status [user id]",
 	Short: "Enable or disable a user. Will toggle the current status if no flag (--enable or --disable) is provided.",
 	PreRun: func(cmd *cobra.Command, args []string) {
@@ -296,18 +296,19 @@ var userChangeEnabledCmd = &cobra.Command{
 
 		u := getUserFromArg(s, args[0])
 
+		var status user.Status
 		if userFlagEnableUser {
-			u.Status = user.StatusActive
+			status = user.StatusActive
 		} else if userFlagDisableUser {
-			u.Status = user.StatusDisabled
+			status = user.StatusDisabled
 		} else {
 			if u.Status == user.StatusActive {
-				u.Status = user.StatusDisabled
+				status = user.StatusDisabled
 			} else {
-				u.Status = user.StatusActive
+				status = user.StatusActive
 			}
 		}
-		_, err := user.UpdateUser(s, u, false)
+		err := user.SetUserStatus(s, u, status)
 		if err != nil {
 			_ = s.Rollback()
 			log.Fatalf("Could not enable the user")
@@ -317,7 +318,7 @@ var userChangeEnabledCmd = &cobra.Command{
 			log.Fatalf("Error saving everything: %s", err)
 		}
 
-		fmt.Printf("User status successfully changed, status is now \"%s\"\n", u.Status)
+		fmt.Printf("User status successfully changed, status is now \"%s\"\n", status)
 	},
 }
 
