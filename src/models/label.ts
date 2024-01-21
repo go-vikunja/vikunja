@@ -24,7 +24,7 @@ export default class LabelModel extends AbstractModel<ILabel> implements ILabel 
 		super()
 		this.assignData(data)
 
-		if (this.hexColor !== '' && this.hexColor.substring(0, 1) !== '#') {
+		if (this.hexColor !== '' && !this.hexColor.startsWith('#') && !this.hexColor.startsWith('var(')) {
 			this.hexColor = '#' + this.hexColor
 		}
 

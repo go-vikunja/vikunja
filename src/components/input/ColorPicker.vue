@@ -64,6 +64,15 @@ const emit = defineEmits(['update:modelValue'])
 watch(
 	() => modelValue,
 	(newValue) => {
+		if (newValue === '' || newValue.startsWith('var(')) {
+			color.value = ''
+			return
+		}
+
+		if (!newValue.startsWith('#') && (newValue.length === 6 || newValue.length === 3)) {
+			newValue = `#${newValue}`
+		}
+
 		color.value = newValue
 	},
 	{immediate: true},
