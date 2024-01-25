@@ -92,7 +92,7 @@
     "@types/lodash.clonedeep": "4.5.9",
     "@vueuse/core": "10.7.2",
     "@vueuse/router": "10.7.2",
-    "axios": "1.6.6",
+    "axios": "1.6.7",
     "blurhash": "2.0.5",
     "bulma-css-variables": "0.9.33",
     "camel-case": "4.1.2",
