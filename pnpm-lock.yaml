@@ -256,8 +256,8 @@ devDependencies:
     specifier: 0.17.8
     version: 0.17.8(histoire@0.17.8)(vite@5.0.12)(vue@3.4.15)
   '@rushstack/eslint-patch':
-    specifier: 1.7.0
-    version: 1.7.0
+    specifier: 1.7.1
+    version: 1.7.1
   '@tsconfig/node18':
     specifier: 18.2.2
     version: 18.2.2
@@ -313,8 +313,8 @@ devDependencies:
     specifier: 4.22.2
     version: 4.22.2
   caniuse-lite:
-    specifier: 1.0.30001579
-    version: 1.0.30001579
+    specifier: 1.0.30001580
+    version: 1.0.30001580
   css-has-pseudo:
     specifier: 6.0.1
     version: 6.0.1(postcss@8.4.33)
@@ -4179,8 +4179,8 @@ packages:
     requiresBuild: true
     optional: true
 
-  /@rushstack/eslint-patch@1.7.0:
-    resolution: {integrity: sha512-Jh4t/593gxs0lJZ/z3NnasKlplXT2f+4y/LZYuaKZW5KAaiVFL/fThhs+17EbUd53jUVJ0QudYCBGbN/psvaqg==}
+  /@rushstack/eslint-patch@1.7.1:
+    resolution: {integrity: sha512-irBNt5094vHloql4QzY8RdeI8Tns2kGsaiJ/m6jENWx9xCz/m/F4gKQ1dAailFmpL0Id9tgWLqZbTUO4SINM/Q==}
     dev: true
 
   /@sentry-internal/feedback@7.95.0:
@@ -5562,7 +5562,7 @@ packages:
       postcss: ^8.1.0
     dependencies:
       browserslist: 4.22.2
-      caniuse-lite: 1.0.30001579
+      caniuse-lite: 1.0.30001580
       fraction.js: 4.3.7
       normalize-range: 0.1.2
       picocolors: 1.0.0
@@ -5743,7 +5743,7 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001579
+      caniuse-lite: 1.0.30001580
       electron-to-chromium: 1.4.605
       node-releases: 2.0.14
       update-browserslist-db: 1.0.13(browserslist@4.22.2)
@@ -5829,8 +5829,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /caniuse-lite@1.0.30001579:
-    resolution: {integrity: sha512-u5AUVkixruKHJjw/pj9wISlcMpgFWzSrczLZbrqBSxukQixmg0SJ5sZTpvaFvxU0HoQKd4yoyAogyrAz9pzJnA==}
+  /caniuse-lite@1.0.30001580:
+    resolution: {integrity: sha512-mtj5ur2FFPZcCEpXFy8ADXbDACuNFXg6mxVDqp7tqooX6l3zwm+d8EPoeOSIFRDvHs8qu7/SLFOGniULkcH2iA==}
     dev: true
 
   /capital-case@1.0.4:
