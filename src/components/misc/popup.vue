@@ -53,6 +53,7 @@ onClickOutside(popup, () => {
 	overflow: hidden;
 	position: absolute;
 	top: 1rem;
+	z-index: 100;
 
 	&.is-open {
 		opacity: 1;
