@@ -165,7 +165,7 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 	exists, err := s.
 		Where("(task_id = ? AND other_task_id = ? AND relation_kind = ?) OR (task_id = ? AND other_task_id = ? AND relation_kind = ?)",
 			rel.TaskID, rel.OtherTaskID, rel.RelationKind, rel.TaskID, rel.OtherTaskID, rel.RelationKind).
-		Exist(rel)
+		Exist(&TaskRelation{})
 	if err != nil {
 		return err
 	}
