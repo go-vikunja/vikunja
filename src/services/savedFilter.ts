@@ -106,6 +106,7 @@ export function useSavedFilter(projectId?: MaybeRef<IProject['id']>) {
 		const response = await filterService.get(filter.value)
 		response.filters = objectToSnakeCase(response.filters)
 		filter.value = response
+		await validateTitleField()
 	}, {immediate: true})
 
 	async function createFilter() {
