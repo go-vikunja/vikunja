@@ -197,7 +197,7 @@ function validateSelectedEvents() {
 
 		<table
 			class="table has-actions is-striped is-hoverable is-fullwidth"
-			v-if="webhooks.length > 0"
+			v-if="webhooks?.length > 0"
 		>
 			<thead>
 			<tr>
