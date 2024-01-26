@@ -300,7 +300,7 @@ function prepareFiltersAndLoadTasks() {
 		sortByParam.value = {} 
 		sortByParam.value[ALPHABETICAL_SORT] = 'asc'
 	}
-	
+
 	loadTasks()
 }
 </script>

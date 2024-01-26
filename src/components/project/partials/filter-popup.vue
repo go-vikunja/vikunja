@@ -36,7 +36,7 @@ import Filters from '@/components/project/partials/filters.vue'
 
 import {getDefaultParams} from '@/composables/useTaskList'
 
-const	props = defineProps({
+const props = defineProps({
 	modelValue: {
 		required: true,
 	},
@@ -48,6 +48,9 @@ const value = computed({
 		return props.modelValue
 	},
 	set(value) {
+		if(props.modelValue === value) {
+			return
+		}
 		emit('update:modelValue', value)
 	},
 })
@@ -59,7 +62,7 @@ watch(
 	},
 	{immediate: true},
 )
-		
+
 const hasFilters = computed(() => {
 	// this.value also contains the page parameter which we don't want to include in filters
 	// eslint-disable-next-line no-unused-vars
