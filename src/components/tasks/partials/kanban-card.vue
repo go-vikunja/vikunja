@@ -60,7 +60,7 @@
 					class="ml-1"
 					:inline="true"
 				/>
-				<checklist-summary :task="task"/>
+				<checklist-summary :task="task" class="checklist"/>
 				<span class="icon" v-if="task.attachments.length > 0">
 					<icon icon="paperclip"/>	
 				</span>
@@ -297,6 +297,10 @@ $task-background: var(--white);
 		.priority-label {
 			background: hsl(220, 13%, 91%);
 		}
+
+		.footer :deep(.checklist-summary) {
+			color: hsl(216.9, 19.1%, 26.7%); // grey-700
+		}
 	}
 
 	&.has-light-text {
@@ -319,7 +323,7 @@ $task-background: var(--white);
 			}
 
 			:deep(.checklist-summary) {
-				color: hsl(217.9, 10.6%, 64.9%); // grey-400
+				color: hsl(220, 13%, 91%); // grey-200
 			}
 		}
 	}
