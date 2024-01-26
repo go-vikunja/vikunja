@@ -184,8 +184,13 @@ func (la *TaskAssginee) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	doer, _ := user.GetFromAuth(a)
+	task, err := GetTaskByIDSimple(s, la.TaskID)
+	if err != nil {
+		return err
+	}
+
 	return events.Dispatch(&TaskAssigneeDeletedEvent{
-		Task:     &Task{ID: la.TaskID},
+		Task:     &task,
 		Assignee: &user.User{ID: la.UserID},
 		Doer:     doer,
 	})

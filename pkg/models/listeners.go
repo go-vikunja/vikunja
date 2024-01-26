@@ -470,9 +470,9 @@ func (s *HandleTaskUpdateLastUpdated) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
-	task, is := event["Task"].(map[string]interface{})
+	task, is := event["task"].(map[string]interface{})
 	if !is {
-		log.Errorf("Event payload does not contain task ID")
+		log.Errorf("Event payload does not contain task")
 		return
 	}
 
@@ -677,30 +677,28 @@ type WebhookPayload struct {
 	Data      interface{} `json:"data"`
 }
 
+func getIDAsInt64(id interface{}) int64 {
+	switch v := id.(type) {
+	case int64:
+		return v
+	case float64:
+		return int64(v)
+	}
+	return id.(int64)
+}
+
 func getProjectIDFromAnyEvent(eventPayload map[string]interface{}) int64 {
 	if task, has := eventPayload["task"]; has {
 		t := task.(map[string]interface{})
 		if projectID, has := t["project_id"]; has {
-			switch v := projectID.(type) {
-			case int64:
-				return v
-			case float64:
-				return int64(v)
-			}
-			return projectID.(int64)
+			return getIDAsInt64(projectID)
 		}
 	}
 
 	if project, has := eventPayload["project"]; has {
 		t := project.(map[string]interface{})
 		if projectID, has := t["id"]; has {
-			switch v := projectID.(type) {
-			case int64:
-				return v
-			case float64:
-				return int64(v)
-			}
-			return projectID.(int64)
+			return getIDAsInt64(projectID)
 		}
 	}
 
@@ -739,7 +737,6 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 				break
 			}
 		}
-
 	}
 
 	if webhook == nil {

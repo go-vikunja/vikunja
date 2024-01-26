@@ -114,8 +114,13 @@ func (tc *TaskComment) Delete(s *xorm.Session, _ web.Auth) error {
 		return err
 	}
 
+	task, err := GetTaskByIDSimple(s, tc.TaskID)
+	if err != nil {
+		return err
+	}
+
 	return events.Dispatch(&TaskCommentDeletedEvent{
-		Task:    &Task{ID: tc.TaskID},
+		Task:    &task,
 		Comment: tc,
 		Doer:    tc.Author,
 	})

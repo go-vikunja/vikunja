@@ -86,8 +86,13 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadCloser, realna
 		return err
 	}
 
+	task, err := GetTaskByIDSimple(s, ta.TaskID)
+	if err != nil {
+		return err
+	}
+
 	return events.Dispatch(&TaskAttachmentCreatedEvent{
-		Task:       &Task{ID: ta.TaskID},
+		Task:       &task,
 		Attachment: ta,
 		Doer:       ta.CreatedBy,
 	})
@@ -220,8 +225,13 @@ func (ta *TaskAttachment) Delete(s *xorm.Session, a web.Auth) error {
 	}
 
 	doer, _ := user.GetFromAuth(a)
+	task, err := GetTaskByIDSimple(s, ta.TaskID)
+	if err != nil {
+		return err
+	}
+
 	return events.Dispatch(&TaskAttachmentDeletedEvent{
-		Task:       &Task{ID: ta.TaskID},
+		Task:       &task,
 		Attachment: ta,
 		Doer:       doer,
 	})

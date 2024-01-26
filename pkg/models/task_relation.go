@@ -201,8 +201,13 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 	}
 
 	doer, _ := user.GetFromAuth(a)
+	task, err := GetTaskByIDSimple(s, rel.TaskID)
+	if err != nil {
+		return err
+	}
+
 	return events.Dispatch(&TaskRelationCreatedEvent{
-		Task:     &Task{ID: rel.TaskID},
+		Task:     &task,
 		Relation: rel,
 		Doer:     doer,
 	})
@@ -261,8 +266,13 @@ func (rel *TaskRelation) Delete(s *xorm.Session, a web.Auth) error {
 	}
 
 	doer, _ := user.GetFromAuth(a)
+	task, err := GetTaskByIDSimple(s, rel.TaskID)
+	if err != nil {
+		return err
+	}
+
 	return events.Dispatch(&TaskRelationDeletedEvent{
-		Task:     &Task{ID: rel.TaskID},
+		Task:     &task,
 		Relation: rel,
 		Doer:     doer,
 	})
