@@ -266,6 +266,11 @@ func getSubscriptionsForProjects(s *xorm.Session, projectIDs []int64, u *user.Us
 			continue
 		}
 		ps[eID], err = GetProjectSimpleByID(s, eID)
+		if err != nil && IsErrProjectDoesNotExist(err) {
+			// If the project does not exist, it might got deleted. There could still be subscribers though.
+			delete(ps, eID)
+			continue
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -314,6 +319,10 @@ func getSubscriptionsForProjects(s *xorm.Session, projectIDs []int64, u *user.Us
 		_, has := projectsToSubscriptions[eID]
 		_, hasProject := ps[eID]
 		if !has && hasProject {
+			_, exists := ps[eID]
+			if !exists {
+				continue
+			}
 			var parent = ps[eID].ParentProject
 			for parent != nil {
 				sub, has := projectsToSubscriptions[parent.ID]
