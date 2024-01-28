@@ -9,6 +9,116 @@ All releases can be found on https://code.vikunja.io/frontend/releases.
 
 The releases aim at the api versions which is why there are missing versions.
 
+## [0.22.1] - 2024-01-28
+
+### Bug Fixes
+
+* *(auth)* Correctly construct redirect url from current window href
+* *(ci)* Use working crowdin image
+* *(ci)* Use working image for crowdin update step
+* *(ci)* Use working crowdin image
+* *(color picker)* When picking a color, the color picker should not be black afterwards
+* *(editor)* List icons
+* *(editor)* Use higher-contrast colors for links and code
+* *(editor)* Don't bubble up changes when no changes were made
+* *(editor)* Focus the editor when clicking on the whole edit container
+* *(editor)* Render images without crashing
+* *(editor)* Use a stable image id to prevent constant re-rendering
+* *(editor)* Use manual input prompt instead of window.prompt
+* *(filter)* Validate filter title field after loading a filter for edit
+* *(kanban)* Ensure text and icon color only depends on the card background, not on the color scheme
+* *(kanban)* Make sure the checklist summary uses the correct text color
+* *(kanban)* Make sure spacing between assignees and other task details works out evenly
+* *(labels)* Make color reset work
+* *(labels)* Text and background combination in dark mode
+* *(notifications)* Unread indicator spacing
+* *(notifications)* Always left-align notification text
+* *(notifications)* Read indicator size
+* *(openid)* Use the full path when building the redirect url, not only the host
+* *(openid)* Use the calculated redirect url when authenticating with openid providers
+* *(project)* Always use the appropriate color for task estimate during deletion dialoge
+* *(quick add magic)* Ensure month is removed from task text
+* *(table view)* Make sure popup does not overlap
+* *(task)* Don't immediately re-trigger date change when nothing changed
+* *(task)* Bubble date changes from the picker up
+* *(task)* Update due date when marking a task done
+* *(task)* Don't show edit button when the user does not have permission to edit the task
+* *(task)* Don't show assignee edit buttons and input when the user does not have the permission to edit
+* *(tasks)* Make sure tasks show up if their parent task is not available in the current view
+* *(tasks)* Don't load tasks multiple times when viewing list or gantt view
+* *(test)* Make date assertion not brittle
+* Lint ([5e991f3](5e991f3024f7856420614171ec66468eb2e2df63))
+
+
+### Dependencies
+
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v2 (#3862)
+* *(deps)* Update pnpm to v8.14.0
+* *(deps)* Update dependency vue to v3.4.7 (#3873)
+* *(deps)* Update dependency axios to v1.6.5 (#3871)
+* *(deps)* Update dependency date-fns to v3 (#3857)
+* *(deps)* Update dev-dependencies (#3861)
+* *(deps)* Update dependency @kyvg/vue3-notification to v3.1.3 (#3864)
+* *(deps)* Update dependency node to v20.11.0
+* *(deps)* Update dependency vue-i18n to v9.9.0 (#3880)
+* *(deps)* Update dependency dompurify to v3.0.8 (#3881)
+* *(deps)* Update dependency floating-vue to v2.0.0 (#3883)
+* *(deps)* Update tiptap to v2.1.15 (#3884)
+* *(deps)* Update vueuse to v10.7.1 (#3872)
+* *(deps)* Update pnpm to v8.14.1 (#3885)
+* *(deps)* Update sentry-javascript monorepo to v7.93.0 (#3859)
+* *(deps)* Update dependency floating-vue to v5 (#3887)
+* *(deps)* Update dependency vue to v3.4.8 (#3886)
+* *(deps)* Update node.js to v20.11 (#3888)
+* *(deps)* Increase renovate timeout
+* *(deps)* Update tiptap to v2.1.16 (#3892)
+* *(deps)* Pin node.js (#3895)
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency sortablejs to v1.15.2
+* *(deps)* Update vueuse to v10.7.2
+* *(deps)* Update dependency floating-vue to v5.1.0
+* *(deps)* Update dependency vue to v3.4.14
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies (major) (#3890)
+* *(deps)* Update dependency floating-vue to v5.1.1
+* *(deps)* Update dependency floating-vue to v5.2.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency vue to v3.4.15
+* *(deps)* Update dependency happy-dom to v13.2.0
+* *(deps)* Update sentry-javascript monorepo to v7.94.1
+* *(deps)* Update dependency vite to v5.0.12
+* *(deps)* Update dependency date-fns to v3.3.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update pnpm to v8.14.2
+* *(deps)* Update dependency date-fns to v3.3.1
+* *(deps)* Update dev-dependencies to v6.19.1
+* *(deps)* Update pnpm to v8.14.3
+* *(deps)* Update sentry-javascript monorepo to v7.95.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency axios to v1.6.6
+* *(deps)* Update dev-dependencies
+* *(deps)* Update sentry-javascript monorepo to v7.97.0
+* *(deps)* Update sentry-javascript monorepo to v7.98.0
+* *(deps)* Update dependency axios to v1.6.7
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies
+
+### Features
+
+* *(reminders)* Show reminders in notifications bar
+* Datepicker locale support (#3878) ([92f7d9d](92f7d9ded5d56b95ba7d647eba01372f6ef682ad))
+
+
+### Miscellaneous Tasks
+
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Update translations via Crowdin
+* *(perf)* Import some modules dynamically (#3179)
+* Only show webhooks overview table when there are webhooks ([326bfb5](326bfb557ab359fa154b163f5dd957928f46d3ec))
+* Only show webhooks overview table when there are webhooks ([631b02d](631b02d2eedc4a403b7c55f1c56ceaeca5379bf5))
+
 ## [0.22.0] - 2023-12-19
 
 ### Bug Fixes
