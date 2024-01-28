@@ -7,6 +7,62 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.22.1] - 2024-01-28
+
+### Bug Fixes
+
+* *(api)* Make sure permission to read all tasks work for reading all tasks per project
+* *(assignees)* Improve wording for assignee emails
+* *(assignees)* Prevent double notifications for assignees
+* *(assignees)* Subscribe assigned users directly to the task, not async
+* *(assignees)* Make sure task assignee created event contains the full task
+* *(auth)* Don't reset user settings when updating name or email from external auth provider
+* *(migration)* Ignore tasks with empty titles
+* *(openid)* Use the calculated redirect url when authenticating with openid providers
+* *(projects)* Don't remove parent project id if the parent project is available in the same run
+* *(relations)* Don't allow creating relations which already exist
+* *(subscriptions)* Don't crash when a project is already deleted
+* *(task)* Delete the task after all related attributes to prevent task not found errors
+* *(typesense)* Update tasks in Typesense directly when the change happened
+* *(user)* Make disable command actually work
+* *(webhooks)* Make sure all events with tasks have the full task* Create webhooks table for fresh installation ([09696ae](09696aec1bea647a5bfc7be16b31054626d721e4))
+* Lint ([2c84688](2c84688a4013a816eca02caabba8c634a03d3d57))
+* Convert everything which looks like an url to a <a href html element ([27a5f68](27a5f6862b1748ec10ca9282e0fe1a64f9ccf910))
+* Update function signatures ([4d48d81](4d48d814c95244f21454219c1004b6298744e076))
+* Tests ([1630e4f](1630e4fc08bc5fccff191a6cc4afe936543635d8))
+* Lint ([30a2dcd](30a2dcd04c8379291a2ae5068ec0cab07bc9a7fb))
+
+### Dependencies
+
+* *(deps)* Update dessant/repo-lockdown action to v4
+* *(deps)* Update alpine docker tag to v3.19
+* *(deps)* Update module github.com/arran4/golang-ical to v0.2.3 (#1669)
+* *(deps)* Update module github.com/labstack/gommon to v0.4.2
+* *(deps)* Update module xorm.io/xorm to v1.3.6
+* *(deps)* Update module golang.org/x/term to v0.16.0
+* *(deps)* Update module golang.org/x/image to v0.15.0
+* *(deps)* Update module github.com/prometheus/client_golang to v1.18.0
+* *(deps)* Update module github.com/typesense/typesense-go to v1
+* *(deps)* Update module golang.org/x/oauth2 to v0.16.0
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.4.0
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.26.0
+* *(deps)* Update goreleaser/nfpm docker tag to v2.35.2
+* *(deps)* Update module github.com/labstack/echo/v4 to v4.11.4
+* *(deps)* Update module golang.org/x/sync to v0.6.0
+* *(deps)* Update module xorm.io/xorm to v1.3.7
+* *(deps)* Update module github.com/google/uuid to v1.6.0
+* *(deps)* Update src.techknowlogick.com/xgo digest to 77ac23f
+* *(deps)* Update module github.com/mattn/go-sqlite3 to v1.14.20
+
+### Features
+
+* *(reminders)* Persist reminders in the db
+
+### Miscellaneous Tasks
+
+* Check if import zip contains a VERSION file ([ec6e3e9](ec6e3e99e0d6f2d8a9c889c7261e0d16b4ebea7d))
+* Rename function ([0d24ba1](0d24ba12bb85078afd8c821bae61926fd81f163e))
+
 ## [0.22.0] - 2023-12-19
 
 ### Bug Fixes
