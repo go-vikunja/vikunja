@@ -453,6 +453,10 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, parentProjectIDs []int
 		parentIDsMap[id] = true
 	}
 
+	for _, project := range currentProjects {
+		parentIDsMap[project.ID] = true
+	}
+
 	newParentIDs := []int64{}
 	for _, project := range currentProjects {
 		if project.IsArchived {
