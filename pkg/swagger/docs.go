@@ -8548,6 +8548,9 @@ const docTemplate = `{
                 "code": {
                     "type": "string"
                 },
+                "redirect_url": {
+                    "type": "string"
+                },
                 "scope": {
                     "type": "string"
                 }
@@ -8883,9 +8886,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/openid.Provider"
                     }
-                },
-                "redirect_url": {
-                    "type": "string"
                 }
             }
         },

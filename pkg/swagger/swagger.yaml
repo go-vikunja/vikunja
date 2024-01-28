@@ -1099,6 +1099,8 @@ definitions:
     properties:
       code:
         type: string
+      redirect_url:
+        type: string
       scope:
         type: string
     type: object
@@ -1345,8 +1347,6 @@ definitions:
         items:
           $ref: '#/definitions/openid.Provider'
         type: array
-      redirect_url:
-        type: string
     type: object
   v1.vikunjaInfos:
     properties:
