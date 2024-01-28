@@ -40,7 +40,7 @@ const logModule = `vikunja`
 var logInstance = logging.MustGetLogger(logModule)
 
 // logpath is the path in which log files will be written.
-// This value is a mere fallback for other modules that could but shouldn't be used before calling ConfigLogger
+// This value is a mere fallback for other modules that could but shouldn't be used before calling ConfigureLogger
 var logPath = "."
 
 // InitLogger initializes the global log handler
@@ -58,8 +58,8 @@ func InitLogger() {
 	logInstance.SetBackend(backendLeveled)
 }
 
-// ConfigLogger configures the global log handler
-func ConfigLogger(configLogEnabled bool, configLogStandard string, configLogPath string, configLogLevel string) {
+// ConfigureLogger configures the global log handler
+func ConfigureLogger(configLogEnabled bool, configLogStandard string, configLogPath string, configLogLevel string) {
 	lvl := strings.ToUpper(configLogLevel)
 	level, err := logging.LogLevel(lvl)
 	if err != nil {

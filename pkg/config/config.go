@@ -411,7 +411,7 @@ func InitConfig() {
 
 	// Just load environment variables
 	_ = viper.ReadInConfig()
-	log.ConfigLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString())
+	log.ConfigureLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString())
 
 	// Load the config file
 	viper.AddConfigPath(ServiceRootpath.GetString())
@@ -436,7 +436,7 @@ func InitConfig() {
 			log.Warning(err.Error())
 			log.Warning("Using default config.")
 		} else {
-			log.ConfigLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString())
+			log.ConfigureLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString())
 		}
 	} else {
 		log.Info("No config file found, using default or config from environment variables.")
