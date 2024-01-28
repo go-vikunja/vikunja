@@ -57,8 +57,7 @@
 					v-if="task.assignees.length > 0"
 					:assignees="task.assignees"
 					:avatar-size="24"
-					class="ml-1"
-					:inline="true"
+					class="mr-1"
 				/>
 				<checklist-summary :task="task" class="checklist"/>
 				<span class="icon" v-if="task.attachments.length > 0">
@@ -218,13 +217,13 @@ $task-background: var(--white);
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
+		margin-top: .25rem;
 
 		:deep(.tag),
 		:deep(.checklist-summary),
 		.assignees,
 		.icon,
 		.priority-label {
-			margin-top: .25rem;
 			margin-right: .25rem;
 		}
 
