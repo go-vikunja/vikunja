@@ -42,7 +42,7 @@ import (
 type Callback struct {
 	Code        string `query:"code" json:"code"`
 	Scope       string `query:"scop" json:"scope"`
-	RedirectUrl string `json:"redirect_url"`
+	RedirectURL string `json:"redirect_url"`
 }
 
 // Provider is the structure of an OpenID Connect provider
@@ -104,7 +104,7 @@ func HandleCallback(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "Provider does not exist"})
 	}
 
-	provider.Oauth2Config.RedirectURL = cb.RedirectUrl
+	provider.Oauth2Config.RedirectURL = cb.RedirectURL
 
 	// Parse the access & ID token
 	oauth2Token, err := provider.Oauth2Config.Exchange(context.Background(), cb.Code)
