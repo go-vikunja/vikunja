@@ -291,8 +291,15 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 		return err
 	}
 
+	notifiedUsers := make(map[int64]bool)
+
 	for _, subscriber := range subscribers {
 		if subscriber.UserID == event.Doer.ID {
+			continue
+		}
+
+		if notifiedUsers[subscriber.UserID] {
+			// Users may be subscribed to the task and the project itself, which leads to double notifications
 			continue
 		}
 
@@ -306,6 +313,8 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 		if err != nil {
 			return
 		}
+
+		notifiedUsers[subscriber.UserID] = true
 	}
 
 	return nil
