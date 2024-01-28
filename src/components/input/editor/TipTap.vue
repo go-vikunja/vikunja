@@ -76,7 +76,7 @@
 			@change="addImage"
 		/>
 
-		<ul class="tiptap__editor-actions d-print-none" v-if="bottomActions.length === 0 && !isEditing">
+		<ul class="tiptap__editor-actions d-print-none" v-if="bottomActions.length === 0 && !isEditing && isEditEnabled">
 			<li>
 				<BaseButton
 					@click="setEdit"
