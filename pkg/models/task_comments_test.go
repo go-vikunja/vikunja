@@ -102,7 +102,10 @@ func TestTaskComment_Delete(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		tc := &TaskComment{ID: 1}
+		tc := &TaskComment{
+			ID:     1,
+			TaskID: 1,
+		}
 		err := tc.Delete(s, u)
 		require.NoError(t, err)
 		err = s.Commit()
