@@ -268,8 +268,12 @@ func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, project 
 	}
 
 	doer, _ := user.GetFromAuth(auth)
+	task, err := GetTaskSimple(s, &Task{ID: t.ID})
+	if err != nil {
+		return err
+	}
 	err = events.Dispatch(&TaskAssigneeCreatedEvent{
-		Task:     t,
+		Task:     &task,
 		Assignee: newAssignee,
 		Doer:     doer,
 	})
