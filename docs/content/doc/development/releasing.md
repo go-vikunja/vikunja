@@ -24,6 +24,7 @@ Not all steps are necessary for every release.
 	* API
 	* Desktop
 	* Once built: Prune the cloudflare cache so that the new versions show up at [dl.vikunja.io](https://dl.vikunja.io/)
+    * Update the [Flathub desktop package](https://github.com/flathub/io.vikunja.Vikunja)
 * Release Highlights Blogpost
 	* Include a section about Vikunja in general (totally fine to copy one from the earlier blog posts)
 	* New Features & Improvements: Mention bigger features, potentially with screenshots. Things like refactoring are sometimes also worth mentioning.
