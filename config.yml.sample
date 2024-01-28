@@ -292,17 +292,14 @@ auth:
   # **Note:** Some openid providers (like gitlab) only make the email of the user available through openid claims if they have set it to be publicly visible.
   # If the email is not public in those cases, authenticating will fail.
   # **Note 2:** The frontend expects to be redirected after authentication by the third party
-  # to <frontend-url>/auth/openid/<auth key>. Please make sure to configure the redirect url with your third party
+  # to <frontend-url>/auth/openid/<auth key>. Please make sure to configure the redirect url in your third party
   # auth service accordingly if you're using the default vikunja frontend.
+  # The frontend will automatically provide the api with the redirect url, composed from the current url where it's hosted.
+  # If you want to use the desktop client with openid, make sure to allow redirects to `127.0.0.1`.
   # Take a look at the [default config file](https://kolaente.dev/vikunja/api/src/branch/main/config.yml.sample) for more information about how to configure openid authentication.
   openid:
     # Enable or disable OpenID Connect authentication
     enabled: false
-    # The url to redirect clients to. Defaults to the configured frontend url. If you're using Vikunja with the official
-    # frontend, you don't need to change this value.
-    # **Note:** The redirect url must exactly match the configured redirect url with the third party provider.
-    # This includes all slashes at the end or protocols.
-    redirecturl: <frontend url>
     # A list of enabled providers
     providers:
       # The name of the provider as it will appear in the frontend.

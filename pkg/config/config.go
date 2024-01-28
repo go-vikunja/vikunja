@@ -65,10 +65,9 @@ const (
 	ServiceEnableUserDeletion    Key = `service.enableuserdeletion`
 	ServiceMaxAvatarSize         Key = `service.maxavatarsize`
 
-	AuthLocalEnabled      Key = `auth.local.enabled`
-	AuthOpenIDEnabled     Key = `auth.openid.enabled`
-	AuthOpenIDRedirectURL Key = `auth.openid.redirecturl`
-	AuthOpenIDProviders   Key = `auth.openid.providers`
+	AuthLocalEnabled    Key = `auth.local.enabled`
+	AuthOpenIDEnabled   Key = `auth.openid.enabled`
+	AuthOpenIDProviders Key = `auth.openid.providers`
 
 	LegalImprintURL Key = `legal.imprinturl`
 	LegalPrivacyURL Key = `legal.privacyurl`
@@ -449,10 +448,6 @@ func InitConfig() {
 
 	if ServiceFrontendurl.GetString() != "" && !strings.HasSuffix(ServiceFrontendurl.GetString(), "/") {
 		ServiceFrontendurl.Set(ServiceFrontendurl.GetString() + "/")
-	}
-
-	if AuthOpenIDRedirectURL.GetString() == "" {
-		AuthOpenIDRedirectURL.Set(ServiceFrontendurl.GetString() + "auth/openid/")
 	}
 
 	if MigrationTodoistRedirectURL.GetString() == "" {

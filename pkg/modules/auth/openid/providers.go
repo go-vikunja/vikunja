@@ -149,7 +149,6 @@ func getProviderFromMap(pi map[string]interface{}) (provider *Provider, err erro
 	provider.Oauth2Config = &oauth2.Config{
 		ClientID:     provider.ClientID,
 		ClientSecret: provider.ClientSecret,
-		RedirectURL:  config.AuthOpenIDRedirectURL.GetString() + k,
 		// Discovery returns the OAuth2 endpoints.
 		Endpoint: provider.openIDProvider.Endpoint(),
 

@@ -63,9 +63,8 @@ type localAuthInfo struct {
 }
 
 type openIDAuthInfo struct {
-	Enabled     bool               `json:"enabled"`
-	RedirectURL string             `json:"redirect_url"`
-	Providers   []*openid.Provider `json:"providers"`
+	Enabled   bool               `json:"enabled"`
+	Providers []*openid.Provider `json:"providers"`
 }
 
 type legalInfo struct {
@@ -109,8 +108,7 @@ func Info(c echo.Context) error {
 				Enabled: config.AuthLocalEnabled.GetBool(),
 			},
 			OpenIDConnect: openIDAuthInfo{
-				Enabled:     config.AuthOpenIDEnabled.GetBool(),
-				RedirectURL: config.AuthOpenIDRedirectURL.GetString(),
+				Enabled: config.AuthOpenIDEnabled.GetBool(),
 			},
 		},
 	}
