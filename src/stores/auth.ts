@@ -9,7 +9,11 @@ import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 import {setModuleLoading} from '@/stores/helper'
 import {success} from '@/message'
-import {redirectToProvider, redirectToProviderOnLogout} from '@/helpers/redirectToProvider'
+import {
+	getRedirectUrlFromCurrentFrontendPath,
+	redirectToProvider,
+	redirectToProviderOnLogout,
+} from '@/helpers/redirectToProvider'
 import {AUTH_TYPES, type IUser} from '@/modelTypes/IUser'
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import router from '@/router'
@@ -17,6 +21,7 @@ import {useConfigStore} from '@/stores/config'
 import UserSettingsModel from '@/models/userSettings'
 import {MILLISECONDS_A_SECOND} from '@/constants/date'
 import {PrefixMode} from '@/modules/parseTaskText'
+import type {IProvider} from '@/types/IProvider'
 
 function redirectToProviderIfNothingElseIsEnabled() {
 	const {auth} = useConfigStore()
@@ -180,8 +185,12 @@ export const useAuthStore = defineStore('auth', () => {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 
+		const {auth} = useConfigStore()
+		const fullProvider: IProvider = auth.openidConnect.providers.find((p: IProvider) => p.key === provider)
+
 		const data = {
 			code: code,
+			redirect_url: getRedirectUrlFromCurrentFrontendPath(fullProvider),
 		}
 
 		// Delete an eventually preexisting old token
