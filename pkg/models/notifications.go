@@ -111,10 +111,18 @@ type TaskAssignedNotification struct {
 	Doer     *user.User `json:"doer"`
 	Task     *Task      `json:"task"`
 	Assignee *user.User `json:"assignee"`
+	Target   *user.User `json:"-"`
 }
 
 // ToMail returns the mail notification for TaskAssignedNotification
 func (n *TaskAssignedNotification) ToMail() *notifications.Mail {
+	if n.Target.ID == n.Assignee.ID {
+		return notifications.NewMail().
+			Subject("You have been assigned to "+n.Task.Title+"("+n.Task.GetFullIdentifier()+")").
+			Line(n.Doer.GetName()+" has assigned you to "+n.Task.Title+".").
+			Action("View Task", n.Task.GetFrontendURL())
+	}
+
 	return notifications.NewMail().
 		Subject(n.Task.Title+"("+n.Task.GetFullIdentifier()+")"+" has been assigned to "+n.Assignee.GetName()).
 		Line(n.Doer.GetName()+" has assigned this task to "+n.Assignee.GetName()+".").

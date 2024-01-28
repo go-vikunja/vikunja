@@ -300,6 +300,7 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 			Doer:     event.Doer,
 			Task:     &task,
 			Assignee: event.Assignee,
+			Target:   subscriber.User,
 		}
 		err = notifications.Notify(subscriber.User, n)
 		if err != nil {
