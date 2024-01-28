@@ -256,6 +256,17 @@ func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, project 
 		return err
 	}
 
+	sub := &Subscription{
+		UserID:     newAssigneeID,
+		EntityType: SubscriptionEntityTask,
+		EntityID:   t.ID,
+	}
+
+	err = sub.Create(s, newAssignee)
+	if err != nil && !IsErrSubscriptionAlreadyExists(err) {
+		return err
+	}
+
 	doer, _ := user.GetFromAuth(auth)
 	err = events.Dispatch(&TaskAssigneeCreatedEvent{
 		Task:     t,

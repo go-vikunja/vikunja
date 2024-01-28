@@ -52,7 +52,6 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &SendTaskAssignedNotification{})
 	events.RegisterListener((&TaskDeletedEvent{}).Name(), &SendTaskDeletedNotification{})
 	events.RegisterListener((&ProjectCreatedEvent{}).Name(), &SendProjectCreatedNotification{})
-	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &SubscribeAssigneeToTask{})
 	events.RegisterListener((&TeamMemberAddedEvent{}).Name(), &SendTeamMemberAddedNotification{})
 	events.RegisterListener((&TaskCommentUpdatedEvent{}).Name(), &HandleTaskCommentEditMentions{})
 	events.RegisterListener((&TaskCreatedEvent{}).Name(), &HandleTaskCreateMentions{})
@@ -369,39 +368,6 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 	}
 
 	return nil
-}
-
-type SubscribeAssigneeToTask struct {
-}
-
-// Name defines the name for the SubscribeAssigneeToTask listener
-func (s *SubscribeAssigneeToTask) Name() string {
-	return "task.assignee.subscribe"
-}
-
-// Handle is executed when the event SubscribeAssigneeToTask listens on is fired
-func (s *SubscribeAssigneeToTask) Handle(msg *message.Message) (err error) {
-	event := &TaskAssigneeCreatedEvent{}
-	err = json.Unmarshal(msg.Payload, event)
-	if err != nil {
-		return err
-	}
-
-	sub := &Subscription{
-		UserID:     event.Assignee.ID,
-		EntityType: SubscriptionEntityTask,
-		EntityID:   event.Task.ID,
-	}
-
-	sess := db.NewSession()
-	defer sess.Close()
-
-	err = sub.Create(sess, event.Assignee)
-	if err != nil && !IsErrSubscriptionAlreadyExists(err) {
-		return err
-	}
-
-	return sess.Commit()
 }
 
 // HandleTaskCreateMentions  represents a listener
