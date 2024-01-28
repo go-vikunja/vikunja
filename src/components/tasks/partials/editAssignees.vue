@@ -12,7 +12,7 @@
 		:autocomplete-enabled="false"
 	>
 		<template #items="{items}">
-			<assignee-list :assignees="items" :remove="removeAssignee"/>
+			<assignee-list :assignees="items" :remove="removeAssignee" :disabled="disabled"/>
 		</template>
 		<template #searchResult="{option: user}">
 			<user :avatar-size="24" :show-username="true" :user="user"/>

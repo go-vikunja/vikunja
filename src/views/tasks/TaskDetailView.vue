@@ -37,11 +37,16 @@
 								{{ $t('task.attributes.assignees') }}
 							</div>
 							<edit-assignees
-								:disabled="!canWrite"
+								v-if="canWrite"
 								:project-id="task.projectId"
 								:task-id="task.id"
 								:ref="e => setFieldRef('assignees', e)"
 								v-model="task.assignees"
+							/>
+							<assignee-list
+								v-else
+								:assignees="task.assignees"
+								class="mt-2"
 							/>
 						</div>
 						<CustomTransition name="flash-background" appear>
@@ -513,6 +518,7 @@ import {useProjectStore} from '@/stores/projects'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {useAuthStore} from '@/stores/auth'
 import {playPopSound} from '@/helpers/playPop'
+import AssigneeList from '@/components/tasks/partials/assigneeList.vue'
 
 const {
 	taskId,
