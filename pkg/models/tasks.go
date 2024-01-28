@@ -1432,10 +1432,6 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	if _, err = s.ID(t.ID).Delete(Task{}); err != nil {
-		return err
-	}
-
 	// Delete assignees
 	if _, err = s.Where("task_id = ?", t.ID).Delete(TaskAssginee{}); err != nil {
 		return err
@@ -1482,6 +1478,12 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskReminder{})
 	if err != nil {
 		return
+	}
+
+	// Actually delete the task
+	_, err = s.ID(t.ID).Delete(Task{})
+	if err != nil {
+		return err
 	}
 
 	doer, _ := user.GetFromAuth(a)
