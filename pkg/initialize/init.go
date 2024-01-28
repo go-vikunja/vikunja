@@ -95,7 +95,6 @@ func FullInit() {
 	models.RegisterUserDeletionCron()
 	models.RegisterOldExportCleanupCron()
 	openid.CleanupSavedOpenIDProviders()
-	models.RegisterPeriodicTypesenseResyncCron()
 
 	// Start processing events
 	go func() {

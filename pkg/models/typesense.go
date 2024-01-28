@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
@@ -232,7 +231,7 @@ func ReindexAllTasks() (err error) {
 		return fmt.Errorf("could not index dummy task: %w", err)
 	}
 
-	err = reindexTasks(s, tasks)
+	err = reindexTasksInTypesense(s, tasks)
 	if err != nil {
 		return fmt.Errorf("could not reindex all tasks: %s", err.Error())
 	}
@@ -278,7 +277,7 @@ func getTypesenseTaskForTask(s *xorm.Session, task *Task, projectsCache map[int6
 	return
 }
 
-func reindexTasks(s *xorm.Session, tasks map[int64]*Task) (err error) {
+func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error) {
 
 	if len(tasks) == 0 {
 		log.Infof("No tasks to index")
@@ -313,6 +312,8 @@ func reindexTasks(s *xorm.Session, tasks map[int64]*Task) (err error) {
 		log.Errorf("Could not upsert task into Typesense", err)
 		return err
 	}
+
+	log.Debugf("Indexed tasks %v into Typesense", tasks)
 
 	return nil
 }
@@ -475,6 +476,8 @@ func convertTaskToTypesenseTask(task *Task) *typesenseTask {
 	return tt
 }
 
+// This function is only used to catch up with the Typesense Sync when it didn't index for some reason
+
 func SyncUpdatedTasksIntoTypesense() (err error) {
 	tasks := make(map[int64]*Task)
 
@@ -517,7 +520,7 @@ func SyncUpdatedTasksIntoTypesense() (err error) {
 	if len(tasks) > 0 {
 		log.Debugf("[Typesense Sync] Updating %d tasks", len(tasks))
 
-		err = reindexTasks(s, tasks)
+		err = reindexTasksInTypesense(s, tasks)
 		if err != nil {
 			_ = s.Rollback()
 			return
@@ -538,21 +541,4 @@ func SyncUpdatedTasksIntoTypesense() (err error) {
 	}
 
 	return s.Commit()
-}
-
-func RegisterPeriodicTypesenseResyncCron() {
-	if !config.TypesenseEnabled.GetBool() {
-		log.Debugf("[Typesense Sync] Typesense is disabled, not setting up sync cron")
-		return
-	}
-
-	err := cron.Schedule("* * * * *", func() {
-		err := SyncUpdatedTasksIntoTypesense()
-		if err != nil {
-			log.Fatalf("[Typesense Sync] Could not sync updated tasks into typesense: %s", err)
-		}
-	})
-	if err != nil {
-		log.Fatalf("[Typesense Sync] Could not register typesense resync cron: %s", err)
-	}
 }

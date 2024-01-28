@@ -70,6 +70,7 @@ func RegisterListeners() {
 	if config.TypesenseEnabled.GetBool() {
 		events.RegisterListener((&TaskDeletedEvent{}).Name(), &RemoveTaskFromTypesense{})
 		events.RegisterListener((&TaskCreatedEvent{}).Name(), &AddTaskToTypesense{})
+		events.RegisterListener((&TaskUpdatedEvent{}).Name(), &UpdateTaskInTypesense{})
 	}
 	if config.WebhooksEnabled.GetBool() {
 		RegisterEventForWebhook(&TaskCreatedEvent{})
@@ -511,7 +512,7 @@ type RemoveTaskFromTypesense struct {
 
 // Name defines the name for the RemoveTaskFromTypesense listener
 func (s *RemoveTaskFromTypesense) Name() string {
-	return "remove.task.from.typesense"
+	return "typesense.task.remove"
 }
 
 // Handle is executed when the event RemoveTaskFromTypesense listens on is fired
@@ -537,7 +538,7 @@ type AddTaskToTypesense struct {
 
 // Name defines the name for the AddTaskToTypesense listener
 func (l *AddTaskToTypesense) Name() string {
-	return "add.task.to.typesense"
+	return "typesense.task.add"
 }
 
 // Handle is executed when the event AddTaskToTypesense listens on is fired
@@ -561,6 +562,32 @@ func (l *AddTaskToTypesense) Handle(msg *message.Message) (err error) {
 		Documents().
 		Create(context.Background(), ttask)
 	return
+}
+
+// UpdateTaskInTypesense  represents a listener
+type UpdateTaskInTypesense struct {
+}
+
+// Name defines the name for the UpdateTaskInTypesense listener
+func (l *UpdateTaskInTypesense) Name() string {
+	return "typesense.task.update"
+}
+
+// Handle is executed when the event UpdateTaskInTypesense listens on is fired
+func (l *UpdateTaskInTypesense) Handle(msg *message.Message) (err error) {
+	event := &TaskUpdatedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	task := make(map[int64]*Task, 1)
+	task[event.Task.ID] = event.Task // Will be filled with all data by the Typesense connector
+
+	return reindexTasksInTypesense(s, task)
 }
 
 // IncreaseAttachmentCounter  represents a listener

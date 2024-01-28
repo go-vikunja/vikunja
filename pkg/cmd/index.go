@@ -26,6 +26,7 @@ import (
 
 func init() {
 	rootCmd.AddCommand(indexCmd)
+	rootCmd.AddCommand(partialReindexCmd)
 }
 
 var indexCmd = &cobra.Command{
@@ -35,8 +36,8 @@ var indexCmd = &cobra.Command{
 		initialize.FullInitWithoutAsync()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		if !config.TypesenseEnabled.GetBool() {
-			log.Error("Typesense not enabled")
+		if config.TypesenseURL.GetString() == "" {
+			log.Error("Typesense not configured")
 			return
 		}
 
@@ -50,6 +51,35 @@ var indexCmd = &cobra.Command{
 		err = models.ReindexAllTasks()
 		if err != nil {
 			log.Criticalf("Could not reindex all tasks into Typesense: %s", err.Error())
+			return
+		}
+
+		log.Infof("Done!")
+	},
+}
+
+var partialReindexCmd = &cobra.Command{
+	Use:   "partial-index",
+	Short: "Reindex any tasks which were not indexed yet into Typesense. This will not remove any existing index.",
+	PreRun: func(cmd *cobra.Command, args []string) {
+		initialize.FullInitWithoutAsync()
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		if config.TypesenseURL.GetString() == "" {
+			log.Error("Typesense not configured")
+			return
+		}
+
+		log.Infof("Indexing… This may take a while.")
+
+		err := models.CreateTypesenseCollections()
+		if err != nil {
+			log.Criticalf("Could not create Typesense collections: %s", err.Error())
+			return
+		}
+		err = models.SyncUpdatedTasksIntoTypesense()
+		if err != nil {
+			log.Criticalf("Could not reindex all changed tasks into Typesense: %s", err.Error())
 			return
 		}
 
