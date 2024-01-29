@@ -136,7 +136,7 @@
     "@types/is-touch-device": "1.0.2",
     "@types/lodash.debounce": "4.0.9",
     "@types/marked": "5.0.2",
-    "@types/node": "20.11.8",
+    "@types/node": "20.11.10",
     "@types/postcss-preset-env": "7.7.0",
     "@types/sortablejs": "1.15.7",
     "@typescript-eslint/eslint-plugin": "6.19.1",
