@@ -762,7 +762,7 @@
       "empty": "Noch keine Beschreibung vorhanden."
     },
     "assignee": {
-      "placeholder": "Tippe, um eine:n Benutzer:in zuzuweisen …",
+      "placeholder": "Tippe, um jemanden zuzuweisen …",
       "selectPlaceholder": "Diese:n Benutzer:in zuweisen",
       "assignSuccess": "Der:die Benutzer:in wurde erfolgreich zugewiesen.",
       "unassignSuccess": "Benutzer:innenzuweisung aufgehoben."
