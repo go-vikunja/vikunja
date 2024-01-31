@@ -623,7 +623,7 @@ func (vcls *VikunjaCaldavProjectStorage) getProjectRessource(isCollection bool) 
 	if !can {
 		_ = s.Rollback()
 		log.Errorf("User %v tried to access a caldav resource (Project %v) which they are not allowed to access", vcls.user.Username, vcls.project.ID)
-		return rr, models.ErrUserDoesNotHaveAccessToProject{ProjectID: vcls.project.ID}
+		return rr, models.ErrUserDoesNotHaveAccessToProject{ProjectID: vcls.project.ID, UserID: vcls.user.ID}
 	}
 	err = vcls.project.ReadOne(s, vcls.user)
 	if err != nil {

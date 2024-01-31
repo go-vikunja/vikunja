@@ -208,7 +208,10 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			return nil, 0, 0, err
 		}
 		if !canRead {
-			return nil, 0, 0, ErrUserDoesNotHaveAccessToProject{ProjectID: tf.ProjectID}
+			return nil, 0, 0, ErrUserDoesNotHaveAccessToProject{
+				ProjectID: tf.ProjectID,
+				UserID:    a.GetID(),
+			}
 		}
 		projects = []*Project{{ID: tf.ProjectID}}
 	}
