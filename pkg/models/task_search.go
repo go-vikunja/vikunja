@@ -300,9 +300,10 @@ func convertFilterValues(value interface{}) string {
 		return "false"
 	case time.Time:
 		return strconv.FormatInt(v.Unix(), 10)
+	default:
+		log.Errorf("Unknown search type for value %v of type %T", value, value)
 	}
 
-	log.Errorf("Unknown search type for value %v", value)
 	return ""
 }
 
