@@ -21,6 +21,7 @@ export const SUPPORTED_LOCALES = {
 	'hu-HU': 'Magyar',
 	'ar-SA': 'اَلْعَرَبِيَّةُ',
 	'sl-SI': 'Slovenščina',
+	// IMPORTANT: Also add new languages to useDayjsLanguageSync
 } as const
 
 export type SupportedLocale = keyof typeof SUPPORTED_LOCALES

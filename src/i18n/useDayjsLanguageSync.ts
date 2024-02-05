@@ -15,6 +15,13 @@ export const DAYJS_LOCALE_MAPPING = {
 	'nl-nl': 'nl',
 	'pt-pt': 'pt',
 	'zh-cn': 'zh-cn',
+	'no-NO': 'nn',
+	'es-ES': 'es',
+	'da-DK': 'da',
+	'ja-JP': 'ja',
+	'hu-HU': 'hu',
+	'ar-SA': 'ar-sa',
+	'sl-SI': 'sl',
 } as Record<SupportedLocale, ISOLanguage>
 
 export const DAYJS_LANGUAGE_IMPORTS = {
@@ -29,6 +36,13 @@ export const DAYJS_LANGUAGE_IMPORTS = {
 	'nl-nl': () => import('dayjs/locale/nl'),
 	'pt-pt': () => import('dayjs/locale/pt'),
 	'zh-cn': () => import('dayjs/locale/zh-cn'),
+	'no-no':  () => import('dayjs/locale/nn'),
+	'es-es':  () => import('dayjs/locale/es'),
+	'da-dk':  () => import('dayjs/locale/da'),
+	'ja-jp':  () => import('dayjs/locale/ja'),
+	'hu-hu':  () => import('dayjs/locale/hu'),
+	'ar-sa':  () => import('dayjs/locale/ar-sa'),
+	'sl-si':  () => import('dayjs/locale/sl'),
 } as Record<SupportedLocale, () => Promise<ILocale>>
 
 export function useDayjsLanguageSync(dayjsGlobal: typeof dayjs) {
