@@ -285,6 +285,15 @@ func convertFilterValues(value interface{}) string {
 		return strings.Join(filter, ",")
 	}
 
+	if stringSlice, is := value.([]string); is {
+		filter := []string{}
+		for _, v := range stringSlice {
+			filter = append(filter, convertFilterValues(v))
+		}
+
+		return strings.Join(filter, ",")
+	}
+
 	switch v := value.(type) {
 	case string:
 		return v
