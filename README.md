@@ -25,7 +25,7 @@ export DOCKER_BUILDKIT=1
 docker build -t vikunja/frontend .
 ```
 
-Refer to Refer [to multi-platform documentation](https://docs.docker.com/build/building/multi-platform/) in order to build for the different platform.
+Refer to [multi-platform documentation](https://docs.docker.com/build/building/multi-platform/) in order to build for different platforms.
 
 ## Project setup
 
