@@ -75,7 +75,7 @@ require (
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/xurls/v2 v2.5.0
-	src.techknowlogick.com/xgo v1.7.1-0.20240124202215-77ac23f331fe
+	src.techknowlogick.com/xgo v1.7.1-0.20240206191224-5aae65575674
 	src.techknowlogick.com/xormigrate v1.7.1
 	xorm.io/builder v0.3.13
 	xorm.io/xorm v1.3.7
