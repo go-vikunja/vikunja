@@ -333,4 +333,23 @@ function prepareFiltersAndLoadTasks() {
 .control.has-icons-right .icon {
 	transition: all $transition;
 }
+
+:deep(.single-task) {
+	.handle {
+		opacity: 1;
+		transition: opacity $transition;
+		margin-right: .25rem;
+		cursor: grab;
+	}
+
+	@media(hover: hover) and (pointer: fine) {
+		& .handle {
+			opacity: 0;
+		}
+
+		&:hover .handle {
+			opacity: 1;
+		}
+	}
+}
 </style>

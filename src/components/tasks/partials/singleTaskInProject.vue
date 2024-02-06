@@ -2,7 +2,7 @@
 	<div>
 		<div
 			:class="{'is-loading': taskService.loading}"
-			class="task loader-container"
+			class="task loader-container single-task"
 			@mouseup.stop.self="openTaskDetail"
 			@mousedown.stop.self="focusTaskLink"
 			ref="taskContainerRef"
@@ -435,21 +435,12 @@ function focusTaskLink() {
 		}
 	}
 
-	.handle {
-		opacity: 1;
-		transition: opacity $transition;
-		margin-right: .25rem;
-		cursor: grab;
-	}
-
 	@media(hover: hover) and (pointer: fine) {
-		& .favorite,
-		& .handle {
+		& .favorite {
 			opacity: 0;
 		}
 
-		&:hover .favorite,
-		&:hover .handle {
+		&:hover .favorite {
 			opacity: 1;
 		}
 	}

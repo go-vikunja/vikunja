@@ -30,7 +30,7 @@
 					</span>
 					<span
 						v-if="project.id > 0"
-						class="icon menu-item-icon handle lines-handle"
+						class="icon menu-item-icon handle"
 						:class="{'has-color-bubble': project.hexColor !== ''}"
 					>
 						<icon icon="grip-lines"/>
