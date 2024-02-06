@@ -46,7 +46,7 @@
 					<DatepickerInline
 						v-if="activeForm === 'absolute'"
 						v-model="reminderDate"
-						@update:modelValue="setReminderDate(close)"
+						@update:modelValue="setReminderDateAndClose(close)"
 					/>
 
 					<x-button
@@ -105,7 +105,7 @@ const presets = computed<TaskReminderModel[]>(() => [
 	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 7, relativeTo: defaultRelativeTo},
 	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 30, relativeTo: defaultRelativeTo},
 ])
-const reminderDate = ref(null)
+const reminderDate = ref<Date|null>(null)
 
 type availableForms = null | 'relative' | 'absolute'
 
@@ -135,7 +135,17 @@ const reminderText = computed(() => {
 watch(
 	() => modelValue,
 	(newReminder) => {
-		reminder.value = newReminder || new TaskReminderModel()
+		if(newReminder) {
+			reminder.value = newReminder
+			
+			if(newReminder.relativeTo === null) {
+				reminderDate.value = new Date(newReminder.reminder)
+			}
+			
+			return
+		}
+		
+		reminder.value = new TaskReminderModel()
 	},
 	{immediate: true},
 )
@@ -148,7 +158,7 @@ function updateData() {
 	}
 }
 
-function setReminderDate(close) {
+function setReminderDateAndClose(close) {
 	reminder.value.reminder = reminderDate.value === null
 		? null
 		: new Date(reminderDate.value)
