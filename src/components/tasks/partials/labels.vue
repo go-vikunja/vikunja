@@ -25,5 +25,9 @@ defineProps({
 <style lang="scss" scoped>
 .label-wrapper {
 	display: inline;
+	
+	:deep(.tag) {
+		margin-bottom: .25rem;
+	}
 }
 </style>
