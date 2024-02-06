@@ -123,6 +123,23 @@ watch(
 
 function transformTaskToGanttBar(t: ITask) {
 	const black = 'var(--grey-800)'
+	
+	const taskColor = getHexColor(t.hexColor)
+	
+	let textColor = black
+	let backgroundColor = 'var(--grey-100)'
+	if(t.startDate) {
+		backgroundColor = taskColor ?? ''
+		if(typeof taskColor === 'undefined') {
+			textColor = 'white'
+			backgroundColor = 'var(--primary)'
+		} else if(colorIsDark(taskColor)) {
+			textColor = black
+		} else {
+			textColor = 'white'
+		}
+	}
+	
 	return [{
 		startDate: isoToKebabDate(t.startDate ? t.startDate.toISOString() : props.defaultTaskStartDate),
 		endDate: isoToKebabDate(t.endDate ? t.endDate.toISOString() : props.defaultTaskEndDate),
@@ -131,8 +148,8 @@ function transformTaskToGanttBar(t: ITask) {
 			label: t.title,
 			hasHandles: true,
 			style: {
-				color: t.startDate ? (colorIsDark(getHexColor(t.hexColor)) ? black : 'white') : black,
-				backgroundColor: t.startDate ? getHexColor(t.hexColor) : 'var(--grey-100)',
+				color: textColor,
+				backgroundColor,
 				border: t.startDate ? '' : '2px dashed var(--grey-300)',
 				'text-decoration': t.done ? 'line-through' : null,
 			},

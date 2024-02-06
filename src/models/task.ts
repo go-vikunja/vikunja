@@ -23,11 +23,9 @@ import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import TaskReminderModel from '@/models/taskReminder'
 import {secondsToPeriod} from '@/helpers/time/period'
 
-export const TASK_DEFAULT_COLOR = '#1973ff'
-
-export function	getHexColor(hexColor: string): string {
+export function	getHexColor(hexColor: string): string | undefined {
 	if (hexColor === '' || hexColor === '#') {
-		return TASK_DEFAULT_COLOR
+		return undefined
 	}
 
 	return hexColor

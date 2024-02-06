@@ -4,10 +4,10 @@
 		:class="{
 			'is-loading': loadingInternal || loading,
 			'draggable': !(loadingInternal || loading),
-			'has-light-text': color !== TASK_DEFAULT_COLOR && !colorIsDark(color),
-			'has-custom-background-color': color !== TASK_DEFAULT_COLOR ? color : undefined,
+			'has-light-text': !colorIsDark(color),
+			'has-custom-background-color': color ?? undefined,
 		}"
-		:style="{'background-color': color !== TASK_DEFAULT_COLOR ? color : undefined}"
+		:style="{'background-color': color ?? undefined}"
 		@click.exact="openTaskDetail()"
 		@click.ctrl="() => toggleTaskDone(task)"
 		@click.meta="() => toggleTaskDone(task)"
@@ -83,7 +83,7 @@ import Done from '@/components/misc/Done.vue'
 import Labels from '@/components/tasks/partials/labels.vue'
 import ChecklistSummary from './checklist-summary.vue'
 
-import {TASK_DEFAULT_COLOR, getHexColor} from '@/models/task'
+import {getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 import {SUPPORTED_IMAGE_SUFFIX} from '@/models/attachment'
 import AttachmentService from '@/services/attachment'

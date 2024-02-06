@@ -472,7 +472,7 @@ import {klona} from 'klona/lite'
 import {eventToHotkeyString} from '@github/hotkey'
 
 import TaskService from '@/services/task'
-import TaskModel, {TASK_DEFAULT_COLOR} from '@/models/task'
+import TaskModel from '@/models/task'
 
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
@@ -582,9 +582,7 @@ const color = computed(() => {
 		? task.value.getHexColor()
 		: undefined
 
-	return color === TASK_DEFAULT_COLOR
-		? ''
-		: color
+	return color
 })
 
 const hasAttachments = computed(() => attachmentStore.attachments.length > 0)
