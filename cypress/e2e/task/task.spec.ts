@@ -562,7 +562,7 @@ describe('Task', () => {
 				.click()
 
 			const today = new Date()
-			const day = today.toLocaleString('default', {day: '2-digit'})
+			const day = today.toLocaleString('default', {day: 'numeric'})
 			const month = today.toLocaleString('default', {month: 'short'})
 			const year = today.toLocaleString('default', {year: 'numeric'})
 			const date = `${day} ${month} ${year}, 12:00:00`
@@ -605,7 +605,7 @@ describe('Task', () => {
 				.click()
 
 			const today = new Date()
-			const day = today.toLocaleString('default', {day: '2-digit'})
+			const day = today.toLocaleString('default', {day: 'numeric'})
 			const month = today.toLocaleString('default', {month: 'short'})
 			const year = today.toLocaleString('default', {year: 'numeric'})
 			const date = `${day} ${month} ${year}, 12:00:00`
