@@ -746,7 +746,7 @@ watch(
 		height: auto;
 
 		&.ProseMirror-selectednode {
-			outline: 3px solid #68cef8;
+			outline: 3px solid var(--primary);
 		}
 	}
 
