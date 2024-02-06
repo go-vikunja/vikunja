@@ -1,5 +1,7 @@
 <template>
 	<Multiselect
+		class="edit-assignees"
+		:class="{'has-assignees': assignees.length > 0}"
 		:loading="projectUserService.loading"
 		:placeholder="$t('task.assignee.placeholder')"
 		:multiple="true"
@@ -115,3 +117,9 @@ async function findUser(query: string) {
 		})
 }
 </script>
+
+<style lang="scss">
+.edit-assignees.has-assignees.multiselect .input {
+	padding-left: 0;
+}
+</style>
