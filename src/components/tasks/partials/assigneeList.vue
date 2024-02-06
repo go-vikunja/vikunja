@@ -33,7 +33,7 @@ const hasDelete = computed(() => typeof remove !== 'undefined' && !disabled)
 				:avatar-size="avatarSize"
 				:show-username="false"
 				:user="user"
-				:class="{'m-2': hasDelete, 'mr-3': !hasDelete}"
+				:class="{'m-2': hasDelete}"
 			/>
 			<BaseButton
 				:key="'delete'+user.id"
