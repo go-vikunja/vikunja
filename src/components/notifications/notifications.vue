@@ -156,6 +156,8 @@ async function markAllRead() {
 	const notificationService = new NotificationService()
 	await notificationService.markAllRead()
 	success({message: t('notification.markAllReadSuccess')})
+	
+	notifications.value.forEach(n => n.readAt = new Date())
 }
 </script>
 
