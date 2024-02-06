@@ -304,7 +304,6 @@ watch(
 )
 
 const editor = useEditor({
-	content: modelValue,
 	editable: isEditing.value,
 	extensions: [
 		// Starterkit:
