@@ -36,7 +36,7 @@ defineProps({
 	--progress-height: #{$size-normal};
 	--progress-bar-background-color: var(--border-light, #{$border-light});
 	--progress-value-background-color: var(--grey-500, #{$text});
-	--progress-border-radius: var(--radius-rounded, #{$radius-rounded});
+	--progress-border-radius: #{$radius};
 	--progress-indeterminate-duration: 1.5s;
 
 	appearance: none;
