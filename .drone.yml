@@ -1273,6 +1273,6 @@ steps:
         src/i18n/lang/en.json: en.json
 ---
 kind: signature
-hmac: cff233ec220ef90956e3c3815995183f9a40e5ef2dde18d5294982ec4b9e1f1b
+hmac: b7b744c3bcbef8832ec93b9717aa9deef462509aa2770c31165cdcece7b98df2
 
 ...
