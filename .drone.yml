@@ -1219,7 +1219,7 @@ steps:
         - linux/arm/v7
         - linux/arm64/v8
       context: ./frontend
-      dockerfile: ./fro3ntend/Dockerfile
+      dockerfile: ./frontend/Dockerfile
     depends_on: [ generate-tags ]
     when:
       ref:
@@ -1288,6 +1288,6 @@ steps:
         frontend/src/i18n/lang/en.json: en.json
 ---
 kind: signature
-hmac: 08bf8b7b75c82860a7e7da07148e13e5be3221a9ac0ddc0e051aac4cd2d59b36
+hmac: f7ebd61ac78fa0cce777914cf81c71be64016b4e5213de32546a612875084381
 
 ...
