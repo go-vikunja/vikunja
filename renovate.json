@@ -2,6 +2,48 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "labels": ["dependencies"],
   "extends": [
-    "config:base"
+    "config:base",
+    "config:js-app"
+  ],
+  "hostRules": [
+    {
+      "timeout": 600000
+    }
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": ["happy-dom"],
+      "extends": ["schedule:weekly"]
+    },
+    {
+      "groupName": "caniuse-and-related",
+      "matchPackageNames": ["caniuse-lite", "browserslist"],
+      "extends": ["schedule:weekly"]
+    },
+    {
+      "groupName": "vueuse",
+      "matchPackagePrefixes": [
+        "@vueuse/"
+      ]
+    },
+    {
+      "groupName": "histoire",
+      "matchPackagePrefixes": [
+        "@histoire/",
+        "histoire"
+      ]
+    },
+    {
+      "groupName": "tiptap",
+      "matchPackagePrefixes": [
+        "@tiptap/",
+        "tiptap"
+      ]
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "groupName": "dev-dependencies",
+      "extends": ["schedule:daily"]
+    }
   ]
 }
