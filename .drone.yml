@@ -117,7 +117,6 @@ steps:
       GOPROXY: 'https://goproxy.kolaente.de'
     commands:
       - mage -compile ./mage-static
-      - env
     when:
       event: [ push, tag, pull_request ]
 
@@ -137,7 +136,7 @@ steps:
     pull: always
     environment:
       GOPROXY: 'https://goproxy.kolaente.de'
-    depends_on: [ build ]
+    depends_on: [ mage ]
     commands:
       - export "GOROOT=$(go env GOROOT)"
       - ./mage-static check:golangci
@@ -1288,6 +1287,6 @@ steps:
         frontend/src/i18n/lang/en.json: en.json
 ---
 kind: signature
-hmac: 0783b49472a26f489f7dded1e31473996ba432f7155fc75409b4820f34a5cb0e
+hmac: c814fdec67436ee37b02ca5b4891f9a0d0f430a86eb12e539fdda2845a3954f4
 
 ...
