@@ -46,7 +46,6 @@
 				class="task-progress"
 				v-if="task.percentDone > 0"
 				:value="task.percentDone * 100"
-				is-small
 			/>
 
 			<div class="footer">
