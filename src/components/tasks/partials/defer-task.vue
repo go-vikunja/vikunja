@@ -6,33 +6,33 @@
 		<label class="label">{{ $t('task.deferDueDate.title') }}</label>
 		<div class="defer-days">
 			<x-button
-				@click.prevent.stop="() => deferDays(1)"
 				:shadow="false"
 				variant="secondary"
+				@click.prevent.stop="() => deferDays(1)"
 			>
 				{{ $t('task.deferDueDate.1day') }}
 			</x-button>
 			<x-button
-				@click.prevent.stop="() => deferDays(3)"
 				:shadow="false"
 				variant="secondary"
+				@click.prevent.stop="() => deferDays(3)"
 			>
 				{{ $t('task.deferDueDate.3days') }}
 			</x-button>
 			<x-button
-				@click.prevent.stop="() => deferDays(7)"
 				:shadow="false"
 				variant="secondary"
+				@click.prevent.stop="() => deferDays(7)"
 			>
 				{{ $t('task.deferDueDate.1week') }}
 			</x-button>
 		</div>
 		<flat-pickr
+			v-model="dueDate"
 			:class="{ disabled: taskService.loading }"
 			:config="flatPickerConfig"
 			:disabled="taskService.loading || undefined"
 			class="input"
-			v-model="dueDate"
 		/>
 	</div>
 </template>

@@ -1,9 +1,12 @@
 <template>
 	<div>
-		<message v-if="loading">
+		<Message v-if="loading">
 			{{ $t('sharing.authenticating') }}
-		</message>
-		<div v-if="authenticateWithPassword" class="box">
+		</Message>
+		<div
+			v-if="authenticateWithPassword"
+			class="box"
+		>
 			<p class="pb-2">
 				{{ $t('sharing.passwordRequired') }}
 			</p>
@@ -11,21 +14,28 @@
 				<div class="control">
 					<input
 						id="linkSharePassword"
+						v-model="password"
+						v-focus
 						type="password"
 						class="input"
 						:placeholder="$t('user.auth.passwordPlaceholder')"
-						v-model="password"
-						v-focus
 						@keyup.enter.prevent="authenticate()"
-					/>
+					>
 				</div>
 			</div>
 
-			<x-button @click="authenticate()" :loading="loading">
+			<x-button
+				:loading="loading"
+				@click="authenticate()"
+			>
 				{{ $t('user.auth.login') }}
 			</x-button>
 
-			<Message variant="danger" class="mt-4" v-if="errorMessage !== ''">
+			<Message
+				v-if="errorMessage !== ''"
+				variant="danger"
+				class="mt-4"
+			>
 				{{ errorMessage }}
 			</Message>
 		</div>

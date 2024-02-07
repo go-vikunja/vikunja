@@ -1,5 +1,8 @@
 <template>
-	<div :class="{ 'is-loading': loading}" class="loader-container">
+	<div
+		:class="{ 'is-loading': loading}"
+		class="loader-container"
+	>
 		<x-button
 			:to="{name:'labels.create'}"
 			class="is-pulled-right"
@@ -13,61 +16,81 @@
 			<p v-if="Object.entries(labels).length > 0">
 				{{ $t('label.description') }}
 			</p>
-			<p v-else class="has-text-centered has-text-grey is-italic">
+			<p
+				v-else
+				class="has-text-centered has-text-grey is-italic"
+			>
 				{{ $t('label.newCTA') }}
-				<router-link :to="{name:'labels.create'}">{{ $t('label.create.title') }}.</router-link>
+				<router-link :to="{name:'labels.create'}">
+					{{ $t('label.create.title') }}.
+				</router-link>
 			</p>
 		</div>
 
 		<div class="columns">
 			<div class="labels-list column">
 				<span
-					:class="{'disabled': userInfo.id !== l.createdBy.id}" :key="l.id"
+					v-for="l in labels"
+					:key="l.id"
+					:class="{'disabled': userInfo.id !== l.createdBy.id}"
 					:style="{'background': l.hexColor, 'color': l.textColor}"
 					class="tag"
-					v-for="l in labels"
 				>
 					<span
 						v-if="userInfo.id !== l.createdBy.id"
-						v-tooltip.bottom="$t('label.edit.forbidden')">
+						v-tooltip.bottom="$t('label.edit.forbidden')"
+					>
 						{{ l.title }}
 					</span>
 					<BaseButton
+						v-else
 						:style="{'color': l.textColor}"
 						@click="editLabel(l)"
-						v-else>
+					>
 						{{ l.title }}
 					</BaseButton>
-					<BaseButton @click="showDeleteDialoge(l)" class="delete is-small" v-if="userInfo.id === l.createdBy.id" />
+					<BaseButton
+						v-if="userInfo.id === l.createdBy.id"
+						class="delete is-small"
+						@click="showDeleteDialoge(l)"
+					/>
 				</span>
 			</div>
-			<div class="column is-4" v-if="isLabelEdit">
-				<card :title="$t('label.edit.header')" :has-close="true" @close="() => isLabelEdit = false">
+			<div
+				v-if="isLabelEdit"
+				class="column is-4"
+			>
+				<card
+					:title="$t('label.edit.header')"
+					:has-close="true"
+					@close="() => isLabelEdit = false"
+				>
 					<form @submit.prevent="editLabelSubmit()">
 						<div class="field">
 							<label class="label">{{ $t('label.attributes.title') }}</label>
 							<div class="control">
 								<input
+									v-model="labelEditLabel.title"
 									class="input"
 									:placeholder="$t('label.attributes.titlePlaceholder')"
 									type="text"
-									v-model="labelEditLabel.title"/>
+								>
 							</div>
 						</div>
 						<div class="field">
 							<label class="label">{{ $t('label.attributes.description') }}</label>
 							<div class="control">
-								<editor
-									:placeholder="$t('label.attributes.description')"
+								<Editor
 									v-if="editorActive"
 									v-model="labelEditLabel.description"
+									:placeholder="$t('label.attributes.description')"
 								/>
 							</div>
 						</div>
 						<div class="field">
 							<label class="label">{{ $t('label.attributes.color') }}</label>
 							<div class="control">
-								<color-picker v-model="labelEditLabel.hexColor"/>
+								<ColorPicker v-model="labelEditLabel.hexColor" />
 							</div>
 						</div>
 						<div class="field has-addons">
@@ -82,9 +105,9 @@
 							</div>
 							<div class="control">
 								<x-button
-									@click="showDeleteDialoge(labelEditLabel)"
 									icon="trash-alt"
 									class="is-danger"
+									@click="showDeleteDialoge(labelEditLabel)"
 								/>
 							</div>
 						</div>
@@ -97,11 +120,15 @@
 				@close="showDeleteModal = false"
 				@submit="deleteLabel(labelToDelete)"
 			>
-				<template #header><span>{{ $t('task.label.delete.header') }}</span></template>
+				<template #header>
+					<span>{{ $t('task.label.delete.header') }}</span>
+				</template>
 
 				<template #text>
-					<p>{{ $t('task.label.delete.text1') }}<br/>
-						{{ $t('task.label.delete.text2') }}</p>
+					<p>
+						{{ $t('task.label.delete.text1') }}<br>
+						{{ $t('task.label.delete.text2') }}
+					</p>
 				</template>
 			</modal>
 		</div>

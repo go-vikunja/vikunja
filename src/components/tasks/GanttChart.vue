@@ -3,7 +3,11 @@
 		v-if="props.isLoading && !ganttBars.length || dayjsLanguageLoading"
 		class="gantt-container"
 	/>
-	<div ref="ganttContainer" class="gantt-container" v-else>
+	<div
+		v-else
+		ref="ganttContainer"
+		class="gantt-container"
+	>
 		<GGanttChart
 			:date-format="DAYJS_ISO_DATE_FORMAT"
 			:chart-start="isoToKebabDate(filters.dateFrom)"
@@ -12,9 +16,9 @@
 			bar-start="startDate"
 			bar-end="endDate"
 			:grid="true"
-			@dragend-bar="updateGanttTask"
-			@dblclick-bar="openTask"
 			:width="ganttChartWidth"
+			@dragendBar="updateGanttTask"
+			@dblclickBar="openTask"
 		>
 			<template #timeunit="{value, date}">
 				<div
@@ -72,13 +76,13 @@ export interface GanttChartProps {
 	defaultTaskEndDate: DateISO
 }
 
-const DAYJS_ISO_DATE_FORMAT = 'YYYY-MM-DD'
-
 const props = defineProps<GanttChartProps>()
 
 const emit = defineEmits<{
   (e: 'update:task', task: ITaskPartialWithId): void
 }>()
+
+const DAYJS_ISO_DATE_FORMAT = 'YYYY-MM-DD'
 
 const {tasks, filters} = toRefs(props)
 

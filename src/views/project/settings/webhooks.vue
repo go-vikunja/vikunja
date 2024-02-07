@@ -1,5 +1,5 @@
 <script lang="ts">
-export default {name: 'project-setting-webhooks'}
+export default {name: 'ProjectSettingWebhooks'}
 </script>
 
 <script lang="ts" setup>
@@ -118,48 +118,61 @@ function validateSelectedEvents() {
 </script>
 
 <template>
-	<create-edit
+	<CreateEdit
 		:title="$t('project.webhooks.title')"
 		:has-primary-action="false"
 		:wide="true"
 	>
 		<x-button
 			v-if="!(webhooks?.length === 0 || showNewForm)"
-			@click="showNewForm = true"
 			icon="plus"
-			class="mb-4">
+			class="mb-4"
+			@click="showNewForm = true"
+		>
 			{{ $t('project.webhooks.create') }}
 		</x-button>
 
-		<div class="p-4" v-if="webhooks?.length === 0 || showNewForm">
+		<div
+			v-if="webhooks?.length === 0 || showNewForm"
+			class="p-4"
+		>
 			<div class="field">
-				<label class="label" for="targetUrl">
+				<label
+					class="label"
+					for="targetUrl"
+				>
 					{{ $t('project.webhooks.targetUrl') }}
 				</label>
 				<div class="control">
 					<input
-						required
 						id="targetUrl"
+						v-model="newWebhook.targetUrl"
+						required
 						class="input"
 						:placeholder="$t('project.webhooks.targetUrl')"
-						v-model="newWebhook.targetUrl"
 						@focusout="validateTargetUrl"
-					/>
+					>
 				</div>
-				<p class="help is-danger" v-if="!webhookTargetUrlValid">
+				<p
+					v-if="!webhookTargetUrlValid"
+					class="help is-danger"
+				>
 					{{ $t('project.webhooks.targetUrlInvalid') }}
 				</p>
 			</div>
 			<div class="field">
-				<label class="label" for="secret">
+				<label
+					class="label"
+					for="secret"
+				>
 					{{ $t('project.webhooks.secret') }}
 				</label>
 				<div class="control">
 					<input
 						id="secret"
-						class="input"
 						v-model="newWebhook.secret"
-					/>
+						class="input"
+					>
 				</div>
 				<p class="help">
 					{{ $t('project.webhooks.secretHint') }}
@@ -169,65 +182,77 @@ function validateSelectedEvents() {
 				</p>
 			</div>
 			<div class="field">
-				<label class="label" for="secret">
+				<label
+					class="label"
+					for="secret"
+				>
 					{{ $t('project.webhooks.events') }}
 				</label>
 				<p class="help">
 					{{ $t('project.webhooks.eventsHint') }}
 				</p>
 				<div class="control">
-					<fancycheckbox
+					<Fancycheckbox
 						v-for="event in availableEvents"
 						:key="event"
-						class="available-events-check"
 						v-model="newWebhookEvents[event]"
-						@update:model-value="validateSelectedEvents"
+						class="available-events-check"
+						@update:modelValue="validateSelectedEvents"
 					>
 						{{ event }}
-					</fancycheckbox>
+					</Fancycheckbox>
 				</div>
-				<p class="help is-danger" v-if="!selectedEventsValid">
+				<p
+					v-if="!selectedEventsValid"
+					class="help is-danger"
+				>
 					{{ $t('project.webhooks.mustSelectEvents') }}
 				</p>
 			</div>
-			<x-button @click="create" icon="plus">
+			<x-button
+				icon="plus"
+				@click="create"
+			>
 				{{ $t('project.webhooks.create') }}
 			</x-button>
 		</div>
 
 		<table
-			class="table has-actions is-striped is-hoverable is-fullwidth"
 			v-if="webhooks?.length > 0"
+			class="table has-actions is-striped is-hoverable is-fullwidth"
 		>
 			<thead>
-			<tr>
-				<th>{{ $t('project.webhooks.targetUrl') }}</th>
-				<th>{{ $t('project.webhooks.events') }}</th>
-				<th>{{ $t('misc.created') }}</th>
-				<th>{{ $t('misc.createdBy') }}</th>
-				<th></th>
-			</tr>
+				<tr>
+					<th>{{ $t('project.webhooks.targetUrl') }}</th>
+					<th>{{ $t('project.webhooks.events') }}</th>
+					<th>{{ $t('misc.created') }}</th>
+					<th>{{ $t('misc.createdBy') }}</th>
+					<th />
+				</tr>
 			</thead>
 			<tbody>
-			<tr :key="w.id" v-for="w in webhooks">
-				<td>{{ w.targetUrl }}</td>
-				<td>{{ w.events.join(', ') }}</td>
-				<td>{{ formatDateShort(w.created) }}</td>
-				<td>
-					<User
-						:avatar-size="25"
-						:user="w.createdBy"
-					/>
-				</td>
+				<tr
+					v-for="w in webhooks"
+					:key="w.id"
+				>
+					<td>{{ w.targetUrl }}</td>
+					<td>{{ w.events.join(', ') }}</td>
+					<td>{{ formatDateShort(w.created) }}</td>
+					<td>
+						<User
+							:avatar-size="25"
+							:user="w.createdBy"
+						/>
+					</td>
 
-				<td class="actions">
-					<x-button
-						@click="() => {showDeleteModal = true;webhookIdToDelete = w.id}"
-						class="is-danger"
-						icon="trash-alt"
-					/>
-				</td>
-			</tr>
+					<td class="actions">
+						<x-button
+							class="is-danger"
+							icon="trash-alt"
+							@click="() => {showDeleteModal = true;webhookIdToDelete = w.id}"
+						/>
+					</td>
+				</tr>
 			</tbody>
 		</table>
 
@@ -244,7 +269,7 @@ function validateSelectedEvents() {
 				<p>{{ $t('project.webhooks.deleteText') }}</p>
 			</template>
 		</modal>
-	</create-edit>
+	</CreateEdit>
 </template>
 
 <style lang="scss" scoped>

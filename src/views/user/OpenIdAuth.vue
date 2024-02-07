@@ -1,14 +1,21 @@
 <template>
 	<div>
-		<message variant="danger" v-if="errorMessage">
+		<Message
+			v-if="errorMessage"
+			variant="danger"
+		>
 			{{ errorMessage }}
-		</message>
-		<message variant="danger" v-if="errorMessageFromQuery" class="mt-2">
+		</Message>
+		<Message
+			v-if="errorMessageFromQuery"
+			variant="danger"
+			class="mt-2"
+		>
 			{{ errorMessageFromQuery }}
-		</message>
-		<message v-if="loading">
+		</Message>
+		<Message v-if="loading">
 			{{ $t('user.auth.authenticating') }}
-		</message>
+		</Message>
 	</div>
 </template>
 

@@ -52,9 +52,10 @@ export function useRouteWithModal() {
 		}
 		currentModal.value = h(component, routeProps)
 	})
+	
+	const historyState = computed(() => route.fullPath && window.history.state)
 
 	function closeModal() {
-		const historyState = computed(() => route.fullPath && window.history.state)
 
 		// If the current project was changed because the user moved the currently opened task while coming from kanban,
 		// we need to reflect that change in the route when they close the task modal.

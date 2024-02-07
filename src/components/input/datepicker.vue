@@ -1,22 +1,29 @@
 <template>
 	<div class="datepicker">
-		<SimpleButton @click.stop="toggleDatePopup" class="show" :disabled="disabled || undefined">
+		<SimpleButton
+			class="show"
+			:disabled="disabled || undefined"
+			@click.stop="toggleDatePopup"
+		>
 			{{ date === null ? chooseDateLabel : formatDateShort(date) }}
 		</SimpleButton>
 
 		<CustomTransition name="fade">
-			<div v-if="show" class="datepicker-popup" ref="datepickerPopup">
-
+			<div
+				v-if="show"
+				ref="datepickerPopup"
+				class="datepicker-popup"
+			>
 				<DatepickerInline
 					v-model="date"
-					@update:model-value="updateData"
+					@update:modelValue="updateData"
 				/>
 
 				<x-button
+					v-cy="'closeDatepicker'"
 					class="datepicker__close-button"
 					:shadow="false"
 					@click="close"
-					v-cy="'closeDatepicker'"
 				>
 					{{ $t('misc.confirm') }}
 				</x-button>
@@ -56,7 +63,7 @@ const props = defineProps({
 	},
 })
 
-const emit = defineEmits(['update:modelValue', 'close', 'close-on-change'])
+const emit = defineEmits(['update:modelValue', 'close', 'closeOnChange'])
 
 const date = ref<Date | null>()
 const show = ref(false)
@@ -108,7 +115,7 @@ function close() {
 		emit('close', changed.value)
 		if (changed.value) {
 			changed.value = false
-			emit('close-on-change', changed.value)
+			emit('closeOnChange', changed.value)
 		}
 	}, 200)
 }

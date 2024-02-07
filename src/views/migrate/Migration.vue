@@ -13,7 +13,7 @@
 					class="migration-service-image"
 					:alt="name"
 					:src="icon"
-				/>
+				>
 				{{ name }}
 			</router-link>
 		</div>

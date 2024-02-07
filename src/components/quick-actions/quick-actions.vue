@@ -1,33 +1,53 @@
 <template>
-	<modal :enabled="active" @close="closeQuickActions" :overflow="isNewTaskCommand">
+	<modal
+		:enabled="active"
+		:overflow="isNewTaskCommand"
+		@close="closeQuickActions"
+	>
 		<div class="card quick-actions">
-			<div class="action-input" :class="{'has-active-cmd': selectedCmd !== null}">
-				<div class="active-cmd tag" v-if="selectedCmd !== null">
+			<div
+				class="action-input"
+				:class="{'has-active-cmd': selectedCmd !== null}"
+			>
+				<div
+					v-if="selectedCmd !== null"
+					class="active-cmd tag"
+				>
 					{{ selectedCmd.title }}
 				</div>
 				<input
+					ref="searchInput"
+					v-model="query"
 					v-focus
 					class="input"
 					:class="{'is-loading': loading}"
-					v-model="query"
 					:placeholder="placeholder"
 					@keyup="search"
-					ref="searchInput"
 					@keydown.down.prevent="select(0, 0)"
 					@keyup.prevent.delete="unselectCmd"
 					@keyup.prevent.enter="doCmd"
 					@keyup.prevent.esc="closeQuickActions"
-				/>
+				>
 			</div>
 
-			<div class="help has-text-grey-light p-2" v-if="hintText !== '' && !isNewTaskCommand">
+			<div
+				v-if="hintText !== '' && !isNewTaskCommand"
+				class="help has-text-grey-light p-2"
+			>
 				{{ hintText }}
 			</div>
 
-			<quick-add-magic v-if="isNewTaskCommand"/>
+			<QuickAddMagic v-if="isNewTaskCommand" />
 
-			<div class="results" v-if="selectedCmd === null">
-				<div v-for="(r, k) in results" :key="k" class="result">
+			<div
+				v-if="selectedCmd === null"
+				class="results"
+			>
+				<div
+					v-for="(r, k) in results"
+					:key="k"
+					class="result"
+				>
 					<span class="result-title">
 						{{ r.title }}
 					</span>
@@ -35,9 +55,9 @@
 						<BaseButton
 							v-for="(i, key) in r.items"
 							:key="key"
+							:ref="(el: Element | ComponentPublicInstance | null) => setResultRefs(el, k, key)"
 							class="result-item-button"
 							:class="{'is-strikethrough': (i as DoAction<ITask>)?.done}"
-							:ref="(el: Element | ComponentPublicInstance | null) => setResultRefs(el, k, key)"
 							@keydown.up.prevent="select(k, key - 1)"
 							@keydown.down.prevent="select(k, key + 1)"
 							@click.prevent.stop="doAction(r.type, i)"
@@ -45,10 +65,10 @@
 							@keyup.prevent.esc="searchInput?.focus()"
 						>
 							<template v-if="r.type === ACTION_TYPE.LABELS">
-								<x-label :label="i"/>
+								<XLabel :label="i" />
 							</template>
 							<template v-else-if="r.type === ACTION_TYPE.TASK">
-								<single-task-inline-readonly
+								<SingleTaskInlineReadonly
 									:task="i"
 									:show-project="true"
 								/>

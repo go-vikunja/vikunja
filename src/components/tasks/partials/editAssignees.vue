@@ -1,23 +1,31 @@
 <template>
 	<Multiselect
+		v-model="assignees"
 		class="edit-assignees"
 		:class="{'has-assignees': assignees.length > 0}"
 		:loading="projectUserService.loading"
 		:placeholder="$t('task.assignee.placeholder')"
 		:multiple="true"
-		@search="findUser"
 		:search-results="foundUsers"
-		@select="addAssignee"
 		label="name"
 		:select-placeholder="$t('task.assignee.selectPlaceholder')"
-		v-model="assignees"
 		:autocomplete-enabled="false"
+		@search="findUser"
+		@select="addAssignee"
 	>
 		<template #items="{items}">
-			<assignee-list :assignees="items" :remove="removeAssignee" :disabled="disabled"/>
+			<AssigneeList
+				:assignees="items"
+				:remove="removeAssignee"
+				:disabled="disabled"
+			/>
 		</template>
 		<template #searchResult="{option: user}">
-			<user :avatar-size="24" :show-username="true" :user="user"/>
+			<User
+				:avatar-size="24"
+				:show-username="true"
+				:user="user"
+			/>
 		</template>
 	</Multiselect>
 </template>

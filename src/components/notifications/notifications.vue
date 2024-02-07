@@ -1,51 +1,80 @@
 <template>
 	<div class="notifications">
-		<slot name="trigger" toggleOpen="() => showNotifications = !showNotifications" :has-unread-notifications="unreadNotifications > 0">
-			<BaseButton class="trigger-button" @click.stop="showNotifications = !showNotifications">
-				<span class="unread-indicator" v-if="unreadNotifications > 0"></span>
-				<icon icon="bell"/>
+		<slot
+			name="trigger"
+			toggle-open="() => showNotifications = !showNotifications"
+			:has-unread-notifications="unreadNotifications > 0"
+		>
+			<BaseButton
+				class="trigger-button"
+				@click.stop="showNotifications = !showNotifications"
+			>
+				<span
+					v-if="unreadNotifications > 0"
+					class="unread-indicator"
+				/>
+				<icon icon="bell" />
 			</BaseButton>
 		</slot>
 
 		<CustomTransition name="fade">
-			<div class="notifications-list" v-if="showNotifications" ref="popup">
+			<div
+				v-if="showNotifications"
+				ref="popup"
+				class="notifications-list"
+			>
 				<span class="head">{{ $t('notification.title') }}</span>
 				<div
 					v-for="(n, index) in notifications"
 					:key="n.id"
 					class="single-notification"
 				>
-					<div class="read-indicator" :class="{'read': n.readAt !== null}"></div>
-					<user
+					<div
+						class="read-indicator"
+						:class="{'read': n.readAt !== null}"
+					/>
+					<User
+						v-if="n.notification.doer"
 						:user="n.notification.doer"
 						:show-username="false"
 						:avatar-size="16"
-						v-if="n.notification.doer"
 					/>
 					<div class="detail">
 						<div>
-							<span class="has-text-weight-bold mr-1" v-if="n.notification.doer">
+							<span
+								v-if="n.notification.doer"
+								class="has-text-weight-bold mr-1"
+							>
 								{{ getDisplayName(n.notification.doer) }}
 							</span>
-							<BaseButton @click="() => to(n, index)()" class="has-text-left">
+							<BaseButton
+								class="has-text-left"
+								@click="() => to(n, index)()"
+							>
 								{{ n.toText(userInfo) }}
 							</BaseButton>
 						</div>
-						<span class="created" v-tooltip="formatDateLong(n.created)">
+						<span
+							v-tooltip="formatDateLong(n.created)"
+							class="created"
+						>
 							{{ formatDateSince(n.created) }}
 						</span>
 					</div>
 				</div>
-				<x-button
+				<XButton
 					v-if="notifications.length > 0 && unreadNotifications > 0"
+					variant="tertiary"
+					class="mt-2 is-fullwidth" 
 					@click="markAllRead"
-					variant="tertiary" 
-					class="mt-2 is-fullwidth"
 				>
 					{{ $t('notification.markAllRead') }}
-				</x-button>
-				<p class="nothing" v-if="notifications.length === 0">
-					{{ $t('notification.none') }}<br/>
+				</XButton>
+				<p
+					v-if="notifications.length === 0"
+					class="nothing"
+				>
+					{{ $t('notification.none') }}<br>
 					<span class="explainer">
 						{{ $t('notification.explainer') }}
 					</span>

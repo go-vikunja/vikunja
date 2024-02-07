@@ -17,10 +17,14 @@
 			:src="coverImageBlobUrl"
 			alt=""
 			class="cover-image"
-		/>
+		>
 		<div class="p-2">
 			<span class="task-id">
-				<Done class="kanban-card__done" :is-done="task.done" variant="small"/>
+				<Done
+					class="kanban-card__done"
+					:is-done="task.done"
+					variant="small"
+				/>
 				<template v-if="task.identifier === ''">
 					#{{ task.index }}
 				</template>
@@ -29,12 +33,13 @@
 				</template>
 			</span>
 			<span
+				v-if="task.dueDate > 0"
+				v-tooltip="formatDateLong(task.dueDate)"
 				:class="{'overdue': task.dueDate <= new Date() && !task.done}"
 				class="due-date"
-				v-if="task.dueDate > 0"
-				v-tooltip="formatDateLong(task.dueDate)">
+			>
 				<span class="icon">
-					<icon :icon="['far', 'calendar-alt']"/>
+					<icon :icon="['far', 'calendar-alt']" />
 				</span>
 				<time :datetime="formatISO(task.dueDate)">
 					{{ formatDateSince(task.dueDate) }}
@@ -43,32 +48,44 @@
 			<h3>{{ task.title }}</h3>
 
 			<ProgressBar
-				class="task-progress"
 				v-if="task.percentDone > 0"
+				class="task-progress"
 				:value="task.percentDone * 100"
 			/>
-
 			<div class="footer">
-				<labels :labels="task.labels"/>
-				<priority-label
+				<Labels :labels="task.labels" />
+				<PriorityLabel
 					:priority="task.priority"
 					:done="task.done"
-					class="is-inline-flex is-align-items-center"/>
-				<assignee-list
+					class="is-inline-flex is-align-items-center"
+				/>
+				<AssigneeList
 					v-if="task.assignees.length > 0"
 					:assignees="task.assignees"
 					:avatar-size="24"
 					class="mr-1"
 				/>
-				<checklist-summary :task="task" class="checklist"/>
-				<span class="icon" v-if="task.attachments.length > 0">
-					<icon icon="paperclip"/>	
+				<ChecklistSummary
+					:task="task"
+					class="checklist"
+				/>
+				<span
+					v-if="task.attachments.length > 0"
+					class="icon"
+				>
+					<icon icon="paperclip" />	
 				</span>
-				<span v-if="!isEditorContentEmpty(task.description)" class="icon">
-					<icon icon="align-left"/>
+				<span
+					v-if="!isEditorContentEmpty(task.description)"
+					class="icon"
+				>
+					<icon icon="align-left" />
 				</span>
-				<span class="icon" v-if="task.repeatAfter.amount > 0">
-					<icon icon="history"/>
+				<span
+					v-if="task.repeatAfter.amount > 0"
+					class="icon"
+				>
+					<icon icon="history" />
 				</span>
 			</div>
 		</div>
@@ -98,10 +115,6 @@ import {useAuthStore} from '@/stores/auth'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 
-const router = useRouter()
-
-const loadingInternal = ref(false)
-
 const {
 	task,
 	loading = false,
@@ -109,6 +122,10 @@ const {
 	task: ITask,
 	loading: boolean,
 }>()
+
+const router = useRouter()
+
+const loadingInternal = ref(false)
 
 const color = computed(() => getHexColor(task.hexColor))
 

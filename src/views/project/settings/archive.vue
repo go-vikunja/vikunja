@@ -3,7 +3,9 @@
 		@close="$router.back()"
 		@submit="archiveProject()"
 	>
-		<template #header><span>{{ project.isArchived ? $t('project.archive.unarchive') : $t('project.archive.archive') }}</span></template>
+		<template #header>
+			<span>{{ project.isArchived ? $t('project.archive.unarchive') : $t('project.archive.archive') }}</span>
+		</template>
 		
 		<template #text>
 			<p>{{ project.isArchived ? $t('project.archive.unarchiveText') : $t('project.archive.archiveText') }}</p>
@@ -12,7 +14,7 @@
 </template>
 
 <script lang="ts">
-export default {name: 'project-setting-archive'}
+export default {name: 'ProjectSettingArchive'}
 </script>
 
 <script setup lang="ts">

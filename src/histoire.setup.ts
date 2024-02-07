@@ -22,8 +22,8 @@ export const setupVue3 = defineSetupVue3(({ app }) => {
 
 	app.directive('cy', cypress)
 
-	app.component('icon', FontAwesomeIcon)
+	app.component('Icon', FontAwesomeIcon)
 	app.component('XButton', XButton)
-	app.component('modal', Modal)
-	app.component('card', Card)
+	app.component('Modal', Modal)
+	app.component('Card', Card)
 })

@@ -1,8 +1,18 @@
 <template>
 	<BaseButton>
-		<icon icon="sort-up" v-if="order === 'asc'"/>
-		<icon icon="sort-up" v-else-if="order === 'desc'" rotation="180"/>
-		<icon icon="sort" v-else/>
+		<icon
+			v-if="order === 'asc'"
+			icon="sort-up"
+		/>
+		<icon
+			v-else-if="order === 'desc'"
+			icon="sort-up"
+			rotation="180"
+		/>
+		<icon
+			v-else
+			icon="sort"
+		/>
 	</BaseButton>
 </template>
 

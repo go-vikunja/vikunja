@@ -2,229 +2,265 @@
 	<ProjectWrapper
 		class="project-kanban"
 		:project-id="projectId"
-		viewName="kanban"
+		view-name="kanban"
 	>
 		<template #header>
-			<div class="filter-container" v-if="!isSavedFilter(project)">
+			<div
+				v-if="!isSavedFilter(project)"
+				class="filter-container"
+			>
 				<div class="items">
-					<filter-popup v-model="params" />
+					<FilterPopup v-model="params" />
 				</div>
 			</div>
 		</template>
 
 		<template #default>
 			<div class="kanban-view">
-			<div
-				:class="{ 'is-loading': loading && !oneTaskUpdating}"
-				class="kanban kanban-bucket-container loader-container"
-			>
-			<draggable
-				v-bind="DRAG_OPTIONS"
-				:modelValue="buckets"
-				@update:modelValue="updateBuckets"
-				@end="updateBucketPosition"
-				@start="() => dragBucket = true"
-				group="buckets"
-				:disabled="!canWrite || newTaskInputFocused"
-				tag="ul"
-				:item-key="({id}: IBucket) => `bucket${id}`"
-				:component-data="bucketDraggableComponentData"
-			>
-				<template #item="{element: bucket, index: bucketIndex }">
-					<div
-						class="bucket"
-						:class="{'is-collapsed': collapsedBuckets[bucket.id]}"
-					>
-						<div class="bucket-header" @click="() => unCollapseBucket(bucket)">
-							<span
-								v-if="project?.doneBucketId === bucket.id"
-								class="icon is-small has-text-success mr-2"
-								v-tooltip="$t('project.kanban.doneBucketHint')"
-							>
-								<icon icon="check-double"/>
-							</span>
-							<h2
-								@keydown.enter.prevent.stop="($event.target as HTMLElement).blur()"
-								@keydown.esc.prevent.stop="($event.target as HTMLElement).blur()"
-								@blur="saveBucketTitle(bucket.id, ($event.target as HTMLElement).textContent as string)"
-								@click="focusBucketTitle"
-								class="title input"
-								:contenteditable="(bucketTitleEditable && canWrite && !collapsedBuckets[bucket.id]) ? true : undefined"
-								:spellcheck="false">{{ bucket.title }}</h2>
-							<span
-								:class="{'is-max': bucket.count >= bucket.limit}"
-								class="limit"
-								v-if="bucket.limit > 0">
-								{{ bucket.count }}/{{ bucket.limit }}
-							</span>
-							<dropdown
-								class="is-right options"
-								v-if="canWrite && !collapsedBuckets[bucket.id]"
-								trigger-icon="ellipsis-v"
-								@close="() => showSetLimitInput = false"
-							>
-								<dropdown-item
-									@click.stop="showSetLimitInput = true"
-								>
-									<div class="field has-addons" v-if="showSetLimitInput">
-										<div class="control">
-											<input
-												@keyup.esc="() => showSetLimitInput = false"
-												@keyup.enter="() => showSetLimitInput = false"
-												:value="bucket.limit"
-												@input="(event) => setBucketLimit(bucket.id, parseInt((event.target as HTMLInputElement).value))"
-												class="input"
-												type="number"
-												min="0"
-												v-focus.always
-											/>
-										</div>
-										<div class="control">
-											<x-button
-												:disabled="bucket.limit < 0"
-												:icon="['far', 'save']"
-												:shadow="false"
-												v-cy="'setBucketLimit'"
-											/>
-										</div>
-									</div>
-									<template v-else>
-										{{
-											$t('project.kanban.limit', {limit: bucket.limit > 0 ? bucket.limit : $t('project.kanban.noLimit')})
-										}}
-									</template>
-								</dropdown-item>
-								<dropdown-item
-									@click.stop="toggleDoneBucket(bucket)"
-									v-tooltip="$t('project.kanban.doneBucketHintExtended')"
-									:icon-class="{'has-text-success': bucket.id === project?.doneBucketId}"
-									icon="check-double"
-								>
-									{{ $t('project.kanban.doneBucket') }}
-								</dropdown-item>
-								<dropdown-item
-									@click.stop="toggleDefaultBucket(bucket)"
-									v-tooltip="$t('project.kanban.defaultBucketHint')"
-									:icon-class="{'has-text-primary': bucket.id === project.defaultBucketId}"
-									icon="th"
-								>
-									{{ $t('project.kanban.defaultBucket') }}
-								</dropdown-item>
-								<dropdown-item
-									@click.stop="() => collapseBucket(bucket)"
-									icon="angles-up"
-								>
-									{{ $t('project.kanban.collapse') }}
-								</dropdown-item>
-								<dropdown-item
-									:class="{'is-disabled': buckets.length <= 1}"
-									@click.stop="() => deleteBucketModal(bucket.id)"
-									v-tooltip="buckets.length <= 1 ? $t('project.kanban.deleteLast') : ''"
-									icon-class="has-text-danger"
-									icon="trash-alt"
-								>
-									{{ $t('misc.delete') }}
-								</dropdown-item>
-							</dropdown>
-						</div>
-
-						<draggable
-							v-bind="DRAG_OPTIONS"
-							:modelValue="bucket.tasks"
-							@update:modelValue="(tasks) => updateTasks(bucket.id, tasks)"
-							@start="() => dragstart(bucket)"
-							@end="updateTaskPosition"
-							:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
-							:disabled="!canWrite"
-							:data-bucket-index="bucketIndex"
-							tag="ul"
-							:item-key="(task: ITask) => `bucket${bucket.id}-task${task.id}`"
-							:component-data="getTaskDraggableTaskComponentData(bucket)"
-						>
-							<template #footer>
-								<div class="bucket-footer" v-if="canWrite">
-									<div class="field" v-if="showNewTaskInput[bucket.id]">
-										<div class="control" :class="{'is-loading': loading || taskLoading}">
-											<input
-												class="input"
-												:disabled="loading || taskLoading || undefined"
-												@focusout="toggleShowNewTaskInput(bucket.id)"
-												@focusin="() => newTaskInputFocused = true"
-												@keyup.enter="addTaskToBucket(bucket.id)"
-												@keyup.esc="toggleShowNewTaskInput(bucket.id)"
-												:placeholder="$t('project.kanban.addTaskPlaceholder')"
-												type="text"
-												v-focus.always
-												v-model="newTaskText"
-											/>
-										</div>
-										<p class="help is-danger" v-if="newTaskError[bucket.id] && newTaskText === ''">
-											{{ $t('project.create.addTitleRequired') }}
-										</p>
-									</div>
-									<x-button
-										@click="toggleShowNewTaskInput(bucket.id)"
-										class="is-fullwidth has-text-centered"
-										:shadow="false"
-										v-else
-										icon="plus"
-										variant="secondary"
-									>
-										{{ bucket.tasks.length === 0 ? $t('project.kanban.addTask') : $t('project.kanban.addAnotherTask') }}
-									</x-button>
-								</div>
-							</template>
-
-							<template #item="{element: task}">
-								<div class="task-item">
-									<kanban-card class="kanban-card" :task="task" :loading="taskUpdating[task.id] ?? false"/>
-								</div>
-							</template>
-						</draggable>
-					</div>
-				</template>
-			</draggable>
-
-			<div class="bucket new-bucket" v-if="canWrite && !loading && buckets.length > 0">
-				<input
-					:class="{'is-loading': loading}"
-					:disabled="loading || undefined"
-					@blur="() => showNewBucketInput = false"
-					@keyup.enter="createNewBucket"
-					@keyup.esc="($event.target as HTMLInputElement).blur()"
-					class="input"
-					:placeholder="$t('project.kanban.addBucketPlaceholder')"
-					type="text"
-					v-focus.always
-					v-if="showNewBucketInput"
-					v-model="newBucketTitle"
-				/>
-				<x-button
-					v-else
-					@click="() => showNewBucketInput = true"
-					:shadow="false"
-					class="is-transparent is-fullwidth has-text-centered"
-					variant="secondary"
-					icon="plus"
+				<div
+					:class="{ 'is-loading': loading && !oneTaskUpdating}"
+					class="kanban kanban-bucket-container loader-container"
 				>
-					{{ $t('project.kanban.addBucket') }}
-				</x-button>
+					<draggable
+						v-bind="DRAG_OPTIONS"
+						:model-value="buckets"
+						group="buckets"
+						:disabled="!canWrite || newTaskInputFocused"
+						tag="ul"
+						:item-key="({id}: IBucket) => `bucket${id}`"
+						:component-data="bucketDraggableComponentData"
+						@update:modelValue="updateBuckets"
+						@end="updateBucketPosition"
+						@start="() => dragBucket = true"
+					>
+						<template #item="{element: bucket, index: bucketIndex }">
+							<div
+								class="bucket"
+								:class="{'is-collapsed': collapsedBuckets[bucket.id]}"
+							>
+								<div
+									class="bucket-header"
+									@click="() => unCollapseBucket(bucket)"
+								>
+									<span
+										v-if="project?.doneBucketId === bucket.id"
+										v-tooltip="$t('project.kanban.doneBucketHint')"
+										class="icon is-small has-text-success mr-2"
+									>
+										<icon icon="check-double" />
+									</span>
+									<h2
+										class="title input"
+										:contenteditable="(bucketTitleEditable && canWrite && !collapsedBuckets[bucket.id]) ? true : undefined"
+										:spellcheck="false"
+										@keydown.enter.prevent.stop="($event.target as HTMLElement).blur()"
+										@keydown.esc.prevent.stop="($event.target as HTMLElement).blur()"
+										@blur="saveBucketTitle(bucket.id, ($event.target as HTMLElement).textContent as string)"
+										@click="focusBucketTitle"
+									>
+										{{ bucket.title }}
+									</h2>
+									<span
+										v-if="bucket.limit > 0"
+										:class="{'is-max': bucket.count >= bucket.limit}"
+										class="limit"
+									>
+										{{ bucket.count }}/{{ bucket.limit }}
+									</span>
+									<Dropdown
+										v-if="canWrite && !collapsedBuckets[bucket.id]"
+										class="is-right options"
+										trigger-icon="ellipsis-v"
+										@close="() => showSetLimitInput = false"
+									>
+										<DropdownItem
+											@click.stop="showSetLimitInput = true"
+										>
+											<div
+												v-if="showSetLimitInput"
+												class="field has-addons"
+											>
+												<div class="control">
+													<input
+														v-focus.always
+														:value="bucket.limit"
+														class="input"
+														type="number"
+														min="0"
+														@keyup.esc="() => showSetLimitInput = false"
+														@keyup.enter="() => showSetLimitInput = false"
+														@input="(event) => setBucketLimit(bucket.id, parseInt((event.target as HTMLInputElement).value))"
+													>
+												</div>
+												<div class="control">
+													<x-button
+														v-cy="'setBucketLimit'"
+														:disabled="bucket.limit < 0"
+														:icon="['far', 'save']"
+														:shadow="false"
+													/>
+												</div>
+											</div>
+											<template v-else>
+												{{
+													$t('project.kanban.limit', {limit: bucket.limit > 0 ? bucket.limit : $t('project.kanban.noLimit')})
+												}}
+											</template>
+										</DropdownItem>
+										<DropdownItem
+											v-tooltip="$t('project.kanban.doneBucketHintExtended')"
+											:icon-class="{'has-text-success': bucket.id === project?.doneBucketId}"
+											icon="check-double"
+											@click.stop="toggleDoneBucket(bucket)"
+										>
+											{{ $t('project.kanban.doneBucket') }}
+										</DropdownItem>
+										<DropdownItem
+											v-tooltip="$t('project.kanban.defaultBucketHint')"
+											:icon-class="{'has-text-primary': bucket.id === project.defaultBucketId}"
+											icon="th"
+											@click.stop="toggleDefaultBucket(bucket)"
+										>
+											{{ $t('project.kanban.defaultBucket') }}
+										</DropdownItem>
+										<DropdownItem
+											icon="angles-up"
+											@click.stop="() => collapseBucket(bucket)"
+										>
+											{{ $t('project.kanban.collapse') }}
+										</DropdownItem>
+										<DropdownItem
+											v-tooltip="buckets.length <= 1 ? $t('project.kanban.deleteLast') : ''"
+											:class="{'is-disabled': buckets.length <= 1}"
+											icon-class="has-text-danger"
+											icon="trash-alt"
+											@click.stop="() => deleteBucketModal(bucket.id)"
+										>
+											{{ $t('misc.delete') }}
+										</DropdownItem>
+									</Dropdown>
+								</div>
+
+								<draggable
+									v-bind="DRAG_OPTIONS"
+									:model-value="bucket.tasks"
+									:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
+									:disabled="!canWrite"
+									:data-bucket-index="bucketIndex"
+									tag="ul"
+									:item-key="(task: ITask) => `bucket${bucket.id}-task${task.id}`"
+									:component-data="getTaskDraggableTaskComponentData(bucket)"
+									@update:modelValue="(tasks) => updateTasks(bucket.id, tasks)"
+									@start="() => dragstart(bucket)"
+									@end="updateTaskPosition"
+								>
+									<template #footer>
+										<div
+											v-if="canWrite"
+											class="bucket-footer"
+										>
+											<div
+												v-if="showNewTaskInput[bucket.id]"
+												class="field"
+											>
+												<div
+													class="control"
+													:class="{'is-loading': loading || taskLoading}"
+												>
+													<input
+														v-model="newTaskText"
+														v-focus.always
+														class="input"
+														:disabled="loading || taskLoading || undefined"
+														:placeholder="$t('project.kanban.addTaskPlaceholder')"
+														type="text"
+														@focusout="toggleShowNewTaskInput(bucket.id)"
+														@focusin="() => newTaskInputFocused = true"
+														@keyup.enter="addTaskToBucket(bucket.id)"
+														@keyup.esc="toggleShowNewTaskInput(bucket.id)"
+													>
+												</div>
+												<p
+													v-if="newTaskError[bucket.id] && newTaskText === ''"
+													class="help is-danger"
+												>
+													{{ $t('project.create.addTitleRequired') }}
+												</p>
+											</div>
+											<x-button
+												v-else
+												class="is-fullwidth has-text-centered"
+												:shadow="false"
+												icon="plus"
+												variant="secondary"
+												@click="toggleShowNewTaskInput(bucket.id)"
+											>
+												{{ bucket.tasks.length === 0 ? $t('project.kanban.addTask') : $t('project.kanban.addAnotherTask') }}
+											</x-button>
+										</div>
+									</template>
+
+									<template #item="{element: task}">
+										<div class="task-item">
+											<KanbanCard
+												class="kanban-card"
+												:task="task"
+												:loading="taskUpdating[task.id] ?? false"
+											/>
+										</div>
+									</template>
+								</draggable>
+							</div>
+						</template>
+					</draggable>
+
+					<div
+						v-if="canWrite && !loading && buckets.length > 0"
+						class="bucket new-bucket"
+					>
+						<input
+							v-if="showNewBucketInput"
+							v-model="newBucketTitle"
+							v-focus.always
+							:class="{'is-loading': loading}"
+							:disabled="loading || undefined"
+							class="input"
+							:placeholder="$t('project.kanban.addBucketPlaceholder')"
+							type="text"
+							@blur="() => showNewBucketInput = false"
+							@keyup.enter="createNewBucket"
+							@keyup.esc="($event.target as HTMLInputElement).blur()"
+						>
+						<x-button
+							v-else
+							:shadow="false"
+							class="is-transparent is-fullwidth has-text-centered"
+							variant="secondary"
+							icon="plus"
+							@click="() => showNewBucketInput = true"
+						>
+							{{ $t('project.kanban.addBucket') }}
+						</x-button>
+					</div>
+				</div>
+
+				<modal
+					:enabled="showBucketDeleteModal"
+					@close="showBucketDeleteModal = false"
+					@submit="deleteBucket()"
+				>
+					<template #header>
+						<span>{{ $t('project.kanban.deleteHeaderBucket') }}</span>
+					</template>
+
+					<template #text>
+						<p>
+							{{ $t('project.kanban.deleteBucketText1') }}<br>
+							{{ $t('project.kanban.deleteBucketText2') }}
+						</p>
+					</template>
+				</modal>
 			</div>
-		</div>
-
-		<modal
-			:enabled="showBucketDeleteModal"
-			@close="showBucketDeleteModal = false"
-			@submit="deleteBucket()"
-		>
-			<template #header><span>{{ $t('project.kanban.deleteHeaderBucket') }}</span></template>
-
-			<template #text>
-				<p>{{ $t('project.kanban.deleteBucketText1') }}<br/>
-					{{ $t('project.kanban.deleteBucketText2') }}</p>
-			</template>
-		</modal>
-		</div>
 		</template>
 	</ProjectWrapper>
 </template>
@@ -258,6 +294,12 @@ import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import {isSavedFilter} from '@/services/savedFilter'
 import {success} from '@/message'
 import {useProjectStore} from '@/stores/projects'
+
+const {
+	projectId = undefined,
+} = defineProps<{
+	projectId: number,
+}>()
 
 const DRAG_OPTIONS = {
 	// sortable options
@@ -330,12 +372,6 @@ const bucketDraggableComponentData = computed(() => ({
 		{'dragging-disabled': !canWrite.value},
 	],
 }))
-const {
-	projectId = undefined,
-} = defineProps<{
-	projectId: number,
-}>()
-
 const canWrite = computed(() => baseStore.currentProject?.maxRight > Rights.READ)
 const project = computed(() => projectId ? projectStore.projects[projectId]: null)
 

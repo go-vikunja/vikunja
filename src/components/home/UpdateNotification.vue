@@ -1,11 +1,16 @@
 <template>
-	<div class="update-notification" v-if="updateAvailable">
-		<p class="update-notification__message">{{ $t('update.available') }}</p>
+	<div
+		v-if="updateAvailable"
+		class="update-notification"
+	>
+		<p class="update-notification__message">
+			{{ $t('update.available') }}
+		</p>
 		<x-button
-			@click="refreshApp()"
 			:shadow="false"
 			:wrap="false"
-			>
+			@click="refreshApp()"
+		>
 			{{ $t('update.do') }}
 		</x-button>
 	</div>

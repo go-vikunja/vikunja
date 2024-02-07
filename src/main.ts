@@ -66,10 +66,10 @@ setLanguage(browserLanguage).then(() => {
 	app.directive('shortcut', shortcut)
 	app.directive('cy', cypress)
 
-	app.component('icon', FontAwesomeIcon)
-	app.component('x-button', Button)
-	app.component('modal', Modal)
-	app.component('card', Card)
+	app.component('Icon', FontAwesomeIcon)
+	app.component('XButton', Button)
+	app.component('Modal', Modal)
+	app.component('Card', Card)
 
 	app.config.errorHandler = (err, vm, info) => {
 		if (import.meta.env.DEV) {

@@ -7,9 +7,9 @@
 		{{ $t('filters.clear') }}
 	</x-button>
 	<x-button
-		@click="() => modalOpen = true"
 		variant="secondary"
 		icon="filter"
+		@click="() => modalOpen = true"
 	>
 		{{ $t('filters.title') }}
 	</x-button>
@@ -20,10 +20,10 @@
 		variant="hint-modal"
 		@close="() => modalOpen = false"
 	>
-		<filters
-			:has-title="true"
-			v-model="value"
+		<Filters
 			ref="filters"
+			v-model="value"
+			:has-title="true"
 			class="filter-popup"
 		/>
 	</modal>

@@ -1,17 +1,26 @@
 <template>
-	<div class="base-checkbox" v-cy="'checkbox'">
+	<div
+		v-cy="'checkbox'"
+		class="base-checkbox"
+	>
 		<input
-			type="checkbox"
 			:id="checkboxId"
+			type="checkbox"
 			class="is-sr-only"
 			:checked="modelValue"
-			@change="(event) => emit('update:modelValue', (event.target as HTMLInputElement).checked)"
 			:disabled="disabled || undefined"
-		/>
+			@change="(event) => emit('update:modelValue', (event.target as HTMLInputElement).checked)"
+		>
 
-		<slot name="label" :checkboxId="checkboxId">
-			<label :for="checkboxId" class="base-checkbox__label">
-				<slot/>
+		<slot
+			name="label"
+			:checkbox-id="checkboxId"
+		>
+			<label
+				:for="checkboxId"
+				class="base-checkbox__label"
+			>
+				<slot />
 			</label>
 		</slot>
 	</div>

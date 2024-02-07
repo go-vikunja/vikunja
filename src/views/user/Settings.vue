@@ -3,15 +3,21 @@
 		<div class="user-settings">
 			<nav class="navigation">
 				<ul>
-					<li v-for="({routeName, title }, index) in navigationItems" :key="index">
-						<router-link class="navigation-link" :to="{name: routeName}">
+					<li
+						v-for="({routeName, title }, index) in navigationItems"
+						:key="index"
+					>
+						<router-link
+							class="navigation-link"
+							:to="{name: routeName}"
+						>
 							{{ title }}
 						</router-link>
 					</li>
 				</ul>
 			</nav>
 			<section class="view">
-				<router-view/>
+				<router-view />
 			</section>
 		</div>
 	</div>

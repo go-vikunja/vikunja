@@ -1,13 +1,13 @@
 <template>
-    <ul class="project-grid">
-			<li
-				v-for="(item, index) in filteredProjects"
-				:key="`project_${item.id}_${index}`"
-				class="project-grid-item"
-			>
-				<ProjectCard :project="item" />
-			</li>
-    </ul>
+	<ul class="project-grid">
+		<li
+			v-for="(item, index) in filteredProjects"
+			:key="`project_${item.id}_${index}`"
+			class="project-grid-item"
+		>
+			<ProjectCard :project="item" />
+		</li>
+	</ul>
 </template>
 
 <script lang="ts" setup>

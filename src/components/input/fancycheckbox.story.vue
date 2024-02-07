@@ -26,32 +26,42 @@ const withoutInitialState = ref<boolean | undefined>()
 			</FancyCheckbox>
 
 			Visualisation
-			<input type="checkbox" v-model="isChecked">
+			<input
+				v-model="isChecked"
+				type="checkbox"
+			>
 			{{ isChecked }}
 		</Variant>
 		<Variant title="Enabled Initially">
 			<FancyCheckbox
-				:disabled="isDisabled"
 				v-model="isCheckedInitiallyEnabled"
+				:disabled="isDisabled"
 			>
 				We want you to use this option
 			</FancyCheckbox>
 
 			Visualisation
-			<input type="checkbox" v-model="isCheckedInitiallyEnabled">
+			<input
+				v-model="isCheckedInitiallyEnabled"
+				type="checkbox"
+			>
 			{{ isCheckedInitiallyEnabled }}
 		</Variant>
 		<Variant title="Disabled">
 			<FancyCheckbox
 				disabled
-				:modelValue="isCheckedDisabled"
-				@update:model-value="logEvent('Setting disabled: This should never happen', $event)"
+				:model-value="isCheckedDisabled"
+				@update:modelValue="logEvent('Setting disabled: This should never happen', $event)"
 			>
 				You can't change this
 			</FancyCheckbox>
 
 			Visualisation
-			<input type="checkbox" v-model="isCheckedDisabled" disabled>
+			<input
+				v-model="isCheckedDisabled"
+				type="checkbox"
+				disabled
+			>
 			{{ isCheckedDisabled }}
 		</Variant>
 
@@ -64,7 +74,11 @@ const withoutInitialState = ref<boolean | undefined>()
 			</FancyCheckbox>
 
 			Visualisation
-			<input type="checkbox" v-model="withoutInitialState" disabled>
+			<input
+				v-model="withoutInitialState"
+				type="checkbox"
+				disabled
+			>
 			{{ withoutInitialState }}
 		</Variant>
 	</Story>

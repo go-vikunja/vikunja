@@ -1,56 +1,90 @@
 <template>
 	<div class="control repeat-after-input">
 		<div class="buttons has-addons is-centered mt-2">
-			<x-button variant="secondary" class="is-small" @click="() => setRepeatAfter(1, 'days')">
+			<x-button
+				variant="secondary"
+				class="is-small"
+				@click="() => setRepeatAfter(1, 'days')"
+			>
 				{{ $t('task.repeat.everyDay') }}
 			</x-button>
-			<x-button variant="secondary" class="is-small" @click="() => setRepeatAfter(1, 'weeks')">
+			<x-button
+				variant="secondary"
+				class="is-small"
+				@click="() => setRepeatAfter(1, 'weeks')"
+			>
 				{{ $t('task.repeat.everyWeek') }}
 			</x-button>
-			<x-button variant="secondary" class="is-small" @click="() => setRepeatAfter(30, 'days')">
+			<x-button
+				variant="secondary"
+				class="is-small"
+				@click="() => setRepeatAfter(30, 'days')"
+			>
 				{{ $t('task.repeat.every30d') }}
 			</x-button>
 		</div>
 		<div class="is-flex is-align-items-center mb-2">
-			<label for="repeatMode" class="is-fullwidth">
+			<label
+				for="repeatMode"
+				class="is-fullwidth"
+			>
 				{{ $t('task.repeat.mode') }}:
 			</label>
 			<div class="control">
 				<div class="select">
-					<select @change="updateData" v-model="task.repeatMode" id="repeatMode">
-						<option :value="TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT">{{ $t('misc.default') }}</option>
-						<option :value="TASK_REPEAT_MODES.REPEAT_MODE_MONTH">{{ $t('task.repeat.monthly') }}</option>
-						<option :value="TASK_REPEAT_MODES.REPEAT_MODE_FROM_CURRENT_DATE">{{ $t('task.repeat.fromCurrentDate') }}</option>
+					<select
+						id="repeatMode"
+						v-model="task.repeatMode"
+						@change="updateData"
+					>
+						<option :value="TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT">
+							{{ $t('misc.default') }}
+						</option>
+						<option :value="TASK_REPEAT_MODES.REPEAT_MODE_MONTH">
+							{{ $t('task.repeat.monthly') }}
+						</option>
+						<option :value="TASK_REPEAT_MODES.REPEAT_MODE_FROM_CURRENT_DATE">
+							{{ $t('task.repeat.fromCurrentDate') }}
+						</option>
 					</select>
 				</div>
 			</div>
 		</div>
-		<div class="is-flex" v-if="task.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_MONTH">
+		<div
+			v-if="task.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_MONTH"
+			class="is-flex"
+		>
 			<p class="pr-4">
 				{{ $t('task.repeat.each') }}
 			</p>
 			<div class="field has-addons is-fullwidth">
 				<div class="control">
 					<input
+						v-model="repeatAfter.amount"
 						:disabled="disabled || undefined"
-						@change="updateData"
 						class="input"
 						:placeholder="$t('task.repeat.specifyAmount')"
-						v-model="repeatAfter.amount"
 						type="number"
 						min="0"
-					/>
+						@change="updateData"
+					>
 				</div>
 				<div class="control">
 					<div class="select">
 						<select
 							v-model="repeatAfter.type"
-							@change="updateData"
 							:disabled="disabled || undefined"
+							@change="updateData"
 						>
-							<option value="hours">{{ $t('task.repeat.hours') }}</option>
-							<option value="days">{{ $t('task.repeat.days') }}</option>
-							<option value="weeks">{{ $t('task.repeat.weeks') }}</option>
+							<option value="hours">
+								{{ $t('task.repeat.hours') }}
+							</option>
+							<option value="days">
+								{{ $t('task.repeat.days') }}
+							</option>
+							<option value="weeks">
+								{{ $t('task.repeat.weeks') }}
+							</option>
 						</select>
 					</div>
 				</div>
@@ -74,7 +108,7 @@ const props = defineProps({
 	modelValue: {
 		type: Object as PropType<ITask>,
 		default: () => ({}),
-		required: true,
+		required: false,
 	},
 	disabled: {
 		type: Boolean,
@@ -82,9 +116,9 @@ const props = defineProps({
 	},
 })
 
-const {t} = useI18n({useScope: 'global'})
-
 const emit = defineEmits(['update:modelValue'])
+
+const {t} = useI18n({useScope: 'global'})
 
 const task = ref<ITask>(new TaskModel())
 const repeatAfter = reactive({

@@ -1,29 +1,46 @@
 <template>
 	<div>
-		<message variant="danger" v-if="errorMsg" class="mb-4">
+		<Message
+			v-if="errorMsg"
+			variant="danger"
+			class="mb-4"
+		>
 			{{ errorMsg }}
-		</message>
-		<div class="has-text-centered mb-4" v-if="isSuccess">
-			<message variant="success">
+		</Message>
+		<div
+			v-if="isSuccess"
+			class="has-text-centered mb-4"
+		>
+			<Message variant="success">
 				{{ $t('user.auth.resetPasswordSuccess') }}
-			</message>
-			<x-button :to="{ name: 'user.login' }" class="mt-4">
+			</Message>
+			<x-button
+				:to="{ name: 'user.login' }"
+				class="mt-4"
+			>
 				{{ $t('user.auth.login') }}
 			</x-button>
 		</div>
-		<form @submit.prevent="requestPasswordReset" v-if="!isSuccess">
+		<form
+			v-if="!isSuccess"
+			@submit.prevent="requestPasswordReset"
+		>
 			<div class="field">
-				<label class="label" for="email">{{ $t('user.auth.email') }}</label>
+				<label
+					class="label"
+					for="email"
+				>{{ $t('user.auth.email') }}</label>
 				<div class="control">
 					<input
-						class="input"
 						id="email"
+						v-model="passwordReset.email"
+						v-focus
+						class="input"
 						name="email"
 						:placeholder="$t('user.auth.emailPlaceholder')"
 						required
 						type="email"
-						v-focus
-						v-model="passwordReset.email"/>
+					>
 				</div>
 			</div>
 
@@ -35,7 +52,10 @@
 					>
 						{{ $t('user.auth.resetPasswordAction') }}
 					</x-button>
-					<x-button :to="{ name: 'user.login' }" variant="secondary">
+					<x-button
+						:to="{ name: 'user.login' }"
+						variant="secondary"
+					>
 						{{ $t('user.auth.login') }}
 					</x-button>
 				</div>

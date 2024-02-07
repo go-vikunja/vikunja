@@ -1,5 +1,5 @@
 <template>
-    <div
+	<div
 		v-if="isDone"
 		class="is-done"
 		:class="{ 'is-done--small': variant === 'small' }"

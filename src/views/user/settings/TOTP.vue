@@ -1,62 +1,91 @@
 <template>
-	<card :title="$t('user.settings.totp.title')" v-if="totpEnabled">
+	<card
+		v-if="totpEnabled"
+		:title="$t('user.settings.totp.title')"
+	>
 		<x-button
+			v-if="!totpEnrolled && totp.secret === ''"
 			:loading="totpService.loading"
 			@click="totpEnroll()"
-			v-if="!totpEnrolled && totp.secret === ''">
+		>
 			{{ $t('user.settings.totp.enroll') }}
 		</x-button>
 		<template v-else-if="totp.secret !== '' && !totp.enabled">
 			<p>
 				{{ $t('user.settings.totp.finishSetupPart1') }}
-				<strong>{{ totp.secret }}</strong><br/>
+				<strong>{{ totp.secret }}</strong><br>
 				{{ $t('user.settings.totp.finishSetupPart2') }}
 			</p>
 			<p>
-				{{ $t('user.settings.totp.scanQR') }}<br/>
-				<img :src="totpQR" alt=""/>
+				{{ $t('user.settings.totp.scanQR') }}<br>
+				<img
+					:src="totpQR"
+					alt=""
+				>
 			</p>
 			<div class="field">
-				<label class="label" for="totpConfirmPasscode">{{ $t('user.settings.totp.passcode') }}</label>
+				<label
+					class="label"
+					for="totpConfirmPasscode"
+				>{{ $t('user.settings.totp.passcode') }}</label>
 				<div class="control">
 					<input
-						autocomplete="one-time-code"
-						@keyup.enter="totpConfirm"
-						class="input"
 						id="totpConfirmPasscode"
+						v-model="totpConfirmPasscode"
+						autocomplete="one-time-code"
+						class="input"
 						:placeholder="$t('user.settings.totp.passcodePlaceholder')"
 						type="text"
 						inputmode="numeric"
-						v-model="totpConfirmPasscode"/>
+						@keyup.enter="totpConfirm"
+					>
 				</div>
 			</div>
-			<x-button @click="totpConfirm">{{ $t('misc.confirm') }}</x-button>
+			<x-button @click="totpConfirm">
+				{{ $t('misc.confirm') }}
+			</x-button>
 		</template>
 		<template v-else-if="totp.secret !== '' && totp.enabled">
 			<p>
 				{{ $t('user.settings.totp.setupSuccess') }}
 			</p>
 			<p v-if="!totpDisableForm">
-				<x-button @click="totpDisableForm = true" class="is-danger">{{ $t('misc.disable') }}</x-button>
+				<x-button
+					class="is-danger"
+					@click="totpDisableForm = true"
+				>
+					{{ $t('misc.disable') }}
+				</x-button>
 			</p>
 			<div v-if="totpDisableForm">
 				<div class="field">
-					<label class="label" for="currentPassword">{{ $t('user.settings.totp.enterPassword') }}</label>
+					<label
+						class="label"
+						for="currentPassword"
+					>{{ $t('user.settings.totp.enterPassword') }}</label>
 					<div class="control">
 						<input
-							@keyup.enter="totpDisable"
-							class="input"
 							id="currentPassword"
+							v-model="totpDisablePassword"
+							v-focus
+							class="input"
 							:placeholder="$t('user.settings.currentPasswordPlaceholder')"
 							type="password"
-							v-focus
-							v-model="totpDisablePassword"/>
+							@keyup.enter="totpDisable"
+						>
 					</div>
 				</div>
-				<x-button @click="totpDisable" class="is-danger">
+				<x-button
+					class="is-danger"
+					@click="totpDisable"
+				>
 					{{ $t('user.settings.totp.disable') }}
 				</x-button>
-				<x-button @click="totpDisableForm = false" variant="tertiary" class="ml-2">
+				<x-button
+					variant="tertiary"
+					class="ml-2"
+					@click="totpDisableForm = false"
+				>
 					{{ $t('misc.cancel') }}
 				</x-button>
 			</div>
@@ -65,7 +94,7 @@
 </template>
 
 <script lang="ts">
-export default { name: 'user-settings-totp' }
+export default { name: 'UserSettingsTotp' }
 </script>
 
 <script lang="ts" setup>

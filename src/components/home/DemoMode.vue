@@ -17,8 +17,11 @@ const enabled = computed(() => configStore.demoModeEnabled && !hide.value)
 			{{ $t('demo.title') }}
 			<strong class="is-uppercase">{{ $t('demo.everythingWillBeDeleted') }}</strong>
 		</p>
-		<BaseButton @click="() => hide = true" class="hide-button">
-			<icon icon="times"/>
+		<BaseButton
+			class="hide-button"
+			@click="() => hide = true"
+		>
+			<icon icon="times" />
 		</BaseButton>
 	</div>
 </template>

@@ -1,38 +1,62 @@
 <template>
 	<div class="api-config">
 		<div v-if="configureApi">
-			<label class="label" for="api-url">{{ $t('apiConfig.url') }}</label>
+			<label
+				class="label"
+				for="api-url"
+			>{{ $t('apiConfig.url') }}</label>
 			<div class="field has-addons">
 				<div class="control is-expanded">
 					<input
-						class="input"
 						id="api-url"
+						v-model="apiUrl"
+						v-focus
+						class="input"
 						:placeholder="$t('apiConfig.urlPlaceholder')"
 						required
 						type="url"
-						v-focus
-						v-model="apiUrl"
 						@keyup.enter="setApiUrl"
-					/>
+					>
 				</div>
 				<div class="control">
-					<x-button @click="setApiUrl" :disabled="apiUrl === '' || undefined">
+					<x-button
+						:disabled="apiUrl === '' || undefined"
+						@click="setApiUrl"
+					>
 						{{ $t('apiConfig.change') }}
 					</x-button>
 				</div>
 			</div>
 		</div>
-		<div class="api-url-info" v-else>
-			<i18n-t keypath="apiConfig.use" scope="global">
-				<span class="url" v-tooltip="apiUrl"> {{ apiDomain }} </span>
+		<div
+			v-else
+			class="api-url-info"
+		>
+			<i18n-t
+				keypath="apiConfig.use"
+				scope="global"
+			>
+				<span
+					v-tooltip="apiUrl"
+					class="url"
+				> {{ apiDomain }} </span>
 			</i18n-t>
-			<br/>
-			<ButtonLink class="api-config__change-button" @click="() => (configureApi = true)">{{ $t('apiConfig.change') }}</ButtonLink>
+			<br>
+			<ButtonLink
+				class="api-config__change-button"
+				@click="() => (configureApi = true)"
+			>
+				{{ $t('apiConfig.change') }}
+			</ButtonLink>
 		</div>
 
-		<message variant="danger" v-if="errorMsg !== ''" class="mt-2">
+		<Message
+			v-if="errorMsg !== ''"
+			variant="danger"
+			class="mt-2"
+		>
 			{{ errorMsg }}
-		</message>
+		</Message>
 	</div>
 </template>
 
@@ -57,7 +81,7 @@ const props = defineProps({
 const emit = defineEmits(['foundApi'])
 
 const apiUrl = ref(window.API_URL)
-const configureApi = ref(apiUrl.value === '')
+const configureApi = ref(window.API_URL === '')
 
 // Because we're only using this to parse the hostname, it should be fine to just prefix with http:// 
 // regardless of whether the url is actually reachable under http.

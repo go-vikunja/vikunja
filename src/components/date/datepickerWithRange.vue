@@ -1,20 +1,31 @@
 <template>
 	<div class="datepicker-with-range-container">
-		<popup>
+		<Popup>
 			<template #trigger="{toggle}">
-				<slot name="trigger" :toggle="toggle" :buttonText="buttonText"></slot>
+				<slot
+					name="trigger"
+					:toggle="toggle"
+					:button-text="buttonText"
+				/>
 			</template>
 			<template #content="{isOpen}">
-				<div class="datepicker-with-range" :class="{'is-open': isOpen}">
+				<div
+					class="datepicker-with-range"
+					:class="{'is-open': isOpen}"
+				>
 					<div class="selections">
-						<BaseButton @click="setDateRange(null)" :class="{'is-active': customRangeActive}">
+						<BaseButton
+							:class="{'is-active': customRangeActive}"
+							@click="setDateRange(null)"
+						>
 							{{ $t('misc.custom') }}
 						</BaseButton>
 						<BaseButton
 							v-for="(value, text) in DATE_RANGES"
 							:key="text"
+							:class="{'is-active': from === value[0] && to === value[1]}"
 							@click="setDateRange(value)"
-							:class="{'is-active': from === value[0] && to === value[1]}">
+						>
 							{{ $t(`input.datepickerRange.ranges.${text}`) }}
 						</BaseButton>
 					</div>
@@ -23,10 +34,18 @@
 							{{ $t('input.datepickerRange.from') }}
 							<div class="field has-addons">
 								<div class="control is-fullwidth">
-									<input class="input" type="text" v-model="from"/>
+									<input
+										v-model="from"
+										class="input"
+										type="text"
+									>
 								</div>
 								<div class="control">
-									<x-button icon="calendar" variant="secondary" data-toggle/>
+									<x-button
+										icon="calendar"
+										variant="secondary"
+										data-toggle
+									/>
 								</div>
 							</div>
 						</label>
@@ -34,38 +53,49 @@
 							{{ $t('input.datepickerRange.to') }}
 							<div class="field has-addons">
 								<div class="control is-fullwidth">
-									<input class="input" type="text" v-model="to"/>
+									<input
+										v-model="to"
+										class="input"
+										type="text"
+									>
 								</div>
 								<div class="control">
-									<x-button icon="calendar" variant="secondary" data-toggle/>
+									<x-button
+										icon="calendar"
+										variant="secondary"
+										data-toggle
+									/>
 								</div>
 							</div>
 						</label>
 						<flat-pickr
-							:config="flatPickerConfig"
 							v-model="flatpickrRange"
+							:config="flatPickerConfig"
 						/>
 
 						<p>
 							{{ $t('input.datemathHelp.canuse') }}
-							<BaseButton class="has-text-primary" @click="showHowItWorks = true">
+							<BaseButton
+								class="has-text-primary"
+								@click="showHowItWorks = true"
+							>
 								{{ $t('input.datemathHelp.learnhow') }}
 							</BaseButton>
 						</p>
 
 						<modal
 							:enabled="showHowItWorks"
-							@close="() => showHowItWorks = false"
 							transition-name="fade"
 							:overflow="true"
 							variant="hint-modal"
+							@close="() => showHowItWorks = false"
 						>
-							<DatemathHelp/>
+							<DatemathHelp />
 						</modal>
 					</div>
 				</div>
 			</template>
-		</popup>
+		</Popup>
 	</div>
 </template>
 
@@ -83,14 +113,15 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import DatemathHelp from '@/components/date/datemathHelp.vue'
 import { getFlatpickrLanguage } from '@/helpers/flatpickrLanguage'
 
-const {t} = useI18n({useScope: 'global'})
-
-const emit = defineEmits(['update:modelValue'])
 const props = defineProps({
 	modelValue: {
 		required: false,
 	},
 })
+
+const emit = defineEmits(['update:modelValue'])
+
+const {t} = useI18n({useScope: 'global'})
 
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),

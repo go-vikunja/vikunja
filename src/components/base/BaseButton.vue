@@ -6,38 +6,39 @@
 <template>
 	<div
 		v-if="disabled === true && (to !== undefined || href !== undefined)"
+		ref="button"
 		class="base-button"
 		:aria-disabled="disabled || undefined"
-		ref="button"
 	>
-		<slot/>
+		<slot />
 	</div>
 	<router-link
 		v-else-if="to !== undefined"
+		ref="button"
 		:to="to"
 		class="base-button"
-		ref="button"
 	>
-		<slot/>
+		<slot />
 	</router-link>
-	<a v-else-if="href !== undefined"
+	<a
+		v-else-if="href !== undefined"
+		ref="button"
 		class="base-button"
 		:href="href"
 		rel="noreferrer noopener nofollow"
 		target="_blank"
-		ref="button"
 	>
-		<slot/>
+		<slot />
 	</a>
 	<button
 		v-else
+		ref="button"
 		:type="type"
 		class="base-button base-button--type-button"
 		:disabled="disabled || undefined"
-		ref="button"
 		@click="(event: MouseEvent) => emit('click', event)"
 	>
-		<slot/>
+		<slot />
 	</button>
 </template>
 

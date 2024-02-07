@@ -1,8 +1,15 @@
 <template>
 	<div class="heading">
 		<div class="flex is-align-items-center">
-			<BaseButton @click="copyUrl"><h1 class="title task-id">{{ textIdentifier }}</h1></BaseButton>
-			<Done class="heading__done" :is-done="task.done"/>
+			<BaseButton @click="copyUrl">
+				<h1 class="title task-id">
+					{{ textIdentifier }}
+				</h1>
+			</BaseButton>
+			<Done
+				class="heading__done"
+				:is-done="task.done"
+			/>
 			<ColorBubble
 				v-if="task.hexColor !== ''"
 				:color="getHexColor(task.hexColor)"
@@ -12,10 +19,10 @@
 		<h1
 			class="title input"
 			:class="{'disabled': !canWrite}"
-			@blur="save(($event.target as HTMLInputElement).textContent as string)"
-			@keydown.enter.prevent.stop="($event.target as HTMLInputElement).blur()"
 			:contenteditable="canWrite ? true : undefined"
 			:spellcheck="false"
+			@blur="save(($event.target as HTMLInputElement).textContent as string)"
+			@keydown.enter.prevent.stop="($event.target as HTMLInputElement).blur()"
 		>
 			{{ task.title.trim() }}
 		</h1>
@@ -24,14 +31,17 @@
 				v-if="loading && saving"
 				class="is-inline-flex is-align-items-center"
 			>
-				<span class="loader is-inline-block mr-2"></span>
+				<span class="loader is-inline-block mr-2" />
 				{{ $t('misc.saving') }}
 			</span>
 			<span
 				v-else-if="!loading && showSavedMessage"
 				class="has-text-success is-inline-flex is-align-content-center"
 			>
-				<icon icon="check" class="mr-2"/>
+				<icon
+					icon="check"
+					class="mr-2"
+				/>
 				{{ $t('misc.saved') }}
 			</span>
 		</CustomTransition>

@@ -1,37 +1,55 @@
 <template>
 	<!-- This is a workaround to get the sw to "see" the to-be-cached version of the offline background image -->
-	<div class="offline" style="height: 0;width: 0;"></div>
-	<div class="app offline" v-if="!online">
+	<div
+		class="offline"
+		style="height: 0;width: 0;"
+	/>
+	<div
+		v-if="!online"
+		class="app offline"
+	>
 		<div class="offline-message">
-			<h1 class="title">{{ $t('offline.title') }}</h1>
+			<h1 class="title">
+				{{ $t('offline.title') }}
+			</h1>
 			<p>{{ $t('offline.text') }}</p>
 		</div>
 	</div>
 	<template v-else-if="ready">
-		<slot/>
+		<slot />
 	</template>
 	<section v-else-if="error !== ''">
-		<no-auth-wrapper :show-api-config="false">
+		<NoAuthWrapper :show-api-config="false">
 			<p v-if="error === ERROR_NO_API_URL">
 				{{ $t('ready.noApiUrlConfigured') }}
 			</p>
-			<message variant="danger" v-else class="mb-4">
+			<Message
+				v-else
+				variant="danger"
+				class="mb-4"
+			>
 				<p>
-					{{ $t('ready.errorOccured') }}<br/>
+					{{ $t('ready.errorOccured') }}<br>
 					{{ error }}
 				</p>
 				<p>
 					{{ $t('ready.checkApiUrl') }}
 				</p>
-			</message>
-			<api-config :configure-open="true" @found-api="load"/>
-		</no-auth-wrapper>
+			</Message>
+			<ApiConfig
+				:configure-open="true"
+				@foundApi="load"
+			/>
+		</NoAuthWrapper>
 	</section>
 	<CustomTransition name="fade">
-		<section class="vikunja-loading" v-if="showLoading">
-			<Logo class="logo"/>
+		<section
+			v-if="showLoading"
+			class="vikunja-loading"
+		>
+			<Logo class="logo" />
 			<p>
-				<span class="loader-container is-loading-small is-loading"></span>
+				<span class="loader-container is-loading-small is-loading" />
 				{{ $t('ready.loading') }}
 			</p>
 		</section>

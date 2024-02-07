@@ -10,8 +10,15 @@
 				</SimpleButton>
 			</template>
 			<template #content="{isOpen, close}">
-				<Card class="reminder-options-popup" :class="{'is-open': isOpen}" :padding="false">
-					<div class="options" v-if="activeForm === null">
+				<Card
+					class="reminder-options-popup"
+					:class="{'is-open': isOpen}"
+					:padding="false"
+				>
+					<div
+						v-if="activeForm === null"
+						class="options"
+					>
 						<SimpleButton
 							v-for="(p, k) in presets"
 							:key="k"
@@ -22,16 +29,16 @@
 							{{ formatReminder(p) }}
 						</SimpleButton>
 						<SimpleButton
-							@click="showFormSwitch = 'relative'"
 							class="option-button"
 							:class="{'currently-active': typeof modelValue !== 'undefined' && modelValue?.relativeTo !== null && presets.find(p => p.relativePeriod === modelValue?.relativePeriod && modelValue?.relativeTo === p.relativeTo) === undefined}"
+							@click="showFormSwitch = 'relative'"
 						>
 							{{ $t('task.reminder.custom') }}
 						</SimpleButton>
 						<SimpleButton
-							@click="showFormSwitch = 'absolute'"
 							class="option-button"
 							:class="{'currently-active': modelValue?.relativeTo === null}"
+							@click="showFormSwitch = 'absolute'"
 						>
 							{{ $t('task.reminder.dateAndTime') }}
 						</SimpleButton>
@@ -81,8 +88,6 @@ import TaskReminderModel from '@/models/taskReminder'
 import Card from '@/components/misc/card.vue'
 import SimpleButton from '@/components/input/SimpleButton.vue'
 
-const {t} = useI18n({useScope: 'global'})
-
 const {
 	modelValue,
 	clearAfterUpdate = false,
@@ -94,6 +99,8 @@ const {
 }>()
 
 const emit = defineEmits(['update:modelValue'])
+
+const {t} = useI18n({useScope: 'global'})
 
 const reminder = ref<ITaskReminder>(new TaskReminderModel())
 

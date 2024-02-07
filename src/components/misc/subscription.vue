@@ -1,32 +1,32 @@
 <template>
 	<x-button
 		v-if="type === 'button'"
+		v-tooltip="tooltipText"
 		variant="secondary"
 		:icon="iconName"
-		v-tooltip="tooltipText"
-		@click="changeSubscription"
 		:disabled="disabled"
+		@click="changeSubscription"
 	>
 		{{ buttonText }}
 	</x-button>
 	<DropdownItem
 		v-else-if="type === 'dropdown'"
 		v-tooltip="tooltipText"
-		@click="changeSubscription"
 		:disabled="disabled"
 		:icon="iconName"
+		@click="changeSubscription"
 	>
 		{{ buttonText }}
 	</DropdownItem>
 	<BaseButton
 		v-else
 		v-tooltip="tooltipText"
-		@click="changeSubscription"
 		:class="{'is-disabled': disabled}"
 		:disabled="disabled"
+		@click="changeSubscription"
 	>
 		<span class="icon">
-			<icon :icon="iconName"/>
+			<icon :icon="iconName" />
 		</span>
 		{{ buttonText }}
 	</BaseButton>
@@ -63,9 +63,9 @@ const props = defineProps({
 	},
 })
 
-const subscriptionEntity = computed<string | null>(() => props.modelValue?.entity ?? null)
-
 const emit = defineEmits(['update:modelValue'])
+
+const subscriptionEntity = computed<string | null>(() => props.modelValue?.entity ?? null)
 
 const subscriptionService = shallowRef(new SubscriptionService())
 

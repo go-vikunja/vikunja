@@ -1,27 +1,31 @@
 <template>
 	<div class="password-field">
 		<input
-			class="input"
 			id="password"
+			class="input"
 			name="password"
 			:placeholder="$t('user.auth.passwordPlaceholder')"
 			required
 			:type="passwordFieldType"
 			autocomplete="current-password"
-			@keyup.enter="e => $emit('submit', e)"
 			:tabindex="props.tabindex"
+			@keyup.enter="e => $emit('submit', e)"
 			@focusout="validate"
 			@input="handleInput"
-		/>
+		>
 		<BaseButton
-			@click="togglePasswordFieldType"
+			v-tooltip="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')"
 			class="password-field-type-toggle"
 			:aria-label="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')"
-			v-tooltip="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')">
-			<icon :icon="passwordFieldType === 'password' ? 'eye' : 'eye-slash'"/>
+			@click="togglePasswordFieldType"
+		>
+			<icon :icon="passwordFieldType === 'password' ? 'eye' : 'eye-slash'" />
 		</BaseButton>
 	</div>
-	<p class="help is-danger" v-if="!isValid">
+	<p
+		v-if="!isValid"
+		class="help is-danger"
+	>
 		{{ $t('user.auth.passwordRequired') }}
 	</p>
 </template>

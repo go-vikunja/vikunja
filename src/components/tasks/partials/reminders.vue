@@ -7,26 +7,26 @@
 			class="reminder-input"
 		>
 			<ReminderDetail
+				v-model="reminders[index]"
 				class="reminder-detail"
 				:disabled="disabled"
-				v-model="reminders[index]"
-				@update:model-value="updateData"
 				:default-relative-to="defaultRelativeTo"
+				@update:modelValue="updateData"
 			/>
 			<BaseButton
 				v-if="!disabled"
-				@click="removeReminderByIndex(index)"
 				class="remove"
+				@click="removeReminderByIndex(index)"
 			>
-				<icon icon="times"/>
+				<icon icon="times" />
 			</BaseButton>
 		</div>
 
 		<ReminderDetail
 			:disabled="disabled"
-			@update:modelValue="addNewReminder"
 			:clear-after-update="true"
 			:default-relative-to="defaultRelativeTo"
+			@update:modelValue="addNewReminder"
 		/>
 	</div>
 </template>

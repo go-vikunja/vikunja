@@ -1,117 +1,131 @@
 <template>
-	<ProjectWrapper class="project-list" :project-id="projectId" viewName="project">
+	<ProjectWrapper
+		class="project-list"
+		:project-id="projectId"
+		view-name="project"
+	>
 		<template #header>
-		<div
-			class="filter-container"
-			v-if="!isSavedFilter(project)"
-		>
-			<div class="items">
-				<div class="search">
-					<div :class="{ hidden: !showTaskSearch }" class="field has-addons">
-						<div class="control has-icons-left has-icons-right">
-							<input
-								@blur="hideSearchBar()"
-								@keyup.enter="searchTasks"
-								class="input"
-								:placeholder="$t('misc.search')"
-								type="text"
-								v-focus
-								v-model="searchTerm"
-							/>
-							<span class="icon is-left">
-								<icon icon="search"/>
-							</span>
+			<div
+				v-if="!isSavedFilter(project)"
+				class="filter-container"
+			>
+				<div class="items">
+					<div class="search">
+						<div
+							:class="{ hidden: !showTaskSearch }"
+							class="field has-addons"
+						>
+							<div class="control has-icons-left has-icons-right">
+								<input
+									v-model="searchTerm"
+									v-focus
+									class="input"
+									:placeholder="$t('misc.search')"
+									type="text"
+									@blur="hideSearchBar()"
+									@keyup.enter="searchTasks"
+								>
+								<span class="icon is-left">
+									<icon icon="search" />
+								</span>
+							</div>
+							<div class="control">
+								<x-button
+									:loading="loading"
+									:shadow="false"
+									@click="searchTasks"
+								>
+									{{ $t('misc.search') }}
+								</x-button>
+							</div>
 						</div>
-						<div class="control">
-							<x-button
-								:loading="loading"
-								@click="searchTasks"
-								:shadow="false"
-							>
-								{{ $t('misc.search') }}
-							</x-button>
-						</div>
+						<x-button
+							v-if="!showTaskSearch"
+							icon="search"
+							variant="secondary"
+							@click="showTaskSearch = !showTaskSearch"
+						/>
 					</div>
-					<x-button
-						@click="showTaskSearch = !showTaskSearch"
-						icon="search"
-						variant="secondary"
-						v-if="!showTaskSearch"
+					<FilterPopup
+						v-model="params"
+						@update:modelValue="prepareFiltersAndLoadTasks()"
 					/>
 				</div>
-				<filter-popup
-					v-model="params"
-					@update:modelValue="prepareFiltersAndLoadTasks()"
-				/>
 			</div>
-		</div>
 		</template>
 
 		<template #default>
-		<div
-			:class="{ 'is-loading': loading }"
-			class="loader-container is-max-width-desktop list-view"
-		>
-		<card :padding="false" :has-content="false" class="has-overflow">
-			<add-task
-				v-if="!project.isArchived && canWrite"
-				class="list-view__add-task d-print-none"
-				ref="addTaskRef"
-				:default-position="firstNewPosition"
-				@taskAdded="updateTaskList"
-			/>
-
-			<nothing v-if="ctaVisible && tasks.length === 0 && !loading">
-				{{ $t('project.list.empty') }}
-				<ButtonLink @click="focusNewTaskInput()" v-if="project.id > 0">
-					{{ $t('project.list.newTaskCta') }}
-				</ButtonLink>
-			</nothing>
-
-
-			<draggable
-				v-if="tasks && tasks.length > 0"
-				v-bind="DRAG_OPTIONS"
-				v-model="tasks"
-				group="tasks"
-				@start="() => drag = true"
-				@end="saveTaskPosition"
-				handle=".handle"
-				:disabled="!canWrite"
-				item-key="id"
-				tag="ul"
-				:component-data="{
-					class: {
-						tasks: true,
-						'dragging-disabled': !canWrite || isAlphabeticalSorting
-					},
-					type: 'transition-group'
-				}"
+			<div
+				:class="{ 'is-loading': loading }"
+				class="loader-container is-max-width-desktop list-view"
 			>
-				<template #item="{element: t}">
-					<single-task-in-project
-						:show-list-color="false"
-						:disabled="!canWrite"
-						:can-mark-as-done="canWrite || isSavedFilter(project)"
-						:the-task="t"
-						@taskUpdated="updateTasks"
-						:all-tasks="allTasks"
-					>
-						<template v-if="canWrite">
-							<span class="icon handle">
-								<icon icon="grip-lines"/>
-							</span>
-						</template>
-					</single-task-in-project>
-				</template>
-			</draggable>
+				<card
+					:padding="false"
+					:has-content="false"
+					class="has-overflow"
+				>
+					<AddTask
+						v-if="!project.isArchived && canWrite"
+						ref="addTaskRef"
+						class="list-view__add-task d-print-none"
+						:default-position="firstNewPosition"
+						@taskAdded="updateTaskList"
+					/>
 
-			<Pagination 
-				:total-pages="totalPages"
-				:current-page="currentPage"
-			/>
-		</card>
-		</div>
+					<Nothing v-if="ctaVisible && tasks.length === 0 && !loading">
+						{{ $t('project.list.empty') }}
+						<ButtonLink
+							v-if="project.id > 0"
+							@click="focusNewTaskInput()"
+						>
+							{{ $t('project.list.newTaskCta') }}
+						</ButtonLink>
+					</Nothing>
+
+
+					<draggable
+						v-if="tasks && tasks.length > 0"
+						v-bind="DRAG_OPTIONS"
+						v-model="tasks"
+						group="tasks"
+						handle=".handle"
+						:disabled="!canWrite"
+						item-key="id"
+						tag="ul"
+						:component-data="{
+							class: {
+								tasks: true,
+								'dragging-disabled': !canWrite || isAlphabeticalSorting
+							},
+							type: 'transition-group'
+						}"
+						@start="() => drag = true"
+						@end="saveTaskPosition"
+					>
+						<template #item="{element: t}">
+							<SingleTaskInProject
+								:show-list-color="false"
+								:disabled="!canWrite"
+								:can-mark-as-done="canWrite || isSavedFilter(project)"
+								:the-task="t"
+								:all-tasks="allTasks"
+								@taskUpdated="updateTasks"
+							>
+								<template v-if="canWrite">
+									<span class="icon handle">
+										<icon icon="grip-lines" />
+									</span>
+								</template>
+							</SingleTaskInProject>
+						</template>
+					</draggable>
+
+					<Pagination 
+						:total-pages="totalPages"
+						:current-page="currentPage"
+					/>
+				</card>
+			</div>
 		</template>
 	</ProjectWrapper>
 </template>

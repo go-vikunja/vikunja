@@ -1,65 +1,82 @@
 <template>
 	<modal
-		@close="$router.back()"
 		variant="hint-modal"
+		@close="$router.back()"
 	>
-				<card class="has-no-shadow" :title="$t('filters.create.title')">
-					<p>
-						{{ $t('filters.create.description') }}
-					</p>
-					<div class="field">
-						<label class="label" for="title">{{ $t('filters.attributes.title') }}</label>
-						<div class="control">
-							<input
-								v-model="filter.title"
-								:class="{ 'disabled': filterService.loading, 'is-danger': !titleValid  }"
-								:disabled="filterService.loading || undefined"
-								class="input"
-								id="Title"
-								:placeholder="$t('filters.attributes.titlePlaceholder')"
-								type="text"
-								v-focus
-								@focusout="validateTitleField"
-							/>
-						</div>
-						<p class="help is-danger" v-if="!titleValid">{{ $t('filters.create.titleRequired') }}</p>
-					</div>
-					<div class="field">
-						<label class="label" for="description">{{ $t('filters.attributes.description') }}</label>
-						<div class="control">
-							<editor
-								:key="filter.id"
-								v-model="filter.description"
-								:class="{ 'disabled': filterService.loading}"
-								:disabled="filterService.loading"
-								id="description"
-								:placeholder="$t('filters.attributes.descriptionPlaceholder')"
-							/>
-						</div>
-					</div>
-					<div class="field">
-						<label class="label" for="filters">{{ $t('filters.title') }}</label>
-						<div class="control">
-							<Filters
-								:class="{ 'disabled': filterService.loading}"
-								:disabled="filterService.loading"
-								class="has-no-shadow has-no-border"
-								v-model="filters"
-							/>
-						</div>
-					</div>
+		<card
+			class="has-no-shadow"
+			:title="$t('filters.create.title')"
+		>
+			<p>
+				{{ $t('filters.create.description') }}
+			</p>
+			<div class="field">
+				<label
+					class="label"
+					for="title"
+				>{{ $t('filters.attributes.title') }}</label>
+				<div class="control">
+					<input
+						id="Title"
+						v-model="filter.title"
+						v-focus
+						:class="{ 'disabled': filterService.loading, 'is-danger': !titleValid }"
+						:disabled="filterService.loading || undefined"
+						class="input"
+						:placeholder="$t('filters.attributes.titlePlaceholder')"
+						type="text"
+						@focusout="validateTitleField"
+					>
+				</div>
+				<p
+					v-if="!titleValid"
+					class="help is-danger"
+				>
+					{{ $t('filters.create.titleRequired') }}
+				</p>
+			</div>
+			<div class="field">
+				<label
+					class="label"
+					for="description"
+				>{{ $t('filters.attributes.description') }}</label>
+				<div class="control">
+					<Editor
+						id="description"
+						:key="filter.id"
+						v-model="filter.description"
+						:class="{ 'disabled': filterService.loading}"
+						:disabled="filterService.loading"
+						:placeholder="$t('filters.attributes.descriptionPlaceholder')"
+					/>
+				</div>
+			</div>
+			<div class="field">
+				<label
+					class="label"
+					for="filters"
+				>{{ $t('filters.title') }}</label>
+				<div class="control">
+					<Filters
+						v-model="filters"
+						:class="{ 'disabled': filterService.loading}"
+						:disabled="filterService.loading"
+						class="has-no-shadow has-no-border"
+					/>
+				</div>
+			</div>
 
-					<template #footer>
-						<x-button
-							:loading="filterService.loading"
-							:disabled="filterService.loading || !titleValid"
-							@click="createFilterWithValidation()"
-							class="is-fullwidth"
-						>
-							{{ $t('filters.create.action') }}
-						</x-button>
-					</template>
-				</card>
+			<template #footer>
+				<x-button
+					:loading="filterService.loading"
+					:disabled="filterService.loading || !titleValid"
+					class="is-fullwidth"
+					@click="createFilterWithValidation()"
+				>
+					{{ $t('filters.create.action') }}
+				</x-button>
+			</template>
+		</card>
 	</modal>
 </template>
 

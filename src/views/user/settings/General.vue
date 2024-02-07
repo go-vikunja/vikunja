@@ -1,77 +1,113 @@
 <template>
-	<card :title="$t('user.settings.general.title')" class="general-settings" :loading="loading">
+	<card
+		:title="$t('user.settings.general.title')"
+		class="general-settings"
+		:loading="loading"
+	>
 		<div class="field">
-			<label class="label" :for="`newName${id}`">{{ $t('user.settings.general.name') }}</label>
+			<label
+				class="label"
+				:for="`newName${id}`"
+			>{{ $t('user.settings.general.name') }}</label>
 			<div class="control">
 				<input
-					@keyup.enter="updateSettings"
-					class="input"
 					:id="`newName${id}`"
+					v-model="settings.name"
+					class="input"
 					:placeholder="$t('user.settings.general.newName')"
 					type="text"
-					v-model="settings.name"/>
+					@keyup.enter="updateSettings"
+				>
 			</div>
 		</div>
 		<div class="field">
 			<label class="label">
 				{{ $t('user.settings.general.defaultProject') }}
 			</label>
-			<project-search v-model="defaultProject"/>
+			<ProjectSearch v-model="defaultProject" />
 		</div>
-		<div class="field" v-if="hasFilters">
+		<div
+			v-if="hasFilters"
+			class="field"
+		>
 			<label class="label">
 				{{ $t('user.settings.general.filterUsedOnOverview') }}
 			</label>
-			<project-search v-model="filterUsedInOverview" :saved-filters-only="true"/>
+			<ProjectSearch
+				v-model="filterUsedInOverview"
+				:saved-filters-only="true"
+			/>
 		</div>
 		<div class="field">
 			<label class="checkbox">
-				<input type="checkbox" v-model="settings.emailRemindersEnabled"/>
+				<input
+					v-model="settings.emailRemindersEnabled"
+					type="checkbox"
+				>
 				{{ $t('user.settings.general.emailReminders') }}
 			</label>
 		</div>
 		<div class="field">
 			<label class="checkbox">
-				<input type="checkbox" v-model="settings.discoverableByName"/>
+				<input
+					v-model="settings.discoverableByName"
+					type="checkbox"
+				>
 				{{ $t('user.settings.general.discoverableByName') }}
 			</label>
 		</div>
 		<div class="field">
 			<label class="checkbox">
-				<input type="checkbox" v-model="settings.discoverableByEmail"/>
+				<input
+					v-model="settings.discoverableByEmail"
+					type="checkbox"
+				>
 				{{ $t('user.settings.general.discoverableByEmail') }}
 			</label>
 		</div>
 		<div class="field">
 			<label class="checkbox">
-				<input type="checkbox" v-model="settings.frontendSettings.playSoundWhenDone"/>
+				<input
+					v-model="settings.frontendSettings.playSoundWhenDone"
+					type="checkbox"
+				>
 				{{ $t('user.settings.general.playSoundWhenDone') }}
 			</label>
 		</div>
 		<div class="field">
 			<label class="checkbox">
-				<input type="checkbox" v-model="settings.overdueTasksRemindersEnabled"/>
+				<input
+					v-model="settings.overdueTasksRemindersEnabled"
+					type="checkbox"
+				>
 				{{ $t('user.settings.general.overdueReminders') }}
 			</label>
 		</div>
-		<div class="field" v-if="settings.overdueTasksRemindersEnabled">
-			<label class="label" for="overdueTasksReminderTime">
+		<div
+			v-if="settings.overdueTasksRemindersEnabled"
+			class="field"
+		>
+			<label
+				class="label"
+				for="overdueTasksReminderTime"
+			>
 				{{ $t('user.settings.general.overdueTasksRemindersTime') }}
 			</label>
 			<div class="control">
 				<input
-					@keyup.enter="updateSettings"
-					class="input"
 					id="overdueTasksReminderTime"
+					v-model="settings.overdueTasksRemindersTime"
+					class="input"
 					type="time"
-					v-model="settings.overdueTasksRemindersTime"/>
+					@keyup.enter="updateSettings"
+				>
 			</div>
 		</div>
 		<div class="field">
 			<label class="is-flex is-align-items-center">
-					<span>
-						{{ $t('user.settings.general.weekStart') }}
-					</span>
+				<span>
+					{{ $t('user.settings.general.weekStart') }}
+				</span>
 				<div class="select ml-2">
 					<select v-model.number="settings.weekStart">
 						<option value="0">{{ $t('user.settings.general.weekStartSunday') }}</option>
@@ -82,9 +118,9 @@
 		</div>
 		<div class="field">
 			<label class="is-flex is-align-items-center">
-					<span>
-						{{ $t('user.settings.general.language') }}
-					</span>
+				<span>
+					{{ $t('user.settings.general.language') }}
+				</span>
 				<div class="select ml-2">
 					<select v-model="settings.language">
 						<option
@@ -99,12 +135,16 @@
 		</div>
 		<div class="field">
 			<label class="is-flex is-align-items-center">
-					<span>
-						{{ $t('user.settings.quickAddMagic.title') }}
-					</span>
+				<span>
+					{{ $t('user.settings.quickAddMagic.title') }}
+				</span>
 				<div class="select ml-2">
 					<select v-model="settings.frontendSettings.quickAddMagicMode">
-						<option v-for="set in PrefixMode" :key="set" :value="set">
+						<option
+							v-for="set in PrefixMode"
+							:key="set"
+							:value="set"
+						>
 							{{ $t(`user.settings.quickAddMagic.${set}`) }}
 						</option>
 					</select>
@@ -119,7 +159,11 @@
 				<div class="select ml-2">
 					<select v-model="settings.frontendSettings.colorSchema">
 						<!-- TODO: use the Vikunja logo in color scheme as option buttons -->
-						<option v-for="(title, schemeId) in colorSchemeSettings" :key="schemeId" :value="schemeId">
+						<option
+							v-for="(title, schemeId) in colorSchemeSettings"
+							:key="schemeId"
+							:value="schemeId"
+						>
 							{{ title }}
 						</option>
 					</select>
@@ -133,7 +177,10 @@
 				</span>
 				<div class="select ml-2">
 					<select v-model="settings.timezone">
-						<option v-for="tz in availableTimezones" :key="tz">
+						<option
+							v-for="tz in availableTimezones"
+							:key="tz"
+						>
 							{{ tz }}
 						</option>
 					</select>
@@ -142,10 +189,10 @@
 		</div>
 
 		<x-button
-			:loading="loading"
-			@click="updateSettings()"
-			class="is-fullwidth mt-4"
 			v-cy="'saveGeneralSettings'"
+			:loading="loading"
+			class="is-fullwidth mt-4"
+			@click="updateSettings()"
 		>
 			{{ $t('misc.save') }}
 		</x-button>
@@ -153,7 +200,7 @@
 </template>
 
 <script lang="ts">
-export default {name: 'user-settings-general'}
+export default {name: 'UserSettingsGeneral'}
 </script>
 
 <script setup lang="ts">

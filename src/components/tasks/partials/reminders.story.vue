@@ -11,16 +11,16 @@ const newReminder = ref(null)
 <template>
 	<Story>
 		<Variant title="Default">
-			<reminders/>
+			<reminders />
 		</Variant>
 		<Variant title="Reminder Detail with fixed date">
-			<reminder-detail v-model="reminderNow"/>
+			<ReminderDetail v-model="reminderNow" />
 		</Variant>
 		<Variant title="Reminder Detail with relative date">
-			<reminder-detail v-model="relativeReminder"/>
+			<ReminderDetail v-model="relativeReminder" />
 		</Variant>
 		<Variant title="New Reminder Detail">
-			<reminder-detail v-model="newReminder"/>
+			<ReminderDetail v-model="newReminder" />
 		</Variant>
 	</Story>
 </template>

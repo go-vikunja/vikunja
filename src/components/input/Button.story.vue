@@ -6,19 +6,28 @@ import XButton from './button.vue'
 <template>
 	<Story :layout="{ type: 'grid', width: '200px' }">
 		<Variant title="primary">
-			<XButton @click="logEvent('Click', $event)" variant="primary">
+			<XButton
+				variant="primary"
+				@click="logEvent('Click', $event)"
+			>
 				Order pizza!
 			</XButton>
 		</Variant>
 
 		<Variant title="secondary">
-			<XButton @click="logEvent('Click', $event)" variant="secondary">
+			<XButton
+				variant="secondary"
+				@click="logEvent('Click', $event)"
+			>
 				Order spaghetti!
 			</XButton>
 		</Variant>
 
 		<Variant title="tertiary">
-			<XButton @click="logEvent('Click', $event)" variant="tertiary">
+			<XButton
+				variant="tertiary"
+				@click="logEvent('Click', $event)"
+			>
 				Order tortellini!
 			</XButton>
 		</Variant>

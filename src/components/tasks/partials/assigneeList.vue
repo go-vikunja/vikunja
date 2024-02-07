@@ -22,11 +22,14 @@ const hasDelete = computed(() => typeof remove !== 'undefined' && !disabled)
 </script>
 
 <template>
-	<div class="assignees-list" :class="{'is-inline': inline}">
+	<div
+		class="assignees-list"
+		:class="{'is-inline': inline}"
+	>
 		<span
 			v-for="user in assignees"
-			class="assignee"
 			:key="user.id"
+			class="assignee"
 		>
 			<User
 				:key="'user'+user.id"
@@ -36,12 +39,12 @@ const hasDelete = computed(() => typeof remove !== 'undefined' && !disabled)
 				:class="{'m-2': hasDelete}"
 			/>
 			<BaseButton
-				:key="'delete'+user.id"
 				v-if="hasDelete"
-				@click="remove(user)"
+				:key="'delete'+user.id"
 				class="remove-assignee"
+				@click="remove(user)"
 			>
-				<icon icon="times"/>
+				<icon icon="times" />
 			</BaseButton>
 		</span>
 	</div>

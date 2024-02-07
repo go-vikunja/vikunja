@@ -6,12 +6,15 @@
 		label="title"
 		:select-placeholder="$t('project.searchSelect')"
 		:model-value="project"
-		@update:model-value="Object.assign(project, $event)"
+		@update:modelValue="Object.assign(project, $event)"
 		@select="select"
 		@search="findProjects"
 	>
 		<template #searchResult="{option}">
-			<span class="has-text-grey" v-if="projectStore.getAncestors(option).length > 1">
+			<span
+				v-if="projectStore.getAncestors(option).length > 1"
+				class="has-text-grey"
+			>
 				{{ projectStore.getAncestors(option).filter(p => p.id !== option.id).map(p => getProjectTitle(p)).join(' &gt; ') }} &gt;
 			</span>
 			{{ getProjectTitle(option) }}

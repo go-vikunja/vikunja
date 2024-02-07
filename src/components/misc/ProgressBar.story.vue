@@ -7,9 +7,9 @@ const value = ref(50)
 </script>
 
 <template>
-  <Story>
-    <Variant title="Default">
-      <ProgressBar :value="value" />
-    </Variant>
-  </Story>
+	<Story>
+		<Variant title="Default">
+			<ProgressBar :value="value" />
+		</Variant>
+	</Story>
 </template>

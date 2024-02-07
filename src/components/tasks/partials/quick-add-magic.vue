@@ -1,22 +1,25 @@
 <template>
 	<template v-if="mode !== 'disabled' && prefixes !== undefined">
 		<BaseButton
-			@click="() => visible = true"
-			class="icon is-small show-helper-text"
 			v-tooltip="$t('task.quickAddMagic.hint')"
+			class="icon is-small show-helper-text"
 			:aria-label="$t('task.quickAddMagic.hint')"
 			:class="{'is-highlighted': highlightHintIcon}"
+			@click="() => visible = true"
 		>
-			<icon :icon="['far', 'circle-question']"/>
+			<icon :icon="['far', 'circle-question']" />
 		</BaseButton>
 		<modal
 			:enabled="visible"
-			@close="() => visible = false"
 			transition-name="fade"
 			:overflow="true"
 			variant="hint-modal"
+			@close="() => visible = false"
 		>
-			<card class="has-no-shadow" :title="$t('task.quickAddMagic.title')">
+			<card
+				class="has-no-shadow"
+				:title="$t('task.quickAddMagic.title')"
+			>
 				<p>{{ $t('task.quickAddMagic.intro') }}</p>
 
 				<h3>{{ $t('task.attributes.labels') }}</h3>
@@ -102,14 +105,14 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import {PREFIXES} from '@/modules/parseTaskText'
 import {useAuthStore} from '@/stores/auth'
 
+defineProps<{
+	highlightHintIcon?: boolean,
+}>()
+
 const authStore = useAuthStore()
 
 const visible = ref(false)
 const mode = computed(() => authStore.settings.frontendSettings.quickAddMagicMode)
-
-defineProps<{
-	highlightHintIcon?: boolean,
-}>()
 
 const prefixes = computed(() => PREFIXES[mode.value])
 </script>

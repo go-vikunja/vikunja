@@ -1,6 +1,12 @@
 <template>
-	<component :is="is" class="shortcuts">
-		<template v-for="(k, i) in keys" :key="i">
+	<component
+		:is="is"
+		class="shortcuts"
+	>
+		<template
+			v-for="(k, i) in keys"
+			:key="i"
+		>
 			<kbd>{{ k }}</kbd>
 			<span v-if="i < keys.length - 1">{{ combination }}</span>
 		</template>

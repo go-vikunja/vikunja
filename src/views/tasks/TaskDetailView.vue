@@ -7,312 +7,402 @@
 		}"
 	>
 		<!-- Removing everything until the task is loaded to prevent empty initialization of other components -->
-		<div class="task-view" v-if="visible">
+		<div
+			v-if="visible"
+			class="task-view"
+		>
 			<Heading
-				:task="task"
-				@update:task="Object.assign(task, $event)"
-				:can-write="canWrite"
 				ref="heading"
+				:task="task"
+				:can-write="canWrite"
+				@update:task="Object.assign(task, $event)"
 			/>
-			<h6 class="subtitle" v-if="project?.id">
-				<template v-for="p in projectStore.getAncestors(project)" :key="p.id">
+			<h6
+				v-if="project?.id"
+				class="subtitle"
+			>
+				<template
+					v-for="p in projectStore.getAncestors(project)"
+					:key="p.id"
+				>
 					<router-link :to="{ name: 'project.index', params: { projectId: p.id } }">
 						{{ getProjectTitle(p) }}
 					</router-link>
-					<span class="has-text-grey-light" v-if="p.id !== project?.id"> &gt; </span>
+					<span
+						v-if="p.id !== project?.id"
+						class="has-text-grey-light"
+					> &gt; </span>
 				</template>
 			</h6>
 
-			<checklist-summary :task="task"/>
+			<ChecklistSummary :task="task" />
 
 			<!-- Content and buttons -->
 			<div class="columns mt-2">
 				<!-- Content -->
-				<div :class="{'is-two-thirds': canWrite}" class="column detail-content">
+				<div
+					:class="{'is-two-thirds': canWrite}"
+					class="column detail-content"
+				>
 					<div class="columns details">
-						<div class="column assignees" v-if="activeFields.assignees">
+						<div
+							v-if="activeFields.assignees"
+							class="column assignees"
+						>
 							<!-- Assignees -->
 							<div class="detail-title">
-								<icon icon="users"/>
+								<icon icon="users" />
 								{{ $t('task.attributes.assignees') }}
 							</div>
-							<edit-assignees
+							<EditAssignees
 								v-if="canWrite"
-								:project-id="task.projectId"
-								:task-id="task.id"
 								:ref="e => setFieldRef('assignees', e)"
 								v-model="task.assignees"
+								:project-id="task.projectId"
+								:task-id="task.id"
 							/>
-							<assignee-list
+							<AssigneeList
 								v-else
 								:assignees="task.assignees"
 								class="mt-2"
 							/>
 						</div>
-						<CustomTransition name="flash-background" appear>
-							<div class="column" v-if="activeFields.priority">
+						<CustomTransition
+							name="flash-background"
+							appear
+						>
+							<div
+								v-if="activeFields.priority"
+								class="column"
+							>
 								<!-- Priority -->
 								<div class="detail-title">
-									<icon icon="exclamation"/>
+									<icon icon="exclamation" />
 									{{ $t('task.attributes.priority') }}
 								</div>
-								<priority-select
-									:disabled="!canWrite"
-									@update:model-value="setPriority"
+								<PrioritySelect
 									:ref="e => setFieldRef('priority', e)"
-									v-model="task.priority"/>
+									v-model="task.priority"
+									:disabled="!canWrite"
+									@update:modelValue="setPriority"
+								/>
 							</div>
 						</CustomTransition>
-						<CustomTransition name="flash-background" appear>
-							<div class="column" v-if="activeFields.dueDate">
+						<CustomTransition
+							name="flash-background"
+							appear
+						>
+							<div
+								v-if="activeFields.dueDate"
+								class="column"
+							>
 								<!-- Due Date -->
 								<div class="detail-title">
-									<icon icon="calendar"/>
+									<icon icon="calendar" />
 									{{ $t('task.attributes.dueDate') }}
 								</div>
 								<div class="date-input">
-									<datepicker
+									<Datepicker
+										:ref="e => setFieldRef('dueDate', e)"
 										v-model="task.dueDate"
-										@close-on-change="saveTask()"
 										:choose-date-label="$t('task.detail.chooseDueDate')"
 										:disabled="taskService.loading || !canWrite"
-										:ref="e => setFieldRef('dueDate', e)"
+										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
 										v-if="task.dueDate && canWrite"
+										class="remove"
 										@click="() => {task.dueDate = null;saveTask()}"
-										class="remove">
+									>
 										<span class="icon is-small">
-											<icon icon="times"></icon>
+											<icon icon="times" />
 										</span>
 									</BaseButton>
 								</div>
 							</div>
 						</CustomTransition>
-						<CustomTransition name="flash-background" appear>
-							<div class="column" v-if="activeFields.percentDone">
+						<CustomTransition
+							name="flash-background"
+							appear
+						>
+							<div
+								v-if="activeFields.percentDone"
+								class="column"
+							>
 								<!-- Progress -->
 								<div class="detail-title">
-									<icon icon="percent"/>
+									<icon icon="percent" />
 									{{ $t('task.attributes.percentDone') }}
 								</div>
-								<percent-done-select
-									:disabled="!canWrite"
-									@update:model-value="setPercentDone"
+								<PercentDoneSelect
 									:ref="e => setFieldRef('percentDone', e)"
-									v-model="task.percentDone"/>
+									v-model="task.percentDone"
+									:disabled="!canWrite"
+									@update:modelValue="setPercentDone"
+								/>
 							</div>
 						</CustomTransition>
-						<CustomTransition name="flash-background" appear>
-							<div class="column" v-if="activeFields.startDate">
+						<CustomTransition
+							name="flash-background"
+							appear
+						>
+							<div
+								v-if="activeFields.startDate"
+								class="column"
+							>
 								<!-- Start Date -->
 								<div class="detail-title">
-									<icon icon="play"/>
+									<icon icon="play" />
 									{{ $t('task.attributes.startDate') }}
 								</div>
 								<div class="date-input">
-									<datepicker
+									<Datepicker
+										:ref="e => setFieldRef('startDate', e)"
 										v-model="task.startDate"
-										@close-on-change="saveTask()"
 										:choose-date-label="$t('task.detail.chooseStartDate')"
 										:disabled="taskService.loading || !canWrite"
-										:ref="e => setFieldRef('startDate', e)"
+										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
-										@click="() => {task.startDate = null;saveTask()}"
 										v-if="task.startDate && canWrite"
 										class="remove"
+										@click="() => {task.startDate = null;saveTask()}"
 									>
 										<span class="icon is-small">
-											<icon icon="times"></icon>
+											<icon icon="times" />
 										</span>
 									</BaseButton>
 								</div>
 							</div>
 						</CustomTransition>
-						<CustomTransition name="flash-background" appear>
-							<div class="column" v-if="activeFields.endDate">
+						<CustomTransition
+							name="flash-background"
+							appear
+						>
+							<div
+								v-if="activeFields.endDate"
+								class="column"
+							>
 								<!-- End Date -->
 								<div class="detail-title">
-									<icon icon="stop"/>
+									<icon icon="stop" />
 									{{ $t('task.attributes.endDate') }}
 								</div>
 								<div class="date-input">
-									<datepicker
+									<Datepicker
+										:ref="e => setFieldRef('endDate', e)"
 										v-model="task.endDate"
-										@close-on-change="saveTask()"
 										:choose-date-label="$t('task.detail.chooseEndDate')"
 										:disabled="taskService.loading || !canWrite"
-										:ref="e => setFieldRef('endDate', e)"
+										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
-										@click="() => {task.endDate = null;saveTask()}"
 										v-if="task.endDate && canWrite"
-										class="remove">
+										class="remove"
+										@click="() => {task.endDate = null;saveTask()}"
+									>
 										<span class="icon is-small">
-											<icon icon="times"></icon>
+											<icon icon="times" />
 										</span>
 									</BaseButton>
 								</div>
 							</div>
 						</CustomTransition>
-						<CustomTransition name="flash-background" appear>
-							<div class="column" v-if="activeFields.reminders">
+						<CustomTransition
+							name="flash-background"
+							appear
+						>
+							<div
+								v-if="activeFields.reminders"
+								class="column"
+							>
 								<!-- Reminders -->
 								<div class="detail-title">
-									<icon :icon="['far', 'clock']"/>
+									<icon :icon="['far', 'clock']" />
 									{{ $t('task.attributes.reminders') }}
 								</div>
-								<reminders
-									:disabled="!canWrite"
+								<Reminders
 									:ref="e => setFieldRef('reminders', e)"
 									v-model="task"
-									@update:model-value="saveTask()"
+									:disabled="!canWrite"
+									@update:modelValue="saveTask()"
 								/>
 							</div>
 						</CustomTransition>
-						<CustomTransition name="flash-background" appear>
-							<div class="column" v-if="activeFields.repeatAfter">
+						<CustomTransition
+							name="flash-background"
+							appear
+						>
+							<div
+								v-if="activeFields.repeatAfter"
+								class="column"
+							>
 								<!-- Repeat after -->
 								<div class="is-flex is-justify-content-space-between">
 									<div class="detail-title">
-										<icon icon="history"/>
+										<icon icon="history" />
 										{{ $t('task.attributes.repeat') }}
 									</div>
 									<BaseButton
-										@click="removeRepeatAfter"
 										v-if="canWrite"
-										class="remove">
+										class="remove"
+										@click="removeRepeatAfter"
+									>
 										<span class="icon is-small">
-											<icon icon="times"></icon>
+											<icon icon="times" />
 										</span>
 									</BaseButton>
 								</div>
-								<repeat-after
-									:disabled="!canWrite"
+								<RepeatAfter
 									:ref="e => setFieldRef('repeatAfter', e)"
 									v-model="task"
-									@update:model-value="saveTask()"
+									:disabled="!canWrite"
+									@update:modelValue="saveTask()"
 								/>
 							</div>
 						</CustomTransition>
-						<CustomTransition name="flash-background" appear>
-							<div class="column" v-if="activeFields.color">
+						<CustomTransition
+							name="flash-background"
+							appear
+						>
+							<div
+								v-if="activeFields.color"
+								class="column"
+							>
 								<!-- Color -->
 								<div class="detail-title">
-									<icon icon="fill-drip"/>
+									<icon icon="fill-drip" />
 									{{ $t('task.attributes.color') }}
 								</div>
-								<color-picker
-									menu-position="bottom"
+								<ColorPicker
 									:ref="e => setFieldRef('color', e)"
 									v-model="taskColor"
-									@update:model-value="saveTask()"
+									menu-position="bottom"
+									@update:modelValue="saveTask()"
 								/>
 							</div>
 						</CustomTransition>
 					</div>
 
 					<!-- Labels -->
-					<div class="labels-list details" v-if="activeFields.labels">
+					<div
+						v-if="activeFields.labels"
+						class="labels-list details"
+					>
 						<div class="detail-title">
 							<span class="icon is-grey">
-								<icon icon="tags"/>
+								<icon icon="tags" />
 							</span>
 							{{ $t('task.attributes.labels') }}
 						</div>
-						<edit-labels
+						<EditLabels
+							:ref="e => setFieldRef('labels', e)"
+							v-model="task.labels"
 							:disabled="!canWrite"
 							:task-id="taskId"
-							:ref="e => setFieldRef('labels', e)"
-							v-model="task.labels"/>
+						/>
 					</div>
 
 					<!-- Description -->
 					<div class="details content description">
-						<description
+						<Description
 							:model-value="task"
-							@update:modelValue="Object.assign(task, $event)"
 							:can-write="canWrite"
 							:attachment-upload="attachmentUpload"
+							@update:modelValue="Object.assign(task, $event)"
 						/>
 					</div>
 
 					<!-- Attachments -->
-					<div class="content attachments" v-if="activeFields.attachments || hasAttachments">
-						<attachments
+					<div
+						v-if="activeFields.attachments || hasAttachments"
+						class="content attachments"
+					>
+						<Attachments
+							:ref="e => setFieldRef('attachments', e)"
 							:edit-enabled="canWrite"
 							:task="task"
-							@task-changed="({coverImageAttachmentId}) => task.coverImageAttachmentId = coverImageAttachmentId"
-							:ref="e => setFieldRef('attachments', e)"
+							@taskChanged="({coverImageAttachmentId}) => task.coverImageAttachmentId = coverImageAttachmentId"
 						/>
 					</div>
 
 					<!-- Related Tasks -->
-					<div class="content details mb-0" v-if="activeFields.relatedTasks">
+					<div
+						v-if="activeFields.relatedTasks"
+						class="content details mb-0"
+					>
 						<h3>
 							<span class="icon is-grey">
-								<icon icon="sitemap"/>
+								<icon icon="sitemap" />
 							</span>
 							{{ $t('task.attributes.relatedTasks') }}
 						</h3>
-						<related-tasks
+						<RelatedTasks
+							:ref="e => setFieldRef('relatedTasks', e)"
 							:edit-enabled="canWrite"
 							:initial-related-tasks="task.relatedTasks"
 							:project-id="task.projectId"
 							:show-no-relations-notice="true"
 							:task-id="taskId"
-							:ref="e => setFieldRef('relatedTasks', e)"
 						/>
 					</div>
 
 					<!-- Move Task -->
-					<div class="content details" v-if="activeFields.moveProject">
+					<div
+						v-if="activeFields.moveProject"
+						class="content details"
+					>
 						<h3>
 							<span class="icon is-grey">
-								<icon icon="list"/>
+								<icon icon="list" />
 							</span>
 							{{ $t('task.detail.move') }}
 						</h3>
 						<div class="field has-addons">
 							<div class="control is-expanded">
-								<project-search
-									@update:modelValue="changeProject"
+								<ProjectSearch
 									:ref="e => setFieldRef('moveProject', e)"
+									@update:modelValue="changeProject"
 								/>
 							</div>
 						</div>
 					</div>
 
 					<!-- Comments -->
-					<comments :can-write="canWrite" :task-id="taskId"/>
+					<Comments
+						:can-write="canWrite"
+						:task-id="taskId"
+					/>
 				</div>
 				
 				<!-- Task Actions -->
-				<div class="column is-one-third action-buttons d-print-none" v-if="canWrite || isModal">
+				<div
+					v-if="canWrite || isModal"
+					class="column is-one-third action-buttons d-print-none"
+				>
 					<template v-if="canWrite">
 						<x-button
+							v-shortcut="'t'"
 							:class="{'is-success': !task.done}"
 							:shadow="task.done"
-							@click="toggleTaskDone()"
 							class="is-outlined has-no-border"
 							icon="check-double"
 							variant="secondary"
-							v-shortcut="'t'"
+							@click="toggleTaskDone()"
 						>
 							{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
 						</x-button>
-						<task-subscription
+						<TaskSubscription
 							entity="task"
 							:entity-id="task.id"
 							:model-value="task.subscription"
-							@update:model-value="sub => task.subscription = sub"
+							@update:modelValue="sub => task.subscription = sub"
 						/>
 						<x-button
-							@click="toggleFavorite"
+							v-shortcut="'s'"
 							variant="secondary"
 							:icon="task.isFavorite ? 'star' : ['far', 'star']"
-							v-shortcut="'s'"
+							@click="toggleFavorite"
 						>
 							{{
 								task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
@@ -322,34 +412,34 @@
 						<span class="action-heading">{{ $t('task.detail.organization') }}</span>
 						
 						<x-button
-							@click="setFieldActive('labels')"
+							v-shortcut="'l'"
 							variant="secondary"
 							icon="tags"
-							v-shortcut="'l'"
+							@click="setFieldActive('labels')"
 						>
 							{{ $t('task.detail.actions.label') }}
 						</x-button>
 						<x-button
-							@click="setFieldActive('priority')"
+							v-shortcut="'p'"
 							variant="secondary"
 							icon="exclamation"
-							v-shortcut="'p'"
+							@click="setFieldActive('priority')"
 						>
 							{{ $t('task.detail.actions.priority') }}
 						</x-button>
 						<x-button
-							@click="setFieldActive('percentDone')"
 							variant="secondary"
 							icon="percent"
+							@click="setFieldActive('percentDone')"
 						>
 							{{ $t('task.detail.actions.percentDone') }}
 						</x-button>
 						<x-button
-							@click="setFieldActive('color')"
+							v-shortcut="'c'"
 							variant="secondary"
 							icon="fill-drip"
 							:icon-color="color"
-							v-shortcut="'c'"
+							@click="setFieldActive('color')"
 						>
 							{{ $t('task.detail.actions.color') }}
 						</x-button>
@@ -357,35 +447,35 @@
 						<span class="action-heading">{{ $t('task.detail.management') }}</span>
 
 						<x-button
-							@click="setFieldActive('assignees')"
-							variant="secondary"
 							v-shortcut="'a'"
 							v-cy="'taskDetail.assign'"
+							variant="secondary"
+							@click="setFieldActive('assignees')"
 						>
-							<span class="icon is-small"><icon icon="users"/></span>
+							<span class="icon is-small"><icon icon="users" /></span>
 							{{ $t('task.detail.actions.assign') }}
 						</x-button>
 						<x-button
-							@click="setFieldActive('attachments')"
+							v-shortcut="'f'"
 							variant="secondary"
 							icon="paperclip"
-							v-shortcut="'f'"
+							@click="setFieldActive('attachments')"
 						>
 							{{ $t('task.detail.actions.attachments') }}
 						</x-button>
 						<x-button
-							@click="setRelatedTasksActive()"
+							v-shortcut="'r'"
 							variant="secondary"
 							icon="sitemap"
-							v-shortcut="'r'"
+							@click="setRelatedTasksActive()"
 						>
 							{{ $t('task.detail.actions.relatedTasks') }}
 						</x-button>
 						<x-button
-							@click="setFieldActive('moveProject')"
+							v-shortcut="'m'"
 							variant="secondary"
 							icon="list"
-							v-shortcut="'m'"
+							@click="setFieldActive('moveProject')"
 						>
 							{{ $t('task.detail.actions.moveProject') }}
 						</x-button>
@@ -393,59 +483,62 @@
 						<span class="action-heading">{{ $t('task.detail.dateAndTime') }}</span>
 						
 						<x-button
-							@click="setFieldActive('dueDate')"
+							v-shortcut="'d'"
 							variant="secondary"
 							icon="calendar"
-							v-shortcut="'d'"
+							@click="setFieldActive('dueDate')"
 						>
 							{{ $t('task.detail.actions.dueDate') }}
 						</x-button>
 						<x-button
-							@click="setFieldActive('startDate')"
 							variant="secondary"
 							icon="play"
+							@click="setFieldActive('startDate')"
 						>
 							{{ $t('task.detail.actions.startDate') }}
 						</x-button>
 						<x-button
-							@click="setFieldActive('endDate')"
 							variant="secondary"
 							icon="stop"
+							@click="setFieldActive('endDate')"
 						>
 							{{ $t('task.detail.actions.endDate') }}
 						</x-button>
 						<x-button
-							@click="setFieldActive('reminders')"
+							v-shortcut="'Alt+r'"
 							variant="secondary"
 							:icon="['far', 'clock']"
-							v-shortcut="'Alt+r'"
+							@click="setFieldActive('reminders')"
 						>
 							{{ $t('task.detail.actions.reminders') }}
 						</x-button>
 						<x-button
-							@click="setFieldActive('repeatAfter')"
 							variant="secondary"
 							icon="history"
+							@click="setFieldActive('repeatAfter')"
 						>
 							{{ $t('task.detail.actions.repeatAfter') }}
 						</x-button>
 						<x-button
-							@click="showDeleteModal = true"
+							v-shortcut="'Shift+Delete'"
 							icon="trash-alt"
 							:shadow="false"
 							class="is-danger is-outlined has-no-border"
-							v-shortcut="'Shift+Delete'"
+							@click="showDeleteModal = true"
 						>
 							{{ $t('task.detail.actions.delete') }}
 						</x-button>
 					</template>
 
 					<!-- Created / Updated [by] -->
-					<created-updated :task="task"/>
+					<CreatedUpdated :task="task" />
 				</div>
 			</div>
 			<!-- Created / Updated [by] -->
-			<created-updated :task="task" v-if="!canWrite && !isModal"/>
+			<CreatedUpdated
+				v-if="!canWrite && !isModal"
+				:task="task"
+			/>
 		</div>
 
 		<modal
@@ -453,18 +546,22 @@
 			@close="showDeleteModal = false"
 			@submit="deleteTask()"
 		>
-			<template #header><span>{{ $t('task.detail.delete.header') }}</span></template>
+			<template #header>
+				<span>{{ $t('task.detail.delete.header') }}</span>
+			</template>
 
 			<template #text>
-				<p>{{ $t('task.detail.delete.text1') }}<br/>
-					{{ $t('task.detail.delete.text2') }}</p>
+				<p>
+					{{ $t('task.detail.delete.text1') }}<br>
+					{{ $t('task.detail.delete.text2') }}
+				</p>
 			</template>
 		</modal>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, toRef, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
+import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
 import {useRouter, type RouteLocation} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {unrefElement} from '@vueuse/core'
@@ -539,7 +636,8 @@ const taskStore = useTaskStore()
 const kanbanStore = useKanbanStore()
 
 const task = ref<ITask>(new TaskModel())
-useTitle(toRef(task.value, 'title'))
+const taskTitle = computed(() => task.value.title)
+useTitle(taskTitle)
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
 function saveTaskViaHotkey(event) {

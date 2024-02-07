@@ -141,48 +141,69 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 
 <template>
 	<card :title="$t('user.settings.apiTokens.title')">
-
-		<message v-if="tokenCreatedSuccessMessage !== ''" class="has-text-centered mb-4">
-			{{ tokenCreatedSuccessMessage }}<br/>
+		<Message
+			v-if="tokenCreatedSuccessMessage !== ''"
+			class="has-text-centered mb-4"
+		>
+			{{ tokenCreatedSuccessMessage }}<br>
 			{{ $t('user.settings.apiTokens.tokenCreatedNotSeeAgain') }}
-		</message>
+		</Message>
 
 		<p>
 			{{ $t('user.settings.apiTokens.general') }}
-			<BaseButton :href="apiDocsUrl">{{ $t('user.settings.apiTokens.apiDocs') }}</BaseButton>
+			<BaseButton :href="apiDocsUrl">
+				{{ $t('user.settings.apiTokens.apiDocs') }}
+			</BaseButton>
 			.
 		</p>
 
-		<table class="table" v-if="tokens.length > 0">
+		<table
+			v-if="tokens.length > 0"
+			class="table"
+		>
 			<tr>
 				<th>{{ $t('misc.id') }}</th>
 				<th>{{ $t('user.settings.apiTokens.attributes.title') }}</th>
 				<th>{{ $t('user.settings.apiTokens.attributes.permissions') }}</th>
 				<th>{{ $t('user.settings.apiTokens.attributes.expiresAt') }}</th>
 				<th>{{ $t('misc.created') }}</th>
-				<th class="has-text-right">{{ $t('misc.actions') }}</th>
+				<th class="has-text-right">
+					{{ $t('misc.actions') }}
+				</th>
 			</tr>
-			<tr v-for="tk in tokens" :key="tk.id">
+			<tr
+				v-for="tk in tokens"
+				:key="tk.id"
+			>
 				<td>{{ tk.id }}</td>
 				<td>{{ tk.title }}</td>
 				<td class="is-capitalized">
-					<template v-for="(v, p) in tk.permissions" :key="'permission-' + p">
+					<template
+						v-for="(v, p) in tk.permissions"
+						:key="'permission-' + p"
+					>
 						<strong>{{ formatPermissionTitle(p) }}:</strong>
 						{{ v.map(formatPermissionTitle).join(', ') }}
-						<br/>
+						<br>
 					</template>
 				</td>
 				<td>
 					{{ formatDateShort(tk.expiresAt) }}
-					<p v-if="tk.expiresAt < new Date()" class="has-text-danger">
+					<p
+						v-if="tk.expiresAt < new Date()"
+						class="has-text-danger"
+					>
 						{{ $t('user.settings.apiTokens.expired', {ago: formatDateSince(tk.expiresAt)}) }}
 					</p>
 				</td>
 				<td>{{ formatDateShort(tk.created) }}</td>
 				<td class="has-text-right">
-					<x-button variant="secondary" @click="() => {tokenToDelete = tk; showDeleteModal = true}">
+					<XButton
+						variant="secondary"
+						@click="() => {tokenToDelete = tk; showDeleteModal = true}"
+					>
 						{{ $t('misc.delete') }}
-					</x-button>
+					</XButton>
 				</td>
 			</tr>
 		</table>
@@ -193,44 +214,65 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 		>
 			<!-- Title -->
 			<div class="field">
-				<label class="label" for="apiTokenTitle">{{ $t('user.settings.apiTokens.attributes.title') }}</label>
+				<label
+					class="label"
+					for="apiTokenTitle"
+				>{{ $t('user.settings.apiTokens.attributes.title') }}</label>
 				<div class="control">
 					<input
-						class="input"
 						id="apiTokenTitle"
 						ref="apiTokenTitle"
-						type="text"
-						v-focus
-						:placeholder="$t('user.settings.apiTokens.attributes.titlePlaceholder')"
 						v-model="newToken.title"
+						v-focus
+						class="input"
+						type="text"
+						:placeholder="$t('user.settings.apiTokens.attributes.titlePlaceholder')"
 						@keyup="() => newTokenTitleValid = newToken.title !== ''"
 						@focusout="() => newTokenTitleValid = newToken.title !== ''"
-					/>
+					>
 				</div>
-				<p class="help is-danger" v-if="!newTokenTitleValid">
+				<p
+					v-if="!newTokenTitleValid"
+					class="help is-danger"
+				>
 					{{ $t('user.settings.apiTokens.titleRequired') }}
 				</p>
 			</div>
 
 			<!-- Expiry -->
 			<div class="field">
-				<label class="label" for="apiTokenExpiry">
+				<label
+					class="label"
+					for="apiTokenExpiry"
+				>
 					{{ $t('user.settings.apiTokens.attributes.expiresAt') }}
 				</label>
 				<div class="is-flex">
 					<div class="control select">
-						<select class="select" v-model="newTokenExpiry" id="apiTokenExpiry">
-							<option value="30">{{ $t('user.settings.apiTokens.30d') }}</option>
-							<option value="60">{{ $t('user.settings.apiTokens.60d') }}</option>
-							<option value="90">{{ $t('user.settings.apiTokens.90d') }}</option>
-							<option value="custom">{{ $t('misc.custom') }}</option>
+						<select
+							id="apiTokenExpiry"
+							v-model="newTokenExpiry"
+							class="select"
+						>
+							<option value="30">
+								{{ $t('user.settings.apiTokens.30d') }}
+							</option>
+							<option value="60">
+								{{ $t('user.settings.apiTokens.60d') }}
+							</option>
+							<option value="90">
+								{{ $t('user.settings.apiTokens.90d') }}
+							</option>
+							<option value="custom">
+								{{ $t('misc.custom') }}
+							</option>
 						</select>
 					</div>
 					<flat-pickr
 						v-if="newTokenExpiry === 'custom'"
+						v-model="newTokenExpiryCustom"
 						class="ml-2"
 						:config="flatPickerConfig"
-						v-model="newTokenExpiryCustom"
 					/>
 				</div>
 			</div>
@@ -239,50 +281,57 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 			<div class="field">
 				<label class="label">{{ $t('user.settings.apiTokens.attributes.permissions') }}</label>
 				<p>{{ $t('user.settings.apiTokens.permissionExplanation') }}</p>
-				<div v-for="(routes, group) in availableRoutes" class="mb-2" :key="group">
-					<strong class="is-capitalized">{{ formatPermissionTitle(group) }}</strong><br/>
+				<div
+					v-for="(routes, group) in availableRoutes"
+					:key="group"
+					class="mb-2"
+				>
+					<strong class="is-capitalized">{{ formatPermissionTitle(group) }}</strong><br>
 					<template
 						v-if="Object.keys(routes).length > 1"
 					>
-						<fancycheckbox
-							class="mr-2 is-italic"
+						<Fancycheckbox
 							v-model="newTokenPermissionsGroup[group]"
-							@update:model-value="checked => selectPermissionGroup(group, checked)"
+							class="mr-2 is-italic"
+							@update:modelValue="checked => selectPermissionGroup(group, checked)"
 						>
 							{{ $t('user.settings.apiTokens.selectAll') }}
-						</fancycheckbox>
-						<br/>
+						</Fancycheckbox>
+						<br>
 					</template>
 					<template
 						v-for="(paths, route) in routes"
 						:key="group+'-'+route"
 					>
-						<fancycheckbox
-							class="mr-2 is-capitalized"
+						<Fancycheckbox
 							v-model="newTokenPermissions[group][route]"
-							@update:model-value="checked => toggleGroupPermissionsFromChild(group, checked)"
+							class="mr-2 is-capitalized"
+							@update:modelValue="checked => toggleGroupPermissionsFromChild(group, checked)"
 						>
 							{{ formatPermissionTitle(route) }}
-						</fancycheckbox>
-						<br/>
+						</Fancycheckbox>
+						<br>
 					</template>
 				</div>
 			</div>
 
-			<x-button :loading="service.loading" @click="createToken">
+			<XButton
+				:loading="service.loading"
+				@click="createToken"
+			>
 				{{ $t('user.settings.apiTokens.createToken') }}
-			</x-button>
+			</XButton>
 		</form>
 
-		<x-button
+		<XButton
 			v-else
 			icon="plus"
 			class="mb-4"
-			@click="() => showCreateForm = true"
 			:loading="service.loading"
+			@click="() => showCreateForm = true"
 		>
 			{{ $t('user.settings.apiTokens.createAToken') }}
-		</x-button>
+		</XButton>
 
 		<modal
 			:enabled="showDeleteModal"
@@ -295,7 +344,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 
 			<template #text>
 				<p>
-					{{ $t('user.settings.apiTokens.delete.text1', {token: tokenToDelete.title}) }}<br/>
+					{{ $t('user.settings.apiTokens.delete.text1', {token: tokenToDelete.title}) }}<br>
 					{{ $t('user.settings.apiTokens.delete.text2') }}
 				</p>
 			</template>

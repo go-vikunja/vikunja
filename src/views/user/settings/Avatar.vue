@@ -6,19 +6,24 @@
 				:key="providerId"
 				class="radio"
 			>
-				<input name="avatarProvider" type="radio" v-model="avatarProvider" :value="providerId"/>
+				<input
+					v-model="avatarProvider"
+					name="avatarProvider"
+					type="radio"
+					:value="providerId"
+				>
 				{{ label }}
 			</label>
 		</div>
 
 		<template v-if="avatarProvider === 'upload'">
 			<input
-				@change="cropAvatar"
+				ref="avatarUploadInput"
 				accept="image/*"
 				class="is-hidden"
-				ref="avatarUploadInput"
 				type="file"
-			/>
+				@change="cropAvatar"
+			>
 
 			<x-button
 				v-if="!isCropAvatar"
@@ -29,27 +34,30 @@
 			</x-button>
 			<template v-else>
 				<Cropper
+					ref="cropper"
 					:src="avatarToCrop"
 					:stencil-props="{aspectRatio: 1}"
-					@ready="() => loading = false"
 					class="mb-4 cropper"
-					ref="cropper"
+					@ready="() => loading = false"
 				/>
 				<x-button
+					v-cy="'uploadAvatar'"
 					:loading="avatarService.loading || loading"
 					@click="uploadAvatar"
-					v-cy="'uploadAvatar'"
 				>
 					{{ $t('user.settings.avatar.uploadAvatar') }}
 				</x-button>
 			</template>
 		</template>
 
-		<div class="mt-2" v-else>
+		<div
+			v-else
+			class="mt-2"
+		>
 			<x-button
 				:loading="avatarService.loading || loading"
-				@click="updateAvatarStatus()"
 				class="is-fullwidth"
+				@click="updateAvatarStatus()"
 			>
 				{{ $t('misc.save') }}
 			</x-button>
@@ -58,7 +66,7 @@
 </template>
 
 <script lang="ts">
-export default { name: 'user-settings-avatar' }
+export default { name: 'UserSettingsAvatar' }
 </script>
 
 <script setup lang="ts">

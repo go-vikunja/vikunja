@@ -4,14 +4,17 @@
 		:class="{'is-inline': isInline}"
 	>
 		<img
+			v-tooltip="displayName"
 			:height="avatarSize"
 			:src="getAvatarUrl(user, avatarSize)"
 			:width="avatarSize"
 			:alt="'Avatar of ' + displayName"
 			class="avatar"
-			v-tooltip="displayName"
-		/>
-		<span class="username" v-if="showUsername">{{ displayName }}</span>
+		>
+		<span
+			v-if="showUsername"
+			class="username"
+		>{{ displayName }}</span>
 	</div>
 </template>
 

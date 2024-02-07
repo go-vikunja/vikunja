@@ -1,16 +1,20 @@
 <template>
-	<modal @close="$router.back()" :overflow="true" :wide="wide">
+	<modal
+		:overflow="true"
+		:wide="wide"
+		@close="$router.back()"
+	>
 		<card
 			:title="title"
 			:shadow="false"
 			:padding="false"
 			class="has-text-left"
 			:has-close="true"
-			@close="$router.back()"
 			:loading="loading"
+			@close="$router.back()"
 		>
 			<div class="p-4">
-				<slot/>
+				<slot />
 			</div>
 
 			<template #footer>
@@ -32,10 +36,10 @@
 					<x-button
 						v-if="hasPrimaryAction"
 						variant="primary"
-						@click.prevent.stop="primary()"
 						:icon="primaryIcon"
 						:disabled="primaryDisabled || loading"
 						class="ml-2"
+						@click.prevent.stop="primary()"
 					>
 						{{ primaryLabel || $t('misc.create') }}
 					</x-button>

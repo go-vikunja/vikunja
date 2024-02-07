@@ -1,5 +1,7 @@
 <template>
-	<BaseButton class="button-link"><slot/></BaseButton>
+	<BaseButton class="button-link">
+		<slot />
+	</BaseButton>
 </template>
 
 <script setup lang="ts">

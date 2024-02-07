@@ -1,43 +1,55 @@
 <template>
-	<card v-if="isLocalUser" :title="$t('user.settings.updateEmailTitle')">
+	<card
+		v-if="isLocalUser"
+		:title="$t('user.settings.updateEmailTitle')"
+	>
 		<form @submit.prevent="updateEmail">
 			<div class="field">
-				<label class="label" for="newEmail">{{ $t('user.settings.updateEmailNew') }}</label>
+				<label
+					class="label"
+					for="newEmail"
+				>{{ $t('user.settings.updateEmailNew') }}</label>
 				<div class="control">
 					<input
-						@keyup.enter="updateEmail"
-						class="input"
 						id="newEmail"
+						v-model="emailUpdate.newEmail"
+						class="input"
 						:placeholder="$t('user.auth.emailPlaceholder')"
 						type="email"
-						v-model="emailUpdate.newEmail"/>
+						@keyup.enter="updateEmail"
+					>
 				</div>
 			</div>
 			<div class="field">
-				<label class="label" for="currentPasswordEmail">{{ $t('user.settings.currentPassword') }}</label>
+				<label
+					class="label"
+					for="currentPasswordEmail"
+				>{{ $t('user.settings.currentPassword') }}</label>
 				<div class="control">
 					<input
-						@keyup.enter="updateEmail"
-						class="input"
 						id="currentPasswordEmail"
+						v-model="emailUpdate.password"
+						class="input"
 						:placeholder="$t('user.settings.currentPasswordPlaceholder')"
 						type="password"
-						v-model="emailUpdate.password"/>
+						@keyup.enter="updateEmail"
+					>
 				</div>
 			</div>
 		</form>
 
 		<x-button
 			:loading="emailUpdateService.loading"
+			class="is-fullwidth mt-4"
 			@click="updateEmail"
-			class="is-fullwidth mt-4">
+		>
 			{{ $t('misc.save') }}
 		</x-button>
 	</card>
 </template>
 
 <script lang="ts">
-export default { name: 'user-settings-update-email' }
+export default { name: 'UserSettingsUpdateEmail' }
 </script>
 
 <script setup lang="ts">

@@ -1,77 +1,85 @@
 <template>
-	<create-edit
+	<CreateEdit
 		:title="$t('project.edit.header')"
 		primary-icon=""
 		:primary-label="$t('misc.save')"
-		@primary="save"
 		:tertiary="$t('misc.delete')"
+		@primary="save"
 		@tertiary="$router.push({ name: 'project.settings.delete', params: { id: projectId } })"
 	>
 		<div class="field">
-			<label class="label" for="title">{{ $t('project.title') }}</label>
+			<label
+				class="label"
+				for="title"
+			>{{ $t('project.title') }}</label>
 			<div class="control">
 				<input
+					id="title"
+					v-model="project.title"
+					v-focus
 					:class="{ 'disabled': isLoading}"
 					:disabled="isLoading || undefined"
-					@keyup.enter="save"
 					class="input"
-					id="title"
 					:placeholder="$t('project.edit.titlePlaceholder')"
 					type="text"
-					v-focus
-					v-model="project.title"/>
+					@keyup.enter="save"
+				>
 			</div>
 		</div>
 		<div class="field">
 			<label
+				v-tooltip="$t('project.edit.identifierTooltip')"
 				class="label"
 				for="identifier"
-				v-tooltip="$t('project.edit.identifierTooltip')">
+			>
 				{{ $t('project.edit.identifier') }}
 			</label>
 			<div class="control">
 				<input
+					id="identifier"
+					v-model="project.identifier"
+					v-focus
 					:class="{ 'disabled': isLoading}"
 					:disabled="isLoading || undefined"
-					@keyup.enter="save"
 					class="input"
-					id="identifier"
 					:placeholder="$t('project.edit.identifierPlaceholder')"
 					type="text"
-					v-focus
-					v-model="project.identifier"/>
+					@keyup.enter="save"
+				>
 			</div>
 		</div>
 		<div class="field">
 			<label class="label">{{ $t('project.parent') }}</label>
 			<div class="control">
-				<project-search v-model="parentProject"/>
+				<ProjectSearch v-model="parentProject" />
 			</div>
 		</div>
 		<div class="field">
-			<label class="label" for="projectdescription">{{ $t('project.edit.description') }}</label>
+			<label
+				class="label"
+				for="projectdescription"
+			>{{ $t('project.edit.description') }}</label>
 			<div class="control">
 				<Editor
+					id="projectdescription"
+					v-model="project.description"
 					:class="{ 'disabled': isLoading}"
 					:disabled="isLoading"
-					id="projectdescription"
 					:placeholder="$t('project.edit.descriptionPlaceholder')"
-					v-model="project.description"
 				/>
 			</div>
 		</div>
 		<div class="field">
 			<label class="label">{{ $t('project.edit.color') }}</label>
 			<div class="control">
-				<color-picker v-model="project.hexColor"/>
+				<ColorPicker v-model="project.hexColor" />
 			</div>
 		</div>
-
-	</create-edit>
+	</CreateEdit>
 </template>
 
 <script lang="ts">
-export default {name: 'project-setting-edit'}
+export default {name: 'ProjectSettingEdit'}
 </script>
 
 <script setup lang="ts">

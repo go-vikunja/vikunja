@@ -2,7 +2,7 @@
 	<span
 		:style="{backgroundColor: color }"
 		class="color-bubble"
-	></span>
+	/>
 </template>
 
 <script lang="ts" setup>

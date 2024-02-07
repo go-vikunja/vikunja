@@ -1,37 +1,44 @@
 <template>
 	<Multiselect
+		v-model="labels"
 		:loading="loading"
 		:placeholder="$t('task.label.placeholder')"
 		:multiple="true"
-		@search="findLabel"
 		:search-results="foundLabels"
-		@select="addLabel"
 		label="title"
 		:creatable="creatable"
-		@create="createAndAddLabel"
 		:create-placeholder="$t('task.label.createPlaceholder')"
-		v-model="labels"
 		:search-delay="10"
 		:close-after-select="false"
+		@search="findLabel"
+		@select="addLabel"
+		@create="createAndAddLabel"
 	>
 		<template #tag="{item: label}">
 			<span
 				:style="{'background': label.hexColor, 'color': label.textColor}"
-				class="tag">
+				class="tag"
+			>
 				<span>{{ label.title }}</span>
-				<BaseButton v-cy="'taskDetail.removeLabel'" @click="removeLabel(label)" class="delete is-small" />
+				<BaseButton
+					v-cy="'taskDetail.removeLabel'"
+					class="delete is-small"
+					@click="removeLabel(label)"
+				/>
 			</span>
 		</template>
 		<template #searchResult="{option}">
 			<span
 				v-if="typeof option === 'string'"
-				class="tag search-result">
+				class="tag search-result"
+			>
 				<span>{{ option }}</span>
 			</span>
 			<span
 				v-else
 				:style="{'background': option.hexColor, 'color': option.textColor}"
-				class="tag search-result">
+				class="tag search-result"
+			>
 				<span>{{ option.title }}</span>
 			</span>
 		</template>

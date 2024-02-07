@@ -2,10 +2,10 @@
 	<div class="content-auth">
 		<BaseButton
 			v-show="menuActive"
-			@click="baseStore.setMenuActive(false)"
 			class="menu-hide-button d-print-none"
+			@click="baseStore.setMenuActive(false)"
 		>
-			<icon icon="times"/>
+			<icon icon="times" />
 		</BaseButton>
 		<div
 			class="app-container"
@@ -15,8 +15,9 @@
 			<div
 				:class="{'is-visible': background}"
 				class="app-container-background background-fade-in d-print-none"
-				:style="{'background-image': background && `url(${background})`}"></div>
-			<navigation class="d-print-none"/>
+				:style="{'background-image': background && `url(${background})`}"
+			/>
+			<Navigation class="d-print-none" />
 			<main
 				class="app-content"
 				:class="[
@@ -26,33 +27,36 @@
 			>
 				<BaseButton
 					v-show="menuActive"
-					@click="baseStore.setMenuActive(false)"
 					class="mobile-overlay d-print-none"
+					@click="baseStore.setMenuActive(false)"
 				/>
 
-				<quick-actions/>
+				<QuickActions />
 
-				<router-view :route="routeWithModal" v-slot="{ Component }">
+				<router-view
+					v-slot="{ Component }"
+					:route="routeWithModal"
+				>
 					<keep-alive :include="['project.list', 'project.gantt', 'project.table', 'project.kanban']">
-						<component :is="Component"/>
+						<component :is="Component" />
 					</keep-alive>
 				</router-view>
 
 				<modal
 					:enabled="typeof currentModal !== 'undefined'"
-					@close="closeModal()"
 					variant="scrolling"
 					class="task-detail-view-modal"
+					@close="closeModal()"
 				>
-					<component :is="currentModal"/>
+					<component :is="currentModal" />
 				</modal>
 
 				<BaseButton
+					v-shortcut="'?'"
 					class="keyboard-shortcuts-button d-print-none"
 					@click="showKeyboardShortcuts()"
-					v-shortcut="'?'"
 				>
-					<icon icon="keyboard"/>
+					<icon icon="keyboard" />
 				</BaseButton>
 			</main>
 		</div>

@@ -1,29 +1,33 @@
 <template>
-	<create-edit
+	<CreateEdit
 		:title="$t('project.share.header')"
 		:has-primary-action="false"
 	>
 		<template v-if="project">
 			<userTeam
 				:id="project.id"
-				:userIsAdmin="userIsAdmin"
-				shareType="user"
+				:user-is-admin="userIsAdmin"
+				share-type="user"
 				type="project"
 			/>
 			<userTeam
 				:id="project.id"
-				:userIsAdmin="userIsAdmin"
-				shareType="team"
+				:user-is-admin="userIsAdmin"
+				share-type="team"
 				type="project"
 			/>
 		</template>
 
-		<link-sharing :project-id="projectId" v-if="linkSharingEnabled" class="mt-4"/>
-	</create-edit>
+		<LinkSharing
+			v-if="linkSharingEnabled"
+			:project-id="projectId"
+			class="mt-4"
+		/>
+	</CreateEdit>
 </template>
 
 <script lang="ts">
-export default {name: 'project-setting-share'}
+export default {name: 'ProjectSettingShare'}
 </script>
 
 <script lang="ts" setup>

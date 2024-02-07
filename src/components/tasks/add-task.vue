@@ -1,31 +1,34 @@
 <template>
-	<div class="task-add" ref="taskAdd">
+	<div
+		ref="taskAdd"
+		class="task-add"
+	>
 		<div class="add-task__field field is-grouped">
 			<p class="control has-icons-left has-icons-right is-expanded">
 				<textarea
+					ref="newTaskInput"
+					v-model="newTaskTitle"
+					v-focus
 					class="add-task-textarea input"
 					:class="{'textarea-empty': newTaskTitle === ''}"
 					:placeholder="$t('project.list.addPlaceholder')"
 					rows="1"
-					v-focus
-					v-model="newTaskTitle"
-					ref="newTaskInput"
 					@keyup="resetEmptyTitleError"
 					@keydown.enter="handleEnter"
 				/>
 				<span class="icon is-small is-left">
-					<icon icon="tasks"/>
+					<icon icon="tasks" />
 				</span>
-				<quick-add-magic :highlight-hint-icon="taskAddHovered"/>
+				<QuickAddMagic :highlight-hint-icon="taskAddHovered" />
 			</p>
 			<p class="control">
 				<x-button
 					class="add-task-button"
 					:disabled="newTaskTitle === '' || loading || undefined"
-					@click="addTask()"
 					icon="plus"
 					:loading="loading"
 					:aria-label="$t('project.list.add')"
+					@click="addTask()"
 				>
 					<span class="button-text">
 						{{ $t('project.list.add') }}
@@ -34,7 +37,10 @@
 			</p>
 		</div>
 		<Expandable :open="errorMessage !== ''">
-			<p class="pt-3 mt-0 help is-danger" v-if="errorMessage !== ''">
+			<p
+				v-if="errorMessage !== ''"
+				class="pt-3 mt-0 help is-danger"
+			>
 				{{ errorMessage }}
 			</p>
 		</Expandable>

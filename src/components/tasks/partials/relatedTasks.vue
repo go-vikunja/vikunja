@@ -2,41 +2,53 @@
 	<div class="task-relations">
 		<x-button
 			v-if="editEnabled && Object.keys(relatedTasks).length > 0"
-			@click="showNewRelationForm = !showNewRelationForm"
+			id="showRelatedTasksFormButton"
+			v-tooltip="$t('task.relation.add')"
 			class="is-pulled-right add-task-relation-button d-print-none"
 			:class="{'is-active': showNewRelationForm}"
-			v-tooltip="$t('task.relation.add')"
 			variant="secondary"
 			icon="plus"
 			:shadow="false"
-			id="showRelatedTasksFormButton"
+			@click="showNewRelationForm = !showNewRelationForm"
 		/>
 		<transition-group name="fade">
 			<template v-if="editEnabled && showCreate">
-				<label class="label" key="label">
+				<label
+					key="label"
+					class="label"
+				>
 					{{ $t('task.relation.new') }}
 					<CustomTransition name="fade">
-						<span class="is-inline-flex" v-if="taskRelationService.loading">
-							<span class="loader is-inline-block mr-2"></span>
+						<span
+							v-if="taskRelationService.loading"
+							class="is-inline-flex"
+						>
+							<span class="loader is-inline-block mr-2" />
 							{{ $t('misc.saving') }}
 						</span>
-						<span class="has-text-success" v-else-if="!taskRelationService.loading && saved">
+						<span
+							v-else-if="!taskRelationService.loading && saved"
+							class="has-text-success"
+						>
 							{{ $t('misc.saved') }}
 						</span>
 					</CustomTransition>
 				</label>
-				<div class="field" key="field-search">
+				<div
+					key="field-search"
+					class="field"
+				>
 					<Multiselect
+						v-model="newTaskRelation.task"
+						v-focus
 						:placeholder="$t('task.relation.searchPlaceholder')"
-						@search="findTasks"
 						:loading="taskService.loading"
 						:search-results="mappedFoundTasks"
 						label="title"
-						v-model="newTaskRelation.task"
 						:creatable="true"
 						:create-placeholder="$t('task.relation.createPlaceholder')"
+						@search="findTasks"
 						@create="createAndRelateTask"
-						v-focus
 					>
 						<template #searchResult="{option: task}">
 							<span 
@@ -45,62 +57,86 @@
 								:class="{'is-strikethrough': task.done}"
 							>
 								<span
-									class="different-project"
 									v-if="task.projectId !== projectId"
+									class="different-project"
 								>
 									<span
 										v-if="task.differentProject !== null"
-										v-tooltip="$t('task.relation.differentProject')">
+										v-tooltip="$t('task.relation.differentProject')"
+									>
 										{{ task.differentProject }} >
 									</span>
 								</span>
 								{{ task.title }}
 							</span>
-							<span class="search-result" v-else>
+							<span
+								v-else
+								class="search-result"
+							>
 								{{ task }}
 							</span>
 						</template>
 					</Multiselect>
 				</div>
-				<div class="field has-addons mb-4" key="field-kind">
+				<div
+					key="field-kind"
+					class="field has-addons mb-4"
+				>
 					<div class="control is-expanded">
 						<div class="select is-fullwidth has-defaults">
 							<select v-model="newTaskRelation.kind">
-								<option value="unset">{{ $t('task.relation.select') }}</option>
-								<option :key="`option_${rk}`" :value="rk" v-for="rk in RELATION_KINDS">
+								<option value="unset">
+									{{ $t('task.relation.select') }}
+								</option>
+								<option
+									v-for="rk in RELATION_KINDS"
+									:key="`option_${rk}`"
+									:value="rk"
+								>
 									{{ $t(`task.relation.kinds.${rk}`, 1) }}
 								</option>
 							</select>
 						</div>
 					</div>
 					<div class="control">
-						<x-button @click="addTaskRelation()">{{ $t('task.relation.add') }}</x-button>
+						<x-button @click="addTaskRelation()">
+							{{ $t('task.relation.add') }}
+						</x-button>
 					</div>
 				</div>
 			</template>
 		</transition-group>
 
-		<div :key="rts.kind" class="related-tasks" v-for="rts in mappedRelatedTasks">
+		<div
+			v-for="rts in mappedRelatedTasks"
+			:key="rts.kind"
+			class="related-tasks"
+		>
 			<span class="title">{{ rts.title }}</span>
 			<div class="tasks">
-				<div :key="t.id" class="task" v-for="t in rts.tasks">
+				<div
+					v-for="t in rts.tasks"
+					:key="t.id"
+					class="task"
+				>
 					<div class="is-flex is-align-items-center">
 						<Fancycheckbox
-							class="task-done-checkbox"
 							v-model="t.done"
-							@update:model-value="toggleTaskDone(t)"
+							class="task-done-checkbox"
+							@update:modelValue="toggleTaskDone(t)"
 						/>
 						<router-link
 							:to="{ name: route.name as string, params: { id: t.id } }"
 							:class="{ 'is-strikethrough': t.done}"
 						>
 							<span
-								class="different-project"
 								v-if="t.projectId !== projectId"
+								class="different-project"
 							>
 								<span
 									v-if="t.differentProject !== null"
-									v-tooltip="$t('task.relation.differentProject')">
+									v-tooltip="$t('task.relation.differentProject')"
+								>
 									{{ t.differentProject }} >
 								</span>
 							</span>
@@ -109,18 +145,21 @@
 					</div>
 					<BaseButton
 						v-if="editEnabled"
+						class="remove"
 						@click="setRelationToDelete({
 							relationKind: rts.kind,
 							otherTaskId: t.id
 						})"
-						class="remove"
 					>
-						<icon icon="trash-alt"/>
+						<icon icon="trash-alt" />
 					</BaseButton>
 				</div>
 			</div>
 		</div>
-		<p class="none" v-if="showNoRelationsNotice && Object.keys(relatedTasks).length === 0">
+		<p
+			v-if="showNoRelationsNotice && Object.keys(relatedTasks).length === 0"
+			class="none"
+		>
 			{{ $t('task.relation.noneYet') }}
 		</p>
 
@@ -129,11 +168,13 @@
 			@close="relationToDelete = undefined"
 			@submit="removeTaskRelation()"
 		>
-			<template #header><span>{{ $t('task.relation.delete') }}</span></template>
+			<template #header>
+				<span>{{ $t('task.relation.delete') }}</span>
+			</template>
 
 			<template #text>
 				<p>
-					{{ $t('task.relation.deleteText1') }}<br/>
+					{{ $t('task.relation.deleteText1') }}<br>
 					<strong class="has-text-white">{{ $t('misc.cannotBeUndone') }}</strong>
 				</p>
 			</template>

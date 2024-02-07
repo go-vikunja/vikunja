@@ -1,5 +1,8 @@
 <template>
-	<div class="loader-container is-loading" :class="{'is-small': variant === 'small'}"></div>
+	<div
+		class="loader-container is-loading"
+		:class="{'is-small': variant === 'small'}"
+	/>
 </template>
 
 <script lang="ts">

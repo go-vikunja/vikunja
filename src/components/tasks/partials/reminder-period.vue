@@ -3,24 +3,38 @@
 		class="reminder-period control"
 	>
 		<input
-			class="input"
 			v-model.number="period.duration"
+			class="input"
 			type="number"
 			min="0"
 			@change="updateData"
-		/>
+		>
 
 		<div class="select">
-			<select v-model="period.durationUnit" @change="updateData">
-				<option value="minutes">{{ $t('time.units.minutes', period.duration) }}</option>
-				<option value="hours">{{ $t('time.units.hours', period.duration) }}</option>
-				<option value="days">{{ $t('time.units.days', period.duration) }}</option>
-				<option value="weeks">{{ $t('time.units.weeks', period.duration) }}</option>
+			<select
+				v-model="period.durationUnit"
+				@change="updateData"
+			>
+				<option value="minutes">
+					{{ $t('time.units.minutes', period.duration) }}
+				</option>
+				<option value="hours">
+					{{ $t('time.units.hours', period.duration) }}
+				</option>
+				<option value="days">
+					{{ $t('time.units.days', period.duration) }}
+				</option>
+				<option value="weeks">
+					{{ $t('time.units.weeks', period.duration) }}
+				</option>
 			</select>
 		</div>
 
 		<div class="select">
-			<select v-model.number="period.sign" @change="updateData">
+			<select
+				v-model.number="period.sign"
+				@change="updateData"
+			>
 				<option value="-1">
 					{{ $t('task.reminder.beforeShort') }}
 				</option>
@@ -31,7 +45,10 @@
 		</div>
 
 		<div class="select">
-			<select v-model="period.relativeTo" @change="updateData">
+			<select
+				v-model="period.relativeTo"
+				@change="updateData"
+			>
 				<option :value="REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE">
 					{{ $t('task.attributes.dueDate') }}
 				</option>

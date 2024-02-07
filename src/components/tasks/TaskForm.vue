@@ -1,20 +1,24 @@
 <template>
 	<form
-		@submit.prevent="createTask"
 		class="add-new-task"
+		@submit.prevent="createTask"
 	>
 		<CustomTransition name="width">
 			<input
 				v-if="newTaskFieldActive"
+				ref="newTaskTitleField"
 				v-model="newTaskTitle"
+				class="input"
+				type="text"
 				@blur="hideCreateNewTask"
 				@keyup.esc="newTaskFieldActive = false"
-				class="input"
-				ref="newTaskTitleField"
-				type="text"
-			/>
+			>
 		</CustomTransition>
-		<x-button @click="showCreateTaskOrCreate" :shadow="false" icon="plus">
+		<x-button
+			:shadow="false"
+			icon="plus"
+			@click="showCreateTaskOrCreate"
+		>
 			{{ $t('task.new') }}
 		</x-button>
 	</form>
@@ -27,7 +31,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 
 const emit = defineEmits<{
-	(e: 'create-task', title: string): Promise<ITask>
+	(e: 'createTask', title: string): Promise<ITask>
 }>()
 
 const newTaskFieldActive = ref(false)
@@ -56,7 +60,7 @@ async function createTask() {
 	if (!newTaskFieldActive.value) {
 		return
 	}
-	await emit('create-task', newTaskTitle.value)
+	await emit('createTask', newTaskTitle.value)
 	newTaskTitle.value = ''
 	hideCreateNewTask()
 }

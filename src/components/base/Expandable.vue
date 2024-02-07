@@ -1,27 +1,30 @@
 <template>
-  <transition
-    name="expandable-slide"
-    @before-enter="beforeEnter"
-    @enter="enter"
-    @after-enter="afterEnter"
-    @enter-cancelled="enterCancelled"
-    @before-leave="beforeLeave"
-    @leave="leave"
-    @after-leave="afterLeave"
-    @leave-cancelled="leaveCancelled"
-  >
-    <div
-      v-if="initialHeight"
-      class="expandable-initial-height"
-      :style="{ maxHeight: `${initialHeight}px` }"
-      :class="{ 'expandable-initial-height--expanded': open }"
-    >
-      <slot />
-    </div>
-    <div v-else-if="open" class="expandable">
-      <slot />
-    </div>
-  </transition>
+	<transition
+		name="expandable-slide"
+		@beforeEnter="beforeEnter"
+		@enter="enter"
+		@afterEnter="afterEnter"
+		@enterCancelled="enterCancelled"
+		@beforeLeave="beforeLeave"
+		@leave="leave"
+		@afterLeave="afterLeave"
+		@leaveCancelled="leaveCancelled"
+	>
+		<div
+			v-if="initialHeight"
+			class="expandable-initial-height"
+			:style="{ maxHeight: `${initialHeight}px` }"
+			:class="{ 'expandable-initial-height--expanded': open }"
+		>
+			<slot />
+		</div>
+		<div
+			v-else-if="open"
+			class="expandable"
+		>
+			<slot />
+		</div>
+	</transition>
 </template>
 
 <script setup lang="ts">

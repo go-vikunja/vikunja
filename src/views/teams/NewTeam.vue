@@ -1,31 +1,37 @@
 <template>
-	<create-edit
+	<CreateEdit
 		:title="title"
-		@create="newTeam()"
 		:primary-disabled="team.name === ''"
+		@create="newTeam()"
 	>
 		<div class="field">
-			<label class="label" for="teamName">{{ $t('team.attributes.name') }}</label>
+			<label
+				class="label"
+				for="teamName"
+			>{{ $t('team.attributes.name') }}</label>
 			<div
 				class="control is-expanded"
 				:class="{ 'is-loading': teamService.loading }"
 			>
 				<input
+					id="teamName"
+					v-model="team.name"
+					v-focus
 					:class="{ 'disabled': teamService.loading }"
 					class="input"
-					id="teamName"
 					:placeholder="$t('team.attributes.namePlaceholder')"
 					type="text"
-					v-focus
-					v-model="team.name"
 					@keyup.enter="newTeam"
-				/>
+				>
 			</div>
 		</div>
-		<p class="help is-danger" v-if="showError && team.name === ''">
+		<p
+			v-if="showError && team.name === ''"
+			class="help is-danger"
+		>
 			{{ $t('team.attributes.nameRequired') }}
 		</p>
-	</create-edit>
+	</CreateEdit>
 </template>
 
 <script lang="ts">

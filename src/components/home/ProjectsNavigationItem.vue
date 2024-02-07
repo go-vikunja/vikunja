@@ -6,10 +6,13 @@
 		<div>
 			<BaseButton
 				v-if="canCollapse && childProjects?.length > 0"
-				@click="childProjectsOpen = !childProjectsOpen"
 				class="collapse-project-button"
+				@click="childProjectsOpen = !childProjectsOpen"
 			>
-				<icon icon="chevron-down" :class="{ 'project-is-collapsed': !childProjectsOpen }"/>
+				<icon
+					icon="chevron-down"
+					:class="{ 'project-is-collapsed': !childProjectsOpen }"
+				/>
 			</BaseButton>
 			<BaseButton
 				:to="{ name: 'project.index', params: { projectId: project.id} }"
@@ -19,21 +22,27 @@
 				<span
 					v-if="!canCollapse || childProjects?.length === 0"
 					class="collapse-project-button-placeholder"
-				></span>
-				<div class="color-bubble-handle-wrapper" :class="{'is-draggable': project.id > 0}">
+				/>
+				<div
+					class="color-bubble-handle-wrapper"
+					:class="{'is-draggable': project.id > 0}"
+				>
 					<ColorBubble
 						v-if="project.hexColor !== ''"
 						:color="project.hexColor"
 					/>
-					<span v-else-if="project.id < -1" class="saved-filter-icon icon menu-item-icon">
-						<icon icon="filter"/>
+					<span
+						v-else-if="project.id < -1"
+						class="saved-filter-icon icon menu-item-icon"
+					>
+						<icon icon="filter" />
 					</span>
 					<span
 						v-if="project.id > 0"
 						class="icon menu-item-icon handle"
 						:class="{'has-color-bubble': project.hexColor !== ''}"
 					>
-						<icon icon="grip-lines"/>
+						<icon icon="grip-lines" />
 					</span>
 				</div>
 				<span class="project-menu-title">{{ getProjectTitle(project) }}</span>
@@ -44,7 +53,7 @@
 				:class="{'is-favorite': project.isFavorite}"
 				@click="projectStore.toggleProjectFavorite(project)"
 			>
-				<icon :icon="project.isFavorite ? 'star' : ['far', 'star']"/>
+				<icon :icon="project.isFavorite ? 'star' : ['far', 'star']" />
 			</BaseButton>
 			<ProjectSettingsDropdown
 				class="menu-list-dropdown"
@@ -52,8 +61,14 @@
 				:level="level"
 			>
 				<template #trigger="{toggleOpen}">
-					<BaseButton class="menu-list-dropdown-trigger" @click="toggleOpen">
-						<icon icon="ellipsis-h" class="icon"/>
+					<BaseButton
+						class="menu-list-dropdown-trigger"
+						@click="toggleOpen"
+					>
+						<icon
+							icon="ellipsis-h"
+							class="icon"
+						/>
 					</BaseButton>
 				</template>
 			</ProjectSettingsDropdown>

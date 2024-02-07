@@ -1,11 +1,11 @@
 <template>
 	<input
+		v-bind="attrs"
+		ref="root"
 		type="text"
 		data-input
 		:disabled="disabled"
-		v-bind="attrs"
-		ref="root"
-	/>
+	>
 </template>
 
 <script lang="ts">

@@ -1,58 +1,75 @@
 <template>
-	<card v-if="isLocalUser" :title="$t('user.settings.newPasswordTitle')" :loading="passwordUpdateService.loading">
+	<card
+		v-if="isLocalUser"
+		:title="$t('user.settings.newPasswordTitle')"
+		:loading="passwordUpdateService.loading"
+	>
 		<form @submit.prevent="updatePassword">
 			<div class="field">
-				<label class="label" for="newPassword">{{ $t('user.settings.newPassword') }}</label>
+				<label
+					class="label"
+					for="newPassword"
+				>{{ $t('user.settings.newPassword') }}</label>
 				<div class="control">
 					<input
-						autocomplete="new-password"
-						@keyup.enter="updatePassword"
-						class="input"
 						id="newPassword"
-						:placeholder="$t('user.auth.passwordPlaceholder')"
-						type="password"
-						v-model="passwordUpdate.newPassword"/>
-				</div>
-			</div>
-			<div class="field">
-				<label class="label" for="newPasswordConfirm">{{ $t('user.settings.newPasswordConfirm') }}</label>
-				<div class="control">
-					<input
+						v-model="passwordUpdate.newPassword"
 						autocomplete="new-password"
-						@keyup.enter="updatePassword"
 						class="input"
-						id="newPasswordConfirm"
 						:placeholder="$t('user.auth.passwordPlaceholder')"
 						type="password"
-						v-model="passwordConfirm"/>
+						@keyup.enter="updatePassword"
+					>
 				</div>
 			</div>
 			<div class="field">
-				<label class="label" for="currentPassword">{{ $t('user.settings.currentPassword') }}</label>
+				<label
+					class="label"
+					for="newPasswordConfirm"
+				>{{ $t('user.settings.newPasswordConfirm') }}</label>
 				<div class="control">
 					<input
-						autocomplete="current-password"
-						@keyup.enter="updatePassword"
+						id="newPasswordConfirm"
+						v-model="passwordConfirm"
+						autocomplete="new-password"
 						class="input"
+						:placeholder="$t('user.auth.passwordPlaceholder')"
+						type="password"
+						@keyup.enter="updatePassword"
+					>
+				</div>
+			</div>
+			<div class="field">
+				<label
+					class="label"
+					for="currentPassword"
+				>{{ $t('user.settings.currentPassword') }}</label>
+				<div class="control">
+					<input
 						id="currentPassword"
+						v-model="passwordUpdate.oldPassword"
+						autocomplete="current-password"
+						class="input"
 						:placeholder="$t('user.settings.currentPasswordPlaceholder')"
 						type="password"
-						v-model="passwordUpdate.oldPassword"/>
+						@keyup.enter="updatePassword"
+					>
 				</div>
 			</div>
 		</form>
 
 		<x-button
 			:loading="passwordUpdateService.loading"
+			class="is-fullwidth mt-4"
 			@click="updatePassword"
-			class="is-fullwidth mt-4">
+		>
 			{{ $t('misc.save') }}
 		</x-button>
 	</card>
 </template>
 
 <script lang="ts">
-export default {name: 'user-settings-password-update'}
+export default {name: 'UserSettingsPasswordUpdate'}
 </script>
 
 <script setup lang="ts">

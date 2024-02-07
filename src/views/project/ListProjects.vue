@@ -1,15 +1,29 @@
 <template>
-	<div class="content loader-container" :class="{'is-loading': loading}" v-cy="'projects-list'">
+	<div
+		v-cy="'projects-list'"
+		class="content loader-container"
+		:class="{'is-loading': loading}"
+	>
 		<header class="project-header">
-			<fancycheckbox v-model="showArchived" v-cy="'show-archived-check'">
+			<Fancycheckbox
+				v-model="showArchived"
+				v-cy="'show-archived-check'"
+			>
 				{{ $t('project.showArchived') }}
-			</fancycheckbox>
+			</Fancycheckbox>
 
 			<div class="action-buttons">
-				<x-button :to="{name: 'filters.create'}" icon="filter">
+				<x-button
+					:to="{name: 'filters.create'}"
+					icon="filter"
+				>
 					{{ $t('filters.create.title') }}
 				</x-button>
-				<x-button :to="{name: 'project.create'}" icon="plus" v-cy="'new-project'">
+				<x-button
+					v-cy="'new-project'"
+					:to="{name: 'project.create'}"
+					icon="plus"
+				>
 					{{ $t('project.create.header') }}
 				</x-button>
 			</div>

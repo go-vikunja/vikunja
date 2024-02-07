@@ -1,20 +1,30 @@
 <template>
-	<div class="content details" v-if="enabled">
-		<h3 v-if="canWrite || comments.length > 0" :class="{'d-print-none': comments.length === 0}">
+	<div
+		v-if="enabled"
+		class="content details"
+	>
+		<h3
+			v-if="canWrite || comments.length > 0"
+			:class="{'d-print-none': comments.length === 0}"
+		>
 			<span class="icon is-grey">
-				<icon :icon="['far', 'comments']"/>
+				<icon :icon="['far', 'comments']" />
 			</span>
 			{{ $t('task.comment.title') }}
 		</h3>
 		<div class="comments">
 			<span
-				class="is-inline-flex is-align-items-center"
 				v-if="taskCommentService.loading && saving === null && !creating"
+				class="is-inline-flex is-align-items-center"
 			>
-				<span class="loader is-inline-block mr-2"></span>
+				<span class="loader is-inline-block mr-2" />
 				{{ $t('task.comment.loading') }}
 			</span>
-			<div :key="c.id" class="media comment" v-for="c in comments">
+			<div
+				v-for="c in comments"
+				:key="c.id"
+				class="media comment"
+			>
 				<figure class="media-left is-hidden-mobile">
 					<img
 						:src="getAvatarUrl(c.author, 48)"
@@ -22,7 +32,7 @@
 						class="image is-avatar"
 						height="48"
 						width="48"
-					/>
+					>
 				</figure>
 				<div class="media-content">
 					<div class="comment-info">
@@ -32,9 +42,12 @@
 							class="image is-avatar d-print-none"
 							height="20"
 							width="20"
-						/>
+						>
 						<strong>{{ getDisplayName(c.author) }}</strong>&nbsp;
-						<span v-tooltip="formatDateLong(c.created)" class="has-text-grey">
+						<span
+							v-tooltip="formatDateLong(c.created)"
+							class="has-text-grey"
+						>
 							{{ formatDateSince(c.created) }}
 						</span>
 						<span
@@ -45,32 +58,35 @@
 						</span>
 						<CustomTransition name="fade">
 							<span
-								class="is-inline-flex"
 								v-if="
 									taskCommentService.loading &&
-									saving === c.id
+										saving === c.id
 								"
+								class="is-inline-flex"
 							>
-								<span class="loader is-inline-block mr-2"></span>
+								<span class="loader is-inline-block mr-2" />
 								{{ $t('misc.saving') }}
 							</span>
 							<span
-								class="has-text-success"
 								v-else-if="
 									!taskCommentService.loading &&
-									saved === c.id
+										saved === c.id
 								"
+								class="has-text-success"
 							>
 								{{ $t('misc.saved') }}
 							</span>
 						</CustomTransition>
 					</div>
-					<editor
+					<Editor
+						v-model="c.comment"
 						:is-edit-enabled="canWrite && c.author.id === currentUserId"
 						:upload-callback="attachmentUpload"
 						:upload-enabled="true"
-						v-model="c.comment"
-						@update:model-value="
+						:bottom-actions="actions[c.id]"
+						:show-save="true"
+						initial-mode="preview"
+						@update:modelValue="
 							() => {
 								toggleEdit(c)
 								editCommentWithDelay()
@@ -80,13 +96,13 @@
 							toggleEdit(c)
 							editComment()
 						}"
-						:bottom-actions="actions[c.id]"
-						:show-save="true"
-						initial-mode="preview"
 					/>
 				</div>
 			</div>
-			<div class="media comment d-print-none" v-if="canWrite">
+			<div
+				v-if="canWrite"
+				class="media comment d-print-none"
+			>
 				<figure class="media-left is-hidden-mobile">
 					<img
 						:src="userAvatar"
@@ -94,7 +110,7 @@
 						class="image is-avatar"
 						height="48"
 						width="48"
-					/>
+					>
 				</figure>
 				<div class="media-content">
 					<div class="form">
@@ -103,12 +119,14 @@
 								v-if="taskCommentService.loading && creating"
 								class="is-inline-flex"
 							>
-								<span class="loader is-inline-block mr-2"></span>
+								<span class="loader is-inline-block mr-2" />
 								{{ $t('task.comment.creating') }}
 							</span>
 						</CustomTransition>
 						<div class="field">
-							<editor
+							<Editor
+								v-if="editorActive"
+								v-model="newComment.comment"
 								:class="{
 									'is-loading':
 										taskCommentService.loading &&
@@ -117,8 +135,6 @@
 								:upload-callback="attachmentUpload"
 								:upload-enabled="true"
 								:placeholder="$t('task.comment.placeholder')"
-								v-if="editorActive"
-								v-model="newComment.comment"
 								@save="addComment()"
 							/>
 						</div>
@@ -141,11 +157,13 @@
 			@close="showDeleteModal = false"
 			@submit="() => deleteComment(commentToDelete)"
 		>
-			<template #header><span>{{ $t('task.comment.delete') }}</span></template>
+			<template #header>
+				<span>{{ $t('task.comment.delete') }}</span>
+			</template>
 
 			<template #text>
 				<p>
-					{{ $t('task.comment.deleteText1') }}<br/>
+					{{ $t('task.comment.deleteText1') }}<br>
 					<strong class="has-text-white">{{ $t('misc.cannotBeUndone') }}</strong>
 				</p>
 			</template>

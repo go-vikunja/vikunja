@@ -1,26 +1,46 @@
 <template>
-	<div class="is-max-width-desktop has-text-left" v-cy="'showTasks'">
+	<div
+		v-cy="'showTasks'"
+		class="is-max-width-desktop has-text-left"
+	>
 		<h3 class="mb-2 title">
 			{{ pageTitle }}
 		</h3>
-		<p v-if="!showAll" class="show-tasks-options">
-			<datepicker-with-range @update:model-value="setDate">
+		<p
+			v-if="!showAll"
+			class="show-tasks-options"
+		>
+			<DatepickerWithRange @update:modelValue="setDate">
 				<template #trigger="{toggle}">
-					<x-button @click.prevent.stop="toggle()" variant="primary" :shadow="false" class="mb-2">
+					<x-button
+						variant="primary"
+						:shadow="false"
+						class="mb-2"
+						@click.prevent.stop="toggle()"
+					>
 						{{ $t('task.show.select') }}
 					</x-button>
 				</template>
-			</datepicker-with-range>
-			<fancycheckbox @update:model-value="setShowNulls" :model-value="showNulls" class="mr-2">
+			</DatepickerWithRange>
+			<Fancycheckbox
+				:model-value="showNulls"
+				class="mr-2"
+				@update:modelValue="setShowNulls"
+			>
 				{{ $t('task.show.noDates') }}
-			</fancycheckbox>
-			<fancycheckbox @update:model-value="setShowOverdue" :model-value="showOverdue">
+			</Fancycheckbox>
+			<Fancycheckbox
+				:model-value="showOverdue"
+				@update:modelValue="setShowOverdue"
+			>
 				{{ $t('task.show.overdue') }}
-			</fancycheckbox>
+			</Fancycheckbox>
 		</p>
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
-			<h3 class="has-text-centered mt-6">{{ $t('task.show.noTasks') }}</h3>
-			<LlamaCool class="llama-cool"/>
+			<h3 class="has-text-centered mt-6">
+				{{ $t('task.show.noTasks') }}
+			</h3>
+			<LlamaCool class="llama-cool" />
 		</template>
 
 		<card
@@ -31,15 +51,20 @@
 			:loading="loading"
 		>
 			<div class="p-2">
-				<single-task-in-project
+				<SingleTaskInProject
 					v-for="t in tasks"
 					:key="t.id"
 					:show-project="true"
 					:the-task="t"
-					@taskUpdated="updateTasks"/>
+					@taskUpdated="updateTasks"
+				/>
 			</div>
 		</card>
-		<div v-else :class="{ 'is-loading': loading}" class="spinner"></div>
+		<div
+			v-else
+			:class="{ 'is-loading': loading}"
+			class="spinner"
+		/>
 	</div>
 </template>
 
@@ -61,19 +86,6 @@ import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 import {useProjectStore} from '@/stores/projects'
 
-const authStore = useAuthStore()
-const taskStore = useTaskStore()
-const route = useRoute()
-const router = useRouter()
-const {t} = useI18n({useScope: 'global'})
-
-const tasks = ref<ITask[]>([])
-const showNothingToDo = ref<boolean>(false)
-
-const projectStore = useProjectStore()
-
-setTimeout(() => showNothingToDo.value = true, 100)
-
 // Linting disabled because we explicitely enabled destructuring in vite's config, this will work.
 // eslint-disable-next-line vue/no-setup-props-destructure
 const {
@@ -87,6 +99,18 @@ const {
 	showNulls?: boolean,
 	showOverdue?: boolean,
 }>()
+const authStore = useAuthStore()
+const taskStore = useTaskStore()
+const route = useRoute()
+const router = useRouter()
+const {t} = useI18n({useScope: 'global'})
+
+const tasks = ref<ITask[]>([])
+const showNothingToDo = ref<boolean>(false)
+
+const projectStore = useProjectStore()
+
+setTimeout(() => showNothingToDo.value = true, 100)
 
 const showAll = computed(() => typeof dateFrom === 'undefined' || typeof dateTo === 'undefined')
 

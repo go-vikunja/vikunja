@@ -15,8 +15,17 @@ const CustomLogo = computed(() => window.CUSTOM_LOGO_URL)
 
 <template>
 	<div>
-	<Logo v-if="!CustomLogo" alt="Vikunja" class="logo" />
-	<img v-show="CustomLogo" :src="CustomLogo" alt="Vikunja" class="logo" />
+		<Logo
+			v-if="!CustomLogo"
+			alt="Vikunja"
+			class="logo"
+		/>
+		<img
+			v-show="CustomLogo"
+			:src="CustomLogo"
+			alt="Vikunja"
+			class="logo"
+		>
 	</div>
 </template>
 

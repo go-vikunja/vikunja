@@ -3,38 +3,48 @@
 		class="loader-container is-max-width-desktop"
 		:class="{ 'is-loading': teamService.loading }"
 	>
-		<card class="is-fullwidth" v-if="userIsAdmin" :title="title">
+		<card
+			v-if="userIsAdmin"
+			class="is-fullwidth"
+			:title="title"
+		>
 			<form @submit.prevent="save()">
 				<div class="field">
-					<label class="label" for="teamtext">{{ $t('team.attributes.name') }}</label>
+					<label
+						class="label"
+						for="teamtext"
+					>{{ $t('team.attributes.name') }}</label>
 					<div class="control">
 						<input
+							id="teamtext"
+							v-model="team.name"
+							v-focus
 							:class="{ disabled: teamMemberService.loading }"
 							:disabled="teamMemberService.loading || undefined"
 							class="input"
-							id="teamtext"
 							:placeholder="$t('team.attributes.namePlaceholder')"
 							type="text"
-							v-focus
-							v-model="team.name"
-						/>
+						>
 					</div>
 				</div>
 				<p
-					class="help is-danger"
 					v-if="showErrorTeamnameRequired && team.name === ''"
+					class="help is-danger"
 				>
 					{{ $t('team.attributes.nameRequired') }}
 				</p>
 				<div class="field">
-					<label class="label" for="teamdescription">{{ $t('team.attributes.description') }}</label>
+					<label
+						class="label"
+						for="teamdescription"
+					>{{ $t('team.attributes.description') }}</label>
 					<div class="control">
-						<editor
+						<Editor
+							id="teamdescription"
+							v-model="team.description"
 							:class="{ disabled: teamService.loading }"
 							:disabled="teamService.loading"
-							id="teamdescription"
 							:placeholder="$t('team.attributes.descriptionPlaceholder')"
-							v-model="team.description"
 						/>
 					</div>
 				</div>
@@ -43,99 +53,129 @@
 			<div class="field has-addons mt-4">
 				<div class="control is-fullwidth">
 					<x-button
-						@click="save()"
 						:loading="teamService.loading"
 						class="is-fullwidth"
+						@click="save()"
 					>
 						{{ $t('misc.save') }}
 					</x-button>
 				</div>
 				<div class="control">
 					<x-button
-						@click="showDeleteModal = true"
 						:loading="teamService.loading"
 						class="is-danger"
 						icon="trash-alt"
+						@click="showDeleteModal = true"
 					/>
 				</div>
 			</div>
 		</card>
 
-		<card class="is-fullwidth has-overflow" :title="$t('team.edit.members')" :padding="false">
-			<div class="p-4" v-if="userIsAdmin">
+		<card
+			class="is-fullwidth has-overflow"
+			:title="$t('team.edit.members')"
+			:padding="false"
+		>
+			<div
+				v-if="userIsAdmin"
+				class="p-4"
+			>
 				<div class="field has-addons">
 					<div class="control is-expanded">
-						<multiselect
+						<Multiselect
+							v-model="newMember"
 							:loading="userService.loading"
 							:placeholder="$t('team.edit.search')"
-							@search="findUser"
 							:search-results="foundUsers"
 							label="username"
-							v-model="newMember"
+							@search="findUser"
 						>
 							<template #searchResult="{option: user}">
-								<User :avatar-size="24" :user="user" class="m-0"/>
+								<User
+									:avatar-size="24"
+									:user="user"
+									class="m-0"
+								/>
 							</template>
-						</multiselect>
+						</Multiselect>
 					</div>
 					<div class="control">
-						<x-button @click="addUser" icon="plus">
+						<x-button
+							icon="plus"
+							@click="addUser"
+						>
 							{{ $t('team.edit.addUser') }}
 						</x-button>
 					</div>
 				</div>
-				<p class="help is-danger" v-if="showMustSelectUserError">
+				<p
+					v-if="showMustSelectUserError"
+					class="help is-danger"
+				>
 					{{ $t('team.edit.mustSelectUser') }}
 				</p>
 			</div>
 			<table class="table has-actions is-striped is-hoverable is-fullwidth">
 				<tbody>
-				<tr :key="m.id" v-for="m in team?.members">
-					<td>
-						<User :avatar-size="24" :user="m" class="m-0"/>
-					</td>
-					<td>
-						<template v-if="m.id === userInfo.id">
-							<b class="is-success">You</b>
-						</template>
-					</td>
-					<td class="type">
-						<template v-if="m.admin">
+					<tr
+						v-for="m in team?.members"
+						:key="m.id"
+					>
+						<td>
+							<User
+								:avatar-size="24"
+								:user="m"
+								class="m-0"
+							/>
+						</td>
+						<td>
+							<template v-if="m.id === userInfo.id">
+								<b class="is-success">You</b>
+							</template>
+						</td>
+						<td class="type">
+							<template v-if="m.admin">
 								<span class="icon is-small">
-									<icon icon="lock"/>
+									<icon icon="lock" />
 								</span>
-							{{ $t('team.attributes.admin') }}
-						</template>
-						<template v-else>
+								{{ $t('team.attributes.admin') }}
+							</template>
+							<template v-else>
 								<span class="icon is-small">
-									<icon icon="user"/>
+									<icon icon="user" />
 								</span>
-							{{ $t('team.attributes.member') }}
-						</template>
-					</td>
-					<td class="actions" v-if="userIsAdmin">
-						<x-button
-							:loading="teamMemberService.loading"
-							@click="() => toggleUserType(m)"
-							class="mr-2"
-							v-if="m.id !== userInfo.id"
+								{{ $t('team.attributes.member') }}
+							</template>
+						</td>
+						<td
+							v-if="userIsAdmin"
+							class="actions"
 						>
-							{{ m.admin ? $t('team.edit.makeMember') : $t('team.edit.makeAdmin') }}
-						</x-button>
-						<x-button
-							:loading="teamMemberService.loading"
-							@click="() => {memberToDelete = m; showUserDeleteModal = true}"
-							class="is-danger"
-							v-if="m.id !== userInfo.id"
-							icon="trash-alt"
-						/>
-					</td>
-				</tr>
+							<x-button
+								v-if="m.id !== userInfo.id"
+								:loading="teamMemberService.loading"
+								class="mr-2"
+								@click="() => toggleUserType(m)"
+							>
+								{{ m.admin ? $t('team.edit.makeMember') : $t('team.edit.makeAdmin') }}
+							</x-button>
+							<x-button
+								v-if="m.id !== userInfo.id"
+								:loading="teamMemberService.loading"
+								class="is-danger"
+								icon="trash-alt"
+								@click="() => {memberToDelete = m; showUserDeleteModal = true}"
+							/>
+						</td>
+					</tr>
 				</tbody>
 			</table>
 		</card>
 
-		<x-button class="is-fullwidth is-danger" @click="showLeaveModal = true">
+		<x-button
+			class="is-fullwidth is-danger"
+			@click="showLeaveModal = true"
+		>
 			{{ $t('team.edit.leave.title') }}
 		</x-button>
 
@@ -145,11 +185,15 @@
 			@close="showLeaveModal = false"
 			@submit="leave()"
 		>
-			<template #header><span>{{ $t('team.edit.leave.title') }}</span></template>
+			<template #header>
+				<span>{{ $t('team.edit.leave.title') }}</span>
+			</template>
 
 			<template #text>
-				<p>{{ $t('team.edit.leave.text1') }}<br/>
-					{{ $t('team.edit.leave.text2') }}</p>
+				<p>
+					{{ $t('team.edit.leave.text1') }}<br>
+					{{ $t('team.edit.leave.text2') }}
+				</p>
 			</template>
 		</modal>
 
@@ -159,11 +203,15 @@
 			@close="showDeleteModal = false"
 			@submit="deleteTeam()"
 		>
-			<template #header><span>{{ $t('team.edit.delete.header') }}</span></template>
+			<template #header>
+				<span>{{ $t('team.edit.delete.header') }}</span>
+			</template>
 
 			<template #text>
-				<p>{{ $t('team.edit.delete.text1') }}<br/>
-					{{ $t('team.edit.delete.text2') }}</p>
+				<p>
+					{{ $t('team.edit.delete.text1') }}<br>
+					{{ $t('team.edit.delete.text2') }}
+				</p>
 			</template>
 		</modal>
 
@@ -173,11 +221,15 @@
 			@close="showUserDeleteModal = false"
 			@submit="deleteMember()"
 		>
-			<template #header><span>{{ $t('team.edit.deleteUser.header') }}</span></template>
+			<template #header>
+				<span>{{ $t('team.edit.deleteUser.header') }}</span>
+			</template>
 
 			<template #text>
-				<p>{{ $t('team.edit.deleteUser.text1') }}<br/>
-					{{ $t('team.edit.deleteUser.text2') }}</p>
+				<p>
+					{{ $t('team.edit.deleteUser.text1') }}<br>
+					{{ $t('team.edit.deleteUser.text2') }}
+				</p>
 			</template>
 		</modal>
 	</div>

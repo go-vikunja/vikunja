@@ -1,7 +1,11 @@
 <template>
-    <BaseButton class="menu-bottom-link" :href="poweredByUrl" target="_blank">
-        {{ $t('misc.poweredBy') }}
-    </BaseButton>
+	<BaseButton
+		class="menu-bottom-link"
+		:href="poweredByUrl"
+		target="_blank"
+	>
+		{{ $t('misc.poweredBy') }}
+	</BaseButton>
 </template>
 
 <script setup lang="ts">

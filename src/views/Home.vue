@@ -1,8 +1,14 @@
 <template>
 	<div class="content has-text-centered">
-		<h2 v-if="salutation">{{ salutation }}</h2>
+		<h2 v-if="salutation">
+			{{ salutation }}
+		</h2>
 
-		<message variant="danger" v-if="deletionScheduledAt !== null" class="mb-4">
+		<Message
+			v-if="deletionScheduledAt !== null"
+			variant="danger"
+			class="mb-4"
+		>
 			{{
 				$t('user.deletion.scheduled', {
 					date: formatDateShort(deletionScheduledAt),
@@ -12,10 +18,10 @@
 			<router-link :to="{name: 'user.settings', hash: '#deletion'}">
 				{{ $t('user.deletion.scheduledCancel') }}
 			</router-link>
-		</message>
-		<add-task
-			@taskAdded="updateTaskKey"
+		</Message>
+		<AddTask
 			class="is-max-width-desktop"
+			@taskAdded="updateTaskKey"
 		/>
 		<template v-if="!hasTasks && !loading && migratorsEnabled">
 			<p class="mt-4">
@@ -23,18 +29,25 @@
 			</p>
 			<x-button
 				:to="{ name: 'migrate.start' }"
-				:shadow="false">
+				:shadow="false"
+			>
 				{{ $t('home.project.import') }}
 			</x-button>
 		</template>
-		<div v-if="projectHistory.length > 0" class="is-max-width-desktop has-text-left mt-4">
+		<div
+			v-if="projectHistory.length > 0"
+			class="is-max-width-desktop has-text-left mt-4"
+		>
 			<h3>{{ $t('home.lastViewed') }}</h3>
-			<ProjectCardGrid :projects="projectHistory" v-cy="'projectCardGrid'" />
+			<ProjectCardGrid
+				v-cy="'projectCardGrid'"
+				:projects="projectHistory"
+			/>
 		</div>
 		<ShowTasks
 			v-if="projectStore.hasProjects"
-			class="show-tasks"
 			:key="showTasksKey"
+			class="show-tasks"
 		/>
 	</div>
 </template>

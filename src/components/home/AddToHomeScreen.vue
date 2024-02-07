@@ -4,12 +4,18 @@
 		class="add-to-home-screen"
 		:class="{'has-update-available': hasUpdateAvailable}"
 	>
-		<icon icon="arrow-up-from-bracket" class="add-icon"/>
+		<icon
+			icon="arrow-up-from-bracket"
+			class="add-icon"
+		/>
 		<p>
 			{{ $t('home.addToHomeScreen') }}
 		</p>
-		<BaseButton @click="() => hideMessage = true" class="hide-button">
-			<icon icon="x"/>
+		<BaseButton
+			class="hide-button"
+			@click="() => hideMessage = true"
+		>
+			<icon icon="x" />
 		</BaseButton>
 	</div>
 </template>

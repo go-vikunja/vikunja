@@ -1,46 +1,54 @@
 <template>
-	<create-edit
+	<CreateEdit
 		v-if="uploadBackgroundEnabled || unsplashBackgroundEnabled"
 		:title="$t('project.background.title')"
 		:loading="backgroundService.loading"
 		class="project-background-setting"
 		:wide="true"
 	>
-		<div class="mb-4" v-if="uploadBackgroundEnabled">
+		<div
+			v-if="uploadBackgroundEnabled"
+			class="mb-4"
+		>
 			<input
-				@change="uploadBackground"
+				ref="backgroundUploadInput"
 				accept="image/*"
 				class="is-hidden"
-				ref="backgroundUploadInput"
 				type="file"
-			/>
+				@change="uploadBackground"
+			>
 			<x-button
 				:loading="backgroundUploadService.loading"
-				@click="backgroundUploadInput?.click()"
 				variant="primary"
+				@click="backgroundUploadInput?.click()"
 			>
 				{{ $t('project.background.upload') }}
 			</x-button>
 		</div>
 		<template v-if="unsplashBackgroundEnabled">
 			<input
+				v-model="backgroundSearchTerm"
 				:class="{'is-loading': backgroundService.loading}"
-				@keyup="debounceNewBackgroundSearch()"
 				class="input is-expanded"
 				:placeholder="$t('project.background.searchPlaceholder')"
 				type="text"
-				v-model="backgroundSearchTerm"
-			/>
+				@keyup="debounceNewBackgroundSearch()"
+			>
 
 			<p class="unsplash-credit">
-				<BaseButton class="unsplash-credit__link" href="https://unsplash.com">{{ $t('project.background.poweredByUnsplash') }}</BaseButton>
+				<BaseButton
+					class="unsplash-credit__link"
+					href="https://unsplash.com"
+				>
+					{{ $t('project.background.poweredByUnsplash') }}
+				</BaseButton>
 			</p>
 
 			<ul class="image-search__result-list">
 				<li
 					v-for="im in backgroundSearchResult"
-					class="image-search__result-item"
 					:key="im.id"
+					class="image-search__result-item"
 					:style="{'background-image': `url(${backgroundBlurHashes[im.id]})`}"
 				>
 					<CustomTransition name="fade">
@@ -49,7 +57,11 @@
 							class="image-search__image-button"
 							@click="setBackground(im.id)"
 						>
-							<img class="image-search__image" :src="backgroundThumbs[im.id]" alt="" />
+							<img
+								class="image-search__image"
+								:src="backgroundThumbs[im.id]"
+								alt=""
+							>
 						</BaseButton>
 					</CustomTransition>
 
@@ -64,10 +76,10 @@
 			<x-button
 				v-if="backgroundSearchResult.length > 0"
 				:disabled="backgroundService.loading"
-				@click="searchBackgrounds(currentPage + 1)"
 				class="is-load-more-button mt-4"
 				:shadow="false"
 				variant="secondary"
+				@click="searchBackgrounds(currentPage + 1)"
 			>
 				{{ backgroundService.loading ? $t('misc.loading') : $t('project.background.loadMore') }}
 			</x-button>
@@ -90,11 +102,11 @@
 				{{ $t('misc.close') }}
 			</x-button>
 		</template>
-	</create-edit>
+	</CreateEdit>
 </template>
 
 <script lang="ts">
-export default { name: 'project-setting-background' }
+export default { name: 'ProjectSettingBackground' }
 </script>
 
 <script setup lang="ts">

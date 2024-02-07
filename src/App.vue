@@ -1,23 +1,23 @@
 <template>
-	<ready>
+	<Ready>
 		<template v-if="authUser">
-			<TheNavigation/>
-			<content-auth/>
+			<TheNavigation />
+			<ContentAuth />
 		</template>
-		<content-link-share v-else-if="authLinkShare"/>
-		<no-auth-wrapper v-else>
-			<router-view/>
-		</no-auth-wrapper>
+		<ContentLinkShare v-else-if="authLinkShare" />
+		<NoAuthWrapper v-else>
+			<router-view />
+		</NoAuthWrapper>
 		
-		<keyboard-shortcuts v-if="keyboardShortcutsActive"/>
+		<KeyboardShortcuts v-if="keyboardShortcutsActive" />
 		
 		<Teleport to="body">
-			<AddToHomeScreen/>
-			<UpdateNotification/>
-			<Notification/>
-			<DemoMode/>
+			<AddToHomeScreen />
+			<UpdateNotification />
+			<Notification />
+			<DemoMode />
 		</Teleport>
-	</ready>
+	</Ready>
 </template>
 
 <script lang="ts" setup>

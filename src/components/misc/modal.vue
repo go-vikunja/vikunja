@@ -1,56 +1,59 @@
 <template>
 	<Teleport to="body">
 		<!-- FIXME: transition should not be included in the modal -->
-		<CustomTransition :name="transitionName" appear>
+		<CustomTransition
+			:name="transitionName"
+			appear
+		>
 			<section
 				v-if="enabled"
+				ref="modal"
 				class="modal-mask"
 				:class="[
 					{ 'has-overflow': overflow },
 					variant,
 				]"
-				ref="modal"
 				v-bind="attrs"
 			>
 				<div
+					v-shortcut="'Escape'"
 					class="modal-container"
 					@mousedown.self.prevent.stop="$emit('close')"
-					v-shortcut="'Escape'"
 				>
 					<div
 						class="modal-content"
 						:class="{
-						'has-overflow': overflow,
-						'is-wide': wide
-					}"
+							'has-overflow': overflow,
+							'is-wide': wide
+						}"
 					>
 						<BaseButton
-							@click="$emit('close')"
 							class="close"
+							@click="$emit('close')"
 						>
-							<icon icon="times"/>
+							<icon icon="times" />
 						</BaseButton>
 
 						<slot>
 							<div class="header">
-								<slot name="header"></slot>
+								<slot name="header" />
 							</div>
 							<div class="content">
-								<slot name="text"></slot>
+								<slot name="text" />
 							</div>
 							<div class="actions">
 								<x-button
-									@click="$emit('close')"
 									variant="tertiary"
 									class="has-text-danger"
+									@click="$emit('close')"
 								>
 									{{ $t('misc.cancel') }}
 								</x-button>
 								<x-button
-									@click="$emit('submit')"
-									variant="primary"
 									v-cy="'modalPrimary'"
+									variant="primary"
 									:shadow="false"
+									@click="$emit('submit')"
 								>
 									{{ $t('misc.doit') }}
 								</x-button>

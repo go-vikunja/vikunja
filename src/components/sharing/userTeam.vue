@@ -10,108 +10,119 @@
 					:class="{ 'is-loading': searchService.loading }"
 				>
 					<Multiselect
+						v-model="sharable"
 						:loading="searchService.loading"
 						:placeholder="$t('misc.searchPlaceholder')"
-						@search="find"
 						:search-results="found"
 						:label="searchLabel"
-						v-model="sharable"
+						@search="find"
 					/>
 				</p>
 				<p class="control">
-					<x-button @click="add()">{{ $t('project.share.share') }}</x-button>
+					<x-button @click="add()">
+						{{ $t('project.share.share') }}
+					</x-button>
 				</p>
 			</div>
 		</div>
 
-		<table class="table has-actions is-striped is-hoverable is-fullwidth mb-4" v-if="sharables.length > 0">
+		<table
+			v-if="sharables.length > 0"
+			class="table has-actions is-striped is-hoverable is-fullwidth mb-4"
+		>
 			<tbody>
-			<tr :key="s.id" v-for="s in sharables">
-				<template v-if="shareType === 'user'">
-					<td>{{ getDisplayName(s) }}</td>
-					<td>
-						<template v-if="s.id === userInfo.id">
-							<b class="is-success">{{ $t('project.share.userTeam.you') }}</b>
-						</template>
-					</td>
-				</template>
-				<template v-if="shareType === 'team'">
-					<td>
-						<router-link
-							:to="{
+				<tr
+					v-for="s in sharables"
+					:key="s.id"
+				>
+					<template v-if="shareType === 'user'">
+						<td>{{ getDisplayName(s) }}</td>
+						<td>
+							<template v-if="s.id === userInfo.id">
+								<b class="is-success">{{ $t('project.share.userTeam.you') }}</b>
+							</template>
+						</td>
+					</template>
+					<template v-if="shareType === 'team'">
+						<td>
+							<router-link
+								:to="{
 									name: 'teams.edit',
 									params: { id: s.id },
 								}"
-						>
-							{{ s.name }}
-						</router-link>
+							>
+								{{ s.name }}
+							</router-link>
+						</td>
+					</template>
+					<td class="type">
+						<template v-if="s.right === RIGHTS.ADMIN">
+							<span class="icon is-small">
+								<icon icon="lock" />
+							</span>
+							{{ $t('project.share.right.admin') }}
+						</template>
+						<template v-else-if="s.right === RIGHTS.READ_WRITE">
+							<span class="icon is-small">
+								<icon icon="pen" />
+							</span>
+							{{ $t('project.share.right.readWrite') }}
+						</template>
+						<template v-else>
+							<span class="icon is-small">
+								<icon icon="users" />
+							</span>
+							{{ $t('project.share.right.read') }}
+						</template>
 					</td>
-				</template>
-				<td class="type">
-					<template v-if="s.right === RIGHTS.ADMIN">
-							<span class="icon is-small">
-								<icon icon="lock"/>
-							</span>
-						{{ $t('project.share.right.admin') }}
-					</template>
-					<template v-else-if="s.right === RIGHTS.READ_WRITE">
-							<span class="icon is-small">
-								<icon icon="pen"/>
-							</span>
-						{{ $t('project.share.right.readWrite') }}
-					</template>
-					<template v-else>
-							<span class="icon is-small">
-								<icon icon="users"/>
-							</span>
-						{{ $t('project.share.right.read') }}
-					</template>
-				</td>
-				<td class="actions" v-if="userIsAdmin">
-					<div class="select">
-						<select
-							@change="toggleType(s)"
-							class="mr-2"
-							v-model="selectedRight[s.id]"
-						>
-							<option
-								:selected="s.right === RIGHTS.READ"
-								:value="RIGHTS.READ"
+					<td
+						v-if="userIsAdmin"
+						class="actions"
+					>
+						<div class="select">
+							<select
+								v-model="selectedRight[s.id]"
+								class="mr-2"
+								@change="toggleType(s)"
 							>
-								{{ $t('project.share.right.read') }}
-							</option>
-							<option
-								:selected="s.right === RIGHTS.READ_WRITE"
-								:value="RIGHTS.READ_WRITE"
-							>
-								{{ $t('project.share.right.readWrite') }}
-							</option>
-							<option
-								:selected="s.right === RIGHTS.ADMIN"
-								:value="RIGHTS.ADMIN"
-							>
-								{{ $t('project.share.right.admin') }}
-							</option>
-						</select>
-					</div>
-					<x-button
-						@click="
+								<option
+									:selected="s.right === RIGHTS.READ"
+									:value="RIGHTS.READ"
+								>
+									{{ $t('project.share.right.read') }}
+								</option>
+								<option
+									:selected="s.right === RIGHTS.READ_WRITE"
+									:value="RIGHTS.READ_WRITE"
+								>
+									{{ $t('project.share.right.readWrite') }}
+								</option>
+								<option
+									:selected="s.right === RIGHTS.ADMIN"
+									:value="RIGHTS.ADMIN"
+								>
+									{{ $t('project.share.right.admin') }}
+								</option>
+							</select>
+						</div>
+						<x-button
+							class="is-danger"
+							icon="trash-alt"
+							@click="
 								() => {
 									sharable = s
 									showDeleteModal = true
 								}
 							"
-						class="is-danger"
-						icon="trash-alt"
-					/>
-				</td>
-			</tr>
+						/>
+					</td>
+				</tr>
 			</tbody>
 		</table>
 
-		<nothing v-else>
+		<Nothing v-else>
 			{{ $t('project.share.userTeam.notShared', {type: shareTypeNames}) }}
-		</nothing>
+		</Nothing>
 
 		<modal
 			:enabled="showDeleteModal"
@@ -120,8 +131,8 @@
 		>
 			<template #header>
 				<span>{{
-						$t('project.share.userTeam.removeHeader', {type: shareTypeName, sharable: sharableName})
-					}}</span>
+					$t('project.share.userTeam.removeHeader', {type: shareTypeName, sharable: sharableName})
+				}}</span>
 			</template>
 			<template #text>
 				<p>{{ $t('project.share.userTeam.removeText', {type: shareTypeName, sharable: sharableName}) }}</p>
@@ -131,7 +142,7 @@
 </template>
 
 <script lang="ts">
-export default {name: 'userTeamShare'}
+export default {name: 'UserTeamShare'}
 </script>
 
 <script setup lang="ts">

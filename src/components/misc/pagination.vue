@@ -1,25 +1,33 @@
 <template>
 	<nav
+		v-if="totalPages > 1"
 		aria-label="pagination"
 		class="pagination is-centered p-4"
 		role="navigation"
-		v-if="totalPages > 1"
 	>
 		<router-link
 			:disabled="currentPage === 1 || undefined"
 			:to="getRouteForPagination(currentPage - 1)"
-			class="pagination-previous">
+			class="pagination-previous"
+		>
 			{{ $t('misc.previous') }}
 		</router-link>
 		<router-link
 			:disabled="currentPage === totalPages || undefined"
 			:to="getRouteForPagination(currentPage + 1)"
-			class="pagination-next">
+			class="pagination-next"
+		>
 			{{ $t('misc.next') }}
 		</router-link>
 		<ul class="pagination-list">
-			<li :key="`page-${i}`" v-for="(p, i) in pages">
-				<span class="pagination-ellipsis" v-if="p.isEllipsis">&hellip;</span>
+			<li
+				v-for="(p, i) in pages"
+				:key="`page-${i}`"
+			>
+				<span
+					v-if="p.isEllipsis"
+					class="pagination-ellipsis"
+				>&hellip;</span>
 				<router-link
 					v-else
 					class="pagination-link"
@@ -36,6 +44,17 @@
 
 <script lang="ts" setup>
 import {computed} from 'vue'
+
+const props = defineProps({
+	totalPages: {
+		type: Number,
+		required: true,
+	},
+	currentPage: {
+		type: Number,
+		default: 0,
+	},
+})
 
 function createPagination(totalPages: number, currentPage: number) {
 	const pages = []
@@ -80,17 +99,6 @@ function getRouteForPagination(page = 1, type = null) {
 		},
 	}
 }
-
-const props = defineProps({
-	totalPages: {
-		type: Number,
-		required: true,
-	},
-	currentPage: {
-		type: Number,
-		default: 0,
-	},
-})
 
 const pages = computed(() => createPagination(props.totalPages, props.currentPage))
 </script>

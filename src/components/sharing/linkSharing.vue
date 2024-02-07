@@ -3,8 +3,9 @@
 		<p class="has-text-weight-bold">
 			{{ $t('project.share.links.title') }}
 			<span
+				v-tooltip="$t('project.share.links.explanation')"
 				class="is-size-7 has-text-grey is-italic ml-3"
-				v-tooltip="$t('project.share.links.explanation')">
+			>
 				{{ $t('project.share.links.what') }}
 			</span>
 		</p>
@@ -12,20 +13,30 @@
 		<div class="sharables-project">
 			<x-button
 				v-if="!(linkShares.length === 0 || showNewForm)"
-				@click="showNewForm = true"
 				icon="plus"
-				class="mb-4">
+				class="mb-4"
+				@click="showNewForm = true"
+			>
 				{{ $t('project.share.links.create') }}
 			</x-button>
 
-			<div class="p-4" v-if="linkShares.length === 0 || showNewForm">
+			<div
+				v-if="linkShares.length === 0 || showNewForm"
+				class="p-4"
+			>
 				<div class="field">
-					<label class="label" for="linkShareRight">
+					<label
+						class="label"
+						for="linkShareRight"
+					>
 						{{ $t('project.share.right.title') }}
 					</label>
 					<div class="control">
 						<div class="select">
-							<select v-model="selectedRight" id="linkShareRight">
+							<select
+								id="linkShareRight"
+								v-model="selectedRight"
+							>
 								<option :value="RIGHTS.READ">
 									{{ $t('project.share.right.read') }}
 								</option>
@@ -40,131 +51,150 @@
 					</div>
 				</div>
 				<div class="field">
-					<label class="label" for="linkShareName">
+					<label
+						class="label"
+						for="linkShareName"
+					>
 						{{ $t('project.share.links.name') }}
 					</label>
 					<div class="control">
 						<input
 							id="linkShareName"
+							v-model="name"
+							v-tooltip="$t('project.share.links.nameExplanation')"
 							class="input"
 							:placeholder="$t('project.share.links.namePlaceholder')"
-							v-tooltip="$t('project.share.links.nameExplanation')"
-							v-model="name"
-						/>
+						>
 					</div>
 				</div>
 				<div class="field">
-					<label class="label" for="linkSharePassword">
+					<label
+						class="label"
+						for="linkSharePassword"
+					>
 						{{ $t('project.share.links.password') }}
 					</label>
 					<div class="control">
 						<input
 							id="linkSharePassword"
+							v-model="password"
+							v-tooltip="$t('project.share.links.passwordExplanation')"
 							type="password"
 							class="input"
 							:placeholder="$t('user.auth.passwordPlaceholder')"
-							v-tooltip="$t('project.share.links.passwordExplanation')"
-							v-model="password"
-						/>
+						>
 					</div>
 				</div>
-				<x-button @click="add(projectId)" icon="plus">
+				<x-button
+					icon="plus"
+					@click="add(projectId)"
+				>
 					{{ $t('project.share.share') }}
 				</x-button>
 			</div>
 
 			<table
-				class="table has-actions is-striped is-hoverable is-fullwidth"
 				v-if="linkShares.length > 0"
+				class="table has-actions is-striped is-hoverable is-fullwidth"
 			>
 				<thead>
-				<tr>
-					<th></th>
-					<th>{{ $t('project.share.links.view') }}</th>
-					<th>{{ $t('project.share.attributes.delete') }}</th>
-				</tr>
+					<tr>
+						<th />
+						<th>{{ $t('project.share.links.view') }}</th>
+						<th>{{ $t('project.share.attributes.delete') }}</th>
+					</tr>
 				</thead>
 				<tbody>
-				<tr :key="s.id" v-for="s in linkShares">
-					<td>
-						<p class="mb-2 is-italic" v-if="s.name !== ''">
-							{{ s.name }}
-						</p>
+					<tr
+						v-for="s in linkShares"
+						:key="s.id"
+					>
+						<td>
+							<p
+								v-if="s.name !== ''"
+								class="mb-2 is-italic"
+							>
+								{{ s.name }}
+							</p>
 
-						<p class="mb-2">
-							<i18n-t keypath="project.share.links.sharedBy" scope="global">
-								<strong>{{ getDisplayName(s.sharedBy) }}</strong>
-							</i18n-t>
-						</p>
+							<p class="mb-2">
+								<i18n-t
+									keypath="project.share.links.sharedBy"
+									scope="global"
+								>
+									<strong>{{ getDisplayName(s.sharedBy) }}</strong>
+								</i18n-t>
+							</p>
 
-						<p class="mb-2">
-							<template v-if="s.right === RIGHTS.ADMIN">
-								<span class="icon is-small">
-									<icon icon="lock"/>
-								</span>&nbsp;
-								{{ $t('project.share.right.admin') }}
-							</template>
-							<template v-else-if="s.right === RIGHTS.READ_WRITE">
-								<span class="icon is-small">
-									<icon icon="pen"/>
-								</span>&nbsp;
-								{{ $t('project.share.right.readWrite') }}
-							</template>
-							<template v-else>
-								<span class="icon is-small">
-									<icon icon="users"/>
-								</span>&nbsp;
-								{{ $t('project.share.right.read') }}
-							</template>
-						</p>
+							<p class="mb-2">
+								<template v-if="s.right === RIGHTS.ADMIN">
+									<span class="icon is-small">
+										<icon icon="lock" />
+									</span>&nbsp;
+									{{ $t('project.share.right.admin') }}
+								</template>
+								<template v-else-if="s.right === RIGHTS.READ_WRITE">
+									<span class="icon is-small">
+										<icon icon="pen" />
+									</span>&nbsp;
+									{{ $t('project.share.right.readWrite') }}
+								</template>
+								<template v-else>
+									<span class="icon is-small">
+										<icon icon="users" />
+									</span>&nbsp;
+									{{ $t('project.share.right.read') }}
+								</template>
+							</p>
 						
-						<div class="field has-addons no-input-mobile">
-							<div class="control">
-								<input
+							<div class="field has-addons no-input-mobile">
+								<div class="control">
+									<input
 										:value="getShareLink(s.hash, selectedView[s.id])"
 										class="input"
 										readonly
 										type="text"
-								/>
-							</div>
-							<div class="control">
-								<x-button
-										@click="copy(getShareLink(s.hash, selectedView[s.id]))"
-										:shadow="false"
+									>
+								</div>
+								<div class="control">
+									<x-button
 										v-tooltip="$t('misc.copy')"
-								>
-									<span class="icon">
-										<icon icon="paste"/>
-									</span>
-								</x-button>
+										:shadow="false"
+										@click="copy(getShareLink(s.hash, selectedView[s.id]))"
+									>
+										<span class="icon">
+											<icon icon="paste" />
+										</span>
+									</x-button>
+								</div>
 							</div>
-						</div>
-					</td>
-					<td>
-						<div class="select">
-							<select v-model="selectedView[s.id]">
-								<option
-									v-for="(title, key) in availableViews"
-									:value="key"
-									:key="key">
-									{{ title }}
-								</option>
-							</select>
-						</div>
-					</td>
-					<td class="actions">
-						<x-button
-							@click="
+						</td>
+						<td>
+							<div class="select">
+								<select v-model="selectedView[s.id]">
+									<option
+										v-for="(title, key) in availableViews"
+										:key="key"
+										:value="key"
+									>
+										{{ title }}
+									</option>
+								</select>
+							</div>
+						</td>
+						<td class="actions">
+							<x-button
+								class="is-danger"
+								icon="trash-alt"
+								@click="
 									() => {
 										linkIdToDelete = s.id
 										showDeleteModal = true
 									}
 								"
-							class="is-danger"
-							icon="trash-alt"
-						/>
-					</td>
-				</tr>
+							/>
+						</td>
+					</tr>
 				</tbody>
 			</table>
 		</div>
@@ -207,7 +237,7 @@ import {useConfigStore} from '@/stores/config'
 const props = defineProps({
 	projectId: {
 		default: 0,
-		required: true,
+		required: false,
 	},
 })
 

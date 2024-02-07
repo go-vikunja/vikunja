@@ -1,36 +1,59 @@
 <template>
 	<div>
-		<message variant="success" text-align="center" class="mb-4" v-if="confirmedEmailSuccess">
+		<Message
+			v-if="confirmedEmailSuccess"
+			variant="success"
+			text-align="center"
+			class="mb-4"
+		>
 			{{ $t('user.auth.confirmEmailSuccess') }}
-		</message>
-		<message variant="danger" v-if="errorMessage" class="mb-4">
+		</Message>
+		<Message
+			v-if="errorMessage"
+			variant="danger"
+			class="mb-4"
+		>
 			{{ errorMessage }}
-		</message>
-		<form @submit.prevent="submit" id="loginform" v-if="localAuthEnabled">
+		</Message>
+		<form
+			v-if="localAuthEnabled"
+			id="loginform"
+			@submit.prevent="submit"
+		>
 			<div class="field">
-				<label class="label" for="username">{{ $t('user.auth.usernameEmail') }}</label>
+				<label
+					class="label"
+					for="username"
+				>{{ $t('user.auth.usernameEmail') }}</label>
 				<div class="control">
 					<input
-						class="input" id="username"
+						id="username"
+						ref="usernameRef"
+						v-focus
+						class="input"
 						name="username"
 						:placeholder="$t('user.auth.usernamePlaceholder')"
-						ref="usernameRef"
 						required
 						type="text"
 						autocomplete="username"
-						v-focus
-						@keyup.enter="submit"
 						tabindex="1"
+						@keyup.enter="submit"
 						@focusout="validateUsernameField()"
-					/>
+					>
 				</div>
-				<p class="help is-danger" v-if="!usernameValid">
+				<p
+					v-if="!usernameValid"
+					class="help is-danger"
+				>
 					{{ $t('user.auth.usernameRequired') }}
 				</p>
 			</div>
 			<div class="field">
 				<div class="label-with-link">
-					<label class="label" for="password">{{ $t('user.auth.password') }}</label>
+					<label
+						class="label"
+						for="password"
+					>{{ $t('user.auth.password') }}</label>
 					<router-link
 						:to="{ name: 'user.password-reset.request' }"
 						class="reset-password-link"
@@ -39,41 +62,59 @@
 						{{ $t('user.auth.forgotPassword') }}
 					</router-link>
 				</div>
-				<Password tabindex="2" @submit="submit" v-model="password" :validate-initially="validatePasswordInitially"/>
+				<Password
+					v-model="password"
+					tabindex="2"
+					:validate-initially="validatePasswordInitially"
+					@submit="submit"
+				/>
 			</div>
-			<div class="field" v-if="needsTotpPasscode">
-				<label class="label" for="totpPasscode">{{ $t('user.auth.totpTitle') }}</label>
+			<div
+				v-if="needsTotpPasscode"
+				class="field"
+			>
+				<label
+					class="label"
+					for="totpPasscode"
+				>{{ $t('user.auth.totpTitle') }}</label>
 				<div class="control">
 					<input
+						id="totpPasscode"
+						ref="totpPasscode"
+						v-focus
 						autocomplete="one-time-code"
 						class="input"
-						id="totpPasscode"
 						:placeholder="$t('user.auth.totpPlaceholder')"
-						ref="totpPasscode"
 						required
 						type="text"
-						v-focus
-						@keyup.enter="submit"
 						tabindex="3"
 						inputmode="numeric"
-					/>
+						@keyup.enter="submit"
+					>
 				</div>
 			</div>
 			<div class="field">
 				<label class="label">
-					<input type="checkbox" v-model="rememberMe" class="mr-1"/>
+					<input
+						v-model="rememberMe"
+						type="checkbox"
+						class="mr-1"
+					>
 					{{ $t('user.auth.remember') }}
 				</label>
 			</div>
 
 			<x-button
-				@click="submit"
 				:loading="isLoading"
 				tabindex="4"
+				@click="submit"
 			>
 				{{ $t('user.auth.login') }}
 			</x-button>
-			<p class="mt-2" v-if="registrationEnabled">
+			<p
+				v-if="registrationEnabled"
+				class="mt-2"
+			>
 				{{ $t('user.auth.noAccountYet') }}
 				<router-link
 					:to="{ name: 'user.register' }"
@@ -87,13 +128,14 @@
 
 		<div
 			v-if="hasOpenIdProviders"
-			class="mt-4">
+			class="mt-4"
+		>
 			<x-button
 				v-for="(p, k) in openidConnect.providers"
 				:key="k"
-				@click="redirectToProvider(p)"
 				variant="secondary"
 				class="is-fullwidth mt-2"
+				@click="redirectToProvider(p)"
 			>
 				{{ $t('user.auth.loginWith', {provider: p.name}) }}
 			</x-button>

@@ -2,8 +2,8 @@
 	<div class="label-wrapper">
 		<XLabel
 			v-for="label in labels"
-			:label="label"
 			:key="label.id"
+			:label="label"
 		/>
 	</div>
 </template>

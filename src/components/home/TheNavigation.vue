@@ -1,66 +1,110 @@
 <template>
-	<header :class="{ 'has-background': background, 'menu-active': menuActive }" aria-label="main navigation"
-		class="navbar d-print-none">
-		<router-link :to="{ name: 'home' }" class="logo-link">
-			<Logo width="164" height="48" />
+	<header
+		:class="{ 'has-background': background, 'menu-active': menuActive }"
+		aria-label="main navigation"
+		class="navbar d-print-none"
+	>
+		<router-link
+			:to="{ name: 'home' }"
+			class="logo-link"
+		>
+			<Logo
+				width="164"
+				height="48"
+			/>
 		</router-link>
 
 		<MenuButton class="menu-button" />
 
-		<div v-if="currentProject?.id" class="project-title-wrapper">
+		<div
+			v-if="currentProject?.id"
+			class="project-title-wrapper"
+		>
 			<h1 class="project-title">
 				{{ currentProject.title === '' ? $t('misc.loading') : getProjectTitle(currentProject) }}
 			</h1>
 
-			<BaseButton :to="{ name: 'project.info', params: { projectId: currentProject.id } }" class="project-title-button">
+			<BaseButton
+				:to="{ name: 'project.info', params: { projectId: currentProject.id } }"
+				class="project-title-button"
+			>
 				<icon icon="circle-info" />
 			</BaseButton>
 
-			<project-settings-dropdown v-if="canWriteCurrentProject && currentProject.id !== -1"
-				class="project-title-dropdown" :project="currentProject">
+			<ProjectSettingsDropdown
+				v-if="canWriteCurrentProject && currentProject.id !== -1"
+				class="project-title-dropdown"
+				:project="currentProject"
+			>
 				<template #trigger="{ toggleOpen }">
-					<BaseButton class="project-title-button" @click="toggleOpen">
-						<icon icon="ellipsis-h" class="icon" />
+					<BaseButton
+						class="project-title-button"
+						@click="toggleOpen"
+					>
+						<icon
+							icon="ellipsis-h"
+							class="icon"
+						/>
 					</BaseButton>
 				</template>
-			</project-settings-dropdown>
+			</ProjectSettingsDropdown>
 		</div>
 
 		<div class="navbar-end">
-			<OpenQuickActions/>
+			<OpenQuickActions />
 			<Notifications />
-			<dropdown>
+			<Dropdown>
 				<template #trigger="{ toggleOpen, open }">
-					<BaseButton class="username-dropdown-trigger" @click="toggleOpen" variant="secondary" :shadow="false">
-						<img :src="authStore.avatarUrl" alt="" class="avatar" width="40" height="40" />
+					<BaseButton
+						class="username-dropdown-trigger"
+						variant="secondary"
+						:shadow="false"
+						@click="toggleOpen"
+					>
+						<img
+							:src="authStore.avatarUrl"
+							alt=""
+							class="avatar"
+							width="40"
+							height="40"
+						>
 						<span class="username">{{ authStore.userDisplayName }}</span>
-						<span class="icon is-small" :style="{
-							transform: open ? 'rotate(180deg)' : 'rotate(0)',
-						}">
+						<span
+							class="icon is-small"
+							:style="{
+								transform: open ? 'rotate(180deg)' : 'rotate(0)',
+							}"
+						>
 							<icon icon="chevron-down" />
 						</span>
 					</BaseButton>
 				</template>
 
-				<dropdown-item :to="{ name: 'user.settings' }">
+				<DropdownItem :to="{ name: 'user.settings' }">
 					{{ $t('user.settings.title') }}
-				</dropdown-item>
-				<dropdown-item v-if="imprintUrl" :href="imprintUrl">
+				</DropdownItem>
+				<DropdownItem
+					v-if="imprintUrl"
+					:href="imprintUrl"
+				>
 					{{ $t('navigation.imprint') }}
-				</dropdown-item>
-				<dropdown-item v-if="privacyPolicyUrl" :href="privacyPolicyUrl">
+				</DropdownItem>
+				<DropdownItem
+					v-if="privacyPolicyUrl"
+					:href="privacyPolicyUrl"
+				>
 					{{ $t('navigation.privacy') }}
-				</dropdown-item>
-				<dropdown-item @click="baseStore.setKeyboardShortcutsActive(true)">
+				</DropdownItem>
+				<DropdownItem @click="baseStore.setKeyboardShortcutsActive(true)">
 					{{ $t('keyboardShortcuts.title') }}
-				</dropdown-item>
-				<dropdown-item :to="{ name: 'about' }">
+				</DropdownItem>
+				<DropdownItem :to="{ name: 'about' }">
 					{{ $t('about.title') }}
-				</dropdown-item>
-				<dropdown-item @click="authStore.logout()">
+				</DropdownItem>
+				<DropdownItem @click="authStore.logout()">
 					{{ $t('user.auth.logout') }}
-				</dropdown-item>
-			</dropdown>
+				</DropdownItem>
+			</Dropdown>
 		</div>
 	</header>
 </template>

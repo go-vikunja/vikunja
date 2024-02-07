@@ -1,5 +1,8 @@
 <template>
-	<card :title="$t('user.deletion.title')" v-if="userDeletionEnabled">
+	<card
+		v-if="userDeletionEnabled"
+		:title="$t('user.deletion.title')"
+	>
 		<template v-if="deletionScheduledAt !== null">
 			<form @submit.prevent="cancelDeletion()">
 				<p>
@@ -15,22 +18,28 @@
 						{{ $t('user.deletion.scheduledCancelText') }}
 					</p>
 					<div class="field">
-						<label class="label" for="currentPasswordAccountDelete">
+						<label
+							class="label"
+							for="currentPasswordAccountDelete"
+						>
 							{{ $t('user.settings.currentPassword') }}
 						</label>
 						<div class="control">
 							<input
+								id="currentPasswordAccountDelete"
+								ref="passwordInput"
+								v-model="password"
 								class="input"
 								:class="{'is-danger': errPasswordRequired}"
-								id="currentPasswordAccountDelete"
 								:placeholder="$t('user.settings.currentPasswordPlaceholder')"
 								type="password"
-								v-model="password"
 								@keyup="() => errPasswordRequired = password === ''"
-								ref="passwordInput"
-							/>
+							>
 						</div>
-						<p class="help is-danger" v-if="errPasswordRequired">
+						<p
+							v-if="errPasswordRequired"
+							class="help is-danger"
+						>
 							{{ $t('user.deletion.passwordRequired') }}
 						</p>
 					</div>
@@ -42,8 +51,9 @@
 
 			<x-button
 				:loading="accountDeleteService.loading"
+				class="is-fullwidth mt-4"
 				@click="cancelDeletion()"
-				class="is-fullwidth mt-4">
+			>
 				{{ $t('user.deletion.scheduledCancelConfirm') }}
 			</x-button>
 		</template>
@@ -51,27 +61,36 @@
 			<p>
 				{{ $t('user.deletion.text1') }}
 			</p>
-			<form @submit.prevent="deleteAccount()" v-if="isLocalUser">
+			<form
+				v-if="isLocalUser"
+				@submit.prevent="deleteAccount()"
+			>
 				<p>
 					{{ $t('user.deletion.text2') }}
 				</p>
 				<div class="field">
-					<label class="label" for="currentPasswordAccountDelete">
+					<label
+						class="label"
+						for="currentPasswordAccountDelete"
+					>
 						{{ $t('user.settings.currentPassword') }}
 					</label>
 					<div class="control">
 						<input
+							id="currentPasswordAccountDelete"
+							ref="passwordInput"
+							v-model="password"
 							class="input"
 							:class="{'is-danger': errPasswordRequired}"
-							id="currentPasswordAccountDelete"
 							:placeholder="$t('user.settings.currentPasswordPlaceholder')"
 							type="password"
-							v-model="password"
 							@keyup="() => errPasswordRequired = password === ''"
-							ref="passwordInput"
-						/>
+						>
 					</div>
-					<p class="help is-danger" v-if="errPasswordRequired">
+					<p
+						v-if="errPasswordRequired"
+						class="help is-danger"
+					>
 						{{ $t('user.deletion.passwordRequired') }}
 					</p>
 				</div>
@@ -82,8 +101,9 @@
 
 			<x-button
 				:loading="accountDeleteService.loading"
+				class="is-fullwidth mt-4 is-danger"
 				@click="deleteAccount()"
-				class="is-fullwidth mt-4 is-danger">
+			>
 				{{ $t('user.deletion.confirm') }}
 			</x-button>
 		</template>
@@ -91,7 +111,7 @@
 </template>
 
 <script lang="ts">
-export default {name: 'user-settings-deletion'}
+export default {name: 'UserSettingsDeletion'}
 </script>
 
 <script setup lang="ts">

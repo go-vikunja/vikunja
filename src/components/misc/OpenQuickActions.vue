@@ -31,10 +31,10 @@ function openQuickActions() {
 
 <template>
 	<BaseButton
-		@click="openQuickActions"
 		class="trigger-button"
 		:title="$t('keyboardShortcuts.quickSearch')"
+		@click="openQuickActions"
 	>
-		<icon icon="search"/>
+		<icon icon="search" />
 	</BaseButton>
 </template>

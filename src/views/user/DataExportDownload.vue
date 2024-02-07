@@ -4,22 +4,28 @@
 		<template v-if="isLocalUser">
 			<p>{{ $t('user.export.descriptionPasswordRequired') }}</p>
 			<div class="field">
-				<label class="label" for="currentPasswordDataExport">
+				<label
+					class="label"
+					for="currentPasswordDataExport"
+				>
 					{{ $t('user.settings.currentPassword') }}
 				</label>
 				<div class="control">
 					<input
+						id="currentPasswordDataExport"
+						ref="passwordInput"
+						v-model="password"
 						class="input"
 						:class="{'is-danger': errPasswordRequired}"
-						id="currentPasswordDataExport"
 						:placeholder="$t('user.settings.currentPasswordPlaceholder')"
 						type="password"
-						v-model="password"
 						@keyup="() => errPasswordRequired = password === ''"
-						ref="passwordInput"
-					/>
+					>
 				</div>
-				<p class="help is-danger" v-if="errPasswordRequired">
+				<p
+					v-if="errPasswordRequired"
+					class="help is-danger"
+				>
 					{{ $t('user.deletion.passwordRequired') }}
 				</p>
 			</div>
@@ -28,8 +34,9 @@
 		<x-button
 			v-focus
 			:loading="dataExportService.loading"
+			class="mt-4"
 			@click="download()"
-			class="mt-4">
+		>
 			{{ $t('misc.download') }}
 		</x-button>
 	</div>

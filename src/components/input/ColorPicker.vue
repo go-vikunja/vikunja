@@ -1,36 +1,67 @@
 <template>
 	<div class="color-picker-container">
 		<datalist :id="colorListID">
-			<option v-for="defaultColor in defaultColors" :key="defaultColor" :value="defaultColor" />
+			<option
+				v-for="defaultColor in defaultColors"
+				:key="defaultColor"
+				:value="defaultColor"
+			/>
 		</datalist>
 		
 		<div class="picker">
 			<input
+				v-model="color"
 				class="picker__input"
 				type="color"
-				v-model="color"
 				:list="colorListID"
 				:class="{'is-empty': isEmpty}"
-			/>
-			<svg class="picker__pattern" v-show="isEmpty" viewBox="0 0 22 22" fill="fff">
-				<pattern id="checker" width="11" height="11" patternUnits="userSpaceOnUse" fill="FFF">
-					<rect fill="#cccccc" x="0" width="5.5" height="5.5" y="0"></rect>
-					<rect fill="#cccccc" x="5.5" width="5.5" height="5.5" y="5.5"></rect>
+			>
+			<svg
+				v-show="isEmpty"
+				class="picker__pattern"
+				viewBox="0 0 22 22"
+				fill="fff"
+			>
+				<pattern
+					id="checker"
+					width="11"
+					height="11"
+					patternUnits="userSpaceOnUse"
+					fill="FFF"
+				>
+					<rect
+						fill="#cccccc"
+						x="0"
+						width="5.5"
+						height="5.5"
+						y="0"
+					/>
+					<rect
+						fill="#cccccc"
+						x="5.5"
+						width="5.5"
+						height="5.5"
+						y="5.5"
+					/>
 				</pattern>
-				<rect width="22" height="22" fill="url(#checker)"></rect>
+				<rect
+					width="22"
+					height="22"
+					fill="url(#checker)"
+				/>
 			</svg>
 		</div>
 
-		<x-button
+		<XButton
 			v-if="!isEmpty"
 			:disabled="isEmpty"
-			@click="reset"
 			class="is-small ml-2"
 			:shadow="false"
 			variant="secondary"
+			@click="reset"
 		>
 			{{ $t('input.resetColor') }}
-		</x-button>
+		</XButton>
 	</div>
 </template>
 
@@ -38,6 +69,14 @@
 import {computed, ref, watch} from 'vue'
 import {createRandomID} from '@/helpers/randomId'
 import XButton from '@/components/input/button.vue'
+
+const {
+	modelValue,
+} = defineProps<{
+	modelValue: string,
+}>()
+
+const emit = defineEmits(['update:modelValue'])
 
 const DEFAULT_COLORS = [
 	'#1973ff',
@@ -52,14 +91,6 @@ const color = ref('')
 const lastChangeTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 const defaultColors = ref(DEFAULT_COLORS)
 const colorListID = ref(createRandomID())
-
-const {
-	modelValue,
-} = defineProps<{
-	modelValue: string,
-}>()
-
-const emit = defineEmits(['update:modelValue'])
 
 watch(
 	() => modelValue,

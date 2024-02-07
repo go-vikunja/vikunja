@@ -1,12 +1,15 @@
 <template>
 	<div
+		ref="multiselectRoot"
 		class="multiselect"
 		:class="{'has-search-results': searchResultsVisible}"
-		ref="multiselectRoot"
 		tabindex="-1"
 		@focus="focus"
 	>
-		<div class="control" :class="{'is-loading': loading || localLoading}">
+		<div
+			class="control"
+			:class="{'is-loading': loading || localLoading}"
+		>
 			<div
 				class="input-wrapper input"
 				:class="{'has-multiple': hasMultiple, 'has-removal-button': removalAvailable}"
@@ -18,51 +21,67 @@
 					:remove="remove"
 				>
 					<template v-for="(item, key) in internalValue">
-						<slot name="tag" :item="item">
-							<span :key="`item${key}`" class="tag ml-2 mt-2">
+						<slot
+							name="tag"
+							:item="item"
+						>
+							<span
+								:key="`item${key}`"
+								class="tag ml-2 mt-2"
+							>
 								{{ label !== '' ? item[label] : item }}
-								<BaseButton @click="() => remove(item)" class="delete is-small"></BaseButton>
+								<BaseButton
+									class="delete is-small"
+									@click="() => remove(item)"
+								/>
 							</span>
 						</slot>
 					</template>
 				</slot>
 				
 				<input
+					ref="searchInput"
+					v-model="query"
 					type="text"
 					class="input"
-					v-model="query"
-					@keyup="search"
-					@keyup.enter.exact.prevent="() => createOrSelectOnEnter()"
 					:placeholder="placeholder"
-					@keydown.down.exact.prevent="() => preSelect(0)"
-					ref="searchInput"
-					@focus="handleFocus"
 					:autocomplete="autocompleteEnabled ? undefined : 'off'"
 					:spellcheck="autocompleteEnabled ? undefined : 'false'"
-				/>
+					@keyup="search"
+					@keyup.enter.exact.prevent="() => createOrSelectOnEnter()"
+					@keydown.down.exact.prevent="() => preSelect(0)"
+					@focus="handleFocus"
+				>
 				<BaseButton 
 					v-if="removalAvailable"
 					class="removal-button"
 					@click="resetSelectedValue"
 				>
-					<icon icon="times"/>
+					<icon icon="times" />
 				</BaseButton>
 			</div>
 		</div>
 
 		<CustomTransition name="fade">
-			<div class="search-results" :class="{'search-results-inline': inline}" v-if="searchResultsVisible">
+			<div
+				v-if="searchResultsVisible"
+				class="search-results"
+				:class="{'search-results-inline': inline}"
+			>
 				<BaseButton
-					class="search-result-button is-fullwidth"
 					v-for="(data, index) in filteredSearchResults"
 					:key="index"
 					:ref="(el) => setResult(el, index)"
+					class="search-result-button is-fullwidth"
 					@keydown.up.prevent="() => preSelect(index - 1)"
 					@keydown.down.prevent="() => preSelect(index + 1)"
 					@click.prevent.stop="() => select(data)"
 				>
 					<span>
-						<slot name="searchResult" :option="data">
+						<slot
+							name="searchResult"
+							:option="data"
+						>
 							<span class="search-result">{{ label !== '' ? data[label] : data }}</span>
 						</slot>
 					</span>
@@ -73,15 +92,18 @@
 
 				<BaseButton
 					v-if="creatableAvailable"
-					class="search-result-button is-fullwidth"
 					:ref="(el) => setResult(el, filteredSearchResults.length)"
+					class="search-result-button is-fullwidth"
 					@keydown.up.prevent="() => preSelect(filteredSearchResults.length - 1)"
 					@keydown.down.prevent="() => preSelect(filteredSearchResults.length + 1)"
 					@keyup.enter.prevent="create"
 					@click.prevent.stop="create"
 				>
 					<span>
-						<slot name="searchResult" :option="query">
+						<slot
+							name="searchResult"
+							:option="query"
+						>
 							<span class="search-result">
 								{{ query }}
 							</span>
@@ -106,16 +128,6 @@ import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function elementInResults(elem: string | any, label: string, query: string): boolean {
-	// Don't make create available if we have an exact match in our search results.
-	if (label !== '') {
-		return elem[label] === query
-	}
-
-	return elem === query
-}
 
 const props = defineProps({
 	/**
@@ -244,6 +256,16 @@ const emit = defineEmits<{
 	 */
 	(e: 'remove', value: null): void
 }>()
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function elementInResults(elem: string | any, label: string, query: string): boolean {
+	// Don't make create available if we have an exact match in our search results.
+	if (label !== '') {
+		return elem[label] === query
+	}
+
+	return elem === query
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const query = ref<string | { [key: string]: any }>('')

@@ -1,14 +1,14 @@
 <template>
-	<create-edit
+	<CreateEdit
 		:title="$t('project.duplicate.title')"
 		primary-icon="paste"
 		:primary-label="$t('project.duplicate.label')"
-		@primary="duplicate"
 		:loading="isLoading"
+		@primary="duplicate"
 	>
 		<p>{{ $t('project.duplicate.text') }}</p>
-		<project-search v-model="parentProject"/>
-	</create-edit>
+		<ProjectSearch v-model="parentProject" />
+	</CreateEdit>
 </template>
 
 <script setup lang="ts">

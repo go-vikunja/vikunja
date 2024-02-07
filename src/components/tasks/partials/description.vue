@@ -2,29 +2,35 @@
 	<div>
 		<h3>
 			<span class="icon is-grey">
-				<icon icon="align-left"/>
+				<icon icon="align-left" />
 			</span>
 			{{ $t('task.attributes.description') }}
 			<CustomTransition name="fade">
-				<span class="is-small is-inline-flex" v-if="loading && saving">
-					<span class="loader is-inline-block mr-2"></span>
+				<span
+					v-if="loading && saving"
+					class="is-small is-inline-flex"
+				>
+					<span class="loader is-inline-block mr-2" />
 					{{ $t('misc.saving') }}
 				</span>
-				<span class="is-small has-text-success" v-else-if="!loading && saved">
-					<icon icon="check"/>
+				<span
+					v-else-if="!loading && saved"
+					class="is-small has-text-success"
+				>
+					<icon icon="check" />
 					{{ $t('misc.saved') }}
 				</span>
 			</CustomTransition>
 		</h3>
-		<editor
+		<Editor
+			v-model="description"
 			class="tiptap__task-description"
 			:is-edit-enabled="canWrite"
 			:upload-callback="uploadCallback"
 			:placeholder="$t('task.description.placeholder')"
 			:show-save="true"
 			edit-shortcut="e"
-			v-model="description"
-			@update:model-value="saveWithDelay"
+			@update:modelValue="saveWithDelay"
 			@save="save"
 		/>
 	</div>

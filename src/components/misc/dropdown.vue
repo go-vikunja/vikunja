@@ -1,15 +1,32 @@
 <template>
-	<div class="dropdown" ref="dropdown">
-		<slot name="trigger" :close="close" :toggleOpen="toggleOpen" :open="open">
-			<BaseButton class="dropdown-trigger is-flex" @click="toggleOpen">
-				<icon :icon="triggerIcon" class="icon"/>
+	<div
+		ref="dropdown"
+		class="dropdown"
+	>
+		<slot
+			name="trigger"
+			:close="close"
+			:toggle-open="toggleOpen"
+			:open="open"
+		>
+			<BaseButton
+				class="dropdown-trigger is-flex"
+				@click="toggleOpen"
+			>
+				<icon
+					:icon="triggerIcon"
+					class="icon"
+				/>
 			</BaseButton>
 		</slot>
 
 		<CustomTransition name="fade">
-			<div class="dropdown-menu" v-if="open">
+			<div
+				v-if="open"
+				class="dropdown-menu"
+			>
 				<div class="dropdown-content">
-					<slot :close="close"></slot>
+					<slot :close="close" />
 				</div>
 			</div>
 		</CustomTransition>

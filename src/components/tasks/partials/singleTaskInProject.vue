@@ -1,17 +1,17 @@
 <template>
 	<div>
 		<div
+			ref="taskContainerRef"
 			:class="{'is-loading': taskService.loading}"
 			class="task loader-container single-task"
+			tabindex="-1"
 			@mouseup.stop.self="openTaskDetail"
 			@mousedown.stop.self="focusTaskLink"
-			ref="taskContainerRef"
-			tabindex="-1"
 		>
-			<fancycheckbox
-				:disabled="(isArchived || disabled) && !canMarkAsDone"
-				@update:model-value="markAsDone"
+			<Fancycheckbox
 				v-model="task.done"
+				:disabled="(isArchived || disabled) && !canMarkAsDone"
+				@update:modelValue="markAsDone"
 			/>
 
 			<ColorBubble
@@ -26,42 +26,46 @@
 				@mouseup.stop.self="openTaskDetail"
 				@mousedown.stop.self="focusTaskLink"
 			>
-			<span>
-				<router-link
-					v-if="showProject && typeof project !== 'undefined'"
-					:to="{ name: 'project.list', params: { projectId: task.projectId } }"
-					class="task-project mr-1"
-					:class="{'mr-2': task.hexColor !== ''}"
-					v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
-				>
-					{{ project.title }}
-				</router-link>
+				<span>
+					<router-link
+						v-if="showProject && typeof project !== 'undefined'"
+						v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
+						:to="{ name: 'project.list', params: { projectId: task.projectId } }"
+						class="task-project mr-1"
+						:class="{'mr-2': task.hexColor !== ''}"
+					>
+						{{ project.title }}
+					</router-link>
 
-				<ColorBubble
-					v-if="task.hexColor !== ''"
-					:color="getHexColor(task.hexColor)"
-					class="mr-1"
-				/>
+					<ColorBubble
+						v-if="task.hexColor !== ''"
+						:color="getHexColor(task.hexColor)"
+						class="mr-1"
+					/>
 			
-				<priority-label :priority="task.priority" :done="task.done" class="pr-2"/>
+					<PriorityLabel
+						:priority="task.priority"
+						:done="task.done"
+						class="pr-2"
+					/>
 				
-				<router-link
-					:to="taskDetailRoute"
-					class="task-link"
-					ref="taskLink"
-					tabindex="-1"
-				>
+					<router-link
+						ref="taskLink"
+						:to="taskDetailRoute"
+						class="task-link"
+						tabindex="-1"
+					>
 						{{ task.title }}
-				</router-link>
-			</span>
+					</router-link>
+				</span>
 
-				<labels
+				<Labels
 					v-if="task.labels.length > 0"
 					class="labels ml-2 mr-1"
 					:labels="task.labels"
 				/>
 
-				<assignee-list
+				<AssigneeList
 					v-if="task.assignees.length > 0"
 					:assignees="task.assignees"
 					:avatar-size="25"
@@ -72,9 +76,9 @@
 				<!-- FIXME: use popup -->
 				<BaseButton
 					v-if="+new Date(task.dueDate) > 0"
+					v-tooltip="formatDateLong(task.dueDate)"
 					class="dueDate"
 					@click.prevent.stop="showDefer = !showDefer"
-					v-tooltip="formatDateLong(task.dueDate)"
 				>
 					<time
 						:datetime="formatISO(task.dueDate)"
@@ -86,22 +90,35 @@
 					</time>
 				</BaseButton>
 				<CustomTransition name="fade">
-					<defer-task v-if="+new Date(task.dueDate) > 0 && showDefer" v-model="task" ref="deferDueDate"/>
+					<DeferTask
+						v-if="+new Date(task.dueDate) > 0 && showDefer"
+						ref="deferDueDate"
+						v-model="task"
+					/>
 				</CustomTransition>
 
 				<span>
-				<span class="project-task-icon" v-if="task.attachments.length > 0">
-					<icon icon="paperclip"/>
+					<span
+						v-if="task.attachments.length > 0"
+						class="project-task-icon"
+					>
+						<icon icon="paperclip" />
+					</span>
+					<span
+						v-if="!isEditorContentEmpty(task.description)"
+						class="project-task-icon"
+					>
+						<icon icon="align-left" />
+					</span>
+					<span
+						v-if="task.repeatAfter.amount > 0"
+						class="project-task-icon"
+					>
+						<icon icon="history" />
+					</span>
 				</span>
-				<span class="project-task-icon" v-if="!isEditorContentEmpty(task.description)">
-					<icon icon="align-left"/>
-				</span>
-				<span class="project-task-icon" v-if="task.repeatAfter.amount > 0">
-					<icon icon="history"/>
-				</span>
-			</span>
 
-				<checklist-summary :task="task"/>
+				<ChecklistSummary :task="task" />
 			</div>
 
 			<ProgressBar
@@ -118,22 +135,28 @@
 			
 			<router-link
 				v-if="showProjectSeparately"
+				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
 				:to="{ name: 'project.list', params: { projectId: task.projectId } }"
 				class="task-project"
-				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
 			>
 				{{ project.title }}
 			</router-link>
 
 			<BaseButton
 				:class="{'is-favorite': task.isFavorite}"
-				@click="toggleFavorite"
 				class="favorite"
+				@click="toggleFavorite"
 			>
-				<icon icon="star" v-if="task.isFavorite"/>
-				<icon :icon="['far', 'star']" v-else/>
+				<icon
+					v-if="task.isFavorite"
+					icon="star"
+				/>
+				<icon
+					v-else
+					:icon="['far', 'star']"
+				/>
 			</BaseButton>
-			<slot/>
+			<slot />
 		</div>
 		<template v-if="typeof task.relatedTasks?.subtask !== 'undefined'">
 			<template v-for="subtask in task.relatedTasks.subtask">
@@ -201,6 +224,8 @@ const {
 	allTasks?: ITask[],
 }>()
 
+const emit = defineEmits(['taskUpdated'])
+
 function getTaskById(taskId: number): ITask | undefined {
 	if (typeof allTasks === 'undefined' || allTasks.length === 0) {
 		return null
@@ -208,8 +233,6 @@ function getTaskById(taskId: number): ITask | undefined {
 
 	return allTasks.find(t => t.id === taskId)
 }
-
-const emit = defineEmits(['task-updated'])
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -278,7 +301,7 @@ async function markAsDone(checked: boolean) {
 		if (checked && useAuthStore().settings.frontendSettings.playSoundWhenDone) {
 			playPopSound()
 		}
-		emit('task-updated', newTask)
+		emit('taskUpdated', newTask)
 		success({
 			message: task.value.done ?
 				t('task.doneSuccess') :
@@ -304,7 +327,7 @@ function undoDone(checked: boolean) {
 
 async function toggleFavorite() {
 	task.value = await taskStore.toggleFavorite(task.value)
-	emit('task-updated', task.value)
+	emit('taskUpdated', task.value)
 }
 
 const deferDueDate = ref<typeof DeferTask | null>(null)

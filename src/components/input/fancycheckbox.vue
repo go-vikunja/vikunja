@@ -7,11 +7,14 @@
 		}"
 		:disabled="disabled"
 		:model-value="modelValue"
-		@update:model-value="value => emit('update:modelValue', value)"
+		@update:modelValue="value => emit('update:modelValue', value)"
 	>
 		<CheckboxIcon class="fancycheckbox__icon" />
-		<span v-if="$slots.default" class="fancycheckbox__content">
-			<slot/>
+		<span
+			v-if="$slots.default"
+			class="fancycheckbox__content"
+		>
+			<slot />
 		</span>
 	</BaseCheckbox>
 </template>

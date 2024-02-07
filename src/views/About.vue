@@ -1,15 +1,15 @@
 <template>
 	<modal
-		@close="$router.back()"
 		transition-name="fade"
 		variant="hint-modal"
+		@close="$router.back()"
 	>
 		<card
 			class="has-no-shadow"
 			:title="$t('about.title')"
 			:has-close="true"
-			@close="$router.back()"
 			:padding="false"
+			@close="$router.back()"
 		>
 			<div class="p-4">
 				<p>

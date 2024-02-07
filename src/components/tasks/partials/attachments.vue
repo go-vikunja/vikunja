@@ -2,20 +2,20 @@
 	<div class="attachments">
 		<h3>
 			<span class="icon is-grey">
-				<icon icon="paperclip"/>
+				<icon icon="paperclip" />
 			</span>
 			{{ $t('task.attachment.title') }}
 		</h3>
 
 		<input
 			v-if="editEnabled"
-			:disabled="loading || undefined"
-			@change="uploadNewAttachment()"
 			id="files"
-			multiple
 			ref="filesRef"
+			:disabled="loading || undefined"
+			multiple
 			type="file"
-		/>
+			@change="uploadNewAttachment()"
+		>
 
 		<ProgressBar
 			v-if="attachmentService.uploadProgress > 0"
@@ -23,14 +23,17 @@
 			is-primary
 		/>
 
-		<div class="files" v-if="attachments.length > 0">
+		<div
+			v-if="attachments.length > 0"
+			class="files"
+		>
 			<!-- FIXME: don't use a for element that wraps other links / buttons
 				Instead: overlay element with button that is inside.
 			-->
 			<a
-				class="attachment"
 				v-for="a in attachments"
 				:key="a.id"
+				class="attachment"
 				@click="viewOrDownload(a)"
 			>
 				<div class="filename">
@@ -44,7 +47,10 @@
 				</div>
 				<div class="info">
 					<p class="attachment-info-meta">
-						<i18n-t keypath="task.attachment.createdBy" scope="global">
+						<i18n-t
+							keypath="task.attachment.createdBy"
+							scope="global"
+						>
 							<span v-tooltip="formatDateLong(a.created)">
 								{{ formatDateSince(a.created) }}
 							</span>
@@ -63,24 +69,24 @@
 					</p>
 					<p>
 						<BaseButton
+							v-tooltip="$t('task.attachment.downloadTooltip')"
 							class="attachment-info-meta-button"
 							@click.prevent.stop="downloadAttachment(a)"
-							v-tooltip="$t('task.attachment.downloadTooltip')"
 						>
 							{{ $t('misc.download') }}
 						</BaseButton>
 						<BaseButton
+							v-tooltip="$t('task.attachment.copyUrlTooltip')"
 							class="attachment-info-meta-button"
 							@click.stop="copyUrl(a)"
-							v-tooltip="$t('task.attachment.copyUrlTooltip')"
 						>
 							{{ $t('task.attachment.copyUrl') }}
 						</BaseButton>
 						<BaseButton
 							v-if="editEnabled"
+							v-tooltip="$t('task.attachment.deleteTooltip')"
 							class="attachment-info-meta-button"
 							@click.prevent.stop="setAttachmentToDelete(a)"
-							v-tooltip="$t('task.attachment.deleteTooltip')"
 						>
 							{{ $t('misc.delete') }}
 						</BaseButton>
@@ -103,11 +109,11 @@
 		<x-button
 			v-if="editEnabled"
 			:disabled="loading"
-			@click="filesRef?.click()"
 			class="mb-4"
 			icon="cloud-upload-alt"
 			variant="secondary"
 			:shadow="false"
+			@click="filesRef?.click()"
 		>
 			{{ $t('task.attachment.upload') }}
 		</x-button>
@@ -115,15 +121,17 @@
 		<!-- Dropzone -->
 		<Teleport to="body">
 			<div
+				v-if="editEnabled"
 				:class="{ hidden: !isOverDropZone }"
 				class="dropzone"
-				v-if="editEnabled"
 			>
 				<div class="drop-hint">
 					<div class="icon">
-						<icon icon="cloud-upload-alt"/>
+						<icon icon="cloud-upload-alt" />
 					</div>
-					<div class="hint">{{ $t('task.attachment.drop') }}</div>
+					<div class="hint">
+						{{ $t('task.attachment.drop') }}
+					</div>
 				</div>
 			</div>
 		</Teleport>
@@ -140,7 +148,7 @@
 
 			<template #text>
 				<p>
-					{{ $t('task.attachment.deleteText1', {filename: attachmentToDelete.file.name}) }}<br/>
+					{{ $t('task.attachment.deleteText1', {filename: attachmentToDelete.file.name}) }}<br>
 					<strong class="has-text-white">{{ $t('misc.cannotBeUndone') }}</strong>
 				</p>
 			</template>
@@ -151,7 +159,10 @@
 			:enabled="attachmentImageBlobUrl !== null"
 			@close="attachmentImageBlobUrl = null"
 		>
-			<img :src="attachmentImageBlobUrl" alt=""/>
+			<img
+				:src="attachmentImageBlobUrl"
+				alt=""
+			>
 		</modal>
 	</div>
 </template>
@@ -178,9 +189,6 @@ import {error, success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
 import {useI18n} from 'vue-i18n'
 
-const taskStore = useTaskStore()
-const {t} = useI18n({useScope: 'global'})
-
 const {
 	task,
 	editEnabled = true,
@@ -188,9 +196,10 @@ const {
 	task: ITask,
 	editEnabled: boolean,
 }>()
-
 // FIXME: this should go through the store
-const emit = defineEmits(['task-changed'])
+const emit = defineEmits(['taskChanged'])
+const taskStore = useTaskStore()
+const {t} = useI18n({useScope: 'global'})
 
 const attachmentService = shallowReactive(new AttachmentService())
 
@@ -266,7 +275,7 @@ function copyUrl(attachment: IAttachment) {
 
 async function setCoverImage(attachment: IAttachment | null) {
 	const updatedTask = await taskStore.setCoverImage(task, attachment)
-	emit('task-changed', updatedTask)
+	emit('taskChanged', updatedTask)
 	success({message: t('task.attachment.successfullyChangedCoverImage')})
 }
 </script>

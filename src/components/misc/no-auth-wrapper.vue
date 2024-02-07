@@ -1,8 +1,15 @@
 <template>
 	<div class="no-auth-wrapper">
-		<Logo class="logo" width="200" height="58"/>
+		<Logo
+			class="logo"
+			width="200"
+			height="58"
+		/>
 		<div class="noauth-container">
-			<section class="image" :class="{'has-message': motd !== ''}">
+			<section
+				class="image"
+				:class="{'has-message': motd !== ''}"
+			>
 				<Message v-if="motd !== ''">
 					{{ motd }}
 				</Message>
@@ -12,14 +19,22 @@
 			</section>
 			<section class="content">
 				<div>
-					<h2 class="title" v-if="title">{{ title }}</h2>
-					<api-config v-if="showApiConfig"/>
-					<Message v-if="motd !== ''" class="is-hidden-tablet mb-4">
+					<h2
+						v-if="title"
+						class="title"
+					>
+						{{ title }}
+					</h2>
+					<ApiConfig v-if="showApiConfig" />
+					<Message
+						v-if="motd !== ''"
+						class="is-hidden-tablet mb-4"
+					>
 						{{ motd }}
 					</Message>
-					<slot/>
+					<slot />
 				</div>
-				<legal/>
+				<Legal />
 			</section>
 		</div>
 	</div>
@@ -38,6 +53,11 @@ import ApiConfig from '@/components/misc/api-config.vue'
 import {useTitle} from '@/composables/useTitle'
 import {useConfigStore} from '@/stores/config'
 
+const {
+	showApiConfig = true,
+} = defineProps<{
+	showApiConfig?: boolean
+}>()
 const configStore = useConfigStore()
 const motd = computed(() => configStore.motd)
 
@@ -46,11 +66,6 @@ const {t} = useI18n({useScope: 'global'})
 const title = computed(() => t(route.meta?.title as string || ''))
 useTitle(() => title.value)
 
-const {
-	showApiConfig = true,
-} = defineProps<{
-	showApiConfig?: boolean
-}>()
 </script>
 
 <style lang="scss" scoped>

@@ -1,5 +1,5 @@
 <template>
-	<multiselect
+	<Multiselect
 		v-model="selectedUsers"
 		:search-results="foundUsers"
 		:loading="userService.loading"

@@ -1,10 +1,20 @@
 <template>
 	<modal @close="close()">
-		<card class="has-background-white keyboard-shortcuts"  :shadow="false" :title="$t('keyboardShortcuts.title')">
-			<template v-for="(s, i) in shortcuts" :key="i">
+		<card
+			class="has-background-white keyboard-shortcuts"
+			:shadow="false"
+			:title="$t('keyboardShortcuts.title')"
+		>
+			<template
+				v-for="(s, i) in shortcuts"
+				:key="i"
+			>
 				<h3>{{ $t(s.title) }}</h3>
 
-				<message class="mb-4" v-if="s.available">
+				<Message
+					v-if="s.available"
+					class="mb-4"
+				>
 					{{
 						typeof s.available === 'undefined' ?
 							$t('keyboardShortcuts.allPages') :
@@ -14,14 +24,19 @@
 									: $t('keyboardShortcuts.somePagesOnly')
 							)
 					}}
-				</message>
+				</Message>
 
 				<dl class="shortcut-list">
-					<template v-for="(sc, si) in s.shortcuts" :key="si">
-						<dt class="shortcut-title">{{ $t(sc.title) }}</dt>
-						<shortcut
-							class="shortcut-keys"
+					<template
+						v-for="(sc, si) in s.shortcuts"
+						:key="si"
+					>
+						<dt class="shortcut-title">
+							{{ $t(sc.title) }}
+						</dt>
+						<Shortcut
 							is="dd"
+							class="shortcut-keys"
 							:keys="sc.keys"
 							:combination="sc.combination && $t(`keyboardShortcuts.${sc.combination}`)"
 						/>

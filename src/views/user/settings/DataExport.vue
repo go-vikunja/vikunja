@@ -8,22 +8,28 @@
 				{{ $t('user.export.descriptionPasswordRequired') }}
 			</p>
 			<div class="field">
-				<label class="label" for="currentPasswordDataExport">
+				<label
+					class="label"
+					for="currentPasswordDataExport"
+				>
 					{{ $t('user.settings.currentPassword') }}
 				</label>
 				<div class="control">
 					<input
+						id="currentPasswordDataExport"
+						ref="passwordInput"
+						v-model="password"
 						class="input"
 						:class="{'is-danger': errPasswordRequired}"
-						id="currentPasswordDataExport"
 						:placeholder="$t('user.settings.currentPasswordPlaceholder')"
 						type="password"
-						v-model="password"
 						@keyup="() => errPasswordRequired = password === ''"
-						ref="passwordInput"
-					/>
+					>
 				</div>
-				<p class="help is-danger" v-if="errPasswordRequired">
+				<p
+					v-if="errPasswordRequired"
+					class="help is-danger"
+				>
 					{{ $t('user.deletion.passwordRequired') }}
 				</p>
 			</div>
@@ -31,15 +37,16 @@
 
 		<x-button
 			:loading="dataExportService.loading"
+			class="is-fullwidth mt-4"
 			@click="requestDataExport()"
-			class="is-fullwidth mt-4">
+		>
 			{{ $t('user.export.request') }}
 		</x-button>
 	</card>
 </template>
 
 <script lang="ts">
-export default {name: 'user-settings-data-export'}
+export default {name: 'UserSettingsDataExport'}
 </script>
 
 <script setup lang="ts">

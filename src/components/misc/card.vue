@@ -1,18 +1,24 @@
 <template>
-	<div class="card" :class="{'has-no-shadow': !shadow}">
-		<header class="card-header" v-if="title !== ''">
+	<div
+		class="card"
+		:class="{'has-no-shadow': !shadow}"
+	>
+		<header
+			v-if="title !== ''"
+			class="card-header"
+		>
 			<p class="card-header-title">
 				{{ title }}
 			</p>
 			<BaseButton
 				v-if="hasClose"
+				v-tooltip="$t('misc.close')"
 				class="card-header-icon"
 				:aria-label="$t('misc.close')"
 				@click="$emit('close')"
-				v-tooltip="$t('misc.close')"
 			>	
 				<span class="icon">
-					<icon :icon="closeIcon"/>
+					<icon :icon="closeIcon" />
 				</span>
 			</BaseButton>
 		</header>
@@ -24,12 +30,15 @@
 			}"
 		>
 			<div :class="{'content': hasContent}">
-				<slot/>
+				<slot />
 			</div>
 		</div>
 
-		<footer v-if="$slots.footer" class="card-footer">
-			<slot name="footer"/>
+		<footer
+			v-if="$slots.footer"
+			class="card-footer"
+		>
+			<slot name="footer" />
 		</footer>
 	</div>
 </template>

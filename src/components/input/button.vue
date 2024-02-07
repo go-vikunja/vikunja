@@ -18,7 +18,10 @@
 				:icon="icon"
 				:style="{'color': iconColor !== '' ? iconColor : undefined}"
 			/>
-			<span class="icon is-small" v-else>
+			<span
+				v-else
+				class="icon is-small"
+			>
 				<icon 
 					:icon="icon"
 					:style="{'color': iconColor !== '' ? iconColor : undefined}"
@@ -38,7 +41,7 @@ const BUTTON_TYPES_MAP = {
 
 export type ButtonTypes = keyof typeof BUTTON_TYPES_MAP
 
-export default { name: 'x-button' }
+export default { name: 'XButton' }
 </script>
 
 <script setup lang="ts">

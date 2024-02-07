@@ -1,46 +1,70 @@
 <template>
-	<aside :class="{'is-active': baseStore.menuActive}" class="menu-container">
+	<aside
+		:class="{'is-active': baseStore.menuActive}"
+		class="menu-container"
+	>
 		<nav class="menu top-menu">
-			<router-link :to="{name: 'home'}" class="logo">
-				<Logo width="164" height="48"/>
+			<router-link
+				:to="{name: 'home'}"
+				class="logo"
+			>
+				<Logo
+					width="164"
+					height="48"
+				/>
 			</router-link>
 			<menu class="menu-list other-menu-items">
 				<li>
-					<router-link :to="{ name: 'home'}" v-shortcut="'g o'">
+					<router-link
+						v-shortcut="'g o'"
+						:to="{ name: 'home'}"
+					>
 						<span class="menu-item-icon icon">
-							<icon icon="calendar"/>
+							<icon icon="calendar" />
 						</span>
 						{{ $t('navigation.overview') }}
 					</router-link>
 				</li>
 				<li>
-					<router-link :to="{ name: 'tasks.range'}" v-shortcut="'g u'">
+					<router-link
+						v-shortcut="'g u'"
+						:to="{ name: 'tasks.range'}"
+					>
 						<span class="menu-item-icon icon">
-							<icon :icon="['far', 'calendar-alt']"/>
+							<icon :icon="['far', 'calendar-alt']" />
 						</span>
 						{{ $t('navigation.upcoming') }}
 					</router-link>
 				</li>
 				<li>
-					<router-link :to="{ name: 'projects.index'}" v-shortcut="'g p'">
+					<router-link
+						v-shortcut="'g p'"
+						:to="{ name: 'projects.index'}"
+					>
 						<span class="menu-item-icon icon">
-							<icon icon="layer-group"/>
+							<icon icon="layer-group" />
 						</span>
 						{{ $t('project.projects') }}
 					</router-link>
 				</li>
 				<li>
-					<router-link :to="{ name: 'labels.index'}" v-shortcut="'g a'">
+					<router-link
+						v-shortcut="'g a'"
+						:to="{ name: 'labels.index'}"
+					>
 						<span class="menu-item-icon icon">
-							<icon icon="tags"/>
+							<icon icon="tags" />
 						</span>
 						{{ $t('label.title') }}
 					</router-link>
 				</li>
 				<li>
-					<router-link :to="{ name: 'teams.index'}" v-shortcut="'g m'">
+					<router-link
+						v-shortcut="'g m'"
+						:to="{ name: 'teams.index'}"
+					>
 						<span class="menu-item-icon icon">
-							<icon icon="users"/>
+							<icon icon="users" />
 						</span>
 						{{ $t('team.title') }}
 					</router-link>
@@ -53,7 +77,10 @@
 			variant="small"
 		/>
 		<template v-else>
-			<nav class="menu" v-if="favoriteProjects">
+			<nav
+				v-if="favoriteProjects"
+				class="menu"
+			>
 				<ProjectsNavigation
 					:model-value="favoriteProjects" 
 					:can-edit-order="false"
@@ -61,7 +88,10 @@
 				/>
 			</nav>
 			
-			<nav class="menu" v-if="savedFilterProjects">
+			<nav
+				v-if="savedFilterProjects"
+				class="menu"
+			>
 				<ProjectsNavigation
 					:model-value="savedFilterProjects"
 					:can-edit-order="false"
@@ -79,7 +109,7 @@
 			</nav>
 		</template>
 
-		<PoweredByLink/>
+		<PoweredByLink />
 	</aside>
 </template>
 

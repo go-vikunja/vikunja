@@ -1,24 +1,42 @@
 <template>
 	<p class="created">
-		<time :datetime="formatISO(task.created)" v-tooltip="formatDateLong(task.created)">
-			<i18n-t keypath="task.detail.created" scope="global">
+		<time
+			v-tooltip="formatDateLong(task.created)"
+			:datetime="formatISO(task.created)"
+		>
+			<i18n-t
+				keypath="task.detail.created"
+				scope="global"
+			>
 				<span>{{ formatDateSince(task.created) }}</span>
 				{{ getDisplayName(task.createdBy) }}
 			</i18n-t>
 		</time>
 		<template v-if="+new Date(task.created) !== +new Date(task.updated)">
-			<br/>
+			<br>
 			<!-- Computed properties to show the actual date every time it gets updated -->
-			<time :datetime="formatISO(task.updated)" v-tooltip="updatedFormatted">
-				<i18n-t keypath="task.detail.updated" scope="global">
+			<time
+				v-tooltip="updatedFormatted"
+				:datetime="formatISO(task.updated)"
+			>
+				<i18n-t
+					keypath="task.detail.updated"
+					scope="global"
+				>
 					<span>{{ updatedSince }}</span>
 				</i18n-t>
 			</time>
 		</template>
 		<template v-if="task.done">
-			<br/>
-			<time :datetime="formatISO(task.doneAt)" v-tooltip="doneFormatted">
-				<i18n-t keypath="task.detail.doneAt" scope="global">
+			<br>
+			<time
+				v-tooltip="doneFormatted"
+				:datetime="formatISO(task.doneAt)"
+			>
+				<i18n-t
+					keypath="task.detail.doneAt"
+					scope="global"
+				>
 					<span>{{ doneSince }}</span>
 				</i18n-t>
 			</time>

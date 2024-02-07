@@ -1,5 +1,8 @@
 <template>
-	<div class="tiptap" ref="tiptapInstanceRef">
+	<div
+		ref="tiptapInstanceRef"
+		class="tiptap"
+	>
 		<EditorToolbar
 			v-if="editor && isEditing"
 			:editor="editor"
@@ -11,56 +14,56 @@
 			class="editor-bubble__wrapper"
 		>
 			<BaseButton
-				class="editor-bubble__button"
-				@click="editor.chain().focus().toggleBold().run()"
-				:class="{ 'is-active': editor.isActive('bold') }"
 				v-tooltip="$t('input.editor.bold')"
+				class="editor-bubble__button"
+				:class="{ 'is-active': editor.isActive('bold') }"
+				@click="editor.chain().focus().toggleBold().run()"
 			>
-				<icon :icon="['fa', 'fa-bold']"/>
+				<icon :icon="['fa', 'fa-bold']" />
 			</BaseButton>
 			<BaseButton
-				class="editor-bubble__button"
-				@click="editor.chain().focus().toggleItalic().run()"
-				:class="{ 'is-active': editor.isActive('italic') }"
 				v-tooltip="$t('input.editor.italic')"
+				class="editor-bubble__button"
+				:class="{ 'is-active': editor.isActive('italic') }"
+				@click="editor.chain().focus().toggleItalic().run()"
 			>
-				<icon :icon="['fa', 'fa-italic']"/>
+				<icon :icon="['fa', 'fa-italic']" />
 			</BaseButton>
 			<BaseButton
-				class="editor-bubble__button"
-				@click="editor.chain().focus().toggleUnderline().run()"
-				:class="{ 'is-active': editor.isActive('underline') }"
 				v-tooltip="$t('input.editor.underline')"
+				class="editor-bubble__button"
+				:class="{ 'is-active': editor.isActive('underline') }"
+				@click="editor.chain().focus().toggleUnderline().run()"
 			>
-				<icon :icon="['fa', 'fa-underline']"/>
+				<icon :icon="['fa', 'fa-underline']" />
 			</BaseButton>
 			<BaseButton
-				class="editor-bubble__button"
-				@click="editor.chain().focus().toggleStrike().run()"
-				:class="{ 'is-active': editor.isActive('strike') }"
 				v-tooltip="$t('input.editor.strikethrough')"
+				class="editor-bubble__button"
+				:class="{ 'is-active': editor.isActive('strike') }"
+				@click="editor.chain().focus().toggleStrike().run()"
 			>
-				<icon :icon="['fa', 'fa-strikethrough']"/>
+				<icon :icon="['fa', 'fa-strikethrough']" />
 			</BaseButton>
 			<BaseButton
-				class="editor-bubble__button"
-				@click="editor.chain().focus().toggleCode().run()"
-				:class="{ 'is-active': editor.isActive('code') }"
 				v-tooltip="$t('input.editor.code')"
+				class="editor-bubble__button"
+				:class="{ 'is-active': editor.isActive('code') }"
+				@click="editor.chain().focus().toggleCode().run()"
 			>
-				<icon :icon="['fa', 'fa-code']"/>
+				<icon :icon="['fa', 'fa-code']" />
 			</BaseButton>
 			<BaseButton
-				class="editor-bubble__button"
-				@click="setLink"
-				:class="{ 'is-active': editor.isActive('link') }"
 				v-tooltip="$t('input.editor.link')"
+				class="editor-bubble__button"
+				:class="{ 'is-active': editor.isActive('link') }"
+				@click="setLink"
 			>
-				<icon :icon="['fa', 'fa-link']"/>
+				<icon :icon="['fa', 'fa-link']" />
 			</BaseButton>
 		</BubbleMenu>
 
-		<editor-content
+		<EditorContent
 			class="tiptap__editor"
 			:class="{'tiptap__editor-is-edit-enabled': isEditing}"
 			:editor="editor"
@@ -69,52 +72,66 @@
 
 		<input
 			v-if="isEditing"
-			type="file"
 			id="tiptap__image-upload"
-			class="is-hidden"
 			ref="uploadInputRef"
+			type="file"
+			class="is-hidden"
 			@change="addImage"
-		/>
+		>
 
-		<ul class="tiptap__editor-actions d-print-none" v-if="bottomActions.length === 0 && !isEditing && isEditEnabled">
+		<ul
+			v-if="bottomActions.length === 0 && !isEditing && isEditEnabled"
+			class="tiptap__editor-actions d-print-none"
+		>
 			<li>
 				<BaseButton
+					class="done-edit"
 					@click="setEdit"
-					class="done-edit">
+				>
 					{{ $t('input.editor.edit') }}
 				</BaseButton>
 			</li>
 		</ul>
-		<ul class="tiptap__editor-actions d-print-none" v-if="bottomActions.length > 0">
+		<ul
+			v-if="bottomActions.length > 0"
+			class="tiptap__editor-actions d-print-none"
+		>
 			<li v-if="isEditing && showSave">
 				<BaseButton
+					class="done-edit"
 					@click="bubbleSave"
-					class="done-edit">
+				>
 					{{ $t('misc.save') }}
 				</BaseButton>
 			</li>
 			<li v-if="!isEditing">
 				<BaseButton
+					class="done-edit"
 					@click="setEdit"
-					class="done-edit">
+				>
 					{{ $t('input.editor.edit') }}
 				</BaseButton>
 			</li>
-			<li v-for="(action, k) in bottomActions" :key="k">
-				<BaseButton @click="action.action">{{ action.title }}</BaseButton>
+			<li
+				v-for="(action, k) in bottomActions"
+				:key="k"
+			>
+				<BaseButton @click="action.action">
+					{{ action.title }}
+				</BaseButton>
 			</li>
 		</ul>
-		<x-button
+		<XButton
 			v-else-if="isEditing && showSave"
+			v-cy="'saveEditor'"
 			class="mt-4"
-			@click="bubbleSave"
 			variant="secondary"
 			:shadow="false"
-			v-cy="'saveEditor'"
 			:disabled="!contentHasChanged"
+			@click="bubbleSave"
 		>
 			{{ $t('misc.save') }}
-		</x-button>
+		</XButton>
 	</div>
 </template>
 
@@ -176,6 +193,26 @@ import {mergeAttributes} from '@tiptap/core'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
+
+const {
+	modelValue,
+	uploadCallback,
+	isEditEnabled = true,
+	bottomActions = [],
+	showSave = false,
+	placeholder = '',
+	editShortcut = '',
+} = defineProps<{
+	modelValue: string,
+	uploadCallback?: UploadCallback,
+	isEditEnabled?: boolean,
+	bottomActions?: BottomAction[],
+	showSave?: boolean,
+	placeholder?: string,
+	editShortcut?: string,
+}>()
+
+const emit = defineEmits(['update:modelValue', 'save'])
 
 const tiptapInstanceRef = ref<HTMLInputElement | null>(null)
 
@@ -270,26 +307,6 @@ const CustomImage = Image.extend({
 
 type Mode = 'edit' | 'preview'
 
-const {
-	modelValue,
-	uploadCallback,
-	isEditEnabled = true,
-	bottomActions = [],
-	showSave = false,
-	placeholder = '',
-	editShortcut = '',
-} = defineProps<{
-	modelValue: string,
-	uploadCallback?: UploadCallback,
-	isEditEnabled?: boolean,
-	bottomActions?: BottomAction[],
-	showSave?: boolean,
-	placeholder?: string,
-	editShortcut?: string,
-}>()
-
-const emit = defineEmits(['update:modelValue', 'save'])
-
 const internalMode = ref<Mode>('preview')
 const isEditing = computed(() => internalMode.value === 'edit' && isEditEnabled)
 const contentHasChanged = ref<boolean>(false)
@@ -304,6 +321,7 @@ watch(
 )
 
 const editor = useEditor({
+	// eslint-disable-next-line vue/no-ref-object-destructure
 	editable: isEditing.value,
 	extensions: [
 		// Starterkit:

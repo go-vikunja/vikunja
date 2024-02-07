@@ -8,11 +8,11 @@
 				<template v-if="migrator.isFileMigrator">
 					<p>{{ $t('migrate.importUpload', {name: migrator.name}) }}</p>
 					<input
-						@change="migrate"
-						class="is-hidden"
 						ref="uploadInput"
+						class="is-hidden"
 						type="file"
-					/>
+						@change="migrate"
+					>
 					<x-button
 						:loading="migrationFileService.loading"
 						:disabled="migrationFileService.loading || undefined"
@@ -37,11 +37,18 @@
 				class="migration-in-progress-container"
 			>
 				<div class="migration-in-progress">
-					<img :alt="migrator.name" :src="migrator.icon" class="logo"/>
+					<img
+						:alt="migrator.name"
+						:src="migrator.icon"
+						class="logo"
+					>
 					<div class="progress-dots">
-						<span v-for="i in progressDotsCount" :key="i"/>
+						<span
+							v-for="i in progressDotsCount"
+							:key="i"
+						/>
 					</div>
-					<Logo class="logo"/>
+					<Logo class="logo" />
 				</div>
 				<p>{{ $t('migrate.inProgress') }}</p>
 			</div>
@@ -50,31 +57,47 @@
 			<p>
 				{{ $t('migrate.migrationInProgress') }}
 			</p>
-			<x-button :to="{name: 'home'}">{{ $t('home.goToOverview') }}</x-button>
+			<x-button :to="{name: 'home'}">
+				{{ $t('home.goToOverview') }}
+			</x-button>
 		</div>
 		<div v-else-if="lastMigrationFinishedAt">
 			<p>
 				{{
 					$t('migrate.alreadyMigrated1', {name: migrator.name, date: formatDateLong(lastMigrationFinishedAt)})
-				}}<br/>
+				}}<br>
 				{{ $t('migrate.alreadyMigrated2') }}
 			</p>
 			<div class="buttons">
-				<x-button @click="migrate">{{ $t('migrate.confirm') }}</x-button>
-				<x-button :to="{name: 'home'}" variant="tertiary" class="has-text-danger">
+				<x-button @click="migrate">
+					{{ $t('migrate.confirm') }}
+				</x-button>
+				<x-button
+					:to="{name: 'home'}"
+					variant="tertiary"
+					class="has-text-danger"
+				>
 					{{ $t('misc.cancel') }}
 				</x-button>
 			</div>
 		</div>
 		<div v-else>
-			<Message class="mb-4" v-if="migrator.isFileMigrator">
+			<Message
+				v-if="migrator.isFileMigrator"
+				class="mb-4"
+			>
 				{{ message }}
 			</Message>
-			<Message class="mb-4" v-else>
+			<Message
+				v-else
+				class="mb-4"
+			>
 				{{ $t('migrate.migrationStartedWillReciveEmail', {service: migrator.name}) }}
 			</Message>
 
-			<x-button :to="{name: 'home'}">{{ $t('home.goToOverview') }}</x-button>
+			<x-button :to="{name: 'home'}">
+				{{ $t('home.goToOverview') }}
+			</x-button>
 		</div>
 	</div>
 </template>
@@ -106,12 +129,12 @@ import {MIGRATORS, Migrator} from './migrators'
 import {useTitle} from '@/composables/useTitle'
 import {useProjectStore} from '@/stores/projects'
 
-const PROGRESS_DOTS_COUNT = 8
-
 const props = defineProps<{
 	service: string,
 	code?: string,
 }>()
+
+const PROGRESS_DOTS_COUNT = 8
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -125,7 +148,9 @@ const migratorAuthCode = ref('')
 
 const migrator = computed<Migrator>(() => MIGRATORS[props.service])
 
+// eslint-disable-next-line vue/no-ref-object-destructure
 const migrationService = shallowReactive(new AbstractMigrationService(migrator.value.id))
+// eslint-disable-next-line vue/no-ref-object-destructure
 const migrationFileService = shallowReactive(new AbstractMigrationFileService(migrator.value.id))
 
 useTitle(() => t('migrate.titleService', {name: migrator.value.name}))

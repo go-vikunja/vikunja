@@ -3,19 +3,28 @@
 		@close="$router.back()"
 		@submit="deleteProject()"
 	>
-		<template #header><span>{{ $t('project.delete.header') }}</span></template>
+		<template #header>
+			<span>{{ $t('project.delete.header') }}</span>
+		</template>
 
 		<template #text>
 			<p>
 				{{ $t('project.delete.text1') }}
 			</p>
 
-			<p class="has-text-weight-bold" v-if="totalTasks !== null">
+			<p
+				v-if="totalTasks !== null"
+				class="has-text-weight-bold"
+			>
 				{{
 					totalTasks > 0 ? $t('project.delete.tasksToDelete', {count: totalTasks}) : $t('project.delete.noTasksToDelete')
 				}}
 			</p>
-			<Loading v-else class="is-loading-small" variant="default"/>
+			<Loading
+				v-else
+				class="is-loading-small"
+				variant="default"
+			/>
 
 			<p>
 				{{ $t('misc.cannotBeUndone') }}

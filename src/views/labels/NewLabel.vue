@@ -1,37 +1,43 @@
 <template>
-	<create-edit
+	<CreateEdit
 		:title="$t('label.create.title')"
-		@create="newLabel()"
 		:primary-disabled="label.title === ''"
+		@create="newLabel()"
 	>
 		<div class="field">
-			<label class="label" for="labelTitle">{{ $t('label.attributes.title') }}</label>
+			<label
+				class="label"
+				for="labelTitle"
+			>{{ $t('label.attributes.title') }}</label>
 			<div
 				class="control is-expanded"
 				:class="{ 'is-loading': loading }"
 			>
 				<input
+					id="labelTitle"
+					v-model="label.title"
+					v-focus
 					:class="{ disabled: loading }"
 					class="input"
 					:placeholder="$t('label.attributes.titlePlaceholder')"
 					type="text"
-					id="labelTitle"
-					v-focus
-					v-model="label.title"
 					@keyup.enter="newLabel()"
-				/>
+				>
 			</div>
 		</div>
-		<p class="help is-danger" v-if="showError && label.title === ''">
+		<p
+			v-if="showError && label.title === ''"
+			class="help is-danger"
+		>
 			{{ $t('label.create.titleRequired') }}
 		</p>
 		<div class="field">
 			<label class="label">{{ $t('label.attributes.color') }}</label>
 			<div class="control">
-				<color-picker v-model="label.hexColor"/>
+				<ColorPicker v-model="label.hexColor" />
 			</div>
 		</div>
-	</create-edit>
+	</CreateEdit>
 </template>
 
 <script setup lang="ts">

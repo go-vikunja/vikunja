@@ -2,35 +2,35 @@
 	<div class="editor-toolbar">
 		<div class="editor-toolbar__segment">
 			<BaseButton
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
-				:class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
 				v-tooltip="$t('input.editor.heading1')"
+				class="editor-toolbar__button"
+				:class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
+				@click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-header']"/>
+					<icon :icon="['fa', 'fa-header']" />
 					<span class="icon__lower-text">1</span>
 				</span>
 			</BaseButton>
 			<BaseButton
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
-				:class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
 				v-tooltip="$t('input.editor.heading2')"
+				class="editor-toolbar__button"
+				:class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
+				@click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-header']"/>
+					<icon :icon="['fa', 'fa-header']" />
 					<span class="icon__lower-text">2</span>
 				</span>
 			</BaseButton>
 			<BaseButton
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
-				:class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
 				v-tooltip="$t('input.editor.heading3')"
+				class="editor-toolbar__button"
+				:class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
+				@click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-header']"/>
+					<icon :icon="['fa', 'fa-header']" />
 					<span class="icon__lower-text">3</span>
 				</span>
 			</BaseButton>
@@ -38,167 +38,167 @@
 
 		<div class="editor-toolbar__segment">
 			<BaseButton
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().toggleBold().run()"
-				:class="{ 'is-active': editor.isActive('bold') }"
 				v-tooltip="$t('input.editor.bold')"
+				class="editor-toolbar__button"
+				:class="{ 'is-active': editor.isActive('bold') }"
+				@click="editor.chain().focus().toggleBold().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-bold']"/>
+					<icon :icon="['fa', 'fa-bold']" />
 				</span>
 			</BaseButton>
 			<BaseButton
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().toggleItalic().run()"
-				:class="{ 'is-active': editor.isActive('italic') }"
 				v-tooltip="$t('input.editor.italic')"
+				class="editor-toolbar__button"
+				:class="{ 'is-active': editor.isActive('italic') }"
+				@click="editor.chain().focus().toggleItalic().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-italic']"/>
+					<icon :icon="['fa', 'fa-italic']" />
 				</span>
 			</BaseButton>
 			<BaseButton
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().toggleUnderline().run()"
-				:class="{ 'is-active': editor.isActive('underline') }"
 				v-tooltip="$t('input.editor.underline')"
+				class="editor-toolbar__button"
+				:class="{ 'is-active': editor.isActive('underline') }"
+				@click="editor.chain().focus().toggleUnderline().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-underline']"/>
+					<icon :icon="['fa', 'fa-underline']" />
 				</span>
 			</BaseButton>
 			<BaseButton
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().toggleStrike().run()"
-				:class="{ 'is-active': editor.isActive('strike') }"
 				v-tooltip="$t('input.editor.strikethrough')"
+				class="editor-toolbar__button"
+				:class="{ 'is-active': editor.isActive('strike') }"
+				@click="editor.chain().focus().toggleStrike().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-strikethrough']"/>
+					<icon :icon="['fa', 'fa-strikethrough']" />
 				</span>
 			</BaseButton>
 		</div>
 
 		<div class="editor-toolbar__segment">
 			<BaseButton
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().toggleCodeBlock().run()"
-				:class="{ 'is-active': editor.isActive('codeBlock') }"
 				v-tooltip="$t('input.editor.code')"
+				class="editor-toolbar__button"
+				:class="{ 'is-active': editor.isActive('codeBlock') }"
+				@click="editor.chain().focus().toggleCodeBlock().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-code']"/>
+					<icon :icon="['fa', 'fa-code']" />
 				</span>
 			</BaseButton>
 			<BaseButton
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().toggleBlockquote().run()"
-				:class="{ 'is-active': editor.isActive('blockquote') }"
 				v-tooltip="$t('input.editor.quote')"
+				class="editor-toolbar__button"
+				:class="{ 'is-active': editor.isActive('blockquote') }"
+				@click="editor.chain().focus().toggleBlockquote().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-quote-right']"/>
+					<icon :icon="['fa', 'fa-quote-right']" />
 				</span>
 			</BaseButton>
 		</div>
 
 		<div class="editor-toolbar__segment">
 			<BaseButton
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().toggleBulletList().run()"
-				:class="{ 'is-active': editor.isActive('bulletList') }"
 				v-tooltip="$t('input.editor.bulletList')"
+				class="editor-toolbar__button"
+				:class="{ 'is-active': editor.isActive('bulletList') }"
+				@click="editor.chain().focus().toggleBulletList().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-list-ul']"/>
+					<icon :icon="['fa', 'fa-list-ul']" />
 				</span>
 			</BaseButton>
 			<BaseButton
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().toggleOrderedList().run()"
-				:class="{ 'is-active': editor.isActive('orderedList') }"
 				v-tooltip="$t('input.editor.orderedList')"
+				class="editor-toolbar__button"
+				:class="{ 'is-active': editor.isActive('orderedList') }"
+				@click="editor.chain().focus().toggleOrderedList().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-list-ol']"/>
+					<icon :icon="['fa', 'fa-list-ol']" />
 				</span>
 			</BaseButton>
 			<BaseButton
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().toggleTaskList().run()"
-				:class="{ 'is-active': editor.isActive('taskList') }"
 				v-tooltip="$t('input.editor.taskList')"
-			>
-				<span class="icon">
-					<icon icon="fa-list-check"/>
-				</span>
-			</BaseButton>
-		</div>
-
-		<div class="editor-toolbar__segment">
-			<BaseButton
-				class="editor-toolbar__button" 
-				@click="openImagePicker" 
-				v-tooltip="$t('input.editor.image')"
-			>
-				<span class="icon">
-					<icon icon="fa-image"/>
-				</span>
-			</BaseButton>
-		</div>
-
-		<div class="editor-toolbar__segment">
-			<BaseButton
 				class="editor-toolbar__button"
-				@click="setLink"
+				:class="{ 'is-active': editor.isActive('taskList') }"
+				@click="editor.chain().focus().toggleTaskList().run()"
+			>
+				<span class="icon">
+					<icon icon="fa-list-check" />
+				</span>
+			</BaseButton>
+		</div>
+
+		<div class="editor-toolbar__segment">
+			<BaseButton
+				v-tooltip="$t('input.editor.image')" 
+				class="editor-toolbar__button" 
+				@click="openImagePicker"
+			>
+				<span class="icon">
+					<icon icon="fa-image" />
+				</span>
+			</BaseButton>
+		</div>
+
+		<div class="editor-toolbar__segment">
+			<BaseButton
+				v-tooltip="$t('input.editor.link')"
+				class="editor-toolbar__button"
 				:class="{ 'is-active': editor.isActive('link') }"
 				title="set link"
-				v-tooltip="$t('input.editor.link')"
+				@click="setLink"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-link']"/>
+					<icon :icon="['fa', 'fa-link']" />
 				</span>
 			</BaseButton>
 			<BaseButton
+				v-tooltip="$t('input.editor.text')"
 				class="editor-toolbar__button"
-				@click="editor.chain().focus().setParagraph().run()"
 				:class="{ 'is-active': editor.isActive('paragraph') }"
 				title="paragraph"
-				v-tooltip="$t('input.editor.text')"
+				@click="editor.chain().focus().setParagraph().run()"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-paragraph']"/>
+					<icon :icon="['fa', 'fa-paragraph']" />
 				</span>
 			</BaseButton>
 
 			<BaseButton
+				v-tooltip="$t('input.editor.horizontalRule')"
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().setHorizontalRule().run()"
-				v-tooltip="$t('input.editor.horizontalRule')"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-ruler-horizontal']"/>
+					<icon :icon="['fa', 'fa-ruler-horizontal']" />
 				</span>
 			</BaseButton>
 		</div>
 
 		<div class="editor-toolbar__segment">
 			<BaseButton
+				v-tooltip="$t('input.editor.undo')"
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().undo().run()"
-				v-tooltip="$t('input.editor.undo')"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-undo']"/>
+					<icon :icon="['fa', 'fa-undo']" />
 				</span>
 			</BaseButton>
 			<BaseButton
+				v-tooltip="$t('input.editor.redo')"
 				class="editor-toolbar__button"
 				@click="editor.chain().focus().redo().run()"
-				v-tooltip="$t('input.editor.redo')"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-redo']"/>
+					<icon :icon="['fa', 'fa-redo']" />
 				</span>
 			</BaseButton>
 		</div>
@@ -206,16 +206,19 @@
 		<div class="editor-toolbar__segment">
 			<!-- table -->
 			<BaseButton
-				class="editor-toolbar__button"
-				@click="toggleTableMode"
-				:class="{ 'is-active': editor.isActive('table') }"
 				v-tooltip="$t('input.editor.table.title')"
+				class="editor-toolbar__button"
+				:class="{ 'is-active': editor.isActive('table') }"
+				@click="toggleTableMode"
 			>
 				<span class="icon">
-					<icon :icon="['fa', 'fa-table']"/>
+					<icon :icon="['fa', 'fa-table']" />
 				</span>
 			</BaseButton>
-			<div v-if="tableMode" class="editor-toolbar__table-buttons">
+			<div
+				v-if="tableMode"
+				class="editor-toolbar__table-buttons"
+			>
 				<BaseButton
 					class="editor-toolbar__button"
 					@click="
@@ -230,99 +233,99 @@
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					@click="editor.chain().focus().addColumnBefore().run()"
 					:disabled="!editor.can().addColumnBefore"
+					@click="editor.chain().focus().addColumnBefore().run()"
 				>
 					{{ $t('input.editor.table.addColumnBefore') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					@click="editor.chain().focus().addColumnAfter().run()"
 					:disabled="!editor.can().addColumnAfter"
+					@click="editor.chain().focus().addColumnAfter().run()"
 				>
 					{{ $t('input.editor.table.addColumnAfter') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					@click="editor.chain().focus().deleteColumn().run()"
 					:disabled="!editor.can().deleteColumn"
+					@click="editor.chain().focus().deleteColumn().run()"
 				>
 					{{ $t('input.editor.table.deleteColumn') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					@click="editor.chain().focus().addRowBefore().run()"
 					:disabled="!editor.can().addRowBefore"
+					@click="editor.chain().focus().addRowBefore().run()"
 				>
 					{{ $t('input.editor.table.addRowBefore') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					@click="editor.chain().focus().addRowAfter().run()"
 					:disabled="!editor.can().addRowAfter"
+					@click="editor.chain().focus().addRowAfter().run()"
 				>
 					{{ $t('input.editor.table.addRowAfter') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					@click="editor.chain().focus().deleteRow().run()"
 					:disabled="!editor.can().deleteRow"
+					@click="editor.chain().focus().deleteRow().run()"
 				>
 					{{ $t('input.editor.table.deleteRow') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					@click="editor.chain().focus().deleteTable().run()"
 					:disabled="!editor.can().deleteTable"
+					@click="editor.chain().focus().deleteTable().run()"
 				>
 					{{ $t('input.editor.table.deleteTable') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					@click="editor.chain().focus().mergeCells().run()"
 					:disabled="!editor.can().mergeCells"
+					@click="editor.chain().focus().mergeCells().run()"
 				>
 					{{ $t('input.editor.table.mergeCells') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					@click="editor.chain().focus().splitCell().run()"
 					:disabled="!editor.can().splitCell"
+					@click="editor.chain().focus().splitCell().run()"
 				>
 					{{ $t('input.editor.table.splitCell') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					@click="editor.chain().focus().toggleHeaderColumn().run()"
 					:disabled="!editor.can().toggleHeaderColumn"
+					@click="editor.chain().focus().toggleHeaderColumn().run()"
 				>
 					{{ $t('input.editor.table.toggleHeaderColumn') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					@click="editor.chain().focus().toggleHeaderRow().run()"
 					:disabled="!editor.can().toggleHeaderRow"
+					@click="editor.chain().focus().toggleHeaderRow().run()"
 				>
 					{{ $t('input.editor.table.toggleHeaderRow') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					@click="editor.chain().focus().toggleHeaderCell().run()"
 					:disabled="!editor.can().toggleHeaderCell"
+					@click="editor.chain().focus().toggleHeaderCell().run()"
 				>
 					{{ $t('input.editor.table.toggleHeaderCell') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					@click="editor.chain().focus().mergeOrSplit().run()"
 					:disabled="!editor.can().mergeOrSplit"
+					@click="editor.chain().focus().mergeOrSplit().run()"
 				>
 					{{ $t('input.editor.table.mergeOrSplit') }}
 				</BaseButton>
 				<BaseButton
 					class="editor-toolbar__button"
-					@click="editor.chain().focus().fixTables().run()"
 					:disabled="!editor.can().fixTables"
+					@click="editor.chain().focus().fixTables().run()"
 				>
 					{{ $t('input.editor.table.fixTables') }}
 				</BaseButton>

@@ -1,55 +1,69 @@
 <template>
-	<create-edit
+	<CreateEdit
 		:title="$t('filters.edit.title')"
 		primary-icon=""
 		:primary-label="$t('misc.save')"
-		@primary="saveFilterWithValidation"
 		:tertiary="$t('misc.delete')"
+		@primary="saveFilterWithValidation"
 		@tertiary="$router.push({ name: 'filter.settings.delete', params: { id: projectId } })"
 	>
 		<form @submit.prevent="saveFilterWithValidation()">
 			<div class="field">
-				<label class="label" for="title">{{ $t('filters.attributes.title') }}</label>
+				<label
+					class="label"
+					for="title"
+				>{{ $t('filters.attributes.title') }}</label>
 				<div class="control">
 					<input
+						id="Title"
 						v-model="filter.title"
-						:class="{ 'disabled': filterService.loading, 'is-danger': !titleValid  }"
+						v-focus
+						:class="{ 'disabled': filterService.loading, 'is-danger': !titleValid }"
 						:disabled="filterService.loading || undefined"
 						class="input"
-						id="Title"
 						:placeholder="$t('filters.attributes.titlePlaceholder')"
 						type="text"
-						v-focus
 						@focusout="validateTitleField"
-					/>
+					>
 				</div>
-				<p class="help is-danger" v-if="!titleValid">{{ $t('filters.create.titleRequired') }}</p>
+				<p
+					v-if="!titleValid"
+					class="help is-danger"
+				>
+					{{ $t('filters.create.titleRequired') }}
+				</p>
 			</div>
 			<div class="field">
-				<label class="label" for="description">{{ $t('filters.attributes.description') }}</label>
+				<label
+					class="label"
+					for="description"
+				>{{ $t('filters.attributes.description') }}</label>
 				<div class="control">
-					<editor
+					<Editor
+						id="description"
+						v-model="filter.description"
 						:class="{ 'disabled': filterService.loading}"
 						:disabled="filterService.loading"
-						id="description"
 						:placeholder="$t('filters.attributes.descriptionPlaceholder')"
-						v-model="filter.description"
 					/>
 				</div>
 			</div>
 			<div class="field">
-				<label class="label" for="filters">{{ $t('filters.title') }}</label>
+				<label
+					class="label"
+					for="filters"
+				>{{ $t('filters.title') }}</label>
 				<div class="control">
 					<Filters
+						v-model="filters"
 						:class="{ 'disabled': filterService.loading}"
 						:disabled="filterService.loading"
 						class="has-no-shadow has-no-border"
-						v-model="filters"
 					/>
 				</div>
 			</div>
 		</form>
-	</create-edit>
+	</CreateEdit>
 </template>
 
 <script setup lang="ts">

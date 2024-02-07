@@ -1,21 +1,16 @@
 <template>
 	<div class="message-wrapper">
-		<div class="message" :class="[variant, textAlignClass]">
-			<slot/>
+		<div
+			class="message"
+			:class="[variant, textAlignClass]"
+		>
+			<slot />
 		</div>
 	</div>
 </template>
 
 <script lang="ts" setup>
 import {computed, type PropType} from 'vue'
-
-const TEXT_ALIGN_MAP = Object.freeze({
-	left: '',
-	center: 'has-text-centered',
-	right: 'has-text-right',
-})
-
-type textAlignVariants = keyof typeof TEXT_ALIGN_MAP
 
 const props = defineProps({
 	variant: {
@@ -27,6 +22,14 @@ const props = defineProps({
 		default: 'left',
 	},
 })
+
+const TEXT_ALIGN_MAP = Object.freeze({
+	left: '',
+	center: 'has-text-centered',
+	right: 'has-text-right',
+})
+
+type textAlignVariants = keyof typeof TEXT_ALIGN_MAP
 
 const textAlignClass = computed(() => TEXT_ALIGN_MAP[props.textAlign])
 

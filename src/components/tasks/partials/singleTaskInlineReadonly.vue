@@ -3,9 +3,9 @@
 		<span>
 			<span
 				v-if="showProject && typeof project !== 'undefined'"
+				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
 				class="task-project"
 				:class="{'mr-2': task.hexColor !== ''}"
-				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
 			>
 				{{ project.title }}
 			</span>
@@ -16,10 +16,16 @@
 				class="mr-1"
 			/>
 
-			<priority-label :priority="task.priority" :done="task.done"/>
+			<PriorityLabel
+				:priority="task.priority"
+				:done="task.done"
+			/>
 
 			<!-- Show any parent tasks to make it clear this task is a sub task of something -->
-			<span class="parent-tasks" v-if="typeof task.relatedTasks?.parenttask !== 'undefined'">
+			<span
+				v-if="typeof task.relatedTasks?.parenttask !== 'undefined'"
+				class="parent-tasks"
+			>
 				<template v-for="(pt, i) in task.relatedTasks.parenttask">
 					{{ pt.title }}<template v-if="(i + 1) < task.relatedTasks.parenttask.length">,&nbsp;</template>
 				</template>
@@ -28,13 +34,13 @@
 			{{ task.title }}
 		</span>
 
-		<labels
+		<Labels
 			v-if="task.labels.length > 0"
 			class="labels ml-2 mr-1"
 			:labels="task.labels"
 		/>
 
-		<assignee-list
+		<AssigneeList
 			v-if="task.assignees.length > 0"
 			:assignees="task.assignees"
 			:avatar-size="20"
@@ -44,8 +50,8 @@
 
 		<span
 			v-if="+new Date(task.dueDate) > 0"
-			class="dueDate"
 			v-tooltip="formatDateLong(task.dueDate)"
+			class="dueDate"
 		>
 			<time
 				:datetime="formatISO(task.dueDate)"
@@ -57,23 +63,33 @@
 		</span>
 
 		<span>
-			<span class="project-task-icon" v-if="task.attachments.length > 0">
-				<icon icon="paperclip"/>
+			<span
+				v-if="task.attachments.length > 0"
+				class="project-task-icon"
+			>
+				<icon icon="paperclip" />
 			</span>
-			<span class="project-task-icon" v-if="task.description">
-				<icon icon="align-left"/>
+			<span
+				v-if="task.description"
+				class="project-task-icon"
+			>
+				<icon icon="align-left" />
 			</span>
-			<span class="project-task-icon" v-if="task.repeatAfter.amount > 0">
-				<icon icon="history"/>
+			<span
+				v-if="task.repeatAfter.amount > 0"
+				class="project-task-icon"
+			>
+				<icon icon="history" />
 			</span>
 		</span>
 
-		<checklist-summary :task="task"/>
+		<ChecklistSummary :task="task" />
 
 		<progress
-			class="progress is-small"
 			v-if="task.percentDone > 0"
-			:value="task.percentDone * 100" max="100"
+			class="progress is-small"
+			:value="task.percentDone * 100"
+			max="100"
 		>
 			{{ task.percentDone * 100 }}%
 		</progress>

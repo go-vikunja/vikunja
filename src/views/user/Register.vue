@@ -1,73 +1,99 @@
 <template>
 	<div>
-		<message variant="danger" v-if="errorMessage !== ''" class="mb-4">
+		<Message
+			v-if="errorMessage !== ''"
+			variant="danger"
+			class="mb-4"
+		>
 			{{ errorMessage }}
-		</message>
-		<form @submit.prevent="submit" id="registerform">
+		</Message>
+		<form
+			id="registerform"
+			@submit.prevent="submit"
+		>
 			<div class="field">
-				<label class="label" for="username">{{ $t('user.auth.username') }}</label>
+				<label
+					class="label"
+					for="username"
+				>{{ $t('user.auth.username') }}</label>
 				<div class="control">
 					<input
-						class="input"
 						id="username"
+						v-model="credentials.username"
+						v-focus
+						class="input"
 						name="username"
 						:placeholder="$t('user.auth.usernamePlaceholder')"
 						required
 						type="text"
 						autocomplete="username"
-						v-focus
-						v-model="credentials.username"
 						@keyup.enter="submit"
 						@focusout="validateUsername"
-					/>
+					>
 				</div>
-				<p class="help is-danger" v-if="!usernameValid">
+				<p
+					v-if="!usernameValid"
+					class="help is-danger"
+				>
 					{{ $t('user.auth.usernameRequired') }}
 				</p>
 			</div>
 			<div class="field">
-				<label class="label" for="email">{{ $t('user.auth.email') }}</label>
+				<label
+					class="label"
+					for="email"
+				>{{ $t('user.auth.email') }}</label>
 				<div class="control">
 					<input
-						class="input"
 						id="email"
+						v-model="credentials.email"
+						class="input"
 						name="email"
 						:placeholder="$t('user.auth.emailPlaceholder')"
 						required
 						type="email"
-						v-model="credentials.email"
 						@keyup.enter="submit"
 						@focusout="validateEmail"
-					/>
+					>
 				</div>
-				<p class="help is-danger" v-if="!emailValid">
+				<p
+					v-if="!emailValid"
+					class="help is-danger"
+				>
 					{{ $t('user.auth.emailInvalid') }}
 				</p>
 			</div>
 			<div class="field">
-				<label class="label" for="password">{{ $t('user.auth.password') }}</label>
-				<password @submit="submit" @update:modelValue="v => credentials.password = v" :validate-initially="validatePasswordInitially"/>
+				<label
+					class="label"
+					for="password"
+				>{{ $t('user.auth.password') }}</label>
+				<Password
+					:validate-initially="validatePasswordInitially"
+					@submit="submit"
+					@update:modelValue="v => credentials.password = v"
+				/>
 			</div>
 
 			<x-button
-				:loading="isLoading"
 				id="register-submit"
-				@click="submit"
+				:loading="isLoading"
 				class="mr-2"
 				:disabled="!everythingValid"
+				@click="submit"
 			>
 				{{ $t('user.auth.createAccount') }}
 			</x-button>
 			
-			<message
+			<Message
 				v-if="configStore.demoModeEnabled"
 				variant="warning"
 				class="mt-4"
 			>
 				{{ $t('demo.title') }}
-				{{ $t('demo.accountWillBeDeleted') }}<br/>
+				{{ $t('demo.accountWillBeDeleted') }}<br>
 				<strong class="is-uppercase">{{ $t('demo.everythingWillBeDeleted') }}</strong>
-			</message>
+			</Message>
 			
 			<p class="mt-2">
 				{{ $t('user.auth.alreadyHaveAnAccount') }}

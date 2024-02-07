@@ -2,26 +2,30 @@
 	<div class="items">
 		<template v-if="items.length">
 			<button
-				class="item"
-				:class="{ 'is-selected': index === selectedIndex }"
 				v-for="(item, index) in items"
 				:key="index"
+				class="item"
+				:class="{ 'is-selected': index === selectedIndex }"
 				@click="selectItem(index)"
 			>
-				<icon :icon="item.icon"/>
+				<icon :icon="item.icon" />
 				<div class="description">
 					<p>{{ item.title }}</p>
 					<p>{{ item.description }}</p>
 				</div>
 			</button>
 		</template>
-		<div class="item" v-else>
+		<div
+			v-else
+			class="item"
+		>
 			No result
 		</div>
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+/* eslint-disable vue/component-api-style */
 export default {
 	props: {
 		items: {

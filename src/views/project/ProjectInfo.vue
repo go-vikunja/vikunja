@@ -5,8 +5,15 @@
 		<card
 			:title="project?.title"
 		>
-			<div class="has-text-left" v-html="htmlDescription" v-if="htmlDescription !== ''"></div>
-			<p v-else class="is-italic">
+			<div
+				v-if="htmlDescription !== ''"
+				class="has-text-left"
+				v-html="htmlDescription"
+			/>
+			<p
+				v-else
+				class="is-italic"
+			>
 				{{ $t('project.noDescriptionAvailable') }}
 			</p>
 		</card>

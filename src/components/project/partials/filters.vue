@@ -1,134 +1,157 @@
 <template>
-	<card class="filters has-overflow" :title="hasTitle ? $t('filters.title') : ''">
+	<card
+		class="filters has-overflow"
+		:title="hasTitle ? $t('filters.title') : ''"
+	>
 		<div class="field is-flex is-flex-direction-column">
-			<fancycheckbox
+			<Fancycheckbox
 				v-model="params.filter_include_nulls"
-				@update:model-value="change()"
+				@update:modelValue="change()"
 			>
 				{{ $t('filters.attributes.includeNulls') }}
-			</fancycheckbox>
-			<fancycheckbox
+			</Fancycheckbox>
+			<Fancycheckbox
 				v-model="filters.requireAllFilters"
-				@update:model-value="setFilterConcat()"
+				@update:modelValue="setFilterConcat()"
 			>
 				{{ $t('filters.attributes.requireAll') }}
-			</fancycheckbox>
-			<fancycheckbox
+			</Fancycheckbox>
+			<Fancycheckbox
 				v-model="filters.done"
-				@update:model-value="setDoneFilter"
+				@update:modelValue="setDoneFilter"
 			>
 				{{ $t('filters.attributes.showDoneTasks') }}
-			</fancycheckbox>
-			<fancycheckbox
+			</Fancycheckbox>
+			<Fancycheckbox
 				v-if="!['project.kanban', 'project.table'].includes($route.name as string)"
 				v-model="sortAlphabetically"
-				@update:model-value="change()"
+				@update:modelValue="change()"
 			>
 				{{ $t('filters.attributes.sortAlphabetically') }}
-			</fancycheckbox>
+			</Fancycheckbox>
 		</div>
 		<div class="field">
 			<label class="label">{{ $t('misc.search') }}</label>
 			<div class="control">
 				<input
+					v-model="params.s"
 					class="input"
 					:placeholder="$t('misc.search')"
-					v-model="params.s"
 					@blur="change()"
 					@keyup.enter="change()"
-				/>
+				>
 			</div>
 		</div>
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.priority') }}</label>
 			<div class="control single-value-control">
-				<priority-select
+				<PrioritySelect
 					v-model.number="filters.priority"
-					@update:model-value="setPriority"
 					:disabled="!filters.usePriority || undefined"
+					@update:modelValue="setPriority"
 				/>
-				<fancycheckbox
+				<Fancycheckbox
 					v-model="filters.usePriority"
-					@update:model-value="setPriority"
+					@update:modelValue="setPriority"
 				>
 					{{ $t('filters.attributes.enablePriority') }}
-				</fancycheckbox>
+				</Fancycheckbox>
 			</div>
 		</div>
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.percentDone') }}</label>
 			<div class="control single-value-control">
-				<percent-done-select
+				<PercentDoneSelect
 					v-model.number="filters.percentDone"
-					@update:model-value="setPercentDoneFilter"
 					:disabled="!filters.usePercentDone || undefined"
+					@update:modelValue="setPercentDoneFilter"
 				/>
-				<fancycheckbox
+				<Fancycheckbox
 					v-model="filters.usePercentDone"
-					@update:model-value="setPercentDoneFilter"
+					@update:modelValue="setPercentDoneFilter"
 				>
 					{{ $t('filters.attributes.enablePercentDone') }}
-				</fancycheckbox>
+				</Fancycheckbox>
 			</div>
 		</div>
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.dueDate') }}</label>
 			<div class="control">
-				<datepicker-with-range
+				<DatepickerWithRange
 					v-model="filters.dueDate"
-					@update:model-value="values => setDateFilter('due_date', values)"
+					@update:modelValue="values => setDateFilter('due_date', values)"
 				>
 					<template #trigger="{toggle, buttonText}">
-						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
+						<x-button
+							variant="secondary"
+							:shadow="false"
+							class="mb-2"
+							@click.prevent.stop="toggle()"
+						>
 							{{ buttonText }}
 						</x-button>
 					</template>
-				</datepicker-with-range>
+				</DatepickerWithRange>
 			</div>
 		</div>
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.startDate') }}</label>
 			<div class="control">
-				<datepicker-with-range
+				<DatepickerWithRange
 					v-model="filters.startDate"
-					@update:model-value="values => setDateFilter('start_date', values)"
+					@update:modelValue="values => setDateFilter('start_date', values)"
 				>
 					<template #trigger="{toggle, buttonText}">
-						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
+						<x-button
+							variant="secondary"
+							:shadow="false"
+							class="mb-2"
+							@click.prevent.stop="toggle()"
+						>
 							{{ buttonText }}
 						</x-button>
 					</template>
-				</datepicker-with-range>
+				</DatepickerWithRange>
 			</div>
 		</div>
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.endDate') }}</label>
 			<div class="control">
-				<datepicker-with-range
+				<DatepickerWithRange
 					v-model="filters.endDate"
-					@update:model-value="values => setDateFilter('end_date', values)"
+					@update:modelValue="values => setDateFilter('end_date', values)"
 				>
 					<template #trigger="{toggle, buttonText}">
-						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
+						<x-button
+							variant="secondary"
+							:shadow="false"
+							class="mb-2"
+							@click.prevent.stop="toggle()"
+						>
 							{{ buttonText }}
 						</x-button>
 					</template>
-				</datepicker-with-range>
+				</DatepickerWithRange>
 			</div>
 		</div>
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.reminders') }}</label>
 			<div class="control">
-				<datepicker-with-range
+				<DatepickerWithRange
 					v-model="filters.reminders"
-					@update:model-value="values => setDateFilter('reminders', values)"
+					@update:modelValue="values => setDateFilter('reminders', values)"
 				>
 					<template #trigger="{toggle, buttonText}">
-						<x-button @click.prevent.stop="toggle()" variant="secondary" :shadow="false" class="mb-2">
+						<x-button
+							variant="secondary"
+							:shadow="false"
+							class="mb-2"
+							@click.prevent.stop="toggle()"
+						>
 							{{ buttonText }}
 						</x-button>
 					</template>
-				</datepicker-with-range>
+				</DatepickerWithRange>
 			</div>
 		</div>
 
@@ -146,10 +169,10 @@
 		<div class="field">
 			<label class="label">{{ $t('task.attributes.labels') }}</label>
 			<div class="control labels-list">
-				<edit-labels
-					:creatable="false"
+				<EditLabels
 					v-model="entities.labels"
-					@update:model-value="changeLabelFilter"
+					:creatable="false"
+					@update:modelValue="changeLabelFilter"
 				/>
 			</div>
 		</div>
@@ -162,9 +185,9 @@
 				<div class="control">
 					<SelectProject
 						v-model="entities.projects"
+						:project-filter="p => p.id > 0"
 						@select="changeMultiselectFilter('projects', 'project_id')"
 						@remove="changeMultiselectFilter('projects', 'project_id')"
-						:project-filter="p => p.id > 0"
 					/>
 				</div>
 			</div>
@@ -205,6 +228,18 @@ import ProjectService from '@/services/project'
 // FIXME: do not use this here for now. instead create new version from DEFAULT_PARAMS
 import {getDefaultParams} from '@/composables/useTaskList'
 
+const props = defineProps({
+	modelValue: {
+		required: true,
+	},
+	hasTitle: {
+		type: Boolean,
+		default: false,
+	},
+})
+
+const emit = defineEmits(['update:modelValue'])
+
 // FIXME: merge with DEFAULT_PARAMS in taskProject.js
 const DEFAULT_PARAMS = {
 	sort_by: [],
@@ -232,18 +267,6 @@ const DEFAULT_FILTERS = {
 	labels: '',
 	project_id: '',
 } as const
-
-const props = defineProps({
-	modelValue: {
-		required: true,
-	},
-	hasTitle: {
-		type: Boolean,
-		default: false,
-	},
-})
-
-const emit = defineEmits(['update:modelValue'])
 
 const {modelValue} = toRefs(props)
 

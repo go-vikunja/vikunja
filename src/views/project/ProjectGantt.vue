@@ -1,46 +1,71 @@
 <template>
-	<ProjectWrapper class="project-gantt" :project-id="filters.projectId" viewName="gantt">
+	<ProjectWrapper
+		class="project-gantt"
+		:project-id="filters.projectId"
+		view-name="gantt"
+	>
 		<template #header>
 			<card :has-content="false">
 				<div class="gantt-options">
 					<div class="field">
-						<label class="label" for="range">{{ $t('project.gantt.range') }}</label>
+						<label
+							class="label"
+							for="range"
+						>{{ $t('project.gantt.range') }}</label>
 						<div class="control">
 							<Foo
+								id="range"
 								ref="flatPickerEl"
+								v-model="flatPickerDateRange"
 								:config="flatPickerConfig"
 								class="input"
-								id="range"
 								:placeholder="$t('project.gantt.range')"
-								v-model="flatPickerDateRange"
 							/>
 						</div>
 					</div>
-					<div class="field" v-if="!hasDefaultFilters">
-						<label class="label" for="range">Reset</label>
+					<div
+						v-if="!hasDefaultFilters"
+						class="field"
+					>
+						<label
+							class="label"
+							for="range"
+						>Reset</label>
 						<div class="control">
-							<x-button @click="setDefaultFilters">Reset</x-button>
+							<x-button @click="setDefaultFilters">
+								Reset
+							</x-button>
 						</div>
 					</div>
-					<fancycheckbox is-block v-model="filters.showTasksWithoutDates">
+					<Fancycheckbox
+						v-model="filters.showTasksWithoutDates"
+						is-block
+					>
 						{{ $t('project.gantt.showTasksWithoutDates') }}
-					</fancycheckbox>
+					</Fancycheckbox>
 				</div>
 			</card>
 		</template>
 
 		<template #default>
 			<div class="gantt-chart-container">
-				<card :has-content="false" :padding="false" class="has-overflow">
-					<gantt-chart
+				<card
+					:has-content="false"
+					:padding="false"
+					class="has-overflow"
+				>
+					<GanttChart
 						:filters="filters"
 						:tasks="tasks"
-						:isLoading="isLoading"
+						:is-loading="isLoading"
 						:default-task-start-date="defaultTaskStartDate"
 						:default-task-end-date="defaultTaskEndDate"
 						@update:task="updateTask"
 					/>
-					<TaskForm v-if="canWrite" @create-task="addGanttTask"/>
+					<TaskForm
+						v-if="canWrite"
+						@createTask="addGanttTask"
+					/>
 				</card>
 			</div>
 		</template>
@@ -70,9 +95,9 @@ import type {ITask} from '@/modelTypes/ITask'
 
 type Options = Flatpickr.Options.Options
 
-const GanttChart = createAsyncComponent(() => import('@/components/tasks/GanttChart.vue'))
-
 const props = defineProps<{route: RouteLocationNormalized}>()
+
+const GanttChart = createAsyncComponent(() => import('@/components/tasks/GanttChart.vue'))
 
 const baseStore = useBaseStore()
 const canWrite = computed(() => baseStore.currentProject?.maxRight > RIGHTS.READ)

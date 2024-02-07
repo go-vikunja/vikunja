@@ -1,11 +1,11 @@
 <template>
 	<BaseButton
-		class="menu-show-button"
-		@click="baseStore.toggleMenu()"
-		@shortkey="() => baseStore.toggleMenu()"
 		v-shortcut="'Mod+e'"
+		class="menu-show-button"
 		:title="$t('keyboardShortcuts.toggleMenu')"
 		:aria-label="menuActive ? $t('misc.hideMenu') : $t('misc.showMenu')"
+		@click="baseStore.toggleMenu()"
+		@shortkey="() => baseStore.toggleMenu()"
 	/>
 </template>
 

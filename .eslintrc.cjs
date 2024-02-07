@@ -19,7 +19,7 @@ module.exports = {
 		'semi': ['error', 'never'],
 
 		'vue/v-on-event-hyphenation': ['warn', 'never', { 'autofix': true }],
-		'vue/multi-word-component-names': 'warn',
+		'vue/multi-word-component-names': 'off',
 
 		// uncategorized rules:
 		'vue/component-api-style': ['error', ['script-setup']],
@@ -43,6 +43,7 @@ module.exports = {
 		'vue/no-required-prop-with-default': ['error', { 'autofix': true }],
 		'vue/no-duplicate-attr-inheritance': 'error',
 		'vue/no-empty-component-block': 'error',
+		'vue/html-indent': ['error', 'tab'],
 
 		// vue3
 		'vue/no-ref-object-destructure': 'error',

@@ -1,20 +1,39 @@
 <template>
 	<div>
-		<message v-if="errorMsg" class="mb-4">
+		<Message
+			v-if="errorMsg"
+			class="mb-4"
+		>
 			{{ errorMsg }}
-		</message>
-		<div class="has-text-centered mb-4" v-if="successMessage">
-			<message variant="success">
+		</Message>
+		<div
+			v-if="successMessage"
+			class="has-text-centered mb-4"
+		>
+			<Message variant="success">
 				{{ successMessage }}
-			</message>
-			<x-button :to="{ name: 'user.login' }" class="mt-4">
+			</Message>
+			<x-button
+				:to="{ name: 'user.login' }"
+				class="mt-4"
+			>
 				{{ $t('user.auth.login') }}
 			</x-button>
 		</div>
-		<form @submit.prevent="resetPassword" id="form" v-if="!successMessage">
+		<form
+			v-if="!successMessage"
+			id="form"
+			@submit.prevent="resetPassword"
+		>
 			<div class="field">
-				<label class="label" for="password">{{ $t('user.auth.password') }}</label>
-				<Password @submit="resetPassword" @update:modelValue="v => credentials.password = v"/>
+				<label
+					class="label"
+					for="password"
+				>{{ $t('user.auth.password') }}</label>
+				<Password
+					@submit="resetPassword"
+					@update:modelValue="v => credentials.password = v"
+				/>
 			</div>
 
 			<div class="field is-grouped">

@@ -1,99 +1,108 @@
 <template>
-	<dropdown>
+	<Dropdown>
 		<template #trigger="triggerProps">
-			<slot name="trigger" v-bind="triggerProps">
-				<BaseButton class="dropdown-trigger" @click="triggerProps.toggleOpen">
-					<icon icon="ellipsis-h" class="icon"/>
+			<slot
+				name="trigger"
+				v-bind="triggerProps"
+			>
+				<BaseButton
+					class="dropdown-trigger"
+					@click="triggerProps.toggleOpen"
+				>
+					<icon
+						icon="ellipsis-h"
+						class="icon"
+					/>
 				</BaseButton>
 			</slot>
 		</template>
 
 		<template v-if="isSavedFilter(project)">
-			<dropdown-item
+			<DropdownItem
 				:to="{ name: 'filter.settings.edit', params: { projectId: project.id } }"
 				icon="pen"
 			>
 				{{ $t('menu.edit') }}
-			</dropdown-item>
-			<dropdown-item
+			</DropdownItem>
+			<DropdownItem
 				:to="{ name: 'filter.settings.delete', params: { projectId: project.id } }"
 				icon="trash-alt"
 			>
 				{{ $t('misc.delete') }}
-			</dropdown-item>
+			</DropdownItem>
 		</template>
 
 		<template v-else-if="project.isArchived">
-			<dropdown-item
+			<DropdownItem
 				:to="{ name: 'project.settings.archive', params: { projectId: project.id } }"
 				icon="archive"
 			>
 				{{ $t('menu.unarchive') }}
-			</dropdown-item>
+			</DropdownItem>
 		</template>
 		<template v-else>
-			<dropdown-item
+			<DropdownItem
 				:to="{ name: 'project.settings.edit', params: { projectId: project.id } }"
 				icon="pen"
 			>
 				{{ $t('menu.edit') }}
-			</dropdown-item>
-			<dropdown-item
+			</DropdownItem>
+			<DropdownItem
 				v-if="backgroundsEnabled"
 				:to="{ name: 'project.settings.background', params: { projectId: project.id } }"
 				icon="image"
 			>
 				{{ $t('menu.setBackground') }}
-			</dropdown-item>
-			<dropdown-item
+			</DropdownItem>
+			<DropdownItem
 				:to="{ name: 'project.settings.share', params: { projectId: project.id } }"
 				icon="share-alt"
 			>
 				{{ $t('menu.share') }}
-			</dropdown-item>
-			<dropdown-item
+			</DropdownItem>
+			<DropdownItem
 				:to="{ name: 'project.settings.duplicate', params: { projectId: project.id } }"
 				icon="paste"
 			>
 				{{ $t('menu.duplicate') }}
-			</dropdown-item>
-			<dropdown-item
+			</DropdownItem>
+			<DropdownItem
 				:to="{ name: 'project.settings.archive', params: { projectId: project.id } }"
 				icon="archive"
 			>
 				{{ $t('menu.archive') }}
-			</dropdown-item>
+			</DropdownItem>
 			<Subscription
 				class="has-no-shadow"
 				:is-button="false"
 				entity="project"
 				:entity-id="project.id"
 				:model-value="project.subscription"
-				@update:model-value="setSubscriptionInStore"
 				type="dropdown"
+				@update:modelValue="setSubscriptionInStore"
 			/>
-			<dropdown-item
+			<DropdownItem
 				:to="{ name: 'project.settings.webhooks', params: { projectId: project.id } }"
 				icon="bolt"
 			>
 				{{ $t('project.webhooks.title') }}
-			</dropdown-item>
-			<dropdown-item
+			</DropdownItem>
+			<DropdownItem
 				v-if="level < 2"
 				:to="{ name: 'project.createFromParent', params: { parentProjectId: project.id } }"
 				icon="layer-group"
 			>
 				{{ $t('menu.createProject') }}
-			</dropdown-item>
-			<dropdown-item
+			</DropdownItem>
+			<DropdownItem
 				:to="{ name: 'project.settings.delete', params: { projectId: project.id } }"
 				icon="trash-alt"
 				class="has-text-danger"
 			>
 				{{ $t('menu.delete') }}
-			</dropdown-item>
+			</DropdownItem>
 		</template>
-	</dropdown>
+	</Dropdown>
 </template>
 
 <script setup lang="ts">

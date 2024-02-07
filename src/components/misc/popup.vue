@@ -1,14 +1,24 @@
 <template>
-	<slot name="trigger" :isOpen="open" :toggle="toggle" :close="close"></slot>
+	<slot
+		name="trigger"
+		:is-open="open"
+		:toggle="toggle"
+		:close="close"
+	/>
 	<div
+		ref="popup"
 		class="popup"
 		:class="{
 			'is-open': open,
 			'has-overflow': props.hasOverflow && open
 		}"
-		ref="popup"
 	>
-		<slot name="content" :isOpen="open" :toggle="toggle" :close="close"/>
+		<slot
+			name="content"
+			:is-open="open"
+			:toggle="toggle"
+			:close="close"
+		/>
 	</div>
 </template>
 

@@ -15,11 +15,20 @@
 			:class="{'is-visible': background}"
 			:style="{'background-image': background !== null ? `url(${background})` : undefined}"
 		/>
-		<span v-if="project.isArchived" class="is-archived" >{{ $t('project.archived') }}</span>
+		<span
+			v-if="project.isArchived"
+			class="is-archived"
+		>{{ $t('project.archived') }}</span>
 
-		<div class="project-title" aria-hidden="true">
-			<span v-if="project.id < -1" class="saved-filter-icon icon">
-				<icon icon="filter"/>
+		<div
+			class="project-title"
+			aria-hidden="true"
+		>
+			<span
+				v-if="project.id < -1"
+				class="saved-filter-icon icon"
+			>
+				<icon icon="filter" />
 			</span>
 			{{ project.title }}
 		</div>

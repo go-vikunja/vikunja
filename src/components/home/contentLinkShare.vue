@@ -6,16 +6,20 @@
 	>
 		<div class="container has-text-centered link-share-view">
 			<div class="column is-10 is-offset-1">
-				<Logo class="logo" v-if="logoVisible"/>
+				<Logo
+					v-if="logoVisible"
+					class="logo"
+				/>
 				<h1
 					:class="{'m-0': !logoVisible}"
 					:style="{ 'opacity': currentProject?.title === '' ? '0': '1' }"
-					class="title">
+					class="title"
+				>
 					{{ currentProject?.title === '' ? $t('misc.loading') : currentProject?.title }}
 				</h1>
 				<div class="box has-text-left view">
-					<router-view/>
-					<PoweredByLink/>
+					<router-view />
+					<PoweredByLink />
 				</div>
 			</div>
 		</div>

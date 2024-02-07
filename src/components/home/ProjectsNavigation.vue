@@ -2,10 +2,8 @@
 	<draggable
 		v-model="availableProjects"
 		animation="100"
-		ghostClass="ghost"
+		ghost-class="ghost"
 		group="projects"
-		@start="() => drag = true"
-		@end="saveProjectPosition"
 		handle=".handle"
 		tag="menu"
 		item-key="id"
@@ -19,6 +17,8 @@
 				{ 'dragging-disabled': !canEditOrder }
 			],
 		}"
+		@start="() => drag = true"
+		@end="saveProjectPosition"
 	>
 		<template #item="{element: project}">
 			<ProjectsNavigationItem

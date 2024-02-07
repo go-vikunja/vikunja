@@ -5,10 +5,10 @@
 			class="icon is-small"
 			:class="iconClass"
 		>
-			<Icon :icon="icon"/>
+			<Icon :icon="icon" />
 		</span>
 		<span>
-			<slot/>
+			<slot />
 		</span>
 	</BaseButton>
 </template>

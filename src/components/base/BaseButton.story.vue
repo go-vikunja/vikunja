@@ -21,10 +21,16 @@ const state = reactive({
 </script>
 
 <template>
-	<Story :setup-app="setupApp" :layout="{ type: 'grid', width: '200px' }">
+	<Story
+		:setup-app="setupApp"
+		:layout="{ type: 'grid', width: '200px' }"
+	>
 		<Variant title="custom">
 			<template #controls>
-				<HstCheckbox v-model="state.disabled" title="Disabled" />
+				<HstCheckbox
+					v-model="state.disabled"
+					title="Disabled"
+				/>
 			</template>
 			<BaseButton :disabled="state.disabled">
 				Hello!

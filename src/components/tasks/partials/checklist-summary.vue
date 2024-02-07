@@ -1,9 +1,29 @@
 <template>
-	<span v-if="checklist.total > 0" class="checklist-summary">
-		<svg width="12" height="12">
-			<circle stroke-width="2" fill="transparent" cx="50%" cy="50%" r="5"></circle>
-			<circle stroke-width="2" stroke-dasharray="31" :stroke-dashoffset="checklistCircleDone"
-					stroke-linecap="round" fill="transparent" cx="50%" cy="50%" r="5"></circle>
+	<span
+		v-if="checklist.total > 0"
+		class="checklist-summary"
+	>
+		<svg
+			width="12"
+			height="12"
+		>
+			<circle
+				stroke-width="2"
+				fill="transparent"
+				cx="50%"
+				cy="50%"
+				r="5"
+			/>
+			<circle
+				stroke-width="2"
+				stroke-dasharray="31"
+				:stroke-dashoffset="checklistCircleDone"
+				stroke-linecap="round"
+				fill="transparent"
+				cx="50%"
+				cy="50%"
+				r="5"
+			/>
 		</svg>
 		<span>{{ label }}</span>
 	</span>

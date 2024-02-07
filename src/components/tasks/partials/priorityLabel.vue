@@ -1,10 +1,14 @@
 <template>
 	<span
+		v-if="!done && (showAll || priority >= priorities.HIGH)"
 		:class="{'not-so-high': priority === priorities.HIGH, 'high-priority': priority >= priorities.HIGH}"
 		class="priority-label"
-		v-if="!done && (showAll || priority >= priorities.HIGH)">
-		<span class="icon" v-if="priority >= priorities.HIGH">
-			<icon icon="exclamation"/>
+	>
+		<span
+			v-if="priority >= priorities.HIGH"
+			class="icon"
+		>
+			<icon icon="exclamation" />
 		</span>
 		<span>
 			<template v-if="priority === priorities.UNSET">{{ $t('task.priority.unset') }}</template>
@@ -14,8 +18,11 @@
 			<template v-if="priority === priorities.URGENT">{{ $t('task.priority.urgent') }}</template>
 			<template v-if="priority === priorities.DO_NOW">{{ $t('task.priority.doNow') }}</template>
 		</span>
-		<span class="icon pr-0" v-if="priority === priorities.DO_NOW">
-			<icon icon="exclamation"/>
+		<span
+			v-if="priority === priorities.DO_NOW"
+			class="icon pr-0"
+		>
+			<icon icon="exclamation" />
 		</span>
 	</span>
 </template>

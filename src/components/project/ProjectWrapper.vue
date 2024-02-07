@@ -14,7 +14,7 @@
 					:title="$t('keyboardShortcuts.project.switchToListView')"
 					class="switch-view-button"
 					:class="{'is-active': viewName === 'project'}"
-					:to="{ name: 'project.list',   params: { projectId } }"
+					:to="{ name: 'project.list', params: { projectId } }"
 				>
 					{{ $t('project.list.title') }}
 				</BaseButton>
@@ -23,7 +23,7 @@
 					:title="$t('keyboardShortcuts.project.switchToGanttView')"
 					class="switch-view-button"
 					:class="{'is-active': viewName === 'gantt'}"
-					:to="{ name: 'project.gantt',  params: { projectId } }"
+					:to="{ name: 'project.gantt', params: { projectId } }"
 				>
 					{{ $t('project.gantt.title') }}
 				</BaseButton>
@@ -32,7 +32,7 @@
 					:title="$t('keyboardShortcuts.project.switchToTableView')"
 					class="switch-view-button"
 					:class="{'is-active': viewName === 'table'}"
-					:to="{ name: 'project.table',  params: { projectId } }"
+					:to="{ name: 'project.table', params: { projectId } }"
 				>
 					{{ $t('project.table.title') }}
 				</BaseButton>
@@ -49,12 +49,16 @@
 			<slot name="header" />
 		</div>
 		<CustomTransition name="fade">
-			<Message variant="warning" v-if="currentProject?.isArchived" class="mb-4">
+			<Message
+				v-if="currentProject?.isArchived"
+				variant="warning"
+				class="mb-4"
+			>
 				{{ $t('project.archivedMessage') }}
 			</Message>
 		</CustomTransition>
 
-		<slot v-if="loadedProjectId"/>
+		<slot v-if="loadedProjectId" />
 	</div>
 </template>
 
