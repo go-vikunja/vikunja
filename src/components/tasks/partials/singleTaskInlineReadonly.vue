@@ -182,9 +182,5 @@ const project = computed(() => projectStore.projects[task.projectId])
 		color: var(--grey-500);
 		width: auto;
 	}
-
-	.progress {
-		margin-bottom: 0;
-	}
 }
 </style>

@@ -35,7 +35,7 @@ defineProps({
 .progress-bar {
 	--progress-height: var(--size-normal, #{$size-normal});
 	--progress-bar-background-color: var(--border-light, #{$border-light});
-	--progress-value-background-color: var(--text, #{$text});
+	--progress-value-background-color: var(--grey-500, #{$text});
 	--progress-border-radius: var(--radius-rounded, #{$radius-rounded});
 	--progress-indeterminate-duration: 1.5s;
 
@@ -46,11 +46,10 @@ defineProps({
 	appearance: none;
 	border: none;
 	border-radius: var(--progress-border-radius);
-	display: block;
 	height: var(--progress-height);
 	overflow: hidden;
 	padding: 0;
-	width: 100%;
+	margin-bottom: 0;
 
 	&::-webkit-progress-bar {
 		background-color: var(--progress-bar-background-color);
@@ -153,7 +152,17 @@ defineProps({
 
 	&::-moz-progress-bar,
 	&::-webkit-progress-value {
-		background: var(--grey-500);
+		background: var(--progress-value-background-color);
+	}
+
+	width: 50px;
+	margin: 0 0.5rem 0 0;
+	flex: 3 1 auto;
+
+	@media screen and (max-width: $tablet) {
+		margin: 0.5rem 0 0 0;
+		order: 1;
+		width: 100%;
 	}
 }
 

@@ -43,6 +43,7 @@
 			<h3>{{ task.title }}</h3>
 
 			<ProgressBar
+				class="task-progress"
 				v-if="task.percentDone > 0"
 				:value="task.percentDone * 100"
 				is-small
@@ -189,11 +190,6 @@ $task-background: var(--white);
 		word-break: break-word;
 	}
 
-	.progress {
-		margin: 8px 0 0 0;
-		width: 100%;
-		height: 0.5rem;
-	}
 
 	.due-date {
 		float: right;
@@ -332,5 +328,11 @@ $task-background: var(--white);
 
 .kanban-card__done {
 	margin-right: .25rem;
+}
+
+.task-progress {
+	margin: 8px 0 0 0;
+	width: 100%;
+	height: 0.5rem;
 }
 </style>
