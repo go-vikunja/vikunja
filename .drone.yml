@@ -548,7 +548,7 @@ steps:
       branch: main
       commit: true
       commit_message: "[skip ci] Updated swagger docs"
-      remote: "ssh://git@kolaente.dev:9022/vikunja/api.git"
+      remote: "ssh://git@kolaente.dev:9022/vikunja/vikunja.git"
       ssh_key:
         from_secret: git_push_ssh_key
 
@@ -1288,6 +1288,6 @@ steps:
         frontend/src/i18n/lang/en.json: en.json
 ---
 kind: signature
-hmac: f7ebd61ac78fa0cce777914cf81c71be64016b4e5213de32546a612875084381
+hmac: 0783b49472a26f489f7dded1e31473996ba432f7155fc75409b4820f34a5cb0e
 
 ...
