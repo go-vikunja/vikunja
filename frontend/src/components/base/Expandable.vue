@@ -1,0 +1,182 @@
+<template>
+	<transition
+		name="expandable-slide"
+		@beforeEnter="beforeEnter"
+		@enter="enter"
+		@afterEnter="afterEnter"
+		@enterCancelled="enterCancelled"
+		@beforeLeave="beforeLeave"
+		@leave="leave"
+		@afterLeave="afterLeave"
+		@leaveCancelled="leaveCancelled"
+	>
+		<div
+			v-if="initialHeight"
+			class="expandable-initial-height"
+			:style="{ maxHeight: `${initialHeight}px` }"
+			:class="{ 'expandable-initial-height--expanded': open }"
+		>
+			<slot />
+		</div>
+		<div
+			v-else-if="open"
+			class="expandable"
+		>
+			<slot />
+		</div>
+	</transition>
+</template>
+
+<script setup lang="ts">
+// the logic of this component is loosly based on this article
+// https://gomakethings.com/how-to-add-transition-animations-to-vanilla-javascript-show-and-hide-methods/#putting-it-all-together
+
+import {computed, ref} from 'vue'
+import {getInheritedBackgroundColor} from '@/helpers/getInheritedBackgroundColor'
+
+const props = defineProps({
+  /** Whether the Expandable is open or not */
+  open: {
+    type: Boolean,
+    default: false,
+  },
+  /** If there is too much content, content will be cut of here. */
+  initialHeight: {
+    type: Number,
+    default: undefined,
+  },
+  /** The hidden content is indicated by a gradient. This is the color that the gradient fades to.
+   * Makes only sense if `initialHeight` is set. */
+  backgroundColor: {
+    type: String,
+  },
+})
+
+const wrapper = ref<HTMLElement | null>(null)
+
+const computedBackgroundColor = computed(() => {
+  if (wrapper.value === null) {
+    return props.backgroundColor || '#fff'
+  }
+  return props.backgroundColor || getInheritedBackgroundColor(wrapper.value)
+})
+
+/**
+ * Get the natural height of the element
+ */
+function getHeight(el: HTMLElement) {
+  const { display } = el.style // save display property
+  el.style.display = 'block' // Make it visible
+  const height = `${el.scrollHeight}px` // Get its height
+  el.style.display = display // revert to original display property
+  return height
+}
+
+/**
+ * force layout of element changes
+ * https://gist.github.com/paulirish/5d52fb081b3570c81e3a
+ */
+function forceLayout(el: HTMLElement) {
+  el.offsetTop
+}
+
+/* ######################################################################
+# The following functions are called by the js hooks of the transitions.
+# They follow the orignal hook order of the vue transition component
+# see: https://vuejs.org/guide/built-ins/transition.html#javascript-hooks
+###################################################################### */
+
+function beforeEnter(el: HTMLElement) {
+  el.style.height = '0'
+  el.style.willChange = 'height'
+  el.style.backfaceVisibility = 'hidden'
+  forceLayout(el)
+}
+
+// the done callback is optional when
+// used in combination with CSS
+function enter(el: HTMLElement) {
+  const height = getHeight(el) // Get the natural height
+  el.style.height = height // Update the height
+}
+
+function afterEnter(el: HTMLElement) {
+  removeHeight(el)
+}
+
+function enterCancelled(el: HTMLElement) {
+  removeHeight(el)
+}
+
+function beforeLeave(el: HTMLElement) {
+  // Give the element a height to change from
+  el.style.height = `${el.scrollHeight}px`
+  forceLayout(el)
+}
+
+function leave(el: HTMLElement) {
+  // Set the height back to 0
+  el.style.height = '0'
+	el.style.willChange = ''
+	el.style.backfaceVisibility = ''
+}
+
+function afterLeave(el: HTMLElement) {
+  removeHeight(el)
+}
+
+function leaveCancelled(el: HTMLElement) {
+  removeHeight(el)
+}
+
+function removeHeight(el: HTMLElement) {
+  el.style.height = ''
+}
+</script>
+
+<style lang="scss" scoped>
+$transition-time: 300ms;
+
+.expandable-slide-enter-active,
+.expandable-slide-leave-active {
+  transition:
+    opacity $transition-time ease-in-quint,
+    height $transition-time ease-in-out-quint;
+  overflow: hidden;
+}
+
+.expandable-slide-enter,
+.expandable-slide-leave-to {
+  opacity: 0;
+}
+
+.expandable-initial-height {
+  padding: 5px;
+  margin: -5px;
+  overflow: hidden;
+  position: relative;
+
+  &::after {
+    content: "";
+    display: block;
+    background-image: linear-gradient(
+      to bottom,
+      transparent,
+      ease-in-out
+      v-bind(computedBackgroundColor)
+    );
+    position: absolute;
+    height: 40px;
+    width: 100%;
+    bottom: 0;
+  }
+}
+
+.expandable-initial-height--expanded {
+  height: 100% !important;
+
+  &::after {
+    display: none;
+  }
+}
+</style>

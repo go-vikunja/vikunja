@@ -1,0 +1,105 @@
+.field.has-addons .button {
+  height: 2.5rem;
+  margin-left: 0 !important;
+}
+
+.field.has-addons .select select {
+  margin-right: 0;
+}
+
+.input,
+.textarea {
+  transition: all $transition;
+  box-shadow: none;
+
+  &.is-active,
+  &.is-focused,
+  &:active,
+  &:focus {
+    box-shadow: none;
+  }
+
+  @each $name, $pair in $colors {
+    $color: nth($pair, 1);
+    $color-invert: nth($pair, 2);
+
+    &.is-#{$name} {
+      &.is-active,
+      &.is-focused,
+      &:active,
+      &:focus,
+      &:focus:not(:active) {
+        border-color: $color;
+      }
+    }
+  }
+}
+
+.select:after {
+  margin-top: -0.575rem;
+}
+
+.select select {
+  $thickness: 1px;
+  border-width: $thickness;
+
+  &:not([multiple]) {
+    height: calc(2.25rem + #{$thickness});
+  }
+
+  &.is-active,
+  &.is-focused,
+  &:active,
+  &:focus,
+  &:focus:not(:active) {
+    box-shadow: none;
+  }
+}
+
+.field.has-addons .control .select select {
+  height: 100%;
+}
+
+.control.has-icons-left .icon,
+.control.has-icons-right .icon {
+  z-index: 4;
+}
+
+// Buttons icons
+.button .icon.is-small {
+  margin-right: 0.05rem !important;
+}
+
+// FIXME: used for
+// - the <h1> in heading.vue
+// - the <h2> in Kanban.vue
+// Contenteditable form
+.input.title {
+  font-size: 1.8rem;
+  font-family: $vikunja-font;
+  font-weight: 400 !important;
+  background: transparent;
+  border-color: transparent;
+  margin: 0 .3rem;
+  height: auto;
+  padding: .3rem;
+
+  &:focus {
+    background: $input-background-color;
+    border-color: $input-focus-border-color;
+  }
+
+  &.disabled {
+    &:focus, &:hover {
+      background: transparent !important;
+      border-color: transparent !important;
+      cursor: default !important;
+    }
+  }
+}
+
+h1, h2, h3 {
+  .input.title {
+    height: auto;
+  }
+}

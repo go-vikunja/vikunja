@@ -1,0 +1,22 @@
+:root {
+  --shadow-xs: 0 1px 3px hsla(var(--grey-500-hsl), .12),
+               0 1px 2px hsla(var(--grey-500-hsl), .24);
+  --shadow-sm: 0 3px 6px hsla(var(--grey-500-hsl), .12),
+               0 2px 4px hsla(var(--grey-500-hsl), .10);
+  --shadow-md: 0 10px 20px hsla(var(--grey-500-hsl), .12),
+               0 3px 6px hsla(var(--grey-500-hsl), .08);
+  --shadow-lg: 0 15px 25px hsla(var(--grey-500-hsl), .12),
+               0 5px 10px hsla(var(--grey-500-hsl), .05);
+
+  &.dark {
+    // Even darker shadows for dark mode
+    --shadow-xs: 0 1px 3px hsla(var(--grey-50-hsl), 0.4),
+                 0 1px 2px hsla(var(--grey-50-hsl), 0.8);
+    --shadow-sm: 0 3px 6px hsla(var(--grey-50-hsl), 0.8),
+                 0 2px 4px hsla(var(--grey-50-hsl), 0.6);
+    --shadow-md: 0 10px 20px hsla(var(--grey-50-hsl), 0.8),
+                 0 3px 6px hsla(var(--grey-50-hsl), 0.6);
+    --shadow-lg: 0 15px 25px hsla(var(--grey-50-hsl), 0.8),
+                 0 5px 10px hsla(var(--grey-50-hsl), 0.4);
+  }
+}

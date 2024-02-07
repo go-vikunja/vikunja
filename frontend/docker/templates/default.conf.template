@@ -1,0 +1,85 @@
+server {
+  listen      ${VIKUNJA_HTTP_PORT};
+  listen      [::]:${VIKUNJA_HTTP_PORT};
+  ## Needed when behind HAProxy with SSL termination + HTTP/2 support
+  listen      ${VIKUNJA_HTTP2_PORT}  default_server http2 proxy_protocol;
+  listen      [::]:${VIKUNJA_HTTP2_PORT} default_server http2 proxy_protocol;
+
+  server_name _;
+  expires     $expires;
+  root        /usr/share/nginx/html;
+  access_log  /dev/stdout ${VIKUNJA_LOG_FORMAT};
+  # security headers
+  add_header X-XSS-Protection        "1; mode=block" always;
+  add_header X-Content-Type-Options  "nosniff" always;
+  add_header Referrer-Policy         "no-referrer-when-downgrade" always;
+  add_header Content-Security-Policy "default-src 'self' http: https: ws: wss: data: blob: 'unsafe-inline'; frame-ancestors 'self';" always;
+  add_header Permissions-Policy      "interest-cohort=()" always;
+
+  # . files
+  location ~ /\.(?!well-known) {
+    deny all;
+  }
+
+  # assume that everything else is handled by the application router, by injecting the index.html.
+  location / {
+    autoindex off;
+    expires off;
+    add_header Cache-Control "public, max-age=0, s-maxage=0, must-revalidate" always;
+    try_files $uri /index.html =404;
+  }
+  
+  # Disable caching for sw
+  location = /sw.js {
+    autoindex off;
+    expires off;
+    add_header Cache-Control "public, max-age=0, s-maxage=0, must-revalidate" always;
+  }
+
+  # Disable caching for webmanifest
+  location = /manifest.webmanifest {
+    autoindex off;
+    expires off;
+    add_header Cache-Control "public, max-age=0, s-maxage=0, must-revalidate" always;
+  }
+
+  # favicon.ico
+  location = /favicon.ico {
+    log_not_found off;
+    access_log    off;
+  }
+
+  # robots.txt
+  location = /robots.txt {
+    log_not_found off;
+    access_log    off;
+    expires -1; # no-cache
+  }
+
+  location = /ready {
+    return 200 "";
+    access_log off;
+    expires -1; # no-cache
+  }
+
+  # all assets contain hash in filename, cache forever
+  location ^~ /assets/ {
+    add_header Cache-Control "public, max-age=31536000, s-maxage=31536000, immutable";
+    try_files $uri =404;
+  }
+
+  # all workbox scripts are compiled with hash in filename, cache forever3
+  location ^~ /workbox- {
+    add_header Cache-Control "public, max-age=31536000, s-maxage=31536000, immutable";
+    try_files $uri =404;
+  }
+
+  # assets, media
+  location ~* .(txt|webmanifest|css|js|mjs|map|svg|jpg|jpeg|png|ico|ttf|woff|woff2|wav)$ {
+    try_files $uri $uri/ =404;
+  }
+
+  error_page   500 502 503 504  /50x.html;
+  location = /50x.html { }
+
+}

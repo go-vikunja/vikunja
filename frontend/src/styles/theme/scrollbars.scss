@@ -1,0 +1,31 @@
+$scrollbar-height: 8px;
+$scrollbar-track-color: var(--grey-200);
+$scrollbar-thumb-color: var(--grey-300);
+$scrollbar-hover-color: var(--grey-500);
+
+// Chrome
+::-webkit-scrollbar {
+  width: $scrollbar-height;
+  height: $scrollbar-height;
+}
+
+::-webkit-scrollbar-track {
+  background: $scrollbar-track-color;
+  border-radius: .5rem;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: .5rem;
+  background: $scrollbar-thumb-color;
+  transition: all $transition;
+
+  &:hover {
+    background: $scrollbar-hover-color;
+  }
+}
+
+// Firefox
+* {
+  scrollbar-color: $scrollbar-thumb-color $scrollbar-track-color;
+  scrollbar-width: thin;
+}

@@ -1,0 +1,110 @@
+*,
+*:hover,
+*:active,
+*:focus {
+  outline: none;
+}
+
+:focus {
+  box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+}
+
+:focus:not(:focus-visible) {
+  outline: 0;
+}
+
+:focus-visible,
+:-moz-focusring {
+  box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+}
+
+:root {
+  // Bulma sets this to "scroll" which gives us a scrollbar even if there's no content to scroll
+  --body-overflow-y: auto;
+}
+
+body {
+  background: var(--site-background);
+  min-height: 100vh;
+ 
+  @media print {
+    background: #fff;
+  }
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: $vikunja-font;
+  font-weight: 400 !important;
+}
+
+// FIXME: these helpers should be mixins
+.has-no-border {
+  border: none !important;
+}
+
+.has-rounded-corners {
+  border-radius: $radius;
+}
+
+.has-overflow {
+  overflow: visible !important;
+}
+
+.has-horizontal-overflow {
+	overflow-y: hidden;
+	overflow-x: auto;
+}
+
+button.table {
+  margin-bottom: 0 !important;
+}
+
+.is-max-width-desktop {
+  width: 100%;
+  max-width: $desktop;
+  margin: 0 auto;
+}
+
+.has-no-shadow {
+  &,
+  &.is-hovered,
+  &:hover,
+  &.is-active,
+  &.is-focused,
+  &:active,
+  &:focus,
+  &:focus:not(:active) {
+    box-shadow: none !important;
+  }
+}
+
+.is-fullwidth {
+  width: 100%;
+}
+
+.color-bubble {
+  display: inline-block;
+  border-radius: 100%;
+}
+
+.is-strikethrough {
+  text-decoration: line-through;
+}
+
+.is-touch .handle {
+	opacity: 1 !important;
+}
+
+.dragging-disabled .handle {
+	opacity: 0 !important;
+}
+
+.box {
+  border: 1px solid var(--grey-200);
+  box-shadow: var(--shadow-sm);
+}

@@ -1,0 +1,14 @@
+{
+  "recommendations": [
+    "codezombiech.gitignore",
+    "dbaeumer.vscode-eslint",
+    "editorconfig.editorconfig",
+    "vue.volar",
+    "vue.vscode-typescript-vue-plugin",
+    "lokalise.i18n-ally",
+    "mgmcdermott.vscode-language-babel",
+    "mikestead.dotenv",
+    "Syler.sass-indented",
+    "zixuanchen.vitest-explorer"
+  ]
+}

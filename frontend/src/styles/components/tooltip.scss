@@ -1,0 +1,12 @@
+.v-popper--theme-tooltip .v-popper__inner {
+  padding: 5px 10px;
+  font-size: 0.8rem;	
+  background: var(--grey-900);
+  color: var(--white);
+  border-radius: 5px;
+}
+
+.dark .v-popper--theme-tooltip .v-popper__inner {
+  background: var(--white);
+  color: var(--grey-900);
+}

@@ -1,0 +1,27 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "include": ["env.d.ts", "src/**/*.d.ts", "src/**/*", "src/**/*.vue", "src/**/*.json"],
+  "exclude": ["src/**/__tests__/*"],
+  "compilerOptions": {
+    "composite": true,
+    "baseUrl": ".",
+    "lib": ["ESNext", "DOM", "WebWorker"],
+
+    "importHelpers": true,
+    "sourceMap": true,
+    "strictNullChecks": true,
+    
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": [
+      // https://github.com/ikenfin/vite-plugin-sentry#typescript
+      "vite-plugin-sentry/client"
+    ],
+    "ignoreDeprecations": "5.0"
+  },
+  "vueCompilerOptions": {
+    // "strictTemplates": true
+    "jsxTemplates": true
+  }
+}

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0">
+	<title>Vikunja</title>
+	<meta name="description" content="Vikunja (/vɪˈkuːnjə/) - The to-do app to organize your life.">
+	<meta name="theme-color" content="#1973ff"/>
+
+	<link rel="icon" href="/favicon.ico">
+	<link rel="apple-touch-icon" href="/images/icons/apple-touch-icon-180x180.png"/>
+	<!--__vite-plugin-inject-preload__-->
+</head>
+<body>
+<noscript>
+	<strong>We're sorry but Vikunja doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+</noscript>
+<div id="app"></div>
+<script type="module" src="/src/main.ts"></script>
+<script>
+	//
+	// This variable points the frontend to the api.
+	// It has to be the full url, including the last /api/v1 part and port.
+	// You can change this if your api is not reachable on the same port as the frontend.
+	window.API_URL = 'http://localhost:3456/api/v1'
+	// Enable error tracking with sentry. If this is set to true, will send anonymized data to 
+	// our sentry instance to notify us of potential problems.
+	window.SENTRY_ENABLED = false
+	window.SENTRY_DSN = 'https://85694a2d757547cbbc90cd4b55c5a18d@o1047380.ingest.sentry.io/6024480'
+	// If enabled, allows the user to nest projects infinitely, instead of the default 2 levels.
+	// This setting might change in the future or be removed completely.
+	window.PROJECT_INFINITE_NESTING_ENABLED = false
+	// Allow changing the logo and other icons based on various occasions throughout the year.
+	window.ALLOW_ICON_CHANGES = true
+	// Allow using a custom logo via external URL.
+	window.CUSTOM_LOGO_URL = ''
+</script>
+</body>
+</html>

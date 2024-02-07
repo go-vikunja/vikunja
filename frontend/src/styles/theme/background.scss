@@ -1,0 +1,59 @@
+.app-container.has-background,
+.link-share-container.has-background {
+  position: relative;
+
+  &, .app-container-background {
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  // FIXME: move to pagination component
+  .pagination-link:not(.is-current) {
+    background: var(--grey-100);
+  }
+
+  .box,
+  .card,
+  .switch-view,
+  .project-table .button,
+  .filter-container .button,
+  .search .button {
+    box-shadow: none;
+  }
+
+  .task-view {
+    border-radius: $radius;
+
+    @media screen and (min-width: $tablet) {
+      margin-inline: 1rem;
+    }
+  }
+
+  .kanban .tasks {
+    background: transparent;
+
+    .task {
+      border-radius: $radius !important;
+    }
+  }
+}
+
+.app-container-background {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  z-index: 0;
+}
+
+.background-fade-in {
+  opacity: 0;
+  transition: opacity $transition;
+  transition-delay: $transition-duration * 2; // To fake an appearing background
+
+  &.is-visible {
+    opacity: 1;
+  }
+}

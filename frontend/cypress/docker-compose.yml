@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  api:
+    image: vikunja/api:unstable
+    environment:
+      VIKUNJA_LOG_LEVEL: DEBUG
+      VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
+    ports:
+      - 3456:3456
+  cypress:
+    image: cypress/browsers:node18.12.0-chrome107
+    volumes:
+    - ..:/project
+    - $HOME/.cache:/home/node/.cache/
+    user: node
+    working_dir: /project
+    environment:
+      CYPRESS_API_URL: http://api:3456/api/v1
+      CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB

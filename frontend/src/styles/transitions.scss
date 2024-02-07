@@ -1,0 +1,19 @@
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity $transition-duration;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.width-enter-active,
+.width-leave-active {
+  transition: width $transition-duration;
+}
+
+.width-enter-from,
+.width-leave-to {
+  width: 0;
+}

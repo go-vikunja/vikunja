@@ -1,0 +1,89 @@
+<template>
+	<modal @close="close()">
+		<card
+			class="has-background-white keyboard-shortcuts"
+			:shadow="false"
+			:title="$t('keyboardShortcuts.title')"
+		>
+			<template
+				v-for="(s, i) in shortcuts"
+				:key="i"
+			>
+				<h3>{{ $t(s.title) }}</h3>
+
+				<Message
+					v-if="s.available"
+					class="mb-4"
+				>
+					{{
+						typeof s.available === 'undefined' ?
+							$t('keyboardShortcuts.allPages') :
+							(
+								s.available($route)
+									? $t('keyboardShortcuts.currentPageOnly')
+									: $t('keyboardShortcuts.somePagesOnly')
+							)
+					}}
+				</Message>
+
+				<dl class="shortcut-list">
+					<template
+						v-for="(sc, si) in s.shortcuts"
+						:key="si"
+					>
+						<dt class="shortcut-title">
+							{{ $t(sc.title) }}
+						</dt>
+						<Shortcut
+							is="dd"
+							class="shortcut-keys"
+							:keys="sc.keys"
+							:combination="sc.combination && $t(`keyboardShortcuts.${sc.combination}`)"
+						/>
+					</template>
+				</dl>
+			</template>
+		</card>
+	</modal>
+</template>
+
+<script lang="ts" setup>
+import {useBaseStore} from '@/stores/base'
+
+import Shortcut from '@/components/misc/shortcut.vue'
+import Message from '@/components/misc/message.vue'
+
+import {KEYBOARD_SHORTCUTS as shortcuts} from './shortcuts'
+
+function close() {
+	useBaseStore().setKeyboardShortcutsActive(false)
+}
+</script>
+
+<style scoped>
+.keyboard-shortcuts {
+	text-align: left;
+}
+
+.message:not(:last-child) {
+	margin-bottom: 1rem;
+}
+
+.message-body {
+	padding: .75rem;
+}
+
+.shortcut-list {
+	display: grid;
+	grid-template-columns: 2fr 1fr;
+}
+
+.shortcut-title {
+	margin-bottom: .5rem;
+}
+
+.shortcut-keys {
+	justify-content: end;
+	margin-bottom: .5rem;
+}
+</style>

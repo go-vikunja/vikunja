@@ -1,0 +1,41 @@
+//
+// IMPORTANT NOTE:
+//
+// The styles in this file and all imported styles should not
+// create CSS output when compiled!
+// Instead they should only define SCSS that gets compiled to nothing.
+//
+// The reason is that this file is prefixed in _every_ component style so that
+// the component has access to the variables, mixins, etc. that
+// are defined here.
+//
+
+$family-sans-serif: 'Open Sans', Helvetica, Arial, sans-serif;
+
+// the default values get overwritten by the definitions above
+@import "bulma-css-variables/sass/utilities/_all";
+
+// since $tablet is defined by bulma we can just define it after importing the utilities
+$mobile: math.div($tablet, 2);
+
+$vikunja-font: 'Quicksand', sans-serif;
+
+$pagination-current-border: var(--primary);
+$navbar-item-active-color: var(--primary);
+
+$site-background: var(--grey-100);
+
+$transition-duration: 150ms;
+$transition: $transition-duration ease;
+
+$button-height: 34px;
+$switch-view-height: 2.69rem;
+
+$navbar-height: 4rem;
+$navbar-width: 300px;
+$navbar-padding: 2rem;
+
+$vikunja-nav-color: var(--grey-700);
+$vikunja-nav-selected-width: 0.4rem;
+
+$close-button-min-space: 84px;

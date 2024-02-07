@@ -1,0 +1,48 @@
+// FIXME: These classes are used all over.
+// very hard to untangle
+// they have many overwrites at different positions
+.tasks {
+	text-align: left;
+
+	
+	@media screen and (max-width: $tablet) {
+		max-width: 100%;
+	}
+
+	&.short {
+		@media screen and (min-width: $tablet) {
+			max-width: 53vw;
+		}
+	}
+
+	&.noborder {
+		margin: 1rem -0.5rem;
+	}
+}
+
+// FIXME: seems only necessary for
+// - relatedTasks.vue
+// - singleTaskInProject.vue
+.is-menu-enabled .tasks .task {
+	span:not(.tag), a {
+		.tasktext,
+		&.tasktext {
+			@media screen and (max-width: $desktop) {
+				max-width: calc(100vw - 27px - 2rem - 1.5rem - 3rem - #{$navbar-width}); // 1.5rem is the padding of the tasks container, 3rem is the padding of .app-container
+			}
+
+			// Duplicated rule to have it work properly in at least some browsers
+			// This should be fine as the ui doesn't work in rare edge cases to begin with
+			@media screen and (max-width: calc(#{$desktop} + #{$navbar-width})) {
+				max-width: calc(100vw - 27px - 2rem - 1.5rem - 3rem - #{$navbar-width}); // 1.5rem is the padding of the tasks container, 3rem is the padding of .app-container
+			}
+		}
+	}
+}
+
+// FIXME: is only used where <edit-task> is used aswell:
+// - Project.vue
+// -> Move the <card> wrapper including this class definition inside <edit-task>
+.is-max-width-desktop .tasks .task {
+	max-width: $desktop;
+}

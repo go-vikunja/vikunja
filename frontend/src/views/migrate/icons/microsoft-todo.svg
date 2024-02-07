@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1007.9 821.8">
+  <defs>
+    <radialGradient id="c" cx="410.2" cy="853.3" r="85" gradientTransform="rotate(45 546.8 785.4)" gradientUnits="userSpaceOnUse">
+      <stop offset=".5" stop-opacity=".1"/>
+      <stop offset="1" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="e" cx="1051.1" cy="1265.9" r="85" gradientTransform="rotate(-135 769.6 767.5)" xlink:href="#c"/>
+    <radialGradient id="h" cx="27.6" cy="2001.4" r="85" gradientTransform="scale(1 -1) rotate(45 2979.2 860.2)" xlink:href="#c"/>
+    <linearGradient id="a" x1="700.8" y1="597" x2="749.8" y2="597" gradientTransform="matrix(.867 0 0 1.307 86.6 -142.3)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-opacity=".1"/>
+      <stop offset="1" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="f" x1="1880.8" y1="34.3" x2="1929.8" y2="34.3" gradientTransform="matrix(.867 0 0 -.796 -1446 767.1)" xlink:href="#a"/>
+    <linearGradient id="i" x1="308.4" y1="811.6" x2="919.3" y2="200.7" gradientTransform="rotate(-45 613.8 506.2)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2987e6"/>
+      <stop offset="1" stop-color="#58c1f5"/>
+    </linearGradient>
+    <mask id="b" x="317.1" y="651.8" width="170" height="205.2" maskUnits="userSpaceOnUse">
+      <path class="a" transform="rotate(45 546.8 845.5)" d="M367.7 871h85v85h-85z"/>
+    </mask>
+    <mask id="d" x="837.9" y="95.8" width="205.2" height="205.2" maskUnits="userSpaceOnUse">
+      <path class="a" transform="rotate(-135 932.9 246)" d="M876 260h170v85H876z"/>
+    </mask>
+    <mask id="g" x="-35.2" y="299.5" width="205.2" height="205.2" maskUnits="userSpaceOnUse">
+      <path class="a" transform="rotate(-45 -81.7 457.6)" d="M-22 463.7h170v85H-22z"/>
+    </mask>
+    <style>
+      .a{fill:#fff}
+    </style>
+  </defs>
+  <path transform="rotate(45 852.3 570)" style="fill:url(#a)" d="M694.4 269.8h42.5v736.5h-42.5z"/>
+  <g style="mask:url(#b)">
+    <circle cx="402.1" cy="736.8" r="85" style="fill:url(#c)"/>
+  </g>
+  <g style="mask:url(#d)">
+    <circle cx="922.9" cy="216" r="85" style="fill:url(#e)"/>
+  </g>
+  <path transform="rotate(135 226.7 680)" style="fill:url(#f)" d="M185.3 515.6h42.5v448.5h-42.5z"/>
+  <g style="mask:url(#g)">
+    <circle cx="85" cy="419.7" r="85" style="fill:url(#h)"/>
+  </g>
+  <rect x="164.4" y="320" width="288" height="576" rx="42.5" transform="rotate(-45 163.7 559.5)" style="fill:#195abd"/>
+  <rect x="469.8" y="74.2" width="288" height="864" rx="42.5" transform="rotate(45 750.5 438.2)" style="fill:url(#i)"/>
+</svg>

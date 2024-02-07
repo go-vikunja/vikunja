@@ -1,0 +1,945 @@
+<template>
+	<div
+		ref="tiptapInstanceRef"
+		class="tiptap"
+	>
+		<EditorToolbar
+			v-if="editor && isEditing"
+			:editor="editor"
+			:upload-callback="uploadCallback"
+		/>
+		<BubbleMenu
+			v-if="editor && isEditing"
+			:editor="editor"
+			class="editor-bubble__wrapper"
+		>
+			<BaseButton
+				v-tooltip="$t('input.editor.bold')"
+				class="editor-bubble__button"
+				:class="{ 'is-active': editor.isActive('bold') }"
+				@click="editor.chain().focus().toggleBold().run()"
+			>
+				<icon :icon="['fa', 'fa-bold']" />
+			</BaseButton>
+			<BaseButton
+				v-tooltip="$t('input.editor.italic')"
+				class="editor-bubble__button"
+				:class="{ 'is-active': editor.isActive('italic') }"
+				@click="editor.chain().focus().toggleItalic().run()"
+			>
+				<icon :icon="['fa', 'fa-italic']" />
+			</BaseButton>
+			<BaseButton
+				v-tooltip="$t('input.editor.underline')"
+				class="editor-bubble__button"
+				:class="{ 'is-active': editor.isActive('underline') }"
+				@click="editor.chain().focus().toggleUnderline().run()"
+			>
+				<icon :icon="['fa', 'fa-underline']" />
+			</BaseButton>
+			<BaseButton
+				v-tooltip="$t('input.editor.strikethrough')"
+				class="editor-bubble__button"
+				:class="{ 'is-active': editor.isActive('strike') }"
+				@click="editor.chain().focus().toggleStrike().run()"
+			>
+				<icon :icon="['fa', 'fa-strikethrough']" />
+			</BaseButton>
+			<BaseButton
+				v-tooltip="$t('input.editor.code')"
+				class="editor-bubble__button"
+				:class="{ 'is-active': editor.isActive('code') }"
+				@click="editor.chain().focus().toggleCode().run()"
+			>
+				<icon :icon="['fa', 'fa-code']" />
+			</BaseButton>
+			<BaseButton
+				v-tooltip="$t('input.editor.link')"
+				class="editor-bubble__button"
+				:class="{ 'is-active': editor.isActive('link') }"
+				@click="setLink"
+			>
+				<icon :icon="['fa', 'fa-link']" />
+			</BaseButton>
+		</BubbleMenu>
+
+		<EditorContent
+			class="tiptap__editor"
+			:class="{'tiptap__editor-is-edit-enabled': isEditing}"
+			:editor="editor"
+			@click="focusIfEditing()"
+		/>
+
+		<input
+			v-if="isEditing"
+			id="tiptap__image-upload"
+			ref="uploadInputRef"
+			type="file"
+			class="is-hidden"
+			@change="addImage"
+		>
+
+		<ul
+			v-if="bottomActions.length === 0 && !isEditing && isEditEnabled"
+			class="tiptap__editor-actions d-print-none"
+		>
+			<li>
+				<BaseButton
+					class="done-edit"
+					@click="setEdit"
+				>
+					{{ $t('input.editor.edit') }}
+				</BaseButton>
+			</li>
+		</ul>
+		<ul
+			v-if="bottomActions.length > 0"
+			class="tiptap__editor-actions d-print-none"
+		>
+			<li v-if="isEditing && showSave">
+				<BaseButton
+					class="done-edit"
+					@click="bubbleSave"
+				>
+					{{ $t('misc.save') }}
+				</BaseButton>
+			</li>
+			<li v-if="!isEditing">
+				<BaseButton
+					class="done-edit"
+					@click="setEdit"
+				>
+					{{ $t('input.editor.edit') }}
+				</BaseButton>
+			</li>
+			<li
+				v-for="(action, k) in bottomActions"
+				:key="k"
+			>
+				<BaseButton @click="action.action">
+					{{ action.title }}
+				</BaseButton>
+			</li>
+		</ul>
+		<XButton
+			v-else-if="isEditing && showSave"
+			v-cy="'saveEditor'"
+			class="mt-4"
+			variant="secondary"
+			:shadow="false"
+			:disabled="!contentHasChanged"
+			@click="bubbleSave"
+		>
+			{{ $t('misc.save') }}
+		</XButton>
+	</div>
+</template>
+
+<script setup lang="ts">
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue'
+
+import EditorToolbar from './EditorToolbar.vue'
+
+import Link from '@tiptap/extension-link'
+
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import Table from '@tiptap/extension-table'
+import TableCell from '@tiptap/extension-table-cell'
+import TableHeader from '@tiptap/extension-table-header'
+import TableRow from '@tiptap/extension-table-row'
+import Typography from '@tiptap/extension-typography'
+import Image from '@tiptap/extension-image'
+import Underline from '@tiptap/extension-underline'
+
+import TaskItem from '@tiptap/extension-task-item'
+import TaskList from '@tiptap/extension-task-list'
+
+import {Blockquote} from '@tiptap/extension-blockquote'
+import {Bold} from '@tiptap/extension-bold'
+import {BulletList} from '@tiptap/extension-bullet-list'
+import {Code} from '@tiptap/extension-code'
+import {Document} from '@tiptap/extension-document'
+import {Dropcursor} from '@tiptap/extension-dropcursor'
+import {Gapcursor} from '@tiptap/extension-gapcursor'
+import {HardBreak} from '@tiptap/extension-hard-break'
+import {Heading} from '@tiptap/extension-heading'
+import {History} from '@tiptap/extension-history'
+import {HorizontalRule} from '@tiptap/extension-horizontal-rule'
+import {Italic} from '@tiptap/extension-italic'
+import {ListItem} from '@tiptap/extension-list-item'
+import {OrderedList} from '@tiptap/extension-ordered-list'
+import {Paragraph} from '@tiptap/extension-paragraph'
+import {Strike} from '@tiptap/extension-strike'
+import {Text} from '@tiptap/extension-text'
+import {BubbleMenu, EditorContent, useEditor} from '@tiptap/vue-3'
+import {Node} from '@tiptap/pm/model'
+
+import Commands from './commands'
+import suggestionSetup from './suggestion'
+
+import {lowlight} from 'lowlight'
+
+import type {BottomAction, UploadCallback} from './types'
+import type {ITask} from '@/modelTypes/ITask'
+import type {IAttachment} from '@/modelTypes/IAttachment'
+import AttachmentModel from '@/models/attachment'
+import AttachmentService from '@/services/attachment'
+import {useI18n} from 'vue-i18n'
+import BaseButton from '@/components/base/BaseButton.vue'
+import XButton from '@/components/input/button.vue'
+import {Placeholder} from '@tiptap/extension-placeholder'
+import {eventToHotkeyString} from '@github/hotkey'
+import {mergeAttributes} from '@tiptap/core'
+import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
+import inputPrompt from '@/helpers/inputPrompt'
+import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
+
+const {
+	modelValue,
+	uploadCallback,
+	isEditEnabled = true,
+	bottomActions = [],
+	showSave = false,
+	placeholder = '',
+	editShortcut = '',
+} = defineProps<{
+	modelValue: string,
+	uploadCallback?: UploadCallback,
+	isEditEnabled?: boolean,
+	bottomActions?: BottomAction[],
+	showSave?: boolean,
+	placeholder?: string,
+	editShortcut?: string,
+}>()
+
+const emit = defineEmits(['update:modelValue', 'save'])
+
+const tiptapInstanceRef = ref<HTMLInputElement | null>(null)
+
+const {t} = useI18n()
+
+const CustomTableCell = TableCell.extend({
+	addAttributes() {
+		return {
+			// extend the existing attributes …
+			...this.parent?.(),
+
+			// and add a new one …
+			backgroundColor: {
+				default: null,
+				parseHTML: (element: HTMLElement) => element.getAttribute('data-background-color'),
+				renderHTML: (attributes) => {
+					return {
+						'data-background-color': attributes.backgroundColor,
+						style: `background-color: ${attributes.backgroundColor}`,
+					}
+				},
+			},
+		}
+	},
+})
+
+type CacheKey = `${ITask['id']}-${IAttachment['id']}`
+const loadedAttachments = ref<{
+	[key: CacheKey]: string
+}>({})
+
+const CustomImage = Image.extend({
+	addAttributes() {
+		return {
+			src: {
+				default: null,
+			},
+			alt: {
+				default: null,
+			},
+			title: {
+				default: null,
+			},
+			id: {
+				default: null,
+			},
+			'data-src': {
+				default: null,
+			},
+		}
+	},
+	renderHTML({HTMLAttributes}) {
+		if (HTMLAttributes.src?.startsWith(window.API_URL) || HTMLAttributes['data-src']?.startsWith(window.API_URL)) {
+			const imageUrl = HTMLAttributes['data-src'] ?? HTMLAttributes.src
+
+			// The url is something like /tasks/<id>/attachments/<id>
+			const parts = imageUrl.slice(window.API_URL.length + 1).split('/')
+			const taskId = Number(parts[1])
+			const attachmentId = Number(parts[3])
+			const cacheKey: CacheKey = `${taskId}-${attachmentId}`
+			const id = 'tiptap-image-' + cacheKey
+
+			nextTick(async () => {
+
+				const img = document.getElementById(id)
+
+				if (!img) return
+
+				if (typeof loadedAttachments.value[cacheKey] === 'undefined') {
+
+					const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
+
+					const attachmentService = new AttachmentService()
+					loadedAttachments.value[cacheKey] = await attachmentService.getBlobUrl(attachment)
+				}
+
+				img.src = loadedAttachments.value[cacheKey]
+			})
+
+			return ['img', mergeAttributes(this.options.HTMLAttributes, {
+				'data-src': imageUrl,
+				src: '#',
+				alt: HTMLAttributes.alt,
+				title: HTMLAttributes.title,
+				id,
+			})]
+		}
+
+		return ['img', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)]
+	},
+})
+
+type Mode = 'edit' | 'preview'
+
+const internalMode = ref<Mode>('preview')
+const isEditing = computed(() => internalMode.value === 'edit' && isEditEnabled)
+const contentHasChanged = ref<boolean>(false)
+
+watch(
+	() => internalMode.value,
+	mode => {
+		if (mode === 'preview') {
+			contentHasChanged.value = false
+		}
+	},
+)
+
+const editor = useEditor({
+	// eslint-disable-next-line vue/no-ref-object-destructure
+	editable: isEditing.value,
+	extensions: [
+		// Starterkit:
+		Blockquote,
+		Bold,
+		BulletList,
+		Code,
+		CodeBlockLowlight.configure({
+			lowlight,
+		}),
+		Document,
+		Dropcursor,
+		Gapcursor,
+		HardBreak.extend({
+			addKeyboardShortcuts() {
+				return {
+					'Mod-Enter': () => {
+						if (contentHasChanged.value) {
+							bubbleSave()
+						}
+					},
+				}
+			},
+		}),
+		Heading,
+		History,
+		HorizontalRule,
+		Italic,
+		ListItem,
+		OrderedList,
+		Paragraph,
+		Strike,
+		Text,
+
+		Placeholder.configure({
+			placeholder: ({editor}) => {
+				if (!isEditing.value) {
+					return ''
+				}
+
+				if (editor.getText() !== '' && !editor.isFocused) {
+					return ''
+				}
+
+				return placeholder !== ''
+					? placeholder
+					: t('input.editor.placeholder')
+			},
+		}),
+		Typography,
+		Underline,
+		Link.configure({
+			openOnClick: true,
+			validate: (href: string) => /^https?:\/\//.test(href),
+		}),
+		Table.configure({
+			resizable: true,
+		}),
+		TableRow,
+		TableHeader,
+		// Custom TableCell with backgroundColor attribute
+		CustomTableCell,
+
+		CustomImage,
+
+		TaskList,
+		TaskItem.configure({
+			nested: true,
+			onReadOnlyChecked: (node: Node, checked: boolean): boolean => {
+				if (!isEditEnabled) {
+					return false
+				}
+
+				// The following is a workaround for this bug:
+				// https://github.com/ueberdosis/tiptap/issues/4521
+				// https://github.com/ueberdosis/tiptap/issues/3676
+
+				editor.value!.state.doc.descendants((subnode, pos) => {
+					if (node.eq(subnode)) {
+						const {tr} = editor.value!.state
+						tr.setNodeMarkup(pos, undefined, {
+							...node.attrs,
+							checked,
+						})
+						editor.value!.view.dispatch(tr)
+						bubbleSave()
+					}
+				})
+
+
+				return true
+			},
+		}),
+
+		Commands.configure({
+			suggestion: suggestionSetup(t),
+		}),
+		BubbleMenu,
+	],
+	onUpdate: () => {
+		bubbleNow()
+	},
+})
+
+watch(
+	() => isEditing.value,
+	() => {
+		editor.value?.setEditable(isEditing.value)
+	},
+	{immediate: true},
+)
+
+watch(
+	() => modelValue,
+	value => {
+		if (!editor?.value) return
+
+		if (editor.value.getHTML() === value) {
+			return
+		}
+
+		setModeAndValue(value)
+	},
+	{immediate: true},
+)
+
+function bubbleNow() {
+	if (editor.value?.getHTML() === modelValue) {
+		return
+	}
+
+	contentHasChanged.value = true
+	emit('update:modelValue', editor.value?.getHTML())
+}
+
+function bubbleSave() {
+	bubbleNow()
+	emit('save', editor.value?.getHTML())
+	if (isEditing.value) {
+		internalMode.value = 'preview'
+	}
+}
+
+function setEdit(focus: boolean = true) {
+	internalMode.value = 'edit'
+	if (focus) {
+		editor.value?.commands.focus()
+	}
+}
+
+onBeforeUnmount(() => editor.value?.destroy())
+
+const uploadInputRef = ref<HTMLInputElement | null>(null)
+
+function uploadAndInsertFiles(files: File[] | FileList) {
+	uploadCallback(files).then(urls => {
+		urls?.forEach(url => {
+			editor.value
+				?.chain()
+				.focus()
+				.setImage({src: url})
+				.run()
+		})
+		bubbleSave()
+	})
+}
+
+async function addImage(event) {
+
+	if (typeof uploadCallback !== 'undefined') {
+		const files = uploadInputRef.value?.files
+
+		if (!files || files.length === 0) {
+			return
+		}
+
+		uploadAndInsertFiles(files)
+
+		return
+	}
+
+	const url = await inputPrompt(event.target.getBoundingClientRect())
+
+	if (url) {
+		editor.value?.chain().focus().setImage({src: url}).run()
+		bubbleSave()
+	}
+}
+
+function setLink(event) {
+	setLinkInEditor(event.target.getBoundingClientRect(), editor.value)
+}
+
+onMounted(async () => {
+	if (editShortcut !== '') {
+		document.addEventListener('keydown', setFocusToEditor)
+	}
+
+	await nextTick()
+
+	const input = tiptapInstanceRef.value?.querySelectorAll('.tiptap__editor')[0]?.children[0]
+	input?.addEventListener('paste', handleImagePaste)
+
+	setModeAndValue(modelValue)
+})
+
+onBeforeUnmount(() => {
+	nextTick(() => {
+		const input = tiptapInstanceRef.value?.querySelectorAll('.tiptap__editor')[0]?.children[0]
+		input?.removeEventListener('paste', handleImagePaste)
+	})
+	if (editShortcut !== '') {
+		document.removeEventListener('keydown', setFocusToEditor)
+	}
+})
+
+function setModeAndValue(value: string) {
+	internalMode.value = isEditorContentEmpty(value) ? 'edit' : 'preview'
+	editor.value?.commands.setContent(value, false)
+}
+
+function handleImagePaste(event) {
+	if (event?.clipboardData?.items?.length === 0) {
+		return
+	}
+
+	event.preventDefault()
+
+	const image = event.clipboardData.items[0]
+	if (image.kind === 'file' && image.type.startsWith('image/')) {
+		uploadAndInsertFiles([image.getAsFile()])
+	}
+}
+
+// See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
+function setFocusToEditor(event) {
+	const hotkeyString = eventToHotkeyString(event)
+	if (!hotkeyString) return
+	if (hotkeyString !== editShortcut ||
+		event.target.tagName.toLowerCase() === 'input' ||
+		event.target.tagName.toLowerCase() === 'textarea' ||
+		event.target.contentEditable === 'true') {
+		return
+	}
+
+	event.preventDefault()
+
+	if (!isEditing.value && isEditEnabled) {
+		internalMode.value = 'edit'
+	}
+
+	editor.value?.commands.focus()
+}
+
+function focusIfEditing() {
+	if (isEditing.value) {
+		editor.value?.commands.focus()
+	}
+}
+
+function clickTasklistCheckbox(event) {
+	event.stopImmediatePropagation()
+
+	if (event.target.localName !== 'p') {
+		return
+	}
+
+	event.target.parentNode.parentNode.firstChild.click()
+}
+
+watch(
+	() => isEditing.value,
+	editing => {
+		nextTick(() => {
+			const checkboxes = tiptapInstanceRef.value?.querySelectorAll('[data-checked]')
+			if (typeof checkboxes === 'undefined' || checkboxes.length === 0) {
+				return
+			}
+
+			if (editing) {
+				checkboxes.forEach(check => {
+					if (check.children.length < 2) {
+						return
+					}
+
+					// We assume the first child contains the label element with the checkbox and the second child the actual label
+					// When the actual label is clicked, we forward that click to the checkbox.
+					check.children[1].removeEventListener('click', clickTasklistCheckbox)
+				})
+
+				return
+			}
+
+			checkboxes.forEach(check => {
+				if (check.children.length < 2) {
+					return
+				}
+
+				// We assume the first child contains the label element with the checkbox and the second child the actual label
+				// When the actual label is clicked, we forward that click to the checkbox.
+				check.children[1].addEventListener('click', clickTasklistCheckbox)
+			})
+		})
+	},
+	{immediate: true},
+)
+</script>
+
+<style lang="scss">
+.tiptap__editor {
+	&.tiptap__editor-is-edit-enabled {
+		min-height: 10rem;
+
+		.ProseMirror {
+			padding: .5rem;
+		}
+
+		&:focus-within, &:focus {
+			box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+		}
+
+		ul[data-type='taskList'] li > div {
+			cursor: text;
+		}
+	}
+
+	transition: box-shadow $transition;
+	border-radius: $radius;
+}
+
+.tiptap p::before {
+	content: attr(data-placeholder);
+	color: var(--grey-400);
+	pointer-events: none;
+	height: 0;
+	float: left;
+}
+
+// Basic editor styles
+.ProseMirror {
+	padding: .5rem .5rem .5rem 0;
+
+	&:focus-within, &:focus {
+		box-shadow: none;
+	}
+
+	> * + * {
+		margin-top: 0.75em;
+	}
+
+	ul,
+	ol {
+		padding: 0 1rem;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		line-height: 1.1;
+	}
+
+	code {
+		background-color: var(--grey-200);
+		color: var(--grey-700);
+	}
+
+	pre {
+		background: var(--grey-200);
+		color: var(--grey-700);
+		font-family: 'JetBrainsMono', monospace;
+		padding: 0.75rem 1rem;
+		border-radius: $radius;
+
+		code {
+			color: inherit;
+			padding: 0;
+			background: none;
+			font-size: 0.8rem;
+		}
+
+		.hljs-comment,
+		.hljs-quote {
+			color: var(--grey-500);
+		}
+
+		.hljs-variable,
+		.hljs-template-variable,
+		.hljs-attribute,
+		.hljs-tag,
+		.hljs-name,
+		.hljs-regexp,
+		.hljs-link,
+		.hljs-name,
+		.hljs-selector-id,
+		.hljs-selector-class {
+			color: var(--code-variable);
+		}
+
+		.hljs-number,
+		.hljs-meta,
+		.hljs-built_in,
+		.hljs-builtin-name,
+		.hljs-literal,
+		.hljs-type,
+		.hljs-params {
+			color: var(--code-literal);
+		}
+
+		.hljs-string,
+		.hljs-symbol,
+		.hljs-bullet {
+			color: var(--code-symbol);
+		}
+
+		.hljs-title,
+		.hljs-section {
+			color: var(--code-section);
+		}
+
+		.hljs-keyword,
+		.hljs-selector-tag {
+			color: var(--code-keyword);
+		}
+
+		.hljs-emphasis {
+			font-style: italic;
+		}
+
+		.hljs-strong {
+			font-weight: 700;
+		}
+	}
+
+	img {
+		max-width: 100%;
+		height: auto;
+
+		&.ProseMirror-selectednode {
+			outline: 3px solid var(--primary);
+		}
+	}
+
+	blockquote {
+		padding-left: 1rem;
+		border-left: 2px solid rgba(#0d0d0d, 0.1);
+	}
+
+	hr {
+		border: none;
+		border-top: 2px solid rgba(#0d0d0d, 0.1);
+		margin: 2rem 0;
+	}
+}
+
+.ProseMirror {
+	/* Table-specific styling */
+	table {
+		border-collapse: collapse;
+		table-layout: fixed;
+		width: 100%;
+		margin: 0;
+		overflow: hidden;
+
+		td,
+		th {
+			min-width: 1em;
+			border: 2px solid #ced4da;
+			padding: 3px 5px;
+			vertical-align: top;
+			box-sizing: border-box;
+			position: relative;
+
+			> * {
+				margin-bottom: 0;
+			}
+		}
+
+		th {
+			font-weight: bold;
+			text-align: left;
+			background-color: #f1f3f5;
+		}
+
+		.selectedCell:after {
+			z-index: 2;
+			position: absolute;
+			content: '';
+			left: 0;
+			right: 0;
+			top: 0;
+			bottom: 0;
+			background: rgba(200, 200, 255, 0.4);
+			pointer-events: none;
+		}
+
+		.column-resize-handle {
+			position: absolute;
+			right: -2px;
+			top: 0;
+			bottom: -2px;
+			width: 4px;
+			background-color: #adf;
+			pointer-events: none;
+		}
+
+		p {
+			margin: 0;
+		}
+	}
+
+	// Lists
+	ul {
+		margin-left: .5rem;
+		margin-top: 0 !important;
+
+		li {
+			margin-top: 0;
+		}
+
+		p {
+			margin-bottom: 0 !important;
+		}
+	}
+}
+
+.tableWrapper {
+	overflow-x: auto;
+}
+
+.resize-cursor {
+	cursor: ew-resize;
+	cursor: col-resize;
+}
+
+// tasklist
+ul[data-type='taskList'] {
+	list-style: none;
+	padding: 0;
+	margin-left: 0;
+
+	li {
+		display: flex;
+
+		> label {
+			flex: 0 0 auto;
+			margin-right: 0.5rem;
+			user-select: none;
+		}
+
+		> div {
+			flex: 1 1 auto;
+			cursor: pointer;
+		}
+	}
+
+	input[type='checkbox'] {
+		cursor: pointer;
+	}
+}
+
+.editor-bubble__wrapper {
+	background: var(--white);
+	border-radius: $radius;
+	border: 1px solid var(--grey-200);
+	box-shadow: var(--shadow-md);
+	display: flex;
+	overflow: hidden;
+}
+
+.editor-bubble__button {
+	color: var(--grey-700);
+	transition: all $transition;
+	background: transparent;
+
+	svg {
+		box-sizing: border-box;
+		display: block;
+		width: 1rem;
+		height: 1rem;
+		padding: .5rem;
+		margin: 0;
+	}
+
+	&:hover {
+		background: var(--grey-200);
+	}
+}
+
+ul.tiptap__editor-actions {
+	font-size: .8rem;
+	margin: 0;
+
+	li {
+		display: inline-block;
+
+		&::after {
+			content: '·';
+			padding: 0 .25rem;
+		}
+
+		&:last-child:after {
+			content: '';
+		}
+	}
+
+	&, a {
+		color: var(--grey-500);
+
+		&.done-edit {
+			color: var(--primary);
+		}
+	}
+
+	a:hover {
+		text-decoration: underline;
+	}
+}
+</style>

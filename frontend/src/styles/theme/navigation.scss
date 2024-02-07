@@ -1,0 +1,140 @@
+// these are general menu styles
+// should be in own components
+.menu {
+  .menu-list .list-menu-link,
+  .menu-list a {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+
+    .color-bubble {
+      height: 12px;
+      flex: 0 0 12px;
+      opacity: 1;
+      margin: 0 .5rem 0 .25rem;
+    }
+  }
+
+  .menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    
+    &.other-menu-items li,
+    li > div {
+      height: 44px;
+      display: flex;
+      align-items: center;
+
+      &:hover {
+        background: var(--white);
+      }
+    }
+
+    li > div {
+      .menu-list-dropdown {
+        opacity: 1;
+        transition: $transition;
+      }
+
+      @media(hover: hover) and (pointer: fine) {
+        .menu-list-dropdown {
+          opacity: 0;
+        }
+
+        &:hover .menu-list-dropdown {
+          opacity: 1;
+        }
+      }
+    }
+
+    li > menu {
+      margin: 0 0 0 var(--menu-nested-list-margin);
+    }
+
+    .menu-item-icon {
+      color: var(--grey-400);
+    }
+
+    .menu-list-dropdown-trigger {
+      display: flex;
+      padding: 0.5rem;
+    }
+
+    .flip-list-move {
+      transition: transform $transition-duration;
+    }
+
+    .ghost {
+      background: var(--grey-200);
+
+      * {
+        opacity: 0;
+      }
+    }
+
+    a:hover {
+      background: transparent;
+    }
+
+    .list-menu-link,
+    li, li > div {
+      .collapse-project-button {
+        padding: .5rem .25rem .5rem .5rem;
+
+        svg {
+          transition: all $transition;
+          color: var(--grey-400);
+        }
+      }
+
+      .collapse-project-button-placeholder {
+        width: 1.625rem;
+        flex-shrink: 0;
+      }
+
+      > a {
+        color: $vikunja-nav-color;
+        padding: .75rem .5rem .75rem .25rem;
+        transition: all 0.2s ease;
+
+        border-radius: 0;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        width: 100%;
+
+        &.router-link-exact-active {
+          color: var(--primary);
+        }
+
+        .icon {
+          height: 1rem;
+          vertical-align: middle;
+          padding-right: 0.5rem;
+        }
+
+        &.router-link-exact-active .icon:not(.handle) {
+          color: var(--primary);
+        }
+
+        .handle {
+          opacity: 0;
+          transition: opacity $transition;
+        }
+
+        &:hover .handle {
+          opacity: 1;
+        }
+      }
+    }
+
+    &:not(.dragging-disabled) .handle {
+      cursor: grab;
+    }
+    
+    menu {
+      border-left: 0;
+    }
+  }
+}
