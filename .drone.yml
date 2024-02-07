@@ -387,6 +387,7 @@ steps:
       CYPRESS_CACHE_FOLDER: .cache/cypress
       PUPPETEER_SKIP_DOWNLOAD: true
     commands:
+      - cd frontend
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000
   #    depends_on:
@@ -398,6 +399,7 @@ steps:
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
+      - cd frontend
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run lint
     depends_on:
@@ -409,6 +411,7 @@ steps:
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
+      - cd frontend
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run build
     depends_on:
@@ -418,6 +421,7 @@ steps:
     image: node:20.11.0-alpine
     pull: always
     commands:
+      - cd frontend
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run test:unit
     depends_on:
@@ -430,6 +434,7 @@ steps:
     environment:
       PNPM_CACHE_FOLDER: .cache/pnpm
     commands:
+      - cd frontend
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run typecheck
     depends_on:
@@ -447,6 +452,7 @@ steps:
       CYPRESS_RECORD_KEY:
         from_secret: cypress_project_key
     commands:
+      - cd frontend
       - sed -i 's/localhost/api/g' dist/index.html
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm cypress install
@@ -486,6 +492,7 @@ steps:
       GITEA_TOKEN:
         from_secret: gitea_token
     commands:
+      - cd frontend
       - cp -r dist dist-preview
       # Override the default api url used for preview
       - sed -i 's|http://localhost:3456|https://try.vikunja.io|g' dist-preview/index.html
@@ -988,6 +995,7 @@ steps:
       SENTRY_PROJECT: frontend-oss
       PUPPETEER_SKIP_DOWNLOAD: true
     commands:
+      - cd frontend
       - apk add git
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000 --frozen-lockfile
@@ -1002,6 +1010,7 @@ steps:
     image: kolaente/zip
     pull: always
     commands:
+      - cd frontend
       - cp src/version.json dist
       - cd dist
       - zip -r ../vikunja-frontend-unstable.zip *
@@ -1020,7 +1029,7 @@ steps:
       endpoint: https://s3.fr-par.scw.cloud
       region: fr-par
       path_style: true
-      source: vikunja-frontend-unstable.zip
+      source: frontend/vikunja-frontend-unstable.zip
       target: /frontend/
     depends_on: [ static ]
 
@@ -1070,6 +1079,7 @@ steps:
       SENTRY_ORG: vikunja
       SENTRY_PROJECT: frontend-oss
     commands:
+      - cd frontend
       - apk add git
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000 --frozen-lockfile
@@ -1084,6 +1094,7 @@ steps:
     image: kolaente/zip
     pull: always
     commands:
+      - cd frontend
       - cp src/version.json dist
       - cd dist
       - zip -r ../vikunja-frontend-${DRONE_TAG##v}.zip *
@@ -1102,7 +1113,7 @@ steps:
       endpoint: https://s3.fr-par.scw.cloud
       region: fr-par
       path_style: true
-      source: vikunja-frontend-${DRONE_TAG##v}.zip
+      source: frontend/vikunja-frontend-${DRONE_TAG##v}.zip
       target: /frontend/
     depends_on: [ static ]
 
@@ -1171,6 +1182,8 @@ steps:
         - linux/arm/v6
         - linux/arm/v7
         - linux/arm64/v8
+      context: ./frontend
+      dockerfile: ./frontend/Dockerfile
     depends_on: [ fetch-tags ]
     when:
       ref:
@@ -1205,6 +1218,8 @@ steps:
         - linux/arm/v6
         - linux/arm/v7
         - linux/arm64/v8
+      context: ./frontend
+      dockerfile: ./fro3ntend/Dockerfile
     depends_on: [ generate-tags ]
     when:
       ref:
@@ -1233,7 +1248,7 @@ steps:
         from_secret: crowdin_key
       project_id: 462614
       target: download
-      download_to: src/i18n/lang/
+      download_to: frontend/src/i18n/lang/
       download_export_approved_only: true
 
   - name: move-files
@@ -1242,7 +1257,7 @@ steps:
     depends_on:
       - download
     commands:
-      - mv src/i18n/lang/*/*.json src/i18n/lang
+      - mv frontend/src/i18n/lang/*/*.json frontend/src/i18n/lang
 
   - name: push
     pull: always
@@ -1255,7 +1270,7 @@ steps:
       branch: main
       commit: true
       commit_message: "chore(i18n): update translations via Crowdin"
-      remote: "ssh://git@kolaente.dev:9022/vikunja/frontend.git"
+      remote: "ssh://git@kolaente.dev:9022/vikunja/vikunja.git"
       ssh_key:
         from_secret: git_push_ssh_key
 
@@ -1270,9 +1285,9 @@ steps:
       project_id: 462614
       target: upload
       upload_files:
-        src/i18n/lang/en.json: en.json
+        frontend/src/i18n/lang/en.json: en.json
 ---
 kind: signature
-hmac: b7b744c3bcbef8832ec93b9717aa9deef462509aa2770c31165cdcece7b98df2
+hmac: 08bf8b7b75c82860a7e7da07148e13e5be3221a9ac0ddc0e051aac4cd2d59b36
 
 ...
