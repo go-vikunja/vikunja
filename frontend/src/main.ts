@@ -5,7 +5,6 @@ import pinia from './pinia'
 import router from './router'
 import App from './App.vue'
 import {error, success} from './message'
-import {VERSION} from './version.json'
 
 // Notifications
 import Notifications from '@kyvg/vue3-notification'
@@ -26,8 +25,6 @@ declare global {
 		CUSTOM_LOGO_URL?: string;
 	}
 }
-
-console.info(`Vikunja frontend version ${VERSION}`)
 
 // Check if we have an api url in local storage and use it if that's the case
 const apiUrlFromStorage = localStorage.getItem('API_URL')

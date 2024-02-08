@@ -28,7 +28,6 @@ RUN if [ "$USE_RELEASE" != true ]; then \
       apk add --no-cache --virtual .build-deps git jq && \
       git describe --tags --always --abbrev=10 | sed 's/-/+/; s/^v//; s/-g/-/' | \
       xargs -0 -I{} jq -Mcnr --arg version {} '{VERSION:$version}' | \
-      tee src/version.json && \
       apk del .build-deps; \
     fi
 

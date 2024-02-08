@@ -999,7 +999,6 @@ steps:
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000 --frozen-lockfile
       - pnpm run lint
-      - "echo '{\"VERSION\": \"'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'\"}' > src/version.json"
       - pnpm run build
       - sed -i 's/http\:\\/\\/localhost\\:3456\\/api\\/v1/\\/api\\/v1/g' dist/index.html # Override the default api url used for developing
   #    depends_on:
@@ -1010,7 +1009,6 @@ steps:
     pull: always
     commands:
       - cd frontend
-      - cp src/version.json dist
       - cd dist
       - zip -r ../vikunja-frontend-unstable.zip *
       - cd ..
@@ -1082,8 +1080,6 @@ steps:
       - apk add git
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000 --frozen-lockfile
-      - pnpm run lint
-      - "echo '{\"VERSION\": \"'$(git describe --tags --always --abbrev=10 | sed 's/-/+/' | sed 's/^v//' | sed 's/-g/-/')'\"}' > src/version.json"
       - pnpm run build
       - sed -i 's/http\:\\/\\/localhost\\:3456\\/api\\/v1/\\/api\\/v1/g' dist/index.html # Override the default api url used for developing
   #    depends_on:
@@ -1094,10 +1090,8 @@ steps:
     pull: always
     commands:
       - cd frontend
-      - cp src/version.json dist
       - cd dist
       - zip -r ../vikunja-frontend-${DRONE_TAG##v}.zip *
-      - cd ..
     depends_on: [ build ]
 
   - name: release
@@ -1501,6 +1495,6 @@ steps:
 #      - mc cp ./dist/*.dmg.blockmap scw-fr-par/vikunja-releases/desktop/$VERSION/
 ---
 kind: signature
-hmac: 07f6ab6787f479c4bd83c7f0c3097de37d10fd18b1b37a3a0b2a8db012d244cb
+hmac: a52540e02a2061e83407dc2e7d4a8af684b98ed18a833de55307994e513e2aee
 
 ...

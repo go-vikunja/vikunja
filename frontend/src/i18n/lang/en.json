@@ -1093,8 +1093,7 @@
   },
   "about": {
     "title": "About",
-    "frontendVersion": "Frontend Version: {version}",
-    "apiVersion": "API Version: {version}"
+    "version": "Version: {version}"
   },
   "time": {
     "units": {

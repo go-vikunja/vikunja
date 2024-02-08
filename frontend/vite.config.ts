@@ -19,8 +19,6 @@ import postcssEasingGradients from 'postcss-easing-gradients'
 
 const pathSrc = fileURLToPath(new URL('./src', import.meta.url))
 
-import {VERSION} from './src/version.json'
-
 // the @use rules have to be the first in the compiled stylesheets
 const PREFIXED_SCSS_STYLES = `@use "sass:math";
 @import "${pathSrc}/styles/common-imports";`
@@ -46,7 +44,6 @@ function getSentryConfig(env: ImportMetaEnv): ViteSentryPluginOptions {
 		authToken: env.SENTRY_AUTH_TOKEN,
 		org: env.SENTRY_ORG,
 		project: env.SENTRY_PROJECT,
-		release: VERSION,
 		cleanSourcemapsAfterUpload: true,
 		legacyErrorHandlingMode: true,
 		deploy: {
