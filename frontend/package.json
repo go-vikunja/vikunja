@@ -24,7 +24,8 @@
   ],
   "type": "module",
   "scripts": {
-    "serve": "vite",
+    "dev": "vite",
+    "serve": "pnpm run dev",
     "preview": "vite preview --port 4173",
     "preview:dev": "vite preview --outDir dist-dev --mode development --port 4173",
     "build": "vite build && workbox copyLibraries dist/",
