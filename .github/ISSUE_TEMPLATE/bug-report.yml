@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        NOTE: If your issue is a security concern, please send an email to security@vikunja.io instead of opening a public issue.
+        NOTE: If your issue is a security concern, please send an email to security@vikunja.io instead of opening a public issue. [More information about our security policy](https://vikunja.io/contact/#security).
   - type: markdown
     attributes:
       value: |
@@ -24,17 +24,10 @@ body:
       description: |
         Please provide a description of your issue here, with a URL if you were able to reproduce the issue (see below).
   - type: input
-    id: frontend-version
+    id: version
     attributes:
-      label: Vikunja Frontend Version
-      description: Vikunja frontend version (or commit reference) of your instance
-    validations:
-      required: true
-  - type: input
-    id: api-version
-    attributes:
-      label: Vikunja API Version
-      description: Vikunja API version (or commit reference) of your instance
+      label: Vikunja Version
+      description: Vikunja version (or commit reference) of your instance
     validations:
       required: true
   - type: input
@@ -47,6 +40,7 @@ body:
     attributes:
       label: Can you reproduce the bug on the Vikunja demo site?
       options:
+        - "Please select"
         - "Yes"
         - "No"
     validations:

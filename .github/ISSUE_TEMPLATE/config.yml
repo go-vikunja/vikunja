@@ -1,8 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Frontend issues
-    url: https://code.vikunja.io/frontend/issues
-    about: This is the API repo. Please open frontend-related bug reports and discussions in the frontend repo. Not sure if you issue is frontend or api? Ask in Matrix or the forum first.
   - name: Forum
     url: https://community.vikunja.io/
     about: Feature Requests, Questions, configuration or deployment problems should be discussed in the forum.
