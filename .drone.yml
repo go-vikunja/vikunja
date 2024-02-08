@@ -1272,7 +1272,7 @@ depends_on:
 
 trigger:
   branch:
-    exclude:
+    include:
       - main
   event:
     include:
@@ -1501,6 +1501,6 @@ steps:
 #      - mc cp ./dist/*.dmg.blockmap scw-fr-par/vikunja-releases/desktop/$VERSION/
 ---
 kind: signature
-hmac: a3d01559d320a62a56ea541e4b439ff68bb09b0087dbc889df17fcba86cfcb5d
+hmac: 07f6ab6787f479c4bd83c7f0c3097de37d10fd18b1b37a3a0b2a8db012d244cb
 
 ...
