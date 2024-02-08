@@ -24,9 +24,9 @@ A maintainer will take a look and give you feedback. Once everyone is happy, the
 
 If you plan to do a bigger change, it is better to open an issue for discussion first.
 
-## API
+The main repo is [`vikunja/vikunja`](https://kolaente.dev/vikunja/vikunja), it contains all code for the api, frontend and desktop applications.
 
-The code for the api is located at [code.vikunja.io/api](https://code.vikunja.io/api).
+## API
 
 You'll need at least Go 1.21 to build Vikunja's api.
 
@@ -37,10 +37,10 @@ Make sure to check the other doc articles for specific development tasks like [t
 
 ## Frontend requirements
 
-The code for the frontend is located at [code.vikunja.io/frontend](https://code.vikunja.io/frontend).
+The code for the frontend is located in the `frontend` sub folder of the main repo.
 More instructions can be found in the repo's README.
 
-You need to have [pnpm](https://pnpm.io/) and Node.JS in version 18 or higher installed.
+You need to have [pnpm](https://pnpm.io/) and Node.JS in version 20 or higher installed.
 
 ## Pull Requests
 
@@ -92,6 +92,6 @@ Backports and point-releases should go to a `release/version` branch, based on t
 
 ## Conventional Commits
 
-We're using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) because they greatly simplify generating release notes.
+We're using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) because they simplify generating release notes a lot.
 
 It is not required to use them when creating a PR, but appreciated.
