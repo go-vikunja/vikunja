@@ -178,15 +178,9 @@ func RegisterRoutes(e *echo.Echo) {
 	// healthcheck
 	e.GET("/health", HealthcheckHandler)
 
-	// static files
-	if static := config.ServiceStaticpath.GetString(); static != "" {
-		e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
-			Root:  static,
-			HTML5: true,
-		}))
-	}
+	setupStaticFrontendFilesHandler(e)
 
-	// CORS_SHIT
+	// CORS
 	if config.CorsEnable.GetBool() {
 		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 			AllowOrigins: config.CorsOrigins.GetStringSlice(),
