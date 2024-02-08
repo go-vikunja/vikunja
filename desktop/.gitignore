@@ -1,0 +1,6 @@
+node_modules/
+.idea/
+frontend/
+dist/
+*.zip
+*.tgz
