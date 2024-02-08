@@ -47,7 +47,6 @@ const (
 	ServiceFrontendurl     Key = `service.frontendurl`
 	ServiceEnableCaldav    Key = `service.enablecaldav`
 	ServiceRootpath        Key = `service.rootpath`
-	ServiceStaticpath      Key = `service.staticpath`
 	ServiceMaxItemsPerPage Key = `service.maxitemsperpage`
 	ServiceDemoMode        Key = `service.demomode`
 	// Deprecated: Use metrics.enabled
@@ -293,7 +292,6 @@ func InitDefaultConfig() {
 	ServiceEnableCaldav.setDefault(true)
 
 	ServiceRootpath.setDefault(getBinaryDirLocation())
-	ServiceStaticpath.setDefault("")
 	ServiceMaxItemsPerPage.setDefault(50)
 	ServiceEnableMetrics.setDefault(false)
 	ServiceMotd.setDefault("")
