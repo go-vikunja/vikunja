@@ -1,42 +1,48 @@
 package routes
 
 import (
-	"code.vikunja.io/api/frontend"
-	"github.com/labstack/echo/v4/middleware"
+	"bytes"
+	"errors"
+	"fmt"
+	"io"
+	"mime"
 	"net/http"
+	"net/url"
+	"os"
+	"path"
+	"path/filepath"
 	"strings"
+	"sync"
 
+	"code.vikunja.io/api/frontend"
+
+	etaggenerator "github.com/hhsnopek/etag"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
-func staticWithConfig() echo.MiddlewareFunc {
-	// Defaults
-	if config.Root == "" {
-		config.Root = "." // For security we want to restrict to CWD.
-	}
-	if config.Skipper == nil {
-		config.Skipper = DefaultStaticConfig.Skipper
-	}
-	if config.Index == "" {
-		config.Index = DefaultStaticConfig.Index
-	}
-	if config.Filesystem == nil {
-		config.Filesystem = http.Dir(config.Root)
-		config.Root = "."
-	}
+const (
+	indexFile       = `index.html`
+	rootPath        = `dist/`
+	cacheControlMax = `max-age=315360000, public, max-age=31536000, s-maxage=31536000, immutable`
+)
 
-	// Index template
-	t, tErr := template.New("index").Parse(html)
-	if tErr != nil {
-		panic(fmt.Errorf("echo: %w", tErr))
-	}
+// Because the files are embedded into the final binary, we can be absolutely sure the etag will never change
+// and we can cache its generation pretty heavily.
+var etagCache map[string]string
+var etagLock sync.Mutex
+
+func init() {
+	etagCache = make(map[string]string)
+	etagLock = sync.Mutex{}
+}
+
+// Copied from echo's middleware.StaticWithConfig simplified and adjusted for caching
+func static() echo.MiddlewareFunc {
+	assetFs := http.FS(frontend.Files)
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) (err error) {
-			if config.Skipper(c) {
-				return next(c)
-			}
-
 			p := c.Request().URL.Path
 			if strings.HasSuffix(c.Path(), "*") { // When serving from a group, e.g. `/static*`.
 				p = c.Param("*")
@@ -45,20 +51,11 @@ func staticWithConfig() echo.MiddlewareFunc {
 			if err != nil {
 				return
 			}
-			name := path.Join(config.Root, path.Clean("/"+p)) // "/"+ for security
+			name := path.Join(rootPath, path.Clean("/"+p)) // "/"+ for security
 
-			if config.IgnoreBase {
-				routePath := path.Base(strings.TrimRight(c.Path(), "/*"))
-				baseURLPath := path.Base(p)
-				if baseURLPath == routePath {
-					i := strings.LastIndex(name, routePath)
-					name = name[:i] + strings.Replace(name[i:], routePath, "", 1)
-				}
-			}
-
-			file, err := config.Filesystem.Open(name)
+			file, err := assetFs.Open(name)
 			if err != nil {
-				if !isIgnorableOpenFileError(err) {
+				if !os.IsNotExist(err) {
 					return err
 				}
 
@@ -69,11 +66,11 @@ func staticWithConfig() echo.MiddlewareFunc {
 				}
 
 				var he *echo.HTTPError
-				if !(errors.As(err, &he) && config.HTML5 && he.Code == http.StatusNotFound) {
+				if !(errors.As(err, &he) && he.Code == http.StatusNotFound) {
 					return err
 				}
 
-				file, err = config.Filesystem.Open(path.Join(config.Root, config.Index))
+				file, err = assetFs.Open(path.Join(rootPath, indexFile))
 				if err != nil {
 					return err
 				}
@@ -87,12 +84,8 @@ func staticWithConfig() echo.MiddlewareFunc {
 			}
 
 			if info.IsDir() {
-				index, err := config.Filesystem.Open(path.Join(name, config.Index))
+				index, err := assetFs.Open(path.Join(name, indexFile))
 				if err != nil {
-					if config.Browse {
-						return listDir(t, name, file, c.Response())
-					}
-
 					return next(c)
 				}
 
@@ -103,12 +96,95 @@ func staticWithConfig() echo.MiddlewareFunc {
 					return err
 				}
 
-				return serveFile(c, index, info)
+				etag, err := generateEtag(index, name)
+				if err != nil {
+					return err
+				}
+
+				return serveFile(c, index, info, etag)
 			}
 
-			return serveFile(c, file, info)
+			etag, err := generateEtag(file, name)
+			if err != nil {
+				return err
+			}
+
+			return serveFile(c, file, info, etag)
 		}
 	}
+}
+
+func generateEtag(file http.File, name string) (etag string, err error) {
+	etagLock.Lock()
+	defer etagLock.Unlock()
+	etag, has := etagCache[name]
+	if !has {
+		buf := bytes.Buffer{}
+		_, err = buf.ReadFrom(file)
+		if err != nil {
+			return "", err
+		}
+		etag = etaggenerator.Generate(buf.Bytes(), true)
+		etagCache[name] = etag
+	}
+
+	return etag, nil
+}
+
+// copied from http.serveContent
+func getMimeType(c echo.Context, name string, file http.File) (mimeType string, err error) {
+	var ctype string
+	ctype = c.Response().Header().Get("Content-Type")
+	if ctype == "" {
+		ctype = mime.TypeByExtension(filepath.Ext(name))
+		if ctype == "" {
+			// read a chunk to decide between utf-8 text and binary
+			var buf [512]byte
+			n, _ := io.ReadFull(file, buf[:])
+			ctype = http.DetectContentType(buf[:n])
+			_, err := file.Seek(0, io.SeekStart) // rewind to output whole file
+			if err != nil {
+				return "", fmt.Errorf("seeker can't seek")
+			}
+		}
+	}
+
+	return ctype, nil
+}
+
+func serveFile(c echo.Context, file http.File, info os.FileInfo, etag string) error {
+
+	c.Response().Header().Set("Server", "Vikunja")
+	c.Response().Header().Set("Vary", "Accept-Encoding")
+	c.Response().Header().Set("Etag", etag)
+
+	contentType, err := getMimeType(c, info.Name(), file)
+	if err != nil {
+		return err
+	}
+
+	var cacheControl = "public, max-age=0, s-maxage=0, must-revalidate"
+	if strings.HasPrefix(contentType, "image/") ||
+		strings.HasPrefix(contentType, "font/") ||
+		strings.HasPrefix(contentType, "~images/") ||
+		strings.HasPrefix(contentType, "~font/") ||
+		contentType == "text/css" ||
+		contentType == "application/javascript" ||
+		contentType == "text/javascript" ||
+		contentType == "application/vnd.ms-fontobject" ||
+		contentType == "application/x-font-ttf" ||
+		contentType == "font/opentype" ||
+		contentType == "font/woff2" ||
+		contentType == "image/svg+xml" ||
+		contentType == "image/x-icon" ||
+		contentType == "audio/wav" {
+		cacheControl = cacheControlMax
+	}
+
+	c.Response().Header().Set("Cache-Control", cacheControl)
+
+	http.ServeContent(c.Response(), c.Request(), info.Name(), info.ModTime(), file)
+	return nil
 }
 
 func setupStaticFrontendFilesHandler(e *echo.Echo) {
@@ -120,39 +196,5 @@ func setupStaticFrontendFilesHandler(e *echo.Echo) {
 		},
 	}))
 
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			if strings.HasPrefix(c.Path(), "/api/") {
-				return next(c)
-			}
-
-			c.Response().Header().Set("Server", "Vikunja")
-			c.Response().Header().Set("Vary", "Accept-Encoding")
-
-			// TODO how to get last modified and etag header?
-			// Cache-Control: https://www.rfc-editor.org/rfc/rfc9111#section-5.2
-			/*
-
-			   nginx returns these headers:
-
-			   --content-encoding: gzip
-			   --content-type: text/html; charset=utf-8
-			   --date: Thu, 08 Feb 2024 15:53:23 GMT
-			   etag: W/"65c39587-bf7"
-			   --last-modified: Wed, 07 Feb 2024 14:36:55 GMT
-			   --server: nginx
-			   --vary: Accept-Encoding
-			   cache-control: public, max-age=0, s-maxage=0, must-revalidate
-
-			*/
-
-			return next(c)
-		}
-	})
-
-	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
-		Filesystem: http.FS(frontend.Files),
-		HTML5:      true,
-		Root:       "dist/",
-	}))
+	e.Use(static())
 }
