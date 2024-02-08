@@ -1119,30 +1119,6 @@ steps:
 ---
 kind: pipeline
 type: docker
-name: trigger-desktop-update
-
-trigger:
-  branch:
-    - main
-  event:
-    - push
-
-depends_on:
-  - frontend-release-latest
-
-steps:
-  - name: trigger
-    image: plugins/downstream
-    settings:
-      server: https://drone.kolaente.de
-      token:
-        from_secret: drone_token
-      repositories:
-        - vikunja/desktop@main
-
----
-kind: pipeline
-type: docker
 name: frontend-docker-release
 
 depends_on:
@@ -1285,8 +1261,246 @@ steps:
       target: upload
       upload_files:
         frontend/src/i18n/lang/en.json: en.json
+
+---
+kind: pipeline
+type: docker
+name: desktop-build
+
+depends_on:
+  - frontend-release-latest
+
+trigger:
+  branch:
+    exclude:
+      - main
+  event:
+    include:
+      - push
+      - pull_request
+
+steps:
+  - name: fetch-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
+
+  - name: restore-cache
+    image: meltwater/drone-cache:dev
+    pull: true
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: cache_aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: cache_aws_secret_access_key
+    settings:
+      restore: true
+      bucket: kolaente.dev-drone-dependency-cache
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
+      mount:
+        - '.cache'
+
+  - name: build
+    image: electronuserland/builder:wine-mono
+    pull: true
+    environment:
+      YARN_CACHE_FOLDER: .cache/yarn/
+    depends_on:
+      - fetch-tags
+      - restore-cache
+    commands:
+      - cd desktop
+      - export VERSION=${DRONE_TAG##v}
+      - if [ -z "$$VERSION" ]; then export VERSION=unstable; fi
+      # TODO: Move to a yarn script
+      - wget https://dl.vikunja.io/frontend/vikunja-frontend-$$VERSION.zip
+      - unzip vikunja-frontend-$$VERSION.zip -d frontend
+      - sed -i 's/\\/api\\/v1//g' frontend/index.html
+      - ./bumpp.sh
+      - yarn install
+      - yarn dist --linux --windows
+
+  - name: rebuild-cache
+    image: meltwater/drone-cache:dev
+    pull: true
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: cache_aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: cache_aws_secret_access_key
+    settings:
+      rebuild: true
+      bucket: kolaente.dev-drone-dependency-cache
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
+      mount:
+        - '.cache'
+    depends_on:
+      - build
+
+---
+kind: pipeline
+type: docker
+name: desktop-release
+
+depends_on:
+  - frontend-release-latest
+
+trigger:
+  ref:
+    - refs/heads/main
+    - "refs/tags/**"
+
+steps:
+  - name: fetch-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
+
+  - name: restore-cache
+    image: meltwater/drone-cache:dev
+    pull: true
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: cache_aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: cache_aws_secret_access_key
+    settings:
+      restore: true
+      bucket: kolaente.dev-drone-dependency-cache
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
+      mount:
+        - '.cache'
+
+  - name: build
+    image: electronuserland/builder:wine-mono
+    pull: true
+    environment:
+      YARN_CACHE_FOLDER: .cache/yarn/
+    depends_on:
+      - fetch-tags
+      - restore-cache
+    commands:
+      - cd desktop
+      - export VERSION=${DRONE_TAG##v}
+      - if [ -z "$$VERSION" ]; then export VERSION=unstable; fi
+      # TODO: Move to a yarn script
+      - wget https://dl.vikunja.io/frontend/vikunja-frontend-$$VERSION.zip
+      - unzip vikunja-frontend-$$VERSION.zip -d frontend
+      - sed -i 's/\\/api\\/v1//g' frontend/index.html
+      - ./bumpp.sh
+      - yarn install
+      - cat package.json
+      - yarn dist --linux --windows
+
+  - name: rebuild-cache
+    image: meltwater/drone-cache:dev
+    pull: true
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: cache_aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: cache_aws_secret_access_key
+    settings:
+      rebuild: true
+      bucket: kolaente.dev-drone-dependency-cache
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
+      mount:
+        - '.cache'
+    depends_on:
+      - build
+
+  - name: release-latest
+    image: plugins/s3
+    pull: true
+    settings:
+      bucket: vikunja-releases
+      access_key:
+        from_secret: aws_access_key_id
+      secret_key:
+        from_secret: aws_secret_access_key
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      strip_prefix: desktop/dist/
+      source: desktop/dist/*
+      target: /desktop/unstable/
+    when:
+      event:
+        exclude:
+          - tag
+    depends_on: [ build ]
+
+  - name: release-version
+    image: plugins/s3
+    pull: true
+    settings:
+      bucket: vikunja-releases
+      access_key:
+        from_secret: aws_access_key_id
+      secret_key:
+        from_secret: aws_secret_access_key
+      endpoint: https://s3.fr-par.scw.cloud
+      region: fr-par
+      path_style: true
+      strip_prefix: desktop/dist/
+      source: desktop/dist/*
+      target: /desktop/${DRONE_TAG##v}/
+    when:
+      event:
+        - tag
+    depends_on: [ build ]
+
+# Disabled until we have a working mac runner
+#---
+#kind: pipeline
+#type: exec
+#name: desktop-release-macos
+#
+#trigger:
+#  ref:
+#    - refs/heads/main
+#    - "refs/tags/**"
+#
+#platform:
+#  os: darwin
+#  arch: amd64
+#
+#steps:
+#  - name: build
+#    environment:
+#      ACCESS_KEY:
+#        from_secret: aws_access_key_id
+#      SECRET_KEY:
+#        from_secret: aws_secret_access_key
+#    commands:
+#      - git fetch --tags
+#      - export VERSION=${DRONE_TAG##v}
+#      - if [ -z "$$VERSION" ]; then export VERSION=unstable; fi
+#      # TODO: Move to a yarn script
+#      - wget https://dl.vikunja.io/frontend/vikunja-frontend-$$VERSION.zip
+#      - unzip vikunja-frontend-$$VERSION.zip -d frontend
+#      - sed -i '' 's/\\/api\\/v1//g' frontend/index.html
+#      # Make sure that the -unstable suffix is added to release files
+#      - sed -i '' "s/\$${version}/$$VERSION/g" package.json
+#      - yarn install
+#      - yarn dist --mac
+#      - mc config host add scw-fr-par https://s3.fr-par.scw.cloud $ACCESS_KEY $SECRET_KEY --api S3v4
+#      - mc cp ./dist/*.dmg scw-fr-par/vikunja-releases/desktop/$VERSION/
+#      - mc cp ./dist/*.dmg.blockmap scw-fr-par/vikunja-releases/desktop/$VERSION/
 ---
 kind: signature
-hmac: c814fdec67436ee37b02ca5b4891f9a0d0f430a86eb12e539fdda2845a3954f4
+hmac: a3d01559d320a62a56ea541e4b439ff68bb09b0087dbc889df17fcba86cfcb5d
 
 ...
