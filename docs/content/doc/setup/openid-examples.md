@@ -11,7 +11,7 @@ menu:
 # OpenID example configurations
 
 On this page you will find examples about how to set up Vikunja with a third-party OpenID provider.
-To add another example, please [edit this document](https://kolaente.dev/vikunja/api/src/branch/main/docs/content/doc/setup/openid-examples.md) and send a PR.
+To add another example, please [edit this document](https://kolaente.dev/vikunja/vikunja/src/branch/main/docs/content/doc/setup/openid-examples.md) and send a PR.
 
 {{< table_of_contents >}}
 

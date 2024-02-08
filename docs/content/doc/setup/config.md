@@ -32,7 +32,7 @@ first:
 Vikunja supports using `toml`, `yaml`, `hcl`, `ini`, `json`, envfile, env variables and Java Properties files.
 We recommend yaml or toml, but you're free to use whatever you want.
 
-Vikunja provides a default [`config.yml`](https://kolaente.dev/vikunja/api/src/branch/main/config.yml.sample) file which you can use as a starting point.
+Vikunja provides a default [`config.yml`](https://kolaente.dev/vikunja/vikunja/src/branch/main/config.yml.sample) file which you can use as a starting point.
 
 # Config file locations
 
@@ -1161,7 +1161,7 @@ If the email is not public in those cases, authenticating will fail.
 **Note 2:** The frontend expects to be redirected after authentication by the third party
 to <frontend-url>/auth/openid/<auth key>. Please make sure to configure the redirect url with your third party
 auth service accordingly if you're using the default vikunja frontend.
-Take a look at the [default config file](https://kolaente.dev/vikunja/api/src/branch/main/config.yml.sample) for more information about how to configure openid authentication.
+Take a look at the [default config file](https://kolaente.dev/vikunja/vikunja/src/branch/main/config.yml.sample) for more information about how to configure openid authentication.
 
 Default: `<empty>`
 
@@ -1320,7 +1320,7 @@ Environment path: `VIKUNJA_DEFAULTSETTINGS_WEEK_START`
 
 ### language
 
-The language of the user interface. Must be an ISO 639-1 language code followed by an ISO 3166-1 alpha-2 country code. Check https://kolaente.dev/vikunja/frontend/src/branch/main/src/i18n/lang for a list of possible languages. Will default to the browser language the user uses when signing up.
+The language of the user interface. Must be an ISO 639-1 language code followed by an ISO 3166-1 alpha-2 country code. Check https://kolaente.dev/vikunja/vikunja/src/branch/main/frontend/src/i18n/lang for a list of possible languages. Will default to the browser language the user uses when signing up.
 
 Default: `<unset>`
 

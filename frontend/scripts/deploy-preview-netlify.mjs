@@ -15,7 +15,7 @@ const siteId = process.env.NETLIFY_SITE_ID
 const branchSlug = createSlug(process.env.DRONE_SOURCE_BRANCH)
 const prNumber = process.env.DRONE_PULL_REQUEST
 
-const prIssueCommentsUrl = `https://kolaente.dev/api/v1/repos/vikunja/frontend/issues/${prNumber}/comments`
+const prIssueCommentsUrl = `https://kolaente.dev/api/v1/repos/vikunja/vikunja/issues/${prNumber}/comments`
 const alias = `${prNumber}-${branchSlug}`.substring(0,37)
 const fullPreviewUrl = `https://${alias}--vikunja-frontend-preview.netlify.app`
 

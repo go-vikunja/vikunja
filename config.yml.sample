@@ -296,7 +296,7 @@ auth:
   # auth service accordingly if you're using the default vikunja frontend.
   # The frontend will automatically provide the api with the redirect url, composed from the current url where it's hosted.
   # If you want to use the desktop client with openid, make sure to allow redirects to `127.0.0.1`.
-  # Take a look at the [default config file](https://kolaente.dev/vikunja/api/src/branch/main/config.yml.sample) for more information about how to configure openid authentication.
+  # Take a look at the [default config file](https://kolaente.dev/vikunja/vikunja/src/branch/main/config.yml.sample) for more information about how to configure openid authentication.
   openid:
     # Enable or disable OpenID Connect authentication
     enabled: false
@@ -343,7 +343,7 @@ defaultsettings:
   default_project_id: 0
   # Start of the week for the user. `0` is sunday, `1` is monday and so on.
   week_start: 0
-  # The language of the user interface. Must be an ISO 639-1 language code followed by an ISO 3166-1 alpha-2 country code. Check https://kolaente.dev/vikunja/frontend/src/branch/main/src/i18n/lang for a list of possible languages. Will default to the browser language the user uses when signing up.
+  # The language of the user interface. Must be an ISO 639-1 language code followed by an ISO 3166-1 alpha-2 country code. Check https://kolaente.dev/vikunja/vikunja/frontend/src/branch/main/src/i18n/lang for a list of possible languages. Will default to the browser language the user uses when signing up.
   language: <unset>
   # The time zone of each individual user. This will affect when users get reminders and overdue task emails.
   timezone: <time zone set at service.timezone>

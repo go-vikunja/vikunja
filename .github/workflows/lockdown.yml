@@ -16,7 +16,7 @@ jobs:
         with:
           pr-comment: 'Hi! Thank you for your contribution.
 
-          This repo is only a mirror and unfortunately we can''t accept PRs made here. Please re-submit your changes to [our Gitea instance](https://kolaente.dev/vikunja/api/pulls).
+          This repo is only a mirror and unfortunately we can''t accept PRs made here. Please re-submit your changes to [our Gitea instance](https://kolaente.dev/vikunja/vikunja/pulls).
 
           Also check out the [contribution guidelines](https://vikunja.io/docs/development/#pull-requests).
 

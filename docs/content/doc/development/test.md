@@ -91,7 +91,7 @@ fixtures other than db fixtures (like files).
 ## Frontend tests
 
 The frontend has end to end tests with Cypress that use a Vikunja instance and drive a browser against it.
-Check out the docs [in the frontend repo](https://kolaente.dev/vikunja/frontend/src/branch/main/cypress/README.md) about how they work and how to get them running.
+Check out the docs [in the frontend repo](https://kolaente.dev/vikunja/vikunja/src/branch/main/frontend/cypress/README.md) about how they work and how to get them running.
 
 ### Unit Tests
 

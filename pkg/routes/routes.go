@@ -218,7 +218,7 @@ func registerAPIRoutes(a *echo.Group) {
 
 	// Echo does not unescape url path params by default. To make sure values bound as :param in urls are passed
 	// properly to handlers, we use this middleware to unescape them.
-	// See https://kolaente.dev/vikunja/api/issues/1224
+	// See https://kolaente.dev/vikunja/vikunja/issues/1224
 	// See https://github.com/labstack/echo/issues/766
 	a.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {

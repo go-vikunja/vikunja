@@ -22,7 +22,7 @@ Check out [the api docs](https://try.vikunja.io/api/v1/docs#tag/webhooks) for in
 
 ## Available events and their payload
 
-All events registered as webhook events in [the event listeners definition](https://kolaente.dev/vikunja/api/src/branch/main/pkg/models/listeners.go#L69) can be used as webhook target.
+All events registered as webhook events in [the event listeners definition](https://kolaente.dev/vikunja/vikunja/src/branch/main/pkg/models/listeners.go#L69) can be used as webhook target.
 
 A webhook payload will look similar to this:
 
