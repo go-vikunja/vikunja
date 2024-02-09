@@ -1495,6 +1495,6 @@ steps:
 #      - mc cp ./dist/*.dmg.blockmap scw-fr-par/vikunja-releases/desktop/$VERSION/
 ---
 kind: signature
-hmac: a52540e02a2061e83407dc2e7d4a8af684b98ed18a833de55307994e513e2aee
+hmac: f6100044ee52600c852ff3b200e282c9d450471ca44023e3817f28989fd91fd6
 
 ...
