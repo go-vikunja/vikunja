@@ -22,9 +22,10 @@ import (
 )
 
 const (
-	indexFile       = `index.html`
-	rootPath        = `dist/`
-	cacheControlMax = `max-age=315360000, public, max-age=31536000, s-maxage=31536000, immutable`
+	indexFile        = `index.html`
+	rootPath         = `dist/`
+	cacheControlMax  = `max-age=315360000, public, max-age=31536000, s-maxage=31536000, immutable`
+	cacheControlNone = `public, max-age=0, s-maxage=0, must-revalidate`
 )
 
 // Because the files are embedded into the final binary, we can be absolutely sure the etag will never change
@@ -132,38 +133,40 @@ func generateEtag(file http.File, name string) (etag string, err error) {
 }
 
 // copied from http.serveContent
-func getMimeType(c echo.Context, name string, file http.File) (mimeType string, err error) {
-	var ctype string
-	ctype = c.Response().Header().Get("Content-Type")
-	if ctype == "" {
-		ctype = mime.TypeByExtension(filepath.Ext(name))
-		if ctype == "" {
-			// read a chunk to decide between utf-8 text and binary
-			var buf [512]byte
-			n, _ := io.ReadFull(file, buf[:])
-			ctype = http.DetectContentType(buf[:n])
-			_, err := file.Seek(0, io.SeekStart) // rewind to output whole file
-			if err != nil {
-				return "", fmt.Errorf("seeker can't seek")
-			}
+func getMimeType(name string, file http.File) (mineType string, err error) {
+	mineType = mime.TypeByExtension(filepath.Ext(name))
+	if mineType == "" {
+		// read a chunk to decide between utf-8 text and binary
+		var buf [512]byte
+		n, _ := io.ReadFull(file, buf[:])
+		mineType = http.DetectContentType(buf[:n])
+		_, err := file.Seek(0, io.SeekStart) // rewind to output whole file
+		if err != nil {
+			return "", fmt.Errorf("seeker can't seek")
 		}
 	}
 
-	return ctype, nil
+	return mineType, nil
 }
 
-func serveFile(c echo.Context, file http.File, info os.FileInfo, etag string) error {
-
-	c.Response().Header().Set("Server", "Vikunja")
-	c.Response().Header().Set("Vary", "Accept-Encoding")
-	c.Response().Header().Set("Etag", etag)
-
-	contentType, err := getMimeType(c, info.Name(), file)
-	if err != nil {
-		return err
+func getCacheControlHeader(info os.FileInfo, file http.File) (header string, err error) {
+	// Don't cache service worker and related files
+	if info.Name() == "robots.txt" ||
+		info.Name() == "sw.js" ||
+		info.Name() == "manifest.webmanifest" {
+		return cacheControlNone, nil
 	}
 
-	var cacheControl = "public, max-age=0, s-maxage=0, must-revalidate"
+	if strings.HasPrefix(info.Name(), "workbox-") {
+		return cacheControlMax, nil
+	}
+
+	contentType, err := getMimeType(info.Name(), file)
+	if err != nil {
+		return "", err
+	}
+
+	// Cache everything looking like an asset
 	if strings.HasPrefix(contentType, "image/") ||
 		strings.HasPrefix(contentType, "font/") ||
 		strings.HasPrefix(contentType, "~images/") ||
@@ -178,9 +181,22 @@ func serveFile(c echo.Context, file http.File, info os.FileInfo, etag string) er
 		contentType == "image/svg+xml" ||
 		contentType == "image/x-icon" ||
 		contentType == "audio/wav" {
-		cacheControl = cacheControlMax
+		return cacheControlMax, nil
 	}
 
+	return cacheControlNone, nil
+}
+
+func serveFile(c echo.Context, file http.File, info os.FileInfo, etag string) error {
+
+	c.Response().Header().Set("Server", "Vikunja")
+	c.Response().Header().Set("Vary", "Accept-Encoding")
+	c.Response().Header().Set("Etag", etag)
+
+	cacheControl, err := getCacheControlHeader(info, file)
+	if err != nil {
+		return err
+	}
 	c.Response().Header().Set("Cache-Control", cacheControl)
 
 	http.ServeContent(c.Response(), c.Request(), info.Name(), info.ModTime(), file)
