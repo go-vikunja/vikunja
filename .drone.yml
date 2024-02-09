@@ -1,7 +1,7 @@
 ---
 kind: pipeline
 type: docker
-name: testing
+name: build-and-test-api
 
 workspace:
   base: /go
@@ -338,7 +338,7 @@ steps:
 ---
 kind: pipeline
 type: docker
-name: build-frontend
+name: build-and-test-frontend
 
 trigger:
   branch:
@@ -358,26 +358,6 @@ services:
       VIKUNJA_LOG_LEVEL: DEBUG
 
 steps:
-  # Disabled until we figure out why it is so slow
-  #  - name: restore-cache
-  #    image: meltwater/drone-cache:dev
-  #    pull: always
-  #    environment:
-  #      AWS_ACCESS_KEY_ID:
-  #        from_secret: cache_aws_access_key_id
-  #      AWS_SECRET_ACCESS_KEY:
-  #        from_secret: cache_aws_secret_access_key
-  #    settings:
-  #      debug: true
-  #      restore: true
-  #      bucket: kolaente.dev-drone-dependency-cache
-  #      endpoint: https://s3.fr-par.scw.cloud
-  #      region: fr-par
-  #      path_style: true
-  #      cache_key: '{{ .Repo.Name }}_{{ checksum "pnpm-lock.yaml" }}_{{ arch }}_{{ os }}'
-  #      mount:
-  #        - .cache
-
   - name: dependencies
     image: node:20.11.0-alpine
     pull: always
@@ -459,26 +439,6 @@ steps:
     depends_on:
       - build-prod
   
-  #  - name: rebuild-cache
-  #    image: meltwater/drone-cache:dev
-  #    pull: always
-  #    environment:
-  #      AWS_ACCESS_KEY_ID:
-  #        from_secret: cache_aws_access_key_id
-  #      AWS_SECRET_ACCESS_KEY:
-  #        from_secret: cache_aws_secret_access_key
-  #    settings:
-  #      rebuild: true
-  #      bucket: kolaente.dev-drone-dependency-cache
-  #      endpoint: https://s3.fr-par.scw.cloud
-  #      region: fr-par
-  #      path_style: true
-  #      cache_key: '{{ .Repo.Name }}_{{ checksum "pnpm-lock.yaml" }}_{{ arch }}_{{ os }}'
-  #      mount:
-  #        - .cache
-  #    depends_on:
-  #      - dependencies
-
   - name: deploy-preview
     image: williamjackson/netlify-cli
     pull: always
@@ -513,7 +473,7 @@ type: docker
 name: generate-swagger-docs
 
 depends_on:
-  - testing
+  - build-and-test-api
 
 workspace:
   base: /go
@@ -552,16 +512,13 @@ steps:
         from_secret: git_push_ssh_key
 
 ---
-########
-# Build a release when tagging
-########
-
 kind: pipeline
 type: docker
 name: release
 
 depends_on:
-  - testing
+  - build-and-test-api
+  - build-and-test-frontend
 
 workspace:
   base: /source
@@ -578,6 +535,30 @@ steps:
     image: docker:git
     commands:
       - git fetch --tags
+
+  - name: frontend-dependencies
+    image: node:20.11.0-alpine
+    pull: always
+    environment:
+      PNPM_CACHE_FOLDER: .cache/pnpm
+      CYPRESS_CACHE_FOLDER: .cache/cypress
+      PUPPETEER_SKIP_DOWNLOAD: true
+    commands:
+      - cd frontend
+      - corepack enable && pnpm config set store-dir .cache/pnpm
+      - pnpm install --fetch-timeout 100000
+
+  - name: frontend-build
+    image: node:20.11.0-alpine
+    pull: always
+    environment:
+      PNPM_CACHE_FOLDER: .cache/pnpm
+    commands:
+      - cd frontend
+      - corepack enable && pnpm config set store-dir .cache/pnpm
+      - pnpm run build
+    depends_on:
+      - frontend-dependencies
 
   # We're statically compiling the magefile to avoid race condition issues caused by multiple pipeline steps
   # compiling the same magefile at the same time. It's also faster if each step does not need to compile it first.
@@ -612,7 +593,9 @@ steps:
       - export PATH=$PATH:$GOPATH/bin
       - go install github.com/magefile/mage
       - ./mage-static release:windows
-    depends_on: [ before-static-build ]
+    depends_on:
+      - before-static-build
+      - frontend-build
 
   - name: static-build-linux
     image: techknowlogick/xgo:latest
@@ -626,7 +609,9 @@ steps:
       - export PATH=$PATH:$GOPATH/bin
       - go install github.com/magefile/mage
       - ./mage-static release:linux
-    depends_on: [ before-static-build ]
+    depends_on:
+      - before-static-build
+      - frontend-build
 
   - name: static-build-darwin
     image: techknowlogick/xgo:latest
@@ -640,7 +625,9 @@ steps:
       - export PATH=$PATH:$GOPATH/bin
       - go install github.com/magefile/mage
       - ./mage-static release:darwin
-    depends_on: [ before-static-build ]
+    depends_on:
+      - before-static-build
+      - frontend-build
 
   - name: after-build-compress
     image: kolaente/upx
@@ -678,7 +665,7 @@ steps:
       detach_sign: true
 
   # Push the releases to our pseudo-s3-bucket
-  - name: release-latest
+  - name: release-unstable
     image: plugins/s3
     pull: always
     settings:
@@ -794,53 +781,6 @@ steps:
         - tag
     depends_on: [ build-os-packages-version ]
 
----
-kind: pipeline
-type: docker
-name: deploy-docs
-
-workspace:
-  base: /go
-  path: src/code.vikunja.io/api
-
-clone:
-  depth: 50
-
-trigger:
-  event:
-    - push
-  branch:
-    - main
-
-steps:
-  - name: theme
-    image: kolaente/toolbox
-    pull: always
-    commands:
-      - mkdir docs/themes/vikunja -p
-      - cd docs/themes/vikunja
-      - wget https://dl.vikunja.io/theme/vikunja-theme.tar.gz
-      - tar -xzf vikunja-theme.tar.gz
-
-  - name: build
-    image: klakegg/hugo:0.111.3
-    pull: always
-    commands:
-      - cd docs
-      - hugo
-      - mv public/docs/* public # Hugo seems to be not capable of setting a different theme for a home page, so we do this ugly hack to fix it.
-
-  - name: docker
-    image: plugins/docker
-    pull: always
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/docs
-      context: docs/
-      dockerfile: docs/Dockerfile
 
 ---
 kind: pipeline
@@ -848,7 +788,8 @@ type: docker
 name: docker-release
 
 depends_on:
-  - testing
+  - build-and-test-api
+  - build-and-test-frontend
 
 trigger:
   ref:
@@ -870,7 +811,7 @@ steps:
         from_secret: docker_username
       password:
         from_secret: docker_password
-      repo: vikunja/api
+      repo: vikunja/vikunja
       tags: unstable
       platforms:
         - linux/386
@@ -903,7 +844,7 @@ steps:
         from_secret: docker_username
       password:
         from_secret: docker_password
-      repo: vikunja/api
+      repo: vikunja/vikunja
       platforms:
         - linux/386
         - linux/amd64
@@ -915,43 +856,14 @@ steps:
       ref:
         - "refs/tags/**"
 
+
 ---
 kind: pipeline
 type: docker
-name: notify
-
-trigger:
-  ref:
-    - refs/heads/main
-    - "refs/tags/**"
+name: frontend-release-unstable
 
 depends_on:
-  - testing
-  - release
-  - deploy-docs
-  - docker-release
-
-steps:
-  - name: notify
-    image: plugins/matrix
-    settings:
-      homeserver: https://matrix.org
-      roomid: WqBDCxzghKcNflkErL:matrix.org
-      username:
-        from_secret: matrix_username
-      password:
-        from_secret: matrix_password
-    when:
-      status:
-        - success
-        - failure
----
-kind: pipeline
-type: docker
-name: frontend-release-latest
-
-depends_on:
-  - build-frontend
+  - build-and-test-frontend
 
 trigger:
   branch:
@@ -965,24 +877,6 @@ steps:
     commands:
       - git fetch --tags
   
-  #  - name: restore-cache
-  #    image: meltwater/drone-cache:dev
-  #    pull: always
-  #    environment:
-  #      AWS_ACCESS_KEY_ID:
-  #        from_secret: cache_aws_access_key_id
-  #      AWS_SECRET_ACCESS_KEY:
-  #        from_secret: cache_aws_secret_access_key
-  #    settings:
-  #      restore: true
-  #      bucket: kolaente.dev-drone-dependency-cache
-  #      endpoint: https://s3.fr-par.scw.cloud
-  #      region: fr-par
-  #      path_style: true
-  #      cache_key: '{{ .Repo.Name }}_{{ checksum "pnpm-lock.yaml" }}_{{ arch }}_{{ os }}'
-  #      mount:
-  #        - .cache
-
   - name: build
     image: node:20.11.0-alpine
     pull: always
@@ -995,14 +889,11 @@ steps:
       PUPPETEER_SKIP_DOWNLOAD: true
     commands:
       - cd frontend
-      - apk add git
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000 --frozen-lockfile
       - pnpm run lint
       - pnpm run build
       - sed -i 's/http\:\\/\\/localhost\\:3456\\/api\\/v1/\\/api\\/v1/g' dist/index.html # Override the default api url used for developing
-  #    depends_on:
-  #      - restore-cache
 
   - name: static
     image: kolaente/zip
@@ -1011,7 +902,6 @@ steps:
       - cd frontend
       - cd dist
       - zip -r ../vikunja-frontend-unstable.zip *
-      - cd ..
     depends_on: [ build ]
 
   - name: release
@@ -1033,10 +923,10 @@ steps:
 ---
 kind: pipeline
 type: docker
-name: release-frontend-version
+name: frontend-release-version
 
 depends_on:
-  - build-frontend
+  - build-and-test-frontend
 
 trigger:
   event:
@@ -1048,24 +938,6 @@ steps:
     commands:
       - git fetch --tags
   
-  #  - name: restore-cache
-  #    image: meltwater/drone-cache:dev
-  #    pull: always
-  #    environment:
-  #      AWS_ACCESS_KEY_ID:
-  #        from_secret: cache_aws_access_key_id
-  #      AWS_SECRET_ACCESS_KEY:
-  #        from_secret: cache_aws_secret_access_key
-  #    settings:
-  #      restore: true
-  #      bucket: kolaente.dev-drone-dependency-cache
-  #      endpoint: https://s3.fr-par.scw.cloud
-  #      region: fr-par
-  #      path_style: true
-  #      cache_key: '{{ .Repo.Name }}_{{ checksum "pnpm-lock.yaml" }}_{{ arch }}_{{ os }}'
-  #      mount:
-  #        - .cache
-
   - name: build
     image: node:20.11.0-alpine
     pull: always
@@ -1077,13 +949,10 @@ steps:
       SENTRY_PROJECT: frontend-oss
     commands:
       - cd frontend
-      - apk add git
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm install --fetch-timeout 100000 --frozen-lockfile
       - pnpm run build
       - sed -i 's/http\:\\/\\/localhost\\:3456\\/api\\/v1/\\/api\\/v1/g' dist/index.html # Override the default api url used for developing
-  #    depends_on:
-  #      - restore-cache
 
   - name: static
     image: kolaente/zip
@@ -1110,89 +979,6 @@ steps:
       target: /frontend/
     depends_on: [ static ]
 
----
-kind: pipeline
-type: docker
-name: frontend-docker-release
-
-depends_on:
-  - build-frontend
-
-trigger:
-  ref:
-    - refs/heads/main
-    - "refs/tags/**"
-  event:
-    exclude:
-      - cron
-
-steps:
-  - name: fetch-tags
-    image: docker:git
-    commands:
-      - git fetch --tags
-
-  - name: docker-unstable
-    image: thegeeklab/drone-docker-buildx
-    privileged: true
-    pull: always
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/frontend
-      tags: unstable
-      build_args:
-        - USE_RELEASE=false
-      platforms:
-        - linux/386
-        - linux/amd64
-        - linux/arm/v6
-        - linux/arm/v7
-        - linux/arm64/v8
-      context: ./frontend
-      dockerfile: ./frontend/Dockerfile
-    depends_on: [ fetch-tags ]
-    when:
-      ref:
-        - refs/heads/main
-
-  - name: generate-tags
-    image: thegeeklab/docker-autotag
-    environment:
-      DOCKER_AUTOTAG_VERSION: ${DRONE_TAG}
-      DOCKER_AUTOTAG_EXTRA_TAGS: latest
-      DOCKER_AUTOTAG_OUTPUT_FILE: .tags
-    depends_on: [ fetch-tags ]
-    when:
-      ref:
-        - "refs/tags/**"
-
-  - name: docker-release
-    image: thegeeklab/drone-docker-buildx
-    privileged: true
-    pull: always
-    settings:
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-      repo: vikunja/frontend
-      build_args:
-        - USE_RELEASE=false
-      platforms:
-        - linux/386
-        - linux/amd64
-        - linux/arm/v6
-        - linux/arm/v7
-        - linux/arm64/v8
-      context: ./frontend
-      dockerfile: ./frontend/Dockerfile
-    depends_on: [ generate-tags ]
-    when:
-      ref:
-        - "refs/tags/**"
 ---
 kind: pipeline
 type: docker
@@ -1262,7 +1048,7 @@ type: docker
 name: desktop-build
 
 depends_on:
-  - frontend-release-latest
+  - frontend-release-unstable
 
 trigger:
   branch:
@@ -1343,7 +1129,8 @@ type: docker
 name: desktop-release
 
 depends_on:
-  - frontend-release-latest
+  - frontend-release-unstable
+  - frontend-release-version
 
 trigger:
   ref:
@@ -1493,8 +1280,87 @@ steps:
 #      - mc config host add scw-fr-par https://s3.fr-par.scw.cloud $ACCESS_KEY $SECRET_KEY --api S3v4
 #      - mc cp ./dist/*.dmg scw-fr-par/vikunja-releases/desktop/$VERSION/
 #      - mc cp ./dist/*.dmg.blockmap scw-fr-par/vikunja-releases/desktop/$VERSION/
+
+---
+kind: pipeline
+type: docker
+name: deploy-docs
+
+workspace:
+  base: /go
+  path: src/code.vikunja.io/api
+
+clone:
+  depth: 50
+
+trigger:
+  event:
+    - push
+  branch:
+    - main
+
+steps:
+  - name: theme
+    image: kolaente/toolbox
+    pull: always
+    commands:
+      - mkdir docs/themes/vikunja -p
+      - cd docs/themes/vikunja
+      - wget https://dl.vikunja.io/theme/vikunja-theme.tar.gz
+      - tar -xzf vikunja-theme.tar.gz
+
+  - name: build
+    image: klakegg/hugo:0.111.3
+    pull: always
+    commands:
+      - cd docs
+      - hugo
+      - mv public/docs/* public # Hugo seems to be not capable of setting a different theme for a home page, so we do this ugly hack to fix it.
+
+  - name: docker
+    image: plugins/docker
+    pull: always
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: vikunja/docs
+      context: docs/
+      dockerfile: docs/Dockerfile
+---
+kind: pipeline
+type: docker
+name: notify
+
+trigger:
+  ref:
+    - refs/heads/main
+    - "refs/tags/**"
+
+depends_on:
+  - build-and-test-api
+  - build-and-test-frontend
+  - release
+  - deploy-docs
+  - docker-release
+
+steps:
+  - name: notify
+    image: plugins/matrix
+    settings:
+      homeserver: https://matrix.org
+      roomid: WqBDCxzghKcNflkErL:matrix.org
+      username:
+        from_secret: matrix_username
+      password:
+        from_secret: matrix_password
+    when:
+      status:
+        - success
+        - failure
 ---
 kind: signature
-hmac: f6100044ee52600c852ff3b200e282c9d450471ca44023e3817f28989fd91fd6
+hmac: 418392c25980336dc1ae4a5c6db2c67d830c37bad50468847483e40e5aa59e83
 
 ...
