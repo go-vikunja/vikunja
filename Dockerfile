@@ -3,8 +3,6 @@ FROM --platform=$BUILDPLATFORM node:20.11.0-alpine AS frontendbuilder
 
 WORKDIR /build
 
-ARG USE_RELEASE=false
-ARG RELEASE_VERSION=unstable
 ENV PNPM_CACHE_FOLDER .cache/pnpm/
 ENV PUPPETEER_SKIP_DOWNLOAD true
 
