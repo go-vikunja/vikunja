@@ -681,7 +681,7 @@ steps:
       path_style: true
       strip_prefix: dist/zip/
       source: dist/zip/*
-      target: /api/unstable/
+      target: /vikunja/unstable/
     when:
       branch:
         - main
@@ -703,7 +703,7 @@ steps:
       path_style: true
       strip_prefix: dist/zip/
       source: dist/zip/*
-      target: /api/${DRONE_TAG##v}/
+      target: /vikunja/${DRONE_TAG##v}/
     when:
       event:
         - tag
@@ -755,7 +755,7 @@ steps:
       path_style: true
       strip_prefix: dist/os-packages/
       source: dist/os-packages/*
-      target: /api/unstable/
+      target: /vikunja/unstable/
     when:
       branch:
         - main
@@ -777,7 +777,7 @@ steps:
       path_style: true
       strip_prefix: dist/os-packages/
       source: dist/os-packages/*
-      target: /api/${DRONE_TAG##v}/
+      target: /vikunja/${DRONE_TAG##v}/
     when:
       event:
         - tag
@@ -1360,6 +1360,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 25297bbae6b6b8e388bd78cfeed7be41b7bd9958efb59061c95e7514bdebb085
+hmac: 145b0b119455f21515deeedc1ec2a391953aaa4101a4046e05e3c670067c3f5b
 
 ...
