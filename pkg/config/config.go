@@ -63,6 +63,7 @@ const (
 	ServiceEnableUserDeletion    Key = `service.enableuserdeletion`
 	ServiceMaxAvatarSize         Key = `service.maxavatarsize`
 	ServiceAllowIconChanges      Key = `service.allowiconchanges`
+	ServiceCustomLogoURL         Key = `service.customlogourl`
 
 	SentryEnabled         Key = `sentry.enabled`
 	SentryDsn             Key = `sentry.dsn`

@@ -60,6 +60,8 @@ service:
   demomode: false
   # Allow changing the logo and other icons based on various occasions throughout the year.
   allowiconchanges: true
+  # Allow using a custom logo via external URL.
+  customlogourl: ''
 
 sentry:
   # If set to true, enables anonymous error tracking of api errors via Sentry. This allows us to gather more 

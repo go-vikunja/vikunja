@@ -79,7 +79,7 @@ func serveIndexFile(c echo.Context, assetFs http.FileSystem) (err error) {
 		if config.ServiceAllowIconChanges.GetBool() {
 			data["ALLOW_ICON_CHANGES"] = "true"
 		}
-		data["CUSTOM_LOGO_URL"] = "" // TODO
+		data["CUSTOM_LOGO_URL"] = config.ServiceCustomLogoURL.GetString()
 
 		err = tmpl.Execute(&tplOutput, data)
 		if err != nil {
