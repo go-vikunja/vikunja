@@ -74,7 +74,7 @@
 			</ProjectSettingsDropdown>
 		</div>
 		<ProjectsNavigation
-			v-if="canNestDeeper && childProjectsOpen && canCollapse"
+			v-if="childProjectsOpen && canCollapse"
 			:model-value="childProjects"
 			:can-edit-order="true"
 			:can-collapse="canCollapse"
@@ -95,7 +95,6 @@ import ProjectSettingsDropdown from '@/components/project/project-settings-dropd
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import ColorBubble from '@/components/misc/colorBubble.vue'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
-import {canNestProjectDeeper} from '@/helpers/canNestProjectDeeper'
 
 const {
 	project,
@@ -116,16 +115,10 @@ const currentProject = computed(() => baseStore.currentProject)
 const childProjectsOpen = ref(true)
 
 const childProjects = computed(() => {
-	if (!canNestDeeper.value) {
-		return []
-	}
-
 	return projectStore.getChildProjects(project.id)
 		.filter(p => !p.isArchived)
 		.sort((a, b) => a.position - b.position)
 })
-
-const canNestDeeper = computed(() => canNestProjectDeeper(level))
 </script>
 
 <style lang="scss" scoped>
