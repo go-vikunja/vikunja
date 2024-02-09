@@ -23,7 +23,7 @@ First, define a `const` with the metric key in redis. This is done in `pkg/metri
 
 To expose a new metric, you need to register it in the `init` function inside of the `metrics` package like so:
 
-{{< highlight golang >}}
+```go
 // Register total user count metric
 promauto.NewGaugeFunc(prometheus.GaugeOpts{
     Name: "vikunja_team_count", // The key of the metric. Must be unique.
@@ -32,7 +32,7 @@ promauto.NewGaugeFunc(prometheus.GaugeOpts{
     count, _ := GetCount(TeamCountKey) // TeamCountKey is the const we defined earlier.
     return float64(count)
 })
-{{< /highlight >}}
+```
 
 Then you'll need to set the metrics initial value on every startup of Vikunja.
 This is done in `pkg/routes/routes.go` to avoid cyclic imports.

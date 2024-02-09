@@ -27,89 +27,53 @@ Create a directory for the project where all data and the compose file will live
 
 Create a `docker-compose.yml` file with the following contents in your directory:
 
-{{< highlight yaml >}}
+
+```yaml
 version: '3'
 
 services:
-  db:
-    image: mariadb:10
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    environment:
-      MYSQL_ROOT_PASSWORD: supersecret
-      MYSQL_USER: vikunja
-      MYSQL_PASSWORD: secret
-      MYSQL_DATABASE: vikunja
-    volumes:
-      - ./db:/var/lib/mysql
-    restart: unless-stopped
-  api:
-    image: vikunja/api
-    environment:
-      VIKUNJA_DATABASE_HOST: db
-      VIKUNJA_DATABASE_PASSWORD: secret
-      VIKUNJA_DATABASE_TYPE: mysql
-      VIKUNJA_DATABASE_USER: vikunja
-      VIKUNJA_DATABASE_DATABASE: vikunja
-      VIKUNJA_SERVICE_JWTSECRET: <a super secure random secret>
-      VIKUNJA_SERVICE_FRONTENDURL: https://<your public frontend url with slash>/
-    volumes: 
-      - ./files:/app/vikunja/files
-    depends_on:
-      - db
-    restart: unless-stopped
-  frontend:
-    image: vikunja/frontend
-    restart: unless-stopped
-  proxy:
-    image: nginx
-    ports:
-      - 80:80
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      - api
-      - frontend
-    restart: unless-stopped
-{{< /highlight >}}
+    vikunja:
+        image: vikunja/vikunja
+        environment:
+            VIKUNJA_SERVICE_PUBLICURL: http://<the public url where vikunja is reachable>
+            VIKUNJA_DATABASE_HOST: db
+            VIKUNJA_DATABASE_PASSWORD: secret
+            VIKUNJA_DATABASE_TYPE: mysql
+            VIKUNJA_DATABASE_USER: vikunja
+            VIKUNJA_DATABASE_DATABASE: vikunja
+            VIKUNJA_SERVICE_JWTSECRET: <a super secure random secret>
+        ports:
+            - 3456:3456
+        volumes:
+            - ./files:/app/vikunja/files
+        depends_on:
+            - db
+        restart: unless-stopped
+    db:
+        image: mariadb:10
+        command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+        environment:
+            MYSQL_ROOT_PASSWORD: supersupersecret
+            MYSQL_USER: vikunja
+            MYSQL_PASSWORD: supersecret
+            MYSQL_DATABASE: vikunja
+        volumes:
+            - ./db:/var/lib/mysql
+        restart: unless-stopped
+```
 
-This defines four services, each with their own container:
+This defines two services, each with their own container:
 
-* An api service which runs the vikunja api. Most of the core logic lives here.
-* The frontend which will make vikunja actually usable for most people.
+* A Vikunja service which runs the vikunja api and hosts its frontend.
 * A database container which will store all projects, tasks, etc. We're using mariadb here, but you're free to use mysql or postgres if you want.
-* A proxy service which makes the frontend and api available on the same port, redirecting all requests to `/api` to the api container. 
-If you already have a proxy on your host, you may want to check out the [reverse proxy examples]() to use that.
-By default, it uses port 80 on the host.
+
+If you already have a proxy on your host, you may want to check out the [reverse proxy examples]({{< ref "reverse-proxies.md" >}}) to use that.
+By default, Vikunja will be exposed on port 3456 on the host.
+
 To change to something different, you'll need to change the `ports` section in the service definition.
 The number before the colon is the host port - This is where you can reach vikunja from the outside once all is up and running.
 
-For the proxy service we'll need another bit of configuration.
-Create an `nginx.conf` in your directory (next to the `docker-compose.yml` file) and add the following contents to it:
-
-{{< highlight conf >}}
-server {
-    listen 80;
-
-    location / {
-        proxy_pass http://frontend:80;
-    }
-
-    location ~* ^/(api|dav|\.well-known)/ {
-        proxy_pass http://api:3456;
-        client_max_body_size 20M;
-    }
-}
-{{< /highlight >}}
-
-This is a simple proxy configuration which will forward all requests to `/api/` to the api container and everything else to the frontend.
-
-<div class="notification is-info">
-<b>NOTE:</b> Even if you want to make your installation available under a different port, you don't need to change anything in this configuration.
-</div>
-
-<div class="notification is-warning">
-<b>NOTE:</b> If you change the max upload size in Vikunja's settings, you'll need to also change the <code>client_max_body_size</code> in the nginx proxy config.
-</div>
+You'll need to change the value of the `VIKUNJA_SERVICE_PUBLICURL` environment variable to the public port or hostname where Vikunja is reachable.
 
 ## Run it
 
@@ -118,8 +82,8 @@ When first started, Vikunja will set up the database and run all migrations etc.
 Once it is ready, you should see a message like this one in your console:
 
 ```
-api_1       | 2020-05-24T11:15:37.560386009Z: INFO	▶ cmd/func1 025 Vikunja version 0.13.1+19-e9bc3246ce, built at Sun, 24 May 2020 11:10:36 +0000
-api_1       | ⇨ http server started on [::]:3456
+vikunja_1       | 2024-02-09T14:44:06.990677157+01:00: INFO       ▶ cmd/func29 05d Vikunja version 0.23.0
+vikunja_1       | ⇨ http server started on [::]:3456
 ```
 
 This indicates all setup has been successful.
@@ -159,20 +123,6 @@ If not, there might be a different error or a bug with Vikunja, please reach out
 
 (If you have an idea about how we could improve this, we'd like to hear it!)
 
-#### "Not a directory"
-
-If you get an error like this one:
-
-```
-ERROR: for vikunja_proxy_1 Cannot start service proxy: OCI runtime create failed: container_linux.go:349: starting container process caused "process_linux.go:449: container init caused \"rootfs_linux.go:58: mounting \\\"vikunja/nginx.conf\\\" to rootfs \\\"/var/lib/docker/overlay2/9c8b8f9419c29dad0d1233fbb0a3c36cf403dabd7a55d6f0a47b0c1dd6029994/merged\\\" at \\\"/var/lib/docker/overlay2/9c8b8f9419c29dad0d1233fbb0a3c36cf403dabd7a55d6f0a47b0c1dd6029994/merged/etc/nginx/conf.d/default.conf\\\" caused \\\"not a directory\\\"\"": unknown: Are you trying to mount a directory onto a file (or vice-versa)? Check if the specified host path exists and is the expected type
-```
-
-this means docker tried to mount a directory from the host to a file in the container.
-This can happen if you did not create the `nginx.conf` file.
-Because there is a volume mount for it in the `docker-compose.yml`, Docker will create a folder because non exists, assuming you want to mount a folder into the container.
-
-To fix this, create the file and restart the containers again.
-
 #### Migration failed: commands out of sync
 
 If you get an error like this one:
@@ -192,20 +142,46 @@ To do this, first stop everything by running `sudo docker-compose down`, then re
 Head over to `http://<host-ip or url>/api/v1/info` in a browser.
 You should see something like this:
 
-{{< highlight json >}}
+```json
 {
-  "version": "0.13.1+19-e9bc3246ce",
-  "frontend_url": "http://localhost:8080/",
-  "motd": "test",
-  "link_sharing_enabled": true,
-  "max_file_size": "20MB",
-  "registration_enabled": true,
-  "available_migrators": [
-    "todoist"
-  ],
-  "task_attachments_enabled": true
+	"version": "v0.23.0",
+	"frontend_url": "https://try.vikunja.io/",
+	"motd": "",
+	"link_sharing_enabled": true,
+	"max_file_size": "20MB",
+	"registration_enabled": true,
+	"available_migrators": [
+		"vikunja-file",
+		"ticktick",
+		"todoist"
+	],
+	"task_attachments_enabled": true,
+	"enabled_background_providers": [
+		"upload",
+		"unsplash"
+	],
+	"totp_enabled": false,
+	"legal": {
+		"imprint_url": "",
+		"privacy_policy_url": ""
+	},
+	"caldav_enabled": true,
+	"auth": {
+		"local": {
+			"enabled": true
+		},
+		"openid_connect": {
+			"enabled": false,
+			"providers": null
+		}
+	},
+	"email_reminders_enabled": true,
+	"user_deletion_enabled": true,
+	"task_comments_enabled": true,
+	"demo_mode_enabled": true,
+	"webhooks_enabled": true
 }
-{{< /highlight >}}
+```
 
 This shows you can reach the api through the api proxy.
 

@@ -18,7 +18,7 @@ and a human-readable error message about what went wrong.
 
 An error consists of multiple functions and definitions:
 
-{{< highlight golang >}}
+```go
 // This struct holds any information about this specific error.
 // In this case, it contains the user ID of a nonexistent user.
 // This type should always be a struct, even if it has no values in it.
@@ -69,4 +69,4 @@ func (err ErrUserDoesNotExist) HTTPError() web.HTTPError {
 		Message: "The user does not exist.",
     }
 }
-{{< /highlight >}}
+```

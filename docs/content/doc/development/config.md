@@ -32,10 +32,10 @@ Then run `mage generate-docs` to generate the configuration docs from the sample
 To retrieve a configured value call the key with a getter for the type you need.
 For example:
 
-{{< highlight golang >}}
+```go
 if config.CacheEnabled.GetBool() {
 	// Do something with enabled caches
 }
-{{< /highlight >}}
+```
 
 Take a look at the methods declared on the type to see what's available.

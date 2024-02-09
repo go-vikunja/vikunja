@@ -16,13 +16,7 @@ Not all steps are necessary for every release.
 	* New Features: If there are new features worth mentioning the feature page should be updated.
 	* New Screenshots: If an overhaul of an existing feature happened so that it now looks different from the existing screenshot, a new one is required.
 * Generate changelogs (with git-cliff)
-	* Frontend
-	* API
-	* Desktop
 * Tag a new version: Include the changelog for that version as the tag message
-	* Frontend
-	* API
-	* Desktop
 	* Once built: Prune the cloudflare cache so that the new versions show up at [dl.vikunja.io](https://dl.vikunja.io/)
     * Update the [Flathub desktop package](https://github.com/flathub/io.vikunja.Vikunja)
 * Release Highlights Blogpost

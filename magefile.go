@@ -64,6 +64,7 @@ var (
 		"build":                 Build.Build,
 		"do-the-swag":           DoTheSwag,
 		"check:got-swag":        Check.GotSwag,
+		"release":               Release.Release,
 		"release:os-package":    Release.OsPackage,
 		"dev:make-migration":    Dev.MakeMigration,
 		"dev:make-event":        Dev.MakeEvent,

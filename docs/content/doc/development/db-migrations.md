@@ -27,9 +27,9 @@ and a more in-depth description of what the migration actually does.
 
 To easily get a new id, run the following on any unix system:
 
-{{< highlight bash >}}
+```
 date +%Y%m%d%H%M%S
-{{< /highlight >}}
+```
 
 New migrations should be added via the `init()` function to the `migrations` variable.
 All migrations are sorted before being executed, since `init()` does not guarantee the order.
@@ -44,7 +44,7 @@ It will ask you for a table name and generate an empty migration similar to the 
 
 ### Example
 
-{{< highlight golang >}}
+```go
 package migration
 
 import (
@@ -73,6 +73,6 @@ func init() {
 		},
 	})
 }
-{{< /highlight >}}
+```
 
 You should always copy the changed parts of the struct you're changing when adding migrations.

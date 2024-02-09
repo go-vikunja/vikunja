@@ -27,9 +27,9 @@ The easies way to do that is to set the environment variable `VIKUNJA_SERVICE_RO
 
 To run unit tests with [mage]({{< ref "mage.md">}}), execute
 
-{{< highlight bash >}}
+```
 mage test:unit
-{{< /highlight >}}
+```
 
 In Vikunja, everything that is not an integration test counts as unit test - even if it accesses the db.
 This definition is a bit blurry, but we haven't found a better one yet.
@@ -71,18 +71,18 @@ You should put new fixtures in this folder.
 When initializing db fixtures, you are responsible for defining which tables your package needs in your test init function.
 Usually, this is done as follows (this code snippet is taken from the `user` package):
 
-{{< highlight go >}}
+```go
 err = db.InitTestFixtures("users")
 if err != nil {
 	log.Fatal(err)
 }
-{{< /highlight >}}
+```
 
 In your actual tests, you then load the fixtures into the in-memory db like so:
 
-{{< highlight go >}}
+```go
 db.LoadAndAssertFixtures(t)
-{{< /highlight >}}
+```
 
 This will load all fixtures you defined in your test init method.
 You should always use this method to load fixtures, the only exception is when your package tests require extra test 
@@ -97,13 +97,13 @@ Check out the docs [in the frontend repo](https://kolaente.dev/vikunja/vikunja/s
 
 To run the frontend unit tests, run
 
-{{< highlight bash >}}
+```
 pnpm run test:unit
-{{< /highlight >}}
+```
 
 The frontend also has a watcher available that re-runs all unit tests every time you change something.
 To use it, simply run
 
-{{< highlight bash >}}
+```
 pnpm run test:unit-watch
-{{< /highlight >}}
+```

@@ -38,9 +38,7 @@ After saving, build Vikunja as normal.
 pnpm run build
 ```
 
-Once you have the build files you can deploy them as usual.
-Note that when deploying in docker you'll need to put the files in a web container yourself, you 
-can't use the `Dockerfile` in the repo without modifications.
+Once you have the frontend built, you can proceed to build the binary as outlined in [building from source]({{< ref "build-from-source.md">}}#api).
 
 ## API
 

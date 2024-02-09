@@ -16,13 +16,13 @@ The package exposes a `cron.Schedule` method with two arguments: The first one t
 
 A basic function to register a cron task looks like this:
 
-{{< highlight golang >}}
+```go
 func RegisterSomeCronTask() {
 	err := cron.Schedule("0 * * * *", func() {
 		// Do something every hour
 	}
 }
-{{< /highlight >}}
+```
 
 Call the register method in the `FullInit()` method of the `init` package to actually register it.
 

@@ -36,7 +36,7 @@ The demo instance at [try.vikunja.io](https://try.vikunja.io) automatically upda
 
 First you should create a backup of your current setup!
 
-Switching between versions is the same process as [upgrading]({{< ref install-backend.md >}}#updating).
+Switching between versions is the same process as [upgrading]({{< ref install.md >}}#updating).
 Simply replace the stable binary with an unstable one or vice-versa.
 
 For installations using docker, it is as simple as using the `unstable` or `latest` tag to switch between versions.

@@ -19,7 +19,7 @@ Please refer to its documentation for information about how to use flags etc.
 
 To add a new cli command, add something like the following:
 
-{{< highlight golang >}}
+```go
 func init() {
 	rootCmd.AddCommand(myCmd)
 }
@@ -31,4 +31,4 @@ var myCmd = &cobra.Command{
 		// Call other functions
 	},
 }
-{{</ highlight >}}
+```

@@ -16,16 +16,17 @@ Right now it is not possible to configure openid authentication via environment 
 Variables are nested in the `config.yml`, these nested variables become `VIKUNJA_FIRST_CHILD` when configuring via
 environment variables. So setting
 
-{{< highlight bash >}}
+```
 export VIKUNJA_FIRST_CHILD=true
-{{< /highlight >}}
+```
 
 is the same as defining it in a `config.yml` like so:
 
-{{< highlight yaml >}}
+```yaml
+```yaml
 first:
     child: true
-{{< /highlight >}}
+```
 
 # Formats
 
@@ -137,15 +138,15 @@ Full path: `service.unixsocketmode`
 Environment path: `VIKUNJA_SERVICE_UNIXSOCKETMODE`
 
 
-### frontendurl
+### publicurl
 
-The URL of the frontend, used to send password reset emails.
+The public facing URL where your users can reach Vikunja. Used in emails and for the communication between api and frontend.
 
 Default: `<empty>`
 
-Full path: `service.frontendurl`
+Full path: `service.publicurl`
 
-Environment path: `VIKUNJA_SERVICE_FRONTENDURL`
+Environment path: `VIKUNJA_SERVICE_PUBLICURL`
 
 
 ### rootpath
@@ -159,17 +160,6 @@ Default: `<rootpath>`
 Full path: `service.rootpath`
 
 Environment path: `VIKUNJA_SERVICE_ROOTPATH`
-
-
-### staticpath
-
-Path on the file system to serve static files from. Set to the path of the frontend files to host frontend alongside the api.
-
-Default: `<empty>`
-
-Full path: `service.staticpath`
-
-Environment path: `VIKUNJA_SERVICE_STATICPATH`
 
 
 ### maxitemsperpage
@@ -271,17 +261,6 @@ Full path: `service.enabletotp`
 Environment path: `VIKUNJA_SERVICE_ENABLETOTP`
 
 
-### sentrydsn
-
-If not empty, enables logging of crashes and unhandled errors in sentry.
-
-Default: `<empty>`
-
-Full path: `service.sentrydsn`
-
-Environment path: `VIKUNJA_SERVICE_SENTRYDSN`
-
-
 ### testingtoken
 
 If not empty, this will enable `/test/{table}` endpoints which allow to put any content in the database.
@@ -343,6 +322,80 @@ Default: `false`
 Full path: `service.demomode`
 
 Environment path: `VIKUNJA_SERVICE_DEMOMODE`
+
+
+### allowiconchanges
+
+Allow changing the logo and other icons based on various occasions throughout the year.
+
+Default: `true`
+
+Full path: `service.allowiconchanges`
+
+Environment path: `VIKUNJA_SERVICE_ALLOWICONCHANGES`
+
+
+### customlogourl
+
+Allow using a custom logo via external URL.
+
+Default: `<empty>`
+
+Full path: `service.customlogourl`
+
+Environment path: `VIKUNJA_SERVICE_CUSTOMLOGOURL`
+
+
+---
+
+## sentry
+
+
+
+### enabled
+
+If set to true, enables anonymous error tracking of api errors via Sentry. This allows us to gather more 
+information about errors in order to debug and fix it.
+
+Default: `false`
+
+Full path: `sentry.enabled`
+
+Environment path: `VIKUNJA_SENTRY_ENABLED`
+
+
+### dsn
+
+Configure the Sentry dsn used for api error tracking. Only used when Sentry is enabled for the api.
+
+Default: `https://440eedc957d545a795c17bbaf477497c@o1047380.ingest.sentry.io/4504254983634944`
+
+Full path: `sentry.dsn`
+
+Environment path: `VIKUNJA_SENTRY_DSN`
+
+
+### frontendenabled
+
+If set to true, enables anonymous error tracking of frontend errors via Sentry. This allows us to gather more 
+information about errors in order to debug and fix it.
+
+Default: `false`
+
+Full path: `sentry.frontendenabled`
+
+Environment path: `VIKUNJA_SENTRY_FRONTENDENABLED`
+
+
+### frontenddsn
+
+Configure the Sentry dsn used for frontend error tracking. Only used when Sentry is enabled for the frontend.
+
+Default: `https://85694a2d757547cbbc90cd4b55c5a18d@o1047380.ingest.sentry.io/6024480`
+
+Full path: `sentry.frontenddsn`
+
+Environment path: `VIKUNJA_SENTRY_FRONTENDDSN`
 
 
 ---
@@ -611,7 +664,7 @@ Whether to enable or disable cors headers.
 Note: If you want to put the frontend and the api on separate domains or ports, you will need to enable this.
       Otherwise the frontend won't be able to make requests to the api through the browser.
 
-Default: `true`
+Default: `false`
 
 Full path: `cors.enable`
 
@@ -1159,8 +1212,10 @@ The provider needs to support the `openid`, `profile` and `email` scopes.<br/>
 **Note:** Some openid providers (like gitlab) only make the email of the user available through openid claims if they have set it to be publicly visible.
 If the email is not public in those cases, authenticating will fail.
 **Note 2:** The frontend expects to be redirected after authentication by the third party
-to <frontend-url>/auth/openid/<auth key>. Please make sure to configure the redirect url with your third party
+to <frontend-url>/auth/openid/<auth key>. Please make sure to configure the redirect url in your third party
 auth service accordingly if you're using the default vikunja frontend.
+The frontend will automatically provide the api with the redirect url, composed from the current url where it's hosted.
+If you want to use the desktop client with openid, make sure to allow redirects to `127.0.0.1`.
 Take a look at the [default config file](https://kolaente.dev/vikunja/vikunja/src/branch/main/config.yml.sample) for more information about how to configure openid authentication.
 
 Default: `<empty>`
@@ -1320,7 +1375,7 @@ Environment path: `VIKUNJA_DEFAULTSETTINGS_WEEK_START`
 
 ### language
 
-The language of the user interface. Must be an ISO 639-1 language code followed by an ISO 3166-1 alpha-2 country code. Check https://kolaente.dev/vikunja/vikunja/src/branch/main/frontend/src/i18n/lang for a list of possible languages. Will default to the browser language the user uses when signing up.
+The language of the user interface. Must be an ISO 639-1 language code followed by an ISO 3166-1 alpha-2 country code. Check https://kolaente.dev/vikunja/vikunja/frontend/src/branch/main/src/i18n/lang for a list of possible languages. Will default to the browser language the user uses when signing up.
 
 Default: `<unset>`
 

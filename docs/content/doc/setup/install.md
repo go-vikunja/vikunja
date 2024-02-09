@@ -11,42 +11,277 @@ menu:
 
 # Installing
 
-Vikunja consists of two parts: [API](https://code.vikunja.io/api) and [frontend](https://code.vikunja.io/frontend).
+Architecturally, Vikunja is made up of two parts: [API](https://code.vikunja.io/api) and [frontend](https://code.vikunja.io/api/frontend).
 
-You will always need to install at least the API.
-To actually use Vikunja you'll also need to somehow install a frontend to use it.
-You can either:
+Both are bundled into one single deployable binary (or docker container).
+That means you only need to install one thing to be able to use Vikunja.
 
-* [Install the web frontend]({{< ref "install-frontend.md">}})
-* Use the desktop app, which is essentially a web frontend packaged for easy installation on desktop devices
+You can also:
+
+* Use the desktop app, which is essentially the web frontend packaged for easy installation on desktop devices
 * Use the mobile app only, but as of right now it only supports the very basic features of Vikunja
 
-Vikunja can be installed in various ways. 
-This document provides an overview and instructions for the different methods.
+<div class="notification is-warning">
+<b>NOTE:</b> If you intend to run Vikunja with mysql and/or to use non-latin characters 
+<a href="{{< ref "utf-8.md">}}">make sure your db is utf-8 compatible</a>.
+</div>
 
-* [API]({{< ref "install-backend.md">}})
-  * [Installing from binary]({{< ref "install-backend.md#install-from-binary">}})
-    * [Verify the GPG signature]({{< ref "install-backend.md#verify-the-gpg-signature">}})
-    * [Set it up]({{< ref "install-backend.md#set-it-up">}})
-    * [Systemd service]({{< ref "install-backend.md#systemd-service">}})
-    * [Updating]({{< ref "install-backend.md#updating">}})
-    * [Build from source]({{< ref "install-backend.md#build-from-source">}})
-  * [Docker]({{< ref "install-backend.md#docker">}})
-  * [Debian packages]({{< ref "install-backend.md#debian-packages">}})
-  * [Configuration]({{< ref "config.md">}})
-  * [UTF-8 Settings]({{< ref "utf-8.md">}})
-* [Frontend]({{< ref "install-frontend.md">}})
-  * [Docker]({{< ref "install-frontend.md#docker">}})
-  * [NGINX]({{< ref "install-frontend.md#nginx">}})
-  * [Apache]({{< ref "install-frontend.md#apache">}})
-  * [Updating]({{< ref "install-frontend.md#updating">}})
+Vikunja can be installed in various ways.
+This document provides an overview and instructions for the different methods:
+
+* [Installing from binary](#install-from-binary)
+* [Build from source]({{< ref "build-from-source.md">}})
+* [Docker](#docker)
+* [Debian packages](#debian-packages)
+* [FreeBSD](#freebsd--freenas)
+* [Kubernetes]({{< ref "k8s.md" >}})
+
+And after you installed Vikunja, you may want to check out these other ressources:
+
+* [Configuration]({{< ref "config.md">}})
+* [UTF-8 Settings]({{< ref "utf-8.md">}})
 * [Reverse proxies]({{< ref "reverse-proxies.md">}})
 * [Full docker example]({{< ref "full-docker-example.md">}})
 * [Backups]({{< ref "backups.md">}})
 
-## Installation on kubernetes
+## Install from binary
 
-A third-party Helm Chart is available from the k8s-at-home project [here](https://github.com/k8s-at-home/charts/tree/master/charts/stable/vikunja).
+Download a copy of Vikunja from the [download page](https://dl.vikunja.io/vikunja) for your architecture.
+
+```
+wget <download-url>
+```
+
+### Verify the GPG signature
+
+All releases are signed using GPG.
+
+To validate the downloaded zip file use the signiture file `.asc` and the key `FF054DACD908493A`:
+
+```
+gpg --keyserver keyserver.ubuntu.com --recv FF054DACD908493A
+gpg --verify vikunja-<vikunja version>-linux-amd64-full.zip.asc vikunja-<vikunja version>-linux-amd64-full.zip
+```
+
+### Set it up
+
+Once you've verified the signature, you need to unzip and make it executable.
+You'll also need to create a symlink to the binary, so that you can execute Vikunja by typing `vikunja` on your system.
+We'll install vikunja to `/opt/vikunja`, change the path where needed if you want to install it elsewhere.
+
+Run these commands to install it:
+
+```
+mkdir -p /opt/vikunja
+unzip <vikunja-zip-file> -d /opt/vikunja
+chmod +x /opt/vikunja
+sudo ln -s /opt/vikunja/vikunja /usr/bin/vikunja
+```
+
+### Systemd service
+
+To automatically start Vikunja when your system boots and to ensure all dependent services are met, you want to use an init system like systemd.
+
+Save the following service file to `/etc/systemd/system/vikunja.service` and adapt it to your needs:
+
+```unit file (systemd)
+[Unit]
+Description=Vikunja
+After=syslog.target
+After=network.target
+# Depending on how you configured Vikunja, you may want to uncomment these:
+#Requires=mysql.service
+#Requires=mariadb.service
+#Requires=postgresql.service
+#Requires=redis.service
+
+[Service]
+RestartSec=2s
+Type=simple
+WorkingDirectory=/opt/vikunja
+ExecStart=/usr/bin/vikunja
+Restart=always
+# If you want to bind Vikunja to a port below 1024 uncomment
+# the two values below
+###
+#CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+#AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target
+```
+
+If you've installed Vikunja to a directory other than `/opt/vikunja`, you need to adapt `WorkingDirectory` accordingly.
+
+After you made all necessary modifications, it's time to start the service:
+
+```
+sudo systemctl enable vikunja
+sudo systemctl start vikunja
+```
+
+### Build from source
+
+To build vikunja from source, see [building from source]({{< ref "build-from-source.md">}}).
+
+### Updating
+
+[Make a backup first]({{< ref "backups.md" >}}).
+
+Simply replace the binary with the new version, then restart Vikunja.
+It will automatically run all necessary database migrations.
+**Make sure to take a look at the changelog for the new version to not miss any manual steps the update may involve!**
+
+## Docker
+
+(Note: this assumes some familiarity with docker)
+
+To get up and running quickly, use this command:
+
+```
+touch vikunja.db
+docker run -p 3456:3456 -v $PWD/files:/app/vikunja/files -v $PWD/vikunja.db:/app/vikunja/vikunja.db vikunja/vikunja
+```
+
+This will expose vikunja on port `3456` on the host running the container and use sqlite as database backend.
+
+You can mount a local configuration like so:
+
+```
+touch vikunja.db
+docker run -p 3456:3456 -v /path/to/config/on/host.yml:/app/vikunja/config.yml:ro -v $PWD/files:/app/vikunja/files -v $PWD/vikunja.db:/app/vikunja/vikunja.db vikunja/vikunja
+```
+
+Though it is recommended to use environment variables or `.env` files to configure Vikunja in docker.
+See [config]({{< ref "config.md">}}) for a list of available configuration options.
+
+Check out the [docker examples]({{<ref "full-docker-example.md">}}) for more advanced configuration using mysql / postgres and a reverse proxy.
+
+### Files volume
+
+By default, the container stores all files uploaded and used through vikunja inside of `/app/vikunja/files` which is created as a docker volume.
+You should mount the volume somewhere to the host to permanently store the files and don't lose them if the container restarts.
+
+### Setting user and group id of the user running vikunja
+
+You can set the user and group id of the user running vikunja with the `PUID` and `PGID` environment variables.
+This follows the pattern used by [the linuxserver.io](https://docs.linuxserver.io/general/understanding-puid-and-pgid) docker images.
+
+This is useful to solve general permission problems when host-mounting volumes such as the volume used for task attachments.
+
+### Docker compose
+
+Check out the [docker examples]({{<ref "full-docker-example.md">}}) for more advanced configuration using docker compose.
+
+## Debian packages
+
+Vikunja is available as debian packages.
+
+To install these, grab a `.deb` file from [the download page](https://dl.vikunja.io/vikunja) and run
+
+```
+dpkg -i vikunja.deb
+```
+
+This will install Vikunja to `/opt/vikunja`.
+To configure it, use the config file in `/etc/vikunja/config.yml`.
+
+## FreeBSD / FreeNAS
+
+Unfortunately, we currently can't provide pre-built binaries for FreeBSD.
+As a workaround, it is possible to compile vikunja for FreeBSD directly on a FreeBSD machine, a guide is available below:
+
+*Thanks to HungrySkeleton who originally created this guide [in the forum](https://community.vikunja.io/t/freebsd-support/69/11).*
+
+### Jail Setup
+
+1. Create a jail named `vikunja`
+2. Set jail properties to 'auto start'
+3. Mount storage (`/mnt` to `jailData/vikunja`)
+4. Start jail & SSH into it
+
+### Installing packages
+
+```
+pkg update && pkg upgrade -y
+pkg install nano git go gmake
+go install github.com/magefile/mage
+```
+
+### Clone vikunja repo
+
+```
+mkdir /mnt/GO/code.vikunja.io
+cd /mnt/GO/code.vikunja.io
+git clone https://code.vikunja.io/api
+cd /mnt/GO/code.vikunja.io/api
+```
+
+### Compile binaries
+
+```
+cd frontend
+pnpm install
+pnpm run build
+cd ..
+mage build
+```
+
+### Create folder to install Vikunja into
+
+```
+mkdir /mnt/vikunja
+cp /mnt/GO/code.vikunja.io/api/vikunja /mnt/vikunja
+cd /mnt/vikunja
+chmod +x /mnt/vikunja
+```
+
+### Set vikunja to boot on startup
+
+```
+nano /etc/rc.d/vikunja
+```
+
+Then paste into the file:
+
+```
+#!/bin/sh
+
+. /etc/rc.subr
+
+name=vikunja
+rcvar=vikunja_enable
+
+command="/mnt/vikunja/${name}"
+
+load_rc_config $name
+run_rc_command "$1"
+```
+
+Save and exit.  Then execute:
+
+```
+chmod +x /etc/rc.d/vikunja
+nano /etc/rc.conf
+```
+
+Then add line to bottom of file:
+
+```
+vikunja_enable="YES"
+```
+
+Test vikunja now works with
+
+```
+service vikunja start
+```
+
+Vikunja is now available through IP:
+
+```
+192.168.1.XXX:3456
+```
 
 ## Other installation resources
 
@@ -57,3 +292,12 @@ A third-party Helm Chart is available from the k8s-at-home project [here](https:
 * [Self-Hosted To-Do List with Vikunja in Docker](https://www.youtube.com/watch?v=DqyqDWpEvKI) (Youtube)
 * [Vikunja self-hosted (step by step)](https://nguyenminhhung.com/vikunja-self-hosted-step-by-step/)
 * [How to Install Vikunja on Your Synology NAS](https://mariushosting.com/how-to-install-vikunja-on-your-synology-nas/)
+
+## Configuration
+
+See [available configuration options]({{< ref "config.md">}}).
+
+## Default Password
+
+After successfully installing Vikunja, there is no default user or password.
+You only need to register a new account and set all the details when creating it.

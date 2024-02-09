@@ -21,7 +21,7 @@ These comments will show up in the documentation, it'll make it easier for devel
 
 As an example, this is the definition of a project with all comments:
 
-{{< highlight golang >}}
+```go
 type Project struct {
 	// The unique, numeric id of this project.
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"project"`
@@ -69,7 +69,7 @@ type Project struct {
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
 }
-{{< /highlight >}}
+```
 
 ## Documenting api Endpoints
 
@@ -78,7 +78,7 @@ When generating the api docs with mage, the swagger cli will pick these up and p
 
 A comment looks like this:
 
-{{< highlight golang >}}
+```go
 // @Summary Login
 // @Description Logs a user in. Returns a JWT-Token to authenticate further requests.
 // @tags user
@@ -93,4 +93,4 @@ A comment looks like this:
 func Login(c echo.Context) error {
 	// Handler logic
 }
-{{< /highlight >}}
+```

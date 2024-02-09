@@ -53,23 +53,23 @@ These tasks are automatically run in our CI every time someone pushes to main or
 
 ### Build Vikunja
 
-{{< highlight bash >}}
+```
 mage build:build
-{{< /highlight >}}
+```
 
 or
 
-{{< highlight bash >}}
+```
 mage build
-{{< /highlight >}}
+```
 
 Builds a `vikunja`-binary in the root directory of the repo for the platform it is run on.
 
 ### clean
 
-{{< highlight bash >}}
+```
 mage build:clean
-{{< /highlight >}}
+```
 
 Cleans all build and executable files
 
@@ -94,9 +94,9 @@ Various code-checks are available:
 
 ### Build Releases
 
-{{< highlight bash >}}
+```
 mage release
-{{< /highlight >}}
+```
 
 Builds binaries for all platforms and zips them with a copy of the `templates/` folder.
 All built zip files are stored into `dist/zips/`. Binaries are stored in `dist/binaries/`,
@@ -118,17 +118,17 @@ binary to be able to use it.
 
 ### Build os packages
 
-{{< highlight bash >}}
+```
 mage release:packages
-{{< /highlight >}}
+```
 
 Will build `.deb`, `.rpm` and `.apk` packages to `dist/os-packages`.
 
 ### Make a debian repo
 
-{{< highlight bash >}}
+```
 mage release:reprepro
-{{< /highlight >}}
+```
 
 Takes an already built debian package and creates a debian repo structure around it.
 
@@ -138,25 +138,25 @@ Used to be run inside a [docker container](https://git.kolaente.de/konrad/reprep
 
 ### unit
 
-{{< highlight bash >}}
+```
 mage test:unit
-{{< /highlight >}}
+```
 
 Runs all tests except integration tests.
 
 ### coverage
 
-{{< highlight bash >}}
+```
 mage test:coverage
-{{< /highlight >}}
+```
 
 Runs all tests except integration tests and generates a `coverage.html` file to inspect the code coverage.
 
 ### integration
 
-{{< highlight bash >}}
+```
 mage test:integration
-{{< /highlight >}}
+```
 
 Runs all integration tests.
 
@@ -164,9 +164,9 @@ Runs all integration tests.
 
 ### Create a new migration 
 
-{{< highlight bash >}}
+```
 mage dev:create-migration
-{{< /highlight >}}
+```
 
 Creates a new migration with the current date.
 Will ask for the name of the struct you want to create a migration for.
@@ -177,16 +177,16 @@ See also [migration docs]({{< ref "mage.md" >}}).
 
 ### Format the code
 
-{{< highlight bash >}}
+```
 mage fmt
-{{< /highlight >}}
+```
 
 Formats all source code using `go fmt`.
 
 ### Generate swagger definitions from code comments
 
-{{< highlight bash >}}
+```
 mage do-the-swag
-{{< /highlight >}}
+```
 
 Generates swagger definitions from the comment annotations in the code.

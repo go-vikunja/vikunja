@@ -30,9 +30,9 @@ To fix this, follow the steps below.
 To find out if your db supports utf-8, run the following in a shell or similar, assuming the database 
 you're using for vikunja is called `vikunja`:
 
-{{< highlight sql >}}
+```sql
 SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = 'vikunja';
-{{< /highlight >}}
+```
 
 This will get you a result like the following:
 
@@ -57,7 +57,7 @@ Before attempting any conversion, please [back up your database]({{< ref "backup
 
 Copy the following sql statements in a file called `preAlterTables.sql` and replace all occurrences of `vikunja` with the name of your database:
 
-{{< highlight sql >}}
+```sql
 use information_schema;
 SELECT concat("ALTER DATABASE `",table_schema,"` CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;") as _sql 
 FROM `TABLES` where table_schema like 'vikunja' and TABLE_TYPE='BASE TABLE' group by table_schema;
@@ -67,31 +67,31 @@ SELECT concat("ALTER TABLE `",table_schema,"`.`",table_name, "` CHANGE `",column
 FROM `COLUMNS` where table_schema like 'vikunja' and data_type in ('varchar','char');
 SELECT concat("ALTER TABLE `",table_schema,"`.`",table_name, "` CHANGE `",column_name,"` `",column_name,"` ",data_type," CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci",IF(is_nullable="YES"," NULL"," NOT NULL"),";") as _sql 
 FROM `COLUMNS` where table_schema like 'vikunja' and data_type in ('text','tinytext','mediumtext','longtext');
-{{< /highlight >}}
+```
 
 ### 2. Run the pre-conversion script
 
 Running this will create the actual migration script for your particular database structure and save it in a file called `alterTables.sql`:
 
-{{< highlight bash >}}
+```
 mysql -uroot < preAlterTables.sql | egrep '^ALTER' > alterTables.sql
-{{< /highlight >}}
+```
 
 ### 3. Convert the database
 
 At this point converting is just a matter of executing the previously generated sql script:
 
-{{< highlight bash >}}
+```
 mysql -uroot < alterTables.sql
-{{< /highlight >}}
+```
 
 ### 4. Verify it was successfully converted
 
 If everything worked as intended, your db collation should now look like this:
 
-{{< highlight sql >}}
+```sql
 SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = 'vikunja';
-{{< /highlight >}}
+```
 
 Should get you:
 
