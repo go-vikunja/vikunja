@@ -18,8 +18,8 @@ import {getBrowserLanguage, i18n, setLanguage} from './i18n'
 declare global {
 	interface Window {
 		API_URL: string;
-		SENTRY_ENABLED: boolean;
-		SENTRY_DSN: string;
+		SENTRY_ENABLED?: boolean;
+		SENTRY_DSN?: string;
 		PROJECT_INFINITE_NESTING_ENABLED: boolean;
 		ALLOW_ICON_CHANGES: boolean;
 		CUSTOM_LOGO_URL?: string;

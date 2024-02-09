@@ -58,11 +58,15 @@ const (
 	ServiceTimeZone              Key = `service.timezone`
 	ServiceEnableTaskComments    Key = `service.enabletaskcomments`
 	ServiceEnableTotp            Key = `service.enabletotp`
-	ServiceSentryDsn             Key = `service.sentrydsn`
 	ServiceTestingtoken          Key = `service.testingtoken`
 	ServiceEnableEmailReminders  Key = `service.enableemailreminders`
 	ServiceEnableUserDeletion    Key = `service.enableuserdeletion`
 	ServiceMaxAvatarSize         Key = `service.maxavatarsize`
+
+	SentryEnabled         Key = `sentry.enabled`
+	SentryDsn             Key = `sentry.dsn`
+	SentryFrontendEnabled Key = `sentry.frontendenabled`
+	SentryFrontendDsn     Key = `sentry.frontenddsn`
 
 	AuthLocalEnabled    Key = `auth.local.enabled`
 	AuthOpenIDEnabled   Key = `auth.openid.enabled`
@@ -305,6 +309,10 @@ func InitDefaultConfig() {
 	ServiceEnableUserDeletion.setDefault(true)
 	ServiceMaxAvatarSize.setDefault(1024)
 	ServiceDemoMode.setDefault(false)
+
+	// Sentry
+	SentryDsn.setDefault("https://440eedc957d545a795c17bbaf477497c@o1047380.ingest.sentry.io/4504254983634944")
+	SentryFrontendDsn.setDefault("https://85694a2d757547cbbc90cd4b55c5a18d@o1047380.ingest.sentry.io/6024480")
 
 	// Auth
 	AuthLocalEnabled.setDefault(true)

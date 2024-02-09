@@ -2,6 +2,7 @@ package routes
 
 import (
 	"bytes"
+	"code.vikunja.io/api/pkg/config"
 	"errors"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"text/template"
 
 	"code.vikunja.io/api/frontend"
 
@@ -22,20 +24,88 @@ import (
 )
 
 const (
-	indexFile        = `index.html`
-	rootPath         = `dist/`
-	cacheControlMax  = `max-age=315360000, public, max-age=31536000, s-maxage=31536000, immutable`
-	cacheControlNone = `public, max-age=0, s-maxage=0, must-revalidate`
+	indexFile               = `index.html`
+	rootPath                = `dist/`
+	cacheControlMax         = `max-age=315360000, public, max-age=31536000, s-maxage=31536000, immutable`
+	cacheControlNone        = `public, max-age=0, s-maxage=0, must-revalidate`
+	configScriptTagTemplate = `
+<script>
+	window.SENTRY_ENABLED = {{ .SENTRY_ENABLED }}
+	window.SENTRY_DSN = '{{ .SENTRY_DSN }}'
+	window.ALLOW_ICON_CHANGES = {{ .ALLOW_ICON_CHANGES }}
+	window.CUSTOM_LOGO_URL = '{{ .CUSTOM_LOGO_URL }}'
+</script>`
 )
 
 // Because the files are embedded into the final binary, we can be absolutely sure the etag will never change
 // and we can cache its generation pretty heavily.
 var etagCache map[string]string
 var etagLock sync.Mutex
+var scriptConfigString string
+var scriptConfigStringLock sync.Mutex
 
 func init() {
 	etagCache = make(map[string]string)
 	etagLock = sync.Mutex{}
+	scriptConfigStringLock = sync.Mutex{}
+}
+
+func serveIndexFile(c echo.Context, assetFs http.FileSystem) (err error) {
+	index, err := assetFs.Open(path.Join(rootPath, indexFile))
+	if err != nil {
+		return err
+	}
+	defer index.Close()
+
+	if scriptConfigString == "" {
+
+		scriptConfigStringLock.Lock()
+		defer scriptConfigStringLock.Unlock()
+
+		// replace config variables
+		tmpl, err := template.New("config").Parse(configScriptTagTemplate)
+		if err != nil {
+			return err
+		}
+		var tplOutput bytes.Buffer
+		data := make(map[string]string)
+
+		data["SENTRY_ENABLED"] = "false"
+		if config.SentryFrontendEnabled.GetBool() {
+			data["SENTRY_ENABLED"] = "true"
+		}
+		data["SENTRY_DSN"] = config.SentryFrontendDsn.GetString()
+		data["ALLOW_ICON_CHANGES"] = "true" // TODO
+		data["CUSTOM_LOGO_URL"] = ""        // TODO
+
+		err = tmpl.Execute(&tplOutput, data)
+		if err != nil {
+			return err
+		}
+		scriptConfig := tplOutput.String()
+
+		buf := bytes.Buffer{}
+		_, err = buf.ReadFrom(index)
+		if err != nil {
+			return err
+		}
+
+		scriptConfigString = strings.ReplaceAll(buf.String(), `<div id="app"></div>`, `<div id="app"></div>`+scriptConfig)
+	}
+
+	reader := strings.NewReader(scriptConfigString)
+
+	info, err := index.Stat()
+	if err != nil {
+		return err
+	}
+
+	etag, err := generateEtag(index, info.Name())
+	if err != nil {
+		return err
+	}
+
+	return serveFile(c, reader, info, etag)
 }
 
 // Copied from echo's middleware.StaticWithConfig simplified and adjusted for caching
@@ -71,10 +141,8 @@ func static() echo.MiddlewareFunc {
 					return err
 				}
 
-				file, err = assetFs.Open(path.Join(rootPath, indexFile))
-				if err != nil {
-					return err
-				}
+				// Handle all other requests with the index file
+				return serveIndexFile(c, assetFs)
 			}
 
 			defer file.Close()
@@ -85,24 +153,7 @@ func static() echo.MiddlewareFunc {
 			}
 
 			if info.IsDir() {
-				index, err := assetFs.Open(path.Join(name, indexFile))
-				if err != nil {
-					return next(c)
-				}
-
-				defer index.Close()
-
-				info, err = index.Stat()
-				if err != nil {
-					return err
-				}
-
-				etag, err := generateEtag(index, name)
-				if err != nil {
-					return err
-				}
-
-				return serveFile(c, index, info, etag)
+				return serveIndexFile(c, assetFs)
 			}
 
 			etag, err := generateEtag(file, name)
@@ -133,7 +184,7 @@ func generateEtag(file http.File, name string) (etag string, err error) {
 }
 
 // copied from http.serveContent
-func getMimeType(name string, file http.File) (mineType string, err error) {
+func getMimeType(name string, file io.ReadSeeker) (mineType string, err error) {
 	mineType = mime.TypeByExtension(filepath.Ext(name))
 	if mineType == "" {
 		// read a chunk to decide between utf-8 text and binary
@@ -149,7 +200,7 @@ func getMimeType(name string, file http.File) (mineType string, err error) {
 	return mineType, nil
 }
 
-func getCacheControlHeader(info os.FileInfo, file http.File) (header string, err error) {
+func getCacheControlHeader(info os.FileInfo, file io.ReadSeeker) (header string, err error) {
 	// Don't cache service worker and related files
 	if info.Name() == "robots.txt" ||
 		info.Name() == "sw.js" ||
@@ -187,7 +238,7 @@ func getCacheControlHeader(info os.FileInfo, file http.File) (header string, err
 	return cacheControlNone, nil
 }
 
-func serveFile(c echo.Context, file http.File, info os.FileInfo, etag string) error {
+func serveFile(c echo.Context, file io.ReadSeeker, info os.FileInfo, etag string) error {
 
 	c.Response().Header().Set("Server", "Vikunja")
 	c.Response().Header().Set("Vary", "Accept-Encoding")

@@ -8,7 +8,7 @@ export default async function setupSentry(app: App, router: Router) {
 
 	Sentry.init({
 		app,
-		dsn: window.SENTRY_DSN,
+		dsn: window.SENTRY_DSN ?? '',
 		release: import.meta.env.VITE_PLUGIN_SENTRY_CONFIG.release,
 		dist: import.meta.env.VITE_PLUGIN_SENTRY_CONFIG.dist,
 		integrations: [

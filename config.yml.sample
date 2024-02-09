@@ -40,8 +40,6 @@ service:
   enabletaskcomments: true
   # Whether totp is enabled. In most cases you want to leave that enabled.
   enabletotp: true
-  # If not empty, enables logging of crashes and unhandled errors in sentry.
-  sentrydsn: ''
   # If not empty, this will enable `/test/{table}` endpoints which allow to put any content in the database.
   # Used to reset the db before frontend tests. Because this is quite a dangerous feature allowing for lots of harm,
   # each request made to this endpoint needs to provide an `Authorization: <token>` header with the token from below. <br/>
@@ -60,6 +58,18 @@ service:
   # If set to true, the frontend will show a big red warning not to use this instance for real data as it will be cleared out.
   # You probably don't need to set this value, it was created specifically for usage on [try](https://try.vikunja.io).
   demomode: false
+
+sentry:
+  # If set to true, enables anonymous error tracking of api errors via Sentry. This allows us to gather more 
+  # information about errors in order to debug and fix it.
+  enabled: false
+  # Configure the Sentry dsn used for api error tracking. Only used when Sentry is enabled for the api.
+  dsn: "https://440eedc957d545a795c17bbaf477497c@o1047380.ingest.sentry.io/4504254983634944"
+  # If set to true, enables anonymous error tracking of frontend errors via Sentry. This allows us to gather more 
+  # information about errors in order to debug and fix it.
+  frontendenabled: false
+  # Configure the Sentry dsn used for frontend error tracking. Only used when Sentry is enabled for the frontend.
+  frontenddsn: "https://85694a2d757547cbbc90cd4b55c5a18d@o1047380.ingest.sentry.io/6024480"
 
 database:
   # Database type to use. Supported types are mysql, postgres and sqlite.
