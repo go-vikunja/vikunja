@@ -1049,16 +1049,12 @@ kind: pipeline
 type: docker
 name: desktop-build
 
-depends_on:
-  - frontend-release-unstable
-
 trigger:
   branch:
     include:
       - main
   event:
     include:
-      - push
       - pull_request
 
 steps:
@@ -1346,6 +1342,7 @@ depends_on:
   - release
   - deploy-docs
   - docker-release
+  - desktop-release
 
 steps:
   - name: notify
@@ -1363,6 +1360,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 284c12993b18b99bf40e31a8ac5b861eb1dc505f680c83ff50f0657a7d6b9018
+hmac: 25297bbae6b6b8e388bd78cfeed7be41b7bd9958efb59061c95e7514bdebb085
 
 ...
