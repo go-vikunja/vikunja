@@ -115,7 +115,7 @@ func RenderMail(m *Mail) (mailOpts *mail.Opts, err error) {
 	data["ActionText"] = m.actionText
 	data["ActionURL"] = m.actionURL
 	data["Boundary"] = boundary
-	data["FrontendURL"] = config.ServiceFrontendurl.GetString()
+	data["FrontendURL"] = config.ServicePublicURL.GetString()
 
 	var introLinesHTML []templatehtml.HTML
 	for _, line := range m.introLines {

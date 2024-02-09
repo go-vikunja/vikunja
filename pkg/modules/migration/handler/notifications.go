@@ -36,7 +36,7 @@ func (n *MigrationDoneNotification) ToMail() *notifications.Mail {
 	return notifications.NewMail().
 		Subject("The migration from "+kind+" to Vikunja was completed").
 		Line("Vikunja has imported all lists/projects, tasks, notes, reminders and files from "+kind+" you have access to.").
-		Action("View your imported projects in Vikunja", config.ServiceFrontendurl.GetString()).
+		Action("View your imported projects in Vikunja", config.ServicePublicURL.GetString()).
 		Line("Have fun with your new (old) projects!")
 }
 

@@ -44,7 +44,7 @@ const (
 	ServiceInterface       Key = `service.interface`
 	ServiceUnixSocket      Key = `service.unixsocket`
 	ServiceUnixSocketMode  Key = `service.unixsocketmode`
-	ServiceFrontendurl     Key = `service.frontendurl`
+	ServicePublicURL       Key = `service.publicurl`
 	ServiceEnableCaldav    Key = `service.enablecaldav`
 	ServiceRootpath        Key = `service.rootpath`
 	ServiceMaxItemsPerPage Key = `service.maxitemsperpage`
@@ -294,7 +294,7 @@ func InitDefaultConfig() {
 	ServiceJWTTTLLong.setDefault(2592000) // 30 days
 	ServiceInterface.setDefault(":3456")
 	ServiceUnixSocket.setDefault("")
-	ServiceFrontendurl.setDefault("")
+	ServicePublicURL.setDefault("")
 	ServiceEnableCaldav.setDefault(true)
 
 	ServiceRootpath.setDefault(getBinaryDirLocation())
@@ -381,7 +381,7 @@ func InitDefaultConfig() {
 	FilesBasePath.setDefault("files")
 	FilesMaxSize.setDefault("20MB")
 	// Cors
-	CorsEnable.setDefault(true)
+	CorsEnable.setDefault(false)
 	CorsOrigins.setDefault([]string{"*"})
 	CorsMaxAge.setDefault(0)
 	// Migration
@@ -455,20 +455,20 @@ func InitConfig() {
 		RateLimitStore.Set(KeyvalueType.GetString())
 	}
 
-	if ServiceFrontendurl.GetString() != "" && !strings.HasSuffix(ServiceFrontendurl.GetString(), "/") {
-		ServiceFrontendurl.Set(ServiceFrontendurl.GetString() + "/")
+	if ServicePublicURL.GetString() != "" && !strings.HasSuffix(ServicePublicURL.GetString(), "/") {
+		ServicePublicURL.Set(ServicePublicURL.GetString() + "/")
 	}
 
 	if MigrationTodoistRedirectURL.GetString() == "" {
-		MigrationTodoistRedirectURL.Set(ServiceFrontendurl.GetString() + "migrate/todoist")
+		MigrationTodoistRedirectURL.Set(ServicePublicURL.GetString() + "migrate/todoist")
 	}
 
 	if MigrationTrelloRedirectURL.GetString() == "" {
-		MigrationTrelloRedirectURL.Set(ServiceFrontendurl.GetString() + "migrate/trello")
+		MigrationTrelloRedirectURL.Set(ServicePublicURL.GetString() + "migrate/trello")
 	}
 
 	if MigrationMicrosoftTodoRedirectURL.GetString() == "" {
-		MigrationMicrosoftTodoRedirectURL.Set(ServiceFrontendurl.GetString() + "migrate/microsoft-todo")
+		MigrationMicrosoftTodoRedirectURL.Set(ServicePublicURL.GetString() + "migrate/microsoft-todo")
 	}
 
 	if DefaultSettingsTimezone.GetString() == "" {

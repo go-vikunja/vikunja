@@ -48,7 +48,7 @@ func (n *EmailConfirmNotification) ToMail() *notifications.Mail {
 
 	return nn.
 		Line("To confirm your email address, click the link below:").
-		Action("Confirm your email address", config.ServiceFrontendurl.GetString()+"?userEmailConfirm="+n.ConfirmToken).
+		Action("Confirm your email address", config.ServicePublicURL.GetString()+"?userEmailConfirm="+n.ConfirmToken).
 		Line("Have a nice day!")
 }
 
@@ -98,7 +98,7 @@ func (n *ResetPasswordNotification) ToMail() *notifications.Mail {
 		Subject("Reset your password on Vikunja").
 		Greeting("Hi "+n.User.GetName()+",").
 		Line("To reset your password, click the link below:").
-		Action("Reset your password", config.ServiceFrontendurl.GetString()+"?userPasswordReset="+n.Token.Token).
+		Action("Reset your password", config.ServicePublicURL.GetString()+"?userPasswordReset="+n.Token.Token).
 		Line("This link will be valid for 24 hours.").
 		Line("Have a nice day!")
 }
@@ -125,7 +125,7 @@ func (n *InvalidTOTPNotification) ToMail() *notifications.Mail {
 		Greeting("Hi "+n.User.GetName()+",").
 		Line("Someone just tried to log in into your account with correct username and password but a wrong TOTP passcode.").
 		Line("**If this was not you, someone else knows your password. You should set a new one immediately!**").
-		Action("Reset your password", config.ServiceFrontendurl.GetString()+"get-password-reset")
+		Action("Reset your password", config.ServicePublicURL.GetString()+"get-password-reset")
 }
 
 // ToDB returns the InvalidTOTPNotification notification in a format which can be saved in the db
@@ -150,7 +150,7 @@ func (n *PasswordAccountLockedAfterInvalidTOTOPNotification) ToMail() *notificat
 		Greeting("Hi " + n.User.GetName() + ",").
 		Line("Someone tried to log in with your credentials but failed to provide a valid TOTP passcode.").
 		Line("After 10 failed attempts, we've disabled your account and reset your password. To set a new one, follow the instructions in the reset email we just sent you.").
-		Line("If you did not receive an email with reset instructions, you can always request a new one at [" + config.ServiceFrontendurl.GetString() + "get-password-reset](" + config.ServiceFrontendurl.GetString() + "get-password-reset).")
+		Line("If you did not receive an email with reset instructions, you can always request a new one at [" + config.ServicePublicURL.GetString() + "get-password-reset](" + config.ServicePublicURL.GetString() + "get-password-reset).")
 }
 
 // ToDB returns the PasswordAccountLockedAfterInvalidTOTOPNotification notification in a format which can be saved in the db
@@ -176,7 +176,7 @@ func (n *FailedLoginAttemptNotification) ToMail() *notifications.Mail {
 		Line("Someone just tried to log in into your account with a wrong password three times in a row.").
 		Line("If this was not you, this could be someone else trying to break into your account.").
 		Line("To enhance the security of you account you may want to set a stronger password or enable TOTP authentication in the settings:").
-		Action("Go to settings", config.ServiceFrontendurl.GetString()+"user/settings")
+		Action("Go to settings", config.ServicePublicURL.GetString()+"user/settings")
 }
 
 // ToDB returns the FailedLoginAttemptNotification notification in a format which can be saved in the db
@@ -201,7 +201,7 @@ func (n *AccountDeletionConfirmNotification) ToMail() *notifications.Mail {
 		Subject("Please confirm the deletion of your Vikunja account").
 		Greeting("Hi "+n.User.GetName()+",").
 		Line("You have requested the deletion of your account. To confirm this, please click the link below:").
-		Action("Confirm the deletion of my account", config.ServiceFrontendurl.GetString()+"?accountDeletionConfirm="+n.ConfirmToken).
+		Action("Confirm the deletion of my account", config.ServicePublicURL.GetString()+"?accountDeletionConfirm="+n.ConfirmToken).
 		Line("This link will be valid for 24 hours.").
 		Line("Once you confirm the deletion we will schedule the deletion of your account in three days and send you another email until then.").
 		Line("If you proceed with the deletion of your account, we will remove all of your projects and tasks you created. Everything you shared with another user or team will transfer ownership to them.").
@@ -239,7 +239,7 @@ func (n *AccountDeletionNotification) ToMail() *notifications.Mail {
 		Line("You recently requested the deletion of your Vikunja account.").
 		Line("We will delete your account "+durationString+".").
 		Line("If you changed your mind, simply click the link below to cancel the deletion and follow the instructions there:").
-		Action("Abort the deletion", config.ServiceFrontendurl.GetString()).
+		Action("Abort the deletion", config.ServicePublicURL.GetString()).
 		Line("Have a nice day!")
 }
 

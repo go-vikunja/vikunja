@@ -156,7 +156,7 @@ func (t *Task) GetFullIdentifier() string {
 }
 
 func (t *Task) GetFrontendURL() string {
-	return config.ServiceFrontendurl.GetString() + "tasks/" + strconv.FormatInt(t.ID, 10)
+	return config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(t.ID, 10)
 }
 
 type taskFilterConcatinator string

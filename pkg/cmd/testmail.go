@@ -47,7 +47,7 @@ var testmailCmd = &cobra.Command{
 			Subject("Test from Vikunja").
 			Line("This is a test mail!").
 			Line("If you received this, Vikunja is correctly set up to send emails.").
-			Action("Go to your instance", config.ServiceFrontendurl.GetString())
+			Action("Go to your instance", config.ServicePublicURL.GetString())
 
 		opts, err := notifications.RenderMail(message)
 		if err != nil {

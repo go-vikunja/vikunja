@@ -82,7 +82,7 @@ type legalInfo struct {
 func Info(c echo.Context) error {
 	info := vikunjaInfos{
 		Version:                version.Version,
-		FrontendURL:            config.ServiceFrontendurl.GetString(),
+		FrontendURL:            config.ServicePublicURL.GetString(),
 		Motd:                   config.ServiceMotd.GetString(),
 		LinkSharingEnabled:     config.ServiceEnableLinkSharing.GetBool(),
 		MaxFileSize:            config.FilesMaxSize.GetString(),

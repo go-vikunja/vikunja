@@ -44,7 +44,7 @@ func (n *ReminderDueNotification) ToMail() *notifications.Mail {
 		Subject(`Reminder for "`+n.Task.Title+`" (`+n.Project.Title+`)`).
 		Greeting("Hi "+n.User.GetName()+",").
 		Line(`This is a friendly reminder of the task "`+n.Task.Title+`" (`+n.Project.Title+`).`).
-		Action("Open Task", config.ServiceFrontendurl.GetString()+"tasks/"+strconv.FormatInt(n.Task.ID, 10)).
+		Action("Open Task", config.ServicePublicURL.GetString()+"tasks/"+strconv.FormatInt(n.Task.ID, 10)).
 		Line("Have a nice day!")
 }
 
@@ -173,7 +173,7 @@ func (n *ProjectCreatedNotification) ToMail() *notifications.Mail {
 	return notifications.NewMail().
 		Subject(n.Doer.GetName()+` created the project "`+n.Project.Title+`"`).
 		Line(n.Doer.GetName()+` created the project "`+n.Project.Title+`"`).
-		Action("View Project", config.ServiceFrontendurl.GetString()+"projects/")
+		Action("View Project", config.ServicePublicURL.GetString()+"projects/")
 }
 
 // ToDB returns the ProjectCreatedNotification notification in a format which can be saved in the db
@@ -200,7 +200,7 @@ func (n *TeamMemberAddedNotification) ToMail() *notifications.Mail {
 		From(n.Doer.GetNameAndFromEmail()).
 		Greeting("Hi "+n.Member.GetName()+",").
 		Line(n.Doer.GetName()+" has just added you to the "+n.Team.Name+" team in Vikunja.").
-		Action("View Team", config.ServiceFrontendurl.GetString()+"teams/"+strconv.FormatInt(n.Team.ID, 10)+"/edit")
+		Action("View Team", config.ServicePublicURL.GetString()+"teams/"+strconv.FormatInt(n.Team.ID, 10)+"/edit")
 }
 
 // ToDB returns the TeamMemberAddedNotification notification in a format which can be saved in the db
@@ -227,7 +227,7 @@ func (n *UndoneTaskOverdueNotification) ToMail() *notifications.Mail {
 		Subject(`Task "`+n.Task.Title+`" (`+n.Project.Title+`) is overdue`).
 		Greeting("Hi "+n.User.GetName()+",").
 		Line(`This is a friendly reminder of the task "`+n.Task.Title+`" (`+n.Project.Title+`) which is overdue since `+utils.HumanizeDuration(until)+` and not yet done.`).
-		Action("Open Task", config.ServiceFrontendurl.GetString()+"tasks/"+strconv.FormatInt(n.Task.ID, 10)).
+		Action("Open Task", config.ServicePublicURL.GetString()+"tasks/"+strconv.FormatInt(n.Task.ID, 10)).
 		Line("Have a nice day!")
 }
 
@@ -263,7 +263,7 @@ func (n *UndoneTasksOverdueNotification) ToMail() *notifications.Mail {
 	overdueLine := ""
 	for _, task := range sortedTasks {
 		until := time.Until(task.DueDate).Round(1*time.Hour) * -1
-		overdueLine += `* [` + task.Title + `](` + config.ServiceFrontendurl.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + n.Projects[task.ProjectID].Title + `), overdue since ` + utils.HumanizeDuration(until) + "\n"
+		overdueLine += `* [` + task.Title + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + n.Projects[task.ProjectID].Title + `), overdue since ` + utils.HumanizeDuration(until) + "\n"
 	}
 
 	return notifications.NewMail().
@@ -271,7 +271,7 @@ func (n *UndoneTasksOverdueNotification) ToMail() *notifications.Mail {
 		Greeting("Hi "+n.User.GetName()+",").
 		Line("You have the following overdue tasks:").
 		Line(overdueLine).
-		Action("Open Vikunja", config.ServiceFrontendurl.GetString()).
+		Action("Open Vikunja", config.ServicePublicURL.GetString()).
 		Line("Have a nice day!")
 }
 
@@ -338,7 +338,7 @@ func (n *DataExportReadyNotification) ToMail() *notifications.Mail {
 		Subject("Your Vikunja Data Export is ready").
 		Greeting("Hi "+n.User.GetName()+",").
 		Line("Your Vikunja Data Export is ready for you to download. Click the button below to download it:").
-		Action("Download", config.ServiceFrontendurl.GetString()+"user/export/download").
+		Action("Download", config.ServicePublicURL.GetString()+"user/export/download").
 		Line("The download will be available for the next 7 days.").
 		Line("Have a nice day!")
 }
