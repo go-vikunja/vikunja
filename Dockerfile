@@ -1,15 +1,27 @@
 # syntax=docker/dockerfile:1
-#  ┬─┐┬ ┐o┬  ┬─┐
-#  │─││ │││  │ │
-#  ┘─┘┘─┘┘┘─┘┘─┘
+FROM --platform=$BUILDPLATFORM node:20.11.0-alpine AS frontendbuilder
 
-FROM --platform=$BUILDPLATFORM techknowlogick/xgo:go-1.21.x AS builder
+WORKDIR /build
+
+ARG USE_RELEASE=false
+ARG RELEASE_VERSION=unstable
+ENV PNPM_CACHE_FOLDER .cache/pnpm/
+ENV PUPPETEER_SKIP_DOWNLOAD true
+
+COPY frontend/ ./
+
+RUN corepack enable && \
+      pnpm install && \
+      pnpm run build
+
+FROM --platform=$BUILDPLATFORM techknowlogick/xgo:go-1.21.x AS apibuilder
 
 RUN go install github.com/magefile/mage@latest && \
     mv /go/bin/mage /usr/local/go/bin
 
 WORKDIR /go/src/code.vikunja.io/api
 COPY . ./
+COPY --from=frontendbuilder /build/dist ./frontend/dist
 
 ARG TARGETOS TARGETARCH TARGETVARIANT
 
@@ -41,4 +53,4 @@ RUN apk --update --no-cache add tzdata tini shadow && \
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod 0755 /entrypoint.sh && mkdir files
 
-COPY --from=builder /build/vikunja-* vikunja
+COPY --from=apibuilder /build/vikunja-* vikunja
