@@ -117,6 +117,8 @@ steps:
       GOPROXY: 'https://goproxy.kolaente.de'
     commands:
       - mage -compile ./mage-static
+      - mkdir -p frontend/dist
+      - touch frontend/dist/index.html
     when:
       event: [ push, tag, pull_request ]
 
@@ -1064,24 +1066,24 @@ steps:
     image: docker:git
     commands:
       - git fetch --tags
-
-  - name: restore-cache
-    image: meltwater/drone-cache:dev
-    pull: true
-    environment:
-      AWS_ACCESS_KEY_ID:
-        from_secret: cache_aws_access_key_id
-      AWS_SECRET_ACCESS_KEY:
-        from_secret: cache_aws_secret_access_key
-    settings:
-      restore: true
-      bucket: kolaente.dev-drone-dependency-cache
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
-      path_style: true
-      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
-      mount:
-        - '.cache'
+#
+#  - name: restore-cache
+#    image: meltwater/drone-cache:dev
+#    pull: true
+#    environment:
+#      AWS_ACCESS_KEY_ID:
+#        from_secret: cache_aws_access_key_id
+#      AWS_SECRET_ACCESS_KEY:
+#        from_secret: cache_aws_secret_access_key
+#    settings:
+#      restore: true
+#      bucket: kolaente.dev-drone-dependency-cache
+#      endpoint: https://s3.fr-par.scw.cloud
+#      region: fr-par
+#      path_style: true
+#      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
+#      mount:
+#        - '.cache'
 
   - name: build
     image: electronuserland/builder:wine-mono
@@ -1090,7 +1092,7 @@ steps:
       YARN_CACHE_FOLDER: .cache/yarn/
     depends_on:
       - fetch-tags
-      - restore-cache
+#      - restore-cache
     commands:
       - cd desktop
       - export VERSION=${DRONE_TAG##v}
@@ -1103,25 +1105,25 @@ steps:
       - yarn install
       - yarn dist --linux --windows
 
-  - name: rebuild-cache
-    image: meltwater/drone-cache:dev
-    pull: true
-    environment:
-      AWS_ACCESS_KEY_ID:
-        from_secret: cache_aws_access_key_id
-      AWS_SECRET_ACCESS_KEY:
-        from_secret: cache_aws_secret_access_key
-    settings:
-      rebuild: true
-      bucket: kolaente.dev-drone-dependency-cache
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
-      path_style: true
-      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
-      mount:
-        - '.cache'
-    depends_on:
-      - build
+#  - name: rebuild-cache
+#    image: meltwater/drone-cache:dev
+#    pull: true
+#    environment:
+#      AWS_ACCESS_KEY_ID:
+#        from_secret: cache_aws_access_key_id
+#      AWS_SECRET_ACCESS_KEY:
+#        from_secret: cache_aws_secret_access_key
+#    settings:
+#      rebuild: true
+#      bucket: kolaente.dev-drone-dependency-cache
+#      endpoint: https://s3.fr-par.scw.cloud
+#      region: fr-par
+#      path_style: true
+#      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
+#      mount:
+#        - '.cache'
+#    depends_on:
+#      - build
 
 ---
 kind: pipeline
@@ -1143,23 +1145,23 @@ steps:
     commands:
       - git fetch --tags
 
-  - name: restore-cache
-    image: meltwater/drone-cache:dev
-    pull: true
-    environment:
-      AWS_ACCESS_KEY_ID:
-        from_secret: cache_aws_access_key_id
-      AWS_SECRET_ACCESS_KEY:
-        from_secret: cache_aws_secret_access_key
-    settings:
-      restore: true
-      bucket: kolaente.dev-drone-dependency-cache
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
-      path_style: true
-      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
-      mount:
-        - '.cache'
+#  - name: restore-cache
+#    image: meltwater/drone-cache:dev
+#    pull: true
+#    environment:
+#      AWS_ACCESS_KEY_ID:
+#        from_secret: cache_aws_access_key_id
+#      AWS_SECRET_ACCESS_KEY:
+#        from_secret: cache_aws_secret_access_key
+#    settings:
+#      restore: true
+#      bucket: kolaente.dev-drone-dependency-cache
+#      endpoint: https://s3.fr-par.scw.cloud
+#      region: fr-par
+#      path_style: true
+#      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
+#      mount:
+#        - '.cache'
 
   - name: build
     image: electronuserland/builder:wine-mono
@@ -1168,7 +1170,7 @@ steps:
       YARN_CACHE_FOLDER: .cache/yarn/
     depends_on:
       - fetch-tags
-      - restore-cache
+#      - restore-cache
     commands:
       - cd desktop
       - export VERSION=${DRONE_TAG##v}
@@ -1182,25 +1184,25 @@ steps:
       - cat package.json
       - yarn dist --linux --windows
 
-  - name: rebuild-cache
-    image: meltwater/drone-cache:dev
-    pull: true
-    environment:
-      AWS_ACCESS_KEY_ID:
-        from_secret: cache_aws_access_key_id
-      AWS_SECRET_ACCESS_KEY:
-        from_secret: cache_aws_secret_access_key
-    settings:
-      rebuild: true
-      bucket: kolaente.dev-drone-dependency-cache
-      endpoint: https://s3.fr-par.scw.cloud
-      region: fr-par
-      path_style: true
-      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
-      mount:
-        - '.cache'
-    depends_on:
-      - build
+#  - name: rebuild-cache
+#    image: meltwater/drone-cache:dev
+#    pull: true
+#    environment:
+#      AWS_ACCESS_KEY_ID:
+#        from_secret: cache_aws_access_key_id
+#      AWS_SECRET_ACCESS_KEY:
+#        from_secret: cache_aws_secret_access_key
+#    settings:
+#      rebuild: true
+#      bucket: kolaente.dev-drone-dependency-cache
+#      endpoint: https://s3.fr-par.scw.cloud
+#      region: fr-par
+#      path_style: true
+#      cache_key: '{{ .Repo.Name }}_{{ checksum "desktop/yarn.lock" }}_{{ arch }}_{{ os }}'
+#      mount:
+#        - '.cache'
+#    depends_on:
+#      - build
 
   - name: release-latest
     image: plugins/s3
@@ -1361,6 +1363,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 418392c25980336dc1ae4a5c6db2c67d830c37bad50468847483e40e5aa59e83
+hmac: 284c12993b18b99bf40e31a8ac5b861eb1dc505f680c83ff50f0657a7d6b9018
 
 ...
