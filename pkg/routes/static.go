@@ -75,8 +75,11 @@ func serveIndexFile(c echo.Context, assetFs http.FileSystem) (err error) {
 			data["SENTRY_ENABLED"] = "true"
 		}
 		data["SENTRY_DSN"] = config.SentryFrontendDsn.GetString()
-		data["ALLOW_ICON_CHANGES"] = "true" // TODO
-		data["CUSTOM_LOGO_URL"] = ""        // TODO
+		data["ALLOW_ICON_CHANGES"] = "false"
+		if config.ServiceAllowIconChanges.GetBool() {
+			data["ALLOW_ICON_CHANGES"] = "true"
+		}
+		data["CUSTOM_LOGO_URL"] = "" // TODO
 
 		err = tmpl.Execute(&tplOutput, data)
 		if err != nil {

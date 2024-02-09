@@ -62,6 +62,7 @@ const (
 	ServiceEnableEmailReminders  Key = `service.enableemailreminders`
 	ServiceEnableUserDeletion    Key = `service.enableuserdeletion`
 	ServiceMaxAvatarSize         Key = `service.maxavatarsize`
+	ServiceAllowIconChanges      Key = `service.allowiconchanges`
 
 	SentryEnabled         Key = `sentry.enabled`
 	SentryDsn             Key = `sentry.dsn`
@@ -309,6 +310,7 @@ func InitDefaultConfig() {
 	ServiceEnableUserDeletion.setDefault(true)
 	ServiceMaxAvatarSize.setDefault(1024)
 	ServiceDemoMode.setDefault(false)
+	ServiceAllowIconChanges.setDefault(true)
 
 	// Sentry
 	SentryDsn.setDefault("https://440eedc957d545a795c17bbaf477497c@o1047380.ingest.sentry.io/4504254983634944")
