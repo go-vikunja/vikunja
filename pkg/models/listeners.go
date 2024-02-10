@@ -747,6 +747,48 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 		return nil
 	}
 
+	// Load event data again so that it is always populated in the webhook payload
+	var doerID int64
+	if doer, has := event["doer"]; has {
+		d := doer.(map[string]interface{})
+		if rawDoerID, has := d["id"]; has {
+			doerID = getIDAsInt64(rawDoerID)
+			fullDoer, err := user.GetUserByID(s, doerID)
+			if err != nil && !user.IsErrUserDoesNotExist(err) {
+				return err
+			}
+			if err == nil {
+				event["doer"] = fullDoer
+			}
+		}
+	}
+
+	if task, has := event["task"]; has && doerID != 0 {
+		t := task.(map[string]interface{})
+		if taskID, has := t["id"]; has {
+			id := getIDAsInt64(taskID)
+			fullTask := Task{ID: id}
+			err = fullTask.ReadOne(s, &user.User{ID: doerID})
+			if err != nil && !IsErrTaskDoesNotExist(err) {
+				return err
+			}
+			if err == nil {
+				event["task"] = fullTask
+			}
+		}
+	}
+
+	if _, has := event["project"]; has && doerID != 0 {
+		project := &Project{ID: projectID}
+		err = project.ReadOne(s, &user.User{ID: doerID})
+		if err != nil && !IsErrProjectDoesNotExist(err) {
+			return err
+		}
+		if err == nil {
+			event["project"] = project
+		}
+	}
+
 	err = webhook.sendWebhookPayload(&WebhookPayload{
 		EventName: wl.EventName,
 		Time:      time.Now(),
