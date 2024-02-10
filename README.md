@@ -2,12 +2,12 @@
 
 [![Build Status](https://drone.kolaente.de/api/badges/vikunja/vikunjaa/status.svg)](https://drone.kolaente.de/vikunja/vikunja)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Download](https://img.shields.io/badge/download-v0.22.1-brightgreen.svg)](https://dl.vikunja.io)
+[![Download](https://img.shields.io/badge/download-v0.23.0-brightgreen.svg)](https://dl.vikunja.io)
 [![Docker Pulls](https://img.shields.io/docker/pulls/vikunja/vikunja.svg)](https://hub.docker.com/r/vikunja/vikunja/)
 [![Swagger Docs](https://img.shields.io/badge/swagger-docs-brightgreen.svg)](https://try.vikunja.io/api/v1/docs)
 [![Go Report Card](https://goreportcard.com/badge/kolaente.dev/vikunja/vikunja)](https://goreportcard.com/report/kolaente.dev/vikunja/vikunja)
 
-# Vikunja API
+# Vikunja
 
 > The Todo-app to organize your life.
 
@@ -43,12 +43,9 @@ All docs can be found on [the Vikunja home page](https://vikunja.io/docs/).
 
 See [the roadmap](https://my.vikunja.cloud/share/QFyzYEmEYfSyQfTOmIRSwLUpkFjboaBqQCnaPmWd/auth) (hosted on Vikunja!) for more!
 
-* [ ] [Mobile apps](https://code.vikunja.io/app) (separate repo) *In Progress*
-* [ ] [Webapp](https://code.vikunja.io/frontend) (separate repo) *In Progress*
-
 ## Contributing
 
-Fork -> Push -> Pull-Request. Also see the [dev docs](https://vikunja.io/docs/development/) for more info.
+Please check out the contribuition guidelines on [the website](https://vikunja.io/docs/development/).
 
 ## License
 

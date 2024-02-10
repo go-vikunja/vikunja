@@ -7,6 +7,108 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/api/releases.
 
+## [0.23.0] - 2024-02-10
+
+### Bug Fixes
+
+* *(assignees)* Use correct amount of spacing in assignee selection
+* *(ci)* cd to frontend in frontend pipelines
+* *(ci)* Deploy packages into the correct directory
+* *(ci)* Swagger docs generate should use the correct url
+* *(ci)* Typo
+* *(ci)* Update shasum
+* *(docs)* Old install pages redirect
+* *(editor)* Don't set editor content intitially
+* *(export)* Don't crash when an exported file does not exist
+* *(filters)* Add explicit check for string slice filter
+* *(gantt)* Correctly import languages from dayjs
+* *(kanban)* Assignee spacing
+* *(kanban)* Bottom spacing of labels
+* *(notifications)* Mark all notifications as read in ui directly when marking as read on the server
+* *(progress)* Cleanup unused css
+* *(progress)* Less rounding
+* *(reminders)* Set reminder date on datepicker when editing a reminder
+* *(task)* Make sure the drag handle is shown as intended
+* *(task)* Move cover image setter to store
+* *(task)* Remove default task color
+* *(tasks)* Check for cycles during creation of task relations and prevent them
+* *(tasks)* Show any errors happening during task load
+* *(tests)* Adjust gantt rows identifier
+* *(webhook)* Fetch all event details before sending the webhook
+
+### Features
+ 
+* Merge API, Frontend and Desktop repos
+* *(ci)* Combine api and frontend drone configs
+* *(ci)* Merge desktop ci config
+* *(ci)* Save .tags file to generate release tags
+* *(ci)* Run desktop build without waiting on the frontend when not doing release builds
+* *(ci)* Run desktop pipeline only on PRs
+* *(editor)* Use primary color for currently selected node
+* *(filters)* Log type if unknown filter type
+* *(progress)* Move customizations into progress bar component
+
+### Dependencies
+
+* *(deps)* Update dependency @4tw/cypress-drag-drop to v1.8.1 (#693)
+* *(deps)* Update dependency @fortawesome/vue-fontawesome to v3.0.6
+* *(deps)* Update dependency @kyvg/vue3-notification to v3.1.4
+* *(deps)* Update dependency @types/node to v20.11.10
+* *(deps)* Update dependency autoprefixer to v10.3.3 (#684)
+* *(deps)* Update dependency autoprefixer to v10.3.4 (#697)
+* *(deps)* Update dependency axios to v0.21.2 (#698)
+* *(deps)* Update dependency axios to v0.21.3 (#700)
+* *(deps)* Update dependency cypress to v8.3.1 (#689)
+* *(deps)* Update dependency electron to v28.2.1 (#186)
+* *(deps)* Update dependency electron to v28.2.2 (#187)
+* *(deps)* Update dependency esbuild to v0.12.23 (#683)
+* *(deps)* Update dependency esbuild to v0.12.24 (#688)
+* *(deps)* Update dependency esbuild to v0.12.25 (#696)
+* *(deps)* Update dependency esbuild to v0.14.53 (#2217)
+* *(deps)* Update dependency eslint-plugin-vue to v7.17.0 (#686)
+* *(deps)* Update dependency floating-vue to v5.2.1
+* *(deps)* Update dependency floating-vue to v5.2.2
+* *(deps)* Update dependency jest to v27.1.0 (#687)
+* *(deps)* Update dependency marked to v3.0.1 (#677)
+* *(deps)* Update dependency marked to v3.0.2 (#682)
+* *(deps)* Update dependency postcss to v8.4.19 (#2673)
+* *(deps)* Update dependency sass to v1.38.1 (#679)
+* *(deps)* Update dependency sass to v1.38.2 (#690)
+* *(deps)* Update dependency sass to v1.39.0 (#695)
+* *(deps)* Update dependency typescript to v4.4.2 (#685)
+* *(deps)* Update dependency ufo to v1.4.0
+* *(deps)* Update dependency vite to v2.5.1 (#680)
+* *(deps)* Update dependency vite to v2.5.2 (#692)
+* *(deps)* Update dependency vite to v2.5.3 (#694)
+* *(deps)* Update dependency vite-plugin-pwa to v0.11.2 (#681)
+* *(deps)* Update dependency vue to v3.2.45
+* *(deps)* Update dependency vue-i18n to v9.9.1
+* *(deps)* Update goreleaser/nfpm docker tag to v2.35.3 (#1692)
+* *(deps)* Update module github.com/arran4/golang-ical to v0.2.4
+* *(deps)* Update module github.com/mattn/go-sqlite3 to v1.14.21
+* *(deps)* Update module github.com/mattn/go-sqlite3 to v1.14.22
+* *(deps)* Update module github.com/swaggo/swag to v1.16.3
+* *(deps)* Update module github.com/yuin/goldmark to v1.7.0
+* *(deps)* Update pnpm to v8.15.0
+* *(deps)* Update pnpm to v8.15.1
+* *(deps)* Update sentry-javascript monorepo to v7.100.1
+* *(deps)* Update sentry-javascript monorepo to v7.17.2 (#2587)
+* *(deps)* Update sentry-javascript monorepo to v7.19.0 (#2670)
+* *(deps)* Update sentry-javascript monorepo to v7.99.0
+* *(deps)* Update src.techknowlogick.com/xgo digest to 45b9ea6
+* *(deps)* Update src.techknowlogick.com/xgo digest to 5aae655
+* *(deps)* Update tiptap to v2.2.0
+* *(deps)* Update tiptap to v2.2.1
+* *(deps)* Update typescript-eslint monorepo to v4.29.3 (#676)
+* *(deps)* Update typescript-eslint monorepo to v4.30.0 (#691)
+
+### Miscellaneous Tasks
+
+* *(Expandable)* Spelling ⛈
+* *(deps)* Move renovate config
+* *(deps)* Remove redundant renovate config
+* *(quick actions)* Format
+
 ## [0.22.1] - 2024-01-28
 
 ### Bug Fixes

@@ -1,5 +1,8 @@
 # Changelog
 
+THIS CHANGELOG ONLY EXISTS FOR HISTORICAL REASONS.
+Starting with version 0.23.0, all changes are logged in the CHANGELOG.md in the root of this repository since the repos were merged.
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres
