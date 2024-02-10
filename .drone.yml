@@ -919,7 +919,7 @@ steps:
       region: fr-par
       path_style: true
       source: frontend/vikunja-frontend-unstable.zip
-      target: /frontend/
+      target: /
     depends_on: [ static ]
 
 ---
@@ -978,7 +978,7 @@ steps:
       region: fr-par
       path_style: true
       source: frontend/vikunja-frontend-${DRONE_TAG##v}.zip
-      target: /frontend/
+      target: /
     depends_on: [ static ]
 
 ---
