@@ -19,8 +19,10 @@ package models
 import (
 	"archive/zip"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"strconv"
 	"time"
@@ -219,15 +221,20 @@ func exportTaskAttachments(s *xorm.Session, wr *zip.Writer, taskIDs []int64) (er
 		return err
 	}
 
-	fs := make(map[int64]io.ReadCloser)
+	attachmentFiles := make(map[int64]io.ReadCloser)
 	for _, ta := range tas {
-		if err := ta.File.LoadFileByID(); err != nil {
+		err = ta.File.LoadFileByID()
+		if err != nil {
+			var pathError *fs.PathError
+			if errors.As(err, &pathError) {
+				continue
+			}
 			return err
 		}
-		fs[ta.FileID] = ta.File.File
+		attachmentFiles[ta.FileID] = ta.File.File
 	}
 
-	return utils.WriteFilesToZip(fs, wr)
+	return utils.WriteFilesToZip(attachmentFiles, wr)
 }
 
 func exportSavedFilters(s *xorm.Session, u *user.User, wr *zip.Writer) (err error) {
@@ -256,7 +263,7 @@ func exportProjectBackgrounds(s *xorm.Session, u *user.User, wr *zip.Writer) (er
 		return err
 	}
 
-	fs := make(map[int64]io.ReadCloser)
+	backgroundFiles := make(map[int64]io.ReadCloser)
 	for _, l := range projects {
 		if l.BackgroundFileID == 0 {
 			continue
@@ -267,13 +274,17 @@ func exportProjectBackgrounds(s *xorm.Session, u *user.User, wr *zip.Writer) (er
 		}
 		err = bgFile.LoadFileByID()
 		if err != nil {
-			return
+			var pathError *fs.PathError
+			if errors.As(err, &pathError) {
+				continue
+			}
+			return err
 		}
 
-		fs[l.BackgroundFileID] = bgFile.File
+		backgroundFiles[l.BackgroundFileID] = bgFile.File
 	}
 
-	return utils.WriteFilesToZip(fs, wr)
+	return utils.WriteFilesToZip(backgroundFiles, wr)
 }
 
 func RegisterOldExportCleanupCron() {
