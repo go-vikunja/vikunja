@@ -96,6 +96,182 @@ func TestTaskRelation_Create(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrRelationTasksCannotBeTheSame(err))
 	})
+	t.Run("cycle with one subtask", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		rel := TaskRelation{
+			TaskID:       29,
+			OtherTaskID:  1,
+			RelationKind: RelationKindSubtask,
+		}
+		err := rel.Create(s, &user.User{ID: 1})
+		require.Error(t, err)
+		assert.True(t, IsErrTaskRelationCycle(err))
+	})
+	t.Run("cycle with multiple subtasks", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		rel1 := TaskRelation{
+			TaskID:       1,
+			OtherTaskID:  2,
+			RelationKind: RelationKindSubtask,
+		}
+		err := rel1.Create(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		rel2 := TaskRelation{
+			TaskID:       2,
+			OtherTaskID:  3,
+			RelationKind: RelationKindSubtask,
+		}
+		err = rel2.Create(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		rel3 := TaskRelation{
+			TaskID:       3,
+			OtherTaskID:  4,
+			RelationKind: RelationKindSubtask,
+		}
+		err = rel3.Create(s, &user.User{ID: 1})
+		require.NoError(t, err)
+
+		// Cycle happens here
+		rel4 := TaskRelation{
+			TaskID:       4,
+			OtherTaskID:  2,
+			RelationKind: RelationKindSubtask,
+		}
+		err = rel4.Create(s, &user.User{ID: 1})
+		require.Error(t, err)
+		assert.True(t, IsErrTaskRelationCycle(err))
+	})
+	t.Run("cycle with multiple subtasks tasks and relation back to parent", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		rel1 := TaskRelation{
+			TaskID:       1,
+			OtherTaskID:  2,
+			RelationKind: RelationKindSubtask,
+		}
+		err := rel1.Create(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		rel2 := TaskRelation{
+			TaskID:       2,
+			OtherTaskID:  3,
+			RelationKind: RelationKindSubtask,
+		}
+		err = rel2.Create(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		rel3 := TaskRelation{
+			TaskID:       3,
+			OtherTaskID:  4,
+			RelationKind: RelationKindSubtask,
+		}
+		err = rel3.Create(s, &user.User{ID: 1})
+		require.NoError(t, err)
+
+		// Cycle happens here
+		rel4 := TaskRelation{
+			TaskID:       4,
+			OtherTaskID:  1,
+			RelationKind: RelationKindSubtask,
+		}
+		err = rel4.Create(s, &user.User{ID: 1})
+		require.Error(t, err)
+		assert.True(t, IsErrTaskRelationCycle(err))
+	})
+	t.Run("cycle with one parenttask", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		rel := TaskRelation{
+			TaskID:       1,
+			OtherTaskID:  29,
+			RelationKind: RelationKindParenttask,
+		}
+		err := rel.Create(s, &user.User{ID: 1})
+		require.Error(t, err)
+		assert.True(t, IsErrTaskRelationCycle(err))
+	})
+	t.Run("cycle with multiple parenttasks", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		rel1 := TaskRelation{
+			TaskID:       1,
+			OtherTaskID:  2,
+			RelationKind: RelationKindParenttask,
+		}
+		err := rel1.Create(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		rel2 := TaskRelation{
+			TaskID:       2,
+			OtherTaskID:  3,
+			RelationKind: RelationKindParenttask,
+		}
+		err = rel2.Create(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		rel3 := TaskRelation{
+			TaskID:       3,
+			OtherTaskID:  4,
+			RelationKind: RelationKindParenttask,
+		}
+		err = rel3.Create(s, &user.User{ID: 1})
+		require.NoError(t, err)
+
+		// Cycle happens here
+		rel4 := TaskRelation{
+			TaskID:       4,
+			OtherTaskID:  2,
+			RelationKind: RelationKindParenttask,
+		}
+		err = rel4.Create(s, &user.User{ID: 1})
+		require.Error(t, err)
+		assert.True(t, IsErrTaskRelationCycle(err))
+	})
+	t.Run("cycle with multiple parenttasks and relation back to parent", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		rel1 := TaskRelation{
+			TaskID:       1,
+			OtherTaskID:  2,
+			RelationKind: RelationKindParenttask,
+		}
+		err := rel1.Create(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		rel2 := TaskRelation{
+			TaskID:       2,
+			OtherTaskID:  3,
+			RelationKind: RelationKindParenttask,
+		}
+		err = rel2.Create(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		rel3 := TaskRelation{
+			TaskID:       3,
+			OtherTaskID:  4,
+			RelationKind: RelationKindParenttask,
+		}
+		err = rel3.Create(s, &user.User{ID: 1})
+		require.NoError(t, err)
+
+		// Cycle happens here
+		rel4 := TaskRelation{
+			TaskID:       4,
+			OtherTaskID:  1,
+			RelationKind: RelationKindParenttask,
+		}
+		err = rel4.Create(s, &user.User{ID: 1})
+		require.Error(t, err)
+		assert.True(t, IsErrTaskRelationCycle(err))
+	})
 }
 
 func TestTaskRelation_Delete(t *testing.T) {

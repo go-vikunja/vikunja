@@ -1003,6 +1003,35 @@ func (err ErrReminderRelativeToMissing) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrTaskRelationCycle represents an error where the user tries to create an already existing relation
+type ErrTaskRelationCycle struct {
+	Kind        RelationKind
+	TaskID      int64
+	OtherTaskID int64
+}
+
+// IsErrTaskRelationCycle checks if an error is ErrTaskRelationCycle.
+func IsErrTaskRelationCycle(err error) bool {
+	_, ok := err.(ErrTaskRelationCycle)
+	return ok
+}
+
+func (err ErrTaskRelationCycle) Error() string {
+	return fmt.Sprintf("Task relation cycle detectetd [TaskID: %v, OtherTaskID: %v, Kind: %v]", err.TaskID, err.OtherTaskID, err.Kind)
+}
+
+// ErrCodeTaskRelationCycle holds the unique world-error code of this error
+const ErrCodeTaskRelationCycle = 4022
+
+// HTTPError holds the http error description
+func (err ErrTaskRelationCycle) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeTaskRelationCycle,
+		Message:  "This task relation would create a cycle.",
+	}
+}
+
 // ============
 // Team errors
 // ============

@@ -138,6 +138,54 @@ func getInverseRelation(kind RelationKind) RelationKind {
 	return RelationKindUnknown
 }
 
+func checkTaskRelationCycle(s *xorm.Session, relation *TaskRelation, otherTaskIDToCheck int64, visited map[int64]bool, currentPath map[int64]bool) (err error) {
+	if visited == nil {
+		visited = make(map[int64]bool)
+	}
+
+	if currentPath == nil {
+		currentPath = make(map[int64]bool)
+	}
+
+	if visited[relation.TaskID] {
+		return nil // Node already visited, no cycle detected
+	}
+
+	if relation.TaskID == otherTaskIDToCheck || // This checks for cycles between leaf nodes
+		currentPath[relation.TaskID] ||
+		currentPath[otherTaskIDToCheck] {
+		// Cycle detected
+		return ErrTaskRelationCycle{
+			TaskID:      relation.TaskID,
+			OtherTaskID: relation.OtherTaskID,
+			Kind:        relation.RelationKind,
+		}
+	}
+
+	visited[relation.TaskID] = true
+	currentPath[relation.TaskID] = true
+
+	parenttasks := []*TaskRelation{}
+	// where child = relation.id
+	err = s.Where("other_task_id = ? AND relation_kind = ?", relation.TaskID, relation.RelationKind).
+		Find(&parenttasks)
+	if err != nil {
+		return
+	}
+
+	for _, parent := range parenttasks {
+		err = checkTaskRelationCycle(s, parent, otherTaskIDToCheck, visited, currentPath)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Remove the current node from the currentPath to avoid false positives
+	delete(currentPath, relation.TaskID)
+
+	return nil
+}
+
 // Create creates a new task relation
 // @Summary Create a new relation between two tasks
 // @Description Creates a new relation between two tasks. The user needs to have update rights on the base task and at least read rights on the other task. Both tasks do not need to be on the same project. Take a look at the docs for available task relation kinds.
@@ -189,6 +237,14 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 		OtherTaskID:  rel.TaskID,
 		CreatedByID:  rel.CreatedByID,
 		RelationKind: getInverseRelation(rel.RelationKind),
+	}
+
+	// If we're creating a subtask relation, check if we're about to create a cycle
+	if rel.RelationKind == RelationKindSubtask || rel.RelationKind == RelationKindParenttask {
+		err = checkTaskRelationCycle(s, rel, rel.OtherTaskID, nil, nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Finally insert everything
