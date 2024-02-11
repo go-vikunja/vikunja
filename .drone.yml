@@ -358,6 +358,7 @@ services:
     environment:
       VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
       VIKUNJA_LOG_LEVEL: DEBUG
+      VIKUNJA_CORS_ENABLE: 1
 
 steps:
   - name: dependencies
@@ -1374,6 +1375,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 90827e8c19d58f370a55c1ba17d188461e3aa1fe1b27cce52fa58925227894de
+hmac: b3642fd8cce5856d5e2b8e35c476d1653cc8ca86939381089cd8977adf41e83c
 
 ...
