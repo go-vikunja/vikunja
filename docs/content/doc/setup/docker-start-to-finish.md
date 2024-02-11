@@ -47,7 +47,8 @@ services:
         volumes:
             - ./files:/app/vikunja/files
         depends_on:
-            - db
+            db:
+                condition: service_healthy
         restart: unless-stopped
     db:
         image: mariadb:10
@@ -60,6 +61,9 @@ services:
         volumes:
             - ./db:/var/lib/mysql
         restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "--silent"]
+            interval: 2s
 ```
 
 This defines two services, each with their own container:

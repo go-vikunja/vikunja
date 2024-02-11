@@ -34,13 +34,16 @@ To use postgres as a database backend, change the `db` section of the examples t
 
 ```yaml
 db:
-  image: postgres:13
+  image: postgres:16
   environment:
     POSTGRES_PASSWORD: secret
     POSTGRES_USER: vikunja
   volumes:
     - ./db:/var/lib/postgresql/data
   restart: unless-stopped
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+    interval: 2s
 ```
 
 You'll also need to change the `VIKUNJA_DATABASE_TYPE` to `postgres` on the api container declaration.
@@ -111,7 +114,8 @@ services:
     volumes:
       - ./files:/app/vikunja/files
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
   db:
     image: mariadb:10
@@ -124,6 +128,9 @@ services:
     volumes:
       - ./db:/var/lib/mysql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "--silent"]
+      interval: 2s
 ```
 
 ## Example with Traefik 2
@@ -156,7 +163,8 @@ services:
       - web
       - default
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
@@ -175,6 +183,9 @@ services:
     volumes:
       - ./db:/var/lib/mysql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "--silent"]
+      interval: 2s
 
 networks:
   web:
@@ -215,7 +226,8 @@ services:
     volumes:
       - ./files:/app/vikunja/files
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
   db:
     image: mariadb:10
@@ -228,6 +240,9 @@ services:
     volumes:
       - ./db:/var/lib/mysql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "--silent"]
+      interval: 2s
   caddy:
     image: caddy
     restart: unless-stopped
