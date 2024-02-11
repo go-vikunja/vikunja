@@ -839,3 +839,5 @@ xorm.io/xorm v1.3.6 h1:hfpWHkDIWWqUi8FRF2H2M9O8lO3Ov47rwFcS9gPzPkU=
 xorm.io/xorm v1.3.6/go.mod h1:qFJGFoVYbbIdnz2vaL5OxSQ2raleMpyRRalnq3n9OJo=
 xorm.io/xorm v1.3.7 h1:mLceAGu0b87r9pD4qXyxGHxifOXIIrAdVcA6k95/osw=
 xorm.io/xorm v1.3.7/go.mod h1:LsCCffeeYp63ssk0pKumP6l96WZcHix7ChpurcLNuMw=
+xorm.io/xorm v1.3.8 h1:CJmplmWqfSRpLWSPMmqz+so8toBp3m7ehuRehIWedZo=
+xorm.io/xorm v1.3.8/go.mod h1:LsCCffeeYp63ssk0pKumP6l96WZcHix7ChpurcLNuMw=

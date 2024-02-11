@@ -79,7 +79,7 @@ require (
 	src.techknowlogick.com/xgo v1.7.1-0.20240206231429-45b9ea635e03
 	src.techknowlogick.com/xormigrate v1.7.1
 	xorm.io/builder v0.3.13
-	xorm.io/xorm v1.3.7
+	xorm.io/xorm v1.3.8
 )
 
 require (
