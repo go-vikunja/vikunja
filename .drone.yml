@@ -784,6 +784,20 @@ steps:
         - tag
     depends_on: [ build-os-packages-version ]
 
+  - name: gitea-release
+    image: plugins/gitea-release
+    pull: true
+    settings:
+      api_key:
+        from_secret: gitea_token
+      base_url: https://kolaente.dev
+      files: dist/zip/*
+      prerelease: true
+      title: ${DRONE_TAG##v} 
+    when:
+      event:
+        - tag
+    depends_on: [ sign-release ]
 
 ---
 kind: pipeline
@@ -1375,6 +1389,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: b3642fd8cce5856d5e2b8e35c476d1653cc8ca86939381089cd8977adf41e83c
+hmac: 2c0390b42119086b3379c21743ef62e793b838506c6786d0833a9bf4dbc8891f
 
 ...
