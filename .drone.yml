@@ -1199,8 +1199,21 @@ steps:
 #        - '.cache'
 #    depends_on:
 #      - build
+  
+  - name: rename-unstable
+    image: apline
+    pull: true
+    commands:
+      - cd desktop/dist
+      - for file in Vikunja*; do suffix=".${file##*.}"; if [[ ! -d $file ]]; then mv "$file" "Vikunja-Desktop-unstable${suffix}"; fi; done
+    depends_on:
+      - build
+    when:
+      event:
+        exclude:
+          - tag
 
-  - name: release-latest
+  - name: release-unstable
     image: plugins/s3
     pull: true
     settings:
@@ -1213,13 +1226,14 @@ steps:
       region: fr-par
       path_style: true
       strip_prefix: desktop/dist/
-      source: desktop/dist/*
+      source: desktop/dist/Vikunja-Desktop*
       target: /desktop/unstable/
     when:
       event:
         exclude:
           - tag
-    depends_on: [ build ]
+    depends_on:
+      - rename-unstable
 
   - name: release-version
     image: plugins/s3
@@ -1360,6 +1374,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 128214182f90834702da16ed7b0f1dec09dc61bbbe7f293aea7cb6c46e7edae2
+hmac: 90827e8c19d58f370a55c1ba17d188461e3aa1fe1b27cce52fa58925227894de
 
 ...
