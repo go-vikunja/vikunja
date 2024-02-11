@@ -160,6 +160,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=web"
       - "traefik.http.routers.vikunja.rule=Host(`vikunja.example.com`)"
       - "traefik.http.routers.vikunja.entrypoints=https"
       - "traefik.http.routers.vikunja.tls.certResolver=acme"
