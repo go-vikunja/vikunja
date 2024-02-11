@@ -353,7 +353,7 @@ trigger:
 
 services:
   - name: api
-    image: vikunja/api:unstable
+    image: vikunja/vikunja:unstable
     pull: always
     environment:
       VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
@@ -1389,6 +1389,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 2c0390b42119086b3379c21743ef62e793b838506c6786d0833a9bf4dbc8891f
+hmac: ecafdfbeb29047bf6c3603cc186c106550184d8bbb6befe05d359f8b5c983ae0
 
 ...
