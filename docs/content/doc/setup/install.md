@@ -29,10 +29,11 @@ You can also:
 Vikunja can be installed in various ways.
 This document provides an overview and instructions for the different methods:
 
-* [Installing from binary](#install-from-binary)
+* [Installing from binary (manual)](#install-from-binary)
 * [Build from source]({{< ref "build-from-source.md">}})
 * [Docker](#docker)
-* [Debian packages](#debian-packages)
+* [Debian](#debian-packages)
+* [RPM](#rpm)
 * [FreeBSD](#freebsd--freenas)
 * [Kubernetes]({{< ref "k8s.md" >}})
 
@@ -175,7 +176,7 @@ Check out the [docker examples]({{<ref "full-docker-example.md">}}) for more adv
 
 ## Debian packages
 
-Vikunja is available as debian packages.
+Vikunja is available as deb package for installation on debian-like systems.
 
 To install these, grab a `.deb` file from [the download page](https://dl.vikunja.io/vikunja) and run
 
@@ -185,6 +186,18 @@ dpkg -i vikunja.deb
 
 This will install Vikunja to `/opt/vikunja`.
 To configure it, use the config file in `/etc/vikunja/config.yml`.
+
+## RPM
+
+Vikunja is available as rpm package for installation on Fedora, CentOS and others.
+
+To install these, grab a `.rpm` file from [the download page](https://dl.vikunja.io/vikunja) and run
+
+```
+rpm -i vikunja.rpm
+```
+
+To configure Vikunja, use the config file in `/etc/vikunja/config.yml`.
 
 ## FreeBSD / FreeNAS
 
