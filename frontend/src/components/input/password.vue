@@ -10,7 +10,8 @@
 			autocomplete="current-password"
 			:tabindex="props.tabindex"
 			@keyup.enter="e => $emit('submit', e)"
-			@focusout="validate"
+			@focusout="() => {validate(); validateAfterFirst = true}"
+			@keyup="() => {validateAfterFirst ? validate() : null}"
 			@input="handleInput"
 		>
 		<BaseButton
@@ -23,16 +24,17 @@
 		</BaseButton>
 	</div>
 	<p
-		v-if="!isValid"
+		v-if="isValid !== true"
 		class="help is-danger"
 	>
-		{{ $t('user.auth.passwordRequired') }}
+		{{ isValid }}
 	</p>
 </template>
 
 <script lang="ts" setup>
 import {ref, watch} from 'vue'
 import {useDebounceFn} from '@vueuse/core'
+import {useI18n} from 'vue-i18n'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 const props = defineProps({
@@ -41,12 +43,12 @@ const props = defineProps({
 	// This prop is a workaround to trigger validation from the outside when the user never had focus in the input.
 	validateInitially: Boolean,
 })
-
 const emit = defineEmits(['submit', 'update:modelValue'])
-
+const {t} = useI18n()
 const passwordFieldType = ref('password')
 const password = ref('')
-const isValid = ref(!props.validateInitially)
+const isValid = ref<true | string>(props.validateInitially === true ? true : '')
+const validateAfterFirst = ref(false)
 
 watch(
 	() => props.validateInitially,
@@ -55,7 +57,22 @@ watch(
 )
 
 const validate = useDebounceFn(() => {
-	isValid.value = password.value !== ''
+	if (password.value === '') {
+		isValid.value = t('user.auth.passwordRequired')
+		return
+	}
+
+	if (password.value.length < 8) {
+		isValid.value = t('user.auth.passwordNotMin')
+		return
+	}
+	
+	if (password.value.length > 250) {
+		isValid.value = t('user.auth.passwordNotMax')
+		return
+	}
+	
+	isValid.value = true
 }, 100)
 
 function togglePasswordFieldType() {

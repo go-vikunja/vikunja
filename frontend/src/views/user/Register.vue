@@ -28,21 +28,24 @@
 						type="text"
 						autocomplete="username"
 						@keyup.enter="submit"
-						@focusout="validateUsername"
+						@focusout="() => {validateUsername(); validateUsernameAfterFirst = true}"
+						@keyup="() => {validateUsernameAfterFirst ? validateUsername() : null}"
 					>
 				</div>
 				<p
-					v-if="!usernameValid"
+					v-if="usernameValid !== true"
 					class="help is-danger"
 				>
-					{{ $t('user.auth.usernameRequired') }}
+					{{ usernameValid }}
 				</p>
 			</div>
 			<div class="field">
 				<label
 					class="label"
 					for="email"
-				>{{ $t('user.auth.email') }}</label>
+				>
+					{{ $t('user.auth.email') }}
+				</label>
 				<div class="control">
 					<input
 						id="email"
@@ -53,7 +56,8 @@
 						required
 						type="email"
 						@keyup.enter="submit"
-						@focusout="validateEmail"
+						@focusout="() => {validateEmail(); validateEmailAfterFirst = true}"
+						@keyup="() => {validateEmailAfterFirst ? validateEmail() : null}"
 					>
 				</div>
 				<p
@@ -84,7 +88,7 @@
 			>
 				{{ $t('user.auth.createAccount') }}
 			</x-button>
-			
+
 			<Message
 				v-if="configStore.demoModeEnabled"
 				variant="warning"
@@ -94,7 +98,7 @@
 				{{ $t('demo.accountWillBeDeleted') }}<br>
 				<strong class="is-uppercase">{{ $t('demo.everythingWillBeDeleted') }}</strong>
 			</Message>
-			
+
 			<p class="mt-2">
 				{{ $t('user.auth.alreadyHaveAnAccount') }}
 				<router-link :to="{ name: 'user.login' }">
@@ -107,7 +111,8 @@
 
 <script setup lang="ts">
 import {useDebounceFn} from '@vueuse/core'
-import {ref, reactive, toRaw, computed, onBeforeMount} from 'vue'
+import {computed, onBeforeMount, reactive, ref, toRaw} from 'vue'
+import {useI18n} from 'vue-i18n'
 
 import router from '@/router'
 import Message from '@/components/misc/message.vue'
@@ -117,6 +122,7 @@ import Password from '@/components/input/password.vue'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 
+const {t} = useI18n()
 const authStore = useAuthStore()
 const configStore = useConfigStore()
 
@@ -142,13 +148,30 @@ const DEBOUNCE_TIME = 100
 
 // debouncing to prevent error messages when clicking on the log in button
 const emailValid = ref(true)
+const validateEmailAfterFirst = ref(false)
 const validateEmail = useDebounceFn(() => {
 	emailValid.value = isEmail(credentials.email)
 }, DEBOUNCE_TIME)
 
-const usernameValid = ref(true)
+const usernameValid = ref<true | string>(true)
+const validateUsernameAfterFirst = ref(false)
 const validateUsername = useDebounceFn(() => {
-	usernameValid.value = credentials.username !== ''
+	if (credentials.username === '') {
+		usernameValid.value = t('user.auth.usernameRequired')
+		return
+	}
+	
+	if(credentials.username.indexOf(' ') !== -1) {
+		usernameValid.value = t('user.auth.usernameMustNotContainSpace')
+		return
+	}
+	
+	if(credentials.username.indexOf('://') !== -1) {
+		usernameValid.value = t('user.auth.usernameMustNotLookLikeUrl')
+		return
+	}
+	
+	usernameValid.value = true
 }, DEBOUNCE_TIME)
 
 const everythingValid = computed(() => {
