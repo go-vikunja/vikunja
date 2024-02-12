@@ -84,9 +84,10 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from 'vue'
+import {computed} from 'vue'
 import {useProjectStore} from '@/stores/projects'
 import {useBaseStore} from '@/stores/base'
+import {useStorage} from '@vueuse/core'
 
 import type {IProject} from '@/modelTypes/IProject'
 
@@ -112,7 +113,18 @@ const projectStore = useProjectStore()
 const baseStore = useBaseStore()
 const currentProject = computed(() => baseStore.currentProject)
 
-const childProjectsOpen = ref(true)
+// Persist open state across browser reloads. Using a seperate ref for the state 
+// allows us to use only one entry in local storage instead of one for every project id.
+type openState = { [key: number]: boolean }
+const childProjectsOpenState = useStorage<openState>('navigation-child-projects-open', {})
+const childProjectsOpen = computed({
+	get() {
+		return childProjectsOpenState.value[project.id] ?? true
+	},
+	set(open) {
+		childProjectsOpenState.value[project.id] = open
+	},
+})
 
 const childProjects = computed(() => {
 	return projectStore.getChildProjects(project.id)
