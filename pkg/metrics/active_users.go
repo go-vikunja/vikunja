@@ -69,7 +69,7 @@ func init() {
 func setupActiveUsersMetric() {
 	err := registry.Register(promauto.NewGaugeFunc(prometheus.GaugeOpts{
 		Name: "vikunja_active_users",
-		Help: "The number of shares active within the last 30 seconds",
+		Help: "The number of users active within the last 30 seconds",
 	}, func() float64 {
 		allActiveUsers := activeUsersMap{}
 		_, err := keyvalue.GetWithValue(activeUsersKey, &allActiveUsers)
