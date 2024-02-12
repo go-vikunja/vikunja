@@ -21,6 +21,7 @@ export interface SortBy {
 	percent_done?: Order
 	created?: Order
 	updated?: Order
+	done_at?: Order,
 }
 
 // FIXME: merge with DEFAULT_PARAMS in filters.vue

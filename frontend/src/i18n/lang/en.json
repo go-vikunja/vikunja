@@ -716,7 +716,8 @@
       "repeat": "Repeat",
       "startDate": "Start Date",
       "title": "Title",
-      "updated": "Updated"
+      "updated": "Updated",
+      "doneAt": "Done At"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",

@@ -52,6 +52,9 @@
 								<Fancycheckbox v-model="activeColumns.percentDone">
 									{{ $t('task.attributes.percentDone') }}
 								</Fancycheckbox>
+								<Fancycheckbox v-model="activeColumns.doneAt">
+									{{ $t('task.attributes.doneAt') }}
+								</Fancycheckbox>
 								<Fancycheckbox v-model="activeColumns.created">
 									{{ $t('task.attributes.created') }}
 								</Fancycheckbox>
@@ -144,6 +147,13 @@
 											@click="sort('percent_done')"
 										/>
 									</th>
+									<th v-if="activeColumns.doneAt">
+										{{ $t('task.attributes.doneAt') }}
+										<Sort
+											:order="sortBy.done_at"
+											@click="sort('done_at')"
+										/>
+									</th>
 									<th v-if="activeColumns.created">
 										{{ $t('task.attributes.created') }}
 										<Sort
@@ -224,6 +234,10 @@
 										{{ t.percentDone * 100 }}%
 									</td>
 									<DateTableCell
+										v-if="activeColumns.doneAt"
+										:date="t.doneAt"
+									/>
+									<DateTableCell
 										v-if="activeColumns.created"
 										:date="t.created"
 									/>
@@ -297,6 +311,7 @@ const ACTIVE_COLUMNS_DEFAULT = {
 	created: false,
 	updated: false,
 	createdBy: false,
+	doneAt: false,
 }
 
 const SORT_BY_DEFAULT: SortBy = {
