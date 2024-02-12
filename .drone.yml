@@ -1216,7 +1216,7 @@ steps:
 #      - build
   
   - name: rename-unstable
-    image: alpine
+    image: bash
     pull: true
     commands:
       - cd desktop/dist
@@ -1389,6 +1389,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: ebaa2b225788f5ff23cc55be29bea1c6fef1507d2c8f8b0f4b927205ae3a3a63
+hmac: 701e3ef16ca217178380a0aacb14601828d9c0d43a7c3cc5033ccd3288927850
 
 ...
