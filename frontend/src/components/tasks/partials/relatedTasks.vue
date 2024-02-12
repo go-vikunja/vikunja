@@ -261,16 +261,18 @@ const foundTasks = ref<ITask[]>([])
 
 async function findTasks(newQuery: string) {
 	query.value = newQuery
-	foundTasks.value = await taskService.getAll({}, {
+	const result = await taskService.getAll({}, {
 		s: newQuery,
 		sort_by: 'done',
 	})
+	
+	foundTasks.value = mapRelatedTasks(result)
 }
 
 function mapRelatedTasks(tasks: ITask[]) {
 	return tasks.map(task => {
 		// by doing this here once we can save a lot of duplicate calls in the template
-		const project = projectStore.projects[task.ProjectId]
+		const project = projectStore.projects[task.projectId]
 
 		return {
 			...task,
