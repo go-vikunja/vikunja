@@ -1220,7 +1220,7 @@ steps:
     pull: true
     commands:
       - cd desktop/dist
-      - for file in Vikunja*; do suffix=".${file##*.}"; if [[ ! -d $file ]]; then mv "$file" "Vikunja-Desktop-unstable${suffix}"; fi; done
+      - bash -c 'for file in Vikunja*; do suffix=".${file##*.}"; if [[ ! -d $file ]]; then mv "$file" "Vikunja-Desktop-unstable${suffix}"; fi; done'
     depends_on:
       - build
     when:
@@ -1389,6 +1389,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 701e3ef16ca217178380a0aacb14601828d9c0d43a7c3cc5033ccd3288927850
+hmac: 2a04bdccf78b768db5ca89bf2bfa472ade15d8499b976b47deb52d93400b38a2
 
 ...
