@@ -82,14 +82,15 @@
 											>
 												<div class="control">
 													<input
+														ref="bucketLimitInputRef"
 														v-focus.always
 														:value="bucket.limit"
 														class="input"
 														type="number"
 														min="0"
 														@keyup.esc="() => showSetLimitInput = false"
-														@keyup.enter="() => showSetLimitInput = false"
-														@input="(event) => setBucketLimit(bucket.id, parseInt((event.target as HTMLInputElement).value))"
+														@keyup.enter="() => {setBucketLimit(bucket.id, true); showSetLimitInput = false}"
+														@input="setBucketLimit(bucket.id)"
 													>
 												</div>
 												<div class="control">
@@ -98,6 +99,7 @@
 														:disabled="bucket.limit < 0"
 														:icon="['far', 'save']"
 														:shadow="false"
+														@click="setBucketLimit(bucket.id, true)"
 													/>
 												</div>
 											</div>
@@ -320,6 +322,7 @@ const taskStore = useTaskStore()
 const projectStore = useProjectStore()
 
 const taskContainerRefs = ref<{[id: IBucket['id']]: HTMLElement}>({})
+const bucketLimitInputRef = ref<HTMLInputElement | null>(null)
 
 const drag = ref(false)
 const dragBucket = ref(false)
@@ -615,7 +618,7 @@ function updateBucketPosition(e: {newIndex: number}) {
 	})
 }
 
-async function setBucketLimit(bucketId: IBucket['id'], limit: number) {
+async function saveBucketLimit(bucketId: IBucket['id'], limit: number) {
 	if (limit < 0) {
 		return
 	}
@@ -625,6 +628,22 @@ async function setBucketLimit(bucketId: IBucket['id'], limit: number) {
 		limit,
 	})
 	success({message: t('project.kanban.bucketLimitSavedSuccess')})
+}
+
+const setBucketLimitCancel = ref<number|null>(null)
+
+async function setBucketLimit(bucketId: IBucket['id'], now: boolean = false) {
+	const limit = parseInt(bucketLimitInputRef.value?.value || '')
+	
+	if (setBucketLimitCancel.value !== null) {
+		clearTimeout(setBucketLimitCancel.value)
+	}
+	
+	if (now) {
+		return saveBucketLimit(bucketId, limit)
+	}
+	
+	setBucketLimitCancel.value = setTimeout(saveBucketLimit, 2500, bucketId, limit)
 }
 
 function shouldAcceptDrop(bucket: IBucket) {
