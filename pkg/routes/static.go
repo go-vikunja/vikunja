@@ -126,12 +126,11 @@ func serveIndexFile(c echo.Context, assetFs http.FileSystem) (err error) {
 		return err
 	}
 
-	etag, err := generateEtag(index, info.Name())
-	if err != nil {
-		return err
-	}
-
-	return serveFile(c, reader, info, etag)
+	//etag, err := generateEtag(index, info.Name())
+	//if err != nil {
+	//	return err
+	//}
+	return serveFile(c, reader, info, "")
 }
 
 // Copied from echo's middleware.StaticWithConfig simplified and adjusted for caching
@@ -271,7 +270,9 @@ func serveFile(c echo.Context, file io.ReadSeeker, info os.FileInfo, etag string
 
 	c.Response().Header().Set("Server", "Vikunja")
 	c.Response().Header().Set("Vary", "Accept-Encoding")
-	c.Response().Header().Set("Etag", etag)
+	if etag != "" {
+		c.Response().Header().Set("Etag", etag)
+	}
 
 	cacheControl, err := getCacheControlHeader(info, file)
 	if err != nil {
