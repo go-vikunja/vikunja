@@ -20,10 +20,12 @@ import (
 	"archive/zip"
 	"bufio"
 	"bytes"
+	vversion "code.vikunja.io/api/pkg/version"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-version"
 	"io"
 	"os"
 	"sort"
@@ -63,6 +65,7 @@ func Restore(filename string) error {
 	// Find the configFile, database and files files
 	var configFile *zip.File
 	var dotEnvFile *zip.File
+	var versionFile *zip.File
 	dbfiles := make(map[string]*zip.File)
 	filesFiles := make(map[string]*zip.File)
 	for _, file := range r.File {
@@ -81,6 +84,43 @@ func Restore(filename string) error {
 		}
 		if strings.HasPrefix(file.Name, "files/") {
 			filesFiles[strings.ReplaceAll(file.Name, "files/", "")] = file
+			continue
+		}
+		if file.Name == "VERSION" {
+			versionFile = file
+		}
+	}
+
+	///////
+	// Check if we're restoring to the same version as the dump
+	if versionFile == nil {
+		return fmt.Errorf("dump does not contain VERSION file, refusing to continue")
+	}
+	vf, err := versionFile.Open()
+	if err != nil {
+		return fmt.Errorf("could not open version file: %w", err)
+	}
+
+	var bufVersion bytes.Buffer
+	if _, err := bufVersion.ReadFrom(vf); err != nil {
+		return fmt.Errorf("could not read version file: %w", err)
+	}
+
+	versionString := bufVersion.String()
+	if versionString == "dev" && vversion.Version == "dev" {
+		log.Debugf("Importing from dev version")
+	} else {
+		dumpedVersion, err := version.NewVersion(bufVersion.String())
+		if err != nil {
+			return err
+		}
+		currentVersion, err := version.NewVersion(vversion.Version)
+		if err != nil {
+			return err
+		}
+
+		if !dumpedVersion.Equal(currentVersion) {
+			return fmt.Errorf("export was created with version %s but this is %s - please make sure you are running the same Vikunja version before restoring", dumpedVersion, currentVersion)
 		}
 	}
 
