@@ -129,8 +129,9 @@ services:
       - ./db:/var/lib/mysql
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--su=vikunja", "--connect", "--innodb_initialized"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u $$MYSQL_USER --password=$$MYSQL_PASSWORD"]
       interval: 2s
+      start_period: 30s
 ```
 
 ## Example with Traefik 2
@@ -184,8 +185,9 @@ services:
       - ./db:/var/lib/mysql
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--su=vikunja", "--connect", "--innodb_initialized"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u $$MYSQL_USER --password=$$MYSQL_PASSWORD"]
       interval: 2s
+      start_period: 30s
 
 networks:
   web:
@@ -241,8 +243,9 @@ services:
       - ./db:/var/lib/mysql
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--su=vikunja", "--connect", "--innodb_initialized"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u $$MYSQL_USER --password=$$MYSQL_PASSWORD"]
       interval: 2s
+      start_period: 30s
   caddy:
     image: caddy
     restart: unless-stopped

@@ -62,8 +62,9 @@ services:
             - ./db:/var/lib/mysql
         restart: unless-stopped
         healthcheck:
-            test: ["CMD", "healthcheck.sh", "--su=vikunja", "--connect", "--innodb_initialized"]
+            test: ["CMD-SHELL", "mysqladmin ping -h localhost -u $$MYSQL_USER --password=$$MYSQL_PASSWORD"]
             interval: 2s
+			start_period: 30s
 ```
 
 This defines two services, each with their own container:
