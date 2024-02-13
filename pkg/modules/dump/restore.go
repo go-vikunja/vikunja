@@ -20,23 +20,24 @@ import (
 	"archive/zip"
 	"bufio"
 	"bytes"
-	vversion "code.vikunja.io/api/pkg/version"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/go-version"
 	"io"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/go-version"
+
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/migration"
+	vversion "code.vikunja.io/api/pkg/version"
 
 	"src.techknowlogick.com/xormigrate"
 )
@@ -93,35 +94,9 @@ func Restore(filename string) error {
 
 	///////
 	// Check if we're restoring to the same version as the dump
-	if versionFile == nil {
-		return fmt.Errorf("dump does not contain VERSION file, refusing to continue")
-	}
-	vf, err := versionFile.Open()
+	err = checkVikunjaVersion(versionFile)
 	if err != nil {
-		return fmt.Errorf("could not open version file: %w", err)
-	}
-
-	var bufVersion bytes.Buffer
-	if _, err := bufVersion.ReadFrom(vf); err != nil {
-		return fmt.Errorf("could not read version file: %w", err)
-	}
-
-	versionString := bufVersion.String()
-	if versionString == "dev" && vversion.Version == "dev" {
-		log.Debugf("Importing from dev version")
-	} else {
-		dumpedVersion, err := version.NewVersion(bufVersion.String())
-		if err != nil {
-			return err
-		}
-		currentVersion, err := version.NewVersion(vversion.Version)
-		if err != nil {
-			return err
-		}
-
-		if !dumpedVersion.Equal(currentVersion) {
-			return fmt.Errorf("export was created with version %s but this is %s - please make sure you are running the same Vikunja version before restoring", dumpedVersion, currentVersion)
-		}
+		return err
 	}
 
 	///////
@@ -313,6 +288,41 @@ func restoreConfig(configFile, dotEnvFile *zip.File) error {
 		log.Warning("If your config does not match, you'll have to make the changes and restart the restoring process afterwards.")
 		if _, err := bufio.NewReader(os.Stdin).ReadString('\n'); err != nil {
 			return fmt.Errorf("could not read from stdin: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func checkVikunjaVersion(versionFile *zip.File) error {
+	if versionFile == nil {
+		return fmt.Errorf("dump does not contain VERSION file, refusing to continue")
+	}
+	vf, err := versionFile.Open()
+	if err != nil {
+		return fmt.Errorf("could not open version file: %w", err)
+	}
+
+	var bufVersion bytes.Buffer
+	if _, err := bufVersion.ReadFrom(vf); err != nil {
+		return fmt.Errorf("could not read version file: %w", err)
+	}
+
+	versionString := bufVersion.String()
+	if versionString == "dev" && vversion.Version == "dev" {
+		log.Debugf("Importing from dev version")
+	} else {
+		dumpedVersion, err := version.NewVersion(bufVersion.String())
+		if err != nil {
+			return err
+		}
+		currentVersion, err := version.NewVersion(vversion.Version)
+		if err != nil {
+			return err
+		}
+
+		if !dumpedVersion.Equal(currentVersion) {
+			return fmt.Errorf("export was created with version %s but this is %s - please make sure you are running the same Vikunja version before restoring", dumpedVersion, currentVersion)
 		}
 	}
 
