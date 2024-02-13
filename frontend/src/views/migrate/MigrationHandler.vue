@@ -3,7 +3,7 @@
 		<h1>{{ $t('migrate.titleService', {name: migrator.name}) }}</h1>
 		<p>{{ $t('migrate.descriptionDo') }}</p>
 
-		<template v-if="message === '' && lastMigrationFinishedAt === null">
+		<template v-if="message === '' && lastMigrationStartedAt === null">
 			<template v-if="isMigrating === false">
 				<template v-if="migrator.isFileMigrator">
 					<p>{{ $t('migrate.importUpload', {name: migrator.name}) }}</p>
@@ -48,15 +48,15 @@
 							:key="i"
 						/>
 					</div>
-					<Logo class="logo" />
+					<Logo class="logo"/>
 				</div>
 				<p>{{ $t('migrate.inProgress') }}</p>
 			</div>
 		</template>
 		<div v-else-if="lastMigrationStartedAt && lastMigrationFinishedAt === null">
-			<p>
+			<Message class="mb-4">
 				{{ $t('migrate.migrationInProgress') }}
-			</p>
+			</Message>
 			<x-button :to="{name: 'home'}">
 				{{ $t('home.goToOverview') }}
 			</x-button>
@@ -170,19 +170,18 @@ async function initMigration() {
 	if (!migratorAuthCode.value) {
 		return
 	}
-	const {startedAt, finishedAt} = await migrationService.getStatus()
-	if (startedAt) {
-		lastMigrationStartedAt.value = parseDateOrNull(startedAt)
+	const {started_at, finished_at} = await migrationService.getStatus()
+	if (started_at) {
+		lastMigrationStartedAt.value = parseDateOrNull(started_at)
 	}
-	if (finishedAt) {
-		lastMigrationFinishedAt.value = parseDateOrNull(finishedAt)
+	if (finished_at) {
+		lastMigrationFinishedAt.value = parseDateOrNull(finished_at)
 		if (lastMigrationFinishedAt.value) {
 			return
 		}
 	}
-
+	
 	if (lastMigrationStartedAt.value && lastMigrationFinishedAt.value === null) {
-		// Migration already in progress
 		return
 	}
 
@@ -214,6 +213,8 @@ async function migrate() {
 		message.value = result.message
 		const projectStore = useProjectStore()
 		return projectStore.loadProjects()
+	} catch (e) {
+		console.log(e)
 	} finally {
 		isMigrating.value = false
 	}

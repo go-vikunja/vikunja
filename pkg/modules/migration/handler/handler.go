@@ -73,8 +73,8 @@ func (mw *MigrationWeb) Migrate(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	if stats.FinishedAt.IsZero() {
-		return c.JSON(http.StatusOK, map[string]string{
+	if !stats.StartedAt.IsZero() && stats.FinishedAt.IsZero() {
+		return c.JSON(http.StatusPreconditionFailed, map[string]string{
 			"message":       "Migration already running",
 			"running_since": stats.StartedAt.String(),
 		})
@@ -95,7 +95,7 @@ func (mw *MigrationWeb) Migrate(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
-	return c.JSON(http.StatusOK, models.Message{Message: "Everything was migrated successfully."})
+	return c.JSON(http.StatusOK, models.Message{Message: "Migration was started successfully."})
 }
 
 // Status returns whether or not a user has already done this migration
