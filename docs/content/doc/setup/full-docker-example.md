@@ -36,7 +36,7 @@ To use postgres as a database backend, change the `db` section of the examples t
 db:
   image: postgres:16
   environment:
-    POSTGRES_PASSWORD: secret
+    POSTGRES_PASSWORD: changeme
     POSTGRES_USER: vikunja
   volumes:
     - ./db:/var/lib/postgresql/data
@@ -104,7 +104,7 @@ services:
     environment:
       VIKUNJA_SERVICE_PUBLICURL: http://<the public url where vikunja is reachable>
       VIKUNJA_DATABASE_HOST: db
-      VIKUNJA_DATABASE_PASSWORD: secret
+      VIKUNJA_DATABASE_PASSWORD: changeme
       VIKUNJA_DATABASE_TYPE: mysql
       VIKUNJA_DATABASE_USER: vikunja
       VIKUNJA_DATABASE_DATABASE: vikunja
@@ -121,15 +121,15 @@ services:
     image: mariadb:10
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
-      MYSQL_ROOT_PASSWORD: supersupersecret
+      MYSQL_ROOT_PASSWORD: supersecret
       MYSQL_USER: vikunja
-      MYSQL_PASSWORD: supersecret
+      MYSQL_PASSWORD: changeme
       MYSQL_DATABASE: vikunja
     volumes:
       - ./db:/var/lib/mysql
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "--silent"]
+      test: ["CMD", "healthcheck.sh", "--su=vikunja", "--connect", "--innodb_initialized"]
       interval: 2s
 ```
 
@@ -152,7 +152,7 @@ services:
     environment:
       VIKUNJA_SERVICE_PUBLICURL: http://<the public url where vikunja is reachable>
       VIKUNJA_DATABASE_HOST: db
-      VIKUNJA_DATABASE_PASSWORD: supersecret
+      VIKUNJA_DATABASE_PASSWORD: changeme
       VIKUNJA_DATABASE_TYPE: mysql
       VIKUNJA_DATABASE_USER: vikunja
       VIKUNJA_DATABASE_DATABASE: vikunja
@@ -178,13 +178,13 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: supersupersecret 
       MYSQL_USER: vikunja
-      MYSQL_PASSWORD: supersecret
+      MYSQL_PASSWORD: changeme
       MYSQL_DATABASE: vikunja
     volumes:
       - ./db:/var/lib/mysql
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "--silent"]
+      test: ["CMD", "healthcheck.sh", "--su=vikunja", "--connect", "--innodb_initialized"]
       interval: 2s
 
 networks:
@@ -216,7 +216,7 @@ services:
     environment:
       VIKUNJA_SERVICE_PUBLICURL: http://<the public url where vikunja is reachable>
       VIKUNJA_DATABASE_HOST: db
-      VIKUNJA_DATABASE_PASSWORD: secret
+      VIKUNJA_DATABASE_PASSWORD: changeme
       VIKUNJA_DATABASE_TYPE: mysql
       VIKUNJA_DATABASE_USER: vikunja
       VIKUNJA_DATABASE_DATABASE: vikunja
@@ -233,15 +233,15 @@ services:
     image: mariadb:10
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
-      MYSQL_ROOT_PASSWORD: supersupersecret
+      MYSQL_ROOT_PASSWORD: supersecret
       MYSQL_USER: vikunja
-      MYSQL_PASSWORD: supersecret
+      MYSQL_PASSWORD: changeme
       MYSQL_DATABASE: vikunja
     volumes:
       - ./db:/var/lib/mysql
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "--silent"]
+      test: ["CMD", "healthcheck.sh", "--su=vikunja", "--connect", "--innodb_initialized"]
       interval: 2s
   caddy:
     image: caddy
