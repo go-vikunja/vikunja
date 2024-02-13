@@ -13,7 +13,7 @@
   },
   "homepage": "https://vikunja.io/",
   "funding": "https://opencollective.com/vikunja",
-  "packageManager": "pnpm@8.15.1",
+  "packageManager": "pnpm@8.15.2",
   "keywords": [
     "todo",
     "productivity",
