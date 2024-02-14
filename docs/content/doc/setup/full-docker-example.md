@@ -48,10 +48,6 @@ db:
 
 You'll also need to change the `VIKUNJA_DATABASE_TYPE` to `postgres` on the api container declaration.
 
-<div class="notification is-warning">
-<b>NOTE:</b> The mariadb container can sometimes take a while to initialize, especially on the first run. During this time, the api container will fail to start at all. It will automatically restart every few seconds.
-</div>
-
 ## Sqlite
 
 Vikunja supports postgres, mysql and sqlite as a database backend. The examples on this page use mysql with a mariadb container.
