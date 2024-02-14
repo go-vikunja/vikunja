@@ -193,6 +193,7 @@ import {mergeAttributes} from '@tiptap/core'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
+import {createRandomID} from '@/helpers/randomId'
 
 const {
 	modelValue,
@@ -388,7 +389,20 @@ const editor = useEditor({
 		CustomImage,
 
 		TaskList,
-		TaskItem.configure({
+		TaskItem.extend({
+			addAttributes() {
+				return {
+					...this.parent?.(),
+					id: {
+						default: createRandomID,
+						parseHTML: element => element.getAttribute('data-id'),
+						renderHTML: attributes => ({
+							'data-id': attributes.id,
+						}),
+					},
+				}
+			},
+		}).configure({
 			nested: true,
 			onReadOnlyChecked: (node: Node, checked: boolean): boolean => {
 				if (!isEditEnabled) {
@@ -400,7 +414,7 @@ const editor = useEditor({
 				// https://github.com/ueberdosis/tiptap/issues/3676
 
 				editor.value!.state.doc.descendants((subnode, pos) => {
-					if (node.eq(subnode)) {
+					if (node.attrs.id === subnode.attrs.id) {
 						const {tr} = editor.value!.state
 						tr.setNodeMarkup(pos, undefined, {
 							...node.attrs,
@@ -408,9 +422,9 @@ const editor = useEditor({
 						})
 						editor.value!.view.dispatch(tr)
 						bubbleSave()
+						return true
 					}
 				})
-
 
 				return true
 			},
@@ -594,27 +608,21 @@ function clickTasklistCheckbox(event) {
 
 watch(
 	() => isEditing.value,
-	editing => {
-		nextTick(() => {
-			const checkboxes = tiptapInstanceRef.value?.querySelectorAll('[data-checked]')
+	async editing => {
+		await nextTick()
+		
+		let checkboxes = tiptapInstanceRef.value?.querySelectorAll('[data-checked]')
+		if (typeof checkboxes === 'undefined' || checkboxes.length === 0) {
+			// For some reason, this works when we check a second time.
+			await nextTick()
+
+			checkboxes = tiptapInstanceRef.value?.querySelectorAll('[data-checked]')
 			if (typeof checkboxes === 'undefined' || checkboxes.length === 0) {
 				return
 			}
+		}
 
-			if (editing) {
-				checkboxes.forEach(check => {
-					if (check.children.length < 2) {
-						return
-					}
-
-					// We assume the first child contains the label element with the checkbox and the second child the actual label
-					// When the actual label is clicked, we forward that click to the checkbox.
-					check.children[1].removeEventListener('click', clickTasklistCheckbox)
-				})
-
-				return
-			}
-
+		if (editing) {
 			checkboxes.forEach(check => {
 				if (check.children.length < 2) {
 					return
@@ -622,8 +630,21 @@ watch(
 
 				// We assume the first child contains the label element with the checkbox and the second child the actual label
 				// When the actual label is clicked, we forward that click to the checkbox.
-				check.children[1].addEventListener('click', clickTasklistCheckbox)
+				check.children[1].removeEventListener('click', clickTasklistCheckbox)
 			})
+
+			return
+		}
+
+		checkboxes.forEach(check => {
+			if (check.children.length < 2) {
+				return
+			}
+
+			// We assume the first child contains the label element with the checkbox and the second child the actual label
+			// When the actual label is clicked, we forward that click to the checkbox.
+			check.children[1].removeEventListener('click', clickTasklistCheckbox)
+			check.children[1].addEventListener('click', clickTasklistCheckbox)
 		})
 	},
 	{immediate: true},
@@ -781,6 +802,7 @@ watch(
 
 .ProseMirror {
 	/* Table-specific styling */
+
 	table {
 		border-collapse: collapse;
 		table-layout: fixed;
@@ -836,6 +858,7 @@ watch(
 	}
 
 	// Lists
+
 	ul {
 		margin-left: .5rem;
 		margin-top: 0 !important;
