@@ -42,7 +42,7 @@ db:
     - ./db:/var/lib/postgresql/data
   restart: unless-stopped
   healthcheck:
-    test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+    test: ["CMD-SHELL", "pg_isready -h localhost -U $$POSTGRES_USER"]
     interval: 2s
 ```
 
