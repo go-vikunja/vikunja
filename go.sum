@@ -33,6 +33,8 @@ github.com/arran4/golang-ical v0.2.3 h1:C4Vj7+BjJBIrAJhHgi6Ku+XUkQVugRq4re5Cqj5Q
 github.com/arran4/golang-ical v0.2.3/go.mod h1:RqMuPGmwRRwjkb07hmm+JBqcWa1vF1LvVmPtSZN2OhQ=
 github.com/arran4/golang-ical v0.2.4 h1:0/rTXn2qqEekLKec3SzRRy+z7pCLtniMb0KD/dPogUo=
 github.com/arran4/golang-ical v0.2.4/go.mod h1:RqMuPGmwRRwjkb07hmm+JBqcWa1vF1LvVmPtSZN2OhQ=
+github.com/arran4/golang-ical v0.2.5 h1:zaAdee/cOnOCeSuxUSgkWnF9jZl/oYq2ZgDk+LU3wGs=
+github.com/arran4/golang-ical v0.2.5/go.mod h1:RqMuPGmwRRwjkb07hmm+JBqcWa1vF1LvVmPtSZN2OhQ=
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 h1:DklsrG3dyBCFEj5IhUbnKptjxatkF07cF2ak3yi77so=
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2/go.mod h1:WaHUgvxTVq04UNunO+XhnAqY/wQc+bxr74GqbsZ/Jqw=
 github.com/bbrks/go-blurhash v1.1.1 h1:uoXOxRPDca9zHYabUTwvS4KnY++KKUbwFo+Yxb8ME4M=
