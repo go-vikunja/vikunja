@@ -48,7 +48,7 @@
 							:key="i"
 						/>
 					</div>
-					<Logo class="logo"/>
+					<Logo class="logo" />
 				</div>
 				<p>{{ $t('migrate.inProgress') }}</p>
 			</div>
