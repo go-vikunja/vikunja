@@ -41,23 +41,12 @@ There are multiple categories of subcommands in the magefile:
 
 These tasks are automatically run in our CI every time someone pushes to main or you update a pull request:
 
-* `mage check:lint`
-* `mage check:fmt`
-* `mage check:ineffassign`
-* `mage check:misspell`
-* `mage check:goconst`
-* `mage build:generate`
+* `mage lint`
 * `mage build:build`
 
 ## Build
 
 ### Build Vikunja
-
-```
-mage build:build
-```
-
-or
 
 ```
 mage build
@@ -79,16 +68,9 @@ All check sub-commands exit with a status code of 1 if the check fails.
 
 Various code-checks are available:
 
-* `mage check:all`: Runs fmt-check, lint, got-swag, misspell-check, ineffasign-check, gocyclo-check, static-check, gosec-check, goconst-check all in parallel
-* `mage check:fmt`: Checks if the code is properly formatted with go fmt
-* `mage check:go-sec`: Checks the source code for potential security issues by scanning the Go AST using the [gosec tool](https://github.com/securego/gosec)
-* `mage check:goconst`: Checks for repeated strings that could be replaced by a constant using [goconst](https://github.com/jgautheron/goconst/)
-* `mage check:gocyclo`: Checks for the cyclomatic complexity of the source code using [gocyclo](https://github.com/fzipp/gocyclo)
-* `mage check:got-swag`: Checks if the swagger docs need to be re-generated from the code annotations
-* `mage check:ineffassign`: Checks the source code for ineffectual assigns using [ineffassign](https://github.com/gordonklaus/ineffassign)
-* `mage check:lint`: Runs golint on all packages
-* `mage check:misspell`: Checks the source code for misspellings
-* `mage check:static`: Statically analyzes the source code about a range of different problems using [staticcheck](https://staticcheck.io/docs/)
+* `mage check:all`: Runs golangci and swagger documentation check
+* `mage lint`: Checks if the code follows the rules as defined in the `.golangci.yml` config file.
+* `mage lint:fix`: Fixes all code style issues which are easily fixable.
 
 ## Release
 

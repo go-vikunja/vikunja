@@ -71,7 +71,8 @@ var (
 		"dev:make-listener":     Dev.MakeListener,
 		"dev:make-notification": Dev.MakeNotification,
 		"generate-docs":         GenerateDocs,
-		"check:golangci-fix":    Check.GolangciFix,
+		"lint":                  Check.Golangci,
+		"lint:fix":              Check.GolangciFix,
 	}
 )
 
