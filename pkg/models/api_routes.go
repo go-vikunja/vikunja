@@ -69,7 +69,7 @@ func getRouteGroupName(path string) string {
 // CollectRoutesForAPITokenUsage gets called for every added APITokenRoute and builds a list of all routes we can use for the api tokens.
 func CollectRoutesForAPITokenUsage(route echo.Route) {
 
-	if !strings.Contains(route.Name, "(*WebHandler)") {
+	if !strings.Contains(route.Name, "(*WebHandler)") && !strings.Contains(route.Name, "Attachment") {
 		return
 	}
 
@@ -114,6 +114,21 @@ func CollectRoutesForAPITokenUsage(route echo.Route) {
 		apiTokenRoutes[routeGroupName].Delete = &RouteDetail{
 			Path:   route.Path,
 			Method: route.Method,
+		}
+	}
+
+	if routeGroupName == "tasks_attachments" {
+		if strings.Contains(route.Name, "UploadTaskAttachment") {
+			apiTokenRoutes[routeGroupName].Create = &RouteDetail{
+				Path:   route.Path,
+				Method: route.Method,
+			}
+		}
+		if strings.Contains(route.Name, "GetTaskAttachment") {
+			apiTokenRoutes[routeGroupName].ReadOne = &RouteDetail{
+				Path:   route.Path,
+				Method: route.Method,
+			}
 		}
 	}
 }
