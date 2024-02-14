@@ -22,17 +22,22 @@ watch(
 	{immediate: true},
 )
 
-const availableFilterFields = [
-	'done',
+const dateFields = [
 	'dueDate',
-	'priority',
-	'usePriority',
 	'startDate',
 	'endDate',
+	'doneAt',
+]
+
+const availableFilterFields = [
+	'done',
+	'priority',
+	'usePriority',
 	'percentDone',
 	'reminders',
 	'assignees',
 	'labels',
+	...dateFields,
 ]
 
 const filterOperators = [
@@ -56,6 +61,16 @@ const filterJoinOperators = [
 
 const highlightedFilterQuery = computed(() => {
 	let highlighted = escapeHtml(filterQuery.value)
+	dateFields
+		.map(o => escapeHtml(o))
+		.forEach(o => {
+			const pattern = new RegExp(o + '\\s*(&lt;|&gt;|&lt;=|&gt;=|=|!=)\\s*([\'"]?)([^\'"\\s]+\\1?)?', 'ig');
+			highlighted = highlighted.replaceAll(pattern, (match, token, start, value, position) => {
+				console.log({match, token, value, position})
+				return `${o} ${token} <span class="filter-query__special_value">${value}</span><span class="filter-query__special_value_placeholder">${value}</span>`
+				// TODO: make special value a button with datepicker popup
+			})
+		})
 	filterOperators
 		.map(o => ` ${escapeHtml(o)} `)
 		.forEach(o => {
@@ -116,6 +131,20 @@ function escapeHtml(unsafe: string): string {
 
 	&.filter-query__join-operator {
 		color: var(--code-section);
+	}
+
+	&.filter-query__special_value_placeholder {
+		padding: .125rem .25rem;
+		display: inline-block;
+	}
+	
+	&.filter-query__special_value {
+		background: var(--primary);
+		padding: .125rem .25rem;
+		color: white;
+		border-radius: $radius;
+		position: absolute;
+		margin-top: calc((0.25em - 0.125rem) * -1);
 	}
 }
 </style>
