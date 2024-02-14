@@ -107,15 +107,15 @@ function escapeHtml(unsafe: string): string {
 <style lang="scss">
 .filter-input-highlight span {
 	&.filter-query__field {
-		color: #faf594;
+		color: var(--code-literal);
 	}
 
 	&.filter-query__operator {
-		color: hsla(var(--primary-h), var(--primary-s), 80%);
+		color: var(--code-keyword);
 	}
 
 	&.filter-query__join-operator {
-		color: hsla(var(--primary-h), var(--primary-s), 90%);
+		color: var(--code-section);
 	}
 }
 </style>
