@@ -179,6 +179,10 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 		path = "./db.db"
 	}
 
+	if path == "memory" {
+		return xorm.NewEngine("sqlite3", "file::memory:?cache=shared")
+	}
+
 	// Try opening the db file to return a better error message if that does not work
 	var exists = true
 	if _, err := os.Stat(path); err != nil {
