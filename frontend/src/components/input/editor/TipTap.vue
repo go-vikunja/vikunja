@@ -389,20 +389,7 @@ const editor = useEditor({
 		CustomImage,
 
 		TaskList,
-		TaskItem.extend({
-			addAttributes() {
-				return {
-					...this.parent?.(),
-					id: {
-						default: () => createRandomID(),
-						parseHTML: element => element.getAttribute('data-id'),
-						renderHTML: attributes => ({
-							'data-id': attributes.id,
-						}),
-					},
-				}
-			},
-		}).configure({
+		TaskItem.configure({
 			nested: true,
 			onReadOnlyChecked: (node: Node, checked: boolean): boolean => {
 				if (!isEditEnabled) {
@@ -414,7 +401,7 @@ const editor = useEditor({
 				// https://github.com/ueberdosis/tiptap/issues/3676
 
 				editor.value!.state.doc.descendants((subnode, pos) => {
-					if (node.attrs.id === subnode.attrs.id) {
+					if (node.eq(subnode)) {
 						const {tr} = editor.value!.state
 						tr.setNodeMarkup(pos, undefined, {
 							...node.attrs,
@@ -422,9 +409,9 @@ const editor = useEditor({
 						})
 						editor.value!.view.dispatch(tr)
 						bubbleSave()
-						return true
 					}
 				})
+
 
 				return true
 			},
