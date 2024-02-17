@@ -394,7 +394,7 @@ const editor = useEditor({
 				return {
 					...this.parent?.(),
 					id: {
-						default: createRandomID,
+						default: () => createRandomID(),
 						parseHTML: element => element.getAttribute('data-id'),
 						renderHTML: attributes => ({
 							'data-id': attributes.id,
