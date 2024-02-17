@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue'
+import {ref, watch} from 'vue'
 import {onClickOutside} from '@vueuse/core'
 
 const props = defineProps({
@@ -31,7 +31,18 @@ const props = defineProps({
 		type: Boolean,
 		default: false,
 	},
+	open: {
+		type: Boolean,
+		default: false,
+	},
 })
+
+watch(
+	() => props.open,
+	nowOpen => {
+		open.value = nowOpen
+	},
+)
 
 const emit = defineEmits(['close'])
 
