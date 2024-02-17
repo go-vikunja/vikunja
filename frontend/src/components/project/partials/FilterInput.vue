@@ -2,6 +2,9 @@
 import {computed, nextTick, ref, watch} from 'vue'
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
 import DatepickerWithValues from '@/components/date/datepickerWithValues.vue'
+import UserService from "@/services/user";
+import {getAvatarUrl, getDisplayName} from "@/models/user";
+import {createRandomID} from "@/helpers/randomId";
 
 const {
 	modelValue,
@@ -23,11 +26,18 @@ watch(
 	{immediate: true},
 )
 
+const userService = new UserService()
+
 const dateFields = [
 	'dueDate',
 	'startDate',
 	'endDate',
 	'doneAt',
+	'reminders',
+]
+
+const assigneeFields = [
+	'assignees',
 ]
 
 const availableFilterFields = [
@@ -35,10 +45,9 @@ const availableFilterFields = [
 	'priority',
 	'usePriority',
 	'percentDone',
-	'reminders',
-	'assignees',
 	'labels',
 	...dateFields,
+	...assigneeFields,
 ]
 
 const filterOperators = [
@@ -81,15 +90,49 @@ function unEscapeHtml(unsafe: string): string {
 const highlightedFilterQuery = computed(() => {
 	let highlighted = escapeHtml(filterQuery.value)
 	dateFields
-		.map(o => escapeHtml(o))
 		.forEach(o => {
 			const pattern = new RegExp(o + '\\s*(&lt;|&gt;|&lt;=|&gt;=|=|!=)\\s*([\'"]?)([^\'"\\s]+\\1?)?', 'ig');
-			highlighted = highlighted.replaceAll(pattern, (match, token, start, value, position, last) => {
-				console.log({position, last})
+			highlighted = highlighted.replaceAll(pattern, (match, token, start, value, position) => {
 				if (typeof value === 'undefined') {
 					value = ''
 				}
 				return `${o} ${token} <button class="button is-primary filter-query__date_value" data-position="${position}">${value}</button><span class="filter-query__date_value_placeholder">${value}</span>`
+			})
+		})
+	assigneeFields
+		.forEach(f => {
+			const pattern = new RegExp(f + '\\s*(&lt;|&gt;|&lt;=|&gt;=|=|!=)\\s*([\'"]?)([^\'"\\s]+\\1?)?', 'ig');
+			highlighted = highlighted.replaceAll(pattern, (match, token, start, value) => {
+				if (typeof value === 'undefined') {
+					value = ''
+				}
+				
+				const id = createRandomID(32)
+							
+				userService.getAll({}, {s: value}).then(users => {
+					if (users.length > 0) {
+						const displayName = getDisplayName(users[0])
+						const nameTag = document.createElement('span')
+						nameTag.innerText = displayName
+						
+						const avatar = document.createElement('img')
+						avatar.src = getAvatarUrl(users[0], 20)
+						avatar.height = 20
+						avatar.width = 20
+						avatar.alt = displayName
+						
+						// TODO: caching
+						
+						nextTick(() => {
+							const assigneeValue = document.getElementById(id)
+							assigneeValue.innerText = ''
+							assigneeValue?.appendChild(avatar)
+							assigneeValue?.appendChild(nameTag)
+						})
+					}
+				})
+				
+				return `${f} ${token} <span class="filter-query__assignee_value" id="${id}">${value}<span>`
 			})
 		})
 	filterOperators
@@ -193,6 +236,19 @@ function updateDateInQuery(newDate: string) {
 		&.filter-query__date_value_placeholder {
 			padding: .125rem .25rem;
 			display: inline-block;
+		}
+		
+		&.filter-query__assignee_value {
+			padding: .125rem .25rem;
+			border-radius: $radius;
+			background-color: var(--grey-200);
+			color: var(--grey-700);
+			display: inline-flex;
+			align-items: center;
+			
+			> img {
+				margin-right: .25rem;
+			}
 		}
 	}
 
