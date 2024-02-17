@@ -125,6 +125,7 @@ watch(
 
 					const button = event.target
 					currentOldDatepickerValue.value = button?.innerText
+					currentDatepickerValue.value = button?.innerText
 					currentDatepickerPos.value = parseInt(button?.dataset.position)
 					datePickerPopupOpen.value = true
 				})
