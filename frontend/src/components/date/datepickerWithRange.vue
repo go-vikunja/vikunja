@@ -75,13 +75,14 @@
 
 						<p>
 							{{ $t('input.datemathHelp.canuse') }}
-							<BaseButton
-								class="has-text-primary"
-								@click="showHowItWorks = true"
-							>
-								{{ $t('input.datemathHelp.learnhow') }}
-							</BaseButton>
 						</p>
+
+						<BaseButton
+							class="has-text-primary"
+							@click="showHowItWorks = true"
+						>
+							{{ $t('input.datemathHelp.learnhow') }}
+						</BaseButton>
 
 						<modal
 							:enabled="showHowItWorks"
@@ -90,7 +91,7 @@
 							variant="hint-modal"
 							@close="() => showHowItWorks = false"
 						>
-							<DatemathHelp />
+							<DatemathHelp/>
 						</modal>
 					</div>
 				</div>
@@ -111,7 +112,7 @@ import Popup from '@/components/misc/popup.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import BaseButton from '@/components/base/BaseButton.vue'
 import DatemathHelp from '@/components/date/datemathHelp.vue'
-import { getFlatpickrLanguage } from '@/helpers/flatpickrLanguage'
+import {getFlatpickrLanguage} from '@/helpers/flatpickrLanguage'
 
 const props = defineProps({
 	modelValue: {
