@@ -66,6 +66,7 @@
 					v-model="password"
 					tabindex="2"
 					:validate-initially="validatePasswordInitially"
+					:validate-min-length="false"
 					@submit="submit"
 				/>
 			</div>

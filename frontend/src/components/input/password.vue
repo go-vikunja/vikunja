@@ -42,6 +42,10 @@ const props = defineProps({
 	modelValue: String,
 	// This prop is a workaround to trigger validation from the outside when the user never had focus in the input.
 	validateInitially: Boolean,
+	validateMinLength: {
+		type: Boolean,
+		default: true,
+	},
 })
 const emit = defineEmits(['submit', 'update:modelValue'])
 const {t} = useI18n()
@@ -62,12 +66,12 @@ const validate = useDebounceFn(() => {
 		return
 	}
 
-	if (password.value.length < 8) {
+	if (props.validateMinLength && password.value.length < 8) {
 		isValid.value = t('user.auth.passwordNotMin')
 		return
 	}
 	
-	if (password.value.length > 250) {
+	if (props.validateMinLength && password.value.length > 250) {
 		isValid.value = t('user.auth.passwordNotMax')
 		return
 	}
