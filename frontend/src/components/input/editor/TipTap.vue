@@ -19,7 +19,7 @@
 				:class="{ 'is-active': editor.isActive('bold') }"
 				@click="editor.chain().focus().toggleBold().run()"
 			>
-				<icon :icon="['fa', 'fa-bold']" />
+				<icon :icon="['fa', 'fa-bold']"/>
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.italic')"
@@ -27,7 +27,7 @@
 				:class="{ 'is-active': editor.isActive('italic') }"
 				@click="editor.chain().focus().toggleItalic().run()"
 			>
-				<icon :icon="['fa', 'fa-italic']" />
+				<icon :icon="['fa', 'fa-italic']"/>
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.underline')"
@@ -35,7 +35,7 @@
 				:class="{ 'is-active': editor.isActive('underline') }"
 				@click="editor.chain().focus().toggleUnderline().run()"
 			>
-				<icon :icon="['fa', 'fa-underline']" />
+				<icon :icon="['fa', 'fa-underline']"/>
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.strikethrough')"
@@ -43,7 +43,7 @@
 				:class="{ 'is-active': editor.isActive('strike') }"
 				@click="editor.chain().focus().toggleStrike().run()"
 			>
-				<icon :icon="['fa', 'fa-strikethrough']" />
+				<icon :icon="['fa', 'fa-strikethrough']"/>
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.code')"
@@ -51,7 +51,7 @@
 				:class="{ 'is-active': editor.isActive('code') }"
 				@click="editor.chain().focus().toggleCode().run()"
 			>
-				<icon :icon="['fa', 'fa-code']" />
+				<icon :icon="['fa', 'fa-code']"/>
 			</BaseButton>
 			<BaseButton
 				v-tooltip="$t('input.editor.link')"
@@ -59,7 +59,7 @@
 				:class="{ 'is-active': editor.isActive('link') }"
 				@click="setLink"
 			>
-				<icon :icon="['fa', 'fa-link']" />
+				<icon :icon="['fa', 'fa-link']"/>
 			</BaseButton>
 		</BubbleMenu>
 
@@ -389,7 +389,20 @@ const editor = useEditor({
 		CustomImage,
 
 		TaskList,
-		TaskItem.configure({
+		TaskItem.extend({
+			addAttributes() {
+				return {
+					...this.parent?.(),
+					id: {
+						default: () => createRandomID(),
+						parseHTML: element => element.getAttribute('data-id'),
+						renderHTML: attributes => ({
+							'data-id': attributes.id,
+						}),
+					},
+				}
+			},
+		}).configure({
 			nested: true,
 			onReadOnlyChecked: (node: Node, checked: boolean): boolean => {
 				if (!isEditEnabled) {
@@ -401,7 +414,7 @@ const editor = useEditor({
 				// https://github.com/ueberdosis/tiptap/issues/3676
 
 				editor.value!.state.doc.descendants((subnode, pos) => {
-					if (node.eq(subnode)) {
+					if (node.attrs.id === subnode.attrs.id) {
 						const {tr} = editor.value!.state
 						tr.setNodeMarkup(pos, undefined, {
 							...node.attrs,
@@ -409,9 +422,9 @@ const editor = useEditor({
 						})
 						editor.value!.view.dispatch(tr)
 						bubbleSave()
+						return true
 					}
 				})
-
 
 				return true
 			},
@@ -597,7 +610,7 @@ watch(
 	() => isEditing.value,
 	async editing => {
 		await nextTick()
-		
+
 		let checkboxes = tiptapInstanceRef.value?.querySelectorAll('[data-checked]')
 		if (typeof checkboxes === 'undefined' || checkboxes.length === 0) {
 			// For some reason, this works when we check a second time.
