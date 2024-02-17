@@ -193,7 +193,6 @@ import {mergeAttributes} from '@tiptap/core'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
-import {createRandomID} from '@/helpers/randomId'
 
 const {
 	modelValue,
