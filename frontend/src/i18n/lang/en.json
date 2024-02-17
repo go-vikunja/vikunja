@@ -588,6 +588,7 @@
       "to": "To",
       "from": "From",
       "fromto": "{from} to {to}",
+      "date": "Date",
       "ranges": {
         "today": "Today",
         
@@ -605,6 +606,30 @@
         
         "thisYear": "This Year",
         "restOfThisYear": "The Rest of This Year"
+      },
+      "values": {
+        "now": "Now",
+        "startOfToday": "Start of today",
+        "endOfToday": "End of today",
+
+        "beginningOflastWeek": "Beginning of last week",
+        "endOfLastWeek": "End of last week",
+        "beginningOfThisWeek": "Beginning of this week",
+        "endOfThisWeek": "End of this week",
+        "startOfNextWeek": "Start of next week",
+        "endOfNextWeek": "End of next week",
+        "in7Days": "In 7 days",
+
+        "beginningOfLastMonth": "Beginning of last month",
+        "endOfLastMonth": "End of last month",
+        "startOfThisMonth": "Start of this month",
+        "endOfThisMonth": "End of this month",
+        "startOfNextMonth": "Start of next month",
+        "endOfNextMonth": "End of next month",
+        "in30Days": "In 30 days",
+
+        "startOfThisYear": "Beginning of this year",
+        "endOfThisYear": "End of this year"
       }
     },
     "datemathHelp": {
