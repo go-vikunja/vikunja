@@ -17,12 +17,12 @@
 							{{ $t('misc.custom') }}
 						</BaseButton>
 						<BaseButton
-							v-for="(value, text) in DATE_RANGES"
+							v-for="(value, text) in DATE_VALUES"
 							:key="text"
-							:class="{'is-active': date === value[0]}"
-							@click="setDate(value[0])"
+							:class="{'is-active': date === value}"
+							@click="setDate(value)"
 						>
-							{{ $t(`input.datepickerRange.ranges.${text}`) }}
+							{{ $t(`input.datepickerRange.values.${text}`) }}
 						</BaseButton>
 					</div>
 					<div class="flatpickr-container input-group">
@@ -86,7 +86,7 @@ import 'flatpickr/dist/flatpickr.css'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 
 import Popup from '@/components/misc/popup.vue'
-import {DATE_RANGES} from '@/components/date/dateRanges'
+import {DATE_VALUES} from '@/components/date/dateRanges'
 import BaseButton from '@/components/base/BaseButton.vue'
 import DatemathHelp from '@/components/date/datemathHelp.vue'
 import {getFlatpickrLanguage} from '@/helpers/flatpickrLanguage'
@@ -162,7 +162,7 @@ function setDate(range: string | null) {
 }
 
 const customRangeActive = computed<boolean>(() => {
-	return !Object.values(DATE_RANGES).some(d => date.value === d)
+	return !Object.values(DATE_VALUES).some(d => date.value === d)
 })
 </script>
 
