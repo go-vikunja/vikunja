@@ -33,7 +33,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.3
 	github.com/getsentry/sentry-go v0.27.0
 	github.com/go-sql-driver/mysql v1.7.1
-	github.com/go-testfixtures/testfixtures/v3 v3.9.0
+	github.com/go-testfixtures/testfixtures/v3 v3.10.0
 	github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
@@ -83,10 +83,10 @@ require (
 )
 
 require (
-	github.com/ClickHouse/ch-go v0.55.0 // indirect
-	github.com/ClickHouse/clickhouse-go/v2 v2.9.1 // indirect
+	github.com/ClickHouse/ch-go v0.58.2 // indirect
+	github.com/ClickHouse/clickhouse-go/v2 v2.18.0 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/andybalholm/brotli v1.0.5 // indirect
+	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -142,9 +142,9 @@ require (
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/onsi/ginkgo v1.16.4 // indirect
 	github.com/onsi/gomega v1.16.0 // indirect
-	github.com/paulmach/orb v0.9.0 // indirect
+	github.com/paulmach/orb v0.11.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
-	github.com/pierrec/lz4/v4 v4.1.17 // indirect
+	github.com/pierrec/lz4/v4 v4.1.18 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_model v0.5.0 // indirect
@@ -168,8 +168,8 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/yosssi/gohtml v0.0.0-20201013000340-ee4748c638f4 // indirect
-	go.opentelemetry.io/otel v1.15.0 // indirect
-	go.opentelemetry.io/otel/trace v1.15.0 // indirect
+	go.opentelemetry.io/otel v1.22.0 // indirect
+	go.opentelemetry.io/otel/trace v1.22.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.4.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
