@@ -11,6 +11,9 @@
 
 > The Todo-app to organize your life.
 
+If Vikunja is useful to you, please consider [buying me a coffee](https://www.buymeacoffee.com/kolaente), [sponsoring me on GitHub](https://github.com/sponsors/kolaente) or buying [a sticker pack](https://vikunja.cloud/stickers).
+I'm also offering [a hosted version of Vikunja](https://vikunja.cloud/) if you want a hassle-free solution for yourself or your team.
+
 # Table of contents
 
 * [Security Reports](#security-reports)
