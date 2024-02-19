@@ -88,8 +88,8 @@ This example lets you host Vikunja without any reverse proxy in front of it.
 This is the absolute minimum configuration you need to get something up and running. 
 If you want to make Vikunja available on a domain or need tls termination, check out one of the other examples.
 
-Note that you need to change the [`VIKUNJA_SERVICE_PUBLICURL`]({{< ref "config.md" >}}#publicurl) environment variable to the ip (the docker host you're running this on) is reachable at. 
-Because the browser you'll use to access the Vikunja frontend uses that url to make the requests, it has to be able to reach that ip + port from the outside. 
+Note that you need to change the [`VIKUNJA_SERVICE_PUBLICURL`]({{< ref "config.md" >}}#publicurl) environment variable to the public ip or hostname including the port (the docker host you're running this on) is reachable at, prefixed with `http://`.
+Because the browser you'll use to access the Vikunja frontend uses that url to make the requests, it has to be able to reach it from the outside. 
 
 ```yaml
 version: '3'
@@ -98,7 +98,7 @@ services:
   vikunja:
     image: vikunja/vikunja
     environment:
-      VIKUNJA_SERVICE_PUBLICURL: http://<the public url where vikunja is reachable>
+      VIKUNJA_SERVICE_PUBLICURL: http://<the public ip or host where vikunja is reachable>
       VIKUNJA_DATABASE_HOST: db
       VIKUNJA_DATABASE_PASSWORD: changeme
       VIKUNJA_DATABASE_TYPE: mysql
