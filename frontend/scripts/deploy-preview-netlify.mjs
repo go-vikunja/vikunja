@@ -51,10 +51,12 @@ Hi ${process.env.DRONE_COMMIT_AUTHOR}!
 
 Thank you for creating a PR!
 
-I've deployed the changes of this PR on a preview environment under this URL: ${fullPreviewUrl}
+I've deployed the frontend changes of this PR on a preview environment under this URL: ${fullPreviewUrl}
 
 You can use this url to view the changes live and test them out.
-You will need to manually connect this to an api running somehwere. The easiest to use is https://try.vikunja.io/.
+You will need to manually connect this to an api running somewhere. The easiest to use is https://try.vikunja.io/.
+
+This preview does not contain any changes made to the api, only the frontend.
 
 Have a nice day!
 
