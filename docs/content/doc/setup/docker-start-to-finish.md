@@ -27,7 +27,6 @@ Create a directory for the project where all data and the compose file will live
 
 Create a `docker-compose.yml` file with the following contents in your directory:
 
-
 ```yaml
 version: '3'
 
@@ -79,6 +78,18 @@ To change to something different, you'll need to change the `ports` section in t
 The number before the colon is the host port - This is where you can reach vikunja from the outside once all is up and running.
 
 You'll need to change the value of the `VIKUNJA_SERVICE_PUBLICURL` environment variable to the public port or hostname where Vikunja is reachable.
+
+## Ensure adequate file permissions
+
+Vikunja runs as user `1000` and no group by default.
+
+To be able to upload task attachments or change the background of project, Vikunja must be able to write into the `files` directory.
+To do this, create the folder and chown it before starting the stack:
+
+```
+mkdir $PWD/files
+chown 1000 $PWD/files
+```
 
 ## Run it
 

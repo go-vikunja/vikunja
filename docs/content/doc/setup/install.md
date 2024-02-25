@@ -140,17 +140,23 @@ It will automatically run all necessary database migrations.
 To get up and running quickly, use this command:
 
 ```
-touch vikunja.db
-docker run -p 3456:3456 -v $PWD/files:/app/vikunja/files -v $PWD/vikunja.db:/app/vikunja/vikunja.db vikunja/vikunja
+mkdir $PWD/files $PWD/db
+chown 1000 $PWD/files $PWD/db
+docker run -p 3456:3456 -v $PWD/files:/app/vikunja/files -v $PWD/db:/db vikunja/vikunja
 ```
 
 This will expose vikunja on port `3456` on the host running the container and use sqlite as database backend.
 
+**Note**: The container runs as the user `1000` and no group by default. 
+You can use Docker's [`--user`](https://docs.docker.com/engine/reference/run/#user) flag to change that.
+Make sure the new user has required permissions on the `db` and `files` folder.
+
 You can mount a local configuration like so:
 
 ```
-touch vikunja.db
-docker run -p 3456:3456 -v /path/to/config/on/host.yml:/app/vikunja/config.yml:ro -v $PWD/files:/app/vikunja/files -v $PWD/vikunja.db:/app/vikunja/vikunja.db vikunja/vikunja
+mkdir $PWD/files $PWD/db
+chown 1000 $PWD/files $PWD/db
+docker run -p 3456:3456 -v /path/to/config/on/host.yml:/app/vikunja/config.yml:ro -v $PWD/files:/app/vikunja/files -v $PWD/db:/db vikunja/vikunja
 ```
 
 Though it is recommended to use environment variables or `.env` files to configure Vikunja in docker.
@@ -162,13 +168,6 @@ Check out the [docker examples]({{<ref "full-docker-example.md">}}) for more adv
 
 By default, the container stores all files uploaded and used through vikunja inside of `/app/vikunja/files` which is created as a docker volume.
 You should mount the volume somewhere to the host to permanently store the files and don't lose them if the container restarts.
-
-### Setting user and group id of the user running vikunja
-
-You can set the user and group id of the user running vikunja with the `PUID` and `PGID` environment variables.
-This follows the pattern used by [the linuxserver.io](https://docs.linuxserver.io/general/understanding-puid-and-pgid) docker images.
-
-This is useful to solve general permission problems when host-mounting volumes such as the volume used for task attachments.
 
 ### Docker compose
 

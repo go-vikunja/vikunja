@@ -1,6 +1,7 @@
 files/
 dist/
 logs/
+docs/
 
 Dockerfile
 docker-manifest.tmpl

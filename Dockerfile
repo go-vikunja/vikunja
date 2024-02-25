@@ -33,22 +33,14 @@ RUN export PATH=$PATH:$GOPATH/bin && \
 #  ┘└┘┘─┘┘└┘┘└┘┴─┘┘└┘
 
 # The actual image
-# Note: I wanted to use the scratch image here, but unfortunatly the go-sqlite bindings require cgo and
-# because of this, the container would not start when I compiled the image without cgo.
-FROM alpine:3.19 AS runner
+FROM scratch
 LABEL maintainer="maintainers@vikunja.io"
 WORKDIR /app/vikunja
-ENTRYPOINT [ "/sbin/tini", "-g", "--", "/entrypoint.sh" ]
+ENTRYPOINT [ "/app/vikunja/vikunja" ]
 EXPOSE 3456
+USER 1000
 
 ENV VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/
-ENV PUID 1000
-ENV PGID 1000
-
-RUN apk --update --no-cache add tzdata tini shadow && \
-    addgroup vikunja && \
-    adduser -s /bin/sh -D -G vikunja vikunja -h /app/vikunja -H
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod 0755 /entrypoint.sh && mkdir files
+ENV VIKUNJA_DATABASE_PATH=/db/vikunja.db
 
 COPY --from=apibuilder /build/vikunja-* vikunja

@@ -15,8 +15,6 @@ It uses a proxy configuration to make it available under a domain.
 
 For all available configuration options, see [configuration]({{< ref "config.md">}}).
 
-Once deployed, you might want to change the [`PUID` and `GUID` settings]({{< ref "install.md">}}#setting-user-and-group-id-of-the-user-running-vikunja) or [set the time zone]({{< ref "config.md">}}#timezone).
-
 After registering all your users, you might also want to [disable the user registration]({{<ref "config.md">}}#enableregistration).
 
 <div class="notification is-warning">
@@ -26,6 +24,23 @@ All examples on this page already reflect this and do not require additional wor
 </div>
 
 {{< table_of_contents >}}
+
+## File permissions
+
+Vikunja runs as user `1000` and no group by default.
+You can use Docker's [`--user`](https://docs.docker.com/engine/reference/run/#user) flag to change that.
+
+You must ensure Vikunja is able to write into the `files` directory.
+To do this, create the folder and chown it before starting the stack:
+
+```
+mkdir $PWD/files
+chown 1000 $PWD/files
+```
+
+You'll need to do this before running any of the examples on this page.
+
+Vikunja will not try to aquire ownership of the files folder, as that would mean it had to run as root.
 
 ## PostgreSQL
 
@@ -78,6 +93,13 @@ You'll also need to remove or change the `VIKUNJA_DATABASE_TYPE` to `sqlite` on 
 
 You can also remove the db section.
 
+To run the container, you need to create the directories first and make sure they have all required permissions:
+
+```
+mkdir $PWD/files $PWD/db
+chown 1000 $PWD/files $PWD/db
+```
+
 <div class="notification is-warning">
 <b>NOTE:</b> If you'll use your instance with more than a handful of users, we recommend using mysql or postgres.
 </div>
@@ -90,6 +112,11 @@ If you want to make Vikunja available on a domain or need tls termination, check
 
 Note that you need to change the [`VIKUNJA_SERVICE_PUBLICURL`]({{< ref "config.md" >}}#publicurl) environment variable to the public ip or hostname including the port (the docker host you're running this on) is reachable at, prefixed with `http://`.
 Because the browser you'll use to access the Vikunja frontend uses that url to make the requests, it has to be able to reach it from the outside. 
+
+<div class="notification is-warning">
+<b>NOTE:</b> You must ensure Vikunja has write permissions on the `files` directory before starting the stack.
+To do this, <a href="#file-permissions">check out the related commands here</a>.
+</div>
 
 ```yaml
 version: '3'
@@ -139,6 +166,11 @@ We also make a few assumptions here which you'll most likely need to adjust for 
 * Your domain is `vikunja.example.com`
 * The entrypoint you want to make vikunja available from is called `https`
 * The tls cert resolver is called `acme`
+
+<div class="notification is-warning">
+<b>NOTE:</b> You must ensure Vikunja has write permissions on the `files` directory before starting the stack.
+To do this, <a href="#file-permissions">check out the related commands here</a>.
+</div>
 
 ```yaml
 version: '3'
@@ -202,6 +234,11 @@ vikunja.example.com {
 
 Note that you need to change the [`VIKUNJA_SERVICE_PUBLICURL`]({{< ref "config.md" >}}#publicurl) environment variable to the ip (the docker host you're running this on) is reachable at.
 Because the browser you'll use to access the Vikunja frontend uses that url to make the requests, it has to be able to reach that ip + port from the outside.
+
+<div class="notification is-warning">
+<b>NOTE:</b> You must ensure Vikunja has write permissions on the `files` directory before starting the stack.
+To do this, <a href="#file-permissions">check out the related commands here</a>.
+</div>
 
 Docker Compose config:
 
@@ -286,9 +323,12 @@ The docker-compose file we're going to use is exactly the same from the [example
 
 You may want to change the volumes to match the rest of your setup.
 
-Once deployed, you might want to change the [`PUID` and `GUID` settings]({{< ref "install.md">}}#setting-user-and-group-id-of-the-user-running-vikunja) or [set the time zone]({{< ref "config.md">}}#timezone).
-
 After registering all your users, you might also want to [disable the user registration]({{<ref "config.md">}}#enableregistration).
+
+<div class="notification is-warning">
+<b>NOTE:</b> You must ensure Vikunja has write permissions on the `files` directory before starting the stack.
+To do this, <a href="#file-permissions">check out the related commands here</a>.
+</div>
 
 ## Redis
 
