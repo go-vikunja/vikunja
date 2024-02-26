@@ -359,6 +359,8 @@ services:
       VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
       VIKUNJA_LOG_LEVEL: DEBUG
       VIKUNJA_CORS_ENABLE: 1
+      VIKUNJA_DATABASE_PATH: memory
+      VIKUNJA_DATABASE_TYPE: sqlite
 
 steps:
   - name: dependencies
