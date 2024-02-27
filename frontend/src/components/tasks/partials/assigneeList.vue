@@ -59,7 +59,7 @@ const hasDelete = computed(() => typeof remove !== 'undefined' && !disabled)
 	}
 
 	&:hover .assignee:not(:first-child) {
-		margin-left: -1rem;
+		margin-left: -0.5rem;
 	}
 }
 
@@ -68,7 +68,7 @@ const hasDelete = computed(() => typeof remove !== 'undefined' && !disabled)
 	transition: all $transition;
 
 	&:not(:first-child) {
-		margin-left: -1.5rem;
+		margin-left: -1rem;
 	}
 
 	:deep(.user img) {
