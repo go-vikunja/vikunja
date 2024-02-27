@@ -19,6 +19,7 @@
 			:width="ganttChartWidth"
 			@dragendBar="updateGanttTask"
 			@dblclickBar="openTask"
+			:color-scheme="GANTT_COLOR_SCHEME"
 		>
 			<template #timeunit="{value, date}">
 				<div
@@ -59,7 +60,7 @@ import {
 	extendDayjs,
 	GGanttChart,
 	GGanttRow,
-	type GanttBarObject,
+	type GanttBarObject, type ColorScheme,
 } from '@infectoone/vue-ganttastic'
 
 import Loading from '@/components/misc/loading.vue'
@@ -112,6 +113,16 @@ const ganttChartWidth = computed(() => {
 })
 
 const ganttBars = ref<GanttBarObject[][]>([])
+
+const GANTT_COLOR_SCHEME: ColorScheme = {
+	primary: 'var(--grey-100)',
+	secondary: 'var(--grey-300)',
+	ternary: 'var(--grey-500)',
+	quartenary: 'var(--grey-600)',
+	hoverHighlight: 'var(--grey-700)',
+	text: 'var(--grey-800)',
+	background: 'var(--white)',
+}
 
 /**
  * Update ganttBars when tasks change
