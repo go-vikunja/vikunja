@@ -158,7 +158,7 @@ func setRootPath() {
 
 func setGoFiles() {
 	// GOFILES := $(shell find . -name "*.go" -type f ! -path "*/bindata.go")
-	files, err := runCmdWithOutput("find", ".", "-name", "*.go", "-type", "f", "!", "-path", "*/bindata.go")
+	files, err := runCmdWithOutput("find", "./pkg", "-name", "*.go", "-type", "f", "!", "-path", "*/bindata.go")
 	if err != nil {
 		fmt.Printf("Error getting go files: %s\n", err)
 		os.Exit(1)

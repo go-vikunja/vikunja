@@ -1,7 +1,7 @@
 ---
 kind: pipeline
 type: docker
-name: build-and-test-api
+name: build-and-test
 
 workspace:
   base: /go
@@ -122,7 +122,7 @@ steps:
     when:
       event: [ push, tag, pull_request ]
 
-  - name: build
+  - name: api-build
     image: vikunja/golang-build:latest
     pull: always
     environment:
@@ -133,7 +133,7 @@ steps:
     when:
       event: [ push, tag, pull_request ]
 
-  - name: lint
+  - name: api-lint
     image: golangci/golangci-lint:v1.55.2
     pull: always
     environment:
@@ -156,7 +156,9 @@ steps:
   - name: test-migration-sqlite
     image: vikunja/golang-build:latest
     pull: always
-    depends_on: [ test-migration-prepare, build ]
+    depends_on: 
+      - test-migration-prepare
+      - api-build
     environment:
       VIKUNJA_DATABASE_TYPE: sqlite
       VIKUNJA_DATABASE_PATH: /db/vikunja-migration-test.db
@@ -175,7 +177,9 @@ steps:
   - name: test-migration-mysql
     image: vikunja/golang-build:latest
     pull: always
-    depends_on: [ test-migration-prepare, build ]
+    depends_on:
+      - test-migration-prepare
+      - api-build
     environment:
       VIKUNJA_DATABASE_TYPE: mysql
       VIKUNJA_DATABASE_HOST: test-mysql-migration
@@ -194,7 +198,9 @@ steps:
   - name: test-migration-psql
     image: vikunja/golang-build:latest
     pull: always
-    depends_on: [ test-migration-prepare, build ]
+    depends_on:
+      - test-migration-prepare
+      - api-build
     environment:
       VIKUNJA_DATABASE_TYPE: postgres
       VIKUNJA_DATABASE_HOST: test-postgres-migration
@@ -211,7 +217,7 @@ steps:
     when:
       event: [ push, tag, pull_request ]
 
-  - name: test
+  - name: api-test-unit
     image: vikunja/golang-build:latest
     pull: always
     environment:
@@ -222,7 +228,7 @@ steps:
     when:
       event: [ push, tag, pull_request ]
 
-  - name: test-sqlite
+  - name: api-test-unit-sqlite
     image: vikunja/golang-build:latest
     pull: always
     environment:
@@ -239,7 +245,7 @@ steps:
     when:
       event: [ push, tag, pull_request ]
 
-  - name: test-mysql
+  - name: api-test-unit-mysql
     image: vikunja/golang-build:latest
     pull: always
     environment:
@@ -256,7 +262,7 @@ steps:
     when:
       event: [ push, tag, pull_request ]
 
-  - name: test-postgres
+  - name: api-test-unit-postgres
     image: vikunja/golang-build:latest
     pull: always
     environment:
@@ -337,23 +343,8 @@ steps:
     when:
       event: [ push, tag, pull_request ]
 
----
-kind: pipeline
-type: docker
-name: build-and-test-frontend
-
-trigger:
-  branch:
-    include:
-      - main
-  event:
-    include:
-      - push
-      - pull_request
-
-services:
-  - name: api
-    image: vikunja/vikunja:unstable
+  - name: test-api-run
+    image: vikunja/golang-build:latest
     pull: always
     environment:
       VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
@@ -361,9 +352,13 @@ services:
       VIKUNJA_CORS_ENABLE: 1
       VIKUNJA_DATABASE_PATH: memory
       VIKUNJA_DATABASE_TYPE: sqlite
+    commands:
+      - ./vikunja
+    detach: true
+    depends_on:
+      - api-build
 
-steps:
-  - name: dependencies
+  - name: frontend-dependencies
     image: node:20.11.0-alpine
     pull: always
     environment:
@@ -377,7 +372,7 @@ steps:
   #    depends_on:
   #      - restore-cache
 
-  - name: lint
+  - name: frontend-lint
     image: node:20.11.0-alpine
     pull: always
     environment:
@@ -387,9 +382,9 @@ steps:
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run lint
     depends_on:
-      - dependencies
+      - frontend-dependencies
 
-  - name: build-prod
+  - name: frontend-build-prod
     image: node:20.11.0-alpine
     pull: always
     environment:
@@ -397,11 +392,11 @@ steps:
     commands:
       - cd frontend
       - corepack enable && pnpm config set store-dir .cache/pnpm
-      - pnpm run build
+      - pnpm run build:test
     depends_on:
-      - dependencies
+      - frontend-dependencies
 
-  - name: test-unit
+  - name: frontend-test-unit
     image: node:20.11.0-alpine
     pull: always
     commands:
@@ -409,9 +404,9 @@ steps:
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run test:unit
     depends_on:
-      - dependencies
+      - frontend-dependencies
 
-  - name: typecheck
+  - name: frontend-typecheck
     failure: ignore
     image: node:20.11.0-alpine
     pull: always
@@ -422,13 +417,13 @@ steps:
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm run typecheck
     depends_on:
-      - dependencies
+      - frontend-dependencies
 
-  - name: test-frontend
+  - name: frontend-test
     image: cypress/browsers:node18.12.0-chrome107
     pull: always
     environment:
-      CYPRESS_API_URL: http://api:3456/api/v1
+      CYPRESS_API_URL: http://test-api-run:3456/api/v1
       CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB
       PNPM_CACHE_FOLDER: .cache/pnpm
       CYPRESS_CACHE_FOLDER: .cache/cypress
@@ -437,14 +432,15 @@ steps:
         from_secret: cypress_project_key
     commands:
       - cd frontend
-      - sed -i 's/localhost/api/g' dist/index.html
+      - sed -i 's/localhost/test-api-run/g' dist-test/index.html
       - corepack enable && pnpm config set store-dir .cache/pnpm
       - pnpm cypress install
-      - pnpm run test:e2e-record
+      - pnpm run test:e2e-record-test
     depends_on:
-      - build-prod
+      - frontend-build-prod
+      - test-api-run
   
-  - name: deploy-preview
+  - name: frontend-deploy-preview
     image: williamjackson/netlify-cli
     pull: always
     user: root # The rest runs as root and thus the permissions wouldn't work
@@ -457,7 +453,7 @@ steps:
         from_secret: gitea_token
     commands:
       - cd frontend
-      - cp -r dist dist-preview
+      - cp -r dist-test dist-preview
       # Override the default api url used for preview
       - sed -i 's|http://localhost:3456|https://try.vikunja.io|g' dist-preview/index.html
       - apk add --no-cache perl-utils
@@ -466,7 +462,7 @@ steps:
       - shasum -a 384 -c ./scripts/deploy-preview-netlify.mjs.sha384
       - node ./scripts/deploy-preview-netlify.mjs
     depends_on:
-      - build-prod
+      - frontend-build-prod
     when:
       event:
         include:
@@ -478,7 +474,7 @@ type: docker
 name: generate-swagger-docs
 
 depends_on:
-  - build-and-test-api
+  - build-and-test
 
 workspace:
   base: /go
@@ -522,8 +518,7 @@ type: docker
 name: release
 
 depends_on:
-  - build-and-test-api
-  - build-and-test-frontend
+  - build-and-test
 
 workspace:
   base: /source
@@ -807,8 +802,7 @@ type: docker
 name: docker-release
 
 depends_on:
-  - build-and-test-api
-  - build-and-test-frontend
+  - build-and-test
 
 trigger:
   ref:
@@ -882,7 +876,7 @@ type: docker
 name: frontend-release-unstable
 
 depends_on:
-  - build-and-test-frontend
+  - build-and-test
 
 trigger:
   branch:
@@ -945,7 +939,7 @@ type: docker
 name: frontend-release-version
 
 depends_on:
-  - build-and-test-frontend
+  - build-and-test
 
 trigger:
   event:
@@ -1368,8 +1362,7 @@ trigger:
     - "refs/tags/**"
 
 depends_on:
-  - build-and-test-api
-  - build-and-test-frontend
+  - build-and-test
   - release
   - deploy-docs
   - docker-release
@@ -1391,6 +1384,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: efad37a3bff117fe2f46299a1afe640b8f36a23fc1b83a0f4930bf01a9878640
+hmac: 008b86263a8d03806da907c128a837a380901f1a2190a658c22d4e06cadc1b64
 
 ...
