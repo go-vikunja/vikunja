@@ -1,5 +1,8 @@
 <template>
-	<BaseButton class="dropdown-item" :class="{'is-disabled': disabled}">
+	<BaseButton
+		class="dropdown-item"
+		:class="{'is-disabled': disabled}"
+	>
 		<span
 			v-if="icon"
 			class="icon is-small"

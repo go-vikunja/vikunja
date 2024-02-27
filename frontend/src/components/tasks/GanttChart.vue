@@ -17,9 +17,9 @@
 			bar-end="endDate"
 			:grid="true"
 			:width="ganttChartWidth"
+			:color-scheme="GANTT_COLOR_SCHEME"
 			@dragendBar="updateGanttTask"
 			@dblclickBar="openTask"
-			:color-scheme="GANTT_COLOR_SCHEME"
 		>
 			<template #timeunit="{value, date}">
 				<div

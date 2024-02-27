@@ -67,10 +67,10 @@
 				{{ $t('menu.duplicate') }}
 			</DropdownItem>
 			<DropdownItem
+				v-tooltip="isDefaultProject ? $t('menu.cantArchiveIsDefault') : ''"
 				:to="{ name: 'project.settings.archive', params: { projectId: project.id } }"
 				icon="archive"
 				:disabled="isDefaultProject"
-				v-tooltip="isDefaultProject ? $t('menu.cantArchiveIsDefault') : ''"
 			>
 				{{ $t('menu.archive') }}
 			</DropdownItem>
@@ -97,11 +97,11 @@
 				{{ $t('menu.createProject') }}
 			</DropdownItem>
 			<DropdownItem
+				v-tooltip="isDefaultProject ? $t('menu.cantDeleteIsDefault') : ''"
 				:to="{ name: 'project.settings.delete', params: { projectId: project.id } }"
 				icon="trash-alt"
 				class="has-text-danger"
 				:disabled="isDefaultProject"
-				v-tooltip="isDefaultProject ? $t('menu.cantDeleteIsDefault') : ''"
 			>
 				{{ $t('menu.delete') }}
 			</DropdownItem>
