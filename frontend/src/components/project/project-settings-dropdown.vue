@@ -69,6 +69,8 @@
 			<DropdownItem
 				:to="{ name: 'project.settings.archive', params: { projectId: project.id } }"
 				icon="archive"
+				:disabled="isDefaultProject"
+				v-tooltip="isDefaultProject ? $t('menu.cantArchiveIsDefault') : ''"
 			>
 				{{ $t('menu.archive') }}
 			</DropdownItem>
@@ -98,6 +100,8 @@
 				:to="{ name: 'project.settings.delete', params: { projectId: project.id } }"
 				icon="trash-alt"
 				class="has-text-danger"
+				:disabled="isDefaultProject"
+				v-tooltip="isDefaultProject ? $t('menu.cantDeleteIsDefault') : ''"
 			>
 				{{ $t('menu.delete') }}
 			</DropdownItem>
@@ -106,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watchEffect, type PropType} from 'vue'
+import {computed, type PropType, ref, watchEffect} from 'vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Dropdown from '@/components/misc/dropdown.vue'
@@ -118,6 +122,7 @@ import type {ISubscription} from '@/modelTypes/ISubscription'
 import {isSavedFilter} from '@/services/savedFilter'
 import {useConfigStore} from '@/stores/config'
 import {useProjectStore} from '@/stores/projects'
+import {useAuthStore} from '@/stores/auth'
 
 const props = defineProps({
 	project: {
@@ -146,4 +151,7 @@ function setSubscriptionInStore(sub: ISubscription) {
 	}
 	projectStore.setProject(updatedProject)
 }
+
+const authStore = useAuthStore()
+const isDefaultProject = computed(() => props.project?.id === authStore.settings.defaultProjectId)
 </script>

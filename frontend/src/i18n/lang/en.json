@@ -978,7 +978,9 @@
     "setBackground": "Set background",
     "share": "Share",
     "newProject": "New project",
-    "createProject": "Create project"
+    "createProject": "Create project",
+    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
+    "cantDeleteIsDefault": "You cannot delete this because it is your default project."
   },
   "apiConfig": {
     "url": "Vikunja URL",

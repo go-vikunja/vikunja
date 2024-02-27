@@ -1,5 +1,5 @@
 <template>
-	<BaseButton class="dropdown-item">
+	<BaseButton class="dropdown-item" :class="{'is-disabled': disabled}">
 		<span
 			v-if="icon"
 			class="icon is-small"
@@ -21,6 +21,7 @@ import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 export interface DropDownItemProps extends /* @vue-ignore */ BaseButtonProps {
 	icon?: IconProp,
 	iconClass?: object | string,
+	disabled?: boolean,
 }
 
 defineProps<DropDownItemProps>()
