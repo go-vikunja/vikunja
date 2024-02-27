@@ -53,7 +53,7 @@
 				<p>{{ $t('migrate.inProgress') }}</p>
 			</div>
 		</template>
-		<div v-else-if="lastMigrationStartedAt && lastMigrationFinishedAt === null">
+		<div v-else-if="!migrationJustStarted && lastMigrationStartedAt && lastMigrationFinishedAt === null">
 			<Message class="mb-4">
 				{{ $t('migrate.migrationInProgress') }}
 			</Message>
@@ -145,6 +145,7 @@ const lastMigrationFinishedAt = ref<Date | null>(null)
 const lastMigrationStartedAt = ref<Date | null>(null)
 const message = ref('')
 const migratorAuthCode = ref('')
+const migrationJustStarted = ref(false)
 
 const migrator = computed<Migrator>(() => MIGRATORS[props.service])
 
@@ -207,12 +208,15 @@ async function migrate() {
 	}
 
 	try {
-		const result = migrator.value.isFileMigrator
-			? await migrationFileService.migrate(migrationConfig as File)
-			: await migrationService.migrate(migrationConfig as MigrationConfig)
-		message.value = result.message
-		const projectStore = useProjectStore()
-		return projectStore.loadProjects()
+		if (migrator.value.isFileMigrator) {
+			const result = await migrationFileService.migrate(migrationConfig as File)
+			message.value = result.message
+			const projectStore = useProjectStore()
+			return projectStore.loadProjects()
+		}
+		
+		await migrationService.migrate(migrationConfig as MigrationConfig)
+		migrationJustStarted.value = true
 	} catch (e) {
 		console.log(e)
 	} finally {
