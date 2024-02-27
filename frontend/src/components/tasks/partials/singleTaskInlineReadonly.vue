@@ -103,7 +103,7 @@ import {getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 
 import PriorityLabel from '@/components/tasks/partials/priorityLabel.vue'
-import Labels from '@/components/tasks/partials//labels.vue'
+import Labels from '@/components/tasks/partials/labels.vue'
 import ChecklistSummary from '@/components/tasks/partials/checklist-summary.vue'
 
 import ColorBubble from '@/components/misc/colorBubble.vue'
@@ -197,6 +197,7 @@ const project = computed(() => projectStore.projects[task.projectId])
 	span.parent-tasks {
 		color: var(--grey-500);
 		width: auto;
+		margin-left: .25rem;
 	}
 }
 </style>

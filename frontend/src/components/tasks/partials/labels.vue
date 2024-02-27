@@ -27,7 +27,8 @@ defineProps({
 	display: inline;
 	
 	:deep(.tag) {
-		margin-bottom: .25rem;
+		margin-top: .125rem;
+		margin-bottom: .125rem;
 	}
 }
 </style>
