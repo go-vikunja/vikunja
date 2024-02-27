@@ -416,11 +416,11 @@ function handleTaskContainerScroll(id: IBucket['id'], projectId: IProject['id'],
 		return
 	}
 
-	kanbanStore.loadNextTasksForBucket({
-		projectId: projectId,
-		params: params.value,
-		bucketId: id,
-	})
+	kanbanStore.loadNextTasksForBucket(
+		projectId,
+		params.value,
+		id,
+	)
 }
 
 function updateTasks(bucketId: IBucket['id'], tasks: IBucket['tasks']) {

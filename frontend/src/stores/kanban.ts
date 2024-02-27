@@ -246,8 +246,9 @@ export const useKanbanStore = defineStore('kanban', () => {
 	}
 
 	async function loadNextTasksForBucket(
-		{projectId, ps = {}, bucketId} :
-		{projectId: IProject['id'], ps, bucketId: IBucket['id']},
+		projectId: IProject['id'],
+		ps,
+		bucketId: IBucket['id'],
 	) {
 		const isLoading = bucketLoading.value[bucketId] ?? false
 		if (isLoading) {
