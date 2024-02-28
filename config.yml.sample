@@ -76,7 +76,7 @@ sentry:
   frontenddsn: "https://85694a2d757547cbbc90cd4b55c5a18d@o1047380.ingest.sentry.io/6024480"
 
 database:
-  # Database type to use. Supported types are mysql, postgres and sqlite.
+  # Database type to use. Supported values are mysql, postgres and sqlite. Vikunja is able to run with MySQL 8.0+, Mariadb 10.2+, PostgreSQL 12+, and sqlite.
   type: "sqlite"
   # Database user which is used to connect to the database.
   user: "vikunja"

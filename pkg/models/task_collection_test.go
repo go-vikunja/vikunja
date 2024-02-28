@@ -656,6 +656,18 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:  time.Unix(1543626724, 0).In(loc),
 		Updated:  time.Unix(1543626724, 0).In(loc),
 	}
+	task39 := &Task{
+		ID:           39,
+		Title:        "task #39",
+		Identifier:   "#0",
+		CreatedByID:  1,
+		CreatedBy:    user1,
+		ProjectID:    25,
+		RelatedTasks: map[RelationKind][]*Task{},
+		BucketID:     0,
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
+	}
 
 	type fields struct {
 		ProjectID int64
@@ -728,6 +740,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task32,
 				task33,
 				task35,
+				task39,
 			},
 			wantErr: false,
 		},
@@ -772,6 +785,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task3,
 				task1,
 				task2,
+				task39,
 			},
 			wantErr: false,
 		},
@@ -943,6 +957,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task32, // has nil dates
 				task33, // has nil dates
 				task35, // has nil dates
+				task39, // has nil dates
 			},
 			wantErr: false,
 		},
@@ -1202,6 +1217,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task32,
 				task33,
 				task35,
+				task39,
 			},
 		},
 		{
@@ -1218,6 +1234,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task6,
 				task5,
 				// The other ones don't have a due date
+				task39,
 				task35,
 				task33,
 				task32,

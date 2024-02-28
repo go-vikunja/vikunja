@@ -17,6 +17,7 @@
 package models
 
 import (
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -418,67 +419,53 @@ func getUserProjectsStatement(parentProjectIDs []int64, userID int64, search str
 			parentCondition,
 			builder.NotIn("l.id", parentProjectIDs),
 		)).
-		OrderBy("position").
 		GroupBy("l.id")
 }
 
-func getAllProjectsForUser(s *xorm.Session, userID int64, parentProjectIDs []int64, opts *projectOptions, projects *[]*Project, oldTotalCount int64, archivedProjects map[int64]bool) (resultCount int, totalCount int64, err error) {
+func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) (projects []*Project, totalCount int64, err error) {
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
-	query := getUserProjectsStatement(parentProjectIDs, userID, opts.search, opts.getArchived)
-	if limit > 0 {
-		query = query.Limit(limit, start)
+	query := getUserProjectsStatement(nil, userID, opts.search, opts.getArchived)
+
+	querySQLString, args, err := query.ToSQL()
+	if err != nil {
+		return nil, 0, err
 	}
 
+	var limitSQL string
+	if limit > 0 {
+		limitSQL = fmt.Sprintf("LIMIT %d OFFSET %d", limit, start)
+	}
+
+	baseQuery := querySQLString + `
+UNION ALL
+SELECT p.* FROM projects p
+INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
+
 	currentProjects := []*Project{}
-	err = s.SQL(query).Find(&currentProjects)
+	err = s.SQL(`WITH RECURSIVE all_projects as (
+`+baseQuery+`
+ORDER BY position
+`+limitSQL+`
+)
+SELECT * FROM all_projects GROUP BY all_projects.id ORDER BY position`, args...).Find(&currentProjects)
 	if err != nil {
-		return 0, 0, err
+		return
 	}
 
 	if len(currentProjects) == 0 {
-		return 0, oldTotalCount, err
+		return nil, 0, err
 	}
 
-	query = getUserProjectsStatement(parentProjectIDs, userID, opts.search, opts.getArchived)
 	totalCount, err = s.
-		SQL(query.Select("count(*)")).
+		SQL(`WITH RECURSIVE all_projects as (`+baseQuery+`)
+SELECT count(*) FROM all_projects`, args...).
 		Count(&Project{})
 	if err != nil {
-		return 0, 0, err
+		return nil, 0, err
 	}
 
-	parentIDsMap := make(map[int64]bool, len(parentProjectIDs))
-	for _, id := range parentProjectIDs {
-		parentIDsMap[id] = true
-	}
-
-	for _, project := range currentProjects {
-		parentIDsMap[project.ID] = true
-	}
-
-	newParentIDs := []int64{}
-	for _, project := range currentProjects {
-		if project.IsArchived {
-			archivedProjects[project.ID] = true
-		}
-		if archivedProjects[project.ParentProjectID] {
-			project.IsArchived = true
-		}
-		// Filter out parent project ids which we're not looking for to avoid leaking
-		// information about parent projects
-		if !parentIDsMap[project.ParentProjectID] {
-			project.ParentProjectID = 0
-		}
-		newParentIDs = append(newParentIDs, project.ID)
-	}
-
-	*projects = append(*projects, currentProjects...)
-
-	// If we don't reset the limit for subprojects, it will be impossible to fetch all subprojects.
-	opts.page = -1
-
-	return getAllProjectsForUser(s, userID, newParentIDs, opts, projects, oldTotalCount+totalCount, archivedProjects)
+	return currentProjects, totalCount, err
 }
 
 // Gets the projects with their children without any tasks
@@ -488,9 +475,7 @@ func getRawProjectsForUser(s *xorm.Session, opts *projectOptions) (projects []*P
 		return nil, 0, 0, err
 	}
 
-	allProjects := []*Project{}
-	archivedProjects := make(map[int64]bool)
-	resultCount, totalItems, err = getAllProjectsForUser(s, fullUser.ID, nil, opts, &allProjects, 0, archivedProjects)
+	allProjects, totalItems, err := getAllProjectsForUser(s, fullUser.ID, opts)
 	if err != nil {
 		return
 	}

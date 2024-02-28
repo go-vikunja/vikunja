@@ -349,11 +349,9 @@ func TestProject_ReadAll(t *testing.T) {
 	t.Run("all", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
-		projects := []*Project{}
-		archivedProjects := make(map[int64]bool)
-		_, _, err := getAllProjectsForUser(s, 1, nil, &projectOptions{}, &projects, 0, archivedProjects)
+		projects, _, err := getAllProjectsForUser(s, 6, &projectOptions{})
 		require.NoError(t, err)
-		assert.Len(t, projects, 24)
+		assert.Len(t, projects, 25)
 		_ = s.Close()
 	})
 	t.Run("only child projects for one project", func(t *testing.T) {
@@ -369,12 +367,12 @@ func TestProject_ReadAll(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, reflect.Slice, reflect.TypeOf(projects3).Kind())
 		ls := projects3.([]*Project)
-		assert.Len(t, ls, 26)
+		assert.Len(t, ls, 28)
 		assert.Equal(t, int64(3), ls[0].ID) // Project 3 has a position of 1 and should be sorted first
 		assert.Equal(t, int64(1), ls[1].ID)
 		assert.Equal(t, int64(6), ls[2].ID)
-		assert.Equal(t, int64(-1), ls[24].ID)
-		assert.Equal(t, int64(-2), ls[25].ID)
+		assert.Equal(t, int64(-1), ls[26].ID)
+		assert.Equal(t, int64(-2), ls[27].ID)
 		_ = s.Close()
 	})
 	t.Run("projects for nonexistant user", func(t *testing.T) {
