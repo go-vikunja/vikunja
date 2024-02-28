@@ -406,7 +406,7 @@ Environment path: `VIKUNJA_SENTRY_FRONTENDDSN`
 
 ### type
 
-Database type to use. Supported types are mysql, postgres and sqlite.
+Database type to use. Supported values are mysql, postgres and sqlite. Vikunja is able to run with MySQL 8.0+, Mariadb 10.2+, PostgreSQL 12+, and sqlite.
 
 Default: `sqlite`
 
