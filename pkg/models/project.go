@@ -443,12 +443,8 @@ SELECT p.* FROM projects p
 INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 
 	currentProjects := []*Project{}
-	err = s.SQL(`WITH RECURSIVE all_projects as (
-`+baseQuery+`
-ORDER BY position
-`+limitSQL+`
-)
-SELECT * FROM all_projects GROUP BY all_projects.id ORDER BY position`, args...).Find(&currentProjects)
+	err = s.SQL(`WITH RECURSIVE all_projects as (`+baseQuery+`)
+SELECT DISTINCT * FROM all_projects ORDER BY position `+limitSQL, args...).Find(&currentProjects)
 	if err != nil {
 		return
 	}
@@ -459,7 +455,7 @@ SELECT * FROM all_projects GROUP BY all_projects.id ORDER BY position`, args...)
 
 	totalCount, err = s.
 		SQL(`WITH RECURSIVE all_projects as (`+baseQuery+`)
-SELECT count(*) FROM all_projects`, args...).
+SELECT count(*) FROM all_projects GROUP BY all_projects.id`, args...).
 		Count(&Project{})
 	if err != nil {
 		return nil, 0, err
