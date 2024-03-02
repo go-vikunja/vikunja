@@ -329,9 +329,13 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 	return teamData, errs
 }
 
+func getOIDCTeamName(name string) string {
+	return name + " (OIDC)"
+}
+
 func CreateOIDCTeam(s *xorm.Session, teamData *models.OIDCTeam, u *user.User) (team *models.Team, err error) {
 	team = &models.Team{
-		Name:        teamData.Name + "(OIDC)",
+		Name:        getOIDCTeamName(teamData.Name),
 		Description: teamData.Description,
 		OidcID:      teamData.OidcID,
 	}
@@ -356,6 +360,14 @@ func GetOrCreateTeamsByOIDCAndNames(s *xorm.Session, teamData []*models.OIDCTeam
 			}
 			te = append(te, newTeam)
 			continue
+		}
+
+		if team.Name != getOIDCTeamName(oidcTeam.Name) {
+			team.Name = getOIDCTeamName(oidcTeam.Name)
+			err = team.Update(s, u)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		log.Debugf("Team with oidc_id %v and name %v already exists.", team.OidcID, team.Name)
