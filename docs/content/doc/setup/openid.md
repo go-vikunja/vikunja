@@ -1,3 +1,13 @@
+---
+date: "2022-08-09:00:00+02:00"
+title: "OpenID"
+draft: false
+type: "doc"
+menu:
+  sidebar:
+    parent: "setup"
+---
+
 # OpenID
 
 Vikunja allows for authentication with an oauth provider via the OpenID standard.
