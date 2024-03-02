@@ -27,6 +27,7 @@
 						:loading="migrationService.loading"
 						:disabled="migrationService.loading || undefined"
 						:href="authUrl"
+						:open-external-in-new-tab="false"
 					>
 						{{ $t('migrate.getStarted') }}
 					</x-button>

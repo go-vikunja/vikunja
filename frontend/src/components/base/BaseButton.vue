@@ -26,7 +26,7 @@
 		class="base-button"
 		:href="href"
 		rel="noreferrer noopener nofollow"
-		target="_blank"
+		:target="openExternalInNewTab ? '_blank' : undefined"
 	>
 		<slot />
 	</a>
@@ -69,6 +69,7 @@ export interface BaseButtonProps extends /* @vue-ignore */ HTMLAttributes {
 	disabled?: boolean
 	to?: RouteLocationRaw
 	href?: string
+	openExternalInNewTab?: boolean
 }
 
 export interface BaseButtonEmits {
@@ -78,6 +79,7 @@ export interface BaseButtonEmits {
 const {
 	type = BASE_BUTTON_TYPES_MAP.BUTTON,
 	disabled = false,
+	openExternalInNewTab = true,
 } = defineProps<BaseButtonProps>()
 
 const emit = defineEmits<BaseButtonEmits>()
