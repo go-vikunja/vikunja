@@ -175,20 +175,28 @@ export const useProjectStore = defineStore('project', () => {
 		}
 	}
 
-	async function loadProjects() {
+	async function loadAllProjects() {
 		const cancel = setModuleLoading(setIsLoading)
 
 		const projectService = new ProjectService()
+		const loadedProjects: IProject[] = []
+		let page = 1
 		try {
-			const loadedProjects = await projectService.getAll({}, {is_archived: true}) as IProject[]
-			projects.value = {}
-			setProjects(loadedProjects)
-			loadedProjects.forEach(p => add(p))
-
-			return loadedProjects
+			do {
+				const newProjects = await projectService.getAll({}, {is_archived: true}, page) as IProject[]
+				loadedProjects.push(...newProjects)
+				page++
+			} while (page <= projectService.totalPages)
+			
 		} finally {
 			cancel()
 		}
+		
+		projects.value = {}
+		setProjects(loadedProjects)
+		loadedProjects.forEach(p => add(p))
+
+		return loadedProjects
 	}
 
 	function getAncestors(project: IProject): IProject[] {
@@ -222,7 +230,7 @@ export const useProjectStore = defineStore('project', () => {
 		setProjects,
 		removeProjectById,
 		toggleProjectFavorite,
-		loadProjects,
+		loadAllProjects,
 		createProject,
 		updateProject,
 		deleteProject,

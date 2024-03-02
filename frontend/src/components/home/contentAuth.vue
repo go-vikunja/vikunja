@@ -122,7 +122,7 @@ const labelStore = useLabelStore()
 labelStore.loadAllLabels()
 
 const projectStore = useProjectStore()
-projectStore.loadProjects()
+projectStore.loadAllProjects()
 </script>
 
 <style lang="scss" scoped>

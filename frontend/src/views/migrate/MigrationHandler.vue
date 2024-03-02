@@ -213,7 +213,7 @@ async function migrate() {
 			const result = await migrationFileService.migrate(migrationConfig as File)
 			message.value = result.message
 			const projectStore = useProjectStore()
-			return projectStore.loadProjects()
+			return projectStore.loadAllProjects()
 		}
 		
 		await migrationService.migrate(migrationConfig as MigrationConfig)

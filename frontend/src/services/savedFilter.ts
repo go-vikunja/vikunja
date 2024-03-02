@@ -111,13 +111,13 @@ export function useSavedFilter(projectId?: MaybeRef<IProject['id']>) {
 
 	async function createFilter() {
 		filter.value = await filterService.create(filter.value)
-		await projectStore.loadProjects()
+		await projectStore.loadAllProjects()
 		router.push({name: 'project.index', params: {projectId: getProjectId(filter.value)}})
 	}
 
 	async function saveFilter() {
 		const response = await filterService.update(filter.value)
-		await projectStore.loadProjects()
+		await projectStore.loadAllProjects()
 		success({message: t('filters.edit.success')})
 		response.filters = objectToSnakeCase(response.filters)
 		filter.value = response
@@ -130,7 +130,7 @@ export function useSavedFilter(projectId?: MaybeRef<IProject['id']>) {
 
 	async function deleteFilter() {	
 		await filterService.delete(filter.value)
-		await projectStore.loadProjects()
+		await projectStore.loadAllProjects()
 		success({message: t('filters.delete.success')})
 		router.push({name: 'projects.index'})
 	}

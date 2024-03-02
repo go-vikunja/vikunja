@@ -473,7 +473,7 @@ export const useTaskStore = defineStore('task', () => {
 		task = await taskService.update(task)
 		
 		// reloading the projects list so that the Favorites project shows up or is hidden when there are (or are not) favorite tasks
-		await projectStore.loadProjects() 
+		await projectStore.loadAllProjects() 
 		
 		return task
 	}
