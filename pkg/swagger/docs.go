@@ -8367,7 +8367,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "admin": {
-                    "description": "Whether or not the member is an admin of the team. See the docs for more about what a team admin can do",
+                    "description": "Whether the member is an admin of the team. See the docs for more about what a team admin can do",
                     "type": "boolean"
                 },
                 "created": {
