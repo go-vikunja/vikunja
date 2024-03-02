@@ -129,7 +129,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}, false)
 		db.AssertExists(t, "teams", map[string]interface{}{
 			"id":   oidcTeams,
-			"name": team,
+			"name": team + " (OIDC)",
 		}, false)
 	})
 
