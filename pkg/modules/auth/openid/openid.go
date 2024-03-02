@@ -331,7 +331,7 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 
 func CreateOIDCTeam(s *xorm.Session, teamData *models.OIDCTeam, u *user.User) (team *models.Team, err error) {
 	team = &models.Team{
-		Name:        teamData.TeamName,
+		Name:        teamData.Name + "(OIDC)",
 		Description: teamData.Description,
 		OidcID:      teamData.OidcID,
 	}

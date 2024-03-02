@@ -22,7 +22,7 @@
 			>
 				<router-link :to="{name: 'teams.edit', params: {id: t.id}}">
 					<p>
-						{{ t.name + (t.oidcId ? ` (sso:  ${t.oidcId})`: '') }}
+						{{ t.name }}
 					</p>
 				</router-link>
 			</li>
