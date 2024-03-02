@@ -316,8 +316,8 @@ func GetProjectSimplByTaskID(s *xorm.Session, taskID int64) (l *Project, err err
 	return &project, nil
 }
 
-// GetProjectsSimplByTaskIDs gets a list of projects by a task ids
-func GetProjectsSimplByTaskIDs(s *xorm.Session, taskIDs []int64) (ps map[int64]*Project, err error) {
+// GetProjectsMapSimplByTaskIDs gets a list of projects by a task ids
+func GetProjectsMapSimplByTaskIDs(s *xorm.Session, taskIDs []int64) (ps map[int64]*Project, err error) {
 	ps = make(map[int64]*Project)
 	err = s.
 		Select("projects.*").
@@ -328,9 +328,30 @@ func GetProjectsSimplByTaskIDs(s *xorm.Session, taskIDs []int64) (ps map[int64]*
 	return
 }
 
-// GetProjectsByIDs returns a map of projects from a slice with project ids
-func GetProjectsByIDs(s *xorm.Session, projectIDs []int64) (projects map[int64]*Project, err error) {
+func GetProjectsSimplByTaskIDs(s *xorm.Session, taskIDs []int64) (ps []*Project, err error) {
+	err = s.
+		Select("projects.*").
+		Table(Project{}).
+		Join("INNER", "tasks", "projects.id = tasks.project_id").
+		In("tasks.id", taskIDs).
+		Find(&ps)
+	return
+}
+
+// GetProjectsMapByIDs returns a map of projects from a slice with project ids
+func GetProjectsMapByIDs(s *xorm.Session, projectIDs []int64) (projects map[int64]*Project, err error) {
 	projects = make(map[int64]*Project, len(projectIDs))
+
+	if len(projectIDs) == 0 {
+		return
+	}
+
+	err = s.In("id", projectIDs).Find(&projects)
+	return
+}
+
+func GetProjectsByIDs(s *xorm.Session, projectIDs []int64) (projects []*Project, err error) {
+	projects = make([]*Project, 0, len(projectIDs))
 
 	if len(projectIDs) == 0 {
 		return
@@ -559,7 +580,7 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 		return err
 	}
 
-	subscriptions, err := GetSubscriptions(s, SubscriptionEntityProject, projectIDs, a)
+	subscriptions, err := GetSubscriptionsForProjects(s, projects, a)
 	if err != nil {
 		log.Errorf("An error occurred while getting project subscriptions for a project: %s", err.Error())
 		subscriptions = make(map[int64][]*Subscription)

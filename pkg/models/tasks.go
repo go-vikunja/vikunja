@@ -356,6 +356,11 @@ func GetTaskSimple(s *xorm.Session, t *Task) (task Task, err error) {
 	return
 }
 
+func GetTasksSimpleByIDs(s *xorm.Session, ids []int64) (tasks []*Task, err error) {
+	err = s.In("id", ids).Find(&tasks)
+	return
+}
+
 // GetTasksByIDs returns all tasks for a project of ids
 func (bt *BulkTask) GetTasksByIDs(s *xorm.Session) (err error) {
 	for _, id := range bt.IDs {
@@ -586,7 +591,7 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth) (e
 	}
 
 	// Get all identifiers
-	projects, err := GetProjectsByIDs(s, projectIDs)
+	projects, err := GetProjectsMapByIDs(s, projectIDs)
 	if err != nil {
 		return err
 	}

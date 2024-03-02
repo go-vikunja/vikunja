@@ -223,7 +223,11 @@ func GetSubscriptions(s *xorm.Session, entityType SubscriptionEntityType, entity
 
 	switch entityType {
 	case SubscriptionEntityProject:
-		return getSubscriptionsForProjects(s, entityIDs, u)
+		projects, err := GetProjectsByIDs(s, entityIDs)
+		if err != nil {
+			return nil, err
+		}
+		return GetSubscriptionsForProjects(s, projects, u)
 	case SubscriptionEntityTask:
 		subs, err := getSubscriptionsForTasks(s, entityIDs, u)
 		if err != nil {
@@ -232,22 +236,34 @@ func GetSubscriptions(s *xorm.Session, entityType SubscriptionEntityType, entity
 
 		// If the task does not have a subscription directly or from its project, get the one
 		// from the parent and return it instead.
+		var taskIDsWithoutSubscription []int64
 		for _, eID := range entityIDs {
 			if _, has := subs[eID]; has {
 				continue
 			}
 
-			task, err := GetTaskByIDSimple(s, eID)
-			if err != nil {
-				return nil, err
-			}
-			projectSubscriptions, err := getSubscriptionsForProjects(s, []int64{task.ProjectID}, u)
-			if err != nil {
-				return nil, err
-			}
-			for _, subscription := range projectSubscriptions {
-				subs[eID] = subscription // The first project subscription is the subscription we're looking for
-				break
+			taskIDsWithoutSubscription = append(taskIDsWithoutSubscription, eID)
+		}
+
+		projects, err := GetProjectsSimplByTaskIDs(s, taskIDsWithoutSubscription)
+		if err != nil {
+			return nil, err
+		}
+
+		tasks, err := GetTasksSimpleByIDs(s, taskIDsWithoutSubscription)
+		if err != nil {
+			return nil, err
+		}
+
+		projectSubscriptions, err := GetSubscriptionsForProjects(s, projects, u)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, task := range tasks {
+			sub, has := projectSubscriptions[task.ProjectID]
+			if has {
+				subs[task.ID] = sub
 			}
 		}
 
@@ -257,48 +273,59 @@ func GetSubscriptions(s *xorm.Session, entityType SubscriptionEntityType, entity
 	return
 }
 
-func getSubscriptionsForProjects(s *xorm.Session, projectIDs []int64, u *user.User) (projectsToSubscriptions map[int64][]*Subscription, err error) {
-	origEntityIDs := projectIDs
-	var ps = make(map[int64]*Project)
+func GetSubscriptionsForProjects(s *xorm.Session, projects []*Project, a web.Auth) (projectsToSubscriptions map[int64][]*Subscription, err error) {
+	u, is := a.(*user.User)
+	if u != nil && !is {
+		return
+	}
 
-	for _, eID := range projectIDs {
-		if eID < 1 {
+	var ps = make(map[int64]*Project)
+	origProjectIDs := make([]int64, 0, len(projects))
+	allProjectIDs := make([]int64, 0, len(projects))
+
+	for _, p := range projects {
+		ps[p.ID] = p
+		origProjectIDs = append(origProjectIDs, p.ID)
+		allProjectIDs = append(allProjectIDs, p.ID)
+	}
+
+	// We can't just use the projects we have, we need to fetch the parents
+	// because they may not be loaded in the same object
+
+	for _, p := range projects {
+		if p.ParentProjectID == 0 {
 			continue
 		}
-		ps[eID], err = GetProjectSimpleByID(s, eID)
-		if err != nil && IsErrProjectDoesNotExist(err) {
-			// If the project does not exist, it might got deleted. There could still be subscribers though.
-			delete(ps, eID)
+
+		if _, has := ps[p.ParentProjectID]; has {
 			continue
 		}
-		if err != nil {
-			return nil, err
-		}
-		err = ps[eID].GetAllParentProjects(s)
+
+		err = ps[p.ID].GetAllParentProjects(s)
 		if err != nil {
 			return nil, err
 		}
 
 		parentIDs := []int64{}
-		var parent = ps[eID].ParentProject
+		var parent = ps[p.ID].ParentProject
 		for parent != nil {
 			parentIDs = append(parentIDs, parent.ID)
 			parent = parent.ParentProject
 		}
 
 		// Now we have all parent ids
-		projectIDs = append(projectIDs, parentIDs...) // the child project id is already in there
+		allProjectIDs = append(allProjectIDs, parentIDs...) // the child project id is already in there
 	}
 
 	var subscriptions []*Subscription
 	if u != nil {
 		err = s.
 			Where("user_id = ?", u.ID).
-			And(getSubscriberCondForEntities(SubscriptionEntityProject, projectIDs)).
+			And(getSubscriberCondForEntities(SubscriptionEntityProject, allProjectIDs)).
 			Find(&subscriptions)
 	} else {
 		err = s.
-			And(getSubscriberCondForEntities(SubscriptionEntityProject, projectIDs)).
+			And(getSubscriberCondForEntities(SubscriptionEntityProject, allProjectIDs)).
 			Find(&subscriptions)
 	}
 	if err != nil {
@@ -313,7 +340,7 @@ func getSubscriptionsForProjects(s *xorm.Session, projectIDs []int64, u *user.Us
 
 	// Rearrange so that subscriptions trickle down
 
-	for _, eID := range origEntityIDs {
+	for _, eID := range origProjectIDs {
 		// If the current project does not have a subscription, climb up the tree until a project has one,
 		// then use that subscription for all child projects
 		_, has := projectsToSubscriptions[eID]
