@@ -455,7 +455,7 @@ SELECT DISTINCT * FROM all_projects ORDER BY position `+limitSQL, args...).Find(
 
 	totalCount, err = s.
 		SQL(`WITH RECURSIVE all_projects as (`+baseQuery+`)
-SELECT count(*) FROM all_projects GROUP BY all_projects.id`, args...).
+SELECT COUNT(DISTINCT all_projects.id) FROM all_projects`, args...).
 		Count(&Project{})
 	if err != nil {
 		return nil, 0, err
