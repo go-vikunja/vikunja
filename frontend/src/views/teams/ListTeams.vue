@@ -65,7 +65,7 @@ ul.teams {
   li {
     list-style: none;
     margin: 0;
-    border-bottom: 1px solid $border;
+    border-bottom: 1px solid var(--grey-200);
 
     a {
       color: var(--text);
