@@ -38,6 +38,8 @@ type Team struct {
 	// The team's description.
 	Description string `xorm:"longtext null" json:"description"`
 	CreatedByID int64  `xorm:"bigint not null INDEX" json:"-"`
+	// The team's oidc id delivered by the oidc provider
+	OidcID string `xorm:"varchar(250) null" maxLength:"250" json:"oidc_id"`
 
 	// The user who created this team.
 	CreatedBy *user.User `xorm:"-" json:"created_by"`
@@ -91,6 +93,13 @@ type TeamUser struct {
 	TeamID int64 `json:"-"`
 }
 
+// OIDCTeamData is the relevant data for a team and is delivered by oidc token
+type OIDCTeamData struct {
+	TeamName    string
+	OidcID      string
+	Description string
+}
+
 // GetTeamByID gets a team by its ID
 func GetTeamByID(s *xorm.Session, id int64) (team *Team, err error) {
 	if id < 1 {
@@ -118,6 +127,34 @@ func GetTeamByID(s *xorm.Session, id int64) (team *Team, err error) {
 	team = &t
 
 	return
+}
+
+// GetTeamByOidcIDAndName gets teams where oidc_id and name match parameters
+// For oidc team creation oidcID and Name need to be set
+func GetTeamByOidcIDAndName(s *xorm.Session, oidcID string, teamName string) (*Team, error) {
+	team := &Team{}
+	has, err := s.
+		Table("teams").
+		Where("oidc_id = ? AND name = ?", oidcID, teamName).
+		Get(team)
+	if !has || err != nil {
+		return nil, ErrOIDCTeamDoesNotExist{teamName, oidcID}
+	}
+	return team, nil
+}
+
+func FindAllOidcTeamIDsForUser(s *xorm.Session, userID int64) (ts []int64, err error) {
+	err = s.
+		Table("team_members").
+		Where("user_id = ? ", userID).
+		Join("RIGHT", "teams", "teams.id = team_members.team_id").
+		Where("teams.oidc_id != ? AND teams.oidc_id IS NOT NULL", "").
+		Cols("teams.id").
+		Find(&ts)
+	if ts == nil || err != nil {
+		return ts, err
+	}
+	return ts, nil
 }
 
 func addMoreInfoToTeams(s *xorm.Session, teams []*Team) (err error) {
@@ -270,7 +307,6 @@ func (t *Team) Create(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	// Insert the current user as member and admin
 	tm := TeamMember{TeamID: t.ID, Username: doer.Username, Admin: true}
 	if err = tm.Create(s, doer); err != nil {
 		return err

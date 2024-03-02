@@ -125,6 +125,10 @@ func getProviderFromMap(pi map[string]interface{}) (provider *Provider, err erro
 		logoutURL = ""
 	}
 
+	scope, _ := pi["scope"].(string)
+	if scope == "" {
+		scope = "openid profile email"
+	}
 	provider = &Provider{
 		Name:            pi["name"].(string),
 		Key:             k,
@@ -132,6 +136,7 @@ func getProviderFromMap(pi map[string]interface{}) (provider *Provider, err erro
 		OriginalAuthURL: pi["authurl"].(string),
 		ClientSecret:    pi["clientsecret"].(string),
 		LogoutURL:       logoutURL,
+		Scope:           scope,
 	}
 
 	cl, is := pi["clientid"].(int)

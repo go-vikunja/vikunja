@@ -426,6 +426,32 @@ func (err *ErrNoOpenIDEmailProvided) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrNoOpenIDEmailProvided represents a "NoEmailProvided" kind of error.
+type ErrOpenIDCustomScopeMalformed struct {
+}
+
+// IsErrNoEmailProvided checks if an error is a ErrNoOpenIDEmailProvided.
+func IsErrOpenIDCustomScopeMalformed(err error) bool {
+	_, ok := err.(*ErrOpenIDCustomScopeMalformed)
+	return ok
+}
+
+func (err *ErrOpenIDCustomScopeMalformed) Error() string {
+	return "Custom Scope malformed"
+}
+
+// ErrCodeNoOpenIDEmailProvided holds the unique world-error code of this error
+const ErrCodeOpenIDCustomScopeMalformed = 1022
+
+// HTTPError holds the http error description
+func (err *ErrOpenIDCustomScopeMalformed) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeOpenIDCustomScopeMalformed,
+		Message:  "The custom scope set by the OIDC provider is malformed. Please make sure the openid provider sets the data correctly for your scope. Check especially to have set an oidcID",
+	}
+}
+
 // ErrAccountDisabled represents a "AccountDisabled" kind of error.
 type ErrAccountDisabled struct {
 	UserID int64

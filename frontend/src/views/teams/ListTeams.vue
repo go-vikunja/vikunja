@@ -17,11 +17,13 @@
 			class="teams box"
 		>
 			<li
-				v-for="team in teams"
-				:key="team.id"
+				v-for="t in teams"
+				:key="t.id"
 			>
-				<router-link :to="{name: 'teams.edit', params: {id: team.id}}">
-					{{ team.name }}
+				<router-link :to="{name: 'teams.edit', params: {id: t.id}}">
+					<p>
+						{{ t.name + (t.oidcId ? ` (sso:  ${t.oidcId})`: '') }}
+					</p>
 				</router-link>
 			</li>
 		</ul>

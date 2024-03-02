@@ -9,6 +9,7 @@ export interface ITeam extends IAbstract {
 	description: string
 	members: ITeamMember[]
 	right: Right
+	oidcId: string
 
 	createdBy: IUser
 	created: Date

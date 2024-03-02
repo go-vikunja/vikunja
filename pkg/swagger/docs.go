@@ -8300,6 +8300,11 @@ const docTemplate = `{
                     "maxLength": 250,
                     "minLength": 1
                 },
+                "oidc_id": {
+                    "description": "The team's oidc id delivered by the oidc provider",
+                    "type": "string",
+                    "maxLength": 250
+                },
                 "updated": {
                     "description": "A timestamp when this relation was last updated. You cannot change this value.",
                     "type": "string"
@@ -8429,6 +8434,11 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 1
+                },
+                "oidc_id": {
+                    "description": "The team's oidc id delivered by the oidc provider",
+                    "type": "string",
+                    "maxLength": 250
                 },
                 "right": {
                     "$ref": "#/definitions/models.Right"
@@ -8572,6 +8582,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "scope": {
                     "type": "string"
                 }
             }

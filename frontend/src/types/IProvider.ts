@@ -4,4 +4,5 @@ export interface IProvider {
 	authUrl: string;
 	clientId: string;
 	logoutUrl: string;
+	scope: string;
 }

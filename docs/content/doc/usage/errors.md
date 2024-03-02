@@ -44,6 +44,7 @@ This document describes the different errors Vikunja can return.
 | 1020      | 412 | This user account is disabled. |
 | 1021      | 412 | This account is managed by a third-party authentication provider. |
 | 1021      | 412 | The username must not contain spaces. |
+| 1022      | 412 | The custom scope set by the OIDC provider is malformed. Please make sure the openid provider sets the data correctly for your scope. Check especially to have set an oidcID. |
 
 ## Validation
 
@@ -106,6 +107,9 @@ This document describes the different errors Vikunja can return.
 | 6005 | 409 | The user is already a member of that team.                           |
 | 6006 | 400 | Cannot delete the last team member.                                  |
 | 6007 | 403 | The team does not have access to the project to perform that action. |
+| 6008 | 400 | There are no teams found with that team name. |
+| 6009 | 400 | There is no oidc team with that team name and oidcId. |
+| 6010 | 400 | There are no oidc teams found for the user. |
 
 ## User Project Access
 

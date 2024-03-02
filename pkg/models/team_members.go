@@ -44,7 +44,6 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
-
 	// Check if the user exists
 	member, err := user2.GetUserByUsername(s, tm.Username)
 	if err != nil {
@@ -107,6 +106,12 @@ func (tm *TeamMember) Delete(s *xorm.Session, _ web.Auth) (err error) {
 
 	_, err = s.Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).Delete(&TeamMember{})
 	return
+}
+
+func (tm *TeamMember) MembershipExists(s *xorm.Session) (exists bool, err error) {
+	return s.
+		Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).
+		Exist(&TeamMember{})
 }
 
 // Update toggles a team member's admin status

@@ -21,21 +21,22 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"code.vikunja.io/web/handler"
 
 	"code.vikunja.io/api/pkg/db"
-	"xorm.io/xorm"
-
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 	"github.com/coreos/go-oidc/v3/oidc"
 	petname "github.com/dustinkirkland/golang-petname"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/oauth2"
+	"xorm.io/xorm"
 )
 
 // Callback contains the callback after an auth request was made and redirected
@@ -53,16 +54,17 @@ type Provider struct {
 	AuthURL         string `json:"auth_url"`
 	LogoutURL       string `json:"logout_url"`
 	ClientID        string `json:"client_id"`
+	Scope           string `json:"scope"`
 	ClientSecret    string `json:"-"`
 	openIDProvider  *oidc.Provider
 	Oauth2Config    *oauth2.Config `json:"-"`
 }
-
 type claims struct {
-	Email             string `json:"email"`
-	Name              string `json:"name"`
-	PreferredUsername string `json:"preferred_username"`
-	Nickname          string `json:"nickname"`
+	Email             string                   `json:"email"`
+	Name              string                   `json:"name"`
+	PreferredUsername string                   `json:"preferred_username"`
+	Nickname          string                   `json:"nickname"`
+	VikunjaGroups     []map[string]interface{} `json:"vikunja_groups"`
 }
 
 func init() {
@@ -96,6 +98,7 @@ func HandleCallback(c echo.Context) error {
 	// Check if the provider exists
 	providerKey := c.Param("provider")
 	provider, err := GetProvider(providerKey)
+	log.Debugf("Provider: %v", provider)
 	if err != nil {
 		log.Error(err)
 		return handler.HandleHTTPError(err, c)
@@ -145,6 +148,7 @@ func HandleCallback(c echo.Context) error {
 
 	// Extract custom claims
 	cl := &claims{}
+
 	err = idToken.Claims(cl)
 	if err != nil {
 		log.Errorf("Error getting token claims for provider %s: %v", provider.Name, err)
@@ -198,16 +202,166 @@ func HandleCallback(c echo.Context) error {
 		return handler.HandleHTTPError(err, c)
 	}
 
+	// does the oidc token contain well formed "vikunja_groups" through vikunja_scope
+	log.Debugf("Checking for vikunja_groups in token %v", cl.VikunjaGroups)
+	teamData, errs := getTeamDataFromToken(cl.VikunjaGroups, provider)
+	if len(teamData) > 0 {
+		for _, err := range errs {
+			log.Errorf("Error creating teams for user and vikunja groups %s: %v", cl.VikunjaGroups, err)
+		}
+
+		//find old teams for user through oidc
+		oldOidcTeams, err := models.FindAllOidcTeamIDsForUser(s, u.ID)
+		if err != nil {
+			log.Debugf("No oidc teams found for user %v", err)
+		}
+		oidcTeams, err := AssignOrCreateUserToTeams(s, u, teamData)
+		if err != nil {
+			log.Errorf("Could not proceed with group routine %v", err)
+		}
+		teamIDsToLeave := utils.NotIn(oldOidcTeams, oidcTeams)
+		err = RemoveUserFromTeamsByIds(s, u, teamIDsToLeave)
+		if err != nil {
+			log.Errorf("Found error while leaving teams %v", err)
+		}
+		errors := RemoveEmptySSOTeams(s, teamIDsToLeave)
+		if len(errors) > 0 {
+			for _, err := range errors {
+				log.Errorf("Found error while removing empty teams %v", err)
+			}
+		}
+	}
 	err = s.Commit()
 	if err != nil {
+		_ = s.Rollback()
+		log.Errorf("Error creating new team for provider %s: %v", provider.Name, err)
 		return handler.HandleHTTPError(err, c)
 	}
-
 	// Create token
 	return auth.NewUserAuthTokenResponse(u, c, false)
 }
 
+func AssignOrCreateUserToTeams(s *xorm.Session, u *user.User, teamData []models.OIDCTeamData) (oidcTeams []int64, err error) {
+	if len(teamData) == 0 {
+		return
+	}
+	// check if we have seen these teams before.
+	// find or create Teams and assign user as teammember.
+	teams, err := GetOrCreateTeamsByOIDCAndNames(s, teamData, u)
+	if err != nil {
+		log.Errorf("Error verifying team for %v, got %v. Error: %v", u.Name, teams, err)
+		return nil, err
+	}
+	for _, team := range teams {
+		tm := models.TeamMember{TeamID: team.ID, UserID: u.ID, Username: u.Username}
+		exists, _ := tm.MembershipExists(s)
+		if !exists {
+			err = tm.Create(s, u)
+			if err != nil {
+				log.Errorf("Could not assign user %s to team %s: %v", u.Username, team.Name, err)
+			}
+		}
+		oidcTeams = append(oidcTeams, team.ID)
+	}
+	return oidcTeams, err
+}
+
+func RemoveEmptySSOTeams(s *xorm.Session, teamIDs []int64) (errs []error) {
+	for _, teamID := range teamIDs {
+		count, err := s.Where("team_id = ?", teamID).Count(&models.TeamMember{})
+		if count == 0 && err == nil {
+			log.Debugf("SSO team with id %v has no members. It will be deleted", teamID)
+			_, _err := s.Where("id = ?", teamID).Delete(&models.Team{})
+			if _err != nil {
+				errs = append(errs, _err)
+			}
+		}
+	}
+	return errs
+}
+
+func RemoveUserFromTeamsByIds(s *xorm.Session, u *user.User, teamIDs []int64) (err error) {
+
+	if len(teamIDs) < 1 {
+		return nil
+	}
+
+	log.Debugf("Removing team_member with user_id %v from team_ids %v", u.ID, teamIDs)
+	_, err = s.In("team_id", teamIDs).And("user_id = ?", u.ID).Delete(&models.TeamMember{})
+	return err
+}
+
+func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (teamData []models.OIDCTeamData, errs []error) {
+	teamData = []models.OIDCTeamData{}
+	errs = []error{}
+	for _, team := range groups {
+		var name string
+		var description string
+		var oidcID string
+		_, exists := team["name"]
+		if exists {
+			name = team["name"].(string)
+		}
+		_, exists = team["description"]
+		if exists {
+			description = team["description"].(string)
+		}
+		_, exists = team["oidcID"]
+		if exists {
+			switch t := team["oidcID"].(type) {
+			case int64:
+				oidcID = strconv.FormatInt(team["oidcID"].(int64), 10)
+			case string:
+				oidcID = string(team["oidcID"].(string))
+			case float64:
+				oidcID = strconv.FormatFloat(team["oidcID"].(float64), 'f', -1, 64)
+			default:
+				log.Errorf("No oidcID assigned for %v or type %v not supported", team, t)
+			}
+		}
+		if name == "" || oidcID == "" {
+			log.Errorf("Claim of your custom scope does not hold name or oidcID for automatic group assignment through oidc provider. Please check %s", provider.Name)
+			errs = append(errs, &user.ErrOpenIDCustomScopeMalformed{})
+			continue
+		}
+		teamData = append(teamData, models.OIDCTeamData{TeamName: name, OidcID: oidcID, Description: description})
+	}
+	return teamData, errs
+}
+
+func CreateTeamWithData(s *xorm.Session, teamData models.OIDCTeamData, u *user.User) (team *models.Team, err error) {
+	team = &models.Team{
+		Name:        teamData.TeamName,
+		Description: teamData.Description,
+		OidcID:      teamData.OidcID,
+	}
+	err = team.Create(s, u)
+	return team, err
+}
+
+// this functions creates an array of existing teams that was generated from the oidc data.
+func GetOrCreateTeamsByOIDCAndNames(s *xorm.Session, teamData []models.OIDCTeamData, u *user.User) (te []*models.Team, err error) {
+	te = []*models.Team{}
+	// Procedure can only be successful if oidcID is set
+	for _, oidcTeam := range teamData {
+		team, err := models.GetTeamByOidcIDAndName(s, oidcTeam.OidcID, oidcTeam.TeamName)
+		if err != nil {
+			log.Debugf("Team with oidc_id %v and name %v does not exist. Creating team.. ", oidcTeam.OidcID, oidcTeam.TeamName)
+			newTeam, err := CreateTeamWithData(s, oidcTeam, u)
+			if err != nil {
+				return te, err
+			}
+			te = append(te, newTeam)
+		} else {
+			log.Debugf("Team with oidc_id %v and name %v already exists.", team.OidcID, team.Name)
+			te = append(te, team)
+		}
+	}
+	return te, err
+}
+
 func getOrCreateUser(s *xorm.Session, cl *claims, issuer, subject string) (u *user.User, err error) {
+
 	// Check if the user exists for that issuer and subject
 	u, err = user.GetUserWithEmail(s, &user.User{
 		Issuer:  issuer,

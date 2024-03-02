@@ -4,7 +4,7 @@
 		:class="{ 'is-loading': teamService.loading }"
 	>
 		<card
-			v-if="userIsAdmin"
+			v-if="userIsAdmin && !team.oidcId"
 			class="is-fullwidth"
 			:title="title"
 		>
@@ -77,7 +77,7 @@
 			:padding="false"
 		>
 			<div
-				v-if="userIsAdmin"
+				v-if="userIsAdmin && !team.oidcId"
 				class="p-4"
 			>
 				<div class="field has-addons">

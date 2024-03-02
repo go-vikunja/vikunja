@@ -94,7 +94,7 @@ Environment path: `VIKUNJA_SERVICE_JWTTTL`
 
 ### jwtttllong
 
-The duration of the "remember me" time in seconds. When the login request is made with 
+The duration of the "remember me" time in seconds. When the login request is made with
 the long param set, the token returned will be valid for this period.
 The default is 2592000 seconds (30 Days).
 
@@ -289,7 +289,7 @@ Environment path: `VIKUNJA_SERVICE_ENABLEEMAILREMINDERS`
 
 ### enableuserdeletion
 
-If true, will allow users to request the complete deletion of their account. When using external authentication methods 
+If true, will allow users to request the complete deletion of their account. When using external authentication methods
 it may be required to coordinate with them in order to delete the account. This setting will not affect the cli commands
 for user deletion.
 
@@ -569,7 +569,7 @@ Environment path: `VIKUNJA_DATABASE_TLS`
 
 Whether to enable the Typesense integration. If true, all tasks will be synced to the configured Typesense
 instance and all search and filtering will run through Typesense instead of only through the database.
-Typesense allows fast fulltext search including fuzzy matching support. It may return different results than 
+Typesense allows fast fulltext search including fuzzy matching support. It may return different results than
 what you'd get with a database-only search.
 
 Default: `false`
@@ -1024,7 +1024,7 @@ Environment path: `VIKUNJA_RATELIMIT_STORE`
 
 ### noauthlimit
 
-The number of requests a user can make from the same IP to all unauthenticated routes (login, register, 
+The number of requests a user can make from the same IP to all unauthenticated routes (login, register,
 password confirmation, email verification, password reset request) per minute. This limit cannot be disabled.
 You should only change this if you know what you're doing.
 

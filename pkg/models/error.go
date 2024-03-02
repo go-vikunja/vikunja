@@ -1059,7 +1059,6 @@ func (err ErrTeamNameCannotBeEmpty) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeTeamNameCannotBeEmpty, Message: "The team name cannot be empty"}
 }
 
-// ErrTeamDoesNotExist represents an error where a team does not exist
 type ErrTeamDoesNotExist struct {
 	TeamID int64
 }
@@ -1176,6 +1175,54 @@ const ErrCodeTeamDoesNotHaveAccessToProject = 6007
 // HTTPError holds the http error description
 func (err ErrTeamDoesNotHaveAccessToProject) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeTeamDoesNotHaveAccessToProject, Message: "This team does not have access to the project."}
+}
+
+// ErrOIDCTeamDoesNotExist represents an error where a team with specified name and specified oidcId property does not exist
+type ErrOIDCTeamDoesNotExist struct {
+	OidcID string
+	Name   string
+}
+
+// IsErrOIDCTeamDoesNotExist checks if an error is ErrOIDCTeamDoesNotExist.
+func IsErrOIDCTeamDoesNotExist(err error) bool {
+	_, ok := err.(ErrOIDCTeamDoesNotExist)
+	return ok
+}
+
+// ErrTeamDoesNotExist represents an error where a team does not exist
+func (err ErrOIDCTeamDoesNotExist) Error() string {
+	return fmt.Sprintf("No team with that name and valid oidcId could be found. [Team Name: %v] [OidcID : %v] ", err.Name, err.OidcID)
+}
+
+// ErrCodeTeamDoesNotExist holds the unique world-error code of this error
+const ErrCodeOIDCTeamDoesNotExist = 6008
+
+// HTTPError holds the http error description
+func (err ErrOIDCTeamDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeTeamDoesNotExist, Message: "No team with that name and valid oidcId could be found."}
+}
+
+// ErrOIDCTeamsDoNotExistForUser represents an error where an oidcTeam does not exist for the user
+type ErrOIDCTeamsDoNotExistForUser struct {
+	UserID int64
+}
+
+// IsErrOIDCTeamsDoNotExistForUser checks if an error is ErrOIDCTeamsDoNotExistForUser.
+func IsErrOIDCTeamsDoNotExistForUser(err error) bool {
+	_, ok := err.(ErrOIDCTeamsDoNotExistForUser)
+	return ok
+}
+
+func (err ErrOIDCTeamsDoNotExistForUser) Error() string {
+	return fmt.Sprintf("No teams with property oidcId could be found for user [User ID: %d]", err.UserID)
+}
+
+// ErrCodeTeamDoesNotExist holds the unique world-error code of this error
+const ErrCodeOIDCTeamsDoNotExistForUser = 6009
+
+// HTTPError holds the http error description
+func (err ErrOIDCTeamsDoNotExistForUser) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeTeamDoesNotExist, Message: "No Teams with property oidcId could be found for User."}
 }
 
 // ====================

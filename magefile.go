@@ -25,7 +25,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"github.com/iancoleman/strcase"
 	"io"
 	"os"
 	"os/exec"
@@ -33,6 +32,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/iancoleman/strcase"
 
 	"github.com/magefile/mage/mg"
 	"golang.org/x/sync/errgroup"
