@@ -210,7 +210,7 @@ func HandleCallback(c echo.Context) error {
 			log.Errorf("Error creating teams for user and vikunja groups %s: %v", cl.VikunjaGroups, err)
 		}
 
-		//find old teams for user through oidc
+		// find old teams for user through oidc
 		oldOidcTeams, err := models.FindAllOidcTeamIDsForUser(s, u.ID)
 		if err != nil {
 			log.Debugf("No oidc teams found for user %v", err)
@@ -224,9 +224,9 @@ func HandleCallback(c echo.Context) error {
 		if err != nil {
 			log.Errorf("Found error while leaving teams %v", err)
 		}
-		errors := RemoveEmptySSOTeams(s, teamIDsToLeave)
-		if len(errors) > 0 {
-			for _, err := range errors {
+		errs := RemoveEmptySSOTeams(s, teamIDsToLeave)
+		if len(errs) > 0 {
+			for _, err := range errs {
 				log.Errorf("Found error while removing empty teams %v", err)
 			}
 		}
@@ -241,7 +241,7 @@ func HandleCallback(c echo.Context) error {
 	return auth.NewUserAuthTokenResponse(u, c, false)
 }
 
-func AssignOrCreateUserToTeams(s *xorm.Session, u *user.User, teamData []models.OIDCTeamData) (oidcTeams []int64, err error) {
+func AssignOrCreateUserToTeams(s *xorm.Session, u *user.User, teamData []*models.OIDCTeam) (oidcTeams []int64, err error) {
 	if len(teamData) == 0 {
 		return
 	}
@@ -291,8 +291,8 @@ func RemoveUserFromTeamsByIds(s *xorm.Session, u *user.User, teamIDs []int64) (e
 	return err
 }
 
-func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (teamData []models.OIDCTeamData, errs []error) {
-	teamData = []models.OIDCTeamData{}
+func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (teamData []*models.OIDCTeam, errs []error) {
+	teamData = []*models.OIDCTeam{}
 	errs = []error{}
 	for _, team := range groups {
 		var name string
@@ -309,10 +309,10 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 		_, exists = team["oidcID"]
 		if exists {
 			switch t := team["oidcID"].(type) {
+			case string:
+				oidcID = team["oidcID"].(string)
 			case int64:
 				oidcID = strconv.FormatInt(team["oidcID"].(int64), 10)
-			case string:
-				oidcID = string(team["oidcID"].(string))
 			case float64:
 				oidcID = strconv.FormatFloat(team["oidcID"].(float64), 'f', -1, 64)
 			default:
@@ -324,12 +324,12 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 			errs = append(errs, &user.ErrOpenIDCustomScopeMalformed{})
 			continue
 		}
-		teamData = append(teamData, models.OIDCTeamData{TeamName: name, OidcID: oidcID, Description: description})
+		teamData = append(teamData, &models.OIDCTeam{Name: name, OidcID: oidcID, Description: description})
 	}
 	return teamData, errs
 }
 
-func CreateTeamWithData(s *xorm.Session, teamData models.OIDCTeamData, u *user.User) (team *models.Team, err error) {
+func CreateOIDCTeam(s *xorm.Session, teamData *models.OIDCTeam, u *user.User) (team *models.Team, err error) {
 	team = &models.Team{
 		Name:        teamData.TeamName,
 		Description: teamData.Description,
@@ -339,23 +339,27 @@ func CreateTeamWithData(s *xorm.Session, teamData models.OIDCTeamData, u *user.U
 	return team, err
 }
 
-// this functions creates an array of existing teams that was generated from the oidc data.
-func GetOrCreateTeamsByOIDCAndNames(s *xorm.Session, teamData []models.OIDCTeamData, u *user.User) (te []*models.Team, err error) {
+// GetOrCreateTeamsByOIDCAndNames returns a slice of teams which were generated from the oidc data. If a team did not exist previously it is automatically created.
+func GetOrCreateTeamsByOIDCAndNames(s *xorm.Session, teamData []*models.OIDCTeam, u *user.User) (te []*models.Team, err error) {
 	te = []*models.Team{}
 	// Procedure can only be successful if oidcID is set
 	for _, oidcTeam := range teamData {
-		team, err := models.GetTeamByOidcIDAndName(s, oidcTeam.OidcID, oidcTeam.TeamName)
-		if err != nil {
-			log.Debugf("Team with oidc_id %v and name %v does not exist. Creating team.. ", oidcTeam.OidcID, oidcTeam.TeamName)
-			newTeam, err := CreateTeamWithData(s, oidcTeam, u)
+		team, err := models.GetTeamByOidcIDAndName(s, oidcTeam.OidcID, oidcTeam.Name)
+		if err != nil && !models.IsErrOIDCTeamDoesNotExist(err) {
+			return nil, err
+		}
+		if err != nil && models.IsErrOIDCTeamDoesNotExist(err) {
+			log.Debugf("Team with oidc_id %v and name %v does not exist. Creating team… ", oidcTeam.OidcID, oidcTeam.Name)
+			newTeam, err := CreateOIDCTeam(s, oidcTeam, u)
 			if err != nil {
 				return te, err
 			}
 			te = append(te, newTeam)
-		} else {
-			log.Debugf("Team with oidc_id %v and name %v already exists.", team.OidcID, team.Name)
-			te = append(te, team)
+			continue
 		}
+
+		log.Debugf("Team with oidc_id %v and name %v already exists.", team.OidcID, team.Name)
+		te = append(te, team)
 	}
 	return te, err
 }

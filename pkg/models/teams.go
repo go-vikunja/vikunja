@@ -88,14 +88,14 @@ func (*TeamMember) TableName() string {
 // TeamUser is the team member type
 type TeamUser struct {
 	user.User `xorm:"extends"`
-	// Whether or not the member is an admin of the team. See the docs for more about what a team admin can do
+	// Whether the member is an admin of the team. See the docs for more about what a team admin can do
 	Admin  bool  `json:"admin"`
 	TeamID int64 `json:"-"`
 }
 
-// OIDCTeamData is the relevant data for a team and is delivered by oidc token
-type OIDCTeamData struct {
-	TeamName    string
+// OIDCTeam is the relevant data for a team and is delivered by oidc token
+type OIDCTeam struct {
+	Name        string
 	OidcID      string
 	Description string
 }
