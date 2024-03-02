@@ -286,16 +286,15 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 					:key="group"
 					class="mb-2"
 				>
-					<strong class="is-capitalized">{{ formatPermissionTitle(group) }}</strong><br>
 					<template
-						v-if="Object.keys(routes).length > 1"
+						v-if="Object.keys(routes).length >= 1"
 					>
 						<Fancycheckbox
 							v-model="newTokenPermissionsGroup[group]"
-							class="mr-2 is-italic"
+							class="mr-2 is-capitalized has-text-weight-bold"
 							@update:modelValue="checked => selectPermissionGroup(group, checked)"
 						>
-							{{ $t('user.settings.apiTokens.selectAll') }}
+							{{ formatPermissionTitle(group) }}
 						</Fancycheckbox>
 						<br>
 					</template>
@@ -305,7 +304,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 					>
 						<Fancycheckbox
 							v-model="newTokenPermissions[group][route]"
-							class="mr-2 is-capitalized"
+							class="ml-4 mr-2 is-capitalized"
 							@update:modelValue="checked => toggleGroupPermissionsFromChild(group, checked)"
 						>
 							{{ formatPermissionTitle(route) }}
