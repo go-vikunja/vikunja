@@ -540,19 +540,24 @@ func getSavedFilterProjects(s *xorm.Session, doer *user.User) (savedFiltersProje
 }
 
 // GetAllParentProjects returns all parents of a given project
-func (p *Project) GetAllParentProjects(s *xorm.Session) (err error) {
-	if p.ParentProjectID == 0 {
-		return
-	}
-
-	parent, err := GetProjectSimpleByID(s, p.ParentProjectID)
-	if err != nil {
-		return err
-	}
-
-	p.ParentProject = parent
-
-	return parent.GetAllParentProjects(s)
+func GetAllParentProjects(s *xorm.Session, projectID int64) (allProjects map[int64]*Project, err error) {
+	allProjects = make(map[int64]*Project)
+	err = s.SQL(`WITH RECURSIVE all_projects AS (
+		    SELECT
+		        p.*
+		    FROM
+		        projects p
+		    WHERE
+		        p.id = ?
+		    UNION ALL
+		    SELECT
+		        p.*
+		    FROM
+		        projects p
+		            INNER JOIN all_projects pc ON p.ID = pc.parent_project_id
+		)
+		SELECT DISTINCT * FROM all_projects`, projectID).Find(&allProjects)
+	return
 }
 
 // addProjectDetails adds owner user objects and project tasks to all projects in the slice
@@ -667,29 +672,9 @@ func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err er
 			}
 		}
 
-		allProjects := make(map[int64]*Project)
-		err = s.SQL(`WITH RECURSIVE all_projects AS (
-		    SELECT
-		        p.id,
-		        p.parent_project_id
-		    FROM
-		        projects p
-		    WHERE
-		        p.id = ?
-		    UNION ALL
-		    SELECT
-		        p.id,
-		        p.parent_project_id
-		    FROM
-		        projects p
-		            INNER JOIN all_projects pc ON p.ID = pc.parent_project_id
-		)
-		SELECT
-		    *
-		FROM
-		    all_projects`, project.ParentProjectID).Find(&allProjects)
+		allProjects, err := GetAllParentProjects(s, project.ParentProjectID)
 		if err != nil {
-			return
+			return err
 		}
 
 		var parent *Project

@@ -301,20 +301,18 @@ func GetSubscriptionsForProjects(s *xorm.Session, projects []*Project, a web.Aut
 			continue
 		}
 
-		err = ps[p.ID].GetAllParentProjects(s)
+		parents, err := GetAllParentProjects(s, p.ID)
 		if err != nil {
 			return nil, err
 		}
 
-		parentIDs := []int64{}
-		var parent = ps[p.ID].ParentProject
+		// Walk the tree up until we reach the top
+		var parent = parents[p.ParentProjectID] // parent now has a pointer…
+		ps[p.ID].ParentProject = parents[p.ParentProjectID]
 		for parent != nil {
-			parentIDs = append(parentIDs, parent.ID)
-			parent = parent.ParentProject
+			allProjectIDs = append(allProjectIDs, parent.ID)
+			parent = parents[parent.ParentProjectID] // … which means we can update it here and then update the pointer in the map
 		}
-
-		// Now we have all parent ids
-		allProjectIDs = append(allProjectIDs, parentIDs...) // the child project id is already in there
 	}
 
 	var subscriptions []*Subscription
