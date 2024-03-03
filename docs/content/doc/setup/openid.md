@@ -10,27 +10,117 @@ menu:
 
 # OpenID
 
-Vikunja allows for authentication with an oauth provider via the OpenID standard.
-
-To learn more about how to configure this, [check out the examples]({{< ref "openid-examples.md">}})
+Vikunja allows for authentication with an external identity source such as Authentik, Keycloak or similar via the
+[OpenID Connect](https://openid.net/developers/specs/) standard.
 
 {{< table_of_contents >}}
 
+## OpenID Connect Overview
+
+OpenID Connect is a standardized identity layer built on top of the more generic OAuth 2.0 specification, simplying interaction between the involved parties significantly.
+While the [OpenID specification](https://openid.net/specs/openid-connect-core-1_0.html#Overview) is worth a read, we summarize the most important basics here.
+
+The involved parties are:
+
+- **Resource Owner:** typically the end-user
+- **Resource Server:** the application server handling requests from the client, the Vikunja API in our case
+- **Client:** the application or client accessing the RS on behalf of the RO. Vikunja web frontend or any of the apps
+- **Authorization Server:** the server verifying the user identity and issuing tokens. These docs also use the words `OAuth 2.0 provider`, `Identity Provider` interchangeably.
+
+After the user is authenticated, the provider issues a token to the user, containing various claims.
+There's different types of tokens (ID token, access token, refresh token), and all of them are created as [JSON Web Token](https://www.rfc-editor.org/info/rfc7519).
+Claims in turn are assertions containing information about the token bearer, usually the user.
+
+**Scopes** are requested by the client when redirecting the end-user to the Authorization Server for authentication, and indirectly control which claims are included in the resulting tokens.
+There's certain default scopes, but its also possible to define custom scopes, which are used by the feature assigning users to Teams automatically.
+
+## Configuring OIDC Authentication
+
+To achieve authentication via an external provider, it is required to (a) configure a confidential Client on your OAuth 2.0 provider and (b) configure Vikunja to authenticate against this provider. 
+[Example configurations]({{< ref "openid-examples.md">}}) are provided for various different identity providers, below you can find generic guides though.
+
+OpenID Connect defines various flow types indicating how exactly the interaction between the involved parties work, Vikunja makes use of the standard **Authorization Code Flow**.
+
+### Step 1: Configure your Authorization Server
+
+The first step is to configure the Authorization Server to correctly handle requests coming from Vikunja.
+In general, this involves the following steps at a minimum:
+
+- Create a confidential client and obtain the client ID and client secret
+- Configure (whitelist) redirect URLs that can be used by Vikunja
+- Make sure the required scopes (`openid profile email` are the default scopes used by Vikunja) are supported
+- Optional: configure an additional scope for automatic team assignment, see below for details
+
+More detailled instructions for various different identity providers can be [found here]({{< ref "openid-examples.md">}})
+
+### Step 2: Configure Vikunja
+
+Vikunja has to be configured to use the identity provider. Please note that there is currently no option to configure these settings via environment variables, they have to be defined using the configuration file. The configuration schema is as follows:
+
+```yaml
+auth:
+  openid:
+    enabled: true
+    redirecturl: https://vikunja.mydomain.com/auth/openid/  <---- slash at the end is important
+    providers:
+      - name: <provider-name>
+        authurl: <auth-url>
+        clientid: <vikunja client-id>
+        clientsecret: <vikunja client-secret>
+        scope: openid profile email
+```
+
+The values for `authurl` can be obtained from the Metadata of your provider, while `clientid` and `clientsecret` are obtained when configuring the client.
+The scope usually doesn't need to be specified or changed, unless you want to configure the automatic team assignment.
+
+Optionally it is possible to disable local authentication and therefore forcing users to login via OpenID connect:
+
+```yaml
+auth:
+  local:
+    enabled: false
+```
+
 ## Automatically assign users to teams
 
-Vikunja is capable of automatically adding users to a team based on a group defined in the oidc provider.
+Vikunja is capable of automatically adding users to a team based on OIDC claims added by the identity provider.
 If configured, Vikunja will sync teams, automatically create new ones and make sure the members are part of the configured teams.
 Teams which exist only because they were created from oidc attributes are not editable in Vikunja.
 
 To distinguish between teams created in Vikunja and teams generated automatically via oidc, generated teams have an `oidcID` assigned internally.
+Within the UI, the teams created through OIDC get a `(OIDC)` suffix to make them distinguishable from locally created teams.
 
-You need to make sure the OpenID provider offers a `vikunja_groups` key through your custom scope. This is the key, which is looked up by Vikunja to start the procedure.
+On a high level, you need to make sure that the **ID token** issued by your identity provider contains a `vikunja_groups` claim, following the structure defined below.
+It depends on the provider being used as well as the preferences of the administrator how this is achieved.
+Typically you'd want to request an additional scope (e.g. `vikunja_scope`) which then triggers the identity provider to add the claim.
+If the `vikunja_groups` is part of the **ID token**, Vikunja will  start the procedure and import teams and team memberships.
 
-Additionally, make sure to deliver an `oidcID` and a `name` attribute within the `vikunja_groups`. You can see how to set this up, if you continue reading.
+The claim structure expexted by Vikunja is as follows:
+
+```json
+{
+    "vikunja_groups": [
+        {
+            "name": "team 1",
+            "oidcID": 33349
+        },
+        {
+            "name": "team 2",
+            "oidcID": 35933
+        }
+    ]
+}
+```
+
+For each team, you need to define a team `name` and an `oidcID`, where the `oidcID` can be any string with a length of less than 250 characters.
+The `oidcID` is used to uniquely identify the team, so please make sure to keep this unique.
+
+Below you'll find two example implementations for Authentik and Keycloak.
+If you've successfully implemented this with another identity provider, please let us know and submit a PR to improve the docs.
 
 ### Setup in Authentik
 
-To configure automatic team management through Authentik, we assume you have already [set up Authentik]({{< ref "openid-examples.md">}}#authentik) as an oidc provider for authentication with Vikunja.
+To configure automatic team management through Authentik, we assume you have already [set up Authentik]({{< ref "openid-examples.md">}}#authentik) as an OIDC provider for authentication with Vikunja.
 
 To use Authentik's group assignment feature, follow these steps:
 
@@ -46,38 +136,21 @@ for group in request.user.ak_groups.all():
 return groupsDict
 ```
 
-output example:
-
-```
-{
-    "vikunja_groups": [
-        {
-            "name": "team 1",
-            "oidcID": 33349
-        },
-        {
-            "name": "team 2",
-            "oidcID": 35933
-        }
-    ]
-}
-```
-
 5. In Authentik's menu on the left, go to Applications > Providers > Select the Vikunja provider. Then click on "Edit", on the bottom open "Advanced protocol settings", select the newly created property mapping under "Scopes". Save the provider.
 
 Now when you log into Vikunja via Authentik it will show you a list of scopes you are claiming.
-You should see the description you entered on the oidc provider's admin area.
+You should see the description you entered on the OIDC provider's admin area.
 
 Proceed to vikunja and open the teams page in the sidebar menu.
-You should see "(sso: *your_oidcID*)" written next to each team you were assigned through oidc.
+You should see "(OIDC)" written next to each team you were assigned through OIDC.
 
-## Setup in Keycloak
+### Setup in Keycloak
 
-The kind people from the Darmstadt Makerspace have written [a guide on how to create a mapper for Vikunja here](https://github.com/makerspace-darmstadt/keycloak-vikunja-mapper).
+The kind people from Makerspace Darmstadt e.V. have written [a guide on how to create a mapper for Vikunja here](https://github.com/makerspace-darmstadt/keycloak-vikunja-mapper).
 
 ## Use cases
 
-All examples assume one team called "Team 1" in your provider.
+All examples assume one team called "Team 1" to be configured within your provider.
 
 * *Token delivers team.name +team.oidcID and Vikunja team does not exist:* \
 New team will be created called "Team 1" with attribute oidcID: "33929"

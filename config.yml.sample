@@ -301,13 +301,11 @@ auth:
     enabled: true
   # OpenID configuration will allow users to authenticate through a third-party OpenID Connect compatible provider.<br/>
   # The provider needs to support the `openid`, `profile` and `email` scopes.<br/>
-  # **Note:** Some openid providers (like gitlab) only make the email of the user available through openid claims if they have set it to be publicly visible.
+  # **Note:** Some openid providers (like Gitlab) only make the email of the user available through OpenID if they have set it to be publicly visible.
   # If the email is not public in those cases, authenticating will fail.
-  # **Note 2:** The frontend expects to be redirected after authentication by the third party
-  # to <frontend-url>/auth/openid/<auth key>. Please make sure to configure the redirect url in your third party
-  # auth service accordingly if you're using the default vikunja frontend.
-  # The frontend will automatically provide the api with the redirect url, composed from the current url where it's hosted.
-  # If you want to use the desktop client with openid, make sure to allow redirects to `127.0.0.1`.
+  # **Note 2:** The frontend expects the third party to rediect the user <frontend-url>/auth/openid/<auth key> after authentication. Please make sure to configure the redirect url in your third party auth service accordingly if you're using the default vikunja frontend.
+  # The frontend will automatically provide the API with the redirect url, composed from the current url where it's hosted.
+  # If you want to use the desktop client with OpenID, make sure to allow redirects to `127.0.0.1`.
   # Take a look at the [default config file](https://kolaente.dev/vikunja/vikunja/src/branch/main/config.yml.sample) for more information about how to configure openid authentication.
   openid:
     # Enable or disable OpenID Connect authentication

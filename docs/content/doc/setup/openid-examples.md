@@ -10,7 +10,7 @@ menu:
 
 # OpenID example configurations
 
-On this page you will find examples about how to set up Vikunja with a third-party OpenID provider.
+On this page you will find examples about how to set up Vikunja with a third-party OAuth 2.0 provider using OpenID Connect.
 To add another example, please [edit this document](https://kolaente.dev/vikunja/vikunja/src/branch/main/docs/content/doc/setup/openid-examples.md) and send a PR.
 
 {{< table_of_contents >}}
@@ -111,4 +111,7 @@ auth:
         clientsecret: "" # copy from Authentik
 ```
 
-**Note:** The `authurl` that Vikunja requires is not the `Authorize URL` that you can see in the Provider. Vikunja uses Open ID Discovery to find the correct endpoint to use. Vikunja does this by automatically accessing the `OpenID Configuration URL` (usually `https://authentik.mydomain.com/application/o/vikunja/.well-known/openid-configuration`). Use this URL without the `.well-known/openid-configuration` as the `authurl`.
+**Note:** The `authurl` that Vikunja requires is not the `Authorize URL` that you can see in the Provider.
+OpenID Discovery is used to find the correct endpoint to use automatically, by accessing the `OpenID Configuration URL` (usually `https://authentik.mydomain.com/application/o/vikunja/.well-known/openid-configuration`).
+Use this URL without the `.well-known/openid-configuration` as the `authurl`.
+Typically this URL can be found in the metadata section within your identity provider.
