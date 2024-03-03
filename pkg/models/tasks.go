@@ -657,7 +657,8 @@ func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, doCheckBucke
 	}
 
 	var bucket *Bucket
-	if task.Done && originalTask != nil && !originalTask.Done {
+	if task.Done && originalTask != nil &&
+		(!originalTask.Done || task.ProjectID != originalTask.ProjectID) {
 		task.BucketID = project.DoneBucketID
 	}
 
@@ -666,7 +667,10 @@ func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, doCheckBucke
 	}
 
 	// Either no bucket was provided or the task was moved between projects
-	if task.BucketID == 0 || (originalTask != nil && task.ProjectID != 0 && originalTask.ProjectID != task.ProjectID) {
+	// But if the task was moved between projects, don't update the done bucket
+	// because then we have it already updated to the done bucket.
+	if task.BucketID == 0 ||
+		(originalTask != nil && task.ProjectID != 0 && originalTask.ProjectID != task.ProjectID && !task.Done) {
 		task.BucketID, err = getDefaultBucketID(s, project)
 		if err != nil {
 			return
@@ -860,17 +864,18 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	// Old task has the stored reminders
 	ot.Reminders = reminders
 
-	targetBucket, err := setTaskBucket(s, t, &ot, t.BucketID != 0 && t.BucketID != ot.BucketID, nil)
+	project, err := GetProjectSimpleByID(s, t.ProjectID)
+	if err != nil {
+		return err
+	}
+
+	targetBucket, err := setTaskBucket(s, t, &ot, t.BucketID != 0 && t.BucketID != ot.BucketID, project)
 	if err != nil {
 		return err
 	}
 
 	// If the task was moved into the done bucket and the task has a repeating cycle we should not update
 	// the bucket.
-	project, err := GetProjectSimpleByID(s, t.ProjectID)
-	if err != nil {
-		return err
-	}
 	if targetBucket.ID == project.DoneBucketID && t.RepeatAfter > 0 {
 		t.Done = true // This will trigger the correct re-scheduling of the task (happening in updateDone later)
 		t.BucketID = ot.BucketID

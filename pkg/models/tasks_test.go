@@ -345,8 +345,7 @@ func TestTask_Update(t *testing.T) {
 		err = s.Commit()
 		require.NoError(t, err)
 
-		assert.Equal(t, int64(4), task.BucketID) // bucket 4 is the default bucket on project 2
-		assert.True(t, task.Done)                // bucket 4 is the done bucket, so the task should be marked as done as well
+		assert.Equal(t, int64(40), task.BucketID) // bucket 40 is the default bucket on project 2
 	})
 	t.Run("marking a task as done should move it to the done bucket", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -387,7 +386,29 @@ func TestTask_Update(t *testing.T) {
 		db.AssertExists(t, "tasks", map[string]interface{}{
 			"id":         1,
 			"project_id": 2,
-			"bucket_id":  4,
+			"bucket_id":  40,
+		}, false)
+	})
+	t.Run("move done task to another project with a done bucket", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:        2,
+			Done:      true,
+			ProjectID: 2,
+		}
+		err := task.Update(s, u)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":         2,
+			"project_id": 2,
+			"bucket_id":  4, // 4 is the done bucket
+			"done":       true,
 		}, false)
 	})
 	t.Run("repeating tasks should not be moved to the done bucket", func(t *testing.T) {
