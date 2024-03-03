@@ -681,7 +681,7 @@ func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err er
 		        p.id,
 		        p.parent_project_id
 		    FROM
-		        Projects p
+		        projects p
 		            INNER JOIN all_projects pc ON p.ID = pc.parent_project_id
 		)
 		SELECT
