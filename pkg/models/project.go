@@ -667,11 +667,33 @@ func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err er
 			}
 		}
 
-		var parent *Project
-		parent, err = GetProjectSimpleByID(s, project.ParentProjectID)
+		allProjects := make(map[int64]*Project)
+		err = s.SQL(`WITH RECURSIVE all_projects AS (
+		    SELECT
+		        p.id,
+		        p.parent_project_id
+		    FROM
+		        projects p
+		    WHERE
+		        p.id = ?
+		    UNION ALL
+		    SELECT
+		        p.id,
+		        p.parent_project_id
+		    FROM
+		        Projects p
+		            INNER JOIN all_projects pc ON p.ID = pc.parent_project_id
+		)
+		SELECT
+		    *
+		FROM
+		    all_projects`, project.ParentProjectID).Find(&allProjects)
 		if err != nil {
-			return err
+			return
 		}
+
+		var parent *Project
+		parent = allProjects[project.ParentProjectID]
 
 		// Check if there's a cycle in the parent relation
 		parentsVisited := make(map[int64]bool)
@@ -681,11 +703,7 @@ func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err er
 				break
 			}
 
-			// FIXME: Can we do this with better performance?
-			parent, err = GetProjectSimpleByID(s, parent.ParentProjectID)
-			if err != nil {
-				return err
-			}
+			parent = allProjects[parent.ParentProjectID]
 
 			if parentsVisited[parent.ID] {
 				return &ErrProjectCannotHaveACyclicRelationship{
