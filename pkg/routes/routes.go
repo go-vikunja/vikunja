@@ -156,10 +156,10 @@ func setupSentry(e *echo.Echo) {
 			if hub != nil {
 				hub.WithScope(func(scope *sentry.Scope) {
 					scope.SetExtra("url", c.Request().URL)
-					hub.CaptureException(err)
+					hub.CaptureException(herr.Internal)
 				})
 			} else {
-				sentry.CaptureException(err)
+				sentry.CaptureException(herr.Internal)
 				log.Debugf("Could not add context for sending error '%s' to sentry", err.Error())
 			}
 			log.Debugf("Error '%s' sent to sentry", err.Error())
