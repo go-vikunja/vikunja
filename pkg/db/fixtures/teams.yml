@@ -33,3 +33,4 @@
   name: testteam14
   created_by_id: 7
   oidc_id: 14
+  issuer: "https://some.issuer"

@@ -215,7 +215,7 @@ func HandleCallback(c echo.Context) error {
 		if err != nil {
 			log.Debugf("No oidc teams found for user %v", err)
 		}
-		oidcTeams, err := AssignOrCreateUserToTeams(s, u, teamData)
+		oidcTeams, err := AssignOrCreateUserToTeams(s, u, teamData, idToken.Issuer)
 		if err != nil {
 			log.Errorf("Could not proceed with group routine %v", err)
 		}
@@ -241,13 +241,13 @@ func HandleCallback(c echo.Context) error {
 	return auth.NewUserAuthTokenResponse(u, c, false)
 }
 
-func AssignOrCreateUserToTeams(s *xorm.Session, u *user.User, teamData []*models.OIDCTeam) (oidcTeams []int64, err error) {
+func AssignOrCreateUserToTeams(s *xorm.Session, u *user.User, teamData []*models.OIDCTeam, issuer string) (oidcTeams []int64, err error) {
 	if len(teamData) == 0 {
 		return
 	}
 	// check if we have seen these teams before.
 	// find or create Teams and assign user as teammember.
-	teams, err := GetOrCreateTeamsByOIDCAndNames(s, teamData, u)
+	teams, err := GetOrCreateTeamsByOIDC(s, teamData, u, issuer)
 	if err != nil {
 		log.Errorf("Error verifying team for %v, got %v. Error: %v", u.Name, teams, err)
 		return nil, err
@@ -333,28 +333,29 @@ func getOIDCTeamName(name string) string {
 	return name + " (OIDC)"
 }
 
-func CreateOIDCTeam(s *xorm.Session, teamData *models.OIDCTeam, u *user.User) (team *models.Team, err error) {
+func CreateOIDCTeam(s *xorm.Session, teamData *models.OIDCTeam, u *user.User, issuer string) (team *models.Team, err error) {
 	team = &models.Team{
 		Name:        getOIDCTeamName(teamData.Name),
 		Description: teamData.Description,
 		OidcID:      teamData.OidcID,
+		Issuer:      issuer,
 	}
 	err = team.Create(s, u)
 	return team, err
 }
 
-// GetOrCreateTeamsByOIDCAndNames returns a slice of teams which were generated from the oidc data. If a team did not exist previously it is automatically created.
-func GetOrCreateTeamsByOIDCAndNames(s *xorm.Session, teamData []*models.OIDCTeam, u *user.User) (te []*models.Team, err error) {
+// GetOrCreateTeamsByOIDC returns a slice of teams which were generated from the oidc data. If a team did not exist previously it is automatically created.
+func GetOrCreateTeamsByOIDC(s *xorm.Session, teamData []*models.OIDCTeam, u *user.User, issuer string) (te []*models.Team, err error) {
 	te = []*models.Team{}
 	// Procedure can only be successful if oidcID is set
 	for _, oidcTeam := range teamData {
-		team, err := models.GetTeamByOidcIDAndName(s, oidcTeam.OidcID, oidcTeam.Name)
+		team, err := models.GetTeamByOidcIDAndIssuer(s, oidcTeam.OidcID, issuer)
 		if err != nil && !models.IsErrOIDCTeamDoesNotExist(err) {
 			return nil, err
 		}
 		if err != nil && models.IsErrOIDCTeamDoesNotExist(err) {
 			log.Debugf("Team with oidc_id %v and name %v does not exist. Creating team… ", oidcTeam.OidcID, oidcTeam.Name)
-			newTeam, err := CreateOIDCTeam(s, oidcTeam, u)
+			newTeam, err := CreateOIDCTeam(s, oidcTeam, u, issuer)
 			if err != nil {
 				return te, err
 			}

@@ -118,7 +118,7 @@ func TestGetOrCreateUser(t *testing.T) {
 			require.NoError(t, err)
 		}
 		require.NoError(t, err)
-		oidcTeams, err := AssignOrCreateUserToTeams(s, u, teamData)
+		oidcTeams, err := AssignOrCreateUserToTeams(s, u, teamData, "https://some.issuer")
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -152,7 +152,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		for _, err := range errs {
 			require.NoError(t, err)
 		}
-		oidcTeams, err := AssignOrCreateUserToTeams(s, u, teamData)
+		oidcTeams, err := AssignOrCreateUserToTeams(s, u, teamData, "https://some.issuer")
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -181,7 +181,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		oldOidcTeams, err := models.FindAllOidcTeamIDsForUser(s, u.ID)
 		require.NoError(t, err)
-		oidcTeams, err := AssignOrCreateUserToTeams(s, u, teamData)
+		oidcTeams, err := AssignOrCreateUserToTeams(s, u, teamData, "https://some.issuer")
 		require.NoError(t, err)
 		teamIDsToLeave := utils.NotIn(oldOidcTeams, oidcTeams)
 		require.NoError(t, err)
@@ -222,7 +222,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		oldOidcTeams, err := models.FindAllOidcTeamIDsForUser(s, u.ID)
 		require.NoError(t, err)
-		oidcTeams, err := AssignOrCreateUserToTeams(s, u, teamData)
+		oidcTeams, err := AssignOrCreateUserToTeams(s, u, teamData, "https://some.issuer")
 		require.NoError(t, err)
 		teamIDsToLeave := utils.NotIn(oldOidcTeams, oidcTeams)
 		require.NoError(t, err)

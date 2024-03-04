@@ -40,6 +40,8 @@ type Team struct {
 	CreatedByID int64  `xorm:"bigint not null INDEX" json:"-"`
 	// The team's oidc id delivered by the oidc provider
 	OidcID string `xorm:"varchar(250) null" maxLength:"250" json:"oidc_id"`
+	// Contains the issuer extracted from the vikunja_groups claim if this team was created through oidc
+	Issuer string `xorm:"text null" json:"-"`
 
 	// The user who created this team.
 	CreatedBy *user.User `xorm:"-" json:"created_by"`
@@ -129,16 +131,16 @@ func GetTeamByID(s *xorm.Session, id int64) (team *Team, err error) {
 	return
 }
 
-// GetTeamByOidcIDAndName gets teams where oidc_id and name match parameters
+// GetTeamByOidcID returns a team matching the given oidc_id
 // For oidc team creation oidcID and Name need to be set
-func GetTeamByOidcIDAndName(s *xorm.Session, oidcID string, teamName string) (*Team, error) {
+func GetTeamByOidcIDAndIssuer(s *xorm.Session, oidcID string, issuer string) (*Team, error) {
 	team := &Team{}
 	has, err := s.
 		Table("teams").
-		Where("oidc_id = ? AND name = ?", oidcID, teamName).
+		Where("oidc_id = ? AND issuer = ?", oidcID, issuer).
 		Get(team)
 	if !has || err != nil {
-		return nil, ErrOIDCTeamDoesNotExist{teamName, oidcID}
+		return nil, ErrOIDCTeamDoesNotExist{issuer, oidcID}
 	}
 	return team, nil
 }
