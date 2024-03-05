@@ -33,6 +33,12 @@
 		
 		<FilterInput v-model="filterQuery"/>
 		
+		<Autocomplete
+			:options="filteredFruits"
+			suggestion="Type: Blueberry"
+			v-model="selectedValue"
+		/>
+		
 		<div class="field">
 			<label class="label">{{ $t('misc.search') }}</label>
 			<div class="control">
@@ -231,6 +237,116 @@ import ProjectService from '@/services/project'
 // FIXME: do not use this here for now. instead create new version from DEFAULT_PARAMS
 import {getDefaultParams} from '@/composables/useTaskList'
 import FilterInput from '@/components/project/partials/FilterInput.vue'
+import Autocomplete from '@/components/input/Autocomplete.vue'
+
+
+const selectedValue = ref('')
+const filteredFruits = computed(() => {
+	const vals = (selectedValue.value || '').toLowerCase().split(' ')
+	return FRUITS
+		.filter(f => f.toLowerCase().startsWith(vals[vals.length - 1]))
+		.sort()
+})
+
+const FRUITS = [
+	'Apple',
+	'Apricot',
+	'Avocado',
+	'Banana',
+	'Bilberry',
+	'Blackberry',
+	'Blackcurrant',
+	'Blueberry',
+	'Boysenberry',
+	'Buddha\'s hand (fingered citron)',
+	'Crab apples',
+	'Currant',
+	'Cherry',
+	'Cherimoya',
+	'Chico fruit',
+	'Cloudberry',
+	'Coconut',
+	'Cranberry',
+	'Cucumber',
+	'Custard apple',
+	'Damson',
+	'Date',
+	'Dragonfruit',
+	'Durian',
+	'Elderberry',
+	'Feijoa',
+	'Fig',
+	'Goji berry',
+	'Gooseberry',
+	'Grape',
+	'Raisin',
+	'Grapefruit',
+	'Guava',
+	'Honeyberry',
+	'Huckleberry',
+	'Jabuticaba',
+	'Jackfruit',
+	'Jambul',
+	'Jujube',
+	'Juniper berry',
+	'Kiwano',
+	'Kiwifruit',
+	'Kumquat',
+	'Lemon',
+	'Lime',
+	'Loquat',
+	'Longan',
+	'Lychee',
+	'Mango',
+	'Mangosteen',
+	'Marionberry',
+	'Melon',
+	'Cantaloupe',
+	'Honeydew',
+	'Watermelon',
+	'Miracle fruit',
+	'Mulberry',
+	'Nectarine',
+	'Nance',
+	'Olive',
+	'Orange',
+	'Blood orange',
+	'Clementine',
+	'Mandarine',
+	'Tangerine',
+	'Papaya',
+	'Passionfruit',
+	'Peach',
+	'Pear',
+	'Persimmon',
+	'Plantain',
+	'Plum',
+	'Prune (dried plum)',
+	'Pineapple',
+	'Plumcot (or Pluot)',
+	'Pomegranate',
+	'Pomelo',
+	'Purple mangosteen',
+	'Quince',
+	'Raspberry',
+	'Salmonberry',
+	'Rambutan',
+	'Redcurrant',
+	'Salal berry',
+	'Salak',
+	'Satsuma',
+	'Soursop',
+	'Star fruit',
+	'gonzoberry',
+	'Strawberry',
+	'Tamarillo',
+	'Tamarind',
+	'Ugli fruit',
+	'Yuzu',
+]
+
+
+
 
 const props = defineProps({
 	modelValue: {
