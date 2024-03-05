@@ -2,9 +2,9 @@
 import {computed, nextTick, ref, watch} from 'vue'
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
 import DatepickerWithValues from '@/components/date/datepickerWithValues.vue'
-import UserService from "@/services/user";
-import {getAvatarUrl, getDisplayName} from "@/models/user";
-import {createRandomID} from "@/helpers/randomId";
+import UserService from '@/services/user'
+import {getAvatarUrl, getDisplayName} from '@/models/user'
+import {createRandomID} from '@/helpers/randomId'
 
 const {
 	modelValue,
@@ -84,46 +84,46 @@ function unEscapeHtml(unsafe: string): string {
 		.replace(/&lt;/g, '<')
 		.replace(/&gt;/g, '>')
 		.replace(/&quot/g, '"')
-		.replace(/&#039;/g, "'")
+		.replace(/&#039;/g, '\'')
 }
 
 const highlightedFilterQuery = computed(() => {
 	let highlighted = escapeHtml(filterQuery.value)
 	dateFields
 		.forEach(o => {
-			const pattern = new RegExp(o + '(\\s*)(&lt;|&gt;|&lt;=|&gt;=|=|!=)(\\s*)([\'"]?)([^\'"\\s]+\\1?)?', 'ig');
+			const pattern = new RegExp(o + '(\\s*)(&lt;|&gt;|&lt;=|&gt;=|=|!=)(\\s*)([\'"]?)([^\'"\\s]+\\1?)?', 'ig')
 			highlighted = highlighted.replaceAll(pattern, (match, spacesBefore, token, spacesAfter, start, value, position) => {
 				if (typeof value === 'undefined') {
 					value = ''
 				}
-				
+
 				return `${o}${spacesBefore}${token}${spacesAfter}<button class="is-primary filter-query__date_value" data-position="${position}">${value}</button><span class="filter-query__date_value_placeholder">${value}</span>`
 			})
 		})
 	assigneeFields
 		.forEach(f => {
-			const pattern = new RegExp(f + '\\s*(&lt;|&gt;|&lt;=|&gt;=|=|!=)\\s*([\'"]?)([^\'"\\s]+\\1?)?', 'ig');
+			const pattern = new RegExp(f + '\\s*(&lt;|&gt;|&lt;=|&gt;=|=|!=)\\s*([\'"]?)([^\'"\\s]+\\1?)?', 'ig')
 			highlighted = highlighted.replaceAll(pattern, (match, token, start, value) => {
 				if (typeof value === 'undefined') {
 					value = ''
 				}
-				
+
 				const id = createRandomID(32)
-							
+
 				userService.getAll({}, {s: value}).then(users => {
 					if (users.length > 0) {
 						const displayName = getDisplayName(users[0])
 						const nameTag = document.createElement('span')
 						nameTag.innerText = displayName
-						
+
 						const avatar = document.createElement('img')
 						avatar.src = getAvatarUrl(users[0], 20)
 						avatar.height = 20
 						avatar.width = 20
 						avatar.alt = displayName
-						
+
 						// TODO: caching
-						
+
 						nextTick(() => {
 							const assigneeValue = document.getElementById(id)
 							assigneeValue.innerText = ''
@@ -132,7 +132,7 @@ const highlightedFilterQuery = computed(() => {
 						})
 					}
 				})
-				
+
 				return `${f} ${token} <span class="filter-query__assignee_value" id="${id}">${value}<span>`
 			})
 		})
@@ -175,12 +175,12 @@ watch(
 				})
 			})
 	},
-	{immediate: true}
+	{immediate: true},
 )
 
 function updateDateInQuery(newDate: string) {
 	// Need to escape and unescape the query because the positions are based on the escaped query
-	let escaped = escapeHtml(filterQuery.value) 
+	let escaped = escapeHtml(filterQuery.value)
 	escaped = escaped
 			.substring(0, currentDatepickerPos.value)
 		+ escaped
@@ -238,7 +238,7 @@ function updateDateInQuery(newDate: string) {
 			display: inline-block;
 			color: transparent;
 		}
-		
+
 		&.filter-query__assignee_value {
 			padding: .125rem .25rem;
 			border-radius: $radius;
@@ -246,7 +246,7 @@ function updateDateInQuery(newDate: string) {
 			color: var(--grey-700);
 			display: inline-flex;
 			align-items: center;
-			
+
 			> img {
 				margin-right: .25rem;
 			}
