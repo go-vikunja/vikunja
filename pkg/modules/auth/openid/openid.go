@@ -340,7 +340,7 @@ func CreateOIDCTeam(s *xorm.Session, teamData *models.OIDCTeam, u *user.User, is
 		OidcID:      teamData.OidcID,
 		Issuer:      issuer,
 	}
-	err = team.Create(s, u)
+	err = team.CreateNewTeam(s, u, false)
 	return team, err
 }
 

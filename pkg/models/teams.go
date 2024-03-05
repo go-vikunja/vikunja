@@ -211,6 +211,42 @@ func addMoreInfoToTeams(s *xorm.Session, teams []*Team) (err error) {
 	return
 }
 
+// CreateNewTeam creates a new team and assignes the user that has caused creation
+// as the first member of the team
+// If firstUserShouldBeAdmin is true, the user will be an admin of the team
+// Note: this function has been extracted from the Create method to allow
+// an additional parameter to control whether the user should become admin of the team
+func (t *Team) CreateNewTeam(s *xorm.Session, a web.Auth, firstUserShouldBeAdmin bool) (err error) {
+
+	doer, err := user.GetFromAuth(a)
+	if err != nil {
+		return err
+	}
+
+	// Check if we have a name
+	if t.Name == "" {
+		return ErrTeamNameCannotBeEmpty{}
+	}
+
+	t.CreatedByID = doer.ID
+	t.CreatedBy = doer
+
+	_, err = s.Insert(t)
+	if err != nil {
+		return
+	}
+
+	tm := TeamMember{TeamID: t.ID, Username: doer.Username, Admin: firstUserShouldBeAdmin}
+	if err = tm.Create(s, doer); err != nil {
+		return err
+	}
+
+	return events.Dispatch(&TeamCreatedEvent{
+		Team: t,
+		Doer: a,
+	})
+}
+
 // ReadOne implements the CRUD method to get one team
 // @Summary Gets one team
 // @Description Returns a team by its ID.
@@ -291,33 +327,13 @@ func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams [put]
 func (t *Team) Create(s *xorm.Session, a web.Auth) (err error) {
-	doer, err := user.GetFromAuth(a)
+
+	err = t.CreateNewTeam(s, a, true)
 	if err != nil {
 		return err
 	}
 
-	// Check if we have a name
-	if t.Name == "" {
-		return ErrTeamNameCannotBeEmpty{}
-	}
-
-	t.CreatedByID = doer.ID
-	t.CreatedBy = doer
-
-	_, err = s.Insert(t)
-	if err != nil {
-		return
-	}
-
-	tm := TeamMember{TeamID: t.ID, Username: doer.Username, Admin: true}
-	if err = tm.Create(s, doer); err != nil {
-		return err
-	}
-
-	return events.Dispatch(&TeamCreatedEvent{
-		Team: t,
-		Doer: a,
-	})
+	return
 }
 
 // Delete deletes a team
