@@ -91,12 +91,13 @@ const highlightedFilterQuery = computed(() => {
 	let highlighted = escapeHtml(filterQuery.value)
 	dateFields
 		.forEach(o => {
-			const pattern = new RegExp(o + '\\s*(&lt;|&gt;|&lt;=|&gt;=|=|!=)\\s*([\'"]?)([^\'"\\s]+\\1?)?', 'ig');
-			highlighted = highlighted.replaceAll(pattern, (match, token, start, value, position) => {
+			const pattern = new RegExp(o + '(\\s*)(&lt;|&gt;|&lt;=|&gt;=|=|!=)(\\s*)([\'"]?)([^\'"\\s]+\\1?)?', 'ig');
+			highlighted = highlighted.replaceAll(pattern, (match, spacesBefore, token, spacesAfter, start, value, position) => {
 				if (typeof value === 'undefined') {
 					value = ''
 				}
-				return `${o} ${token} <button class="is-primary filter-query__date_value" data-position="${position}">${value}</button><span class="filter-query__date_value_placeholder">${value}</span>`
+				
+				return `${o}${spacesBefore}${token}${spacesAfter}<button class="is-primary filter-query__date_value" data-position="${position}">${value}</button><span class="filter-query__date_value_placeholder">${value}</span>`
 			})
 		})
 	assigneeFields
