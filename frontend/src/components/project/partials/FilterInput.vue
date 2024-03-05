@@ -96,7 +96,7 @@ const highlightedFilterQuery = computed(() => {
 				if (typeof value === 'undefined') {
 					value = ''
 				}
-				return `${o} ${token} <button class="button is-primary filter-query__date_value" data-position="${position}">${value}</button><span class="filter-query__date_value_placeholder">${value}</span>`
+				return `${o} ${token} <button class="is-primary filter-query__date_value" data-position="${position}">${value}</button><span class="filter-query__date_value_placeholder">${value}</span>`
 			})
 		})
 	assigneeFields
@@ -234,8 +234,8 @@ function updateDateInQuery(newDate: string) {
 		}
 
 		&.filter-query__date_value_placeholder {
-			padding: .125rem .25rem;
 			display: inline-block;
+			color: transparent;
 		}
 		
 		&.filter-query__assignee_value {
@@ -253,11 +253,17 @@ function updateDateInQuery(newDate: string) {
 	}
 
 	button.filter-query__date_value {
-		padding: .125rem .25rem;
 		border-radius: $radius;
 		position: absolute;
 		margin-top: calc((0.25em - 0.125rem) * -1);
 		height: 1.75rem;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: var(--primary);
+		font-size: 1rem;
+		cursor: pointer;
+		line-height: 1.5;
 	}
 }
 </style>
