@@ -260,7 +260,6 @@ function updateDateInQuery(newDate: string) {
 		padding: 0;
 		border: 0;
 		background: transparent;
-		color: var(--primary);
 		font-size: 1rem;
 		cursor: pointer;
 		line-height: 1.5;
