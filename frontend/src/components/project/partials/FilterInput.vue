@@ -5,6 +5,7 @@ import DatepickerWithValues from '@/components/date/datepickerWithValues.vue'
 import UserService from '@/services/user'
 import {getAvatarUrl, getDisplayName} from '@/models/user'
 import {createRandomID} from '@/helpers/randomId'
+import AutocompleteDropdown from '@/components/input/AutocompleteDropdown.vue'
 
 const {
 	modelValue,
@@ -40,14 +41,18 @@ const assigneeFields = [
 	'assignees',
 ]
 
+const labelFields = [
+	'labels',
+]
+
 const availableFilterFields = [
 	'done',
 	'priority',
 	'usePriority',
 	'percentDone',
-	'labels',
 	...dateFields,
 	...assigneeFields,
+	...labelFields,
 ]
 
 const filterOperators = [
@@ -68,6 +73,9 @@ const filterJoinOperators = [
 	'(',
 	')',
 ]
+
+const FILTER_OPERATORS_REGEX = '(&lt;|&gt;|&lt;=|&gt;=|=|!=)'
+const FILTER_JOIN_OPERATORS_REGEX = '(&amp;&amp;|\|\||\(|\))'
 
 function escapeHtml(unsafe: string): string {
 	return unsafe
@@ -91,7 +99,7 @@ const highlightedFilterQuery = computed(() => {
 	let highlighted = escapeHtml(filterQuery.value)
 	dateFields
 		.forEach(o => {
-			const pattern = new RegExp(o + '(\\s*)(&lt;|&gt;|&lt;=|&gt;=|=|!=)(\\s*)([\'"]?)([^\'"\\s]+\\1?)?', 'ig')
+			const pattern = new RegExp(o + '(\\s*)' + FILTER_OPERATORS_REGEX + '(\\s*)([\'"]?)([^\'"\\s]+\\1?)?', 'ig')
 			highlighted = highlighted.replaceAll(pattern, (match, spacesBefore, token, spacesAfter, start, value, position) => {
 				if (typeof value === 'undefined') {
 					value = ''
@@ -102,7 +110,7 @@ const highlightedFilterQuery = computed(() => {
 		})
 	assigneeFields
 		.forEach(f => {
-			const pattern = new RegExp(f + '\\s*(&lt;|&gt;|&lt;=|&gt;=|=|!=)\\s*([\'"]?)([^\'"\\s]+\\1?)?', 'ig')
+			const pattern = new RegExp(f + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*([\'"]?)([^\'"\\s]+\\1?)?', 'ig')
 			highlighted = highlighted.replaceAll(pattern, (match, token, start, value) => {
 				if (typeof value === 'undefined') {
 					value = ''
@@ -189,33 +197,70 @@ function updateDateInQuery(newDate: string) {
 	currentOldDatepickerValue.value = newDate
 	filterQuery.value = unEscapeHtml(escaped)
 }
+
+function handleFieldInput(e, autocompleteOnInput) {
+	const cursorPosition = filterInput.value.selectionStart
+	const textUpToCursor = filterQuery.value.substring(0, cursorPosition)
+
+	labelFields.forEach(l => {
+		const pattern = new RegExp('(' + l + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&\|\(\)]+\\1?)?$', 'ig')
+		const match = pattern.exec(textUpToCursor)
+
+		if (match !== null) {
+			const [matched, prefix, operator, space, keyword] = match
+			if (keyword) {
+				autocompleteResults.value = ['loool', keyword]
+			}
+		}
+	})
+}
+
+const autocompleteResults = ref<any[]>([])
 </script>
 
 <template>
 	<div class="field">
 		<label class="label">{{ $t('filters.query.title') }}</label>
-		<div class="control filter-input">
-			<textarea
-				autocomplete="off"
-				autocorrect="off"
-				autocapitalize="off"
-				spellcheck="false"
-				v-model="filterQuery"
-				class="input"
-				ref="filterInput"
-			></textarea>
-			<div
-				class="filter-input-highlight"
-				:style="{'height': height}"
-				v-html="highlightedFilterQuery"
-			></div>
-			<DatepickerWithValues
-				v-model="currentDatepickerValue"
-				:open="datePickerPopupOpen"
-				@close="() => datePickerPopupOpen = false"
-				@update:model-value="updateDateInQuery"
-			/>
-		</div>
+		<AutocompleteDropdown 
+			:options="autocompleteResults"
+			@blur="filterInput?.blur()"
+		>
+			<template
+				v-slot:input="{ onKeydown, onFocusField, onUpdateField }"
+			>
+				<div class="control filter-input">
+					<textarea
+						@input="e => handleFieldInput(e, onUpdateField)"
+						@focus="onFocusField"
+						@keydown="onKeydown"
+
+						autocomplete="off"
+						autocorrect="off"
+						autocapitalize="off"
+						spellcheck="false"
+						v-model="filterQuery"
+						class="input"
+						ref="filterInput"
+					></textarea>
+					<div
+						class="filter-input-highlight"
+						:style="{'height': height}"
+						v-html="highlightedFilterQuery"
+					></div>
+					<DatepickerWithValues
+						v-model="currentDatepickerValue"
+						:open="datePickerPopupOpen"
+						@close="() => datePickerPopupOpen = false"
+						@update:model-value="updateDateInQuery"
+					/>
+				</div>
+			</template>
+			<template
+				v-slot:result="{ item }"
+			>
+				whoo {{ item }}
+			</template>
+		</AutocompleteDropdown>
 	</div>
 </template>
 
