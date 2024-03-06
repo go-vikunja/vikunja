@@ -12,7 +12,6 @@ type state = 'unfocused' | 'focused'
 const selectedIndex = ref(-1)
 const state = ref<state>('unfocused')
 const val = ref<string>('')
-const isResizing = ref(false)
 const model = defineModel<string>()
 
 const suggestionScrollerRef = ref<HTMLInputElement | null>(null)
@@ -77,38 +76,10 @@ function updateSuggestionScroll() {
 	})
 }
 
-function updateScrollWindowSize() {
-	if (isResizing.value) {
-		return
-	}
-
-	isResizing.value = true
-
-	nextTick(() => {
-		isResizing.value = false
-
-		const scroller = suggestionScrollerRef.value
-		const parent = containerRef.value
-		if (scroller) {
-			const rect = parent.getBoundingClientRect()
-			const pxTop = rect.top
-			const pxBottom = window.innerHeight - rect.bottom
-			const maxHeight = Math.max(pxTop, pxBottom, props.maxHeight)
-			const isReversed = pxBottom < props.maxHeight && pxTop > pxBottom
-			scroller.style.maxHeight = Math.min(isReversed ? pxTop : pxBottom, props.maxHeight) + 'px'
-			scroller.parentNode.style.transform =
-				isReversed ? 'translateY(-100%) translateY(-1.4rem)'
-					: 'translateY(.4rem)'
-		}
-	})
-}
-
 function setState(stateName: state) {
 	state.value = stateName
 	if (stateName === 'unfocused') {
 		emit('blur')
-	} else {
-		updateScrollWindowSize()
 	}
 }
 
@@ -235,3 +206,53 @@ function onUpdateField(e) {
 		</div>
 	</div>
 </template>
+
+<style scoped lang="scss">
+.autocomplete {
+	position: relative;
+	
+	.suggestion-list {
+		position: absolute;
+		
+		background: var(--white);
+		border-radius: 0 0 var(--input-radius) var(--input-radius);
+		border: 1px solid var(--primary);
+		border-top: none;
+
+		max-height: 50vh;
+		overflow-x: auto;
+		z-index: 100;
+		max-width: 100%;
+		min-width: 100%;
+		margin-top: -2px;
+		
+		button {
+			width: 100%;
+			background: transparent;
+			border: 0;
+
+			font-size: .9rem;
+			width: 100%;
+			color: var(--grey-800);
+			text-align: left;
+			box-shadow: none;
+			text-transform: none;
+			font-family: $family-sans-serif;
+			font-weight: normal;
+			padding: .5rem .75rem;
+			border: none;
+			cursor: pointer;
+
+			&:focus,
+			&:hover {
+				background: var(--grey-100);
+				box-shadow: none !important;
+			}
+
+			&:active {
+				background: var(--grey-100);
+			}
+		}
+	}
+}
+</style>

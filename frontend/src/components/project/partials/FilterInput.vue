@@ -240,6 +240,7 @@ const autocompleteResults = ref<any[]>([])
 						spellcheck="false"
 						v-model="filterQuery"
 						class="input"
+						:class="{'has-autocomplete-results': autocompleteResults.length > 0}"
 						ref="filterInput"
 					></textarea>
 					<div
@@ -258,7 +259,7 @@ const autocompleteResults = ref<any[]>([])
 			<template
 				v-slot:result="{ item }"
 			>
-				whoo {{ item }}
+				{{ item }}
 			</template>
 		</AutocompleteDropdown>
 	</div>
@@ -323,6 +324,10 @@ const autocompleteResults = ref<any[]>([])
 		-webkit-text-fill-color: transparent;
 		background: transparent !important;
 		resize: none;
+		
+		&.has-autocomplete-results {
+			border-radius: var(--input-radius) var(--input-radius) 0 0;
+		}
 	}
 
 	.filter-input-highlight {
