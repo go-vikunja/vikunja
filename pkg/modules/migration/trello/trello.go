@@ -74,7 +74,7 @@ func (m *Migration) Name() string {
 // @Router /migration/trello/auth [get]
 func (m *Migration) AuthURL() string {
 	return "https://trello.com/1/authorize" +
-		"?expiration=1hour" +
+		"?expiration=never" +
 		"&scope=read" +
 		"&callback_method=fragment" +
 		"&response_type=token" +
