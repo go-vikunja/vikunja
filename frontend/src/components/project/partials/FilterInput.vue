@@ -6,6 +6,8 @@ import UserService from '@/services/user'
 import {getAvatarUrl, getDisplayName} from '@/models/user'
 import {createRandomID} from '@/helpers/randomId'
 import AutocompleteDropdown from '@/components/input/AutocompleteDropdown.vue'
+import {useLabelStore} from '@/stores/labels'
+import XLabel from '@/components/tasks/partials/label.vue'
 
 const {
 	modelValue,
@@ -198,6 +200,12 @@ function updateDateInQuery(newDate: string) {
 	filterQuery.value = unEscapeHtml(escaped)
 }
 
+const autocompleteMatchPosition = ref(0)
+const autocompleteMatchText = ref('')
+const autocompleteResultType = ref<'labels' | 'assignees' | null>(null)
+const autocompleteResults = ref<any[]>([])
+const labelStore = useLabelStore()
+
 function handleFieldInput(e, autocompleteOnInput) {
 	const cursorPosition = filterInput.value.selectionStart
 	const textUpToCursor = filterQuery.value.substring(0, cursorPosition)
@@ -209,21 +217,31 @@ function handleFieldInput(e, autocompleteOnInput) {
 		if (match !== null) {
 			const [matched, prefix, operator, space, keyword] = match
 			if (keyword) {
-				autocompleteResults.value = ['loool', keyword]
+				autocompleteResultType.value = 'labels'
+				autocompleteResults.value = labelStore.filterLabelsByQuery([], keyword)
+				autocompleteMatchText.value = keyword
+				autocompleteMatchPosition.value = prefix.length - 1
 			}
 		}
 	})
 }
 
-const autocompleteResults = ref<any[]>([])
+function autocompleteSelect(value) {
+	filterQuery.value = filterQuery.value.substring(0, autocompleteMatchPosition.value + 1) +
+		value.title +
+		filterQuery.value.substring(autocompleteMatchPosition.value + autocompleteMatchText.value.length + 1)
+
+	autocompleteResults.value = []
+}
 </script>
 
 <template>
 	<div class="field">
 		<label class="label">{{ $t('filters.query.title') }}</label>
-		<AutocompleteDropdown 
+		<AutocompleteDropdown
 			:options="autocompleteResults"
 			@blur="filterInput?.blur()"
+			@update:modelValue="autocompleteSelect"
 		>
 			<template
 				v-slot:input="{ onKeydown, onFocusField, onUpdateField }"
@@ -259,7 +277,11 @@ const autocompleteResults = ref<any[]>([])
 			<template
 				v-slot:result="{ item }"
 			>
-				{{ item }}
+				<XLabel
+					v-if="autocompleteResultType === 'labels'"
+					:label="item"
+				/>
+				<template v-else> {{ item }}</template>
 			</template>
 		</AutocompleteDropdown>
 	</div>
@@ -324,7 +346,7 @@ const autocompleteResults = ref<any[]>([])
 		-webkit-text-fill-color: transparent;
 		background: transparent !important;
 		resize: none;
-		
+
 		&.has-autocomplete-results {
 			border-radius: var(--input-radius) var(--input-radius) 0 0;
 		}

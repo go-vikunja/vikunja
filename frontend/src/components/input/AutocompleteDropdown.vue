@@ -27,30 +27,6 @@ watch(
 
 const emit = defineEmits(['blur'])
 
-const placeholderText = computed(() => {
-	const value = (model.value || '').replace(/[\n\r\t]/gi, ' ')
-
-	if (state.value === 'unfocused') {
-		return value ? '' : props.suggestion
-	}
-
-	if (!value || !value.trim()) {
-		return props.suggestion
-	}
-
-	return lookahead()
-})
-
-const spacerText = computed(() => {
-	const value = (model.value || '').replace(/[\n\r\t]/gi, ' ')
-
-	if (!value || !value.trim()) {
-		return props.suggestion
-	}
-
-	return value
-})
-
 const props = withDefaults(defineProps<{
 	options: any[],
 	suggestion?: string,
@@ -161,14 +137,10 @@ function onUpdateField(e) {
 		<div class="entry-box">
 			<slot
 				name="input"
-				:spacerText
-				:placeholderText
 				:onUpdateField
 				:onFocusField
 				:onKeydown
 			>
-				<div class="spacer">{{ spacerText }}</div>
-				<div class="placeholder">{{ placeholderText }}</div>
 				<textarea class="field"
 						  @input="onUpdateField"
 						  @focus="onFocusField"
