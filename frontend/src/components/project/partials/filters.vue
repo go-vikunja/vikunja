@@ -43,7 +43,7 @@ import {useRoute} from 'vue-router'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
-import {transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
+import {FILTER_OPERATORS, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
 
 const props = defineProps({
 	hasTitle: {
@@ -78,8 +78,8 @@ watchDebounced(
 		const val = {...value}
 		val.filter = transformFilterStringFromApi(
 			val?.filter || '',
-			labelId => labelStore.getLabelById(labelId),
-			projectId => projectStore.projects.value[projectId] || null,
+			labelId => labelStore.getLabelById(labelId)?.title,
+			projectId => projectStore.projects.value[projectId]?.title || null,
 		)
 		params.value = val
 	},
@@ -96,9 +96,18 @@ function change() {
 		projectTitle => projectStore.searchProject(projectTitle)[0]?.id || null,
 	)
 	
+	let s = ''
+	
+	// When the filter does not contain any filter tokens, assume a simple search and redirect the input
+	const hasFilterQueries = FILTER_OPERATORS.find(o => filter.includes(o)) || false
+	if (!hasFilterQueries) {
+		s = filter
+	}
+	
 	modelValue.value = {
 		...params.value,
-		filter,
+		filter: s === '' ? filter : '',
+		s,
 	}
 }
 </script>
