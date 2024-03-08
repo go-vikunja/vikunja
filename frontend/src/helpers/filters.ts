@@ -66,6 +66,11 @@ export function transformFilterStringForApi(
 	labelResolver: (title: string) => number | null,
 	projectResolver: (title: string) => number | null,
 ): string {
+	
+	if (filter.trim() === '') {
+		return ''
+	}
+	
 	// Transform labels to ids
 	LABEL_FIELDS.forEach(field => {
 		const pattern = getFieldPattern(field)
@@ -110,6 +115,11 @@ export function transformFilterStringFromApi(
 	labelResolver: (id: number) => string | null,
 	projectResolver: (id: number) => string | null,
 ): string {
+	
+	if (filter.trim() === '') {
+		return ''
+	}
+	
 	// Transform all attributes from snake case
 	AVAILABLE_FILTER_FIELDS.forEach(f => {
 		filter = filter.replace(snakeCase(f), f)
