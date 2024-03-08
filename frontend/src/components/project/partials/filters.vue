@@ -4,19 +4,20 @@
 		:title="hasTitle ? $t('filters.title') : ''"
 		role="search"
 	>
+		<FilterInput 
+			v-model="params.filter"
+			:project-id="projectId"
+			@blur="change()"
+		/>
+		
 		<div class="field is-flex is-flex-direction-column">
 			<Fancycheckbox
 				v-model="params.filter_include_nulls"
-				@update:modelValue="change()"
+				@blur="change()"
 			>
 				{{ $t('filters.attributes.includeNulls') }}
 			</Fancycheckbox>
 		</div>
-		
-		<FilterInput 
-			v-model="params.filter"
-			:project-id="projectId"
-		/>
 		
 		<template #footer>
 			<x-button
@@ -37,7 +38,6 @@ export const ALPHABETICAL_SORT = 'title'
 import {computed, ref} from 'vue'
 import {watchDebounced} from '@vueuse/core'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
-import {objectToSnakeCase} from '@/helpers/case'
 import FilterInput from '@/components/project/partials/FilterInput.vue'
 import {useRoute} from 'vue-router'
 import type {TaskFilterParams} from '@/services/taskCollection'
@@ -75,7 +75,7 @@ const params = ref<TaskFilterParams>({
 watchDebounced(
 	() => modelValue.value,
 	(value: TaskFilterParams) => {
-		const val = value
+		const val = {...value}
 		val.filter = transformFilterStringFromApi(
 			val?.filter || '',
 			labelId => labelStore.getLabelById(labelId),

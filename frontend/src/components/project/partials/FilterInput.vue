@@ -29,7 +29,7 @@ const {
 	projectId?: number,
 }>()
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'blur'])
 
 const filterQuery = ref<string>('')
 const {
@@ -257,6 +257,8 @@ function autocompleteSelect(value) {
 						class="input"
 						:class="{'has-autocomplete-results': autocompleteResults.length > 0}"
 						ref="filterInput"
+						:placeholder="$t('filters.query.placeholder')"
+						@blur="e => emit('blur', e)"
 					></textarea>
 					<div
 						class="filter-input-highlight"
@@ -344,10 +346,15 @@ function autocompleteSelect(value) {
 
 	textarea {
 		position: absolute;
-		text-fill-color: transparent;
-		-webkit-text-fill-color: transparent;
 		background: transparent !important;
 		resize: none;
+		text-fill-color: transparent;
+		-webkit-text-fill-color: transparent;
+		
+		&::placeholder {
+			text-fill-color: var(--input-placeholder-color);
+			-webkit-text-fill-color: var(--input-placeholder-color);
+		}
 
 		&.has-autocomplete-results {
 			border-radius: var(--input-radius) var(--input-radius) 0 0;

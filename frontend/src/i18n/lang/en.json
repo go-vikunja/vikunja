@@ -418,7 +418,8 @@
       "success": "The filter was saved successfully."
     },
     "query": {
-      "title": "Query"
+      "title": "Query",
+      "placeholder": "Type a search or filter query…"
     }
   },
   "migrate": {
