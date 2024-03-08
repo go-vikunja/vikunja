@@ -14,11 +14,13 @@ import {useProjectStore} from '@/stores/projects'
 
 const {
 	projectId,
+	modelValue,
 } = defineProps<{
 	projectId?: number,
+	modelValue: string,
 }>()
 
-const model = defineModel<string>()
+const emit = defineEmits(['update:modelValue'])
 
 const filterQuery = ref<string>('')
 const {
@@ -27,11 +29,20 @@ const {
 } = useAutoHeightTextarea(filterQuery)
 
 watch(
-	() => model.value,
+	() => modelValue,
 	() => {
-		filterQuery.value = model.value
+		filterQuery.value = modelValue
 	},
 	{immediate: true},
+)
+
+watch(
+	() => filterQuery.value,
+	() => {
+		if (filterQuery.value !== modelValue) {
+			emit('update:modelValue', filterQuery.value)
+		}
+	},
 )
 
 const userService = new UserService()
