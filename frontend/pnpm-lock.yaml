@@ -29,8 +29,8 @@ dependencies:
     specifier: 2.2.0
     version: 2.2.0(dayjs@1.11.10)(vue@3.4.21)
   '@intlify/unplugin-vue-i18n':
-    specifier: 3.0.0
-    version: 3.0.0(rollup@4.12.1)(vue-i18n@9.10.1)
+    specifier: 3.0.1
+    version: 3.0.1(rollup@4.12.1)(vue-i18n@9.10.1)
   '@kyvg/vue3-notification':
     specifier: 3.2.0
     version: 3.2.0(vue@3.4.21)
@@ -3843,8 +3843,8 @@ packages:
     engines: {node: '>= 16'}
     dev: false
 
-  /@intlify/unplugin-vue-i18n@3.0.0(rollup@4.12.1)(vue-i18n@9.10.1):
-    resolution: {integrity: sha512-xyZCWnwr3aPYtQsLBEc9gXy2DVc0qJoRPjc3ntSIsvVvERSmiRYw1w0VGiltuTveNleCBHhJ8/gJIxIVqj1olA==}
+  /@intlify/unplugin-vue-i18n@3.0.1(rollup@4.12.1)(vue-i18n@9.10.1):
+    resolution: {integrity: sha512-q1zJhA/WpoLBzAAuKA5/AEp0e+bMOM10ll/HxT4g1VAw/9JhC4TTobP9KobKH90JMZ4U2daLFlYQfKNd29lpqw==}
     engines: {node: '>= 14.16'}
     peerDependencies:
       petite-vue-i18n: '*'
