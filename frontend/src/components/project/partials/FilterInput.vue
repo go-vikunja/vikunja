@@ -13,11 +13,11 @@ import ProjectUserService from '@/services/projectUsers'
 import {useProjectStore} from '@/stores/projects'
 
 const {
-	projectId,
 	modelValue,
+	projectId,
 } = defineProps<{
-	projectId?: number,
 	modelValue: string,
+	projectId?: number,
 }>()
 
 const emit = defineEmits(['update:modelValue'])

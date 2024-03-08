@@ -34,29 +34,24 @@ import {computed, ref, watch} from 'vue'
 
 import Filters from '@/components/project/partials/filters.vue'
 
-import {getDefaultParams} from '@/composables/useTaskList'
+import {getDefaultTaskFilterParams, type TaskFilterParams} from '@/services/taskCollection'
 
-const props = defineProps({
-	modelValue: {
-		required: true,
-	},
-})
-const emit = defineEmits(['update:modelValue'])
+const modelValue = defineModel<TaskFilterParams>()
 
-const value = computed({
+const value = computed<TaskFilterParams>({
 	get() {
-		return props.modelValue
+		return modelValue.value
 	},
 	set(value) {
-		if(props.modelValue === value) {
+		if(modelValue === value) {
 			return
 		}
-		emit('update:modelValue', value)
+		modelValue.value = value
 	},
 })
 
 watch(
-	() => props.modelValue,
+	() => modelValue,
 	(modelValue) => {
 		value.value = modelValue
 	},
@@ -66,15 +61,12 @@ watch(
 const hasFilters = computed(() => {
 	// this.value also contains the page parameter which we don't want to include in filters
 	// eslint-disable-next-line no-unused-vars
-	const {filter_by, filter_value, filter_comparator, filter_concat, s} = value.value
-	const def = {...getDefaultParams()}
+	const {filter, s} = value.value
+	const def = {...getDefaultTaskFilterParams()}
 
-	const params = {filter_by, filter_value, filter_comparator, filter_concat, s}
+	const params = {filter, s}
 	const defaultParams = {
-		filter_by: def.filter_by,
-		filter_value: def.filter_value,
-		filter_comparator: def.filter_comparator,
-		filter_concat: def.filter_concat,
+		filter: def.filter,
 		s: s ? def.s : undefined,
 	}
 
@@ -84,7 +76,7 @@ const hasFilters = computed(() => {
 const modalOpen = ref(false)
 
 function clearFilters() {
-	value.value = {...getDefaultParams()}
+	value.value = {...getDefaultTaskFilterParams()}
 }
 </script>
 
