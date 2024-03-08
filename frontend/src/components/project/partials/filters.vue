@@ -17,6 +17,15 @@
 			v-model="params.filter"
 			:project-id="projectId"
 		/>
+		
+		<template #footer>
+			<x-button
+				variant="primary"
+				@click.prevent.stop="change()"
+			>
+				{{ $t('filters.showResults') }}
+			</x-button>
+		</template>
 	</card>
 </template>
 

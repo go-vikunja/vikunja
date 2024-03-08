@@ -385,6 +385,7 @@
   "filters": {
     "title": "Filters",
     "clear": "Clear Filters",
+    "showResults": "Show results",
     "attributes": {
       "title": "Title",
       "titlePlaceholder": "The saved filter title goes here…",
