@@ -1,7 +1,7 @@
 import {computed, ref, watch} from 'vue'
 import type dayjs from 'dayjs'
 
-import {i18n, type SupportedLocale, type ISOLanguage} from '@/i18n'
+import {i18n, type ISOLanguage, type SupportedLocale} from '@/i18n'
 
 export const DAYJS_LOCALE_MAPPING = {
 	'de-de': 'de',
@@ -22,6 +22,7 @@ export const DAYJS_LOCALE_MAPPING = {
 	'hu-HU': 'hu',
 	'ar-SA': 'ar-sa',
 	'sl-SI': 'sl',
+	'pt-BR': 'pt',
 } as Record<SupportedLocale, ISOLanguage>
 
 export const DAYJS_LANGUAGE_IMPORTS = {
@@ -36,13 +37,14 @@ export const DAYJS_LANGUAGE_IMPORTS = {
 	'nl-nl': () => import('dayjs/locale/nl'),
 	'pt-pt': () => import('dayjs/locale/pt'),
 	'zh-cn': () => import('dayjs/locale/zh-cn'),
-	'no-no':  () => import('dayjs/locale/nn'),
-	'es-es':  () => import('dayjs/locale/es'),
-	'da-dk':  () => import('dayjs/locale/da'),
-	'ja-jp':  () => import('dayjs/locale/ja'),
-	'hu-hu':  () => import('dayjs/locale/hu'),
-	'ar-sa':  () => import('dayjs/locale/ar-sa'),
-	'sl-si':  () => import('dayjs/locale/sl'),
+	'no-no': () => import('dayjs/locale/nn'),
+	'es-es': () => import('dayjs/locale/es'),
+	'da-dk': () => import('dayjs/locale/da'),
+	'ja-jp': () => import('dayjs/locale/ja'),
+	'hu-hu': () => import('dayjs/locale/hu'),
+	'ar-sa': () => import('dayjs/locale/ar-sa'),
+	'sl-si': () => import('dayjs/locale/sl'),
+	'pt-br': () => import('dayjs/locale/pt-br'),
 } as Record<SupportedLocale, () => Promise<ILocale>>
 
 export function useDayjsLanguageSync(dayjsGlobal: typeof dayjs) {
