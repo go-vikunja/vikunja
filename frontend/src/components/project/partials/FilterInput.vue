@@ -10,6 +10,7 @@ import {useLabelStore} from '@/stores/labels'
 import XLabel from '@/components/tasks/partials/label.vue'
 import User from '@/components/misc/user.vue'
 import ProjectUserService from '@/services/projectUsers'
+import {useProjectStore} from '@/stores/projects'
 
 const {
 	projectId,
@@ -55,6 +56,7 @@ const labelFields = [
 const autocompleteFields = [
 	...labelFields,
 	...assigneeFields,
+	'project',
 ]
 
 const availableFilterFields = [
@@ -212,9 +214,10 @@ function updateDateInQuery(newDate: string) {
 
 const autocompleteMatchPosition = ref(0)
 const autocompleteMatchText = ref('')
-const autocompleteResultType = ref<'labels' | 'assignees' | null>(null)
+const autocompleteResultType = ref<'labels' | 'assignees' | 'projects' | null>(null)
 const autocompleteResults = ref<any[]>([])
 const labelStore = useLabelStore()
+const projectStore = useProjectStore()
 
 function handleFieldInput(e, autocompleteOnInput) {
 	const cursorPosition = filterInput.value.selectionStart
@@ -240,6 +243,10 @@ function handleFieldInput(e, autocompleteOnInput) {
 						userService.getAll({}, {s: keyword})
 							.then(users => autocompleteResults.value = users.length > 1 ? users : [])
 					}
+				}
+				if (!projectId && matched.startsWith('project')) {
+					autocompleteResultType.value = 'projects'
+					autocompleteResults.value = projectStore.searchProject(keyword)
 				}
 				autocompleteMatchText.value = keyword
 				autocompleteMatchPosition.value = prefix.length - 1
@@ -310,7 +317,7 @@ function autocompleteSelect(value) {
 					:user="item"
 					:avatar-size="25"
 				/>
-				<template v-else> {{ item }}</template>
+				<template v-else> {{ item.title }}</template>
 			</template>
 		</AutocompleteDropdown>
 	</div>
