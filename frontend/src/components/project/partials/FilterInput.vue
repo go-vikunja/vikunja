@@ -11,6 +11,15 @@ import XLabel from '@/components/tasks/partials/label.vue'
 import User from '@/components/misc/user.vue'
 import ProjectUserService from '@/services/projectUsers'
 import {useProjectStore} from '@/stores/projects'
+import {
+	DATE_FIELDS,
+	ASSIGNEE_FIELDS,
+	AUTOCOMPLETE_FIELDS,
+	AVAILABLE_FILTER_FIELDS,
+	FILTER_JOIN_OPERATOR,
+	FILTER_OPERATORS,
+	FILTER_OPERATORS_REGEX,
+} from '@/helpers/filters'
 
 const {
 	modelValue,
@@ -48,60 +57,6 @@ watch(
 const userService = new UserService()
 const projectUserService = new ProjectUserService()
 
-const dateFields = [
-	'dueDate',
-	'startDate',
-	'endDate',
-	'doneAt',
-	'reminders',
-]
-
-const assigneeFields = [
-	'assignees',
-]
-
-const labelFields = [
-	'labels',
-]
-
-const autocompleteFields = [
-	...labelFields,
-	...assigneeFields,
-	'project',
-]
-
-const availableFilterFields = [
-	'done',
-	'priority',
-	'usePriority',
-	'percentDone',
-	...dateFields,
-	...assigneeFields,
-	...labelFields,
-]
-
-const filterOperators = [
-	'!=',
-	'=',
-	'>',
-	'>=',
-	'<',
-	'<=',
-	'like',
-	'in',
-	'?=',
-]
-
-const filterJoinOperators = [
-	'&&',
-	'||',
-	'(',
-	')',
-]
-
-const FILTER_OPERATORS_REGEX = '(&lt;|&gt;|&lt;=|&gt;=|=|!=)'
-const FILTER_JOIN_OPERATORS_REGEX = '(&amp;&amp;|\|\||\(|\))'
-
 function escapeHtml(unsafe: string): string {
 	return unsafe
 		.replace(/&/g, '&amp;')
@@ -122,7 +77,7 @@ function unEscapeHtml(unsafe: string): string {
 
 const highlightedFilterQuery = computed(() => {
 	let highlighted = escapeHtml(filterQuery.value)
-	dateFields
+	DATE_FIELDS
 		.forEach(o => {
 			const pattern = new RegExp(o + '(\\s*)' + FILTER_OPERATORS_REGEX + '(\\s*)([\'"]?)([^\'"\\s]+\\1?)?', 'ig')
 			highlighted = highlighted.replaceAll(pattern, (match, spacesBefore, token, spacesAfter, start, value, position) => {
@@ -133,7 +88,7 @@ const highlightedFilterQuery = computed(() => {
 				return `${o}${spacesBefore}${token}${spacesAfter}<button class="is-primary filter-query__date_value" data-position="${position}">${value}</button><span class="filter-query__date_value_placeholder">${value}</span>`
 			})
 		})
-	assigneeFields
+	ASSIGNEE_FIELDS
 		.forEach(f => {
 			const pattern = new RegExp(f + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*([\'"]?)([^\'"\\s]+\\1?)?', 'ig')
 			highlighted = highlighted.replaceAll(pattern, (match, token, start, value) => {
@@ -169,17 +124,17 @@ const highlightedFilterQuery = computed(() => {
 				return `${f} ${token} <span class="filter-query__assignee_value" id="${id}">${value}<span>`
 			})
 		})
-	filterOperators
+	FILTER_OPERATORS
 		.map(o => ` ${escapeHtml(o)} `)
 		.forEach(o => {
 			highlighted = highlighted.replaceAll(o, `<span class="filter-query__operator">${o}</span>`)
 		})
-	filterJoinOperators
+	FILTER_JOIN_OPERATOR
 		.map(o => escapeHtml(o))
 		.forEach(o => {
 			highlighted = highlighted.replaceAll(o, `<span class="filter-query__join-operator">${o}</span>`)
 		})
-	availableFilterFields.forEach(f => {
+	AVAILABLE_FILTER_FIELDS.forEach(f => {
 		highlighted = highlighted.replaceAll(f, `<span class="filter-query__field">${f}</span>`)
 	})
 	return highlighted
@@ -234,7 +189,7 @@ function handleFieldInput(e, autocompleteOnInput) {
 	const cursorPosition = filterInput.value.selectionStart
 	const textUpToCursor = filterQuery.value.substring(0, cursorPosition)
 
-	autocompleteFields.forEach(field => {
+	AUTOCOMPLETE_FIELDS.forEach(field => {
 		const pattern = new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&\|\(\)]+\\1?)?$', 'ig')
 		const match = pattern.exec(textUpToCursor)
 

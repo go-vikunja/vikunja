@@ -41,6 +41,9 @@ import {objectToSnakeCase} from '@/helpers/case'
 import FilterInput from '@/components/project/partials/FilterInput.vue'
 import {useRoute} from 'vue-router'
 import type {TaskFilterParams} from '@/services/taskCollection'
+import {useLabelStore} from '@/stores/labels'
+import {useProjectStore} from '@/stores/projects'
+import {transformFilterStringForApi} from '@/helpers/filters'
 
 const props = defineProps({
 	hasTitle: {
@@ -78,8 +81,21 @@ watchDebounced(
 	},
 	{immediate: true, debounce: 500, maxWait: 1000},
 )
+
+const labelStore = useLabelStore()
+const projectStore = useProjectStore()
+
 function change() {
-	modelValue.value = params.value
+	const filter = transformFilterStringForApi(
+		params.value.filter,
+		labelTitle => labelStore.filterLabelsByQuery([], labelTitle)[0]?.id || null,
+		projectTitle => projectStore.searchProject(projectTitle)[0]?.id || null,
+	)
+	
+	modelValue.value = {
+		...params.value,
+		filter,
+	}
 }
 </script>
 
