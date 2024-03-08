@@ -1,4 +1,5 @@
 import {snakeCase} from 'snake-case'
+import {camelCase} from 'camel-case'
 
 export const DATE_FIELDS = [
 	'dueDate',
@@ -56,6 +57,10 @@ export const FILTER_JOIN_OPERATOR = [
 
 export const FILTER_OPERATORS_REGEX = '(&lt;|&gt;|&lt;=|&gt;=|=|!=)'
 
+function getFieldPattern(field: string): RegExp {
+	return new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&\|\(\)]+\\1?)?', 'ig')
+}
+
 export function transformFilterStringForApi(
 	filter: string,
 	labelResolver: (title: string) => number | null,
@@ -63,7 +68,7 @@ export function transformFilterStringForApi(
 ): string {
 	// Transform labels to ids
 	LABEL_FIELDS.forEach(field => {
-		const pattern = new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&\|\(\)]+\\1?)?', 'ig')
+		const pattern = getFieldPattern(field)
 
 		let match: RegExpExecArray | null
 		while ((match = pattern.exec(filter)) !== null) {
@@ -78,7 +83,7 @@ export function transformFilterStringForApi(
 	})
 	// Transform projects to ids
 	PROJECT_FIELDS.forEach(field => {
-		const pattern = new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&\|\(\)]+\\1?)?', 'ig')
+		const pattern = getFieldPattern(field)
 
 		let match: RegExpExecArray | null
 		while ((match = pattern.exec(filter)) !== null) {
@@ -95,6 +100,51 @@ export function transformFilterStringForApi(
 	// Transform all attributes to snake case
 	AVAILABLE_FILTER_FIELDS.forEach(f => {
 		filter = filter.replace(f, snakeCase(f))
+	})
+
+	return filter
+}
+
+export function transformFilterStringFromApi(
+	filter: string,
+	labelResolver: (id: number) => string | null,
+	projectResolver: (id: number) => string | null,
+): string {
+	// Transform all attributes from snake case
+	AVAILABLE_FILTER_FIELDS.forEach(f => {
+		filter = filter.replace(snakeCase(f), f)
+	})
+	
+	// Transform labels to their titles
+	LABEL_FIELDS.forEach(field => {
+		const pattern = getFieldPattern(field)
+
+		let match: RegExpExecArray | null
+		while ((match = pattern.exec(filter)) !== null) {
+			const [matched, prefix, operator, space, keyword] = match
+			if (keyword) {
+				const labelTitle = labelResolver(Number(keyword.trim()))
+				if (labelTitle !== null) {
+					filter = filter.replace(keyword, labelTitle)
+				}
+			}
+		}
+	})
+
+	// Transform projects to ids
+	PROJECT_FIELDS.forEach(field => {
+		const pattern = getFieldPattern(field)
+
+		let match: RegExpExecArray | null
+		while ((match = pattern.exec(filter)) !== null) {
+			const [matched, prefix, operator, space, keyword] = match
+			if (keyword) {
+				const project = projectResolver(Number(keyword.trim()))
+				if (project !== null) {
+					filter = filter.replace(keyword, project)
+				}
+			}
+		}
 	})
 
 	return filter

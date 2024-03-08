@@ -43,7 +43,7 @@ import {useRoute} from 'vue-router'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
-import {transformFilterStringForApi} from '@/helpers/filters'
+import {transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
 
 const props = defineProps({
 	hasTitle: {
@@ -52,7 +52,7 @@ const props = defineProps({
 	},
 })
 
-const modelValue = defineModel()
+const modelValue = defineModel<TaskFilterParams>()
 
 const route = useRoute()
 const projectId = computed(() => {
@@ -72,12 +72,16 @@ const params = ref<TaskFilterParams>({
 })
 
 // Using watchDebounced to prevent the filter re-triggering itself.
-// FIXME: Only here until this whole component changes a lot with the new filter syntax.
 watchDebounced(
-	modelValue,
-	(value) => {
-		// FIXME: filters should only be converted to snake case in the last moment
-		params.value = objectToSnakeCase(value)
+	() => modelValue.value,
+	(value: TaskFilterParams) => {
+		const val = value
+		val.filter = transformFilterStringFromApi(
+			val?.filter || '',
+			labelId => labelStore.getLabelById(labelId),
+			projectId => projectStore.projects.value[projectId] || null,
+		)
+		params.value = val
 	},
 	{immediate: true, debounce: 500, maxWait: 1000},
 )
