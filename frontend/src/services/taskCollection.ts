@@ -3,15 +3,12 @@ import TaskModel from '@/models/task'
 
 import type {ITask} from '@/modelTypes/ITask'
 
-// FIXME: unite with other filter params types
-export interface GetAllTasksParams {
+export interface TaskFilterParams {
 	sort_by: ('start_date' | 'done' | 'id')[],
-	order_by: ('asc' | 'asc' | 'desc')[],
-	filter_by: 'start_date'[],
-	filter_comparator: ('greater_equals' | 'less_equals')[],
-	filter_value: [string, string] // [dateFrom, dateTo],
-	filter_concat: 'and',
+	order_by: ('asc' | 'desc')[],
+	filter: string,
 	filter_include_nulls: boolean,
+	s: string,
 }
 
 export default class TaskCollectionService extends AbstractService<ITask> {
