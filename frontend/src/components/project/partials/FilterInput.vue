@@ -8,28 +8,33 @@ import {createRandomID} from '@/helpers/randomId'
 import AutocompleteDropdown from '@/components/input/AutocompleteDropdown.vue'
 import {useLabelStore} from '@/stores/labels'
 import XLabel from '@/components/tasks/partials/label.vue'
+import User from '@/components/misc/user.vue'
+import ProjectUserService from '@/services/projectUsers'
 
 const {
-	modelValue,
+	projectId,
 } = defineProps<{
-	modelValue: string,
+	projectId?: number,
 }>()
 
-const filterQuery = ref('')
+const model = defineModel<string>()
+
+const filterQuery = ref<string>('')
 const {
 	textarea: filterInput,
 	height,
 } = useAutoHeightTextarea(filterQuery)
 
 watch(
-	() => modelValue,
+	() => model.value,
 	() => {
-		filterQuery.value = modelValue
+		filterQuery.value = model.value
 	},
 	{immediate: true},
 )
 
 const userService = new UserService()
+const projectUserService = new ProjectUserService()
 
 const dateFields = [
 	'dueDate',
@@ -45,6 +50,11 @@ const assigneeFields = [
 
 const labelFields = [
 	'labels',
+]
+
+const autocompleteFields = [
+	...labelFields,
+	...assigneeFields,
 ]
 
 const availableFilterFields = [
@@ -210,15 +220,27 @@ function handleFieldInput(e, autocompleteOnInput) {
 	const cursorPosition = filterInput.value.selectionStart
 	const textUpToCursor = filterQuery.value.substring(0, cursorPosition)
 
-	labelFields.forEach(l => {
-		const pattern = new RegExp('(' + l + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&\|\(\)]+\\1?)?$', 'ig')
+	autocompleteFields.forEach(field => {
+		const pattern = new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&\|\(\)]+\\1?)?$', 'ig')
 		const match = pattern.exec(textUpToCursor)
 
 		if (match !== null) {
 			const [matched, prefix, operator, space, keyword] = match
 			if (keyword) {
-				autocompleteResultType.value = 'labels'
-				autocompleteResults.value = labelStore.filterLabelsByQuery([], keyword)
+				if (matched.startsWith('label')) {
+					autocompleteResultType.value = 'labels'
+					autocompleteResults.value = labelStore.filterLabelsByQuery([], keyword)
+				}
+				if (matched.startsWith('assignee')) {
+					autocompleteResultType.value = 'assignees'
+					if (projectId) {
+						projectUserService.getAll({projectId}, {s: keyword})
+							.then(users => autocompleteResults.value = users.length > 1 ? users : [])
+					} else {
+						userService.getAll({}, {s: keyword})
+							.then(users => autocompleteResults.value = users.length > 1 ? users : [])
+					}
+				}
 				autocompleteMatchText.value = keyword
 				autocompleteMatchPosition.value = prefix.length - 1
 			}
@@ -228,7 +250,9 @@ function handleFieldInput(e, autocompleteOnInput) {
 
 function autocompleteSelect(value) {
 	filterQuery.value = filterQuery.value.substring(0, autocompleteMatchPosition.value + 1) +
-		value.title +
+		(autocompleteResultType.value === 'labels'
+			? value.title
+			: value.username) +
 		filterQuery.value.substring(autocompleteMatchPosition.value + autocompleteMatchText.value.length + 1)
 
 	autocompleteResults.value = []
@@ -280,6 +304,11 @@ function autocompleteSelect(value) {
 				<XLabel
 					v-if="autocompleteResultType === 'labels'"
 					:label="item"
+				/>
+				<User
+					v-else-if="autocompleteResultType === 'assignees'"
+					:user="item"
+					:avatar-size="25"
 				/>
 				<template v-else> {{ item }}</template>
 			</template>

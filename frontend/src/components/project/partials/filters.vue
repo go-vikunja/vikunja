@@ -31,7 +31,10 @@
 			</Fancycheckbox>
 		</div>
 		
-		<FilterInput v-model="filterQuery"/>
+		<FilterInput 
+			v-model="filterQuery"
+			:project-id="projectId"
+		/>
 		
 		<div class="field">
 			<label class="label">{{ $t('misc.search') }}</label>
@@ -231,6 +234,7 @@ import ProjectService from '@/services/project'
 // FIXME: do not use this here for now. instead create new version from DEFAULT_PARAMS
 import {getDefaultParams} from '@/composables/useTaskList'
 import FilterInput from '@/components/project/partials/FilterInput.vue'
+import {useRoute} from 'vue-router'
 
 const props = defineProps({
 	modelValue: {
@@ -243,6 +247,15 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
+
+const route = useRoute()
+const projectId = computed(() => {
+	if (route.name?.startsWith('project.')) {
+		return Number(route.params.projectId)
+	}
+	
+	return undefined
+})
 
 // FIXME: merge with DEFAULT_PARAMS in taskProject.js
 const DEFAULT_PARAMS = {
