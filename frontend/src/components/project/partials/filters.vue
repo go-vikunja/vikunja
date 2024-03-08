@@ -2,6 +2,7 @@
 	<card
 		class="filters has-overflow"
 		:title="hasTitle ? $t('filters.title') : ''"
+		role="search"
 	>
 		<div class="field is-flex is-flex-direction-column">
 			<Fancycheckbox
