@@ -27,7 +27,7 @@
 		>
 			<x-button
 				variant="primary"
-				@click.prevent.stop="change()"
+				@click.prevent.stop="changeAndEmitButton"
 			>
 				{{ $t('filters.showResults') }}
 			</x-button>
@@ -61,7 +61,7 @@ const  {
 	modelValue: TaskFilterParams,
 }>()
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'showResultsButtonClicked'])
 
 const route = useRoute()
 const projectId = computed(() => {
@@ -124,5 +124,10 @@ function change() {
 	}
 
 	emit('update:modelValue', newParams)
+}
+
+function changeAndEmitButton() {
+	change()
+	emit('showResultsButtonClicked')
 }
 </script>

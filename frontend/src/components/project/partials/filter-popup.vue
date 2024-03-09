@@ -26,6 +26,7 @@
 			:has-title="true"
 			class="filter-popup"
 			@update:modelValue="emitChanges"
+			@showResultsButtonClicked="() => modalOpen = false"
 		/>
 	</modal>
 </template>
