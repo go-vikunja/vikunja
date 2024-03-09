@@ -51,7 +51,7 @@ In general, this involves the following steps at a minimum:
 - Make sure the required scopes (`openid profile email` are the default scopes used by Vikunja) are supported
 - Optional: configure an additional scope for automatic team assignment, see below for details
 
-More detailled instructions for various different identity providers can be [found here]({{< ref "openid-examples.md">}})
+More detailed instructions for various different identity providers can be [found here]({{< ref "openid-examples.md">}})
 
 ### Step 2: Configure Vikunja
 
@@ -64,13 +64,17 @@ auth:
     redirecturl: https://vikunja.mydomain.com/auth/openid/  <---- slash at the end is important
     providers:
       - name: <provider-name>
-        authurl: <auth-url>
+        authurl: <auth-url>		<----- Used for OIDC Discovery, usually the issuer 
         clientid: <vikunja client-id>
         clientsecret: <vikunja client-secret>
         scope: openid profile email
 ```
 
-The values for `authurl` can be obtained from the Metadata of your provider, while `clientid` and `clientsecret` are obtained when configuring the client.
+The value for `authurl` can be obtained from the metadata of your provider.
+Note that the `authurl` is used for [OIDC Discovery](https://openid.net/specs/openid-connect-discovery-1_0.html).
+Typically, you'll want to use the `issuer` URL as found in the provider metadata.
+
+The values for `clientid` and `clientsecret` are typically obtained when configuring the client.
 The scope usually doesn't need to be specified or changed, unless you want to configure the automatic team assignment.
 
 Optionally it is possible to disable local authentication and therefore forcing users to login via OpenID connect:
