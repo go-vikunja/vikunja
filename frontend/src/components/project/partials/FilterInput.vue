@@ -96,32 +96,7 @@ const highlightedFilterQuery = computed(() => {
 					value = ''
 				}
 
-				const id = createRandomID(32)
-
-				userService.getAll({}, {s: value}).then(users => {
-					if (users.length > 0) {
-						const displayName = getDisplayName(users[0])
-						const nameTag = document.createElement('span')
-						nameTag.innerText = displayName
-
-						const avatar = document.createElement('img')
-						avatar.src = getAvatarUrl(users[0], 20)
-						avatar.height = 20
-						avatar.width = 20
-						avatar.alt = displayName
-
-						// TODO: caching
-
-						nextTick(() => {
-							const assigneeValue = document.getElementById(id)
-							assigneeValue.innerText = ''
-							assigneeValue?.appendChild(avatar)
-							assigneeValue?.appendChild(nameTag)
-						})
-					}
-				})
-
-				return `${f} ${token} <span class="filter-query__assignee_value" id="${id}">${value}<span>`
+				return `${f} ${token} <span class="filter-query__assignee_value">${value}<span>`
 			})
 		})
 	FILTER_OPERATORS
@@ -312,16 +287,9 @@ function autocompleteSelect(value) {
 		}
 
 		&.filter-query__assignee_value {
-			padding: .125rem .25rem;
 			border-radius: $radius;
 			background-color: var(--grey-200);
 			color: var(--grey-700);
-			display: inline-flex;
-			align-items: center;
-
-			> img {
-				margin-right: .25rem;
-			}
 		}
 	}
 
