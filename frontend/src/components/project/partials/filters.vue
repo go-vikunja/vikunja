@@ -21,7 +21,7 @@
 		
 		<FilterInputDocs/>
 		
-		<template #footer>
+		<template v-if="hasFooter" #footer>
 			<x-button
 				variant="primary"
 				@click.prevent.stop="change()"
@@ -52,6 +52,10 @@ const props = defineProps({
 	hasTitle: {
 		type: Boolean,
 		default: false,
+	},
+	hasFooter: {
+		type: Boolean,
+		default: true,
 	},
 })
 
