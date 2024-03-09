@@ -19,6 +19,8 @@
 			</Fancycheckbox>
 		</div>
 		
+		<FilterInputDocs/>
+		
 		<template #footer>
 			<x-button
 				variant="primary"
@@ -44,6 +46,7 @@ import type {TaskFilterParams} from '@/services/taskCollection'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
 import {FILTER_OPERATORS, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
+import FilterInputDocs from '@/components/project/partials/FilterInputDocs.vue'
 
 const props = defineProps({
 	hasTitle: {

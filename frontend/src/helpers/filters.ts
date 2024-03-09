@@ -1,5 +1,4 @@
 import {snakeCase} from 'snake-case'
-import {camelCase} from 'camel-case'
 
 export const DATE_FIELDS = [
 	'dueDate',
