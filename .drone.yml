@@ -3,6 +3,11 @@ kind: pipeline
 type: docker
 name: build-and-test
 
+trigger:
+  event:
+    exclude:
+      - cron
+
 workspace:
   base: /go
   path: src/code.vikunja.io/api
@@ -528,6 +533,9 @@ trigger:
   ref:
     - refs/heads/main
     - "refs/tags/**"
+  event:
+    exclude:
+      - cron
 
 steps:
   # Needed to get the versions right as they depend on tags
@@ -808,6 +816,9 @@ trigger:
   ref:
     - refs/heads/main
     - "refs/tags/**"
+  event:
+    exclude:
+      - cron
 
 steps:
   - name: fetch-tags
@@ -1145,6 +1156,9 @@ trigger:
   ref:
     - refs/heads/main
     - "refs/tags/**"
+  event:
+    exclude:
+      - cron
 
 steps:
   - name: fetch-tags
@@ -1360,6 +1374,9 @@ trigger:
   ref:
     - refs/heads/main
     - "refs/tags/**"
+  event:
+    exclude:
+      - cron
 
 depends_on:
   - build-and-test
@@ -1384,6 +1401,6 @@ steps:
         - failure
 ---
 kind: signature
-hmac: 008b86263a8d03806da907c128a837a380901f1a2190a658c22d4e06cadc1b64
+hmac: a569410ea13ad83c15c7606ed44b17b6bac0eb66d668344dfbf008c9448b4af5
 
 ...
