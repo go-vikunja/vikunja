@@ -249,15 +249,17 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 						Title: "Test Card 2",
 						Description: `
 
-## Checkproject 1
+<h2> Checkproject 1</h2>
 
-* [ ] Pending Task
-* [x] Completed Task
+<ul data-type="taskList">
+<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>Pending Task</p></div></li>
+<li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>Completed Task</p></div></li></ul>
 
-## Checkproject 2
+<h2> Checkproject 2</h2>
 
-* [ ] Pending Task
-* [ ] Another Pending Task`,
+<ul data-type="taskList">
+<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>Pending Task</p></div></li>
+<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>Another Pending Task</p></div></li></ul>`,
 						BucketID:       1,
 						KanbanPosition: 124,
 					},

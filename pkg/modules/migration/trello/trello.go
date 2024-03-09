@@ -248,17 +248,17 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullV
 
 				// Checklists (as markdown in description)
 				for _, checklist := range card.Checklists {
-					task.Description += "\n\n## " + checklist.Name + "\n"
+					task.Description += "\n\n<h2> " + checklist.Name + "</h2>\n\n" + `<ul data-type="taskList">`
 
 					for _, item := range checklist.CheckItems {
-						task.Description += "\n* "
+						task.Description += "\n"
 						if item.State == "complete" {
-							task.Description += "[x]"
+							task.Description += `<li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>` + item.Name + `</p></div></li>`
 						} else {
-							task.Description += "[ ]"
+							task.Description += `<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>` + item.Name + `</p></div></li>`
 						}
-						task.Description += " " + item.Name
 					}
+					task.Description += "</ul>"
 				}
 				if len(card.Checklists) > 0 {
 					log.Debugf("[Trello Migration] Converted %d checklists from card %s", len(card.Checklists), card.ID)
