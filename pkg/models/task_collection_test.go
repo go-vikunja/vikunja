@@ -1146,6 +1146,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task32,
 				task33,
 				task35,
+				task39,
 			},
 			wantErr: false,
 		},
