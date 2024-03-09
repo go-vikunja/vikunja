@@ -18,7 +18,7 @@ import {
 	AVAILABLE_FILTER_FIELDS,
 	FILTER_JOIN_OPERATOR,
 	FILTER_OPERATORS,
-	FILTER_OPERATORS_REGEX,
+	FILTER_OPERATORS_REGEX, LABEL_FIELDS,
 } from '@/helpers/filters'
 
 const {
@@ -99,15 +99,28 @@ const highlightedFilterQuery = computed(() => {
 				return `${f} ${token} <span class="filter-query__assignee_value">${value}<span>`
 			})
 		})
-	FILTER_OPERATORS
-		.map(o => ` ${escapeHtml(o)} `)
-		.forEach(o => {
-			highlighted = highlighted.replaceAll(o, `<span class="filter-query__operator">${o}</span>`)
-		})
 	FILTER_JOIN_OPERATOR
 		.map(o => escapeHtml(o))
 		.forEach(o => {
 			highlighted = highlighted.replaceAll(o, `<span class="filter-query__join-operator">${o}</span>`)
+		})
+	LABEL_FIELDS
+		.forEach(f => {
+			const pattern = new RegExp(f + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*([\'"]?)([^\'"\\s]+\\1?)?', 'ig')
+			highlighted = highlighted.replaceAll(pattern, (match, token, start, value) => {
+				if (typeof value === 'undefined') {
+					value = ''
+				}
+
+				const label = labelStore.getLabelsByExactTitles([value])[0] || undefined
+
+				return `${f} ${token} <span class="filter-query__label_value" style="background-color: ${label?.hexColor}; color: ${label?.textColor}">${label?.title ?? value}<span>`
+			})
+		})
+	FILTER_OPERATORS
+		.map(o => ` ${escapeHtml(o)} `)
+		.forEach(o => {
+			highlighted = highlighted.replaceAll(o, `<span class="filter-query__operator">${o}</span>`)
 		})
 	AVAILABLE_FILTER_FIELDS.forEach(f => {
 		highlighted = highlighted.replaceAll(f, `<span class="filter-query__field">${f}</span>`)
@@ -286,7 +299,7 @@ function autocompleteSelect(value) {
 			color: transparent;
 		}
 
-		&.filter-query__assignee_value {
+		&.filter-query__assignee_value, &.filter-query__label_value {
 			border-radius: $radius;
 			background-color: var(--grey-200);
 			color: var(--grey-700);
