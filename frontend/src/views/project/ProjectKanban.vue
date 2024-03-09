@@ -296,6 +296,7 @@ import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import {isSavedFilter} from '@/services/savedFilter'
 import {success} from '@/message'
 import {useProjectStore} from '@/stores/projects'
+import type {TaskFilterParams} from '@/services/taskCollection'
 
 const {
 	projectId = undefined,
@@ -347,11 +348,12 @@ const collapsedBuckets = ref<CollapsedBuckets>({})
 const taskUpdating = ref<{[id: ITask['id']]: boolean}>({})
 const oneTaskUpdating = ref(false)
 
-const params = ref({
-	filter_by: [],
-	filter_value: [],
-	filter_comparator: [],
-	filter_concat: 'and',
+const params = ref<TaskFilterParams>({
+	sort_by: [],
+	order_by: [],
+	filter: '',
+	filter_include_nulls: false,
+	s: '',
 })
 
 const getTaskDraggableTaskComponentData = computed(() => (bucket: IBucket) => {

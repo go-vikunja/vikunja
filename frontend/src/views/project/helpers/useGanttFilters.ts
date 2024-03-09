@@ -79,10 +79,7 @@ function ganttFiltersToApiParams(filters: GanttFilters): TaskFilterParams {
 	return {
 		sort_by: ['start_date', 'done', 'id'],
 		order_by: ['asc', 'asc', 'desc'],
-		filter_by: ['start_date', 'start_date'],
-		filter_comparator: ['greater_equals', 'less_equals'],
-		filter_value: [isoToKebabDate(filters.dateFrom), isoToKebabDate(filters.dateTo)],
-		filter_concat: 'and',
+		filter: 'start_date >= ' + isoToKebabDate(filters.dateFrom) + ' && start_date <= ' + isoToKebabDate(filters.dateTo),
 		filter_include_nulls: filters.showTasksWithoutDates,
 	}
 }
