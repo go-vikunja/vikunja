@@ -68,7 +68,7 @@
 							variant="hint-modal"
 							@close="() => showHowItWorks = false"
 						>
-							<DatemathHelp/>
+							<DatemathHelp />
 						</modal>
 					</div>
 				</div>
@@ -94,6 +94,7 @@ import {getFlatpickrLanguage} from '@/helpers/flatpickrLanguage'
 const props = defineProps({
 	modelValue: {
 		required: false,
+		default: null,
 	},
 	open: {
 		type: Boolean,

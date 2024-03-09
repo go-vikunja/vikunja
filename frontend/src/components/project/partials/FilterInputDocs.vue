@@ -6,12 +6,18 @@ const showDocs = ref(false)
 </script>
 
 <template>
-	<BaseButton @click="showDocs = !showDocs" class="has-text-primary">
+	<BaseButton
+		class="has-text-primary"
+		@click="showDocs = !showDocs"
+	>
 		{{ $t('filters.query.help.link') }}
 	</BaseButton>
 
 	<Transition>
-		<div v-if="showDocs" class="content">
+		<div
+			v-if="showDocs"
+			class="content"
+		>
 			<p>{{ $t('filters.query.help.intro') }}</p>
 			<ul>
 				<li><code>done</code>: {{ $t('filters.query.help.fields.done') }}</li>
@@ -47,11 +53,13 @@ const showDocs = ref(false)
 			<ul>
 				<li><code>priority = 4</code>: {{ $t('filters.query.help.examples.priorityEqual') }}</li>
 				<li><code>dueDate &lt; now</code>: {{ $t('filters.query.help.examples.dueDatePast') }}</li>
-				<li><code>done = false &amp;&amp; priority &gt;= 3</code>:
+				<li>
+					<code>done = false &amp;&amp; priority &gt;= 3</code>:
 					{{ $t('filters.query.help.examples.undoneHighPriority') }}
 				</li>
 				<li><code>assignees in [user1, user2]</code>: {{ $t('filters.query.help.examples.assigneesIn') }}</li>
-				<li><code>(priority = 1 || priority = 2) &amp;&amp; dueDate &lt;= now</code>:
+				<li>
+					<code>(priority = 1 || priority = 2) &amp;&amp; dueDate &lt;= now</code>:
 					{{ $t('filters.query.help.examples.priorityOneOrTwoPastDue') }}
 				</li>
 			</ul>

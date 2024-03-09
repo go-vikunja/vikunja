@@ -20,7 +20,7 @@ export function useAutoHeightTextarea(value: MaybeRef<string>) {
 			textareaEl.value = textareaEl.placeholder
 		}
 
-		const cs = getComputedStyle(textareaEl)
+		// const cs = getComputedStyle(textareaEl)
 
 		textareaEl.style.minHeight = ''
 		textareaEl.style.height = '0'

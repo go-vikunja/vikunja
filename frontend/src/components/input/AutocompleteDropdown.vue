@@ -1,16 +1,26 @@
 <script setup lang="ts">
-import {type ComponentPublicInstance, computed, nextTick, ref, watch} from 'vue'
+import {type ComponentPublicInstance, nextTick, ref, watch} from 'vue'
 
-const TAB = 9,
-	ENTER = 13,
-	ESCAPE = 27,
+const props = withDefaults(defineProps<{
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	options: any[],
+	suggestion?: string,
+	maxHeight?: number,
+}>(), {
+	maxHeight: 200,
+	suggestion: '',
+})
+
+const emit = defineEmits(['blur'])
+
+const ESCAPE = 27,
 	ARROW_UP = 38,
 	ARROW_DOWN = 40
 
-type state = 'unfocused' | 'focused'
+type StateType = 'unfocused' | 'focused'
 
 const selectedIndex = ref(-1)
-const state = ref<state>('unfocused')
+const state = ref<StateType>('unfocused')
 const val = ref<string>('')
 const model = defineModel<string>()
 
@@ -25,25 +35,6 @@ watch(
 	},
 )
 
-const emit = defineEmits(['blur'])
-
-const props = withDefaults(defineProps<{
-	options: any[],
-	suggestion?: string,
-	maxHeight?: number,
-}>(), {
-	maxHeight: 200,
-})
-
-function lookahead() {
-	if (!props.options.length) {
-		return model.value
-	}
-	const index = Math.max(0, Math.min(selectedIndex.value, props.options.length - 1))
-	const match = props.options[index]
-	return model.value + (match ? match.substring(model.value?.length) : '')
-}
-
 function updateSuggestionScroll() {
 	nextTick(() => {
 		const scroller = suggestionScrollerRef.value
@@ -52,14 +43,14 @@ function updateSuggestionScroll() {
 	})
 }
 
-function setState(stateName: state) {
+function setState(stateName: StateType) {
 	state.value = stateName
 	if (stateName === 'unfocused') {
 		emit('blur')
 	}
 }
 
-function onFocusField(e) {
+function onFocusField() {
 	setState('focused')
 }
 
@@ -103,7 +94,7 @@ function select(offset: number) {
 		// Arrow up but we're already at the top
 		index = props.options.length - 1
 	}
-	let elems = resultRefs.value[index]
+	const elems = resultRefs.value[index]
 	if (
 		typeof elems === 'undefined'
 	) {
@@ -133,37 +124,48 @@ function onUpdateField(e) {
 </script>
 
 <template>
-	<div class="autocomplete" ref="containerRef">
+	<div
+		ref="containerRef"
+		class="autocomplete"
+	>
 		<div class="entry-box">
 			<slot
 				name="input"
-				:onUpdateField
-				:onFocusField
-				:onKeydown
+				:on-update-field
+				:on-focus-field
+				:on-keydown
 			>
-				<textarea class="field"
-						  @input="onUpdateField"
-						  @focus="onFocusField"
-						  @keydown="onKeydown"
-						  :class="state"
-						  :value="val"
-						  ref="editorRef"></textarea>
+				<textarea
+					ref="editorRef"
+					class="field"
+					:class="state"
+					:value="val"
+					@input="onUpdateField"
+					@focus="onFocusField"
+					@keydown="onKeydown"
+				/>
 			</slot>
 		</div>
-		<div class="suggestion-list" v-if="state === 'focused' && options.length">
-			<div v-if="options && options.length" class="scroll-list">
+		<div
+			v-if="state === 'focused' && options.length"
+			class="suggestion-list"
+		>
+			<div
+				v-if="options && options.length"
+				class="scroll-list"
+			>
 				<div
-					class="items"
 					ref="suggestionScrollerRef"
+					class="items"
 					@keydown="onKeydown"
 				>
 					<button
 						v-for="(item, index) in options"
-						class="item"
-						@click="onSelectValue(item)"
-						:class="{ selected: index === selectedIndex }"
 						:key="item"
 						:ref="(el: Element | ComponentPublicInstance | null) => setResultRefs(el, index)"
+						class="item"
+						:class="{ selected: index === selectedIndex }"
+						@click="onSelectValue(item)"
 					>
 						<slot
 							name="result"
@@ -182,10 +184,10 @@ function onUpdateField(e) {
 <style scoped lang="scss">
 .autocomplete {
 	position: relative;
-	
+
 	.suggestion-list {
 		position: absolute;
-		
+
 		background: var(--white);
 		border-radius: 0 0 var(--input-radius) var(--input-radius);
 		border: 1px solid var(--primary);
@@ -197,7 +199,7 @@ function onUpdateField(e) {
 		max-width: 100%;
 		min-width: 100%;
 		margin-top: -2px;
-		
+
 		button {
 			width: 100%;
 			background: transparent;

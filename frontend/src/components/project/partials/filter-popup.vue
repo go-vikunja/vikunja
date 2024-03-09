@@ -25,6 +25,7 @@
 			v-model="value"
 			:has-title="true"
 			class="filter-popup"
+			@update:modelValue="emitChanges"
 		/>
 	</modal>
 </template>
@@ -36,27 +37,26 @@ import Filters from '@/components/project/partials/filters.vue'
 
 import {getDefaultTaskFilterParams, type TaskFilterParams} from '@/services/taskCollection'
 
-const modelValue = defineModel<TaskFilterParams>()
+const modelValue = defineModel<TaskFilterParams>({})
 
-const value = computed<TaskFilterParams>({
-	get() {
-		return modelValue.value
-	},
-	set(value) {
-		if(modelValue === value) {
-			return
-		}
-		modelValue.value = value
-	},
-})
+const value = ref<TaskFilterParams>({})
 
 watch(
-	() => modelValue,
-	(modelValue) => {
+	() => modelValue.value,
+	(modelValue: TaskFilterParams) => {
 		value.value = modelValue
 	},
 	{immediate: true},
 )
+
+function emitChanges(newValue: TaskFilterParams) {
+	if (modelValue.value?.filter === newValue.filter && modelValue.value?.s === newValue.s) {
+		return
+	}
+
+	modelValue.value.filter = newValue.filter
+	modelValue.value.s = newValue.s
+}
 
 const hasFilters = computed(() => {
 	// this.value also contains the page parameter which we don't want to include in filters

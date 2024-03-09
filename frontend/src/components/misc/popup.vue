@@ -1,7 +1,7 @@
 <template>
 	<slot
 		name="trigger"
-		:is-open="open"
+		:is-open="openValue"
 		:toggle="toggle"
 		:close="close"
 	/>
@@ -9,13 +9,13 @@
 		ref="popup"
 		class="popup"
 		:class="{
-			'is-open': open,
-			'has-overflow': props.hasOverflow && open
+			'is-open': openValue,
+			'has-overflow': props.hasOverflow && openValue
 		}"
 	>
 		<slot
 			name="content"
-			:is-open="open"
+			:is-open="openValue"
 			:toggle="toggle"
 			:close="close"
 		/>
@@ -37,29 +37,29 @@ const props = defineProps({
 	},
 })
 
+const emit = defineEmits(['close'])
+
 watch(
 	() => props.open,
 	nowOpen => {
-		open.value = nowOpen
+		openValue.value = nowOpen
 	},
 )
 
-const emit = defineEmits(['close'])
-
-const open = ref(false)
+const openValue = ref(false)
 const popup = ref<HTMLElement | null>(null)
 
 function close() {
-	open.value = false
+	openValue.value = false
 	emit('close')
 }
 
 function toggle() {
-	open.value = !open.value
+	openValue.value = !openValue.value
 }
 
 onClickOutside(popup, () => {
-	if (!open.value) {
+	if (!openValue.value) {
 		return
 	}
 	close()

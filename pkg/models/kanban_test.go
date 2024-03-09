@@ -105,13 +105,13 @@ func TestBucket_ReadAll(t *testing.T) {
 			},
 		}
 		bucketsInterface, _, _, err := b.ReadAll(s, testuser, "", -1, 0)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		buckets := bucketsInterface.([]*Bucket)
 		assert.Len(t, buckets, 3)
-		assert.Len(t, buckets[0].Tasks, 0)
+		assert.Empty(t, buckets[0].Tasks, 0)
 		assert.Len(t, buckets[1].Tasks, 3)
-		assert.Len(t, buckets[2].Tasks, 0)
+		assert.Empty(t, buckets[2].Tasks, 0)
 		assert.Equal(t, int64(3), buckets[1].Tasks[0].ID)
 		assert.Equal(t, int64(4), buckets[1].Tasks[1].ID)
 		assert.Equal(t, int64(5), buckets[1].Tasks[2].ID)

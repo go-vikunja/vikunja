@@ -3,8 +3,6 @@ import {computed, nextTick, ref, watch} from 'vue'
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
 import DatepickerWithValues from '@/components/date/datepickerWithValues.vue'
 import UserService from '@/services/user'
-import {getAvatarUrl, getDisplayName} from '@/models/user'
-import {createRandomID} from '@/helpers/randomId'
 import AutocompleteDropdown from '@/components/input/AutocompleteDropdown.vue'
 import {useLabelStore} from '@/stores/labels'
 import XLabel from '@/components/tasks/partials/label.vue'
@@ -169,19 +167,21 @@ function updateDateInQuery(newDate: string) {
 const autocompleteMatchPosition = ref(0)
 const autocompleteMatchText = ref('')
 const autocompleteResultType = ref<'labels' | 'assignees' | 'projects' | null>(null)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const autocompleteResults = ref<any[]>([])
 const labelStore = useLabelStore()
 const projectStore = useProjectStore()
 
-function handleFieldInput(e, autocompleteOnInput) {
+function handleFieldInput() {
 	const cursorPosition = filterInput.value.selectionStart
 	const textUpToCursor = filterQuery.value.substring(0, cursorPosition)
 
 	AUTOCOMPLETE_FIELDS.forEach(field => {
-		const pattern = new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&\|\(\)]+\\1?)?$', 'ig')
+		const pattern = new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&|()]+\\1?)?$', 'ig')
 		const match = pattern.exec(textUpToCursor)
 
 		if (match !== null) {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const [matched, prefix, operator, space, keyword] = match
 			if (keyword) {
 				if (matched.startsWith('label')) {
@@ -229,40 +229,40 @@ function autocompleteSelect(value) {
 			@update:modelValue="autocompleteSelect"
 		>
 			<template
-				v-slot:input="{ onKeydown, onFocusField, onUpdateField }"
+				#input="{ onKeydown, onFocusField }"
 			>
 				<div class="control filter-input">
 					<textarea
-						@input="e => handleFieldInput(e, onUpdateField)"
-						@focus="onFocusField"
-						@keydown="onKeydown"
-
+						ref="filterInput"
+						v-model="filterQuery"
 						autocomplete="off"
+
 						autocorrect="off"
 						autocapitalize="off"
 						spellcheck="false"
-						v-model="filterQuery"
 						class="input"
 						:class="{'has-autocomplete-results': autocompleteResults.length > 0}"
-						ref="filterInput"
 						:placeholder="$t('filters.query.placeholder')"
+						@input="handleFieldInput"
+						@focus="onFocusField"
+						@keydown="onKeydown"
 						@blur="e => emit('blur', e)"
-					></textarea>
+					/>
 					<div
 						class="filter-input-highlight"
 						:style="{'height': height}"
 						v-html="highlightedFilterQuery"
-					></div>
+					/>
 					<DatepickerWithValues
 						v-model="currentDatepickerValue"
 						:open="datePickerPopupOpen"
 						@close="() => datePickerPopupOpen = false"
-						@update:model-value="updateDateInQuery"
+						@update:modelValue="updateDateInQuery"
 					/>
 				</div>
 			</template>
 			<template
-				v-slot:result="{ item }"
+				#result="{ item }"
 			>
 				<XLabel
 					v-if="autocompleteResultType === 'labels'"
@@ -273,7 +273,9 @@ function autocompleteSelect(value) {
 					:user="item"
 					:avatar-size="25"
 				/>
-				<template v-else> {{ item.title }}</template>
+				<template v-else>
+					{{ item.title }}
+				</template>
 			</template>
 		</AutocompleteDropdown>
 	</div>

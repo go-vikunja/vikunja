@@ -91,7 +91,7 @@
 							variant="hint-modal"
 							@close="() => showHowItWorks = false"
 						>
-							<DatemathHelp/>
+							<DatemathHelp />
 						</modal>
 					</div>
 				</div>

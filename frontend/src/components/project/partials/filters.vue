@@ -4,12 +4,12 @@
 		:title="hasTitle ? $t('filters.title') : ''"
 		role="search"
 	>
-		<FilterInput 
+		<FilterInput
 			v-model="params.filter"
 			:project-id="projectId"
 			@blur="change()"
 		/>
-		
+
 		<div class="field is-flex is-flex-direction-column">
 			<Fancycheckbox
 				v-model="params.filter_include_nulls"
@@ -18,10 +18,13 @@
 				{{ $t('filters.attributes.includeNulls') }}
 			</Fancycheckbox>
 		</div>
-		
-		<FilterInputDocs/>
-		
-		<template v-if="hasFooter" #footer>
+
+		<FilterInputDocs />
+
+		<template
+			v-if="hasFooter"
+			#footer
+		>
 			<x-button
 				variant="primary"
 				@click.prevent.stop="change()"
@@ -48,25 +51,24 @@ import {useProjectStore} from '@/stores/projects'
 import {FILTER_OPERATORS, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
 import FilterInputDocs from '@/components/project/partials/FilterInputDocs.vue'
 
-const props = defineProps({
-	hasTitle: {
-		type: Boolean,
-		default: false,
-	},
-	hasFooter: {
-		type: Boolean,
-		default: true,
-	},
-})
+const  {
+	hasTitle= false,
+	hasFooter = true,
+	modelValue,
+} = defineProps<{
+	hasTitle?: boolean,
+	hasFooter?: boolean,
+	modelValue: TaskFilterParams,
+}>()
 
-const modelValue = defineModel<TaskFilterParams>()
+const emit = defineEmits(['update:modelValue'])
 
 const route = useRoute()
 const projectId = computed(() => {
 	if (route.name?.startsWith('project.')) {
 		return Number(route.params.projectId)
 	}
-	
+
 	return undefined
 })
 
@@ -80,7 +82,7 @@ const params = ref<TaskFilterParams>({
 
 // Using watchDebounced to prevent the filter re-triggering itself.
 watchDebounced(
-	() => modelValue.value,
+	() => modelValue,
 	(value: TaskFilterParams) => {
 		const val = {...value}
 		val.filter = transformFilterStringFromApi(
@@ -102,22 +104,25 @@ function change() {
 		labelTitle => labelStore.filterLabelsByQuery([], labelTitle)[0]?.id || null,
 		projectTitle => projectStore.searchProject(projectTitle)[0]?.id || null,
 	)
-	
+
 	let s = ''
-	
+
 	// When the filter does not contain any filter tokens, assume a simple search and redirect the input
 	const hasFilterQueries = FILTER_OPERATORS.find(o => filter.includes(o)) || false
 	if (!hasFilterQueries) {
 		s = filter
 	}
-	
-	modelValue.value = {
+
+	const newParams = {
 		...params.value,
 		filter: s === '' ? filter : '',
 		s,
 	}
+
+	if (JSON.stringify(modelValue) === JSON.stringify(newParams)) {
+		return
+	}
+
+	emit('update:modelValue', newParams)
 }
 </script>
-
-<style lang="scss" scoped>
-</style>

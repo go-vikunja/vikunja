@@ -15,7 +15,7 @@ function initState(value: string) {
 			:init-state="initState('dueDate < now && done = false && dueDate > now/w+1w')"
 		>
 			<template #default="{state}">
-				<FilterInput v-model="state.value"/>
+				<FilterInput v-model="state.value" />
 			</template>
 		</Variant>
 	</Story>

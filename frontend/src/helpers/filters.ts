@@ -57,7 +57,7 @@ export const FILTER_JOIN_OPERATOR = [
 export const FILTER_OPERATORS_REGEX = '(&lt;|&gt;|&lt;=|&gt;=|=|!=)'
 
 function getFieldPattern(field: string): RegExp {
-	return new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&\|\(\)]+\\1?)?', 'ig')
+	return new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&|()]+\\1?)?', 'ig')
 }
 
 export function transformFilterStringForApi(
@@ -76,6 +76,7 @@ export function transformFilterStringForApi(
 
 		let match: RegExpExecArray | null
 		while ((match = pattern.exec(filter)) !== null) {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const [matched, prefix, operator, space, keyword] = match
 			if (keyword) {
 				const labelId = labelResolver(keyword.trim())
@@ -91,6 +92,7 @@ export function transformFilterStringForApi(
 
 		let match: RegExpExecArray | null
 		while ((match = pattern.exec(filter)) !== null) {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const [matched, prefix, operator, space, keyword] = match
 			if (keyword) {
 				const projectId = projectResolver(keyword.trim())
@@ -130,6 +132,7 @@ export function transformFilterStringFromApi(
 
 		let match: RegExpExecArray | null
 		while ((match = pattern.exec(filter)) !== null) {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const [matched, prefix, operator, space, keyword] = match
 			if (keyword) {
 				const labelTitle = labelResolver(Number(keyword.trim()))
@@ -146,6 +149,7 @@ export function transformFilterStringFromApi(
 
 		let match: RegExpExecArray | null
 		while ((match = pattern.exec(filter)) !== null) {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const [matched, prefix, operator, space, keyword] = match
 			if (keyword) {
 				const project = projectResolver(Number(keyword.trim()))
