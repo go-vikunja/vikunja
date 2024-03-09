@@ -783,28 +783,11 @@ definitions:
     type: object
   models.TaskCollection:
     properties:
-      filter_by:
-        description: The field name of the field to filter by
-        items:
-          type: string
-        type: array
-      filter_comparator:
-        description: The comparator for field and value
-        items:
-          type: string
-        type: array
-      filter_concat:
-        description: The way all filter conditions are concatenated together, can
-          be either "and" or "or".,
+      filter:
         type: string
       filter_include_nulls:
         description: If set to true, the result will also include null values
         type: boolean
-      filter_value:
-        description: The value of the field name to filter by
-        items:
-          type: string
-        type: array
       order_by:
         description: The query parameter to order the items by. This can be either
           asc or desc, with asc being the default.
@@ -2718,27 +2701,10 @@ paths:
         in: query
         name: s
         type: string
-      - description: The name of the field to filter by. Allowed values are all task
-          properties. Task properties which are their own object require passing in
-          the id of that entity. Accepts an array for multiple filters which will
-          be chanied together, all supplied filter must match.
+      - description: The filter query to match tasks by. Check out https://vikunja.io/docs/filters
+          for a full explanation of the feature.
         in: query
-        name: filter_by
-        type: string
-      - description: The value to filter for.
-        in: query
-        name: filter_value
-        type: string
-      - description: The comparator to use for a filter. Available values are `equals`,
-          `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in`
-          expects comma-separated values in `filter_value`. Defaults to `equals`
-        in: query
-        name: filter_comparator
-        type: string
-      - description: The concatinator to use for filters. Available values are `and`
-          or `or`. Defaults to `or`.
-        in: query
-        name: filter_concat
+        name: filter
         type: string
       - description: If set to true the result will include filtered fields whose
           value is set to `null`. Available values are `true` or `false`. Defaults
@@ -2885,30 +2851,10 @@ paths:
         in: query
         name: order_by
         type: string
-      - description: The name of the field to filter by. Allowed values are all task
-          properties. Task properties which are their own object require passing in
-          the id of that entity. Accepts an array for multiple filters which will
-          be chanied together, all supplied filter must match.
+      - description: The filter query to match tasks by. Check out https://vikunja.io/docs/filters
+          for a full explanation of the feature.
         in: query
-        name: filter_by
-        type: string
-      - description: The value to filter for. You can use [grafana](https://grafana.com/docs/grafana/latest/dashboards/time-range-controls)-
-          or [elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#date-math)-style
-          relative dates for all date fields like `due_date`, `start_date`, `end_date`,
-          etc.
-        in: query
-        name: filter_value
-        type: string
-      - description: The comparator to use for a filter. Available values are `equals`,
-          `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in`
-          expects comma-separated values in `filter_value`. Defaults to `equals`
-        in: query
-        name: filter_comparator
-        type: string
-      - description: The concatinator to use for filters. Available values are `and`
-          or `or`. Defaults to `or`.
-        in: query
-        name: filter_concat
+        name: filter
         type: string
       - description: If set to true the result will include filtered fields whose
           value is set to `null`. Available values are `true` or `false`. Defaults
