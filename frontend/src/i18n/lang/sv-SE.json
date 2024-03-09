@@ -57,7 +57,11 @@
       "logout": "Logga ut",
       "emailInvalid": "Vänligen ange en giltig e-postadress.",
       "usernameRequired": "Vänligen ange ett användarnamn.",
+      "usernameMustNotContainSpace": "The username must not contain spaces.",
+      "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
       "passwordRequired": "Vänligen ange ett lösenord.",
+      "passwordNotMin": "Password must have at least 8 characters.",
+      "passwordNotMax": "Password must have at most 250 characters.",
       "showPassword": "Show the password",
       "hidePassword": "Hide the password",
       "noAccountYet": "Har du inget konto än?",
@@ -708,7 +712,8 @@
       "repeat": "Upprepa",
       "startDate": "Startdatum",
       "title": "Titel",
-      "updated": "Updated"
+      "updated": "Updated",
+      "doneAt": "Done At"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",
@@ -969,7 +974,9 @@
     "setBackground": "Set background",
     "share": "Dela",
     "newProject": "Nytt projekt",
-    "createProject": "Skapa projekt"
+    "createProject": "Skapa projekt",
+    "cantArchiveIsDefault": "",
+    "cantDeleteIsDefault": ""
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -1089,8 +1096,7 @@
   },
   "about": {
     "title": "Om",
-    "frontendVersion": "Frontend Version: {version}",
-    "apiVersion": "API Version: {version}"
+    "version": ""
   },
   "time": {
     "units": {
