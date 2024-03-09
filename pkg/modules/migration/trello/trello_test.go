@@ -52,7 +52,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 					Cards: []*trello.Card{
 						{
 							Name: "Test Card 1",
-							Desc: "Card Description",
+							Desc: "Card Description **bold**",
 							Pos:  123,
 							Due:  &time1,
 							Labels: []*trello.Label{
@@ -218,7 +218,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 				{
 					Task: models.Task{
 						Title:          "Test Card 1",
-						Description:    "Card Description",
+						Description:    "<p>Card Description <strong>bold</strong></p>\n",
 						BucketID:       1,
 						KanbanPosition: 123,
 						DueDate:        time1,

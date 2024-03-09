@@ -17,6 +17,8 @@
 package trello
 
 import (
+	"bytes"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
@@ -24,6 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/adlio/trello"
+	"github.com/yuin/goldmark"
 )
 
 // Migration represents the trello migration struct
@@ -160,6 +163,16 @@ func getTrelloData(token string) (trelloData []*trello.Board, err error) {
 	return
 }
 
+func convertMarkdownToHTML(input string) (output string, err error) {
+	var buf bytes.Buffer
+	err = goldmark.Convert([]byte(input), &buf)
+	if err != nil {
+		return
+	}
+	//#nosec - we are not responsible to escape this as we don't know the context where it is used
+	return buf.String(), nil
+}
+
 // Converts all previously obtained data from trello into the vikunja format.
 // `trelloData` should contain all boards with their projects and cards respectively.
 func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullVikunjaHierachie []*models.ProjectWithTasksAndBuckets, err error) {
@@ -220,9 +233,13 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullV
 				// The usual stuff: Title, description, position, bucket id
 				task := &models.Task{
 					Title:          card.Name,
-					Description:    card.Desc,
 					KanbanPosition: card.Pos,
 					BucketID:       bucketID,
+				}
+
+				task.Description, err = convertMarkdownToHTML(card.Desc)
+				if err != nil {
+					return nil, err
 				}
 
 				if card.Due != nil {
