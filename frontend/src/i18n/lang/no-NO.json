@@ -57,7 +57,11 @@
       "logout": "Logg ut",
       "emailInvalid": "Vennligst oppgi en gyldig e-postadresse.",
       "usernameRequired": "Angi et brukernavn.",
+      "usernameMustNotContainSpace": "The username must not contain spaces.",
+      "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
       "passwordRequired": "Angi et passord.",
+      "passwordNotMin": "Password must have at least 8 characters.",
+      "passwordNotMax": "Password must have at most 250 characters.",
       "showPassword": "Vis passord",
       "hidePassword": "Skjul passord",
       "noAccountYet": "Har du ikke konto ennå?",
@@ -708,7 +712,8 @@
       "repeat": "Gjenta",
       "startDate": "Start Dato",
       "title": "Tittel",
-      "updated": "Oppdatert"
+      "updated": "Oppdatert",
+      "doneAt": "Done At"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "Du kan ikke melde deg ut her fordi du abonnerer på denne oppgaven gjennom prosjektet.",
@@ -969,7 +974,9 @@
     "setBackground": "Bruk som bakgrunn",
     "share": "Del",
     "newProject": "Nytt prosjekt",
-    "createProject": "Create project"
+    "createProject": "Create project",
+    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
+    "cantDeleteIsDefault": "You cannot delete this because it is your default project."
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -1089,8 +1096,7 @@
   },
   "about": {
     "title": "Om",
-    "frontendVersion": "Frontend versjon: {version}",
-    "apiVersion": "API versjon: {version}"
+    "version": "Version: {version}"
   },
   "time": {
     "units": {

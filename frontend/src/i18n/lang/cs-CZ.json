@@ -57,7 +57,11 @@
       "logout": "Odhlásit se",
       "emailInvalid": "Prosím zadejte platnou emailovou adresu.",
       "usernameRequired": "Zadejte prosím uživatelské jméno.",
+      "usernameMustNotContainSpace": "The username must not contain spaces.",
+      "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
       "passwordRequired": "Zadejte prosím heslo.",
+      "passwordNotMin": "Password must have at least 8 characters.",
+      "passwordNotMax": "Password must have at most 250 characters.",
       "showPassword": "Ukázat heslo",
       "hidePassword": "Skrýt heslo",
       "noAccountYet": "Ještě nemáte účet?",
@@ -708,7 +712,8 @@
       "repeat": "Opakovat",
       "startDate": "Počáteční datum",
       "title": "Název",
-      "updated": "Aktualizováno"
+      "updated": "Aktualizováno",
+      "doneAt": "Done At"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "Zde se nemůžete odhlásit, protože jste přihlášeni k odběru tohoto úkolu prostřednictvím jeho projektu.",
@@ -969,7 +974,9 @@
     "setBackground": "Nastavit pozadí",
     "share": "Sdílet",
     "newProject": "Nový projekt",
-    "createProject": "Vytvořit projekt"
+    "createProject": "Vytvořit projekt",
+    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
+    "cantDeleteIsDefault": "You cannot delete this because it is your default project."
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -1089,8 +1096,7 @@
   },
   "about": {
     "title": "O aplikaci",
-    "frontendVersion": "Verze frontendu: {version}",
-    "apiVersion": "Verze API: {version}"
+    "version": "Version: {version}"
   },
   "time": {
     "units": {

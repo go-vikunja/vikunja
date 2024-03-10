@@ -57,7 +57,11 @@
       "logout": "Выйти",
       "emailInvalid": "Введите корректный email адрес.",
       "usernameRequired": "Введите имя пользователя.",
+      "usernameMustNotContainSpace": "The username must not contain spaces.",
+      "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
       "passwordRequired": "Введите пароль.",
+      "passwordNotMin": "Password must have at least 8 characters.",
+      "passwordNotMax": "Password must have at most 250 characters.",
       "showPassword": "Показать пароль",
       "hidePassword": "Скрыть пароль",
       "noAccountYet": "Ещё нет аккаунта?",
@@ -708,7 +712,8 @@
       "repeat": "Повтор",
       "startDate": "Дата начала",
       "title": "Название",
-      "updated": "Дата изменения"
+      "updated": "Дата изменения",
+      "doneAt": "Done At"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "Вы не можете отписаться здесь, потому что вы подписаны эту задачу через её проект.",
@@ -969,7 +974,9 @@
     "setBackground": "Задать фон",
     "share": "Поделиться",
     "newProject": "Создать проект",
-    "createProject": "Создать проект"
+    "createProject": "Создать проект",
+    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
+    "cantDeleteIsDefault": "You cannot delete this because it is your default project."
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -1089,8 +1096,7 @@
   },
   "about": {
     "title": "О Vikunja",
-    "frontendVersion": "Версия фронтенда: {version}",
-    "apiVersion": "Версия API: {version}"
+    "version": "Version: {version}"
   },
   "time": {
     "units": {

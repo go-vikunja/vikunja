@@ -57,7 +57,11 @@
       "logout": "ログアウト",
       "emailInvalid": "有効なメールアドレスを入力してください。",
       "usernameRequired": "ユーザー名を入力してください。",
+      "usernameMustNotContainSpace": "The username must not contain spaces.",
+      "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
       "passwordRequired": "パスワードを入力してください。",
+      "passwordNotMin": "Password must have at least 8 characters.",
+      "passwordNotMax": "Password must have at most 250 characters.",
       "showPassword": "パスワードの表示",
       "hidePassword": "パスワードの非表示",
       "noAccountYet": "まだアカウントをお持ちでないですか？",
@@ -708,7 +712,8 @@
       "repeat": "繰り返し間隔",
       "startDate": "開始日",
       "title": "タスク名",
-      "updated": "Updated"
+      "updated": "Updated",
+      "doneAt": "Done At"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "現在プロジェクトを通して購読しているため、ここでこのタスクの購読を解除することはできません。",
@@ -969,7 +974,9 @@
     "setBackground": "背景画像の設定",
     "share": "共有",
     "newProject": "新しいプロジェクトの作成",
-    "createProject": "プロジェクトの作成"
+    "createProject": "プロジェクトの作成",
+    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
+    "cantDeleteIsDefault": "You cannot delete this because it is your default project."
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -1089,8 +1096,7 @@
   },
   "about": {
     "title": "Vikunjaについて",
-    "frontendVersion": "フロントエンドのバージョン: {version}",
-    "apiVersion": "APIのバージョン: {version}"
+    "version": "Version: {version}"
   },
   "time": {
     "units": {

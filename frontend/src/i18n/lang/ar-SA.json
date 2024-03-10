@@ -57,7 +57,11 @@
       "logout": "تسجيل الخروج",
       "emailInvalid": "الرجاء إدخال عنوان بريد إلكتروني صحيح.",
       "usernameRequired": "الرجاء إدخال اسم المستخدم.",
+      "usernameMustNotContainSpace": "The username must not contain spaces.",
+      "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
       "passwordRequired": "الرجاء إدخال كلمة المرور.",
+      "passwordNotMin": "Password must have at least 8 characters.",
+      "passwordNotMax": "Password must have at most 250 characters.",
       "showPassword": "إظهار كلمة المرور",
       "hidePassword": "إخفاء كلمة المرور",
       "noAccountYet": "ليس لديك حساب بعد؟",
@@ -708,7 +712,8 @@
       "repeat": "تكرار",
       "startDate": "تاريخ البدء",
       "title": "العنوان",
-      "updated": "تاريخ التحديث"
+      "updated": "تاريخ التحديث",
+      "doneAt": "Done At"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "لا يمكنك إلغاء الاشتراك هنا لأنك مشترك في هذه المهمة من خلال المشروع.",
@@ -969,7 +974,9 @@
     "setBackground": "تعيين خلفية",
     "share": "مشاركة",
     "newProject": "مشروع جديد",
-    "createProject": "إنشاء مشروع"
+    "createProject": "إنشاء مشروع",
+    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
+    "cantDeleteIsDefault": "You cannot delete this because it is your default project."
   },
   "apiConfig": {
     "url": "رابط Vikunja",
@@ -1089,8 +1096,7 @@
   },
   "about": {
     "title": "عن البرنامج",
-    "frontendVersion": "إصدار الواجهة: {version}",
-    "apiVersion": "إصدار API: {version}"
+    "version": "Version: {version}"
   },
   "time": {
     "units": {

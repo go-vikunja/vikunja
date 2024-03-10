@@ -57,7 +57,11 @@
       "logout": "Log ud",
       "emailInvalid": "Indtast venligst en gyldig e-mailadresse.",
       "usernameRequired": "Angiv venligst et brugernavn.",
+      "usernameMustNotContainSpace": "The username must not contain spaces.",
+      "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
       "passwordRequired": "Angiv venligst en adgangskode.",
+      "passwordNotMin": "Password must have at least 8 characters.",
+      "passwordNotMax": "Password must have at most 250 characters.",
       "showPassword": "Vis adgangskoden",
       "hidePassword": "Skjul adgangskoden",
       "noAccountYet": "Har du ikke en konto endnu?",
@@ -708,7 +712,8 @@
       "repeat": "Gentag",
       "startDate": "Startdato",
       "title": "Titel",
-      "updated": "Opdateret"
+      "updated": "Opdateret",
+      "doneAt": "Done At"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",
@@ -969,7 +974,9 @@
     "setBackground": "Indstil baggrund",
     "share": "Del",
     "newProject": "New project",
-    "createProject": "Create project"
+    "createProject": "Create project",
+    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
+    "cantDeleteIsDefault": "You cannot delete this because it is your default project."
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -1089,8 +1096,7 @@
   },
   "about": {
     "title": "Om",
-    "frontendVersion": "Frontend Version: {version}",
-    "apiVersion": "API Version: {version}"
+    "version": "Version: {version}"
   },
   "time": {
     "units": {

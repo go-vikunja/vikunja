@@ -57,7 +57,11 @@
       "logout": "注销",
       "emailInvalid": "请输入有效的电子邮件地址。",
       "usernameRequired": "请输入用户名",
+      "usernameMustNotContainSpace": "The username must not contain spaces.",
+      "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
       "passwordRequired": "请提供密码",
+      "passwordNotMin": "Password must have at least 8 characters.",
+      "passwordNotMax": "Password must have at most 250 characters.",
       "showPassword": "显示密码",
       "hidePassword": "隐藏密码",
       "noAccountYet": "还没有账号？",
@@ -708,7 +712,8 @@
       "repeat": "重复",
       "startDate": "开始日期",
       "title": "标题",
-      "updated": "已更新"
+      "updated": "已更新",
+      "doneAt": "Done At"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "你无法在此处取消订阅，因为你已通过其项目订阅了此任务。",
@@ -969,7 +974,9 @@
     "setBackground": "设置背景",
     "share": "共享",
     "newProject": "新项目",
-    "createProject": "创建项目"
+    "createProject": "创建项目",
+    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
+    "cantDeleteIsDefault": "You cannot delete this because it is your default project."
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -1089,8 +1096,7 @@
   },
   "about": {
     "title": "关于",
-    "frontendVersion": "前端版本：{version}",
-    "apiVersion": "API 版本：{version}"
+    "version": "Version: {version}"
   },
   "time": {
     "units": {

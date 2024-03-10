@@ -57,7 +57,11 @@
       "logout": "Terminar Sessão",
       "emailInvalid": "Por favor, insire um endereço de e-mail válido.",
       "usernameRequired": "Por favor, fornece um nome de utilizador.",
+      "usernameMustNotContainSpace": "O nome de utilizador não deve conter espaços.",
+      "usernameMustNotLookLikeUrl": "O nome de utilizador não se deve assemelhar a um URL.",
       "passwordRequired": "Por favor, fornece uma palavra-passe.",
+      "passwordNotMin": "A palavra-passe deve ter no mínimo 8 caracteres.",
+      "passwordNotMax": "A palavra-passe deve ter no máximo 250 caracteres.",
       "showPassword": "Mostrar a palavra-passe",
       "hidePassword": "Esconder a palavra-passe",
       "noAccountYet": "Ainda não tens uma conta?",
@@ -708,7 +712,8 @@
       "repeat": "Repetir",
       "startDate": "Data de Início",
       "title": "Título",
-      "updated": "Atualizado"
+      "updated": "Atualizado",
+      "doneAt": "Concluído Em"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "Não podes cancelar a tua subscrição aqui porque estás subscrito nesta tarefa através do seu projeto.",
@@ -969,7 +974,9 @@
     "setBackground": "Definir Fundo",
     "share": "Partilhar",
     "newProject": "Novo projeto",
-    "createProject": "Criar projeto"
+    "createProject": "Criar projeto",
+    "cantArchiveIsDefault": "Não podes arquivar isto porque é o teu projeto padrão.",
+    "cantDeleteIsDefault": "Não podes eliminar isto porque é o teu projeto padrão."
   },
   "apiConfig": {
     "url": "URL do Vikunja",
@@ -1089,8 +1096,7 @@
   },
   "about": {
     "title": "Sobre",
-    "frontendVersion": "Versão Atual: {version}",
-    "apiVersion": "Versão da API: {version}"
+    "version": "Versão: {version}"
   },
   "time": {
     "units": {

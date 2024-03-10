@@ -57,7 +57,11 @@
       "logout": "Wyloguj",
       "emailInvalid": "Proszę podać poprawny adres e-mail.",
       "usernameRequired": "Proszę podać nazwę użytkownika.",
+      "usernameMustNotContainSpace": "The username must not contain spaces.",
+      "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
       "passwordRequired": "Proszę podać hasło.",
+      "passwordNotMin": "Password must have at least 8 characters.",
+      "passwordNotMax": "Password must have at most 250 characters.",
       "showPassword": "Pokaż hasło",
       "hidePassword": "Ukryj hasło",
       "noAccountYet": "Nie masz jeszcze konta?",
@@ -708,7 +712,8 @@
       "repeat": "Powtarzanie",
       "startDate": "Data rozpoczęcia",
       "title": "Tytuł",
-      "updated": "Zaktualizowano"
+      "updated": "Zaktualizowano",
+      "doneAt": "Done At"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "Nie możesz zrezygnować z subskrypcji, ponieważ subskrybujesz to zadanie poprzez jego projekt.",
@@ -969,7 +974,9 @@
     "setBackground": "Ustaw tło",
     "share": "Udostępnij",
     "newProject": "Nowy projekt",
-    "createProject": "Utwórz projekt"
+    "createProject": "Utwórz projekt",
+    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
+    "cantDeleteIsDefault": "You cannot delete this because it is your default project."
   },
   "apiConfig": {
     "url": "URL Vikunji",
@@ -1089,8 +1096,7 @@
   },
   "about": {
     "title": "O aplikacji",
-    "frontendVersion": "Wersja frontendu: {version}",
-    "apiVersion": "Wersja API: {version}"
+    "version": "Version: {version}"
   },
   "time": {
     "units": {

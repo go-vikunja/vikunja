@@ -975,8 +975,8 @@
     "share": "Dela",
     "newProject": "Nytt projekt",
     "createProject": "Skapa projekt",
-    "cantArchiveIsDefault": "",
-    "cantDeleteIsDefault": ""
+    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
+    "cantDeleteIsDefault": "You cannot delete this because it is your default project."
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -1096,7 +1096,7 @@
   },
   "about": {
     "title": "Om",
-    "version": ""
+    "version": "Version: {version}"
   },
   "time": {
     "units": {

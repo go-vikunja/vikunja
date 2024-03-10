@@ -57,7 +57,11 @@
       "logout": "Kijelentkezés",
       "emailInvalid": "Kérjük, adjon meg egy valós email címet!",
       "usernameRequired": "Kérjük adjon meg egy felhasználónevet.",
+      "usernameMustNotContainSpace": "The username must not contain spaces.",
+      "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
       "passwordRequired": "Kérjük, adjon meg új jelszót.",
+      "passwordNotMin": "Password must have at least 8 characters.",
+      "passwordNotMax": "Password must have at most 250 characters.",
       "showPassword": "Jelszó megjelenítése",
       "hidePassword": "A jelszó elrejtése",
       "noAccountYet": "Még nincs fiókja?",
@@ -708,7 +712,8 @@
       "repeat": "Ismétlés",
       "startDate": "Kezdő dátum",
       "title": "Cím",
-      "updated": "Frissítve"
+      "updated": "Frissítve",
+      "doneAt": "Done At"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "Itt nem iratkozhat le, mert a projektjén keresztül feliratkozott erre a feladatra.",
@@ -969,7 +974,9 @@
     "setBackground": "Háttérkép beállítása",
     "share": "Megosztás",
     "newProject": "Új projekt",
-    "createProject": "Projekt létrehozása"
+    "createProject": "Projekt létrehozása",
+    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
+    "cantDeleteIsDefault": "You cannot delete this because it is your default project."
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -1089,8 +1096,7 @@
   },
   "about": {
     "title": "Névjegy",
-    "frontendVersion": "Frontend verzió: {version}",
-    "apiVersion": "API verzió: {version}"
+    "version": "Version: {version}"
   },
   "time": {
     "units": {
