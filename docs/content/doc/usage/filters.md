@@ -33,6 +33,8 @@ The available fields for filtering include:
 
 You can date math to set relative dates. Click on the date value in a query to find out more.
 
+All strings must be either single-word or enclosed in `"` or `'`. This extends to date values like `2024-03-11`.
+
 ## Operators
 
 The available operators for filtering include:
