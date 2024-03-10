@@ -137,6 +137,16 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 									Name:  "Label 3",
 									Color: "blue",
 								},
+								{
+									ID:    "ide4",
+									Name:  "Label 4",
+									Color: "green_dark",
+								},
+								{
+									ID:    "ide5",
+									Name:  "Label 5",
+									Color: "doesnotexist",
+								},
 							},
 						},
 						{
@@ -293,6 +303,14 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 							{
 								Title:    "Label 3",
 								HexColor: trelloColorMap["blue"],
+							},
+							{
+								Title:    "Label 4",
+								HexColor: trelloColorMap["green_dark"],
+							},
+							{
+								Title:    "Label 5",
+								HexColor: trelloColorMap["transparent"],
 							},
 						},
 					},

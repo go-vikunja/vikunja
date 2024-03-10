@@ -37,19 +37,39 @@ type Migration struct {
 var trelloColorMap map[string]string
 
 func init() {
-	trelloColorMap = make(map[string]string, 10)
+	trelloColorMap = make(map[string]string, 30)
 	trelloColorMap = map[string]string{
-		"green":       "61bd4f",
-		"yellow":      "f2d600",
-		"orange":      "ff9f1a",
-		"red":         "eb5a46",
-		"sky":         "00c2e0",
-		"lime":        "51e898",
-		"purple":      "c377e0",
-		"blue":        "0079bf",
-		"pink":        "ff78cb",
-		"black":       "344563",
-		"transparent": "", // Empty
+		"green":        "4bce97",
+		"yellow":       "f5cd47",
+		"orange":       "fea362",
+		"red":          "f87168",
+		"purple":       "9f8fef",
+		"blue":         "579dff",
+		"sky":          "6cc3e0",
+		"lime":         "94c748",
+		"pink":         "e774bb",
+		"black":        "8590a2",
+		"green_dark":   "1f845a",
+		"yellow_dark":  "946f00",
+		"orange_dark":  "c25100",
+		"red_dark":     "c9372c",
+		"purple_dark":  "6e5dc6",
+		"blue_dark":    "0c66e4",
+		"sky_dark":     "227d9b",
+		"lime_dark":    "5b7f24",
+		"pink_dark":    "ae4787",
+		"black_dark":   "626f86",
+		"green_light":  "baf3db",
+		"yellow_light": "f8e6a0",
+		"orange_light": "fedec8",
+		"red_light":    "ffd5d2",
+		"purple_light": "dfd8fd",
+		"blue_light":   "cce0ff",
+		"sky_light":    "c6edfb",
+		"lime_light":   "d3f1a7",
+		"ping_light":   "fdd0ec",
+		"black_light":  "dcdfe4",
+		"transparent":  "", // Empty
 	}
 }
 
@@ -268,8 +288,8 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullV
 				for _, label := range card.Labels {
 					color, exists := trelloColorMap[label.Color]
 					if !exists {
-						log.Debugf("[Trello Migration] Color %s not mapped for trello card %s, not adding label", label.Color, card.ID)
-						continue
+						log.Debugf("[Trello Migration] Color %s not mapped for trello card %s, falling back to transparent", label.Color, card.ID)
+						color = trelloColorMap["transparent"]
 					}
 
 					task.Labels = append(task.Labels, &models.Label{
