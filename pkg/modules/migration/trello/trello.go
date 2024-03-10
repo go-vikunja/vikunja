@@ -319,16 +319,47 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullV
 						return nil, err
 					}
 
-					task.Attachments = append(task.Attachments, &models.TaskAttachment{
+					vikunjaAttachment := &models.TaskAttachment{
 						File: &files.File{
 							Name:        attachment.Name,
 							Mime:        attachment.MimeType,
 							Size:        uint64(buf.Len()),
 							FileContent: buf.Bytes(),
 						},
-					})
+					}
+
+					if card.IDAttachmentCover != "" && card.IDAttachmentCover == attachment.ID {
+						vikunjaAttachment.ID = 42
+						task.CoverImageAttachmentID = 42
+					}
+
+					task.Attachments = append(task.Attachments, vikunjaAttachment)
 
 					log.Debugf("[Trello Migration] Downloaded card attachment %s", attachment.ID)
+				}
+
+				// When the cover image was set manually, we need to add it as an attachment
+				if card.ManualCoverAttachment && len(card.Cover.Scaled) > 0 {
+
+					cover := card.Cover.Scaled[len(card.Cover.Scaled)-1]
+
+					buf, err := migration.DownloadFile(cover.URL)
+					if err != nil {
+						return nil, err
+					}
+
+					coverAttachment := &models.TaskAttachment{
+						ID: 43,
+						File: &files.File{
+							Name:        cover.ID + ".jpg",
+							Mime:        "image/jpg", // Seems to always return jpg
+							Size:        uint64(buf.Len()),
+							FileContent: buf.Bytes(),
+						},
+					}
+
+					task.Attachments = append(task.Attachments, coverAttachment)
+					task.CoverImageAttachmentID = coverAttachment.ID
 				}
 
 				project.Tasks = append(project.Tasks, &models.TaskWithComments{Task: *task})

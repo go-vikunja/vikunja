@@ -267,6 +267,8 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		for _, a := range t.Attachments {
 			// Check if we have a file to create
 			if len(a.File.FileContent) > 0 {
+				oldID := a.ID
+				a.ID = 0
 				a.TaskID = t.ID
 				fr := io.NopCloser(bytes.NewReader(a.File.FileContent))
 				err = a.NewAttachment(s, fr, a.File.Name, a.File.Size, user)
@@ -274,6 +276,14 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 					return
 				}
 				log.Debugf("[creating structure] Created new attachment %d", a.ID)
+
+				if t.CoverImageAttachmentID == oldID {
+					t.CoverImageAttachmentID = a.ID
+					err = t.Update(s, user)
+					if err != nil {
+						return
+					}
+				}
 			}
 		}
 

@@ -69,6 +69,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 							},
 							Attachments: []*trello.Attachment{
 								{
+									ID:       "5cc71b16f0c7a57bed3c94e9",
 									Name:     "Testimage.jpg",
 									IsUpload: true,
 									MimeType: "image/jpg",
