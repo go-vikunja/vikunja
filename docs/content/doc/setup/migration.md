@@ -14,7 +14,7 @@ menu:
 There are several importers available for third-party services like Trello, Microsoft To Do or Todoist.
 All available migration options can be found [here](https://kolaente.dev/vikunja/vikunja/src/branch/main/config.yml.sample#L218).
 
-You can develop migrations for more services, see the [documentation]({{< ref "./development/migration.md">}}) for more info.
+You can develop migrations for more services, see the [documentation]({{< ref "../development/migration.md">}}) for more info.
 
 {{< table_of_contents >}}
 
