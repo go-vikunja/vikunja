@@ -296,7 +296,7 @@ func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 	limit, start := getLimitFromPageIndex(page, perPage)
 	all := []*Team{}
 
-	query := s.Select("teams.*").
+	query := s.Distinct("teams.*").
 		Table("teams").
 		Join("INNER", "team_members", "team_members.team_id = teams.id").
 		Where(db.ILIKE("teams.name", search))
