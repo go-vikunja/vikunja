@@ -59,6 +59,7 @@
 						:class="{ 'disabled': filterService.loading}"
 						:disabled="filterService.loading"
 						class="has-no-shadow has-no-border"
+						:has-footer="false"
 					/>
 				</div>
 			</div>

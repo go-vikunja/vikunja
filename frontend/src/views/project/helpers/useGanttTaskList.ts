@@ -4,7 +4,7 @@ import {klona} from 'klona/lite'
 import type {Filters} from '@/composables/useRouteFilters'
 import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
 
-import TaskCollectionService, {type GetAllTasksParams} from '@/services/taskCollection'
+import TaskCollectionService, {type TaskFilterParams} from '@/services/taskCollection'
 import TaskService from '@/services/task'
 
 import TaskModel from '@/models/task'
@@ -13,7 +13,7 @@ import {error, success} from '@/message'
 // FIXME: unify with general `useTaskList`
 export function useGanttTaskList<F extends Filters>(
 	filters: Ref<F>,
-	filterToApiParams: (filters: F) => GetAllTasksParams,
+	filterToApiParams: (filters: F) => TaskFilterParams,
 	options: {
 		loadAll?: boolean,
 	} = {
@@ -26,7 +26,7 @@ export function useGanttTaskList<F extends Filters>(
 
 	const tasks = ref<Map<ITask['id'], ITask>>(new Map())
 
-	async function fetchTasks(params: GetAllTasksParams, page = 1): Promise<ITask[]> {
+	async function fetchTasks(params: TaskFilterParams, page = 1): Promise<ITask[]> {
 		const tasks = await taskCollectionService.getAll({projectId: filters.value.projectId}, params, page) as ITask[]
 		if (options.loadAll && page < taskCollectionService.totalPages) {
 			const nextTasks = await fetchTasks(params, page + 1)
@@ -40,7 +40,7 @@ export function useGanttTaskList<F extends Filters>(
 	 * Normally there is no need to trigger this manually
 	 */
 	async function loadTasks() {
-		const params: GetAllTasksParams = filterToApiParams(filters.value)
+		const params: TaskFilterParams = filterToApiParams(filters.value)
 
 		const loadedTasks = await fetchTasks(params)
 		tasks.value = new Map()

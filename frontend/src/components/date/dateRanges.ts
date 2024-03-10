@@ -19,3 +19,28 @@ export const DATE_RANGES = {
 	'thisYear': ['now/y', 'now/y+1y'],
 	'restOfThisYear': ['now', 'now/y+1y'],
 }
+
+export const DATE_VALUES = {
+	'now': 'now',
+	'startOfToday': 'now/d',
+	'endOfToday': 'now/d+1d',
+
+	'beginningOflastWeek': 'now/w-1w',
+	'endOfLastWeek': 'now/w-2w',
+	'beginningOfThisWeek': 'now/w',
+	'endOfThisWeek': 'now/w+1w',
+	'startOfNextWeek': 'now/w+1w',
+	'endOfNextWeek': 'now/w+2w',
+	'in7Days': 'now+7d',
+
+	'beginningOfLastMonth': 'now/M-1M',
+	'endOfLastMonth': 'now/M-2M',
+	'startOfThisMonth': 'now/M',
+	'endOfThisMonth': 'now/M+1M',
+	'startOfNextMonth': 'now/M+1M',
+	'endOfNextMonth': 'now/M+2M',
+	'in30Days': 'now+30d',
+
+	'startOfThisYear': 'now/y',
+	'endOfThisYear': 'now/y+1y',
+}

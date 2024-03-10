@@ -11,11 +11,9 @@ export default class SavedFilterModel extends AbstractModel<ISavedFilter> implem
 	filters: ISavedFilter['filters'] = {
 		sortBy: ['done', 'id'],
 		orderBy: ['asc', 'desc'],
-		filterBy: ['done'],
-		filterValue: ['false'],
-		filterComparator: ['equals'],
-		filterConcat: 'and',
+		filter: 'done = false',
 		filterIncludeNulls: true,
+		s: '',
 	}
 
 	owner: IUser = {}

@@ -17,6 +17,8 @@
 package models
 
 import (
+	"strconv"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/log"
@@ -106,10 +108,7 @@ func getDefaultBucketID(s *xorm.Session, project *Project) (bucketID int64, err 
 // @Param page query int false "The page number for tasks. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of tasks per bucket per page. This parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
-// @Param filter_by query string false "The name of the field to filter by. Allowed values are all task properties. Task properties which are their own object require passing in the id of that entity. Accepts an array for multiple filters which will be chanied together, all supplied filter must match."
-// @Param filter_value query string false "The value to filter for."
-// @Param filter_comparator query string false "The comparator to use for a filter. Available values are `equals`, `greater`, `greater_equals`, `less`, `less_equals`, `like` and `in`. `in` expects comma-separated values in `filter_value`. Defaults to `equals`"
-// @Param filter_concat query string false "The concatinator to use for filters. Available values are `and` or `or`. Defaults to `or`."
+// @Param filter query string false "The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature."
 // @Param filter_include_nulls query string false "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`."
 // @Success 200 {array} models.Bucket "The buckets with their tasks"
 // @Failure 500 {object} models.Message "Internal server error"
@@ -173,28 +172,36 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 	opts.page = page
 	opts.perPage = perPage
 	opts.search = search
-	opts.filterConcat = filterConcatAnd
 
-	var bucketFilterIndex int
-	for i, filter := range opts.filters {
+	for _, filter := range opts.parsedFilters {
 		if filter.field == taskPropertyBucketID {
-			bucketFilterIndex = i
+
+			// Limiting the map to the one filter we're looking for is the easiest way to ensure we only
+			// get tasks in this bucket
+			bucketID := filter.value.(int64)
+			bucket := bucketMap[bucketID]
+
+			bucketMap = make(map[int64]*Bucket, 1)
+			bucketMap[bucketID] = bucket
 			break
 		}
 	}
 
-	if bucketFilterIndex == 0 {
-		opts.filters = append(opts.filters, &taskFilter{
-			field:      taskPropertyBucketID,
-			value:      0,
-			comparator: taskFilterComparatorEquals,
-		})
-		bucketFilterIndex = len(opts.filters) - 1
-	}
-
+	originalFilter := opts.filter
 	for id, bucket := range bucketMap {
 
-		opts.filters[bucketFilterIndex].value = id
+		if !strings.Contains(originalFilter, "bucket_id") {
+			var filterString string
+			if originalFilter == "" {
+				filterString = "bucket_id = " + strconv.FormatInt(id, 10)
+			} else {
+				filterString = "(" + originalFilter + ") && bucket_id = " + strconv.FormatInt(id, 10)
+			}
+			opts.parsedFilters, err = getTaskFiltersFromFilterString(filterString)
+			if err != nil {
+				return
+			}
+		}
 
 		ts, _, total, err := getRawTasksForProjects(s, []*Project{{ID: bucket.ProjectID}}, auth, opts)
 		if err != nil {

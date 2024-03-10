@@ -29,6 +29,8 @@ import (
 	"gopkg.in/d4l3k/messagediff.v1"
 )
 
+// To only run a selected tests: ^\QTestTaskCollection_ReadAll\E$/^\QReadAll_Tasks_with_range\E$
+
 func TestTaskCollection_ReadAll(t *testing.T) {
 	// Dummy users
 	user1 := &user.User{
@@ -675,10 +677,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		SortBy    []string // Is a string, since this is the place where a query string comes from the user
 		OrderBy   []string
 
-		FilterBy           []string
-		FilterValue        []string
-		FilterComparator   []string
 		FilterIncludeNulls bool
+		Filter             string
 
 		CRUDable web.CRUDable
 		Rights   web.Rights
@@ -792,9 +792,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "ReadAll Tasks with range",
 			fields: fields{
-				FilterBy:         []string{"start_date", "end_date"},
-				FilterValue:      []string{"2018-12-11T03:46:40+00:00", "2018-12-13T11:20:01+00:00"},
-				FilterComparator: []string{"greater", "less"},
+				Filter: "start_date > '2018-12-11T03:46:40+00:00' || end_date < '2018-12-13T11:20:01+00:00'",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -807,9 +805,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "ReadAll Tasks with different range",
 			fields: fields{
-				FilterBy:         []string{"start_date", "end_date"},
-				FilterValue:      []string{"2018-12-13T11:20:00+00:00", "2018-12-16T22:40:00+00:00"},
-				FilterComparator: []string{"greater", "less"},
+				Filter: "start_date > '2018-12-13T11:20:00+00:00' || end_date < '2018-12-16T22:40:00+00:00'",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -821,20 +817,16 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "ReadAll Tasks with range with start date only",
 			fields: fields{
-				FilterBy:         []string{"start_date"},
-				FilterValue:      []string{"2018-12-12T07:33:20+00:00"},
-				FilterComparator: []string{"greater"},
+				Filter: "start_date > '2018-12-12T07:33:20+00:00'",
 			},
 			args:    defaultArgs,
 			want:    []*Task{},
 			wantErr: false,
 		},
 		{
-			name: "ReadAll Tasks with range with start date only and greater equals",
+			name: "ReadAll Tasks with range with start date only between",
 			fields: fields{
-				FilterBy:         []string{"start_date"},
-				FilterValue:      []string{"2018-12-12T07:33:20+00:00"},
-				FilterComparator: []string{"greater_equals"},
+				Filter: "start_date > '2018-12-12T00:00:00+00:00' && start_date < '2018-12-13T00:00:00+00:00'",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -844,11 +836,34 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "ReadAll Tasks with range with start date only and greater equals",
+			fields: fields{
+				Filter: "start_date >= '2018-12-12T07:33:20+00:00'",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task7,
+				task9,
+			},
+			wantErr: false,
+		},
+		{
+			name: "range and nesting",
+			fields: fields{
+				Filter: "(start_date > '2018-12-12T00:00:00+00:00' && start_date < '2018-12-13T00:00:00+00:00') || end_date > '2018-12-13T00:00:00+00:00'",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task7,
+				task8,
+				task9,
+			},
+			wantErr: false,
+		},
+		{
 			name: "undone tasks only",
 			fields: fields{
-				FilterBy:         []string{"done"},
-				FilterValue:      []string{"false"},
-				FilterComparator: []string{"equals"},
+				Filter: "done = false",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -892,9 +907,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "done tasks only",
 			fields: fields{
-				FilterBy:         []string{"done"},
-				FilterValue:      []string{"true"},
-				FilterComparator: []string{"equals"},
+				Filter: "done = true",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -905,9 +918,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "done tasks only - not equals done",
 			fields: fields{
-				FilterBy:         []string{"done"},
-				FilterValue:      []string{"false"},
-				FilterComparator: []string{"not_equals"},
+				Filter: "done != false",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -918,10 +929,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "range with nulls",
 			fields: fields{
-				FilterBy:           []string{"start_date", "end_date"},
-				FilterValue:        []string{"2018-12-11T03:46:40+00:00", "2018-12-13T11:20:01+00:00"},
-				FilterComparator:   []string{"greater", "less"},
 				FilterIncludeNulls: true,
+				Filter:             "start_date > '2018-12-11T03:46:40+00:00' || end_date < '2018-12-13T11:20:01+00:00'",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -976,9 +985,26 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "filtered with like",
 			fields: fields{
-				FilterBy:         []string{"title"},
-				FilterValue:      []string{"with"},
-				FilterComparator: []string{"like"},
+				Filter: "title ~ with",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task7,
+				task8,
+				task9,
+				task27,
+				task28,
+				task29,
+				task30,
+				task31,
+				task33,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filtered with like and '",
+			fields: fields{
+				Filter: "title ~ 'with'",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -997,9 +1023,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "filtered reminder dates",
 			fields: fields{
-				FilterBy:         []string{"reminders", "reminders"},
-				FilterValue:      []string{"2018-10-01T00:00:00+00:00", "2018-12-10T00:00:00+00:00"},
-				FilterComparator: []string{"greater", "less"},
+				Filter: "reminders > '2018-10-01T00:00:00+00:00' && reminders < '2018-12-10T00:00:00+00:00'",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -1009,11 +1033,21 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "filter in keyword",
+			fields: fields{
+				Filter: "id in '1,2,34'", // user does not have permission to access task 34
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task1,
+				task2,
+			},
+			wantErr: false,
+		},
+		{
 			name: "filter in",
 			fields: fields{
-				FilterBy:         []string{"id"},
-				FilterValue:      []string{"1,2,34"}, // Task 34 is forbidden for user 1
-				FilterComparator: []string{"in"},
+				Filter: "id ?= '1,2,34'", // user does not have permission to access task 34
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -1025,9 +1059,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "filter assignees by username",
 			fields: fields{
-				FilterBy:         []string{"assignees"},
-				FilterValue:      []string{"user1"},
-				FilterComparator: []string{"equals"},
+				Filter: "assignees = 'user1'",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -1038,9 +1070,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "filter assignees by username with users field name",
 			fields: fields{
-				FilterBy:         []string{"users"},
-				FilterValue:      []string{"user1"},
-				FilterComparator: []string{"equals"},
+				Filter: "users = 'user1'",
 			},
 			args:    defaultArgs,
 			want:    nil,
@@ -1049,9 +1079,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "filter assignees by username with user_id field name",
 			fields: fields{
-				FilterBy:         []string{"user_id"},
-				FilterValue:      []string{"user1"},
-				FilterComparator: []string{"equals"},
+				Filter: "user_id = 'user1'",
 			},
 			args:    defaultArgs,
 			want:    nil,
@@ -1060,9 +1088,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "filter assignees by multiple username",
 			fields: fields{
-				FilterBy:         []string{"assignees", "assignees"},
-				FilterValue:      []string{"user1", "user2"},
-				FilterComparator: []string{"equals", "equals"},
+				Filter: "assignees = 'user1' || assignees = 'user2'",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -1074,9 +1100,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "filter assignees by numbers",
 			fields: fields{
-				FilterBy:         []string{"assignees"},
-				FilterValue:      []string{"1"},
-				FilterComparator: []string{"equals"},
+				Filter: "assignees = 1",
 			},
 			args:    defaultArgs,
 			want:    []*Task{},
@@ -1085,20 +1109,51 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "filter assignees by name with like",
 			fields: fields{
-				FilterBy:         []string{"assignees"},
-				FilterValue:      []string{"user"},
-				FilterComparator: []string{"like"},
+				Filter: "assignees ~ 'user'",
 			},
-			args:    defaultArgs,
-			want:    []*Task{},
+			args: defaultArgs,
+			want: []*Task{
+				// Same as without any filter since the filter is ignored
+				task1,
+				task2,
+				task3,
+				task4,
+				task5,
+				task6,
+				task7,
+				task8,
+				task9,
+				task10,
+				task11,
+				task12,
+				task15,
+				task16,
+				task17,
+				task18,
+				task19,
+				task20,
+				task21,
+				task22,
+				task23,
+				task24,
+				task25,
+				task26,
+				task27,
+				task28,
+				task29,
+				task30,
+				task31,
+				task32,
+				task33,
+				task35,
+				task39,
+			},
 			wantErr: false,
 		},
 		{
 			name: "filter assignees in by id",
 			fields: fields{
-				FilterBy:         []string{"assignees"},
-				FilterValue:      []string{"1,2"},
-				FilterComparator: []string{"in"},
+				Filter: "assignees ?= '1,2'",
 			},
 			args:    defaultArgs,
 			want:    []*Task{},
@@ -1107,9 +1162,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "filter assignees in by username",
 			fields: fields{
-				FilterBy:         []string{"assignees"},
-				FilterValue:      []string{"user1,user2"},
-				FilterComparator: []string{"in"},
+				Filter: "assignees ?= 'user1,user2'",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -1121,9 +1174,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		{
 			name: "filter labels",
 			fields: fields{
-				FilterBy:         []string{"labels"},
-				FilterValue:      []string{"4"},
-				FilterComparator: []string{"equals"},
+				Filter: "labels = 4",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -1134,11 +1185,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "filter project",
+			name: "filter project_id",
 			fields: fields{
-				FilterBy:         []string{"project_id"},
-				FilterValue:      []string{"6"},
-				FilterComparator: []string{"equals"},
+				Filter: "project_id = 6",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -1146,13 +1195,31 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "filter project",
+			fields: fields{
+				Filter: "project = 6",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task15,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filter project forbidden",
+			fields: fields{
+				Filter: "project_id = 20", // user1 has no access to project 20
+			},
+			args:    defaultArgs,
+			want:    []*Task{},
+			wantErr: false,
+		},
 		// TODO filter parent project?
 		{
 			name: "filter by index",
 			fields: fields{
-				FilterBy:         []string{"index"},
-				FilterValue:      []string{"5"},
-				FilterComparator: []string{"equals"},
+				Filter: "index = 5",
 			},
 			args: defaultArgs,
 			want: []*Task{
@@ -1321,6 +1388,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task9,
 			},
 		},
+		// TODO unix dates
+		// TODO date magic
 	}
 
 	for _, tt := range tests {
@@ -1334,10 +1403,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				SortBy:    tt.fields.SortBy,
 				OrderBy:   tt.fields.OrderBy,
 
-				FilterBy:           tt.fields.FilterBy,
-				FilterValue:        tt.fields.FilterValue,
-				FilterComparator:   tt.fields.FilterComparator,
 				FilterIncludeNulls: tt.fields.FilterIncludeNulls,
+
+				Filter: tt.fields.Filter,
 
 				CRUDable: tt.fields.CRUDable,
 				Rights:   tt.fields.Rights,

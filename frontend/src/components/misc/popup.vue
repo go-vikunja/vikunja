@@ -1,7 +1,7 @@
 <template>
 	<slot
 		name="trigger"
-		:is-open="open"
+		:is-open="openValue"
 		:toggle="toggle"
 		:close="close"
 	/>
@@ -9,13 +9,13 @@
 		ref="popup"
 		class="popup"
 		:class="{
-			'is-open': open,
-			'has-overflow': props.hasOverflow && open
+			'is-open': openValue,
+			'has-overflow': props.hasOverflow && openValue
 		}"
 	>
 		<slot
 			name="content"
-			:is-open="open"
+			:is-open="openValue"
 			:toggle="toggle"
 			:close="close"
 		/>
@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue'
+import {ref, watch} from 'vue'
 import {onClickOutside} from '@vueuse/core'
 
 const props = defineProps({
@@ -31,24 +31,35 @@ const props = defineProps({
 		type: Boolean,
 		default: false,
 	},
+	open: {
+		type: Boolean,
+		default: false,
+	},
 })
 
 const emit = defineEmits(['close'])
 
-const open = ref(false)
+watch(
+	() => props.open,
+	nowOpen => {
+		openValue.value = nowOpen
+	},
+)
+
+const openValue = ref(false)
 const popup = ref<HTMLElement | null>(null)
 
 function close() {
-	open.value = false
+	openValue.value = false
 	emit('close')
 }
 
 function toggle() {
-	open.value = !open.value
+	openValue.value = !openValue.value
 }
 
 onClickOutside(popup, () => {
-	if (!open.value) {
+	if (!openValue.value) {
 		return
 	}
 	close()

@@ -76,23 +76,21 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 	return
 }
 
-//nolint:gocyclo
-func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
+func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (filterCond builder.Cond, err error) {
 
-	orderby, err := getOrderByDBStatement(opts)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	// Some filters need a special treatment since they are in a separate table
-	reminderFilters := []builder.Cond{}
-	assigneeFilters := []builder.Cond{}
-	labelFilters := []builder.Cond{}
-	projectFilters := []builder.Cond{}
-
-	var filters = make([]builder.Cond, 0, len(opts.filters))
+	var dbFilters = make([]builder.Cond, 0, len(rawFilters))
 	// To still find tasks with nil values, we exclude 0s when comparing with >/< values.
-	for _, f := range opts.filters {
+	for _, f := range rawFilters {
+
+		if nested, is := f.value.([]*taskFilter); is {
+			nestedDBFilters, err := convertFiltersToDBFilterCond(nested, includeNulls)
+			if err != nil {
+				return nil, err
+			}
+			dbFilters = append(dbFilters, nestedDBFilters)
+			continue
+		}
+
 		if f.field == "reminders" {
 			filter, err := getFilterCond(&taskFilter{
 				// recreating the struct here to avoid modifying it when reusing the opts struct
@@ -100,17 +98,17 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 				value:      f.value,
 				comparator: f.comparator,
 				isNumeric:  f.isNumeric,
-			}, opts.filterIncludeNulls)
+			}, includeNulls)
 			if err != nil {
-				return nil, totalCount, err
+				return nil, err
 			}
-			reminderFilters = append(reminderFilters, filter)
+			dbFilters = append(dbFilters, getFilterCondForSeparateTable("task_reminders", filter))
 			continue
 		}
 
 		if f.field == "assignees" {
 			if f.comparator == taskFilterComparatorLike {
-				return nil, totalCount, err
+				return
 			}
 			filter, err := getFilterCond(&taskFilter{
 				// recreating the struct here to avoid modifying it when reusing the opts struct
@@ -118,11 +116,17 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 				value:      f.value,
 				comparator: f.comparator,
 				isNumeric:  f.isNumeric,
-			}, opts.filterIncludeNulls)
+			}, includeNulls)
 			if err != nil {
-				return nil, totalCount, err
+				return nil, err
 			}
-			assigneeFilters = append(assigneeFilters, filter)
+
+			assigneeFilter := builder.In("user_id",
+				builder.Select("id").
+					From("users").
+					Where(filter),
+			)
+			dbFilters = append(dbFilters, getFilterCondForSeparateTable("task_assignees", assigneeFilter))
 			continue
 		}
 
@@ -133,11 +137,12 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 				value:      f.value,
 				comparator: f.comparator,
 				isNumeric:  f.isNumeric,
-			}, opts.filterIncludeNulls)
+			}, includeNulls)
 			if err != nil {
-				return nil, totalCount, err
+				return nil, err
 			}
-			labelFilters = append(labelFilters, filter)
+
+			dbFilters = append(dbFilters, getFilterCondForSeparateTable("label_tasks", filter))
 			continue
 		}
 
@@ -148,19 +153,60 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 				value:      f.value,
 				comparator: f.comparator,
 				isNumeric:  f.isNumeric,
-			}, opts.filterIncludeNulls)
+			}, includeNulls)
 			if err != nil {
-				return nil, totalCount, err
+				return nil, err
 			}
-			projectFilters = append(projectFilters, filter)
+
+			cond := builder.In(
+				"project_id",
+				builder.
+					Select("id").
+					From("projects").
+					Where(filter),
+			)
+			dbFilters = append(dbFilters, cond)
 			continue
 		}
 
-		filter, err := getFilterCond(f, opts.filterIncludeNulls)
+		filter, err := getFilterCond(f, includeNulls)
 		if err != nil {
-			return nil, totalCount, err
+			return nil, err
 		}
-		filters = append(filters, filter)
+		dbFilters = append(dbFilters, filter)
+	}
+
+	if len(dbFilters) > 0 {
+		if len(dbFilters) == 1 {
+			filterCond = dbFilters[0]
+		} else {
+			for i, f := range dbFilters {
+				if len(dbFilters) > i+1 {
+					switch rawFilters[i+1].join {
+					case filterConcatOr:
+						filterCond = builder.Or(filterCond, f, dbFilters[i+1])
+					case filterConcatAnd:
+						filterCond = builder.And(filterCond, f, dbFilters[i+1])
+					}
+				}
+			}
+		}
+	}
+
+	return filterCond, nil
+}
+
+//nolint:gocyclo
+func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
+
+	orderby, err := getOrderByDBStatement(opts)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	filterCond, err := convertFiltersToDBFilterCond(opts.parsedFilters, opts.filterIncludeNulls)
+	if err != nil {
+		return nil, 0, err
 	}
 
 	// Then return all tasks for that projects
@@ -197,53 +243,6 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 				))
 
 		favoritesCond = builder.In("id", favCond)
-	}
-
-	if len(reminderFilters) > 0 {
-		filters = append(filters, getFilterCondForSeparateTable("task_reminders", opts.filterConcat, reminderFilters))
-	}
-
-	if len(assigneeFilters) > 0 {
-		assigneeFilter := []builder.Cond{
-			builder.In("user_id",
-				builder.Select("id").
-					From("users").
-					Where(builder.Or(assigneeFilters...)),
-			)}
-		filters = append(filters, getFilterCondForSeparateTable("task_assignees", opts.filterConcat, assigneeFilter))
-	}
-
-	if len(labelFilters) > 0 {
-		filters = append(filters, getFilterCondForSeparateTable("label_tasks", opts.filterConcat, labelFilters))
-	}
-
-	if len(projectFilters) > 0 {
-		var filtercond builder.Cond
-		if opts.filterConcat == filterConcatOr {
-			filtercond = builder.Or(projectFilters...)
-		}
-		if opts.filterConcat == filterConcatAnd {
-			filtercond = builder.And(projectFilters...)
-		}
-
-		cond := builder.In(
-			"project_id",
-			builder.
-				Select("id").
-				From("projects").
-				Where(filtercond),
-		)
-		filters = append(filters, cond)
-	}
-
-	var filterCond builder.Cond
-	if len(filters) > 0 {
-		if opts.filterConcat == filterConcatOr {
-			filterCond = builder.Or(filters...)
-		}
-		if opts.filterConcat == filterConcatAnd {
-			filterCond = builder.And(filters...)
-		}
 	}
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
@@ -316,40 +315,22 @@ func convertFilterValues(value interface{}) string {
 	return ""
 }
 
-func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
+// Parsing and rebuilding the filter for Typesense has the advantage that we have more control over
+// what Typesense finally gets to see.
+func convertParsedFilterToTypesense(rawFilters []*taskFilter) (filterBy string, err error) {
 
-	var sortbyFields []string
-	for i, param := range opts.sortby {
-		// Validate the params
-		if err := param.validate(); err != nil {
-			return nil, totalCount, err
+	filters := []string{}
+
+	for _, f := range rawFilters {
+
+		if nested, is := f.value.([]*taskFilter); is {
+			nestedDBFilters, err := convertParsedFilterToTypesense(nested)
+			if err != nil {
+				return "", err
+			}
+			filters = append(filters, "("+nestedDBFilters+")")
+			continue
 		}
-
-		// Typesense does not allow sorting by ID, so we sort by created timestamp instead
-		if param.sortBy == "id" {
-			param.sortBy = "created"
-		}
-
-		sortbyFields = append(sortbyFields, param.sortBy+"(missing_values:last):"+param.orderBy.String())
-
-		if i == 2 {
-			// Typesense supports up to 3 sorting parameters
-			// https://typesense.org/docs/0.25.0/api/search.html#ranking-and-sorting-parameters
-			break
-		}
-	}
-
-	sortby := strings.Join(sortbyFields, ",")
-
-	projectIDStrings := []string{}
-	for _, id := range opts.projectIDs {
-		projectIDStrings = append(projectIDStrings, strconv.FormatInt(id, 10))
-	}
-	filterBy := []string{
-		"project_id: [" + strings.Join(projectIDStrings, ", ") + "]",
-	}
-
-	for _, f := range opts.filters {
 
 		if f.field == "reminders" {
 			f.field = "reminders.reminder"
@@ -361,6 +342,10 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 
 		if f.field == "labels" || f.field == "label_id" {
 			f.field = "labels.id"
+		}
+
+		if f.field == "project" {
+			f.field = "project_id"
 		}
 
 		filter := f.field
@@ -394,7 +379,67 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 			filter += "]"
 		}
 
-		filterBy = append(filterBy, filter)
+		filters = append(filters, filter)
+	}
+
+	if len(filters) > 0 {
+		if len(filters) == 1 {
+			filterBy = filters[0]
+		} else {
+			for i, f := range filters {
+				if len(filters) > i+1 {
+					switch rawFilters[i+1].join {
+					case filterConcatOr:
+						filterBy = f + " || " + filters[i+1]
+					case filterConcatAnd:
+						filterBy = f + " && " + filters[i+1]
+					}
+				}
+			}
+		}
+	}
+
+	return
+}
+
+func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
+
+	var sortbyFields []string
+	for i, param := range opts.sortby {
+		// Validate the params
+		if err := param.validate(); err != nil {
+			return nil, totalCount, err
+		}
+
+		// Typesense does not allow sorting by ID, so we sort by created timestamp instead
+		if param.sortBy == "id" {
+			param.sortBy = "created"
+		}
+
+		sortbyFields = append(sortbyFields, param.sortBy+"(missing_values:last):"+param.orderBy.String())
+
+		if i == 2 {
+			// Typesense supports up to 3 sorting parameters
+			// https://typesense.org/docs/0.25.0/api/search.html#ranking-and-sorting-parameters
+			break
+		}
+	}
+
+	sortby := strings.Join(sortbyFields, ",")
+
+	projectIDStrings := []string{}
+	for _, id := range opts.projectIDs {
+		projectIDStrings = append(projectIDStrings, strconv.FormatInt(id, 10))
+	}
+
+	filter, err := convertParsedFilterToTypesense(opts.parsedFilters)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	filterBy := []string{
+		"project_id: [" + strings.Join(projectIDStrings, ", ") + "]",
+		"(" + filter + ")",
 	}
 
 	////////////////

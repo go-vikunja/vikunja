@@ -33,6 +33,10 @@ export const useLabelStore = defineStore('label', () => {
 	const getLabelsByIds = computed(() => {
 		return (ids: ILabel['id'][]) => Object.values(labels.value).filter(({id}) => ids.includes(id))
 	})
+	
+	const getLabelById = computed(() => {
+		return (labelId: ILabel['id']) => Object.values(labels.value).find(({id}) => id === labelId)
+	})
 
 	// **
 	// * Checks if a project of labels is available in the store and filters them then query
@@ -138,6 +142,7 @@ export const useLabelStore = defineStore('label', () => {
 		isLoading,
 
 		getLabelsByIds,
+		getLabelById,
 		filterLabelsByQuery,
 		getLabelsByExactTitles,
 

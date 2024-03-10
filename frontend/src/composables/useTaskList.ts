@@ -2,7 +2,7 @@ import {ref, shallowReactive, watch, computed, type ComputedGetter} from 'vue'
 import {useRoute} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 
-import TaskCollectionService from '@/services/taskCollection'
+import TaskCollectionService, {getDefaultTaskFilterParams} from '@/services/taskCollection'
 import type {ITask} from '@/modelTypes/ITask'
 import {error} from '@/message'
 import type {IProject} from '@/modelTypes/IProject'
@@ -23,16 +23,6 @@ export interface SortBy {
 	updated?: Order
 	done_at?: Order,
 }
-
-// FIXME: merge with DEFAULT_PARAMS in filters.vue
-export const getDefaultParams = () => ({
-	sort_by: ['position', 'id'],
-	order_by: ['asc', 'desc'],
-	filter_by: ['done'],
-	filter_value: ['false'],
-	filter_comparator: ['equals'],
-	filter_concat: 'and',
-})
 
 const SORT_BY_DEFAULT: SortBy = {
 	id: 'desc',
@@ -67,7 +57,7 @@ export function useTaskList(projectIdGetter: ComputedGetter<IProject['id']>, sor
 	
 	const projectId = computed(() => projectIdGetter())
 	
-	const params = ref({...getDefaultParams()})
+	const params = ref({...getDefaultTaskFilterParams()})
 	
 	const search = ref('')
 	const page = useRouteQuery('page', '1', { transform: Number })

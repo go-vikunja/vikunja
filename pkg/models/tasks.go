@@ -162,8 +162,8 @@ func (t *Task) GetFrontendURL() string {
 type taskFilterConcatinator string
 
 const (
-	filterConcatAnd = "and"
-	filterConcatOr  = "or"
+	filterConcatAnd taskFilterConcatinator = "and"
+	filterConcatOr  taskFilterConcatinator = "or"
 )
 
 type taskSearchOptions struct {
@@ -171,9 +171,9 @@ type taskSearchOptions struct {
 	page               int
 	perPage            int
 	sortby             []*sortParam
-	filters            []*taskFilter
-	filterConcat       taskFilterConcatinator
+	parsedFilters      []*taskFilter
 	filterIncludeNulls bool
+	filter             string
 	projectIDs         []int64
 }
 
@@ -238,21 +238,13 @@ func getFilterCond(f *taskFilter, includeNulls bool) (cond builder.Cond, err err
 	return
 }
 
-func getFilterCondForSeparateTable(table string, concat taskFilterConcatinator, conds []builder.Cond) builder.Cond {
-	var filtercond builder.Cond
-	if concat == filterConcatOr {
-		filtercond = builder.Or(conds...)
-	}
-	if concat == filterConcatAnd {
-		filtercond = builder.And(conds...)
-	}
-
+func getFilterCondForSeparateTable(table string, cond builder.Cond) builder.Cond {
 	return builder.In(
 		"id",
 		builder.
 			Select("task_id").
 			From(table).
-			Where(filtercond),
+			Where(cond),
 	)
 }
 
@@ -271,11 +263,6 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 	// If the user does not have any projects, don't try to get any tasks
 	if len(projects) == 0 {
 		return nil, 0, 0, nil
-	}
-
-	// Set the default concatinator of filter variables to or if none was provided
-	if opts.filterConcat == "" {
-		opts.filterConcat = filterConcatOr
 	}
 
 	// Get all project IDs and get the tasks

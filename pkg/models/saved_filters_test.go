@@ -65,7 +65,7 @@ func TestSavedFilter_Create(t *testing.T) {
 	vals := map[string]interface{}{
 		"title":       "'test'",
 		"description": "'Lorem Ipsum dolor sit amet'",
-		"filters":     "'{\"sort_by\":null,\"order_by\":null,\"filter_by\":null,\"filter_value\":null,\"filter_comparator\":null,\"filter_concat\":\"\",\"filter_include_nulls\":false}'",
+		"filters":     "'{\"sort_by\":null,\"order_by\":null,\"filter\":\"\",\"filter_include_nulls\":false}'",
 		"owner_id":    1,
 	}
 	// Postgres can't compare json values directly, see https://dba.stackexchange.com/a/106290/210721

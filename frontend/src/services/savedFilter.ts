@@ -63,9 +63,6 @@ export default class SavedFilterService extends AbstractService<ISavedFilter> {
 		// the filter values in snake_sćase for url parameters.
 		model.filters = objectToCamelCase(model.filters)
 
-		// Make sure all filterValues are passes as strings. This is a requirement of the api.
-		model.filters.filterValue = model.filters.filterValue.map(v => String(v))
-
 		return model
 	}
 

@@ -1021,7 +1021,7 @@ func (err ErrTaskRelationCycle) Error() string {
 }
 
 // ErrCodeTaskRelationCycle holds the unique world-error code of this error
-const ErrCodeTaskRelationCycle = 4022
+const ErrCodeTaskRelationCycle = 4023
 
 // HTTPError holds the http error description
 func (err ErrTaskRelationCycle) HTTPError() web.HTTPError {
@@ -1029,6 +1029,34 @@ func (err ErrTaskRelationCycle) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusConflict,
 		Code:     ErrCodeTaskRelationCycle,
 		Message:  "This task relation would create a cycle.",
+	}
+}
+
+// ErrInvalidFilterExpression represents an error where the task filter expression was invalid
+type ErrInvalidFilterExpression struct {
+	Expression      string
+	ExpressionError error
+}
+
+// IsErrInvalidFilterExpression checks if an error is ErrInvalidFilterExpression.
+func IsErrInvalidFilterExpression(err error) bool {
+	_, ok := err.(ErrInvalidFilterExpression)
+	return ok
+}
+
+func (err ErrInvalidFilterExpression) Error() string {
+	return fmt.Sprintf("Task filter expression '%s' is invalid [ExpressionError: %v]", err.Expression, err.ExpressionError)
+}
+
+// ErrCodeInvalidFilterExpression holds the unique world-error code of this error
+const ErrCodeInvalidFilterExpression = 4024
+
+// HTTPError holds the http error description
+func (err ErrInvalidFilterExpression) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidFilterExpression,
+		Message:  fmt.Sprintf("The filter expression '%s' is invalid: %v", err.Expression, err.ExpressionError),
 	}
 }
 
