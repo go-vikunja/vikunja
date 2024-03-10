@@ -88,7 +88,7 @@ watchDebounced(
 		val.filter = transformFilterStringFromApi(
 			val?.filter || '',
 			labelId => labelStore.getLabelById(labelId)?.title,
-			projectId => projectStore.projects.value[projectId]?.title || null,
+			projectId => projectStore.projects[projectId]?.title || null,
 		)
 		params.value = val
 	},

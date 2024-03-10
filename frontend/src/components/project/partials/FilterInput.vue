@@ -211,9 +211,9 @@ function handleFieldInput() {
 
 function autocompleteSelect(value) {
 	filterQuery.value = filterQuery.value.substring(0, autocompleteMatchPosition.value + 1) +
-		(autocompleteResultType.value === 'labels'
-			? value.title
-			: value.username) +
+		(autocompleteResultType.value === 'assignees'
+			? value.username
+			: value.title) +
 		filterQuery.value.substring(autocompleteMatchPosition.value + autocompleteMatchText.value.length + 1)
 
 	autocompleteResults.value = []
