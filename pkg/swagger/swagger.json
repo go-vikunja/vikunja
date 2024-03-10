@@ -8221,6 +8221,14 @@
                     "description": "The unique, numeric id of this team.",
                     "type": "integer"
                 },
+                "include_public": {
+                    "description": "Query parameter controlling whether to include public projects or not",
+                    "type": "boolean"
+                },
+                "is_public": {
+                    "description": "Defines wether the team should be publicly discoverable when sharing a project",
+                    "type": "boolean"
+                },
                 "members": {
                     "description": "An array of all members in this team.",
                     "type": "array",
@@ -8355,6 +8363,14 @@
                 "id": {
                     "description": "The unique, numeric id of this team.",
                     "type": "integer"
+                },
+                "include_public": {
+                    "description": "Query parameter controlling whether to include public projects or not",
+                    "type": "boolean"
+                },
+                "is_public": {
+                    "description": "Defines wether the team should be publicly discoverable when sharing a project",
+                    "type": "boolean"
                 },
                 "members": {
                     "description": "An array of all members in this team.",
@@ -8877,6 +8893,9 @@
                 },
                 "motd": {
                     "type": "string"
+                },
+                "public_teams_enabled": {
+                    "type": "boolean"
                 },
                 "registration_enabled": {
                     "type": "boolean"

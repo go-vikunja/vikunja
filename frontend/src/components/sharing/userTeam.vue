@@ -172,6 +172,7 @@ import Multiselect from '@/components/input/multiselect.vue'
 import Nothing from '@/components/misc/nothing.vue'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
+import {useConfigStore} from '@/stores/config'
 
 // FIXME: I think this whole thing can now only manage user/team sharing for projects? Maybe remove a little generalization?
 
@@ -210,8 +211,8 @@ const selectedRight = ref({})
 const sharables = ref([])
 const showDeleteModal = ref(false)
 
-
 const authStore = useAuthStore()
+const configStore = useConfigStore()
 const userInfo = computed(() => authStore.info)
 
 function createShareTypeNameComputed(count: number) {
@@ -360,7 +361,15 @@ async function find(query: string) {
 		found.value = []
 		return
 	}
-	const results = await searchService.getAll({}, {s: query})
+
+	// Include public teams here if we are sharing with teams and its enabled in the config
+	let results = []
+	if (props.shareType === 'team' && configStore.publicTeamsEnabled) {
+		results = await searchService.getAll({}, {s: query, includePublic: true})
+	} else {
+		results = await searchService.getAll({}, {s: query})
+	}
+
 	found.value = results
 		.filter(m => {
 			if(props.shareType === 'user' && m.id === currentUserId.value) {

@@ -346,6 +346,17 @@ Full path: `service.customlogourl`
 Environment path: `VIKUNJA_SERVICE_CUSTOMLOGOURL`
 
 
+### enablepublicteams
+
+discoverable when sharing a project, therefore not only showing teams the user is member of.
+
+Default: `false`
+
+Full path: `service.enablepublicteams`
+
+Environment path: `VIKUNJA_SERVICE_ENABLEPUBLICTEAMS`
+
+
 ---
 
 ## sentry

@@ -33,6 +33,27 @@
 				>
 					{{ $t('team.attributes.nameRequired') }}
 				</p>
+				<div
+					v-if="configStore.publicTeamsEnabled"
+					class="field"
+				>
+					<label
+						class="label"
+						for="teamIsPublic"
+					>{{ $t('team.attributes.isPublic') }}</label>
+					<div
+						class="control is-expanded"
+						:class="{ 'is-loading': teamService.loading }"
+					>
+						<Fancycheckbox
+							v-model="team.isPublic"
+							:disabled="teamMemberService.loading || undefined"
+							:class="{ 'disabled': teamService.loading }"
+						>
+							{{ $t('team.attributes.isPublicDescription') }}
+						</Fancycheckbox>
+					</div>
+				</div>
 				<div class="field">
 					<label
 						class="label"
@@ -242,6 +263,7 @@ import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
 
 import Editor from '@/components/input/AsyncEditor'
+import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import Multiselect from '@/components/input/multiselect.vue'
 import User from '@/components/misc/user.vue'
 
@@ -254,12 +276,14 @@ import {RIGHTS as Rights} from '@/constants/rights'
 import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
+import {useConfigStore} from '@/stores/config'
 
 import type {ITeam} from '@/modelTypes/ITeam'
 import type {IUser} from '@/modelTypes/IUser'
 import type {ITeamMember} from '@/modelTypes/ITeamMember'
 
 const authStore = useAuthStore()
+const configStore = useConfigStore()
 const route = useRoute()
 const router = useRouter()
 const {t} = useI18n({useScope: 'global'})

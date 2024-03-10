@@ -51,6 +51,7 @@ type vikunjaInfos struct {
 	TaskCommentsEnabled        bool      `json:"task_comments_enabled"`
 	DemoModeEnabled            bool      `json:"demo_mode_enabled"`
 	WebhooksEnabled            bool      `json:"webhooks_enabled"`
+	PublicTeamsEnabled         bool      `json:"public_teams_enabled"`
 }
 
 type authInfo struct {
@@ -95,6 +96,7 @@ func Info(c echo.Context) error {
 		TaskCommentsEnabled:    config.ServiceEnableTaskComments.GetBool(),
 		DemoModeEnabled:        config.ServiceDemoMode.GetBool(),
 		WebhooksEnabled:        config.WebhooksEnabled.GetBool(),
+		PublicTeamsEnabled:     config.ServiceEnablePublicTeams.GetBool(),
 		AvailableMigrators: []string{
 			(&vikunja_file.FileMigrator{}).Name(),
 			(&ticktick.Migrator{}).Name(),

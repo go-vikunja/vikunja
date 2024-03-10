@@ -25,6 +25,26 @@
 				>
 			</div>
 		</div>
+		<div
+			v-if="configStore.publicTeamsEnabled"
+			class="field"
+		>
+			<label
+				class="label"
+				for="teamIsPublic"
+			>{{ $t('team.attributes.isPublic') }}</label>
+			<div
+				class="control is-expanded"
+				:class="{ 'is-loading': teamService.loading }"
+			>
+				<Fancycheckbox
+					v-model="team.isPublic"
+					:class="{ 'disabled': teamService.loading }"
+				>
+					{{ $t('team.attributes.isPublicDescription') }}
+				</Fancycheckbox>
+			</div>
+		</div>
 		<p
 			v-if="showError && team.name === ''"
 			class="help is-danger"
@@ -46,10 +66,13 @@ import TeamModel from '@/models/team'
 import TeamService from '@/services/team'
 
 import CreateEdit from '@/components/misc/create-edit.vue'
+import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 
 import {useTitle} from '@/composables/useTitle'
 import {useRouter} from 'vue-router'
 import {success} from '@/message'
+
+import {useConfigStore} from '@/stores/config'
 
 const {t} = useI18n()
 const title = computed(() => t('team.create.title'))
@@ -59,6 +82,8 @@ const router = useRouter()
 const teamService = shallowReactive(new TeamService())
 const team = reactive(new TeamModel())
 const showError = ref(false)
+
+const configStore = useConfigStore()
 
 async function newTeam() {
 	if (team.name === '') {

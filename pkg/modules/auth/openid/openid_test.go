@@ -128,8 +128,41 @@ func TestGetOrCreateUser(t *testing.T) {
 			"email": cl.Email,
 		}, false)
 		db.AssertExists(t, "teams", map[string]interface{}{
-			"id":   oidcTeams,
-			"name": team + " (OIDC)",
+			"id":        oidcTeams,
+			"name":      team + " (OIDC)",
+			"is_public": false,
+		}, false)
+	})
+
+	t.Run("Update IsPublic flag for existing team", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		team := "testteam15"
+		oidcID := "15"
+		cl := &claims{
+			Email: "other-email-address@some.service.com",
+			VikunjaGroups: []map[string]interface{}{
+				{"name": team, "oidcID": oidcID, "isPublic": true},
+			},
+		}
+
+		u, err := getOrCreateUser(s, cl, "https://some.service.com", "12345")
+		require.NoError(t, err)
+		teamData, errs := getTeamDataFromToken(cl.VikunjaGroups, nil)
+		for _, err := range errs {
+			require.NoError(t, err)
+		}
+		oidcTeams, err := AssignOrCreateUserToTeams(s, u, teamData, "https://some.issuer")
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"id":        oidcTeams,
+			"name":      team + " (OIDC)",
+			"is_public": true,
 		}, false)
 	})
 

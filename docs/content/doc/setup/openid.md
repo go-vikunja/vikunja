@@ -99,7 +99,7 @@ It depends on the provider being used as well as the preferences of the administ
 Typically you'd want to request an additional scope (e.g. `vikunja_scope`) which then triggers the identity provider to add the claim.
 If the `vikunja_groups` is part of the **ID token**, Vikunja will  start the procedure and import teams and team memberships.
 
-The claim structure expexted by Vikunja is as follows:
+The minimal claim structure expected by Vikunja is as follows:
 
 ```json
 {
@@ -112,6 +112,21 @@ The claim structure expexted by Vikunja is as follows:
             "name": "team 2",
             "oidcID": 35933
         }
+    ]
+}
+```
+
+It also also possible to pass the description and isPublic flag as optional parameter. If not present, the description will be empty and project visibility defaults to false.
+
+```json
+{
+    "vikunja_groups": [
+        {
+            "name": "team 3",
+            "oidcID": 33349,
+						"description": "My Team Description",
+						"isPublic": true
+        },
     ]
 }
 ```

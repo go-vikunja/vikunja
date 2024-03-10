@@ -19,6 +19,7 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 
 	"code.vikunja.io/api/pkg/events"
@@ -52,6 +53,12 @@ type Team struct {
 	Created time.Time `xorm:"created" json:"created"`
 	// A timestamp when this relation was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated" json:"updated"`
+
+	// Defines wether the team should be publicly discoverable when sharing a project
+	IsPublic bool `xorm:"not null default false" json:"is_public"`
+
+	// Query parameter controlling whether to include public projects or not
+	IncludePublic bool `xorm:"-" query:"include_public" json:"include_public"`
 
 	web.CRUDable `xorm:"-" json:"-"`
 	web.Rights   `xorm:"-" json:"-"`
@@ -100,6 +107,7 @@ type OIDCTeam struct {
 	Name        string
 	OidcID      string
 	Description string
+	IsPublic    bool
 }
 
 // GetTeamByID gets a team by its ID
@@ -287,11 +295,24 @@ func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 
 	limit, start := getLimitFromPageIndex(page, perPage)
 	all := []*Team{}
+
 	query := s.Select("teams.*").
 		Table("teams").
 		Join("INNER", "team_members", "team_members.team_id = teams.id").
-		Where("team_members.user_id = ?", a.GetID()).
 		Where(db.ILIKE("teams.name", search))
+
+	// If public teams are enabled, we want to include them in the result
+	if config.ServiceEnablePublicTeams.GetBool() && t.IncludePublic {
+		query = query.Where(
+			builder.Or(
+				builder.Eq{"teams.is_public": true},
+				builder.Eq{"team_members.user_id": a.GetID()},
+			),
+		)
+	} else {
+		query = query.Where("team_members.user_id = ?", a.GetID())
+	}
+
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
@@ -398,7 +419,7 @@ func (t *Team) Update(s *xorm.Session, _ web.Auth) (err error) {
 		return
 	}
 
-	_, err = s.ID(t.ID).Update(t)
+	_, err = s.ID(t.ID).UseBool("is_public").Update(t)
 	if err != nil {
 		return
 	}

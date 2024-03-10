@@ -62,6 +62,9 @@ service:
   allowiconchanges: true
   # Allow using a custom logo via external URL.
   customlogourl: ''
+  # Enables the public team feature. If enabled, it is possible to configure teams to be public, which makes them
+  # discoverable when sharing a project, therefore not only showing teams the user is member of.
+  enablepublicteams: false
 
 sentry:
   # If set to true, enables anonymous error tracking of api errors via Sentry. This allows us to gather more 

@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 
@@ -49,6 +50,7 @@ func TestTeam_Create(t *testing.T) {
 			"id":          team.ID,
 			"name":        "Testteam293",
 			"description": "Lorem Ispum",
+			"is_public":   false,
 		}, false)
 	})
 	t.Run("empty name", func(t *testing.T) {
@@ -60,6 +62,27 @@ func TestTeam_Create(t *testing.T) {
 		err := team.Create(s, doer)
 		require.Error(t, err)
 		assert.True(t, IsErrTeamNameCannotBeEmpty(err))
+	})
+	t.Run("public", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		team := &Team{
+			Name:        "Testteam293_Public",
+			Description: "Lorem Ispum",
+			IsPublic:    true,
+		}
+		err := team.Create(s, doer)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"id":          team.ID,
+			"name":        "Testteam293_Public",
+			"description": "Lorem Ispum",
+			"is_public":   true,
+		}, false)
 	})
 }
 
@@ -125,6 +148,58 @@ func TestTeam_ReadAll(t *testing.T) {
 		ts := teams.([]*Team)
 		assert.Len(t, ts, 1)
 		assert.Equal(t, int64(2), ts[0].ID)
+	})
+	t.Run("public discovery disabled", func(t *testing.T) {
+
+		s := db.NewSession()
+		defer s.Close()
+
+		team := &Team{}
+
+		// Default setting is having ServiceEnablePublicTeams disabled
+		// In this default case, fetching teams with or without public flag should return the same result
+
+		// Fetch without public flag
+		teams, _, _, err := team.ReadAll(s, doer, "", 1, 50)
+		require.NoError(t, err)
+		assert.Equal(t, reflect.Slice, reflect.TypeOf(teams).Kind())
+		ts := teams.([]*Team)
+		assert.Len(t, ts, 5)
+
+		// Fetch with public flag
+		team.IncludePublic = true
+		teams, _, _, err = team.ReadAll(s, doer, "", 1, 50)
+		require.NoError(t, err)
+		assert.Equal(t, reflect.Slice, reflect.TypeOf(teams).Kind())
+		ts = teams.([]*Team)
+		assert.Len(t, ts, 5)
+	})
+
+	t.Run("public discovery enabled", func(t *testing.T) {
+
+		s := db.NewSession()
+		defer s.Close()
+
+		team := &Team{}
+
+		// Enable ServiceEnablePublicTeams feature
+		config.ServiceEnablePublicTeams.Set(true)
+
+		// Fetch without public flag should be the same as before
+		team.IncludePublic = false
+		teams, _, _, err := team.ReadAll(s, doer, "", 1, 50)
+		require.NoError(t, err)
+		assert.Equal(t, reflect.Slice, reflect.TypeOf(teams).Kind())
+		ts := teams.([]*Team)
+		assert.Len(t, ts, 5)
+
+		// Fetch with public flag should return more teams
+		team.IncludePublic = true
+		teams, _, _, err = team.ReadAll(s, doer, "", 1, 50)
+		require.NoError(t, err)
+		assert.Equal(t, reflect.Slice, reflect.TypeOf(teams).Kind())
+		ts = teams.([]*Team)
+		assert.Len(t, ts, 7)
 	})
 }
 

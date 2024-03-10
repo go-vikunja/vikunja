@@ -986,7 +986,9 @@
       "description": "Description",
       "descriptionPlaceholder": "Describe the team here, hit '/' for more options…",
       "admin": "Admin",
-      "member": "Member"
+      "member": "Member",
+      "isPublic": "Public Team",
+      "isPublicDescription": "Make the team publicly discoverable. When enabled, anyone can share projects with this team even when not being a direct member."
     }
   },
   "keyboardShortcuts": {

@@ -298,14 +298,27 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 		var name string
 		var description string
 		var oidcID string
+		var IsPublic bool
+
+		// Read name
 		_, exists := team["name"]
 		if exists {
 			name = team["name"].(string)
 		}
+
+		// Read description
 		_, exists = team["description"]
 		if exists {
 			description = team["description"].(string)
 		}
+
+		// Read isPublic flag
+		_, exists = team["isPublic"]
+		if exists {
+			IsPublic = team["isPublic"].(bool)
+		}
+
+		// Read oidcID
 		_, exists = team["oidcID"]
 		if exists {
 			switch t := team["oidcID"].(type) {
@@ -324,7 +337,7 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 			errs = append(errs, &user.ErrOpenIDCustomScopeMalformed{})
 			continue
 		}
-		teamData = append(teamData, &models.OIDCTeam{Name: name, OidcID: oidcID, Description: description})
+		teamData = append(teamData, &models.OIDCTeam{Name: name, OidcID: oidcID, Description: description, IsPublic: IsPublic})
 	}
 	return teamData, errs
 }
@@ -339,6 +352,7 @@ func CreateOIDCTeam(s *xorm.Session, teamData *models.OIDCTeam, u *user.User, is
 		Description: teamData.Description,
 		OidcID:      teamData.OidcID,
 		Issuer:      issuer,
+		IsPublic:    teamData.IsPublic,
 	}
 	err = team.CreateNewTeam(s, u, false)
 	return team, err
@@ -363,12 +377,24 @@ func GetOrCreateTeamsByOIDC(s *xorm.Session, teamData []*models.OIDCTeam, u *use
 			continue
 		}
 
+		// Compare the name and update if it changed
 		if team.Name != getOIDCTeamName(oidcTeam.Name) {
 			team.Name = getOIDCTeamName(oidcTeam.Name)
-			err = team.Update(s, u)
-			if err != nil {
-				return nil, err
-			}
+		}
+
+		// Compare the description and update if it changed
+		if team.Description != oidcTeam.Description {
+			team.Description = oidcTeam.Description
+		}
+
+		// Compare the isPublic flag and update if it changed
+		if team.IsPublic != oidcTeam.IsPublic {
+			team.IsPublic = oidcTeam.IsPublic
+		}
+
+		err = team.Update(s, u)
+		if err != nil {
+			return nil, err
 		}
 
 		log.Debugf("Team with oidc_id %v and name %v already exists.", team.OidcID, team.Name)

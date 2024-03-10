@@ -37,6 +37,7 @@ export interface ConfigState {
 			providers: IProvider[],
 		},
 	},
+	publicTeamsEnabled: boolean,
 }
 
 export const useConfigStore = defineStore('config', () => {
@@ -70,6 +71,7 @@ export const useConfigStore = defineStore('config', () => {
 				providers: [],
 			},
 		},
+		publicTeamsEnabled: false,
 	})
 
 	const migratorsEnabled = computed(() => state.availableMigrators?.length > 0)

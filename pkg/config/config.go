@@ -64,6 +64,7 @@ const (
 	ServiceMaxAvatarSize         Key = `service.maxavatarsize`
 	ServiceAllowIconChanges      Key = `service.allowiconchanges`
 	ServiceCustomLogoURL         Key = `service.customlogourl`
+	ServiceEnablePublicTeams     Key = `service.enablepublicteams`
 
 	SentryEnabled         Key = `sentry.enabled`
 	SentryDsn             Key = `sentry.dsn`
@@ -312,6 +313,7 @@ func InitDefaultConfig() {
 	ServiceMaxAvatarSize.setDefault(1024)
 	ServiceDemoMode.setDefault(false)
 	ServiceAllowIconChanges.setDefault(true)
+	ServiceEnablePublicTeams.setDefault(false)
 
 	// Sentry
 	SentryDsn.setDefault("https://440eedc957d545a795c17bbaf477497c@o1047380.ingest.sentry.io/4504254983634944")
