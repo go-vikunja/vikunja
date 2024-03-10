@@ -128,10 +128,10 @@ var userCmd = &cobra.Command{
 var userListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "Shows a list of all users.",
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInit()
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		s := db.NewSession()
 		defer s.Close()
 
@@ -173,10 +173,10 @@ var userListCmd = &cobra.Command{
 var userCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a new user.",
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInit()
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		s := db.NewSession()
 		defer s.Close()
 
@@ -214,10 +214,10 @@ var userUpdateCmd = &cobra.Command{
 	Use:   "update [user id]",
 	Short: "Update an existing user.",
 	Args:  cobra.ExactArgs(1),
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInit()
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		s := db.NewSession()
 		defer s.Close()
 
@@ -250,11 +250,11 @@ var userUpdateCmd = &cobra.Command{
 var userResetPasswordCmd = &cobra.Command{
 	Use:   "reset-password [user id]",
 	Short: "Reset a users password, either through mailing them a reset link or directly.",
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInit()
 	},
 	Args: cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		s := db.NewSession()
 		defer s.Close()
 
@@ -286,11 +286,11 @@ var userResetPasswordCmd = &cobra.Command{
 var userChangeStatusCmd = &cobra.Command{
 	Use:   "change-status [user id]",
 	Short: "Enable or disable a user. Will toggle the current status if no flag (--enable or --disable) is provided.",
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInit()
 	},
 	Args: cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		s := db.NewSession()
 		defer s.Close()
 
@@ -327,10 +327,10 @@ var userDeleteCmd = &cobra.Command{
 	Short: "Delete an existing user.",
 	Long:  "Kick off the user deletion process. If call without the --now flag, this command will only trigger an email to the user in order for them to confirm and start the deletion process. With the flag the user is deleted immediately. USE WITH CAUTION.",
 	Args:  cobra.ExactArgs(1),
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInit()
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		if userFlagDeleteNow && !userFlagDeleteConfirm {
 			fmt.Println("You requested to delete the user immediately. Are you sure?")
 			fmt.Println(`To confirm, please type "yes, I confirm" in all uppercase:`)

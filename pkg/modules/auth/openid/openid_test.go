@@ -185,7 +185,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		require.NoError(t, err)
 		teamIDsToLeave := utils.NotIn(oldOidcTeams, oidcTeams)
 		require.NoError(t, err)
-		err = RemoveUserFromTeamsByIds(s, u, teamIDsToLeave)
+		err = RemoveUserFromTeamsByIDs(s, u, teamIDsToLeave)
 		require.NoError(t, err)
 		errs = RemoveEmptySSOTeams(s, teamIDsToLeave)
 		for _, err = range errs {
@@ -226,7 +226,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		require.NoError(t, err)
 		teamIDsToLeave := utils.NotIn(oldOidcTeams, oidcTeams)
 		require.NoError(t, err)
-		err = RemoveUserFromTeamsByIds(s, u, teamIDsToLeave)
+		err = RemoveUserFromTeamsByIDs(s, u, teamIDsToLeave)
 		require.NoError(t, err)
 		errs = RemoveEmptySSOTeams(s, teamIDsToLeave)
 		for _, err := range errs {

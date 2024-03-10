@@ -36,10 +36,10 @@ func init() {
 var migrateCmd = &cobra.Command{
 	Use:   "migrate",
 	Short: "Run all database migrations which didn't already run.",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRun: func(_ *cobra.Command, _ []string) {
 		initialize.LightInit()
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		migration.Migrate(nil)
 	},
 }
@@ -47,7 +47,7 @@ var migrateCmd = &cobra.Command{
 var migrateListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "Show a list with all database migrations.",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		migration.ListMigrations()
 	},
 }
@@ -57,7 +57,7 @@ var rollbackUntilFlag string
 var migrationRollbackCmd = &cobra.Command{
 	Use:   "rollback",
 	Short: "Roll migrations back until a certain point.",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		migration.Rollback(rollbackUntilFlag)
 	},
 }

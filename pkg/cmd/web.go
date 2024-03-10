@@ -67,10 +67,10 @@ func setupUnixSocket(e *echo.Echo) error {
 var webCmd = &cobra.Command{
 	Use:   "web",
 	Short: "Starts the rest api web server",
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInit()
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 
 		// Version notification
 		log.Infof("Vikunja version %s", version.Version)

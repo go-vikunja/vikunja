@@ -32,10 +32,10 @@ func init() {
 var indexCmd = &cobra.Command{
 	Use:   "index",
 	Short: "Reindex all of Vikunja's data into Typesense. This will remove any existing index.",
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInitWithoutAsync()
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		if config.TypesenseURL.GetString() == "" {
 			log.Error("Typesense not configured")
 			return
@@ -61,10 +61,10 @@ var indexCmd = &cobra.Command{
 var partialReindexCmd = &cobra.Command{
 	Use:   "partial-index",
 	Short: "Reindex any tasks which were not indexed yet into Typesense. This will not remove any existing index.",
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInitWithoutAsync()
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		if config.TypesenseURL.GetString() == "" {
 			log.Error("Typesense not configured")
 			return

@@ -33,13 +33,13 @@ var testmailCmd = &cobra.Command{
 	Use:   "testmail [email]",
 	Short: "Send a test mail using the configured smtp connection",
 	Args:  cobra.ExactArgs(1),
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.LightInit()
 
 		// Start the mail daemon
 		mail.StartMailDaemon()
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		log.Info("Sending testmail...")
 		message := notifications.NewMail().
 			From("Vikunja <"+config.MailerFromEmail.GetString()+">").

@@ -99,3 +99,7 @@ issues:
     - path: pkg/modules/migration/ticktick/ticktick_test.go
       linters:
         - testifylint
+    - path: pkg/migration/*
+      text: "parameter 'tx' seems to be unused, consider removing or renaming it as"
+      linters:
+        - revive

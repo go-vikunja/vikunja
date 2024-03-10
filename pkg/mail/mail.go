@@ -50,8 +50,8 @@ func getClient() (*mail.Client, error) {
 	opts := []mail.Option{
 		mail.WithPort(config.MailerPort.GetInt()),
 		mail.WithTLSPolicy(tlsPolicy),
-		//#nosec G402
 		mail.WithTLSConfig(&tls.Config{
+			//#nosec G402
 			InsecureSkipVerify: config.MailerSkipTLSVerify.GetBool(),
 			ServerName:         config.MailerHost.GetString(),
 		}),

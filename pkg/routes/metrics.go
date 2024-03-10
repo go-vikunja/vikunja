@@ -83,7 +83,7 @@ func setupMetrics(a *echo.Group) {
 	r := a.Group("/metrics")
 
 	if config.MetricsUsername.GetString() != "" && config.MetricsPassword.GetString() != "" {
-		r.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+		r.Use(middleware.BasicAuth(func(username, password string, _ echo.Context) (bool, error) {
 			if subtle.ConstantTimeCompare([]byte(username), []byte(config.MetricsUsername.GetString())) == 1 &&
 				subtle.ConstantTimeCompare([]byte(password), []byte(config.MetricsPassword.GetString())) == 1 {
 				return true, nil

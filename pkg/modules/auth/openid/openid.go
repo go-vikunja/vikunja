@@ -220,7 +220,7 @@ func HandleCallback(c echo.Context) error {
 			log.Errorf("Could not proceed with group routine %v", err)
 		}
 		teamIDsToLeave := utils.NotIn(oldOidcTeams, oidcTeams)
-		err = RemoveUserFromTeamsByIds(s, u, teamIDsToLeave)
+		err = RemoveUserFromTeamsByIDs(s, u, teamIDsToLeave)
 		if err != nil {
 			log.Errorf("Found error while leaving teams %v", err)
 		}
@@ -280,7 +280,7 @@ func RemoveEmptySSOTeams(s *xorm.Session, teamIDs []int64) (errs []error) {
 	return errs
 }
 
-func RemoveUserFromTeamsByIds(s *xorm.Session, u *user.User, teamIDs []int64) (err error) {
+func RemoveUserFromTeamsByIDs(s *xorm.Session, u *user.User, teamIDs []int64) (err error) {
 
 	if len(teamIDs) < 1 {
 		return nil

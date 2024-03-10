@@ -354,9 +354,6 @@ func TestProject_ReadAll(t *testing.T) {
 		assert.Len(t, projects, 25)
 		_ = s.Close()
 	})
-	t.Run("only child projects for one project", func(t *testing.T) {
-		// TODO
-	})
 	t.Run("all projects for user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

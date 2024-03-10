@@ -48,7 +48,7 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 
 			return false
 		},
-		ErrorHandler: func(c echo.Context, err error) error {
+		ErrorHandler: func(_ echo.Context, err error) error {
 			if err != nil {
 				return echo.NewHTTPError(http.StatusUnauthorized, "missing, malformed, expired or otherwise invalid token provided").SetInternal(err)
 			}

@@ -32,10 +32,10 @@ func init() {
 var dumpCmd = &cobra.Command{
 	Use:   "dump",
 	Short: "Dump all vikunja data into a zip file. Includes config, files and db.",
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInitWithoutAsync()
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		filename := "vikunja-dump_" + time.Now().Format("2006-01-02_15-03-05") + ".zip"
 		if err := dump.Dump(filename); err != nil {
 			log.Critical(err.Error())
