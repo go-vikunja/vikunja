@@ -64,7 +64,7 @@ auth:
     redirecturl: https://vikunja.mydomain.com/auth/openid/  <---- slash at the end is important
     providers:
       - name: <provider-name>
-        authurl: <auth-url>		<----- Used for OIDC Discovery, usually the issuer 
+        authurl: <auth-url>  <----- Used for OIDC Discovery, usually the issuer 
         clientid: <vikunja client-id>
         clientsecret: <vikunja client-secret>
         scope: openid profile email
@@ -116,7 +116,7 @@ The minimal claim structure expected by Vikunja is as follows:
 }
 ```
 
-It also also possible to pass the description and isPublic flag as optional parameter. If not present, the description will be empty and project visibility defaults to false.
+It is also possible to pass the `description` and the `isPublic` flag as optional parameters. If not present, the description will be empty and project visibility defaults to false.
 
 ```json
 {
@@ -124,8 +124,8 @@ It also also possible to pass the description and isPublic flag as optional para
         {
             "name": "team 3",
             "oidcID": 33349,
-						"description": "My Team Description",
-						"isPublic": true
+            "description": "My Team Description",
+            "isPublic": true
         },
     ]
 }
