@@ -305,7 +305,7 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullV
 					log.Debugf("[Trello Migration] Downloading %d card attachments from card %s", len(card.Attachments), card.ID)
 				}
 				for _, attachment := range card.Attachments {
-					if attachment.MimeType == "" { // Attachments can also be not downloadable - the mime type is empty in that case.
+					if !attachment.IsUpload { // There are other types of attachments which are not files. We can only handle files.
 						log.Debugf("[Trello Migration] Attachment %s does not have a mime type, not downloading", attachment.ID)
 						continue
 					}
