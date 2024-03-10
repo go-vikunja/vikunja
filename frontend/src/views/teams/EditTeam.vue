@@ -173,6 +173,7 @@
 		</card>
 
 		<x-button
+			v-if="team && !team.oidcId"
 			class="is-fullwidth is-danger"
 			@click="showLeaveModal = true"
 		>
