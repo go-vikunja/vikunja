@@ -1943,6 +1943,12 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "The time zone which should be used for date match (statements like ",
+                        "name": "filter_timezone",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "If set to true the result will include filtered fields whose value is set to ` + "`" + `null` + "`" + `. Available values are ` + "`" + `true` + "`" + ` or ` + "`" + `false` + "`" + `. Defaults to ` + "`" + `false` + "`" + `.",
                         "name": "filter_include_nulls",
                         "in": "query"
@@ -2153,6 +2159,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature.",
                         "name": "filter",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The time zone which should be used for date match (statements like ",
+                        "name": "filter_timezone",
                         "in": "query"
                     },
                     {
@@ -8097,6 +8109,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "filter": {
+                    "description": "The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature.",
                     "type": "string"
                 },
                 "filter_include_nulls": {

@@ -784,6 +784,8 @@ definitions:
   models.TaskCollection:
     properties:
       filter:
+        description: The filter query to match tasks by. Check out https://vikunja.io/docs/filters
+          for a full explanation of the feature.
         type: string
       filter_include_nulls:
         description: If set to true, the result will also include null values
@@ -2724,6 +2726,11 @@ paths:
         in: query
         name: filter
         type: string
+      - description: 'The time zone which should be used for date match (statements
+          like '
+        in: query
+        name: filter_timezone
+        type: string
       - description: If set to true the result will include filtered fields whose
           value is set to `null`. Available values are `true` or `false`. Defaults
           to `false`.
@@ -2873,6 +2880,11 @@ paths:
           for a full explanation of the feature.
         in: query
         name: filter
+        type: string
+      - description: 'The time zone which should be used for date match (statements
+          like '
+        in: query
+        name: filter_timezone
         type: string
       - description: If set to true the result will include filtered fields whose
           value is set to `null`. Available values are `true` or `false`. Defaults
