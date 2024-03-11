@@ -19,6 +19,7 @@ package models
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -153,6 +154,18 @@ func getTaskFiltersFromFilterString(filter string) (filters []*taskFilter, err e
 
 	filter = strings.ReplaceAll(filter, " in ", " ?= ")
 
+	// Replaces all occurences with in with a string so that it passes the filter
+	pattern := `\?=\s+([^&|]+)`
+	re := regexp.MustCompile(pattern)
+
+	filter = re.ReplaceAllStringFunc(filter, func(match string) string {
+		value := strings.TrimSpace(strings.TrimPrefix(match, "?="))
+		value = strings.ReplaceAll(value, "'", `\'`)
+		enclosedValue := "'" + value + "'"
+
+		return "?= " + enclosedValue
+	})
+
 	parsedFilter, err := fexpr.Parse(filter)
 	if err != nil {
 		return nil, &ErrInvalidFilterExpression{
@@ -242,7 +255,7 @@ func getValueForField(field reflect.StructField, rawValue string) (value interfa
 		// In that case we don't really care about what the actual type is, we just cast the value to an
 		// int64 since we need the id - yes, this assumes we only ever have int64 IDs, but this is fine.
 		if field.Type.Elem().Kind() == reflect.Ptr {
-			value, err = strconv.ParseInt(rawValue, 10, 64)
+			value, err = strconv.ParseInt(strings.TrimSpace(rawValue), 10, 64)
 			return
 		}
 

@@ -63,7 +63,7 @@ watchEffect(
 		}
 
 		const taskService = new TaskService()
-		taskService.getAll({}, {filter: `project in '${childProjectIds.value.join(',')}'`}).then(() => {
+		taskService.getAll({}, {filter: `project in ${childProjectIds.value.join(',')}`}).then(() => {
 			totalTasks.value = taskService.totalPages * taskService.resultCount
 		})
 	},
