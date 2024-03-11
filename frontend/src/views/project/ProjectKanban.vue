@@ -554,7 +554,6 @@ async function createNewBucket() {
 		projectId: project.value.id,
 	}))
 	newBucketTitle.value = ''
-	showNewBucketInput.value = false
 }
 
 function deleteBucketModal(bucketId: IBucket['id']) {
