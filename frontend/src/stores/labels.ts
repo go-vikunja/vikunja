@@ -57,6 +57,12 @@ export const useLabelStore = defineStore('label', () => {
 			.values(labels.value)
 			.filter(({title}) => labelTitles.some(l => l.toLowerCase() === title.toLowerCase()))
 	})
+	
+	const getLabelByExactTitle = computed(() => {
+		return (labelTitle: string) => Object
+			.values(labels.value)
+			.find(l => l.title.toLowerCase() === labelTitle.toLowerCase())
+	})
 
 
 	function setIsLoading(newIsLoading: boolean) {
@@ -145,6 +151,7 @@ export const useLabelStore = defineStore('label', () => {
 		getLabelById,
 		filterLabelsByQuery,
 		getLabelsByExactTitles,
+		getLabelByExactTitle,
 
 		setLabels,
 		setLabel,

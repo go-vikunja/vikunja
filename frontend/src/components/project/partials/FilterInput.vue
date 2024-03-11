@@ -16,7 +16,7 @@ import {
 	AVAILABLE_FILTER_FIELDS,
 	FILTER_JOIN_OPERATOR,
 	FILTER_OPERATORS,
-	FILTER_OPERATORS_REGEX, LABEL_FIELDS,
+	FILTER_OPERATORS_REGEX, LABEL_FIELDS, getFilterFieldRegexPattern,
 } from '@/helpers/filters'
 
 const {
@@ -104,15 +104,25 @@ const highlightedFilterQuery = computed(() => {
 		})
 	LABEL_FIELDS
 		.forEach(f => {
-			const pattern = new RegExp(f + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*([\'"]?)([^\'"\\s]+\\1?)?', 'ig')
-			highlighted = highlighted.replaceAll(pattern, (match, token, start, value) => {
+			const pattern = getFilterFieldRegexPattern(f)
+			highlighted = highlighted.replaceAll(pattern, (match, prefix, operator, space, value) => {
+
 				if (typeof value === 'undefined') {
 					value = ''
 				}
+				
+				let labelTitles = [value]
+				if(operator === 'in' || operator === '?=') {
+					labelTitles = value.split(',').map(v => v.trim())
+				}
 
-				const label = labelStore.getLabelsByExactTitles([value])[0] || undefined
+				const labelsHtml: string[] = []
+				labelTitles.forEach(t => {
+					const label = labelStore.getLabelByExactTitle(t) || undefined
+					labelsHtml.push(`<span class="filter-query__label_value" style="background-color: ${label?.hexColor}; color: ${label?.textColor}">${label?.title ?? t}</span>`)
+				})
 
-				return `${f} ${token} <span class="filter-query__label_value" style="background-color: ${label?.hexColor}; color: ${label?.textColor}">${label?.title ?? value}<span>`
+				return `${f} ${operator} ${labelsHtml.join(', ')}`
 			})
 		})
 	FILTER_OPERATORS
@@ -184,26 +194,31 @@ function handleFieldInput() {
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const [matched, prefix, operator, space, keyword] = match
 			if (keyword) {
+				let search = keyword
+				if(operator === 'in' || operator === '?=') {
+					const keywords = keyword.split(',')
+					search = keywords[keywords.length - 1].trim()
+				}
 				if (matched.startsWith('label')) {
 					autocompleteResultType.value = 'labels'
-					autocompleteResults.value = labelStore.filterLabelsByQuery([], keyword)
+					autocompleteResults.value = labelStore.filterLabelsByQuery([], search)
 				}
 				if (matched.startsWith('assignee')) {
 					autocompleteResultType.value = 'assignees'
 					if (projectId) {
-						projectUserService.getAll({projectId}, {s: keyword})
+						projectUserService.getAll({projectId}, {s: search})
 							.then(users => autocompleteResults.value = users.length > 1 ? users : [])
 					} else {
-						userService.getAll({}, {s: keyword})
+						userService.getAll({}, {s: search})
 							.then(users => autocompleteResults.value = users.length > 1 ? users : [])
 					}
 				}
 				if (!projectId && matched.startsWith('project')) {
 					autocompleteResultType.value = 'projects'
-					autocompleteResults.value = projectStore.searchProject(keyword)
+					autocompleteResults.value = projectStore.searchProject(search)
 				}
 				autocompleteMatchText.value = keyword
-				autocompleteMatchPosition.value = prefix.length - 1
+				autocompleteMatchPosition.value = prefix.length - 1 + keyword.replace(search, '').length
 			}
 		}
 	})

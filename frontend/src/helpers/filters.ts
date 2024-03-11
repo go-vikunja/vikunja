@@ -57,7 +57,7 @@ export const FILTER_JOIN_OPERATOR = [
 
 export const FILTER_OPERATORS_REGEX = '(&lt;|&gt;|&lt;=|&gt;=|=|!=|in)'
 
-function getFieldPattern(field: string): RegExp {
+export function getFilterFieldRegexPattern(field: string): RegExp {
 	return new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&|()]+\\1?)?', 'ig')
 }
 
@@ -73,7 +73,7 @@ export function transformFilterStringForApi(
 
 	// Transform labels to ids
 	LABEL_FIELDS.forEach(field => {
-		const pattern = getFieldPattern(field)
+		const pattern = getFilterFieldRegexPattern(field)
 
 		let match: RegExpExecArray | null
 		while ((match = pattern.exec(filter)) !== null) {
@@ -96,7 +96,7 @@ export function transformFilterStringForApi(
 	})
 	// Transform projects to ids
 	PROJECT_FIELDS.forEach(field => {
-		const pattern = getFieldPattern(field)
+		const pattern = getFilterFieldRegexPattern(field)
 
 		let match: RegExpExecArray | null
 		while ((match = pattern.exec(filter)) !== null) {
@@ -143,7 +143,7 @@ export function transformFilterStringFromApi(
 
 	// Transform labels to their titles
 	LABEL_FIELDS.forEach(field => {
-		const pattern = getFieldPattern(field)
+		const pattern = getFilterFieldRegexPattern(field)
 
 		let match: RegExpExecArray | null
 		while ((match = pattern.exec(filter)) !== null) {
@@ -167,7 +167,7 @@ export function transformFilterStringFromApi(
 
 	// Transform projects to ids
 	PROJECT_FIELDS.forEach(field => {
-		const pattern = getFieldPattern(field)
+		const pattern = getFilterFieldRegexPattern(field)
 
 		let match: RegExpExecArray | null
 		while ((match = pattern.exec(filter)) !== null) {

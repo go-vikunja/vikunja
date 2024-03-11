@@ -46,7 +46,7 @@ The available operators for filtering include:
 *   `<`: Less than
 *   `<=`: Less than or equal to
 *   `like`: Matches a pattern (using wildcard `%`)
-*   `in`: Matches any value in a list
+*   `in`: Matches any value in a comma-seperated list of values
 
 To combine multiple conditions, you can use the following logical operators:
 
