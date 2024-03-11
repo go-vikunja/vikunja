@@ -248,6 +248,7 @@
       "text2": "This includes all tasks and CANNOT BE UNDONE!",
       "success": "The project was successfully deleted.",
       "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
+      "tasksAndChildProjectsToDelete": "This will irrevocably remove approx. {tasks} tasks and {projects} projects.",
       "noTasksToDelete": "This project does not contain any tasks, it should be safe to delete."
     },
     "duplicate": {

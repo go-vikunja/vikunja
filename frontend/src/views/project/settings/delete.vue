@@ -16,9 +16,7 @@
 				v-if="totalTasks !== null"
 				class="has-text-weight-bold"
 			>
-				{{
-					totalTasks > 0 ? $t('project.delete.tasksToDelete', {count: totalTasks}) : $t('project.delete.noTasksToDelete')
-				}}
+				{{ deleteNotice }}
 			</p>
 			<Loading
 				v-else
@@ -39,9 +37,9 @@ import {useTitle} from '@/composables/useTitle'
 import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
 import {success} from '@/message'
-import TaskCollectionService from '@/services/taskCollection'
 import Loading from '@/components/misc/loading.vue'
 import {useProjectStore} from '@/stores/projects'
+import TaskService from '@/services/task'
 
 const {t} = useI18n({useScope: 'global'})
 const projectStore = useProjectStore()
@@ -51,6 +49,7 @@ const router = useRouter()
 const totalTasks = ref<number | null>(null)
 
 const project = computed(() => projectStore.projects[route.params.projectId])
+const childProjectIds = ref<number[]>([])
 
 watchEffect(
 	() => {
@@ -58,14 +57,31 @@ watchEffect(
 			return
 		}
 
-		const taskCollectionService = new TaskCollectionService()
-		taskCollectionService.getAll({projectId: route.params.projectId}).then(() => {
-			totalTasks.value = taskCollectionService.totalPages * taskCollectionService.resultCount
+		childProjectIds.value = projectStore.getChildProjects(parseInt(route.params.projectId)).map(p => p.id)
+		if (childProjectIds.value.length === 0) {
+			childProjectIds.value = [parseInt(route.params.projectId)]
+		}
+
+		const taskService = new TaskService()
+		taskService.getAll({}, {filter: `project in '${childProjectIds.value.join(',')}'`}).then(() => {
+			totalTasks.value = taskService.totalPages * taskService.resultCount
 		})
 	},
 )
 
 useTitle(() => t('project.delete.title', {project: project?.value?.title}))
+
+const deleteNotice = computed(() => {
+	if(totalTasks.value && totalTasks.value > 0 && childProjectIds.value.length <= 1) {
+		return t('project.delete.tasksToDelete', {count: totalTasks.value})
+	}
+	
+	if(totalTasks.value && totalTasks.value > 0 && childProjectIds.value.length > 1) {
+		return t('project.delete.tasksAndChildProjectsToDelete', {tasks: totalTasks.value, projects: childProjectIds.value.length})
+	}
+
+	return t('project.delete.noTasksToDelete')
+})
 
 async function deleteProject() {
 	if (!project.value) {
