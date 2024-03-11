@@ -6,6 +6,7 @@ import TaskCollectionService, {getDefaultTaskFilterParams} from '@/services/task
 import type {ITask} from '@/modelTypes/ITask'
 import {error} from '@/message'
 import type {IProject} from '@/modelTypes/IProject'
+import {useAuthStore} from '@/stores/auth'
 
 export type Order = 'asc' | 'desc' | 'none'
 
@@ -81,11 +82,16 @@ export function useTaskList(projectIdGetter: ComputedGetter<IProject['id']>, sor
 			page.value = 1
 		},
 	)
-
+	
+	const authStore = useAuthStore()
+	
 	const getAllTasksParams = computed(() => {
 		return [
 			{projectId: projectId.value},
-			allParams.value,
+			{
+				...allParams.value,
+				filter_timezone: authStore.settings.timezone,
+			},
 			page.value,
 		]
 	})

@@ -109,6 +109,7 @@ func getDefaultBucketID(s *xorm.Session, project *Project) (bucketID int64, err 
 // @Param per_page query int false "The maximum number of tasks per bucket per page. This parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
 // @Param filter query string false "The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature."
+// @Param filter_timezone query string false "The time zone which should be used for date match (statements like "now" resolve to different actual times)"
 // @Param filter_include_nulls query string false "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`."
 // @Success 200 {array} models.Bucket "The buckets with their tasks"
 // @Failure 500 {object} models.Message "Internal server error"
@@ -197,7 +198,7 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 			} else {
 				filterString = "(" + originalFilter + ") && bucket_id = " + strconv.FormatInt(id, 10)
 			}
-			opts.parsedFilters, err = getTaskFiltersFromFilterString(filterString)
+			opts.parsedFilters, err = getTaskFiltersFromFilterString(filterString, opts.filterTimezone)
 			if err != nil {
 				return
 			}

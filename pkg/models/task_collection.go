@@ -33,7 +33,10 @@ type TaskCollection struct {
 	OrderBy    []string `query:"order_by" json:"order_by"`
 	OrderByArr []string `query:"order_by[]" json:"-"`
 
+	// The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature.
 	Filter string `query:"filter" json:"filter"`
+	// The time zone which should be used for date match (statements like "now" resolve to different actual times)
+	FilterTimezone string `query:"filter_timezone" json:"filter_timezone"`
 
 	// If set to true, the result will also include null values
 	FilterIncludeNulls bool `query:"filter_include_nulls" json:"filter_include_nulls"`
@@ -103,9 +106,10 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskSearchOption
 		sortby:             sort,
 		filterIncludeNulls: tf.FilterIncludeNulls,
 		filter:             tf.Filter,
+		filterTimezone:     tf.FilterTimezone,
 	}
 
-	opts.parsedFilters, err = getTaskFiltersFromFilterString(tf.Filter)
+	opts.parsedFilters, err = getTaskFiltersFromFilterString(tf.Filter, tf.FilterTimezone)
 	return opts, err
 }
 
@@ -122,6 +126,7 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskSearchOption
 // @Param sort_by query string false "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`."
 // @Param order_by query string false "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`."
 // @Param filter query string false "The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature."
+// @Param filter_timezone query string false "The time zone which should be used for date match (statements like "now" resolve to different actual times)"
 // @Param filter_include_nulls query string false "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"

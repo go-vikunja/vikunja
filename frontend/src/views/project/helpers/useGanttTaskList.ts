@@ -9,6 +9,7 @@ import TaskService from '@/services/task'
 
 import TaskModel from '@/models/task'
 import {error, success} from '@/message'
+import {useAuthStore} from '@/stores/auth'
 
 // FIXME: unify with general `useTaskList`
 export function useGanttTaskList<F extends Filters>(
@@ -21,12 +22,18 @@ export function useGanttTaskList<F extends Filters>(
 	}) {
 	const taskCollectionService = shallowReactive(new TaskCollectionService())
 	const taskService = shallowReactive(new TaskService())
+	const authStore = useAuthStore()
 
 	const isLoading = computed(() => taskCollectionService.loading)
 
 	const tasks = ref<Map<ITask['id'], ITask>>(new Map())
 
 	async function fetchTasks(params: TaskFilterParams, page = 1): Promise<ITask[]> {
+		
+		if(params.filter_timezone === '') {
+			params.filter_timezone = authStore.settings.timezone
+		}
+		
 		const tasks = await taskCollectionService.getAll({projectId: filters.value.projectId}, params, page) as ITask[]
 		if (options.loadAll && page < taskCollectionService.totalPages) {
 			const nextTasks = await fetchTasks(params, page + 1)

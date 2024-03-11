@@ -85,6 +85,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 import {useProjectStore} from '@/stores/projects'
+import type {TaskFilterParams} from '@/services/taskCollection'
 
 // Linting disabled because we explicitely enabled destructuring in vite's config, this will work.
 // eslint-disable-next-line vue/no-setup-props-destructure
@@ -184,6 +185,7 @@ async function loadPendingTasks(from: string, to: string) {
 	const params = {
 		sortBy: ['due_date', 'id'],
 		orderBy: ['asc', 'desc'],
+		filterTimezone: authStore.settings.timezone,
 		filterBy: ['done'],
 		filterValue: ['false'],
 		filterComparator: ['equals'],

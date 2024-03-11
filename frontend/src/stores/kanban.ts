@@ -7,13 +7,14 @@ import {i18n} from '@/i18n'
 import {success} from '@/message'
 
 import BucketService from '@/services/bucket'
-import TaskCollectionService from '@/services/taskCollection'
+import TaskCollectionService, {type TaskFilterParams} from '@/services/taskCollection'
 
 import {setModuleLoading} from '@/stores/helper'
 
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 import type {IBucket} from '@/modelTypes/IBucket'
+import {useAuthStore} from '@/stores/auth'
 
 const TASKS_PER_BUCKET = 25
 
@@ -44,6 +45,8 @@ const addTaskToBucketAndSort = (buckets: IBucket[], task: ITask) => {
  * It should hold only the current buckets.
  */
 export const useKanbanStore = defineStore('kanban', () => {
+	const authStore = useAuthStore()
+	
 	const buckets = ref<IBucket[]>([])
 	const projectId = ref<IProject['id']>(0)
 	const bucketLoading = ref<{[id: IBucket['id']]: boolean}>({})
@@ -247,7 +250,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 	async function loadNextTasksForBucket(
 		projectId: IProject['id'],
-		ps,
+		ps: TaskFilterParams,
 		bucketId: IBucket['id'],
 	) {
 		const isLoading = bucketLoading.value[bucketId] ?? false
@@ -265,7 +268,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		const cancel = setModuleLoading(setIsLoading)
 		setBucketLoading({bucketId: bucketId, loading: true})
 
-		const params = JSON.parse(JSON.stringify(ps))
+		const params: TaskFilterParams = JSON.parse(JSON.stringify(ps))
 
 		params.sort_by = 'kanban_position'
 		params.order_by = 'asc'
@@ -286,6 +289,8 @@ export const useKanbanStore = defineStore('kanban', () => {
 			params.filter_value = [...(params.filter_value ?? []), bucketId]
 			params.filter_comparator = [...(params.filter_comparator ?? []), 'equals']
 		}
+		
+		params.filter_timezone = authStore.settings.timezone
 
 		params.per_page = TASKS_PER_BUCKET
 

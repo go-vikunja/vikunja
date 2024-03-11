@@ -8,6 +8,7 @@ export interface TaskFilterParams {
 	order_by: ('asc' | 'desc')[],
 	filter: string,
 	filter_include_nulls: boolean,
+	filter_timezone: string,
 	s: string,
 }
 
@@ -17,6 +18,7 @@ export function getDefaultTaskFilterParams(): TaskFilterParams {
 		order_by: ['asc', 'desc'],
 		filter: '',
 		filter_include_nulls: false,
+		filter_timezone: '',
 		s: '',
 	}
 }

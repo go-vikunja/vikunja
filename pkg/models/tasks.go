@@ -174,6 +174,7 @@ type taskSearchOptions struct {
 	parsedFilters      []*taskFilter
 	filterIncludeNulls bool
 	filter             string
+	filterTimezone     string
 	projectIDs         []int64
 }
 

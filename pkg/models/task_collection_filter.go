@@ -92,7 +92,7 @@ func parseTimeFromUserInput(timeString string) (value time.Time, err error) {
 	return value.In(config.GetTimeZone()), err
 }
 
-func parseFilterFromExpression(f fexpr.ExprGroup) (filter *taskFilter, err error) {
+func parseFilterFromExpression(f fexpr.ExprGroup, loc *time.Location) (filter *taskFilter, err error) {
 	filter = &taskFilter{
 		join: filterConcatAnd,
 	}
@@ -112,7 +112,7 @@ func parseFilterFromExpression(f fexpr.ExprGroup) (filter *taskFilter, err error
 	case []fexpr.ExprGroup:
 		values := make([]*taskFilter, 0, len(v))
 		for _, expression := range v {
-			subfilter, err := parseFilterFromExpression(expression)
+			subfilter, err := parseFilterFromExpression(expression, loc)
 			if err != nil {
 				return nil, err
 			}
@@ -132,7 +132,7 @@ func parseFilterFromExpression(f fexpr.ExprGroup) (filter *taskFilter, err error
 	if filter.field == "project" {
 		filter.field = "project_id"
 	}
-	reflectValue, filter.value, err = getNativeValueForTaskField(filter.field, filter.comparator, value)
+	reflectValue, filter.value, err = getNativeValueForTaskField(filter.field, filter.comparator, value, loc)
 	if err != nil {
 		return nil, ErrInvalidTaskFilterValue{
 			Value: filter.field,
@@ -146,7 +146,7 @@ func parseFilterFromExpression(f fexpr.ExprGroup) (filter *taskFilter, err error
 	return filter, nil
 }
 
-func getTaskFiltersFromFilterString(filter string) (filters []*taskFilter, err error) {
+func getTaskFiltersFromFilterString(filter string, filterTimezone string) (filters []*taskFilter, err error) {
 
 	if filter == "" {
 		return
@@ -174,9 +174,17 @@ func getTaskFiltersFromFilterString(filter string) (filters []*taskFilter, err e
 		}
 	}
 
+	var loc *time.Location
+	if filterTimezone != "" {
+		loc, err = time.LoadLocation(filterTimezone)
+		if err != nil {
+			return
+		}
+	}
+
 	filters = make([]*taskFilter, 0, len(parsedFilter))
 	for _, f := range parsedFilter {
-		parsedFilter, err := parseFilterFromExpression(f)
+		parsedFilter, err := parseFilterFromExpression(f, loc)
 		if err != nil {
 			return nil, err
 		}
@@ -230,7 +238,12 @@ func getFilterComparatorFromOp(op fexpr.SignOp) (taskFilterComparator, error) {
 	}
 }
 
-func getValueForField(field reflect.StructField, rawValue string) (value interface{}, err error) {
+func getValueForField(field reflect.StructField, rawValue string, loc *time.Location) (value interface{}, err error) {
+
+	if loc == nil {
+		loc = config.GetTimeZone()
+	}
+
 	switch field.Type.Kind() {
 	case reflect.Int64:
 		value, err = strconv.ParseInt(rawValue, 10, 64)
@@ -245,7 +258,7 @@ func getValueForField(field reflect.StructField, rawValue string) (value interfa
 			var t datemath.Expression
 			t, err = datemath.Parse(rawValue)
 			if err == nil {
-				value = t.Time(datemath.WithLocation(config.GetTimeZone()))
+				value = t.Time(datemath.WithLocation(config.GetTimeZone())).In(loc)
 			} else {
 				value, err = parseTimeFromUserInput(rawValue)
 			}
@@ -273,7 +286,7 @@ func getValueForField(field reflect.StructField, rawValue string) (value interfa
 	return
 }
 
-func getNativeValueForTaskField(fieldName string, comparator taskFilterComparator, value string) (reflectField *reflect.StructField, nativeValue interface{}, err error) {
+func getNativeValueForTaskField(fieldName string, comparator taskFilterComparator, value string, loc *time.Location) (reflectField *reflect.StructField, nativeValue interface{}, err error) {
 
 	realFieldName := strings.ReplaceAll(strcase.ToCamel(fieldName), "Id", "ID")
 
@@ -299,7 +312,7 @@ func getNativeValueForTaskField(fieldName string, comparator taskFilterComparato
 		vals := strings.Split(value, ",")
 		valueSlice := []interface{}{}
 		for _, val := range vals {
-			v, err := getValueForField(field, val)
+			v, err := getValueForField(field, val, loc)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -308,6 +321,6 @@ func getNativeValueForTaskField(fieldName string, comparator taskFilterComparato
 		return nil, valueSlice, nil
 	}
 
-	val, err := getValueForField(field, value)
+	val, err := getValueForField(field, value, loc)
 	return &field, val, err
 }
