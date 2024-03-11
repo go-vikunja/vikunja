@@ -36,7 +36,7 @@ type TaskCollection struct {
 	// The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature.
 	Filter string `query:"filter" json:"filter"`
 	// The time zone which should be used for date match (statements like "now" resolve to different actual times)
-	FilterTimezone string `query:"filter_timezone" json:"filter_timezone"`
+	FilterTimezone string `query:"filter_timezone" json:"-"`
 
 	// If set to true, the result will also include null values
 	FilterIncludeNulls bool `query:"filter_include_nulls" json:"filter_include_nulls"`
@@ -157,6 +157,14 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		sf.Filters.SortByArr = nil
 		sf.Filters.OrderBy = orderby
 		sf.Filters.OrderByArr = nil
+
+		if sf.Filters.FilterTimezone == "" {
+			u, err := user.GetUserByID(s, a.GetID())
+			if err != nil {
+				return nil, 0, 0, err
+			}
+			sf.Filters.FilterTimezone = u.Timezone
+		}
 
 		return sf.getTaskCollection().ReadAll(s, a, search, page, perPage)
 	}

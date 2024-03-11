@@ -155,7 +155,7 @@ func getTaskFiltersFromFilterString(filter string, filterTimezone string) (filte
 	filter = strings.ReplaceAll(filter, " in ", " ?= ")
 
 	// Replaces all occurrences with in with a string so that it passes the filter
-	pattern := `\?=\s+([^&|]+)`
+	pattern := `\?=\s+([^&|']+)`
 	re := regexp.MustCompile(pattern)
 
 	filter = re.ReplaceAllStringFunc(filter, func(match string) string {
