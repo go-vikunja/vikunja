@@ -2,7 +2,7 @@ import {ref, shallowReactive, watch, computed, type ComputedGetter} from 'vue'
 import {useRoute} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 
-import TaskCollectionService, {getDefaultTaskFilterParams} from '@/services/taskCollection'
+import TaskCollectionService, {getDefaultTaskFilterParams, type TaskFilterParams} from '@/services/taskCollection'
 import type {ITask} from '@/modelTypes/ITask'
 import {error} from '@/message'
 import type {IProject} from '@/modelTypes/IProject'
@@ -58,7 +58,7 @@ export function useTaskList(projectIdGetter: ComputedGetter<IProject['id']>, sor
 	
 	const projectId = computed(() => projectIdGetter())
 	
-	const params = ref({...getDefaultTaskFilterParams()})
+	const params = ref<TaskFilterParams>({...getDefaultTaskFilterParams()})
 	
 	const search = ref('')
 	const page = useRouteQuery('page', '1', { transform: Number })

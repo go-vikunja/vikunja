@@ -350,26 +350,6 @@ const isNewTaskCommand = computed(() => (
 
 const taskSearchTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 
-type Filter = { by: string, value: string | number, comparator: string }
-
-function filtersToParams(filters: Filter[]) {
-	const filter_by: Filter['by'][] = []
-	const filter_value: Filter['value'][] = []
-	const filter_comparator: Filter['comparator'][] = []
-
-	filters.forEach(({by, value, comparator}) => {
-		filter_by.push(by)
-		filter_value.push(value)
-		filter_comparator.push(comparator)
-	})
-
-	return {
-		filter_by,
-		filter_value,
-		filter_comparator,
-	}
-}
-
 function searchTasks() {
 	if (
 		searchMode.value !== SEARCH_MODE.ALL &&
@@ -391,40 +371,27 @@ function searchTasks() {
 
 	const {text, project: projectName, labels} = parsedQuery.value
 
-	const filters: Filter[] = []
-
-	// FIXME: improve types
-	function addFilter(
-		by: Filter['by'],
-		value: Filter['value'],
-		comparator: Filter['comparator'],
-	) {
-		filters.push({
-			by,
-			value,
-			comparator,
-		})
-	}
-
+	let filter = ''
+	
 	if (projectName !== null) {
 		const project = projectStore.findProjectByExactname(projectName)
 		console.log({project})
 		if (project !== null) {
-			addFilter('project_id', project.id, 'equals')
+			filter += ' project = ' + project.id
 		}
 	}
 
 	if (labels.length > 0) {
 		const labelIds = labelStore.getLabelsByExactTitles(labels).map((l) => l.id)
 		if (labelIds.length > 0) {
-			addFilter('labels', labelIds.join(), 'in')
+			filter += 'labels in ' + labelIds.join(', ')
 		}
 	}
 
 	const params = {
 		s: text,
 		sort_by: 'done',
-		...filtersToParams(filters),
+		filter,
 	}
 
 	taskSearchTimeout.value = setTimeout(async () => {

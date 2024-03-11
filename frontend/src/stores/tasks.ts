@@ -126,7 +126,7 @@ export const useTaskStore = defineStore('task', () => {
 
 	async function loadTasks(params: TaskFilterParams, projectId: IProject['id'] | null = null) {
 		
-		if (params.filter_timezone === '') {
+		if (!params.filter_timezone || params.filter_timezone === '') {
 			params.filter_timezone = authStore.settings.timezone
 		}
 

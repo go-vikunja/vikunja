@@ -182,29 +182,21 @@ async function loadPendingTasks(from: string, to: string) {
 		return
 	}
 
-	const params = {
-		sortBy: ['due_date', 'id'],
-		orderBy: ['asc', 'desc'],
-		filterTimezone: authStore.settings.timezone,
-		filterBy: ['done'],
-		filterValue: ['false'],
-		filterComparator: ['equals'],
-		filterConcat: 'and',
-		filterIncludeNulls: showNulls,
+	const params: TaskFilterParams = {
+		sort_by: ['due_date', 'id'],
+		order_by: ['asc', 'desc'],
+		filter: 'done = false',
+		filter_include_nulls: showNulls,
 	}
 
 	if (!showAll.value) {
-		params.filterBy.push('due_date')
-		params.filterValue.push(to)
-		params.filterComparator.push('less')
+		params.filter += ` && due_date < '${to}'`
 
 		// NOTE: Ideally we could also show tasks with a start or end date in the specified range, but the api
 		//       is not capable (yet) of combining multiple filters with 'and' and 'or'.
 
 		if (!showOverdue) {
-			params.filterBy.push('due_date')
-			params.filterValue.push(from)
-			params.filterComparator.push('greater')
+			params.filter += ` && due_date > '${from}'`
 		}
 	}
 	

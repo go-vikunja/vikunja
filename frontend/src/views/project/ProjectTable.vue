@@ -333,9 +333,7 @@ const {
 const tasks: Ref<ITask[]> = taskList.tasks
 
 Object.assign(params.value, {
-	filter_by: [],
-	filter_value: [],
-	filter_comparator: [],
+	filter: '',
 })
 
 // FIXME: by doing this we can have multiple sort orders

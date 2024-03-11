@@ -4,12 +4,13 @@ import TaskModel from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 
 export interface TaskFilterParams {
-	sort_by: ('start_date' | 'done' | 'id' | 'position')[],
+	sort_by: ('start_date' | 'done' | 'id' | 'position' | 'kanban_position')[],
 	order_by: ('asc' | 'desc')[],
 	filter: string,
 	filter_include_nulls: boolean,
-	filter_timezone: string,
+	filter_timezone?: string,
 	s: string,
+	per_page?: number,
 }
 
 export function getDefaultTaskFilterParams(): TaskFilterParams {
