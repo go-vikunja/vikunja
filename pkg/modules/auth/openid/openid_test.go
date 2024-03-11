@@ -220,14 +220,6 @@ func TestGetOrCreateUser(t *testing.T) {
 		require.NoError(t, err)
 		err = RemoveUserFromTeamsByIDs(s, u, teamIDsToLeave)
 		require.NoError(t, err)
-		errs = RemoveEmptySSOTeams(s, teamIDsToLeave)
-		for _, err = range errs {
-			require.NoError(t, err)
-		}
-		errs = RemoveEmptySSOTeams(s, teamIDsToLeave)
-		for _, err = range errs {
-			require.NoError(t, err)
-		}
 		err = s.Commit()
 		require.NoError(t, err)
 
@@ -235,38 +227,6 @@ func TestGetOrCreateUser(t *testing.T) {
 			"team_id": oidcTeams,
 			"user_id": u.ID,
 		})
-	})
-	t.Run("existing user, remove from existing team and delete team", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		cl := &claims{
-			Email:         "other-email-address@some.service.com",
-			VikunjaGroups: []map[string]interface{}{},
-		}
-
-		u := &user.User{ID: 10}
-		teamData, errs := getTeamDataFromToken(cl.VikunjaGroups, nil)
-		if len(errs) > 0 {
-			for _, err := range errs {
-				require.NoError(t, err)
-			}
-		}
-		oldOidcTeams, err := models.FindAllOidcTeamIDsForUser(s, u.ID)
-		require.NoError(t, err)
-		oidcTeams, err := AssignOrCreateUserToTeams(s, u, teamData, "https://some.issuer")
-		require.NoError(t, err)
-		teamIDsToLeave := utils.NotIn(oldOidcTeams, oidcTeams)
-		require.NoError(t, err)
-		err = RemoveUserFromTeamsByIDs(s, u, teamIDsToLeave)
-		require.NoError(t, err)
-		errs = RemoveEmptySSOTeams(s, teamIDsToLeave)
-		for _, err := range errs {
-			require.NoError(t, err)
-		}
-		err = s.Commit()
-		require.NoError(t, err)
 		db.AssertMissing(t, "teams", map[string]interface{}{
 			"id": oidcTeams,
 		})

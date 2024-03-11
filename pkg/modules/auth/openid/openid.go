@@ -222,13 +222,7 @@ func HandleCallback(c echo.Context) error {
 		teamIDsToLeave := utils.NotIn(oldOidcTeams, oidcTeams)
 		err = RemoveUserFromTeamsByIDs(s, u, teamIDsToLeave)
 		if err != nil {
-			log.Errorf("Found error while leaving teams %v", err)
-		}
-		errs := RemoveEmptySSOTeams(s, teamIDsToLeave)
-		if len(errs) > 0 {
-			for _, err := range errs {
-				log.Errorf("Found error while removing empty teams %v", err)
-			}
+			log.Errorf("Error while leaving teams %v", err)
 		}
 	}
 	err = s.Commit()
@@ -264,20 +258,6 @@ func AssignOrCreateUserToTeams(s *xorm.Session, u *user.User, teamData []*models
 		oidcTeams = append(oidcTeams, team.ID)
 	}
 	return oidcTeams, err
-}
-
-func RemoveEmptySSOTeams(s *xorm.Session, teamIDs []int64) (errs []error) {
-	for _, teamID := range teamIDs {
-		count, err := s.Where("team_id = ?", teamID).Count(&models.TeamMember{})
-		if count == 0 && err == nil {
-			log.Debugf("SSO team with id %v has no members. It will be deleted", teamID)
-			_, _err := s.Where("id = ?", teamID).Delete(&models.Team{})
-			if _err != nil {
-				errs = append(errs, _err)
-			}
-		}
-	}
-	return errs
 }
 
 func RemoveUserFromTeamsByIDs(s *xorm.Session, u *user.User, teamIDs []int64) (err error) {
