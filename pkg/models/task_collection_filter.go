@@ -154,7 +154,7 @@ func getTaskFiltersFromFilterString(filter string) (filters []*taskFilter, err e
 
 	filter = strings.ReplaceAll(filter, " in ", " ?= ")
 
-	// Replaces all occurences with in with a string so that it passes the filter
+	// Replaces all occurrences with in with a string so that it passes the filter
 	pattern := `\?=\s+([^&|]+)`
 	re := regexp.MustCompile(pattern)
 
