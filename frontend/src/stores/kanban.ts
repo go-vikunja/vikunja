@@ -97,13 +97,10 @@ export const useKanbanStore = defineStore('kanban', () => {
 		buckets.value[bucketIndex] = newBucket
 	}
 
-	function setBucketByIndex({
-								  bucketIndex,
-								  bucket,
-							  }: {
+	function setBucketByIndex(
 		bucketIndex: number,
-		bucket: IBucket
-	}) {
+		bucket: IBucket,
+	) {
 		buckets.value[bucketIndex] = bucket
 	}
 
@@ -269,7 +266,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		setBucketLoading({bucketId: bucketId, loading: true})
 
 		const params: TaskFilterParams = JSON.parse(JSON.stringify(ps))
-		
+
 		params.sort_by = ['kanban_position']
 		params.order_by = ['asc']
 		params.filter = `${params.filter === '' ? '' : params.filter + ' && '}bucket_id = ${bucketId}`
@@ -330,16 +327,16 @@ export const useKanbanStore = defineStore('kanban', () => {
 			...updatedBucketData,
 		}
 
-		setBucketByIndex({bucketIndex, bucket: updatedBucket})
+		setBucketByIndex(bucketIndex, updatedBucket)
 
 		const bucketService = new BucketService()
 		try {
 			const returnedBucket = await bucketService.update(updatedBucket)
-			setBucketByIndex({bucketIndex, bucket: returnedBucket})
+			setBucketByIndex(bucketIndex, returnedBucket)
 			return returnedBucket
 		} catch (e) {
 			// restore original state
-			setBucketByIndex({bucketIndex, bucket: oldBucket})
+			setBucketByIndex(bucketIndex, oldBucket)
 
 			throw e
 		} finally {
