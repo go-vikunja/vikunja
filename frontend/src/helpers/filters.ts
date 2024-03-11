@@ -55,7 +55,7 @@ export const FILTER_JOIN_OPERATOR = [
 	')',
 ]
 
-export const FILTER_OPERATORS_REGEX = '(&lt;|&gt;|&lt;=|&gt;=|=|!=)'
+export const FILTER_OPERATORS_REGEX = '(&lt;|&gt;|&lt;=|&gt;=|=|!=|in)'
 
 function getFieldPattern(field: string): RegExp {
 	return new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&|()]+\\1?)?', 'ig')
@@ -66,11 +66,11 @@ export function transformFilterStringForApi(
 	labelResolver: (title: string) => number | null,
 	projectResolver: (title: string) => number | null,
 ): string {
-	
+
 	if (filter.trim() === '') {
 		return ''
 	}
-	
+
 	// Transform labels to ids
 	LABEL_FIELDS.forEach(field => {
 		const pattern = getFieldPattern(field)
@@ -80,10 +80,17 @@ export function transformFilterStringForApi(
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const [matched, prefix, operator, space, keyword] = match
 			if (keyword) {
-				const labelId = labelResolver(keyword.trim())
-				if (labelId !== null) {
-					filter = filter.replace(keyword, String(labelId))
+				let keywords = [keyword.trim()]
+				if (operator === 'in' || operator === '?=') {
+					keywords = keyword.trim().split(',').map(k => k.trim())
 				}
+
+				keywords.forEach(k => {
+					const labelId = labelResolver(k)
+					if (labelId !== null) {
+						filter = filter.replace(k, String(labelId))
+					}
+				})
 			}
 		}
 	})
@@ -96,10 +103,17 @@ export function transformFilterStringForApi(
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const [matched, prefix, operator, space, keyword] = match
 			if (keyword) {
-				const projectId = projectResolver(keyword.trim())
-				if (projectId !== null) {
-					filter = filter.replace(keyword, String(projectId))
+				let keywords = [keyword.trim()]
+				if (operator === 'in' || operator === '?=') {
+					keywords = keyword.trim().split(',').map(k => k.trim())
 				}
+
+				keywords.forEach(k => {
+					const projectId = projectResolver(k)
+					if (projectId !== null) {
+						filter = filter.replace(k, String(projectId))
+					}
+				})
 			}
 		}
 	})
@@ -117,16 +131,16 @@ export function transformFilterStringFromApi(
 	labelResolver: (id: number) => string | null,
 	projectResolver: (id: number) => string | null,
 ): string {
-	
+
 	if (filter.trim() === '') {
 		return ''
 	}
-	
+
 	// Transform all attributes from snake case
 	AVAILABLE_FILTER_FIELDS.forEach(f => {
 		filter = filter.replace(snakeCase(f), f)
 	})
-	
+
 	// Transform labels to their titles
 	LABEL_FIELDS.forEach(field => {
 		const pattern = getFieldPattern(field)
@@ -136,10 +150,17 @@ export function transformFilterStringFromApi(
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const [matched, prefix, operator, space, keyword] = match
 			if (keyword) {
-				const labelTitle = labelResolver(Number(keyword.trim()))
-				if (labelTitle !== null) {
-					filter = filter.replace(keyword, labelTitle)
+				let keywords = [keyword.trim()]
+				if (operator === 'in' || operator === '?=') {
+					keywords = keyword.trim().split(',').map(k => k.trim())
 				}
+
+				keywords.forEach(k => {
+					const labelTitle = labelResolver(parseInt(k))
+					if (labelTitle !== null) {
+						filter = filter.replace(k, labelTitle)
+					}
+				})
 			}
 		}
 	})
@@ -153,10 +174,17 @@ export function transformFilterStringFromApi(
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const [matched, prefix, operator, space, keyword] = match
 			if (keyword) {
-				const project = projectResolver(Number(keyword.trim()))
-				if (project !== null) {
-					filter = filter.replace(keyword, project)
+				let keywords = [keyword.trim()]
+				if (operator === 'in' || operator === '?=') {
+					keywords = keyword.trim().split(',').map(k => k.trim())
 				}
+
+				keywords.forEach(k => {
+					const project = projectResolver(parseInt(k))
+					if (project !== null) {
+						filter = filter.replace(k, project)
+					}
+				})
 			}
 		}
 	})
