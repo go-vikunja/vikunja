@@ -173,7 +173,7 @@ function setShowNulls(show: boolean) {
 	})
 }
 
-async function loadPendingTasks(from: string, to: string) {
+async function loadPendingTasks(from: Date|string, to: Date|string) {
 	// FIXME: HACK! This should never happen.
 	// Since this route is authentication only, users would get an error message if they access the page unauthenticated.
 	// Since this component is mounted as the home page before unauthenticated users get redirected
@@ -187,16 +187,18 @@ async function loadPendingTasks(from: string, to: string) {
 		order_by: ['asc', 'desc'],
 		filter: 'done = false',
 		filter_include_nulls: showNulls,
+		s: '',
 	}
 
 	if (!showAll.value) {
-		params.filter += ` && due_date < '${to}'`
+		
+		params.filter += ` && due_date < '${to instanceof Date ? to.toISOString() : to}'`
 
 		// NOTE: Ideally we could also show tasks with a start or end date in the specified range, but the api
 		//       is not capable (yet) of combining multiple filters with 'and' and 'or'.
 
 		if (!showOverdue) {
-			params.filter += ` && due_date > '${from}'`
+			params.filter += ` && due_date > '${from instanceof Date ? from.toISOString() : from}'`
 		}
 	}
 	
