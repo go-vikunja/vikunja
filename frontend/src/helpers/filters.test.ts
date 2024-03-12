@@ -18,7 +18,7 @@ describe('Filter Transformation', () => {
 		'labels': 'labels',
 	}
 
-	describe('For api', () => {
+	describe('For API', () => {
 		for (const c in fieldCases) {
 			it('should transform all filter params for ' + c + ' to snake_case', () => {
 				const transformed = transformFilterStringForApi(c + ' = ipsum', nullTitleToIdResolver, nullTitleToIdResolver)
@@ -97,6 +97,16 @@ describe('Filter Transformation', () => {
 
 			expect(transformed).toBe('project in 1, 2')
 		})
+
+		it('should resolve projects at the correct position', () => {
+			const transformed = transformFilterStringForApi(
+				'project = pr',
+				nullTitleToIdResolver,
+				(title: string) => 1,
+			)
+
+			expect(transformed).toBe('project = 1')
+		})
 	})
 
 	describe('To API', () => {
@@ -138,7 +148,7 @@ describe('Filter Transformation', () => {
 
 			expect(transformed).toBe('labels = lorem && dueDate = now && labels = ipsum')
 		})
-		
+
 		it('should correctly resolve multiple labels in', () => {
 			const transformed = transformFilterStringFromApi(
 				'labels in 1, 2',

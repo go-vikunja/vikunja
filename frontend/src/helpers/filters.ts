@@ -108,12 +108,19 @@ export function transformFilterStringForApi(
 					keywords = keyword.trim().split(',').map(k => k.trim())
 				}
 
+				let replaced = keyword
+
 				keywords.forEach(k => {
 					const projectId = projectResolver(k)
 					if (projectId !== null) {
-						filter = filter.replace(k, String(projectId))
+						replaced = replaced.replace(k, String(projectId))
 					}
 				})
+
+				const actualKeywordStart = (match?.index || 0) + prefix.length
+				filter = filter.substring(0, actualKeywordStart) +
+					replaced +
+					filter.substring(actualKeywordStart + keyword.length)
 			}
 		}
 	})
