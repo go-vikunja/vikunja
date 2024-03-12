@@ -197,6 +197,23 @@ func TestBucket_Delete(t *testing.T) {
 			"project_id": 18,
 		}, false)
 	})
+	t.Run("done bucket should be reset", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		b := &Bucket{
+			ID:        3,
+			ProjectID: 1,
+		}
+		err := b.Delete(s, user)
+		require.NoError(t, err)
+
+		db.AssertMissing(t, "projects", map[string]interface{}{
+			"id":             1,
+			"done_bucket_id": 3,
+		})
+	})
 }
 
 func TestBucket_Update(t *testing.T) {

@@ -310,7 +310,7 @@ func (b *Bucket) Update(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "The bucket does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/buckets/{bucketID} [delete]
-func (b *Bucket) Delete(s *xorm.Session, _ web.Auth) (err error) {
+func (b *Bucket) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// Prevent removing the last bucket
 	total, err := s.Where("project_id = ?", b.ProjectID).Count(&Bucket{})
@@ -324,17 +324,27 @@ func (b *Bucket) Delete(s *xorm.Session, _ web.Auth) (err error) {
 		}
 	}
 
-	// Remove the bucket itself
-	_, err = s.Where("id = ?", b.ID).Delete(&Bucket{})
-	if err != nil {
-		return
-	}
-
 	// Get the default bucket
 	p, err := GetProjectSimpleByID(s, b.ProjectID)
 	if err != nil {
 		return
 	}
+	var updateProject bool
+	if b.ID == p.DefaultBucketID {
+		p.DefaultBucketID = 0
+		updateProject = true
+	}
+	if b.ID == p.DoneBucketID {
+		p.DoneBucketID = 0
+		updateProject = true
+	}
+	if updateProject {
+		err = p.Update(s, a)
+		if err != nil {
+			return
+		}
+	}
+
 	defaultBucketID, err := getDefaultBucketID(s, p)
 	if err != nil {
 		return err
@@ -345,5 +355,11 @@ func (b *Bucket) Delete(s *xorm.Session, _ web.Auth) (err error) {
 		Where("bucket_id = ?", b.ID).
 		Cols("bucket_id").
 		Update(&Task{BucketID: defaultBucketID})
+	if err != nil {
+		return
+	}
+
+	// Remove the bucket itself
+	_, err = s.Where("id = ?", b.ID).Delete(&Bucket{})
 	return
 }
