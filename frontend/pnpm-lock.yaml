@@ -233,7 +233,7 @@ dependencies:
     specifier: 4.3.0
     version: 4.3.0(vue@3.4.21)
   vuemoji-picker:
-    specifier: ^0.2.1
+    specifier: 0.2.1
     version: 0.2.1(vue@3.4.21)
   workbox-precaching:
     specifier: 7.0.0
