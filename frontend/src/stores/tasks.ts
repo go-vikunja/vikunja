@@ -152,7 +152,6 @@ export const useTaskStore = defineStore('task', () => {
 		const taskService = new TaskService()
 		try {
 			const updatedTask = await taskService.update(task)
-			console.log({updated: updatedTask.reactions, old: task.reactions})
 			kanbanStore.setTaskInBucket(updatedTask)
 			return updatedTask
 		} finally {

@@ -392,7 +392,6 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		const cancel = this.setLoading()
 
 		try {
-			console.log('post', model.reactions)
 			const response = await this.http.post(url, model)
 			const result = this.modelUpdateFactory(response.data)
 			if (typeof model.maxRight !== 'undefined') {
