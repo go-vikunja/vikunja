@@ -10,13 +10,15 @@ import User from '@/components/misc/user.vue'
 import ProjectUserService from '@/services/projectUsers'
 import {useProjectStore} from '@/stores/projects'
 import {
-	DATE_FIELDS,
 	ASSIGNEE_FIELDS,
 	AUTOCOMPLETE_FIELDS,
 	AVAILABLE_FILTER_FIELDS,
+	DATE_FIELDS,
 	FILTER_JOIN_OPERATOR,
 	FILTER_OPERATORS,
-	FILTER_OPERATORS_REGEX, LABEL_FIELDS, getFilterFieldRegexPattern,
+	FILTER_OPERATORS_REGEX,
+	getFilterFieldRegexPattern,
+	LABEL_FIELDS,
 } from '@/helpers/filters'
 
 const {
@@ -110,9 +112,9 @@ const highlightedFilterQuery = computed(() => {
 				if (typeof value === 'undefined') {
 					value = ''
 				}
-				
-				let labelTitles = [value]
-				if(operator === 'in' || operator === '?=') {
+
+				let labelTitles = [value.trim()]
+				if (operator === 'in' || operator === '?=') {
 					labelTitles = value.split(',').map(v => v.trim())
 				}
 
@@ -122,7 +124,8 @@ const highlightedFilterQuery = computed(() => {
 					labelsHtml.push(`<span class="filter-query__label_value" style="background-color: ${label?.hexColor}; color: ${label?.textColor}">${label?.title ?? t}</span>`)
 				})
 
-				return `${f} ${operator} ${labelsHtml.join(', ')}`
+				const endSpace = value.endsWith(' ') ? ' ' : ''
+				return `${f} ${operator} ${labelsHtml.join(', ')}${endSpace}`
 			})
 		})
 	FILTER_OPERATORS
@@ -195,7 +198,7 @@ function handleFieldInput() {
 			const [matched, prefix, operator, space, keyword] = match
 			if (keyword) {
 				let search = keyword
-				if(operator === 'in' || operator === '?=') {
+				if (operator === 'in' || operator === '?=') {
 					const keywords = keyword.split(',')
 					search = keywords[keywords.length - 1].trim()
 				}
@@ -348,7 +351,7 @@ function autocompleteSelect(value) {
 		resize: none;
 		text-fill-color: transparent;
 		-webkit-text-fill-color: transparent;
-		
+
 		&::placeholder {
 			text-fill-color: var(--input-placeholder-color);
 			-webkit-text-fill-color: var(--input-placeholder-color);

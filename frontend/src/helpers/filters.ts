@@ -58,7 +58,7 @@ export const FILTER_JOIN_OPERATOR = [
 export const FILTER_OPERATORS_REGEX = '(&lt;|&gt;|&lt;=|&gt;=|=|!=|in)'
 
 export function getFilterFieldRegexPattern(field: string): RegExp {
-	return new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&|()]+\\1?)?', 'ig')
+	return new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&|()<]+\\1?)?', 'ig')
 }
 
 export function transformFilterStringForApi(
