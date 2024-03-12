@@ -7098,6 +7098,7 @@
                         "JWTKeyAuth": []
                     }
                 ],
+                "description": "Add a reaction to an entity. Will do nothing if the reaction already exists.",
                 "consumes": [
                     "application/json"
                 ],
@@ -7153,8 +7154,10 @@
                         }
                     }
                 }
-            },
-            "delete": {
+            }
+        },
+        "/{kind}/{id}/reactions/delete": {
+            "post": {
                 "security": [
                     {
                         "JWTKeyAuth": []
@@ -7581,6 +7584,14 @@
                 "project_id": {
                     "description": "The project this task belongs to.",
                     "type": "integer"
+                },
+                "reactions": {
+                    "description": "Reactions on that task.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.ReactionMap"
+                        }
+                    ]
                 },
                 "related_tasks": {
                     "description": "All related tasks, grouped by their relation kind",
@@ -8230,6 +8241,14 @@
                     "description": "The project this task belongs to.",
                     "type": "integer"
                 },
+                "reactions": {
+                    "description": "Reactions on that task.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.ReactionMap"
+                        }
+                    ]
+                },
                 "related_tasks": {
                     "description": "All related tasks, grouped by their relation kind",
                     "allOf": [
@@ -8352,6 +8371,9 @@
                 },
                 "id": {
                     "type": "integer"
+                },
+                "reactions": {
+                    "$ref": "#/definitions/models.ReactionMap"
                 },
                 "updated": {
                     "type": "string"

@@ -237,6 +237,10 @@ definitions:
       project_id:
         description: The project this task belongs to.
         type: integer
+      reactions:
+        allOf:
+        - $ref: '#/definitions/models.ReactionMap'
+        description: Reactions on that task.
       related_tasks:
         allOf:
         - $ref: '#/definitions/models.RelatedTaskMap'
@@ -743,6 +747,10 @@ definitions:
       project_id:
         description: The project this task belongs to.
         type: integer
+      reactions:
+        allOf:
+        - $ref: '#/definitions/models.ReactionMap'
+        description: Reactions on that task.
       related_tasks:
         allOf:
         - $ref: '#/definitions/models.RelatedTaskMap'
@@ -834,6 +842,8 @@ definitions:
         type: string
       id:
         type: integer
+      reactions:
+        $ref: '#/definitions/models.ReactionMap'
       updated:
         type: string
     type: object
@@ -1461,48 +1471,6 @@ info:
   title: Vikunja API
 paths:
   /{kind}/{id}/reactions:
-    delete:
-      consumes:
-      - application/json
-      description: Removes the reaction of that user on that entity.
-      parameters:
-      - description: Entity ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: The kind of the entity. Can be either `tasks` or `comments` for
-          task comments
-        in: path
-        name: kind
-        required: true
-        type: integer
-      - description: The reaction you want to add to the entity.
-        in: body
-        name: project
-        required: true
-        schema:
-          $ref: '#/definitions/models.Reaction'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The reaction was successfully removed.
-          schema:
-            $ref: '#/definitions/models.Message'
-        "403":
-          description: The user does not have access to the entity
-          schema:
-            $ref: '#/definitions/web.HTTPError'
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Removes the user's reaction
-      tags:
-      - task
     get:
       consumes:
       - application/json
@@ -1544,6 +1512,8 @@ paths:
     put:
       consumes:
       - application/json
+      description: Add a reaction to an entity. Will do nothing if the reaction already
+        exists.
       parameters:
       - description: Entity ID
         in: path
@@ -1580,6 +1550,49 @@ paths:
       security:
       - JWTKeyAuth: []
       summary: Add a reaction to an entity
+      tags:
+      - task
+  /{kind}/{id}/reactions/delete:
+    post:
+      consumes:
+      - application/json
+      description: Removes the reaction of that user on that entity.
+      parameters:
+      - description: Entity ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The kind of the entity. Can be either `tasks` or `comments` for
+          task comments
+        in: path
+        name: kind
+        required: true
+        type: integer
+      - description: The reaction you want to add to the entity.
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.Reaction'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The reaction was successfully removed.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: The user does not have access to the entity
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Removes the user's reaction
       tags:
       - task
   /{username}/avatar:
