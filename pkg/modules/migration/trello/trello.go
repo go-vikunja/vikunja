@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/adlio/trello"
 	"github.com/yuin/goldmark"
 )

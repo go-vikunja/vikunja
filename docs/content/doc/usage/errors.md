@@ -97,6 +97,7 @@ This document describes the different errors Vikunja can return.
 | 4022      | 400 | The task has a relative reminder which does not specify relative to what.  |
 | 4023      | 409 | Tried to create a task relation which would create a cycle.                |
 | 4024      | 400 | The provided filter expression is invalid.                                 |
+| 4025      | 400 | The reaction kind is invalid.                                              |
 
 ## Team
 

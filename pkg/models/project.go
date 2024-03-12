@@ -23,7 +23,6 @@ import (
 	"strings"
 	"time"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
@@ -370,10 +369,7 @@ type projectOptions struct {
 }
 
 func getUserProjectsStatement(parentProjectIDs []int64, userID int64, search string, getArchived bool) *builder.Builder {
-	dialect := config.DatabaseType.GetString()
-	if dialect == "sqlite" {
-		dialect = builder.SQLITE
-	}
+	dialect := db.GetDialect()
 
 	// Adding a 1=1 condition by default here because xorm always needs a condition and cannot handle nil conditions
 	var getArchivedCond builder.Cond = builder.Eq{"1": 1}

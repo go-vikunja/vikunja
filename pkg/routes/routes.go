@@ -589,6 +589,15 @@ func registerAPIRoutes(a *echo.Group) {
 		a.POST("/projects/:project/webhooks/:webhook", webhookProvider.UpdateWeb)
 		a.GET("/webhooks/events", apiv1.GetAvailableWebhookEvents)
 	}
+
+	reactionProvider := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.Reaction{}
+		},
+	}
+	a.GET("/:entitykind/:entityid/reactions", reactionProvider.ReadAllWeb)
+	a.POST("/:entitykind/:entityid/reactions/delete", reactionProvider.DeleteWeb)
+	a.PUT("/:entitykind/:entityid/reactions", reactionProvider.CreateWeb)
 }
 
 func registerMigrations(m *echo.Group) {

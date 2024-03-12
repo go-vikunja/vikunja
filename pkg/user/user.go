@@ -34,6 +34,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -259,13 +260,17 @@ func GetUserWithEmail(s *xorm.Session, user *User) (userOut *User, err error) {
 
 // GetUsersByIDs returns a map of users from a slice of user ids
 func GetUsersByIDs(s *xorm.Session, userIDs []int64) (users map[int64]*User, err error) {
-	users = make(map[int64]*User)
-
 	if len(userIDs) == 0 {
 		return users, nil
 	}
 
-	err = s.In("id", userIDs).Find(&users)
+	return GetUsersByCond(s, builder.In("id", userIDs))
+}
+
+func GetUsersByCond(s *xorm.Session, cond builder.Cond) (users map[int64]*User, err error) {
+	users = make(map[int64]*User)
+
+	err = s.Where(cond).Find(&users)
 	if err != nil {
 		return
 	}

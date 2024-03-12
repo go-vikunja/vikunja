@@ -1,0 +1,28 @@
+diff --git a/dist/index.js b/dist/index.js
+index b6e6e0a6864cb00bc085b8d4503a705cb3bc8404..0466ef46406b0df41c8d0bb9a5bac9eabf4a50de 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -368,10 +368,12 @@ const sequenceTracker = new SequenceTracker({
+ function keyDownHandler(event) {
+     if (event.defaultPrevented)
+         return;
+-    if (!(event.target instanceof Node))
++    const target = event.explicitOriginalTarget || event.target;
++    if (target.shadowRoot)
+         return;
+-    if (isFormField(event.target)) {
+-        const target = event.target;
++    if (!(target instanceof Node))
++        return;
++    if (isFormField(target)) {
+         if (!target.id)
+             return;
+         if (!target.ownerDocument.querySelector(`[data-hotkey-scope="${target.id}"]`))
+@@ -385,7 +387,6 @@ function keyDownHandler(event) {
+     sequenceTracker.registerKeypress(event);
+     currentTriePosition = newTriePosition;
+     if (newTriePosition instanceof Leaf) {
+-        const target = event.target;
+         let shouldFire = false;
+         let elementToFire;
+         const formField = isFormField(target);

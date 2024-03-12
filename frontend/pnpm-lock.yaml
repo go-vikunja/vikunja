@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
+  '@github/hotkey@3.1.0':
+    hash: c67tdk7qpd5grxd2zj6lsxfbou
+    path: patches/@github__hotkey@3.1.0.patch
   flexsearch@0.7.31:
     hash: bfn3sngfuhktmdj7jgl3ejl35y
     path: patches/flexsearch@0.7.31.patch
@@ -24,7 +27,7 @@ dependencies:
     version: 3.0.6(@fortawesome/fontawesome-svg-core@6.5.1)(vue@3.4.21)
   '@github/hotkey':
     specifier: 3.1.0
-    version: 3.1.0
+    version: 3.1.0(patch_hash=c67tdk7qpd5grxd2zj6lsxfbou)
   '@infectoone/vue-ganttastic':
     specifier: 2.2.0
     version: 2.2.0(dayjs@1.11.10)(vue@3.4.21)
@@ -229,6 +232,9 @@ dependencies:
   vue-router:
     specifier: 4.3.0
     version: 4.3.0(vue@3.4.21)
+  vuemoji-picker:
+    specifier: ^0.2.1
+    version: 0.2.1(vue@3.4.21)
   workbox-precaching:
     specifier: 7.0.0
     version: 7.0.0
@@ -2687,9 +2693,10 @@ packages:
       vue: 3.4.21(typescript@5.4.2)
     dev: false
 
-  /@github/hotkey@3.1.0:
+  /@github/hotkey@3.1.0(patch_hash=c67tdk7qpd5grxd2zj6lsxfbou):
     resolution: {integrity: sha512-Lj9QjYa+b+Nk5U1nZtlXLdx3HI8/EeM6ZNwBjpYcGVYqpwHdM2ScRH0p7+5zh28JG6SPbTM9+Rb1dFd742qMTw==}
     dev: false
+    patched: true
 
   /@hapi/hoek@9.2.1:
     resolution: {integrity: sha512-gfta+H8aziZsm8pZa0vj04KO6biEiisppNgA1kbJvFrrWu9Vm7eaUEy76DIxsuTaWvti5fkJVhllWc6ZTE+Mdw==}
@@ -4358,7 +4365,7 @@ packages:
   /@vueuse/shared@9.13.0(vue@3.4.21):
     resolution: {integrity: sha512-UrnhU+Cnufu4S6JLCPZnkWh0WwZGUp72ktOF2DFptMlOs3TOdVv8xJN53zhHGARmVOsz5KqOls09+J1NR6sBKw==}
     dependencies:
-      vue-demi: 0.14.6(vue@3.4.21)
+      vue-demi: 0.14.7(vue@3.4.21)
     transitivePeerDependencies:
       - '@vue/composition-api'
       - vue
@@ -5609,6 +5616,10 @@ packages:
   /electron-to-chromium@1.4.685:
     resolution: {integrity: sha512-yDYeobbTEe4TNooEzOQO6xFqg9XnAkVy2Lod1C1B2it8u47JNLYvl9nLDWBamqUakWB8Jc1hhS1uHUNYTNQdfw==}
     dev: true
+
+  /emoji-picker-element@1.21.1:
+    resolution: {integrity: sha512-XO3buLicIjIb59dy3R2PVzpyxUEye7DSmHApbxFJxK8gCFPlGKP/Pld8ccWNYvny9t6vYhnKP1FNYgqqMy1XHA==}
+    dev: false
 
   /emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -10272,6 +10283,20 @@ packages:
       '@vue/server-renderer': 3.4.21(vue@3.4.21)
       '@vue/shared': 3.4.21
       typescript: 5.4.2
+
+  /vuemoji-picker@0.2.1(vue@3.4.21):
+    resolution: {integrity: sha512-wKRZBZclTdnQIT4jPzmkJ5Ci9ObzMFPjkuYb+/+/9h+mAZIUwdcPqYbEJCohbxJPoOvkuPVDeuOdTKR8hqqVLA==}
+    peerDependencies:
+      '@vue/composition-api': ^1.7.0
+      vue: ^2.6.14 || ^3.2.0
+    peerDependenciesMeta:
+      '@vue/composition-api':
+        optional: true
+    dependencies:
+      emoji-picker-element: 1.21.1
+      vue: 3.4.21(typescript@5.4.2)
+      vue-demi: 0.14.7(vue@3.4.21)
+    dev: false
 
   /w3c-keyname@2.2.6:
     resolution: {integrity: sha512-f+fciywl1SJEniZHD6H+kUO8gOnwIr7f4ijKA6+ZvJFjeGi1r4PDLl53Ayud9O/rk64RqgoQine0feoeOU0kXg==}

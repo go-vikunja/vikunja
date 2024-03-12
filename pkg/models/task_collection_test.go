@@ -98,6 +98,9 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		BucketID:    1,
 		IsFavorite:  true,
 		Position:    2,
+		Reactions: ReactionMap{
+			"👋": []*user.User{user1},
+		},
 		Labels: []*Label{
 			label4,
 		},

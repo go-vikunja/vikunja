@@ -37,6 +37,8 @@ type TaskComment struct {
 	Author   *user.User `xorm:"-" json:"author"`
 	TaskID   int64      `xorm:"not null" json:"-" param:"task"`
 
+	Reactions ReactionMap `xorm:"-" json:"reactions"`
+
 	Created time.Time `xorm:"created" json:"created"`
 	Updated time.Time `xorm:"updated" json:"updated"`
 
@@ -167,7 +169,7 @@ func (tc *TaskComment) Update(s *xorm.Session, _ web.Auth) error {
 
 func getTaskCommentSimple(s *xorm.Session, tc *TaskComment) error {
 	exists, err := s.
-		Where("id = ? and task_id = ?", tc.ID, tc.TaskID).
+		Where("id = ?", tc.ID).
 		NoAutoCondition().
 		Get(tc)
 	if err != nil {
@@ -263,8 +265,10 @@ func (tc *TaskComment) ReadAll(s *xorm.Session, auth web.Auth, search string, pa
 	}
 
 	var authorIDs []int64
+	var commentIDs []int64
 	for _, comment := range comments {
 		authorIDs = append(authorIDs, comment.AuthorID)
+		commentIDs = append(commentIDs, comment.ID)
 	}
 
 	authors, err := getUsersOrLinkSharesFromIDs(s, authorIDs)
@@ -272,8 +276,17 @@ func (tc *TaskComment) ReadAll(s *xorm.Session, auth web.Auth, search string, pa
 		return
 	}
 
+	reactions, err := getReactionsForEntityIDs(s, ReactionKindComment, commentIDs)
+	if err != nil {
+		return
+	}
+
 	for _, comment := range comments {
 		comment.Author = authors[comment.AuthorID]
+		r, has := reactions[comment.ID]
+		if has {
+			comment.Reactions = r
+		}
 	}
 
 	numberOfTotalItems, err = s.

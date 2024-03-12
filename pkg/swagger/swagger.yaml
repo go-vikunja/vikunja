@@ -509,6 +509,27 @@ definitions:
         description: The username.
         type: string
     type: object
+  models.Reaction:
+    properties:
+      created:
+        description: A timestamp when this reaction was created. You cannot change
+          this value.
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who reacted
+      value:
+        description: The actual reaction. This can be any valid utf character or text,
+          up to a length of 20.
+        type: string
+    type: object
+  models.ReactionMap:
+    additionalProperties:
+      items:
+        $ref: '#/definitions/user.User'
+      type: array
+    type: object
   models.RelatedTaskMap:
     additionalProperties:
       items:
@@ -1439,6 +1460,128 @@ info:
     url: https://code.vikunja.io/api/src/branch/main/LICENSE
   title: Vikunja API
 paths:
+  /{kind}/{id}/reactions:
+    delete:
+      consumes:
+      - application/json
+      description: Removes the reaction of that user on that entity.
+      parameters:
+      - description: Entity ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The kind of the entity. Can be either `tasks` or `comments` for
+          task comments
+        in: path
+        name: kind
+        required: true
+        type: integer
+      - description: The reaction you want to add to the entity.
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.Reaction'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The reaction was successfully removed.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: The user does not have access to the entity
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Removes the user's reaction
+      tags:
+      - task
+    get:
+      consumes:
+      - application/json
+      description: Returns all reactions for an entity
+      parameters:
+      - description: Entity ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The kind of the entity. Can be either `tasks` or `comments` for
+          task comments
+        in: path
+        name: kind
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The reactions
+          schema:
+            items:
+              $ref: '#/definitions/models.ReactionMap'
+            type: array
+        "403":
+          description: The user does not have access to the entity
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all reactions for an entity
+      tags:
+      - task
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Entity ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The kind of the entity. Can be either `tasks` or `comments` for
+          task comments
+        in: path
+        name: kind
+        required: true
+        type: integer
+      - description: The reaction you want to add to the entity.
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.Reaction'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created reaction
+          schema:
+            $ref: '#/definitions/models.Reaction'
+        "403":
+          description: The user does not have access to the entity
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Add a reaction to an entity
+      tags:
+      - task
   /{username}/avatar:
     get:
       description: Returns the user avatar as image.

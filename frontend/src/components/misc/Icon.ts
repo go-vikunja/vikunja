@@ -87,7 +87,7 @@ import {
 	faStar,
 	faSun,
 	faTimesCircle,
-	faCircleQuestion,
+	faCircleQuestion, faFaceLaugh,
 } from '@fortawesome/free-regular-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 
@@ -186,6 +186,7 @@ library.add(faXmarksLines)
 library.add(faFont)
 library.add(faRulerHorizontal)
 library.add(faUnderline)
+library.add(faFaceLaugh)
 
 // overwriting the wrong types
 export default FontAwesomeIcon as unknown as FontAwesomeIconFixedTypes

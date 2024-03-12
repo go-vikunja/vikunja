@@ -86,6 +86,8 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 
 	position = 0
 	kanbanPosition = 0
+	
+	reactions = {}
 
 	createdBy: IUser = UserModel
 	created: Date = null
@@ -148,6 +150,12 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		this.updated = new Date(this.updated)
 
 		this.projectId = Number(this.projectId)
+
+		// We can't convert emojis to camel case, hence we do this manually
+		this.reactions = {}
+		Object.keys(data.reactions || {}).forEach(reaction => {
+			this.reactions[reaction] = data.reactions[reaction].map(u => new UserModel(u))
+		})
 	}
 
 	getTextIdentifier() {

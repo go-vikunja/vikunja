@@ -97,6 +97,12 @@
 							editComment()
 						}"
 					/>
+					<Reactions 
+						v-model="c.reactions"
+						class="mt-2" 
+						entity-kind="comments"
+						:entity-id="c.id"
+					/>
 				</div>
 			</div>
 			<div
@@ -190,6 +196,7 @@ import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
 import {getAvatarUrl, getDisplayName} from '@/models/user'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
+import Reactions from '@/components/input/Reactions.vue'
 
 const props = defineProps({
 	taskId: {

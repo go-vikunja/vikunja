@@ -61,6 +61,7 @@ func GetTables() []interface{} {
 		&APIToken{},
 		&TypesenseSync{},
 		&Webhook{},
+		&Reaction{},
 	}
 }
 

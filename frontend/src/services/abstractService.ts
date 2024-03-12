@@ -77,19 +77,25 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 				case 'post':
 					if (this.useUpdateInterceptor()) {
 						config.data = this.beforeUpdate(config.data)
-						config.data = objectToSnakeCase(config.data)
+						if(this.autoTransformBeforePost()) {
+							config.data = objectToSnakeCase(config.data)
+						}
 					}
 					break
 				case 'put':
 					if (this.useCreateInterceptor()) {
 						config.data = this.beforeCreate(config.data)
-						config.data = objectToSnakeCase(config.data)
+						if(this.autoTransformBeforePut()) {
+							config.data = objectToSnakeCase(config.data)
+						}
 					}
 					break
 				case 'delete':
 					if (this.useDeleteInterceptor()) {
 						config.data = this.beforeDelete(config.data)
-						config.data = objectToSnakeCase(config.data)
+						if(this.autoTransformBeforeDelete()) {
+							config.data = objectToSnakeCase(config.data)
+						}
 					}
 					break
 			}
@@ -118,6 +124,22 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 	 */
 	useDeleteInterceptor(): boolean {
 		return true
+	}
+	
+	autoTransformBeforeSend(): boolean {
+		return true
+	}
+
+	autoTransformBeforePost(): boolean {
+		return this.autoTransformBeforeSend()
+	}
+
+	autoTransformBeforePut(): boolean {
+		return this.autoTransformBeforeSend()
+	}
+
+	autoTransformBeforeDelete(): boolean {
+		return this.autoTransformBeforeSend()
 	}
 
 	/////////////////
@@ -370,6 +392,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		const cancel = this.setLoading()
 
 		try {
+			console.log('post', model.reactions)
 			const response = await this.http.post(url, model)
 			const result = this.modelUpdateFactory(response.data)
 			if (typeof model.maxRight !== 'undefined') {

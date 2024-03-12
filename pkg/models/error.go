@@ -1060,6 +1060,33 @@ func (err ErrInvalidFilterExpression) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrInvalidReactionEntityKind represents an error where the reaction kind is invalid
+type ErrInvalidReactionEntityKind struct {
+	Kind string
+}
+
+// IsErrInvalidReactionEntityKind checks if an error is ErrInvalidReactionEntityKind.
+func IsErrInvalidReactionEntityKind(err error) bool {
+	_, ok := err.(ErrInvalidReactionEntityKind)
+	return ok
+}
+
+func (err ErrInvalidReactionEntityKind) Error() string {
+	return fmt.Sprintf("Reaction kind %s is invalid", err.Kind)
+}
+
+// ErrCodeInvalidReactionEntityKind holds the unique world-error code of this error
+const ErrCodeInvalidReactionEntityKind = 4025
+
+// HTTPError holds the http error description
+func (err ErrInvalidReactionEntityKind) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidReactionEntityKind,
+		Message:  fmt.Sprintf("The reaction kind '%s' is invalid.", err.Kind),
+	}
+}
+
 // ============
 // Team errors
 // ============

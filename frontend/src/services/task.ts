@@ -6,6 +6,7 @@ import LabelService from './label'
 
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK} from '@/constants/date'
+import {objectToSnakeCase} from '@/helpers/case'
 
 const parseDate = date => {
 	if (date) {
@@ -38,8 +39,12 @@ export default class TaskService extends AbstractService<ITask> {
 		return this.processModel(model)
 	}
 
+	autoTransformBeforePost(): boolean {
+		return false
+	}
+
 	processModel(updatedModel) {
-		const model = { ...updatedModel }
+		const model = {...updatedModel}
 
 		model.title = model.title?.trim()
 
@@ -108,7 +113,15 @@ export default class TaskService extends AbstractService<ITask> {
 			model.labels = model.labels.map(l => labelService.processModel(l))
 		}
 
-		return model as ITask
+		const transformed = objectToSnakeCase(model)
+
+		// We can't convert emojis to skane case, hence we add them back again
+		transformed.reactions = {}
+		Object.keys(updatedModel.reactions || {}).forEach(reaction => {
+			transformed.reactions[reaction] = updatedModel.reactions[reaction].map(u => objectToSnakeCase(u))
+		})
+
+		return transformed as ITask
 	}
 }
 

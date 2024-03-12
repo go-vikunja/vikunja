@@ -558,6 +558,10 @@ function handleImagePaste(event) {
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
 function setFocusToEditor(event) {
+	if(event.target.shadowRoot) {
+		return
+	}
+	
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
 	if (hotkeyString !== editShortcut ||

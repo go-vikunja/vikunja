@@ -65,6 +65,7 @@ func SetupTests() {
 		"subscriptions",
 		"favorites",
 		"api_tokens",
+		"reactions",
 	)
 	if err != nil {
 		log.Fatal(err)

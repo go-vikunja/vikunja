@@ -26,6 +26,8 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
+
+	"xorm.io/builder"
 	"xorm.io/xorm"
 	"xorm.io/xorm/names"
 	"xorm.io/xorm/schemas"
@@ -226,4 +228,13 @@ func NewSession() *xorm.Session {
 // Type returns the db type of the currently configured db
 func Type() schemas.DBType {
 	return x.Dialect().URI().DBType
+}
+
+func GetDialect() string {
+	dialect := config.DatabaseType.GetString()
+	if dialect == "sqlite" {
+		dialect = builder.SQLITE
+	}
+
+	return dialect
 }

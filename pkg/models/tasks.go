@@ -125,6 +125,9 @@ type Task struct {
 	// The position of tasks in the kanban board. See the docs for the `position` property on how to use this.
 	KanbanPosition float64 `xorm:"double null" json:"kanban_position"`
 
+	// Reactions on that task.
+	Reactions ReactionMap `xorm:"-" json:"reactions"`
+
 	// The user who initially created the task.
 	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-"`
 	CreatedByID int64      `xorm:"bigint not null" json:"-"` // ID of the user who put that task on the project
@@ -584,6 +587,11 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth) (e
 		return err
 	}
 
+	reactions, err := getReactionsForEntityIDs(s, ReactionKindTask, taskIDs)
+	if err != nil {
+		return
+	}
+
 	// Add all objects to their tasks
 	for _, task := range taskMap {
 
@@ -600,6 +608,11 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth) (e
 		task.setIdentifier(projects[task.ProjectID])
 
 		task.IsFavorite = taskFavorites[task.ID]
+
+		r, has := reactions[task.ID]
+		if has {
+			task.Reactions = r
+		}
 	}
 
 	// Get all related tasks
