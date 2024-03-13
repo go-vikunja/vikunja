@@ -18,13 +18,11 @@ $filter-container-top-link-share-list: -47px;
   margin-top: $filter-container-top-default;
   z-index: 4;
 
-  .items {
-    display: flex;
-    justify-content: flex-end;
+  display: flex;
+  justify-content: flex-end;
 
-    .button:not(:last-of-type) {
-      margin-right: .5rem;
-    }
+  .button:not(:last-of-type) {
+    margin-right: .5rem;
   }
 
   .button {
@@ -33,37 +31,6 @@ $filter-container-top-link-share-list: -47px;
 
   .card {
     text-align: left;
-  }
-
-  .fancycheckbox {
-    display: block;
-  }
-
-  .search {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-right: .5rem;
-
-    .field {
-      transition: width $transition;
-      width: 100%;
-
-      &.hidden {
-        width: 0;
-        height: 0;
-        margin: 0;
-        overflow: hidden;
-      }
-
-      .button {
-        height: 100%;
-      }
-    }
-  }
-
-  .filters input {
-    font-size: .9rem;
   }
 
   @media screen and (max-width: $tablet) {

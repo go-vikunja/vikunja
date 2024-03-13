@@ -5,13 +5,11 @@
 		view-name="kanban"
 	>
 		<template #header>
-			<div
-				v-if="!isSavedFilter(project)"
-				class="filter-container"
-			>
-				<div class="items">
-					<FilterPopup v-model="params" />
-				</div>
+			<div class="filter-container">
+				<FilterPopup
+					v-if="!isSavedFilter(project)"
+					v-model="params"
+				/>
 			</div>
 		</template>
 
@@ -47,7 +45,7 @@
 										v-tooltip="$t('project.kanban.doneBucketHint')"
 										class="icon is-small has-text-success mr-2"
 									>
-										<icon icon="check-double" />
+										<icon icon="check-double"/>
 									</span>
 									<h2
 										class="title input"
@@ -197,7 +195,9 @@
 												variant="secondary"
 												@click="toggleShowNewTaskInput(bucket.id)"
 											>
-												{{ bucket.tasks.length === 0 ? $t('project.kanban.addTask') : $t('project.kanban.addAnotherTask') }}
+												{{
+													bucket.tasks.length === 0 ? $t('project.kanban.addTask') : $t('project.kanban.addAnotherTask')
+												}}
 											</x-button>
 										</div>
 									</template>
@@ -290,7 +290,11 @@ import KanbanCard from '@/components/tasks/partials/kanban-card.vue'
 import Dropdown from '@/components/misc/dropdown.vue'
 import DropdownItem from '@/components/misc/dropdown-item.vue'
 
-import {getCollapsedBucketState, saveCollapsedBucketState, type CollapsedBuckets} from '@/helpers/saveCollapsedBucketState'
+import {
+	type CollapsedBuckets,
+	getCollapsedBucketState,
+	saveCollapsedBucketState,
+} from '@/helpers/saveCollapsedBucketState'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 
 import {isSavedFilter} from '@/services/savedFilter'
@@ -322,7 +326,7 @@ const kanbanStore = useKanbanStore()
 const taskStore = useTaskStore()
 const projectStore = useProjectStore()
 
-const taskContainerRefs = ref<{[id: IBucket['id']]: HTMLElement}>({})
+const taskContainerRefs = ref<{ [id: IBucket['id']]: HTMLElement }>({})
 const bucketLimitInputRef = ref<HTMLInputElement | null>(null)
 
 const drag = ref(false)
@@ -334,18 +338,18 @@ const bucketToDelete = ref(0)
 const bucketTitleEditable = ref(false)
 
 const newTaskText = ref('')
-const showNewTaskInput = ref<{[id: IBucket['id']]: boolean}>({})
+const showNewTaskInput = ref<{ [id: IBucket['id']]: boolean }>({})
 
 const newBucketTitle = ref('')
 const showNewBucketInput = ref(false)
-const newTaskError = ref<{[id: IBucket['id']]: boolean}>({})
+const newTaskError = ref<{ [id: IBucket['id']]: boolean }>({})
 const newTaskInputFocused = ref(false)
 
 const showSetLimitInput = ref(false)
 const collapsedBuckets = ref<CollapsedBuckets>({})
 
 // We're using this to show the loading animation only at the task when updating it
-const taskUpdating = ref<{[id: ITask['id']]: boolean}>({})
+const taskUpdating = ref<{ [id: ITask['id']]: boolean }>({})
 const oneTaskUpdating = ref(false)
 
 const params = ref<TaskFilterParams>({
@@ -378,7 +382,7 @@ const bucketDraggableComponentData = computed(() => ({
 	],
 }))
 const canWrite = computed(() => baseStore.currentProject?.maxRight > Rights.READ)
-const project = computed(() => projectId ? projectStore.projects[projectId]: null)
+const project = computed(() => projectId ? projectStore.projects[projectId] : null)
 
 const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)
@@ -497,7 +501,7 @@ async function updateTaskPosition(e) {
 		await taskStore.update(newTask)
 
 		// Make sure the first and second task don't both get position 0 assigned
-		if(newTaskIndex === 0 && taskAfter !== null && taskAfter.kanbanPosition === 0) {
+		if (newTaskIndex === 0 && taskAfter !== null && taskAfter.kanbanPosition === 0) {
 			const taskAfterAfter = newBucket.tasks[newTaskIndex + 2] ?? null
 			const newTaskAfter = klona(taskAfter) // cloning the task to avoid pinia store manipulation
 			newTaskAfter.bucketId = newBucket.id
@@ -602,7 +606,7 @@ function updateBuckets(value: IBucket[]) {
 }
 
 // TODO: fix type
-function updateBucketPosition(e: {newIndex: number}) {
+function updateBucketPosition(e: { newIndex: number }) {
 	// (2) bucket positon is changed
 	dragBucket.value = false
 
@@ -631,19 +635,19 @@ async function saveBucketLimit(bucketId: IBucket['id'], limit: number) {
 	success({message: t('project.kanban.bucketLimitSavedSuccess')})
 }
 
-const setBucketLimitCancel = ref<number|null>(null)
+const setBucketLimitCancel = ref<number | null>(null)
 
 async function setBucketLimit(bucketId: IBucket['id'], now: boolean = false) {
 	const limit = parseInt(bucketLimitInputRef.value?.value || '')
-	
+
 	if (setBucketLimitCancel.value !== null) {
 		clearTimeout(setBucketLimitCancel.value)
 	}
-	
+
 	if (now) {
 		return saveBucketLimit(bucketId, limit)
 	}
-	
+
 	setBucketLimitCancel.value = setTimeout(saveBucketLimit, 2500, bucketId, limit)
 }
 
@@ -739,6 +743,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		* {
 			opacity: 0;
 		}
+
 		&::after {
 			content: '';
 			position: absolute;
@@ -780,6 +785,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			&:first-of-type {
 				padding-top: .5rem;
 			}
+
 			&:last-of-type {
 				padding-bottom: .5rem;
 			}

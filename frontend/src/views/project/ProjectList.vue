@@ -5,52 +5,12 @@
 		view-name="project"
 	>
 		<template #header>
-			<div
-				v-if="!isSavedFilter(project)"
-				class="filter-container"
-			>
-				<div class="items">
-					<div class="search">
-						<div
-							:class="{ hidden: !showTaskSearch }"
-							class="field has-addons"
-						>
-							<div class="control has-icons-left has-icons-right">
-								<input
-									v-model="searchTerm"
-									v-focus
-									class="input"
-									:placeholder="$t('misc.search')"
-									type="text"
-									@blur="hideSearchBar()"
-									@keyup.enter="searchTasks"
-								>
-								<span class="icon is-left">
-									<icon icon="search" />
-								</span>
-							</div>
-							<div class="control">
-								<x-button
-									:loading="loading"
-									:shadow="false"
-									@click="searchTasks"
-								>
-									{{ $t('misc.search') }}
-								</x-button>
-							</div>
-						</div>
-						<x-button
-							v-if="!showTaskSearch"
-							icon="search"
-							variant="secondary"
-							@click="showTaskSearch = !showTaskSearch"
-						/>
-					</div>
-					<FilterPopup
-						v-model="params"
-						@update:modelValue="prepareFiltersAndLoadTasks()"
-					/>
-				</div>
+			<div class="filter-container">
+				<FilterPopup
+					v-if="!isSavedFilter(project)"
+					v-model="params"
+					@update:modelValue="prepareFiltersAndLoadTasks()"
+				/>
 			</div>
 		</template>
 
@@ -113,14 +73,14 @@
 							>
 								<template v-if="canWrite">
 									<span class="icon handle">
-										<icon icon="grip-lines" />
+										<icon icon="grip-lines"/>
 									</span>
 								</template>
 							</SingleTaskInProject>
 						</template>
 					</draggable>
 
-					<Pagination 
+					<Pagination
 						:total-pages="totalPages"
 						:current-page="currentPage"
 					/>
@@ -131,7 +91,7 @@
 </template>
 
 <script lang="ts">
-export default { name: 'List' }
+export default {name: 'List'}
 </script>
 
 <script setup lang="ts">
@@ -183,7 +143,7 @@ const {
 	searchTerm,
 	params,
 	sortByParam,
-} = useTaskList(() => projectId, {position: 'asc' })
+} = useTaskList(() => projectId, {position: 'asc'})
 
 const tasks = ref<ITask[]>([])
 watch(
@@ -203,7 +163,7 @@ watch(
 
 			// If the task is a subtask, make sure the parent task is available in the current view as well
 			for (const pt of t.relatedTasks.parenttask) {
-				if(typeof tasksById[pt.id] === 'undefined') {
+				if (typeof tasksById[pt.id] === 'undefined') {
 					return true
 				}
 			}
@@ -265,16 +225,16 @@ function hideSearchBar() {
 }
 
 const addTaskRef = ref<typeof AddTask | null>(null)
+
 function focusNewTaskInput() {
 	addTaskRef.value?.focusTaskInput()
 }
 
 function updateTaskList(task: ITask) {
-	if (isAlphabeticalSorting.value ) {
+	if (isAlphabeticalSorting.value) {
 		// reload tasks with current filter and sorting
 		loadTasks()
-	}
-	else {
+	} else {
 		allTasks.value = [
 			task,
 			...allTasks.value,
@@ -310,8 +270,8 @@ async function saveTaskPosition(e) {
 }
 
 function prepareFiltersAndLoadTasks() {
-	if(isAlphabeticalSorting.value) {
-		sortByParam.value = {} 
+	if (isAlphabeticalSorting.value) {
+		sortByParam.value = {}
 		sortByParam.value[ALPHABETICAL_SORT] = 'asc'
 	}
 
@@ -328,7 +288,7 @@ function prepareFiltersAndLoadTasks() {
 	border-radius: $radius;
 	background: var(--grey-100);
 	border: 2px dashed var(--grey-300);
-	
+
 	* {
 		opacity: 0;
 	}
@@ -339,8 +299,8 @@ function prepareFiltersAndLoadTasks() {
 }
 
 .link-share-view .card {
-  border: none;
-  box-shadow: none;
+	border: none;
+	box-shadow: none;
 }
 
 .control.has-icons-left .icon,

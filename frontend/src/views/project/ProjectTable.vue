@@ -67,7 +67,7 @@
 							</card>
 						</template>
 					</Popup>
-					<FilterPopup v-model="params" />
+					<FilterPopup v-model="params"/>
 				</div>
 			</div>
 		</template>
@@ -84,175 +84,175 @@
 					<div class="has-horizontal-overflow">
 						<table class="table has-actions is-hoverable is-fullwidth mb-0">
 							<thead>
-								<tr>
-									<th v-if="activeColumns.index">
-										#
-										<Sort
-											:order="sortBy.index"
-											@click="sort('index')"
-										/>
-									</th>
-									<th v-if="activeColumns.done">
-										{{ $t('task.attributes.done') }}
-										<Sort
-											:order="sortBy.done"
-											@click="sort('done')"
-										/>
-									</th>
-									<th v-if="activeColumns.title">
-										{{ $t('task.attributes.title') }}
-										<Sort
-											:order="sortBy.title"
-											@click="sort('title')"
-										/>
-									</th>
-									<th v-if="activeColumns.priority">
-										{{ $t('task.attributes.priority') }}
-										<Sort
-											:order="sortBy.priority"
-											@click="sort('priority')"
-										/>
-									</th>
-									<th v-if="activeColumns.labels">
-										{{ $t('task.attributes.labels') }}
-									</th>
-									<th v-if="activeColumns.assignees">
-										{{ $t('task.attributes.assignees') }}
-									</th>
-									<th v-if="activeColumns.dueDate">
-										{{ $t('task.attributes.dueDate') }}
-										<Sort
-											:order="sortBy.due_date"
-											@click="sort('due_date')"
-										/>
-									</th>
-									<th v-if="activeColumns.startDate">
-										{{ $t('task.attributes.startDate') }}
-										<Sort
-											:order="sortBy.start_date"
-											@click="sort('start_date')"
-										/>
-									</th>
-									<th v-if="activeColumns.endDate">
-										{{ $t('task.attributes.endDate') }}
-										<Sort
-											:order="sortBy.end_date"
-											@click="sort('end_date')"
-										/>
-									</th>
-									<th v-if="activeColumns.percentDone">
-										{{ $t('task.attributes.percentDone') }}
-										<Sort
-											:order="sortBy.percent_done"
-											@click="sort('percent_done')"
-										/>
-									</th>
-									<th v-if="activeColumns.doneAt">
-										{{ $t('task.attributes.doneAt') }}
-										<Sort
-											:order="sortBy.done_at"
-											@click="sort('done_at')"
-										/>
-									</th>
-									<th v-if="activeColumns.created">
-										{{ $t('task.attributes.created') }}
-										<Sort
-											:order="sortBy.created"
-											@click="sort('created')"
-										/>
-									</th>
-									<th v-if="activeColumns.updated">
-										{{ $t('task.attributes.updated') }}
-										<Sort
-											:order="sortBy.updated"
-											@click="sort('updated')"
-										/>
-									</th>
-									<th v-if="activeColumns.createdBy">
-										{{ $t('task.attributes.createdBy') }}
-									</th>
-								</tr>
+							<tr>
+								<th v-if="activeColumns.index">
+									#
+									<Sort
+										:order="sortBy.index"
+										@click="sort('index')"
+									/>
+								</th>
+								<th v-if="activeColumns.done">
+									{{ $t('task.attributes.done') }}
+									<Sort
+										:order="sortBy.done"
+										@click="sort('done')"
+									/>
+								</th>
+								<th v-if="activeColumns.title">
+									{{ $t('task.attributes.title') }}
+									<Sort
+										:order="sortBy.title"
+										@click="sort('title')"
+									/>
+								</th>
+								<th v-if="activeColumns.priority">
+									{{ $t('task.attributes.priority') }}
+									<Sort
+										:order="sortBy.priority"
+										@click="sort('priority')"
+									/>
+								</th>
+								<th v-if="activeColumns.labels">
+									{{ $t('task.attributes.labels') }}
+								</th>
+								<th v-if="activeColumns.assignees">
+									{{ $t('task.attributes.assignees') }}
+								</th>
+								<th v-if="activeColumns.dueDate">
+									{{ $t('task.attributes.dueDate') }}
+									<Sort
+										:order="sortBy.due_date"
+										@click="sort('due_date')"
+									/>
+								</th>
+								<th v-if="activeColumns.startDate">
+									{{ $t('task.attributes.startDate') }}
+									<Sort
+										:order="sortBy.start_date"
+										@click="sort('start_date')"
+									/>
+								</th>
+								<th v-if="activeColumns.endDate">
+									{{ $t('task.attributes.endDate') }}
+									<Sort
+										:order="sortBy.end_date"
+										@click="sort('end_date')"
+									/>
+								</th>
+								<th v-if="activeColumns.percentDone">
+									{{ $t('task.attributes.percentDone') }}
+									<Sort
+										:order="sortBy.percent_done"
+										@click="sort('percent_done')"
+									/>
+								</th>
+								<th v-if="activeColumns.doneAt">
+									{{ $t('task.attributes.doneAt') }}
+									<Sort
+										:order="sortBy.done_at"
+										@click="sort('done_at')"
+									/>
+								</th>
+								<th v-if="activeColumns.created">
+									{{ $t('task.attributes.created') }}
+									<Sort
+										:order="sortBy.created"
+										@click="sort('created')"
+									/>
+								</th>
+								<th v-if="activeColumns.updated">
+									{{ $t('task.attributes.updated') }}
+									<Sort
+										:order="sortBy.updated"
+										@click="sort('updated')"
+									/>
+								</th>
+								<th v-if="activeColumns.createdBy">
+									{{ $t('task.attributes.createdBy') }}
+								</th>
+							</tr>
 							</thead>
 							<tbody>
-								<tr
-									v-for="t in tasks"
-									:key="t.id"
-								>
-									<td v-if="activeColumns.index">
-										<router-link :to="taskDetailRoutes[t.id]">
-											<template v-if="t.identifier === ''">
-												#{{ t.index }}
-											</template>
-											<template v-else>
-												{{ t.identifier }}
-											</template>
-										</router-link>
-									</td>
-									<td v-if="activeColumns.done">
-										<Done
-											:is-done="t.done"
-											variant="small"
-										/>
-									</td>
-									<td v-if="activeColumns.title">
-										<router-link :to="taskDetailRoutes[t.id]">
-											{{ t.title }}
-										</router-link>
-									</td>
-									<td v-if="activeColumns.priority">
-										<PriorityLabel
-											:priority="t.priority"
-											:done="t.done"
-											:show-all="true"
-										/>
-									</td>
-									<td v-if="activeColumns.labels">
-										<Labels :labels="t.labels" />
-									</td>
-									<td v-if="activeColumns.assignees">
-										<AssigneeList
-											v-if="t.assignees.length > 0"
-											:assignees="t.assignees"
-											:avatar-size="28"
-											class="ml-1"
-											:inline="true"
-										/>
-									</td>
-									<DateTableCell
-										v-if="activeColumns.dueDate"
-										:date="t.dueDate"
+							<tr
+								v-for="t in tasks"
+								:key="t.id"
+							>
+								<td v-if="activeColumns.index">
+									<router-link :to="taskDetailRoutes[t.id]">
+										<template v-if="t.identifier === ''">
+											#{{ t.index }}
+										</template>
+										<template v-else>
+											{{ t.identifier }}
+										</template>
+									</router-link>
+								</td>
+								<td v-if="activeColumns.done">
+									<Done
+										:is-done="t.done"
+										variant="small"
 									/>
-									<DateTableCell
-										v-if="activeColumns.startDate"
-										:date="t.startDate"
+								</td>
+								<td v-if="activeColumns.title">
+									<router-link :to="taskDetailRoutes[t.id]">
+										{{ t.title }}
+									</router-link>
+								</td>
+								<td v-if="activeColumns.priority">
+									<PriorityLabel
+										:priority="t.priority"
+										:done="t.done"
+										:show-all="true"
 									/>
-									<DateTableCell
-										v-if="activeColumns.endDate"
-										:date="t.endDate"
+								</td>
+								<td v-if="activeColumns.labels">
+									<Labels :labels="t.labels"/>
+								</td>
+								<td v-if="activeColumns.assignees">
+									<AssigneeList
+										v-if="t.assignees.length > 0"
+										:assignees="t.assignees"
+										:avatar-size="28"
+										class="ml-1"
+										:inline="true"
 									/>
-									<td v-if="activeColumns.percentDone">
-										{{ t.percentDone * 100 }}%
-									</td>
-									<DateTableCell
-										v-if="activeColumns.doneAt"
-										:date="t.doneAt"
+								</td>
+								<DateTableCell
+									v-if="activeColumns.dueDate"
+									:date="t.dueDate"
+								/>
+								<DateTableCell
+									v-if="activeColumns.startDate"
+									:date="t.startDate"
+								/>
+								<DateTableCell
+									v-if="activeColumns.endDate"
+									:date="t.endDate"
+								/>
+								<td v-if="activeColumns.percentDone">
+									{{ t.percentDone * 100 }}%
+								</td>
+								<DateTableCell
+									v-if="activeColumns.doneAt"
+									:date="t.doneAt"
+								/>
+								<DateTableCell
+									v-if="activeColumns.created"
+									:date="t.created"
+								/>
+								<DateTableCell
+									v-if="activeColumns.updated"
+									:date="t.updated"
+								/>
+								<td v-if="activeColumns.createdBy">
+									<User
+										:avatar-size="27"
+										:show-username="false"
+										:user="t.createdBy"
 									/>
-									<DateTableCell
-										v-if="activeColumns.created"
-										:date="t.created"
-									/>
-									<DateTableCell
-										v-if="activeColumns.updated"
-										:date="t.updated"
-									/>
-									<td v-if="activeColumns.createdBy">
-										<User
-											:avatar-size="27"
-											:show-username="false"
-											:user="t.createdBy"
-										/>
-									</td>
-								</tr>
+								</td>
+							</tr>
 							</tbody>
 						</table>
 					</div>
@@ -284,9 +284,8 @@ import FilterPopup from '@/components/project/partials/filter-popup.vue'
 import Pagination from '@/components/misc/pagination.vue'
 import Popup from '@/components/misc/popup.vue'
 
-import {useTaskList} from '@/composables/useTaskList'
-
 import type {SortBy} from '@/composables/useTaskList'
+import {useTaskList} from '@/composables/useTaskList'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 import AssigneeList from '@/components/tasks/partials/assigneeList.vue'
@@ -380,6 +379,11 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 
 .columns-filter {
 	margin: 0;
+
+	:deep(.card-content .content) {
+		display: flex;
+		flex-direction: column;
+	}
 
 	&.is-open {
 		margin: 2rem 0 1rem;

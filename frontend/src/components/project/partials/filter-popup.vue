@@ -1,12 +1,5 @@
 <template>
 	<x-button
-		v-if="hasFilters"
-		variant="secondary"
-		@click="clearFilters"
-	>
-		{{ $t('filters.clear') }}
-	</x-button>
-	<x-button
 		variant="secondary"
 		icon="filter"
 		@click="() => modalOpen = true"

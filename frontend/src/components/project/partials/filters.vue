@@ -26,6 +26,13 @@
 			#footer
 		>
 			<x-button
+				variant="secondary"
+				@click.prevent.stop="clearFiltersAndEmit"
+				class="mr-2"
+			>
+				{{ $t('filters.clear') }}
+			</x-button>
+			<x-button
 				variant="primary"
 				@click.prevent.stop="changeAndEmitButton"
 			>
@@ -129,5 +136,10 @@ function change() {
 function changeAndEmitButton() {
 	change()
 	emit('showResultsButtonClicked')
+}
+
+function clearFiltersAndEmit() {
+	params.value.filter = ''
+	changeAndEmitButton()
 }
 </script>
