@@ -374,7 +374,7 @@ const editor = useEditor({
 		Typography,
 		Underline,
 		Link.configure({
-			openOnClick: true,
+			openOnClick: false,
 			validate: (href: string) => /^https?:\/\//.test(href),
 		}),
 		Table.configure({
