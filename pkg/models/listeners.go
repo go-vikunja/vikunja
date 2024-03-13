@@ -725,24 +725,36 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
+	parents, err := GetAllParentProjects(s, projectID)
+	if err != nil {
+		return err
+	}
+
+	projectIDs := make([]int64, 0, len(parents)+1)
+	projectIDs = append(projectIDs, projectID)
+
+	for _, p := range parents {
+		projectIDs = append(projectIDs, p.ID)
+	}
+
 	ws := []*Webhook{}
-	err = s.Where("project_id = ?", projectID).
+	err = s.In("project_id", projectIDs).
 		Find(&ws)
 	if err != nil {
 		return err
 	}
 
-	var webhook *Webhook
+	matchingWebhooks := []*Webhook{}
 	for _, w := range ws {
 		for _, e := range w.Events {
 			if e == wl.EventName {
-				webhook = w
+				matchingWebhooks = append(matchingWebhooks, w)
 				break
 			}
 		}
 	}
 
-	if webhook == nil {
+	if len(matchingWebhooks) == 0 {
 		log.Debugf("Did not find any webhook for the %s event for project %d, not sending", wl.EventName, projectID)
 		return nil
 	}
@@ -789,11 +801,17 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 		}
 	}
 
-	err = webhook.sendWebhookPayload(&WebhookPayload{
-		EventName: wl.EventName,
-		Time:      time.Now(),
-		Data:      event,
-	})
+	for _, webhook := range matchingWebhooks {
+		err = webhook.sendWebhookPayload(&WebhookPayload{
+			EventName: wl.EventName,
+			Time:      time.Now(),
+			Data:      event,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
 	return
 }
 
