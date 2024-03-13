@@ -30,21 +30,39 @@ import {computed, ref, watch} from 'vue'
 
 import Filters from '@/components/project/partials/filters.vue'
 
-import {type TaskFilterParams} from '@/services/taskCollection'
+import {getDefaultTaskFilterParams, type TaskFilterParams} from '@/services/taskCollection'
+import {useRouteQuery} from '@vueuse/router'
 
 const modelValue = defineModel<TaskFilterParams>({})
 
 const value = ref<TaskFilterParams>({})
+const filter = useRouteQuery('filter')
 
 watch(
 	() => modelValue.value,
 	(modelValue: TaskFilterParams) => {
 		value.value = modelValue
+		if (value.value.filter !== '' && value.value.filter !== getDefaultTaskFilterParams().filter) {
+			filter.value = value.value.filter
+		}
+	},
+	{immediate: true},
+)
+
+watch(
+	() => filter.value,
+	val => {
+		if (modelValue.value?.filter === val || typeof val === 'undefined') {
+			return
+		}
+
+		modelValue.value.filter = val
 	},
 	{immediate: true},
 )
 
 function emitChanges(newValue: TaskFilterParams) {
+	filter.value = newValue.filter
 	if (modelValue.value?.filter === newValue.filter && modelValue.value?.s === newValue.s) {
 		return
 	}
@@ -54,7 +72,7 @@ function emitChanges(newValue: TaskFilterParams) {
 }
 
 const hasFilters = computed(() => {
-	return value.value.filter !== '' || 
+	return value.value.filter !== '' ||
 		value.value.s !== ''
 })
 
@@ -73,13 +91,13 @@ const modalOpen = ref(false)
 $filter-bubble-size: .75rem;
 .has-filters {
 	position: relative;
-	
+
 	&::after {
 		content: '';
 		position: absolute;
 		top: math.div($filter-bubble-size, -2);
 		right: math.div($filter-bubble-size, -2);
-		
+
 		width: $filter-bubble-size;
 		height: $filter-bubble-size;
 		border-radius: 100%;
