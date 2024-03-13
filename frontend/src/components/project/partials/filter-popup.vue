@@ -30,7 +30,7 @@ import {computed, ref, watch} from 'vue'
 
 import Filters from '@/components/project/partials/filters.vue'
 
-import {getDefaultTaskFilterParams, type TaskFilterParams} from '@/services/taskCollection'
+import {type TaskFilterParams} from '@/services/taskCollection'
 
 const modelValue = defineModel<TaskFilterParams>({})
 
@@ -54,18 +54,8 @@ function emitChanges(newValue: TaskFilterParams) {
 }
 
 const hasFilters = computed(() => {
-	// this.value also contains the page parameter which we don't want to include in filters
-	// eslint-disable-next-line no-unused-vars
-	const {filter, s} = value.value
-	const def = {...getDefaultTaskFilterParams()}
-
-	const params = {filter, s}
-	const defaultParams = {
-		filter: def.filter,
-		s: s ? def.s : undefined,
-	}
-
-	return JSON.stringify(params) !== JSON.stringify(defaultParams)
+	return value.value.filter !== '' || 
+		value.value.s !== ''
 })
 
 const modalOpen = ref(false)
@@ -77,6 +67,23 @@ const modalOpen = ref(false)
 
 	&.is-open {
 		margin: 2rem 0 1rem;
+	}
+}
+
+$filter-bubble-size: .75rem;
+.has-filters {
+	position: relative;
+	
+	&::after {
+		content: '';
+		position: absolute;
+		top: math.div($filter-bubble-size, -2);
+		right: math.div($filter-bubble-size, -2);
+		
+		width: $filter-bubble-size;
+		height: $filter-bubble-size;
+		border-radius: 100%;
+		background: var(--primary);
 	}
 }
 </style>

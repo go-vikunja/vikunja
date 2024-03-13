@@ -28,6 +28,7 @@
 			<x-button
 				variant="secondary"
 				class="mr-2"
+				:disabled="params.filter === ''"
 				@click.prevent.stop="clearFiltersAndEmit"
 			>
 				{{ $t('filters.clear') }}
