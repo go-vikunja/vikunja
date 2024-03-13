@@ -19,6 +19,7 @@ package models
 import (
 	"code.vikunja.io/web"
 	"time"
+	"xorm.io/xorm"
 )
 
 type ProjectViewKind int
@@ -56,4 +57,152 @@ type ProjectView struct {
 
 func (p *ProjectView) TableName() string {
 	return "project_views"
+}
+
+// ReadAll gets all project views
+// @Summary Get all project views for a project
+// @Description Returns all project views for a sepcific project
+// @tags project
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param project path int true "Project ID"
+// @Success 200 {array} models.ProjectView "The project views"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /projects/{project}/views [get]
+func (p *ProjectView) ReadAll(s *xorm.Session, a web.Auth, _ string, _ int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+
+	pp := &Project{ID: p.ProjectID}
+	can, _, err := pp.CanRead(s, a)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	if !can {
+		return nil, 0, 0, ErrGenericForbidden{}
+	}
+
+	projectViews := []*ProjectView{}
+	err = s.
+		Where("project_id = ?", p.ProjectID).
+		Find(&projectViews)
+	if err != nil {
+		return
+	}
+
+	totalCount, err := s.
+		Where("project_id = ?", p.ProjectID).
+		Count(&ProjectView{})
+	if err != nil {
+		return
+	}
+
+	return projectViews, len(projectViews), totalCount, nil
+}
+
+// ReadOne implements the CRUD method to get one project view
+// @Summary Get one project view
+// @Description Returns a project view by its ID.
+// @tags project
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param project path int true "Project ID"
+// @Param id path int true "Project View ID"
+// @Success 200 {object} models.ProjectView "The project view"
+// @Failure 403 {object} web.HTTPError "The user does not have access to this project view"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /projects/{project}/views/{id} [get]
+func (p *ProjectView) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
+	view, err := GetProjectViewByID(s, p.ID)
+	if err != nil {
+		return err
+	}
+
+	*p = *view
+	return
+}
+
+// Delete removes the project view
+// @Summary Delete a project view
+// @Description Deletes a project view.
+// @tags project
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param project path int true "Project ID"
+// @Param id path int true "Project View ID"
+// @Success 200 {object} models.Message "The project view was successfully deleted."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the project view"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /projects/{project}/views/{id} [delete]
+func (p *ProjectView) Delete(s *xorm.Session, a web.Auth) (err error) {
+	_, err = s.
+		Where("id = ? AND projec_id = ?", p.ID, p.ProjectID).
+		Delete(&ProjectView{})
+	return
+}
+
+// Create adds a new project view
+// @Summary Create a project view
+// @Description Create a project view in a specific project.
+// @tags project
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param project path int true "Project ID"
+// @Param view body models.ProjectView true "The project view you want to create."
+// @Success 200 {object} models.ProjectView "The created project view"
+// @Failure 403 {object} web.HTTPError "The user does not have access to create a project view"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /projects/{project}/views [put]
+func (p *ProjectView) Create(s *xorm.Session, a web.Auth) (err error) {
+	_, err = s.Insert(p)
+	return
+}
+
+// Update is the handler to update a project view
+// @Summary Updates a project view
+// @Description Updates a project view.
+// @tags project
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param project path int true "Project ID"
+// @Param id path int true "Project View ID"
+// @Param view body models.ProjectView true "The project view with updated values you want to change."
+// @Success 200 {object} models.ProjectView "The updated project view."
+// @Failure 400 {object} web.HTTPError "Invalid project view object provided."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /projects/{project}/views/{id} [post]
+func (p *ProjectView) Update(s *xorm.Session, _ web.Auth) (err error) {
+	// Check if the project view exists
+	_, err = GetProjectViewByID(s, p.ID)
+	if err != nil {
+		return
+	}
+
+	_, err = s.ID(p.ID).Update(p)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func GetProjectViewByID(s *xorm.Session, id int64) (view *ProjectView, err error) {
+	exists, err := s.
+		Where("id = ?", id).
+		NoAutoCondition().
+		Get(view)
+	if err != nil {
+		return nil, err
+	}
+
+	if !exists {
+		return nil, &ErrProjectViewDoesNotExist{
+			ProjectViewID: id,
+		}
+	}
+
+	return
 }

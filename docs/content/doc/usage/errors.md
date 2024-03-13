@@ -55,19 +55,20 @@ This document describes the different errors Vikunja can return.
 
 ## Project
 
-| ErrorCode | HTTP Status Code | Description                                                                                                                         |
-|-----------|------------------|-------------------------------------------------------------------------------------------------------------------------------------|
-| 3001      | 404 | The project does not exist.                                                                                                         |
-| 3004      | 403 | The user needs to have read permissions on that project to perform that action.                                                     |
-| 3005      | 400 | The project title cannot be empty.                                                                                                  |
-| 3006      | 404 | The project share does not exist.                                                                                                   |
-| 3007      | 400 | A project with this identifier already exists.                                                                                      |
+| ErrorCode | HTTP Status Code | Description                                                                                                                        |
+|-----------|------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| 3001      | 404 | The project does not exist.                                                                                                        |
+| 3004      | 403 | The user needs to have read permissions on that project to perform that action.                                                    |
+| 3005      | 400 | The project title cannot be empty.                                                                                                 |
+| 3006      | 404 | The project share does not exist.                                                                                                  |
+| 3007      | 400 | A project with this identifier already exists.                                                                                     |
 | 3008      | 412 | The project is archived and can therefore only be accessed read only. This is also true for all tasks associated with this project. |
-| 3009      | 412 | The project cannot belong to a dynamically generated parent project like "Favorites".                                               |
-| 3010      | 412 | This project cannot be a child of itself.                                                                                           |
-| 3011      | 412 | This project cannot have a cyclic relationship to a parent project.                                                                 |
-| 3012      | 412 | This project cannot be deleted because a user has set it as their default project.                                                  |
-| 3013      | 412 | This project cannot be archived because a user has set it as their default project.                                                 |
+| 3009      | 412 | The project cannot belong to a dynamically generated parent project like "Favorites".                                              |
+| 3010      | 412 | This project cannot be a child of itself.                                                                                          |
+| 3011      | 412 | This project cannot have a cyclic relationship to a parent project.                                                                |
+| 3012      | 412 | This project cannot be deleted because a user has set it as their default project.                                                 |
+| 3013      | 412 | This project cannot be archived because a user has set it as their default project.                                                |
+| 3014      | 404 | This project view does not exist.                                                                                                  |
 
 ## Task
 

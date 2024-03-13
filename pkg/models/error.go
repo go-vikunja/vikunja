@@ -412,6 +412,33 @@ func (err *ErrCannotArchiveDefaultProject) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrProjectViewDoesNotExist represents an error where the default project is being deleted
+type ErrProjectViewDoesNotExist struct {
+	ProjectViewID int64
+}
+
+// IsErrProjectViewDoesNotExist checks if an error is a project is archived error.
+func IsErrProjectViewDoesNotExist(err error) bool {
+	_, ok := err.(*ErrProjectViewDoesNotExist)
+	return ok
+}
+
+func (err *ErrProjectViewDoesNotExist) Error() string {
+	return fmt.Sprintf("Project view does not exist [ProjectViewID: %d]", err.ProjectViewID)
+}
+
+// ErrCodeProjectViewDoesNotExist holds the unique world-error code of this error
+const ErrCodeProjectViewDoesNotExist = 3014
+
+// HTTPError holds the http error description
+func (err *ErrProjectViewDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeProjectViewDoesNotExist,
+		Message:  "This project view does not exist.",
+	}
+}
+
 // ==============
 // Task errors
 // ==============
