@@ -19,7 +19,7 @@
 			</Fancycheckbox>
 		</div>
 
-		<FilterInputDocs />
+		<FilterInputDocs/>
 
 		<template
 			v-if="hasFooter"
@@ -59,8 +59,8 @@ import {useProjectStore} from '@/stores/projects'
 import {FILTER_OPERATORS, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
 import FilterInputDocs from '@/components/project/partials/FilterInputDocs.vue'
 
-const  {
-	hasTitle= false,
+const {
+	hasTitle = false,
 	hasFooter = true,
 	modelValue,
 } = defineProps<{
@@ -110,7 +110,15 @@ function change() {
 	const filter = transformFilterStringForApi(
 		params.value.filter,
 		labelTitle => labelStore.filterLabelsByQuery([], labelTitle)[0]?.id || null,
-		projectTitle => projectStore.searchProject(projectTitle)[0]?.id || null,
+		projectTitle => {
+			const found = projectStore.findProjectByExactname(projectTitle)
+
+			if (found === null) {
+				return null
+			}
+
+			return found[0]?.id || null
+		},
 	)
 
 	let s = ''

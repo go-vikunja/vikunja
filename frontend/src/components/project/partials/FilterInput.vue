@@ -20,6 +20,7 @@ import {
 	getFilterFieldRegexPattern,
 	LABEL_FIELDS,
 } from '@/helpers/filters'
+import {useDebounceFn} from '@vueuse/core'
 
 const {
 	modelValue,
@@ -236,6 +237,10 @@ function autocompleteSelect(value) {
 
 	autocompleteResults.value = []
 }
+
+// The blur from the textarea might happen before the replacement after autocomplete select was done.
+// That caused listeners to try and replace values earlier, resulting in broken queries.
+const blurDebounced = useDebounceFn(() => emit('blur'), 500)
 </script>
 
 <template>
@@ -264,7 +269,7 @@ function autocompleteSelect(value) {
 						@input="handleFieldInput"
 						@focus="onFocusField"
 						@keydown="onKeydown"
-						@blur="e => emit('blur', e)"
+						@blur="blurDebounced"
 					/>
 					<div
 						class="filter-input-highlight"
