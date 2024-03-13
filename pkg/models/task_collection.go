@@ -33,7 +33,7 @@ type TaskCollection struct {
 	OrderBy    []string `query:"order_by" json:"order_by"`
 	OrderByArr []string `query:"order_by[]" json:"-"`
 
-	// The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature.
+	// The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation.
 	Filter string `query:"filter" json:"filter"`
 	// The time zone which should be used for date match (statements like "now" resolve to different actual times)
 	FilterTimezone string `query:"filter_timezone" json:"-"`
