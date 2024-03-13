@@ -57,11 +57,11 @@
       "logout": "Odjava",
       "emailInvalid": "Prosim vnesite veljaven e-poštni naslov.",
       "usernameRequired": "Prosim vnesite uporabniško ime.",
-      "usernameMustNotContainSpace": "The username must not contain spaces.",
-      "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
+      "usernameMustNotContainSpace": "Uporabniško ime ne sme vsebovati presledkov.",
+      "usernameMustNotLookLikeUrl": "Uporabniško ime ne sme izgledati kot URL.",
       "passwordRequired": "Prosim vnesite geslo.",
-      "passwordNotMin": "Password must have at least 8 characters.",
-      "passwordNotMax": "Password must have at most 250 characters.",
+      "passwordNotMin": "Geslo mora imeti vsaj 8 znakov.",
+      "passwordNotMax": "Geslo mora imeti največ 250 znakov.",
       "showPassword": "Prikažite geslo",
       "hidePassword": "Skrijte geslo",
       "noAccountYet": "Še nimate računa?",
@@ -248,6 +248,7 @@
       "text2": "To vključuje vse naloge in GA NI MOGOČE RAZVELJAVITI!",
       "success": "Projekt je bil uspešno izbrisan.",
       "tasksToDelete": "S tem bo nepreklicno odstranjeno približno {count} nalog.",
+      "tasksAndChildProjectsToDelete": "S tem bo nepreklicno odstranjeno cca. {tasks} nalog in {projects} projektov.",
       "noTasksToDelete": "Ta projekt ne vsebuje nobenih nalog, zato ga lahko varno izbrišete."
     },
     "duplicate": {
@@ -385,6 +386,7 @@
   "filters": {
     "title": "Filtri",
     "clear": "Počisti filtre",
+    "showResults": "Prikaži rezultate",
     "attributes": {
       "title": "Naslov",
       "titlePlaceholder": "Tu je naslov shranjenega filtra…",
@@ -415,6 +417,52 @@
     "edit": {
       "title": "Uredi shranjeni filter",
       "success": "Filter je bil uspešno shranjen."
+    },
+    "query": {
+      "title": "Poizvedba",
+      "placeholder": "Vnesite poizvedbo za iskanje ali filtriranje…",
+      "help": {
+        "intro": "Za filtriranje nalog lahko uporabite sintakso poizvedbe, podobno SQL. Razpoložljiva polja za filtriranje vključujejo:",
+        "link": "Kako to deluje?",
+        "canUseDatemath": "Za nastavitev relativnih datumov lahko določite datume. Če želite izvedeti več, kliknite vrednost datuma v poizvedbi.",
+        "fields": {
+          "done": "Ali je naloga opravljena ali ne",
+          "priority": "Stopnja prioritete naloge (1-5)",
+          "percentDone": "Odstotek dokončanja naloge (0–100)",
+          "dueDate": "Datum zapadlosti naloge",
+          "startDate": "Začetni datum opravila",
+          "endDate": "Končni datum opravila",
+          "doneAt": "Datum in čas, ko je bila naloga opravljena",
+          "assignees": "Dodeljeni k nalogi",
+          "labels": "Oznake, povezane z opravilom",
+          "project": "Projekt, ki mu naloga pripada (na voljo samo za shranjene filtre, ne na ravni projekta)"
+        },
+        "operators": {
+          "intro": "Razpoložljivi operaterji za filtriranje vključujejo:",
+          "notEqual": "Ni enako",
+          "equal": "Je enako",
+          "greaterThan": "Večje kot",
+          "greaterThanOrEqual": "Večje ali enako kot",
+          "lessThan": "Manj kot",
+          "lessThanOrEqual": "Manjše ali enako kot",
+          "like": "Ujema se z vzorcem (z nadomestnimi znaki %)",
+          "in": "Ujema se s katero koli vrednostjo na seznamu vrednosti, ločenih z vejico"
+        },
+        "logicalOperators": {
+          "intro": "Če želite združiti več pogojev, lahko uporabite naslednje logične operatorje:",
+          "and": "IN operator, se ujema, če so izpolnjeni vsi pogoji",
+          "or": "ALI operator, se ujema, če je kateri od pogojev resničen",
+          "parentheses": "Oklepaji za združevanje pogojev"
+        },
+        "examples": {
+          "intro": "Tukaj je nekaj primerov filtrirnih poizvedb:",
+          "priorityEqual": "Ujema se z nalogami s prioritetno stopnjo 4",
+          "dueDatePast": "Ujema se z opravili z rokom v preteklosti",
+          "undoneHighPriority": "Ujema se z neopravljenimi opravili s prioritetno stopnjo 3 ali višjo",
+          "assigneesIn": "Ujema se z nalogami, dodeljenimi k \"user1\" ali \"user2\"",
+          "priorityOneOrTwoPastDue": "Ujema se z opravili s prioritetno stopnjo 1 ali 2 in rokom v preteklosti"
+        }
+      }
     }
   },
   "migrate": {
@@ -584,6 +632,7 @@
       "to": "Za",
       "from": "Od",
       "fromto": "{from} do {to}",
+      "date": "Datum",
       "ranges": {
         "today": "Danes",
         "thisWeek": "Ta teden",
@@ -598,6 +647,27 @@
         "lastMonth": "Prejšnji mesec",
         "thisYear": "Letos",
         "restOfThisYear": "Preostanek tega leta"
+      },
+      "values": {
+        "now": "Zdaj",
+        "startOfToday": "Začetek današnjega dne",
+        "endOfToday": "Konec današnjega dne",
+        "beginningOflastWeek": "Začetek prejšnjega tedna",
+        "endOfLastWeek": "Konec prejšnjega tedna",
+        "beginningOfThisWeek": "Začetek tega tedna",
+        "endOfThisWeek": "Konec tega tedna",
+        "startOfNextWeek": "Začetek naslednjega tedna",
+        "endOfNextWeek": "Konec naslednjega tedna",
+        "in7Days": "V 7 dneh",
+        "beginningOfLastMonth": "Začetek prejšnjega meseca",
+        "endOfLastMonth": "Konec prejšnjega meseca",
+        "startOfThisMonth": "Začetek tega meseca",
+        "endOfThisMonth": "Konec tega meseca",
+        "startOfNextMonth": "Začetek naslednjega meseca",
+        "endOfNextMonth": "Konec naslednjega meseca",
+        "in30Days": "V 30 dneh",
+        "startOfThisYear": "Začetek tega leta",
+        "endOfThisYear": "Konec tega leta"
       }
     },
     "datemathHelp": {
@@ -713,7 +783,7 @@
       "startDate": "Začetni datum",
       "title": "Naslov",
       "updated": "Posodobljeno",
-      "doneAt": "Done At"
+      "doneAt": "Končano ob"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "Ker ste na to nalogo naročeni prek njenega projekta, se tu ne morete odjaviti.",
@@ -916,7 +986,9 @@
       "description": "Opis",
       "descriptionPlaceholder": "Tukaj opiši ekipo, pritisni '/' za več možnosti…",
       "admin": "Administrator",
-      "member": "Član"
+      "member": "Član",
+      "isPublic": "Javna ekipa",
+      "isPublicDescription": "Naj bo ekipa javno vidna. Ko je omogočeno, lahko vsakdo deli projekte s to ekipo, tudi če ni neposredni član."
     }
   },
   "keyboardShortcuts": {
@@ -975,8 +1047,8 @@
     "share": "Skupna raba",
     "newProject": "Nov projekt",
     "createProject": "Ustvari projekt",
-    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
-    "cantDeleteIsDefault": "You cannot delete this because it is your default project."
+    "cantArchiveIsDefault": "Tega ne morete arhivirati, ker je to vaš privzeti projekt.",
+    "cantDeleteIsDefault": "Tega ne morete izbrisati, ker je to vaš privzeti projekt."
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -1022,6 +1094,12 @@
     "locale": "sl",
     "altFormatLong": "j M Y H:i",
     "altFormatShort": "j M Y"
+  },
+  "reaction": {
+    "reactedWith": "{user} reacted with {value}",
+    "reactedWithAnd": "{users} and {lastUser} reacted with {value}",
+    "reactedWithAndMany": "{users} and {num} more reacted reacted with {value}",
+    "add": "Add your reaction"
   },
   "error": {
     "error": "Napaka",
@@ -1096,7 +1174,7 @@
   },
   "about": {
     "title": "O programu",
-    "version": "Version: {version}"
+    "version": "Verzija: {version}"
   },
   "time": {
     "units": {

@@ -57,11 +57,11 @@
       "logout": "Odhlásit se",
       "emailInvalid": "Prosím zadejte platnou emailovou adresu.",
       "usernameRequired": "Zadejte prosím uživatelské jméno.",
-      "usernameMustNotContainSpace": "The username must not contain spaces.",
-      "usernameMustNotLookLikeUrl": "The username must not look like a URL.",
+      "usernameMustNotContainSpace": "Uživatelské jméno nesmí obsahovat mezery.",
+      "usernameMustNotLookLikeUrl": "Uživatelské jméno nesmí vypadat jako adresa URL.",
       "passwordRequired": "Zadejte prosím heslo.",
-      "passwordNotMin": "Password must have at least 8 characters.",
-      "passwordNotMax": "Password must have at most 250 characters.",
+      "passwordNotMin": "Heslo musí mít nejméně 8 znaků.",
+      "passwordNotMax": "Heslo může mít maximálně 250 znaků.",
       "showPassword": "Ukázat heslo",
       "hidePassword": "Skrýt heslo",
       "noAccountYet": "Ještě nemáte účet?",
@@ -248,6 +248,7 @@
       "text2": "To zahrnuje všechny úkoly a JE TO NEVRATNÉ!",
       "success": "Projekt byl úspěšně smazán.",
       "tasksToDelete": "Neodvolatelně tím odstraníme asi {count} úloh.",
+      "tasksAndChildProjectsToDelete": "Chystáte se neodvolatelně odstranit nějaké úkoly (cca {tasks}) a projekty (cca {projects}).",
       "noTasksToDelete": "Tento projekt neobsahuje žádné úkoly, mělo by být bezpečné ho smazat."
     },
     "duplicate": {
@@ -385,6 +386,7 @@
   "filters": {
     "title": "Filtry",
     "clear": "Vymazat filtry",
+    "showResults": "Zobrazit výsledky",
     "attributes": {
       "title": "Název",
       "titlePlaceholder": "Název uloženého filtru přijde sem…",
@@ -415,6 +417,52 @@
     "edit": {
       "title": "Upravit tento uložený filtr",
       "success": "Filtr byl úspěšně uložen."
+    },
+    "query": {
+      "title": "Dotaz",
+      "placeholder": "Zadejte vyhledávací nebo filtrační dotaz…",
+      "help": {
+        "intro": "K filtrování úkolů můžete použít syntaxi dotazů podobnou SQL. Dostupná pole pro filtrování zahrnují:",
+        "link": "Jak to funguje?",
+        "canUseDatemath": "Můžete použít matematiku a nastavit relativní data. Pro více informací klikněte na datum v dotazu.",
+        "fields": {
+          "done": "Zda je úkol dokončen nebo ne",
+          "priority": "Úroveň priority úkolu (1-5)",
+          "percentDone": "Procento dokončení úkolu (0-100)",
+          "dueDate": "Datum dokončení úkolu",
+          "startDate": "Datum zahájení úkolu",
+          "endDate": "Datum dokončení úkolu",
+          "doneAt": "Datum a čas, kdy byl úkol dokončen",
+          "assignees": "Přiřazení uživatelé",
+          "labels": "Štítky přiřazené úkolu",
+          "project": "Projekt, do kterého úkol patří (k dispozici pouze pro uložené filtry, ne na úrovni projektu)"
+        },
+        "operators": {
+          "intro": "Dostupné operátory pro filtrování zahrnují:",
+          "notEqual": "Nerovná se",
+          "equal": "Rovná se",
+          "greaterThan": "Větší než",
+          "greaterThanOrEqual": "Větší nebo rovno než",
+          "lessThan": "Menší než",
+          "lessThanOrEqual": "Menší nebo rovno než",
+          "like": "Odpovídá vzoru (s použitím zástupného znaku %)",
+          "in": "Odpovídá libovolné hodnotě v seznamu hodnot oddělených čárkou"
+        },
+        "logicalOperators": {
+          "intro": "Pro kombinování více podmínek můžete použít tyto logické operátory:",
+          "and": "AND - shoduje se, pokud jsou splněny všechny podmínky",
+          "or": "OR - shoduje se, pokud je splněna alespoň jedna podmínka",
+          "parentheses": "Závorky seskupují podmínky"
+        },
+        "examples": {
+          "intro": "Zde jsou některé příklady filtrovacích dotazů:",
+          "priorityEqual": "Odpovídá úkolům s úrovní priority 4",
+          "dueDatePast": "Odpovídá úkolům s termínem dokončení v minulosti",
+          "undoneHighPriority": "Odpovídá nedokončeným úkolům s úrovní priority 3 nebo vyšší",
+          "assigneesIn": "Odpovídá úkolům přiřazeným buď \"uživatel1\", nebo \"uživatel2\"",
+          "priorityOneOrTwoPastDue": "Odpovídá úkolům s prioritou 1 nebo 2 a termínem dokončení v minulosti"
+        }
+      }
     }
   },
   "migrate": {
@@ -584,6 +632,7 @@
       "to": "Do",
       "from": "Od",
       "fromto": "{from} – {to}",
+      "date": "Datum",
       "ranges": {
         "today": "Dnes",
         "thisWeek": "Tento týden",
@@ -598,6 +647,27 @@
         "lastMonth": "Minulý měsíc",
         "thisYear": "Tento rok",
         "restOfThisYear": "Zbytek tohoto roku"
+      },
+      "values": {
+        "now": "Teď",
+        "startOfToday": "Začátek dnes",
+        "endOfToday": "Konec dnes",
+        "beginningOflastWeek": "Začátek minulého týdne",
+        "endOfLastWeek": "Konec posledního týdne",
+        "beginningOfThisWeek": "Začátek tohoto týdne",
+        "endOfThisWeek": "Konec tohoto týdne",
+        "startOfNextWeek": "Začátek příštího týdne",
+        "endOfNextWeek": "Konec tohoto týdne",
+        "in7Days": "Za 7 dní",
+        "beginningOfLastMonth": "Začátek minulého měsíce",
+        "endOfLastMonth": "Konec minulého měsíce",
+        "startOfThisMonth": "Začátek tohoto měsíce",
+        "endOfThisMonth": "Konec tohoto měsíce",
+        "startOfNextMonth": "Začátek příštího měsíce",
+        "endOfNextMonth": "Konec příštího měsíce",
+        "in30Days": "Za 30 dní",
+        "startOfThisYear": "Začátek tohoto roku",
+        "endOfThisYear": "Konec tohoto roku"
       }
     },
     "datemathHelp": {
@@ -713,7 +783,7 @@
       "startDate": "Počáteční datum",
       "title": "Název",
       "updated": "Aktualizováno",
-      "doneAt": "Done At"
+      "doneAt": "Dokončeno"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "Zde se nemůžete odhlásit, protože jste přihlášeni k odběru tohoto úkolu prostřednictvím jeho projektu.",
@@ -916,7 +986,9 @@
       "description": "Popis",
       "descriptionPlaceholder": "Popište tým, stiskněte '/' pro více možností…",
       "admin": "Administrátor",
-      "member": "Člen"
+      "member": "Člen",
+      "isPublic": "Veřejný tým",
+      "isPublicDescription": "Učinit tým veřejně dostupným. Pokud je povoleno, každý může s tímto týmem sdílet projekty, i když není přímým členem."
     }
   },
   "keyboardShortcuts": {
@@ -975,8 +1047,8 @@
     "share": "Sdílet",
     "newProject": "Nový projekt",
     "createProject": "Vytvořit projekt",
-    "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
-    "cantDeleteIsDefault": "You cannot delete this because it is your default project."
+    "cantArchiveIsDefault": "Nemůžete archivovat svůj výchozí projekt.",
+    "cantDeleteIsDefault": "Nemůžete smazat svůj výchozí projekt."
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -1096,7 +1168,7 @@
   },
   "about": {
     "title": "O aplikaci",
-    "version": "Version: {version}"
+    "version": "Verze: {version}"
   },
   "time": {
     "units": {

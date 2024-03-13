@@ -248,6 +248,7 @@
       "text2": "Dies umfasst alle Aufgaben und kann NICHT rückgängig gemacht werden!",
       "success": "Das Projekt wurde erfolgreich gelöscht.",
       "tasksToDelete": "Dies löscht unwiderruflich ca. {count} Aufgaben.",
+      "tasksAndChildProjectsToDelete": "Dies löscht unwiderruflich ca. {tasks} Aufgaben und {projects} Projekte.",
       "noTasksToDelete": "Dieses Projekt enthält keine Aufgaben, es kann sicher gelöscht werden."
     },
     "duplicate": {
@@ -385,6 +386,7 @@
   "filters": {
     "title": "Filter",
     "clear": "Filter zurücksetzen",
+    "showResults": "Ergebnisse anzeigen",
     "attributes": {
       "title": "Titl",
       "titlePlaceholder": "De Name für de g'speicheret Filter chunt da ahne…",
@@ -415,6 +417,52 @@
     "edit": {
       "title": "De g'speicheret Filter bearbeite",
       "success": "De filter isch erfolgriich g'speichered wore."
+    },
+    "query": {
+      "title": "Abfrage",
+      "placeholder": "Gib eine Suche oder Filterabfrage ein…",
+      "help": {
+        "intro": "Um Aufgaben zu filtern, kannst du eine SQL-ähnliche Abfragesyntax verwenden. Du kannst die folgenden Felder in deinem Filter verwenden:",
+        "link": "Wie funktioniert das?",
+        "canUseDatemath": "Du kannst Date Math verwenden, um relative Daten festzulegen. Klicke auf den Datumswert in einer Abfrage, um mehr zu erfahren.",
+        "fields": {
+          "done": "Ob die Aufgabe erledigt ist oder nicht",
+          "priority": "Die Priorität der Aufgabe (1-5)",
+          "percentDone": "Prozentsatz der Fertigstellung der Aufgabe (0-100)",
+          "dueDate": "Das Fälligkeitsdatum der Aufgabe",
+          "startDate": "Das Startdatum der Aufgabe",
+          "endDate": "Das Enddatum der Aufgabe",
+          "doneAt": "Datum und Uhrzeit, an dem die Aufgabe als erledigt markiert wurde",
+          "assignees": "Die der Aufgabe Zugewiesenen",
+          "labels": "Die der Aufgabe zugeordneten Labels",
+          "project": "Das Projekt, zu dem die Aufgabe gehört (nur verfügbar für gespeicherte Filter, nicht auf Projektebene)"
+        },
+        "operators": {
+          "intro": "Die verfügbaren Operatoren für die Filterung sind:",
+          "notEqual": "Ungleich",
+          "equal": "Gleich",
+          "greaterThan": "Größer als",
+          "greaterThanOrEqual": "Größer oder gleich",
+          "lessThan": "Kleiner als",
+          "lessThanOrEqual": "Kleiner als oder gleich",
+          "like": "Vergleicht zu einem Muster (mit Platzhalter %)",
+          "in": "Filtert einen beliebigen Wert in einer kommaseparierten Liste"
+        },
+        "logicalOperators": {
+          "intro": "Um mehrere Bedingungen zu kombinieren, kannst du folgende logische Operatoren verwenden:",
+          "and": "UND Operator, stimmt überein, wenn alle Bedingungen wahr sind",
+          "or": "ODER Operator, stimmt überein, wenn eine der Bedingungen wahr ist",
+          "parentheses": "Klammern zum Gruppieren von Bedingungen"
+        },
+        "examples": {
+          "intro": "Hier sind einige Beispiele für Filterabfragen:",
+          "priorityEqual": "Findet Aufgaben mit Priorität Level 4",
+          "dueDatePast": "Findet Aufgaben mit einem Fälligkeitsdatum in der Vergangenheit",
+          "undoneHighPriority": "Findet Aufgaben, die nicht erledigt sind und Priorität Level mindestens 3 haben",
+          "assigneesIn": "Findet Aufgaben, die entweder \"user1\" oder \"user2\" zugewiesen sind",
+          "priorityOneOrTwoPastDue": "Findet Aufgaben mit Priorität Level 1 oder 2 und einem Fälligkeitsdatum in der Vergangenheit"
+        }
+      }
     }
   },
   "migrate": {
@@ -584,6 +632,7 @@
       "to": "Bis",
       "from": "Von",
       "fromto": "{from} bis {to}",
+      "date": "Datum",
       "ranges": {
         "today": "Heute",
         "thisWeek": "Diese Woche",
@@ -598,6 +647,27 @@
         "lastMonth": "Letzter Monat",
         "thisYear": "Dieses Jahr",
         "restOfThisYear": "Der Rest des Jahres"
+      },
+      "values": {
+        "now": "Jetzt",
+        "startOfToday": "Beginn des heutigen Tages",
+        "endOfToday": "Ende des heutigen Tages",
+        "beginningOflastWeek": "Beginn der letzten Woche",
+        "endOfLastWeek": "Ende der letzten Woche",
+        "beginningOfThisWeek": "Beginn dieser Woche",
+        "endOfThisWeek": "Ende dieser Woche",
+        "startOfNextWeek": "Beginn der nächsten Woche",
+        "endOfNextWeek": "Ende der nächsten Woche",
+        "in7Days": "In 7 Tagen",
+        "beginningOfLastMonth": "Beginn des letzten Monats",
+        "endOfLastMonth": "Ende des letzten Monats",
+        "startOfThisMonth": "Beginn diesen Monats",
+        "endOfThisMonth": "Ende diesen Monats",
+        "startOfNextMonth": "Beginn des nächsten Monats",
+        "endOfNextMonth": "Ende des nächsten Monats",
+        "in30Days": "In 30 Tagen",
+        "startOfThisYear": "Beginn dieses Jahres",
+        "endOfThisYear": "Ende dieses Jahres"
       }
     },
     "datemathHelp": {
@@ -916,7 +986,9 @@
       "description": "Beschriibig",
       "descriptionPlaceholder": "Gib eine Beschreibung für dieses Team ein, drücke '/' für mehr Optionen…",
       "admin": "Chef",
-      "member": "Mitglied"
+      "member": "Mitglied",
+      "isPublic": "Öffentliches Team",
+      "isPublicDescription": "Machs das Team öffentlich sichtbar. Wenn aktiviert, kann jede:r mit diesem Team Projekte teilen, auch wenn er oder sie kein direktes Mitglied des Teams ist."
     }
   },
   "keyboardShortcuts": {
@@ -1022,6 +1094,12 @@
     "locale": "ch",
     "altFormatLong": "j M Y H:i",
     "altFormatShort": "j M Y"
+  },
+  "reaction": {
+    "reactedWith": "{user} reacted with {value}",
+    "reactedWithAnd": "{users} and {lastUser} reacted with {value}",
+    "reactedWithAndMany": "{users} and {num} more reacted reacted with {value}",
+    "add": "Add your reaction"
   },
   "error": {
     "error": "Fähler",
