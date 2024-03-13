@@ -71,8 +71,7 @@ import {periodToSeconds, PeriodUnit, secondsToPeriod} from '@/helpers/time/perio
 import TaskReminderModel from '@/models/taskReminder'
 
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
-import {REMINDER_PERIOD_RELATIVE_TO_TYPES, type IReminderPeriodRelativeTo} from '@/types/IReminderPeriodRelativeTo'
-import {useDebounceFn} from '@vueuse/core'
+import {type IReminderPeriodRelativeTo, REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
 const {
 	modelValue,
@@ -123,7 +122,7 @@ function updateData() {
 	reminder.value.relativeTo = period.value.relativeTo
 	reminder.value.reminder = null
 
-	useDebounceFn(() => emit('update:modelValue', reminder.value), 1000)
+	emit('update:modelValue', reminder.value)
 }
 </script>
 

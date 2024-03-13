@@ -73,10 +73,10 @@
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
 import {SECONDS_A_DAY, SECONDS_A_HOUR} from '@/constants/date'
-import {IReminderPeriodRelativeTo, REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
+import {type IReminderPeriodRelativeTo, REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {useI18n} from 'vue-i18n'
 
-import {PeriodUnit, secondsToPeriod} from '@/helpers/time/period'
+import {type PeriodUnit, secondsToPeriod} from '@/helpers/time/period'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import {formatDateShort} from '@/helpers/time/formatDate'
 
@@ -87,6 +87,7 @@ import Popup from '@/components/misc/popup.vue'
 import TaskReminderModel from '@/models/taskReminder'
 import Card from '@/components/misc/card.vue'
 import SimpleButton from '@/components/input/SimpleButton.vue'
+import {useDebounceFn} from '@vueuse/core'
 
 const {
 	modelValue,
@@ -181,8 +182,9 @@ function setReminderFromPreset(preset, close) {
 	close()
 }
 
+const updateDataDebounced = useDebounceFn(updateData, 1000)
 function updateDataAndMaybeClose(close) {
-	updateData()
+	updateDataDebounced()
 	if (clearAfterUpdate) {
 		close()
 	}
