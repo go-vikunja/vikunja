@@ -139,7 +139,7 @@
 			<BaseButton
 				v-tooltip="$t('input.editor.image')" 
 				class="editor-toolbar__button" 
-				@click="openImagePicker"
+				@click="e => emit('imageUploadClicked', e)"
 			>
 				<span class="icon">
 					<icon icon="fa-image" />
@@ -347,14 +347,12 @@ const {
 	editor: Editor,
 }>()
 
+const emit = defineEmits(['imageUploadClicked'])
+
 const tableMode = ref(false)
 
 function toggleTableMode() {
 	tableMode.value = !tableMode.value
-}
-
-function openImagePicker() {
-	document.getElementById('tiptap__image-upload').click()
 }
 
 function setLink(event) {

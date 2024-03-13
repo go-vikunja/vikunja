@@ -6,7 +6,7 @@
 		<EditorToolbar
 			v-if="editor && isEditing"
 			:editor="editor"
-			:upload-callback="uploadCallback"
+			@imageUploadClicked="triggerImageInput"
 		/>
 		<BubbleMenu
 			v-if="editor && isEditing"
@@ -489,6 +489,15 @@ function uploadAndInsertFiles(files: File[] | FileList) {
 	})
 }
 
+function triggerImageInput(event) {
+	if (typeof uploadCallback !== 'undefined') {
+		uploadInputRef.value?.click()
+		return
+	}
+
+	addImage(event)
+}
+
 async function addImage(event) {
 
 	if (typeof uploadCallback !== 'undefined') {
@@ -522,16 +531,20 @@ onMounted(async () => {
 
 	await nextTick()
 
-	const input = tiptapInstanceRef.value?.querySelectorAll('.tiptap__editor')[0]?.children[0]
-	input?.addEventListener('paste', handleImagePaste)
+	if (typeof uploadCallback !== 'undefined') {
+		const input = tiptapInstanceRef.value?.querySelectorAll('.tiptap__editor')[0]?.children[0]
+		input?.addEventListener('paste', handleImagePaste)
+	}
 
 	setModeAndValue(modelValue)
 })
 
 onBeforeUnmount(() => {
 	nextTick(() => {
-		const input = tiptapInstanceRef.value?.querySelectorAll('.tiptap__editor')[0]?.children[0]
-		input?.removeEventListener('paste', handleImagePaste)
+		if (typeof uploadCallback !== 'undefined') {
+			const input = tiptapInstanceRef.value?.querySelectorAll('.tiptap__editor')[0]?.children[0]
+			input?.removeEventListener('paste', handleImagePaste)
+		}
 	})
 	if (editShortcut !== '') {
 		document.removeEventListener('keydown', setFocusToEditor)
@@ -558,10 +571,10 @@ function handleImagePaste(event) {
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
 function setFocusToEditor(event) {
-	if(event.target.shadowRoot) {
+	if (event.target.shadowRoot) {
 		return
 	}
-	
+
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
 	if (hotkeyString !== editShortcut ||
@@ -600,7 +613,7 @@ watch(
 	() => isEditing.value,
 	async editing => {
 		await nextTick()
-		
+
 		let checkboxes = tiptapInstanceRef.value?.querySelectorAll('[data-checked]')
 		if (typeof checkboxes === 'undefined' || checkboxes.length === 0) {
 			// For some reason, this works when we check a second time.
