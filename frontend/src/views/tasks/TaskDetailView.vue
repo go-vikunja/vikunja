@@ -25,7 +25,16 @@
 					v-for="p in projectStore.getAncestors(project)"
 					:key="p.id"
 				>
-					<router-link :to="{ name: 'project.index', params: { projectId: p.id } }">
+					<a
+						v-if="router.options.history.state.back?.includes('/projects/'+p.id+'/') || false"
+						@click="router.back()"
+					>
+						{{ getProjectTitle(p) }}
+					</a>
+					<router-link 
+						v-else
+						:to="{ name: 'project.index', params: { projectId: p.id } }"
+					>
 						{{ getProjectTitle(p) }}
 					</router-link>
 					<span
