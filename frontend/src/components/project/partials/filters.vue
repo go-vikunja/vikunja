@@ -27,8 +27,8 @@
 		>
 			<x-button
 				variant="secondary"
-				@click.prevent.stop="clearFiltersAndEmit"
 				class="mr-2"
+				@click.prevent.stop="clearFiltersAndEmit"
 			>
 				{{ $t('filters.clear') }}
 			</x-button>

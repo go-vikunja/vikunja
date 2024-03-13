@@ -2,6 +2,7 @@
 	<x-button
 		variant="secondary"
 		icon="filter"
+		:class="{'has-filters': hasFilters}"
 		@click="() => modalOpen = true"
 	>
 		{{ $t('filters.title') }}
@@ -68,10 +69,6 @@ const hasFilters = computed(() => {
 })
 
 const modalOpen = ref(false)
-
-function clearFilters() {
-	value.value = {...getDefaultTaskFilterParams()}
-}
 </script>
 
 <style scoped lang="scss">

@@ -73,7 +73,7 @@
 							>
 								<template v-if="canWrite">
 									<span class="icon handle">
-										<icon icon="grip-lines"/>
+										<icon icon="grip-lines" />
 									</span>
 								</template>
 							</SingleTaskInProject>
@@ -97,7 +97,6 @@ export default {name: 'List'}
 <script setup lang="ts">
 import {ref, computed, nextTick, onMounted, watch} from 'vue'
 import draggable from 'zhyswan-vuedraggable'
-import {useRoute, useRouter} from 'vue-router'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import ButtonLink from '@/components/misc/ButtonLink.vue'
@@ -126,7 +125,6 @@ const {
 }>()
 
 const ctaVisible = ref(false)
-const showTaskSearch = ref(false)
 
 const drag = ref(false)
 const DRAG_OPTIONS = {
@@ -140,7 +138,6 @@ const {
 	totalPages,
 	currentPage,
 	loadTasks,
-	searchTerm,
 	params,
 	sortByParam,
 } = useTaskList(() => projectId, {position: 'asc'})
@@ -197,32 +194,6 @@ onMounted(async () => {
 	await nextTick()
 	ctaVisible.value = true
 })
-
-const route = useRoute()
-const router = useRouter()
-
-function searchTasks() {
-	// Only search if the search term changed
-	if (route.query as unknown as string === searchTerm.value) {
-		return
-	}
-
-	router.push({
-		name: 'project.list',
-		query: {search: searchTerm.value},
-	})
-}
-
-function hideSearchBar() {
-	// This is a workaround.
-	// When clicking on the search button, @blur from the input is fired. If we
-	// would then directly hide the whole search bar directly, no click event
-	// from the button gets fired. To prevent this, we wait 200ms until we hide
-	// everything so the button has a chance of firing the search event.
-	setTimeout(() => {
-		showTaskSearch.value = false
-	}, 200)
-}
 
 const addTaskRef = ref<typeof AddTask | null>(null)
 

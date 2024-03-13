@@ -45,7 +45,7 @@
 										v-tooltip="$t('project.kanban.doneBucketHint')"
 										class="icon is-small has-text-success mr-2"
 									>
-										<icon icon="check-double"/>
+										<icon icon="check-double" />
 									</span>
 									<h2
 										class="title input"
