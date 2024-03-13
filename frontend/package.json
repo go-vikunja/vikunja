@@ -161,7 +161,7 @@
     "esbuild": "0.20.1",
     "eslint": "8.57.0",
     "eslint-plugin-vue": "9.23.0",
-    "happy-dom": "13.7.8",
+    "happy-dom": "13.8.2",
     "histoire": "0.17.9",
     "postcss": "8.4.35",
     "postcss-easing-gradients": "3.0.1",

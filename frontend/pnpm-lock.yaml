@@ -340,8 +340,8 @@ devDependencies:
     specifier: 9.23.0
     version: 9.23.0(eslint@8.57.0)
   happy-dom:
-    specifier: 13.7.8
-    version: 13.7.8
+    specifier: 13.8.2
+    version: 13.8.2
   histoire:
     specifier: 0.17.9
     version: 0.17.9(@types/node@20.11.26)(sass@1.71.1)(terser@5.24.0)(vite@5.1.6)
@@ -392,7 +392,7 @@ devDependencies:
     version: 5.1.0(vue@3.4.21)
   vitest:
     specifier: 1.3.1
-    version: 1.3.1(@types/node@20.11.26)(happy-dom@13.7.8)(sass@1.71.1)(terser@5.24.0)
+    version: 1.3.1(@types/node@20.11.26)(happy-dom@13.8.2)(sass@1.71.1)(terser@5.24.0)
   vue-tsc:
     specifier: 2.0.6
     version: 2.0.6(typescript@5.4.2)
@@ -6460,8 +6460,8 @@ packages:
       strip-bom-string: 1.0.0
     dev: true
 
-  /happy-dom@13.7.8:
-    resolution: {integrity: sha512-dnvgCiPPfXXts+AW1DVAoDa9nPmI48YPHUv34L6pmjv2lwNZte8OwsK9SajEXENfibS8uo1zG7xJwlW/NXlDxQ==}
+  /happy-dom@13.8.2:
+    resolution: {integrity: sha512-u9KxyeQNIzkJDR2iCitKeS5Uy0YUv5eOntpO8e7ZzbDVv4kP5Y77Zo2LnZitwMrss/1pY2Uc2e5qOVGkiKE5Gg==}
     engines: {node: '>=16.0.0'}
     dependencies:
       entities: 4.5.0
@@ -10090,7 +10090,7 @@ packages:
       fsevents: 2.3.3
     dev: true
 
-  /vitest@1.3.1(@types/node@20.11.26)(happy-dom@13.7.8)(sass@1.71.1)(terser@5.24.0):
+  /vitest@1.3.1(@types/node@20.11.26)(happy-dom@13.8.2)(sass@1.71.1)(terser@5.24.0):
     resolution: {integrity: sha512-/1QJqXs8YbCrfv/GPQ05wAZf2eakUPLPa18vkJAKE7RXOKfVHqMZZ1WlTjiwl6Gcn65M5vpNUB6EFLnEdRdEXQ==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
@@ -10125,7 +10125,7 @@ packages:
       chai: 4.3.10
       debug: 4.3.4(supports-color@8.1.1)
       execa: 8.0.1
-      happy-dom: 13.7.8
+      happy-dom: 13.8.2
       local-pkg: 0.5.0
       magic-string: 0.30.7
       pathe: 1.1.1
