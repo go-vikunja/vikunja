@@ -85,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watchEffect, shallowReactive, type ComponentPublicInstance} from 'vue'
+import {type ComponentPublicInstance, computed, ref, shallowReactive, watchEffect} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
 
@@ -107,13 +107,14 @@ import {useTaskStore} from '@/stores/tasks'
 import {useAuthStore} from '@/stores/auth'
 
 import {getHistory} from '@/modules/projectHistory'
-import {parseTaskText, PrefixMode, PREFIXES} from '@/modules/parseTaskText'
+import {parseTaskText, PREFIXES, PrefixMode} from '@/modules/parseTaskText'
 import {success} from '@/message'
 
 import type {ITeam} from '@/modelTypes/ITeam'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 import type {IAbstract} from '@/modelTypes/IAbstract'
+import {isSavedFilter} from '@/services/savedFilter'
 
 const {t} = useI18n({useScope: 'global'})
 const router = useRouter()
@@ -280,10 +281,13 @@ const commands = computed<{ [key in COMMAND_TYPE]: Command }>(() => ({
 
 const placeholder = computed(() => selectedCmd.value?.placeholder || t('quickActions.placeholder'))
 
-const currentProject = computed(() => Object.keys(baseStore.currentProject).length === 0
-	? null
-	: baseStore.currentProject,
-)
+const currentProject = computed(() => {
+	if (Object.keys(baseStore.currentProject).length === 0 || isSavedFilter(baseStore.currentProject)) {
+		return null
+	}
+	
+	return baseStore.currentProject
+})
 
 const hintText = computed(() => {
 	if (selectedCmd.value !== null && currentProject.value !== null) {
@@ -372,7 +376,7 @@ function searchTasks() {
 	const {text, project: projectName, labels} = parsedQuery.value
 
 	let filter = ''
-	
+
 	if (projectName !== null) {
 		const project = projectStore.findProjectByExactname(projectName)
 		console.log({project})
