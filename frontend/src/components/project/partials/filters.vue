@@ -19,7 +19,7 @@
 			</Fancycheckbox>
 		</div>
 
-		<FilterInputDocs/>
+		<FilterInputDocs />
 
 		<template
 			v-if="hasFooter"

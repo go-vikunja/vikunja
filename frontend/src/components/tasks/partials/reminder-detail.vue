@@ -60,7 +60,7 @@
 						v-if="showFormSwitch !== null"
 						class="reminder__close-button"
 						:shadow="false"
-						@click="updateDataAndMaybeClose(close)"
+						@click="updateDataAndMaybeCloseNow(close)"
 					>
 						{{ $t('misc.confirm') }}
 					</x-button>
@@ -113,7 +113,7 @@ const presets = computed<TaskReminderModel[]>(() => [
 	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 7, relativeTo: defaultRelativeTo},
 	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 30, relativeTo: defaultRelativeTo},
 ])
-const reminderDate = ref<Date|null>(null)
+const reminderDate = ref<Date | null>(null)
 
 type availableForms = null | 'relative' | 'absolute'
 
@@ -143,16 +143,16 @@ const reminderText = computed(() => {
 watch(
 	() => modelValue,
 	(newReminder) => {
-		if(newReminder) {
+		if (newReminder) {
 			reminder.value = newReminder
-			
-			if(newReminder.relativeTo === null) {
+
+			if (newReminder.relativeTo === null) {
 				reminderDate.value = new Date(newReminder.reminder)
 			}
-			
+
 			return
 		}
-		
+
 		reminder.value = new TaskReminderModel()
 	},
 	{immediate: true},
@@ -182,9 +182,10 @@ function setReminderFromPreset(preset, close) {
 	close()
 }
 
-const updateDataDebounced = useDebounceFn(updateData, 1000)
-function updateDataAndMaybeClose(close) {
-	updateDataDebounced()
+const updateDataAndMaybeClose = useDebounceFn(updateDataAndMaybeCloseNow, 500)
+
+function updateDataAndMaybeCloseNow(close) {
+	updateData()
 	if (clearAfterUpdate) {
 		close()
 	}
