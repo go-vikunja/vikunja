@@ -63,6 +63,7 @@
 
 	<div class="flatpickr-container">
 		<flat-pickr
+			ref="flatPickrRef"
 			v-model="flatPickrDate"
 			:config="flatPickerConfig"
 		/>
@@ -70,7 +71,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, toRef, watch, computed, type PropType} from 'vue'
+import {computed, onBeforeUnmount, onMounted, type PropType, ref, toRef, watch} from 'vue'
 import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 
@@ -81,7 +82,7 @@ import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
 import {useI18n} from 'vue-i18n'
-import { getFlatpickrLanguage } from '@/helpers/flatpickrLanguage'
+import {getFlatpickrLanguage} from '@/helpers/flatpickrLanguage'
 
 const props = defineProps({
 	modelValue: {
@@ -105,6 +106,7 @@ watch(
 	{immediate: true},
 )
 
+const flatPickrRef = ref<HTMLElement | null>(null)
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,
@@ -141,6 +143,41 @@ const flatPickrDate = computed({
 		return formatDate(date.value, 'yyy-LL-dd H:mm')
 	},
 })
+
+onMounted(() => {
+	const inputs = flatPickrRef.value?.$el.parentNode.querySelectorAll('.numInputWrapper > input.numInput')
+	inputs.forEach(i => {
+		i.addEventListener('input', handleFlatpickrInput)
+	})
+})
+
+onBeforeUnmount(() => {
+	const inputs = flatPickrRef.value?.$el.parentNode.querySelectorAll('.numInputWrapper > input.numInput')
+	inputs.forEach(i => {
+		i.removeEventListener('input', handleFlatpickrInput)
+	})
+})
+
+// Flatpickr only returns a change event when the value in the input it's referring to changes.
+// That means it will usually only trigger when the focus is moved out of the input field.
+// This is fine most of the time. However, since we're displaying flatpickr in a popup,
+// the whole html dom instance might get destroyed, before the change event had a
+// chance to fire. In that case, it would not update the date value. To fix 
+// this, we're now listening on every change and bubble them up as soon
+// as they happen.
+function handleFlatpickrInput(e) {
+	const newDate = new Date(date?.value || 'now')
+	if (e.target.classList.contains('flatpickr-minute')) {
+		newDate.setMinutes(e.target.value)
+	}
+	if (e.target.classList.contains('flatpickr-hour')) {
+		newDate.setHours(e.target.value)
+	}
+	if (e.target.classList.contains('cur-year')) {
+		newDate.setFullYear(e.target.value)
+	}
+	flatPickrDate.value = newDate
+}
 
 
 function setDateValue(dateString: string | Date | null) {
