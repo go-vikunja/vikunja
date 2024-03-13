@@ -45,6 +45,14 @@ func (projects20240313230538) TableName() string {
 	return "projects"
 }
 
+type filters20240313230538 struct {
+	ID int64 `xorm:"autoincr not null unique pk" json:"id" param:"view"`
+}
+
+func (filters20240313230538) TableName() string {
+	return "saved_filters"
+}
+
 func init() {
 	migrations = append(migrations, &xormigrate.Migration{
 		ID:          "20240313230538",
@@ -87,6 +95,31 @@ func init() {
 					return err
 				}
 				err = createView(project.ID, 3, "Kanban", 400)
+				if err != nil {
+					return err
+				}
+			}
+
+			filters := []*filters20240313230538{}
+			err = tx.Find(&filters)
+			if err != nil {
+				return err
+			}
+
+			for _, filter := range filters {
+				err = createView(filter.ID*-1-1, 0, "List", 100)
+				if err != nil {
+					return err
+				}
+				err = createView(filter.ID*-1-1, 1, "Gantt", 200)
+				if err != nil {
+					return err
+				}
+				err = createView(filter.ID*-1-1, 2, "Table", 300)
+				if err != nil {
+					return err
+				}
+				err = createView(filter.ID*-1-1, 3, "Kanban", 400)
 				if err != nil {
 					return err
 				}
