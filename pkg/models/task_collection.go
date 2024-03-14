@@ -24,7 +24,8 @@ import (
 
 // TaskCollection is a struct used to hold filter details and not clutter the Task struct with information not related to actual tasks.
 type TaskCollection struct {
-	ProjectID int64 `param:"project" json:"-"`
+	ProjectID     int64 `param:"project" json:"-"`
+	ProjectViewID int64 `param:"view" json:"-"`
 
 	// The query parameter to sort by. This is for ex. done, priority, etc.
 	SortBy    []string `query:"sort_by" json:"sort_by"`
@@ -120,6 +121,7 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskSearchOption
 // @Accept json
 // @Produce json
 // @Param id path int true "The project ID."
+// @Param view path int true "The project view ID."
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
@@ -131,7 +133,7 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskSearchOption
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /projects/{id}/tasks [get]
+// @Router /projects/{id}/views/{view}/tasks [get]
 func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
 
 	// If the project id is < -1 this means we're dealing with a saved filter - in that case we get and populate the filter
@@ -167,6 +169,15 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		}
 
 		return sf.getTaskCollection().ReadAll(s, a, search, page, perPage)
+	}
+
+	if tf.ProjectViewID != 0 {
+		view, err := GetProjectViewByID(s, tf.ProjectViewID)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+
+		tf.Filter = view.Filter
 	}
 
 	taskopts, err := getTaskFilterOptsFromCollection(tf)

@@ -355,6 +355,7 @@ func registerAPIRoutes(a *echo.Group) {
 			return &models.TaskCollection{}
 		},
 	}
+	a.GET("/projects/:project/views/:view/tasks", taskCollectionHandler.ReadAllWeb)
 	a.GET("/projects/:project/tasks", taskCollectionHandler.ReadAllWeb)
 
 	kanbanBucketHandler := &handler.WebHandler{
