@@ -193,6 +193,14 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	opts.page = page
 	opts.perPage = perPage
 
+	if view != nil {
+		opts.sortby = append(opts.sortby, &sortParam{
+			projectViewID: view.ID,
+			sortBy:        taskPropertyPosition,
+			orderBy:       orderAscending,
+		})
+	}
+
 	shareAuth, is := a.(*LinkSharing)
 	if is {
 		project, err := GetProjectSimpleByID(s, shareAuth.ProjectID)

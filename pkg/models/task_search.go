@@ -53,14 +53,19 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 			return "", err
 		}
 
+		var prefix string
+		if param.sortBy == taskPropertyPosition {
+			prefix = "task_positions."
+		}
+
 		// Mysql sorts columns with null values before ones without null value.
 		// Because it does not have support for NULLS FIRST or NULLS LAST we work around this by
 		// first sorting for null (or not null) values and then the order we actually want to.
 		if db.Type() == schemas.MYSQL {
-			orderby += "`" + param.sortBy + "` IS NULL, "
+			orderby += prefix + "`" + param.sortBy + "` IS NULL, "
 		}
 
-		orderby += "`" + param.sortBy + "` " + param.orderBy.String()
+		orderby += prefix + "`" + param.sortBy + "` " + param.orderBy.String()
 
 		// Postgres and sqlite allow us to control how columns with null values are sorted.
 		// To make that consistent with the sort order we have and other dbms, we're adding a separate clause here.
@@ -251,6 +256,13 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	query := d.s.Where(cond)
 	if limit > 0 {
 		query = query.Limit(limit, start)
+	}
+
+	for _, param := range opts.sortby {
+		if param.sortBy == taskPropertyPosition {
+			query = query.Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", param.projectViewID)
+			break
+		}
 	}
 
 	tasks = []*Task{}

@@ -18,8 +18,9 @@ package models
 
 type (
 	sortParam struct {
-		sortBy  string
-		orderBy sortOrder // asc or desc
+		sortBy        string
+		orderBy       sortOrder // asc or desc
+		projectViewID int64
 	}
 
 	sortOrder string
@@ -72,5 +73,10 @@ func (sp *sortParam) validate() error {
 	if sp.orderBy != orderDescending && sp.orderBy != orderAscending {
 		return ErrInvalidSortOrder{OrderBy: sp.orderBy}
 	}
+
+	if sp.sortBy == taskPropertyPosition && sp.projectViewID == 0 {
+		return ErrMustHaveProjectViewToSortByPosition{}
+	}
+
 	return validateTaskField(sp.sortBy)
 }

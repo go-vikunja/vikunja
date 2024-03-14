@@ -99,6 +99,7 @@ This document describes the different errors Vikunja can return.
 | 4023      | 409 | Tried to create a task relation which would create a cycle.                |
 | 4024      | 400 | The provided filter expression is invalid.                                 |
 | 4025      | 400 | The reaction kind is invalid.                                              |
+| 4026      | 400 | You must provide a project view ID when sorting by position.               |
 
 ## Team
 

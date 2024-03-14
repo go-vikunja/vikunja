@@ -1114,6 +1114,25 @@ func (err ErrInvalidReactionEntityKind) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrMustHaveProjectViewToSortByPosition represents an error where no project view id was supplied
+type ErrMustHaveProjectViewToSortByPosition struct{}
+
+func (err ErrMustHaveProjectViewToSortByPosition) Error() string {
+	return "You must provide a project view ID when sorting by position"
+}
+
+// ErrCodeMustHaveProjectViewToSortByPosition holds the unique world-error code of this error
+const ErrCodeMustHaveProjectViewToSortByPosition = 4026
+
+// HTTPError holds the http error description
+func (err ErrMustHaveProjectViewToSortByPosition) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeMustHaveProjectViewToSortByPosition,
+		Message:  "You must provide a project view ID when sorting by position",
+	}
+}
+
 // ============
 // Team errors
 // ============
