@@ -19,7 +19,7 @@
 			</Fancycheckbox>
 		</div>
 
-		<FilterInputDocs />
+		<FilterInputDocs/>
 
 		<template
 			v-if="hasFooter"
@@ -111,12 +111,7 @@ function change() {
 		labelTitle => labelStore.filterLabelsByQuery([], labelTitle)[0]?.id || null,
 		projectTitle => {
 			const found = projectStore.findProjectByExactname(projectTitle)
-
-			if (found === null) {
-				return null
-			}
-
-			return found[0]?.id || null
+			return found?.id || null
 		},
 	)
 
