@@ -189,6 +189,7 @@ const projectStore = useProjectStore()
 function handleFieldInput() {
 	const cursorPosition = filterInput.value.selectionStart
 	const textUpToCursor = filterQuery.value.substring(0, cursorPosition)
+	autocompleteResults.value = []
 
 	AUTOCOMPLETE_FIELDS.forEach(field => {
 		const pattern = new RegExp('(' + field + '\\s*' + FILTER_OPERATORS_REGEX + '\\s*)([\'"]?)([^\'"&|()]+\\1?)?$', 'ig')
