@@ -116,9 +116,14 @@ func (sf *SavedFilter) toProject() *Project {
 // @Failure 403 {object} web.HTTPError "The user does not have access to that saved filter."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters [put]
-func (sf *SavedFilter) Create(s *xorm.Session, auth web.Auth) error {
+func (sf *SavedFilter) Create(s *xorm.Session, auth web.Auth) (err error) {
 	sf.OwnerID = auth.GetID()
-	_, err := s.Insert(sf)
+	_, err = s.Insert(sf)
+	if err != nil {
+		return
+	}
+
+	err = CreateDefaultViewsForProject(s, &Project{ID: getProjectIDFromSavedFilterID(sf.ID)}, auth)
 	return err
 }
 
