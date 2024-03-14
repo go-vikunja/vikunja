@@ -177,7 +177,11 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			return nil, 0, 0, err
 		}
 
-		tf.Filter = view.Filter
+		if tf.Filter != "" {
+			tf.Filter = "(" + tf.Filter + ") && (" + view.Filter + ")"
+		} else {
+			tf.Filter = view.Filter
+		}
 	}
 
 	taskopts, err := getTaskFilterOptsFromCollection(tf)
