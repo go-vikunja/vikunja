@@ -48,8 +48,7 @@ export const ALPHABETICAL_SORT = 'title'
 </script>
 
 <script setup lang="ts">
-import {computed, ref} from 'vue'
-import {watchDebounced} from '@vueuse/core'
+import {computed, ref, watch} from 'vue'
 import Fancycheckbox from '@/components/input/fancycheckbox.vue'
 import FilterInput from '@/components/project/partials/FilterInput.vue'
 import {useRoute} from 'vue-router'
@@ -89,7 +88,7 @@ const params = ref<TaskFilterParams>({
 })
 
 // Using watchDebounced to prevent the filter re-triggering itself.
-watchDebounced(
+watch(
 	() => modelValue,
 	(value: TaskFilterParams) => {
 		const val = {...value}
@@ -100,7 +99,7 @@ watchDebounced(
 		)
 		params.value = val
 	},
-	{immediate: true, debounce: 500, maxWait: 1000},
+	{immediate: true},
 )
 
 const labelStore = useLabelStore()
