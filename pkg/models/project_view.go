@@ -31,6 +31,19 @@ const (
 	ProjectViewKindKanban
 )
 
+type BucketConfigurationModeKind int
+
+const (
+	BucketConfigurationModeNone BucketConfigurationModeKind = iota
+	BucketConfigurationModeManual
+	BucketConfigurationModeFilter
+)
+
+type ProjectViewBucketConfiguration struct {
+	Title  string
+	Filter string
+}
+
 type ProjectView struct {
 	// The unique numeric id of this view
 	ID int64 `xorm:"autoincr not null unique pk" json:"id" param:"view"`
@@ -45,6 +58,11 @@ type ProjectView struct {
 	Filter string `xorm:"text null default null" query:"filter" json:"filter"`
 	// The position of this view in the list. The list of all views will be sorted by this parameter.
 	Position float64 `xorm:"double null" json:"position"`
+
+	// The bucket configuration mode. Can be `none`, `manual` or `filter`. `manual` allows to move tasks between buckets as you normally would. `filter` creates buckets based on a filter for each bucket.
+	BucketConfigurationMode BucketConfigurationModeKind `xorm:"default 0" json:"bucket_configuration_mode"`
+	// When the bucket configuration mode is not `manual`, this field holds the options of that configuration.
+	BucketConfiguration []*ProjectViewBucketConfiguration `xorm:"json" json:"bucket_configuration"`
 
 	// A timestamp when this view was updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`

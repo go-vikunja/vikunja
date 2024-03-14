@@ -22,15 +22,24 @@ import (
 	"xorm.io/xorm"
 )
 
+type projectViewBucketConfiguration20240313230538 struct {
+	Title  string
+	Filter string
+}
+
 type projectView20240313230538 struct {
-	ID        int64     `xorm:"autoincr not null unique pk" json:"id" param:"view"`
-	Title     string    `xorm:"varchar(255) not null" json:"title" valid:"runelength(1|250)"`
-	ProjectID int64     `xorm:"not null index" json:"project_id" param:"project"`
-	ViewKind  int       `xorm:"not null" json:"view_kind"`
-	Filter    string    `xorm:"text null default null" query:"filter" json:"filter"`
-	Position  float64   `xorm:"double null" json:"position"`
-	Updated   time.Time `xorm:"updated not null" json:"updated"`
-	Created   time.Time `xorm:"created not null" json:"created"`
+	ID        int64   `xorm:"autoincr not null unique pk" json:"id" param:"view"`
+	Title     string  `xorm:"varchar(255) not null" json:"title" valid:"runelength(1|250)"`
+	ProjectID int64   `xorm:"not null index" json:"project_id" param:"project"`
+	ViewKind  int     `xorm:"not null" json:"view_kind"`
+	Filter    string  `xorm:"text null default null" query:"filter" json:"filter"`
+	Position  float64 `xorm:"double null" json:"position"`
+
+	BucketConfigurationMode int                                             `xorm:"default 0" json:"bucket_configuration_mode"`
+	BucketConfiguration     []*projectViewBucketConfiguration20240313230538 `xorm:"json" json:"bucket_configuration"`
+
+	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Created time.Time `xorm:"created not null" json:"created"`
 }
 
 func (projectView20240313230538) TableName() string {
@@ -75,6 +84,10 @@ func init() {
 					ProjectID: projectID,
 					ViewKind:  kind,
 					Position:  position,
+				}
+
+				if kind == 3 {
+					view.BucketConfigurationMode = 1
 				}
 
 				_, err := tx.Insert(view)
