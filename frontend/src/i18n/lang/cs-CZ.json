@@ -1095,6 +1095,12 @@
     "altFormatLong": "j M Y H:i",
     "altFormatShort": "j M Y"
   },
+  "reaction": {
+    "reactedWith": "{user} reacted with {value}",
+    "reactedWithAnd": "{users} and {lastUser} reacted with {value}",
+    "reactedWithAndMany": "{users} and {num} more reacted reacted with {value}",
+    "add": "Add your reaction"
+  },
   "error": {
     "error": "Chyba",
     "success": "Úspěch",

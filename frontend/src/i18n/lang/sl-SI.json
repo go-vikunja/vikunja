@@ -1096,10 +1096,10 @@
     "altFormatShort": "j M Y"
   },
   "reaction": {
-    "reactedWith": "{user} reacted with {value}",
-    "reactedWithAnd": "{users} and {lastUser} reacted with {value}",
-    "reactedWithAndMany": "{users} and {num} more reacted reacted with {value}",
-    "add": "Add your reaction"
+    "reactedWith": "{user} se je odzval z {value}",
+    "reactedWithAnd": "{users} in {lastUser} sta reagirala z {value}",
+    "reactedWithAndMany": "{users} in {num} drugih se je odzvalo z {value}",
+    "add": "Dodaj svoj odziv"
   },
   "error": {
     "error": "Napaka",

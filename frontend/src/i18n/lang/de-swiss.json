@@ -1096,10 +1096,10 @@
     "altFormatShort": "j M Y"
   },
   "reaction": {
-    "reactedWith": "{user} reacted with {value}",
-    "reactedWithAnd": "{users} and {lastUser} reacted with {value}",
-    "reactedWithAndMany": "{users} and {num} more reacted reacted with {value}",
-    "add": "Add your reaction"
+    "reactedWith": "{user} hat mit {value} reagiert",
+    "reactedWithAnd": "{users} und {lastUser} haben mit {value} reagiert",
+    "reactedWithAndMany": "{users} und {num} weitere haben mit {value} reagiert",
+    "add": "Reaktion hinzufügen"
   },
   "error": {
     "error": "Fähler",
