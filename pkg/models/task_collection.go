@@ -171,8 +171,9 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		return sf.getTaskCollection().ReadAll(s, a, search, page, perPage)
 	}
 
+	var view *ProjectView
 	if tf.ProjectViewID != 0 {
-		view, err := GetProjectViewByID(s, tf.ProjectViewID, tf.ProjectID)
+		view, err = GetProjectViewByID(s, tf.ProjectViewID, tf.ProjectID)
 		if err != nil {
 			return nil, 0, 0, err
 		}
@@ -184,14 +185,14 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		}
 	}
 
-	taskopts, err := getTaskFilterOptsFromCollection(tf)
+	opts, err := getTaskFilterOptsFromCollection(tf)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	taskopts.search = search
-	taskopts.page = page
-	taskopts.perPage = perPage
+	opts.search = search
+	opts.page = page
+	opts.perPage = perPage
 
 	shareAuth, is := a.(*LinkSharing)
 	if is {
@@ -199,7 +200,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		if err != nil {
 			return nil, 0, 0, err
 		}
-		return getTasksForProjects(s, []*Project{project}, a, taskopts)
+		return getTasksForProjects(s, []*Project{project}, a, opts)
 	}
 
 	// If the project ID is not set, we get all tasks for the user.
@@ -232,5 +233,12 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		projects = []*Project{{ID: tf.ProjectID}}
 	}
 
-	return getTasksForProjects(s, projects, a, taskopts)
+	if view != nil {
+		if view.BucketConfigurationMode != BucketConfigurationModeNone {
+			tasksInBuckets, err := GetTasksInBucketsForView(s, view, opts, a)
+			return tasksInBuckets, len(tasksInBuckets), int64(len(tasksInBuckets)), err
+		}
+	}
+
+	return getTasksForProjects(s, projects, a, opts)
 }

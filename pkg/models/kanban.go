@@ -97,21 +97,15 @@ func getDefaultBucketID(s *xorm.Session, project *Project) (bucketID int64, err 
 	return bucket.ID, nil
 }
 
-// ReadAll returns all buckets with their tasks for a certain project
+// ReadAll returns all manual buckets for a certain project
 // @Summary Get all kanban buckets of a project
-// @Description Returns all kanban buckets with belong to a project including their tasks. Buckets are always sorted by their `position` in ascending order. Tasks are sorted by their `kanban_position` in ascending order.
+// @Description Returns all kanban buckets which belong to that project. Buckets are always sorted by their `position` in ascending order. To get all buckets with their tasks, use the tasks endpoint with a kanban view.
 // @tags project
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param id path int true "Project Id"
-// @Param page query int false "The page number for tasks. Used for pagination. If not provided, the first page of results is returned."
-// @Param per_page query int false "The maximum number of tasks per bucket per page. This parameter is limited by the configured maximum of items per page."
-// @Param s query string false "Search tasks by task text."
-// @Param filter query string false "The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature."
-// @Param filter_timezone query string false "The time zone which should be used for date match (statements like "now" resolve to different actual times)"
-// @Param filter_include_nulls query string false "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`."
-// @Success 200 {array} models.Bucket "The buckets with their tasks"
+// @Param id path int true "Project ID"
+// @Success 200 {array} models.Bucket "The buckets"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /projects/{id}/buckets [get]
 func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
@@ -129,7 +123,6 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
-	// Get all buckets for this project
 	buckets := []*Bucket{}
 	err = s.
 		Where("project_id = ?", b.ProjectID).
@@ -137,6 +130,52 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 		Find(&buckets)
 	if err != nil {
 		return
+	}
+
+	userIDs := make([]int64, 0, len(buckets))
+	for _, bb := range buckets {
+		userIDs = append(userIDs, bb.CreatedByID)
+	}
+
+	// Get all users
+	users, err := getUsersOrLinkSharesFromIDs(s, userIDs)
+	if err != nil {
+		return
+	}
+
+	for _, bb := range buckets {
+		bb.CreatedBy = users[bb.CreatedByID]
+	}
+
+	return buckets, len(buckets), int64(len(buckets)), nil
+}
+
+func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, opts *taskSearchOptions, auth web.Auth) (bucketsWithTasks []*Bucket, err error) {
+	// Get all buckets for this project
+	buckets := []*Bucket{}
+
+	if view.BucketConfigurationMode == BucketConfigurationModeManual {
+		err = s.
+			Where("project_id = ?", view.ProjectID).
+			OrderBy("position").
+			Find(&buckets)
+		if err != nil {
+			return
+		}
+	}
+
+	if view.BucketConfigurationMode == BucketConfigurationModeFilter {
+		for id, bc := range view.BucketConfiguration {
+			buckets = append(buckets, &Bucket{
+				ID:          int64(id),
+				Title:       bc.Title,
+				ProjectID:   view.ProjectID,
+				Position:    float64(id),
+				CreatedByID: auth.GetID(),
+				Created:     time.Now(),
+				Updated:     time.Now(),
+			})
+		}
 	}
 
 	// Make a map from the bucket slice with their id as key so that we can use it to put the tasks in their buckets
@@ -159,20 +198,12 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 
 	tasks := []*Task{}
 
-	opts, err := getTaskFilterOptsFromCollection(&b.TaskCollection)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
 	opts.sortby = []*sortParam{
 		{
 			orderBy: orderAscending,
 			sortBy:  taskPropertyKanbanPosition,
 		},
 	}
-	opts.page = page
-	opts.perPage = perPage
-	opts.search = search
 
 	for _, filter := range opts.parsedFilters {
 		if filter.field == taskPropertyBucketID {
@@ -192,11 +223,17 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 	for id, bucket := range bucketMap {
 
 		if !strings.Contains(originalFilter, "bucket_id") {
+
+			var bucketFilter = "bucket_id = " + strconv.FormatInt(id, 10)
+			if view.BucketConfigurationMode == BucketConfigurationModeFilter {
+				bucketFilter = "(" + view.BucketConfiguration[id].Filter + ")"
+			}
+
 			var filterString string
 			if originalFilter == "" {
-				filterString = "bucket_id = " + strconv.FormatInt(id, 10)
+				filterString = bucketFilter
 			} else {
-				filterString = "(" + originalFilter + ") && bucket_id = " + strconv.FormatInt(id, 10)
+				filterString = "(" + originalFilter + ") && " + bucketFilter
 			}
 			opts.parsedFilters, err = getTaskFiltersFromFilterString(filterString, opts.filterTimezone)
 			if err != nil {
@@ -206,7 +243,7 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 
 		ts, _, total, err := getRawTasksForProjects(s, []*Project{{ID: bucket.ProjectID}}, auth, opts)
 		if err != nil {
-			return nil, 0, 0, err
+			return nil, err
 		}
 
 		bucket.Count = total
@@ -221,7 +258,7 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 
 	err = addMoreInfoToTasks(s, taskMap, auth)
 	if err != nil {
-		return nil, 0, 0, err
+		return nil, err
 	}
 
 	// Put all tasks in their buckets
@@ -230,13 +267,13 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 	for _, task := range tasks {
 		// Check if the bucket exists in the map to prevent nil pointer panics
 		if _, exists := bucketMap[task.BucketID]; !exists {
-			log.Debugf("Tried to put task %d into bucket %d which does not exist in project %d", task.ID, task.BucketID, b.ProjectID)
+			log.Debugf("Tried to put task %d into bucket %d which does not exist in project %d", task.ID, task.BucketID, view.ProjectID)
 			continue
 		}
 		bucketMap[task.BucketID].Tasks = append(bucketMap[task.BucketID].Tasks, task)
 	}
 
-	return buckets, len(buckets), int64(len(buckets)), nil
+	return buckets, nil
 }
 
 // Create creates a new bucket
