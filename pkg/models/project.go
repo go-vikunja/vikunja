@@ -80,6 +80,8 @@ type Project struct {
 	// The position this project has when querying all projects. See the tasks.position property on how to use this.
 	Position float64 `xorm:"double null" json:"position"`
 
+	Views []*ProjectView `xorm:"-" json:"views"`
+
 	// A timestamp when this project was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this project was last updated. You cannot change this value.
@@ -266,6 +268,9 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		return nil
 	}
 
+	err = s.
+		Where("project_id = ?", p.ID).
+		Find(&p.Views)
 	return
 }
 
@@ -587,6 +592,23 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 		subscriptions = make(map[int64][]*Subscription)
 	}
 
+	views := []*ProjectView{}
+	err = s.
+		In("project_id", projectIDs).
+		Find(&views)
+	if err != nil {
+		return
+	}
+
+	viewMap := make(map[int64][]*ProjectView)
+	for _, v := range views {
+		if _, has := viewMap[v.ProjectID]; !has {
+			viewMap[v.ProjectID] = []*ProjectView{}
+		}
+
+		viewMap[v.ProjectID] = append(viewMap[v.ProjectID], v)
+	}
+
 	for _, p := range projects {
 		if o, exists := owners[p.OwnerID]; exists {
 			p.Owner = o
@@ -603,6 +625,11 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 
 		if subscription, exists := subscriptions[p.ID]; exists && len(subscription) > 0 {
 			p.Subscription = subscription[0]
+		}
+
+		vs, has := viewMap[p.ID]
+		if has {
+			p.Views = vs
 		}
 	}
 
