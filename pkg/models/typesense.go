@@ -154,10 +154,6 @@ func CreateTypesenseCollections() error {
 				Type: "float",
 			},
 			{
-				Name: "kanban_position",
-				Type: "float",
-			},
-			{
 				Name: "created_by_id",
 				Type: "int64",
 			},
@@ -417,7 +413,6 @@ type typesenseTask struct {
 	Updated                int64       `json:"updated"`
 	BucketID               int64       `json:"bucket_id"`
 	Position               float64     `json:"position"`
-	KanbanPosition         float64     `json:"kanban_position"`
 	CreatedByID            int64       `json:"created_by_id"`
 	Reminders              interface{} `json:"reminders"`
 	Assignees              interface{} `json:"assignees"`
@@ -451,7 +446,6 @@ func convertTaskToTypesenseTask(task *Task) *typesenseTask {
 		Updated:                task.Updated.UTC().Unix(),
 		BucketID:               task.BucketID,
 		Position:               task.Position,
-		KanbanPosition:         task.KanbanPosition,
 		CreatedByID:            task.CreatedByID,
 		Reminders:              task.Reminders,
 		Assignees:              task.Assignees,

@@ -386,6 +386,13 @@ func registerAPIRoutes(a *echo.Group) {
 	a.DELETE("/tasks/:projecttask", taskHandler.DeleteWeb)
 	a.POST("/tasks/:projecttask", taskHandler.UpdateWeb)
 
+	taskPositionHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.TaskPosition{}
+		},
+	}
+	a.POST("/tasks/:task/position", taskPositionHandler.UpdateWeb)
+
 	bulkTaskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.BulkTask{}

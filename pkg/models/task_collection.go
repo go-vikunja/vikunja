@@ -67,7 +67,6 @@ func validateTaskField(fieldName string) error {
 		taskPropertyCreated,
 		taskPropertyUpdated,
 		taskPropertyPosition,
-		taskPropertyKanbanPosition,
 		taskPropertyBucketID,
 		taskPropertyIndex:
 		return nil

@@ -121,9 +121,9 @@ type Task struct {
 	// You would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.
 	// A 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task
 	// which also leaves a lot of room for rearranging and sorting later.
-	Position float64 `xorm:"double null" json:"position"`
-	// The position of tasks in the kanban board. See the docs for the `position` property on how to use this.
-	KanbanPosition float64 `xorm:"double null" json:"kanban_position"`
+	// Positions are always saved per view. They will automatically be set if you request the tasks through a view
+	// endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
+	Position float64 `xorm:"-" json:"position"`
 
 	// Reactions on that task.
 	Reactions ReactionMap `xorm:"-" json:"reactions"`
@@ -785,7 +785,6 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 
 	// If no position was supplied, set a default one
 	t.Position = calculateDefaultPosition(t.Index, t.Position)
-	t.KanbanPosition = calculateDefaultPosition(t.Index, t.KanbanPosition)
 
 	t.HexColor = utils.NormalizeHex(t.HexColor)
 
@@ -912,7 +911,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		"bucket_id",
 		"position",
 		"repeat_mode",
-		"kanban_position",
 		"cover_image_attachment_id",
 	}
 
@@ -1028,9 +1026,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	if t.Position == 0 {
 		ot.Position = 0
 	}
-	if t.KanbanPosition == 0 {
-		ot.KanbanPosition = 0
-	}
 	// Repeat from current date
 	if t.RepeatMode == TaskRepeatModeDefault {
 		ot.RepeatMode = TaskRepeatModeDefault
@@ -1059,12 +1054,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 			return err
 		}
 	}
-	if ot.KanbanPosition < 0.1 {
-		err = recalculateTaskKanbanPositions(s, t.BucketID)
-		if err != nil {
-			return err
-		}
-	}
 
 	// Get the task updated timestamp in a new struct - if we'd just try to put it into t which we already have, it
 	// would still contain the old updated date.
@@ -1075,7 +1064,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 	t.Updated = nt.Updated
 	t.Position = nt.Position
-	t.KanbanPosition = nt.KanbanPosition
 
 	doer, _ := user.GetFromAuth(a)
 	err = events.Dispatch(&TaskUpdatedEvent{
@@ -1087,39 +1075,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
-}
-
-func recalculateTaskKanbanPositions(s *xorm.Session, bucketID int64) (err error) {
-
-	allTasks := []*Task{}
-	err = s.
-		Where("bucket_id = ?", bucketID).
-		OrderBy("kanban_position asc").
-		Find(&allTasks)
-	if err != nil {
-		return
-	}
-
-	maxPosition := math.Pow(2, 32)
-
-	for i, task := range allTasks {
-
-		currentPosition := maxPosition / float64(len(allTasks)) * (float64(i + 1))
-
-		// Here we use "NoAutoTime() to prevent the ORM from updating column "updated" automatically.
-		// Otherwise, this signals to CalDAV clients that the task has changed, which is not the case.
-		// Consequence: when synchronizing a list of tasks, the first one immediately changes the date of all the
-		// following ones from the same batch, which are then unable to be updated.
-		_, err = s.Cols("kanban_position").
-			Where("id = ?", task.ID).
-			NoAutoTime().
-			Update(&Task{KanbanPosition: currentPosition})
-		if err != nil {
-			return
-		}
-	}
-
-	return
 }
 
 func recalculateTaskPositions(s *xorm.Session, projectID int64) (err error) {

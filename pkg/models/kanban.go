@@ -201,7 +201,7 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, opts *taskSear
 	opts.sortby = []*sortParam{
 		{
 			orderBy: orderAscending,
-			sortBy:  taskPropertyKanbanPosition,
+			sortBy:  taskPropertyPosition,
 		},
 	}
 

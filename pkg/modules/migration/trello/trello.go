@@ -253,9 +253,8 @@ func convertTrelloDataToVikunja(trelloData []*trello.Board, token string) (fullV
 
 				// The usual stuff: Title, description, position, bucket id
 				task := &models.Task{
-					Title:          card.Name,
-					KanbanPosition: card.Pos,
-					BucketID:       bucketID,
+					Title:    card.Name,
+					BucketID: bucketID,
 				}
 
 				task.Description, err = convertMarkdownToHTML(card.Desc)
