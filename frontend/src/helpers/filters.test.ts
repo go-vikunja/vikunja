@@ -107,6 +107,16 @@ describe('Filter Transformation', () => {
 
 			expect(transformed).toBe('project = 1')
 		})
+		
+		it('should resolve project and labels independently', () => {
+			const transformed = transformFilterStringForApi(
+				'project = lorem && labels = ipsum',
+				multipleDummyResolver,
+				multipleDummyResolver,
+			)
+
+			expect(transformed).toBe('project = 1 && labels = 2')
+		})
 	})
 
 	describe('To API', () => {

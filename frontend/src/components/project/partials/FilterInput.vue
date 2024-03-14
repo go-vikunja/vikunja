@@ -222,7 +222,7 @@ function handleFieldInput() {
 					autocompleteResults.value = projectStore.searchProject(search)
 				}
 				autocompleteMatchText.value = keyword
-				autocompleteMatchPosition.value = prefix.length - 1 + keyword.replace(search, '').length
+				autocompleteMatchPosition.value = match.index + prefix.length - 1 + keyword.replace(search, '').length
 			}
 		}
 	})
