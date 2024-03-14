@@ -172,7 +172,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	}
 
 	if tf.ProjectViewID != 0 {
-		view, err := GetProjectViewByID(s, tf.ProjectViewID)
+		view, err := GetProjectViewByID(s, tf.ProjectViewID, tf.ProjectID)
 		if err != nil {
 			return nil, 0, 0, err
 		}

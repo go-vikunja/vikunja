@@ -113,7 +113,7 @@ func (p *ProjectView) ReadAll(s *xorm.Session, a web.Auth, _ string, _ int, _ in
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views/{id} [get]
 func (p *ProjectView) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
-	view, err := GetProjectViewByID(s, p.ID)
+	view, err := GetProjectViewByID(s, p.ID, p.ProjectID)
 	if err != nil {
 		return err
 	}
@@ -176,7 +176,7 @@ func (p *ProjectView) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Router /projects/{project}/views/{id} [post]
 func (p *ProjectView) Update(s *xorm.Session, _ web.Auth) (err error) {
 	// Check if the project view exists
-	_, err = GetProjectViewByID(s, p.ID)
+	_, err = GetProjectViewByID(s, p.ID, p.ProjectID)
 	if err != nil {
 		return
 	}
@@ -189,9 +189,9 @@ func (p *ProjectView) Update(s *xorm.Session, _ web.Auth) (err error) {
 	return
 }
 
-func GetProjectViewByID(s *xorm.Session, id int64) (view *ProjectView, err error) {
+func GetProjectViewByID(s *xorm.Session, id, projectID int64) (view *ProjectView, err error) {
 	exists, err := s.
-		Where("id = ?", id).
+		Where("id = ? AND project_id = ?", id, projectID).
 		NoAutoCondition().
 		Get(view)
 	if err != nil {
