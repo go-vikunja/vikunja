@@ -18,11 +18,49 @@ package models
 
 import (
 	"code.vikunja.io/web"
+	"encoding/json"
+	"fmt"
 	"time"
 	"xorm.io/xorm"
 )
 
 type ProjectViewKind int
+
+func (p *ProjectViewKind) MarshalJSON() ([]byte, error) {
+	switch *p {
+	case ProjectViewKindList:
+		return []byte(`"list"`), nil
+	case ProjectViewKindGantt:
+		return []byte(`"gantt"`), nil
+	case ProjectViewKindTable:
+		return []byte(`"table"`), nil
+	case ProjectViewKindKanban:
+		return []byte(`"kanban"`), nil
+	}
+
+	return []byte(`null`), nil
+}
+
+func (p *ProjectViewKind) UnmarshalJSON(bytes []byte) error {
+	var value string
+	err := json.Unmarshal(bytes, &value)
+	if err != nil {
+		return err
+	}
+
+	switch value {
+	case "list":
+		*p = ProjectViewKindList
+	case "gantt":
+		*p = ProjectViewKindGantt
+	case "table":
+		*p = ProjectViewKindTable
+	case "kanban":
+		*p = ProjectViewKindKanban
+	}
+
+	return fmt.Errorf("unkown project view kind: %s", bytes)
+}
 
 const (
 	ProjectViewKindList ProjectViewKind = iota
@@ -38,6 +76,38 @@ const (
 	BucketConfigurationModeManual
 	BucketConfigurationModeFilter
 )
+
+func (p *BucketConfigurationModeKind) MarshalJSON() ([]byte, error) {
+	switch *p {
+	case BucketConfigurationModeNone:
+		return []byte(`"none"`), nil
+	case BucketConfigurationModeManual:
+		return []byte(`"manual"`), nil
+	case BucketConfigurationModeFilter:
+		return []byte(`"filter"`), nil
+	}
+
+	return []byte(`null`), nil
+}
+
+func (p *BucketConfigurationModeKind) UnmarshalJSON(bytes []byte) error {
+	var value string
+	err := json.Unmarshal(bytes, &value)
+	if err != nil {
+		return err
+	}
+
+	switch value {
+	case "none":
+		*p = BucketConfigurationModeNone
+	case "manual":
+		*p = BucketConfigurationModeManual
+	case "filter":
+		*p = BucketConfigurationModeFilter
+	}
+
+	return fmt.Errorf("unkown bucket configuration mode kind: %s", bytes)
+}
 
 type ProjectViewBucketConfiguration struct {
 	Title  string
