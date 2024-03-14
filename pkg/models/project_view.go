@@ -206,3 +206,47 @@ func GetProjectViewByID(s *xorm.Session, id int64) (view *ProjectView, err error
 
 	return
 }
+
+func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth) (err error) {
+	list := &ProjectView{
+		ProjectID: project.ID,
+		Title:     "List",
+		ViewKind:  ProjectViewKindList,
+		Position:  100,
+	}
+	err = list.Create(s, a)
+	if err != nil {
+		return
+	}
+
+	gantt := &ProjectView{
+		ProjectID: project.ID,
+		Title:     "Gantt",
+		ViewKind:  ProjectViewKindGantt,
+		Position:  200,
+	}
+	err = gantt.Create(s, a)
+	if err != nil {
+		return
+	}
+
+	table := &ProjectView{
+		ProjectID: project.ID,
+		Title:     "Table",
+		ViewKind:  ProjectViewKindTable,
+		Position:  300,
+	}
+	err = table.Create(s, a)
+	if err != nil {
+		return
+	}
+
+	kanban := &ProjectView{
+		ProjectID: project.ID,
+		Title:     "Kanban",
+		ViewKind:  ProjectViewKindKanban,
+		Position:  400,
+	}
+	err = kanban.Create(s, a)
+	return
+}

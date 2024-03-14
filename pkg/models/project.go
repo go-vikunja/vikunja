@@ -789,6 +789,11 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 		}
 	}
 
+	err = CreateDefaultViewsForProject(s, project, auth)
+	if err != nil {
+		return
+	}
+
 	return events.Dispatch(&ProjectCreatedEvent{
 		Project: project,
 		Doer:    doer,
