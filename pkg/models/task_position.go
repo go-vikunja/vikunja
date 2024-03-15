@@ -64,6 +64,17 @@ func (tp *TaskPosition) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id}/position [post]
 func (tp *TaskPosition) Update(s *xorm.Session, _ web.Auth) (err error) {
+
+	// Update all positions if the newly saved position is < 0.1
+	if tp.Position < 0.1 {
+		view, err := GetProjectViewByID(s, tp.ProjectViewID)
+		if err != nil {
+			return err
+		}
+
+		return RecalculateTaskPositions(s, view)
+	}
+
 	exists, err := s.
 		Where("task_id = ? AND project_view_id = ?", tp.TaskID, tp.ProjectViewID).
 		Get(&TaskPosition{})
@@ -108,6 +119,13 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView) (err error) {
 			ProjectViewID: view.ID,
 			Position:      currentPosition,
 		})
+	}
+
+	_, err = s.
+		Where("project_view_id = ?", view.ID).
+		Delete(&TaskPosition{})
+	if err != nil {
+		return
 	}
 
 	_, err = s.Insert(newPositions)

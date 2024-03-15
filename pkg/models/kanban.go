@@ -123,7 +123,7 @@ func getDefaultBucketID(s *xorm.Session, view *ProjectView) (bucketID int64, err
 // @Router /projects/{id}/views/{view}/buckets [get]
 func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 
-	view, err := GetProjectViewByID(s, b.ProjectViewID, b.ProjectID)
+	view, err := GetProjectViewByIDAndProject(s, b.ProjectViewID, b.ProjectID)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -379,7 +379,7 @@ func (b *Bucket) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Get the default bucket
-	p, err := GetProjectViewByID(s, b.ProjectViewID, b.ProjectID)
+	p, err := GetProjectViewByIDAndProject(s, b.ProjectViewID, b.ProjectID)
 	if err != nil {
 		return
 	}
