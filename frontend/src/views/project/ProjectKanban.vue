@@ -396,13 +396,14 @@ watch(
 	() => ({
 		params: params.value,
 		projectId,
+		viewId: view.id,
 	}),
 	({params}) => {
 		if (projectId === undefined || Number(projectId) === 0) {
 			return
 		}
 		collapsedBuckets.value = getCollapsedBucketState(projectId)
-		kanbanStore.loadBucketsForProject({projectId, params})
+		kanbanStore.loadBucketsForProject(projectId, view.id, params)
 	},
 	{
 		immediate: true,

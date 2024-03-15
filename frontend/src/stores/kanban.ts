@@ -226,15 +226,15 @@ export const useKanbanStore = defineStore('kanban', () => {
 		allTasksLoadedForBucket.value[bucketId] = true
 	}
 
-	async function loadBucketsForProject({projectId, params}: { projectId: IProject['id'], params }) {
+	async function loadBucketsForProject(projectId: IProject['id'], viewId: IProjectView['id'], params) {
 		const cancel = setModuleLoading(setIsLoading)
 
 		// Clear everything to prevent having old buckets in the project if loading the buckets from this project takes a few moments
 		setBuckets([])
 
-		const bucketService = new BucketService()
+		const taskCollectionService = new TaskCollectionService()
 		try {
-			const newBuckets = await bucketService.getAll({projectId}, {
+			const newBuckets = await taskCollectionService.getAll({projectId, viewId}, {
 				...params,
 				per_page: TASKS_PER_BUCKET,
 			})
@@ -311,7 +311,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 			const response = await bucketService.delete(bucket)
 			removeBucket(bucket)
 			// We reload all buckets because tasks are being moved from the deleted bucket
-			loadBucketsForProject({projectId: bucket.projectId, params})
+			loadBucketsForProject(bucket.projectId, bucket.projectViewId, params)
 			return response
 		} finally {
 			cancel()
