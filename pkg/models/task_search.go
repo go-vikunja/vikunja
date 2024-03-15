@@ -416,29 +416,6 @@ func convertParsedFilterToTypesense(rawFilters []*taskFilter) (filterBy string, 
 
 func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
 
-	var sortbyFields []string
-	for i, param := range opts.sortby {
-		// Validate the params
-		if err := param.validate(); err != nil {
-			return nil, totalCount, err
-		}
-
-		// Typesense does not allow sorting by ID, so we sort by created timestamp instead
-		if param.sortBy == "id" {
-			param.sortBy = "created"
-		}
-
-		sortbyFields = append(sortbyFields, param.sortBy+"(missing_values:last):"+param.orderBy.String())
-
-		if i == 2 {
-			// Typesense supports up to 3 sorting parameters
-			// https://typesense.org/docs/0.25.0/api/search.html#ranking-and-sorting-parameters
-			break
-		}
-	}
-
-	sortby := strings.Join(sortbyFields, ",")
-
 	projectIDStrings := []string{}
 	for _, id := range opts.projectIDs {
 		projectIDStrings = append(projectIDStrings, strconv.FormatInt(id, 10))
@@ -453,6 +430,34 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 		"project_id: [" + strings.Join(projectIDStrings, ", ") + "]",
 		"(" + filter + ")",
 	}
+
+	var sortbyFields []string
+	for i, param := range opts.sortby {
+		// Validate the params
+		if err := param.validate(); err != nil {
+			return nil, totalCount, err
+		}
+
+		// Typesense does not allow sorting by ID, so we sort by created timestamp instead
+		if param.sortBy == taskPropertyID {
+			param.sortBy = taskPropertyCreated
+		}
+
+		if param.sortBy == taskPropertyPosition {
+			filterBy = append(filterBy, "project_view_id: "+strconv.FormatInt(param.projectViewID, 10))
+			break
+		}
+
+		sortbyFields = append(sortbyFields, param.sortBy+"(missing_values:last):"+param.orderBy.String())
+
+		if i == 2 {
+			// Typesense supports up to 3 sorting parameters
+			// https://typesense.org/docs/0.25.0/api/search.html#ranking-and-sorting-parameters
+			break
+		}
+	}
+
+	sortby := strings.Join(sortbyFields, ",")
 
 	////////////////
 	// Actual search

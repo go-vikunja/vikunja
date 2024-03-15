@@ -19,6 +19,8 @@ package models
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -158,6 +160,10 @@ func CreateTypesenseCollections() error {
 				Type: "int64",
 			},
 			{
+				Name: "project_view_id",
+				Type: "int64",
+			},
+			{
 				Name:     "reminders",
 				Type:     "object[]", // TODO
 				Optional: pointer.True(),
@@ -243,14 +249,17 @@ func ReindexAllTasks() (err error) {
 	return
 }
 
-func getTypesenseTaskForTask(s *xorm.Session, task *Task, projectsCache map[int64]*Project) (ttask *typesenseTask, err error) {
+func getTypesenseTaskForTask(s *xorm.Session, task *Task, projectsCache map[int64]*Project) (ttasks []*typesenseTask, err error) {
 	positions := []*TaskPosition{}
 	err = s.Where("task_id = ?", task.ID).Find(&positions)
 	if err != nil {
 		return
 	}
 
-	ttask = convertTaskToTypesenseTask(task, positions)
+	for _, position := range positions {
+		ttask := convertTaskToTypesenseTask(task, position)
+		ttasks = append(ttasks, ttask)
+	}
 
 	var p *Project
 	if projectsCache == nil {
@@ -271,9 +280,13 @@ func getTypesenseTaskForTask(s *xorm.Session, task *Task, projectsCache map[int6
 	}
 
 	comment := &TaskComment{TaskID: task.ID}
-	ttask.Comments, _, _, err = comment.ReadAll(s, &user.User{ID: p.OwnerID}, "", -1, -1)
+	comments, _, _, err := comment.ReadAll(s, &user.User{ID: p.OwnerID}, "", -1, -1)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch comments for task %d: %s", task.ID, err.Error())
+	}
+
+	for _, t := range ttasks {
+		t.Comments = comments
 	}
 
 	return
@@ -292,16 +305,31 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 	}
 
 	projects := make(map[int64]*Project)
-
 	typesenseTasks := []interface{}{}
+	taskIDs := []string{}
+
 	for _, task := range tasks {
 
-		ttask, err := getTypesenseTaskForTask(s, task, projects)
+		ttasks, err := getTypesenseTaskForTask(s, task, projects)
 		if err != nil {
 			return err
 		}
 
-		typesenseTasks = append(typesenseTasks, ttask)
+		for _, ttask := range ttasks {
+			typesenseTasks = append(typesenseTasks, ttask)
+		}
+
+		taskIDs = append(taskIDs, strconv.FormatInt(task.ID, 10))
+	}
+
+	_, err = typesenseClient.Collection("tasks").
+		Documents().
+		Delete(context.Background(), &api.DeleteDocumentsParams{
+			FilterBy: pointer.String("task_id:[" + strings.Join(taskIDs, ",") + "]"),
+		})
+	if err != nil {
+		log.Errorf("Could not delete old tasks in Typesense", err)
+		return err
 	}
 
 	_, err = typesenseClient.Collection("tasks").
@@ -398,6 +426,7 @@ func indexDummyTask() (err error) {
 
 type typesenseTask struct {
 	ID                     string      `json:"id"`
+	TaskID                 string      `json:"task_id"`
 	Title                  string      `json:"title"`
 	Description            string      `json:"description"`
 	Done                   bool        `json:"done"`
@@ -422,17 +451,22 @@ type typesenseTask struct {
 	Assignees              interface{} `json:"assignees"`
 	Labels                 interface{} `json:"labels"`
 	//RelatedTasks           interface{} `json:"related_tasks"` // TODO
-	Attachments interface{} `json:"attachments"`
-	Comments    interface{} `json:"comments"`
-	Positions   []*struct {
-		Position      float64 `json:"position"`
-		ProjectViewID int64   `json:"project_view_id"`
-	} `json:"positions"`
+	Attachments   interface{} `json:"attachments"`
+	Comments      interface{} `json:"comments"`
+	Position      float64     `json:"position"`
+	ProjectViewID int64       `json:"project_view_id"`
 }
 
-func convertTaskToTypesenseTask(task *Task, positions []*TaskPosition) *typesenseTask {
+func convertTaskToTypesenseTask(task *Task, position *TaskPosition) *typesenseTask {
+
+	var projectViewID int64
+	if position != nil {
+		projectViewID = position.ProjectViewID
+	}
+
 	tt := &typesenseTask{
-		ID:                     fmt.Sprintf("%d", task.ID),
+		ID:                     fmt.Sprintf("%d_%d", task.ID, projectViewID),
+		TaskID:                 fmt.Sprintf("%d", task.ID),
 		Title:                  task.Title,
 		Description:            task.Description,
 		Done:                   task.Done,
@@ -457,7 +491,9 @@ func convertTaskToTypesenseTask(task *Task, positions []*TaskPosition) *typesens
 		Assignees:              task.Assignees,
 		Labels:                 task.Labels,
 		//RelatedTasks:           task.RelatedTasks,
-		Attachments: task.Attachments,
+		Attachments:   task.Attachments,
+		Position:      position.Position,
+		ProjectViewID: projectViewID,
 	}
 
 	if task.DoneAt.IsZero() {
@@ -471,16 +507,6 @@ func convertTaskToTypesenseTask(task *Task, positions []*TaskPosition) *typesens
 	}
 	if task.EndDate.IsZero() {
 		tt.EndDate = nil
-	}
-
-	for _, position := range positions {
-		tt.Positions = append(tt.Positions, &struct {
-			Position      float64 `json:"position"`
-			ProjectViewID int64   `json:"project_view_id"`
-		}{
-			Position:      position.Position,
-			ProjectViewID: position.ProjectViewID,
-		})
 	}
 
 	return tt

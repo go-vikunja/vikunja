@@ -258,7 +258,6 @@ func getTaskIndexFromSearchString(s string) (index int64) {
 	return
 }
 
-//nolint:gocyclo
 func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
 	// If the user does not have any projects, don't try to get any tasks
