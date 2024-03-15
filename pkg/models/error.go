@@ -1557,8 +1557,8 @@ func (err ErrBucketDoesNotBelongToProject) HTTPError() web.HTTPError {
 
 // ErrCannotRemoveLastBucket represents an error where a kanban bucket is the last on a project and thus cannot be removed.
 type ErrCannotRemoveLastBucket struct {
-	BucketID  int64
-	ProjectID int64
+	BucketID      int64
+	ProjectViewID int64
 }
 
 // IsErrCannotRemoveLastBucket checks if an error is ErrCannotRemoveLastBucket.
@@ -1568,7 +1568,7 @@ func IsErrCannotRemoveLastBucket(err error) bool {
 }
 
 func (err ErrCannotRemoveLastBucket) Error() string {
-	return fmt.Sprintf("Cannot remove last bucket of project [BucketID: %d, ProjectID: %d]", err.BucketID, err.ProjectID)
+	return fmt.Sprintf("Cannot remove last bucket of project [BucketID: %d, ProjectID: %d]", err.BucketID, err.ProjectViewID)
 }
 
 // ErrCodeCannotRemoveLastBucket holds the unique world-error code of this error

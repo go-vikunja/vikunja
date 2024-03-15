@@ -34,7 +34,7 @@ type Bucket struct {
 	// The title of this bucket.
 	Title string `xorm:"text not null" valid:"required" minLength:"1" json:"title"`
 	// The project this bucket belongs to.
-	ProjectID int64 `xorm:"bigint not null" json:"project_id" param:"project"`
+	ProjectID int64 `xorm:"-" json:"-" param:"project"`
 	// The project view this bucket belongs to.
 	ProjectViewID int64 `xorm:"bigint not null" json:"project_view_id" param:"view"`
 	// All tasks which belong to this bucket.
@@ -107,17 +107,18 @@ func getDefaultBucketID(s *xorm.Session, project *Project) (bucketID int64, err 
 // @Produce json
 // @Security JWTKeyAuth
 // @Param id path int true "Project ID"
+// @Param view path int true "Project view ID"
 // @Success 200 {array} models.Bucket "The buckets"
 // @Failure 500 {object} models.Message "Internal server error"
-// @Router /projects/{id}/buckets [get]
+// @Router /projects/{id}/views/{view}/buckets [get]
 func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 
-	project, err := GetProjectSimpleByID(s, b.ProjectID)
+	view, err := GetProjectViewByID(s, b.ProjectViewID, b.ProjectID)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	can, _, err := project.CanRead(s, auth)
+	can, _, err := view.CanRead(s, auth)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -127,7 +128,7 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, search string, page int
 
 	buckets := []*Bucket{}
 	err = s.
-		Where("project_id = ?", b.ProjectID).
+		Where("project_view_id = ?", b.ProjectViewID).
 		OrderBy("position").
 		Find(&buckets)
 	if err != nil {
@@ -244,7 +245,7 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, opts *taskSear
 			}
 		}
 
-		ts, _, total, err := getRawTasksForProjects(s, []*Project{{ID: bucket.ProjectID}}, auth, opts)
+		ts, _, total, err := getRawTasksForProjects(s, []*Project{{ID: view.ProjectID}}, auth, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -287,12 +288,13 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, opts *taskSear
 // @Produce json
 // @Security JWTKeyAuth
 // @Param id path int true "Project Id"
+// @Param view path int true "Project view ID"
 // @Param bucket body models.Bucket true "The bucket object"
 // @Success 200 {object} models.Bucket "The created bucket object."
 // @Failure 400 {object} web.HTTPError "Invalid bucket object provided."
 // @Failure 404 {object} web.HTTPError "The project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /projects/{id}/buckets [put]
+// @Router /projects/{id}/views/{view}/buckets [put]
 func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
 	b.CreatedBy, err = GetUserOrLinkShareUser(s, a)
 	if err != nil {
@@ -319,12 +321,13 @@ func (b *Bucket) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Security JWTKeyAuth
 // @Param projectID path int true "Project Id"
 // @Param bucketID path int true "Bucket Id"
+// @Param view path int true "Project view ID"
 // @Param bucket body models.Bucket true "The bucket object"
 // @Success 200 {object} models.Bucket "The created bucket object."
 // @Failure 400 {object} web.HTTPError "Invalid bucket object provided."
 // @Failure 404 {object} web.HTTPError "The bucket does not exist."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /projects/{projectID}/buckets/{bucketID} [post]
+// @Router /projects/{projectID}/views/{view}/buckets/{bucketID} [post]
 func (b *Bucket) Update(s *xorm.Session, _ web.Auth) (err error) {
 	_, err = s.
 		Where("id = ?", b.ID).
@@ -346,21 +349,22 @@ func (b *Bucket) Update(s *xorm.Session, _ web.Auth) (err error) {
 // @Security JWTKeyAuth
 // @Param projectID path int true "Project Id"
 // @Param bucketID path int true "Bucket Id"
+// @Param view path int true "Project view ID"
 // @Success 200 {object} models.Message "Successfully deleted."
 // @Failure 404 {object} web.HTTPError "The bucket does not exist."
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /projects/{projectID}/buckets/{bucketID} [delete]
+// @Router /projects/{projectID}/views/{view}/buckets/{bucketID} [delete]
 func (b *Bucket) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// Prevent removing the last bucket
-	total, err := s.Where("project_id = ?", b.ProjectID).Count(&Bucket{})
+	total, err := s.Where("project_view_id = ?", b.ProjectViewID).Count(&Bucket{})
 	if err != nil {
 		return
 	}
 	if total <= 1 {
 		return ErrCannotRemoveLastBucket{
-			BucketID:  b.ID,
-			ProjectID: b.ProjectID,
+			BucketID:      b.ID,
+			ProjectViewID: b.ProjectViewID,
 		}
 	}
 

@@ -363,10 +363,10 @@ func registerAPIRoutes(a *echo.Group) {
 			return &models.Bucket{}
 		},
 	}
-	a.GET("/projects/:project/buckets", kanbanBucketHandler.ReadAllWeb)
-	a.PUT("/projects/:project/buckets", kanbanBucketHandler.CreateWeb)
-	a.POST("/projects/:project/buckets/:bucket", kanbanBucketHandler.UpdateWeb)
-	a.DELETE("/projects/:project/buckets/:bucket", kanbanBucketHandler.DeleteWeb)
+	a.GET("/projects/:project/views/:view/buckets", kanbanBucketHandler.ReadAllWeb)
+	a.PUT("/projects/:project/views/:view/buckets", kanbanBucketHandler.CreateWeb)
+	a.POST("/projects/:project/views/:view/buckets/:bucket", kanbanBucketHandler.UpdateWeb)
+	a.DELETE("/projects/:project/views/:view/buckets/:bucket", kanbanBucketHandler.DeleteWeb)
 
 	projectDuplicateHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
