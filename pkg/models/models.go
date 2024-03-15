@@ -63,6 +63,8 @@ func GetTables() []interface{} {
 		&Webhook{},
 		&Reaction{},
 		&ProjectView{},
+		&TaskPosition{},
+		&TaskBucket{},
 	}
 }
 

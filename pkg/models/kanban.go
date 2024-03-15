@@ -82,14 +82,14 @@ func getBucketByID(s *xorm.Session, id int64) (b *Bucket, err error) {
 	return
 }
 
-func getDefaultBucketID(s *xorm.Session, project *Project) (bucketID int64, err error) {
-	if project.DefaultBucketID != 0 {
-		return project.DefaultBucketID, nil
+func getDefaultBucketID(s *xorm.Session, view *ProjectView) (bucketID int64, err error) {
+	if view.DefaultBucketID != 0 {
+		return view.DefaultBucketID, nil
 	}
 
 	bucket := &Bucket{}
 	_, err = s.
-		Where("project_id = ?", project.ID).
+		Where("project_view_id = ?", view.ID).
 		OrderBy("position asc").
 		Get(bucket)
 	if err != nil {
@@ -369,7 +369,7 @@ func (b *Bucket) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Get the default bucket
-	p, err := GetProjectSimpleByID(s, b.ProjectID)
+	p, err := GetProjectViewByID(s, b.ProjectViewID, b.ProjectID)
 	if err != nil {
 		return
 	}

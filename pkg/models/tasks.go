@@ -648,10 +648,10 @@ func checkBucketLimit(s *xorm.Session, t *Task, bucket *Bucket) (err error) {
 }
 
 // Contains all the task logic to figure out what bucket to use for this task.
-func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, doCheckBucketLimit bool, project *Project) (targetBucket *Bucket, err error) {
+func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, doCheckBucketLimit bool, view *ProjectView) (targetBucket *Bucket, err error) {
 
-	if project == nil {
-		project, err = GetProjectSimpleByID(s, task.ProjectID)
+	if view == nil {
+		view, err = GetProjectViewByID(s, view.ID, task.ProjectID)
 		if err != nil {
 			return nil, err
 		}
@@ -660,7 +660,7 @@ func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, doCheckBucke
 	var bucket *Bucket
 	if task.Done && originalTask != nil &&
 		(!originalTask.Done || task.ProjectID != originalTask.ProjectID) {
-		task.BucketID = project.DoneBucketID
+		task.BucketID = view.DoneBucketID
 	}
 
 	if task.BucketID == 0 && originalTask != nil && originalTask.BucketID != 0 {
@@ -672,7 +672,7 @@ func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, doCheckBucke
 	// because then we have it already updated to the done bucket.
 	if task.BucketID == 0 ||
 		(originalTask != nil && task.ProjectID != 0 && originalTask.ProjectID != task.ProjectID && !task.Done) {
-		task.BucketID, err = getDefaultBucketID(s, project)
+		task.BucketID, err = getDefaultBucketID(s, view)
 		if err != nil {
 			return
 		}
@@ -699,7 +699,7 @@ func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, doCheckBucke
 		}
 	}
 
-	if bucket.ID == project.DoneBucketID && originalTask != nil && !originalTask.Done {
+	if bucket.ID == view.DoneBucketID && originalTask != nil && !originalTask.Done {
 		task.Done = true
 	}
 
@@ -869,7 +869,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	targetBucket, err := setTaskBucket(s, t, &ot, t.BucketID != 0 && t.BucketID != ot.BucketID, project)
+	targetBucket, err := setTaskBucket(s, t, &ot, t.BucketID != 0 && t.BucketID != ot.BucketID, nil)
 	if err != nil {
 		return err
 	}

@@ -133,6 +133,10 @@ type ProjectView struct {
 	BucketConfigurationMode BucketConfigurationModeKind `xorm:"default 0" json:"bucket_configuration_mode"`
 	// When the bucket configuration mode is not `manual`, this field holds the options of that configuration.
 	BucketConfiguration []*ProjectViewBucketConfiguration `xorm:"json" json:"bucket_configuration"`
+	// The ID of the bucket where new tasks without a bucket are added to. By default, this is the leftmost bucket in a view.
+	DefaultBucketID int64 `xorm:"bigint INDEX null" json:"default_bucket_id"`
+	// If tasks are moved to the done bucket, they are marked as done. If they are marked as done individually, they are moved into the done bucket.
+	DoneBucketID int64 `xorm:"bigint INDEX null" json:"done_bucket_id"`
 
 	// A timestamp when this view was updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`
