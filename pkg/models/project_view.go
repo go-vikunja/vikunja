@@ -287,6 +287,7 @@ func (p *ProjectView) Update(s *xorm.Session, _ web.Auth) (err error) {
 }
 
 func GetProjectViewByIDAndProject(s *xorm.Session, id, projectID int64) (view *ProjectView, err error) {
+	view = &ProjectView{}
 	exists, err := s.
 		Where("id = ? AND project_id = ?", id, projectID).
 		NoAutoCondition().
