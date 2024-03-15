@@ -112,7 +112,7 @@ type Task struct {
 	// A timestamp when this task was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`
 
-	// BucketID is the ID of the kanban bucket this task belongs to.
+	// Deprecated: use the id via the separate entity.
 	BucketID int64 `xorm:"bigint null" json:"bucket_id"`
 
 	// The position of the task - any task project can be sorted as usual by this parameter.
