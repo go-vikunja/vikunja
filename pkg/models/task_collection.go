@@ -74,7 +74,7 @@ func validateTaskField(fieldName string) error {
 	return ErrInvalidTaskField{TaskField: fieldName}
 }
 
-func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskSearchOptions, err error) {
+func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectView) (opts *taskSearchOptions, err error) {
 	if len(tf.SortByArr) > 0 {
 		tf.SortBy = append(tf.SortBy, tf.SortByArr...)
 	}
@@ -93,6 +93,10 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection) (opts *taskSearchOption
 		// Taken from https://stackoverflow.com/a/27252199/10924593
 		if len(tf.OrderBy) > i {
 			param.orderBy = getSortOrderFromString(tf.OrderBy[i])
+		}
+
+		if s == taskPropertyPosition && projectView != nil {
+			param.projectViewID = projectView.ID
 		}
 
 		// Param validation
@@ -177,14 +181,16 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			return nil, 0, 0, err
 		}
 
-		if tf.Filter != "" {
-			tf.Filter = "(" + tf.Filter + ") && (" + view.Filter + ")"
-		} else {
-			tf.Filter = view.Filter
+		if view.Filter != "" {
+			if tf.Filter != "" {
+				tf.Filter = "(" + tf.Filter + ") && (" + view.Filter + ")"
+			} else {
+				tf.Filter = view.Filter
+			}
 		}
 	}
 
-	opts, err := getTaskFilterOptsFromCollection(tf)
+	opts, err := getTaskFilterOptsFromCollection(tf, view)
 	if err != nil {
 		return nil, 0, 0, err
 	}
