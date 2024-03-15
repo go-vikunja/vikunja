@@ -19,8 +19,6 @@ package models
 import (
 	"context"
 	"encoding/json"
-	"github.com/typesense/typesense-go/typesense/api"
-	"github.com/typesense/typesense-go/typesense/api/pointer"
 	"strconv"
 	"time"
 
@@ -532,15 +530,6 @@ func (l *AddTaskToTypesense) Handle(msg *message.Message) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 	ttask, err := getTypesenseTaskForTask(s, event.Task, nil)
-	if err != nil {
-		return err
-	}
-
-	_, err = typesenseClient.Collection("tasks").
-		Documents().
-		Delete(context.Background(), &api.DeleteDocumentsParams{
-			FilterBy: pointer.String("task_id:" + strconv.FormatInt(event.Task.ID, 10)),
-		})
 	if err != nil {
 		return err
 	}

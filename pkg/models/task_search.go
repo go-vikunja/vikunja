@@ -444,8 +444,8 @@ func (t *typesenseTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, 
 		}
 
 		if param.sortBy == taskPropertyPosition {
-			filterBy = append(filterBy, "project_view_id: "+strconv.FormatInt(param.projectViewID, 10))
-			break
+			param.sortBy = "positions.view_" + strconv.FormatInt(param.projectViewID, 10)
+			continue
 		}
 
 		sortbyFields = append(sortbyFields, param.sortBy+"(missing_values:last):"+param.orderBy.String())
