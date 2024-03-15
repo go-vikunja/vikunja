@@ -445,7 +445,6 @@ func convertTaskToTypesenseTask(task *Task) *typesenseTask {
 		Created:                task.Created.UTC().Unix(),
 		Updated:                task.Updated.UTC().Unix(),
 		BucketID:               task.BucketID,
-		Position:               task.Position,
 		CreatedByID:            task.CreatedByID,
 		Reminders:              task.Reminders,
 		Assignees:              task.Assignees,

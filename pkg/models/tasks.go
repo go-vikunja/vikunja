@@ -117,11 +117,7 @@ type Task struct {
 	BucketID int64 `xorm:"bigint null" json:"bucket_id"`
 
 	// The position of the task - any task project can be sorted as usual by this parameter.
-	// When accessing tasks via kanban buckets, this is primarily used to sort them based on a range
-	// We're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).
-	// You would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.
-	// A 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task
-	// which also leaves a lot of room for rearranging and sorting later.
+	// When accessing tasks via views with buckets, this is primarily used to sort them based on a range.
 	// Positions are always saved per view. They will automatically be set if you request the tasks through a view
 	// endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
 	Position float64 `xorm:"-" json:"position"`
@@ -736,18 +732,6 @@ func calculateDefaultPosition(entityID int64, position float64) float64 {
 	return position
 }
 
-func (t *Task) setTaskPosition(s *xorm.Session, position float64, view *ProjectView) (err error) {
-
-	pos := &TaskPosition{
-		TaskID:        t.ID,
-		ProjectViewID: view.ID,
-		Position:      calculateDefaultPosition(t.Index, position),
-	}
-
-	_, err = s.Insert(pos)
-	return
-}
-
 func getNextTaskIndex(s *xorm.Session, projectID int64) (nextIndex int64, err error) {
 	latestTask := &Task{}
 	_, err = s.
@@ -823,6 +807,8 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 		return err
 	}
 
+	positions := []*TaskPosition{}
+
 	for _, view := range views {
 
 		// Get the default bucket and move the task there
@@ -831,10 +817,16 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 			return
 		}
 
-		err = t.setTaskPosition(s, t.Position, view)
-		if err != nil {
-			return
-		}
+		positions = append(positions, &TaskPosition{
+			TaskID:        t.ID,
+			ProjectViewID: view.ID,
+			Position:      calculateDefaultPosition(t.Index, t.Position),
+		})
+	}
+
+	_, err = s.Insert(&positions)
+	if err != nil {
+		return
 	}
 
 	t.CreatedBy = createdBy
@@ -938,11 +930,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		err = setTaskBucket(s, t, &ot, view, taskBucket)
 		if err != nil {
 			return err
-		}
-
-		err = t.setTaskPosition(s, t.Position, view)
-		if err != nil {
-			return
 		}
 	}
 
@@ -1086,10 +1073,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	if t.PercentDone == 0 {
 		ot.PercentDone = 0
 	}
-	// Position
-	if t.Position == 0 {
-		ot.Position = 0
-	}
 	// Repeat from current date
 	if t.RepeatMode == TaskRepeatModeDefault {
 		ot.RepeatMode = TaskRepeatModeDefault
@@ -1119,7 +1102,6 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 	t.Updated = nt.Updated
-	t.Position = nt.Position
 
 	doer, _ := user.GetFromAuth(a)
 	err = events.Dispatch(&TaskUpdatedEvent{
