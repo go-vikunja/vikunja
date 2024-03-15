@@ -151,6 +151,14 @@ func (p *ProjectView) TableName() string {
 	return "project_views"
 }
 
+func getViewsForProject(s *xorm.Session, projectID int64) (views []*ProjectView, err error) {
+	views = []*ProjectView{}
+	err = s.
+		Where("project_id = ?", projectID).
+		Find(&views)
+	return
+}
+
 // ReadAll gets all project views
 // @Summary Get all project views for a project
 // @Description Returns all project views for a sepcific project
@@ -173,12 +181,9 @@ func (p *ProjectView) ReadAll(s *xorm.Session, a web.Auth, _ string, _ int, _ in
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
-	projectViews := []*ProjectView{}
-	err = s.
-		Where("project_id = ?", p.ProjectID).
-		Find(&projectViews)
+	projectViews, err := getViewsForProject(s, p.ProjectID)
 	if err != nil {
-		return
+		return nil, 0, 0, err
 	}
 
 	totalCount, err := s.

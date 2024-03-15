@@ -33,8 +33,9 @@ func (task20240315110428) TableName() string {
 }
 
 type taskBuckets20240315110428 struct {
-	BucketID int64 `xorm:"bigint not null index"`
-	TaskID   int64 `xorm:"bigint not null index"`
+	BucketID      int64 `xorm:"bigint not null index"`
+	TaskID        int64 `xorm:"bigint not null index"`
+	ProjectViewID int64 `xorm:"bigint not null index"`
 }
 
 func (taskBuckets20240315110428) TableName() string {
