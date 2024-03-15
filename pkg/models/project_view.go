@@ -295,7 +295,7 @@ func GetProjectViewByID(s *xorm.Session, id, projectID int64) (view *ProjectView
 	return
 }
 
-func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth) (err error) {
+func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth, createBacklogBucket bool) (err error) {
 	list := &ProjectView{
 		ProjectID: project.ID,
 		Title:     "List",
@@ -336,5 +336,18 @@ func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth)
 		Position:  400,
 	}
 	err = kanban.Create(s, a)
+	if err != nil {
+		return
+	}
+
+	if createBacklogBucket {
+		// Create a new first bucket for this project
+		b := &Bucket{
+			ProjectViewID: kanban.ID,
+			Title:         "Backlog",
+		}
+		err = b.Create(s, a)
+	}
+
 	return
 }

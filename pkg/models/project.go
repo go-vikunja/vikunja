@@ -777,19 +777,7 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 		}
 	}
 
-	if createBacklogBucket {
-		// Create a new first bucket for this project
-		b := &Bucket{
-			ProjectID: project.ID,
-			Title:     "Backlog",
-		}
-		err = b.Create(s, auth)
-		if err != nil {
-			return
-		}
-	}
-
-	err = CreateDefaultViewsForProject(s, project, auth)
+	err = CreateDefaultViewsForProject(s, project, auth, createBacklogBucket)
 	if err != nil {
 		return
 	}

@@ -35,6 +35,8 @@ type Bucket struct {
 	Title string `xorm:"text not null" valid:"required" minLength:"1" json:"title"`
 	// The project this bucket belongs to.
 	ProjectID int64 `xorm:"bigint not null" json:"project_id" param:"project"`
+	// The project view this bucket belongs to.
+	ProjectViewID int64 `xorm:"bigint not null" json:"project_view_id" param:"view"`
 	// All tasks which belong to this bucket.
 	Tasks []*Task `xorm:"-" json:"tasks"`
 
@@ -167,13 +169,13 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, opts *taskSear
 	if view.BucketConfigurationMode == BucketConfigurationModeFilter {
 		for id, bc := range view.BucketConfiguration {
 			buckets = append(buckets, &Bucket{
-				ID:          int64(id),
-				Title:       bc.Title,
-				ProjectID:   view.ProjectID,
-				Position:    float64(id),
-				CreatedByID: auth.GetID(),
-				Created:     time.Now(),
-				Updated:     time.Now(),
+				ID:            int64(id),
+				Title:         bc.Title,
+				ProjectViewID: view.ID,
+				Position:      float64(id),
+				CreatedByID:   auth.GetID(),
+				Created:       time.Now(),
+				Updated:       time.Now(),
 			})
 		}
 	}
