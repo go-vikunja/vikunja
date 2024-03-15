@@ -286,8 +286,7 @@ services:
       - "80:80"
       - "443:443"
     depends_on:
-      - api
-      - frontend
+      - vikunja
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
 ```
