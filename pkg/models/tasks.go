@@ -112,7 +112,8 @@ type Task struct {
 	// A timestamp when this task was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`
 
-	// Deprecated: use the id via the separate entity.
+	// The bucket id. Will only be populated when the task is accessed via a view with buckets.
+	// Can be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.
 	BucketID int64 `xorm:"bigint null" json:"bucket_id"`
 
 	// The position of the task - any task project can be sorted as usual by this parameter.
@@ -620,17 +621,6 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth) (e
 	return
 }
 
-func checkBucketAndTaskBelongToSameProject(fullTask *Task, bucket *Bucket) (err error) {
-	if fullTask.ProjectID != bucket.ProjectID {
-		return ErrBucketDoesNotBelongToProject{
-			ProjectID: fullTask.ProjectID,
-			BucketID:  fullTask.BucketID,
-		}
-	}
-
-	return
-}
-
 // Checks if adding a new task would exceed the bucket limit
 func checkBucketLimit(s *xorm.Session, t *Task, bucket *Bucket) (err error) {
 	if bucket.Limit > 0 {
@@ -693,7 +683,12 @@ func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, view *Projec
 	}
 
 	// If there is a bucket set, make sure they belong to the same project as the task
-	err = checkBucketAndTaskBelongToSameProject(task, bucket)
+	if task.ProjectID != bucket.ProjectID {
+		return ErrBucketDoesNotBelongToProject{
+			ProjectID: task.ProjectID,
+			BucketID:  bucket.ID,
+		}
+	}
 	if err != nil {
 		return
 	}
@@ -918,13 +913,26 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	for _, view := range views {
-		// bucket id mitgeben, dann den view zu dem bucket suchen und updaten wenn nötig
+	buckets := make(map[int64]*Bucket)
+	err = s.In("project_project_id",
+		builder.Select("id").
+			From("project_views").
+			Where(builder.Eq{"project_id": t.ProjectID}),
+	).
+		Find(&buckets)
 
+	for _, view := range views {
 		taskBucket := &TaskBucket{
-			BucketID:      t.BucketID,
 			TaskID:        t.ID,
 			ProjectViewID: view.ID,
+		}
+
+		// Only update the bucket when the current view
+		if t.BucketID != 0 {
+			bucket, has := buckets[t.BucketID]
+			if has && bucket.ProjectViewID == view.ID {
+				taskBucket.BucketID = t.BucketID
+			}
 		}
 
 		err = setTaskBucket(s, t, &ot, view, taskBucket)
