@@ -323,7 +323,7 @@ const SORT_BY_DEFAULT: SortBy = {
 const activeColumns = useStorage('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT})
 const sortBy = useStorage<SortBy>('tableViewSortBy', {...SORT_BY_DEFAULT})
 
-const taskList = useTaskList(() => projectId, sortBy.value)
+const taskList = useTaskList(() => projectId, () => view.id, sortBy.value)
 
 const {
 	loading,
