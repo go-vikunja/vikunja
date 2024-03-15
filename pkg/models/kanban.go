@@ -213,7 +213,7 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, opts *taskSear
 
 	opts.sortby = []*sortParam{
 		{
-			projectViewID: view.ProjectID,
+			projectViewID: view.ID,
 			orderBy:       orderAscending,
 			sortBy:        taskPropertyPosition,
 		},
@@ -258,6 +258,10 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, opts *taskSear
 		ts, _, total, err := getRawTasksForProjects(s, []*Project{{ID: view.ProjectID}}, auth, opts)
 		if err != nil {
 			return nil, err
+		}
+
+		for _, t := range ts {
+			t.BucketID = bucket.ID
 		}
 
 		bucket.Count = total

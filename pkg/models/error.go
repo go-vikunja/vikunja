@@ -1527,27 +1527,27 @@ func (err ErrBucketDoesNotExist) HTTPError() web.HTTPError {
 	}
 }
 
-// ErrBucketDoesNotBelongToProject represents an error where a kanban bucket does not belong to a project
-type ErrBucketDoesNotBelongToProject struct {
-	BucketID  int64
-	ProjectID int64
+// ErrBucketDoesNotBelongToProjectView represents an error where a kanban bucket does not belong to a project
+type ErrBucketDoesNotBelongToProjectView struct {
+	BucketID      int64
+	ProjectViewID int64
 }
 
-// IsErrBucketDoesNotBelongToProject checks if an error is ErrBucketDoesNotBelongToProject.
+// IsErrBucketDoesNotBelongToProject checks if an error is ErrBucketDoesNotBelongToProjectView.
 func IsErrBucketDoesNotBelongToProject(err error) bool {
-	_, ok := err.(ErrBucketDoesNotBelongToProject)
+	_, ok := err.(ErrBucketDoesNotBelongToProjectView)
 	return ok
 }
 
-func (err ErrBucketDoesNotBelongToProject) Error() string {
-	return fmt.Sprintf("Bucket does not not belong to project [BucketID: %d, ProjectID: %d]", err.BucketID, err.ProjectID)
+func (err ErrBucketDoesNotBelongToProjectView) Error() string {
+	return fmt.Sprintf("Bucket does not not belong to project view [BucketID: %d, ProjectViewID: %d]", err.BucketID, err.ProjectViewID)
 }
 
 // ErrCodeBucketDoesNotBelongToProject holds the unique world-error code of this error
 const ErrCodeBucketDoesNotBelongToProject = 10002
 
 // HTTPError holds the http error description
-func (err ErrBucketDoesNotBelongToProject) HTTPError() web.HTTPError {
+func (err ErrBucketDoesNotBelongToProjectView) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeBucketDoesNotBelongToProject,

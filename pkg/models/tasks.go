@@ -114,7 +114,7 @@ type Task struct {
 
 	// The bucket id. Will only be populated when the task is accessed via a view with buckets.
 	// Can be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.
-	BucketID int64 `xorm:"bigint null" json:"bucket_id"`
+	BucketID int64 `xorm:"<-" json:"bucket_id"`
 
 	// The position of the task - any task project can be sorted as usual by this parameter.
 	// When accessing tasks via views with buckets, this is primarily used to sort them based on a range.
@@ -204,6 +204,9 @@ func (t *Task) ReadAll(_ *xorm.Session, _ web.Auth, _ string, _ int, _ int) (res
 
 func getFilterCond(f *taskFilter, includeNulls bool) (cond builder.Cond, err error) {
 	field := "`" + f.field + "`"
+	if f.field == taskPropertyBucketID {
+		field = "task_buckets.`bucket_id`"
+	}
 	switch f.comparator {
 	case taskFilterComparatorEquals:
 		cond = &builder.Eq{field: f.value}
@@ -633,15 +636,16 @@ func checkBucketLimit(s *xorm.Session, t *Task, bucket *Bucket) (err error) {
 }
 
 // Contains all the task logic to figure out what bucket to use for this task.
-func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, view *ProjectView, targetBucket *TaskBucket) (err error) {
+func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, view *ProjectView, targetBucketID int64) (err error) {
+	if view.BucketConfigurationMode == BucketConfigurationModeNone {
+		return
+	}
 
 	var shouldChangeBucket = true
-	if targetBucket == nil {
-		targetBucket = &TaskBucket{
-			BucketID:      0,
-			TaskID:        task.ID,
-			ProjectViewID: view.ID,
-		}
+	targetBucket := &TaskBucket{
+		BucketID:      targetBucketID,
+		TaskID:        task.ID,
+		ProjectViewID: view.ID,
 	}
 
 	oldTaskBucket := &TaskBucket{}
@@ -678,14 +682,11 @@ func setTaskBucket(s *xorm.Session, task *Task, originalTask *Task, view *Projec
 	}
 
 	// If there is a bucket set, make sure they belong to the same project as the task
-	if task.ProjectID != bucket.ProjectID {
-		return ErrBucketDoesNotBelongToProject{
-			ProjectID: task.ProjectID,
-			BucketID:  bucket.ID,
+	if view.ID != bucket.ProjectViewID {
+		return ErrBucketDoesNotBelongToProjectView{
+			ProjectViewID: view.ID,
+			BucketID:      bucket.ID,
 		}
-	}
-	if err != nil {
-		return
 	}
 
 	// Check the bucket limit
@@ -811,7 +812,7 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool) (err
 	for _, view := range views {
 
 		// Get the default bucket and move the task there
-		err = setTaskBucket(s, t, nil, view, &TaskBucket{})
+		err = setTaskBucket(s, t, nil, view, 0)
 		if err != nil {
 			return
 		}
@@ -913,20 +914,16 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		Find(&buckets)
 
 	for _, view := range views {
-		taskBucket := &TaskBucket{
-			TaskID:        t.ID,
-			ProjectViewID: view.ID,
-		}
-
 		// Only update the bucket when the current view
+		var targetBucketID int64
 		if t.BucketID != 0 {
 			bucket, has := buckets[t.BucketID]
 			if has && bucket.ProjectViewID == view.ID {
-				taskBucket.BucketID = t.BucketID
+				targetBucketID = t.BucketID
 			}
 		}
 
-		err = setTaskBucket(s, t, &ot, view, taskBucket)
+		err = setTaskBucket(s, t, &ot, view, targetBucketID)
 		if err != nil {
 			return err
 		}

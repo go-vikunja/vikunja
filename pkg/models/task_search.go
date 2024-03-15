@@ -209,6 +209,14 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		return nil, 0, err
 	}
 
+	var joinTaskBuckets bool
+	for _, filter := range opts.parsedFilters {
+		if filter.field == taskPropertyBucketID {
+			joinTaskBuckets = true
+			break
+		}
+	}
+
 	filterCond, err := convertFiltersToDBFilterCond(opts.parsedFilters, opts.filterIncludeNulls)
 	if err != nil {
 		return nil, 0, err
@@ -265,20 +273,24 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		}
 	}
 
+	if joinTaskBuckets {
+		query = query.Join("LEFT", "task_buckets", "task_buckets.task_id = tasks.id")
+	}
+
 	tasks = []*Task{}
-	err = query.OrderBy(orderby).Find(&tasks)
+	err = query.
+		OrderBy(orderby).
+		Find(&tasks)
 	if err != nil {
 		return nil, totalCount, err
 	}
 
 	queryCount := d.s.Where(cond)
+	if joinTaskBuckets {
+		queryCount = queryCount.Join("LEFT", "task_buckets", "task_buckets.task_id = tasks.id")
+	}
 	totalCount, err = queryCount.
 		Count(&Task{})
-	if err != nil {
-		return nil, totalCount, err
-
-	}
-
 	return
 }
 
