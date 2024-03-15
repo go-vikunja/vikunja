@@ -244,7 +244,13 @@ func ReindexAllTasks() (err error) {
 }
 
 func getTypesenseTaskForTask(s *xorm.Session, task *Task, projectsCache map[int64]*Project) (ttask *typesenseTask, err error) {
-	ttask = convertTaskToTypesenseTask(task)
+	positions := []*TaskPosition{}
+	err = s.Where("task_id = ?", task.ID).Find(&positions)
+	if err != nil {
+		return
+	}
+
+	ttask = convertTaskToTypesenseTask(task, positions)
 
 	var p *Project
 	if projectsCache == nil {
@@ -411,8 +417,6 @@ type typesenseTask struct {
 	CoverImageAttachmentID int64       `json:"cover_image_attachment_id"`
 	Created                int64       `json:"created"`
 	Updated                int64       `json:"updated"`
-	BucketID               int64       `json:"bucket_id"`
-	Position               float64     `json:"position"`
 	CreatedByID            int64       `json:"created_by_id"`
 	Reminders              interface{} `json:"reminders"`
 	Assignees              interface{} `json:"assignees"`
@@ -420,9 +424,13 @@ type typesenseTask struct {
 	//RelatedTasks           interface{} `json:"related_tasks"` // TODO
 	Attachments interface{} `json:"attachments"`
 	Comments    interface{} `json:"comments"`
+	Positions   []*struct {
+		Position      float64 `json:"position"`
+		ProjectViewID int64   `json:"project_view_id"`
+	} `json:"positions"`
 }
 
-func convertTaskToTypesenseTask(task *Task) *typesenseTask {
+func convertTaskToTypesenseTask(task *Task, positions []*TaskPosition) *typesenseTask {
 	tt := &typesenseTask{
 		ID:                     fmt.Sprintf("%d", task.ID),
 		Title:                  task.Title,
@@ -444,7 +452,6 @@ func convertTaskToTypesenseTask(task *Task) *typesenseTask {
 		CoverImageAttachmentID: task.CoverImageAttachmentID,
 		Created:                task.Created.UTC().Unix(),
 		Updated:                task.Updated.UTC().Unix(),
-		BucketID:               task.BucketID,
 		CreatedByID:            task.CreatedByID,
 		Reminders:              task.Reminders,
 		Assignees:              task.Assignees,
@@ -464,6 +471,16 @@ func convertTaskToTypesenseTask(task *Task) *typesenseTask {
 	}
 	if task.EndDate.IsZero() {
 		tt.EndDate = nil
+	}
+
+	for _, position := range positions {
+		tt.Positions = append(tt.Positions, &struct {
+			Position      float64 `json:"position"`
+			ProjectViewID int64   `json:"project_view_id"`
+		}{
+			Position:      position.Position,
+			ProjectViewID: position.ProjectViewID,
+		})
 	}
 
 	return tt
