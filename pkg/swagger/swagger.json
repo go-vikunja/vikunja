@@ -1883,150 +1883,6 @@
                 }
             }
         },
-        "/projects/{id}/buckets": {
-            "get": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Returns all kanban buckets with belong to a project including their tasks. Buckets are always sorted by their `position` in ascending order. Tasks are sorted by their `kanban_position` in ascending order.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "project"
-                ],
-                "summary": "Get all kanban buckets of a project",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Project Id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "The page number for tasks. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "The maximum number of tasks per bucket per page. This parameter is limited by the configured maximum of items per page.",
-                        "name": "per_page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Search tasks by task text.",
-                        "name": "s",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature.",
-                        "name": "filter",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The time zone which should be used for date match (statements like ",
-                        "name": "filter_timezone",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`.",
-                        "name": "filter_include_nulls",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The buckets with their tasks",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Bucket"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Creates a new kanban bucket on a project.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "project"
-                ],
-                "summary": "Create a new bucket",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Project Id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "The bucket object",
-                        "name": "bucket",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Bucket"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The created bucket object.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Bucket"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid bucket object provided.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "The project does not exist.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
         "/projects/{id}/projectusers": {
             "get": {
                 "security": [
@@ -2092,98 +1948,6 @@
             }
         },
         "/projects/{id}/tasks": {
-            "get": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Returns all tasks for the current project.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "task"
-                ],
-                "summary": "Get tasks in a project",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "The project ID.",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
-                        "name": "per_page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Search tasks by task text.",
-                        "name": "s",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`.",
-                        "name": "sort_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`.",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature.",
-                        "name": "filter",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "The time zone which should be used for date match (statements like ",
-                        "name": "filter_timezone",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`.",
-                        "name": "filter_include_nulls",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The tasks",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Task"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            },
             "put": {
                 "security": [
                     {
@@ -2523,6 +2287,229 @@
                 }
             }
         },
+        "/projects/{id}/views/{view}/buckets": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns all kanban buckets which belong to that project. Buckets are always sorted by their `position` in ascending order. To get all buckets with their tasks, use the tasks endpoint with a kanban view.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Get all kanban buckets of a project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Project view ID",
+                        "name": "view",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The buckets",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Bucket"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Creates a new kanban bucket on a project.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Create a new bucket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Project view ID",
+                        "name": "view",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The bucket object",
+                        "name": "bucket",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Bucket"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created bucket object.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Bucket"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid bucket object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The project does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{id}/views/{view}/tasks": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns all tasks for the current project.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Get tasks in a project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The project ID.",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The project view ID.",
+                        "name": "view",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The page number. Used for pagination. If not provided, the first page of results is returned.",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page.",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search tasks by task text.",
+                        "name": "s",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The sorting parameter. You can pass this multiple times to get the tasks ordered by multiple different parametes, along with `order_by`. Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`, `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`, `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default is `id`.",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The ordering parameter. Possible values to order by are `asc` or `desc`. Default is `asc`.",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature.",
+                        "name": "filter",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The time zone which should be used for date match (statements like ",
+                        "name": "filter_timezone",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`.",
+                        "name": "filter_include_nulls",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The tasks",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Task"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/projects/{id}/webhooks": {
             "get": {
                 "security": [
@@ -2734,131 +2721,6 @@
                     },
                     "404": {
                         "description": "The webhok target does not exist.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/projects/{projectID}/buckets/{bucketID}": {
-            "post": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Updates an existing kanban bucket.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "project"
-                ],
-                "summary": "Update an existing bucket",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Project Id",
-                        "name": "projectID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Bucket Id",
-                        "name": "bucketID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "The bucket object",
-                        "name": "bucket",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Bucket"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The created bucket object.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Bucket"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid bucket object provided.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "The bucket does not exist.",
-                        "schema": {
-                            "$ref": "#/definitions/web.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "JWTKeyAuth": []
-                    }
-                ],
-                "description": "Deletes an existing kanban bucket and dissociates all of its task. It does not delete any tasks. You cannot delete the last bucket on a project.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "project"
-                ],
-                "summary": "Deletes an existing bucket",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Project Id",
-                        "name": "projectID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Bucket Id",
-                        "name": "bucketID",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successfully deleted.",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "404": {
-                        "description": "The bucket does not exist.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -3192,6 +3054,145 @@
                 }
             }
         },
+        "/projects/{projectID}/views/{view}/buckets/{bucketID}": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Updates an existing kanban bucket.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Update an existing bucket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project Id",
+                        "name": "projectID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Bucket Id",
+                        "name": "bucketID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Project view ID",
+                        "name": "view",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The bucket object",
+                        "name": "bucket",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Bucket"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created bucket object.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Bucket"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid bucket object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "The bucket does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Deletes an existing kanban bucket and dissociates all of its task. It does not delete any tasks. You cannot delete the last bucket on a project.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Deletes an existing bucket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project Id",
+                        "name": "projectID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Bucket Id",
+                        "name": "bucketID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Project view ID",
+                        "name": "view",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully deleted.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "404": {
+                        "description": "The bucket does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/projects/{project}/shares": {
             "get": {
                 "security": [
@@ -3433,6 +3434,281 @@
                     },
                     "404": {
                         "description": "Share Link not found.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{project}/views": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns all project views for a sepcific project",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Get all project views for a project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "project",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The project views",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ProjectView"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Create a project view in a specific project.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Create a project view",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "project",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The project view you want to create.",
+                        "name": "view",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ProjectView"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The created project view",
+                        "schema": {
+                            "$ref": "#/definitions/models.ProjectView"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to create a project view",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{project}/views/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns a project view by its ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Get one project view",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "project",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Project View ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The project view",
+                        "schema": {
+                            "$ref": "#/definitions/models.ProjectView"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to this project view",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Updates a project view.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Updates a project view",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "project",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Project View ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The project view with updated values you want to change.",
+                        "name": "view",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ProjectView"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The updated project view.",
+                        "schema": {
+                            "$ref": "#/definitions/models.ProjectView"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid project view object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Deletes a project view.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "project"
+                ],
+                "summary": "Delete a project view",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "project",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Project View ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The project view was successfully deleted.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the project view",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -4250,6 +4526,64 @@
                         "description": "The task does not exist.",
                         "schema": {
                             "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/tasks/{id}/position": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Updates a task position.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Updates a task position",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The task position with updated values you want to change.",
+                        "name": "view",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.TaskPosition"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The updated task position.",
+                        "schema": {
+                            "$ref": "#/definitions/models.TaskPosition"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid task position object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "500": {
@@ -7446,8 +7780,8 @@
                     "description": "The position this bucket has when querying all buckets. See the tasks.position property on how to use this.",
                     "type": "number"
                 },
-                "project_id": {
-                    "description": "The project this bucket belongs to.",
+                "project_view_id": {
+                    "description": "The project view this bucket belongs to.",
                     "type": "integer"
                 },
                 "tasks": {
@@ -7467,6 +7801,19 @@
                     "type": "string"
                 }
             }
+        },
+        "models.BucketConfigurationModeKind": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2
+            ],
+            "x-enum-varnames": [
+                "BucketConfigurationModeNone",
+                "BucketConfigurationModeManual",
+                "BucketConfigurationModeFilter"
+            ]
         },
         "models.BulkAssignees": {
             "type": "object",
@@ -7498,7 +7845,7 @@
                     }
                 },
                 "bucket_id": {
-                    "description": "BucketID is the ID of the kanban bucket this task belongs to.",
+                    "description": "The bucket id. Will only be populated when the task is accessed via a view with buckets.\nCan be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.",
                     "type": "integer"
                 },
                 "cover_image_attachment_id": {
@@ -7558,10 +7905,6 @@
                     "description": "True if a task is a favorite task. Favorite tasks show up in a separate \"Important\" project. This value depends on the user making the call to the api.",
                     "type": "boolean"
                 },
-                "kanban_position": {
-                    "description": "The position of tasks in the kanban board. See the docs for the `position` property on how to use this.",
-                    "type": "number"
-                },
                 "labels": {
                     "description": "An array of labels which are associated with this task.",
                     "type": "array",
@@ -7574,7 +7917,7 @@
                     "type": "number"
                 },
                 "position": {
-                    "description": "The position of the task - any task project can be sorted as usual by this parameter.\nWhen accessing tasks via kanban buckets, this is primarily used to sort them based on a range\nWe're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).\nYou would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.\nA 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task\nwhich also leaves a lot of room for rearranging and sorting later.",
+                    "description": "The position of the task - any task project can be sorted as usual by this parameter.\nWhen accessing tasks via views with buckets, this is primarily used to sort them based on a range.\nPositions are always saved per view. They will automatically be set if you request the tasks through a view\nendpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.",
                     "type": "number"
                 },
                 "priority": {
@@ -7823,16 +8166,12 @@
                     "description": "A timestamp when this project was created. You cannot change this value.",
                     "type": "string"
                 },
-                "default_bucket_id": {
-                    "description": "The ID of the bucket where new tasks without a bucket are added to. By default, this is the leftmost bucket in a project.",
-                    "type": "integer"
-                },
                 "description": {
                     "description": "The description of the project.",
                     "type": "string"
                 },
                 "done_bucket_id": {
-                    "description": "If tasks are moved to the done bucket, they are marked as done. If they are marked as done individually, they are moved into the done bucket.",
+                    "description": "Deprecated: If tasks are moved to the done bucket, they are marked as done. If they are marked as done individually, they are moved into the done bucket.",
                     "type": "integer"
                 },
                 "hex_color": {
@@ -7890,6 +8229,12 @@
                 "updated": {
                     "description": "A timestamp when this project was last updated. You cannot change this value.",
                     "type": "string"
+                },
+                "views": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ProjectView"
+                    }
                 }
             }
         },
@@ -7940,6 +8285,96 @@
                     "type": "string"
                 }
             }
+        },
+        "models.ProjectView": {
+            "type": "object",
+            "properties": {
+                "bucket_configuration": {
+                    "description": "When the bucket configuration mode is not `manual`, this field holds the options of that configuration.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ProjectViewBucketConfiguration"
+                    }
+                },
+                "bucket_configuration_mode": {
+                    "description": "The bucket configuration mode. Can be `none`, `manual` or `filter`. `manual` allows to move tasks between buckets as you normally would. `filter` creates buckets based on a filter for each bucket.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.BucketConfigurationModeKind"
+                        }
+                    ]
+                },
+                "created": {
+                    "description": "A timestamp when this reaction was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "default_bucket_id": {
+                    "description": "The ID of the bucket where new tasks without a bucket are added to. By default, this is the leftmost bucket in a view.",
+                    "type": "integer"
+                },
+                "done_bucket_id": {
+                    "description": "If tasks are moved to the done bucket, they are marked as done. If they are marked as done individually, they are moved into the done bucket.",
+                    "type": "integer"
+                },
+                "filter": {
+                    "description": "The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The unique numeric id of this view",
+                    "type": "integer"
+                },
+                "position": {
+                    "description": "The position of this view in the list. The list of all views will be sorted by this parameter.",
+                    "type": "number"
+                },
+                "project_id": {
+                    "description": "The project this view belongs to",
+                    "type": "integer"
+                },
+                "title": {
+                    "description": "The title of this view",
+                    "type": "string"
+                },
+                "updated": {
+                    "description": "A timestamp when this view was updated. You cannot change this value.",
+                    "type": "string"
+                },
+                "view_kind": {
+                    "description": "The kind of this view. Can be `list`, `gantt`, `table` or `kanban`.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.ProjectViewKind"
+                        }
+                    ]
+                }
+            }
+        },
+        "models.ProjectViewBucketConfiguration": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ProjectViewKind": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2,
+                3
+            ],
+            "x-enum-varnames": [
+                "ProjectViewKindList",
+                "ProjectViewKindGantt",
+                "ProjectViewKindTable",
+                "ProjectViewKindKanban"
+            ]
         },
         "models.Reaction": {
             "type": "object",
@@ -8154,7 +8589,7 @@
                     }
                 },
                 "bucket_id": {
-                    "description": "BucketID is the ID of the kanban bucket this task belongs to.",
+                    "description": "The bucket id. Will only be populated when the task is accessed via a view with buckets.\nCan be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.",
                     "type": "integer"
                 },
                 "cover_image_attachment_id": {
@@ -8214,10 +8649,6 @@
                     "description": "True if a task is a favorite task. Favorite tasks show up in a separate \"Important\" project. This value depends on the user making the call to the api.",
                     "type": "boolean"
                 },
-                "kanban_position": {
-                    "description": "The position of tasks in the kanban board. See the docs for the `position` property on how to use this.",
-                    "type": "number"
-                },
                 "labels": {
                     "description": "An array of labels which are associated with this task.",
                     "type": "array",
@@ -8230,7 +8661,7 @@
                     "type": "number"
                 },
                 "position": {
-                    "description": "The position of the task - any task project can be sorted as usual by this parameter.\nWhen accessing tasks via kanban buckets, this is primarily used to sort them based on a range\nWe're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).\nYou would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.\nA 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task\nwhich also leaves a lot of room for rearranging and sorting later.",
+                    "description": "The position of the task - any task project can be sorted as usual by this parameter.\nWhen accessing tasks via views with buckets, this is primarily used to sort them based on a range.\nPositions are always saved per view. They will automatically be set if you request the tasks through a view\nendpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.",
                     "type": "number"
                 },
                 "priority": {
@@ -8334,7 +8765,7 @@
             "type": "object",
             "properties": {
                 "filter": {
-                    "description": "The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature.",
+                    "description": "The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation.",
                     "type": "string"
                 },
                 "filter_include_nulls": {
@@ -8377,6 +8808,23 @@
                 },
                 "updated": {
                     "type": "string"
+                }
+            }
+        },
+        "models.TaskPosition": {
+            "type": "object",
+            "properties": {
+                "position": {
+                    "description": "The position of the task - any task project can be sorted as usual by this parameter.\nWhen accessing tasks via kanban buckets, this is primarily used to sort them based on a range\nWe're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).\nYou would calculate the new position between two tasks with something like task3.position = (task2.position - task1.position) / 2.\nA 64-Bit float leaves plenty of room to initially give tasks a position with 2^16 difference to the previous task\nwhich also leaves a lot of room for rearranging and sorting later.\nPositions are always saved per view. They will automatically be set if you request the tasks through a view\nendpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.",
+                    "type": "number"
+                },
+                "project_view_id": {
+                    "description": "The project view this task is related to",
+                    "type": "integer"
+                },
+                "task_id": {
+                    "description": "The ID of the task this position is for",
+                    "type": "integer"
                 }
             }
         },
