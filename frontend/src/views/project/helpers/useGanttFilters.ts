@@ -12,6 +12,7 @@ import type {TaskFilterParams} from '@/services/taskCollection'
 
 import type {DateISO} from '@/types/DateISO'
 import type {DateKebab} from '@/types/DateKebab'
+import type {IProjectView} from '@/modelTypes/IProjectView'
 
 // convenient internal filter object
 export interface GanttFilters {
@@ -88,7 +89,7 @@ export type UseGanttFiltersReturn =
 	ReturnType<typeof useRouteFilters<GanttFilters>> &
 	ReturnType<typeof useGanttTaskList<GanttFilters>>
 
-export function useGanttFilters(route: Ref<RouteLocationNormalized>): UseGanttFiltersReturn {
+export function useGanttFilters(route: Ref<RouteLocationNormalized>, view: IProjectView): UseGanttFiltersReturn {
 	const {
 		filters,
 		hasDefaultFilters,
@@ -108,7 +109,7 @@ export function useGanttFilters(route: Ref<RouteLocationNormalized>): UseGanttFi
 		isLoading,
 		addTask,
 		updateTask,
-	} = useGanttTaskList<GanttFilters>(filters, ganttFiltersToApiParams)
+	} = useGanttTaskList<GanttFilters>(filters, ganttFiltersToApiParams, view)
 
 	return {
 		filters,

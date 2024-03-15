@@ -2,7 +2,7 @@
 	<ProjectWrapper
 		class="project-table"
 		:project-id="projectId"
-		view-name="table"
+		:view
 	>
 		<template #header>
 			<div class="filter-container">
@@ -289,11 +289,14 @@ import {useTaskList} from '@/composables/useTaskList'
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 import AssigneeList from '@/components/tasks/partials/assigneeList.vue'
+import type {IProjectView} from '@/modelTypes/IProjectView'
 
 const {
 	projectId,
+	view,
 } = defineProps<{
 	projectId: IProject['id'],
+	view: IProjectView,
 }>()
 
 const ACTIVE_COLUMNS_DEFAULT = {

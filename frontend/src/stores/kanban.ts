@@ -15,6 +15,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 import type {IBucket} from '@/modelTypes/IBucket'
 import {useAuthStore} from '@/stores/auth'
+import type {IProjectView} from '@/modelTypes/IProjectView'
 
 const TASKS_PER_BUCKET = 25
 
@@ -247,6 +248,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 	async function loadNextTasksForBucket(
 		projectId: IProject['id'],
+		viewId: IProjectView['id'],
 		ps: TaskFilterParams,
 		bucketId: IBucket['id'],
 	) {
@@ -275,7 +277,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		const taskService = new TaskCollectionService()
 		try {
-			const tasks = await taskService.getAll({projectId}, params, page)
+			const tasks = await taskService.getAll({projectId, viewId}, params, page)
 			addTasksToBucket({tasks, bucketId: bucketId})
 			setTasksLoadedForBucketPage({bucketId, page})
 			if (taskService.totalPages <= page) {

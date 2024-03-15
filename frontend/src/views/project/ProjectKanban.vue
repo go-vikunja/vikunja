@@ -2,7 +2,7 @@
 	<ProjectWrapper
 		class="project-kanban"
 		:project-id="projectId"
-		view-name="kanban"
+		:view
 	>
 		<template #header>
 			<div class="filter-container">
@@ -301,11 +301,14 @@ import {isSavedFilter} from '@/services/savedFilter'
 import {success} from '@/message'
 import {useProjectStore} from '@/stores/projects'
 import type {TaskFilterParams} from '@/services/taskCollection'
+import type {IProjectView} from '@/modelTypes/IProjectView'
 
 const {
 	projectId = undefined,
+	view,
 } = defineProps<{
 	projectId: number,
+	view: IProjectView,
 }>()
 
 const DRAG_OPTIONS = {
@@ -424,6 +427,7 @@ function handleTaskContainerScroll(id: IBucket['id'], projectId: IProject['id'],
 
 	kanbanStore.loadNextTasksForBucket(
 		projectId,
+		view.id,
 		params.value,
 		id,
 	)

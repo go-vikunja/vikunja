@@ -37,6 +37,7 @@ const MigrationHandlerComponent = () => import('@/views/migrate/MigrationHandler
 const ProjectList = () => import('@/views/project/ProjectList.vue')
 const ProjectGantt = () => import('@/views/project/ProjectGantt.vue')
 const ProjectTable = () => import('@/views/project/ProjectTable.vue')
+const ProjectView = () => import('@/views/project/ProjectView.vue')
 // If we load the component async, using it as a backdrop view will not work. Instead, everything explodes
 // with an error from the core saying "Cannot read properties of undefined (reading 'parentNode')"
 // Of course, with no clear indicator of where the problem comes from.
@@ -358,6 +359,16 @@ const router = createRouter({
 					params: {projectId: to.params.projectId},
 				}
 			},
+		},
+		{
+			path: '/projects/:projectId/:viewId',
+			name: 'project.view',
+			component: ProjectView,
+			beforeEnter: (to) => saveProjectView(parseInt(to.params.projectId as string), parseInt(to.params.viewId as string)),
+			props: route => ({ 
+				projectId: Number(route.params.projectId as string),
+				viewId: Number(route.params.viewId as string),
+			}),
 		},
 		{
 			path: '/projects/:projectId/list',

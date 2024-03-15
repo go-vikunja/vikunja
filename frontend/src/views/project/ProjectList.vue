@@ -2,7 +2,7 @@
 	<ProjectWrapper
 		class="project-list"
 		:project-id="projectId"
-		view-name="project"
+		:view
 	>
 		<template #header>
 			<div class="filter-container">
@@ -117,11 +117,14 @@ import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
 
 import type {IProject} from '@/modelTypes/IProject'
+import type {IProjectView} from '@/modelTypes/IProjectView'
 
 const {
 	projectId,
+	view,
 } = defineProps<{
 	projectId: IProject['id'],
+	view: IProjectView,
 }>()
 
 const ctaVisible = ref(false)
@@ -140,7 +143,7 @@ const {
 	loadTasks,
 	params,
 	sortByParam,
-} = useTaskList(() => projectId, {position: 'asc'})
+} = useTaskList(() => projectId, () => view.id, {position: 'asc'})
 
 const tasks = ref<ITask[]>([])
 watch(

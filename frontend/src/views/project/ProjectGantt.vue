@@ -2,7 +2,7 @@
 	<ProjectWrapper
 		class="project-gantt"
 		:project-id="filters.projectId"
-		view-name="gantt"
+		:view
 	>
 		<template #header>
 			<card :has-content="false">
@@ -92,10 +92,14 @@ import {RIGHTS} from '@/constants/rights'
 
 import type {DateISO} from '@/types/DateISO'
 import type {ITask} from '@/modelTypes/ITask'
+import type {IProjectView} from '@/modelTypes/IProjectView'
 
 type Options = Flatpickr.Options.Options
 
-const props = defineProps<{route: RouteLocationNormalized}>()
+const props = defineProps<{
+	route: RouteLocationNormalized
+	view: IProjectView
+}>()
 
 const GanttChart = createAsyncComponent(() => import('@/components/tasks/GanttChart.vue'))
 
@@ -111,7 +115,7 @@ const {
 	isLoading,
 	addTask,
 	updateTask,
-} = useGanttFilters(route)
+} = useGanttFilters(route, props.view)
 
 const DEFAULT_DATE_RANGE_DAYS = 7
 

@@ -1,4 +1,4 @@
-import {computed, ref, shallowReactive, watch, type Ref} from 'vue'
+import {computed, ref, type Ref, shallowReactive, watch} from 'vue'
 import {klona} from 'klona/lite'
 
 import type {Filters} from '@/composables/useRouteFilters'
@@ -10,16 +10,15 @@ import TaskService from '@/services/task'
 import TaskModel from '@/models/task'
 import {error, success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
+import type {IProjectView} from '@/modelTypes/IProjectView'
 
 // FIXME: unify with general `useTaskList`
 export function useGanttTaskList<F extends Filters>(
 	filters: Ref<F>,
 	filterToApiParams: (filters: F) => TaskFilterParams,
-	options: {
-		loadAll?: boolean,
-	} = {
-		loadAll: true,
-	}) {
+	view: IProjectView,
+	loadAll: boolean = true,
+) {
 	const taskCollectionService = shallowReactive(new TaskCollectionService())
 	const taskService = shallowReactive(new TaskService())
 	const authStore = useAuthStore()
@@ -29,13 +28,13 @@ export function useGanttTaskList<F extends Filters>(
 	const tasks = ref<Map<ITask['id'], ITask>>(new Map())
 
 	async function fetchTasks(params: TaskFilterParams, page = 1): Promise<ITask[]> {
-		
-		if(params.filter_timezone === '') {
+
+		if (params.filter_timezone === '') {
 			params.filter_timezone = authStore.settings.timezone
 		}
 		
 		const tasks = await taskCollectionService.getAll({projectId: filters.value.projectId}, params, page) as ITask[]
-		if (options.loadAll && page < taskCollectionService.totalPages) {
+		if (loadAll && page < taskCollectionService.totalPages) {
 			const nextTasks = await fetchTasks(params, page + 1)
 			return tasks.concat(nextTasks)
 		}

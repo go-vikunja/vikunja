@@ -3,11 +3,7 @@ import router from '@/router'
 
 import type {IProject} from '@/modelTypes/IProject'
 
-export type ProjectRouteName = Extract<RouteRecordName, string>
-export type ProjectViewSettings = Record<
-	IProject['id'],
-	Extract<RouteRecordName, ProjectRouteName>
->
+export type ProjectViewSettings = Record<IProject['id'], number>
 
 const SETTINGS_KEY_PROJECT_VIEW = 'projectView'
 
@@ -50,12 +46,8 @@ function migrateStoredProjectRouteSettings() {
 /**
  * Save the current project view to local storage
  */
-export function saveProjectView(projectId: IProject['id'], routeName: string) {
-	if (routeName.includes('settings.')) {
-		return
-	}
-	
-	if (!projectId) {
+export function saveProjectView(projectId: IProject['id'], viewId: number) {
+	if (!projectId || !viewId) {
 		return
 	}
 	
@@ -71,7 +63,7 @@ export function saveProjectView(projectId: IProject['id'], routeName: string) {
 		projectViewSettings = savedProjectViewSettings
 	}
 
-	projectViewSettings[projectId] = routeName
+	projectViewSettings[projectId] = viewId
 	localStorage.setItem(SETTINGS_KEY_PROJECT_VIEW, JSON.stringify(projectViewSettings))
 }
 

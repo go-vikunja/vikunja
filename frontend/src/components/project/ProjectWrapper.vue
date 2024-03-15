@@ -6,47 +6,19 @@
 		<h1 class="project-title-print">
 			{{ getProjectTitle(currentProject) }}
 		</h1>
-		
+
 		<div class="switch-view-container d-print-none">
 			<div class="switch-view">
 				<BaseButton
-					v-shortcut="'g l'"
-					:title="$t('keyboardShortcuts.project.switchToListView')"
+					v-for="v in views"
 					class="switch-view-button"
-					:class="{'is-active': viewName === 'project'}"
-					:to="{ name: 'project.list', params: { projectId } }"
+					:class="{'is-active': v.id === view.id}"
+					:to="{ name: 'project.view', params: { projectId, viewId: v.id } }"
 				>
-					{{ $t('project.list.title') }}
-				</BaseButton>
-				<BaseButton
-					v-shortcut="'g g'"
-					:title="$t('keyboardShortcuts.project.switchToGanttView')"
-					class="switch-view-button"
-					:class="{'is-active': viewName === 'gantt'}"
-					:to="{ name: 'project.gantt', params: { projectId } }"
-				>
-					{{ $t('project.gantt.title') }}
-				</BaseButton>
-				<BaseButton
-					v-shortcut="'g t'"
-					:title="$t('keyboardShortcuts.project.switchToTableView')"
-					class="switch-view-button"
-					:class="{'is-active': viewName === 'table'}"
-					:to="{ name: 'project.table', params: { projectId } }"
-				>
-					{{ $t('project.table.title') }}
-				</BaseButton>
-				<BaseButton
-					v-shortcut="'g k'"
-					:title="$t('keyboardShortcuts.project.switchToKanbanView')"
-					class="switch-view-button"
-					:class="{'is-active': viewName === 'kanban'}"
-					:to="{ name: 'project.kanban', params: { projectId } }"
-				>
-					{{ $t('project.kanban.title') }}
+					{{ getViewTitle(v) }}
 				</BaseButton>
 			</div>
-			<slot name="header" />
+			<slot name="header"/>
 		</div>
 		<CustomTransition name="fade">
 			<Message
@@ -58,12 +30,12 @@
 			</Message>
 		</CustomTransition>
 
-		<slot v-if="loadedProjectId" />
+		<slot v-if="loadedProjectId"/>
 	</div>
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watch} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {useRoute} from 'vue-router'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -79,26 +51,27 @@ import {useTitle} from '@/composables/useTitle'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
+import type {IProject} from '@/modelTypes/IProject'
+import type {IProjectView} from '@/modelTypes/IProjectView'
+import {useI18n} from 'vue-i18n'
 
-const props = defineProps({
-	projectId: {
-		type: Number,
-		required: true,
-	},
-	viewName: {
-		type: String,
-		required: true,
-	},
-})
+const {
+	projectId,
+	view,
+} = defineProps<{
+	projectId: number,
+	view: IProjectView,
+}>()
 
 const route = useRoute()
+const {t} = useI18n()
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
 const projectService = ref(new ProjectService())
 const loadedProjectId = ref(0)
 
-const currentProject = computed(() => {
+const currentProject = computed<IProject>(() => {
 	return typeof baseStore.currentProject === 'undefined' ? {
 		id: 0,
 		title: '',
@@ -108,13 +81,15 @@ const currentProject = computed(() => {
 })
 useTitle(() => currentProject.value?.id ? getProjectTitle(currentProject.value) : '')
 
+const views = computed(() => currentProject.value?.views)
+
 // watchEffect would be called every time the prop would get a value assigned, even if that value was the same as before.
 // This resulted in loading and setting the project multiple times, even when navigating away from it.
 // This caused wired bugs where the project background would be set on the home page but only right after setting a new 
 // project background and then navigating to home. It also highlighted the project in the menu and didn't allow changing any
 // of it, most likely due to the rights not being properly populated.
 watch(
-	() => props.projectId,
+	() => projectId,
 	// loadProject
 	async (projectIdToLoad: number) => {
 		const projectData = {id: projectIdToLoad}
@@ -130,11 +105,11 @@ watch(
 			)
 			&& typeof currentProject.value !== 'undefined' && currentProject.value.maxRight !== null
 		) {
-			loadedProjectId.value = props.projectId
+			loadedProjectId.value = projectId
 			return
 		}
 
-		console.debug(`Loading project, props.viewName = ${props.viewName}, $route.params =`, route.params, `, loadedProjectId = ${loadedProjectId.value}, currentProject = `, currentProject.value)
+		console.debug(`Loading project, props.view = ${view}, $route.params =`, route.params, `, loadedProjectId = ${loadedProjectId.value}, currentProject = `, currentProject.value)
 
 		// Set the current project to the one we're about to load so that the title is already shown at the top
 		loadedProjectId.value = 0
@@ -149,31 +124,46 @@ watch(
 			const loadedProject = await projectService.value.get(project)
 			baseStore.handleSetCurrentProject({project: loadedProject})
 		} finally {
-			loadedProjectId.value = props.projectId
+			loadedProjectId.value = projectId
 		}
 	},
 	{immediate: true},
 )
+
+function getViewTitle(view: IProjectView) {
+	switch (view.title) {
+		case 'List':
+			return t('project.list.title')
+		case 'Gantt':
+			return t('project.gantt.title')
+		case 'Table':
+			return t('project.table.title')
+		case 'Kanban':
+			return t('project.kanban.title')
+	}
+	
+	return view.title
+}
 </script>
 
 <style lang="scss" scoped>
 .switch-view-container {
-  @media screen and (max-width: $tablet) {
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-  }
+	@media screen and (max-width: $tablet) {
+		display: flex;
+		justify-content: center;
+		flex-direction: column;
+	}
 }
 
 .switch-view {
-  background: var(--white);
-  display: inline-flex;
-  border-radius: $radius;
-  font-size: .75rem;
-  box-shadow: var(--shadow-sm);
-  height: $switch-view-height;
-  margin: 0 auto 1rem;
-  padding: .5rem;
+	background: var(--white);
+	display: inline-flex;
+	border-radius: $radius;
+	font-size: .75rem;
+	box-shadow: var(--shadow-sm);
+	height: $switch-view-height;
+	margin: 0 auto 1rem;
+	padding: .5rem;
 }
 
 .switch-view-button {
@@ -201,7 +191,7 @@ watch(
 
 // FIXME: this should be in notification and set via a prop
 .is-archived .notification.is-warning {
-  margin-bottom: 1rem;
+	margin-bottom: 1rem;
 }
 
 .project-title-print {
@@ -209,7 +199,7 @@ watch(
 	font-size: 1.75rem;
 	text-align: center;
 	margin-bottom: .5rem;
-	
+
 	@media print {
 		display: block;
 	}

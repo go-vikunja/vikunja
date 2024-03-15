@@ -27,7 +27,7 @@ export function getDefaultTaskFilterParams(): TaskFilterParams {
 export default class TaskCollectionService extends AbstractService<ITask> {
 	constructor() {
 		super({
-			getAll: '/projects/{projectId}/tasks',
+			getAll: '/projects/{projectId}/views/{viewId}/tasks',
 		})
 	}
 
