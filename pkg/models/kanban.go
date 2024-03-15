@@ -169,7 +169,7 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, opts *taskSear
 
 	if view.BucketConfigurationMode == BucketConfigurationModeManual {
 		err = s.
-			Where("project_id = ?", view.ProjectID).
+			Where("project_view_id = ?", view.ID).
 			OrderBy("position").
 			Find(&buckets)
 		if err != nil {

@@ -358,10 +358,11 @@ func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth,
 	}
 
 	kanban := &ProjectView{
-		ProjectID: project.ID,
-		Title:     "Kanban",
-		ViewKind:  ProjectViewKindKanban,
-		Position:  400,
+		ProjectID:               project.ID,
+		Title:                   "Kanban",
+		ViewKind:                ProjectViewKindKanban,
+		Position:                400,
+		BucketConfigurationMode: BucketConfigurationModeManual,
 	}
 	err = kanban.Create(s, a)
 	if err != nil {
