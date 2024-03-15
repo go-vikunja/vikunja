@@ -33,6 +33,7 @@ export default class TaskCollectionService extends AbstractService<ITask> {
 	}
 
 	modelFactory(data) {
+		// FIXME: There must be a better way for this…
 		if (typeof data.project_view_id !== 'undefined') {
 			return new BucketModel(data)
 		}
