@@ -303,7 +303,7 @@ func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklo
 		}
 	}
 
-	return RecalculateTaskPositions(s, p)
+	return RecalculateTaskPositions(s, p, a)
 }
 
 // Update is the handler to update a project view

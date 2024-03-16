@@ -54,5 +54,5 @@ func (p *ProjectView) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 func (p *ProjectView) getProject(s *xorm.Session) (pp *Project, err error) {
-	return GetProjectSimpleByID(s, p.ProjectID)
+	return &Project{ID: p.ProjectID}, nil
 }

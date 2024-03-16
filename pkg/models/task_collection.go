@@ -130,6 +130,34 @@ func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, v
 	return getTasksForProjects(s, projects, a, opts, view)
 }
 
+func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskCollection) (projects []*Project, err error) {
+	if tf.ProjectID == 0 || tf.isSavedFilter {
+		projects, _, _, err = getRawProjectsForUser(
+			s,
+			&projectOptions{
+				user: &user.User{ID: a.GetID()},
+				page: -1,
+			},
+		)
+		return projects, err
+	}
+
+	// Check the project exists and the user has access on it
+	project := &Project{ID: tf.ProjectID}
+	canRead, _, err := project.CanRead(s, a)
+	if err != nil {
+		return nil, err
+	}
+	if !canRead {
+		return nil, ErrUserDoesNotHaveAccessToProject{
+			ProjectID: tf.ProjectID,
+			UserID:    a.GetID(),
+		}
+	}
+
+	return []*Project{{ID: tf.ProjectID}}, nil
+}
+
 // ReadAll gets all tasks for a collection
 // @Summary Get tasks in a project
 // @Description Returns all tasks for the current project.
@@ -234,34 +262,9 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		return getTaskOrTasksInBuckets(s, a, []*Project{project}, view, opts)
 	}
 
-	// If the project ID is not set, we get all tasks for the user.
-	// This allows to use this function in Task.ReadAll with a possibility to deprecate the latter at some point.
-	var projects []*Project
-	if tf.ProjectID == 0 || tf.isSavedFilter {
-		projects, _, _, err = getRawProjectsForUser(
-			s,
-			&projectOptions{
-				user: &user.User{ID: a.GetID()},
-				page: -1,
-			},
-		)
-		if err != nil {
-			return nil, 0, 0, err
-		}
-	} else {
-		// Check the project exists and the user has access on it
-		project := &Project{ID: tf.ProjectID}
-		canRead, _, err := project.CanRead(s, a)
-		if err != nil {
-			return nil, 0, 0, err
-		}
-		if !canRead {
-			return nil, 0, 0, ErrUserDoesNotHaveAccessToProject{
-				ProjectID: tf.ProjectID,
-				UserID:    a.GetID(),
-			}
-		}
-		projects = []*Project{{ID: tf.ProjectID}}
+	projects, err := getRelevantProjectsFromCollection(s, a, tf)
+	if err != nil {
+		return nil, 0, 0, err
 	}
 
 	return getTaskOrTasksInBuckets(s, a, projects, view, opts)

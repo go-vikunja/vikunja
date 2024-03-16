@@ -66,50 +66,81 @@ func (tp *TaskPosition) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 // @Failure 400 {object} web.HTTPError "Invalid task position object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id}/position [post]
-func (tp *TaskPosition) Update(s *xorm.Session, _ web.Auth) (err error) {
+func (tp *TaskPosition) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	// Update all positions if the newly saved position is < 0.1
+	var shouldRecalculate bool
+	var view *ProjectView
 	if tp.Position < 0.1 {
-		view, err := GetProjectViewByID(s, tp.ProjectViewID)
+		shouldRecalculate = true
+		view, err = GetProjectViewByID(s, tp.ProjectViewID)
 		if err != nil {
 			return err
 		}
-
-		return RecalculateTaskPositions(s, view)
 	}
 
 	exists, err := s.
 		Where("task_id = ? AND project_view_id = ?", tp.TaskID, tp.ProjectViewID).
-		Get(&TaskPosition{})
+		Exist(&TaskPosition{})
 	if err != nil {
 		return err
 	}
 
 	if !exists {
 		_, err = s.Insert(tp)
-		return
+		if err != nil {
+			return
+		}
+		if shouldRecalculate {
+			return RecalculateTaskPositions(s, view, a)
+		}
+		return nil
 	}
 
 	_, err = s.
 		Where("task_id = ?", tp.TaskID).
 		Cols("project_view_id", "position").
 		Update(tp)
-	return
-}
-
-func RecalculateTaskPositions(s *xorm.Session, view *ProjectView) (err error) {
-
-	allTasks := []*Task{}
-	err = s.
-		Select("tasks.*, task_positions.position AS position").
-		Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", view.ID).
-		Where("project_id = ?", view.ProjectID).
-		OrderBy("position asc").
-		Find(&allTasks)
 	if err != nil {
 		return
 	}
 
+	if shouldRecalculate {
+		return RecalculateTaskPositions(s, view, a)
+	}
+
+	return
+}
+
+func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (err error) {
+
+	// Using the collection so that we get all tasks, even in cases where we're dealing with a saved filter underneath
+	tc := &TaskCollection{
+		ProjectID: view.ProjectID,
+	}
+	if view.ProjectID < -1 {
+		tc.ProjectID = 0
+	}
+
+	projects, err := getRelevantProjectsFromCollection(s, a, tc)
+	if err != nil {
+		return err
+	}
+
+	opts := &taskSearchOptions{
+		sortby: []*sortParam{
+			{
+				projectViewID: view.ID,
+				sortBy:        taskPropertyPosition,
+				orderBy:       orderAscending,
+			},
+		},
+	}
+
+	allTasks, _, _, err := getRawTasksForProjects(s, projects, a, opts)
+	if err != nil {
+		return err
+	}
 	if len(allTasks) == 0 {
 		return
 	}
