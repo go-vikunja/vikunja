@@ -213,7 +213,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		if err != nil {
 			return nil, 0, 0, err
 		}
-		return getTasksForProjects(s, []*Project{project}, a, opts)
+		return getTasksForProjects(s, []*Project{project}, a, opts, view)
 	}
 
 	// If the project ID is not set, we get all tasks for the user.
@@ -253,5 +253,5 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		}
 	}
 
-	return getTasksForProjects(s, projects, a, opts)
+	return getTasksForProjects(s, projects, a, opts, view)
 }

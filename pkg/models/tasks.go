@@ -303,7 +303,7 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 	return tasks, len(tasks), totalItems, err
 }
 
-func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
+func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions, view *ProjectView) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
 	tasks, resultCount, totalItems, err = getRawTasksForProjects(s, projects, a, opts)
 	if err != nil {
@@ -315,7 +315,7 @@ func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts 
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a)
+	err = addMoreInfoToTasks(s, taskMap, a, view)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -392,7 +392,7 @@ func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, 
 		taskMap[t.ID] = t
 	}
 
-	err = addMoreInfoToTasks(s, taskMap, a)
+	err = addMoreInfoToTasks(s, taskMap, a, nil)
 	return
 }
 
@@ -533,7 +533,7 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 
 // This function takes a map with pointers and returns a slice with pointers to tasks
 // It adds more stuff like assignees/labels/etc to a bunch of tasks
-func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth) (err error) {
+func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView) (err error) {
 
 	// No need to iterate over users and stuff if the project doesn't have tasks
 	if len(taskMap) == 0 {
@@ -591,6 +591,17 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth) (e
 		return
 	}
 
+	var positionsMap = make(map[int64]*TaskPosition)
+	if view != nil {
+		positions, err := getPositionsForView(s, view)
+		if err != nil {
+			return err
+		}
+		for _, position := range positions {
+			positionsMap[position.TaskID] = position
+		}
+	}
+
 	// Add all objects to their tasks
 	for _, task := range taskMap {
 
@@ -611,6 +622,11 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth) (e
 		r, has := reactions[task.ID]
 		if has {
 			task.Reactions = r
+		}
+
+		p, has := positionsMap[task.ID]
+		if has {
+			task.Position = p.Position
 		}
 	}
 
@@ -1487,7 +1503,7 @@ func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 	taskMap := make(map[int64]*Task, 1)
 	taskMap[t.ID] = t
 
-	err = addMoreInfoToTasks(s, taskMap, a)
+	err = addMoreInfoToTasks(s, taskMap, a, nil)
 	if err != nil {
 		return
 	}

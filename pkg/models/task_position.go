@@ -134,3 +134,11 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView) (err error) {
 	_, err = s.Insert(newPositions)
 	return
 }
+
+func getPositionsForView(s *xorm.Session, view *ProjectView) (positions []*TaskPosition, err error) {
+	positions = []*TaskPosition{}
+	err = s.
+		Where("project_view_id = ?", view.ID).
+		Find(&positions)
+	return
+}

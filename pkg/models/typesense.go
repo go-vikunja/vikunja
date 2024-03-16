@@ -291,7 +291,7 @@ func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error)
 		return
 	}
 
-	err = addMoreInfoToTasks(s, tasks, &user.User{ID: 1})
+	err = addMoreInfoToTasks(s, tasks, &user.User{ID: 1}, nil)
 	if err != nil {
 		return fmt.Errorf("could not fetch more task info: %s", err.Error())
 	}
