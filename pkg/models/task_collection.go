@@ -117,6 +117,17 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 	return opts, err
 }
 
+func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions) (tasks interface{}, resultCount int, totalItems int64, err error) {
+	if view != nil {
+		if view.BucketConfigurationMode != BucketConfigurationModeNone {
+			tasksInBuckets, err := GetTasksInBucketsForView(s, view, opts, a)
+			return tasksInBuckets, len(tasksInBuckets), int64(len(tasksInBuckets)), err
+		}
+	}
+
+	return getTasksForProjects(s, projects, a, opts, view)
+}
+
 // ReadAll gets all tasks for a collection
 // @Summary Get tasks in a project
 // @Description Returns all tasks for the current project.
@@ -213,7 +224,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		if err != nil {
 			return nil, 0, 0, err
 		}
-		return getTasksForProjects(s, []*Project{project}, a, opts, view)
+		return getTaskOrTasksInBuckets(s, a, []*Project{project}, view, opts)
 	}
 
 	// If the project ID is not set, we get all tasks for the user.
@@ -246,12 +257,5 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		projects = []*Project{{ID: tf.ProjectID}}
 	}
 
-	if view != nil {
-		if view.BucketConfigurationMode != BucketConfigurationModeNone {
-			tasksInBuckets, err := GetTasksInBucketsForView(s, view, opts, a)
-			return tasksInBuckets, len(tasksInBuckets), int64(len(tasksInBuckets)), err
-		}
-	}
-
-	return getTasksForProjects(s, projects, a, opts, view)
+	return getTaskOrTasksInBuckets(s, a, projects, view, opts)
 }
